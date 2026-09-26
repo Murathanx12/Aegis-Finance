@@ -175,8 +175,8 @@ def test_quest_prompt_carries_questions_keys_and_policy():
                        news_rows=[], catalysts=_catalysts(), predictions=[])
     p = TC.quest_prompt("AAA", e)
     assert "AAA" in p
-    assert len(TC.TEN_QUESTIONS) == 10
-    for q in TC.TEN_QUESTIONS:
+    assert len(TC.TWELVE_QUESTIONS) == 12 and len(TC.ANSWER_KEYS) == 12
+    for q in TC.QUESTIONS:
         assert q in p
     for k in TC.WEB_KEYS:
         assert f'"{k}"' in p, k
@@ -199,23 +199,24 @@ def test_parse_reply_clean_json_keeps_only_known_keys():
 
 
 def test_parse_reply_refuses_nested_objects():
-    out = TC.parse_reply(json.dumps({"name": "A", "demand": {"x": 1},
+    out = TC.parse_reply(json.dumps({"name": "A", "bottleneck": {"x": 1},
                                      "analyst_actions": [{"firm": "GS"}]}))
-    assert out["demand"] is None
+    assert out["bottleneck"] is None
     assert out["analyst_actions"] is None
-    assert set(out["parse_rejected_nested"]) == {"demand", "analyst_actions"}
+    assert set(out["parse_rejected_nested"]) == {"bottleneck", "analyst_actions"}
 
 
 def test_parse_reply_degraded_lifts_scalars_and_invents_nothing():
-    txt = ('{"name": "Triple A", "consensus_n": 7, "demand": "strong "unquoted" '
-           'demand", "product": "widgets", "sources": ["https://a", "https://b"]')
+    txt = ('{"name": "Triple A", "consensus_n": 7, "bottleneck": "strong "unquoted" '
+           'demand", "demand_product": "widgets 2026-09-01", '
+           '"sources": ["https://a", "https://b"]')
     out = TC.parse_reply(txt + "}")
     assert out["parse"] == "degraded"
     assert out["name"] == "Triple A"
     assert out["consensus_n"] == 7
-    assert out["product"] == "widgets"
+    assert out["demand_product"] == "widgets 2026-09-01"
     assert out["sources"] == ["https://a", "https://b"]
-    assert out["demand"] is None               # unreadable -> None, not guessed
+    assert out["bottleneck"] is None           # unreadable -> None, not guessed
     for k in TC.WEB_KEYS:
         assert k in out
 
@@ -584,3 +585,269 @@ def test_run_writes_forecast_rows_beside_a_tmp_root_never_the_real_ledger(tmp_pa
     out = S.forecast(ASOF, root=tmp_path, path=led, today=ASOF)   # backfill: nothing new
     assert out["n_rows_written"] == 0
     assert out["ledger_rows_before"] == out["ledger_rows_after"] == 2
+
+
+# ───────────────── chunk F (2026-09-26): twelve questions + X reads ─────────
+
+RUN_UTC = f"{ASOF}T12:00:00+00:00"
+
+
+def _v2_reply(**over):
+    body = {k: "not found" for k in TC.ANSWER_KEYS}
+    body.update({
+        "name": "Triple A",
+        "what_changed_30_90d": "2026-09-10 guidance raised (company PR); 2026-07-01 new fab",
+        "ceo_promised": "2026-06-15 CEO promised HBM4 volume by 2026-12-31 (call transcript)",
+        "bottleneck": "packaging capacity is tight",          # UNDATED answer
+        "x_company_posts": ["2026-09-20 | @tripleA | We started shipping HBM4 samples | https://x.com/tripleA/status/1",
+                            "last week | @tripleA | undated post"],
+        "x_ceo_posts": ["2026-09-18 | @ceoA | Demand exceeds supply through 2027"],
+        "x_analyst_posts": ["2026-09-21 | @semi_analyst | Raised price target to 30 on HBM share"],
+        "claims": ["2026-09-10 | what_changed_30_90d | Triple A IR | https://investors.triplea.com/pr/1 | Company raised FY guidance to 12bn",
+                   "2026-09-12 | bottleneck | reuters.com | https://www.reuters.com/x | Triple A says packaging lead times lengthened",
+                   "2026-09-13 | who_loses | somesite | https://blog.example.com/p | Rivals look weak",
+                   "no date here | bottleneck | site | https://a | an undated claim"],
+        "promises": ["2026-06-15 | 2026-12-31 | OPEN | HBM4 volume shipments by year end | 2026-09-20 samples shipping"],
+        "analyst_actions": [], "upcoming_dates": [], "sources": ["https://investors.triplea.com"],
+    })
+    body.update(over)
+    return json.dumps(body)
+
+
+def test_twelve_keys_parse_flat():
+    out = TC.parse_reply(_v2_reply())
+    assert out["parse"] == "ok"
+    for k in TC.ANSWER_KEYS:
+        assert k in out, k
+    assert out["what_changed_30_90d"].startswith("2026-09-10")
+    for k in TC.X_LIST_KEYS + ("claims", "promises", "undated_claims"):
+        assert isinstance(out[k], list), k
+
+
+def test_undated_claims_are_refused_into_their_bucket_not_dropped():
+    out = TC.parse_reply(_v2_reply())
+    und = out["undated_claims"]
+    assert any(u.startswith("x_company_posts: last week") for u in und)
+    assert any(u.startswith("claims: no date here") for u in und)
+    # the undated ANSWER stays on the card and is flagged
+    assert out["bottleneck"] == "packaging capacity is tight"
+    assert any(u.startswith("bottleneck: ") for u in und)
+    # "not found" is not a claim, so it is never flagged
+    assert not any(u.startswith("who_loses: ") for u in und)
+    # the dated items stay; the undated ones are gone from their lists
+    assert len(out["x_company_posts"]) == 1 and len(out["claims"]) == 3
+
+
+def test_quest_prompt_names_x_reads_prior_card_and_open_promises():
+    e = TC.engine_side("AAA", asof=ASOF, bars=None, revisions=None, news_rows=[],
+                       catalysts=[], predictions=[])
+    prior = {"asof": "2026-09-01", "verdict": "neutral", "falsifier": "f",
+             "web_bottleneck": "old bottleneck"}
+    p = TC.quest_prompt("AAA", e, prior_card=prior, open_promises=[
+        {"promised_utc": "2026-06-15", "due_utc": "2026-12-31",
+         "promise_text": "HBM4 volume by year end"}])
+    for k in TC.X_LIST_KEYS:
+        assert f'"{k}"' in p
+    assert "x.com" in p and "last 30 days" in p
+    assert "old bottleneck" in p and "HBM4 volume by year end" in p
+    assert "COPIED EXACTLY" in p
+
+
+def _v2_card(reply=None, **over):
+    e = TC.engine_side("AAA", asof=ASOF, bars=_bars(), revisions=None, news_rows=[],
+                       catalysts=[], predictions=[])
+    web = TC.parse_reply(reply or _v2_reply())
+    syn = {"bull": "b", "bear": "r", "falsifier": "f", "verdict": "supports",
+           "confidence": "med", "synth_status": "OK"}
+    c = TC.build_card("AAA", kind="personal", asof=ASOF, engine=e, web=web, synth=syn,
+                      meta={"run_utc": RUN_UTC, "trigger": "(c) catalyst", "quest_model": "m"})
+    c.update(over)
+    return c
+
+
+def test_v2_card_is_valid_and_carries_answers_x_and_trigger():
+    c = _v2_card()
+    assert TC.validate_card(c) == []
+    assert c["schema"] == "thesis_card/v2"
+    assert c["web_ceo_promised"].startswith("2026-06-15")
+    assert c["trigger"] == "(c) catalyst" and c["run_utc"] == RUN_UTC
+    assert c["undated_claims"]
+
+
+def test_web_events_row_per_dated_claim_with_source_id(tmp_path):
+    c = _v2_card()
+    ev, cl = tmp_path / "ev.jsonl", tmp_path / "cl.jsonl"
+    res = TC.write_evidence(c, events_path=ev, claims_file=cl)
+    claims = [json.loads(x) for x in cl.read_text(encoding="utf-8").splitlines()]
+    # 3 X posts dated + 3 dated claims = 6, every one in the claims ledger
+    assert len(claims) == 6 == res["claims_written"]
+    for r in claims:
+        assert r["source_id"].startswith("openclaw:")
+        assert r["first_seen_utc"] == RUN_UTC
+        assert r["claim_utc"] <= ASOF
+    ids = {r["source_id"] for r in claims}
+    assert {"openclaw:@tripleA".lower(), "openclaw:@ceoa", "openclaw:@semi_analyst",
+            "openclaw:investors.triplea.com", "openclaw:reuters.com"} <= ids
+    events = [json.loads(x) for x in ev.read_text(encoding="utf-8").splitlines()]
+    typed = [r for r in claims if r["web_event_type"]]
+    assert len(events) == len(typed) >= 4
+    for e in events:
+        assert e["retrieved_by"].startswith("openclaw:")
+        assert e["observed_at"] == RUN_UTC
+    by_type = {e["event_type"] for e in events}
+    assert {"guidance_change", "product_launch", "analyst_revision",
+            "supplier_constraint"} <= by_type
+    # an untyped claim is kept in the claims ledger with the refusal beside it
+    untyped = [r for r in claims if r["event_type"] == "claim"]
+    assert untyped and all(r["web_event_refused"] for r in untyped)
+    # idempotent
+    res2 = TC.write_evidence(c, events_path=ev, claims_file=cl)
+    assert res2["claims_written"] == 0 and res2["web_events"]["written"] == 0
+    assert len(cl.read_text(encoding="utf-8").splitlines()) == 6
+
+
+def test_a_claim_dated_after_the_run_is_refused(tmp_path):
+    c = _v2_card(reply=_v2_reply(claims=[
+        "2027-01-01 | bottleneck | reuters.com | https://www.reuters.com/y | future shortage"]))
+    res = TC.write_evidence(c, events_path=tmp_path / "e", claims_file=tmp_path / "c")
+    assert res["n_future_refused"] == 1
+
+
+def test_promise_row_and_forecast_written_once_then_graded(tmp_path):
+    from backend.services import belief_state as B
+    pp, fp = tmp_path / "promises.jsonl", tmp_path / "pred.jsonl"
+    c = _v2_card()
+    r1 = TC.write_promises(c, today=ASOF, path=pp, forecast_path=fp)
+    assert r1["promises_written"] == 1 and r1["forecast_rows_written"] == 1
+    rows = [json.loads(x) for x in pp.read_text(encoding="utf-8").splitlines()]
+    assert rows[0]["row_type"] == "promise" and rows[0]["status"] == "OPEN"
+    assert rows[0]["due_utc"] == "2026-12-31" and rows[0]["promised_utc"] == "2026-06-15"
+    preds = B.read_predictions(fp)
+    assert len(preds) == 1 and preds[0]["specialist"] == "promise:v1"
+    assert preds[0]["horizon_days"] in B.HORIZONS and preds[0]["horizon_days"] >= 60
+    assert preds[0]["inputs_used"]["promise_id"] == rows[0]["promise_id"]
+    # idempotent by hash
+    r2 = TC.write_promises(c, today=ASOF, path=pp, forecast_path=fp)
+    assert r2["promises_written"] == 0 and r2["forecast_rows_written"] == 0
+    assert len(pp.read_text(encoding="utf-8").splitlines()) == 1
+    assert len(B.read_predictions(fp)) == 1
+    # the open promise is handed to the next quest
+    assert [p["promise_text"] for p in TC.open_promises("AAA", path=pp)] == [
+        "HBM4 volume shipments by year end"]
+    # the next card addresses it: DELIVERED -> one grade row, once
+    later = _v2_card(reply=_v2_reply(promises=[
+        "2026-06-15 | 2026-12-31 | DELIVERED | HBM4 volume shipments by year end | 2026-12-10 volume shipments confirmed"]))
+    r3 = TC.write_promises(later, today=ASOF, path=pp, forecast_path=fp)
+    assert r3["grades_written"] == 1 and r3["promises_written"] == 0
+    TC.write_promises(later, today=ASOF, path=pp, forecast_path=fp)
+    rows = [json.loads(x) for x in pp.read_text(encoding="utf-8").splitlines()]
+    assert [r["row_type"] for r in rows] == ["promise", "grade"]
+    assert TC.open_promises("AAA", path=pp) == []
+    assert TC.promise_state(rows)[rows[0]["promise_id"]]["status"] == "DELIVERED"
+
+
+def _closes(n=90, sd=0.01, last_ret=0.0, seed=3):
+    rng = np.random.default_rng(seed)
+    r = rng.normal(0, sd, n - 1)
+    r[-1] = last_ret
+    px = 100 * np.exp(np.concatenate([[0.0], np.cumsum(r)]))
+    ds = [d.strftime("%Y-%m-%d") for d in pd.bdate_range(end=ASOF, periods=n)]
+    return px, ds
+
+
+def test_trigger_fires_on_a_big_move_without_a_typed_event_and_not_otherwise():
+    px, ds = _closes(last_ret=0.08)
+    r = TC.trig_sigma_move(px, ds, ASOF)
+    assert r and r.startswith("(d)")
+    assert TC.trig_sigma_move(px, ds, ASOF, typed_event_dates={ds[-1]}) is None
+    px2, ds2 = _closes(last_ret=0.004)
+    assert TC.trig_sigma_move(px2, ds2, ASOF) is None
+    # a move long before asof is not news
+    later = (date.fromisoformat(ASOF) + timedelta(days=20)).isoformat()
+    assert TC.trig_sigma_move(px, ds, later) is None
+
+
+def test_trigger_fires_on_a_synthetic_revision_cluster_and_not_otherwise():
+    from backend.services import revision_flow as RF
+    a = pd.Timestamp(ASOF)
+    rows = []
+    for i, f in enumerate(("F1", "F2", "F3")):        # AAA: 3 firms in 10 days
+        rows.append(("AAA", a - pd.Timedelta(days=2 + i), f))
+    rows += [("BBB", a - pd.Timedelta(days=2), "F1"),  # BBB: 2 firms recent,
+             ("BBB", a - pd.Timedelta(days=3), "F2"),
+             ("BBB", a - pd.Timedelta(days=40), "F3")]  # the 3rd outside 10 days
+    rev = pd.DataFrame([{"ticker": t, "event_date": d, "firm": f, "target_action": "Raises",
+                         "prior_target": 10.0, "current_target": 11.0, "pit_safe": True}
+                        for t, d, f in rows])
+    flow = RF.compute(rev, asof=a + pd.Timedelta(days=1), window_days=10)
+    trig = TC.compute_triggers(["AAA", "BBB"], asof=ASOF, last_cards={"AAA": ASOF, "BBB": ASOF},
+                               n_firms_recent=flow["n_firms"].to_dict())
+    assert [t["ticker"] for t in trig] == ["AAA"]
+    assert trig[0]["reasons"][0].startswith("(b) revision cluster: 3 firms")
+
+
+def test_other_triggers_catalyst_entry_and_staleness():
+    a = date.fromisoformat(ASOF)
+    near = f"{a + timedelta(days=4)} | earnings | Q4"
+    far = f"{a + timedelta(days=30)} | earnings | Q1"
+    assert TC.trig_catalyst(ASOF, [near]).startswith("(c)")
+    assert TC.trig_catalyst(ASOF, [far]) is None
+    assert TC.trig_entered(f"{ASOF}T01:00:00+00:00", None, "book:x").startswith("(a)")
+    assert TC.trig_entered("2026-09-01T00:00:00+00:00", "2026-09-10") is None
+    assert TC.trig_entered("2026-09-20T00:00:00+00:00", "2026-09-10") is not None
+    assert TC.trig_stale("2026-08-01", ASOF).startswith("(e)")
+    assert TC.trig_stale("2026-09-20", ASOF) is None
+    trig = TC.compute_triggers(["QUIET"], asof=ASOF, last_cards={"QUIET": "2026-09-20"})
+    assert trig == []
+
+
+def test_digest_has_what_changed_since_the_last_card(tmp_path):
+    prev = _v2_card(asof="2026-09-01")
+    prev["card_hash"] = TC.card_hash(prev)
+    TC.write_card(prev, root=tmp_path)
+    cur = _v2_card(reply=_v2_reply(bottleneck="2026-09-20 substrate shortage now"))
+    TC.write_card(cur, root=tmp_path)
+    d = TC.diff_cards(TC.previous_card("AAA", ASOF, root=tmp_path), cur)
+    assert d["changed"] == ["bottleneck"] and d["prev_asof"] == "2026-09-01"
+    md = TC.write_digest(ASOF, root=tmp_path).read_text(encoding="utf-8")
+    assert "## What changed since the last card" in md
+    assert "AAA** vs 2026-09-01" in md and "bottleneck: 2026-09-20 substrate" in md
+    # a v1 previous card is reported as a schema change, not twelve new answers
+    v1 = {"asof": "2026-08-01", "verdict": "neutral", "web_what_changed": "x"}
+    assert TC.diff_cards(v1, cur)["schema_change"].startswith("thesis_card/v1")
+
+
+def test_run_writes_evidence_and_promises_beside_a_tmp_root(tmp_path):
+    from scripts import thesis_cards as S
+
+    def quest(ticker, prompt, *, model, timeout, log_dir):
+        assert "x_ceo_posts" in prompt
+        return {"status": "OK", "reply": _v2_reply(), "elapsed_s": 1.0,
+                "log_path": str(log_dir / "q.log"), "cost_usd": 0.0}
+
+    def synth(engine, web, *, model):
+        return {"bull": "b", "bear": "r", "falsifier": "f", "verdict": "neutral",
+                "confidence": "low", "synth_status": "OK"}
+
+    res = S.run(universe=[{"ticker": "AAA", "kind": "personal", "source": "trigger",
+                           "trigger": "(c) catalyst within 5 sessions"}],
+                asof=ASOF, root=tmp_path, max_quests=1, cap_usd=1.0, parallel=1,
+                model="m", inputs=_fake_inputs(), quest_fn=quest, synth_fn=synth,
+                spend_fn=lambda day: 0.0)
+    assert res["state"] == "DONE"
+    card = TC.read_cards(ASOF, root=tmp_path)[0]
+    assert card["trigger"] == "(c) catalyst within 5 sessions"
+    assert res["evidence"]["AAA"]["claims_written"] == 6
+    assert res["promises"]["AAA"]["promises_written"] == 1
+    for f in ("_claims.jsonl", "_web_events.jsonl", "_promises.jsonl", "_predictions.jsonl"):
+        assert (tmp_path / f).exists(), f
+    preds = [json.loads(x) for x in (tmp_path / "_predictions.jsonl").read_text(
+        encoding="utf-8").splitlines()]
+    assert {p["specialist"] for p in preds} == {"thesis_card:v1", "promise:v1"}
+
+
+def test_a_dividend_date_is_not_a_catalyst():
+    a = date.fromisoformat(ASOF)
+    assert TC.trig_catalyst(ASOF, [f"{a + timedelta(days=2)} | dividend | Q3"]) is None
+    assert TC.trig_catalyst(ASOF, [f"{a + timedelta(days=2)} | webcast_replay_expiry | x"]) is None
+    assert TC.trig_catalyst(ASOF, [f"{a + timedelta(days=2)} | earnings | Q3"]).startswith("(c)")

@@ -49,30 +49,42 @@ ENGINE_KEYS: tuple[str, ...] = (
     "engine_forecast_p_up_1d", "engine_forecast_p_up_5d",
 )
 
-#: The ten fixed questions (Murat's review list, 2026-09-25 amendment).
-TEN_QUESTIONS: tuple[str, ...] = (
-    "What changed in the last 90 days?",
-    "What is known today that was not known yesterday?",
-    "Is growth coming from demand, price, volume or mix?",
-    "Who are the key suppliers and are they constrained?",
-    "Who are the key customers and how concentrated are they?",
-    "Who loses if this company wins?",
-    "What evidence CONTRADICTS the bull case?",
-    "If management is right, what happens next?",
-    "If management is wrong, what breaks first?",
-    "Who are the second- and third-order beneficiaries?",
+#: Murat's twelve questions (external_session_brief_2026-09-26 section F),
+#: one FLAT reply key each, in his order. Replaced the ten of 2026-09-25 on
+#: 2026-09-26 (schema thesis_card/v2); a v1 card's ten answers stay readable.
+TWELVE_QUESTIONS: tuple[tuple[str, str], ...] = (
+    ("what_changed_30_90d", "What changed in the last 30 and in the last 90 days?"),
+    ("true_now_not_modelled", "What is true NOW that analysts may not have modelled yet?"),
+    ("demand_product", "What product creates the demand?"),
+    ("price_volume_mix", "Is growth coming from price, volume or mix?"),
+    ("bottleneck", "What is the bottleneck (the company's, or the one it relieves)?"),
+    ("who_benefits_next", "Who benefits NEXT (second- and third-order beneficiaries)?"),
+    ("who_loses", "Who loses if this company wins?"),
+    ("margin_collapse_risk", "What would collapse margins?"),
+    ("low_cost_substitute", "Is there a Chinese or other low-cost substitute, and how close is it?"),
+    ("ceo_promised", "What did the CEO / management PROMISE (dated, quoted)?"),
+    ("did_they_deliver", "Did they deliver on earlier promises (dated evidence)?"),
+    ("what_would_falsify", "What observable event, with a date or a number, would falsify the thesis?"),
 )
+ANSWER_KEYS: tuple[str, ...] = tuple(k for k, _ in TWELVE_QUESTIONS)
+QUESTIONS: tuple[str, ...] = tuple(q for _, q in TWELVE_QUESTIONS)
+#: The v1 card's ten answer keys, kept so the digest can say a diff is across schemas.
+V1_ANSWER_KEYS: tuple[str, ...] = (
+    "what_changed", "not_known_yesterday", "demand_price_volume_mix", "suppliers",
+    "customers", "who_loses", "contradicting_evidence", "if_management_right",
+    "if_management_wrong", "second_order_beneficiaries")
+
+#: The three X reads made INSIDE the same quest, plus the dated claim and
+#: promise lists. Every item starts with YYYY-MM-DD; one that does not is moved
+#: to `undated_claims` by `parse_reply` -- refused as evidence, never dropped.
+X_LIST_KEYS: tuple[str, ...] = ("x_company_posts", "x_ceo_posts", "x_analyst_posts")
+DATED_LIST_KEYS: tuple[str, ...] = (*X_LIST_KEYS, "claims", "promises")
 
 #: The flat keys the web quest must return. Lists hold plain strings only.
-WEB_STR_KEYS: tuple[str, ...] = (
-    "name", "what_changed", "not_known_yesterday", "demand_price_volume_mix",
-    "suppliers", "customers", "who_loses", "contradicting_evidence",
-    "if_management_right", "if_management_wrong", "second_order_beneficiaries",
-    "product", "demand", "pricing_power", "competition", "team",
-    "market_strategy", "consensus_source",
-)
+WEB_STR_KEYS: tuple[str, ...] = ("name", *ANSWER_KEYS, "consensus_source")
 WEB_NUM_KEYS: tuple[str, ...] = ("consensus_n", "consensus_mean_target")
-WEB_LIST_KEYS: tuple[str, ...] = ("analyst_actions", "upcoming_dates", "sources")
+WEB_LIST_KEYS: tuple[str, ...] = (*DATED_LIST_KEYS, "analyst_actions",
+                                  "upcoming_dates", "sources")
 WEB_KEYS: tuple[str, ...] = WEB_STR_KEYS + WEB_NUM_KEYS + WEB_LIST_KEYS
 
 SYNTH_KEYS: tuple[str, ...] = ("bull", "bear", "falsifier", "verdict", "confidence")
@@ -103,7 +115,7 @@ _NUM_CARD_KEYS = (*[k for k in ENGINE_KEYS if k not in ("engine_band",
                   "deepseek_cost_usd")
 _LIST_CAPS = {"news_30d_top": 8, "analyst_actions": 10}
 
-SCHEMA_VERSION = "thesis_card/v1"
+SCHEMA_VERSION = "thesis_card/v2"
 
 
 def _cfg(name: str, default: Any) -> Any:
@@ -368,13 +380,33 @@ SOURCE_POLICY = (
     "accept any paywall. If a page will not load, say so and move on.")
 
 
-def quest_prompt(ticker: str, engine: dict) -> str:
-    """The ONE OpenClaw quest for a ticker. Tells the agent what the engine
-    already knows so it spends its browsing on the gaps."""
+def _prior_card_brief(prior: dict | None) -> dict | None:
+    """What the previous card of this name concluded -- so the quest asks what
+    CHANGED since then instead of re-deriving it."""
+    if not prior:
+        return None
+    out = {"asof": prior.get("asof"), "verdict": prior.get("verdict"),
+           "falsifier": _clean(prior.get("falsifier"), 240)}
+    for k in ANSWER_KEYS:
+        v = prior.get(f"web_{k}")
+        if v:
+            out[k] = _clean(v, 160)
+    return out
+
+
+def quest_prompt(ticker: str, engine: dict, *, prior_card: dict | None = None,
+                 open_promises: Iterable[dict] | None = None) -> str:
+    """The ONE OpenClaw quest for a ticker: Murat's twelve questions plus two X
+    reads, in the same turn. Tells the agent what the engine and the previous
+    card already know (Murat: "use all of the files we have") so it spends its
+    browsing on the gaps, and hands it the OPEN promises on file to grade."""
     known = {k: engine.get(k) for k in (
-        "engine_px", "engine_band", "engine_mom_63", "engine_net_raises_90d",
-        "engine_n_firms_90d", "news_30d_count")}
+        "engine_px", "engine_band", "engine_mom_21", "engine_mom_63",
+        "engine_vol_63", "engine_rev_qoq", "engine_gross_margin",
+        "engine_net_raises_90d", "engine_n_firms_90d", "news_30d_count")}
     known["engine_upcoming_dates"] = engine.get("engine_upcoming_dates")
+    known["engine_analyst_actions_90d"] = (engine.get("engine_analyst_actions_90d") or [])[:6]
+    known["news_30d_top"] = (engine.get("news_30d_top") or [])[:5]
     keys_shape = {k: ("" if k in WEB_STR_KEYS else 0 if k in WEB_NUM_KEYS else [])
                   for k in WEB_KEYS}
     suffix_note = ""
@@ -382,44 +414,60 @@ def quest_prompt(ticker: str, engine: dict) -> str:
         suffix_note = ("\nThis is a NON-US listing (Yahoo/Bloomberg suffix). Read the "
                        "company's investor relations page in ENGLISH where one exists; "
                        "report prices and targets in the listing currency and say which.\n")
-    qs = "\n".join(f"{i}. {q}" for i, q in enumerate(TEN_QUESTIONS, 1))
+    qs = "\n".join(f"{i}. [{k}] {q}" for i, (k, q) in enumerate(TWELVE_QUESTIONS, 1))
+    prior = _prior_card_brief(prior_card)
+    prior_txt = ("\nTHE PREVIOUS CARD ON THIS NAME (say what CHANGED since it; do not "
+                 "repeat it):\n" + json.dumps(prior, default=str) + "\n") if prior else ""
+    proms = [f"{p.get('promised_utc')} | due {p.get('due_utc') or 'none'} | "
+             f"{p.get('promise_text')}" for p in (open_promises or [])][:10]
+    prom_txt = ("\nOPEN PROMISES ON FILE -- for EACH, find dated evidence and return it "
+                "in `promises` with the promise text COPIED EXACTLY and status "
+                "DELIVERED, MISSED or still OPEN:\n" + "\n".join(proms) + "\n") if proms else ""
+    today = engine.get("engine_asof") or date.today().isoformat()
     return f"""You are gathering EVIDENCE about ONE company, ticker {ticker}. You are
 not asked whether to buy it; an opinion without a source is discarded.
-Use your browser / web tools. Today is {engine.get("engine_asof") or date.today().isoformat()}.
+Use your browser / web tools, and the logged-in X (x.com) account. Today is {today}.
 {suffix_note}
 WHAT THE ENGINE ALREADY KNOWS (do not re-derive; fill the gaps):
 {json.dumps(known, default=str)}
-
+{prior_txt}{prom_txt}
 {SOURCE_POLICY}
 
-ANSWER THESE TEN QUESTIONS, each in at most 60 words, each with a date where
-one exists. If you found nothing, write "not found" -- never guess:
+ANSWER THESE TWELVE QUESTIONS, each in at most 60 words. EVERY factual claim
+carries its date (YYYY-MM-DD) and source in the text. If you found nothing,
+write "not found" -- never guess:
 {qs}
 
+X READS (open x.com; read, never post, like or follow):
+X1. x_company_posts and x_ceo_posts: the company's own account and the CEO's
+    own account, posts in the last 30 days. Each item is the plain string
+    "YYYY-MM-DD | @handle | quoted text (at most 200 chars) | post URL".
+X2. x_analyst_posts: sell-side analysts and industry accounts posting on this
+    name in the last 30 days, same format. X is CONTEXT: it may raise a
+    question, it never settles a number.
+
 ALSO:
-A. List EVERY analyst action in the last 90 days you can find (rating change,
-   initiation, price-target change), each as the plain string
+A. claims: every dated fact behind your twelve answers, each as the plain string
+   "YYYY-MM-DD | question_key | source (@handle or site) | url | claim (at most 200 chars)".
+   A claim you cannot date does not belong here.
+B. promises: every dated management promise you found (and every OPEN promise
+   on file), each as "YYYY-MM-DD promised | YYYY-MM-DD due or none |
+   OPEN|DELIVERED|MISSED | the promise, quoted | dated evidence for the status".
+C. analyst_actions: every analyst action in the last 90 days, each as
    "YYYY-MM-DD | firm | action | from->to". At most 10, newest first.
-B. List EVERY dated upcoming event from the company's investor relations page
-   (earnings date, investor day, FDA/PDUFA date, product launch, shareholder
-   meeting, lockup expiry), each as the plain string
-   "YYYY-MM-DD | kind | what | source_url | primary|aggregator".
-C. Consensus: number of analysts (consensus_n), mean price target
+D. upcoming_dates: every dated upcoming event from the company's investor
+   relations page, each as "YYYY-MM-DD | kind | what | source_url | primary|aggregator".
+E. Consensus: number of analysts (consensus_n), mean price target
    (consensus_mean_target, a number), and the URL you read it on (consensus_source).
-D. product, demand, pricing_power, competition, team, market_strategy: one or
-   two plain sentences each, from what you read.
-E. sources: every URL you actually read.
+F. sources: every URL you actually read.
 
 Return FLAT JSON ONLY, nothing before or after it, exactly these keys. Every
 value is a plain string, a number, null, or a list of plain strings. NO nested
 objects, no quotation marks inside strings, no newlines inside strings:
 {json.dumps(keys_shape)}
 
-Map the ten questions to: what_changed, not_known_yesterday,
-demand_price_volume_mix, suppliers, customers, who_loses,
-contradicting_evidence, if_management_right, if_management_wrong,
-second_order_beneficiaries. contradicting_evidence is NOT optional: a report
-with no disconfirming evidence is incomplete.
+The twelve answers go in the keys named in brackets above. what_would_falsify
+is NOT optional: a report with no disconfirming observable is incomplete.
 """
 
 
@@ -473,6 +521,8 @@ def parse_reply(text: str | None, *, keys: tuple[str, ...] = WEB_KEYS) -> dict:
                     pass
         if not any(out[k] is not None for k in keys):
             out["parse"] = "refused"
+        elif keys == WEB_KEYS:
+            _split_undated(out)
         return out
 
     dropped = sorted(k for k in d if k not in keys)
@@ -495,6 +545,46 @@ def parse_reply(text: str | None, *, keys: tuple[str, ...] = WEB_KEYS) -> dict:
         out["parse_dropped_keys"] = dropped
     if nested:
         out["parse_rejected_nested"] = nested
+    if keys == WEB_KEYS:
+        _split_undated(out)
+    return out
+
+
+_DATE_RE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
+_NOT_FOUND = re.compile(r"^\s*(not found|none found|n/?a|unknown|none)\b", re.I)
+
+
+def _lead_date(item: Any) -> str | None:
+    """The item's own date: its first `|`-field, which must be YYYY-MM-DD."""
+    return _day(str(item).split("|")[0].strip().split(" ")[0])
+
+
+def _split_undated(out: dict) -> dict:
+    """Every claim dated, or refused into `undated_claims` -- never dropped.
+
+    A list item under DATED_LIST_KEYS whose first field is not a date is MOVED
+    to `undated_claims` as "<key>: <item>". A twelve-answer that is not "not
+    found" and carries no date anywhere is KEPT on the card (it is the answer)
+    and ALSO listed in `undated_claims`, so nothing reads it as dated evidence.
+    """
+    und: list[str] = []
+    for k in DATED_LIST_KEYS:
+        v = out.get(k)
+        if not isinstance(v, list):
+            continue
+        keep = []
+        for x in v:
+            if _lead_date(x):
+                keep.append(x)
+            else:
+                und.append(f"{k}: {_clean(x, 300)}")
+        out[k] = keep
+    for k in ANSWER_KEYS:
+        v = out.get(k)
+        if isinstance(v, str) and v.strip() and not _NOT_FOUND.match(v) \
+                and not _DATE_RE.search(v):
+            und.append(f"{k}: {_clean(v, 200)}")
+    out["undated_claims"] = und
     return out
 
 
@@ -648,9 +738,13 @@ def build_card(ticker: str, *, kind: str, asof: Any, engine: dict, web: dict,
     c["upcoming_dates"] = _by_date(_merge_lists(engine.get("engine_upcoming_dates"),
                                                 web.get("upcoming_dates")),
                                    reverse=False)
-    for k in ("product", "demand", "pricing_power", "competition", "team",
-              "market_strategy"):
-        c[k] = web.get(k)
+    # v2: the six narrative keys are fed from the twelve answers they overlap;
+    # the rest stay None (not asked -> unknown, never invented).
+    for k, src in (("product", "demand_product"), ("demand", "price_volume_mix"),
+                   ("pricing_power", "margin_collapse_risk"),
+                   ("competition", "low_cost_substitute"), ("team", None),
+                   ("market_strategy", "ceo_promised")):
+        c[k] = web.get(k) if web.get(k) is not None else (web.get(src) if src else None)
     for k in SYNTH_KEYS:
         c[k] = synth.get(k)
     cat_urls = [s.split("|")[3].strip() for s in (engine.get("engine_upcoming_dates") or [])
@@ -659,18 +753,20 @@ def build_card(ticker: str, *, kind: str, asof: Any, engine: dict, web: dict,
     c["openclaw_log_path"] = meta.get("openclaw_log_path")
     c["openclaw_elapsed_s"] = _num(meta.get("openclaw_elapsed_s"), 2)
     c["deepseek_cost_usd"] = _num(meta.get("deepseek_cost_usd"), 6)
-    # ── beyond the spec: the ten answers and provenance, flat ──
-    for k in ("what_changed", "not_known_yesterday", "demand_price_volume_mix",
-              "suppliers", "customers", "who_loses", "contradicting_evidence",
-              "if_management_right", "if_management_wrong",
-              "second_order_beneficiaries"):
+    # ── beyond the spec: the twelve answers, the X reads, the dated claims,
+    # the promises, the refused undated claims and provenance, flat ──
+    for k in ANSWER_KEYS:
         c[f"web_{k}"] = web.get(k)
+    for k in DATED_LIST_KEYS:
+        c[k] = list(web.get(k) or [])
+    c["undated_claims"] = list(web.get("undated_claims") or [])
     c["web_parse"] = web.get("parse")
     c["synth_status"] = synth.get("synth_status")
     c["synth_model"] = synth.get("synth_model")
     c["engine_unavailable"] = engine.get("engine_unavailable")
     c["engine_last_filed"] = engine.get("engine_last_filed")
-    for k in ("openclaw_status", "openclaw_cost_usd", "quest_model", "source"):
+    for k in ("openclaw_status", "openclaw_cost_usd", "quest_model", "source",
+              "trigger", "run_utc"):
         if k in meta:
             c[k] = meta[k]
     c["schema"] = SCHEMA_VERSION
@@ -798,12 +894,752 @@ def write_digest(day: Any, *, root: Path | None = None) -> Path:
         nxt = _clean(ud[0], 80) if isinstance(ud, list) and ud else ""
         lines.append(f"| {c.get('ticker')} | {c.get('verdict')} | {c.get('confidence')} "
                      f"| {nxt} | {_clean(c.get('falsifier'), 200)} |")
+    lines += what_changed_lines(cards, root=r)
     p = r / ds / "DIGEST.md"
     p.parent.mkdir(parents=True, exist_ok=True)
     tmp = p.with_suffix(".md.tmp")
     tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
     tmp.replace(p)
     return p
+
+
+# ──────────────────────── previous cards and the diff ───────────────────────
+
+def _is_refused(card: dict) -> bool:
+    return str(card.get("verdict", "")).startswith("REFUSED_") or bool(card.get("_unreadable"))
+
+
+def card_history(ticker: str, *, root: Path | None = None) -> list[dict]:
+    """Every readable, non-refused card of `ticker`, oldest first, across all
+    date folders."""
+    r = Path(root) if root is not None else cards_root()
+    if not r.exists():
+        return []
+    name = f"{_safe_name(ticker)}.json"
+    out = []
+    for d in sorted(x for x in r.iterdir() if x.is_dir() and _day(x.name) == x.name):
+        f = d / name
+        if not f.exists():
+            continue
+        try:
+            c = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(c, dict) and not _is_refused(c):
+            out.append(c)
+    return out
+
+
+def previous_card(ticker: str, before: Any, *, root: Path | None = None) -> dict | None:
+    """The latest non-refused card of `ticker` dated strictly before `before`."""
+    b = _asof_date(before).isoformat()
+    prev = [c for c in card_history(ticker, root=root) if str(c.get("asof")) < b]
+    return prev[-1] if prev else None
+
+
+def last_card_index(*, root: Path | None = None) -> dict[str, str]:
+    """ticker -> the asof of its latest non-refused card, over every folder."""
+    r = Path(root) if root is not None else cards_root()
+    out: dict[str, str] = {}
+    if not r.exists():
+        return out
+    for d in sorted(x for x in r.iterdir() if x.is_dir() and _day(x.name) == x.name):
+        for c in read_cards(d.name, root=r):
+            if c.get("ticker") and not _is_refused(c):
+                out[str(c["ticker"]).upper()] = d.name
+    return out
+
+
+def diff_cards(prev: dict | None, cur: dict) -> dict:
+    """The twelve answers (and the verdict) of `cur` vs `prev`.
+
+    Returns {"prev_asof", "verdict_change", "changed", "new", "gone",
+    "unchanged", "schema_change"}. Answers are compared after whitespace/case
+    normalisation; a v1 previous card has none of the twelve keys, which is
+    reported as a schema change rather than as twelve "new" answers.
+    """
+    if prev is None:
+        return {"prev_asof": None, "first_card": True}
+    def norm(v):
+        return re.sub(r"\s+", " ", str(v or "")).strip().lower()
+    out = {"prev_asof": prev.get("asof"), "changed": [], "new": [], "gone": [],
+           "unchanged": []}
+    pv, cv = prev.get("verdict"), cur.get("verdict")
+    out["verdict_change"] = None if (pv, prev.get("confidence")) == (cv, cur.get("confidence")) \
+        else f"{pv}/{prev.get('confidence')} -> {cv}/{cur.get('confidence')}"
+    if not any(f"web_{k}" in prev for k in ANSWER_KEYS):
+        out["schema_change"] = f"{prev.get('schema') or 'thesis_card/v1'} -> {cur.get('schema')}"
+        return out
+    for k in ANSWER_KEYS:
+        a, b = norm(prev.get(f"web_{k}")), norm(cur.get(f"web_{k}"))
+        if a == b:
+            out["unchanged"].append(k)
+        elif not a:
+            out["new"].append(k)
+        elif not b:
+            out["gone"].append(k)
+        else:
+            out["changed"].append(k)
+    return out
+
+
+def what_changed_lines(cards: list[dict], *, root: Path | None = None) -> list[str]:
+    """The digest section: per ticker, what changed since its previous card."""
+    lines = ["", "## What changed since the last card", ""]
+    n = 0
+    for c in cards:
+        if c.get("_unreadable") or not c.get("ticker"):
+            continue
+        d = diff_cards(previous_card(c["ticker"], c.get("asof"), root=root), c)
+        trig = f" -- trigger: {_clean(c.get('trigger'), 160)}" if c.get("trigger") else ""
+        if d.get("first_card"):
+            lines.append(f"- **{c['ticker']}**: first card{trig}")
+            n += 1
+            continue
+        head = f"- **{c['ticker']}** vs {d['prev_asof']}{trig}"
+        if d.get("verdict_change"):
+            head += f"; verdict {d['verdict_change']}"
+        if d.get("schema_change"):
+            lines.append(head + f"; schema {d['schema_change']} (answers not comparable)")
+            n += 1
+            continue
+        lines.append(head + f"; {len(d['changed'])} changed, {len(d['new'])} new, "
+                     f"{len(d['gone'])} gone, {len(d['unchanged'])} unchanged")
+        for k in d["changed"] + d["new"]:
+            lines.append(f"  - {k}: {_clean(c.get(f'web_{k}'), 200)}")
+        n += 1
+    if n == 0:
+        lines.append("(no cards)")
+    return lines
+
+
+# ─────────────────────── dated claims -> web_events rows ────────────────────
+#
+# Rule 6 (session order 2026-09-26): every OpenClaw result = structured
+# evidence + timestamp + forecast + future grade. Each DATED claim a card
+# carries becomes (1) a row in the card claims ledger with `source_id =
+# "openclaw:<handle or site>"` and `first_seen_utc` = the card's run time, and
+# (2) a `web_events` row where the closed vocabulary has a type for it.
+#
+# `web_events.validate` accepts only its own 25 types and keeps a fixed set of
+# fields: it has no `claim` type and no `source_id` field. So the source rides
+# in `retrieved_by` (its "who fetched this" field) and an untyped claim lives
+# in the claims ledger only, with the refusal written beside it -- a claim the
+# ledger cannot hold is a counted finding, not a silent drop.
+
+CLAIM_SCHEMA = "thesis_claim/v1"
+
+#: text pattern -> `event_vocabulary` id. First match wins; none -> "claim".
+_VOCAB_RULES: tuple[tuple[str, str], ...] = (
+    (r"\b(upgrad|downgrad)", "analyst_rating_change"),
+    (r"\binitiat\w* (coverage|at)\b", "analyst_initiation"),
+    (r"\bprice target|\bPT\b|\btarget (to|raised|cut|lowered)", "analyst_target_change"),
+    (r"\bpre-?announce", "earnings_preannouncement"),
+    (r"\bguid(e|ance|ed)\b|\boutlook\b", "guidance_change"),
+    (r"\b(earnings|results|EPS|quarter(ly)? revenue|reported revenue)\b", "earnings_report"),
+    (r"\b(acquir|merger|takeover|to buy)\w*", "mergers_acquisitions"),
+    (r"\b(buyback|repurchase)", "stock_buyback"),
+    (r"\bdividend (cut|suspend)", "dividend_cut_or_suspension"),
+    (r"\bdividend\b", "dividend_increase"),
+    (r"\b(offering|dilut|convertible notes)", "equity_issuance_dilution"),
+    (r"\b(FDA|approv|PDUFA|CRL|EMA)\b", "regulatory_approval"),
+    (r"\b(investigat|subpoena|probe|antitrust|DOJ|FTC)\b", "regulatory_investigation_or_action"),
+    (r"\b(lawsuit|class action|sued|litigation)\b", "litigation_filed"),
+    (r"\b(contract|order|award|partnership|deal with|agreement)\b", "new_contract_or_partnership"),
+    (r"\b(launch|unveil|introduc|ship(s|ping|ped)|sampl)\w*", "product_launch_or_innovation"),
+    (r"\b(shortage|constrain|sold out|capacity|allocation|lead time)\w*", "growth_constraint_cited"),
+    (r"\b(tariff|export control|trade polic)\w*", "tariff_or_trade_policy"),
+    (r"\b(CEO|CFO|chief \w+ officer)\b.*\b(appoint|named|hire|join)", "management_change_appointment"),
+    (r"\b(resign|depart|step(s|ped)? down|retir)\w*", "management_change_departure"),
+)
+
+#: event_vocabulary id -> web_events type (the ledger's own closed set).
+VOCAB_TO_WEB: dict[str, str] = {
+    "analyst_rating_change": "analyst_revision", "analyst_target_change": "analyst_revision",
+    "analyst_initiation": "analyst_revision", "earnings_report": "earnings_release",
+    "earnings_preannouncement": "earnings_release", "guidance_change": "guidance_change",
+    "mergers_acquisitions": "mna", "stock_buyback": "buyback",
+    "dividend_increase": "dividend_change", "dividend_cut_or_suspension": "dividend_change",
+    "equity_issuance_dilution": "offering", "regulatory_approval": "regulatory_decision",
+    "regulatory_investigation_or_action": "regulatory_decision",
+    "litigation_filed": "litigation", "new_contract_or_partnership": "contract_win",
+    "product_launch_or_innovation": "product_launch",
+    "growth_constraint_cited": "supplier_constraint",
+    "management_change_appointment": "management_language_change",
+    "management_change_departure": "management_language_change",
+}
+
+_WIRES = ("reuters.", "bloomberg.", "apnews.", "dowjones.", "wsj.", "prnewswire.",
+          "businesswire.", "globenewswire.", "nikkei.", "yna.co.kr", "cnbc.", "ft.com")
+
+
+def vocab_type(text: str) -> str:
+    """A claim's `event_vocabulary` id by a declared keyword rule, else "claim"."""
+    try:
+        from backend.services import event_vocabulary as V
+        known = set(V.EVENT_TYPES)
+    except Exception:                                              # noqa: BLE001
+        known = None
+    for pat, vid in _VOCAB_RULES:
+        if re.search(pat, str(text or ""), re.I) and (known is None or vid in known):
+            return vid
+    return "claim"
+
+
+def _domain(url: str) -> str:
+    m = re.match(r"^\s*https?://([^/\s]+)", str(url or ""), re.I)
+    d = m.group(1).lower() if m else ""
+    return d[4:] if d.startswith("www.") else d
+
+
+def _source_id(src: str, url: str) -> str:
+    """openclaw:<@handle> for X, else openclaw:<site>; lower-case, no spaces."""
+    s = str(src or "").strip()
+    if s.startswith("@"):
+        return "openclaw:@" + re.sub(r"[^A-Za-z0-9_]", "", s[1:]).lower()
+    site = _domain(url) or (_domain("https://" + s) if not re.search(r"\s", s) else "")
+    site = site or re.sub(r"[^a-z0-9._-]+", "_", s.lower()).strip("_") or "unknown"
+    return f"openclaw:{site}"
+
+
+def claim_items(card: dict) -> list[dict]:
+    """Every DATED claim on a card, parsed: the three X lists and `claims`.
+    Items whose date does not parse were already moved to `undated_claims`."""
+    out = []
+    t = str(card.get("ticker") or "").upper()
+    for k in X_LIST_KEYS:
+        for it in card.get(k) or []:
+            f = [x.strip() for x in str(it).split("|")]
+            d = _lead_date(it)
+            if not d or len(f) < 3:
+                continue
+            handle = f[1] if f[1].startswith("@") else "@" + f[1].lstrip("@")
+            url = next((x for x in f[3:] if x.lower().startswith("http")), "")
+            url = url or f"https://x.com/{handle[1:]}"
+            out.append({"ticker": t, "list": k, "question_key": k, "claim_utc": d,
+                        "source": handle, "source_url": url, "text": f[2][:200]})
+    for it in card.get("claims") or []:
+        f = [x.strip() for x in str(it).split("|")]
+        d = _lead_date(it)
+        if not d or len(f) < 5:
+            if d and len(f) >= 3:         # short form: date | source | text
+                out.append({"ticker": t, "list": "claims", "question_key": None,
+                            "claim_utc": d, "source": f[1], "source_url": "",
+                            "text": f[-1][:200]})
+            continue
+        out.append({"ticker": t, "list": "claims", "question_key": f[1] or None,
+                    "claim_utc": d, "source": f[2], "source_url": f[3],
+                    "text": " | ".join(f[4:])[:200]})
+    for c in out:
+        c["source_id"] = _source_id(c["source"], c["source_url"])
+        c["event_type"] = vocab_type(c["text"])
+    return out
+
+
+def claim_id(item: dict) -> str:
+    return hashlib.sha256(json.dumps(
+        [item.get("ticker"), item.get("source_id"), item.get("claim_utc"),
+         re.sub(r"\s+", " ", str(item.get("text", "")).strip().lower())]).encode()
+    ).hexdigest()[:16]
+
+
+def web_event_row(item: dict, *, run_utc: str) -> tuple[dict | None, str | None]:
+    """A `web_events` row for one claim, or (None, why) when none fits."""
+    wtype = VOCAB_TO_WEB.get(item.get("event_type") or "")
+    if wtype is None:
+        return None, (f"no web_events type fits event_type {item.get('event_type')!r} "
+                      f"(web_events has no generic 'claim' type)")
+    try:
+        from backend.services import web_events as WE
+        reg = WE.SOURCE_REGISTRY
+    except Exception as exc:                                       # noqa: BLE001
+        return None, f"web_events unavailable: {type(exc).__name__}"
+    url = str(item.get("source_url") or "")
+    dom = _domain(url)
+    if not dom:
+        return None, "claim carries no http(s) URL; web_events needs a checkable page"
+    is_x = dom in ("x.com", "twitter.com")
+    first_party = item.get("list") in ("x_company_posts", "x_ceo_posts")
+    if is_x:
+        st = "x"
+    elif dom.endswith("sec.gov"):
+        st = "sec"
+    elif wtype in reg.get("company_ir", {}).get("types", ()):
+        st = "company_ir"
+    else:
+        st = "news"
+    if st not in reg or wtype not in reg[st]["types"]:
+        return None, f"web_events source_type {st!r} may not carry {wtype!r}"
+    if st == "sec":
+        cs = "REGULATOR"
+    elif first_party:
+        cs = "DIRECT_COMPANY_STATEMENT"
+    elif is_x:
+        cs = "FORUM_CLAIM"
+    elif ("investor" in dom or dom.startswith("ir.")) and st == "company_ir":
+        cs = "DIRECT_COMPANY_STATEMENT"
+    elif any(w in dom for w in _WIRES):
+        cs = "MAJOR_WIRE"
+    else:
+        cs = "AGGREGATOR"
+    return {"ticker": item["ticker"], "entity": item["source_id"], "source_type": st,
+            "source_url": url, "event_type": wtype, "claim": item["text"],
+            "evidence_date": item["claim_utc"], "observed_at": run_utc,
+            "retrieved_by": item["source_id"], "confidence_source": cs}, None
+
+
+def claims_path() -> Path:
+    return cards_root() / "claims" / "claims.jsonl"
+
+
+def _read_jsonl(path: Path) -> list[dict]:
+    if not Path(path).exists():
+        return []
+    out = []
+    for ln in Path(path).read_text(encoding="utf-8").splitlines():
+        ln = ln.strip()
+        if ln:
+            try:
+                out.append(json.loads(ln))
+            except ValueError:
+                continue
+    return out
+
+
+def _append_jsonl(path: Path, rows: list[dict]) -> None:
+    if not rows:
+        return
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        for r in rows:
+            fh.write(json.dumps(r, default=str, ensure_ascii=False) + "\n")
+
+
+def _local_web_events_append(rows: list[dict], path: Path) -> dict:
+    """`web_events.append`'s contract (validate, refuse-and-count, dedupe by
+    event_id) written to `path` -- for a run against a non-default root."""
+    from backend.services import web_events as WE
+    ok, refused = [], []
+    for r in rows:
+        try:
+            ok.append(WE.validate(r))
+        except WE.WebEventRefused as exc:
+            refused.append({"row": {k: r.get(k) for k in ("ticker", "event_type",
+                                                          "source_url")},
+                            "why": str(exc)[:300]})
+    seen = {e.get("event_id") for e in _read_jsonl(path)}
+    new = []
+    for e in ok:
+        if e["event_id"] not in seen:
+            seen.add(e["event_id"])
+            new.append(e)
+    _append_jsonl(path, new)
+    return {"receipt": "web_events.append(local)", "path": str(path),
+            "accepted": len(ok), "written": len(new), "duplicates": len(ok) - len(new),
+            "refused": len(refused), "refusals": refused[:10]}
+
+
+def write_evidence(card: dict, *, run_utc: str | None = None,
+                   events_path: Path | None = None,
+                   claims_file: Path | None = None) -> dict:
+    """The card's dated claims -> the claims ledger + `web_events` rows.
+
+    IDEMPOTENT: a claim is keyed by (ticker, source_id, date, text) and written
+    once to the claims ledger; `web_events` dedupes by its own event_id. A claim
+    dated after the run is refused (a source cannot be read before it exists).
+    `events_path=None` writes the real `web_events` ledger via `append`.
+    """
+    run_utc = run_utc or card.get("run_utc") or datetime.utcnow().isoformat(timespec="seconds") + "+00:00"
+    cf = Path(claims_file) if claims_file is not None else claims_path()
+    have = {r.get("claim_id") for r in _read_jsonl(cf)}
+    items = claim_items(card)
+    rows, wrows, res = [], [], {"n_claims": len(items), "n_future_refused": 0,
+                                "n_already_written": 0, "n_untyped": 0}
+    for it in items:
+        if it["claim_utc"] > str(run_utc)[:10]:
+            res["n_future_refused"] += 1
+            continue
+        cid = claim_id(it)
+        wr, why = web_event_row(it, run_utc=run_utc)
+        if it["event_type"] == "claim":
+            res["n_untyped"] += 1
+        if wr is not None:
+            wrows.append(wr)
+        if cid in have:
+            res["n_already_written"] += 1
+            continue
+        have.add(cid)
+        rows.append({"schema": CLAIM_SCHEMA, "claim_id": cid, "ticker": it["ticker"],
+                     "card_hash": card.get("card_hash"), "card_asof": card.get("asof"),
+                     "list": it["list"], "question_key": it["question_key"],
+                     "claim_utc": it["claim_utc"], "first_seen_utc": run_utc,
+                     "source_id": it["source_id"], "source": it["source"],
+                     "source_url": it["source_url"], "event_type": it["event_type"],
+                     "text": it["text"], "web_event_type": (wr or {}).get("event_type"),
+                     "web_event_refused": why})
+    _append_jsonl(cf, rows)
+    res["claims_written"] = len(rows)
+    res["claims_path"] = str(cf)
+    if wrows:
+        if events_path is None:
+            from backend.services import web_events as WE
+            res["web_events"] = WE.append(wrows, day=str(run_utc)[:10])
+        else:
+            res["web_events"] = _local_web_events_append(wrows, Path(events_path))
+    else:
+        res["web_events"] = {"accepted": 0, "written": 0, "refused": 0}
+    res["n_untyped_claims_ledger_only"] = sum(1 for r in rows if r["web_event_refused"])
+    return res
+
+
+# ─────────────────────────────── the promise ledger ─────────────────────────
+#
+# "What the CEO promised / did they deliver": a promise is a dated, gradeable
+# statement. Each becomes ONE `promise` row (idempotent by hash of ticker, text
+# and promised date) with a `promise:v1` forecast row at the due horizon; the
+# next card that returns the same promise with DELIVERED or MISSED appends ONE
+# `grade` row. Append-only: a promise's history is the record, and its current
+# status is its latest grade.
+
+PROMISE_SCHEMA = "promise/v1"
+PROMISE_STATUSES = ("OPEN", "DELIVERED", "MISSED")
+PROMISE_SPECIALIST = "promise:v1"
+PROMISE_MECHANISM = "promise_v1"
+#: ~a quarter when no due date is stated.
+PROMISE_DEFAULT_HORIZON = 60
+PROMISE_P = 0.5
+PROMISE_CONTRACT = (
+    "promise:v1 -> ledger. One row per OPEN management promise at the first "
+    "horizon on the grid (1,2,5,20,60,120,252) at or after the sessions to its "
+    "due date (none stated -> 60; past -> 20; capped 252). P(beats SPY) = 0.50: "
+    "a dated ANCHOR, not a skill claim. The promise's grade is its status in "
+    "promises.jsonl (DELIVERED / MISSED, set by a later card); the read is "
+    "realised excess return conditioned on that status.")
+
+
+def promises_path() -> Path:
+    from backend import config as C
+    return Path(C.OPTIMUS_LEDGER_DIR) / "promises" / "promises.jsonl"
+
+
+def _norm_text(s: Any) -> str:
+    return re.sub(r"[^a-z0-9 ]+", "", re.sub(r"\s+", " ", str(s or "").lower())).strip()
+
+
+def promise_id(ticker: str, promise_text: str, promised_utc: str) -> str:
+    return hashlib.sha256(json.dumps(
+        [str(ticker).upper(), _norm_text(promise_text), str(promised_utc)[:10]]
+    ).encode()).hexdigest()[:16]
+
+
+def parse_promise(item: str, ticker: str) -> dict | None:
+    """"promised | due or none | STATUS | promise | evidence" -> a dict, or None."""
+    f = [x.strip() for x in str(item).split("|")]
+    d = _lead_date(item)
+    if not d or len(f) < 4:
+        return None
+    due = _day(f[1].replace("due", "").strip().split(" ")[0]) if f[1] else None
+    st = (re.findall(r"[A-Za-z]+", f[2]) or [""])[0].upper()
+    if st not in PROMISE_STATUSES:
+        return None
+    text = f[3][:400]
+    if not text:
+        return None
+    return {"ticker": str(ticker).upper(), "promise_text": text, "promised_utc": d,
+            "due_utc": due, "status": st,
+            "evidence": " | ".join(f[4:])[:400] if len(f) > 4 else ""}
+
+
+def promise_state(rows: Iterable[dict]) -> dict[str, dict]:
+    """promise_id -> the promise row with `status` = its latest grade."""
+    out: dict[str, dict] = {}
+    for r in rows:
+        pid = r.get("promise_id")
+        if r.get("row_type") == "promise":
+            out[pid] = dict(r)
+        elif r.get("row_type") == "grade" and pid in out:
+            out[pid]["status"] = r.get("status")
+            out[pid]["graded_utc"] = r.get("graded_utc")
+    return out
+
+
+def open_promises(ticker: str, *, path: Path | None = None) -> list[dict]:
+    st = promise_state(_read_jsonl(Path(path) if path else promises_path()))
+    return [p for p in st.values() if p.get("ticker") == str(ticker).upper()
+            and p.get("status") == "OPEN"]
+
+
+def _match_existing(p: dict, state: dict[str, dict]) -> str | None:
+    """Exact id, else the same ticker + promised date with >= 60% word overlap
+    (the quest is told to copy the text exactly; this catches small drift)."""
+    pid = promise_id(p["ticker"], p["promise_text"], p["promised_utc"])
+    if pid in state:
+        return pid
+    a = set(_norm_text(p["promise_text"]).split())
+    best, best_j = None, 0.0
+    for k, q in state.items():
+        if q.get("ticker") != p["ticker"] or q.get("promised_utc") != p["promised_utc"]:
+            continue
+        b = set(_norm_text(q.get("promise_text")).split())
+        j = len(a & b) / max(1, len(a | b))
+        if j > best_j:
+            best, best_j = k, j
+    return best if best_j >= 0.6 else None
+
+
+def promise_horizon(due_utc: str | None, today: Any) -> int:
+    """The first grid horizon at or after the sessions from `today` to due."""
+    from backend.services import belief_state as B
+    if not due_utc:
+        return PROMISE_DEFAULT_HORIZON
+    import numpy as np
+    n = int(np.busday_count(_asof_date(today).isoformat(), str(due_utc)[:10]))
+    if n <= 0:
+        return 20
+    for h in B.HORIZONS:
+        if h >= n:
+            return h
+    return max(B.HORIZONS)
+
+
+def promise_forecast_records(prom: dict, *, today: Any, made_at: str | None = None) -> list:
+    from backend.services import belief_state as B
+    h = promise_horizon(prom.get("due_utc"), today)
+    return [B.make_prediction(
+        ticker=prom["ticker"], specialist=PROMISE_SPECIALIST,
+        observable=B.Observable.BEATS_BENCHMARK, horizon_days=h,
+        probability=PROMISE_P, benchmark=FORECAST_BENCHMARK,
+        thesis=f"management promise ({prom['promised_utc']}): {prom['promise_text']}"[:1200],
+        counter_thesis="the promise is MISSED, or delivered and already priced",
+        next_observable=f"due {prom.get('due_utc') or 'unstated'}",
+        model=str(prom.get("model") or "openclaw"), model_version=PROMISE_SCHEMA,
+        prompt=PROMISE_CONTRACT, input_snapshot={k: prom.get(k) for k in (
+            "promise_id", "promise_text", "promised_utc", "due_utc", "status",
+            "card_hash")},
+        made_at=made_at, mechanism_id=PROMISE_MECHANISM,
+        decision_date=_asof_date(today).isoformat(),
+        inputs_used={"source": "promise_ledger", "promise_id": prom["promise_id"],
+                     "card_hash": prom.get("card_hash"), "due_utc": prom.get("due_utc")},
+        licence="PRODUCT_EXPERIMENT",
+        notes_text=f"promise anchor h={h}; graded by promises.jsonl status")]
+
+
+def write_promises(card: dict, *, today: Any, run_utc: str | None = None,
+                   path: Path | None = None, forecast_path: Path | None = None) -> dict:
+    """The card's promises -> `promise` rows (new), `grade` rows (an OPEN
+    promise now DELIVERED/MISSED) and `promise:v1` forecast rows.
+
+    IDEMPOTENT: a promise row once per promise_id; a grade row once per
+    (promise_id, status); a forecast row once per (promise_id, horizon).
+    """
+    from backend.services import belief_state as B
+    pp = Path(path) if path is not None else promises_path()
+    run_utc = run_utc or card.get("run_utc") or datetime.utcnow().isoformat(timespec="seconds") + "+00:00"
+    rows = _read_jsonl(pp)
+    state = promise_state(rows)
+    graded = {(r.get("promise_id"), r.get("status")) for r in rows
+              if r.get("row_type") == "grade"}
+    have_fc = set()
+    for r in B.read_predictions(forecast_path):
+        if r.get("specialist") == PROMISE_SPECIALIST:
+            have_fc.add(((r.get("inputs_used") or {}).get("promise_id"),
+                         int(r.get("horizon_days") or 0)))
+    new_rows, recs = [], []
+    res = {"n_promises": 0, "promises_written": 0, "grades_written": 0,
+           "forecast_rows_written": 0, "n_unparseable": 0, "unchanged": 0}
+    t = str(card.get("ticker") or "").upper()
+    for it in card.get("promises") or []:
+        p = parse_promise(it, t)
+        if p is None:
+            res["n_unparseable"] += 1
+            continue
+        res["n_promises"] += 1
+        pid = _match_existing(p, state)
+        if pid is None:
+            pid = promise_id(t, p["promise_text"], p["promised_utc"])
+            row = {"schema": PROMISE_SCHEMA, "row_type": "promise", "promise_id": pid,
+                   **p, "first_seen_utc": run_utc, "card_hash": card.get("card_hash"),
+                   "card_asof": card.get("asof"), "model": card.get("quest_model")}
+            new_rows.append(row)
+            state[pid] = dict(row)
+            res["promises_written"] += 1
+            if p["status"] == "OPEN":
+                for r in promise_forecast_records(row, today=today):
+                    key = (pid, r.horizon_days)
+                    if key not in have_fc:
+                        have_fc.add(key)
+                        recs.append(r)
+            continue
+        cur = state[pid].get("status")
+        if p["status"] != "OPEN" and cur == "OPEN" and (pid, p["status"]) not in graded:
+            new_rows.append({"schema": PROMISE_SCHEMA, "row_type": "grade",
+                             "promise_id": pid, "ticker": t, "status": p["status"],
+                             "evidence": p["evidence"], "graded_utc": run_utc,
+                             "card_hash": card.get("card_hash"),
+                             "card_asof": card.get("asof")})
+            graded.add((pid, p["status"]))
+            state[pid]["status"] = p["status"]
+            res["grades_written"] += 1
+        else:
+            res["unchanged"] += 1
+    _append_jsonl(pp, new_rows)
+    if recs:
+        B.append(recs, path=forecast_path)
+    res["forecast_rows_written"] = len(recs)
+    res["path"] = str(pp)
+    return res
+
+
+# ─────────────────────────────── card triggers ──────────────────────────────
+#
+# A name is re-carded when something happened, not on a calendar alone:
+#   (a) it ENTERED a frozen book or the funnel shortlist after its last card
+#   (b) >= 3 distinct firms revised it in the last 10 days (revision_flow)
+#   (c) an earnings / 8-K / catalyst date is within 5 sessions
+#   (d) |1d move| > 2 sigma_63 with no typed event that day or the day before
+#   (e) its last card is older than 30 days
+# Each check is pure and takes its inputs; `compute_triggers` joins them.
+
+TRIGGER_CLUSTER_FIRMS = int(_cfg("THESIS_CARD_TRIGGER_CLUSTER_FIRMS", 3))
+TRIGGER_CLUSTER_DAYS = int(_cfg("THESIS_CARD_TRIGGER_CLUSTER_DAYS", 10))
+TRIGGER_CATALYST_SESSIONS = int(_cfg("THESIS_CARD_TRIGGER_CATALYST_SESSIONS", 5))
+TRIGGER_SIGMA_K = float(_cfg("THESIS_CARD_TRIGGER_SIGMA_K", 2.0))
+TRIGGER_SIGMA_WINDOW = int(_cfg("THESIS_CARD_TRIGGER_SIGMA_WINDOW", 63))
+TRIGGER_STALE_DAYS = int(_cfg("THESIS_CARD_TRIGGER_STALE_DAYS", 30))
+#: a move older than this many calendar days before asof is not "news".
+TRIGGER_MOVE_MAX_AGE_DAYS = 4
+
+
+def trig_entered(member_since_utc: str | None, last_card_asof: str | None,
+                 where: str = "book/funnel") -> str | None:
+    if not member_since_utc:
+        return None
+    if last_card_asof is None or str(member_since_utc)[:10] > str(last_card_asof)[:10]:
+        return f"(a) entered {where} {str(member_since_utc)[:10]}" + (
+            "" if last_card_asof else " (never carded)")
+    return None
+
+
+def trig_revision_cluster(n_firms_recent: Any, *, min_firms: int = TRIGGER_CLUSTER_FIRMS,
+                          days: int = TRIGGER_CLUSTER_DAYS) -> str | None:
+    n = _num(n_firms_recent)
+    if n is not None and n >= min_firms:
+        return f"(b) revision cluster: {int(n)} firms in {days}d"
+    return None
+
+
+#: event kinds that are dated but carry no news about the business: a card is
+#: not re-run for a dividend record date or a webcast replay expiring.
+TRIGGER_NON_CATALYST = re.compile(
+    r"dividend|record date|ex-?date|replay|promotion|warrant|proxy deadline", re.I)
+
+
+def trig_catalyst(asof: Any, dated_events: Iterable[str], *,
+                  sessions: int = TRIGGER_CATALYST_SESSIONS) -> str | None:
+    """`dated_events`: "YYYY-MM-DD | kind | what ..." strings. Kinds matching
+    TRIGGER_NON_CATALYST are not catalysts."""
+    import numpy as np
+    a = _asof_date(asof).isoformat()
+    hits = []
+    for s in dated_events or []:
+        d = _lead_date(s)
+        if not d or d < a:
+            continue
+        kind = (str(s).split("|") + ["", ""])[1]
+        if TRIGGER_NON_CATALYST.search(kind):
+            continue
+        if int(np.busday_count(a, d)) <= sessions:
+            f = [x.strip() for x in str(s).split("|")]
+            hits.append(f"{d} {f[1] if len(f) > 1 else ''}".strip())
+    if hits:
+        return f"(c) catalyst within {sessions} sessions: " + ", ".join(sorted(set(hits))[:3])
+    return None
+
+
+def trig_sigma_move(closes, dates, asof: Any, typed_event_dates: Iterable[str] = (), *,
+                    k: float = TRIGGER_SIGMA_K, window: int = TRIGGER_SIGMA_WINDOW,
+                    max_age_days: int = TRIGGER_MOVE_MAX_AGE_DAYS) -> str | None:
+    """|last 1d return| > k * sd of the `window` returns before it, on a bar
+    within `max_age_days` of asof, with no typed event that day or the day before."""
+    import numpy as np
+    c = np.asarray(list(closes), dtype=float)
+    ds = [str(d)[:10] for d in dates]
+    a = _asof_date(asof)
+    keep = [i for i, d in enumerate(ds) if d <= a.isoformat()]
+    if len(keep) < window + 2:
+        return None
+    c = c[keep]
+    ds = [ds[i] for i in keep]
+    if (a - date.fromisoformat(ds[-1])).days > max_age_days:
+        return None
+    r = np.diff(np.log(c))
+    last, hist = r[-1], r[-window - 1:-1]
+    sd = float(np.std(hist, ddof=1))
+    if not math.isfinite(sd) or sd <= 0 or abs(last) <= k * sd:
+        return None
+    move_d = ds[-1]
+    prev_d = ds[-2]
+    typed = {str(x)[:10] for x in typed_event_dates or []}
+    if move_d in typed or prev_d in typed:
+        return None
+    return (f"(d) {move_d} move {math.expm1(last):+.1%} = {abs(last) / sd:.1f} sigma_{window} "
+            f"with no typed event")
+
+
+def trig_stale(last_card_asof: str | None, asof: Any, *,
+               days: int = TRIGGER_STALE_DAYS) -> str | None:
+    if not last_card_asof:
+        return None
+    age = (_asof_date(asof) - _asof_date(last_card_asof)).days
+    if age > days:
+        return f"(e) last card {last_card_asof} is {age}d old"
+    return None
+
+
+def compute_triggers(candidates: Iterable[str], *, asof: Any, last_cards: dict[str, str],
+                     member_since: dict[str, tuple[str, str]] | None = None,
+                     n_firms_recent: dict[str, Any] | None = None,
+                     dated_events: dict[str, list[str]] | None = None,
+                     bars=None, typed_events: dict[str, set] | None = None) -> list[dict]:
+    """[{ticker, reasons}] for every candidate with at least one reason, sorted
+    by the number of reasons (desc) then ticker. Pure: every input passed in."""
+    member_since = member_since or {}
+    n_firms_recent = n_firms_recent or {}
+    dated_events = dated_events or {}
+    typed_events = typed_events or {}
+    by_sym = {}
+    if bars is not None and len(bars):
+        import pandas as pd
+        b = bars.sort_values("date")
+        for sym, g in b.groupby("symbol", sort=False):
+            by_sym[str(sym).upper()] = (g["close"].astype(float).to_numpy(),
+                                        pd.to_datetime(g["date"]).dt.strftime("%Y-%m-%d").tolist())
+    out = []
+    for t in dict.fromkeys(str(x).upper() for x in candidates):
+        last = last_cards.get(t)
+        reasons = []
+        ms = member_since.get(t)
+        r = trig_entered(ms[0], last, ms[1]) if ms else None
+        if r:
+            reasons.append(r)
+        r = trig_revision_cluster(n_firms_recent.get(t))
+        if r:
+            reasons.append(r)
+        r = trig_catalyst(asof, dated_events.get(t) or [])
+        if r:
+            reasons.append(r)
+        if t in by_sym:
+            r = trig_sigma_move(by_sym[t][0], by_sym[t][1], asof, typed_events.get(t) or ())
+            if r:
+                reasons.append(r)
+        r = trig_stale(last, asof)
+        if r:
+            reasons.append(r)
+        if reasons:
+            out.append({"ticker": t, "reasons": reasons, "last_card": last})
+    out.sort(key=lambda x: (-len(x["reasons"]), x["ticker"]))
+    return out
 
 
 # ─────────────────────────── the card as a forecast ─────────────────────────

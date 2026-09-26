@@ -8,6 +8,16 @@ DeepSeek synthesis per ticker.
     python -m scripts.thesis_cards validate [--date YYYY-MM-DD]
     python -m scripts.thesis_cards digest [--date YYYY-MM-DD]
     python -m scripts.thesis_cards forecast [--date YYYY-MM-DD]   # backfill ledger rows
+    python -m scripts.thesis_cards run --trigger --dry-run   # who would be re-carded, and why
+    python -m scripts.thesis_cards run --trigger --max-quests 5   # re-card them (daily cap binds)
+
+TRIGGERS (`--trigger`, 2026-09-26): a name is re-carded when (a) it entered a
+frozen book or the funnel shortlist after its last card, (b) >= 3 firms revised
+it in 10 days, (c) an earnings / catalyst date is within 5 sessions, (d) its
+|1d move| > 2 sigma_63 with no typed event, or (e) its card is > 30 days old.
+The reason is written on the card (`trigger`). Every non-refused card also
+writes its dated claims (claims ledger + `web_events`) and its management
+promises (`promises/promises.jsonl` + `promise:v1` forecast rows).
 
 Every card written by `run` also becomes forecast rows (`thesis_card:v1`,
 `beats_benchmark` vs SPY at h=20 and h=120; `TC.write_forecasts`), idempotent
@@ -371,8 +381,12 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
     day = asof_d.isoformat()
     # A run against a non-default root (a test's tmp_path) must never append to
     # the real forecast ledger: its rows go beside its cards unless told otherwise.
+    sidecar = root is not None
     if forecast_path is None and root is not None:
         forecast_path = Path(root) / "_predictions.jsonl"
+    events_path = Path(root) / "_web_events.jsonl" if sidecar else None
+    claims_file = Path(root) / "_claims.jsonl" if sidecar else None
+    promises_file = Path(root) / "_promises.jsonl" if sidecar else None
     root = Path(root) if root is not None else TC.cards_root()
     max_quests = int(max_quests if max_quests is not None else _cfg.THESIS_CARD_MAX_QUESTS)
     cap_usd = float(cap_usd if cap_usd is not None else _cfg.THESIS_CARD_CAP_USD)
@@ -407,7 +421,7 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
                            "n_skipped_existing": len(skipped),
                            "n_todo": len(todo), "cut_by_max_quests": [u["ticker"] for u in todo_cut],
                            "done": [], "refused": [], "state": "RUNNING",
-                           "forecast_rows_written": 0}
+                           "forecast_rows_written": 0, "evidence": {}, "promises": {}}
     print(f"thesis cards {day}: universe {len(universe)}, {len(skipped)} already "
           f"carded, {len(todo)} to do (max {max_quests}), cap ${cap_usd:.2f}, "
           f"parallel {parallel}, model {model}", flush=True)
@@ -422,10 +436,13 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
             return res
         u = todo[0]
         e = engine_for(u["ticker"], asof_d, inputs)
+        qp = TC.quest_prompt(u["ticker"], e,
+                             prior_card=TC.previous_card(u["ticker"], asof_d, root=root),
+                             open_promises=TC.open_promises(u["ticker"], path=promises_file))
         print(f"\n===== ENGINE SIDE {u['ticker']} ({u['kind']}, {u['source']}) =====")
         print(json.dumps(e, indent=1, default=str))
-        print(f"\n===== OPENCLAW QUEST PROMPT ({len(TC.quest_prompt(u['ticker'], e))} chars) =====")
-        print(TC.quest_prompt(u["ticker"], e))
+        print(f"\n===== OPENCLAW QUEST PROMPT ({len(qp)} chars) =====")
+        print(qp)
         print("\n===== SYNTHESIS SYSTEM PROMPT =====")
         print(TC.SYNTH_SYSTEM)
         print("\n===== SYNTHESIS USER (web side empty in a dry run) =====")
@@ -464,13 +481,18 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
             return
         try:
             e = engine_for(t, asof_d, inputs)
-            q = quest_fn(t, TC.quest_prompt(t, e), model=model, timeout=timeout,
-                         log_dir=log_dir)
+            prompt = TC.quest_prompt(t, e,
+                                     prior_card=TC.previous_card(t, asof_d, root=root),
+                                     open_promises=TC.open_promises(t, path=promises_file))
+            q = quest_fn(t, prompt, model=model, timeout=timeout, log_dir=log_dir)
             meta = {"openclaw_log_path": q.get("log_path"),
                     "openclaw_elapsed_s": q.get("elapsed_s"),
                     "openclaw_status": q.get("status"),
                     "openclaw_cost_usd": q.get("cost_usd"),
-                    "quest_model": model, "source": u.get("source")}
+                    "quest_model": model, "source": u.get("source"),
+                    "run_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+            if u.get("trigger"):
+                meta["trigger"] = u["trigger"]
             status = q.get("status")
             reply = q.get("reply") or ""
             card = None
@@ -513,6 +535,23 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
                     # The card is on disk; `forecast --date` writes its rows later.
                     res.setdefault("forecast_errors", []).append(
                         {"ticker": t, "error": f"{type(exc).__name__}: {str(exc)[:200]}"})
+                if not str(card.get("verdict", "")).startswith("REFUSED_"):
+                    # Rule 6: the card's dated claims and promises become
+                    # evidence rows and forecast rows. A failure is recorded and
+                    # the card stands; `evidence --date` re-derives both.
+                    try:
+                        res["evidence"][t] = TC.write_evidence(
+                            card, events_path=events_path, claims_file=claims_file)
+                    except Exception as exc:                       # noqa: BLE001
+                        res.setdefault("evidence_errors", []).append(
+                            {"ticker": t, "error": f"{type(exc).__name__}: {str(exc)[:200]}"})
+                    try:
+                        res["promises"][t] = TC.write_promises(
+                            card, today=datetime.now(timezone.utc).date(),
+                            path=promises_file, forecast_path=forecast_path)
+                    except Exception as exc:                       # noqa: BLE001
+                        res.setdefault("promise_errors", []).append(
+                            {"ticker": t, "error": f"{type(exc).__name__}: {str(exc)[:200]}"})
                 (res["refused"] if str(card.get("verdict", "")).startswith("REFUSED_")
                  else res["done"]).append(t)
             print(f"  {t:<11} {str(card.get('verdict')):<24} conf "
@@ -566,6 +605,221 @@ def _purpose_spend(day: str, purpose: str) -> float | None:
     if not s or s.get("total_is_lower_bound"):
         return None
     return float(s.get("total_cost_usd") or 0.0)
+
+
+# ─────────────────────────────── triggers ───────────────────────────────────
+
+BOOKS = Path(_cfg.OPTIMUS_LEDGER_DIR) / "llm_portfolio" / "books.jsonl"
+FUNNEL = REPO / "backend" / "data" / "funnel_night10.json"
+FUNNEL_HISTORY = REPO / "backend" / "data" / "funnel_history"
+
+
+def book_members(path: Path = BOOKS) -> dict[str, tuple[str, str]]:
+    """ticker -> (first frozen_utc, "book:<name>") over every NON-twin frozen
+    book. A twin is a control, not a chosen name."""
+    out: dict[str, tuple[str, str]] = {}
+    if not Path(path).exists():
+        return out
+    for ln in Path(path).read_text(encoding="utf-8").splitlines():
+        try:
+            b = json.loads(ln)
+        except ValueError:
+            continue
+        # A twin is a control, not a chosen name -- including one whose
+        # `kind` says personal but whose name or parent says twin.
+        if (b.get("kind") == "twin" or b.get("twin") or b.get("parent_book_id")
+                or "twin" in str(b.get("name") or "").lower() or not b.get("frozen_utc")):
+            continue
+        for pos in b.get("positions") or []:
+            t = str((pos or {}).get("ticker") or "").upper()
+            if not t or t in ("CASH", "$CASH"):
+                continue
+            f = str(b["frozen_utc"])
+            if t not in out or f < out[t][0]:
+                out[t] = (f, f"book:{b.get('name')}")
+    return out
+
+
+def funnel_members(current: Path = FUNNEL, history: Path = FUNNEL_HISTORY
+                   ) -> dict[str, tuple[str, str]]:
+    """ticker -> (generated_at of the earliest snapshot of its CURRENT unbroken
+    run in the shortlist, "funnel"). A name that left and came back entered again."""
+    snaps = []
+    for f in sorted(Path(history).glob("*.json")) if Path(history).exists() else []:
+        try:
+            d = json.loads(f.read_text(encoding="utf-8"))
+            snaps.append((str(d.get("generated_at")), {str(c.get("ticker")).upper()
+                                                       for c in d.get("candidates") or []}))
+        except (OSError, ValueError):
+            continue
+    try:
+        d = json.loads(Path(current).read_text(encoding="utf-8"))
+        cur = (str(d.get("generated_at")), {str(c.get("ticker")).upper()
+                                            for c in d.get("candidates") or []})
+    except (OSError, ValueError):
+        return {}
+    snaps = sorted({s[0]: s for s in snaps + [cur]}.values())
+    out = {}
+    for t in cur[1]:
+        since = cur[0]
+        for g, names in reversed(snaps):
+            if g > cur[0]:
+                continue
+            if t in names:
+                since = g
+            else:
+                break
+        out[t] = (since, "funnel")
+    return out
+
+
+def _typed_event_dates(asof: date, tickers: set[str], revisions) -> dict[str, set]:
+    """ticker -> dates with a TYPED event: typed_events rows (not no_event),
+    web_events rows, and dated analyst revisions, over the last 10 days."""
+    out: dict[str, set] = {}
+    lo = asof - timedelta(days=10)
+    root = Path(_cfg.OPTIMUS_LEDGER_DIR) / "typed_events"
+    for f in sorted(root.glob("20*.jsonl")) if root.exists() else []:
+        try:
+            if date.fromisoformat(f.stem[:10]) < lo:
+                continue
+        except ValueError:
+            continue
+        for ln in f.read_text(encoding="utf-8", errors="replace").splitlines():
+            try:
+                r = json.loads(ln)
+            except ValueError:
+                continue
+            if r.get("event_type") in (None, "no_event"):
+                continue
+            d = str(r.get("document_date") or r.get("first_seen_utc") or "")[:10]
+            for t in r.get("tickers") or []:
+                if str(t).upper() in tickers:
+                    out.setdefault(str(t).upper(), set()).add(d)
+    try:
+        from backend.services import web_events as WE
+        for e in WE.read_all(limit_days=15):
+            t = str(e.get("ticker") or "").upper()
+            if t in tickers and e.get("event_type") != "no_event_found":
+                out.setdefault(t, set()).add(str(e.get("evidence_date"))[:10])
+    except Exception:                                              # noqa: BLE001
+        pass
+    if revisions is not None and len(revisions):
+        import pandas as pd
+        r = revisions[pd.to_datetime(revisions["event_date"], errors="coerce", utc=True)
+                      >= pd.Timestamp(lo, tz="UTC")]
+        for t, d in zip(r["ticker"].astype(str).str.upper(), r["event_date"].astype(str)):
+            if t in tickers:
+                out.setdefault(t, set()).add(d[:10])
+    return out
+
+
+def trigger_list(asof: Any, *, root: Path | None = None, verbose: bool = True) -> dict:
+    """Load what the five triggers read and return {"triggered": [...], ...}."""
+    import pandas as pd
+    asof_d = TC._asof_date(asof)
+    uni = {u["ticker"]: u for u in default_universe()}
+    books = book_members()
+    funnel = funnel_members()
+    last = TC.last_card_index(root=root)
+    member_since: dict[str, tuple[str, str]] = {}
+    for t, v in list(books.items()) + list(funnel.items()):
+        if t not in member_since or v[0] < member_since[t][0]:
+            member_since[t] = v
+    cands = sorted(set(uni) | set(books) | set(funnel) | set(last))
+    tset = set(cands)
+    # (b) revision cluster, via revision_flow on PIT-safe rows only
+    n_firms: dict[str, float] = {}
+    revisions = None
+    rp = Path(_cfg.OPTIMUS_LEDGER_DIR) / "analyst" / "target_revisions.parquet"
+    try:
+        from backend.services import revision_flow as RF
+        revisions = pd.read_parquet(rp)
+        revisions = revisions[revisions["ticker"].astype(str).str.upper().isin(tset)]
+        safe = revisions[revisions["pit_safe"].astype("boolean").fillna(False).astype(bool)]
+        n_unsafe = len(revisions) - len(safe)
+        if n_unsafe and verbose:
+            print(f"  revisions: {n_unsafe} non-PIT-safe rows excluded from the cluster check")
+        revisions = safe
+        flow = RF.compute(safe, asof=pd.Timestamp(asof_d) + pd.Timedelta(days=1),
+                          window_days=TC.TRIGGER_CLUSTER_DAYS)
+        n_firms = flow["n_firms"].to_dict()
+    except Exception as exc:                                       # noqa: BLE001
+        print(f"  revision cluster UNAVAILABLE: {type(exc).__name__}: {str(exc)[:120]}")
+    # (c) catalysts: the YAML + murat_book + each name's latest card's upcoming dates
+    dated: dict[str, list[str]] = {}
+    for c in _load_catalysts():
+        t = str(c.get("ticker")).upper()
+        dated.setdefault(t, []).append(f"{c['date']} | {c.get('kind', '')} | {c.get('what', '')}")
+    for t, d in last.items():
+        for c in TC.read_cards(d, root=root):
+            if str(c.get("ticker")).upper() == t:
+                dated.setdefault(t, []).extend(
+                    x for x in (c.get("upcoming_dates") or []) if isinstance(x, str))
+    # (d) bars
+    bars = None
+    try:
+        from backend.services import xs_ranker as XR
+        b = XR.load_bars(XR.survivorship_free_paths())
+        b = b[b["symbol"].isin(tset)]
+        b = b[pd.to_datetime(b["date"]) >= pd.Timestamp(asof_d) - pd.Timedelta(days=140)]
+        bars = b[["symbol", "date", "close"]].copy()
+    except Exception as exc:                                       # noqa: BLE001
+        print(f"  bars UNAVAILABLE: {type(exc).__name__}: {str(exc)[:120]}")
+    typed = _typed_event_dates(asof_d, tset, revisions)
+    trig = TC.compute_triggers(cands, asof=asof_d, last_cards=last,
+                               member_since=member_since, n_firms_recent=n_firms,
+                               dated_events=dated, bars=bars, typed_events=typed)
+    for x in trig:
+        u = uni.get(x["ticker"])
+        x["kind"] = u["kind"] if u else ("competition" if "competition" in
+                                         str(member_since.get(x["ticker"], ("", ""))[1])
+                                         else "personal")
+        x["source"] = "trigger"
+    res = {"asof": asof_d.isoformat(), "n_candidates": len(cands),
+           "n_books_names": len(books), "n_funnel_names": len(funnel),
+           "n_carded_names": len(last), "n_triggered": len(trig), "triggered": trig,
+           "bars_names": 0 if bars is None else int(bars["symbol"].nunique()),
+           "n_revision_cluster_names": sum(1 for v in n_firms.values()
+                                           if v >= TC.TRIGGER_CLUSTER_FIRMS)}
+    if bars is not None and len(bars):
+        last_bar = pd.to_datetime(bars["date"]).max().date()
+        res["bars_last_date"] = last_bar.isoformat()
+        if (asof_d - last_bar).days > TC.TRIGGER_MOVE_MAX_AGE_DAYS:
+            res["sigma_move_check"] = (
+                f"CANNOT FIRE: bars end {last_bar}, more than "
+                f"{TC.TRIGGER_MOVE_MAX_AGE_DAYS}d before {asof_d} -- (d) did not run, "
+                f"which is not the same as no big moves")
+    else:
+        res["sigma_move_check"] = "CANNOT FIRE: no bars"
+    if verbose:
+        if res.get("sigma_move_check"):
+            print(f"  (d) {res['sigma_move_check']}")
+        print(f"triggers {res['asof']}: {len(cands)} candidates ({len(books)} book names, "
+              f"{len(funnel)} funnel, {len(last)} carded; bars for {res['bars_names']}) "
+              f"-> {len(trig)} triggered")
+        by = {}
+        for x in trig:
+            for r in x["reasons"]:
+                by[r[:3]] = by.get(r[:3], 0) + 1
+        print("  by reason: " + ", ".join(f"{k} {v}" for k, v in sorted(by.items())))
+        for x in trig:
+            print(f"  {x['ticker']:<11} last card {x['last_card'] or '-':<10} "
+                  + " ; ".join(x["reasons"]))
+    return res
+
+
+def evidence(day: str, *, root: Path | None = None) -> dict:
+    """Backfill: a day's cards -> claims + web_events + promises. $0, no LLM."""
+    out = {"day": day, "evidence": {}, "promises": {}}
+    for c in TC.read_cards(day, root=root):
+        if c.get("_unreadable") or str(c.get("verdict", "")).startswith("REFUSED_"):
+            continue
+        t = c["ticker"]
+        out["evidence"][t] = TC.write_evidence(c)
+        out["promises"][t] = TC.write_promises(c, today=datetime.now(timezone.utc).date())
+    print(json.dumps(out, indent=1, default=str)[:4000])
+    return out
 
 
 # ─────────────────────────────── CLI ────────────────────────────────────────
@@ -626,7 +880,9 @@ def main(argv=None) -> int:
     r.add_argument("--dry-run", action="store_true")
     r.add_argument("--retry-refused", action="store_true")
     r.add_argument("--only", default=None, help="comma list: restrict the universe")
-    for name in ("validate", "digest", "forecast"):
+    r.add_argument("--trigger", action="store_true",
+                   help="universe = names whose card is due (a)-(e); reason on the card")
+    for name in ("validate", "digest", "forecast", "evidence"):
         s = sub.add_parser(name)
         s.add_argument("--date", default=None)
     a = ap.parse_args(argv)
@@ -644,14 +900,30 @@ def main(argv=None) -> int:
     if a.cmd == "forecast":
         res = forecast(day)
         return 0 if res["ledger_rows_after"] - res["ledger_rows_before"] == res["n_rows_written"] else 1
+    if a.cmd == "evidence":
+        evidence(day)
+        return 0
 
-    uni = (default_universe() if a.universe == "default"
-           else universe_from_file(Path(a.universe)))
+    if a.trigger:
+        tl = trigger_list(day)
+        uni = [{"ticker": x["ticker"], "kind": x["kind"], "source": "trigger",
+                "trigger": "; ".join(x["reasons"])} for x in tl["triggered"]]
+        if a.dry_run and not a.only:
+            return 0
+    else:
+        uni = (default_universe() if a.universe == "default"
+               else universe_from_file(Path(a.universe)))
     if a.only:
         want = [x.strip().upper() for x in a.only.split(",") if x.strip()]
         by = {u["ticker"]: u for u in uni}
-        uni = [by.get(t, {"ticker": t, "kind": "personal", "source": "--only"})
-               for t in want]
+        if a.trigger:
+            missing = [t for t in want if t not in by]
+            if missing:
+                print(f"REFUSED_NOT_TRIGGERED: {missing} have no trigger today")
+            uni = [by[t] for t in want if t in by]
+        else:
+            uni = [by.get(t, {"ticker": t, "kind": "personal", "source": "--only"})
+                   for t in want]
     if not a.dry_run:
         from backend.services import openclaw_client as OC
         h = OC.health()
