@@ -215,7 +215,15 @@ def test_the_live_ledger_has_records_and_every_graded_one_is_whole():
         assert str(r["resolved_at"])[:10] >= str(r["made_at"])[:10], (
             f"{r['prediction_id']} was resolved before it was made")
     voided = [r for r in rows if r.get("void_reason")]
-    assert all(not (0 < (r["threshold"] or 0.5) < 1) for r in voided)
+    # 2026-09-26: a void has two legitimate reasons now -- a malformed threshold
+    # (the original) and an UNRESOLVABLE forecast (a delisted name, a futures or
+    # index ticker no bar source carries; 130 voided by the grader that night).
+    # The invariant is not "voids have bad thresholds"; it is "a void is never a
+    # grade": it names its reason and carries no outcome.
+    for r in voided:
+        assert str(r["void_reason"]).strip(), f"{r['prediction_id']} voided with no reason"
+        assert r.get("outcome") is None, (
+            f"{r['prediction_id']} is voided AND graded -- a void is not a grade")
     assert all(r.get("outcome") is None for r in voided), (
         "a voided record must never be graded: the void IS the disposition")
 
