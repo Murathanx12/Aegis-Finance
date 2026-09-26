@@ -43,7 +43,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from backend.services.strategy_library import Strategy, col, combo, gated, sector_rel, within_top
+from backend.services.strategy_library import (Strategy, col, combo, gated, rank_band, rank_of,
+                                               sector_rel, within_top)
 
 #: When chunk C registered these rules (before any of them was scored).
 REGISTERED_CHUNK_C = "2026-09-26T09:00:00+00:00"
@@ -189,7 +190,8 @@ EXTRA_FAMILIES["disposition"] = ("holders anchored on an old high sell as the pr
 _MULTI = (("mom_21", 1), ("mom_63", 1), ("mom_126", 1), ("mom_252", 1))
 
 #: Columns `attach` derives from panel columns (all PIT: built from bars <= t).
-DERIVED_COLUMNS: tuple[str, ...] = ("sharpe_252", "mkt_not_stress", "low_vs_high_252")
+DERIVED_COLUMNS: tuple[str, ...] = ("sharpe_252", "mkt_not_stress", "low_vs_high_252",
+                                    "ear_filed_dow")
 
 
 @dataclass(frozen=True)
@@ -368,10 +370,307 @@ def _discovery_rules() -> list:
     ]
 
 
+# ── the paper rules (2026-09-26 evening) ─────────────────────────────────────
+#
+# Source: `docs/research_notes/2026-09-26/research_ssrn_arxiv_signals_and_oss_comparison.md`
+# §4 (five "tonight-registrable" rules) and §2 row 5 (13F is ON DISK, so
+# `NOT_REACHABLE["RET-10"] = "no 13F feed"` is stale -- see `EXT_CORRECTS_BASE`).
+# Every rule carries its FALSIFIER and its CONTROL, written down before the
+# first score. The Friday rule and its Monday control are registered in the
+# same commit on purpose: a control chosen after seeing the result is not one.
+#
+# Deviations from the note's literal one-liners, each forced by the codebase
+# and stated here rather than discovered later:
+# * Friday is `dayofweek == 4` in pandas (Monday = 0). The note's `lo=5.0`
+#   would have selected SATURDAY filings, i.e. almost nothing.
+# * `quality_momentum_gate` as literally written (12-1 momentum in the top
+#   gross-margin tercile, monthly) IS the registered `mom_in_high_margin`
+#   (INT-05) with `gated` in place of `within_top` -- a relabel `register()`
+#   would NOT have caught (different shape string, same economics). It is
+#   registered at the QUARTERLY hold of `mom_12_1_q` instead, so the note's
+#   comparison -- the crash tail against the unconditional twin at the same
+#   holding -- is one row against one row.
+# * `disp_short_avoid` reads the HISTORICAL `target_cv_180` (cross-firm price
+#   target CV from the revisions parquet), not the forward-only
+#   `target_dispersion` snapshots, so it can be scored tonight; it is
+#   `mom_12_1_q` minus the top dispersion decile (`excluding_top`), so a name
+#   with no dispersion reading STAYS in the book -- a `within_top` gate would
+#   have silently turned the screen into a coverage filter.
+# * `Strategy.control` is a BOOLEAN (this row IS a control, printed, never
+#   ranked). The NAMED control(s) of a rule therefore live in `controls`.
+
+_FUND_EXT = "SEC facts joined on filed + 2 days, never on the period end"
+
+#: When the paper rules were written down, before any of them was scored.
+REGISTERED_PAPER = "2026-09-26T15:05:00+00:00"
+
+_SSA = "research_ssrn_arxiv_signals_and_oss_comparison.md 2026-09-26"
+_LIT = ("[LIT: paper not re-read tonight; DOI resolved via doi.org + Crossref title match 2026-09-26]")
+DP09 = ("DellaVigna & Pollet 2009, JF 64(2) 'Investor Inattention and Friday Earnings "
+        "Announcements' https://doi.org/10.1111/j.1540-6261.2009.01447.x")
+AFIM = ("Asness, Frazzini, Israel & Moskowitz 2014, JPM 40(5) 'Fact, Fiction and Momentum "
+        "Investing' https://doi.org/10.3905/jpm.2014.40.5.075; " + NM)
+GL03 = ("Gleason & Lee 2003, The Accounting Review 78(1) 'Analyst Forecast Revisions and "
+        "Market Price Discovery' https://doi.org/10.2308/accr.2003.78.1.193")
+DMS02 = ("Diether, Malloy & Scherbina 2002, JF 57(5) 'Differences of Opinion and the Cross "
+         "Section of Stock Returns' https://doi.org/10.1111/0022-1082.00490")
+CHS02 = ("Chen, Hong & Stein 2002, JFE 66 'Breadth of Ownership and Stock Returns' "
+         "https://doi.org/10.1016/S0304-405X(02)00223-4")
+CLS01 = ("Chan, Lakonishok & Sougiannis 2001, JF 56(6) 'The Stock Market Valuation of "
+         "Research and Development Expenditures' https://doi.org/10.1111/0022-1082.00411")
+EP13 = ("Eisfeldt & Papanikolaou 2013, JF 68(4) 'Organization Capital and the Cross-Section "
+        "of Expected Returns' https://doi.org/10.1111/jofi.12034")
+
+EXTRA_FAMILIES["institutional_breadth"] = (
+    "with short-sale constraints, pessimists who cannot short simply leave; a FALL in the "
+    "number of institutions holding a name means negative views are unpriced (Chen-Hong-Stein)")
+EXTRA_FAMILIES["intangibles"] = (
+    "GAAP expenses R&D and organisation capital immediately, so book numbers understate "
+    "the asset and investors under-price the firms that build it")
+
+_DOW_CAVEAT = ("ear_filed_dow = weekday (Mon=0 .. Fri=4) of the 8-K 2.02 ACCEPTANCE day in "
+               "New York, derived in strategy_library_ext.derive_columns as date - "
+               "days_since_earn from two panel columns attach_8k built strictly before the "
+               "decision date (NaN unless days_since_earn >= 1); an after-close Friday filing "
+               "counts as Friday (the paper's announcement day); the 8-K can trail the press "
+               "release by a day")
+_CLUSTER_CAVEAT = ("cluster_age_days: target RAISES only, chained while consecutive raises on "
+                   "the name are <= 30 days apart; the cluster is ACTIVE when its latest raise "
+                   "is <= 30 days before the decision date; age = decision date - the chain's "
+                   "first raise; every raise dated strictly before the decision date "
+                   "(merge_asof, exact matches excluded). " + _REV)
+_13F_CAVEAT = ("13F: wrds/tr13f_quarterly.json (tr_13f.s34 aggregated server-side per "
+               "(rdate, cusip8), n_managers >= 3, 2013Q1-2025Q4). s34's `fdate` EQUALS "
+               "`rdate` (measured: median/min/max 0 days on 4.84M 2024 rows), so it is NOT a "
+               "knowledge date; a quarter is usable only when rdate + 45 days (the SEC "
+               "deadline) is strictly before the decision date. cusip8 -> permno by "
+               "tr13f_permno_link.json, permno -> the permno's LAST CRSP ticker "
+               "(crsp_pit_monthly_v1, ends 2024-11: permnos first listed later are unmapped); "
+               "a reused ticker goes to the permno alive at that rdate. Change = log(n "
+               "managers / n managers the previous quarter), consecutive quarters only; the "
+               "n >= 3 floor means a name rising from 2 holders has no prior and is NaN. "
+               "Longs-only, 45 days stale by construction")
+_INTANG_CAVEAT = ("from sec_facts_history facts 'rd' (us-gaap ResearchAndDevelopmentExpense) and "
+                  "'sga' (SellingGeneralAndAdministrativeExpense), ANNUAL periods (350-380 days) "
+                  "at their FIRST filing, available filed + 2d; scaled by assets at the same "
+                  "period end because market value is refused (VAL-01); org capital by "
+                  "perpetual inventory (delta 15%, g 10%, NOT CPI-deflated)")
+
+
+@dataclass(frozen=True)
+class PaperStrategy(DiscoveryStrategy):
+    """A rule from a paper, with its falsifier and its named control(s).
+
+    `falsifier` is the observation that would kill the rule's mechanism, stated
+    before the first score; `controls` names the registered rule(s) it must be
+    read against (`Strategy.control` is the boolean "this row IS a control").
+    """
+
+    falsifier: str = ""
+    controls: tuple = ()
+
+    def meta(self) -> dict:
+        m = super().meta()
+        m["falsifier"] = self.falsifier
+        m["controls"] = list(self.controls)
+        return m
+
+
+#: Keys a paper rule exposes through `.meta()` on top of REQUIRED_KEYS.
+PAPER_KEYS: tuple[str, ...] = ("claimed_number", "discovery_id", "falsifier", "controls")
+
+
+def excluding_top(base, drop_col: str, frac: float, sign: float = 1.0):
+    """`base` everywhere EXCEPT the top `frac` of drop_col per date.
+
+    A name with no drop_col value stays in: an exclusion screen that dropped
+    the uncovered names would be a coverage filter wearing a screen's name.
+    """
+    def f(p):
+        r = rank_of(p, drop_col, sign)
+        return base(p).where(~(r > 1.0 - frac))
+    f.requires = tuple(getattr(base, "requires", ())) + (drop_col,)
+    f.shape = (f"excluding_top({getattr(base, 'shape', '?')},"
+               f"{drop_col}{'+' if sign >= 0 else '-'})")
+    return f
+
+
+def _paper(did, rid, family, desc, signal, *, cite, claimed, reason, falsifier, controls,
+           caveat="", **kw):
+    kw.setdefault("first_registered_utc", REGISTERED_PAPER)
+    return PaperStrategy(
+        rid, family, desc, signal, source=f"literature:{did} {cite} {_LIT} ({_SSA})",
+        claimed_number=claimed, literature_reported=f"CLAIMED by source: {claimed}",
+        discovery_id=did, economic_reason=reason, caveat=caveat, falsifier=falsifier,
+        controls=tuple(controls), **kw)
+
+
+def _paper_rules() -> list:
+    MOM = "mom_252_21"
+    fri_claim = ("Friday announcers: ~15% lower immediate response and ~70% higher delayed "
+                 "response than other weekdays for the same surprise (paper's abstract; "
+                 "not re-derived here)")
+    return [
+        _paper("SSA-01", "friday_ear_drift", "earnings_event",
+               "3-day announcement return of the latest 8-K 2.02, scored only where that 8-K "
+               "was filed on a FRIDAY",
+               gated(col("ear_last"), "ear_filed_dow", lo=4.0, hi=4.0), cite=DP09,
+               claimed=fri_claim,
+               reason="investors are less attentive on Fridays; the unpriced reaction becomes drift",
+               falsifier=("(a) if monday_ear_drift's excess vs SPY is EQUAL OR LARGER than this "
+                          "row's in BOTH the dev window and 2024-26, the day-specific (Friday "
+                          "inattention) mechanism is falsified even if this row is profitable; "
+                          "(b) if this row's dev excess is not above ear_drift's (the "
+                          "unconditional rule), the weekday conditioning adds nothing -> "
+                          "DEPRIORITIZED (this row, not the earnings_event family)"),
+               controls=("monday_ear_drift", "ear_drift"),
+               caveat=_DOW_CAVEAT),
+        _paper("SSA-01-CTL", "monday_ear_drift", "earnings_event",
+               "3-day announcement return of the latest 8-K 2.02, scored only where that 8-K "
+               "was filed on a MONDAY (the pre-declared control for friday_ear_drift)",
+               gated(col("ear_last"), "ear_filed_dow", lo=0.0, hi=0.0), cite=DP09,
+               claimed="none: the pre-declared control; the source's claim is Friday-specific",
+               reason=("control: DellaVigna-Pollet's mechanism is Friday inattention, so Monday "
+                       "filers should show the smaller drift"),
+               falsifier=("this row IS friday_ear_drift's falsifier: read it BEFORE the Friday "
+                          "row; equal-or-larger Monday drift kills the day-specific story"),
+               controls=("friday_ear_drift",), control=True, caveat=_DOW_CAVEAT),
+        _paper("SSA-18", "quality_momentum_gate", "combination",
+               "12-1 momentum among the top third by gross margin, rebalanced QUARTERLY "
+               "(mom_12_1_q with a quality gate)",
+               within_top(col(MOM), "gross_margin", 1 / 3), hold_months=3, cite=AFIM,
+               claimed=("no single number: the claim is that momentum's crash risk concentrates "
+                        "in junk / high-volatility names, so a quality-gated book keeps the mean "
+                        "and shrinks the tail"),
+               reason=("momentum survives in profitable names; the crash risk concentrates in "
+                       "the unprofitable tail"),
+               falsifier=("against mom_12_1_q (same score, same quarterly hold, no gate): the "
+                          "crash-tail claim is falsified unless max_dd is >= 5 percentage points "
+                          "shallower OR loo_worst_mean_active is >= 0.10%/month less negative; "
+                          "a better mean alone does not rescue it (the claim is about the tail)"),
+               controls=("mom_12_1_q", "mom_in_high_margin"),
+               caveat=("the literal note spec (monthly, gated on a p66 threshold) is "
+                       "mom_in_high_margin (INT-05) relabelled; registered at the quarterly "
+                       "hold to compare against mom_12_1_q; " + _FUND_EXT)),
+        _paper("SSA-03", "cascade_entry_timing", "revision_flow",
+               "names in an ACTIVE target-raise cluster, youngest cluster first (days since "
+               "the cluster's first raise, ascending)",
+               col("cluster_age_days", -1), cite=GL03,
+               claimed=("first-mover revisions carry significantly more of the eventual price "
+                        "move than later revisions into the same cluster (no number carried in "
+                        "the note)"),
+               reason=("the first mover into a revision cluster carries the most unpriced "
+                       "information; later revisers are chasing"),
+               falsifier=("if its excess vs SPY is not above first_mover_raises' (the 'was "
+                          "first' construction) in BOTH the dev window and 2024-26, cascade "
+                          "position adds nothing beyond the registered first-mover rule -> "
+                          "DEPRIORITIZED"),
+               controls=("first_mover_raises", "net_raises"), caveat=_CLUSTER_CAVEAT),
+        _paper("SSA-04", "disp_short_avoid", "analyst_dispersion",
+               "12-1 momentum, rebalanced quarterly, EXCLUDING the top decile of cross-firm "
+               "price-target dispersion (mom_12_1_q with a disagreement screen)",
+               excluding_top(col(MOM), "target_cv_180", 0.10), hold_months=3, cite=DMS02,
+               claimed=("high-dispersion quintile underperforms low-dispersion significantly in "
+                        "the original sample (no number carried in the note)"),
+               reason=("with short-sale constraints the optimists set the price when opinions "
+                       "differ widely, so high-disagreement names are overpriced"),
+               falsifier=("against mom_12_1_q unmodified: if NEITHER the mean (dev and 2024-26 "
+                          "excess vs SPY) NOR loo_worst_mean_active improves, dispersion-as-a-"
+                          "risk-filter is falsified on this panel"),
+               controls=("mom_12_1_q",),
+               caveat=("target_cv_180 (attach_ratings: std/mean of each firm's latest target in "
+                       "180 days, >= 3 firms) is PRICE-TARGET dispersion, not the paper's "
+                       "EPS-forecast dispersion; names without it are kept; " + _REV)),
+        _paper("RET-10", "inst_breadth_up", "institutional_breadth",
+               "largest quarterly rise in the NUMBER of 13F institutions holding the name "
+               "(log change), held a quarter",
+               col("inst_breadth_chg"), hold_months=3, cite=CHS02,
+               claimed=("increases in ownership breadth predict higher, decreases lower "
+                        "subsequent returns (no number carried in the note; none invented)"),
+               reason=EXTRA_FAMILIES["institutional_breadth"],
+               falsifier=("if inst_breadth_up_21_40 (its own ranks 21-40) earns as much as the "
+                          "top 20, the ordering is uninformative; if its dev excess vs SPY is "
+                          "not above the random-k controls', breadth change carries nothing here"),
+               controls=("inst_breadth_up_21_40", "random_1", "random_2", "random_3"),
+               caveat=_13F_CAVEAT),
+        _paper("RET-10-CTL", "inst_breadth_up_21_40", "institutional_breadth",
+               "inst_breadth_up's own ranks 21-40 (the k+1..2k twin)",
+               rank_band(col("inst_breadth_chg"), 21, 40), hold_months=3, cite=CHS02,
+               claimed="none: the k+1..2k control for inst_breadth_up",
+               reason="control: is the ORDERING inside the breadth ranking informative",
+               falsifier="this row IS inst_breadth_up's ordering falsifier",
+               controls=("inst_breadth_up",), control=True, caveat=_13F_CAVEAT),
+    ]
+
+
+def _intangible_rules() -> list:
+    """CLS R&D and EP organisation capital -- columns exist only after the re-extraction."""
+    return [
+        _paper("SSA-15", "rd_intensity", "intangibles",
+               "annual R&D expense / total assets, highest first, held twelve months",
+               col("rd_intensity"), hold_months=12, cite=CLS01,
+               claimed=("high R&D-intensity firms subsequently outperform, especially among "
+                        "low market-to-book / poor past return names (no number carried)"),
+               reason=EXTRA_FAMILIES["intangibles"],
+               falsifier=("if its dev excess vs SPY is not above gross_margin's (the registered "
+                          "profitability level) and the random-k controls', R&D intensity adds "
+                          "nothing on this panel"),
+               controls=("gross_margin", "random_1"), caveat=_INTANG_CAVEAT),
+        _paper("SSA-16", "org_capital", "intangibles",
+               "perpetual-inventory SG&A stock / total assets, highest first, held twelve months",
+               col("org_capital"), hold_months=12, cite=EP13,
+               claimed=("high organisation-capital firms earn a significant premium over low "
+                        "(no number carried)"),
+               reason=EXTRA_FAMILIES["intangibles"],
+               falsifier=("if its dev excess vs SPY is not above rd_intensity's and the random-k "
+                          "controls', capitalised SG&A adds nothing beyond R&D"),
+               controls=("rd_intensity", "random_1"), caveat=_INTANG_CAVEAT),
+    ]
+
+
+#: The facts the intangible rules need and the panel column each one yields.
+INTANGIBLE_FACTS: dict[str, str] = {"rd": "rd_intensity", "sga": "org_capital"}
+
+
+def _extraction_has(facts=tuple(INTANGIBLE_FACTS)) -> bool:
+    """Does the on-disk sec_facts_history carry these facts yet? (False on any doubt.)"""
+    try:
+        import pyarrow.parquet as pq
+
+        from backend import config as _cfg
+        from pathlib import Path
+        path = Path(_cfg.OPTIMUS_LEDGER_DIR) / "fundamentals_sec" / "sec_facts_history.parquet"
+        if not path.exists():
+            return False
+        got = set(pq.read_table(path, columns=["fact"]).column("fact").to_pandas().unique())
+        return set(facts) <= got
+    except Exception:                                  # noqa: BLE001 -- unknown = not yet
+        return False
+
+
+#: True once `scripts/pull_sec_fundamentals.py` has re-run with the rd/sga tags.
+INTANGIBLES_EXTRACTED: bool = _extraction_has()
+
+#: Base-library NOT_REACHABLE lines this module shows to be stale. The base
+#: file is chunk D's; the correction is recorded here, next to the rule that
+#: makes it stale, and printed in the handoff.
+EXT_CORRECTS_BASE: dict = {
+    "RET-10": ("STALE: 'no 13F feed' is false -- wrds/tr_13f.s34 is on disk (tr13f_s34_1996..2024 "
+               "parquets, 72.7M holdings rows since 2013) and aggregated per quarter in "
+               "wrds/tr13f_quarterly.json through 2025Q4; RET-10 is reachable as "
+               "`inst_breadth_up` (ownership BREADTH, rdate + 45d). The base line should read: "
+               "'reachable via strategy_library_ext.inst_breadth_up'"),
+    "MISC-01": "same: the 13F join exists (inst_breadth_up); 'no 13F join' is stale",
+    "MISC-08": "built: `cascade_entry_timing` (Gleason & Lee 2003); 'cascade timing not built' is stale",
+}
+
+
 #: chunk C's eight rules (pinned by test_pit_features) and the discovery rules.
 CHUNK_C_STRATEGIES: list = _rules()
 DISCOVERY_STRATEGIES: list = _discovery_rules()
-EXTRA_STRATEGIES: list = CHUNK_C_STRATEGIES + DISCOVERY_STRATEGIES
+#: the paper rules (+ the intangible pair once the re-extraction has landed).
+PAPER_STRATEGIES: list = _paper_rules() + (_intangible_rules() if INTANGIBLES_EXTRACTED else [])
+EXTRA_STRATEGIES: list = CHUNK_C_STRATEGIES + DISCOVERY_STRATEGIES + PAPER_STRATEGIES
 
 #: Keys every entry exposes through `.meta()`; pinned by the test.
 REQUIRED_KEYS: tuple[str, ...] = ("id", "family", "economic_reason", "source",
@@ -504,6 +803,22 @@ EXT_NOT_REACHABLE: list = [
      "why": "only the megacap satellite is registered (gh01_*)"},
 ]
 
+#: The intangible pair waits on the re-extraction (scripts/pull_sec_fundamentals.py
+#: FACTS gained "rd"/"sga" on 2026-09-26; the parquet on disk predates that). Once
+#: sec_facts_history carries both facts, INTANGIBLES_EXTRACTED flips at import,
+#: the rules join PAPER_STRATEGIES, `attach` builds the columns, and these rows go.
+if not INTANGIBLES_EXTRACTED:
+    EXT_NOT_REACHABLE += [
+        {"id": r.discovery_id, "rule_id": r.id,
+         "missing_column": (f"{INTANGIBLE_FACTS[f]} (built by strategy_library_ext.attach from "
+                            f"sec_facts_history fact '{f}' = us-gaap:{tag})"),
+         "source": r.source, "claimed_number": r.claimed_number,
+         "why": ("the 9-tag extraction on disk has no R&D/SG&A; the tag is now in "
+                 "pull_sec_fundamentals.FACTS and lands on the next extraction run")}
+        for r, f, tag in zip(_intangible_rules(), ("rd", "sga"),
+                             ("ResearchAndDevelopmentExpense",
+                              "SellingGeneralAndAdministrativeExpense"))]
+
 
 # ── the factory hook: put the six columns on the panel ──────────────────────
 
@@ -534,6 +849,16 @@ def derive_columns(panel):
     if {"px_vs_52w_high", "px_vs_52w_low"} <= set(out.columns):
         lo = (1.0 + out["px_vs_52w_low"].astype(float))
         out["low_vs_high_252"] = (1.0 + out["px_vs_52w_high"].astype(float)) / lo.where(lo > 0) - 1.0
+    if {"days_since_earn", "date"} <= set(out.columns):
+        # the latest KNOWN 8-K 2.02 is `days_since_earn` days before the row's
+        # date (attach_8k: filed strictly before the date, its 3-day window
+        # closed). A non-positive age would be an event on/after the decision
+        # date and is refused (NaN), never turned into a weekday.
+        import pandas as pd
+        age = pd.to_numeric(out["days_since_earn"], errors="coerce")
+        ok = age.notna() & (age >= 1)
+        day = pd.to_datetime(out["date"]) - pd.to_timedelta(age.where(ok, 0.0), unit="D")
+        out["ear_filed_dow"] = day.dt.dayofweek.astype(float).where(ok)
     for c in DERIVED_COLUMNS:
         if c in out.columns:
             out[c] = out[c].replace([np.inf, -np.inf], np.nan)
@@ -549,11 +874,220 @@ def attach(panel, W: dict | None = None):
     """
     panel = derive_columns(panel)
     info0 = {"derived": {c: int(panel[c].notna().sum()) for c in DERIVED_COLUMNS if c in panel.columns}}
+    panel, info0["paper"] = attach_paper_columns(panel)
     try:
         out, info = _attach_pit(panel, W)
     except Exception as e:                           # noqa: BLE001 -- named in info
         return panel, {**info0, "pit_refused": f"{type(e).__name__}: {e}"}
     return out, {**info0, **info}
+
+
+# ── the paper rules' columns: revision clusters, 13F breadth, intangibles ────
+
+#: 13F: the SEC deadline. s34's `fdate` equals `rdate`, so it cannot be used.
+FILING_LAG_13F_DAYS = 45
+#: a 13F reading older than this at the decision date is stale (a missed quarter).
+MAX_13F_AGE_DAYS = 200
+CLUSTER_GAP_DAYS = 30
+CLUSTER_ACTIVE_DAYS = 30
+OC_DEPRECIATION = 0.15
+OC_GROWTH = 0.10
+
+
+def _day(s):
+    import pandas as pd
+    t = pd.to_datetime(s, errors="coerce", utc=True)
+    return t.dt.tz_convert(None).dt.normalize()
+
+
+def _asof_join(panel, feats, value_cols, *, on_right: str, exact: bool, max_age_days=None,
+               age_from: str | None = None):
+    """Backward as-of join of per-symbol rows onto the panel (row order kept)."""
+    import numpy as np
+    import pandas as pd
+    left = pd.DataFrame({"_i": np.arange(len(panel)), "symbol": panel["symbol"].astype(str).to_numpy(),
+                         "date": pd.to_datetime(panel["date"]).dt.normalize().to_numpy()})
+    left = left.sort_values("date", kind="mergesort")
+    right = feats.sort_values(on_right, kind="mergesort")
+    m = pd.merge_asof(left, right, left_on="date", right_on=on_right, by="symbol",
+                      direction="backward", allow_exact_matches=exact)
+    if max_age_days is not None and age_from:
+        stale = (m["date"] - m[age_from]).dt.days > max_age_days
+        m.loc[stale, value_cols] = np.nan
+    m = m.sort_values("_i")
+    return {c: m[c].to_numpy(dtype=float) for c in value_cols}
+
+
+def cluster_age_frame(rev):
+    """(symbol, day, cluster_start) per raise day: the chain a raise belongs to.
+
+    Raises chain while consecutive raises on a name are <= CLUSTER_GAP_DAYS
+    apart. A chain's START is its first raise, which depends only on earlier
+    raises, so no later event can move it.
+    """
+    import pandas as pd
+    ta = rev["target_action"].fillna("").astype(str).str.lower()
+    r = pd.DataFrame({"symbol": rev["ticker"].astype(str).str.upper(), "day": _day(rev["event_date"])})
+    r = r[(ta == "raises").to_numpy() & r["day"].notna().to_numpy()]
+    r = r.sort_values(["symbol", "day"], kind="mergesort").drop_duplicates()
+    gap = r.groupby("symbol")["day"].diff().dt.days
+    r["cid"] = (gap.isna() | (gap > CLUSTER_GAP_DAYS)).cumsum()
+    r["cluster_start"] = r.groupby("cid")["day"].transform("min")
+    return r[["symbol", "day", "cluster_start"]]
+
+
+def cluster_age_days(panel, rev):
+    """Days since the ACTIVE raise cluster began, from raises strictly before the date."""
+    import numpy as np
+    import pandas as pd
+    f = cluster_age_frame(rev)
+    left = pd.DataFrame({"_i": np.arange(len(panel)), "symbol": panel["symbol"].astype(str).to_numpy(),
+                         "date": pd.to_datetime(panel["date"]).dt.normalize().to_numpy()})
+    m = pd.merge_asof(left.sort_values("date", kind="mergesort"), f.sort_values("day", kind="mergesort"),
+                      left_on="date", right_on="day", by="symbol", direction="backward",
+                      allow_exact_matches=False).sort_values("_i")
+    since_last = (m["date"] - m["day"]).dt.days
+    age = (m["date"] - m["cluster_start"]).dt.days.astype(float)
+    return age.where(since_last <= CLUSTER_ACTIVE_DAYS).to_numpy(dtype=float)
+
+
+def inst_breadth_frame(q_rows, link: dict, crsp, *, lag_days: int = FILING_LAG_13F_DAYS):
+    """(symbol, rdate, available, inst_breadth_chg) from the aggregated 13F quarters.
+
+    `q_rows`: [rdate, cusip8, inst_shares, n_managers, top_shares] (tr13f_quarterly.json).
+    `crsp`: permno, date, ticker (crsp_pit_monthly_v1). A quarter is AVAILABLE at
+    rdate + lag_days; callers join it only on dates strictly after that.
+    """
+    import numpy as np
+    import pandas as pd
+    q = pd.DataFrame(list(q_rows), columns=["rdate", "cusip8", "inst_shares", "n_managers", "top_shares"])
+    q["rdate"] = pd.to_datetime(q["rdate"])
+    q["permno"] = q["cusip8"].astype(str).map({str(k): int(v) for k, v in link.items()})
+    q = q.dropna(subset=["permno"])
+    q["permno"] = q["permno"].astype("int64")
+    q = q.groupby(["permno", "rdate"], as_index=False)["n_managers"].max()
+    q = q.sort_values(["permno", "rdate"], kind="mergesort")
+    g = q.groupby("permno")
+    prev_n, prev_d = g["n_managers"].shift(1), g["rdate"].shift(1)
+    gap = (q["rdate"] - prev_d).dt.days
+    consecutive = gap.between(80, 100)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        q["inst_breadth_chg"] = np.log(q["n_managers"].astype(float) / prev_n.astype(float)).where(consecutive)
+    c = crsp[["permno", "date", "ticker"]].dropna().copy()
+    c["date"] = pd.to_datetime(c["date"])
+    c = c.sort_values("date", kind="mergesort")
+    life = c.groupby("permno").agg(first=("date", "min"), last=("date", "max"), ticker=("ticker", "last"))
+    crsp_end = c["date"].max()
+    q = q.join(life, on="permno", how="inner")
+    slack = pd.Timedelta(days=92)
+    alive = (q["rdate"] >= q["first"] - slack) & (
+        (q["rdate"] <= q["last"] + slack) | (q["last"] >= crsp_end - pd.Timedelta(days=35)))
+    q = q[alive & q["inst_breadth_chg"].notna()]
+    q = q.sort_values("n_managers", kind="mergesort").drop_duplicates(["ticker", "rdate"], keep="last")
+    q["symbol"] = q["ticker"].astype(str).str.upper()
+    q["available"] = q["rdate"] + pd.Timedelta(days=lag_days)
+    return q[["symbol", "rdate", "available", "inst_breadth_chg"]].reset_index(drop=True)
+
+
+def intangibles_frame(facts):
+    """(symbol, filed, available, rd_intensity, org_capital) from ANNUAL first filings."""
+    import numpy as np
+    import pandas as pd
+    lo, hi = 350, 380
+    f = facts.copy()
+    f["filed"] = pd.to_datetime(f["filed"])
+    f = f.sort_values("filed", kind="mergesort")
+    flows = f[f["fact"].isin(tuple(INTANGIBLE_FACTS)) & pd.to_numeric(f["period_days"], errors="coerce").between(lo, hi)]
+    flows = flows.drop_duplicates(["ticker", "fact", "end"], keep="first")
+    assets = f[f["fact"] == "assets"].drop_duplicates(["ticker", "end"], keep="first")
+    w = flows.pivot_table(index=["ticker", "end"], columns="fact", values="val", aggfunc="first")
+    filed = flows.groupby(["ticker", "end"])["filed"].max()
+    w = w.join(filed).join(assets.set_index(["ticker", "end"])["val"].rename("assets")).reset_index()
+    for c in INTANGIBLE_FACTS:
+        if c not in w.columns:
+            w[c] = np.nan
+    a = w["assets"].where(w["assets"] > 0)
+    w["rd_intensity"] = w["rd"] / a
+    w["end_d"] = pd.to_datetime(w["end"])
+    w = w.sort_values(["ticker", "end_d"], kind="mergesort")
+    oc = np.full(len(w), np.nan)
+    prev_t, prev_end, prev_oc = None, None, np.nan
+    for i, (t, e, s) in enumerate(zip(w["ticker"].to_numpy(), w["end_d"], w["sga"].to_numpy(dtype=float))):
+        if not np.isfinite(s):
+            prev_t, prev_oc = t, np.nan
+            continue
+        chained = (t == prev_t and np.isfinite(prev_oc) and prev_end is not None
+                   and (e - prev_end).days <= 400)
+        oc[i] = ((1 - OC_DEPRECIATION) * prev_oc + s) if chained else s / (OC_GROWTH + OC_DEPRECIATION)
+        prev_t, prev_end, prev_oc = t, e, oc[i]
+    w["org_capital"] = oc / a.to_numpy(dtype=float)
+    w["symbol"] = w["ticker"].astype(str).str.upper()
+    w["available"] = w["filed"] + pd.Timedelta(days=2)
+    return w[["symbol", "filed", "available", "rd_intensity", "org_capital"]]
+
+
+def attach_paper_columns(panel):
+    """(panel + cluster_age_days / inst_breadth_chg / rd_intensity / org_capital, info).
+
+    Each source is read under its own try: a missing file is a named refusal in
+    `info` and the rules over that column are refused by name by the factory.
+    """
+    import json
+
+    import pandas as pd
+
+    from backend.services import pit_features as pf
+    opt = pf._optimus()
+    out = panel.copy()
+    info: dict = {}
+    try:
+        p = opt / "analyst" / "target_revisions.parquet"
+        if not p.exists():
+            info["cluster_age_days"] = f"REFUSED: no {p.name}"
+        else:
+            rev = pd.read_parquet(p, columns=["ticker", "event_date", "target_action"])
+            out["cluster_age_days"] = cluster_age_days(out, rev)
+            info["cluster_age_days"] = {"non_nan": int(out["cluster_age_days"].notna().sum()),
+                                        "pit": "raises strictly before the date"}
+    except Exception as e:                          # noqa: BLE001 -- named
+        info["cluster_age_days"] = f"REFUSED: {type(e).__name__}: {e}"
+    try:
+        wr = opt / "wrds"
+        qp, lp = wr / "tr13f_quarterly.json", wr / "tr13f_permno_link.json"
+        cp = opt / "crsp_pit" / "crsp_pit_monthly_v1.parquet"
+        missing = [x.name for x in (qp, lp, cp) if not x.exists()]
+        if missing:
+            info["inst_breadth_chg"] = f"REFUSED: missing {missing}"
+        else:
+            fr = inst_breadth_frame(json.loads(qp.read_text(encoding="utf-8")),
+                                    json.loads(lp.read_text(encoding="utf-8")),
+                                    pd.read_parquet(cp, columns=["permno", "date", "ticker"]))
+            got = _asof_join(out, fr, ["inst_breadth_chg"], on_right="available", exact=False,
+                             max_age_days=MAX_13F_AGE_DAYS, age_from="rdate")
+            out["inst_breadth_chg"] = got["inst_breadth_chg"]
+            info["inst_breadth_chg"] = {
+                "non_nan": int(out["inst_breadth_chg"].notna().sum()),
+                "quarters": [str(fr["rdate"].min().date()), str(fr["rdate"].max().date())],
+                "pit": f"rdate + {FILING_LAG_13F_DAYS}d strictly before the date (fdate == rdate)"}
+    except Exception as e:                          # noqa: BLE001 -- named
+        info["inst_breadth_chg"] = f"REFUSED: {type(e).__name__}: {e}"
+    try:
+        fp = opt / "fundamentals_sec" / "sec_facts_history.parquet"
+        facts = pd.read_parquet(fp) if fp.exists() else None
+        if facts is None or not set(INTANGIBLE_FACTS) <= set(facts["fact"].unique()):
+            info["intangibles"] = ("AWAITING EXTRACTION: sec_facts_history has no rd/sga facts "
+                                   "(re-run scripts/pull_sec_fundamentals.py --universe-from-bars)")
+        else:
+            fr = intangibles_frame(facts)
+            cols = list(INTANGIBLE_FACTS.values())
+            got = _asof_join(out, fr, cols, on_right="available", exact=True,
+                             max_age_days=460, age_from="filed")
+            for c in cols:
+                out[c] = got[c]
+            info["intangibles"] = {c: int(out[c].notna().sum()) for c in cols}
+    except Exception as e:                          # noqa: BLE001 -- named
+        info["intangibles"] = f"REFUSED: {type(e).__name__}: {e}"
+    return out, info
 
 
 def _attach_pit(panel, W: dict | None = None):

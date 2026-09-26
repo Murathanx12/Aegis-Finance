@@ -98,6 +98,14 @@ FACTS: dict[str, tuple[str, ...]] = {
     "cash": ("CashAndCashEquivalentsAtCarryingValue",),
     "debt": ("LongTermDebtNoncurrent", "LongTermDebt"),
     "shares": ("CommonStockSharesOutstanding", "EntityCommonStockSharesOutstanding"),
+    # 2026-09-26: the intangibles pair (Chan-Lakonishok-Sougiannis R&D intensity,
+    # Eisfeldt-Papanikolaou organisation capital). Present in companyfacts for
+    # filers that report them; absent = the firm does not break the line out.
+    # strategy_library_ext.attach builds `rd_intensity` / `org_capital` from the
+    # ANNUAL rows once the next extraction writes these facts.
+    "rd": ("ResearchAndDevelopmentExpense",
+           "ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost"),
+    "sga": ("SellingGeneralAndAdministrativeExpense",),
 }
 
 
