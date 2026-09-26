@@ -31,6 +31,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from backend.cache import cached
+from backend import config as _config_mod
 from backend.config import config as _cfg
 
 logger = logging.getLogger(__name__)
@@ -82,6 +83,22 @@ def provider_status() -> dict:
             out["absent"].append(name)
     out["matches_declaration"] = bool(
         out["active"] == SOLE_PROVISIONED_PROVIDER)
+    # NAMED providers (chunk G, 2026-09-26). Reachable only by name through
+    # `call_named`; never a fallback, never the primary. Listed with the same
+    # configured / declared_but_empty / absent vocabulary as the keys above.
+    routes = getattr(_config_mod, "MODEL_ROUTING_PROVIDERS", {}) or {}
+    nv_env = os.getenv("NVIDIA_API_KEY")
+    out["named"] = {
+        "nvidia": {"role": "adjudicator",
+                   "model": _nvidia_model(),
+                   "cost_status": (routes.get("nvidia") or {}).get("cost_status"),
+                   "state": ("configured" if (nv_env or "").strip() else
+                             "declared_but_empty" if nv_env is not None else "absent")},
+        "local": {"role": "on_demand", "model": "local",
+                  "cost_status": (routes.get("local") or {}).get("cost_status"),
+                  "state": "unprobed (started on demand by llama_server.ensure)"},
+    }
+    out["roles"] = {"deepseek": "primary", "nvidia": "adjudicator", "local": "on_demand"}
     return out
 
 # Claude models (fast → quality)
@@ -368,6 +385,161 @@ def _call_llm(
                     _trip_breaker(e)
 
     return None
+
+
+# ── Named providers (chunk G, 2026-09-26) ───────────────────────────────────
+#
+# `_call_llm` answers "the house model" and that stays DeepSeek. `call_named`
+# answers "THIS provider, by name" -- the /deep, /ask and /compare routes, where
+# which model answered IS the measurement. Three rules:
+#
+#  * no fallback: a named provider that is not configured is a REFUSAL, never a
+#    silent answer from another model (a comparison that quietly measured the
+#    wrong model is worse than no comparison);
+#  * the language pin and the non-English refusal apply to every provider, on
+#    the same central path;
+#  * every wire attempt writes ONE telemetry row with the provider's name, and
+#    the reply carries the same `cost_usd` the row was priced at, plus the
+#    `cost_status` (LISTED | UNPRICED) so a None is never read as free.
+
+_NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "").strip()
+_nvidia_client = None
+_local_client = None
+
+
+def _nvidia_model() -> str:
+    return str(getattr(_config_mod, "MODEL_ROUTING_NVIDIA_MODEL",
+                       "nvidia/nemotron-3-super-120b-a12b"))
+
+
+def _nvidia_base_url() -> str:
+    """`NVIDIA_BASE_URL` from the environment, normalised to end in /v1."""
+    url = (os.getenv("NVIDIA_BASE_URL") or "").strip() or str(getattr(
+        _config_mod, "MODEL_ROUTING_NVIDIA_DEFAULT_BASE_URL",
+        "https://integrate.api.nvidia.com/v1"))
+    url = url.rstrip("/")
+    return url if url.endswith("/v1") else url + "/v1"
+
+
+def _get_nvidia_client():
+    global _nvidia_client
+    if _nvidia_client is not None:
+        return _nvidia_client
+    if not _NVIDIA_API_KEY:
+        return None
+    from openai import OpenAI
+    _nvidia_client = OpenAI(api_key=_NVIDIA_API_KEY, base_url=_nvidia_base_url(),
+                            timeout=float(getattr(_config_mod, "MODEL_ROUTING_TIMEOUT_S", 180.0)))
+    return _nvidia_client
+
+
+def _get_local_client():
+    global _local_client
+    if _local_client is not None:
+        return _local_client
+    from openai import OpenAI
+    from backend.services import llama_server as _ls
+    _local_client = OpenAI(api_key="local-no-key",
+                           base_url=f"http://{_ls.LLAMA_HOST}:{_ls.LLAMA_PORT}/v1",
+                           timeout=float(getattr(_config_mod, "MODEL_ROUTING_TIMEOUT_S", 180.0)))
+    return _local_client
+
+
+def cost_status(model: str) -> str:
+    """LISTED when the house price table knows the model, else UNPRICED."""
+    return "LISTED" if str(model) in getattr(_config_mod, "LLM_PRICE_PER_MTOK", {}) else "UNPRICED"
+
+
+def _reply_text(response) -> str:
+    """content, else `reasoning_content` (a reasoning model can put its whole
+    answer there and return content=None -- model_provider measured it)."""
+    msg = response.choices[0].message
+    text = getattr(msg, "content", None)
+    if not text:
+        text = getattr(msg, "reasoning_content", None) or ""
+    return str(text).strip()
+
+
+def call_named(provider: str, system_prompt: str, user_prompt: str, *,
+               purpose: str, max_tokens: int | None = None,
+               validate=None, ensure_reason: str | None = None) -> dict:
+    """One chat turn from the NAMED provider. Never raises for a provider error.
+
+    Returns `{provider, model, text, ok, status, latency_s, cost_usd,
+    cost_status, tokens_in, tokens_out, cached_tokens, error}`. `text` is None
+    whenever `ok` is False. `provider` is one of `deepseek`, `nvidia`, `local`.
+    """
+    from backend.services import llm_telemetry as _tel
+
+    routes = getattr(_config_mod, "MODEL_ROUTING_PROVIDERS", {}) or {}
+    mt = int(max_tokens or getattr(_config_mod, "MODEL_ROUTING_MAX_TOKENS", 700))
+    out = {"provider": provider, "model": None, "text": None, "ok": False,
+           "status": None, "latency_s": None, "cost_usd": None,
+           "cost_status": None, "tokens_in": 0, "tokens_out": 0,
+           "cached_tokens": 0, "error": None}
+    if provider == "deepseek":
+        model, client = _DEEPSEEK_MODEL, (_get_openai_client() if _DEEPSEEK_API_KEY else None)
+        if client is None:
+            return {**out, "model": model, "status": "NOT_CONFIGURED",
+                    "error": "DEEPSEEK_API_KEY is not set"}
+        if not _acquire_call_budget():
+            return {**out, "model": model, "status": "BUDGET_REFUSED",
+                    "error": "daily call cap or billing breaker"}
+    elif provider == "nvidia":
+        model, client = _nvidia_model(), _get_nvidia_client()
+        if client is None:
+            return {**out, "model": model, "status": "NOT_CONFIGURED",
+                    "error": "NVIDIA_API_KEY is not set"}
+    elif provider == "local":
+        from backend.services import llama_server as _ls
+        model = str((routes.get("local") or {}).get("model") or "local")
+        st = _ls.ensure(ensure_reason or purpose)
+        if not st.get("ok"):
+            return {**out, "model": model, "status": "LOCAL_UNAVAILABLE",
+                    "error": f"llama_server.ensure: {st.get('action')} "
+                             f"{st.get('reason') or st.get('detail') or ''}".strip()}
+        client = _get_local_client()
+    else:
+        return {**out, "status": "UNKNOWN_PROVIDER",
+                "error": f"unknown provider {provider!r}; have deepseek, nvidia, local"}
+
+    out["model"] = model
+    out["cost_status"] = cost_status(model)
+    tel_provider = provider
+    t0 = time.perf_counter()
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "system", "content": system_prompt + _LANGUAGE_PIN},
+                      {"role": "user", "content": user_prompt}],
+            max_tokens=mt,
+            temperature=_llm_cfg.get("temperature", 0.3),
+        )
+        text = _reply_text(response)
+    except Exception as e:                                     # noqa: BLE001
+        _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt,
+                t0=t0, error=e)
+        if provider == "deepseek" and _is_billing_error(e):
+            _trip_breaker(e)
+        return {**out, "status": "ERROR", "latency_s": round(time.perf_counter() - t0, 3),
+                "error": f"{type(e).__name__}: {str(e)[:300]}"}
+    latency = round(time.perf_counter() - t0, 3)
+    _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt,
+            resp=response, text=text, t0=t0, validate=validate)
+    usage = _tel.extract_usage(response, tel_provider)
+    out.update(usage)
+    out["latency_s"] = latency
+    out["cost_usd"] = _tel.price_call(model, usage["tokens_in"], usage["tokens_out"],
+                                      usage["cached_tokens"])
+    if provider == "local":
+        from backend.services import llama_server as _ls
+        _ls.touch(ensure_reason or purpose)
+    if not text:
+        return {**out, "status": "EMPTY", "error": "the model returned an empty message"}
+    if _refuse_non_english(tel_provider, purpose, text):
+        return {**out, "status": "LANGUAGE_REFUSED",
+                "error": "reply was mostly non-Latin script; discarded, not repaired"}
+    return {**out, "text": text, "ok": True, "status": "OK"}
 
 
 # ── Public API ──────────────────────────────────────────────────────────────

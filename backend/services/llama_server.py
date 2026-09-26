@@ -605,12 +605,196 @@ def stop_if_owned() -> dict:
     return stop(allow_foreign=False) | {"owner": inst}
 
 
+# ------------------------------------------------------------ on demand (chunk G)
+#
+# 2026-09-26, Murat: "llama-server not permanently resident; idle shutdown".
+# The machine had ~5 GB free that afternoon with the server resident at
+# 9.5-12 GB, and fast suites had already been killed for low memory. So the
+# server is now started by the CALLER that needs it -- `/ask`, `/research`,
+# `/compare`, the factory's local pairing, the distillation -- through
+# `ensure(reason)`, and stopped BY PID by the process that started it once no
+# call has touched it for `MODEL_ROUTING_IDLE_SHUTDOWN_S`.
+#
+# WHY A WATCHDOG AND NOT A llama-server FLAG. Build 10645 (commit c5fc7e348) has
+# `--sleep-idle-seconds` (checked with `--help`): it puts the server to SLEEP,
+# the process stays, and what `/health` answers while asleep is unmeasured -- a
+# `status()` reading "listening, not ready" forever would make every `ensure()`
+# wait out its timeout. Stop-by-PID is the promise that was asked for, so the
+# watchdog does that and the flag is not passed.
+#
+# WHO MAY IDLE-STOP. Only the process whose PID is `owner_pid` in the ownership
+# note -- the per-PROCESS rule `stop_if_owned` paid for on 2026-09-11. Any
+# process may `touch()` (record a use); only the starter stops.
+
+import threading as _threading  # noqa: E402
+
+IDLE_SHUTDOWN_S = float(os.getenv("AEGIS_LLAMA_IDLE_SHUTDOWN_S",
+                                  str(_conf("MODEL_ROUTING_IDLE_SHUTDOWN_S", 900))))
+WATCHDOG_TICK_S = float(_conf("MODEL_ROUTING_WATCHDOG_TICK_S", 30))
+ENSURE_WAIT_S = float(_conf("MODEL_ROUTING_ENSURE_WAIT_S", 240.0))
+
+_ENSURE_LOCK = _threading.Lock()
+_WATCHDOG: "_threading.Thread | None" = None
+_WATCHDOG_STOP = _threading.Event()
+
+
+def hold_path() -> Path:
+    """The operator hold the lab already honours (`LAB_MODEL_SERVER_HOLD_NAME`).
+
+    `ensure()` honours it too: a suite run with the server held down must not be
+    undone by a phone message asking a question.
+    """
+    return OWNER_FILE.parent / str(_conf("LAB_MODEL_SERVER_HOLD_NAME", "MODEL_SERVER_HOLD"))
+
+
+def touch(reason: str | None = None, *, now: float | None = None) -> dict:
+    """Record a use. Any process may call it; it never starts or stops anything."""
+    owner = _read_owner()
+    if not owner.get("pid"):
+        return {"touched": False, "reason": "no ownership note (server not started by Aegis)"}
+    owner["last_used_ts"] = float(now if now is not None else time.time())
+    owner["last_used_for"] = reason or owner.get("last_used_for")
+    owner["uses"] = int(owner.get("uses") or 0) + 1
+    _write_owner(owner)
+    return {"touched": True, "last_used_ts": owner["last_used_ts"]}
+
+
+def busy(timeout: float = 2.0) -> bool:
+    """Is a request mid-flight? `/slots` names it; unreadable means NOT busy.
+
+    Only consulted once the idle clock has run out, so the cost of a wrong "not
+    busy" is one interrupted generation after fifteen idle minutes.
+    """
+    import urllib.error
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"http://{LLAMA_HOST}:{LLAMA_PORT}/slots",  # noqa: S310 localhost
+                                    timeout=timeout) as fh:
+            slots = json.loads(fh.read().decode() or "[]")
+    except (urllib.error.URLError, OSError, ValueError):
+        return False
+    return any(isinstance(s, dict) and s.get("is_processing") for s in (slots or []))
+
+
+def _wait_ready(wait_s: float) -> bool:
+    deadline = time.time() + max(0.0, wait_s)
+    while True:
+        if health_ok():
+            return True
+        if time.time() >= deadline:
+            return False
+        time.sleep(1.0)
+
+
+def ensure(reason: str, *, wait_s: float | None = None, bind: bool = True,
+           watchdog: bool = True) -> dict:
+    """Make the local model answer, starting it only if nothing is listening.
+
+    Returns `status()` plus `ok`, `action` (`reused` | `started` | `refused` |
+    `died` | `timeout`), `started_for` (the reason recorded when THIS server was
+    started) and `requested_for` (this call's reason). A foreign server is
+    USED, never adopted: it is not ours to stop, so no watchdog is armed for it.
+    """
+    wait = ENSURE_WAIT_S if wait_s is None else float(wait_s)
+    with _ENSURE_LOCK:
+        st = status()
+        if st["listening"]:
+            ready = bool(st["ready"]) or _wait_ready(wait)
+            if st["started_by_aegis"]:
+                touch(reason)
+            owner = _read_owner()
+            return {**status(), "ok": ready, "action": "reused",
+                    "requested_for": reason,
+                    "started_for": owner.get("started_for") if st["started_by_aegis"] else None,
+                    "note": None if ready else f"listening but /health not 200 after {wait}s"}
+        if hold_path().exists():
+            return {**st, "ok": False, "action": "refused", "reason": "OPERATOR_HOLD",
+                    "requested_for": reason,
+                    "detail": f"{hold_path()} exists: an operator is holding the server down"}
+        r = start(wait_s=wait, bind=bind)
+        if r.get("ok") and r.get("pid"):
+            owner = _read_owner()
+            owner.update({"started_for": reason, "last_used_ts": time.time(),
+                          "last_used_for": reason, "uses": 1,
+                          "idle_shutdown_s": IDLE_SHUTDOWN_S})
+            _write_owner(owner)
+            if watchdog:
+                start_watchdog()
+        return {**(r.get("status") or status()), "ok": bool(r.get("ok")),
+                "action": r.get("action"), "reason": r.get("reason"),
+                "pid": r.get("pid"), "requested_for": reason,
+                "started_for": reason if r.get("ok") else None,
+                "idle_shutdown_s": IDLE_SHUTDOWN_S}
+
+
+def idle_check(*, now: float | None = None) -> dict:
+    """One watchdog tick: stop BY PID if THIS process started the server and
+    nothing has used it for `IDLE_SHUTDOWN_S`. Returns what it decided."""
+    owner = _read_owner()
+    if not owner.get("pid"):
+        return {"action": "none", "reason": "no ownership note"}
+    inst = owning_instance(owner)
+    if not inst["is_me"]:
+        return {"action": "none", "reason": "not the starting process",
+                "owner_pid": inst["owner_pid"]}
+    t = float(now if now is not None else time.time())
+    last = owner.get("last_used_ts")
+    if last is None:
+        try:
+            last = datetime.fromisoformat(str(owner.get("started_utc"))).timestamp()
+        except (TypeError, ValueError):
+            last = t
+    idle = t - float(last)
+    if idle < IDLE_SHUTDOWN_S:
+        return {"action": "none", "reason": "in use", "idle_s": round(idle, 1),
+                "idle_shutdown_s": IDLE_SHUTDOWN_S}
+    if busy():
+        touch("watchdog:busy", now=t)
+        return {"action": "none", "reason": "a request is mid-flight", "idle_s": round(idle, 1)}
+    r = stop(allow_foreign=False)
+    return {"action": "idle_stopped" if r.get("ok") else "stop_failed",
+            "idle_s": round(idle, 1), "pid": r.get("pid"),
+            "started_for": owner.get("started_for"),
+            "stop": {k: r.get(k) for k in ("ok", "action", "reason", "pid")}}
+
+
+def _watchdog_loop() -> None:
+    while not _WATCHDOG_STOP.wait(WATCHDOG_TICK_S):
+        try:
+            out = idle_check()
+        except Exception:                          # noqa: BLE001 - a tick never kills the host
+            continue
+        if out.get("action") == "idle_stopped" or out.get("reason") in (
+                "no ownership note", "not the starting process"):
+            return
+
+
+def start_watchdog() -> bool:
+    """Arm the idle watchdog in THIS process (idempotent). A daemon thread: it
+    never keeps a process alive, and a process that exits takes a bound server
+    with it anyway (`bind_lifetime`)."""
+    global _WATCHDOG
+    if _WATCHDOG is not None and _WATCHDOG.is_alive():
+        return False
+    _WATCHDOG_STOP.clear()
+    _WATCHDOG = _threading.Thread(target=_watchdog_loop, name="llama-idle-watchdog",
+                                  daemon=True)
+    _WATCHDOG.start()
+    return True
+
+
+def stop_watchdog() -> None:
+    _WATCHDOG_STOP.set()
+
+
 def main() -> int:                                            # tiny CLI for the shell and for humans
     import argparse
     ap = argparse.ArgumentParser(description="local llama.cpp server: status / start / stop")
-    ap.add_argument("action", choices=("status", "start", "stop", "stop-if-owned"))
+    ap.add_argument("action", choices=("status", "start", "stop", "stop-if-owned",
+                                       "ensure", "idle-check"))
     ap.add_argument("--allow-foreign", action="store_true",
                     help="stop a server Aegis did not start (it may be mid-job)")
+    ap.add_argument("--reason", default="cli", help="ensure: what the model is started for")
     a = ap.parse_args()
     if a.action == "status":
         out = status()
@@ -618,6 +802,12 @@ def main() -> int:                                            # tiny CLI for the
         out = start()
     elif a.action == "stop":
         out = stop(allow_foreign=a.allow_foreign)
+    elif a.action == "ensure":
+        # a CLI process exits at once, so no watchdog could outlive it: unbound,
+        # and the note says so -- stop it with `stop` when done.
+        out = ensure(a.reason, bind=False, watchdog=False)
+    elif a.action == "idle-check":
+        out = idle_check()
     else:
         out = stop_if_owned()
     print(json.dumps(out, indent=1, default=str))

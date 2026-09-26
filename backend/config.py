@@ -3444,6 +3444,55 @@ LAB_MODEL_LOOPS: tuple[str, ...] = ("l2_typing", "nn_lab", "idle_gpu_queue")
 LAB_NETWORK_LOOPS: tuple[str, ...] = ("news_pull", "social_pull",
                                       "catalyst_calendar", "thematic_streams")
 
+# ── MODEL ROUTING (chunk G, 2026-09-26) ─────────────────────────────────────
+#
+# Murat's brief: "llama-server not permanently resident; idle shutdown; /ask
+# local on demand; /deep DeepSeek or NVIDIA; /compare all three frozen and
+# graded". The local model is started by the CALLER that needs it
+# (`llama_server.ensure(reason)`), never at boot, and stopped by PID by the
+# process that started it once nothing has used it for IDLE_SHUTDOWN_S.
+# DeepSeek stays the sole PRIMARY (`llm_analyzer.SOLE_PROVISIONED_PROVIDER`);
+# NVIDIA is a NAMED adjudicator and local is on-demand -- neither is a fallback.
+
+#: THE boot switch. False = nothing starts llama-server at boot: not the desktop
+#: shell, not `night_run_until`, not the always-on lab (whose own flag below now
+#: READS this one). True restores the pre-2026-09-26 resident behaviour.
+MODEL_ROUTING_START_AT_BOOT = False
+
+#: Seconds without a call before the starting process stops the server by PID.
+MODEL_ROUTING_IDLE_SHUTDOWN_S = 900
+
+#: How often the idle watchdog looks. Cheap: one file read and, when due, a stop.
+MODEL_ROUTING_WATCHDOG_TICK_S = 30
+
+#: How long `ensure()` waits for /health after a start (a 30B-A3B loads from disk).
+MODEL_ROUTING_ENSURE_WAIT_S = 240.0
+
+#: Per-provider route. `cost_status` is DERIVED from `LLM_PRICE_PER_MTOK`, never
+#: declared: LISTED means the telemetry row carries a dollar figure (a free
+#: tier is LISTED at $0.00), UNPRICED means `cost_usd=None` and every total that
+#: includes it is a lower bound.
+MODEL_ROUTING_NVIDIA_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+MODEL_ROUTING_NVIDIA_DEFAULT_BASE_URL = "https://integrate.api.nvidia.com/v1"
+MODEL_ROUTING_LOCAL_MODEL = "local"
+MODEL_ROUTING_MAX_TOKENS = 700
+MODEL_ROUTING_TIMEOUT_S = 180.0
+MODEL_ROUTING_PROVIDERS: dict[str, dict] = {
+    name: {"model": model, "role": role,
+           "cost_status": "LISTED" if model in LLM_PRICE_PER_MTOK else "UNPRICED"}
+    for name, model, role in (
+        ("deepseek", "deepseek-chat", "primary"),
+        ("nvidia", MODEL_ROUTING_NVIDIA_MODEL, "adjudicator"),
+        ("local", MODEL_ROUTING_LOCAL_MODEL, "on_demand"),
+    )
+}
+
+#: `/compare` freezes one forecast row per provider at this horizon, graded by
+#: the existing resolver/grader like every other row (specialist
+#: `compare:<provider>`). 5 sessions: long enough to resolve inside a week.
+MODEL_ROUTING_COMPARE_HORIZON = 5
+MODEL_ROUTING_COMPARE_BENCHMARK = "SPY"
+
 #: MAY THE LAB START THE MODEL SERVER? (amended 2026-09-18, measured)
 #:
 #: The original rule was "the desktop app and a human are the only starters"
@@ -3456,7 +3505,7 @@ LAB_NETWORK_LOOPS: tuple[str, ...] = ("news_pull", "social_pull",
 #:
 #: What does NOT change: the lab never STOPS a server, and a FOREIGN server --
 #: one Aegis did not start -- is still not ours to touch.
-LAB_STARTS_MODEL_SERVER = True
+LAB_STARTS_MODEL_SERVER = MODEL_ROUTING_START_AT_BOOT   # 2026-09-26: on demand, see MODEL ROUTING
 
 #: How many times in ONE date the lab may start the model server. A server that
 #: keeps dying is a finding, not a retry loop: at the cap the lab refuses BY

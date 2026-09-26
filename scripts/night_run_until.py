@@ -352,7 +352,7 @@ class Night:
             self.stop_file.unlink()
         try:
             self.power_check()
-            self.start_model()
+            self.start_model() if getattr(_config, "MODEL_ROUTING_START_AT_BOOT", False) else self.log("model server: NOT started at boot (MODEL_ROUTING_START_AT_BOOT=False); callers use llama_server.ensure")
             self.balance("start")
             # The market loop starts FIRST and outlives every queue. It owns the
             # US session; the research queue is what fills the gaps around it.

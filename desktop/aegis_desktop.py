@@ -420,7 +420,7 @@ def main(argv: list[str] | None = None) -> int:
     log.info("storage %s", storage)
     port = a.port or free_port()
     start_backend(port)
-    llama = maybe_start_llama(enabled=not a.no_llama, keep=a.keep_llama)
+    llama = maybe_start_llama(enabled=not a.no_llama and bool(getattr(__import__("backend.config", fromlist=["_"]), "MODEL_ROUTING_START_AT_BOOT", False)), keep=a.keep_llama)  # 2026-09-26: on demand (llama_server.ensure)
 
     report = {"utc": _now(), "port": port, "llama": llama, "log": str(logfile),
               "storage": str(storage), "repo_root": str(repo_root() or REPO),

@@ -57,10 +57,19 @@ logger = logging.getLogger("telegram_agent")
 
 HELP = """*AEGIS remote*
 
-*Money*
-`/nav` broker equity, cash, positions, day move
+*Money* (from receipts -- no model)
+`/nav` every paper account vs SPY
+`/books` the LLM-portfolio leaderboard
+`/forecasts` today's forecast pass
+`/broker` live broker equity, cash, positions
 `/book` the ranked next-month names
 `/brief` the full daily brief
+
+*Models* (each reply names provider, cost, latency)
+`/ask <q>` local model, started on demand
+`/research <ticker>` OpenClaw quest + local synthesis
+`/deep <q>` DeepSeek · add `--nvidia` for NVIDIA
+`/compare <ticker>` one packet to local, DeepSeek, NVIDIA; three graded rows
 
 *Simulation*
 `/sim status` what is running and how far in
@@ -74,7 +83,8 @@ HELP = """*AEGIS remote*
 `/approve <id>` · `/deny <id>`
 
 *System*
-`/status` broker, sim, model server, ranker
+`/status` sim + model server (receipts)
+`/system` broker, sim, model server, ranker
 `/help` this
 
 _This bot answers only this chat. It never places an order and never approves
@@ -262,11 +272,24 @@ def cmd_status(args, msg) -> str:
     return "\n".join(out)
 
 
+def _routed(cmd: str):
+    """A handler that goes through `model_routing.route` -- the table the
+    tests pin (chunk G, 2026-09-26). Money/state commands read receipts and
+    make no model call; model commands name provider, cost and latency."""
+    def _h(args, msg) -> str:
+        from backend.services import model_routing as MR
+        return MR.route(cmd, list(args))
+    _h.__name__ = f"routed_{cmd}"
+    return _h
+
+
 HANDLERS = {
     "help": cmd_help, "start": cmd_help,
-    "nav": cmd_nav, "book": cmd_book, "brief": cmd_brief,
-    "sim": cmd_sim, "status": cmd_status,
+    "broker": cmd_nav, "book": cmd_book, "brief": cmd_brief,
+    "sim": cmd_sim, "system": cmd_status,
     "pending": cmd_pending, "approve": cmd_approve, "deny": cmd_deny,
+    **{c: _routed(c) for c in ("nav", "status", "books", "forecasts",
+                               "ask", "research", "deep", "compare")},
 }
 
 
