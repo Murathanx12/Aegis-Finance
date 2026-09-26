@@ -1477,6 +1477,24 @@ def keep_awake(on: bool) -> str:
         return f"unavailable: {type(exc).__name__}: {exc}"
 
 
+def learning_report_at_exit(day: str | None = None) -> dict:
+    """Chunk I: write the daily learning report for the session's last UTC day.
+
+    Called once, on the clean exit path of `run()`, after `SS.finish`. Never
+    raises: the report reads receipts and a failure is logged and returned,
+    because the checkpoint is the thing a session exit may not lose.
+    """
+    day = day or datetime.now(timezone.utc).date().isoformat()
+    try:
+        from scripts import daily_learning_report as DLR
+        res = DLR.write_report(day)
+        logger.info("learning report %s: %s", day, res.get("md"))
+        return res
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("learning report %s failed: %s: %s", day, type(exc).__name__, exc)
+        return {"failed": f"{type(exc).__name__}: {exc}"[:300], "day": day}
+
+
 def run(session_id: str) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     st = SS.status()
@@ -1521,6 +1539,9 @@ def run(session_id: str) -> int:
                 keep_awake(False)
                 SS.finish(state, why, {"final_cycle": n})
                 logger.info("sim %s: %s (%s) after %d cycles", session_id, state, why, n)
+                # AFTER the checkpoint: a report that fails must never cost
+                # the session its finish row (chunk I, 2026-09-26).
+                learning_report_at_exit()
                 return 0
 
             n += 1
