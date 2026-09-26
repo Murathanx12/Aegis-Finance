@@ -192,12 +192,64 @@ def cluster(corr: pd.DataFrame, *, rho_cut: float = RHO_CUT) -> pd.Series:
 
 # ── regression ──────────────────────────────────────────────────────────────
 
-def ols(y: pd.Series, X: pd.DataFrame) -> dict:
+#: The used SE for a multi-month hold is max(plain, Newey-West). On the run of
+#: record (T164302Z) the NW SE came out BELOW the plain one for most hold > 1
+#: rules, and at lag 11 on 32 months (a 12-month hold in the 2024-26 window) it
+#: turned rd_intensity's hedged t from +1.57 into +2.85. A lag that is a third
+#: of the sample makes the NW estimate noisy and biased low; the dependence a
+#: multi-month hold creates is positive by construction, so a negative sample
+#: autocorrelation there is noise, not diversification. HAC may widen, never narrow.
+HAC_FLOOR_NOTE = ("used SE = max(plain, Newey-West): the HAC correction may widen the plain SE, "
+                  "never narrow it (a lag of hold - 1 on ~32 months is noisy and biased low)")
+
+
+def hac_lags_for(hold_months: int) -> int:
+    """Newey-West lag for a rule held `hold_months` months: hold - 1 (Bartlett).
+
+    A quarterly book's monthly active returns share holdings with the two
+    months either side, so they are serially dependent; a monthly book's are
+    not (lag 0 = the plain SE)."""
+    return max(0, int(hold_months) - 1)
+
+
+def newey_west_cov(A: np.ndarray, resid: np.ndarray, lags: int) -> np.ndarray:
+    """HAC (Newey-West, Bartlett kernel) covariance of OLS coefficients.
+
+    (A'A)^-1 S (A'A)^-1 with S = sum_t u_t^2 a_t a_t' + sum_{l=1..L} w_l
+    sum_t (a_t u_t u_{t-l} a_{t-l}' + transpose), w_l = 1 - l/(L+1), scaled by
+    n / (n - p) (HC1-style). Lag 0 is White's heteroskedasticity-robust SE; for
+    an intercept-only regression it equals the plain SE."""
+    n, p = A.shape
+    g = A * resid[:, None]
+    S = g.T @ g
+    for lag in range(1, int(lags) + 1):
+        w = 1.0 - lag / (lags + 1.0)
+        G = g[lag:].T @ g[:-lag]
+        S += w * (G + G.T)
+    inv = np.linalg.pinv(A.T @ A)
+    return inv @ S @ inv * (n / max(n - p, 1))
+
+
+def hac_se_mean(x: Iterable[float], lags: int) -> float:
+    """Newey-West SE of a sample mean (intercept-only regression)."""
+    v = np.asarray([float(z) for z in x], dtype=float)
+    v = v[np.isfinite(v)]
+    n = len(v)
+    if n < 2:
+        return float("nan")
+    A = np.ones((n, 1))
+    cov = newey_west_cov(A, v - v.mean(), lags)
+    return float(math.sqrt(max(cov[0, 0], 0.0)))
+
+
+def ols(y: pd.Series, X: pd.DataFrame, *, hold_months: int = 1) -> dict:
     """OLS with intercept: alpha, t(alpha), betas, t(betas), R^2, n.
 
     Refuses (InsufficientHistory) below MIN_MONTHS or with too few degrees of
-    freedom. Plain OLS standard errors: the monthly blocks do not overlap for a
-    hold-1 rule; for hold > 1 they understate the SE and the caller says so."""
+    freedom. Plain OLS standard errors always; for a rule held longer than a
+    month (serially dependent monthly returns) the Newey-West HAC SE with lag
+    hold_months - 1 (Bartlett) is printed beside them, and `t_alpha_used` /
+    `se_alpha_used` / `mde_alpha_80_used` are the HAC ones (plain when hold = 1)."""
     df = pd.concat([y.rename("__y"), X], axis=1).dropna()
     n, p = len(df), X.shape[1] + 1
     if n < MIN_MONTHS or n - p < 3:
@@ -215,8 +267,25 @@ def ols(y: pd.Series, X: pd.DataFrame) -> dict:
     t = np.where(se > 0, coef / np.where(se > 0, se, 1), np.nan)
     means = df[X.columns].mean()
     contrib = {c: float(coef[i + 1] * means[c]) for i, c in enumerate(X.columns)}
+    L = hac_lags_for(hold_months)
+    hcov = newey_west_cov(A, resid, L)
+    hse = np.sqrt(np.clip(np.diag(hcov), 0, None))
+    se_h = float(hse[0])
+    t_h = float(coef[0] / se_h) if se_h > 0 else float("nan")
+    use_hac = L > 0
+    # HAC_FLOOR: the used SE is max(plain, HAC) -- HAC may widen, never narrow
+    se_u = max(se_h, float(se[0])) if use_hac else float(se[0])
     return {"n": int(n), "alpha_monthly": float(coef[0]), "t_alpha": float(t[0]),
             "se_alpha": float(se[0]), "mde_alpha_80": float(MDE_Z * se[0]),
+            "hold_months": int(hold_months), "hac_lags": int(L),
+            "se_alpha_hac": se_h, "t_alpha_hac": t_h, "mde_alpha_80_hac": float(MDE_Z * se_h),
+            "se_used": (("hac" if se_h >= se[0] else "plain (HAC below plain: floored)")
+                        if use_hac else "plain"),
+            "t_alpha_used": float(coef[0] / se_u) if se_u > 0 else float("nan"),
+            "se_alpha_used": se_u,
+            "mde_alpha_80_used": float(MDE_Z * se_u),
+            "t_betas_hac": {c: (float(coef[i + 1] / hse[i + 1]) if hse[i + 1] > 0 else float("nan"))
+                            for i, c in enumerate(X.columns)},
             "betas": {c: float(coef[i + 1]) for i, c in enumerate(X.columns)},
             "t_betas": {c: float(t[i + 1]) for i, c in enumerate(X.columns)},
             "r2": float(r2), "mean_active_monthly": float(Y.mean()),
@@ -251,10 +320,12 @@ def dsr_at(active: Iterable[float], n_trials: int) -> Optional[float]:
 
 # ── ex-ante hedge, verdict, residuals (review 2026-09-27) ────────────────────
 
-def exante_hedge(y: pd.Series, X: pd.DataFrame, betas: dict) -> dict:
+def exante_hedge(y: pd.Series, X: pd.DataFrame, betas: dict, *, hold_months: int = 1) -> dict:
     """The alpha left after betas you could have known: y - X @ betas_fitted_
     elsewhere (no intercept), over the months of `y`. Mean, SE (plain,
-    sd / sqrt n), t and MDE at 80% power. Refuses below MIN_MONTHS."""
+    sd / sqrt n), t and MDE at 80% power; for hold_months > 1 the Newey-West
+    SE (lag hold - 1) beside it, and `t` / `se` / `mde_80` ARE the HAC ones
+    (the plain ones stay as `*_plain`). Refuses below MIN_MONTHS."""
     cols = [c for c in X.columns if c in betas]
     df = pd.concat([y.rename("__y"), X[cols]], axis=1).dropna()
     n = len(df)
@@ -264,16 +335,32 @@ def exante_hedge(y: pd.Series, X: pd.DataFrame, betas: dict) -> dict:
     sd = float(np.std(h, ddof=1)) if n > 1 else float("nan")
     se = sd / math.sqrt(n) if np.isfinite(sd) else float("nan")
     m = float(h.mean())
-    return {"n": int(n), "alpha_monthly": m, "se": se,
-            "t": (m / se) if se and np.isfinite(se) and se > 0 else float("nan"),
-            "mde_80": MDE_Z * se, "betas_used": {c: float(betas[c]) for c in cols}}
+    t_plain = (m / se) if se and np.isfinite(se) and se > 0 else float("nan")
+    L = hac_lags_for(hold_months)
+    se_h = hac_se_mean(h, L)
+    t_h = (m / se_h) if np.isfinite(se_h) and se_h > 0 else float("nan")
+    use = L > 0
+    # HAC_FLOOR: max(plain, HAC) -- see HAC_FLOOR_NOTE
+    se_u = max(se_h, se) if (use and np.isfinite(se_h)) else se
+    return {"n": int(n), "alpha_monthly": m,
+            "se": se_u, "t": (m / se_u) if np.isfinite(se_u) and se_u > 0 else float("nan"),
+            "mde_80": MDE_Z * se_u,
+            "se_used": (("hac" if se_h >= se else "plain (HAC below plain: floored)")
+                        if use else "plain"), "hold_months": int(hold_months),
+            "hac_lags": int(L),
+            "se_plain": se, "t_plain": t_plain, "mde_80_plain": MDE_Z * se,
+            "se_hac": se_h, "t_hac": t_h, "mde_80_hac": MDE_Z * se_h,
+            "betas_used": {c: float(betas[c]) for c in cols}}
 
 
 def verdict(hedge: dict, observed_excess: float) -> str:
     """ALPHA_DETECTED: |t| >= 2 on the ex-ante-hedged alpha (the sign is printed
     beside it). BETA_EXPLAINS: |t| < 1 AND the MDE is below the observed mean
     excess -- the test could have seen an alpha that size and did not.
-    Everything else is CANNOT_DISTINGUISH: no power is not no alpha."""
+    Everything else is CANNOT_DISTINGUISH: no power is not no alpha.
+
+    `hedge["t"]` / `hedge["mde_80"]` are the HAC ones when the rule is held
+    longer than a month (`exante_hedge(..., hold_months=h)`), plain otherwise."""
     t, mde = hedge.get("t"), hedge.get("mde_80")
     if t is None or not np.isfinite(t):
         return "CANNOT_DISTINGUISH"

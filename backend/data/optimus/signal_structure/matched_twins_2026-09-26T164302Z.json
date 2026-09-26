@@ -1,0 +1,559 @@
+{
+ "schema": "signal_structure/matched_twins/1",
+ "job": "signal_structure --matched-twins",
+ "run_id": "2026-09-26T164302Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-26T20:26:27+00:00",
+ "label": "HINDSIGHT: every rule was registered 2026-09-26, after every month here",
+ "why": "reviewer idea 2 (review 2026-09-27), owed item 3: separate 'the rule selects' from 'the rule buys a style' with a DGTW-style characteristic-matched random twin",
+ "rules_source": "strategy_library/top10_for_replication_2026-09-26T164302Z.json (top by sealed_vs_spy (the board's primary sort))",
+ "random_1": {
+  "column": "random_1@k50",
+  "source": "backend/data/optimus/signal_structure/monthly_returns_2026-09-26T164302Z.parquet"
+ },
+ "panel": {
+  "status": "CACHED",
+  "path": "backend/data/optimus/signal_structure/matched_twins_panel_2026-09-26T164302Z.parquet",
+  "rows": 366330
+ },
+ "matching": "size band (mega >= 1e9 / large >= 1e8 / mid >= 2e7 / small, on 63-session median dollar volume) x vol_63 tercile x mom_252_21 tercile, terciles among the date's eligible names; one twin name per held name, same weight, excluding the rule's own holdings, without replacement within a date; redrawn at every rebalance; weights drift between rebalances; fallback band x vol -> band -> any",
+ "net_convention": "rule net = the stored series; twin net = twin gross - the RULE's own cost that month (the twin trades the same weights in the same bands), so rule - twin net = rule gross - twin gross; random_1 = the stored k50 control, net",
+ "windows": {
+  "dev_end": "2023-12-31",
+  "sealed_start": "2024-01-01",
+  "recent_periods": 6,
+  "rule": "a period's window is that of its ENTRY session (decision + 1 business day)"
+ },
+ "summary": {
+  "dev": {
+   "median_rule_minus_twin": 0.03677005840312586,
+   "median_rule_minus_random_1": 0.016017682870444472,
+   "median_removed_by_matching": -0.0077469938701903995,
+   "median_share_removed": -0.15945873252050005,
+   "n_rule_minus_twin_gt_0": 8,
+   "n_rules": 10
+  },
+  "sealed": {
+   "median_rule_minus_twin": 0.37409603633271404,
+   "median_rule_minus_random_1": 0.526441715721883,
+   "median_removed_by_matching": 0.20094950332387385,
+   "median_share_removed": 0.40262684053986186,
+   "n_rule_minus_twin_gt_0": 10,
+   "n_rules": 10
+  }
+ },
+ "rows": [
+  {
+   "rule": "mom_12_1_liqw",
+   "k": 20,
+   "hold_months": 1,
+   "universe": "all",
+   "weight_rule": "inv_amihud",
+   "seed": 114318022352773,
+   "recon_check": {
+    "max_abs_gap_gross": 1.0223892887850639e-07,
+    "median_abs_gap_gross": 1.3565780283830708e-08,
+    "n_months_gap_gt_1e-6": 0
+   },
+   "twin_fallbacks": {
+    "cell": 2295,
+    "band_vol": 5,
+    "band": 0,
+    "any": 0,
+    "none": 0
+   },
+   "board_sealed_vs_spy": 0.684004,
+   "dev": {
+    "n_months": 83,
+    "cagr_rule": 0.06978741618739881,
+    "cagr_twin": 0.11846333079595528,
+    "cagr_random_1": 0.11399634789102842,
+    "rule_minus_twin": -0.04867591460855647,
+    "rule_minus_random_1": -0.044208931703629606,
+    "removed_by_matching": 0.004466982904926864,
+    "share_removed": -0.10104254350394355,
+    "mean_monthly_rule_minus_twin": 0.003442719418906019,
+    "t_monthly_rule_minus_twin": 0.20932586319517124,
+    "rule_minus_twin_draws_mean": -0.021294830525179238,
+    "rule_minus_twin_draws_sd": 0.08672238382527911,
+    "n_extra_draws": 20
+   },
+   "sealed": {
+    "n_months": 32,
+    "cagr_rule": 0.8939966420213601,
+    "cagr_twin": 0.18232318756560906,
+    "cagr_random_1": 0.10436152357314765,
+    "rule_minus_twin": 0.711673454455751,
+    "rule_minus_random_1": 0.7896351184482124,
+    "removed_by_matching": 0.0779616639924614,
+    "share_removed": 0.09873125215817571,
+    "mean_monthly_rule_minus_twin": 0.05255505837480039,
+    "t_monthly_rule_minus_twin": 1.8085708325649872,
+    "rule_minus_twin_draws_mean": 0.5986522856793581,
+    "rule_minus_twin_draws_sd": 0.23537897237409117,
+    "n_extra_draws": 20
+   }
+  },
+  {
+   "rule": "qc372_oversold_snapback_mega",
+   "k": 5,
+   "hold_months": 1,
+   "universe": "mega",
+   "weight_rule": "equal",
+   "seed": 206864839535346,
+   "recon_check": {
+    "max_abs_gap_gross": 4.239901322741768e-08,
+    "median_abs_gap_gross": 1.164505192274845e-08,
+    "n_months_gap_gt_1e-6": 0
+   },
+   "twin_fallbacks": {
+    "cell": 466,
+    "band_vol": 71,
+    "band": 33,
+    "any": 5,
+    "none": 0
+   },
+   "board_sealed_vs_spy": 0.594195,
+   "dev": {
+    "n_months": 83,
+    "cagr_rule": 0.12195574407404752,
+    "cagr_twin": 0.10315237491363449,
+    "cagr_random_1": 0.11399634789102842,
+    "rule_minus_twin": 0.01880336916041303,
+    "rule_minus_random_1": 0.007959396183019107,
+    "removed_by_matching": -0.010843972977393923,
+    "share_removed": -1.3624115106280155,
+    "mean_monthly_rule_minus_twin": 0.003291397603391434,
+    "t_monthly_rule_minus_twin": 0.47315820649582463,
+    "rule_minus_twin_draws_mean": 0.045229422562448794,
+    "rule_minus_twin_draws_sd": 0.03350659524527711,
+    "n_extra_draws": 20
+   },
+   "sealed": {
+    "n_months": 32,
+    "cagr_rule": 0.804187781893656,
+    "cagr_twin": 0.09281941003588812,
+    "cagr_random_1": 0.10436152357314765,
+    "rule_minus_twin": 0.7113683718577679,
+    "rule_minus_random_1": 0.6998262583205084,
+    "removed_by_matching": -0.011542113537259535,
+    "share_removed": -0.016492827183934338,
+    "mean_monthly_rule_minus_twin": 0.042383735666510325,
+    "t_monthly_rule_minus_twin": 2.7090983339760104,
+    "rule_minus_twin_draws_mean": 0.4186160854137457,
+    "rule_minus_twin_draws_sd": 0.14918440040649683,
+    "n_extra_draws": 20
+   }
+  },
+  {
+   "rule": "rd_intensity",
+   "k": 20,
+   "hold_months": 12,
+   "universe": "all",
+   "weight_rule": "equal",
+   "seed": 75266375499121,
+   "recon_check": {
+    "max_abs_gap_gross": 2.2186302059412633e-08,
+    "median_abs_gap_gross": 5.21616699833416e-09,
+    "n_months_gap_gt_1e-6": 0
+   },
+   "twin_fallbacks": {
+    "cell": 200,
+    "band_vol": 0,
+    "band": 0,
+    "any": 0,
+    "none": 0
+   },
+   "board_sealed_vs_spy": 0.555432,
+   "dev": {
+    "n_months": 83,
+    "cagr_rule": 0.17054045572340604,
+    "cagr_twin": 0.12019397761185657,
+    "cagr_random_1": 0.11399634789102842,
+    "rule_minus_twin": 0.050346478111549464,
+    "rule_minus_random_1": 0.05654410783237762,
+    "removed_by_matching": 0.006197629720828157,
+    "share_removed": 0.10960699458201273,
+    "mean_monthly_rule_minus_twin": 0.005342867014670787,
+    "t_monthly_rule_minus_twin": 0.5925008407662146,
+    "rule_minus_twin_draws_mean": 0.05160055279765707,
+    "rule_minus_twin_draws_sd": 0.04154612561759621,
+    "n_extra_draws": 20
+   },
+   "sealed": {
+    "n_months": 32,
+    "cagr_rule": 0.7654245204080301,
+    "cagr_twin": 0.363024342559366,
+    "cagr_random_1": 0.10436152357314765,
+    "rule_minus_twin": 0.4024001778486641,
+    "rule_minus_random_1": 0.6610629968348825,
+    "removed_by_matching": 0.25866281898621835,
+    "share_removed": 0.39128316094634785,
+    "mean_monthly_rule_minus_twin": 0.03212979671828283,
+    "t_monthly_rule_minus_twin": 1.1122175620799475,
+    "rule_minus_twin_draws_mean": 0.5065220857318897,
+    "rule_minus_twin_draws_sd": 0.1194904633522019,
+    "n_extra_draws": 20
+   }
+  },
+  {
+   "rule": "rev_5d",
+   "k": 20,
+   "hold_months": 1,
+   "universe": "all",
+   "weight_rule": "equal",
+   "seed": 184317105378858,
+   "recon_check": {
+    "max_abs_gap_gross": 3.528340342118241e-08,
+    "median_abs_gap_gross": 5.347685100298705e-09,
+    "n_months_gap_gt_1e-6": 0
+   },
+   "twin_fallbacks": {
+    "cell": 2298,
+    "band_vol": 2,
+    "band": 0,
+    "any": 0,
+    "none": 0
+   },
+   "board_sealed_vs_spy": 0.484427,
+   "dev": {
+    "n_months": 83,
+    "cagr_rule": 0.0284650639633115,
+    "cagr_twin": 0.056987552121171126,
+    "cagr_random_1": 0.11399634789102842,
+    "rule_minus_twin": -0.028522488157859627,
+    "rule_minus_random_1": -0.08553128392771692,
+    "removed_by_matching": -0.05700879576985729,
+    "share_removed": 0.6665256634991685,
+    "mean_monthly_rule_minus_twin": 0.004912216106056478,
+    "t_monthly_rule_minus_twin": 0.4096982429500763,
+    "rule_minus_twin_draws_mean": -0.014095207352625644,
+    "rule_minus_twin_draws_sd": 0.051732257315380434,
+    "n_extra_draws": 20
+   },
+   "sealed": {
+    "n_months": 32,
+    "cagr_rule": 0.6944203972248002,
+    "cagr_twin": 0.3486285024080362,
+    "cagr_random_1": 0.10436152357314765,
+    "rule_minus_twin": 0.345791894816764,
+    "rule_minus_random_1": 0.5900588736516525,
+    "removed_by_matching": 0.24426697883488857,
+    "share_removed": 0.41397052013337593,
+    "mean_monthly_rule_minus_twin": 0.021477552086946457,
+    "t_monthly_rule_minus_twin": 1.845885593182384,
+    "rule_minus_twin_draws_mean": 0.39823741242341215,
+    "rule_minus_twin_draws_sd": 0.13755435225762538,
+    "n_extra_draws": 20
+   }
+  },
+  {
+   "rule": "qc623_mom63_liquidity_weighted",
+   "k": 10,
+   "hold_months": 1,
+   "universe": "large",
+   "weight_rule": "inv_amihud",
+   "seed": 183232880251997,
+   "recon_check": {
+    "max_abs_gap_gross": 5.1943629158363036e-08,
+    "median_abs_gap_gross": 1.0799286770390992e-08,
+    "n_months_gap_gt_1e-6": 0
+   },
+   "twin_fallbacks": {
+    "cell": 1125,
+    "band_vol": 14,
+    "band": 11,
+    "any": 0,
+    "none": 0
+   },
+   "board_sealed_vs_spy": 0.462923,
+   "dev": {
+    "n_months": 83,
+    "cagr_rule": 0.12197322292948631,
+    "cagr_twin": 0.09688569625880006,
+    "cagr_random_1": 0.11399634789102842,
+    "rule_minus_twin": 0.025087526670686255,
+    "rule_minus_random_1": 0.007976875038457898,
+    "removed_by_matching": -0.017110651632228357,
+    "share_removed": -2.1450319266297817,
+    "mean_monthly_rule_minus_twin": 0.003335932307989564,
+    "t_monthly_rule_minus_twin": 0.34599314742638204,
+    "rule_minus_twin_draws_mean": 0.06114642136204782,
+    "rule_minus_twin_draws_sd": 0.07300875780098912,
+    "n_extra_draws": 20
+   },
+   "sealed": {
+    "n_months": 32,
+    "cagr_rule": 0.672915748145795,
+    "cagr_twin": 0.23194505443015778,
+    "cagr_random_1": 0.10436152357314765,
+    "rule_minus_twin": 0.44097069371563724,
+    "rule_minus_random_1": 0.5685542245726474,
+    "removed_by_matching": 0.12758353085701013,
+    "share_removed": 0.22439993468153022,
+    "mean_monthly_rule_minus_twin": 0.03681293180928625,
+    "t_monthly_rule_minus_twin": 1.4728055657703516,
+    "rule_minus_twin_draws_mean": 0.3118263860873641,
+    "rule_minus_twin_draws_sd": 0.20618634659628846,
+    "n_extra_draws": 20
+   }
+  },
+  {
+   "rule": "mom_12_1_q",
+   "k": 20,
+   "hold_months": 3,
+   "universe": "all",
+   "weight_rule": "equal",
+   "seed": 222686662038574,
+   "recon_check": {
+    "max_abs_gap_gross": 2.244512883886607e-08,
+    "median_abs_gap_gross": 5.997205149155249e-09,
+    "n_months_gap_gt_1e-6": 0
+   },
+   "twin_fallbacks": {
+    "cell": 779,
+    "band_vol": 1,
+    "band": 0,
+    "any": 0,
+    "none": 0
+   },
+   "board_sealed_vs_spy": 0.378698,
+   "dev": {
+    "n_months": 83,
+    "cagr_rule": 0.34232460868777115,
+    "cagr_twin": 0.1785451700292946,
+    "cagr_random_1": 0.11399634789102842,
+    "rule_minus_twin": 0.16377943865847655,
+    "rule_minus_random_1": 0.22832826079674273,
+    "removed_by_matching": 0.06454882213826618,
+    "share_removed": 0.2827018517682635,
+    "mean_monthly_rule_minus_twin": 0.014033105717397588,
+    "t_monthly_rule_minus_twin": 1.7742103584269153,
+    "rule_minus_twin_draws_mean": 0.20416170571009973,
+    "rule_minus_twin_draws_sd": 0.039029200513768146,
+    "n_extra_draws": 20
+   },
+   "sealed": {
+    "n_months": 32,
+    "cagr_rule": 0.5886907304442663,
+    "cagr_twin": 0.3395459357612971,
+    "cagr_random_1": 0.10436152357314765,
+    "rule_minus_twin": 0.24914479468296924,
+    "rule_minus_random_1": 0.4843292068711187,
+    "removed_by_matching": 0.23518441218814945,
+    "share_removed": 0.48558792005854123,
+    "mean_monthly_rule_minus_twin": 0.01798323554097592,
+    "t_monthly_rule_minus_twin": 1.485951637567182,
+    "rule_minus_twin_draws_mean": 0.3552189160858902,
+    "rule_minus_twin_draws_sd": 0.14112908834404006,
+    "n_extra_draws": 20
+   }
+  },
+  {
+   "rule": "margin_mom",
+   "k": 20,
+   "hold_months": 1,
+   "universe": "all",
+   "weight_rule": "equal",
+   "seed": 129985937006209,
+   "recon_check": {
+    "max_abs_gap_gross": 2.3365813395237467e-08,
+    "median_abs_gap_gross": 5.418682225144522e-09,
+    "n_months_gap_gt_1e-6": 0
+   },
+   "twin_fallbacks": {
+    "cell": 2285,
+    "band_vol": 13,
+    "band": 2,
+    "any": 0,
+    "none": 0
+   },
+   "board_sealed_vs_spy": 0.378453,
+   "dev": {
+    "n_months": 83,
+    "cagr_rule": 0.13533893624485138,
+    "cagr_twin": 0.10934633312804154,
+    "cagr_random_1": 0.11399634789102842,
+    "rule_minus_twin": 0.025992603116809843,
+    "rule_minus_random_1": 0.021342588353822967,
+    "removed_by_matching": -0.004650014762986876,
+    "share_removed": -0.21787492153705657,
+    "mean_monthly_rule_minus_twin": 0.003072446909984764,
+    "t_monthly_rule_minus_twin": 0.6113915002718294,
+    "rule_minus_twin_draws_mean": -0.002725382487297001,
+    "rule_minus_twin_draws_sd": 0.03714656866323077,
+    "n_extra_draws": 20
+   },
+   "sealed": {
+    "n_months": 32,
+    "cagr_rule": 0.588446374469642,
+    "cagr_twin": 0.17705027177471067,
+    "cagr_random_1": 0.10436152357314765,
+    "rule_minus_twin": 0.4113961026949313,
+    "rule_minus_random_1": 0.48408485089649433,
+    "removed_by_matching": 0.07268874820156301,
+    "share_removed": 0.15015703975645608,
+    "mean_monthly_rule_minus_twin": 0.02991197366176052,
+    "t_monthly_rule_minus_twin": 2.200251662095975,
+    "rule_minus_twin_draws_mean": 0.40036268296067623,
+    "rule_minus_twin_draws_sd": 0.09516270569562107,
+    "n_extra_draws": 20
+   }
+  },
+  {
+   "rule": "skill_mom",
+   "k": 20,
+   "hold_months": 1,
+   "universe": "all",
+   "weight_rule": "equal",
+   "seed": 143471698105606,
+   "recon_check": {
+    "max_abs_gap_gross": 2.428952022024214e-08,
+    "median_abs_gap_gross": 5.7351731419519325e-09,
+    "n_months_gap_gt_1e-6": 0
+   },
+   "twin_fallbacks": {
+    "cell": 2274,
+    "band_vol": 22,
+    "band": 4,
+    "any": 0,
+    "none": 0
+   },
+   "board_sealed_vs_spy": 0.369627,
+   "dev": {
+    "n_months": 83,
+    "cagr_rule": 0.17896349067924877,
+    "cagr_twin": 0.1314159769898069,
+    "cagr_random_1": 0.11399634789102842,
+    "rule_minus_twin": 0.04754751368944188,
+    "rule_minus_random_1": 0.06496714278822036,
+    "removed_by_matching": 0.017419629098778477,
+    "share_removed": 0.2681298322686426,
+    "mean_monthly_rule_minus_twin": 0.003776607519023019,
+    "t_monthly_rule_minus_twin": 0.733323311553357,
+    "rule_minus_twin_draws_mean": 0.0237662522723619,
+    "rule_minus_twin_draws_sd": 0.04800760930902188,
+    "n_extra_draws": 20
+   },
+   "sealed": {
+    "n_months": 32,
+    "cagr_rule": 0.5796200230011912,
+    "cagr_twin": 0.31671537913316805,
+    "cagr_random_1": 0.10436152357314765,
+    "rule_minus_twin": 0.26290464386802315,
+    "rule_minus_random_1": 0.47525849942804355,
+    "removed_by_matching": 0.2123538555600204,
+    "share_removed": 0.4468175862516517,
+    "mean_monthly_rule_minus_twin": 0.01648721279144582,
+    "t_monthly_rule_minus_twin": 2.1490915260829127,
+    "rule_minus_twin_draws_mean": 0.3167774613318268,
+    "rule_minus_twin_draws_sd": 0.09392104733037321,
+    "n_extra_draws": 20
+   }
+  },
+  {
+   "rule": "qc395_sharpe252_above_trend_large",
+   "k": 10,
+   "hold_months": 1,
+   "universe": "large",
+   "weight_rule": "equal",
+   "seed": 249159603224378,
+   "recon_check": {
+    "max_abs_gap_gross": 2.9034999932120442e-08,
+    "median_abs_gap_gross": 7.592704048819954e-09,
+    "n_months_gap_gt_1e-6": 0
+   },
+   "twin_fallbacks": {
+    "cell": 1139,
+    "band_vol": 8,
+    "band": 3,
+    "any": 0,
+    "none": 0
+   },
+   "board_sealed_vs_spy": 0.352383,
+   "dev": {
+    "n_months": 83,
+    "cagr_rule": 0.2675379181732509,
+    "cagr_twin": 0.05547367316594376,
+    "cagr_random_1": 0.11399634789102842,
+    "rule_minus_twin": 0.21206424500730714,
+    "rule_minus_random_1": 0.15354157028222248,
+    "removed_by_matching": -0.058522674725084656,
+    "share_removed": -0.3811519878135608,
+    "mean_monthly_rule_minus_twin": 0.017862045559567566,
+    "t_monthly_rule_minus_twin": 2.172825767907744,
+    "rule_minus_twin_draws_mean": 0.08691038817849155,
+    "rule_minus_twin_draws_sd": 0.08003539902100122,
+    "n_extra_draws": 20
+   },
+   "sealed": {
+    "n_months": 32,
+    "cagr_rule": 0.5623754995809778,
+    "cagr_twin": 0.42818363927477043,
+    "cagr_random_1": 0.10436152357314765,
+    "rule_minus_twin": 0.13419186030620733,
+    "rule_minus_random_1": 0.4580139760078301,
+    "removed_by_matching": 0.3238221157016228,
+    "share_removed": 0.7070136123882971,
+    "mean_monthly_rule_minus_twin": 0.011865765548377509,
+    "t_monthly_rule_minus_twin": 0.7152495161650317,
+    "rule_minus_twin_draws_mean": 0.3173961268048705,
+    "rule_minus_twin_draws_sd": 0.10759077353524939,
+    "n_extra_draws": 20
+   }
+  },
+  {
+   "rule": "co03_reversal_in_high_margin",
+   "k": 20,
+   "hold_months": 1,
+   "universe": "all",
+   "weight_rule": "equal",
+   "seed": 84113717530862,
+   "recon_check": {
+    "max_abs_gap_gross": 1.8677994012561427e-08,
+    "median_abs_gap_gross": 4.621139013116782e-09,
+    "n_months_gap_gt_1e-6": 0
+   },
+   "twin_fallbacks": {
+    "cell": 2296,
+    "band_vol": 4,
+    "band": 0,
+    "any": 0,
+    "none": 0
+   },
+   "board_sealed_vs_spy": 0.349129,
+   "dev": {
+    "n_months": 83,
+    "cagr_rule": 0.12468912527809439,
+    "cagr_twin": 0.06449377014784674,
+    "cagr_random_1": 0.11399634789102842,
+    "rule_minus_twin": 0.06019535513024765,
+    "rule_minus_random_1": 0.010692777387065977,
+    "removed_by_matching": -0.049502577743181675,
+    "share_removed": -4.629534119270095,
+    "mean_monthly_rule_minus_twin": 0.00678864773424105,
+    "t_monthly_rule_minus_twin": 1.0217685525698277,
+    "rule_minus_twin_draws_mean": 0.05751514341500226,
+    "rule_minus_twin_draws_sd": 0.04361612209725518,
+    "n_extra_draws": 20
+   },
+   "sealed": {
+    "n_months": 32,
+    "cagr_rule": 0.5591223786832891,
+    "cagr_twin": 0.29390667466087494,
+    "cagr_random_1": 0.10436152357314765,
+    "rule_minus_twin": 0.2652157040224141,
+    "rule_minus_random_1": 0.4547608551101414,
+    "removed_by_matching": 0.1895451510877273,
+    "share_removed": 0.4168018178297693,
+    "mean_monthly_rule_minus_twin": 0.01585753648865739,
+    "t_monthly_rule_minus_twin": 1.505945777050088,
+    "rule_minus_twin_draws_mean": 0.33000845771491205,
+    "rule_minus_twin_draws_sd": 0.10346639895993319,
+    "n_extra_draws": 20
+   }
+  }
+ ],
+ "reading": "removed_by_matching = (rule - random_1) - (rule - twin) = twin - random_1 in CAGR: the part of the excess over a uniform random draw that the size / vol / past-return cell explains. share_removed = removed / (rule - random_1)."
+}

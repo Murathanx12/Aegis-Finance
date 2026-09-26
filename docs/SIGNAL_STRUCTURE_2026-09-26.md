@@ -455,3 +455,88 @@ cluster mean, tagged by axis.
   cell once the controls are done, then copy the columns in `_row`. Until then the sidecar carries
   them.
 - **HAC / Newey-West SEs for hold > 1 books:** still not done. Their MDE is optimistic.
+
+## 2026-09-27 (later): hold-period keying in xs_ranker, HAC for multi-month holds, matched twins
+
+Every number below is HINDSIGHT. Run of record: `T164302Z`. Its series come from
+`checkpoint_2026-09-27.T173143Z.bak.json`, now also stored as
+`monthly_returns_2026-09-26T164302Z.parquet`. That file is gitignored and is rebuilt by `--hac`. No factory
+run and no LLM spend.
+
+### 1. `xs_ranker.top_k_backtest` is hold-keyed
+
+The per-year fields now use the year of the forward return's END session: decision date +
+`horizon` business days on the US federal holiday calendar. This covers `by_year`,
+`leave_one_year_out`, `loo_worst_*` and `share_of_total_by_year`. `share_of_total_top1pct_hold_ends`
+names the dates by their hold end.
+
+The decision-keyed values are kept for one release as `*_decision`, marked DEPRECATED. The
+`share_of_total_by_date` fractions do not depend on the key and are unchanged.
+`night_horizon_sweep` reads the same field names, so it now reads hold-keyed values. Test: a
+21-session hold entered on 2023-12-29 lands in 2024 (`test_xs_ranker_hold_keying.py`).
+
+### 2. HAC standard errors for rules held longer than one month
+
+`signal_structure.ols` and `exante_hedge` now print both the plain SE and a Newey-West SE (Bartlett,
+lag = hold_months − 1). For hold > 1, the verdict reads the HAC t, **floored at the plain SE**:
+the HAC correction may widen the SE but never narrows it. `python -m scripts.signal_structure --hac`
+writes `hac_readout_2026-09-26T164302Z.json`.
+
+The floor is not optional here:
+
+- 284 primary cells: 269 hold 1 month, 11 hold 3 months, 4 hold 12 months.
+- For 8 of the 15 multi-month rules, the raw Newey-West SE came out *below* the plain SE.
+- Unfloored, one verdict flipped. `rd_intensity` (12-month hold) went from CANNOT_DISTINGUISH to
+  ALPHA_DETECTED: hedged t +1.57 → +2.85. That estimate is lag 11 on 32 months, which is noise.
+- **Floored, no verdict changes:** 14 ALPHA_DETECTED and 270 CANNOT_DISTINGUISH, the same under
+  both SEs.
+
+### 3. Characteristic-matched random twins, 2024-26 top-10
+
+Command: `python -m scripts.signal_structure --matched-twins`; receipt:
+`matched_twins_2026-09-26T164302Z.json`; module: `backend/services/matched_twins.py`.
+
+How the twin is built:
+
+- For every held name, draw one name from the same size band × vol_63 tercile × 12-1 tercile at
+  the same rebalance.
+- Draw from the same survivorship-free panel. The rule's own names are excluded.
+- Seed from the rule id. 20 extra draws give the twin's sampling SD.
+- Twin net = twin gross − the rule's own cost that month.
+- Reconstruction check: the rule's own gross, rebuilt from its holdings on this panel, matches the
+  stored series within 1e-7 for all 10 rules.
+
+All figures are CAGR differences. "Removed" = (rule − random_1) − (rule − twin).
+
+| rule | dev: rule−twin | dev: rule−random_1 | 24-26: rule−twin (draw SD) | 24-26: rule−random_1 | share removed 24-26 |
+|---|---|---|---|---|---|
+| mom_12_1_liqw | −4.9% | −4.4% | +71.2% (23.5%) | +79.0% | 10% |
+| qc372_oversold_snapback_mega | +1.9% | +0.8% | +71.1% (14.9%) | +70.0% | −2% |
+| rd_intensity | +5.0% | +5.7% | +40.2% (11.9%) | +66.1% | 39% |
+| rev_5d | −2.9% | −8.6% | +34.6% (13.8%) | +59.0% | 41% |
+| qc623_mom63_liquidity_weighted | +2.5% | +0.8% | +44.1% (20.6%) | +56.9% | 22% |
+| mom_12_1_q | +16.4% | +22.8% | +24.9% (14.1%) | +48.4% | 49% |
+| margin_mom | +2.6% | +2.1% | +41.1% (9.5%) | +48.4% | 15% |
+| skill_mom | +4.8% | +6.5% | +26.3% (9.4%) | +47.5% | 45% |
+| qc395_sharpe252_above_trend_large | +21.2% | +15.4% | +13.4% (10.8%) | +45.8% | 71% |
+| co03_reversal_in_high_margin | +6.0% | +1.1% | +26.5% (10.3%) | +45.5% | 42% |
+
+What the table says:
+
+- **In 2024-26, matching removes a median 20.1 pp of the 52.6 pp excess over random_1** (median
+  share about 40%). The largest shares are the large-cap trend rule (71%) and quarterly momentum
+  (49%).
+- **All 10 rules still beat their matched twin in 2024-26.** Two cautions apply:
+  - these 10 were *selected* on 2024-26;
+  - the twin draw SD is 9–24%/yr.
+- **In dev, matching removes nothing** (median −0.8 pp), and 8 of 10 rules beat their twins by a
+  median of only +3.7%.
+- **Conclusion:** the 2024-26 excess is part style (size, vol, past return) and part window
+  selection. Neither is established as a mechanism.
+
+### Still owed
+
+- The factory's own `night_backtest_factory` does not apply the HAC floor. Its t is
+  `t_active_horizon_blocks` on horizon-wide blocks, which is a different estimator.
+- Matched twins cover only the 10 rules the replication file carries holdings for. Rolling them
+  out to every board row needs the factory to store holdings for every cell.

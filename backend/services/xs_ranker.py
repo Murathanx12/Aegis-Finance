@@ -566,6 +566,49 @@ def _information_coefficient(oos: pd.DataFrame) -> dict:
     }
 
 
+#: Review 2026-09-27 (§4b, carried to xs_ranker by the adjudication): per-year
+#: statistics are keyed on the period the money was HELD -- the forward return's
+#: own END session -- not the decision date. Decision-keyed, a 21-session hold
+#: entered on the last session of December printed as that December's year while
+#: every cent of it was earned in January.
+YEAR_KEY_NOTE = ("hold: each rebalance date is keyed on the END session of its "
+                 "forward return (decision date + `horizon` NYSE-approximate "
+                 "business days, US federal holidays excluded), i.e. the year the "
+                 "money was held through")
+DECISION_KEY_DEPRECATED = ("DEPRECATED (review 2026-09-27 §4b): keyed on the DECISION "
+                           "date; printed for one release beside the hold-keyed "
+                           "value, then removed")
+
+
+def hold_end_dates(dates: Iterable, horizon: int = HORIZON_SESSIONS) -> pd.DatetimeIndex:
+    """The session each `horizon`-session forward return ENDS on.
+
+    Business days with the US federal holiday calendar: exact across Christmas
+    and New Year (the sessions that decide the year a December hold lands in),
+    within a session elsewhere (Good Friday closes, Columbus/Veterans Day open).
+    The oos frame's own dates cannot serve as the calendar: walk-forward folds
+    leave a purge gap between test windows."""
+    from pandas.tseries.holiday import USFederalHolidayCalendar
+    idx = pd.DatetimeIndex(pd.to_datetime(list(dates))).normalize()
+    if len(idx) == 0:
+        return idx
+    hol = USFederalHolidayCalendar().holidays(idx.min() - pd.Timedelta(days=7),
+                                              idx.max() + pd.Timedelta(days=2 * int(horizon) + 30))
+    out = np.busday_offset(idx.values.astype("datetime64[D]"), int(horizon), roll="forward",
+                           holidays=hol.values.astype("datetime64[D]"))
+    return pd.DatetimeIndex(out)
+
+
+def _year_tables(net: np.ndarray, years: pd.Series) -> tuple[dict, dict]:
+    by_year, loo = {}, {}
+    for y in sorted(years.unique()):
+        m = (years == y).values
+        by_year[y] = {"mean_net": float(net[m].mean()), "n_dates": int(m.sum())}
+        if (~m).sum() > 1:
+            loo[y] = float(net[~m].mean())
+    return by_year, loo
+
+
 def top_k_backtest(oos: pd.DataFrame, *, k: int = 20, cost: bool = True,
                    horizon: int | None = None) -> dict:
     """What an equal-weight top-k book earned OOS, per rebalance date, net.
@@ -662,37 +705,65 @@ def top_k_backtest(oos: pd.DataFrame, *, k: int = 20, cost: bool = True,
     # had spent the afternoon on was real and irrelevant. When a number is
     # positive the first question is not how precise it is, it is WHICH PART OF
     # THE SAMPLE IT IS -- so that question is no longer optional here.
-    years = pd.Series([r["date"][:4] for r in rows])
-    by_year, loo = {}, {}
-    for y in sorted(years.unique()):
-        m = (years == y).values
-        by_year[y] = {"mean_net": float(net[m].mean()), "n_dates": int(m.sum())}
-        if (~m).sum() > 1:
-            loo[y] = float(net[~m].mean())
+    #
+    # HOLD-KEYED (review 2026-09-27): the year is the one the forward return
+    # ENDS in. The decision-keyed tables ride along one release as `*_decision`.
+    h_key = int(horizon) if horizon else HORIZON_SESSIONS
+    ends = hold_end_dates([r["date"] for r in rows], h_key)
+    for r, e in zip(rows, ends):
+        r["hold_end"] = str(e.date())
+    years = pd.Series([str(e.year) for e in ends])
+    years_dec = pd.Series([r["date"][:4] for r in rows])
+    by_year, loo = _year_tables(net, years)
+    by_year_dec, loo_dec = _year_tables(net, years_dec)
     # The worst leave-one-out mean is the number a reader should quote: it is
     # what the strategy earns if the single best year does not repeat.
     loo_worst = min(loo.values()) if loo else None
     loo_worst_year = min(loo, key=loo.get) if loo else None
+    loo_worst_dec = min(loo_dec.values()) if loo_dec else None
+    loo_worst_year_dec = min(loo_dec, key=loo_dec.get) if loo_dec else None
 
     # Concentration by date, for the same reason: 35 rows of 46,361 once carried
     # 81% of a result in this programme.
     total = float(net.sum())
     order = np.argsort(-np.abs(net))
     conc = {}
+    top_dates_hold: list = []
+    top_dates_dec: list = []
     if total != 0:
         for frac in (0.01, 0.05, 0.10):
             n_top = max(1, int(len(net) * frac))
             conc[f"top_{int(frac*100)}pct_of_dates"] = float(
                 net[order[:n_top]].sum() / total)
+        # The shares do not depend on the key; WHICH dates they name does.
+        n1 = max(1, int(len(net) * 0.01))
+        top_dates_hold = [rows[j]["hold_end"] for j in order[:n1]]
+        top_dates_dec = [rows[j]["date"] for j in order[:n1]]
+    share_year = ({y: float(net[(years == y).values].sum() / total) for y in sorted(years.unique())}
+                  if total != 0 else {})
+    share_year_dec = ({y: float(net[(years_dec == y).values].sum() / total)
+                       for y in sorted(years_dec.unique())} if total != 0 else {})
 
     return {
         "k": k,
         "n_dates": len(rows),
+        "year_key": YEAR_KEY_NOTE,
+        "hold_horizon_sessions": h_key,
         "by_year": by_year,
         "leave_one_year_out": loo,
         "loo_worst_mean_net": loo_worst,
         "loo_worst_dropped_year": loo_worst_year,
+        "by_year_decision": by_year_dec,
+        "leave_one_year_out_decision": loo_dec,
+        "loo_worst_mean_net_decision": loo_worst_dec,
+        "loo_worst_dropped_year_decision": loo_worst_year_dec,
+        "decision_key_status": DECISION_KEY_DEPRECATED,
+        # fractions of the total carried by the top 1/5/10% of dates: key-free
         "share_of_total_by_date": conc,
+        "share_of_total_top1pct_hold_ends": top_dates_hold,
+        "share_of_total_top1pct_decision_dates": top_dates_dec,
+        "share_of_total_by_year": share_year,
+        "share_of_total_by_year_decision": share_year_dec,
         "n_blocks": int(blocks.nunique()),
         "n_blocks_nonoverlap": n_no,
         # Blocks at 2*horizon width, which truly cannot share an outcome. This

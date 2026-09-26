@@ -165,17 +165,20 @@ def stored_series_check(pq: Path, net: pd.DataFrame) -> dict:
             "max_abs_gap": gap, "n_columns": len(cols)}
 
 
-def _fit(y: pd.Series, X: pd.DataFrame) -> dict:
+def _fit(y: pd.Series, X: pd.DataFrame, hold_months: int = 1) -> dict:
     try:
-        return SS.ols(y, X)
+        return SS.ols(y, X, hold_months=hold_months)
     except SS.InsufficientHistory as e:
         return {"status": "REFUSED", "why": str(e)}
 
 
 def decompose(active: pd.DataFrame, X: pd.DataFrame, masks: dict, board: dict,
-              cells: dict, primary: list) -> tuple[dict, dict]:
+              cells: dict, primary: list, *, hac: bool = True) -> tuple[dict, dict]:
     """{rule: decomposition} over every primary cell, plus (dev beta, 2024-26
-    beta) pairs per spread for the beta-stability correlation."""
+    beta) pairs per spread for the beta-stability correlation.
+
+    `hac` (default): a rule held h > 1 months gets Newey-West SEs at lag h - 1
+    and its verdict reads the HAC t; hac=False reproduces the plain readout."""
     cand = [r for r in board["all_rows"] if not r.get("control")
             and r.get("sealed_vs_spy") is not None and r.get("dev_vs_spy") is not None]
     top_sealed = {r["id"] for r in sorted(cand, key=lambda r: (-r["sealed_vs_spy"], r["id"]))[:TOP_N]}
@@ -186,18 +189,21 @@ def decompose(active: pd.DataFrame, X: pd.DataFrame, masks: dict, board: dict,
         rid = cells[cid]["rule"]
         r = by_id.get(rid) or {}
         y = active[cid]
+        hm = cells[cid]["hold_months"] if hac else 1
         out = {"cell": cid, "family": cells[cid]["family"], "hold_months": cells[cid]["hold_months"],
+               "se_basis": "hac" if hm > 1 else "plain",
                "sealed_vs_spy": r.get("sealed_vs_spy", cells[cid].get("sealed_vs_spy")),
                "dev_vs_spy": r.get("dev_vs_spy", cells[cid].get("dev_vs_spy")),
                "in_sealed_top30": rid in top_sealed, "in_dev_top30": rid in top_dev}
         for w in ("sealed", "dev"):
-            out[w] = _fit(y[masks[w]], X[masks[w]])
-            out[f"{w}_smh_mtum"] = _fit(y[masks[w]], X.loc[masks[w], ["SMH-SPY", "MTUM-SPY"]])
-        out["full"] = _fit(y, X)
+            out[w] = _fit(y[masks[w]], X[masks[w]], hm)
+            out[f"{w}_smh_mtum"] = _fit(y[masks[w]], X.loc[masks[w], ["SMH-SPY", "MTUM-SPY"]], hm)
+        out["full"] = _fit(y, X, hm)
         s, d = out["sealed"], out["dev"]
         if "t_alpha" in s and "t_alpha" in d:
             try:
-                h = SS.exante_hedge(y[masks["sealed"]], X[masks["sealed"]], d["betas"])
+                h = SS.exante_hedge(y[masks["sealed"]], X[masks["sealed"]], d["betas"],
+                                    hold_months=hm)
             except SS.InsufficientHistory as e:
                 h = {"status": "REFUSED", "why": str(e)}
             out["alpha_after_pre2024_hedge"] = h
@@ -212,7 +218,8 @@ def decompose(active: pd.DataFrame, X: pd.DataFrame, masks: dict, board: dict,
                 pairs[c].append((d["betas"][c], s["betas"][c]))
         else:
             out["verdict"] = "REFUSED"
-        out["survives_both"] = bool(s.get("t_alpha", -9) >= 2 and d.get("t_alpha", -9) >= 2)
+        out["survives_both"] = bool(s.get("t_alpha_used", s.get("t_alpha", -9)) >= 2
+                                    and d.get("t_alpha_used", d.get("t_alpha", -9)) >= 2)
         decomp[rid] = out
     return decomp, pairs
 
@@ -239,6 +246,8 @@ def summarise_decomposition(decomp: dict, pairs: dict) -> dict:
         "n_t_ge_2_2024_26": sum(1 for v in ok if v["sealed"]["t_alpha"] >= 2),
         "n_t_ge_2_full": sum(1 for v in ok if (v.get("full") or {}).get("t_alpha", -9) >= 2),
         "n_t_ge_2_both": sum(1 for v in ok if v["survives_both"]),
+        "n_t_used_ge_2_2024_26": sum(1 for v in ok if v["sealed"].get("t_alpha_used", -9) >= 2),
+        "se_basis": "survives_both and *_used read the HAC t for hold > 1 (plain for hold 1)",
         "verdicts_all_primary": dist(decomp.values()),
         "verdicts_2024_26_top30": dist([v for v in decomp.values() if v["in_sealed_top30"]]),
         "verdicts_dev_top30": dist([v for v in decomp.values() if v["in_dev_top30"]]),
@@ -349,6 +358,8 @@ def within_cluster(block: dict, active: pd.DataFrame, net: pd.DataFrame, spy: pd
                              cells[m]["rule"], cells[anchor]["rule"])})
         pairs = pair_persistence(rows, metas, cells)
         cm = active[mem].mean(axis=1)
+        # the cluster mean inherits the LONGEST hold among its members (HAC lag)
+        hm = max(cells[m]["hold_months"] for m in mem)
         te = [float((active[m] - cm).dropna().std(ddof=1) * np.sqrt(12)) for m in mem]
         sv = [r["sealed_vs_spy"] for r in rows if r["sealed_vs_spy"] is not None]
         both = [(r["dev_vs_spy"], r["sealed_vs_spy"]) for r in rows
@@ -356,11 +367,12 @@ def within_cluster(block: dict, active: pd.DataFrame, net: pd.DataFrame, spy: pd
         rho = float(spearmanr([a for a, _ in both], [b for _, b in both])[0]) if len(both) >= 3 else None
         axes = Counter(r["axis"] for r in rows if r["axis"] != "anchor")
         lvl1: dict = {}
-        d = _fit(cm[masks["dev"]], X[masks["dev"]])
-        s_ = _fit(cm[masks["sealed"]], X[masks["sealed"]])
+        d = _fit(cm[masks["dev"]], X[masks["dev"]], hm)
+        s_ = _fit(cm[masks["sealed"]], X[masks["sealed"]], hm)
         if "betas" in d and "mean_active_monthly" in s_:
             try:
-                h = SS.exante_hedge(cm[masks["sealed"]], X[masks["sealed"]], d["betas"])
+                h = SS.exante_hedge(cm[masks["sealed"]], X[masks["sealed"]], d["betas"],
+                                    hold_months=hm)
                 lvl1 = {"mean_active_2024_26": s_["mean_active_monthly"],
                         "alpha_in_window": s_["alpha_monthly"], "t_in_window": s_["t_alpha"],
                         "mde_in_window": s_["mde_alpha_80"],
@@ -643,16 +655,293 @@ def rekey(run_id: str) -> dict:
     return doc
 
 
+# ── HAC: Newey-West t for multi-month holds, readout of a run of record ─────
+#
+# Owed item 2 (adjudication 2026-09-27): a rule held h > 1 months has serially
+# dependent monthly active returns, so its plain t is optimistic. The readout is
+# recomputed with Newey-West SEs at lag h - 1 (Bartlett) from the run's stored
+# series (no factory), beside the plain one, and every verdict that moves is named.
+
+def load_series_of_record(run_id: str) -> dict:
+    """The run's board, cells and monthly active/net frames from its series of
+    record (the checkpoint that reproduces the board). Writes
+    monthly_returns_<run>.parquet if absent; if present it must agree."""
+    run = json.loads((LIB / f"run_{run_id}.json").read_text(encoding="utf-8"))
+    bp = LIB / f"leaderboard_{run_id}.json"
+    board = json.loads(bp.read_text(encoding="utf-8"))
+    rows = list(board["all_rows"]) + [dict(c, control=True) for c in board.get("controls") or []]
+    ck, src = find_series_source(run, rows)
+    done = ck["state"]["done"]
+    del ck
+    cells, refused = SS.cells_from_checkpoint(done)
+    etf, _meta = etf_monthly(False)
+    active, ref2 = SS.active_frame(cells, pd.DatetimeIndex(etf.index))
+    refused += ref2
+    for cid, _ in ref2:
+        cells.pop(cid, None)
+    active = active.loc[active.notna().any(axis=1)]
+    spy = etf["SPY"].reindex(active.index)
+    net = active.add(spy, axis=0)
+    net.index.name = "decision_date"
+    pq = OUT / f"monthly_returns_{run_id}.parquet"
+    pcheck = stored_series_check(pq, net)
+    if pcheck["status"] == "WRITTEN":
+        OUT.mkdir(parents=True, exist_ok=True)
+        net.to_parquet(pq)
+        pcheck["source"] = src.get("path")
+    return {"run": run, "board": board, "board_path": bp, "done": done, "cells": cells,
+            "refused": refused, "etf": etf, "active": active, "net": net, "spy": spy,
+            "series_source": src, "stored_series_check": pcheck}
+
+
+def hac_readout(run_id: str) -> dict:
+    S_ = load_series_of_record(run_id)
+    board, cells, etf, active = S_["board"], S_["cells"], S_["etf"], S_["active"]
+    src, pcheck, refused, bp = S_["series_source"], S_["stored_series_check"], S_["refused"], S_["board_path"]
+    masks = SS.window_masks(active.index)
+    primary = [c for c in active.columns if not cells[c]["control"] and cells[c]["primary"]]
+    X = SS.factor_spreads(etf).reindex(active.index)
+    d_hac, _ = decompose(active, X, masks, board, cells, primary, hac=True)
+    d_pl, _ = decompose(active, X, masks, board, cells, primary, hac=False)
+    changed, table = [], []
+    for rid, v in d_hac.items():
+        w = d_pl[rid]
+        hp, hh = w.get("alpha_after_pre2024_hedge") or {}, v.get("alpha_after_pre2024_hedge") or {}
+        s_ = v.get("sealed") or {}
+        row = {"rule": rid, "cell": v["cell"], "hold_months": v["hold_months"],
+               "hac_lags": SS.hac_lags_for(v["hold_months"]),
+               "in_sealed_top30": v["in_sealed_top30"], "in_dev_top30": v["in_dev_top30"],
+               "sealed_vs_spy": v.get("sealed_vs_spy"),
+               "hedged_alpha_monthly": hh.get("alpha_monthly"),
+               "hedged_t_plain": hh.get("t_plain", hp.get("t")), "hedged_t_hac": hh.get("t_hac"),
+               "hedged_mde_plain": hh.get("mde_80_plain", hp.get("mde_80")),
+               "hedged_mde_hac": hh.get("mde_80_hac"),
+               "t_alpha_2024_26_plain": s_.get("t_alpha"), "t_alpha_2024_26_hac": s_.get("t_alpha_hac"),
+               "t_alpha_dev_plain": (v.get("dev") or {}).get("t_alpha"),
+               "t_alpha_dev_hac": (v.get("dev") or {}).get("t_alpha_hac"),
+               "hedged_se_basis": hh.get("se_used"),
+               "verdict_plain": w.get("verdict"), "verdict_hac": v.get("verdict"),
+               "verdict_hac_unfloored": (SS.verdict({"t": hh.get("t_hac"), "mde_80": hh.get("mde_80_hac")},
+                                                    s_.get("mean_active_monthly"))
+                                         if "t_hac" in hh else None),
+               "alpha_sign": v.get("alpha_sign"),
+               "survives_both_plain": w.get("survives_both"), "survives_both_hac": v.get("survives_both")}
+        if v["hold_months"] > 1:
+            table.append(row)
+        if row["verdict_plain"] != row["verdict_hac"] or row["survives_both_plain"] != row["survives_both_hac"]:
+            changed.append(row)
+    table.sort(key=lambda r: (-r["hold_months"], r["rule"]))
+    doc = {
+        "schema": "signal_structure/hac_readout/1", "job": "signal_structure --hac", "run_id": run_id,
+        "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+        "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "label": "HINDSIGHT: every rule was registered 2026-09-26, after every month here",
+        "why": ("owed item 2 (adjudication 2026-09-27): Newey-West HAC SEs, lag hold_months - 1 "
+                "(Bartlett), for rules held longer than a month; the verdict reads the HAC t when "
+                "hold_months > 1; plain and HAC printed side by side"),
+        "series_source": src, "stored_series_check": pcheck,
+        "board": str(bp.relative_to(REPO)).replace(chr(92), "/"),
+        "n_primary_cells": len(primary),
+        "n_multi_month_primary": sum(1 for c in primary if cells[c]["hold_months"] > 1),
+        "hold_months_mix": {str(k): v for k, v in sorted(Counter(cells[c]["hold_months"] for c in primary).items())},
+        "verdicts_plain": dict(sorted(Counter(v.get("verdict") for v in d_pl.values()).items())),
+        "verdicts_hac": dict(sorted(Counter(v.get("verdict") for v in d_hac.values()).items())),
+        "verdicts_2024_26_top30_plain": dict(sorted(Counter(v.get("verdict") for v in d_pl.values()
+                                                            if v["in_sealed_top30"]).items())),
+        "verdicts_2024_26_top30_hac": dict(sorted(Counter(v.get("verdict") for v in d_hac.values()
+                                                          if v["in_sealed_top30"]).items())),
+        "n_changed": len(changed), "changed": changed,
+        "multi_month_rules": table,
+        "method": ("NW cov = (A'A)^-1 S (A'A)^-1 x n/(n-p); S with Bartlett weights 1 - l/(L+1); "
+                   "the hedged alpha is an intercept-only NW SE on the dev-beta-hedged 2024-26 series"),
+        "hac_floor": SS.HAC_FLOOR_NOTE,
+        "n_changed_unfloored": sum(1 for r in table if r["verdict_hac_unfloored"] != r["verdict_plain"]),
+        "n_multi_month_hac_below_plain_hedged": sum(1 for r in table if r["hedged_t_hac"] is not None
+                                                    and r["hedged_t_plain"] is not None
+                                                    and abs(r["hedged_t_hac"]) > abs(r["hedged_t_plain"])),
+        "refused": refused,
+    }
+    OUT.mkdir(parents=True, exist_ok=True)
+    rp = OUT / f"hac_readout_{run_id}.json"
+    rp.write_text(json.dumps(doc, indent=1, default=lambda o: None if isinstance(o, float)
+                             and not np.isfinite(o) else str(o)), encoding="utf-8")
+    print(f"hac readout -> {rp}")
+    print(json.dumps({k: doc[k] for k in ("n_primary_cells", "n_multi_month_primary", "hold_months_mix",
+                                          "verdicts_plain", "verdicts_hac", "n_changed",
+                                          "n_changed_unfloored", "n_multi_month_hac_below_plain_hedged")},
+                     indent=1))
+    for r in changed:
+        print(f"  CHANGED {r['rule']} h={r['hold_months']}: {r['verdict_plain']} -> {r['verdict_hac']} "
+              f"(hedged t {_f(r['hedged_t_plain'], 2)} -> {_f(r['hedged_t_hac'], 2)}; "
+              f"survives_both {r['survives_both_plain']} -> {r['survives_both_hac']})")
+    return doc
+
+
+# ── MATCHED RANDOM TWINS (reviewer idea 2, owed item 3) ─────────────────────
+#
+# For each of the run's 2024-26 top-10 rules (top10_for_replication_<run>.json,
+# which carries each rule's holdings by rebalance), a random twin matched on
+# size band x vol_63 tercile x 12-1 tercile at every rebalance, drawn from the
+# same survivorship-free panel and seeded from the rule id. rule - matched twin
+# beside rule - random_1 (the stored k50 random control) in dev and 2024-26.
+
+def _twin_panel(run_id: str, dates: list) -> tuple[pd.DataFrame, dict]:
+    from backend import config as _cfg
+    from backend.services import llm_portfolio as LP
+    from backend.services import matched_twins as MT
+    from backend.services import xs_ranker as XR
+    pq = OUT / f"matched_twins_panel_{run_id}.parquet"
+    if pq.exists():
+        panel = pd.read_parquet(pq)
+        return panel, {"status": "CACHED", "path": str(pq.relative_to(REPO)).replace(chr(92), "/"),
+                       "rows": int(len(panel))}
+    paths = XR.survivorship_free_paths()
+    panel = MT.build_panel(paths, start=_cfg.STRATEGY_LIB_START,
+                           delist_return=float(_cfg.STRATEGY_LIB_DELIST_RETURN), decision_dates=dates,
+                           min_price=XR.MIN_PRICE, max_price=XR.MAX_PRICE,
+                           min_mdv=XR.MIN_MEDIAN_DOLLAR_VOL, min_history=XR.MIN_HISTORY_SESSIONS)
+    syms = panel["symbol"].unique()
+    excl = {s_ for s_ in syms if s_ in XR.INDEX_PROXIES or LP.is_etf(s_)}
+    panel.loc[panel["symbol"].isin(excl), "eligible"] = False
+    OUT.mkdir(parents=True, exist_ok=True)
+    panel.to_parquet(pq)
+    return panel, {"status": "BUILT", "path": str(pq.relative_to(REPO)).replace(chr(92), "/"),
+                   "rows": int(len(panel)), "bars": [p_.name for p_ in paths],
+                   "start": _cfg.STRATEGY_LIB_START, "n_excluded_etf_or_index": len(excl)}
+
+
+def matched_twins_readout(run_id: str) -> dict:
+    from backend.services import matched_twins as MT
+    from backend.services import strategy_library as SL
+    top = json.loads((LIB / f"top10_for_replication_{run_id}.json").read_text(encoding="utf-8"))
+    rules = top["rows"]
+    pq = OUT / f"monthly_returns_{run_id}.parquet"
+    if not pq.exists():
+        raise SystemExit(f"REFUSED: {pq.name} absent; run --hac (or the receipt job) for {run_id} first")
+    stored = pd.read_parquet(pq)
+    rcol = f"random_1@k{SL.RANDOM_PANEL_K}" if hasattr(SL, "RANDOM_PANEL_K") else "random_1@k50"
+    if rcol not in stored.columns:
+        raise SystemExit(f"REFUSED: {rcol} not in {pq.name}")
+    random_1 = stored[rcol].astype(float)
+    dates = sorted({m["date"] for r in rules for m in r["monthly_return_series"]})
+    panel, pmeta = _twin_panel(run_id, dates)
+    by_date = MT.panel_by_date(panel)
+    cache: dict = {}
+    out_rows = []
+    for r in rules:
+        rid = r["id"]
+        ts = MT.twin_series(r, panel, seed=MT.seed_for(rid), by_date=by_date, cache=cache)
+        idx = ts.index
+        rule_net = ts["stored_net"].astype(float)
+        twin_net = ts["twin_gross"] - ts["cost"].astype(float)
+        win = SL.split_windows(idx)
+        recon = (ts["rule_gross_recon"] - ts["stored_gross"].astype(float)).abs()
+        fb: dict = {}
+        for f in ts["fallbacks"]:
+            for k_, v_ in (f or {}).items():
+                fb[k_] = fb.get(k_, 0) + v_
+        row = {"rule": rid, "k": r["k"], "hold_months": r["hold_months"], "universe": r["universe_rule"],
+               "weight_rule": r["weight_rule"], "seed": MT.seed_for(rid),
+               "recon_check": {"max_abs_gap_gross": float(recon.max()),
+                               "median_abs_gap_gross": float(recon.median()),
+                               "n_months_gap_gt_1e-6": int((recon > 1e-6).sum())},
+               "twin_fallbacks": fb, "board_sealed_vs_spy": (r.get("board") or {}).get("sealed_vs_spy")}
+        for w in ("dev", "sealed"):
+            row[w] = MT.compare(rule_net, twin_net, random_1, win[w])
+        # the twin's own sampling noise: N_EXTRA_DRAWS more seeds
+        extra = {"dev": [], "sealed": []}
+        for j in range(1, MT.N_EXTRA_DRAWS + 1):
+            tj = MT.twin_series(r, panel, seed=MT.seed_for(rid, j), by_date=by_date, cache=cache)
+            tn = tj["twin_gross"] - tj["cost"].astype(float)
+            for w in extra:
+                extra[w].append(MT.compare(rule_net, tn, random_1, win[w])["rule_minus_twin"])
+        for w, xs in extra.items():
+            xs = [x for x in xs if x is not None]
+            row[w]["rule_minus_twin_draws_mean"] = float(np.mean(xs)) if xs else None
+            row[w]["rule_minus_twin_draws_sd"] = float(np.std(xs, ddof=1)) if len(xs) > 1 else None
+            row[w]["n_extra_draws"] = len(xs)
+        out_rows.append(row)
+
+    def med(w, key):
+        xs = [x[w][key] for x in out_rows if x[w].get(key) is not None]
+        return float(np.median(xs)) if xs else None
+    summary = {w: {"median_rule_minus_twin": med(w, "rule_minus_twin"),
+                   "median_rule_minus_random_1": med(w, "rule_minus_random_1"),
+                   "median_removed_by_matching": med(w, "removed_by_matching"),
+                   "median_share_removed": med(w, "share_removed"),
+                   "n_rule_minus_twin_gt_0": sum(1 for x in out_rows if (x[w]["rule_minus_twin"] or 0) > 0),
+                   "n_rules": len(out_rows)} for w in ("dev", "sealed")}
+    doc = {
+        "schema": "signal_structure/matched_twins/1", "job": "signal_structure --matched-twins",
+        "run_id": run_id, "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+        "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "label": "HINDSIGHT: every rule was registered 2026-09-26, after every month here",
+        "why": ("reviewer idea 2 (review 2026-09-27), owed item 3: separate 'the rule selects' from "
+                "'the rule buys a style' with a DGTW-style characteristic-matched random twin"),
+        "rules_source": f"strategy_library/top10_for_replication_{run_id}.json ({top.get('selection')})",
+        "random_1": {"column": rcol, "source": str(pq.relative_to(REPO)).replace(chr(92), "/")},
+        "panel": pmeta,
+        "matching": ("size band (mega >= 1e9 / large >= 1e8 / mid >= 2e7 / small, on 63-session median "
+                     "dollar volume) x vol_63 tercile x mom_252_21 tercile, terciles among the date's "
+                     "eligible names; one twin name per held name, same weight, excluding the rule's own "
+                     "holdings, without replacement within a date; redrawn at every rebalance; weights "
+                     "drift between rebalances; fallback band x vol -> band -> any"),
+        "net_convention": ("rule net = the stored series; twin net = twin gross - the RULE's own cost that "
+                           "month (the twin trades the same weights in the same bands), so rule - twin "
+                           "net = rule gross - twin gross; random_1 = the stored k50 control, net"),
+        "windows": top.get("split"),
+        "summary": summary, "rows": out_rows,
+        "reading": ("removed_by_matching = (rule - random_1) - (rule - twin) = twin - random_1 in CAGR: "
+                    "the part of the excess over a uniform random draw that the size / vol / past-return "
+                    "cell explains. share_removed = removed / (rule - random_1)."),
+    }
+    rp = OUT / f"matched_twins_{run_id}.json"
+    rp.write_text(json.dumps(doc, indent=1, default=lambda o: None if isinstance(o, float)
+                             and not np.isfinite(o) else str(o)), encoding="utf-8")
+    print(f"matched twins -> {rp}")
+    print(render_twins(doc))
+    return doc
+
+
+def render_twins(doc: dict) -> str:
+    L = [f"## Matched random twins -- run {doc['run_id']} (2024-26 top-10)", "",
+         "| rule | k | hold | recon gap (max) | dev: rule - twin | dev: rule - random_1 | dev removed | "
+         "24-26: rule - twin (draw sd) | 24-26: rule - random_1 | 24-26 removed | share removed 24-26 |",
+         "|---|---|---|---|---|---|---|---|---|---|---|"]
+    for x in doc["rows"]:
+        d, s_ = x["dev"], x["sealed"]
+        L.append(f"| `{x['rule']}` | {x['k']} | {x['hold_months']} | {x['recon_check']['max_abs_gap_gross']:.1e} | "
+                 f"{_pct(d['rule_minus_twin'])} | {_pct(d['rule_minus_random_1'])} | {_pct(d['removed_by_matching'])} | "
+                 f"{_pct(s_['rule_minus_twin'])} ({_pct(s_.get('rule_minus_twin_draws_sd'))}) | "
+                 f"{_pct(s_['rule_minus_random_1'])} | {_pct(s_['removed_by_matching'])} | "
+                 f"{_pct(s_['share_removed'], 0)} |")
+    for w, v in doc["summary"].items():
+        L.append(f"\n{w}: median rule - twin {_pct(v['median_rule_minus_twin'])}, median rule - random_1 "
+                 f"{_pct(v['median_rule_minus_random_1'])}, median removed {_pct(v['median_removed_by_matching'])}; "
+                 f"rule beats its twin in {v['n_rule_minus_twin_gt_0']} of {v['n_rules']}.")
+    return "\n".join(L) + "\n"
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run-id", default=DEFAULT_RUN)
     ap.add_argument("--refresh-etf", action="store_true")
     ap.add_argument("--rekey", action="store_true",
                     help="hold-month re-key + panel benchmarks of --run-id's board, from stored series")
+    ap.add_argument("--hac", action="store_true",
+                    help="Newey-West readout (plain vs HAC verdicts) of --run-id, from stored series")
+    ap.add_argument("--matched-twins", action="store_true",
+                    help="characteristic-matched random twins for --run-id's 2024-26 top-10")
     a = ap.parse_args(argv)
     run_id = a.run_id
     if a.rekey:
         rekey(run_id)
+        return 0
+    if a.hac:
+        hac_readout(run_id)
+        return 0
+    if a.matched_twins:
+        matched_twins_readout(run_id)
         return 0
     if (LIB / f"leaderboard_{run_id}.INVALID.md").exists():
         raise SystemExit(f"REFUSED: run {run_id} is marked INVALID")
@@ -877,8 +1166,9 @@ def main(argv=None) -> int:
             f"a series needs >= {SS.MIN_PAIR_MONTHS} months in the window",
             "clusters: average linkage on 1 - rho, cut at rho 0.8 (distance 0.2); NaN rho = distance 1",
             "representative = highest DEV-window DSR at n = trial cells",
-            "OLS standard errors are plain; hold>1 rules (quarterly books) have serially dependent "
-            "monthly active returns, so their t is optimistic",
+            "OLS standard errors: plain for hold-1 rules; for hold > 1 (serially dependent monthly "
+            "active returns) Newey-West HAC at lag hold - 1 is printed beside the plain one and the "
+            "verdict reads it (2026-09-27, owed item 2)",
             "32 sealed blocks and 7 parameters: a t of 2 on alpha is one-in-twenty by noise per rule",
             "MDE = 2.8 x SE (two-sided 5%, 80% power); at ~32 blocks the MDE is ~2.5%/month, so "
             "t < 1 is mostly NO POWER, not no alpha (review 2026-09-27 §1)",

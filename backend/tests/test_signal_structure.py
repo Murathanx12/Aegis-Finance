@@ -169,3 +169,76 @@ def test_base_signal_and_member_axis():
     assert SX.member_axis(dict(m, universe_rule="large"), m, 20, 20, "x_large", "x") == "universe"
     assert SX.member_axis(m, m, 20, 20, "mom_no_downgrades", "mom_12_1") == "signal/filter"
     assert SX.member_axis(dict(m, hold_months=3), m, 20, 20, "mom_12_1_q", "mom_12_1") == "hold/offset"
+
+
+# ── Newey-West (HAC) for multi-month holds (review 2026-09-27, owed item 2) ──
+
+def _overlapping(n: int, h: int, seed: int = 5) -> np.ndarray:
+    """y_t = mean of the last h iid shocks: a quarterly book's monthly returns
+    share holdings with the h - 1 months either side."""
+    e = np.random.default_rng(seed).normal(0, 1, n + h - 1)
+    return np.convolve(e, np.ones(h) / h, mode="valid")
+
+
+def test_hac_lag_is_hold_minus_one():
+    assert SS.hac_lags_for(1) == 0 and SS.hac_lags_for(3) == 2 and SS.hac_lags_for(12) == 11
+
+
+def test_hac_se_exceeds_plain_by_the_bartlett_factor_on_an_overlapping_series():
+    # MA(2) with equal weights: gamma_0 = 3/9, gamma_1 = 2/9, gamma_2 = 1/9.
+    # Bartlett at lag 2: gamma_0 + 2(2/3 gamma_1 + 1/3 gamma_2) = 19/27, so the
+    # SE ratio HAC / plain is sqrt((19/27) / (9/27)) = sqrt(19/9) = 1.453.
+    y = _overlapping(40_000, 3)
+    se_plain = float(np.std(y, ddof=1) / np.sqrt(len(y)))
+    se_hac = SS.hac_se_mean(y, SS.hac_lags_for(3))
+    assert abs(se_hac / se_plain - np.sqrt(19 / 9)) < 0.05
+    # and lag 0 is the plain SE of the mean exactly
+    assert abs(SS.hac_se_mean(y, 0) / se_plain - 1.0) < 1e-9
+
+
+def test_ols_prints_both_t_and_uses_hac_only_for_multi_month_holds():
+    n = 4000
+    idx = pd.date_range("1700-01-31", periods=n, freq="ME")
+    rng = np.random.default_rng(9)
+    X = pd.DataFrame({"SMH-SPY": rng.normal(0, 0.04, n)}, index=idx)
+    y = pd.Series(0.002 + 0.5 * X["SMH-SPY"].to_numpy() + 0.02 * _overlapping(n, 3, 2), index=idx)
+    one = SS.ols(y, X, hold_months=1)
+    three = SS.ols(y, X, hold_months=3)
+    assert one["se_used"] == "plain" and one["t_alpha_used"] == one["t_alpha"]
+    assert three["se_used"] == "hac" and three["hac_lags"] == 2
+    assert three["t_alpha_used"] == three["t_alpha_hac"]
+    assert three["se_alpha_hac"] > 1.3 * three["se_alpha"]
+    assert abs(three["t_alpha"] - one["t_alpha"]) < 1e-12        # the plain t is unchanged
+
+
+def test_the_verdict_reads_the_hac_t_for_a_quarterly_hold():
+    # an alpha that clears |t| >= 2 on the plain SE and not on the HAC one
+    n = 120
+    idx = pd.date_range("2014-01-31", periods=n, freq="ME")
+    base = _overlapping(n, 3, 17)
+    y = pd.Series(0.018 * base / base.std() + 0.0, index=idx)
+    y = y - y.mean() + 2.4 * float(y.std(ddof=1)) / np.sqrt(n)    # plain t = 2.4 exactly
+    X = pd.DataFrame({"SMH-SPY": np.zeros(n)}, index=idx)
+    h1 = SS.exante_hedge(y, X, {"SMH-SPY": 0.0}, hold_months=1)
+    h3 = SS.exante_hedge(y, X, {"SMH-SPY": 0.0}, hold_months=3)
+    assert abs(h1["t"] - 2.4) < 1e-9 and SS.verdict(h1, 0.01) == "ALPHA_DETECTED"
+    assert abs(h3["t_plain"] - 2.4) < 1e-9
+    assert h3["se_used"] == "hac" and h3["t"] < 2.0
+    assert SS.verdict(h3, 0.01) == "CANNOT_DISTINGUISH"
+
+
+def test_hac_never_narrows_the_plain_se():
+    """A negatively autocorrelated series has NW SE < plain; the used SE is the plain one."""
+    rng = np.random.default_rng(23)
+    e = rng.normal(0, 1, 401)
+    y = e[1:] - 0.6 * e[:-1]                                     # MA(1), negative rho_1
+    se_plain = float(np.std(y, ddof=1) / np.sqrt(len(y)))
+    assert SS.hac_se_mean(y, 2) < se_plain                       # the raw HAC narrows
+    idx = pd.date_range("1900-01-31", periods=len(y), freq="ME")
+    X = pd.DataFrame({"SMH-SPY": np.zeros(len(y))}, index=idx)
+    h = SS.exante_hedge(pd.Series(y + 0.05, index=idx), X, {"SMH-SPY": 0.0}, hold_months=3)
+    assert h["se"] == h["se_plain"] and h["se_hac"] < h["se_plain"]
+    assert h["se_used"].startswith("plain (HAC below plain")
+    Xr = pd.DataFrame({"SMH-SPY": rng.normal(0, 0.04, len(y))}, index=idx)
+    o = SS.ols(pd.Series(y, index=idx), Xr, hold_months=3)
+    assert o["se_alpha_used"] == max(o["se_alpha"], o["se_alpha_hac"])
