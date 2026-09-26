@@ -894,6 +894,22 @@ def _breadth(rule) -> list[int]:
     return sorted(set(SL.BREADTH_K) | {int(rule.k)})
 
 
+
+def _value_aware_run(panel, rule, *, k, scores):
+    """`strategy_library_ext.run_value_rule` for the VAL-01 value rules, else
+    `strategy_library.run_strategy`. The receipt of a refused period lives in
+    `m.attrs["eligibility"]`; a missing ext module falls back to the base runner
+    and says nothing -- the base runner's own receipt still prints."""
+    try:
+        from backend.services import strategy_library_ext as EXT
+        value_ids = {r.id for r in getattr(EXT, "VALUE_UNLOCK_STRATEGIES", [])}
+    except Exception:                                            # noqa: BLE001
+        value_ids = set()
+    if rule.id in value_ids:
+        from backend.services import strategy_library_ext as EXT
+        return EXT.run_value_rule(panel, rule, k=k, scores=scores)
+    return SL.run_strategy(panel, rule, k=k, scores=scores)
+
 def evaluate_rule(panel: pd.DataFrame, spy: pd.Series, rule, *, since: str) -> dict:
     """All breadth cells of one rule; a missing input is a named REFUSAL."""
     if getattr(rule, "forward_only", False):
@@ -905,7 +921,11 @@ def evaluate_rule(panel: pd.DataFrame, spy: pd.Series, rule, *, since: str) -> d
         return {"id": rule.id, "status": "REFUSED", "why": str(e), "meta": rule.meta()}
     cells = {}
     for k in _breadth(rule):
-        m = SL.run_strategy(panel, rule, k=k, scores=sc)
+        # VAL-01 review (2026-09-27): a value rule whose decision date cannot
+        # fill k names must REFUSE that period, not carry a stale book at the
+        # last computable weights (the value rows kept returning non-cash
+        # months after 2026-04-06, where market value is NaN).
+        m = _value_aware_run(panel, rule, k=k, scores=sc)
         ev = SL.evaluate(m, spy, hold_months=rule.hold_months,
                          registered_utc=rule.first_registered_utc, since=since)
         cells[str(k)] = ev
