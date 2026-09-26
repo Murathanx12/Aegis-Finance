@@ -356,7 +356,7 @@ of what might happen."
 
 ## Historical backtests: what worked, what didn't
 
-> 🔵 **HINDSIGHT BACKTEST — NOT FORWARD PERFORMANCE.** Every rule below was written down on 2026-09-26, after every month it is scored on. The quotable record starts at registration. Receipt for every number in this section: `backend/data/optimus/strategy_library/leaderboard_2026-09-26T182110Z.json` at commit `615256bd` (run `2026-09-26T182110Z`; rendered as `backend/data/optimus/strategy_library/LEADERBOARD.md`, which the next run refreshes -- the receipt it cites is never overwritten); forward results: `docs/BRIDGE.md`.
+> 🔵 **HINDSIGHT BACKTEST — NOT FORWARD PERFORMANCE.** Every rule below was written down on 2026-09-26, after every month it is scored on. The quotable record starts at registration. Receipt for every number in this section: `backend/data/optimus/strategy_library/leaderboard_2026-09-26T182110Z.json` at commit `d93f6029` (run `2026-09-26T182110Z`; rendered as `backend/data/optimus/strategy_library/LEADERBOARD.md`, which the next run refreshes -- the receipt it cites is never overwritten); forward results: `docs/BRIDGE.md`.
 
 The strategy library (288 rules in 35 families, 868 cells at k = 10/20/50 plus each rule's own k) was run on survivorship-free bars net of a band round-trip cost, with a split declared in code before the ranking: **dev** = monthly periods entered through 2023-12-31, and the **2024-26 selection window (split declared, data seen)** = entered from 2024-01-01 (32 monthly blocks). Every rule was written in 2026, so the second window is where the board SORTS, not a holdout. Sorted by net return vs SPY in that window (`backend/data/optimus/strategy_library/leaderboard_2026-09-26T182110Z.json`, `top_by_sealed_vs_spy`):
 
