@@ -152,6 +152,84 @@ class OpenClawRefused(RuntimeError):
     """The browser will not be driven. Never swallowed into a no-op."""
 
 
+#: How long a PASSED `assert_profile` is trusted, per process, per profile name
+#: (seconds). Kept in this module rather than `backend/config.py` on purpose:
+#: it is a property of how this wrapper talks to the CLI, not a research knob.
+#:
+#: Why (2026-09-27): every verb ran `openclaw browser profiles` first, and one
+#: CLI round trip cost ~15 s that night under memory pressure, so one article
+#: read (navigate, wait, snapshot, scrollintoview x2-3, evaluate ~= 12 calls)
+#: took 3-4 minutes, a large share of it re-asking a question whose answer had
+#: not changed. The gateway log showed a `browser.request` every ~15 s while
+#: the reader idled on that check.
+#:
+#: What still re-checks: a FAILED assertion is never cached; the cache for a
+#: profile is dropped on REFUSED_BROWSER_PROFILE_UNAVAILABLE,
+#: REFUSED_OPERATOR_TAB_MISSING, any CLI timeout (gateway timeout), a verb that
+#: returns non-zero, and any `start`/`stop` of a browser profile (the reader's
+#: re-attach path) -- so a re-attach always sees a fresh `profiles` listing.
+#: `health()` always checks fresh; it is the pre-run gate, not a per-verb one.
+OPENCLAW_PROFILE_ASSERT_TTL_S: float = 120.0
+
+#: profile name -> (monotonic stamp, resolver identity, the passed result).
+_PROFILE_CACHE: dict[str, tuple[float, tuple[int, int], dict]] = {}
+
+#: Monotonic clock for the cache; a module attribute so a test can move it.
+_clock = time.monotonic
+
+
+def invalidate_profile_cache(name: str | None = None) -> None:
+    """Drop the cached profile assertion for `name` (or for every profile)."""
+    if name is None:
+        _PROFILE_CACHE.clear()
+    else:
+        _PROFILE_CACHE.pop(name, None)
+
+
+#: Every CLI round trip this process made: count and wall seconds, in total
+#: and per sub-command, so a footprint can report CLI seconds per page.
+_CLI_LEDGER: dict[str, Any] = {"calls": 0, "seconds": 0.0, "timeouts": 0, "by_cmd": {}}
+
+
+def cli_ledger() -> dict:
+    """A copy of this process's CLI call counts and seconds."""
+    return json.loads(json.dumps(_CLI_LEDGER))
+
+
+def reset_cli_ledger() -> None:
+    _CLI_LEDGER.update(calls=0, seconds=0.0, timeouts=0, by_cmd={})
+
+
+#: Flags that take a value, skipped when naming the sub-command.
+_VALUE_FLAGS = frozenset({"--browser-profile", "--target-id", "--fn", "--message-file",
+                          "--model", "--session-id", "--format", "--limit", "--time"})
+
+
+def _cmd_key(args: list[str]) -> str:
+    """`browser profiles`, `browser navigate`, `gateway status`, ... -- the
+    first two positional words, `--flag value` pairs skipped."""
+    out: list[str] = []
+    skip = False
+    for a in args:
+        if skip:
+            skip = False
+            continue
+        if a.startswith("--"):
+            skip = a in _VALUE_FLAGS
+            continue
+        out.append(a)
+        if len(out) == 2:
+            break
+    return " ".join(out)
+
+
+def _profile_of(args: list[str]) -> str | None:
+    try:
+        return args[args.index("--browser-profile") + 1]
+    except (ValueError, IndexError):
+        return None
+
+
 def allowed_profiles() -> tuple[str, ...]:
     return tuple(getattr(_config, "OPENCLAW_ALLOWED_PROFILES",
                          ("muratclaw", "user", "chrome")))
@@ -223,9 +301,30 @@ def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProc
     # with cp1252, and a page's curly quote (UTF-8 E2 80 9D -> byte 0x9D, which
     # cp1252 does not map) killed the reader thread and returned stdout=None --
     # an EMPTY read that looked like a page with no text (chunk J, 2026-09-26).
-    r = subprocess.run([_bin(), *args], capture_output=True, text=True,
-                       encoding="utf-8", errors="replace",
-                       timeout=timeout, shell=(os.name == "nt"))
+    key = _cmd_key(args)
+    t0 = time.monotonic()
+    try:
+        r = subprocess.run([_bin(), *args], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace",
+                           timeout=timeout, shell=(os.name == "nt"))
+    except subprocess.TimeoutExpired:
+        # A gateway timeout says nothing trustworthy about ANY profile.
+        invalidate_profile_cache()
+        _CLI_LEDGER["timeouts"] += 1
+        raise
+    finally:
+        dt = time.monotonic() - t0
+        _CLI_LEDGER["calls"] += 1
+        _CLI_LEDGER["seconds"] = round(_CLI_LEDGER["seconds"] + dt, 3)
+        row = _CLI_LEDGER["by_cmd"].setdefault(key, {"calls": 0, "seconds": 0.0})
+        row["calls"] += 1
+        row["seconds"] = round(row["seconds"] + dt, 3)
+    if args[:1] == ["browser"] and any(a in ("start", "stop", "reset-profile",
+                                             "create-profile", "delete-profile")
+                                       for a in args[1:]):
+        # The re-attach path (web_reader) runs `start`; whatever it did, the
+        # next verb must see a fresh listing.
+        invalidate_profile_cache(_profile_of(args))
     # Strip centrally. Every parser downstream matches on plain text, and a
     # receipt full of escape codes is unreadable besides.
     return subprocess.CompletedProcess(r.args, r.returncode,
@@ -274,14 +373,27 @@ def profiles() -> list[dict]:
     return out
 
 
-def assert_profile(strict: bool = True, *, name: str | None = None) -> dict:
+def assert_profile(strict: bool = True, *, name: str | None = None,
+                   fresh: bool = False) -> dict:
     """The named (or pinned) profile must EXIST. No fallback, ever.
 
     An operator profile must also be RUNNING: `user` attaches to a Chrome that
     is already open, and a stopped one means Murat's browser is not there to
     attach to -- OpenClaw must not start one of its own in its place.
+
+    A PASS is cached for `OPENCLAW_PROFILE_ASSERT_TTL_S` per profile name (see
+    that constant for what invalidates it); a failure never is. `fresh=True`
+    bypasses the cache. The result carries `cached: bool`.
     """
     want = profile(name)
+    # The cache is valid only for the resolver that produced it: a swapped
+    # `profiles` or `_run` (a test, a reload) is a different world.
+    ident = (id(profiles), id(_run))
+    hit = _PROFILE_CACHE.get(want)
+    if (not fresh and hit is not None and hit[1] == ident
+            and _clock() - hit[0] < OPENCLAW_PROFILE_ASSERT_TTL_S):
+        return {**hit[2], "cached": True}
+    _PROFILE_CACHE.pop(want, None)
     found = next((p for p in profiles() if p["name"] == want), None)
     if found is None:
         msg = (f"REFUSED_BROWSER_PROFILE_UNAVAILABLE: no OpenClaw browser "
@@ -301,7 +413,9 @@ def assert_profile(strict: bool = True, *, name: str | None = None) -> dict:
         if strict:
             raise OpenClawRefused(msg)
         return {"ok": False, "profile": want, "detail": msg, **found}
-    return {"ok": True, "profile": want, **found}
+    out = {"ok": True, "profile": want, **found}
+    _PROFILE_CACHE[want] = (_clock(), ident, dict(out))
+    return {**out, "cached": False}
 
 
 def _json_of(stdout: str) -> Any:
@@ -433,6 +547,7 @@ def assert_operator_tab(target_id: str | None, *, profile_name: str) -> str:
         why = (f" (Chrome MCP session {mine!r} is gone; the listing is session {now}: "
                f"every tab id was reissued -- rebind by URL)"
                if mine and now and mine not in now else "")
+        invalidate_profile_cache(profile_name)
         raise OpenClawRefused(
             f"REFUSED_OPERATOR_TAB_MISSING: no tab {target_id!r} on {profile_name!r}{why}.")
     if not host_allowed(u):
@@ -511,20 +626,35 @@ def browser(verb: str, *args: str, url: str | None = None,
                 raise OpenClawRefused(
                     f"REFUSED_OPERATOR_HOST: {u!r} is not on {operator_hosts()}.")
 
-    if profile_name is not None:
-        assert_profile(name=want)
-    else:
-        assert_profile()
-    before = None
-    if operator and (verb in OPERATOR_TAB_VERBS or verb == "close"):
-        before = assert_operator_tab(target_id, profile_name=want)
+    t_check = time.monotonic()
+    try:
+        if profile_name is not None:
+            pa = assert_profile(name=want)
+        else:
+            pa = assert_profile()
+        before = None
+        if operator and (verb in OPERATOR_TAB_VERBS or verb == "close"):
+            before = assert_operator_tab(target_id, profile_name=want)
+    except OpenClawRefused as exc:
+        if "REFUSED_BROWSER_PROFILE_UNAVAILABLE" in str(exc):
+            invalidate_profile_cache(want)
+        raise
+    check_s = time.monotonic() - t_check
     argv = ["browser", "--browser-profile", want, verb, *args]
     if target_id and verb not in ("tabs", "status", "profiles"):
         argv += ([target_id] if verb in ("focus", "close") else ["--target-id", target_id])
     if url:
         argv.append(url)
+    t0 = time.monotonic()
     r = _run(argv, timeout=timeout)
+    if r.returncode != 0:
+        # A failed verb may be a detached browser or a gateway error; the next
+        # verb re-asks rather than trusting an answer up to two minutes old.
+        invalidate_profile_cache(want)
     out: dict[str, Any] = {"verb": verb, "profile": want, "rc": r.returncode,
+                           "seconds": round(time.monotonic() - t0, 3),
+                           "check_seconds": round(check_s, 3),
+                           "profile_check": "cached" if pa.get("cached") else "checked",
                            "stdout": (r.stdout or "").strip(),
                            "stderr": (r.stderr or "").strip()[:600]}
     if operator and verb == "close" and r.returncode == 0:
@@ -612,15 +742,23 @@ def read_text(target_id: str, *, profile_name: str | None = None,
     profile the tab host check applies exactly as in `browser()`.
     """
     want = profile(profile_name)
-    assert_profile(name=want)
+    t_check = time.monotonic()
+    pa = assert_profile(name=want)
     expected = None
     if is_operator_profile(want):
         assert_operator_tab(target_id, profile_name=want)
         hit = find_tab(tabs(profile_name=want), target_id)
         expected = str(hit.get("targetId")) if hit and hit.get("targetId") else None
+    check_s = time.monotonic() - t_check
+    t0 = time.monotonic()
     r = _run(["browser", "--browser-profile", want, "--json", "evaluate",
               "--target-id", target_id, "--fn", READ_TEXT_FN], timeout=timeout)
+    if r.returncode != 0:
+        invalidate_profile_cache(want)
     out: dict[str, Any] = {"rc": r.returncode, "profile": want, "target_id": target_id,
+                           "seconds": round(time.monotonic() - t0, 3),
+                           "check_seconds": round(check_s, 3),
+                           "profile_check": "cached" if pa.get("cached") else "checked",
                            "url": None, "title": None, "text": ""}
     try:
         d = _json_of(r.stdout)
@@ -814,6 +952,11 @@ def health(*, probe_web: bool = False) -> Health:
         rows["gateway_probe_ok"] = False
         rows["gateway_error"] = str(exc)[:200]
 
+    # Fresh, never cached: this is the pre-run gate (once per launch), and the
+    # messaging-channel check below keeps that same once-per-health() cadence.
+    # (Invalidate-then-assert rather than `fresh=True`, so the call signature
+    # stays the one callers and stubs already use.)
+    invalidate_profile_cache(profile())
     p = assert_profile(strict=False)
     rows["profile_pinned"] = bool(p.get("ok"))
     rows["profile_detail"] = p.get("detail") or p.get("state")

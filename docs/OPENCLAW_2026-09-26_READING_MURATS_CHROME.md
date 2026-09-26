@@ -432,3 +432,24 @@ positional: it is bound to one session. **Neither name survives a reset.**
 **Not fixed here: why the session resets.** Since 16:44 UTC every `tabs`/`status` on `user`
 answers `Chrome MCP subprocess tree cleanup could not be verified.` (GATEWAY_NEEDS_RESTART), so
 the live before/after reproduction could not run. The reader does not restart the gateway.
+
+**2026-09-27 -- the profile check is cached (one per 120 s, invalidated on refusal).** Every verb
+used to run `openclaw browser profiles` (`assert_profile`) before itself, and one CLI round trip
+cost **~15 s** on this machine tonight under memory pressure. An article read (navigate, wait,
+snapshot, scrollintoview x2-3, evaluate) is ~12 CLI calls, so ~3-4 minutes a page, and the
+gateway log showed a `browser.request` every ~15 s while the reader idled on that check. Now a
+PASSED assertion is cached per process, per profile name, for `OPENCLAW_PROFILE_ASSERT_TTL_S =
+120` (a module constant in `openclaw_client`). A failure is never cached. The entry is dropped on
+`REFUSED_BROWSER_PROFILE_UNAVAILABLE`, `REFUSED_OPERATOR_TAB_MISSING`, any CLI timeout (all
+profiles), any verb with a non-zero rc, and any `browser ... start/stop`, so the re-attach path
+always re-checks. `health()` still checks fresh once per call, and the messaging-channel check
+stays in `health()`: once per launch, never per verb. Measured with a counting fake `_run`: ten
+verbs cost **1** `profiles` call (it was 10). After a refusal, the next verb re-checks. Every
+`browser()`/`read_text()` result now carries `seconds` (the verb's own CLI time), `check_seconds`
+and `profile_check` (`cached`/`checked`). `openclaw_client.cli_ledger()` also counts calls and
+seconds per sub-command for the process, so `footprint` can report CLI seconds per page (that
+wiring is in `web_reader` and has not been done). **Still per-verb on `user`:**
+`assert_operator_tab` lists `tabs` before every tab verb, and `navigate`/`click`/`press` read the
+tab URL again afterwards, so an operator verb still costs ~2-3 CLI calls. **The queue running
+now keeps the old per-verb check until its next launch**, because it imported the module before
+this change.
