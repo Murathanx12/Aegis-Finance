@@ -978,6 +978,18 @@ def _row(res: dict) -> dict:
         "loo_worst_dropped_year": c.get("loo_worst_dropped_year"),
         "worst_cell": res.get("worst_cell"),
         "top5_months_share_of_log_return": c.get("top5_months_share_of_log_return"),
+        # review 2026-09-27 (hold-month keying + panel-relative benchmarks):
+        # the per-period tables keyed on the month the money was HELD, the
+        # decision-keyed table kept one release as `deprecated`, and the
+        # benchmarks beside SPY. None is printed when evaluate() has no value.
+        "by_year_hold": c.get("by_year_hold"),
+        "by_year_decision_deprecated": c.get("by_year_decision"),
+        "top5_months_hold": c.get("top5_months_hold"),
+        "loo_worst_mean_active_hold": c.get("loo_worst_mean_active_hold", c.get("loo_worst_mean_active")),
+        "sealed_vs_iwm": c.get("sealed_vs_iwm"),
+        "dev_vs_iwm": c.get("dev_vs_iwm"),
+        "sealed_vs_random_panel": c.get("sealed_vs_random_panel"),
+        "dev_vs_random_panel": c.get("dev_vs_random_panel"),
         "cagr_without_best_5_months": c.get("cagr_without_best_5_months"),
         "spy_cagr_same_window": c.get("spy_cagr_same_window"),
         "t_active_horizon_blocks": c.get("t_active_horizon_blocks"),
