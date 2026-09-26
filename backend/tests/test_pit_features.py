@@ -78,8 +78,10 @@ def _news(end=D, sessions=None) -> list[dict]:
         rows.append({"first_seen_utc": f"{s.date()}T15:00:00+00:00", "tickers": "[]"})
     for s in past[-5:]:                  # AAA spikes in the last five sessions
         for _ in range(6):
+            # published the same day: a 2015 stamp here would make these ARCHIVE
+            # rows (news_registry.grade_row), which attention_z now excludes
             rows.append({"first_seen_utc": f"{s.date()}T16:00:00+00:00",
-                         "tickers": "['AAA']", "published_utc": "2015-01-02T00:00:00+00:00"})
+                         "tickers": "['AAA']", "published_utc": f"{s.date()}T15:30:00+00:00"})
     return rows
 
 
@@ -224,6 +226,31 @@ def test_attention_uses_first_seen_not_published():
     # and a frame with ONLY published_utc stamps contributes nothing
     nf = pf.news_frame([{"published_utc": "2024-05-30T00:00:00+00:00", "tickers": "['AAA']"}])
     assert nf.empty
+
+
+def test_attention_z_excludes_archive_rows():
+    """Owed hook 2026-09-27: a row published years before we first saw it is an
+    ARCHIVE row. It must not move attention_z and must not mark a session covered;
+    the count reaches the receipt via `meta`."""
+    sess = _sessions(D)
+    rows = _news(sessions=sess)
+    recent = f"{sess[sess < D][-1].date()}T10:00:00+00:00"
+    archive = {"first_seen_utc": recent, "published_utc": "2015-01-02T13:00:00+00:00",
+               "tickers": "['BBB']", "pit_grade": "native_stamp"}
+    meta_base: dict = {}
+    meta: dict = {}
+    base = _compute(news_rows=rows, meta=meta_base)
+    moved = _compute(news_rows=rows + [archive], meta=meta)
+    assert moved.loc[("BBB", D), "attention_z"] == base.loc[("BBB", D), "attention_z"]
+    assert meta_base["attention_archive_rows_excluded"] == 0
+    assert meta["attention_archive_rows_excluded"] == 1
+    # the owed-hook note's two-row check
+    fresh = {"first_seen_utc": recent, "published_utc": recent, "tickers": "['AAA']"}
+    nf = pf.news_frame([fresh, archive])
+    assert len(nf) == 1 and nf["ticker"].iloc[0] == "AAA"
+    assert nf.attrs["archive_rows_excluded"] == 1
+    assert nf.attrs["coverage_stamps"] == [recent]
+    assert pf.news_frame([archive]).attrs["coverage_stamps"] == []
 
 
 def test_fomo_is_rev5_times_spike():

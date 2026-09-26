@@ -45,6 +45,18 @@ What landed in the commit that carries this note, and the two patches it could n
 
 ## Owed patch 1: `attention_z` archive exclusion (`backend/services/pit_features.py`, not mine tonight)
 
+> **APPLIED 2026-09-27** in commit `COMMIT_HASH` ("Owed hooks applied: ..."). It mirrors
+> `tone_frame` and uses `news_registry.grade_row`. `load_news_corpus` now carries
+> `published_utc` and `pit_grade`. Without them every row lacked a stamp pair and the patch
+> would have excluded 0. `compute()` writes `attention_archive_rows_excluded` and
+> `attention_rows_without_stamp_pair` into `meta`, so they reach the receipt.
+> - On the real corpus (read-only, 2026-09-27): 82,283 rows. **39,902 archive rows
+>   excluded** and 386 without a stamp pair.
+> - The archives are not one spike on 09-11. By first-seen day: 09-13 18,032 · 09-21 13,311 ·
+>   09-19 4,176 · 09-11 4,052 · 09-26 134.
+> - Test: `test_attention_z_excludes_archive_rows`. The `_news` fixture's AAA spike rows had
+>   `published_utc` 2015, which made them archives, so they now carry a same-day publish stamp.
+
 `news_frame` reads `first_seen_utc` only. Its docstring names the defect: 2015 Benzinga items
 first seen in 2026-09 are counted as 2026-09 news. They inflate `attention_z` on the backfill
 days and mark those sessions COVERED. The patch drops archive rows before both the count and
@@ -107,6 +119,18 @@ The loop does not touch the model, so it stays out of `LAB_MODEL_LOOPS`.
 `test_always_on_lab.py` covers the three-way equality. The lab must be restarted by PID, never
 by image name. The new loop proves itself with its first `lab_status.json` row
 `loops.health.last_tick_utc`.
+
+## Owed patch 3: footprint fields on the run receipt (`scripts/dowjones_pull.py`)
+
+> **APPLIED 2026-09-27** in commit `COMMIT_HASH`.
+> - `FOOTPRINT_RECEIPT_KEYS` and `_footprint_fields` replace the two fixed key lists: the one in
+>   `run_reads` and the one in `_merged_footprint`.
+> - The run receipt's `footprint` block now carries `cli_scope`, `cli_calls`, `cli_seconds`,
+>   `cli_seconds_per_page`, `cli_calls_per_page`, `cli_breakdown`, `cli_cache`, `reattaches`
+>   (int, and it includes the pre-run re-attach) and `tab_remaps` (the event count; the events
+>   stay top-level). A missing key is None, never 0.
+> - Test: `test_the_run_receipt_carries_the_cli_footprint_fields`.
+> - The running queue picks this up on its next launch.
 
 ## Also owed, found on the way
 

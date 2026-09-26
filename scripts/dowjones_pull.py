@@ -209,8 +209,7 @@ def run_reads(source: str, section: str, *, parent_tab: str, max_articles: int =
             rc["tab_closed"] = False
             rc["close_error"] = str(exc)[:200]
         fp = reader.close()
-        rc["footprint"] = {k: fp.get(k) for k in ("verdict", "cv_of_gaps", "gaps_s",
-                                                  "pages_per_hour", "scroll_share", "path")}
+        rc["footprint"] = _footprint_fields(fp or {}, rc)
     rc["pages"] = reader.log
     gaps = [p["waited_s"] for p in reader.log]
     stamps = [datetime.fromisoformat(p["at"]) for p in reader.log]
@@ -406,12 +405,34 @@ def _stored_today(stored: dict[str, set[str]], url: str, day: str) -> bool:
     return day in stored.get(WR.norm_url(url), set())
 
 
-def _merged_footprint(readers: list[WR.Reader], write: bool = True) -> dict:
+#: What the RUN receipt copies from a footprint. The cli_* fields (2026-09-27)
+#: show what the profile-assert cache (3d721f05) and the tabs-listing cache
+#: (2131b2ba) saved; before this list carried them they lived only in the
+#: footprint file, so a morning read of the run receipt could not see them.
+FOOTPRINT_RECEIPT_KEYS = ("verdict", "cv_of_gaps", "gaps_s", "gap_min_s", "pages_per_hour",
+                          "scroll_share", "pages", "path", "cli_scope", "cli_calls",
+                          "cli_seconds", "cli_seconds_per_page", "cli_calls_per_page",
+                          "cli_breakdown", "cli_cache")
+
+
+def _footprint_fields(fp: dict, rc: dict | None = None) -> dict:
+    """The run receipt's `footprint` block: FOOTPRINT_RECEIPT_KEYS from the
+    footprint (None when absent -- missing is visible, never 0), plus the run's
+    recovery counts: `reattaches` (int) and `tab_remaps` (how many remap events;
+    the events themselves stay in the receipt's top-level `tab_remaps`)."""
+    out = {k: fp.get(k) for k in FOOTPRINT_RECEIPT_KEYS}
+    rc = rc or {}
+    out["reattaches"] = int(rc.get("reattaches") or 0)
+    out["tab_remaps"] = len(rc.get("tab_remaps") or [])
+    return out
+
+
+def _merged_footprint(readers: list[WR.Reader], write: bool = True,
+                      rc: dict | None = None) -> dict:
     log = sorted((p for r in readers for p in r.log if p.get("at")), key=lambda p: p["at"])
     fp = WR.footprint_receipt(log, scrolled=sum(r.scrolled_reads for r in readers),
                               reads=sum(r.reads for r in readers), write=write)
-    return {k: fp.get(k) for k in ("verdict", "cv_of_gaps", "gaps_s", "gap_min_s",
-                                   "pages_per_hour", "scroll_share", "pages", "path")}
+    return _footprint_fields(fp, rc)
 
 
 def _classify(msg: str) -> str:
@@ -723,7 +744,7 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
             rc["lanes"][lid]["tab"] = rd.tab           # the id after any re-attach
         _close_all(driver, profile, readers, rc, recovery, parents, source_of)
         rc["parent_tabs_final"] = {k: v["tab"] for k, v in parents.items()}
-        rc["footprint"] = _merged_footprint(list(readers.values()))
+        rc["footprint"] = _merged_footprint(list(readers.values()), rc=rc)
         WR.release_reader_lock(lock)
     rc["hour_cap_waits_s"] = list(getattr(thr, "hour_cap_waits", []))
     rc["throttle_targets_s"] = list(thr.targets)
@@ -881,7 +902,7 @@ def run_archive(days: list[date], *, parent_tab: str, max_per_day: int | None = 
         if rd is not None:
             _close_all(driver, profile, readers, rc, recovery, parents, {"wsj": "wsj"})
             rc["tab_closed"] = bool(rc["tabs_closed"]) and all(rc["tabs_closed"].values())
-            rc["footprint"] = _merged_footprint([rd])
+            rc["footprint"] = _merged_footprint([rd], rc=rc)
         WR.release_reader_lock(lock)
     rc["n_articles"] = sum(v["read"] for v in rc["per_day"].values())
     rc["complete"] = (not rc["stopped"] and len(rc["per_day"]) == len(days))
@@ -1239,6 +1260,8 @@ def main(argv: list[str] | None = None) -> int:
             r["parent_tabs"] = parents
             r["reattach_log"] = pre_log + r.get("reattach_log", [])
             r["reattaches"] = r.get("reattaches", 0) + sum(1 for x in pre_log if x.get("ok"))
+            if isinstance(r.get("footprint"), dict):           # the pre-run re-attach counts too
+                r["footprint"]["reattaches"] = r["reattaches"]
         except Exception as exc:  # noqa: BLE001 -- a refusal is a finding, rc 2
             print(f"REFUSED: {type(exc).__name__}: {exc}")
             _LAST_OUTCOME.update(kind="archive", n_articles=0,
@@ -1285,6 +1308,8 @@ def main(argv: list[str] | None = None) -> int:
                          progress_path=rpath)
             r["reattach_log"] = pre_log + r.get("reattach_log", [])
             r["reattaches"] = r.get("reattaches", 0) + sum(1 for x in pre_log if x.get("ok"))
+            if isinstance(r.get("footprint"), dict):           # the pre-run re-attach counts too
+                r["footprint"]["reattaches"] = r["reattaches"]
         except Exception as exc:  # noqa: BLE001 -- a refusal is a finding, rc 2
             print(f"REFUSED: {type(exc).__name__}: {exc}")
             _LAST_OUTCOME.update(kind="plan", n_articles=0,

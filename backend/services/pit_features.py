@@ -215,13 +215,29 @@ def news_frame(news_rows: Iterable[dict] | pd.DataFrame) -> pd.DataFrame:
     `published_utc` is ignored on purpose: the corpus backfills Benzinga items
     published in 2015 with a first-seen stamp of 2026-09, and the published
     stamp of an `index_state` feed can move after the fact (invariant 20).
+
+    ARCHIVE ROWS ARE EXCLUDED (owed hook 2026-09-27), exactly as `tone_frame`
+    does: `published_utc` is read only by `news_registry.grade_row`, to find
+    rows published > ARCHIVE_LAG_DAYS before we first saw them. The 36,720
+    archived Benzinga headlines all carry first_seen 2026-09-11 and would
+    otherwise land on that one session as an attention spike and mark it
+    COVERED. Coverage stamps come from the KEPT rows only. The count lands on
+    `attrs["archive_rows_excluded"]`; rows that could never be graded (no
+    stamp pair) on `attrs["rows_without_stamp_pair"]`.
     """
+    from backend.services import news_registry as NR
     recs = news_rows.to_dict("records") if isinstance(news_rows, pd.DataFrame) else list(news_rows)
     out = []
     stamps = []
+    n_arch = n_unstamped = 0
     for r in recs:
         fs = r.get("first_seen_utc")
         if not fs:
+            continue
+        if not NR.has_stamp_pair(r):
+            n_unstamped += 1
+        if NR.grade_row(r).get("pit_grade") == NR.ARCHIVE_GRADE:
+            n_arch += 1
             continue
         stamps.append(fs)
         for t in _parse_tickers(r.get("tickers")):
@@ -230,6 +246,8 @@ def news_frame(news_rows: Iterable[dict] | pd.DataFrame) -> pd.DataFrame:
     df["first_seen"] = _naive(df["first_seen"])
     # every row's own stamp, ticker-less ones included, marks its session COVERED
     df.attrs["coverage_stamps"] = stamps
+    df.attrs["archive_rows_excluded"] = n_arch
+    df.attrs["rows_without_stamp_pair"] = n_unstamped
     return df
 
 
@@ -541,8 +559,11 @@ def compute(panel_dates: Iterable, *, bars: pd.DataFrame | None = None,
     else:
         sess = pd.bdate_range(dates.min() - pd.Timedelta(days=400), dates.max())
     if news_rows is not None:
-        put(attention_features(news_frame(news_rows), dates, sess, tk),
-            ["attention_z", "attention_z_n"])
+        nf = news_frame(news_rows)
+        put(attention_features(nf, dates, sess, tk), ["attention_z", "attention_z_n"])
+        if meta is not None:
+            meta["attention_archive_rows_excluded"] = int(nf.attrs.get("archive_rows_excluded", 0))
+            meta["attention_rows_without_stamp_pair"] = int(nf.attrs.get("rows_without_stamp_pair", 0))
     if revisions is not None and len(revisions):
         prep = _prep_revisions(revisions, firm_map)
         put(skill_features(prep, actor_corpus, dates),
@@ -820,7 +841,11 @@ def load_news_corpus(root: Path | None = None) -> list[dict]:
                         r = json.loads(line)
                     except json.JSONDecodeError:
                         continue
+                    # published_utc + pit_grade ride along ONLY so news_frame
+                    # can grade archives; neither dates a row.
                     rows.append({"first_seen_utc": r.get("first_seen_utc"),
+                                 "published_utc": r.get("published_utc"),
+                                 "pit_grade": r.get("pit_grade"),
                                  "tickers": r.get("tickers")})
     return rows
 

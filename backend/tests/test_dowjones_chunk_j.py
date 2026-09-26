@@ -1347,3 +1347,35 @@ def test_queue_marks_only_done_lines_and_retries_a_claims_pass_over_nothing(tmp_
     r2 = DP.run_queue(q, main_fn=fake_main)
     assert [ln["status"] for ln in r2["lines"]] == ["DONE", "DONE"]
     assert len(list(DP.queue_done_dir(q).glob("*.done"))) == 2
+
+
+def test_the_run_receipt_carries_the_cli_footprint_fields(monkeypatch):
+    """Owed hook 2026-09-27: the run receipt copies the cli_* cost of the run
+    (so the profile-assert and tabs-listing caches show their saving there)
+    plus the recovery counts, every key present even when the value is absent."""
+    from scripts import dowjones_pull as DP
+    fake_fp = {"verdict": "HUMAN_PACE_OK", "cv_of_gaps": 0.4, "gaps_s": [30.0, 41.2, 55.0],
+               "gap_min_s": 30.0, "pages_per_hour": 60.0, "scroll_share": 1.0, "pages": 4,
+               "path": "fp.json", "cli_scope": "since_reader_start", "cli_calls": 11,
+               "cli_seconds": 165.0, "cli_seconds_per_page": 41.25, "cli_calls_per_page": 2.75,
+               "cli_breakdown": {"profile_check": {"calls": 1, "seconds": 15.0},
+                                 "tabs_listing": {"calls": 2, "seconds": 30.0},
+                                 "other": {"calls": 8, "seconds": 120.0}},
+               "cli_cache": {"profile_hits": 9, "tabs_hits": 6}}
+    rc = {"reattaches": 2, "tab_remaps": [{"remap": {}}, {"remap": {}}, {"remap": {}}]}
+    owed = ("cli_calls", "cli_seconds", "cli_seconds_per_page", "cli_calls_per_page",
+            "cli_breakdown", "cli_cache", "reattaches", "tab_remaps")
+    out = DP._footprint_fields(fake_fp, rc)
+    for k in owed:
+        assert k in out, k
+    for k in owed[:6]:
+        assert out[k] == fake_fp[k]
+    assert out["reattaches"] == 2 and out["tab_remaps"] == 3
+    # the merged path (plan / archive runs) goes through the same copy
+    monkeypatch.setattr(WR, "footprint_receipt", lambda log, **kw: dict(fake_fp))
+    merged = DP._merged_footprint([], write=False, rc=rc)
+    assert all(merged[k] == out[k] for k in owed)
+    # a footprint with no CLI ledger keeps the keys as None, never 0
+    bare = DP._footprint_fields({"verdict": "CANNOT DETERMINE: 0 gap(s)"})
+    assert all(k in bare for k in owed) and bare["cli_calls"] is None
+    assert bare["reattaches"] == 0 and bare["tab_remaps"] == 0
