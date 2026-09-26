@@ -1297,10 +1297,21 @@ def write_evidence(card: dict, *, run_utc: str | None = None,
 #
 # "What the CEO promised / did they deliver": a promise is a dated, gradeable
 # statement. Each becomes ONE `promise` row (idempotent by hash of ticker, text
-# and promised date) with a `promise:v1` forecast row at the due horizon; the
-# next card that returns the same promise with DELIVERED or MISSED appends ONE
-# `grade` row. Append-only: a promise's history is the record, and its current
-# status is its latest grade.
+# and promised date); the next card that returns the same promise with
+# DELIVERED or MISSED appends ONE `grade` row. Append-only: a promise's history
+# is the record, and its current status is its latest grade.
+#
+# 2026-09-26 (adjudication row 14, reviewer A+B+F W5): the `promise:v1`
+# forecast rows at P(beats SPY) = 0.50 are RETIRED -- every outcome scores Brier
+# 0.25, so they grade nothing and dilute the one skilled population in
+# `predictions.jsonl`. No new one is written. The five written on 2026-09-26
+# stay in the ledger (it is append-only and `belief_state` voids a row only by
+# its own `void_reason` field, which would mean rewriting a tamper-evident
+# file); graders should exclude `specialist == "promise:v1"`.
+# A promise with a NUMBERED target is graded by a deterministic parser over the
+# company's 8-K EX-99 earnings release (`grade_numeric_promises`), never by the
+# LLM that extracted it: `target` rows declare {metric, op, value, tolerance}
+# BEFORE the due date, `grade` rows carry the parsed numbers.
 
 PROMISE_SCHEMA = "promise/v1"
 PROMISE_STATUSES = ("OPEN", "DELIVERED", "MISSED")
@@ -1308,7 +1319,10 @@ PROMISE_SPECIALIST = "promise:v1"
 PROMISE_MECHANISM = "promise_v1"
 #: ~a quarter when no due date is stated.
 PROMISE_DEFAULT_HORIZON = 60
+#: historical: the retired anchor probability (no row is written with it now).
 PROMISE_P = 0.5
+PROMISE_FORECASTS_RETIRED = ("2026-09-26: promise:v1 forecast rows at p=0.50 retired "
+                             "(adjudication row 14); promises are graded by status only")
 PROMISE_CONTRACT = (
     "promise:v1 -> ledger. One row per OPEN management promise at the first "
     "horizon on the grid (1,2,5,20,60,120,252) at or after the sessions to its "
@@ -1352,15 +1366,23 @@ def parse_promise(item: str, ticker: str) -> dict | None:
 
 
 def promise_state(rows: Iterable[dict]) -> dict[str, dict]:
-    """promise_id -> the promise row with `status` = its latest grade."""
+    """promise_id -> the promise row with `status` = its latest grade, its
+    declared numeric `targets` (first declaration wins) and, after a parser
+    grade, the `parsed` numbers."""
     out: dict[str, dict] = {}
     for r in rows:
         pid = r.get("promise_id")
         if r.get("row_type") == "promise":
             out[pid] = dict(r)
+        elif r.get("row_type") == "target" and pid in out and "targets" not in out[pid]:
+            out[pid]["targets"] = list(r.get("targets") or [])
+            out[pid]["targets_declared_utc"] = r.get("declared_utc")
         elif r.get("row_type") == "grade" and pid in out:
             out[pid]["status"] = r.get("status")
             out[pid]["graded_utc"] = r.get("graded_utc")
+            if r.get("grader"):
+                out[pid]["grader"] = r.get("grader")
+                out[pid]["parsed"] = r.get("parsed")
     return out
 
 
@@ -1404,6 +1426,14 @@ def promise_horizon(due_utc: str | None, today: Any) -> int:
 
 
 def promise_forecast_records(prom: dict, *, today: Any, made_at: str | None = None) -> list:
+    """RETIRED 2026-09-26 (adjudication row 14): always []. A P = 0.50 anchor
+    scores Brier 0.25 whatever happens and only dilutes the graded population.
+    The old construction is kept below, unreachable, as the record of what the
+    five 2026-09-26 rows were."""
+    return []
+
+
+def _retired_promise_forecast_records(prom: dict, *, today: Any, made_at: str | None = None) -> list:
     from backend.services import belief_state as B
     h = promise_horizon(prom.get("due_utc"), today)
     return [B.make_prediction(
@@ -1427,11 +1457,14 @@ def promise_forecast_records(prom: dict, *, today: Any, made_at: str | None = No
 
 def write_promises(card: dict, *, today: Any, run_utc: str | None = None,
                    path: Path | None = None, forecast_path: Path | None = None) -> dict:
-    """The card's promises -> `promise` rows (new), `grade` rows (an OPEN
-    promise now DELIVERED/MISSED) and `promise:v1` forecast rows.
+    """The card's promises -> `promise` rows (new) and `grade` rows (an OPEN
+    promise now DELIVERED/MISSED). No forecast row is written any more
+    (`PROMISE_FORECASTS_RETIRED`); `forecast_rows_written` stays in the result
+    and is always 0. A promise with declared numeric targets is NOT graded by a
+    card: the parser over the 8-K is its only grader.
 
     IDEMPOTENT: a promise row once per promise_id; a grade row once per
-    (promise_id, status); a forecast row once per (promise_id, horizon).
+    (promise_id, status).
     """
     from backend.services import belief_state as B
     pp = Path(path) if path is not None else promises_path()
@@ -1447,7 +1480,8 @@ def write_promises(card: dict, *, today: Any, run_utc: str | None = None,
                          int(r.get("horizon_days") or 0)))
     new_rows, recs = [], []
     res = {"n_promises": 0, "promises_written": 0, "grades_written": 0,
-           "forecast_rows_written": 0, "n_unparseable": 0, "unchanged": 0}
+           "forecast_rows_written": 0, "n_unparseable": 0, "unchanged": 0,
+           "card_grade_refused_numeric": 0}
     t = str(card.get("ticker") or "").upper()
     for it in card.get("promises") or []:
         p = parse_promise(it, t)
@@ -1472,6 +1506,9 @@ def write_promises(card: dict, *, today: Any, run_utc: str | None = None,
                         recs.append(r)
             continue
         cur = state[pid].get("status")
+        if p["status"] != "OPEN" and state[pid].get("targets"):
+            res["card_grade_refused_numeric"] += 1
+            continue
         if p["status"] != "OPEN" and cur == "OPEN" and (pid, p["status"]) not in graded:
             new_rows.append({"schema": PROMISE_SCHEMA, "row_type": "grade",
                              "promise_id": pid, "ticker": t, "status": p["status"],
@@ -1487,6 +1524,294 @@ def write_promises(card: dict, *, today: Any, run_utc: str | None = None,
     if recs:
         B.append(recs, path=forecast_path)
     res["forecast_rows_written"] = len(recs)
+    res["path"] = str(pp)
+    return res
+
+
+# ─────────────────────────── numeric promise grading ────────────────────────
+#
+# Reviewer A+B+F W5: "On 2026-10-01 the ledger holds a DELIVERED or MISSED row
+# that no LLM wrote." A promise with a numbered target is graded from the
+# company's own 8-K EX-99 earnings release by one regex per metric. The target
+# is declared (a `target` row) BEFORE the due date; a declaration after it is
+# refused, because a target written after the print is a description.
+
+PROMISE_GRADER = "parser:8k_ex99/v1"
+NUMERIC_OPS = ("within", ">=", "<=")
+#: metric -> unit. Revenue in USD billions, EPS in USD per diluted share,
+#: margins in percent.
+NUMERIC_METRICS: dict[str, str] = {
+    "revenue": "usd_bn", "eps_non_gaap": "usd", "eps_gaap": "usd",
+    "gross_margin_gaap": "pct", "gross_margin_non_gaap": "pct",
+}
+#: an earnings release may land a little before the stated due date.
+PROMISE_RELEASE_EARLY_DAYS = 3
+EX99_CORPUS = "sec_edgar_8k_ex99_body"
+EARNINGS_ITEM_TAG = "8-K:2.02"
+
+_NUM = r"(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)"
+_NOT_NON = r"(?<!non-)(?<!non )"
+#: metric -> ordered regexes; group 1 = the number, group 2 (revenue) = the scale
+_METRIC_RX: dict[str, tuple[re.Pattern, ...]] = {
+    "revenue": (
+        re.compile(r"\brevenues?\s+(?:of|was|were|totaled|totalled|reached|at)\s+(?:a\s+record\s+)?"
+                   r"\$\s?" + _NUM + r"\s*(billion|million|bn|b|m)\b", re.I),
+        re.compile(r"\brecord\s+revenues?\s+(?:of\s+)?\$\s?" + _NUM + r"\s*(billion|million|bn|b|m)\b", re.I),
+    ),
+    "eps_non_gaap": (
+        re.compile(r"\bnon-?\s?GAAP\s+(?:diluted\s+)?(?:EPS|earnings\s+per\s+(?:diluted\s+)?share)"
+                   r"\s+(?:of|was|were)?\s*\$\s?" + _NUM, re.I),
+        re.compile(r"\bnon-?\s?GAAP\s+net\s+income\s+of\s+\$\s?[\d.,]+\s*(?:billion|million)?,?\s+"
+                   r"or\s+\$\s?" + _NUM + r"\s+per\s+diluted\s+share", re.I),
+    ),
+    "eps_gaap": (
+        re.compile(_NOT_NON + r"\bGAAP\s+(?:diluted\s+)?(?:EPS|earnings\s+per\s+(?:diluted\s+)?share)"
+                   r"\s+(?:of|was|were)?\s*\$\s?" + _NUM, re.I),
+        re.compile(_NOT_NON + r"\bGAAP\s+net\s+income\s+of\s+\$\s?[\d.,]+\s*(?:billion|million)?,?\s+"
+                   r"or\s+\$\s?" + _NUM + r"\s+per\s+diluted\s+share", re.I),
+    ),
+    "gross_margin_gaap": (
+        re.compile(_NOT_NON + r"\bGAAP\s+gross\s+margins?\s+(?:of|was|were)?\s*" + _NUM + r"\s*%", re.I),
+        re.compile(r"\bgross\s+margins?\s+(?:of|was)\s+" + _NUM + r"\s*%\s+(?:on\s+a\s+)?GAAP", re.I),
+        # the results table (GAAP columns come first): "Gross margin 5,053 ...
+        # percent of revenue 44.7 %" -- first occurrence, before any non-GAAP heading
+        re.compile(_NOT_NON + r"\bgross\s+margin\s+\$?\s?[\d,.]+\s+(?:\$?\s?[\d,.]+\s+){0,8}"
+                   r"(?:percent|%)\s+of\s+(?:net\s+)?(?:revenue|sales)\s+" + _NUM + r"\s*%", re.I),
+    ),
+    "gross_margin_non_gaap": (
+        re.compile(r"\bnon-?\s?GAAP\s+gross\s+margins?\s+(?:of|was|were)?\s*" + _NUM + r"\s*%", re.I),
+    ),
+}
+#: results precede the outlook; the outlook's "gross margin 86% +/- 1%" is the
+#: NEXT quarter's guide and must never grade this quarter's promise.
+_OUTLOOK_RX = re.compile(r"\b(?:business\s+outlook|financial\s+outlook|guidance\s+for\s+the|"
+                         r"outlook\s+for\s+the|the\s+following\s+(?:is|are)\s+(?:our|micron's)\s+guidance)\b",
+                         re.I)
+
+
+def clean_release_text(text: str) -> str:
+    import html
+    t = html.unescape(str(text or "")).replace("\xa0", " ")
+    t = re.sub(r"<[^>]+>", " ", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
+def parse_release_numbers(text: str) -> dict[str, dict]:
+    """metric -> {value, unit, match} from the RESULTS part of a release (the
+    text before its outlook section). A metric no regex finds is absent."""
+    t = clean_release_text(text)
+    m = _OUTLOOK_RX.search(t)
+    results = t[:m.start()] if m else t
+    out: dict[str, dict] = {}
+    for metric, rxs in _METRIC_RX.items():
+        for rx in rxs:
+            hit = rx.search(results)
+            if not hit:
+                continue
+            v = float(hit.group(1).replace(",", ""))
+            if metric == "revenue":
+                scale = hit.group(2).lower()
+                v = v / 1000.0 if scale in ("million", "m") else v
+            out[metric] = {"value": round(v, 6), "unit": NUMERIC_METRICS[metric],
+                           "match": results[max(0, hit.start() - 20):hit.end() + 20][:240]}
+            break
+    if "gross_margin_non_gaap" not in out:
+        # Micron-style side-by-side table: "GAAP(1) q q q Non-GAAP(2) q q q ...
+        # Gross margin a b c d e f Percent of revenue 84.6 % 74.4 % 37.7 % 84.9 % ..."
+        # -- the first half of the percents is GAAP, the second half non-GAAP.
+        m2 = _GM_TABLE_RX.search(results)
+        if m2 and re.search(r"non-?\s?GAAP", results[max(0, m2.start() - 600):m2.start()], re.I):
+            pcts = [float(x) for x in re.findall(r"(\d+(?:\.\d+)?)\s*%", m2.group(1))]
+            if len(pcts) >= 2 and len(pcts) % 2 == 0:
+                out["gross_margin_non_gaap"] = {
+                    "value": pcts[len(pcts) // 2], "unit": "pct",
+                    "match": results[m2.start():m2.end()][:240]}
+    return out
+
+
+_GM_TABLE_RX = re.compile(r"\bgross\s+margin\s+(?:\$?\s?[\d,.]+\s+){2,10}(?:percent|%)\s+of\s+"
+                          r"(?:net\s+)?(?:revenue|sales)\s+((?:\d+(?:\.\d+)?\s*%\s*){2,10})", re.I)
+
+
+def check_target(target: dict, value: float | None) -> bool | None:
+    """True / False, or None when the number was not found."""
+    if value is None:
+        return None
+    op = target.get("op", "within")
+    v = float(target["value"])
+    tol = float(target.get("tolerance") or 0.0)
+    if op == "within":
+        return v - tol - 1e-9 <= value <= v + tol + 1e-9
+    if op == ">=":
+        return value >= v - tol - 1e-9
+    if op == "<=":
+        return value <= v + tol + 1e-9
+    raise ValueError(f"unknown op {op!r}")
+
+
+def grade_numeric(targets: list[dict], numbers: dict[str, dict]) -> tuple[str, list[dict]]:
+    """DELIVERED only when every target is found and met; MISSED when any found
+    target is missed; UNGRADEABLE when none is missed but one is not found."""
+    detail, missed, missing = [], False, False
+    for tg in targets:
+        got = (numbers.get(tg["metric"]) or {}).get("value")
+        ok = check_target(tg, got)
+        detail.append({**tg, "parsed": got, "met": ok,
+                       "match": (numbers.get(tg["metric"]) or {}).get("match")})
+        missed |= ok is False
+        missing |= ok is None
+    status = "MISSED" if missed else "UNGRADEABLE" if missing else "DELIVERED"
+    return status, detail
+
+
+def declare_targets(promise_id_: str, targets: list[dict], *, declared_utc: str | None = None,
+                    path: Path | None = None, source: str = "") -> dict:
+    """Append ONE `target` row for an existing promise. Refused when the promise
+    is unknown, already has targets, the metric/op is unknown, or the
+    declaration is dated on/after the promise's due date."""
+    pp = Path(path) if path is not None else promises_path()
+    state = promise_state(_read_jsonl(pp))
+    if promise_id_ not in state:
+        return {"written": 0, "refused": f"no promise {promise_id_}"}
+    pr = state[promise_id_]
+    if pr.get("targets"):
+        return {"written": 0, "refused": "targets already declared", "declared_utc": pr.get("targets_declared_utc")}
+    declared_utc = declared_utc or datetime.utcnow().isoformat(timespec="seconds") + "+00:00"
+    if pr.get("due_utc") and str(declared_utc)[:10] >= str(pr["due_utc"])[:10]:
+        return {"written": 0, "refused": f"declared {declared_utc[:10]} on/after due {pr['due_utc']}: "
+                                         "a target written after the print is a description"}
+    clean = []
+    for tg in targets:
+        if tg.get("metric") not in NUMERIC_METRICS or tg.get("op", "within") not in NUMERIC_OPS:
+            return {"written": 0, "refused": f"bad target {tg!r}"}
+        clean.append({"metric": tg["metric"], "op": tg.get("op", "within"),
+                      "value": float(tg["value"]), "tolerance": float(tg.get("tolerance") or 0.0),
+                      "unit": NUMERIC_METRICS[tg["metric"]], "basis": tg.get("basis", "")})
+    _append_jsonl(pp, [{"schema": PROMISE_SCHEMA, "row_type": "target", "promise_id": promise_id_,
+                        "ticker": pr.get("ticker"), "targets": clean, "declared_utc": declared_utc,
+                        "source": source}])
+    return {"written": 1, "targets": clean}
+
+
+def _cik_for(ticker: str, cik_map: dict[str, int] | None = None) -> int | None:
+    if cik_map is not None:
+        return cik_map.get(str(ticker).upper())
+    from backend import config as C
+    p = Path(C.OPTIMUS_LEDGER_DIR) / "edgar_8k" / "company_tickers.json"
+    try:
+        d = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    for r in (d.values() if isinstance(d, dict) else d):
+        if str(r.get("ticker", "")).upper() == str(ticker).upper():
+            return int(r["cik_str"])
+    return None
+
+
+def earnings_releases(ticker: str, *, on_or_after: str, corpus_dir: Path | None = None,
+                      cik_map: dict[str, int] | None = None) -> list[dict]:
+    """8-K Item 2.02 EX-99 bodies for this ticker's CIK published on/after a date
+    (an `earnings_release` event). Oldest first."""
+    from backend import config as C
+    d = Path(corpus_dir) if corpus_dir else Path(C.OPTIMUS_LEDGER_DIR) / "news_corpus" / EX99_CORPUS
+    cik = _cik_for(ticker, cik_map)
+    if cik is None or not d.exists():
+        return []
+    tag = f"cik:{cik:010d}"
+    out = []
+    for f in sorted(d.glob("*.jsonl")):
+        if f.stem < on_or_after[:10]:
+            continue
+        for r in _read_jsonl(f):
+            tags = set(r.get("entity_tags") or [])
+            if tag not in tags and str(ticker).upper() not in {str(x).upper() for x in r.get("tickers") or []}:
+                continue
+            if EARNINGS_ITEM_TAG not in tags:
+                continue
+            if str(r.get("published_utc") or "")[:10] < on_or_after[:10]:
+                continue
+            out.append(r)
+    out.sort(key=lambda r: str(r.get("published_utc") or ""))
+    return out
+
+
+def grade_numeric_promises(ticker: str | None = None, *, path: Path | None = None,
+                           corpus_dir: Path | None = None, cik_map: dict[str, int] | None = None,
+                           fetch: Callable[[str], str] | None = None, today: Any = None,
+                           graded_utc: str | None = None,
+                           releases_fn: Callable[[str, str], list[dict]] | None = None) -> dict:
+    """Grade every OPEN (or UNGRADEABLE) promise with declared targets whose due
+    date has come, from the first earnings release on/after due - 3 days.
+    `fetch(url) -> text` is tried when the corpus body (capped at 4,000 chars)
+    lacks a metric; `releases_fn(ticker, since) -> [{url, published_utc, body}]`
+    is asked when the corpus holds no release (the EX-99 corpus samples the
+    8-K feed, so a company's print can be absent from it). Appends one `grade`
+    row per (promise, status, document)."""
+    pp = Path(path) if path is not None else promises_path()
+    rows = _read_jsonl(pp)
+    state = promise_state(rows)
+    done = {(r.get("promise_id"), r.get("status"), r.get("document_url")) for r in rows
+            if r.get("row_type") == "grade"}
+    today_s = _asof_date(today).isoformat() if today is not None else date.today().isoformat()
+    graded_utc = graded_utc or datetime.utcnow().isoformat(timespec="seconds") + "+00:00"
+    res: dict[str, Any] = {"n_candidates": 0, "n_not_due": 0, "n_no_release": 0,
+                           "grades_written": 0, "grades": []}
+    new_rows = []
+    for pid, pr in state.items():
+        if not pr.get("targets") or pr.get("status") not in ("OPEN", "UNGRADEABLE"):
+            continue
+        if ticker and pr.get("ticker") != str(ticker).upper():
+            continue
+        res["n_candidates"] += 1
+        due = str(pr.get("due_utc") or "")[:10]
+        if not due:
+            continue
+        start = (date.fromisoformat(due) - timedelta(days=PROMISE_RELEASE_EARLY_DAYS)).isoformat()
+        if today_s < start:
+            res["n_not_due"] += 1
+            continue
+        rels = earnings_releases(pr["ticker"], on_or_after=start, corpus_dir=corpus_dir, cik_map=cik_map)
+        if not rels and releases_fn is not None:
+            try:
+                rels = [r for r in releases_fn(pr["ticker"], start) or []
+                        if str(r.get("published_utc") or "")[:10] >= start]
+            except Exception as exc:                                # noqa: BLE001
+                res.setdefault("fetch_errors", []).append(f"releases_fn {pr['ticker']}: {exc}"[:200])
+                rels = []
+        if not rels:
+            res["n_no_release"] += 1
+            res["grades"].append({"promise_id": pid, "status": "NO_RELEASE_YET", "since": start})
+            continue
+        rel = rels[0]
+        nums = parse_release_numbers(rel.get("body") or "")
+        fetched = False
+        if fetch and any(t["metric"] not in nums for t in pr["targets"]) and rel.get("url"):
+            try:
+                full = parse_release_numbers(fetch(rel["url"]) or "")
+                fetched = True
+                for k, v in full.items():
+                    nums.setdefault(k, v)
+            except Exception as exc:                                # noqa: BLE001
+                res.setdefault("fetch_errors", []).append(f"{rel.get('url')}: {exc}"[:200])
+        status, detail = grade_numeric(pr["targets"], nums)
+        key = (pid, status, rel.get("url"))
+        g = {"promise_id": pid, "ticker": pr["ticker"], "status": status, "detail": detail,
+             "document_url": rel.get("url"), "document_published_utc": rel.get("published_utc"),
+             "fetched_full_document": fetched}
+        res["grades"].append(g)
+        if key in done:
+            continue
+        done.add(key)
+        new_rows.append({"schema": PROMISE_SCHEMA, "row_type": "grade", "promise_id": pid,
+                         "ticker": pr["ticker"], "status": status, "grader": PROMISE_GRADER,
+                         "parsed": {d_["metric"]: d_["parsed"] for d_ in detail},
+                         "detail": detail, "document_url": rel.get("url"),
+                         "document_published_utc": rel.get("published_utc"),
+                         "fetched_full_document": fetched, "graded_utc": graded_utc,
+                         "evidence": "; ".join(f"{d_['metric']}={d_['parsed']} vs {d_['op']} "
+                                               f"{d_['value']}+/-{d_['tolerance']}" for d_ in detail)})
+        res["grades_written"] += 1
+    _append_jsonl(pp, new_rows)
     res["path"] = str(pp)
     return res
 

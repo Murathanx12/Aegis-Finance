@@ -713,24 +713,24 @@ def test_a_claim_dated_after_the_run_is_refused(tmp_path):
     assert res["n_future_refused"] == 1
 
 
-def test_promise_row_and_forecast_written_once_then_graded(tmp_path):
+def test_promise_row_written_once_then_graded_and_no_p050_forecast(tmp_path):
+    """Adjudication row 14: the promise:v1 forecast rows at p=0.50 are retired --
+    the promise row is written, no forecast row is, ever."""
     from backend.services import belief_state as B
     pp, fp = tmp_path / "promises.jsonl", tmp_path / "pred.jsonl"
     c = _v2_card()
     r1 = TC.write_promises(c, today=ASOF, path=pp, forecast_path=fp)
-    assert r1["promises_written"] == 1 and r1["forecast_rows_written"] == 1
+    assert r1["promises_written"] == 1 and r1["forecast_rows_written"] == 0
     rows = [json.loads(x) for x in pp.read_text(encoding="utf-8").splitlines()]
     assert rows[0]["row_type"] == "promise" and rows[0]["status"] == "OPEN"
     assert rows[0]["due_utc"] == "2026-12-31" and rows[0]["promised_utc"] == "2026-06-15"
-    preds = B.read_predictions(fp)
-    assert len(preds) == 1 and preds[0]["specialist"] == "promise:v1"
-    assert preds[0]["horizon_days"] in B.HORIZONS and preds[0]["horizon_days"] >= 60
-    assert preds[0]["inputs_used"]["promise_id"] == rows[0]["promise_id"]
+    assert B.read_predictions(fp) == []
+    assert TC.promise_forecast_records(rows[0], today=ASOF) == []
     # idempotent by hash
     r2 = TC.write_promises(c, today=ASOF, path=pp, forecast_path=fp)
     assert r2["promises_written"] == 0 and r2["forecast_rows_written"] == 0
     assert len(pp.read_text(encoding="utf-8").splitlines()) == 1
-    assert len(B.read_predictions(fp)) == 1
+    assert B.read_predictions(fp) == []
     # the open promise is handed to the next quest
     assert [p["promise_text"] for p in TC.open_promises("AAA", path=pp)] == [
         "HBM4 volume shipments by year end"]
@@ -744,6 +744,118 @@ def test_promise_row_and_forecast_written_once_then_graded(tmp_path):
     assert [r["row_type"] for r in rows] == ["promise", "grade"]
     assert TC.open_promises("AAA", path=pp) == []
     assert TC.promise_state(rows)[rows[0]["promise_id"]]["status"] == "DELIVERED"
+
+
+# ── numeric promises: graded by a parser over the 8-K, not by an LLM ─────────
+_MU_LIKE_RELEASE = (
+    "EX-99.1 2 ex991.htm EX-99.1 Micron Technology, Inc. Reports Results for the Fourth "
+    "Quarter of Fiscal 2026 &nbsp; Revenue of $50.37&nbsp;billion versus $44.10 billion for the "
+    "prior quarter; GAAP net income of $33.21 billion, or $29.40 per diluted share; Non-GAAP net "
+    "income of $35.10 billion, or $31.12 per diluted share; GAAP gross margin of 86.2%. "
+    "Business Outlook: Revenue $58.00 billion &plusmn; $1.0 billion; GAAP gross margin 88.0%; "
+    "Non-GAAP diluted EPS of $36.00")
+
+
+def _numeric_setup(tmp_path, body, *, due="2026-09-30", published="2026-09-30T20:05:00+00:00"):
+    pp = tmp_path / "promises.jsonl"
+    c = _v2_card(reply=_v2_reply(promises=[
+        f"2026-06-24 | {due} | OPEN | FQ4 revenue $50.0B +/- $1.0B, GAAP GM ~86%, non-GAAP EPS $31 +/- $1 | 8-K"]))
+    c["ticker"] = "MUX"
+    TC.write_promises(c, today=ASOF, path=pp, forecast_path=tmp_path / "pred.jsonl")
+    pid = json.loads(pp.read_text(encoding="utf-8").splitlines()[0])["promise_id"]
+    r = TC.declare_targets(pid, [
+        {"metric": "revenue", "op": "within", "value": 50.0, "tolerance": 1.0},
+        {"metric": "eps_non_gaap", "op": "within", "value": 31.0, "tolerance": 1.0},
+        {"metric": "gross_margin_gaap", "op": "within", "value": 86.0, "tolerance": 0.5}],
+        declared_utc="2026-09-26T10:00:00+00:00", path=pp)
+    assert r["written"] == 1
+    corpus = tmp_path / "ex99"
+    corpus.mkdir()
+    (corpus / f"{published[:10]}.jsonl").write_text(json.dumps({
+        "source": "sec_edgar_8k_ex99_body", "published_utc": published,
+        "first_seen_utc": published, "url": "https://www.sec.gov/Archives/x/ex991.htm",
+        "title": "8-K - MICRON-LIKE (0000000042) EX-99.1", "body": body, "tickers": [],
+        "entity_tags": ["8-K:2.02", "cik:0000000042", "exhibit:EX-99.1"]}) + "\n", encoding="utf-8")
+    return pp, pid, corpus
+
+
+def test_release_parser_reads_results_not_the_outlook():
+    n = TC.parse_release_numbers(_MU_LIKE_RELEASE)
+    assert n["revenue"]["value"] == pytest.approx(50.37)
+    assert n["eps_non_gaap"]["value"] == pytest.approx(31.12)
+    assert n["eps_gaap"]["value"] == pytest.approx(29.40)
+    assert n["gross_margin_gaap"]["value"] == pytest.approx(86.2)      # not the outlook's 88.0
+    m = TC.parse_release_numbers("Revenue was $950 million. Non-GAAP EPS of $0.41.")
+    assert m["revenue"]["value"] == pytest.approx(0.95) and m["eps_non_gaap"]["value"] == pytest.approx(0.41)
+
+
+def test_release_parser_reads_the_micron_side_by_side_table():
+    """The real FQ3-26 layout (EDGAR a2026q3ex991, 2026-06-24): GAAP and
+    non-GAAP columns side by side, margins only in the table, outlook after."""
+    t = ("Fiscal Q3 2026 highlights &#8226; Revenue of $41.46 billion versus $23.86 billion "
+         "&#8226; GAAP net income of $28.24 billion, or $24.67 per diluted share &#8226; Non-GAAP "
+         "net income of $28.86 billion, or $25.11 per diluted share. Quarterly Financial Results "
+         "GAAP (1) Non-GAAP (2) FQ3-26 FQ2-26 FQ3-25 FQ3-26 FQ2-26 FQ3-25 Revenue $ 41,456 $ 23,860 "
+         "$ 9,301 $ 41,456 $ 23,860 $ 9,301 Gross margin 35,056 17,755 3,508 35,199 17,876 3,623 "
+         "Percent of revenue 84.6 % 74.4 % 37.7 % 84.9 % 74.9 % 39.0 % Operating expenses 1,738 "
+         "Business Outlook FQ4-26 Revenue $50.0 billion Gross margin Approximately 86% "
+         "Diluted earnings per share $30.73 $31.00")
+    n = TC.parse_release_numbers(t)
+    assert n["revenue"]["value"] == pytest.approx(41.46)
+    assert n["eps_gaap"]["value"] == pytest.approx(24.67)
+    assert n["eps_non_gaap"]["value"] == pytest.approx(25.11)
+    assert n["gross_margin_gaap"]["value"] == pytest.approx(84.6)
+    assert n["gross_margin_non_gaap"]["value"] == pytest.approx(84.9)
+
+
+def test_numeric_promise_graded_delivered_from_a_synthetic_8k(tmp_path):
+    pp, pid, corpus = _numeric_setup(tmp_path, _MU_LIKE_RELEASE)
+    # not due yet: nothing is graded
+    r0 = TC.grade_numeric_promises(path=pp, corpus_dir=corpus, cik_map={"MUX": 42}, today="2026-09-20")
+    assert r0["n_not_due"] == 1 and r0["grades_written"] == 0
+    r = TC.grade_numeric_promises(path=pp, corpus_dir=corpus, cik_map={"MUX": 42}, today="2026-10-01")
+    assert r["grades_written"] == 1
+    st = TC.promise_state(TC._read_jsonl(pp))[pid]
+    assert st["status"] == "DELIVERED" and st["grader"] == TC.PROMISE_GRADER
+    assert st["parsed"] == {"revenue": pytest.approx(50.37), "eps_non_gaap": pytest.approx(31.12),
+                            "gross_margin_gaap": pytest.approx(86.2)}
+    # idempotent
+    assert TC.grade_numeric_promises(path=pp, corpus_dir=corpus, cik_map={"MUX": 42},
+                                     today="2026-10-01")["grades_written"] == 0
+
+
+def test_numeric_promise_missed_and_ungradeable(tmp_path):
+    missed = _MU_LIKE_RELEASE.replace("86.2%", "84.9%")
+    pp, pid, corpus = _numeric_setup(tmp_path, missed)
+    TC.grade_numeric_promises(path=pp, corpus_dir=corpus, cik_map={"MUX": 42}, today="2026-10-01")
+    st = TC.promise_state(TC._read_jsonl(pp))[pid]
+    assert st["status"] == "MISSED" and st["parsed"]["gross_margin_gaap"] == pytest.approx(84.9)
+    (tmp_path / "b").mkdir()
+    pp2, pid2, corpus2 = _numeric_setup(tmp_path / "b", "Micron reports results. Revenue of $50.1 billion.")
+    TC.grade_numeric_promises(path=pp2, corpus_dir=corpus2, cik_map={"MUX": 42}, today="2026-10-01")
+    st2 = TC.promise_state(TC._read_jsonl(pp2))[pid2]
+    assert st2["status"] == "UNGRADEABLE" and st2["parsed"]["revenue"] == pytest.approx(50.1)
+    assert st2["parsed"]["eps_non_gaap"] is None
+    # a fetch of the full exhibit fills the missing metrics and re-grades
+    r2 = TC.grade_numeric_promises(path=pp2, corpus_dir=corpus2, cik_map={"MUX": 42},
+                                   today="2026-10-01", fetch=lambda url: _MU_LIKE_RELEASE)
+    assert r2["grades_written"] == 1
+    assert TC.promise_state(TC._read_jsonl(pp2))[pid2]["status"] == "DELIVERED"
+
+
+def test_a_card_cannot_grade_a_numbered_promise_and_late_targets_are_refused(tmp_path):
+    pp, pid, _ = _numeric_setup(tmp_path, _MU_LIKE_RELEASE)
+    assert TC.declare_targets(pid, [{"metric": "revenue", "value": 1}], path=pp)["written"] == 0
+    txt = json.loads(pp.read_text(encoding="utf-8").splitlines()[0])["promise_text"]
+    later = _v2_card(reply=_v2_reply(promises=[f"2026-06-24 | 2026-09-30 | DELIVERED | {txt} | card says so"]))
+    later["ticker"] = "MUX"
+    r = TC.write_promises(later, today=ASOF, path=pp, forecast_path=tmp_path / "p.jsonl")
+    assert r["card_grade_refused_numeric"] == 1 and r["grades_written"] == 0
+    TC.write_promises(_v2_card(), today=ASOF, path=pp, forecast_path=tmp_path / "p2.jsonl")
+    other = [r for r in TC._read_jsonl(pp) if r.get("ticker") == "AAA"][0]["promise_id"]
+    late = TC.declare_targets(other, [{"metric": "revenue", "value": 1}],
+                              declared_utc="2027-01-02T00:00:00+00:00", path=pp)
+    assert late["written"] == 0 and "after the print" in late["refused"]
 
 
 def _closes(n=90, sd=0.01, last_ret=0.0, seed=3):
@@ -843,7 +955,7 @@ def test_run_writes_evidence_and_promises_beside_a_tmp_root(tmp_path):
         assert (tmp_path / f).exists(), f
     preds = [json.loads(x) for x in (tmp_path / "_predictions.jsonl").read_text(
         encoding="utf-8").splitlines()]
-    assert {p["specialist"] for p in preds} == {"thesis_card:v1", "promise:v1"}
+    assert {p["specialist"] for p in preds} == {"thesis_card:v1"}      # no p=0.50 promise rows
 
 
 def test_a_dividend_date_is_not_a_catalyst():

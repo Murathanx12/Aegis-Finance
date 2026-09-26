@@ -312,3 +312,204 @@ def test_login_wall_is_a_refusal_not_an_empty_read(tmp_path, monkeypatch):
     dc = S.run_discovery(turn_fn=walled, registry_path=reg_p, day="2026-09-26")
     assert dc["quests"][0]["status"] == "REFUSED_LOGIN_WALL"
     assert all(q["status"] == "NOT_RUN_LOGIN_WALL" for q in dc["quests"][1:])
+
+
+# ── the broker scoreboard (adjudication row 13) ─────────────────────────────
+def _broker_fixture(tmp_path):
+    """A synthetic panel and revisions parquet with known answers.
+
+    40 sessions; UNI1..UNI4 flat (universe median return 0); WIN rises 1%/session,
+    LOS falls 1%/session. GoodCo raises WIN and lowers LOS (always right);
+    BadCo does the opposite (always wrong). A 3-firm cluster on WIN: Early
+    (day 1), Mid (day 4), Late (day 8)."""
+    dates = pd.bdate_range("2026-01-05", periods=60)
+    rows = []
+    for s, f in (("UNI1", 0.0), ("UNI2", 0.0), ("UNI3", 0.0), ("UNI4", 0.0),
+                 ("WIN", 0.01), ("LOS", -0.01)):
+        px = 100.0 * (1 + f) ** np.arange(len(dates))
+        rows.append(pd.DataFrame({"symbol": s, "date": dates, "close": px}))
+    bars = pd.concat(rows, ignore_index=True)
+    rev = []
+
+    def add(t, firm, ticker, ta, action="main"):
+        rev.append({"ticker": ticker, "pulled_at": "2026-09-01T00:00:00+00:00",
+                    "event_date": str(t), "firm": firm, "from_grade": "", "to_grade": "",
+                    "action": action, "target_action": ta, "prior_target": 1.0,
+                    "current_target": 1.1, "target_change": 0.1, "pit_safe": True})
+
+    for i in range(0, 30, 2):
+        add(dates[i] + pd.Timedelta(hours=14), "GoodCo", "WIN", "Raises")
+        add(dates[i] + pd.Timedelta(hours=14), "GoodCo", "LOS", "Lowers")
+        add(dates[i + 1] + pd.Timedelta(hours=14), "BadCo", "WIN", "Lowers")
+        add(dates[i + 1] + pd.Timedelta(hours=14), "BadCo", "LOS", "Raises")
+    add(dates[40] + pd.Timedelta(hours=14), "Early", "UNI1", "Raises")
+    add(dates[43] + pd.Timedelta(hours=14), "Mid", "UNI1", "Raises")
+    add(dates[47] + pd.Timedelta(hours=14), "Late", "UNI1", "Raises")
+    add(dates[5], "Mixed", "WIN", "Raises", action="down")          # MIXED: not directional
+    add("2026-10-05 10:00:00", "Future", "WIN", "Raises")            # after its own pull
+    p = tmp_path / "rev.parquet"
+    pd.DataFrame(rev).to_parquet(p)
+    return bars, p, dates
+
+
+def test_broker_direction_rules():
+    assert SR.broker_direction("Raises", "main") == "up"
+    assert SR.broker_direction("Lowers", "reit") == "down"
+    assert SR.broker_direction("Maintains", "up") == "up"
+    assert SR.broker_direction("Raises", "down") is None           # mixed
+    assert SR.broker_direction("Announces", "init") is None
+
+
+def test_broker_scoreboard_hit_rate_on_synthetic_parquet(tmp_path):
+    bars, p, dates = _broker_fixture(tmp_path)
+    claims, rc = SR.load_revision_claims(p, today="2026-09-26")
+    assert rc["n_refused_future"] + rc["n_refused_after_pull"] == 1
+    assert claims["direction"].isna().sum() == 1                    # the mixed row
+    d, syms, rel = SR.relative_forward_returns(bars)
+    c = SR.attach_outcomes(claims, d, syms, rel)
+    # entry is the first session AFTER the claim date; WIN beats the flat median
+    w = c[(c["firm"] == "GoodCo") & (c["ticker"] == "WIN")].iloc[0]
+    assert w["entry"] == dates[1]
+    assert w["rel_5d"] == pytest.approx(1.01 ** 5 - 1, rel=1e-4)
+    # a claim before the panel starts is not priced at its first session
+    early = pd.DataFrame([{"ticker": "WIN", "firm": "X", "source_id": "sell_side:x",
+                           "t": pd.Timestamp("2015-06-01"), "direction": "up"}])
+    assert np.isnan(SR.attach_outcomes(early, d, syms, rel)["rel_5d"].iloc[0])
+    sb = SR.broker_scoreboard(c, today="2026-09-26", rank_min_n=10, weight_min_n=5)
+    f = {r["source_id"]: r for r in sb["firms"]}
+    assert f["sell_side:goodco"]["hit_5d"] == pytest.approx(1.0)
+    assert f["sell_side:goodco"]["hit_21d"] == pytest.approx(1.0)
+    assert f["sell_side:badco"]["hit_21d"] == pytest.approx(0.0)
+    assert f["sell_side:goodco"]["rel_21d_after_raise"] > 0 > f["sell_side:goodco"]["rel_21d_after_lower"]
+    assert sb["top"][0] == "sell_side:goodco" and sb["bottom"][0] == "sell_side:badco"
+    assert f["sell_side:goodco"]["weight_status"] == "earned"
+    n = f["sell_side:goodco"]["n_heldout_21d"]
+    assert f["sell_side:goodco"]["weight"] == pytest.approx(1.0 * n / (n + 200), rel=1e-3)
+    assert f["sell_side:badco"]["weight"] == 0.0                     # floored, never negative
+    assert f["sell_side:early"]["weight"] == "prior"                 # n < min
+    assert "2026" in f["sell_side:goodco"]["by_year"]
+
+
+def test_first_mover_rank_and_pit_class(tmp_path):
+    bars, p, dates = _broker_fixture(tmp_path)
+    claims, _ = SR.load_revision_claims(p, today="2026-09-26")
+    uni = claims[claims["ticker"] == "UNI1"]
+    cl = SR.assign_clusters(uni)
+    ranks = dict(zip(cl["firm"], cl["cluster_rank"]))
+    assert ranks == {"Early": 1, "Mid": 2, "Late": 3}
+    assert set(cl["cluster_size"]) == {3}
+    # a pair of firms is not a cluster
+    assert SR.assign_clusters(uni[uni["firm"] != "Late"]).empty
+    # PIT: the class uses only earlier claims by OTHER firms within the window
+    n_prior = SR.prior_firm_counts(uni)
+    got = dict(zip(uni["firm"], n_prior.loc[uni.index]))
+    assert got == {"Early": 0, "Mid": 1, "Late": 2}
+    d, syms, rel = SR.relative_forward_returns(bars)
+    c = SR.attach_outcomes(claims, d, syms, rel)
+    fm = SR.first_mover_table(SR.assign_clusters(c), h=5)
+    assert fm["n_clusters"] >= 1 and "first_minus_last_all" in fm
+    pit = SR.pit_first_vs_follower(c)
+    assert set(pit["5"]["by_class"]) >= {"first"}
+
+
+def test_apply_broker_weights_writes_registry(tmp_path):
+    reg = {"sell_side:goodco": SR.Source(source_id="sell_side:goodco", kind="sell_side"),
+           "sell_side:thin": SR.Source(source_id="sell_side:thin", kind="sell_side", weight=0.3)}
+    board = {"asof": "2026-09-26", "heldout_split_date": "2025-05-06", "firms": [
+        {"source_id": "sell_side:goodco", "weight_status": "earned", "weight": 0.05,
+         "skill_heldout_21d": 0.1, "n_heldout_21d": 200},
+        {"source_id": "sell_side:thin", "weight_status": "prior (held-out n=3 < 20)", "weight": "prior"}]}
+    out, res = SR.apply_broker_weights(reg, board)
+    assert out["sell_side:goodco"].weight == 0.05 and "held-out" in out["sell_side:goodco"].weight_basis
+    assert out["sell_side:thin"].weight is None                      # back to prior, not stale
+    assert res == {"n_earned": 1, "n_prior": 1, "n_not_in_registry": 0}
+    p = SR.save_registry(out, tmp_path / "r.yaml")
+    assert SR.load_registry(p)["sell_side:goodco"].weight == 0.05
+
+
+# ── X handle timelines (adjudication row 10) ────────────────────────────────
+def _timeline_reg(tmp_path):
+    reg_p = tmp_path / "registry.yaml"
+    a = SR.x_source("Jukanlosreve", kind="industry_specialist", tickers=["MU"], quest_id="")
+    b = SR.x_source("quiet_one", kind="journalist", tickers=["MU"], quest_id="")
+    SR.save_registry({a.source_id: a, b.source_id: b}, reg_p)
+    return reg_p
+
+
+def test_timeline_read_with_dated_claims_marks_the_handle_verified(tmp_path, monkeypatch):
+    from scripts import source_reads as S
+    reg_p = _timeline_reg(tmp_path)
+    monkeypatch.setattr(SR, "SOURCES_DIR", tmp_path)
+    posted = _now_minus(30)
+    seen = []
+
+    def fake_turn(prompt, *, purpose, **kw):
+        seen.append(prompt)
+        return {"status": "OK", "cost_usd": 0.01, "reply": json.dumps({"searched": True, "reads": [
+            {"handle": "@Jukanlosreve", "status": "OK",
+             "latest_post_url": "https://x.com/Jukanlosreve/status/77", "latest_post_utc": posted,
+             "posts": [{"post_url": "https://x.com/Jukanlosreve/status/77", "posted_utc": posted,
+                        "ticker": "MU", "claim": "Samsung HBM4 qual slips again", "direction": "up",
+                        "event_type": "supplier_constraint"},
+                       {"post_url": "https://x.com/Jukanlosreve/status/78", "posted_utc": posted,
+                        "ticker": "MU", "claim": "DRAM contract talks ongoing", "direction": "none"}]},
+            {"handle": "@quiet_one", "status": "EMPTY", "posts": []}]})}
+
+    rc = S.run_timeline_reads(turn_fn=fake_turn, registry_path=reg_p, ledger_path=tmp_path / "p.jsonl",
+                              claims_path=tmp_path / "c.jsonl", write_events=False, tickers=["MU"])
+    assert "https://x.com/Jukanlosreve" in seen[0] and "x.com/search" not in seen[0]
+    st = {p["handle"]: p["status"] for p in rc["per_source"]}
+    assert st == {"@Jukanlosreve": "OK", "@quiet_one": "EMPTY_READ"}
+    assert rc["n_claims"] == 2 and rc["n_directional_claims"] == 1
+    assert rc["forecast_rows"]["n_rows_written"] == len(SR.SCORE_HORIZONS)   # the directed one only
+    assert rc["forecast_rows"]["n_no_direction"] == 1
+    reg = SR.load_registry(reg_p)
+    assert reg["x:jukanlosreve"].verified is True and "status/77" in reg["x:jukanlosreve"].verified_by
+    assert reg["x:quiet_one"].verified is False
+    assert (tmp_path / f"timelines_{rc['day']}.json").exists()
+
+
+def test_timeline_login_wall_is_its_own_status_and_stops_spend(tmp_path, monkeypatch):
+    from scripts import source_reads as S
+    reg_p = tmp_path / "registry.yaml"
+    srcs = [SR.x_source(f"h{i}", kind="journalist", quest_id="") for i in range(8)]
+    SR.save_registry({s.source_id: s for s in srcs}, reg_p)
+    monkeypatch.setattr(SR, "SOURCES_DIR", tmp_path)
+    calls = []
+
+    def walled(prompt, *, purpose, **kw):
+        calls.append(1)
+        return {"status": "OK", "cost_usd": 0.005, "reply": json.dumps(
+            {"searched": False, "blocker": "redirected to x.com/i/flow/login"})}
+
+    rc = S.run_timeline_reads(turn_fn=walled, registry_path=reg_p, ledger_path=tmp_path / "p.jsonl",
+                              claims_path=tmp_path / "c.jsonl", write_events=False, tickers=["MU"])
+    assert len(calls) == S.TIMELINE_WALL_STOP
+    assert {p["status"] for p in rc["per_source"]} == {"NOT_READ_LOGIN_WALL"}
+    assert rc["login_wall"] and rc["n_claims"] == 0
+    assert not any(s.verified for s in SR.load_registry(reg_p).values())
+
+
+def test_timeline_per_handle_wall_and_not_found(tmp_path, monkeypatch):
+    from scripts import source_reads as S
+    reg_p = _timeline_reg(tmp_path)
+    monkeypatch.setattr(SR, "SOURCES_DIR", tmp_path)
+
+    def mixed(prompt, *, purpose, **kw):
+        return {"status": "OK", "cost_usd": 0.0, "reply": json.dumps({"searched": True, "reads": [
+            {"handle": "@Jukanlosreve", "status": "LOGIN_WALL", "posts": []},
+            {"handle": "@quiet_one", "status": "NOT_FOUND", "posts": []}]})}
+
+    rc = S.run_timeline_reads(turn_fn=mixed, registry_path=reg_p, ledger_path=tmp_path / "p.jsonl",
+                              claims_path=tmp_path / "c.jsonl", write_events=False, tickers=["MU"])
+    st = {p["handle"]: p["status"] for p in rc["per_source"]}
+    assert st == {"@Jukanlosreve": "NOT_READ_LOGIN_WALL", "@quiet_one": "NOT_FOUND"}
+
+
+def test_timeline_seed_is_unverified_and_covers_the_reviewer_list():
+    from scripts import source_reads as S
+    seeds = S.timeline_seed_sources()
+    hs = {s.handle for s in seeds}
+    assert {"@dylan522p", "@Jukanlosreve", "@adamfeuerstein", "@DeItaone", "@muddywatersre"} <= hs
+    assert all(s.platform == "x" and s.verified is False for s in seeds)
+    assert len({h for h, *_ in S.SPECIALIST_HANDLES}) == len(S.SPECIALIST_HANDLES)

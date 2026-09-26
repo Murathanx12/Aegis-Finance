@@ -1,0 +1,775 @@
+{
+  "receipt": "source_reads.timelines",
+  "day": "2026-09-26",
+  "generated_at": "2026-09-26T09:41:21+00:00",
+  "model": "deepseek/deepseek-flash",
+  "mode": "x.com/<handle> timelines (search is walled logged out)",
+  "window_days": 30,
+  "tickers": [
+    "AAPL",
+    "AARD",
+    "ABSI",
+    "AGIO",
+    "ALLE",
+    "AMAT",
+    "AMD",
+    "AMGN",
+    "AMSC",
+    "AMZN",
+    "ARGX",
+    "ASML",
+    "AVGO",
+    "AVPT",
+    "AXTI",
+    "BBIO",
+    "BE",
+    "BHVN",
+    "CCJ",
+    "CHRN",
+    "CLS",
+    "CLYM",
+    "COGT",
+    "CRWD",
+    "DELL",
+    "DKNG",
+    "DMRA",
+    "GEV",
+    "GILD",
+    "GOOG",
+    "GOOGL",
+    "GRID",
+    "HOOD",
+    "HUBS",
+    "INCY",
+    "INTC",
+    "IONQ",
+    "JAZZ",
+    "KYTX",
+    "LEU",
+    "LLY",
+    "META",
+    "MP",
+    "MRK",
+    "MRVL",
+    "MU",
+    "NOVT",
+    "NTLA",
+    "NVDA",
+    "NVT",
+    "OKTA",
+    "PANW",
+    "PRAX",
+    "PRCH",
+    "QUBT",
+    "RGEN",
+    "SLDP",
+    "SMMT",
+    "SNDK",
+    "SNDR",
+    "SNOW",
+    "SOC",
+    "STX",
+    "TER",
+    "TSM",
+    "VKTX",
+    "VRT",
+    "VRTX",
+    "WST"
+  ],
+  "n_x_sources": 37,
+  "n_quests_run": 15,
+  "cost_usd": 0.531193,
+  "cap_usd": 1.2,
+  "max_quests": 15,
+  "handles_per_quest": 2,
+  "status_counts": {
+    "OK": 11,
+    "NOT_FOUND": 3,
+    "EMPTY_READ": 14,
+    "NOT_READ_LOGIN_WALL": 2,
+    "NOT_READ_CAP_QUESTS": 7
+  },
+  "login_wall": null,
+  "n_claims": 24,
+  "n_directional_claims": 7,
+  "n_verified_now": 24,
+  "web_events": {
+    "written": 24,
+    "refused": 0,
+    "duplicates": 0
+  },
+  "web_event_refusals": [],
+  "forecast_rows": {
+    "n_claims": 24,
+    "n_new_claims": 24,
+    "n_duplicate_claims": 0,
+    "n_no_direction": 17,
+    "n_rows_written": 21,
+    "n_rows_already": 0
+  },
+  "never": "no order is generated from any read",
+  "quests": [
+    {
+      "quest_id": "timeline:2026-09-26:00",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@dylan522p",
+        "@SemiAnalysis_"
+      ],
+      "n_claims": 7,
+      "cost_usd": 0.050553,
+      "cost_openclaw_usd": 0.05055254399999999,
+      "cost_unknown": false,
+      "elapsed_s": 235.2,
+      "reply_head": "{\"searched\": true, \"blocker\": \"Browser session was not logged in to X (x.com/home redirected to /i/jf/onboarding?mode=login), so both profiles rendered as guest timelines truncated by a \\\"Log in or sign up for X\\\" wall; only the most recent posts were visible (dylan522p back to Sep 20, SemiAnalysis_"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:01",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@Jukanlosreve",
+        "@TrendForce"
+      ],
+      "n_claims": 1,
+      "cost_usd": 0.043139,
+      "cost_openclaw_usd": 0.043139016,
+      "cost_unknown": false,
+      "elapsed_s": 193.2,
+      "reply_head": "{\"searched\": true, \"blocker\": \"Browser CDP profile 'muratclaw' is not logged in to X (x.com/home redirects to /i/jf/onboarding/web?mode=login), so X served only the logged-out public preview of each profile: @TrendForce showed only its 5 newest posts (dated Sep 24-25, 2026) and further scrolling hit"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:02",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@adamfeuerstein",
+        "@matthewherper"
+      ],
+      "n_claims": 3,
+      "cost_usd": 0.03505,
+      "cost_openclaw_usd": 0.035050008,
+      "cost_unknown": false,
+      "elapsed_s": 106.1,
+      "reply_head": "{\"searched\": true, \"blocker\": \"Browser profile 'muratclaw' had no X auth cookies (no auth_token/ct0/twid); x.com/home redirected to /i/jf/onboarding login and both profile timelines rendered X's logged-out view, which caps the page at ~5-7 recent posts and ends in a 'Log in or sign up for X' / 'See "
+    },
+    {
+      "quest_id": "timeline:2026-09-26:03",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@EndpointsNews",
+        "@FierceBiotech"
+      ],
+      "n_claims": 0,
+      "cost_usd": 0.018795,
+      "cost_openclaw_usd": 0.018794892,
+      "cost_unknown": false,
+      "elapsed_s": 76.8,
+      "reply_head": "{\"searched\": true, \"blocker\": \"\", \"reads\": [{\"handle\": \"@EndpointsNews\", \"status\": \"EMPTY\", \"latest_post_url\": \"\", \"latest_post_utc\": \"\", \"posts\": []}, {\"handle\": \"@FierceBiotech\", \"status\": \"OK\", \"latest_post_url\": \"https://x.com/FierceBiotech/status/2102456649411870894\", \"latest_post_utc\": \"2026-0"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:04",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@DeItaone",
+        "@FirstSquawk"
+      ],
+      "n_claims": 0,
+      "cost_usd": 0.027145,
+      "cost_openclaw_usd": 0.027144636000000003,
+      "cost_unknown": false,
+      "elapsed_s": 87.3,
+      "reply_head": "{\"searched\": true, \"blocker\": \"Both profile timelines rendered logged-out: each showed only the 5 newest posts, then the 'Log in or sign up for X / Continue to X' wall; further scrolling loaded no additional posts, so coverage is limited to those 5 newest posts per handle. No ticker-matching post ap"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:05",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@unusual_whales",
+        "@muddywatersre"
+      ],
+      "n_claims": 0,
+      "cost_usd": 0.043245,
+      "cost_openclaw_usd": 0.04324548,
+      "cost_unknown": false,
+      "elapsed_s": 130.8,
+      "reply_head": "{\"searched\": true, \"blocker\": \"Browser profile is not signed in to X (x.com/home redirects to https://x.com/i/jf/onboarding/web?mode=login), so both profile timelines rendered only the newest ~4 posts before a 'Log in or sign up for X' gate cut the timeline; the full 2026-08-27+ window could not be "
+    },
+    {
+      "quest_id": "timeline:2026-09-26:06",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@CitronResearch",
+        "@FuzzyPandaShort"
+      ],
+      "n_claims": 0,
+      "cost_usd": 0.03285,
+      "cost_openclaw_usd": 0.03284950799999999,
+      "cost_unknown": false,
+      "elapsed_s": 132.2,
+      "reply_head": "{\"searched\": true, \"blocker\": \"\", \"reads\": [{\"handle\": \"@CitronResearch\", \"status\": \"EMPTY\", \"latest_post_url\": \"https://x.com/CitronResearch/status/2066554755564880181\", \"latest_post_utc\": \"2026-06-15T16:13:00Z\", \"posts\": []}, {\"handle\": \"@FuzzyPandaShort\", \"status\": \"EMPTY\", \"latest_post_url\": \"ht"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:07",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@MicronTech",
+        "@Broadcom"
+      ],
+      "n_claims": 0,
+      "cost_usd": 0.037007,
+      "cost_openclaw_usd": 0.037006968,
+      "cost_unknown": false,
+      "elapsed_s": 115.2,
+      "reply_head": "{\"searched\": true, \"blocker\": \"\", \"reads\": [{\"handle\": \"@MicronTech\", \"status\": \"OK\", \"latest_post_url\": \"https://x.com/MicronTech/status/2103589794433654833\", \"latest_post_utc\": \"2026-09-25T20:57:44Z\", \"posts\": []}, {\"handle\": \"@Broadcom\", \"status\": \"OK\", \"latest_post_url\": \"https://x.com/Broadcom/"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:08",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@GEVernova",
+        "@Vertiv"
+      ],
+      "n_claims": 2,
+      "cost_usd": 0.047762,
+      "cost_openclaw_usd": 0.04776246000000001,
+      "cost_unknown": false,
+      "elapsed_s": 157.4,
+      "reply_head": "{\"searched\": true, \"blocker\": \"\", \"reads\": [{\"handle\": \"@GEVernova\", \"status\": \"EMPTY\", \"latest_post_url\": \"https://x.com/GEVernova/status/2079929499840282751\", \"latest_post_utc\": \"2026-07-22T14:00:00Z\", \"posts\": []}, {\"handle\": \"@Vertiv\", \"status\": \"OK\", \"latest_post_url\": \"https://x.com/Vertiv/sta"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:09",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@RobinhoodApp",
+        "@DraftKings"
+      ],
+      "n_claims": 1,
+      "cost_usd": 0.062705,
+      "cost_openclaw_usd": 0.06270528,
+      "cost_unknown": false,
+      "elapsed_s": 193.0,
+      "reply_head": "{\"searched\": true, \"blocker\": \"\", \"reads\": [{\"handle\": \"@RobinhoodApp\", \"status\": \"OK\", \"latest_post_url\": \"https://x.com/RobinhoodApp/status/2103620564979970433\", \"latest_post_utc\": \"2026-09-25T23:00:00Z\", \"posts\": [{\"post_url\": \"https://x.com/RobinhoodApp/status/2103576376607482037\", \"posted_utc\":"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:10",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@IonQ_Inc",
+        "@VertexPharma"
+      ],
+      "n_claims": 3,
+      "cost_usd": 0.040132,
+      "cost_openclaw_usd": 0.04013207999999999,
+      "cost_unknown": false,
+      "elapsed_s": 122.9,
+      "reply_head": "{\"searched\": true, \"blocker\": \"\", \"reads\": [{\"handle\": \"@IonQ_Inc\", \"status\": \"OK\", \"latest_post_url\": \"https://x.com/IonQ_Inc/status/2103472188154147036\", \"latest_post_utc\": \"2026-09-25T13:10:00Z\", \"posts\": [{\"post_url\": \"https://x.com/IonQ_Inc/status/2102732846649450546\", \"posted_utc\": \"2026-09-23"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:11",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@Cameco",
+        "@CentrusEnergy"
+      ],
+      "n_claims": 0,
+      "cost_usd": 0.013315,
+      "cost_openclaw_usd": 0.013314708,
+      "cost_unknown": false,
+      "elapsed_s": 42.3,
+      "reply_head": "{\"searched\": true, \"blocker\": \"\", \"reads\": [{\"handle\": \"@cameco\", \"status\": \"EMPTY\", \"latest_post_url\": \"https://x.com/cameco/status/1450925546884505608\", \"latest_post_utc\": \"2021-10-20T20:43:00Z\", \"posts\": []}, {\"handle\": \"@CentrusEnergy\", \"status\": \"EMPTY\", \"latest_post_url\": null, \"latest_post_ut"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:12",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@Bloom_Energy",
+        "@MPMaterials"
+      ],
+      "n_claims": 7,
+      "cost_usd": 0.037509,
+      "cost_openclaw_usd": 0.037508688,
+      "cost_unknown": false,
+      "elapsed_s": 127.9,
+      "reply_head": "{\"searched\": true, \"blocker\": \"\", \"reads\": [{\"handle\": \"@Bloom_Energy\", \"status\": \"OK\", \"latest_post_url\": \"https://x.com/Bloom_Energy/status/2103192271202213975\", \"latest_post_utc\": \"2026-09-24T18:38:07Z\", \"posts\": [{\"post_url\": \"https://x.com/Bloom_Energy/status/2103192271202213975\", \"posted_utc\":"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:13",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@Celestica",
+        "@BridgeBio"
+      ],
+      "n_claims": 0,
+      "cost_usd": 0.020515,
+      "cost_openclaw_usd": 0.020515164,
+      "cost_unknown": false,
+      "elapsed_s": 67.7,
+      "reply_head": "{\"searched\": true, \"blocker\": \"\", \"reads\": [{\"handle\": \"@Celestica\", \"status\": \"EMPTY\", \"latest_post_url\": \"\", \"latest_post_utc\": \"\", \"posts\": []}, {\"handle\": \"@BridgeBio\", \"status\": \"EMPTY\", \"latest_post_url\": \"https://x.com/Bridgebio/status/1377531509696032768\", \"latest_post_utc\": \"2021-04-01T08:0"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:14",
+      "status": "OK",
+      "parsed": true,
+      "blocker": null,
+      "handles": [
+        "@TSMC",
+        "@nVentHQ"
+      ],
+      "n_claims": 0,
+      "cost_usd": 0.021471,
+      "cost_openclaw_usd": 0.021471228,
+      "cost_unknown": false,
+      "elapsed_s": 76.4,
+      "reply_head": "{\"searched\": true, \"blocker\": \"\", \"reads\": [{\"handle\": \"@TSMC\", \"status\": \"NOT_FOUND\", \"latest_post_url\": \"\", \"latest_post_utc\": \"\", \"posts\": []}, {\"handle\": \"@nVentHQ\", \"status\": \"NOT_FOUND\", \"latest_post_url\": \"\", \"latest_post_utc\": \"\", \"posts\": []}]}"
+    },
+    {
+      "quest_id": "timeline:2026-09-26:15",
+      "status": "NOT_READ_CAP_QUESTS",
+      "handles": [
+        "@NovantaInc",
+        "@WestPharma"
+      ]
+    },
+    {
+      "quest_id": "timeline:2026-09-26:16",
+      "status": "NOT_READ_CAP_QUESTS",
+      "handles": [
+        "@CogentBio",
+        "@VikingTx"
+      ]
+    },
+    {
+      "quest_id": "timeline:2026-09-26:17",
+      "status": "NOT_READ_CAP_QUESTS",
+      "handles": [
+        "@agiospharma",
+        "@Repligen"
+      ]
+    },
+    {
+      "quest_id": "timeline:2026-09-26:18",
+      "status": "NOT_READ_CAP_QUESTS",
+      "handles": [
+        "@PraxisPrecision"
+      ]
+    }
+  ],
+  "per_source": [
+    {
+      "source_id": "x:dylan522p",
+      "handle": "@dylan522p",
+      "status": "OK",
+      "reported_status": "OK",
+      "n_posts_reported": 4,
+      "n_dated_on_book": 4,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 2
+    },
+    {
+      "source_id": "x:semianalysis_",
+      "handle": "@SemiAnalysis_",
+      "status": "OK",
+      "reported_status": "OK",
+      "n_posts_reported": 3,
+      "n_dated_on_book": 3,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 1
+    },
+    {
+      "source_id": "x:jukanlosreve",
+      "handle": "@Jukanlosreve",
+      "status": "NOT_FOUND",
+      "reported_status": "NOT_FOUND",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:trendforce",
+      "handle": "@TrendForce",
+      "status": "OK",
+      "reported_status": "OK",
+      "n_posts_reported": 1,
+      "n_dated_on_book": 1,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:adamfeuerstein",
+      "handle": "@adamfeuerstein",
+      "status": "OK",
+      "reported_status": "OK",
+      "n_posts_reported": 1,
+      "n_dated_on_book": 1,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:matthewherper",
+      "handle": "@matthewherper",
+      "status": "OK",
+      "reported_status": "OK",
+      "n_posts_reported": 2,
+      "n_dated_on_book": 2,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:endpointsnews",
+      "handle": "@EndpointsNews",
+      "status": "EMPTY_READ",
+      "reported_status": "EMPTY",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:fiercebiotech",
+      "handle": "@FierceBiotech",
+      "status": "EMPTY_READ",
+      "reported_status": "OK",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:deitaone",
+      "handle": "@DeItaone",
+      "status": "EMPTY_READ",
+      "reported_status": "OK",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:firstsquawk",
+      "handle": "@FirstSquawk",
+      "status": "EMPTY_READ",
+      "reported_status": "OK",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:unusual_whales",
+      "handle": "@unusual_whales",
+      "status": "NOT_READ_LOGIN_WALL",
+      "reported_status": "LOGIN_WALL",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:muddywatersre",
+      "handle": "@muddywatersre",
+      "status": "NOT_READ_LOGIN_WALL",
+      "reported_status": "LOGIN_WALL",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:citronresearch",
+      "handle": "@CitronResearch",
+      "status": "EMPTY_READ",
+      "reported_status": "EMPTY",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:fuzzypandashort",
+      "handle": "@FuzzyPandaShort",
+      "status": "EMPTY_READ",
+      "reported_status": "EMPTY",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:microntech",
+      "handle": "@MicronTech",
+      "status": "EMPTY_READ",
+      "reported_status": "OK",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:broadcom",
+      "handle": "@Broadcom",
+      "status": "EMPTY_READ",
+      "reported_status": "OK",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:gevernova",
+      "handle": "@GEVernova",
+      "status": "EMPTY_READ",
+      "reported_status": "EMPTY",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:vertiv",
+      "handle": "@Vertiv",
+      "status": "OK",
+      "reported_status": "OK",
+      "n_posts_reported": 2,
+      "n_dated_on_book": 2,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:robinhoodapp",
+      "handle": "@RobinhoodApp",
+      "status": "OK",
+      "reported_status": "OK",
+      "n_posts_reported": 1,
+      "n_dated_on_book": 1,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:draftkings",
+      "handle": "@DraftKings",
+      "status": "EMPTY_READ",
+      "reported_status": "OK",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:ionq_inc",
+      "handle": "@IonQ_Inc",
+      "status": "OK",
+      "reported_status": "OK",
+      "n_posts_reported": 1,
+      "n_dated_on_book": 1,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:vertexpharma",
+      "handle": "@VertexPharma",
+      "status": "OK",
+      "reported_status": "OK",
+      "n_posts_reported": 2,
+      "n_dated_on_book": 2,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 1
+    },
+    {
+      "source_id": "x:cameco",
+      "handle": "@Cameco",
+      "status": "EMPTY_READ",
+      "reported_status": "EMPTY",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:centrusenergy",
+      "handle": "@CentrusEnergy",
+      "status": "EMPTY_READ",
+      "reported_status": "EMPTY",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:bloom_energy",
+      "handle": "@Bloom_Energy",
+      "status": "OK",
+      "reported_status": "OK",
+      "n_posts_reported": 5,
+      "n_dated_on_book": 5,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 2
+    },
+    {
+      "source_id": "x:mpmaterials",
+      "handle": "@MPMaterials",
+      "status": "OK",
+      "reported_status": "OK",
+      "n_posts_reported": 2,
+      "n_dated_on_book": 2,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 1
+    },
+    {
+      "source_id": "x:celestica",
+      "handle": "@Celestica",
+      "status": "EMPTY_READ",
+      "reported_status": "EMPTY",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:bridgebio",
+      "handle": "@BridgeBio",
+      "status": "EMPTY_READ",
+      "reported_status": "EMPTY",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "verified_now": true,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:tsmc",
+      "handle": "@TSMC",
+      "status": "NOT_FOUND",
+      "reported_status": "NOT_FOUND",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:nventhq",
+      "handle": "@nVentHQ",
+      "status": "NOT_FOUND",
+      "reported_status": "NOT_FOUND",
+      "n_posts_reported": 0,
+      "n_dated_on_book": 0,
+      "n_undated": 0,
+      "n_off_book": 0,
+      "n_directional": 0
+    },
+    {
+      "source_id": "x:novantainc",
+      "handle": "@NovantaInc",
+      "status": "NOT_READ_CAP_QUESTS"
+    },
+    {
+      "source_id": "x:westpharma",
+      "handle": "@WestPharma",
+      "status": "NOT_READ_CAP_QUESTS"
+    },
+    {
+      "source_id": "x:cogentbio",
+      "handle": "@CogentBio",
+      "status": "NOT_READ_CAP_QUESTS"
+    },
+    {
+      "source_id": "x:vikingtx",
+      "handle": "@VikingTx",
+      "status": "NOT_READ_CAP_QUESTS"
+    },
+    {
+      "source_id": "x:agiospharma",
+      "handle": "@agiospharma",
+      "status": "NOT_READ_CAP_QUESTS"
+    },
+    {
+      "source_id": "x:repligen",
+      "handle": "@Repligen",
+      "status": "NOT_READ_CAP_QUESTS"
+    },
+    {
+      "source_id": "x:praxisprecision",
+      "handle": "@PraxisPrecision",
+      "status": "NOT_READ_CAP_QUESTS"
+    }
+  ]
+}

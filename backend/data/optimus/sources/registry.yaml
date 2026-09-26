@@ -2,12 +2,384 @@ schema: source_registry/v1
 read_me_first: 'Every source is a forecaster that has not earned a weight yet. Social sources are an ATTENTION layer, never
   a truth layer and never an order. A handle a quest proposed is verified: false until a dated post from it has been read.'
 counts_by_kind:
+  company: 23
   filing: 4
-  industry_specialist: 1
+  fund_manager: 3
+  industry_specialist: 5
+  journalist: 6
   newswire: 14
   reddit_community: 2
+  retail_influencer: 1
   sell_side: 456
 sources:
+- source_id: x:agiospharma
+  kind: company
+  handle: '@agiospharma'
+  url: https://x.com/agiospharma
+  tickers_covered:
+  - AGIO
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:bloom_energy
+  kind: company
+  handle: '@Bloom_Energy'
+  url: https://x.com/Bloom_Energy
+  tickers_covered:
+  - BE
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: true
+  verified_by: https://x.com/Bloom_Energy/status/2103192271202213975 @ 2026-09-24T18:38:07+00:00
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:bridgebio
+  kind: company
+  handle: '@BridgeBio'
+  url: https://x.com/BridgeBio
+  tickers_covered:
+  - BBIO
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: true
+  verified_by: https://x.com/Bridgebio/status/1377531509696032768 @ 2021-04-01T08:01:19+00:00
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:broadcom
+  kind: company
+  handle: '@Broadcom'
+  url: https://x.com/Broadcom
+  tickers_covered:
+  - AVGO
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: true
+  verified_by: https://x.com/Broadcom/status/2102819396557173123 @ 2026-09-23T17:56:27+00:00
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:cameco
+  kind: company
+  handle: '@Cameco'
+  url: https://x.com/Cameco
+  tickers_covered:
+  - CCJ
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: true
+  verified_by: https://x.com/cameco/status/1450925546884505608 @ 2021-10-20T20:43:00+00:00
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:celestica
+  kind: company
+  handle: '@Celestica'
+  url: https://x.com/Celestica
+  tickers_covered:
+  - CLS
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:centrusenergy
+  kind: company
+  handle: '@CentrusEnergy'
+  url: https://x.com/CentrusEnergy
+  tickers_covered:
+  - LEU
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:cogentbio
+  kind: company
+  handle: '@CogentBio'
+  url: https://x.com/CogentBio
+  tickers_covered:
+  - COGT
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:draftkings
+  kind: company
+  handle: '@DraftKings'
+  url: https://x.com/DraftKings
+  tickers_covered:
+  - DKNG
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: true
+  verified_by: https://x.com/DraftKings/status/2103675997107212350 @ 2026-09-26T02:40:16+00:00
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:gevernova
+  kind: company
+  handle: '@GEVernova'
+  url: https://x.com/GEVernova
+  tickers_covered:
+  - GEV
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: true
+  verified_by: https://x.com/GEVernova/status/2079929499840282751 @ 2026-07-22T14:00:00+00:00
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:ionq_inc
+  kind: company
+  handle: '@IonQ_Inc'
+  url: https://x.com/IonQ_Inc
+  tickers_covered:
+  - IONQ
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: true
+  verified_by: https://x.com/IonQ_Inc/status/2102732846649450546 @ 2026-09-23T12:12:00+00:00
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:microntech
+  kind: company
+  handle: '@MicronTech'
+  url: https://x.com/MicronTech
+  tickers_covered:
+  - MU
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: true
+  verified_by: https://x.com/MicronTech/status/2103589794433654833 @ 2026-09-25T20:57:44+00:00
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:mpmaterials
+  kind: company
+  handle: '@MPMaterials'
+  url: https://x.com/MPMaterials
+  tickers_covered:
+  - MP
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: true
+  verified_by: https://x.com/MPMaterials/status/2103155885392736612 @ 2026-09-24T16:13:32+00:00
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:novantainc
+  kind: company
+  handle: '@NovantaInc'
+  url: https://x.com/NovantaInc
+  tickers_covered:
+  - NOVT
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:nventhq
+  kind: company
+  handle: '@nVentHQ'
+  url: https://x.com/nVentHQ
+  tickers_covered:
+  - NVT
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:praxisprecision
+  kind: company
+  handle: '@PraxisPrecision'
+  url: https://x.com/PraxisPrecision
+  tickers_covered:
+  - PRAX
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:repligen
+  kind: company
+  handle: '@Repligen'
+  url: https://x.com/Repligen
+  tickers_covered:
+  - RGEN
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:robinhoodapp
+  kind: company
+  handle: '@RobinhoodApp'
+  url: https://x.com/RobinhoodApp
+  tickers_covered:
+  - HOOD
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: true
+  verified_by: https://x.com/RobinhoodApp/status/2103576376607482037 @ 2026-09-25T20:04:25+00:00
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:tsmc
+  kind: company
+  handle: '@TSMC'
+  url: https://x.com/TSMC
+  tickers_covered:
+  - TSM
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:vertexpharma
+  kind: company
+  handle: '@VertexPharma'
+  url: https://x.com/VertexPharma
+  tickers_covered:
+  - VRTX
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: true
+  verified_by: https://x.com/VertexPharma/status/2102676879819915632 @ 2026-09-23T08:30:00+00:00
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:vertiv
+  kind: company
+  handle: '@Vertiv'
+  url: https://x.com/Vertiv
+  tickers_covered:
+  - VRT
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: true
+  verified_by: https://x.com/Vertiv/status/2103469567628509487 @ 2026-09-25T13:00:00+00:00
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:vikingtx
+  kind: company
+  handle: '@VikingTx'
+  url: https://x.com/VikingTx
+  tickers_covered:
+  - VKTX
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
+- source_id: x:westpharma
+  kind: company
+  handle: '@WestPharma'
+  url: https://x.com/WestPharma
+  tickers_covered:
+  - WST
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: company_ir_seed_2026-09-26
+  platform: x
+  theme: human_ai_thematic_v2
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: guessed company handle; unverified until a dated post is read
+  weight: null
+  weight_basis: ''
 - source_id: filing:sec_edgar_8k
   kind: filing
   handle: 8-K
@@ -21,6 +393,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: SEC EDGAR current 8-K filings (primary)
+  weight: null
+  weight_basis: ''
 - source_id: filing:sec_form4
   kind: filing
   handle: '4'
@@ -34,6 +408,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: SEC EDGAR Form 4 insider transactions (primary)
+  weight: null
+  weight_basis: ''
 - source_id: news:sec_edgar_8k_current_atom
   kind: filing
   handle: sec_edgar_8k_current_atom
@@ -47,6 +423,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:sec_edgar_8k_ex99_body
   kind: filing
   handle: sec_edgar_8k_ex99_body
@@ -60,6 +438,53 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
+- source_id: x:citronresearch
+  kind: fund_manager
+  handle: '@CitronResearch'
+  url: https://x.com/CitronResearch
+  tickers_covered: []
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: short_activist
+  verified: true
+  verified_by: https://x.com/CitronResearch/status/2066554755564880181 @ 2026-06-15T16:13:00+00:00
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
+- source_id: x:fuzzypandashort
+  kind: fund_manager
+  handle: '@FuzzyPandaShort'
+  url: https://x.com/FuzzyPandaShort
+  tickers_covered: []
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: short_activist
+  verified: true
+  verified_by: https://x.com/FuzzyPandaShort/status/2090145569100669283 @ 2026-08-19T18:35:00+00:00
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
+- source_id: x:muddywatersre
+  kind: fund_manager
+  handle: '@muddywatersre'
+  url: https://x.com/muddywatersre
+  tickers_covered: []
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: short_activist
+  verified: true
+  verified_by: https://x.com/muddywatersre/status/2103172749405376831 @ 2026-09-24T17:20:00+00:00
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
 - source_id: news:quantocracy_rss
   kind: industry_specialist
   handle: quantocracy_rss
@@ -73,6 +498,282 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
+- source_id: x:dylan522p
+  kind: industry_specialist
+  handle: '@dylan522p'
+  url: https://x.com/dylan522p
+  tickers_covered:
+  - MU
+  - SNDK
+  - NVDA
+  - AMD
+  - TSM
+  - ASML
+  - TER
+  - AXTI
+  - WOLF
+  - LITE
+  - AVGO
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: semis_memory
+  verified: true
+  verified_by: https://x.com/dylan522p/status/2103225106512363902 @ 2026-09-24T20:48:00+00:00
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
+- source_id: x:jukanlosreve
+  kind: industry_specialist
+  handle: '@Jukanlosreve'
+  url: https://x.com/Jukanlosreve
+  tickers_covered:
+  - MU
+  - SNDK
+  - NVDA
+  - AMD
+  - TSM
+  - ASML
+  - TER
+  - AXTI
+  - WOLF
+  - LITE
+  - AVGO
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: semis_memory
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
+- source_id: x:semianalysis_
+  kind: industry_specialist
+  handle: '@SemiAnalysis_'
+  url: https://x.com/SemiAnalysis_
+  tickers_covered:
+  - MU
+  - SNDK
+  - NVDA
+  - AMD
+  - TSM
+  - ASML
+  - TER
+  - AXTI
+  - WOLF
+  - LITE
+  - AVGO
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: semis_memory
+  verified: true
+  verified_by: https://x.com/SemiAnalysis_/status/2103657995850707172 @ 2026-09-26T01:28:00+00:00
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
+- source_id: x:trendforce
+  kind: industry_specialist
+  handle: '@TrendForce'
+  url: https://x.com/TrendForce
+  tickers_covered:
+  - MU
+  - SNDK
+  - NVDA
+  - AMD
+  - TSM
+  - ASML
+  - TER
+  - AXTI
+  - WOLF
+  - LITE
+  - AVGO
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: semis_memory
+  verified: true
+  verified_by: https://x.com/trendforce/status/2103107402090336670 @ 2026-09-24T13:00:53+00:00
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
+- source_id: x:adamfeuerstein
+  kind: journalist
+  handle: '@adamfeuerstein'
+  url: https://x.com/adamfeuerstein
+  tickers_covered:
+  - INCY
+  - JAZZ
+  - VRTX
+  - BBIO
+  - NTLA
+  - ARGX
+  - AGIO
+  - AMGN
+  - MRK
+  - PRAX
+  - COGT
+  - KYTX
+  - BHVN
+  - ABSI
+  - ERAS
+  - RVMD
+  - TWST
+  - VKTX
+  - RGEN
+  - WST
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: biotech
+  verified: true
+  verified_by: https://x.com/adamfeuerstein/status/2103449678247256358 @ 2026-09-25T11:40:58+00:00
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
+- source_id: x:deitaone
+  kind: journalist
+  handle: '@DeItaone'
+  url: https://x.com/DeItaone
+  tickers_covered: []
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: tape_headlines
+  verified: true
+  verified_by: https://x.com/DeItaone/status/2103758318095200428 @ 2026-09-26T08:07:23+00:00
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
+- source_id: x:endpointsnews
+  kind: journalist
+  handle: '@EndpointsNews'
+  url: https://x.com/EndpointsNews
+  tickers_covered:
+  - INCY
+  - JAZZ
+  - VRTX
+  - BBIO
+  - NTLA
+  - ARGX
+  - AGIO
+  - AMGN
+  - MRK
+  - PRAX
+  - COGT
+  - KYTX
+  - BHVN
+  - ABSI
+  - ERAS
+  - RVMD
+  - TWST
+  - VKTX
+  - RGEN
+  - WST
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: biotech
+  verified: false
+  verified_by: ''
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
+- source_id: x:fiercebiotech
+  kind: journalist
+  handle: '@FierceBiotech'
+  url: https://x.com/FierceBiotech
+  tickers_covered:
+  - INCY
+  - JAZZ
+  - VRTX
+  - BBIO
+  - NTLA
+  - ARGX
+  - AGIO
+  - AMGN
+  - MRK
+  - PRAX
+  - COGT
+  - KYTX
+  - BHVN
+  - ABSI
+  - ERAS
+  - RVMD
+  - TWST
+  - VKTX
+  - RGEN
+  - WST
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: biotech
+  verified: true
+  verified_by: https://x.com/FierceBiotech/status/2102456649411870894 @ 2026-09-22T17:55:00+00:00
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
+- source_id: x:firstsquawk
+  kind: journalist
+  handle: '@FirstSquawk'
+  url: https://x.com/FirstSquawk
+  tickers_covered: []
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: tape_headlines
+  verified: true
+  verified_by: https://x.com/FirstSquawk/status/2103776814011441407 @ 2026-09-26T09:20:53+00:00
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
+- source_id: x:matthewherper
+  kind: journalist
+  handle: '@matthewherper'
+  url: https://x.com/matthewherper
+  tickers_covered:
+  - INCY
+  - JAZZ
+  - VRTX
+  - BBIO
+  - NTLA
+  - ARGX
+  - AGIO
+  - AMGN
+  - MRK
+  - PRAX
+  - COGT
+  - KYTX
+  - BHVN
+  - ABSI
+  - ERAS
+  - RVMD
+  - TWST
+  - VKTX
+  - RGEN
+  - WST
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: biotech
+  verified: true
+  verified_by: https://x.com/matthewherper/status/2103487551772230123 @ 2026-09-25T14:11:27+00:00
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
 - source_id: news:alpaca_benzinga_news
   kind: newswire
   handle: alpaca_benzinga_news
@@ -86,6 +787,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:gdelt_doc_v2
   kind: newswire
   handle: gdelt_doc_v2
@@ -99,6 +802,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:google_news_rss_en_au
   kind: newswire
   handle: google_news_rss_en_au
@@ -112,6 +817,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:google_news_rss_en_gb
   kind: newswire
   handle: google_news_rss_en_gb
@@ -125,6 +832,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:google_news_rss_en_hk
   kind: newswire
   handle: google_news_rss_en_hk
@@ -138,6 +847,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:google_news_rss_en_in
   kind: newswire
   handle: google_news_rss_en_in
@@ -151,6 +862,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:google_news_rss_en_sg
   kind: newswire
   handle: google_news_rss_en_sg
@@ -164,6 +877,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:google_news_rss_en_us
   kind: newswire
   handle: google_news_rss_en_us
@@ -177,6 +892,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:google_news_rss_ja_jp
   kind: newswire
   handle: google_news_rss_ja_jp
@@ -190,6 +907,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:google_news_rss_ko_kr
   kind: newswire
   handle: google_news_rss_ko_kr
@@ -203,6 +922,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:google_news_rss_zh_cn
   kind: newswire
   handle: google_news_rss_zh_cn
@@ -216,6 +937,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:google_news_rss_zh_tw
   kind: newswire
   handle: google_news_rss_zh_tw
@@ -229,6 +952,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:nikkei_asia_rss
   kind: newswire
   handle: nikkei_asia_rss
@@ -242,6 +967,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:yfinance_ticker_news
   kind: newswire
   handle: yfinance_ticker_news
@@ -255,6 +982,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:reddit_algotrading_rss
   kind: reddit_community
   handle: reddit_algotrading_rss
@@ -268,6 +997,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
 - source_id: news:reddit_securityanalysis_rss
   kind: reddit_community
   handle: reddit_securityanalysis_rss
@@ -281,6 +1012,23 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: news corpus source (first_seen_utc per row)
+  weight: null
+  weight_basis: ''
+- source_id: x:unusual_whales
+  kind: retail_influencer
+  handle: '@unusual_whales'
+  url: https://x.com/unusual_whales
+  tickers_covered: []
+  added_utc: '2026-09-26T09:10:09+00:00'
+  added_by: reviewer_abf_2026-09-26
+  platform: x
+  theme: tape_headlines
+  verified: true
+  verified_by: https://x.com/unusual_whales/status/2103674367104467073 @ 2026-09-26T02:33:00+00:00
+  found_by_quest: ''
+  notes: reviewer A+B+F specialist
+  weight: null
+  weight_basis: ''
 - source_id: sell_side:86_research
   kind: sell_side
   handle: 86 Research
@@ -294,6 +1042,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:abg_sundal_collier
   kind: sell_side
   handle: ABG Sundal Collier
@@ -307,6 +1057,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 15 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:abn_amro
   kind: sell_side
   handle: ABN Amro
@@ -320,6 +1072,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 14 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:aci_research
   kind: sell_side
   handle: ACI Research
@@ -333,6 +1087,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:aegis_capital
   kind: sell_side
   handle: Aegis Capital
@@ -346,6 +1102,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 61 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:ahorro_corporacion
   kind: sell_side
   handle: Ahorro Corporacion
@@ -359,6 +1117,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:albert_fried
   kind: sell_side
   handle: Albert Fried
@@ -372,6 +1132,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 7 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:albert_fried_co
   kind: sell_side
   handle: Albert Fried & Co.
@@ -385,6 +1147,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 18 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:alden_securities
   kind: sell_side
   handle: Alden Securities
@@ -398,6 +1162,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:alembic_global
   kind: sell_side
   handle: Alembic Global
@@ -411,6 +1177,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 53 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=4 < 20)'
 - source_id: sell_side:alere_financial
   kind: sell_side
   handle: Alere Financial
@@ -424,6 +1192,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:aletheia_capital
   kind: sell_side
   handle: Aletheia Capital
@@ -437,6 +1207,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:allaria_ledesma
   kind: sell_side
   handle: Allaria Ledesma
@@ -450,6 +1222,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:alliance_global_partners
   kind: sell_side
   handle: Alliance Global Partners
@@ -463,6 +1237,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 78 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=5 < 20)'
 - source_id: sell_side:altacorp_capital
   kind: sell_side
   handle: AltaCorp Capital
@@ -476,6 +1252,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 8 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:ambit_capital
   kind: sell_side
   handle: Ambit Capital
@@ -489,6 +1267,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:american_capital_partners
   kind: sell_side
   handle: American Capital Partners
@@ -502,6 +1282,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:ameriprise_financial
   kind: sell_side
   handle: Ameriprise Financial
@@ -515,6 +1297,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:amerx
   kind: sell_side
   handle: Amerx
@@ -528,6 +1312,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 7 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:anand_rathi
   kind: sell_side
   handle: Anand Rathi
@@ -541,6 +1327,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:andrew_buscaglia
   kind: sell_side
   handle: Andrew Buscaglia
@@ -554,6 +1342,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:apb_financial
   kind: sell_side
   handle: APB Financial
@@ -567,6 +1357,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:arctic_securities
   kind: sell_side
   handle: Arctic Securities
@@ -580,6 +1372,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:ardour_capital
   kind: sell_side
   handle: Ardour Capital
@@ -593,6 +1387,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 8 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:arete_research
   kind: sell_side
   handle: Arete Research
@@ -606,6 +1402,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 23 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=5 < 20)'
 - source_id: sell_side:argus
   kind: sell_side
   handle: Argus
@@ -619,6 +1417,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 8 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:argus_research
   kind: sell_side
   handle: Argus Research
@@ -632,6 +1432,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2185 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0348 on n=230 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:arihant_capital_markets
   kind: sell_side
   handle: Arihant Capital Markets
@@ -645,6 +1448,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:ascendiant_capital
   kind: sell_side
   handle: Ascendiant Capital
@@ -658,6 +1463,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 116 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=16 < 20)'
 - source_id: sell_side:ata_invest
   kind: sell_side
   handle: ATA Invest
@@ -671,6 +1478,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:atb_capital
   kind: sell_side
   handle: ATB Capital
@@ -684,6 +1493,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:atlantic_equities
   kind: sell_side
   handle: Atlantic Equities
@@ -697,6 +1508,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 497 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:auriga
   kind: sell_side
   handle: Auriga
@@ -710,6 +1523,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 10 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:autonomous_research
   kind: sell_side
   handle: Autonomous Research
@@ -723,6 +1538,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:avian_securities
   kind: sell_side
   handle: Avian Securities
@@ -736,6 +1553,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:avondale_partners
   kind: sell_side
   handle: Avondale Partners
@@ -749,6 +1568,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 154 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:axiom_capital
   kind: sell_side
   handle: Axiom Capital
@@ -762,6 +1583,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 32 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:axis_capital
   kind: sell_side
   handle: Axis Capital
@@ -775,6 +1598,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:b_of_a_securities
   kind: sell_side
   handle: B of A Securities
@@ -788,6 +1613,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 12162 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0022 on n=1848 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:b_riley
   kind: sell_side
   handle: B. Riley
@@ -801,6 +1629,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:b_riley_fbr
   kind: sell_side
   handle: B. Riley FBR
@@ -814,6 +1644,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 10 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:b_riley_securities
   kind: sell_side
   handle: B. Riley Securities
@@ -827,6 +1659,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3300 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0330 on n=546 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:baader_bank
   kind: sell_side
   handle: Baader Bank
@@ -840,6 +1675,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:baader_helvea
   kind: sell_side
   handle: Baader Helvea
@@ -853,6 +1690,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:baird
   kind: sell_side
   handle: Baird
@@ -866,6 +1705,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 7166 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0084 on n=1194 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:banca_akros
   kind: sell_side
   handle: Banca Akros
@@ -879,6 +1721,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:banco_bradesco_bbi_s_a
   kind: sell_side
   handle: Banco Bradesco BBI S.A
@@ -892,6 +1736,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 15 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=7 < 20)'
 - source_id: sell_side:banco_btg_pactual
   kind: sell_side
   handle: Banco BTG Pactual
@@ -905,6 +1751,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:banco_sabadell
   kind: sell_side
   handle: Banco Sabadell
@@ -918,6 +1766,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bank_of_america
   kind: sell_side
   handle: Bank of America
@@ -931,6 +1781,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 38 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bankhaus_lampe
   kind: sell_side
   handle: Bankhaus Lampe
@@ -944,6 +1796,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:barclays
   kind: sell_side
   handle: Barclays
@@ -957,6 +1811,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 22573 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0110 on n=4916 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:barrington_research
   kind: sell_side
   handle: Barrington Research
@@ -970,6 +1827,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1366 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0794 on n=126 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:batlivala_karani
   kind: sell_side
   handle: Batlivala & Karani
@@ -983,6 +1843,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bb_t_capital
   kind: sell_side
   handle: BB&T Capital
@@ -996,6 +1858,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 271 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bba_securities
   kind: sell_side
   handle: BBA Securities
@@ -1009,6 +1873,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bbva
   kind: sell_side
   handle: BBVA
@@ -1022,6 +1888,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bby
   kind: sell_side
   handle: BBY
@@ -1035,6 +1903,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:beacon_securities
   kind: sell_side
   handle: Beacon Securities
@@ -1048,6 +1918,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:beaufort_securities
   kind: sell_side
   handle: Beaufort Securities
@@ -1061,6 +1933,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:belus_capital
   kind: sell_side
   handle: Belus Capital
@@ -1074,6 +1948,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:benchmark
   kind: sell_side
   handle: Benchmark
@@ -1087,6 +1963,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3325 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0486 on n=597 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:berenberg
   kind: sell_side
   handle: Berenberg
@@ -1100,6 +1979,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 675 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=10 < 20)'
 - source_id: sell_side:bernstein
   kind: sell_side
   handle: Bernstein
@@ -1113,6 +1994,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1968 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.1011 on n=445 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:bgb_securities
   kind: sell_side
   handle: BGB Securities
@@ -1126,6 +2010,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 19 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bgc_financial
   kind: sell_side
   handle: BGC FInancial
@@ -1139,6 +2025,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 38 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:blaylock_robert_van
   kind: sell_side
   handle: Blaylock Robert Van
@@ -1152,6 +2040,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bluefin
   kind: sell_side
   handle: BlueFin
@@ -1165,6 +2055,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bmo_capital
   kind: sell_side
   handle: BMO Capital
@@ -1178,6 +2070,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 7929 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0358 on n=1006 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:bnp_paribas
   kind: sell_side
   handle: BNP Paribas
@@ -1191,6 +2086,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 142 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0222 on n=90 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:bnp_paribas_exane
   kind: sell_side
   handle: BNP Paribas Exane
@@ -1204,6 +2102,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=3 < 20)'
 - source_id: sell_side:boc_int_l
   kind: sell_side
   handle: BOC Int'l
@@ -1217,6 +2117,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bocom_international
   kind: sell_side
   handle: BOCOM International
@@ -1230,6 +2132,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 8 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:boenning_scattergood
   kind: sell_side
   handle: Boenning & Scattergood
@@ -1243,6 +2147,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 95 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bradesco
   kind: sell_side
   handle: Bradesco
@@ -1256,6 +2162,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bradesco_corretora
   kind: sell_side
   handle: Bradesco Corretora
@@ -1269,6 +2177,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 17 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:brasil_plural
   kind: sell_side
   handle: Brasil Plural
@@ -1282,6 +2192,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:brean_capital
   kind: sell_side
   handle: Brean Capital
@@ -1295,6 +2207,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 310 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:brigantine
   kind: sell_side
   handle: Brigantine
@@ -1308,6 +2222,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:brinson_patrick
   kind: sell_side
   handle: Brinson Patrick
@@ -1321,6 +2237,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:brookline_capital
   kind: sell_side
   handle: Brookline Capital
@@ -1334,6 +2252,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=1 < 20)'
 - source_id: sell_side:bryan_garnier
   kind: sell_side
   handle: Bryan Garnier
@@ -1347,6 +2267,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 12 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:btg_pactual
   kind: sell_side
   handle: BTG Pactual
@@ -1360,6 +2282,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:btig
   kind: sell_side
   handle: BTIG
@@ -1373,6 +2297,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3195 dated revisions in target_revisions.parquet
+  weight: 0.01342
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0169 on n=771 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:btig_research
   kind: sell_side
   handle: BTIG Research
@@ -1386,6 +2313,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:buckingham
   kind: sell_side
   handle: Buckingham
@@ -1399,6 +2328,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:buckingham_research
   kind: sell_side
   handle: Buckingham Research
@@ -1412,6 +2343,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 932 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:burgan_securities
   kind: sell_side
   handle: Burgan Securities
@@ -1425,6 +2358,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:burrill_company
   kind: sell_side
   handle: Burrill & Company
@@ -1438,6 +2373,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:bwg_global
   kind: sell_side
   handle: BWG Global
@@ -1451,6 +2388,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 20 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0000 on n=20 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:bws_financial
   kind: sell_side
   handle: BWS Financial
@@ -1464,6 +2404,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 332 dated revisions in target_revisions.parquet
+  weight: 0.0044
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0370 on n=27 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:byron_capital_markets
   kind: sell_side
   handle: Byron Capital Markets
@@ -1477,6 +2420,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:cabrera_capital_markets
   kind: sell_side
   handle: Cabrera Capital Markets
@@ -1490,6 +2435,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:canaccord_genuity
   kind: sell_side
   handle: Canaccord Genuity
@@ -1503,6 +2450,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4328 dated revisions in target_revisions.parquet
+  weight: 0.01297
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0162 on n=803 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:cannonball_research
   kind: sell_side
   handle: Cannonball Research
@@ -1516,6 +2466,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:cantor_fitzgerald
   kind: sell_side
   handle: Cantor Fitzgerald
@@ -1529,6 +2481,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3976 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0369 on n=841 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:capital_one
   kind: sell_side
   handle: Capital One
@@ -1542,6 +2497,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 148 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:capital_one_financial
   kind: sell_side
   handle: Capital One Financial
@@ -1555,6 +2512,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:capitalone_southecoast
   kind: sell_side
   handle: CapitalOne Southecoast
@@ -1568,6 +2527,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:capstone
   kind: sell_side
   handle: Capstone
@@ -1581,6 +2542,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:caris_co
   kind: sell_side
   handle: Caris & Co.
@@ -1594,6 +2557,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 16 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:carnegie
   kind: sell_side
   handle: Carnegie
@@ -1607,6 +2572,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:cascend
   kind: sell_side
   handle: Cascend
@@ -1620,6 +2587,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 45 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:cba
   kind: sell_side
   handle: CBA
@@ -1633,6 +2602,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:cbre
   kind: sell_side
   handle: CBRE
@@ -1646,6 +2617,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 13 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=4 < 20)'
 - source_id: sell_side:ccb_international
   kind: sell_side
   handle: CCB International
@@ -1659,6 +2632,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:ccic
   kind: sell_side
   handle: CCIC
@@ -1672,6 +2647,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:cfra
   kind: sell_side
   handle: CFRA
@@ -1685,6 +2662,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 522 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=3 < 20)'
 - source_id: sell_side:chardan_capital
   kind: sell_side
   handle: Chardan Capital
@@ -1698,6 +2677,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 623 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.2500 on n=80 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:charles_stanley
   kind: sell_side
   handle: Charles Stanley
@@ -1711,6 +2693,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:charter_equity
   kind: sell_side
   handle: Charter Equity
@@ -1724,6 +2708,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 15 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:china_international_capital
   kind: sell_side
   handle: China International Capital
@@ -1737,6 +2723,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:china_renaissance
   kind: sell_side
   handle: China Renaissance
@@ -1750,6 +2738,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 69 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=7 < 20)'
 - source_id: sell_side:cibc
   kind: sell_side
   handle: CIBC
@@ -1763,6 +2753,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 394 dated revisions in target_revisions.parquet
+  weight: 0.0184
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0476 on n=126 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:cicc
   kind: sell_side
   handle: CICC
@@ -1776,6 +2769,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 58 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=4 < 20)'
 - source_id: sell_side:cimb
   kind: sell_side
   handle: CIMB
@@ -1789,6 +2784,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:citi
   kind: sell_side
   handle: Citi
@@ -1802,6 +2799,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:citic_securities
   kind: sell_side
   handle: Citic Securities
@@ -1815,6 +2814,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:citigroup
   kind: sell_side
   handle: Citigroup
@@ -1828,6 +2829,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 19281 dated revisions in target_revisions.parquet
+  weight: 0.01513
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0159 on n=3955 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:citizens
   kind: sell_side
   handle: Citizens
@@ -1841,6 +2845,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 698 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0709 on n=437 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:citizens_capital_markets
   kind: sell_side
   handle: Citizens Capital Markets
@@ -1854,6 +2861,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 149 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=1 < 20)'
 - source_id: sell_side:cjs_securities
   kind: sell_side
   handle: CJS Securities
@@ -1867,6 +2876,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 67 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=7 < 20)'
 - source_id: sell_side:ck_cooper
   kind: sell_side
   handle: CK Cooper
@@ -1880,6 +2891,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:cl_king
   kind: sell_side
   handle: CL King
@@ -1893,6 +2906,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 177 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:clal_finance
   kind: sell_side
   handle: Clal Finance
@@ -1906,6 +2921,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:clarkson_capital_markets
   kind: sell_side
   handle: Clarkson Capital Markets
@@ -1919,6 +2936,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 63 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:clarksons_platou
   kind: sell_side
   handle: Clarksons Platou
@@ -1932,6 +2951,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:clarus_securities
   kind: sell_side
   handle: Clarus Securities
@@ -1945,6 +2966,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:clear_street
   kind: sell_side
   handle: Clear Street
@@ -1958,6 +2981,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 66 dated revisions in target_revisions.parquet
+  weight: 0.02565
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.1765 on n=34 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:cleveland_research
   kind: sell_side
   handle: Cleveland Research
@@ -1971,6 +2997,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 74 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:clsa
   kind: sell_side
   handle: CLSA
@@ -1984,6 +3012,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 385 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=8 < 20)'
 - source_id: sell_side:cmb_international
   kind: sell_side
   handle: CMB International
@@ -1997,6 +3027,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:colliers_securities
   kind: sell_side
   handle: Colliers Securities
@@ -2010,6 +3042,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 18 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=1 < 20)'
 - source_id: sell_side:collins_stewart
   kind: sell_side
   handle: Collins Stewart
@@ -2023,6 +3057,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:commerzbank
   kind: sell_side
   handle: Commerzbank
@@ -2036,6 +3072,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:compass_point
   kind: sell_side
   handle: Compass Point
@@ -2049,6 +3087,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 819 dated revisions in target_revisions.parquet
+  weight: 0.03004
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.2121 on n=33 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:consumer_edge_research
   kind: sell_side
   handle: Consumer Edge Research
@@ -2062,6 +3103,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 31 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:cormark_securities
   kind: sell_side
   handle: Cormark Securities
@@ -2075,6 +3118,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 19 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:cowen_co
   kind: sell_side
   handle: Cowen & Co.
@@ -2088,6 +3133,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1859 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:craig_hallum
   kind: sell_side
   handle: Craig-Hallum
@@ -2101,6 +3148,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1159 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.1385 on n=65 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:credit_agricole
   kind: sell_side
   handle: Credit Agricole
@@ -2114,6 +3164,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 40 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:credit_suisse
   kind: sell_side
   handle: Credit Suisse
@@ -2127,6 +3179,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9168 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:cross_research
   kind: sell_side
   handle: Cross Research
@@ -2140,6 +3194,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 40 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:crowell_weedon_co
   kind: sell_side
   handle: Crowell, Weedon & Co.
@@ -2153,6 +3209,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:crt_capital
   kind: sell_side
   handle: CRT Capital
@@ -2166,6 +3224,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 125 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:d_boral_capital
   kind: sell_side
   handle: D. Boral Capital
@@ -2179,6 +3239,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 190 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=6 < 20)'
 - source_id: sell_side:da_davidson
   kind: sell_side
   handle: DA Davidson
@@ -2192,6 +3254,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4885 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0207 on n=917 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:dahlman_rose
   kind: sell_side
   handle: Dahlman Rose
@@ -2205,6 +3270,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 88 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:daiwa_capital
   kind: sell_side
   handle: Daiwa Capital
@@ -2218,6 +3285,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 172 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=13 < 20)'
 - source_id: sell_side:danske_bank
   kind: sell_side
   handle: Danske Bank
@@ -2231,6 +3300,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 19 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:davenport
   kind: sell_side
   handle: Davenport
@@ -2244,6 +3315,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 30 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:dawson_james
   kind: sell_side
   handle: Dawson James
@@ -2257,6 +3330,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 7 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:dbn_markets
   kind: sell_side
   handle: DBN Markets
@@ -2270,6 +3345,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:dbs_bank
   kind: sell_side
   handle: DBS Bank
@@ -2283,6 +3360,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 10 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=1 < 20)'
 - source_id: sell_side:desjardins
   kind: sell_side
   handle: Desjardins
@@ -2296,6 +3375,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 49 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:deutsche_bank
   kind: sell_side
   handle: Deutsche Bank
@@ -2309,6 +3390,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 11347 dated revisions in target_revisions.parquet
+  weight: 0.00187
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0030 on n=329 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:dnb_markets
   kind: sell_side
   handle: DNB Markets
@@ -2322,6 +3406,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 55 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:dominick_dominick
   kind: sell_side
   handle: Dominick & Dominick
@@ -2335,6 +3421,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:dougherty
   kind: sell_side
   handle: Dougherty
@@ -2348,6 +3436,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:dougherty_co
   kind: sell_side
   handle: Dougherty & Co.
@@ -2361,6 +3451,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 109 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:drexel_hamilton
   kind: sell_side
   handle: Drexel Hamilton
@@ -2374,6 +3466,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 157 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:dundee
   kind: sell_side
   handle: Dundee
@@ -2387,6 +3481,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 33 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:dz_bank
   kind: sell_side
   handle: DZ Bank
@@ -2400,6 +3496,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 141 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=2 < 20)'
 - source_id: sell_side:early_bird_capital
   kind: sell_side
   handle: Early Bird Capital
@@ -2413,6 +3511,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:edelweiss
   kind: sell_side
   handle: Edelweiss
@@ -2426,6 +3526,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:edward_jones
   kind: sell_side
   handle: Edward Jones
@@ -2439,6 +3541,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 130 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:ef_hutton
   kind: sell_side
   handle: EF Hutton
@@ -2452,6 +3556,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 203 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:eight_capital
   kind: sell_side
   handle: Eight Capital
@@ -2465,6 +3571,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:emkay_global
   kind: sell_side
   handle: Emkay Global
@@ -2478,6 +3586,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:empire_asset_management
   kind: sell_side
   handle: Empire Asset Management
@@ -2491,6 +3601,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:equinet
   kind: sell_side
   handle: Equinet
@@ -2504,6 +3616,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:equita
   kind: sell_side
   handle: Equita
@@ -2517,6 +3631,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:erste_group
   kind: sell_side
   handle: Erste Group
@@ -2530,6 +3646,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 48 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=4 < 20)'
 - source_id: sell_side:espirito_santo
   kind: sell_side
   handle: Espirito Santo
@@ -2543,6 +3661,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 10 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:euro_pacific_capital
   kind: sell_side
   handle: Euro Pacific Capital
@@ -2556,6 +3676,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:evercore_isi_group
   kind: sell_side
   handle: Evercore ISI Group
@@ -2569,6 +3691,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6305 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0175 on n=2119 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:evercore_partners
   kind: sell_side
   handle: Evercore Partners
@@ -2582,6 +3707,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:evli_bank
   kind: sell_side
   handle: Evli Bank
@@ -2595,6 +3722,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:exane_bnp_paribas
   kind: sell_side
   handle: Exane BNP Paribas
@@ -2608,6 +3737,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 453 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=6 < 20)'
 - source_id: sell_side:express_securities
   kind: sell_side
   handle: Express Securities
@@ -2621,6 +3752,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:fbn_securities
   kind: sell_side
   handle: FBN Securities
@@ -2634,6 +3767,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 117 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:fbr_capital
   kind: sell_side
   handle: FBR Capital
@@ -2647,6 +3782,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 543 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:fearnleys
   kind: sell_side
   handle: Fearnleys
@@ -2660,6 +3797,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 13 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=1 < 20)'
 - source_id: sell_side:feltl_co
   kind: sell_side
   handle: Feltl & Co.
@@ -2673,6 +3812,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 76 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:fermium_research
   kind: sell_side
   handle: Fermium Research
@@ -2686,6 +3827,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 27 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=5 < 20)'
 - source_id: sell_side:fidentiis
   kind: sell_side
   handle: Fidentiis
@@ -2699,6 +3842,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:fig_partners
   kind: sell_side
   handle: FIG Partners
@@ -2712,6 +3857,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 73 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:first_analysis
   kind: sell_side
   handle: First Analysis
@@ -2725,6 +3872,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 93 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:first_global
   kind: sell_side
   handle: First Global
@@ -2738,6 +3887,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:first_shanghai
   kind: sell_side
   handle: First Shanghai
@@ -2751,6 +3902,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:firstenergy_capital
   kind: sell_side
   handle: FirstEnergy Capital
@@ -2764,6 +3917,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 25 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:fondsfinans
   kind: sell_side
   handle: Fondsfinans
@@ -2777,6 +3932,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:fox_advisors
   kind: sell_side
   handle: Fox Advisors
@@ -2790,6 +3947,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 16 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:freedom_broker
   kind: sell_side
   handle: Freedom Broker
@@ -2803,6 +3962,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 372 dated revisions in target_revisions.parquet
+  weight: 0.01352
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0246 on n=244 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:freedom_capital_markets
   kind: sell_side
   handle: Freedom Capital Markets
@@ -2816,6 +3978,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 92 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=10 < 20)'
 - source_id: sell_side:furey_research
   kind: sell_side
   handle: Furey Research
@@ -2829,6 +3993,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:gabelli_co
   kind: sell_side
   handle: Gabelli & Co.
@@ -2842,6 +4008,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 197 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:garp_research
   kind: sell_side
   handle: GARP Research
@@ -2855,6 +4023,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:gbm
   kind: sell_side
   handle: GBM
@@ -2868,6 +4038,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:gf_securities
   kind: sell_side
   handle: GF Securities
@@ -2881,6 +4053,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:gilford_securities
   kind: sell_side
   handle: Gilford Securities
@@ -2894,6 +4068,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 40 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:glj_research
   kind: sell_side
   handle: GLJ Research
@@ -2907,6 +4083,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 127 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.1724 on n=29 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:global_equities_research
   kind: sell_side
   handle: Global Equities Research
@@ -2920,6 +4099,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:global_hunter_securities
   kind: sell_side
   handle: Global Hunter Securities
@@ -2933,6 +4114,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 76 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:gmp_securities
   kind: sell_side
   handle: GMP Securities
@@ -2946,6 +4129,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 53 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:goldman_sachs
   kind: sell_side
   handle: Goldman Sachs
@@ -2959,6 +4144,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 11276 dated revisions in target_revisions.parquet
+  weight: 0.06653
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0749 on n=1589 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:gordon_haskett
   kind: sell_side
   handle: Gordon Haskett
@@ -2972,6 +4160,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 250 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=11 < 20)'
 - source_id: sell_side:great_lakes
   kind: sell_side
   handle: Great Lakes
@@ -2985,6 +4175,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:green_street_advistors
   kind: sell_side
   handle: Green Street Advistors
@@ -2998,6 +4190,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:griffin_securities
   kind: sell_side
   handle: Griffin Securities
@@ -3011,6 +4205,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 10 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:guggenheim
   kind: sell_side
   handle: Guggenheim
@@ -3024,6 +4220,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3185 dated revisions in target_revisions.parquet
+  weight: 0.01518
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0194 on n=720 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:guzman_company
   kind: sell_side
   handle: Guzman & Company
@@ -3037,6 +4236,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:hamburger_sparkasse
   kind: sell_side
   handle: Hamburger Sparkasse
@@ -3050,6 +4251,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:handelsbanken
   kind: sell_side
   handle: Handelsbanken
@@ -3063,6 +4266,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:hbsc
   kind: sell_side
   handle: HBSC
@@ -3076,6 +4281,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:hc_wainwright_co
   kind: sell_side
   handle: HC Wainwright & Co.
@@ -3089,6 +4296,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5285 dated revisions in target_revisions.parquet
+  weight: 0.00987
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0123 on n=812 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:hilliard_lyons
   kind: sell_side
   handle: Hilliard Lyons
@@ -3102,6 +4312,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 137 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:hovde_group
   kind: sell_side
   handle: Hovde Group
@@ -3115,6 +4327,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 99 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=14 < 20)'
 - source_id: sell_side:hsbc
   kind: sell_side
   handle: HSBC
@@ -3128,6 +4342,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1152 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.1014 on n=138 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:huber_research
   kind: sell_side
   handle: Huber Research
@@ -3141,6 +4358,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:hudson_square
   kind: sell_side
   handle: Hudson Square
@@ -3154,6 +4373,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 10 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:iberia_capital_partners
   kind: sell_side
   handle: IBERIA Capital Partners
@@ -3167,6 +4388,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 35 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:icbc_research
   kind: sell_side
   handle: ICBC Research
@@ -3180,6 +4403,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:icici_securities
   kind: sell_side
   handle: ICICI Securities
@@ -3193,6 +4418,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:idbi_capital
   kind: sell_side
   handle: IDBI Capital
@@ -3206,6 +4433,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:ifs_securities
   kind: sell_side
   handle: IFS Securities
@@ -3219,6 +4448,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:imperial_capital
   kind: sell_side
   handle: Imperial Capital
@@ -3232,6 +4463,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 625 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:indaba_global_research
   kind: sell_side
   handle: Indaba Global Research
@@ -3245,6 +4478,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:independent_research
   kind: sell_side
   handle: Independent Research
@@ -3258,6 +4493,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:industrial_alliance
   kind: sell_side
   handle: Industrial Alliance
@@ -3271,6 +4508,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:ingalls_snyder_llc
   kind: sell_side
   handle: Ingalls & Snyder, LLC
@@ -3284,6 +4523,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:investec
   kind: sell_side
   handle: Investec
@@ -3297,6 +4538,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 39 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:isi_group
   kind: sell_side
   handle: ISI Group
@@ -3310,6 +4553,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 419 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:israel_brokerage_investments
   kind: sell_side
   handle: Israel Brokerage & Investments
@@ -3323,6 +4568,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:itau_bba
   kind: sell_side
   handle: Itau BBA
@@ -3336,6 +4583,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 65 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=6 < 20)'
 - source_id: sell_side:j_safra_sarasin
   kind: sell_side
   handle: J. Safra Sarasin
@@ -3349,6 +4598,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:jacob_securities
   kind: sell_side
   handle: Jacob Securities
@@ -3362,6 +4613,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:janco_partners
   kind: sell_side
   handle: Janco Partners
@@ -3375,6 +4628,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 8 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:janney_capital
   kind: sell_side
   handle: Janney Capital
@@ -3388,6 +4643,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:janney_montgomery_scott
   kind: sell_side
   handle: Janney Montgomery Scott
@@ -3401,6 +4658,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 534 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=10 < 20)'
 - source_id: sell_side:jbl_advisors
   kind: sell_side
   handle: JBL Advisors
@@ -3414,6 +4673,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:jefferies
   kind: sell_side
   handle: Jefferies
@@ -3427,6 +4688,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 10200 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0557 on n=1239 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:jennings_capital
   kind: sell_side
   handle: Jennings Capital
@@ -3440,6 +4704,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:jg_capital
   kind: sell_side
   handle: JG Capital
@@ -3453,6 +4719,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 8 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:ji_asia_research
   kind: sell_side
   handle: Ji-Asia Research
@@ -3466,6 +4734,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:jmp_securities
   kind: sell_side
   handle: JMP Securities
@@ -3479,6 +4749,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3842 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0480 on n=229 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:johnson_rice
   kind: sell_side
   handle: Johnson Rice
@@ -3492,6 +4765,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 82 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=14 < 20)'
 - source_id: sell_side:jones_trading
   kind: sell_side
   handle: Jones Trading
@@ -3505,6 +4780,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 178 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.1915 on n=47 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:jonestrading
   kind: sell_side
   handle: JonesTrading
@@ -3518,6 +4796,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 53 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:jp_morgan
   kind: sell_side
   handle: JP Morgan
@@ -3531,6 +4811,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 18336 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0048 on n=4198 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:jyske_bank
   kind: sell_side
   handle: Jyske Bank
@@ -3544,6 +4827,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:kalinowski_research
   kind: sell_side
   handle: Kalinowski Research
@@ -3557,6 +4842,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 8 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:kansas_city_capital
   kind: sell_side
   handle: Kansas City Capital
@@ -3570,6 +4857,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:kbc_partners
   kind: sell_side
   handle: KBC Partners
@@ -3583,6 +4872,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:keefe_bruyette_woods
   kind: sell_side
   handle: Keefe, Bruyette & Woods
@@ -3596,6 +4887,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4520 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0265 on n=1284 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:kepler_cheuvreux
   kind: sell_side
   handle: Kepler Cheuvreux
@@ -3609,6 +4903,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 25 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:keybanc
   kind: sell_side
   handle: Keybanc
@@ -3622,6 +4918,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 7409 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0268 on n=1083 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:kgi_securities
   kind: sell_side
   handle: KGI Securities
@@ -3635,6 +4934,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 35 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=8 < 20)'
 - source_id: sell_side:klr_group
   kind: sell_side
   handle: KLR Group
@@ -3648,6 +4949,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 69 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:kotak_securities
   kind: sell_side
   handle: Kotak Securities
@@ -3661,6 +4964,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:ladenburg_thalmann
   kind: sell_side
   handle: Ladenburg Thalmann
@@ -3674,6 +4979,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 335 dated revisions in target_revisions.parquet
+  weight: 0.02025
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.1064 on n=47 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:laidlaw_co
   kind: sell_side
   handle: Laidlaw & Co.
@@ -3687,6 +4995,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:lake_street
   kind: sell_side
   handle: Lake Street
@@ -3700,6 +5010,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 441 dated revisions in target_revisions.parquet
+  weight: 0.01225
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0317 on n=126 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:langenberg_company
   kind: sell_side
   handle: Langenberg & Company
@@ -3713,6 +5026,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:lazard
   kind: sell_side
   handle: Lazard
@@ -3726,6 +5041,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 64 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:lbbw_research
   kind: sell_side
   handle: LBBW Research
@@ -3739,6 +5056,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 7 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:leerink_partners
   kind: sell_side
   handle: Leerink Partners
@@ -3752,6 +5071,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 376 dated revisions in target_revisions.parquet
+  weight: 0.04496
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.1026 on n=156 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:leerink_swann
   kind: sell_side
   handle: Leerink Swann
@@ -3765,6 +5087,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 331 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=1 < 20)'
 - source_id: sell_side:liberum
   kind: sell_side
   handle: Liberum
@@ -3778,6 +5102,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 15 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:lifesci_capital
   kind: sell_side
   handle: LifeSci Capital
@@ -3791,6 +5117,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 24 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=1 < 20)'
 - source_id: sell_side:lightshed_partners
   kind: sell_side
   handle: LightShed Partners
@@ -3804,6 +5132,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 17 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:litchfield_hills
   kind: sell_side
   handle: Litchfield Hills
@@ -3817,6 +5147,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:longbow_research
   kind: sell_side
   handle: Longbow Research
@@ -3830,6 +5162,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 460 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=3 < 20)'
 - source_id: sell_side:loop_capital
   kind: sell_side
   handle: Loop Capital
@@ -3843,6 +5177,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1702 dated revisions in target_revisions.parquet
+  weight: 0.00282
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0065 on n=153 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:lucid_capital_markets
   kind: sell_side
   handle: LUCID CAPITAL MARKETS
@@ -3856,6 +5193,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 16 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:lynx_global
   kind: sell_side
   handle: Lynx Global
@@ -3869,6 +5208,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=1 < 20)'
 - source_id: sell_side:m_partners
   kind: sell_side
   handle: M Partners
@@ -3882,6 +5223,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 7 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:mackie_research
   kind: sell_side
   handle: Mackie Research
@@ -3895,6 +5238,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 25 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:macquarie
   kind: sell_side
   handle: Macquarie
@@ -3908,6 +5253,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1989 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0268 on n=224 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:mainfirst_bank_ag
   kind: sell_side
   handle: MainFirst Bank AG
@@ -3921,6 +5269,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 10 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:makor_capital
   kind: sell_side
   handle: Makor Capital
@@ -3934,6 +5284,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:maxim_group
   kind: sell_side
   handle: Maxim Group
@@ -3947,6 +5299,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 411 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0244 on n=41 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:mcadams_wright_ragen
   kind: sell_side
   handle: McAdams Wright Ragen
@@ -3960,6 +5315,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 22 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:mcnicoll_lewis_vlak
   kind: sell_side
   handle: McNicoll Lewis Vlak
@@ -3973,6 +5330,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 40 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:mediobanca_securities
   kind: sell_side
   handle: Mediobanca Securities
@@ -3986,6 +5345,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 11 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:melius_research
   kind: sell_side
   handle: Melius Research
@@ -3999,6 +5360,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 108 dated revisions in target_revisions.parquet
+  weight: 0.02203
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.1852 on n=27 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:meredith_whitney_advisory_group
   kind: sell_side
   handle: Meredith Whitney Advisory Group
@@ -4012,6 +5376,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:merion_capital
   kind: sell_side
   handle: Merion Capital
@@ -4025,6 +5391,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 10 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:merriman_capital
   kind: sell_side
   handle: Merriman Capital
@@ -4038,6 +5406,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:midtown_partners
   kind: sell_side
   handle: Midtown Partners
@@ -4051,6 +5421,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:miller_tabak
   kind: sell_side
   handle: Miller Tabak
@@ -4064,6 +5436,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 113 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:millman_research
   kind: sell_side
   handle: Millman Research
@@ -4077,6 +5451,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:mirabaud_securities
   kind: sell_side
   handle: Mirabaud Securities
@@ -4090,6 +5466,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:mirae_asset
   kind: sell_side
   handle: Mirae Asset
@@ -4103,6 +5481,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:mito_securities
   kind: sell_side
   handle: Mito Securities
@@ -4116,6 +5496,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:mitsubishi_ufj
   kind: sell_side
   handle: Mitsubishi UFJ
@@ -4129,6 +5511,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 39 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:mizuho
   kind: sell_side
   handle: Mizuho
@@ -4142,6 +5526,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6894 dated revisions in target_revisions.parquet
+  weight: 0.02296
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0255 on n=1804 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:mkm_partners
   kind: sell_side
   handle: MKM Partners
@@ -4155,6 +5542,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 675 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:mlv_co
   kind: sell_side
   handle: MLV & Co.
@@ -4168,6 +5557,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 27 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:moelis_company_llc
   kind: sell_side
   handle: Moelis & Company LLC
@@ -4181,6 +5572,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:moffett_nathanson
   kind: sell_side
   handle: Moffett Nathanson
@@ -4194,6 +5587,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:moffettnathanson
   kind: sell_side
   handle: MoffettNathanson
@@ -4207,6 +5602,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 197 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=5 < 20)'
 - source_id: sell_side:monness_crespi_hardt
   kind: sell_side
   handle: Monness, Crespi, Hardt
@@ -4220,6 +5617,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 248 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=4 < 20)'
 - source_id: sell_side:morgan_keegan
   kind: sell_side
   handle: Morgan Keegan
@@ -4233,6 +5632,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 22 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:morgan_stanley
   kind: sell_side
   handle: Morgan Stanley
@@ -4246,6 +5647,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 27671 dated revisions in target_revisions.parquet
+  weight: 0.01764
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0186 on n=3660 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:morningstar
   kind: sell_side
   handle: Morningstar
@@ -4259,6 +5663,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:national_alliance_securities
   kind: sell_side
   handle: National Alliance Securities
@@ -4272,6 +5678,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 13 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:national_bank_financial_inc
   kind: sell_side
   handle: National Bank Financial Inc
@@ -4285,6 +5693,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 98 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=1 < 20)'
 - source_id: sell_side:national_bank_of_canada
   kind: sell_side
   handle: National Bank Of Canada
@@ -4298,6 +5708,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 8 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:national_securities_corporation
   kind: sell_side
   handle: National Securities Corporation
@@ -4311,6 +5723,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 23 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:natixis
   kind: sell_side
   handle: Natixis
@@ -4324,6 +5738,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 26 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:needham
   kind: sell_side
   handle: Needham
@@ -4337,6 +5753,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 8900 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0032 on n=1240 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:new_street_research
   kind: sell_side
   handle: New Street Research
@@ -4350,6 +5769,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 98 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=4 < 20)'
 - source_id: sell_side:noble_capital_markets
   kind: sell_side
   handle: Noble Capital Markets
@@ -4363,6 +5784,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 69 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=4 < 20)'
 - source_id: sell_side:noble_financial
   kind: sell_side
   handle: Noble Financial
@@ -4376,6 +5799,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:nomura
   kind: sell_side
   handle: Nomura
@@ -4389,6 +5814,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1765 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:nomura_instinet
   kind: sell_side
   handle: Nomura Instinet
@@ -4402,6 +5829,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 57 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:nord_lb
   kind: sell_side
   handle: Nord/LB
@@ -4415,6 +5844,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:nordea_equity
   kind: sell_side
   handle: Nordea Equity
@@ -4428,6 +5859,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 15 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:norne_securities
   kind: sell_side
   handle: Norne Securities
@@ -4441,6 +5874,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:northcoast_research
   kind: sell_side
   handle: Northcoast Research
@@ -4454,6 +5889,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 309 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=2 < 20)'
 - source_id: sell_side:northern_securities
   kind: sell_side
   handle: Northern Securities
@@ -4467,6 +5904,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:northland_capital_markets
   kind: sell_side
   handle: Northland Capital Markets
@@ -4480,6 +5919,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 832 dated revisions in target_revisions.parquet
+  weight: 0.02583
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0986 on n=71 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:northland_securities
   kind: sell_side
   handle: Northland Securities
@@ -4493,6 +5935,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:numis_securities
   kind: sell_side
   handle: Numis Securities
@@ -4506,6 +5950,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 18 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:oddo_securities
   kind: sell_side
   handle: Oddo Securities
@@ -4519,6 +5965,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 11 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:odeon_capital
   kind: sell_side
   handle: Odeon Capital
@@ -4532,6 +5980,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 64 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:off_wall_street
   kind: sell_side
   handle: Off Wall Street
@@ -4545,6 +5995,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:oppenheimer
   kind: sell_side
   handle: Oppenheimer
@@ -4558,6 +6010,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5847 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0091 on n=991 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:oracle_investment_research
   kind: sell_side
   handle: Oracle Investment Research
@@ -4571,6 +6026,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 7 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:oriel
   kind: sell_side
   handle: Oriel
@@ -4584,6 +6041,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:otr_global
   kind: sell_side
   handle: OTR Global
@@ -4597,6 +6056,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 162 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:oxen_group
   kind: sell_side
   handle: Oxen Group
@@ -4610,6 +6071,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 14 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:pacific_crest
   kind: sell_side
   handle: Pacific Crest
@@ -4623,6 +6086,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 296 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:panmure_gordon
   kind: sell_side
   handle: Panmure Gordon
@@ -4636,6 +6101,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:paradigm_capital
   kind: sell_side
   handle: Paradigm Capital
@@ -4649,6 +6116,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 10 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:pareto_securities
   kind: sell_side
   handle: Pareto Securities
@@ -4662,6 +6131,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 24 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:pentair
   kind: sell_side
   handle: Pentair
@@ -4675,6 +6146,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:petercam
   kind: sell_side
   handle: Petercam
@@ -4688,6 +6161,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:peters_co
   kind: sell_side
   handle: Peters & Co.
@@ -4701,6 +6176,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:phillip_securities
   kind: sell_side
   handle: Phillip Securities
@@ -4714,6 +6191,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 11 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=1 < 20)'
 - source_id: sell_side:phoenix_partners_group
   kind: sell_side
   handle: Phoenix Partners Group
@@ -4727,6 +6206,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:pi_financial
   kind: sell_side
   handle: PI Financial
@@ -4740,6 +6221,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 8 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:pickering_energy_partners
   kind: sell_side
   handle: Pickering Energy Partners
@@ -4753,6 +6236,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 13 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:piper_jaffray
   kind: sell_side
   handle: Piper Jaffray
@@ -4766,6 +6251,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:piper_sandler
   kind: sell_side
   handle: Piper Sandler
@@ -4779,6 +6266,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 11036 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0432 on n=2224 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:piperjaffray
   kind: sell_side
   handle: PiperJaffray
@@ -4792,6 +6282,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 10 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:pivotal_research
   kind: sell_side
   handle: Pivotal Research
@@ -4805,6 +6297,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 192 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=5 < 20)'
 - source_id: sell_side:portales_partners
   kind: sell_side
   handle: Portales Partners
@@ -4818,6 +6312,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 15 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:princeton_securities
   kind: sell_side
   handle: Princeton Securities
@@ -4831,6 +6327,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:pritchard_capital_partners
   kind: sell_side
   handle: Pritchard Capital Partners
@@ -4844,6 +6342,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 7 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:r5_capital
   kind: sell_side
   handle: R5 Capital
@@ -4857,6 +6357,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 15 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:rabobank
   kind: sell_side
   handle: Rabobank
@@ -4870,6 +6372,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:rafferty_capital
   kind: sell_side
   handle: Rafferty Capital
@@ -4883,6 +6387,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 34 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:raymond_james
   kind: sell_side
   handle: Raymond James
@@ -4896,6 +6402,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9379 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0119 on n=757 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:rbc_capital
   kind: sell_side
   handle: RBC Capital
@@ -4909,6 +6418,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 12903 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0154 on n=2531 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:redburn
   kind: sell_side
   handle: Redburn
@@ -4922,6 +6434,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:redburn_atlantic
   kind: sell_side
   handle: Redburn Atlantic
@@ -4935,6 +6449,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 160 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=11 < 20)'
 - source_id: sell_side:redburn_partners
   kind: sell_side
   handle: Redburn Partners
@@ -4948,6 +6464,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 135 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:redstone_technology
   kind: sell_side
   handle: Redstone Technology
@@ -4961,6 +6479,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:renaissance_capital
   kind: sell_side
   handle: Renaissance Capital
@@ -4974,6 +6494,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:rf_lafferty
   kind: sell_side
   handle: RF Lafferty
@@ -4987,6 +6509,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 19 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:rhino_trading
   kind: sell_side
   handle: Rhino Trading
@@ -5000,6 +6524,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:rochdale_securities
   kind: sell_side
   handle: Rochdale Securities
@@ -5013,6 +6539,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:rodman_renshaw
   kind: sell_side
   handle: Rodman & Renshaw
@@ -5026,6 +6554,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 25 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:rosenblatt
   kind: sell_side
   handle: Rosenblatt
@@ -5039,6 +6569,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2800 dated revisions in target_revisions.parquet
+  weight: 0.0239
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0351 on n=427 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:roth_capital
   kind: sell_side
   handle: Roth Capital
@@ -5052,6 +6585,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 957 dated revisions in target_revisions.parquet
+  weight: 0.02971
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0492 on n=305 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:roth_mkm
   kind: sell_side
   handle: Roth MKM
@@ -5065,6 +6601,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 839 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=3 < 20)'
 - source_id: sell_side:rothschild_co
   kind: sell_side
   handle: Rothschild & Co
@@ -5078,6 +6616,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 111 dated revisions in target_revisions.parquet
+  weight: 0.03333
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.2000 on n=40 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:rs_platou_markets
   kind: sell_side
   handle: RS Platou Markets
@@ -5091,6 +6632,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 18 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:s_p_capital_iq
   kind: sell_side
   handle: S&P Capital IQ
@@ -5104,6 +6647,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 61 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:salman_partners
   kind: sell_side
   handle: Salman Partners
@@ -5117,6 +6662,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 10 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:sandler_o_neill
   kind: sell_side
   handle: Sandler O'Neill
@@ -5130,6 +6677,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:santander
   kind: sell_side
   handle: Santander
@@ -5143,6 +6692,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 33 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:sbg_securities
   kind: sell_side
   handle: SBG Securities
@@ -5156,6 +6707,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:scotia_howard_weil
   kind: sell_side
   handle: Scotia Howard Weil
@@ -5169,6 +6722,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:scotiabank
   kind: sell_side
   handle: Scotiabank
@@ -5182,6 +6737,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2524 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0363 on n=882 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:seaport_global
   kind: sell_side
   handle: Seaport Global
@@ -5195,6 +6753,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1042 dated revisions in target_revisions.parquet
+  weight: 0.01934
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0545 on n=110 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:seb_enskilda
   kind: sell_side
   handle: SEB Enskilda
@@ -5208,6 +6769,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:seibert_williams
   kind: sell_side
   handle: Seibert Williams
@@ -5221,6 +6784,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:shaw_stockbroking
   kind: sell_side
   handle: Shaw Stockbroking
@@ -5234,6 +6799,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:shore_capital
   kind: sell_side
   handle: Shore Capital
@@ -5247,6 +6814,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:sidoti_co
   kind: sell_side
   handle: Sidoti & Co.
@@ -5260,6 +6829,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 544 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=10 < 20)'
 - source_id: sell_side:simmons_co
   kind: sell_side
   handle: Simmons & Co.
@@ -5273,6 +6844,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 26 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:singular_research
   kind: sell_side
   handle: Singular Research
@@ -5286,6 +6859,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 12 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:small_cap_consumer_research
   kind: sell_side
   handle: Small Cap Consumer Research
@@ -5299,6 +6874,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 65 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=2 < 20)'
 - source_id: sell_side:smbc_nikko
   kind: sell_side
   handle: SMBC Nikko
@@ -5312,6 +6889,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 60 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:sns_securities
   kind: sell_side
   handle: SNS Securities
@@ -5325,6 +6904,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:societe_generale
   kind: sell_side
   handle: Societe Generale
@@ -5338,6 +6919,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 337 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:sparebank_1_markets
   kind: sell_side
   handle: SpareBank 1 Markets
@@ -5351,6 +6934,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:spark_capital
   kind: sell_side
   handle: Spark Capital
@@ -5364,6 +6949,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:standpoint
   kind: sell_side
   handle: Standpoint
@@ -5377,6 +6964,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:standpoint_research
   kind: sell_side
   handle: Standpoint Research
@@ -5390,6 +6979,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 373 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:stephens_co
   kind: sell_side
   handle: Stephens & Co.
@@ -5403,6 +6994,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3757 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0105 on n=380 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:sterne_agee
   kind: sell_side
   handle: Sterne Agee
@@ -5416,6 +7010,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 682 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:sterne_agee_crt
   kind: sell_side
   handle: Sterne Agee CRT
@@ -5429,6 +7025,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 7 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:stifel
   kind: sell_side
   handle: Stifel
@@ -5442,6 +7040,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9898 dated revisions in target_revisions.parquet
+  weight: 0.02461
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0277 on n=1590 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:stifel_nicolaus
   kind: sell_side
   handle: Stifel Nicolaus
@@ -5455,6 +7056,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 44 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:stonecap_securities
   kind: sell_side
   handle: Stonecap Securities
@@ -5468,6 +7071,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:stonex
   kind: sell_side
   handle: StoneX
@@ -5481,6 +7086,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 34 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:summer_street
   kind: sell_side
   handle: Summer Street
@@ -5494,6 +7101,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:summit_insights_group
   kind: sell_side
   handle: Summit Insights Group
@@ -5507,6 +7116,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 113 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:suntrust_robinson_humphrey
   kind: sell_side
   handle: SunTrust Robinson Humphrey
@@ -5520,6 +7131,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2039 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:susquehanna
   kind: sell_side
   handle: Susquehanna
@@ -5533,6 +7146,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3689 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0012 on n=813 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:svb_leerink
   kind: sell_side
   handle: SVB Leerink
@@ -5546,6 +7162,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1077 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:svb_securities
   kind: sell_side
   handle: SVB Securities
@@ -5559,6 +7177,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 19 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:swedbank
   kind: sell_side
   handle: Swedbank
@@ -5572,6 +7192,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 24 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:sws_research
   kind: sell_side
   handle: SWS Research
@@ -5585,6 +7207,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:taglich_brothers
   kind: sell_side
   handle: Taglich Brothers
@@ -5598,6 +7222,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:td_cowen
   kind: sell_side
   handle: TD Cowen
@@ -5611,6 +7237,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4027 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0319 on n=1566 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:td_securities
   kind: sell_side
   handle: TD Securities
@@ -5624,6 +7253,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 411 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.1064 on n=47 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:telsey_advisory_group
   kind: sell_side
   handle: Telsey Advisory Group
@@ -5637,6 +7269,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2533 dated revisions in target_revisions.parquet
+  weight: 0.01564
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0283 on n=247 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:texas_capital_securities
   kind: sell_side
   handle: Texas Capital Securities
@@ -5650,6 +7285,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 16 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:th_capital
   kind: sell_side
   handle: TH Capital
@@ -5663,6 +7300,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 6 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:the_oxen_group
   kind: sell_side
   handle: The Oxen Group
@@ -5676,6 +7315,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:thinkequity
   kind: sell_side
   handle: ThinkEquity
@@ -5689,6 +7330,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 14 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:tigress_financial
   kind: sell_side
   handle: Tigress Financial
@@ -5702,6 +7345,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 438 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0685 on n=73 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:topeka
   kind: sell_side
   handle: Topeka
@@ -5715,6 +7361,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:topeka_capital
   kind: sell_side
   handle: Topeka Capital
@@ -5728,6 +7376,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 169 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:tph_energy_research
   kind: sell_side
   handle: TPH Energy Research
@@ -5741,6 +7391,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:truist_securities
   kind: sell_side
   handle: Truist Securities
@@ -5754,6 +7406,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 8747 dated revisions in target_revisions.parquet
+  weight: 0.00638
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0069 on n=2457 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:tudor_pickering
   kind: sell_side
   handle: Tudor Pickering
@@ -5767,6 +7422,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 146 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:u_s_capital_advisors
   kind: sell_side
   handle: U.S. Capital Advisors
@@ -5780,6 +7437,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:ubs
   kind: sell_side
   handle: UBS
@@ -5793,6 +7452,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 15251 dated revisions in target_revisions.parquet
+  weight: 0.01417
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0148 on n=4462 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:union_gaming
   kind: sell_side
   handle: Union Gaming
@@ -5806,6 +7468,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 18 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:univest_securities
   kind: sell_side
   handle: Univest Securities
@@ -5819,6 +7483,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:uob_kay_hian
   kind: sell_side
   handle: UOB Kay Hian
@@ -5832,6 +7498,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:us_capital_advisors
   kind: sell_side
   handle: US Capital Advisors
@@ -5845,6 +7513,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:us_tiger_securities_inc
   kind: sell_side
   handle: US Tiger Securities, Inc
@@ -5858,6 +7528,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:valuengine
   kind: sell_side
   handle: ValuEngine
@@ -5871,6 +7543,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 3 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:veritas_research
   kind: sell_side
   handle: Veritas Research
@@ -5884,6 +7558,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:versant_partners
   kind: sell_side
   handle: Versant Partners
@@ -5897,6 +7573,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 4 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:vertical_group
   kind: sell_side
   handle: Vertical Group
@@ -5910,6 +7588,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:vertical_research
   kind: sell_side
   handle: Vertical Research
@@ -5923,6 +7603,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 295 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=2 < 20)'
 - source_id: sell_side:vtb_capital
   kind: sell_side
   handle: VTB Capital
@@ -5936,6 +7618,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:wallachbeth_capital
   kind: sell_side
   handle: WallachBeth Capital
@@ -5949,6 +7633,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:warburg_research
   kind: sell_side
   handle: Warburg Research
@@ -5962,6 +7648,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:wbb_securities
   kind: sell_side
   handle: WBB Securities
@@ -5975,6 +7663,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 9 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:wedbush
   kind: sell_side
   handle: Wedbush
@@ -5988,6 +7678,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 5122 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0095 on n=527 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:wellington_shields
   kind: sell_side
   handle: Wellington Shields
@@ -6001,6 +7694,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 39 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:wells_fargo
   kind: sell_side
   handle: Wells Fargo
@@ -6014,6 +7709,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 17756 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.0091 on n=4602 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:westpark_capital
   kind: sell_side
   handle: WestPark Capital
@@ -6027,6 +7725,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 98 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=7 < 20)'
 - source_id: sell_side:wgz_bank
   kind: sell_side
   handle: WGZ Bank
@@ -6040,6 +7740,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 2 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:william_blair
   kind: sell_side
   handle: William Blair
@@ -6053,6 +7755,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 959 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill -0.1667 on n=84 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:william_o_neil
   kind: sell_side
   handle: William O'Neil
@@ -6066,6 +7771,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:williams_capital
   kind: sell_side
   handle: Williams Capital
@@ -6079,6 +7786,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 81 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:williams_trading
   kind: sell_side
   handle: Williams Trading
@@ -6092,6 +7801,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 40 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=1 < 20)'
 - source_id: sell_side:wolfe_research
   kind: sell_side
   handle: Wolfe Research
@@ -6105,6 +7816,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1919 dated revisions in target_revisions.parquet
+  weight: 0.03739
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0746 on n=201 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:wunderlich
   kind: sell_side
   handle: Wunderlich
@@ -6118,6 +7832,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 15 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:wunderlich_securities
   kind: sell_side
   handle: Wunderlich Securities
@@ -6131,6 +7847,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 646 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:zacks_investment_research
   kind: sell_side
   handle: Zacks Investment Research
@@ -6144,6 +7862,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:zelman
   kind: sell_side
   handle: Zelman
@@ -6157,6 +7877,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 39 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:zelman_assoc
   kind: sell_side
   handle: Zelman & Assoc
@@ -6170,6 +7892,9 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 50 dated revisions in target_revisions.parquet
+  weight: 0.0
+  weight_basis: 'broker_scoreboard 2026-09-26: held-out 21d hit skill +0.0000 on n=24 (claims >= 2025-05-06), shrunk n/(n+200),
+    floored at 0'
 - source_id: sell_side:zephrin_group
   kind: sell_side
   handle: Zephrin Group
@@ -6183,6 +7908,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'
 - source_id: sell_side:zero_one
   kind: sell_side
   handle: Zero One
@@ -6196,6 +7923,8 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=1 < 20)'
 - source_id: sell_side:zuanic_associates
   kind: sell_side
   handle: Zuanic & Associates
@@ -6209,3 +7938,5 @@ sources:
   verified_by: ''
   found_by_quest: ''
   notes: 1 dated revisions in target_revisions.parquet
+  weight: null
+  weight_basis: 'prior: prior (held-out n=0 < 20)'

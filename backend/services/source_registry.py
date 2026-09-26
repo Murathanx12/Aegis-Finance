@@ -119,6 +119,11 @@ class Source:
     verified_by: str = ""         # the dated post that verified it
     found_by_quest: str = ""
     notes: str = ""
+    #: None = prior (nothing earned yet). A number is an EARNED weight and
+    #: `weight_basis` says from what (e.g. the broker scoreboard's held-out 21d
+    #: hit-rate skill, shrunk n/(n+200)).
+    weight: float | None = None
+    weight_basis: str = ""
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -163,7 +168,16 @@ def source_from_dict(d: dict) -> Source:
         added_utc=str(d.get("added_utc") or ""), added_by=str(d.get("added_by") or ""),
         platform=str(d.get("platform") or ""), theme=str(d.get("theme") or ""),
         verified=bool(d.get("verified", True)), verified_by=str(d.get("verified_by") or ""),
-        found_by_quest=str(d.get("found_by_quest") or ""), notes=str(d.get("notes") or ""))
+        found_by_quest=str(d.get("found_by_quest") or ""), notes=str(d.get("notes") or ""),
+        weight=_opt_float(d.get("weight")), weight_basis=str(d.get("weight_basis") or ""))
+
+
+def _opt_float(v: Any) -> float | None:
+    try:
+        x = float(v)
+    except (TypeError, ValueError):
+        return None
+    return x if math.isfinite(x) else None
 
 
 def load_registry(path: Path | str | None = None) -> dict[str, Source]:
@@ -755,7 +769,10 @@ def write_scoreboard(sb: dict, *, out_dir: Path | None = None, day: str | None =
     jp = d / f"scoreboard_{day}.json"
     jp.write_text(json.dumps(sb, indent=2, default=str), encoding="utf-8")
     mp = d / "SOURCES.md"
-    mp.write_text(render_markdown(sb, day=day), encoding="utf-8")
+    md = render_markdown(sb, day=day)
+    if sb.get("brokers"):
+        md += "\n" + render_broker_markdown(sb["brokers"], day=day)
+    mp.write_text(md, encoding="utf-8")
     return jp, mp
 
 
@@ -796,7 +813,9 @@ def render_markdown(sb: dict, *, day: str) -> str:
                      "| | | | | | | | | | | | | |")
     n_rest = len(sb["rows"]) - len(shown)
     lines += ["", f"{n_rest} further registered sources (newswires, filings, "
-              f"brokerages) have n=0 and weight=prior; they are in the JSON receipt.",
+              f"brokerages) have no claims in the claims ledger; they are in the JSON "
+              f"receipt. Brokerages are scored from the revisions parquet below "
+              f"(`brokers` in the receipt) when that section is present.",
               "", "## Metrics", ""]
     for k, v in sb["metrics"].items():
         lines.append(f"- `{k}`: {v}")
@@ -811,3 +830,620 @@ def sector_map_default() -> dict[str, str]:
     except Exception as exc:                                      # noqa: BLE001
         logger.warning("source_registry: sector map unavailable (%s)", exc)
         return {}
+
+
+# ═════════════════════════════ the broker scoreboard ════════════════════════
+#
+# Adjudication 2026-09-26 row 13 (reviewer A+B+F, W4): the 456 brokerages were
+# registered at n=0 while `target_revisions.parquet` already held ~393k dated,
+# directional claims. Scoring them costs $0 and needs no LLM:
+#   * a claim = one revision row; direction = target Raises/Lowers, else a
+#     rating up/down; a row that raises the target AND downgrades is MIXED and
+#     is not a directional claim (it is still counted);
+#   * entry = the close of the first session STRICTLY after the event date (a
+#     revision stamped during a session is not assumed tradable at its close);
+#   * outcome = the name's h-session return minus the UNIVERSE MEDIAN h-session
+#     return from the same entry session, over the survivorship-free panel;
+#   * hit = the signed relative return is > 0;
+#   * first-mover vs follower: a cluster is >= 3 distinct firms moving the same
+#     name in the same direction within 10 calendar days of the cluster's first
+#     claim; the first firm's signed return from ITS entry is compared with the
+#     last firm's from ITS entry, per cluster, blocked by month.
+# Rows dated after `today` or after their own `pulled_at` are refused (one
+# AMR/Jefferies row is dated 2026-10-05 and was pulled 2026-09-25).
+
+BROKER_HORIZONS: tuple[int, ...] = (5, 21)
+BROKER_CLUSTER_DAYS: int = int(_cfg("BROKER_CLUSTER_DAYS", 10))
+BROKER_CLUSTER_MIN_FIRMS: int = int(_cfg("BROKER_CLUSTER_MIN_FIRMS", 3))
+BROKER_RANK_MIN_N: int = int(_cfg("BROKER_RANK_MIN_N", 50))
+BROKER_RANK_YEARS: int = int(_cfg("BROKER_RANK_YEARS", 3))
+BROKER_WEIGHT_MIN_N: int = int(_cfg("BROKER_WEIGHT_MIN_N", 20))
+BROKER_SHRINK_K: float = float(_cfg("BROKER_SHRINK_K", 200.0))
+#: a corpus row published this long before we first saw it is an archive
+#: backfill (the 36,720-row benzinga archive, adjudication row 12), not news.
+ARCHIVE_GAP_DAYS: int = int(_cfg("SOURCE_ARCHIVE_GAP_DAYS", 30))
+#: calendar days between the day after a claim and its entry session; more =
+#: the claim predates the panel (or sits in a gap) and is left unpriced.
+MAX_ENTRY_GAP_DAYS: int = 6
+
+
+def broker_direction(target_action: Any, action: Any) -> str | None:
+    """'up' / 'down' / None (no directional content, or MIXED signals)."""
+    ta = str(target_action or "").strip().lower()
+    ac = str(action or "").strip().lower()
+    ups = (ta == "raises") + (ac == "up")
+    downs = (ta == "lowers") + (ac == "down")
+    if ups and not downs:
+        return "up"
+    if downs and not ups:
+        return "down"
+    return None
+
+
+def load_revision_claims(path: Path | str | None = None, *, today: Any = None) -> tuple[pd.DataFrame, dict]:
+    """The revisions parquet as claims: ticker, firm, source_id, t (UTC-naive
+    timestamp), direction. Refuses future-dated rows and rows dated after their
+    own pull; the receipt counts both."""
+    p = Path(path) if path else TARGET_REVISIONS
+    df = pd.read_parquet(p)
+    cols = ["ticker", "event_date", "firm", "target_action", "action", "pulled_at"]
+    df = df[[c for c in cols if c in df.columns]].copy()
+    today_end = pd.Timestamp(today or date.today()).normalize() + pd.Timedelta(days=1)
+    t = pd.to_datetime(df["event_date"], errors="coerce", utc=True).dt.tz_localize(None)
+    rc = {"n_rows": int(len(df)), "n_undated": int(t.isna().sum())}
+    fut = (t >= today_end).fillna(False)
+    if "pulled_at" in df.columns:
+        pulled = pd.to_datetime(df["pulled_at"], errors="coerce", utc=True).dt.tz_localize(None)
+        after_pull = (t > pulled).fillna(False)
+    else:
+        after_pull = pd.Series(False, index=df.index)
+    rc["n_refused_future"] = int(fut.sum())
+    rc["n_refused_after_pull"] = int((after_pull & ~fut).sum())
+    keep = t.notna() & ~fut & ~after_pull
+    df = df[keep].copy()
+    df["t"] = t[keep]
+    df["ticker"] = df["ticker"].astype(str).str.upper()
+    df["firm"] = df["firm"].astype(str)
+    df["source_id"] = "sell_side:" + df["firm"].map(_slug)
+    ta = df["target_action"] if "target_action" in df.columns else pd.Series("", index=df.index)
+    ac = df["action"] if "action" in df.columns else pd.Series("", index=df.index)
+    df["direction"] = [broker_direction(a, b) for a, b in zip(ta, ac)]
+    df = df[df["firm"].map(_slug) != ""]
+    rc["n_claims"] = int(len(df))
+    rc["n_directional"] = int(df["direction"].notna().sum())
+    rc["n_firms"] = int(df["source_id"].nunique())
+    return df[["ticker", "firm", "source_id", "t", "direction"]].reset_index(drop=True), rc
+
+
+def load_close_panel(paths: Sequence[Path] | None = None) -> pd.DataFrame:
+    """Long symbol/date/close from the survivorship-free panel.
+
+    Same semantics as `xs_ranker.load_bars(survivorship_free_paths())` --
+    concatenate, keep a (symbol, date)'s FIRST occurrence (the living pull over
+    the delisted one) -- but reads three columns, not nine: the full load peaks
+    well above the ~4 GB this machine had free on 2026-09-26."""
+    from backend.services import xs_ranker as X
+    ps = list(paths) if paths is not None else X.survivorship_free_paths()
+    frames = []
+    for p in ps:
+        f = pd.read_parquet(p, columns=["symbol", "date", "close"])
+        f["close"] = f["close"].astype("float32")
+        frames.append(f)
+    out = pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
+    out["symbol"] = out["symbol"].astype(str)
+    out["date"] = pd.to_datetime(out["date"])
+    return out.drop_duplicates(subset=["symbol", "date"], keep="first")
+
+
+def relative_forward_returns(bars_long: pd.DataFrame, horizons: Sequence[int] = BROKER_HORIZONS
+                             ) -> tuple[pd.DatetimeIndex, list[str], dict[int, np.ndarray]]:
+    """(dates, symbols, {h: rel}) where rel[i, j] = symbol j's return from the
+    close of session i to session i+h, minus the cross-sectional MEDIAN of that
+    return over every symbol priced on both sessions."""
+    import warnings
+    px = bars_long.pivot_table(index="date", columns="symbol", values="close", aggfunc="last")
+    px = px.sort_index()
+    arr = px.to_numpy(dtype="float32")
+    arr[~np.isfinite(arr) | (arr <= 0)] = np.nan
+    out: dict[int, np.ndarray] = {}
+    for h in horizons:
+        fwd = np.full_like(arr, np.nan)
+        if len(arr) > h:
+            fwd[:-h] = arr[h:] / arr[:-h] - 1.0
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            med = np.nanmedian(fwd, axis=1)
+        out[h] = fwd - med[:, None]
+        del fwd
+    return pd.DatetimeIndex(px.index), [str(c) for c in px.columns], out
+
+
+def attach_outcomes(claims: pd.DataFrame, dates: pd.DatetimeIndex, symbols: list[str],
+                    rel: dict[int, np.ndarray]) -> pd.DataFrame:
+    """Adds entry (session), rel_{h}d, signed_{h}d and hit_{h}d to each claim."""
+    c = claims.copy()
+    col = {s: i for i, s in enumerate(symbols)}
+    j = c["ticker"].map(col)
+    day0 = c["t"].dt.normalize() + pd.Timedelta(days=1)
+    pos = dates.searchsorted(day0)
+    ok = j.notna().to_numpy() & (pos < len(dates))
+    # a claim before the panel starts (or inside a gap) must not be priced at
+    # the panel's first session: the entry must fall within a week of the claim
+    gap = np.full(len(c), np.inf)
+    gap[ok] = (dates.to_numpy()[pos[ok]] - day0.to_numpy()[ok]) / np.timedelta64(1, "D")
+    ok &= gap <= MAX_ENTRY_GAP_DAYS
+    entry = np.full(len(c), np.datetime64("NaT"), dtype="datetime64[ns]")
+    entry[ok] = dates.to_numpy()[pos[ok]]
+    c["entry"] = entry
+    sign = c["direction"].map({"up": 1.0, "down": -1.0}).to_numpy(dtype=float)
+    ji = j.fillna(-1).astype(int).to_numpy()
+    for h, m in rel.items():
+        v = np.full(len(c), np.nan)
+        v[ok] = m[pos[ok], ji[ok]]
+        s = v * sign
+        c[f"rel_{h}d"] = v
+        c[f"signed_{h}d"] = s
+        c[f"hit_{h}d"] = np.where(np.isfinite(s), (s > 0).astype(float), np.nan)
+    return c
+
+
+def assign_clusters(claims: pd.DataFrame, *, days: int = BROKER_CLUSTER_DAYS,
+                    min_firms: int = BROKER_CLUSTER_MIN_FIRMS) -> pd.DataFrame:
+    """Directional claims with cluster_id, cluster_rank (1 = first firm),
+    cluster_size (distinct firms). A firm's repeat inside its cluster is dropped
+    (its first claim is its position). Clusters with < min_firms are dropped."""
+    d = claims[claims["direction"].notna()].sort_values(["ticker", "direction", "t", "source_id"],
+                                                         kind="mergesort")
+    cid = np.full(len(d), -1, dtype=np.int64)
+    tk = d["ticker"].to_numpy()
+    dr = d["direction"].to_numpy()
+    tt = d["t"].to_numpy()
+    span = np.timedelta64(days, "D")
+    cur, start, key = -1, None, None
+    for i in range(len(d)):
+        k = (tk[i], dr[i])
+        if k != key or tt[i] > start + span:
+            cur += 1
+            key, start = k, tt[i]
+        cid[i] = cur
+    d = d.assign(cluster_id=cid)
+    d = d.drop_duplicates(subset=["cluster_id", "source_id"], keep="first")
+    size = d.groupby("cluster_id")["source_id"].transform("size")
+    d = d[size >= min_firms].copy()
+    d["cluster_size"] = d.groupby("cluster_id")["source_id"].transform("size")
+    d["cluster_rank"] = d.groupby("cluster_id").cumcount() + 1
+    return d
+
+
+def _block_mean_se(values: pd.Series, blocks: pd.Series) -> dict:
+    v = pd.DataFrame({"v": values, "b": blocks}).dropna()
+    if v.empty:
+        return {"n": 0, "n_blocks": 0, "mean": None, "block_mean": None,
+                "se_block": None, "t_block": None}
+    bm = v.groupby("b")["v"].mean()
+    nb = len(bm)
+    se = float(bm.std(ddof=1) / math.sqrt(nb)) if nb > 1 else None
+    return {"n": int(len(v)), "n_blocks": int(nb), "mean": _f(v["v"].mean(), 5),
+            "block_mean": _f(bm.mean(), 5), "se_block": _f(se, 5),
+            "t_block": _f(bm.mean() / se, 2) if se else None}
+
+
+def first_mover_table(clustered: pd.DataFrame, *, h: int = 21) -> dict:
+    """First firm vs last firm in the same cluster: paired, month-blocked."""
+    col = f"signed_{h}d"
+    if clustered.empty:
+        return {"horizon": h, "n_clusters": 0}
+    first = clustered[clustered["cluster_rank"] == 1].set_index("cluster_id")
+    last = clustered[clustered["cluster_rank"] == clustered["cluster_size"]].set_index("cluster_id")
+    pair = first[[col, "t", "entry"]].join(last[[col, "entry"]], rsuffix="_last", how="inner")
+    pair["diff"] = pair[col] - pair[f"{col}_last"]
+    pair["block"] = pair["t"].dt.to_period("M").astype(str)
+    pair["year"] = pair["t"].dt.year
+    staggered = pair[pair["entry_last"] > pair["entry"]]
+    by_rank = {}
+    rk = clustered["cluster_rank"].clip(upper=5)
+    for r, g in clustered.groupby(rk):
+        s = g[col].dropna()
+        by_rank["5+" if r == 5 else str(int(r))] = {
+            "n": int(len(s)), "mean_signed": _f(s.mean(), 5),
+            "hit": _f((s > 0).mean(), 4) if len(s) else None}
+    by_year, loyo = {}, []
+    for y, g in staggered.groupby("year"):
+        by_year[str(int(y))] = {"n": int(g["diff"].notna().sum()), "mean_diff": _f(g["diff"].mean(), 5)}
+        rest = staggered[staggered["year"] != y]["diff"].dropna()
+        if len(rest):
+            loyo.append(float(rest.mean()))
+    return {"horizon": h, "n_clusters": int(len(pair)),
+            "n_staggered": int(len(staggered)),
+            "share_same_session": _f(1 - len(staggered) / len(pair), 4) if len(pair) else None,
+            "first_mean_signed": _f(pair[col].mean(), 5),
+            "last_mean_signed": _f(pair[f"{col}_last"].mean(), 5),
+            "first_minus_last_all": _block_mean_se(pair["diff"], pair["block"]),
+            "first_minus_last_staggered": _block_mean_se(staggered["diff"], staggered["block"]),
+            "staggered_first_mean_signed": _f(staggered[col].mean(), 5),
+            "staggered_last_mean_signed": _f(staggered[f"{col}_last"].mean(), 5),
+            "staggered_by_year": by_year,
+            "staggered_leave_one_year_out_worst": _f(min(loyo), 5) if loyo else None,
+            "by_rank": by_rank,
+            "read": ("diff = first firm's signed relative return from its own entry minus the "
+                     "last firm's from its own entry, same cluster. 'staggered' keeps clusters "
+                     "whose last firm entered on a LATER session (same-session ties have diff 0 "
+                     "by construction). Blocks = calendar month of the cluster's first claim.")}
+
+
+def prior_firm_counts(claims: pd.DataFrame, *, days: int = BROKER_CLUSTER_DAYS) -> pd.Series:
+    """For each directional claim: how many OTHER firms made a claim in the same
+    direction on the same name in the `days` calendar days strictly before it.
+    Point-in-time: uses only earlier claims, so 0 = 'first' is knowable at t."""
+    d = claims[claims["direction"].notna()].sort_values(["ticker", "direction", "t"], kind="mergesort")
+    tk, dr, tt, sid = (d["ticker"].to_numpy(), d["direction"].to_numpy(),
+                       d["t"].to_numpy(), d["source_id"].to_numpy())
+    span = np.timedelta64(days, "D")
+    out = np.zeros(len(d), dtype=np.int64)
+    n = len(d)
+    lo, key, counts = 0, None, {}
+    i = 0
+    while i < n:
+        k = (tk[i], dr[i])
+        if k != key:
+            key, lo, counts = k, i, {}
+        # the block of rows sharing this exact timestamp: none is "prior" to another
+        j = i
+        while j + 1 < n and tk[j + 1] == tk[i] and dr[j + 1] == dr[i] and tt[j + 1] == tt[i]:
+            j += 1
+        while lo < i and tt[lo] < tt[i] - span:
+            f = sid[lo]
+            counts[f] -= 1
+            if counts[f] == 0:
+                del counts[f]
+            lo += 1
+        for q in range(i, j + 1):
+            out[q] = len(counts) - (1 if sid[q] in counts else 0)
+        for q in range(i, j + 1):
+            counts[sid[q]] = counts.get(sid[q], 0) + 1
+        i = j + 1
+    return pd.Series(out, index=d.index).reindex(claims.index)
+
+
+def pit_first_vs_follower(claims: pd.DataFrame, *, days: int = BROKER_CLUSTER_DAYS) -> dict:
+    """The TRADABLE version of first-mover vs follower. Each claim is classed by
+    what was knowable at its own time: 'first' (no other firm moved the name
+    the same way in the prior `days`), 'second', 'third_plus'. The cluster table
+    conditions on followers arriving LATER, which is look-ahead; this does not."""
+    c = claims[claims["direction"].notna()].copy()
+    c["n_prior"] = prior_firm_counts(claims, days=days).reindex(c.index)
+    c["grp"] = np.where(c["n_prior"] == 0, "first", np.where(c["n_prior"] == 1, "second", "third_plus"))
+    c["block"] = c["t"].dt.to_period("M").astype(str)
+    out: dict[str, Any] = {"window_days": days,
+                           "read": "class = other firms moving the name the same way in the prior "
+                                   f"{days} days (knowable at t). diff = month-mean(first) - "
+                                   "month-mean(third_plus), blocked by month."}
+    for h in BROKER_HORIZONS:
+        col = f"signed_{h}d"
+        groups = {}
+        for g, gg in c.groupby("grp"):
+            s = gg[col].dropna()
+            groups[g] = {"n": int(len(s)), "mean_signed": _f(s.mean(), 5),
+                         "hit": _f((s > 0).mean(), 4) if len(s) else None}
+        m = c.dropna(subset=[col]).groupby(["block", "grp"])[col].mean().unstack()
+        res: dict[str, Any] = {"by_class": groups}
+        if {"first", "third_plus"} <= set(m.columns):
+            dm = (m["first"] - m["third_plus"]).dropna()
+            se = float(dm.std(ddof=1) / math.sqrt(len(dm))) if len(dm) > 1 else None
+            res["first_minus_third_plus"] = {"n_blocks": int(len(dm)), "mean": _f(dm.mean(), 5),
+                                             "se_block": _f(se, 5),
+                                             "t_block": _f(dm.mean() / se, 2) if se else None}
+            yr = dm.groupby(dm.index.str[:4]).mean()
+            res["by_year"] = {y: _f(v, 5) for y, v in yr.items()}
+            res["leave_one_year_out_worst"] = _f(min(dm[dm.index.str[:4] != y].mean() for y in yr.index), 5) \
+                if len(yr) > 1 else None
+        out[str(h)] = res
+    return out
+
+
+def firm_first_mover_rows(clustered: pd.DataFrame, *, since: pd.Timestamp, h: int = 21,
+                          min_n: int = 30) -> list[dict]:
+    c = clustered[clustered["t"] >= since]
+    col = f"signed_{h}d"
+    out = []
+    for sid, g in c.groupby("source_id"):
+        if len(g) < min_n:
+            continue
+        f = g[g["cluster_rank"] == 1]
+        fo = g[g["cluster_rank"] > 1]
+        out.append({"source_id": sid, "firm": str(g["firm"].iloc[0]),
+                    "n_cluster_claims": int(len(g)), "n_first": int(len(f)),
+                    "share_first": _f(len(f) / len(g), 4),
+                    "mean_rank_pct": _f(((g["cluster_rank"] - 1) / (g["cluster_size"] - 1)).mean(), 4),
+                    "signed_when_first": _f(f[col].mean(), 5),
+                    "signed_when_follower": _f(fo[col].mean(), 5)})
+    out.sort(key=lambda r: -(r["share_first"] or 0))
+    return out
+
+
+def _hit_stats(g: pd.DataFrame) -> dict:
+    d = g[g["direction"].notna()]
+    r = {"n_claims": int(len(g)), "n_directional": int(len(d))}
+    for h in BROKER_HORIZONS:
+        hh = d[f"hit_{h}d"].dropna()
+        r[f"n_resolved_{h}d"] = int(len(hh))
+        r[f"hit_{h}d"] = _f(hh.mean(), 4) if len(hh) else None
+        up = d.loc[d["direction"] == "up", f"rel_{h}d"].dropna()
+        dn = d.loc[d["direction"] == "down", f"rel_{h}d"].dropna()
+        r[f"rel_{h}d_after_raise"] = _f(up.mean(), 5) if len(up) else None
+        r[f"rel_{h}d_after_lower"] = _f(dn.mean(), 5) if len(dn) else None
+        r[f"n_raise_{h}d"] = int(len(up))
+        r[f"n_lower_{h}d"] = int(len(dn))
+    return r
+
+
+def broker_lead_times(claims: pd.DataFrame, mainstream: pd.DataFrame | None) -> pd.Series:
+    """Hours from the revision to the first mainstream corpus item on the same
+    ticker within +/- LEAD_WINDOW_H; NaN where the corpus does not cover the
+    name or the date (the corpus starts 2026-09-11)."""
+    empty = pd.Series(np.nan, index=claims.index, dtype=float)
+    if mainstream is None or mainstream.empty or claims.empty:
+        return empty
+    lo = pd.to_datetime(mainstream["t"], utc=True).min().tz_localize(None) - pd.Timedelta(hours=LEAD_WINDOW_H)
+    sub = claims[(claims["t"] >= lo) & claims["ticker"].isin(set(mainstream["ticker"]))]
+    if sub.empty:
+        return empty
+    tmp = pd.DataFrame({"ticker": sub["ticker"], "source_id": sub["source_id"],
+                        "claim_utc": sub["t"].dt.tz_localize("UTC")}, index=sub.index)
+    return lead_times_h(tmp, mainstream).reindex(claims.index)
+
+
+def broker_scoreboard(claims: pd.DataFrame, *, today: Any = None,
+                      mainstream: pd.DataFrame | None = None,
+                      rank_years: int = BROKER_RANK_YEARS, rank_min_n: int = BROKER_RANK_MIN_N,
+                      weight_min_n: int = BROKER_WEIGHT_MIN_N, shrink_k: float = BROKER_SHRINK_K,
+                      top_n: int = 20) -> dict:
+    """Per firm and per year from claims that already carry outcomes
+    (`attach_outcomes`). Pure: no disk, no network."""
+    today_ts = pd.Timestamp(today or date.today()).normalize()
+    since = today_ts - pd.DateOffset(years=rank_years)
+    c = claims.copy()
+    c["year"] = c["t"].dt.year
+    c["lead_h"] = broker_lead_times(c, mainstream)
+    recent = c[c["t"] >= since]
+    # held-out split: ONE global date (the median resolved directional claim in
+    # the window), so no firm's held-out half overlaps another's training half.
+    rd = recent[recent["direction"].notna() & recent["hit_21d"].notna()]
+    split = rd["t"].quantile(0.5) if len(rd) else today_ts
+    firms = []
+    for sid, g in c.groupby("source_id"):
+        row = {"source_id": sid, "firm": str(g["firm"].value_counts().index[0]),
+               "first_claim": str(g["t"].min().date()), "last_claim": str(g["t"].max().date())}
+        row.update(_hit_stats(g))
+        gr = g[g["t"] >= since]
+        row.update({f"recent_{k}": v for k, v in _hit_stats(gr).items()})
+        by_year = {}
+        for y, gy in g.groupby("year"):
+            hy = gy[gy["direction"].notna()]["hit_21d"].dropna()
+            by_year[str(int(y))] = {"n": int(len(hy)), "hit_21d": _f(hy.mean(), 3) if len(hy) else None}
+        row["by_year"] = by_year
+        dd = gr[gr["direction"].notna() & gr["hit_21d"].notna()]
+        ins, held = dd[dd["t"] < split], dd[dd["t"] >= split]
+        row["n_insample_21d"] = int(len(ins))
+        row["n_heldout_21d"] = int(len(held))
+        row["skill_insample_21d"] = _f(2 * ins["hit_21d"].mean() - 1, 4) if len(ins) else None
+        row["skill_heldout_21d"] = _f(2 * held["hit_21d"].mean() - 1, 4) if len(held) else None
+        n = len(held)
+        if n >= weight_min_n and row["skill_heldout_21d"] is not None:
+            shrunk = row["skill_heldout_21d"] * n / (n + shrink_k)
+            row["skill_heldout_21d_shrunk"] = _f(shrunk, 5)
+            row["weight"] = _f(max(0.0, shrunk), 5)
+            row["weight_status"] = "earned"
+        else:
+            row["skill_heldout_21d_shrunk"] = None
+            row["weight"] = "prior"
+            row["weight_status"] = f"prior (held-out n={n} < {weight_min_n})"
+        lead = g["lead_h"].dropna()
+        row["n_lead_matched"] = int(len(lead))
+        row["lead_h_median"] = _f(lead.median(), 2) if len(lead) else None
+        row["share_led_mainstream"] = _f((lead > 0).mean(), 3) if len(lead) else None
+        firms.append(row)
+    ranked = [r for r in firms if r["recent_n_resolved_21d"] >= rank_min_n
+              and r["recent_hit_21d"] is not None]
+    ranked.sort(key=lambda r: (-r["recent_hit_21d"], r["source_id"]))
+    by_year_all = {str(int(y)): _hit_stats(gy) for y, gy in c.groupby("year")}
+    # persistence: does in-sample skill predict held-out skill across firms?
+    pers = [(r["skill_insample_21d"], r["skill_heldout_21d"]) for r in firms
+            if r["n_insample_21d"] >= weight_min_n and r["n_heldout_21d"] >= weight_min_n]
+    rho = None
+    if len(pers) >= 5:
+        a = np.array(pers, float)
+        rho = float(pd.Series(a[:, 0]).rank().corr(pd.Series(a[:, 1]).rank()))
+    clustered = assign_clusters(c)
+    base = c[c["direction"].notna()]
+    rbase = recent[recent["direction"].notna()]
+    return {"schema": "broker_scoreboard/v1", "generated_at": _now(),
+            "asof": str(today_ts.date()), "rank_window_since": str(since.date()),
+            "heldout_split_date": str(pd.Timestamp(split).date()),
+            "n_claims": int(len(c)), "n_directional": int(len(base)),
+            "n_firms": len(firms), "n_ranked": len(ranked),
+            "base_rate": {f"hit_{h}d": _f(base[f"hit_{h}d"].mean(), 4) for h in BROKER_HORIZONS},
+            "base_rate_recent": {f"hit_{h}d": _f(rbase[f"hit_{h}d"].mean(), 4) for h in BROKER_HORIZONS},
+            "persistence_insample_vs_heldout_spearman": _f(rho, 3) if rho is not None else None,
+            "n_firms_persistence": len(pers),
+            "n_weight_earned": sum(1 for r in firms if r["weight_status"] == "earned"),
+            "top": [r["source_id"] for r in ranked[:top_n]],
+            "bottom": [r["source_id"] for r in ranked[::-1][:top_n]],
+            "by_year": by_year_all,
+            "first_mover_pit": pit_first_vs_follower(c),
+            "first_mover": {str(h): first_mover_table(clustered, h=h) for h in BROKER_HORIZONS},
+            "first_mover_note": ("`first_mover` (clusters) conditions on >= 3 firms arriving, i.e. on "
+                                 "the FUTURE: descriptive only. `first_mover_pit` classes each claim by "
+                                 "what was knowable at its own time and is the tradable comparison."),
+            "first_mover_by_firm": firm_first_mover_rows(clustered, since=since),
+            "metrics": {
+                "hit_Nd": "share of directional claims whose name beat the universe-median N-session return (sign agreed with the claim), entry at the first close strictly after the revision date",
+                "rel_Nd_after_raise/lower": "mean name-minus-universe-median N-session return after a raise / a lower (unsigned)",
+                "skill_heldout_21d": "2*hit_21d - 1 on the firm's claims dated on/after heldout_split_date within the rank window",
+                "weight": f"max(0, skill_heldout_21d * n/(n+{shrink_k:.0f})) when held-out n >= {weight_min_n}; else prior",
+                "lead_h_median": f"hours from the revision to the first mainstream corpus item on the name within +/-{LEAD_WINDOW_H:.0f}h (positive = broker first); null where the corpus (from 2026-09-11) has nothing",
+                "caveat": "claims on the same name and day are NOT independent (a print draws 10 firms at once); hit rates are descriptive and the month-blocked first-mover SE is the only inferential number here"},
+            "firms": firms}
+
+
+def load_mainstream_pit(tickers: Iterable[str], *, corpus_dir: Path | None = None,
+                        registry: dict[str, Source] | None = None) -> pd.DataFrame:
+    """`load_mainstream_items`, minus archive backfill rows (published more than
+    ARCHIVE_GAP_DAYS before first seen -- adjudication row 12)."""
+    want = {str(t).upper() for t in tickers}
+    cdir = Path(corpus_dir) if corpus_dir else NEWS_CORPUS_DIR
+    rows = []
+    if not want or not cdir.exists():
+        return pd.DataFrame(columns=["ticker", "source_id", "t"])
+    for d in sorted(cdir.iterdir()):
+        if not d.is_dir() or d.name.startswith("_"):
+            continue
+        sid = corpus_source_id(d.name)
+        kind = (registry[sid].kind if registry and sid in registry else corpus_kind(d.name)[0])
+        if kind not in MAINSTREAM_KINDS:
+            continue
+        for f in sorted(d.glob("*.jsonl")):
+            with f.open(encoding="utf-8") as fh:
+                for line in fh:
+                    try:
+                        r = json.loads(line)
+                    except ValueError:
+                        continue
+                    tk = {str(x).upper() for x in (r.get("tickers") or [])} & want
+                    if not tk:
+                        continue
+                    pub, seen = parse_utc(r.get("published_utc")), parse_utc(r.get("first_seen_utc"))
+                    if pub is not None and seen is not None and (seen - pub) > timedelta(days=ARCHIVE_GAP_DAYS):
+                        continue
+                    ts = [x for x in (pub, seen) if x is not None]
+                    if not ts:
+                        continue
+                    for k in tk:
+                        rows.append({"ticker": k, "source_id": sid, "t": min(ts)})
+    return pd.DataFrame(rows, columns=["ticker", "source_id", "t"])
+
+
+def apply_broker_weights(reg: dict[str, Source], board: dict) -> tuple[dict[str, Source], dict]:
+    """Write each scored firm's weight into its registry entry. A firm with too
+    few held-out claims is set back to prior (None) -- never left at a stale number."""
+    out = dict(reg)
+    res = {"n_earned": 0, "n_prior": 0, "n_not_in_registry": 0}
+    for r in board.get("firms", []):
+        sid = r["source_id"]
+        if sid not in out:
+            res["n_not_in_registry"] += 1
+            continue
+        if r["weight_status"] == "earned":
+            out[sid] = replace(out[sid], weight=float(r["weight"]), weight_basis=(
+                f"broker_scoreboard {board['asof']}: held-out 21d hit skill "
+                f"{r['skill_heldout_21d']:+.4f} on n={r['n_heldout_21d']} (claims >= "
+                f"{board['heldout_split_date']}), shrunk n/(n+{BROKER_SHRINK_K:.0f}), floored at 0"))
+            res["n_earned"] += 1
+        else:
+            out[sid] = replace(out[sid], weight=None, weight_basis=f"prior: {r['weight_status']}")
+            res["n_prior"] += 1
+    return out, res
+
+
+def _p(v: Any, pct: bool = False) -> str:
+    if v is None:
+        return "-"
+    if isinstance(v, str):
+        return v
+    return f"{100 * v:+.2f}%" if pct else f"{v:.3f}"
+
+
+def render_broker_markdown(board: dict, *, day: str) -> str:
+    firms = {r["source_id"]: r for r in board["firms"]}
+    L = [f"## Brokerages -- scored from `target_revisions.parquet` ({day})", "",
+         f"{board['n_claims']:,} claims ({board['n_directional']:,} directional) from "
+         f"{board['n_firms']} firms. Outcome = the name's return minus the universe-median "
+         f"return from the first close after the revision (survivorship-free panel). "
+         f"Base hit rate: 5d {_p(board['base_rate']['hit_5d'])}, 21d "
+         f"{_p(board['base_rate']['hit_21d'])} (last {BROKER_RANK_YEARS}y: "
+         f"{_p(board['base_rate_recent']['hit_21d'])}). Held-out split "
+         f"{board['heldout_split_date']}; persistence of firm skill (Spearman, in-sample vs "
+         f"held-out, {board['n_firms_persistence']} firms): "
+         f"{_p(board['persistence_insample_vs_heldout_spearman'])}. "
+         f"{board['n_weight_earned']} firms earned a registry weight.", "",
+         f"**Caveat:** {board['metrics']['caveat']}.", ""]
+
+    def table(ids: list[str], title: str) -> None:
+        L.extend([f"### {title} (n >= {BROKER_RANK_MIN_N} resolved 21d claims since "
+                  f"{board['rank_window_since']})", "",
+                  "| firm | n21 | hit 21d | hit 5d | 21d after raise | 21d after lower | held-out skill (n) | weight | by year (hit21, n) |",
+                  "|---|---:|---:|---:|---:|---:|---:|---:|---|"])
+        for sid in ids:
+            r = firms[sid]
+            yrs = ", ".join(f"{y}: {_p(v['hit_21d'])} ({v['n']})" for y, v in r["by_year"].items()
+                            if int(y) >= int(board["rank_window_since"][:4]) and v["n"])
+            L.append(f"| {r['firm']} | {r['recent_n_resolved_21d']} | {_p(r['recent_hit_21d'])} | "
+                     f"{_p(r['recent_hit_5d'])} | {_p(r['recent_rel_21d_after_raise'], True)} | "
+                     f"{_p(r['recent_rel_21d_after_lower'], True)} | "
+                     f"{_p(r['skill_heldout_21d'])} ({r['n_heldout_21d']}) | {_p(r['weight'])} | {yrs} |")
+        L.append("")
+
+    table(board["top"], "Top 20 by 21d hit rate")
+    table(board["bottom"], "Bottom 20 by 21d hit rate")
+    L += ["### All firms by year", "",
+          "| year | claims | directional | hit 5d | hit 21d | 21d after raise | 21d after lower |",
+          "|---|---:|---:|---:|---:|---:|---:|"]
+    for y, v in board["by_year"].items():
+        L.append(f"| {y} | {v['n_claims']:,} | {v['n_directional']:,} | {_p(v['hit_5d'])} | "
+                 f"{_p(v['hit_21d'])} | {_p(v['rel_21d_after_raise'], True)} | "
+                 f"{_p(v['rel_21d_after_lower'], True)} |")
+    pit = board.get("first_mover_pit") or {}
+    L += ["", f"### First mover vs follower, point-in-time (other firms moving the name the "
+          f"same way in the prior {pit.get('window_days', BROKER_CLUSTER_DAYS)} days, knowable at t)", "",
+          "| horizon | first: mean signed (hit, n) | second | third+ | first - third+ (month-block SE, t, blocks) | LOYO worst |",
+          "|---|---|---|---|---|---:|"]
+    for h in BROKER_HORIZONS:
+        r = pit.get(str(h)) or {}
+        bc = r.get("by_class") or {}
+        cell = lambda g: (f"{_p((bc.get(g) or {}).get('mean_signed'), True)} "
+                          f"({_p((bc.get(g) or {}).get('hit'))}, {(bc.get(g) or {}).get('n', 0):,})")
+        d = r.get("first_minus_third_plus") or {}
+        L.append(f"| {h}d | {cell('first')} | {cell('second')} | {cell('third_plus')} | "
+                 f"{_p(d.get('mean'), True)} ({_p(d.get('se_block'), True)}, t {d.get('t_block')}, "
+                 f"{d.get('n_blocks')}) | {_p(r.get('leave_one_year_out_worst'), True)} |")
+    if pit.get("21", {}).get("by_year"):
+        L.append("")
+        L.append("21d first - third+ by year: " + ", ".join(
+            f"{y}: {_p(v, True)}" for y, v in pit["21"]["by_year"].items()))
+    L += ["", f"### First mover vs follower, clusters (>= {BROKER_CLUSTER_MIN_FIRMS} firms, "
+          f"same name and direction, within {BROKER_CLUSTER_DAYS} days) -- LOOK-AHEAD, descriptive", "",
+          "A cluster is only known once its followers arrive, so 'the first firm of a cluster' "
+          "is selected on the future. Read this as where in a cascade the return accrues, "
+          "not as a signal.", ""]
+    for h, fm in board["first_mover"].items():
+        if not fm.get("n_clusters"):
+            continue
+        a, s = fm["first_minus_last_all"], fm["first_minus_last_staggered"]
+        L.append(f"- **{h}d**: {fm['n_clusters']:,} clusters; {_p(fm['share_same_session'])} have "
+                 f"first and last entering on the same session. All: first "
+                 f"{_p(fm['first_mean_signed'], True)} vs last {_p(fm['last_mean_signed'], True)}, "
+                 f"diff {_p(a['block_mean'], True)} (month-block SE {_p(a['se_block'], True)}, "
+                 f"t {a['t_block']}, {a['n_blocks']} blocks). Staggered only ({fm['n_staggered']:,}): "
+                 f"first {_p(fm['staggered_first_mean_signed'], True)} vs last "
+                 f"{_p(fm['staggered_last_mean_signed'], True)}, diff {_p(s['block_mean'], True)} "
+                 f"(SE {_p(s['se_block'], True)}, t {s['t_block']}); leave-one-year-out worst "
+                 f"{_p(fm['staggered_leave_one_year_out_worst'], True)}.")
+        L.append("  - by rank: " + ", ".join(
+            f"#{k}: {_p(v['mean_signed'], True)} (hit {_p(v['hit'])}, n {v['n']:,})"
+            for k, v in fm["by_rank"].items()))
+        L.append("  - staggered diff by year: " + ", ".join(
+            f"{y}: {_p(v['mean_diff'], True)} ({v['n']})" for y, v in fm["staggered_by_year"].items()))
+    fb = board.get("first_mover_by_firm") or []
+    if fb:
+        L += ["", f"#### Firms most often first (>= 30 cluster claims since {board['rank_window_since']})", "",
+              "| firm | cluster claims | share first | mean rank pct | 21d signed when first | when follower |",
+              "|---|---:|---:|---:|---:|---:|"]
+        for r in fb[:15]:
+            L.append(f"| {r['firm']} | {r['n_cluster_claims']} | {_p(r['share_first'])} | "
+                     f"{_p(r['mean_rank_pct'])} | {_p(r['signed_when_first'], True)} | "
+                     f"{_p(r['signed_when_follower'], True)} |")
+    lead = [r for r in board["firms"] if r["n_lead_matched"]]
+    L += ["", f"Lead time vs the corpus's first mainstream item: {len(lead)} firms have "
+          f"at least one matched claim (the corpus starts 2026-09-11); the rest are null, "
+          f"not zero. Per-firm values are in the JSON receipt.", ""]
+    return "\n".join(L) + "\n"
