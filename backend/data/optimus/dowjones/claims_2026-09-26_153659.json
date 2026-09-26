@@ -1,0 +1,15 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-09-26",
+ "started_utc": "2026-09-26T15:36:55+00:00",
+ "purpose": "dowjones_claims",
+ "cap_usd": 0.3,
+ "spent_usd": 0.0,
+ "n_llm_calls": 0,
+ "stopped": null,
+ "n_articles": 0,
+ "n_claims": 0,
+ "forecast_rows_by_source_id": {},
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": []
+}
