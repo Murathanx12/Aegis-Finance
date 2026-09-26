@@ -25,6 +25,7 @@ So every row this module accepts carries, or is REFUSED:
     claim              what the source actually said, quoted or close to it
     retrieved_by       openclaw:<profile>, so a bad profile is traceable
     confidence_source  DIRECT_COMPANY_STATEMENT .. AGGREGATOR .. FORUM_CLAIM
+    source_id          optional: the source registry id of the speaker
 
 `observed_at` and `evidence_date` are separate fields on purpose. A filing dated
 last Tuesday that we only read today is not evidence we had last Tuesday, and
@@ -74,7 +75,16 @@ EVENT_TYPES: frozenset[str] = frozenset({
     "attention_spike", "forum_disagreement",
     # the honest ones
     "no_event_found", "contradiction",
+    # a dated, sourced statement no typed row fits (adjudication 2026-09-26
+    # row 9): F's thesis cards wrote 26 claims and 20 lived only in the claims
+    # ledger. Still closed-vocabulary -- the TEXT is free, the type is not --
+    # and still countable per source, which is what source reliability grades.
+    "claim",
 })
+
+#: Every source type may carry a generic `claim`: what makes a claim evidence
+#: is its date, URL and source, not which typed bucket it fits.
+GENERIC_TYPES: tuple[str, ...] = ("claim",)
 
 #: How much weight the SOURCE deserves before any model reads it.
 CONFIDENCE_SOURCES: tuple[str, ...] = (
@@ -152,7 +162,7 @@ def validate(row: dict) -> dict:
     st = str(row["source_type"])
     if st not in SOURCE_REGISTRY:
         raise WebEventRefused(f"REFUSED: source_type {st!r} is not in the registry")
-    if et not in SOURCE_REGISTRY[st]["types"]:
+    if et not in SOURCE_REGISTRY[st]["types"] and et not in GENERIC_TYPES:
         raise WebEventRefused(
             f"REFUSED: {st!r} may not carry event_type {et!r}. A forum cannot "
             f"file an 8-K, and a filing is not an attention spike.")
@@ -200,6 +210,10 @@ def validate(row: dict) -> dict:
         "horizon_prior": row.get("horizon_prior") or None,
         "confidence_source": cs,
         "retrieved_by": row.get("retrieved_by") or "openclaw:unknown",
+        # optional (2026-09-26): the source registry's id for WHO said it, so a
+        # claim can be graded against its speaker. Not part of `event_id`: the
+        # same statement read via two sources is one event.
+        "source_id": (str(row["source_id"]) if row.get("source_id") else None),
     }
     if out["evidence_date"] > out["observed_at"][:10]:
         raise WebEventRefused(

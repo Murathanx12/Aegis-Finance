@@ -851,3 +851,83 @@ def test_a_dividend_date_is_not_a_catalyst():
     assert TC.trig_catalyst(ASOF, [f"{a + timedelta(days=2)} | dividend | Q3"]) is None
     assert TC.trig_catalyst(ASOF, [f"{a + timedelta(days=2)} | webcast_replay_expiry | x"]) is None
     assert TC.trig_catalyst(ASOF, [f"{a + timedelta(days=2)} | earnings | Q3"]).startswith("(c)")
+
+
+# ── post-review fixes 2026-09-26 (adjudication rows 9) ──────────────────────
+def _books_file(tmp_path):
+    rows = [
+        {"name": "personal_x", "kind": "personal", "model": "deepseek-flash",
+         "frozen_utc": "2026-09-20T00:00:00+00:00", "positions": [{"ticker": "PPP"}]},
+        {"name": "comp_x", "kind": "competition", "model": "deepseek-flash",
+         "frozen_utc": "2026-09-20T00:00:00+00:00", "positions": [{"ticker": "CCC"}]},
+        {"name": "lib_mom_12_1_q_2026-09-26", "kind": "personal",
+         "model": "rule:strategy_library:mom_12_1_q",
+         "frozen_utc": "2026-09-26T00:00:00+00:00", "positions": [{"ticker": "LLL"}]},
+        {"name": "lib_other", "kind": "personal", "model": "rule:strategy_library:x",
+         "frozen_utc": "2026-09-26T00:00:00+00:00", "positions": [{"ticker": "PPP"}]},
+    ]
+    p = tmp_path / "books.jsonl"
+    p.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+    return p
+
+
+def test_trigger_a_reads_personal_and_competition_books_not_the_library(tmp_path):
+    from scripts import thesis_cards as S
+    p = _books_file(tmp_path)
+    m = S.book_members(p)
+    assert set(m) == {"PPP", "CCC"}
+    assert m["PPP"][1] == "book:personal_x"          # a library book never sets entry
+    m = S.book_members(p, include_library=True)
+    assert set(m) == {"PPP", "CCC", "LLL"}
+
+
+def test_the_cli_opts_the_library_in(monkeypatch):
+    from scripts import thesis_cards as S
+    seen = {}
+
+    def fake_trigger_list(day, **kw):
+        seen.update(kw)
+        return {"triggered": []}
+    monkeypatch.setattr(S, "trigger_list", fake_trigger_list)
+    assert S.main(["run", "--trigger", "--dry-run", "--date", ASOF]) == 0
+    assert seen.get("include_library") is False
+    assert S.main(["run", "--trigger", "--dry-run", "--include-library", "--date", ASOF]) == 0
+    assert seen.get("include_library") is True
+
+
+def test_untyped_claims_backfill_into_web_events_as_generic_claims(tmp_path):
+    from scripts import thesis_cards as S
+    cf = tmp_path / "claims.jsonl"
+    ev = tmp_path / "events.jsonl"
+    base = {"schema": "claim/v1", "ticker": "MU", "card_asof": ASOF,
+            "first_seen_utc": f"{ASOF}T03:00:00+00:00", "claim_utc": "2026-09-24"}
+    rows = [
+        {**base, "claim_id": "c1", "event_type": "claim", "source_id": "openclaw:trendforce.com",
+         "source_url": "https://www.trendforce.com/price/dram", "text": "DDR5 spot +4%",
+         "web_event_refused": "no web_events type fits event_type 'claim'"},
+        {**base, "claim_id": "c2", "event_type": "earnings_report", "source_id": "openclaw:sec.gov",
+         "source_url": "https://www.sec.gov/Archives/x", "text": "FQ4 revenue $9.3B",
+         "web_event_refused": "web_events source_type 'sec' may not carry 'earnings_release'"},
+        {**base, "claim_id": "c3", "event_type": "claim", "source_id": "openclaw:@microntech",
+         "source_url": "https://x.com/MicronTech/status/1", "text": "HBM4 sampling",
+         "web_event_refused": "no web_events type fits event_type 'claim'"},
+        {**base, "claim_id": "c4", "event_type": "analyst_target_change", "source_id": "openclaw:x",
+         "source_url": "https://www.reuters.com/x", "text": "PT raised",
+         "web_event_refused": None},                          # already typed: not touched
+        {**base, "claim_id": "c5", "card_asof": "2026-09-01",
+         "first_seen_utc": "2026-09-01T00:00:00+00:00", "event_type": "claim",
+         "source_id": "openclaw:y", "source_url": "https://y.com/x", "text": "old",
+         "claim_utc": "2026-08-30", "web_event_refused": "no type"},   # another day
+    ]
+    cf.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+    res = S.backfill_claim_events(ASOF, claims_file=cf, events_path=ev)
+    assert res["n_candidates"] == 3 and res["web_events"]["written"] == 3
+    got = [json.loads(x) for x in ev.read_text(encoding="utf-8").splitlines()]
+    assert {e["event_type"] for e in got} == {"claim"}
+    assert {e["source_id"] for e in got} == {"openclaw:trendforce.com", "openclaw:sec.gov",
+                                            "openclaw:@microntech"}
+    st = {e["source_id"]: e["source_type"] for e in got}
+    assert st["openclaw:sec.gov"] == "sec" and st["openclaw:@microntech"] == "x"
+    assert all(e["evidence_date"] == "2026-09-24" for e in got)
+    again = S.backfill_claim_events(ASOF, claims_file=cf, events_path=ev)
+    assert again["web_events"]["written"] == 0                     # idempotent

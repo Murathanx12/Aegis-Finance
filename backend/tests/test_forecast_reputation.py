@@ -249,3 +249,64 @@ def test_refit_says_when_k_prior_is_not_identified(tmp_path):
     r = fr.refit(p, today=date.today().isoformat(), out_dir=tmp_path / "rep")
     assert r["tuned"]["identified"]["k_prior"] is False
     assert r["tuned"]["k_prior"] == 300.0     # tie-break: nearest DEFAULTS, not the data
+
+
+# ── the free vol prior (review 2026-09-26 H+I §2.1) ─────────────────────────
+def _vol_world(n_days: int = 8, per_day: int = 40, seed: int = 7):
+    """Tickers with known, very different vols; outcomes drawn from the true
+    vol; an LLM that says a flat 0.5 on every magnitude question."""
+    from scipy.stats import norm
+    rng = np.random.default_rng(seed)
+    vols = {f"T{i}": 0.005 + 0.004 * i for i in range(per_day)}
+    days = pd.bdate_range("2025-01-02", periods=200 + n_days)
+    bars = []
+    for t, s in vols.items():
+        px = 100 * np.exp(np.cumsum(rng.normal(0, s, len(days))))
+        bars += [{"symbol": t, "date": d, "close": c} for d, c in zip(days, px)]
+    bars = pd.DataFrame(bars)
+    rows = []
+    for d in days[200:]:
+        for t, s in vols.items():
+            thr = 0.02
+            p_true = 2 * (1 - norm.cdf(thr / s))
+            rows.append({"specialist": "investigator:X", "ticker": t,
+                         "observable": "abs_move_exceeds", "horizon_days": 1,
+                         "threshold": thr, "probability": 0.5, "prior": 0.5,
+                         "outcome": int(rng.random() < p_true),
+                         "made_at": f"{d.date()}T11:00:00+00:00"})
+    return fr.graded_frame_from_rows(rows), bars
+
+
+def test_vol_prior_beats_a_flat_llm_on_the_same_heldout_rows():
+    g, bars = _vol_world()
+    r = fr.vol_prior_skill(g, horizon=1, bars=bars)
+    assert r["status"] == "OK"
+    assert r["n_heldout"] == r["n_rows"] - r["n_rows"] // 2   # every held-out row had a sigma
+    assert r["skill_prior"] > 0.2 > r["skill_llm"]
+    assert r["winner"] == "prior"
+    assert r["days_prior_wins"] == r["n_days"] == 8
+    assert r["skill_llm_own_prior"] == pytest.approx(r["skill_llm"])
+
+
+def test_vol_prior_never_reads_the_made_days_own_bar():
+    g, bars = _vol_world(n_days=2)
+    base = fr._trailing_sigma(g, bars)
+    made = pd.to_datetime(g["made_at"]).dt.tz_localize(None).dt.normalize()
+    spike = bars.copy()
+    hit = spike["date"].isin(set(made))
+    spike.loc[hit, "close"] = spike.loc[hit, "close"] * 50      # a crash ON the made day
+    after = fr._trailing_sigma(g, spike)
+    # the first made day's sigma is untouched (its own bar is excluded)
+    first = made == made.min()
+    assert np.allclose(base[first], after[first])
+
+
+def test_vol_prior_refuses_direction_and_a_missing_sigma_source():
+    g, bars = _vol_world(n_days=2)
+    assert fr.vol_prior_skill(g, observable="beats_benchmark", horizon=1,
+                              bars=bars)["status"] == "REFUSED"
+    r = fr.vol_prior_skill(g, horizon=1)
+    assert r["status"] == "REFUSED" and "sigma" in r["reason"]
+    # short history -> no sigma -> refused, never scored on a guess
+    r = fr.vol_prior_skill(g, horizon=1, bars=bars[bars["date"] > bars["date"].max() - pd.Timedelta(days=20)])
+    assert r["status"] == "REFUSED"

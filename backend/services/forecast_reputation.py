@@ -130,10 +130,13 @@ def graded_frame_from_rows(rows: Iterable[dict]) -> pd.DataFrame:
             "ticker": r.get("ticker"), "threshold": str(r.get("threshold")),
             "benchmark": str(r.get("benchmark")),
             "ret": _num(det.get("realised_return")), "rel_ret": _num(rel),
+            # the LLM's OWN stated prior (investigator rows carry one; NaN
+            # elsewhere) -- `vol_prior_skill` scores it beside the posterior.
+            "prior": _num(r.get("prior")),
         })
     g = pd.DataFrame(out, columns=["arm", "p", "y", "made_at", "resolves_after",
                                    "horizon_days", "observable", "ticker",
-                                   "threshold", "benchmark", "ret", "rel_ret"])
+                                   "threshold", "benchmark", "ret", "rel_ret", "prior"])
     g["made_at"] = pd.to_datetime(g["made_at"], utc=True, errors="coerce",
                                   format="ISO8601")
     g["made_day"] = g["made_at"].dt.strftime("%Y-%m-%d")
@@ -301,6 +304,157 @@ def pool(ps: dict[str, float], w: pd.Series, *, kappa: float) -> float | None:
     if den <= 0:
         return None
     return float(_sigmoid(kappa * num / den))
+
+
+# ── the free baseline: a trailing-vol prior on magnitude questions ──────────
+#: Review 2026-09-26 (H+I §2.1, adjudication row 3): on the investigator's OWN
+#: `abs_move_exceeds` questions, p = 2(1 - Phi(thr / (sigma_63 sqrt h))) -- a
+#: $0 formula -- scored +10.2% held out at h=1 against the LLM posterior's
+#: +5.7%, and won 7 of 8 days. Climatology is a bar a spreadsheet clears; this
+#: is the bar an LLM magnitude forecast has to clear before anything may say it
+#: "works".
+VOL_PRIOR_WINDOW = 63
+VOL_PRIOR_MIN_OBS = 42
+
+
+def _trailing_sigma(graded: pd.DataFrame, bars: pd.DataFrame, *,
+                    window: int = VOL_PRIOR_WINDOW,
+                    min_obs: int = VOL_PRIOR_MIN_OBS) -> pd.Series:
+    """sigma of daily log returns over the `window` sessions STRICTLY BEFORE
+    each row's made day (a bar dated on the made day is not known to a
+    pre-open forecast). Index aligned to `graded`; NaN where history is short."""
+    need = graded[["ticker", "made_at"]].copy()
+    need["ticker"] = need["ticker"].astype(str).str.upper()
+    need["_d"] = (pd.to_datetime(need["made_at"], utc=True, errors="coerce")
+                  .dt.tz_localize(None).dt.normalize())
+    b = bars[["symbol", "date", "close"]].copy()
+    b["symbol"] = b["symbol"].astype(str).str.upper()
+    b = b[b["symbol"].isin(set(need["ticker"]))]
+    d = pd.to_datetime(b["date"], errors="coerce")
+    if getattr(d.dt, "tz", None) is not None:
+        d = d.dt.tz_localize(None)
+    b["date"] = d.dt.normalize()
+    b = b.dropna(subset=["date", "close"])
+    b = b[b["close"] > 0].sort_values(["symbol", "date"], kind="stable")
+    b["lr"] = np.log(b["close"]).groupby(b["symbol"]).diff()
+    b["sig"] = (b.groupby("symbol")["lr"]
+                .transform(lambda x: x.rolling(window, min_periods=min_obs).std()))
+    # a bar's sigma is usable from the NEXT calendar day on, so the asof match
+    # on the made day never sees the made day's own bar.
+    b["_d"] = b["date"] + pd.Timedelta(days=1)
+    out = pd.Series(np.nan, index=graded.index, dtype=float)
+    left = need[need["_d"].notna()].reset_index().sort_values("_d", kind="stable")
+    right = (b.dropna(subset=["sig"])[["symbol", "_d", "sig"]]
+             .sort_values("_d", kind="stable"))
+    if left.empty or right.empty:
+        return out
+    m = pd.merge_asof(left, right, on="_d", left_by="ticker", right_by="symbol",
+                      direction="backward")
+    out.loc[m["index"].to_numpy()] = m["sig"].to_numpy(float)
+    return out
+
+
+def _abs_move_p(thr: np.ndarray, sigma: np.ndarray, h: float) -> np.ndarray:
+    from scipy.special import erfc
+    z = thr / (sigma * math.sqrt(max(float(h), 1e-9)))
+    return erfc(z / math.sqrt(2.0))           # = 2 (1 - Phi(z))
+
+
+def vol_prior_skill(graded: pd.DataFrame, *, observable: str = MAGNITUDE_OBSERVABLE,
+                    horizon: int, bars: pd.DataFrame | None = None,
+                    arm: str | None = None, arm_prefix: str = "investigator:",
+                    window: int = VOL_PRIOR_WINDOW) -> dict:
+    """The LLM posterior vs a $0 trailing-vol prior, row for row, held out.
+
+    Rows: `observable` at `horizon`, arm == `arm` (else every arm starting with
+    `arm_prefix`), pooled and sorted by `made_at`; the later half is held out
+    (the reviewer's split). Both forecasts are scored on the SAME held-out rows
+    -- those with a trailing sigma -- against the TRAINING-half base rate, so
+    the choice of climatology cannot change which one wins.
+
+    p_prior = 2 (1 - Phi(thr / (sigma_63 sqrt h))), sigma from `bars` (symbol,
+    date, close) or from a `sigma63` column already on `graded`.
+    `days_prior_wins` counts made-days (all of them) where the formula's Brier
+    beats the posterior's. `skill_llm_own_prior` scores the row's stated
+    `prior` when every held-out row carries one.
+
+    `status` is REFUSED (with `reason`) for a non-magnitude observable, no sigma
+    source, or no held-out row with a sigma. `winner` is "prior" when the
+    formula's skill >= the LLM's: a tie goes to the $0 forecaster.
+    """
+    base = {"observable": observable, "horizon": int(horizon),
+            "arm": arm or f"{arm_prefix}*", "window": window,
+            "formula": "p = 2(1 - Phi(thr / (sigma_63 * sqrt(h))))",
+            "split": ("pooled rows, later half by made_at held out; "
+                      "climatology = training-half base rate")}
+    if observable != MAGNITUDE_OBSERVABLE:
+        return {**base, "status": "REFUSED",
+                "reason": (f"the vol prior forecasts |move| > thr; {observable!r} "
+                           f"is not a magnitude question")}
+    g = graded[(graded["observable"].astype(str) == observable)
+               & (pd.to_numeric(graded["horizon_days"], errors="coerce") == horizon)]
+    g = (g[g["arm"].astype(str) == arm] if arm
+         else g[g["arm"].astype(str).str.startswith(arm_prefix)])
+    if g.empty:
+        return {**base, "status": "REFUSED", "reason": "no graded rows for this cell",
+                "n_rows": 0}
+    if "sigma63" in g.columns:
+        sig = pd.to_numeric(g["sigma63"], errors="coerce")
+    elif bars is not None:
+        sig = _trailing_sigma(g, bars, window=window)
+    else:
+        return {**base, "status": "REFUSED", "n_rows": int(len(g)),
+                "reason": "no sigma source: pass bars or a sigma63 column"}
+    g = g.assign(_sig=sig.to_numpy(float),
+                 _thr=pd.to_numeric(g["threshold"], errors="coerce").to_numpy(float),
+                 _t=pd.to_datetime(g["made_at"], utc=True, errors="coerce"))
+    g = g.sort_values("_t", kind="stable")
+    n = len(g)
+    s_, t_ = g["_sig"].to_numpy(float), g["_thr"].to_numpy(float)
+    have = np.isfinite(s_) & np.isfinite(t_) & (s_ > 0)
+    pv = np.full(n, np.nan)
+    if have.any():
+        pv[have] = _abs_move_p(t_[have], s_[have], horizon)
+    g = g.assign(_pv=pv)
+    train, test = g.iloc[: n // 2], g.iloc[n // 2:]
+    tt = test[np.isfinite(test["_pv"].to_numpy())]
+    if train.empty or tt.empty:
+        return {**base, "status": "REFUSED", "n_rows": n,
+                "reason": ("too few rows to split" if train.empty
+                           else "no held-out row has a trailing sigma")}
+    b = float(train["y"].mean())
+    y = tt["y"].to_numpy(float)
+    clim = float(np.mean((b - y) ** 2))
+
+    def _sk(p: np.ndarray) -> float | None:
+        return _f(1.0 - float(np.mean((p - y) ** 2)) / clim) if clim > 0 else None
+
+    llm = _sk(tt["p"].to_numpy(float))
+    pri = _sk(tt["_pv"].to_numpy(float))
+    own = None
+    if "prior" in tt.columns:
+        op = pd.to_numeric(tt["prior"], errors="coerce").to_numpy(float)
+        if np.isfinite(op).all():
+            own = _sk(op)
+    days = []
+    gg = g[np.isfinite(g["_pv"].to_numpy())]
+    for d, sub in gg.groupby(gg["_t"].dt.strftime("%Y-%m-%d"), sort=True):
+        yy = sub["y"].to_numpy(float)
+        bl = float(np.mean((sub["p"].to_numpy(float) - yy) ** 2))
+        bp = float(np.mean((sub["_pv"].to_numpy(float) - yy) ** 2))
+        days.append({"day": d, "n": int(len(sub)), "brier_llm": bl, "brier_prior": bp,
+                     "prior_wins": bool(bp < bl)})
+    winner = None if llm is None or pri is None else ("prior" if pri >= llm else "llm")
+    return {**base, "status": "OK", "n_rows": n, "n_heldout": int(len(tt)),
+            "n_heldout_no_sigma": int(len(test) - len(tt)),
+            "heldout_from": str(tt["_t"].min())[:10], "heldout_to": str(tt["_t"].max())[:10],
+            "climatology_base_rate": b,
+            "skill_llm": llm, "skill_prior": pri, "skill_llm_own_prior": own,
+            "winner": winner,
+            "days_prior_wins": int(sum(x["prior_wins"] for x in days)),
+            "n_days": len(days), "by_day": days,
+            "p_spread_llm": _f(tt["p"].std(ddof=0)),
+            "p_spread_prior": _f(tt["_pv"].std(ddof=0))}
 
 
 # ── calibration ──────────────────────────────────────────────────────────────

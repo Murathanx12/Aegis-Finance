@@ -12,7 +12,9 @@ DeepSeek synthesis per ticker.
     python -m scripts.thesis_cards run --trigger --max-quests 5   # re-card them (daily cap binds)
 
 TRIGGERS (`--trigger`, 2026-09-26): a name is re-carded when (a) it entered a
-frozen book or the funnel shortlist after its last card, (b) >= 3 firms revised
+personal / competition frozen book or the funnel shortlist after its last card
+(strategy-library `lib_*` books are excluded: 190 rule-picked names would eat
+the quest cap; `--include-library` opts them in), (b) >= 3 firms revised
 it in 10 days, (c) an earnings / catalyst date is within 5 sessions, (d) its
 |1d move| > 2 sigma_63 with no typed event, or (e) its card is > 30 days old.
 The reason is written on the card (`trigger`). Every non-refused card also
@@ -542,6 +544,8 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
                     try:
                         res["evidence"][t] = TC.write_evidence(
                             card, events_path=events_path, claims_file=claims_file)
+                        res["evidence"][t]["untyped_claims"] = backfill_claim_events(
+                            day, claims_file=claims_file, events_path=events_path)["web_events"]
                     except Exception as exc:                       # noqa: BLE001
                         res.setdefault("evidence_errors", []).append(
                             {"ticker": t, "error": f"{type(exc).__name__}: {str(exc)[:200]}"})
@@ -614,9 +618,20 @@ FUNNEL = REPO / "backend" / "data" / "funnel_night10.json"
 FUNNEL_HISTORY = REPO / "backend" / "data" / "funnel_history"
 
 
-def book_members(path: Path = BOOKS) -> dict[str, tuple[str, str]]:
+def is_library_book(b: dict) -> bool:
+    """A strategy-library rule book (`lib_*`, model `rule:strategy_library:*`)."""
+    return (str(b.get("name") or "").startswith("lib_")
+            or str(b.get("model") or "").startswith("rule:strategy_library:"))
+
+
+def book_members(path: Path = BOOKS, *, include_library: bool = False
+                 ) -> dict[str, tuple[str, str]]:
     """ticker -> (first frozen_utc, "book:<name>") over every NON-twin frozen
-    book. A twin is a control, not a chosen name."""
+    book. A twin is a control, not a chosen name.
+
+    Trigger (a) is for names a PERSON or the competition chose: the strategy
+    library's rule books (adjudication 2026-09-26 row 9: 190 names that would
+    eat the daily quest cap) are left out unless `include_library`."""
     out: dict[str, tuple[str, str]] = {}
     if not Path(path).exists():
         return out
@@ -629,6 +644,8 @@ def book_members(path: Path = BOOKS) -> dict[str, tuple[str, str]]:
         # `kind` says personal but whose name or parent says twin.
         if (b.get("kind") == "twin" or b.get("twin") or b.get("parent_book_id")
                 or "twin" in str(b.get("name") or "").lower() or not b.get("frozen_utc")):
+            continue
+        if not include_library and is_library_book(b):
             continue
         for pos in b.get("positions") or []:
             t = str((pos or {}).get("ticker") or "").upper()
@@ -714,12 +731,14 @@ def _typed_event_dates(asof: date, tickers: set[str], revisions) -> dict[str, se
     return out
 
 
-def trigger_list(asof: Any, *, root: Path | None = None, verbose: bool = True) -> dict:
-    """Load what the five triggers read and return {"triggered": [...], ...}."""
+def trigger_list(asof: Any, *, root: Path | None = None, verbose: bool = True,
+                 include_library: bool = False) -> dict:
+    """Load what the five triggers read and return {"triggered": [...], ...}.
+    Trigger (a) reads personal/competition books only unless `include_library`."""
     import pandas as pd
     asof_d = TC._asof_date(asof)
     uni = {u["ticker"]: u for u in default_universe()}
-    books = book_members()
+    books = book_members(include_library=include_library)
     funnel = funnel_members()
     last = TC.last_card_index(root=root)
     member_since: dict[str, tuple[str, str]] = {}
@@ -778,6 +797,7 @@ def trigger_list(asof: Any, *, root: Path | None = None, verbose: bool = True) -
         x["source"] = "trigger"
     res = {"asof": asof_d.isoformat(), "n_candidates": len(cands),
            "n_books_names": len(books), "n_funnel_names": len(funnel),
+           "library_books": "included" if include_library else "excluded (--include-library)",
            "n_carded_names": len(last), "n_triggered": len(trig), "triggered": trig,
            "bars_names": 0 if bars is None else int(bars["symbol"].nunique()),
            "n_revision_cluster_names": sum(1 for v in n_firms.values()
@@ -809,8 +829,70 @@ def trigger_list(asof: Any, *, root: Path | None = None, verbose: bool = True) -
     return res
 
 
+def _claim_source_type(url: str) -> str:
+    dom = TC._domain(url)
+    if dom in ("x.com", "twitter.com"):
+        return "x"
+    if dom.endswith("sec.gov"):
+        return "sec"
+    return "news"
+
+
+def _claim_confidence(st: str, url: str, source_list: str | None) -> str:
+    dom = TC._domain(url)
+    if st == "sec":
+        return "REGULATOR"
+    if source_list in ("x_company_posts", "x_ceo_posts"):
+        return "DIRECT_COMPANY_STATEMENT"
+    if st == "x":
+        return "FORUM_CLAIM"
+    if any(w in dom for w in getattr(TC, "_WIRES", ())):
+        return "MAJOR_WIRE"
+    return "AGGREGATOR"
+
+
+def backfill_claim_events(day: str, *, claims_file: Path | None = None,
+                          events_path: Path | None = None) -> dict:
+    """Claims-ledger rows of `day` that got NO web_events row -> a generic
+    `claim` web event carrying `source_id` (adjudication 2026-09-26 row 9).
+
+    A row belongs to `day` by its card's `card_asof` or its `first_seen_utc`.
+    Only rows with `web_event_refused` are read, so a claim that already has a
+    typed event is never duplicated as a generic one. Idempotent: web_events
+    dedupes by event_id. The claims ledger is append-only and is not edited."""
+    cf = Path(claims_file) if claims_file is not None else TC.claims_path()
+    rows = [r for r in TC._read_jsonl(cf)
+            if r.get("web_event_refused")
+            and (str(r.get("card_asof") or "")[:10] == day
+                 or str(r.get("first_seen_utc") or "")[:10] == day)]
+    by_day: dict[str, list[dict]] = {}
+    for r in rows:
+        url = str(r.get("source_url") or "")
+        st = _claim_source_type(url)
+        seen = str(r.get("first_seen_utc") or f"{day}T00:00:00+00:00")
+        by_day.setdefault(seen[:10], []).append({
+            "ticker": r.get("ticker"), "entity": r.get("source_id") or "",
+            "source_type": st, "source_url": url, "event_type": "claim",
+            "claim": r.get("text"), "evidence_date": r.get("claim_utc"),
+            "observed_at": seen, "retrieved_by": r.get("source_id") or "openclaw:unknown",
+            "source_id": r.get("source_id"),
+            "confidence_source": _claim_confidence(st, url, r.get("list"))})
+    tot = {"accepted": 0, "written": 0, "duplicates": 0, "refused": 0, "refusals": []}
+    for d, wrows in sorted(by_day.items()):
+        if events_path is None:
+            from backend.services import web_events as WE
+            res = WE.append(wrows, day=d)
+        else:
+            res = TC._local_web_events_append(wrows, Path(events_path))
+        for k in ("accepted", "written", "duplicates", "refused"):
+            tot[k] += int(res.get(k) or 0)
+        tot["refusals"] += res.get("refusals") or []
+    return {"day": day, "claims_path": str(cf), "n_candidates": len(rows), "web_events": tot}
+
+
 def evidence(day: str, *, root: Path | None = None) -> dict:
-    """Backfill: a day's cards -> claims + web_events + promises. $0, no LLM."""
+    """Backfill: a day's cards -> claims + web_events + promises. $0, no LLM.
+    Untyped claims then become generic `claim` web events (`backfill_claim_events`)."""
     out = {"day": day, "evidence": {}, "promises": {}}
     for c in TC.read_cards(day, root=root):
         if c.get("_unreadable") or str(c.get("verdict", "")).startswith("REFUSED_"):
@@ -818,6 +900,7 @@ def evidence(day: str, *, root: Path | None = None) -> dict:
         t = c["ticker"]
         out["evidence"][t] = TC.write_evidence(c)
         out["promises"][t] = TC.write_promises(c, today=datetime.now(timezone.utc).date())
+    out["untyped_claims"] = backfill_claim_events(day)
     print(json.dumps(out, indent=1, default=str)[:4000])
     return out
 
@@ -882,6 +965,8 @@ def main(argv=None) -> int:
     r.add_argument("--only", default=None, help="comma list: restrict the universe")
     r.add_argument("--trigger", action="store_true",
                    help="universe = names whose card is due (a)-(e); reason on the card")
+    r.add_argument("--include-library", action="store_true",
+                   help="trigger (a) also reads strategy-library lib_* books (default: excluded)")
     for name in ("validate", "digest", "forecast", "evidence"):
         s = sub.add_parser(name)
         s.add_argument("--date", default=None)
@@ -905,7 +990,7 @@ def main(argv=None) -> int:
         return 0
 
     if a.trigger:
-        tl = trigger_list(day)
+        tl = trigger_list(day, include_library=a.include_library)
         uni = [{"ticker": x["ticker"], "kind": x["kind"], "source": "trigger",
                 "trigger": "; ".join(x["reasons"])} for x in tl["triggered"]]
         if a.dry_run and not a.only:
