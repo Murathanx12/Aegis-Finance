@@ -38,13 +38,13 @@
  ],
  "watermark_first_seen_utc": "2026-09-21T14:49:51+00:00",
  "funnel": {
-  "corpus_rows": 19145,
-  "no_ticker": 4526,
+  "corpus_rows": 20798,
+  "no_ticker": 5771,
   "no_symbol_bar": 8296,
   "before_calendar": 8864,
-  "pending_future_session": 1685,
+  "pending_future_session": 2088,
   "no_bar_that_day": 0,
-  "dup": 1666,
+  "dup": 1672,
   "kept": 0
  },
  "rows_appended": 0,
@@ -55,10 +55,10 @@
   "panel": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
   "bars": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet"
  },
- "wall_s": 3.42,
- "written_utc": "2026-09-24T23:49:14+00:00",
+ "wall_s": 3.1,
+ "written_utc": "2026-09-25T23:48:59+00:00",
  "panel_rows_after": 346415,
  "verdict": "PENDING",
- "headline": "0 rows appended from 19,145 corpus rows over 6 labelling sources; 1,685 awaiting a session that has not happened yet; 8,864 older than the first bar; 0 PIT violations",
+ "headline": "0 rows appended from 20,798 corpus rows over 6 labelling sources; 2,088 awaiting a session that has not happened yet; 8,864 older than the first bar; 0 PIT violations",
  "next_test": "re-run after the next session's bars land to label the pending rows; 8,864 rows PREDATE the bars (the Alpaca backfill starts 2015-01-01 and prices_2025_26 starts 2025-01-02) and need older bars or a --since on the backfill; when the panel passes ~20k labelled cells over 2+ months, run N3_frozen_embedding_head and C2 against the TF-IDF and shuffled controls"
 }
