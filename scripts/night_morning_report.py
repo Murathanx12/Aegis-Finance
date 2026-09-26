@@ -625,6 +625,15 @@ def five_questions(receipts: dict, contract: dict | None) -> dict:
 # ===========================================================================
 
 
+def _subsystem_lines() -> list[str]:
+    """The health probes' DEAD/STALE rows, one line each (review 2026-09-26 §4.3)."""
+    try:
+        from backend.services.system_health import non_alive_lines
+        return non_alive_lines()
+    except Exception as exc:                                    # noqa: BLE001
+        return [f"_subsystems: CANNOT DETERMINE ({type(exc).__name__})_"]
+
+
 def render(day: str, folder: Path, receipts: dict, contract: dict | None,
            ledger: list[dict], q: dict) -> str:
     """The report, body first and the five questions last.
@@ -638,6 +647,9 @@ def render(day: str, folder: Path, receipts: dict, contract: dict | None,
     L.append("")
     L.append(f"Night folder `{folder}` — {len(receipts)} receipt(s). "
              f"Written {_now()}. Licence PRODUCT_EXPERIMENT; no model was called.")
+    L.append("")
+    L.append("## 0. Subsystems not ALIVE (DEAD/STALE first)")
+    L += _subsystem_lines()
     L.append("")
     L.append("## 1. Paper NAV vs SPY")
     L += block_nav(receipts, folder, day)

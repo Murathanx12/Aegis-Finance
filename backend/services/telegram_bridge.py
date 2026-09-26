@@ -192,6 +192,8 @@ def send(text: str, *, chat_id: str | None = None, markdown: bool = True,
             f"to the bot once and `claim_owner()` will capture it. This bridge "
             f"does not reply to whoever spoke last — the destination is "
             f"configuration, not message-derived.")
+    if tag in BRIEF_TAGS:
+        text = _health_head() + text
     text = redact(text)
     out = []
     for chunk in _split(text):
@@ -207,6 +209,21 @@ def send(text: str, *, chat_id: str | None = None, markdown: bool = True,
     _append(OUTBOX_PATH, {"t": _now(), "tag": tag, "chat_id": target,
                           "chars": len(text)})
     return out
+
+
+#: Sends that are the phone's front page: the probes' DEAD/STALE rows go FIRST.
+BRIEF_TAGS = ("brief", "cmd:brief")
+
+
+def _health_head() -> str:
+    """DEAD/STALE subsystem rows, one line each, above the brief. Never raises:
+    a health read that fails must not cost the brief itself."""
+    try:
+        from backend.services.system_health import non_alive_lines
+        lines = non_alive_lines(limit=8)
+    except Exception as exc:                                       # noqa: BLE001
+        lines = [f"_subsystems: CANNOT DETERMINE ({type(exc).__name__})_"]
+    return "\n".join(lines) + "\n\n"
 
 
 def _split(text: str) -> list[str]:

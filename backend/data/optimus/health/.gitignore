@@ -1,0 +1,4 @@
+# Probe receipts accumulate (one per run) and _state.json changes every run.
+# The first receipt of 2026-09-26 is force-added as the baseline finding.
+*
+!.gitignore

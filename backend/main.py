@@ -1155,6 +1155,14 @@ async def health_full():
         _r = accrual_canary_health.get(_k) or {}
         if _r.get("status") == "DEGRADED":
             _degraded_reasons.append(f"{_k}: {_r.get('reason')}")
+    # Every long-running subsystem, each verdict DERIVED from evidence its
+    # producer wrote (review 2026-09-26 §4). Informational: it does not fold
+    # into `status`, whose paging semantics are older than this block.
+    try:
+        from backend.services import system_health as _sh
+        subsystems = _sh.api_block()
+    except Exception as e:                                     # noqa: BLE001
+        subsystems = {"source": "error", "rows": [], "error": str(e)}
     return {
         "status": "ok" if not _degraded_reasons else "DEGRADED",
         "degraded_reasons": _degraded_reasons,
@@ -1196,6 +1204,7 @@ async def health_full():
         "data_sources": source_health(),
         "fred_health": fred_source_health,
         "recent_warnings": recent_warnings(),
+        "subsystems": subsystems,
     }
 
 
