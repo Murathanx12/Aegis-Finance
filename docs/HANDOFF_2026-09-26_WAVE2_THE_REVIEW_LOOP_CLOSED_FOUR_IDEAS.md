@@ -104,3 +104,32 @@ claimed: the README's backtest section now says a true thing with its receipt be
 raises; the analyst-skill filter outside 2025; 27 of 33 priced accounts behind SPY.
 **HIGHEST-EV EXPERIMENT**: the three PROBE-weighting twins already frozen (equal /
 inverse-vol / big-move tilt, ~$17k EV at $1M), read against USMV on 2026-10-26.
+
+## 7. 22:30 HKT — chunk J rules set by Murat after the first live read
+- OpenClaw attaches to Murat's OWN Chrome via `--browser-profile user` (remote debugging
+  enabled by him 22:05). It sees every profile's tabs. **Only the "MuratClaw (Work)" window's
+  tabs may be touched** (t20 wsj / t32 marketwatch / t33 barrons); never `open` a new tab
+  (it lands in his main profile — a SEC page did, once); never any other domain through the
+  browser. `sec.gov` is HTTP-API only.
+- **Paywalled reads only when he hands the PC over** (`backend/data/optimus/HANDOFF_PC` file
+  gates `dowjones_pull.py --handoff`). His stated worry: the account gets flagged as a bot
+  even for read-and-summarise. The ToU (research note §licence) agrees.
+- **Primary path = the paste digest inbox**: he copies article text into
+  `backend/data/optimus/digest_inbox/`; `scripts/digest_ingest.py` turns it into corpus rows
+  (`first_seen_utc` = ingest time, `published` from the text, `origin: pasted_by_operator`)
+  and claims → forecast rows. Free data (10 RSS feeds, every item) is fetched by HTTP now.
+
+## 8. 22:40 → 23:50 HKT — wave 3, the hour Murat handed the PC over ("full freedom")
+Commits: chunk J `3ae60413` · paper rules `d51d0050` · systems fixes `85d96044` · health probes
+`cd21ac3f` · reviews/research `bc867065` `f20d4586` `16b8fb20` `c0a967ef` · `.env.bak*` ignored
+`e7281aa5` · stale reachability lines `4f241d03`.
+
+| track | measured | what changed |
+|---|---|---|
+| **Systems review** (`reviews/REVIEW_2026-09-26_SYSTEMS_ATTACK_AND_HEALTH_PROBES.md`) | 29 systems, 10 bad rules, 19 false-code findings. Worst three: bars stale since 09-21 with no refresher; the website backend sleeps when idle (lane NAVs stopped 09-18); Telegram agent dead since 09-23 while `stack_health` said ready. | bars refreshed to **09-25** (+12,216 rows), `scripts/pull_bars_refresh.py` first in `daily_pass`, `BARS_MAX_AGE_SESSIONS=2` gate in `u_plan`; Telegram agent under a Scheduled Task supervisor (restart proven by a PID kill); 130 unresolvable forecasts VOIDed (AVB 96, EA 27, 7 futures/index); the mandate's three disagreements (capital $40k vs $1M; caps 2/3/10/12%; gross 80%) now REFUSE on the receipt until Murat confirms one; `n_considered: 2` explained (25 funnel names → 16 HOLD-negative + 7 no-evidence → 2 after the committee gate; rule decision owed) |
+| **Health probes** (`system_health.py`, `scripts/health_probe.py`, `/api/health/full.subsystems`, `docs/HEALTH_PROBES_2026-09-26.md`) | first live table: 0 DEAD / **13 STALE** / 6 UNKNOWN / 25 ALIVE. Ranking on 09-21 bars while the panel is on 09-25 (re-rank launched); `live_market_loop` never ran end to end; Optimus health page 13 d stale; `lab_loop:idle_gpu_queue` GPU_BUSY; Railway backend uptime 896 s = asleep. | 73 tests; every probe has a missing-evidence → not-ALIVE case; AST test that nothing reads mtime. **Owed**: a 30-min `health` tick in `always_on_lab`, a final step in `daily_pass`, `stack_health` as a wrapper. |
+| **Paper rules** (`research_ssrn_arxiv_signals_and_oss_comparison.md`) | 6 registered with pre-declared controls; **all six had a falsifier fire**: Friday-drift lost to its Monday control both windows (top-5 share 4.54); `quality_momentum_gate` deepened the crash tail (−44.6% vs −35.9%); `cascade_entry_timing` beat first-mover in dev only; `disp_short_avoid` ≈ `mom_12_1_q`; `inst_breadth_up` (13F breadth, rdate+45d) beats its own ranks 21-40 but not random_1 in dev and 2025 is +58 pp of it. | XBRL re-extraction run: `rd` 1,991 rows, `sga` 1,295 → `rd_intensity` / `org_capital` become reachable on the next factory run (launched). 13F: `fdate == rdate` on every row, so the lag is `rdate + 45 d`. |
+| **Chunk J** (`docs/OPENCLAW_2026-09-26_READING_MURATS_CHROME.md`) | 10 DJ feeds live (162 items); 13 other free surfaces probed, 10 → 401/403; HOTS ×5 at 91–203 s gaps (HUMAN_PACE_OK); 3 claims → 6 forecast rows (`wsj_heard_on_the_street`); Optimus (7 read-only tools) + `aegis_api` (GET only) registered as OpenClaw MCP tools, one `brain_query` call $0.012; `digest_inbox/WEEKEND_READING_LIST.md` 214 links / 56 names. | Two bugs fixed: cp1252 decode made every read empty; the first claims pass invented 24 rows from 8 claims. Barron's/MarketWatch reads re-launched after the attach dropped (gateway restart re-attached). |
+| **OpenClaw best practice** (`research_openclaw_best_practice_and_human_pace.md`) | what flags a session; verb sequences per task shape; footprint plan (CV of gaps < 0.15 = ALARM). Evasion tooling declared out of scope. | jittered pacing, scroll-through and `footprint_receipt` in `web_reader`. |
+
+**Attended items for Murat (none executable from here):** Railway website backend "sleep when idle" OFF; remove the start command pointing at `scripts/arena_paper_repair_once.py` (not in the image); relink this repo's Railway CLI (`railway unlink` / `link`); confirm ONE mandate (capital base, per-name cap, gross cap); decide whether committee-negative names count in `n_considered`; delete `HANDOFF_PC` when back; the weekend paste inbox.
