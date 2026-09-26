@@ -361,3 +361,15 @@ backend/data/optimus/night_factory_*/*_smoke_regrade_taq.json
 # carries its shape, row count and sha256. The 2026-09-11 CI red was the
 # opposite arrangement: tracked artefacts written beside gitignored scratch.
 backend/data/optimus/x_lane/*.parquet
+backend/data/optimus/HANDOFF_PC
+# Chunk J (2026-09-26): Dow Jones full text is a subscriber's personal copy and
+# this repo is PUBLIC (ToU 9.3: no redistribution). Full text lives only under
+# news_corpus/ (ignored above; named again so a future un-ignore of the corpus
+# cannot expose it) and in the paste inbox. Only the inbox README and the
+# reading list are tracked.
+backend/data/optimus/news_corpus/dowjones/
+backend/data/optimus/digest_inbox/*
+!backend/data/optimus/digest_inbox/README.md
+!backend/data/optimus/digest_inbox/WEEKEND_READING_LIST.md
+.env.bak*
+.env.bak_*
