@@ -1,0 +1,26 @@
+{
+ "fetched_utc": "2026-09-26T16:00:01+00:00",
+ "source": "yfinance auto_adjust=True Close (total return)",
+ "construction": "daily pct_change compounded over (month-end session, next month-end session]; indexed by the period's START decision date (the factory's spy_leg convention)",
+ "tickers": [
+  "SPY",
+  "QQQ",
+  "IWM",
+  "SMH",
+  "USMV",
+  "MTUM",
+  "VLUE",
+  "QUAL"
+ ],
+ "first_valid": {
+  "SPY": "2016-11-01",
+  "QQQ": "2016-11-01",
+  "IWM": "2016-11-01",
+  "SMH": "2016-11-01",
+  "USMV": "2016-11-01",
+  "MTUM": "2016-11-01",
+  "VLUE": "2016-11-01",
+  "QUAL": "2016-11-01"
+ },
+ "last_session": "2026-09-25"
+}
