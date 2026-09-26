@@ -161,3 +161,15 @@ Commits: chunk J `3ae60413` · paper rules `d51d0050` · systems fixes `85d96044
   render from it; replication 10/10 AGREE). `T153843Z` is INVALID (25-name facts table).
 - Next session: read `dowjones/queue_run_2026-09-27b.log`, the SSRN note (register its top-5 with
   controls), the retrain log, `health_probe`; delete `HANDOFF_PC` if Murat is back; push.
+
+## 11. 02:10 HKT 09-27 — the night after the limit note
+- Crash model retrained (`train_crash_model_2026-09-27.log.err`): LASSO kept 6/60, 20 features
+  selected (`fred_lei_chg_3m`, `vol_x_mom_12m`, `fred_sloos_cc_chg_12m`, …); conformal 3m/6m/12m
+  recalibrated on 1,852 samples; three CV folds had ONE class (no crash) so AUC is undefined
+  there — the rare-event limitation, not a defect. Model + sidecar are local (`*.pkl` ignored).
+- Queue relaunched on the J3 fix (`0ca3b7fa`, stable Chrome-MCP handles): parent tabs resolved
+  by host, Barron's picks tab opened (`chrome-mcp:8ab5bfd86096:23`), reading at human pace.
+- Round-2 paper rules (SSRN via OpenClaw's own browser) being registered: `news_tone_reversal_5d`,
+  `filing_similarity_change`, `distance_to_default_rising`, `call_tone_drift`, `opex_week_large_hold`;
+  enablers `news_tone_z` (FinBERT column) and the `VAL-01` market-value fix.
+- Sim `24b89eb2f80a` cycle 11 at 02:03 (first cycle was the slow daily analyst pull).
