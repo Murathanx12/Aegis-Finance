@@ -70,7 +70,8 @@ narrower contract, because they ARE Murat's browser:
   a SEC page as a new tab in his MAIN Chrome profile, in front of him;
 * every action names a tab (`target_id`), and that tab's CURRENT host must be
   in `config.OPENCLAW_USER_TAB_HOSTS` (wsj/barrons/marketwatch) before the
-  action, and is re-read after a navigate/click/press;
+  action, and is re-read after a navigate/click/non-scroll press (the tab
+  listing is cached `OPENCLAW_TABS_TTL_S`; see that constant);
 * `type`, `fill`, `download`, `upload`, `batch` are refused, and `close`
   runs only on a tab this process itself opened (`open_from_tab`).
 
@@ -179,16 +180,73 @@ _clock = time.monotonic
 
 
 def invalidate_profile_cache(name: str | None = None) -> None:
-    """Drop the cached profile assertion for `name` (or for every profile)."""
+    """Drop the cached profile assertion for `name` (or for every profile).
+
+    Everything that says the profile answer may be stale (a refusal naming a
+    tab, a non-zero verb, a gateway timeout, a `start`/`stop`) says the tab
+    listing may be stale too, so this drops that profile's tab listing as well.
+    """
     if name is None:
         _PROFILE_CACHE.clear()
     else:
         _PROFILE_CACHE.pop(name, None)
+    invalidate_tabs_cache(name)
+
+
+#: How long a `tabs` listing is trusted, per process, per profile (seconds).
+#:
+#: Why (2026-09-27): on the operator profile every tab verb listed `tabs`
+#: before acting (the host check) and `navigate`/`click`/`press` listed it
+#: AGAIN afterwards (the landed-URL check) -- 2-3 CLI round trips per action
+#: at ~15 s each that night. One article read (navigate, wait, snapshot, two
+#: scroll steps, read) cost 8 listings at HEAD `3d721f05`; with this cache it
+#: costs 2 (the first host check and the post-navigate URL re-read), counted
+#: by `test_openclaw_client.test_a_read_article_sequence_costs_two_listings`.
+#:
+#: A verb whose tab is FOUND in a cached listing does not re-list. Anything
+#: else re-lists before it refuses: a handle absent from the cache, a handle
+#: whose Chrome MCP session nonce (`chrome-mcp:<nonce>:<n>`) is not the
+#: cached listing's nonce, or a cached URL off the allowed hosts. The cache is
+#: dropped by `open_from_tab` (before, and between polls), a `close`, any
+#: refusal naming a tab, any `start`/`stop`/re-attach, a non-zero verb, a
+#: gateway timeout, and the post-action URL re-read (which is itself a fresh
+#: listing, so it refills the cache with the landed URL). Only `navigate`,
+#: `click` and a non-scroll `press` re-read the URL: that is the paywall /
+#: left-the-hosts check. `wait`, `snapshot`, `scrollintoview`, a scroll-key
+#: `press` and `read_text` do not; `read_text` still reports the URL it
+#: actually read, and the reader host-checks THAT.
+OPENCLAW_TABS_TTL_S: float = 20.0
+
+#: Keys whose `press` scrolls rather than acts; no landed-URL re-read after them.
+SCROLL_KEYS: frozenset[str] = frozenset({"PageDown", "PageUp", "ArrowDown", "ArrowUp",
+                                         "Space", " ", "Home", "End"})
+
+#: profile name -> (monotonic stamp, the `_run` that produced it, the listing).
+#: The `_run` object itself (not its id) so a swapped resolver never reuses it.
+_TABS_CACHE: dict[str, tuple[float, Any, list[dict]]] = {}
+#: profile name -> the Chrome MCP session nonces of the last FRESH listing;
+#: survives invalidation so a nonce change between listings is counted.
+_TABS_NONCES: dict[str, frozenset[str]] = {}
+
+
+def invalidate_tabs_cache(name: str | None = None) -> None:
+    """Drop the cached `tabs` listing for `name` (or for every profile)."""
+    if name is None:
+        _TABS_CACHE.clear()
+    else:
+        _TABS_CACHE.pop(name, None)
+
+
+def _new_cache_counters() -> dict[str, int]:
+    return {"profile_hits": 0, "profile_misses": 0, "tabs_hits": 0, "tabs_misses": 0,
+            "tabs_nonce_changes": 0, "url_rereads": 0}
 
 
 #: Every CLI round trip this process made: count and wall seconds, in total
-#: and per sub-command, so a footprint can report CLI seconds per page.
-_CLI_LEDGER: dict[str, Any] = {"calls": 0, "seconds": 0.0, "timeouts": 0, "by_cmd": {}}
+#: and per sub-command, so a footprint can report CLI seconds per page; plus
+#: the two caches' hit/miss counts and the post-action URL re-reads.
+_CLI_LEDGER: dict[str, Any] = {"calls": 0, "seconds": 0.0, "timeouts": 0, "by_cmd": {},
+                               "cache": _new_cache_counters()}
 
 
 def cli_ledger() -> dict:
@@ -197,7 +255,13 @@ def cli_ledger() -> dict:
 
 
 def reset_cli_ledger() -> None:
-    _CLI_LEDGER.update(calls=0, seconds=0.0, timeouts=0, by_cmd={})
+    _CLI_LEDGER.update(calls=0, seconds=0.0, timeouts=0, by_cmd={},
+                       cache=_new_cache_counters())
+
+
+def _bump(key: str, n: int = 1) -> None:
+    c = _CLI_LEDGER.setdefault("cache", _new_cache_counters())
+    c[key] = c.get(key, 0) + n
 
 
 #: Flags that take a value, skipped when naming the sub-command.
@@ -392,8 +456,10 @@ def assert_profile(strict: bool = True, *, name: str | None = None,
     hit = _PROFILE_CACHE.get(want)
     if (not fresh and hit is not None and hit[1] == ident
             and _clock() - hit[0] < OPENCLAW_PROFILE_ASSERT_TTL_S):
+        _bump("profile_hits")
         return {**hit[2], "cached": True}
     _PROFILE_CACHE.pop(want, None)
+    _bump("profile_misses")
     found = next((p for p in profiles() if p["name"] == want), None)
     if found is None:
         msg = (f"REFUSED_BROWSER_PROFILE_UNAVAILABLE: no OpenClaw browser "
@@ -423,17 +489,44 @@ def _json_of(stdout: str) -> Any:
     return json.loads(txt[txt.index("{"):txt.rindex("}") + 1])
 
 
+def _nonces(tab_list: list[dict]) -> frozenset[str]:
+    return frozenset(s_ for s_ in (session_of(str(t.get("targetId") or "")) for t in tab_list)
+                     if s_)
+
+
 def tabs(*, profile_name: str | None = None) -> list[dict]:
-    """`[{tabId, targetId, url, title, ...}]` from `browser --json tabs`. Read-only."""
+    """`[{tabId, targetId, url, title, ...}]` from `browser --json tabs`. Read-only.
+
+    Cached for `OPENCLAW_TABS_TTL_S` per profile (see that constant). A caller
+    that needs the CURRENT listing calls `invalidate_tabs_cache(profile)`
+    first -- the signature stays the one every caller and stub already uses.
+    An empty or unreadable listing is never cached."""
     want = profile(profile_name)
+    hit = _TABS_CACHE.get(want)
+    if (hit is not None and hit[1] is _run
+            and _clock() - hit[0] < OPENCLAW_TABS_TTL_S):
+        _bump("tabs_hits")
+        return [dict(t) for t in hit[2]]
+    _TABS_CACHE.pop(want, None)
+    _bump("tabs_misses")
     r = _run(["browser", "--browser-profile", want, "--json", "tabs"], timeout=90)
     try:
         d = _json_of(r.stdout)
     except ValueError:
+        invalidate_profile_cache(want)
         raise OpenClawRefused(
             f"REFUSED_TABS_UNREADABLE: `browser --json tabs` on {want!r} returned "
             f"no JSON (rc {r.returncode}): {(r.stderr or r.stdout or '')[:200]!r}")
-    return [t for t in (d.get("tabs") or []) if isinstance(t, dict)]
+    out = [t for t in (d.get("tabs") or []) if isinstance(t, dict)]
+    ns = _nonces(out)
+    prev = _TABS_NONCES.get(want)
+    if prev and ns and ns != prev:
+        _bump("tabs_nonce_changes")
+    if ns:
+        _TABS_NONCES[want] = ns
+    if out:
+        _TABS_CACHE[want] = (_clock(), _run, [dict(t) for t in out])
+    return out
 
 
 # -- tab identity (Chunk J3, 2026-09-27) --------------------------------------
@@ -530,8 +623,13 @@ def tab_url(target_id: str, *, profile_name: str | None = None) -> str | None:
     return None if t is None else str(t.get("url") or "")
 
 
-def assert_operator_tab(target_id: str | None, *, profile_name: str) -> str:
-    """The tab exists and its CURRENT host is wsj/barrons/marketwatch."""
+def _operator_tab(target_id: str | None, *, profile_name: str) -> tuple[str, dict]:
+    """`(current url, tab)` for an operator tab on an allowed host, or refuse.
+
+    Uses the cached listing when the handle is in it and on an allowed host;
+    re-lists ONCE before refusing (absent handle, a session nonce the cache
+    does not carry, or a cached URL off the hosts), so a stale cache can
+    cost one listing but can never cause a refusal on its own."""
     if not target_id:
         raise OpenClawRefused(
             f"REFUSED_OPERATOR_TAB_UNNAMED: on {profile_name!r} (Murat's own "
@@ -539,23 +637,44 @@ def assert_operator_tab(target_id: str | None, *, profile_name: str) -> str:
             f"whatever tab happens to be focused.")
     listing = tabs(profile_name=profile_name)
     hit = find_tab(listing, target_id)
-    u = None if hit is None else str(hit.get("url") or "")
-    if u is None:
-        mine = session_of(target_id)
-        now = sorted({s_ for s_ in (session_of(str(t.get("targetId") or "")) for t in listing)
-                      if s_})
+    mine = session_of(target_id)
+    if mine and _nonces(listing) and mine not in _nonces(listing):
+        _bump("tabs_nonce_changes")
+    if hit is None or not host_allowed(str(hit.get("url") or "")):
+        invalidate_tabs_cache(profile_name)
+        listing = tabs(profile_name=profile_name)
+        hit = find_tab(listing, target_id)
+    if hit is None:
+        now = sorted(_nonces(listing))
         why = (f" (Chrome MCP session {mine!r} is gone; the listing is session {now}: "
                f"every tab id was reissued -- rebind by URL)"
                if mine and now and mine not in now else "")
         invalidate_profile_cache(profile_name)
         raise OpenClawRefused(
             f"REFUSED_OPERATOR_TAB_MISSING: no tab {target_id!r} on {profile_name!r}{why}.")
+    u = str(hit.get("url") or "")
     if not host_allowed(u):
+        invalidate_tabs_cache(profile_name)
         raise OpenClawRefused(
             f"REFUSED_OPERATOR_TAB_HOST: tab {target_id!r} is on "
             f"{(urlsplit(u).hostname or u)!r}; the operator profile may touch "
             f"only {operator_hosts()} (Murat, 2026-09-26).")
-    return u
+    return u, hit
+
+
+def assert_operator_tab(target_id: str | None, *, profile_name: str) -> str:
+    """The tab exists and its CURRENT host is wsj/barrons/marketwatch."""
+    return _operator_tab(target_id, profile_name=profile_name)[0]
+
+
+def _needs_url_reread(verb: str, args: tuple) -> bool:
+    """navigate/click always; press unless every key is a scroll key."""
+    if verb in ("navigate", "click"):
+        return True
+    if verb == "press":
+        keys = [a for a in args if isinstance(a, str) and not a.startswith("--")]
+        return not keys or any(k not in SCROLL_KEYS for k in keys)
+    return False
 
 
 _ATTACHED_CACHE: dict[str, tuple[float, dict]] = {}
@@ -638,6 +757,8 @@ def browser(verb: str, *args: str, url: str | None = None,
     except OpenClawRefused as exc:
         if "REFUSED_BROWSER_PROFILE_UNAVAILABLE" in str(exc):
             invalidate_profile_cache(want)
+        if "TAB" in str(exc).split(":", 1)[0]:
+            invalidate_tabs_cache(want)
         raise
     check_s = time.monotonic() - t_check
     argv = ["browser", "--browser-profile", want, verb, *args]
@@ -657,13 +778,18 @@ def browser(verb: str, *args: str, url: str | None = None,
                            "profile_check": "cached" if pa.get("cached") else "checked",
                            "stdout": (r.stdout or "").strip(),
                            "stderr": (r.stderr or "").strip()[:600]}
+    if verb == "close":
+        invalidate_tabs_cache(want)
     if operator and verb == "close" and r.returncode == 0:
         _OPENED_TABS.discard(str(target_id))
     if operator:
         out["target_id"] = target_id
         out["tab_url_before"] = before
         out["attached_to"] = attached_to(profile_name=want)
-        if verb in ("navigate", "click", "press") and target_id:
+        if target_id and _needs_url_reread(verb, args):
+            # The landed-URL check: a FRESH listing (which refills the cache).
+            invalidate_tabs_cache(want)
+            _bump("url_rereads")
             after = tab_url(target_id, profile_name=want)
             out["tab_url_after"] = after
             out["left_allowed_hosts"] = bool(after) and not host_allowed(after)
@@ -698,6 +824,10 @@ def open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
     sleep = sleep_fn or time.sleep
     now = clock or time.monotonic
     assert_profile(name=want)
+    # A new tab changes the listing: the before-list must be fresh (the parent
+    # check lists it; `before` reuses that one listing), every poll is fresh,
+    # and the last poll -- taken after the open -- is what stays cached.
+    invalidate_tabs_cache(want)
     assert_operator_tab(parent_id, profile_name=want)
     before = tabs(profile_name=want)
     parent = find_tab(before, parent_id)
@@ -711,6 +841,7 @@ def open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
     new: list[dict] = []
     how = "handle"
     while True:
+        invalidate_tabs_cache(want)
         after = tabs(profile_name=want)
         new, how = new_tabs_after(before, after, url)
         ready = len(new) == 1 and str(new[0].get("url") or "") not in ("", "about:blank")
@@ -718,6 +849,7 @@ def open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
             break
         sleep(poll_s)
     if r.returncode != 0 or len(new) != 1:
+        invalidate_tabs_cache(want)
         raise OpenClawRefused(
             f"REFUSED_OPEN_FROM_TAB: rc {r.returncode}, {len(new)} new tab(s) ({how}) "
             f"after window.open from {parent_id!r} within {wait_s:.0f} s: "
@@ -746,9 +878,10 @@ def read_text(target_id: str, *, profile_name: str | None = None,
     pa = assert_profile(name=want)
     expected = None
     if is_operator_profile(want):
-        assert_operator_tab(target_id, profile_name=want)
-        hit = find_tab(tabs(profile_name=want), target_id)
-        expected = str(hit.get("targetId")) if hit and hit.get("targetId") else None
+        # ONE listing (usually the cached one) serves both the host check and
+        # the expected targetId; HEAD listed twice here.
+        _, hit = _operator_tab(target_id, profile_name=want)
+        expected = str(hit.get("targetId")) if hit.get("targetId") else None
     check_s = time.monotonic() - t_check
     t0 = time.monotonic()
     r = _run(["browser", "--browser-profile", want, "--json", "evaluate",

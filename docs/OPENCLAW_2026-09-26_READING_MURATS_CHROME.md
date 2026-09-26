@@ -453,3 +453,52 @@ wiring is in `web_reader` and has not been done). **Still per-verb on `user`:**
 tab URL again afterwards, so an operator verb still costs ~2-3 CLI calls. **The queue running
 now keeps the old per-verb check until its next launch**, because it imported the module before
 this change.
+
+**2026-09-27 -- the tab listing is cached too (20 s, invalidated on open/close/refusal/nonce).**
+This closes the "still per-verb on `user`" line above. `openclaw_client.tabs()` now caches the
+listing per process, per profile, for `OPENCLAW_TABS_TTL_S = 20` (a module constant). A verb
+whose tab is FOUND in the cached listing, on an allowed host, does not list again. Anything else
+re-lists once before it refuses, so a stale cache can cost one call but cannot cause a refusal
+by itself. That covers a handle missing from the cache, a `chrome-mcp:<nonce>:<n>` handle whose
+nonce is not the cached listing's, and a cached URL off the hosts. The listing is dropped by:
+`open_from_tab` (before the open, and before every poll; the post-open poll is what stays
+cached), `close`, any refusal naming a tab (`REFUSED_OPERATOR_TAB_*`, `REFUSED_TABS_UNREADABLE`,
+`REFUSED_OPEN_FROM_TAB`), `start`/`stop` and `web_reader.ensure_attached` (the re-attach path),
+a non-zero verb, and a gateway timeout. The landed-URL re-read stays only where the reader needs
+it: after `navigate`, `click`, and any `press` that is not a scroll key (`Enter` still
+re-reads). That is the paywall / left-the-hosts check, and it lists fresh, which refills the
+cache with the landed URL. `wait`, `snapshot`, `scrollintoview`, a `PageDown` press and
+`read_text` do not re-read. `read_text` also dropped its own second listing: one listing now
+serves the host check and the expected `targetId`. The URL it actually read is still returned,
+and `read_article` host-checks that URL.
+
+Measured with a fake CLI (the real `_run`, a counting `subprocess.run`), no browser:
+
+| sequence | `tabs` listings, HEAD `3d721f05` | after | all CLI calls, HEAD | after | at ~15 s/call |
+|---|---|---|---|---|---|
+| navigate, wait, snapshot, scrollintoview x2, read_text | 8 | **2** | 16 | **10** | ~4.0 -> ~2.5 min |
+| `Reader.read_article` (navigate, wait, 2 x wait+PageDown, read) | 11 | **2** | 20 | **11** | ~5.0 -> ~2.75 min |
+
+The two left are the host check before `navigate` and the landed-URL re-read after it. The
+next article in the same tab within 20 s costs 1; after the 20-90 s throttle gap it costs 2
+again. Before the profile cache (the commit before `3d721f05`), the same `read_article` was 26
+calls, with a `profiles` check on each of its 7 verbs.
+In CLI calls per verb: a `wait`/`snapshot`/`scrollintoview` on `user` went from 2 to 1, a
+`PageDown` press from 3 to 1, `navigate`/`click` from 3 to 2 on a warm cache (3 on a cold one),
+and `read_text` from 3 to 1.
+Tests: `backend/tests/test_openclaw_client.py` (`test_a_read_article_sequence_costs_two_listings`,
+`..._lists_seven_times` for the no-cache baseline, which is 7 not 8 because of the `read_text`
+dedupe, plus nonce, refusal, TTL, close/start and open_from_tab invalidation).
+
+**The footprint now shows the saving.** `web_reader.footprint_receipt` carries `cli_calls`,
+`cli_seconds`, `cli_seconds_per_page`, `cli_calls_per_page`, `cli_breakdown`
+(`profile_check` = `browser profiles`, `tabs_listing` = `browser tabs`, `other`) and
+`cli_cache` (profile/tabs hits and misses, `tabs_nonce_changes`, `url_rereads`). The source is
+`openclaw_client.cli_ledger()`. `Reader.close()` reports the delta since the reader started
+(`cli_scope: "since_reader_start"`). The ledger is per process, so that delta also includes any
+other lane the same process drove in the window. `dowjones_pull._merged_footprint` passes no
+baseline, so it gets the whole process (`cli_scope: "process"`). The footprint JSON file on disk
+carries every field. `dowjones_pull`'s own run receipt copies only a whitelist of footprint
+keys, so it will not show them until that list is extended (not changed here). **The queue
+running now keeps the old per-verb listing until its next launch.** It imported both modules
+before this change.

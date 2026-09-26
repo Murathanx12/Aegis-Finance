@@ -182,6 +182,11 @@ def ensure_attached(profile: str = "user", *, oc: Any = None, log: list | None =
     if oc is None:
         from backend.services import openclaw_client as oc  # type: ignore[no-redef]
     log = log if log is not None else []
+    # Whatever happened, the caller re-resolves its tabs next: never from a
+    # cached listing taken before the detach (openclaw_client.OPENCLAW_TABS_TTL_S).
+    inv = getattr(oc, "invalidate_tabs_cache", None)
+    if callable(inv):
+        inv(profile)
 
     def state() -> str | None:
         try:
@@ -493,13 +498,61 @@ def release_reader_lock(path: Path | None = None, *, pid: int | None = None) -> 
 FOOTPRINT_CV_ALARM = 0.15
 
 
+def _ledger_now() -> dict | None:
+    try:
+        from backend.services import openclaw_client as OC
+        return OC.cli_ledger()
+    except Exception:  # noqa: BLE001 -- a receipt must still be written
+        return None
+
+
+def cli_footprint(now: dict | None, since: dict | None, pages: int, *,
+                  scope: str) -> dict:
+    """What the session cost in OpenClaw CLI round trips (2026-09-27: ~15 s
+    each under memory pressure). `now - since` from `openclaw_client.cli_ledger()`:
+    `cli_calls`, `cli_seconds`, `cli_seconds_per_page`, and `cli_breakdown`
+    split into `profile_check` (`browser profiles`), `tabs_listing` (`browser
+    tabs`) and `other`, plus the cache counters. `scope` says what the delta
+    covers -- the ledger is per PROCESS, so a reader's delta includes any
+    other lane driven by the same process in the same window."""
+    if not now:
+        return {"cli_scope": scope, "cli_calls": None, "cli_seconds": None,
+                "cli_seconds_per_page": None, "cli_breakdown": None, "cli_cache": None,
+                "cli_ledger": "UNAVAILABLE: the driver has no cli_ledger()"}
+    base = since or {"calls": 0, "seconds": 0.0, "by_cmd": {}, "cache": {}}
+
+    def row(key: str) -> dict:
+        a = (now.get("by_cmd") or {}).get(key) or {}
+        b = (base.get("by_cmd") or {}).get(key) or {}
+        return {"calls": int(a.get("calls", 0)) - int(b.get("calls", 0)),
+                "seconds": round(float(a.get("seconds", 0.0)) - float(b.get("seconds", 0.0)), 3)}
+
+    calls = int(now.get("calls", 0)) - int(base.get("calls", 0))
+    secs = round(float(now.get("seconds", 0.0)) - float(base.get("seconds", 0.0)), 3)
+    prof, tabl = row("browser profiles"), row("browser tabs")
+    other = {"calls": calls - prof["calls"] - tabl["calls"],
+             "seconds": round(secs - prof["seconds"] - tabl["seconds"], 3)}
+    cache = {k: int(v) - int((base.get("cache") or {}).get(k, 0))
+             for k, v in (now.get("cache") or {}).items()}
+    return {"cli_scope": scope, "cli_calls": calls, "cli_seconds": secs,
+            "cli_seconds_per_page": round(secs / pages, 3) if pages else None,
+            "cli_calls_per_page": round(calls / pages, 2) if pages else None,
+            "cli_breakdown": {"profile_check": prof, "tabs_listing": tabl, "other": other},
+            "cli_cache": cache}
+
+
 def footprint_receipt(log: list[dict], *, scrolled: int = 0, reads: int = 0,
-                      out_dir: Path | None = None, write: bool = True) -> dict:
+                      out_dir: Path | None = None, write: bool = True,
+                      cli_now: dict | None = None, cli_since: dict | None = None) -> dict:
     """What this session looked like from the site's side: the gaps between
     page loads, pages/hour, the coefficient of variation of the gaps, and the
     share of reads that scrolled. `verdict` is `HUMAN_PACE_OK`, `ALARM: ...`
     (CV < 0.15 -- pacing collapsed to a constant) or `CANNOT DETERMINE` (< 3
-    gaps), never a bare boolean."""
+    gaps), never a bare boolean.
+
+    It also carries the CLI cost (`cli_footprint`): `cli_now` defaults to this
+    process's `openclaw_client.cli_ledger()`, and `cli_since` to nothing, so a
+    caller with no baseline gets the whole process (`cli_scope: "process"`)."""
     import statistics as stats
     stamps = sorted(datetime.fromisoformat(p["at"]) for p in log if p.get("at"))
     gaps = [round((b - a).total_seconds(), 1) for a, b in zip(stamps, stamps[1:])]
@@ -526,6 +579,9 @@ def footprint_receipt(log: list[dict], *, scrolled: int = 0, reads: int = 0,
           "reads": reads, "reads_with_scroll": scrolled,
           "scroll_share": round(scrolled / reads, 3) if reads else None,
           "cv_alarm_threshold": FOOTPRINT_CV_ALARM, "verdict": verdict}
+    rc.update(cli_footprint(cli_now if cli_now is not None else _ledger_now(), cli_since,
+                            len(stamps),
+                            scope="since_reader_start" if cli_since is not None else "process"))
     if write:
         d = Path(out_dir) if out_dir else Path(_config.OPTIMUS_LEDGER_DIR) / "web_reader"
         d.mkdir(parents=True, exist_ok=True)
@@ -730,6 +786,7 @@ class Reader:
     reads: int = 0
     lock: bool = True
     _lock_path: Path | None = None
+    _cli0: dict | None = None
 
     def __post_init__(self) -> None:
         if self.driver is None:
@@ -737,12 +794,24 @@ class Reader:
             self.driver = OC
         if self.lock:
             self._lock_path = acquire_reader_lock()
+        self._cli0 = self.cli_ledger()
+
+    def cli_ledger(self) -> dict | None:
+        """The driver's CLI ledger now, or None for a driver without one."""
+        led = getattr(self.driver, "cli_ledger", None)
+        try:
+            return led() if callable(led) else None
+        except Exception:  # noqa: BLE001 -- a receipt field, never a failure
+            return None
 
     def close(self, *, write_footprint: bool = True) -> dict | None:
         """Release the one-reader lock and write the session's footprint."""
         fp = None
         if write_footprint:
-            fp = footprint_receipt(self.log, scrolled=self.scrolled_reads, reads=self.reads)
+            now = self.cli_ledger()
+            fp = footprint_receipt(self.log, scrolled=self.scrolled_reads, reads=self.reads,
+                                   cli_now=now or {},
+                                   cli_since=self._cli0 if now else None)
         if self._lock_path is not None:
             release_reader_lock(self._lock_path)
             self._lock_path = None

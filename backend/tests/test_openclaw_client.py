@@ -220,3 +220,255 @@ def test_the_cli_ledger_counts_seconds_per_subcommand(monkeypatch):
     assert all(v["calls"] == 1 and v["seconds"] >= 0 for v in led["by_cmd"].values())
     OC.reset_cli_ledger()
     assert OC.cli_ledger()["calls"] == 0
+
+
+# -- the tab listing cache (2026-09-27) ---------------------------------------
+# On the operator profile each tab verb listed `tabs` first (the host check)
+# and navigate/click/press listed it again afterwards (the landed-URL check):
+# 2-3 CLI round trips per action at ~15 s each that night.
+
+WSJ_A = "https://www.wsj.com/finance/stocks/a-story-1a2b3c4d"
+
+
+class OperatorCLI(FakeCLI):
+    """`user` profile with live tab URLs: navigate moves the tab, evaluate reads
+    it, and `nonce` is the Chrome MCP session every targetId carries."""
+
+    def __init__(self, nonce: str = "aaa"):
+        super().__init__()
+        self.nonce = nonce
+        self.urls = {"1": "https://www.wsj.com/news/heard-on-the-street",
+                     "2": "https://www.barrons.com/market-data"}
+
+    def handle(self, n: str) -> str:
+        return f"chrome-mcp:{self.nonce}:{n}"
+
+    def __call__(self, args, **kw):
+        self.calls.append(list(args))
+        verb = OC._cmd_key(args)
+        if verb == "browser profiles":
+            return subprocess.CompletedProcess(args, 0, self.profiles_out, "")
+        if verb == "browser tabs":
+            return subprocess.CompletedProcess(args, 0, json.dumps({"tabs": [
+                {"tabId": f"t{20 + int(n)}", "targetId": self.handle(n), "url": u}
+                for n, u in self.urls.items()]}), "")
+        if verb == "browser status":
+            return subprocess.CompletedProcess(args, 0, '{"running": true}', "")
+        tid = args[args.index("--target-id") + 1] if "--target-id" in args else None
+        n = str(tid).rsplit(":", 1)[-1] if tid else None
+        if verb == "browser navigate":            # ... navigate <url> --target-id <tid>
+            self.urls[n] = args[args.index("navigate") + 1]
+        if verb == "browser evaluate":
+            if "window.open" in args[-1]:
+                self.urls[str(max(int(k) for k in self.urls) + 1)] = WSJ_A
+                return subprocess.CompletedProcess(args, 0, "{}", "")
+            return subprocess.CompletedProcess(args, 0, json.dumps(
+                {"ok": True, "result": {"url": self.urls.get(n), "title": "T",
+                                        "text": "body"}}), "")
+        return subprocess.CompletedProcess(args, 0, "ok", "")
+
+
+def _install(monkeypatch, fake) -> None:
+    """Fake the PROCESS, not `_run`: the real `_run` then keeps the ledger."""
+    monkeypatch.setattr(subprocess, "run", lambda cmd, **kw: fake(list(cmd[1:]), **kw))
+
+
+@pytest.fixture(autouse=True)
+def _clean_tab_cache():
+    def clear():
+        OC.invalidate_tabs_cache()
+        OC._TABS_NONCES.clear()
+        OC._ATTACHED_CACHE.clear()
+    clear()
+    yield
+    clear()
+
+
+def _read_article_sequence(fake: OperatorCLI) -> None:
+    """navigate, wait, snapshot, scrollintoview x2, evaluate (read_text)."""
+    tab = fake.handle("1")
+    OC.browser("navigate", WSJ_A, profile_name="user", target_id=tab)
+    OC.browser("wait", "--time", "3500", profile_name="user", target_id=tab)
+    OC.browser("snapshot", "--format", "ai", profile_name="user", target_id=tab)
+    OC.browser("scrollintoview", "e12", profile_name="user", target_id=tab)
+    OC.browser("scrollintoview", "e40", profile_name="user", target_id=tab)
+    got = OC.read_text(tab, profile_name="user")
+    assert got["url"] == WSJ_A and got["text"] == "body"
+
+
+def test_a_read_article_sequence_costs_two_listings(monkeypatch, clock):
+    fake = OperatorCLI()
+    _install(monkeypatch, fake)
+    OC.reset_cli_ledger()
+    _read_article_sequence(fake)
+    c = fake.count()
+    led = OC.cli_ledger()
+    print(f"\ntabs listings for one article: {c['browser tabs']}, URL re-reads "
+          f"{led['cache']['url_rereads']}, CLI calls {led['calls']}")
+    # 1 host check before navigate + 1 landed-URL re-read after it; the rest hit.
+    assert c["browser tabs"] <= 2
+    assert led["cache"]["url_rereads"] <= 2
+    assert c["browser profiles"] == 1
+    assert led["by_cmd"]["browser tabs"]["calls"] == c["browser tabs"]
+    assert led["cache"]["tabs_hits"] >= 5
+
+
+def test_without_the_tab_cache_the_same_sequence_lists_seven_times(monkeypatch, clock):
+    """The 'before' number, measured the same way: a TTL of 0 is the old
+    behaviour (HEAD 3d721f05 also listed a second time inside read_text: 8)."""
+    fake = OperatorCLI()
+    _install(monkeypatch, fake)
+    monkeypatch.setattr(OC, "OPENCLAW_TABS_TTL_S", 0.0)
+    _read_article_sequence(fake)
+    print(f"\ntabs listings with no cache: {fake.count()['browser tabs']}")
+    assert fake.count()["browser tabs"] >= 6
+
+
+def test_scroll_press_does_not_reread_but_navigate_click_and_enter_do(monkeypatch, clock):
+    fake = OperatorCLI()
+    _install(monkeypatch, fake)
+    tab = fake.handle("1")
+    r = OC.browser("press", "PageDown", profile_name="user", target_id=tab)
+    assert "tab_url_after" not in r
+    OC.reset_cli_ledger()
+    for verb, arg in (("click", "e7"), ("press", "Enter"), ("navigate", WSJ_A)):
+        r = OC.browser(verb, arg, profile_name="user", target_id=tab)
+        assert r["tab_url_after"] and r["left_allowed_hosts"] is False
+    assert OC.cli_ledger()["cache"]["url_rereads"] == 3
+
+
+def test_the_tab_cache_expires_after_its_ttl(monkeypatch, clock):
+    fake = OperatorCLI()
+    _install(monkeypatch, fake)
+    tab = fake.handle("1")
+    OC.browser("wait", "--time", "1", profile_name="user", target_id=tab)
+    clock["t"] += OC.OPENCLAW_TABS_TTL_S - 1
+    OC.browser("wait", "--time", "1", profile_name="user", target_id=tab)
+    assert fake.count()["browser tabs"] == 1
+    clock["t"] += 2
+    OC.browser("wait", "--time", "1", profile_name="user", target_id=tab)
+    assert fake.count()["browser tabs"] == 2
+
+
+def test_a_session_nonce_change_relists_and_is_counted(monkeypatch, clock):
+    fake = OperatorCLI(nonce="aaa")
+    _install(monkeypatch, fake)
+    OC.reset_cli_ledger()
+    OC.browser("wait", "--time", "1", profile_name="user", target_id=fake.handle("1"))
+    assert fake.count()["browser tabs"] == 1
+    # The Chrome MCP session resets: every id is reissued under a new nonce.
+    fake.nonce = "bbb"
+    # A handle from the NEW session is not in the cached (aaa) listing: re-list.
+    OC.browser("wait", "--time", "1", profile_name="user", target_id=fake.handle("1"))
+    assert fake.count()["browser tabs"] == 2
+    assert OC.cli_ledger()["cache"]["tabs_nonce_changes"] >= 1
+    # An OLD handle refuses by name from a fresh listing, never from the cache.
+    with pytest.raises(OC.OpenClawRefused, match=r"session 'aaa' is gone"):
+        OC.browser("wait", "--time", "1", profile_name="user", target_id="chrome-mcp:aaa:1")
+    assert "user" not in OC._TABS_CACHE
+
+
+def test_a_refusal_naming_a_tab_invalidates_the_listing(monkeypatch, clock):
+    fake = OperatorCLI()
+    _install(monkeypatch, fake)
+    OC.browser("wait", "--time", "1", profile_name="user", target_id=fake.handle("1"))
+    assert "user" in OC._TABS_CACHE
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_TAB_MISSING"):
+        OC.browser("wait", "--time", "1", profile_name="user", target_id=fake.handle("9"))
+    assert "user" not in OC._TABS_CACHE
+    n = fake.count()["browser tabs"]
+    OC.browser("wait", "--time", "1", profile_name="user", target_id=fake.handle("1"))
+    assert fake.count()["browser tabs"] == n + 1
+
+
+def test_a_cached_off_host_url_is_rechecked_fresh_before_refusing(monkeypatch, clock):
+    fake = OperatorCLI()
+    _install(monkeypatch, fake)
+    tab = fake.handle("1")
+    fake.urls["1"] = "https://mail.google.com/mail/u/0"
+    OC.tabs(profile_name="user")                       # cache: tab 1 off the hosts
+    fake.urls["1"] = "https://www.wsj.com/news/markets"  # ... it came back
+    OC.browser("wait", "--time", "1", profile_name="user", target_id=tab)   # no refusal
+    fake.urls["1"] = "https://mail.google.com/mail/u/0"
+    OC.invalidate_tabs_cache("user")
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_TAB_HOST"):
+        OC.browser("wait", "--time", "1", profile_name="user", target_id=tab)
+    assert "user" not in OC._TABS_CACHE
+
+
+def test_close_and_start_invalidate_the_listing(monkeypatch, clock):
+    fake = OperatorCLI()
+    _install(monkeypatch, fake)
+    OC.tabs(profile_name="user")
+    assert "user" in OC._TABS_CACHE
+    OC._OPENED_TABS.add(fake.handle("2"))
+    try:
+        OC.browser("close", profile_name="user", target_id=fake.handle("2"))
+    finally:
+        OC._OPENED_TABS.discard(fake.handle("2"))
+    assert "user" not in OC._TABS_CACHE
+
+
+def test_a_reattach_start_drops_the_listing(monkeypatch, clock):
+    OC._TABS_CACHE["user"] = (clock["t"], OC._run, [{"tabId": "t1"}])
+    OC._TABS_CACHE["muratclaw"] = (clock["t"], OC._run, [{"tabId": "t2"}])
+    monkeypatch.setattr(subprocess, "run",
+                        lambda *a, **k: subprocess.CompletedProcess(a[0], 0, "", ""))
+    OC._run(["browser", "--browser-profile", "user", "start"], timeout=60)
+    assert "user" not in OC._TABS_CACHE and "muratclaw" in OC._TABS_CACHE
+
+
+def test_open_from_tab_lists_fresh_and_polls_fresh(monkeypatch, clock):
+    fake = OperatorCLI()
+    _install(monkeypatch, fake)
+    OC.tabs(profile_name="user")          # a warm cache that cannot hold the new tab
+    before = fake.count()["browser tabs"]
+    out = OC.open_from_tab(fake.handle("1"), WSJ_A, sleep_fn=lambda s: None)
+    try:
+        assert out["new_tab"] == fake.handle("3")
+        # the warm cache was NOT used for `before`, and the poll listed again
+        assert fake.count()["browser tabs"] - before == 2
+        # the post-open listing is what stays cached: a verb on the new tab hits it
+        n = fake.count()["browser tabs"]
+        OC.browser("wait", "--time", "1", profile_name="user", target_id=out["new_tab"])
+        assert fake.count()["browser tabs"] == n
+    finally:
+        OC._OPENED_TABS.discard(fake.handle("3"))
+
+
+def test_the_reader_footprint_carries_the_cli_ledger(monkeypatch, clock, tmp_path):
+    """End to end through web_reader.Reader with the real client and a fake CLI:
+    one article, and the footprint says what it cost."""
+    from backend.services import web_reader as WR
+    from datetime import datetime, timedelta, timezone
+    fake = OperatorCLI()
+    _install(monkeypatch, fake)
+    now = {"t": datetime(2026, 9, 27, 14, 0, tzinfo=timezone.utc)}
+
+    def sleep(s):
+        now["t"] += timedelta(seconds=s)
+    thr = WR.Throttle(tmp_path / "thr.log", now_fn=lambda: now["t"], sleep_fn=sleep, seed=3)
+    rd = WR.Reader(profile="user", tab=fake.handle("1"), throttle=thr, lock=False)
+    OC.reset_cli_ledger()
+    rd._cli0 = rd.cli_ledger()
+    art = rd.read_article(WSJ_A, store=False)
+    assert art["url"] == WSJ_A
+    c = fake.count()
+    print(f"\nReader.read_article: {c['browser tabs']} tabs listings, "
+          f"{c['browser profiles']} profiles, {sum(c.values())} CLI calls")
+    assert c["browser tabs"] <= 2
+    fp = WR.footprint_receipt(rd.log, reads=rd.reads, scrolled=rd.scrolled_reads,
+                              write=False, cli_now=rd.cli_ledger(), cli_since=rd._cli0)
+    assert fp["cli_calls"] == sum(c.values()) and fp["cli_scope"] == "since_reader_start"
+    assert fp["cli_breakdown"]["tabs_listing"]["calls"] == c["browser tabs"]
+    assert fp["cli_breakdown"]["profile_check"]["calls"] == c["browser profiles"]
+    assert fp["cli_seconds_per_page"] is not None and fp["cli_cache"]["tabs_hits"] >= 3
+    # Reader.close() writes the same fields
+    out = rd.close(write_footprint=True)
+    assert out["cli_calls"] == sum(c.values()) and "tabs_listing" in out["cli_breakdown"]
+
+
+def test_a_stub_driver_without_a_ledger_says_so():
+    from backend.services import web_reader as WR
+    fp = WR.footprint_receipt([], write=False, cli_now={})
+    assert fp["cli_calls"] is None and fp["cli_ledger"].startswith("UNAVAILABLE")
