@@ -62,3 +62,11 @@ accidents, the ALLE one closed tonight.
    WSJ is Murat's call; Reddit stays as a graded source, not a trusted one.
 5. Murat: register by Oct 5 with the WLS export; an X account; overrule
    anything with a sentence.
+
+## 6. 11:00 HKT — Murat's inputs
+- **X is connected to OpenClaw** (Murat, 11:00 HKT): chunk 6's social read can
+  use it. Same rule as every source: X items become forecast rows and earn a
+  reliability weight; nothing is trusted by opinion.
+- WSJ: pending Murat's decision. Overrules: none yet.
+- The local model server was stopped by PID (110308; VRAM 5,167 → ~400 MiB) so
+  the GPU is free; `llama_server.start()` brings it back when a night needs it.
