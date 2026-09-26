@@ -1,0 +1,115 @@
+{
+ "cycle": 25,
+ "at": "2026-09-25T21:23:55+00:00",
+ "mode": "paper_profit",
+ "elapsed_s": 11.7,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 3.3,
+   "result": {
+    "equity": 999056.33,
+    "cash": 780857.77,
+    "n_positions": 11,
+    "invested_frac": 0.21840466192732097
+   }
+  },
+  "funnel": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "candidate set is fresh",
+    "generated_at": "2026-09-24T02:48:34+00:00",
+    "age_days": 1.77,
+    "n_candidates": 25
+   }
+  },
+  "analyst": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "already pulled today (2026-09-26)",
+    "n_snapshots": 3098,
+    "n_revision_rows": 393578
+   }
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "bars unchanged since the last rank",
+    "asof": "2026-09-21",
+    "n_eligible": 2929,
+    "top1": "FLNC"
+   }
+  },
+  "forecast": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "already ran today (2026-09-25)",
+    "state": "DONE",
+    "n_rows_written": 118,
+    "status": "ok"
+   }
+  },
+  "review": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "morning review done; market closed",
+    "review": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\review\\review_2026-09-25.json"
+   }
+  },
+  "plan": {
+   "ok": true,
+   "elapsed_s": 6.1,
+   "result": {
+    "planned": true,
+    "verdict": "MEASURED_NEGATIVE",
+    "acting": true,
+    "exploit_acting": false,
+    "blend_verdict": "UNMEASURED",
+    "er_present": true,
+    "er_red": null,
+    "probe_verdict": "UNMEASURED_TRADE_SMALL",
+    "probe_acting": true,
+    "shortlist": 23,
+    "shortlist_red": null,
+    "contract": "present",
+    "contract_red": null,
+    "contract_refused_excluded": 2,
+    "n_considered": 46,
+    "n_probe": 10,
+    "n_orders": 1,
+    "n_probe_orders": 0,
+    "n_exploit_orders": 0,
+    "n_sent": 0,
+    "send_block": null,
+    "turnover_usd": 19927.92,
+    "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,436 on $999,056; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$199,811",
+    "decisions_new": 0,
+    "top1": "NVDA"
+   }
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 2.3,
+   "result": {
+    "forecasts": "0 newly resolved; 17,484 of 26,148 records now carry an outcome; 130 wait on a bar, 8,528 are not yet due",
+    "decisions": "nothing_to_do"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "unit": "backtest_factory",
+    "skipped": "already ran today (2026-09-25)",
+    "day": "2026-09-25",
+    "rc": 0
+   }
+  }
+ },
+ "errors": []
+}

@@ -1,6 +1,16 @@
 # LEARNED_2026-09.md -- rules distilled from 2026-09's graded ledger
 
-Last ledger distillation: 2026-09-26 -- **LEARNED** (20 rules written; answered by deepseek/deepseek-chat, local_gguf/local; local INVALID: F6: quotes no number (a rule must carry its skill); DeepSeek $0.000496)
+Last ledger distillation: 2026-09-26 -- **LEARN_DEGRADED** -- no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24) (0 rules written; answered by None; local None; DeepSeek $0.0)
+- LEARN_DEGRADED 2026-09-26 (ledger_distill): no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24)
+- LEARN_DEGRADED 2026-09-26 (ledger_distill): no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24)
+- LEARN_DEGRADED 2026-09-26 (ledger_distill): no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24)
+- LEARN_DEGRADED 2026-09-26 (ledger_distill): no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24)
+- LEARN_DEGRADED 2026-09-26 (ledger_distill): no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24)
+- LEARN_DEGRADED 2026-09-26 (ledger_distill): no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24)
+- LEARN_DEGRADED 2026-09-26 (ledger_distill): no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24)
+- LEARN_DEGRADED 2026-09-26 (ledger_distill): no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24)
+- LEARN_DEGRADED 2026-09-26 (ledger_distill): no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24)
+- LEARN_DEGRADED 2026-09-26 (ledger_distill): no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24)
 
 ## MEASURED -- graded-ledger rules (n=20 current, 20 rows written this month)
 

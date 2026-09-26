@@ -1,0 +1,311 @@
+{
+ "receipt": "expected_return_refit",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "date": "2026-09-26",
+ "written_utc": "2026-09-26T02:50:45+00:00",
+ "sources": "production",
+ "unavailable": {
+  "regime": "not requested"
+ },
+ "constants": {
+  "ER_BLEND_GRADE_HORIZON": 21,
+  "ER_BLEND_GRADE_MIN_SESSIONS": 21,
+  "ER_CALIB_K": 30.0,
+  "ER_EXPLOIT_MAX_WEIGHT": 0.1,
+  "ER_FLOOR": 0.0,
+  "ER_GAMMA": 1.0,
+  "ER_HORIZONS": [
+   5,
+   21,
+   63
+  ],
+  "ER_HORIZON_ALIASES": {
+   "5": 5,
+   "20": 21,
+   "21": 21,
+   "60": 63,
+   "63": 63
+  },
+  "ER_K_PRIOR": 30.0,
+  "ER_MIN_GRADED": 30,
+  "ER_OOS_MIN_DATES": 20,
+  "ER_PDUFA_BREAKEVEN_P": 0.87,
+  "ER_PDUFA_PRIOR_P_APPROVAL": 0.7,
+  "ER_PDUFA_UP_RETURN": 0.05,
+  "ER_PRIOR_SHARE": 0.5,
+  "ER_REGIME_SCALE": {
+   "risk_on": 1.0,
+   "risk_off": 0.5,
+   "unknown": 1.0
+  },
+  "ER_REVISION_MIN_FIRMS": 3,
+  "ER_SIZE_SCALE_MIN": 0.25,
+  "ER_SR_MULT_MAX": 1.5,
+  "ER_SR_MULT_MIN": 0.5
+ },
+ "tables": {
+  "h5": {
+   "ranker": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "revision_flow": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "investigator_dir": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "thesis_card": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "catalyst": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "source_reliability": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   }
+  },
+  "h21": {
+   "ranker": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "revision_flow": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "investigator_dir": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "thesis_card": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "catalyst": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "source_reliability": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   }
+  },
+  "h63": {
+   "ranker": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "revision_flow": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "investigator_dir": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "thesis_card": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "catalyst": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "source_reliability": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   }
+  }
+ },
+ "oos": {
+  "h5": {
+   "horizon": 5,
+   "n_dates": 0,
+   "oos_advantage_reputation_vs_equal": null,
+   "by_year": {},
+   "loo_worst": null,
+   "licensed": false,
+   "why": "no graded decision rows carry an E[r] decomposition yet"
+  },
+  "h21": {
+   "horizon": 21,
+   "n_dates": 0,
+   "oos_advantage_reputation_vs_equal": null,
+   "by_year": {},
+   "loo_worst": null,
+   "licensed": false,
+   "why": "no graded decision rows carry an E[r] decomposition yet"
+  },
+  "h63": {
+   "horizon": 63,
+   "n_dates": 0,
+   "oos_advantage_reputation_vs_equal": null,
+   "by_year": {},
+   "loo_worst": null,
+   "licensed": false,
+   "why": "no graded decision rows carry an E[r] decomposition yet"
+  }
+ },
+ "calibration": {},
+ "magnitude": {
+  "lambda": 0.005489068686421972,
+  "skill": 0.02607307626050437,
+  "n": 8,
+  "bins": [
+   {
+    "p_lo": 0.01,
+    "p_hi": 0.09,
+    "p_mean": 0.06123918128654972,
+    "n": 171,
+    "abs_move": 0.021366202140241375
+   },
+   {
+    "p_lo": 0.0918,
+    "p_hi": 0.14,
+    "p_mean": 0.11639754601226994,
+    "n": 163,
+    "abs_move": 0.024647372057129018
+   },
+   {
+    "p_lo": 0.141,
+    "p_hi": 0.18,
+    "p_mean": 0.15828571428571428,
+    "n": 147,
+    "abs_move": 0.02671166774742353
+   },
+   {
+    "p_lo": 0.19,
+    "p_hi": 0.24,
+    "p_mean": 0.21069542483660134,
+    "n": 153,
+    "abs_move": 0.035739966210484586
+   },
+   {
+    "p_lo": 0.25,
+    "p_hi": 0.28,
+    "p_mean": 0.25749265536723165,
+    "n": 177,
+    "abs_move": 0.03280169094111794
+   },
+   {
+    "p_lo": 0.285,
+    "p_hi": 0.33,
+    "p_mean": 0.3055813953488372,
+    "n": 129,
+    "abs_move": 0.03938479188957692
+   },
+   {
+    "p_lo": 0.34,
+    "p_hi": 0.4,
+    "p_mean": 0.3709990147783252,
+    "n": 203,
+    "abs_move": 0.038001632431561065
+   },
+   {
+    "p_lo": 0.41,
+    "p_hi": 0.48,
+    "p_mean": 0.4455452830188681,
+    "n": 106,
+    "abs_move": 0.04431093825500056
+   },
+   {
+    "p_lo": 0.49,
+    "p_hi": 0.6,
+    "p_mean": 0.5344252873563218,
+    "n": 174,
+    "abs_move": 0.049759484476295676
+   },
+   {
+    "p_lo": 0.61,
+    "p_hi": 0.95,
+    "p_mean": 0.7048248175182482,
+    "n": 137,
+    "abs_move": 0.0639964486264819
+   }
+  ],
+  "ref_abs_move": 0.03704452836541182,
+  "horizon": 5,
+  "why": "lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)"
+ },
+ "n_graded_forecasts": 17484,
+ "n_graded_decisions": 0
+}

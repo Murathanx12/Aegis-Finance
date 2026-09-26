@@ -60,7 +60,7 @@
    "biotech": 0.0
   }
  },
- "updated": "2026-09-25T18:56:00+00:00",
+ "updated": "2026-09-26T02:50:48+00:00",
  "schema_keys": [
   "book_size",
   "exploration_temperature",
@@ -75,12 +75,12 @@
   "source_trust",
   "watchlist_attention"
  ],
- "refreshed_utc": "2026-09-25T18:56:00+00:00",
+ "refreshed_utc": "2026-09-26T02:50:48+00:00",
  "changed_since_last": [],
  "changes": [],
  "sources": {
-  "reputation_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\reputation\\reputation_2026-09-25.json",
-  "reputation_date": "2026-09-25",
+  "reputation_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\reputation\\reputation_2026-09-26.json",
+  "reputation_date": "2026-09-26",
   "persona_receipt_section_64": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\specialists\\scoreboard_2026-09-24.json"
  },
  "observed": {
@@ -96,22 +96,106 @@
    "source": "scripts.sim_run._probe_grade"
   },
   "direction_vs_magnitude": {
-   "note": "investigator: magnitude held-out skill 0.0408 (n 1560) vs direction -0.0872 (n 780) -- size on the magnitude read, never the direction read",
+   "note": "investigator: magnitude held-out skill 0.044 (n 1560) vs direction -0.0901 (n 780) -- size on the magnitude read, never the direction read",
    "by_family": {
+    "accounting_forensics": {
+     "direction_skill_heldout": -0.0796,
+     "direction_n_heldout": 211,
+     "magnitude_skill_heldout": -0.671,
+     "magnitude_n_heldout": 213
+    },
+    "analyst_revisions": {
+     "direction_skill_heldout": -0.1131,
+     "direction_n_heldout": 338,
+     "magnitude_skill_heldout": -0.7346,
+     "magnitude_n_heldout": 249
+    },
+    "behavioral_narrative": {
+     "direction_skill_heldout": -0.1134,
+     "direction_n_heldout": 306,
+     "magnitude_skill_heldout": -0.7838,
+     "magnitude_n_heldout": 229
+    },
+    "biotech_pharma": {
+     "direction_skill_heldout": -0.2146,
+     "direction_n_heldout": 33,
+     "magnitude_skill_heldout": -2.4738,
+     "magnitude_n_heldout": 48
+    },
+    "company_fundamental": {
+     "direction_skill_heldout": -0.2966,
+     "direction_n_heldout": 200,
+     "magnitude_skill_heldout": -0.695,
+     "magnitude_n_heldout": 196
+    },
+    "energy_materials": {
+     "direction_skill_heldout": -0.0222,
+     "direction_n_heldout": 36,
+     "magnitude_skill_heldout": -1.6059,
+     "magnitude_n_heldout": 30
+    },
+    "event_news": {
+     "direction_skill_heldout": -0.1997,
+     "direction_n_heldout": 285,
+     "magnitude_skill_heldout": -0.9938,
+     "magnitude_n_heldout": 259
+    },
+    "execution_momentum": {
+     "direction_skill_heldout": -0.0839,
+     "direction_n_heldout": 371,
+     "magnitude_skill_heldout": -0.6881,
+     "magnitude_n_heldout": 257
+    },
+    "geopolitical": {
+     "direction_skill_heldout": -0.1514,
+     "direction_n_heldout": 266,
+     "magnitude_skill_heldout": -0.5901,
+     "magnitude_n_heldout": 244
+    },
     "investigator": {
-     "direction_skill_heldout": -0.0872,
+     "direction_skill_heldout": -0.0901,
      "direction_n_heldout": 780,
-     "magnitude_skill_heldout": 0.0408,
+     "magnitude_skill_heldout": 0.044,
      "magnitude_n_heldout": 1560
     },
-    "personas": {
-     "direction_skill_heldout": -0.1055,
-     "direction_n_heldout": 3388,
-     "magnitude_skill_heldout": -0.6903,
-     "magnitude_n_heldout": 3006
+    "macro_rates": {
+     "direction_skill_heldout": -0.1448,
+     "direction_n_heldout": 292,
+     "magnitude_skill_heldout": -0.6967,
+     "magnitude_n_heldout": 246
+    },
+    "options_volatility": {
+     "direction_skill_heldout": -0.0993,
+     "direction_n_heldout": 370,
+     "magnitude_skill_heldout": -1.203,
+     "magnitude_n_heldout": 264
+    },
+    "ownership_flow": {
+     "direction_skill_heldout": -0.0707,
+     "direction_n_heldout": 304,
+     "magnitude_skill_heldout": -0.7123,
+     "magnitude_n_heldout": 248
+    },
+    "semis_technology": {
+     "direction_skill_heldout": -0.3476,
+     "direction_n_heldout": 72,
+     "magnitude_skill_heldout": -0.6313,
+     "magnitude_n_heldout": 78
+    },
+    "skeptic": {
+     "direction_skill_heldout": -0.0594,
+     "direction_n_heldout": 303,
+     "magnitude_skill_heldout": -0.6074,
+     "magnitude_n_heldout": 238
+    },
+    "why_moved": {
+     "direction_skill_heldout": -0.0525,
+     "direction_n_heldout": 4,
+     "magnitude_skill_heldout": null,
+     "magnitude_n_heldout": 0
     }
    },
-   "source": "learned_rules.jsonl (MEASURED class cells)"
+   "source": "reputation receipt arms_by_observable"
   }
  },
  "contract": "the night changes preferences, never code or risk limits: only SCHEMA keys move, each with a receipt"

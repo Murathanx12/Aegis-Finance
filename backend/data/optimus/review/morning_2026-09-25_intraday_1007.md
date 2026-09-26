@@ -1,0 +1,15 @@
+# Morning review 2026-09-25 (intraday)
+498 holdings; labels {'UNPRICED': 88, 'hold': 390, 'buy_more': 3, 'WATCH': 17}
+| src | ticker | close | 1d σ | 5d σ | p5/p1 | label | why |
+|---|---|---|---|---|---|---|---|
+| pc_paper | META | 741.245 | 4.03 | 1.81 | 0.5 | WATCH | moved +4.0σ today; decide next session (the label would have been hold |
+| llm:pers_catalyst_calendar_2026-09-25 | NVO | 39.8 | -3.33 | -1.57 | - | WATCH | moved -3.3σ today; decide next session (the label would have been hold |
+| llm:comp_catalyst_calendar_2026-09-25 | NVO | 39.8 | -3.33 | -1.57 | - | WATCH | moved -3.3σ today; decide next session (the label would have been hold |
+| llm:revision_flow_v0_random_twin | FIVN | 37.01 | 3.06 | 1.62 | 0.55 | WATCH | moved +3.1σ today; decide next session (the label would have been hold |
+| llm:comp_catalyst_calendar_2026-09-25 | MLYS | 28.31 | -2.74 | -1.5 | - | WATCH | moved -2.7σ today; decide next session (the label would have been hold |
+| llm:pers_policy_geopolitics_2026-09-25 | INTC | 121.78 | 2.63 | 2.46 | 0.49 | WATCH | moved +2.6σ today; decide next session (the label would have been hold |
+| llm:comp_policy_geopolitics_2026-09-25 | INTC | 121.78 | 2.63 | 2.46 | 0.49 | WATCH | moved +2.6σ today; decide next session (the label would have been hold |
+| llm:comp_ensemble_2026-09-25 | INTC | 121.78 | 2.63 | 2.46 | 0.49 | WATCH | moved +2.6σ today; decide next session (the label would have been hold |
+| llm:revision_flow_v0 | NET | 351.67 | 2.4 | 0.8 | 0.52 | WATCH | moved +2.4σ today; decide next session (the label would have been hold |
+| llm:comp_retail_attention_contrarian_2026-09-25 | NET | 351.67 | 2.4 | 0.8 | 0.52 | WATCH | moved +2.4σ today; decide next session (the label would have been hold |
+488 more row(s) in review_2026-09-25.json

@@ -3,8 +3,8 @@
  "date": "2026-09-26",
  "licence": "PRODUCT_EXPERIMENT",
  "llm_spend_usd": 0.0,
- "written_utc": "2026-09-25T18:56:45+00:00",
- "elapsed_s": 91.0,
+ "written_utc": "2026-09-26T00:41:50+00:00",
+ "elapsed_s": 62.0,
  "partial": null,
  "n_rules_done": 116,
  "n_computed_this_run": 116,
@@ -33,7 +33,7 @@
  },
  "flow": {
   "status": "OK",
-  "n_revision_rows": 393369,
+  "n_revision_rows": 393581,
   "n_covered": 2992,
   "windows_days": [
    90,
@@ -58,9 +58,9 @@
    "construction": "pct_change of auto_adjust=True Close (total return)",
    "dividends_included": true,
    "network": true,
-   "fetched_utc": "2026-09-25T18:55:55.216143+00:00"
+   "fetched_utc": "2026-09-26T00:41:19.174255+00:00"
   },
-  "provenance_sha256": "1df46b50128c9aeaf3f49f32a7a1394ad2211356e10ea0166b8126810f1e68ac",
+  "provenance_sha256": "9ba0b223a7f4e2756dc1ffd742c8ed017b4db83784d87ee158fcea8d3b8c884c",
   "span": [
    "2017-01-24",
    "2026-09-25"
