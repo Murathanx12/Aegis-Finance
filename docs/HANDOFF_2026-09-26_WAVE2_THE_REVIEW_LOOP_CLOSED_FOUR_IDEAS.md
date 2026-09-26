@@ -150,3 +150,14 @@ Commits: chunk J `3ae60413` · paper rules `d51d0050` · systems fixes `85d96044
   die when 2020 is dropped (COVID). HYPOTHESIS closed.
 - 61 rules `DEPRIORITIZED` as cluster duplicates. **Owed:** the bridge grades each cluster as one
   observation and compares momentum books against SMH/MTUM before SPY; a HAC t for quarterly books.
+
+## 10. 01:02 HKT 09-27 — session cut by the usage limit; what runs on without me
+- Sim `24b89eb2f80a` (pid 137904, planned end 08:18) in its first cycle's analyst pull; lab pid 100684;
+  crash-model retrain pid 128152 (`train_crash_model_2026-09-27.log`); J3 builder fixing the
+  queue's tab-id bug and relaunching `dowjones_pull --queue` (pid in `dowjones/queue_run.pid`);
+  the SSRN abstract read on the managed OpenClaw profile (writes `research_ssrn_via_openclaw_browser_signal_candidates.md`).
+- CI: green at `8f9ec417`; `b4b89c8a` + `164312c5` pushed, verdict unread. Later commits by J3
+  are NOT pushed. Factory receipt of record: `leaderboard_2026-09-26T164302Z.json` (README/BRIDGE
+  render from it; replication 10/10 AGREE). `T153843Z` is INVALID (25-name facts table).
+- Next session: read `dowjones/queue_run_2026-09-27b.log`, the SSRN note (register its top-5 with
+  controls), the retrain log, `health_probe`; delete `HANDOFF_PC` if Murat is back; push.
