@@ -78,8 +78,10 @@ A NEW TAB comes only from `open_from_tab()`: it runs `window.open(<url>)` from
 inside an already-open MuratClaw (Work) tab, so the new tab inherits THAT
 Chrome profile (Murat, 2026-09-26: the CDP `open` verb lands in his MAIN
 profile). The URL is host-checked and JSON-encoded into a fixed template; the
-new tab is found by diffing `tabs` before/after and its host is re-checked
-before anything else touches it.
+new tab is found by diffing `tabs` before/after by its STABLE handle (raw
+`targetId`; by URL when the Chrome MCP session was reset between the two
+lists -- never by `tN` position), polled for up to 5 s, and its host is
+re-checked before anything else touches it.
 
 `evaluate` stays out of `ALLOWED_VERBS`. Reading article text uses
 `read_text()`, which runs ONE fixed, module-constant function (innerText of the
@@ -320,12 +322,98 @@ def tabs(*, profile_name: str | None = None) -> list[dict]:
     return [t for t in (d.get("tabs") or []) if isinstance(t, dict)]
 
 
+# -- tab identity (Chunk J3, 2026-09-27) --------------------------------------
+# On the `user` profile a tab has two names. `targetId` is Chrome MCP's
+# `chrome-mcp:<session nonce>:<n>`; `tabId` (`tN`) is the gateway's friendly
+# alias, handed out per targetId. openclaw resolves either exactly. The HANDLE
+# a run holds is the raw targetId: it names the session it belongs to, so a
+# missing handle can say WHY it is missing (the Chrome MCP session was reset
+# and every id was reissued) instead of "no tab 't24'". For chrome-mcp the
+# gateway does NOT migrate aliases across a session reset (openclaw
+# `assignTabAliases(..., !usesChromeMcp)`), so neither name survives one --
+# that case is rebound by URL (`new_tabs_after`, `dowjones_pull._Recovery`),
+# never by position.
+
+def tab_handle(t: dict) -> str:
+    """The id every later verb is given: raw `targetId`, else the `tN` alias."""
+    return str(t.get("targetId") or t.get("tabId") or t.get("suggestedTargetId") or "")
+
+
+def tab_label(t: dict) -> str:
+    """The friendly `tN` (for printing and oldest-first ordering), else the handle."""
+    return str(t.get("tabId") or t.get("suggestedTargetId") or t.get("label")
+               or t.get("targetId") or "")
+
+
+def tab_matches(t: dict, ref: str | None) -> bool:
+    return bool(ref) and ref in (t.get("tabId"), t.get("suggestedTargetId"),
+                                 t.get("targetId"), t.get("label"))
+
+
+def find_tab(tab_list: list[dict], ref: str | None) -> dict | None:
+    return next((t for t in tab_list if tab_matches(t, ref)), None)
+
+
+def session_of(ref: str | None) -> str | None:
+    """`chrome-mcp:<nonce>:<n>` -> `<nonce>`; anything else -> None."""
+    parts = str(ref or "").split(":")
+    return parts[1] if len(parts) == 3 and parts[0] == "chrome-mcp" else None
+
+
+def label_num(label: str) -> int:
+    """`t24` -> 24, `chrome-mcp:abc:7` -> 7; unnumbered sorts last."""
+    digits = "".join(ch for ch in str(label).rsplit(":", 1)[-1] if ch.isdigit())
+    return int(digits) if digits else 10 ** 9
+
+
+def _url_key(u: str | None) -> str:
+    x = urlsplit(str(u or ""))
+    host = (x.hostname or "").lower()
+    host = host[4:] if host.startswith("www.") else host
+    return f"{host}{x.path.rstrip('/')}"
+
+
+def new_tabs_after(before: list[dict], after: list[dict], url: str | None = None
+                   ) -> tuple[list[dict], str]:
+    """The tab(s) `window.open` added, from a before/after pair of `tabs` lists.
+
+    1. by HANDLE: a handle absent from `before`. At most one, and the list grew
+       by at most one -> that is the answer.
+    2. otherwise (the Chrome MCP session was reset between the two lists, so
+       every handle AND every `tN` was reissued): by URL multiset -- the tab
+       whose URL occurs more often after than before, newest first, preferring
+       the URL that was asked for. Never by position: a `tN` number is not a
+       tab's place, and a stale number can name nothing at all.
+    Returns `(tabs, how)`."""
+    seen = {tab_handle(t) for t in before}
+    by_handle = [t for t in after if tab_handle(t) not in seen]
+    if len(by_handle) <= 1 and len(after) <= len(before) + 1:
+        return by_handle, "handle"
+    count: dict[str, int] = {}
+    for t in before:
+        k = _url_key(t.get("url"))
+        count[k] = count.get(k, 0) + 1
+    extra: list[dict] = []
+    for t in sorted(after, key=lambda t: label_num(tab_label(t))):   # oldest keeps the old URL
+        k = _url_key(t.get("url"))
+        if count.get(k, 0) > 0:
+            count[k] -= 1
+        else:
+            extra.append(t)
+    if url and len(extra) > 1:
+        want = [t for t in extra if _url_key(t.get("url")) == _url_key(url)]
+        extra = want or extra
+    return extra, "url_multiset"
+
+
+def brief(tab_list: list[dict]) -> list[list[str]]:
+    """`[[tN, handle, url]]` -- what a receipt or a log line prints."""
+    return [[tab_label(t), tab_handle(t), str(t.get("url") or "")[:90]] for t in tab_list]
+
+
 def tab_url(target_id: str, *, profile_name: str | None = None) -> str | None:
-    for t in tabs(profile_name=profile_name):
-        if target_id in (t.get("tabId"), t.get("suggestedTargetId"),
-                         t.get("targetId"), t.get("label")):
-            return str(t.get("url") or "")
-    return None
+    t = find_tab(tabs(profile_name=profile_name), target_id)
+    return None if t is None else str(t.get("url") or "")
 
 
 def assert_operator_tab(target_id: str | None, *, profile_name: str) -> str:
@@ -335,10 +423,18 @@ def assert_operator_tab(target_id: str | None, *, profile_name: str) -> str:
             f"REFUSED_OPERATOR_TAB_UNNAMED: on {profile_name!r} (Murat's own "
             f"Chrome) every action names its tab; an unnamed action lands on "
             f"whatever tab happens to be focused.")
-    u = tab_url(target_id, profile_name=profile_name)
+    listing = tabs(profile_name=profile_name)
+    hit = find_tab(listing, target_id)
+    u = None if hit is None else str(hit.get("url") or "")
     if u is None:
+        mine = session_of(target_id)
+        now = sorted({s_ for s_ in (session_of(str(t.get("targetId") or "")) for t in listing)
+                      if s_})
+        why = (f" (Chrome MCP session {mine!r} is gone; the listing is session {now}: "
+               f"every tab id was reissued -- rebind by URL)"
+               if mine and now and mine not in now else "")
         raise OpenClawRefused(
-            f"REFUSED_OPERATOR_TAB_MISSING: no tab {target_id!r} on {profile_name!r}.")
+            f"REFUSED_OPERATOR_TAB_MISSING: no tab {target_id!r} on {profile_name!r}{why}.")
     if not host_allowed(u):
         raise OpenClawRefused(
             f"REFUSED_OPERATOR_TAB_HOST: tab {target_id!r} is on "
@@ -448,14 +544,20 @@ OPEN_FROM_TAB_TEMPLATE = "() => {{ window.open({url}, '_blank'); return 1; }}"
 
 
 def open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
-                  settle_s: float = 2.0, sleep_fn: Any = None) -> dict:
+                  settle_s: float = 1.0, wait_s: float = 5.0, poll_s: float = 0.5,
+                  sleep_fn: Any = None, clock: Any = None) -> dict:
     """Open `url` in a NEW tab of the same Chrome profile window as `parent_id`.
 
     `parent_id` must be an operator tab already on an allowed host; `url` must
     be on an allowed host. The JavaScript is a fixed template with the URL
     JSON-encoded into it -- nothing else from the caller reaches the page.
-    Returns `{new_tab, url, parent}`; refuses if no new tab appeared or the new
-    tab is on a host outside the allowlist.
+
+    The new tab is found by `new_tabs_after` on the `tabs` lists before and
+    after (by stable handle, falling back to URL when the Chrome MCP session
+    was reset in between), polled for up to `wait_s` because the tab can take a
+    moment to appear. Returns `{new_tab, label, url, parent, how, tabs_before,
+    tabs_after}`; `new_tab` is the STABLE handle every later verb is given.
+    Refuses if no single new tab appeared or it is off the allowlist.
     """
     want = profile(profile_name)
     if not is_operator_profile(want):
@@ -463,26 +565,42 @@ def open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
     check_url(url)
     if not host_allowed(url):
         raise OpenClawRefused(f"REFUSED_OPERATOR_HOST: {url!r} is not on {operator_hosts()}.")
+    sleep = sleep_fn or time.sleep
+    now = clock or time.monotonic
     assert_profile(name=want)
     assert_operator_tab(parent_id, profile_name=want)
-    before_ids = {str(t.get("tabId")) for t in tabs(profile_name=want)}
+    before = tabs(profile_name=want)
+    parent = find_tab(before, parent_id)
+    parent_handle = tab_handle(parent) if parent else parent_id
     fn = OPEN_FROM_TAB_TEMPLATE.format(url=json.dumps(url))
     r = _run(["browser", "--browser-profile", want, "--json", "evaluate",
-              "--target-id", parent_id, "--fn", fn], timeout=60)
-    (sleep_fn or time.sleep)(settle_s)
-    new = [t for t in tabs(profile_name=want) if str(t.get("tabId")) not in before_ids]
+              "--target-id", parent_handle, "--fn", fn], timeout=60)
+    sleep(settle_s)
+    t0 = now()
+    after: list[dict] = []
+    new: list[dict] = []
+    how = "handle"
+    while True:
+        after = tabs(profile_name=want)
+        new, how = new_tabs_after(before, after, url)
+        ready = len(new) == 1 and str(new[0].get("url") or "") not in ("", "about:blank")
+        if r.returncode != 0 or len(new) > 1 or ready or now() - t0 >= wait_s:
+            break
+        sleep(poll_s)
     if r.returncode != 0 or len(new) != 1:
         raise OpenClawRefused(
-            f"REFUSED_OPEN_FROM_TAB: rc {r.returncode}, {len(new)} new tab(s) "
-            f"after window.open from {parent_id!r}: {(r.stderr or '')[:160]!r}")
-    tid, turl = str(new[0].get("tabId")), str(new[0].get("url") or "")
+            f"REFUSED_OPEN_FROM_TAB: rc {r.returncode}, {len(new)} new tab(s) ({how}) "
+            f"after window.open from {parent_id!r} within {wait_s:.0f} s: "
+            f"{(r.stderr or '')[:160]!r}; before={brief(before)} after={brief(after)}")
+    tid, turl = tab_handle(new[0]), str(new[0].get("url") or "")
     _OPENED_TABS.add(tid)
     if turl and turl != "about:blank" and not host_allowed(turl):
         raise OpenClawRefused(
             f"REFUSED_OPERATOR_TAB_HOST: the new tab {tid!r} is on {turl!r}; it is "
             f"recorded as ours so `close` may remove it.")
-    return {"new_tab": tid, "url": turl, "parent": parent_id, "profile": want,
-            "attached_to": attached_to(profile_name=want)}
+    return {"new_tab": tid, "label": tab_label(new[0]), "url": turl, "parent": parent_handle,
+            "how": how, "profile": want, "tabs_before": brief(before),
+            "tabs_after": brief(after), "attached_to": attached_to(profile_name=want)}
 
 
 def read_text(target_id: str, *, profile_name: str | None = None,
@@ -498,8 +616,8 @@ def read_text(target_id: str, *, profile_name: str | None = None,
     expected = None
     if is_operator_profile(want):
         assert_operator_tab(target_id, profile_name=want)
-        expected = next((str(t.get("targetId")) for t in tabs(profile_name=want)
-                         if target_id in (t.get("tabId"), t.get("targetId"))), None)
+        hit = find_tab(tabs(profile_name=want), target_id)
+        expected = str(hit.get("targetId")) if hit and hit.get("targetId") else None
     r = _run(["browser", "--browser-profile", want, "--json", "evaluate",
               "--target-id", target_id, "--fn", READ_TEXT_FN], timeout=timeout)
     out: dict[str, Any] = {"rc": r.returncode, "profile": want, "target_id": target_id,

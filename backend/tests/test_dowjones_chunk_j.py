@@ -1165,3 +1165,185 @@ def test_a_gateway_that_cannot_clean_up_its_mcp_subprocess_refuses_at_once(fast_
     with pytest.raises(WR.ReaderRefused, match="GATEWAY_NEEDS_RESTART"):
         WR.ensure_attached("user", oc=oc, log=log, **fast_reattach)
     assert len(oc.runs) == 1 and log[0]["ok"] is False and "cleanup" in log[0]["start_out"]
+
+
+
+# ═══════════ Chunk J3: stable tab ids; a refused line is never DONE ═════════
+# 2026-09-27 00:33 HKT: every rotating-plan line refused `no tab 't24'` (then
+# 't62') on the verb right after `open_from_tab`, and the queue marked a
+# claims pass over nothing DONE. openclaw's `tN` is an alias per Chrome MCP
+# targetId (`chrome-mcp:<session>:<n>`); a Chrome MCP session reset reissues
+# BOTH, and the gateway does not migrate chrome-mcp aliases.
+
+def _tab(label, handle, url):
+    return {"tabId": label, "suggestedTargetId": label, "targetId": handle, "url": url}
+
+
+HOTS = "https://www.wsj.com/news/heard-on-the-street"
+BEFORE = [_tab("t10", "chrome-mcp:aaa:1", "https://www.barrons.com/market-data/bonds/x"),
+          _tab("t14", "chrome-mcp:aaa:2", "https://www.wsj.com/health/peptide-4aa63e38"),
+          _tab("t18", "chrome-mcp:aaa:3", "https://www.marketwatch.com/investing/stock/qubt")]
+
+
+def test_new_tab_is_found_by_its_stable_handle_when_the_tn_numbering_shifts():
+    # same session, but every `tN` label moved: the diff must not be by label
+    after = [dict(t, tabId=f"t{int(t['tabId'][1:]) + 30}",
+                  suggestedTargetId=f"t{int(t['tabId'][1:]) + 30}") for t in BEFORE]
+    after.append(_tab("t52", "chrome-mcp:aaa:4", HOTS))
+    new, how = OC.new_tabs_after(BEFORE, after, HOTS)
+    assert how == "handle" and [OC.tab_handle(t) for t in new] == ["chrome-mcp:aaa:4"]
+    # the label diff this replaces would have called all four tabs new
+    assert len({t["tabId"] for t in after} - {t["tabId"] for t in BEFORE}) == 4
+
+
+def test_after_a_chrome_mcp_session_reset_the_new_tab_is_found_by_url_never_by_position():
+    after = [_tab(f"t{30 + i}", f"chrome-mcp:bbb:{i}", t["url"]) for i, t in enumerate(BEFORE)]
+    after.append(_tab("t33", "chrome-mcp:bbb:3", HOTS + "?mod=nav"))
+    new, how = OC.new_tabs_after(BEFORE, after, HOTS)
+    assert how == "url_multiset" and [OC.tab_handle(t) for t in new] == ["chrome-mcp:bbb:3"]
+    # not appeared yet after the reset -> nothing, so the caller keeps polling
+    assert OC.new_tabs_after(BEFORE, after[:3], HOTS)[0] == []
+
+
+def test_open_from_tab_waits_for_the_tab_and_returns_the_stable_handle(monkeypatch):
+    monkeypatch.setattr(OC, "profiles", _fake_profiles)
+    monkeypatch.setattr(OC, "attached_to", lambda profile_name=None: {"pid": 1})
+    listings = [list(BEFORE)] * 3 + [BEFORE + [_tab("t24", "chrome-mcp:aaa:4", "about:blank")],
+                                     BEFORE + [_tab("t24", "chrome-mcp:aaa:4", HOTS)]]
+    seen = {"n": 0}
+
+    def tabs(profile_name=None):
+        i = min(seen["n"], len(listings) - 1)
+        seen["n"] += 1
+        return list(listings[i])
+    monkeypatch.setattr(OC, "tabs", tabs)
+    sent = []
+    monkeypatch.setattr(OC, "_run", lambda args, **k: sent.append(args)
+                        or subprocess.CompletedProcess(args, 0, "{}", ""))
+    t = [0.0]
+
+    def sleep(s):
+        t[0] += s
+    r = OC.open_from_tab("t14", HOTS, sleep_fn=sleep, clock=lambda: t[0])
+    assert r["new_tab"] == "chrome-mcp:aaa:4" and r["label"] == "t24" and r["url"] == HOTS
+    assert "chrome-mcp:aaa:4" in OC._OPENED_TABS
+    assert sent[0][sent[0].index("--target-id") + 1] == "chrome-mcp:aaa:2"   # parent by handle
+    assert r["tabs_before"][1] == ["t14", "chrome-mcp:aaa:2", BEFORE[1]["url"]]
+    OC._OPENED_TABS.discard("chrome-mcp:aaa:4")
+    # a tab that never appears refuses after the 5 s window, with both lists
+    seen["n"], t[0] = 0, 0.0
+    listings[:] = [list(BEFORE)]
+    with pytest.raises(OC.OpenClawRefused,
+                       match=r"REFUSED_OPEN_FROM_TAB: rc 0, 0 new.*within 5 s.*before="):
+        OC.open_from_tab("t14", HOTS, sleep_fn=sleep, clock=lambda: t[0])
+    assert t[0] >= 5.0
+
+
+def test_a_missing_handle_names_the_session_reset(monkeypatch):
+    monkeypatch.setattr(OC, "tabs", lambda profile_name=None: [
+        _tab("t40", "chrome-mcp:bbb:1", HOTS)])
+    with pytest.raises(OC.OpenClawRefused,
+                       match=r"session 'aaa' is gone.*\['bbb'\].*rebind by URL"):
+        OC.assert_operator_tab("chrome-mcp:aaa:4", profile_name="user")
+    assert WR.is_detached("REFUSED_OPERATOR_TAB_MISSING: no tab 'chrome-mcp:aaa:4' on 'user' "
+                          "(Chrome MCP session 'aaa' is gone)")
+    # the label still resolves to the same tab while the session lives
+    assert OC.assert_operator_tab("t40", profile_name="user") == HOTS
+
+
+def test_parent_tabs_hold_the_handle_and_order_by_label():
+    from scripts import dowjones_pull as DP
+    tabs = [_tab("t18", "chrome-mcp:aaa:9", "https://www.wsj.com/b-1a2b3c4d"),
+            _tab("t14", "chrome-mcp:aaa:12", "https://www.wsj.com/a-1a2b3c4d")]
+    p = DP.resolve_parent_tabs(["wsj"], tabs)
+    assert p["wsj"]["tab"] == "chrome-mcp:aaa:12" and p["wsj"]["label"] == "t14"
+    assert DP.resolve_parent_tabs(["wsj"], tabs, explicit={"wsj": "t18"})["wsj"]["tab"] == \
+        "chrome-mcp:aaa:9"
+    assert DP.resolve_parent_tabs(["wsj"], tabs, exclude={"chrome-mcp:aaa:12"})["wsj"][
+        "label"] == "t18"
+
+
+class ResetOnFirstWaitStub(MultiStub):
+    """The 00:33 failure: the tab opens, then the Chrome MCP session resets
+    before the next verb and every id is reissued (+100)."""
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.reset_done, self._OPENED_TABS = False, set()
+
+    def profiles(self):
+        return [{"name": "user", "state": "running"}]
+
+    def tabs(self, profile_name=None):
+        return self._tabs + [{"tabId": k, "url": v} for k, v in self.cur.items()]
+
+    def open_from_tab(self, parent, url, profile_name="user"):
+        r = super().open_from_tab(parent, url, profile_name)
+        self._OPENED_TABS.add(r["new_tab"])
+        return r
+
+    def browser(self, verb, *args, profile_name=None, target_id=None, url=None):
+        if verb == "wait" and not self.reset_done:
+            self.reset_done = True
+            shift = lambda t: f"t{int(t[1:]) + 100}"   # noqa: E731
+            self._tabs = [dict(t, tabId=shift(t["tabId"])) for t in self._tabs]
+            self.cur = {shift(k): v for k, v in self.cur.items()}
+        if target_id and target_id not in self.cur:
+            raise OC.OpenClawRefused(
+                f"REFUSED_OPERATOR_TAB_MISSING: no tab {target_id!r} on 'user'.")
+        return super().browser(verb, *args, profile_name=profile_name, target_id=target_id,
+                               url=url)
+
+
+def test_a_tab_lost_right_after_open_is_rebound_by_url_and_the_lane_reads(ledger, monkeypatch):
+    from scripts import dowjones_pull as DP
+    monkeypatch.setattr(WR, "REATTACH_WAIT_S", 0.0)
+    drv = ResetOnFirstWaitStub()
+    _, th = _clock_throttle(ledger / "thr.log")
+    lanes = DP.parse_plan("barrons:stock_picks:3")
+    rc = DP.run_plan(lanes, parents=DP.resolve_parent_tabs(["barrons"], drv.tabs()),
+                     driver=drv, throttle=th, stored={})
+    assert rc["stopped"] is None and rc["per_source"]["barrons"]["articles"] == 3
+    assert rc["tab_remaps"][0]["remap"] == {"t51": "t151"}
+    assert rc["lanes"]["barrons:stock_picks"]["tab"] == "t151" and drv.closed == ["t151"]
+    # no second tab was opened: the lost one was found again, not replaced
+    assert sum(1 for c in drv.calls if c[0] == "open_from_tab") == 1
+
+
+@pytest.mark.parametrize("code,outcome,status", [
+    (0, {"kind": "plan", "n_articles": 4, "refused": None}, "DONE"),
+    (0, {"kind": "plan", "n_articles": 0,
+         "refused": "OpenClawRefused: REFUSED_OPERATOR_TAB_MISSING: no tab 't24'"},
+     "FAILED_WILL_RETRY"),
+    (2, {"kind": "archive", "n_articles": 0, "refused": "no tab 't62'"}, "FAILED_WILL_RETRY"),
+    (0, {"kind": "claims", "n_articles": 0, "refused": None}, "SKIPPED_NOTHING_TO_DO"),
+    (0, {"kind": "claims", "n_articles": 5, "refused": None}, "DONE"),
+    (0, {"kind": "claims", "n_articles": 2, "refused": "CAP: spent $0.4"}, "FAILED_WILL_RETRY"),
+    (0, {}, "DONE"),
+    (2, {}, "FAILED_WILL_RETRY"),
+])
+def test_a_refused_line_is_never_done(code, outcome, status):
+    from scripts import dowjones_pull as DP
+    assert DP.line_status(code, outcome) == status
+
+
+def test_queue_marks_only_done_lines_and_retries_a_claims_pass_over_nothing(tmp_path):
+    from scripts import dowjones_pull as DP
+    q = tmp_path / "QUEUE.txt"
+    q.write_text('--plan "wsj:heard_on_the_street:2"\n--claims\n', encoding="utf-8")
+    state = {"articles": 0}
+
+    def fake_main(argv):
+        if argv[0] == "--plan":
+            DP._LAST_OUTCOME.update(kind="plan", n_articles=state["articles"],
+                                    refused=None if state["articles"] else "no tab 't24'")
+            return 0          # rc 0 alone is not DONE
+        DP._LAST_OUTCOME.update(kind="claims", n_articles=state["articles"], refused=None)
+        return 0
+    r1 = DP.run_queue(q, main_fn=fake_main)
+    assert [ln["status"] for ln in r1["lines"]] == ["FAILED_WILL_RETRY", "SKIPPED_NOTHING_TO_DO"]
+    assert not list(DP.queue_done_dir(q).glob("*.done"))
+    state["articles"] = 3
+    r2 = DP.run_queue(q, main_fn=fake_main)
+    assert [ln["status"] for ln in r2["lines"]] == ["DONE", "DONE"]
+    assert len(list(DP.queue_done_dir(q).glob("*.done"))) == 2

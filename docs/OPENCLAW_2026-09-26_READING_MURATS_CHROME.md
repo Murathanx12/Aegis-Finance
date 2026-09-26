@@ -391,3 +391,44 @@ the queue runs. Each time, the state stayed `stopped`. The queue's first line re
 `REFUSED_GATEWAY_DOWN: GATEWAY_NEEDS_RESTART` (`dowjones/plan_2026-09-26_162641.json`) and is
 **not** marked done, so the next `--queue` run starts with it. It needs a gateway restart by
 the operator first.
+
+### 12.2 Chunk J3 (2026-09-27): stable tab ids; a refused line is never DONE
+
+**What failed.** The queue launched at 00:33 HKT read nothing. On both lines the verb straight
+after `open_from_tab` refused: `REFUSED_OPERATOR_TAB_MISSING: no tab 't24'` (plan, lane opened
+from t10) and `'t62'` (archive, opened from t39). The profile was `stopped` by the archive's
+close. Meanwhile the queue marked the claims line DONE with `n_articles 0`.
+
+**What the ids are (read from openclaw 2026.9.5's `dist/`, not assumed).** Chrome MCP names a
+page `chrome-mcp:<session nonce>:<n>` (`registerChromeMcpTargets`). The gateway gives each
+targetId a friendly alias `tN` from a per-profile counter (`assignTabAlias`), and `--target-id`
+resolves either one exactly. For chrome-mcp the gateway calls `assignTabAliases(...,
+migrateReplacements = !usesChromeMcp)`, so it does **not** carry an alias across a Chrome MCP
+session reset. When the MCP subprocess resets, the nonce changes, every targetId is reissued, and
+so is every `tN`. The same wsj tab was t14 at 16:33 UTC and t39 at 16:41. A `tN` is therefore not
+positional: it is bound to one session. **Neither name survives a reset.**
+
+**The fix.**
+* `open_from_tab` diffs the before/after `tabs` lists by the **handle** (raw targetId), not by
+  `tN`. If the lists straddle a reset, every handle looks new, so it falls back to the **URL
+  multiset** and prefers the URL it asked for. It never uses position. It polls up to 5 s for the
+  tab to appear with a real URL. It returns the handle as `new_tab`, plus `label`, `how`,
+  `tabs_before` and `tabs_after`. The plan and archive receipts keep that record under
+  `opened`, and the log prints `opened <lane>: <tN> = <handle> (<how>)`.
+* Every later verb gets the handle. `resolve_parent_tabs` holds handles and orders by `tN`
+  (oldest first). `_Recovery` remaps by URL onto handles.
+* A missing chrome-mcp handle now says why:
+  `(Chrome MCP session 'aaa' is gone; the listing is session ['bbb']: every tab id was reissued
+  -- rebind by URL)`. It is still a DETACHED error, so recovery runs.
+* The first `wait`/listing snapshot after an open used to sit outside any recovery. That is the
+  exact call that refused at 00:33. `run_plan` and `run_archive` now route it through one
+  re-attach + rebind-by-URL, then retry.
+* The queue verdict is `line_status(rc, outcome)`. A refusal or stop with nothing read is
+  `FAILED_WILL_RETRY` whatever the rc, and so is a claims pass cut short. A claims pass with zero
+  new stored articles is `SKIPPED_NOTHING_TO_DO`, which leaves no marker, so it runs again once
+  reads exist. Only `DONE` writes a marker. The 00:33 claims marker was renamed
+  `line006_*.voided_J3_claims_over_nothing`.
+
+**Not fixed here: why the session resets.** Since 16:44 UTC every `tabs`/`status` on `user`
+answers `Chrome MCP subprocess tree cleanup could not be verified.` (GATEWAY_NEEDS_RESTART), so
+the live before/after reproduction could not run. The reader does not restart the gateway.

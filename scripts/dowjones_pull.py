@@ -67,6 +67,7 @@ if str(REPO) not in sys.path:
 from backend import config as _config  # noqa: E402
 from backend.services import dowjones_claims as DC  # noqa: E402
 from backend.services import dowjones_feeds as DF  # noqa: E402
+from backend.services import openclaw_client as OCH  # noqa: E402  -- pure tab-id helpers only
 from backend.services import web_reader as WR  # noqa: E402
 
 TOU_SENTENCE = (
@@ -343,8 +344,7 @@ def parse_parent_tabs(spec: str) -> dict[str, str]:
 
 
 def _tab_num(tid: str) -> int:
-    digits = "".join(ch for ch in str(tid) if ch.isdigit())
-    return int(digits) if digits else 10 ** 9
+    return OCH.label_num(tid)
 
 
 def resolve_parent_tabs(sources: list[str], tab_list: list[dict], *,
@@ -357,25 +357,30 @@ def resolve_parent_tabs(sources: list[str], tab_list: list[dict], *,
     that source's site. A source with no tab on its host borrows the oldest
     tab on any allowed host (a `window.open` from a wsj.com tab inherits the
     same Chrome profile) and says so in `how`. No allowed tab at all refuses."""
-    by_id = {str(t.get("tabId")): str(t.get("url") or "") for t in tab_list if t.get("tabId")}
-    cands = sorted(((tid, u) for tid, u in by_id.items() if tid not in exclude
-                    and WR.host_ok(u)), key=lambda x: _tab_num(x[0]))
+    # the handle is the STABLE id (raw targetId when the listing has one); the
+    # `tN` label only orders oldest-first and is printed (Chunk J3)
+    rows = [(OCH.tab_handle(t), OCH.tab_label(t), str(t.get("url") or ""), t)
+            for t in tab_list if OCH.tab_handle(t)]
+    cands = sorted(((h, lab, u) for h, lab, u, t in rows
+                    if not any(OCH.tab_matches(t, x) for x in exclude) and WR.host_ok(u)),
+                   key=lambda x: _tab_num(x[1]))
     out: dict[str, dict] = {}
     for src in sources:
         want = (explicit or {}).get(src)
         if want:
-            u = by_id.get(want)
-            if u is None or not WR.host_ok(u):
+            hit = next(((h, lab, u) for h, lab, u, t in rows if OCH.tab_matches(t, want)), None)
+            if hit is None or not WR.host_ok(hit[2]):
                 raise WR.ReaderRefused(f"REFUSED_PARENT_TAB: {src}={want} is "
-                                       f"{'missing' if u is None else 'on ' + repr(u)}")
-            out[src] = {"tab": want, "url": u, "how": "explicit"}
+                                       f"{'missing' if hit is None else 'on ' + repr(hit[2])}")
+            out[src] = {"tab": hit[0], "label": hit[1], "url": hit[2], "how": "explicit"}
             continue
         host = f"{src}.com"
-        own = [(tid, u) for tid, u in cands if WR.norm_url(u).split("/")[0].endswith(host)]
+        own = [c for c in cands if WR.norm_url(c[2]).split("/")[0].endswith(host)]
         if own:
-            out[src] = {"tab": own[0][0], "url": own[0][1], "how": f"by_host:{host}"}
+            out[src] = {"tab": own[0][0], "label": own[0][1], "url": own[0][2],
+                        "how": f"by_host:{host}"}
         elif cands:
-            out[src] = {"tab": cands[0][0], "url": cands[0][1],
+            out[src] = {"tab": cands[0][0], "label": cands[0][1], "url": cands[0][2],
                         "how": f"borrowed:no {host} tab open"}
         else:
             raise WR.ReaderRefused(
@@ -455,12 +460,12 @@ class _Recovery:
         for key, rd in readers.items():
             last = next((pg["url"] for pg in reversed(rd.log) if pg.get("url")), "") or ""
             want = WR.norm_url(last)
-            cands = sorted((t for t in tabs if str(t.get("tabId")) not in taken
+            cands = sorted((t for t in tabs if OCH.tab_handle(t) not in taken
                             and WR.norm_url(str(t.get("url") or "")) == want),
-                           key=lambda t: -_tab_num(str(t.get("tabId"))))
+                           key=lambda t: -_tab_num(OCH.tab_label(t)))
             old = rd.tab
             if cands:
-                new = str(cands[0]["tabId"])
+                new = OCH.tab_handle(cands[0])
                 taken.add(new)
                 if opened is not None:
                     opened.discard(old)
@@ -608,13 +613,29 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
                            "waited_s": thr.waits[-1] if thr.waits else 0.0,
                            "at": thr.now_fn().isoformat(timespec="seconds"), "lane": lid})
             readers[lid] = rd
+            st["opened"] = {k: opened.get(k) for k in ("label", "how", "tabs_before",
+                                                       "tabs_after")}
+            print(f"opened {lid}: {opened.get('label') or tab} = {tab} "
+                  f"({opened.get('how') or '?'}) {first_url[:80]}", flush=True)
             rc["order"].append({"turn": 0, "lane": lid, "what": "listing", "url": first_url,
                                 "at": rd.log[-1]["at"], "ok": True})
-            driver.browser("wait", "--time", "4000", profile_name=profile, target_id=tab)
+
+            def first_look() -> str | None:
+                driver.browser("wait", "--time", "4000", profile_name=profile,
+                               target_id=rd.tab)
+                return None if sec == "analyst_estimates" else rd.snapshot()
+            try:
+                listing_snap = first_look()
+            except Exception as exc:  # noqa: BLE001 -- detached -> ONE rebind, then retry
+                if not WR.is_detached(str(exc)):
+                    raise
+                recovery.recover(readers, parents, source_of)
+                st["tab"] = rd.tab
+                listing_snap = first_look()
             if sec == "analyst_estimates":
                 queues[lid] = [("ticker", t) for t in todo]
             else:
-                links = WR.select_links(rd.snapshot(), pattern)
+                links = WR.select_links(listing_snap or "", pattern)
                 st["links_found"] = len(links)
                 fresh = [lk for lk in links if not stored.get(WR.norm_url(lk["url"]))]
                 st["skipped_already_stored"] = len(links) - len(fresh)
@@ -805,11 +826,15 @@ def run_archive(days: list[date], *, parent_tab: str, max_per_day: int | None = 
                        max_pages=budget, lock=False)
         readers["wsj"] = rd
         rc["tab_opened"] = rd.tab
+        rc["opened"] = {k: opened.get(k) for k in ("label", "how", "tabs_before", "tabs_after")}
+        print(f"opened wsj archive: {opened.get('label') or rd.tab} = {rd.tab} "
+              f"({opened.get('how') or '?'})", flush=True)
         rd.pages = 1
         rd.log.append({"page": 1, "what": "open_from_tab", "url": first,
                        "waited_s": thr.waits[-1] if thr.waits else 0.0,
                        "at": thr.now_fn().isoformat(timespec="seconds")})
-        driver.browser("wait", "--time", "4000", profile_name=profile, target_id=rd.tab)
+        guarded(lambda: driver.browser("wait", "--time", "4000", profile_name=profile,
+                                       target_id=rd.tab))
         for i, d in enumerate(days):
             url = archive_url("wsj", d)
             st: dict[str, Any] = {"url": url, "links_found": 0, "already_stored": 0,
@@ -886,12 +911,35 @@ def _line_key(lineno: int, line: str) -> str:
     return f"line{lineno:03d}_{hashlib.sha256(line.encode('utf-8')).hexdigest()[:10]}"
 
 
+#: What the last `main()` call did, for the queue's DONE rule (J3). `main`
+#: fills it; `run_queue` clears it before each line.
+_LAST_OUTCOME: dict[str, Any] = {}
+
+
+def line_status(code: int, outcome: dict | None) -> str:
+    """One queue line's verdict (Chunk J3, 2026-09-27: lines 3-6 of the 00:33
+    queue were marked DONE with `n_articles 0`, one of them a claims pass over
+    nothing).
+
+    * a refusal / stop with nothing read -> `FAILED_WILL_RETRY`, whatever rc;
+    * a claims pass with zero NEW stored articles -> `SKIPPED_NOTHING_TO_DO`
+      (no marker: the next run tries again once reads exist);
+    * rc 0 otherwise -> `DONE`; anything else -> `FAILED_WILL_RETRY`."""
+    o = outcome or {}
+    n = o.get("n_articles")
+    if o.get("refused") and (not n or o.get("kind") == "claims"):
+        return "FAILED_WILL_RETRY"          # a claims pass cut short leaves articles unread
+    if o.get("kind") == "claims" and code == 0 and not o.get("refused") and not n:
+        return "SKIPPED_NOTHING_TO_DO"
+    return "DONE" if code == 0 else "FAILED_WILL_RETRY"
+
+
 def run_queue(path: Path, *, inherit: list[str] | None = None,
               main_fn: Any = None, only_first: bool = False) -> dict:
     """Each line is one `dowjones_pull` command (its arguments), run in order.
-    A line that returns 0 gets a `.done` marker (keyed by line number AND a
-    hash of its text, so an EDITED line runs again); a re-run skips done
-    lines. A failed line is recorded and the queue continues, so one refused
+    A line whose `line_status` is DONE (rc 0 AND not a refusal over nothing,
+    J3) gets a `.done` marker (keyed by line number AND a hash of its text,
+    so an EDITED line runs again); a re-run skips done lines. A failed line is recorded and the queue continues, so one refused
     source does not cost the night. `inherit` (`--handoff`, `--profile X`) is
     appended to a line that does not set it."""
     main_fn = main_fn or main
@@ -911,6 +959,7 @@ def run_queue(path: Path, *, inherit: list[str] | None = None,
             if flag.startswith("--") and flag not in argv:
                 argv.append(flag)
         t0 = datetime.now(timezone.utc)
+        _LAST_OUTCOME.clear()
         try:
             code = int(main_fn(argv))
         except SystemExit as exc:
@@ -920,10 +969,16 @@ def run_queue(path: Path, *, inherit: list[str] | None = None,
             rc["lines"].append({"line": lineno, "args": line, "status": "ERROR",
                                 "error": f"{type(exc).__name__}: {str(exc)[:200]}"})
             continue
+        outcome = dict(_LAST_OUTCOME)
+        status = line_status(code, outcome)
         row = {"line": lineno, "args": line, "rc": code,
                "seconds": round((datetime.now(timezone.utc) - t0).total_seconds(), 1),
-               "status": "DONE" if code == 0 else "FAILED_WILL_RETRY"}
-        if code == 0:
+               "status": status, "outcome": outcome}
+        print(f"queue line {lineno}: {status} (rc {code}, "
+              f"{outcome.get('n_articles')} article(s)"
+              f"{', ' + str(outcome.get('refused'))[:120] if outcome.get('refused') else ''})",
+              flush=True)
+        if status == "DONE":
             dd.mkdir(parents=True, exist_ok=True)
             marker.write_text(json.dumps({"line": lineno, "args": line,
                                           "done_utc": datetime.now(timezone.utc).isoformat(
@@ -1144,7 +1199,8 @@ def main(argv: list[str] | None = None) -> int:
         p = _write(r, f"queue_{day}_{datetime.now(timezone.utc):%H%M%S}.json")
         out["queue"] = {"receipt": str(p), "lines": [
             {k: ln.get(k) for k in ("line", "status", "rc", "seconds")} for ln in r["lines"]]}
-        rc = 0 if all(ln["status"] in ("DONE", "SKIPPED_DONE") for ln in r["lines"]) else 2
+        rc = 0 if all(ln["status"] in ("DONE", "SKIPPED_DONE", "SKIPPED_NOTHING_TO_DO")
+                      for ln in r["lines"]) else 2
     if a.archive:
         print(TOU_SENTENCE, flush=True)
         try:
@@ -1185,6 +1241,8 @@ def main(argv: list[str] | None = None) -> int:
             r["reattaches"] = r.get("reattaches", 0) + sum(1 for x in pre_log if x.get("ok"))
         except Exception as exc:  # noqa: BLE001 -- a refusal is a finding, rc 2
             print(f"REFUSED: {type(exc).__name__}: {exc}")
+            _LAST_OUTCOME.update(kind="archive", n_articles=0,
+                                 refused=f"{type(exc).__name__}: {exc}"[:300])
             _write({"receipt": "dowjones_pull.archive", "n_articles": 0, "days": a.archive,
                     "reattach_log": pre_log,
                     "refused": f"{type(exc).__name__}: {exc}"[:400]}, rpath.name)
@@ -1198,6 +1256,7 @@ def main(argv: list[str] | None = None) -> int:
                           "reattaches": r.get("reattaches"),
                           "footprint": (r.get("footprint") or {}).get("verdict")}
         rc = 0 if r["complete"] else 2
+        _LAST_OUTCOME.update(kind="archive", n_articles=r["n_articles"], refused=r["stopped"])
     if a.plan:
         print(TOU_SENTENCE, flush=True)
         if not a.handoff or not handoff_ok():
@@ -1228,6 +1287,8 @@ def main(argv: list[str] | None = None) -> int:
             r["reattaches"] = r.get("reattaches", 0) + sum(1 for x in pre_log if x.get("ok"))
         except Exception as exc:  # noqa: BLE001 -- a refusal is a finding, rc 2
             print(f"REFUSED: {type(exc).__name__}: {exc}")
+            _LAST_OUTCOME.update(kind="plan", n_articles=0,
+                                 refused=f"{type(exc).__name__}: {exc}"[:300])
             _write({"receipt": "dowjones_pull.plan", "plan": a.plan, "n_articles": 0,
                     "reattach_log": pre_log,
                     "refused": f"{type(exc).__name__}: {exc}"[:400],
@@ -1247,6 +1308,10 @@ def main(argv: list[str] | None = None) -> int:
         rc = 0 if not r["stopped"] and all(
             v["dropped"] in (None, "EXHAUSTED") or str(v["dropped"]).startswith("EXHAUSTED")
             for v in r["lanes"].values()) else 2
+        dropped = [f"{k}: {v['dropped']}" for k, v in r["lanes"].items()
+                   if v["dropped"] and not str(v["dropped"]).startswith("EXHAUSTED")]
+        _LAST_OUTCOME.update(kind="plan", n_articles=r["n_articles"],
+                             refused=r["stopped"] or ("; ".join(dropped)[:300] or None))
     if a.source:
         print(TOU_SENTENCE, flush=True)
         if not a.handoff or not handoff_ok():
@@ -1289,6 +1354,10 @@ def main(argv: list[str] | None = None) -> int:
         out["claims"] = {"receipt": str(p), "n_articles": r["n_articles"],
                          "n_claims": r["n_claims"], "spent_usd": r["spent_usd"],
                          "rows": r["forecast_rows_by_source_id"], "stopped": r["stopped"]}
+        n_new = r["n_articles"] + int((r.get("mw_analyst_snapshot") or {}).get("n_pages") or 0)
+        _LAST_OUTCOME.update(kind="claims", n_articles=n_new, refused=r["stopped"])
+        if r["stopped"] and str(r["stopped"]).startswith("REFUSED"):
+            rc = 2
     if not out and rc == 0:
         ap.print_help()
         return 2
