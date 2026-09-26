@@ -1,0 +1,572 @@
+{
+  "generated_utc": "2026-09-26T08:42:13.767626+00:00",
+  "module": "backend/services/pit_features.py",
+  "pit_rule": "every input row dated STRICTLY before the decision date",
+  "decision_dates": {
+    "n": 130,
+    "first": "2016-01-04",
+    "last": "2026-09-22",
+    "rule": "first session of each month + one run-date row"
+  },
+  "universe": {
+    "bars_paths": [
+      "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars.parquet",
+      "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars_delisted.parquet"
+    ],
+    "n_symbols": 4793,
+    "rows": 623090
+  },
+  "min_support": {
+    "analyst_skill_weight": 2,
+    "max_21": 15,
+    "attention_z": 60,
+    "fomo_reversal": 60,
+    "first_mover_rank": 10,
+    "pricing_power_cost_pressure": 2
+  },
+  "support": {
+    "analyst_skill_weight": {
+      "non_nan": 125463,
+      "rows": 623090,
+      "by_year": {
+        "2016": 4901,
+        "2017": 2163,
+        "2018": 6789,
+        "2019": 5618,
+        "2020": 11040,
+        "2021": 9625,
+        "2022": 13241,
+        "2023": 16105,
+        "2024": 17698,
+        "2025": 19904,
+        "2026": 18379
+      },
+      "tickers_with_any": 2745
+    },
+    "max_21": {
+      "non_nan": 408459,
+      "rows": 623090,
+      "by_year": {
+        "2016": 33291,
+        "2017": 39015,
+        "2018": 41972,
+        "2019": 41934,
+        "2020": 39826,
+        "2021": 38236,
+        "2022": 35767,
+        "2023": 34773,
+        "2024": 35498,
+        "2025": 36509,
+        "2026": 31638
+      },
+      "tickers_with_any": 4784
+    },
+    "attention_z": {
+      "non_nan": 0,
+      "rows": 623090,
+      "by_year": {
+        "2016": 0,
+        "2017": 0,
+        "2018": 0,
+        "2019": 0,
+        "2020": 0,
+        "2021": 0,
+        "2022": 0,
+        "2023": 0,
+        "2024": 0,
+        "2025": 0,
+        "2026": 0
+      },
+      "tickers_with_any": 0
+    },
+    "fomo_reversal": {
+      "non_nan": 0,
+      "rows": 623090,
+      "by_year": {
+        "2016": 0,
+        "2017": 0,
+        "2018": 0,
+        "2019": 0,
+        "2020": 0,
+        "2021": 0,
+        "2022": 0,
+        "2023": 0,
+        "2024": 0,
+        "2025": 0,
+        "2026": 0
+      },
+      "tickers_with_any": 0
+    },
+    "first_mover_rank": {
+      "non_nan": 96696,
+      "rows": 623090,
+      "by_year": {
+        "2016": 3948,
+        "2017": 2403,
+        "2018": 5018,
+        "2019": 4615,
+        "2020": 8902,
+        "2021": 7664,
+        "2022": 10714,
+        "2023": 11802,
+        "2024": 13033,
+        "2025": 15016,
+        "2026": 13581
+      },
+      "tickers_with_any": 2901
+    },
+    "pricing_power_cost_pressure": {
+      "non_nan": 59337,
+      "rows": 623090,
+      "by_year": {
+        "2016": 1456,
+        "2017": 1641,
+        "2018": 10169,
+        "2019": 10165,
+        "2020": 1690,
+        "2021": 0,
+        "2022": 12026,
+        "2023": 11150,
+        "2024": 0,
+        "2025": 0,
+        "2026": 11040
+      },
+      "tickers_with_any": 1571
+    }
+  },
+  "firm_map": {
+    "mapped_firms": 146,
+    "firms_total": 467,
+    "share_of_revision_events_mapped": 0.8317,
+    "rule": "same oftic, +-1 day, target within 1%, modal estimid >= 50% of >= 20 matches",
+    "top": [
+      {
+        "firm": "Morgan Stanley",
+        "estimid": "MORGAN",
+        "matches": 22643,
+        "firm_total": 27191,
+        "share": 0.8327387738589974
+      },
+      {
+        "firm": "Barclays",
+        "estimid": "FRCLAYSC",
+        "matches": 18244,
+        "firm_total": 23047,
+        "share": 0.7915997743741051
+      },
+      {
+        "firm": "Wells Fargo",
+        "estimid": "WHEAT",
+        "matches": 12643,
+        "firm_total": 16491,
+        "share": 0.7666606027530168
+      },
+      {
+        "firm": "Deutsche Bank",
+        "estimid": "LAWRENCE",
+        "matches": 9195,
+        "firm_total": 11896,
+        "share": 0.7729488903833222
+      },
+      {
+        "firm": "Piper Sandler",
+        "estimid": "PIPER",
+        "matches": 8832,
+        "firm_total": 11537,
+        "share": 0.7655369680159487
+      },
+      {
+        "firm": "B of A Securities",
+        "estimid": "MERRILL",
+        "matches": 8441,
+        "firm_total": 10863,
+        "share": 0.7770413329651109
+      },
+      {
+        "firm": "RBC Capital",
+        "estimid": "RBCDOMIN",
+        "matches": 8166,
+        "firm_total": 11742,
+        "share": 0.6954522227899846
+      },
+      {
+        "firm": "Goldman Sachs",
+        "estimid": "GOLDMAN",
+        "matches": 8110,
+        "firm_total": 9657,
+        "share": 0.8398053225639432
+      },
+      {
+        "firm": "Stifel",
+        "estimid": "STIFEL",
+        "matches": 7994,
+        "firm_total": 10844,
+        "share": 0.7371818517152342
+      },
+      {
+        "firm": "Credit Suisse",
+        "estimid": "FBOSTON",
+        "matches": 7290,
+        "firm_total": 9826,
+        "share": 0.741909220435579
+      },
+      {
+        "firm": "Truist Securities",
+        "estimid": "ROBINSON",
+        "matches": 6639,
+        "firm_total": 8711,
+        "share": 0.7621398232120308
+      },
+      {
+        "firm": "Raymond James",
+        "estimid": "RAYMOND",
+        "matches": 6338,
+        "firm_total": 9004,
+        "share": 0.7039093736117281
+      },
+      {
+        "firm": "JP Morgan",
+        "estimid": "JPMORGAN",
+        "matches": 6318,
+        "firm_total": 9889,
+        "share": 0.6388916978460916
+      },
+      {
+        "firm": "Keybanc",
+        "estimid": "MCDONALD",
+        "matches": 5636,
+        "firm_total": 7867,
+        "share": 0.7164103215965425
+      },
+      {
+        "firm": "BMO Capital",
+        "estimid": "BURNS",
+        "matches": 5575,
+        "firm_total": 8524,
+        "share": 0.6540356640075082
+      },
+      {
+        "firm": "Mizuho",
+        "estimid": "MIZUSEC",
+        "matches": 5350,
+        "firm_total": 6910,
+        "share": 0.7742402315484804
+      },
+      {
+        "firm": "Needham",
+        "estimid": "NEEDHAM",
+        "matches": 4361,
+        "firm_total": 6878,
+        "share": 0.6340505961035184
+      },
+      {
+        "firm": "Oppenheimer",
+        "estimid": "FAHN",
+        "matches": 4238,
+        "firm_total": 5993,
+        "share": 0.7071583514099783
+      },
+      {
+        "firm": "Evercore ISI Group",
+        "estimid": "EVERCO",
+        "matches": 3840,
+        "firm_total": 5168,
+        "share": 0.7430340557275542
+      },
+      {
+        "firm": "Keefe, Bruyette & Woods",
+        "estimid": "KEEFE",
+        "matches": 3308,
+        "firm_total": 3972,
+        "share": 0.8328298086606244
+      },
+      {
+        "firm": "Wedbush",
+        "estimid": "OLMSTEAD",
+        "matches": 3184,
+        "firm_total": 4791,
+        "share": 0.6645794197453558
+      },
+      {
+        "firm": "Canaccord Genuity",
+        "estimid": "CANACCOR",
+        "matches": 3090,
+        "firm_total": 4543,
+        "share": 0.6801672903367819
+      },
+      {
+        "firm": "DA Davidson",
+        "estimid": "DAVIDSON",
+        "matches": 3026,
+        "firm_total": 4063,
+        "share": 0.7447698744769874
+      },
+      {
+        "firm": "Susquehanna",
+        "estimid": "SUSQUEH",
+        "matches": 2816,
+        "firm_total": 3790,
+        "share": 0.7430079155672823
+      },
+      {
+        "firm": "B. Riley Securities",
+        "estimid": "FRIEDMAN",
+        "matches": 2464,
+        "firm_total": 2808,
+        "share": 0.8774928774928775
+      },
+      {
+        "firm": "HC Wainwright & Co.",
+        "estimid": "HCWAIN",
+        "matches": 2306,
+        "firm_total": 2610,
+        "share": 0.8835249042145594
+      },
+      {
+        "firm": "Stephens & Co.",
+        "estimid": "STEPHENS",
+        "matches": 2054,
+        "firm_total": 2902,
+        "share": 0.7077877325982082
+      },
+      {
+        "firm": "JMP Securities",
+        "estimid": "JOLSON",
+        "matches": 2049,
+        "firm_total": 2875,
+        "share": 0.7126956521739131
+      },
+      {
+        "firm": "Scotiabank",
+        "estimid": "MCLEOD",
+        "matches": 1727,
+        "firm_total": 2214,
+        "share": 0.7800361336946703
+      },
+      {
+        "firm": "Cantor Fitzgerald",
+        "estimid": "CANTORFZ",
+        "matches": 1689,
+        "firm_total": 2481,
+        "share": 0.6807738814993954
+      },
+      {
+        "firm": "Guggenheim",
+        "estimid": "GUGGEL",
+        "matches": 1632,
+        "firm_total": 2253,
+        "share": 0.7243675099866844
+      },
+      {
+        "firm": "SunTrust Robinson Humphrey",
+        "estimid": "ROBINSON",
+        "matches": 1576,
+        "firm_total": 1920,
+        "share": 0.8208333333333333
+      },
+      {
+        "firm": "BTIG",
+        "estimid": "BTIG",
+        "matches": 1574,
+        "firm_total": 2165,
+        "share": 0.7270207852193995
+      },
+      {
+        "firm": "Benchmark",
+        "estimid": "THEBENCH",
+        "matches": 1564,
+        "firm_total": 2211,
+        "share": 0.7073722297602895
+      },
+      {
+        "firm": "Rosenblatt",
+        "estimid": "ROSSEC",
+        "matches": 1514,
+        "firm_total": 2396,
+        "share": 0.6318864774624374
+      },
+      {
+        "firm": "Loop Capital",
+        "estimid": "LOOPCAMA",
+        "matches": 1291,
+        "firm_total": 1643,
+        "share": 0.7857577601947656
+      },
+      {
+        "firm": "Bernstein",
+        "estimid": "BERN",
+        "matches": 1109,
+        "firm_total": 1487,
+        "share": 0.7457969065232011
+      },
+      {
+        "firm": "Telsey Advisory Group",
+        "estimid": "TELSEY",
+        "matches": 1051,
+        "firm_total": 1921,
+        "share": 0.5471108797501302
+      },
+      {
+        "firm": "Macquarie",
+        "estimid": "MACQUARI",
+        "matches": 1038,
+        "firm_total": 1388,
+        "share": 0.7478386167146974
+      },
+      {
+        "firm": "SVB Leerink",
+        "estimid": "LEERINK",
+        "matches": 944,
+        "firm_total": 1173,
+        "share": 0.8047740835464621
+      }
+    ]
+  },
+  "revisions_future_dated_rows": 1,
+  "news_corpus": {
+    "rows": 81013,
+    "first_seen_min": "2026-09-11T12:06:30+00:00",
+    "note": "first_seen_utc is PULL time; attention_z has no history before the corpus began"
+  },
+  "cost_pressure_source": "IN-HOUSE PROXY: market-wide median annual COGS growth (SEC facts, filed+2d, last 365d) minus its trailing-3y median. The note's NAICS PPI (FRED) is NOT on disk; this is not the note's instrument.",
+  "cost_pressure_by_date": {
+    "2016-01-04": 0.00523,
+    "2016-02-01": 0.00472,
+    "2016-03-01": -0.01908,
+    "2016-04-01": -0.03169,
+    "2016-05-02": -0.03103,
+    "2016-06-01": -0.03076,
+    "2016-07-01": -0.02985,
+    "2016-08-01": -0.03011,
+    "2016-09-01": -0.03129,
+    "2016-10-03": -0.03105,
+    "2016-11-01": -0.03242,
+    "2016-12-01": -0.03446,
+    "2017-01-03": -0.03471,
+    "2017-02-01": -0.03519,
+    "2017-03-01": -0.02872,
+    "2017-04-03": -0.0241,
+    "2017-05-01": -0.02428,
+    "2017-06-01": -0.02376,
+    "2017-07-03": -0.0236,
+    "2017-08-01": -0.01585,
+    "2017-09-01": -0.00547,
+    "2017-10-02": -0.00087,
+    "2017-11-01": 0.0006,
+    "2017-12-01": 0.00284,
+    "2018-01-02": 0.00348,
+    "2018-02-01": 0.00647,
+    "2018-03-01": 0.03584,
+    "2018-04-02": 0.04766,
+    "2018-05-01": 0.04782,
+    "2018-06-01": 0.04768,
+    "2018-07-02": 0.0477,
+    "2018-08-01": 0.04782,
+    "2018-09-04": 0.0497,
+    "2018-10-01": 0.05182,
+    "2018-11-01": 0.05261,
+    "2018-12-03": 0.05511,
+    "2019-01-02": 0.05529,
+    "2019-02-01": 0.055,
+    "2019-03-01": 0.06745,
+    "2019-04-01": 0.08298,
+    "2019-05-01": 0.08419,
+    "2019-06-03": 0.08314,
+    "2019-07-01": 0.08189,
+    "2019-08-01": 0.06632,
+    "2019-09-03": 0.04162,
+    "2019-10-01": 0.03317,
+    "2019-11-01": 0.03275,
+    "2019-12-02": 0.02751,
+    "2020-01-02": 0.02537,
+    "2020-02-03": 0.0246,
+    "2020-03-02": -0.02872,
+    "2020-04-01": -0.03506,
+    "2020-05-01": -0.03483,
+    "2020-06-01": -0.03548,
+    "2020-07-01": -0.03513,
+    "2020-08-03": -0.03592,
+    "2020-09-01": -0.03661,
+    "2020-10-01": -0.03713,
+    "2020-11-02": -0.03891,
+    "2020-12-01": -0.04046,
+    "2021-01-04": -0.04126,
+    "2021-02-01": -0.04141,
+    "2021-03-01": -0.0555,
+    "2021-04-01": -0.06286,
+    "2021-05-03": -0.07134,
+    "2021-06-01": -0.07406,
+    "2021-07-01": -0.0734,
+    "2021-08-02": -0.06632,
+    "2021-09-01": -0.04115,
+    "2021-10-01": -0.02793,
+    "2021-11-01": -0.02543,
+    "2021-12-01": -0.02141,
+    "2022-01-03": -0.01782,
+    "2022-02-01": -0.01645,
+    "2022-03-01": 0.07573,
+    "2022-04-01": 0.11606,
+    "2022-05-02": 0.12634,
+    "2022-06-01": 0.13244,
+    "2022-07-01": 0.13654,
+    "2022-08-01": 0.1374,
+    "2022-09-01": 0.14204,
+    "2022-10-03": 0.14204,
+    "2022-11-01": 0.14204,
+    "2022-12-01": 0.1387,
+    "2023-01-03": 0.1387,
+    "2023-02-01": 0.13729,
+    "2023-03-01": 0.11799,
+    "2023-04-03": 0.11002,
+    "2023-05-01": 0.10663,
+    "2023-06-01": 0.10515,
+    "2023-07-03": 0.10285,
+    "2023-08-01": 0.06777,
+    "2023-09-01": 0.01406,
+    "2023-10-02": -0.00059,
+    "2023-11-01": -0.00313,
+    "2023-12-01": -0.00604,
+    "2024-01-02": -0.0106,
+    "2024-02-01": -0.01075,
+    "2024-03-01": -0.06051,
+    "2024-04-01": -0.08849,
+    "2024-05-01": -0.0908,
+    "2024-06-03": -0.09435,
+    "2024-07-01": -0.09616,
+    "2024-08-01": -0.09715,
+    "2024-09-03": -0.10161,
+    "2024-10-01": -0.10257,
+    "2024-11-01": -0.10376,
+    "2024-12-02": -0.10552,
+    "2025-01-02": -0.106,
+    "2025-02-03": -0.10619,
+    "2025-03-03": -0.11362,
+    "2025-04-01": -0.11019,
+    "2025-05-01": -0.10827,
+    "2025-06-02": -0.10481,
+    "2025-07-01": -0.10137,
+    "2025-08-01": -0.07582,
+    "2025-09-02": -0.03667,
+    "2025-10-01": -0.01948,
+    "2025-11-03": -0.01458,
+    "2025-12-01": -0.01088,
+    "2026-01-02": -0.00897,
+    "2026-02-02": -0.00567,
+    "2026-03-02": 0.01648,
+    "2026-04-01": 0.0204,
+    "2026-05-01": 0.02193,
+    "2026-06-01": 0.02515,
+    "2026-07-01": 0.02576,
+    "2026-08-03": 0.02716,
+    "2026-09-01": 0.02955,
+    "2026-09-22": 0.03006
+  },
+  "forward_only": [
+    "attention_z",
+    "fomo_reversal"
+  ],
+  "history_note": {
+    "analyst_skill_weight": "actor-corpus claims resolve from 2013-04; before that every broker carries the prior weight 1.0"
+  },
+  "fingerprint": "861b78a2d3adec57"
+}

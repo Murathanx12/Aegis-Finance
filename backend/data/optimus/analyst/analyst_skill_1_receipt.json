@@ -1,0 +1,244 @@
+{
+  "trial": "ANALYST-SKILL-1",
+  "prereg": "C:\\Users\\mrthn\\Aegis module\\TRIALS\\PREREG_ANALYST_SKILL_1.md",
+  "prereg_sha256_16": "3e8a6e04b0590e7c",
+  "lint": {
+    "status": "OK",
+    "tail": "\nPREREG_ANALYST_SKILL_1.md: PASS  (vs 357 prior experiments)\n  no close match in 148 graveyard rows, the trial registry or the prereg folder. PASS means UNMATCHED, not novel: this compares wording against what this programme has recorded, and it knows nothing about the literature.\n  R13: n_required 31  n_available 72  smallest resolvable effect 0.66pp\n   [near     ] 0.209  prereg    REGISTERED             PREREG_REVISION_FORECASTER_1\n   [near     ] 0.198  prereg    REGISTERED             PREREG_BIAS_CORRECTED_BAND_1\n"
+  },
+  "instrument": "tr_ibes.ptgdetu (WRDS bulk parquet on disk) + CRSP dsf + dsedelist",
+  "instrument_matches_registration": true,
+  "started_utc": "2026-09-26T08:46:55.311392+00:00",
+  "skill_table": {
+    "brokers_measured": 364,
+    "grand_median_skill": -0.21311,
+    "prior_weight_unmeasured": 1.092,
+    "estimation_targets_graded": 467221,
+    "persistence_2013_15_vs_2016_18": {
+      "brokers_n20_both": 141,
+      "spearman": 0.7631
+    }
+  },
+  "panel": {
+    "contaminated_excluded": 5511,
+    "no_entry_price": 1389,
+    "missing_months": [
+      "2024-12"
+    ],
+    "rows": 1389034,
+    "months_evaluable": 71,
+    "months_registered": 72,
+    "brokers_in_panel": 332,
+    "share_panel_rows_measured_broker": 0.9783
+  },
+  "primary": {
+    "by_year": {
+      "2019": {
+        "months": 12,
+        "mean_dic": 0.0013,
+        "mean_ic_ew": -0.0461,
+        "mean_ic_sw": -0.0448,
+        "share_months_dic_pos": 0.833
+      },
+      "2020": {
+        "months": 12,
+        "mean_dic": -0.00123,
+        "mean_ic_ew": 0.00375,
+        "mean_ic_sw": 0.00252,
+        "share_months_dic_pos": 0.333
+      },
+      "2021": {
+        "months": 12,
+        "mean_dic": 0.00156,
+        "mean_ic_ew": -0.06755,
+        "mean_ic_sw": -0.06599,
+        "share_months_dic_pos": 0.667
+      },
+      "2022": {
+        "months": 12,
+        "mean_dic": 0.00099,
+        "mean_ic_ew": -0.14721,
+        "mean_ic_sw": -0.14623,
+        "share_months_dic_pos": 0.833
+      },
+      "2023": {
+        "months": 12,
+        "mean_dic": 0.00162,
+        "mean_ic_ew": -0.06027,
+        "mean_ic_sw": -0.05864,
+        "share_months_dic_pos": 0.833
+      },
+      "2024": {
+        "months": 11,
+        "mean_dic": 0.0008,
+        "mean_ic_ew": -0.09157,
+        "mean_ic_sw": -0.09077,
+        "share_months_dic_pos": 0.636
+      }
+    },
+    "size_split": {
+      "small": {
+        "months": 71,
+        "mean_dic": 0.00057,
+        "t_nw3": 1.633,
+        "mean_names": 1393.0
+      },
+      "largemid": {
+        "months": 71,
+        "mean_dic": 0.00084,
+        "t_nw3": 2.096,
+        "mean_names": 1263.5
+      }
+    },
+    "verdict": "ADOPT",
+    "power_gate": {
+      "n_months": 71,
+      "realised_sd_dic": 0.00254,
+      "assumed_sd_dic": 0.02,
+      "nw3_se": 0.000334,
+      "mde_nw3": 0.00067,
+      "mde_naive": 0.0006,
+      "declared_effect": 0.01,
+      "passed": true
+    },
+    "delta_ic_mean": 0.000841,
+    "t_nw3": 2.52,
+    "mean_ic_ew": -0.06783,
+    "mean_ic_sw": -0.06699,
+    "leave_one_year_out": {
+      "2019": 0.00075,
+      "2020": 0.00126,
+      "2021": 0.00069,
+      "2022": 0.00081,
+      "2023": 0.00068,
+      "2024": 0.00085
+    }
+  },
+  "report_only": {
+    "attenuation_diagnostic": {
+      "corr_dic_ic_ew": -0.4615,
+      "slope": -0.00719,
+      "slope_t_nw3": -4.98,
+      "intercept_dic_at_zero_ic": 0.000354,
+      "intercept_t_nw3": 1.086,
+      "months_ic_ew_pos": {
+        "n": 21,
+        "mean_dic": -0.00089
+      },
+      "months_ic_ew_nonpos": {
+        "n": 50,
+        "mean_dic": 0.00157
+      },
+      "share_abs_ic_sw_below_abs_ic_ew": 0.704
+    },
+    "sensitivity_skill_from_targets_resolved_before_2019": {
+      "verdict": "ADOPT",
+      "delta_ic_mean": 0.000773,
+      "t_nw3": 2.345,
+      "by_year": {
+        "2019": {
+          "months": 12,
+          "mean_dic": 0.0012,
+          "mean_ic_ew": -0.0461,
+          "mean_ic_sw": -0.0449,
+          "share_months_dic_pos": 0.75
+        },
+        "2020": {
+          "months": 12,
+          "mean_dic": -0.00136,
+          "mean_ic_ew": 0.00375,
+          "mean_ic_sw": 0.00239,
+          "share_months_dic_pos": 0.333
+        },
+        "2021": {
+          "months": 12,
+          "mean_dic": 0.00152,
+          "mean_ic_ew": -0.06755,
+          "mean_ic_sw": -0.06603,
+          "share_months_dic_pos": 0.667
+        },
+        "2022": {
+          "months": 12,
+          "mean_dic": 0.00099,
+          "mean_ic_ew": -0.14721,
+          "mean_ic_sw": -0.14623,
+          "share_months_dic_pos": 0.833
+        },
+        "2023": {
+          "months": 12,
+          "mean_dic": 0.00153,
+          "mean_ic_ew": -0.06027,
+          "mean_ic_sw": -0.05874,
+          "share_months_dic_pos": 0.833
+        },
+        "2024": {
+          "months": 11,
+          "mean_dic": 0.00077,
+          "mean_ic_ew": -0.09157,
+          "mean_ic_sw": -0.09079,
+          "share_months_dic_pos": 0.636
+        }
+      }
+    },
+    "analyst_level_amaskcd": {
+      "verdict": "REJECT",
+      "delta_ic_mean": 0.000347,
+      "t_nw3": 1.317,
+      "by_year": {
+        "2019": {
+          "months": 12,
+          "mean_dic": 0.00057,
+          "mean_ic_ew": -0.046,
+          "mean_ic_sw": -0.04543,
+          "share_months_dic_pos": 0.583
+        },
+        "2020": {
+          "months": 12,
+          "mean_dic": -5e-05,
+          "mean_ic_ew": 0.00376,
+          "mean_ic_sw": 0.00371,
+          "share_months_dic_pos": 0.417
+        },
+        "2021": {
+          "months": 12,
+          "mean_dic": 0.00011,
+          "mean_ic_ew": -0.06762,
+          "mean_ic_sw": -0.06751,
+          "share_months_dic_pos": 0.5
+        },
+        "2022": {
+          "months": 12,
+          "mean_dic": 0.00041,
+          "mean_ic_ew": -0.14728,
+          "mean_ic_sw": -0.14686,
+          "share_months_dic_pos": 0.667
+        },
+        "2023": {
+          "months": 12,
+          "mean_dic": 0.0005,
+          "mean_ic_ew": -0.06027,
+          "mean_ic_sw": -0.05977,
+          "share_months_dic_pos": 0.583
+        },
+        "2024": {
+          "months": 11,
+          "mean_dic": 0.00056,
+          "mean_ic_ew": -0.09157,
+          "mean_ic_sw": -0.09101,
+          "share_months_dic_pos": 0.727
+        }
+      }
+    }
+  },
+  "descriptive_target_skill_vs_rec_reliability": {
+    "brokers": 169,
+    "spearman": 0.3736
+  },
+  "informs_rules": [
+    "ibes_skill_net_raises",
+    "first_mover_leadership",
+    "skilled_leader"
+  ],
+  "verdict": "ADOPT",
+  "finished_utc": "2026-09-26T08:47:38.054192+00:00"
+}
