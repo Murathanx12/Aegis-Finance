@@ -76,6 +76,20 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--sha", default=None)
     ap.add_argument("--wait", action="store_true")
     a = ap.parse_args(argv)
+    if a.sha is None:
+        # 2026-09-26: without --sha the "newest completed run" was the PREVIOUS
+        # commit's run whenever the pushed commit's run had not been created
+        # yet -- twice in one day it printed an old verdict for a new push and
+        # exited 0 behind a `| tail`. The head we are standing on is the only
+        # sha a watcher should ever default to.
+        try:
+            import subprocess
+            a.sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True,
+                                   text=True, check=True).stdout.strip()[:7]
+            print(f"watching HEAD {a.sha}")
+        except Exception as e:                                       # noqa: BLE001
+            print(f"cannot resolve HEAD ({type(e).__name__}); pass --sha explicitly")
+            return 2
 
     deadline = time.time() + 20 * 60
     while True:
