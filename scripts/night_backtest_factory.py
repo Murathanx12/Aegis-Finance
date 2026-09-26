@@ -147,6 +147,18 @@ def build_panel(W: dict, *, delist_return: float, market: str = "SPY",
     last_valid = np.where(fin.any(axis=0), T - 1 - np.argmax(fin[::-1], axis=0), -1)
     rm_all = R[:, m_i]
 
+    # overnight (prev close -> open) and intraday (open -> close) log returns
+    with np.errstate(invalid="ignore", divide="ignore"):
+        LO = np.full_like(C, np.nan)
+        LO[1:] = np.log(O[1:] / Cff[:-1])
+        LI = np.log(C / O)
+    LO[~np.isfinite(LO)] = np.nan
+    LI[~np.isfinite(LI)] = np.nan
+    # market regime, one value per session, trailing data only
+    mc = Cff[:, m_i]
+    ma200_m = pd.Series(mc).rolling(200, min_periods=150).mean().to_numpy()
+    mvol = pd.Series(rm_all).rolling(21, min_periods=15).std().to_numpy()
+
     me, extra = decision_indices(dates)
     # month-end closes for the seasonality columns (every month, from the start)
     Cme = Cff[me]
@@ -248,6 +260,26 @@ def build_panel(W: dict, *, delist_return: float, market: str = "SPY",
         vals = np.vstack([Rm[m] if 0 <= m < len(me) else np.full(N, np.nan) for m in lags])
         f["seas_same_month"] = np.where(np.isfinite(vals).sum(axis=0) >= 2, np.nanmean(vals, axis=0), np.nan)
         f["seas_lag12"] = vals[0]
+        # overnight momentum (Lou-Polk-Skouras) and the gap share of the last month
+        lo_w = _win(LO, i, 252)
+        f["ovn_252"] = np.where(_count_ok(lo_w, 120), np.nansum(lo_w, axis=0), np.nan)
+        lo21, li21 = np.abs(_win(LO, i, 21)), np.abs(_win(LI, i, 21))
+        with np.errstate(invalid="ignore", divide="ignore"):
+            gs = np.nansum(lo21, axis=0) / (np.nansum(lo21, axis=0) + np.nansum(li21, axis=0))
+        f["gap_share_21"] = np.where(_count_ok(lo21, 15), gs, np.nan)
+        # market regime (identical on every row of the date)
+        up = float(mc[i] > ma200_m[i]) if np.isfinite(ma200_m[i]) else np.nan
+        hist = mvol[252:i + 1] if i >= 252 else mvol[:0]
+        hist = hist[np.isfinite(hist)]
+        if len(hist) >= 60 and np.isfinite(mvol[i]):
+            q1, q2 = np.quantile(hist, [1 / 3, 2 / 3])
+            stress, calm = float(mvol[i] >= q2), float(mvol[i] <= q1)
+        else:
+            stress = calm = np.nan
+        f["mkt_trend_up"] = np.full(N, up)
+        f["mkt_trend_down"] = np.full(N, 1.0 - up if np.isfinite(up) else np.nan)
+        f["mkt_stress"] = np.full(N, stress)
+        f["mkt_calm"] = np.full(N, calm)
         # eligibility (xs_ranker's floors, trailing data only; ETFs out)
         elig = (trade & (c >= XR.MIN_PRICE) & (c <= XR.MAX_PRICE)
                 & (np.nan_to_num(mdv) >= XR.MIN_MEDIAN_DOLLAR_VOL)
@@ -292,18 +324,38 @@ def attach_fundamentals(panel: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     rev = w["revenue"] if "revenue" in w else pd.Series(np.nan, index=w.index)
     cogs = w["cogs"] if "cogs" in w else pd.Series(np.nan, index=w.index)
     gm = ((rev - cogs) / rev.where(rev > 0)).rename("gross_margin")
-    extra = pd.DataFrame({"gross_margin": gm, "revenue": rev}).reset_index()
+    def _w(c):
+        return w[c] if c in w else pd.Series(np.nan, index=w.index)
+    extra = pd.DataFrame({"gross_margin": gm, "revenue": rev,
+                          "om": _w("operating_income") / rev.where(rev > 0),
+                          "roa": _w("net_income") / _w("assets").where(_w("assets") > 0),
+                          "ni": _w("net_income"),
+                          "dat": _w("debt") / _w("assets").where(_w("assets") > 0)}).reset_index()
     extra = extra.sort_values(["ticker", "filed"])
     g = extra.groupby("ticker")
     prev_rev = g["revenue"].shift(4)
     extra["rev_gr"] = (extra["revenue"] - prev_rev) / prev_rev.where(prev_rev > 0)
     extra["gm_chg"] = extra["gross_margin"] - g["gross_margin"].shift(4)
     extra["inflection"] = extra["rev_gr"] * extra["gm_chg"]
-    feats = r.merge(extra[["ticker", "filed", "gross_margin", "rev_gr", "gm_chg", "inflection"]],
-                    on=["ticker", "filed"], how="left")
+    # chunk D: acceleration, operating margin, ROA, turns, deleveraging (same
+    # filing-sequence convention as rev_gr: four filings back ~ one year)
+    g = extra.groupby("ticker")
+    extra["rev_accel"] = extra["rev_gr"] - g["rev_gr"].shift(4)
+    extra["om_chg"] = extra["om"] - g["om"].shift(4)
+    extra["roa_chg"] = extra["roa"] - g["roa"].shift(4)
+    extra["debt_at_chg"] = extra["dat"] - g["dat"].shift(4)
+    pni = g["ni"].shift(4)
+    extra["ni_turn"] = ((extra["ni"] > 0) & (pni <= 0)).astype(float).where(pni.notna() & extra["ni"].notna())
+    pgm = g["gm_chg"].shift(4)
+    extra["gm_turn"] = ((extra["gm_chg"] > 0) & (pgm <= 0)).astype(float).where(pgm.notna() & extra["gm_chg"].notna())
+    prg = g["rev_gr"].shift(4)
+    extra["rev_turn"] = ((extra["rev_gr"] > 0) & (prg <= 0)).astype(float).where(prg.notna() & extra["rev_gr"].notna())
+    new_cols = ["gross_margin", "rev_gr", "gm_chg", "inflection", "rev_accel", "om_chg", "roa_chg",
+                "debt_at_chg", "ni_turn", "gm_turn", "rev_turn"]
+    feats = r.merge(extra[["ticker", "filed"] + new_cols], on=["ticker", "filed"], how="left")
     feats["available"] = feats["filed"] + pd.Timedelta(days=FF.LAG_DAYS)
     feats = feats.sort_values("available")
-    cols = list(FF.FUNDAMENTAL_FEATURES) + ["gross_margin", "rev_gr", "gm_chg", "inflection"]
+    cols = list(FF.FUNDAMENTAL_FEATURES) + new_cols
     left = panel.sort_values("date").reset_index()
     feats["symbol"] = feats["ticker"].astype(str)
     m = pd.merge_asof(left, feats[["symbol", "available", "filed"] + cols],
@@ -345,6 +397,418 @@ def attach_flow(panel: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     out["flow_accel"] = out["net_raises_30"] - out["net_raises"] / 3.0
     return out, {"status": "OK", "n_revision_rows": int(len(rev)), "n_covered": len(covered),
                  "windows_days": [90, 30, 180], "strictly_before_decision_date": True}
+
+
+# ═════════════════════ chunk D: more PIT inputs, each a named refusal ═══════
+#
+# Every attacher below returns (panel, meta) and NEVER raises for missing or
+# malformed data: it returns the panel unchanged with meta status REFUSED, and
+# the rules that read its columns are then refused BY NAME in the leaderboard.
+# Every event is counted strictly before the decision date (date-level: an
+# event stamped on the decision day itself is not used).
+
+def _decision_frame(panel: pd.DataFrame) -> tuple[pd.DatetimeIndex, dict]:
+    """The decision dates and, for each, the NEXT decision date (holding-period end)."""
+    ds = pd.DatetimeIndex(sorted(panel["date"].unique()))
+    me = pd.DatetimeIndex(sorted(panel.loc[panel["is_month_end"], "date"].unique()))
+    nxt = {}
+    for d in ds:
+        later = me[me > d]
+        nxt[d] = later[0] if len(later) else d + pd.Timedelta(days=31)
+    return ds, nxt
+
+
+def _merge_feats(panel: pd.DataFrame, rows: list, cols: list, covered: set,
+                 zero_fill: list) -> pd.DataFrame:
+    """Left-join per-(date, symbol) features; covered names get 0 for counts."""
+    feats = (pd.DataFrame(rows) if rows else pd.DataFrame(columns=["date", "symbol"] + cols))
+    out = panel.drop(columns=[c for c in cols if c in panel.columns])
+    out = out.merge(feats, on=["date", "symbol"], how="left")
+    cov = out["symbol"].isin(covered)
+    for c in cols:
+        if c not in out.columns:
+            out[c] = np.nan
+        if c in zero_fill:
+            out.loc[cov & out[c].isna(), c] = 0.0
+            out.loc[~cov, c] = np.nan
+    return out
+
+
+def _cum(a: np.ndarray) -> np.ndarray:
+    z = np.zeros((1,) + a.shape[1:])
+    return np.concatenate([z, np.cumsum(np.nan_to_num(a), axis=0)], axis=0)
+
+
+def attach_ratings(panel: pd.DataFrame, W: dict, *, market: str = "SPY") -> tuple[pd.DataFrame, dict]:
+    """Rating changes, LEAD vs CHASE raises, analyst skill, first movers, target dispersion.
+
+    From the SAME revision parquet as `attach_flow`, using the columns it does
+    not: `action` (up/down/init), `firm`, `current_target`.
+    * LEAD raise: the stock's return over the 10 sessions before the event day
+      was <= 0. CHASE raise: it was > +1 sigma (63-session daily sd x sqrt 10).
+    * Skill: a firm's mean 63-session return vs SPY after its raises, using ONLY
+      raises whose 63 sessions had elapsed by the decision date; >= 20 resolved
+      raises and a positive mean = skilled.
+    * First mover: a raise with no other raise on the name in the prior 30 days.
+    * Target CV: std/mean of each firm's latest target in 180 days, >= 3 firms.
+    """
+    path = Path(_cfg.OPTIMUS_LEDGER_DIR) / "analyst" / "target_revisions.parquet"
+    if not path.exists():
+        return panel, {"status": "REFUSED", "why": f"no revision parquet at {path}"}
+    rev = pd.read_parquet(path, columns=["ticker", "event_date", "firm", "action",
+                                         "target_action", "current_target"])
+    rev["ticker"] = rev["ticker"].astype(str).str.upper()
+    rev["t"] = pd.to_datetime(rev["event_date"], errors="coerce")
+    rev = rev[rev["t"].notna()]
+    if getattr(rev["t"].dt, "tz", None) is not None:
+        rev["t"] = rev["t"].dt.tz_convert(None)
+    rev["day"] = rev["t"].dt.normalize()
+    covered = set(rev["ticker"])
+    dates, symbols = W["dates"], W["symbols"]
+    C = W["close"]
+    Cff = pd.DataFrame(C).ffill().to_numpy()
+    R = np.full_like(C, np.nan)
+    R[1:] = C[1:] / Cff[:-1] - 1.0
+    S1, S2, SN = _cum(R), _cum(R ** 2), _cum(np.isfinite(R).astype(float))
+    m_i = int(np.searchsorted(symbols, market))
+    si = np.searchsorted(symbols, rev["ticker"].to_numpy())
+    si = np.clip(si, 0, len(symbols) - 1)
+    ok_sym = symbols[si] == rev["ticker"].to_numpy()
+    i0 = np.searchsorted(dates.values, rev["day"].to_numpy(), side="left") - 1
+    T = len(dates)
+    ok = ok_sym & (i0 >= 63)
+    ta = rev["target_action"].fillna("").str.lower().to_numpy()
+    is_raise = ta == "raises"
+    is_lower = ta == "lowers"
+    ret10 = np.full(len(rev), np.nan)
+    sig10 = np.full(len(rev), np.nan)
+    exc63 = np.full(len(rev), np.nan)
+    res_idx = np.full(len(rev), 10 ** 9)
+    ii, ss = i0[ok], si[ok]
+    ret10[ok] = Cff[ii, ss] / Cff[ii - 10, ss] - 1.0
+    n_ = SN[ii + 1, ss] - SN[ii - 62, ss]
+    s1 = S1[ii + 1, ss] - S1[ii - 62, ss]
+    s2 = S2[ii + 1, ss] - S2[ii - 62, ss]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        var = (s2 - s1 ** 2 / n_) / (n_ - 1)
+    sig10[ok] = np.where(n_ >= 40, np.sqrt(np.maximum(var, 0)) * math.sqrt(10), np.nan)
+    e0, e1 = ii + 1, ii + 64
+    fut = e1 < T
+    ex = np.full(len(ii), np.nan)
+    ex[fut] = ((Cff[e1[fut], ss[fut]] / Cff[e0[fut], ss[fut]])
+               - (Cff[e1[fut], m_i] / Cff[e0[fut], m_i]))
+    exc63[ok] = ex
+    ri = np.full(len(ii), 10 ** 9)
+    ri[fut] = e1[fut]
+    res_idx[ok] = ri
+    rev["lead"] = is_raise & (ret10 <= 0)
+    rev["chase"] = is_raise & (ret10 > sig10)
+    rev["raise"] = is_raise
+    rev["lower"] = is_lower
+    rev["exc63"] = exc63
+    rev["res_idx"] = res_idx
+    rev = rev.sort_values(["ticker", "t"]).reset_index(drop=True)
+    rr = rev[rev["raise"]]
+    gap = rr.groupby("ticker")["t"].diff()
+    rev["first_mover"] = False
+    rev.loc[rr.index, "first_mover"] = (gap.isna() | (gap > pd.Timedelta(days=30))).to_numpy()
+    rev = rev.sort_values("t").reset_index(drop=True)
+    tt = rev["day"].to_numpy()
+    didx = {d: i for i, d in enumerate(dates)}
+    ds, _nxt = _decision_frame(panel)
+    rows = []
+    for d in ds:
+        dv = np.datetime64(d)
+        lo90 = np.searchsorted(tt, np.datetime64(d - pd.Timedelta(days=90)), "left")
+        lo180 = np.searchsorted(tt, np.datetime64(d - pd.Timedelta(days=180)), "left")
+        hi = np.searchsorted(tt, dv, "left")                  # strictly before the day
+        w = rev.iloc[lo90:hi]
+        if not len(w):
+            continue
+        di = didx.get(d, 10 ** 9)
+        resolved = rev.iloc[:hi]
+        resolved = resolved[resolved["raise"] & (resolved["res_idx"] <= di)
+                            & resolved["exc63"].notna()]
+        sk = resolved.groupby("firm")["exc63"].agg(["mean", "count"])
+        skilled = set(sk.index[(sk["count"] >= 20) & (sk["mean"] > 0)])
+        wf = w["firm"].isin(skilled)
+        g = pd.DataFrame({
+            "ticker": w["ticker"],
+            "up": (w["action"] == "up").astype(float),
+            "down": (w["action"] == "down").astype(float),
+            "init": (w["action"] == "init").astype(float),
+            "lead": w["lead"].astype(float), "chase": w["chase"].astype(float),
+            "fm": (w["first_mover"] & w["raise"]).astype(float),
+            "sfm": (w["first_mover"] & w["raise"] & wf).astype(float),
+            "skill": ((w["raise"] & wf).astype(float) - (w["lower"] & wf).astype(float)),
+        }).groupby("ticker").sum()
+        w180 = rev.iloc[lo180:hi]
+        w180 = w180[w180["current_target"] > 0]
+        last = w180.drop_duplicates(["ticker", "firm"], keep="last")
+        cvg = last.groupby("ticker")["current_target"].agg(["std", "mean", "count"])
+        cv = (cvg["std"] / cvg["mean"]).where(cvg["count"] >= 3)
+        g = g.join(cv.rename("cv"), how="outer")
+        for tk, r_ in g.iterrows():
+            rows.append({"date": d, "symbol": tk,
+                         "rating_net_90": r_["up"] - r_["down"] if np.isfinite(r_["up"]) else np.nan,
+                         "rating_downgrades_90": r_["down"], "initiations_90": r_["init"],
+                         "lead_raises_90": r_["lead"], "chase_raises_90": r_["chase"],
+                         "lead_minus_chase_90": r_["lead"] - r_["chase"],
+                         "first_mover_raises_90": r_["fm"], "skill_net_raises_90": r_["skill"],
+                         "skill_first_mover_90": r_["sfm"],
+                         "target_cv_180": r_["cv"]})
+    cols = ["rating_net_90", "rating_downgrades_90", "initiations_90", "lead_raises_90",
+            "chase_raises_90", "lead_minus_chase_90", "first_mover_raises_90",
+            "skill_net_raises_90", "skill_first_mover_90", "target_cv_180"]
+    out = _merge_feats(panel, rows, cols, covered, zero_fill=cols[:-1])
+    n_r = int(is_raise.sum())
+    return out, {"status": "OK", "n_events": int(len(rev)), "n_raises": n_r,
+                 "lead_share_of_raises": round(float(rev["lead"].sum()) / max(n_r, 1), 4),
+                 "chase_share_of_raises": round(float(rev["chase"].sum()) / max(n_r, 1), 4),
+                 "strictly_before_decision_date": True,
+                 "skill_rule": ">= 20 resolved raises, mean 63-session excess vs SPY > 0, "
+                               "resolved before the decision date"}
+
+
+def attach_insider(panel: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    """Form 4 open-market buys/sells by distinct insider, observed before the date."""
+    path = Path(_cfg.OPTIMUS_LEDGER_DIR) / "sec_insider" / "insider_events_v1.parquet"
+    if not path.exists():
+        return panel, {"status": "REFUSED", "why": f"no insider events at {path}"}
+    start = pd.Timestamp(panel["date"].min()) - pd.Timedelta(days=200)
+    ev = pd.read_parquet(path, columns=["symbol", "event_type", "observed_at_utc", "insider_cik",
+                                        "insider_is_officer", "insider_dollar_value"],
+                         filters=[("observed_at_utc", ">=", start.tz_localize("UTC"))])
+    ev = ev[ev["symbol"].notna()]
+    ev["symbol"] = ev["symbol"].astype(str).str.upper()
+    ev["t"] = ev["observed_at_utc"].dt.tz_convert(None)
+    ev = ev.sort_values("t").reset_index(drop=True)
+    covered = set(ev["symbol"])
+    tt = ev["t"].to_numpy()
+    ds, _ = _decision_frame(panel)
+    rows = []
+    BUY, SELL, OPP = "insider_open_market_buy", "insider_open_market_sell", "insider_opportunistic_buy"
+    for d in ds:
+        hi = np.searchsorted(tt, np.datetime64(d), "left")     # observed before the day starts
+        lo90 = np.searchsorted(tt, np.datetime64(d - pd.Timedelta(days=90)), "left")
+        lo180 = np.searchsorted(tt, np.datetime64(d - pd.Timedelta(days=180)), "left")
+        w9, w18 = ev.iloc[lo90:hi], ev.iloc[lo180:hi]
+        if not len(w18):
+            continue
+
+        def nun(w, mask):
+            x = w[mask][["symbol", "insider_cik"]].drop_duplicates()
+            return x.groupby("symbol").size()
+        b9 = w9["event_type"] == BUY
+        f = pd.DataFrame({
+            "b90": nun(w9, b9), "s90": nun(w9, w9["event_type"] == SELL),
+            "o90": nun(w9, b9 & w9["insider_is_officer"].astype(bool)),
+            "v90": w9[b9].groupby("symbol")["insider_dollar_value"].sum(),
+            "b180": nun(w18, w18["event_type"] == BUY), "s180": nun(w18, w18["event_type"] == SELL),
+            "p180": nun(w18, w18["event_type"] == OPP)}).fillna(0.0)
+        for s_, r_ in f.iterrows():
+            tot = r_["b180"] + r_["s180"]
+            rows.append({"date": d, "symbol": s_, "ins_buyers_90": r_["b90"],
+                         "ins_sellers_90": r_["s90"], "ins_officer_buyers_90": r_["o90"],
+                         "ins_buy_value_90": r_["v90"], "ins_opp_buyers_180": r_["p180"],
+                         "ins_net_ratio_180": (r_["b180"] - r_["s180"]) / tot if tot > 0 else np.nan})
+    cols = ["ins_buyers_90", "ins_sellers_90", "ins_officer_buyers_90", "ins_buy_value_90",
+            "ins_opp_buyers_180", "ins_net_ratio_180"]
+    out = _merge_feats(panel, rows, cols, covered, zero_fill=cols[:-1])
+    out["ins_buy_value_dv_90"] = out["ins_buy_value_90"] / out["median_dollar_vol"]
+    return out, {"status": "OK", "n_events": int(len(ev)), "n_symbols": len(covered),
+                 "last_observed": str(ev["t"].max()) if len(ev) else None,
+                 "pit": "observed_at_utc (filing date EOD, conservative) strictly before the decision day",
+                 "caveat": "the file ends at its last observed date; windows after it undercount"}
+
+
+_DISTRESS_ITEMS = ("1.03", "2.04", "3.01", "4.02")
+
+
+def attach_8k(panel: pd.DataFrame, W: dict, *, market: str = "SPY") -> tuple[pd.DataFrame, dict]:
+    """8-K item counts, the 2.02 earnings calendar, and the announcement return."""
+    path = Path(_cfg.OPTIMUS_LEDGER_DIR) / "edgar_8k" / "eightk_items.parquet"
+    if not path.exists():
+        return panel, {"status": "REFUSED", "why": f"no 8-K items at {path}"}
+    ek = pd.read_parquet(path, columns=["ticker", "acceptance_datetime", "filing_date", "items_joined"])
+    ek = ek[ek["ticker"].notna()]
+    ek["ticker"] = ek["ticker"].astype(str).str.upper()
+    acc = pd.to_datetime(ek["acceptance_datetime"], errors="coerce", utc=True)
+    fd = pd.to_datetime(ek["filing_date"], errors="coerce")
+    et = acc.dt.tz_convert("America/New_York")
+    ek["day"] = et.dt.tz_localize(None).dt.normalize().fillna(fd)
+    ek["after_close"] = (et.dt.hour >= 16).fillna(True).to_numpy()
+    ek = ek[ek["day"].notna()]
+    it = ek["items_joined"].fillna("").astype(str)
+    ek["i202"] = it.str.contains("2.02", regex=False)
+    ek["i101"] = it.str.contains("1.01", regex=False)
+    ek["i502"] = it.str.contains("5.02", regex=False)
+    ek["i701"] = it.str.contains("7.01", regex=False)
+    ek["dist"] = np.logical_or.reduce([it.str.contains(x, regex=False) for x in _DISTRESS_ITEMS])
+    ek = ek.sort_values("day").reset_index(drop=True)
+    covered = set(ek["ticker"])
+    dates, symbols = W["dates"], W["symbols"]
+    Cff = pd.DataFrame(W["close"]).ffill().to_numpy()
+    m_i = int(np.searchsorted(symbols, market))
+    # earnings: the reaction session e (the day itself, or the next if filed after the close)
+    er = ek[ek["i202"]].copy()
+    si = np.clip(np.searchsorted(symbols, er["ticker"].to_numpy()), 0, len(symbols) - 1)
+    oks = symbols[si] == er["ticker"].to_numpy()
+    e = np.searchsorted(dates.values, er["day"].to_numpy(), "left")
+    e = e + (er["after_close"].to_numpy() & (e < len(dates))
+             & (dates.values[np.clip(e, 0, len(dates) - 1)] == er["day"].to_numpy())).astype(int)
+    T = len(dates)
+    good = oks & (e >= 1) & (e + 1 < T)
+    ear = np.full(len(er), np.nan)
+    a, b, s_ = e[good] - 1, e[good] + 1, si[good]
+    ear[good] = (Cff[b, s_] / Cff[a, s_] - 1.0) - (Cff[b, m_i] / Cff[a, m_i] - 1.0)
+    er["ear"] = ear
+    er["known_idx"] = np.where(good, e + 1, 10 ** 9)
+    er = er.sort_values("day").reset_index(drop=True)
+    tt = ek["day"].to_numpy()
+    et_ = er["day"].to_numpy()
+    didx = {d: i for i, d in enumerate(dates)}
+    ds, nxt = _decision_frame(panel)
+    rows = []
+    for d in ds:
+        hi = np.searchsorted(tt, np.datetime64(d), "left")
+        w90 = ek.iloc[np.searchsorted(tt, np.datetime64(d - pd.Timedelta(days=90)), "left"):hi]
+        w180 = ek.iloc[np.searchsorted(tt, np.datetime64(d - pd.Timedelta(days=180)), "left"):hi]
+        w365 = ek.iloc[np.searchsorted(tt, np.datetime64(d - pd.Timedelta(days=365)), "left"):hi]
+        f = pd.DataFrame({"n8k": w90.groupby("ticker").size(),
+                          "n101": w90[w90["i101"]].groupby("ticker").size(),
+                          "n701": w90[w90["i701"]].groupby("ticker").size(),
+                          "n502": w180[w180["i502"]].groupby("ticker").size(),
+                          "dist": w365[w365["dist"]].groupby("ticker").size()})
+        di = didx.get(d, -1)
+        ehi = np.searchsorted(et_, np.datetime64(d), "left")
+        past = er.iloc[:ehi]
+        lastp = past.drop_duplicates("ticker", keep="last").set_index("ticker")
+        known = past[past["known_idx"] <= di]
+        lastk = known.drop_duplicates("ticker", keep="last").set_index("ticker")
+        age = (d - lastk["day"]).dt.days
+        f = f.join(pd.DataFrame({"ear": lastk["ear"].where(age <= 100),
+                                 "age": age.where(age <= 100)}), how="outer")
+        dn = nxt[d]
+        # expected next print: a year-ago 2.02 shifted 364d, or the last 2.02 + 91d
+        y0 = np.searchsorted(et_, np.datetime64(d - pd.Timedelta(days=364)), "right")
+        y1 = np.searchsorted(et_, np.datetime64(dn - pd.Timedelta(days=364)), "right")
+        y2 = np.searchsorted(et_, np.datetime64(dn + pd.Timedelta(days=21) - pd.Timedelta(days=364)), "right")
+        nxt_set = set(er["ticker"].iloc[y0:y1])
+        fol_set = set(er["ticker"].iloc[y1:y2])
+        q = lastp["day"] + pd.Timedelta(days=91)
+        nxt_set |= set(q.index[(q > d) & (q <= dn)])
+        fol_set |= set(q.index[(q > dn) & (q <= dn + pd.Timedelta(days=21))])
+        fol_set -= nxt_set
+        idx = set(f.index) | nxt_set | fol_set
+        f = f.reindex(sorted(idx))
+        f["earn_next"] = [1.0 if t_ in nxt_set else 0.0 for t_ in f.index]
+        f["earn_following"] = [1.0 if t_ in fol_set else 0.0 for t_ in f.index]
+        for tk, r_ in f.iterrows():
+            rows.append({"date": d, "symbol": tk, "n8k_90": r_["n8k"], "n101_90": r_["n101"],
+                         "n701_90": r_["n701"], "n502_180": r_["n502"], "distress_365": r_["dist"],
+                         "ear_last": r_["ear"], "days_since_earn": r_["age"],
+                         "earn_next": r_["earn_next"], "earn_following": r_["earn_following"]})
+    cols = ["n8k_90", "n101_90", "n701_90", "n502_180", "distress_365", "ear_last",
+            "days_since_earn", "earn_next", "earn_following"]
+    zero = ["n8k_90", "n101_90", "n701_90", "n502_180", "distress_365", "earn_next", "earn_following"]
+    out = _merge_feats(panel, rows, cols, covered, zero_fill=zero)
+    return out, {"status": "OK", "n_filings": int(len(ek)), "n_202": int(len(er)),
+                 "n_202_priced": int(np.isfinite(ear).sum()), "n_tickers": len(covered),
+                 "pit": ("counts: acceptance day strictly before the decision day; the 3-day "
+                         "announcement return is used only once its last session has closed"),
+                 "expected_print_rule": "2.02 filed 364d earlier, or the last 2.02 + 91d"}
+
+
+def attach_short_interest(panel: pd.DataFrame, *, lag_days: int = 26) -> tuple[pd.DataFrame, dict]:
+    """Days-to-cover and the 3-month change in short interest, published-date PIT."""
+    base = Path(_cfg.OPTIMUS_LEDGER_DIR) / "wrds" / "bulk"
+    p_si, p_sec = base / "comp__sec_shortint.parquet", base / "comp__security.parquet"
+    if not (p_si.exists() and p_sec.exists()):
+        return panel, {"status": "REFUSED", "why": f"no Compustat short interest at {base}"}
+    start = pd.Timestamp(panel["date"].min()) - pd.Timedelta(days=200)
+    si = pd.read_parquet(p_si, columns=["gvkey", "iid", "shortintadj", "datadate"])
+    si = si[(si["iid"] == "01") & si["shortintadj"].notna()]
+    si["datadate"] = pd.to_datetime(si["datadate"])
+    si = si[si["datadate"] >= start]
+    sec = pd.read_parquet(p_sec, columns=["gvkey", "iid", "tic", "excntry"])
+    sec = sec[(sec["iid"] == "01") & (sec["excntry"] == "USA") & sec["tic"].notna()]
+    sec = sec[~sec["tic"].astype(str).str.contains(r"[.\s]", regex=True)]
+    lastd = si.groupby("gvkey")["datadate"].max().rename("lastd")
+    sec = sec.merge(lastd, left_on="gvkey", right_index=True, how="inner")
+    sec = sec.sort_values("lastd").drop_duplicates("tic", keep="last")
+    si = si.merge(sec[["gvkey", "tic"]], on="gvkey", how="inner")
+    si["available"] = si["datadate"] + pd.Timedelta(days=lag_days)
+    si = si.rename(columns={"tic": "symbol"})[["symbol", "available", "shortintadj"]]
+    si = si.sort_values("available")
+    covered = set(si["symbol"])
+    left = panel[["date", "symbol"]].reset_index()
+    now = pd.merge_asof(left.sort_values("date"), si, left_on="date", right_on="available",
+                        by="symbol", direction="backward")
+    left2 = left.copy()
+    left2["d3"] = left2["date"] - pd.Timedelta(days=91)
+    prev = pd.merge_asof(left2.sort_values("d3"), si, left_on="d3", right_on="available",
+                         by="symbol", direction="backward")
+    now = now.set_index("index").sort_index()
+    prev = prev.set_index("index").sort_index()
+    out = panel.copy()
+    stale = (out["date"] - now["available"]).dt.days > 60
+    s_now = now["shortintadj"].where(~stale)
+    shares_day = out["median_dollar_vol"] / out["close"]
+    out["dtc"] = (s_now / shares_day.where(shares_day > 0)).to_numpy()
+    with np.errstate(divide="ignore", invalid="ignore"):
+        out["si_chg_3m"] = np.log((s_now + 1.0) / (prev["shortintadj"] + 1.0)).to_numpy()
+    return out, {"status": "OK", "n_prints": int(len(si)), "n_symbols": len(covered),
+                 "publication_lag_days": lag_days, "last_available": str(si["available"].max()),
+                 "basis": ("shortintadj (split-adjusted) over split-adjusted bar volume: both on "
+                           "the current share basis, so the ratio carries no split look-ahead"),
+                 "caveat": "gvkey->symbol by CURRENT Compustat ticker; dead issuers mostly absent"}
+
+
+def attach_sector(panel: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    """Static GICS sector per symbol (Compustat), and the sector's mean 12-1 momentum."""
+    base = Path(_cfg.OPTIMUS_LEDGER_DIR) / "wrds" / "bulk"
+    p_co, p_sec = base / "comp__company.parquet", base / "comp__security.parquet"
+    if not (p_co.exists() and p_sec.exists()):
+        return panel, {"status": "REFUSED", "why": f"no Compustat company/security at {base}"}
+    co = pd.read_parquet(p_co, columns=["gvkey", "gsector"])
+    sec = pd.read_parquet(p_sec, columns=["gvkey", "iid", "tic", "excntry", "secstat"])
+    sec = sec[(sec["iid"] == "01") & (sec["excntry"] == "USA") & sec["tic"].notna()]
+    sec = sec[~sec["tic"].astype(str).str.contains(r"[.\s]", regex=True)]
+    m = sec.merge(co, on="gvkey").dropna(subset=["gsector"])
+    m = m.sort_values("secstat").drop_duplicates("tic", keep="first")     # 'A'ctive before 'I'
+    mp = dict(zip(m["tic"].astype(str), m["gsector"].astype(str)))
+    out = panel.copy()
+    out["gsector"] = out["symbol"].map(mp)
+    el = out["eligible"] & out["gsector"].notna()
+    sm = out[el].groupby(["date", "gsector"]).agg(sector_mom=("mom_252_21", "mean"),
+                                                  sector_ret_21=("mom_21", "mean"))
+    out = out.drop(columns=[c for c in ("sector_mom", "sector_ret_21") if c in out.columns])
+    out = out.merge(sm.reset_index(), on=["date", "gsector"], how="left")
+    out["mom_minus_sector"] = out["mom_252_21"] - out["sector_mom"]
+    cov = out.loc[out["eligible"] & (out["date"] == out["date"].max()), "gsector"].notna().mean()
+    return out, {"status": "OK", "n_mapped_tickers": len(mp),
+                 "eligible_coverage_last_date": round(float(cov), 4),
+                 "caveat": "CURRENT classification applied to every past month (static map)"}
+
+
+def attach_extension(panel: pd.DataFrame, W: dict) -> tuple[pd.DataFrame, dict]:
+    """The sibling module's columns (`strategy_library_ext.attach`), if it has any."""
+    if not SL.EXTRA_SOURCE.startswith("backend.services.strategy_library_ext"):
+        return panel, {"status": "ABSENT", "why": SL.EXTRA_SOURCE}
+    import importlib
+    ext = importlib.import_module("backend.services.strategy_library_ext")
+    fn = getattr(ext, "attach", None) or getattr(ext, "attach_panel", None)
+    if fn is None:
+        return panel, {"status": "NO_ATTACH", "why": ("strategy_library_ext has no attach(panel, W); "
+                                                      "its rules are refused for missing columns")}
+    try:
+        res = fn(panel, W)
+    except Exception as e:                            # noqa: BLE001 -- named in the receipt
+        return panel, {"status": "REFUSED", "why": f"{type(e).__name__}: {e}"}
+    if isinstance(res, tuple):
+        return res[0], {"status": "OK", **(res[1] if len(res) > 1 and isinstance(res[1], dict) else {})}
+    return res, {"status": "OK"}
 
 
 # ═════════════════════════════════ the market leg ═══════════════════════════
@@ -415,6 +879,9 @@ def _breadth(rule) -> list[int]:
 
 def evaluate_rule(panel: pd.DataFrame, spy: pd.Series, rule, *, since: str) -> dict:
     """All breadth cells of one rule; a missing input is a named REFUSAL."""
+    if getattr(rule, "forward_only", False):
+        return {"id": rule.id, "status": "REFUSED", "meta": rule.meta(),
+                "why": "FORWARD_ONLY: its input has no history on this panel; it accrues forward"}
     try:
         sc = SL.selection_scores(panel, rule)
     except SL.RuleInputMissing as e:
@@ -450,6 +917,23 @@ def _row(res: dict) -> dict:
         "hold_months": meta["hold_months"], "universe": meta["universe_rule"],
         "source": meta["source"], "control": meta["control"],
         "first_registered_utc": meta["first_registered_utc"],
+        "economic_reason": meta.get("economic_reason"),
+        # THE OBJECTIVE: sealed net return vs SPY (split declared in code)
+        "sealed_vs_spy": c.get("sealed_vs_spy"),
+        "sealed_cagr": c.get("sealed_cagr"),
+        "sealed_spy_cagr": c.get("sealed_spy_cagr"),
+        "n_sealed_months": c.get("n_sealed_months"),
+        "sealed_dsr": c.get("sealed_dsr"), "sealed_dsr_z": c.get("sealed_dsr_z"),
+        "sealed_max_dd": (c.get("sealed_window") or {}).get("max_dd"),
+        "dev_cagr": c.get("dev_cagr"), "dev_spy_cagr": c.get("dev_spy_cagr"),
+        "dev_vs_spy": c.get("dev_vs_spy"),
+        "n_dev_months": (c.get("dev_window") or {}).get("n_months"),
+        "recent_126_return": c.get("recent_126_return"),
+        "recent_126_spy": c.get("recent_126_spy"),
+        "recent_126_vs_spy": c.get("recent_126_vs_spy"),
+        "turnover_annual": c.get("turnover_annual"),
+        "cost_bps_paid": c.get("cost_bps_paid"),
+        "max_dd": c.get("max_dd"),
         # honest columns, BEFORE any headline
         "by_year_signs": c.get("by_year_signs"),
         "positive_excess_years_2020_2025": c.get("positive_excess_years_2020_2025"),
@@ -549,6 +1033,31 @@ def run_factory(panel: pd.DataFrame, spy: pd.Series, spy_meta: dict, *,
     return board
 
 
+def sealed_sort_key(x: dict) -> tuple:
+    """THE primary sort: sealed net return vs SPY; sealed DSR z breaks ties."""
+    v = x.get("sealed_vs_spy")
+    z = x.get("sealed_dsr_z")
+    return (v if v is not None else -9.0, z if z is not None else -99.0)
+
+
+def _sr0(n: int, T: int) -> float | None:
+    """Expected max monthly Sharpe of n pure-noise cells over T months (analytic null)."""
+    if n < 2 or T < 3:
+        return None
+    from scipy.stats import norm
+    g = 0.5772156649
+    z = (1 - g) * norm.ppf(1 - 1.0 / n) + g * norm.ppf(1 - 1.0 / (n * math.e))
+    return float(z / math.sqrt(T - 1))
+
+
+def _n_noise_above(n: int, T: int, ir_annual: float) -> float | None:
+    """How many of n noise cells would print an annual IR above `ir_annual` over T months."""
+    if T < 3:
+        return None
+    from scipy.stats import norm
+    return float(n * (1.0 - norm.cdf(ir_annual / math.sqrt(12) * math.sqrt(T - 1))))
+
+
 def leaderboard(done: dict, rules: list, *, spy_meta: dict, today: date,
                 partial: str | None, since: str) -> dict:
     """Deflate across every cell looked at, then rank. Deterministic per input."""
@@ -578,6 +1087,9 @@ def leaderboard(done: dict, rules: list, *, spy_meta: dict, today: date,
     by_id = sorted(rows, key=lambda x: x["id"])          # stable sorts keep id order on ties
     by_dsr = sorted(by_id, key=key_dsr, reverse=True)
     by_cagr = sorted(by_id, key=key_cagr, reverse=True)
+    by_sealed = sorted(by_id, key=sealed_sort_key, reverse=True)
+    T_full = max((len(c.get("active_returns") or []) for c in cells), default=0)
+    T_sealed = max((len(c.get("sealed_active_returns") or []) for c in cells), default=0)
     spy_row = None
     for r in ok:
         c = r["cells"].get(r["primary_k"]) or {}
@@ -600,7 +1112,27 @@ def leaderboard(done: dict, rules: list, *, spy_meta: dict, today: date,
         "partial": partial, "n_rules_in_library": len(rules), "n_rules_done": len(res),
         "n_refused": sum(1 for r in res if r.get("status") != "OK"),
         "refused": {r["id"]: r.get("why") for r in res if r.get("status") != "OK"},
+        "objective": {
+            "primary_sort": "sealed_vs_spy (sealed net CAGR minus SPY CAGR, same months)",
+            "dev_end": SL.DEV_END, "sealed_start": SL.SEALED_START,
+            "recent": f"last {SL.RECENT_PERIODS} completed monthly periods (~{SL.RECENT_SESSIONS} sessions)",
+            "split_rule": "a period belongs to the window its ENTRY session (decision + 1 business day) is in",
+            "n_sealed_months": T_sealed, "n_dev_months_max": T_full - T_sealed if T_full else None,
+            "honest_note": (
+                f"The sealed window is {T_sealed} monthly blocks (the brief assumed 21). 'Sealed' "
+                f"means the split was declared in code before this run, NOT that nobody has seen "
+                f"2024-2026: every rule was written in 2026, and the 02:00 board printed full-sample "
+                f"numbers including it. Ranking {len(cells)} cells on {T_sealed} months selects luck "
+                f"as readily as skill -- read sealed_dsr (at n={len(cells)}) and the dev column "
+                f"beside every sealed number."),
+            "noise_sharpe_ceiling_monthly_full": _sr0(len(cells), T_full),
+            "noise_sharpe_ceiling_monthly_sealed": _sr0(len(cells), T_sealed),
+            "noise_sharpe_ceiling_annual_sealed": (_sr0(len(cells), T_sealed) or 0) * math.sqrt(12),
+            "expected_noise_cells_ir_above_0_5_annual_full": _n_noise_above(len(cells), T_full, 0.5),
+            "expected_noise_cells_ir_above_0_5_annual_sealed": _n_noise_above(len(cells), T_sealed, 0.5),
+        },
         "multiplicity": {
+            "cells_looked_at": len(cells),
             "n_cells_looked_at": len(cells), "n_candidate_rules": len(cand),
             "n_families": len(families), "families": families,
             "dsr_n_trials_nominal": len(cells), "dsr_n_trials_effective": max(2, len(families)),
@@ -615,6 +1147,9 @@ def leaderboard(done: dict, rules: list, *, spy_meta: dict, today: date,
                 "canonical_refusal": spy_meta.get("canonical_refusal")},
         "market_benchmark": spy_meta.get("market_benchmark"),
         "since": since,
+        "extra_rules_source": SL.EXTRA_SOURCE, "extra_rules_refused": SL.EXTRA_REFUSED,
+        "top_by_sealed_vs_spy": by_sealed[:top_n],
+        "bottom_by_sealed_vs_spy": by_sealed[-top_n:][::-1],
         "top_by_dsr": by_dsr[:top_n],
         "top_by_hindsight_cagr_since_2020": by_cagr[:top_n],
         "bottom_by_hindsight_cagr_since_2020": by_cagr[-top_n:][::-1],
@@ -654,6 +1189,24 @@ def _table(rows: list) -> list[str]:
     return lines
 
 
+def _sealed_table(rows: list) -> list[str]:
+    head = ("| id | family | k | sealed vs SPY | sealed CAGR (months) | SPY sealed | sealed DSR | "
+            "dev CAGR | dev vs SPY | DSR full (n) | LOO-worst (mo) | top-5-mo share | "
+            "turnover/yr | cost bps/yr | max DD | recent-126 (SPY) | by-year |")
+    lines = [head, "|" + "---|" * 17]
+    for r in rows:
+        lines.append(
+            f"| {r['id']} | {r['family']} | {r['k']} | **{_pct(r.get('sealed_vs_spy'))}** | "
+            f"{_pct(r.get('sealed_cagr'))} ({r.get('n_sealed_months')}) | {_pct(r.get('sealed_spy_cagr'))} | "
+            f"{_num(r.get('sealed_dsr'), 3)} | {_pct(r.get('dev_cagr'))} | {_pct(r.get('dev_vs_spy'))} | "
+            f"{_num(r.get('dsr'), 3)} ({r.get('dsr_n_trials')}) | {_pct(r.get('loo_worst_mean_active'), 2)} | "
+            f"{_num(r.get('top5_months_share_of_log_return'))} | {_num(r.get('turnover_annual'), 1)}x | "
+            f"{_num(r.get('cost_bps_paid'), 0)} | {_pct(r.get('max_dd'))} | "
+            f"{_pct(r.get('recent_126_return'))} ({_pct(r.get('recent_126_spy'))}) | "
+            f"`{r.get('by_year_signs')}` |")
+    return lines
+
+
 def render_md(board: dict, books: dict | None = None, forward: list | None = None) -> str:
     mp = board["multiplicity"]
     spy = board["spy"]
@@ -675,7 +1228,30 @@ def render_md(board: dict, books: dict | None = None, forward: list | None = Non
           f"anything but a PRODUCT_EXPERIMENT observation.",
           f"- refused rules: {board['n_refused']}; catalogue rows not reachable on this panel: "
           f"{mp['not_reachable_catalogue_rows']} (named in `strategy_library.NOT_REACHABLE`).",
-          f"- controls (never ranked, never trials): {', '.join(mp['controls_excluded_from_trials'])}", "",
+          f"- controls (never ranked, never trials): {', '.join(mp['controls_excluded_from_trials'])}", ""]
+    ob = board.get("objective") or {}
+    if ob:
+        L += ["## The objective: sealed net return vs SPY (split declared in code)", "",
+              f"- dev: entry <= {ob['dev_end']}; SEALED: entry >= {ob['sealed_start']} "
+              f"({ob['n_sealed_months']} monthly blocks); recent: {ob['recent']}. {ob['split_rule']}.",
+              f"- {ob['honest_note']}",
+              f"- noise ceiling at n={mp['n_cells_looked_at']}: best monthly active Sharpe of pure noise "
+              f"{_num(ob.get('noise_sharpe_ceiling_monthly_full'), 3)} over the full window, "
+              f"{_num(ob.get('noise_sharpe_ceiling_monthly_sealed'), 3)} over the sealed window "
+              f"(= {_num(ob.get('noise_sharpe_ceiling_annual_sealed'), 2)} annual IR).",
+              f"- expected pure-noise cells with an annual IR > 0.5: "
+              f"{_num(ob.get('expected_noise_cells_ir_above_0_5_annual_full'), 1)} on the full window, "
+              f"{_num(ob.get('expected_noise_cells_ir_above_0_5_annual_sealed'), 1)} on the sealed window.",
+              f"- rules from strategy_library_ext: {board.get('extra_rules_source')}"
+              + (f"; refused: {board.get('extra_rules_refused')}" if board.get("extra_rules_refused") else ""),
+              "", "## Top 10 by SEALED net return vs SPY (the objective)", ""]
+        L += _sealed_table(board.get("top_by_sealed_vs_spy") or [])
+        L += ["", "## Bottom 10 by sealed net return vs SPY", ""]
+        L += _sealed_table(board.get("bottom_by_sealed_vs_spy") or [])
+        L += ["", "## Controls on the sealed window (random k: the luck bar)", ""]
+        L += _sealed_table(board.get("controls") or [])
+        L += [""]
+    L += [
           "## SPY", "",
           f"SPY since {board['since']}: CAGR {_pct(spy.get('cagr_since_2020'))}, cumulative "
           f"{_pct(spy.get('cum_since_2020'), 0)}, max DD {_pct(spy.get('max_dd_since_2020'))} "
@@ -874,8 +1450,113 @@ def write_outputs(board: dict, *, out: Path, today: date, books=None, forward=No
     return {"leaderboard": str(lb), "markdown": str(out / "LEADERBOARD.md")}
 
 
+def write_replication(board: dict, panel: pd.DataFrame, spy: pd.Series, rules: list, *,
+                      out: Path, today: date, n: int = 10) -> Path:
+    """`top10_for_replication_<date>.json`: what a second engine needs, nothing it must infer.
+
+    Schema per `research_library_expansion_and_lean.md` 2.5: each top-n rule by
+    the PRIMARY sort (sealed vs SPY) with its exact rule, universe filter,
+    rebalance dates, held symbols and weights by date, the cost model, and the
+    monthly series (gross, cost, net, SPY) this engine produced. A second
+    engine recomputes the monthly series from the SAME holdings and costs and
+    compares; it never re-derives the selection.
+    """
+    from backend.services import xs_ranker as XR
+    by_id = {r.id: r for r in rules}
+    rows = []
+    for r in (board.get("top_by_sealed_vs_spy") or [])[:n]:
+        rule = by_id[r["id"]]
+        hold: list = []
+        m = SL.run_strategy(panel, rule, k=int(r["k"]), holdings=hold)
+        wins = SL.split_windows(pd.DatetimeIndex(m["date"]))
+        ent = SL.entry_dates(pd.DatetimeIndex(m["date"]))
+        series = []
+        for j, x in enumerate(m.itertuples(index=False)):
+            s_ = spy.get(x.date)
+            series.append({"date": str(x.date.date()), "entry": str(ent[j].date()),
+                           "gross": float(x.gross), "cost": float(x.cost), "net": float(x.net),
+                           "spy": float(s_) if s_ is not None and np.isfinite(s_) else None,
+                           "turnover": float(x.turnover), "n_held": int(x.n_held),
+                           "n_delisted": int(x.n_delisted), "rebalanced": bool(x.rebalanced),
+                           "window": ("sealed" if wins["sealed"][j] else "dev")
+                           + ("+recent" if wins["recent"][j] else "")})
+        meta = rule.meta()
+        rows.append({
+            "id": rule.id, "family": rule.family, "rule_one_line": rule.description,
+            "economic_reason": rule.economic_reason, "signal_shape": meta["shape"],
+            "signature": meta["signature"], "requires": meta["requires"],
+            "universe_rule": rule.universe_rule,
+            "universe_filter": SL.UNIVERSE_TEXT[rule.universe_rule],
+            "eligible": SL.ELIGIBLE_TEXT, "k": int(r["k"]), "hold_months": rule.hold_months,
+            "weight_rule": rule.weight_rule, "regime_gate": rule.regime_gate,
+            "rebalance_rule": rule.rebalance, "source": rule.source,
+            "first_registered_utc": rule.first_registered_utc, "fingerprint": rule.fingerprint(),
+            "rebalance_dates": [h["date"] for h in hold],
+            "held_symbols_by_date": {h["date"]: h["symbols"] for h in hold},
+            "weights_by_date": {h["date"]: h["weights"] for h in hold},
+            "risk_off_dates": [h["date"] for h in hold if h.get("risk_off")],
+            "monthly_return_series": series,
+            "board": {k_: r.get(k_) for k_ in ("sealed_vs_spy", "sealed_cagr", "sealed_spy_cagr",
+                                               "n_sealed_months", "sealed_dsr", "dev_cagr", "dsr",
+                                               "turnover_annual", "cost_bps_paid", "max_dd",
+                                               "recent_126_return")},
+        })
+    doc = {"schema": "strategy_library.replication/1", "date": str(today),
+           "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+           "source": f"backend/services/strategy_library.py + leaderboard_{today}.json",
+           "selection": "top by sealed_vs_spy (the board's primary sort)",
+           "split": {"dev_end": SL.DEV_END, "sealed_start": SL.SEALED_START,
+                     "recent_periods": SL.RECENT_PERIODS,
+                     "rule": "a period's window is that of its ENTRY session (decision + 1 business day)"},
+           "cost_model": {
+               "bands_bps_round_trip": dict(XR.COST_BPS_BY_BAND),
+               "band_boundaries_median_dollar_vol": {"mega": ">= 1e9", "large": ">= 1e8",
+                                                     "mid": ">= 2e7", "small": "< 2e7"},
+               "convention": ("half the band round trip per side on the weight traded at each "
+                              "rebalance; drift between rebalances untraded and uncharged; the "
+                              "band is the name's at the date it was bought"),
+               "band_boundary_var": "median_dollar_vol (63 sessions, trailing)"},
+           "fill_convention": ("decide at the month-end close; enter at the NEXT session's open; "
+                               "exit at the open of the session after the next decision date; a "
+                               "name whose bars stop inside the period is filled at its last close "
+                               f"x (1 + {_cfg.STRATEGY_LIB_DELIST_RETURN}); cash (regime gate off) earns 0"),
+           "rows": rows}
+    path = out / f"top10_for_replication_{today}.json"
+    atomic_write_json(path, _round(doc, 10), indent=1)
+    return path
+
+
+def check_replication(doc: dict) -> list[dict]:
+    """Recompute each row's sealed CAGR and total net from its own monthly series."""
+    res = []
+    for r in doc["rows"]:
+        s = r["monthly_return_series"]
+        sealed = [x["net"] for x in s if x["window"].startswith("sealed")]
+        res.append({"id": r["id"], "n": len(s), "sealed_cagr": SL._cagr(sealed),
+                    "cum_net": float(np.prod([1 + x["net"] for x in s]) - 1.0),
+                    "gross_minus_cost_equals_net": all(abs(x["gross"] - x["cost"] - x["net"]) < 1e-9
+                                                       for x in s)})
+    return res
+
+
 def print_top(board: dict, log=print) -> None:
     mp = board["multiplicity"]
+    ob = board.get("objective") or {}
+    if ob:
+        log(f"\nOBJECTIVE: sealed net vs SPY; sealed = entry >= {ob['sealed_start']} "
+            f"({ob['n_sealed_months']} months); cells looked at {mp['n_cells_looked_at']}; noise "
+            f"ceiling sealed {_num(ob.get('noise_sharpe_ceiling_monthly_sealed'), 3)}/mo "
+            f"({_num(ob.get('noise_sharpe_ceiling_annual_sealed'), 2)} annual IR)")
+        log(f"{'id':28s} {'family':18s} {'sealVsSPY':>9s} {'sealCAGR':>8s} {'sDSR':>5s} {'devCAGR':>8s} "
+            f"{'DSR':>5s} {'LOOw':>7s} {'top5':>5s} {'turn':>5s} {'bps':>5s} {'maxDD':>7s} {'rec126':>7s}")
+        for r in board.get("top_by_sealed_vs_spy") or []:
+            log(f"{r['id']:28s} {r['family']:18s} {_pct(r.get('sealed_vs_spy')):>9s} "
+                f"{_pct(r.get('sealed_cagr')):>8s} {_num(r.get('sealed_dsr'), 2):>5s} "
+                f"{_pct(r.get('dev_cagr')):>8s} {_num(r.get('dsr'), 2):>5s} "
+                f"{_pct(r.get('loo_worst_mean_active'), 2):>7s} "
+                f"{_num(r.get('top5_months_share_of_log_return')):>5s} "
+                f"{_num(r.get('turnover_annual'), 1):>5s} {_num(r.get('cost_bps_paid'), 0):>5s} "
+                f"{_pct(r.get('max_dd')):>7s} {_pct(r.get('recent_126_return')):>7s}")
     log(f"\nMULTIPLICITY: {mp['n_cells_looked_at']} cells looked at, {mp['n_families']} families; "
         f"DSR at n={mp['dsr_n_trials_nominal']} (effective n={mp['dsr_n_trials_effective']}); "
         f"HLZ t bar {mp['hlz_t_bar']}")
@@ -919,10 +1600,25 @@ def main(argv=None) -> int:
     W = load_wide(paths, start=start, max_symbols=300 if a.smoke else 0)
     print(f"  wide arrays {W['close'].shape} ({W['n_bar_rows']:,} bars) in {time.time()-t0:.0f}s", flush=True)
     panel = build_panel(W, delist_return=float(_cfg.STRATEGY_LIB_DELIST_RETURN))
+    if a.smoke or a.no_freeze:
+        # only the forward freeze reads high/low/volume again; free ~0.3 GB for the attachers
+        for c_ in ("high", "low", "volume"):
+            W.pop(c_, None)
     print(f"  panel {len(panel):,} rows, {panel['date'].nunique()} dates in {time.time()-t0:.0f}s", flush=True)
     panel, fmeta = attach_fundamentals(panel)
     panel, flmeta = attach_flow(panel)
     print(f"  fundamentals {fmeta.get('status')}, flow {flmeta.get('status')} ({time.time()-t0:.0f}s)", flush=True)
+    extra_meta = {}
+    for name, fn in (("ratings", lambda p: attach_ratings(p, W)), ("insider", attach_insider),
+                     ("eightk", lambda p: attach_8k(p, W)), ("short_interest", attach_short_interest),
+                     ("sector", attach_sector), ("extension", lambda p: attach_extension(p, W))):
+        try:
+            panel, extra_meta[name] = fn(panel)
+        except Exception as e:                            # noqa: BLE001 -- a refusal, named
+            extra_meta[name] = {"status": "REFUSED", "why": f"{type(e).__name__}: {e}"}
+        print(f"  {name}: {extra_meta[name].get('status')} "
+              f"{extra_meta[name].get('why', '')} ({time.time()-t0:.0f}s)", flush=True)
+    panel["tiebreak"] = SL._tiebreak(panel)
     last = pd.DataFrame({"symbol": W["symbols"],
                          "date": [W["dates"][i] if i >= 0 else pd.NaT for i in
                                   np.where(np.isfinite(W["close"]).any(axis=0),
@@ -947,6 +1643,11 @@ def main(argv=None) -> int:
         for x in forward:
             print("  " + x)
     paths_out = write_outputs(board, out=out, today=today, books=books, forward=forward)
+    try:
+        paths_out["replication"] = str(write_replication(board, panel, spy, rules, out=out, today=today))
+    except Exception as e:                                # noqa: BLE001 -- printed, never silent
+        paths_out["replication"] = f"REFUSED: {type(e).__name__}: {e}"
+    print(f"  replication file: {paths_out['replication']}", flush=True)
     run = {"job": JOB, "date": str(today), "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
            "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "elapsed_s": round(time.time() - t0, 1), "partial": board.get("partial"),
@@ -956,6 +1657,7 @@ def main(argv=None) -> int:
                      "first": str(panel["date"].min().date()), "last": str(panel["date"].max().date()),
                      "fingerprint": panel_fingerprint(panel)},
            "survivorship_audit": audit, "fundamentals": fmeta, "flow": flmeta,
+           "chunk_d_inputs": extra_meta, "objective": board.get("objective"),
            "spy": {k: v for k, v in spy_meta.items() if k != "market_benchmark"},
            "market_benchmark": spy_meta.get("market_benchmark"),
            "books": books, "backtest_vs_forward": forward, **paths_out}

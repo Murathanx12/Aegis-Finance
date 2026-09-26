@@ -273,8 +273,10 @@ def test_the_library_seeds_at_least_one_hundred_rules_with_unique_ids():
 
 
 def test_every_rule_carries_its_registration_date_and_a_fingerprint():
+    stamps = {SL.REGISTERED_2026_09_26, SL.REGISTERED_2026_09_26_PM}
+    for r in SL._rules():                   # the library's own rules (not the sibling module's)
+        assert r.first_registered_utc in stamps, r.id
     for r in SL.RULES:
-        assert r.first_registered_utc == SL.REGISTERED_2026_09_26
         assert re.fullmatch(r"[0-9a-f]{16}", r.fingerprint())
     assert re.fullmatch(r"[0-9a-f]{16}", SL.library_fingerprint())
 
@@ -402,3 +404,141 @@ def test_forward_only_rules_carry_the_replay_number_as_a_citation():
     for e in SL.FORWARD_ONLY:
         assert e["green_replay_never_forward"] is True
         assert "replay" in e["replay_reported"].lower()
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# CHUNK D (2026-09-26 PM): the sealed split, >= 200 different rules, no thresholds
+# ═════════════════════════════════════════════════════════════════════════════
+
+def test_the_split_constants_are_declared_in_code():
+    assert SL.DEV_END == "2023-12-31"
+    assert SL.SEALED_START == "2024-01-01"
+    assert SL.RECENT_SESSIONS == 126 and SL.RECENT_PERIODS == 6
+
+
+def test_a_december_decision_earned_in_january_is_sealed():
+    idx = pd.DatetimeIndex(["2023-11-30", "2023-12-29", "2024-01-31"])
+    w = SL.split_windows(idx)
+    assert list(w["dev"]) == [True, False, False]
+    assert list(w["sealed"]) == [False, True, True]
+
+
+def test_a_rule_that_differs_only_by_a_threshold_is_refused():
+    lib: list = []
+    SL.register(lib, SL.Strategy("a", "revision_flow", "rule >= 3 firms",
+                                 SL.gated(SL.col("flow_rule_score"), "n_firms", lo=3)))
+    with pytest.raises(SL.ThresholdVariant, match="differs only by a threshold or k"):
+        SL.register(lib, SL.Strategy("b", "revision_flow", "rule >= 5 firms",
+                                     SL.gated(SL.col("flow_rule_score"), "n_firms", lo=5)))
+    with pytest.raises(SL.ThresholdVariant):
+        SL.register(lib, SL.Strategy("c", "revision_flow", "same rule, k=50",
+                                     SL.gated(SL.col("flow_rule_score"), "n_firms", lo=3), k=50))
+    with pytest.raises(SL.ThresholdVariant):
+        SL.register(lib, SL.Strategy("d", "x", "same interaction, another fraction",
+                                     SL.within_top(SL.col("a"), "b", 0.3)))
+        SL.register(lib, SL.Strategy("e", "x", "same interaction, another fraction",
+                                     SL.within_top(SL.col("a"), "b", 0.5)))
+    # a different MECHANISM on the same column is not a threshold variant
+    SL.register(lib, SL.Strategy("f", "revision_flow", "NO raise at all (the other side)",
+                                 SL.gated(SL.col("flow_rule_score"), "n_firms", hi=0)))
+    SL.register(lib, SL.Strategy("g", "revision_flow", "same rule, large band",
+                                 SL.gated(SL.col("flow_rule_score"), "n_firms", lo=3), "large"))
+    SL.register(lib, SL.Strategy("h", "revision_flow", "same rule, in cash below SPY 200d",
+                                 SL.gated(SL.col("flow_rule_score"), "n_firms", lo=3),
+                                 regime_gate="mkt_trend_up"))
+    assert [r.id for r in lib] == ["a", "d", "f", "g", "h"]
+
+
+def test_the_library_holds_200_genuinely_different_rules_with_reasons():
+    live = SL.rules(include_controls=False)
+    assert len(live) >= 200
+    sigs = [r.signature() for r in live]
+    assert len(sigs) == len(set(sigs)), "two registered rules share a signature"
+    for r in live:
+        assert r.family and r.source and r.first_registered_utc, r.id
+        assert r.economic_reason, f"{r.id} carries no economic reason"
+    assert not set(SL.RETIRED_THRESHOLD_VARIANTS) & {r.id for r in SL.RULES}
+
+
+def test_the_newly_reachable_rows_left_not_reachable_and_have_rules():
+    moved = set(SL.BECAME_REACHABLE_2026_09_26_PM)
+    assert not moved & set(SL.NOT_REACHABLE)
+    mapped = set()
+    for r in SL.RULES:
+        mapped.update(re.findall(r"literature:([A-Z]+-\d+)", r.source))
+    assert moved <= mapped, sorted(moved - mapped)
+
+
+def test_evaluate_prints_the_sealed_columns():
+    p = planted_panel()
+    spy = planted_spy(p)
+    m = SL.run_strategy(p, SL.Strategy("planted", "x", "alpha", SL.col("alpha")))
+    ev = SL.evaluate(m, spy)
+    for k_ in ("dev_cagr", "sealed_cagr", "sealed_vs_spy", "recent_126_return", "turnover_annual",
+               "cost_bps_paid", "max_dd", "n_sealed_months", "sealed_active_returns"):
+        assert k_ in ev, k_
+    assert ev["n_sealed_months"] == 24          # decisions 2023-12-31 .. 2025-11-30 (last open)
+    assert ev["sealed_vs_spy"] == pytest.approx(ev["sealed_cagr"] - ev["sealed_spy_cagr"])
+    assert ev["recent_window"]["n_months"] == SL.RECENT_PERIODS
+    assert ev["cost_bps_paid"] > 0 and ev["turnover_annual"] > 0
+
+
+def test_a_regime_gate_sends_the_book_to_cash_and_charges_the_exit():
+    p = planted_panel(36, 60)
+    d = sorted(p["date"].unique())
+    off = set(d[10:14])
+    p["gate"] = [0.0 if x in off else 1.0 for x in p["date"]]
+    base = SL.run_strategy(p, SL.Strategy("u", "x", "alpha", SL.col("alpha")))
+    hold: list = []
+    g = SL.run_strategy(p, SL.Strategy("g", "x", "alpha gated", SL.col("alpha"),
+                                       regime_gate="gate"), holdings=hold)
+    gi = g.set_index("date")
+    for x in off:
+        assert gi.loc[x, "gross"] == 0.0 and gi.loc[x, "n_held"] == 0
+    assert gi.loc[d[10], "cost"] > 0            # selling into cash is charged
+    assert any(h["risk_off"] for h in hold)
+    on = [x for x in d[:10]]
+    assert np.allclose(gi.loc[on, "net"], base.set_index("date").loc[on, "net"])
+
+
+def test_inverse_vol_weights_sum_to_one_and_tilt_to_the_calm():
+    p = planted_panel(24, 60)
+    p["vol_63"] = np.where(p["symbol"].str[-1].astype(int) % 2 == 0, 0.2, 0.8)
+    hold: list = []
+    SL.run_strategy(p, SL.Strategy("w", "x", "alpha ivw", SL.col("alpha"), weight_rule="inv_vol"),
+                    holdings=hold)
+    for h in hold:
+        assert sum(h["weights"]) == pytest.approx(1.0)
+        assert max(h["weights"]) / min(h["weights"]) == pytest.approx(4.0)
+
+
+def test_the_sibling_module_rules_are_registered_or_refused_by_name(monkeypatch):
+    """strategy_library_ext (another builder's file) enters through `register`."""
+    import importlib.machinery
+    import sys
+    import types
+    name = "backend.services.strategy_library_ext"
+    fake = types.ModuleType(name)
+    fake.__spec__ = importlib.machinery.ModuleSpec(name, None)
+    fake.EXTRA_STRATEGIES = [
+        SL.Strategy("ext_new_mechanism", "attention", "a new column", SL.col("attention_z"),
+                    economic_reason="attention shocks revert", first_registered_utc="2026-09-26T10:00:00+00:00"),
+        SL.Strategy("ext_flow_rule_min7", "revision_flow", "flow_rule at 7 firms",
+                    SL.gated(SL.col("flow_rule_score"), "n_firms", lo=7)),
+        {"id": "ext_fwd", "family": "attention", "description": "forward only",
+         "signal": SL.col("thesis_p"), "forward_only": True},
+    ]
+    monkeypatch.setitem(sys.modules, name, fake)
+    saved = list(SL.RULES)
+    try:
+        SL.EXTRA_REFUSED.clear()
+        SL._load_extra()
+        ids = [r.id for r in SL.RULES]
+        assert "ext_new_mechanism" in ids and "ext_fwd" in ids
+        assert "ext_flow_rule_min7" in SL.EXTRA_REFUSED
+        assert "ThresholdVariant" in SL.EXTRA_REFUSED["ext_flow_rule_min7"]
+        assert SL.RULES[-1].control, "controls stay last"
+        assert SL.EXTRA_SOURCE.startswith(name)
+    finally:
+        SL.RULES[:] = saved
+        SL.EXTRA_REFUSED.clear()

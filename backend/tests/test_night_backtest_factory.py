@@ -99,10 +99,17 @@ def test_the_md_prints_multiplicity_before_the_first_table(ledger):
     md = F.render_md(board)
     assert md.index("## Multiplicity") < md.index("## Top 10 by deflated Sharpe")
     assert "HINDSIGHT" in md.splitlines()[2]
+    assert md.index("## Multiplicity") < md.index("## Top 10 by SEALED net return vs SPY")
+    # the FIRST table is the objective's, and its first number is sealed-vs-SPY
     head = [ln for ln in md.splitlines() if ln.startswith("| id |")][0]
-    assert head.index("by-year") < head.index("CAGR since 2020")
-    assert head.index("LOO-worst") < head.index("CAGR since 2020")
-    assert head.index("DSR") < head.index("CAGR since 2020")
+    assert head.index("sealed vs SPY") < head.index("dev CAGR")
+    assert head.index("sealed DSR") < head.index("dev CAGR")
+    for col in ("LOO-worst", "top-5-mo share", "turnover/yr", "cost bps/yr", "max DD",
+                "recent-126", "DSR full"):
+        assert col in head
+    hind = [ln for ln in md.splitlines() if ln.startswith("| id |") and "CAGR since 2020" in ln][0]
+    assert hind.index("by-year") < hind.index("CAGR since 2020")
+    assert hind.index("DSR") < hind.index("CAGR since 2020")
 
 
 def test_a_rule_whose_input_is_absent_is_refused_by_name(ledger):
@@ -258,3 +265,81 @@ def test_when_every_dsr_rounds_to_zero_the_order_is_by_evidence_not_by_name(ledg
     assert board["top_by_dsr"][0]["id"] == "aaa_planted"
     zs = [r["dsr_z"] for r in board["top_by_dsr"]]
     assert zs == sorted(zs, reverse=True)
+
+
+# ═════════════════ chunk D: sealed columns, the sort, the replication file ═════
+
+_NEW_COLS = ("dev_cagr", "sealed_cagr", "sealed_vs_spy", "recent_126_return", "turnover_annual",
+             "cost_bps_paid", "max_dd", "sealed_dsr", "dsr", "loo_worst_mean_active",
+             "top5_months_share_of_log_return", "economic_reason", "n_sealed_months")
+
+
+def test_every_row_carries_the_sealed_columns(ledger):
+    p = planted_panel()
+    spy = planted_spy(p)
+    board = F.run_factory(p, spy, _spy_meta(spy), today=TODAY, rules=_library(20),
+                          out=ledger / "lib", log=lambda *_: None)
+    for r in board["all_rows"]:
+        for c in _NEW_COLS:
+            assert c in r, (r["id"], c)
+        assert r["sealed_vs_spy"] is not None and r["n_sealed_months"] == 24
+    ob = board["objective"]
+    assert ob["dev_end"] == "2023-12-31" and ob["sealed_start"] == "2024-01-01"
+    assert board["multiplicity"]["cells_looked_at"] == 63        # 21 rules x k 10/20/50
+    assert ob["noise_sharpe_ceiling_monthly_sealed"] > ob["noise_sharpe_ceiling_monthly_full"] > 0
+    assert "not that nobody has seen" in ob["honest_note"].replace("NOT", "not")
+
+
+def test_the_primary_sort_is_sealed_net_return_vs_spy(ledger):
+    p = planted_panel()
+    spy = planted_spy(p)
+    board = F.run_factory(p, spy, _spy_meta(spy), today=TODAY, rules=_library(30),
+                          out=ledger / "lib", log=lambda *_: None)
+    top = board["top_by_sealed_vs_spy"]
+    v = [r["sealed_vs_spy"] for r in top]
+    assert v == sorted(v, reverse=True)
+    assert top[0]["id"] == "planted"
+    best = max(board["all_rows"], key=lambda r: r["sealed_vs_spy"])
+    assert top[0]["id"] == best["id"]
+    # the sort key is the sealed number even when full-sample DSR disagrees
+    rows = [{"id": "a", "sealed_vs_spy": 0.10, "sealed_dsr_z": -1.0, "dsr": 0.0},
+            {"id": "b", "sealed_vs_spy": 0.02, "sealed_dsr_z": 3.0, "dsr": 0.99}]
+    assert sorted(rows, key=F.sealed_sort_key, reverse=True)[0]["id"] == "a"
+
+
+def test_the_replication_file_round_trips(ledger):
+    import json
+    p = planted_panel()
+    spy = planted_spy(p)
+    rules = _library(12)
+    out = ledger / "lib"
+    board = F.run_factory(p, spy, _spy_meta(spy), today=TODAY, rules=rules, out=out,
+                          log=lambda *_: None)
+    path = F.write_replication(board, p, spy, rules, out=out, today=TODAY)
+    assert path.name == f"top10_for_replication_{TODAY}.json"
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    assert len(doc["rows"]) == 10
+    assert set(doc["cost_model"]["bands_bps_round_trip"]) == {"mega", "large", "mid", "small"}
+    assert doc["split"]["sealed_start"] == "2024-01-01"
+    by_id = {r["id"]: r for r in board["all_rows"]}
+    for row, chk in zip(doc["rows"], F.check_replication(doc)):
+        assert row["id"] == [r["id"] for r in board["top_by_sealed_vs_spy"]][doc["rows"].index(row)]
+        assert row["universe_filter"] and row["rule_one_line"] and row["fingerprint"]
+        assert row["rebalance_dates"] and all(
+            len(row["held_symbols_by_date"][d]) == row["k"] for d in row["rebalance_dates"])
+        assert chk["gross_minus_cost_equals_net"]
+        # the file's own monthly series reproduces the board's sealed CAGR
+        assert chk["sealed_cagr"] == pytest.approx(by_id[row["id"]]["sealed_cagr"], abs=1e-5)
+        spy_s = [x["spy"] for x in row["monthly_return_series"] if x["window"].startswith("sealed")]
+        assert SL._cagr(spy_s) == pytest.approx(by_id[row["id"]]["sealed_spy_cagr"], abs=1e-5)
+
+
+def test_a_forward_only_rule_is_refused_not_backtested(ledger):
+    p = planted_panel(30, 40)
+    spy = planted_spy(p)
+    rules = _library(5) + [SL.Strategy("fwd", "attention", "thesis cards", SL.col("alpha"),
+                                       forward_only=True)]
+    board = F.run_factory(p, spy, _spy_meta(spy), today=TODAY, rules=rules,
+                          out=ledger / "lib", log=lambda *_: None)
+    assert "FORWARD_ONLY" in board["refused"]["fwd"]
+    assert board["multiplicity"]["cells_looked_at"] == 6 * 2     # 40 names: k=50 never fills
