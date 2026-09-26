@@ -1,0 +1,121 @@
+{
+ "t": "2026-09-26T03:57:19+00:00",
+ "tag": "paper_accounts_roi",
+ "account_number": "PA37CSAUFCQR",
+ "equity": 999054.41,
+ "last_equity": 1000000.0,
+ "cash": 780857.77,
+ "long_market_value": 218196.64,
+ "short_market_value": 0.0,
+ "buying_power": 3734381.67,
+ "n_positions": 11,
+ "positions": [
+  {
+   "symbol": "AAPL",
+   "qty": 58.0,
+   "avg_entry_price": 335.18,
+   "market_value": 19782.06,
+   "unrealized_pl": 341.62,
+   "unrealized_plpc": 0.01757,
+   "current_price": 341.07
+  },
+  {
+   "symbol": "ALLE",
+   "qty": 129.0,
+   "avg_entry_price": 153.56,
+   "market_value": 19926.63,
+   "unrealized_pl": 117.39,
+   "unrealized_plpc": 0.00593,
+   "current_price": 154.47
+  },
+  {
+   "symbol": "AMZN",
+   "qty": 79.0,
+   "avg_entry_price": 248.46,
+   "market_value": 19723.93,
+   "unrealized_pl": 95.59,
+   "unrealized_plpc": 0.00487,
+   "current_price": 249.67
+  },
+  {
+   "symbol": "AVPT",
+   "qty": 1524.0,
+   "avg_entry_price": 13.19,
+   "market_value": 19812.0,
+   "unrealized_pl": -289.56,
+   "unrealized_plpc": -0.0144,
+   "current_price": 13.0
+  },
+  {
+   "symbol": "GOOG",
+   "qty": 58.0,
+   "avg_entry_price": 342.07322,
+   "market_value": 19782.64,
+   "unrealized_pl": -57.60676,
+   "unrealized_plpc": -0.0029,
+   "current_price": 341.08
+  },
+  {
+   "symbol": "GOOGL",
+   "qty": 58.0,
+   "avg_entry_price": 345.538483,
+   "market_value": 19947.36,
+   "unrealized_pl": -93.872014,
+   "unrealized_plpc": -0.00468,
+   "current_price": 343.92
+  },
+  {
+   "symbol": "INCY",
+   "qty": 160.0,
+   "avg_entry_price": 125.99,
+   "market_value": 19822.4,
+   "unrealized_pl": -336.0,
+   "unrealized_plpc": -0.01667,
+   "current_price": 123.89
+  },
+  {
+   "symbol": "JAZZ",
+   "qty": 84.0,
+   "avg_entry_price": 237.35,
+   "market_value": 19987.8,
+   "unrealized_pl": 50.4,
+   "unrealized_plpc": 0.00253,
+   "current_price": 237.95
+  },
+  {
+   "symbol": "META",
+   "qty": 26.0,
+   "avg_entry_price": 757.100769,
+   "market_value": 19543.16,
+   "unrealized_pl": -141.459994,
+   "unrealized_plpc": -0.00719,
+   "current_price": 751.66
+  },
+  {
+   "symbol": "NVDA",
+   "qty": 88.0,
+   "avg_entry_price": 226.599432,
+   "market_value": 19806.16,
+   "unrealized_pl": -134.590016,
+   "unrealized_plpc": -0.00675,
+   "current_price": 225.07
+  },
+  {
+   "symbol": "SNDR",
+   "qty": 642.0,
+   "avg_entry_price": 32.026293,
+   "market_value": 20062.5,
+   "unrealized_pl": -498.380106,
+   "unrealized_plpc": -0.02424,
+   "current_price": 31.25
+  }
+ ],
+ "benchmarks": {
+  "SPY": 771.21,
+  "QQQ": 745.04,
+  "IWM": 281.98
+ },
+ "benchmark_error": null,
+ "invested_frac": 0.2184031598439168,
+ "intraday_return": -0.0009455899999999406
+}
