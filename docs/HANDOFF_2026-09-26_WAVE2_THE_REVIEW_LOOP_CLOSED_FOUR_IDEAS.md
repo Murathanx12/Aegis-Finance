@@ -292,3 +292,15 @@ Murat handed the PC over for four hours ("full freedom and full access").
   per approval in `chrome_consent.log.jsonl`. **Deleting `HANDOFF_PC` stops it and the reads.** To
   revoke everything: `chrome://inspect/#remote-debugging` → untick, or "Turn off in settings" on the banner.
 - Queue relaunched 16:15 (`queue_run_2026-09-27e.log`) on the signed-in tabs; sim `4f65d9b05c5d` running to ~21:50.
+
+## 19. 17:05 HKT 09-27 — the afternoon (Murat away, PC handed over)
+| track | result |
+|---|---|
+| **Pooled family test** (`77893aaf`, run `2026-09-27T082553Z`) | 25 families: **0 show alpha in both windows** vs the panel's random portfolio or SPY; pooling cuts the MDE only 20–30% (n_eff 2–4 per family); best family DSR 0.89 (`quality`) at n=25. |
+| **Matched twins, all 288 cells** | 2024-26 median rule − twin **−0.2%** (vs +7.1% against a uniform random draw): matching on size/vol/past return removes 51% of a rule's excess; 140 of 288 beat their twin. |
+| **Leads on the forward clock** (`54453bc2`, `docs/BOOK_2026-09-27_LEADS_FROM_THE_FAMILY_POOL.md`) | `weighted` family (rule − twin t 2.01 / 2.25) and cells `mom_12_1_q_trend@k20`, `disp_short_avoid@k20` (≈0.8 of 288 expected by chance): five books for 09-28, each with its **matched random twin frozen beside it**; two frozen as `__control` (inverse-vol puts ~15% on one name). Test declared: rule − twin positive at 21 and 63 sessions, z₆₃ ≥ 1. |
+| **Stock lists v3.2** (`ed8d0c47`, PDF in Downloads, 35 pp) | ROI list gated on n ≥ 5 analysts and the research vetoes; top 10 VKTX, NTLA, HWM, IONQ, AGYS, NVT, AMZN, NVDA, TSM, GEV; excluded table printed; 67 cards; news-forecast table (22 claims, 51 rows, n graded 0). |
+| **LLM prices** (`201b8402`) | calibrated from the provider's balance: old table 1.61× high, OpenClaw's `costUsd` 2.01× high; day's card spend $2.37; card cap and receipt on one ruler. |
+| **Reader** (`e54551b7`, `6b70c553`) | lane tabs blanked after each read and recycled after 10 pages; per-host pacing ≥ 60 s; search lanes per ticker; start-up cleanup closed 4 leftover tabs; the host guard knows its own blank tabs. Queue `QUEUE_2026-09-27.txt` running since 16:38 (MarketWatch analyst pages for the 67 carded names first). |
+| **Lab** | the STOP file must go where the RUNNING lab reads it (`lab_status.json` → `stop_file`, the folder of its START date). Restarted 16:54 as pid 88112 on the new code: `health` loop live, **L2 typing starts the model on demand** (llama-server came up by itself; the reaper stops it when idle). |
+| **Sim** | `4f65d9b05c5d`, cycle 15 at 17:00, planned end 21:49. |
