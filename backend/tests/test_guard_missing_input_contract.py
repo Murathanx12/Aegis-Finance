@@ -1470,6 +1470,22 @@ def _case_finra_short_volume():
             "a FINRA folder with no parsed file")
 
 
+def _case_source_scorecard():
+    """Source scorecard (2026-09-27): an empty corpus refuses by name.
+
+    The missing input is THE CORPUS. A scorecard over no stored article and no
+    claim would print a table of zeros that reads as "every source was graded
+    and none was right".
+    """
+    import tempfile
+    from pathlib import Path
+
+    from backend.services.source_scorecard import ScorecardRefused, load_corpus
+    empty = Path(tempfile.mkdtemp())
+    return (lambda: load_corpus(empty), ScorecardRefused,
+            "a corpus folder with no article and no claim")
+
+
 CASES = {
     "investment_committee": _case_investment_committee,
     "fundamental_features": _case_fundamental_features,
@@ -1572,6 +1588,7 @@ CASES = {
     "family_pool": _case_family_pool,
     "disk_guard": _case_disk_guard,
     "finra_short_volume": _case_finra_short_volume,
+    "source_scorecard": _case_source_scorecard,
 }
 
 
