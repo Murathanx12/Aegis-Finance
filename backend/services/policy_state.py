@@ -41,6 +41,7 @@ WHAT IS DELIBERATELY NOT HERE
 from __future__ import annotations
 
 import json
+import math
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
@@ -98,6 +99,18 @@ SCHEMA: dict[str, tuple[Any, float, float, str]] = {
     "persona_weights": ({}, 0.0, 1.0,
                         "weight on each thematic persona's forecast; its "
                         "reputation weight, 0.0 while held-out skill <= 0 (§64)"),
+    # 2026-09-27 (review item 7, "the ledger becomes weights"): how the PROBE
+    # book splits its (fixed, capped) gross across its names. A CATEGORY, not a
+    # number: it can only pick one of three shapes, each clipped at the same
+    # per-name cap, so no value of it can raise a weight or the gross.
+    "probe_weighting": ("equal", 0.0, 0.0,
+                        "how PROBE splits its capped gross across names; moved "
+                        "only by the three weighting twin books' grades"),
+}
+
+#: Keys whose value is one of a declared set, not a number in a range.
+ENUM_KEYS: dict[str, tuple[str, ...]] = {
+    "probe_weighting": ("equal", "inverse_vol", "bigmove_tilt"),
 }
 
 
@@ -126,6 +139,11 @@ def _check(key: str, value: Any) -> None:
             f"{sorted(SCHEMA)} and nothing else; an undeclared key is a code "
             f"change wearing a config's clothes.")
     default, low, high, _ = SCHEMA[key]
+    if key in ENUM_KEYS:
+        if value not in ENUM_KEYS[key]:
+            raise PolicyRefused(
+                f"REFUSED: {key} = {value!r} is not one of {list(ENUM_KEYS[key])}")
+        return
     if isinstance(default, dict):
         if not isinstance(value, dict):
             raise PolicyRefused(f"REFUSED: {key} must be a mapping, got {type(value).__name__}")
@@ -197,7 +215,8 @@ def declaration() -> dict:
     return {
         "receipt": "policy_state_declaration",
         "mutable": {k: {"value": cur.get(k), "default": v[0],
-                        "range": [v[1], v[2]], "what": v[3]}
+                        "range": (list(ENUM_KEYS[k]) if k in ENUM_KEYS
+                                  else [v[1], v[2]]), "what": v[3]}
                     for k, v in SCHEMA.items()},
         "immutable_by_design": [
             "pc_broker.MAX_INVESTED_FRAC / MAX_NAME_FRAC / MAX_ADV_PARTICIPATION "
@@ -338,7 +357,8 @@ def _diff(old: dict, new: dict) -> list[str]:
 def refresh(reputation_receipt: dict | str | Path | None, *,
             receipt_path: str | None = None, persona_receipt: str | None = None,
             probe_gate: dict | None = None, write: bool = True,
-            now: str | None = None, rules_path: Path | None = None) -> dict:
+            now: str | None = None, rules_path: Path | None = None,
+            twin_leaderboard: dict | str | Path | None = None) -> dict:
     """Rewrite `policy_state.json` from the newest GRADES. Every night.
 
     Moves `reputation_weights` and `persona_weights` only, each change one
@@ -395,6 +415,34 @@ def refresh(reputation_receipt: dict | str | Path | None, *,
                 "new": {k: new.get(k) for k in moved},
                 "reason": why, "evidence": ev})
 
+    # ---- the PROBE weighting preference, from the three twin books' grades --
+    pw = probe_weighting_from_twins(twin_leaderboard)
+    old_pw = prev_values.get("probe_weighting") or "equal"
+    _check("probe_weighting", pw["value"])
+    values["probe_weighting"] = pw["value"]
+    if pw["value"] != old_pw:
+        changes.append({
+            "t": t, "actor": "night:policy_state.refresh", "key": "probe_weighting",
+            "old": old_pw, "new": pw["value"], "reason": pw["reason"],
+            "evidence": pw["evidence"]})
+
+    # The weights' AGE is the age of the receipt they came from. A night that
+    # found no new receipt keeps the old weights, so it keeps the old receipt's
+    # date too (carried, and said so) -- otherwise a `refresh(None)` would
+    # erase the date and make fresh weights undateable, or a stale receipt's
+    # weights would look as new as tonight.
+    prev_sources = {}
+    try:
+        prev_sources = (json.loads(STATE_PATH.read_text(encoding="utf-8"))
+                        .get("sources") or {}) if STATE_PATH.is_file() else {}
+    except (OSError, ValueError):
+        prev_sources = {}
+    carried = not ok and bool(prev_sources.get("reputation_date"))
+    rep_path = receipt_path if ok else (prev_sources.get("reputation_receipt")
+                                        if carried else receipt_path)
+    rep_date = (rec or {}).get("date") if ok else (
+        prev_sources.get("reputation_date") if carried else None)
+
     dvm = _direction_vs_magnitude(rec if isinstance(rec, dict) else {},
                                   rules_path=rules_path)
     state = {
@@ -403,9 +451,13 @@ def refresh(reputation_receipt: dict | str | Path | None, *,
         "refreshed_utc": t,
         "changed_since_last": [c["key"] for c in changes],
         "changes": [{k: c[k] for k in ("key", "old", "new")} for c in changes],
-        "sources": {"reputation_receipt": receipt_path,
-                    "reputation_date": (rec or {}).get("date") if isinstance(rec, dict) else None,
+        "sources": {"reputation_receipt": rep_path,
+                    "reputation_date": rep_date,
+                    "reputation_carried_from_previous": carried,
                     "persona_receipt_section_64": persona_receipt},
+        # Read by `sim_run.u_plan` (the PROBE weighting preference). `value` is
+        # also `values.probe_weighting`; this block carries its evidence.
+        "probe_weighting": pw,
         # OBSERVED, not preferences: read-only facts the night reports beside
         # the values it may move. Nothing here is a knob.
         "observed": {
@@ -429,3 +481,297 @@ def refresh(reputation_receipt: dict | str | Path | None, *,
                 for c in changes:
                     fh.write(json.dumps(c, default=str) + "\n")
     return state
+
+
+# ═══════════════════════ the PLAN reads what the night learned ═══════════════
+#
+# REVIEW 2026-09-26 ITEM 7 / roadmap Lane R ("the ledger becomes weights"): the
+# refresh above ran every night and nothing on the paper-decision path read
+# it. `sim_run.u_plan` now reads it through the functions below, and only for
+# PREFERENCES:
+#
+# * `plan_view`      -- is the state fresh enough to use? A stale, missing or
+#                       unparseable state is UNKNOWN, never fresh (the
+#                       `funnel_staleness` pattern), and the plan says why.
+# * `probe_order`    -- the ORDER of the PROBE shortlist: reputation-weighted
+#                       E[r] (only components whose arm carries weight > 0),
+#                       with the sigma_63 vol prior as the magnitude term.
+# * `probe_weights`  -- how the PROBE's capped gross splits across its names.
+#                       The caps are ARGUMENTS the caller takes from `config`;
+#                       nothing in the state can reach them, and the function
+#                       falls back to equal on any breach.
+
+#: The three weighting twins frozen 2026-09-26 (`bridge_report.probe_books`).
+PROBE_TWIN_BOOKS: dict[str, str] = {
+    "equal": "probe_equal_2026-09-26",
+    "inverse_vol": "probe_inverse_vol_2026-09-26",
+    "bigmove_tilt": "probe_bigmove_tilt_2026-09-26",
+}
+#: Every twin needs this many graded sessions before the preference may move.
+PROBE_TWIN_MIN_SESSIONS = 21
+#: ...and the leader must beat EACH other twin by this much net-to-date
+#: (fraction of NAV; the twins share names, entry day and benchmark, so the
+#: difference is the weighting alone). Declared before any twin had a session.
+PROBE_TWIN_MARGIN = 0.01
+#: Where the book factory's daily grade lands (`llm_portfolio.leaderboard`).
+LEADERBOARD_DIR = _cfg.OPTIMUS_LEDGER_DIR / "llm_portfolio"
+
+#: The plan uses a reputation block no older than this many XNYS sessions.
+PLAN_MAX_AGE_SESSIONS = 2
+#: The E[r] horizon the PROBE order reads: the horizon the shortlist is GRADED
+#: on (`sim_run._probe_grade` uses min(PROBE_HORIZONS_SESSIONS) = 5).
+PLAN_ORDER_HORIZON = 5
+#: E[r] components that are a FORECAST ARM's output; each is admitted only
+#: while its family carries weight > 0 in `reputation_weights`. The other
+#: components (ranker, revision_flow, catalyst, source_reliability) are graded
+#: by `expected_return` itself and are admitted on their own weight > 0.
+FORECAST_COMPONENT_FAMILY: dict[str, str] = {"investigator_dir": "investigator",
+                                             "thesis_card": "thesis_card"}
+
+
+def _twin_leaderboard(src: dict | str | Path | None) -> tuple[dict | None, str | None]:
+    if isinstance(src, dict):
+        return src, "<injected>"
+    p = Path(src) if src is not None else _latest(LEADERBOARD_DIR, "leaderboard_*.json")
+    if p is None or not Path(p).is_file():
+        return None, str(p) if p else None
+    try:
+        return json.loads(Path(p).read_text(encoding="utf-8")), str(p)
+    except (OSError, ValueError):
+        return None, str(p)
+
+
+def probe_weighting_from_twins(leaderboard: dict | str | Path | None = None, *,
+                               min_sessions: int = PROBE_TWIN_MIN_SESSIONS,
+                               margin: float = PROBE_TWIN_MARGIN) -> dict:
+    """`equal` until all three twins have >= `min_sessions` graded sessions AND
+    one beats each of the other two by >= `margin` net-to-date. Any missing,
+    ungraded or unreadable twin keeps `equal` and says which. The honest value
+    for the first month is `equal` with `reason: twins immature (n sessions)`.
+    """
+    lb, path = _twin_leaderboard(leaderboard)
+    ev: dict = {"leaderboard": path, "min_sessions": int(min_sessions),
+                "margin_net_to_date": float(margin),
+                "books": dict(PROBE_TWIN_BOOKS), "by_scheme": {}}
+    if not isinstance(lb, dict):
+        return {"value": "equal", "reason": f"twins unreadable: no leaderboard ({path})",
+                "evidence": ev}
+    ev["graded_utc"] = lb.get("graded_utc")
+    ev["bars_through"] = lb.get("bars_through")
+    by_name = {g.get("name"): g for g in lb.get("grades") or [] if isinstance(g, dict)}
+    rows: dict[str, dict] = {}
+    for scheme, name in PROBE_TWIN_BOOKS.items():
+        g = by_name.get(name) or {}
+        rows[scheme] = {"status": g.get("status"), "sessions": g.get("sessions"),
+                        "net_to_date": g.get("net_to_date"),
+                        "vs_benchmark": g.get("vs_benchmark")}
+    ev["by_scheme"] = rows
+    n = [r["sessions"] if isinstance(r["sessions"], (int, float)) else 0
+         for r in rows.values()]
+    if min(n) < min_sessions or any(r["status"] != "OK" for r in rows.values()):
+        return {"value": "equal",
+                "reason": (f"twins immature ({int(min(n))} sessions; each needs "
+                           f"{min_sessions}; statuses "
+                           f"{sorted({str(r['status'] or 'MISSING') for r in rows.values()})})"),
+                "evidence": ev}
+    try:
+        net = {k: float(r["net_to_date"]) for k, r in rows.items()}
+    except (TypeError, ValueError):
+        return {"value": "equal", "reason": "twins graded but a net_to_date is not numeric",
+                "evidence": ev}
+    lead = max(net, key=lambda k: net[k])
+    gap = min(net[lead] - v for k, v in net.items() if k != lead)
+    ev["leader"], ev["leader_gap"] = lead, gap
+    if gap < margin:
+        return {"value": "equal",
+                "reason": (f"no twin leads by the declared margin: {lead} leads by "
+                           f"{gap:+.4f} < {margin:.4f} after {int(min(n))} sessions"),
+                "evidence": ev}
+    return {"value": lead,
+            "reason": (f"{lead} beats each other twin by >= {margin:.4f} net-to-date "
+                       f"(gap {gap:+.4f}) after {int(min(n))} sessions"),
+            "evidence": ev}
+
+
+def _sessions_between(lo: Any, hi: Any) -> int | None:
+    """XNYS sessions after `lo` up to and including `hi`; None if undateable.
+
+    Only an ISO `YYYY-MM-DD` STRING is a date here: a bare number such as
+    20260927 (which `date.fromisoformat` would accept as the basic format) is
+    not how any writer stamps a receipt, so it is undateable, and undateable
+    is UNKNOWN, never fresh. A stamp more than one calendar day AFTER `hi`
+    (one day of slack for the UTC+8 machine vs the ET plan date) is also
+    undateable: a receipt from the future is a clock or a leak, not news.
+    """
+    import re as _re
+    from datetime import date, timedelta
+    iso = _re.compile(r"\d{4}-\d{2}-\d{2}")
+    if not (isinstance(lo, str) and isinstance(hi, str)
+            and iso.match(lo) and iso.match(hi)):
+        return None
+    try:
+        a, b = date.fromisoformat(lo[:10]), date.fromisoformat(hi[:10])
+    except (TypeError, ValueError):
+        return None
+    if a > b + timedelta(days=1):
+        return None
+    try:
+        from scripts import pull_bars_refresh as BR
+        return int(BR.sessions_behind(a, b))
+    except Exception:                                           # noqa: BLE001
+        n, d = 0, a + timedelta(days=1)
+        while d <= b:
+            n += d.weekday() < 5
+            d += timedelta(days=1)
+        return n
+
+
+def plan_view(asof: str, *, path: Path | None = None,
+              max_age_sessions: int = PLAN_MAX_AGE_SESSIONS) -> dict:
+    """What the plan may use from `policy_state.json`, or why it may not.
+
+    `{"use": True, "used": {...}, "state": {...}}` when the file parses, carries
+    a dated reputation block no older than `max_age_sessions` XNYS sessions
+    before `asof`, and at least one arm with weight > 0. Otherwise
+    `{"use": False, "ignored": {"reason": ...}}`: a stale state is UNKNOWN,
+    never fresh, and an undateable one is stale.
+    """
+    p = Path(path) if path is not None else STATE_PATH
+    base = {"path": str(p)}
+    if not p.is_file():
+        return {"use": False, "ignored": {**base, "reason": "missing: no policy_state.json"}}
+    try:
+        raw = json.loads(p.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise ValueError("not a JSON object")
+    except (OSError, ValueError) as exc:
+        return {"use": False, "ignored": {
+            **base, "reason": f"unparseable: {type(exc).__name__}: {exc}"[:200]}}
+    values = raw.get("values") if isinstance(raw.get("values"), dict) else {}
+    src = raw.get("sources") if isinstance(raw.get("sources"), dict) else {}
+    rep_date = src.get("reputation_date")
+    age = _sessions_between(rep_date, asof) if rep_date else None
+    rep_w = values.get("reputation_weights")
+    info = {**base, "generated_at": raw.get("refreshed_utc") or raw.get("updated"),
+            "reputation_date": rep_date, "age_sessions": age,
+            "max_age_sessions": int(max_age_sessions)}
+    if age is None:
+        return {"use": False, "ignored": {**info, "reason": (
+            f"stale: reputation block undateable (reputation_date={rep_date!r}); "
+            f"UNKNOWN is never fresh")}}
+    if age > max_age_sessions:
+        return {"use": False, "ignored": {**info, "reason": (
+            f"stale: reputation block is {age} sessions old (limit {max_age_sessions})")}}
+    if not isinstance(rep_w, dict):
+        return {"use": False, "ignored": {**info, "reason": "no reputation_weights block"}}
+    try:
+        _check("reputation_weights", rep_w)
+    except PolicyRefused as exc:
+        return {"use": False, "ignored": {**info, "reason": f"unparseable: {exc}"[:200]}}
+    positive = sorted(k for k, v in rep_w.items() if float(v) > 0)
+    if not positive:
+        return {"use": False, "ignored": {**info, "reason": "no arm carries weight > 0"}}
+    pw_block = raw.get("probe_weighting") if isinstance(raw.get("probe_weighting"), dict) else {}
+    pw = pw_block.get("value", values.get("probe_weighting", "equal"))
+    pw_reason = pw_block.get("reason") or "no evidence block: default"
+    if pw not in ENUM_KEYS["probe_weighting"]:
+        pw, pw_reason = "equal", f"declared value {pw!r} is not a weighting; equal used"
+    return {"use": True, "state": raw,
+            "used": {**info, "reputation_arms_with_weight": positive,
+                     "probe_weighting": pw, "probe_weighting_reason": pw_reason}}
+
+
+def _family_weight(rep_weights: dict, family: str) -> float:
+    return sum(float(v) for k, v in rep_weights.items()
+               if _family(k) == family and float(v) > 0)
+
+
+def reputation_er(cell: dict | None, rep_weights: dict) -> tuple[float | None, list[str]]:
+    """sum_c w_c x_c over the components that may contribute; None if none may.
+
+    `w_c` is the E[r] layer's own reputation weight for the component (graded
+    forward, floor 0). A forecast-arm component additionally needs its family
+    to carry weight > 0 in the night's `reputation_weights` -- a family at
+    weight 0 has no vote, whatever the E[r] layer's table says.
+    """
+    if not cell:
+        return None, []
+    x = cell.get("x") or {}
+    w = cell.get("weights_reputation") or {}
+    used = []
+    for c, xv in x.items():
+        if xv is None or float(w.get(c, 0.0) or 0.0) <= 0:
+            continue
+        fam = FORECAST_COMPONENT_FAMILY.get(c)
+        if fam is not None and _family_weight(rep_weights, fam) <= 0:
+            continue
+        used.append(c)
+    if not used:
+        return None, []
+    return float(sum(float(w[c]) * float(x[c]) for c in used)), sorted(used)
+
+
+def probe_order(rows: list[dict], er_view: dict | None, rep_weights: dict, *,
+                sigma: dict[str, float],
+                horizon: int = PLAN_ORDER_HORIZON) -> tuple[list[dict], dict]:
+    """The shortlist re-ordered by reputation-weighted E[r_h], descending.
+
+    Names with no contributing component keep their shortlist order, after the
+    priced names (no E[r] is not E[r] = 0). Ties on E[r] go to the larger
+    vol-prior magnitude `sigma_daily * sqrt(h)` -- the $0 formula that beat the
+    LLM's own magnitude read (review 2026-09-26 H+I §2.1) -- then to the
+    shortlist order. The LLM magnitude read is never used here.
+    """
+    names = (er_view or {}).get("names") or {}
+    scored, detail = [], {}
+    for i, r in enumerate(rows):
+        t = str(r["ticker"]).upper()
+        er, comps = reputation_er((names.get(t) or {}).get(f"h{horizon}"), rep_weights)
+        mag = float(sigma.get(r["ticker"], 0.0) or 0.0) * math.sqrt(horizon)
+        detail[r["ticker"]] = {"er_reputation": er, "components": comps,
+                               "vol_prior_magnitude": mag, "shortlist_rank": i + 1}
+        scored.append((r, er, mag, i))
+    priced = sorted([z for z in scored if z[1] is not None],
+                    key=lambda z: (-z[1], -z[2], z[3]))
+    unpriced = [z for z in scored if z[1] is None]
+    out = [z[0] for z in priced + unpriced]
+    return out, {"horizon": horizon, "n_priced": len(priced), "n_unpriced": len(unpriced),
+                 "by_name": detail,
+                 "changed": [r["ticker"] for r in out] != [r["ticker"] for r in rows]}
+
+
+def probe_weights(tickers: list[str], sigma: dict[str, float], scheme: str, *,
+                  max_weight: float, gross_cap: float) -> tuple[dict[str, float], dict]:
+    """Per-name PROBE weights under `scheme`, never above the caps.
+
+    `equal`: each gets min(max_weight, gross_cap / n) -- the pre-2026-09-27 book
+    exactly. `inverse_vol` (1/sigma) and `bigmove_tilt` (sigma: the vol prior
+    is the magnitude term) spread the SAME total as equal in proportion, then
+    clip each name at `max_weight` without redistributing -- so a preference
+    can only shrink the gross, never raise it. Any breach (impossible by
+    construction; the check is the proof on every call) falls back to equal.
+    """
+    n = len(tickers)
+    if n == 0:
+        return {}, {"scheme": scheme, "applied": scheme, "fallback_why": None, "gross": 0.0,
+                    "max_weight_cap": float(max_weight), "gross_cap": float(gross_cap)}
+    w_eq = min(float(max_weight), float(gross_cap) / n)
+    applied, why = scheme, None
+    if scheme == "equal":
+        w = {t: w_eq for t in tickers}
+    elif scheme in ("inverse_vol", "bigmove_tilt"):
+        s = {t: float(sigma.get(t) or 0.0) for t in tickers}
+        if any(v <= 0 or not math.isfinite(v) for v in s.values()):
+            w, applied, why = {t: w_eq for t in tickers}, "equal", "a name has no sigma"
+        else:
+            raw = {t: (1.0 / s[t] if scheme == "inverse_vol" else s[t]) for t in tickers}
+            tot = sum(raw.values())
+            w = {t: min(float(max_weight), w_eq * n * raw[t] / tot) for t in tickers}
+    else:
+        w, applied, why = {t: w_eq for t in tickers}, "equal", f"unknown scheme {scheme!r}"
+    if (max(w.values()) > float(max_weight) + 1e-12
+            or sum(w.values()) > float(gross_cap) + 1e-9):
+        w, applied, why = {t: w_eq for t in tickers}, "equal", "cap breach refused"
+    return w, {"scheme": scheme, "applied": applied, "fallback_why": why,
+               "gross": sum(w.values()), "max_weight_cap": float(max_weight),
+               "gross_cap": float(gross_cap)}

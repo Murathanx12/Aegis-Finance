@@ -1,0 +1,127 @@
+{
+ "job": "L4b_qwen3_extraction",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 1,
+ "run_id": "20260927T140613Z-p150872",
+ "smoke": false,
+ "stage": "raw",
+ "llm_spend_usd": 0.0,
+ "arms": [
+  "local_7b",
+  "local_30b"
+ ],
+ "model": {
+  "local_7b": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+  "local_30b": "Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf"
+ },
+ "question": "On E-G1's frozen 240 items, does Qwen3-30B-A3B read news into typed fields better than the incumbent 7B -- by enough, reliably enough, and fast enough to replace it for L2 typing?",
+ "decision_rule": {
+  "replace_7b_for_l2_typing_only_if": [
+   "field accuracy (30B - 7B) >= 3 points on the SAME 240 items",
+   "AND the paired difference's t >= 2",
+   "AND the nightly typing backlog at the 30B's measured mean seconds/item fits in 8 hours"
+  ],
+  "otherwise": "KEEP_7B -- and the 30B file is a candidate to move to the archive drive (a decided KEEP is not a reason to hold 17.28 GiB on C:)",
+  "incomplete": "INCOMPLETE if either arm did not read every item -- an unfinished comparison decides nothing, and never defaults to KEEP",
+  "min_gain_pts": 3.0,
+  "min_t": 2.0,
+  "night_hours": 8.0,
+  "scope": "L2 typing ONLY. R2-Qwen3 (the monthly digest read) keeps its own registered two-condition rule in TRIAL-R2 s.6 / L4's protocol"
+ },
+ "decision": null,
+ "wire_system_sha256": "4c832e7e615d101de36bb1cbbe1c9dfcdc0ac6db5f65c5a2819c4e0baca80a43",
+ "status": "REFUSED_GPU_CONTENDED",
+ "qwen3_setting": {
+  "n_cpu_moe": 48,
+  "source": "DEFAULT",
+  "detail": "no L4 receipt with a measured best setting; config default used"
+ },
+ "configs": {
+  "local_7b": {
+   "name": "qwen25_7b",
+   "model": "C:\\Users\\mrthn\\llama\\models\\Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+   "port": 8093,
+   "n_cpu_moe": 0
+  },
+  "local_30b": {
+   "name": "qwen3_30b_moe48",
+   "model": "C:\\Users\\mrthn\\llama\\models\\Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf",
+   "port": 8093,
+   "n_cpu_moe": 48
+  }
+ },
+ "preflight": {
+  "ok": false,
+  "refusals": [
+   {
+    "code": "REFUSED_SERVER_UP",
+    "detail": "a llama-server is up on the default port 8080 as PID 146528; it is not this job's and this job does not stop it -- rerun once it is down"
+   },
+   {
+    "code": "REFUSED_GPU_LOCK_HELD",
+    "detail": "a sim session is RUNNING and 'one session owns the GPU and the broker lease' (sim_session.start); L4 waits for it"
+   },
+   {
+    "code": "REFUSED_GPU_CONTENDED",
+    "detail": "the card reports 5383 MiB used and 8 process(es) hide their size (PID 16920 [Insufficient Permissions], PID 34152 [Insufficient Permissions], PID 135768 C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe, PID 138820 C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe, PID 78376 [Insufficient Permissions], PID 146528 C:\\Users\\mrthn\\llama\\bin\\llama-server.exe, PID 97408 C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe, PID 139064 C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe); 5383 MiB is unaccounted for (> 3072)"
+   },
+   {
+    "code": "REFUSED_RAM",
+    "detail": "0.5 GiB free RAM < 20 GiB; a 17 GiB mmapped model on a short machine pages the weights and measures the disk, not the model"
+   }
+  ],
+  "seen": {
+   "utc": "2026-09-27T14:06:13+00:00",
+   "job_pid": 150872,
+   "default_port": {
+    "port": 8080,
+    "listener_pid": 146528
+   },
+   "owner_note": null,
+   "named_ports": {
+    "8093": null
+   },
+   "sim_session": {
+    "state": "RUNNING",
+    "pid_alive": true
+   },
+   "gpu": {
+    "contended": true,
+    "reason": "the card reports 5383 MiB used and 8 process(es) hide their size (PID 16920 [Insufficient Permissions], PID 34152 [Insufficient Permissions], PID 135768 C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe, PID 138820 C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe, PID 78376 [Insufficient Permissions], PID 146528 C:\\Users\\mrthn\\llama\\bin\\llama-server.exe, PID 97408 C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe, PID 139064 C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe); 5383 MiB is unaccounted for (> 3072)",
+    "card": {
+     "used_mib": 5383,
+     "total_mib": 8151,
+     "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU"
+    }
+   },
+   "ram_available_gib": 0.49,
+   "disk": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-27",
+    "volume": "C:\\",
+    "free_bytes": 257500508160,
+    "total_bytes": 1022580748288,
+    "free_gb": 239.82,
+    "total_gb": 952.4
+   },
+   "power_plan": {
+    "may_sleep": false
+   }
+  },
+  "floors": {
+   "ram_gib": 20.0,
+   "disk_gib": 25.0
+  }
+ },
+ "headline": "L4b not run: REFUSED_GPU_CONTENDED, REFUSED_GPU_LOCK_HELD, REFUSED_RAM, REFUSED_SERVER_UP",
+ "verdict": "REFUSED (REFUSED_GPU_CONTENDED, REFUSED_GPU_LOCK_HELD, REFUSED_RAM, REFUSED_SERVER_UP): a llama-server is up on the default port 8080 as PID 146528; it is not this job's and this job does not stop it -- rerun once it is down; a sim session is RUNNING and 'one session owns the GPU and the broker lease' (sim_session.start); L4 waits for it; the card reports 5383 MiB used and 8 process(es) hide their size (PID 16920 [Insufficient Permissions], PID 34152 [Insufficient Permissions], PID 135768 C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe, PID 138820 C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe, PID 78376 [Insufficient Permissions], PID 146528 C:\\Users\\mrthn\\llama\\bin\\llama-server.exe, PID 97408 C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe, PID 139064 C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe); 5383 MiB is unaccounted for (> 3072); 0.5 GiB free RAM < 20 GiB; a 17 GiB mmapped model on a short machine pages the weights and measures the disk, not the model",
+ "next_test": "the lab's idle-GPU queue re-dispatches L4b on a later day",
+ "receipt_path": "backend\\data\\optimus\\l4_live_proof\\L4b_qwen3_extraction_refusal_20260927T140610Z.json",
+ "written_utc": "2026-09-27T14:06:15+00:00",
+ "elapsed_s": 4.2,
+ "budget": {
+  "budget_s": 4800.0,
+  "awake_s": 1.8,
+  "slept_s": 0.0,
+  "sleep_gap_s": 300.0
+ }
+}

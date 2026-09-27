@@ -1,0 +1,104 @@
+{
+ "schema": "finra_short_volume/manifest/1",
+ "written_utc": "2026-09-27T14:25:02+00:00",
+ "source": "https://cdn.finra.org/equity/regsho/daily/CNMSshvol{d}.txt",
+ "pit_rule": "a day's FINRA file is public after that day's close (~17:20 ET, CDN last-modified); a decision on day D reads only files dated STRICTLY BEFORE D (usable from the NEXT session)",
+ "not_short_interest": "short SALE volume (executions flagged short, incl. market-maker hedging), off-exchange FINRA-reported venues only",
+ "rows": 19645674,
+ "dates": 2049,
+ "first": "2018-08-01",
+ "last": "2026-09-25",
+ "not_published_weekdays": 79,
+ "years": {
+  "2018": {
+   "file": "year_2018.parquet",
+   "rows": 814888,
+   "dates": 105,
+   "symbols": 9091,
+   "first": "2018-08-01",
+   "last": "2018-12-31",
+   "bytes": 10346721,
+   "sha256": "fc36ad4ce577a459dafd3d1d2aefb068eee45105605674b9291d41f1a17d0573"
+  },
+  "2019": {
+   "file": "year_2019.parquet",
+   "rows": 1973575,
+   "dates": 252,
+   "symbols": 9798,
+   "first": "2019-01-02",
+   "last": "2019-12-31",
+   "bytes": 25837601,
+   "sha256": "7241aad351bf2396c994d14adad496f3e4f1a97c966ef51def64f405bbc71c46"
+  },
+  "2020": {
+   "file": "year_2020.parquet",
+   "rows": 2111875,
+   "dates": 253,
+   "symbols": 10529,
+   "first": "2020-01-02",
+   "last": "2020-12-31",
+   "bytes": 29112213,
+   "sha256": "480a1abea8358d7d7f1921a0691536aeb921c82190f00270815e046594437a17"
+  },
+  "2021": {
+   "file": "year_2021.parquet",
+   "rows": 2464645,
+   "dates": 252,
+   "symbols": 13102,
+   "first": "2021-01-04",
+   "last": "2021-12-31",
+   "bytes": 32961469,
+   "sha256": "2434b60c676ad9b2b7fe56ce319e6ba239afd25ada06dd36a4c10aa917834264"
+  },
+  "2022": {
+   "file": "year_2022.parquet",
+   "rows": 2516888,
+   "dates": 251,
+   "symbols": 13286,
+   "first": "2022-01-03",
+   "last": "2022-12-30",
+   "bytes": 33827893,
+   "sha256": "61f7be5ea4740f82337bc1e346f46e64f20217b9405c4b37083fb1335f764333"
+  },
+  "2023": {
+   "file": "year_2023.parquet",
+   "rows": 2441520,
+   "dates": 250,
+   "symbols": 12991,
+   "first": "2023-01-03",
+   "last": "2023-12-29",
+   "bytes": 33004153,
+   "sha256": "4759d1c1aa9ec6d484b145219bbe26a852c781d999e66225c914d42dc0e5c15e"
+  },
+  "2024": {
+   "file": "year_2024.parquet",
+   "rows": 2503350,
+   "dates": 252,
+   "symbols": 12580,
+   "first": "2024-01-02",
+   "last": "2024-12-31",
+   "bytes": 34172232,
+   "sha256": "a165a7520e10c5d14b89f419d52b77675e6ece2c8b2ca40ee9772eaa58e2a5f7"
+  },
+  "2025": {
+   "file": "year_2025.parquet",
+   "rows": 2669269,
+   "dates": 250,
+   "symbols": 13382,
+   "first": "2025-01-02",
+   "last": "2025-12-31",
+   "bytes": 36521690,
+   "sha256": "5a4d4c8fb4ff346f7ce01c45598d99234afbfe2340aed3a4095f55dea592fedd"
+  },
+  "2026": {
+   "file": "year_2026.parquet",
+   "rows": 2149664,
+   "dates": 184,
+   "symbols": 14265,
+   "first": "2026-01-02",
+   "last": "2026-09-25",
+   "bytes": 38211827,
+   "sha256": "4200854ef55f203f0b370e6f13b5c0b04c49def038ea0c8c13cc260fea1b90f8"
+  }
+ }
+}

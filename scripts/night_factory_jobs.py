@@ -72,9 +72,23 @@ OUT = REPO / "backend" / "data" / "optimus" / f"night_factory_{RUN_DATE}"
 # later day must not leave an empty newest night for the board readers to find.
 
 
+_IMPORTED_OUT = OUT
+
+
+def out_dir() -> Path:
+    """Tonight's folder resolved at CALL time (2026-09-27): the always-on lab
+    imports this module into a process that lives for days, and `OUT` above is
+    the folder of the day it was imported. A monkeypatched `OUT` still wins."""
+    if OUT is not _IMPORTED_OUT:
+        return Path(OUT)
+    night = os.getenv("NIGHT_RUN_DATE") or datetime.now().strftime("%Y-%m-%d")
+    return REPO / "backend" / "data" / "optimus" / f"night_factory_{night}"
+
+
 def _out() -> Path:
-    OUT.mkdir(parents=True, exist_ok=True)
-    return OUT
+    out = out_dir()
+    out.mkdir(parents=True, exist_ok=True)
+    return out
 WRDS = REPO / "backend" / "data" / "optimus" / "wrds"
 TAPE = REPO / "backend" / "data" / "optimus" / "r4_event_families" / "R4_earnings_events.parquet"
 PLACEBO = REPO / "backend" / "data" / "optimus" / "r4_event_families" / "R4_placebo_offset40.parquet"
@@ -1553,6 +1567,10 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # and the frozen sweep, so the run that happens when the shell brings
         # the server up asks this question and not a similar one.
         "L4_qwen3_measure": _lazy("scripts.night_l4_qwen3_measure", "L4_qwen3_measure"),
+        # 2026-09-27: the comparison that DECIDES -- E-G1's 240 frozen items,
+        # local 7B vs local 30B, both on servers this job starts and stops.
+        "L4b_qwen3_extraction": _lazy("scripts.night_l4b_qwen3_extraction",
+                                      "L4b_qwen3_extraction"),
         # 2026-09-12, chunk 5b T3: the historical leg of lane B's first four
         # books. Three of the four cannot decide on the 2025-26 ticker bars
         # (their panels are CRSP-permno-keyed and CRSP ends 2024-12-31), so
@@ -1778,6 +1796,7 @@ JOB_STAGES = {
     "N2_learner_v3": "signal",
     "R2_widened_panelB": "signal",
     "L4_qwen3_measure": "raw",
+    "L4b_qwen3_extraction": "raw",
     # L2 turns raw corpus text into typed FEATURE rows; it reads no price,
     # no weight and no PnL, and E1 (signal) reads it afterwards.
     "L2_typed_events": "features",
@@ -1950,9 +1969,13 @@ def main(argv=None) -> int:
     elif a.job == "L2_retype_v3":
         payload = fn(smoke=a.smoke, run=a.run, workers=a.workers)
     elif a.job in ("E2_embedding_horizon", "E1_event_head", "E3_adaptive_conformal",
-                   "E4_adwin_gated_refit", "L4_qwen3_measure",
-                   "S1_social_features"):
+                   "E4_adwin_gated_refit", "S1_social_features"):
         payload = fn(smoke=a.smoke, run=a.run)
+    elif a.job in ("L4_qwen3_measure", "L4b_qwen3_extraction"):
+        # 2026-09-27: these flush their own receipt mid-run (atomic, so a kill
+        # leaves the rows); `--out` is the file the factory resolved, so the
+        # flushes land in it and never beside it as a stray run number.
+        payload = fn(smoke=a.smoke, run=a.run, out=a.out)
     elif a.job == "S2_scenario_gym":
         # the run number files the frozen cell list, and `--resume` continues
         # from the answers already on disk rather than re-asking them.

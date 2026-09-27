@@ -98,7 +98,6 @@ ALLOW: dict[tuple[str, str], str] = {
     ("backend/strategy/adapters.py", "G4_CHAMPION_DECLARATION.json"): _PENDING_LAUNCHER,
     ("backend/strategy/adapters.py", "G4_seal.json"): _PENDING_LAUNCHER,
     ("scripts/night_factory.py", "optimus"): _SCRIPTS_NEVER_FROZEN,
-    ("scripts/night_factory.py", ".json"): _SCRIPTS_NEVER_FROZEN,
     ("scripts/night_factory_jobs.py", "optimus"): _SCRIPTS_NEVER_FROZEN,
     ("scripts/night_factory_jobs.py", "R4_earnings_events.parquet"): _SCRIPTS_NEVER_FROZEN,
     ("scripts/night_factory_jobs.py", "R4_placebo_offset40.parquet"): _SCRIPTS_NEVER_FROZEN,

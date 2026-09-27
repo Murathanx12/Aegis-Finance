@@ -927,5 +927,122 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+
+# ── ROUND 3 (2026-09-27): FINRA daily short-SALE volume ─────────────────────
+#
+# Source: `backend/services/finra_short_volume.py` (FINRA Reg SHO consolidated
+# daily files, CNMSshvol<YYYYMMDD>.txt, from 2018-08-01). Research note
+# `docs/research_notes/2026-09-26/research_ssrn_arxiv_signals_and_oss_comparison.md`
+# §1 #7 and §2 row 3. Outside FEATURE_COLUMNS and `compute`, like news_tone_z.
+#
+# SHORT SALE VOLUME IS NOT SHORT INTEREST. It is the share of the day's
+# off-exchange (FINRA-reported) volume executed as a short sale, and most of
+# it is market makers shorting to fill customer buys and flat by the close, so
+# the LEVEL sits near 0.4-0.5 for an ordinary name with no view behind it. The
+# papers that find information in daily shorting flow read it relative to the
+# cross-section and to the name's own normal level:
+#   Boehmer, Jones & Zhang 2008, JF 63(2) "Which Shorts Are Informed?"
+#     (NYSE audit-trail shorting share of volume; heavily shorted names
+#     underperform lightly shorted ones over the next 20 sessions);
+#   Diether, Lee & Werner 2009, RFS 22(2) "Short-Sale Strategies and Return
+#     Predictability" (Reg SHO daily data; rising shorting precedes lower returns);
+#   Engelberg, Reed & Ringgenberg 2012, JFE 105(2) "How Are Shorts Informed?".
+# None of them used THESE files (off-exchange only, 2018+), so their numbers
+# are claims about a neighbouring measure, not about this column.
+#
+# THE PIT RULE. A day's file is public after that day's close (CDN
+# last-modified ~17:20 ET on the trade date). A row dated d reads only files
+# dated STRICTLY BEFORE d: the as-of join below takes the last FINRA session
+# s < d, and every window ends at s. `short_vol_asof` carries s ("dated by the
+# last file used"). The factory asks for d = t + 1 day, so month-end t's own
+# file (published after t's close, before t+1's open) is admissible and
+# nothing later is.
+#
+# COVERAGE. The session calendar is the set of dates FINRA published (union
+# over all symbols). A name absent from a day's file is NOT covered that day.
+#   short_vol_ratio_21      mean daily short_volume / total_volume over the
+#                           last 21 FINRA sessions; NaN when fewer than 15 of
+#                           the 21 are covered (`short_vol_ratio_21_n` = count)
+#   short_vol_ratio_z       (short_vol_ratio_21 - its own mean over the prior
+#                           252 sessions) / its own sd over them (sd floored
+#                           at SV_SD_FLOOR); NaN unless >= SV_BASE_MIN of those
+#                           252 sessions carry a valid short_vol_ratio_21
+#   short_vol_ratio_chg_21  short_vol_ratio_21 minus the same quantity 21
+#                           sessions earlier (both must pass the 15-of-21 rule)
+# A last session more than SV_STALE_DAYS before d leaves every column NaN.
+
+SHORT_VOL_COLUMNS: tuple[str, ...] = ("short_vol_ratio_21", "short_vol_ratio_z",
+                                      "short_vol_ratio_chg_21")
+SV_WINDOW = 21
+SV_MIN_COVERED = 15
+SV_BASE = 252
+SV_BASE_MIN = 126
+SV_SD_FLOOR = 0.01
+SV_STALE_DAYS = 10
+
+
+def short_volume_ratio_wide(sv: pd.DataFrame, tickers: Iterable[str] | None = None) -> pd.DataFrame:
+    """FINRA long frame -> sessions x symbols daily ratio (NaN = not covered).
+
+    Sessions are every date any symbol was published (FINRA's calendar), so a
+    name missing from a file is a NaN day, never a skipped one. A day with
+    total_volume <= 0 is not covered.
+    """
+    s = sv[["date", "symbol", "short_volume", "total_volume"]].copy()
+    s["date"] = pd.to_datetime(s["date"]).dt.normalize()
+    sessions = pd.DatetimeIndex(sorted(s["date"].unique()))
+    if tickers is not None:
+        s = s[s["symbol"].isin(set(tickers))]
+    tv = s["total_volume"].astype(float)
+    s["ratio"] = (s["short_volume"].astype(float) / tv.where(tv > 0)).clip(0.0, 1.0)
+    W = s.pivot_table(index="date", columns="symbol", values="ratio", aggfunc="last")
+    return W.reindex(sessions)
+
+
+def short_volume_features(sv: pd.DataFrame, dates: Iterable, tickers: Iterable[str] | None = None
+                          ) -> pd.DataFrame:
+    """(ticker, date) -> SHORT_VOL_COLUMNS + short_vol_ratio_21_n + short_vol_asof.
+
+    For each decision date d the values are those computed at the last FINRA
+    session s STRICTLY BEFORE d (see the PIT rule above).
+    """
+    dts = _dates(dates)
+    W = short_volume_ratio_wide(sv, tickers)
+    cols = ["ticker", "date", *SHORT_VOL_COLUMNS, "short_vol_ratio_21_n", "short_vol_asof"]
+    if W.empty or not len(dts):
+        return pd.DataFrame(columns=cols)
+    n21 = W.rolling(SV_WINDOW, min_periods=1).count()
+    r21 = W.rolling(SV_WINDOW, min_periods=SV_MIN_COVERED).mean()
+    # the baseline is the PRIOR 252 sessions (shifted one), so today's level is
+    # compared with its history, not with a window that already contains it
+    mu = r21.rolling(SV_BASE, min_periods=SV_BASE_MIN).mean().shift(1)
+    sd = r21.rolling(SV_BASE, min_periods=SV_BASE_MIN).std().shift(1)
+    z = (r21 - mu) / sd.clip(lower=SV_SD_FLOOR)
+    chg = r21 - r21.shift(SV_WINDOW)
+    sess = W.index
+    # the last session strictly before d
+    pos = sess.searchsorted(dts, side="left") - 1
+    ok = pos >= 0
+    s_at = pd.DatetimeIndex([sess[i] if i >= 0 else pd.NaT for i in pos])
+    fresh = ok & ((dts - s_at).days <= SV_STALE_DAYS)
+    syms = list(W.columns)
+    out = []
+    for name, M in (("short_vol_ratio_21", r21), ("short_vol_ratio_z", z),
+                    ("short_vol_ratio_chg_21", chg), ("short_vol_ratio_21_n", n21)):
+        A = M.to_numpy(dtype=float)[np.where(ok, pos, 0)]
+        A[~fresh] = np.nan
+        out.append(A)
+    T, N = len(dts), len(syms)
+    frame = pd.DataFrame({"ticker": np.tile(syms, T), "date": np.repeat(dts.values, N)})
+    for name, A in zip(("short_vol_ratio_21", "short_vol_ratio_z", "short_vol_ratio_chg_21",
+                        "short_vol_ratio_21_n"), out):
+        frame[name] = A.reshape(-1)
+    frame["short_vol_ratio_21_n"] = frame["short_vol_ratio_21_n"].fillna(0).astype(int)
+    frame["short_vol_asof"] = np.repeat(np.where(fresh, s_at.values, np.datetime64("NaT")), N)
+    for c in SHORT_VOL_COLUMNS:
+        frame[c] = frame[c].replace([np.inf, -np.inf], np.nan)
+    return frame[cols]
+
+
 if __name__ == "__main__":
     raise SystemExit(main())

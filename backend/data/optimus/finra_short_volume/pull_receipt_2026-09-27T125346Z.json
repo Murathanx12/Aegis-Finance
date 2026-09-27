@@ -1,0 +1,28 @@
+{
+ "started_utc": "2026-09-27T125346Z",
+ "disk_free_gb": 124.5,
+ "pull": {
+  "schema": "finra_short_volume/pull/1",
+  "url_template": "https://cdn.finra.org/equity/regsho/daily/CNMSshvol{d}.txt",
+  "pit_rule": "a day's FINRA file is public after that day's close (~17:20 ET, CDN last-modified); a decision on day D reads only files dated STRICTLY BEFORE D (usable from the NEXT session)",
+  "start": "2026-09-21",
+  "end": "2026-09-26",
+  "already_on_disk": 0,
+  "known_not_published": 0,
+  "to_fetch": 5,
+  "fetched_ok": 5,
+  "not_published": [],
+  "not_published_recent_retry": [],
+  "rows_fetched": 61791,
+  "stopped": null
+ },
+ "manifest": {
+  "rows": 61791,
+  "dates": 5,
+  "first": "2026-09-21",
+  "last": "2026-09-25",
+  "not_published_weekdays": 0
+ },
+ "pit_rule": "a day's FINRA file is public after that day's close (~17:20 ET, CDN last-modified); a decision on day D reads only files dated STRICTLY BEFORE D (usable from the NEXT session)",
+ "finished_utc": "2026-09-27T125356Z"
+}

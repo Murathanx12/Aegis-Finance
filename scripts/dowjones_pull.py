@@ -394,6 +394,21 @@ def _tab_num(tid: str) -> int:
     return OCH.label_num(tid)
 
 
+#: THE MARKER (2026-09-27). The `user` attach reaches EVERY profile of the running
+#: Chrome and the tab list does not name a tab's profile; "by host" twice put
+#: pages in Murat's main account. When this is set (main() sets it for operator
+#: profiles), the ONLY admissible parent is a tab whose URL carries the marker --
+#: a tab Murat opened by hand in the MuratClaw window. Everything the reader
+#: opens comes from `window.open` inside it, so it inherits that profile.
+#: No marker tab -> REFUSED_NO_MARKER_TAB; an explicit parent without it refuses too.
+PARENT_MARKER: str | None = None
+MARKER_DEFAULT = "aegis=muratclaw"
+
+
+def _has_marker(url: str) -> bool:
+    return PARENT_MARKER is None or PARENT_MARKER in (url or "")
+
+
 def resolve_parent_tabs(sources: list[str], tab_list: list[dict], *,
                         explicit: dict[str, str] | None = None,
                         exclude: set[str] | frozenset[str] = frozenset()) -> dict[str, dict]:
@@ -408,6 +423,12 @@ def resolve_parent_tabs(sources: list[str], tab_list: list[dict], *,
     # `tN` label only orders oldest-first and is printed (Chunk J3)
     rows = [(OCH.tab_handle(t), OCH.tab_label(t), str(t.get("url") or ""), t)
             for t in tab_list if OCH.tab_handle(t)]
+    if PARENT_MARKER is not None:
+        rows = [r for r in rows if _has_marker(r[2])]
+        if not rows:
+            raise WR.ReaderRefused(
+                f"REFUSED_NO_MARKER_TAB: no open tab carries {PARENT_MARKER!r}. Open "
+                f"https://www.wsj.com/?{PARENT_MARKER} in the MuratClaw window and leave it open.")
     cands = sorted(((h, lab, u) for h, lab, u, t in rows
                     if not any(OCH.tab_matches(t, x) for x in exclude) and WR.host_ok(u)),
                    key=lambda x: _tab_num(x[1]))
@@ -1595,6 +1616,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--write-queue", default="",
                     help="write the night's queue file (from the books) to this path")
     a = ap.parse_args(argv)
+    from backend.services.openclaw_client import is_operator_profile
+    if getattr(a, "profile", None) and is_operator_profile(a.profile):
+        global PARENT_MARKER
+        PARENT_MARKER = MARKER_DEFAULT
     out: dict[str, Any] = {}
     rc = 0
     day = _today()

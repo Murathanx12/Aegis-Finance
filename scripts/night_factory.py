@@ -38,10 +38,54 @@ ROOT = Path(__file__).resolve().parent.parent
 # 2026-09-13: the default was the literal "2026-09-08" for five days; two runs
 # (B_verdict, A_corner) wrote into that folder before anyone noticed, because a
 # stale default date reads exactly like a chosen one. Unset, the night is TODAY.
+#
+# 2026-09-27: RESOLVED AT WRITE TIME. These four names were the folder, fixed
+# ONCE at import -- and the always-on lab imports this module into a process
+# that runs for days, so every idle-queue receipt it wrote after midnight went
+# into YESTERDAY's folder while the lab's own "already ran today?" check read
+# TODAY's. The names below stay for importers that read them once (a CLI that
+# lives for seconds); everything in this file goes through `run_date()` /
+# `out_dir()` / `stop_path()` / `leaderboard_path()`, which ask the clock at
+# the moment of the write. A test that monkeypatches `OUT` (or `STOP`,
+# `LEADERBOARD`) still wins: an override is any value that is not the object
+# bound here at import.
+_BASE = ROOT / "backend" / "data" / "optimus"
+#: the local clock, a seam so a test can cross midnight without waiting for it
+_now_local = datetime.now
 RUN_DATE = os.getenv("NIGHT_RUN_DATE") or datetime.now().strftime("%Y-%m-%d")
-OUT = ROOT / "backend" / "data" / "optimus" / f"night_factory_{RUN_DATE}"
+OUT = _BASE / f"night_factory_{RUN_DATE}"
 STOP = OUT / "STOP"
 LEADERBOARD = OUT / "LEADERBOARD.md"
+_IMPORTED = {"OUT": OUT, "STOP": STOP, "LEADERBOARD": LEADERBOARD}
+#: `main()` pins its night for its own duration (one folder, one STOP file,
+#: one board per CLI night even when it crosses midnight); the lab never calls
+#: `main()`, so it is never pinned.
+_PINNED: dict = {}
+
+
+def _override(name: str) -> Path | None:
+    v = globals().get(name)
+    return None if v is None or v is _IMPORTED[name] else Path(v)
+
+
+def run_date() -> str:
+    """The night a write made NOW belongs to: a pinned CLI night, else
+    `NIGHT_RUN_DATE`, else today's local date -- asked at call time."""
+    return (_PINNED.get("date") or os.getenv("NIGHT_RUN_DATE")
+            or _now_local().strftime("%Y-%m-%d"))
+
+
+def out_dir() -> Path:
+    """The night folder for a write made now (not created here)."""
+    return _override("OUT") or _BASE / f"night_factory_{run_date()}"
+
+
+def stop_path() -> Path:
+    return _override("STOP") or out_dir() / "STOP"
+
+
+def leaderboard_path() -> Path:
+    return _override("LEADERBOARD") or out_dir() / "LEADERBOARD.md"
 
 #: (job id, minutes). Priority order.
 QUEUE: list[tuple[str, int]] = [
@@ -103,20 +147,23 @@ except Exception:                                             # noqa: BLE001
 
 
 def stopped() -> bool:
-    return STOP.exists()
+    return stop_path().exists()
 
 
 def _receipt_path(job: str, run: int) -> Path:
-    return OUT / f"{job}_run{run:02d}.json"
+    return out_dir() / f"{job}_run{run:02d}.json"
 
 
-def write_receipt(job: str, run: int, payload: dict) -> Path:
-    OUT.mkdir(parents=True, exist_ok=True)
+def write_receipt(job: str, run: int, payload: dict, path: Path | None = None) -> Path:
+    """Write the receipt. `path` pins it to the file a job was launched with
+    (`run_job` passes it, so a job that crosses midnight is filed with its own
+    log); without it the folder is resolved NOW."""
+    p = Path(path) if path is not None else _receipt_path(job, run)
+    p.parent.mkdir(parents=True, exist_ok=True)
     payload.setdefault("licence", "PRODUCT_EXPERIMENT")
     payload.setdefault("job", job)
     payload.setdefault("run", run)
     payload.setdefault("written_utc", datetime.now(timezone.utc).isoformat(timespec="seconds"))
-    p = _receipt_path(job, run)
     p.write_text(json.dumps(payload, indent=1, default=str), encoding="utf-8")
     return p
 
@@ -154,10 +201,11 @@ def _cell(text: object, limit: int = 160) -> str:
 
 
 def append_leaderboard(job: str, run: int, payload: dict) -> None:
-    OUT.mkdir(parents=True, exist_ok=True)
-    if not LEADERBOARD.exists():
-        LEADERBOARD.write_text(
-            f"# NIGHT FACTORY {RUN_DATE} -- leaderboard\n\n"
+    board = leaderboard_path()
+    board.parent.mkdir(parents=True, exist_ok=True)
+    if not board.exists():
+        board.write_text(
+            f"# NIGHT FACTORY {run_date()} -- leaderboard\n\n"
             "Two rulers, two lists (ROADMAP_2026-09-08_NIGHT_ALPHA_FACTORY.md section 1).\n"
             "A row is never deleted for failing the first ruler; it moves to the second with a\n"
             "typed status: PRODUCT_PROMISING / CONDITIONAL / BETA_ONLY / FAILED_VARIANT.\n"
@@ -169,12 +217,12 @@ def append_leaderboard(job: str, run: int, payload: dict) -> None:
             "|---|---|---|---|---|---|\n", encoding="utf-8")
     row = (f"| {job} | {run} | {_cell(_status(payload), 30)} | {_cell(payload.get('headline'))} "
            f"| {_cell(payload.get('family_max_p'), 20)} | {_cell(payload.get('written_utc'), 30)} |\n")
-    with LEADERBOARD.open("a", encoding="utf-8") as fh:
+    with board.open("a", encoding="utf-8") as fh:
         fh.write(row)
 
 
 def _log_path(job: str, run: int) -> Path:
-    return OUT / f"{job}_run{run:02d}.log"
+    return out_dir() / f"{job}_run{run:02d}.log"
 
 
 def _is_crashed_stub(job: str, run: int) -> bool:
@@ -470,16 +518,24 @@ def run_job(job: str, run: int, timeout_min: int, extra: list[str], resume: bool
     awake seconds, it kills the tree, and it says in the receipt which PIDs it
     asked to die and how long the machine was asleep.
     """
+    # ONE folder per launch, resolved now: the receipt, the log and the child's
+    # own NIGHT_RUN_DATE all name the night the job STARTED in, so a job that
+    # runs past midnight is not read back from (or stubbed into) the next day.
+    receipt = _receipt_path(job, run)
+    folder = receipt.parent
+    night = (folder.name[len("night_factory_"):] if folder.name.startswith("night_factory_")
+             else run_date())
     cmd = [sys.executable, "-m", _job_module(job), job,
-           "--out", str(_receipt_path(job, run)), "--run", str(run), *extra]
+           "--out", str(receipt), "--run", str(run), *extra]
     if resume:
         cmd.append("--resume")
-    log = OUT / f"{job}_run{run:02d}.log"
-    OUT.mkdir(parents=True, exist_ok=True)
+    log = folder / f"{job}_run{run:02d}.log"
+    folder.mkdir(parents=True, exist_ok=True)
     with log.open("w", encoding="utf-8") as fh:
         proc = subprocess.Popen(cmd, cwd=str(ROOT), stdout=fh, stderr=subprocess.STDOUT, text=True,
                                 env={**os.environ, "AEGIS_IGNORE_DOTENV": "1",
-                                     "PYTHONIOENCODING": "utf-8"})
+                                     "PYTHONIOENCODING": "utf-8",
+                                     "NIGHT_RUN_DATE": night})
         rc, box = await_within_box(proc, timeout_min * 60)
 
     def _tail(n: int) -> str:
@@ -496,22 +552,22 @@ def run_job(job: str, run: int, timeout_min: int, extra: list[str], resume: bool
             headline += (f"; the machine also slept {slept:.0f}s of the "
                          f"{box['elapsed_s']:.0f}s on the wall, which did NOT count")
         payload = {"verdict": "TIMEOUT", "headline": headline, "log_tail": _tail(4000), **box}
-        write_receipt(job, run, payload)
+        write_receipt(job, run, payload, path=receipt)
         return payload
 
-    if _receipt_path(job, run).exists():
-        payload = json.loads(_receipt_path(job, run).read_text(encoding="utf-8"))
+    if receipt.exists():
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
         payload.update(box)
         payload["exit_code"] = rc
         if rc:
             payload.setdefault("verdict", "FAILED")
             payload["log_tail"] = _tail(3000)
-        write_receipt(job, run, payload)
+        write_receipt(job, run, payload, path=receipt)
         return payload
 
     payload = {"verdict": "FAILED", "headline": f"exited {rc} with no receipt",
                "exit_code": rc, "log_tail": _tail(4000), **box}
-    write_receipt(job, run, payload)
+    write_receipt(job, run, payload, path=receipt)
     return payload
 
 
@@ -533,7 +589,18 @@ def main(argv: list[str] | None = None) -> int:
             print(f"REFUSED: not in the queue: {sorted(unknown)}", flush=True)
             return 2
     queue = [(j, m) for j, m in QUEUE if want is None or j in want]
-    print(f"NIGHT FACTORY {RUN_DATE}: {len(queue)} job(s); STOP file: {STOP}", flush=True)
+    # a CLI night keeps ONE folder even across midnight (its STOP file and its
+    # board are where the operator was told they are); pinned here, released
+    # in the finally -- the lab, which never calls main(), is never pinned
+    _PINNED["date"] = run_date()
+    try:
+        return _main_queue(queue, a)
+    finally:
+        _PINNED.pop("date", None)
+
+
+def _main_queue(queue: list[tuple[str, int]], a: argparse.Namespace) -> int:
+    print(f"NIGHT FACTORY {run_date()}: {len(queue)} job(s); STOP file: {stop_path()}", flush=True)
     print(gpu_line(), flush=True)
     refusal = refuse_if_the_machine_may_sleep()
     if refusal:

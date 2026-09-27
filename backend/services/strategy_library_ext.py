@@ -1147,6 +1147,218 @@ ENABLER_EFFECT: dict = {
 EXTRA_STRATEGIES += ROUND2_STRATEGIES + VALUE_UNLOCK_STRATEGIES
 
 
+# ── FINRA daily short-SALE volume (2026-09-27, roadmap Lane D) ───────────────
+#
+# Source note: `research_ssrn_arxiv_signals_and_oss_comparison.md` §1 #7
+# (Boehmer-Jones-Zhang: daily shorting flow, MISSING data) and §2 row 3 (the
+# FINRA files, free, T+1). There was no EXT_NOT_REACHABLE row for it -- the gap
+# lived only in that note -- so ENABLER_EFFECT records what the column unlocks.
+# Collector: `backend/services/finra_short_volume.py`; columns:
+# `pit_features.short_volume_features` (files dated STRICTLY before the
+# decision date; 15-of-21 coverage or NaN). Result note:
+# `docs/research_notes/2026-09-27/finra_short_volume_2026-09-27.md`.
+#
+# Every rule, falsifier and control below was written BEFORE the first score.
+# Controls: each rule's own ranks 21-40 (the k+1..2k twin, registered here as
+# a `control=True` row) and its matched random twin (same band, same count,
+# built by `scripts.signal_structure --matched-twins` from the run's holdings).
+# All three sit in ONE family, `short_sale_flow` (the interaction included), so
+# `--family-pool` has the >= 3 primary rules it needs to pool the family.
+
+#: When the FINRA rules were written down, before any of them was scored.
+REGISTERED_FINRA = "2026-09-27T13:10:00+00:00"
+
+BJZ08 = ("Boehmer, Jones & Zhang 2008, JF 63(2) 'Which Shorts Are Informed?' "
+         "https://doi.org/10.1111/j.1540-6261.2008.01324.x")
+DLW09 = ("Diether, Lee & Werner 2009, RFS 22(2) 'Short-Sale Strategies and Return "
+         "Predictability' https://doi.org/10.1093/rfs/hhn047")
+ERR12 = ("Engelberg, Reed & Ringgenberg 2012, JFE 105(2) 'How Are Shorts Informed? Short "
+         "Sellers, News, and Information Processing' https://doi.org/10.1016/j.jfineco.2012.01.001")
+_LIT3 = "[LIT: papers not re-read tonight; DOIs from memory, not re-resolved 2026-09-27]"
+_FINRA_SRC = "FINRA Reg SHO daily files https://cdn.finra.org/equity/regsho/daily/CNMSshvol<YYYYMMDD>.txt"
+
+EXTRA_FAMILIES["short_sale_flow"] = (
+    "short sellers are, on average, better informed than the marginal buyer; names they are "
+    "NOT shorting (or have stopped shorting) carry less unpriced bad news")
+
+_SV_CAVEAT = ("short_vol_ratio_* (pit_features.short_volume_features) from FINRA's CONSOLIDATED "
+              "off-exchange daily files, 2018-08+: short SALE volume / total FINRA-reported "
+              "volume, NOT short interest -- most of it is market-maker hedging flat by the "
+              "close, and exchange-printed volume is not in these files; a day's file is used "
+              "from the next session (row t reads files dated <= t, entry at t+1's open, after "
+              "t's ~17:20 ET publication); NaN unless 15 of the last 21 FINRA sessions cover the "
+              "name; ticker join (FINRA 'BRK/B'-style symbols do not match the panel's)")
+
+#: Size bands of `size_band_rel`: the engine's own UNIVERSES thresholds.
+SIZE_BAND_EDGES = (2e7, 1e8)
+
+
+def size_band_rel(base, *, top_frac: float | None = None):
+    """`base` as its percentile within (date, size band) among ELIGIBLE names.
+
+    Bands are the engine's own: small < $20M, mid $20M-$100M, large >= $100M
+    median 63-session dollar volume. The top-k then takes the most extreme names
+    RELATIVE TO THEIR BAND, so the book is not simply the band where the signal
+    happens to be lowest. `top_frac` keeps only the top `top_frac` of each band
+    (0.1 = the band's decile).
+    """
+    import numpy as np
+    import pandas as pd
+
+    from backend.services.strategy_library import _need
+
+    def f(p):
+        _need(p, ("median_dollar_vol", "eligible"))
+        s = base(p).astype(float)
+        mdv = p["median_dollar_vol"].astype(float)
+        band = pd.Series(np.select([mdv >= SIZE_BAND_EDGES[1], mdv >= SIZE_BAND_EDGES[0]],
+                                   [2.0, 1.0], default=0.0), index=p.index)
+        band = band.where(mdv.notna() & p["eligible"].fillna(False).astype(bool))
+        r = s.where(band.notna()).groupby([p["date"], band]).rank(pct=True).reindex(p.index)
+        if top_frac is not None:
+            r = r.where(r >= 1.0 - top_frac)
+        return r
+    f.requires = tuple(getattr(base, "requires", ())) + ("median_dollar_vol",)
+    f.shape = (f"size_band_rel({getattr(base, 'shape', '?')}"
+               f"{',top' if top_frac is not None else ''})")
+    return f
+
+
+def _fn(did, rid, family, desc, signal, *, cite, claimed, falsifier, controls, caveat=_SV_CAVEAT,
+        reason=None, **kw):
+    kw.setdefault("first_registered_utc", REGISTERED_FINRA)
+    return PaperStrategy(
+        rid, family, desc, signal, source=f"literature:{did} {cite} {_LIT3} ({_SSA}; {_FINRA_SRC})",
+        claimed_number=claimed, literature_reported=f"CLAIMED by source: {claimed}",
+        discovery_id=did, economic_reason=reason or EXTRA_FAMILIES[family], caveat=caveat,
+        falsifier=falsifier, controls=tuple(controls), **kw)
+
+
+def _finra_rules() -> list:
+    low = size_band_rel(col("short_vol_ratio_21", -1), top_frac=0.10)
+    fall = col("short_vol_ratio_chg_21", -1)
+    mom_low = within_top(col("mom_252_21"), "short_vol_ratio_21", 1 / 3, sign=-1.0)
+    bjz_claim = ("heavily shorted stocks underperform lightly shorted stocks by a risk-adjusted "
+                 "~1.16% over the following 20 trading days (~15.6% annualised), NYSE audit-trail "
+                 "shorting 2000-2004 (paper's abstract, quoted from memory, not re-read; a "
+                 "different, exchange-side measure from these off-exchange files)")
+    iwm = ("the effect is the small-cap tilt: if the rule's monthly net on SPY and IWM-SPY gives "
+           "IWM-SPY beta >= 0.9 AND alpha t < 1, it is a size bet, not a shorting signal")
+    return [
+        _fn("SSA-07a", "low_short_vol_ratio", "short_sale_flow",
+            "LOWEST 21-session FINRA short-sale-volume ratio, within size band (the lowest decile "
+            "of each small/mid/large band; top-k by within-band percentile)",
+            low, cite=f"{BJZ08}; {DLW09}", claimed=bjz_claim,
+            falsifier=("(a) does not beat its matched random twin (same band, same count) in the "
+                       "dev window -> the ratio carries nothing here; (b) " + iwm + "; (c) if "
+                       "low_short_vol_ratio_21_40 earns as much as the top 20, the ordering inside "
+                       "the decile is uninformative"),
+            controls=("low_short_vol_ratio_21_40", "matched_random_twin", "random_1",
+                      "low_days_to_cover")),
+        _fn("SSA-07a-CTL", "low_short_vol_ratio_21_40", "short_sale_flow",
+            "low_short_vol_ratio's own ranks 21-40 (the k+1..2k twin)",
+            rank_band(low, 21, 40), cite=BJZ08,
+            claimed="none: the k+1..2k control for low_short_vol_ratio",
+            falsifier="this row IS low_short_vol_ratio's ordering falsifier",
+            reason="control: is the ORDERING inside the low-shorting ranking informative",
+            controls=("low_short_vol_ratio",), control=True),
+        _fn("SSA-07b", "short_vol_ratio_falling", "short_sale_flow",
+            "LARGEST 21-session decline in the FINRA short-sale-volume ratio (this 21-session "
+            "mean minus the previous 21-session mean, most negative first)",
+            fall, cite=f"{DLW09}; {ERR12}",
+            claimed=("rising daily short selling precedes negative abnormal returns; falling "
+                     "shorting the reverse (Diether-Lee-Werner, Reg SHO 2005 data; no number "
+                     "carried here, none invented)"),
+            falsifier=("(a) does not beat its matched random twin in dev; (b) " + iwm + "; (c) if "
+                       "short_vol_ratio_falling_21_40 earns as much, the ordering is "
+                       "uninformative; (d) if its dev excess vs SPY is not above short_covering's "
+                       "(the bi-monthly short-INTEREST decline rule), daily frequency adds nothing"),
+            controls=("short_vol_ratio_falling_21_40", "matched_random_twin", "short_covering")),
+        _fn("SSA-07b-CTL", "short_vol_ratio_falling_21_40", "short_sale_flow",
+            "short_vol_ratio_falling's own ranks 21-40 (the k+1..2k twin)",
+            rank_band(fall, 21, 40), cite=DLW09,
+            claimed="none: the k+1..2k control for short_vol_ratio_falling",
+            falsifier="this row IS short_vol_ratio_falling's ordering falsifier",
+            reason="control: is the ORDERING inside the falling-shorting ranking informative",
+            controls=("short_vol_ratio_falling",), control=True),
+        _fn("SSA-07c", "mom_low_short_vol", "short_sale_flow",
+            "12-1 momentum among the LOWEST tercile of the 21-session FINRA short-sale-volume "
+            "ratio (winners the short sellers are not leaning against)",
+            mom_low, cite=f"{BJZ08}; Jegadeesh & Titman 1993, JF",
+            claimed="none: an interaction registered by us (no source number)",
+            reason=("ours: momentum that informed short sellers are not fading should be the "
+                    "part of momentum that continues"),
+            falsifier=("(a) does not beat its matched random twin in dev; (b) if its dev AND "
+                       "2024-26 excess vs SPY are not above mom_12_1's (same score, no gate), the "
+                       "low-shorting gate adds nothing to momentum; (c) " + iwm + "; (d) if "
+                       "mom_low_short_vol_21_40 earns as much, the ordering is uninformative"),
+            controls=("mom_low_short_vol_21_40", "mom_12_1", "matched_random_twin")),
+        _fn("SSA-07c-CTL", "mom_low_short_vol_21_40", "short_sale_flow",
+            "mom_low_short_vol's own ranks 21-40 (the k+1..2k twin)",
+            rank_band(mom_low, 21, 40), cite=BJZ08,
+            claimed="none: the k+1..2k control for mom_low_short_vol",
+            falsifier="this row IS mom_low_short_vol's ordering falsifier",
+            reason="control: is the ORDERING inside the gated momentum ranking informative",
+            controls=("mom_low_short_vol",), control=True),
+    ]
+
+
+FINRA_STRATEGIES: list = _finra_rules()
+EXTRA_STRATEGIES += FINRA_STRATEGIES
+
+ENABLER_EFFECT["short_vol_ratio (FINRA Reg SHO daily)"] = {
+    "left_ext_not_reachable": [],
+    "was_recorded_as": ("research note 2026-09-26 §1 #7 'NEW mechanism, MISSING data' and §2 row 3; "
+                        "no EXT_NOT_REACHABLE row existed"),
+    "new_rules_scoring": [r.id for r in FINRA_STRATEGIES if not r.control],
+    "controls": [r.id for r in FINRA_STRATEGIES if r.control],
+    "still_blocked": {"SSA-08 (Engelberg-Reed-Ringgenberg lending fee)": "paid lending-fee feed"},
+}
+
+
+def attach_short_volume(panel, W: dict | None = None, sv=None):
+    """(panel + SHORT_VOL_COLUMNS, info). Features at t+1d (files dated <= t), mapped to t."""
+    import pandas as pd
+
+    from backend.services import finra_short_volume as FSV
+    from backend.services import pit_features as pf
+    syms = panel["symbol"].astype(str).unique()
+    rws = (panel["is_month_end"].fillna(False).astype(bool) if "is_month_end" in panel.columns
+           else pd.Series(True, index=panel.index))
+    me = pd.DatetimeIndex(sorted(pd.to_datetime(panel.loc[rws, "date"]).unique()))
+    if sv is None:
+        t0 = (me.min() - pd.Timedelta(days=560)) if len(me) else None
+        sv = FSV.load(symbols=syms, start=t0)
+    f = pf.short_volume_features(sv, me + pd.Timedelta(days=1), syms)
+    f["date"] = pd.to_datetime(f["date"]) - pd.Timedelta(days=1)
+    drop = [c for c in (*pf.SHORT_VOL_COLUMNS, "short_vol_ratio_21_n", "short_vol_asof")
+            if c in panel.columns]
+    out = panel.drop(columns=drop).copy()
+    key = pd.MultiIndex.from_arrays([out["symbol"].astype(str),
+                                     pd.to_datetime(out["date"]).dt.normalize()])
+    fi = f.set_index(["ticker", "date"])
+    for c in (*pf.SHORT_VOL_COLUMNS, "short_vol_ratio_21_n"):
+        out[c] = fi[c].reindex(key).to_numpy(dtype=float)
+    out["short_vol_asof"] = pd.to_datetime(fi["short_vol_asof"].reindex(key).to_numpy())
+    info = {"pit_rule": FSV.PIT_RULE,
+            "finra_rows_read": int(len(sv)),
+            "finra_sessions": int(pd.to_datetime(sv["date"]).nunique()),
+            "non_nan": {c: int(out[c].notna().sum()) for c in pf.SHORT_VOL_COLUMNS},
+            "month_end_rows": int(rws.sum())}
+    if "eligible" in out.columns:
+        el = out["eligible"].fillna(False).astype(bool).to_numpy() & rws.to_numpy()
+        info["eligible_month_end_rows"] = int(el.sum())
+        info["eligible_with_ratio"] = int((el & out["short_vol_ratio_21"].notna().to_numpy()).sum())
+        if len(me):
+            by_year = {}
+            yrs = pd.to_datetime(out["date"]).dt.year.to_numpy()
+            for y in sorted(set(yrs[el])):
+                m = el & (yrs == y)
+                by_year[int(y)] = round(float(out.loc[m, "short_vol_ratio_21"].notna().mean()), 3)
+            info["eligible_coverage_by_year"] = by_year
+    return out, info
+
+
 # ── the factory hook: put the six columns on the panel ──────────────────────
 
 def _bars_from_wide(W: dict) -> "pd.DataFrame":
@@ -1212,6 +1424,10 @@ def attach(panel, W: dict | None = None):
         info0["value_rule_eligibility"] = value_rule_receipts(panel)
     except Exception as e:                           # noqa: BLE001 -- named in info
         info0["value_rule_eligibility"] = f"REFUSED: {type(e).__name__}: {e}"
+    try:
+        panel, info0["short_volume"] = attach_short_volume(panel, W)
+    except Exception as e:                           # noqa: BLE001 -- named in info
+        info0["short_volume"] = f"REFUSED: {type(e).__name__}: {e}"
     try:
         out, info = _attach_pit(panel, W)
     except Exception as e:                           # noqa: BLE001 -- named in info

@@ -728,6 +728,81 @@ def p_u_plan(ctx: ProbeCtx) -> ProbeResult:
                        proof=f"{day.name}/intended_book.json")
 
 
+#: `policy_state` is STALE when no plan in this many sessions READ it.
+POLICY_STATE_READ_SESSIONS = 2
+
+
+def p_policy_state(ctx: ProbeCtx) -> ProbeResult:
+    """Was the night's learning READ by a plan? (review 2026-09-26 item 7)
+
+    `policy_state.json` is refreshed every night; for a month nothing on the
+    paper path read it. ALIVE only when some `u_plan` receipt
+    (`pc_book/<day>/decisions.jsonl`) whose `asof` is within the last
+    `POLICY_STATE_READ_SESSIONS` sessions carries `policy_state_used`.
+    Otherwise STALE -- including when the newest plan says
+    `policy_state_ignored` (the reason is printed) and when the state was
+    written but no plan ran: write-only learning is the failure this row exists
+    to show. No state file and no plan at all is UNKNOWN (no evidence).
+    """
+    book = ctx.optimus_dir / "pc_book"
+    st = _read_json(book / "policy_state.json")
+    refreshed = _ts(st.get("refreshed_utc") or st.get("updated")) if isinstance(st, dict) else None
+    last = last_closed_session(ctx.now)
+    try:
+        days = sorted((x for x in book.iterdir()
+                       if x.is_dir() and re.fullmatch(r"\d{4}-\d{2}-\d{2}", x.name)),
+                      reverse=True)[:7]
+    except OSError:
+        days = []
+    newest_used, newest_plan = None, None
+    for day in days:
+        for line in reversed(_tail_lines(day / "decisions.jsonl", 1 << 20)):
+            try:
+                row = json.loads(line)
+            except ValueError:
+                continue
+            if not isinstance(row, dict) or "verdict" not in row or not row.get("asof"):
+                continue
+            a = _ts(row["asof"])
+            if a is None or sessions_behind(a.date(), last) > POLICY_STATE_READ_SESSIONS:
+                continue
+            newest_plan = newest_plan or (day.name, row)
+            if isinstance(row.get("policy_state_used"), dict):
+                newest_used = (day.name, row)
+                break
+        if newest_used:
+            break
+    ref = (f"policy_state.json refreshed {_iso(refreshed)}" if refreshed
+           else "policy_state.json missing or undated")
+    if newest_used:
+        day, row = newest_used
+        t = _ts(row.get("t"))
+        u = row["policy_state_used"]
+        return ProbeResult("ALIVE", _iso(t), _age(t, ctx.now),
+                           f"plan asof {row['asof']} read it: age {u.get('age_sessions')} "
+                           f"session(s), order: {str(u.get('order_source'))[:90]}, "
+                           f"weighting {u.get('probe_weighting')}; {ref}",
+                           proof=f"pc_book/{day}/decisions.jsonl policy_state_used")
+    if newest_plan:
+        day, row = newest_plan
+        t = _ts(row.get("t"))
+        why = ((row.get("policy_state_ignored") or {}).get("reason")
+               or (f"the plan was {row.get('verdict')} before reaching the reader"
+                   if str(row.get("verdict", "")).startswith("REFUSED") else
+                   "the plan predates the reader (no policy_state_used / _ignored field)"))
+        return ProbeResult("STALE", _iso(t), _age(t, ctx.now),
+                           f"WRITE-ONLY: the newest plan (asof {row['asof']}) did not read "
+                           f"policy_state: {why}; {ref}",
+                           proof=f"pc_book/{day}/decisions.jsonl")
+    if refreshed is None:
+        return _unknown(f"no dated pc_book/policy_state.json and no plan in the last "
+                        f"{POLICY_STATE_READ_SESSIONS} session(s)")
+    return ProbeResult("STALE", _iso(refreshed), _age(refreshed, ctx.now),
+                       f"WRITE-ONLY: no plan in the last {POLICY_STATE_READ_SESSIONS} "
+                       f"session(s) (to {last}) read policy_state; {ref}",
+                       proof="pc_book/<day>/decisions.jsonl")
+
+
 def p_decision_contract(ctx: ProbeCtx) -> ProbeResult:
     folder = ctx.optimus_dir / "decisions"
     newest = _newest_named(folder, "20??-??-??.json")
@@ -1524,6 +1599,7 @@ PROBES: tuple[Probe, ...] = (
     Probe("forecast_ledger", "pc", D1, "predictions.jsonl: new_rows_since_last_run", p_forecast_ledger),
     Probe("u_review", "pc", D1, "review/review_<last_session>.json: generated_utc", p_u_review),
     Probe("u_plan", "pc", D1, "pc_book/<d>/intended_book.json: t, asof, invested_frac", p_u_plan),
+    Probe("policy_state", "pc", D1, "pc_book/<d>/decisions.jsonl: a plan within 2 sessions carrying policy_state_used", p_policy_state),
     Probe("decision_contract", "pc", D1, "decisions/<d>.json: written_utc + n_considered run", p_decision_contract),
     Probe("forecast_grader", "pc", D1, "predictions.jsonl: max(resolved_at) vs due rows; daily_pass 'wait on a bar'", p_forecast_grader),
     Probe("book_grader", "pc", D1, "daily_pass scoreboard.nav_vs_spy.window.last_date + llm_portfolio/leaderboard_<day>.json (bars_through, status_counts) + the pass's book-grading steps", p_book_grader),
@@ -1547,6 +1623,7 @@ PROBES: tuple[Probe, ...] = (
     Probe("accrual_canary", "pc", D1, "accrual_canary.forecast_accrual + n_considered_row (PC paths)", p_accrual_canary),
     Probe("disk_free", "pc", timedelta(minutes=5), "shutil.disk_usage on the ledger dir's volume vs DISK_FREE_STALE_GB / DISK_FREE_DEAD_GB", p_disk_free),
     Probe("zero_byte_receipts", "pc", D1, "zero-byte *.json*/.md/.csv/.parquet under the ledger dir, dated by the stamp in the name (last 24 h)", p_zero_byte_receipts),
+    Probe("openclaw_temp_builds", "pc", timedelta(minutes=10), "count + time-boxed size of %TEMP%/openclaw-plugin-build-* vs OPENCLAW_TEMP_DEGRADED_COUNT / _GB", lambda ctx: __import__("backend.services.openclaw_temp", fromlist=["p_openclaw_temp_builds"]).p_openclaw_temp_builds(ctx), True),
 )
 
 

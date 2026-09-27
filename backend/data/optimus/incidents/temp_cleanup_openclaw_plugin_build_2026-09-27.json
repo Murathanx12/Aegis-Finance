@@ -1,0 +1,12 @@
+[
+ {
+  "t_utc": "2026-09-27T14:24:01.820595+00:00",
+  "pattern": "openclaw-plugin-build-*",
+  "rule": "directories older than 15 min only",
+  "deleted": 1908,
+  "skipped_recent": 43,
+  "errors": 0,
+  "free_gb_before": 172.4,
+  "free_gb_after": 320.8
+ }
+]

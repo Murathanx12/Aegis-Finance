@@ -945,7 +945,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
            contracts_dir: Path | None = None, er_sources: Any = None,
            er_dir: Path | None = None, contract_file: Path | None = None,
            bars_paths: list[Path] | None = None,
-           now_utc: datetime | None = None) -> dict:
+           now_utc: datetime | None = None,
+           policy_state_path: Path | None = None) -> dict:
     """Ranking + committee shortlist -> a book, under EXPLOIT and PROBE.
 
     THE UNIT THAT DID NOT EXIST (2026-09-23), and then the unit that could not
@@ -993,6 +994,18 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     same ticker where one exists (the shortlist id moves to
     `shortlist_hypothesis_id`), so one grade covers both writers. An absent
     contract does not stop PROBE: the receipt says `contract: absent`, red.
+
+    WHAT THE NIGHT LEARNED (review 2026-09-26 item 7, 2026-09-27): the plan
+    reads `policy_state` (`policy_state.plan_view`) for PREFERENCES only. When
+    its reputation block is <= 2 sessions old and some arm carries weight > 0,
+    the PROBE shortlist is ORDERED by reputation-weighted E[r_5] (only E[r]
+    components whose arm has weight > 0; the sigma_63 vol prior breaks ties)
+    and split by `probe_weighting` (equal / inverse_vol / bigmove_tilt). Stale,
+    missing or unparseable -> the old shortlist order, equal weights, and
+    `policy_state_ignored` says why. PROBE_MAX_WEIGHT and PROBE_GROSS_CAP come
+    from `config` and are passed IN to `policy_state.probe_weights`; no value in
+    the state reaches them. A sandbox caller that names no `policy_state_path`
+    does not read this machine's state.
     """
     from backend.services import expected_return as ER
     from backend.services import pc_broker as PB
@@ -1098,6 +1111,45 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         return float((((er_view or {}).get("names") or {}).get(str(sym).upper()) or {})
                      .get("size_scale", 1.0))
 
+    # ---- what the night learned: PREFERENCES only (review 2026-09-26 item 7) -
+    from backend.services import policy_state as PS
+    if policy_state_path is None and sandbox:
+        pview = {"use": False, "ignored": {
+            "reason": "sandbox caller named no policy_state_path"}}
+    else:
+        try:
+            pview = PS.plan_view(asof, path=policy_state_path)
+        except Exception as exc:                                   # noqa: BLE001
+            pview = {"use": False, "ignored": {
+                "reason": f"unparseable: {type(exc).__name__}: {exc}"[:200]}}
+    sig_by = {x["ticker"]: _daily_sigma(x) for x in sl}
+    order_meta = None
+    probe_weighting = "equal"
+    if pview["use"]:
+        probe_weighting = pview["used"]["probe_weighting"]
+        if er_view is None:
+            order_source = f"shortlist order (policy fresh, but no E[r] view: {er_red})"
+        else:
+            sl, order_meta = PS.probe_order(
+                sl, er_view, pview["state"]["values"]["reputation_weights"], sigma=sig_by)
+            order_source = (
+                f"reputation-weighted E[r_{order_meta['horizon']}] (components whose arm "
+                f"has weight > 0), sigma_63 vol prior breaks ties; "
+                f"{order_meta['n_priced']} priced, {order_meta['n_unpriced']} in "
+                f"shortlist order after them" if order_meta["n_priced"] else
+                "shortlist order (no shortlist name carries a contributing component)")
+        policy_used = {k: pview["used"].get(k) for k in (
+            "generated_at", "age_sessions", "reputation_date", "reputation_arms_with_weight",
+            "probe_weighting", "probe_weighting_reason", "path")}
+        policy_used["order_source"] = order_source
+        policy_ignored = None
+    else:
+        order_source = f"shortlist order (policy_state ignored: {pview['ignored']['reason']})"
+        policy_used = None
+        policy_ignored = {**pview["ignored"], "order_source": order_source,
+                          "probe_weighting": "equal"}
+        logger.warning("u_plan: policy_state IGNORED: %s", pview["ignored"]["reason"])
+
     er_pool = [(x, (_er(x["symbol"]) or {}).get("er")) for x in pool]
     if er_view is not None and any(e is not None for _, e in er_pool):
         ex_pick = sorted([(x, e) for x, e in er_pool if e is not None and e > 0],
@@ -1112,9 +1164,13 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     probe_rows = [x for x in sl if not (exploit_acting and x["ticker"] in exploit_syms)]
     probe_rows = probe_rows[:int(_config.PROBE_MAX_NAMES)]
     n_probe = len(probe_rows)
-    w_probe = (min(float(_config.PROBE_MAX_WEIGHT),
-                   float(_config.PROBE_GROSS_CAP) / n_probe) if n_probe else 0.0)
-    probe_gross = n_probe * w_probe
+    # The caps are read from `config` HERE and passed in; the preference only
+    # chooses the shape under them (policy_state.probe_weights refuses a breach).
+    w_by_probe, weighting_meta = PS.probe_weights(
+        [x["ticker"] for x in probe_rows], sig_by, probe_weighting,
+        max_weight=float(_config.PROBE_MAX_WEIGHT), gross_cap=float(_config.PROBE_GROSS_CAP))
+    w_probe = max(w_by_probe.values()) if n_probe else 0.0
+    probe_gross = sum(w_by_probe.values())
     grade = _probe_grade(ledger_path)
     probe_acting = (mode == "paper_profit") and grade["may_trade"] and n_probe > 0
 
@@ -1142,7 +1198,7 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                                  + (f" E[r_21] {ex_er[x['symbol']]*100:+.2f}%"
                                     if ex_er.get(x["symbol"]) is not None else "")))
                for x, _ in ex_pick if x["symbol"] in ex_syms]
-    targets += [PB.Target(symbol=x["ticker"], weight=w_probe,
+    targets += [PB.Target(symbol=x["ticker"], weight=w_by_probe[x["ticker"]],
                           median_dollar_vol=x.get("median_dollar_vol"),
                           reason=f"PROBE shortlist score {x.get('score')} ({x['source']})")
                 for x in probe_rows]
@@ -1225,15 +1281,17 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                 "expiry_utc": expiry, "expiry_basis": basis,
                 "mode": mode, "acting": probe_acting, "virtual": not probe_acting,
                 "position_budget": {
-                    "weight": w_probe, "dollars": w_probe * equity,
+                    "weight": w_by_probe[x["ticker"]],
+                    "dollars": w_by_probe[x["ticker"]] * equity,
                     "shares": int(p.target_qty) if p else 0, "price": px,
                     "capital_usd": equity, "virtual": not probe_acting,
                     "basis": ("config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; "
+                              f"weighting {weighting_meta['applied']}; "
                               "orders only while the venue is open")},
                 "ranking_verdict": ranking_verdict,
                 "probe_verdict": {k: grade[k] for k in ("verdict", "n_days_scored", "min_days")},
                 "maximum_loss": probe_worst_case(
-                    equity=equity, n_names=1, weight=w_probe,
+                    equity=equity, n_names=1, weight=w_by_probe[x["ticker"]],
                     daily_sigma=_daily_sigma(x), label=f"PROBE {x['ticker']}"),
                 "built_utc": _now(),
             }
@@ -1295,6 +1353,12 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
               "contract_clash_reasons": {t: contract["refused"].get(t.upper())
                                          for t in contract_clash},
               "n_probe": n_probe, "probe_weight": w_probe, "probe_gross": probe_gross,
+              "probe_weights": w_by_probe, "probe_weighting": weighting_meta,
+              "order_source": order_source,
+              **({"policy_state_used": policy_used} if policy_used else
+                 {"policy_state_ignored": policy_ignored}),
+              "probe_order": ({t: order_meta["by_name"][t] for t in
+                               [x["ticker"] for x in sl][:15]} if order_meta else None),
               "n_orders": sum(1 for p in plans if p.qty > 0),
               "orders_by_state": by_state,
               "sendable_by_state": {st: sum(1 for p in to_send if _state(p.symbol) == st)
@@ -1348,6 +1412,10 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             "contract_clash": contract_clash,
             "contract_refused_excluded": len(contract_clash),
             "n_considered": record["n_considered"], "n_probe": n_probe,
+            "policy_state_used": policy_used is not None,
+            "policy_state_ignored": (policy_ignored or {}).get("reason"),
+            "order_source": order_source,
+            "probe_weighting": weighting_meta["applied"], "probe_gross": probe_gross,
             "n_orders": record["n_orders"],
             # PERMITTED to be sent (acting gate applied), not merely planned:
             # the would-be EXPLOIT book is still planned and printed when its

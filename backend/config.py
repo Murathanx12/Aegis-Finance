@@ -3463,6 +3463,10 @@ LAB_IDLE_QUEUE: tuple[tuple[str, int], ...] = (
     ("E1_event_head", 60),
     ("X4_regime_route", 90),
     ("L4_qwen3_measure", 60),
+    # 2026-09-27: the comparison that DECIDES whether the 30B replaces the 7B
+    # for L2 typing -- the E-G1 240-item extraction set, local 7B vs local 30B,
+    # $0. After L4 because it reads L4's best --n-cpu-moe setting.
+    ("L4b_qwen3_extraction", 90),
 )
 
 # ── THE IDLE QUEUE'S SLOT (2026-09-27) ───────────────────────────────────────
@@ -3494,7 +3498,56 @@ LAB_IDLE_JOB_MAX_TIMEOUTS_PER_DAY = 2
 #: measures Qwen3-30B-A3B). While one holds the slot the typing loop does not
 #: start the 7B (`GPU_BUSY`), and one is not dispatched while an Aegis 7B is
 #: listening (`GPU_BUSY`): whoever holds the card first keeps it for that tick.
-LAB_IDLE_JOBS_OWN_THE_GPU: tuple[str, ...] = ("L4_qwen3_measure",)
+LAB_IDLE_JOBS_OWN_THE_GPU: tuple[str, ...] = ("L4_qwen3_measure", "L4b_qwen3_extraction")
+
+# ── L4 / L4b: QWEN3-30B-A3B IS MEASURED, NOT ASSUMED (2026-09-27) ────────────
+#
+# Both jobs start and stop their OWN llama-server (a second, named server
+# config on its own port) and never touch the default 7B serving config. They
+# refuse while any llama-server is up on the default port, while the GPU is
+# held (gpu_guard contention, a running sim session, another L4 holder), and
+# on the RAM/disk floors below.
+
+#: the candidate reader's file, beside the incumbent in `LLAMA_HOME/models`
+L4_QWEN3_MODEL_FILE = "Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf"
+#: the incumbent's file, served by L4b's 7B arm on the SAME port and client
+L4_INCUMBENT_MODEL_FILE = "Qwen2.5-7B-Instruct-Q4_K_M.gguf"
+#: the named server's port -- NOT `LLAMA_PORT` (8080), so no caller of the
+#: default reader can ever send a request to the 30B by accident
+L4_PORT = 8093
+#: the registered sweep, descending (fewer MoE layers on the CPU = more VRAM)
+L4_N_CPU_MOE_SWEEP: tuple[int, ...] = (48, 40, 32, 24)
+#: refuse below these. The 30B is 17.28 GiB mmapped; a machine with less free
+#: RAM than that pages the weights and measures the disk, not the model.
+L4_MIN_FREE_RAM_GB = 20.0
+L4_MIN_FREE_DISK_GB = 25.0
+#: /health must answer 200 within this per setting (a 17 GiB load from disk)
+L4_HEALTH_WAIT_S = 600.0
+#: L4's own budget, inside its 60-minute queue box, so it stops descending and
+#: writes its receipt rather than being killed without one
+L4_MAX_MINUTES = 50.0
+#: after a stop, VRAM must be back within this of the pre-start baseline
+L4_VRAM_BASELINE_TOL_MIB = 300
+#: seconds to wait for VRAM to come back after the server's PID is gone
+L4_VRAM_SETTLE_S = 20.0
+#: tokens generated per generation probe (ignore_eos, so the count is exact)
+L4_GEN_TOKENS = 128
+
+#: L4b's own budget inside its 90-minute queue box
+L4B_MAX_MINUTES = 80.0
+#: the decision rule, written into the receipt BEFORE the first item is read:
+#: the 30B replaces the 7B for L2 typing only if field accuracy is higher by
+#: >= this many POINTS, with the paired difference's t >= L4B_MIN_T, AND the
+#: nightly typing backlog at the 30B's measured seconds/item fits the night.
+L4B_MIN_GAIN_PTS = 3.0
+L4B_MIN_T = 2.0
+L4B_NIGHT_HOURS = 8.0
+#: days of news-corpus inflow averaged into "the nightly typing backlog"
+L4B_BACKLOG_LOOKBACK_DAYS = 7
+#: used ONLY when the inflow cannot be measured, and the receipt says so
+L4B_BACKLOG_ROWS_FALLBACK = 3000
+#: the 30B's --n-cpu-moe when no measured L4 receipt names a best setting
+L4B_QWEN3_N_CPU_MOE_DEFAULT = 48
 
 #: Rows the typing loop may take in one tick. One tick must not try to type a
 #: 6,020-row backlog and block the next news pull.
@@ -4226,19 +4279,26 @@ OPENCLAW_USER_TAB_HOSTS = ("wsj.com", "barrons.com", "marketwatch.com")
 #: Human-pace throttle for `web_reader.read_article` (persisted across runs).
 #: The gap between page loads is DRAWN from [MIN, MAX] (lognormal, clipped;
 #: never the same interval twice) -- a constant interval is the machine tell.
-WEB_READER_MIN_DELAY_S = 20.0
-WEB_READER_MAX_DELAY_S = 90.0
-WEB_READER_MAX_PER_HOUR = 45          # 2026-09-26 23:55 Murat: 'let openclaw loose' -- pace unchanged (20-90 s), caps raised
-WEB_READER_MAX_PER_DAY = 300
+#: 2026-09-27 22:5x HKT, Murat: "read it faster and read multiple pages dont just
+#: wait, while waiting move to another page". His subscription, his call; the
+#: account-flag risk under Dow Jones ToU 9.4.1 was stated to him and rises with
+#: pace. Was 20-90 s, same host 60 s, 45/h, 300/day, 120/day/host. The gap is
+#: still DRAWN (never constant) and the three sites are rotated, so a wait on
+#: one host is spent loading a page on another.
+WEB_READER_MIN_DELAY_S = 6.0
+WEB_READER_MAX_DELAY_S = 20.0
+WEB_READER_MIN_SAME_HOST_GAP_S = 18.0
+WEB_READER_MAX_PER_HOUR = 180
+WEB_READER_MAX_PER_DAY = 1500
 #: Per-site daily cap (wsj / barrons / marketwatch each), inside the global one.
-WEB_READER_MAX_PER_DAY_PER_HOST = 120
+WEB_READER_MAX_PER_DAY_PER_HOST = 600
 #: `dowjones_pull --archive` reads at most this many articles per archive day.
-DOWJONES_ARCHIVE_MAX_PER_DAY = 40
+DOWJONES_ARCHIVE_MAX_PER_DAY = 80
 #: `dowjones_pull --handoff` refuses unless this file exists. Murat creates it
 #: when he steps away from the PC; nothing in the repo ever creates it.
 DOWJONES_HANDOFF_FILE = OPTIMUS_LEDGER_DIR / "HANDOFF_PC"
 #: Claim extraction (DeepSeek, `llm_analyzer._call_llm`) -- hard cap per run.
-DOWJONES_CLAIMS_CAP_USD = 1.00
+DOWJONES_CLAIMS_CAP_USD = 3.00
 DOWJONES_CLAIMS_EST_USD_PER_ARTICLE = 0.004
 DOWJONES_CLAIMS_PURPOSE = "dowjones_claims"
 #: The operator's paste inbox (primary path from 2026-09-26: Murat copies the
@@ -4260,3 +4320,22 @@ DOWJONES_ACCOUNT_NAME_PATTERNS = ("murat", "murathan", "abdullaev")
 #: and the sim: a run that cannot finish its receipts must not start.
 DISK_FREE_STALE_GB = 10
 DISK_FREE_DEAD_GB = 2
+
+# ── OpenClaw temp builds (2026-09-27: ~2,400 `openclaw-plugin-build-*` folders
+# of ~70 MB each filled C:) -- `backend/services/openclaw_temp.py` ──────────
+#: `sweep_plugin_builds`: only folders whose mtime is at least this old.
+OPENCLAW_TEMP_SWEEP_MAX_AGE_MIN = 15
+#: The client sweeps at most once per this many seconds.
+OPENCLAW_TEMP_SWEEP_INTERVAL_S = 600
+#: Wall-clock budget of one sweep; the rest is deferred to the next one.
+OPENCLAW_TEMP_SWEEP_MAX_SECONDS = 30.0
+#: A folder CREATED within this many seconds after a live OpenClaw node process
+#: started may be that process's loaded plugin source; it is kept.
+OPENCLAW_TEMP_PROTECT_WINDOW_S = 300
+#: When the live-process scan fails, only folders older than this are deleted.
+OPENCLAW_TEMP_UNSCANNED_MIN_AGE_H = 24
+#: `system_health.openclaw_temp_builds` goes DEGRADED (verdict STALE) above either.
+OPENCLAW_TEMP_DEGRADED_COUNT = 50
+OPENCLAW_TEMP_DEGRADED_GB = 5.0
+#: The probe's time box: counting always completes, sizing stops at this.
+OPENCLAW_TEMP_PROBE_BUDGET_S = 1.5

@@ -114,6 +114,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from backend import config as _config
+from backend.services import openclaw_temp as _OT
 
 logger = logging.getLogger(__name__)
 
@@ -516,6 +517,14 @@ def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProc
         row = _CLI_LEDGER["by_cmd"].setdefault(key, {"calls": 0, "seconds": 0.0})
         row["calls"] += 1
         row["seconds"] = round(row["seconds"] + dt, 3)
+        # Every process that loads a source-shipped plugin leaves a ~70 MB
+        # `openclaw-plugin-build-*` copy in TEMP (2026-09-27: ~2,400 of them
+        # filled C:). At most one sweep per interval, on a daemon thread; a
+        # sweep failure never fails the call (see `openclaw_temp`).
+        try:
+            _OT.after_cli_call()
+        except Exception:                                         # noqa: BLE001
+            pass
     if args[:1] == ["browser"] and any(a in ("start", "stop", "reset-profile",
                                              "create-profile", "delete-profile")
                                        for a in args[1:]):

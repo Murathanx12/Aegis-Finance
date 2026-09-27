@@ -53,6 +53,7 @@ Trading-day cadences use the XNYS calendar (`exchange_calendars`; weekday fallba
 | forecast_ledger | 1 d | ledger row count delta since previous probe | delta > 0; zero for ≥ 1 d = STALE (DEGRADED) |
 | u_review | 1 session | `review/review_<last session>.json.generated_utc` | exists |
 | u_plan | 1 session | `intended_book.json` t/asof/invested_frac + ranking asof | fresh, under `PROBE_GROSS_CAP`, ranking within limit |
+| policy_state | 1 d | `pc_book/<d>/decisions.jsonl` plan rows (`asof` within `POLICY_STATE_READ_SESSIONS` = 2) + `pc_book/policy_state.json.refreshed_utc` | a recent plan carries `policy_state_used`; STALE `WRITE-ONLY` when the state is written and no plan read it (or the plan ignored it, reason printed); UNKNOWN with neither (added 2026-09-27) |
 | decision_contract | 1 d | `decisions/<d>.json.written_utc` + `accrual_canary.n_considered_row` | fresh and not stuck |
 | forecast_grader | 1 d | ledger max(`resolved_at`) vs due-unresolved rows; daily_pass "N wait on a bar" | resolved_at moved while due rows exist; no bar-wait > 21 d |
 | book_grader | 1 session | daily_pass `scoreboard.nav_vs_spy.window.last_date` (+ newest leaderboard name stamp) | == last session |

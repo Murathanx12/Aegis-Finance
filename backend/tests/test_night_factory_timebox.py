@@ -300,3 +300,87 @@ def test_the_gpu_line_never_raises_even_with_no_gpu(monkeypatch):
 
     monkeypatch.setattr(subprocess, "run", _no_smi)
     assert NF.gpu_line().startswith("GPU: --")
+
+
+# ------------------------------------------------- the folder, across midnight
+#
+# 2026-09-27: `OUT` was fixed at IMPORT, and the always-on lab imports this
+# module into a process that lives for days -- so every idle-queue receipt it
+# wrote after midnight landed in YESTERDAY's folder while its own "already ran
+# today?" check read TODAY's. The folder is now resolved at write time.
+
+class _Clock:
+    def __init__(self, stamp: str):
+        from datetime import datetime
+        self.now = datetime.fromisoformat(stamp)
+
+    def __call__(self):
+        return self.now
+
+
+@pytest.fixture()
+def clocked(tmp_path: Path, monkeypatch):
+    monkeypatch.delenv("NIGHT_RUN_DATE", raising=False)
+    monkeypatch.setattr(NF, "_BASE", tmp_path)
+    clock = _Clock("2026-09-27T23:59:58")
+    monkeypatch.setattr(NF, "_now_local", clock)
+    return clock
+
+
+def test_the_folder_is_resolved_at_write_time_not_at_import(clocked, tmp_path: Path):
+    p1 = NF.write_receipt("J", 1, {"verdict": "DESCRIPTIVE"})
+    clocked.now = clocked.now.replace(day=28, hour=0, minute=0, second=2)
+    p2 = NF.write_receipt("J", 1, {"verdict": "DESCRIPTIVE"})
+    assert p1.parent.name == "night_factory_2026-09-27"
+    assert p2.parent.name == "night_factory_2026-09-28", (
+        "a write after midnight went into yesterday's folder")
+    assert NF.stop_path().parent.name == "night_factory_2026-09-28"
+    assert NF.leaderboard_path().parent.name == "night_factory_2026-09-28"
+    assert NF.resolve_run("J", 1) == (2, False), "resolve_run read a different night"
+
+
+def test_a_job_that_crosses_midnight_is_filed_with_its_own_night(clocked, tmp_path: Path,
+                                                                 monkeypatch):
+    """Launched at 23:59:58, finished after midnight: the receipt, the log and
+    the child's NIGHT_RUN_DATE all name the night it STARTED in, and no
+    'exited with no receipt' stub appears in the next day's folder."""
+    real_box = NF.await_within_box
+
+    def _box_across_midnight(proc, box_s, **kw):
+        out = real_box(proc, box_s, **kw)
+        clocked.now = clocked.now.replace(day=28, hour=0, minute=0, second=5)
+        return out
+
+    monkeypatch.setattr(NF, "await_within_box", _box_across_midnight)
+    payload = NF.run_job("SMOKE_quick", 1, 1.0, ["--sleep-s", "1"])
+    assert payload["verdict"] == "SMOKE" and payload["exit_code"] == 0
+    day1 = tmp_path / "night_factory_2026-09-27"
+    assert (day1 / "SMOKE_quick_run01.json").exists() and (day1 / "SMOKE_quick_run01.log").exists()
+    assert not (tmp_path / "night_factory_2026-09-28" / "SMOKE_quick_run01.json").exists()
+
+
+def test_the_cli_night_is_pinned_for_its_own_duration(clocked, monkeypatch):
+    """`main()` keeps ONE folder for a night that crosses midnight (its STOP
+    file and board are where the operator was told), and releases the pin."""
+    seen = []
+
+    def _job(job, run, minutes, extra, resume=False):
+        seen.append(NF.out_dir().name)
+        clocked.now = clocked.now.replace(day=28, hour=0, minute=1)
+        return {"verdict": "DESCRIPTIVE", "headline": "ok"}
+
+    monkeypatch.setattr(NF, "run_job", _job)
+    monkeypatch.setattr(NF, "refuse_if_the_machine_may_sleep", lambda: None)
+    monkeypatch.setattr(NF, "gpu_line", lambda: "GPU: test")
+    monkeypatch.setattr(NF, "QUEUE", [("A_job", 1), ("B_job", 1)])
+    assert NF.main([]) == 0
+    assert seen == ["night_factory_2026-09-27", "night_factory_2026-09-27"]
+    assert NF.out_dir().name == "night_factory_2026-09-28", "the pin outlived main()"
+
+
+def test_the_jobs_module_resolves_its_folder_at_call_time(monkeypatch, tmp_path: Path):
+    from scripts import night_factory_jobs as J
+    monkeypatch.setenv("NIGHT_RUN_DATE", "2031-01-02")
+    assert J.out_dir().name == "night_factory_2031-01-02"
+    monkeypatch.setattr(J, "OUT", tmp_path / "pinned")
+    assert J.out_dir() == tmp_path / "pinned", "a monkeypatched OUT must still win"

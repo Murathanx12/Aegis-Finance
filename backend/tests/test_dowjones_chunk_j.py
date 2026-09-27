@@ -21,6 +21,26 @@ from backend.services import dowjones_feeds as DF
 from backend.services import openclaw_client as OC
 from backend.services import web_reader as WR
 
+
+@pytest.fixture(autouse=True)
+def _no_parent_marker(monkeypatch):
+    """These tests use fake tab lists without Murat's marker; the marker rule has
+    its own file (`test_dowjones_parent_marker.py`). `main()` sets a module
+    global, so it is reset around every test."""
+    from scripts import dowjones_pull as _DJ
+    monkeypatch.setattr(_DJ, "MARKER_DEFAULT", None)
+    monkeypatch.setattr(_DJ, "PARENT_MARKER", None)
+    # The pacing RULE is tested at fixed reference settings (20-90 s, same host
+    # 60 s). The live pace is config and was changed on 2026-09-27; a test that
+    # read it would be a gate on tonight's setting, not on the rule.
+    from backend import config as _cfg
+    for k, v in (("WEB_READER_MIN_DELAY_S", 20.0), ("WEB_READER_MAX_DELAY_S", 90.0),
+                 ("WEB_READER_MIN_SAME_HOST_GAP_S", 60.0), ("WEB_READER_MAX_PER_HOUR", 45),
+                 ("WEB_READER_MAX_PER_DAY", 300), ("WEB_READER_MAX_PER_DAY_PER_HOST", 120),
+                 ("DOWJONES_ARCHIVE_MAX_PER_DAY", 40), ("DOWJONES_CLAIMS_CAP_USD", 1.00)):
+        monkeypatch.setattr(_cfg, k, v, raising=False)
+
+
 REPO = Path(__file__).resolve().parents[2]
 
 LISTING = """- rootwebarea "Heard on the Street - WSJ"

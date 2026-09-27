@@ -1454,6 +1454,22 @@ def _case_disk_guard():
             "a volume whose free space cannot be measured")
 
 
+def _case_finra_short_volume():
+    """FINRA short-sale volume (2026-09-27): no files on disk refuses by name.
+
+    The missing input is THE DATA FOLDER. A loader that returned an empty frame
+    would let `attach_short_volume` put an all-NaN column on the panel and the
+    three rules would score nothing, silently.
+    """
+    import tempfile
+    from pathlib import Path
+
+    from backend.services.finra_short_volume import FinraShortVolumeError, load
+    empty = Path(tempfile.mkdtemp())
+    return (lambda: load(empty), FinraShortVolumeError,
+            "a FINRA folder with no parsed file")
+
+
 CASES = {
     "investment_committee": _case_investment_committee,
     "fundamental_features": _case_fundamental_features,
@@ -1555,6 +1571,7 @@ CASES = {
     "matched_twins": _case_matched_twins,
     "family_pool": _case_family_pool,
     "disk_guard": _case_disk_guard,
+    "finra_short_volume": _case_finra_short_volume,
 }
 
 
