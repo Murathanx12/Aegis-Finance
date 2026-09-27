@@ -346,7 +346,8 @@ def test_run_reads_opens_one_tab_reads_closes_and_stores_locally(ledger):
                       driver=drv, throttle=th)
     assert drv.calls[0][0] == "open_from_tab" and drv.closed == ["t99"]
     assert rc["n_articles"] == 2 and rc["tab_closed"] is True
-    assert all(20 <= g <= 90 for g in rc["seconds_between_page_loads"])
+    # one host only: the same-host floor (>= 60 s, the drawn target x3) sets every gap
+    assert all(60 <= g <= 270 for g in rc["seconds_between_page_loads"])
     assert len(set(rc["throttle_targets_s"])) == len(rc["throttle_targets_s"])
     # each article scrolled 2-3 PageDowns before the read; footprint written; lock released
     assert sum(1 for c in drv.calls if c[0] == "press") >= 4
@@ -354,7 +355,11 @@ def test_run_reads_opens_one_tab_reads_closes_and_stores_locally(ledger):
     assert not WR.lock_path().exists()
     # first article by CLICKING its ref from the snapshot, the second by its snapshot URL
     verbs = [c[0] for c in drv.calls]
-    assert "click" in verbs and verbs.count("navigate") == 1
+    loads = [c for c in drv.calls if c[0] == "navigate" and c[2][0] != WR.BLANK_URL]
+    assert "click" in verbs and len(loads) == 1
+    # each read ends with the tab blanked (tab discipline, 2026-09-27)
+    assert sum(1 for c in drv.calls if c[0] == "navigate" and c[2][0] == WR.BLANK_URL) == 2
+    assert rc["orphaned_tabs"] == [] and rc["opened"] == ["t99"]
     stored = list((ledger / "news_corpus" / "dowjones").glob("wsj/*/*.json"))
     assert len(stored) == 1        # same text twice -> one file (idempotent by sha)
     rec = json.loads(stored[0].read_text(encoding="utf-8"))
@@ -742,7 +747,9 @@ def test_run_plan_rotates_sources_under_one_throttle_and_closes_every_tab(ledger
     assert rc["stopped"] is None and not WR.lock_path().exists()
     # the MU page was already loaded by open_from_tab: read in place, not loaded twice
     mw_tab = opens[2][3]
-    assert sum(1 for c in drv.calls if c[0] == "navigate" and c[1] == mw_tab) == 1
+    assert sum(1 for c in drv.calls if c[0] == "navigate" and c[1] == mw_tab
+               and c[2][0] != WR.BLANK_URL) == 1
+    assert rc["orphaned_tabs"] == [] and rc["blanks"] >= 6
 
 
 def test_run_plan_skips_stored_urls_and_a_failed_tab_drops_only_its_lane(ledger):
@@ -1100,6 +1107,10 @@ class DetachingStub(MultiStub):
 
     def _run(self, args, timeout=180.0):
         self.runs.append(args)
+        if "navigate" in args:              # own_blank_tab_verb's argv
+            self.cur[args[args.index("--target-id") + 1]] = args[args.index("navigate") + 1]
+        if args[3:4] == ["close"]:
+            self.closed.append(args[4])
         if args[-1] == "start":
             self.state = "running"
             shift = lambda t: f"t{int(t[1:]) + 100}"   # noqa: E731
@@ -1145,7 +1156,10 @@ def test_run_plan_reattaches_mid_run_remaps_tabs_and_finishes(ledger, fast_reatt
     parents = DP.resolve_parent_tabs(["barrons", "wsj", "marketwatch"], drv.tabs())
     rc = DP.run_plan(lanes, parents=parents, driver=drv, throttle=th, stored={})
     assert rc["reattaches"] == 1 and rc["stopped"] is None
-    assert rc["reattach_log"][0]["ok"] and [r[-1] for r in drv.runs] == ["start"]
+    assert rc["reattach_log"][0]["ok"] and [r[-1] for r in drv.runs if r[-1] == "start"] == ["start"]
+    # the only other raw CLI calls are the blank-tab route: navigate/close on OUR blank tabs
+    assert all(r[3] in ("navigate", "close", "start") for r in drv.runs)
+    assert rc["orphaned_tabs"] == []            # the blank lane tabs were remapped, not lost
     assert rc["per_source"]["barrons"]["articles"] == 3
     assert rc["per_source"]["wsj"]["articles"] == 1
     assert rc["per_source"]["marketwatch"]["articles"] == 2
@@ -1379,3 +1393,414 @@ def test_the_run_receipt_carries_the_cli_footprint_fields(monkeypatch):
     bare = DP._footprint_fields({"verdict": "CANNOT DETERMINE: 0 gap(s)"})
     assert all(k in bare for k in owed) and bare["cli_calls"] is None
     assert bare["reattaches"] == 0 and bare["tab_remaps"] == 0
+
+
+
+# ═══════ Tab discipline and the v3 shortlist queue (2026-09-27 evening) ═════
+# Overnight Chrome reached 97 processes: the reader's lane tabs held heavy
+# WSJ/Barron's pages (single renderers at 1.8-2.6 GB) while they waited for
+# their next turn, and tabs of runs that died were never closed.
+
+def _sleep_marker(drv, th):
+    """Put every throttle sleep into the driver's call log, in order."""
+    orig = th.sleep_fn
+
+    def sleep(s):
+        drv.calls.append(("sleep", None, (s,)))
+        orig(s)
+    th.sleep_fn = sleep
+
+
+def test_every_read_blanks_its_tab_before_the_next_throttle_sleep(ledger):
+    from scripts import dowjones_pull as DP
+    drv = MultiStub()
+    _, th = _clock_throttle(ledger / "thr.log")
+    _sleep_marker(drv, th)
+    lanes = DP.parse_plan("barrons:stock_picks:3,marketwatch:analyst_estimates:MU|DKNG")
+    rc = DP.run_plan(lanes, parents=DP.resolve_parent_tabs(["barrons", "marketwatch"],
+                                                          drv.tabs()),
+                     driver=drv, throttle=th, stored={})
+    reads = [i for i, c in enumerate(drv.calls) if c[0] == "read_text"]
+    assert len(reads) == 5 and rc["n_articles"] == 5
+    for i in reads:
+        tab, rest = drv.calls[i][1], drv.calls[i + 1:]
+        blank = next(j for j, c in enumerate(rest) if c[0] == "navigate" and c[1] == tab
+                     and c[2][0] == WR.BLANK_URL)
+        nxt_sleep = next((j for j, c in enumerate(rest) if c[0] == "sleep"), len(rest))
+        assert blank < nxt_sleep                  # blank BEFORE the throttle sleep
+        assert not any(c[1] == tab for c in rest[:blank])
+    # 5 reads + the Barron's listing (it waits blank for its first turn)
+    assert rc["blanks"] == 6 and rc["blank_failures"] == []
+    # a blanked tab is re-navigated on its next turn: every page load after a
+    # blank on the same tab is a real URL
+    loads = [c for c in drv.calls if c[0] == "navigate" and c[2][0] != WR.BLANK_URL]
+    assert len(loads) == 4 and all(WR.host_ok(c[2][0]) for c in loads)
+    assert rc["orphaned_tabs"] == [] and sorted(drv.closed) == sorted(rc["opened"])
+
+
+def test_a_tab_that_served_ten_pages_is_closed_and_reopened_from_its_parent(ledger):
+    from scripts import dowjones_pull as DP
+    items = [(f"Heard on the Street story number {i} about a company",
+              f"https://www.wsj.com/finance/stocks/story-{i}-{i:02d}a2b3c4") for i in range(1, 13)]
+    listing = "https://www.wsj.com/news/heard-on-the-street"
+    drv = MultiStub(listings={listing: _listing("HOTS", items)})
+    _, th = _clock_throttle(ledger / "thr.log")
+    lanes = DP.parse_plan("wsj:heard_on_the_street:12")
+    rc = DP.run_plan(lanes, parents=DP.resolve_parent_tabs(["wsj"], drv.tabs()),
+                     driver=drv, throttle=th, stored={})
+    assert rc["n_articles"] == 12 and rc["stopped"] is None
+    opens = [c for c in drv.calls if c[0] == "open_from_tab"]
+    assert [c[1] for c in opens] == ["t20", "t20"]          # both from the wsj parent
+    first, second = opens[0][3], opens[1][3]
+    # page loads per tab: the open plus every non-blank navigate on it
+    per_tab = {first: 1, second: 1}
+    for c in drv.calls:
+        if c[0] == "navigate" and c[2][0] != WR.BLANK_URL:
+            per_tab[c[1]] += 1
+    assert per_tab == {first: 10, second: 3}                 # 1 listing + 12 articles
+    # the old tab is closed BEFORE the new one opens
+    i_close = next(i for i, c in enumerate(drv.calls) if c[0] == "close" and c[1] == first)
+    assert i_close < drv.calls.index(opens[1])
+    rot = rc["tab_rotations"]
+    assert len(rot) == 1 and rot[0]["old"] == first and rot[0]["old_closed"] is True
+    assert rot[0]["new"] == second and "10 pages" in rot[0]["why"]
+    assert rc["opened"] == [first, second] and rc["orphaned_tabs"] == []
+    assert drv.closed == [first, second]
+
+
+def test_no_tab_is_orphaned_when_the_run_dies_on_an_exception(ledger):
+    from scripts import dowjones_pull as DP
+    drv = MultiStub()
+    orig = drv.browser
+
+    def crashing(verb, *args, profile_name=None, target_id=None, url=None):
+        if verb == "snapshot" and drv.cur.get(target_id, "").startswith("https://www.wsj.com/"):
+            raise RuntimeError("renderer crashed")
+        return orig(verb, *args, profile_name=profile_name, target_id=target_id, url=url)
+    drv.browser = crashing
+    _, th = _clock_throttle(ledger / "thr.log")
+    lanes = DP.parse_plan("barrons:stock_picks:3,wsj:heard_on_the_street:5")
+    rpath = ledger / "dowjones" / "plan_crash.json"
+    with pytest.raises(RuntimeError, match="renderer crashed"):
+        DP.run_plan(lanes, parents=DP.resolve_parent_tabs(["barrons", "wsj"], drv.tabs()),
+                    driver=drv, throttle=th, stored={}, progress_path=rpath)
+    opens = [c[3] for c in drv.calls if c[0] == "open_from_tab"]
+    assert len(opens) == 2 and sorted(drv.closed) == sorted(opens)
+    rc = json.loads(rpath.read_text(encoding="utf-8"))
+    assert rc["orphaned_tabs"] == [] and rc["opened"] == opens
+    assert rc["stopped"].startswith("RuntimeError") and not WR.lock_path().exists()
+
+
+def test_the_budget_path_closes_every_tab_and_is_a_planned_end(ledger):
+    from scripts import dowjones_pull as DP
+    drv = MultiStub()
+    _, th = _clock_throttle(ledger / "thr.log")
+    lanes = DP.parse_plan("barrons:stock_picks:3,wsj:heard_on_the_street:5")
+    rc = DP.run_plan(lanes, parents=DP.resolve_parent_tabs(["barrons", "wsj"], drv.tabs()),
+                     driver=drv, throttle=th, stored={}, max_pages=3)
+    assert rc["stopped"] is None and rc["budget_spent"].startswith("BUDGET_SPENT")
+    assert rc["pages_loaded"] == 3 and rc["orphaned_tabs"] == []
+    assert sorted(drv.closed) == sorted(rc["opened"]) and len(rc["opened"]) == 2
+
+
+def _receipt(d: Path, name: str, rc: dict) -> None:
+    d.mkdir(parents=True, exist_ok=True)
+    (d / name).write_text(json.dumps(rc), encoding="utf-8")
+
+
+def test_startup_cleanup_closes_only_tabs_an_earlier_receipt_recorded(ledger):
+    from scripts import dowjones_pull as DP
+    today = datetime.now(timezone.utc).date()
+    old_day = today - timedelta(days=DP.CLEANUP_LOOKBACK_DAYS + 2)
+    rdir = ledger / "dowjones"
+    _receipt(rdir, f"plan_{today.isoformat()}_010101.json", {
+        "lanes": {"a": {"tab": "chrome-mcp:old:5"}, "b": {"tab": "chrome-mcp:old:6"}},
+        "tabs_closed": {"chrome-mcp:old:5": False, "chrome-mcp:old:6": True},
+        "opened": ["chrome-mcp:old:7", "t44", "chrome-mcp:old:8"]})
+    _receipt(rdir, f"archive_{old_day.isoformat()}_010101.json", {"opened": ["chrome-mcp:old:9"]})
+    _receipt(rdir, f"claims_{today.isoformat()}_010101.json", {"opened": ["chrome-mcp:old:11"]})
+    assert DP.previous_opened_handles(rdir) == ["chrome-mcp:old:5", "chrome-mcp:old:7",
+                                                "chrome-mcp:old:8", "t44"]
+    wsj = "https://www.wsj.com/finance/stocks/leftover-1a2b3c4d"
+    tabs = [{"tabId": "t13", "targetId": "chrome-mcp:old:1",
+             "url": "https://www.barrons.com/market-data/bonds/x"},
+            {"tabId": "t20", "targetId": "chrome-mcp:old:2",
+             "url": "https://www.wsj.com/health/some-story-4aa63e38"},
+            {"tabId": "t25", "targetId": "chrome-mcp:old:5", "url": wsj},          # ours, left
+            {"tabId": "t26", "targetId": "chrome-mcp:old:6", "url": wsj},          # closed then
+            {"tabId": "t27", "targetId": "chrome-mcp:old:7",
+             "url": "https://mail.google.com/mail/u/0"},                           # off-host
+            {"tabId": "t44", "targetId": "chrome-mcp:old:44", "url": wsj},         # tN alias
+            {"tabId": "t29", "targetId": "chrome-mcp:old:9", "url": wsj},          # too old
+            {"tabId": "t30", "targetId": "chrome-mcp:old:10", "url": wsj}]         # never ours
+    drv = MultiStub(tabs=tabs)
+    drv._OPENED_TABS = set()
+    _, th = _clock_throttle(ledger / "thr.log")
+    rc = DP.run_plan(DP.parse_plan("barrons:stock_picks:1"),
+                     parents=DP.resolve_parent_tabs(["barrons"], tabs), driver=drv,
+                     throttle=th, stored={})
+    cu = rc["startup_cleanup"]
+    assert cu["closed"] == ["chrome-mcp:old:5"] and drv.closed[0] == "chrome-mcp:old:5"
+    assert "chrome-mcp:old:5" in drv._OPENED_TABS               # adopted from the receipt
+    assert "session-qualified" in cu["skipped"]["t44"]
+    assert "Dow Jones host" in cu["skipped"]["chrome-mcp:old:7"]
+    assert cu["skipped"]["chrome-mcp:old:8"] == "not present"
+    never = {"chrome-mcp:old:6", "chrome-mcp:old:7", "chrome-mcp:old:9", "chrome-mcp:old:10",
+             "chrome-mcp:old:44", "t44", "chrome-mcp:old:1", "chrome-mcp:old:2"}
+    assert not never & set(drv.closed)
+    # the run's own tab is closed too, and nothing it opened is orphaned
+    assert rc["orphaned_tabs"] == [] and drv.closed[1:] == rc["opened"]
+
+
+def test_a_leftover_that_was_chosen_as_parent_is_replaced_before_any_open(ledger):
+    from scripts import dowjones_pull as DP
+    tabs = [{"tabId": "t20", "targetId": "chrome-mcp:s:20",
+             "url": "https://www.wsj.com/finance/stocks/leftover-1a2b3c4d"},
+            {"tabId": "t31", "targetId": "chrome-mcp:s:31", "url": "https://www.wsj.com/opinion"}]
+    drv = MultiStub(tabs=tabs)
+    drv.browser_orig = drv.browser
+
+    def close_and_forget(verb, *args, profile_name=None, target_id=None, url=None):
+        r = drv.browser_orig(verb, *args, profile_name=profile_name, target_id=target_id, url=url)
+        if verb == "close":
+            drv._tabs = [t for t in drv._tabs if t["targetId"] != target_id]
+        return r
+    drv.browser = close_and_forget
+    _, th = _clock_throttle(ledger / "thr.log")
+    parents = DP.resolve_parent_tabs(["wsj"], tabs)
+    assert parents["wsj"]["tab"] == "chrome-mcp:s:20"
+    rc = DP.run_plan(DP.parse_plan("wsj:heard_on_the_street:1"), parents=parents, driver=drv,
+                     throttle=th, stored={}, cleanup_handles=["chrome-mcp:s:20"])
+    assert rc["parents_reresolved_after_cleanup"] == {"wsj": "chrome-mcp:s:31"}
+    assert [c[1] for c in drv.calls if c[0] == "open_from_tab"] == ["chrome-mcp:s:31"]
+
+
+def test_one_lane_left_still_paces_its_host(ledger):
+    from scripts import dowjones_pull as DP
+    drv = MultiStub()
+    _, th = _clock_throttle(ledger / "thr.log")
+    lanes = DP.parse_plan("marketwatch:analyst_estimates:MU|DKNG|QUBT|AAPL|NVDA")
+    rc = DP.run_plan(lanes, parents=DP.resolve_parent_tabs(["marketwatch"], drv.tabs()),
+                     driver=drv, throttle=th, stored={})
+    gaps = rc["seconds_between_page_loads"]
+    assert len(gaps) == 4 and all(g >= 60 for g in gaps)
+    assert rc["same_host_waits"] and all(w["host"] == "marketwatch.com"
+                                         for w in rc["same_host_waits"])
+    # the floor keeps the jitter: not a constant 60 (the footprint's CV alarm)
+    assert len(set(gaps)) == len(gaps)
+
+
+def test_the_same_host_floor_binds_only_on_the_same_host(tmp_path):
+    ck, th = _clock_throttle(tmp_path / "t.log", min_delay_s=20, max_delay_s=25,
+                             max_per_hour=99, max_per_day=99, max_per_day_per_host=99)
+    stamps = []
+    for h in ("wsj.com", "barrons.com", "wsj.com", "marketwatch.com"):
+        th.acquire(host=h)
+        stamps.append((h, ck.t))
+    ab = (stamps[1][1] - stamps[0][1]).total_seconds()
+    aa = (stamps[2][1] - stamps[0][1]).total_seconds()
+    assert 20 <= ab <= 25                 # different hosts: the shared jittered gap only
+    assert aa >= 60                       # the same host: the floor
+    assert (stamps[3][1] - stamps[2][1]).total_seconds() <= 25
+    assert [w["host"] for w in th.same_host_waits] == ["wsj.com"]
+
+
+def _quote_page(title: str, now: datetime) -> str:
+    """A WSJ quote page snapshot: nav, a sign-in link, a sponsored unit, an old
+    story, dated / relative / undated stories, and a market-data link."""
+    def day(n: int) -> str:
+        return (now - timedelta(days=n)).strftime("%B %d, %Y")
+    rows = [
+        ("link", "Markets", "https://www.wsj.com/finance"),
+        ("link", "Sign In", "https://accounts.wsj.com/login"),
+        ("link", "Micron Beats Estimates as Memory Prices Climb Again",
+         "https://www.wsj.com/finance/stocks/micron-beats-1a2b3c4d?mod=quote_news"),
+        ("time", day(20), None),
+        ("link", "Sponsored: A Wealth Plan for Memory Chip Investors",
+         "https://www.wsj.com/finance/investing/wealth-plan-2b3c4d5e"),
+        ("link", "Micron's Old Story From Last Summer, Revisited",
+         "https://www.wsj.com/finance/stocks/micron-old-3c4d5e6f"),
+        ("text", day(45), None),
+        ("link", "Micron Shares Jump After an Upgrade From Analysts",
+         "https://www.wsj.com/finance/stocks/micron-upgrade-4d5e6f7a"),
+        ("text", "2 hours ago", None),
+        ("link", "Chip Stocks Rally as AI Spending Holds Up Well",
+         "https://www.wsj.com/tech/chip-stocks-rally-5e6f7a8b"),
+        ("link", "A Fourth Story That Must Not Be Taken Here Today",
+         "https://www.wsj.com/finance/stocks/fourth-6f7a8b9c"),
+        ("link", "Micron Technology Inc. Research and Ratings",
+         "https://www.wsj.com/market-data/quotes/MU/research-ratings"),
+    ]
+    tree = [f'- rootwebarea "{title}"']
+    links = []
+    for i, (role, name, url) in enumerate(rows, 1):
+        tree.append(f'  - {role} "{name}"' + (f" [ref=e{i}]" if role == "link" else ""))
+        if url:
+            links.append(f"{len(links) + 1}. {name} -> {url}")
+    return "\n".join(tree) + "\nLinks:\n" + "\n".join(links) + "\n"
+
+
+def test_search_lane_takes_three_recent_article_links_and_skips_nav_ads_and_old(ledger):
+    from scripts import dowjones_pull as DP
+    now = datetime.now(timezone.utc)
+    snap = _quote_page("MU Stock Quote - WSJ", now)
+    sel = WR.select_search_links(snap, DP.SECTIONS["wsj"]["search"][1], now=now,
+                                 max_age_days=DP.SEARCH_MAX_AGE_DAYS,
+                                 limit=DP.SEARCH_LINKS_PER_NAME)
+    got = [lk["url"].split("/")[-1] for lk in sel["links"]]
+    assert got == ["micron-beats-1a2b3c4d?mod=quote_news", "micron-upgrade-4d5e6f7a",
+                   "chip-stocks-rally-5e6f7a8b"]              # page order, max 3
+    assert [u.split("/")[-1] for u in sel["skipped_old"]] == ["micron-old-3c4d5e6f"]
+    assert [u.split("/")[-1] for u in sel["skipped_ad"]] == ["wealth-plan-2b3c4d5e"]
+    beats, upgrade, rally = sel["links"]
+    assert 19 <= (now - datetime.fromisoformat(beats["published_visible"])).days <= 21
+    assert (now - datetime.fromisoformat(upgrade["published_visible"])) < timedelta(hours=3)
+    assert rally["published_visible"] is None                 # undated: kept
+    assert all(lk["ref"] for lk in sel["links"])
+    # nav, sign-in and the market-data link never reach the candidates
+    assert sel["candidates"] == 6
+
+
+def test_search_lane_reads_links_chosen_from_the_quote_page_and_resumes(ledger):
+    from scripts import dowjones_pull as DP
+    now = datetime.now(timezone.utc)
+    quote = {t: DP.lane_url("wsj", "search", t) for t in ("MU", "NVDA", "AAPL")}
+    assert quote["MU"] == "https://www.wsj.com/market-data/quotes/MU"
+    assert DP.lane_url("barrons", "search", "MU") == \
+        "https://www.barrons.com/market-data/stocks/mu"
+    listings = {quote["MU"]: _quote_page("MU", now),
+                quote["NVDA"]: _listing("NVDA", [("Nvidia Sells More Chips Than Expected",
+                                                  "https://www.wsj.com/tech/nvidia-1f2e3d4c")]),
+                quote["AAPL"]: _listing("AAPL", [("Apple Is Said to Plan a Cheaper iPhone",
+                                                  "https://www.wsj.com/tech/apple-2f3e4d5c")])}
+    drv = MultiStub(listings=listings)
+    _, th = _clock_throttle(ledger / "thr.log")
+    lanes = DP.parse_plan("wsj_search:MU|NVDA|AAPL")
+    assert lanes[0]["lane"] == "wsj:search" and lanes[0]["tickers"] == ["MU", "NVDA", "AAPL"]
+    rc = DP.run_plan(lanes, parents=DP.resolve_parent_tabs(["wsj"], drv.tabs()), driver=drv,
+                     throttle=th, stored={}, max_pages=6)
+    st = rc["lanes"]["wsj:search"]
+    # MU's quote page (in place: the tab opened ON it) -> 3 links -> NVDA's page -> 1 link
+    assert st["searches"]["MU"]["taken"] == 3 and st["searches"]["NVDA"]["taken"] == 1
+    assert "AAPL" not in st["searches"] and rc["budget_spent"] and rc["stopped"] is None
+    assert [a["ticker"] for a in st["articles"]] == ["MU", "MU", "MU", "NVDA"]
+    assert rc["pages_loaded"] == 6 and rc["orphaned_tabs"] == []
+    assert sum(1 for c in drv.calls if c[0] == "navigate" and c[2][0] == quote["MU"]) == 0
+    # resumable: a rerun the same day skips the names already searched
+    assert DP.searched_since("wsj", DP._today()) == {"MU", "NVDA"}
+    drv2 = MultiStub(listings=listings)
+    rc2 = DP.run_plan(lanes, parents=DP.resolve_parent_tabs(["wsj"], drv2.tabs()), driver=drv2,
+                      throttle=th, stored=WR.stored_urls(), max_pages=6)
+    assert list(rc2["lanes"]["wsj:search"]["searches"]) == ["AAPL"]
+    assert rc2["lanes"]["wsj:search"]["skipped_already_stored"] == 2
+
+
+def test_the_shortlist_queue_carries_mw_search_archive_and_claims_in_order():
+    from scripts import dowjones_pull as DP
+    import shlex
+    names = ["AAPL", "MU", "NVDA", "VKTX", "ZZZ"]
+    txt = DP.build_shortlist_queue_text("2026-09-27", names=names,
+                                        order=["VKTX", "NVDA", "NOTCARDED"], mw_done={"MU"})
+    lines = [ln for ln in txt.splitlines() if ln and not ln.startswith("#")]
+    assert lines[0] == '--plan "marketwatch:analyst_estimates:VKTX|NVDA|AAPL|ZZZ" ' \
+                       '--fresh-since 2026-09-27'
+    plan = shlex.split(lines[1])
+    lanes = DP.parse_plan(plan[1])
+    assert [ln["lane"] for ln in lanes] == ["wsj:search", "barrons:search"]
+    assert lanes[0]["tickers"] == ["VKTX", "NVDA", "AAPL", "MU", "ZZZ"]
+    assert plan[2:] == ["--max-pages", str(DP.SHORTLIST_SEARCH_MAX_PAGES), "--fresh-since",
+                        "2026-09-27"]
+    assert lines[2] == "--archive 2026-09-22..2026-09-25"
+    assert lines[3] == "--claims --claims-since 2026-09-27"
+
+
+def test_the_committed_v3_queue_file_parses():
+    from scripts import dowjones_pull as DP
+    import shlex
+    q = REPO / "backend" / "data" / "optimus" / "dowjones" / "QUEUE_2026-09-27.txt"
+    lines = [ln for _, ln in DP.queue_lines(q)]
+    assert lines[-1].startswith("--claims") and any(ln.startswith("--archive") for ln in lines)
+    plans = [DP.parse_plan(shlex.split(ln)[1]) for ln in lines if ln.startswith("--plan")]
+    search = next(p for p in plans if p[0]["section"] == "search")
+    assert len(search[0]["tickers"]) == 67 and search[0]["tickers"][0] == "VKTX"
+
+
+# ── the blank-tab route through the REAL openclaw_client guard ──────────────
+
+class GuardedCLI:
+    """The `openclaw` CLI for the real `openclaw_client`: `user` profile,
+    tabs with live URLs, window.open adds a tab, navigate/close act."""
+
+    PROFILES = ("user: running (2 tabs) [existing-session]\n  transport: chrome-mcp\n"
+                "muratclaw: stopped [default]\nchrome: stopped [extension]\n")
+
+    def __init__(self):
+        self.calls, self.urls = [], {"1": "https://www.wsj.com/news/heard-on-the-street"}
+
+    def h(self, n):
+        return f"chrome-mcp:zzz:{n}"
+
+    def __call__(self, args, **kw):
+        self.calls.append(list(args))
+        verb = OC._cmd_key(args)
+        ok = lambda out="ok": subprocess.CompletedProcess(args, 0, out, "")  # noqa: E731
+        if verb == "browser profiles":
+            return ok(self.PROFILES)
+        if verb == "browser tabs":
+            return ok(json.dumps({"tabs": [{"tabId": f"t{n}", "targetId": self.h(n), "url": u}
+                                           for n, u in self.urls.items()]}))
+        if verb == "browser status":
+            return ok('{"running": true}')
+        tid = args[args.index("--target-id") + 1] if "--target-id" in args else None
+        n = str(tid).rsplit(":", 1)[-1] if tid else None
+        if verb == "browser navigate":
+            self.urls[n] = args[args.index("navigate") + 1]
+        if verb == "browser close":
+            self.urls.pop(str(args[-1]).rsplit(":", 1)[-1], None)
+        if verb == "browser evaluate":
+            fn = args[-1]
+            if "window.open" in fn:
+                self.urls[str(max(int(k) for k in self.urls) + 1)] = json.loads(
+                    fn.split("window.open(", 1)[1].split(", '_blank'")[0])
+                return ok("{}")
+            return ok(json.dumps({"ok": True, "result": {
+                "url": self.urls.get(n), "title": "A story",
+                "text": "A story\nBy A Writer\n" + "Paragraph about a company. " * 20}}))
+        return ok()
+
+
+def test_a_blanked_tab_is_renavigated_and_closed_through_the_real_client(ledger, monkeypatch):
+    """`openclaw_client.browser()` refuses any verb on a tab whose current host
+    is not wsj/barrons/marketwatch -- which a blanked tab is not. The narrow
+    route (`own_blank_tab_verb`) is what makes the blank-between-reads rule
+    work at all against the real guard."""
+    fake = GuardedCLI()
+    monkeypatch.setattr(subprocess, "run", lambda cmd, **kw: fake(list(cmd[1:]), **kw))
+    OC.invalidate_tabs_cache()
+    OC.invalidate_profile_cache()
+    a = "https://www.wsj.com/finance/stocks/story-a-1a2b3c4d"
+    b = "https://www.wsj.com/finance/stocks/story-b-2b3c4d5e"
+    try:
+        op = OC.open_from_tab(fake.h("1"), a, profile_name="user", sleep_fn=lambda s: None)
+        tab = op["new_tab"]
+        _, th = _clock_throttle(ledger / "thr.log")
+        rd = WR.Reader(profile="user", tab=tab, throttle=th, driver=OC, lock=False,
+                       parent=fake.h("1"))
+        rd.pages, rd.tab_pages = 1, 1
+        rd.read_article(a)                         # navigate (guarded), read, then blank
+        assert rd.blanked and fake.urls[tab.rsplit(":", 1)[-1]] == WR.BLANK_URL
+        # the guarded verb itself refuses a blank tab -- the reason for the route
+        with pytest.raises(OC.OpenClawRefused, match="OPERATOR_TAB_HOST"):
+            OC.browser("navigate", b, profile_name="user", target_id=tab)
+        art = rd.read_article(b)                   # re-navigated through own_blank_tab_verb
+        assert art["url"] == b and rd.blanked
+        assert rd.close_tab() and tab not in OC._OPENED_TABS
+        assert tab.rsplit(":", 1)[-1] not in fake.urls and rd.orphans() == []
+        # the route never touches a tab this process did not open
+        with pytest.raises(WR.ReaderRefused, match="NOT_OUR_TAB"):
+            WR.own_blank_tab_verb(OC, "user", fake.h("1"), "close")
+    finally:
+        OC._OPENED_TABS.difference_update({h for h in list(OC._OPENED_TABS)
+                                           if h.startswith("chrome-mcp:zzz:")})
+        OC.invalidate_tabs_cache()
+        OC.invalidate_profile_cache()

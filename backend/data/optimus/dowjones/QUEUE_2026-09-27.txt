@@ -1,0 +1,11 @@
+# dowjones_pull queue -- the v3 shortlist (67 carded names on 2026-09-27; ROI-list order first: VKTX, NTLA, HWM, IONQ, AGYS, NVT, AMZN, NVDA, TSM, GEV)
+# written by: python -m scripts.dowjones_pull --write-shortlist-queue <this file> --shortlist-date 2026-09-27
+# run: python -m scripts.dowjones_pull --queue <this file> --handoff --profile user
+# (a) MarketWatch analyst estimates: 67 names (0 already snapshotted on 2026-09-27 left out); one page each
+# (b) WSJ quote page + Barron's stock page per name, <= 3 article links each (<= 30 days old when dated), 60 pages for the whole line
+# (c) the WSJ archive the 09-26 queue refused on the gateway; (d) claims last
+# one line = one command; a DONE line gets a marker in <stem>.done/ and is skipped
+--plan "marketwatch:analyst_estimates:VKTX|NTLA|HWM|IONQ|AGYS|NVT|AMZN|NVDA|TSM|GEV|CLS|PRAX|SNOW|JAZZ|LEU|COGT|BHVN|BBIO|CRM|MP|AVGO|ABSI|LNG|CCJ|BSP|AGIO|ENS|PRGS|BA|GOOGL|TER|VRT|VG|BN|WDAY|WST|DKNG|AVPT|PRCH|VRTX|NOW|MU|SNDR|NVO|HUBS|INCY|HOOD|META|RHI|ACI|PEGA|SMPL|RGEN|MAN|BE|AAPL|AMGN|IRDM|AARD|HELE|KYTX|NOVT|NVEC|PSNL|QUBT|SLDP|SOC" --fresh-since 2026-09-27
+--plan "wsj_search:VKTX|NTLA|HWM|IONQ|AGYS|NVT|AMZN|NVDA|TSM|GEV|CLS|PRAX|SNOW|JAZZ|LEU|COGT|BHVN|BBIO|CRM|MP|AVGO|ABSI|LNG|CCJ|BSP|AGIO|ENS|PRGS|BA|GOOGL|TER|VRT|VG|BN|WDAY|WST|DKNG|AVPT|PRCH|VRTX|NOW|MU|SNDR|NVO|HUBS|INCY|HOOD|META|RHI|ACI|PEGA|SMPL|RGEN|MAN|BE|AAPL|AMGN|IRDM|AARD|HELE|KYTX|NOVT|NVEC|PSNL|QUBT|SLDP|SOC,barrons_search:VKTX|NTLA|HWM|IONQ|AGYS|NVT|AMZN|NVDA|TSM|GEV|CLS|PRAX|SNOW|JAZZ|LEU|COGT|BHVN|BBIO|CRM|MP|AVGO|ABSI|LNG|CCJ|BSP|AGIO|ENS|PRGS|BA|GOOGL|TER|VRT|VG|BN|WDAY|WST|DKNG|AVPT|PRCH|VRTX|NOW|MU|SNDR|NVO|HUBS|INCY|HOOD|META|RHI|ACI|PEGA|SMPL|RGEN|MAN|BE|AAPL|AMGN|IRDM|AARD|HELE|KYTX|NOVT|NVEC|PSNL|QUBT|SLDP|SOC" --max-pages 60 --fresh-since 2026-09-27
+--archive 2026-09-22..2026-09-25
+--claims --claims-since 2026-09-27

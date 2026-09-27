@@ -27,7 +27,31 @@ WHERE THE BROWSER MAY GO (config, enforced in `openclaw_client` too)
   reading session at a time (`_reader.lock`); each article is scrolled through
   in 2-3 PageDown steps with 1-3 s pauses before it is read; every session
   writes `footprint_receipt()` (gap histogram, CV, pages/hour, scroll share,
-  ALARM when the CV of gaps < 0.15).
+  ALARM when the CV of gaps < 0.15). Two hits on the SAME host are >= 60 s
+  apart (the drawn target x3, `min_same_host_gap_s`), so a rotation down to
+  one lane still paces that host.
+
+TAB DISCIPLINE (2026-09-27, after Chrome reached 97 processes overnight with
+single WSJ/Barron's renderers at 1.8-2.6 GB)
+============================================================================
+* After every read (text extracted and stored) the lane tab is navigated to
+  `about:blank` before the next throttle sleep (`Reader.blank`); the next turn
+  re-navigates it. A heavy page never sits in a waiting tab.
+* A tab that has served `WEB_READER_MAX_PAGES_PER_TAB` (10) page loads is
+  CLOSED and re-opened from its parent (`Reader._reopen`): a renderer does not
+  return its memory on navigation alone.
+* Every tab a Reader opened is in `Reader.opened`; `close_tab` records each
+  close in `Reader.closed`, so a run receipt can print `orphaned_tabs`.
+* `openclaw_client`'s operator guard only acts on a tab whose CURRENT host is
+  wsj/barrons/marketwatch, so a blanked tab could be neither re-navigated nor
+  closed through `browser()`. `own_blank_tab_verb` is the one narrow way past
+  it: only a tab THIS process opened (`_OPENED_TABS`), only while it is on
+  `about:blank` (re-read fresh), only `navigate` to an allowed host (landed
+  URL re-read and refused off-host) or `close`.
+* `close_leftover_tabs` closes, at start-up, tabs an EARLIER run recorded as
+  opened and never closed -- only session-qualified handles
+  (`chrome-mcp:<nonce>:<n>`) still present on a Dow Jones host; a bare `tN`
+  alias is never trusted across runs (it is reissued).
 
 LICENCE -- quoted from the Dow Jones subscriber agreement
 (https://www.dowjones.com/terms-of-use/, fetched 2026-09-26; full quotes in
@@ -83,6 +107,14 @@ DENY_LINK_TEXT = re.compile(
     r"sign\s*(out|in|up)|log\s*(out|in)|subscribe|subscription|buy\s+now|checkout|"
     r"register|my\s+account|account|settings|newsletter|gift|manage|customer\s+center|"
     r"cancel|upgrade|offer|trial|share|email|print|comment|podcast|video", re.I)
+#: The narrower deny for a company SEARCH page (2026-09-27): its links are
+#: loaded by URL, never clicked, and must already match an article-id URL
+#: pattern, so only text that reads like an account or money action is
+#: refused. `DENY_LINK_TEXT` would drop "Viking's Trial Data ...", "... an
+#: Upgrade From Analysts", "... Share Buyback" -- the news a search is for.
+ARTICLE_DENY_LINK_TEXT = re.compile(
+    r"sign\s*(out|in|up)|log\s*(out|in)|subscribe|subscription|buy\s+now|checkout|"
+    r"register|my\s+account|customer\s+center|newsletter|gift\s+(article|subscription)", re.I)
 
 _SNAP_NODE = re.compile(r'^\s*-\s+(\w+)\s+"((?:[^"\\]|\\.)*)"(?:.*?\[ref=([^\]]+)\])?')
 _SNAP_LINK = re.compile(r"^\s*\d+\.\s+(.*?)\s+->\s+(\S+)\s*$")
@@ -272,11 +304,12 @@ def parse_snapshot(text: str) -> dict:
 
 
 def select_links(snapshot_text: str, link_pattern: str, *, text_pattern: str | None = None,
-                 limit: int | None = None) -> list[dict]:
+                 limit: int | None = None, deny_text: re.Pattern | None = None) -> list[dict]:
     """Links the page SHOWS that match `link_pattern` (on the URL) and, if
     given, `text_pattern` (on the link text). `[{text, url, ref}]`, deduped by
     URL, in page order. A decoy (wrong host, account/money text, a button, a
-    URL that does not match) is never returned."""
+    URL that does not match) is never returned. `deny_text` defaults to
+    `DENY_LINK_TEXT`."""
     snap = parse_snapshot(snapshot_text)
     link_nodes = [n for n in snap["nodes"] if n["role"] == "link" and n["ref"]]
     refs_by_text: dict[str, list[str]] = {}
@@ -290,7 +323,7 @@ def select_links(snapshot_text: str, link_pattern: str, *, text_pattern: str | N
         base = u.split("#")[0]
         if base in seen or not host_ok(u) or not url_re.search(u):
             continue
-        if DENY_LINK_TEXT.search(t) or (txt_re and not txt_re.search(t)):
+        if (deny_text or DENY_LINK_TEXT).search(t) or (txt_re and not txt_re.search(t)):
             continue
         if len(t) < 12:        # section chrome ("Markets", "Tech"), not a headline
             continue
@@ -335,6 +368,14 @@ class Throttle:
     max_per_day: int = field(default_factory=lambda: int(_cfg("WEB_READER_MAX_PER_DAY", 120)))
     max_per_day_per_host: int = field(
         default_factory=lambda: int(_cfg("WEB_READER_MAX_PER_DAY_PER_HOST", 40)))
+    #: Two page loads on the SAME host are at least this far apart: the drawn
+    #: target SCALED by `min_same_host_gap_s / min_delay_s` (60/20 = 3x, so a
+    #: one-lane run gaps in [60, 270] s). Scaled, not shifted: `60 + jitter`
+    #: cut the CV of gaps to ~0.10 and tripped the footprint's constant-pace
+    #: ALARM in the test. The rotation interleaves hosts; with one lane left
+    #: this still paces that host.
+    min_same_host_gap_s: float = field(
+        default_factory=lambda: float(_cfg("WEB_READER_MIN_SAME_HOST_GAP_S", 60.0)))
     now_fn: Callable[[], datetime] = field(default=lambda: datetime.now(timezone.utc))
     sleep_fn: Callable[[float], None] = field(default=time.sleep)
     seed: int | None = None
@@ -346,6 +387,9 @@ class Throttle:
     wait_on_hour_cap: bool = False
     max_hour_wait_s: float = 3900.0
     hour_cap_waits: list[float] = field(default_factory=list)
+    #: `[{host, extra_s}]`: each time the same-host floor, not the shared
+    #: jittered gap, set the wait.
+    same_host_waits: list[dict] = field(default_factory=list)
     waits: list[float] = field(default_factory=list)
     targets: list[float] = field(default_factory=list)
     _rng: Any = field(default=None, repr=False)
@@ -420,6 +464,14 @@ class Throttle:
         if rows:
             gap = (now - max(r[0] for r in rows)).total_seconds()
             wait = max(0.0, target - gap)
+        same = [r[0] for r in rows if host and r[1] == host]
+        if same and self.min_same_host_gap_s > 0:
+            k = self.min_same_host_gap_s / max(float(self.min_delay_s), 1.0)
+            floor = max(self.min_same_host_gap_s, target * max(1.0, k))
+            need = floor - (now - max(same)).total_seconds()
+            if need > wait:
+                self.same_host_waits.append({"host": host, "extra_s": round(need - wait, 2)})
+                wait = need
         if wait > 0:
             self.sleep_fn(wait)
         self.waits.append(round(wait, 2))
@@ -762,15 +814,247 @@ def store_article(art: dict, *, root: Path | None = None) -> dict:
             "pit_grade": rec["pit_grade"]}
 
 
+# ──────────────────────── tab discipline (2026-09-27) ────────────────────────
+
+BLANK_URL = "about:blank"
+
+
+def max_pages_per_tab() -> int:
+    return int(_cfg("WEB_READER_MAX_PAGES_PER_TAB", 10))
+
+
+def _fresh_tab_url(driver: Any, profile: str, tab: str) -> str | None:
+    """The tab's CURRENT url from a fresh listing (None when it is gone)."""
+    inv = getattr(driver, "invalidate_tabs_cache", None)
+    if callable(inv):
+        inv(profile)
+    fn = getattr(driver, "tab_url", None)
+    if callable(fn):
+        return fn(tab, profile_name=profile)
+    tabs = driver.tabs(profile_name=profile)
+    hit = next((t for t in tabs if tab in (t.get("tabId"), t.get("targetId"))), None)
+    return None if hit is None else str(hit.get("url") or "")
+
+
+def own_blank_tab_verb(driver: Any, profile: str, tab: str, verb: str,
+                       url: str | None = None) -> dict:
+    """The blank-tab verbs on a tab THIS process opened:
+
+    * `blank` -- navigate it to `about:blank` (one CLI call; the guarded
+      `browser("navigate")` would add a tab listing for its landed-URL check,
+      ~15 s under memory pressure, and would blank ANY allowed-host tab, Murat's
+      own included -- this refuses a tab not in `_OPENED_TABS`);
+    * `navigate` (to `url`) or `close` while it is on `about:blank` -- the step
+      `openclaw_client.browser()` refuses, because its operator guard wants
+      the tab's current host to be a Dow Jones host.
+
+    Checked here: the handle is in the driver's `_OPENED_TABS`; for
+    navigate/close, a FRESH listing shows the tab exactly on `about:blank`; a
+    navigate target is on the allowed hosts and passes `check_url`; after a
+    navigate the landed url is re-read (the caller refuses on
+    `left_allowed_hosts`). A driver without `_run` (a test stub) gets the
+    plain verb."""
+    run = getattr(driver, "_run", None)
+    if not callable(run):
+        if verb == "blank":
+            return driver.browser("navigate", BLANK_URL, profile_name=profile, target_id=tab)
+        args = (url,) if verb == "navigate" else ()
+        return driver.browser(verb, *args, profile_name=profile, target_id=tab)
+    if verb not in ("blank", "navigate", "close"):
+        raise ReaderRefused(f"REFUSED_BLANK_TAB_VERB: {verb!r} on a blank tab")
+    opened = getattr(driver, "_OPENED_TABS", None)
+    if opened is None or tab not in opened:
+        raise ReaderRefused(f"REFUSED_NOT_OUR_TAB: {tab!r} was not opened by this process")
+    if verb == "blank":
+        r = run(["browser", "--browser-profile", profile, "navigate", BLANK_URL,
+                 "--target-id", tab], timeout=60.0)
+        inv = getattr(driver, "invalidate_tabs_cache", None)
+        if callable(inv):
+            inv(profile)                  # the cached listing still shows the old URL
+        return {"verb": "blank", "profile": profile, "rc": r.returncode, "target_id": tab,
+                "via": "own_blank_tab", "stderr": (r.stderr or "").strip()[:600]}
+    cur = _fresh_tab_url(driver, profile, tab)
+    if cur is None:
+        if verb == "close":
+            opened.discard(tab)
+            return {"verb": "close", "rc": 0, "already_gone": True, "target_id": tab}
+        raise ReaderRefused(f"REFUSED_OPERATOR_TAB_MISSING: no tab {tab!r} on {profile!r}")
+    if cur != BLANK_URL:
+        raise ReaderRefused(f"REFUSED_NOT_BLANK: {tab!r} is on {cur!r}, not {BLANK_URL}; "
+                            f"the guarded verb applies")
+    if verb == "navigate":
+        if not url or not host_ok(url):
+            raise ReaderRefused(f"REFUSED_HOST: {url!r} is not on {hosts()}")
+        chk = getattr(driver, "check_url", None)
+        if callable(chk):
+            chk(url)
+        argv = ["browser", "--browser-profile", profile, "navigate", url, "--target-id", tab]
+    else:
+        argv = ["browser", "--browser-profile", profile, "close", tab]
+    r = run(argv, timeout=180.0)
+    out: dict[str, Any] = {"verb": verb, "profile": profile, "rc": r.returncode,
+                           "target_id": tab, "tab_url_before": cur, "via": "own_blank_tab",
+                           "stderr": (r.stderr or "").strip()[:600]}
+    if verb == "close":
+        inv = getattr(driver, "invalidate_tabs_cache", None)
+        if callable(inv):
+            inv(profile)
+        if r.returncode == 0:
+            opened.discard(tab)
+        return out
+    after = _fresh_tab_url(driver, profile, tab)
+    out["tab_url_after"] = after
+    out["left_allowed_hosts"] = bool(after) and not host_ok(after or "")
+    return out
+
+
+def close_leftover_tabs(driver: Any, profile: str, handles: Any, *,
+                        log: dict | None = None) -> dict:
+    """Close tabs an EARLIER run recorded as opened and never closed.
+
+    Only a handle that (1) is session-qualified (`chrome-mcp:<nonce>:<n>` --
+    a bare `tN` is reissued and may name one of Murat's own tabs now), (2) is
+    in the CURRENT listing, and (3) is on a Dow Jones host. Such a tab is
+    adopted into `_OPENED_TABS` (the receipt is the proof it was ours) and
+    closed with the guarded verb. Returns `{candidates, closed, skipped}`."""
+    out = log if log is not None else {}
+    handles = sorted({str(h) for h in (handles or []) if h})
+    out.update({"candidates": handles, "closed": [], "skipped": {}})
+    if not handles:
+        return out
+    try:
+        inv = getattr(driver, "invalidate_tabs_cache", None)
+        if callable(inv):
+            inv(profile)
+        listing = driver.tabs(profile_name=profile)
+    except Exception as exc:  # noqa: BLE001 -- a cleanup that cannot list says so
+        out["error"] = f"{type(exc).__name__}: {str(exc)[:200]}"
+        return out
+    by_handle = {str(t.get("targetId") or t.get("tabId") or ""): t for t in listing}
+    opened = getattr(driver, "_OPENED_TABS", None)
+    for h in handles:
+        parts = h.split(":")
+        if not (len(parts) == 3 and parts[0] == "chrome-mcp"):
+            out["skipped"][h] = "not session-qualified (a tN alias is reissued)"
+            continue
+        t = by_handle.get(h)
+        if t is None:
+            out["skipped"][h] = "not present"
+            continue
+        u = str(t.get("url") or "")
+        if not host_ok(u):
+            out["skipped"][h] = f"not on a Dow Jones host ({u[:60]!r})"
+            continue
+        if opened is not None:
+            opened.add(h)
+        try:
+            r = driver.browser("close", profile_name=profile, target_id=h)
+            if r.get("rc") == 0:
+                out["closed"].append(h)
+            else:
+                out["skipped"][h] = f"close rc {r.get('rc')}"
+        except Exception as exc:  # noqa: BLE001
+            out["skipped"][h] = f"{type(exc).__name__}: {str(exc)[:160]}"
+    return out
+
+
+# ─────────────────────── search / quote-page link choice ─────────────────────
+
+#: "3 hours ago", "2 days ago", "1 wk ago"
+REL_AGE_RE = re.compile(r"\b(\d{1,3})\s*(min|mins|minute|minutes|h|hr|hrs|hour|hours|"
+                        r"d|day|days|wk|wks|week|weeks)\s+ago\b", re.I)
+NUM_DATE_RE = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2}|\d{4})\b")
+#: Sponsored / advertising units that carry an article-shaped link.
+AD_TEXT = re.compile(r"sponsored|advertis|paid\s+(program|post|content)|partner\s+content|"
+                     r"presented\s+by|promoted|buyside", re.I)
+
+
+def visible_date(text: str, now: datetime) -> datetime | None:
+    """The first date a reader could SEE in `text`: a dateline
+    (`Sept. 24, 2026`), a numeric `9/24/26`, or a relative age (`3 hours
+    ago`). None when nothing dated is visible."""
+    iso = parse_published(text or "")
+    if iso:
+        return datetime.fromisoformat(iso)
+    m = NUM_DATE_RE.search(text or "")
+    if m:
+        mo, dd, yy = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        yy = yy + 2000 if yy < 100 else yy
+        try:
+            return datetime(yy, mo, dd, tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    m = REL_AGE_RE.search(text or "")
+    if m:
+        n, unit = int(m.group(1)), m.group(2).lower()
+        if unit.startswith("min"):
+            return now - timedelta(minutes=n)
+        if unit.startswith("h"):
+            return now - timedelta(hours=n)
+        if unit.startswith("d"):
+            return now - timedelta(days=n)
+        return now - timedelta(weeks=n)
+    return None
+
+
+def select_search_links(snapshot_text: str, link_pattern: str, *, now: datetime,
+                        max_age_days: int = 30, limit: int = 3) -> dict:
+    """Article links from a company's quote/search page SNAPSHOT: the links
+    `select_links` accepts (host, pattern, >= 12 chars, no account/money text
+    by the narrower `ARTICLE_DENY_LINK_TEXT`), minus sponsored units, minus any whose visible date (in the link text or
+    the tree lines under it, up to the next link) is older than
+    `max_age_days`; at most `limit`, in page order. An undated link is kept
+    (`published_visible: None`). Returns `{links, candidates, skipped_old,
+    skipped_ad}`."""
+    cands = select_links(snapshot_text, link_pattern, deny_text=ARTICLE_DENY_LINK_TEXT)
+    tree = (snapshot_text or "").split("\nLinks:", 1)[0].splitlines()
+    link_lines = []
+    for i, ln in enumerate(tree):
+        m = _SNAP_NODE.match(ln)
+        if m and m.group(1).lower() == "link":
+            link_lines.append((i, m.group(2).replace('\\"', '"').strip()))
+    used: set[int] = set()
+
+    def context(text: str) -> str:
+        for k, (i, name) in enumerate(link_lines):
+            if name == text and i not in used:
+                used.add(i)
+                end = link_lines[k + 1][0] if k + 1 < len(link_lines) else len(tree)
+                return "\n".join(tree[i:min(end, i + 7)])
+        return text
+
+    out: dict[str, Any] = {"links": [], "candidates": len(cands), "skipped_old": [],
+                           "skipped_ad": []}
+    for lk in cands:
+        ctx = context(lk["text"])
+        if AD_TEXT.search(ctx) or AD_TEXT.search(lk["url"]):
+            out["skipped_ad"].append(lk["url"])
+            continue
+        when = visible_date(ctx, now)
+        if when is not None and (now - when) > timedelta(days=max_age_days):
+            out["skipped_old"].append(lk["url"])
+            continue
+        out["links"].append(dict(lk, published_visible=when.isoformat(timespec="seconds")
+                                 if when else None))
+        if len(out["links"]) >= limit:
+            break
+    return out
+
+
 # ─────────────────────────────── the reader ─────────────────────────────────
 
 @dataclass
 class Reader:
-    """One reading session in one tab this process opened.
+    """One reading session in one lane tab this process opened.
 
     `driver` is `openclaw_client` (or a stub in tests). Every page load goes
     through `throttle.acquire`. `max_pages` is the session cap.
-    """
+
+    Tab discipline (2026-09-27): after each read the tab is blanked
+    (`blank_after_read`); with a `parent`, a tab that has served
+    `max_tab_pages` page loads is closed and re-opened from it on the next
+    load. `opened` lists every handle this Reader held, `closed` what closing
+    each one returned; `orphans()` is the difference."""
 
     profile: str
     tab: str
@@ -785,6 +1069,18 @@ class Reader:
     scrolled_reads: int = 0
     reads: int = 0
     lock: bool = True
+    parent: str | None = None
+    max_tab_pages: int = field(default_factory=max_pages_per_tab)
+    tab_pages: int = 0
+    blank_after_read: bool = True
+    blanked: bool = False
+    blanks: int = 0
+    blank_failures: list[str] = field(default_factory=list)
+    needs_reopen: bool = False
+    opened: list[str] = field(default_factory=list)
+    closed: dict[str, bool] = field(default_factory=dict)
+    close_errors: dict[str, str] = field(default_factory=dict)
+    rotations: list[dict] = field(default_factory=list)
     _lock_path: Path | None = None
     _cli0: dict | None = None
 
@@ -794,6 +1090,8 @@ class Reader:
             self.driver = OC
         if self.lock:
             self._lock_path = acquire_reader_lock()
+        if self.tab and self.tab not in self.opened:
+            self.opened.append(self.tab)
         self._cli0 = self.cli_ledger()
 
     def cli_ledger(self) -> dict | None:
@@ -816,6 +1114,69 @@ class Reader:
             release_reader_lock(self._lock_path)
             self._lock_path = None
         return fp
+
+    # ── tab discipline ──────────────────────────────────────────────────────
+
+    def blank(self) -> bool:
+        """Navigate the tab to `about:blank` so the page's renderer memory is
+        dropped while the lane waits for its next turn. Not a page load (no
+        request reaches a site), so no throttle. A failure is recorded, never
+        raised: the article is already stored."""
+        if not self.blank_after_read or self.blanked or self.needs_reopen:
+            return False
+        try:
+            r = own_blank_tab_verb(self.driver, self.profile, self.tab, "blank")
+            if r.get("rc") not in (0, None):
+                raise ReaderRefused(f"rc {r.get('rc')}: {(r.get('stderr') or '')[:120]}")
+        except Exception as exc:  # noqa: BLE001 -- say it, never hide it
+            self.blank_failures.append(f"{self.tab}: {type(exc).__name__}: {str(exc)[:160]}")
+            return False
+        self.blanked, self.last_snapshot = True, ""
+        self.blanks += 1
+        return True
+
+    def close_tab(self) -> bool:
+        """Close the CURRENT tab (a blanked one through `own_blank_tab_verb`);
+        the result is recorded in `closed` / `close_errors`."""
+        tab = self.tab
+        if self.closed.get(tab):
+            return True
+        if self.needs_reopen:            # its handle is gone (session reset): nothing to close
+            self.closed.setdefault(tab, False)
+            self.close_errors.setdefault(tab, "LOST: handle reissued by a session reset")
+            return False
+        try:
+            r = (own_blank_tab_verb(self.driver, self.profile, tab, "close") if self.blanked
+                 else self.driver.browser("close", profile_name=self.profile, target_id=tab))
+            ok = r.get("rc") == 0
+            if not ok:
+                self.close_errors[tab] = f"rc {r.get('rc')}: {(r.get('stderr') or '')[:160]}"
+        except Exception as exc:  # noqa: BLE001 -- say it, never hide it
+            ok = False
+            self.close_errors[tab] = f"{type(exc).__name__}: {str(exc)[:200]}"
+        self.closed[tab] = ok
+        return ok
+
+    def orphans(self) -> list[str]:
+        return [h for h in self.opened if not self.closed.get(h)]
+
+    def _reopen(self, url: str, why: str) -> None:
+        """Close this tab and open a fresh one from `parent` AT `url` (that
+        open is the page load)."""
+        old = self.tab
+        closed = self.close_tab()
+        self._page("reopen", url)
+        op = self.driver.open_from_tab(self.parent, url, profile_name=self.profile)
+        self.tab = op["new_tab"]
+        self.opened.append(self.tab)
+        self.tab_pages, self.blanked, self.needs_reopen, self.last_snapshot = 1, False, False, ""
+        self.log[-1]["tab"] = self.tab
+        self.rotations.append({"at": self.log[-1]["at"], "old": old, "old_closed": closed,
+                               "new": self.tab, "why": why, "url": url})
+        self.driver.browser("wait", "--time", str(self.wait_ms),
+                            profile_name=self.profile, target_id=self.tab)
+
+    # ── page loads ──────────────────────────────────────────────────────────
 
     def scroll_through(self) -> int:
         """2-3 PageDown presses with jittered 1-3 s pauses -- a person reads
@@ -854,10 +1215,22 @@ class Reader:
     def navigate(self, url: str) -> None:
         shown = url
         url = shell_safe_url(url)
+        if self.parent and (self.needs_reopen or self.tab_pages >= self.max_tab_pages):
+            self._reopen(url, "lost_on_reattach" if self.needs_reopen else
+                         f"served {self.tab_pages} pages >= {self.max_tab_pages}")
+            if url != shown:
+                self.log[-1]["url_shown"] = shown
+            return
         self._page("navigate", url)
         if url != shown:
             self.log[-1]["url_shown"] = shown
-        r = self.driver.browser("navigate", url, profile_name=self.profile, target_id=self.tab)
+        if self.blanked:
+            r = own_blank_tab_verb(self.driver, self.profile, self.tab, "navigate", url)
+        else:
+            r = self.driver.browser("navigate", url, profile_name=self.profile,
+                                    target_id=self.tab)
+        self.blanked = False
+        self.tab_pages += 1
         self._check_still_on_host(r)
         self.driver.browser("wait", "--time", str(self.wait_ms),
                             profile_name=self.profile, target_id=self.tab)
@@ -876,16 +1249,20 @@ class Reader:
                             limit=limit)
 
     def read_article(self, link: dict | str, *, column: str | None = None,
-                     origin: str = "web_reader", store: bool = True) -> dict:
+                     origin: str = "web_reader", store: bool = True,
+                     tickers: list[str] | None = None) -> dict:
         """click the link's ref (when the last snapshot shows it as a link) or
-        navigate to its URL -> wait -> fixed innerText read -> clean -> store."""
+        navigate to its URL -> wait -> fixed innerText read -> clean -> store
+        -> blank the tab."""
         from backend.services import dowjones_claims as DC
         url = link if isinstance(link, str) else link.get("url")
         ref = None if isinstance(link, str) else link.get("ref")
         t0 = time.time()
-        if ref and self.last_snapshot and ref_is_clickable(self.last_snapshot, ref):
+        if (ref and self.last_snapshot and not self.blanked
+                and ref_is_clickable(self.last_snapshot, ref)):
             self._page("click", url)
             r = self.driver.browser("click", ref, profile_name=self.profile, target_id=self.tab)
+            self.tab_pages += 1
             self._check_still_on_host(r)
             self.driver.browser("wait", "--time", str(self.wait_ms),
                                 profile_name=self.profile, target_id=self.tab)
@@ -914,10 +1291,13 @@ class Reader:
                "paywall_suspected": bool(re.search(r"subscribe to continue|to keep reading|"
                                                    r"choose your .* subscription", raw, re.I)),
                "column": column or DC.column_of(final_url, title or "", text, pub)}
+        if tickers:
+            art["tickers"] = list(tickers)
         art["sha"] = DC.text_sha(text)
         art["scroll_steps"] = steps
         art["read_s"] = round(time.time() - t0, 2)
         if store and text:
             art["stored"] = store_article(art)
         self.last_snapshot = ""
+        self.blank()
         return art

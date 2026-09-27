@@ -502,3 +502,69 @@ carries every field. `dowjones_pull`'s own run receipt copies only a whitelist o
 keys, so it will not show them until that list is extended (not changed here). **The queue
 running now keeps the old per-verb listing until its next launch.** It imported both modules
 before this change.
+
+## 13. 2026-09-27 evening: tab discipline, per-host pacing, the v3 shortlist queue
+
+**The memory finding.** Overnight 09-26 -> 09-27 Chrome grew to **97 processes** and single
+WSJ / Barron's renderers held **1.8-2.6 GB** each. The reader was the cause: a rotating run kept
+one tab per lane, and each tab sat on its last heavy article page (ads, video players, live
+tickers) through every other lane's 20-90 s turn; a run that died left its tabs open, and the
+next run opened four more. The machine starved; the attach failures on top of it were Chrome's
+"Allow remote debugging?" prompt (handoff §18, now the consent watcher's job).
+
+**The tab discipline** (`backend/services/web_reader.py`, `scripts/dowjones_pull.py`):
+- after every read (text extracted and stored) the lane tab goes to `about:blank` BEFORE the next
+  throttle sleep, and is re-navigated on its next turn; a listing or quote page waits blank too;
+- a tab that has served **10 page loads** is closed and re-opened from its parent at the next URL
+  (a renderer does not give memory back on navigation alone);
+- every tab a run opened is closed on every exit path (normal end, refusal, exception, the page
+  budget); the run receipt carries `opened`, `tabs_closed`, `orphaned_tabs`, `blanks`,
+  `tab_rotations`, and a crashed run still writes that accounting;
+- on start, after the one-reader lock is held, the run closes tabs an EARLIER receipt records as
+  opened and not closed (`plan_/archive_/reads_` receipts of the last 3 days, dated by the name,
+  never mtime): only `chrome-mcp:<nonce>:<n>` handles still present on a Dow Jones host; a bare
+  `tN` is never trusted across runs; a leftover that had been picked as a parent is replaced first.
+- **Why a second route exists.** `openclaw_client.browser()` refuses any verb on a tab whose
+  CURRENT host is not wsj/barrons/marketwatch, so a blanked tab could be neither re-navigated nor
+  closed through it. `web_reader.own_blank_tab_verb` is the one narrow way past that guard: only a
+  tab in this process's `_OPENED_TABS`; `blank` (one CLI call, and it refuses Murat's own tabs,
+  which the guarded navigate would not); `navigate`/`close` only while a fresh listing shows the
+  tab on `about:blank`, the target on the allowed hosts, the landed URL re-read. Pinned against the
+  REAL client with a fake CLI (`test_a_blanked_tab_is_renavigated_and_closed_through_the_real_client`).
+  The proper home of that rule is `openclaw_client`'s guard ("a tab we opened may leave
+  `about:blank`"); owed there, not changed here.
+- After a Chrome MCP re-attach every handle is reissued and a blank tab cannot be told from one of
+  Murat's. Blank lane tabs are remapped only when the new listing has exactly as many blank tabs
+  as the run has blanked lanes; otherwise the lane re-opens from its parent at its next load and
+  the old blank handle is listed in `orphaned_tabs` (light, but visible).
+
+**Per-host pacing.** The throttle stays shared (20-90 s jittered between any two loads), and two
+loads on the SAME host are now >= 60 s apart: the drawn target x3, so a one-lane run gaps in
+[60, 270] s. Scaled, not `60 + jitter`: a shift cut the CV of gaps to 0.10 and tripped the
+footprint's constant-pace alarm in the test. `same_host_waits` is on the run receipt.
+
+**Company search lanes.** `wsj_search:<T1|T2...>` / `barrons_search:<...>` load the company's own
+page (`wsj.com/market-data/quotes/<TICKER>` -- the corpus shows `.../quotes/MU/research-ratings`
+linked from a stored page -- and `barrons.com/market-data/stocks/<ticker>`), choose up to 3
+article links FROM its snapshot (the site's article-id URL pattern; nav, sign-in and sponsored
+units dropped; older than 30 days when the page shows a date), and read them in rotation. The
+link-text deny is narrower there (`ARTICLE_DENY_LINK_TEXT`): the default list would drop "trial",
+"upgrade", "share" -- the words of the news a search is for -- and these links are loaded by URL,
+never clicked. Neither quote-page layout has been snapshotted live yet: the first run's receipt
+(`searches.<T>.links_on_page`) is the check that the pattern finds the news list.
+
+**The queue** (`backend/data/optimus/dowjones/QUEUE_2026-09-27.txt`, written by
+`python -m scripts.dowjones_pull --write-shortlist-queue backend/data/optimus/dowjones/QUEUE_2026-09-27.txt --shortlist-date 2026-09-27`):
+the 67 carded names (non-refused `thesis_cards/2026-09-27`), the note's §3 ROI order first.
+(a) MarketWatch analyst estimates for the 67 (none was snapshotted on 09-27 when it was written;
+`--fresh-since 2026-09-27` skips any the running queue adds); one lane, so ~70 loads at >= 60 s
+each, about two hours; (b) WSJ + Barron's search over the same 67, **60 pages for the whole line**
+(about 7-8 names per site at 1 page + <= 3 articles; a rerun continues down the list); (c) the
+archive `2026-09-22..2026-09-25` refused on the gateway last night; (d) `--claims` last. Run it
+when the current queue has finished (the one-reader lock refuses a second reader anyway):
+
+    python -m scripts.dowjones_pull --queue backend/data/optimus/dowjones/QUEUE_2026-09-27.txt --handoff --profile user
+
+Budget note: the day caps are 300 loads / 120 per host (config); tonight's earlier queue counts
+against them, so a line may refuse `REFUSED_THROTTLE_DAY` / `_HOST_DAY` and is retried on the next
+queue run (DONE lines skip; `--fresh-since` keeps a rerun after UTC midnight from re-reading).
