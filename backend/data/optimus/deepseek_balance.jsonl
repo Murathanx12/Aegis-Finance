@@ -8,3 +8,6 @@
 {"granted_usd": 0.0, "is_available": true, "label": "cost_audit", "read_at": "2026-09-13T11:35:35.763765+00:00", "topped_up_usd": 7.22, "total_usd": 7.22}
 {"granted_usd": 0.0, "is_available": true, "label": "cost_audit", "read_at": "2026-09-13T12:26:02.617277+00:00", "topped_up_usd": 7.18, "total_usd": 7.18}
 {"granted_usd": 0.0, "is_available": true, "label": "cost_audit", "read_at": "2026-09-13T15:01:56.837658+00:00", "topped_up_usd": 7.18, "total_usd": 7.18}
+{"granted_usd": 0.0, "is_available": true, "label": "cost_audit", "read_at": "2026-09-27T06:45:50.728077+00:00", "topped_up_usd": 33.9, "total_usd": 33.9}
+{"granted_usd": 0.0, "is_available": true, "label": "calibration_before", "read_at": "2026-09-27T07:07:48.290743+00:00", "topped_up_usd": 33.79, "total_usd": 33.79}
+{"granted_usd": 0.0, "is_available": true, "label": "calibration_after", "read_at": "2026-09-27T07:32:04.035190+00:00", "topped_up_usd": 33.53, "total_usd": 33.53}
