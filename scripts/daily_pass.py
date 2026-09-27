@@ -1271,14 +1271,28 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
             f"{counts['skipped']} skipped / {counts['timeout']} timed out "
             f"over {len(STEPS)} steps"),
     }
+    # `disk free: <n> GB`, measured now (2026-09-27: C: reached 0 bytes and
+    # nothing printed it). `print_receipt` leads with it when STALE/DEAD.
+    receipt["disk"] = disk_status()
+    if receipt["disk"].get("verdict") in ("DEAD", "STALE"):
+        receipt["headline"] = f"{receipt['disk'].get('line')} | {receipt['headline']}"
     if write_receipt:
+        from backend.services.disk_guard import atomic_write_json   # noqa: PLC0415
         path = receipt_path(day, run)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            json.dumps(receipt, ensure_ascii=False, indent=1, default=str),
-            encoding="utf-8")
+        # atomic: a full disk leaves the previous receipt, never a zero-byte one
+        atomic_write_json(path, receipt)
         receipt["path"] = str(path)
     return receipt
+
+
+def disk_status() -> dict:
+    """`system_health.disk_status()` behind a name like every other seam."""
+    try:
+        from backend.services import system_health as SH
+        return SH.disk_status()
+    except Exception as exc:                                       # noqa: BLE001
+        return {"verdict": "UNKNOWN", "free_gb": None,
+                "line": f"disk free: CANNOT DETERMINE ({type(exc).__name__})"}
 
 
 def plan(day: str | None = None) -> dict:
@@ -1307,8 +1321,14 @@ def print_receipt(receipt: dict) -> None:
     print("=" * 74)
     print(f"DAILY PASS — {receipt['date']}  run {receipt['run']}")
     print("=" * 74)
+    disk = receipt.get("disk") or {}
+    disk_bad = disk.get("verdict") in ("DEAD", "STALE")
+    if disk_bad:
+        print(f"  !! {disk.get('line')}")
     print(f"  git HEAD   {receipt['git_head']}")
     print(f"  elapsed    {receipt['elapsed_s']}s")
+    if disk and not disk_bad:
+        print(f"  {disk.get('line')}")
     print()
     for r in receipt["steps"]:
         secs = "--" if r.get("seconds") is None else f"{r['seconds']:.1f}s"
@@ -1393,6 +1413,15 @@ def main(argv: list[str] | None = None) -> int:
     if a.dry_run:
         print(json.dumps(plan(a.date), indent=1, default=str))
         return 0
+    # START-UP GUARD (2026-09-27 disk-full): a pass that cannot write its
+    # receipt must not start pulling; refused by name, rc 2 like the others.
+    from backend.services import disk_guard as DG                 # noqa: PLC0415
+    try:
+        DG.require_free(_config.DISK_FREE_DEAD_GB + 1, "daily_pass",
+                        path=_config.OPTIMUS_LEDGER_DIR)
+    except DG.DiskTooFull as exc:
+        print(f"REFUSED: {exc}")
+        return 2
     try:
         receipt = run_daily_pass(day=a.date, force=a.force)
     except (SamePassAlreadyRan, SiblingPassRunning) as exc:

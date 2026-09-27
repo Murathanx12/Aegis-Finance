@@ -104,3 +104,96 @@ task:AegisAnalystPanelDaily (no receipt mapped) · task:AegisWRDSPullNight (reti
 one-shot; delete it).
 
 The receipt is `backend/data/optimus/health/health_20260926T153240Z.json`.
+
+## 2026-09-27 — the disk: two probes and a write guard
+
+**Why.** From about 17:50 to 19:15 HKT on 09-27, C: sat at 0 bytes free
+(handoff `HANDOFF_2026-09-26_WAVE2_...` §20). The lab died, the reader stopped,
+a crawl lost its checkpoint, and 13 receipts were truncated to zero bytes. None
+of the probe rows went red, because nothing measured the disk. Agents found out by
+tripping over it.
+
+**`disk_free`** (`pc`, cadence 5 min) is `shutil.disk_usage` on the volume that
+holds `OPTIMUS_LEDGER_DIR`. It reads **ALIVE** at 10 GB free or more, **STALE**
+below 10 GB and **DEAD** below 2 GB. The thresholds are
+`config.DISK_FREE_STALE_GB` and `config.DISK_FREE_DEAD_GB`. The row's evidence
+is the measured free GB and the volume. If the volume cannot be measured, or no
+reader is on the context, the row is UNKNOWN, never ALIVE. First live reading
+(11:48Z): **10.2 GB free on C:\ of 952 GB, ALIVE by 0.2 GB**, and falling about
+0.6 GB in seven minutes while other agents ran.
+
+**`zero_byte_receipts`** (`pc`, cadence 1 d) counts zero-byte files under the
+ledger dir. It looks only at receipt-shaped names (`*.json*`, including
+`.json.tmp`, plus `.md`, `.csv` and `.parquet`). Each file is dated by the
+**stamp in its own name**: `20260927T111250Z`, `2026-09-27_111242`, or else
+`2026-09-27`. It never uses mtime (the AST test in `test_system_health.py` still
+passes). Any stamped empty file from the last 24 h turns the row **STALE**, and
+the row names up to five. Empty files with no stamp are counted and named under
+`undated`, but they cannot turn the row red because they carry no date. Logs
+(`*.log`, `*.err`) are left out on purpose: an empty stderr log is what a clean
+run leaves behind. If no file is stamped in the window, the row is UNKNOWN.
+
+**The reports.** `system_health.disk_status()` measures the disk NOW, never
+from a two-hour-old receipt. `non_alive_lines()` feeds both the morning report
+and the Telegram brief. When the disk is STALE or DEAD its line comes **first**,
+above the subsystems header. When the disk is fine, its line comes last. The
+daily-pass receipt carries `disk` and prints `disk free: <n> GB`. When the disk
+is STALE or DEAD, both the printed receipt and its `headline` start with that
+line. A STALE `zero_byte_receipts` row appears among the DEAD/STALE rows like
+any other probe.
+
+**The guard** (`backend/services/disk_guard.py`):
+
+- `require_free(gb, what)` raises `DiskTooFull`, naming the run, the volume and
+  the measured GB. A volume it cannot measure also refuses. `DiskTooFull` is an
+  `OSError` as well as a `RuntimeError`, so every existing `except OSError`
+  around a write still catches it. It is enrolled in the missing-input contract.
+- `atomic_write_json` / `atomic_write_text` write a temp file in the same
+  directory, then fsync it, check its size against the bytes written, re-parse
+  it (for JSON) and `os.replace` it over the target. When a write fails, the
+  temp is removed and the **old file stays whole**. ENOSPC is raised as
+  `DiskTooFull`.
+- Writers converted (these are the ones that were truncated on 09-27):
+  - the reader's receipts: `dowjones_pull._write` (plan, queue, feeds, reads,
+    archive, claims), `_progress`, the queue `.done` markers and the
+    queue-file writers
+  - `web_reader`: footprint, the per-article record, the session lock
+  - the health receipt, `HEALTH.md` and `_state.json`, all in
+    `system_health.run`
+  - the lab's `_write_atomic`, which covers `lab_status.json` and the lock.
+    It had no fsync and left a zero-byte `.tmp` on ENOSPC. The running lab
+    picks this up at its next restart.
+  - `news_pull`: the per-source and `_ALL` receipts, and the cursors
+  - the daily-pass receipt
+- Start-up refusals. Each of these calls
+  `require_free(DISK_FREE_DEAD_GB + 1, ...)`, which means 3 GB, before doing
+  any work:
+  - `night_backtest_factory` returns rc 2
+  - `daily_pass` returns rc 2
+  - `dowjones_pull --queue` returns rc 2
+  - `sim_run` returns rc 4 and writes `STOPPED` / `REFUSED_DISK`, so the
+    session can resume after space is freed
+
+### Space on this machine: what is safe to clear, and what is not
+
+**Safe to clear.** All of this regenerates on the next install or build:
+
+| what | how | size seen |
+|---|---|---|
+| pip cache | `pip cache purge` | 4.3 GB on 09-27 (purged; 1.7 MB now) |
+| npm cache | `npm cache clean --force` | 6.4 GB on 09-27 (cleaned) |
+| `frontend/.next` | delete the folder; `npx next build` rebuilds it | ~2.2 GB |
+| `__pycache__` folders | delete them; Python rewrites them on import | ~50 MB |
+
+**Not safe to clear.** None of this can be regenerated, or it is the record
+itself:
+
+- **Models**: the llama-server GGUFs, e.g. Qwen3-30B-A3B at 17.28 GB. They are
+  re-downloadable, but only at hours of bandwidth, and the lab expects them.
+- **Ledgers**: `backend/data/optimus/**` (predictions, books, claims, sessions,
+  decisions, receipts, `news_corpus`, `evidence_memory`). These are the evidence.
+- **Bars**: `prices_2025_26/bars.parquet` and the delisted-bars panels. Pulling
+  them again costs hours, and a mid-pull state is survivor-biased.
+
+11 GB free is roughly one day of margin at the 09-27 write rate. Real space has
+to be freed on C:. The caches are only a stopgap.

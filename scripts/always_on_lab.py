@@ -218,12 +218,14 @@ def _write_atomic(path: Path, payload: dict) -> None:
     The same pattern `llama_server.py` and `night_launcher.py` already use for
     their own state files: a crash mid-write leaves the PREVIOUS status intact
     rather than a truncated JSON nobody can parse.
+
+    2026-09-27 (disk full): the temp is now fsynced, checked non-empty and
+    re-parsed before the replace, and REMOVED when the write fails -- the old
+    version left a zero-byte `lab_status.json.tmp` behind on ENOSPC.
+    `disk_guard.DiskTooFull` is an OSError, so the handlers here still catch it.
     """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=1, default=str),
-                   encoding="utf-8")
-    os.replace(tmp, path)
+    from backend.services.disk_guard import atomic_write_json    # noqa: PLC0415
+    atomic_write_json(path, payload)
 
 
 # ===========================================================================

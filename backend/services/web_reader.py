@@ -93,6 +93,7 @@ from typing import Any, Callable
 from urllib.parse import urlsplit
 
 from backend import config as _config
+from backend.services import disk_guard as DG
 
 LICENCE = "Dow Jones subscriber, personal research; not republished"
 
@@ -512,9 +513,8 @@ def acquire_reader_lock(path: Path | None = None, *, pid: int | None = None) -> 
         if opid and opid != me and _pid_alive(opid):
             raise ReaderRefused(f"REFUSED_READER_BUSY: another reading session (pid {opid}, "
                                 f"since {other.get('since')}) holds {p}")
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps({"pid": me, "since": datetime.now(timezone.utc).isoformat(
-        timespec="seconds")}), encoding="utf-8")
+    DG.atomic_write_json(p, {"pid": me, "since": datetime.now(timezone.utc).isoformat(
+        timespec="seconds")}, indent=None, ensure_ascii=True)
     return p
 
 
@@ -622,7 +622,8 @@ def footprint_receipt(log: list[dict], *, scrolled: int = 0, reads: int = 0,
         d = Path(out_dir) if out_dir else Path(_config.OPTIMUS_LEDGER_DIR) / "web_reader"
         d.mkdir(parents=True, exist_ok=True)
         p = d / f"footprint_{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}.json"
-        p.write_text(json.dumps(rc, indent=1), encoding="utf-8")
+        # atomic (2026-09-27): footprint_20260927T111242Z.json was truncated to 0 bytes
+        DG.atomic_write_json(p, rc, ensure_ascii=True)
         rc["path"] = str(p)
     return rc
 
@@ -780,8 +781,7 @@ def store_article(art: dict, *, root: Path | None = None) -> dict:
         if k in art:
             rec[k] = art[k]
     p = root / pub / day / f"{sha}.json"
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(rec, ensure_ascii=False, indent=1), encoding="utf-8")
+    DG.atomic_write_json(p, rec)
 
     sid = registry_source_id(pub, origin)
     row = {"source": sid, "first_seen_utc": seen, "published_utc": rec["published_utc"] or "",

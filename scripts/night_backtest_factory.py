@@ -2273,6 +2273,14 @@ def main(argv=None) -> int:
     ap.add_argument("--max-rules", type=int, default=0)
     ap.add_argument("--out", default=None)
     a = ap.parse_args(argv)
+    # START-UP GUARD (2026-09-27 disk-full): refuse by name before loading a
+    # 1.4 GB panel whose receipts could not be written.
+    from backend.services import disk_guard as DG                 # noqa: PLC0415
+    try:
+        DG.require_free(_cfg.DISK_FREE_DEAD_GB + 1, JOB, path=_cfg.OPTIMUS_LEDGER_DIR)
+    except DG.DiskTooFull as exc:
+        print(f"REFUSED: {exc}", flush=True)
+        return 2
     t0 = time.time()
     today = date.today()
     run_id = new_run_id()

@@ -42,6 +42,7 @@ import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import time
 import urllib.request
@@ -98,6 +99,9 @@ class ProbeCtx:
     pid_cmdline: Optional[Callable[[int], Optional[str]]] = None
     railway_url: str = ""
     cache: dict = field(default_factory=dict)
+    #: `shutil.disk_usage`-shaped reader for `disk_free`; None = not measured
+    #: (UNKNOWN). `make_ctx` supplies the real one; tests inject a fake.
+    disk_usage: Optional[Callable[[str], Any]] = None
 
     def path(self, key: str, default: Path) -> Path:
         return Path(self.paths.get(key, default))
@@ -1400,6 +1404,111 @@ def p_accrual_canary(ctx: ProbeCtx) -> ProbeResult:
                        proof="accrual_canary.forecast_accrual + n_considered_row on the PC paths")
 
 
+# ─────────────────────────────────────── disk (2026-09-27 disk-full incident)
+
+#: Receipt-shaped names the zero-byte probe inspects. Logs (`*.log`, `*.err`)
+#: are excluded on purpose: an empty stderr log is the NORMAL state of a clean
+#: run, and counting them would make the probe red for ever.
+_RECEIPT_SUFFIXES = (".md", ".csv", ".parquet")
+_STAMP_DT = re.compile(r"(20\d{2})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z")
+_STAMP_DASH_DT = re.compile(r"(20\d{2})-(\d{2})-(\d{2})[_T](\d{2})(\d{2})(\d{2})")
+_STAMP_DATE = re.compile(r"(20\d{2})-(\d{2})-(\d{2})")
+
+
+def _name_stamp(name: str) -> tuple[Optional[datetime], bool]:
+    """(stamp, date_only) from the producer's own stamp in a FILE NAME, never an
+    mtime. `20260927T111250Z`, `2026-09-27_111242`, else `2026-09-27`."""
+    for rx in (_STAMP_DT, _STAMP_DASH_DT):
+        m = rx.search(name)
+        if m:
+            try:
+                return datetime(*map(int, m.groups()), tzinfo=timezone.utc), False
+            except ValueError:
+                pass
+    m = _STAMP_DATE.search(name)
+    if m:
+        try:
+            return datetime(*map(int, m.groups()), tzinfo=timezone.utc), True
+        except ValueError:
+            pass
+    return None, False
+
+
+def _is_receipt_name(name: str) -> bool:
+    return ".json" in name or name.endswith(_RECEIPT_SUFFIXES)
+
+
+def p_disk_free(ctx: ProbeCtx) -> ProbeResult:
+    """Free bytes on the volume holding the ledger dir (`shutil.disk_usage`).
+
+    ALIVE >= DISK_FREE_STALE_GB, STALE below, DEAD < DISK_FREE_DEAD_GB. On
+    2026-09-27 C: reached 0 bytes and 13 receipts were truncated to zero while
+    every row here read healthy -- nothing measured the disk."""
+    if ctx.disk_usage is None:
+        return _unknown("no disk_usage reader on the probe context; free space not measured")
+    from backend import config as C                                 # noqa: PLC0415
+    from backend.services import disk_guard as DG                   # noqa: PLC0415
+    try:
+        m = DG.measure(ctx.optimus_dir, disk_usage=ctx.disk_usage)
+    except DG.DiskTooFull as exc:
+        return _unknown(str(exc)[:200])
+    stale_gb, dead_gb = float(C.DISK_FREE_STALE_GB), float(C.DISK_FREE_DEAD_GB)
+    free_gb = m["free_bytes"] / DG.GB
+    v: Verdict = "DEAD" if free_gb < dead_gb else ("STALE" if free_gb < stale_gb else "ALIVE")
+    return ProbeResult(v, _iso(ctx.now), 0.0,
+                       f"disk free: {free_gb:.1f} GB on {m['volume']} of {m['total_gb']:.0f} GB "
+                       f"(STALE < {stale_gb:g} GB, DEAD < {dead_gb:g} GB)",
+                       delta=int(m["free_bytes"]),
+                       proof=f"shutil.disk_usage({m['volume']}) for {ctx.optimus_dir.name}/")
+
+
+def p_zero_byte_receipts(ctx: ProbeCtx) -> ProbeResult:
+    """Zero-byte receipt-shaped files under the ledger dir, dated by the STAMP in
+    their own name within the last 24 h. A file with no stamp is counted under
+    `undated` and printed, but cannot turn the row red (it has no date)."""
+    root = ctx.optimus_dir
+    if not root.is_dir():
+        return _unknown(f"ledger dir {root} does not exist")
+    lo = ctx.now - timedelta(hours=24)
+    hi = ctx.now + timedelta(hours=1)
+    n_dated, empty_dated, empty_undated = 0, [], []
+    for dirpath, dirnames, files in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in ("__pycache__", ".git")]
+        for fn in files:
+            if not _is_receipt_name(fn):
+                continue
+            ts, date_only = _name_stamp(fn)
+            if ts is None:
+                try:
+                    if os.path.getsize(os.path.join(dirpath, fn)) == 0:
+                        empty_undated.append(os.path.relpath(os.path.join(dirpath, fn), root))
+                except OSError:
+                    pass
+                continue
+            in_window = (ts.date() >= lo.date() and ts.date() <= hi.date()) if date_only \
+                else (lo <= ts <= hi)
+            if not in_window:
+                continue
+            n_dated += 1
+            try:
+                if os.path.getsize(os.path.join(dirpath, fn)) == 0:
+                    empty_dated.append(os.path.relpath(os.path.join(dirpath, fn), root))
+            except OSError:
+                pass
+    und = (f"; undated zero-byte: {len(empty_undated)}"
+           + (f" ({', '.join(sorted(empty_undated)[:5])})" if empty_undated else ""))
+    if n_dated == 0:
+        return _unknown(f"no receipt-stamped file dated in the last 24 h under {root.name}/ "
+                        f"to inspect{und}", delta=len(empty_dated))
+    names = ", ".join(sorted(empty_dated)[:5]).replace("\\", "/")
+    v: Verdict = "STALE" if empty_dated else "ALIVE"
+    return ProbeResult(v, _iso(ctx.now), 0.0,
+                       f"{len(empty_dated)} zero-byte of {n_dated} receipt(s) stamped in the last 24 h"
+                       + (f": {names}" if names else "") + und.replace("\\", "/"),
+                       delta=len(empty_dated),
+                       proof="os.walk + os.path.getsize; date = the stamp in the file name, never mtime")
+
+
 # ════════════════════════════════════════════════════════════════ registry
 
 D1 = timedelta(days=1)
@@ -1436,6 +1545,8 @@ PROBES: tuple[Probe, ...] = (
     Probe("ci", "external", D1, "gh run list --commit origin/main: conclusion", p_ci, True),
     Probe("git", "pc", D1, "git rev-list --count origin/main..HEAD", p_git, True),
     Probe("accrual_canary", "pc", D1, "accrual_canary.forecast_accrual + n_considered_row (PC paths)", p_accrual_canary),
+    Probe("disk_free", "pc", timedelta(minutes=5), "shutil.disk_usage on the ledger dir's volume vs DISK_FREE_STALE_GB / DISK_FREE_DEAD_GB", p_disk_free),
+    Probe("zero_byte_receipts", "pc", D1, "zero-byte *.json*/.md/.csv/.parquet under the ledger dir, dated by the stamp in the name (last 24 h)", p_zero_byte_receipts),
 )
 
 
@@ -1533,6 +1644,7 @@ def make_ctx(*, optimus_dir: Optional[Path] = None, now: Optional[datetime] = No
     if optimus_dir is None:
         from backend import config as C                             # noqa: PLC0415
         optimus_dir = Path(C.OPTIMUS_LEDGER_DIR)
+    kw.setdefault("disk_usage", shutil.disk_usage)
     ctx = ProbeCtx(optimus_dir=Path(optimus_dir), now=now or _utcnow(), allow_proc=allow_proc,
                    railway_url=kw.pop("railway_url", None) or _default_railway_url(), **kw)
     ctx.prev_state = _load_state(health_dir(ctx.optimus_dir))
@@ -1559,8 +1671,10 @@ def run(*, ctx: Optional[ProbeCtx] = None, only: Optional[set] = None,
         hd.mkdir(parents=True, exist_ok=True)
         stamp = ctx.now.strftime("%Y%m%dT%H%M%SZ")
         p = hd / f"health_{stamp}.json"
-        p.write_text(json.dumps(out, indent=1, default=str), encoding="utf-8")
-        (hd / "HEALTH.md").write_text(render_md(out), encoding="utf-8")
+        # atomic (2026-09-27): a full disk leaves the OLD file, never a zero-byte one
+        from backend.services.disk_guard import atomic_write_json, atomic_write_text  # noqa: PLC0415
+        atomic_write_json(p, out, ensure_ascii=True)
+        atomic_write_text(hd / "HEALTH.md", render_md(out))
         with open(hd / "health_index.jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps({"utc": out["generated_utc"], "path": p.name,
                                 "counts": out["counts"], "exit_code": out["exit_code"]}) + "\n")
@@ -1569,7 +1683,7 @@ def run(*, ctx: Optional[ProbeCtx] = None, only: Optional[set] = None,
             state.pop("pending_model_since", None)
         if "no_bar" not in ctx.new_state:
             state.pop("no_bar", None)
-        (hd / "_state.json").write_text(json.dumps(state, indent=1), encoding="utf-8")
+        atomic_write_json(hd / "_state.json", state, ensure_ascii=True)
         out["path"] = str(p)
     return out
 
@@ -1633,6 +1747,24 @@ def api_block(*, ttl_s: float = 60.0) -> dict:
     return block
 
 
+def disk_status(*, optimus_dir: Optional[Path] = None,
+                disk_usage: Optional[Callable[[str], Any]] = None) -> dict:
+    """The `disk_free` probe measured NOW (it is cheap and must never come from
+    a two-hour-old receipt): {verdict, line, free_gb}. Never raises."""
+    try:
+        ctx = make_ctx(optimus_dir=optimus_dir, allow_proc=False,
+                       disk_usage=disk_usage or shutil.disk_usage)
+        r = p_disk_free(ctx)
+        free = r.delta / (1024 ** 3) if r.delta is not None else None
+        return {"verdict": r.verdict, "free_gb": None if free is None else round(free, 2),
+                "line": (r.detail if free is not None else f"disk free: UNKNOWN ({r.detail})")
+                        if r.verdict == "ALIVE" else f"{r.verdict} {r.detail}",
+                "detail": r.detail}
+    except Exception as exc:                                        # noqa: BLE001
+        return {"verdict": "UNKNOWN", "free_gb": None, "detail": type(exc).__name__,
+                "line": f"disk free: CANNOT DETERMINE ({type(exc).__name__}: {str(exc)[:100]})"}
+
+
 def non_alive_lines(*, limit: int = 12) -> list[str]:
     """DEAD/STALE rows first, one line each, for the morning report and the
     Telegram brief. Uses the newest probe receipt when it is <= 2 h old, else
@@ -1648,8 +1780,15 @@ def non_alive_lines(*, limit: int = 12) -> list[str]:
         bad = [r for r in rows if r["verdict"] in ("DEAD", "STALE")]
         unk = sum(1 for r in rows if r["verdict"] == "UNKNOWN")
         head = (f"_subsystems: {len(bad)} DEAD/STALE, {unk} UNKNOWN of {len(rows)} ({src})_")
-        return [head] + [f"- {row_line(r)}" for r in bad[:limit]] + (
+        body = [f"- {row_line(r)}" for r in bad[:limit]
+                if r.get("probe") != "disk_free" and r.get("name") != "disk_free"] + (
             [f"- ... {len(bad) - limit} more in backend/data/optimus/health/HEALTH.md"]
             if len(bad) > limit else [])
+        # The disk is measured NOW, not read from the receipt, and LEADS the
+        # block when it is STALE/DEAD (2026-09-27: C: at 0 bytes read healthy).
+        d = disk_status()
+        if d["verdict"] in ("DEAD", "STALE"):
+            return [f"- {d['line']}", head] + body
+        return [head] + body + [f"- {d['line']}"]
     except Exception as exc:                                        # noqa: BLE001
         return [f"_subsystems: CANNOT DETERMINE ({type(exc).__name__}: {str(exc)[:120]})_"]

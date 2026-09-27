@@ -4210,3 +4210,12 @@ DOWJONES_ARCHIVE_ENABLED = True       # 2026-09-26 23:55 Murat's call (handoff-g
 #: Lines shorter than 60 chars containing one of these are the signed-in
 #: account's name in the page chrome and are stripped from stored text.
 DOWJONES_ACCOUNT_NAME_PATTERNS = ("murat", "murathan", "abdullaev")
+
+# ── Disk guard (2026-09-27, handoff §20: C: reached 0 bytes free) ───────────
+#: `system_health.disk_free`: free space on the volume holding
+#: OPTIMUS_LEDGER_DIR. ALIVE at or above STALE_GB, STALE below it, DEAD below
+#: DEAD_GB. `disk_guard.require_free(DISK_FREE_DEAD_GB + 1, ...)` is the
+#: start-up refusal of the night factory, the daily pass, the reader's queue
+#: and the sim: a run that cannot finish its receipts must not start.
+DISK_FREE_STALE_GB = 10
+DISK_FREE_DEAD_GB = 2

@@ -442,9 +442,11 @@ def test_non_alive_lines_put_dead_and_stale_first(tmp_path, monkeypatch):
         {"name": "b", "verdict": "DEAD", "detail": "gone", "proof": "pid 1"},
         {"name": "c", "verdict": "UNKNOWN", "detail": "?"}]}
     monkeypatch.setattr(SH, "newest_receipt", lambda hd=None: rec)
+    monkeypatch.setattr(SH.shutil, "disk_usage", _fake_du(40.0))
     lines = SH.non_alive_lines()
     assert "1 DEAD/STALE, 1 UNKNOWN of 3" in lines[0]
-    assert lines[1].startswith("- DEAD b -- gone") and len(lines) == 2
+    assert lines[1].startswith("- DEAD b -- gone") and len(lines) == 3
+    assert lines[2].startswith("- disk free: 40.0 GB")      # ALIVE disk: printed last
 
 
 # ─────────────────────────── book_grader sees the llm_portfolio books (09-27)
@@ -515,3 +517,105 @@ def test_a_failed_book_grading_step_turns_book_grader_stale(tmp_path):
     ctx = _ctx(tmp_path, now=now)
     ctx.cache["daily_pass_rows"] = [{"step": s, "status": "ok"} for s in SH.BOOK_GRADE_STEPS]
     assert SH.p_book_grader(ctx).verdict == "ALIVE"
+
+
+# ─────────────────────────── disk (2026-09-27: C: reached 0 bytes, nothing went red)
+
+def _fake_du(free_gb: float):
+    from collections import namedtuple
+    U = namedtuple("U", "total used free")
+    g = 1024 ** 3
+    return lambda p: U(953 * g, int((953 - free_gb) * g), int(free_gb * g))
+
+
+@pytest.mark.parametrize("free_gb, verdict", [(50.0, "ALIVE"), (10.0, "ALIVE"),
+                                              (9.9, "STALE"), (2.0, "STALE"),
+                                              (1.9, "DEAD"), (0.0, "DEAD")])
+def test_disk_free_verdicts_follow_the_config_thresholds(tmp_path, free_gb, verdict):
+    ctx = _ctx(tmp_path)
+    ctx.disk_usage = _fake_du(free_gb)
+    r = SH.p_disk_free(ctx)
+    assert r.verdict == verdict, r.detail
+    assert f"disk free: {free_gb:.1f} GB" in r.detail and "STALE < 10 GB" in r.detail
+
+
+def test_disk_free_unmeasurable_is_unknown_not_alive(tmp_path):
+    ctx = _ctx(tmp_path)
+    ctx.disk_usage = lambda p: (_ for _ in ()).throw(OSError("not ready"))
+    assert SH.p_disk_free(ctx).verdict == "UNKNOWN"
+
+
+def test_make_ctx_measures_the_real_disk(tmp_path):
+    ctx = SH.make_ctx(optimus_dir=tmp_path, allow_proc=False)
+    assert ctx.disk_usage is not None
+    assert SH.p_disk_free(ctx).verdict in ("ALIVE", "STALE", "DEAD")
+
+
+def test_zero_byte_probe_counts_a_stamped_empty_file_and_ignores_a_full_one(tmp_path):
+    now = _now()
+    od = tmp_path / "optimus"
+    stamp = now.strftime("%Y%m%dT%H%M%SZ")
+    _w(od / "health" / f"health_{stamp}.json", {"ok": 1})               # non-empty: ignored
+    (od / "dowjones").mkdir(parents=True)
+    (od / "dowjones" / f"plan_{now:%Y-%m-%d_%H%M%S}.json").write_bytes(b"")   # stamped, empty
+    old = now - timedelta(days=3)
+    (od / "dowjones" / f"plan_{old:%Y-%m-%d_%H%M%S}.json").write_bytes(b"")   # outside 24 h
+    (od / "run_x.log.err").write_bytes(b"")                              # a log: not a receipt
+    (od / "lab_status.json").write_bytes(b"")                            # undated
+    r = SH.p_zero_byte_receipts(_ctx(tmp_path, now=now))
+    assert r.verdict == "STALE", r.detail
+    assert r.delta == 1 and f"plan_{now:%Y-%m-%d_%H%M%S}.json" in r.detail
+    assert "undated zero-byte: 1 (lab_status.json)" in r.detail
+
+
+def test_zero_byte_probe_all_full_is_alive(tmp_path):
+    now = _now()
+    _w(tmp_path / "optimus" / "news_corpus" / "_receipts" / f"{now:%Y%m%dT%H%M%SZ}_ALL.json", {"a": 1})
+    r = SH.p_zero_byte_receipts(_ctx(tmp_path, now=now))
+    assert r.verdict == "ALIVE" and r.delta == 0, r.detail
+
+
+def test_name_stamp_reads_the_three_shapes():
+    assert SH._name_stamp("health_20260927T111250Z.json")[0].hour == 11
+    ts, date_only = SH._name_stamp("plan_2026-09-27_094906.json")
+    assert ts.minute == 49 and not date_only
+    ts, date_only = SH._name_stamp("daily_pass_2026-09-27.json")
+    assert ts.day == 27 and date_only
+    assert SH._name_stamp("lab_status.json") == (None, False)
+
+
+def test_a_bad_disk_leads_the_report_lines(tmp_path, monkeypatch):
+    rec = {"generated_utc": _iso(_now()), "rows": [
+        {"name": "b", "verdict": "DEAD", "detail": "gone", "proof": "pid 1"}]}
+    monkeypatch.setattr(SH, "newest_receipt", lambda hd=None: rec)
+    monkeypatch.setattr(SH.shutil, "disk_usage", _fake_du(1.0))
+    lines = SH.non_alive_lines()
+    assert lines[0].startswith("- DEAD disk free: 1.0 GB"), lines
+    monkeypatch.setattr(SH.shutil, "disk_usage", _fake_du(40.0))
+    lines = SH.non_alive_lines()
+    assert lines[0].startswith("_subsystems") and lines[-1].startswith("- disk free: 40.0 GB")
+
+
+def test_the_health_receipt_is_written_atomically(tmp_path, monkeypatch):
+    from backend.services import disk_guard as DG
+    ctx = _ctx(tmp_path)
+    SH.run(ctx=ctx, only={"git"}, persist=True)
+    hd = ctx.optimus_dir / "health"
+    before = (hd / "_state.json").read_text(encoding="utf-8")
+
+    class Full:
+        def __init__(self, p, m):
+            self._f = open(p, m)
+        def write(self, d):
+            import errno
+            raise OSError(errno.ENOSPC, "full")
+        def __enter__(self):
+            return self
+        def __exit__(self, *a):
+            self._f.close()
+    monkeypatch.setattr(DG, "_open", Full)
+    ctx2 = _ctx(tmp_path, now=_now() + timedelta(seconds=5))
+    with pytest.raises(DG.DiskTooFull):
+        SH.run(ctx=ctx2, only={"git"}, persist=True)
+    assert (hd / "_state.json").read_text(encoding="utf-8") == before
+    assert all(p.stat().st_size > 0 for p in hd.iterdir())

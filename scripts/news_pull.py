@@ -81,6 +81,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from backend import config as _config  # noqa: E402
+from backend.services import disk_guard as DG  # noqa: E402
 from backend.services import fetch_scrapling  # noqa: E402
 from backend.services import news_entities as entities  # noqa: E402
 from backend.services import news_registry as registry  # noqa: E402
@@ -1017,8 +1018,7 @@ def _read_cursor(source_id: str) -> dict:
 
 def _write_cursor(source_id: str, cur: dict) -> None:
     p = cursor_path(source_id)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(cur, indent=1, sort_keys=True), encoding="utf-8")
+    DG.atomic_write_json(p, cur, sort_keys=True, ensure_ascii=True, default=None)
 
 
 def _known_raw_ids(source_id: str, days: int = DEDUPE_LOOKBACK_DAYS) -> set[str]:
@@ -1192,8 +1192,8 @@ def pull_source(source_id: str, ctx: RunContext | None = None) -> dict:
 
 def _emit(receipt: dict, src: registry.NewsSource) -> None:
     p = receipt_path(src.id, _stamp())
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(receipt, indent=1, default=str), encoding="utf-8")
+    # atomic (2026-09-27): a full disk truncated a per-source receipt to 0 bytes
+    DG.atomic_write_json(p, receipt, ensure_ascii=True)
     receipt["receipt_path"] = str(p)
 
 
@@ -1262,8 +1262,7 @@ def pull_all(source_ids: Iterable[str] | None = None, ctx: RunContext | None = N
                      f"{len(red)} RED, {len(refused)} refused"),
     }
     p = receipt_path("ALL", _stamp())
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(summary, indent=1, default=str), encoding="utf-8")
+    DG.atomic_write_json(p, summary, ensure_ascii=True)
     summary["receipt_path"] = str(p)
     return summary
 

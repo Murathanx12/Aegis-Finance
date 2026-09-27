@@ -1439,6 +1439,21 @@ def _case_family_pool():
             "a family with two rules")
 
 
+def _case_disk_guard():
+    """Disk guard (2026-09-27 disk-full incident): an UNMEASURED disk refuses.
+
+    The missing input is THE FREE SPACE. A start-up guard that cannot read the
+    volume and lets the run start is the guard that read healthy while C: sat
+    at zero bytes -- an unmeasured disk is not a disk with room.
+    """
+    from backend.services.disk_guard import DiskTooFull, require_free
+
+    def unreadable(_p):
+        raise OSError("volume not ready")
+    return (lambda: require_free(1, "contract", disk_usage=unreadable), DiskTooFull,
+            "a volume whose free space cannot be measured")
+
+
 CASES = {
     "investment_committee": _case_investment_committee,
     "fundamental_features": _case_fundamental_features,
@@ -1539,6 +1554,7 @@ CASES = {
     "signal_structure": _case_signal_structure,
     "matched_twins": _case_matched_twins,
     "family_pool": _case_family_pool,
+    "disk_guard": _case_disk_guard,
 }
 
 

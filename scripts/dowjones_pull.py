@@ -82,6 +82,7 @@ if str(REPO) not in sys.path:
 from backend import config as _config  # noqa: E402
 from backend.services import dowjones_claims as DC  # noqa: E402
 from backend.services import dowjones_feeds as DF  # noqa: E402
+from backend.services import disk_guard as DG  # noqa: E402
 from backend.services import openclaw_client as OCH  # noqa: E402  -- pure tab-id helpers only
 from backend.services import web_reader as WR  # noqa: E402
 
@@ -149,8 +150,8 @@ def _today() -> str:
 
 def _write(rc: dict, name: str) -> Path:
     p = DF.receipts_dir() / name
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(rc, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
+    # atomic (2026-09-27): a full disk leaves the OLD receipt, never a zero-byte one
+    DG.atomic_write_json(p, rc)
     return p
 
 
@@ -267,8 +268,7 @@ def _progress(rc: dict, reader: WR.Reader, path: Path | None) -> None:
         return
     rc["pages"] = reader.log
     rc["in_progress"] = True
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(rc, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
+    DG.atomic_write_json(path, rc)
 
 
 def _read_current(reader: WR.Reader, url: str, column: str, ticker: str) -> dict:
@@ -1311,9 +1311,9 @@ def run_queue(path: Path, *, inherit: list[str] | None = None,
               flush=True)
         if status == "DONE":
             dd.mkdir(parents=True, exist_ok=True)
-            marker.write_text(json.dumps({"line": lineno, "args": line,
+            DG.atomic_write_json(marker, {"line": lineno, "args": line,
                                           "done_utc": datetime.now(timezone.utc).isoformat(
-                                              timespec="seconds")}), encoding="utf-8")
+                                              timespec="seconds")}, indent=None)
         rc["lines"].append(row)
         if only_first:
             break
@@ -1613,14 +1613,22 @@ def main(argv: list[str] | None = None) -> int:
     if a.write_shortlist_queue:
         qp = Path(a.write_shortlist_queue)
         qp.parent.mkdir(parents=True, exist_ok=True)
-        qp.write_text(build_shortlist_queue_text(a.shortlist_date or day), encoding="utf-8")
+        DG.atomic_write_text(qp, build_shortlist_queue_text(a.shortlist_date or day))
         out["write_shortlist_queue"] = str(qp)
     if a.write_queue:
         qp = Path(a.write_queue)
         qp.parent.mkdir(parents=True, exist_ok=True)
-        qp.write_text(build_queue_text(), encoding="utf-8")
+        DG.atomic_write_text(qp, build_queue_text())
         out["write_queue"] = str(qp)
     if a.queue:
+        # START-UP GUARD (2026-09-27 disk-full): a queue that cannot write its
+        # receipts must not start reading; refuse by name before any page load.
+        try:
+            DG.require_free(_config.DISK_FREE_DEAD_GB + 1, "dowjones_pull --queue",
+                            path=DF.receipts_dir())
+        except DG.DiskTooFull as exc:
+            print(f"REFUSED: {exc}", flush=True)
+            return 2
         print(TOU_SENTENCE, flush=True)
         r = run_queue(Path(a.queue), inherit=["--handoff"] if a.handoff else [],
                       main_fn=lambda av: main(av + (["--profile", a.profile]

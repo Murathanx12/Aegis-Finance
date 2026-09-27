@@ -1597,6 +1597,19 @@ def run(session_id: str) -> int:
     if s.get("id") != session_id:
         logger.error("session mismatch: asked for %s, on disk %s", session_id, s.get("id"))
         return 3
+    # START-UP GUARD (2026-09-27 disk-full): a sim that cannot write its cycle
+    # receipts must not start. Refused by name; STOPPED so it stays resumable.
+    from backend.services import disk_guard as DG                 # noqa: PLC0415
+    try:
+        DG.require_free(_config.DISK_FREE_DEAD_GB + 1, f"sim_run {session_id}",
+                        path=_config.OPTIMUS_LEDGER_DIR)
+    except DG.DiskTooFull as exc:
+        logger.error("%s", exc)
+        try:
+            SS.finish("STOPPED", f"REFUSED_DISK: {exc}"[:300])
+        except OSError:
+            logger.error("could not even write the stop receipt (disk full)")
+        return 4
 
     mode = s.get("mode", "observe")
     day = datetime.now().date().isoformat()
