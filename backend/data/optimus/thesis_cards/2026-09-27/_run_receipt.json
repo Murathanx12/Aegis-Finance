@@ -1,0 +1,2624 @@
+{
+ "receipt": "thesis_cards_run",
+ "day": "2026-09-27",
+ "model": "deepseek/deepseek-flash",
+ "cap_usd": 5.0,
+ "max_quests": 60,
+ "parallel": 3,
+ "n_universe": 60,
+ "n_skipped_existing": 0,
+ "n_todo": 60,
+ "cut_by_max_quests": [],
+ "done": [
+  "MU",
+  "VRT",
+  "GEV",
+  "NVT",
+  "TSM",
+  "HOOD",
+  "AVGO",
+  "CLS",
+  "MP",
+  "BE",
+  "NOVT",
+  "WST",
+  "VRTX",
+  "COGT",
+  "DKNG",
+  "VKTX",
+  "LEU",
+  "CCJ",
+  "AGIO",
+  "IONQ",
+  "RGEN",
+  "BBIO",
+  "NVEC",
+  "MAN",
+  "PRAX",
+  "RHI",
+  "ACI",
+  "PEGA",
+  "IRDM",
+  "HELE",
+  "AGYS",
+  "PRGS",
+  "SMPL",
+  "QUBT",
+  "AARD",
+  "SLDP",
+  "BHVN",
+  "AAPL",
+  "AMGN",
+  "BA",
+  "BN",
+  "HWM",
+  "CRM",
+  "BSP",
+  "LNG",
+  "NOW",
+  "NVO",
+  "SNOW",
+  "PSNL",
+  "VG",
+  "WDAY",
+  "NVDA",
+  "SNDR",
+  "INCY",
+  "META",
+  "AVPT",
+  "AMZN",
+  "GOOGL"
+ ],
+ "refused": [
+  "TEM",
+  "JAZZ"
+ ],
+ "state": "DONE",
+ "forecast_rows_written": 116,
+ "evidence": {
+  "MU": {
+   "n_claims": 22,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 14,
+   "claims_written": 22,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 8,
+    "written": 8,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 14,
+   "untyped_claims": {
+    "accepted": 14,
+    "written": 14,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   }
+  },
+  "VRT": {
+   "n_claims": 27,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 13,
+   "claims_written": 27,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 3,
+    "written": 3,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 24,
+   "untyped_claims": {
+    "accepted": 37,
+    "written": 23,
+    "duplicates": 14,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "GEV": {
+   "n_claims": 20,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 11,
+   "claims_written": 20,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 9,
+    "written": 9,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 11,
+   "untyped_claims": {
+    "accepted": 48,
+    "written": 11,
+    "duplicates": 37,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "NVT": {
+   "n_claims": 26,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 16,
+   "claims_written": 26,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 8,
+    "written": 8,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 18,
+   "untyped_claims": {
+    "accepted": 66,
+    "written": 18,
+    "duplicates": 48,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "TSM": {
+   "n_claims": 26,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 14,
+   "claims_written": 26,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 11,
+    "written": 11,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 15,
+   "untyped_claims": {
+    "accepted": 81,
+    "written": 15,
+    "duplicates": 66,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "HOOD": {
+   "n_claims": 34,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 24,
+   "claims_written": 34,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 6,
+    "written": 6,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 28,
+   "untyped_claims": {
+    "accepted": 109,
+    "written": 28,
+    "duplicates": 81,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "AVGO": {
+   "n_claims": 25,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 14,
+   "claims_written": 25,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 11,
+    "written": 11,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 14,
+   "untyped_claims": {
+    "accepted": 123,
+    "written": 14,
+    "duplicates": 109,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "CLS": {
+   "n_claims": 26,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 7,
+   "claims_written": 26,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 13,
+    "written": 13,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 13,
+   "untyped_claims": {
+    "accepted": 136,
+    "written": 13,
+    "duplicates": 123,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "MP": {
+   "n_claims": 27,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 18,
+   "claims_written": 27,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 8,
+    "written": 8,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 19,
+   "untyped_claims": {
+    "accepted": 155,
+    "written": 19,
+    "duplicates": 136,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "BE": {
+   "n_claims": 18,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 10,
+   "claims_written": 18,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 3,
+    "written": 3,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 15,
+   "untyped_claims": {
+    "accepted": 170,
+    "written": 15,
+    "duplicates": 155,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "NOVT": {
+   "n_claims": 18,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 9,
+   "claims_written": 18,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 4,
+    "written": 4,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 14,
+   "untyped_claims": {
+    "accepted": 184,
+    "written": 14,
+    "duplicates": 170,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "WST": {
+   "n_claims": 24,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 14,
+   "claims_written": 24,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 1,
+    "written": 1,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 23,
+   "untyped_claims": {
+    "accepted": 207,
+    "written": 23,
+    "duplicates": 184,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "VRTX": {
+   "n_claims": 25,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 11,
+   "claims_written": 25,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 13,
+    "written": 13,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 12,
+   "untyped_claims": {
+    "accepted": 219,
+    "written": 12,
+    "duplicates": 207,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "COGT": {
+   "n_claims": 16,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 4,
+   "claims_written": 16,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 8,
+    "written": 8,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 8,
+   "untyped_claims": {
+    "accepted": 227,
+    "written": 8,
+    "duplicates": 219,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "DKNG": {
+   "n_claims": 22,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 17,
+   "claims_written": 22,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 3,
+    "written": 3,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 19,
+   "untyped_claims": {
+    "accepted": 246,
+    "written": 19,
+    "duplicates": 227,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "VKTX": {
+   "n_claims": 12,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 9,
+   "claims_written": 12,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 2,
+    "written": 2,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 10,
+   "untyped_claims": {
+    "accepted": 256,
+    "written": 10,
+    "duplicates": 246,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "LEU": {
+   "n_claims": 21,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 10,
+   "claims_written": 21,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 7,
+    "written": 7,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 14,
+   "untyped_claims": {
+    "accepted": 270,
+    "written": 14,
+    "duplicates": 256,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "CCJ": {
+   "n_claims": 22,
+   "n_future_refused": 1,
+   "n_already_written": 0,
+   "n_untyped": 11,
+   "claims_written": 21,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 10,
+    "written": 10,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 11,
+   "untyped_claims": {
+    "accepted": 281,
+    "written": 11,
+    "duplicates": 270,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "AGIO": {
+   "n_claims": 25,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 13,
+   "claims_written": 25,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 7,
+    "written": 7,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 18,
+   "untyped_claims": {
+    "accepted": 299,
+    "written": 18,
+    "duplicates": 281,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "IONQ": {
+   "n_claims": 27,
+   "n_future_refused": 1,
+   "n_already_written": 0,
+   "n_untyped": 17,
+   "claims_written": 26,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 8,
+    "written": 8,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 18,
+   "untyped_claims": {
+    "accepted": 317,
+    "written": 18,
+    "duplicates": 299,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "RGEN": {
+   "n_claims": 20,
+   "n_future_refused": 2,
+   "n_already_written": 0,
+   "n_untyped": 8,
+   "claims_written": 18,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 5,
+    "written": 5,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 13,
+   "untyped_claims": {
+    "accepted": 330,
+    "written": 13,
+    "duplicates": 317,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "BBIO": {
+   "n_claims": 27,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 19,
+   "claims_written": 27,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 4,
+    "written": 4,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 23,
+   "untyped_claims": {
+    "accepted": 353,
+    "written": 23,
+    "duplicates": 330,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "NVEC": {
+   "n_claims": 16,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 10,
+   "claims_written": 16,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 5,
+    "written": 5,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 11,
+   "untyped_claims": {
+    "accepted": 364,
+    "written": 11,
+    "duplicates": 353,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "MAN": {
+   "n_claims": 27,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 16,
+   "claims_written": 27,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 11,
+    "written": 11,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 16,
+   "untyped_claims": {
+    "accepted": 380,
+    "written": 16,
+    "duplicates": 364,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "PRAX": {
+   "n_claims": 13,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 7,
+   "claims_written": 13,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 4,
+    "written": 4,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 9,
+   "untyped_claims": {
+    "accepted": 389,
+    "written": 9,
+    "duplicates": 380,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "RHI": {
+   "n_claims": 17,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 11,
+   "claims_written": 17,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 4,
+    "written": 4,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 13,
+   "untyped_claims": {
+    "accepted": 402,
+    "written": 13,
+    "duplicates": 389,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "ACI": {
+   "n_claims": 14,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 8,
+   "claims_written": 14,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 1,
+    "written": 1,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 13,
+   "untyped_claims": {
+    "accepted": 415,
+    "written": 13,
+    "duplicates": 402,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "PEGA": {
+   "n_claims": 18,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 14,
+   "claims_written": 18,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 3,
+    "written": 3,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 15,
+   "untyped_claims": {
+    "accepted": 430,
+    "written": 15,
+    "duplicates": 415,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "IRDM": {
+   "n_claims": 26,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 16,
+   "claims_written": 26,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 9,
+    "written": 9,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 17,
+   "untyped_claims": {
+    "accepted": 447,
+    "written": 17,
+    "duplicates": 430,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "HELE": {
+   "n_claims": 21,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 8,
+   "claims_written": 21,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 10,
+    "written": 10,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 11,
+   "untyped_claims": {
+    "accepted": 458,
+    "written": 11,
+    "duplicates": 447,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "AGYS": {
+   "n_claims": 23,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 18,
+   "claims_written": 23,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 1,
+    "written": 1,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 22,
+   "untyped_claims": {
+    "accepted": 480,
+    "written": 22,
+    "duplicates": 458,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "PRGS": {
+   "n_claims": 19,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 12,
+   "claims_written": 19,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 2,
+    "written": 2,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 17,
+   "untyped_claims": {
+    "accepted": 497,
+    "written": 17,
+    "duplicates": 480,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "SMPL": {
+   "n_claims": 24,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 11,
+   "claims_written": 24,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 4,
+    "written": 4,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 20,
+   "untyped_claims": {
+    "accepted": 517,
+    "written": 20,
+    "duplicates": 497,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "QUBT": {
+   "n_claims": 21,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 13,
+   "claims_written": 21,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 7,
+    "written": 7,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 14,
+   "untyped_claims": {
+    "accepted": 531,
+    "written": 14,
+    "duplicates": 517,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "AARD": {
+   "n_claims": 27,
+   "n_future_refused": 1,
+   "n_already_written": 0,
+   "n_untyped": 15,
+   "claims_written": 26,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 11,
+    "written": 11,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 15,
+   "untyped_claims": {
+    "accepted": 546,
+    "written": 15,
+    "duplicates": 531,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "SLDP": {
+   "n_claims": 18,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 8,
+   "claims_written": 18,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 6,
+    "written": 6,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 12,
+   "untyped_claims": {
+    "accepted": 558,
+    "written": 12,
+    "duplicates": 546,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "BHVN": {
+   "n_claims": 19,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 16,
+   "claims_written": 19,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 2,
+    "written": 2,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 17,
+   "untyped_claims": {
+    "accepted": 575,
+    "written": 17,
+    "duplicates": 558,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "AAPL": {
+   "n_claims": 22,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 15,
+   "claims_written": 22,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 3,
+    "written": 3,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 19,
+   "untyped_claims": {
+    "accepted": 594,
+    "written": 19,
+    "duplicates": 575,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "AMGN": {
+   "n_claims": 25,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 14,
+   "claims_written": 25,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 6,
+    "written": 6,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 19,
+   "untyped_claims": {
+    "accepted": 613,
+    "written": 19,
+    "duplicates": 594,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "BA": {
+   "n_claims": 26,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 12,
+   "claims_written": 26,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 13,
+    "written": 13,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 13,
+   "untyped_claims": {
+    "accepted": 626,
+    "written": 13,
+    "duplicates": 613,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "BN": {
+   "n_claims": 20,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 13,
+   "claims_written": 20,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 7,
+    "written": 7,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 13,
+   "untyped_claims": {
+    "accepted": 639,
+    "written": 13,
+    "duplicates": 626,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "HWM": {
+   "n_claims": 25,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 15,
+   "claims_written": 25,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 4,
+    "written": 4,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 21,
+   "untyped_claims": {
+    "accepted": 660,
+    "written": 21,
+    "duplicates": 639,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "CRM": {
+   "n_claims": 19,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 13,
+   "claims_written": 19,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 3,
+    "written": 3,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 16,
+   "untyped_claims": {
+    "accepted": 676,
+    "written": 16,
+    "duplicates": 660,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "BSP": {
+   "n_claims": 19,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 12,
+   "claims_written": 19,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 6,
+    "written": 6,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 13,
+   "untyped_claims": {
+    "accepted": 689,
+    "written": 13,
+    "duplicates": 676,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "LNG": {
+   "n_claims": 23,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 11,
+   "claims_written": 23,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 5,
+    "written": 5,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 18,
+   "untyped_claims": {
+    "accepted": 707,
+    "written": 18,
+    "duplicates": 689,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "NOW": {
+   "n_claims": 26,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 19,
+   "claims_written": 26,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 7,
+    "written": 7,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 19,
+   "untyped_claims": {
+    "accepted": 726,
+    "written": 19,
+    "duplicates": 707,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "NVO": {
+   "n_claims": 21,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 14,
+   "claims_written": 21,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 7,
+    "written": 7,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 14,
+   "untyped_claims": {
+    "accepted": 740,
+    "written": 14,
+    "duplicates": 726,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "SNOW": {
+   "n_claims": 23,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 15,
+   "claims_written": 23,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 5,
+    "written": 5,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 18,
+   "untyped_claims": {
+    "accepted": 758,
+    "written": 18,
+    "duplicates": 740,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "PSNL": {
+   "n_claims": 15,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 8,
+   "claims_written": 15,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 6,
+    "written": 6,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 9,
+   "untyped_claims": {
+    "accepted": 767,
+    "written": 9,
+    "duplicates": 758,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "VG": {
+   "n_claims": 26,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 18,
+   "claims_written": 26,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 3,
+    "written": 3,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 23,
+   "untyped_claims": {
+    "accepted": 790,
+    "written": 23,
+    "duplicates": 767,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "WDAY": {
+   "n_claims": 21,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 11,
+   "claims_written": 21,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 3,
+    "written": 3,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 18,
+   "untyped_claims": {
+    "accepted": 808,
+    "written": 18,
+    "duplicates": 790,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "NVDA": {
+   "n_claims": 21,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 11,
+   "claims_written": 21,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 10,
+    "written": 10,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 11,
+   "untyped_claims": {
+    "accepted": 819,
+    "written": 11,
+    "duplicates": 808,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "SNDR": {
+   "n_claims": 11,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 4,
+   "claims_written": 11,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "accepted": 0,
+    "written": 0,
+    "refused": 0
+   },
+   "n_untyped_claims_ledger_only": 11,
+   "untyped_claims": {
+    "accepted": 830,
+    "written": 11,
+    "duplicates": 819,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "INCY": {
+   "n_claims": 17,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 9,
+   "claims_written": 17,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 5,
+    "written": 5,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 12,
+   "untyped_claims": {
+    "accepted": 842,
+    "written": 12,
+    "duplicates": 830,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "META": {
+   "n_claims": 23,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 11,
+   "claims_written": 23,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 9,
+    "written": 9,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 14,
+   "untyped_claims": {
+    "accepted": 856,
+    "written": 14,
+    "duplicates": 842,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "AVPT": {
+   "n_claims": 26,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 18,
+   "claims_written": 26,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 2,
+    "written": 2,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 24,
+   "untyped_claims": {
+    "accepted": 880,
+    "written": 24,
+    "duplicates": 856,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "AMZN": {
+   "n_claims": 26,
+   "n_future_refused": 1,
+   "n_already_written": 0,
+   "n_untyped": 22,
+   "claims_written": 25,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 3,
+    "written": 3,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 22,
+   "untyped_claims": {
+    "accepted": 902,
+    "written": 22,
+    "duplicates": 880,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  },
+  "GOOGL": {
+   "n_claims": 23,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 18,
+   "claims_written": 23,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-27.jsonl",
+    "accepted": 4,
+    "written": 4,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 19,
+   "untyped_claims": {
+    "accepted": 921,
+    "written": 19,
+    "duplicates": 902,
+    "refused": 1,
+    "refusals": [
+     {
+      "row": {
+       "ticker": "VRT",
+       "event_type": "claim",
+       "source_url": "n/a"
+      },
+      "why": "REFUSED: 'n/a' is not an allowed URL for source_type 'news'. An off-registry URL means the browser wandered, and wandering evidence cannot be attributed."
+     }
+    ]
+   }
+  }
+ },
+ "promises": {
+  "MU": {
+   "n_promises": 5,
+   "promises_written": 0,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 5,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "VRT": {
+   "n_promises": 8,
+   "promises_written": 8,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "GEV": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "NVT": {
+   "n_promises": 7,
+   "promises_written": 7,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "TSM": {
+   "n_promises": 8,
+   "promises_written": 8,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "HOOD": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "AVGO": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "CLS": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "MP": {
+   "n_promises": 7,
+   "promises_written": 7,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "BE": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "NOVT": {
+   "n_promises": 6,
+   "promises_written": 6,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "WST": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "VRTX": {
+   "n_promises": 7,
+   "promises_written": 7,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "COGT": {
+   "n_promises": 6,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 1,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "DKNG": {
+   "n_promises": 4,
+   "promises_written": 4,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "VKTX": {
+   "n_promises": 3,
+   "promises_written": 3,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "LEU": {
+   "n_promises": 6,
+   "promises_written": 6,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "CCJ": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "AGIO": {
+   "n_promises": 4,
+   "promises_written": 4,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "IONQ": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "RGEN": {
+   "n_promises": 4,
+   "promises_written": 4,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "BBIO": {
+   "n_promises": 7,
+   "promises_written": 7,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "NVEC": {
+   "n_promises": 4,
+   "promises_written": 4,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "MAN": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "PRAX": {
+   "n_promises": 6,
+   "promises_written": 6,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "RHI": {
+   "n_promises": 4,
+   "promises_written": 4,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "ACI": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "PEGA": {
+   "n_promises": 3,
+   "promises_written": 3,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "IRDM": {
+   "n_promises": 6,
+   "promises_written": 6,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "HELE": {
+   "n_promises": 7,
+   "promises_written": 7,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "AGYS": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "PRGS": {
+   "n_promises": 4,
+   "promises_written": 4,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "SMPL": {
+   "n_promises": 9,
+   "promises_written": 9,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "QUBT": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "AARD": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "SLDP": {
+   "n_promises": 9,
+   "promises_written": 9,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "BHVN": {
+   "n_promises": 7,
+   "promises_written": 7,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "AAPL": {
+   "n_promises": 3,
+   "promises_written": 3,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "AMGN": {
+   "n_promises": 6,
+   "promises_written": 6,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "BA": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "BN": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "HWM": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "CRM": {
+   "n_promises": 7,
+   "promises_written": 7,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "BSP": {
+   "n_promises": 4,
+   "promises_written": 4,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "LNG": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "NOW": {
+   "n_promises": 4,
+   "promises_written": 4,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "NVO": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "SNOW": {
+   "n_promises": 3,
+   "promises_written": 3,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "PSNL": {
+   "n_promises": 3,
+   "promises_written": 3,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "VG": {
+   "n_promises": 7,
+   "promises_written": 7,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "WDAY": {
+   "n_promises": 7,
+   "promises_written": 7,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "NVDA": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "SNDR": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "INCY": {
+   "n_promises": 4,
+   "promises_written": 4,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "META": {
+   "n_promises": 6,
+   "promises_written": 6,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "AVPT": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "AMZN": {
+   "n_promises": 6,
+   "promises_written": 6,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  },
+  "GOOGL": {
+   "n_promises": 3,
+   "promises_written": 3,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  }
+ },
+ "spent_usd_before_last_admit": 3.211927,
+ "spent_usd_today": 3.3755040000000003,
+ "digest": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\2026-09-27\\DIGEST.md"
+}
