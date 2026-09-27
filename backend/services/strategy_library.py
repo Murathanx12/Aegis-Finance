@@ -1422,6 +1422,8 @@ def dev_selected_sealed_evaluated(rows: list, *, n_blocks: int | None = None,
             out[f"n_beat_{bn}_in_both_windows"] = int(sum(
                 1 for r in have if r[f"dev_vs_{bn}"] > 0 and r[f"sealed_vs_{bn}"] > 0))
             out[f"n_rules_with_{bn}"] = len(have)
+            out[f"{bn}_status"] = (f"ON_ROWS (n_controls={len(RANDOM_PANEL_RULES)})"
+                                   if bn == "random_panel" else f"ON_ROWS (n_rules={len(have)})")
         else:
             out[f"n_beat_{bn}_in_both_windows"] = None
             out[f"{bn}_status"] = (f"NOT_ON_ROWS: no row carries dev_vs_{bn} and sealed_vs_{bn} "
@@ -1494,7 +1496,9 @@ def random_panel(net) -> "_pd.Series":
 def panel_benchmarks(net, masks: dict, benches: dict) -> dict:
     """{f"{window}_vs_{name}": rule CAGR - benchmark CAGR} over the rule's own
     months in each window. A benchmark that is None, or has a hole inside the
-    rule's months, gives None plus a `_why` naming it (never a partial CAGR)."""
+    rule's months, gives None plus a `_why` naming it (never a partial CAGR).
+    A benchmark given as a STRING is a refusal already named by the caller
+    (e.g. `RANDOM_PANEL_MEMBER` for the panel's own legs): None + that reason."""
     out: dict = {}
     for w, mk in masks.items():
         y = net[_np.asarray(mk)].dropna()
@@ -1506,6 +1510,9 @@ def panel_benchmarks(net, masks: dict, benches: dict) -> dict:
                 continue
             if b is None:
                 out[key], out[f"{key}_why"] = None, f"{name.upper()}_SERIES_MISSING"
+                continue
+            if isinstance(b, str):
+                out[key], out[f"{key}_why"] = None, b
                 continue
             bb = b.reindex(y.index)
             if bb.isna().any():
@@ -2411,7 +2418,7 @@ def _window_stats(net, spy, active) -> dict:
 
 def evaluate(monthly, spy, *, hold_months: int = 1,
              registered_utc: str = REGISTERED_2026_09_26,
-             since: str = "2020-01-01") -> dict:
+             since: str = "2020-01-01", iwm=None, random_panel=None) -> dict:
     """Every number the leaderboard may show about one (rule, k) cell.
 
     `monthly`: `run_strategy`'s frame. `spy`: the market's return over the SAME
@@ -2419,6 +2426,13 @@ def evaluate(monthly, spy, *, hold_months: int = 1,
     By year first, then leave-one-year-out, the t on horizon-wide blocks,
     Sharpe with its block count, and the since-2020 line -- labelled HINDSIGHT
     for every month before `registered_utc`, with the quotable remainder apart.
+
+    `iwm` / `random_panel`: the panel-relative hurdles beside SPY (monthly
+    series on the same decision-date grid, or a string naming why the caller
+    has none). `dev_vs_iwm` / `sealed_vs_iwm` / `dev_vs_random_panel` /
+    `sealed_vs_random_panel` are set on EVERY cell, exactly as `dev_vs_spy`
+    is; an absent series is None plus `*_why` = `IWM_SERIES_MISSING` /
+    `RANDOM_PANEL_SERIES_MISSING`, never a silent None.
     """
     if monthly is None or len(monthly) == 0:
         return {"status": "REFUSED", "why": "no month had k selectable names"}
@@ -2531,6 +2545,10 @@ def evaluate(monthly, spy, *, hold_months: int = 1,
     out["sealed_spy_cagr"] = out["sealed_window"]["spy_cagr"]
     out["sealed_vs_spy"] = out["sealed_window"]["vs_spy"]
     out["n_sealed_months"] = out["sealed_window"]["n_months"]
+    # PANEL-RELATIVE HURDLES, computed live (review 2026-09-27 §2): the same
+    # months of each window, a hole or an absent series refused by name.
+    out.update(panel_benchmarks(m["net"], {"dev": wins["dev"], "sealed": wins["sealed"]},
+                                {"iwm": iwm, "random_panel": random_panel}))
     out["recent_126_return"] = out["recent_window"]["cum"]
     out["recent_126_spy"] = out["recent_window"]["spy_cum"]
     out["recent_126_vs_spy"] = ((out["recent_126_return"] - out["recent_126_spy"])

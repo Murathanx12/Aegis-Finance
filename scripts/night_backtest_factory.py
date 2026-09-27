@@ -881,6 +881,92 @@ def spy_leg(panel: pd.DataFrame, W: dict | None = None, *, market: str = "SPY",
                "market_benchmark": b.stamp()}
 
 
+def _compound_onto(r: pd.Series, dates: pd.DatetimeIndex) -> pd.Series:
+    """Daily returns compounded over (month-end, next month-end], keyed by the
+    period's START decision date -- `spy_leg`'s canonical construction."""
+    r = r.copy()
+    r.index = pd.DatetimeIndex(r.index).tz_localize(None) if getattr(
+        r.index, "tz", None) else pd.DatetimeIndex(r.index)
+    vals = {}
+    for a, z in zip(dates[:-1], dates[1:]):
+        seg = r[(r.index > a) & (r.index <= z)]
+        vals[a] = float(np.prod(1.0 + seg.to_numpy()) - 1.0) if len(seg) else np.nan
+    return pd.Series(vals, dtype=float)
+
+
+def iwm_leg(panel: pd.DataFrame, W: dict | None = None, *, network: bool = True,
+            ticker: str = "IWM") -> tuple[pd.Series, dict]:
+    """IWM total return over each decision period, on the SPY leg's grid.
+
+    Canonical: `learner.benchmark`'s adjusted-close total return (the one
+    ruler's network path). Fallback: the survivorship-free bars (vendor
+    adjustment = split + dividend), open-to-open on the strategy's entry
+    sessions -- `spy_leg`'s fallback, same shape. Neither available: REFUSED
+    by name (`IWM_SERIES_MISSING`), never a silent None.
+
+    (`global_prices` was the planned source; its cache holds SMH/MTUM but not
+    IWM, and it is UNADJUSTED -- no dividends -- so not a total return.)
+    """
+    from learner import benchmark as bm
+    dates = pd.DatetimeIndex(sorted(panel.loc[panel["is_month_end"], "date"].unique()))
+    refusal = None
+    if network:
+        try:
+            b = bm._yf_total_return(ticker, f"{ticker.lower()}_tr_yf_adjclose",
+                                    str((dates.min() - pd.Timedelta(days=10)).date()), None)
+            s = _compound_onto(b.returns, dates)
+            return s, {"source": f"{ticker.lower()}_tr_yf_adjclose", "status": "OK",
+                       "alignment": "daily total return compounded over (month-end, next month-end]"}
+        except bm.BenchmarkUnavailable as e:
+            refusal = str(e)
+    if W is not None and ticker in set(np.asarray(W["symbols"]).tolist()):
+        cal, O, C = W["dates"], W["open"], W["close"]
+        m_i = int(np.searchsorted(W["symbols"], ticker))
+        idx = {d: i for i, d in enumerate(cal)}
+        vals = {}
+        for a, z in zip(dates[:-1], dates[1:]):
+            e0, e1 = idx[a] + 1, idx[z] + 1
+            if e1 < len(cal):
+                p0 = O[e0, m_i] if np.isfinite(O[e0, m_i]) else C[e0 - 1, m_i]
+                p1 = O[e1, m_i] if np.isfinite(O[e1, m_i]) else C[e1 - 1, m_i]
+                vals[a] = float(p1 / p0 - 1.0)
+        s = pd.Series(vals, dtype=float)
+        if s.notna().any():
+            return s, {"source": f"matched:{ticker.lower()}_bars_entry_aligned", "status": "OK",
+                       "canonical_refusal": refusal}
+    raise SL.BenchmarkMissing(
+        f"{ticker}_SERIES_MISSING: canonical {refusal or 'not tried (network off)'}; "
+        f"bars {'absent' if W is None else f'hold no {ticker}'}")
+
+
+def random_panel_leg(panel: pd.DataFrame) -> tuple[pd.Series, dict]:
+    """PASS ONE of the two-pass factory: the random panel's monthly NET series.
+
+    The three all-universe random controls (`SL.RANDOM_PANEL_RULES`) at
+    `SL.RANDOM_PANEL_K`, through the same runner the rules use, averaged month
+    by month (`SL.random_panel`). Every rule in pass two reads it as
+    `dev_vs_random_panel` / `sealed_vs_random_panel`. Refuses by name
+    (`RANDOM_PANEL_MISSING`) when no control can run.
+    """
+    cols, why = {}, {}
+    for rid in SL.RANDOM_PANEL_RULES:
+        try:
+            rule = SL.rule_by_id(rid)
+            m = _value_aware_run(panel, rule, k=SL.RANDOM_PANEL_K,
+                                 scores=SL.selection_scores(panel, rule))
+        except Exception as e:                            # noqa: BLE001 -- named below
+            why[rid] = f"{type(e).__name__}: {e}"
+            continue
+        if m is None or len(m) == 0:
+            why[rid] = "no month had k selectable names"
+            continue
+        cols[f"{rid}@k{SL.RANDOM_PANEL_K}"] = m.set_index("date").sort_index()["net"]
+    net = pd.DataFrame(cols)
+    s = SL.random_panel(net)                             # raises RANDOM_PANEL_MISSING when empty
+    return s, {"status": "OK", "n_controls": len(cols), "controls": sorted(cols),
+               "refused": why, "k": SL.RANDOM_PANEL_K, "n_months": int(s.notna().sum())}
+
+
 # ═════════════════════════════════ the factory ══════════════════════════════
 
 def panel_fingerprint(panel: pd.DataFrame) -> str:
@@ -910,8 +996,19 @@ def _value_aware_run(panel, rule, *, k, scores):
         return EXT.run_value_rule(panel, rule, k=k, scores=scores)
     return SL.run_strategy(panel, rule, k=k, scores=scores)
 
-def evaluate_rule(panel: pd.DataFrame, spy: pd.Series, rule, *, since: str) -> dict:
-    """All breadth cells of one rule; a missing input is a named REFUSAL."""
+def evaluate_rule(panel: pd.DataFrame, spy: pd.Series, rule, *, since: str,
+                  benches: dict | None = None) -> dict:
+    """All breadth cells of one rule; a missing input is a named REFUSAL.
+
+    `benches`: {"iwm": series-or-reason, "random_panel": series-or-reason}
+    from pass one. A random-panel member is never measured against the panel
+    it is a leg of (`RANDOM_PANEL_MEMBER`)."""
+    benches = dict(benches or {})
+    iwm = benches.get("iwm", "IWM_SERIES_MISSING: no IWM leg was passed to the factory")
+    rp = benches.get("random_panel",
+                     "RANDOM_PANEL_SERIES_MISSING: no random panel was passed to the factory")
+    if rule.id in SL.RANDOM_PANEL_RULES:
+        rp = "RANDOM_PANEL_MEMBER: this control is one of the panel's own legs"
     if getattr(rule, "forward_only", False):
         return {"id": rule.id, "status": "REFUSED", "meta": rule.meta(),
                 "why": "FORWARD_ONLY: its input has no history on this panel; it accrues forward"}
@@ -927,7 +1024,8 @@ def evaluate_rule(panel: pd.DataFrame, spy: pd.Series, rule, *, since: str) -> d
         # months after 2026-04-06, where market value is NaN).
         m = _value_aware_run(panel, rule, k=k, scores=sc)
         ev = SL.evaluate(m, spy, hold_months=rule.hold_months,
-                         registered_utc=rule.first_registered_utc, since=since)
+                         registered_utc=rule.first_registered_utc, since=since,
+                         iwm=iwm, random_panel=rp)
         cells[str(k)] = ev
     ok = {k: c for k, c in cells.items() if c.get("status") == "OK"}
     if not ok:
@@ -990,6 +1088,8 @@ def _row(res: dict) -> dict:
         "dev_vs_iwm": c.get("dev_vs_iwm"),
         "sealed_vs_random_panel": c.get("sealed_vs_random_panel"),
         "dev_vs_random_panel": c.get("dev_vs_random_panel"),
+        **{f"{w}_vs_{b}_why": c[f"{w}_vs_{b}_why"] for w in ("dev", "sealed")
+           for b in SL.PANEL_BENCHMARKS if c.get(f"{w}_vs_{b}_why")},
         "cagr_without_best_5_months": c.get("cagr_without_best_5_months"),
         "spy_cagr_same_window": c.get("spy_cagr_same_window"),
         "t_active_horizon_blocks": c.get("t_active_horizon_blocks"),
@@ -1034,8 +1134,15 @@ def run_factory(panel: pd.DataFrame, spy: pd.Series, spy_meta: dict, *,
                 today: date, rules: list | None = None, out: Path | None = None,
                 resume: bool = False, time_box_s: float | None = None,
                 stop_after: int | None = None, since: str | None = None,
-                checkpoint_every: int | None = None, log=print) -> dict:
+                checkpoint_every: int | None = None, log=print,
+                iwm=None, iwm_meta: dict | None = None) -> dict:
     """Evaluate every rule, checkpointing; return the leaderboard dict.
+
+    TWO PASSES. Pass one builds the random panel (`random_panel_leg`: the
+    random controls first); pass two evaluates every rule -- the random
+    controls at the head of the order -- against SPY, `iwm` (a series, or a
+    string naming why there is none; None = `IWM_SERIES_MISSING`) and the
+    panel, so every row carries `*_vs_iwm` and `*_vs_random_panel`.
 
     `stop_after` ends the loop after that many NEW rules as a clean stop (the
     checkpoint is flushed first) -- the STOP file and the time box take the
@@ -1046,9 +1153,25 @@ def run_factory(panel: pd.DataFrame, spy: pd.Series, spy_meta: dict, *,
     out.mkdir(parents=True, exist_ok=True)
     since = since or _cfg.STRATEGY_LIB_SINCE
     every = int(checkpoint_every or _cfg.STRATEGY_LIB_CHECKPOINT_EVERY)
+    # PASS ONE: the random panel, before any rule is read against it.
+    try:
+        rp, rp_meta = random_panel_leg(panel)
+    except SL.BenchmarkMissing as e:
+        rp, rp_meta = str(e), {"status": f"REFUSED: {e}"}
+    if iwm is None:
+        iwm = "IWM_SERIES_MISSING: no IWM leg was passed to the factory"
+    iwm_meta = dict(iwm_meta or ({"status": f"REFUSED: {iwm}"} if isinstance(iwm, str)
+                                 else {"status": "OK", "source": "caller"}))
+    benches = {"iwm": iwm, "random_panel": rp}
+    # PASS TWO: the random controls lead (their rows are the panel's receipt)
+    head = [r for r in rules if r.id in SL.RANDOM_PANEL_RULES]
+    rules = head + [r for r in rules if r.id not in SL.RANDOM_PANEL_RULES]
     config = {"job": JOB, "date": str(today), "library": SL.library_fingerprint(rules),
               "panel": panel_fingerprint(panel), "breadth": list(SL.BREADTH_K),
-              "since": since, "spy_source": spy_meta.get("source")}
+              "since": since, "spy_source": spy_meta.get("source"),
+              "iwm_source": iwm_meta.get("source") or iwm_meta.get("status"),
+              "random_panel": (rp_meta.get("status") if isinstance(rp, str)
+                               else f"n_controls={rp_meta['n_controls']}@k{SL.RANDOM_PANEL_K}")}
     ck = Checkpoint(out / f"checkpoint_{today}.json", config)
     done: dict = {}
     if resume and ck.exists():
@@ -1070,7 +1193,7 @@ def run_factory(panel: pd.DataFrame, spy: pd.Series, spy_meta: dict, *,
         if stop_after is not None and n_new >= stop_after:
             stopped_why = f"stop_after={stop_after}"
             break
-        done[rule.id] = _round(evaluate_rule(panel, spy, rule, since=since))
+        done[rule.id] = _round(evaluate_rule(panel, spy, rule, since=since, benches=benches))
         n_new += 1
         if n_new % every == 0:
             ck.save({"done": done})
@@ -1079,6 +1202,9 @@ def run_factory(panel: pd.DataFrame, spy: pd.Series, spy_meta: dict, *,
     board = leaderboard(done, rules, spy_meta=spy_meta, today=today,
                         partial=stopped_why, since=since)
     board["n_computed_this_run"] = n_new
+    board["benchmarks"] = {"iwm": iwm_meta, "random_panel": rp_meta,
+                           "note": SL.PANEL_BENCHMARK_NOTE,
+                           "order": "two-pass: the random panel first, then every rule"}
     return board
 
 
@@ -2026,6 +2152,11 @@ def main(argv=None) -> int:
     audit = XR.survivorship_audit(last.dropna())
     print(f"  survivorship: {audit['verdict'][:120]}", flush=True)
     spy, spy_meta = spy_leg(panel, W, network=not a.offline)
+    try:
+        iwm, iwm_meta = iwm_leg(panel, W, network=not a.offline)
+    except SL.BenchmarkMissing as e:                      # refused by name, printed
+        iwm, iwm_meta = str(e), {"status": f"REFUSED: {e}"}
+    print(f"  IWM leg: {iwm_meta.get('source') or iwm_meta['status']}", flush=True)
     print(f"  SPY leg: {spy_meta['source']} ({len(spy)} periods)"
           + (f"; canonical refused: {spy_meta.get('canonical_refusal')}" if spy_meta.get("canonical_refusal") else ""),
           flush=True)
@@ -2033,7 +2164,8 @@ def main(argv=None) -> int:
     if a.max_rules:
         rules = rules[: a.max_rules]
     board = run_factory(panel, spy, spy_meta, today=today, rules=rules, out=out,
-                        resume=a.resume, time_box_s=a.minutes * 60 - (time.time() - t0))
+                        resume=a.resume, time_box_s=a.minutes * 60 - (time.time() - t0),
+                        iwm=iwm, iwm_meta=iwm_meta)
     print_top(board)
     books = forward = None
     if not (a.smoke or a.no_freeze):
@@ -2045,6 +2177,9 @@ def main(argv=None) -> int:
     dse = board.get("dev_selected_sealed_evaluated") or {}
     if dse.get("sentence"):
         print("DEV-SELECTED, 2024-26-EVALUATED: " + dse["sentence"], flush=True)
+    for bn in ("spy",) + tuple(SL.PANEL_BENCHMARKS):
+        print(f"  {bn}_status: {dse.get(f'{bn}_status', 'ON_ROWS')}; "
+              f"n_beat_{bn}_in_both_windows: {dse.get(f'n_beat_{bn}_in_both_windows')}", flush=True)
     for k_, g_ in (board.get("control_gaps") or {}).items():
         print(f"CONTROL GAP {k_}: by year {g_['gap_by_year']}; excluding {g_['excluded']}: "
               f"sum {g_['sum_excluding']}", flush=True)
@@ -2070,6 +2205,11 @@ def main(argv=None) -> int:
            "chunk_d_inputs": extra_meta, "objective": board.get("objective"),
            "spy": {k: v for k, v in spy_meta.items() if k != "market_benchmark"},
            "market_benchmark": spy_meta.get("market_benchmark"),
+           "benchmarks": board.get("benchmarks"),
+           "iwm_status": dse.get("iwm_status"),
+           "random_panel_status": dse.get("random_panel_status"),
+           "n_beat_in_both_windows": {bn: dse.get(f"n_beat_{bn}_in_both_windows")
+                                      for bn in ("spy",) + tuple(SL.PANEL_BENCHMARKS)},
            "books": books, "backtest_vs_forward": forward, **paths_out}
     rp, rl = receipt_paths(out, "run", today, run_id)
     atomic_write_json(rp, _round(run), indent=1)

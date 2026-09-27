@@ -463,3 +463,102 @@ def test_a_gate_failure_freezes_a_control_book_not_a_headline(ledger):
     rec = next(r for r in LP.read_books() if r["name"] == out["name"])
     assert rec["kind"] == "control" and rec["freeze_gate"]["label"] == "CONTROL(EFFECTIVE_N)"
     assert "planted" in F._existing_lib_ids(LP.read_books())
+
+
+# ───────────── the IWM and random-panel legs computed on every row (two-pass) ─────────────
+
+def _ew(panel: pd.DataFrame) -> pd.Series:
+    """The panel's own equal-weight monthly return, on the decision-date grid."""
+    return panel.groupby("date")["fwd_ret"].mean().dropna()
+
+
+def test_when_iwm_is_the_panels_own_equal_weight_vs_random_panel_matches_vs_iwm(ledger):
+    """50 names and a k=50 random panel: every control holds the whole panel,
+    so the random panel IS the equal-weight series (net of its small drift
+    costs). Handed that same series as IWM, the two hurdles agree on every row."""
+    p = planted_panel(n_sym=50)
+    spy = planted_spy(p)
+    rules = _library(5)
+    board = F.run_factory(p, spy, _spy_meta(spy), today=TODAY, rules=rules,
+                          out=ledger / "sl", iwm=_ew(p), log=lambda *_: None)
+    assert board["benchmarks"]["random_panel"]["n_controls"] == 3
+    dse = board["dev_selected_sealed_evaluated"]
+    assert dse["iwm_status"].startswith("ON_ROWS")
+    assert dse["random_panel_status"] == "ON_ROWS (n_controls=3)"
+    rows = board["all_rows"]
+    assert rows and all(r["dev_vs_iwm"] is not None and r["sealed_vs_iwm"] is not None
+                        and r["dev_vs_random_panel"] is not None
+                        and r["sealed_vs_random_panel"] is not None for r in rows)
+    for r in rows:
+        assert r["dev_vs_random_panel"] == pytest.approx(r["dev_vs_iwm"], abs=0.01)
+        assert r["sealed_vs_random_panel"] == pytest.approx(r["sealed_vs_iwm"], abs=0.01)
+    # the SPY leg is untouched beside them
+    assert all(r["dev_vs_spy"] is not None for r in rows)
+
+
+def test_a_missing_iwm_is_refused_by_name_on_every_row(ledger):
+    p = planted_panel(n_sym=50)
+    spy = planted_spy(p)
+    board = F.run_factory(p, spy, _spy_meta(spy), today=TODAY, rules=_library(3),
+                          out=ledger / "sl", log=lambda *_: None)
+    for r in board["all_rows"]:
+        assert r["dev_vs_iwm"] is None and r["sealed_vs_iwm"] is None
+        assert r["dev_vs_iwm_why"].startswith("IWM_SERIES_MISSING")
+        assert r["sealed_vs_iwm_why"].startswith("IWM_SERIES_MISSING")
+    assert board["dev_selected_sealed_evaluated"]["iwm_status"].startswith("NOT_ON_ROWS")
+    assert board["benchmarks"]["iwm"]["status"].startswith("REFUSED: IWM_SERIES_MISSING")
+    # the leg itself refuses by name when neither network nor bars can price it
+    dates = pd.bdate_range("2019-01-01", "2020-12-31")
+    W = {"dates": pd.DatetimeIndex(dates), "symbols": np.array(["AAA", "SPY"]),
+         "open": np.ones((len(dates), 2)), "close": np.ones((len(dates), 2))}
+    me = pd.Series(np.arange(len(dates)), index=dates).groupby(dates.to_period("M")).max()
+    panel = pd.DataFrame({"date": dates[me.to_numpy()], "is_month_end": True})
+    with pytest.raises(SL.BenchmarkMissing, match="IWM_SERIES_MISSING"):
+        F.iwm_leg(panel, W, network=False)
+    with pytest.raises(SL.BenchmarkMissing, match="IWM_SERIES_MISSING"):
+        F.iwm_leg(panel, None, network=False)
+
+
+def test_the_iwm_leg_prices_from_the_bars_offline():
+    dates = pd.bdate_range("2019-01-01", "2020-12-31")
+    px = np.cumprod(1 + np.full((len(dates), 2), 0.0004), axis=0) * 100
+    W = {"dates": pd.DatetimeIndex(dates), "symbols": np.array(["IWM", "SPY"]),
+         "open": px, "close": px}
+    me = pd.Series(np.arange(len(dates)), index=dates).groupby(dates.to_period("M")).max()
+    panel = pd.DataFrame({"date": dates[me.to_numpy()], "is_month_end": True})
+    s, meta = F.iwm_leg(panel, W, network=False)
+    assert meta["source"] == "matched:iwm_bars_entry_aligned"
+    assert len(s) == len(me) - 2 and (s > 0).all()
+
+
+def test_the_random_controls_are_evaluated_before_any_rule(ledger, monkeypatch):
+    """Two passes, pinned: the panel is built first, then the random controls
+    lead the rule order, and each member is refused against its own panel."""
+    p = planted_panel(n_sym=50)
+    spy = planted_spy(p)
+    calls = []
+    real_leg, real_eval = F.random_panel_leg, F.evaluate_rule
+
+    def leg(panel):
+        calls.append("PANEL")
+        return real_leg(panel)
+
+    def ev(panel, spy_, rule, **kw):
+        calls.append(rule.id)
+        assert isinstance(kw["benches"]["random_panel"], pd.Series)
+        return real_eval(panel, spy_, rule, **kw)
+
+    monkeypatch.setattr(F, "random_panel_leg", leg)
+    monkeypatch.setattr(F, "evaluate_rule", ev)
+    ctl = [SL.rule_by_id(r) for r in SL.RANDOM_PANEL_RULES]
+    rules = _library(3) + ctl                    # the controls LAST in the library order
+    board = F.run_factory(p, spy, _spy_meta(spy), today=TODAY, rules=rules,
+                          out=ledger / "sl", iwm=_ew(p), log=lambda *_: None)
+    assert calls[0] == "PANEL"
+    assert calls[1:4] == list(SL.RANDOM_PANEL_RULES)
+    assert set(calls[4:]) == {r.id for r in _library(3)}
+    ctl_rows = {r["id"]: r for r in board["controls"]}
+    for rid in SL.RANDOM_PANEL_RULES:
+        assert ctl_rows[rid]["dev_vs_random_panel"] is None
+        assert ctl_rows[rid]["dev_vs_random_panel_why"].startswith("RANDOM_PANEL_MEMBER")
+        assert ctl_rows[rid]["dev_vs_iwm"] is not None

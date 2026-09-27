@@ -705,3 +705,19 @@ def test_dev_selected_counts_all_three_benchmarks_when_rows_carry_them():
     bare = SL.dev_selected_sealed_evaluated([_lb_row(f"r{i}", 0.1, 0.1) for i in range(3)])
     assert bare["n_beat_iwm_in_both_windows"] is None
     assert bare["iwm_status"].startswith("NOT_ON_ROWS")
+
+
+def test_evaluate_sets_the_panel_hurdles_on_every_cell_as_it_sets_dev_vs_spy():
+    dates = pd.date_range("2019-01-31", "2025-12-31", freq="ME")
+    ev = SL.evaluate(_monthly(dates, [0.02] * len(dates)), pd.Series(0.0, index=dates),
+                     iwm=pd.Series(0.01, index=dates),
+                     random_panel="RANDOM_PANEL_MEMBER: a leg of the panel")
+    c = (1.02 ** 12) - 1
+    assert ev["dev_vs_spy"] == pytest.approx(c)
+    assert ev["dev_vs_iwm"] == pytest.approx(c - ((1.01 ** 12) - 1))
+    assert ev["sealed_vs_iwm"] == pytest.approx(c - ((1.01 ** 12) - 1))
+    assert ev["dev_vs_random_panel"] is None
+    assert ev["dev_vs_random_panel_why"].startswith("RANDOM_PANEL_MEMBER")
+    bare = SL.evaluate(_monthly(dates, [0.02] * len(dates)), pd.Series(0.0, index=dates))
+    assert bare["sealed_vs_iwm"] is None and bare["sealed_vs_iwm_why"] == "IWM_SERIES_MISSING"
+    assert bare["dev_vs_random_panel_why"] == "RANDOM_PANEL_SERIES_MISSING"
