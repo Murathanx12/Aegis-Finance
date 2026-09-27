@@ -1,7 +1,7 @@
 {
  "schema": "bridge/freeze_gate/1",
  "date": "2026-09-27",
- "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-26T182110Z.json",
+ "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-27T082553Z.json",
  "rule": "Every boolean of the freeze rule and the verdict: PASS or CONTROL(reasons).",
  "notes": [
   "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket."
@@ -1529,6 +1529,295 @@
    },
    "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
    "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "at freeze"
+  },
+  "lib_net_raises_ivw_lead_2026-09-27": {
+   "verdict": "PASS",
+   "reasons": [],
+   "label": "PASS",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": true,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "TGT",
+    "max_weight": 0.08619858301240813,
+    "weight_cap": 0.1,
+    "effective_n": 18.423,
+    "max_cluster": [
+     "CRWD",
+     "FTNT",
+     "OKTA",
+     "PANW",
+     "S"
+    ],
+    "max_cluster_share": 0.2111,
+    "pairs_above_rho": [
+     [
+      "CRWD",
+      "FTNT",
+      0.851
+     ],
+     [
+      "CRWD",
+      "OKTA",
+      0.903
+     ],
+     [
+      "CRWD",
+      "PANW",
+      0.9
+     ],
+     [
+      "CRWD",
+      "S",
+      0.851
+     ],
+     [
+      "FTNT",
+      "OKTA",
+      0.807
+     ],
+     [
+      "FTNT",
+      "PANW",
+      0.852
+     ],
+     [
+      "FTNT",
+      "S",
+      0.879
+     ],
+     [
+      "PANW",
+      "S",
+      0.844
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 86199.0,
+    "decision_date": "2026-09-27",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "weighted",
+    "family_books_before": 1
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+   "verdict_full_rule": "PASS",
+   "reasons_full_rule": [],
+   "evaluated": "at freeze"
+  },
+  "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "NAME_WEIGHT"
+   ],
+   "label": "CONTROL(NAME_WEIGHT)",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": false,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": false
+   },
+   "construction": {
+    "max_name_weight_le_0.10": false,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "JAN",
+    "max_weight": 0.14957261551912382,
+    "weight_cap": 0.1,
+    "effective_n": 15.315,
+    "max_cluster": [
+     "MU",
+     "SNDK"
+    ],
+    "max_cluster_share": 0.0825,
+    "pairs_above_rho": [
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ]
+    ],
+    "earnings_names_over_10pct": {
+     "JAN": {
+      "status": "NOT_DUE",
+      "last_202": "2026-08-04",
+      "due_from": "2026-10-18",
+      "window_end": "2026-10-02",
+      "file_ends": "2026-09-03"
+     }
+    },
+    "largest_name_to_zero_usd": 149573.0,
+    "decision_date": "2026-09-27",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "weighted",
+    "family_books_before": 2
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+   "verdict_full_rule": "CONTROL",
+   "reasons_full_rule": [
+    "MAX_DD",
+    "FAMILY_CAP",
+    "NAME_WEIGHT"
+   ],
+   "evaluated": "at freeze"
+  },
+  "lib_mom_12_1_ivw_lead_2026-09-27__control": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "NAME_WEIGHT"
+   ],
+   "label": "CONTROL(NAME_WEIGHT)",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": false,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": false
+   },
+   "construction": {
+    "max_name_weight_le_0.10": false,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "JAN",
+    "max_weight": 0.1485069881858898,
+    "weight_cap": 0.1,
+    "effective_n": 15.3,
+    "max_cluster": [
+     "MU",
+     "SNDK"
+    ],
+    "max_cluster_share": 0.0819,
+    "pairs_above_rho": [
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ]
+    ],
+    "earnings_names_over_10pct": {
+     "JAN": {
+      "status": "NOT_DUE",
+      "last_202": "2026-08-04",
+      "due_from": "2026-10-18",
+      "window_end": "2026-10-02",
+      "file_ends": "2026-09-03"
+     }
+    },
+    "largest_name_to_zero_usd": 148507.0,
+    "decision_date": "2026-09-27",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "weighted",
+    "family_books_before": 2
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+   "verdict_full_rule": "CONTROL",
+   "reasons_full_rule": [
+    "MAX_DD",
+    "FAMILY_CAP",
+    "NAME_WEIGHT"
+   ],
+   "evaluated": "at freeze"
+  },
+  "lib_mom_12_1_q_trend_lead_2026-09-27": {
+   "verdict": "PASS",
+   "reasons": [],
+   "label": "PASS",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": false,
+    "max_dd_gt_m40": false,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "AKTS",
+    "max_weight": 0.05,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "MU",
+     "SNDK"
+    ],
+    "max_cluster_share": 0.1,
+    "pairs_above_rho": [
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-27",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "regime_gated",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+   "verdict_full_rule": "CONTROL",
+   "reasons_full_rule": [
+    "TOP5_MONTH_SHARE",
+    "MAX_DD"
+   ],
    "evaluated": "at freeze"
   },
   "lib_mom_12_1_liqw_sealed_2026-09-26__ew": {

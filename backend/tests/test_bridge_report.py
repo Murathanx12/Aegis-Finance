@@ -416,3 +416,155 @@ def test_readme_cites_the_committed_sidecar_for_its_run():
     assert (f"**{bw['spy']['n_beat_both']} / {bw['iwm']['n_beat_both']} / "
             f"{bw['random_panel']['n_beat_both']} of {bw['spy']['n_rules']} rules") in s
     assert "LOO-worst mean active/mo (hold-month key)" in s
+
+
+# ───────────── 2026-09-27: the family pool in the README, and the leads ─────────────
+
+def _fp_fixture(tmp_path, run: str = "RUN") -> None:
+    import json
+
+    def fam(name, mde, ratio, t_dev=0.5, t_sealed=0.5):
+        return {"family": name, "members": [f"{name}_a@k20", f"{name}_b@k20", f"{name}_c@k20"],
+                "vs_random_panel": {"windows": {"sealed": {"pooled": {"mde_80": mde},
+                                                           "se_ratio_pooled_to_single": ratio}}},
+                "rule_minus_twin": {"windows": {"dev": {"pooled": {"t_used": t_dev}},
+                                                "sealed": {"pooled": {"t_used": t_sealed}}}}}
+    fp = {"run_id": run, "n_families_pooled": 3, "n_primary_cells": 12,
+          "alpha_both_windows_mean": {"random_panel": [], "spy": ["value"]},
+          "pooled_median_mde_vs_panel": {"sealed": 0.02},
+          "single_rule_reference": {"sealed": {"median_mde_mean_vs_panel": 0.03}},
+          "rule_minus_twin_t_ge_2_both_windows": ["weighted"],
+          "dsr_at_n_families": {"twin": {"weighted": 0.8, "value": 0.1, "momentum": 0.2}},
+          "rows": [fam("weighted", 0.011, 0.6, 2.1, 2.3), fam("value", 0.03, 0.8),
+                   fam("momentum", 0.045, 0.9)]}
+    mt = {"run_id": run, "n_primary_cells": 12,
+          "summary": {"sealed": {"n_cells": 12, "median_rule_minus_twin": -0.004,
+                                 "median_rule_minus_random_1": 0.05, "median_share_removed": 0.6,
+                                 "n_rule_minus_twin_gt_0": 5},
+                      "dev": {"n_t_twin21_ge_2": 3}},
+          "cells_t_twin21_ge_2_both_windows": ["momentum_a@k20"]}
+    (tmp_path / f"family_pool_{run}.json").write_text(json.dumps(fp), encoding="utf-8")
+    (tmp_path / f"matched_twins_{run}.json").write_text(json.dumps(mt), encoding="utf-8")
+
+
+def test_family_pool_bullet_renders_every_number_from_the_receipts(tmp_path):
+    _fp_fixture(tmp_path)
+    s = BR.family_pool_bullet("RUN", struct_dir=tmp_path)
+    assert s.startswith("- **Pooled by family")
+    assert "3 families with >= 3 rules" in s and "12 primary cells" in s
+    assert "**0 of 3** show alpha" in s and "**1 of 3** vs SPY" in s
+    assert "+1.10% to +4.50%/month" in s and "median +2.00% vs +3.00%" in s
+    assert "pooled SE 0.80x a single rule's, range 0.60-0.90" in s
+    assert "**-0.4%**/yr against +5.0%" in s and "removes a median 60%" in s
+    assert "5 of 12 cells beat their twin" in s and "1 (`momentum_a@k20`) at t >= 2" in s
+    assert "`weighted` (t 2.10 dev, 2.30 2024-26; DSR 0.80 at n = 3 families)" in s
+    assert "**a lead for forward paper, not a claim**" in s
+    assert "family_pool_RUN.json" in s and "matched_twins_RUN.json" in s
+    leads = {"run_id": "RUN", "entry_session": "2026-09-28", "forward_test": "rule - twin",
+             "books": [{"cell": "weighted_a@k20", "book": "lib_weighted_a_lead_x", "gate": "PASS"}]}
+    s2 = BR.family_pool_bullet("RUN", struct_dir=tmp_path, leads=leads, leads_path="leads.json")
+    assert "`weighted_a@k20` -> `lib_weighted_a_lead_x` (PASS)" in s2 and "`leads.json`" in s2
+    other = dict(leads, run_id="OTHER")               # a log for another run is not cited
+    assert "lib_weighted_a_lead_x" not in BR.family_pool_bullet("RUN", struct_dir=tmp_path,
+                                                                leads=other)
+
+
+def test_family_pool_bullet_refuses_by_name_when_the_receipt_is_missing(tmp_path):
+    with pytest.raises(BR.FamilyPoolMissing, match="family_pool_NONE.json"):
+        BR.family_pool_facts("NONE", tmp_path)
+    s = BR.family_pool_bullet("NONE", struct_dir=tmp_path)
+    assert "NOT RENDERED" in s and "family_pool_NONE.json" in s and "matched_twins_NONE.json" in s
+    assert not re.search(r"\d+\.\d+%", s)             # no pooled number is carried
+
+
+def test_readme_carries_the_family_pool_bullet_of_its_cited_run():
+    import json
+    _bp, board = _cited_board()
+    p = (REPO / "backend" / "data" / "optimus" / "signal_structure"
+         / f"family_pool_{board['run_id']}.json")
+    assert p.exists(), f"no family-pool receipt for the cited run: {p}"
+    fp = json.loads(p.read_text(encoding="utf-8"))
+    s = _readme_section()
+    n = fp["n_families_pooled"]
+    assert f"**{len(fp['alpha_both_windows_mean']['random_panel'])} of {n}** show alpha" in s
+    assert f"**{len(fp['alpha_both_windows_mean']['spy'])} of {n}** vs SPY" in s
+    for fam in fp["rule_minus_twin_t_ge_2_both_windows"]:
+        assert f"`{fam}` (t " in s
+    assert "a lead for forward paper, not a claim" in s
+
+
+def test_weighted_leads_are_the_members_that_beat_their_twin_in_both_windows_by_dev_dsr():
+    st = {"a": {"cell": "a", "beats_twin_both": True, "dev_dsr": 0.1, "dev_dsr_z": -1.0},
+          "b": {"cell": "b", "beats_twin_both": False, "dev_dsr": 0.9, "dev_dsr_z": 1.0},
+          "c": {"cell": "c", "beats_twin_both": True, "dev_dsr": 0.3, "dev_dsr_z": -0.5},
+          "d": {"cell": "d", "beats_twin_both": True, "dev_dsr": 0.05, "dev_dsr_z": -2.0},
+          "e": {"cell": "e", "beats_twin_both": True, "dev_dsr": 0.2, "dev_dsr_z": -0.8}}
+    assert BR.select_weighted_leads(st) == ["c", "e", "a"]          # b fails in one window
+    assert BR.select_weighted_leads(st, k=1) == ["c"]
+
+
+def test_lead_member_stats_split_the_windows_by_entry_date():
+    idx = pd.DatetimeIndex(pd.date_range("2017-01-31", "2026-07-31", freq="BME"), name="decision_date")
+    x = pd.Series(np.where(idx < pd.Timestamp("2023-12-29"), 0.01, -0.01), index=idx)
+    x = x + np.random.default_rng(0).normal(0, 0.001, len(x))
+    tw = pd.DataFrame({("rule_minus_twin21", "r@k20"): x})
+    st = BR.lead_member_stats(["r@k20"], tw, n_trials=10)["r@k20"]
+    assert st["dev_mean"] > 0 > st["sealed_mean"] and st["beats_twin_both"] is False
+    with pytest.raises(BR.FamilyPoolMissing, match="no rule_minus_twin21"):
+        BR.lead_member_stats(["missing@k20"], tw, n_trials=10)
+
+
+def test_a_lead_gate_is_construction_and_timing_and_keeps_the_full_verdict():
+    g = {"verdict": "CONTROL", "reasons": ["MAX_DD", "FAMILY_CAP", "TOP5_MONTH_SHARE"], "label": "x"}
+    lg = BR.lead_gate(g)
+    assert lg["verdict"] == "PASS" and lg["verdict_full_rule"] == "CONTROL"
+    assert lg["reasons_full_rule"] == ["MAX_DD", "FAMILY_CAP", "TOP5_MONTH_SHARE"]
+    lg2 = BR.lead_gate({"verdict": "CONTROL", "reasons": ["MAX_DD", "NAME_WEIGHT", "STALE_BARS"]})
+    assert lg2["verdict"] == "CONTROL" and lg2["label"] == "CONTROL(NAME_WEIGHT, STALE_BARS)"
+
+
+def test_a_lead_carries_its_matched_twin_ranks_twin_and_both_legs():
+    from backend.services import llm_portfolio as LP
+    parent = LP.freeze({"name": "lib_toy_rule_lead_2026-09-27", "kind": "personal",
+                        "objective": "x", "model": "rule:strategy_library:toy_rule",
+                        "positions": [{"ticker": "AAA", "weight": 0.7, "falsifier": "f"},
+                                      {"ticker": "BBB", "weight": 0.3, "falsifier": "f"},
+                                      {"ticker": "CASH", "weight": 0.0, "falsifier": "n/a"}]},
+                       today="2026-09-27")
+    pairs = [("AAA", "EEE", "cell"), ("BBB", "FFF", "band")]
+    tws = BR.lead_twin_books(parent, asof="2026-09-27", ranks=[("CCC", 0.5), ("DDD", 0.5)],
+                             matched=pairs, seed=7, have=set())
+    by = {t["twin"]: t for t in tws}
+    assert set(by) == set(BR.LEAD_TWINS)
+    assert all(t["parent_book_id"] == parent["book_id"] and t["kind"] == "twin" for t in tws)
+    m = {p["ticker"]: p["weight"] for p in by["matched_random"]["positions"]}
+    assert m["EEE"] == pytest.approx(0.7) and m["FFF"] == pytest.approx(0.3)  # the held name's weight
+    assert [p["ticker"] for p in by["iwm"]["positions"]] == ["IWM"]
+    assert {p["ticker"] for p in by["ranks_k1_2k"]["positions"]} == {"CCC", "DDD"}
+    rest = {"ew", "spy", "ranks_k1_2k", "iwm"}
+    only = BR.lead_twin_books(parent, asof="2026-09-27", ranks=[], matched=pairs, seed=7, have=rest)
+    assert [t["twin"] for t in only] == ["matched_random"]
+    with pytest.raises(LP.Refusal, match="no matched twin"):
+        BR.lead_twin_books(parent, asof="2026-09-27", ranks=[], seed=7, have=rest,
+                           matched=[("AAA", None, "none"), ("BBB", "FFF", "band")])
+
+
+def test_the_bridge_lists_each_lead_with_its_cluster_gate_and_twin_ids():
+    doc = {"rows": [{"book": "lib_x_lead", "cluster_full": 7, "gate": "PASS"}],
+           "leads_log": "leads.json",
+           "leads": {"date": "2026-09-27", "entry_session": "2026-09-28", "bars_asof": "2026-09-25",
+                     "run_id": "RUN", "receipts": {}, "selection": {"a_rule": "r"},
+                     "chance": {"expected_cells_by_chance": 0.82, "n_cells": 288, "basis": "b",
+                                "observed": 2},
+                     "gate_scope": "construction + timing", "forward_test": BR.LEAD_FORWARD_TEST,
+                     "books": [{"cell": "x@k20", "source": "a", "book": "lib_x_lead", "book_id": "id1",
+                                "gate": "PASS",
+                                "declared": {"expected_sigma_21_sessions": 0.1,
+                                             "stop": {"level_21_sessions": -0.2},
+                                             "factor_betas": {"betas": {"SPY": 1.0}}},
+                                "twin_ids": {"matched_random": "t1", "iwm": "t2"}}]}}
+    s = "\n".join(BR.render_leads(doc))
+    assert "| `lib_x_lead` (`id1`) | `x@k20` (a) | 7 | PASS | +10.0% | -20.0% |" in s
+    assert "matched_random `t1`" in s and "iwm `t2`" in s
+    assert "about 0.8 of 288 cells" in s and BR.LEAD_FORWARD_TEST in s
+    assert BR.render_leads({"rows": []}) == []

@@ -844,6 +844,7 @@ def render_md(doc: dict) -> str:
                   + 
                   f"Rule: {gl.get('rule')}. Booleans per book: `{gl.get('log')}`. "
                   f"{gl.get('todo', '')}"]
+    L += render_leads(doc)
     L += render_structure(doc)
     vd = doc.get("voided_before_entry") or []
     L += ["", "## Voided before entry (never graded, never deleted)", ""]
@@ -909,6 +910,46 @@ def render_md(doc: dict) -> str:
           "from raw bars, not an independent engine (shares holdings, fills, cost formula).", ""]
     return "\n".join(L)
 
+
+def render_leads(doc: dict) -> list[str]:
+    """The family-pool leads: each book with its cluster, gate, declared
+    exposures and every twin id, and the forward test written before entry."""
+    ld = doc.get("leads") or {}
+    if not ld.get("books"):
+        return []
+    rows = {r["book"]: r for r in doc.get("rows") or []}
+    ch = ld.get("chance") or {}
+    L = ["", "## Leads from the family pool (on the forward clock, not claims)", "",
+         f"Frozen {ld.get('date')} for the {ld.get('entry_session')} open (bars as of "
+         f"{ld.get('bars_asof')}), from run `{ld.get('run_id')}` (`{ld.get('receipts', {}).get('family_pool')}`, "
+         f"`{ld.get('receipts', {}).get('matched_twins')}`; freeze log `{doc.get('leads_log')}`). "
+         f"(a) {ld.get('selection', {}).get('a_rule')}; (b) the cells whose rule - matched twin is "
+         f"t >= 2 in both windows. Chance alone predicts about "
+         f"{ch.get('expected_cells_by_chance', float('nan')):.1f} of {ch.get('n_cells')} cells passing (b) "
+         f"({ch.get('basis')}); {ch.get('observed')} did. The gate on a lead is {ld.get('gate_scope')}.",
+         "", f"**The forward test, declared before entry:** {ld.get('forward_test')}.", "",
+         "| book | cell (source) | cluster | gate | sigma 21 sessions | stop (2 sigma) | beta SPY / IWM-SPY / "
+         "SMH-SPY / MTUM-SPY | sigma rule - twin, 63 sessions | twins |",
+         "|---|---|---|---|---:|---:|---|---:|---|"]
+    for b in ld["books"]:
+        d = b.get("declared") or {}
+        fb = (d.get("factor_betas") or {}).get("betas") or {}
+        be = " / ".join(_f(fb.get(k)) for k in ("SPY", "IWM-SPY", "SMH-SPY", "MTUM-SPY"))
+        tw = {**(b.get("twin_ids_already") or {}), **(b.get("twin_ids") or {})}
+        r = rows.get(b.get("book")) or {}
+        cl = r.get("cluster_full")
+        L.append(f"| `{b.get('book')}` (`{b.get('book_id')}`) | `{b['cell']}` ({b.get('source')}) | "
+                 f"{cl if cl is not None else 'none'} | {r.get('gate') or b.get('gate')} | "
+                 f"{_p(d.get('expected_sigma_21_sessions'))} | "
+                 f"{_p((d.get('stop') or {}).get('level_21_sessions'))} | {be} | "
+                 f"{_p((d.get('sigma_rule_minus_matched_twin') or {}).get('63_sessions'))} | "
+                 + ", ".join(f"{k} `{v}`" for k, v in sorted(tw.items())) + " |")
+    for b in ld["books"]:
+        if b.get("status") == "ALREADY_FROZEN_SAME_HOLDINGS":
+            L.append("")
+            L.append(f"`{b['cell']}` was already frozen with the same holdings as `{b['book']}`; the "
+                     "twins it lacked (ranks k+1..2k, IWM, matched random) were frozen beside it.")
+    return L
 
 def _f(v: Any, fmt: str = "{:.2f}") -> str:
     return "n/a" if v is None or (isinstance(v, float) and not np.isfinite(v)) else fmt.format(v)
@@ -1222,6 +1263,7 @@ def report(*, today: Optional[date] = None, out_md: Path = DOC,
         k: b["void"].get(k) for k in ("reason", "voided_utc", "who")}}
         for b in lib if b.get("void")]
     heads = [r for r in rows if not r.get("strategy_test_for_voided")]
+    leads_doc, leads_path = latest_leads(out_dir)
     gate_log = out_dir / f"freeze_gate_{today}.json"
     gate_doc = {"schema": "bridge/freeze_gate/1", "date": str(today),
                 "leaderboard": board_path, "rule": F.freeze_gate.__doc__.split("\n")[0],
@@ -1254,6 +1296,7 @@ def report(*, today: Optional[date] = None, out_md: Path = DOC,
            "rule": {"trail_sessions": TRAIL_SESSIONS, "trail_sigmas": TRAIL_SIGMAS,
                     "order": list(INVESTIGATION_ORDER), "taxonomy": list(TAXONOMY)},
            "rows": rows, "carried_investigations": carried,
+           "leads": leads_doc, "leads_log": leads_path,
            "probe_rows": probe_rows(books, bars, today=today),
            "probe_note": ("Reviewer H+I's highest-EV experiment (adjudication 2026-09-26 row 5): "
                           "the PROBE names of `decisions/pc_plan/2026-09-25.json` weighted equal / "
@@ -1411,6 +1454,8 @@ def readme_section(board: dict, board_path: str, *, git_hash: Optional[str] = No
           "the full-window DSR top-10. The 2024-26 top rows with a top-5-month share near or above "
           f"1 made their return in a handful of months, and several were flat or negative in dev "
           f"(`{board_path}`)."]
+    ld, ldp = latest_leads(run_id=board.get("run_id"))
+    L.append(family_pool_bullet(str(board.get("run_id")), leads=ld, leads_path=ldp))
     gs = (bridge or {}).get("gate_summary") or {}
     vd = (bridge or {}).get("voided_before_entry") or []
     booked = {r.get("rule") for r in (bridge or {}).get("rows", [])} | {
@@ -1473,6 +1518,114 @@ def readme_block(readme: str) -> str:
     j = readme.index("\n## ", i + len(README_HEADING))
     return readme[i:j]
 
+
+# ─────────────────────── the family pool, in the README ─────────────────────
+
+class FamilyPoolMissing(RuntimeError):
+    """The family-pool (or matched-twin) receipt for the cited run is absent:
+    the README bullet refuses by name instead of carrying a number."""
+
+
+LEAD_FAMILY = "weighted"
+
+
+def family_pool_facts(run_id: str, struct_dir: Optional[Path] = None) -> dict:
+    """Every number of the README's pooled-family bullet, read from
+    `family_pool_<run>.json` and `matched_twins_<run>.json`. Refuses BY NAME
+    (FamilyPoolMissing) when either receipt is absent."""
+    sd = struct_dir or STRUCT_DIR
+    fpp = sd / f"family_pool_{run_id}.json"
+    mtp = sd / f"matched_twins_{run_id}.json"
+    miss = [p for p in (fpp, mtp) if not p.exists()]
+    if miss:
+        raise FamilyPoolMissing("REFUSED: no " + " and no ".join(
+            f"`{_relpath(p)}`" for p in miss) + f" for run {run_id}")
+    fp = json.loads(fpp.read_text(encoding="utf-8"))
+    mt = json.loads(mtp.read_text(encoding="utf-8"))
+    mdes = [r["vs_random_panel"]["windows"]["sealed"]["pooled"]["mde_80"] for r in fp["rows"]]
+    ratios = [r["vs_random_panel"]["windows"]["sealed"]["se_ratio_pooled_to_single"]
+              for r in fp["rows"]]
+    lead = [f for f in fp.get("rule_minus_twin_t_ge_2_both_windows") or []]
+    lead_t: dict = {}
+    for r in fp["rows"]:
+        if r["family"] in lead:
+            w = r["rule_minus_twin"]["windows"]
+            lead_t[r["family"]] = {"dev": w["dev"]["pooled"]["t_used"],
+                                   "sealed": w["sealed"]["pooled"]["t_used"],
+                                   "dsr": (fp.get("dsr_at_n_families") or {}).get("twin", {}).get(r["family"])}
+    s = mt["summary"]["sealed"]
+    return {"fp_path": _relpath(fpp), "mt_path": _relpath(mtp), "run_id": run_id,
+            "n_families": fp["n_families_pooled"], "n_primary": fp["n_primary_cells"],
+            "alpha_panel": list(fp["alpha_both_windows_mean"]["random_panel"]),
+            "alpha_spy": list(fp["alpha_both_windows_mean"]["spy"]),
+            "mde_lo": min(mdes), "mde_hi": max(mdes),
+            "mde_median": fp["pooled_median_mde_vs_panel"]["sealed"],
+            "mde_single": fp["single_rule_reference"]["sealed"]["median_mde_mean_vs_panel"],
+            "ratio_lo": min(ratios), "ratio_hi": max(ratios),
+            "ratio_median": float(np.median(ratios)),
+            "twin_median": s["median_rule_minus_twin"],
+            "random_median": s["median_rule_minus_random_1"],
+            "share_removed": s["median_share_removed"],
+            "n_beat_twin": s["n_rule_minus_twin_gt_0"], "n_cells": s["n_cells"],
+            "cells_t2_both": list(mt.get("cells_t_twin21_ge_2_both_windows") or []),
+            "lead_families": lead, "lead_t": lead_t, "n_fam_dsr": fp["n_families_pooled"]}
+
+
+def latest_leads(out_dir: Optional[Path] = None, run_id: Optional[str] = None) -> tuple[Optional[dict], Optional[str]]:
+    """The newest `bridge/leads_<date>.json` (for `run_id` when given)."""
+    d = out_dir or BRIDGE_DIR
+    for p in sorted(d.glob("leads_*.json"), reverse=True):
+        doc = json.loads(p.read_text(encoding="utf-8"))
+        if run_id is None or doc.get("run_id") == run_id:
+            return doc, _relpath(p)
+    return None, None
+
+
+def family_pool_bullet(run_id: str, *, struct_dir: Optional[Path] = None,
+                       leads: Optional[dict] = None, leads_path: Optional[str] = None) -> str:
+    """The README's pooled-family sentence, every number from the receipts."""
+    try:
+        f = family_pool_facts(run_id, struct_dir)
+    except FamilyPoolMissing as ex:
+        return (f"- **Pooled families: NOT RENDERED.** {ex} (`signal_structure --family-pool` and "
+                "`--matched-twins` write them); no pooled or matched-twin number is quoted here.")
+    fp, mt = f["fp_path"], f["mt_path"]
+
+    def names(xs: list) -> str:
+        return ", ".join(f"`{x}`" for x in xs) if xs else "none"
+    s = (f"- **Pooled by family, no family shows alpha.** The {f['n_primary']} primary cells pooled "
+         f"into one equal-weight series per family ({f['n_families']} families with >= 3 rules): "
+         f"**{len(f['alpha_panel'])} of {f['n_families']}** show alpha (pooled mean t >= 2) in both "
+         f"windows vs the panel's random portfolio and **{len(f['alpha_spy'])} of "
+         f"{f['n_families']}** vs SPY (`{fp}`, `alpha_both_windows_mean`). Pooling buys less power "
+         f"than the family size suggests because members correlate: the pooled 2024-26 MDE is "
+         f"{_p(f['mde_lo'], 2)} to {_p(f['mde_hi'], 2)}/month across families (median "
+         f"{_p(f['mde_median'], 2)} vs {_p(f['mde_single'], 2)} for a single rule; pooled SE "
+         f"{f['ratio_median']:.2f}x a single rule's, range {f['ratio_lo']:.2f}-{f['ratio_hi']:.2f}) (`{fp}`, "
+         "`rows[].vs_random_panel`, the 2024-26 window). Against a characteristic-matched random twin "
+         "(same size band x 63-session vol tercile x 12-1 return tercile, redrawn every rebalance): "
+         f"median rule - twin in 2024-26 is **{_p(f['twin_median'])}**/yr against "
+         f"{_p(f['random_median'])} vs the uniform random draw, so matching on style removes a "
+         f"median {f['share_removed']:.0%} of a rule's excess; {f['n_beat_twin']} of "
+         f"{f['n_cells']} cells beat their twin in 2024-26, and {len(f['cells_t2_both'])} "
+         f"({names(f['cells_t2_both'])}) at t >= 2 in both windows (`{mt}`, `summary`, the 2024-26 window).")
+    for fam in f["lead_families"]:
+        t = f["lead_t"][fam]
+        s += (f" One family's pooled rule - twin clears t >= 2 in both windows: `{fam}` (t "
+              f"{t['dev']:.2f} dev, {t['sealed']:.2f} 2024-26; DSR {t['dsr']:.2f} at n = "
+              f"{f['n_fam_dsr']} families) -- **a lead for forward paper, not a claim** (`{fp}`, "
+              "`rule_minus_twin_t_ge_2_both_windows`).")
+    if not f["lead_families"]:
+        s += (f" No family's pooled rule - twin clears t >= 2 in both windows (`{fp}`, "
+              "`rule_minus_twin_t_ge_2_both_windows`).")
+    if leads and leads.get("run_id") == run_id:
+        bk = [x for x in leads.get("books") or []]
+        if bk:
+            s += (f" The leads go on the forward clock for the {leads.get('entry_session')} open, each "
+                  "with its matched random twin frozen beside it: "
+                  + "; ".join(f"`{x['cell']}` -> `{x['book']}` ({x['gate']})" for x in bk)
+                  + f" (`{leads_path}`; test declared there: {leads.get('forward_test')}).")
+    return s
 
 # ─────────────────────────────── freeze ─────────────────────────────────────
 
@@ -1772,6 +1925,373 @@ def cmd_freeze(a) -> int:
     return rc
 
 
+# ────────────────── leads from the family pool -> forward paper ──────────────
+
+LEADS_MAX_MEMBERS = 3
+LEAD_STOP_SIGMAS = 2.0
+LEAD_FORWARD_TEST = ("rule - matched twin over 21 and 63 sessions; the lead survives if the sign "
+                     "is positive in both and the 63-session z >= 1")
+LEAD_TWINS = ("ew", "ranks_k1_2k", "spy", "iwm", "matched_random")
+LEAD_BETA_ETFS = ("IWM", "SMH", "MTUM")                  # each minus SPY, beside SPY itself
+#: the factory gate's SELECTION reasons: printed on a lead, not applied (the
+#: selection booleans pick the library's headline books; a lead was picked by
+#: the matched-twin read), so a lead's verdict is construction + timing
+LEAD_SELECTION_REASONS = frozenset({
+    "NO_BACKTEST_ROW", "DEV_NOT_ABOVE_SPY", "2024_26_NOT_ABOVE_SPY", "TOP5_MONTH_SHARE", "MAX_DD",
+    "LOO_WORST", "FAMILY_CAP", "DEV_NOT_ABOVE_SPY_UNKNOWN", "2024_26_NOT_ABOVE_SPY_UNKNOWN",
+    "TOP5_MONTH_SHARE_UNKNOWN", "MAX_DD_UNKNOWN", "LOO_WORST_UNKNOWN"})
+
+
+def lead_member_stats(members: list[str], twin_monthly: pd.DataFrame, *,
+                      n_trials: int) -> dict:
+    """cell -> mean monthly rule - twin21 per window, its t, and the DEV-window
+    DSR of that series at `n_trials` (the cells the twin read looked at)."""
+    from backend.services import signal_structure as SS
+    from learner.inference import deflated_sharpe
+    masks = SS.window_masks(pd.DatetimeIndex(twin_monthly.index))
+    out = {}
+    for c in members:
+        col = ("rule_minus_twin21", c)
+        if col not in twin_monthly.columns:
+            raise FamilyPoolMissing(f"REFUSED: {c} has no rule_minus_twin21 series")
+        s = twin_monthly[col]
+        row: dict = {"cell": c}
+        for w in ("dev", "sealed"):
+            x = s[masks[w]].dropna().to_numpy(dtype=float)
+            sd = float(np.std(x, ddof=1)) if len(x) > 1 else float("nan")
+            row[f"{w}_mean"] = float(np.mean(x)) if len(x) else None
+            row[f"{w}_t"] = (float(np.mean(x) / sd * math.sqrt(len(x)))
+                             if len(x) > 1 and sd > 0 else None)
+            row[f"{w}_n"] = int(len(x))
+        d = deflated_sharpe(list(s[masks["dev"]].dropna().to_numpy(dtype=float)), n_trials=n_trials)
+        row["dev_dsr"], row["dev_dsr_z"] = d.get("dsr"), d.get("z")
+        row["beats_twin_both"] = bool((row["dev_mean"] or 0) > 0 and (row["sealed_mean"] or 0) > 0)
+        out[c] = row
+    return out
+
+
+def select_weighted_leads(stats: dict, k: int = LEADS_MAX_MEMBERS) -> list[str]:
+    """Members that beat their matched twin (mean rule - twin21 > 0) in BOTH
+    windows, highest dev DSR first (ties by the DSR's z, then id), at most k."""
+    ok = [s for s in stats.values() if s["beats_twin_both"]]
+    ok.sort(key=lambda s: (-(s["dev_dsr"] or 0.0), -(s["dev_dsr_z"] or -99.0), s["cell"]))
+    return [s["cell"] for s in ok[:k]]
+
+
+def lead_gate(g: dict) -> dict:
+    """The factory gate re-read on construction + timing only; the full-rule
+    verdict, its reasons and every selection boolean stay on the record."""
+    reasons = [r for r in (g.get("reasons") or []) if r not in LEAD_SELECTION_REASONS]
+    return {**g, "verdict": "PASS" if not reasons else "CONTROL", "reasons": reasons,
+            "label": "PASS" if not reasons else f"CONTROL({', '.join(reasons)})",
+            "scope": ("construction + timing (the lead was selected by the matched-twin read, "
+                      "so the selection booleans are printed, not applied)"),
+            "verdict_full_rule": g.get("verdict"), "reasons_full_rule": list(g.get("reasons") or [])}
+
+
+def book_sigma_21(weights: dict, bars: pd.DataFrame, asof: str, n: int = 63) -> Optional[float]:
+    """sqrt(w' S w) x sqrt(21) on the last n daily close-to-close returns."""
+    b = bars[(bars["date"] <= pd.Timestamp(asof)) & bars["symbol"].isin(list(weights))]
+    px = b.pivot_table(index="date", columns="symbol", values="close").sort_index().tail(n + 1)
+    r = px.pct_change().iloc[1:]
+    cols = [t for t in weights if t in r.columns and r[t].notna().sum() >= 40]
+    if not cols:
+        return None
+    w = np.array([weights[t] for t in cols], dtype=float)
+    S = r[cols].cov(min_periods=40).fillna(0.0).to_numpy()
+    return float(math.sqrt(max(float(w @ S @ w), 0.0)) * math.sqrt(21.0))
+
+
+def cell_factor_betas(net: pd.Series, etf: pd.DataFrame) -> dict:
+    """Full-window monthly NET on SPY, IWM-SPY, SMH-SPY, MTUM-SPY."""
+    from backend.services import signal_structure as SS
+    X = pd.concat([etf["SPY"].rename("SPY"), SS.factor_spreads(etf, LEAD_BETA_ETFS)], axis=1)
+    y = net.dropna()
+    try:
+        f = SS.ols(y, X.reindex(y.index))
+    except SS.InsufficientHistory as ex:
+        return {"status": "INSUFFICIENT_HISTORY", "why": str(ex)}
+    return {"status": "OK", "n_months": f["n"], "betas": f["betas"], "t_betas": f["t_betas"],
+            "alpha_monthly": f["alpha_monthly"], "r2": f["r2"],
+            "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"}
+
+
+def lead_declaration(cell: str, weights: dict, bars: pd.DataFrame, asof: str, *,
+                     net: Optional[pd.Series], etf: Optional[pd.DataFrame],
+                     twin_monthly: pd.DataFrame) -> dict:
+    """What the freeze log declares per book BEFORE its first session."""
+    s21 = book_sigma_21(weights, bars, asof)
+    col0 = ("rule_minus_twin0", cell)
+    d0 = twin_monthly[col0].dropna() if col0 in twin_monthly.columns else pd.Series(dtype=float)
+    sd = float(d0.std(ddof=1)) if len(d0) > 1 else None
+    return {
+        "expected_sigma_21_sessions": s21,
+        "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+        "factor_betas": (cell_factor_betas(net, etf) if net is not None and etf is not None
+                         else {"status": "NO_SERIES"}),
+        "stop": {"sigma_units": LEAD_STOP_SIGMAS,
+                 "level_21_sessions": (-LEAD_STOP_SIGMAS * s21) if s21 else None,
+                 "action": ("declared, not traded: a frozen paper book is never re-weighted; a "
+                            "book at or below it on its 21-session return is flagged for review")},
+        "forward_test": LEAD_FORWARD_TEST,
+        "sigma_rule_minus_matched_twin": {
+            "21_sessions": sd, "63_sessions": (sd * math.sqrt(3.0)) if sd else None,
+            "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+            "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"},
+    }
+
+
+def _twin_book(parent: dict, twin: str, positions: list[dict], asof: str, note: str) -> dict:
+    from backend.services import llm_portfolio as LP
+    return LP.freeze({
+        "name": f"{parent['name']}__{twin}", "kind": "twin", "twin": twin,
+        "objective": f"twin of {parent['name']}: {parent['objective']}",
+        "strategy": f"{twin} twin of {parent['book_id']}: {note}"[:2000],
+        "model": "twin", "parent_book_id": parent["book_id"],
+        "parent_kind": parent.get("kind"), "benchmark": parent.get("benchmark"),
+        "horizon_days": parent.get("horizon_days"), "positions": positions}, today=asof)
+
+
+def lead_twin_books(parent: dict, *, asof: str, ranks: list, matched: list, seed: int,
+                    have: set) -> list[dict]:
+    """The twins a lead is graded beside (LEAD_TWINS), minus the types the
+    parent already has. `ranks`: [(ticker, weight)] of ranks k+1..2k;
+    `matched`: `matched_twins.draw_twins` output [(held, twin, level)]."""
+    from backend.services import llm_portfolio as LP
+    names = [p for p in parent["positions"] if p["ticker"] != "CASH"]
+    w = {p["ticker"]: p["weight"] for p in names}
+    out = []
+    if "ew" not in have:
+        out.append(_twin_book(parent, "ew", [{"ticker": p["ticker"], "weight": 1.0 / len(names),
+                                               "thesis": "equal weight"} for p in names], asof,
+                              "the same names, equal weight"))
+    if "ranks_k1_2k" not in have:
+        out.append(_twin_book(parent, "ranks_k1_2k", [
+            {"ticker": t, "weight": wi, "thesis": "the rule's next k names at its own weight rule"}
+            for t, wi in ranks], asof, f"ranks {len(names) + 1}-{2 * len(names)} of the same rule"))
+    if "spy" not in have:
+        out.append(_twin_book(parent, "spy", [{"ticker": "SPY", "weight": 1.0,
+                                                "thesis": "the market"}], asof, "SPY leg"))
+    if "iwm" not in have:
+        out.append(_twin_book(parent, "iwm", [{"ticker": "IWM", "weight": 1.0,
+                                                "thesis": "the small-cap leg"}], asof, "IWM leg"))
+    if "matched_random" not in have:
+        miss = [h for h, tw, _ in matched if tw is None]
+        if miss:
+            raise LP.Refusal(f"REFUSED: no matched twin for {miss}")
+        pos = [{"ticker": tw, "weight": w[h],
+                "thesis": f"matched random twin of {h} ({lv}: size band x vol_63 x mom_252_21 tercile)"}
+               for h, tw, lv in matched]
+        out.append(_twin_book(parent, "matched_random", pos + [
+            {"ticker": "CASH", "weight": 0.0, "thesis": "parent's cash"}], asof,
+            f"characteristic-matched random twin (matched_twins.draw_twins, seed "
+            f"matched_twins.seed_for(cell) = {seed}); the comparison that produced the lead"))
+    return out
+
+
+def cmd_freeze_leads(a) -> int:
+    """Freeze the family-pool leads for the next open (attended; `--dry-run`)."""
+    from scipy import stats as _st
+    from backend.services import llm_portfolio as LP
+    from backend.services import matched_twins as MT
+    from backend.services import strategy_library as SL
+    from scripts import night_backtest_factory as F
+    today = date.fromisoformat(a.today) if a.today else date.today()
+    run = a.run_id
+    bp = LIB_DIR / f"leaderboard_{run}.json"
+    fpp, mtp = STRUCT_DIR / f"family_pool_{run}.json", STRUCT_DIR / f"matched_twins_{run}.json"
+    tmp_ = STRUCT_DIR / f"matched_twins_monthly_{run}.parquet"
+    cmp_ = LIB_DIR / f"cell_monthly_{run}.parquet"
+    miss = [p for p in (bp, fpp, mtp, tmp_, cmp_) if not p.exists()]
+    if miss:
+        raise FamilyPoolMissing("REFUSED: missing " + ", ".join(_relpath(p) for p in miss))
+    board = json.loads(bp.read_text(encoding="utf-8"))
+    fp = json.loads(fpp.read_text(encoding="utf-8"))
+    mt = json.loads(mtp.read_text(encoding="utf-8"))
+    twm = pd.read_parquet(tmp_)
+    if LEAD_FAMILY not in (fp.get("rule_minus_twin_t_ge_2_both_windows") or []):
+        raise FamilyPoolMissing(f"REFUSED: `{LEAD_FAMILY}` is not a lead in {_relpath(fpp)}")
+    fam_row = next(r for r in fp["rows"] if r["family"] == LEAD_FAMILY)
+    stats = lead_member_stats(fam_row["members"], twm, n_trials=mt["n_primary_cells"])
+    picks_a = select_weighted_leads(stats)
+    picks_b = list(mt.get("cells_t_twin21_ge_2_both_windows") or [])
+    n_dev_hits = mt["summary"]["dev"]["n_t_twin21_ge_2"]
+    p_null = float(_st.norm.sf(2.0))
+    chance = {"expected_cells_by_chance": n_dev_hits * p_null,
+              "basis": (f"{n_dev_hits} cells at t >= 2 vs the 21-draw twin in dev x P(t >= 2 | null) "
+                        f"{p_null:.3f} in 2024-26"),
+              "n_cells": mt["n_primary_cells"], "observed": len(picks_b)}
+    print(f"(a) `{LEAD_FAMILY}` members beating the matched twin in both windows, by dev DSR: {picks_a}")
+    print(f"(b) cells with rule - twin t >= 2 in both windows: {picks_b}")
+    print(f"chance: {chance['expected_cells_by_chance']:.2f} of {chance['n_cells']} ({chance['basis']})")
+    cache = Path(a.panel_cache) if a.panel_cache else None
+    if cache is not None and (cache / "panel.parquet").exists() and (cache / "bars.parquet").exists():
+        panel = pd.read_parquet(cache / "panel.parquet")
+        bars = pd.read_parquet(cache / "bars.parquet")
+        print(f"panel from the cache {cache} (written by build_library_panel)")
+    else:
+        panel, bars = build_library_panel()
+    last = panel["date"].max()
+    dpan = panel.loc[panel.index[(panel["date"] == last).to_numpy()]].reset_index(drop=True)
+    pos = {s: j for j, s in enumerate(dpan["symbol"])}
+    cal = pd.DatetimeIndex(sorted(bars.loc[bars["symbol"] == "SPY", "date"].unique()))
+    entry = LP.entry_session(str(today))
+    cm = pd.read_parquet(cmp_)
+    etf_p = STRUCT_DIR / "etf_monthly.parquet"
+    etf = pd.read_parquet(etf_p) if etf_p.exists() else None
+    books = LP.read_books(include_voided=True)
+    by_id = {r["id"]: r for r in board["all_rows"]}
+    cells_tbl = MT.cell_table(dpan)
+    cidx = MT.CellIndex(cells_tbl)
+    log: dict = {"schema": "bridge/leads/1", "date": str(today), "run_id": run,
+                 "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+                 "label": "HINDSIGHT leads: every rule was registered 2026-09-26; nothing here is a claim",
+                 "entry_session": str(entry.date()), "bars_asof": str(pd.Timestamp(last).date()),
+                 "receipts": {"family_pool": _relpath(fpp), "matched_twins": _relpath(mtp),
+                              "matched_twins_monthly": _relpath(tmp_), "leaderboard": _relpath(bp),
+                              "cell_monthly": _relpath(cmp_)},
+                 "selection": {"a_rule": (f"`{LEAD_FAMILY}` members whose mean monthly rule - twin21 is "
+                                          f"> 0 in BOTH windows, highest dev DSR (rule - twin21, dev "
+                                          f"window, n_trials = {mt['n_primary_cells']} cells) first, "
+                                          f"at most {LEADS_MAX_MEMBERS}"),
+                               "a_members": stats, "a_picks": picks_a,
+                               "b_rule": "matched_twins.cells_t_twin21_ge_2_both_windows",
+                               "b_picks": picks_b},
+                 "gate_scope": ("construction + timing (`lead_gate`); the factory's full-rule verdict "
+                                "is kept beside it"),
+                 "chance": chance, "forward_test": LEAD_FORWARD_TEST, "twins": list(LEAD_TWINS),
+                 "books": [], "notes": []}
+    rc = 0
+    frozen_all: list[dict] = []
+    for cell in picks_a + [c for c in picks_b if c not in picks_a]:
+        rid, k = cell.split("@k")[0], int(cell.split("@k")[1])
+        rule = SL.rule_by_id(rid)
+        src = "a" if cell in picks_a else "b"
+        if rule.regime_gate:
+            v = float(dpan[rule.regime_gate].iloc[0]) if rule.regime_gate in dpan.columns else float("nan")
+            if not (np.isfinite(v) and v > 0):
+                log["notes"].append(f"{cell}: regime gate {rule.regime_gate} = {v} at {last}: the rule "
+                                    "holds CASH; not frozen as a stock book")
+                print(log["notes"][-1])
+                continue
+            log["notes"].append(f"{cell}: regime gate {rule.regime_gate} = {v} at "
+                                f"{pd.Timestamp(last).date()}: invested")
+        picks = SL.latest_selection(panel, rule, k=2 * k)
+        top = np.array([pos[p["symbol"]] for p in picks[:k]])
+        nxt = np.array([pos[p["symbol"]] for p in picks[k:]])
+        w = SL._weights(rule, dpan, top)
+        wn = SL._weights(rule, dpan, nxt)
+        weights = {p["symbol"]: float(x) for p, x in zip(picks[:k], w)}
+        r = by_id.get(rid) or {}
+        mrow = next((x for x in mt["rows"] if x["cell"] == cell), {})
+        md, ms = mrow.get("dev") or {}, mrow.get("sealed") or {}
+        name = f"lib_{rid}_lead_{today}"
+        bk = {"name": name, "kind": "personal",
+              "objective": ("Relative P&L of the rule minus its characteristic-matched random twin "
+                            "over 21 and 63 sessions, long-only, $1M (family-pool lead)"),
+              "model": f"rule:strategy_library:{rid}",
+              "strategy": (f"PRODUCT_EXPERIMENT; kind personal. Family-pool LEAD ({src}) `{cell}`: "
+                           f"{rule.description}. Top-{k}, {rule.weight_rule} weight. HINDSIGHT: rule "
+                           f"- matched twin (21 draws) {_p(md.get('mean_monthly_rule_minus_twin21'), 2)}/mo "
+                           f"(t {md.get('t_monthly_rule_minus_twin21', float('nan')):.2f}) dev, "
+                           f"{_p(ms.get('mean_monthly_rule_minus_twin21'), 2)}/mo "
+                           f"(t {ms.get('t_monthly_rule_minus_twin21', float('nan')):.2f}) 2024-26 "
+                           f"({_relpath(mtp)}); bars asof {pd.Timestamp(last).date()}. "
+                           f"Forward test: {LEAD_FORWARD_TEST}. A lead for forward paper, not a claim.")[:2000],
+              "horizon_days": [1, 5, 21, 63, 126],
+              "positions": [{"ticker": p["symbol"], "weight": round(float(x), 8),
+                             "thesis": f"{rule.description}; score {p['score']:.4g}, rank {i + 1} of {k}",
+                             "falsifier": ("the book trails its matched random twin over 21 AND 63 "
+                                           "sessions, or the 63-session z < 1 (docs/BRIDGE.md)")}
+                            for i, (p, x) in enumerate(zip(picks[:k], w))]
+                           + [{"ticker": "CASH", "weight": 0.0, "thesis": "declared: fully invested",
+                               "falsifier": "n/a"}]}
+        # the same holdings already frozen for the same entry session: name it, twin it
+        dup = [b for b in books + frozen_all if b.get("kind") != "twin" and not b.get("void")
+               and str(b.get("name", "")).startswith("lib_")
+               and LP.entry_session(str(b["asof"])) == entry and _same_positions(b, bk)]
+        seed = MT.seed_for(cell)
+        matched, fb = MT.draw_twins(list(weights), cells_tbl, dpan, np.random.default_rng(seed),
+                                    index=cidx)
+        ranks = [(p["symbol"], float(x)) for p, x in zip(picks[k:], wn)]
+        sub = cm[(cm["rule"] == rid) & (cm["k"] == k)]
+        net = (sub.set_index(pd.DatetimeIndex(sub["date"]))["net"].astype(float) if len(sub) else None)
+        decl = lead_declaration(cell, weights, bars, str(today), net=net, etf=etf, twin_monthly=twm)
+        wc = worst_case_weighted(name, weights, LP.START_CAPITAL)
+        print(wc)
+        entry_log: dict = {"cell": cell, "source": src, "rule": rid, "k": k,
+                           "family": r.get("family"), "weights": weights, "worst_case": wc,
+                           "declared": decl, "matched_twin_fallbacks": fb, "matched_twin_seed": seed,
+                           "ranks_k1_2k": dict(ranks),
+                           "matched_twin_pairs": [{"held": h, "twin": t, "level": lv}
+                                                  for h, t, lv in matched]}
+        parent: Optional[dict] = None
+        have: set = set()
+        if dup:
+            parent = dup[0]
+            have = {b.get("twin") for b in books if b.get("parent_book_id") == parent["book_id"]}
+            gl = (parent.get("freeze_gate") or {}).get("label")
+            entry_log.update({"status": "ALREADY_FROZEN_SAME_HOLDINGS",
+                              "gate": gl or ("CONTROL" if parent["name"].endswith("__control")
+                                             else "evaluated by the bridge report"),
+                              "twins_already": sorted(x for x in have if x)})
+            print(f"  {cell}: already frozen with the same holdings as {parent['name']} "
+                  f"({parent['book_id']}); the twins it lacks are added")
+        else:
+            fam_n = sum(1 for b in books + frozen_all if b.get("kind") == "personal" and not b.get("void")
+                        and str(b.get("name", "")).startswith("lib_") and str(b.get("asof")) == str(today)
+                        and (by_id.get(rule_id_of(b)) or {}).get("family") == r.get("family")
+                        and (b.get("freeze_gate") or {}).get("verdict", "PASS") == "PASS")
+            g = F.freeze_gate(r or None, weights, bars, cal, decision_date=today,
+                              family_books_before=fam_n)
+            lg = lead_gate(g)
+            bk["freeze_gate"] = lg
+            bk["strategy"] = (bk["strategy"] + f" Freeze gate (construction + timing): {lg['label']}.")[:2000]
+            if lg["verdict"] != "PASS":
+                bk["name"] = name + "__control"
+                bk["kind"] = "control"
+            print(f"  FREEZE GATE {bk['name']}: {lg['label']} (full rule: {g['label']})")
+            entry_log.update({"status": "NEW", "gate": lg["label"], "gate_detail": lg})
+        entry_log["book"] = parent["name"] if parent else bk["name"]
+        if a.dry_run:
+            log["books"].append(entry_log)
+            continue
+        try:
+            if parent is None:
+                parent = LP.freeze(bk, universe=set(bars["symbol"].unique()), today=str(today))
+                LP.append_book(parent)
+                frozen_all.append(parent)
+                print(f"  FROZEN {parent['name']} {parent['book_id']}")
+            tws = lead_twin_books(parent, asof=str(today), ranks=ranks, matched=matched,
+                                  seed=seed, have=have)
+        except LP.Refusal as ex:
+            print(f"  {cell}: {ex}")
+            entry_log["refused"] = str(ex)
+            log["books"].append(entry_log)
+            rc = 2
+            continue
+        for t in tws:
+            LP.append_book(t)
+            frozen_all.append(t)
+            print(f"    twin {t['twin']:<15} {t['book_id']}  "
+                  f"{', '.join(p['ticker'] for p in t['positions'][:6])}")
+        entry_log.update({"book": parent["name"], "book_id": parent["book_id"],
+                          "twin_ids": {t["twin"]: t["book_id"] for t in tws},
+                          "twin_ids_already": {b.get("twin"): b["book_id"] for b in books
+                                               if b.get("parent_book_id") == parent["book_id"]}})
+        log["books"].append(entry_log)
+    if a.dry_run:
+        print(json.dumps({b["cell"]: {k_: b.get(k_) for k_ in ("status", "book", "gate")}
+                          for b in log["books"]}, indent=1))
+        if getattr(a, "dry_out", None):
+            Path(a.dry_out).write_text(json.dumps(log, indent=1, default=str), encoding="utf-8")
+        return rc
+    BRIDGE_DIR.mkdir(parents=True, exist_ok=True)
+    out = BRIDGE_DIR / f"leads_{today}.json"
+    out.write_text(json.dumps(log, indent=1, default=str), encoding="utf-8")
+    print(f"-> {out}")
+    return rc
+
 def rerender(receipt: Path, *, out_md: Path = DOC, structure: Optional[dict] = None,
              receipt_label: Optional[str] = None) -> dict:
     """Re-render docs/BRIDGE.md from a STORED bridge receipt plus the current
@@ -1791,6 +2311,8 @@ def rerender(receipt: Path, *, out_md: Path = DOC, structure: Optional[dict] = N
                             "sealed": distinct_bets(doc["rows"], "cluster_sealed")}
     doc["cluster_observations"] = cluster_observations(doc["rows"])
     doc["level2_pairs"] = level2_pairs(doc["rows"], st)
+    if "leads" not in doc:
+        doc["leads"], doc["leads_log"] = latest_leads()
     out_md.parent.mkdir(parents=True, exist_ok=True)
     out_md.write_text(render_md(doc), encoding="utf-8")
     return doc
@@ -1820,11 +2342,20 @@ def main(argv=None) -> int:
     sub.add_parser("readme", help="rewrite the README backtest section from the leaderboard receipt")
     rr = sub.add_parser("render", help="re-render docs/BRIDGE.md from a stored bridge receipt (no bars)")
     rr.add_argument("--receipt", default=None, help="bridge_<date>.json (default: the newest)")
+    fl = sub.add_parser("freeze-leads", help="freeze the family-pool leads for the next open (attended)")
+    fl.add_argument("--run-id", default="2026-09-27T082553Z")
+    fl.add_argument("--today", default=None)
+    fl.add_argument("--panel-cache", default=None,
+                    help="a folder with panel.parquet + bars.parquet from build_library_panel")
+    fl.add_argument("--dry-run", action="store_true")
+    fl.add_argument("--dry-out", default=None, help="with --dry-run: write the would-be log here")
     rr.add_argument("--from-head", action="store_true",
                     help="read the receipt as committed at git HEAD, not the working tree")
     a = ap.parse_args(argv)
     if a.cmd == "freeze":
         return cmd_freeze(a)
+    if a.cmd == "freeze-leads":
+        return cmd_freeze_leads(a)
     if a.cmd == "render":
         rp = Path(a.receipt) if a.receipt else sorted(BRIDGE_DIR.glob("bridge_*.json"))[-1]
         label = _relpath(rp)

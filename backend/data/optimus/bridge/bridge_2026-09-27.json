@@ -2,15 +2,15 @@
  "schema": "bridge/1",
  "date": "2026-09-27",
  "licence": "PRODUCT_EXPERIMENT",
- "generated_utc": "2026-09-26T18:51:05+00:00",
- "git_head": "d93f6029",
- "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-26T182110Z.json",
+ "generated_utc": "2026-09-27T08:48:27+00:00",
+ "git_head": "e54551b7",
+ "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-27T082553Z.json",
  "receipt_json": "backend/data/optimus/bridge/bridge_2026-09-27.json",
  "replication": "backend/data/optimus/strategy_library/replication_vectorbt_2026-09-26T164302Z.json",
  "library_facts": {
   "n_rules": 288,
   "n_beat": 110,
-  "median_sealed_vs_spy": -0.034991999999999995,
+  "median_sealed_vs_spy": -0.0349405,
   "best_dsr": 0.198,
   "best_dsr_id": "mom_12_1_q",
   "n_cells": 868,
@@ -136,12 +136,18 @@
    "mean_dev_vs_spy": 0.151865
   },
   "spearman_dev_vs_selection_window": {
-   "rho": 0.205269,
-   "p_value": 0.000455,
+   "rho": 0.204385,
+   "p_value": 0.000482,
    "n": 288
   },
   "n_beat_spy_in_both_windows": 69,
   "n_beat_spy_in_both_windows_top5_lt_0_6_dd_gt_m40": 39,
+  "n_beat_iwm_in_both_windows": 119,
+  "n_rules_with_iwm": 288,
+  "iwm_status": "ON_ROWS (n_rules=288)",
+  "n_beat_random_panel_in_both_windows": 139,
+  "n_rules_with_random_panel": 288,
+  "random_panel_status": "ON_ROWS (n_controls=3)",
   "mde": {
    "active_sigma_monthly_median": 0.054367,
    "n_blocks": 32,
@@ -150,7 +156,7 @@
    "mde_annualised_simple": 0.322922,
    "basis": "median across rules of |mean_active_monthly * sqrt(12) / IR_annual| (the full-window monthly active sigma); SE = sigma / sqrt(blocks); MDE = 2.8 SE (two-sided 5%, 80% power)"
   },
-  "sentence": "Choosing the top 10 rules by dev (pre-2024) results alone gave +8.8 pp/yr mean vs SPY in the 2024-26 selection window (split declared, data seen) (median +2.6 pp; 6 of 10 beat SPY); dev-to-2024-26 rank Spearman 0.21 over 288 rules; 69 rules beat SPY in both windows; the MDE of a 32-block window at 80% power is 2.7%/month."
+  "sentence": "Choosing the top 10 rules by dev (pre-2024) results alone gave +8.8 pp/yr mean vs SPY in the 2024-26 selection window (split declared, data seen) (median +2.6 pp; 6 of 10 beat SPY); dev-to-2024-26 rank Spearman 0.20 over 288 rules; 69 rules beat SPY in both windows, 119 beat IWM, 139 beat the random panel; the MDE of a 32-block window at 80% power is 2.7%/month."
  },
  "n_forward_graded": 0,
  "voided_before_entry": [
@@ -163,8 +169,8 @@
   }
  ],
  "gate_summary": {
-  "n_books": 26,
-  "n_pass": 11,
+  "n_books": 30,
+  "n_pass": 13,
   "pass_but_timing": [],
   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
   "log": "backend/data/optimus/bridge/freeze_gate_2026-09-27.json",
@@ -176,102 +182,102 @@
    {
     "id": "mom_12_1_liqw",
     "n": 31,
-    "alpha": 0.009564491442559888,
-    "t_alpha": 0.4772762690075268,
-    "beta_spy": 0.08726796856074337,
-    "beta_smh": 0.883003412952766,
-    "beta_mom": 1.0077484588822556,
-    "r2": 0.8108493147240465
+    "alpha": 0.009564480967030017,
+    "t_alpha": 0.47727570868127017,
+    "beta_spy": 0.08726978886560977,
+    "beta_smh": 0.8830029935883028,
+    "beta_mom": 1.0077483865612773,
+    "r2": 0.8108493182741225
    },
    {
     "id": "qc372_oversold_snapback_mega",
     "n": 31,
-    "alpha": 0.013840650493524955,
-    "t_alpha": 0.8427010291599037,
-    "beta_spy": 0.8329132521977878,
-    "beta_smh": 0.6156193893955305,
-    "beta_mom": 0.11253436684961121,
-    "r2": 0.5881755288996329
+    "alpha": 0.013840648943733852,
+    "t_alpha": 0.8427007729934374,
+    "beta_spy": 0.8329129725078973,
+    "beta_smh": 0.6156196214599561,
+    "beta_mom": 0.11253425488354474,
+    "r2": 0.5881754433485242
    },
    {
     "id": "rd_intensity",
     "n": 31,
-    "alpha": 0.013836953548087168,
-    "t_alpha": 0.416294287663751,
-    "beta_spy": 0.46002142119678,
-    "beta_smh": 0.8659796480255704,
-    "beta_mom": -0.008992039557339737,
-    "r2": 0.26715875607606765
+    "alpha": 0.01383695440240588,
+    "t_alpha": 0.4162942721109795,
+    "beta_spy": 0.46002095999417303,
+    "beta_smh": 0.865979849772903,
+    "beta_mom": -0.0089920913487892,
+    "r2": 0.2671587400100377
    },
    {
     "id": "rev_5d",
     "n": 31,
-    "alpha": 0.021704683966207953,
-    "t_alpha": 1.429645147812195,
-    "beta_spy": 0.3681470755345166,
-    "beta_smh": 0.3549925418471641,
-    "beta_mom": 0.16356001199421658,
-    "r2": 0.4114852395231674
+    "alpha": 0.02170467268847356,
+    "t_alpha": 1.4296443545584643,
+    "beta_spy": 0.3681488516615243,
+    "beta_smh": 0.35499218871304206,
+    "beta_mom": 0.16355990027297732,
+    "r2": 0.4114853017631963
    },
    {
     "id": "qc623_mom63_liquidity_weighted",
     "n": 31,
-    "alpha": 0.008080006796303711,
-    "t_alpha": 0.3484066180431075,
-    "beta_spy": -0.02833564781920961,
-    "beta_smh": 0.8101963195481816,
-    "beta_mom": 0.7839434037593621,
-    "r2": 0.68195297057726
+    "alpha": 0.00808000975080985,
+    "t_alpha": 0.34840671495173875,
+    "beta_spy": -0.02833615872351225,
+    "beta_smh": 0.8101964364900407,
+    "beta_mom": 0.7839434246164225,
+    "r2": 0.6819529709793399
    },
    {
     "id": "mom_12_1_q",
     "n": 31,
-    "alpha": 0.022178862582069764,
-    "t_alpha": 2.184781826081791,
-    "beta_spy": -0.028308326421116525,
-    "beta_smh": 0.061054975471308004,
-    "beta_mom": 0.7856609012933916,
-    "r2": 0.8242898364335516
+    "alpha": 0.022178860626822453,
+    "t_alpha": 2.184781434764123,
+    "beta_spy": -0.028307956805376955,
+    "beta_smh": 0.061054881201995675,
+    "beta_mom": 0.7856608933022566,
+    "r2": 0.8242898354453172
    },
    {
     "id": "margin_mom",
     "n": 31,
-    "alpha": 0.011123737909228496,
-    "t_alpha": 0.6556106233077635,
-    "beta_spy": 0.8859230526332306,
-    "beta_smh": 0.2647693221243672,
-    "beta_mom": 0.4403242016134348,
-    "r2": 0.5995822830729147
+    "alpha": 0.01112373582118729,
+    "t_alpha": 0.6556103742839701,
+    "beta_spy": 0.8859228339855054,
+    "beta_smh": 0.2647695500457068,
+    "beta_mom": 0.4403240799386753,
+    "r2": 0.5995821997987021
    },
    {
     "id": "skill_mom",
     "n": 31,
-    "alpha": 0.012305750542045675,
-    "t_alpha": 1.3335041481090546,
-    "beta_spy": 0.5037244466262015,
-    "beta_smh": 0.3507955572592479,
-    "beta_mom": 0.4459319202989416,
-    "r2": 0.8268307249550704
+    "alpha": 0.012305734263557385,
+    "t_alpha": 1.3335026541513517,
+    "beta_spy": 0.5037270288427187,
+    "beta_smh": 0.35079503761622305,
+    "beta_mom": 0.4459317624550596,
+    "r2": 0.8268308256189522
    },
    {
     "id": "qc395_sharpe252_above_trend_large",
     "n": 31,
-    "alpha": -0.0008489288805163668,
-    "t_alpha": -0.0563765486305347,
-    "beta_spy": 0.7935606827011292,
-    "beta_smh": 0.5135745071800938,
-    "beta_mom": 0.6082800443867239,
-    "r2": 0.7845461180624393
+    "alpha": -0.0008489298584355585,
+    "t_alpha": -0.05637660183497406,
+    "beta_spy": 0.7935603267956453,
+    "beta_smh": 0.5135747497324207,
+    "beta_mom": 0.6082799406402724,
+    "r2": 0.7845460663230643
    },
    {
     "id": "co03_reversal_in_high_margin",
     "n": 31,
-    "alpha": 0.02229259125141436,
-    "t_alpha": 1.8382462513249027,
-    "beta_spy": 1.4915965411330694,
-    "beta_smh": -0.18408224361315906,
-    "beta_mom": 0.027099882510745354,
-    "r2": 0.3580518685444035
+    "alpha": 0.02229257982211118,
+    "t_alpha": 1.8382447544142373,
+    "beta_spy": 1.4915975922919558,
+    "beta_smh": -0.18408220032496425,
+    "beta_mom": 0.027099631158086113,
+    "r2": 0.3580515944591788
    }
   ],
   "etf": "SMH",
@@ -295,15 +301,1455 @@
   "label": "HINDSIGHT: every rule was registered 2026-09-26, after every month here",
   "monthly_returns": "backend/data/optimus/signal_structure/monthly_returns_2026-09-26T182110Z.parquet",
   "etf_monthly": "backend/data/optimus/signal_structure/etf_monthly.parquet",
-  "decomposition_status": "OK"
+  "decomposition_status": "OK",
+  "within_cluster": [
+   {
+    "cluster": 170,
+    "n": 17,
+    "anchor": "mom_no_downgrades@k20",
+    "family_mix": {
+     "momentum": 5,
+     "sector_relative": 3,
+     "weighted": 2,
+     "revision_flow": 1,
+     "analyst_rating": 1,
+     "insider": 1,
+     "earnings_event": 1,
+     "filing_event": 1,
+     "flow_momentum": 1,
+     "analyst_dispersion": 1
+    },
+    "mean_inner_rho": 0.8466135490602317,
+    "sealed_vs_spy_min": -0.18563213469127549,
+    "sealed_vs_spy_max": 0.3786977783844925,
+    "sealed_vs_spy_sd": 0.1783825663473756,
+    "median_te_vs_cluster_mean_annual": 0.1258155271159902,
+    "rank_corr_dev_vs_2024_26": 0.06127450980392158,
+    "axes": {
+     "signal/filter": 12,
+     "signal/filter+hold/offset": 2,
+     "signal/filter+weighting": 1,
+     "signal/filter+hold/offset+weighting": 1
+    },
+    "dominant_axis": "signal/filter",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 130,
+      "share_order_persists": 0.5076923076923077
+     },
+     "construction only": {
+      "n": 6,
+      "share_order_persists": 0.3333333333333333
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.008509319852941176,
+     "alpha_in_window": -0.00038881044450310713,
+     "t_in_window": -0.024176085417732616,
+     "mde_in_window": 0.04503083215491063,
+     "alpha_after_pre2024_hedge": -0.01825458846470357,
+     "se_hedged": 0.017931248224282898,
+     "t_hedged": -1.0180322215373048,
+     "mde_hedged": 0.05020749502799211,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "disp_short_avoid@k20",
+      "dev_vs_spy": 0.2211516810234928,
+      "sealed_vs_spy": 0.2900391382800649,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "eap_avoid_mom@k20",
+      "dev_vs_spy": 0.18682670665569678,
+      "sealed_vs_spy": -0.18455039164909892,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_12_1@k20",
+      "dev_vs_spy": 0.22658637883132182,
+      "sealed_vs_spy": 0.04840692792097245,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_12_1_ivw@k20",
+      "dev_vs_spy": 0.15315329559705138,
+      "sealed_vs_spy": 0.24075728018205833,
+      "axis": "signal/filter+weighting"
+     },
+     {
+      "cell": "mom_12_1_q@k20",
+      "dev_vs_spy": 0.21050988407069804,
+      "sealed_vs_spy": 0.3786977783844925,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "mom_12_1_secrel@k20",
+      "dev_vs_spy": 0.03967732123279344,
+      "sealed_vs_spy": 0.2413768114874264,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_12_7@k20",
+      "dev_vs_spy": 0.04277499289224207,
+      "sealed_vs_spy": -0.11666889768419098,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_12m@k20",
+      "dev_vs_spy": 0.1308552123126956,
+      "sealed_vs_spy": -0.010310055418623953,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_in_raised@k20",
+      "dev_vs_spy": 0.09404903948861931,
+      "sealed_vs_spy": 0.0562503771979046,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_in_top_sectors@k20",
+      "dev_vs_spy": 0.17047198879371672,
+      "sealed_vs_spy": -0.034978191148934634,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_no_downgrades@k20",
+      "dev_vs_spy": 0.28561536656996234,
+      "sealed_vs_spy": 0.0038451718640530874,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_no_exec_change@k20",
+      "dev_vs_spy": 0.12746763910299852,
+      "sealed_vs_spy": -0.01920424522872355,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_no_insider_selling@k20",
+      "dev_vs_spy": 0.08620847679650945,
+      "sealed_vs_spy": -0.18563213469127549,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_no_rating_downgrade@k20",
+      "dev_vs_spy": 0.2389681559911594,
+      "sealed_vs_spy": -0.09224729236299889,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_resid_to_sector@k20",
+      "dev_vs_spy": 0.1657923167908455,
+      "sealed_vs_spy": -0.042101476387518044,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "qc470_mom252_quarterly_riskparity@k20",
+      "dev_vs_spy": 0.1273271929053672,
+      "sealed_vs_spy": 0.31090483205452446,
+      "axis": "signal/filter+hold/offset+weighting"
+     },
+     {
+      "cell": "resid_mom_12_1@k20",
+      "dev_vs_spy": 0.18794135955159108,
+      "sealed_vs_spy": -0.08291147937299215,
+      "axis": "signal/filter"
+     }
+    ]
+   },
+   {
+    "cluster": 112,
+    "n": 10,
+    "anchor": "insider_mom@k20",
+    "family_mix": {
+     "combination": 4,
+     "regime_gated": 2,
+     "quality": 1,
+     "insider": 1,
+     "diversified_combo": 1,
+     "sector_relative": 1
+    },
+    "mean_inner_rho": 0.8365328845796468,
+    "sealed_vs_spy_min": -0.09267109091889969,
+    "sealed_vs_spy_max": 0.22242369116847338,
+    "sealed_vs_spy_sd": 0.10170606263722579,
+    "median_te_vs_cluster_mean_annual": 0.1946725982353935,
+    "rank_corr_dev_vs_2024_26": 0.43030303030303024,
+    "axes": {
+     "signal/filter": 3,
+     "signal/filter+universe": 3,
+     "signal/filter+universe+k": 3
+    },
+    "dominant_axis": "signal/filter",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 44,
+      "share_order_persists": 0.5909090909090909
+     },
+     "construction only": {
+      "n": 1,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.006375340624999998,
+     "alpha_in_window": 0.005845689953173265,
+     "t_in_window": 0.5588345004211205,
+     "mde_in_window": 0.0292894083249169,
+     "alpha_after_pre2024_hedge": -0.032160842783893716,
+     "se_hedged": 0.020879221232615458,
+     "t_hedged": -1.5403276983173693,
+     "mde_hedged": 0.058461819451323276,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "div_mom_insider_flow@k20",
+      "dev_vs_spy": 0.18634123818921222,
+      "sealed_vs_spy": 0.005470184935560951,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "gp_at_large@k20",
+      "dev_vs_spy": 0.12329811054171347,
+      "sealed_vs_spy": -0.048643131899947845,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "insider_mom@k20",
+      "dev_vs_spy": 0.35180607723686386,
+      "sealed_vs_spy": -0.03621605574230857,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_gp@k20",
+      "dev_vs_spy": 0.16146055041422924,
+      "sealed_vs_spy": -0.014359840173491234,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_gp_large@k20",
+      "dev_vs_spy": 0.07599318188611415,
+      "sealed_vs_spy": -0.04775429229963879,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "mom_low_ag@k20",
+      "dev_vs_spy": 0.15476811286756398,
+      "sealed_vs_spy": 0.22242369116847338,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "qc536_secneutral_multimom_large@k10",
+      "dev_vs_spy": 0.18905904806933704,
+      "sealed_vs_spy": 0.12602781488672465,
+      "axis": "signal/filter+universe+k"
+     },
+     {
+      "cell": "qc597_secneutral_multimom_calm@k10",
+      "dev_vs_spy": 0.16363555757831327,
+      "sealed_vs_spy": 0.13998538980833275,
+      "axis": "signal/filter+universe+k"
+     },
+     {
+      "cell": "qc629_multimom_above_trend_gated@k10",
+      "dev_vs_spy": 0.13119757293760448,
+      "sealed_vs_spy": -0.09267109091889969,
+      "axis": "signal/filter+universe+k"
+     },
+     {
+      "cell": "trend_quality_large@k20",
+      "dev_vs_spy": 0.16145195601863893,
+      "sealed_vs_spy": 0.05290186736849445,
+      "axis": "signal/filter+universe"
+     }
+    ]
+   },
+   {
+    "cluster": 103,
+    "n": 10,
+    "anchor": "net_raises@k20",
+    "family_mix": {
+     "revision_flow": 5,
+     "analyst_skill": 2,
+     "flow_momentum": 1,
+     "weighted": 1,
+     "ibes_skill_weighted": 1
+    },
+    "mean_inner_rho": 0.8893817337128108,
+    "sealed_vs_spy_min": -0.03850379672212645,
+    "sealed_vs_spy_max": 0.17365784315224397,
+    "sealed_vs_spy_sd": 0.0630787219070185,
+    "median_te_vs_cluster_mean_annual": 0.0375048302304954,
+    "rank_corr_dev_vs_2024_26": -0.006060606060606061,
+    "axes": {
+     "signal/filter": 4,
+     "signal/filter+universe": 2,
+     "signal/filter+hold/offset": 1,
+     "weighting": 1,
+     "universe": 1
+    },
+    "dominant_axis": "signal/filter",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 38,
+      "share_order_persists": 0.4473684210526316
+     },
+     "construction only": {
+      "n": 7,
+      "share_order_persists": 0.8571428571428571
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.005631981249999999,
+     "alpha_in_window": -0.004468282246031867,
+     "t_in_window": -0.5479373124944624,
+     "mde_in_window": 0.0228332511833015,
+     "alpha_after_pre2024_hedge": -0.002900863790493069,
+     "se_hedged": 0.007224234847002502,
+     "t_hedged": -0.4015461639784181,
+     "mde_hedged": 0.020227857571607007,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "flow_in_winners@k20",
+      "dev_vs_spy": 0.057520688313043467,
+      "sealed_vs_spy": 0.03324283305287046,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "flow_rule@k20",
+      "dev_vs_spy": 0.0678473297730251,
+      "sealed_vs_spy": 0.036113116326418115,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "flow_rule_large@k20",
+      "dev_vs_spy": 0.06100241510455073,
+      "sealed_vs_spy": 0.031466513453796585,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "flow_rule_q@k20",
+      "dev_vs_spy": 0.04113407193825602,
+      "sealed_vs_spy": -0.03850379672212645,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "ibes_skill_net_raises@k20",
+      "dev_vs_spy": 0.08361237083003337,
+      "sealed_vs_spy": 0.0314197034939685,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "net_raises@k20",
+      "dev_vs_spy": 0.09663959243158171,
+      "sealed_vs_spy": 0.05850483494738268,
+      "axis": "anchor"
+     },
+     {
+      "cell": "net_raises_ivw@k20",
+      "dev_vs_spy": 0.0774567447209229,
+      "sealed_vs_spy": 0.005237788768372997,
+      "axis": "weighting"
+     },
+     {
+      "cell": "net_raises_large@k20",
+      "dev_vs_spy": 0.07266170765625701,
+      "sealed_vs_spy": 0.05066590396670012,
+      "axis": "universe"
+     },
+     {
+      "cell": "skill_raises@k20",
+      "dev_vs_spy": 0.060681753994332954,
+      "sealed_vs_spy": 0.17365784315224397,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "skill_raises_large@k20",
+      "dev_vs_spy": 0.05448793411837527,
+      "sealed_vs_spy": 0.14764250779439325,
+      "axis": "signal/filter+universe"
+     }
+    ]
+   },
+   {
+    "cluster": 114,
+    "n": 7,
+    "anchor": "gh11_skip_month_composite_q@k50",
+    "family_mix": {
+     "momentum": 4,
+     "trend": 3
+    },
+    "mean_inner_rho": 0.8676044397444351,
+    "sealed_vs_spy_min": -0.2810755457701951,
+    "sealed_vs_spy_max": 0.19926178294772723,
+    "sealed_vs_spy_sd": 0.1971403826953337,
+    "median_te_vs_cluster_mean_annual": 0.15289183150132807,
+    "rank_corr_dev_vs_2024_26": 0.8571428571428573,
+    "axes": {
+     "signal/filter+k": 4,
+     "signal/filter+universe+k": 2
+    },
+    "dominant_axis": "signal/filter+k",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 19,
+      "share_order_persists": 0.8421052631578947
+     },
+     "construction only": {
+      "n": 2,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 2.913839285714412e-05,
+     "alpha_in_window": -0.01334662375655329,
+     "t_in_window": -1.0397465906347485,
+     "mde_in_window": 0.03594197553034061,
+     "alpha_after_pre2024_hedge": -0.0390285995717605,
+     "se_hedged": 0.01847606005713682,
+     "t_hedged": -2.112387568078118,
+     "mde_hedged": 0.051732968159983087,
+     "verdict": "ALPHA_DETECTED",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "gh11_skip_month_composite_q@k50",
+      "dev_vs_spy": 0.08324133492179642,
+      "sealed_vs_spy": -0.18625260301403657,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_6_1@k20",
+      "dev_vs_spy": 0.10509255239709758,
+      "sealed_vs_spy": -0.2810755457701951,
+      "axis": "signal/filter+k"
+     },
+     {
+      "cell": "mom_6_1_large@k20",
+      "dev_vs_spy": 0.21728770246716644,
+      "sealed_vs_spy": 0.19580195031642855,
+      "axis": "signal/filter+universe+k"
+     },
+     {
+      "cell": "mom_6m@k20",
+      "dev_vs_spy": 0.1067995369383159,
+      "sealed_vs_spy": -0.22764345197693436,
+      "axis": "signal/filter+k"
+     },
+     {
+      "cell": "px_vs_ma200@k20",
+      "dev_vs_spy": 0.19863150690946885,
+      "sealed_vs_spy": -0.14161886570170723,
+      "axis": "signal/filter+k"
+     },
+     {
+      "cell": "px_vs_ma200_large@k20",
+      "dev_vs_spy": 0.22242120961859269,
+      "sealed_vs_spy": 0.19926178294772723,
+      "axis": "signal/filter+universe+k"
+     },
+     {
+      "cell": "trend_ma50_200@k20",
+      "dev_vs_spy": 0.16158038720489332,
+      "sealed_vs_spy": -0.12263964423435447,
+      "axis": "signal/filter+k"
+     }
+    ]
+   },
+   {
+    "cluster": 26,
+    "n": 5,
+    "anchor": "lowvol_63_q@k20",
+    "family_mix": {
+     "low_risk": 5
+    },
+    "mean_inner_rho": 0.8835253706979541,
+    "sealed_vs_spy_min": -0.18630837510525233,
+    "sealed_vs_spy_max": -0.07717364009307226,
+    "sealed_vs_spy_sd": 0.040209870377673894,
+    "median_te_vs_cluster_mean_annual": 0.051712634414920855,
+    "rank_corr_dev_vs_2024_26": 0.6,
+    "axes": {
+     "signal/filter+hold/offset": 3,
+     "hold/offset": 1
+    },
+    "dominant_axis": "signal/filter+hold/offset",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 9,
+      "share_order_persists": 0.6666666666666666
+     },
+     "construction only": {
+      "n": 1,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.01085108125,
+     "alpha_in_window": -0.004430500902702849,
+     "t_in_window": -1.359767975047665,
+     "mde_in_window": 0.009123175979440993,
+     "alpha_after_pre2024_hedge": -0.009730124635211676,
+     "se_hedged": 0.00520577603777607,
+     "t_hedged": -1.8691016602720443,
+     "mde_hedged": 0.014576172905772995,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "low_idio_63@k20",
+      "dev_vs_spy": -0.31271610254331816,
+      "sealed_vs_spy": -0.07717364009307226,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "low_max@k20",
+      "dev_vs_spy": -0.42424175821721477,
+      "sealed_vs_spy": -0.18630837510525233,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "lowvol_21@k20",
+      "dev_vs_spy": -0.4622818813552886,
+      "sealed_vs_spy": -0.14762589605618603,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "lowvol_63@k20",
+      "dev_vs_spy": -0.35509854992377776,
+      "sealed_vs_spy": -0.1581665451248382,
+      "axis": "hold/offset"
+     },
+     {
+      "cell": "lowvol_63_q@k20",
+      "dev_vs_spy": -0.29915436987162336,
+      "sealed_vs_spy": -0.13895635444462617,
+      "axis": "anchor"
+     }
+    ]
+   },
+   {
+    "cluster": 10,
+    "n": 4,
+    "anchor": "gp_lowvol_large@k20",
+    "family_mix": {
+     "combination": 3,
+     "diversified_combo": 1
+    },
+    "mean_inner_rho": 0.8700877954918328,
+    "sealed_vs_spy_min": -0.1686922173795926,
+    "sealed_vs_spy_max": -0.12866342202583114,
+    "sealed_vs_spy_sd": 0.01863589357947709,
+    "median_te_vs_cluster_mean_annual": 0.030097278246167824,
+    "rank_corr_dev_vs_2024_26": -0.19999999999999998,
+    "axes": {
+     "signal/filter+universe": 2,
+     "universe": 1
+    },
+    "dominant_axis": "signal/filter+universe",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 5,
+      "share_order_persists": 0.4
+     },
+     "construction only": {
+      "n": 1,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.010472265625000001,
+     "alpha_in_window": 0.0005859502899866744,
+     "t_in_window": 0.1352111529126476,
+     "mde_in_window": 0.012134064214529906,
+     "alpha_after_pre2024_hedge": -0.0063065848178973285,
+     "se_hedged": 0.005074892888285908,
+     "t_hedged": -1.2427030395960605,
+     "mde_hedged": 0.01420970008720054,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "div_agree_quality_lowvol@k20",
+      "dev_vs_spy": -0.016503121335209148,
+      "sealed_vs_spy": -0.1686922173795926,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "gp_lowvol@k20",
+      "dev_vs_spy": 0.0011406943972720462,
+      "sealed_vs_spy": -0.14461558202125224,
+      "axis": "universe"
+     },
+     {
+      "cell": "gp_lowvol_large@k20",
+      "dev_vs_spy": 0.006213315917101392,
+      "sealed_vs_spy": -0.12982188623247226,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_gp_lowvol@k20",
+      "dev_vs_spy": -0.029138456168015248,
+      "sealed_vs_spy": -0.12866342202583114,
+      "axis": "signal/filter+universe"
+     }
+    ]
+   },
+   {
+    "cluster": 151,
+    "n": 4,
+    "anchor": "inflection_large@k20",
+    "family_mix": {
+     "inflection": 3,
+     "quality": 1
+    },
+    "mean_inner_rho": 0.8377545956937816,
+    "sealed_vs_spy_min": -0.09070236602308768,
+    "sealed_vs_spy_max": 0.03751231015389367,
+    "sealed_vs_spy_sd": 0.05715666811968502,
+    "median_te_vs_cluster_mean_annual": 0.07645861488187586,
+    "rank_corr_dev_vs_2024_26": 0.7999999999999999,
+    "axes": {
+     "universe": 2,
+     "signal/filter+universe": 1
+    },
+    "dominant_axis": "universe",
+    "pairs_by_class": {
+     "construction only": {
+      "n": 3,
+      "share_order_persists": 0.6666666666666666
+     },
+     "signal/filter": {
+      "n": 3,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.001426234375,
+     "alpha_in_window": -0.010035537126561045,
+     "t_in_window": -1.0905255245739596,
+     "mde_in_window": 0.02576693834410587,
+     "alpha_after_pre2024_hedge": -0.0074693617809639,
+     "se_hedged": 0.010390043092699535,
+     "t_hedged": -0.7188961310672692,
+     "mde_hedged": 0.0290921206595587,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "inflection@k20",
+      "dev_vs_spy": -0.1033540602540024,
+      "sealed_vs_spy": -0.053730250811965696,
+      "axis": "universe"
+     },
+     {
+      "cell": "inflection_large@k20",
+      "dev_vs_spy": -0.016219267001169824,
+      "sealed_vs_spy": 0.03751231015389367,
+      "axis": "anchor"
+     },
+     {
+      "cell": "inflection_mid_plus@k20",
+      "dev_vs_spy": -0.0763924528509774,
+      "sealed_vs_spy": -0.09070236602308768,
+      "axis": "universe"
+     },
+     {
+      "cell": "margin_expansion@k20",
+      "dev_vs_spy": -0.06412746083899967,
+      "sealed_vs_spy": 0.002487268943992982,
+      "axis": "signal/filter+universe"
+     }
+    ]
+   },
+   {
+    "cluster": 179,
+    "n": 4,
+    "anchor": "mom_flow_ivw@k20",
+    "family_mix": {
+     "combination": 1,
+     "analyst_skill": 1,
+     "sector_relative": 1,
+     "weighted": 1
+    },
+    "mean_inner_rho": 0.8725996673190579,
+    "sealed_vs_spy_min": 0.0889739036478725,
+    "sealed_vs_spy_max": 0.36962805581369285,
+    "sealed_vs_spy_sd": 0.1145772935456896,
+    "median_te_vs_cluster_mean_annual": 0.058037393645912864,
+    "rank_corr_dev_vs_2024_26": 0.39999999999999997,
+    "axes": {
+     "weighting": 2,
+     "signal/filter+weighting": 1
+    },
+    "dominant_axis": "weighting",
+    "pairs_by_class": {
+     "construction only": {
+      "n": 3,
+      "share_order_persists": 1.0
+     },
+     "signal/filter": {
+      "n": 3,
+      "share_order_persists": 0.3333333333333333
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.017952203125,
+     "alpha_in_window": 0.009552123583004583,
+     "t_in_window": 1.0273041909730367,
+     "mde_in_window": 0.026035079256397992,
+     "alpha_after_pre2024_hedge": 0.005648466289734948,
+     "se_hedged": 0.009043070359334528,
+     "t_hedged": 0.6246181955119294,
+     "mde_hedged": 0.025320597006136675,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "+"
+    },
+    "members": [
+     {
+      "cell": "mom_flow@k20",
+      "dev_vs_spy": 0.06766503580678318,
+      "sealed_vs_spy": 0.22900508199173508,
+      "axis": "weighting"
+     },
+     {
+      "cell": "mom_flow_ivw@k20",
+      "dev_vs_spy": 0.07366405153630629,
+      "sealed_vs_spy": 0.2299627457246589,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_flow_secrel@k20",
+      "dev_vs_spy": 0.014557109886623731,
+      "sealed_vs_spy": 0.0889739036478725,
+      "axis": "weighting"
+     },
+     {
+      "cell": "skill_mom@k20",
+      "dev_vs_spy": 0.04714805055594917,
+      "sealed_vs_spy": 0.36962805581369285,
+      "axis": "signal/filter+weighting"
+     }
+    ]
+   },
+   {
+    "cluster": 167,
+    "n": 4,
+    "anchor": "qc395_sharpe252_above_trend_large@k10",
+    "family_mix": {
+     "momentum": 3,
+     "revision_flow": 1
+    },
+    "mean_inner_rho": 0.9214130379224438,
+    "sealed_vs_spy_min": 0.1790127912713253,
+    "sealed_vs_spy_max": 0.3523835679474907,
+    "sealed_vs_spy_sd": 0.07471276085419909,
+    "median_te_vs_cluster_mean_annual": 0.07201698546595983,
+    "rank_corr_dev_vs_2024_26": 0.39999999999999997,
+    "axes": {
+     "signal/filter+k": 3
+    },
+    "dominant_axis": "signal/filter+k",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 6,
+      "share_order_persists": 0.6666666666666666
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.025641687499999996,
+     "alpha_in_window": 0.0017887054830571117,
+     "t_in_window": 0.10131294780191309,
+     "mde_in_window": 0.049434701696295325,
+     "alpha_after_pre2024_hedge": 0.0019251849911175664,
+     "se_hedged": 0.01567893768505293,
+     "t_hedged": 0.12278797389142548,
+     "mde_hedged": 0.04390102551814821,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "+"
+    },
+    "members": [
+     {
+      "cell": "mom_12_1_large@k20",
+      "dev_vs_spy": 0.013352855116190776,
+      "sealed_vs_spy": 0.21513009564740093,
+      "axis": "signal/filter+k"
+     },
+     {
+      "cell": "mom_no_downgrades_large@k20",
+      "dev_vs_spy": 0.04814478089028795,
+      "sealed_vs_spy": 0.1790127912713253,
+      "axis": "signal/filter+k"
+     },
+     {
+      "cell": "qc395_sharpe252_above_trend_large@k10",
+      "dev_vs_spy": 0.13572224770030128,
+      "sealed_vs_spy": 0.3523835679474907,
+      "axis": "anchor"
+     },
+     {
+      "cell": "resid_mom_12_1_large@k20",
+      "dev_vs_spy": 0.04088047422548624,
+      "sealed_vs_spy": 0.24475595964375407,
+      "axis": "signal/filter+k"
+     }
+    ]
+   },
+   {
+    "cluster": 131,
+    "n": 4,
+    "anchor": "rev_1m@k20",
+    "family_mix": {
+     "reversal": 3,
+     "filing_event": 1
+    },
+    "mean_inner_rho": 0.8573648714012881,
+    "sealed_vs_spy_min": -0.13089785803982212,
+    "sealed_vs_spy_max": 0.05831313775332503,
+    "sealed_vs_spy_sd": 0.08733537488868137,
+    "median_te_vs_cluster_mean_annual": 0.12132773487620264,
+    "rank_corr_dev_vs_2024_26": 0.0,
+    "axes": {
+     "signal/filter": 2,
+     "universe": 1
+    },
+    "dominant_axis": "signal/filter",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 5,
+      "share_order_persists": 0.6
+     },
+     "construction only": {
+      "n": 1,
+      "share_order_persists": 0.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.0006077265625000017,
+     "alpha_in_window": -0.009091207808149806,
+     "t_in_window": -0.7931360492303677,
+     "mde_in_window": 0.03209459699571151,
+     "alpha_after_pre2024_hedge": -0.010302110541104317,
+     "se_hedged": 0.012309862023803594,
+     "t_hedged": -0.8368989450233573,
+     "mde_hedged": 0.03446761366665006,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "distress_free_reversal@k20",
+      "dev_vs_spy": -0.0039845782378082895,
+      "sealed_vs_spy": -0.1037345388305051,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "rev_1m@k20",
+      "dev_vs_spy": 0.08967877358907339,
+      "sealed_vs_spy": -0.007786756889490487,
+      "axis": "anchor"
+     },
+     {
+      "cell": "rev_1m_small@k20",
+      "dev_vs_spy": 0.024259583389824035,
+      "sealed_vs_spy": 0.05831313775332503,
+      "axis": "universe"
+     },
+     {
+      "cell": "rev_in_winners@k20",
+      "dev_vs_spy": 0.0507488982020845,
+      "sealed_vs_spy": -0.13089785803982212,
+      "axis": "signal/filter"
+     }
+    ]
+   },
+   {
+    "cluster": 95,
+    "n": 3,
+    "anchor": "big_dv@k20",
+    "family_mix": {
+     "momentum": 1,
+     "size_liquidity": 1,
+     "trend": 1
+    },
+    "mean_inner_rho": 0.8619825436430868,
+    "sealed_vs_spy_min": 0.11504431648936952,
+    "sealed_vs_spy_max": 0.13534271928029207,
+    "sealed_vs_spy_sd": 0.010478553105661315,
+    "median_te_vs_cluster_mean_annual": 0.05749610005767464,
+    "rank_corr_dev_vs_2024_26": 0.5,
+    "axes": {
+     "signal/filter+universe": 1,
+     "signal/filter+universe+k": 1
+    },
+    "dominant_axis": "signal/filter+universe",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 3,
+      "share_order_persists": 0.6666666666666666
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.012358739583333335,
+     "alpha_in_window": -0.0071413823935930695,
+     "t_in_window": -0.9916438172629128,
+     "mde_in_window": 0.020164367844547476,
+     "alpha_after_pre2024_hedge": 0.0010067985355053525,
+     "se_hedged": 0.007823502726058525,
+     "t_hedged": 0.12868897356575432,
+     "mde_hedged": 0.021905807632963868,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "+"
+    },
+    "members": [
+     {
+      "cell": "big_dv@k20",
+      "dev_vs_spy": 0.060401898169856194,
+      "sealed_vs_spy": 0.13534271928029207,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_12_1_mega@k20",
+      "dev_vs_spy": 0.0325062337293196,
+      "sealed_vs_spy": 0.11504431648936952,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "qc768_golden_cross_mega@k30",
+      "dev_vs_spy": -0.00798612634527096,
+      "sealed_vs_spy": 0.12970808969925507,
+      "axis": "signal/filter+universe+k"
+     }
+    ]
+   },
+   {
+    "cluster": 60,
+    "n": 3,
+    "anchor": "gp_at_q@k20",
+    "family_mix": {
+     "quality": 2,
+     "weighted": 1
+    },
+    "mean_inner_rho": 0.9307063317974769,
+    "sealed_vs_spy_min": -0.12143495971169393,
+    "sealed_vs_spy_max": -0.05693978322475646,
+    "sealed_vs_spy_sd": 0.03301399244561547,
+    "median_te_vs_cluster_mean_annual": 0.03060014302247094,
+    "rank_corr_dev_vs_2024_26": -0.5,
+    "axes": {
+     "hold/offset": 1,
+     "hold/offset+weighting": 1
+    },
+    "dominant_axis": "hold/offset",
+    "pairs_by_class": {
+     "construction only": {
+      "n": 3,
+      "share_order_persists": 0.3333333333333333
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.005167520833333334,
+     "alpha_in_window": 0.0036770333188311643,
+     "t_in_window": 0.45299603192076143,
+     "mde_in_window": 0.022727998850392124,
+     "alpha_after_pre2024_hedge": -0.002768713473880792,
+     "se_hedged": 0.007638278546798157,
+     "t_hedged": -0.36247872566016753,
+     "mde_hedged": 0.02138717993103484,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "gp_at@k20",
+      "dev_vs_spy": 0.027933058176320635,
+      "sealed_vs_spy": -0.05693978322475646,
+      "axis": "hold/offset"
+     },
+     {
+      "cell": "gp_at_ivw@k20",
+      "dev_vs_spy": 0.028375915727192336,
+      "sealed_vs_spy": -0.12143495971169393,
+      "axis": "hold/offset+weighting"
+     },
+     {
+      "cell": "gp_at_q@k20",
+      "dev_vs_spy": 0.044040236229722085,
+      "sealed_vs_spy": -0.07693787151775555,
+      "axis": "anchor"
+     }
+    ]
+   },
+   {
+    "cluster": 111,
+    "n": 3,
+    "anchor": "gp_low_ag@k20",
+    "family_mix": {
+     "investment": 1,
+     "combination": 1,
+     "insider": 1
+    },
+    "mean_inner_rho": 0.8567853184028934,
+    "sealed_vs_spy_min": -0.09305731509659054,
+    "sealed_vs_spy_max": 0.04805439230218855,
+    "sealed_vs_spy_sd": 0.07592621374831957,
+    "median_te_vs_cluster_mean_annual": 0.1026934746163328,
+    "rank_corr_dev_vs_2024_26": 0.5,
+    "axes": {
+     "signal/filter+universe": 2
+    },
+    "dominant_axis": "signal/filter+universe",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 3,
+      "share_order_persists": 0.6666666666666666
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.000220260416666667,
+     "alpha_in_window": 0.00280477148405153,
+     "t_in_window": 0.7202236520388595,
+     "mde_in_window": 0.010904057556444365,
+     "alpha_after_pre2024_hedge": -0.02440063643301915,
+     "se_hedged": 0.01567477592958834,
+     "t_hedged": -1.5566816739599785,
+     "mde_hedged": 0.043889372602847344,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "gp_low_ag@k20",
+      "dev_vs_spy": 0.14262368527982794,
+      "sealed_vs_spy": 0.04805439230218855,
+      "axis": "anchor"
+     },
+     {
+      "cell": "insider_buyers_large@k20",
+      "dev_vs_spy": 0.04919550222477165,
+      "sealed_vs_spy": -0.09305731509659054,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "low_asset_growth_large@k20",
+      "dev_vs_spy": 0.15675674450166488,
+      "sealed_vs_spy": 0.02607820851437359,
+      "axis": "signal/filter+universe"
+     }
+    ]
+   },
+   {
+    "cluster": 77,
+    "n": 3,
+    "anchor": "insider_before_print@k20",
+    "family_mix": {
+     "insider": 2,
+     "earnings_event": 1
+    },
+    "mean_inner_rho": 0.8418656192871624,
+    "sealed_vs_spy_min": -0.1251397399890004,
+    "sealed_vs_spy_max": -0.060134704907141234,
+    "sealed_vs_spy_sd": 0.036427882806139955,
+    "median_te_vs_cluster_mean_annual": 0.058126511545174356,
+    "rank_corr_dev_vs_2024_26": -1.0,
+    "axes": {
+     "signal/filter": 2
+    },
+    "dominant_axis": "signal/filter",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 3,
+      "share_order_persists": 0.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.004651239583333334,
+     "alpha_in_window": 0.007498648306142682,
+     "t_in_window": 1.1610398318540935,
+     "mde_in_window": 0.018083974968946696,
+     "alpha_after_pre2024_hedge": 0.0006573781064411026,
+     "se_hedged": 0.006844363877899489,
+     "t_hedged": 0.0960466331376364,
+     "mde_hedged": 0.01916421885811857,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "+"
+    },
+    "members": [
+     {
+      "cell": "insider_before_print@k20",
+      "dev_vs_spy": 0.021594962571938714,
+      "sealed_vs_spy": -0.1251397399890004,
+      "axis": "anchor"
+     },
+     {
+      "cell": "insider_buyers@k20",
+      "dev_vs_spy": -0.01918362984460642,
+      "sealed_vs_spy": -0.06414632920622432,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "insider_unconfirmed@k20",
+      "dev_vs_spy": -0.04267425093187538,
+      "sealed_vs_spy": -0.060134704907141234,
+      "axis": "signal/filter"
+     }
+    ]
+   },
+   {
+    "cluster": 50,
+    "n": 3,
+    "anchor": "lead_raises_large@k20",
+    "family_mix": {
+     "lead_chase": 3
+    },
+    "mean_inner_rho": 0.9123170449375161,
+    "sealed_vs_spy_min": -0.13760968439981336,
+    "sealed_vs_spy_max": -0.06336576007808903,
+    "sealed_vs_spy_sd": 0.03806573808814424,
+    "median_te_vs_cluster_mean_annual": 0.030584415067709213,
+    "rank_corr_dev_vs_2024_26": 1.0,
+    "axes": {
+     "signal/filter+universe": 1,
+     "universe": 1
+    },
+    "dominant_axis": "signal/filter+universe",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 2,
+      "share_order_persists": 1.0
+     },
+     "construction only": {
+      "n": 1,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.006721302083333334,
+     "alpha_in_window": -0.004558883268401735,
+     "t_in_window": -0.716712414384405,
+     "mde_in_window": 0.017810314005079427,
+     "alpha_after_pre2024_hedge": -0.00880246089868891,
+     "se_hedged": 0.0069630326771482915,
+     "t_hedged": -1.264170557116207,
+     "mde_hedged": 0.019496491496015216,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "lead_minus_chase@k20",
+      "dev_vs_spy": -0.00395892889041316,
+      "sealed_vs_spy": -0.13760968439981336,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "lead_raises@k20",
+      "dev_vs_spy": 0.017196680914487672,
+      "sealed_vs_spy": -0.11507816515779834,
+      "axis": "universe"
+     },
+     {
+      "cell": "lead_raises_large@k20",
+      "dev_vs_spy": 0.027424713348276786,
+      "sealed_vs_spy": -0.06336576007808903,
+      "axis": "anchor"
+     }
+    ]
+   },
+   {
+    "cluster": 84,
+    "n": 3,
+    "anchor": "mom_12_1_q_trend@k20",
+    "family_mix": {
+     "regime_gated": 3
+    },
+    "mean_inner_rho": 0.9512274854515425,
+    "sealed_vs_spy_min": -0.12532916679390804,
+    "sealed_vs_spy_max": 0.20830175316783195,
+    "sealed_vs_spy_sd": 0.1806438750722294,
+    "median_te_vs_cluster_mean_annual": 0.05952311021702716,
+    "rank_corr_dev_vs_2024_26": 0.5,
+    "axes": {
+     "signal/filter+hold/offset": 2
+    },
+    "dominant_axis": "signal/filter+hold/offset",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 3,
+      "share_order_persists": 0.6666666666666666
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.005869937500000005,
+     "alpha_in_window": 0.00016285706671527786,
+     "t_in_window": 0.008109018039049577,
+     "mde_in_window": 0.056233662893198325,
+     "alpha_after_pre2024_hedge": -0.015006631066370107,
+     "se_hedged": 0.021077526277414996,
+     "t_hedged": -0.7119730687965039,
+     "mde_hedged": 0.05901707357676199,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "mom_12_1_q_trend@k20",
+      "dev_vs_spy": 0.10388290055093496,
+      "sealed_vs_spy": 0.20830175316783195,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_12_1_trend@k20",
+      "dev_vs_spy": 0.0924243896287491,
+      "sealed_vs_spy": -0.07857384065206863,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "mom_no_downgrades_trend@k20",
+      "dev_vs_spy": 0.10322649458252253,
+      "sealed_vs_spy": -0.12532916679390804,
+      "axis": "signal/filter+hold/offset"
+     }
+    ]
+   },
+   {
+    "cluster": 11,
+    "n": 3,
+    "anchor": "quality_composite_secrel@k20",
+    "family_mix": {
+     "quality": 1,
+     "sector_relative": 1,
+     "weighted": 1
+    },
+    "mean_inner_rho": 0.8645751799729752,
+    "sealed_vs_spy_min": -0.13032258326557788,
+    "sealed_vs_spy_max": -0.09576711580942887,
+    "sealed_vs_spy_sd": 0.019733247634321487,
+    "median_te_vs_cluster_mean_annual": 0.02169300926528117,
+    "rank_corr_dev_vs_2024_26": 1.0,
+    "axes": {
+     "same construction": 1,
+     "weighting": 1
+    },
+    "dominant_axis": "same construction",
+    "pairs_by_class": {
+     "construction only": {
+      "n": 3,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.007806854166666666,
+     "alpha_in_window": 0.0041470298430457565,
+     "t_in_window": 1.026457410334235,
+     "mde_in_window": 0.011312387093339921,
+     "alpha_after_pre2024_hedge": -0.005524623780360045,
+     "se_hedged": 0.005560381121481191,
+     "t_hedged": -0.9935692643471854,
+     "mde_hedged": 0.015569067140147334,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "quality_composite@k20",
+      "dev_vs_spy": 0.03717147450561731,
+      "sealed_vs_spy": -0.09653294661089817,
+      "axis": "same construction"
+     },
+     {
+      "cell": "quality_composite_ivw@k20",
+      "dev_vs_spy": 0.04092360633956149,
+      "sealed_vs_spy": -0.09576711580942887,
+      "axis": "weighting"
+     },
+     {
+      "cell": "quality_composite_secrel@k20",
+      "dev_vs_spy": 0.03346757306979886,
+      "sealed_vs_spy": -0.13032258326557788,
+      "axis": "anchor"
+     }
+    ]
+   },
+   {
+    "cluster": 20,
+    "n": 3,
+    "anchor": "recovery_anchoring@k20",
+    "family_mix": {
+     "momentum": 1,
+     "sector_relative": 1,
+     "disposition": 1
+    },
+    "mean_inner_rho": 0.8449510988012413,
+    "sealed_vs_spy_min": -0.05562558338549195,
+    "sealed_vs_spy_max": 0.007337506854180775,
+    "sealed_vs_spy_sd": 0.03195414232227157,
+    "median_te_vs_cluster_mean_annual": 0.04569168491924569,
+    "rank_corr_dev_vs_2024_26": -0.5,
+    "axes": {
+     "signal/filter": 2
+    },
+    "dominant_axis": "signal/filter",
+    "pairs_by_class": {
+     "construction only": {
+      "n": 1,
+      "share_order_persists": 0.0
+     },
+     "signal/filter": {
+      "n": 2,
+      "share_order_persists": 0.5
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.0015771770833333332,
+     "alpha_in_window": 0.00223641831777449,
+     "t_in_window": 0.42249187659412285,
+     "mde_in_window": 0.014821518795222392,
+     "alpha_after_pre2024_hedge": -0.0010734006660222141,
+     "se_hedged": 0.0054049557851945824,
+     "t_hedged": -0.19859564234780708,
+     "mde_hedged": 0.015133876198544829,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "hi52@k20",
+      "dev_vs_spy": -0.24882105720250658,
+      "sealed_vs_spy": -0.03362763385272505,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "hi52_secrel@k20",
+      "dev_vs_spy": -0.20622779937496627,
+      "sealed_vs_spy": -0.05562558338549195,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "recovery_anchoring@k20",
+      "dev_vs_spy": -0.24240424072425426,
+      "sealed_vs_spy": 0.007337506854180775,
+      "axis": "anchor"
+     }
+    ]
+   }
+  ],
+  "within_cluster_persistence": {
+   "pairs": {
+    "construction only": {
+     "n_pairs": 33,
+     "share_order_persists": 0.696969696969697
+    },
+    "signal/filter": {
+     "n_pairs": 278,
+     "share_order_persists": 0.5503597122302158
+    }
+   },
+   "construction_pairs_by_axis": {
+    "hold/offset": {
+     "n_pairs": 5,
+     "share_order_persists": 0.6
+    },
+    "hold/offset+universe": {
+     "n_pairs": 1,
+     "share_order_persists": 1.0
+    },
+    "hold/offset+weighting": {
+     "n_pairs": 2,
+     "share_order_persists": 1.0
+    },
+    "same construction": {
+     "n_pairs": 4,
+     "share_order_persists": 0.5
+    },
+    "universe": {
+     "n_pairs": 12,
+     "share_order_persists": 0.8333333333333334
+    },
+    "universe+weighting": {
+     "n_pairs": 1,
+     "share_order_persists": 0.0
+    },
+    "weighting": {
+     "n_pairs": 8,
+     "share_order_persists": 0.625
+    }
+   },
+   "note": "a pair's order persists when (dev_a - dev_b) and (2024-26_a - 2024-26_b) have the same sign; 50% is a coin"
+  },
+  "bet_count_curve": {
+   "raw_net": {
+    "n_series": 288,
+    "clusters_by_rho": {
+     "0.5": 8,
+     "0.6": 16,
+     "0.7": 30,
+     "0.8": 86,
+     "0.9": 202
+    },
+    "median_pair_rho": 0.6322061117042476,
+    "share_pairs_ge_cut": 0.07142857142857142,
+    "n_pairs": 41328
+   },
+   "active": {
+    "n_series": 288,
+    "clusters_by_rho": {
+     "0.5": 36,
+     "0.6": 78,
+     "0.7": 133,
+     "0.8": 192,
+     "0.9": 244
+    },
+    "median_pair_rho": 0.29867563505403105,
+    "share_pairs_ge_cut": 0.009364111498257839,
+    "n_pairs": 41328
+   },
+   "residual_smh_iwm_mtum": {
+    "n_series": 288,
+    "clusters_by_rho": {
+     "0.5": 96,
+     "0.6": 140,
+     "0.7": 176,
+     "0.8": 219,
+     "0.9": 254
+    },
+    "median_pair_rho": 0.1413684941497771,
+    "share_pairs_ge_cut": 0.004815137437088657,
+    "n_pairs": 41328
+   },
+   "residual_6_etf": {
+    "n_series": 288,
+    "clusters_by_rho": {
+     "0.5": 99,
+     "0.6": 152,
+     "0.7": 188,
+     "0.8": 222,
+     "0.9": 256
+    },
+    "median_pair_rho": 0.14564843501825694,
+    "share_pairs_ge_cut": 0.004911924119241192,
+    "n_pairs": 41328
+   }
+  }
  },
  "distinct_bets": {
   "full": {
    "window": "cluster_full",
-   "n_books": 27,
-   "n_distinct": 17,
-   "n_clustered_books": 25,
-   "n_clusters": 15,
+   "n_books": 31,
+   "n_distinct": 18,
+   "n_clustered_books": 29,
+   "n_clusters": 16,
    "n_unclustered": 2,
    "multi_book_clusters": {
     "170": [
@@ -312,7 +1758,13 @@
      "lib_mom_12_1_2026-09-26",
      "lib_mom_12_1_secrel_sealed_2026-09-26",
      "lib_disp_short_avoid_2026-09-27",
-     "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control"
+     "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+     "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+     "lib_mom_12_1_ivw_lead_2026-09-27__control"
+    ],
+    "103": [
+     "lib_net_raises_2026-09-26",
+     "lib_net_raises_ivw_lead_2026-09-27"
     ],
     "186": [
      "lib_mom_12_1_small_2026-09-26",
@@ -336,9 +1788,9 @@
   },
   "sealed": {
    "window": "cluster_sealed",
-   "n_books": 27,
+   "n_books": 31,
    "n_distinct": 16,
-   "n_clustered_books": 25,
+   "n_clustered_books": 29,
    "n_clusters": 14,
    "n_unclustered": 2,
    "multi_book_clusters": {
@@ -348,7 +1800,14 @@
      "lib_mom_12_1_2026-09-26",
      "lib_mom_12_1_secrel_sealed_2026-09-26",
      "lib_disp_short_avoid_2026-09-27",
-     "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control"
+     "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+     "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+     "lib_mom_12_1_ivw_lead_2026-09-27__control",
+     "lib_mom_12_1_q_trend_lead_2026-09-27"
+    ],
+    "54": [
+     "lib_net_raises_2026-09-26",
+     "lib_net_raises_ivw_lead_2026-09-27"
     ],
     "41": [
      "lib_mom_12_1_small_2026-09-26",
@@ -381,10 +1840,25 @@
     "lib_mom_12_1_2026-09-26",
     "lib_mom_12_1_secrel_sealed_2026-09-26",
     "lib_disp_short_avoid_2026-09-27",
-    "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control"
+    "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+    "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+    "lib_mom_12_1_ivw_lead_2026-09-27__control"
    ],
-   "n_books": 6,
-   "forward_relative_one_observation": "PENDING (entry 2026-09-28)"
+   "n_books": 8,
+   "forward_relative_one_observation": "PENDING (entry 2026-09-28)",
+   "forward_minus_random_twin_one_observation": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf_one_observation": "PENDING (entry 2026-09-28)"
+  },
+  {
+   "cluster": "103",
+   "books": [
+    "lib_net_raises_2026-09-26",
+    "lib_net_raises_ivw_lead_2026-09-27"
+   ],
+   "n_books": 2,
+   "forward_relative_one_observation": "PENDING (entry 2026-09-28)",
+   "forward_minus_random_twin_one_observation": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf_one_observation": "PENDING (entry 2026-09-28)"
   },
   {
    "cluster": "186",
@@ -393,7 +1867,9 @@
     "lib_mom_no_downgrades_small_2026-09-27__control"
    ],
    "n_books": 2,
-   "forward_relative_one_observation": "PENDING (entry 2026-09-28)"
+   "forward_relative_one_observation": "PENDING (entry 2026-09-28)",
+   "forward_minus_random_twin_one_observation": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf_one_observation": "PENDING (entry 2026-09-28)"
   },
   {
    "cluster": "179",
@@ -404,7 +1880,9 @@
     "lib_mom_flow_ivw_2026-09-27"
    ],
    "n_books": 4,
-   "forward_relative_one_observation": "PENDING (entry 2026-09-28)"
+   "forward_relative_one_observation": "PENDING (entry 2026-09-28)",
+   "forward_minus_random_twin_one_observation": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf_one_observation": "PENDING (entry 2026-09-28)"
   },
   {
    "cluster": "167",
@@ -413,7 +1891,191 @@
     "lib_qc395_sharpe252_above_trend_large_2026-09-27"
    ],
    "n_books": 2,
-   "forward_relative_one_observation": "PENDING (entry 2026-09-28)"
+   "forward_relative_one_observation": "PENDING (entry 2026-09-28)",
+   "forward_minus_random_twin_one_observation": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf_one_observation": "PENDING (entry 2026-09-28)"
+  }
+ ],
+ "level2_pairs": [
+  {
+   "cluster": "170",
+   "book": "lib_mom_12_1_q_2026-09-26",
+   "rule": "mom_12_1_q",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "anchor",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_mom_no_downgrades_2026-09-26",
+   "rule": "mom_no_downgrades",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "signal/filter+hold/offset",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_mom_12_1_2026-09-26",
+   "rule": "mom_12_1",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "hold/offset",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_mom_12_1_secrel_sealed_2026-09-26",
+   "rule": "mom_12_1_secrel",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "hold/offset",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_disp_short_avoid_2026-09-27",
+   "rule": "disp_short_avoid",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "signal/filter",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+   "rule": "qc470_mom252_quarterly_riskparity",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "signal/filter+weighting",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+   "rule": "qc470_mom252_quarterly_riskparity",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "signal/filter+weighting",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+   "rule": "mom_12_1_ivw",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "hold/offset+weighting",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "103",
+   "book": "lib_net_raises_2026-09-26",
+   "rule": "net_raises",
+   "anchor_rule": "net_raises",
+   "axis": "anchor",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.0375048302304954,
+   "mde_after_12_months": 0.10501352464538713
+  },
+  {
+   "cluster": "103",
+   "book": "lib_net_raises_ivw_lead_2026-09-27",
+   "rule": "net_raises_ivw",
+   "anchor_rule": "net_raises",
+   "axis": "weighting",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.0375048302304954,
+   "mde_after_12_months": 0.10501352464538713
+  },
+  {
+   "cluster": "186",
+   "book": "lib_mom_12_1_small_2026-09-26",
+   "rule": "mom_12_1_small",
+   "anchor_rule": "mom_12_1_small",
+   "axis": "anchor",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": null,
+   "mde_after_12_months": null
+  },
+  {
+   "cluster": "186",
+   "book": "lib_mom_no_downgrades_small_2026-09-27__control",
+   "rule": "mom_no_downgrades_small",
+   "anchor_rule": "mom_12_1_small",
+   "axis": "signal/filter",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": null,
+   "mde_after_12_months": null
+  },
+  {
+   "cluster": "179",
+   "book": "lib_mom_flow_2026-09-26",
+   "rule": "mom_flow",
+   "anchor_rule": "mom_flow",
+   "axis": "anchor",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.058037393645912864,
+   "mde_after_12_months": 0.162504702208556
+  },
+  {
+   "cluster": "179",
+   "book": "lib_skill_mom_sealed_2026-09-26",
+   "rule": "skill_mom",
+   "anchor_rule": "mom_flow",
+   "axis": "signal/filter",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.058037393645912864,
+   "mde_after_12_months": 0.162504702208556
+  },
+  {
+   "cluster": "179",
+   "book": "lib_skill_mom_2026-09-27",
+   "rule": "skill_mom",
+   "anchor_rule": "mom_flow",
+   "axis": "signal/filter",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.058037393645912864,
+   "mde_after_12_months": 0.162504702208556
+  },
+  {
+   "cluster": "179",
+   "book": "lib_mom_flow_ivw_2026-09-27",
+   "rule": "mom_flow_ivw",
+   "anchor_rule": "mom_flow",
+   "axis": "weighting",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.058037393645912864,
+   "mde_after_12_months": 0.162504702208556
+  },
+  {
+   "cluster": "167",
+   "book": "lib_resid_mom_12_1_large_sealed_2026-09-26",
+   "rule": "resid_mom_12_1_large",
+   "anchor_rule": "resid_mom_12_1_large",
+   "axis": "anchor",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.07201698546595983,
+   "mde_after_12_months": 0.20164755930468753
+  },
+  {
+   "cluster": "167",
+   "book": "lib_qc395_sharpe252_above_trend_large_2026-09-27",
+   "rule": "qc395_sharpe252_above_trend_large",
+   "anchor_rule": "resid_mom_12_1_large",
+   "axis": "signal/filter+k",
+   "forward_minus_cluster_mean": "PENDING (entry 2026-09-28)",
+   "hist_te_annual": 0.07201698546595983,
+   "mde_after_12_months": 0.20164755930468753
   }
  ],
  "rule": {
@@ -494,7 +2156,10 @@
     "n": 32,
     "alpha_monthly": 0.01952657489243023,
     "t_alpha": 1.09487716936366,
+    "se_alpha": 0.017834489053944767,
+    "mde_alpha_80": 0.049936569351045346,
     "r2": 0.19082215537015979,
+    "mean_active_monthly": 0.028698468750000004,
     "betas": {
      "SMH": 0.4640552079778444,
      "MTUM": -0.041327638002566405,
@@ -504,6 +2169,14 @@
      "SMH": 1.4401681947895075,
      "MTUM": -0.06892019628986301,
      "IWM": 1.5641674396154277
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.014036775310770057,
+     "se": 0.01886654916804107,
+     "t": 0.7440033249189845,
+     "mde_80": 0.05282633767051499,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -564,7 +2237,10 @@
     "n": 32,
     "alpha_monthly": -0.006126921161694346,
     "t_alpha": -0.34296161577852863,
+    "se_alpha": 0.017864743107726885,
+    "mde_alpha_80": 0.05002128070163528,
     "r2": 0.3615491302656457,
+    "mean_active_monthly": 0.00788221875,
     "betas": {
      "SMH": 0.7325781083090415,
      "MTUM": -0.13406330218324444,
@@ -574,6 +2250,14 @@
      "SMH": 2.2696631007689043,
      "MTUM": -0.2231925682266243,
      "IWM": 2.4951666532349215
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.010044944579921927,
+     "se": 0.01833579989111166,
+     "t": -0.5478323628952368,
+     "mde_80": 0.051340239695112644,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -634,7 +2318,10 @@
     "n": 32,
     "alpha_monthly": -0.004047704156540799,
     "t_alpha": -0.5237587940579853,
+    "se_alpha": 0.007728183664812466,
+    "mde_alpha_80": 0.021638914261474903,
     "r2": 0.4083574049640897,
+    "mean_active_monthly": 0.005888687499999999,
     "betas": {
      "SMH": 0.35512345750121105,
      "MTUM": 0.21055586062939807,
@@ -644,6 +2331,14 @@
      "SMH": 2.5433501905079874,
      "MTUM": 0.8103198763248547,
      "IWM": 0.25582575753899855
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.004944257813894869,
+     "se": 0.007558855877923116,
+     "t": -0.6541013473130753,
+     "mde_80": 0.021164796458184722,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "MTUM",
@@ -671,7 +2366,7 @@
    "sealed_dsr": 0.0162,
    "max_dd": -0.407504,
    "turnover_annual": 0.845217,
-   "sigma_active_monthly": 0.041939067058138976,
+   "sigma_active_monthly": 0.041938997684505416,
    "forward_return": "PENDING (entry 2026-09-28)",
    "forward_spy": "PENDING (entry 2026-09-28)",
    "forward_relative": "PENDING (entry 2026-09-28)",
@@ -704,7 +2399,10 @@
     "n": 32,
     "alpha_monthly": -0.001696602468897312,
     "t_alpha": -0.2111560994291792,
+    "se_alpha": 0.008034825768631631,
+    "mde_alpha_80": 0.022497512152168567,
     "r2": 0.496446979527146,
+    "mean_active_monthly": 0.01143309375,
     "betas": {
      "SMH": 0.4833037778658885,
      "MTUM": 0.1764473246929162,
@@ -714,6 +2412,14 @@
      "SMH": 3.3292619123271745,
      "MTUM": 0.65313838303602,
      "IWM": -0.1758519066655632
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.00030486552111112157,
+     "se": 0.007260156312798399,
+     "t": -0.041991591912931184,
+     "mde_80": 0.020328437675835517,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "SMH",
@@ -774,7 +2480,10 @@
     "n": 32,
     "alpha_monthly": -0.002847164061933273,
     "t_alpha": -0.15487876307895102,
+    "se_alpha": 0.01838317923860163,
+    "mde_alpha_80": 0.051472901868084564,
     "r2": 0.31167827151460725,
+    "mean_active_monthly": 0.010364562500000004,
     "betas": {
      "SMH": 0.7246617461065659,
      "MTUM": -0.2696528227429711,
@@ -784,6 +2493,14 @@
      "SMH": 2.1818201615821535,
      "MTUM": -0.43626557185019943,
      "IWM": 2.2386684303058044
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.005067841598815396,
+     "se": 0.01854295711235804,
+     "t": -0.27330277302091743,
+     "mde_80": 0.051920279914602505,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -844,7 +2561,10 @@
     "n": 32,
     "alpha_monthly": 0.004106224235187687,
     "t_alpha": 0.30780569855156237,
+    "se_alpha": 0.013340312588461805,
+    "mde_alpha_80": 0.037352875247693054,
     "r2": 0.4597146318050326,
+    "mean_active_monthly": 0.0010484687499999995,
     "betas": {
      "SMH": -0.15696726480615952,
      "MTUM": 0.7837186556256063,
@@ -854,6 +2574,14 @@
      "SMH": -0.6512493768936196,
      "MTUM": 1.7472730215503423,
      "IWM": 4.247284192465669
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.005215526276017379,
+     "se": 0.01278079495603905,
+     "t": -0.4080752640157952,
+     "mde_80": 0.035786225876909335,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -914,7 +2642,10 @@
     "n": 32,
     "alpha_monthly": 0.006858679975323886,
     "t_alpha": 0.6984420993622182,
+    "se_alpha": 0.009819969302518968,
+    "mde_alpha_80": 0.027495914047053108,
     "r2": 0.5557534877180393,
+    "mean_active_monthly": 0.018319218749999998,
     "betas": {
      "SMH": 0.3419813772395586,
      "MTUM": 0.7301663462443485,
@@ -924,6 +2655,14 @@
      "SMH": 1.9275096587380975,
      "MTUM": 2.2114558556960406,
      "IWM": 2.183507690388075
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.006110906332441391,
+     "se": 0.00909187697090955,
+     "t": 0.6721281372365576,
+     "mde_80": 0.02545725551854674,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "MTUM",
@@ -984,7 +2723,10 @@
     "n": 32,
     "alpha_monthly": 0.004240979354884234,
     "t_alpha": 0.6625913789136618,
+    "se_alpha": 0.006400595434606235,
+    "mde_alpha_80": 0.017921667216897457,
     "r2": 0.331919063781694,
+    "mean_active_monthly": -2.003124999999938e-05,
     "betas": {
      "SMH": -0.1883159873409736,
      "MTUM": 0.301157668644131,
@@ -994,6 +2736,14 @@
      "SMH": -1.628437333163278,
      "MTUM": 1.3993944320010332,
      "IWM": 3.2472312344185363
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.0062391236545827,
+     "se": 0.008460480487783742,
+     "t": -0.7374431822863367,
+     "mde_80": 0.023689345365794475,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -1054,7 +2804,10 @@
     "n": 32,
     "alpha_monthly": 0.00900597444208288,
     "t_alpha": 0.608913146204149,
+    "se_alpha": 0.01479024471424939,
+    "mde_alpha_80": 0.04141268519989829,
     "r2": 0.2617980969986534,
+    "mean_active_monthly": 0.013664406249999997,
     "betas": {
      "SMH": 0.025482877733230214,
      "MTUM": 0.8984134536556951,
@@ -1064,6 +2817,14 @@
      "SMH": 0.09536243829926015,
      "MTUM": 1.8066227699269082,
      "IWM": 1.495387476272971
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.0015143733095157198,
+     "se": 0.014016725154245591,
+     "t": 0.10804045116465912,
+     "mde_80": 0.039246830431887654,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -1124,7 +2885,10 @@
     "n": 32,
     "alpha_monthly": -0.0007837035045793966,
     "t_alpha": -0.09608592900018485,
+    "se_alpha": 0.008156277539637347,
+    "mde_alpha_80": 0.02283757711098457,
     "r2": 0.3710712625796596,
+    "mean_active_monthly": 0.0061488125,
     "betas": {
      "SMH": 0.21183790699852295,
      "MTUM": 0.4005249871185622,
@@ -1134,6 +2898,14 @@
      "SMH": 1.437526692643424,
      "MTUM": 1.4605089148786758,
      "IWM": 1.3609440820963885
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 6.41524091569087e-05,
+     "se": 0.007661704375270851,
+     "t": 0.008373125092631994,
+     "mde_80": 0.02145277225075838,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -1302,7 +3074,10 @@
     "n": 32,
     "alpha_monthly": 0.01922385224385529,
     "t_alpha": 0.7499369334392016,
+    "se_alpha": 0.02563395851927833,
+    "mde_alpha_80": 0.07177508385397932,
     "r2": 0.5623023512380316,
+    "mean_active_monthly": 0.059585343750000005,
     "betas": {
      "SMH": 1.695700118481745,
      "MTUM": 0.36523574691039384,
@@ -1312,6 +3087,14 @@
      "SMH": 3.6613193383339286,
      "MTUM": 0.4237641296201874,
      "IWM": 2.0271195143723952
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.02541958973594632,
+     "se": 0.024503152736174778,
+     "t": 1.0374007789788853,
+     "mde_80": 0.06860882766128937,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "SMH",
@@ -1372,7 +3155,10 @@
     "n": 32,
     "alpha_monthly": 0.02356843532664154,
     "t_alpha": 1.8921164575300988,
+    "se_alpha": 0.012456123000698874,
+    "mde_alpha_80": 0.03487714440195685,
     "r2": 0.3871297368466081,
+    "mean_active_monthly": 0.032238468750000006,
     "betas": {
      "SMH": 0.5844276972521769,
      "MTUM": -0.47387771088007385,
@@ -1382,6 +3168,14 @@
      "SMH": 2.596881532384007,
      "MTUM": -1.1314880882715894,
      "IWM": 3.0850396245770293
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.022617377000136205,
+     "se": 0.01415616172707892,
+     "t": 1.5977054682041436,
+     "mde_80": 0.03963725283582097,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -1409,7 +3203,7 @@
    "sealed_dsr": 0.0998,
    "max_dd": -0.2727,
    "turnover_annual": 5.222609,
-   "sigma_active_monthly": 0.06526570709601288,
+   "sigma_active_monthly": 0.06526560096428331,
    "forward_return": "PENDING (entry 2026-09-28)",
    "forward_spy": "PENDING (entry 2026-09-28)",
    "forward_relative": "PENDING (entry 2026-09-28)",
@@ -1442,7 +3236,10 @@
     "n": 32,
     "alpha_monthly": 0.012373897845294739,
     "t_alpha": 1.098817479224284,
+    "se_alpha": 0.011261103940601817,
+    "mde_alpha_80": 0.03153109103368509,
     "r2": 0.5396163051258838,
+    "mean_active_monthly": 0.027372218750000003,
     "betas": {
      "SMH": 0.5615775523759389,
      "MTUM": 0.45903103173533016,
@@ -1452,6 +3249,14 @@
      "SMH": 2.7601520616236064,
      "MTUM": 1.2123490360179119,
      "IWM": 2.1258668009282147
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.012518205627715755,
+     "se": 0.010734598936058042,
+     "t": 1.1661549446124617,
+     "mde_80": 0.030056877020962516,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "MTUM",
@@ -1479,7 +3284,7 @@
    "sealed_dsr": 0.0589,
    "max_dd": -0.513118,
    "turnover_annual": 5.055652,
-   "sigma_active_monthly": 0.08288497813000952,
+   "sigma_active_monthly": 0.08288479590354578,
    "forward_return": "PENDING (entry 2026-09-28)",
    "forward_spy": "PENDING (entry 2026-09-28)",
    "forward_relative": "PENDING (entry 2026-09-28)",
@@ -1512,7 +3317,10 @@
     "n": 32,
     "alpha_monthly": 0.019649644494029145,
     "t_alpha": 1.184891254018799,
+    "se_alpha": 0.016583500323243495,
+    "mde_alpha_80": 0.046433800905081785,
     "r2": 0.3794488223907665,
+    "mean_active_monthly": 0.03006675,
     "betas": {
      "SMH": 0.46026282512755906,
      "MTUM": 0.3739123498668825,
@@ -1522,6 +3330,14 @@
      "SMH": 1.536151083290926,
      "MTUM": 0.6705948264049878,
      "IWM": 2.735530063136098
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.01967114328594429,
+     "se": 0.015069350932931054,
+     "t": 1.3053742907371637,
+     "mde_80": 0.04219418261220695,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -1582,7 +3398,10 @@
     "n": 32,
     "alpha_monthly": 0.012519062302625414,
     "t_alpha": 0.6900315542548804,
+    "se_alpha": 0.01814273887249102,
+    "mde_alpha_80": 0.05079966884297485,
     "r2": 0.40063845296987766,
+    "mean_active_monthly": 0.02892040625,
     "betas": {
      "SMH": 0.7054152221821344,
      "MTUM": 0.3111840134897406,
@@ -1592,6 +3411,14 @@
      "SMH": 2.1520195552545154,
      "MTUM": 0.5101301832201223,
      "IWM": 2.248936934195173
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.031979909886824004,
+     "se": 0.0193191535906364,
+     "t": 1.6553473596443695,
+     "mde_80": 0.05409363005378191,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -1652,7 +3479,10 @@
     "n": 32,
     "alpha_monthly": 0.011941150946788333,
     "t_alpha": 1.0471367956402122,
+    "se_alpha": 0.011403620803419095,
+    "mde_alpha_80": 0.03193013824957346,
     "r2": 0.395520627980539,
+    "mean_active_monthly": 0.020127781249999997,
     "betas": {
      "SMH": 0.2382107880833449,
      "MTUM": 0.6304887595545836,
@@ -1662,6 +3492,14 @@
      "SMH": 1.1561731899837933,
      "MTUM": 1.6443761654843958,
      "IWM": 1.9889974291604908
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.01366165728862681,
+     "se": 0.010240725303670413,
+     "t": 1.3340517281261601,
+     "mde_80": 0.028674030850277154,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "MTUM",
@@ -1722,7 +3560,10 @@
     "n": 32,
     "alpha_monthly": 0.015870929226095464,
     "t_alpha": 0.9502242294294381,
+    "se_alpha": 0.01670229903064581,
+    "mde_alpha_80": 0.04676643728580826,
     "r2": 0.17301805797566405,
+    "mean_active_monthly": 0.020801499999999994,
     "betas": {
      "SMH": 0.37967662400407554,
      "MTUM": -0.32555654709497167,
@@ -1732,6 +3573,14 @@
      "SMH": 1.2581772860406573,
      "MTUM": -0.5797179814185013,
      "IWM": 1.984260483557546
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.02127728853406074,
+     "se": 0.015337858571148381,
+     "t": 1.3872398441647424,
+     "mde_80": 0.042946003999215464,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -1792,7 +3641,10 @@
     "n": 32,
     "alpha_monthly": 0.001175484539226026,
     "t_alpha": 0.05902012936353705,
+    "se_alpha": 0.019916671683072363,
+    "mde_alpha_80": 0.055766680712602615,
     "r2": 0.42829763596045267,
+    "mean_active_monthly": 0.02648225,
     "betas": {
      "SMH": 0.9681488370990592,
      "MTUM": 0.44333867809157335,
@@ -1802,6 +3654,14 @@
      "SMH": 2.690478959222244,
      "MTUM": 0.6620418601286477,
      "IWM": 0.9397962537343236
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.0018356424241344135,
+     "se": 0.01901903330631711,
+     "t": 0.09651607390185865,
+     "mde_80": 0.05325329325768791,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "SMH",
@@ -1862,7 +3722,10 @@
     "n": 32,
     "alpha_monthly": 0.01368315819786249,
     "t_alpha": 0.8153300602219928,
+    "se_alpha": 0.016782354613709357,
+    "mde_alpha_80": 0.0469905929183862,
     "r2": 0.2954950721087869,
+    "mean_active_monthly": 0.021313718750000005,
     "betas": {
      "SMH": 0.2835929318622224,
      "MTUM": 0.529798343083079,
@@ -1872,6 +3735,14 @@
      "SMH": 0.9352909780424944,
      "MTUM": 0.9389107136235004,
      "IWM": 2.2127168435915294
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.00980161146790308,
+     "se": 0.015531159892704033,
+     "t": 0.6310933333773426,
+     "mde_80": 0.04348724769957129,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -1899,7 +3770,7 @@
    "sealed_dsr": 0.0401,
    "max_dd": -0.313071,
    "turnover_annual": 2.634783,
-   "sigma_active_monthly": 0.0945363157613802,
+   "sigma_active_monthly": 0.09453619290221921,
    "forward_return": "PENDING (entry 2026-09-28)",
    "forward_spy": "PENDING (entry 2026-09-28)",
    "forward_relative": "PENDING (entry 2026-09-28)",
@@ -1932,7 +3803,10 @@
     "n": 32,
     "alpha_monthly": 0.014052369513903958,
     "t_alpha": 0.9039555163681531,
+    "se_alpha": 0.015545421494148904,
+    "mde_alpha_80": 0.04352718018361693,
     "r2": 0.17719830410738413,
+    "mean_active_monthly": 0.022625937500000002,
     "betas": {
      "SMH": 0.4113079714614518,
      "MTUM": -0.01843088321061842,
@@ -1942,6 +3816,14 @@
      "SMH": 1.4644308216518216,
      "MTUM": -0.03526226767401583,
      "IWM": 1.2966816676197481
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.009090572026280023,
+     "se": 0.017385339808327193,
+     "t": 0.522887221446534,
+     "mde_80": 0.04867895146331614,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -2002,7 +3884,10 @@
     "n": 32,
     "alpha_monthly": 0.0071297974686254425,
     "t_alpha": 0.36646083334369317,
+    "se_alpha": 0.01945582397870773,
+    "mde_alpha_80": 0.05447630714038164,
     "r2": 0.4225025560365907,
+    "mean_active_monthly": 0.0318441875,
     "betas": {
      "SMH": 0.9207655894212815,
      "MTUM": 0.48800984851363827,
@@ -2012,6 +3897,14 @@
      "SMH": 2.6194112493926833,
      "MTUM": 0.746011548679288,
      "IWM": 0.7511546473481655
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.014501283285765212,
+     "se": 0.017901235503382747,
+     "t": 0.8100716446652492,
+     "mde_80": 0.05012345940947169,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "SMH",
@@ -2039,7 +3932,7 @@
    "sealed_dsr": 0.0998,
    "max_dd": -0.2727,
    "turnover_annual": 5.222609,
-   "sigma_active_monthly": 0.06526570709601288,
+   "sigma_active_monthly": 0.06526560096428331,
    "forward_return": "PENDING (entry 2026-09-28)",
    "forward_spy": "PENDING (entry 2026-09-28)",
    "forward_relative": "PENDING (entry 2026-09-28)",
@@ -2072,7 +3965,10 @@
     "n": 32,
     "alpha_monthly": 0.012373897845294739,
     "t_alpha": 1.098817479224284,
+    "se_alpha": 0.011261103940601817,
+    "mde_alpha_80": 0.03153109103368509,
     "r2": 0.5396163051258838,
+    "mean_active_monthly": 0.027372218750000003,
     "betas": {
      "SMH": 0.5615775523759389,
      "MTUM": 0.45903103173533016,
@@ -2082,6 +3978,14 @@
      "SMH": 2.7601520616236064,
      "MTUM": 1.2123490360179119,
      "IWM": 2.1258668009282147
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.012518205627715755,
+     "se": 0.010734598936058042,
+     "t": 1.1661549446124617,
+     "mde_80": 0.030056877020962516,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "MTUM",
@@ -2142,7 +4046,10 @@
     "n": 32,
     "alpha_monthly": 0.00726033049799316,
     "t_alpha": 0.7807461929634572,
+    "se_alpha": 0.009299219853298702,
+    "mde_alpha_80": 0.026037815589236363,
     "r2": 0.5431620425086616,
+    "mean_active_monthly": 0.017877375,
     "betas": {
      "SMH": 0.28612864390078246,
      "MTUM": 0.7617957107889654,
@@ -2152,6 +4059,14 @@
      "SMH": 1.7030172901368374,
      "MTUM": 2.4364561529850035,
      "IWM": 1.8057505476672246
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.007661451200005535,
+     "se": 0.008473333783307184,
+     "t": 0.9041838072163413,
+     "mde_80": 0.023725334593260115,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "MTUM",
@@ -2212,7 +4127,10 @@
     "n": 32,
     "alpha_monthly": 0.01052851615226085,
     "t_alpha": 0.7047933358355797,
+    "se_alpha": 0.014938444529669947,
+    "mde_alpha_80": 0.04182764468307585,
     "r2": 0.3046120359076723,
+    "mean_active_monthly": 0.024232156250000005,
     "betas": {
      "SMH": 0.5442236573632256,
      "MTUM": 0.22635511420792162,
@@ -2222,6 +4140,14 @@
      "SMH": 2.0163980742047993,
      "MTUM": 0.45066260734466973,
      "IWM": 1.055130491142171
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.012491058396251635,
+     "se": 0.015899996462754504,
+     "t": 0.7856013317683275,
+     "mde_80": 0.04451999009571261,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -2282,7 +4208,10 @@
     "n": 32,
     "alpha_monthly": 0.0022228363491729216,
     "t_alpha": 0.16270677141568987,
+    "se_alpha": 0.013661609346877943,
+    "mde_alpha_80": 0.038252506171258235,
     "r2": 0.45773367406376164,
+    "mean_active_monthly": 0.0006638125000000003,
     "betas": {
      "SMH": -0.07221681286284456,
      "MTUM": 0.7044999719588828,
@@ -2292,6 +4221,14 @@
      "SMH": -0.29257734289954357,
      "MTUM": 1.5337186906564684,
      "IWM": 4.244185355628422
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.006305104480810371,
+     "se": 0.013079319800059653,
+     "t": -0.482066695913469,
+     "mde_80": 0.03662209544016703,
+     "verdict": "CANNOT_DISTINGUISH"
     }
    },
    "dominant_etf": "IWM",
@@ -2302,9 +4239,1809 @@
    "forward_factor_etf": "PENDING (entry 2026-09-28)",
    "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
    "factor_twin_why": null
+  },
+  {
+   "book": "lib_net_raises_ivw_lead_2026-09-27",
+   "book_id": "40b3584ea3d6a2ae",
+   "rule": "net_raises_ivw",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.209271,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.215231,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.005238,
+   "sealed_dsr": 0.0012,
+   "max_dd": -0.198652,
+   "turnover_annual": 5.776787,
+   "sigma_active_monthly": 0.03221588178604622,
+   "forward_return": "PENDING (entry 2026-09-28)",
+   "forward_spy": "PENDING (entry 2026-09-28)",
+   "forward_relative": "PENDING (entry 2026-09-28)",
+   "expected_relative_to_date": "PENDING (entry 2026-09-28)",
+   "twins_relative": "PENDING (entry 2026-09-28)",
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 0,
+   "sessions_since_entry": 0,
+   "status": "PENDING (entry 2026-09-28)",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 103,
+   "cluster_sealed": 54,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": -0.0048809551744042265,
+    "t_alpha": -0.6844917615180244,
+    "se_alpha": 0.007130772711682518,
+    "mde_alpha_80": 0.01996616359271105,
+    "r2": 0.23674663462555978,
+    "mean_active_monthly": 0.0014754687500000009,
+    "betas": {
+     "SMH": 0.21797081538531735,
+     "MTUM": 0.1405941721659013,
+     "IWM": -0.04030052435905945
+    },
+    "t_betas": {
+     "SMH": 1.6918661101330574,
+     "MTUM": 0.5864045313586856,
+     "IWM": -0.19149317944788719
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.0064367748503398,
+     "se": 0.007245410707576662,
+     "t": -0.8883933720429048,
+     "mde_80": 0.020287149981214652,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.4441108120806166,
+   "dominant_t": 4.596145460344778,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
+  },
+  {
+   "book": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+   "book_id": "4ffbfd2e83d06daa",
+   "rule": "qc470_mom252_quarterly_riskparity",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.259141,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.520896,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.310903,
+   "sealed_dsr": 0.0498,
+   "max_dd": -0.476581,
+   "turnover_annual": 2.661136,
+   "sigma_active_monthly": 0.094011033603558,
+   "forward_return": "PENDING (entry 2026-09-28)",
+   "forward_spy": "PENDING (entry 2026-09-28)",
+   "forward_relative": "PENDING (entry 2026-09-28)",
+   "expected_relative_to_date": "PENDING (entry 2026-09-28)",
+   "twins_relative": "PENDING (entry 2026-09-28)",
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 0,
+   "sessions_since_entry": 0,
+   "status": "PENDING (entry 2026-09-28)",
+   "investigation": null,
+   "kind": "control",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(NAME_WEIGHT)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.01052851615226085,
+    "t_alpha": 0.7047933358355797,
+    "se_alpha": 0.014938444529669947,
+    "mde_alpha_80": 0.04182764468307585,
+    "r2": 0.3046120359076723,
+    "mean_active_monthly": 0.024232156250000005,
+    "betas": {
+     "SMH": 0.5442236573632256,
+     "MTUM": 0.22635511420792162,
+     "IWM": 0.46519211547407446
+    },
+    "t_betas": {
+     "SMH": 2.0163980742047993,
+     "MTUM": 0.45066260734466973,
+     "IWM": 1.055130491142171
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.012491058396251635,
+     "se": 0.015899996462754504,
+     "t": 0.7856013317683275,
+     "mde_80": 0.04451999009571261,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.3511976995509112,
+   "dominant_t": 5.796156615305982,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
+  },
+  {
+   "book": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+   "book_id": "3fd38f0d7a4dcb03",
+   "rule": "mom_12_1_ivw",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.284969,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.45075,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.240757,
+   "sealed_dsr": 0.0209,
+   "max_dd": -0.496893,
+   "turnover_annual": 4.890263,
+   "sigma_active_monthly": 0.09818971856591753,
+   "forward_return": "PENDING (entry 2026-09-28)",
+   "forward_spy": "PENDING (entry 2026-09-28)",
+   "forward_relative": "PENDING (entry 2026-09-28)",
+   "expected_relative_to_date": "PENDING (entry 2026-09-28)",
+   "twins_relative": "PENDING (entry 2026-09-28)",
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 0,
+   "sessions_since_entry": 0,
+   "status": "PENDING (entry 2026-09-28)",
+   "investigation": null,
+   "kind": "control",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(NAME_WEIGHT)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.009077215751458971,
+    "t_alpha": 0.5494491463126994,
+    "se_alpha": 0.0165205748564272,
+    "mde_alpha_80": 0.04625760959799616,
+    "r2": 0.2642011146390624,
+    "mean_active_monthly": 0.020570750000000006,
+    "betas": {
+     "SMH": 0.600256678652082,
+     "MTUM": -0.18295058206209214,
+     "IWM": 0.8849248220554157
+    },
+    "t_betas": {
+     "SMH": 2.011018574385666,
+     "MTUM": -0.3293633209194223,
+     "IWM": 1.8149322968807193
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.004902408171873881,
+     "se": 0.01750074167225572,
+     "t": 0.2801257377363479,
+     "mde_80": 0.049002076682316015,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.4131432602829677,
+   "dominant_t": 5.70251689802297,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
+  },
+  {
+   "book": "lib_mom_12_1_q_trend_lead_2026-09-27",
+   "book_id": "1144c07902e67552",
+   "rule": "mom_12_1_q_trend",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.235698,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.418295,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.208302,
+   "sealed_dsr": 0.0129,
+   "max_dd": -0.418082,
+   "turnover_annual": 2.812174,
+   "sigma_active_monthly": 0.09957537210206359,
+   "forward_return": "PENDING (entry 2026-09-28)",
+   "forward_spy": "PENDING (entry 2026-09-28)",
+   "forward_relative": "PENDING (entry 2026-09-28)",
+   "expected_relative_to_date": "PENDING (entry 2026-09-28)",
+   "twins_relative": "PENDING (entry 2026-09-28)",
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 0,
+   "sessions_since_entry": 0,
+   "status": "PENDING (entry 2026-09-28)",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 84,
+   "cluster_sealed": 94,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.013437164572008721,
+    "t_alpha": 0.701811086309722,
+    "se_alpha": 0.0191464125234389,
+    "mde_alpha_80": 0.05360995506562892,
+    "r2": 0.1297575603846235,
+    "mean_active_monthly": 0.018802468750000002,
+    "betas": {
+     "SMH": 0.3472855447857637,
+     "MTUM": -0.15781256799415438,
+     "IWM": 0.9034770164650996
+    },
+    "t_betas": {
+     "SMH": 1.003930228617441,
+     "MTUM": -0.24514371742363678,
+     "IWM": 1.5988543546597016
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.003891250307905285,
+     "se": 0.020383774278670844,
+     "t": 0.1908994013918712,
+     "mde_80": 0.05707456798027836,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.1102287014345564,
+   "dominant_t": 4.020505129819806,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   }
  ],
  "carried_investigations": [],
+ "leads": {
+  "schema": "bridge/leads/1",
+  "date": "2026-09-27",
+  "run_id": "2026-09-27T082553Z",
+  "licence": "PRODUCT_EXPERIMENT",
+  "llm_spend_usd": 0.0,
+  "label": "HINDSIGHT leads: every rule was registered 2026-09-26; nothing here is a claim",
+  "entry_session": "2026-09-28",
+  "bars_asof": "2026-09-25",
+  "receipts": {
+   "family_pool": "backend/data/optimus/signal_structure/family_pool_2026-09-27T082553Z.json",
+   "matched_twins": "backend/data/optimus/signal_structure/matched_twins_2026-09-27T082553Z.json",
+   "matched_twins_monthly": "backend/data/optimus/signal_structure/matched_twins_monthly_2026-09-27T082553Z.parquet",
+   "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-27T082553Z.json",
+   "cell_monthly": "backend/data/optimus/strategy_library/cell_monthly_2026-09-27T082553Z.parquet"
+  },
+  "selection": {
+   "a_rule": "`weighted` members whose mean monthly rule - twin21 is > 0 in BOTH windows, highest dev DSR (rule - twin21, dev window, n_trials = 288 cells) first, at most 3",
+   "a_members": {
+    "gp_at_ivw@k20": {
+     "cell": "gp_at_ivw@k20",
+     "dev_mean": 0.004004736907049462,
+     "dev_t": 1.379014827878198,
+     "dev_n": 83,
+     "sealed_mean": -0.006225261662651468,
+     "sealed_t": -0.8772291533258703,
+     "sealed_n": 32,
+     "dev_dsr": 0.0638,
+     "dev_dsr_z": -1.5236,
+     "beats_twin_both": false
+    },
+    "mom_12_1_ivw@k20": {
+     "cell": "mom_12_1_ivw@k20",
+     "dev_mean": 0.012738424987548734,
+     "dev_t": 1.6141999509542706,
+     "dev_n": 83,
+     "sealed_mean": 0.015810037524798273,
+     "sealed_t": 1.2785540485805174,
+     "sealed_n": 32,
+     "dev_dsr": 0.0796,
+     "dev_dsr_z": -1.4079,
+     "beats_twin_both": true
+    },
+    "mom_12_1_liqw@k20": {
+     "cell": "mom_12_1_liqw@k20",
+     "dev_mean": 0.0035150579093414023,
+     "dev_t": 0.2544081709624655,
+     "dev_n": 83,
+     "sealed_mean": 0.047764361123970096,
+     "sealed_t": 1.985658760659275,
+     "sealed_n": 32,
+     "dev_dsr": 0.004,
+     "dev_dsr_z": -2.6513,
+     "beats_twin_both": true
+    },
+    "mom_flow_ivw@k20": {
+     "cell": "mom_flow_ivw@k20",
+     "dev_mean": 0.003663933566541219,
+     "dev_t": 0.6753666489684358,
+     "dev_n": 83,
+     "sealed_mean": 0.014728732916821061,
+     "sealed_t": 1.7258392339140638,
+     "sealed_n": 32,
+     "dev_dsr": 0.0183,
+     "dev_dsr_z": -2.0903,
+     "beats_twin_both": true
+    },
+    "net_raises_ivw@k20": {
+     "cell": "net_raises_ivw@k20",
+     "dev_mean": 0.006582179629485679,
+     "dev_t": 2.4274285016643575,
+     "dev_n": 83,
+     "sealed_mean": 0.0034499529782056233,
+     "sealed_t": 0.5861776863428115,
+     "sealed_n": 32,
+     "dev_dsr": 0.3235,
+     "dev_dsr_z": -0.4579,
+     "beats_twin_both": true
+    },
+    "qc470_mom252_quarterly_riskparity@k20": {
+     "cell": "qc470_mom252_quarterly_riskparity@k20",
+     "dev_mean": 0.012448424714848609,
+     "dev_t": 1.6654547039536758,
+     "dev_n": 83,
+     "sealed_mean": 0.017999636767222688,
+     "sealed_t": 1.5957110683258189,
+     "sealed_n": 32,
+     "dev_dsr": 0.0841,
+     "dev_dsr_z": -1.3777,
+     "beats_twin_both": true
+    },
+    "quality_composite_ivw@k20": {
+     "cell": "quality_composite_ivw@k20",
+     "dev_mean": 0.005383709257578191,
+     "dev_t": 2.5398917700490165,
+     "dev_n": 83,
+     "sealed_mean": -0.0021670447298043254,
+     "sealed_t": -0.48240071710913374,
+     "sealed_n": 32,
+     "dev_dsr": 0.3548,
+     "dev_dsr_z": -0.3725,
+     "beats_twin_both": false
+    }
+   },
+   "a_picks": [
+    "net_raises_ivw@k20",
+    "qc470_mom252_quarterly_riskparity@k20",
+    "mom_12_1_ivw@k20"
+   ],
+   "b_rule": "matched_twins.cells_t_twin21_ge_2_both_windows",
+   "b_picks": [
+    "disp_short_avoid@k20",
+    "mom_12_1_q_trend@k20"
+   ]
+  },
+  "gate_scope": "construction + timing (`lead_gate`); the factory's full-rule verdict is kept beside it",
+  "chance": {
+   "expected_cells_by_chance": 0.8190047501344513,
+   "basis": "36 cells at t >= 2 vs the 21-draw twin in dev x P(t >= 2 | null) 0.023 in 2024-26",
+   "n_cells": 288,
+   "observed": 2
+  },
+  "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+  "twins": [
+   "ew",
+   "ranks_k1_2k",
+   "spy",
+   "iwm",
+   "matched_random"
+  ],
+  "books": [
+   {
+    "cell": "net_raises_ivw@k20",
+    "source": "a",
+    "rule": "net_raises_ivw",
+    "k": 20,
+    "family": "weighted",
+    "weights": {
+     "OKTA": 0.033210834574493565,
+     "SNOW": 0.05557357550568276,
+     "CRWD": 0.036076713994388,
+     "PANW": 0.04205014596984346,
+     "CRM": 0.0437827108068764,
+     "TGT": 0.08619858301240813,
+     "GTLB": 0.04875831417276998,
+     "ABNB": 0.05372678677829494,
+     "ESTC": 0.042227354594412306,
+     "AFRM": 0.054713910018343706,
+     "NET": 0.04506505578797405,
+     "AMGN": 0.07872837016231031,
+     "P": 0.03608584769985291,
+     "RVMD": 0.06982372085189559,
+     "DELL": 0.03251790685534426,
+     "DT": 0.06272512028907344,
+     "FTNT": 0.05800979331494851,
+     "S": 0.04170754087347053,
+     "AMD": 0.03787378015418335,
+     "CHYM": 0.04114393458343375
+    },
+    "worst_case": "WORST CASE lib_net_raises_ivw_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (TGT 8.6%) to zero = -$86,199; whole book to zero = -$1,000,000",
+    "declared": {
+     "expected_sigma_21_sessions": 0.0757170594495496,
+     "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+     "factor_betas": {
+      "status": "OK",
+      "n_months": 115,
+      "betas": {
+       "SPY": 1.0099186781543543,
+       "IWM-SPY": 0.046578017512827,
+       "SMH-SPY": 0.10329845498525414,
+       "MTUM-SPY": 0.44533421792975325
+      },
+      "t_betas": {
+       "SPY": 15.296225779223365,
+       "IWM-SPY": 0.5210323599526787,
+       "SMH-SPY": 1.994681352639755,
+       "MTUM-SPY": 4.572427217045885
+      },
+      "alpha_monthly": 0.002718986569120071,
+      "r2": 0.7588400242782856,
+      "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+     },
+     "stop": {
+      "sigma_units": 2.0,
+      "level_21_sessions": -0.1514341188990992,
+      "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+     },
+     "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+     "sigma_rule_minus_matched_twin": {
+      "21_sessions": 0.03285403773554396,
+      "63_sessions": 0.056904862591747284,
+      "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+      "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+     }
+    },
+    "matched_twin_fallbacks": {
+     "cell": 20,
+     "band_vol": 0,
+     "band": 0,
+     "any": 0,
+     "none": 0
+    },
+    "matched_twin_seed": 159174771439939,
+    "ranks_k1_2k": {
+     "DDOG": 0.030979452726230962,
+     "MRK": 0.05909591406643081,
+     "RBRK": 0.02807261187323599,
+     "MDB": 0.031243648042363428,
+     "TRV": 0.07492960279150862,
+     "ZS": 0.032233271035407934,
+     "ABBV": 0.08996549328838091,
+     "ALL": 0.06869817271521127,
+     "ELF": 0.03882624508995615,
+     "EXPE": 0.04582004518890398,
+     "FROG": 0.033198948407672735,
+     "GH": 0.03886452249969098,
+     "PSX": 0.06570699170742582,
+     "WDAY": 0.031589705667321076,
+     "XYZ": 0.057265817046555874,
+     "JAZZ": 0.07420129610522976,
+     "NBIX": 0.06085429604887713,
+     "RYAN": 0.049830973480052256,
+     "VEEV": 0.04406999335571729,
+     "EAT": 0.04455299886382722
+    },
+    "matched_twin_pairs": [
+     {
+      "held": "OKTA",
+      "twin": "PRAX",
+      "level": "cell"
+     },
+     {
+      "held": "SNOW",
+      "twin": "CSCO",
+      "level": "cell"
+     },
+     {
+      "held": "CRWD",
+      "twin": "GEV",
+      "level": "cell"
+     },
+     {
+      "held": "PANW",
+      "twin": "VRT",
+      "level": "cell"
+     },
+     {
+      "held": "CRM",
+      "twin": "APP",
+      "level": "cell"
+     },
+     {
+      "held": "TGT",
+      "twin": "WBD",
+      "level": "cell"
+     },
+     {
+      "held": "GTLB",
+      "twin": "CELH",
+      "level": "cell"
+     },
+     {
+      "held": "ABNB",
+      "twin": "EXEL",
+      "level": "cell"
+     },
+     {
+      "held": "ESTC",
+      "twin": "HUBS",
+      "level": "cell"
+     },
+     {
+      "held": "AFRM",
+      "twin": "CLX",
+      "level": "cell"
+     },
+     {
+      "held": "NET",
+      "twin": "RBRK",
+      "level": "cell"
+     },
+     {
+      "held": "AMGN",
+      "twin": "ADI",
+      "level": "cell"
+     },
+     {
+      "held": "P",
+      "twin": "DY",
+      "level": "cell"
+     },
+     {
+      "held": "RVMD",
+      "twin": "JHX",
+      "level": "cell"
+     },
+     {
+      "held": "DELL",
+      "twin": "MRVL",
+      "level": "cell"
+     },
+     {
+      "held": "DT",
+      "twin": "GEN",
+      "level": "cell"
+     },
+     {
+      "held": "FTNT",
+      "twin": "WCC",
+      "level": "cell"
+     },
+     {
+      "held": "S",
+      "twin": "ZBRA",
+      "level": "cell"
+     },
+     {
+      "held": "AMD",
+      "twin": "WDC",
+      "level": "cell"
+     },
+     {
+      "held": "CHYM",
+      "twin": "STM",
+      "level": "cell"
+     }
+    ],
+    "status": "NEW",
+    "gate": "PASS",
+    "gate_detail": {
+     "verdict": "PASS",
+     "reasons": [],
+     "label": "PASS",
+     "selection": {
+      "dev_vs_spy_gt_0": true,
+      "selection_window_vs_spy_gt_0": true,
+      "top5_month_share_lt_0_6": true,
+      "max_dd_gt_m40": true,
+      "loo_worst_mean_active_gt_0": true,
+      "family_books_le_2": true
+     },
+     "construction": {
+      "max_name_weight_le_0.10": true,
+      "effective_n_ge_8": true,
+      "no_rho_0_8_cluster_above_40pct": true,
+      "no_name_gt_10pct_printing_in_first_5_sessions": true,
+      "largest_name_to_zero_le_150k": true
+     },
+     "timing": {
+      "bars_le_1_session_old": true
+     },
+     "detail": {
+      "k": 20,
+      "max_name": "TGT",
+      "max_weight": 0.08619858301240813,
+      "weight_cap": 0.1,
+      "effective_n": 18.423,
+      "max_cluster": [
+       "CRWD",
+       "FTNT",
+       "OKTA",
+       "PANW",
+       "S"
+      ],
+      "max_cluster_share": 0.2111,
+      "pairs_above_rho": [
+       [
+        "CRWD",
+        "FTNT",
+        0.851
+       ],
+       [
+        "CRWD",
+        "OKTA",
+        0.903
+       ],
+       [
+        "CRWD",
+        "PANW",
+        0.9
+       ],
+       [
+        "CRWD",
+        "S",
+        0.851
+       ],
+       [
+        "FTNT",
+        "OKTA",
+        0.807
+       ],
+       [
+        "FTNT",
+        "PANW",
+        0.852
+       ],
+       [
+        "FTNT",
+        "S",
+        0.879
+       ],
+       [
+        "PANW",
+        "S",
+        0.844
+       ]
+      ],
+      "earnings_names_over_10pct": {},
+      "largest_name_to_zero_usd": 86199.0,
+      "decision_date": "2026-09-27",
+      "bar_date": "2026-09-25",
+      "staleness_sessions": 0,
+      "family": "weighted",
+      "family_books_before": 1
+     },
+     "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+     "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+     "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+     "verdict_full_rule": "PASS",
+     "reasons_full_rule": []
+    },
+    "book": "lib_net_raises_ivw_lead_2026-09-27",
+    "book_id": "40b3584ea3d6a2ae",
+    "twin_ids": {
+     "ew": "bc59d47a14e8c3c4",
+     "ranks_k1_2k": "0dc6584091230ad8",
+     "spy": "a0155f20d1f3d421",
+     "iwm": "a834f30ec8d0538d",
+     "matched_random": "363b1e75a9e9991f"
+    },
+    "twin_ids_already": {}
+   },
+   {
+    "cell": "qc470_mom252_quarterly_riskparity@k20",
+    "source": "a",
+    "rule": "qc470_mom252_quarterly_riskparity",
+    "k": 20,
+    "family": "weighted",
+    "weights": {
+     "AKTS": 0.06288570775558307,
+     "LIFE": 0.0522718380219673,
+     "SNDK": 0.032440645383501845,
+     "AXTI": 0.024722972695233558,
+     "JAN": 0.14957261551912382,
+     "WOLF": 0.035559543022195786,
+     "MRNA": 0.010825732070967637,
+     "NUAI": 0.028578918754540435,
+     "ERAS": 0.059926440428911966,
+     "SLS": 0.03675110086558317,
+     "TXG": 0.052903185213309264,
+     "ANRO": 0.06730639108531997,
+     "TWST": 0.04254753668839638,
+     "MU": 0.05006019488407462,
+     "LITE": 0.040583443771697696,
+     "MXL": 0.03018300935139042,
+     "PRAX": 0.06779245176021796,
+     "ORKA": 0.07089757004059752,
+     "IMMX": 0.04778686848345424,
+     "VICR": 0.03640383420393338
+    },
+    "worst_case": "WORST CASE lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (JAN 15.0%) to zero = -$149,573; whole book to zero = -$1,000,000",
+    "declared": {
+     "expected_sigma_21_sessions": 0.11948968431449865,
+     "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+     "factor_betas": {
+      "status": "OK",
+      "n_months": 115,
+      "betas": {
+       "SPY": 1.1292017105991723,
+       "IWM-SPY": 1.3160722338468172,
+       "SMH-SPY": 0.3471832019187201,
+       "MTUM-SPY": 0.6513226543008014
+      },
+      "t_betas": {
+       "SPY": 6.411576100885564,
+       "IWM-SPY": 5.518979957062868,
+       "SMH-SPY": 2.5132390497336345,
+       "MTUM-SPY": 2.506988329605771
+      },
+      "alpha_monthly": 0.013671154322987813,
+      "r2": 0.5567952803932124,
+      "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+     },
+     "stop": {
+      "sigma_units": 2.0,
+      "level_21_sessions": -0.2389793686289973,
+      "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+     },
+     "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+     "sigma_rule_minus_matched_twin": {
+      "21_sessions": 0.07615281344181342,
+      "63_sessions": 0.13190054202053497,
+      "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+      "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+     }
+    },
+    "matched_twin_fallbacks": {
+     "cell": 20,
+     "band_vol": 0,
+     "band": 0,
+     "any": 0,
+     "none": 0
+    },
+    "matched_twin_seed": 178737001608072,
+    "ranks_k1_2k": {
+     "CLYM": 0.04188275936086561,
+     "IOVA": 0.026201161935425932,
+     "MLPI": 0.23399960664022704,
+     "SYRE": 0.05723061506361453,
+     "DMRA": 0.04136889757910106,
+     "OMER": 0.03497544661676194,
+     "RVMD": 0.08197640658345616,
+     "QTTB": 0.015680398697766773,
+     "BFLY": 0.03201241493433149,
+     "DELL": 0.038177586658134796,
+     "CHRN": 0.0241711405556628,
+     "CDNA": 0.03440753614444883,
+     "BE": 0.02836463835645907,
+     "WDC": 0.03626602967218695,
+     "STX": 0.040162944284129184,
+     "INTC": 0.04103288230260437,
+     "AMD": 0.04446563951178317,
+     "ABSI": 0.03666837466559737,
+     "ASX": 0.04634899615827415,
+     "RLAY": 0.06460652427916859
+    },
+    "matched_twin_pairs": [
+     {
+      "held": "AKTS",
+      "twin": "PDEX",
+      "level": "cell"
+     },
+     {
+      "held": "LIFE",
+      "twin": "BW",
+      "level": "cell"
+     },
+     {
+      "held": "SNDK",
+      "twin": "CRWD",
+      "level": "cell"
+     },
+     {
+      "held": "AXTI",
+      "twin": "ONTO",
+      "level": "cell"
+     },
+     {
+      "held": "JAN",
+      "twin": "NTCT",
+      "level": "cell"
+     },
+     {
+      "held": "WOLF",
+      "twin": "APPS",
+      "level": "cell"
+     },
+     {
+      "held": "MRNA",
+      "twin": "FIX",
+      "level": "cell"
+     },
+     {
+      "held": "NUAI",
+      "twin": "XENE",
+      "level": "cell"
+     },
+     {
+      "held": "ERAS",
+      "twin": "ADEA",
+      "level": "cell"
+     },
+     {
+      "held": "SLS",
+      "twin": "VISN",
+      "level": "cell"
+     },
+     {
+      "held": "TXG",
+      "twin": "SITM",
+      "level": "cell"
+     },
+     {
+      "held": "ANRO",
+      "twin": "ACRS",
+      "level": "cell"
+     },
+     {
+      "held": "TWST",
+      "twin": "TWLO",
+      "level": "cell"
+     },
+     {
+      "held": "MU",
+      "twin": "AMD",
+      "level": "cell"
+     },
+     {
+      "held": "LITE",
+      "twin": "VRT",
+      "level": "cell"
+     },
+     {
+      "held": "MXL",
+      "twin": "FLEX",
+      "level": "cell"
+     },
+     {
+      "held": "PRAX",
+      "twin": "FCEL",
+      "level": "cell"
+     },
+     {
+      "held": "ORKA",
+      "twin": "VPG",
+      "level": "cell"
+     },
+     {
+      "held": "IMMX",
+      "twin": "MRAM",
+      "level": "cell"
+     },
+     {
+      "held": "VICR",
+      "twin": "PL",
+      "level": "cell"
+     }
+    ],
+    "status": "NEW",
+    "gate": "CONTROL(NAME_WEIGHT)",
+    "gate_detail": {
+     "verdict": "CONTROL",
+     "reasons": [
+      "NAME_WEIGHT"
+     ],
+     "label": "CONTROL(NAME_WEIGHT)",
+     "selection": {
+      "dev_vs_spy_gt_0": true,
+      "selection_window_vs_spy_gt_0": true,
+      "top5_month_share_lt_0_6": true,
+      "max_dd_gt_m40": false,
+      "loo_worst_mean_active_gt_0": true,
+      "family_books_le_2": false
+     },
+     "construction": {
+      "max_name_weight_le_0.10": false,
+      "effective_n_ge_8": true,
+      "no_rho_0_8_cluster_above_40pct": true,
+      "no_name_gt_10pct_printing_in_first_5_sessions": true,
+      "largest_name_to_zero_le_150k": true
+     },
+     "timing": {
+      "bars_le_1_session_old": true
+     },
+     "detail": {
+      "k": 20,
+      "max_name": "JAN",
+      "max_weight": 0.14957261551912382,
+      "weight_cap": 0.1,
+      "effective_n": 15.315,
+      "max_cluster": [
+       "MU",
+       "SNDK"
+      ],
+      "max_cluster_share": 0.0825,
+      "pairs_above_rho": [
+       [
+        "MU",
+        "SNDK",
+        0.877
+       ]
+      ],
+      "earnings_names_over_10pct": {
+       "JAN": {
+        "status": "NOT_DUE",
+        "last_202": "2026-08-04",
+        "due_from": "2026-10-18",
+        "window_end": "2026-10-02",
+        "file_ends": "2026-09-03"
+       }
+      },
+      "largest_name_to_zero_usd": 149573.0,
+      "decision_date": "2026-09-27",
+      "bar_date": "2026-09-25",
+      "staleness_sessions": 0,
+      "family": "weighted",
+      "family_books_before": 2
+     },
+     "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+     "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+     "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+     "verdict_full_rule": "CONTROL",
+     "reasons_full_rule": [
+      "MAX_DD",
+      "FAMILY_CAP",
+      "NAME_WEIGHT"
+     ]
+    },
+    "book": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+    "book_id": "4ffbfd2e83d06daa",
+    "twin_ids": {
+     "ew": "2fb54ddd9dde0b04",
+     "ranks_k1_2k": "380be9ef9d5ff617",
+     "spy": "e3bc8022d4614ea7",
+     "iwm": "8f490967515aa87b",
+     "matched_random": "fd7efadd8fae58dc"
+    },
+    "twin_ids_already": {}
+   },
+   {
+    "cell": "mom_12_1_ivw@k20",
+    "source": "a",
+    "rule": "mom_12_1_ivw",
+    "k": 20,
+    "family": "weighted",
+    "weights": {
+     "AKTS": 0.06243767969361776,
+     "LIFE": 0.05189942827863787,
+     "SNDK": 0.03220952260538883,
+     "JAN": 0.1485069881858898,
+     "AXTI": 0.024546834333465925,
+     "WOLF": 0.03530619971553336,
+     "ERAS": 0.059499495612290086,
+     "ANRO": 0.06682686794672323,
+     "QTTB": 0.01974344339734025,
+     "SLS": 0.03648926832710089,
+     "PRAX": 0.06730946569133159,
+     "CLYM": 0.05273525914130247,
+     "DMRA": 0.05208824746781934,
+     "IMMX": 0.04744641182266183,
+     "ORKA": 0.07039246161394523,
+     "LITE": 0.04029430777705196,
+     "MU": 0.0497035419513814,
+     "MRNA": 0.01074860434302725,
+     "ALMS": 0.029571564545403686,
+     "TWST": 0.042244407550087404
+    },
+    "worst_case": "WORST CASE lib_mom_12_1_ivw_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (JAN 14.9%) to zero = -$148,507; whole book to zero = -$1,000,000",
+    "declared": {
+     "expected_sigma_21_sessions": 0.10767125809172104,
+     "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+     "factor_betas": {
+      "status": "OK",
+      "n_months": 115,
+      "betas": {
+       "SPY": 1.0367631538002875,
+       "IWM-SPY": 1.4031464698167329,
+       "SMH-SPY": 0.3989723285279452,
+       "MTUM-SPY": 0.46753347893586567
+      },
+      "t_betas": {
+       "SPY": 5.525202421161056,
+       "IWM-SPY": 5.522776440494936,
+       "SMH-SPY": 2.7107735259677113,
+       "MTUM-SPY": 1.6890566219162337
+      },
+      "alpha_monthly": 0.014965031903655836,
+      "r2": 0.5185981272094622,
+      "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+     },
+     "stop": {
+      "sigma_units": 2.0,
+      "level_21_sessions": -0.21534251618344208,
+      "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+     },
+     "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+     "sigma_rule_minus_matched_twin": {
+      "21_sessions": 0.0769107571982357,
+      "63_sessions": 0.133213339115938,
+      "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+      "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+     }
+    },
+    "matched_twin_fallbacks": {
+     "cell": 20,
+     "band_vol": 0,
+     "band": 0,
+     "any": 0,
+     "none": 0
+    },
+    "matched_twin_seed": 76948860154064,
+    "ranks_k1_2k": {
+     "SYRE": 0.056032538321429924,
+     "MLPI": 0.2291010137090768,
+     "NUAI": 0.022064123601678812,
+     "TXG": 0.04084347723209491,
+     "RVMD": 0.08026029666525349,
+     "CHRN": 0.023665137233845876,
+     "DFTX": 0.05301922066607342,
+     "OMER": 0.034243263866454536,
+     "RLAY": 0.0632540388297947,
+     "WDC": 0.03550682960709368,
+     "AAOI": 0.024467171525645565,
+     "INBX": 0.04550464261925737,
+     "NVCT": 0.03070153744921528,
+     "BFLY": 0.031342260861177564,
+     "HYMC": 0.035630771366279596,
+     "ATEX": 0.04656806874383818,
+     "ARTV": 0.04660365190009515,
+     "ANAB": 0.05026430417709787,
+     "VELO": 0.027625102822120162,
+     "MXL": 0.02330254880247707
+    },
+    "matched_twin_pairs": [
+     {
+      "held": "AKTS",
+      "twin": "ZURA",
+      "level": "cell"
+     },
+     {
+      "held": "LIFE",
+      "twin": "IOVA",
+      "level": "cell"
+     },
+     {
+      "held": "SNDK",
+      "twin": "GEV",
+      "level": "cell"
+     },
+     {
+      "held": "JAN",
+      "twin": "NDSN",
+      "level": "cell"
+     },
+     {
+      "held": "AXTI",
+      "twin": "ONTO",
+      "level": "cell"
+     },
+     {
+      "held": "WOLF",
+      "twin": "SPHR",
+      "level": "cell"
+     },
+     {
+      "held": "ERAS",
+      "twin": "RXT",
+      "level": "cell"
+     },
+     {
+      "held": "ANRO",
+      "twin": "LB",
+      "level": "cell"
+     },
+     {
+      "held": "QTTB",
+      "twin": "NVCR",
+      "level": "cell"
+     },
+     {
+      "held": "SLS",
+      "twin": "EZPW",
+      "level": "cell"
+     },
+     {
+      "held": "PRAX",
+      "twin": "EIX",
+      "level": "cell"
+     },
+     {
+      "held": "CLYM",
+      "twin": "ENLT",
+      "level": "cell"
+     },
+     {
+      "held": "DMRA",
+      "twin": "CGEM",
+      "level": "cell"
+     },
+     {
+      "held": "IMMX",
+      "twin": "NGNE",
+      "level": "cell"
+     },
+     {
+      "held": "ORKA",
+      "twin": "BELFB",
+      "level": "cell"
+     },
+     {
+      "held": "LITE",
+      "twin": "MRVL",
+      "level": "cell"
+     },
+     {
+      "held": "MU",
+      "twin": "ANET",
+      "level": "cell"
+     },
+     {
+      "held": "MRNA",
+      "twin": "DOCN",
+      "level": "cell"
+     },
+     {
+      "held": "ALMS",
+      "twin": "BHE",
+      "level": "cell"
+     },
+     {
+      "held": "TWST",
+      "twin": "GH",
+      "level": "cell"
+     }
+    ],
+    "status": "NEW",
+    "gate": "CONTROL(NAME_WEIGHT)",
+    "gate_detail": {
+     "verdict": "CONTROL",
+     "reasons": [
+      "NAME_WEIGHT"
+     ],
+     "label": "CONTROL(NAME_WEIGHT)",
+     "selection": {
+      "dev_vs_spy_gt_0": true,
+      "selection_window_vs_spy_gt_0": true,
+      "top5_month_share_lt_0_6": true,
+      "max_dd_gt_m40": false,
+      "loo_worst_mean_active_gt_0": true,
+      "family_books_le_2": false
+     },
+     "construction": {
+      "max_name_weight_le_0.10": false,
+      "effective_n_ge_8": true,
+      "no_rho_0_8_cluster_above_40pct": true,
+      "no_name_gt_10pct_printing_in_first_5_sessions": true,
+      "largest_name_to_zero_le_150k": true
+     },
+     "timing": {
+      "bars_le_1_session_old": true
+     },
+     "detail": {
+      "k": 20,
+      "max_name": "JAN",
+      "max_weight": 0.1485069881858898,
+      "weight_cap": 0.1,
+      "effective_n": 15.3,
+      "max_cluster": [
+       "MU",
+       "SNDK"
+      ],
+      "max_cluster_share": 0.0819,
+      "pairs_above_rho": [
+       [
+        "MU",
+        "SNDK",
+        0.877
+       ]
+      ],
+      "earnings_names_over_10pct": {
+       "JAN": {
+        "status": "NOT_DUE",
+        "last_202": "2026-08-04",
+        "due_from": "2026-10-18",
+        "window_end": "2026-10-02",
+        "file_ends": "2026-09-03"
+       }
+      },
+      "largest_name_to_zero_usd": 148507.0,
+      "decision_date": "2026-09-27",
+      "bar_date": "2026-09-25",
+      "staleness_sessions": 0,
+      "family": "weighted",
+      "family_books_before": 2
+     },
+     "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+     "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+     "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+     "verdict_full_rule": "CONTROL",
+     "reasons_full_rule": [
+      "MAX_DD",
+      "FAMILY_CAP",
+      "NAME_WEIGHT"
+     ]
+    },
+    "book": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+    "book_id": "3fd38f0d7a4dcb03",
+    "twin_ids": {
+     "ew": "5d2ce60804a20d37",
+     "ranks_k1_2k": "20b02566f94cbb04",
+     "spy": "10a06bf6b2b66c7d",
+     "iwm": "3bdf3698ed0f0761",
+     "matched_random": "ba7cda26cb2cec30"
+    },
+    "twin_ids_already": {}
+   },
+   {
+    "cell": "disp_short_avoid@k20",
+    "source": "b",
+    "rule": "disp_short_avoid",
+    "k": 20,
+    "family": "analyst_dispersion",
+    "weights": {
+     "AKTS": 0.05,
+     "LIFE": 0.05,
+     "SNDK": 0.05,
+     "JAN": 0.05,
+     "AXTI": 0.05,
+     "WOLF": 0.05,
+     "ERAS": 0.05,
+     "ANRO": 0.05,
+     "SLS": 0.05,
+     "CLYM": 0.05,
+     "DMRA": 0.05,
+     "IMMX": 0.05,
+     "ORKA": 0.05,
+     "LITE": 0.05,
+     "MU": 0.05,
+     "SYRE": 0.05,
+     "MLPI": 0.05,
+     "NUAI": 0.05,
+     "RVMD": 0.05,
+     "CHRN": 0.05
+    },
+    "worst_case": "WORST CASE lib_disp_short_avoid_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (AKTS 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+    "declared": {
+     "expected_sigma_21_sessions": 0.13256607550233765,
+     "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+     "factor_betas": {
+      "status": "OK",
+      "n_months": 115,
+      "betas": {
+       "SPY": 1.1128939742521449,
+       "IWM-SPY": 1.389015929004591,
+       "SMH-SPY": 0.30435920795212845,
+       "MTUM-SPY": 0.4255071968858283
+      },
+      "t_betas": {
+       "SPY": 6.139726327158372,
+       "IWM-SPY": 5.6596329294959435,
+       "SMH-SPY": 2.1407378529523124,
+       "MTUM-SPY": 1.5913473545829417
+      },
+      "alpha_monthly": 0.019040064065232374,
+      "r2": 0.5304891553389227,
+      "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+     },
+     "stop": {
+      "sigma_units": 2.0,
+      "level_21_sessions": -0.2651321510046753,
+      "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+     },
+     "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+     "sigma_rule_minus_matched_twin": {
+      "21_sessions": 0.08208185272055254,
+      "63_sessions": 0.14216993929138266,
+      "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+      "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+     }
+    },
+    "matched_twin_fallbacks": {
+     "cell": 20,
+     "band_vol": 0,
+     "band": 0,
+     "any": 0,
+     "none": 0
+    },
+    "matched_twin_seed": 247824388598716,
+    "ranks_k1_2k": {
+     "DFTX": 0.05,
+     "OMER": 0.05,
+     "RLAY": 0.05,
+     "WDC": 0.05,
+     "AAOI": 0.05,
+     "INBX": 0.05,
+     "NVCT": 0.05,
+     "BFLY": 0.05,
+     "HYMC": 0.05,
+     "ATEX": 0.05,
+     "ARTV": 0.05,
+     "ANAB": 0.05,
+     "MXL": 0.05,
+     "STX": 0.05,
+     "CGEM": 0.05,
+     "ALTO": 0.05,
+     "VICR": 0.05,
+     "ABSI": 0.05,
+     "FTH": 0.05,
+     "DELL": 0.05
+    },
+    "matched_twin_pairs": [
+     {
+      "held": "AKTS",
+      "twin": "PAYS",
+      "level": "cell"
+     },
+     {
+      "held": "LIFE",
+      "twin": "BELFB",
+      "level": "cell"
+     },
+     {
+      "held": "SNDK",
+      "twin": "STX",
+      "level": "cell"
+     },
+     {
+      "held": "JAN",
+      "twin": "SLF",
+      "level": "cell"
+     },
+     {
+      "held": "AXTI",
+      "twin": "TXG",
+      "level": "cell"
+     },
+     {
+      "held": "WOLF",
+      "twin": "ACMR",
+      "level": "cell"
+     },
+     {
+      "held": "ERAS",
+      "twin": "KALU",
+      "level": "cell"
+     },
+     {
+      "held": "ANRO",
+      "twin": "FNKO",
+      "level": "cell"
+     },
+     {
+      "held": "SLS",
+      "twin": "PUMP",
+      "level": "cell"
+     },
+     {
+      "held": "CLYM",
+      "twin": "SUPV",
+      "level": "cell"
+     },
+     {
+      "held": "DMRA",
+      "twin": "HLF",
+      "level": "cell"
+     },
+     {
+      "held": "IMMX",
+      "twin": "GHM",
+      "level": "cell"
+     },
+     {
+      "held": "ORKA",
+      "twin": "URGN",
+      "level": "cell"
+     },
+     {
+      "held": "LITE",
+      "twin": "DELL",
+      "level": "cell"
+     },
+     {
+      "held": "MU",
+      "twin": "GEV",
+      "level": "cell"
+     },
+     {
+      "held": "SYRE",
+      "twin": "TNGX",
+      "level": "cell"
+     },
+     {
+      "held": "MLPI",
+      "twin": "PFIS",
+      "level": "cell"
+     },
+     {
+      "held": "NUAI",
+      "twin": "INBX",
+      "level": "cell"
+     },
+     {
+      "held": "RVMD",
+      "twin": "JHX",
+      "level": "cell"
+     },
+     {
+      "held": "CHRN",
+      "twin": "LB",
+      "level": "cell"
+     }
+    ],
+    "status": "ALREADY_FROZEN_SAME_HOLDINGS",
+    "gate": "PASS",
+    "twins_already": [
+     "ew",
+     "random_same_band",
+     "sector_etf",
+     "spy"
+    ],
+    "book": "lib_disp_short_avoid_2026-09-27",
+    "book_id": "d93fbf2c301248ca",
+    "twin_ids": {
+     "ranks_k1_2k": "1201ed4bc42439f9",
+     "iwm": "7f74a0198ddd1eb1",
+     "matched_random": "67903b85cf3c0b8c"
+    },
+    "twin_ids_already": {
+     "ew": "9400f79fada66555",
+     "sector_etf": "aa5b879f546b7cad",
+     "spy": "75919a39db978691",
+     "random_same_band": "a46f8fec8b098b8e"
+    }
+   },
+   {
+    "cell": "mom_12_1_q_trend@k20",
+    "source": "b",
+    "rule": "mom_12_1_q_trend",
+    "k": 20,
+    "family": "regime_gated",
+    "weights": {
+     "AKTS": 0.05,
+     "LIFE": 0.05,
+     "SNDK": 0.05,
+     "JAN": 0.05,
+     "AXTI": 0.05,
+     "WOLF": 0.05,
+     "ERAS": 0.05,
+     "ANRO": 0.05,
+     "QTTB": 0.05,
+     "SLS": 0.05,
+     "PRAX": 0.05,
+     "CLYM": 0.05,
+     "DMRA": 0.05,
+     "IMMX": 0.05,
+     "ORKA": 0.05,
+     "LITE": 0.05,
+     "MU": 0.05,
+     "MRNA": 0.05,
+     "ALMS": 0.05,
+     "TWST": 0.05
+    },
+    "worst_case": "WORST CASE lib_mom_12_1_q_trend_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (AKTS 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+    "declared": {
+     "expected_sigma_21_sessions": 0.13976235644168547,
+     "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+     "factor_betas": {
+      "status": "OK",
+      "n_months": 115,
+      "betas": {
+       "SPY": 0.43184162794870296,
+       "IWM-SPY": 1.2646978415688872,
+       "SMH-SPY": 0.33367459401693234,
+       "MTUM-SPY": 0.5476241576705749
+      },
+      "t_betas": {
+       "SPY": 2.1378985698134123,
+       "IWM-SPY": 4.624184844008514,
+       "SMH-SPY": 2.1060445506909895,
+       "MTUM-SPY": 1.8378414604257387
+      },
+      "alpha_monthly": 0.018968480328585165,
+      "r2": 0.3218809309127445,
+      "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+     },
+     "stop": {
+      "sigma_units": 2.0,
+      "level_21_sessions": -0.27952471288337094,
+      "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+     },
+     "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+     "sigma_rule_minus_matched_twin": {
+      "21_sessions": 0.07423018924562295,
+      "63_sessions": 0.1285704592288718,
+      "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+      "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+     }
+    },
+    "matched_twin_fallbacks": {
+     "cell": 20,
+     "band_vol": 0,
+     "band": 0,
+     "any": 0,
+     "none": 0
+    },
+    "matched_twin_seed": 210241658120454,
+    "ranks_k1_2k": {
+     "SYRE": 0.05,
+     "MLPI": 0.05,
+     "NUAI": 0.05,
+     "TXG": 0.05,
+     "RVMD": 0.05,
+     "CHRN": 0.05,
+     "DFTX": 0.05,
+     "OMER": 0.05,
+     "RLAY": 0.05,
+     "WDC": 0.05,
+     "AAOI": 0.05,
+     "INBX": 0.05,
+     "NVCT": 0.05,
+     "BFLY": 0.05,
+     "HYMC": 0.05,
+     "ATEX": 0.05,
+     "ARTV": 0.05,
+     "ANAB": 0.05,
+     "VELO": 0.05,
+     "MXL": 0.05
+    },
+    "matched_twin_pairs": [
+     {
+      "held": "AKTS",
+      "twin": "PUBM",
+      "level": "cell"
+     },
+     {
+      "held": "LIFE",
+      "twin": "AGL",
+      "level": "cell"
+     },
+     {
+      "held": "SNDK",
+      "twin": "CRWD",
+      "level": "cell"
+     },
+     {
+      "held": "JAN",
+      "twin": "BBT",
+      "level": "cell"
+     },
+     {
+      "held": "AXTI",
+      "twin": "ASX",
+      "level": "cell"
+     },
+     {
+      "held": "WOLF",
+      "twin": "KALU",
+      "level": "cell"
+     },
+     {
+      "held": "ERAS",
+      "twin": "MAN",
+      "level": "cell"
+     },
+     {
+      "held": "ANRO",
+      "twin": "GSIT",
+      "level": "cell"
+     },
+     {
+      "held": "QTTB",
+      "twin": "CHRN",
+      "level": "cell"
+     },
+     {
+      "held": "SLS",
+      "twin": "CELC",
+      "level": "cell"
+     },
+     {
+      "held": "PRAX",
+      "twin": "SIMO",
+      "level": "cell"
+     },
+     {
+      "held": "CLYM",
+      "twin": "OILU",
+      "level": "cell"
+     },
+     {
+      "held": "DMRA",
+      "twin": "QMCO",
+      "level": "cell"
+     },
+     {
+      "held": "IMMX",
+      "twin": "JBIO",
+      "level": "cell"
+     },
+     {
+      "held": "ORKA",
+      "twin": "PRM",
+      "level": "cell"
+     },
+     {
+      "held": "LITE",
+      "twin": "DELL",
+      "level": "cell"
+     },
+     {
+      "held": "MU",
+      "twin": "PANW",
+      "level": "cell"
+     },
+     {
+      "held": "MRNA",
+      "twin": "LSCC",
+      "level": "cell"
+     },
+     {
+      "held": "ALMS",
+      "twin": "MTRN",
+      "level": "cell"
+     },
+     {
+      "held": "TWST",
+      "twin": "AGX",
+      "level": "cell"
+     }
+    ],
+    "status": "NEW",
+    "gate": "PASS",
+    "gate_detail": {
+     "verdict": "PASS",
+     "reasons": [],
+     "label": "PASS",
+     "selection": {
+      "dev_vs_spy_gt_0": true,
+      "selection_window_vs_spy_gt_0": true,
+      "top5_month_share_lt_0_6": false,
+      "max_dd_gt_m40": false,
+      "loo_worst_mean_active_gt_0": true,
+      "family_books_le_2": true
+     },
+     "construction": {
+      "max_name_weight_le_0.10": true,
+      "effective_n_ge_8": true,
+      "no_rho_0_8_cluster_above_40pct": true,
+      "no_name_gt_10pct_printing_in_first_5_sessions": true,
+      "largest_name_to_zero_le_150k": true
+     },
+     "timing": {
+      "bars_le_1_session_old": true
+     },
+     "detail": {
+      "k": 20,
+      "max_name": "AKTS",
+      "max_weight": 0.05,
+      "weight_cap": 0.1,
+      "effective_n": 20.0,
+      "max_cluster": [
+       "MU",
+       "SNDK"
+      ],
+      "max_cluster_share": 0.1,
+      "pairs_above_rho": [
+       [
+        "MU",
+        "SNDK",
+        0.877
+       ]
+      ],
+      "earnings_names_over_10pct": {},
+      "largest_name_to_zero_usd": 50000.0,
+      "decision_date": "2026-09-27",
+      "bar_date": "2026-09-25",
+      "staleness_sessions": 0,
+      "family": "regime_gated",
+      "family_books_before": 0
+     },
+     "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+     "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+     "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+     "verdict_full_rule": "CONTROL",
+     "reasons_full_rule": [
+      "TOP5_MONTH_SHARE",
+      "MAX_DD"
+     ]
+    },
+    "book": "lib_mom_12_1_q_trend_lead_2026-09-27",
+    "book_id": "1144c07902e67552",
+    "twin_ids": {
+     "ew": "8e78209f77acf36b",
+     "ranks_k1_2k": "b67086822d079f24",
+     "spy": "ffa304a9e3982015",
+     "iwm": "75e9ca596005c4f6",
+     "matched_random": "4f4b04f2d61cefcd"
+    },
+    "twin_ids_already": {}
+   }
+  ],
+  "notes": [
+   "mom_12_1_q_trend@k20: regime gate mkt_trend_up = 1.0 at 2026-09-25: invested"
+  ]
+ },
+ "leads_log": "backend/data/optimus/bridge/leads_2026-09-27.json",
  "probe_rows": [
   {
    "book": "probe_equal_2026-09-26",

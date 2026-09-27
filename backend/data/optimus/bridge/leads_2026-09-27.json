@@ -1,0 +1,1475 @@
+{
+ "schema": "bridge/leads/1",
+ "date": "2026-09-27",
+ "run_id": "2026-09-27T082553Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "label": "HINDSIGHT leads: every rule was registered 2026-09-26; nothing here is a claim",
+ "entry_session": "2026-09-28",
+ "bars_asof": "2026-09-25",
+ "receipts": {
+  "family_pool": "backend/data/optimus/signal_structure/family_pool_2026-09-27T082553Z.json",
+  "matched_twins": "backend/data/optimus/signal_structure/matched_twins_2026-09-27T082553Z.json",
+  "matched_twins_monthly": "backend/data/optimus/signal_structure/matched_twins_monthly_2026-09-27T082553Z.parquet",
+  "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-27T082553Z.json",
+  "cell_monthly": "backend/data/optimus/strategy_library/cell_monthly_2026-09-27T082553Z.parquet"
+ },
+ "selection": {
+  "a_rule": "`weighted` members whose mean monthly rule - twin21 is > 0 in BOTH windows, highest dev DSR (rule - twin21, dev window, n_trials = 288 cells) first, at most 3",
+  "a_members": {
+   "gp_at_ivw@k20": {
+    "cell": "gp_at_ivw@k20",
+    "dev_mean": 0.004004736907049462,
+    "dev_t": 1.379014827878198,
+    "dev_n": 83,
+    "sealed_mean": -0.006225261662651468,
+    "sealed_t": -0.8772291533258703,
+    "sealed_n": 32,
+    "dev_dsr": 0.0638,
+    "dev_dsr_z": -1.5236,
+    "beats_twin_both": false
+   },
+   "mom_12_1_ivw@k20": {
+    "cell": "mom_12_1_ivw@k20",
+    "dev_mean": 0.012738424987548734,
+    "dev_t": 1.6141999509542706,
+    "dev_n": 83,
+    "sealed_mean": 0.015810037524798273,
+    "sealed_t": 1.2785540485805174,
+    "sealed_n": 32,
+    "dev_dsr": 0.0796,
+    "dev_dsr_z": -1.4079,
+    "beats_twin_both": true
+   },
+   "mom_12_1_liqw@k20": {
+    "cell": "mom_12_1_liqw@k20",
+    "dev_mean": 0.0035150579093414023,
+    "dev_t": 0.2544081709624655,
+    "dev_n": 83,
+    "sealed_mean": 0.047764361123970096,
+    "sealed_t": 1.985658760659275,
+    "sealed_n": 32,
+    "dev_dsr": 0.004,
+    "dev_dsr_z": -2.6513,
+    "beats_twin_both": true
+   },
+   "mom_flow_ivw@k20": {
+    "cell": "mom_flow_ivw@k20",
+    "dev_mean": 0.003663933566541219,
+    "dev_t": 0.6753666489684358,
+    "dev_n": 83,
+    "sealed_mean": 0.014728732916821061,
+    "sealed_t": 1.7258392339140638,
+    "sealed_n": 32,
+    "dev_dsr": 0.0183,
+    "dev_dsr_z": -2.0903,
+    "beats_twin_both": true
+   },
+   "net_raises_ivw@k20": {
+    "cell": "net_raises_ivw@k20",
+    "dev_mean": 0.006582179629485679,
+    "dev_t": 2.4274285016643575,
+    "dev_n": 83,
+    "sealed_mean": 0.0034499529782056233,
+    "sealed_t": 0.5861776863428115,
+    "sealed_n": 32,
+    "dev_dsr": 0.3235,
+    "dev_dsr_z": -0.4579,
+    "beats_twin_both": true
+   },
+   "qc470_mom252_quarterly_riskparity@k20": {
+    "cell": "qc470_mom252_quarterly_riskparity@k20",
+    "dev_mean": 0.012448424714848609,
+    "dev_t": 1.6654547039536758,
+    "dev_n": 83,
+    "sealed_mean": 0.017999636767222688,
+    "sealed_t": 1.5957110683258189,
+    "sealed_n": 32,
+    "dev_dsr": 0.0841,
+    "dev_dsr_z": -1.3777,
+    "beats_twin_both": true
+   },
+   "quality_composite_ivw@k20": {
+    "cell": "quality_composite_ivw@k20",
+    "dev_mean": 0.005383709257578191,
+    "dev_t": 2.5398917700490165,
+    "dev_n": 83,
+    "sealed_mean": -0.0021670447298043254,
+    "sealed_t": -0.48240071710913374,
+    "sealed_n": 32,
+    "dev_dsr": 0.3548,
+    "dev_dsr_z": -0.3725,
+    "beats_twin_both": false
+   }
+  },
+  "a_picks": [
+   "net_raises_ivw@k20",
+   "qc470_mom252_quarterly_riskparity@k20",
+   "mom_12_1_ivw@k20"
+  ],
+  "b_rule": "matched_twins.cells_t_twin21_ge_2_both_windows",
+  "b_picks": [
+   "disp_short_avoid@k20",
+   "mom_12_1_q_trend@k20"
+  ]
+ },
+ "gate_scope": "construction + timing (`lead_gate`); the factory's full-rule verdict is kept beside it",
+ "chance": {
+  "expected_cells_by_chance": 0.8190047501344513,
+  "basis": "36 cells at t >= 2 vs the 21-draw twin in dev x P(t >= 2 | null) 0.023 in 2024-26",
+  "n_cells": 288,
+  "observed": 2
+ },
+ "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+ "twins": [
+  "ew",
+  "ranks_k1_2k",
+  "spy",
+  "iwm",
+  "matched_random"
+ ],
+ "books": [
+  {
+   "cell": "net_raises_ivw@k20",
+   "source": "a",
+   "rule": "net_raises_ivw",
+   "k": 20,
+   "family": "weighted",
+   "weights": {
+    "OKTA": 0.033210834574493565,
+    "SNOW": 0.05557357550568276,
+    "CRWD": 0.036076713994388,
+    "PANW": 0.04205014596984346,
+    "CRM": 0.0437827108068764,
+    "TGT": 0.08619858301240813,
+    "GTLB": 0.04875831417276998,
+    "ABNB": 0.05372678677829494,
+    "ESTC": 0.042227354594412306,
+    "AFRM": 0.054713910018343706,
+    "NET": 0.04506505578797405,
+    "AMGN": 0.07872837016231031,
+    "P": 0.03608584769985291,
+    "RVMD": 0.06982372085189559,
+    "DELL": 0.03251790685534426,
+    "DT": 0.06272512028907344,
+    "FTNT": 0.05800979331494851,
+    "S": 0.04170754087347053,
+    "AMD": 0.03787378015418335,
+    "CHYM": 0.04114393458343375
+   },
+   "worst_case": "WORST CASE lib_net_raises_ivw_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (TGT 8.6%) to zero = -$86,199; whole book to zero = -$1,000,000",
+   "declared": {
+    "expected_sigma_21_sessions": 0.0757170594495496,
+    "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+    "factor_betas": {
+     "status": "OK",
+     "n_months": 115,
+     "betas": {
+      "SPY": 1.0099186781543543,
+      "IWM-SPY": 0.046578017512827,
+      "SMH-SPY": 0.10329845498525414,
+      "MTUM-SPY": 0.44533421792975325
+     },
+     "t_betas": {
+      "SPY": 15.296225779223365,
+      "IWM-SPY": 0.5210323599526787,
+      "SMH-SPY": 1.994681352639755,
+      "MTUM-SPY": 4.572427217045885
+     },
+     "alpha_monthly": 0.002718986569120071,
+     "r2": 0.7588400242782856,
+     "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+    },
+    "stop": {
+     "sigma_units": 2.0,
+     "level_21_sessions": -0.1514341188990992,
+     "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+    },
+    "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+    "sigma_rule_minus_matched_twin": {
+     "21_sessions": 0.03285403773554396,
+     "63_sessions": 0.056904862591747284,
+     "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+     "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+    }
+   },
+   "matched_twin_fallbacks": {
+    "cell": 20,
+    "band_vol": 0,
+    "band": 0,
+    "any": 0,
+    "none": 0
+   },
+   "matched_twin_seed": 159174771439939,
+   "ranks_k1_2k": {
+    "DDOG": 0.030979452726230962,
+    "MRK": 0.05909591406643081,
+    "RBRK": 0.02807261187323599,
+    "MDB": 0.031243648042363428,
+    "TRV": 0.07492960279150862,
+    "ZS": 0.032233271035407934,
+    "ABBV": 0.08996549328838091,
+    "ALL": 0.06869817271521127,
+    "ELF": 0.03882624508995615,
+    "EXPE": 0.04582004518890398,
+    "FROG": 0.033198948407672735,
+    "GH": 0.03886452249969098,
+    "PSX": 0.06570699170742582,
+    "WDAY": 0.031589705667321076,
+    "XYZ": 0.057265817046555874,
+    "JAZZ": 0.07420129610522976,
+    "NBIX": 0.06085429604887713,
+    "RYAN": 0.049830973480052256,
+    "VEEV": 0.04406999335571729,
+    "EAT": 0.04455299886382722
+   },
+   "matched_twin_pairs": [
+    {
+     "held": "OKTA",
+     "twin": "PRAX",
+     "level": "cell"
+    },
+    {
+     "held": "SNOW",
+     "twin": "CSCO",
+     "level": "cell"
+    },
+    {
+     "held": "CRWD",
+     "twin": "GEV",
+     "level": "cell"
+    },
+    {
+     "held": "PANW",
+     "twin": "VRT",
+     "level": "cell"
+    },
+    {
+     "held": "CRM",
+     "twin": "APP",
+     "level": "cell"
+    },
+    {
+     "held": "TGT",
+     "twin": "WBD",
+     "level": "cell"
+    },
+    {
+     "held": "GTLB",
+     "twin": "CELH",
+     "level": "cell"
+    },
+    {
+     "held": "ABNB",
+     "twin": "EXEL",
+     "level": "cell"
+    },
+    {
+     "held": "ESTC",
+     "twin": "HUBS",
+     "level": "cell"
+    },
+    {
+     "held": "AFRM",
+     "twin": "CLX",
+     "level": "cell"
+    },
+    {
+     "held": "NET",
+     "twin": "RBRK",
+     "level": "cell"
+    },
+    {
+     "held": "AMGN",
+     "twin": "ADI",
+     "level": "cell"
+    },
+    {
+     "held": "P",
+     "twin": "DY",
+     "level": "cell"
+    },
+    {
+     "held": "RVMD",
+     "twin": "JHX",
+     "level": "cell"
+    },
+    {
+     "held": "DELL",
+     "twin": "MRVL",
+     "level": "cell"
+    },
+    {
+     "held": "DT",
+     "twin": "GEN",
+     "level": "cell"
+    },
+    {
+     "held": "FTNT",
+     "twin": "WCC",
+     "level": "cell"
+    },
+    {
+     "held": "S",
+     "twin": "ZBRA",
+     "level": "cell"
+    },
+    {
+     "held": "AMD",
+     "twin": "WDC",
+     "level": "cell"
+    },
+    {
+     "held": "CHYM",
+     "twin": "STM",
+     "level": "cell"
+    }
+   ],
+   "status": "NEW",
+   "gate": "PASS",
+   "gate_detail": {
+    "verdict": "PASS",
+    "reasons": [],
+    "label": "PASS",
+    "selection": {
+     "dev_vs_spy_gt_0": true,
+     "selection_window_vs_spy_gt_0": true,
+     "top5_month_share_lt_0_6": true,
+     "max_dd_gt_m40": true,
+     "loo_worst_mean_active_gt_0": true,
+     "family_books_le_2": true
+    },
+    "construction": {
+     "max_name_weight_le_0.10": true,
+     "effective_n_ge_8": true,
+     "no_rho_0_8_cluster_above_40pct": true,
+     "no_name_gt_10pct_printing_in_first_5_sessions": true,
+     "largest_name_to_zero_le_150k": true
+    },
+    "timing": {
+     "bars_le_1_session_old": true
+    },
+    "detail": {
+     "k": 20,
+     "max_name": "TGT",
+     "max_weight": 0.08619858301240813,
+     "weight_cap": 0.1,
+     "effective_n": 18.423,
+     "max_cluster": [
+      "CRWD",
+      "FTNT",
+      "OKTA",
+      "PANW",
+      "S"
+     ],
+     "max_cluster_share": 0.2111,
+     "pairs_above_rho": [
+      [
+       "CRWD",
+       "FTNT",
+       0.851
+      ],
+      [
+       "CRWD",
+       "OKTA",
+       0.903
+      ],
+      [
+       "CRWD",
+       "PANW",
+       0.9
+      ],
+      [
+       "CRWD",
+       "S",
+       0.851
+      ],
+      [
+       "FTNT",
+       "OKTA",
+       0.807
+      ],
+      [
+       "FTNT",
+       "PANW",
+       0.852
+      ],
+      [
+       "FTNT",
+       "S",
+       0.879
+      ],
+      [
+       "PANW",
+       "S",
+       0.844
+      ]
+     ],
+     "earnings_names_over_10pct": {},
+     "largest_name_to_zero_usd": 86199.0,
+     "decision_date": "2026-09-27",
+     "bar_date": "2026-09-25",
+     "staleness_sessions": 0,
+     "family": "weighted",
+     "family_books_before": 1
+    },
+    "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+    "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+    "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+    "verdict_full_rule": "PASS",
+    "reasons_full_rule": []
+   },
+   "book": "lib_net_raises_ivw_lead_2026-09-27",
+   "book_id": "40b3584ea3d6a2ae",
+   "twin_ids": {
+    "ew": "bc59d47a14e8c3c4",
+    "ranks_k1_2k": "0dc6584091230ad8",
+    "spy": "a0155f20d1f3d421",
+    "iwm": "a834f30ec8d0538d",
+    "matched_random": "363b1e75a9e9991f"
+   },
+   "twin_ids_already": {}
+  },
+  {
+   "cell": "qc470_mom252_quarterly_riskparity@k20",
+   "source": "a",
+   "rule": "qc470_mom252_quarterly_riskparity",
+   "k": 20,
+   "family": "weighted",
+   "weights": {
+    "AKTS": 0.06288570775558307,
+    "LIFE": 0.0522718380219673,
+    "SNDK": 0.032440645383501845,
+    "AXTI": 0.024722972695233558,
+    "JAN": 0.14957261551912382,
+    "WOLF": 0.035559543022195786,
+    "MRNA": 0.010825732070967637,
+    "NUAI": 0.028578918754540435,
+    "ERAS": 0.059926440428911966,
+    "SLS": 0.03675110086558317,
+    "TXG": 0.052903185213309264,
+    "ANRO": 0.06730639108531997,
+    "TWST": 0.04254753668839638,
+    "MU": 0.05006019488407462,
+    "LITE": 0.040583443771697696,
+    "MXL": 0.03018300935139042,
+    "PRAX": 0.06779245176021796,
+    "ORKA": 0.07089757004059752,
+    "IMMX": 0.04778686848345424,
+    "VICR": 0.03640383420393338
+   },
+   "worst_case": "WORST CASE lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (JAN 15.0%) to zero = -$149,573; whole book to zero = -$1,000,000",
+   "declared": {
+    "expected_sigma_21_sessions": 0.11948968431449865,
+    "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+    "factor_betas": {
+     "status": "OK",
+     "n_months": 115,
+     "betas": {
+      "SPY": 1.1292017105991723,
+      "IWM-SPY": 1.3160722338468172,
+      "SMH-SPY": 0.3471832019187201,
+      "MTUM-SPY": 0.6513226543008014
+     },
+     "t_betas": {
+      "SPY": 6.411576100885564,
+      "IWM-SPY": 5.518979957062868,
+      "SMH-SPY": 2.5132390497336345,
+      "MTUM-SPY": 2.506988329605771
+     },
+     "alpha_monthly": 0.013671154322987813,
+     "r2": 0.5567952803932124,
+     "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+    },
+    "stop": {
+     "sigma_units": 2.0,
+     "level_21_sessions": -0.2389793686289973,
+     "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+    },
+    "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+    "sigma_rule_minus_matched_twin": {
+     "21_sessions": 0.07615281344181342,
+     "63_sessions": 0.13190054202053497,
+     "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+     "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+    }
+   },
+   "matched_twin_fallbacks": {
+    "cell": 20,
+    "band_vol": 0,
+    "band": 0,
+    "any": 0,
+    "none": 0
+   },
+   "matched_twin_seed": 178737001608072,
+   "ranks_k1_2k": {
+    "CLYM": 0.04188275936086561,
+    "IOVA": 0.026201161935425932,
+    "MLPI": 0.23399960664022704,
+    "SYRE": 0.05723061506361453,
+    "DMRA": 0.04136889757910106,
+    "OMER": 0.03497544661676194,
+    "RVMD": 0.08197640658345616,
+    "QTTB": 0.015680398697766773,
+    "BFLY": 0.03201241493433149,
+    "DELL": 0.038177586658134796,
+    "CHRN": 0.0241711405556628,
+    "CDNA": 0.03440753614444883,
+    "BE": 0.02836463835645907,
+    "WDC": 0.03626602967218695,
+    "STX": 0.040162944284129184,
+    "INTC": 0.04103288230260437,
+    "AMD": 0.04446563951178317,
+    "ABSI": 0.03666837466559737,
+    "ASX": 0.04634899615827415,
+    "RLAY": 0.06460652427916859
+   },
+   "matched_twin_pairs": [
+    {
+     "held": "AKTS",
+     "twin": "PDEX",
+     "level": "cell"
+    },
+    {
+     "held": "LIFE",
+     "twin": "BW",
+     "level": "cell"
+    },
+    {
+     "held": "SNDK",
+     "twin": "CRWD",
+     "level": "cell"
+    },
+    {
+     "held": "AXTI",
+     "twin": "ONTO",
+     "level": "cell"
+    },
+    {
+     "held": "JAN",
+     "twin": "NTCT",
+     "level": "cell"
+    },
+    {
+     "held": "WOLF",
+     "twin": "APPS",
+     "level": "cell"
+    },
+    {
+     "held": "MRNA",
+     "twin": "FIX",
+     "level": "cell"
+    },
+    {
+     "held": "NUAI",
+     "twin": "XENE",
+     "level": "cell"
+    },
+    {
+     "held": "ERAS",
+     "twin": "ADEA",
+     "level": "cell"
+    },
+    {
+     "held": "SLS",
+     "twin": "VISN",
+     "level": "cell"
+    },
+    {
+     "held": "TXG",
+     "twin": "SITM",
+     "level": "cell"
+    },
+    {
+     "held": "ANRO",
+     "twin": "ACRS",
+     "level": "cell"
+    },
+    {
+     "held": "TWST",
+     "twin": "TWLO",
+     "level": "cell"
+    },
+    {
+     "held": "MU",
+     "twin": "AMD",
+     "level": "cell"
+    },
+    {
+     "held": "LITE",
+     "twin": "VRT",
+     "level": "cell"
+    },
+    {
+     "held": "MXL",
+     "twin": "FLEX",
+     "level": "cell"
+    },
+    {
+     "held": "PRAX",
+     "twin": "FCEL",
+     "level": "cell"
+    },
+    {
+     "held": "ORKA",
+     "twin": "VPG",
+     "level": "cell"
+    },
+    {
+     "held": "IMMX",
+     "twin": "MRAM",
+     "level": "cell"
+    },
+    {
+     "held": "VICR",
+     "twin": "PL",
+     "level": "cell"
+    }
+   ],
+   "status": "NEW",
+   "gate": "CONTROL(NAME_WEIGHT)",
+   "gate_detail": {
+    "verdict": "CONTROL",
+    "reasons": [
+     "NAME_WEIGHT"
+    ],
+    "label": "CONTROL(NAME_WEIGHT)",
+    "selection": {
+     "dev_vs_spy_gt_0": true,
+     "selection_window_vs_spy_gt_0": true,
+     "top5_month_share_lt_0_6": true,
+     "max_dd_gt_m40": false,
+     "loo_worst_mean_active_gt_0": true,
+     "family_books_le_2": false
+    },
+    "construction": {
+     "max_name_weight_le_0.10": false,
+     "effective_n_ge_8": true,
+     "no_rho_0_8_cluster_above_40pct": true,
+     "no_name_gt_10pct_printing_in_first_5_sessions": true,
+     "largest_name_to_zero_le_150k": true
+    },
+    "timing": {
+     "bars_le_1_session_old": true
+    },
+    "detail": {
+     "k": 20,
+     "max_name": "JAN",
+     "max_weight": 0.14957261551912382,
+     "weight_cap": 0.1,
+     "effective_n": 15.315,
+     "max_cluster": [
+      "MU",
+      "SNDK"
+     ],
+     "max_cluster_share": 0.0825,
+     "pairs_above_rho": [
+      [
+       "MU",
+       "SNDK",
+       0.877
+      ]
+     ],
+     "earnings_names_over_10pct": {
+      "JAN": {
+       "status": "NOT_DUE",
+       "last_202": "2026-08-04",
+       "due_from": "2026-10-18",
+       "window_end": "2026-10-02",
+       "file_ends": "2026-09-03"
+      }
+     },
+     "largest_name_to_zero_usd": 149573.0,
+     "decision_date": "2026-09-27",
+     "bar_date": "2026-09-25",
+     "staleness_sessions": 0,
+     "family": "weighted",
+     "family_books_before": 2
+    },
+    "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+    "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+    "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+    "verdict_full_rule": "CONTROL",
+    "reasons_full_rule": [
+     "MAX_DD",
+     "FAMILY_CAP",
+     "NAME_WEIGHT"
+    ]
+   },
+   "book": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+   "book_id": "4ffbfd2e83d06daa",
+   "twin_ids": {
+    "ew": "2fb54ddd9dde0b04",
+    "ranks_k1_2k": "380be9ef9d5ff617",
+    "spy": "e3bc8022d4614ea7",
+    "iwm": "8f490967515aa87b",
+    "matched_random": "fd7efadd8fae58dc"
+   },
+   "twin_ids_already": {}
+  },
+  {
+   "cell": "mom_12_1_ivw@k20",
+   "source": "a",
+   "rule": "mom_12_1_ivw",
+   "k": 20,
+   "family": "weighted",
+   "weights": {
+    "AKTS": 0.06243767969361776,
+    "LIFE": 0.05189942827863787,
+    "SNDK": 0.03220952260538883,
+    "JAN": 0.1485069881858898,
+    "AXTI": 0.024546834333465925,
+    "WOLF": 0.03530619971553336,
+    "ERAS": 0.059499495612290086,
+    "ANRO": 0.06682686794672323,
+    "QTTB": 0.01974344339734025,
+    "SLS": 0.03648926832710089,
+    "PRAX": 0.06730946569133159,
+    "CLYM": 0.05273525914130247,
+    "DMRA": 0.05208824746781934,
+    "IMMX": 0.04744641182266183,
+    "ORKA": 0.07039246161394523,
+    "LITE": 0.04029430777705196,
+    "MU": 0.0497035419513814,
+    "MRNA": 0.01074860434302725,
+    "ALMS": 0.029571564545403686,
+    "TWST": 0.042244407550087404
+   },
+   "worst_case": "WORST CASE lib_mom_12_1_ivw_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (JAN 14.9%) to zero = -$148,507; whole book to zero = -$1,000,000",
+   "declared": {
+    "expected_sigma_21_sessions": 0.10767125809172104,
+    "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+    "factor_betas": {
+     "status": "OK",
+     "n_months": 115,
+     "betas": {
+      "SPY": 1.0367631538002875,
+      "IWM-SPY": 1.4031464698167329,
+      "SMH-SPY": 0.3989723285279452,
+      "MTUM-SPY": 0.46753347893586567
+     },
+     "t_betas": {
+      "SPY": 5.525202421161056,
+      "IWM-SPY": 5.522776440494936,
+      "SMH-SPY": 2.7107735259677113,
+      "MTUM-SPY": 1.6890566219162337
+     },
+     "alpha_monthly": 0.014965031903655836,
+     "r2": 0.5185981272094622,
+     "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+    },
+    "stop": {
+     "sigma_units": 2.0,
+     "level_21_sessions": -0.21534251618344208,
+     "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+    },
+    "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+    "sigma_rule_minus_matched_twin": {
+     "21_sessions": 0.0769107571982357,
+     "63_sessions": 0.133213339115938,
+     "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+     "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+    }
+   },
+   "matched_twin_fallbacks": {
+    "cell": 20,
+    "band_vol": 0,
+    "band": 0,
+    "any": 0,
+    "none": 0
+   },
+   "matched_twin_seed": 76948860154064,
+   "ranks_k1_2k": {
+    "SYRE": 0.056032538321429924,
+    "MLPI": 0.2291010137090768,
+    "NUAI": 0.022064123601678812,
+    "TXG": 0.04084347723209491,
+    "RVMD": 0.08026029666525349,
+    "CHRN": 0.023665137233845876,
+    "DFTX": 0.05301922066607342,
+    "OMER": 0.034243263866454536,
+    "RLAY": 0.0632540388297947,
+    "WDC": 0.03550682960709368,
+    "AAOI": 0.024467171525645565,
+    "INBX": 0.04550464261925737,
+    "NVCT": 0.03070153744921528,
+    "BFLY": 0.031342260861177564,
+    "HYMC": 0.035630771366279596,
+    "ATEX": 0.04656806874383818,
+    "ARTV": 0.04660365190009515,
+    "ANAB": 0.05026430417709787,
+    "VELO": 0.027625102822120162,
+    "MXL": 0.02330254880247707
+   },
+   "matched_twin_pairs": [
+    {
+     "held": "AKTS",
+     "twin": "ZURA",
+     "level": "cell"
+    },
+    {
+     "held": "LIFE",
+     "twin": "IOVA",
+     "level": "cell"
+    },
+    {
+     "held": "SNDK",
+     "twin": "GEV",
+     "level": "cell"
+    },
+    {
+     "held": "JAN",
+     "twin": "NDSN",
+     "level": "cell"
+    },
+    {
+     "held": "AXTI",
+     "twin": "ONTO",
+     "level": "cell"
+    },
+    {
+     "held": "WOLF",
+     "twin": "SPHR",
+     "level": "cell"
+    },
+    {
+     "held": "ERAS",
+     "twin": "RXT",
+     "level": "cell"
+    },
+    {
+     "held": "ANRO",
+     "twin": "LB",
+     "level": "cell"
+    },
+    {
+     "held": "QTTB",
+     "twin": "NVCR",
+     "level": "cell"
+    },
+    {
+     "held": "SLS",
+     "twin": "EZPW",
+     "level": "cell"
+    },
+    {
+     "held": "PRAX",
+     "twin": "EIX",
+     "level": "cell"
+    },
+    {
+     "held": "CLYM",
+     "twin": "ENLT",
+     "level": "cell"
+    },
+    {
+     "held": "DMRA",
+     "twin": "CGEM",
+     "level": "cell"
+    },
+    {
+     "held": "IMMX",
+     "twin": "NGNE",
+     "level": "cell"
+    },
+    {
+     "held": "ORKA",
+     "twin": "BELFB",
+     "level": "cell"
+    },
+    {
+     "held": "LITE",
+     "twin": "MRVL",
+     "level": "cell"
+    },
+    {
+     "held": "MU",
+     "twin": "ANET",
+     "level": "cell"
+    },
+    {
+     "held": "MRNA",
+     "twin": "DOCN",
+     "level": "cell"
+    },
+    {
+     "held": "ALMS",
+     "twin": "BHE",
+     "level": "cell"
+    },
+    {
+     "held": "TWST",
+     "twin": "GH",
+     "level": "cell"
+    }
+   ],
+   "status": "NEW",
+   "gate": "CONTROL(NAME_WEIGHT)",
+   "gate_detail": {
+    "verdict": "CONTROL",
+    "reasons": [
+     "NAME_WEIGHT"
+    ],
+    "label": "CONTROL(NAME_WEIGHT)",
+    "selection": {
+     "dev_vs_spy_gt_0": true,
+     "selection_window_vs_spy_gt_0": true,
+     "top5_month_share_lt_0_6": true,
+     "max_dd_gt_m40": false,
+     "loo_worst_mean_active_gt_0": true,
+     "family_books_le_2": false
+    },
+    "construction": {
+     "max_name_weight_le_0.10": false,
+     "effective_n_ge_8": true,
+     "no_rho_0_8_cluster_above_40pct": true,
+     "no_name_gt_10pct_printing_in_first_5_sessions": true,
+     "largest_name_to_zero_le_150k": true
+    },
+    "timing": {
+     "bars_le_1_session_old": true
+    },
+    "detail": {
+     "k": 20,
+     "max_name": "JAN",
+     "max_weight": 0.1485069881858898,
+     "weight_cap": 0.1,
+     "effective_n": 15.3,
+     "max_cluster": [
+      "MU",
+      "SNDK"
+     ],
+     "max_cluster_share": 0.0819,
+     "pairs_above_rho": [
+      [
+       "MU",
+       "SNDK",
+       0.877
+      ]
+     ],
+     "earnings_names_over_10pct": {
+      "JAN": {
+       "status": "NOT_DUE",
+       "last_202": "2026-08-04",
+       "due_from": "2026-10-18",
+       "window_end": "2026-10-02",
+       "file_ends": "2026-09-03"
+      }
+     },
+     "largest_name_to_zero_usd": 148507.0,
+     "decision_date": "2026-09-27",
+     "bar_date": "2026-09-25",
+     "staleness_sessions": 0,
+     "family": "weighted",
+     "family_books_before": 2
+    },
+    "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+    "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+    "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+    "verdict_full_rule": "CONTROL",
+    "reasons_full_rule": [
+     "MAX_DD",
+     "FAMILY_CAP",
+     "NAME_WEIGHT"
+    ]
+   },
+   "book": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+   "book_id": "3fd38f0d7a4dcb03",
+   "twin_ids": {
+    "ew": "5d2ce60804a20d37",
+    "ranks_k1_2k": "20b02566f94cbb04",
+    "spy": "10a06bf6b2b66c7d",
+    "iwm": "3bdf3698ed0f0761",
+    "matched_random": "ba7cda26cb2cec30"
+   },
+   "twin_ids_already": {}
+  },
+  {
+   "cell": "disp_short_avoid@k20",
+   "source": "b",
+   "rule": "disp_short_avoid",
+   "k": 20,
+   "family": "analyst_dispersion",
+   "weights": {
+    "AKTS": 0.05,
+    "LIFE": 0.05,
+    "SNDK": 0.05,
+    "JAN": 0.05,
+    "AXTI": 0.05,
+    "WOLF": 0.05,
+    "ERAS": 0.05,
+    "ANRO": 0.05,
+    "SLS": 0.05,
+    "CLYM": 0.05,
+    "DMRA": 0.05,
+    "IMMX": 0.05,
+    "ORKA": 0.05,
+    "LITE": 0.05,
+    "MU": 0.05,
+    "SYRE": 0.05,
+    "MLPI": 0.05,
+    "NUAI": 0.05,
+    "RVMD": 0.05,
+    "CHRN": 0.05
+   },
+   "worst_case": "WORST CASE lib_disp_short_avoid_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (AKTS 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+   "declared": {
+    "expected_sigma_21_sessions": 0.13256607550233765,
+    "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+    "factor_betas": {
+     "status": "OK",
+     "n_months": 115,
+     "betas": {
+      "SPY": 1.1128939742521449,
+      "IWM-SPY": 1.389015929004591,
+      "SMH-SPY": 0.30435920795212845,
+      "MTUM-SPY": 0.4255071968858283
+     },
+     "t_betas": {
+      "SPY": 6.139726327158372,
+      "IWM-SPY": 5.6596329294959435,
+      "SMH-SPY": 2.1407378529523124,
+      "MTUM-SPY": 1.5913473545829417
+     },
+     "alpha_monthly": 0.019040064065232374,
+     "r2": 0.5304891553389227,
+     "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+    },
+    "stop": {
+     "sigma_units": 2.0,
+     "level_21_sessions": -0.2651321510046753,
+     "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+    },
+    "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+    "sigma_rule_minus_matched_twin": {
+     "21_sessions": 0.08208185272055254,
+     "63_sessions": 0.14216993929138266,
+     "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+     "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+    }
+   },
+   "matched_twin_fallbacks": {
+    "cell": 20,
+    "band_vol": 0,
+    "band": 0,
+    "any": 0,
+    "none": 0
+   },
+   "matched_twin_seed": 247824388598716,
+   "ranks_k1_2k": {
+    "DFTX": 0.05,
+    "OMER": 0.05,
+    "RLAY": 0.05,
+    "WDC": 0.05,
+    "AAOI": 0.05,
+    "INBX": 0.05,
+    "NVCT": 0.05,
+    "BFLY": 0.05,
+    "HYMC": 0.05,
+    "ATEX": 0.05,
+    "ARTV": 0.05,
+    "ANAB": 0.05,
+    "MXL": 0.05,
+    "STX": 0.05,
+    "CGEM": 0.05,
+    "ALTO": 0.05,
+    "VICR": 0.05,
+    "ABSI": 0.05,
+    "FTH": 0.05,
+    "DELL": 0.05
+   },
+   "matched_twin_pairs": [
+    {
+     "held": "AKTS",
+     "twin": "PAYS",
+     "level": "cell"
+    },
+    {
+     "held": "LIFE",
+     "twin": "BELFB",
+     "level": "cell"
+    },
+    {
+     "held": "SNDK",
+     "twin": "STX",
+     "level": "cell"
+    },
+    {
+     "held": "JAN",
+     "twin": "SLF",
+     "level": "cell"
+    },
+    {
+     "held": "AXTI",
+     "twin": "TXG",
+     "level": "cell"
+    },
+    {
+     "held": "WOLF",
+     "twin": "ACMR",
+     "level": "cell"
+    },
+    {
+     "held": "ERAS",
+     "twin": "KALU",
+     "level": "cell"
+    },
+    {
+     "held": "ANRO",
+     "twin": "FNKO",
+     "level": "cell"
+    },
+    {
+     "held": "SLS",
+     "twin": "PUMP",
+     "level": "cell"
+    },
+    {
+     "held": "CLYM",
+     "twin": "SUPV",
+     "level": "cell"
+    },
+    {
+     "held": "DMRA",
+     "twin": "HLF",
+     "level": "cell"
+    },
+    {
+     "held": "IMMX",
+     "twin": "GHM",
+     "level": "cell"
+    },
+    {
+     "held": "ORKA",
+     "twin": "URGN",
+     "level": "cell"
+    },
+    {
+     "held": "LITE",
+     "twin": "DELL",
+     "level": "cell"
+    },
+    {
+     "held": "MU",
+     "twin": "GEV",
+     "level": "cell"
+    },
+    {
+     "held": "SYRE",
+     "twin": "TNGX",
+     "level": "cell"
+    },
+    {
+     "held": "MLPI",
+     "twin": "PFIS",
+     "level": "cell"
+    },
+    {
+     "held": "NUAI",
+     "twin": "INBX",
+     "level": "cell"
+    },
+    {
+     "held": "RVMD",
+     "twin": "JHX",
+     "level": "cell"
+    },
+    {
+     "held": "CHRN",
+     "twin": "LB",
+     "level": "cell"
+    }
+   ],
+   "status": "ALREADY_FROZEN_SAME_HOLDINGS",
+   "gate": "PASS",
+   "twins_already": [
+    "ew",
+    "random_same_band",
+    "sector_etf",
+    "spy"
+   ],
+   "book": "lib_disp_short_avoid_2026-09-27",
+   "book_id": "d93fbf2c301248ca",
+   "twin_ids": {
+    "ranks_k1_2k": "1201ed4bc42439f9",
+    "iwm": "7f74a0198ddd1eb1",
+    "matched_random": "67903b85cf3c0b8c"
+   },
+   "twin_ids_already": {
+    "ew": "9400f79fada66555",
+    "sector_etf": "aa5b879f546b7cad",
+    "spy": "75919a39db978691",
+    "random_same_band": "a46f8fec8b098b8e"
+   }
+  },
+  {
+   "cell": "mom_12_1_q_trend@k20",
+   "source": "b",
+   "rule": "mom_12_1_q_trend",
+   "k": 20,
+   "family": "regime_gated",
+   "weights": {
+    "AKTS": 0.05,
+    "LIFE": 0.05,
+    "SNDK": 0.05,
+    "JAN": 0.05,
+    "AXTI": 0.05,
+    "WOLF": 0.05,
+    "ERAS": 0.05,
+    "ANRO": 0.05,
+    "QTTB": 0.05,
+    "SLS": 0.05,
+    "PRAX": 0.05,
+    "CLYM": 0.05,
+    "DMRA": 0.05,
+    "IMMX": 0.05,
+    "ORKA": 0.05,
+    "LITE": 0.05,
+    "MU": 0.05,
+    "MRNA": 0.05,
+    "ALMS": 0.05,
+    "TWST": 0.05
+   },
+   "worst_case": "WORST CASE lib_mom_12_1_q_trend_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (AKTS 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+   "declared": {
+    "expected_sigma_21_sessions": 0.13976235644168547,
+    "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+    "factor_betas": {
+     "status": "OK",
+     "n_months": 115,
+     "betas": {
+      "SPY": 0.43184162794870296,
+      "IWM-SPY": 1.2646978415688872,
+      "SMH-SPY": 0.33367459401693234,
+      "MTUM-SPY": 0.5476241576705749
+     },
+     "t_betas": {
+      "SPY": 2.1378985698134123,
+      "IWM-SPY": 4.624184844008514,
+      "SMH-SPY": 2.1060445506909895,
+      "MTUM-SPY": 1.8378414604257387
+     },
+     "alpha_monthly": 0.018968480328585165,
+     "r2": 0.3218809309127445,
+     "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+    },
+    "stop": {
+     "sigma_units": 2.0,
+     "level_21_sessions": -0.27952471288337094,
+     "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+    },
+    "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+    "sigma_rule_minus_matched_twin": {
+     "21_sessions": 0.07423018924562295,
+     "63_sessions": 0.1285704592288718,
+     "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+     "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+    }
+   },
+   "matched_twin_fallbacks": {
+    "cell": 20,
+    "band_vol": 0,
+    "band": 0,
+    "any": 0,
+    "none": 0
+   },
+   "matched_twin_seed": 210241658120454,
+   "ranks_k1_2k": {
+    "SYRE": 0.05,
+    "MLPI": 0.05,
+    "NUAI": 0.05,
+    "TXG": 0.05,
+    "RVMD": 0.05,
+    "CHRN": 0.05,
+    "DFTX": 0.05,
+    "OMER": 0.05,
+    "RLAY": 0.05,
+    "WDC": 0.05,
+    "AAOI": 0.05,
+    "INBX": 0.05,
+    "NVCT": 0.05,
+    "BFLY": 0.05,
+    "HYMC": 0.05,
+    "ATEX": 0.05,
+    "ARTV": 0.05,
+    "ANAB": 0.05,
+    "VELO": 0.05,
+    "MXL": 0.05
+   },
+   "matched_twin_pairs": [
+    {
+     "held": "AKTS",
+     "twin": "PUBM",
+     "level": "cell"
+    },
+    {
+     "held": "LIFE",
+     "twin": "AGL",
+     "level": "cell"
+    },
+    {
+     "held": "SNDK",
+     "twin": "CRWD",
+     "level": "cell"
+    },
+    {
+     "held": "JAN",
+     "twin": "BBT",
+     "level": "cell"
+    },
+    {
+     "held": "AXTI",
+     "twin": "ASX",
+     "level": "cell"
+    },
+    {
+     "held": "WOLF",
+     "twin": "KALU",
+     "level": "cell"
+    },
+    {
+     "held": "ERAS",
+     "twin": "MAN",
+     "level": "cell"
+    },
+    {
+     "held": "ANRO",
+     "twin": "GSIT",
+     "level": "cell"
+    },
+    {
+     "held": "QTTB",
+     "twin": "CHRN",
+     "level": "cell"
+    },
+    {
+     "held": "SLS",
+     "twin": "CELC",
+     "level": "cell"
+    },
+    {
+     "held": "PRAX",
+     "twin": "SIMO",
+     "level": "cell"
+    },
+    {
+     "held": "CLYM",
+     "twin": "OILU",
+     "level": "cell"
+    },
+    {
+     "held": "DMRA",
+     "twin": "QMCO",
+     "level": "cell"
+    },
+    {
+     "held": "IMMX",
+     "twin": "JBIO",
+     "level": "cell"
+    },
+    {
+     "held": "ORKA",
+     "twin": "PRM",
+     "level": "cell"
+    },
+    {
+     "held": "LITE",
+     "twin": "DELL",
+     "level": "cell"
+    },
+    {
+     "held": "MU",
+     "twin": "PANW",
+     "level": "cell"
+    },
+    {
+     "held": "MRNA",
+     "twin": "LSCC",
+     "level": "cell"
+    },
+    {
+     "held": "ALMS",
+     "twin": "MTRN",
+     "level": "cell"
+    },
+    {
+     "held": "TWST",
+     "twin": "AGX",
+     "level": "cell"
+    }
+   ],
+   "status": "NEW",
+   "gate": "PASS",
+   "gate_detail": {
+    "verdict": "PASS",
+    "reasons": [],
+    "label": "PASS",
+    "selection": {
+     "dev_vs_spy_gt_0": true,
+     "selection_window_vs_spy_gt_0": true,
+     "top5_month_share_lt_0_6": false,
+     "max_dd_gt_m40": false,
+     "loo_worst_mean_active_gt_0": true,
+     "family_books_le_2": true
+    },
+    "construction": {
+     "max_name_weight_le_0.10": true,
+     "effective_n_ge_8": true,
+     "no_rho_0_8_cluster_above_40pct": true,
+     "no_name_gt_10pct_printing_in_first_5_sessions": true,
+     "largest_name_to_zero_le_150k": true
+    },
+    "timing": {
+     "bars_le_1_session_old": true
+    },
+    "detail": {
+     "k": 20,
+     "max_name": "AKTS",
+     "max_weight": 0.05,
+     "weight_cap": 0.1,
+     "effective_n": 20.0,
+     "max_cluster": [
+      "MU",
+      "SNDK"
+     ],
+     "max_cluster_share": 0.1,
+     "pairs_above_rho": [
+      [
+       "MU",
+       "SNDK",
+       0.877
+      ]
+     ],
+     "earnings_names_over_10pct": {},
+     "largest_name_to_zero_usd": 50000.0,
+     "decision_date": "2026-09-27",
+     "bar_date": "2026-09-25",
+     "staleness_sessions": 0,
+     "family": "regime_gated",
+     "family_books_before": 0
+    },
+    "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+    "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+    "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+    "verdict_full_rule": "CONTROL",
+    "reasons_full_rule": [
+     "TOP5_MONTH_SHARE",
+     "MAX_DD"
+    ]
+   },
+   "book": "lib_mom_12_1_q_trend_lead_2026-09-27",
+   "book_id": "1144c07902e67552",
+   "twin_ids": {
+    "ew": "8e78209f77acf36b",
+    "ranks_k1_2k": "b67086822d079f24",
+    "spy": "ffa304a9e3982015",
+    "iwm": "75e9ca596005c4f6",
+    "matched_random": "4f4b04f2d61cefcd"
+   },
+   "twin_ids_already": {}
+  }
+ ],
+ "notes": [
+  "mom_12_1_q_trend@k20: regime gate mkt_trend_up = 1.0 at 2026-09-25: invested"
+ ]
+}
