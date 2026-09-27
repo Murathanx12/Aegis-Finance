@@ -1,0 +1,3674 @@
+{
+ "NVEC": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "NVE Corporation",
+  "title": "NVE Corp",
+  "watchers": 865,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 3,
+  "oldest_of_30_days": 62.74,
+  "bullish": 18,
+  "bearish": 0,
+  "untagged": 12,
+  "distinct_authors": 17,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-25T15:22:59Z",
+    "user": "TechridyStocks",
+    "sentiment": "Bullish",
+    "body": "$NVEC \ud83d\udc40"
+   },
+   {
+    "at": "2026-09-22T21:22:07Z",
+    "user": "CMCanalyst",
+    "sentiment": null,
+    "body": "$NVEC back to $150 soon"
+   },
+   {
+    "at": "2026-09-22T14:24:24Z",
+    "user": "TechridyStocks",
+    "sentiment": null,
+    "body": "$107.26 bullish above for confirmation $NVEC"
+   },
+   {
+    "at": "2026-09-15T12:13:15Z",
+    "user": "regnull",
+    "sentiment": null,
+    "body": "$NVEC, not NVE"
+   },
+   {
+    "at": "2026-09-15T00:47:11Z",
+    "user": "Equibles",
+    "sentiment": null,
+    "body": "$NVEC Saw this on Equibles. Nve Corp /New/ President &amp; CEO BAKER DANIEL A reported selling 19,140 NVEC shares on September 8, 2026, worth about $1.94 million, in a non-derivative Form 4."
+   },
+   {
+    "at": "2026-09-06T23:03:24Z",
+    "user": "Barkee",
+    "sentiment": null,
+    "body": "@liteprofitl_b $NVEC"
+   }
+  ]
+ },
+ "MAN": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "ManpowerGroup",
+  "title": "ManpowerGroup",
+  "watchers": 564,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 1,
+  "oldest_of_30_days": 68.83,
+  "bullish": 3,
+  "bearish": 2,
+  "untagged": 25,
+  "distinct_authors": 10,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-23T10:03:26Z",
+    "user": "Estimize",
+    "sentiment": null,
+    "body": "Wall St is expecting 1.01 EPS for $MAN Q3 [Reporting 10/15 BMO]\nhttp://www.estimize.com/intro/man?chart=historical&amp;metric_name=eps&amp;utm_cont"
+   },
+   {
+    "at": "2026-09-18T07:55:21Z",
+    "user": "martyn78",
+    "sentiment": "Bullish",
+    "body": "$MAN this could have a nice run"
+   },
+   {
+    "at": "2026-09-09T12:36:46Z",
+    "user": "YishaSwings",
+    "sentiment": "Bullish",
+    "body": "$MAN this could get interesting with the right push"
+   },
+   {
+    "at": "2026-09-09T06:11:12Z",
+    "user": "0dteboss",
+    "sentiment": null,
+    "body": "$MAN $MNKD"
+   },
+   {
+    "at": "2026-08-28T19:05:59Z",
+    "user": "STRelativeStrength",
+    "sentiment": null,
+    "body": "$MAN undiscovered breakout with 564 watchers"
+   },
+   {
+    "at": "2026-08-28T15:57:36Z",
+    "user": "BB_88_",
+    "sentiment": "Bearish",
+    "body": "$MAN time to crack"
+   }
+  ]
+ },
+ "RHI": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Robert Half",
+  "title": "Robert Half International Inc.",
+  "watchers": 577,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 1,
+  "oldest_of_30_days": 81.22,
+  "bullish": 3,
+  "bearish": 0,
+  "untagged": 27,
+  "distinct_authors": 19,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-24T22:06:37Z",
+    "user": "Estimize",
+    "sentiment": null,
+    "body": "Wall St is expecting 0.47 EPS for $RHI Q3 [Reporting 10/27 AMC]\nhttp://www.estimize.com/intro/rhi?chart=historical&amp;metric_name=eps&amp;utm_cont"
+   },
+   {
+    "at": "2026-09-16T10:03:46Z",
+    "user": "Estimize",
+    "sentiment": null,
+    "body": "Wall St is expecting 0.47 EPS for $RHI Q3 [Reporting 10/27 AMC]\nhttp://www.estimize.com/intro/rhi?chart=historical&amp;metric_name=eps&amp;utm_cont"
+   },
+   {
+    "at": "2026-08-27T22:12:29Z",
+    "user": "Estimize",
+    "sentiment": null,
+    "body": "Wall St is expecting 0.47 EPS for $RHI Q3 [Reporting 10/27 AMC]\nhttp://www.estimize.com/intro/rhi?chart=historical&amp;metric_name=eps&amp;utm_cont"
+   },
+   {
+    "at": "2026-08-21T18:53:40Z",
+    "user": "Stocktwits",
+    "sentiment": null,
+    "body": "$RHI Follow @STRelativeStrength to find new trade ideas!"
+   },
+   {
+    "at": "2026-08-21T18:36:04Z",
+    "user": "STRelativeStrength",
+    "sentiment": null,
+    "body": "$RHI undiscovered breakout with 580 watchers"
+   },
+   {
+    "at": "2026-08-20T13:01:53Z",
+    "user": "johnmilnes",
+    "sentiment": null,
+    "body": "$RHI Very nice in the folio"
+   }
+  ]
+ },
+ "ACI": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Albertsons",
+  "title": "Albertsons Companies Inc - Ordinary Shares - Class A",
+  "watchers": 5962,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 7,
+  "oldest_of_30_days": 36.99,
+  "bullish": 15,
+  "bearish": 1,
+  "untagged": 14,
+  "distinct_authors": 17,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-25T08:36:43Z",
+    "user": "Broview",
+    "sentiment": "Bullish",
+    "body": "$ACI value investing period"
+   },
+   {
+    "at": "2026-09-24T22:41:01Z",
+    "user": "Ulizo",
+    "sentiment": null,
+    "body": "$ACI \ud83d\ude4f"
+   },
+   {
+    "at": "2026-09-24T17:36:17Z",
+    "user": "gwynn19",
+    "sentiment": null,
+    "body": "$ACI due for a bounce"
+   },
+   {
+    "at": "2026-09-23T19:50:29Z",
+    "user": "MaxAdele",
+    "sentiment": null,
+    "body": "$ACI @H-hi it&#39;s a cheap chic stock with 6% div, just buyback the stock which is way more profitable they make it sounds."
+   },
+   {
+    "at": "2026-09-23T13:48:23Z",
+    "user": "H_hi",
+    "sentiment": "Bullish",
+    "body": "$ACI stop paying divi and pay down debt now! The market hates divi payers, hates them even more when they stop paying \ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23\ud83e\udd23"
+   },
+   {
+    "at": "2026-09-23T12:13:41Z",
+    "user": "1978280Z",
+    "sentiment": "Bullish",
+    "body": "$ACI I wonder when this mini tech move up begins to cool if people wil rotate into stocks like these?  Of course they will if they have some common sense, however common sense isn&#39;t as common these days."
+   }
+  ]
+ },
+ "PEGA": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Pegasystems",
+  "title": "Pegasystems Inc.",
+  "watchers": 1768,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 0,
+  "oldest_of_30_days": 66.11,
+  "bullish": 12,
+  "bearish": 1,
+  "untagged": 17,
+  "distinct_authors": 23,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-17T20:41:48Z",
+    "user": "topstockalerts",
+    "sentiment": null,
+    "body": "JPMorgan downgraded Pegasystems to Neutral from Overweight and cut its price target to $47 from $54, citing higher execution risk and a more challenging path toward the company\u2019s long-term financial targets. \nThe bank lowered its revenue-gr"
+   },
+   {
+    "at": "2026-09-16T00:37:32Z",
+    "user": "Equibles",
+    "sentiment": null,
+    "body": "$PEGA Found it in the filings on Equibles. Pegasystems Inc COO, CFO STILLWELL KENNETH reported selling 39,627 PEGA shares on September 11, 2026, worth about $1.42 million, in a non-derivative Form 4."
+   },
+   {
+    "at": "2026-09-15T17:02:33Z",
+    "user": "Carlos7144",
+    "sentiment": "Bullish",
+    "body": "$PATH $PEGA $NOW  \nPATH&#39;s 21% Rise in Million-Dollar Customers is the Number to Watch https://share.google/i8RWZZvN16aXZy8gT"
+   },
+   {
+    "at": "2026-09-14T16:54:58Z",
+    "user": "Primeoptionsst",
+    "sentiment": null,
+    "body": "$PEGA \ud83d\udea8 PEGA JUST CAUGHT MY ATTENTION.\n\n$PEGA is pushing higher with strong intraday momentum, and I\u2019m watching this move closely. \ud83d\udcc8\n\nI\u2019m looking for the setup before the crowd starts chasing it.\n\nNo guarantees. No chasing. Risk management "
+   },
+   {
+    "at": "2026-09-14T16:54:10Z",
+    "user": "INFINITE_THETA",
+    "sentiment": null,
+    "body": "\ud83d\ude80 $PEGA 18 SEP 26 $40 CALL @ $0.50 \ud83d\udd25\n\n\ud83d\udcc8 RELATIVE STRENGTH\n\u26a1 MOMENTUM TRADE \u267e\ufe0f"
+   },
+   {
+    "at": "2026-09-14T16:53:43Z",
+    "user": "leopard23",
+    "sentiment": null,
+    "body": "$PEGA\n18 SEP 26 $40 CALL\n$0.50"
+   }
+  ]
+ },
+ "IRDM": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Iridium",
+  "title": "Iridium Communications Inc",
+  "watchers": 5481,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 5.8,
+  "bullish": 19,
+  "bearish": 0,
+  "untagged": 11,
+  "distinct_authors": 19,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-26T15:38:59Z",
+    "user": "KryptonResearch14",
+    "sentiment": null,
+    "body": "$IRDM \n \nIridium shareholders approved the Rocket Lab buyout Thursday: 99.6% of votes cast in favor, representing about 81% of outstanding shares. \n \nThe terms: 27 in cash plus Rocket Lab shares for each Iridium share, a notional value of 5"
+   },
+   {
+    "at": "2026-09-25T20:08:28Z",
+    "user": "spearnreel",
+    "sentiment": "Bullish",
+    "body": "$GOGO Straight playin I\u2019m sayin.\n\nPlay or get played.\n\nFew get paid.\n\nPlaybook? Players choice\u2026\n$IRDM $GSAT"
+   },
+   {
+    "at": "2026-09-25T16:19:50Z",
+    "user": "GreenGoblin007",
+    "sentiment": "Bullish",
+    "body": "$RKLB Cant keep it down for much longer. This thing is gonna go parabolic on any positive Neutron news. Or maybe even $IRDM deal closing completely by EOY."
+   },
+   {
+    "at": "2026-09-25T15:02:30Z",
+    "user": "LilNappy666",
+    "sentiment": "Bullish",
+    "body": "$IRDM This price is ridiculous. FCC will approve the buyout without a hitch. There is no regulatory uncertainty that justifies a 10% deduction to buyout price. $RKLB"
+   },
+   {
+    "at": "2026-09-25T14:36:39Z",
+    "user": "spearnreel",
+    "sentiment": "Bullish",
+    "body": "$GOGO I was positioned in $GVP at time of buyout. PA made no sense. Was a similar story as here\u2026hot sector (nuclear engineering), sub 1 p/s, tinge profitability, insider support, etc.\n\nNothing made sense on PA and really wasn\u2019t expecting bu"
+   },
+   {
+    "at": "2026-09-25T14:25:31Z",
+    "user": "Arrow_Investments",
+    "sentiment": "Bullish",
+    "body": "$RKLB the $IRDM will be a nice 1 BILLION in revenue.... $QQQ"
+   }
+  ]
+ },
+ "HELE": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Helen of Troy",
+  "title": "Helen of Troy Ltd",
+  "watchers": 1458,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 2,
+  "oldest_of_30_days": 81.05,
+  "bullish": 9,
+  "bearish": 3,
+  "untagged": 18,
+  "distinct_authors": 20,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-23T10:00:24Z",
+    "user": "Estimize",
+    "sentiment": null,
+    "body": "Wall St is expecting 0.50 EPS for $HELE Q2 [Reporting 10/08 BMO]\nhttp://www.estimize.com/intro/hele?chart=historical&amp;metric_name=eps&amp;utm_co"
+   },
+   {
+    "at": "2026-09-22T11:16:03Z",
+    "user": "NVDAMillionaire",
+    "sentiment": null,
+    "body": "$HELE Brilliant piece that captures HELE&#39;s situation perfectly. So if you want to update your understanding of HELE or get to know HELE better, this is essential reading. https://everyticker.com/quote/HELE/analysis/project-pegasus-and-t"
+   },
+   {
+    "at": "2026-09-03T22:06:23Z",
+    "user": "Estimize",
+    "sentiment": null,
+    "body": "Wall St is expecting 0.50 EPS for $HELE Q2 [Reporting 10/07 BMO]\nhttp://www.estimize.com/intro/hele?chart=historical&amp;metric_name=eps&amp;utm_co"
+   },
+   {
+    "at": "2026-09-01T09:26:29Z",
+    "user": "zero_vector",
+    "sentiment": "Bullish",
+    "body": "$HELE breaking out after a boring base"
+   },
+   {
+    "at": "2026-08-31T19:53:22Z",
+    "user": "Mr__G",
+    "sentiment": null,
+    "body": "$HELE so you tell me they have a Buyback Program with over 495mil left. Interesting."
+   },
+   {
+    "at": "2026-08-31T19:04:55Z",
+    "user": "Dolly_Partons_Ghost",
+    "sentiment": "Bullish",
+    "body": "$HELE"
+   }
+  ]
+ },
+ "SMPL": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Simply Good Foods",
+  "title": "Simply Good Foods Co",
+  "watchers": 1221,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 3,
+  "oldest_of_30_days": 79.32,
+  "bullish": 19,
+  "bearish": 0,
+  "untagged": 11,
+  "distinct_authors": 13,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-24T19:12:09Z",
+    "user": "ChillingTrader",
+    "sentiment": null,
+    "body": "@gemstoneportfolio still think $SMPL is the better bet. Less debt"
+   },
+   {
+    "at": "2026-09-22T11:40:18Z",
+    "user": "NVDAMillionaire",
+    "sentiment": null,
+    "body": "$SMPL Really good write-up that perfectly summarizes SMPL&#39;s present situation. So if you want to bring your SMPL knowledge up to date or just discover SMPL, this is required reading. https://everyticker.com/quote/SMPL/analysis/quest-s-r"
+   },
+   {
+    "at": "2026-09-21T10:03:29Z",
+    "user": "Estimize",
+    "sentiment": null,
+    "body": "Wall St is expecting 0.41 EPS for $SMPL Q4 [Reporting 10/22 BMO]\nhttp://www.estimize.com/intro/smpl?chart=historical&amp;metric_name=eps&amp;utm_co"
+   },
+   {
+    "at": "2026-09-16T14:36:08Z",
+    "user": "myman1956",
+    "sentiment": "Bullish",
+    "body": "$SMPL Looks like will go back to the 20 day avg. of $10.80."
+   },
+   {
+    "at": "2026-09-09T02:15:18Z",
+    "user": "ObersteSchublade",
+    "sentiment": null,
+    "body": "$SMPL Why are they buying between 20 and 12 and not at 10.50????"
+   },
+   {
+    "at": "2026-08-24T13:58:03Z",
+    "user": "11thestate",
+    "sentiment": null,
+    "body": "$SMPL investors \u2014 in case you missed the latest.            \n                \nA new case was filed against Simply Good Foods. Here are the key details.                           \n \nWorth checking and don\u2019t forget to join so you don\u2019t miss a"
+   }
+  ]
+ },
+ "PRGS": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Progress Software",
+  "title": "Progress Software Corp.",
+  "watchers": 1143,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 1,
+  "oldest_of_30_days": 88.67,
+  "bullish": 3,
+  "bearish": 0,
+  "untagged": 27,
+  "distinct_authors": 20,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-22T15:40:20Z",
+    "user": "NVDAMillionaire",
+    "sentiment": null,
+    "body": "$PRGS Excellent article that nails exactly where PRGS stands right now. So if you want to update your PRGS knowledge or get acquainted with PRGS, this is a must read. https://everyticker.com/quote/PRGS/analysis/progress-software-s-ai-inflec"
+   },
+   {
+    "at": "2026-07-30T17:04:09Z",
+    "user": "SuperBee123",
+    "sentiment": null,
+    "body": "$PRGS still bullish"
+   },
+   {
+    "at": "2026-07-29T15:05:36Z",
+    "user": "8BALLIAM",
+    "sentiment": null,
+    "body": "$PRGS tasty"
+   },
+   {
+    "at": "2026-07-29T01:37:00Z",
+    "user": "topstockalerts",
+    "sentiment": null,
+    "body": "Progress Software announced new agentic AI capabilities for its Sitefinity Generative CMS platform, introducing AI agents that operate directly within content workflows to handle optimization, review, analysis, and SEO tasks. The update is "
+   },
+   {
+    "at": "2026-07-23T23:03:30Z",
+    "user": "DrDuru",
+    "sentiment": null,
+    "body": "$DOMO Sells Its Business, But Is the Market Leaving Money on the Table?\n\nDomo is selling almost all its operating business to Progress Software ($PRGS ) for $400 million in cash, yet the stock still trades below the company\u2019s estimated post"
+   },
+   {
+    "at": "2026-07-23T20:14:05Z",
+    "user": "8BALLIAM",
+    "sentiment": null,
+    "body": "$PRGS  I gotta just shut up\ud83d\ude43"
+   }
+  ]
+ },
+ "AGYS": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Agilysys",
+  "title": "Agilysys, Inc",
+  "watchers": 552,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 0,
+  "oldest_of_30_days": 123.14,
+  "bullish": 8,
+  "bearish": 0,
+  "untagged": 22,
+  "distinct_authors": 22,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-02T12:38:13Z",
+    "user": "SilverEagle",
+    "sentiment": "Bullish",
+    "body": "$AGYS high teens revenue growth YoY. Earnings will improve as they manage margins better. I\u2019d buy the dip and ride the 10/20 until proven guilty."
+   },
+   {
+    "at": "2026-08-14T18:42:51Z",
+    "user": "vjtweet",
+    "sentiment": "Bullish",
+    "body": "$AGYS has position. To add more"
+   },
+   {
+    "at": "2026-08-14T02:29:11Z",
+    "user": "PhishTourFunds",
+    "sentiment": null,
+    "body": "$AGYS \ud83d\udd25"
+   },
+   {
+    "at": "2026-08-05T01:36:08Z",
+    "user": "WAYWARD_SUN",
+    "sentiment": "Bullish",
+    "body": "$AGYS"
+   },
+   {
+    "at": "2026-07-29T16:21:09Z",
+    "user": "nicet",
+    "sentiment": null,
+    "body": "$AGYS only stock in green $NVDA $GEVO $PLUG"
+   },
+   {
+    "at": "2026-07-28T18:42:58Z",
+    "user": "AC_TRADER",
+    "sentiment": null,
+    "body": "$AGYS Levels made with @TrendSpider https://share.trendspider.com/chart/AGYS/7594506czd"
+   }
+  ]
+ },
+ "NOVT": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Novanta",
+  "title": "Novanta Inc",
+  "watchers": 805,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 2,
+  "oldest_of_30_days": 117.6,
+  "bullish": 7,
+  "bearish": 0,
+  "untagged": 23,
+  "distinct_authors": 23,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-22T23:36:56Z",
+    "user": "Damond",
+    "sentiment": null,
+    "body": "$NOVT well, I just built my starter position, waiting for a pullback to add more"
+   },
+   {
+    "at": "2026-09-22T18:03:58Z",
+    "user": "Haewook",
+    "sentiment": "Bullish",
+    "body": "$NOVT noice!"
+   },
+   {
+    "at": "2026-09-13T15:52:28Z",
+    "user": "KornieAwareness7",
+    "sentiment": null,
+    "body": "$NOVT $OUST"
+   },
+   {
+    "at": "2026-09-02T06:47:59Z",
+    "user": "saab93boi",
+    "sentiment": "Bullish",
+    "body": "$NOVT Bought a starter here today.  Last of the Physical AI stocks that I wanted for my portfolio.  I finally have the full exposure that I specifically want and will add heavy if it drops even more."
+   },
+   {
+    "at": "2026-08-24T14:41:08Z",
+    "user": "babyloncapital",
+    "sentiment": null,
+    "body": "$NOVT starter here.  beaten down name in a highly promising sector, pure play robotics selling end of arm tooling, motion control.  will add on weakness"
+   },
+   {
+    "at": "2026-08-19T15:55:35Z",
+    "user": "MonkeyBananaGenius",
+    "sentiment": null,
+    "body": "$NOVT very under the radar robotics play. Stalking a long here. Weekly 20 just breaking above the 50. WUTCH"
+   }
+  ]
+ },
+ "COGT": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Cogent Biosciences",
+  "title": "Cogent Biosciences Inc",
+  "watchers": 3308,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 5,
+  "oldest_of_30_days": 80.1,
+  "bullish": 8,
+  "bearish": 0,
+  "untagged": 22,
+  "distinct_authors": 18,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-23T18:04:36Z",
+    "user": "DorianMD",
+    "sentiment": null,
+    "body": "$COGT adding more if this goes below 30"
+   },
+   {
+    "at": "2026-09-23T15:18:11Z",
+    "user": "sks144",
+    "sentiment": null,
+    "body": "$COGT this moves on no volume. So cheap given the TAM on indications."
+   },
+   {
+    "at": "2026-09-23T14:33:42Z",
+    "user": "Cap_00",
+    "sentiment": null,
+    "body": "$COGT 3 pudfa incoming.  Everything is selling off.  Also a BO target.  buying today"
+   },
+   {
+    "at": "2026-09-22T19:00:52Z",
+    "user": "DorianMD",
+    "sentiment": "Bullish",
+    "body": "$COGT buying dips"
+   },
+   {
+    "at": "2026-09-22T16:34:04Z",
+    "user": "DorianMD",
+    "sentiment": null,
+    "body": "$COGT starter"
+   },
+   {
+    "at": "2026-09-16T20:12:31Z",
+    "user": "fda_tracker",
+    "sentiment": null,
+    "body": "$COGT New PDUFA Date 2027-06-29 Cogent Biosciences, Inc. Link: https://www.globenewswire.com/news-release/2026/09/15/3361988/0/en/cogent-biosciences-announces-fda-acceptance-of-new-drug-application-nda-for-bezuclastinib-in-patients-with-adv"
+   }
+  ]
+ },
+ "VKTX": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Viking Therapeutics",
+  "title": "Viking Therapeutics Inc",
+  "watchers": 39793,
+  "n_msgs": 30,
+  "n_last_24h": 30,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 0.6,
+  "bullish": 14,
+  "bearish": 1,
+  "untagged": 15,
+  "distinct_authors": 21,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T15:15:11Z",
+    "user": "BigB100",
+    "sentiment": null,
+    "body": "$VKTX I FEEL A HOSTILE BID COMING"
+   },
+   {
+    "at": "2026-09-27T15:00:38Z",
+    "user": "TrustButVerifii",
+    "sentiment": "Bullish",
+    "body": "$ASPI $VKTX  \nI am gonna humiliate this Fk as he is my betch as well for now til  Viking hits triple digit soon at which point I will sink his head in the toilet til he can&#39;t breath!  \n \nI really think he is penny paid poster and has No"
+   },
+   {
+    "at": "2026-09-27T14:33:52Z",
+    "user": "Stockman824",
+    "sentiment": null,
+    "body": "$VKTX there are a lot more seriously damaged people posting here all of a sudden SAYING they are longs. ANYONE who posts shit and doesn\u2019t contribute to this board will from now on be blocked! We have too much on the line here to deal with s"
+   },
+   {
+    "at": "2026-09-27T14:23:42Z",
+    "user": "Mark7531",
+    "sentiment": "Bullish",
+    "body": "$VKTX Some people on this board are absolutely clueless. The SP in the open market for M&amp;A for a pre revenue biotech is irrelevant. The real value for BP is not what people are buying to own some shares in the open market. The real valu"
+   },
+   {
+    "at": "2026-09-27T14:21:48Z",
+    "user": "RunGal",
+    "sentiment": "Bullish",
+    "body": "$VKTX SO\u2026Wegovy and Ozempic, will lose key patent exclusivity in 2032\u2026\u2026convertible senior notes due 2032\u2026..Anything to read into this?"
+   },
+   {
+    "at": "2026-09-27T14:17:58Z",
+    "user": "nlrmandate",
+    "sentiment": "Bullish",
+    "body": "$VKTX and here&#39;s another one....what&#39;s this world coming to!?!?!?"
+   }
+  ]
+ },
+ "BBIO": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "BridgeBio",
+  "title": "BridgeBio Pharma Inc",
+  "watchers": 5416,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 9,
+  "oldest_of_30_days": 29.91,
+  "bullish": 15,
+  "bearish": 2,
+  "untagged": 13,
+  "distinct_authors": 20,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-25T13:14:44Z",
+    "user": "JackDarwin",
+    "sentiment": "Bullish",
+    "body": "$BBIO Bullish Harami Candlestick Pattern Formed at Downtrend. Wait for the confirmation from the next day&#39;s candle. \n \n \nBullish Harami is a two-candle reversal pattern where a small bullish candle forms within the body of a larger bear"
+   },
+   {
+    "at": "2026-09-24T12:44:29Z",
+    "user": "timfris",
+    "sentiment": null,
+    "body": "$BBIO adding here and CYTK.\nGetting ridiculous."
+   },
+   {
+    "at": "2026-09-23T22:37:57Z",
+    "user": "LMXPERTEN",
+    "sentiment": "Bullish",
+    "body": "$BBIO adding adding adding \ud83d\ude4f"
+   },
+   {
+    "at": "2026-09-23T21:38:55Z",
+    "user": "Merlintrader",
+    "sentiment": null,
+    "body": "BridgeBio ($BBIO): Peer-Reviewed Study Compares Acoramidis with Tafamidis \n \nFree Biotech Catalyst Calendar on Merlintrader. \n \nhttps://www.merlintrader.com/bridgebio-pharma-bbio-stock-hub/"
+   },
+   {
+    "at": "2026-09-23T18:30:50Z",
+    "user": "JayMedina",
+    "sentiment": "Bullish",
+    "body": "$BBIO what\u2019s the move here?"
+   },
+   {
+    "at": "2026-09-23T18:07:49Z",
+    "user": "DrGonzo69",
+    "sentiment": "Bullish",
+    "body": "$BBIO macro drop, tempted to add to my position at these levels."
+   }
+  ]
+ },
+ "RGEN": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Repligen",
+  "title": "Repligen Corp.",
+  "watchers": 1573,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 3,
+  "oldest_of_30_days": 92.75,
+  "bullish": 8,
+  "bearish": 0,
+  "untagged": 22,
+  "distinct_authors": 19,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-25T16:14:56Z",
+    "user": "Doozio",
+    "sentiment": null,
+    "body": "$IMO $RGEN $XLE"
+   },
+   {
+    "at": "2026-09-25T01:40:43Z",
+    "user": "Avocado_smash",
+    "sentiment": null,
+    "body": "$RGEN"
+   },
+   {
+    "at": "2026-09-23T18:20:26Z",
+    "user": "STRelativeStrength",
+    "sentiment": null,
+    "body": "$RGEN undiscovered breakout with 1572 watchers"
+   },
+   {
+    "at": "2026-09-16T01:14:54Z",
+    "user": "Doozio",
+    "sentiment": null,
+    "body": "$IMO if $XLE keep Hucklberry riding while this bum breaks out it\u2019s gonna be tough for da \ud83e\udde0 to make that COIN while da \ud83d\udc11 macro jabronis ruin da \ud83e\udde0 on the DLO.   Rest of this week \ud83e\udde0 need to $RGEN aerate da \ud83e\udde0 stonks."
+   },
+   {
+    "at": "2026-09-15T08:34:56Z",
+    "user": "Constraintalphacom",
+    "sentiment": null,
+    "body": "AI biotech\u2019s biggest developments aren\u2019t just better models anymore.\n\nThe real shift is happening down the stack:\n\n\u2192 Owkin + Servier: AI + proprietary multimodal patient data\n\u2192 Thermo Fisher + NVIDIA: AI-connected autonomous labs\n\u2192 Benchlin"
+   },
+   {
+    "at": "2026-09-01T16:45:34Z",
+    "user": "IN0V8",
+    "sentiment": null,
+    "body": "$RGEN Buy \nHSBC raises target price to $210 from $170"
+   }
+  ]
+ },
+ "IONQ": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "IonQ",
+  "title": "IonQ Inc",
+  "watchers": 60824,
+  "n_msgs": 30,
+  "n_last_24h": 13,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 1.51,
+  "bullish": 10,
+  "bearish": 3,
+  "untagged": 17,
+  "distinct_authors": 22,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T13:45:27Z",
+    "user": "iTrade_Price",
+    "sentiment": null,
+    "body": "$IONQ ionq"
+   },
+   {
+    "at": "2026-09-27T13:26:44Z",
+    "user": "Rudyvilla2030",
+    "sentiment": "Bullish",
+    "body": "$IONQ \ud83d\udc8e"
+   },
+   {
+    "at": "2026-09-27T12:04:24Z",
+    "user": "ChillerID",
+    "sentiment": null,
+    "body": "$IONQ $QBTS $INFQ $NVDA Worth a read \ud83d\udc40"
+   },
+   {
+    "at": "2026-09-27T03:12:48Z",
+    "user": "NerpNerp",
+    "sentiment": null,
+    "body": "$BTC.X $INFQ $IONQ $QNT $SPY Q-Day is being planned for. Legacy tokens may not survive, that\u2019s true."
+   },
+   {
+    "at": "2026-09-27T02:33:51Z",
+    "user": "PaddyOoohhYeah",
+    "sentiment": "Bullish",
+    "body": "$QNT $BTC.X $INFQ $IONQ $SPY Then we&#39;ll sell 4.5 years from now! Thanks for the head&#39;s up!"
+   },
+   {
+    "at": "2026-09-27T02:32:24Z",
+    "user": "DRKWONPHD",
+    "sentiment": null,
+    "body": "$QNT you guys understand that within 5-10 years quantum will make Blockchain obsolete, right? \n\n$BTC.X $INFQ $IONQ $SPY"
+   }
+  ]
+ },
+ "MP": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "MP Materials",
+  "title": "MP Materials Corporation",
+  "watchers": 36197,
+  "n_msgs": 30,
+  "n_last_24h": 7,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 2.1,
+  "bullish": 12,
+  "bearish": 1,
+  "untagged": 17,
+  "distinct_authors": 21,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-26T23:08:46Z",
+    "user": "superalby",
+    "sentiment": "Bullish",
+    "body": "$MP \ud83d\udcaa\ud83c\udffb"
+   },
+   {
+    "at": "2026-09-26T22:33:49Z",
+    "user": "TigerPanda",
+    "sentiment": "Bullish",
+    "body": "$MP when does the money generation initiate. I&#39;ve only got roughly 4 months before I need to liquidate everything to pay my loans"
+   },
+   {
+    "at": "2026-09-26T22:19:57Z",
+    "user": "RidingTrends",
+    "sentiment": null,
+    "body": "$MP Greenland contract?"
+   },
+   {
+    "at": "2026-09-26T22:19:46Z",
+    "user": "jason1990001",
+    "sentiment": "Bullish",
+    "body": "$RUM you know that US government cloud contract is incoming. Just like $INTC and $MP . This is going 4-5x"
+   },
+   {
+    "at": "2026-09-26T17:34:01Z",
+    "user": "YouVSYou",
+    "sentiment": "Bullish",
+    "body": "\ud83d\udea8 US CHINA DEAL\n\nChina will buy at least 10M metric tons of US coal in both 2027 and 2028 while both sides cut tariffs on roughly $30B of non sensitive goods\n\nRare earth negotiations are still ongoing which keeps $MP $USAR in play while cri"
+   },
+   {
+    "at": "2026-09-26T16:28:18Z",
+    "user": "Oddpaperz",
+    "sentiment": null,
+    "body": "$MP $USAR $UUUU $CRML $GRML https://x.com/sirmojojon/status/2103876916667162734?s=46"
+   }
+  ]
+ },
+ "LEU": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Centrus",
+  "title": "Centrus Energy Corp ",
+  "watchers": 8796,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 23,
+  "oldest_of_30_days": 9.04,
+  "bullish": 12,
+  "bearish": 1,
+  "untagged": 17,
+  "distinct_authors": 22,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T13:25:54Z",
+    "user": "GreenEnergy7B",
+    "sentiment": null,
+    "body": "$LEU Dilution + expensive. \n \nOn near-term forward revenue, LEU still looks expensive at about $147/share . \nCurrent forward P/E~60\u00d7 \n \nConsensus expects only about 5% revenue growth in 2026, and the publicly visible estimate for 2027 is ro"
+   },
+   {
+    "at": "2026-09-25T17:49:59Z",
+    "user": "SW51",
+    "sentiment": null,
+    "body": "$LEU red incoming"
+   },
+   {
+    "at": "2026-09-25T14:17:11Z",
+    "user": "HS_LEE",
+    "sentiment": "Bullish",
+    "body": "$LEU I can wait for a few more years. We will see what price would be after few years."
+   },
+   {
+    "at": "2026-09-25T13:15:59Z",
+    "user": "GreenEnergy7B",
+    "sentiment": null,
+    "body": "$LEU Datacenters in the universe? = Less energy demand, short nuclear. \nBREAKING: Google launching TPUs in space NEXT WEEK on SpaceX falcon 9 to test AI data centers orbit \n \nWatch the video: https://x.com/ns123abc/status/210314316172799211"
+   },
+   {
+    "at": "2026-09-25T11:41:15Z",
+    "user": "Merlintrader",
+    "sentiment": null,
+    "body": "Nuclear AI: what must happen for $OKLO, $SMR, $LEU and $BWXT? \nhttps://www.merlintrader.com/nuclear-ai-oklo-smr-leu-bwxt/"
+   },
+   {
+    "at": "2026-09-25T07:23:31Z",
+    "user": "GreenEnergy7B",
+    "sentiment": "Bearish",
+    "body": "$LEU So the 500,000 shares + 2.006 million pre-funded warrants represent approximately 2.506 million additional shares, equivalent to roughly a 13.0% increase in the Class A share count. \n \nIf all warrants eventually become shares, total po"
+   }
+  ]
+ },
+ "CCJ": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Cameco",
+  "title": "Cameco Corp.",
+  "watchers": 17492,
+  "n_msgs": 29,
+  "n_last_24h": 1,
+  "n_last_7d": 17,
+  "oldest_of_30_days": 8.91,
+  "bullish": 8,
+  "bearish": 1,
+  "untagged": 20,
+  "distinct_authors": 24,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T10:39:01Z",
+    "user": "Rjost",
+    "sentiment": "Bullish",
+    "body": "$DNN \u2622\ufe0f $DNN deserves more attention.\n\nPhoenix has moved beyond the permitting stage\u2014final investment decision approved, construction underway and first uranium production targeted for mid-2028.\n\nThe setup:\n\n\u2705 Flagship project in Canada\u2019s A"
+   },
+   {
+    "at": "2026-09-26T01:24:13Z",
+    "user": "MrRodgersNeighborhood",
+    "sentiment": null,
+    "body": "$CCJ imagine if we made Money"
+   },
+   {
+    "at": "2026-09-25T20:14:00Z",
+    "user": "yizeli",
+    "sentiment": "Bearish",
+    "body": "$CCJ fuck bulls ass"
+   },
+   {
+    "at": "2026-09-25T14:56:16Z",
+    "user": "Thelonius_Stonk",
+    "sentiment": null,
+    "body": "$CCJ \ud83c\udf7f"
+   },
+   {
+    "at": "2026-09-24T23:13:26Z",
+    "user": "juzbeachy",
+    "sentiment": null,
+    "body": "$CCJ $BEP where\u2019s a Westinghouse S-1 when you need it?"
+   },
+   {
+    "at": "2026-09-24T14:20:11Z",
+    "user": "Inajiffy",
+    "sentiment": null,
+    "body": "$CCJ wtf happend to the westinghouse IPO and structural uranium shortage/increasing term price. FFS. hold and buy more if it hits 80"
+   }
+  ]
+ },
+ "WST": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "West Pharmaceutical",
+  "title": "West Pharmaceutical Services, Inc.",
+  "watchers": 898,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 0,
+  "oldest_of_30_days": 199.91,
+  "bullish": 3,
+  "bearish": 0,
+  "untagged": 27,
+  "distinct_authors": 19,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-16T11:57:46Z",
+    "user": "John_Wick1234",
+    "sentiment": "Bullish",
+    "body": "$WST Price Cross Above Supertrend"
+   },
+   {
+    "at": "2026-09-16T02:05:35Z",
+    "user": "Equibles",
+    "sentiment": null,
+    "body": "$WST Saw this on Equibles. West Pharmaceutical Services Inc Sr. VP &amp; Chief HR Officer Favorite Annette F reported selling 2,817 WST shares on September 8, 2026, worth about $960.1 thousand, in a non-derivative Form 4."
+   },
+   {
+    "at": "2026-08-27T13:04:49Z",
+    "user": "AXLFI_HQ",
+    "sentiment": null,
+    "body": "The most recent Momentum signal on $WST triggered on 2026-08-26. The expected return for the selected horizon is +10.40% with a historical profit probability of +65.46%. Learn more: https://axlfi.com/factor-analysis?symbol=WST&amp;factor=mo"
+   },
+   {
+    "at": "2026-08-23T18:39:39Z",
+    "user": "AXLFI_HQ",
+    "sentiment": null,
+    "body": "The most recent Roc Curve signal on $WST triggered on 2026-08-21. The expected return for the selected horizon is +13.69% with a historical profit probability of +69.64%. Learn more: https://axlfi.com/factor-analysis?symbol=WST&amp;factor=r"
+   },
+   {
+    "at": "2026-07-25T18:14:13Z",
+    "user": "PenkeInvesting",
+    "sentiment": null,
+    "body": "Fundamental analysis of $WST (WEST PHARMACEUTICAL SERVICES INC) based on financial data and reported results. #WST #WEST"
+   },
+   {
+    "at": "2026-07-24T14:31:51Z",
+    "user": "IN0V8",
+    "sentiment": null,
+    "body": "$WST Opportunity \nDeutsche Bank raises target price to $420 from $405"
+   }
+  ]
+ },
+ "AGIO": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Agios",
+  "title": "Agios Pharmaceuticals Inc",
+  "watchers": 2892,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 7,
+  "oldest_of_30_days": 59.07,
+  "bullish": 1,
+  "bearish": 0,
+  "untagged": 29,
+  "distinct_authors": 8,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-25T10:57:28Z",
+    "user": "Stonky_Mcprofitface",
+    "sentiment": null,
+    "body": "$AGIO Don\u2019t get it with this stock. Can\u2019t hold a gain."
+   },
+   {
+    "at": "2026-09-24T10:19:53Z",
+    "user": "stu4",
+    "sentiment": null,
+    "body": "$AGIO  John Maraganore, walked from this company and Board !!!! That says something about this pathetic bunch of public money blood suckers"
+   },
+   {
+    "at": "2026-09-24T10:18:47Z",
+    "user": "stu4",
+    "sentiment": null,
+    "body": "$AGIO   Still chasing an executive team of failures \nFouse \nGoff \nMilanova\nJones \nGuehens\nYour Merlin activities, saving Lancelot, won\u2019t work here \nThe FDA doesn\u2019t give out fake approvals !!! \n@Merlintrader \u2026.keep up the pump\u2026has the check "
+   },
+   {
+    "at": "2026-09-23T16:25:27Z",
+    "user": "Merlintrader",
+    "sentiment": null,
+    "body": "Agios ($AGIO): Mitapivat Q2 Revenue More Than Doubles, Sickle Cell PDUFA November 1 \n \nFree Biotech Catalyst Calendar on Merlintrader. \n \nhttps://www.merlintrader.com/agios-pharmaceuticals-stock-hub/"
+   },
+   {
+    "at": "2026-09-21T19:52:15Z",
+    "user": "stu4",
+    "sentiment": null,
+    "body": "$AGIO   Pound the tables more Bank of America \nYou have been since Greg Harrison called $60 and never hit it. \nIt went to $16.95 with the same pathetic person , still grabbing a pay check  Jackie Fouse \u2026.the poison still breaths at the cess"
+   },
+   {
+    "at": "2026-09-20T20:55:30Z",
+    "user": "stu4",
+    "sentiment": null,
+    "body": "$AGIO  maybe you too, are forging a fake narrative of AGIO , TO SAVE , FOUSE AND GOFF FROM HUMILIATION AS CEO FAILURES. AFTERALL, MERLIN GAVE LANCELOT THE SAME FAKE BADGE, TO MAKE HIM A KNIGHT ..@Merlintrader"
+   }
+  ]
+ },
+ "PRAX": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Praxis Precision",
+  "title": "Praxis Precision Medicines Inc",
+  "watchers": 1781,
+  "n_msgs": 28,
+  "n_last_24h": 0,
+  "n_last_7d": 12,
+  "oldest_of_30_days": 27.12,
+  "bullish": 11,
+  "bearish": 0,
+  "untagged": 17,
+  "distinct_authors": 16,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-25T21:47:52Z",
+    "user": "R84877P",
+    "sentiment": null,
+    "body": "$PRAX I&#39;ll be so happy knowing I bought more while it was so low!"
+   },
+   {
+    "at": "2026-09-25T11:39:28Z",
+    "user": "Hognose",
+    "sentiment": "Bullish",
+    "body": "$PRAX grabbing some here."
+   },
+   {
+    "at": "2026-09-24T17:59:50Z",
+    "user": "Tbitty",
+    "sentiment": null,
+    "body": "$PRAX does anyone know why this keeps dropping?  Awfully strange for a company with 2  PDUFAs just a few months away."
+   },
+   {
+    "at": "2026-09-24T13:20:24Z",
+    "user": "Quantumup",
+    "sentiment": null,
+    "body": "H.C. Wainwright reiterated $PRAX Buy-$1201 and said -- As part of our &quot;Biopharma Deep Dive&quot; call series, we recently hosted Marcio Souza, President and Chief Executive Officer of Praxis Precision Medicines. \n$RAPP $JAZZ SAGE DRUG "
+   },
+   {
+    "at": "2026-09-24T12:53:26Z",
+    "user": "anachartanalyst",
+    "sentiment": null,
+    "body": "$MCD price target cut by two analysts Thursday after a soft August update. BTIG&#39;s Peter Saleh to $295, TD Cowen&#39;s Andrew Charles to $270. $PWR also got an upgrade from Bernstein, target to $775. $PRAX bulls reiterated. Full track re"
+   },
+   {
+    "at": "2026-09-23T15:41:07Z",
+    "user": "brunoq14",
+    "sentiment": null,
+    "body": "$PRAX XBI is down nearly $6."
+   }
+  ]
+ },
+ "QUBT": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Quantum Computing Inc",
+  "title": "Quantum Computing Inc",
+  "watchers": 33549,
+  "n_msgs": 30,
+  "n_last_24h": 3,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 2.06,
+  "bullish": 22,
+  "bearish": 0,
+  "untagged": 8,
+  "distinct_authors": 12,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T11:41:37Z",
+    "user": "AnonMav",
+    "sentiment": null,
+    "body": "$QUBT has basically been chopping in a wide sideways to down mess. July puked, August stabilized, September tried a bounce back toward the upper part of the recent range. Recent push from mid September low looks constructive, but the bigger"
+   },
+   {
+    "at": "2026-09-26T23:29:03Z",
+    "user": "PaulThomasTPG",
+    "sentiment": "Bullish",
+    "body": "$RGTI $QUBT $QBTS  \nThese stocks are primed and ready to go \ud83d\ude80 \nhttps://youtu.be/959-vC-FURU"
+   },
+   {
+    "at": "2026-09-26T19:51:04Z",
+    "user": "secondtimearound",
+    "sentiment": "Bullish",
+    "body": "$GLND completely adjusting my price targets \n \nI ran more numbers and realize the 20-25 range is 1B market cap \n \nbut that is not what a god candle does. \n \nit goes past that \n \nnew target is 70 USD \n \nthis is going to run extremely hard. \n"
+   },
+   {
+    "at": "2026-09-26T15:07:50Z",
+    "user": "RidingTrends",
+    "sentiment": "Bullish",
+    "body": "$QUBT Sector needs some inflow, still early on this one"
+   },
+   {
+    "at": "2026-09-26T12:38:20Z",
+    "user": "Arrow_Investments",
+    "sentiment": "Bullish",
+    "body": "$QUBT Good Video Explanation! Risk vs. Reward  \nhttps://www.youtube.com/watch?v=fGeAVvJi1PM"
+   },
+   {
+    "at": "2026-09-26T03:10:52Z",
+    "user": "MakPhD",
+    "sentiment": "Bullish",
+    "body": "$QUBT"
+   }
+  ]
+ },
+ "AARD": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Aardvark Therapeutics",
+  "title": "Aardvark Therapeutics Inc",
+  "watchers": 144,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 0,
+  "oldest_of_30_days": 77.53,
+  "bullish": 8,
+  "bearish": 5,
+  "untagged": 17,
+  "distinct_authors": 20,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-08-27T14:17:02Z",
+    "user": "focafoca99",
+    "sentiment": null,
+    "body": "$AARD alerts investors to a securities class action alleging false safety claims for ARD-101."
+   },
+   {
+    "at": "2026-08-25T14:31:53Z",
+    "user": "focafoca99",
+    "sentiment": null,
+    "body": "$AARD files a securities class action notice for investors to seek recovery."
+   },
+   {
+    "at": "2026-08-24T14:11:20Z",
+    "user": "11thestate",
+    "sentiment": null,
+    "body": "In the end, $AARD investors were left with the stock down more than 70% across two major disclosures and stuck with their losses. \n \nHere\u2019s an update worth your attention: a new case was recently filed against Aardvark Therapeutics over cla"
+   },
+   {
+    "at": "2026-08-22T19:17:47Z",
+    "user": "LivermoresGhost",
+    "sentiment": "Bullish",
+    "body": "$CVAT Cavitation Technologies has execute a buyout for this company at 35 million $. This translate to 10.8c per share, you can finds this on the company SEC filing. The stock right now trades 3.9c, the buyout is for 10.8c. The buyer EGS, h"
+   },
+   {
+    "at": "2026-08-20T07:28:05Z",
+    "user": "Biotechnicity",
+    "sentiment": "Bullish",
+    "body": "$AARD Don\u2019t hold a position here but want to voice a minority opinion holding that SAE\u2019s in healthy subjects is Bullsh*t given that already compromised Prader-Willi patients might not experience the same response. It\u2019s entirely possible tha"
+   },
+   {
+    "at": "2026-08-17T18:25:12Z",
+    "user": "focafoca99",
+    "sentiment": null,
+    "body": "$AARD announced a securities class-action deadline for investors on Oct 13."
+   }
+  ]
+ },
+ "BHVN": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Biohaven",
+  "title": "Biohaven Pharmaceutical Holding Company Ltd",
+  "watchers": 3447,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 6.03,
+  "bullish": 7,
+  "bearish": 0,
+  "untagged": 23,
+  "distinct_authors": 6,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-25T20:12:37Z",
+    "user": "Timefortendies77",
+    "sentiment": null,
+    "body": "$BHVN Another drop then up type of day, staying aorund 13. October is coming. Multiple catalysts on the way."
+   },
+   {
+    "at": "2026-09-25T14:36:02Z",
+    "user": "Timefortendies77",
+    "sentiment": null,
+    "body": "$BHVN Shorts only have so far they can go before they hit a massive wall. They are taking their last pennies and know catalysts are coming next month."
+   },
+   {
+    "at": "2026-09-24T18:57:59Z",
+    "user": "Timefortendies77",
+    "sentiment": null,
+    "body": "$BHVN Today&#39;s buying @sellthedip1 @Valueforall was a masterclass in buying when everyone is fearful. The market completely turned around and Biohaven with it. 12s and 13s truly sits value for all!"
+   },
+   {
+    "at": "2026-09-24T18:37:08Z",
+    "user": "Valueforall",
+    "sentiment": null,
+    "body": "$BHVN gonna pound the shit outta this on the way up!"
+   },
+   {
+    "at": "2026-09-24T17:20:43Z",
+    "user": "Timefortendies77",
+    "sentiment": null,
+    "body": "$BHVN Back in the 13s holding strong, nothing has happened here except a few days of turbulence...many things coming this year."
+   },
+   {
+    "at": "2026-09-24T16:43:56Z",
+    "user": "sellthedip1",
+    "sentiment": "Bullish",
+    "body": "$BHVN I\u2019m holding a boat load now so if you scared don\u2019t be . I\u2019m checking out for the next couple weeks by good luck mates !"
+   }
+  ]
+ },
+ "SLDP": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Solid Power",
+  "title": "Solid Power Inc",
+  "watchers": 10449,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 24,
+  "oldest_of_30_days": 10.02,
+  "bullish": 17,
+  "bearish": 0,
+  "untagged": 13,
+  "distinct_authors": 21,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T14:12:17Z",
+    "user": "OriginalTradeonrumor",
+    "sentiment": null,
+    "body": "$SLDP in the bmw article the physical pack architecture receiving accolades here is the exact same &quot;open-chassis&quot; foundation into which BMW plans to drop Solid Power\u2019s sulfide-based cells as solid-state technology matures for demo"
+   },
+   {
+    "at": "2026-09-25T23:09:56Z",
+    "user": "Greenlatern",
+    "sentiment": null,
+    "body": "$SLDP https://share.google/ZRWf3LGEjT209YkPq"
+   },
+   {
+    "at": "2026-09-25T20:25:28Z",
+    "user": "blueacid",
+    "sentiment": "Bullish",
+    "body": "$SLDP Down 3.24% w/w folks! \n\nSalad Bad!\ud83d\udc4e\n\nBeer Bitter!\ud83d\ude06"
+   },
+   {
+    "at": "2026-09-25T17:05:17Z",
+    "user": "ImTC",
+    "sentiment": "Bullish",
+    "body": "$SLDP $AMPX $SES  \n \nhttps://www.youtube.com/watch?v=RvW4OQFA_UY"
+   },
+   {
+    "at": "2026-09-25T13:15:22Z",
+    "user": "Impossible_gain",
+    "sentiment": "Bullish",
+    "body": "$SLDP \ud83e\udd21 is back"
+   },
+   {
+    "at": "2026-09-25T08:47:24Z",
+    "user": "Superfly1978",
+    "sentiment": "Bullish",
+    "body": "$SLDP https://www.google.com/goto?url=CAESewHrOzAVRCWqq5YfogY7MN3N92L6enMFxK0o10afC-VeGCy7DdU-2MAlxos-AUIJzeJrjEy_ezcCMypg3texnqCErVDWqjrWCtU8H7lYIdV-zqncUkmVc47F-ryj5-yMu4XbKtzMMUP-V4lMXpjjHyGkQNjWA8VvGufAXg"
+   }
+  ]
+ },
+ "ABSI": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Absci",
+  "title": "Absci Corp",
+  "watchers": 3499,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 27,
+  "oldest_of_30_days": 9.68,
+  "bullish": 18,
+  "bearish": 0,
+  "untagged": 12,
+  "distinct_authors": 20,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-26T09:45:04Z",
+    "user": "Merlintrader",
+    "sentiment": null,
+    "body": "AI and new medicines: what turns a designed candidate into value? $ABCL, $ABSI, $RXRX, $SDGR https://www.merlintrader.com/ai-drug-discovery-evidence-rights-abcl-absi-rxrx-sdgr/"
+   },
+   {
+    "at": "2026-09-25T17:10:23Z",
+    "user": "juice_rock",
+    "sentiment": "Bullish",
+    "body": "$ABSI Opened a new position. Fits my ongoing thesis of AI increasing success + decreasing cost of new drug discovery."
+   },
+   {
+    "at": "2026-09-25T01:35:16Z",
+    "user": "fibtrap",
+    "sentiment": "Bullish",
+    "body": "$ABSI 12+ soon"
+   },
+   {
+    "at": "2026-09-24T21:18:06Z",
+    "user": "Thelonius_Stonk",
+    "sentiment": null,
+    "body": "$ABSI feed the beast"
+   },
+   {
+    "at": "2026-09-24T13:09:04Z",
+    "user": "7m3835d3",
+    "sentiment": "Bullish",
+    "body": "$ABSI Just to emphasize, I think this is ultimately a good sign. Lilly clearly guided this complex trial design to obtain the information needed. Endometriosis endpoints are a lot more &quot;messy&quot; than measuring hair growth. Waiting f"
+   },
+   {
+    "at": "2026-09-24T12:52:23Z",
+    "user": "stockmongerer",
+    "sentiment": null,
+    "body": "$ABSI $AMD $GME $OPEN \n\nLOL what a bozo"
+   }
+  ]
+ },
+ "AMSC": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "American Superconductor",
+  "title": "American Superconductor Corp.",
+  "watchers": 4886,
+  "n_msgs": 30,
+  "n_last_24h": 3,
+  "n_last_7d": 21,
+  "oldest_of_30_days": 13.1,
+  "bullish": 4,
+  "bearish": 0,
+  "untagged": 26,
+  "distinct_authors": 10,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T02:25:05Z",
+    "user": "carmineconspiracy",
+    "sentiment": null,
+    "body": "$AMSC Amsc can lower the cost of the cryogenic system by designing the control system so that the cooling plant draws power from the HTS link itself or a parallel conventional feed and modulates capacity with load.This is already the implic"
+   },
+   {
+    "at": "2026-09-27T00:26:16Z",
+    "user": "carmineconspiracy",
+    "sentiment": null,
+    "body": "$AMSC DOE decided not to use the  REG like Chicago because of the high cost of the cryogenics used to cool the system,Hope Ross explains the new cryo system their developing and the cost reduction"
+   },
+   {
+    "at": "2026-09-26T23:07:43Z",
+    "user": "carmineconspiracy",
+    "sentiment": null,
+    "body": "$AMSC on September 24 the DOE under the Spark initiative announced 5.25 billion for projects to improve grid reliability,get ready for a ride f a lifetime."
+   },
+   {
+    "at": "2026-09-25T19:28:24Z",
+    "user": "QUAS_III",
+    "sentiment": null,
+    "body": "$AMSC seem glued to 30$ our range has been 26-34$ for sometime now\u2026\n\nOdd- with everything ready to burst- the market is I guess\u2014 wait and \u201csee\u201d \u2026"
+   },
+   {
+    "at": "2026-09-25T16:53:31Z",
+    "user": "Lafeet333",
+    "sentiment": null,
+    "body": "$AMSC  \nNotice the LIPA cable operational for 18 years and counting using amsc 1g wire.  \nHurricane Sandy put a halt to the 2g wire upgrade to the LIPA2 project that intended to replace a portion of the 1g LIPA cable with a 2g splice. Hurri"
+   },
+   {
+    "at": "2026-09-24T21:28:01Z",
+    "user": "QUAS_III",
+    "sentiment": null,
+    "body": "$AMSC add Japan to the list of countries using hts for Data Centers\u2026 just a matter of time for AMSC\n\nhttps://jp.ibtimes.com/swcc-faraday-factory-japan-target-2030-data-center-superconducting-cables-103370"
+   }
+  ]
+ },
+ "HUBS": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "HubSpot",
+  "title": "HubSpot Inc",
+  "watchers": 6874,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 21,
+  "oldest_of_30_days": 10.11,
+  "bullish": 9,
+  "bearish": 1,
+  "untagged": 20,
+  "distinct_authors": 15,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-26T04:58:07Z",
+    "user": "Techdamentals",
+    "sentiment": null,
+    "body": "HubSpot&#39;s fundamentals, read in plain English from what the company actually reported. Not a take, not a guess. The numbers, translated. \n \nFirst two questions are free. \n \ntechdamentals.com/v3/HUBS?ref=st \n \n$HUBS"
+   },
+   {
+    "at": "2026-09-25T22:37:21Z",
+    "user": "Gfigo4",
+    "sentiment": "Bullish",
+    "body": "$PATH to really understand how undervalued $KVYO is you only need to look at and compare it to garbage like this.\n\nAlmost 7 billion mc for aipath at 13% revenue growth rate\n\nKlaviyo 4.5 billion mc with &gt;25% revenue growth\n\nFy 2026 revenu"
+   },
+   {
+    "at": "2026-09-25T15:47:10Z",
+    "user": "Deppvaluegwth",
+    "sentiment": null,
+    "body": "$HUBS Hmmm should I dubbel down\u2026 the deeper I do my research the higher and stronger my conviction gets but I need more volume or you will just pusch this up in seconds"
+   },
+   {
+    "at": "2026-09-24T16:45:43Z",
+    "user": "Deppvaluegwth",
+    "sentiment": null,
+    "body": "$HUBS"
+   },
+   {
+    "at": "2026-09-24T13:51:18Z",
+    "user": "anthealopez",
+    "sentiment": "Bullish",
+    "body": "$APP $ADBE $HUBS"
+   },
+   {
+    "at": "2026-09-23T19:17:20Z",
+    "user": "Jceekp",
+    "sentiment": "Bearish",
+    "body": "$HUBS sometimes you get lucky like me. in at 215 out at 229.25. This loses any momentum the minute it breaks sideways for even half a day, and has for the last month. i&#39;ll re enter at the bottom of the down channel, near 200-205"
+   }
+  ]
+ },
+ "KYTX": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Kyverna",
+  "title": "Kyverna Therapeutics Inc.",
+  "watchers": 1490,
+  "n_msgs": 30,
+  "n_last_24h": 4,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 2.48,
+  "bullish": 10,
+  "bearish": 0,
+  "untagged": 20,
+  "distinct_authors": 11,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T15:17:06Z",
+    "user": "mike755",
+    "sentiment": null,
+    "body": "$KYTX"
+   },
+   {
+    "at": "2026-09-27T14:18:26Z",
+    "user": "Greenenergy33",
+    "sentiment": null,
+    "body": "$KYTX bullish divergence on the daily chart. \nWeekly stochastic RSI reached zero.  \nOnly up from here. Something will happen next week."
+   },
+   {
+    "at": "2026-09-27T14:07:26Z",
+    "user": "mike755",
+    "sentiment": null,
+    "body": "$KYTX 12 million refactory seropositive rheumatoid arthritis. Miv-Cell will need to expand to at least 500,000 patients annual capacity. That means $600 billion market cap. KYTX will buy Gilead."
+   },
+   {
+    "at": "2026-09-27T13:38:07Z",
+    "user": "mike755",
+    "sentiment": null,
+    "body": "$KYTX Sky is the limit for KYTX stock price."
+   },
+   {
+    "at": "2026-09-26T14:16:27Z",
+    "user": "AgentMulder",
+    "sentiment": "Bullish",
+    "body": "$KYTX Averaged down this week with positive affirming report strengthening the science here\u2026..remain \ud83d\ude0e"
+   },
+   {
+    "at": "2026-09-26T13:08:10Z",
+    "user": "dcrown",
+    "sentiment": "Bullish",
+    "body": "$KYTX They have enough cash to launch miv-cel in 2027, capture the -SPS market, and finish enrolling their Phase 3 trial in generalized myasthenia gravis (gMG) by mid-2027"
+   }
+  ]
+ },
+ "NTLA": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Intellia",
+  "title": "Intellia Therapeutics Inc",
+  "watchers": 15252,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 3.89,
+  "bullish": 10,
+  "bearish": 3,
+  "untagged": 17,
+  "distinct_authors": 21,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-26T19:16:48Z",
+    "user": "TheRealJayPowell",
+    "sentiment": null,
+    "body": "$NTLA Cathy picks losers! If she owns it, you\u2019re dead."
+   },
+   {
+    "at": "2026-09-25T21:03:25Z",
+    "user": "None_",
+    "sentiment": null,
+    "body": "$CRSP $BEAM $NTLA $PRME $EDIT CRISPR Therapeutics has publicly discussed AI as part of its R&amp;D strategy, whereas I did not find equally clear, company-specific evidence for Beam, Editas, Intellia or Prime Medicine. \n \nThat does not mean"
+   },
+   {
+    "at": "2026-09-25T18:28:39Z",
+    "user": "fubotvfan",
+    "sentiment": "Bearish",
+    "body": "$NTLA Always weak when the market at ATH. A big correction could easily cut it to $5-$7."
+   },
+   {
+    "at": "2026-09-25T18:07:13Z",
+    "user": "TheRealJayPowell",
+    "sentiment": "Bearish",
+    "body": "$NTLA They will run out of money holding CRLs before anything gets approved. The $75M smash-n-grab was confirmation of take the money and run."
+   },
+   {
+    "at": "2026-09-25T16:10:52Z",
+    "user": "hormany",
+    "sentiment": null,
+    "body": "$NTLA going to sue Claude"
+   },
+   {
+    "at": "2026-09-25T16:01:18Z",
+    "user": "GoodTidings",
+    "sentiment": "Bullish",
+    "body": "$NTLA The buzz Claude word and the market falls for it... This so called ART discovery is in its infancy and may or may never come into fruitation... But anyhow a nice marketing stunt and an opportunity to load up cheap shares because of a "
+   }
+  ]
+ },
+ "PRCH": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Porch Group",
+  "title": "Porch Group Inc - Ordinary Shares - Class A",
+  "watchers": 2656,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 4,
+  "oldest_of_30_days": 54.13,
+  "bullish": 17,
+  "bearish": 2,
+  "untagged": 11,
+  "distinct_authors": 14,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-26T14:25:46Z",
+    "user": "Csfhassan",
+    "sentiment": null,
+    "body": "$PRCH matter of time we hit 20!"
+   },
+   {
+    "at": "2026-09-26T05:30:00Z",
+    "user": "Tillid",
+    "sentiment": "Bullish",
+    "body": "$PRCH have a wonderful weekend \ud83d\ude18 20 soon then 30 \ud83d\ude80\ud83d\ude80\ud83d\ude80\ud83e\udef5\ud83c\udffc\ud83e\udef6\ud83c\udf3c\ud83c\udf38\ud83d\udcaf i am still here \ud83d\ude0e\u2665\ufe0f\ud83d\udcaa\ud83c\udffc"
+   },
+   {
+    "at": "2026-09-23T18:17:01Z",
+    "user": "_ttrent_",
+    "sentiment": "Bullish",
+    "body": "$PRCH data moat affords superior risk pricing and competitive premiums"
+   },
+   {
+    "at": "2026-09-23T12:25:40Z",
+    "user": "Csfhassan",
+    "sentiment": null,
+    "body": "$PRCH"
+   },
+   {
+    "at": "2026-09-19T16:53:39Z",
+    "user": "RemitTekram",
+    "sentiment": "Bullish",
+    "body": "$PRCH $TWST $SLS Sincere gratitude for these three winners. You just need one a year get these kind of annualized returns over the last three years. \ud83d\ude4f\ud83d\ude4f Go bulls!"
+   },
+   {
+    "at": "2026-09-16T20:37:56Z",
+    "user": "coachmc",
+    "sentiment": "Bearish",
+    "body": "$PRCH oof. Rates are kryptonite for this stock as seen in the past. Long term pattern is  near bullish breakout. With the rates news though I don\u2019t think this has the legs it needs."
+   }
+  ]
+ },
+ "SOC": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Sable Offshore",
+  "title": "Sable Offshore Corp.",
+  "watchers": 2335,
+  "n_msgs": 30,
+  "n_last_24h": 5,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 1.97,
+  "bullish": 7,
+  "bearish": 2,
+  "untagged": 21,
+  "distinct_authors": 19,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T12:51:14Z",
+    "user": "Warrent_jr",
+    "sentiment": "Bearish",
+    "body": "$SOC $2.X Bearish!!"
+   },
+   {
+    "at": "2026-09-27T12:30:00Z",
+    "user": "waterboy1990",
+    "sentiment": null,
+    "body": "$SOC coming into tax loss harvesting season here shortly. Not sure what next couple months look like for Sable but I\u2019d think 2027 should be beautiful."
+   },
+   {
+    "at": "2026-09-27T10:39:52Z",
+    "user": "Staz215",
+    "sentiment": null,
+    "body": "$SOC @Warrent_jr  These guys didn&#39;t come here for $1.80 bud.. Trump is the president..."
+   },
+   {
+    "at": "2026-09-26T21:59:25Z",
+    "user": "ZenGamma",
+    "sentiment": null,
+    "body": "$SOC So I went down a bit of a rabbit hole to see if I could monitor the activity. With AI I created a python script that monitored the light level from platform Hondo and the background area to see when it could have been potentially activ"
+   },
+   {
+    "at": "2026-09-26T17:36:53Z",
+    "user": "Staz215",
+    "sentiment": null,
+    "body": "$SOC Next candle should be interesting... Past 3 months have seen highest volume since ipo.. ADX 60+ pointing down while price is in a downtrend, which would indicate a strong downtrend, but it&#39;s simultaneously printing a green candle w"
+   },
+   {
+    "at": "2026-09-25T23:46:05Z",
+    "user": "Staz215",
+    "sentiment": null,
+    "body": "$SOC"
+   }
+  ]
+ },
+ "AVPT": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "AvePoint",
+  "title": "AvePoint Inc - Ordinary Shares - Class A",
+  "watchers": 21320,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 5,
+  "oldest_of_30_days": 51.79,
+  "bullish": 17,
+  "bearish": 0,
+  "untagged": 13,
+  "distinct_authors": 12,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-26T22:31:51Z",
+    "user": "Katafrag",
+    "sentiment": "Bullish",
+    "body": "$AVPT  Inbound Funnel Acceleration: A rising baseline indicates that more enterprise buyers are actively searching for data governance, multi-cloud backup, and permission management software."
+   },
+   {
+    "at": "2026-09-24T17:14:35Z",
+    "user": "Katafrag",
+    "sentiment": "Bullish",
+    "body": "$AVPT institutional positioning before the earnings ?  yeah !"
+   },
+   {
+    "at": "2026-09-24T16:07:32Z",
+    "user": "kevinjackson65",
+    "sentiment": null,
+    "body": "$AVPT This has been another disappointing year for us long term Avepoint investors. \n \nI bought Avepoint stock six years ago at 10 dollars a share, and now six years later Avepoint stock is only 13 dollars a share. \n \nThat&#39;s what I have"
+   },
+   {
+    "at": "2026-09-23T23:46:56Z",
+    "user": "Katafrag",
+    "sentiment": "Bullish",
+    "body": "Not that it matters (until it does) but here\u2019s example of company trading 5x fwd rev growing 33% with positive 7% adjusted ebit margin. From note: \u201cdespite expanding software valuations $AVPT looks like an anomaly trading just 6.9x EV/S (st"
+   },
+   {
+    "at": "2026-09-23T04:34:22Z",
+    "user": "mrvitt1969",
+    "sentiment": null,
+    "body": "$RIG $RUM $RUMBW $AVPT $SPCX $SPCE...You know what is crazy? I just retired this year. I am a widower and  I am going to do something completely dfifferent and am going to Thailand this winter because I hate cold weather. I lived in Florida"
+   },
+   {
+    "at": "2026-09-17T12:37:41Z",
+    "user": "jpcalm68",
+    "sentiment": "Bullish",
+    "body": "$AVPT From yesterday&#39;s investor day with Piper Sandler. Progress on the Google front...\n&quot;TJ, Executive, AvePoint: Yeah. We have parity now on what we cover for Office Cloud as now on Google Workspace. It is really the go-to-market."
+   }
+  ]
+ },
+ "VRTX": {
+  "status": "OK",
+  "tier": "T1",
+  "company": "Vertex Pharmaceuticals",
+  "title": "Vertex Pharmaceuticals, Inc.",
+  "watchers": 12839,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 25,
+  "oldest_of_30_days": 10.98,
+  "bullish": 13,
+  "bearish": 3,
+  "untagged": 14,
+  "distinct_authors": 20,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-25T21:00:45Z",
+    "user": "History101",
+    "sentiment": "Bullish",
+    "body": "$VRTX  thank you, VRTX \n \nhttps://revolver.news/2026/09/the-breakthroughs-in-cystic-fibrosis-have-been-absolutely-astonishing/"
+   },
+   {
+    "at": "2026-09-25T19:42:57Z",
+    "user": "GorillaTrades",
+    "sentiment": null,
+    "body": "Top 3 #momentum #stocks In The GorillaTrades #portfolio This Week: Nordson $NDSN +4.5%, Vertex Pharmaceuticals $VRTX +3.4%, and Descartes Systems $DSGX +2.5%"
+   },
+   {
+    "at": "2026-09-25T19:41:21Z",
+    "user": "svertical1",
+    "sentiment": "Bullish",
+    "body": "$VRTX Another move back to retest breakout looks reasonable\u2026"
+   },
+   {
+    "at": "2026-09-25T17:05:20Z",
+    "user": "Aiming",
+    "sentiment": null,
+    "body": "@PonziHunter $VRTX  \n\u2022  Nov 30, 2026: Povetacicept FDA Decision  Expected approval for IgA kidney disease launches Vertex into a multibillion-dollar nephrology market. \n\u2022 Late 2026 / Early 2027: Inaxaplin Phase 3 Data Results for APOL1-medi"
+   },
+   {
+    "at": "2026-09-25T15:38:56Z",
+    "user": "SanKish",
+    "sentiment": null,
+    "body": "$ABBV $AZN $PROK $TMO $VRTX  that will be wonderful and a great help for multiple stakeholders - patients (because dialysis is painful and weakens heart over time), govt (because it is costly and too many additional Medicare expenses ) and "
+   },
+   {
+    "at": "2026-09-24T12:41:49Z",
+    "user": "HawkEye828",
+    "sentiment": "Bullish",
+    "body": "$PROK, may be the upcoming &quot;Holy Grail&quot; of Biotech.  \nThis is an Autologous treatment designed to delay or completely prevent the need for dialysis. This is one of the Govts biggest expenses. \n Phase 2 complete with a 78% response"
+   }
+  ]
+ },
+ "VRT": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Vertiv",
+  "title": "Vertiv Holdings Co",
+  "watchers": 20337,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 5.04,
+  "bullish": 12,
+  "bearish": 0,
+  "untagged": 18,
+  "distinct_authors": 24,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-25T19:33:07Z",
+    "user": "JasonCO50BPS",
+    "sentiment": "Bullish",
+    "body": "$VRT"
+   },
+   {
+    "at": "2026-09-25T18:10:48Z",
+    "user": "Willjohnson_97",
+    "sentiment": "Bullish",
+    "body": "$VRT \n\nGood news over the weekend &amp; this will gap up to $290 instantly \n\nI\u2019m in. \n\nCheers."
+   },
+   {
+    "at": "2026-09-25T14:53:00Z",
+    "user": "Blessmystocks",
+    "sentiment": "Bullish",
+    "body": "$VRT  \n \nMost Popular Narrative: 45.5% Undervalued \nOn the most followed narrative, Vertiv Holdings Co&#39;s fair value sits at $450.00 against the recent $245.30 close. This highlights a wide gap between what the market pays today and what"
+   },
+   {
+    "at": "2026-09-25T14:44:43Z",
+    "user": "emeraldbayrider",
+    "sentiment": "Bullish",
+    "body": "$ META  $NVDA   $VRT $SPCX  \n \nMETA:  dip gift imo; just added 4k at $752 on the way down - now  long 34k. \n \nNVDA:  posted Elon&#39;s comments from earlier-- they  affirmJensen&#39;s optimisim on units more than doubling in FY2028... yeah,"
+   },
+   {
+    "at": "2026-09-25T14:27:46Z",
+    "user": "Footloose",
+    "sentiment": "Bullish",
+    "body": "$VRT bought 251.20 stop loss 238"
+   },
+   {
+    "at": "2026-09-25T10:26:23Z",
+    "user": "emeraldbayrider",
+    "sentiment": null,
+    "body": "$AMZN $META $NVDA $VRT \n$SPCX \n\nElons comments re NVDA GB300s additions through year end are delightful reinforcement of Jensen comments re doubling UNITS next year as told last week. Just grabbed 4k of SPCX  as beginning to look investable"
+   }
+  ]
+ },
+ "GEV": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "GE Vernova",
+  "title": "GE Vernova Inc.",
+  "watchers": 10655,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 5.62,
+  "bullish": 15,
+  "bearish": 0,
+  "untagged": 15,
+  "distinct_authors": 16,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-26T21:25:36Z",
+    "user": "jhayes1",
+    "sentiment": "Bullish",
+    "body": "$SNDK $MU $GEV  https://currently.att.yahoo.com/att/goldman-sachs-says-7-6-111940473.html"
+   },
+   {
+    "at": "2026-09-25T22:06:23Z",
+    "user": "goodreturn",
+    "sentiment": "Bullish",
+    "body": "If $NVDA demand is real, $CEG $VST $GEV get bid. $JTAI is the micro version: 1 GW-plus sites, Alberta already funded. Visibility names pay the theme. This one still prices like leftover aviation."
+   },
+   {
+    "at": "2026-09-25T22:05:47Z",
+    "user": "goodreturn",
+    "sentiment": "Bullish",
+    "body": "$JTAI $NVDA can ship the racks. $VST $CEG $GEV fight the watts. MS just put the U.S. gap near 33 GW by 2028. $JTAI is the small-cap land-and-gas slice of that same bottleneck: Alberta 200MW BTM plus a 1 GW-plus map. \n \nhttps://blockspace.me"
+   },
+   {
+    "at": "2026-09-25T17:33:12Z",
+    "user": "Teq1",
+    "sentiment": "Bullish",
+    "body": "$GEV One Industrials Stock to Buy:\n\nGE Vernova (GEV)\n\nTrailing 12-Month GAAP Operating Margin: 4.4%\n\nBorn from the energy business of industrial giant General Electric in a 2023 spin-off, GE Vernova (NYSE:GEV) designs, manufactures, and ser"
+   },
+   {
+    "at": "2026-09-25T15:10:42Z",
+    "user": "Srinivas111",
+    "sentiment": null,
+    "body": "$GNRC $SEI $GEV $BE \nGet all gnrc"
+   },
+   {
+    "at": "2026-09-25T13:36:14Z",
+    "user": "ttufiji",
+    "sentiment": "Bullish",
+    "body": "@Cheesemonger @Teq1 so you\u2019re one of us??? $GEV"
+   }
+  ]
+ },
+ "MU": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Micron",
+  "title": "Micron Technology Inc",
+  "watchers": 217071,
+  "n_msgs": 30,
+  "n_last_24h": 30,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 0.11,
+  "bullish": 17,
+  "bearish": 1,
+  "untagged": 12,
+  "distinct_authors": 23,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T15:04:08Z",
+    "user": "Stockmantrader",
+    "sentiment": "Bullish",
+    "body": "$MU Buy Micron and become rich or not up to you or sit around and complain things are too expensive good luck we will prosper"
+   },
+   {
+    "at": "2026-09-27T14:59:11Z",
+    "user": "TradeWithInsight",
+    "sentiment": null,
+    "body": "$HOOD $MSTR $MU $SNDK last Sunday&#39;s watchlist, scored. All four contracts expired Friday. $HOOD 125C over 119.88 hit the 124.70 target with a 126.74 high Wednesday, and Friday&#39;s 117.53 low missed the stop by 0.53. $MSTR 160C over 15"
+   },
+   {
+    "at": "2026-09-27T14:57:21Z",
+    "user": "traderhr",
+    "sentiment": null,
+    "body": "TraderHR: 5 high-attention U.S. stocks traders watched today \u2014 what moved them + technical outlooks. $MSFT $META $INTC $MU $NVDA https://www.traderhr.com/traderhr-5-high-attention-active-stocks-2026-09-25-update-20260927-111828-8mwkx/"
+   },
+   {
+    "at": "2026-09-27T14:46:34Z",
+    "user": "Codman0001",
+    "sentiment": "Bearish",
+    "body": "$MU Make America Great Again! Block Micron from importing to the USA! No place in America for IP thieves"
+   },
+   {
+    "at": "2026-09-27T14:46:19Z",
+    "user": "Elversburg2026",
+    "sentiment": null,
+    "body": "$MU Superior to $AVGO and the street knows it.......Check YTD price. Also TSM even towers AVGO returns this year and again the street knows it. Careful thinking AVGO is DUE for a run......Perhaps in 1st quarter next year. Check historical d"
+   },
+   {
+    "at": "2026-09-27T14:45:22Z",
+    "user": "iDontknowwhatiamdoin",
+    "sentiment": "Bullish",
+    "body": "$MU so funny to watch people try to guess if it\u2019s going to 950 or 1150 \u2026 why don\u2019t you just buy the stock and wait until 2030 and the share price will be 3000+ \u2026 so wild people try to Monday morning quarterback each day \u2026 wealth is created "
+   }
+  ]
+ },
+ "TSM": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "TSMC",
+  "title": "Taiwan Semiconductor Manufacturing - ADR",
+  "watchers": 69808,
+  "n_msgs": 29,
+  "n_last_24h": 3,
+  "n_last_7d": 29,
+  "oldest_of_30_days": 2.96,
+  "bullish": 7,
+  "bearish": 0,
+  "untagged": 22,
+  "distinct_authors": 24,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T14:35:46Z",
+    "user": "Aristotle_Legacy",
+    "sentiment": null,
+    "body": "$ASML and $TSM are two of the strongest \u201cpicks and shovels\u201d behind the AI revolution. \ud83e\udde0\n\nASML provides the advanced lithography machines required to manufacture leading-edge chips. TSMC turns those designs into the world\u2019s most advanced sem"
+   },
+   {
+    "at": "2026-09-27T01:31:27Z",
+    "user": "WorkingDayTrader",
+    "sentiment": null,
+    "body": "$TSM anyone worried about China invading Taiwan?"
+   },
+   {
+    "at": "2026-09-27T00:37:30Z",
+    "user": "grampagrit",
+    "sentiment": "Bullish",
+    "body": "$INTC $AMD $NVDA $TSM $GOOG"
+   },
+   {
+    "at": "2026-09-26T03:47:02Z",
+    "user": "HeroicJobCreator",
+    "sentiment": null,
+    "body": "$DIA $QQQ $SPY $TSM"
+   },
+   {
+    "at": "2026-09-26T03:32:06Z",
+    "user": "Dude2424",
+    "sentiment": "Bullish",
+    "body": "$SPY $DIA $QQQ $TSM \nCrucial moments in history.\n\nThe Boss of The Free World entertaining at The White House the Self Declared President for Life (since 2018) of China and the leader of Chinese Communist Party. \n\nGod bless Our President Tru"
+   },
+   {
+    "at": "2026-09-26T02:37:02Z",
+    "user": "Techdamentals",
+    "sentiment": null,
+    "body": "Taiwan Semi makes the chips for almost everyone in AI. Nvidia, AMD, Apple, Broadcom&#39;s custom silicon. All of it. \n \nSo it has the best competitive position in the industry and it still trades at a discount to its customers. \n \nThat disc"
+   }
+  ]
+ },
+ "HOOD": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Robinhood",
+  "title": "Robinhood Markets Inc",
+  "watchers": 101113,
+  "n_msgs": 30,
+  "n_last_24h": 19,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 1.56,
+  "bullish": 13,
+  "bearish": 5,
+  "untagged": 12,
+  "distinct_authors": 22,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T14:59:11Z",
+    "user": "TradeWithInsight",
+    "sentiment": null,
+    "body": "$HOOD $MSTR $MU $SNDK last Sunday&#39;s watchlist, scored. All four contracts expired Friday. $HOOD 125C over 119.88 hit the 124.70 target with a 126.74 high Wednesday, and Friday&#39;s 117.53 low missed the stop by 0.53. $MSTR 160C over 15"
+   },
+   {
+    "at": "2026-09-27T14:14:21Z",
+    "user": "WallStJesus",
+    "sentiment": null,
+    "body": "$HOOD"
+   },
+   {
+    "at": "2026-09-27T13:46:23Z",
+    "user": "iTrade_Price",
+    "sentiment": null,
+    "body": "$HOOD  hood --"
+   },
+   {
+    "at": "2026-09-27T13:02:41Z",
+    "user": "Higreg",
+    "sentiment": "Bullish",
+    "body": "$BTC.X $COIN $CRCL $HOOD - Keep on bitc$&amp;% bears !!"
+   },
+   {
+    "at": "2026-09-27T10:44:29Z",
+    "user": "NatoshiSakamato",
+    "sentiment": "Bullish",
+    "body": "$BTC.X \n\nBuy Bitcoin\u2026\n\nDo not sell for small returns\u2026\n\n$SPY $QQQ $COIN $HOOD"
+   },
+   {
+    "at": "2026-09-27T09:25:09Z",
+    "user": "Lambo2",
+    "sentiment": "Bearish",
+    "body": "$HOOD"
+   }
+  ]
+ },
+ "AVGO": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Broadcom",
+  "title": "Broadcom Inc",
+  "watchers": 74937,
+  "n_msgs": 28,
+  "n_last_24h": 15,
+  "n_last_7d": 28,
+  "oldest_of_30_days": 1.71,
+  "bullish": 12,
+  "bearish": 1,
+  "untagged": 15,
+  "distinct_authors": 20,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T14:46:19Z",
+    "user": "Elversburg2026",
+    "sentiment": null,
+    "body": "$MU Superior to $AVGO and the street knows it.......Check YTD price. Also TSM even towers AVGO returns this year and again the street knows it. Careful thinking AVGO is DUE for a run......Perhaps in 1st quarter next year. Check historical d"
+   },
+   {
+    "at": "2026-09-27T14:03:44Z",
+    "user": "BullseyeGains",
+    "sentiment": "Bullish",
+    "body": "$NVDA $META $AMD $INTC $AVGO I went straight to the horse&#39;s mouth for answers. Somewhere, Jensen is smiling \ud83d\ude0f."
+   },
+   {
+    "at": "2026-09-27T13:48:14Z",
+    "user": "iTrade_Price",
+    "sentiment": null,
+    "body": "$AVGO  avgo"
+   },
+   {
+    "at": "2026-09-27T09:26:02Z",
+    "user": "Bullofwallstreet1212",
+    "sentiment": "Bullish",
+    "body": "$AVGO AVGO 375 this week"
+   },
+   {
+    "at": "2026-09-27T09:22:40Z",
+    "user": "UltraInstinct",
+    "sentiment": null,
+    "body": "$AVGO This POS is probably ready to dump lower this week."
+   },
+   {
+    "at": "2026-09-27T08:39:54Z",
+    "user": "AVGOmysugardaddy",
+    "sentiment": "Bullish",
+    "body": "$AVGO"
+   }
+  ]
+ },
+ "CLS": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Celestica",
+  "title": "Celestica, Inc.",
+  "watchers": 7647,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 3.07,
+  "bullish": 10,
+  "bearish": 1,
+  "untagged": 19,
+  "distinct_authors": 19,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-26T02:08:23Z",
+    "user": "logicaltrader1",
+    "sentiment": null,
+    "body": "$CLS Shorted pre-market at 380. Stock is up 100 points in 3 weeks\u2026 \nToday was a reversal. It should come down to 340-350 at least."
+   },
+   {
+    "at": "2026-09-25T19:56:17Z",
+    "user": "knash",
+    "sentiment": null,
+    "body": "$CLS ugh.  QQQ and SMH are green and this is getting hammered today at that big resistance at 380"
+   },
+   {
+    "at": "2026-09-25T19:33:25Z",
+    "user": "Dragon_Master",
+    "sentiment": "Bullish",
+    "body": "$CLS $ALAB nice healthy run\nTook profits today. \n\nWill re enter again on the dip. \nGood luck to all \n\nYolo, I jumped on Amat $500 calls"
+   },
+   {
+    "at": "2026-09-25T16:43:54Z",
+    "user": "TooLongToLose",
+    "sentiment": null,
+    "body": "Similar to what we are seeing now in $CLS and $CRDO after a sizable correction, $AVGO will have its day in the sun before year-end. The trade is all way too interconnected across the supply chain. When you see dislocations in correlations a"
+   },
+   {
+    "at": "2026-09-25T16:25:37Z",
+    "user": "Baazigar123",
+    "sentiment": "Bearish",
+    "body": "$CLS Tariff risk"
+   },
+   {
+    "at": "2026-09-25T16:21:15Z",
+    "user": "CaptainOyama",
+    "sentiment": null,
+    "body": "$CLS playing the swings. Sold $374.50, bought back $369.50"
+   }
+  ]
+ },
+ "BE": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Bloom Energy",
+  "title": "Bloom Energy Corp - Ordinary Shares - Class A",
+  "watchers": 36466,
+  "n_msgs": 30,
+  "n_last_24h": 28,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 1.08,
+  "bullish": 9,
+  "bearish": 3,
+  "untagged": 18,
+  "distinct_authors": 26,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T15:18:18Z",
+    "user": "greene9",
+    "sentiment": "Bearish",
+    "body": "$BE  \nhttps://www.globenewswire.com/news-release/2026/09/26/3369410/683/en/be-investor-deadline-approaching-faruqi-faruqi-llp-reminds-bloom-energy-be-investors-of-securities-class-action-lawsuit-deadline-on-september-28-2026.html"
+   },
+   {
+    "at": "2026-09-27T15:09:33Z",
+    "user": "TheOtherWatchdog",
+    "sentiment": null,
+    "body": "@WrongWay123 why post where? On $BE? I am comparing tickers!"
+   },
+   {
+    "at": "2026-09-27T15:09:04Z",
+    "user": "BlockSecurities",
+    "sentiment": null,
+    "body": "$BE hoping for a pullback to buy moar"
+   },
+   {
+    "at": "2026-09-27T14:33:14Z",
+    "user": "greene9",
+    "sentiment": "Bearish",
+    "body": "$BE This stock takes your profits away better than any stock out there .  Tanking after every advance is the only consistent characteristic of BE ask anyone who &quot;believes&quot; in it . Trust this thing will tank on you always . Heres a"
+   },
+   {
+    "at": "2026-09-27T14:33:11Z",
+    "user": "TheOtherWatchdog",
+    "sentiment": "Bullish",
+    "body": "$RUN just made its power play. SPAN partnership turns homes into distributed AI compute nodes. Sound familiar? That&#39;s the exact setup $BE ran before its move from ~$90 to $300+ (250%+, mkt cap into the $80B+ range).\n\n$RUN today: ~$9/sha"
+   },
+   {
+    "at": "2026-09-27T14:09:36Z",
+    "user": "TheCaptainJ",
+    "sentiment": null,
+    "body": "$BE still love this stock!"
+   }
+  ]
+ },
+ "NVT": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "nVent",
+  "title": "nVent Electric plc",
+  "watchers": 1496,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 4,
+  "oldest_of_30_days": 58.16,
+  "bullish": 7,
+  "bearish": 2,
+  "untagged": 21,
+  "distinct_authors": 18,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-25T18:41:48Z",
+    "user": "Doozio",
+    "sentiment": "Bullish",
+    "body": "$NVT chop chop huckleberries $AVT Thursday \ud83d\udc11 \ud83c\udf81 s"
+   },
+   {
+    "at": "2026-09-24T18:45:41Z",
+    "user": "abman54",
+    "sentiment": "Bullish",
+    "body": "$NVT how is this not green??"
+   },
+   {
+    "at": "2026-09-23T13:52:55Z",
+    "user": "Bimergen_IR",
+    "sentiment": null,
+    "body": "How does a growth-stage developer fund a multi-hundred-million-dollar project pipeline without diluting shareholders? \n \nBimergen&#39;s model finances each battery storage project independently at the project level, using tax credit monetiz"
+   },
+   {
+    "at": "2026-09-21T18:51:34Z",
+    "user": "drock4567",
+    "sentiment": "Bearish",
+    "body": "$NVT stock talk weekly just bought this. he\u2019s been horrendous this year, might want to consider getting out. he\u2019s a top signal lately"
+   },
+   {
+    "at": "2026-09-16T08:30:25Z",
+    "user": "wizeinvesting",
+    "sentiment": null,
+    "body": "$NVDA $VRT $NVT $MU\n\nNvidia may be one of the biggest winners of the AI boom, but its latest supply commitments reveal an important reality: building the AI economy requires far more than advanced processors. As Nvidia commits hundreds of b"
+   },
+   {
+    "at": "2026-09-14T18:32:49Z",
+    "user": "Baazigar123",
+    "sentiment": "Bearish",
+    "body": "$NVT better wait"
+   }
+  ]
+ },
+ "DKNG": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "DraftKings",
+  "title": "DraftKings Inc",
+  "watchers": 120381,
+  "n_msgs": 30,
+  "n_last_24h": 7,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 1.79,
+  "bullish": 9,
+  "bearish": 0,
+  "untagged": 21,
+  "distinct_authors": 26,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T11:58:14Z",
+    "user": "KryptonResearch14",
+    "sentiment": null,
+    "body": "$DKNG \n \nNew 52-week low on Friday: DraftKings touched 20.35 intraday before rebounding to close at 22.02, up 3.5%, on volume about 68% above the 50-day average. \n \nThe trigger was small. Citizens JMP trimmed its target to 35 from 37 on Thu"
+   },
+   {
+    "at": "2026-09-27T11:39:05Z",
+    "user": "Ffmadman",
+    "sentiment": null,
+    "body": "$DKNG several upsets in college football yesterday but we will never hear about DraftKings \u201cfavorable\u201d outcomes.  Only earnings excuses."
+   },
+   {
+    "at": "2026-09-27T10:39:07Z",
+    "user": "SqueezeSpecs",
+    "sentiment": null,
+    "body": "$DKNG: DraftKings reported Q2 revenue of $1.44B, down 5% YoY, while Sports Consumer Volume increased 15% to $13.1B. The company maintained its 2026 revenue guidance of $6.5B\u2013$6.9B and adjusted EBITDA guidance of $700M\u2013$900M. \n \nMore recentl"
+   },
+   {
+    "at": "2026-09-27T07:49:54Z",
+    "user": "EQX24",
+    "sentiment": null,
+    "body": "$DKNG"
+   },
+   {
+    "at": "2026-09-27T01:31:54Z",
+    "user": "dWhitaker",
+    "sentiment": "Bullish",
+    "body": "@Robbyj69er @lk90046 Please stop lying, the world is better off without Lenny bullshit $DKNG posts. Bullish, Bullish, Bullish.. Shut up.."
+   },
+   {
+    "at": "2026-09-26T18:39:03Z",
+    "user": "Baazigar123",
+    "sentiment": "Bullish",
+    "body": "$DKNG RSI"
+   }
+  ]
+ },
+ "AAPL": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Apple",
+  "title": "Apple Inc",
+  "watchers": 995144,
+  "n_msgs": 29,
+  "n_last_24h": 29,
+  "n_last_7d": 29,
+  "oldest_of_30_days": 0.62,
+  "bullish": 6,
+  "bearish": 4,
+  "untagged": 19,
+  "distinct_authors": 25,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T15:19:27Z",
+    "user": "OptionsPlayers",
+    "sentiment": null,
+    "body": "$AAPL $QQQ $SPY 100% facts"
+   },
+   {
+    "at": "2026-09-27T14:32:51Z",
+    "user": "Themadogtrader",
+    "sentiment": "Bearish",
+    "body": "$AAPL \n\nWell I finally did it upgraded my battery in my iPhone 13 Pro rather then trade it in and pay the new premium prices apple is charging now apple prices are not sustainable $2500 for the max 18 \ufffc"
+   },
+   {
+    "at": "2026-09-27T13:51:28Z",
+    "user": "DayTrailer",
+    "sentiment": "Bearish",
+    "body": "$AAPL I&#39;m sorry guys. This has been the gift that keeps on giving, but meeting selling at previous ATH and not being able to get back over it by the end of the week doesn&#39;t look great."
+   },
+   {
+    "at": "2026-09-27T13:32:35Z",
+    "user": "Whodo_Voodoo_Ido",
+    "sentiment": null,
+    "body": "$AAPL $SPY $QQQ I accidentally dropped my iPhone in the ocean. In a pinch I bought a $40 phone from Walmart. That was a year ago and I still use the $40 phone because it does absolutely everything the iPhone did. I don&#39;t have any use fo"
+   },
+   {
+    "at": "2026-09-27T13:12:27Z",
+    "user": "Steve_TheBull_Rogers",
+    "sentiment": null,
+    "body": "$AAPL  \n \nDown we go...finally"
+   },
+   {
+    "at": "2026-09-27T13:02:54Z",
+    "user": "StocktwitsNews",
+    "sentiment": null,
+    "body": "Apple\u2019s Tiny iPhone, Watch Feature Just Triggered A $5.7B Legal Blow \u2014 What Investors Need To Know\n\n$AAPL $SPY $QQQ\n\nhttps://stocktwits.com/news/equity/markets/apple-iphone-watch-feature-haptics-5-7b-patent-infringement-case/cZMiFdwRBfI"
+   }
+  ]
+ },
+ "AMGN": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Amgen",
+  "title": "AMGEN Inc.",
+  "watchers": 15000,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 5.1,
+  "bullish": 9,
+  "bearish": 2,
+  "untagged": 19,
+  "distinct_authors": 21,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-26T23:18:32Z",
+    "user": "tymtested",
+    "sentiment": null,
+    "body": "$AMGN 2 Healthcare Stocks That Just Delivered Great News for Investors"
+   },
+   {
+    "at": "2026-09-25T19:46:22Z",
+    "user": "chartistmind",
+    "sentiment": null,
+    "body": "$AMGN $TXN another \ud83d\ude80blocker.  just need a tad more juice from each pls before the close."
+   },
+   {
+    "at": "2026-09-25T19:44:54Z",
+    "user": "Pearl_Power",
+    "sentiment": "Bullish",
+    "body": "$AMGN going for new ATH"
+   },
+   {
+    "at": "2026-09-25T19:23:27Z",
+    "user": "DefenseMania",
+    "sentiment": "Bullish",
+    "body": "$AMGN $LLY could have us for $550.00"
+   },
+   {
+    "at": "2026-09-25T19:12:41Z",
+    "user": "schaeffers",
+    "sentiment": null,
+    "body": "$AMGN has staged quite the bounce off its 80-day \n \nPut skew on the 50-day BTO p/c ratio, too"
+   },
+   {
+    "at": "2026-09-24T21:05:12Z",
+    "user": "Merlintrader",
+    "sentiment": null,
+    "body": "$VKTX $AMGN $LLY $NVO"
+   }
+  ]
+ },
+ "BA": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Boeing",
+  "title": "Boeing Co",
+  "watchers": 197435,
+  "n_msgs": 30,
+  "n_last_24h": 30,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 0.8,
+  "bullish": 12,
+  "bearish": 0,
+  "untagged": 18,
+  "distinct_authors": 21,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T15:21:55Z",
+    "user": "BlueFir",
+    "sentiment": "Bullish",
+    "body": "$BA"
+   },
+   {
+    "at": "2026-09-27T15:15:56Z",
+    "user": "jlc_1978",
+    "sentiment": null,
+    "body": "$BA will the market view the software glitch  as a nothing burger?"
+   },
+   {
+    "at": "2026-09-27T15:10:36Z",
+    "user": "Salahadin666",
+    "sentiment": null,
+    "body": "$BA these software issues come up all the time.  Would not have made a headline  if it were not a Max plane .  Was known months ago and the fix or  temp replacement with older software not a big deal."
+   },
+   {
+    "at": "2026-09-27T14:17:43Z",
+    "user": "ksc_man",
+    "sentiment": null,
+    "body": "$BA You can\u2019t automatically take every procedural or software issue and extrapolate it into an extremely improbable safety risk scenario without evidence that the conditions for such an event actually exist. \n \nIn this case, Boeing says no "
+   },
+   {
+    "at": "2026-09-27T13:00:13Z",
+    "user": "seven01trades",
+    "sentiment": null,
+    "body": "$BA \u2014 Fresh 737 MAX development: Boeing has confirmed a software issue that can cause pilots to lose automated vertical-navigation guidance during a specific missed-approach/landing scenario. The FAA says it is reviewing the issue with Boei"
+   },
+   {
+    "at": "2026-09-27T12:52:52Z",
+    "user": "CNGLLC",
+    "sentiment": null,
+    "body": "$BA OH GEE ANOTHER FUK UP.  BIG SURPRISE  !!!\n\nTHAT&#39;S OK .  EVERYONE STILL GETS A BLUE RIBBON  !!!\n\nGO WOKE GO BROKE !!!"
+   }
+  ]
+ },
+ "BSP": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Bending Spoons",
+  "title": "Bending Spoons S.p.A.",
+  "watchers": 588,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 6,
+  "oldest_of_30_days": 40.92,
+  "bullish": 8,
+  "bearish": 7,
+  "untagged": 15,
+  "distinct_authors": 20,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-24T00:41:16Z",
+    "user": "topstockalerts",
+    "sentiment": null,
+    "body": "S&amp;P Global Ratings upgraded Bending Spoons to BB- from B+, citing greater scale and diversification following recent acquisitions, while also raising ratings on its Term Loan B facilities to BB-. The outlook is stable. \nBending Spoons p"
+   },
+   {
+    "at": "2026-09-23T13:40:40Z",
+    "user": "Catseye",
+    "sentiment": null,
+    "body": "$BSP criminals"
+   },
+   {
+    "at": "2026-09-22T17:12:25Z",
+    "user": "NVDAMillionaire",
+    "sentiment": null,
+    "body": "$BSP Great piece that accurately captures BSP&#39;s current position. So if you want to refresh your understanding of BSP or learn about BSP for the first time, this is essential reading. https://everyticker.com/quote/BSP/analysis/bending-s"
+   },
+   {
+    "at": "2026-09-22T16:08:51Z",
+    "user": "Baazigar123",
+    "sentiment": "Bullish",
+    "body": "$BSP few more"
+   },
+   {
+    "at": "2026-09-22T15:56:21Z",
+    "user": "Bloodmooncapital",
+    "sentiment": null,
+    "body": "$BSP hoping this turkey continues to fall so I can buy in"
+   },
+   {
+    "at": "2026-09-22T13:46:49Z",
+    "user": "Catseye",
+    "sentiment": null,
+    "body": "$BSP really??"
+   }
+  ]
+ },
+ "CRM": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Salesforce",
+  "title": "Salesforce Inc",
+  "watchers": 71383,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 3.95,
+  "bullish": 4,
+  "bearish": 0,
+  "untagged": 26,
+  "distinct_authors": 25,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T08:58:03Z",
+    "user": "stockmando",
+    "sentiment": null,
+    "body": "$ADBE during SaaS apocalypse.   \nCharts looks very identical.  \nYellow mark is where we are now, hopefully turn around next week.  \nCompany growing, no distraption because of AI. Just bad sentiment thst will be shifted very soon. \n \n$MU $CR"
+   },
+   {
+    "at": "2026-09-26T13:56:49Z",
+    "user": "TalkMarkets",
+    "sentiment": null,
+    "body": "Is $2 Trillion For #Anthropic Believable? Three Analysts Pull Apart The Number \nMentions: $SAP $CRM $MSFT https://talkmarkets.com/article/is-2-trillion-for-anthropic-believable-three-analysts-pull-apart-the-number"
+   },
+   {
+    "at": "2026-09-26T10:48:12Z",
+    "user": "parcha",
+    "sentiment": null,
+    "body": "Final Trade: MSFT, MRK, MU, CRM\n$msft $mrk $mu $crm https://www.cnbc.com/video/2026/09/25/final-trade-msft-mrk-mu-crm.html?__source=iosappshare%7Ccom.stocktwits.StockTwits.STShareExtension"
+   },
+   {
+    "at": "2026-09-25T22:17:20Z",
+    "user": "Nigel11",
+    "sentiment": null,
+    "body": "$CRM The more interesting thesis is:\n\nCRM + Agentforce + Data 360 + improving bookings + massive cash generation + buybacks."
+   },
+   {
+    "at": "2026-09-25T22:10:51Z",
+    "user": "Nigel11",
+    "sentiment": null,
+    "body": "$CRM The Chartmaster, Carter Worth says this is going to go up. Dont bet against the Chart Master!"
+   },
+   {
+    "at": "2026-09-25T20:17:00Z",
+    "user": "Shortmyshorts",
+    "sentiment": null,
+    "body": "$CRM i want this a bit closer to 220 before i consider getting back in"
+   }
+  ]
+ },
+ "HWM": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Howmet",
+  "title": "Howmet Aerospace Inc",
+  "watchers": 2659,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 12,
+  "oldest_of_30_days": 18.65,
+  "bullish": 11,
+  "bearish": 4,
+  "untagged": 15,
+  "distinct_authors": 20,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T13:47:46Z",
+    "user": "harmongreg",
+    "sentiment": null,
+    "body": "5 Trade Ideas for Monday: Applied Materials, Bristol-Myers, GE Aerospace, Howmet and Microsoft $AMAT $BMY $GE $HWM $MSFT https://dragonflycap.com/5-trade-ideas-for-monday-applied-materials-bristol-myers-ge-aerospace-howmet-and-microsoft/"
+   },
+   {
+    "at": "2026-09-25T00:37:53Z",
+    "user": "peloswing",
+    "sentiment": null,
+    "body": "Someone&#39;s been accumulating  \n$HWM \n \n \ndown 26% from its August high because of a tweet from  \n@elonmusk \n  saying SpaceX will cast its own turbine blades in-house \n \nHowmet holds &gt;50% share in precision turbine castings with custom"
+   },
+   {
+    "at": "2026-09-24T19:47:17Z",
+    "user": "chartistmind",
+    "sentiment": null,
+    "body": "$HWM $KRMN $KTOS $LHX $PL"
+   },
+   {
+    "at": "2026-09-24T17:26:04Z",
+    "user": "whiteboytrippin",
+    "sentiment": "Bearish",
+    "body": "$HWM something bullish is brewing my puts are toast"
+   },
+   {
+    "at": "2026-09-24T17:07:41Z",
+    "user": "CasperPuff",
+    "sentiment": "Bullish",
+    "body": "$HWM recovery imminent."
+   },
+   {
+    "at": "2026-09-23T19:14:13Z",
+    "user": "long_USA",
+    "sentiment": "Bullish",
+    "body": "$HWM Looks like a couled spring to me"
+   }
+  ]
+ },
+ "LNG": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Cheniere",
+  "title": "Cheniere Energy Inc.",
+  "watchers": 7950,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 7,
+  "oldest_of_30_days": 17.7,
+  "bullish": 9,
+  "bearish": 1,
+  "untagged": 20,
+  "distinct_authors": 20,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T03:12:35Z",
+    "user": "arturosprojects",
+    "sentiment": "Bullish",
+    "body": "$NEXT just got a clean FERC win \ud83d\udd25\nRio Grande LNG capacity uprated 27 \u2192 30.15 mtpa.\nSame 5 trains. Zero extra capex. Extra ~3.15 mtpa of pure upside.\nHigher output = higher cash flow once online.\nThis is exactly the kind of de-risking that m"
+   },
+   {
+    "at": "2026-09-25T12:49:32Z",
+    "user": "Twinity",
+    "sentiment": null,
+    "body": "$VG  \nBtw.. all flip tards that don&#39;t know how to trade LNG exporters.. just follow $LNG  \nU re missing $$ is u are trading otherwise.. \nBut that&#39;s no longer my problem ..   \nI came here now and then to see how low some brains can g"
+   },
+   {
+    "at": "2026-09-22T13:07:08Z",
+    "user": "nth_effect",
+    "sentiment": null,
+    "body": "$AR Down 10.9pp while $LNG has held flat at plus 0.3pp over five days, a divergence that is hard to square if both names are simply leveraged to natural gas flows. The gap suggests the market is discounting something producer-specific at AR"
+   },
+   {
+    "at": "2026-09-22T12:42:12Z",
+    "user": "VoxGeorge",
+    "sentiment": "Bullish",
+    "body": "$LNG Singapore already runs its grid on 95 percent natural gas, and AI-driven data center growth is pushing Malaysia, Thailand and Indonesia toward the same reliance. \n \nhttps://oilprice.com/Energy/Natural-Gas/AI-Data-Centers-Are-Driving-So"
+   },
+   {
+    "at": "2026-09-21T12:34:42Z",
+    "user": "AStrokeOfLuck",
+    "sentiment": null,
+    "body": "$SPY $UNG $LNG $XOM $VG"
+   },
+   {
+    "at": "2026-09-21T11:40:57Z",
+    "user": "arturosprojects",
+    "sentiment": "Bullish",
+    "body": "$NEXT I\u2019m telling youall.. take advantage of the dip. After October 29 sky rocket \n.\n.\n.\n$LNG $SPY"
+   }
+  ]
+ },
+ "VG": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Venture Global",
+  "title": "Venture Global Inc",
+  "watchers": 4725,
+  "n_msgs": 30,
+  "n_last_24h": 8,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 1.85,
+  "bullish": 15,
+  "bearish": 0,
+  "untagged": 15,
+  "distinct_authors": 17,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T14:26:02Z",
+    "user": "TheContessa",
+    "sentiment": "Bullish",
+    "body": "$VG Those flipper on the sidelines and short sellers who didn\u2019t buy to cover on Friday could be stung in Monday when this rebounds. I am content to wait,  and you shorts remember: you own nothing at all."
+   },
+   {
+    "at": "2026-09-27T07:20:03Z",
+    "user": "LeeSo",
+    "sentiment": null,
+    "body": "$VG VG gets mentioned\u2026\n\n\u201cWhen the deal with Albania was confirmed in April, the ambassador said: \u201cI was honored to travel to Tirana to advancePOTUS\u2019 energy agenda and join PM Edi Rama to take part in the signing of a historic deal between A"
+   },
+   {
+    "at": "2026-09-27T04:59:23Z",
+    "user": "MilkingAlgosEveryMonday",
+    "sentiment": "Bullish",
+    "body": "$VG  15 min ago https://www.facebook.com/share/p/1BqyYRxM9C/?mibextid=wwXIfr"
+   },
+   {
+    "at": "2026-09-27T00:40:25Z",
+    "user": "icelandambitions",
+    "sentiment": null,
+    "body": "$VG 80% short interest\u2026\ud83e\udd21"
+   },
+   {
+    "at": "2026-09-26T23:30:39Z",
+    "user": "ChaosDDS",
+    "sentiment": null,
+    "body": "$VG \nNext got its uprate request granted by FERC today. \n\nVG is about 4-6 weeks behind them on the application. VG should get that granted soon"
+   },
+   {
+    "at": "2026-09-26T18:44:01Z",
+    "user": "Kaizan",
+    "sentiment": null,
+    "body": "$VG so we all recognize its value, note the good news and it doesn\u2019t matter. The Sabel hating short that has perhaps 500 million to keep pegging and dropping by the corrupt mm (MS) we cannot overcome. The fricking slime ball attorney at VG "
+   }
+  ]
+ },
+ "NOW": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "ServiceNow",
+  "title": "ServiceNow Inc",
+  "watchers": 44405,
+  "n_msgs": 30,
+  "n_last_24h": 5,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 1.97,
+  "bullish": 8,
+  "bearish": 1,
+  "untagged": 21,
+  "distinct_authors": 24,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T13:47:24Z",
+    "user": "iTrade_Price",
+    "sentiment": null,
+    "body": "$NOW now... like to get back in"
+   },
+   {
+    "at": "2026-09-27T10:36:18Z",
+    "user": "stu4",
+    "sentiment": null,
+    "body": "$NOW  this was just a 118 , 10 days ago \u2026131 is the bottom \nBottom of what. T bills 5+% , money is on the side lines"
+   },
+   {
+    "at": "2026-09-26T22:25:06Z",
+    "user": "TrendSpider",
+    "sentiment": null,
+    "body": "Service restored \ud83d\udee0\ufe0f  \n$NOW"
+   },
+   {
+    "at": "2026-09-26T20:39:16Z",
+    "user": "REDWIR",
+    "sentiment": "Bullish",
+    "body": "$NOW looks like bull flag got rejected at 139.83 but it\u2019s bottomed at 135 twice and to keep momentum I would do buy backs if I was mm. Likely hits 150.32 next target . If mm doesn\u2019t step in then 131 could hit . I got long calls this will be"
+   },
+   {
+    "at": "2026-09-26T15:29:07Z",
+    "user": "Stocktwits",
+    "sentiment": null,
+    "body": "$NOW looking good"
+   },
+   {
+    "at": "2026-09-26T05:02:23Z",
+    "user": "TheJackofAll",
+    "sentiment": "Bullish",
+    "body": "$NOW lets get back over 140 next week. Trump loves this stock, lets make him proud \ud83d\ude06"
+   }
+  ]
+ },
+ "NVO": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Novo Nordisk",
+  "title": "Novo Nordisk A/S",
+  "watchers": 32149,
+  "n_msgs": 30,
+  "n_last_24h": 7,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 1.9,
+  "bullish": 9,
+  "bearish": 0,
+  "untagged": 21,
+  "distinct_authors": 26,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T14:22:41Z",
+    "user": "whiskyqueen",
+    "sentiment": null,
+    "body": "@RunGal No. By 2032 if Viking is still operating independently, the MC will be above $NVO"
+   },
+   {
+    "at": "2026-09-27T09:32:34Z",
+    "user": "SqueezeSpecs",
+    "sentiment": null,
+    "body": "$NVO: Novo Nordisk\u2019s latest Capital Markets Day outlined plans to launch more than five multi-blockbuster medicines by 2030 and generate more than DKK 150B in pipeline sales by 2035. The company also highlighted plans to expand obesity trea"
+   },
+   {
+    "at": "2026-09-27T03:43:27Z",
+    "user": "TrustButVerifii",
+    "sentiment": "Bullish",
+    "body": "$VKTX As early as next week there will be a bidding war.  \nIf PharmaFk waits til phase 3 then premium doubles! \nit will take $50 billion ! \n \nAs soon as $NVO fkhead scientists go through the data and have an emergency meeting with BOD you w"
+   },
+   {
+    "at": "2026-09-27T00:31:15Z",
+    "user": "Crodies",
+    "sentiment": "Bullish",
+    "body": "$NVO a +3% Monday would be nice here!"
+   },
+   {
+    "at": "2026-09-26T20:41:28Z",
+    "user": "WallStpolitician",
+    "sentiment": "Bullish",
+    "body": "$MEDS $NVO $LLY \n\nhttps://www.benzinga.com/news/health-care/26/09/62011321/glp-1-pill-boom-apps-research-risks-lagging"
+   },
+   {
+    "at": "2026-09-26T18:43:28Z",
+    "user": "Pseudominds",
+    "sentiment": null,
+    "body": "$NVO it\u2019s ok, I think buy out is good idea. For $2 billion though lol"
+   }
+  ]
+ },
+ "PSNL": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Personalis",
+  "title": "Personalis Inc",
+  "watchers": 2910,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 12,
+  "oldest_of_30_days": 18.72,
+  "bullish": 5,
+  "bearish": 0,
+  "untagged": 25,
+  "distinct_authors": 12,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T12:51:36Z",
+    "user": "Gallium7",
+    "sentiment": null,
+    "body": "$PSNL fda tracker has a pdufa for mrk on 4th of october\u2026no indication as to what it is. Bla for intismeran was a rolling bla. Gotta wonder if we hear news next Monday\u2026"
+   },
+   {
+    "at": "2026-09-25T19:57:52Z",
+    "user": "arribaStocktrading",
+    "sentiment": null,
+    "body": "$TEM $PSNL Being a musician myself, I can appreciate that Eric has a musical daughter who is a talented vocalist and recently getting lots of exposure.  This isn&#39;t bad at all...  it reminds me of some of Sheryl Crow&#39;s songs and earl"
+   },
+   {
+    "at": "2026-09-25T16:18:50Z",
+    "user": "MD109",
+    "sentiment": "Bullish",
+    "body": "$TEM \nIn my opinion a few years from now many people will look back with regret that they weren\u2019t buying $TEM agressively when it was under $100/share.  It is still undervalued.  \nI bought $NTRA at $40.  When it was trading at $100-$150 man"
+   },
+   {
+    "at": "2026-09-25T13:04:15Z",
+    "user": "TICKERTUTOR",
+    "sentiment": "Bullish",
+    "body": "$TEM I think there&#39;s an expectation being built in that an Anthropic/OpenAI contract for de-identified data for drug discovery might be coming. $PSNL  \n \nhttps://www.reuters.com/world/anthropic-quietly-sets-up-biology-lab-it-ramps-ai-dr"
+   },
+   {
+    "at": "2026-09-25T01:38:40Z",
+    "user": "PatrickandFrankie",
+    "sentiment": null,
+    "body": "@MD109 @USMC223556 of course highly reliant on the $PSNL \u201cacquisition \u201c"
+   },
+   {
+    "at": "2026-09-24T22:25:35Z",
+    "user": "MD109",
+    "sentiment": "Bullish",
+    "body": "@verytrader @MattAI \nI\u2019ve owned $NTRA since it was $40/share. The thesis centered around the MRD opportunity.  I also owned $PSNL with a cost basis of $3.5, also based solely on MRD.  I rolled 100% of my Personalis gains into $TEM making it"
+   }
+  ]
+ },
+ "SNOW": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Snowflake",
+  "title": "Snowflake Inc",
+  "watchers": 58744,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 4.01,
+  "bullish": 14,
+  "bearish": 7,
+  "untagged": 9,
+  "distinct_authors": 19,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T14:44:11Z",
+    "user": "BigAllergies",
+    "sentiment": null,
+    "body": "$SNOW has 8 of 13 momentum checks firing right now"
+   },
+   {
+    "at": "2026-09-26T10:41:31Z",
+    "user": "Life_is_a_Carnival",
+    "sentiment": "Bearish",
+    "body": "$SNOW When insiders are selling as much as these guys are that ought to be a light bulb moment."
+   },
+   {
+    "at": "2026-09-26T03:02:56Z",
+    "user": "StockPlaza",
+    "sentiment": null,
+    "body": "$SNOW why is it selling off at 346"
+   },
+   {
+    "at": "2026-09-25T21:46:40Z",
+    "user": "TheOTCBBKing",
+    "sentiment": "Bullish",
+    "body": "$NCPL starting to run again afterhours. 4M float, NO short shares available and a 570% borrow rate. Massive short position that needs to cover. $DJT $COST $SNOW $TDIC"
+   },
+   {
+    "at": "2026-09-25T16:44:15Z",
+    "user": "Deenjdeenj",
+    "sentiment": "Bullish",
+    "body": "$SNOW Hold em, don\u2019t fold em!! \ud83d\ude80\ud83d\ude80\ud83d\ude80\ud83d\udcb0\ud83d\udcb0\ud83d\udcb0"
+   },
+   {
+    "at": "2026-09-25T15:09:44Z",
+    "user": "ibuythefear247",
+    "sentiment": "Bullish",
+    "body": "$SNOW"
+   }
+  ]
+ },
+ "TEM": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Tempus AI",
+  "title": "Tempus AI Inc",
+  "watchers": 21770,
+  "n_msgs": 30,
+  "n_last_24h": 3,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 2.04,
+  "bullish": 18,
+  "bearish": 2,
+  "untagged": 10,
+  "distinct_authors": 23,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T12:22:18Z",
+    "user": "FonsieTrader",
+    "sentiment": null,
+    "body": "$TEM \u2014 new ATHs next week?\n$15B precision-medicine platform. Just took out a 3-month downtrend on 36M shares.\nData + AI that bills. Oncology volumes still double-digit. Recursion extended the data license + RNA model. Leica put pathology in"
+   },
+   {
+    "at": "2026-09-26T19:41:11Z",
+    "user": "Yingtrader7",
+    "sentiment": null,
+    "body": "$NSYS looks like medical equipment sector going to move  $TEM $INSP $VMD but nortech not showing up anywhere"
+   },
+   {
+    "at": "2026-09-26T16:06:09Z",
+    "user": "Stealyourstocks",
+    "sentiment": "Bullish",
+    "body": "$TEM medical AI might be the one feature of this AI revolution  that general public can get behind."
+   },
+   {
+    "at": "2026-09-26T14:47:25Z",
+    "user": "ChartGuysDan",
+    "sentiment": null,
+    "body": "VIDEO: Can lead bear sectors shape up a weekly bounce to get SPY and QQQ into blue sky breakouts?  My focus on the AI Biotech narrative. \nhttps://www.chartguys.com/watch?v=oQ829rXc2yE \n \n$MSOS $TEM $NTRA $ARKG $MRNA"
+   },
+   {
+    "at": "2026-09-25T22:14:56Z",
+    "user": "Bank1986",
+    "sentiment": "Bullish",
+    "body": "$TEM Retirement $$ for birthday $100 option today!"
+   },
+   {
+    "at": "2026-09-25T20:01:39Z",
+    "user": "WAJeff",
+    "sentiment": null,
+    "body": "$GRAL Didn\u2019t follow my own advice here, regrettably. Ran it up from 19s in Dec 2024 to a final exit at 115.98 at start of 2026, then could have reloaded in the 40s but didn\u2019t. Similar missed opportunity to add $TEM in low 40s."
+   }
+  ]
+ },
+ "WDAY": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Workday",
+  "title": "Workday Inc",
+  "watchers": 15197,
+  "n_msgs": 30,
+  "n_last_24h": 1,
+  "n_last_7d": 10,
+  "oldest_of_30_days": 13.48,
+  "bullish": 7,
+  "bearish": 0,
+  "untagged": 23,
+  "distinct_authors": 19,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-26T19:07:12Z",
+    "user": "Liatris_spicata",
+    "sentiment": null,
+    "body": "$WDAY\ufffcWhaddya mean, \u201cstuck for while\u201d?  Early this summer it was about $120 compared with yesterday\u2019s close of $189.  Ok, maybe range bound the past six weeks, but over the past 52 weeks it has fluctuated between $110 and $250.   The recent"
+   },
+   {
+    "at": "2026-09-25T03:02:00Z",
+    "user": "Techdamentals",
+    "sentiment": null,
+    "body": "Workday&#39;s been stuck for a while. HR and finance software, about as sticky as it gets, growth decelerating. \n \nThat combination usually gets cheap eventually. Sticky revenue plus a beaten down multiple is how value tends to show up in s"
+   },
+   {
+    "at": "2026-09-24T14:39:14Z",
+    "user": "defion",
+    "sentiment": "Bullish",
+    "body": "$WDAY so much room to grow pps from these levels. Any news on buyout?\n\nWorkday Launches Total Benefits, Bringing Health, Wealth, and Wellbeing Support Together in One Place, which seems very bullish"
+   },
+   {
+    "at": "2026-09-23T16:33:58Z",
+    "user": "juve45",
+    "sentiment": null,
+    "body": "$MSFT this looks pin below 499 all other fellow software like $CRM , $WDAY  &amp; $NOW running"
+   },
+   {
+    "at": "2026-09-23T14:12:56Z",
+    "user": "Sirtuan",
+    "sentiment": null,
+    "body": "$CRM $NOW $WDAY saass stocks still looking good."
+   },
+   {
+    "at": "2026-09-22T22:13:11Z",
+    "user": "Baazigar123",
+    "sentiment": "Bullish",
+    "body": "$WDAY GWRE CDNS"
+   }
+  ]
+ },
+ "BN": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Brookfield",
+  "title": "Brookfield Corporation",
+  "watchers": 2402,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 8,
+  "oldest_of_30_days": 13.02,
+  "bullish": 10,
+  "bearish": 0,
+  "untagged": 20,
+  "distinct_authors": 18,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-25T12:22:04Z",
+    "user": "DannyOceans",
+    "sentiment": null,
+    "body": "$BN bullish"
+   },
+   {
+    "at": "2026-09-25T10:44:54Z",
+    "user": "refinedindividual",
+    "sentiment": null,
+    "body": "$BN Barrons for the win: \nhttps://www.msn.com/en-us/news/other/brookfield-has-an-enviable-record-of-boosting-profits-its-stock-looks-cheap/ar-AA2cWpGz"
+   },
+   {
+    "at": "2026-09-24T19:34:57Z",
+    "user": "mazrim",
+    "sentiment": null,
+    "body": "$BN Gotta turn around at some point. Taking some profits from recent winners $MSFT $META and been adding here."
+   },
+   {
+    "at": "2026-09-24T14:00:33Z",
+    "user": "Stocktwits52wLows",
+    "sentiment": null,
+    "body": "$BN printed a new 52-week low today"
+   },
+   {
+    "at": "2026-09-24T13:57:40Z",
+    "user": "Irie9",
+    "sentiment": null,
+    "body": "$BN adding longs this morning."
+   },
+   {
+    "at": "2026-09-20T23:24:16Z",
+    "user": "fiky",
+    "sentiment": null,
+    "body": "$BN fullporting at 34$"
+   }
+  ]
+ },
+ "AMZN": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Amazon",
+  "title": "Amazon.com Inc",
+  "watchers": 704556,
+  "n_msgs": 29,
+  "n_last_24h": 20,
+  "n_last_7d": 29,
+  "oldest_of_30_days": 1.59,
+  "bullish": 7,
+  "bearish": 6,
+  "untagged": 16,
+  "distinct_authors": 22,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T15:04:18Z",
+    "user": "THE_TRADE",
+    "sentiment": "Bearish",
+    "body": "$AMZN $QQQ $XLK \n$GOOGL"
+   },
+   {
+    "at": "2026-09-27T15:02:45Z",
+    "user": "Smegma_Producer",
+    "sentiment": "Bullish",
+    "body": "$AMZN were looking to add fatly here as we believe amazon is undevalued by 300-500 Billion"
+   },
+   {
+    "at": "2026-09-27T07:41:58Z",
+    "user": "TalkMarkets",
+    "sentiment": null,
+    "body": "ICYMI: #Amazon Blocks #Meta\u2019s #Muse \n$AMZN $META Also Mentions: $AAPL $GOOGL  \nhttps://talkmarkets.com/article/amazon-blocks-metas-muse"
+   },
+   {
+    "at": "2026-09-27T06:16:43Z",
+    "user": "BullsmeetSocial",
+    "sentiment": null,
+    "body": "$AMZN still looks weak here \ud83d\udc40\n\nLower highs since the August spike and price continues working into the earnings gap.\n\n$246\u2013248 = immediate support\n$238\u2013240 = next area I\u2019m watching\n\nUnless it reclaims ~$258, I wouldn\u2019t be surprised to see m"
+   },
+   {
+    "at": "2026-09-27T04:49:40Z",
+    "user": "cameron_turner",
+    "sentiment": "Bullish",
+    "body": "$XE $AMZN"
+   },
+   {
+    "at": "2026-09-27T02:59:27Z",
+    "user": "MountCapital",
+    "sentiment": "Bearish",
+    "body": "$AMZN $200 soon"
+   }
+  ]
+ },
+ "GOOG": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Alphabet",
+  "title": "Alphabet Inc - Ordinary Shares - Class C",
+  "watchers": 312100,
+  "n_msgs": 30,
+  "n_last_24h": 9,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 1.83,
+  "bullish": 14,
+  "bearish": 4,
+  "untagged": 12,
+  "distinct_authors": 28,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T13:17:24Z",
+    "user": "PoundinBurgers",
+    "sentiment": "Bullish",
+    "body": "$GOOG $GOOGL $MU $NLST $SKHY And you are a retard"
+   },
+   {
+    "at": "2026-09-27T04:17:15Z",
+    "user": "ZOMEDICAisHeatingUP",
+    "sentiment": null,
+    "body": "$GOOG"
+   },
+   {
+    "at": "2026-09-27T02:56:12Z",
+    "user": "MountCapital",
+    "sentiment": "Bearish",
+    "body": "$GOOG $250 soon"
+   },
+   {
+    "at": "2026-09-27T01:58:19Z",
+    "user": "MilkingAlgosEveryMonday",
+    "sentiment": "Bullish",
+    "body": "$META  $GOOG  $TSLA  and $MU  keep eyes on arxs&lt;&lt;&lt;"
+   },
+   {
+    "at": "2026-09-27T00:37:30Z",
+    "user": "grampagrit",
+    "sentiment": "Bullish",
+    "body": "$INTC $AMD $NVDA $TSM $GOOG"
+   },
+   {
+    "at": "2026-09-26T22:09:48Z",
+    "user": "investor226",
+    "sentiment": null,
+    "body": "$MSFT $TSLA $META $NVDA $GOOG if anyone is looking for option trades https://www.instagram.com/options_journalist?stkn=azNxdG9qMjZrZTBs&amp;utm_source=qr"
+   }
+  ]
+ },
+ "GOOGL": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Alphabet",
+  "title": "Alphabet Inc Class A",
+  "watchers": 231489,
+  "n_msgs": 28,
+  "n_last_24h": 20,
+  "n_last_7d": 28,
+  "oldest_of_30_days": 1.5,
+  "bullish": 9,
+  "bearish": 2,
+  "untagged": 17,
+  "distinct_authors": 21,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T15:04:18Z",
+    "user": "THE_TRADE",
+    "sentiment": "Bearish",
+    "body": "$AMZN $QQQ $XLK \n$GOOGL"
+   },
+   {
+    "at": "2026-09-27T14:56:28Z",
+    "user": "THE_TRADE",
+    "sentiment": "Bullish",
+    "body": "$GOOGL"
+   },
+   {
+    "at": "2026-09-27T13:48:30Z",
+    "user": "THE_TRADE",
+    "sentiment": "Bullish",
+    "body": "$GOOGL \n\nWill blow by $355 this week and stay above it"
+   },
+   {
+    "at": "2026-09-27T13:46:42Z",
+    "user": "iTrade_Price",
+    "sentiment": null,
+    "body": "$GOOGL googl"
+   },
+   {
+    "at": "2026-09-27T13:45:58Z",
+    "user": "Unhappytrader28",
+    "sentiment": null,
+    "body": "$SPY $QQQ $GOOGL"
+   },
+   {
+    "at": "2026-09-27T13:20:53Z",
+    "user": "Justwin100",
+    "sentiment": null,
+    "body": "$QQQ $SPY All I can say is I see $META muse taking over from $GOOGL if care is not taken. It is really amazing and super interesting"
+   }
+  ]
+ },
+ "META": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Meta Platforms",
+  "title": "Meta Platforms Inc",
+  "watchers": 611599,
+  "n_msgs": 30,
+  "n_last_24h": 30,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 0.6,
+  "bullish": 8,
+  "bearish": 1,
+  "untagged": 21,
+  "distinct_authors": 27,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T15:27:28Z",
+    "user": "Equibles",
+    "sentiment": null,
+    "body": "$META I found on Equibles that Allianz Asset Management GmbH increased its META position 26% to 2,828,659 shares as of June 30, 2026, worth an estimated $1.59 billion."
+   },
+   {
+    "at": "2026-09-27T15:16:21Z",
+    "user": "stoxots",
+    "sentiment": null,
+    "body": "$META \n\nTest 690-700 support before next leg up."
+   },
+   {
+    "at": "2026-09-27T15:02:11Z",
+    "user": "Smegma_Producer",
+    "sentiment": "Bearish",
+    "body": "$META we believe at 2T muse has now been priced in and liquidated at 780."
+   },
+   {
+    "at": "2026-09-27T14:57:21Z",
+    "user": "traderhr",
+    "sentiment": null,
+    "body": "TraderHR: 5 high-attention U.S. stocks traders watched today \u2014 what moved them + technical outlooks. $MSFT $META $INTC $MU $NVDA https://www.traderhr.com/traderhr-5-high-attention-active-stocks-2026-09-25-update-20260927-111828-8mwkx/"
+   },
+   {
+    "at": "2026-09-27T14:46:52Z",
+    "user": "GenoCicero",
+    "sentiment": "Bullish",
+    "body": "$ORBS  \nEightco (NASDAQ: ORBS) \nRepresents the Biggest Public Market Exposure to OpenAI for Retail Investors https://prn.to/4txj0XR  \n$QQQ \n  \n$SPY \n  \n$IWM \n  \n$META"
+   },
+   {
+    "at": "2026-09-27T14:07:29Z",
+    "user": "Optionking828",
+    "sentiment": null,
+    "body": "$META Short it\u2026. But for a $100 Month for assistant? I\u2019ll take it,"
+   }
+  ]
+ },
+ "NVDA": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "NVIDIA",
+  "title": "NVIDIA Corp",
+  "watchers": 668630,
+  "n_msgs": 30,
+  "n_last_24h": 30,
+  "n_last_7d": 30,
+  "oldest_of_30_days": 0.36,
+  "bullish": 12,
+  "bearish": 2,
+  "untagged": 16,
+  "distinct_authors": 29,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-27T15:02:00Z",
+    "user": "Jointheask",
+    "sentiment": null,
+    "body": "$SPY WEEKLY STOCK WATCHLIST - $AMD THE OLD $NVDA??? #trading #stockmarket\nhttps://youtu.be/ETGRU-OAWlI"
+   },
+   {
+    "at": "2026-09-27T14:57:21Z",
+    "user": "traderhr",
+    "sentiment": null,
+    "body": "TraderHR: 5 high-attention U.S. stocks traders watched today \u2014 what moved them + technical outlooks. $MSFT $META $INTC $MU $NVDA https://www.traderhr.com/traderhr-5-high-attention-active-stocks-2026-09-25-update-20260927-111828-8mwkx/"
+   },
+   {
+    "at": "2026-09-27T14:49:23Z",
+    "user": "b4udie",
+    "sentiment": "Bullish",
+    "body": "$NVDA is one the most hated stocks on wall st.  For me i like this ticker."
+   },
+   {
+    "at": "2026-09-27T14:48:43Z",
+    "user": "Cpstrag",
+    "sentiment": "Bullish",
+    "body": "$NVDA so terrorism against Americans begins in england..this is all Trump! Get rid of him...going to be alot more bombings til he is gone.! Go NVDA GO JENSEN. GROW!"
+   },
+   {
+    "at": "2026-09-27T14:25:37Z",
+    "user": "fortyeight",
+    "sentiment": "Bullish",
+    "body": "$NVDA Never mention Trump and super intelligence in the same sentence."
+   },
+   {
+    "at": "2026-09-27T14:23:14Z",
+    "user": "david102",
+    "sentiment": null,
+    "body": "$SNDK $MU $NVDA $SKHY\n\nTrump\u2019s \u201cSuper Intelligence (SI)\u201d branding is net positive for Micron (MU) and SanDisk (SNDK) because it signals continued, aggressive U.S. AI infrastructure expansion, not a slowdown. The terminology change doesn\u2019t a"
+   }
+  ]
+ },
+ "INCY": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Incyte",
+  "title": "Incyte Corp.",
+  "watchers": 5634,
+  "n_msgs": 29,
+  "n_last_24h": 0,
+  "n_last_7d": 8,
+  "oldest_of_30_days": 51.63,
+  "bullish": 9,
+  "bearish": 0,
+  "untagged": 20,
+  "distinct_authors": 17,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-26T02:57:17Z",
+    "user": "DonCorleone77",
+    "sentiment": null,
+    "body": "$MIRM $INCY  \n \nMirum Pharmaceuticals, Incyte announce FDA approval of Atebrioz \n \nMirum Pharmaceuticals (MIRM) and Incyte (INCY) announced that the U.S. FDA has approved Atebrioz tablets to reduce the volume of total new heterotopic ossifi"
+   },
+   {
+    "at": "2026-09-25T18:43:37Z",
+    "user": "StocktwitsNews",
+    "sentiment": null,
+    "body": "INCY, MIRM Slip Into FDA\u2019s Weekend Decision Date On Shared Rare-Disease Pill\n\n$MIRM $INCY\n\nhttps://stocktwits.com/news/equity/markets/incy-mirm-slip-into-fda-s-weekend-decision-date-on-shared-rare-disease-pill/cZMOKU5RBOj"
+   },
+   {
+    "at": "2026-09-24T12:57:32Z",
+    "user": "Quantumup",
+    "sentiment": null,
+    "body": "Cantor reiterated $ACRS at Overweight after its KOLs call. \n$INCY $REGN - SNY NKTR LLY ABBV PFE BMY CRVS \nCantor said -- KOLs sounded very confident that modzatinib (oral ITK/JAK3) should work across all LP subtypes (~100-300K addressable p"
+   },
+   {
+    "at": "2026-09-23T20:30:49Z",
+    "user": "Merlintrader",
+    "sentiment": null,
+    "body": "Incyte ($INCY): Positive CHMP Opinion for Povofortay in Hidradenitis Suppurativa \n \nFree Biotech Catalyst Calendar on Merlintrader. \n \nhttps://www.merlintrader.com/incyte-incy-stock-hub/"
+   },
+   {
+    "at": "2026-09-22T18:56:23Z",
+    "user": "Night_Owl_Biotech",
+    "sentiment": null,
+    "body": "Just another day bashing $SNDX management for not exiting via M&amp;A when the opportunity presented itself. M&amp;A exit is a strategy that has historically maximizes shareholder value versus GIA 100% of the time (in oncology, 92% of the t"
+   },
+   {
+    "at": "2026-09-22T13:15:34Z",
+    "user": "deepak1285",
+    "sentiment": null,
+    "body": "$INCY why is this getting smoked?"
+   }
+  ]
+ },
+ "JAZZ": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Jazz Pharmaceuticals",
+  "title": "Jazz Pharmaceuticals plc",
+  "watchers": 4225,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 6,
+  "oldest_of_30_days": 37.01,
+  "bullish": 7,
+  "bearish": 0,
+  "untagged": 23,
+  "distinct_authors": 25,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-25T18:45:33Z",
+    "user": "Merlintrader",
+    "sentiment": null,
+    "body": "Narcolepsy after the orexin approval: $ALKS, $AXSM, $JAZZ and $TAK \nhttps://www.merlintrader.com/narcolepsy-orexin-alks-axsm-jazz-tak/"
+   },
+   {
+    "at": "2026-09-24T13:20:24Z",
+    "user": "Quantumup",
+    "sentiment": null,
+    "body": "H.C. Wainwright reiterated $PRAX Buy-$1201 and said -- As part of our &quot;Biopharma Deep Dive&quot; call series, we recently hosted Marcio Souza, President and Chief Executive Officer of Praxis Precision Medicines. \n$RAPP $JAZZ SAGE DRUG "
+   },
+   {
+    "at": "2026-09-24T12:35:06Z",
+    "user": "NeverFadeTheOracle",
+    "sentiment": null,
+    "body": "$JAZZ \n\n337 Buy \n\nGoldman &amp; Sachs"
+   },
+   {
+    "at": "2026-09-22T21:36:17Z",
+    "user": "investpapaya",
+    "sentiment": null,
+    "body": "$NBIX $JAZZ $BIIB If you were to go ALL IN on one of these stocks ( for long term), which one would you choose?"
+   },
+   {
+    "at": "2026-09-22T21:33:33Z",
+    "user": "investpapaya",
+    "sentiment": "Bullish",
+    "body": "$JAZZ is an undervalued stock, with strong growth and catalysts in 2026-2027."
+   },
+   {
+    "at": "2026-09-22T19:42:20Z",
+    "user": "LibertarianTreehugger",
+    "sentiment": null,
+    "body": "Should You Buy Jazz Pharmaceuticals Stock After Its Actio Acquisition? https://www.fool.com/investing/2026/09/18/should-you-buy-jazz-pharmaceuticals-stock-after-it/ $JAZZ"
+   }
+  ]
+ },
+ "SNDR": {
+  "status": "OK",
+  "tier": "T2",
+  "company": "Schneider National",
+  "title": "Schneider National Inc - Ordinary Shares - Class B",
+  "watchers": 437,
+  "n_msgs": 30,
+  "n_last_24h": 0,
+  "n_last_7d": 1,
+  "oldest_of_30_days": 240.06,
+  "bullish": 0,
+  "bearish": 6,
+  "untagged": 24,
+  "distinct_authors": 18,
+  "fetched_utc": "2026-09-27T15:24:27+00:00",
+  "sample": [
+   {
+    "at": "2026-09-21T15:29:30Z",
+    "user": "triniblockchain",
+    "sentiment": null,
+    "body": "$SNDR pretty neat stuff with electric trucks"
+   },
+   {
+    "at": "2026-09-17T12:38:00Z",
+    "user": "dennismccain",
+    "sentiment": null,
+    "body": "Three companies that are on my list of Growth Companies at a reasonable Price are in the trucking business. They are $ARCB, $KNX, and $SNDR. They\u2019re all three in a necessary and growing business with their earnings expected to grow quite fa"
+   },
+   {
+    "at": "2026-09-17T02:22:48Z",
+    "user": "TNNStockAnalysisNews",
+    "sentiment": null,
+    "body": "Top Losing Stocks Today (Sept 16, 2026): \n \n$C Down 1% to 2.4% \n$MS Down 1.9% to $85.46  \n$EXPD Down More Than 2.5% \n$ODFL Down in Sympathy \n$SNDR Down in Sympathy \n \nhttps://truthsandnews.com/markets/top-losing-stocks-today-sept-16-2026-fe"
+   },
+   {
+    "at": "2026-09-16T12:06:19Z",
+    "user": "TalkMarkets",
+    "sentiment": null,
+    "body": "J.B. Hunt More Freight Is Hurting Margins $JBHT\nAlso Mentions: $ODFL $KNX $SNDR https://talkmarkets.com/article/jb-hunt-more-freight-is-hurting-margins"
+   },
+   {
+    "at": "2026-08-21T15:15:40Z",
+    "user": "OwenTWoodBridge",
+    "sentiment": null,
+    "body": "$SNDR \n$40 18 SEP 26 CALL \n$0.25"
+   },
+   {
+    "at": "2026-08-21T15:15:05Z",
+    "user": "OwenTWoodBridge",
+    "sentiment": null,
+    "body": "$SNDR \n$40 18 SEP 26 CALL \n$0.30\n\nADDING-HERE"
+   }
+  ]
+ }
+}
