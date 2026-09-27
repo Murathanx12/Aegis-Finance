@@ -256,3 +256,12 @@ file, so the STOP was removed and it keeps running its pre-`ensure()` code: L2 t
 waiting for a model server that nothing starts. **Next session: write the STOP file when the lab is
 between jobs, wait for exit, relaunch `always_on_lab.cmd`** (the relaunch picks up `ensure()`/`touch()`
 and the health tick still has to be applied per `owed_hooks_2026-09-27.md`). CI green through `c0612f53`.
+
+## 16. 11:40 HKT 09-27 — morning state
+- Full fast suite green locally: **11,446 passed, 22 skipped** (16 min). Factory on the hold-month
+  calendar with live benchmarks (`T032801Z`, `7021a687`): **69 / 119 / 139 of 288 rules beat SPY /
+  IWM / the panel's random portfolio in both windows**; README re-rendered (`5ee19214`).
+- Scraping blocked on Chrome, not OpenClaw: the gateway log says `Chrome MCP existing-session attach
+  for profile "user" timed out after 5000ms` on every attempt since 04:57; Chrome runs **62 processes**.
+  Fix is on the browser: close the leftover Dow Jones tabs or restart Chrome (the remote-debugging
+  toggle persists), then rerun the queue. Reader change owed: blank lane tabs between reads.
