@@ -221,3 +221,31 @@ Commits: chunk J `3ae60413` · paper rules `d51d0050` · systems fixes `85d96044
 - Matched twins `4b9f9d9c`: ~40% of the 2024-26 top-10's excess over random is style (size/vol/
   past-return); HAC t changes no verdict (floored at the plain SE); `xs_ranker` by-year re-keyed
   on the hold period. CI green through `f0182c54`.
+
+## 14. 08:05 HKT 09-27 — RESULTS SCOREBOARD at the end of the night
+| line | state |
+|---|---|
+| best historical net strategy vs market | **none survives multiplicity, and the 32-block window cannot distinguish a 1%/mo alpha from zero** (MDE 2.46%/mo). Dev-chosen top-10: +8.8 pp mean / +2.6 pp median / 6 of 10 vs SPY in 2024-26; rules beating the benchmark in both windows 68 vs SPY / 117 vs IWM / 137 vs the panel's random portfolio (the panel tilts small). ~40% of the top-10's 2024-26 excess over random is style. Receipt `leaderboard_2026-09-26T164302Z.json` (+ `.rekeyed.json`). |
+| best forward paper strategy | 39 priced accounts: **7 ahead of SPY, 32 behind** (5/20 ex twins); **279 books PENDING** the 09-28 open incl. `bloomberg_rehearsal_2026-09-27` and `murat_core_satellite_2026-09-27`; 1 voided. First bridge reading 2026-10-26 (calibration + declared-vs-realised exposure, not the 21-day return). |
+| independent selectors | 282 → 296 rules registered; **~180 bets at ρ 0.8 on active returns (79–216 across cuts)**; 11 paper rules registered tonight, **all falsified or CANNOT_DISTINGUISH**; VAL-01 unlocked value + distance-to-default; XBRL now carries R&D/SG&A (2,922 names). |
+| farm candidates tested / promoted | 14 rules scored tonight (6 round-1, 5 round-2, 2 intangibles, 1 13F) / promoted 0 |
+| new actionable finding | **a defect**: by-year/LOO keyed on the decision date (29 LOO verdicts flip under the hold month; a "2020" result was January 2021); the facts table shrunk to 25 names by a default `--limit` (guarded now); brokers are coin flips; first-mover raises are look-ahead; the `skill_mom` edge is 2025; "momentum is semis beta" withdrawn as no-power |
+| external execution drag | not measured |
+| LLM spend, the night | Dow Jones claims ≈ $0.01 · Optimus call $0.012 · everything else $0 (sim's `u_forecast` on its daily cap) |
+| suite / CI | **CI green through `8f5ecfc5`** (four red rounds fixed the same hour: guard enrolments ×3, a fixture, a void invariant); local full suite never run (memory) |
+| health (08:02) | 0 DEAD / 11 STALE / 5 UNKNOWN / 28 ALIVE — `llama_server` STALE (L2 typing waited 8.5 h for a model; the lab is being restarted on the `ensure()` hooks), `optimus_brain` 13.7 d, `live_market_loop` never ran, `railway_backend` `all_fresh=False` (attended) |
+| reads | Dow Jones: 35 articles + 12 MarketWatch snapshots in the local corpus; **51 forecast rows** (`wsj_heard_on_the_street` 48, `barrons_stock_picks` 3); 10 feeds live; the archive line waits for a Chrome tab clean-up |
+
+**RESULT IMPROVEMENT: NONE in terminal wealth. What moved: five ideas closed by measurement, one
+overclaim withdrawn by the review loop the same night, two calendar defects fixed, and the first
+book with a declared factor exposure and a pre-registered 10-26 test is on the clock for 09-28.**
+
+**Three sentences (chunk I):** WHAT WORKS — the free σ63 vol prior on magnitude (+10.0% h=1 vs the
+LLM's +5.5%); ordering within a rule (ranks 1–20 beat 21–40). WHAT DOES NOT — LLM direction (−7.9%);
+broker identity (50.1%); first-mover raises; the analyst-skill filter outside 2025; every "alpha"
+on 32 blocks (cannot distinguish). HIGHEST-EV — the dress rehearsal's 10-26 read: move-size rank
+ρ ≥ 0.3 and declared-vs-realised exposure within ±0.3 across the 279 books entering Monday.
+
+**Murat, when back:** delete `HANDOFF_PC` if you want the reads to stop; close the leftover Dow
+Jones tabs (or restart Chrome) and rerun the queue for the WSJ archive; Railway sleep + start
+command; relink the Railway CLI; confirm ONE mandate; fill the weekend paste inbox.
