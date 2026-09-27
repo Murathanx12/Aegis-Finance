@@ -1,0 +1,14 @@
+# Disk-full incident 2026-09-27 ~17:50-19:15 HKT: files truncated to zero bytes (removed 19:35)
+backend/data/optimus/dowjones/plan_2026-09-27_094906.json
+backend/data/optimus/dowjones/plan_2026-09-27_111242.json
+backend/data/optimus/dowjones/queue_2026-09-27_111248.json
+backend/data/optimus/dowjones/queue_run_2026-09-27e.log.err
+backend/data/optimus/dowjones/queue_run_2026-09-27f.log.err
+backend/data/optimus/health/health_20260927T111250Z.json
+backend/data/optimus/lab_status.json.tmp
+backend/data/optimus/news_corpus/_receipts/20260927T111250Z_sec_edgar_8k_ex99_body.json
+backend/data/optimus/night_factory_2026-09-27/decision_vs_reality_2026-09-27.json.tmp
+backend/data/optimus/strategy_library/factory_run_holdings_2026-09-27.log.err
+backend/data/optimus/thesis_cards/2026-09-27/logs/AMSC.openclaw.log
+backend/data/optimus/thesis_cards/2026-09-27/logs/TEM.openclaw.log
+backend/data/optimus/web_reader/footprint_20260927T111242Z.json

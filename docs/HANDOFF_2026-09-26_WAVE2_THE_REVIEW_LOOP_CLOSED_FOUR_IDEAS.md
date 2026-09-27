@@ -304,3 +304,23 @@ Murat handed the PC over for four hours ("full freedom and full access").
 | **Reader** (`e54551b7`, `6b70c553`) | lane tabs blanked after each read and recycled after 10 pages; per-host pacing ≥ 60 s; search lanes per ticker; start-up cleanup closed 4 leftover tabs; the host guard knows its own blank tabs. Queue `QUEUE_2026-09-27.txt` running since 16:38 (MarketWatch analyst pages for the 67 carded names first). |
 | **Lab** | the STOP file must go where the RUNNING lab reads it (`lab_status.json` → `stop_file`, the folder of its START date). Restarted 16:54 as pid 88112 on the new code: `health` loop live, **L2 typing starts the model on demand** (llama-server came up by itself; the reaper stops it when idle). |
 | **Sim** | `4f65d9b05c5d`, cycle 15 at 17:00, planned end 21:49. |
+
+## 20. 19:40 HKT 09-27 — DISK FULL, and the Monday rehearsal
+- **C: reached 0 bytes free (~17:50–19:15 HKT).** The drive (953 GB) was already nearly full; today's paging
+  and runs tipped it. Effects: the lab died, the reader stopped, 13 receipts/logs were truncated to zero
+  bytes (listed in `backend/data/optimus/incidents/disk_full_2026-09-27_zero_byte_files.txt`, then
+  removed), the crowd crawl lost its checkpoint (19 of 68 names survive in the note), the full suite
+  could not run. **Every ledger is intact** (predictions, books, claims, sessions — last lines parse) and
+  OpenClaw's config is unchanged. **Freed 11.4 GB** by `pip cache purge` (4.3 GB) and
+  `npm cache clean --force` (6.4 GB) — caches only, nothing of Murat's. Regenerable space still
+  available: `frontend/.next` 2.2 GB. **Murat must free real space on C:** — 11 GB is a day's margin.
+  Owed: a `disk_free` health probe (STALE < 10 GB, DEAD < 2 GB) and a refuse-to-start guard.
+- **Monday rehearsal** (`a0402d77`, `d8b4badc`, `docs/REHEARSAL_2026-09-28_MONDAY_ENTRY.md`): 307 books
+  (62 parents, 245 twins, 1 voided). **Nothing scheduled graded the books** — fixed: `daily_pass` now runs
+  `grade_books` (pull mode) → `paper_accounts` → `bridge_report` after the bars refresh. First real
+  grade: **Tue 09-29 ≈ 07:50–08:05 HKT** by the `AegisDailyPass` task (the Mon 06:30 pass sees bars only
+  through Fri and correctly records nothing to do). Grade rule **v2 from entry ≥ 09-28**: a halted or
+  NaN-open name enters at its next valid open, its weight waits in cash, nothing is re-weighted;
+  `weight_priced` printed; under 0.5 after 5 sessions = `REFUSED_UNDER_PRICED`. Also fixed: the first
+  day was compared with SPY = 0.0; unadjusted splits are flagged; benchmarks/ETFs are pulled, not
+  assumed; the grade of 306 books 126 s → 2.2 s; bars load 3.9 GB → 1.4 GB.

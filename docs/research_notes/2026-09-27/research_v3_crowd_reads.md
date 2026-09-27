@@ -76,10 +76,26 @@ multi-hour browser queue). This note follows the same convention.
   had not done so as of this note's writing. This includes most of the demand note's top-15 ROI list (LEU, MP,
   CCJ, AGIO, IONQ, MU, ABSI — PRGS, AGYS, NOVT, COGT, VKTX and BBIO DID complete, and anchor §C below) and
   every Tier-2 mega-cap.
-- **A live process is still running**: `scratchpad/crowd_crawl.py` (PID recorded in
-  `scratchpad/crowd_run.pid`), logging to `scratchpad/crowd_run.log`, checkpointing per-ticker results into
-  `scratchpad/crowd_results.json` (safe to re-run — it skips tickers already present). A future session can
-  pick this file up directly rather than re-reading anything already done.
+- **UPDATE, same session, after this note was first published — machine-level incident, not just a data
+  loss: `C:` is at 100% full (independently confirmed: `Get-PSDrive C` reports 0 bytes free of ~953 GB), and
+  the background crawl is dead as a result.** The crawl (PID 19516) eventually attempted all 68 tickers on
+  Reddit (43 OK, 19 COLLISION, 6 EMPTY, 0 walled) and reached StockTwits for 14 more (NVEC..VKTX, 13 OK, 1
+  refused on BBIO) before a non-atomic write truncated `scratchpad/crowd_results.json` to 0 bytes (`OSError
+  28`, no space left on device). Only the per-ticker PASS/FAIL *status* line survives, in
+  `scratchpad/crowd_run.log` — the actual post text, scores, top posts etc. for everything past RGEN (index
+  14, where this note's own data ends) is gone, not merely unread. **This is not contained to this task**:
+  other zero-byte files appeared the same evening under `backend/data/optimus/` (a dowjones plan/queue file,
+  a health receipt, `lab_status.json.tmp`, a night-factory `.tmp`) — other jobs are losing writes too, right
+  now, on this machine. `openclaw_client.health()` also now reports all three browser profiles
+  (`muratclaw`/`user`/`chrome`) as `absent` and a NEW `messaging_channels: 1` (it read `0` at the start of
+  this session) — an anomalous OpenClaw state neither agent configured. **This needs Murat's attention before
+  anything else runs on this machine.** Nobody in this session deleted anything or freed space, and nobody
+  should attempt to without him — freeing the wrong thing on a 100%-full drive, or restarting OpenClaw into an
+  unknown state, is exactly the kind of unilateral "fix" this repo's CLAUDE.md warns against. **Do not re-run
+  `crowd_crawl.py` assuming `crowd_results.json` has anything in it** — it is empty. The honest scoreboard
+  from the surviving log: of the 68 tickers, 68/68 got at least a Reddit status before the crash, but only
+  the 19 in this note's table have any retrievable content — the rest is `OK`/`COLLISION`/`EMPTY` labels with
+  no substance behind them anymore.
 
 ---
 
