@@ -506,8 +506,14 @@ def start(wait_s: float = 90.0, bind: bool = True) -> dict:
             "listening": port_open(), "pid": proc.pid, "status": status()}
 
 
-def stop(*, allow_foreign: bool = False, grace_s: float = STOP_GRACE_S) -> dict:
+def stop(*, allow_foreign: bool = False, grace_s: float = STOP_GRACE_S,
+         stop_reason: str = "operator", stopped_by: str | None = None) -> dict:
     """Terminate the server by PID.
+
+    Every successful stop is written to the STOP LEDGER (`record_stop`) with
+    `stop_reason` -- `idle` from the reaper and the watchdog, `operator` from a
+    human, the desktop shell or the CLI. A server that exits WITHOUT a row in
+    the ledger died; the lab's start cap counts only those (2026-09-27).
 
     `allow_foreign` is the consent gate for a server Aegis did not start. The
     button in the app passes it only after the user has been told what they are
@@ -555,11 +561,81 @@ def stop(*, allow_foreign: bool = False, grace_s: float = STOP_GRACE_S) -> dict:
             return {"ok": False, "action": "error", "reason": f"{type(exc).__name__}: {exc}",
                     "status": status()}
         time.sleep(1.0)
+    owner_before = _read_owner()
     _clear_owner()
     after = status()
+    if not after["listening"]:
+        record_stop(int(pid), stop_reason, stopped_by=stopped_by,
+                    started_for=owner_before.get("started_for"),
+                    started_utc=owner_before.get("started_utc"))
     return {"ok": not after["listening"], "action": "stopped", "pid": pid,
             "escalated_to_force": escalated,
             "note": "terminated by PID; never by image name", "status": after}
+
+
+# ------------------------------------------------------------------ the stop ledger
+#
+# 2026-09-27. The lab caps how often it starts the server in a day, because "a
+# server that keeps dying is a finding, not a retry loop". But since the reaper
+# (G-fix) stops an idle server after 15 minutes BY DESIGN, every on-demand start
+# after an idle stop was counted as if the server had died, and by mid-afternoon
+# the 3-a-day cap was spent on healthy idle stops: typing waited until midnight.
+# So every DELIBERATE stop is written here, and a start is a "restart after
+# death" only when the previous server's PID has no row.
+
+#: Only the tail is read: the question is always about the last few servers.
+STOP_LEDGER_TAIL = 500
+
+
+def stop_ledger_path() -> Path:
+    """`llama_server_stops.jsonl` beside the owner note (env override for tests).
+
+    Resolved at CALL time from `OWNER_FILE`, so a test or a child that redirects
+    the owner note redirects the ledger with it.
+    """
+    env = os.getenv("AEGIS_LLAMA_STOP_LEDGER")
+    return Path(env) if env else OWNER_FILE.parent / "llama_server_stops.jsonl"
+
+
+STOP_REASONS = ("idle", "operator")
+
+
+def record_stop(pid: int, reason: str, *, stopped_by: str | None = None,
+                started_for: str | None = None, started_utc: str | None = None) -> dict:
+    """Append one deliberate stop. Never raises: bookkeeping must not cost a stop."""
+    row = {"utc": _now(), "pid": int(pid), "reason": str(reason),
+           "stopped_by": stopped_by or f"pid:{os.getpid()}",
+           "started_for": started_for, "started_utc": started_utc}
+    try:
+        p = stop_ledger_path()
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with p.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row) + "\n")
+    except OSError:
+        row["written"] = False
+    return row
+
+
+def recorded_stop(pid: int | None) -> dict | None:
+    """The ledger row for `pid`'s deliberate stop, newest first, else None.
+
+    None means the server with that PID ended WITHOUT a recorded idle or
+    operator stop -- it died (or is still alive; the caller checks liveness).
+    """
+    if not pid:
+        return None
+    try:
+        lines = stop_ledger_path().read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    for line in reversed(lines[-STOP_LEDGER_TAIL:]):
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        if int(row.get("pid") or 0) == int(pid):
+            return row
+    return None
 
 
 def owning_instance(owner: dict | None = None) -> dict:
@@ -607,7 +683,7 @@ def stop_if_owned() -> dict:
         return {"ok": True, "action": "left_alone",
                 "reason": f"owned by another Aegis instance pid {inst['owner_pid']}",
                 "pid": st["pid"], "owner_pid": inst["owner_pid"], "my_pid": os.getpid()}
-    return stop(allow_foreign=False) | {"owner": inst}
+    return stop(allow_foreign=False, stopped_by="stop_if_owned") | {"owner": inst}
 
 
 # ------------------------------------------------------------ on demand (chunk G)
@@ -785,7 +861,7 @@ def idle_check(*, now: float | None = None) -> dict:
     if busy():
         touch("watchdog:busy", now=t)
         return {"action": "none", "reason": "a request is mid-flight", "idle_s": round(idle, 1)}
-    r = stop(allow_foreign=False)
+    r = stop(allow_foreign=False, stop_reason="idle", stopped_by="watchdog")
     return {"action": "idle_stopped" if r.get("ok") else "stop_failed",
             "idle_s": round(idle, 1), "pid": r.get("pid"),
             "started_for": owner.get("started_for"),
@@ -980,7 +1056,7 @@ def reap_check(*, now: float | None = None, idle_s: float | None = None,
     if (busy_fn or busy)():
         touch("reaper:busy", now=t)
         return {"action": "none", "reason": "a request is mid-flight", "idle_s": round(idle, 1)}
-    r = stop(allow_foreign=False)
+    r = stop(allow_foreign=False, stop_reason="idle", stopped_by="reaper")
     return {"action": "idle_stopped" if r.get("ok") else "stop_failed",
             "idle_s": round(idle, 1), "pid": r.get("pid"),
             "started_for": owner.get("started_for"),
@@ -1040,7 +1116,7 @@ def main() -> int:                                            # tiny CLI for the
     elif a.action == "start":
         out = start()
     elif a.action == "stop":
-        out = stop(allow_foreign=a.allow_foreign)
+        out = stop(allow_foreign=a.allow_foreign, stopped_by="cli")
     elif a.action == "ensure":
         # a CLI process exits at once, so no watchdog could outlive it: unbound,
         # and the detached reaper (spawned by ensure) owns the idle stop.

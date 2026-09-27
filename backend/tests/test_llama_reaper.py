@@ -105,6 +105,13 @@ def test_the_reaper_stops_an_IDLE_server_by_pid_and_exits(tmp_path):
         stopped = [x for x in log if x.get("action") == "idle_stopped"]
         assert stopped and stopped[0]["pid"] == srv.pid
         assert stopped[0]["stop"]["action"] == "stopped"
+        # 2026-09-27: the idle stop is in the STOP LEDGER, so the lab's start
+        # cap reads it as an idle stop and not as a death
+        ledger = [json.loads(x) for x in
+                  (tmp_path / "llama_server_stops.jsonl").read_text().splitlines()]
+        assert [(r["pid"], r["reason"], r["stopped_by"]) for r in ledger] == [
+            (srv.pid, "idle", "reaper")]
+        assert ledger[0]["started_for"] == "test" and ledger[0]["utc"]
         assert time.time() - t0 < 80
     finally:
         if srv.poll() is None:
@@ -198,3 +205,64 @@ def test_spawn_is_throttled_by_the_stamp_even_when_liveness_reads_dead(tmp_path,
     monkeypatch.setattr(LS, "pid_alive", lambda pid: False)      # a tasklist timeout
     out = LS.spawn_reaper()
     assert out["spawned"] is False and "stamped" in out["reason"]
+
+
+# ---------------------------------------------------------------- the stop ledger
+# 2026-09-27: an idle stop by the reaper is not a death. Every deliberate stop is
+# a ledger row; a server whose PID has no row ended some other way.
+
+
+def test_record_and_recorded_stop_round_trip_newest_first(tmp_path, monkeypatch):
+    from backend.services import llama_server as LS
+    monkeypatch.setattr(LS, "OWNER_FILE", tmp_path / "owner.json")
+    monkeypatch.delenv("AEGIS_LLAMA_STOP_LEDGER", raising=False)
+    assert LS.stop_ledger_path() == tmp_path / "llama_server_stops.jsonl"
+    assert LS.recorded_stop(111) is None                       # no ledger at all
+    LS.record_stop(111, "operator", stopped_by="cli")
+    LS.record_stop(222, "idle", stopped_by="reaper", started_for="lab:l2_typing")
+    LS.record_stop(111, "idle", stopped_by="reaper")
+    assert LS.recorded_stop(111)["reason"] == "idle"           # the newest row wins
+    assert LS.recorded_stop(222)["started_for"] == "lab:l2_typing"
+    assert LS.recorded_stop(333) is None and LS.recorded_stop(None) is None
+
+
+def test_the_reapers_stop_is_an_idle_stop_and_a_default_stop_is_an_operator_stop(
+        tmp_path, monkeypatch):
+    from backend.services import llama_server as LS
+    monkeypatch.setattr(LS, "OWNER_FILE", tmp_path / "owner.json")
+    LS._write_owner({"pid": 4242, "started_utc": LS._now(), "last_used_ts": 0.0,
+                     "started_for": "lab:l2_typing"})
+    monkeypatch.setattr(LS, "pid_alive", lambda pid: True)
+    monkeypatch.setattr(LS, "status", lambda: {"listening": True, "started_by_aegis": True,
+                                               "foreign": False, "pid": 4242})
+    seen: list = []
+    monkeypatch.setattr(LS, "stop", lambda **kw: seen.append(kw) or {"ok": True,
+                                                                      "pid": 4242})
+    out = LS.reap_check(idle_s=1.0, busy_fn=lambda: False)
+    assert out["action"] == "idle_stopped"
+    assert seen[-1]["stop_reason"] == "idle" and seen[-1]["stopped_by"] == "reaper"
+
+
+def test_a_real_stop_writes_the_ledger_and_defaults_to_an_operator_stop(
+        tmp_path, monkeypatch):
+    """The real `stop()`, on a fake PID: the desktop, the CLI and a human stop
+    with the default reason, and the row lands only once nothing listens."""
+    from backend.services import llama_server as LS
+    monkeypatch.setattr(LS, "OWNER_FILE", tmp_path / "owner.json")
+    LS._write_owner({"pid": 4242, "started_utc": "t0", "started_for": "desk"})
+    calls = {"n": 0}
+
+    def _status():
+        calls["n"] += 1
+        up = calls["n"] == 1
+        return {"listening": up, "started_by_aegis": up, "foreign": False,
+                "pid": 4242 if up else None}
+
+    monkeypatch.setattr(LS, "status", _status)
+    monkeypatch.setattr(LS, "pid_alive", lambda pid: False)
+    monkeypatch.setattr(LS.qsp, "run", lambda *a, **k: None)   # no real taskkill
+    monkeypatch.setattr(LS.os, "kill", lambda *a, **k: None)
+    out = LS.stop()
+    assert out["ok"] is True
+    row = LS.recorded_stop(4242)
+    assert row["reason"] == "operator" and row["started_for"] == "desk"

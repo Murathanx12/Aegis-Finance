@@ -94,6 +94,15 @@ def lab(tmp_path, monkeypatch):
     monkeypatch.setattr(L, "_lab_llama", lambda verb, reason: {"ok": True, "stub": verb})
     monkeypatch.setattr(L, "pid_alive", lambda pid: False)
     monkeypatch.setattr(L, "pid_names_lab", lambda pid: True)
+    # THE STOP LEDGER AND THE IDLE SLOT'S OS SEAMS (2026-09-27): no test reads
+    # the real ledger, scans the real process table, kills a real PID or writes
+    # a receipt into the real night folder. Tests that exercise them install spies.
+    monkeypatch.setattr(L, "recorded_stop", lambda pid: None)
+    monkeypatch.setattr(L, "find_job_pids", lambda job, run: [])
+    monkeypatch.setattr(L, "kill_job_tree", lambda pid: pytest.fail(
+        "a test killed a REAL pid; stub L.kill_job_tree"))
+    monkeypatch.setattr(L, "write_job_receipt", lambda job, run, payload: None)
+    monkeypatch.setattr(L, "peek_run", lambda job: 1)
     # THE SAME BELT AS `start_model_server` (chunk 17). `launch_driver` is the
     # one seam that starts a real OS process, and a test that reached it would
     # run a daily pass — twenty-six news sources, paced — inside the offline
@@ -816,20 +825,29 @@ def test_a_sleeping_power_plan_stops_the_lab_starting_a_server(lab, monkeypatch)
     assert out["reason"] == "POWER_PLAN_ALLOWS_SLEEP"
 
 
-def test_the_fourth_start_in_one_day_is_refused_by_name(lab, monkeypatch):
+def test_the_fourth_restart_after_death_in_one_day_is_refused_by_name(lab, monkeypatch):
     """A server that keeps dying is a FINDING, not a retry loop. At the cap the
-    lab refuses by name and the refusal is in `lab_status.json`."""
+    lab refuses by name and the refusal is in `lab_status.json`.
+
+    Since 2026-09-27 the cap counts RESTARTS AFTER DEATH: the first start is not
+    one, and every later start here follows a server whose PID is gone with no
+    idle/operator stop in the ledger (the fixture's `recorded_stop` is None)."""
     spy = _starter(monkeypatch, listening_after=False, ready=False)
     state = L.LabState()
     cap = int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY)
+    first = L.ensure_model_server(state)
+    assert first["started"] is True and first["previous_exit"]["kind"] == "first"
     for _ in range(cap):
-        assert L.ensure_model_server(state)["started"] is True
+        r = L.ensure_model_server(state)
+        assert r["started"] is True and r["previous_exit"]["kind"] == "after_death"
     out = L.ensure_model_server(state)
-    assert spy.calls == cap, "the lab kept starting past its own cap"
+    assert spy.calls == cap + 1, "the lab kept restarting a dying server past its cap"
     assert out["started"] is False
     assert out["reason"] == "MODEL_SERVER_START_CAP_REACHED"
     assert out["reason"] in L.MODEL_SERVER_REFUSALS
-    assert L.status_payload(state)["model_server_starts_today"] == cap
+    payload = L.status_payload(state)
+    assert payload["model_server_starts_today"] == cap + 1
+    assert payload["model_server_restarts_after_death_today"] == cap
 
 
 def test_the_start_count_survives_a_restart(lab, monkeypatch):
@@ -944,12 +962,12 @@ def test_an_on_demand_start_still_binds_the_hold_the_power_plan_and_the_cap(
             == "POWER_PLAN_ALLOWS_SLEEP")
     state.power_refusal = None
     cap = int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY)
-    for _ in range(cap):
+    for _ in range(cap + 1):          # the first start, then `cap` restarts after death
         r = L.ensure_model_server(state, on_demand_for="x")
         assert r["started"] is True and r["mode"] == "on_demand"
     out = L.ensure_model_server(state, on_demand_for="x")
     assert out["reason"] == "MODEL_SERVER_START_CAP_REACHED"
-    assert len(spy.reasons) == cap
+    assert len(spy.reasons) == cap + 1
 
 
 def test_a_failed_on_demand_start_is_pending_model_not_a_crash(lab, monkeypatch):
@@ -2028,3 +2046,355 @@ def test_the_exit_hooks_put_the_previous_signal_handlers_back(lab):
     assert signal.getsignal(signal.SIGINT) is L._on_signal
     restore()
     assert signal.getsignal(signal.SIGINT) is before
+
+
+# --------------------------------------------------------------------------
+# 2026-09-27 -- THE IDLE QUEUE'S SLOT, and AN IDLE STOP IS NOT A DEATH
+#
+# MEASURED in lab_status.json at 21:00 HKT: `idle_gpu_queue` read `timeout` /
+# "a previous call to this loop has not returned; not re-issued" since at least
+# 09-26 (the loop ran each job inside its own 60 s box and its name never left
+# `inflight`), and `l2_typing` read PENDING_MODEL because healthy idle stops by
+# the reaper had spent the "3 starts a day" cap by mid-afternoon.
+# Fake processes only: no GPU, no llama-server, no real PID is ever killed.
+
+
+class _BlockingJob:
+    """`dispatch_job` stand-in: `block` jobs wait until "killed", others return."""
+
+    def __init__(self, block=(), verdicts=None):
+        import threading as _t
+        self.block = set(block)
+        self.verdicts = dict(verdicts or {})
+        self.calls: list[str] = []
+        self.released = _t.Event()
+
+    def __call__(self, job, minutes):
+        self.calls.append(job)
+        if job in self.block:
+            self.released.wait(30)
+            return {"verdict": "FAILED", "headline": "exited 1 with no receipt"}
+        return {"verdict": self.verdicts.get(job, "OK"), "headline": f"{job} done"}
+
+
+def _quiet(state):
+    state.last_model_call_utc = (datetime.now(timezone.utc)
+                                 - timedelta(minutes=60)).isoformat(timespec="seconds")
+
+
+def test_a_timed_out_queue_job_is_reaped_by_pid_and_the_next_tick_issues_the_next_job(
+        lab, monkeypatch):
+    first, second = (j for j, _ in _config.LAB_IDLE_QUEUE[:2])
+    job = _BlockingJob(block={first})
+    monkeypatch.setattr(L, "dispatch_job", job)
+    monkeypatch.setattr(_config, "LAB_IDLE_JOB_JOIN_S", 0.05)
+    monkeypatch.setattr(L, "peek_run", lambda j: 3)
+    looked: list = []
+    monkeypatch.setattr(L, "find_job_pids", lambda j, run: looked.append((j, run)) or [5555])
+    killed: list = []
+
+    def _kill(pid):
+        killed.append(pid)
+        job.released.set()                     # the fake tree dies when killed
+        return [pid, 5556]
+
+    monkeypatch.setattr(L, "kill_job_tree", _kill)
+    receipts: list = []
+    monkeypatch.setattr(L, "write_job_receipt",
+                        lambda j, run, payload: receipts.append((j, run, payload)))
+    state = _idle_state()
+    try:
+        out = L.loop_idle_gpu_queue(state)
+        assert out["status"] == "ok" and out["reason"] == "DISPATCHED"
+        assert out["running_job"] == first and state.idle_job is not None
+
+        # inside its box: polled, not re-dispatched, not reaped
+        out = L.loop_idle_gpu_queue(state)
+        assert out["reason"] == "JOB_RUNNING" and out["job"] == first
+        assert killed == [] and job.calls == [first]
+
+        # past its box + grace: reaped BY PID, TIMEOUT recorded, slot released
+        state.idle_job["deadline_ts"] = 0.0
+        out = L.loop_idle_gpu_queue(state)
+        assert looked == [(first, 3)]
+        assert killed == [5555], "the lab must kill the PID it found, and only that"
+        assert out["verdict"] == "TIMEOUT" and out["reaped_by_lab"] is True
+        assert out["killed_pids"] == [5555, 5556]
+        assert out["running_job"] is None and state.idle_job is None
+        assert out["timeouts_today"] == 1
+        timeout_rows = [p for j, run, p in receipts if j == first]
+        assert timeout_rows and timeout_rows[-1]["verdict"] == "TIMEOUT"
+        assert timeout_rows[-1]["headline"].startswith("TIMEOUT after ")
+        assert all(run == 3 for j, run, p in receipts)
+
+        # the NEXT tick is free and issues the NEXT job (the timed-out one waits
+        # behind every untried job)
+        _quiet(state)
+        out = L.loop_idle_gpu_queue(state)
+        assert out["status"] == "ok" and out["job"] == second, out
+        assert job.calls == [first, second]
+    finally:
+        job.released.set()
+
+
+def test_a_job_that_times_out_twice_in_a_day_is_skipped_by_name(lab, monkeypatch):
+    declared = [j for j, _ in _config.LAB_IDLE_QUEUE]
+    first = declared[0]
+    job = _BlockingJob(verdicts={first: "TIMEOUT"})     # run_job's OWN box fired
+    monkeypatch.setattr(L, "dispatch_job", job)
+    state = _idle_state()
+    out: dict = {}
+    for _ in range(len(declared) + 3):
+        out = L.loop_idle_gpu_queue(state)
+        _quiet(state)
+        if out["status"] == "nothing_to_do":
+            break
+    assert out["status"] == "nothing_to_do", out
+    assert job.calls.count(first) == 2, job.calls
+    # the retry came AFTER every untried job: one bad job cannot starve the queue
+    assert job.calls == declared + [first]
+    skipped = out["skipped_today"][first]
+    assert skipped["reason"] == "TIMED_OUT_TWICE_TODAY" and skipped["timeouts"] == 2
+    assert first not in out["queue_remaining"]
+
+
+def test_timeout_receipts_on_disk_count_after_a_lab_restart(lab, monkeypatch):
+    """The slot is in-process; the night folder is the record a restart keeps."""
+    first = _config.LAB_IDLE_QUEUE[0][0]
+    folder = L.data_dir() / f"night_factory_{L.run_date()}"
+    folder.mkdir(parents=True, exist_ok=True)
+    for run in (1, 2):
+        (folder / f"{first}_run{run:02d}.json").write_text(
+            json.dumps({"verdict": "TIMEOUT"}), encoding="utf-8")
+    job = _BlockingJob()
+    monkeypatch.setattr(L, "dispatch_job", job)
+    out = L.loop_idle_gpu_queue(_idle_state())
+    assert first not in job.calls
+    assert out["skipped_today"][first]["reason"] == "TIMED_OUT_TWICE_TODAY"
+
+
+def test_a_single_timeout_receipt_is_not_a_job_that_ran(lab):
+    first = _config.LAB_IDLE_QUEUE[0][0]
+    folder = L.data_dir() / f"night_factory_{L.run_date()}"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"{first}_run01.json").write_text(json.dumps({"verdict": "TIMEOUT"}),
+                                                encoding="utf-8")
+    assert L._receipt_today(first, L.run_date()) is False
+    _q, remaining, skipped = L._queue_view({}, L.run_date())
+    assert remaining[-1] == first and first not in skipped
+
+
+def test_a_loop_whose_abandoned_call_returned_is_issued_again(lab, monkeypatch):
+    """Not re-issued WHILE wedged must not become NEVER re-issued -- the idle
+    queue's whole day on 2026-09-26/27."""
+    import threading as _t
+    gate = _t.Event()
+    calls: list = []
+
+    def _slow(state):
+        calls.append(1)
+        if len(calls) == 1:
+            gate.wait(30)
+        return {"status": "ok", "n": 0}
+
+    handlers = {n: (lambda s: {"status": "ok", "n": 0}) for n, _ in L.LOOPS}
+    handlers["idle_gpu_queue"] = _slow
+    monkeypatch.setattr(L, "HANDLERS", handlers)
+    monkeypatch.setitem(L.TIMEOUTS, "idle_gpu_queue", 0.2)
+    t0 = datetime.now(timezone.utc)
+    state = L.LabState()
+    try:
+        assert L.tick(state, now=t0)["loops"]["idle_gpu_queue"]["status"] == "timeout"
+        p = L.tick(state, now=t0 + timedelta(minutes=10))
+        assert "not re-issued" in p["loops"]["idle_gpu_queue"]["detail"]
+    finally:
+        gate.set()
+    state.inflight_threads["idle_gpu_queue"].join(5)
+    p = L.tick(state, now=t0 + timedelta(minutes=20))
+    row = p["loops"]["idle_gpu_queue"]
+    assert row["status"] == "ok" and len(calls) == 2
+    assert row["late_return_utc"] and "idle_gpu_queue" not in state.inflight
+
+
+def test_the_idle_job_runs_off_the_loop_box_and_off_the_model_lock(lab, monkeypatch):
+    """The old loop held `model_lock` for the job's whole run inside an
+    abandoned thread; typing's start path then queued behind it."""
+    first = _config.LAB_IDLE_QUEUE[0][0]
+    job = _BlockingJob(block={first})
+    monkeypatch.setattr(L, "dispatch_job", job)
+    monkeypatch.setattr(_config, "LAB_IDLE_JOB_JOIN_S", 0.05)
+    state = _idle_state()
+    try:
+        out = L.loop_idle_gpu_queue(state)
+        assert out["reason"] == "DISPATCHED"
+        assert state.model_lock.acquire(timeout=1), "the job holds the model lock"
+        state.model_lock.release()
+    finally:
+        job.released.set()
+    state.idle_job["thread"].join(5)
+    out = L.loop_idle_gpu_queue(state)
+    assert out["job"] == first and out["verdict"] == "FAILED"
+    assert state.idle_job is None
+
+
+# ----- starts: an idle stop is not a death
+
+def test_an_idle_stop_followed_by_a_start_does_not_count_toward_the_death_cap(
+        lab, monkeypatch):
+    spy = _starter(monkeypatch, listening_after=False, ready=False)
+    monkeypatch.setattr(L, "recorded_stop", lambda pid: {
+        "pid": pid, "reason": "idle", "stopped_by": "reaper", "utc": "x"})
+    state = L.LabState()
+    cap = int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY)
+    for i in range(cap + 3):
+        r = L.ensure_model_server(state)
+        assert r["started"] is True, r
+        assert r["previous_exit"]["kind"] == ("first" if i == 0 else "after_idle_stop")
+    assert spy.calls == cap + 3
+    assert state.restarts_after_death_today(L.run_date()) == 0
+    payload = L.status_payload(state)
+    assert payload["model_server_restarts_after_death_today"] == 0
+    assert payload["model_server_starts_today"] == cap + 3
+
+
+def test_an_unexplained_exit_counts_and_an_operator_stop_does_not(lab, monkeypatch):
+    _starter(monkeypatch, listening_after=False, ready=False)
+    ledger: dict = {}
+    monkeypatch.setattr(L, "recorded_stop", lambda pid: ledger.get("row"))
+    state = L.LabState()
+    assert L.ensure_model_server(state)["previous_exit"]["kind"] == "first"
+    r = L.ensure_model_server(state)                    # died: no ledger row
+    assert r["previous_exit"]["kind"] == "after_death"
+    assert state.restarts_after_death_today(L.run_date()) == 1
+    ledger["row"] = {"pid": 4242, "reason": "operator", "stopped_by": "cli"}
+    r = L.ensure_model_server(state)
+    assert r["previous_exit"]["kind"] == "after_operator_stop"
+    assert state.restarts_after_death_today(L.run_date()) == 1
+
+
+def test_a_previous_server_still_alive_is_not_a_death(lab, monkeypatch):
+    _starter(monkeypatch, listening_after=False, ready=False)
+    monkeypatch.setattr(L, "pid_alive", lambda pid: True)
+    state = L.LabState()
+    L.ensure_model_server(state)
+    r = L.ensure_model_server(state)
+    assert r["previous_exit"]["kind"] == "previous_still_alive"
+    assert state.restarts_after_death_today(L.run_date()) == 0
+
+
+def test_a_failed_start_followed_by_a_start_counts_as_a_death(lab, monkeypatch):
+    spy = SpyStarter(ok=False)
+    monkeypatch.setattr(_config, "LAB_STARTS_MODEL_SERVER", True)
+    monkeypatch.setattr(L, "start_model_server", spy)
+    state = L.LabState()
+    assert L.ensure_model_server(state)["reason"] == "START_FAILED"
+    r = L.ensure_model_server(state)
+    assert r["previous_exit"]["kind"] == "after_failed_start"
+    assert state.restarts_after_death_today(L.run_date()) == 1
+
+
+def test_the_total_start_ceiling_still_binds_a_flapping_loop(lab, monkeypatch):
+    spy = _starter(monkeypatch, listening_after=False, ready=False)
+    monkeypatch.setattr(L, "recorded_stop", lambda pid: {"pid": pid, "reason": "idle"})
+    monkeypatch.setattr(_config, "LAB_MODEL_SERVER_MAX_TOTAL_STARTS_PER_DAY", 5)
+    state = L.LabState()
+    for _ in range(5):
+        assert L.ensure_model_server(state)["started"] is True
+    out = L.ensure_model_server(state)
+    assert out["started"] is False
+    assert out["reason"] == "MODEL_SERVER_TOTAL_START_CEILING_REACHED"
+    assert out["reason"] in L.MODEL_SERVER_REFUSALS
+    assert spy.calls == 5
+
+
+def test_the_ceiling_is_generous_and_above_the_death_cap():
+    assert (int(_config.LAB_MODEL_SERVER_MAX_TOTAL_STARTS_PER_DAY)
+            > 4 * int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY))
+
+
+def test_the_death_split_survives_a_restart_and_an_old_status_file_is_not_deaths(
+        lab, monkeypatch):
+    _starter(monkeypatch, listening_after=False, ready=False)
+    state = L.LabState()
+    L.ensure_model_server(state)
+    L.ensure_model_server(state)                        # one death
+    L._write_atomic(L.status_path(), L.status_payload(state))
+    revived = L.LabState.load()
+    assert revived.restarts_after_death_today(L.run_date()) == 1
+    assert revived.model_server_starts["last_pid"] == 4242
+    # a pre-2026-09-27 file: {"date", "n"} only -- its 3 starts are NOT deaths
+    L._write_atomic(L.status_path(), {"model_server_starts": {
+        "date": L.run_date(), "n": 3}})
+    old = L.LabState.load()
+    assert old.starts_today(L.run_date()) == 3
+    assert old.restarts_after_death_today(L.run_date()) == 0
+    assert L.classify_previous_exit(old)["kind"] == "first"
+    assert L.ensure_model_server(old)["started"] is True
+
+
+# ----- GPU arbitration: whoever holds the card keeps it for the tick
+
+def _held_slot(job: str):
+    import threading as _t
+    ev = _t.Event()
+    th = _t.Thread(target=ev.wait, args=(30,), daemon=True)
+    th.start()
+    return ev, {"job": job, "minutes": 60, "run": 1, "thread": th,
+                "started_ts": 0.0, "started_utc": "t", "deadline_ts": 1e18}
+
+
+def test_typing_does_not_start_the_7b_while_an_own_gpu_job_holds_the_card(
+        lab, monkeypatch):
+    spy = _on_demand(monkeypatch)
+    monkeypatch.setattr(L, "type_rows", lambda **kw: pytest.fail("typed beside L4"))
+    state = L.LabState()
+    ev, slot = _held_slot("L4_qwen3_measure")
+    state.idle_job = slot
+    try:
+        out = L.loop_l2_typing(state)
+    finally:
+        ev.set()
+    assert out["status"] == "skipped" and out["reason"] == "GPU_BUSY"
+    assert out["gpu_holder"]["job"] == "L4_qwen3_measure"
+    assert spy.reasons == [], "the 7B was started beside a job that owns the card"
+    assert state.starts_today(L.run_date()) == 0
+
+
+def test_a_7b_reading_queue_job_does_not_block_typing(lab, monkeypatch):
+    spy = _on_demand(monkeypatch)
+    monkeypatch.setattr(L, "type_rows", lambda **kw: {
+        "status": "ok", "rows_typed": 2, "corpus": {"rows_waiting": 0},
+        "usage": {"cost_usd": 0.0}})
+    state = L.LabState()
+    ev, slot = _held_slot("X_anon_gap")
+    state.idle_job = slot
+    try:
+        out = L.loop_l2_typing(state)
+    finally:
+        ev.set()
+    assert out["status"] == "ok" and spy.reasons == ["lab:l2_typing"]
+
+
+def test_an_own_gpu_job_waits_while_the_7b_is_listening(lab, monkeypatch):
+    assert "L4_qwen3_measure" in _config.LAB_IDLE_JOBS_OWN_THE_GPU
+    monkeypatch.setattr(_config, "LAB_IDLE_QUEUE",
+                        (("L4_qwen3_measure", 60), ("X_anon_gap", 120)))
+    monkeypatch.setattr(L, "model_status", lambda: {
+        "listening": True, "ready": True, "foreign": False,
+        "started_by_aegis": True, "pid": 7001})
+    job = _BlockingJob()
+    monkeypatch.setattr(L, "dispatch_job", job)
+    state = _idle_state()
+    out = L.loop_idle_gpu_queue(state)
+    assert out["job"] == "X_anon_gap", "a runnable job waited behind a blocked one"
+    _quiet(state)
+    out = L.loop_idle_gpu_queue(state)
+    assert out["status"] == "skipped" and out["reason"] == "GPU_BUSY"
+    assert "L4_qwen3_measure" in out["detail"] and "7001" in out["detail"]
+    assert job.calls == ["X_anon_gap"]
+    # the 7B is reaped for idleness -> L4 gets the card
+    monkeypatch.setattr(L, "model_status", lambda: {
+        "listening": False, "ready": False, "foreign": False,
+        "started_by_aegis": False, "pid": None})
+    out = L.loop_idle_gpu_queue(state)
+    assert out["job"] == "L4_qwen3_measure"

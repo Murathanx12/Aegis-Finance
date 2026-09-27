@@ -18,6 +18,9 @@ starter wrote (`pid`, `started_utc`, `last_used_ts`/`last_used_utc`), and:
   `MODEL_ROUTING_IDLE_MIN` (never by image name -- 2026-09-06);
 * refuses a server Aegis did not start (`status()` only calls it ours when the
   note's PID is the PID holding the port, so a recycled PID is refused);
+* writes every idle stop to the STOP LEDGER (`llama_server.record_stop`,
+  `reason: idle`, pid, utc) -- an idle stop is not a death, and the lab's
+  daily start cap counts only servers that ended WITHOUT such a row;
 * exits as soon as the server is gone, so there is never a reaper without a
   server to reap. `llama_server.ensure()` spawns at most one (pid file).
 """

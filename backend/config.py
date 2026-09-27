@@ -3465,6 +3465,37 @@ LAB_IDLE_QUEUE: tuple[tuple[str, int], ...] = (
     ("L4_qwen3_measure", 60),
 )
 
+# ── THE IDLE QUEUE'S SLOT (2026-09-27) ───────────────────────────────────────
+#
+# MEASURED: since at least 09-26 the health table read `idle_gpu_queue: timeout
+# (GPU_BUSY)` and nothing in the queue ran. The loop ran each job INSIDE its own
+# 60 s box; every real job outlives 60 s, the supervisor abandoned the thread,
+# and the loop's name stayed in `inflight` for the life of the process -- one
+# dispatch per lab restart, then "not re-issued" for ever. The job now runs on a
+# worker the lab tracks as a SLOT; the loop polls it, reaps it BY PID past its
+# box, and releases it.
+
+#: Seconds a dispatching tick waits for its worker before returning `running`.
+#: Well inside the loop's 60 s box; a job that finishes this fast is recorded in
+#: the same tick.
+LAB_IDLE_JOB_JOIN_S = 20.0
+
+#: Seconds past a job's own box (its queue minutes) before the LAB reaps it.
+#: `night_factory.run_job` kills its own tree at the box counting AWAKE seconds;
+#: this is the backstop for a run_job that did not return, on the wall clock.
+LAB_IDLE_JOB_REAP_GRACE_S = 600
+
+#: A job that times out this many times in one date is skipped for the rest of
+#: it, with a named row (`TIMED_OUT_TWICE_TODAY`), so one bad job cannot starve
+#: the queue. A job that timed out fewer times is retried AFTER the untried ones.
+LAB_IDLE_JOB_MAX_TIMEOUTS_PER_DAY = 2
+
+#: Queue jobs that need the GPU for a DIFFERENT model than the 7B reader (L4
+#: measures Qwen3-30B-A3B). While one holds the slot the typing loop does not
+#: start the 7B (`GPU_BUSY`), and one is not dispatched while an Aegis 7B is
+#: listening (`GPU_BUSY`): whoever holds the card first keeps it for that tick.
+LAB_IDLE_JOBS_OWN_THE_GPU: tuple[str, ...] = ("L4_qwen3_measure",)
+
 #: Rows the typing loop may take in one tick. One tick must not try to type a
 #: 6,020-row backlog and block the next news pull.
 LAB_L2_MAX_ROWS_PER_TICK = 40
@@ -3645,6 +3676,16 @@ LAB_STARTS_MODEL_SERVER = MODEL_ROUTING_START_AT_BOOT   # 2026-09-26: on demand,
 #: NAME (`MODEL_SERVER_START_CAP_REACHED`) and the refusal is in `lab_status.json`
 #: where a reader can see it, rather than a silent restart every five minutes.
 LAB_MODEL_SERVER_MAX_STARTS_PER_DAY = 3
+
+#: 2026-09-27: `LAB_MODEL_SERVER_MAX_STARTS_PER_DAY` above now counts only
+#: RESTARTS AFTER DEATH -- a start whose previous lab-started server ended with
+#: no row in `llama_server`'s stop ledger (no idle stop by the reaper, no
+#: operator stop). An idle stop is the reaper working as designed; counting it
+#: spent the 3-a-day cap by mid-afternoon and typing waited until midnight.
+#: THIS is the separate, generous ceiling on ALL starts in one date, so a loop
+#: that flaps start -> idle stop -> start still stops, by name
+#: (`MODEL_SERVER_TOTAL_START_CEILING_REACHED`).
+LAB_MODEL_SERVER_MAX_TOTAL_STARTS_PER_DAY = 40
 
 #: THE OPERATOR HOLD. A file of this name under `backend/data/optimus` makes the
 #: lab refuse to start the server (`OPERATOR_HOLD`) for as long as it exists.

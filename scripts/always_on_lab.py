@@ -301,6 +301,18 @@ def pid_alive(pid: int) -> bool:
     return llama_server.pid_alive(int(pid))
 
 
+def recorded_stop(pid) -> dict | None:
+    """`llama_server.recorded_stop(pid)`: the ledger row of a DELIBERATE stop
+    (the reaper's idle stop, an operator's stop) for that server PID, or None.
+    Never raises: an unreadable ledger reads as "no recorded stop"."""
+    try:
+        from backend.services import llama_server
+        return llama_server.recorded_stop(int(pid) if pid else None)
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("stop ledger unreadable (%s)", _trunc(exc))
+        return None
+
+
 def _lab_llama(verb: str, reason: str) -> dict:
     """`llama_server.ensure(reason, wait_s=0)` or `.touch(reason)`, GUARDED.
 
@@ -931,7 +943,16 @@ def release_lock(reason: str | None = None) -> None:
 
 
 class LoopTimeout(RuntimeError):
-    """One loop outlived its wall-clock box. The supervisor's heartbeat did not."""
+    """One loop outlived its wall-clock box. The supervisor's heartbeat did not.
+
+    Carries the abandoned `thread`, so the supervisor can see the call RETURN
+    late and free the loop (2026-09-27): before, a loop that timed out once was
+    "not re-issued" for the life of the process even after its thread ended.
+    """
+
+    def __init__(self, msg: str, thread: "threading.Thread | None" = None):
+        super().__init__(msg)
+        self.thread = thread
 
 
 def call_boxed(fn: Callable[[], dict], timeout_s: float, what: str) -> dict:
@@ -959,7 +980,8 @@ def call_boxed(fn: Callable[[], dict], timeout_s: float, what: str) -> dict:
     t.start()
     t.join(timeout_s)
     if t.is_alive():
-        raise LoopTimeout(f"{what}: no return in {timeout_s:.0f}s (thread abandoned)")
+        raise LoopTimeout(f"{what}: no return in {timeout_s:.0f}s (thread abandoned)",
+                          thread=t)
     if "error" in box:
         raise box["error"]                                         # type: ignore[misc]
     return box.get("value") or {}
@@ -997,11 +1019,22 @@ class LabState:
         self.model_lock = threading.Lock()
         #: A loop still running past its box is not re-issued while wedged.
         self.inflight: set[str] = set()
-        #: `{"date": "<YYYY-MM-DD>", "n": int}` — how many times the lab has
-        #: started the model server on that date. Carried across a restart
-        #: because the lab restarts itself from the Startup folder, and a cap
-        #: that a restart resets is not a cap.
-        self.model_server_starts: dict = {"date": None, "n": 0}
+        #: The abandoned thread behind each `inflight` name. When it has ENDED
+        #: the loop is free again: "not re-issued while wedged" must not become
+        #: "never re-issued" (2026-09-27, the idle queue for a whole day).
+        self.inflight_threads: dict = {}
+        #: THE IDLE QUEUE'S SLOT: the one job the lab is running on a worker
+        #: thread, or None. In-process only; its JSON-safe view is in the
+        #: `idle_gpu_queue` row (`running_job`, `slot`).
+        self.idle_job: dict | None = None
+        #: `{"date", "n", "after_death", "last_pid", "last_outcome", ...}` —
+        #: how many times the lab has started the model server on that date,
+        #: and how many of those were RESTARTS AFTER DEATH (the previous
+        #: lab-started server ended with no idle/operator stop in the ledger).
+        #: Carried across a restart because the lab restarts itself from the
+        #: Startup folder, and a cap that a restart resets is not a cap.
+        self.model_server_starts: dict = {"date": None, "n": 0, "after_death": 0,
+                                          "last_pid": None, "last_outcome": None}
 
     @classmethod
     def load(cls) -> "LabState":
@@ -1014,9 +1047,17 @@ class LabState:
             return cls()
         st = cls(loops=prev.get("loops") or {})
         st.last_model_call_utc = prev.get("last_model_call_utc")
+        rec = prev.get("model_server_starts") or {}
         st.model_server_starts = {
-            "date": (prev.get("model_server_starts") or {}).get("date"),
-            "n": int((prev.get("model_server_starts") or {}).get("n") or 0)}
+            "date": rec.get("date"),
+            "n": int(rec.get("n") or 0),
+            # a status file from before 2026-09-27 has no split: its starts are
+            # NOT assumed to be deaths (that is the defect being fixed)
+            "after_death": int(rec.get("after_death") or 0),
+            "last_pid": rec.get("last_pid"),
+            "last_outcome": rec.get("last_outcome"),
+            "last_start_utc": rec.get("last_start_utc"),
+            "last_kind": rec.get("last_kind")}
         return st
 
     def starts_today(self, today: str) -> int:
@@ -1024,10 +1065,31 @@ class LabState:
         rec = self.model_server_starts or {}
         return int(rec.get("n") or 0) if rec.get("date") == today else 0
 
-    def note_model_server_start(self, today: str) -> int:
+    def restarts_after_death_today(self, today: str) -> int:
+        """Starts booked on `today` that followed an UNEXPLAINED exit."""
+        rec = self.model_server_starts or {}
+        return int(rec.get("after_death") or 0) if rec.get("date") == today else 0
+
+    def note_model_server_start(self, today: str, *, after_death: bool = False,
+                                kind: str | None = None) -> int:
+        """Book one start BEFORE the call (an abandoned thread still counts)."""
         n = self.starts_today(today) + 1
-        self.model_server_starts = {"date": today, "n": n}
+        deaths = self.restarts_after_death_today(today) + (1 if after_death else 0)
+        rec = dict(self.model_server_starts or {})
+        rec.update({"date": today, "n": n, "after_death": deaths,
+                    "last_kind": kind, "last_outcome": "pending",
+                    "last_pid": None,
+                    "last_start_utc": datetime.now(timezone.utc).isoformat(
+                        timespec="seconds")})
+        self.model_server_starts = rec
         return n
+
+    def note_model_server_outcome(self, pid, ok: bool) -> None:
+        """What the booked start produced: the PID the NEXT start classifies."""
+        rec = dict(self.model_server_starts or {})
+        rec["last_pid"] = int(pid) if pid else None
+        rec["last_outcome"] = "started" if ok else "failed"
+        self.model_server_starts = rec
 
     def due(self, loop: str, now: datetime) -> bool:
         last = self.loops[loop].get("last_tick_utc")
@@ -1076,9 +1138,43 @@ MODEL_SERVER_REFUSALS = (
     "FOREIGN_SERVER_UP",
     "POWER_PLAN_ALLOWS_SLEEP",
     "MODEL_SERVER_START_CAP_REACHED",
+    "MODEL_SERVER_TOTAL_START_CEILING_REACHED",
     "STATUS_PROBE_FAILED",
     "START_FAILED",
 )
+
+
+def classify_previous_exit(state: "LabState") -> dict:
+    """How did the server the lab LAST started end? Decides whether the next
+    start is a RESTART AFTER DEATH (counted against the daily cap) or not.
+
+    * `first` -- the lab has not started one (in this status file's memory);
+    * `previous_still_alive` -- its PID is alive (loading, or deaf): not a death;
+    * `after_idle_stop` / `after_operator_stop` -- the stop ledger has a row for
+      its PID: the reaper stopped it for idleness, or a human did. NOT a death;
+    * `after_death` -- its PID is gone with no ledger row: it died;
+    * `after_failed_start` -- the last start never produced a PID. A start that
+      keeps failing is the same finding as a server that keeps dying.
+    """
+    rec = state.model_server_starts or {}
+    pid = rec.get("last_pid")
+    outcome = rec.get("last_outcome")
+    if not pid:
+        if outcome in ("failed", "pending"):
+            return {"kind": "after_failed_start", "after_death": True, "pid": None}
+        return {"kind": "first", "after_death": False, "pid": None}
+    try:
+        alive = bool(pid_alive(int(pid)))
+    except Exception:                                              # noqa: BLE001
+        alive = False
+    if alive:
+        return {"kind": "previous_still_alive", "after_death": False, "pid": pid}
+    stopped = recorded_stop(pid)
+    if stopped:
+        return {"kind": f"after_{stopped.get('reason') or 'recorded'}_stop",
+                "after_death": False, "pid": pid,
+                "ledger_row": {k: stopped.get(k) for k in ("utc", "reason", "stopped_by")}}
+    return {"kind": "after_death", "after_death": True, "pid": pid}
 
 
 def ensure_model_server(state: "LabState", *, now: datetime | None = None,
@@ -1119,7 +1215,9 @@ def ensure_model_server(state: "LabState", *, now: datetime | None = None,
     today = run_date()
     starts = state.starts_today(today)
     base = {"attempted": False, "started": False, "starts_today": starts,
-            "cap": int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY)}
+            "restarts_after_death_today": state.restarts_after_death_today(today),
+            "cap": int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY),
+            "total_ceiling": int(_config.LAB_MODEL_SERVER_MAX_TOTAL_STARTS_PER_DAY)}
 
     boot_starter = bool(getattr(_config, "LAB_STARTS_MODEL_SERVER", False))
     on_demand = bool(on_demand_for) and not boot_starter
@@ -1149,28 +1247,47 @@ def ensure_model_server(state: "LabState", *, now: datetime | None = None,
     if state.power_refusal:
         return {**base, "reason": "POWER_PLAN_ALLOWS_SLEEP",
                 "detail": str(state.power_refusal)[:200]}
-    if starts >= int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY):
+    ceiling = int(_config.LAB_MODEL_SERVER_MAX_TOTAL_STARTS_PER_DAY)
+    if starts >= ceiling:
+        return {**base, "reason": "MODEL_SERVER_TOTAL_START_CEILING_REACHED",
+                "detail": (f"the lab has started the model server {starts} "
+                           f"time(s) on {today} (idle stops included); a loop "
+                           f"that flaps start -> stop -> start stops here")}
+    # 2026-09-27: an IDLE stop by the reaper is not a death. Only a start whose
+    # previous lab-started server ended with no ledger row counts toward the cap.
+    prev = classify_previous_exit(state)
+    base["previous_exit"] = prev
+    deaths = state.restarts_after_death_today(today)
+    if prev["after_death"] and deaths >= int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY):
         return {**base, "reason": "MODEL_SERVER_START_CAP_REACHED",
-                "detail": (f"the lab has already started the model server "
-                           f"{starts} time(s) on {today}; a server that keeps "
-                           f"dying is a finding, not a retry loop")}
+                "detail": (f"the lab has already restarted the model server "
+                           f"{deaths} time(s) on {today} after it ended with no "
+                           f"recorded idle or operator stop ({prev['kind']}, "
+                           f"pid {prev.get('pid')}); a server that keeps dying "
+                           f"is a finding, not a retry loop")}
 
     with state.model_lock:
-        starts = state.note_model_server_start(today)
+        starts = state.note_model_server_start(
+            today, after_death=bool(prev["after_death"]), kind=prev["kind"])
+        base["restarts_after_death_today"] = state.restarts_after_death_today(today)
         try:
             out = (start_model_server_on_demand(str(on_demand_for)) if on_demand
                    else start_model_server())
         except Exception as exc:                                   # noqa: BLE001
             logger.exception("the lab could not start the model server")
+            state.note_model_server_outcome(None, False)
             return {**base, "attempted": True, "starts_today": starts,
                     "reason": "START_FAILED", "detail": _trunc(exc)}
+        state.note_model_server_outcome(out.get("pid"), bool(out.get("ok")))
     if not out.get("ok"):
         return {**base, "attempted": True, "starts_today": starts,
                 "reason": "START_FAILED",
                 "detail": str(out.get("reason") or out.get("action"))[:300]}
-    logger.warning("MODEL SERVER STARTED by the lab (pid %s, action %s, "
-                   "start %d of %d today)", out.get("pid"), out.get("action"),
-                   starts, int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY))
+    logger.warning("MODEL SERVER STARTED by the lab (pid %s, action %s, start %d "
+                   "today of a %d ceiling; %s; %d restart(s) after death of a "
+                   "cap of %d)", out.get("pid"), out.get("action"), starts,
+                   ceiling, prev["kind"], state.restarts_after_death_today(today),
+                   int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY))
     return {**base, "attempted": True, "started": True, "starts_today": starts,
             "reason": None, "action": out.get("action"),
             "server_pid": out.get("pid"), "ready": bool(out.get("ready")),
@@ -1440,6 +1557,17 @@ def loop_l2_typing(state: LabState) -> dict:
             return {"status": "error", "n": 0, "rows_typed_this_tick": 0,
                     "reader": "local", "detail": _trunc(exc)}
         started: dict = {}
+        holder = gpu_holder(state)
+        if holder and not server.get("listening"):
+            # 2026-09-27: an idle-queue job holds the card for a DIFFERENT model
+            # (L4 measures Qwen3-30B). Starting the 7B beside it is two models
+            # on one card; the holder keeps it for this tick.
+            return {"status": "skipped", "n": 0, "rows_typed_this_tick": 0,
+                    "reader": "local", "reason": "GPU_BUSY", "gpu_holder": holder,
+                    "detail": (f"idle-queue job {holder['job']} holds the GPU for "
+                               f"its own model since {holder['started_utc']}; the "
+                               f"7B is not started beside it"),
+                    "backlog_remaining": None}
         if not server.get("listening"):
             # 2026-09-18: this used to return PENDING_MODEL and stop. After the
             # 06:57 unclean reboot (Kernel-Power 41) nothing else started the server and
@@ -1701,13 +1829,292 @@ def loop_nn_lab(state: LabState) -> dict:
     }
 
 
-def _receipt_today(job: str, today: str) -> bool:
-    """Does the night folder for `today` already hold a receipt for `job`?"""
+def _receipt_verdicts_today(job: str, today: str) -> list[str]:
+    """The verdict of every receipt for `job` in `today`'s night folder."""
     folder = data_dir() / f"night_factory_{today}"
+    out: list[str] = []
     try:
-        return any(folder.glob(f"{job}_run[0-9][0-9].json"))
+        paths = sorted(folder.glob(f"{job}_run[0-9][0-9].json"))
     except OSError:
-        return False
+        return out
+    for p in paths:
+        try:
+            payload = json.loads(p.read_text(encoding="utf-8") or "{}")
+        except (OSError, ValueError):
+            payload = {}
+        out.append(str((payload or {}).get("verdict") or ""))
+    return out
+
+
+def _receipt_today(job: str, today: str) -> bool:
+    """Does the night folder for `today` already hold a receipt for `job`?
+
+    A TIMEOUT receipt does not count as "ran" (2026-09-27): a job that timed
+    out gets ONE more turn that day, after the untried jobs, and is skipped by
+    name once it has timed out `LAB_IDLE_JOB_MAX_TIMEOUTS_PER_DAY` times.
+    """
+    return any(v != "TIMEOUT" for v in _receipt_verdicts_today(job, today))
+
+
+# ---------------------------------------------------------------------------
+# THE IDLE QUEUE'S SLOT (2026-09-27)
+#
+# MEASURED: `idle_gpu_queue` read `timeout` / "a previous call to this loop has
+# not returned; not re-issued" from at least 09-26. ROOT CAUSE: the loop called
+# `night_factory.run_job` -- which blocks for the job's whole box (30-120 min) --
+# INSIDE the loop's own 60 s box. Every real dispatch outlived 60 s, `tick()`
+# abandoned the thread and left the loop's name in `inflight`, and nothing ever
+# took it out: one job per lab restart, then nothing, while the abandoned thread
+# also held `model_lock` for the job's whole run. The job now runs on a worker
+# thread the lab tracks as a SLOT; each tick polls the slot, reaps a job past
+# its box + grace BY PID, records the TIMEOUT as that job's receipt, and frees
+# the slot for the next tick.
+# ---------------------------------------------------------------------------
+
+
+def find_job_pids(job: str, run: int | None) -> list[int]:
+    """The PIDs running `job`, from the process table BY COMMAND LINE.
+
+    `night_factory.run_job` launches `python -m scripts.night_factory_jobs <job>
+    --out .../<job>_runNN.json`; the venv launcher and the real interpreter both
+    carry that command line, and `kill_job_tree` takes each tree by PID. Never
+    by image name (CLAUDE.md protocol 6).
+    """
+    needle = f"{job}_run{int(run):02d}" if run else f" {job} "
+    me = os.getpid()
+    return sorted(pid for pid, cmd in scan_processes()
+                  if pid != me and needle in (cmd or "")
+                  and ("night_factory_jobs" in cmd or "night_smoke_job" in cmd))
+
+
+def kill_job_tree(pid: int) -> list[int]:
+    """`night_factory.kill_tree(pid)`: the PID and its descendants, by PID."""
+    from scripts import night_factory
+    return night_factory.kill_tree(int(pid))
+
+
+def write_job_receipt(job: str, run: int | None, payload: dict) -> str | None:
+    """The job's receipt, through `night_factory.write_receipt` (one writer)."""
+    if not run:
+        return None
+    from scripts import night_factory
+    return str(night_factory.write_receipt(job, int(run), payload))
+
+
+def peek_run(job: str) -> int | None:
+    """The run number `dispatch_job` is about to use, for the PID lookup.
+    Best effort: None means the reap matches on the job id alone."""
+    try:
+        from scripts import night_factory
+        return int(night_factory.resolve_run(job, 1)[0])
+    except Exception:                                              # noqa: BLE001
+        return None
+
+
+def _idle_worker(slot: dict) -> None:
+    """The worker thread's body: the job, under `night_factory`'s own box."""
+    try:
+        slot["payload"] = dispatch_job(slot["job"], slot["minutes"]) or {}
+    except BaseException as exc:                                   # noqa: BLE001
+        slot["error"] = exc
+    finally:
+        slot["done_ts"] = time.time()
+        if slot.get("reaped") and slot.get("timeout_payload"):
+            # `run_job` writes its own receipt on the way out of a killed job;
+            # the lab's TIMEOUT is the verdict and is written back over it.
+            try:
+                write_job_receipt(slot["job"], slot.get("run"),
+                                  dict(slot["timeout_payload"]))
+            except Exception:                                      # noqa: BLE001
+                pass
+
+
+def gpu_holder(state: "LabState") -> dict | None:
+    """The idle-queue job holding the card for a DIFFERENT model, or None.
+
+    Only jobs in `LAB_IDLE_JOBS_OWN_THE_GPU` hold it: a queue job that reads the
+    7B shares the reader with typing and blocks nobody.
+    """
+    slot = state.idle_job
+    if not slot or slot["job"] not in tuple(_config.LAB_IDLE_JOBS_OWN_THE_GPU):
+        return None
+    th = slot.get("thread")
+    if th is not None and not th.is_alive():
+        return None
+    return {"job": slot["job"], "run": slot.get("run"),
+            "started_utc": slot.get("started_utc")}
+
+
+def _slot_view(slot: dict, now_ts: float | None = None) -> dict:
+    now_ts = time.time() if now_ts is None else now_ts
+    return {"job": slot["job"], "run": slot.get("run"),
+            "box_minutes": slot["minutes"], "started_utc": slot["started_utc"],
+            "elapsed_s": round(now_ts - slot["started_ts"], 1),
+            "reap_in_s": round(slot["deadline_ts"] - now_ts, 1)}
+
+
+def _timeouts_today(row: dict, job: str, today: str) -> int:
+    """Times `job` timed out on `today`: the lab's own count, or the night
+    folder's TIMEOUT receipts if a restart lost the count -- the larger."""
+    rec = row.get("timeouts") or {}
+    mine = int((rec.get("counts") or {}).get(job) or 0) if rec.get("date") == today else 0
+    on_disk = sum(1 for v in _receipt_verdicts_today(job, today) if v == "TIMEOUT")
+    return max(mine, on_disk)
+
+
+def _note_timeout(row: dict, job: str, today: str) -> int:
+    rec = dict(row.get("timeouts") or {})
+    if rec.get("date") != today:
+        rec = {"date": today, "counts": {}}
+    counts = dict(rec.get("counts") or {})
+    counts[job] = max(int(counts.get(job) or 0),
+                      sum(1 for v in _receipt_verdicts_today(job, today)
+                          if v == "TIMEOUT")) + 1
+    rec["counts"] = counts
+    row["timeouts"] = rec
+    return counts[job]
+
+
+def _queue_view(row: dict, today: str) -> tuple[list[tuple[str, int]], list[str], dict]:
+    """(declared queue, remaining in dispatch order, skipped-today by name).
+
+    Untried jobs first in declared order, then jobs that timed out once today --
+    so a job that timed out cannot take the next turn from one that never ran.
+    """
+    queue = [(j, m) for j, m in _config.LAB_IDLE_QUEUE]
+    dispatched: dict = dict(row.get("dispatched_on") or {})
+    cap = int(_config.LAB_IDLE_JOB_MAX_TIMEOUTS_PER_DAY)
+    fresh: list[str] = []
+    retry: list[str] = []
+    skipped: dict = {}
+    for j, _ in queue:
+        n = _timeouts_today(row, j, today)
+        if n < cap and (dispatched.get(j) == today or _receipt_today(j, today)):
+            continue
+        if n >= cap:
+            skipped[j] = {"reason": "TIMED_OUT_TWICE_TODAY" if cap == 2
+                          else f"TIMED_OUT_{cap}_TIMES_TODAY",
+                          "timeouts": n,
+                          "detail": (f"{j} timed out {n} time(s) on {today}; skipped "
+                                     f"for the rest of the date so one bad job "
+                                     f"cannot starve the queue")}
+        elif n:
+            retry.append(j)
+        else:
+            fresh.append(j)
+    return queue, fresh + retry, skipped
+
+
+def _finish_idle_job(state: "LabState", row: dict, slot: dict, today: str) -> dict:
+    """The slot's job has ended (returned, raised, or been reaped): record it,
+    release the slot, and say what happened. The NEXT tick dispatches."""
+    state.idle_job = None
+    job = slot["job"]
+    dispatched: dict = dict(row.get("dispatched_on") or {})
+    dispatched[job] = today
+    elapsed = round(float(slot.get("done_ts") or time.time()) - slot["started_ts"], 1)
+    state.note_model_call()
+    if slot.get("error") is not None and not slot.get("reaped"):
+        exc = slot["error"]
+        logger.error("idle queue job %s raised: %s", job, _trunc(exc))
+        row["dispatched_on"] = dispatched
+        _q, remaining, skipped = _queue_view(row, today)
+        return {"status": "error", "n": 0, "job": job, "detail": _trunc(exc),
+                "dispatched_on": dispatched, "running_job": None, "slot": None,
+                "queue_remaining": remaining, "skipped_today": skipped}
+
+    payload = (slot.get("timeout_payload") if slot.get("reaped")
+               else slot.get("payload")) or {}
+    verdict = payload.get("verdict")
+    timed_out = verdict == "TIMEOUT"
+    n_timeouts = None
+    if timed_out:
+        n_timeouts = _note_timeout(row, job, today)
+        if n_timeouts < int(_config.LAB_IDLE_JOB_MAX_TIMEOUTS_PER_DAY):
+            # one more turn today, AFTER the untried jobs (`_queue_view`)
+            dispatched.pop(job, None)
+    row["dispatched_on"] = dispatched
+    queue, remaining, skipped = _queue_view(row, today)
+    headline = (f"{job} TIMEOUT after {elapsed:.0f}s ({n_timeouts} today); slot "
+                f"released, {len(remaining)} job(s) left"
+                if timed_out else
+                f"{job} finished ({verdict}) after {elapsed:.0f}s; slot released, "
+                f"{len(remaining)} job(s) left in today's queue")
+    return {
+        "status": "ok", "n": 1, "job": job, "box_minutes": slot["minutes"],
+        "model_server_start": slot.get("model_server_start"),
+        "verdict": verdict,
+        "job_headline": str(payload.get("headline"))[:200],
+        "elapsed_s": elapsed,
+        "reaped_by_lab": bool(slot.get("reaped")),
+        "killed_pids": slot.get("killed_pids") or [],
+        "timeouts_today": n_timeouts,
+        "dispatched_on": dispatched,
+        "running_job": None, "slot": None,
+        "queue": [j for j, _ in queue],
+        "queue_remaining": remaining,
+        "skipped_today": skipped,
+        "headline": headline,
+    }
+
+
+def _reap_idle_job(slot: dict) -> None:
+    """Past its box + grace: kill the job's tree BY PID and write its TIMEOUT."""
+    elapsed = time.time() - slot["started_ts"]
+    pids: list[int] = []
+    try:
+        pids = find_job_pids(slot["job"], slot.get("run"))
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("idle job %s: PID lookup failed (%s)", slot["job"], _trunc(exc))
+    killed: list[int] = []
+    for pid in pids:
+        try:
+            killed.extend(kill_job_tree(pid))
+        except Exception as exc:                                   # noqa: BLE001
+            logger.warning("idle job %s: kill of pid %s failed (%s)",
+                           slot["job"], pid, _trunc(exc))
+    slot["killed_pids"] = sorted(set(killed))
+    slot["timeout_payload"] = {
+        "verdict": "TIMEOUT",
+        "headline": (f"TIMEOUT after {elapsed:.0f}s: reaped by the always-on lab "
+                     f"past its {slot['minutes']}-minute box + "
+                     f"{int(_config.LAB_IDLE_JOB_REAP_GRACE_S)}s grace "
+                     f"(pids {slot['killed_pids'] or 'none found'})"),
+        "reaped_by": "always_on_lab", "elapsed_s": round(elapsed, 1),
+        "killed_pids": slot["killed_pids"], "pids_found": pids,
+    }
+    slot["reaped"] = True
+    try:
+        write_job_receipt(slot["job"], slot.get("run"), dict(slot["timeout_payload"]))
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("idle job %s: TIMEOUT receipt not written (%s)",
+                       slot["job"], _trunc(exc))
+    th = slot.get("thread")
+    if th is not None:
+        th.join(float(_config.LAB_IDLE_JOB_JOIN_S))
+    slot.setdefault("done_ts", time.time())
+
+
+def _poll_idle_job(state: "LabState", row: dict, today: str) -> dict | None:
+    """None when no job holds the slot; else the tick's row for it."""
+    slot = state.idle_job
+    if not slot:
+        return None
+    th = slot.get("thread")
+    if th is None or not th.is_alive():
+        return _finish_idle_job(state, row, slot, today)
+    now_ts = time.time()
+    if now_ts < slot["deadline_ts"]:
+        view = _slot_view(slot, now_ts)
+        row["running_job"] = slot["job"]
+        return {"status": "skipped", "n": 0, "reason": "JOB_RUNNING",
+                "job": slot["job"], "running_job": slot["job"], "slot": view,
+                "detail": (f"{slot['job']} has run {view['elapsed_s']:.0f}s of its "
+                           f"{slot['minutes']}-minute box; the lab reaps it by PID "
+                           f"in {view['reap_in_s']:.0f}s if it has not returned"),
+                "dispatched_on": dict(row.get("dispatched_on") or {})}
+    _reap_idle_job(slot)
+    return _finish_idle_job(state, row, slot, today)
 
 
 def loop_idle_gpu_queue(state: LabState) -> dict:
@@ -1719,25 +2126,31 @@ def loop_idle_gpu_queue(state: LabState) -> dict:
     actively collide with existing scheduled work, which is why it was built
     last and why every condition below is a refusal rather than a preference.
 
-    Four gates, in this order:
+    First, THE SLOT (2026-09-27): a job already running is polled — returned,
+    still inside its box (`JOB_RUNNING`), or past its box + grace and REAPED by
+    PID with a TIMEOUT receipt. The slot is released and the NEXT tick dispatches.
+
+    Then four gates, in this order:
       1. the model must have been quiet for `IDLE_MINUTES`;
       2. no FOREIGN server may be up — a server we did not start is the desktop
          app's or a human's, and taking the GPU out from under it is exactly
          the "not ours to stop" rule wearing a different hat;
       3. `night_factory` / `monday_night` / `daily_pass` must not be running;
-      4. the job must not already have run today.
+      4. the job must not already have run today (a TIMEOUT gets one retry,
+         after the untried jobs; two timeouts skip it for the date, by name).
+    A job that needs the card for a DIFFERENT model (`LAB_IDLE_JOBS_OWN_THE_GPU`)
+    waits while an Aegis 7B is listening: `GPU_BUSY`.
     """
     now = datetime.now(timezone.utc)
     row = state.loops["idle_gpu_queue"]
-    dispatched: dict = dict(row.get("dispatched_on") or {})
     today = run_date()
-    queue = [(j, m) for j, m in _config.LAB_IDLE_QUEUE]
-    # 2026-09-14 05:05: "already ran today" is a fact about the NIGHT FOLDER,
-    # not about this supervisor instance -- a restarted lab re-dispatched jobs a
-    # factory had already read that day, and would have loaded Qwen3-30B beside
-    # a 12 GB server. A receipt for the job under today's folder counts.
-    remaining = [j for j, _ in queue
-                 if dispatched.get(j) != today and not _receipt_today(j, today)]
+
+    polled = _poll_idle_job(state, row, today)
+    if polled is not None:
+        return polled
+
+    dispatched: dict = dict(row.get("dispatched_on") or {})
+    queue, remaining, skipped = _queue_view(row, today)
 
     idle = state.idle_minutes(now)
     if idle is not None and idle < IDLE_MINUTES:
@@ -1745,7 +2158,7 @@ def loop_idle_gpu_queue(state: LabState) -> dict:
                 "detail": (f"a model-touching call finished {idle:.0f} min ago; "
                            f"{IDLE_MINUTES} min of quiet are required"),
                 "idle_minutes": round(idle, 1), "queue_remaining": remaining,
-                "dispatched_on": dispatched}
+                "skipped_today": skipped, "dispatched_on": dispatched}
 
     try:
         server = model_status()
@@ -1775,47 +2188,55 @@ def loop_idle_gpu_queue(state: LabState) -> dict:
         return {"status": "nothing_to_do", "n": 0,
                 "reason": "EVERY_QUEUED_JOB_ALREADY_RAN_TODAY",
                 "queue_remaining": [], "dispatched_on": dispatched,
+                "skipped_today": skipped, "running_job": None,
                 "queue": [j for j, _ in queue]}
 
-    job = remaining[0]
+    # GPU arbitration: a job that brings its OWN model does not start beside an
+    # Aegis 7B that is listening -- whoever holds the card keeps it this tick.
+    own_gpu = tuple(_config.LAB_IDLE_JOBS_OWN_THE_GPU)
+    waiting = [j for j in remaining if j in own_gpu and server.get("listening")]
+    runnable = [j for j in remaining if j not in waiting]
+    if not runnable:
+        return {"status": "skipped", "n": 0, "reason": "GPU_BUSY",
+                "detail": (f"{waiting} need the card for a different model and the "
+                           f"7B server (pid {server.get('pid')}) is listening; they "
+                           f"wait for its idle stop"),
+                "queue_remaining": remaining, "skipped_today": skipped,
+                "dispatched_on": dispatched}
+
+    job = runnable[0]
     minutes = dict(queue)[job]
-    # 2026-09-14 05:00: record the dispatch BEFORE the call. The loop's own
-    # 60 s box abandons this thread long before a real job returns, so a
-    # record written after the return was never written, the next tick saw
-    # the same job as still due, and the queue re-dispatched its first job
-    # instead of advancing -- the first night ran X_anon_gap twice and never
-    # reached E1.
+    # 2026-09-14 05:00: record the dispatch BEFORE the call, so an abandoned
+    # thread cannot make the queue re-dispatch its first job. Kept -- the slot
+    # makes the thread tracked rather than abandoned, but a lab restart still
+    # loses the in-process slot, and the record must survive that.
     dispatched[job] = today
     row["dispatched_on"] = dispatched
     row["running_job"] = job
-    with state.model_lock:
-        state.note_model_call(now)
-        try:
-            payload = dispatch_job(job, minutes)
-        except Exception as exc:                                   # noqa: BLE001
-            logger.exception("idle queue job %s raised", job)
-            dispatched[job] = today
-            row["dispatched_on"] = dispatched
-            return {"status": "error", "n": 0, "job": job,
-                    "detail": _trunc(exc), "dispatched_on": dispatched,
-                    "queue_remaining": [j for j in remaining if j != job]}
-
-    # Marked dispatched whatever the verdict: a job that FAILED tonight has had
-    # its turn, and re-dispatching it every five minutes would starve the rest
-    # of the queue on one broken job.
-    dispatched[job] = today
-    row["dispatched_on"] = dispatched
-    return {
-        "status": "ok", "n": 1, "job": job, "box_minutes": minutes,
-        "model_server_start": started,
-        "verdict": payload.get("verdict"),
-        "job_headline": str(payload.get("headline"))[:200],
-        "dispatched_on": dispatched,
-        "queue": [j for j, _ in queue],
-        "queue_remaining": [j for j in remaining if j != job],
-        "headline": (f"dispatched {job} (<= {minutes} min) into an idle GPU; "
-                     f"{len(remaining) - 1} job(s) left in tonight's queue"),
-    }
+    state.note_model_call(now)
+    now_ts = time.time()
+    slot = {"job": job, "minutes": int(minutes), "run": peek_run(job),
+            "started_ts": now_ts, "started_utc": now.isoformat(timespec="seconds"),
+            "deadline_ts": now_ts + int(minutes) * 60
+            + float(_config.LAB_IDLE_JOB_REAP_GRACE_S),
+            "model_server_start": started}
+    th = threading.Thread(target=_idle_worker, args=(slot,), daemon=True,
+                          name=f"lab:idle_job:{job}")
+    slot["thread"] = th
+    state.idle_job = slot
+    th.start()
+    th.join(float(_config.LAB_IDLE_JOB_JOIN_S))
+    if not th.is_alive():
+        return _finish_idle_job(state, row, slot, today)
+    return {"status": "ok", "n": 1, "job": job, "box_minutes": minutes,
+            "reason": "DISPATCHED", "running_job": job, "slot": _slot_view(slot),
+            "model_server_start": started,
+            "dispatched_on": dispatched,
+            "queue": [j for j, _ in queue],
+            "queue_remaining": [j for j in remaining if j != job],
+            "skipped_today": skipped,
+            "headline": (f"dispatched {job} (<= {minutes} min) into an idle GPU on a "
+                         f"tracked slot; {len(remaining) - 1} job(s) left today")}
 
 
 def loop_thematic_streams(state: LabState) -> dict:
@@ -1950,10 +2371,19 @@ def tick(state: LabState, *, now: datetime | None = None) -> dict:
             continue
         row["due"] = True
         if name in state.inflight:
-            row["status"] = "timeout"
-            row["detail"] = ("a previous call to this loop has not returned; "
-                             "not re-issued")
-            continue
+            stuck = state.inflight_threads.get(name)
+            if stuck is not None and not stuck.is_alive():
+                # The abandoned call has RETURNED. Free the loop: leaving it in
+                # `inflight` is how one timeout became a whole day of
+                # "not re-issued" (idle_gpu_queue, 2026-09-26/27).
+                state.inflight.discard(name)
+                state.inflight_threads.pop(name, None)
+                row["late_return_utc"] = now.isoformat(timespec="seconds")
+            else:
+                row["status"] = "timeout"
+                row["detail"] = ("a previous call to this loop has not returned; "
+                                 "not re-issued")
+                continue
         if state.power_refusal and name in MODEL_LOOPS:
             row["status"] = "paused"
             row["detail"] = f"POWER_PLAN_ALLOWS_SLEEP: {str(state.power_refusal)[:200]}"
@@ -1969,7 +2399,9 @@ def tick(state: LabState, *, now: datetime | None = None) -> dict:
         except LoopTimeout as exc:
             # Left in `inflight` ON PURPOSE: the thread is abandoned, not dead,
             # and re-issuing the same loop against the same resource is how one
-            # stuck call becomes a pile of them.
+            # stuck call becomes a pile of them. Its thread is kept so the next
+            # due tick can see it END and free the loop.
+            state.inflight_threads[name] = getattr(exc, "thread", None)
             row["status"] = "timeout"
             row["detail"] = f"timeout_after_{TIMEOUTS[name]:.0f}s"
             row["error"] = str(exc)[:300]
@@ -2064,6 +2496,12 @@ def status_payload(state: LabState, now: datetime | None = None) -> dict:
         "model_server_starts_today": state.starts_today(run_date()),
         "model_server_start_cap_per_day": int(
             _config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY),
+        # 2026-09-27: the cap above binds RESTARTS AFTER DEATH only; an idle
+        # stop by the reaper is not a death. The ceiling binds every start.
+        "model_server_restarts_after_death_today":
+            state.restarts_after_death_today(run_date()),
+        "model_server_total_start_ceiling_per_day": int(
+            _config.LAB_MODEL_SERVER_MAX_TOTAL_STARTS_PER_DAY),
         "lab_starts_model_server": bool(_config.LAB_STARTS_MODEL_SERVER),
         "model_server_hold": model_server_hold_path().exists(),
         "llama_server": {"up": bool(model.get("listening")),
