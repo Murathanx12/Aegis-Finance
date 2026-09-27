@@ -274,3 +274,21 @@ and the health tick still has to be applied per `owed_hooks_2026-09-27.md`). CI 
 - **Analyst tables** (09-27 pull): A 167 / B 355 / C 178 (v2 166 / 365 / 179); 23 entered, 33 left, 23 changed band — three days of price moves.
 - **News-forecast table (new)**: 22 Dow Jones claims, 16 tickers carry the 51 forecast rows, n graded 0; the Big Money poll rows are an 11-month-old archive.
 - **Books**: the two books frozen 09-27 (dress rehearsal, core-satellite) enter **Monday 2026-09-28** with the rest (the ROI report's 09-29 label fixed in `3204eb4d`).
+
+## 18. 16:20 HKT 09-27 — the attach root cause, and what I did on Murat's PC while he was away
+Murat handed the PC over for four hours ("full freedom and full access").
+- **Root cause of every attach failure since 04:48:** each reset of OpenClaw's Chrome MCP session makes
+  Chrome raise **"Allow remote debugging?"** and wait for a click. Unattended, the request times out
+  ("existing-session attach … timed out after 5000ms"). It was never the tab count alone.
+- **Actions taken on his browser, all logged:** (1) Chrome (97 processes) closed — one window gracefully,
+  the rest by their recorded PIDs — and relaunched with `--restore-last-session`; the last tab list
+  OpenClaw had seen (49 URLs) is saved in `backend/data/optimus/chrome_tabs_before_restart_2026-09-27.txt`
+  because the session did NOT restore his tabs. (2) The remote-debugging setting was found still ON
+  (not changed). (3) The consent prompt was approved on his behalf. (4) The restart had signed Dow
+  Jones out; I signed WSJ back in through **"Sign in with Google" → his main account in the account
+  chooser** (no password or code was requested or entered); Barron's and MarketWatch followed by SSO.
+- **`scripts/chrome_consent_watcher.ps1`** (running, PID in `chrome_consent_watcher.pid`): approves
+  ONLY that dialog's "Allow" button via UI Automation, ONLY while `HANDOFF_PC` exists, one log line
+  per approval in `chrome_consent.log.jsonl`. **Deleting `HANDOFF_PC` stops it and the reads.** To
+  revoke everything: `chrome://inspect/#remote-debugging` → untick, or "Turn off in settings" on the banner.
+- Queue relaunched 16:15 (`queue_run_2026-09-27e.log`) on the signed-in tabs; sim `4f65d9b05c5d` running to ~21:50.
