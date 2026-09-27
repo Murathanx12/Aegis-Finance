@@ -109,6 +109,7 @@ import subprocess
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -355,6 +356,114 @@ def _bin() -> str:
     return exe
 
 
+# ───────────────────────── no shell between us and the CLI ─────────────────
+#
+# Until 2026-09-27 `_run` called the npm `openclaw.CMD` shim with
+# `shell=(os.name == "nt")`, so cmd.exe parsed every argument: a URL carrying
+# `&` (`?refsec=big-money-poll&mod=...`, `search?q=X&sort=new&t=month`) ENDED
+# the command there, the browser got the truncated URL, and cmd tried to run
+# `mod=...` as a second command. Callers grew workarounds (web_reader dropped
+# the tracking query; the crowd-reads agent wrote `^^^&`). The root fix: find
+# the node entry script the shim would run and exec `node <script> *args`
+# directly -- CreateProcess, one argv element per argument, no parser in
+# between. Only when that cannot be resolved does a `.cmd` shim run, and then
+# through `cmd.exe /d /s /c` with every argument quoted AND caret-escaped
+# (twice: once for the /c line, once for the shim's own `%*` re-parse), which
+# is what `subprocess.list2cmdline` does NOT do. Every receipt names the route.
+
+#: `route` values: "node" (node + entry script, no shell), "cmd" (escaped
+#: `.cmd` shim through cmd.exe), "exec" (a real executable / shebang script).
+CLI_ROUTES = ("node", "cmd", "exec")
+
+#: What `openclaw.CMD` runs: `"%_prog%" "%dp0%\node_modules\openclaw\openclaw.mjs" %*`.
+_SHIM_SCRIPT = re.compile(r'"%dp0%\\?([^"%]+?\.(?:mjs|cjs|js))"', re.I)
+
+_CLI_RESOLVED: dict[str, Any] = {}
+
+
+def _node_route_for_shim(shim: str) -> tuple[str, str] | None:
+    """(node, script) that the npm `.cmd` shim at `shim` would run, or None."""
+    d = Path(shim).parent
+    script: Path | None = None
+    try:
+        m = _SHIM_SCRIPT.search(Path(shim).read_text(encoding="utf-8", errors="replace"))
+        if m:
+            script = d / m.group(1).replace("\\", os.sep)
+    except OSError:
+        script = None
+    if script is None or not script.is_file():
+        for cand in (d / "node_modules" / "openclaw" / "openclaw.mjs",
+                     d / "node_modules" / "openclaw" / "dist" / "index.js"):
+            if cand.is_file():
+                script = cand
+                break
+    if script is None or not script.is_file():
+        return None
+    node = d / "node.exe"          # the shim prefers a node.exe beside itself
+    node_s = str(node) if node.is_file() else shutil.which("node")
+    if not node_s:
+        return None
+    return node_s, str(script)
+
+
+def _resolve_cli() -> dict[str, Any]:
+    """{"prefix": [...], "route": ..., "shim": ...}, resolved once per process.
+
+    `OPENCLAW_BIN` / PATH picks the binary as before; a `.cmd`/`.bat` shim is
+    replaced by the node entry script it would have run.
+    """
+    exe = _bin()
+    if _CLI_RESOLVED.get("bin") == exe:
+        return _CLI_RESOLVED
+    out: dict[str, Any] = {"bin": exe, "shim": None}
+    if exe.lower().endswith((".cmd", ".bat")):
+        out["shim"] = exe
+        nr = _node_route_for_shim(exe)
+        if nr:
+            out.update(prefix=list(nr), route="node")
+        else:
+            out.update(prefix=[exe], route="cmd")
+    else:
+        out.update(prefix=[exe], route="exec")
+    _CLI_RESOLVED.clear()
+    _CLI_RESOLVED.update(out)
+    return _CLI_RESOLVED
+
+
+def cli_route() -> str:
+    """The route this process uses to reach the CLI: node | cmd | exec."""
+    return _resolve_cli()["route"]
+
+
+#: cmd.exe metacharacters (the set cross-spawn escapes for the same problem).
+_CMD_META = re.compile(r'([()\][%!^"`<>&|;, *?])')
+
+
+def _cmd_escape_arg(arg: str, *, double: bool = True) -> str:
+    """One argument for a `cmd.exe /d /s /c "..."` line that runs a `.cmd` shim.
+
+    MSVCRT quoting first (backslashes before a quote doubled, the quote
+    escaped, the whole thing quoted), then every cmd metacharacter -- `&`,
+    `|`, `<`, `>`, `^`, `%`, `"` and the rest -- caret-escaped; twice when the
+    target is a batch file, whose `%*` is parsed by cmd a second time.
+    """
+    a = re.sub(r'(\\*)"', lambda m: m.group(1) * 2 + '\\"', str(arg))
+    a = re.sub(r"(\\+)$", lambda m: m.group(1) * 2, a)
+    a = f'"{a}"'
+    a = _CMD_META.sub(r"^\1", a)
+    if double:
+        a = _CMD_META.sub(r"^\1", a)
+    return a
+
+
+def _cmd_line(shim: str, args: list[str]) -> str:
+    """The full command line for the cmd fallback (passed verbatim)."""
+    comspec = os.environ.get("COMSPEC") or "cmd.exe"
+    inner = " ".join([_CMD_META.sub(r"^\1", shim),
+                      *(_cmd_escape_arg(a) for a in args)])
+    return f'"{comspec}" /d /s /c "{inner}"'
+
+
 #: The CLI colourises its output even when not attached to a terminal, and it
 #: puts the escape sequence BETWEEN the label and the value:
 #:
@@ -379,12 +488,22 @@ def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProc
     # with cp1252, and a page's curly quote (UTF-8 E2 80 9D -> byte 0x9D, which
     # cp1252 does not map) killed the reader thread and returned stdout=None --
     # an EMPTY read that looked like a page with no text (chunk J, 2026-09-26).
+    #
+    # No shell: see "no shell between us and the CLI" above. A URL with `&`
+    # arrives at the CLI as one argv element, byte-identical.
     key = _cmd_key(args)
+    cli = _resolve_cli()
+    route = cli["route"]
+    _CLI_LEDGER["cli_route"] = route
+    if route == "cmd":
+        cmdline: Any = _cmd_line(cli["shim"], [str(a) for a in args])
+    else:
+        cmdline = [*cli["prefix"], *[str(a) for a in args]]
     t0 = time.monotonic()
     try:
-        r = subprocess.run([_bin(), *args], capture_output=True, text=True,
+        r = subprocess.run(cmdline, capture_output=True, text=True,
                            encoding="utf-8", errors="replace",
-                           timeout=timeout, shell=(os.name == "nt"))
+                           timeout=timeout, shell=False)
     except subprocess.TimeoutExpired:
         # A gateway timeout says nothing trustworthy about ANY profile.
         invalidate_profile_cache()
@@ -405,8 +524,10 @@ def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProc
         invalidate_profile_cache(_profile_of(args))
     # Strip centrally. Every parser downstream matches on plain text, and a
     # receipt full of escape codes is unreadable besides.
-    return subprocess.CompletedProcess(r.args, r.returncode,
-                                       _strip(r.stdout), _strip(r.stderr))
+    cp = subprocess.CompletedProcess(r.args, r.returncode,
+                                     _strip(r.stdout), _strip(r.stderr))
+    cp.cli_route = route  # type: ignore[attr-defined]
+    return cp
 
 
 def check_url(url: str) -> None:
@@ -812,7 +933,8 @@ def browser(verb: str, *args: str, url: str | None = None,
                            "check_seconds": round(check_s, 3),
                            "profile_check": "cached" if pa.get("cached") else "checked",
                            "stdout": (r.stdout or "").strip(),
-                           "stderr": (r.stderr or "").strip()[:600]}
+                           "stderr": (r.stderr or "").strip()[:600],
+                           "cli_route": getattr(r, "cli_route", None) or cli_route()}
     if verb == "close":
         invalidate_tabs_cache(want)
     if operator and verb == "close" and r.returncode == 0:

@@ -270,7 +270,7 @@ class OperatorCLI(FakeCLI):
 
 def _install(monkeypatch, fake) -> None:
     """Fake the PROCESS, not `_run`: the real `_run` then keeps the ledger."""
-    monkeypatch.setattr(subprocess, "run", lambda cmd, **kw: fake(list(cmd[1:]), **kw))
+    monkeypatch.setattr(subprocess, "run", lambda cmd, **kw: fake(list(cmd[len(OC._resolve_cli()["prefix"]):]), **kw))
 
 
 @pytest.fixture(autouse=True)
@@ -579,3 +579,132 @@ def test_blank_is_one_cli_call_and_only_on_our_tab(blank_cli):
     # the guarded verb blanks only a tab of ours, never Murat's own
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_NAVIGATE"):
         OC.browser("navigate", BLANK, profile_name="user", target_id=blank_cli.handle("1"))
+
+
+# ───────────────── no shell between us and the CLI (2026-09-27) ─────────────
+#
+# `_run` used to call `openclaw.CMD` with shell=True on Windows, so cmd.exe cut
+# every URL at its first `&`. These pin the fix: one argv element per argument,
+# byte-identical, never a shell, and the route named on the receipt.
+
+import ast
+import os
+import sys
+from pathlib import Path
+
+NASTY = ('https://www.barrons.com/a-1?refsec=big-money-poll&mod=x|y%20z^w"q'
+         "&sort=new&t=month")
+
+
+@pytest.fixture
+def fresh_route(monkeypatch):
+    monkeypatch.setattr(OC, "_CLI_RESOLVED", {})
+    return monkeypatch
+
+
+def _npm_shim(d: Path, *, with_script: bool = True, with_node: bool = True) -> Path:
+    shim = d / "openclaw.CMD"
+    shim.write_text('@ECHO off\r\nendLocal & goto #_undefined_# 2>NUL || title %COMSPEC% & '
+                    r'"%_prog%"  "%dp0%\node_modules\openclaw\openclaw.mjs" %*' '\r\n',
+                    encoding="utf-8")
+    if with_script:
+        (d / "node_modules" / "openclaw").mkdir(parents=True)
+        (d / "node_modules" / "openclaw" / "openclaw.mjs").write_text("//", encoding="utf-8")
+    if with_node:
+        (d / "node.exe").write_bytes(b"")
+    return shim
+
+
+def test_a_url_with_cmd_metacharacters_arrives_as_one_identical_argument(fresh_route):
+    seen: dict = {}
+
+    def fake_run(cmd, **kw):
+        seen["cmd"], seen["kw"] = cmd, kw
+        return subprocess.CompletedProcess(cmd, 0, "ok", "")
+    fresh_route.setattr(OC, "_resolve_cli", lambda: {
+        "bin": "openclaw.CMD", "shim": "openclaw.CMD", "route": "node",
+        "prefix": ["C:/node/node.exe", "C:/npm/node_modules/openclaw/openclaw.mjs"]})
+    fresh_route.setattr(subprocess, "run", fake_run)
+    r = OC._run(["browser", "--browser-profile", "muratclaw", "navigate", NASTY])
+    assert isinstance(seen["cmd"], list)
+    assert seen["cmd"] == ["C:/node/node.exe", "C:/npm/node_modules/openclaw/openclaw.mjs",
+                           "browser", "--browser-profile", "muratclaw", "navigate", NASTY]
+    assert seen["cmd"][-1].encode("utf-8") == NASTY.encode("utf-8")
+    assert seen["kw"]["shell"] is False
+    assert r.cli_route == "node" and OC.cli_ledger()["cli_route"] == "node"
+
+
+def test_the_npm_shim_resolves_to_node_plus_its_entry_script(fresh_route, tmp_path):
+    shim = _npm_shim(tmp_path)
+    fresh_route.setenv("OPENCLAW_BIN", str(shim))
+    cli = OC._resolve_cli()
+    assert cli["route"] == "node" and OC.cli_route() == "node"
+    assert cli["prefix"] == [str(tmp_path / "node.exe"),
+                             str(tmp_path / "node_modules" / "openclaw" / "openclaw.mjs")]
+
+
+def test_an_unresolvable_shim_falls_back_to_cmd_and_says_so(fresh_route, tmp_path):
+    shim = _npm_shim(tmp_path, with_script=False)
+    fresh_route.setenv("OPENCLAW_BIN", str(shim))
+    seen: dict = {}
+
+    def fake_run(cmd, **kw):
+        seen["cmd"], seen["kw"] = cmd, kw
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+    fresh_route.setattr(subprocess, "run", fake_run)
+    r = OC._run(["browser", "navigate", NASTY])
+    assert r.cli_route == "cmd" and seen["kw"]["shell"] is False
+    line = seen["cmd"]
+    assert isinstance(line, str) and " /d /s /c " in line
+    # every metacharacter in the URL is caret-escaped, none left bare
+    body = line.split(" /d /s /c ", 1)[1]
+    for ch in "&|^%":
+        i = body.find(ch)
+        while i != -1:
+            assert body[i - 1] == "^" or ch == "^", (ch, body[max(0, i - 5):i + 5])
+            i = body.find(ch, i + 1)
+
+
+@pytest.mark.skipif(os.name != "nt", reason="the cmd.exe fallback exists only on Windows")
+def test_the_cmd_fallback_really_delivers_the_url_whole(fresh_route, tmp_path):
+    # A real .cmd shim whose `%*` is re-parsed by cmd, exactly like npm's.
+    (tmp_path / "echo_args.py").write_text(
+        "import sys, json\nsys.stdout.write(json.dumps(sys.argv[1:]))\n", encoding="utf-8")
+    shim = tmp_path / "openclaw.CMD"
+    shim.write_text(f'@ECHO off\r\n"{sys.executable}" "%~dp0echo_args.py" %*\r\n',
+                    encoding="utf-8")
+    fresh_route.setenv("OPENCLAW_BIN", str(shim))
+    r = OC._run(["browser", "navigate", NASTY], timeout=60)
+    assert r.cli_route == "cmd"
+    assert json.loads(r.stdout) == ["browser", "navigate", NASTY]
+
+
+def test_the_exec_route_is_a_real_process_with_no_shell(fresh_route):
+    # sys.executable stands in for the CLI: a real CreateProcess/exec, no shell.
+    fresh_route.setenv("OPENCLAW_BIN", sys.executable)
+    r = OC._run(["-c", "import sys, json; sys.stdout.write(json.dumps(sys.argv[1:]))",
+                 NASTY], timeout=60)
+    assert r.cli_route == "exec"
+    assert json.loads(r.stdout) == [NASTY]
+
+
+def test_the_module_never_asks_for_a_shell():
+    tree = ast.parse(Path(OC.__file__).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            for kw in node.keywords:
+                if kw.arg == "shell":
+                    assert isinstance(kw.value, ast.Constant) and kw.value.value is False, \
+                        ast.unparse(node)[:120]
+    runs = [n for n in ast.walk(tree) if isinstance(n, ast.Call)
+            and ast.unparse(n.func) in ("subprocess.run", "subprocess.Popen")]
+    assert runs and all(any(k.arg == "shell" for k in n.keywords) for n in runs), \
+        "every subprocess call states shell=False explicitly"
+
+
+def test_browser_names_the_route_on_its_receipt(monkeypatch, clock):
+    fake = FakeCLI()
+    monkeypatch.setattr(OC, "_run", fake)
+    monkeypatch.setattr(OC, "cli_route", lambda: "node")
+    out = OC.browser("snapshot", profile_name="muratclaw")
+    assert out["cli_route"] == "node"

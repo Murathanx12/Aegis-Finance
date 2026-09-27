@@ -995,19 +995,19 @@ def test_big_money_rows_are_written_locally_and_barrons_tickers_are_read(ledger)
     assert "BN" in DC.article_tickers("Brookfield (ticker: BN) looks cheap.")
 
 
-def test_a_url_with_a_shell_metacharacter_loses_only_its_tracking_query(tmp_path):
-    # 2026-09-26: "&mod=" ended the openclaw .cmd command line; both Big Money reads failed
+def test_a_url_with_a_shell_metacharacter_reaches_the_driver_whole(tmp_path):
+    # 2026-09-26: "&mod=" ended the openclaw .cmd command line and the reader
+    # dropped the query to survive it. 09-27: openclaw_client._run has no shell,
+    # so the URL is passed -- and logged -- exactly as given.
     u = ("https://www.barrons.com/articles/big-money-poll-bulls-a54d307f"
          "?refsec=big-money-poll&mod=topics_big-money-poll")
-    assert WR.shell_safe_url(u) == "https://www.barrons.com/articles/big-money-poll-bulls-a54d307f"
-    assert WR.shell_safe_url("https://www.wsj.com/a-1a2b3c4d?mod=hots") == \
-        "https://www.wsj.com/a-1a2b3c4d?mod=hots"
+    assert not hasattr(WR, "shell_safe_url")
     drv = MultiStub()
     ck, th = _clock_throttle(tmp_path / "t.log")
     rd = WR.Reader(profile="user", tab="t99", driver=drv, lock=False, throttle=th)
     rd.navigate(u)
     nav = [c for c in drv.calls if c[0] == "navigate"][0]
-    assert "&" not in nav[2][0] and rd.log[-1]["url_shown"] == u
+    assert nav[2][0] == u and rd.log[-1]["url"] == u and "url_shown" not in rd.log[-1]
 
 
 class FakeOC:
@@ -1776,7 +1776,7 @@ def test_a_blanked_tab_is_renavigated_and_closed_through_the_real_client(ledger,
     2026-09-27). `own_blank_tab_verb` is a thin call to that rule, and it is
     what makes the blank-between-reads rule work against the real guard."""
     fake = GuardedCLI()
-    monkeypatch.setattr(subprocess, "run", lambda cmd, **kw: fake(list(cmd[1:]), **kw))
+    monkeypatch.setattr(subprocess, "run", lambda cmd, **kw: fake(list(cmd[len(OC._resolve_cli()["prefix"]):]), **kw))
     OC.invalidate_tabs_cache()
     OC.invalidate_profile_cache()
     a = "https://www.wsj.com/finance/stocks/story-a-1a2b3c4d"

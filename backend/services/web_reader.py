@@ -139,28 +139,11 @@ def host_ok(url: str) -> bool:
     return any(h == d or h.endswith("." + d) for d in hosts())
 
 
-#: Characters cmd.exe acts on. `openclaw_client._run` calls the `openclaw`
-#: .cmd shim with `shell=True` on Windows, so an UNQUOTED `&` in an argument
-#: ends the command: on 2026-09-26 both Big Money poll reads failed with
-#: "'mod' is not recognized as an internal or external command" because the
-#: snapshot's URLs carried `?refsec=big-money-poll&mod=...`. The root fix
-#: (quote or avoid the shell in `_run`) is owed in openclaw_client.
-_SHELL_META = re.compile(r"[&|^<>%\"]")
-
-
-def shell_safe_url(url: str) -> str:
-    """The same page without its tracking query when the query carries a
-    cmd.exe metacharacter: `scheme://host/path`. Dow Jones article paths are
-    complete on their own (`?mod=`, `&refsec=` are referral tags). A URL with
-    no such character is returned unchanged."""
-    if not url or not _SHELL_META.search(url):
-        return url
-    sp = urlsplit(url)
-    bare = f"{sp.scheme}://{sp.netloc}{sp.path}"
-    if _SHELL_META.search(bare):
-        raise ReaderRefused(f"REFUSED_SHELL_UNSAFE_URL: {url!r} has a cmd metacharacter in "
-                            f"its PATH; not passed to the shell")
-    return bare
+#: 2026-09-26 -> 09-27: a URL with `&` used to be cut by cmd.exe inside
+#: `openclaw_client._run`, so this module dropped tracking queries that carried
+#: a cmd metacharacter (`shell_safe_url`). `_run` now execs node + the CLI's
+#: entry script with no shell, and the URL -- query included -- is passed and
+#: logged exactly as given; the drop is gone.
 
 
 class ReaderRefused(RuntimeError):
@@ -1152,17 +1135,11 @@ class Reader:
                                 f"{(r.get('stderr') or '')[:160]}")
 
     def navigate(self, url: str) -> None:
-        shown = url
-        url = shell_safe_url(url)
         if self.parent and (self.needs_reopen or self.tab_pages >= self.max_tab_pages):
             self._reopen(url, "lost_on_reattach" if self.needs_reopen else
                          f"served {self.tab_pages} pages >= {self.max_tab_pages}")
-            if url != shown:
-                self.log[-1]["url_shown"] = shown
             return
         self._page("navigate", url)
-        if url != shown:
-            self.log[-1]["url_shown"] = shown
         if self.blanked:
             r = own_blank_tab_verb(self.driver, self.profile, self.tab, "navigate", url)
         else:

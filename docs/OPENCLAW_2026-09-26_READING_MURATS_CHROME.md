@@ -568,3 +568,18 @@ when the current queue has finished (the one-reader lock refuses a second reader
 Budget note: the day caps are 300 loads / 120 per host (config); tonight's earlier queue counts
 against them, so a line may refuse `REFUSED_THROTTLE_DAY` / `_HOST_DAY` and is retried on the next
 queue run (DONE lines skip; `--fresh-since` keeps a rerun after UTC midnight from re-reading).
+
+**2026-09-27 -- no shell between us and the CLI.** `openclaw_client._run` used to call the npm
+`openclaw.CMD` shim with `shell=True`, so cmd.exe cut every URL at its first `&`
+(`?refsec=big-money-poll&mod=...`, `search?q=X&sort=new&t=month`): the browser got the truncated
+URL and cmd tried to run the rest as a second command. The reader worked around it by dropping
+tracking queries (`web_reader.shell_safe_url`), the crowd-reads agent by writing `^^^&`. `_run` now
+resolves the shim once to the node entry script it would run (`node.exe` +
+`npm/node_modules/openclaw/openclaw.mjs`) and execs `[node, script, *args]` with `shell=False`: one
+argv element per argument, byte-identical. Only when the script cannot be resolved does it fall back
+to `cmd.exe /d /s /c` with every argument MSVCRT-quoted and caret-escaped twice (the shim's `%*` is
+parsed again) -- pinned by a real `.cmd` round trip in the tests. Every `browser()` receipt and
+`cli_ledger()` carry `cli_route: node|cmd|exec`. The reader's query drop is removed; URLs are passed
+and logged as given. Live proof on `muratclaw` (route `node`, 5 CLI calls, tab closed): opened
+`https://httpbin.org/get?a=1&b=2`, `location.href` read back `https://httpbin.org/get?a=1&b=2`, and
+httpbin echoed `"args": {"a": "1", "b": "2"}`.
