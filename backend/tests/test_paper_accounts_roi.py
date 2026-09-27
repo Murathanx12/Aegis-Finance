@@ -6,6 +6,7 @@ network, so a leaked live call would fail here rather than pass by luck.
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -77,7 +78,10 @@ def _build(tmp_path, monkeypatch, bm=None):
         http_get=_http,
         pc_snapshot=lambda: {"equity": 1_010_000.0, "n_positions": 11, "account_number": "PC"},
         paper_books_args=([], {}), llm_books_path=_llm_books(tmp_path), llm_leaderboard={"books": []},
-        decisions_dir=dec, bm=bm if bm is not None else _spy())
+        decisions_dir=dec, bm=bm if bm is not None else _spy(),
+        # the day these fixtures describe (before the 09-28 entry); a later
+        # today makes an ungraded book UNGRADED, which has its own test
+        llm_today=date(2026, 9, 27))
 
 
 def test_synthetic_account_set_produces_table_and_aggregate(tmp_path, monkeypatch):
@@ -176,7 +180,8 @@ def test_a_voided_book_is_listed_not_graded(tmp_path):
         fh.write(json.dumps({"schema": "llm_portfolio/void", "kind": "void", "book_id": "p1",
                              "name": "pers_x", "reason": "VOID_BEFORE_ENTRY: concentration",
                              "voided_utc": "2026-09-26T09:00:00+00:00", "who": "t"}) + "\n")
-    rows = PA.collect_llm_books(p, leaderboard={"books": []}, leaderboard_name="t")
+    rows = PA.collect_llm_books(p, leaderboard={"books": []}, leaderboard_name="t",
+                                today=date(2026, 9, 27))
     assert len(rows) == 2                                    # parent + twin, never the void row
     par = next(r for r in rows if r["account"] == "pers_x")
     assert par["status"] == "VOIDED" and "concentration" in par["note"]
@@ -244,3 +249,76 @@ def test_grader_and_label_agree_on_a_sunday_book():
 def test_weekday_arithmetic_is_gone():
     import inspect
     assert "busday_offset" not in inspect.getsource(PA.next_session_after).split('"""')[-1]
+
+
+# ── Monday rehearsal 2026-09-28 (docs/REHEARSAL_2026-09-28_MONDAY_ENTRY.md) ──
+# Synthetic, offline. Dates are fixed on purpose: every call passes `today`.
+
+def _lb_row(book_id, name, **kw):
+    row = {"book_id": book_id, "name": name, "status": "OK", "nav_usd": 1_010_000.0,
+           "benchmark": "SPY", "benchmark_to_date": 0.004, "vs_benchmark": 0.006}
+    row.update(kw)
+    return row
+
+
+def test_a_refused_book_after_entry_is_unpriced_not_pending(tmp_path):
+    """The rehearsal's 13 all-ETF twins were REFUSED by the grader and printed
+    as "PENDING (entry 2026-09-28)" on the evening of 09-28."""
+    p = _llm_books(tmp_path)
+    lb = {"bars_through": "2026-09-28", "books": [
+        _lb_row("t1", "pers_x__ew", status="REFUSED", nav_usd=None,
+                why="no position could be priced; missing ['XBI']")]}
+    rows = {r["account"]: r for r in PA.collect_llm_books(
+        p, leaderboard=lb, leaderboard_name="t", today=date(2026, 9, 29))}
+    tw = rows["pers_x__ew"]
+    assert tw["status"] == "UNPRICED" and "XBI" in tw["note"] and "REFUSED" in tw["note"]
+    assert tw["roi_pct"] is None
+    assert PA.aggregate(list(rows.values()))["status_counts"]["UNPRICED"] == 1
+
+
+def test_spy_leg_of_a_graded_book_is_the_graders_open_to_close_leg(tmp_path):
+    """`inception_close` dropped the entry session: on 09-28 evening every book's
+    day was compared with SPY = 0.0. The grade's own leg is the book's window."""
+    p = _llm_books(tmp_path)
+    lb = {"bars_through": "2026-09-28", "books": [_lb_row("p1", "pers_x")]}
+    rows = {r["account"]: r for r in PA.collect_llm_books(
+        p, leaderboard=lb, leaderboard_name="t", today=date(2026, 9, 29))}
+    r = rows["pers_x"]
+    assert r["status"] == "LIVE" and r["roi_pct"] == pytest.approx(1.0)
+    assert r["spy_same_window_pct"] == pytest.approx(0.4)
+    assert r["vs_spy_pp"] == pytest.approx(0.6)
+    assert r["spy_base"] == PA.BASE_GRADE
+    # a ruler that would say SPY 0.0 on the entry day must not overwrite it
+    s = pd.Series([0.05], index=pd.to_datetime(["2026-09-29"]))
+    PA.attach_spy([r], SimpleNamespace(returns=s, overlapping=False))
+    assert r["spy_same_window_pct"] == pytest.approx(0.4)
+    assert r["vs_spy_pp"] == pytest.approx(0.6)
+
+
+def test_a_urth_book_gets_no_spy_leg_on_a_window_the_grade_did_not_measure(tmp_path):
+    p = _llm_books(tmp_path)
+    lb = {"bars_through": "2026-09-28", "books": [
+        _lb_row("p1", "pers_x", benchmark="URTH", benchmark_to_date=None, vs_benchmark=None)]}
+    r = next(x for x in PA.collect_llm_books(p, leaderboard=lb, leaderboard_name="t",
+                                             today=date(2026, 9, 29)) if x["account"] == "pers_x")
+    assert r["spy_base"] == PA.BASE_NOT_SPY and r["spy_same_window_pct"] is None
+    assert "URTH" in r["note"] and "no URTH bars" in r["note"]
+
+
+def test_an_ungraded_book_after_entry_says_so_instead_of_pending(tmp_path):
+    """Nothing schedules `scripts.llm_portfolio grade`. With the newest board
+    ending before the entry session, a book is UNGRADED the day after entry."""
+    p = _llm_books(tmp_path)
+    stale = {"bars_through": "2026-09-25", "books": []}
+    before = PA.collect_llm_books(p, leaderboard=stale, leaderboard_name="old",
+                                  today=date(2026, 9, 28))
+    assert {r["status"] for r in before} == {"PENDING"}      # entry day itself: not yet
+    after = PA.collect_llm_books(p, leaderboard=stale, leaderboard_name="old",
+                                 today=date(2026, 9, 29))
+    assert {r["status"] for r in after} == {"UNGRADED"}
+    assert all("scripts.llm_portfolio grade" in r["note"] for r in after)
+    fresh = {"bars_through": "2026-09-28", "books": [
+        _lb_row("p1", "pers_x", status="PENDING", nav_usd=None)]}
+    rows = {r["account"]: r["status"] for r in PA.collect_llm_books(
+        p, leaderboard=fresh, leaderboard_name="new", today=date(2026, 9, 29))}
+    assert rows["pers_x"] == "PENDING"                       # the grader said so

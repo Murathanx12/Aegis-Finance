@@ -74,6 +74,15 @@ LANE_START_USD = 100_000.0
 #:                         inception day: SPY sessions from that day on.
 BASE_AFTER = "inception_close"
 BASE_BEFORE = "prior_close"
+#: An llm_portfolio book enters at the OPEN of its entry session, so neither base
+#: above is its window: "inception_close" dropped the whole entry session (every
+#: book's Monday was compared with SPY = 0.0), "prior_close" adds the weekend gap
+#: the book never held. Its SPY leg is the grader's own open-to-close leg
+#: (`llm_portfolio.grade`, same window as the book) and `attach_spy` leaves it be.
+BASE_GRADE = "grade_entry_open"
+#: A book benchmarked on something else (URTH): no SPY leg is computed on a
+#: window the grade did not measure; the row carries the grade's own benchmark.
+BASE_NOT_SPY = "benchmark_not_spy"
 
 FAMILY_ORDER = ("website_lane", "alpaca_fleet", "pc_paper", "night_books",
                 "night_books_twin", "murat_book", "agency",
@@ -366,7 +375,8 @@ def _newest_leaderboard(d: Path) -> tuple[Optional[dict], Optional[str]]:
 
 def collect_llm_books(books_path: Path = LLM_DIR / "books.jsonl",
                       leaderboard: Optional[dict] = None,
-                      leaderboard_name: Optional[str] = None) -> list[dict]:
+                      leaderboard_name: Optional[str] = None,
+                      today: Optional[date] = None) -> list[dict]:
     if not books_path.exists():
         return []
     lines = [json.loads(l) for l in books_path.read_text(encoding="utf-8").splitlines() if l.strip()]
@@ -406,13 +416,61 @@ def collect_llm_books(books_path: Path = LLM_DIR / "books.jsonl",
                              note=f"voided before entry ({str(v.get('voided_utc'))[:10]}, "
                                   f"{v.get('who')}): {v.get('reason')}", **kw))
             continue
-        if g.get("status") not in (None, "PENDING") and g.get("nav_usd") is not None:
-            rows.append(_row(r["name"], f"llm_portfolio:{group}", equity=g["nav_usd"],
-                             last_mark=leaderboard.get("bars_through"), **kw))
+        if g.get("status") == "REFUSED":
+            # After entry a refused book is NOT pending: it was due and could not
+            # be priced (rehearsal 2026-09-28: 13 all-ETF twins printed as
+            # "PENDING (entry 2026-09-28)" on the evening of 09-28).
+            rows.append(_row(r["name"], f"llm_portfolio:{group}", status="UNPRICED",
+                             note=f"REFUSED by the grader (entry {entry}): {g.get('why')}",
+                             **kw))
+        elif g.get("status") not in (None, "PENDING") and g.get("nav_usd") is not None:
+            row = _row(r["name"], f"llm_portfolio:{group}", equity=g["nav_usd"],
+                       last_mark=leaderboard.get("bars_through"), **kw)
+            bench, bret = g.get("benchmark"), g.get("benchmark_to_date")
+            row["benchmark"] = bench
+            row["vs_benchmark_pp"] = (None if g.get("vs_benchmark") is None
+                                      else round(100.0 * g["vs_benchmark"], 3))
+            if bench == "SPY" and bret is not None and row["roi_pct"] is not None:
+                row["spy_base"] = BASE_GRADE
+                row["spy_same_window_pct"] = round(100.0 * bret, 3)
+                row["vs_spy_pp"] = round(row["roi_pct"] - 100.0 * bret, 3)
+            elif bench and bench != "SPY":
+                row["spy_base"] = BASE_NOT_SPY
+                row["note"] = (f"benchmark {bench}: vs_benchmark "
+                               f"{'n/a (no ' + bench + ' bars)' if row['vs_benchmark_pp'] is None else format(row['vs_benchmark_pp'], '+.2f') + ' pp'}")
+            rows.append(row)
+        elif _entry_passed(entry, today) and not _board_reaches(leaderboard, entry):
+            # The entry session has closed and the newest leaderboard does not
+            # reach it: nobody ran the grader. Before 2026-09-28 this printed
+            # "PENDING (entry ...)" for as long as nobody did (nothing schedules
+            # `scripts.llm_portfolio grade`).
+            rows.append(_row(r["name"], f"llm_portfolio:{group}", status="UNGRADED",
+                             note=(f"NOT GRADED: entry {entry} has passed and the newest "
+                                   f"leaderboard ({leaderboard_name or 'none'}) has bars "
+                                   f"through {(leaderboard or {}).get('bars_through')}; run "
+                                   f"`python -m scripts.llm_portfolio grade`"), **kw))
         else:
             rows.append(_row(r["name"], f"llm_portfolio:{group}", status="PENDING",
                              note=f"PENDING (entry {entry})", **kw))
     return rows
+
+
+def _entry_passed(entry: str, today: Optional[date]) -> bool:
+    """True when the entry session's date is strictly before `today` (its close
+    has printed by the time any reader runs the next day). An UNKNOWN entry
+    label is never 'passed'."""
+    try:
+        return date.fromisoformat(str(entry)[:10]) < (today or date.today())
+    except ValueError:
+        return False
+
+
+def _board_reaches(board: Optional[dict], entry: str) -> bool:
+    bt = (board or {}).get("bars_through")
+    try:
+        return bool(bt) and date.fromisoformat(str(bt)[:10]) >= date.fromisoformat(str(entry)[:10])
+    except ValueError:
+        return False
 
 
 # ───────────────────────────── 6. agency books ──────────────────────────────
@@ -506,7 +564,7 @@ def attach_spy(rows: list[dict], bm) -> None:
     for r in rows:
         if r.get("broker_now") and r["last_mark"] is None:
             r["last_mark"] = last_session or date.today().isoformat()
-        if r["roi_pct"] is None:
+        if r["roi_pct"] is None or r.get("spy_base") in (BASE_GRADE, BASE_NOT_SPY):
             continue
         s = spy_window_pct(bm, r["inception"], r["last_mark"], r.get("spy_base", BASE_AFTER))
         if s is not None:
@@ -565,7 +623,8 @@ def build(*, tr: Optional[dict], tr_source: str, tr_fresh: bool, fleet_env: dict
           paper_books_args: Optional[tuple] = None, llm_books_path: Path = LLM_DIR / "books.jsonl",
           llm_leaderboard: Optional[dict] = None, decisions_dir: Path = DECISIONS_DIR,
           murat_bars: Optional[pd.DataFrame] = None, bm=None, bm_error: Optional[str] = None,
-          include_fleet: bool = True, include_pc: bool = True) -> dict:
+          include_fleet: bool = True, include_pc: bool = True,
+          llm_today: Optional[date] = None) -> dict:
     rows: list[dict] = []
     rows += collect_lanes(tr, fresh=tr_fresh, source=tr_source)
     if include_fleet:
@@ -577,7 +636,8 @@ def build(*, tr: Optional[dict], tr_source: str, tr_fresh: bool, fleet_env: dict
     rows += collect_murat(bars=murat_bars)
     rows += collect_agency(decisions_dir, [r.get("book_id") for r in pb])
     rows += collect_llm_books(llm_books_path, leaderboard=llm_leaderboard,
-                              leaderboard_name="injected" if llm_leaderboard else None)
+                              leaderboard_name="injected" if llm_leaderboard else None,
+                              today=llm_today)
     order = {f: i for i, f in enumerate(FAMILY_ORDER)}
     rows.sort(key=lambda r: (order.get(r["family"], 99),
                              -(r["roi_pct"] if r["roi_pct"] is not None else -1e9)))
@@ -664,9 +724,10 @@ def render_markdown(rc: dict, png_name: Optional[str]) -> str:
                  f"{vs} | "
                  f"{_f(r['n_positions'])} | {_f(r['last_mark'])} | **{r['status']}** | {src}{'; ' + note if note else ''} |")
     L += ["", "## `llm_portfolio` books and their twins", "",
-          "Frozen 2026-09-25; entry is the OPEN of the first session after `asof`, so every one is "
-          "PENDING until that session prints. Twins are the controls each parent is graded against "
-          "(`ew`, `sector_etf`, `random_same_band`, `spy`).", ""]
+          "Entry is the OPEN of the first session after each book's `asof`; a book is PENDING only "
+          "until that session prints, UNPRICED if the grader refused it after entry. ROI and "
+          "\"vs SPY\" are the grader's own open-to-close window. Twins are the controls each parent "
+          "is graded against (`ew`, `sector_etf`, `random_same_band`, `spy`, ...).", ""]
     for fam in ("llm_portfolio:personal", "llm_portfolio:competition", "llm_portfolio:lib", "llm_portfolio:twin"):
         rs = [r for r in rows if r["family"] == fam]
         if not rs:
@@ -674,8 +735,10 @@ def render_markdown(rc: dict, png_name: Optional[str]) -> str:
         L += [f"### {fam.split(':')[1]} ({len(rs)})", "",
               "| book | start capital | positions | status | graded against |", "|---|---:|---:|---|---|"]
         for r in rs:
-            st = (r["note"] if r["status"] in ("PENDING", "VOIDED")
-                  else f"{r['status']} {_f(r['roi_pct'], pct=True)}")
+            st = (r["note"] if r["status"] in ("PENDING", "VOIDED", "UNPRICED")
+                  else f"{r['status']} {_f(r['roi_pct'], pct=True)}"
+                  + (f" (vs SPY {r['vs_spy_pp']:+.2f} pp)" if r.get("vs_spy_pp") is not None
+                     else (f"; {r['note']}" if r.get("note") else "")))
             L.append(f"| {r['account']} | {_f(r['start_capital'], money=True)} | {_f(r['n_positions'])} | {st} | {r.get('graded_against', '')} |")
         L.append("")
     vd = [r for r in rows if r["status"] == "VOIDED"]

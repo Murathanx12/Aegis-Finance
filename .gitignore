@@ -373,3 +373,6 @@ backend/data/optimus/digest_inbox/*
 !backend/data/optimus/digest_inbox/WEEKEND_READING_LIST.md
 .env.bak*
 .env.bak_*
+
+# Monday rehearsal scratch world (copies of panels and ledgers; never committed)
+backend/data/optimus/_rehearsal_2026-09-28/

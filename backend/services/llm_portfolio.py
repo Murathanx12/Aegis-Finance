@@ -778,6 +778,58 @@ def _entry_mdv(g: pd.DataFrame, j: int, window: int = 63) -> Optional[float]:
     return m if np.isfinite(m) else None
 
 
+#: One split ratio per overnight gap a real 2-for-1 / 3-for-1 / 1-for-10 ... would
+#: leave in an UNADJUSTED series. The grader only NAMES a gap that lands within
+#: `SPLIT_SUSPECT_TOL` of one of these; it never rewrites a price (a real -50%
+#: biotech gap looks the same, and only the vendor's adjusted series can tell).
+SPLIT_RATIOS = tuple(sorted({1.0 / n for n in range(2, 11)} | {float(n) for n in range(2, 11)}
+                            | {2.0 / 3.0, 1.5}))
+SPLIT_SUSPECT_TOL = 0.02
+
+#: `grade()` is called once per book (and, by `bridge_report`, once per book per
+#: session), always on the SAME frame. Grouping ~2M rows by symbol dominated the
+#: call: measured on the 2026-09-28 rehearsal, 307 books took 126 s. The grouping
+#: is memoised on the frame's identity and shape; any other frame recomputes.
+_PX_MEMO: dict = {}
+
+
+def _grouped(bars: pd.DataFrame) -> dict:
+    import weakref
+
+    key = (id(bars), len(bars), tuple(bars.columns))
+    ref = _PX_MEMO.get("ref")
+    if _PX_MEMO.get("key") == key and ref is not None and ref() is bars:
+        return _PX_MEMO["px"]
+    px = {s: g.sort_values("date").reset_index(drop=True)
+          for s, g in bars.groupby("symbol", sort=False)}
+    _PX_MEMO.clear()
+    # dropped with the frame: a long-lived process does not keep a copy alive
+    _PX_MEMO.update(key=key, ref=weakref.ref(bars, lambda _r: _PX_MEMO.clear()), px=px)
+    return px
+
+
+def _suspect_splits(t: str, g: pd.DataFrame, j: int, k_last: int) -> list[dict]:
+    """Overnight gaps (open over the previous close) between entry and the last
+    graded bar whose ratio sits on a split ratio. Named, never corrected."""
+    out: list[dict] = []
+    if k_last <= j:
+        return out
+    o = g["open"].to_numpy(dtype=float)
+    c = g["close"].to_numpy(dtype=float)
+    for i in range(j + 1, k_last + 1):
+        if not (np.isfinite(o[i]) and np.isfinite(c[i - 1]) and c[i - 1] > 0):
+            continue
+        r = o[i] / c[i - 1]
+        for s in SPLIT_RATIOS:
+            if abs(r / s - 1.0) <= SPLIT_SUSPECT_TOL:
+                out.append({"ticker": t, "date": str(pd.Timestamp(g["date"].iloc[i]).date()),
+                            "open_over_prev_close": round(float(r), 4),
+                            "looks_like": (f"{1 / s:g}-for-1 split" if s < 1
+                                           else f"1-for-{s:g} reverse split")})
+                break
+    return out
+
+
 def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict:
     """NAV the book forward from its own as-of date, net of entry cost.
 
@@ -798,8 +850,7 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
                 "twin": rec.get("twin"), "parent_book_id": rec.get("parent_book_id"),
                 "benchmark": bench_sym, "status": "VOIDED",
                 "why": f"voided before entry {v.get('voided_utc')}: {v.get('reason')}"}
-    px = {s: g.sort_values("date").reset_index(drop=True)
-          for s, g in bars.groupby("symbol", sort=False)}
+    px = _grouped(bars)
     bench = px.get(bench_sym)
     cal = bench["date"] if bench is not None and len(bench) else bars["date"]
     dates = np.sort(pd.Series(cal).unique()).astype("datetime64[ns]")
@@ -815,6 +866,13 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
                 "why": "no session has opened since it was frozen"}
 
     held, missing, cost_bps = [], [], 0.0
+    # Every position that is not entered at the entry session's open says WHY,
+    # by name (rehearsal 2026-09-28): a halted name used to enter at its next
+    # bar's open with nothing on the grade, and a NaN open was one more ticker
+    # in `unpriceable` with no reason.
+    why_missing: dict[str, str] = {}
+    deferred: list[dict] = []
+    entry_day = pd.Timestamp(dates[i0])
     for p in rec["positions"]:
         t = p["ticker"]
         if t == "CASH":
@@ -823,22 +881,39 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
         g = px.get(t)
         if g is None:
             missing.append(t)
+            why_missing[t] = "NO_BARS"
             continue
         d = g["date"].values.astype("datetime64[ns]")
         j = int(np.searchsorted(d, dates[i0], side="left"))
-        if j >= len(d):
+        # `today` bounds the name's bars too: a grade as of X equals the grade
+        # on a panel that ends at X (a deferred entry never peeks past it).
+        if j >= len(d) or d[j] > dates[-1]:
             missing.append(t)
+            why_missing[t] = f"NO_BAR_ON_OR_AFTER_ENTRY {entry_day.date()}"
             continue
         o = float(g["open"].iloc[j])
         if not np.isfinite(o) or o <= 0:
             missing.append(t)
+            why_missing[t] = (f"ENTRY_OPEN_NOT_FINITE on {pd.Timestamp(d[j]).date()} "
+                              f"(open={o})")
             continue
+        if pd.Timestamp(d[j]) != entry_day:
+            deferred.append({"ticker": t, "weight": p["weight"],
+                             "entry_session": str(entry_day.date()),
+                             "entered_at_open_of": str(pd.Timestamp(d[j]).date()),
+                             "why": "NO_BAR_ON_ENTRY_SESSION (halted or missing); "
+                                    "held flat at its weight until its first open"})
         cost_bps += p["weight"] * XR.round_trip_bps(_entry_mdv(g, j))
         held.append((t, p["weight"], g, j))
 
+    if missing and not any(g is not None for _t, _w, g, _j in held):
+        # Only the CASH line survived: grading it would report a cash book as
+        # the frozen one. Same refusal as "nothing priced".
+        held = []
     if not held:
         return {**base, "status": "REFUSED",
-                "why": f"no position could be priced; missing {missing[:10]}"}
+                "why": f"no position could be priced; missing {missing[:10]}",
+                "unpriceable_why": why_missing}
 
     # A book whose names we cannot price is NOT silently re-weighted onto the
     # ones we can. That would grade a different book than the one frozen.
@@ -848,13 +923,22 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
            "asof": rec["asof"], "status": "OK",
            "n_positions": rec["n_positions"],
            "n_unpriceable": len(missing), "unpriceable": missing[:20],
+           "unpriceable_why": why_missing,
+           "deferred_entry": deferred,
+           "entry_session": str(entry_day.date()),
            "weight_priced": round(priced_w, 4),
            # Charged ONCE, on entry, at the empirical band cost. Half of a round
            # trip, because the book has not sold yet.
            "entry_cost_bps": round(cost_bps / 2.0, 1),
            "benchmark_is_proxy": proxy,
            "caveat": _config.BOOK_WLS_PROXY_CAVEAT if proxy else None,
+           # No bars for the benchmark: vs_benchmark is None on every cell and
+           # the sessions are counted on the union calendar. Said, not implied.
+           "benchmark_missing": bench is None or not len(bench),
            "horizons": {}}
+    if out["benchmark_missing"]:
+        out["why"] = (f"benchmark {bench_sym} has no bars in the panel: no vs_benchmark, "
+                      f"sessions counted on the union calendar")
 
     def _nav_at(asof_d):
         tot = 0.0
@@ -899,6 +983,14 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
             continue
         out["horizons"][h] = _cell(dates[i1])
     out["to_date"] = {**_cell(dates[-1]), "sessions": len(dates) - i0}
+    sus: list[dict] = []
+    for t, _w, g, j in held:
+        if g is None:
+            continue
+        gd = g["date"].values.astype("datetime64[ns]")
+        k_last = int(np.searchsorted(gd, dates[-1], side="right")) - 1
+        sus += _suspect_splits(t, g, j, k_last)
+    out["suspect_splits"] = sus
     return out
 
 
@@ -981,7 +1073,10 @@ def leaderboard(books: list[dict], bars: pd.DataFrame, *,
                "benchmark_to_date": td.get("benchmark_return"),
                "vs_benchmark": td.get("vs_benchmark"),
                "n_unpriceable": g.get("n_unpriceable"),
-               "entry_cost_bps": g.get("entry_cost_bps")}
+               "entry_cost_bps": g.get("entry_cost_bps"),
+               "benchmark_missing": g.get("benchmark_missing"),
+               "n_deferred_entry": len(g.get("deferred_entry") or []),
+               "n_suspect_splits": len(g.get("suspect_splits") or [])}
         if not g.get("parent_book_id"):
             mine = _td(g)
             for tname in TWIN_TYPES:
@@ -1006,10 +1101,28 @@ def leaderboard(books: list[dict], bars: pd.DataFrame, *,
         v = k.pop("_v")
         k["mean_vs_benchmark"] = float(np.mean(v)) if v else None
 
+    through = pd.Timestamp(bars["date"].max()) if len(bars) else None
+    if through is not None and today is not None:
+        through = min(through, pd.Timestamp(today))
+    status_counts: dict[str, int] = {}
+    for g in grades:
+        st = str(g.get("status"))
+        status_counts[st] = status_counts.get(st, 0) + 1
     return {"schema": SCHEMA_VERSION, "kind": "leaderboard",
             "graded_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "bars_through": (str(pd.Timestamp(bars["date"].max()))[:10]
-                             if len(bars) else None),
+            "bars_through": str(through)[:10] if through is not None else None,
+            # Every grade in exactly one status; the refused and the priced-
+            # without-a-benchmark are counted, never left for a reader to find.
+            "status_counts": status_counts,
+            "refused": [{"name": g["name"], "why": g.get("why")} for g in grades
+                        if g.get("status") == "REFUSED"],
+            "n_benchmark_missing": sum(1 for g in grades if g.get("benchmark_missing")),
+            "benchmark_missing_symbols": sorted({str(g.get("benchmark")) for g in grades
+                                                 if g.get("benchmark_missing")}),
+            "deferred_entry": [{"name": g["name"], **d} for g in grades
+                               for d in (g.get("deferred_entry") or [])],
+            "suspect_splits": [{"name": g["name"], **x} for g in grades
+                               for x in (g.get("suspect_splits") or [])],
             "n_books": sum(1 for r in rows if not r["parent_book_id"]),
             "n_twins": sum(1 for r in rows if r["parent_book_id"]),
             "by_kind": by_kind, "books": rows, "grades": grades,
