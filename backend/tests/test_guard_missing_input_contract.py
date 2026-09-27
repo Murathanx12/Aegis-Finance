@@ -1421,6 +1421,24 @@ def _case_matched_twins():
             TwinInputMissing, "a rule record with no holdings and no series")
 
 
+def _case_family_pool():
+    """Pooled family tests (2026-09-27): a "family" of two rules is not pooled.
+
+    The missing input is THE MEMBERS. A pooled family mean earns its smaller
+    SE from rules that disagree; with fewer than three there is no family to
+    speak of, and a pair's mean printed as a family verdict would read as the
+    library's most powerful test while being two rules.
+    """
+    import numpy as np
+    import pandas as pd
+    from backend.services.family_pool import FamilyPoolRefused, family_test
+    idx = pd.date_range("2016-01-31", periods=40, freq="ME")
+    frame = pd.DataFrame({"a": np.zeros(40), "b": np.zeros(40)}, index=idx)
+    masks = {"dev": np.ones(40, bool), "sealed": np.zeros(40, bool)}
+    return (lambda: family_test(frame, masks, family="pair"), FamilyPoolRefused,
+            "a family with two rules")
+
+
 CASES = {
     "investment_committee": _case_investment_committee,
     "fundamental_features": _case_fundamental_features,
@@ -1520,6 +1538,7 @@ CASES = {
     "source_registry": _case_source_registry,
     "signal_structure": _case_signal_structure,
     "matched_twins": _case_matched_twins,
+    "family_pool": _case_family_pool,
 }
 
 

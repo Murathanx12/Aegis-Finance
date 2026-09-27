@@ -539,4 +539,148 @@ What the table says:
 - The factory's own `night_backtest_factory` does not apply the HAC floor. Its t is
   `t_active_horizon_blocks` on horizon-wide blocks, which is a different estimator.
 - Matched twins cover only the 10 rules the replication file carries holdings for. Rolling them
-  out to every board row needs the factory to store holdings for every cell.
+  out to every board row needs the factory to store holdings for every cell. (Done 2026-09-27
+  evening, next section.)
+
+## 2026-09-27 (evening): pooled family tests and matched twins for every cell
+
+Every number below is HINDSIGHT. Every rule was registered 2026-09-26, after every month scored.
+Licence `PRODUCT_EXPERIMENT`, $0, no LLM. This is reviewer ideas 2 and 3
+(`docs/reviews/REVIEW_2026-09-27_SIGNAL_STRUCTURE_ROUND2_BRIDGE.md` §8), which the adjudication
+deferred to the next factory night.
+
+**RESULT IMPROVEMENT: NONE.** This adds a stronger test and a denominator. It does not add an edge.
+
+- **Run of record:** `2026-09-27T082553Z`, from `python -m scripts.night_backtest_factory --no-freeze`.
+  It ran 306 rules and 904 OK cells in 251 s. Panel fingerprint `3a8c19576fafb9a4`, as in `T080946Z`.
+  The earlier run's checkpoint is kept as `checkpoint_2026-09-27.T080946Z.bak.json`.
+- **Readouts:** `python -m scripts.signal_structure --run-id 2026-09-27T082553Z --rekey --hac --matched-twins`,
+  then `--family-pool`.
+- **Receipts:** `signal_structure/family_pool_2026-09-27T082553Z.{json,md}`,
+  `matched_twins_2026-09-27T082553Z.json`, `hac_readout_…`, `leaderboard_….rekeyed.json`, and
+  `strategy_library/holdings_2026-09-27T082553Z.manifest.json`.
+- **Code:** `backend/services/family_pool.py`, `matched_twins.py` (`cell_records`, `check_months`,
+  `CellIndex`), and `night_backtest_factory.write_holdings`.
+
+### 1. Holdings for every cell
+
+The factory now writes the held symbols and weights at every rebalance for all 904 cells: 2,499,348
+rows, 4.6 MB. It also writes each cell's monthly gross, cost and net (103,184 rows) and its own
+twin panel (372,754 rows). All three are parquet, so they are gitignored. The manifest, which is
+committed, carries each file's sha256, and the readers refuse any file that does not match it.
+
+- **Check: 904 of 904** OK cells have holdings and exactly `n_months` monthly rows.
+- **Crash safety:** a part is flushed before every checkpoint, so `--resume` keeps the holdings.
+- **Twin reconstruction:** the matched-twin module rebuilds each rule's gross from those holdings
+  to within 1.7e-8. Net agrees with the series of record to within 1.1e-6.
+- **Refusal:** a cell whose monthly series has a hole inside its span refuses by name. No cell
+  refused on this run.
+
+### 2. Matched twins for all 288 primary cells
+
+The twin is drawn from the same size band × vol_63 tercile × 12-1 tercile at every rebalance.
+Draw 0 is seeded from the cell id, and 20 more draws give the twin's spread. 99% of twin names came
+from the full cell (596,207 cell draws; 3,507 fell back to "any").
+
+| window | median rule − twin | median rule − random_1 | removed by matching (share) | beats twin | t(rule − twin21) ≥ 2 / ≤ −2 |
+|---|---|---|---|---|---|
+| dev | +3.0% | +2.1% | −1.4 pp (17%) | 193 / 288 | 36 / 23 |
+| 2024-26 | **−0.2%** | +7.1% | **+8.2 pp (51%)** | 140 / 288 | 9 / 8 |
+
+The top-10 table above said all ten rules beat their twin in 2024-26. Over the whole library that
+was selection. The median primary rule's 2024-26 excess over random_1 (+7.1%) is **entirely
+style** (size, volatility and past return), and the median rule loses to its matched twin by 0.2%.
+In 2024-26, 9 cells beat their twin at t ≥ 2 and 8 lose at t ≤ −2, which is what 288 draws of
+noise produce.
+
+Two cells clear t ≥ 2 against the 21-draw twin in both windows:
+
+- `mom_12_1_q_trend@k20`: dev +1.77%/mo (t 2.34), 2024-26 +2.63%/mo (t 2.14);
+- `disp_short_avoid@k20`: +1.67%/mo (t 2.07), then +2.17%/mo (t 2.02).
+
+Chance alone predicts about 0.8 such cells: 36 dev hits × P(t ≥ 2 | null) ≈ 0.023 in 2024-26. These two are
+leads for the forward book, not findings.
+
+### 3. Pooled family tests (25 families with ≥ 3 primary rules)
+
+Each family is scored as one series: the equal-weight mean of its members' monthly active returns.
+
+- **SE:** plain SE, and Newey-West at lag max(hold) − 1. The used SE is the larger of the two.
+- **MDE:** 2.8 × SE.
+- **n_eff** = n / (1 + (n − 1) ρ̄), printed for each window.
+- **Verdict:** the single-rule rules, applied to the 2024-26 pooled series hedged with its dev ETF
+  betas.
+- **Rule − twin:** reads the mean of the 21 twin draws.
+
+Ten families have fewer than 3 rules and were not pooled. The full table (25 rows) is in
+`signal_structure/family_pool_2026-09-27T082553Z.md`. The rows that matter:
+
+| family | n | n_eff 24-26 (ρ̄) | vs panel dev: mean (t) | vs panel 24-26: mean (t) | MDE 24-26 | ETF α vs SPY dev (t) | 24-26 (t) | verdict | rule − twin dev (t) | rule − twin 24-26 (t) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| quality | 12 | 8.9 (0.03) | +0.69% (3.03) | +0.23% (0.81) | 0.79% | +0.55% (2.36) | +0.17% (0.54) | CANNOT_DISTINGUISH | +0.47% (2.72) | −0.33% (−0.99) |
+| analyst_dispersion | 4 | 2.9 (0.13) | +0.82% (3.20) | +0.45% (0.85) | 1.48% | +0.75% (2.78) | +0.12% (0.24) | CANNOT_DISTINGUISH | +0.50% (2.36) | +0.36% (0.90) |
+| revision_flow | 15 | 2.2 (0.41) | +0.98% (2.82) | +0.69% (0.88) | 2.22% | +0.53% (1.90) | −0.38% (−0.61) | CANNOT_DISTINGUISH | +0.56% (2.50) | +0.14% (0.41) |
+| insider | 16 | 5.7 (0.12) | +0.75% (2.51) | +0.44% (1.15) | 1.08% | +0.75% (2.39) | +0.24% (0.56) | CANNOT_DISTINGUISH | +0.50% (2.24) | +0.04% (0.13) |
+| value | 3 | 3.0 (−0.01) | +0.95% (2.35) | +0.67% (1.28) | 1.46% | +1.07% (3.28) | +0.64% (0.99) | CANNOT_DISTINGUISH | +0.54% (1.60) | +0.24% (0.50) |
+| weighted | 7 | 3.7 (0.15) | +1.13% (2.59) | +2.02% (1.99) | 2.85% | +0.74% (1.86) | +0.72% (0.83) | CANNOT_DISTINGUISH | +0.69% (2.01) | **+1.31% (2.25)** |
+| momentum | 26 | 2.1 (0.45) | +1.06% (1.77) | +1.22% (0.97) | 3.51% | +0.72% (1.32) | −0.23% (−0.20) | CANNOT_DISTINGUISH | +0.55% (1.39) | +0.40% (0.54) |
+| combination | 37 | 5.5 (0.16) | +0.50% (1.63) | +0.70% (1.74) | 1.12% | +0.35% (1.42) | +0.51% (1.37) | CANNOT_DISTINGUISH | +0.16% (1.13) | +0.26% (1.11) |
+| diversified_combo | 11 | 4.9 (0.12) | +0.72% (2.80) | −0.00% (−0.00) | 1.15% | +0.57% (2.52) | −0.23% (−0.59) | ALPHA_DETECTED, **negative** (hedged −0.98%/mo, t −2.06) | +0.39% (2.90) | −0.50% (−1.81) |
+| low_risk | 17 | 2.3 (0.40) | −1.31% (−2.80) | −0.22% (−0.45) | 1.34% | −1.40% (−5.27) | −0.11% (−0.39) | CANNOT_DISTINGUISH | −1.45% (−3.93) | −0.22% (−0.87) |
+
+**Power.** Pooling bought less than the hoped-for halving of the MDE, because family members are
+correlated:
+
+- Median n_eff is about 2-4, not n.
+- MDE of the mean vs the panel: single rule 1.51%/mo (dev) and 2.74%/mo (2024-26); pooled family
+  median 1.03% and 2.15%. That is about 0.7-0.8× a single rule.
+- The ETF-alpha SE in 2024-26 is 0.89% single versus 0.65% pooled. The MDE falls from 2.48% to
+  1.82%/mo, which is still 22%/yr.
+- The 2024-26 window cannot resolve a family alpha under ~1%/mo even at best: `quality`, with
+  n_eff 8.9, has an MDE of 0.79%.
+
+**The answers:**
+
+- **Alpha in BOTH windows against the panel benchmark: none of the 25 families.** Pooled mean
+  t ≥ 2 in dev and 2024-26: none vs the random panel, none vs SPY. ETF-alpha t ≥ 2 in both: none.
+- **Families dev-strong vs the panel:** `quality`, `analyst_dispersion`, `revision_flow`,
+  `diversified_combo`, `weighted`, `insider`, `value`, `sector_relative`. All of them are t < 2 in
+  2024-26. `weighted` is the closest, at 1.99.
+- **Verdicts vs SPY:** 24 CANNOT_DISTINGUISH and 1 ALPHA_DETECTED, which is **negative**
+  (`diversified_combo`). Against the panel, all 25 are CANNOT_DISTINGUISH.
+- **Rule − matched twin, pooled t ≥ 2 in both windows: one family, `weighted`.** It scores +0.69%/mo
+  (t 2.01) in dev and +1.31%/mo (t 2.25) in 2024-26, with n_eff 5.4 on the twin series and DSR
+  0.83 at n = 25 families.
+  - Its members are the inverse-vol, liquidity-weighted and risk-parity versions of momentum,
+    quality, gross profitability and net-raises.
+  - What survives the twin is plausibly the WEIGHTING itself (a volatility tilt inside each cell),
+    not any one signal's selection.
+  - One family of 25 clearing t ≥ 2 twice is within what this much looking allows. It is a lead, and
+    it is not a claim.
+- **Multiplicity over families.** Best DSR at n = 25 families:
+  - vs the panel: `quality` 0.891;
+  - vs SPY: `weighted` 0.529;
+  - rule − twin: `regime_gated` 0.872.
+  - None reaches 0.95.
+- **Consistent reads.** `low_risk` is significantly NEGATIVE in dev on every benchmark. The rekeyed
+  board gives 69 / 119 / 139 of 288 primary rules beating SPY / IWM / the panel in both windows,
+  consistent with the review's 66 / 112 / 135.
+
+### What changes in the README's honest sentence (Fable re-renders)
+
+> Pooled into 25 families and tested against the panel's own random portfolio, no family of rules
+> shows a statistically detectable alpha in both the pre-2024 and the 2024-26 windows. Against
+> characteristic-matched random twins, the median rule's 2024-26 excess is zero, because what it
+> beat SPY by was its size, volatility and momentum style. Pooling lowers the detectable effect
+> only to about 1-2%/month, because a family's rules are largely the same bet. One family
+> (volatility- and liquidity-weighted books) beats its twins at t ≈ 2 in both windows, which is a
+> lead for forward paper, not a claim.
+
+### Still owed
+
+- The **fundamentals-family minus price/volume-family** hedged contrast from idea 3 was not run.
+  This readout groups by the library's `family` label, not by input source.
+- A month-block bootstrap of the family mean was not done. The SE is plain or Newey-West as for
+  single rules.
+- `weighted`, `mom_12_1_q_trend@k20` and `disp_short_avoid@k20` should be graded forward against
+  their matched twins. That is the only test that is not hindsight.

@@ -2,7 +2,7 @@
 
 > HINDSIGHT BACKTEST. Every rule was registered 2026-09-26, after every month in these tables; 'since 2020' is what the rule WOULD have done, not what Aegis did. The quotable record starts at registration and accrues in the lib_ forward books. Read by_year_signs, LOO-worst and the worst breadth cell BEFORE the CAGR column; read DSR before Sharpe.
 
-Run `2026-09-27T032801Z`; receipt `backend/data/optimus/strategy_library/leaderboard_2026-09-27T032801Z.json` (this file is the 'latest' copy and is refreshed by every run; the receipt is not).
+Run `2026-09-27T082553Z`; receipt `backend/data/optimus/strategy_library/leaderboard_2026-09-27T082553Z.json` (this file is the 'latest' copy and is refreshed by every run; the receipt is not).
 
 ## Multiplicity (read before any row)
 

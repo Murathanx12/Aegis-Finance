@@ -108,28 +108,58 @@ def _cell_of(sym: str, cells: pd.DataFrame, panel_d: pd.DataFrame) -> tuple:
     return band, pos("vol_63"), pos("mom_252_21")
 
 
+class CellIndex:
+    """One decision date's cells, grouped once: the candidate lists of every
+    (band, vol, mom), (band, vol) and band key IN `cells.index` ORDER, so a draw
+    from a group is the same draw as from the boolean mask over the index (the
+    seeded results do not move), at a dict lookup instead of three object-array
+    comparisons per held name. Built per date and cached by `twin_series`."""
+
+    def __init__(self, cells: pd.DataFrame):
+        self.cells = cells
+        self.idx = cells.index.to_numpy()
+        self.pos = {s: (b, v, m) for s, b, v, m in zip(self.idx, cells["band"].to_numpy(),
+                                                        cells["vt"].to_numpy(), cells["mt"].to_numpy())}
+        g: dict = {}
+        for s, (b, v, m) in self.pos.items():
+            for key in (("cell", b, v, m), ("band_vol", b, v), ("band", b)):
+                g.setdefault(key, []).append(s)
+        self.groups = g
+        self.cuts = cells.attrs.get("cuts") or {}
+
+    def cell_of(self, sym: str, panel_d: pd.DataFrame) -> tuple:
+        if sym in self.pos:
+            return self.pos[sym]
+        return _cell_of(sym, self.cells, panel_d)
+
+    def candidates(self, level: str, b, v, m) -> list:
+        if level == "any":
+            return list(self.idx)
+        key = {"cell": ("cell", b, v, m), "band_vol": ("band_vol", b, v), "band": ("band", b)}[level]
+        return self.groups.get(key, [])
+
+
 def draw_twins(held: Iterable[str], cells: pd.DataFrame, panel_d: pd.DataFrame,
-               rng: np.random.Generator) -> tuple[list, dict]:
+               rng: np.random.Generator, index: Optional[CellIndex] = None) -> tuple[list, dict]:
     """[(held, twin or None, level)] and fallback counts for one rebalance."""
     held = list(held)
     taken = set(held)
     out, counts = [], {lv: 0 for lv in FALLBACK_LEVELS}
     counts["none"] = 0
-    idx = cells.index.to_numpy()
-    band, vt, mt = (cells[c].to_numpy() for c in ("band", "vt", "mt"))
+    ci = index if index is not None else CellIndex(cells)
     for s in held:
-        b, v, m = _cell_of(s, cells, panel_d)
-        masks = []
+        b, v, m = ci.cell_of(s, panel_d)
+        levels = []
         if b is not None:
             if v is not None and m is not None:
-                masks.append(("cell", (band == b) & (vt == v) & (mt == m)))
+                levels.append("cell")
             if v is not None:
-                masks.append(("band_vol", (band == b) & (vt == v)))
-            masks.append(("band", band == b))
-        masks.append(("any", np.ones(len(idx), dtype=bool)))
+                levels.append("band_vol")
+            levels.append("band")
+        levels.append("any")
         pick, level = None, "none"
-        for lv, mk in masks:
-            cand = [x for x in idx[mk] if x not in taken]
+        for lv in levels:
+            cand = [x for x in ci.candidates(lv, b, v, m) if x not in taken]
             if cand:
                 pick = cand[int(rng.integers(len(cand)))]
                 level = lv
@@ -163,9 +193,32 @@ def panel_by_date(panel: pd.DataFrame) -> dict:
     return {str(d.date()): g for d, g in panel.groupby(pd.DatetimeIndex(panel["date"]))}
 
 
+def check_months(rule: dict, grid: Iterable) -> None:
+    """A cell's monthly series must sit on the decision-date grid with NO hole
+    between its first and last month. A hole (a value rule's refused period, a
+    lost row) would let the twin carry a stale book across it while the rule's
+    stored series skips it: the two would no longer be the same months, and
+    "rule - twin" would compare different things. Refuses by the cell's name."""
+    rid = rule.get("id")
+    months = [str(m["date"])[:10] for m in rule.get("monthly_return_series") or []]
+    if not months:
+        raise TwinInputMissing(f"{rid}: no monthly series")
+    g = [str(pd.Timestamp(x).date()) for x in grid]
+    pos = {d: i for i, d in enumerate(g)}
+    off = [d for d in months if d not in pos]
+    if off:
+        raise TwinInputMissing(f"{rid}: month(s) {off[:3]} not on the decision-date grid")
+    have = set(months)
+    missing = [d for d in g[pos[months[0]]:pos[months[-1]] + 1] if d not in have]
+    if missing:
+        raise TwinInputMissing(f"{rid}: {len(missing)} month(s) missing from the monthly series "
+                               f"inside its span (first {missing[0]}); the twin would not cover "
+                               "the same months")
+
+
 def twin_series(rule: dict, panel: pd.DataFrame, *, seed: int,
                 by_date: Optional[dict] = None, cache: Optional[dict] = None,
-                drift: bool = False) -> pd.DataFrame:
+                drift: bool = False, grid: Optional[Iterable] = None) -> pd.DataFrame:
     """Month by month: the rule's own gross (reconstructed from its holdings on
     this panel, a check against the stored series) and its matched twin's gross.
 
@@ -178,6 +231,8 @@ def twin_series(rule: dict, panel: pd.DataFrame, *, seed: int,
     months = rule.get("monthly_return_series") or []
     if not held or not months:
         raise TwinInputMissing(f"{rule.get('id')}: no holdings or no monthly series")
+    if grid is not None:
+        check_months(rule, grid)
     risk_off = {str(d)[:10] for d in rule.get("risk_off_dates") or []}
     rng = np.random.default_rng(seed)
     if by_date is None:
@@ -189,6 +244,9 @@ def twin_series(rule: dict, panel: pd.DataFrame, *, seed: int,
     for mrow in months:
         d = str(mrow["date"])[:10]
         g = by_date.get(d)
+        if g is None:
+            raise TwinInputMissing(f"{rule.get('id')}: month {d} of its series is not on the panel "
+                                   "(its forward returns are unknown; a twin would earn 0 there)")
         if d not in fwd_cache:
             fwd_cache[d] = (g.drop_duplicates("symbol").set_index("symbol")["fwd_ret"].to_dict()
                             if g is not None else {})
@@ -198,11 +256,13 @@ def twin_series(rule: dict, panel: pd.DataFrame, *, seed: int,
             if g is None:
                 raise TwinInputMissing(f"{rule.get('id')}: rebalance {d} is not on the panel")
             syms = list(held[d])
-            ws = list(wts.get(d) or [1.0 / len(syms)] * len(syms))
+            ws = list(wts.get(d) or ([1.0 / len(syms)] * len(syms) if syms else []))
             ck = ("__cells__", d)
             if ck not in fwd_cache:
-                fwd_cache[ck] = cell_table(g)
-            pairs, counts = draw_twins(syms, fwd_cache[ck], g, rng)
+                ct = cell_table(g)
+                fwd_cache[ck] = (ct, CellIndex(ct))
+            ct, ci = fwd_cache[ck]
+            pairs, counts = draw_twins(syms, ct, g, rng, index=ci)
             w_rule = {s: float(x) for s, x in zip(syms, ws)}
             w_twin = {}
             for (s, t, _lv), x in zip(pairs, ws):
@@ -223,6 +283,96 @@ def twin_series(rule: dict, panel: pd.DataFrame, *, seed: int,
     out = pd.DataFrame(rows)
     out["date"] = pd.to_datetime(out["date"])
     return out.set_index("date")
+
+
+# ── holdings for every cell (the factory's sidecar) ─────────────────────────
+#
+# The factory stores, per (rule, k) cell, the held symbols and weights at every
+# rebalance, and each month's gross / cost / net, as two long parquet tables
+# (`holdings_<run>.parquet`, `cell_monthly_<run>.parquet`). The format lives
+# here, beside its only reader, so writer and reader cannot drift apart. A
+# rebalance to CASH (the regime gate off) is one row with symbol "" and
+# weight NaN, `risk_off` True: it round-trips to an empty book on that date.
+
+HOLDINGS_COLUMNS = ("rule", "k", "date", "symbol", "weight", "risk_off")
+MONTHLY_COLUMNS = ("rule", "k", "date", "gross", "cost", "net", "rebalanced", "n_held")
+CASH_SYMBOL = ""
+
+
+def holdings_frame(records: Iterable) -> pd.DataFrame:
+    """[(rule_id, k, [{date, symbols, weights, risk_off}, ...])] -> the long table."""
+    rule, kk, dd, sym, w, ro = [], [], [], [], [], []
+    for rid, k, hold in records:
+        for h in hold or []:
+            syms = list(h.get("symbols") or [])
+            wts = list(h.get("weights") or [])
+            if not syms:
+                syms, wts = [CASH_SYMBOL], [np.nan]
+            n = len(syms)
+            rule += [str(rid)] * n
+            kk += [int(k)] * n
+            dd += [str(h["date"])[:10]] * n
+            sym += [str(x) for x in syms]
+            w += [float(x) for x in wts]
+            ro += [bool(h.get("risk_off"))] * n
+    df = pd.DataFrame({"rule": pd.Categorical(rule), "k": np.asarray(kk, dtype=np.int16),
+                       "date": pd.to_datetime(pd.Series(dd, dtype=object)),
+                       "symbol": pd.Categorical(sym), "weight": np.asarray(w, dtype=float),
+                       "risk_off": np.asarray(ro, dtype=bool)})
+    return df[list(HOLDINGS_COLUMNS)]
+
+
+def monthly_frame(records: Iterable) -> pd.DataFrame:
+    """[(rule_id, k, monthly DataFrame from run_strategy)] -> the long table."""
+    parts = []
+    for rid, k, m in records:
+        if m is None or not len(m):
+            continue
+        x = pd.DataFrame({"rule": str(rid), "k": int(k), "date": pd.to_datetime(m["date"]),
+                          "gross": m["gross"].astype(float), "cost": m["cost"].astype(float),
+                          "net": m["net"].astype(float), "rebalanced": m["rebalanced"].astype(bool),
+                          "n_held": m["n_held"].astype(int)})
+        parts.append(x)
+    if not parts:
+        return pd.DataFrame({c: [] for c in MONTHLY_COLUMNS})
+    df = pd.concat(parts, ignore_index=True)
+    df["rule"] = df["rule"].astype("category")
+    df["k"] = df["k"].astype(np.int16)
+    return df[list(MONTHLY_COLUMNS)]
+
+
+def cell_records(holdings: pd.DataFrame, monthly: pd.DataFrame) -> dict:
+    """The long tables -> {(rule, k): the record `twin_series` reads}:
+    held_symbols_by_date, weights_by_date, risk_off_dates, monthly_return_series."""
+    out: dict = {}
+    h = holdings.copy()
+    h["rule"] = h["rule"].astype(str)
+    h["symbol"] = h["symbol"].astype(str)
+    for (rid, k), g in h.groupby(["rule", "k"], sort=False, observed=True):
+        held, wts, ro = {}, {}, []
+        for d, gd in g.groupby("date", sort=True):
+            ds = str(pd.Timestamp(d).date())
+            real = gd[gd["symbol"] != CASH_SYMBOL]
+            held[ds] = real["symbol"].tolist()
+            wts[ds] = real["weight"].astype(float).tolist()
+            if bool(gd["risk_off"].any()):
+                ro.append(ds)
+        out[(str(rid), int(k))] = {"id": f"{rid}@k{int(k)}", "held_symbols_by_date": held,
+                                   "weights_by_date": wts, "risk_off_dates": ro,
+                                   "monthly_return_series": []}
+    m = monthly.copy()
+    m["rule"] = m["rule"].astype(str)
+    for (rid, k), g in m.groupby(["rule", "k"], sort=False, observed=True):
+        key = (str(rid), int(k))
+        rec = out.setdefault(key, {"id": f"{rid}@k{int(k)}", "held_symbols_by_date": {},
+                                   "weights_by_date": {}, "risk_off_dates": [],
+                                   "monthly_return_series": []})
+        g = g.sort_values("date")
+        rec["monthly_return_series"] = [
+            {"date": str(pd.Timestamp(d).date()), "gross": float(gr), "cost": float(c),
+             "net": float(n), "rebalanced": bool(rb)}
+            for d, gr, c, n, rb in zip(g["date"], g["gross"], g["cost"], g["net"], g["rebalanced"])]
+    return out
 
 
 # ── comparison ──────────────────────────────────────────────────────────────

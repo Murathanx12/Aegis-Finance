@@ -3,6 +3,9 @@
     python -m scripts.signal_structure                          # run 2026-09-26T150811Z
     python -m scripts.signal_structure --run-id <id> --refresh-etf
     python -m scripts.signal_structure --rekey --run-id 2026-09-26T164302Z   # hold-month sidecar
+    python -m scripts.signal_structure --run-id <id> --rekey --hac --matched-twins --family-pool
+        (the flags run in that order; --matched-twins covers EVERY primary cell when the
+         factory wrote holdings_<id>.manifest.json, else the 2024-26 top-10 file)
 
 $0, no LLM. Network: one yfinance pull of eight ETFs (adjusted close), cached
 under `backend/data/optimus/signal_structure/etf_monthly.parquet` with its fetch
@@ -811,6 +814,12 @@ def _twin_panel(run_id: str, dates: list) -> tuple[pd.DataFrame, dict]:
 
 
 def matched_twins_readout(run_id: str) -> dict:
+    if (LIB / f"holdings_{run_id}.manifest.json").exists():
+        return matched_twins_all_cells(run_id)
+    return matched_twins_top10(run_id)
+
+
+def matched_twins_top10(run_id: str) -> dict:
     from backend.services import matched_twins as MT
     from backend.services import strategy_library as SL
     top = json.loads((LIB / f"top10_for_replication_{run_id}.json").read_text(encoding="utf-8"))
@@ -903,6 +912,342 @@ def matched_twins_readout(run_id: str) -> dict:
     return doc
 
 
+# ── matched twins for EVERY primary cell (the factory's holdings sidecar) ─────
+
+def holdings_source(run_id: str) -> dict:
+    """The factory's per-cell holdings, monthly series and twin panel for a run,
+    each checked against the sha256 its manifest recorded. A file that moved
+    since the run refuses by name: the twins would be drawn for a different
+    book than the one the board scored."""
+    mp = LIB / f"holdings_{run_id}.manifest.json"
+    man = json.loads(mp.read_text(encoding="utf-8"))
+    out = {"manifest": man, "manifest_path": str(mp.relative_to(REPO)).replace(chr(92), "/")}
+    for name in ("holdings", "cell_monthly", "twin_panel"):
+        f = REPO / man["files"][name]["path"]
+        if not f.exists():
+            raise SystemExit(f"REFUSED: {f.name} (named by {mp.name}) is absent")
+        if _sha256(f) != man["files"][name]["sha256"]:
+            raise SystemExit(f"REFUSED: {f.name} does not match the sha256 in {mp.name}")
+        out[name] = pd.read_parquet(f)
+    return out
+
+
+def matched_twins_all_cells(run_id: str) -> dict:
+    from backend.services import matched_twins as MT
+    from backend.services import strategy_library as SL
+    S_ = load_series_of_record(run_id)
+    cells, net = S_["cells"], S_["net"]
+    rcol = f"random_1@k{SL.RANDOM_PANEL_K}"
+    if rcol not in net.columns:
+        raise SystemExit(f"REFUSED: {rcol} not in the run's series")
+    random_1 = net[rcol].astype(float)
+    src = holdings_source(run_id)
+    primary = sorted(c for c in net.columns if not cells[c]["control"] and cells[c]["primary"])
+    want = {(cells[c]["rule"], cells[c]["k"]) for c in primary}
+    H, M = src["holdings"], src["cell_monthly"]
+    keyH = list(zip(H["rule"].astype(str), H["k"].astype(int)))
+    keyM = list(zip(M["rule"].astype(str), M["k"].astype(int)))
+    H = H[[k_ in want for k_ in keyH]]
+    M = M[[k_ in want for k_ in keyM]]
+    recs = MT.cell_records(H, M)
+    grid = sorted(pd.to_datetime(src["cell_monthly"]["date"]).unique())
+    panel = src["twin_panel"]
+    by_date = MT.panel_by_date(panel)
+    cache: dict = {}
+    rows, refused = [], []
+    diff0, diffm = {}, {}
+    for cid in primary:
+        key = (cells[cid]["rule"], cells[cid]["k"])
+        rec = recs.get(key)
+        if rec is None:
+            refused.append({"cell": cid, "why": "no holdings in the sidecar"})
+            continue
+        rec = dict(rec, id=cid)
+        try:
+            ts = MT.twin_series(rec, panel, seed=MT.seed_for(cid), by_date=by_date, cache=cache,
+                                grid=grid)
+        except MT.TwinInputMissing as e:
+            refused.append({"cell": cid, "why": str(e)})
+            continue
+        idx = ts.index
+        rule_net = ts["stored_net"].astype(float)
+        cost = ts["cost"].astype(float)
+        twin0 = ts["twin_gross"] - cost
+        win = SL.split_windows(idx)
+        recon = (ts["rule_gross_recon"] - ts["stored_gross"].astype(float)).abs()
+        board_gap = (rule_net - net[cid].reindex(idx)).abs()
+        fb: dict = {}
+        for f in ts["fallbacks"]:
+            for k_, v_ in (f or {}).items():
+                fb[k_] = fb.get(k_, 0) + v_
+        twins = [twin0]
+        for j in range(1, MT.N_EXTRA_DRAWS + 1):
+            tj = MT.twin_series(rec, panel, seed=MT.seed_for(cid, j), by_date=by_date, cache=cache,
+                                grid=grid)
+            twins.append(tj["twin_gross"] - cost)
+        tmean = pd.concat(twins, axis=1).mean(axis=1)
+        row = {"cell": cid, "rule": key[0], "k": key[1], "family": cells[cid]["family"],
+               "hold_months": cells[cid]["hold_months"], "seed": MT.seed_for(cid),
+               "recon_check": {"max_abs_gap_gross": float(recon.max()),
+                               "n_months_gap_gt_1e-6": int((recon > 1e-6).sum()),
+                               "max_abs_gap_net_vs_series_of_record": float(board_gap.max())},
+               "twin_fallbacks": fb}
+        for w in ("dev", "sealed"):
+            r_ = MT.compare(rule_net, twin0, random_1, win[w])
+            xs = [MT.compare(rule_net, t, random_1, win[w])["rule_minus_twin"] for t in twins[1:]]
+            xs = [x for x in xs if x is not None]
+            r_["rule_minus_twin_draws_mean"] = float(np.mean(xs)) if xs else None
+            r_["rule_minus_twin_draws_sd"] = float(np.std(xs, ddof=1)) if len(xs) > 1 else None
+            r_["n_extra_draws"] = len(xs)
+            dm = (rule_net - tmean)[win[w]].dropna()
+            se = float(dm.std(ddof=1) / np.sqrt(len(dm))) if len(dm) > 1 else float("nan")
+            r_["mean_monthly_rule_minus_twin21"] = float(dm.mean()) if len(dm) else None
+            r_["t_monthly_rule_minus_twin21"] = (float(dm.mean() / se) if np.isfinite(se) and se > 0
+                                                 else None)
+            row[w] = r_
+        rows.append(row)
+        diff0[cid] = rule_net - twin0
+        diffm[cid] = rule_net - tmean
+
+    def med(w, key_):
+        xs = [x[w][key_] for x in rows if x[w].get(key_) is not None]
+        return float(np.median(xs)) if xs else None
+    summary = {w: {"n_cells": len(rows),
+                   "median_rule_minus_twin": med(w, "rule_minus_twin"),
+                   "median_rule_minus_random_1": med(w, "rule_minus_random_1"),
+                   "median_removed_by_matching": med(w, "removed_by_matching"),
+                   "median_share_removed": med(w, "share_removed"),
+                   "median_twin_draw_sd": med(w, "rule_minus_twin_draws_sd"),
+                   "n_rule_minus_twin_gt_0": sum(1 for x in rows if (x[w]["rule_minus_twin"] or 0) > 0),
+                   "n_t_twin21_ge_2": sum(1 for x in rows
+                                          if (x[w].get("t_monthly_rule_minus_twin21") or -9) >= 2),
+                   "n_t_twin21_le_minus_2": sum(1 for x in rows
+                                                if (x[w].get("t_monthly_rule_minus_twin21") or 9) <= -2)}
+               for w in ("dev", "sealed")}
+    both = sorted(x["cell"] for x in rows
+                  if (x["dev"].get("t_monthly_rule_minus_twin21") or -9) >= 2
+                  and (x["sealed"].get("t_monthly_rule_minus_twin21") or -9) >= 2)
+    pq = OUT / f"matched_twins_monthly_{run_id}.parquet"
+    frame = pd.concat({"rule_minus_twin21": pd.DataFrame(diffm), "rule_minus_twin0": pd.DataFrame(diff0)},
+                      axis=1)
+    frame.index.name = "decision_date"
+    OUT.mkdir(parents=True, exist_ok=True)
+    frame.to_parquet(pq)
+    doc = {
+        "schema": "signal_structure/matched_twins/2", "job": "signal_structure --matched-twins (all cells)",
+        "run_id": run_id, "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+        "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "label": "HINDSIGHT: every rule was registered 2026-09-26, after every month here",
+        "why": ("reviewer idea 2 for EVERY primary cell: the factory now stores each cell's holdings "
+                "(holdings_<run>.parquet), so the twin no longer depends on the top-10 file"),
+        "rules_source": src["manifest_path"],
+        "holdings_sha256": {k_: v_["sha256"] for k_, v_ in src["manifest"]["files"].items()},
+        "random_1": {"column": rcol, "source": "the run's series of record"},
+        "panel": {"source": src["manifest"]["files"]["twin_panel"]["path"],
+                  "rows": int(len(panel)), "what": "the factory's own panel of this run"},
+        "matching": ("size band (mega >= 1e9 / large >= 1e8 / mid >= 2e7 / small, 63-session median "
+                     "dollar volume) x vol_63 tercile x mom_252_21 tercile among the date's eligible "
+                     "names; one twin per held name, same weight, excluding the rule's own names, "
+                     "without replacement within a date; redrawn at every rebalance; weights held "
+                     "between rebalances as the factory holds them; fallback band x vol -> band -> any"),
+        "net_convention": ("twin net = twin gross - the RULE's own cost that month; draw 0 is seeded "
+                           "from the cell id, draws 1-20 give the twin's sampling sd; `twin21` = the mean "
+                           "of all 21 draws' net, the lower-noise twin the family pool reads"),
+        "month_check": ("a cell whose monthly series has a hole inside its span, or a month off the "
+                        "panel, REFUSES by name (matched_twins.check_months)"),
+        "summary": summary, "cells_t_twin21_ge_2_both_windows": both,
+        "n_primary_cells": len(primary), "n_refused": len(refused), "refused": refused,
+        "series": str(pq.relative_to(REPO)).replace(chr(92), "/"),
+        "rows": rows,
+    }
+    rp = OUT / f"matched_twins_{run_id}.json"
+    rp.write_text(json.dumps(doc, indent=1, default=lambda o: None if isinstance(o, float)
+                             and not np.isfinite(o) else str(o)), encoding="utf-8")
+    print(f"matched twins (all {len(rows)} primary cells, {len(refused)} refused) -> {rp}")
+    for w, v in summary.items():
+        print(f"  {w}: median rule - twin {_pct(v['median_rule_minus_twin'])}, rule - random_1 "
+              f"{_pct(v['median_rule_minus_random_1'])}, removed {_pct(v['median_removed_by_matching'])} "
+              f"(share {_pct(v['median_share_removed'], 0)}); beats twin {v['n_rule_minus_twin_gt_0']}/"
+              f"{v['n_cells']}; t(twin21) >= 2: {v['n_t_twin21_ge_2']}, <= -2: {v['n_t_twin21_le_minus_2']}")
+    print(f"  t(rule - twin21) >= 2 in BOTH windows: {len(both)} {both[:10]}")
+    for r_ in refused:
+        print(f"  REFUSED {r_['cell']}: {r_['why']}")
+    return doc
+
+
+# ── pooled per-family tests (reviewer idea 3) ────────────────────────────────
+
+def family_pool_readout(run_id: str) -> dict:
+    from backend.services import family_pool as FP
+    from backend.services import strategy_library as SL
+    S_ = load_series_of_record(run_id)
+    cells, net, active, etf = S_["cells"], S_["net"], S_["active"], S_["etf"]
+    idx = active.index
+    masks = SS.window_masks(idx)
+    X = SS.factor_spreads(etf).reindex(idx)
+    rp = SL.random_panel(net)
+    vs = {"random_panel": net.sub(rp, axis=0), "spy": active}
+    primary = sorted(c for c in net.columns if not cells[c]["control"] and cells[c]["primary"])
+    fams, small = FP.families(cells, primary)
+    tw_path = OUT / f"matched_twins_monthly_{run_id}.parquet"
+    tw = pd.read_parquet(tw_path)["rule_minus_twin21"] if tw_path.exists() else None
+    # single-rule reference (same estimators), library-wide, 2024-26 and dev
+    ref: dict = {}
+    for w in ("dev", "sealed"):
+        ses, oses = [], []
+        for c in primary:
+            try:
+                ses.append(FP.mean_test(vs["random_panel"][c][masks[w]].dropna(),
+                                        hold_months=cells[c]["hold_months"])["se_used"])
+            except FP.FamilyPoolRefused:
+                pass
+            o = _fit(active[c][masks[w]], X[masks[w]], cells[c]["hold_months"])
+            if "se_alpha_used" in o:
+                oses.append(o["se_alpha_used"])
+        ref[w] = {"median_se_mean_vs_panel": float(np.median(ses)) if ses else None,
+                  "median_mde_mean_vs_panel": float(SS.MDE_Z * np.median(ses)) if ses else None,
+                  "median_se_etf_alpha_vs_spy": float(np.median(oses)) if oses else None,
+                  "median_mde_etf_alpha_vs_spy": float(SS.MDE_Z * np.median(oses)) if oses else None,
+                  "n_cells": len(ses)}
+    rows, pooled_full = [], {"random_panel": {}, "spy": {}, "twin": {}}
+    for f, members in fams.items():
+        hold = max(cells[c]["hold_months"] for c in members)
+        row = {"family": f, "n_rules": len(members), "hold_months_used": hold, "members": members}
+        for b, A in vs.items():
+            t_ = FP.family_test(A[members], masks, family=f, hold_months=hold, X=X)
+            t_.pop("members", None)
+            row[f"vs_{b}"] = t_
+            pooled_full[b][f] = FP.pool(A[members])[0]
+        if tw is not None:
+            have = [c for c in members if c in tw.columns]
+            if len(have) >= FP.MIN_RULES:
+                t_ = FP.family_test(tw[have].reindex(idx), masks, family=f, hold_months=hold, X=None)
+                t_.pop("members", None)
+                t_["n_rules_with_twins"] = len(have)
+                row["rule_minus_twin"] = t_
+                pooled_full["twin"][f] = FP.pool(tw[have].reindex(idx))[0]
+            else:
+                row["rule_minus_twin"] = {"status": "REFUSED",
+                                          "why": f"{len(have)} member(s) with twins < {FP.MIN_RULES}"}
+        else:
+            row["rule_minus_twin"] = {"status": "NOT_RUN", "why": f"{tw_path.name} absent: run --matched-twins"}
+        rows.append(row)
+    n_f = len(fams)
+    dsr = {b: FP.dsr_over_families(v, n_f) for b, v in pooled_full.items() if v}
+    best = {}
+    for b, d in dsr.items():
+        ok = {k_: v_ for k_, v_ in d.items() if v_ is not None}
+        if ok:
+            k_ = max(ok, key=ok.get)
+            best[b] = {"family": k_, "dsr_at_n_families": ok[k_], "n_families": n_f}
+
+    alpha_both = {b: sorted(r["family"] for r in rows if (r.get(f"vs_{b}") or {}).get("mean_t_ge_2_both_windows"))
+                  for b in vs}
+    alpha_both_etf = {b: sorted(r["family"] for r in rows
+                                if (r.get(f"vs_{b}") or {}).get("ols_alpha_t_ge_2_both_windows"))
+                      for b in vs}
+    twin_both = sorted(r["family"] for r in rows if (r.get("rule_minus_twin") or {}).get("mean_t_ge_2_both_windows"))
+    pooled_mde = {w: float(np.median([r["vs_random_panel"]["windows"][w]["pooled"]["mde_80"] for r in rows
+                                      if "mde_80" in r["vs_random_panel"]["windows"][w]["pooled"]]))
+                  for w in ("dev", "sealed")}
+    pooled_etf_se = [((r["vs_spy"]["windows"]["sealed"]["ols"]) or {}).get("se_alpha_used") for r in rows]
+    pooled_etf_se = [x for x in pooled_etf_se if x is not None]
+    doc = {
+        "schema": "signal_structure/family_pool/1", "job": "signal_structure --family-pool",
+        "run_id": run_id, "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+        "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "label": "HINDSIGHT: every rule was registered 2026-09-26, after every month here",
+        "why": ("reviewer idea 3 (review 2026-09-27 §8): the equal-weight mean of a family's primary "
+                "cells' monthly active returns as ONE series; multiplicity over FAMILIES"),
+        "series_source": S_["series_source"].get("path"),
+        "method": {
+            "pooled": "equal-weight mean across the family's primary cells present that month",
+            "benchmarks": ("vs_random_panel = net - mean(random_1..3 @k50) (the panel's own random "
+                           "portfolio); vs_spy = net - SPY; rule_minus_twin = net - the mean of 21 "
+                           "characteristic-matched twin draws' net"),
+            "se": ("plain sd/sqrt(T) and Newey-West at lag max(member hold) - 1; used = max(plain, HAC); "
+                   "MDE = 2.8 x used SE"),
+            "effective_n": "n / (1 + (n-1) mean pairwise rho), rho floored at 0, printed per window",
+            "verdict": ("signal_structure.verdict on the 2024-26 pooled series hedged with its DEV "
+                        "ETF betas (SMH, IWM, MTUM, USMV, QUAL, VLUE minus SPY); rule_minus_twin reads "
+                        "its plain pooled 2024-26 mean"),
+            "alpha_both_windows": "pooled mean t_used >= 2 in dev AND in 2024-26",
+            "windows": "entry-date split: dev = entry < 2024, 2024-26 = entry >= 2024-01, full = all"},
+        "n_primary_cells": len(primary), "n_families_pooled": n_f,
+        "families_too_small": small,
+        "single_rule_reference": ref,
+        "pooled_median_mde_vs_panel": pooled_mde,
+        "pooled_median_se_etf_alpha_vs_spy_2024_26": float(np.median(pooled_etf_se)) if pooled_etf_se else None,
+        "dsr_at_n_families": dsr, "best_family_by_dsr": best,
+        "alpha_both_windows_mean": alpha_both, "alpha_both_windows_etf_alpha": alpha_both_etf,
+        "rule_minus_twin_t_ge_2_both_windows": twin_both,
+        "verdicts": {b: dict(sorted(Counter((r.get(f"vs_{b}") or {}).get("verdict") for r in rows).items()))
+                     for b in vs},
+        "rows": rows,
+    }
+    rpth = OUT / f"family_pool_{run_id}.json"
+    rpth.write_text(json.dumps(doc, indent=1, default=lambda o: None if isinstance(o, float)
+                               and not np.isfinite(o) else str(o)), encoding="utf-8")
+    md = render_family_pool(doc)
+    (OUT / f"family_pool_{run_id}.md").write_text(md, encoding="utf-8")
+    print(f"family pool -> {rpth}")
+    print(md)
+    return doc
+
+
+def render_family_pool(doc: dict) -> str:
+    def g(r, path):
+        x = r
+        for p_ in path:
+            x = (x or {}).get(p_) if isinstance(x, dict) else None
+        return x
+
+    L = [f"## Pooled family tests -- run {doc['run_id']} (HINDSIGHT)", "",
+         f"{doc['n_families_pooled']} families with >= 3 primary rules ({doc['n_primary_cells']} primary cells); "
+         f"too small to pool: {len(doc['families_too_small'])}.", "",
+         "Pooled monthly mean vs the random panel (t = used SE; MDE at 80% power), n_eff in 2024-26, "
+         "the verdict on the dev-hedged 2024-26 alpha vs SPY, and rule - matched twin (21-draw mean):", "",
+         "| family | n | n_eff 24-26 (rho) | vs panel dev: mean (t) | vs panel 24-26: mean (t) | MDE 24-26 | "
+         "vs SPY ETF alpha dev (t) | 24-26 (t) | verdict (vs SPY) | rule-twin dev (t) | rule-twin 24-26 (t) |",
+         "|---|---|---|---|---|---|---|---|---|---|---|"]
+    for r in doc["rows"]:
+        P, S = r["vs_random_panel"]["windows"], r["vs_spy"]["windows"]
+        en = P["sealed"]["effective_n"]
+        tw = r.get("rule_minus_twin") or {}
+        twd = g(tw, ["windows", "dev", "pooled"]) or {}
+        tws = g(tw, ["windows", "sealed", "pooled"]) or {}
+
+        def mt(x):
+            return (f"{_pct(x.get('mean_monthly'), 2)} ({_f(x.get('t_used'), 2)})"
+                    if x and "mean_monthly" in x else "n/a")
+
+        def ot(x):
+            return (f"{_pct(x.get('alpha_monthly'), 2)} ({_f(x.get('t_alpha_used'), 2)})"
+                    if x and "alpha_monthly" in x else "n/a")
+        L.append(f"| {r['family']} | {r['n_rules']} | {_f(en.get('n_eff'), 1)} ({_f(en.get('mean_pair_rho'), 2)}) | "
+                 f"{mt(P['dev']['pooled'])} | {mt(P['sealed']['pooled'])} | "
+                 f"{_pct(P['sealed']['pooled'].get('mde_80'), 2)} | {ot(S['dev']['ols'])} | {ot(S['sealed']['ols'])} | "
+                 f"{r['vs_spy'].get('verdict')} | {mt(twd)} | {mt(tws)} |")
+    ref = doc["single_rule_reference"]
+    L += ["", f"Single rule, median, same estimator: MDE of the mean vs panel dev "
+              f"{_pct(ref['dev']['median_mde_mean_vs_panel'], 2)}/mo, 2024-26 "
+              f"{_pct(ref['sealed']['median_mde_mean_vs_panel'], 2)}/mo; pooled family median "
+              f"{_pct(doc['pooled_median_mde_vs_panel']['dev'], 2)} / "
+              f"{_pct(doc['pooled_median_mde_vs_panel']['sealed'], 2)}/mo. ETF-alpha SE 2024-26: single "
+              f"{_pct(ref['sealed']['median_se_etf_alpha_vs_spy'], 2)} (MDE "
+              f"{_pct(ref['sealed']['median_mde_etf_alpha_vs_spy'], 2)}), pooled "
+              f"{_pct(doc['pooled_median_se_etf_alpha_vs_spy_2024_26'], 2)} (MDE "
+              f"{_pct((doc['pooled_median_se_etf_alpha_vs_spy_2024_26'] or 0) * SS.MDE_Z, 2)}).",
+          f"Alpha (pooled mean t >= 2) in BOTH windows: vs panel {doc['alpha_both_windows_mean']['random_panel']}; "
+          f"vs SPY {doc['alpha_both_windows_mean']['spy']}. ETF alpha t >= 2 both: "
+          f"vs panel {doc['alpha_both_windows_etf_alpha']['random_panel']}; vs SPY {doc['alpha_both_windows_etf_alpha']['spy']}.",
+          f"Rule - matched twin, pooled t >= 2 in BOTH windows: {doc['rule_minus_twin_t_ge_2_both_windows']}.",
+          f"Best family by DSR at n = {doc['n_families_pooled']} families: "
+          + "; ".join(f"{b}: {v['family']} {_f(v['dsr_at_n_families'], 3)}" for b, v in doc["best_family_by_dsr"].items()),
+          f"Verdicts: {doc['verdicts']}"]
+    return "\n".join(L) + "\n"
+
+
 def render_twins(doc: dict) -> str:
     L = [f"## Matched random twins -- run {doc['run_id']} (2024-26 top-10)", "",
          "| rule | k | hold | recon gap (max) | dev: rule - twin | dev: rule - random_1 | dev removed | "
@@ -931,17 +1276,18 @@ def main(argv=None) -> int:
     ap.add_argument("--hac", action="store_true",
                     help="Newey-West readout (plain vs HAC verdicts) of --run-id, from stored series")
     ap.add_argument("--matched-twins", action="store_true",
-                    help="characteristic-matched random twins for --run-id's 2024-26 top-10")
+                    help=("characteristic-matched random twins: every primary cell when the factory "
+                          "stored holdings for --run-id, else its 2024-26 top-10"))
+    ap.add_argument("--family-pool", action="store_true",
+                    help="pooled per-family tests (vs panel, vs SPY, rule - matched twin)")
     a = ap.parse_args(argv)
     run_id = a.run_id
-    if a.rekey:
-        rekey(run_id)
-        return 0
-    if a.hac:
-        hac_readout(run_id)
-        return 0
-    if a.matched_twins:
-        matched_twins_readout(run_id)
+    jobs = [(a.rekey, rekey), (a.hac, hac_readout), (a.matched_twins, matched_twins_readout),
+            (a.family_pool, family_pool_readout)]
+    if any(on for on, _ in jobs):
+        for on, fn in jobs:
+            if on:
+                fn(run_id)
         return 0
     if (LIB / f"leaderboard_{run_id}.INVALID.md").exists():
         raise SystemExit(f"REFUSED: run {run_id} is marked INVALID")

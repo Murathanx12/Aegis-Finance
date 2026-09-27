@@ -981,7 +981,7 @@ def _breadth(rule) -> list[int]:
 
 
 
-def _value_aware_run(panel, rule, *, k, scores):
+def _value_aware_run(panel, rule, *, k, scores, holdings=None):
     """`strategy_library_ext.run_value_rule` for the VAL-01 value rules, else
     `strategy_library.run_strategy`. The receipt of a refused period lives in
     `m.attrs["eligibility"]`; a missing ext module falls back to the base runner
@@ -993,12 +993,17 @@ def _value_aware_run(panel, rule, *, k, scores):
         value_ids = set()
     if rule.id in value_ids:
         from backend.services import strategy_library_ext as EXT
-        return EXT.run_value_rule(panel, rule, k=k, scores=scores)
-    return SL.run_strategy(panel, rule, k=k, scores=scores)
+        return EXT.run_value_rule(panel, rule, k=k, scores=scores, holdings=holdings)
+    return SL.run_strategy(panel, rule, k=k, scores=scores, holdings=holdings)
 
 def evaluate_rule(panel: pd.DataFrame, spy: pd.Series, rule, *, since: str,
-                  benches: dict | None = None) -> dict:
+                  benches: dict | None = None, sink: list | None = None) -> dict:
     """All breadth cells of one rule; a missing input is a named REFUSAL.
+
+    `sink`, when a list, receives (rule_id, k, holdings, monthly frame) for every
+    breadth cell run: the held symbols and weights at each rebalance and the
+    month-by-month gross / cost / net -- the input of matched twins and
+    replication for EVERY cell, not only a top-10 (`write_holdings`).
 
     `benches`: {"iwm": series-or-reason, "random_panel": series-or-reason}
     from pass one. A random-panel member is never measured against the panel
@@ -1022,7 +1027,11 @@ def evaluate_rule(panel: pd.DataFrame, spy: pd.Series, rule, *, since: str,
         # fill k names must REFUSE that period, not carry a stale book at the
         # last computable weights (the value rows kept returning non-cash
         # months after 2026-04-06, where market value is NaN).
-        m = _value_aware_run(panel, rule, k=k, scores=sc)
+        hold: list | None = [] if sink is not None else None
+        m = _value_aware_run(panel, rule, k=k, scores=sc, holdings=hold)
+        if sink is not None:
+            sink.append((rule.id, int(k), hold,
+                         m[["date", "gross", "cost", "net", "rebalanced", "n_held"]].copy()))
         ev = SL.evaluate(m, spy, hold_months=rule.hold_months,
                          registered_utc=rule.first_registered_utc, since=since,
                          iwm=iwm, random_panel=rp)
@@ -1130,6 +1139,143 @@ def _round(o, nd: int = 6):
     return o
 
 
+class HoldingsParts:
+    """Crash state for the per-cell holdings, beside the checkpoint.
+
+    Every checkpoint flushes the buffered cells to `part_<n>.monthly.parquet`
+    then `part_<n>.holdings.parquet` FIRST, so the parts always cover the
+    checkpoint's `done` (a crash between the two leaves a part for a rule the
+    resume will recompute; `merge_holdings` keeps the LAST part of each cell).
+    A fresh run clears the directory; a resume keeps it."""
+
+    def __init__(self, path: Path, *, fresh: bool):
+        self.dir = Path(path)
+        self.dir.mkdir(parents=True, exist_ok=True)
+        if fresh:
+            for f in self.dir.glob("part_*.parquet"):
+                f.unlink()
+        self.buffer: list = []
+
+    def _seq(self) -> int:
+        seqs = [int(f.name.split("_")[1].split(".")[0]) for f in self.dir.glob("part_*.holdings.parquet")]
+        return max(seqs) + 1 if seqs else 0
+
+    def n_parts(self) -> int:
+        return len(list(self.dir.glob("part_*.holdings.parquet")))
+
+    def flush(self) -> None:
+        if not self.buffer:
+            return
+        from backend.services import matched_twins as MT
+        n = self._seq()
+        MT.monthly_frame([(r, k, m) for r, k, _h, m in self.buffer]).to_parquet(
+            self.dir / f"part_{n:05d}.monthly.parquet")
+        # the holdings part last: its presence marks the part complete
+        MT.holdings_frame([(r, k, h) for r, k, h, _m in self.buffer]).to_parquet(
+            self.dir / f"part_{n:05d}.holdings.parquet")
+        self.buffer.clear()
+
+
+TWIN_PANEL_COLUMNS = ("date", "symbol", "eligible", "median_dollar_vol", "vol_63", "mom_252_21",
+                      "fwd_ret", "delisted_in_period")
+#: a sidecar above this size is never committed (the manifest is)
+HOLDINGS_COMMIT_LIMIT_BYTES = 5_000_000
+
+
+def merge_holdings(parts_dir: Path, rule_ids: set) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Every complete part, the LAST version of each (rule, k), rules in `rule_ids` only."""
+    hs, ms = [], []
+    for f in sorted(Path(parts_dir).glob("part_*.holdings.parquet")):
+        n = int(f.name.split("_")[1].split(".")[0])
+        mf = f.with_name(f"part_{n:05d}.monthly.parquet")
+        if not mf.exists():
+            continue
+        h, m = pd.read_parquet(f), pd.read_parquet(mf)
+        for x in (h, m):
+            x["rule"] = x["rule"].astype(str)
+            x["__part"] = n
+        hs.append(h)
+        ms.append(m)
+    if not hs:
+        raise FileNotFoundError(f"no complete holdings part under {parts_dir}")
+    H, M = pd.concat(hs, ignore_index=True), pd.concat(ms, ignore_index=True)
+    last = (pd.concat([H[["rule", "k", "__part"]], M[["rule", "k", "__part"]]])
+            .groupby(["rule", "k"])["__part"].max().rename("__last"))
+    out = []
+    for X in (H, M):
+        X = X.join(last, on=["rule", "k"])
+        X = X[(X["__part"] == X["__last"]) & X["rule"].isin(rule_ids)]
+        X = X.drop(columns=["__part", "__last"]).reset_index(drop=True)
+        X["rule"] = X["rule"].astype("category")
+        if "symbol" in X.columns:
+            X["symbol"] = X["symbol"].astype(str).astype("category")
+        out.append(X)
+    return out[0], out[1]
+
+
+def _sha256_file(p: Path) -> str:
+    h = hashlib.sha256()
+    with open(p, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def write_holdings(done: dict, panel: pd.DataFrame, *, out: Path, today: date, run_id: str) -> dict:
+    """`holdings_<run>.parquet` (held symbols + weights per rebalance, every
+    cell), `cell_monthly_<run>.parquet` (gross / cost / net per month, every
+    cell), `twin_panel_<run>.parquet` (the characteristics matched twins draw
+    from: this run's own panel), and `holdings_<run>.manifest.json` with row
+    counts, sizes and sha256 of each, and a check that every OK cell of `done`
+    has holdings and exactly `n_months` monthly rows. Parquet is gitignored
+    repo-wide; the manifest is the committed receipt."""
+    parts_dir = out / f"holdings_parts_{today}"
+    H, M = merge_holdings(parts_dir, set(done))
+    files = {"holdings": out / f"holdings_{run_id}.parquet",
+             "cell_monthly": out / f"cell_monthly_{run_id}.parquet",
+             "twin_panel": out / f"twin_panel_{run_id}.parquet"}
+    tp = panel[[c for c in TWIN_PANEL_COLUMNS if c in panel.columns]]
+    H.to_parquet(files["holdings"])
+    M.to_parquet(files["cell_monthly"])
+    tp.to_parquet(files["twin_panel"])
+    have_h = set(zip(H["rule"].astype(str), H["k"].astype(int)))
+    mcount = M.groupby([M["rule"].astype(str), M["k"].astype(int)]).size().to_dict()
+    n_ok = n_h = n_m = 0
+    bad: list = []
+    for rid, res in done.items():
+        for k, c in (res.get("cells") or {}).items():
+            if c.get("status") != "OK":
+                continue
+            n_ok += 1
+            key = (rid, int(k))
+            n_h += key in have_h
+            if mcount.get(key) == int(c.get("n_months") or -1):
+                n_m += 1
+            elif len(bad) < 20:
+                bad.append({"cell": f"{rid}@k{k}", "n_months": c.get("n_months"),
+                            "monthly_rows": mcount.get(key)})
+    rows = {"holdings": len(H), "cell_monthly": len(M), "twin_panel": len(tp)}
+    man = {"schema": "strategy_library/holdings_manifest/1", "run_id": run_id, "date": str(today),
+           "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+           "format": ("holdings: one row per (rule, k, rebalance date, symbol) with weight; a rebalance "
+                      "to cash is symbol '' weight NaN risk_off True. cell_monthly: one row per (rule, k, "
+                      "month) with gross / cost / net. Reader: matched_twins.cell_records"),
+           "files": {}, "check": {"n_ok_cells": n_ok, "n_cells_with_holdings": n_h,
+                                  "n_cells_monthly_rows_equal_n_months": n_m,
+                                  "mismatches_first_20": bad}}
+    for name, f in files.items():
+        size = f.stat().st_size
+        man["files"][name] = {"path": _rel(f), "bytes": int(size), "sha256": _sha256_file(f),
+                              "rows": int(rows[name]), "committed": False,
+                              "why_not_committed": ("*.parquet is gitignored repo-wide"
+                                                    + (f"; {size / 1e6:.1f} MB > the 5 MB limit"
+                                                       if size > HOLDINGS_COMMIT_LIMIT_BYTES else ""))}
+    man["files"]["holdings"]["n_cells"] = len(have_h)
+    man["files"]["holdings"]["n_rules"] = len({r for r, _ in have_h})
+    atomic_write_json(out / f"holdings_{run_id}.manifest.json", man, indent=1)
+    return man
+
+
 def run_factory(panel: pd.DataFrame, spy: pd.Series, spy_meta: dict, *,
                 today: date, rules: list | None = None, out: Path | None = None,
                 resume: bool = False, time_box_s: float | None = None,
@@ -1177,6 +1323,7 @@ def run_factory(panel: pd.DataFrame, spy: pd.Series, spy_meta: dict, *,
     if resume and ck.exists():
         done = dict(ck.load().get("done") or {})
         log(f"RESUME: {len(done)} rule(s) already on the checkpoint; not recomputing them")
+    parts = HoldingsParts(out / f"holdings_parts_{today}", fresh=not resume)
     t0 = time.time()
     n_new = 0
     stopped_why = None
@@ -1193,15 +1340,19 @@ def run_factory(panel: pd.DataFrame, spy: pd.Series, spy_meta: dict, *,
         if stop_after is not None and n_new >= stop_after:
             stopped_why = f"stop_after={stop_after}"
             break
-        done[rule.id] = _round(evaluate_rule(panel, spy, rule, since=since, benches=benches))
+        done[rule.id] = _round(evaluate_rule(panel, spy, rule, since=since, benches=benches,
+                                             sink=parts.buffer))
         n_new += 1
         if n_new % every == 0:
+            parts.flush()                      # parts >= done: flushed BEFORE the checkpoint
             ck.save({"done": done})
             log(f"  checkpoint: {len(done)}/{len(rules)} rules ({time.time()-t0:.0f}s)")
+    parts.flush()
     ck.save({"done": done})
     board = leaderboard(done, rules, spy_meta=spy_meta, today=today,
                         partial=stopped_why, since=since)
     board["n_computed_this_run"] = n_new
+    board["holdings_parts"] = {"dir": _rel(parts.dir), "n_parts": parts.n_parts()}
     board["benchmarks"] = {"iwm": iwm_meta, "random_panel": rp_meta,
                            "note": SL.PANEL_BENCHMARK_NOTE,
                            "order": "two-pass: the random panel first, then every rule"}
@@ -1930,6 +2081,12 @@ def backtest_vs_forward(board: dict, bars: pd.DataFrame, *, today: date) -> list
     return lines
 
 
+def board_done(out: Path, today: date) -> dict:
+    """The checkpoint's `done` (every rule this run holds), read back from disk."""
+    blob = json.loads((out / f"checkpoint_{today}.json").read_text(encoding="utf-8"))
+    return dict((blob.get("state") or {}).get("done") or {})
+
+
 def new_run_id(now: datetime | None = None) -> str:
     """`<date>T<HHMMSS>Z` in UTC: the suffix every receipt of one run carries."""
     return (now or datetime.now(timezone.utc)).astimezone(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
@@ -2186,6 +2343,16 @@ def main(argv=None) -> int:
     paths_out = write_outputs(board, out=out, today=today, books=books, forward=forward,
                               run_id=run_id)
     board = {**board, "run_id": run_id}
+    try:
+        man = write_holdings(board_done(out, today), panel, out=out, today=today, run_id=run_id)
+        paths_out["holdings_manifest"] = str(out / f"holdings_{run_id}.manifest.json")
+        print(f"  holdings: {man['files']['holdings']['n_cells']} cells, "
+              f"{man['files']['holdings']['rows']:,} rows; {man['check']['n_cells_with_holdings']}"
+              f"/{man['check']['n_ok_cells']} OK cells with holdings, "
+              f"{man['check']['n_cells_monthly_rows_equal_n_months']} with n_months rows", flush=True)
+    except Exception as e:                                # noqa: BLE001 -- printed, never silent
+        paths_out["holdings_manifest"] = f"REFUSED: {type(e).__name__}: {e}"
+        print(f"  holdings: {paths_out['holdings_manifest']}", flush=True)
     try:
         paths_out["replication"] = str(write_replication(board, panel, spy, rules, out=out,
                                                          today=today, run_id=run_id))
