@@ -472,3 +472,110 @@ def test_a_stub_driver_without_a_ledger_says_so():
     from backend.services import web_reader as WR
     fp = WR.footprint_receipt([], write=False, cli_now={})
     assert fp["cli_calls"] is None and fp["cli_ledger"].startswith("UNAVAILABLE")
+
+
+# -- the guard knows its own blank tabs (2026-09-27, owed from e54551b7) -------
+# The reader blanks its lane tabs between reads; `about:blank` is on no allowed
+# host, so the host check refused to re-navigate or close them and web_reader
+# grew a side route. The guard now accepts a tab THIS process opened while it
+# is exactly on about:blank -- for navigate (allowed host only) and close only.
+
+BLANK = "about:blank"
+
+
+class BlankCLI(OperatorCLI):
+    """OperatorCLI plus `close` and a tab 3 we opened, sitting on about:blank,
+    and a tab 4 on about:blank that we did NOT open."""
+
+    def __init__(self):
+        super().__init__()
+        self.urls["3"] = BLANK
+        self.urls["4"] = BLANK
+
+    def __call__(self, args, **kw):
+        if OC._cmd_key(args) == "browser close":
+            self.calls.append(list(args))
+            self.urls.pop(str(args[-1]).rsplit(":", 1)[-1], None)
+            return subprocess.CompletedProcess(args, 0, "ok", "")
+        return super().__call__(args, **kw)
+
+
+@pytest.fixture
+def blank_cli(monkeypatch):
+    fake = BlankCLI()
+    _install(monkeypatch, fake)
+    OC._OPENED_TABS.add(fake.handle("3"))
+    yield fake
+    OC._OPENED_TABS.difference_update({fake.handle(n) for n in ("1", "2", "3", "4")})
+
+
+def test_navigate_from_our_blank_tab_to_an_allowed_host_passes(blank_cli):
+    tab = blank_cli.handle("3")
+    out = OC.browser("navigate", WSJ_A, profile_name="user", target_id=tab)
+    assert out["rc"] == 0 and out["tab_url_before"] == BLANK and out["own_blank_tab"]
+    assert blank_cli.urls["3"] == WSJ_A
+    # the landed URL is re-read from a fresh listing, and it is on the hosts
+    assert out["tab_url_after"] == WSJ_A and out["left_allowed_hosts"] is False
+
+
+def test_navigate_from_our_blank_tab_to_a_foreign_host_refuses(blank_cli):
+    tab = blank_cli.handle("3")
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_HOST"):
+        OC.browser("navigate", "https://example.com/x", profile_name="user", target_id=tab)
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_NAVIGATE"):
+        OC.browser("navigate", "javascript:alert(1)", profile_name="user", target_id=tab)
+    assert blank_cli.urls["3"] == BLANK
+    assert not any(OC._cmd_key(c) == "browser navigate" for c in blank_cli.calls)
+
+
+def test_a_blank_tab_this_process_did_not_open_refuses(blank_cli):
+    tab = blank_cli.handle("4")
+    for verb, args in (("navigate", (WSJ_A,)), ("close", ())):
+        with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_(TAB_HOST|CLOSE)"):
+            OC.browser(verb, *args, profile_name="user", target_id=tab)
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_NOT_OUR_TAB"):
+        OC.own_blank_tab("close", tab, profile_name="user")
+    assert blank_cli.urls["4"] == BLANK
+
+
+def test_evaluate_and_every_other_verb_on_our_blank_tab_refuse(blank_cli):
+    tab = blank_cli.handle("3")
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_VERB"):
+        OC.browser("evaluate", "--fn", "() => 1", profile_name="user", target_id=tab)
+    for verb in ("snapshot", "click", "press", "wait", "screenshot"):
+        with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_TAB_HOST"):
+            OC.browser(verb, profile_name="user", target_id=tab)
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_BLANK_TAB_VERB"):
+        OC.own_blank_tab("evaluate", tab, profile_name="user")
+
+
+def test_close_on_our_blank_tab_passes_and_forgets_the_handle(blank_cli):
+    tab = blank_cli.handle("3")
+    out = OC.own_blank_tab("close", tab, profile_name="user")
+    assert out["rc"] == 0 and out["via"] == "own_blank_tab"
+    assert "3" not in blank_cli.urls and tab not in OC._OPENED_TABS
+    # a second close of the same handle is refused: it is no longer ours
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_NOT_OUR_TAB"):
+        OC.own_blank_tab("close", tab, profile_name="user")
+
+
+def test_close_of_our_tab_that_is_already_gone_is_already_gone(blank_cli):
+    tab = blank_cli.handle("9")
+    OC._OPENED_TABS.add(tab)
+    out = OC.own_blank_tab("close", tab, profile_name="user")
+    assert out["already_gone"] is True and tab not in OC._OPENED_TABS
+
+
+def test_blank_is_one_cli_call_and_only_on_our_tab(blank_cli):
+    OC.invalidate_profile_cache()
+    tab = blank_cli.handle("3")
+    blank_cli.urls["3"] = WSJ_A
+    n0 = len(blank_cli.calls)
+    out = OC.own_blank_tab("blank", tab, profile_name="user")
+    assert out["rc"] == 0 and blank_cli.urls["3"] == BLANK
+    assert [OC._cmd_key(c) for c in blank_cli.calls[n0:]] == ["browser navigate"]
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_NOT_OUR_TAB"):
+        OC.own_blank_tab("blank", blank_cli.handle("1"), profile_name="user")
+    # the guarded verb blanks only a tab of ours, never Murat's own
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_NAVIGATE"):
+        OC.browser("navigate", BLANK, profile_name="user", target_id=blank_cli.handle("1"))

@@ -1771,9 +1771,10 @@ class GuardedCLI:
 
 def test_a_blanked_tab_is_renavigated_and_closed_through_the_real_client(ledger, monkeypatch):
     """`openclaw_client.browser()` refuses any verb on a tab whose current host
-    is not wsj/barrons/marketwatch -- which a blanked tab is not. The narrow
-    route (`own_blank_tab_verb`) is what makes the blank-between-reads rule
-    work at all against the real guard."""
+    is not wsj/barrons/marketwatch -- which a blanked tab is not -- EXCEPT
+    navigate/close on a tab this process opened (the guard's own rule since
+    2026-09-27). `own_blank_tab_verb` is a thin call to that rule, and it is
+    what makes the blank-between-reads rule work against the real guard."""
     fake = GuardedCLI()
     monkeypatch.setattr(subprocess, "run", lambda cmd, **kw: fake(list(cmd[1:]), **kw))
     OC.invalidate_tabs_cache()
@@ -1789,9 +1790,10 @@ def test_a_blanked_tab_is_renavigated_and_closed_through_the_real_client(ledger,
         rd.pages, rd.tab_pages = 1, 1
         rd.read_article(a)                         # navigate (guarded), read, then blank
         assert rd.blanked and fake.urls[tab.rsplit(":", 1)[-1]] == WR.BLANK_URL
-        # the guarded verb itself refuses a blank tab -- the reason for the route
+        # the guard knows its own blank tab for navigate/close ONLY (2026-09-27):
+        # any other verb on it still refuses on the host
         with pytest.raises(OC.OpenClawRefused, match="OPERATOR_TAB_HOST"):
-            OC.browser("navigate", b, profile_name="user", target_id=tab)
+            OC.browser("snapshot", profile_name="user", target_id=tab)
         art = rd.read_article(b)                   # re-navigated through own_blank_tab_verb
         assert art["url"] == b and rd.blanked
         assert rd.close_tab() and tab not in OC._OPENED_TABS

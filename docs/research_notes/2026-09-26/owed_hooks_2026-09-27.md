@@ -87,6 +87,21 @@ In `compute()` (line ~543), print it on the receipt: keep the frame and write
 
 ## Owed patch 2: the 30-minute health tick (`scripts/always_on_lab.py`, not mine; the lab runs old code)
 
+> **APPLIED 2026-09-27** in the commit "Lab health tick and on-demand model start; the host guard
+> knows its own blank tabs". Config keys, the `LOOPS` entry and `loop_health` landed together
+> (`python -c "import scripts.always_on_lab"` exits 0). The handler matches the patch below and
+> also catches any exception into one logged line and an `error` row, and it logs every non-ALIVE
+> row as `health: <row line>`. One direct call on the real machine (the running lab held the lock,
+> so no `--ticks 1`): 44 rows, ALIVE 28 / STALE 10 / UNKNOWN 6 / DEAD 0, rc 2, receipt
+> `health/health_20260927T084733Z.json`.
+> - The same commit fixes the row it printed: `llama_server STALE -- l2_typing has waited
+>   PENDING_MODEL for 17.2h -- typing never happens unattended`. With
+>   `MODEL_ROUTING_START_AT_BOOT = False` the typing loop now starts its model ON DEMAND
+>   (`ensure_model_server(on_demand_for="lab:l2_typing")` -> `llama_server.ensure`, which spawns
+>   the idle reaper). The hold, the power plan and the daily cap still bind. It waits
+>   `LAB_L2_ON_DEMAND_WAIT_S` (240 s) inside the 900 s box.
+> - The running lab picks this up only after it restarts, by PID.
+
 Three edits must land together. `always_on_lab` asserts at import that `PERIODS`, `TIMEOUTS` and
 `HANDLERS` equal `LOOPS`. So adding the config keys without the loop, or the loop without the
 keys, is an `AssertionError` on the lab's next start. That is why neither half was applied here.

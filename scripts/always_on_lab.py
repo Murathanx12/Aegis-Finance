@@ -133,6 +133,7 @@ LOOPS: tuple[tuple[str, str], ...] = (
     ("nn_lab", "E1 refit, E4 ADWIN gate, E5 stopping rules, on tonight's table"),
     ("idle_gpu_queue", "the next registered job, only when nothing needs the model"),
     ("thematic_streams", "Murat's themes as typed hypothesis streams"),
+    ("health", "every subsystem probed from the evidence it wrote ($0, no model)"),
     ("status", "lab_status.json, every tick, whether or not anything happened"),
 )
 
@@ -268,6 +269,29 @@ def start_model_server() -> dict:
     from backend.services import llama_server
     return llama_server.start(bind=False,
                               wait_s=float(_config.LAB_MODEL_SERVER_START_WAIT_S))
+
+
+def start_model_server_on_demand(reason: str) -> dict:
+    """`llama_server.ensure(reason)` — the lab as an ON-DEMAND starter (2026-09-27).
+
+    THE MEASURED DEFECT. `MODEL_ROUTING_START_AT_BOOT = False` (chunk G,
+    2026-09-26) also switched `LAB_STARTS_MODEL_SERVER` off, and the L2 typing
+    loop's only starter was the boot one — so with nothing else running the
+    model, the health table read "typing never happens unattended": every tick
+    PENDING_MODEL, reason `LAB_STARTS_MODEL_SERVER_DISABLED`. Model routing
+    says the CALLER that needs the model starts it; this is that caller.
+
+    `ensure()` is the routing seam, not `start()`: it records `started_for`,
+    spawns the detached `scripts/llama_reaper` (so the server is started
+    UNBOUND and stopped BY PID after `MODEL_ROUTING_IDLE_MIN` idle — the lab
+    itself still never stops a server), and refuses an operator hold by name.
+    It waits `LAB_L2_ON_DEMAND_WAIT_S` for `/health`, inside the loop's box,
+    because a server left for the next 15-minute tick can be reaped first.
+    """
+    from backend.services import llama_server
+    out = llama_server.ensure(reason,
+                              wait_s=float(_config.LAB_L2_ON_DEMAND_WAIT_S))
+    return {**out, "ready": bool(out.get("ready")) or bool(out.get("ok"))}
 
 
 def pid_alive(pid: int) -> bool:
@@ -1056,7 +1080,8 @@ MODEL_SERVER_REFUSALS = (
 
 
 def ensure_model_server(state: "LabState", *, now: datetime | None = None,
-                        server: dict | None = None) -> dict:
+                        server: dict | None = None,
+                        on_demand_for: str | None = None) -> dict:
     """Start the model server when nothing is listening. Five gates, by name.
 
     THE MEASURED DEFECT. On 2026-09-18 at 06:57 the PC rebooted for Windows
@@ -1080,6 +1105,13 @@ def ensure_model_server(state: "LabState", *, now: datetime | None = None,
     idle queue paid for on 2026-09-14: this runs inside a boxed loop whose thread
     can be abandoned, and a counter written after the return is a counter that
     was never written.
+
+    ON DEMAND (2026-09-27). With the boot starter off (`LAB_STARTS_MODEL_SERVER`
+    follows `MODEL_ROUTING_START_AT_BOOT = False`), a caller that needs the
+    model NOW passes `on_demand_for=<reason>` and the start goes through
+    `start_model_server_on_demand` (`llama_server.ensure` + the idle reaper).
+    Every other gate — hold, foreign, power plan, the daily cap — still binds.
+    Without `on_demand_for` the switched-off lab refuses exactly as before.
     """
     now = now or datetime.now(timezone.utc)
     today = run_date()
@@ -1087,7 +1119,10 @@ def ensure_model_server(state: "LabState", *, now: datetime | None = None,
     base = {"attempted": False, "started": False, "starts_today": starts,
             "cap": int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY)}
 
-    if not bool(getattr(_config, "LAB_STARTS_MODEL_SERVER", False)):
+    boot_starter = bool(getattr(_config, "LAB_STARTS_MODEL_SERVER", False))
+    on_demand = bool(on_demand_for) and not boot_starter
+    base["mode"] = "on_demand" if on_demand else "boot_starter"
+    if not boot_starter and not on_demand:
         return {**base, "reason": "LAB_STARTS_MODEL_SERVER_DISABLED",
                 "detail": ("config.LAB_STARTS_MODEL_SERVER is off; the desktop "
                            "app and a human are the only starters")}
@@ -1121,7 +1156,8 @@ def ensure_model_server(state: "LabState", *, now: datetime | None = None,
     with state.model_lock:
         starts = state.note_model_server_start(today)
         try:
-            out = start_model_server()
+            out = (start_model_server_on_demand(str(on_demand_for)) if on_demand
+                   else start_model_server())
         except Exception as exc:                                   # noqa: BLE001
             logger.exception("the lab could not start the model server")
             return {**base, "attempted": True, "starts_today": starts,
@@ -1369,10 +1405,13 @@ def loop_l2_typing(state: LabState) -> dict:
     Three things this loop does NOT do, each of them named because doing any of
     them would be a plausible mistake:
 
-    * it never starts the model server. It probes `llama_server.status()` before
-      every model-touching tick — not once at startup, because the desktop app
-      can start or stop the server at any point in a multi-day run — and USES a
-      foreign-owned server read-only when one is up;
+    * it never starts the model server BEHIND the gates. It probes
+      `llama_server.status()` before every model-touching tick — not once at
+      startup, because the desktop app can start or stop the server at any
+      point in a multi-day run — USES a foreign-owned server read-only when one
+      is up, and when nothing is listening starts one ON DEMAND through
+      `ensure_model_server(on_demand_for=...)` (hold, power plan and daily cap
+      still bind; the reaper stops it after idle, never this loop);
     * it never adds a second resume mechanism. `typed_events/_cursor.json` is
       the only one, and the supervisor's single-instance lock plus the in-process
       model lock are what stop two typing calls from racing it;
@@ -1405,7 +1444,8 @@ def loop_l2_typing(state: LabState) -> dict:
             # the loop said PENDING_MODEL for a whole day. It now asks
             # `ensure_model_server` first — which refuses BY NAME for a foreign
             # server, a sleep-permitting power plan or the daily cap.
-            started = ensure_model_server(state, server=server)
+            started = ensure_model_server(state, server=server,
+                                          on_demand_for="lab:l2_typing")
             if started.get("started"):
                 try:
                     server = model_status()
@@ -1812,6 +1852,38 @@ def loop_thematic_streams(state: LabState) -> dict:
     }
 
 
+def loop_health(state: LabState) -> dict:
+    """docs/HEALTH_PROBES_2026-09-26.md owed caller: the probe table every 30
+    minutes, persisted, so HEALTH.md is never older than half an hour.
+
+    The same function `scripts/health_probe.py` calls (`system_health.run`),
+    persisted under `backend/data/optimus/health/`. Every non-ALIVE row goes
+    into the lab log as its own line. A probe that raises is ONE logged line
+    and an `error` row — never an exception into the supervisor.
+    """
+    try:
+        from backend.services import system_health as SH
+        out = SH.run(ctx=SH.make_ctx(allow_proc=True), persist=True)
+        rows = out.get("rows") or []
+        bad = [r for r in rows if r.get("verdict") != "ALIVE"]
+        lines = []
+        for r in bad:
+            try:
+                lines.append(SH.row_line(r)[:200])
+            except Exception:                                      # noqa: BLE001
+                lines.append(f"{r.get('verdict')} {r.get('name')}"[:200])
+        for line in lines:
+            logger.warning("health: %s", line)
+        return {"status": "ok", "n": len(rows), "rows": len(rows),
+                "counts": out.get("counts"), "exit_code": out.get("exit_code"),
+                "receipt_path": out.get("path"), "non_alive": lines,
+                "headline": f"health rc {out.get('exit_code')}: {out.get('counts')}"}
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("health probe failed: %s", _trunc(exc))
+        return {"status": "error", "n": 0, "detail": _trunc(exc),
+                "headline": "health probe failed (logged, not raised)"}
+
+
 def loop_status(state: LabState) -> dict:
     """The heartbeat's own loop. Writing the file is the tick's last act, so
     this one only records that the writer was reached."""
@@ -1829,6 +1901,7 @@ HANDLERS: dict[str, Callable[[LabState], dict]] = {
     "nn_lab": loop_nn_lab,
     "idle_gpu_queue": loop_idle_gpu_queue,
     "thematic_streams": loop_thematic_streams,
+    "health": loop_health,
     "status": loop_status,
 }
 assert set(HANDLERS) == {name for name, _ in LOOPS}, \
@@ -2484,13 +2557,14 @@ __all__ = ["ACCEPTANCE_CRITERIA", "DRIVERS", "EXIT_NOT_RECORDED",
            "data_dir", "dispatch_driver", "dispatch_job", "driver_block",
            "driver_log_path", "driver_receipt", "due_at_local_time",
            "empty_stdin_path", "ensure_model_server", "install_exit_hooks",
-           "launch_driver", "learned_line", "local_now",
+           "launch_driver", "learned_line", "local_now", "loop_health",
            "lock_holder", "model_server_hold_path", "record_exit",
            "lock_path", "main", "model_status", "news_sources", "out_dir",
            "parsed_rate_limit", "pid_alive", "pid_names_lab", "plan",
            "power_refusal", "print_plan", "pull_news", "read_lock",
            "release_lock", "run_date", "run_forever", "running_drivers",
-           "scan_processes", "start_model_server", "status_path",
+           "scan_processes", "start_model_server", "start_model_server_on_demand",
+           "status_path",
            "status_payload", "stop_path",
            "tick", "type_rows", "write_acceptance", "write_learned_line",
            "yields_to"]

@@ -73,7 +73,16 @@ narrower contract, because they ARE Murat's browser:
   action, and is re-read after a navigate/click/non-scroll press (the tab
   listing is cached `OPENCLAW_TABS_TTL_S`; see that constant);
 * `type`, `fill`, `download`, `upload`, `batch` are refused, and `close`
-  runs only on a tab this process itself opened (`open_from_tab`).
+  runs only on a tab this process itself opened (`open_from_tab`);
+* OUR BLANK TABS (2026-09-27). The reader blanks its lane tabs between reads
+  (renderer memory), and `about:blank` is on no allowed host, so the host
+  check alone refused to re-navigate or close them and `web_reader` grew a side
+  route. The guard now accepts a tab whose handle is in `_OPENED_TABS` while it
+  is EXACTLY on `about:blank` (read from a fresh listing) for `navigate` -- to
+  an allowed host only, landed URL re-read -- and `close`. Every other verb on
+  a blank tab, and every verb on a blank tab this process did not open, still
+  refuses. An operator `navigate` must name its destination: an allowed-host
+  http(s) URL, or `about:blank` on a tab of ours (`own_blank_tab("blank")`).
 
 A NEW TAB comes only from `open_from_tab()`: it runs `window.open(<url>)` from
 inside an already-open MuratClaw (Work) tab, so the new tab inherits THAT
@@ -142,6 +151,11 @@ OPERATOR_TAB_VERBS: frozenset[str] = frozenset({
 #: Tabs THIS process opened with `open_from_tab`; the only ones `close` may
 #: touch on an operator profile.
 _OPENED_TABS: set[str] = set()
+
+#: The one non-host URL an operator tab may be on and still be acted on -- and
+#: only a tab of ours, only by `OWN_BLANK_TAB_VERBS`.
+BLANK_URL = "about:blank"
+OWN_BLANK_TAB_VERBS: frozenset[str] = frozenset({"navigate", "close"})
 
 #: The ONE function `read_text()` evaluates. A constant, so no caller -- and no
 #: page -- can change what runs.
@@ -623,7 +637,13 @@ def tab_url(target_id: str, *, profile_name: str | None = None) -> str | None:
     return None if t is None else str(t.get("url") or "")
 
 
-def _operator_tab(target_id: str | None, *, profile_name: str) -> tuple[str, dict]:
+def is_own_blank(target_id: str | None, url: str | None) -> bool:
+    """A tab THIS process opened, sitting exactly on `about:blank`."""
+    return bool(target_id) and str(target_id) in _OPENED_TABS and (url or "") == BLANK_URL
+
+
+def _operator_tab(target_id: str | None, *, profile_name: str,
+                  own_blank_ok: bool = False) -> tuple[str, dict]:
     """`(current url, tab)` for an operator tab on an allowed host, or refuse.
 
     Uses the cached listing when the handle is in it and on an allowed host;
@@ -641,6 +661,8 @@ def _operator_tab(target_id: str | None, *, profile_name: str) -> tuple[str, dic
     if mine and _nonces(listing) and mine not in _nonces(listing):
         _bump("tabs_nonce_changes")
     if hit is None or not host_allowed(str(hit.get("url") or "")):
+        # a blank tab is always re-read FRESH: a cached `about:blank` may be a
+        # tab that has since been navigated somewhere else
         invalidate_tabs_cache(profile_name)
         listing = tabs(profile_name=profile_name)
         hit = find_tab(listing, target_id)
@@ -653,6 +675,8 @@ def _operator_tab(target_id: str | None, *, profile_name: str) -> tuple[str, dic
         raise OpenClawRefused(
             f"REFUSED_OPERATOR_TAB_MISSING: no tab {target_id!r} on {profile_name!r}{why}.")
     u = str(hit.get("url") or "")
+    if own_blank_ok and is_own_blank(target_id, u):
+        return u, hit
     if not host_allowed(u):
         invalidate_tabs_cache(profile_name)
         raise OpenClawRefused(
@@ -744,6 +768,16 @@ def browser(verb: str, *args: str, url: str | None = None,
             if not host_allowed(u):
                 raise OpenClawRefused(
                     f"REFUSED_OPERATOR_HOST: {u!r} is not on {operator_hosts()}.")
+        if verb == "navigate":
+            dest = url or next((a for a in args if isinstance(a, str)
+                                and not a.startswith("--")), None)
+            if not dest or not (
+                    dest.lower().startswith(("http://", "https://"))
+                    or (dest == BLANK_URL and str(target_id) in _OPENED_TABS)):
+                raise OpenClawRefused(
+                    f"REFUSED_OPERATOR_NAVIGATE: {dest!r} -- an operator navigate "
+                    f"goes to an http(s) URL on {operator_hosts()}, or to "
+                    f"{BLANK_URL} on a tab this process opened.")
 
     t_check = time.monotonic()
     try:
@@ -753,7 +787,8 @@ def browser(verb: str, *args: str, url: str | None = None,
             pa = assert_profile()
         before = None
         if operator and (verb in OPERATOR_TAB_VERBS or verb == "close"):
-            before = assert_operator_tab(target_id, profile_name=want)
+            before = _operator_tab(target_id, profile_name=want,
+                                   own_blank_ok=verb in OWN_BLANK_TAB_VERBS)[0]
     except OpenClawRefused as exc:
         if "REFUSED_BROWSER_PROFILE_UNAVAILABLE" in str(exc):
             invalidate_profile_cache(want)
@@ -785,6 +820,8 @@ def browser(verb: str, *args: str, url: str | None = None,
     if operator:
         out["target_id"] = target_id
         out["tab_url_before"] = before
+        if before == BLANK_URL:
+            out["own_blank_tab"] = True
         out["attached_to"] = attached_to(profile_name=want)
         if target_id and _needs_url_reread(verb, args):
             # The landed-URL check: a FRESH listing (which refills the cache).
@@ -794,6 +831,53 @@ def browser(verb: str, *args: str, url: str | None = None,
             out["tab_url_after"] = after
             out["left_allowed_hosts"] = bool(after) and not host_allowed(after)
     return out
+
+
+def own_blank_tab(verb: str, target_id: str, url: str | None = None, *,
+                  profile_name: str = "user") -> dict:
+    """The reader's blank-tab verbs, on a tab THIS process opened -- and only one.
+
+    * `blank`: navigate it to `about:blank`, ONE CLI call. The guarded
+      `browser("navigate", BLANK_URL)` would add a tab listing for its host
+      check and another for the landed-URL re-read (~15 s each under memory
+      pressure) to drop a page nobody is reading.
+    * `navigate` (to `url`) / `close`: `browser()` itself, whose guard accepts a
+      tab of ours on `about:blank` for exactly these two verbs. A `close` of a
+      tab that is already gone is `already_gone`, and the handle is forgotten.
+
+    Refuses `REFUSED_NOT_OUR_TAB` for a handle `open_from_tab` did not record
+    and `REFUSED_BLANK_TAB_VERB` for any other verb.
+    """
+    if verb not in ("blank", *OWN_BLANK_TAB_VERBS):
+        raise OpenClawRefused(f"REFUSED_BLANK_TAB_VERB: {verb!r} on a blank tab; only "
+                              f"blank, {sorted(OWN_BLANK_TAB_VERBS)} run there.")
+    want = profile(profile_name)
+    if not is_operator_profile(want):
+        raise OpenClawRefused("own_blank_tab is for operator profiles only")
+    if not target_id or str(target_id) not in _OPENED_TABS:
+        raise OpenClawRefused(
+            f"REFUSED_NOT_OUR_TAB: {target_id!r} was not opened by this process.")
+    if verb == "blank":
+        r = _run(["browser", "--browser-profile", want, "navigate", BLANK_URL,
+                  "--target-id", target_id], timeout=60.0)
+        invalidate_tabs_cache(want)             # the cached listing still shows the old URL
+        return {"verb": "blank", "profile": want, "rc": r.returncode,
+                "target_id": target_id, "via": "own_blank_tab",
+                "stderr": (r.stderr or "").strip()[:600]}
+    if verb == "navigate":
+        if not url:
+            raise OpenClawRefused("REFUSED_OPERATOR_NAVIGATE: no destination URL.")
+        return {**browser("navigate", url, profile_name=want, target_id=target_id),
+                "via": "own_blank_tab"}
+    try:
+        out = browser("close", profile_name=want, target_id=target_id)
+    except OpenClawRefused as exc:
+        if str(exc).startswith("REFUSED_OPERATOR_TAB_MISSING"):
+            _OPENED_TABS.discard(str(target_id))
+            return {"verb": "close", "profile": want, "rc": 0, "already_gone": True,
+                    "target_id": target_id, "via": "own_blank_tab"}
+        raise
+    return {**out, "via": "own_blank_tab"}
 
 
 OPEN_FROM_TAB_TEMPLATE = "() => {{ window.open({url}, '_blank'); return 1; }}"

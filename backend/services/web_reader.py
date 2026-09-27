@@ -44,10 +44,11 @@ single WSJ/Barron's renderers at 1.8-2.6 GB)
   close in `Reader.closed`, so a run receipt can print `orphaned_tabs`.
 * `openclaw_client`'s operator guard only acts on a tab whose CURRENT host is
   wsj/barrons/marketwatch, so a blanked tab could be neither re-navigated nor
-  closed through `browser()`. `own_blank_tab_verb` is the one narrow way past
-  it: only a tab THIS process opened (`_OPENED_TABS`), only while it is on
-  `about:blank` (re-read fresh), only `navigate` to an allowed host (landed
-  URL re-read and refused off-host) or `close`.
+  closed through `browser()`. Since 2026-09-27 the client's guard itself
+  accepts a tab THIS process opened (`_OPENED_TABS`) while it is on
+  `about:blank` (re-read fresh), for `navigate` to an allowed host (landed URL
+  re-read and refused off-host) or `close`; `own_blank_tab_verb` is a thin
+  call to `openclaw_client.own_blank_tab`.
 * `close_leftover_tabs` closes, at start-up, tabs an EARLIER run recorded as
   opened and never closed -- only session-qualified handles
   (`chrome-mcp:<nonce>:<n>`) still present on a Dow Jones host; a bare `tN`
@@ -823,89 +824,27 @@ def max_pages_per_tab() -> int:
     return int(_cfg("WEB_READER_MAX_PAGES_PER_TAB", 10))
 
 
-def _fresh_tab_url(driver: Any, profile: str, tab: str) -> str | None:
-    """The tab's CURRENT url from a fresh listing (None when it is gone)."""
-    inv = getattr(driver, "invalidate_tabs_cache", None)
-    if callable(inv):
-        inv(profile)
-    fn = getattr(driver, "tab_url", None)
-    if callable(fn):
-        return fn(tab, profile_name=profile)
-    tabs = driver.tabs(profile_name=profile)
-    hit = next((t for t in tabs if tab in (t.get("tabId"), t.get("targetId"))), None)
-    return None if hit is None else str(hit.get("url") or "")
-
-
 def own_blank_tab_verb(driver: Any, profile: str, tab: str, verb: str,
                        url: str | None = None) -> dict:
-    """The blank-tab verbs on a tab THIS process opened:
+    """`blank`, or `navigate`/`close` on a blanked tab THIS process opened.
 
-    * `blank` -- navigate it to `about:blank` (one CLI call; the guarded
-      `browser("navigate")` would add a tab listing for its landed-URL check,
-      ~15 s under memory pressure, and would blank ANY allowed-host tab, Murat's
-      own included -- this refuses a tab not in `_OPENED_TABS`);
-    * `navigate` (to `url`) or `close` while it is on `about:blank` -- the step
-      `openclaw_client.browser()` refuses, because its operator guard wants
-      the tab's current host to be a Dow Jones host.
-
-    Checked here: the handle is in the driver's `_OPENED_TABS`; for
-    navigate/close, a FRESH listing shows the tab exactly on `about:blank`; a
-    navigate target is on the allowed hosts and passes `check_url`; after a
-    navigate the landed url is re-read (the caller refuses on
-    `left_allowed_hosts`). A driver without `_run` (a test stub) gets the
-    plain verb."""
-    run = getattr(driver, "_run", None)
-    if not callable(run):
+    A thin call to `openclaw_client.own_blank_tab` (2026-09-27): the guard that
+    knows its own blank tabs lives in the client now, so this module holds no
+    second copy of the rule. A refusal comes back as `ReaderRefused` with the
+    client's reason in front (`REFUSED_NOT_OUR_TAB`, ...). A driver without
+    `own_blank_tab` (a test stub) gets the plain verb."""
+    fn = getattr(driver, "own_blank_tab", None)
+    if not callable(fn):
         if verb == "blank":
             return driver.browser("navigate", BLANK_URL, profile_name=profile, target_id=tab)
         args = (url,) if verb == "navigate" else ()
         return driver.browser(verb, *args, profile_name=profile, target_id=tab)
-    if verb not in ("blank", "navigate", "close"):
-        raise ReaderRefused(f"REFUSED_BLANK_TAB_VERB: {verb!r} on a blank tab")
-    opened = getattr(driver, "_OPENED_TABS", None)
-    if opened is None or tab not in opened:
-        raise ReaderRefused(f"REFUSED_NOT_OUR_TAB: {tab!r} was not opened by this process")
-    if verb == "blank":
-        r = run(["browser", "--browser-profile", profile, "navigate", BLANK_URL,
-                 "--target-id", tab], timeout=60.0)
-        inv = getattr(driver, "invalidate_tabs_cache", None)
-        if callable(inv):
-            inv(profile)                  # the cached listing still shows the old URL
-        return {"verb": "blank", "profile": profile, "rc": r.returncode, "target_id": tab,
-                "via": "own_blank_tab", "stderr": (r.stderr or "").strip()[:600]}
-    cur = _fresh_tab_url(driver, profile, tab)
-    if cur is None:
-        if verb == "close":
-            opened.discard(tab)
-            return {"verb": "close", "rc": 0, "already_gone": True, "target_id": tab}
-        raise ReaderRefused(f"REFUSED_OPERATOR_TAB_MISSING: no tab {tab!r} on {profile!r}")
-    if cur != BLANK_URL:
-        raise ReaderRefused(f"REFUSED_NOT_BLANK: {tab!r} is on {cur!r}, not {BLANK_URL}; "
-                            f"the guarded verb applies")
-    if verb == "navigate":
-        if not url or not host_ok(url):
-            raise ReaderRefused(f"REFUSED_HOST: {url!r} is not on {hosts()}")
-        chk = getattr(driver, "check_url", None)
-        if callable(chk):
-            chk(url)
-        argv = ["browser", "--browser-profile", profile, "navigate", url, "--target-id", tab]
-    else:
-        argv = ["browser", "--browser-profile", profile, "close", tab]
-    r = run(argv, timeout=180.0)
-    out: dict[str, Any] = {"verb": verb, "profile": profile, "rc": r.returncode,
-                           "target_id": tab, "tab_url_before": cur, "via": "own_blank_tab",
-                           "stderr": (r.stderr or "").strip()[:600]}
-    if verb == "close":
-        inv = getattr(driver, "invalidate_tabs_cache", None)
-        if callable(inv):
-            inv(profile)
-        if r.returncode == 0:
-            opened.discard(tab)
-        return out
-    after = _fresh_tab_url(driver, profile, tab)
-    out["tab_url_after"] = after
-    out["left_allowed_hosts"] = bool(after) and not host_ok(after or "")
-    return out
+    try:
+        return fn(verb, tab, url, profile_name=profile)
+    except Exception as exc:
+        if type(exc).__name__ == "OpenClawRefused":
+            raise ReaderRefused(str(exc)) from exc
+        raise
 
 
 def close_leftover_tabs(driver: Any, profile: str, handles: Any, *,

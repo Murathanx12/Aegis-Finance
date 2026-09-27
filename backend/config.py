@@ -3379,6 +3379,9 @@ LAB_LOOP_PERIODS_MINUTES: dict = {
     "nn_lab": 24 * 60,
     "idle_gpu_queue": 5,          # gated by LAB_IDLE_MINUTES, not by its period
     "thematic_streams": 24 * 60,
+    # docs/HEALTH_PROBES_2026-09-26.md's owed caller: HEALTH.md is never older
+    # than half an hour while the lab runs ($0, no model, no network order).
+    "health": 30,
     "status": 5,
 }
 
@@ -3401,6 +3404,7 @@ LAB_LOOP_TIMEOUT_S: dict = {
     "nn_lab": 4 * 3600,
     "idle_gpu_queue": 60,
     "thematic_streams": 600,
+    "health": 300,
     "status": 60,
 }
 
@@ -3644,6 +3648,14 @@ LAB_MODEL_SERVER_HOLD_NAME = "MODEL_SERVER_HOLD"
 #: heartbeat (five minutes) find it ready. `llama_server.start` calls that state
 #: `starting`, which is a state and not a failure.
 LAB_MODEL_SERVER_START_WAIT_S = 0.0
+
+#: Seconds the L2 typing loop waits for `/health` after an ON-DEMAND start
+#: (`llama_server.ensure`, 2026-09-27). NOT zero, unlike the boot starter above:
+#: an on-demand server is reaped after `MODEL_ROUTING_IDLE_MIN` (15) idle, and
+#: the typing loop's period is also 15 minutes -- a server started and left for
+#: the next tick can be reaped before that tick arrives, which is PENDING_MODEL
+#: for ever by a different road. It waits inside the loop's 900 s box instead.
+LAB_L2_ON_DEMAND_WAIT_S = 240.0
 
 #: Consecutive calendar DATES of real coverage before the lab is ACCEPTED.
 #: Dates, not task runs: `ONLOGON` can fire and die repeatedly in a bad state

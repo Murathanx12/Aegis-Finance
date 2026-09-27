@@ -83,6 +83,15 @@ def lab(tmp_path, monkeypatch):
     monkeypatch.setattr(_config, "LAB_STARTS_MODEL_SERVER", False)
     monkeypatch.setattr(L, "start_model_server", lambda: pytest.fail(
         "a test started the REAL model server; stub L.start_model_server"))
+    # THE ON-DEMAND SEAM (2026-09-27) gets the same belt, but as a REFUSAL rather
+    # than a failure: the typing loop now reaches it on every no-server tick, and
+    # every pre-existing "nothing listening -> PENDING_MODEL" test keeps its
+    # meaning because this stand-in starts nothing. Tests of the on-demand path
+    # install their own spy.
+    monkeypatch.setattr(L, "start_model_server_on_demand", lambda reason: {
+        "ok": False, "action": "refused", "reason": "TEST_FIXTURE_STARTS_NOTHING"})
+    # and the ensure()/touch() bookkeeping hook never probes a real port
+    monkeypatch.setattr(L, "_lab_llama", lambda verb, reason: {"ok": True, "stub": verb})
     monkeypatch.setattr(L, "pid_alive", lambda pid: False)
     monkeypatch.setattr(L, "pid_names_lab", lambda pid: True)
     # THE SAME BELT AS `start_model_server` (chunk 17). `launch_driver` is the
@@ -836,19 +845,141 @@ def test_the_start_count_survives_a_restart(lab, monkeypatch):
     assert spy.calls == 1
 
 
-def test_with_the_starter_switched_off_the_lab_behaves_exactly_as_before(
+def test_with_the_starter_switched_off_a_caller_without_a_need_starts_nothing(
         lab, monkeypatch):
-    """`LAB_STARTS_MODEL_SERVER = False` is the pre-2026-09-18 lab, unchanged:
-    PENDING_MODEL, no start, no reader call."""
+    """`LAB_STARTS_MODEL_SERVER = False` with no `on_demand_for` is the
+    pre-2026-09-18 refusal, unchanged — which is what the NN lab and the idle
+    queue still get: no boot start, no on-demand start, refused by name."""
     spy = SpyStarter()
+    on_demand: list = []
     monkeypatch.setattr(_config, "LAB_STARTS_MODEL_SERVER", False)
     monkeypatch.setattr(L, "start_model_server", spy)
+    monkeypatch.setattr(L, "start_model_server_on_demand",
+                        lambda reason: on_demand.append(reason) or {"ok": True})
+    out = L.ensure_model_server(L.LabState())
+    assert spy.calls == 0 and on_demand == []
+    assert out["started"] is False
+    assert out["reason"] == "LAB_STARTS_MODEL_SERVER_DISABLED"
+
+
+class SpyOnDemand:
+    """Records `start_model_server_on_demand(reason)` and flips `model_status`
+    to READY once it has been called — what `llama_server.ensure` produces."""
+
+    def __init__(self, ok: bool = True, pid: int = 5151):
+        self.reasons: list[str] = []
+        self._ok, self._pid = ok, pid
+
+    def __call__(self, reason):
+        self.reasons.append(reason)
+        if not self._ok:
+            return {"ok": False, "action": "died", "reason": "exit code 1"}
+        return {"ok": True, "action": "started", "pid": self._pid, "ready": True,
+                "started_for": reason}
+
+    def status(self):
+        up = bool(self.reasons) and self._ok
+        return {"listening": up, "ready": up, "foreign": False,
+                "started_by_aegis": up, "pid": self._pid if up else None,
+                "detail": "stub"}
+
+
+def _on_demand(monkeypatch, **kw) -> SpyOnDemand:
+    spy = SpyOnDemand(**kw)
+    monkeypatch.setattr(_config, "MODEL_ROUTING_START_AT_BOOT", False)
+    monkeypatch.setattr(_config, "LAB_STARTS_MODEL_SERVER", False)
+    monkeypatch.setattr(L, "start_model_server", lambda: pytest.fail(
+        "the BOOT starter was used for an on-demand start"))
+    monkeypatch.setattr(L, "start_model_server_on_demand", spy)
+    monkeypatch.setattr(L, "model_status", spy.status)
+    return spy
+
+
+def test_typing_starts_its_model_on_demand_when_the_boot_starter_is_off(
+        lab, monkeypatch):
+    """2026-09-27, MEASURED on the health table: "typing never happens
+    unattended". `MODEL_ROUTING_START_AT_BOOT = False` switched the lab's only
+    starter off, so every typing tick said PENDING_MODEL with reason
+    LAB_STARTS_MODEL_SERVER_DISABLED for as long as nobody opened the app. A
+    typing batch that needs the model now starts it through `ensure()`, types,
+    and brackets the batch with ensure/touch so the reaper — not the lab — stops
+    it once it has been idle."""
+    spy = _on_demand(monkeypatch)
+    hooks: list = []
+    monkeypatch.setattr(L, "_lab_llama",
+                        lambda verb, reason: hooks.append((verb, reason)) or {"ok": True})
+    typed: dict = {}
+
+    def _type(**kw):
+        typed.update(kw)
+        hooks.append(("type_rows", None))
+        return {"status": "ok", "rows_typed": 4, "corpus": {"rows_waiting": 11},
+                "usage": {"cost_usd": 0.0}}
+
+    monkeypatch.setattr(L, "type_rows", _type)
+    state = L.LabState()
+    out = L.loop_l2_typing(state)
+    assert spy.reasons == ["lab:l2_typing"], "typing did not ask for its model"
+    assert out["status"] == "ok" and out["n"] == 4
+    assert out["llama_server_up"] is True and typed["backend"] == "local"
+    assert state.starts_today(L.run_date()) == 1, "an on-demand start escaped the cap"
+    assert hooks == [("ensure", "lab:l2_typing"), ("type_rows", None),
+                     ("touch", "lab:l2_typing")]
+
+
+def test_an_on_demand_start_still_binds_the_hold_the_power_plan_and_the_cap(
+        lab, monkeypatch):
+    spy = _on_demand(monkeypatch)
+    monkeypatch.setattr(L, "model_status", lambda: {
+        "listening": False, "ready": False, "foreign": False,
+        "started_by_aegis": False, "pid": None, "detail": "stub"})
+    state = L.LabState()
+    hold = L.model_server_hold_path()
+    hold.parent.mkdir(parents=True, exist_ok=True)
+    hold.write_text("suite running", encoding="utf-8")
+    assert L.ensure_model_server(state, on_demand_for="x")["reason"] == "OPERATOR_HOLD"
+    hold.unlink()
+    state.power_refusal = "REFUSED: POWER_PLAN_ALLOWS_SLEEP"
+    assert (L.ensure_model_server(state, on_demand_for="x")["reason"]
+            == "POWER_PLAN_ALLOWS_SLEEP")
+    state.power_refusal = None
+    cap = int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY)
+    for _ in range(cap):
+        r = L.ensure_model_server(state, on_demand_for="x")
+        assert r["started"] is True and r["mode"] == "on_demand"
+    out = L.ensure_model_server(state, on_demand_for="x")
+    assert out["reason"] == "MODEL_SERVER_START_CAP_REACHED"
+    assert len(spy.reasons) == cap
+
+
+def test_a_failed_on_demand_start_is_pending_model_not_a_crash(lab, monkeypatch):
+    spy = _on_demand(monkeypatch, ok=False)
     monkeypatch.setattr(L, "type_rows", lambda **kw: pytest.fail(
         "the reader was called with nothing listening"))
     out = L.loop_l2_typing(L.LabState())
-    assert spy.calls == 0
+    assert spy.reasons == ["lab:l2_typing"]
     assert out["status"] == "PENDING_MODEL" and out["llama_server_up"] is False
-    assert out["model_server_start"]["reason"] == "LAB_STARTS_MODEL_SERVER_DISABLED"
+    assert out["model_server_start"]["reason"] == "START_FAILED"
+
+
+def test_the_on_demand_seam_is_ensure_with_the_reaper_and_a_real_wait(monkeypatch):
+    """`start_model_server_on_demand` goes through `llama_server.ensure` — the
+    routing seam that spawns the idle reaper — with the reaper left ON (the
+    default) and a NON-ZERO wait: a server left for the next 15-minute tick can
+    be reaped at 15 idle minutes before that tick arrives."""
+    from backend.services import llama_server
+    seen: dict = {}
+
+    def _ensure(reason, **kw):
+        seen.update(kw, reason=reason)
+        return {"ok": True, "action": "started", "pid": 1, "ready": True}
+
+    monkeypatch.setattr(llama_server, "ensure", _ensure)
+    out = L.start_model_server_on_demand("lab:l2_typing")
+    assert out["ok"] is True and out["ready"] is True
+    assert seen["reason"] == "lab:l2_typing"
+    assert "reaper" not in seen or seen["reaper"] is True
+    assert seen["wait_s"] == float(_config.LAB_L2_ON_DEMAND_WAIT_S) > 0
 
 
 def test_a_server_that_is_still_loading_is_not_typed_against(lab, monkeypatch):
@@ -1310,6 +1441,77 @@ def test_the_only_model_server_start_goes_through_the_one_seam():
                 callers.setdefault(_dotted(node.func), []).append(fn.name)
     assert callers.get("llama_server.start") == ["start_model_server"],         f"llama_server.start is called from {callers.get('llama_server.start')}"
     assert callers.get("start_model_server") == ["ensure_model_server"],         f"start_model_server is called from {callers.get('start_model_server')}"
+
+
+def test_the_on_demand_start_goes_through_its_one_seam_too():
+    """`llama_server.ensure` STARTS a server when nothing listens. It may be
+    called from the guarded bookkeeping hook (which checks `listening` first)
+    and from the on-demand seam, and the seam only from `ensure_model_server`,
+    where the hold, the foreign check, the power plan and the cap live."""
+    tree = ast.parse(MODULE.read_text(encoding="utf-8"))
+    callers: dict[str, list[str]] = {}
+    for fn in ast.walk(tree):
+        if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for node in ast.walk(fn):
+            if isinstance(node, ast.Call) and _dotted(node.func) in (
+                    "llama_server.ensure", "start_model_server_on_demand"):
+                callers.setdefault(_dotted(node.func), []).append(fn.name)
+    assert sorted(callers.get("llama_server.ensure", [])) == [
+        "_lab_llama", "start_model_server_on_demand"], callers
+    assert callers.get("start_model_server_on_demand") == ["ensure_model_server"], callers
+
+
+# --------------------------------------------------------------------------
+# the health tick (owed_hooks_2026-09-27 patch 2)
+
+
+def test_the_health_loop_is_declared_every_thirty_minutes_and_touches_no_model():
+    assert "health" in {n for n, _ in L.LOOPS}
+    assert L.PERIODS["health"] == 30
+    assert L.TIMEOUTS["health"] == 300
+    assert "health" not in L.MODEL_LOOPS
+    assert L.HANDLERS["health"] is L.loop_health
+
+
+def test_the_health_loop_persists_and_logs_every_non_alive_row(monkeypatch, caplog):
+    from backend.services import system_health as SH
+    seen: dict = {}
+    rows = [{"verdict": "ALIVE", "name": "news", "detail": "fine"},
+            {"verdict": "DEAD", "name": "telegram_agent", "detail": "no heartbeat"},
+            {"verdict": "UNKNOWN", "name": "l2_typing", "detail": "no receipt"}]
+
+    def _run(*, ctx=None, only=None, persist=False):
+        seen["persist"] = persist
+        return {"rows": rows, "counts": {"ALIVE": 1, "DEAD": 1, "UNKNOWN": 1},
+                "exit_code": 2, "path": "health_x.json"}
+
+    monkeypatch.setattr(SH, "make_ctx", lambda **kw: seen.update(ctx=kw) or object())
+    monkeypatch.setattr(SH, "run", _run)
+    with caplog.at_level("WARNING", logger="always_on_lab"):
+        out = L.loop_health(L.LabState())
+    assert seen["persist"] is True and seen["ctx"] == {"allow_proc": True}
+    assert out["status"] == "ok" and out["rows"] == 3 and out["exit_code"] == 2
+    assert out["receipt_path"] == "health_x.json"
+    assert len(out["non_alive"]) == 2
+    assert out["non_alive"][0].startswith("DEAD telegram_agent")
+    logged = [r.getMessage() for r in caplog.records]
+    assert any("DEAD telegram_agent" in m for m in logged)
+    assert any("UNKNOWN l2_typing" in m for m in logged)
+    assert not any("ALIVE news" in m and "health:" in m for m in logged)
+
+
+def test_a_raising_health_probe_is_a_logged_error_row_not_a_raise(monkeypatch, caplog):
+    from backend.services import system_health as SH
+
+    def _boom(**kw):
+        raise OSError("disk gone")
+
+    monkeypatch.setattr(SH, "make_ctx", _boom)
+    with caplog.at_level("WARNING", logger="always_on_lab"):
+        out = L.loop_health(L.LabState())
+    assert out["status"] == "error" and "disk gone" in out["detail"]
+    assert any("health probe failed" in r.getMessage() for r in caplog.records)
 
 
 def test_the_supervisor_imports_no_broker_module():
