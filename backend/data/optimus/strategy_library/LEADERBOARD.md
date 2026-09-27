@@ -2,7 +2,7 @@
 
 > HINDSIGHT BACKTEST. Every rule was registered 2026-09-26, after every month in these tables; 'since 2020' is what the rule WOULD have done, not what Aegis did. The quotable record starts at registration and accrues in the lib_ forward books. Read by_year_signs, LOO-worst and the worst breadth cell BEFORE the CAGR column; read DSR before Sharpe.
 
-Run `2026-09-27T030004Z`; receipt `backend/data/optimus/strategy_library/leaderboard_2026-09-27T030004Z.json` (this file is the 'latest' copy and is refreshed by every run; the receipt is not).
+Run `2026-09-27T032801Z`; receipt `backend/data/optimus/strategy_library/leaderboard_2026-09-27T032801Z.json` (this file is the 'latest' copy and is refreshed by every run; the receipt is not).
 
 ## Multiplicity (read before any row)
 
@@ -10,7 +10,7 @@ Run `2026-09-27T030004Z`; receipt `backend/data/optimus/strategy_library/leaderb
 - expected best monthly active Sharpe of pure noise at n=868: 0.301 monthly (x3.46 annualised) on the analytic null; 0.489 if the null sd is the dispersion across these cells (printed as `dsr_null_from_library`, never ranked on: structurally negative rules inflate it).
 - Harvey-Liu-Zhu bar: t >= 3.0 on horizon-wide blocks before a row is anything but a PRODUCT_EXPERIMENT observation.
 - refused rules: 5; catalogue rows not reachable on this panel: 50 (named in `strategy_library.NOT_REACHABLE`).
-- controls (never ranked, never trials): monday_ear_drift, inst_breadth_up_21_40, distance_to_default_rising_21_40, distance_to_default_rising_in_stress, random_1, random_2, random_3, random_large, skill_mom_ranks_21_40, unskilled_mom, mom_12_1_q_jajo, mom_12_1_q_fman, mom_12_1_q_mjsd
+- controls (never ranked, never trials): random_1, random_2, random_3, monday_ear_drift, inst_breadth_up_21_40, distance_to_default_rising_21_40, distance_to_default_rising_in_stress, random_large, skill_mom_ranks_21_40, unskilled_mom, mom_12_1_q_jajo, mom_12_1_q_fman, mom_12_1_q_mjsd
 
 ## The sort: net return vs SPY in the 2024-26 selection window (split declared, data seen)
 
@@ -69,13 +69,13 @@ Rules picked on DEV only (dev net CAGR - SPY), read on the 2024-26 selection win
 
 | id | family | k | 2024-26 vs SPY | 2024-26 CAGR (months) | SPY 2024-26 | 2024-26 DSR | dev CAGR | dev vs SPY | DSR full (n) | LOO-worst (mo) | top-5-mo share | turnover/yr | cost bps/yr | max DD | recent-126 (SPY) | by-year |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| random_1 | control | 20 | **-10.6%** | +10.4% (32) | +21.0% | 0.000 | +13.9% | +0.8% | 0.000 (868) | -0.26% | 0.69 | 11.9x | 274 | -29.9% | +25.4% (+12.4%) | `---+++---+` |
+| random_2 | control | 20 | **-10.5%** | +10.4% (32) | +21.0% | 0.000 | +5.4% | -7.8% | 0.000 (868) | -0.70% | 1.01 | 11.9x | 269 | -38.1% | +4.7% (+12.4%) | `+---------` |
+| random_3 | control | 20 | **-2.1%** | +18.9% (32) | +21.0% | 0.001 | +5.9% | -7.3% | 0.000 (868) | -0.44% | 0.88 | 11.9x | 271 | -36.6% | +15.1% (+12.4%) | `---+----+-` |
 | monday_ear_drift | earnings_event | 20 | **-8.8%** | +12.2% (32) | +21.0% | 0.000 | +3.4% | -9.8% | 0.000 (868) | -0.70% | 1.53 | 4.9x | 124 | -47.1% | +9.1% (+12.4%) | `--++---+--` |
 | inst_breadth_up_21_40 | institutional_breadth | 20 | **+10.0%** | +31.0% (32) | +21.0% | 0.006 | +8.7% | -4.4% | 0.002 (868) | -0.05% | 0.78 | 3.6x | 91 | -54.5% | +5.3% (+12.4%) | `--++--++--` |
 | distance_to_default_rising_21_40 | credit_risk | 20 | **-13.0%** | +8.0% (32) | +21.0% | 0.000 | +11.0% | -1.7% | 0.000 (868) | -0.52% | 0.68 | 11.3x | 231 | -32.4% | +4.6% (+12.4%) | `+---++----` |
 | distance_to_default_rising_in_stress | credit_risk | 20 | **-15.4%** | +5.6% (32) | +21.0% | 0.000 | +3.6% | -9.1% | 0.000 (868) | -0.96% | 1.68 | 4.7x | 97 | -29.3% | +7.3% (+12.4%) | `--++-+----` |
-| random_1 | control | 20 | **-10.6%** | +10.4% (32) | +21.0% | 0.000 | +13.9% | +0.8% | 0.000 (868) | -0.26% | 0.69 | 11.9x | 274 | -29.9% | +25.4% (+12.4%) | `---+++---+` |
-| random_2 | control | 20 | **-10.5%** | +10.4% (32) | +21.0% | 0.000 | +5.4% | -7.8% | 0.000 (868) | -0.70% | 1.01 | 11.9x | 269 | -38.1% | +4.7% (+12.4%) | `+---------` |
-| random_3 | control | 20 | **-2.1%** | +18.9% (32) | +21.0% | 0.001 | +5.9% | -7.3% | 0.000 (868) | -0.44% | 0.88 | 11.9x | 271 | -36.6% | +15.1% (+12.4%) | `---+----+-` |
 | random_large | control | 20 | **-1.8%** | +19.2% (32) | +21.0% | 0.001 | +12.3% | -0.8% | 0.001 (868) | -0.17% | 0.53 | 11.6x | 112 | -27.4% | +20.6% (+12.4%) | `-+--++--+-` |
 | skill_mom_ranks_21_40 | diagnostic_control | 20 | **+6.6%** | +27.6% (32) | +21.0% | 0.006 | +16.8% | +3.6% | 0.014 (868) | +0.35% | 0.47 | 9.0x | 140 | -28.1% | +12.8% (+12.4%) | `++-+-+-+-+` |
 | unskilled_mom | diagnostic_control | 20 | **+23.6%** | +44.6% (32) | +21.0% | 0.047 | +21.7% | +8.5% | 0.105 (868) | +0.69% | 0.38 | 5.7x | 88 | -27.9% | +12.2% (+12.4%) | `++-+-+-+++` |
@@ -144,13 +144,13 @@ SPY since 2020-01-01: CAGR +15.7%, cumulative +162%, max DD -23.9% (79 months). 
 
 | id | family | k | by-year vs SPY | LOO-worst (mo, active) | worst cell (k: CAGR) | best-5-mo share / CAGR without them (SPY full) | t blocks | Sharpe (blocks) | DSR (n) | CAGR since 2020 | SPY CAGR | cum since 2020 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
+| random_1 | control | 20 | `---+++---+` | -0.26% (drop 2020) | 50: +12.2% | 0.69 / +4.0% (+15.3%) | -0.17 (115) | 0.65 (115) | 0.000 (868) | +15.2% | +15.7% | +155% |
+| random_2 | control | 20 | `+---------` | -0.70% (drop 2017) | 10: +3.3% | 1.01 / -0.1% (+15.3%) | -1.81 (115) | 0.42 (115) | 0.000 (868) | +5.7% | +15.7% | +44% |
+| random_3 | control | 20 | `---+----+-` | -0.44% (drop 2020) | 50: +8.1% | 0.88 / +1.1% (+15.3%) | -0.80 (115) | 0.50 (115) | 0.000 (868) | +12.1% | +15.7% | +113% |
 | monday_ear_drift | earnings_event | 20 | `--++---+--` | -0.70% (drop 2024) | 10: +2.2% | 1.53 / -3.0% (+15.3%) | -1.22 (115) | 0.35 (115) | 0.000 (868) | +4.1% | +15.7% | +30% |
 | inst_breadth_up_21_40 | institutional_breadth | 20 | `--++--++--` | -0.05% (drop 2024) | 10: +7.5% | 0.78 / +3.2% (+15.3%) | 0.40 (39) | 0.58 (115) | 0.002 (868) | +14.8% | +15.7% | +148% |
 | distance_to_default_rising_21_40 | credit_risk | 20 | `+---++----` | -0.52% (drop 2022) | 10: +9.2% | 0.68 / +3.3% (+15.0%) | -0.74 (114) | 0.56 (114) | 0.000 (868) | +11.9% | +15.7% | +110% |
 | distance_to_default_rising_in_stress | credit_risk | 20 | `--++-+----` | -0.96% (drop 2020) | 50: +1.8% | 1.68 / -2.9% (+15.0%) | -2.35 (114) | 0.32 (114) | 0.000 (868) | +2.7% | +15.7% | +19% |
-| random_1 | control | 20 | `---+++---+` | -0.26% (drop 2020) | 50: +12.2% | 0.69 / +4.0% (+15.3%) | -0.17 (115) | 0.65 (115) | 0.000 (868) | +15.2% | +15.7% | +155% |
-| random_2 | control | 20 | `+---------` | -0.70% (drop 2017) | 10: +3.3% | 1.01 / -0.1% (+15.3%) | -1.81 (115) | 0.42 (115) | 0.000 (868) | +5.7% | +15.7% | +44% |
-| random_3 | control | 20 | `---+----+-` | -0.44% (drop 2020) | 50: +8.1% | 0.88 / +1.1% (+15.3%) | -0.80 (115) | 0.50 (115) | 0.000 (868) | +12.1% | +15.7% | +113% |
 | random_large | control | 20 | `-+--++--+-` | -0.17% (drop 2025) | 50: +13.5% | 0.53 / +6.8% (+15.3%) | -0.04 (115) | 0.76 (115) | 0.001 (868) | +15.0% | +15.7% | +151% |
 | skill_mom_ranks_21_40 | diagnostic_control | 20 | `++-+-+-+-+` | +0.35% (drop 2020) | 10: +14.3% | 0.47 / +10.5% (+15.3%) | 0.96 (115) | 0.81 (115) | 0.014 (868) | +19.5% | +15.7% | +223% |
 | unskilled_mom | diagnostic_control | 20 | `++-+-+-+++` | +0.69% (drop 2020) | 50: +22.1% | 0.38 / +17.1% (+15.3%) | 1.93 (115) | 0.99 (115) | 0.105 (868) | +32.9% | +15.7% | +550% |
