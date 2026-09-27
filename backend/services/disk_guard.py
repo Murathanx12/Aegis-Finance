@@ -153,5 +153,118 @@ def atomic_write_json(path: Path, obj: Any, *, indent: Optional[int] = 1,
     return atomic_write_text(path, text, check_json=True)
 
 
-__all__ = ["DiskTooFull", "GB", "atomic_write_json", "atomic_write_text",
-           "measure", "require_free", "volume_of"]
+# ───────────────────── cross-process file lock (2026-09-27) ─────────────────
+#
+# The Dow Jones reader can run as N worker processes (one per site) that share
+# ONE throttle file, one `_search_seen.jsonl` and one corpus. A read-modify-
+# write of a shared file must be exclusive across processes AND across threads
+# of one process, or two workers read the same "last page load" and both take
+# the same slot. `file_lock` holds an OS byte-range lock (msvcrt on Windows,
+# fcntl on POSIX) on a sidecar `.lock` file plus a per-path threading lock.
+
+import threading as _threading
+import time as _time
+from contextlib import contextmanager as _contextmanager
+
+_THREAD_LOCKS: dict[str, Any] = {}
+_THREAD_LOCKS_GUARD = _threading.Lock()
+_HELD = _threading.local()
+
+
+def _thread_lock_for(key: str) -> Any:
+    with _THREAD_LOCKS_GUARD:
+        lk = _THREAD_LOCKS.get(key)
+        if lk is None:
+            lk = _THREAD_LOCKS[key] = _threading.RLock()
+        return lk
+
+
+class FileLockTimeout(TimeoutError):
+    """`file_lock` could not take the lock within its timeout. Named, never a
+    silent pass: a shared file written WITHOUT the lock is the failure."""
+
+
+@_contextmanager
+def file_lock(path: Path, *, timeout_s: Optional[float] = None, poll_s: float = 0.05):
+    """Exclusive lock on `path` (the lock FILE itself; callers pass a sidecar
+    such as `<file>.lock`). Blocks, polling every `poll_s`, up to `timeout_s`
+    (None = forever) and raises `FileLockTimeout` after. Re-entrant within one
+    thread; exclusive across threads and processes."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    key = str(path.resolve())
+    held = getattr(_HELD, "keys", None)
+    if held is None:
+        held = _HELD.keys = {}
+    if held.get(key):
+        # re-entry from the thread that already holds it: a second OS lock on
+        # a new handle would wait for ITSELF forever (Windows locks per handle)
+        held[key] += 1
+        try:
+            yield path
+        finally:
+            held[key] -= 1
+        return
+    tl = _thread_lock_for(key)
+    t0 = _time.monotonic()
+    if not tl.acquire(timeout=-1 if timeout_s is None else max(0.0, timeout_s)):
+        raise FileLockTimeout(f"thread lock on {path} not taken within {timeout_s} s")
+    fd = None
+    try:
+        fd = os.open(str(path), os.O_RDWR | os.O_CREAT, 0o644)
+        while True:
+            try:
+                if os.name == "nt":
+                    import msvcrt
+                    os.lseek(fd, 0, os.SEEK_SET)
+                    msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError:
+                if timeout_s is not None and _time.monotonic() - t0 >= timeout_s:
+                    raise FileLockTimeout(f"{path} is held by another process "
+                                          f"(waited {timeout_s} s)")
+                _time.sleep(poll_s)
+        held[key] = 1
+        try:
+            yield path
+        finally:
+            held.pop(key, None)
+            try:
+                if os.name == "nt":
+                    import msvcrt
+                    os.lseek(fd, 0, os.SEEK_SET)
+                    msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(fd, fcntl.LOCK_UN)
+            except OSError:
+                pass
+    finally:
+        if fd is not None:
+            os.close(fd)
+        tl.release()
+
+
+def locked_append_line(path: Path, line: str, *, encoding: str = "utf-8") -> Path:
+    """Append ONE line to a shared log under `file_lock(<path>.lock)`, so two
+    writers never interleave half-lines. A full disk raises `DiskTooFull`."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = line if line.endswith(chr(10)) else line + chr(10)
+    with file_lock(path.with_name(path.name + ".lock")):
+        try:
+            with _open(path, "a", encoding=encoding) as fh:
+                fh.write(text)
+                fh.flush()
+        except OSError as exc:
+            if _is_enospc(exc):
+                raise DiskTooFull(f"disk full appending to {path}") from exc
+            raise
+    return path
+
+
+__all__ = ["DiskTooFull", "FileLockTimeout", "GB", "atomic_write_json", "atomic_write_text",
+           "file_lock", "locked_append_line", "measure", "require_free", "volume_of"]

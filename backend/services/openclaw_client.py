@@ -106,6 +106,7 @@ import os
 import re
 import shutil
 import subprocess
+import threading
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -204,8 +205,10 @@ def invalidate_profile_cache(name: str | None = None) -> None:
     """
     if name is None:
         _PROFILE_CACHE.clear()
+        _ATTACHED_CACHE.clear()
     else:
         _PROFILE_CACHE.pop(name, None)
+        _ATTACHED_CACHE.pop(name, None)
     invalidate_tabs_cache(name)
 
 
@@ -255,7 +258,7 @@ def invalidate_tabs_cache(name: str | None = None) -> None:
 
 def _new_cache_counters() -> dict[str, int]:
     return {"profile_hits": 0, "profile_misses": 0, "tabs_hits": 0, "tabs_misses": 0,
-            "tabs_nonce_changes": 0, "url_rereads": 0}
+            "tabs_nonce_changes": 0, "url_rereads": 0, "url_from_reply": 0}
 
 
 #: Every CLI round trip this process made: count and wall seconds, in total
@@ -263,21 +266,28 @@ def _new_cache_counters() -> dict[str, int]:
 #: the two caches' hit/miss counts and the post-action URL re-reads.
 _CLI_LEDGER: dict[str, Any] = {"calls": 0, "seconds": 0.0, "timeouts": 0, "by_cmd": {},
                                "cache": _new_cache_counters()}
+#: The ledger and the caches are module state; since 2026-09-27 a reader may
+#: drive them from more than one thread, so every read-modify-write of the
+#: ledger holds this lock (a lost `+= 1` would under-count CLI calls).
+_LEDGER_LOCK = threading.RLock()
 
 
 def cli_ledger() -> dict:
     """A copy of this process's CLI call counts and seconds."""
-    return json.loads(json.dumps(_CLI_LEDGER))
+    with _LEDGER_LOCK:
+        return json.loads(json.dumps(_CLI_LEDGER))
 
 
 def reset_cli_ledger() -> None:
-    _CLI_LEDGER.update(calls=0, seconds=0.0, timeouts=0, by_cmd={},
-                       cache=_new_cache_counters())
+    with _LEDGER_LOCK:
+        _CLI_LEDGER.update(calls=0, seconds=0.0, timeouts=0, by_cmd={},
+                           cache=_new_cache_counters())
 
 
 def _bump(key: str, n: int = 1) -> None:
-    c = _CLI_LEDGER.setdefault("cache", _new_cache_counters())
-    c[key] = c.get(key, 0) + n
+    with _LEDGER_LOCK:
+        c = _CLI_LEDGER.setdefault("cache", _new_cache_counters())
+        c[key] = c.get(key, 0) + n
 
 
 #: Flags that take a value, skipped when naming the sub-command.
@@ -508,15 +518,17 @@ def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProc
     except subprocess.TimeoutExpired:
         # A gateway timeout says nothing trustworthy about ANY profile.
         invalidate_profile_cache()
-        _CLI_LEDGER["timeouts"] += 1
+        with _LEDGER_LOCK:
+            _CLI_LEDGER["timeouts"] += 1
         raise
     finally:
         dt = time.monotonic() - t0
-        _CLI_LEDGER["calls"] += 1
-        _CLI_LEDGER["seconds"] = round(_CLI_LEDGER["seconds"] + dt, 3)
-        row = _CLI_LEDGER["by_cmd"].setdefault(key, {"calls": 0, "seconds": 0.0})
-        row["calls"] += 1
-        row["seconds"] = round(row["seconds"] + dt, 3)
+        with _LEDGER_LOCK:
+            _CLI_LEDGER["calls"] += 1
+            _CLI_LEDGER["seconds"] = round(_CLI_LEDGER["seconds"] + dt, 3)
+            row = _CLI_LEDGER["by_cmd"].setdefault(key, {"calls": 0, "seconds": 0.0})
+            row["calls"] += 1
+            row["seconds"] = round(row["seconds"] + dt, 3)
         # Every process that loads a source-shipped plugin leaves a ~70 MB
         # `openclaw-plugin-build-*` copy in TEMP (2026-09-27: ~2,400 of them
         # filled C:). At most one sweep per interval, on a daemon thread; a
@@ -653,6 +665,10 @@ def tabs(*, profile_name: str | None = None) -> list[dict]:
         return [dict(t) for t in hit[2]]
     _TABS_CACHE.pop(want, None)
     _bump("tabs_misses")
+    # Stamped at the START of the listing (2026-09-27): with several lanes in
+    # flight a listing that began before another lane's navigate must not
+    # overwrite the newer URL that navigate recorded (`_record_landed_url`).
+    t_start = _clock()
     r = _run(["browser", "--browser-profile", want, "--json", "tabs"], timeout=90)
     try:
         d = _json_of(r.stdout)
@@ -669,8 +685,29 @@ def tabs(*, profile_name: str | None = None) -> list[dict]:
     if ns:
         _TABS_NONCES[want] = ns
     if out:
-        _TABS_CACHE[want] = (_clock(), _run, [dict(t) for t in out])
+        cur = _TABS_CACHE.get(want)
+        if cur is None or cur[0] <= t_start:
+            _TABS_CACHE[want] = (t_start, _run, [dict(t) for t in out])
     return out
+
+
+def _record_landed_url(profile_name: str, target_id: str, url: str) -> bool:
+    """Write the URL an action LANDED on (as the gateway reported it in the
+    action's own reply) into the cached listing, so the next verb's host check
+    on that tab reads the post-action URL. The listing keeps its ORIGINAL
+    stamp: this never extends how long the other tabs' rows are trusted. True
+    when a live cached listing held the tab; False leaves the cache as it was
+    (the next host check then lists fresh)."""
+    hit = _TABS_CACHE.get(profile_name)
+    if hit is None or hit[1] is not _run or _clock() - hit[0] >= OPENCLAW_TABS_TTL_S:
+        return False
+    rows = [dict(t) for t in hit[2]]
+    t = find_tab(rows, target_id)
+    if t is None:
+        return False
+    t["url"] = url
+    _TABS_CACHE[profile_name] = (hit[0], _run, rows)
+    return True
 
 
 # -- tab identity (Chunk J3, 2026-09-27) --------------------------------------
@@ -821,6 +858,43 @@ def assert_operator_tab(target_id: str | None, *, profile_name: str) -> str:
     return _operator_tab(target_id, profile_name=profile_name)[0]
 
 
+#: `openclaw browser navigate` prints `navigated to <url>`, where <url> is the
+#: page's URL as the GATEWAY re-read it from Chrome MCP's own `list_pages`
+#: inside the same locked operation, right after `navigate_page` returned
+#: (openclaw 2026.9.5 `navigateChromeMcpPage`). That is the post-action URL
+#: check the separate `tabs` re-read was making, one CLI process (~9 s) later.
+_NAVIGATED_TO = re.compile(r"^navigated to (\S+)\s*$", re.M)
+
+
+def _landed_url_from_reply(verb: str, stdout: str | None) -> str | None:
+    """The landed URL a `navigate` reply carries, or None (then the caller
+    re-lists `tabs` exactly as before). Only an http(s) URL or `about:blank`
+    is accepted; anything else is treated as no answer."""
+    if verb != "navigate":
+        return None
+    m = None
+    for m in _NAVIGATED_TO.finditer(stdout or ""):
+        pass
+    if m is None:
+        return None
+    u = m.group(1).strip()
+    return u if (u.lower().startswith(("http://", "https://")) or u == BLANK_URL) else None
+
+
+#: Opening and closing tabs change the tab LIST that `open_from_tab` diffs to
+#: find its new tab. Two openers in flight (threads, or worker processes on one
+#: Chrome) could each see the other's tab as "new". So every open_from_tab and
+#: every operator close holds this lock -- a file lock in the user's temp dir
+#: (shared by every process of this user, never in the repo) plus a thread lock.
+TAB_TOPOLOGY_LOCK_NAME = "aegis_openclaw_tab_topology.lock"
+
+
+def _topology_lock() -> Any:
+    import tempfile
+    from backend.services import disk_guard as _DG
+    return _DG.file_lock(Path(tempfile.gettempdir()) / TAB_TOPOLOGY_LOCK_NAME)
+
+
 def _needs_url_reread(verb: str, args: tuple) -> bool:
     """navigate/click always; press unless every key is a scroll key."""
     if verb in ("navigate", "click"):
@@ -833,17 +907,26 @@ def _needs_url_reread(verb: str, args: tuple) -> bool:
 
 _ATTACHED_CACHE: dict[str, tuple[float, dict]] = {}
 
+#: How long `attached_to()` (a `browser --json status` round trip) is trusted
+#: (2026-09-27). It is RECEIPT METADATA -- which browser/pid the profile is
+#: attached to -- not a guard: nothing refuses on it. At 60 s it cost one CLI
+#: call (~9 s) roughly every other article. Dropped early by every event that
+#: drops the profile assertion (`invalidate_profile_cache`: a refusal naming a
+#: tab, a non-zero verb, a gateway timeout, a start/stop) and by a re-attach.
+OPENCLAW_ATTACHED_TTL_S: float = 900.0
 
-def attached_to(*, profile_name: str | None = None, max_age_s: float = 60.0) -> dict:
+
+def attached_to(*, profile_name: str | None = None, max_age_s: float | None = None) -> dict:
     """Which browser a profile is attached to, from `browser --json status`.
 
     Records `driver`, `transport`, `running`, `pid`, `cdpUrl` and, when the
-    status exposes it, `webSocketDebuggerUrl`. Cached `max_age_s` so a receipt
-    on every call does not double the call count.
+    status exposes it, `webSocketDebuggerUrl`. Cached `max_age_s` (default
+    `OPENCLAW_ATTACHED_TTL_S`) so a receipt on every call does not add calls.
     """
     want = profile(profile_name)
+    age = OPENCLAW_ATTACHED_TTL_S if max_age_s is None else float(max_age_s)
     hit = _ATTACHED_CACHE.get(want)
-    if hit and time.time() - hit[0] < max_age_s:
+    if hit and time.time() - hit[0] < age:
         return dict(hit[1])
     r = _run(["browser", "--browser-profile", want, "--json", "status"], timeout=90)
     out: dict[str, Any] = {"profile": want, "parsed": False}
@@ -909,6 +992,20 @@ def browser(verb: str, *args: str, url: str | None = None,
                     f"goes to an http(s) URL on {operator_hosts()}, or to "
                     f"{BLANK_URL} on a tab this process opened.")
 
+    if operator and verb == "close":
+        with _topology_lock():
+            return _browser_checked(verb, args, url=url, timeout=timeout, want=want,
+                                    operator=operator, profile_name=profile_name,
+                                    target_id=target_id)
+    return _browser_checked(verb, args, url=url, timeout=timeout, want=want,
+                            operator=operator, profile_name=profile_name, target_id=target_id)
+
+
+def _browser_checked(verb: str, args: tuple, *, url: str | None, timeout: float, want: str,
+                     operator: bool, profile_name: str | None,
+                     target_id: str | None) -> dict:
+    """`browser()` after its argument checks: the profile and host checks,
+    the verb, and the post-action URL check."""
     t_check = time.monotonic()
     try:
         if profile_name is not None:
@@ -955,10 +1052,23 @@ def browser(verb: str, *args: str, url: str | None = None,
             out["own_blank_tab"] = True
         out["attached_to"] = attached_to(profile_name=want)
         if target_id and _needs_url_reread(verb, args):
-            # The landed-URL check: a FRESH listing (which refills the cache).
-            invalidate_tabs_cache(want)
-            _bump("url_rereads")
-            after = tab_url(target_id, profile_name=want)
+            # The landed-URL check. A navigate whose reply names the landed
+            # URL (the gateway's own post-navigate `list_pages`) is checked on
+            # THAT URL and the cached listing is updated with it; otherwise --
+            # click, a non-scroll press, a failed or unparseable navigate -- a
+            # FRESH listing, as before (2026-09-27: one CLI call per page).
+            landed = _landed_url_from_reply(verb, r.stdout) if r.returncode == 0 else None
+            if landed is not None:
+                _bump("url_from_reply")
+                if not _record_landed_url(want, str(target_id), landed):
+                    invalidate_tabs_cache(want)
+                after = landed
+                out["tab_url_after_source"] = "navigate_reply"
+            else:
+                invalidate_tabs_cache(want)
+                _bump("url_rereads")
+                after = tab_url(target_id, profile_name=want)
+                out["tab_url_after_source"] = "tabs_reread"
             out["tab_url_after"] = after
             out["left_allowed_hosts"] = bool(after) and not host_allowed(after)
     return out
@@ -1017,6 +1127,17 @@ OPEN_FROM_TAB_TEMPLATE = "() => {{ window.open({url}, '_blank'); return 1; }}"
 def open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
                   settle_s: float = 1.0, wait_s: float = 5.0, poll_s: float = 0.5,
                   sleep_fn: Any = None, clock: Any = None) -> dict:
+    """`_open_from_tab` under the tab-topology lock (2026-09-27): the
+    before/after tab diff that names the new tab is exact only while nobody
+    else opens or closes a tab -- another lane, thread, or worker process."""
+    with _topology_lock():
+        return _open_from_tab(parent_id, url, profile_name=profile_name, settle_s=settle_s,
+                              wait_s=wait_s, poll_s=poll_s, sleep_fn=sleep_fn, clock=clock)
+
+
+def _open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
+                   settle_s: float = 1.0, wait_s: float = 5.0, poll_s: float = 0.5,
+                   sleep_fn: Any = None, clock: Any = None) -> dict:
     """Open `url` in a NEW tab of the same Chrome profile window as `parent_id`.
 
     `parent_id` must be an operator tab already on an allowed host; `url` must

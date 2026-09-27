@@ -417,9 +417,22 @@ class Throttle:
                 return round(x, 2)
         return round(lo + (hi - lo) * float(self._rng.random()), 2)
 
+    def lock_path(self) -> Path:
+        return self.path.with_name(self.path.name + ".lock")
+
     def acquire(self, what: str = "page", host: str = "") -> float:
         """Sleep until the next load is allowed, record it, return seconds waited.
-        Raises `ReaderRefused` when the hourly, daily or per-host daily cap is spent."""
+        Raises `ReaderRefused` when the hourly, daily or per-host daily cap is spent.
+
+        The whole read -> wait -> append runs under `disk_guard.file_lock` on
+        `<throttle>.lock` (2026-09-27): with several reader processes sharing
+        this file, two of them reading the same "last load" would both take
+        the same slot. The lock is held THROUGH the sleep, so the next taker
+        computes its gap from the stamp this one writes."""
+        with DG.file_lock(self.lock_path()):
+            return self._acquire(what, host)
+
+    def _acquire(self, what: str, host: str) -> float:
         now = self.now_fn()
         rows = [r for r in self._rows() if now - r[0] < timedelta(days=1)]
         if len(rows) >= self.max_per_day:
@@ -498,23 +511,69 @@ def _pid_alive(pid: int) -> bool:
         return False
 
 
-def acquire_reader_lock(path: Path | None = None, *, pid: int | None = None) -> Path:
-    """ONE reading session at a time, across processes. A lock whose PID is
-    dead is stale and is taken over (and said so in the lock itself)."""
+_WORKER_ID = re.compile(r"^[a-z0-9][a-z0-9_-]{0,31}$")
+
+
+def worker_lock_path(worker: str) -> Path:
+    """`_reader_<worker>.lock` -- one per worker id (2026-09-27)."""
+    if not _WORKER_ID.match(str(worker or "")):
+        raise ReaderRefused(f"REFUSED_WORKER_ID: {worker!r} is not [a-z0-9_-]{{1,32}}")
+    return corpus_root() / f"_reader_{worker}.lock"
+
+
+def _live_holder(p: Path, me: int) -> dict | None:
+    """The lock file's holder when it is a LIVE process other than `me`."""
+    if not p.exists():
+        return None
+    try:
+        other = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    opid = int(other.get("pid") or 0)
+    if opid and opid != me and _pid_alive(opid):
+        return {"pid": opid, "since": other.get("since"), "path": str(p)}
+    return None
+
+
+def live_reader_locks(*, me: int | None = None) -> list[dict]:
+    """Every reader lock (the single-session one and every worker's) held by a
+    live process other than `me`."""
     import os
-    p = Path(path) if path else lock_path()
+    me = int(me if me is not None else os.getpid())
+    root = corpus_root()
+    paths = [lock_path(), *sorted(root.glob("_reader_*.lock"))] if root.exists() else []
+    return [h for h in (_live_holder(p, me) for p in paths) if h]
+
+
+def acquire_reader_lock(path: Path | None = None, *, pid: int | None = None,
+                        worker: str | None = None) -> Path:
+    """ONE reading session at a time, across processes. A lock whose PID is
+    dead is stale and is taken over (and said so in the lock itself).
+
+    WORKERS (2026-09-27). `worker="wsj"` takes `_reader_wsj.lock` instead: one
+    live process per worker id, several worker ids at once. A worker refuses
+    while a single-session reader (`_reader.lock`) is live, and a
+    single-session reader (no `worker`, no explicit `path`) refuses while ANY
+    worker is live -- the two modes never overlap. An explicit `path` checks
+    only that path (the old contract)."""
+    import os
     me = int(pid if pid is not None else os.getpid())
-    if p.exists():
-        try:
-            other = json.loads(p.read_text(encoding="utf-8"))
-        except ValueError:
-            other = {}
-        opid = int(other.get("pid") or 0)
-        if opid and opid != me and _pid_alive(opid):
-            raise ReaderRefused(f"REFUSED_READER_BUSY: another reading session (pid {opid}, "
-                                f"since {other.get('since')}) holds {p}")
+    if worker is not None:
+        p = worker_lock_path(worker)
+        others = [h for h in (_live_holder(lock_path(), me), _live_holder(p, me)) if h]
+    elif path is not None:
+        p = Path(path)
+        others = [h for h in (_live_holder(p, me),) if h]
+    else:
+        p = lock_path()
+        others = live_reader_locks(me=me)
+    if others:
+        o = others[0]
+        raise ReaderRefused(f"REFUSED_READER_BUSY: another reading session (pid {o['pid']}, "
+                            f"since {o.get('since')}) holds {o['path']}")
     DG.atomic_write_json(p, {"pid": me, "since": datetime.now(timezone.utc).isoformat(
-        timespec="seconds")}, indent=None, ensure_ascii=True)
+        timespec="seconds"), **({"worker": worker} if worker else {})},
+        indent=None, ensure_ascii=True)
     return p
 
 
@@ -554,6 +613,7 @@ def cli_footprint(now: dict | None, since: dict | None, pages: int, *,
     if not now:
         return {"cli_scope": scope, "cli_calls": None, "cli_seconds": None,
                 "cli_seconds_per_page": None, "cli_breakdown": None, "cli_cache": None,
+                "cli_by_verb": None,
                 "cli_ledger": "UNAVAILABLE: the driver has no cli_ledger()"}
     base = since or {"calls": 0, "seconds": 0.0, "by_cmd": {}, "cache": {}}
 
@@ -570,11 +630,16 @@ def cli_footprint(now: dict | None, since: dict | None, pages: int, *,
              "seconds": round(secs - prof["seconds"] - tabl["seconds"], 3)}
     cache = {k: int(v) - int((base.get("cache") or {}).get(k, 0))
              for k, v in (now.get("cache") or {}).items()}
+    # seconds per VERB (2026-09-27): the 3-way breakdown could not say where
+    # "other" went, so a profile of a night had to be rebuilt from the code
+    by_verb = {k: row(k) for k in sorted(now.get("by_cmd") or {})}
+    by_verb = {k: dict(v, s_per_call=round(v["seconds"] / v["calls"], 2))
+               for k, v in by_verb.items() if v["calls"] > 0}
     return {"cli_scope": scope, "cli_calls": calls, "cli_seconds": secs,
             "cli_seconds_per_page": round(secs / pages, 3) if pages else None,
             "cli_calls_per_page": round(calls / pages, 2) if pages else None,
             "cli_breakdown": {"profile_check": prof, "tabs_listing": tabl, "other": other},
-            "cli_cache": cache}
+            "cli_cache": cache, "cli_by_verb": by_verb}
 
 
 def footprint_receipt(log: list[dict], *, scrolled: int = 0, reads: int = 0,
@@ -758,9 +823,17 @@ def store_article(art: dict, *, root: Path | None = None) -> dict:
     gitignored) and one corpus row in `news_corpus/<registry id>/<date>.jsonl`
     (metadata + a 280-char lead). Idempotent by `sha`: a second store of the
     same text writes nothing and returns `duplicate: True`."""
+    root = Path(root) if root else corpus_root()
+    # One writer at a time (2026-09-27): reader WORKER processes share this
+    # corpus; the existence check, the write and the corpus-row append are one
+    # step, so two workers storing the same text write it once.
+    with DG.file_lock(root / "_store.lock"):
+        return _store_article(art, root)
+
+
+def _store_article(art: dict, root: Path) -> dict:
     from backend.services import dowjones_claims as DC
     from backend.services import news_registry as NR
-    root = Path(root) if root else corpus_root()
     pub = art.get("publisher") or DC.publisher_of(art.get("url", ""), art.get("text", "")) or "dowjones"
     sha = art.get("sha") or DC.text_sha(art.get("text", ""))
     seen = art.get("first_seen_utc") or DC.now_iso()
@@ -1003,6 +1076,14 @@ class Reader:
     closed: dict[str, bool] = field(default_factory=dict)
     close_errors: dict[str, str] = field(default_factory=dict)
     rotations: list[dict] = field(default_factory=list)
+    #: Local sleeps (the settle after a load, the pauses between scroll steps).
+    #: None -> the throttle's `sleep_fn`, so a test's fake clock drives them.
+    sleep_fn: Callable[[float], None] | None = None
+    #: The throttle clock's time of the last page load on this tab, until the
+    #: settle has been served (`settle()`).
+    loaded_at: datetime | None = None
+    settles: list[float] = field(default_factory=list)
+    _scroll_plan: list[int] | None = None
     _lock_path: Path | None = None
     _cli0: dict | None = None
 
@@ -1053,7 +1134,7 @@ class Reader:
         except Exception as exc:  # noqa: BLE001 -- say it, never hide it
             self.blank_failures.append(f"{self.tab}: {type(exc).__name__}: {str(exc)[:160]}")
             return False
-        self.blanked, self.last_snapshot = True, ""
+        self.blanked, self.last_snapshot, self.loaded_at = True, "", None
         self.blanks += 1
         return True
 
@@ -1095,25 +1176,66 @@ class Reader:
         self.log[-1]["tab"] = self.tab
         self.rotations.append({"at": self.log[-1]["at"], "old": old, "old_closed": closed,
                                "new": self.tab, "why": why, "url": url})
-        self.driver.browser("wait", "--time", str(self.wait_ms),
-                            profile_name=self.profile, target_id=self.tab)
+        self._mark_loaded()
+
+    # ── local time: the settle and the scroll pauses (2026-09-27) ───────────
+    #
+    # These were `browser wait --time N` CLI calls: a fresh node process
+    # (~4-6 s of start-up measured with `browser --help`, ~9 s per call on the
+    # night of 2026-09-27) plus a tab listing for the host check, to make the
+    # gateway run `setTimeout(N)` OUTSIDE its Chrome MCP operation lock
+    # (openclaw 2026.9.5 `waitForExistingSessionCondition`). A pure timer does
+    # nothing to the page, so the same seconds now pass HERE: no browser
+    # action is skipped and every ACTION keeps its host checks. And a settle
+    # is served lazily -- only what is left of it when the tab is next
+    # touched -- so the time another lane spends working counts toward it.
+
+    def _sleep(self, s: float) -> None:
+        if s > 0:
+            (self.sleep_fn or self.throttle.sleep_fn)(s)
+
+    def _mark_loaded(self) -> None:
+        self.loaded_at = self.throttle.now_fn()
+
+    def settle(self) -> float:
+        """Serve what is left of the `wait_ms` settle since the last load on
+        this tab; return the seconds slept (0 when other work covered it)."""
+        if self.loaded_at is None:
+            return 0.0
+        elapsed = (self.throttle.now_fn() - self.loaded_at).total_seconds()
+        rem = max(0.0, self.wait_ms / 1000.0 - elapsed)
+        self.loaded_at = None
+        self._sleep(rem)
+        self.settles.append(round(rem, 2))
+        return rem
 
     # ── page loads ──────────────────────────────────────────────────────────
 
     def scroll_through(self) -> int:
         """2-3 PageDown presses with jittered 1-3 s pauses -- a person reads
-        down a page; an instant extraction with no scroll is the tell."""
-        rng = self.throttle._rng
-        n = int(rng.integers(self.scroll_steps[0], self.scroll_steps[1] + 1))
+        down a page; an instant extraction with no scroll is the tell. The
+        pauses are local (see above); each PRESS is a guarded browser action
+        with its host check before and its result checked after."""
+        self.settle()
+        plan, self._scroll_plan = (self._scroll_plan or self.plan_scroll()), None
         done = 0
-        for _ in range(n):
-            self.driver.browser("wait", "--time", str(int(rng.uniform(1000, 3000))),
-                                profile_name=self.profile, target_id=self.tab)
+        for pause_ms in plan:
+            self._sleep(pause_ms / 1000.0)
             r = self.driver.browser("press", "PageDown", profile_name=self.profile,
                                     target_id=self.tab)
             self._check_still_on_host(r)
             done += 1
         return done
+
+    def plan_scroll(self) -> list[int]:
+        """The scroll for one read: 2-3 steps, each after a 1-3 s pause (ms),
+        drawn from the throttle's generator. `load_article` draws it right
+        after the load, so an interleaved rotation consumes the generator in
+        the same order a serial one does (the draws that set the throttle
+        gaps are the same draws)."""
+        rng = self.throttle._rng
+        n = int(rng.integers(self.scroll_steps[0], self.scroll_steps[1] + 1))
+        return [int(rng.uniform(1000, 3000)) for _ in range(n)]
 
     def _page(self, what: str, url: str | None) -> float:
         if self.pages >= self.max_pages:
@@ -1148,14 +1270,36 @@ class Reader:
         self.blanked = False
         self.tab_pages += 1
         self._check_still_on_host(r)
-        self.driver.browser("wait", "--time", str(self.wait_ms),
-                            profile_name=self.profile, target_id=self.tab)
+        self._mark_loaded()
 
     def snapshot(self) -> str:
+        self.settle()
         r = self.driver.browser("snapshot", "--format", "ai", "--urls", "--limit", "900",
                                 profile_name=self.profile, target_id=self.tab)
         self.last_snapshot = r.get("stdout") or ""
+        if "\nLinks:" not in self.last_snapshot and self.last_snapshot.strip():
+            # 2026-09-28: the CLI cuts a snapshot at ~40,000 chars and the
+            # `Links:` appendix is LAST, so a big page (every WSJ / Barron's
+            # stock page: 51 of 51 returned 0 links) loses all its URLs. The
+            # interactive-only tree is small enough to keep the appendix.
+            r2 = self.driver.browser("snapshot", "--format", "ai", "--urls", "--interactive",
+                                     "--compact", "--limit", "2500",
+                                     profile_name=self.profile, target_id=self.tab)
+            if "\nLinks:" in (r2.get("stdout") or ""):
+                self.last_snapshot = r2.get("stdout") or ""
+                self.snapshot_fallbacks = getattr(self, "snapshot_fallbacks", 0) + 1
         return self.last_snapshot
+
+    def snapshot_after_scroll(self, pages: int = 4, pause_s: float = 1.2) -> str:
+        """Scroll `pages` screens first (a stock page loads its news list
+        lazily), then `snapshot()`. The presses go through the same guarded
+        driver call as every other action on this tab."""
+        self.settle()
+        for _ in range(max(0, int(pages))):
+            self.driver.browser("press", "PageDown", profile_name=self.profile,
+                                target_id=self.tab)
+            (self.sleep_fn or self.throttle.sleep_fn)(pause_s)
+        return self.snapshot()
 
     def read_listing(self, url: str, link_pattern: str, *, text_pattern: str | None = None,
                      limit: int | None = None) -> list[dict]:
@@ -1168,22 +1312,39 @@ class Reader:
                      origin: str = "web_reader", store: bool = True,
                      tickers: list[str] | None = None) -> dict:
         """click the link's ref (when the last snapshot shows it as a link) or
-        navigate to its URL -> wait -> fixed innerText read -> clean -> store
-        -> blank the tab."""
-        from backend.services import dowjones_claims as DC
+        navigate to its URL -> settle -> fixed innerText read -> clean -> store
+        -> blank the tab. `load_article` + `finish_article`; a rotation that
+        interleaves lanes calls the two halves separately."""
+        t0 = time.time()
+        self.load_article(link)
+        return self.finish_article(link, column=column, origin=origin, store=store,
+                                   tickers=tickers, t0=t0)
+
+    def load_article(self, link: dict | str) -> None:
+        """The PAGE LOAD half: throttle slot, then click the snapshot ref or
+        navigate, with the host checks before and after. No settle here."""
         url = link if isinstance(link, str) else link.get("url")
         ref = None if isinstance(link, str) else link.get("ref")
-        t0 = time.time()
         if (ref and self.last_snapshot and not self.blanked
                 and ref_is_clickable(self.last_snapshot, ref)):
             self._page("click", url)
             r = self.driver.browser("click", ref, profile_name=self.profile, target_id=self.tab)
             self.tab_pages += 1
             self._check_still_on_host(r)
-            self.driver.browser("wait", "--time", str(self.wait_ms),
-                                profile_name=self.profile, target_id=self.tab)
+            self._mark_loaded()
         else:
             self.navigate(url)
+        self._scroll_plan = self.plan_scroll()
+
+    def finish_article(self, link: dict | str, *, column: str | None = None,
+                       origin: str = "web_reader", store: bool = True,
+                       tickers: list[str] | None = None, t0: float | None = None) -> dict:
+        """The READ half, on the page `load_article` loaded: what is left of
+        the settle, 2-3 scroll steps, the fixed innerText read, clean, store,
+        blank. No page load."""
+        from backend.services import dowjones_claims as DC
+        url = link if isinstance(link, str) else link.get("url")
+        t0 = time.time() if t0 is None else t0
         steps = self.scroll_through()
         self.reads += 1
         self.scrolled_reads += bool(steps)

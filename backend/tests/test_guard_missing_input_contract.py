@@ -1470,6 +1470,40 @@ def _case_finra_short_volume():
             "a FINRA folder with no parsed file")
 
 
+def _case_disk_guard_file_lock():
+    """Shared-file lock (2026-09-27, reader workers): a lock that cannot be
+    taken refuses by name.
+
+    The missing input is THE LOCK. Reader worker processes share one throttle
+    file; a `file_lock` that gave up quietly and let the caller write anyway
+    would let two workers take the same page-load slot.
+    """
+    import tempfile
+    import threading
+    from pathlib import Path
+
+    from backend.services.disk_guard import FileLockTimeout, file_lock
+    p = Path(tempfile.mkdtemp()) / "contract.lock"
+
+    def call():
+        held, release = threading.Event(), threading.Event()
+
+        def hold():
+            with file_lock(p):
+                held.set()
+                release.wait(5)
+        t = threading.Thread(target=hold, daemon=True)
+        t.start()
+        held.wait(5)
+        try:
+            with file_lock(p, timeout_s=0.2):
+                return "took a lock another holder had"
+        finally:
+            release.set()
+            t.join(5)
+    return call, FileLockTimeout, "a lock file another writer holds"
+
+
 def _case_source_scorecard():
     """Source scorecard (2026-09-27): an empty corpus refuses by name.
 
@@ -1587,6 +1621,7 @@ CASES = {
     "matched_twins": _case_matched_twins,
     "family_pool": _case_family_pool,
     "disk_guard": _case_disk_guard,
+    "disk_guard_file_lock": _case_disk_guard_file_lock,
     "finra_short_volume": _case_finra_short_volume,
     "source_scorecard": _case_source_scorecard,
 }

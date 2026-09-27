@@ -4339,3 +4339,13 @@ OPENCLAW_TEMP_DEGRADED_COUNT = 50
 OPENCLAW_TEMP_DEGRADED_GB = 5.0
 #: The probe's time box: counting always completes, sizing stops at this.
 OPENCLAW_TEMP_PROBE_BUDGET_S = 1.5
+
+# ── Dow Jones reader: worker processes (2026-09-27) ──────────────────────────
+#: `dowjones_pull --plan ... --workers N` splits the plan by SITE into N reader
+#: processes (wsj / barrons / marketwatch), each with its own tab set and its
+#: own `_reader_<site>.lock`. They share ONE throttle file (file-locked), so the
+#: pacing above binds on the sum of their page loads. The gateway serialises
+#: Chrome MCP operations per session and names a pageId on every call, so
+#: concurrent CLI calls do not steal each other's tab. 1 = the old single
+#: process. See docs/research_notes/2026-09-27/reader_throughput_2026-09-27.md.
+DOWJONES_READER_WORKERS_DEFAULT = 3

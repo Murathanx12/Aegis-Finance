@@ -470,6 +470,53 @@ def round_robin(queues: dict[str, list]) -> list[tuple[str, Any]]:
     return out
 
 
+def interleave_order(queues: dict[str, list],
+                     needs_load: Any = None) -> list[tuple[str, str, Any]]:
+    """The INTERLEAVED rotation (2026-09-27), as a pure function: `run_plan`
+    applies exactly these rules online. Ops are `("load", lane, item)` (a
+    throttle slot + the navigate/click) and `("finish", lane, item)` (settle
+    remainder, scroll, read, store, blank -- no page load).
+
+    1. turns in lane order, one item per lane per turn (`round_robin`);
+    2. a lane's item is LOADED at its turn and FINISHED right after the NEXT
+       load, so its settle is spent on another lane's page load;
+    3. a lane never has two items outstanding -- it has one tab -- so its own
+       unread item is finished before its next load;
+    4. an item that needs no load (`needs_load(lane, item)` False: the tab
+       was opened AT it) finishes at its turn, after the outstanding one;
+    5. whatever is outstanding at the end finishes, oldest first.
+    Loads therefore happen in `round_robin` order, one at a time."""
+    need = needs_load or (lambda lane, item: True)
+    qs = {k: list(v) for k, v in queues.items()}
+    active = list(qs)
+    ops: list[tuple[str, str, Any]] = []
+    pend: dict[str, Any] = {}
+    prev: str | None = None
+    while active:
+        for k in list(active):
+            if k in pend:
+                ops.append(("finish", k, pend.pop(k)))
+            if not qs[k]:
+                active.remove(k)
+                continue
+            item = qs[k].pop(0)
+            p = prev
+            if not need(k, item):
+                prev = None
+                if p is not None and p in pend:
+                    ops.append(("finish", p, pend.pop(p)))
+                ops.append(("finish", k, item))
+                continue
+            ops.append(("load", k, item))
+            pend[k] = item
+            prev = k
+            if p is not None and p != k and p in pend:
+                ops.append(("finish", p, pend.pop(p)))
+    for k in list(pend):
+        ops.append(("finish", k, pend.pop(k)))
+    return ops
+
+
 def _stored_today(stored: dict[str, set[str]], url: str, day: str) -> bool:
     return day in stored.get(WR.norm_url(url), set())
 
@@ -505,11 +552,10 @@ def searched_since(source: str, since: str, path: Path | None = None) -> set[str
 
 def _record_search(source: str, ticker: str, row: dict, path: Path | None = None) -> None:
     p = Path(path) if path else search_seen_path()
-    p.parent.mkdir(parents=True, exist_ok=True)
-    with p.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps({"source": source, "ticker": ticker.upper(), "day": _today(),
-                             "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                             **row}) + "\n")
+    # locked append (2026-09-27): reader WORKER processes share this file
+    DG.locked_append_line(p, json.dumps(
+        {"source": source, "ticker": ticker.upper(), "day": _today(),
+         "at": datetime.now(timezone.utc).isoformat(timespec="seconds"), **row}))
 
 
 #: Receipts whose tabs a later run may clean up, and how far back it looks.
@@ -518,12 +564,28 @@ CLEANUP_LOOKBACK_DAYS = 3
 
 
 def previous_opened_handles(rdir: Path | None = None, *,
-                            lookback_days: int = CLEANUP_LOOKBACK_DAYS) -> list[str]:
+                            lookback_days: int = CLEANUP_LOOKBACK_DAYS,
+                            worker: str | None = None, me: int | None = None,
+                            alive: Any = None) -> list[str]:
     """Every tab handle an earlier run's receipt records as OPENED and not
     closed: the `opened` list (2026-09-27 on), and for older receipts
     `tab_opened`, each lane's `tab`, `orphaned_tabs`, `tabs_lost_on_reattach`
     -- minus any the same receipt says it closed. Receipts are dated by the
-    stamp in their NAME, never by mtime (protocol 7)."""
+    stamp in their NAME, never by mtime (protocol 7).
+
+    OWNERSHIP (2026-09-27, reader workers). Until today the one-reader lock
+    made "an earlier receipt" mean "a dead run". With worker processes a LIVE
+    run's in-progress receipt lists its open lane tabs, and a second run
+    starting would have adopted and closed them (`close_leftover_tabs` adopts
+    any session-qualified handle on a Dow Jones host). So a receipt counts only
+    when (1) its `worker` equals `worker` (a crashed worker's tabs are closed
+    by the next start of THAT worker id; a receipt with no `worker` -- a
+    single-session run -- only by a single-session run or the worker
+    launcher), and (2) its `pid`, when it carries one, is not a live process
+    other than `me`."""
+    import os
+    me = int(me if me is not None else os.getpid())
+    alive = alive or WR._pid_alive
     d = Path(rdir) if rdir else DF.receipts_dir()
     since = (datetime.now(timezone.utc).date() - timedelta(days=lookback_days)).isoformat()
     out: set[str] = set()
@@ -539,6 +601,11 @@ def previous_opened_handles(rdir: Path | None = None, *,
             continue
         if not isinstance(rc, dict):
             continue
+        if (rc.get("worker") or None) != (worker or None):
+            continue
+        rpid = int(rc.get("pid") or 0)
+        if rpid and rpid != me and alive(rpid):
+            continue                     # a LIVE run's tabs are its own
         hs: set[str] = set(str(h) for h in (rc.get("opened") or []) if h)
         if rc.get("tab_opened"):
             hs.add(str(rc["tab_opened"]))
@@ -556,13 +623,15 @@ def previous_opened_handles(rdir: Path | None = None, *,
     return sorted(out)
 
 
-def startup_cleanup(driver: Any, profile: str, handles: list[str] | None = None) -> dict:
-    """Run AFTER the one-reader lock is held (a live reader's tabs are in its
-    in-progress receipt): close what earlier runs left open
-    (`web_reader.close_leftover_tabs` -- session-qualified handles still on a
-    Dow Jones host only). Never raises; the result goes on the receipt."""
+def startup_cleanup(driver: Any, profile: str, handles: list[str] | None = None, *,
+                    worker: str | None = None) -> dict:
+    """Run AFTER this run's reader lock is held: close what earlier DEAD runs
+    of the same worker id left open (`previous_opened_handles` -- a live run's
+    receipt is never read as leftovers; `web_reader.close_leftover_tabs` --
+    session-qualified handles still on a Dow Jones host only). Never raises;
+    the result goes on the receipt."""
     try:
-        hs = previous_opened_handles() if handles is None else list(handles)
+        hs = previous_opened_handles(worker=worker) if handles is None else list(handles)
         res = WR.close_leftover_tabs(driver, profile, hs)
     except Exception as exc:  # noqa: BLE001 -- a cleanup never costs the run
         res = {"error": f"{type(exc).__name__}: {str(exc)[:200]}"}
@@ -603,7 +672,7 @@ def _tab_accounting(rc: dict, readers: Any) -> None:
 FOOTPRINT_RECEIPT_KEYS = ("verdict", "cv_of_gaps", "gaps_s", "gap_min_s", "pages_per_hour",
                           "scroll_share", "pages", "path", "cli_scope", "cli_calls",
                           "cli_seconds", "cli_seconds_per_page", "cli_calls_per_page",
-                          "cli_breakdown", "cli_cache")
+                          "cli_breakdown", "cli_cache", "cli_by_verb")
 
 
 def _footprint_fields(fp: dict, rc: dict | None = None) -> dict:
@@ -779,7 +848,8 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
              driver: Any = None, throttle: Any = None, max_pages: int | None = None,
              progress_path: Path | None = None, stored: dict[str, set[str]] | None = None,
              fresh_since: str | None = None, cleanup_handles: list[str] | None = None,
-             searched: dict[str, set[str]] | None = None) -> dict:
+             searched: dict[str, set[str]] | None = None,
+             worker: str | None = None) -> dict:
     """One rotating session: a tab per lane (opened from its source's parent),
     each listing loaded once, then one item per lane per turn.
 
@@ -790,10 +860,19 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
     snapshot (`WR.select_search_links`: <= SEARCH_MAX_AGE_DAYS old when a date
     shows) and puts them at the head of that lane's queue. An EXPLICIT
     `max_pages` is the line's budget: reaching it ends the run as
-    `budget_spent`, not as a refusal."""
+    `budget_spent`, not as a refusal.
+
+    `worker` (2026-09-27): this run is ONE of several reader processes (one
+    per site). It holds `_reader_<worker>.lock` instead of the single-session
+    lock, its receipt carries `worker` and `pid`, and its start-up cleanup
+    closes only tabs a DEAD run of the same worker id left open. The throttle
+    file is shared and file-locked, so every process's page loads draw from
+    ONE budget of slots."""
+    import os
     if driver is None:
         from backend.services import openclaw_client as driver  # type: ignore[no-redef]
     thr = throttle or WR.Throttle(WR.throttle_path(), wait_on_hour_cap=True)
+    pfx = f"[{worker}] " if worker else ""
     day = _today()
     since = fresh_since or day
     stored = WR.stored_urls() if stored is None else stored
@@ -806,8 +885,9 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
         "plan": [{k: ln[k] for k in ("lane", "max", "tickers")} for ln in lanes],
         "parent_tabs": parents, "max_pages": budget, "budget_explicit": explicit_budget,
         "fresh_since": since, "cost_usd": 0.0, "lanes": {}, "order": [], "stopped": None,
-        "budget_spent": None, "opened": [], "orphaned_tabs": []}
-    lock = WR.acquire_reader_lock()
+        "budget_spent": None, "opened": [], "orphaned_tabs": [],
+        "worker": worker, "pid": os.getpid()}
+    lock = WR.acquire_reader_lock(worker=worker) if worker else WR.acquire_reader_lock()
     readers: dict[str, WR.Reader] = {}
     queues: dict[str, list] = {}
     parents = {k: dict(v) for k, v in parents.items()}
@@ -834,7 +914,8 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
         return True
 
     try:
-        rc["startup_cleanup"] = startup_cleanup(driver, profile, cleanup_handles)
+        rc["startup_cleanup"] = startup_cleanup(driver, profile, cleanup_handles,
+                                                worker=worker)
         gone = set(rc["startup_cleanup"].get("closed") or [])
         hit = sorted(k for k, v in parents.items() if v.get("tab") in gone)
         if hit:        # a leftover had been chosen as a parent: re-resolve without it
@@ -904,7 +985,7 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
             readers[lid] = rd
             st["opened"] = {k: opened.get(k) for k in ("label", "how", "tabs_before",
                                                        "tabs_after")}
-            print(f"opened {lid}: {opened.get('label') or tab} = {tab} "
+            print(f"{pfx}opened {lid}: {opened.get('label') or tab} = {tab} "
                   f"({opened.get('how') or '?'}) {first_url[:80]}", flush=True)
             rc["order"].append({"turn": 0, "lane": lid, "what": "listing", "url": first_url,
                                 "at": rd.log[-1]["at"], "ok": True})
@@ -938,14 +1019,173 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
                 rd.blank()                       # the listing waits blank for its turn
             save()
 
-        # 2. the rotation: one item per lane per turn, lane order, one shared throttle
+        # 2. the rotation: one item per lane per turn, lane order, one shared
+        #    throttle -- INTERLEAVED (2026-09-27, `interleave_order`): a lane's
+        #    page is LOADED at its turn and READ right after the NEXT lane's
+        #    load, so the settle of one page is spent loading another. Every
+        #    load still takes a throttle slot (global gap + same-host floor);
+        #    a lane never has two pages outstanding (it has one tab).
         active = [ln["lane"] for ln in lanes if ln["lane"] in readers and not rc["stopped"]]
         turn = 0
         in_place = {lid: rc["lanes"][lid]["section"] in TICKER_SECTIONS for lid in active}
+        pend: dict[str, dict] = {}
+        prev: list[str | None] = [None]
+
+        def drop_pending(lid: str, why: str) -> None:
+            job = pend.pop(lid, None)
+            if job is not None:
+                it = job["item"]
+                rc["lanes"][lid]["refusals"].append(
+                    {"item": it if isinstance(it, str) else it.get("url"),
+                     "why": f"NOT_READ: loaded, then {why}"[:300]})
+
+        def handle(lid: str, kind: str, item: Any, exc: BaseException) -> str | None:
+            """The one exception rule for a load or a read (classified, never
+            swallowed). Returns "break" when the whole run stops."""
+            st, q = rc["lanes"][lid], queues.get(lid) or []
+            msg = f"{type(exc).__name__}: {exc}"[:300]
+            what = item if isinstance(item, str) else item.get("url")
+            if WR.is_detached(msg):
+                # the profile dropped: re-attach, remap, and retry this item
+                rc["order"].append({"turn": turn, "lane": lid, "item": what,
+                                    "at": thr.now_fn().isoformat(timespec="seconds"),
+                                    "ok": False, "why": "DETACHED: " + msg[:100]})
+                try:
+                    recovery.recover(readers, parents, source_of)
+                    q.insert(0, (kind, item))
+                    queues[lid] = q
+                    save()
+                    return None
+                except Exception as exc2:  # noqa: BLE001
+                    msg = f"{type(exc2).__name__}: {exc2}"[:300]
+            in_place[lid] = False
+            st["refusals"].append({"item": what, "why": msg})
+            rc["order"].append({"turn": turn, "lane": lid, "item": what,
+                                "at": thr.now_fn().isoformat(timespec="seconds"),
+                                "ok": False, "why": msg[:120]})
+            cls = "run" if WR.is_gateway_down(msg) else _classify(msg)
+            if cls == "run":
+                rc["stopped"] = msg
+                return "break"
+            if cls == "host":
+                host = st["source"]
+                for other in list(active):
+                    if rc["lanes"][other]["source"] == host:
+                        active.remove(other)
+                        rc["lanes"][other]["dropped"] = msg
+                        drop_pending(other, "its host was dropped")
+            elif cls == "lane":
+                if lid in active:
+                    active.remove(lid)
+                st["dropped"] = msg
+                drop_pending(lid, "its lane was dropped")
+            return None
+
+        def load(lid: str, kind: str, item: Any) -> str | None:
+            """The PAGE LOAD half of an item (throttle slot + navigate/click)."""
+            rd = readers[lid]
+            try:
+                if kind == "search":
+                    url = lane_url(rc["lanes"][lid]["source"], "search", item)
+                    rd.navigate(url)
+                elif kind == "ticker":
+                    url = lane_url("marketwatch", "analyst_estimates", item)
+                    rd.load_article(url)
+                else:
+                    url = item["url"]
+                    rd.load_article(item)
+            except Exception as exc:  # noqa: BLE001 -- classified in `handle`
+                code = handle(lid, kind, item, exc)
+                save()
+                return code
+            in_place[lid] = False
+            pend[lid] = {"kind": kind, "item": item, "url": url, "loaded": True,
+                         "turn": turn, "at": rd.log[-1]["at"],
+                         "waited_s": rd.log[-1]["waited_s"], "t0": time.time()}
+            return None
+
+        def finish(lid: str) -> str | None:
+            """The READ half of the item `lid` has outstanding. No page load."""
+            job = pend.pop(lid, None)
+            if job is None:
+                return None
+            st, rd, q = rc["lanes"][lid], readers[lid], queues.get(lid) or []
+            kind, item, column = job["kind"], job["item"], st["column"]
+            try:
+                if kind == "search":
+                    src = st["source"]
+                    sel = WR.select_search_links((rd.snapshot_after_scroll() if hasattr(rd, "snapshot_after_scroll") else rd.snapshot()), SECTIONS[src]["search"][1],
+                                                 now=thr.now_fn(),
+                                                 max_age_days=SEARCH_MAX_AGE_DAYS,
+                                                 limit=SEARCH_LINKS_PER_NAME)
+                    rd.blank()
+                    take = [lk for lk in sel["links"]
+                            if not stored.get(WR.norm_url(lk["url"]))
+                            and WR.norm_url(lk["url"]) not in queued_urls]
+                    queued_urls.update(WR.norm_url(lk["url"]) for lk in take)
+                    q[0:0] = [("link", dict(lk, ticker=item)) for lk in take]
+                    queues[lid] = q
+                    info = {"links_on_page": sel["candidates"], "taken": len(take),
+                            "skipped_old": len(sel["skipped_old"]),
+                            "skipped_ad": len(sel["skipped_ad"]),
+                            "already_stored": len(sel["links"]) - len(take)}
+                    st["searches"][item] = info
+                    st["links_found"] += len(sel["links"])
+                    _record_search(src, item, info)
+                    if searched is not None:
+                        searched.setdefault(src, set()).add(item.upper())
+                    rc["order"].append({"turn": job["turn"], "lane": lid, "what": "search",
+                                        "ticker": item, "url": job["url"],
+                                        "at": job["at"], "ok": True, **info})
+                    save()
+                    return None
+                if kind == "ticker":
+                    art = (rd.finish_article(job["url"], column=column, t0=job["t0"])
+                           if job["loaded"] else _read_current(rd, job["url"], column, item))
+                    art["ticker"] = item
+                else:
+                    tick = [item["ticker"]] if item.get("ticker") else None
+                    art = rd.finish_article(item, column=column or None, tickers=tick,
+                                            t0=job["t0"])
+                    if item.get("ticker"):
+                        art["ticker"] = item["ticker"]
+                stored.setdefault(WR.norm_url(art.get("url") or ""), set()).add(day)
+                st["articles"].append(_summary(art))
+                loaded = job["loaded"]
+                rc["order"].append({"turn": job["turn"], "lane": lid,
+                                    "url": art.get("url"), "ticker": art.get("ticker"),
+                                    "at": (job["at"] if loaded else
+                                           thr.now_fn().isoformat(timespec="seconds")),
+                                    "page_load": loaded,
+                                    "waited_s": job["waited_s"] if loaded else 0.0,
+                                    "chars": art.get("chars"), "ok": True})
+            except Exception as exc:  # noqa: BLE001 -- classified in `handle`
+                code = handle(lid, kind, item, exc)
+                save()
+                return code
+            save()
+            return None
+
+        def in_place_job(lid: str, kind: str, item: Any) -> None:
+            """An item whose page is already loaded (the tab opened AT it)."""
+            rd = readers[lid]
+            url = (lane_url(rc["lanes"][lid]["source"], "search", item) if kind == "search"
+                   else lane_url("marketwatch", "analyst_estimates", item))
+            in_place[lid] = False
+            pend[lid] = {"kind": kind, "item": item, "url": url, "loaded": False,
+                         "turn": turn, "at": rd.log[-1]["at"], "waited_s": 0.0,
+                         "t0": time.time()}
+
         while active and not rc["stopped"] and not rc["budget_spent"]:
             turn += 1
             for lid in list(active):
-                st, rd, q = rc["lanes"][lid], readers[lid], queues.get(lid) or []
+                if rc["stopped"] or lid not in active:
+                    continue
+                st, q = rc["lanes"][lid], queues.get(lid) or []
+                if lid in pend and finish(lid) == "break":
+                    break
+                if lid not in active:
+                    continue
                 if not q:
                     active.remove(lid)
                     st["dropped"] = st["dropped"] or "EXHAUSTED"
@@ -953,99 +1193,31 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
                 if out_of_budget():
                     break
                 kind, item = q.pop(0)
-                column = st["column"]
-                n_before = rd.pages
-                try:
-                    if kind == "search":
-                        src = st["source"]
-                        url = lane_url(src, "search", item)
-                        if not in_place.get(lid):
-                            rd.navigate(url)
-                        in_place[lid] = False
-                        sel = WR.select_search_links(rd.snapshot(), SECTIONS[src]["search"][1],
-                                                     now=thr.now_fn(),
-                                                     max_age_days=SEARCH_MAX_AGE_DAYS,
-                                                     limit=SEARCH_LINKS_PER_NAME)
-                        rd.blank()
-                        take = [lk for lk in sel["links"]
-                                if not stored.get(WR.norm_url(lk["url"]))
-                                and WR.norm_url(lk["url"]) not in queued_urls]
-                        queued_urls |= {WR.norm_url(lk["url"]) for lk in take}
-                        q[0:0] = [("link", dict(lk, ticker=item)) for lk in take]
-                        queues[lid] = q
-                        info = {"links_on_page": sel["candidates"], "taken": len(take),
-                                "skipped_old": len(sel["skipped_old"]),
-                                "skipped_ad": len(sel["skipped_ad"]),
-                                "already_stored": len(sel["links"]) - len(take)}
-                        st["searches"][item] = info
-                        st["links_found"] += len(sel["links"])
-                        _record_search(src, item, info)
-                        if searched is not None:
-                            searched.setdefault(src, set()).add(item.upper())
-                        rc["order"].append({"turn": turn, "lane": lid, "what": "search",
-                                            "ticker": item, "url": url,
-                                            "at": rd.log[-1]["at"], "ok": True, **info})
-                        save()
-                        continue
-                    if kind == "ticker":
-                        url = lane_url("marketwatch", "analyst_estimates", item)
-                        art = (_read_current(rd, url, column, item) if in_place.get(lid)
-                               else rd.read_article(url, column=column))
-                        in_place[lid] = False
-                        art["ticker"] = item
-                    else:
-                        if stored.get(WR.norm_url(item["url"])):
-                            st["skipped_already_stored"] += 1
-                            continue
-                        tick = [item["ticker"]] if item.get("ticker") else None
-                        art = rd.read_article(item, column=column or None, tickers=tick)
-                        if item.get("ticker"):
-                            art["ticker"] = item["ticker"]
-                    stored.setdefault(WR.norm_url(art.get("url") or ""), set()).add(day)
-                    st["articles"].append(_summary(art))
-                    loaded = rd.pages > n_before      # False: read in place (already loaded)
-                    rc["order"].append({"turn": turn, "lane": lid,
-                                        "url": art.get("url"), "ticker": art.get("ticker"),
-                                        "at": (rd.log[-1]["at"] if loaded else
-                                               thr.now_fn().isoformat(timespec="seconds")),
-                                        "page_load": loaded,
-                                        "waited_s": rd.log[-1]["waited_s"] if loaded else 0.0,
-                                        "chars": art.get("chars"), "ok": True})
-                except Exception as exc:  # noqa: BLE001 -- classified, never swallowed
-                    msg = f"{type(exc).__name__}: {exc}"[:300]
-                    what = item if isinstance(item, str) else item.get("url")
-                    if WR.is_detached(msg):
-                        # the profile dropped: re-attach, remap, and retry this item
-                        rc["order"].append({"turn": turn, "lane": lid, "item": what,
-                                            "at": thr.now_fn().isoformat(timespec="seconds"),
-                                            "ok": False, "why": "DETACHED: " + msg[:100]})
-                        try:
-                            recovery.recover(readers, parents, source_of)
-                            q.insert(0, (kind, item))
-                            queues[lid] = q
-                            save()
-                            continue
-                        except Exception as exc2:  # noqa: BLE001
-                            msg = f"{type(exc2).__name__}: {exc2}"[:300]
-                    in_place[lid] = False
-                    st["refusals"].append({"item": what, "why": msg})
-                    rc["order"].append({"turn": turn, "lane": lid, "item": what,
-                                        "at": thr.now_fn().isoformat(timespec="seconds"),
-                                        "ok": False, "why": msg[:120]})
-                    cls = "run" if WR.is_gateway_down(msg) else _classify(msg)
-                    if cls == "run":
-                        rc["stopped"] = msg
+                if kind == "link" and stored.get(WR.norm_url(item["url"])):
+                    st["skipped_already_stored"] += 1
+                    continue
+                p = prev[0]
+                if kind in ("search", "ticker") and in_place.get(lid):
+                    prev[0] = None
+                    if p and p in pend and finish(p) == "break":
                         break
-                    if cls == "host":
-                        host = st["source"]
-                        for other in list(active):
-                            if rc["lanes"][other]["source"] == host:
-                                active.remove(other)
-                                rc["lanes"][other]["dropped"] = msg
-                    elif cls == "lane":
-                        active.remove(lid)
-                        st["dropped"] = msg
-                save()
+                    in_place_job(lid, kind, item)
+                    if finish(lid) == "break":
+                        break
+                    continue
+                code = load(lid, kind, item)
+                prev[0] = lid if lid in pend else None
+                if p and p != lid and p in pend and finish(p) == "break":
+                    break
+                if code == "break":
+                    break
+        # whatever is still loaded and unread is read now (no page load);
+        # not after the gateway went down -- every verb would time out
+        if not (rc["stopped"] and WR.is_gateway_down(str(rc["stopped"]))):
+            for lid in list(pend):
+                finish(lid)
+        for lid in list(pend):
+            drop_pending(lid, f"the run stopped ({str(rc['stopped'])[:120]})")
         if rc["budget_spent"]:
             for lid in active:
                 if queues.get(lid):
@@ -1580,6 +1752,190 @@ def run_claims(day: str | None = None, *, cap_usd: float | None = None, llm_fn: 
 
 # ─────────────────────────────────── main ───────────────────────────────────
 
+# ─────────────────── reader workers: one process per site ────────────────────
+#
+# 2026-09-27: one page cost ~16 OpenClaw CLI round trips at ~9 s each, all in
+# series, so a night read ~40 pages/hour while the pacing allowed ~180. Each
+# CLI call is a fresh node process (~4-6 s of start-up measured with
+# `browser --help`); the gateway serialises the Chrome MCP operations of one
+# session with an async lock and names a pageId on every call (openclaw
+# 2026.9.5 `withChromeMcpOperationLock`, `callTargetTool`), so CLI calls from
+# several processes queue at the gateway instead of acting on each other's
+# tab. Splitting the plan by SITE into worker processes overlaps the start-up
+# and the local waits; the shared, file-locked throttle keeps the pace ONE
+# budget. Isolation: each worker has its own `_OPENED_TABS` (the close guard),
+# its own lock, receipts stamped with `worker` + `pid`, and a start-up cleanup
+# that reads only its OWN dead runs' receipts.
+
+def split_lanes_by_site(lanes: list[dict], n: int) -> dict[str, list[dict]]:
+    """worker id -> lanes. One worker per SOURCE when `n` >= the number of
+    sources (the id is the source: `wsj`, `barrons`, `marketwatch`); fewer
+    workers take whole sources round-robin (`g1`, `g2`, ...). A source is
+    never split across workers: two processes on one site would each keep
+    their own same-host history."""
+    sources = list(dict.fromkeys(ln["source"] for ln in lanes))
+    n = max(1, int(n))
+    if n >= len(sources):
+        return {s: [ln for ln in lanes if ln["source"] == s] for s in sources}
+    groups: dict[str, list[dict]] = {f"g{i + 1}": [] for i in range(n)}
+    for i, s in enumerate(sources):
+        groups[f"g{i % n + 1}"] += [ln for ln in lanes if ln["source"] == s]
+    return groups
+
+
+def plan_spec(lanes: list[dict]) -> str:
+    """The `--plan` text for `lanes` (inverse of `parse_plan`)."""
+    out = []
+    for ln in lanes:
+        if ln["section"] in TICKER_SECTIONS:
+            out.append(f"{ln['source']}:{ln['section']}:{'|'.join(ln['tickers'])}")
+        else:
+            out.append(f"{ln['source']}:{ln['section']}:{ln['max']}")
+    return ",".join(out)
+
+
+def split_budget(budget: int | None, groups: dict[str, list[dict]]) -> dict[str, int | None]:
+    """An explicit `--max-pages` split across workers in proportion to each
+    group's default budget (sum of lane maxima + lanes + 2), rounded up; None
+    stays None (each worker then uses its own default)."""
+    if budget is None:
+        return {k: None for k in groups}
+    need = {k: sum(ln["max"] for ln in v) + len(v) + 2 for k, v in groups.items()}
+    tot = sum(need.values()) or 1
+    return {k: max(1, -(-int(budget) * need[k] // tot)) for k in groups}
+
+
+def worker_argv(spec: str, wid: str, *, stamp: str, profile: str,
+                max_pages: int | None, fresh_since: str | None,
+                parent_tabs: str = "") -> list[str]:
+    argv = [sys.executable, "-m", "scripts.dowjones_pull", "--plan", spec, "--worker", wid,
+            "--run-stamp", stamp, "--profile", profile, "--handoff"]
+    if max_pages is not None:
+        argv += ["--max-pages", str(max_pages)]
+    if fresh_since:
+        argv += ["--fresh-since", fresh_since]
+    if parent_tabs:
+        argv += ["--parent-tabs", parent_tabs]
+    return argv
+
+
+def workers_pid_path() -> Path:
+    return DF.receipts_dir() / "queue_workers.pid"
+
+
+def run_workers(groups: dict[str, list[dict]], *, stamp: str, profile: str,
+                max_pages: int | None, fresh_since: str | None, parent_tabs: str = "",
+                spawn: Any = None, bind: Any = None, rdir: Path | None = None) -> dict:
+    """Start one `dowjones_pull --plan ... --worker <id>` process per group,
+    wait for all, and fold their receipts into one outcome. `spawn(argv)`
+    returns a Popen-like (`pid`, `wait()`); `bind(pid)` ties the child to this
+    process's lifetime (a Windows job object: killing the launcher by PID
+    kills its workers too -- never by image name). The PIDs are written to
+    `queue_workers.pid` before the first wait."""
+    import subprocess
+    spawn = spawn or (lambda av: subprocess.Popen(av, cwd=str(REPO), stdin=subprocess.DEVNULL))
+    if bind is None:
+        def bind(pid: int) -> dict:
+            try:
+                from backend.services import llama_server as _LS
+                return _LS.bind_lifetime(pid)
+            except Exception as exc:  # noqa: BLE001 -- reported, never fatal
+                return {"bound": False, "reason": f"{type(exc).__name__}: {exc}"}
+    budgets = split_budget(max_pages, groups)
+    procs: dict[str, Any] = {}
+    out: dict[str, Any] = {"receipt": "dowjones_pull.workers", "stamp": stamp,
+                           "launcher_pid": __import__("os").getpid(), "workers": {}}
+    for wid, lns in groups.items():
+        av = worker_argv(plan_spec(lns), wid, stamp=stamp, profile=profile,
+                         max_pages=budgets[wid], fresh_since=fresh_since,
+                         parent_tabs=parent_tabs)
+        p = spawn(av)
+        procs[wid] = p
+        out["workers"][wid] = {"pid": p.pid, "lanes": [ln["lane"] for ln in lns],
+                               "max_pages": budgets[wid], "bound": bind(p.pid)}
+        print(f"worker {wid}: pid {p.pid} lanes {out['workers'][wid]['lanes']}", flush=True)
+    DG.atomic_write_json(workers_pid_path(), {
+        "launcher": out["launcher_pid"], "stamp": stamp,
+        "workers": {k: v["pid"] for k, v in out["workers"].items()}}, indent=None)
+    d = Path(rdir) if rdir else DF.receipts_dir()
+    total, refusals, codes = 0, [], {}
+    for wid, p in procs.items():
+        code = int(p.wait() or 0)
+        codes[wid] = code
+        rp = d / f"plan_{stamp}_{wid}.json"
+        try:
+            r = json.loads(rp.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            r = {}
+        n = int(r.get("n_articles") or 0)
+        total += n
+        why = r.get("refused") or r.get("stopped") or "; ".join(
+            f"{k}: {v.get('dropped')}" for k, v in (r.get("lanes") or {}).items()
+            if v.get("dropped") and not str(v["dropped"]).startswith(("EXHAUSTED",
+                                                                       "BUDGET_SPENT")))
+        if code != 0 or not r:
+            refusals.append(f"{wid}: rc {code}: {str(why or 'no receipt')[:160]}")
+        out["workers"][wid].update(rc=code, receipt=str(rp) if r else None, n_articles=n,
+                                   refused=why or None)
+    out.update(n_articles=total, refused="; ".join(refusals)[:300] or None,
+               rc=0 if all(c == 0 for c in codes.values()) else 2)
+    return out
+
+
+def _launch_workers(a: Any, day: str, stamp: str, *, oc: Any = None,
+                    spawn: Any = None, bind: Any = None) -> int:
+    """`--plan ... --workers N`: the pre-flight a worker cannot do alone,
+    then the workers.
+
+    1. re-attach if needed, and resolve every source's parent through the
+       MARKER rule -- no marker tab refuses here, before any process starts
+       (each worker resolves again itself and refuses the same way);
+    2. take the SINGLE-SESSION lock (refuses while any reader, worker or not,
+       is alive), close what dead single-session runs left open (receipts
+       with no `worker`), release it;
+    3. start the workers and wait (`run_workers`)."""
+    if oc is None:
+        from backend.services import openclaw_client as oc  # type: ignore[no-redef]
+    stamp_full = f"{day}_{stamp}"
+    pre_log: list = []
+    out: dict[str, Any] = {"receipt": "dowjones_pull.workers", "plan": a.plan,
+                           "stamp": stamp_full}
+    try:
+        lanes = parse_plan(a.plan)
+        groups = split_lanes_by_site(lanes, a.workers)
+        WR.ensure_attached(a.profile, oc=oc, log=pre_log)
+        srcs = list(dict.fromkeys(ln["source"] for ln in lanes))
+        parents = resolve_parent_tabs(srcs, oc.tabs(profile_name=a.profile),
+                                      explicit=parse_parent_tabs(a.parent_tabs),
+                                      exclude=set(getattr(oc, "_OPENED_TABS", set())))
+        out["parent_tabs"] = parents
+        lock = WR.acquire_reader_lock()
+        try:
+            out["startup_cleanup"] = startup_cleanup(oc, a.profile, worker=None)
+        finally:
+            WR.release_reader_lock(lock)
+    except Exception as exc:  # noqa: BLE001 -- a refusal is a finding, rc 2
+        print(f"REFUSED: {type(exc).__name__}: {exc}")
+        out.update(refused=f"{type(exc).__name__}: {exc}"[:400], reattach_log=pre_log)
+        _write(out, f"workers_{stamp_full}.json")
+        _LAST_OUTCOME.update(kind="plan", n_articles=0, refused=out["refused"][:300])
+        return 2
+    res = run_workers(groups, stamp=stamp_full, profile=a.profile,
+                      max_pages=a.max_pages if a.max_pages != 20 else None,
+                      fresh_since=a.fresh_since or None, parent_tabs=a.parent_tabs,
+                      spawn=spawn, bind=bind)
+    out.update(res, reattach_log=pre_log)
+    p = _write(out, f"workers_{stamp_full}.json")
+    print(json.dumps({"workers": {"receipt": str(p), "n_articles": res["n_articles"],
+                                  "refused": res["refused"],
+                                  "per_worker": {k: {x: v.get(x) for x in
+                                                     ("pid", "rc", "n_articles")}
+                                                 for k, v in res["workers"].items()}}},
+                     indent=1, default=str))
+    _LAST_OUTCOME.update(kind="plan", n_articles=res["n_articles"], refused=res["refused"])
+    return int(res["rc"])
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--feeds", action="store_true")
@@ -1611,6 +1967,14 @@ def main(argv: list[str] | None = None) -> int:
                     help="write the v3 shortlist queue (carded names) to this path")
     ap.add_argument("--shortlist-date", default="",
                     help="the thesis_cards/<date> the shortlist queue is built from")
+    ap.add_argument("--workers", type=int, nargs="?", default=1,
+                    const=int(getattr(_config, "DOWJONES_READER_WORKERS_DEFAULT", 3)),
+                    help="plan: split the lanes by site into N reader processes sharing "
+                         "one throttle (bare --workers = config default, 3)")
+    ap.add_argument("--worker", default="",
+                    help="(set by --workers) run as this worker id with its own lock")
+    ap.add_argument("--run-stamp", default="",
+                    help="(set by --workers) receipt stamp YYYY-MM-DD_HHMMSS")
     ap.add_argument("--queue", default="", help="a file of dowjones_pull lines, run in order")
     ap.add_argument("--queue-first-only", action="store_true")
     ap.add_argument("--write-queue", default="",
@@ -1655,10 +2019,13 @@ def main(argv: list[str] | None = None) -> int:
             print(f"REFUSED: {exc}", flush=True)
             return 2
         print(TOU_SENTENCE, flush=True)
+        def _line_main(av: list[str]) -> int:
+            extra = ["--profile", a.profile] if "--profile" not in av else []
+            if a.workers > 1 and "--plan" in av and "--workers" not in av:
+                extra += ["--workers", str(a.workers)]
+            return main(av + extra)
         r = run_queue(Path(a.queue), inherit=["--handoff"] if a.handoff else [],
-                      main_fn=lambda av: main(av + (["--profile", a.profile]
-                                                    if "--profile" not in av else [])),
-                      only_first=a.queue_first_only)
+                      main_fn=_line_main, only_first=a.queue_first_only)
         p = _write(r, f"queue_{day}_{datetime.now(timezone.utc):%H%M%S}.json")
         out["queue"] = {"receipt": str(p), "lines": [
             {k: ln.get(k) for k in ("line", "status", "rc", "seconds")} for ln in r["lines"]]}
@@ -1722,7 +2089,16 @@ def main(argv: list[str] | None = None) -> int:
                           "footprint": (r.get("footprint") or {}).get("verdict")}
         rc = 0 if r["complete"] else 2
         _LAST_OUTCOME.update(kind="archive", n_articles=r["n_articles"], refused=r["stopped"])
-    if a.plan:
+    if a.plan and a.workers > 1 and not a.worker:
+        print(TOU_SENTENCE, flush=True)
+        if not a.handoff or not handoff_ok():
+            print(f"REFUSED_NO_HANDOFF: browser reads need --handoff AND "
+                  f"{_config.DOWJONES_HANDOFF_FILE}.")
+            return 2
+        rc = _launch_workers(a, day, datetime.now(timezone.utc).strftime("%H%M%S"))
+        out["plan_workers"] = {"rc": rc, "n_articles": _LAST_OUTCOME.get("n_articles"),
+                               "refused": _LAST_OUTCOME.get("refused")}
+    elif a.plan:
         print(TOU_SENTENCE, flush=True)
         if not a.handoff or not handoff_ok():
             print(f"REFUSED_NO_HANDOFF: browser reads need --handoff AND "
@@ -1730,6 +2106,8 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         stamp = datetime.now(timezone.utc).strftime("%H%M%S")
         rpath = DF.receipts_dir() / f"plan_{day}_{stamp}.json"
+        if a.worker:
+            rpath = DF.receipts_dir() / f"plan_{a.run_stamp or day + '_' + stamp}_{a.worker}.json"
         pre_log: list = []
         try:
             lanes = parse_plan(a.plan)
@@ -1747,7 +2125,8 @@ def main(argv: list[str] | None = None) -> int:
                       flush=True)
             r = run_plan(lanes, parents=parents, profile=a.profile,
                          max_pages=a.max_pages if a.max_pages != 20 else None,
-                         progress_path=rpath, fresh_since=a.fresh_since or None)
+                         progress_path=rpath, fresh_since=a.fresh_since or None,
+                         worker=a.worker or None)
             r["reattach_log"] = pre_log + r.get("reattach_log", [])
             r["reattaches"] = r.get("reattaches", 0) + sum(1 for x in pre_log if x.get("ok"))
             if isinstance(r.get("footprint"), dict):           # the pre-run re-attach counts too
@@ -1756,8 +2135,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"REFUSED: {type(exc).__name__}: {exc}")
             _LAST_OUTCOME.update(kind="plan", n_articles=0,
                                  refused=f"{type(exc).__name__}: {exc}"[:300])
-            _write({"receipt": "dowjones_pull.plan", "plan": a.plan, "n_articles": 0,
-                    "reattach_log": pre_log,
+            # keep what run_plan's `finally` already wrote there (its `opened`
+            # / `tabs_closed` accounting is what the next start of this worker
+            # reads to close a crashed run's tabs) and add the refusal to it
+            try:
+                prior = json.loads(rpath.read_text(encoding="utf-8")) if rpath.exists() else {}
+            except (OSError, ValueError):
+                prior = {}
+            _write({**(prior if isinstance(prior, dict) else {}),
+                    "receipt": "dowjones_pull.plan", "plan": a.plan, "n_articles": 0,
+                    "reattach_log": pre_log, "worker": a.worker or None,
                     "refused": f"{type(exc).__name__}: {exc}"[:400],
                     "finished_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")},
                    rpath.name)
