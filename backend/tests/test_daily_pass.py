@@ -101,6 +101,8 @@ def out(tmp_path, monkeypatch) -> Path:
 def calls(monkeypatch) -> list[str]:
     """Replace every seam; record the order in which the steps reach them."""
     seen: list[str] = []
+    seen_health_kw: list[dict] = []
+    monkeypatch.setattr(DP, "_TEST_HEALTH_KW", seen_health_kw, raising=False)
 
     # 2026-09-26. The real seam runs `scripts.pull_bars_refresh` as a child that
     # pulls from the venue and REWRITES the ranker's 7M-row panel; the real
@@ -118,6 +120,29 @@ def calls(monkeypatch) -> list[str]:
 
     monkeypatch.setattr(DP, "run_bars_refresh", _bars)
     monkeypatch.setattr(DP, "run_grade_promises", _promises)
+
+    # 2026-09-27. The three book-grading seams each run a CHILD that pulls from
+    # yfinance and writes the leaderboard, docs/PAPER_ACCOUNTS.md and
+    # docs/BRIDGE.md -- none of which belongs in a unit test of the driver.
+    def _grade_books(**kw):
+        seen.append("grade_books")
+        return {"status": "ok", "rc": 0, "leaderboard": "lb_fixture.json",
+                "bars_through": "2026-01-02", "status_counts": {"OK": 3, "PENDING": 1},
+                "series_refusals": [], "n_benchmark_missing": 0}
+
+    def _paper_accounts(**kw):
+        seen.append("paper_accounts")
+        return {"status": "ok", "rc": 0, "receipt": "roi_fixture.json", "n_rows": 9,
+                "llm_by_status": {"LIVE": 3, "PENDING": 1}}
+
+    def _bridge(**kw):
+        seen.append("bridge_report")
+        return {"status": "ok", "rc": 0, "receipt": "bridge_fixture.json", "n_rows": 2,
+                "n_forward_graded": 2, "identical_holdings": []}
+
+    monkeypatch.setattr(DP, "run_grade_books", _grade_books)
+    monkeypatch.setattr(DP, "run_paper_accounts", _paper_accounts)
+    monkeypatch.setattr(DP, "run_bridge_report", _bridge)
 
     def _news(**kw):
         seen.append("news_pull")
@@ -206,6 +231,7 @@ def calls(monkeypatch) -> list[str]:
     # one ALIVE row so the step's copy-the-non-ALIVE branch runs.
     def _health(**kw):
         seen.append("health")
+        seen_health_kw.append(kw)
         return {"receipt": "system_health", "exit_code": 1,
                 "counts": {"DEAD": 1, "STALE": 1, "UNKNOWN": 0, "ALIVE": 1},
                 "path": None,
@@ -270,7 +296,8 @@ def test_every_declared_step_runs_in_order(out, calls, rth_open) -> None:
     assert outer == ["bars_refresh", "news_pull", "decision_contract",
                      "analyst_snapshot", "e1_append", "book_cadence",
                      "book_cadence", "book_cadence", "grade_forecasts",
-                     "grade_promises", "coverage", "scoreboard", "health"]
+                     "grade_promises", "grade_books", "paper_accounts",
+                     "bridge_report", "coverage", "scoreboard", "health"]
 
 
 def test_the_handler_table_covers_the_declared_steps() -> None:
@@ -809,3 +836,113 @@ def test_the_health_step_is_last_prints_the_non_alive_rows_and_never_fails(
     assert row2["status"] == "refused"
     assert "probe table unreadable" in row2["refusals"][0]
     assert Path(rec2["path"]).exists()          # the day's receipt is never lost
+
+
+# --------------------------------------------------------------------------
+# the book grade has a scheduled caller (2026-09-27)
+
+BOOK_STEPS = ("grade_books", "paper_accounts", "bridge_report")
+
+
+def test_the_book_grading_steps_run_after_the_bars_refresh_and_before_health(
+        out, calls, rth_open) -> None:
+    rec = DP.run_daily_pass(day=_today())
+    order = [r["step"] for r in rec["steps"]]
+    i = [order.index(s) for s in BOOK_STEPS]
+    assert i == sorted(i) and i[1] == i[0] + 1 and i[2] == i[1] + 1
+    assert order.index("bars_refresh") < i[0] and i[2] < order.index("health")
+    rows = {r["step"]: r for r in rec["steps"]}
+    assert rows["grade_books"]["status"] == "ok" and rows["grade_books"]["rows"] == 3
+    assert rows["grade_books"]["receipt_path"] == "lb_fixture.json"
+    assert rows["grade_books"]["bars_through"] == "2026-01-02"
+    assert rows["paper_accounts"]["receipt_path"] == "roi_fixture.json"
+    assert rows["bridge_report"]["receipt_path"] == "bridge_fixture.json"
+    for s in BOOK_STEPS:
+        assert rec["step_stages"][s] == "pnl"
+        assert DP.step_box_s(s) > 60
+    # the health probes see THIS pass's book-grading rows (its receipt is later)
+    (kw,) = DP._TEST_HEALTH_KW
+    assert [r["step"] for r in kw["daily_pass_rows"] if r["step"] in BOOK_STEPS] == \
+        list(BOOK_STEPS)
+
+
+@pytest.mark.parametrize("failing", BOOK_STEPS)
+@pytest.mark.parametrize("how", ("raises", "refuses"))
+def test_each_book_step_can_fail_and_the_pass_goes_on(
+        out, calls, rth_open, monkeypatch, failing, how) -> None:
+    seam = {"grade_books": "run_grade_books", "paper_accounts": "run_paper_accounts",
+            "bridge_report": "run_bridge_report"}[failing]
+
+    def _bad(**kw):
+        if how == "raises":
+            raise RuntimeError(f"{failing} child crashed")
+        return {"status": "refused", "rc": 1, "reason": f"{failing}: rc 1: boom"}
+
+    monkeypatch.setattr(DP, seam, _bad)
+    rec = DP.run_daily_pass(day=_today())
+    rows = {r["step"]: r for r in rec["steps"]}
+    assert rows[failing]["status"] == ("error" if how == "raises" else "refused")
+    assert failing in rows[failing]["refusals"][0]
+    assert failing in rec["steps_that_did_not_run"]
+    # every other step, including the other two book steps and health, ran
+    assert [r["step"] for r in rec["steps"]] == [s for s, _ in DP.STEPS]
+    for other in BOOK_STEPS:
+        if other != failing:
+            assert rows[other]["status"] == "ok"
+    assert rows["health"]["status"] == "ok"
+    assert DP.main(["--date", _today(), "--force"]) == 0
+
+
+def test_grade_books_names_series_and_book_refusals(out, calls, rth_open,
+                                                    monkeypatch) -> None:
+    monkeypatch.setattr(DP, "run_grade_books", lambda **kw: {
+        "status": "ok", "rc": 0, "leaderboard": "lb.json", "bars_through": "2026-01-02",
+        "status_counts": {"OK": 2, "REFUSED": 1, "REFUSED_UNDER_PRICED": 1},
+        "series_refusals": [{"symbol": "URTH", "why": "NO_BARS after the pull (pull failed)"}],
+        "n_benchmark_missing": 3})
+    rec = DP.run_daily_pass(day=_today())
+    row = next(r for r in rec["steps"] if r["step"] == "grade_books")
+    assert row["status"] == "ok"
+    joined = " | ".join(row["refusals"])
+    assert "SERIES URTH: NO_BARS" in joined
+    assert "REFUSED: 1 book(s)" in joined and "REFUSED_UNDER_PRICED: 1 book(s)" in joined
+    assert "benchmark missing on 3 grade(s)" in joined
+
+
+def test_the_child_runner_reads_the_summary_and_names_a_failure(monkeypatch) -> None:
+    import subprocess as sp
+
+    seen: list = []
+
+    def _run(argv, **kw):
+        seen.append((argv, kw))
+        mod = argv[2]
+        if mod == "ok_mod":
+            return sp.CompletedProcess(argv, 0, stdout='table\n<<<{"status": "ok", "n": 1}>>>\n',
+                                       stderr="")
+        if mod == "rc_mod":
+            return sp.CompletedProcess(argv, 2, stdout="", stderr="Traceback: boom")
+        if mod == "slow_mod":
+            raise sp.TimeoutExpired(argv, kw["timeout"])
+        return sp.CompletedProcess(argv, 0, stdout="no summary here", stderr="")
+
+    monkeypatch.setattr(DP.subprocess, "run", _run)
+    ok = DP._run_module_child(["ok_mod"], 10)
+    assert ok["status"] == "ok" and ok["n"] == 1 and ok["rc"] == 0
+    bad = DP._run_module_child(["rc_mod"], 10)
+    assert bad["status"] == "refused" and "rc 2" in bad["reason"] and "boom" in bad["reason"]
+    slow = DP._run_module_child(["slow_mod"], 10)
+    assert slow["status"] == "refused" and "outlived 10s" in slow["reason"]
+    none = DP._run_module_child(["quiet_mod"], 10)
+    assert none["status"] == "refused"
+    # PULL mode, never --no-pull; --no-broker for the ROI table
+    DP.run_grade_books(timeout_s=5)
+    DP.run_paper_accounts(timeout_s=5)
+    DP.run_bridge_report(timeout_s=5)
+    argvs = [a for a, _ in seen[-3:]]
+    assert argvs[0][2:] == ["scripts.llm_portfolio", "grade", "--json"]
+    assert "--no-pull" not in argvs[0]
+    assert argvs[1][2:] == ["scripts.paper_accounts_roi", "--no-broker", "--json"]
+    assert argvs[2][2:] == ["scripts.bridge_report", "report", "--json"]
+    assert all(kw["timeout"] == 5 for _a, kw in seen[-3:])
+    assert all(kw.get("shell") in (None, False) for _a, kw in seen)

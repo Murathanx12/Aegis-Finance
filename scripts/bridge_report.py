@@ -53,9 +53,14 @@ if str(REPO) not in sys.path:
 
 from backend import config as _cfg                        # noqa: E402
 
-LIB_DIR = REPO / "backend" / "data" / "optimus" / "strategy_library"
-BRIDGE_DIR = REPO / "backend" / "data" / "optimus" / "bridge"
-PLAN_DIR = REPO / "backend" / "data" / "optimus" / "decisions" / "pc_plan"
+#: DATA paths come from the config (`OPTIMUS_LEDGER_DIR`), exactly as the
+#: grader's do, so `AEGIS_DATA_DIR` points this report at a rehearsal's copies
+#: with no in-process redirection (rehearsal 2026-09-28: these were rooted on
+#: the repo). The rendered DOCUMENT stays `docs/BRIDGE.md` unless `--out-md`.
+_OPT = Path(_cfg.OPTIMUS_LEDGER_DIR)
+LIB_DIR = _OPT / "strategy_library"
+BRIDGE_DIR = _OPT / "bridge"
+PLAN_DIR = _OPT / "decisions" / "pc_plan"
 DOC = REPO / "docs" / "BRIDGE.md"
 
 TAXONOMY = ("REGIME_SHIFT", "CROWDING", "FACTOR_DECAY", "DATA_LEAK", "IMPLEMENTATION",
@@ -177,7 +182,7 @@ def regime(spy: pd.DataFrame) -> dict:
 # cluster is graded as ONE observation), a "distinct bets" count sits beside the
 # book count, and every expectation / forward column has a factor-ETF twin.
 
-STRUCT_DIR = REPO / "backend" / "data" / "optimus" / "signal_structure"
+STRUCT_DIR = _OPT / "signal_structure"
 FACTOR_ETFS = ("SMH", "MTUM", "IWM")
 #: The dominant factor ETF is the largest POSITIVE t(beta) in the FULL-window
 #: (2017-26, ~115 months) three-spread regression, and only if that t >= this.
@@ -632,6 +637,23 @@ def gates_for(books: list[dict], board: dict, bars: pd.DataFrame, *,
     return out
 
 
+def identical_holdings(books: list[dict]) -> list[list[str]]:
+    """Groups (>= 2) of non-twin, non-void books holding the SAME names at the
+    same weights (4 dp, CASH aside). Neither is voided -- both were frozen and
+    both stay -- but a group is ONE observation, and the render says so
+    (`lib_mom_12_1_q_2026-09-26` and `lib_mom_12_1_2026-09-26`, rehearsal
+    2026-09-28)."""
+    groups: dict = {}
+    for b in books:
+        if b.get("kind") == "twin" or b.get("void"):
+            continue
+        key = tuple(sorted((p["ticker"], round(float(p["weight"]), 4))
+                           for p in b.get("positions", []) if p["ticker"] != "CASH"))
+        if key:
+            groups.setdefault(key, []).append(str(b.get("name")))
+    return [sorted(v) for v in groups.values() if len(v) > 1]
+
+
 def build_rows(books: list[dict], board: dict, bars: pd.DataFrame, *,
                today: date, regime_now: dict, prior: Optional[dict] = None,
                gates: Optional[dict] = None, structure: Optional[dict] = None,
@@ -824,15 +846,25 @@ def render_md(doc: dict) -> str:
           "forward return | forward SPY | forward relative | expected rel. to date (2024-26 window) "
           "| regime | days | status |",
           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    ident = {n: [m for m in grp if m != n] for grp in (doc.get("identical_holdings") or [])
+             for n in grp}
     for r in doc["rows"]:
         tv = r.get("turnover_annual")
+        same = ident.get(r["book"])
+        st = r["status"] + (f"; identical holdings to {', '.join('`' + m + '`' for m in same)}, "
+                            "one observation" if same else "")
         L.append(
             f"| `{r['book']}` | `{r['rule']}` | {_cl(r)} | {r.get('gate') or 'n/a'} | {_p(r['dev_cagr'])} | "
             f"{_p(r['sealed_cagr'])} ({_p(r['sealed_spy_cagr'])}) | {_p(r['max_dd'])} | "
             f"{(f'{tv:.1f}x' if isinstance(tv, (int, float)) else 'n/a')} | "
             f"{_p(r['forward_return'], 2)} | {_p(r['forward_spy'], 2)} | "
             f"{_p(r['forward_relative'], 2)} | {_p(r['expected_relative_to_date'], 2)} | "
-            f"{r['regime_now']} | {r['days_since_inception']} | {r['status']} |")
+            f"{r['regime_now']} | {r['days_since_inception']} | {st} |")
+    for grp in doc.get("identical_holdings") or []:
+        L += ["", f"**Identical holdings, one observation:** {' = '.join('`' + n + '`' for n in grp)} "
+                  "hold the same names at the same weights. Both were frozen and both stay "
+                  "(neither is voided), but they are one bet: count them once in any tally "
+                  "of forward results."]
     gl = doc.get("gate_summary") or {}
     if gl:
         L += ["", f"**The freeze gate** (`scripts/night_backtest_factory.py::freeze_gate`): "
@@ -1263,6 +1295,11 @@ def report(*, today: Optional[date] = None, out_md: Path = DOC,
         k: b["void"].get(k) for k in ("reason", "voided_utc", "who")}}
         for b in lib if b.get("void")]
     heads = [r for r in rows if not r.get("strategy_test_for_voided")]
+    in_rows = {r["book"] for r in rows}
+    ident = [g for g in identical_holdings([b for b in lib if b.get("name") in in_rows])]
+    for r in rows:
+        r["identical_holdings_with"] = next(([m for m in g if m != r["book"]]
+                                             for g in ident if r["book"] in g), [])
     leads_doc, leads_path = latest_leads(out_dir)
     gate_log = out_dir / f"freeze_gate_{today}.json"
     gate_doc = {"schema": "bridge/freeze_gate/1", "date": str(today),
@@ -1276,6 +1313,7 @@ def report(*, today: Optional[date] = None, out_md: Path = DOC,
            "library_facts": _facts_or_none(board),
            "dev_selected": board.get("dev_selected_sealed_evaluated"),
            "n_forward_graded": sum(1 for r in rows if r.get("sessions_since_entry")),
+           "identical_holdings": ident,
            "voided_before_entry": voided,
            "gate_summary": {"n_books": len(heads),
                             "n_pass": sum(1 for r in heads if r.get("gate_verdict") == "PASS"),
@@ -2320,8 +2358,18 @@ def rerender(receipt: Path, *, out_md: Path = DOC, structure: Optional[dict] = N
 
 def cmd_report(a) -> int:
     today = date.fromisoformat(a.today) if getattr(a, "today", None) else date.today()
-    doc = report(today=today)
+    out_md = Path(a.out_md) if getattr(a, "out_md", None) else DOC
+    doc = report(today=today, out_md=out_md)
     print(render_md(doc))
+    if getattr(a, "json", False):
+        # one machine-readable line for the daily pass (`<<<{...}>>>`)
+        print("<<<" + json.dumps({
+            "status": "ok", "receipt": doc.get("receipt_json"), "doc": str(out_md),
+            "n_rows": len(doc.get("rows") or []),
+            "n_forward_graded": doc.get("n_forward_graded"),
+            "identical_holdings": doc.get("identical_holdings"),
+            "n_investigations": sum(1 for r in doc.get("rows") or [] if r.get("investigation")),
+            "leaderboard": doc.get("leaderboard")}, default=str) + ">>>")
     return 0
 
 
@@ -2339,6 +2387,10 @@ def main(argv=None) -> int:
     f.add_argument("--skip-library", action="store_true")
     r = sub.add_parser("report")
     r.add_argument("--today", default=None)
+    r.add_argument("--out-md", default=None,
+                   help="render BRIDGE.md here instead of docs/ (a rehearsal on copies)")
+    r.add_argument("--json", action="store_true",
+                   help="end with one `<<<{summary}>>>` line (the daily pass reads it)")
     sub.add_parser("readme", help="rewrite the README backtest section from the leaderboard receipt")
     rr = sub.add_parser("render", help="re-render docs/BRIDGE.md from a stored bridge receipt (no bars)")
     rr.add_argument("--receipt", default=None, help="bridge_<date>.json (default: the newest)")

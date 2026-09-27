@@ -568,3 +568,40 @@ def test_the_bridge_lists_each_lead_with_its_cluster_gate_and_twin_ids():
     assert "matched_random `t1`" in s and "iwm `t2`" in s
     assert "about 0.8 of 288 cells" in s and BR.LEAD_FORWARD_TEST in s
     assert BR.render_leads({"rows": []}) == []
+
+
+def test_identical_holdings_are_marked_one_observation_and_neither_is_voided(tmp_path):
+    """`lib_mom_12_1_q_2026-09-26` and `lib_mom_12_1_2026-09-26` hold the same
+    positions (rehearsal 2026-09-28): both stay, the render says they are one bet."""
+    a = _book("lib_mom_12_1_2026-09-26")
+    b = {**_book("lib_mom_12_1_q_2026-09-26"), "book_id": "b2"}
+    c = {**_book("lib_other_2026-09-26"), "book_id": "b3",
+         "positions": [{"ticker": "AAA", "weight": 0.6}, {"ticker": "BBB", "weight": 0.4}]}
+    assert BR.identical_holdings([a, b, c]) == [["lib_mom_12_1_2026-09-26",
+                                                 "lib_mom_12_1_q_2026-09-26"]]
+    # a twin or a voided book is never part of a group
+    assert BR.identical_holdings([a, {**b, "kind": "twin"}]) == []
+    assert BR.identical_holdings([a, {**b, "void": {"reason": "x"}}]) == []
+    doc = BR.report(today=date(2026, 9, 26), out_md=tmp_path / "B.md", out_dir=tmp_path,
+                    books=[a, b, c], bars=_bars(), board={"all_rows": [ROW]},
+                    board_path="lb.json", earnings={}, semis={"status": "SKIPPED", "why": "t"})
+    assert doc["identical_holdings"] == [["lib_mom_12_1_2026-09-26", "lib_mom_12_1_q_2026-09-26"]]
+    rows = {r["book"]: r for r in doc["rows"]}
+    assert rows["lib_mom_12_1_2026-09-26"]["identical_holdings_with"] == ["lib_mom_12_1_q_2026-09-26"]
+    assert rows["lib_other_2026-09-26"]["identical_holdings_with"] == []
+    md = (tmp_path / "B.md").read_text(encoding="utf-8")
+    assert "identical holdings to `lib_mom_12_1_q_2026-09-26`, one observation" in md
+    assert ("**Identical holdings, one observation:** `lib_mom_12_1_2026-09-26` = "
+            "`lib_mom_12_1_q_2026-09-26`") in md
+    assert not doc["voided_before_entry"]
+    # the stored receipt re-renders the same marks with no bars
+    BR.rerender(tmp_path / "bridge_2026-09-26.json", out_md=tmp_path / "R.md", structure={})
+    assert "one observation" in (tmp_path / "R.md").read_text(encoding="utf-8")
+
+
+def test_bridge_data_paths_follow_the_config_not_the_repo():
+    from backend import config as C
+    opt = Path(C.OPTIMUS_LEDGER_DIR)
+    assert BR.BRIDGE_DIR == opt / "bridge" and BR.LIB_DIR == opt / "strategy_library"
+    assert BR.PLAN_DIR == opt / "decisions" / "pc_plan"
+    assert BR.STRUCT_DIR == opt / "signal_structure"

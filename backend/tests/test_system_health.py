@@ -445,3 +445,73 @@ def test_non_alive_lines_put_dead_and_stale_first(tmp_path, monkeypatch):
     lines = SH.non_alive_lines()
     assert "1 DEAD/STALE, 1 UNKNOWN of 3" in lines[0]
     assert lines[1].startswith("- DEAD b -- gone") and len(lines) == 2
+
+
+# ─────────────────────────── book_grader sees the llm_portfolio books (09-27)
+
+def _llm(tmp_path, *, bars_through=None, status_counts=None, books=(), graded=()):
+    d = tmp_path / "optimus" / "llm_portfolio"
+    d.mkdir(parents=True, exist_ok=True)
+    if books:
+        (d / "books.jsonl").write_text("\n".join(json.dumps(b) for b in books) + "\n",
+                                       encoding="utf-8")
+    if bars_through is not None:
+        _w(d / f"leaderboard_{bars_through}.json",
+           {"bars_through": str(bars_through), "graded_utc": _iso(_now()),
+            "status_counts": status_counts or {"OK": 1},
+            "books": [{"book_id": g, "status": "OK"} for g in graded]})
+
+
+def test_book_grader_is_stale_when_the_llm_board_is_more_than_one_session_behind(tmp_path):
+    now = _now()
+    last = SH.last_closed_session(now)
+    days, _ = SH._sessions(last - timedelta(days=14), last)
+    _llm(tmp_path, bars_through=days[-3],                          # 2 sessions behind
+         status_counts={"OK": 3, "PENDING": 2, "REFUSED": 1, "REFUSED_UNDER_PRICED": 1})
+    r = SH.p_book_grader(_ctx(tmp_path, now=now))
+    assert r.verdict == "STALE"
+    assert "2 session(s) behind" in r.detail
+    assert "PENDING 2, UNGRADED 0, REFUSED 2, OK 3" in r.detail
+
+
+def test_book_grader_tolerates_one_session_and_is_alive_when_current(tmp_path):
+    now = _now()
+    last = SH.last_closed_session(now)
+    days, _ = SH._sessions(last - timedelta(days=14), last)
+    _llm(tmp_path, bars_through=days[-2])                           # 1 session behind
+    assert SH.p_book_grader(_ctx(tmp_path, now=now)).verdict == "ALIVE"
+    (tmp_path / "optimus" / "llm_portfolio" / f"leaderboard_{days[-2]}.json").unlink()
+    _llm(tmp_path, bars_through=last)
+    r = SH.p_book_grader(_ctx(tmp_path, now=now))
+    assert r.verdict == "ALIVE" and "0 session(s) behind" in r.detail
+
+
+def test_a_book_past_entry_on_no_board_is_ungraded_and_stale(tmp_path):
+    now = _now()
+    last = SH.last_closed_session(now)
+    old = str(last - timedelta(days=10))
+    books = [{"schema": "llm_portfolio/1", "book_id": "a", "name": "graded", "asof": old},
+             {"schema": "llm_portfolio/1", "book_id": "b", "name": "forgotten", "asof": old}]
+    # no leaderboard at all
+    _llm(tmp_path, books=books)
+    r = SH.p_book_grader(_ctx(tmp_path, now=now))
+    assert r.verdict == "STALE" and "UNGRADED 2" in r.detail
+    # a current board that grades only one of them
+    _llm(tmp_path, bars_through=last, books=books, graded=["a"])
+    r = SH.p_book_grader(_ctx(tmp_path, now=now))
+    assert r.verdict == "STALE" and "UNGRADED 1" in r.detail and "forgotten" in r.detail
+
+
+def test_a_failed_book_grading_step_turns_book_grader_stale(tmp_path):
+    now = _now()
+    _llm(tmp_path, bars_through=SH.last_closed_session(now))
+    ctx = _ctx(tmp_path, now=now)
+    ctx.cache["daily_pass_rows"] = [{"step": "grade_books", "status": "ok"},
+                                    {"step": "paper_accounts", "status": "refused"},
+                                    {"step": "bridge_report", "status": "timeout"}]
+    r = SH.p_book_grader(ctx)
+    assert r.verdict == "STALE"
+    assert "paper_accounts=refused" in r.detail and "bridge_report=timeout" in r.detail
+    ctx = _ctx(tmp_path, now=now)
+    ctx.cache["daily_pass_rows"] = [{"step": s, "status": "ok"} for s in SH.BOOK_GRADE_STEPS]
+    assert SH.p_book_grader(ctx).verdict == "ALIVE"

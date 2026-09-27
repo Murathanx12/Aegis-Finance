@@ -41,16 +41,28 @@ import numpy as np
 import pandas as pd
 
 REPO = Path(__file__).resolve().parent.parent
-OUT_DIR = REPO / "backend" / "data" / "optimus" / "paper_accounts"
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+from backend import config as _config                       # noqa: E402
+
+#: DATA paths come from the config, exactly as the grader's do
+#: (`llm_portfolio.ledger_dir()` = `OPTIMUS_LEDGER_DIR/llm_portfolio`), so
+#: `AEGIS_DATA_DIR` points this reader at a rehearsal's copies with no
+#: in-process redirection (rehearsal 2026-09-28: these were rooted on the repo).
+#: The rendered DOCUMENT stays in the repo's `docs/` unless `--docs-dir` says
+#: otherwise.
+_OPT = Path(_config.OPTIMUS_LEDGER_DIR)
+OUT_DIR = _OPT / "paper_accounts"
 DOC_PATH = REPO / "docs" / "PAPER_ACCOUNTS.md"
 ASSETS = REPO / "docs" / "assets"
 PROD = "https://aegis-finance-production.up.railway.app"
 TRACK_RECORD_URL = f"{PROD}/api/pi/track-record"
 ALPACA_PAPER = "https://paper-api.alpaca.markets"
 TERMINAL_ENV = REPO.parent / "aegis-alpha-terminal" / ".env"
-LLM_DIR = REPO / "backend" / "data" / "optimus" / "llm_portfolio"
-DECISIONS_DIR = REPO / "backend" / "data" / "optimus" / "decisions"
-MURAT_BOOK = REPO / "backend" / "data" / "murat_book.yaml"
+LLM_DIR = _OPT / "llm_portfolio"
+DECISIONS_DIR = _OPT / "decisions"
+MURAT_BOOK = Path(_config.DATA_DIR) / "murat_book.yaml"
 
 SCHEMA = "paper_accounts_roi/1"
 STATUSES = ("LIVE", "PENDING", "RETIRED", "UNPRICED", "CREDENTIAL_INVALID", "UNGRADED",
@@ -394,8 +406,12 @@ def collect_llm_books(books_path: Path = LLM_DIR / "books.jsonl",
     for r in recs:
         if r.get("kind") == "twin":
             twins_of.setdefault(r.get("parent_book_id"), []).append(r.get("twin") or r["name"])
-    src = (f"backend/data/optimus/llm_portfolio/books.jsonl + {leaderboard_name or 'no leaderboard'} "
-           f"(python -m scripts.llm_portfolio grade --no-pull)")
+    # The grade that fills this is `python -m scripts.llm_portfolio grade` in
+    # PULL mode, run by the daily pass's `grade_books` step. `--no-pull` cannot
+    # price URTH or the sector ETFs (no local panel holds them), so it is not
+    # the command to tell a reader to run.
+    src = (f"llm_portfolio/books.jsonl + {leaderboard_name or 'no leaderboard'} "
+           f"(python -m scripts.llm_portfolio grade -- the daily pass's grade_books step)")
     rows = []
     for r in recs:
         kind = r.get("kind")
@@ -416,12 +432,15 @@ def collect_llm_books(books_path: Path = LLM_DIR / "books.jsonl",
                              note=f"voided before entry ({str(v.get('voided_utc'))[:10]}, "
                                   f"{v.get('who')}): {v.get('reason')}", **kw))
             continue
-        if g.get("status") == "REFUSED":
+        if str(g.get("status") or "").startswith("REFUSED"):
             # After entry a refused book is NOT pending: it was due and could not
             # be priced (rehearsal 2026-09-28: 13 all-ETF twins printed as
             # "PENDING (entry 2026-09-28)" on the evening of 09-28).
             rows.append(_row(r["name"], f"llm_portfolio:{group}", status="UNPRICED",
-                             note=f"REFUSED by the grader (entry {entry}): {g.get('why')}",
+                             note=(f"{g.get('status')} by the grader (entry {entry}"
+                                   + (f", weight_priced {g.get('weight_priced')}"
+                                      if g.get("weight_priced") is not None else "")
+                                   + f"): {g.get('why')}"),
                              **kw))
         elif g.get("status") not in (None, "PENDING") and g.get("nav_usd") is not None:
             row = _row(r["name"], f"llm_portfolio:{group}", equity=g["nav_usd"],
@@ -840,28 +859,38 @@ def render_chart(rc: dict, path: Path) -> Optional[Path]:
     return path
 
 
-def write_outputs(rc: dict, *, chart: bool = True) -> dict:
+def write_outputs(rc: dict, *, chart: bool = True, out_dir: Optional[Path] = None,
+                  doc_path: Optional[Path] = None, assets: Optional[Path] = None) -> dict:
+    out_dir = Path(out_dir) if out_dir is not None else OUT_DIR
+    doc_path = Path(doc_path) if doc_path is not None else DOC_PATH
+    assets = Path(assets) if assets is not None else ASSETS
     day = rc["generated_utc"][:10]
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    rj = OUT_DIR / f"roi_{day}.json"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rj = out_dir / f"roi_{day}.json"
     png = latest = None
     if chart:
-        png = render_chart(rc, ASSETS / f"paper_accounts_roi_{day}.png")
+        png = render_chart(rc, assets / f"paper_accounts_roi_{day}.png")
         if png:
-            latest = ASSETS / "paper_accounts_roi_latest.png"
+            latest = assets / "paper_accounts_roi_latest.png"
             shutil.copyfile(png, latest)
             rc["chart"] = {"png": f"docs/assets/{png.name}", "latest": "docs/assets/paper_accounts_roi_latest.png"}
     tmp = rj.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(rc, indent=1, default=str), encoding="utf-8")
     tmp.replace(rj)
-    DOC_PATH.write_text(render_markdown(rc, "paper_accounts_roi_latest.png" if png else None), encoding="utf-8")
-    return {"receipt": rj, "png": png, "latest": latest, "doc": DOC_PATH}
+    doc_path.parent.mkdir(parents=True, exist_ok=True)
+    doc_path.write_text(render_markdown(rc, "paper_accounts_roi_latest.png" if png else None), encoding="utf-8")
+    return {"receipt": rj, "png": png, "latest": latest, "doc": doc_path}
 
 
 def main(argv: Optional[list[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--no-chart", action="store_true")
     ap.add_argument("--no-broker", action="store_true", help="skip the Alpaca fleet and PC-PAPER GETs")
+    ap.add_argument("--docs-dir", default=None,
+                    help="write PAPER_ACCOUNTS.md and assets/ here instead of the repo's docs/ "
+                         "(a rehearsal on AEGIS_DATA_DIR copies)")
+    ap.add_argument("--json", action="store_true",
+                    help="end with one `<<<{summary}>>>` line (the daily pass reads it)")
     a = ap.parse_args(argv)
     tr, why = fetch_track_record()
     tr_source, fresh = TRACK_RECORD_URL, True
@@ -871,18 +900,30 @@ def main(argv: Optional[list[str]] = None) -> int:
     rc = build(tr=tr, tr_source=tr_source, tr_fresh=fresh,
                fleet_env={} if a.no_broker else read_env_file(TERMINAL_ENV),
                bm=bm, bm_error=bm_err, include_fleet=not a.no_broker, include_pc=not a.no_broker)
-    out = write_outputs(rc, chart=not a.no_chart)
+    dd = Path(a.docs_dir) if a.docs_dir else None
+    out = write_outputs(rc, chart=not a.no_chart,
+                        doc_path=(dd / "PAPER_ACCOUNTS.md") if dd else None,
+                        assets=(dd / "assets") if dd else None)
     for r in rc["rows"]:
         if r["family"].startswith("llm_portfolio"):
             continue
         print(f"{r['account'][:46]:46s} {r['family']:17s} {r['status']:18s} "
               f"roi {_f(r['roi_pct'], pct=True):>9s}  spy {_f(r['spy_same_window_pct'], pct=True):>8s}  "
               f"eq {_f(r['equity'], money=True):>12s}")
-    n_llm = sum(1 for r in rc["rows"] if r["family"].startswith("llm_portfolio"))
-    print(f"+ {n_llm} llm_portfolio rows (PENDING until entry)")
+    llm = [r for r in rc["rows"] if r["family"].startswith("llm_portfolio")]
+    by_status: dict = {}
+    for r in llm:
+        by_status[r["status"]] = by_status.get(r["status"], 0) + 1
+    print(f"+ {len(llm)} llm_portfolio rows: {by_status}")
     print(rc["aggregate"]["honest_sentence"])
     for k, v in out.items():
         print(f"-> {k}: {v}")
+    if a.json:
+        print("<<<" + json.dumps({"status": "ok", "receipt": str(out["receipt"]),
+                                  "doc": str(out["doc"]), "n_rows": len(rc["rows"]),
+                                  "llm_by_status": by_status,
+                                  "website_lanes": rc["sources"]["website_lanes"]["source"],
+                                  "spy_leg": rc["sources"]["spy_leg"]}, default=str) + ">>>")
     return 0
 
 

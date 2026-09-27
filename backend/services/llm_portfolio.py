@@ -830,6 +830,188 @@ def _suspect_splits(t: str, g: pd.DataFrame, j: int, k_last: int) -> list[dict]:
     return out
 
 
+def grade_rule_version(entry_day: Any) -> int:
+    """1 for a book whose ENTRY SESSION is before
+    `config.LLM_BOOK_GRADE_RULE_V2_FROM` (2026-09-28), else 2. Decided by the
+    entry session, never by the day the grade runs, so a published v1 number
+    can never move."""
+    return 2 if (pd.Timestamp(entry_day).normalize()
+                 >= pd.Timestamp(_config.LLM_BOOK_GRADE_RULE_V2_FROM)) else 1
+
+
+def _rule_version_of(rec: dict, dates: Any) -> tuple[Optional[int], Optional[str]]:
+    """The rule version of a book the grader could not enter (PENDING/VOIDED):
+    from its entry session on the grader's calendar, else the XNYS calendar.
+    (None, why) when neither can say -- never a guess."""
+    try:
+        return grade_rule_version(entry_session(rec["asof"], dates)), None
+    except Exception as exc:                                  # noqa: BLE001
+        return None, f"entry session unknown: {type(exc).__name__}: {exc}"[:200]
+
+
+def _bench_leg(bench: Optional[pd.DataFrame], start: Any, asof_d: Any) -> Optional[float]:
+    """The benchmark's open(entry) -> close(asof_d) return: the book's own window."""
+    if bench is None:
+        return None
+    sd = bench["date"].values.astype("datetime64[ns]")
+    a = int(np.searchsorted(sd, start, side="left"))
+    z = int(np.searchsorted(sd, asof_d, side="right")) - 1
+    if 0 <= a < len(sd) and a <= z:
+        return float(bench["close"].iloc[z]) / float(bench["open"].iloc[a]) - 1.0
+    return None
+
+
+def _grade_v2(rec: dict, px: dict, bench: Optional[pd.DataFrame], dates: np.ndarray,
+              i0: int, base: dict, bench_sym: str) -> dict:
+    """Missing-name rule VERSION 2 (entry session >= 2026-09-28).
+
+    ONE rule for a halted name and for a NaN open: the name enters at its first
+    VALID open (finite, > 0) on or after the entry session, and not after the
+    grade's `today`. Until then its weight is CASH at 0% -- it is not dropped,
+    and it is NOT re-weighted onto the names that did enter: the NAV divides by
+    the book's whole declared weight, never by the priced part. A name with no
+    valid open yet is listed (`unpriceable_why`, and `deferred_entry` with
+    `entered_at_open_of: None`) and keeps waiting in cash.
+
+    `weight_priced` = (declared CASH + names that have entered) / declared
+    weight: the share of the book that is where the frozen book put it.
+    Declared cash counts as priced (a book frozen 60% cash is not under-priced);
+    `weight_in_market` is the entered names alone. On or after its
+    `LLM_BOOK_UNDER_PRICED_AFTER_SESSIONS`-th session a book with
+    `weight_priced < LLM_BOOK_UNDER_PRICED_MIN_WEIGHT` is `REFUSED_UNDER_PRICED`
+    -- it is not graded on a remnant, scaled or unscaled.
+
+    Entry cost is charged per name from the cell in which it enters (a cell
+    before a deferred name's entry does not pay for it)."""
+    from backend.services import xs_ranker as XR
+
+    entry_day = pd.Timestamp(dates[i0])
+    last = dates[-1]
+    total_w = float(sum(float(p["weight"]) for p in rec["positions"])) or 1.0
+    cash_w = float(sum(float(p["weight"]) for p in rec["positions"] if p["ticker"] == "CASH"))
+    entered: list[tuple] = []          # (ticker, w, g, j, entry date, bps)
+    waiting: dict[str, float] = {}
+    why_missing: dict[str, str] = {}
+    deferred: list[dict] = []
+    for p in rec["positions"]:
+        t, w = p["ticker"], float(p["weight"])
+        if t == "CASH":
+            continue
+        g = px.get(t)
+        if g is None:
+            waiting[t] = w
+            why_missing[t] = "NO_BARS"
+            continue
+        d = g["date"].values.astype("datetime64[ns]")
+        o = g["open"].to_numpy(dtype=float)
+        j0 = int(np.searchsorted(d, dates[i0], side="left"))
+        hi = int(np.searchsorted(d, last, side="right"))        # `today` bounds it
+        ok = np.flatnonzero(np.isfinite(o[j0:hi]) & (o[j0:hi] > 0))
+        on_entry = j0 < hi and pd.Timestamp(d[j0]) == entry_day
+        if on_entry and not (np.isfinite(o[j0]) and o[j0] > 0):
+            why = f"ENTRY_OPEN_NOT_FINITE on {entry_day.date()} (open={o[j0]})"
+        elif not on_entry:
+            why = "NO_BAR_ON_ENTRY_SESSION (halted or missing)"
+        else:
+            why = None
+        if not len(ok):
+            waiting[t] = w
+            why_missing[t] = (f"NO_VALID_OPEN_ON_OR_AFTER_ENTRY {entry_day.date()} through "
+                              f"{pd.Timestamp(last).date()}: {why}; waiting in cash at 0%")
+            deferred.append({"ticker": t, "weight": w,
+                             "entry_session": str(entry_day.date()),
+                             "entered_at_open_of": None,
+                             "why": f"{why}; in cash at 0% until its first valid open"})
+            continue
+        j = j0 + int(ok[0])
+        if why is not None:
+            deferred.append({"ticker": t, "weight": w,
+                             "entry_session": str(entry_day.date()),
+                             "entered_at_open_of": str(pd.Timestamp(d[j]).date()),
+                             "why": f"{why}; in cash at 0% until this open, not re-weighted"})
+        entered.append((t, w, g, j, d[j], XR.round_trip_bps(_entry_mdv(g, j))))
+
+    def _weights(asof_d) -> tuple[float, float]:
+        inm = sum(w for _t, w, _g, _j, dj, _b in entered if dj <= asof_d)
+        return (cash_w + inm) / total_w, inm / total_w
+
+    sessions = len(dates) - i0
+    w_priced, w_mkt = _weights(last)
+    proxy = bench_sym == _config.BOOK_WLS_PROXY
+    common = {"grade_rule_version": 2,
+              "unpriceable_why": why_missing, "deferred_entry": deferred,
+              "entry_session": str(entry_day.date()),
+              "weight_priced": round(w_priced, 4), "weight_in_market": round(w_mkt, 4),
+              "weight_waiting_in_cash": round(max(0.0, 1.0 - w_priced), 4)}
+    if not entered and cash_w < total_w:
+        # No named position has a valid open yet: grading it would report a
+        # cash book as the frozen one (rehearsal fix #5, kept under v2).
+        return {**base, **common, "status": "REFUSED", "sessions": sessions,
+                "n_unpriceable": len(waiting), "unpriceable": list(waiting)[:20],
+                "why": f"no named position has a valid open yet; waiting {list(waiting)[:10]}"}
+    out = {**base, **common, "objective": rec["objective"], "model": rec.get("model"),
+           "asof": rec["asof"], "status": "OK",
+           "n_positions": rec["n_positions"],
+           "n_unpriceable": len(waiting), "unpriceable": list(waiting)[:20],
+           "entry_cost_bps": round(sum(w * b for _t, w, _g, _j, _dj, b in entered) / 2.0, 1),
+           "benchmark_is_proxy": proxy,
+           "caveat": _config.BOOK_WLS_PROXY_CAVEAT if proxy else None,
+           "benchmark_missing": bench is None or not len(bench),
+           "horizons": {}}
+    if out["benchmark_missing"]:
+        out["why"] = (f"benchmark {bench_sym} has no bars in the panel: no vs_benchmark, "
+                      f"sessions counted on the union calendar")
+    min_w = float(_config.LLM_BOOK_UNDER_PRICED_MIN_WEIGHT)
+    after = int(_config.LLM_BOOK_UNDER_PRICED_AFTER_SESSIONS)
+    if sessions >= after and w_priced < min_w:
+        return {**{k: v for k, v in out.items() if k != "horizons"},
+                "status": "REFUSED_UNDER_PRICED", "sessions": sessions,
+                "why": (f"weight_priced {w_priced:.3f} < {min_w:g} after {sessions} "
+                        f"session(s) (rule: >= {after}); waiting in cash: "
+                        f"{sorted(waiting)[:10]}. Not graded on a remnant.")}
+
+    def _cell(asof_d) -> dict:
+        tot = cash_w + sum(waiting.values())                 # cash earns 0% here
+        cost = 0.0
+        for _t, w, g, j, dj, bps in entered:
+            if dj > asof_d:
+                tot += w                                     # not entered yet: cash, 0%
+                continue
+            gd = g["date"].values.astype("datetime64[ns]")
+            k = int(np.searchsorted(gd, asof_d, side="right")) - 1
+            tot += w * float(g["close"].iloc[k]) / float(g["open"].iloc[j])
+            cost += w * bps
+        gross = tot / total_w - 1.0                          # the WHOLE book, never the priced part
+        net = gross - (cost / 2.0) / 10_000.0
+        b = _bench_leg(bench, dates[i0], asof_d)
+        vs = (net - b) if b is not None else None
+        wp, _wm = _weights(asof_d)
+        return {"status": "OK", "gross": gross, "net": net,
+                "nav_usd": round(START_CAPITAL * (1.0 + net), 2),
+                "benchmark_return": b, "vs_benchmark": vs,
+                "spy": b if bench_sym == "SPY" else None,
+                "vs_spy": vs if bench_sym == "SPY" else None,
+                "weight_priced": round(wp, 4),
+                "as_of": str(pd.Timestamp(asof_d))[:10]}
+
+    for h in (rec.get("horizon_days") or HORIZON_DAYS):
+        h = int(h)
+        i1 = i0 + h - 1
+        if i1 > len(dates) - 1:
+            out["horizons"][h] = {"status": "PENDING",
+                                  "why": f"needs {h} sessions, has {len(dates)-i0}"}
+            continue
+        out["horizons"][h] = _cell(dates[i1])
+    out["to_date"] = {**_cell(last), "sessions": sessions}
+    sus: list[dict] = []
+    for t, _w, g, j, _dj, _b in entered:
+        gd = g["date"].values.astype("datetime64[ns]")
+        k_last = int(np.searchsorted(gd, last, side="right")) - 1
+        sus += _suspect_splits(t, g, j, k_last)
+    out["suspect_splits"] = sus
+    return out
+
+
 def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict:
     """NAV the book forward from its own as-of date, net of entry cost.
 
@@ -849,6 +1031,7 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
         return {"book_id": rec["book_id"], "name": rec["name"], "kind": rec.get("kind"),
                 "twin": rec.get("twin"), "parent_book_id": rec.get("parent_book_id"),
                 "benchmark": bench_sym, "status": "VOIDED",
+                "grade_rule_version": _rule_version_of(rec, None)[0],
                 "why": f"voided before entry {v.get('voided_utc')}: {v.get('reason')}"}
     px = _grouped(bars)
     bench = px.get(bench_sym)
@@ -862,8 +1045,19 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
             "parent_book_id": rec.get("parent_book_id"),
             "benchmark": bench_sym}
     if i0 >= len(dates):
-        return {**base, "status": "PENDING",
+        ver, ver_why = _rule_version_of(rec, None)
+        return {**base, "status": "PENDING", "grade_rule_version": ver,
+                **({"grade_rule_version_why": ver_why} if ver_why else {}),
                 "why": "no session has opened since it was frozen"}
+    if grade_rule_version(dates[i0]) >= 2:
+        return _grade_v2(rec, px, bench, dates, i0, base, bench_sym)
+
+    # ── VERSION 1 (entry session before 2026-09-28), kept EXACTLY: every number
+    # published under it stays reproducible. Its rule, stated as the arithmetic
+    # does it: a halted name enters at its next bar's open (held flat at its
+    # weight until then); a NaN open on that bar, or no bar at all, excludes the
+    # name for good; and the NAV divides by `priced_w`, so the excluded weight
+    # IS re-weighted onto the priced names. Version 2 (`_grade_v2`) does not.
 
     held, missing, cost_bps = [], [], 0.0
     # Every position that is not entered at the entry session's open says WHY,
@@ -911,16 +1105,18 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
         # the frozen one. Same refusal as "nothing priced".
         held = []
     if not held:
-        return {**base, "status": "REFUSED",
+        return {**base, "status": "REFUSED", "grade_rule_version": 1,
                 "why": f"no position could be priced; missing {missing[:10]}",
                 "unpriceable_why": why_missing}
 
-    # A book whose names we cannot price is NOT silently re-weighted onto the
-    # ones we can. That would grade a different book than the one frozen.
+    # v1 DOES re-weight: `gross = tot / priced_w` below grades the priced
+    # remnant scaled up to 100% (18 `sector_etf` twins in the 09-28 rehearsal
+    # were graded on 7-48% of their weight). `weight_priced` names the share.
+    # Kept for v1 books only; version 2 holds the missing weight in cash.
     priced_w = sum(w for _t, w, _g, _j in held)
     proxy = bench_sym == _config.BOOK_WLS_PROXY
     out = {**base, "objective": rec["objective"], "model": rec.get("model"),
-           "asof": rec["asof"], "status": "OK",
+           "asof": rec["asof"], "status": "OK", "grade_rule_version": 1,
            "n_positions": rec["n_positions"],
            "n_unpriceable": len(missing), "unpriceable": missing[:20],
            "unpriceable_why": why_missing,
@@ -1075,6 +1271,8 @@ def leaderboard(books: list[dict], bars: pd.DataFrame, *,
                "n_unpriceable": g.get("n_unpriceable"),
                "entry_cost_bps": g.get("entry_cost_bps"),
                "benchmark_missing": g.get("benchmark_missing"),
+               "grade_rule_version": g.get("grade_rule_version"),
+               "weight_priced": g.get("weight_priced"),
                "n_deferred_entry": len(g.get("deferred_entry") or []),
                "n_suspect_splits": len(g.get("suspect_splits") or [])}
         if not g.get("parent_book_id"):
@@ -1114,8 +1312,12 @@ def leaderboard(books: list[dict], bars: pd.DataFrame, *,
             # Every grade in exactly one status; the refused and the priced-
             # without-a-benchmark are counted, never left for a reader to find.
             "status_counts": status_counts,
-            "refused": [{"name": g["name"], "why": g.get("why")} for g in grades
-                        if g.get("status") == "REFUSED"],
+            "refused": [{"name": g["name"], "status": g.get("status"), "why": g.get("why")}
+                        for g in grades if str(g.get("status")).startswith("REFUSED")],
+            "grade_rule_versions": {str(k): sum(1 for g in grades
+                                                if g.get("grade_rule_version") == k)
+                                    for k in sorted({g.get("grade_rule_version") for g in grades},
+                                                    key=lambda x: (x is None, x))},
             "n_benchmark_missing": sum(1 for g in grades if g.get("benchmark_missing")),
             "benchmark_missing_symbols": sorted({str(g.get("benchmark")) for g in grades
                                                  if g.get("benchmark_missing")}),

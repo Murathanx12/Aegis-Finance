@@ -3291,6 +3291,19 @@ DAILY_PASS_STEP_BOX_S: dict = {
     # few read-only CLIs (schtasks, gh, railway, openclaw status), each with its
     # own timeout inside the probe. Sum of boxes 12,300 s < LAB_DRIVER_BOX_S.
     "health": 300,
+    # 2026-09-27 (docs/REHEARSAL_2026-09-28_MONDAY_ENTRY.md, "nothing schedules
+    # the book grade"). The three book-grading steps, each OUT of process (the
+    # grade's bar load peaks in GB and pandas keeps those pages for the life of
+    # an interpreter); each child is killed by its own handle at box - 60 s.
+    # `grade_books` = `scripts.llm_portfolio grade` in PULL mode (a yfinance
+    # batch for every book ticker once per UTC day, then ~306 grades in ~3 s);
+    # `paper_accounts` = `scripts.paper_accounts_roi --no-broker` (one HTTP GET
+    # for the lane track record plus the SPY leg); `bridge_report` = `report`
+    # (measured 6.5 s for 31 books over 2 sessions, grows with sessions).
+    # Sum of boxes 14,400 s < LAB_DRIVER_BOX_S["daily_pass"] = 21,600 s.
+    "grade_books": 900,
+    "paper_accounts": 600,
+    "bridge_report": 600,
 }
 
 # ── SYSTEMS FIXES (review 2026-09-26) ────────────────────────────────────────
@@ -4021,6 +4034,29 @@ BOOK_TICKER_THEMES = {
 
 #: Global price cache (yfinance) -- one pull per ticker per UTC day.
 BOOK_GLOBAL_HISTORY_DAYS = 400
+
+#: THE MISSING-NAME RULE IS VERSIONED (adjudicated 2026-09-27, rehearsal
+#: `docs/REHEARSAL_2026-09-28_MONDAY_ENTRY.md`). A book whose ENTRY SESSION is on
+#: or after this date is graded under `grade_rule_version: 2`: a name with no
+#: valid entry price (halted OR a NaN open -- one rule for both) enters at its
+#: next valid open, and until then its weight sits in cash at 0% and is NOT
+#: re-weighted onto the other names. A book that entered earlier keeps version 1
+#: exactly, because numbers were already published under it.
+LLM_BOOK_GRADE_RULE_V2_FROM = "2026-09-28"
+#: Version 2 only: a book with less than this share of its weight priced as
+#: frozen (declared cash + names that have entered) once it has had
+#: `LLM_BOOK_UNDER_PRICED_AFTER_SESSIONS` sessions is `REFUSED_UNDER_PRICED`
+#: rather than graded on a remnant.
+LLM_BOOK_UNDER_PRICED_MIN_WEIGHT = 0.5
+LLM_BOOK_UNDER_PRICED_AFTER_SESSIONS = 5
+#: Series every grade PULLS (never assumes) before grading, from the earliest
+#: book's entry: the competition benchmark proxy, the ten theme ETFs the
+#: `sector_etf` twins hold that no local panel carries, and the factor ETFs the
+#: bridge and the leads compare against. One that cannot be pulled is a named
+#: refusal on the leaderboard (`series_refusals`).
+LLM_BOOK_REQUIRED_SERIES = ("URTH", "BETZ", "BOTZ", "GRID", "IGV", "ITA", "LIT",
+                            "QTUM", "URA", "XBI", "XLB", "SPY", "IWM", "SMH",
+                            "MTUM")
 
 #: Book factory: DeepSeek spend cap per RUN, read from the same telemetry
 #: ledger `llm_analyzer` writes (purpose `book_factory`).

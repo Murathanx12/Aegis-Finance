@@ -84,9 +84,90 @@ def cmd_template(a) -> int:
     return 0
 
 
-def _us_bars():
+def _us_bars(symbols=None):
+    """The survivorship-free US panel, as `xs_ranker.load_bars` builds it.
+
+    With `symbols`, the filter is pushed INTO the parquet read (pyarrow
+    `filters=`), so only the held names' rows are ever materialised: the
+    unfiltered read of both deep panels is 8.6M rows and peaked at 3.7 GB in the
+    2026-09-28 rehearsal, which the daily pass must not need. The result is the
+    same frame the full load gives for those symbols (first occurrence per
+    (symbol, date) across the panels in order, sorted, index reset) --
+    `test_llm_portfolio_cli.py` pins the equality."""
+    import pandas as pd
+
     from backend.services import xs_ranker as XR
-    return XR.load_bars(XR.survivorship_free_paths())
+    paths = XR.survivorship_free_paths()
+    if symbols is None:
+        return XR.load_bars(paths)
+    syms = sorted({str(x) for x in symbols})
+    frames = []
+    for pth in paths:
+        pth = Path(pth)
+        if not pth.exists():
+            raise XR.RankerError(f"no bars panel at {pth}")
+        df = pd.read_parquet(pth, filters=[("symbol", "in", syms)] if syms else None)
+        if not syms:
+            df = df.iloc[0:0]
+        missing = XR._BAR_COLUMNS - set(df.columns)
+        if missing:
+            raise XR.RankerError(f"{pth.name} is missing columns {sorted(missing)}")
+        frames.append(df)
+    out = pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
+    out["date"] = pd.to_datetime(out["date"])
+    out = out.drop_duplicates(subset=["symbol", "date"], keep="first")
+    return out.sort_values(["symbol", "date"], kind="mergesort").reset_index(drop=True)
+
+
+def pull_today(now=None):
+    """The `today` a grade passes to `global_prices.ensure`.
+
+    `ensure` caches only bars dated BEFORE its `today` (a bar dated today could
+    be intraday). With the UTC date, the 06:30 HKT daily pass (22:30 UTC, 18:30
+    ET, after the close) would drop the session that has just CLOSED, and every
+    URTH-benchmarked book and every ETF-only twin would sit a session behind
+    the SPY books. So: the day after the last CLOSED XNYS session (16:20 ET, the
+    system_health rule), never earlier than the UTC date. A bar dated on or
+    before a closed US session is complete for US, European and Asian listings
+    at that moment (Tokyo opens 00:00 UTC)."""
+    from datetime import timedelta
+
+    from backend.services import system_health as SH
+    now = now or datetime.now(timezone.utc)
+    return max(now.date(), SH.last_closed_session(now) + timedelta(days=1))
+
+
+def required_series(books) -> list[str]:
+    """Every series a grade must PULL rather than assume: each book's benchmark
+    and `config.LLM_BOOK_REQUIRED_SERIES` (URTH, the sector-ETF twins' ETFs,
+    SPY/IWM/SMH/MTUM)."""
+    from backend import config as C
+    out = set(C.LLM_BOOK_REQUIRED_SERIES) | {LP.benchmark_of(b) for b in books}
+    return sorted(out)
+
+
+def series_refusals(bars, want, *, failed=(), pulled: bool = True) -> list[dict]:
+    """A required series with no bars at all, or whose newest bar is behind the
+    union panel's newest SPY/union date, is a NAMED refusal on the grade."""
+    import pandas as pd
+    if len(bars):
+        spy = bars.loc[bars["symbol"] == "SPY", "date"]
+        ref = pd.Timestamp(spy.max() if len(spy) else bars["date"].max())
+        newest = bars.groupby("symbol")["date"].max()
+    else:
+        ref, newest = None, {}
+    out = []
+    for sym in want:
+        if sym not in newest:
+            why = ("NO_BARS after the pull" if pulled
+                   else "NO_BARS (--no-pull: the global cache as is)")
+            out.append({"symbol": sym,
+                        "why": why + (" (pull failed)" if sym in failed else "")})
+        elif ref is not None and pd.Timestamp(newest[sym]) < ref:
+            out.append({"symbol": sym,
+                        "why": f"STALE: bars through {pd.Timestamp(newest[sym]).date()}, "
+                               f"the panel reaches {ref.date()}"})
+    return out
 
 
 def freeze_with_twins(books: list[dict], *, brief=None, us_bars=None,
@@ -194,52 +275,96 @@ def print_table(lb: dict, *, rows: int = 20, out=print) -> None:
         f"{lb['bars_through']}.  {kinds}")
 
 
-def cmd_grade(a) -> int:
+def grade_run(*, no_pull: bool = False, now=None, ensure=None, read_cache=None,
+              us_bars=None, books=None, write: bool = True, out=print) -> dict:
+    """The daily leaderboard, as a function (the CLI and the daily pass call it).
+
+    Returns a summary: `status` (ok | nothing_to_do | refused), the leaderboard
+    path, `bars_through`, `status_counts`, `series_refusals` and the counts a
+    reader checks first. Never raises for a missing series: it is NAMED."""
     from datetime import timedelta
 
     import pandas as pd
 
     from backend.services import global_prices as GP
 
-    books = LP.read_books()
+    books = LP.read_books() if books is None else books
     if not books:
-        print("no frozen books yet. `freeze` one first.")
-        return 2
+        return {"status": "nothing_to_do", "why": "no frozen books yet"}
     need = LP.book_tickers(books)
-    us = _us_bars()
-    us = us[us["symbol"].isin(need)]
-    glob = None
-    if not a.no_pull:
-        start = (min(pd.Timestamp(b["asof"]) for b in books)
-                 - timedelta(days=120)).date()
+    want = required_series(books)
+    us = (us_bars if us_bars is not None else _us_bars)(need | set(want))
+    us = us[us["symbol"].isin(need | set(want))]
+    start = (min(pd.Timestamp(b["asof"]) for b in books) - timedelta(days=120)).date()
+    failed: list = []
+    pull = None
+    if not no_pull:
         # Every book ticker, not only the non-US ones: the US panel is refreshed
         # by hand and a book frozen after its last bar would sit PENDING forever.
-        glob = GP.ensure(sorted(need), start=start)
+        # Plus the REQUIRED series (URTH, the twins' ETFs, the factor ETFs): pulled,
+        # never assumed to be in some local panel.
+        today = pull_today(now)
+        glob = (ensure or GP.ensure)(sorted(need | set(want)), start=start, today=today)
         rc_ = glob.attrs.get("receipt", {})
-        print(f"global_prices: {rc_.get('n_ok')}/{rc_.get('n_requested')} priced, "
-              f"{rc_.get('n_pulled_now')} pulled now, failed {rc_.get('failed', [])[:10]}")
+        failed = list(rc_.get("failed", []))
+        pull = {"today": str(today), "n_ok": rc_.get("n_ok"),
+                "n_requested": rc_.get("n_requested"),
+                "n_pulled_now": rc_.get("n_pulled_now"), "failed": failed[:50]}
+        out(f"global_prices (today={today}): {rc_.get('n_ok')}/{rc_.get('n_requested')} "
+            f"priced, {rc_.get('n_pulled_now')} pulled now, failed {failed[:10]}")
     else:
-        glob = GP.read_cache()
-        glob = glob[glob["symbol"].isin(need)] if len(glob) else None
+        glob = (read_cache or GP.read_cache)()
+        glob = glob[glob["symbol"].isin(need | set(want))] if len(glob) else None
     bars = LP.union_bars(us, glob)
+    refusals = series_refusals(bars, want, failed=failed, pulled=not no_pull)
     lb = LP.leaderboard(books, bars)
-    print_table(lb)
+    print_table(lb, out=out)
     if any(r.get("benchmark_is_proxy") for r in lb["books"]):
-        print("CAVEAT: " + lb["wls_caveat"])
+        out("CAVEAT: " + lb["wls_caveat"])
+    for r in refusals:
+        out(f"SERIES REFUSED: {r['symbol']}: {r['why']}")
     lb.update({"receipt": "llm_portfolio_leaderboard",
                "licence": "PRODUCT_EXPERIMENT",
+               "pull": pull or {"mode": "--no-pull (global cache as is)"},
+               "required_series": want,
+               "series_refusals": refusals,
                "read_me_first": ("Every book is NET of an empirical entry cost by "
                                  "liquidity band and measured against its benchmark "
                                  "over the same window, and against its own twins. "
                                  "A book that returns +8% while SPY returns +11% "
-                                 "has LOST.")})
-    day = datetime.now(timezone.utc).date()
-    p = LP.ledger_dir() / f"leaderboard_{day}.json"
-    p.parent.mkdir(parents=True, exist_ok=True)
-    tmp = p.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(lb, indent=1, default=str), encoding="utf-8")
-    tmp.replace(p)                                  # idempotent per day
-    print(f"-> {p}")
+                                 "has LOST. `grade_rule_version` 2 (entry on or after "
+                                 "2026-09-28): a name without a valid entry open waits "
+                                 "in cash at 0%, never re-weighted.")})
+    path = None
+    if write:
+        day = (now or datetime.now(timezone.utc)).date()
+        path = LP.ledger_dir() / f"leaderboard_{day}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(lb, indent=1, default=str), encoding="utf-8")
+        tmp.replace(path)                               # idempotent per day
+        out(f"-> {path}")
+    sc = lb.get("status_counts") or {}
+    return {"status": "ok" if sc.get("OK") else "nothing_to_do",
+            "leaderboard": str(path) if path else None,
+            "bars_through": lb.get("bars_through"), "status_counts": sc,
+            "n_books": lb.get("n_books"), "n_twins": lb.get("n_twins"),
+            "n_refused": len(lb.get("refused") or []),
+            "n_benchmark_missing": lb.get("n_benchmark_missing"),
+            "n_deferred_entry": len(lb.get("deferred_entry") or []),
+            "n_suspect_splits": len(lb.get("suspect_splits") or []),
+            "grade_rule_versions": lb.get("grade_rule_versions"),
+            "series_refusals": refusals, "pull": pull}
+
+
+def cmd_grade(a) -> int:
+    summary = grade_run(no_pull=a.no_pull)
+    if getattr(a, "json", False):
+        # one machine-readable line for the daily pass (`<<<{...}>>>`)
+        print("<<<" + json.dumps(summary, default=str) + ">>>")
+    if summary.get("status") == "nothing_to_do" and summary.get("why"):
+        print(summary["why"] + ". `freeze` one first.")
+        return 2
     return 0
 
 
@@ -275,7 +400,11 @@ def main(argv=None) -> int:
     g = sub.add_parser("grade", help="daily leaderboard: every book and twin "
                                      "vs its benchmark and its twins")
     g.add_argument("--no-pull", action="store_true",
-                   help="use the global price cache as is (no yfinance call)")
+                   help="use the global price cache as is (no yfinance call). Offline "
+                        "rehearsals only: URTH and the sector ETFs are in no local "
+                        "panel, so competition books and ETF twins go ungraded")
+    g.add_argument("--json", action="store_true",
+                   help="end with one `<<<{summary}>>>` line (the daily pass reads it)")
     g.set_defaults(fn=cmd_grade)
 
     a = ap.parse_args(argv)

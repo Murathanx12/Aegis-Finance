@@ -806,24 +806,148 @@ def p_forecast_grader(ctx: ProbeCtx) -> ProbeResult:
                        proof="predictions.jsonl max(resolved_at) vs due rows")
 
 
+#: The daily pass's book-grading steps (2026-09-27). A row of theirs that is
+#: refused / error / timeout makes `book_grader` non-ALIVE: the step never fails
+#: the pass, so this probe is where its failure turns a row red.
+BOOK_GRADE_STEPS = ("grade_books", "paper_accounts", "bridge_report")
+#: The llm_portfolio leaderboard is STALE when its `bars_through` is MORE than
+#: this many closed sessions behind the last one (one missed pass is tolerated).
+LLM_BOARD_MAX_SESSIONS_BEHIND = 1
+
+
+def _llm_books(ctx: ProbeCtx) -> tuple[list[dict], set]:
+    """(non-void book records, void ids) from `llm_portfolio/books.jsonl`."""
+    books, voids = [], set()
+    try:
+        text = (ctx.optimus_dir / "llm_portfolio" / "books.jsonl").read_text(encoding="utf-8")
+    except OSError:
+        return [], set()
+    for line in text.splitlines():
+        try:
+            x = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(x, dict):
+            continue
+        if x.get("schema") == "llm_portfolio/void":
+            voids.add(x.get("book_id"))
+        elif x.get("book_id"):
+            books.append(x)
+    return [b for b in books if b.get("book_id") not in voids], voids
+
+
+def _book_steps(ctx: ProbeCtx) -> tuple[Optional[list], str]:
+    """The book-grading step rows: the CURRENT pass's (the daily pass hands its
+    rows in as `ctx.cache["daily_pass_rows"]`, because its own receipt is
+    written after this probe runs), else the newest receipt on disk."""
+    rows = ctx.cache.get("daily_pass_rows")
+    if rows is not None:
+        return list(rows), "this daily pass"
+    for i in range(-1, 8):
+        day = ctx.now.date() - timedelta(days=i)
+        d = _daily_pass_receipt(ctx, day)
+        if d:
+            return list(d.get("steps") or []), f"daily_pass_{day}.json"
+    return None, "no daily_pass receipt"
+
+
 def p_book_grader(ctx: ProbeCtx) -> ProbeResult:
-    _, dp = _newest_daily_pass(ctx)
+    """Every graded book, from the evidence each grader wrote.
+
+    Three parts, the worst wins; a part with no evidence is NAMED, never ALIVE:
+    (1) the paper-book scoreboard (`daily_pass scoreboard.nav_vs_spy`), 0
+    sessions behind or STALE; (2) the llm_portfolio leaderboard: STALE when its
+    `bars_through` is more than `LLM_BOARD_MAX_SESSIONS_BEHIND` session(s)
+    behind the last closed session, or when a book past its entry is on no
+    board (UNGRADED); its PENDING / UNGRADED / REFUSED counts are printed;
+    (3) the daily pass's `grade_books` / `paper_accounts` / `bridge_report`
+    rows: any refused / error / timeout is STALE by name."""
     last = last_closed_session(ctx.now)
+    verdicts: list[Verdict] = []
+    notes: list[str] = []
+    evidence: Optional[datetime] = None
+
+    # (1) the paper-book scoreboard, as before
+    _, dp = _newest_daily_pass(ctx)
     lb = _newest_named(ctx.optimus_dir / "strategy_library", "leaderboard_*T*Z.json")
     lb_s = ""
     if lb:
         m = re.search(r"(\d{4}-\d{2}-\d{2}T\d{6}Z)", lb.name)
         if m:
             lbt = datetime.strptime(m.group(1), "%Y-%m-%dT%H%M%SZ").replace(tzinfo=timezone.utc)
-            lb_s = f"; newest leaderboard {lb.name} ({_fmt_age(_age(lbt, ctx.now))} old)"
+            lb_s = f"; newest library leaderboard {lb.name} ({_fmt_age(_age(lbt, ctx.now))} old)"
     nvs = ((dp or {}).get("scoreboard") or {}).get("nav_vs_spy") or {}
     ld = _ts((nvs.get("window") or {}).get("last_date"))
     if ld is None:
-        return _unknown("no daily_pass scoreboard.nav_vs_spy.window.last_date" + lb_s)
-    n = sessions_behind(ld.date(), last)
-    return ProbeResult("ALIVE" if n == 0 else "STALE", _iso(ld), _age(ld, ctx.now),
-                       f"books graded through {ld.date()}, {n} session(s) behind {last}" + lb_s,
-                       proof="daily_pass scoreboard.nav_vs_spy.window.last_date")
+        notes.append("paper books: no daily_pass scoreboard.nav_vs_spy.window.last_date")
+    else:
+        n = sessions_behind(ld.date(), last)
+        verdicts.append("ALIVE" if n == 0 else "STALE")
+        notes.append(f"paper books graded through {ld.date()}, {n} session(s) behind {last}")
+        evidence = ld
+
+    # (2) the llm_portfolio leaderboard
+    books, _voids = _llm_books(ctx)
+    board_p = _newest_named(ctx.optimus_dir / "llm_portfolio", "leaderboard_*.json")
+    board = _read_json(board_p) if board_p else None
+    past_entry = [b for b in books if (_ts(b.get("asof")) is not None
+                                       and _ts(b.get("asof")).date() < last)]
+    if isinstance(board, dict):
+        graded_ids = {r.get("book_id") for r in board.get("books") or []}
+        ungraded = [b for b in past_entry if b.get("book_id") not in graded_ids]
+        sc = dict(board.get("status_counts") or {})
+        if not sc:                        # a board written before status_counts existed
+            for r in board.get("books") or []:
+                sc[str(r.get("status"))] = sc.get(str(r.get("status")), 0) + 1
+        refused = sum(v for k, v in sc.items() if str(k).startswith("REFUSED"))
+        counts = (f"PENDING {sc.get('PENDING', 0)}, UNGRADED {len(ungraded)}, "
+                  f"REFUSED {refused}, OK {sc.get('OK', 0)}")
+        bt = _ts(board.get("bars_through"))
+        if bt is None:
+            verdicts.append("STALE")
+            notes.append(f"llm books: {board_p.name} carries no bars_through ({counts})")
+        else:
+            n = sessions_behind(bt.date(), last)
+            bad = n > LLM_BOARD_MAX_SESSIONS_BEHIND or bool(ungraded)
+            verdicts.append("STALE" if bad else "ALIVE")
+            notes.append(f"llm books: {board_p.name} bars through {bt.date()}, {n} session(s) "
+                         f"behind {last} (limit {LLM_BOARD_MAX_SESSIONS_BEHIND}); {counts}"
+                         + (f"; ungraded past entry: {[b.get('name') for b in ungraded[:5]]}"
+                            if ungraded else ""))
+        gt = _ts(board.get("graded_utc"))
+        if gt and (evidence is None or gt > evidence):
+            evidence = gt
+    elif past_entry:
+        verdicts.append("STALE")
+        notes.append(f"llm books: no llm_portfolio leaderboard while {len(past_entry)} book(s) "
+                     f"are past their entry: UNGRADED {len(past_entry)}")
+    elif books:
+        notes.append(f"llm books: {len(books)} book(s), none past entry yet, no leaderboard")
+    else:
+        notes.append("llm books: no llm_portfolio/books.jsonl")
+
+    # (3) the daily pass's book-grading steps
+    steps, src = _book_steps(ctx)
+    if steps is not None:
+        mine = {s_.get("step"): s_ for s_ in steps if isinstance(s_, dict)
+                and s_.get("step") in BOOK_GRADE_STEPS}
+        failed = [f"{k}={v.get('status')}" for k, v in mine.items()
+                  if v.get("status") in ("refused", "error", "timeout")]
+        if failed:
+            verdicts.append("STALE")
+            notes.append(f"book-grading steps failed in {src}: {failed}")
+        elif mine:
+            notes.append(f"book-grading steps in {src}: "
+                         + ", ".join(f"{k}={v.get('status')}" for k, v in mine.items()))
+
+    detail = "; ".join(notes) + lb_s
+    if not verdicts:
+        return _unknown(detail)
+    v: Verdict = "STALE" if "STALE" in verdicts else "ALIVE"
+    return ProbeResult(v, _iso(evidence), _age(evidence, ctx.now), detail,
+                       proof=("daily_pass scoreboard.nav_vs_spy.window.last_date + "
+                              "llm_portfolio/leaderboard_<day>.json bars_through/status_counts + "
+                              "daily_pass steps grade_books/paper_accounts/bridge_report"))
 
 
 def p_learn_rota(ctx: ProbeCtx) -> ProbeResult:
@@ -1293,7 +1417,7 @@ PROBES: tuple[Probe, ...] = (
     Probe("u_plan", "pc", D1, "pc_book/<d>/intended_book.json: t, asof, invested_frac", p_u_plan),
     Probe("decision_contract", "pc", D1, "decisions/<d>.json: written_utc + n_considered run", p_decision_contract),
     Probe("forecast_grader", "pc", D1, "predictions.jsonl: max(resolved_at) vs due rows; daily_pass 'wait on a bar'", p_forecast_grader),
-    Probe("book_grader", "pc", D1, "daily_pass scoreboard.nav_vs_spy.window.last_date + leaderboard_<ts>.json", p_book_grader),
+    Probe("book_grader", "pc", D1, "daily_pass scoreboard.nav_vs_spy.window.last_date + llm_portfolio/leaderboard_<day>.json (bars_through, status_counts) + the pass's book-grading steps", p_book_grader),
     Probe("learn_rota", "pc", D1, "pc_book/<d>/learn_*.json: status / skipped", p_learn_rota),
     Probe("daily_pass", "pc", D1, "night_factory_<d>/daily_pass_<d>.json: steps[*].utc/status (+ schtasks)", p_daily_pass),
     Probe("iif1_night", "pc", D1, "iif1_nights/<last weekday>.json: status, spend_usd", p_iif1_night),

@@ -322,3 +322,41 @@ def test_an_ungraded_book_after_entry_says_so_instead_of_pending(tmp_path):
     rows = {r["account"]: r["status"] for r in PA.collect_llm_books(
         p, leaderboard=fresh, leaderboard_name="new", today=date(2026, 9, 29))}
     assert rows["pers_x"] == "PENDING"                       # the grader said so
+
+
+def test_an_under_priced_book_is_unpriced_with_its_weight_priced(tmp_path):
+    """Rule v2 (entry >= 2026-09-28): `REFUSED_UNDER_PRICED` is a refusal, not a
+    graded row and not PENDING."""
+    p = _llm_books(tmp_path)
+    lb = {"bars_through": "2026-10-02", "books": [
+        _lb_row("t1", "pers_x__ew", status="REFUSED_UNDER_PRICED", nav_usd=None,
+                weight_priced=0.3, why="weight_priced 0.300 < 0.5 after 5 session(s)")]}
+    rows = {r["account"]: r for r in PA.collect_llm_books(
+        p, leaderboard=lb, leaderboard_name="t", today=date(2026, 10, 3))}
+    tw = rows["pers_x__ew"]
+    assert tw["status"] == "UNPRICED" and tw["roi_pct"] is None
+    assert "REFUSED_UNDER_PRICED" in tw["note"] and "weight_priced 0.3" in tw["note"]
+
+
+def test_the_reader_is_never_told_to_grade_with_no_pull(tmp_path):
+    """`--no-pull` cannot price URTH or the sector ETFs; the daily pass grades in
+    PULL mode, so no row or source line may tell a reader to run it."""
+    import inspect
+    p = _llm_books(tmp_path)
+    for r in PA.collect_llm_books(p, leaderboard={"books": []}, leaderboard_name="t",
+                                  today=date(2026, 9, 29)):
+        assert "--no-pull" not in (r.get("source") or "") + (r.get("note") or "")
+    src = inspect.getsource(PA.main)
+    assert "--no-pull" not in src
+
+
+def test_data_paths_follow_the_config_not_the_repo():
+    """AEGIS_DATA_DIR moves the reader like it moves the grader (rehearsal: the
+    drivers had to re-point these constants in-process)."""
+    from backend import config as C
+    from backend.services import llm_portfolio as LP
+    opt = Path(C.OPTIMUS_LEDGER_DIR)
+    assert PA.LLM_DIR == opt / "llm_portfolio" == LP.ledger_dir()
+    assert PA.OUT_DIR == opt / "paper_accounts"
+    assert PA.DECISIONS_DIR == opt / "decisions"
+    assert PA.MURAT_BOOK == Path(C.DATA_DIR) / "murat_book.yaml"

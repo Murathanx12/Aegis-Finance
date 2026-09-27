@@ -148,6 +148,21 @@ STEPS: tuple[tuple[str, str], ...] = (
     # once-per-UTC-day stamp is shared, so the two never grade the same day.
     ("grade_promises", "numbered promises vs the 8-K EX-99, once per UTC day, "
                        "no LLM"),
+    # 2026-09-27 (docs/REHEARSAL_2026-09-28_MONDAY_ENTRY.md: "NOTHING SCHEDULES
+    # THE BOOK GRADE"). ~300 frozen books enter at the 2026-09-28 open and the
+    # only caller of their grader was a human. AFTER `bars_refresh` (the panel
+    # they are graded on) and the forecast graders, BEFORE `health` (whose
+    # `book_grader` probe reads what these write). Each runs OUT of process and
+    # never fails the pass: a failure is a named row here and a non-ALIVE
+    # `book_grader` row in health.
+    ("grade_books", "every frozen llm_portfolio book and twin, graded in PULL mode "
+                    "(URTH and the sector ETFs pulled, never assumed) -> "
+                    "llm_portfolio/leaderboard_<utc-day>.json"),
+    ("paper_accounts", "every paper account's ROI vs SPY over its own window "
+                       "(--no-broker) -> paper_accounts/roi_<day>.json + "
+                       "docs/PAPER_ACCOUNTS.md"),
+    ("bridge_report", "the backtest -> forward bridge for the lib_/probe books -> "
+                      "bridge/bridge_<day>.json + docs/BRIDGE.md"),
     ("coverage", "the per-source coverage card, derived from disk"),
     # 2026-09-20, chunk 21. It runs LAST and is PRINTED FIRST: it reads the
     # receipts the steps above have just written, and the economics is what the
@@ -381,6 +396,59 @@ def run_grade_promises(timeout_s: float = 540.0) -> dict:
     return MR.grade_promises_daily(runner=_runner)
 
 
+def _run_module_child(args: list[str], timeout_s: float) -> dict:
+    """`python -m <args>` OUT of process; the child's `<<<{json}>>>` summary.
+
+    Out of process for `run_bars_refresh`'s reason: a grade holds a bars frame
+    in the GB and pandas keeps those pages for the life of the interpreter. The
+    child is killed by its own handle at `timeout_s` (below the step's box),
+    never orphaned and never by image name. Never raises: a child that exits
+    non-zero, times out or prints no summary comes back as
+    `{"status": "refused", "reason": ...}` naming why."""
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+    try:
+        r = subprocess.run([sys.executable, "-m", *args], cwd=str(REPO),
+                           capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", timeout=timeout_s, env=env)
+    except subprocess.TimeoutExpired:
+        return {"status": "refused", "rc": None,
+                "reason": f"child `{' '.join(args)}` outlived {timeout_s:g}s and was killed"}
+    except OSError as exc:
+        return {"status": "refused", "rc": None, "reason": f"could not start: {_trunc(exc)}"}
+    out = r.stdout or ""
+    res: dict = {}
+    if "<<<" in out and ">>>" in out:
+        try:
+            res = json.loads(out.rsplit("<<<", 1)[1].split(">>>", 1)[0])
+        except ValueError:
+            res = {"status": "refused", "reason": "unparseable summary"}
+    if r.returncode != 0 or not res:
+        res = {**res, "status": "refused",
+               "reason": (res.get("reason") or
+                          f"rc {r.returncode}: {((r.stderr or '') or out)[-300:]}")}
+    res["rc"] = r.returncode
+    return res
+
+
+def run_grade_books(timeout_s: float = 840.0) -> dict:
+    """`python -m scripts.llm_portfolio grade --json`, PULL mode (not
+    `--no-pull`): URTH and the sector ETFs the twins hold are in no local panel,
+    so an offline grade cannot price the competition books or the ETF twins."""
+    return _run_module_child(["scripts.llm_portfolio", "grade", "--json"], timeout_s)
+
+
+def run_paper_accounts(timeout_s: float = 540.0) -> dict:
+    """`python -m scripts.paper_accounts_roi --no-broker --json` (reads the
+    leaderboard `grade_books` has just written; no broker GETs)."""
+    return _run_module_child(["scripts.paper_accounts_roi", "--no-broker", "--json"],
+                             timeout_s)
+
+
+def run_bridge_report(timeout_s: float = 540.0) -> dict:
+    """`python -m scripts.bridge_report report --json`."""
+    return _run_module_child(["scripts.bridge_report", "report", "--json"], timeout_s)
+
+
 def grade_forecasts(**kw) -> dict:
     """The forecast grader, behind a name like every other seam."""
     from backend.services import forecast_grader
@@ -395,9 +463,17 @@ def morning_scoreboard(**kw) -> dict:
 
 def run_health_probes(**kw) -> dict:
     """`system_health.run(persist=True)` behind a name like every other seam:
-    writes `health/health_<stamp>.json`, `HEALTH.md` and the index line."""
+    writes `health/health_<stamp>.json`, `HEALTH.md` and the index line.
+
+    `daily_pass_rows` (this pass's rows so far) reach the probes as
+    `ctx.cache["daily_pass_rows"]`: the `book_grader` probe judges THIS pass's
+    `grade_books` / `paper_accounts` / `bridge_report` rows, not yesterday's
+    receipt (this pass's receipt is written after the health step)."""
     from backend.services import system_health as SH
-    return SH.run(ctx=SH.make_ctx(allow_proc=bool(kw.get("allow_proc", True))),
+    cache = ({"daily_pass_rows": list(kw["daily_pass_rows"])}
+             if kw.get("daily_pass_rows") is not None else {})
+    return SH.run(ctx=SH.make_ctx(allow_proc=bool(kw.get("allow_proc", True)),
+                                  cache=cache),
                   persist=bool(kw.get("persist", True)))
 
 
@@ -794,6 +870,76 @@ def step_grade_forecasts(ctx: dict) -> dict:
                 headline=rec.get("headline"))
 
 
+def _child_box(step: str) -> float:
+    """The child's own timeout: the step's box minus 60 s, so the child is
+    killed by its handle before the box abandons the thread."""
+    return max(30.0, float(_STEP_BOXES[step]) - 60.0)
+
+
+def step_grade_books(ctx: dict) -> dict:
+    """The llm_portfolio leaderboard, graded in PULL mode (2026-09-27).
+
+    `ok` when at least one book graded OK, `nothing_to_do` when every book is
+    still PENDING (before its entry session), `refused` when the child failed
+    -- the row names why and `book_grader` in health goes non-ALIVE. A required
+    series that could not be pulled (URTH, a twin's ETF) is a named refusal on
+    the row, as is every REFUSED / REFUSED_UNDER_PRICED book count."""
+    t0 = time.time()
+    res = run_grade_books(timeout_s=_child_box("grade_books"))
+    st = str(res.get("status") or "refused")
+    status = st if st in ("ok", "nothing_to_do") else "refused"
+    refusals: list[str] = []
+    if status == "refused":
+        refusals.append(str(res.get("reason") or "the grade child returned no summary"))
+    for r in res.get("series_refusals") or []:
+        refusals.append(f"SERIES {r.get('symbol')}: {r.get('why')}")
+    sc = res.get("status_counts") or {}
+    for k in sorted(sc):
+        if str(k).startswith("REFUSED") and sc[k]:
+            refusals.append(f"{k}: {sc[k]} book(s)")
+    if res.get("n_benchmark_missing"):
+        refusals.append(f"benchmark missing on {res['n_benchmark_missing']} grade(s)")
+    return _row("grade_books", status, rows=int(sc.get("OK") or 0),
+                seconds=round(time.time() - t0, 2), refusals=refusals,
+                receipt_path=res.get("leaderboard"), bars_through=res.get("bars_through"),
+                status_counts=sc, n_deferred_entry=res.get("n_deferred_entry"),
+                n_suspect_splits=res.get("n_suspect_splits"),
+                grade_rule_versions=res.get("grade_rule_versions"),
+                pull=res.get("pull"), rc=res.get("rc"),
+                headline=(f"books graded through {res.get('bars_through')}: {sc}"
+                          if status != "refused" else None))
+
+
+def step_paper_accounts(ctx: dict) -> dict:
+    """Every paper account's ROI table (`--no-broker`), from the leaderboard the
+    step above has just written. Never fails the pass."""
+    t0 = time.time()
+    res = run_paper_accounts(timeout_s=_child_box("paper_accounts"))
+    ok = str(res.get("status")) == "ok"
+    llm = res.get("llm_by_status") or {}
+    refusals = [] if ok else [str(res.get("reason") or "no summary")]
+    if llm.get("UNGRADED"):
+        refusals.append(f"UNGRADED llm books: {llm['UNGRADED']}")
+    return _row("paper_accounts", "ok" if ok else "refused",
+                rows=int(res.get("n_rows") or 0), seconds=round(time.time() - t0, 2),
+                refusals=refusals, receipt_path=res.get("receipt"), doc=res.get("doc"),
+                llm_by_status=llm, rc=res.get("rc"))
+
+
+def step_bridge_report(ctx: dict) -> dict:
+    """The backtest -> forward bridge for the lib_/probe books. Never fails the
+    pass."""
+    t0 = time.time()
+    res = run_bridge_report(timeout_s=_child_box("bridge_report"))
+    ok = str(res.get("status")) == "ok"
+    return _row("bridge_report", "ok" if ok else "refused",
+                rows=int(res.get("n_rows") or 0), seconds=round(time.time() - t0, 2),
+                refusals=[] if ok else [str(res.get("reason") or "no summary")],
+                receipt_path=res.get("receipt"), doc=res.get("doc"),
+                n_forward_graded=res.get("n_forward_graded"),
+                identical_holdings=res.get("identical_holdings"), rc=res.get("rc"))
+
+
 def step_coverage(ctx: dict) -> dict:
     """The card, from disk. A card that cannot be computed says so."""
     t0 = time.time()
@@ -855,7 +1001,7 @@ def step_health(ctx: dict) -> dict:
     pass writes after this step, so it judges the previous pass."""
     t0 = time.time()
     try:
-        out = run_health_probes()
+        out = run_health_probes(daily_pass_rows=list(ctx.get("rows") or []))
     except Exception as exc:                                       # noqa: BLE001
         return _row("health", "refused", rows=0, seconds=round(time.time() - t0, 2),
                     refusals=[f"health probes raised: {_trunc(exc)}"])
@@ -879,6 +1025,9 @@ _HANDLERS: dict[str, Callable[[dict], dict]] = {
     "book_cadence": step_book_cadence,
     "decision_contract": step_decision_contract,
     "grade_forecasts": step_grade_forecasts,
+    "grade_books": step_grade_books,
+    "paper_accounts": step_paper_accounts,
+    "bridge_report": step_bridge_report,
     "coverage": step_coverage,
     "scoreboard": step_scoreboard,
     "health": step_health,
@@ -1077,6 +1226,10 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
                         "e1_append": "normalized", "book_cadence": "pnl",
                         "decision_contract": "pnl", "grade_forecasts": "pnl",
                         "coverage": "raw", "scoreboard": "pnl",
+                        # a grade written onto a book is an outcome: nothing
+                        # upstream may read it
+                        "grade_books": "pnl", "paper_accounts": "pnl",
+                        "bridge_report": "pnl",
                         # reads the receipts every stage wrote; nothing trades on it
                         "health": "pnl"},
         "date": day, "run": run,

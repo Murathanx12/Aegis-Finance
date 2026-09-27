@@ -18,6 +18,14 @@ what these pin, all synthetic and offline:
 
 Dates are fixed on purpose: the entry session is the regression, and `today`
 is passed on every call.
+
+ONE MISSING-NAME RULE, VERSIONED (adjudicated 2026-09-27). A book whose entry
+session is on or after `config.LLM_BOOK_GRADE_RULE_V2_FROM` (2026-09-28) is
+graded under version 2: a halted name and a NaN open are the SAME case -- the
+name enters at its next valid open and sits in cash at 0% until then, never
+re-weighted onto the others -- and a book under half priced after 5 sessions is
+`REFUSED_UNDER_PRICED`. A book that entered earlier keeps version 1 exactly
+(the halted/NaN/cash tests below run it on a 09-18 entry).
 """
 
 from __future__ import annotations
@@ -31,6 +39,10 @@ from backend.services import llm_portfolio as LP
 DAYS = pd.bdate_range("2026-08-03", "2026-10-02")
 ENTRY = pd.Timestamp("2026-09-28")
 NEXT = pd.Timestamp("2026-09-29")
+# a version-1 book: frozen 09-17, entered 09-18 (before the rule change)
+V1_ASOF = "2026-09-17"
+V1_ENTRY = pd.Timestamp("2026-09-18")
+V1_NEXT = pd.Timestamp("2026-09-21")
 
 
 def _series(sym, *, px=100.0, drift=0.0, gap=0.0):
@@ -64,35 +76,37 @@ def test_entry_is_the_entry_session_open_not_the_previous_close():
     assert g["deferred_entry"] == [] and g["suspect_splits"] == []
 
 
-def test_a_halted_name_is_a_named_deferred_entry():
+def test_v1_a_halted_name_is_a_named_deferred_entry():
     bars = _bars("SPY", "AAA", "HLT")
-    bars = bars[~((bars.symbol == "HLT") & (bars.date == ENTRY))]
-    book = _book([("AAA", 0.5), ("HLT", 0.5)])
-    # Monday evening: the halted name has no bar on or after entry -> named, not entered
-    mon = LP.grade(book, bars[bars.date <= ENTRY], today=ENTRY)
+    bars = bars[~((bars.symbol == "HLT") & (bars.date == V1_ENTRY))]
+    book = _book([("AAA", 0.5), ("HLT", 0.5)], asof=V1_ASOF)
+    # entry evening: the halted name has no bar on or after entry -> named, not entered
+    mon = LP.grade(book, bars[bars.date <= V1_ENTRY], today=V1_ENTRY)
+    assert mon["grade_rule_version"] == 1
     assert mon["unpriceable_why"]["HLT"].startswith("NO_BAR_ON_OR_AFTER_ENTRY")
     assert mon["deferred_entry"] == []
-    # the same grade on the full panel with today=Monday: identical (no peeking)
-    full_mon = LP.grade(book, bars, today=ENTRY)
+    # the same grade on the full panel with today=entry: identical (no peeking)
+    full_mon = LP.grade(book, bars, today=V1_ENTRY)
     assert full_mon["unpriceable_why"] == mon["unpriceable_why"]
     assert full_mon["to_date"]["net"] == pytest.approx(mon["to_date"]["net"])
-    # Tuesday: entered at ITS first open, and the grade says so
-    tue = LP.grade(book, bars, today=NEXT)
+    # next session: entered at ITS first open, and the grade says so
+    tue = LP.grade(book, bars, today=V1_NEXT)
     assert tue["n_unpriceable"] == 0
     (d,) = tue["deferred_entry"]
-    assert d["ticker"] == "HLT" and d["entry_session"] == "2026-09-28"
-    assert d["entered_at_open_of"] == "2026-09-29"
+    assert d["ticker"] == "HLT" and d["entry_session"] == "2026-09-18"
+    assert d["entered_at_open_of"] == "2026-09-21"
     # held flat at its weight on the entry session: h=1 is AAA's day at half weight
-    a = bars[(bars.symbol == "AAA") & (bars.date == ENTRY)].iloc[0]
+    a = bars[(bars.symbol == "AAA") & (bars.date == V1_ENTRY)].iloc[0]
     assert tue["horizons"][1]["gross"] == pytest.approx(0.5 * (a.close / a.open - 1.0))
 
 
-def test_a_nan_entry_open_is_named_and_never_priced_at_zero_or_the_prior_close():
+def test_v1_a_nan_entry_open_is_named_and_never_priced_at_zero_or_the_prior_close():
     bars = _bars("SPY", "AAA", "NAN", NAN={"drift": 0.01})
-    bars.loc[(bars.symbol == "NAN") & (bars.date == ENTRY), "open"] = np.nan
-    g = LP.grade(_book([("AAA", 0.5), ("NAN", 0.5)]), bars, today=NEXT)
+    bars.loc[(bars.symbol == "NAN") & (bars.date == V1_ENTRY), "open"] = np.nan
+    g = LP.grade(_book([("AAA", 0.5), ("NAN", 0.5)], asof=V1_ASOF), bars, today=V1_NEXT)
+    assert g["grade_rule_version"] == 1
     assert g["unpriceable"] == ["NAN"]
-    assert g["unpriceable_why"]["NAN"].startswith("ENTRY_OPEN_NOT_FINITE on 2026-09-28")
+    assert g["unpriceable_why"]["NAN"].startswith("ENTRY_OPEN_NOT_FINITE on 2026-09-18")
     assert g["weight_priced"] == pytest.approx(0.5)
     assert all(np.isfinite(c["net"]) for c in g["horizons"].values() if c["status"] == "OK")
     assert np.isfinite(g["to_date"]["net"])
@@ -132,13 +146,16 @@ def test_a_missing_benchmark_is_said_on_the_grade_and_counted():
     assert lb["n_benchmark_missing"] == 1 and lb["benchmark_missing_symbols"] == ["URTH"]
 
 
-def test_a_book_left_with_only_cash_is_refused_not_graded_as_cash():
+@pytest.mark.parametrize("asof,today,ver", [(V1_ASOF, V1_NEXT, 1), ("2026-09-25", NEXT, 2)])
+def test_a_book_left_with_only_cash_is_refused_not_graded_as_cash(asof, today, ver):
     bars = _bars("SPY")
-    g = LP.grade(_book([("XBI", 0.9), ("CASH", 0.1)]), bars, today=NEXT)
-    assert g["status"] == "REFUSED" and g["unpriceable_why"] == {"XBI": "NO_BARS"}
+    g = LP.grade(_book([("XBI", 0.9), ("CASH", 0.1)], asof=asof), bars, today=today)
+    assert g["status"] == "REFUSED" and g["grade_rule_version"] == ver
+    assert g["unpriceable_why"] == {"XBI": "NO_BARS"}
     # a book FROZEN as cash is still graded (nothing was missing)
-    c = LP.grade(_book([("CASH", 1.0)]), bars, today=NEXT)
+    c = LP.grade(_book([("CASH", 1.0)], asof=asof), bars, today=today)
     assert c["status"] == "OK" and c["to_date"]["gross"] == pytest.approx(0.0)
+    assert c["grade_rule_version"] == ver
 
 
 def test_the_grouping_memo_is_invisible():
@@ -165,3 +182,105 @@ def test_leaderboard_counts_every_status_and_bars_through_honours_today():
     assert lb["bars_through"] == "2026-09-28"
     assert lb["status_counts"] == {"OK": 1, "REFUSED": 1, "PENDING": 1}
     assert [r["name"] for r in lb["refused"]] == ["etf"]
+
+
+# ─────────────────── rule version 2: one missing-name rule from 2026-09-28 ───
+
+def _day(bars, sym, day):
+    return bars[(bars.symbol == sym) & (bars.date == day)].iloc[0]
+
+
+def test_v2_halt_and_nan_open_are_one_rule_deferred_to_the_next_valid_open():
+    bars = _bars("SPY", "AAA", "HLT", "NAN", AAA={"drift": 0.004},
+                 HLT={"drift": 0.01}, NAN={"drift": 0.01})
+    bars = bars[~((bars.symbol == "HLT") & (bars.date == ENTRY))].copy()   # halted
+    bars.loc[(bars.symbol == "NAN") & (bars.date == ENTRY), "open"] = np.nan  # NaN open
+    halt = _book([("AAA", 0.5), ("HLT", 0.5)], name="halt", book_id="h")
+    nan = _book([("AAA", 0.5), ("NAN", 0.5)], name="nan", book_id="n")
+    # Monday evening: neither has entered; both wait in cash, both named
+    for b, t in ((halt, "HLT"), (nan, "NAN")):
+        g = LP.grade(b, bars, today=ENTRY)
+        assert g["status"] == "OK" and g["grade_rule_version"] == 2
+        (d,) = g["deferred_entry"]
+        assert d["ticker"] == t and d["entered_at_open_of"] is None
+        assert t in g["unpriceable_why"]
+        assert g["weight_priced"] == pytest.approx(0.5)
+        assert g["weight_in_market"] == pytest.approx(0.5)
+    assert "NO_BAR_ON_ENTRY_SESSION" in LP.grade(halt, bars, today=ENTRY)["unpriceable_why"]["HLT"]
+    assert "ENTRY_OPEN_NOT_FINITE on 2026-09-28" in \
+        LP.grade(nan, bars, today=ENTRY)["unpriceable_why"]["NAN"]
+    # Tuesday: BOTH entered at the 09-29 open -- the same rule for both cases
+    gh, gn = LP.grade(halt, bars, today=NEXT), LP.grade(nan, bars, today=NEXT)
+    for g, t in ((gh, "HLT"), (gn, "NAN")):
+        (d,) = g["deferred_entry"]
+        assert d["ticker"] == t and d["entered_at_open_of"] == "2026-09-29"
+        assert g["n_unpriceable"] == 0 and g["weight_priced"] == pytest.approx(1.0)
+        a0, a1, x1 = _day(bars, "AAA", ENTRY), _day(bars, "AAA", NEXT), _day(bars, t, NEXT)
+        # h=1: AAA's day at HALF weight (the other half in cash at 0%, NOT re-weighted)
+        assert g["horizons"][1]["gross"] == pytest.approx(0.5 * (a0.close / a0.open - 1.0))
+        assert g["horizons"][1]["weight_priced"] == pytest.approx(0.5)
+        # to date: AAA from the 09-28 open, the deferred name from ITS 09-29 open
+        assert g["to_date"]["gross"] == pytest.approx(
+            0.5 * a1.close / a0.open + 0.5 * x1.close / x1.open - 1.0)
+    assert gh["to_date"]["gross"] == pytest.approx(gn["to_date"]["gross"])
+
+
+def test_v2_cash_is_not_reweighted_where_v1_would_scale_the_remnant():
+    bars = _bars("SPY", "AAA", AAA={"drift": 0.01})
+    v2 = LP.grade(_book([("AAA", 0.4), ("XBI", 0.6)]), bars, today=NEXT)
+    a0, a1 = _day(bars, "AAA", ENTRY), _day(bars, "AAA", NEXT)
+    r = a1.close / a0.open - 1.0
+    assert v2["grade_rule_version"] == 2 and v2["status"] == "OK"
+    assert v2["to_date"]["gross"] == pytest.approx(0.4 * r)          # 60% in cash at 0%
+    assert v2["weight_priced"] == pytest.approx(0.4)
+    assert v2["unpriceable_why"] == {"XBI": "NO_BARS"}
+    # the same book entered 09-18 keeps v1: the remnant scaled to 100%
+    v1 = LP.grade(_book([("AAA", 0.4), ("XBI", 0.6)], asof=V1_ASOF), bars, today=V1_NEXT)
+    b0, b1 = _day(bars, "AAA", V1_ENTRY), _day(bars, "AAA", V1_NEXT)
+    assert v1["grade_rule_version"] == 1
+    assert v1["to_date"]["gross"] == pytest.approx(b1.close / b0.open - 1.0)
+    assert v1["weight_priced"] == pytest.approx(0.4)
+
+
+def test_v2_under_priced_after_five_sessions_is_refused_not_graded_on_a_remnant():
+    bars = _bars("SPY", "AAA")
+    book = _book([("AAA", 0.4), ("XBI", 0.6)])
+    four = LP.grade(book, bars, today=pd.Timestamp("2026-10-01"))
+    assert four["status"] == "OK" and four["to_date"]["sessions"] == 4
+    five = LP.grade(book, bars, today=pd.Timestamp("2026-10-02"))
+    assert five["status"] == "REFUSED_UNDER_PRICED" and five["sessions"] == 5
+    assert five["weight_priced"] == pytest.approx(0.4) and "to_date" not in five
+    assert "weight_priced 0.400 < 0.5" in five["why"]
+    # declared cash is priced as frozen: a 60%-cash book is never under-priced
+    cashy = LP.grade(_book([("AAA", 0.4), ("CASH", 0.6)]), bars,
+                     today=pd.Timestamp("2026-10-02"))
+    assert cashy["status"] == "OK" and cashy["weight_priced"] == pytest.approx(1.0)
+    assert cashy["weight_in_market"] == pytest.approx(0.4)
+    lb = LP.leaderboard([book], bars, today=pd.Timestamp("2026-10-02"), voided=[])
+    assert lb["status_counts"] == {"REFUSED_UNDER_PRICED": 1}
+    assert lb["refused"][0]["status"] == "REFUSED_UNDER_PRICED"
+    assert lb["books"][0]["weight_priced"] == pytest.approx(0.4)
+
+
+def test_v1_under_priced_book_is_still_graded_exactly_as_published():
+    """No v1 number moves: a pre-09-28 book under half priced stays OK, scaled."""
+    bars = _bars("SPY", "AAA", AAA={"drift": 0.002})
+    g = LP.grade(_book([("AAA", 0.3), ("XBI", 0.7)], asof=V1_ASOF), bars,
+                 today=pd.Timestamp("2026-10-02"))
+    assert g["status"] == "OK" and g["grade_rule_version"] == 1
+    a0 = _day(bars, "AAA", V1_ENTRY)
+    a1 = _day(bars, "AAA", pd.Timestamp("2026-10-02"))
+    assert g["to_date"]["gross"] == pytest.approx(a1.close / a0.open - 1.0)
+
+
+def test_every_grade_row_carries_its_rule_version():
+    bars = _bars("SPY", "AAA")
+    books = [_book([("AAA", 1.0)], name="v1", book_id="a", asof=V1_ASOF),
+             _book([("AAA", 1.0)], name="v2", book_id="b"),
+             _book([("AAA", 1.0)], name="later", book_id="c", asof="2026-10-02")]
+    lb = LP.leaderboard(books, bars, today=NEXT, voided=[])
+    by = {r["name"]: r for r in lb["books"]}
+    assert by["v1"]["grade_rule_version"] == 1 and by["v2"]["grade_rule_version"] == 2
+    assert by["later"]["status"] == "PENDING"
+    assert by["later"]["grade_rule_version"] in (2, None)       # None only without a calendar
+    assert lb["grade_rule_versions"]["1"] == 1 and lb["grade_rule_versions"]["2"] >= 1
