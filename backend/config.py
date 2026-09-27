@@ -2513,7 +2513,13 @@ LLM_PRICE_PER_MTOK: dict[str, dict[str, float]] = {
     # The first N9 probe made every call at cost_usd=None, so its $1 cap read a
     # LOWER BOUND of $0 while the balance moved $0.21. Priced as v4-flash until
     # a balance re-derivation says otherwise; `deepseek-pro` propagated likewise.
-    "deepseek-flash": {"in": 0.169413, "cached_in": 0.00338826, "out": 1.284835},
+    # 2026-09-27, CALIBRATED FROM THE BALANCE: 8 thesis-card quests through
+    # OpenClaw moved the balance $0.26 ($33.79 -> $33.53, +/- $0.01) where the
+    # row above priced them $0.412 -> k = 0.6146 [0.590, 0.639] on the 09-05
+    # leg SHAPE (one route = one mix = the LEVEL only; the split is carried).
+    # Receipt: backend/data/optimus/llm_price/calibration_2026-09-27.json
+    # (see LLM_PRICE_CALIBRATION below; scripts/llm_price_calibrate.py).
+    "deepseek-flash": {"in": 0.10411313, "cached_in": 0.00208226, "out": 0.7895982},
     "deepseek-pro": {"in": 0.526390, "cached_in": 0.00438659, "out": 3.992166},
     # ── FREE TIER (2026-09-07). Zeros, and in THIS table on purpose. ────────
     # A free model is not "no price"; it is a price of zero, and the difference
@@ -2629,6 +2635,34 @@ LLM_PRICE_DERIVATION: dict[str, object] = {
             "cannot be checked without top-up history. The measurement "
             "INSIDE the two windows is direct; this extrapolation is not."),
     },
+}
+
+#: The `deepseek-flash` row's provenance, machine-readable (the model DeepSeek
+#: has actually served since 2026-09-14). Separate from LLM_PRICE_DERIVATION on
+#: purpose: that block pins the 09-05 v4-flash / chat / reasoner rows to their
+#: two-window solve, and this one is a one-window LEVEL fit on the thesis-card
+#: route. `test_llm_price_calibration.py` pins the row to this block.
+LLM_PRICE_CALIBRATION: dict[str, object] = {
+    "model": "deepseek-flash",
+    "calibrated_on": "2026-09-27",
+    "receipt": "backend/data/optimus/llm_price/calibration_2026-09-27.json",
+    "script": "scripts/llm_price_calibrate.py",
+    "method": "scalar_on_prior_shape",
+    "route": "scripts.thesis_cards.run: OpenClaw quest (deepseek/deepseek-flash) + synth",
+    "balance_before_usd": 33.79, "balance_after_usd": 33.53,
+    "provider_delta_usd": 0.26, "offset_usd_other_rows": 0.00659859,
+    "n_calls": 8, "tokens_in": 583175, "cached_tokens": 18901504, "tokens_out": 194184,
+    "prior_row": {"in": 0.169413, "cached_in": 0.00338826, "out": 1.284835},
+    "k_vs_prior": 0.614552, "k_bracket": [0.5903, 0.638804],
+    "fitted_usd_per_mtok": {"in": 0.10411313, "cached_in": 0.00208226,
+                            "out": 0.7895982},
+    "granularity_usd": 0.01,
+    "not_measured": ("the per-leg split: one route has one in/cached/out mix, so "
+                     "the balance identifies one number (the level); the legs keep "
+                     "the 2026-09-05 shape"),
+    "finding": ("the 09-27 06:45 read that implied a 4-6x over-statement was taken "
+                "before the earlier run's spend had posted; this settled batch "
+                "measures table 1.61x and OpenClaw costUsd 2.01x the provider"),
 }
 
 LLM_TELEMETRY_PATH_ENV = "AEGIS_LLM_TELEMETRY_PATH"
@@ -4015,6 +4049,20 @@ THESIS_CARD_SYNTH_PURPOSE = "thesis_card_synth"
 THESIS_CARD_EST_QUEST_USD = 0.08
 THESIS_CARD_NEWS_DAYS = 30
 THESIS_CARD_REVISION_DAYS = 90
+
+# ── LLM price calibration from the provider balance (2026-09-27) ────────────
+#: `backend/services/llm_price_calibration.py`, `scripts/llm_price_calibrate.py`.
+#: DeepSeek quotes the balance to the cent: every window delta is uncertain by
+#: one step, so a calibration whose total delta is under the MIN reports
+#: TOO_COARSE and is not adoptable.
+DEEPSEEK_BALANCE_GRANULARITY_USD = 0.01
+LLM_PRICE_CALIBRATION_MIN_DELTA_USD = 0.05
+#: Seconds to wait after a run's last reply before the closing balance read.
+DEEPSEEK_BALANCE_POSTING_LAG_S = 90
+#: A run receipt's `provider_delta` line (balance delta vs ALL DeepSeek
+#: telemetry over a bracketing snapshot pair) above this is a WARNING carrying
+#: the calibration's age -- never a refusal: the balance is too coarse to refuse on.
+LLM_PROVIDER_DISAGREE_WARN = 0.25
 #: An answer whose SHAPE is unfinished (too few names, weights not summing to
 #: 1) is re-asked this many times on the same cached prefix before freezing.
 #: The 2026-09-25 smoke call returned one position of an 18-name strategy.

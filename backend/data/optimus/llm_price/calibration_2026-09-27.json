@@ -1,0 +1,333 @@
+{
+ "model": "deepseek-flash",
+ "balance_before": {
+  "read_at": "2026-09-27T07:07:48.290743+00:00",
+  "total_usd": 33.79,
+  "label": "calibration_before",
+  "settle_reads": [
+   33.79,
+   33.79
+  ]
+ },
+ "balance_after": {
+  "read_at": "2026-09-27T07:32:04.035190+00:00",
+  "total_usd": 33.53,
+  "label": "calibration_after",
+  "settle_reads": [
+   33.53,
+   33.53
+  ],
+  "settle_wait_s": 150.7
+ },
+ "provider_delta_usd": 0.26,
+ "window": {
+  "delta_usd": 0.26,
+  "tokens_in": 583175,
+  "cached_tokens": 18901504,
+  "tokens_out": 194184,
+  "offset_usd": 0.00659859,
+  "n_calls": 8,
+  "n_offset_calls": 8,
+  "n_unpriced_calls": 0,
+  "offset_models": {
+   "deepseek-chat": 8
+  }
+ },
+ "fit": {
+  "n_windows": 1,
+  "granularity_usd": 0.01,
+  "min_delta_usd": 0.05,
+  "prior": {
+   "in": 0.169413,
+   "cached_in": 0.00338826,
+   "out": 1.284835
+  },
+  "status": "OK",
+  "method": "scalar_on_prior_shape",
+  "condition_number": null,
+  "delta_total_usd": 0.26,
+  "fitted_usd_per_mtok": {
+   "in": 0.10411313,
+   "cached_in": 0.00208226,
+   "out": 0.7895982
+  },
+  "bracket_usd_per_mtok": {
+   "in": [
+    0.10000451,
+    0.10822176
+   ],
+   "cached_in": [
+    0.00200009,
+    0.00216444
+   ],
+   "out": [
+    0.75843822,
+    0.82075817
+   ]
+  },
+  "relative_uncertainty": 0.0385,
+  "adoptable": true,
+  "k_vs_prior": 0.614552,
+  "k_bracket": [
+   0.5903,
+   0.638804
+  ],
+  "prior_table_cost_usd": 0.412335,
+  "identified": "ONE equation: the level on this route's mix. The per-leg split is the prior table's shape, NOT measured."
+ },
+ "n_calls": 8,
+ "n_offset_calls": 8,
+ "telemetry_at_prior_table_usd": 0.418934,
+ "openclaw_reported_usd": 0.521382,
+ "per_call": [
+  {
+   "call_id": "07780a5f363f584d",
+   "ts": "2026-09-27T07:10:48.862549+00:00",
+   "purpose": "thesis_card_quest",
+   "model": "deepseek-flash",
+   "tokens_in": 76123,
+   "cached_tokens": 1664768,
+   "tokens_out": 20525,
+   "table_cost_usd": 0.04490813,
+   "openclaw_reported_cost_usd": 0.057455508,
+   "status": "OK"
+  },
+  {
+   "call_id": "7f99cbc00fbd5dc1",
+   "ts": "2026-09-27T07:10:52.892691+00:00",
+   "purpose": "thesis_card_synth",
+   "model": "deepseek-chat",
+   "tokens_in": 3214,
+   "cached_tokens": 128,
+   "tokens_out": 205,
+   "table_cost_usd": 0.00080832,
+   "openclaw_reported_cost_usd": null,
+   "status": null
+  },
+  {
+   "call_id": "3927ac769f49c411",
+   "ts": "2026-09-27T07:13:07.591791+00:00",
+   "purpose": "thesis_card_quest",
+   "model": "deepseek-flash",
+   "tokens_in": 66747,
+   "cached_tokens": 2315392,
+   "tokens_out": 26288,
+   "table_cost_usd": 0.0529287,
+   "openclaw_reported_cost_usd": 0.065462052,
+   "status": "OK"
+  },
+  {
+   "call_id": "594402ce428a11c8",
+   "ts": "2026-09-27T07:13:09.340077+00:00",
+   "purpose": "thesis_card_synth",
+   "model": "deepseek-chat",
+   "tokens_in": 3941,
+   "cached_tokens": 128,
+   "tokens_out": 199,
+   "table_cost_usd": 0.00092377,
+   "openclaw_reported_cost_usd": null,
+   "status": null
+  },
+  {
+   "call_id": "981ee9bb5ccb9224",
+   "ts": "2026-09-27T07:19:18.474956+00:00",
+   "purpose": "thesis_card_quest",
+   "model": "deepseek-flash",
+   "tokens_in": 90478,
+   "cached_tokens": 4340480,
+   "tokens_out": 29790,
+   "table_cost_usd": 0.06831006,
+   "openclaw_reported_cost_usd": 0.08893427999999999,
+   "status": "OK"
+  },
+  {
+   "call_id": "115143108c45c609",
+   "ts": "2026-09-27T07:19:20.370731+00:00",
+   "purpose": "thesis_card_synth",
+   "model": "deepseek-chat",
+   "tokens_in": 3153,
+   "cached_tokens": 128,
+   "tokens_out": 187,
+   "table_cost_usd": 0.00077486,
+   "openclaw_reported_cost_usd": null,
+   "status": null
+  },
+  {
+   "call_id": "7391ae399289d8bf",
+   "ts": "2026-09-27T07:22:37.462480+00:00",
+   "purpose": "thesis_card_quest",
+   "model": "deepseek-flash",
+   "tokens_in": 66914,
+   "cached_tokens": 3156608,
+   "tokens_out": 27616,
+   "table_cost_usd": 0.05751351,
+   "openclaw_reported_cost_usd": 0.07215304800000001,
+   "status": "OK"
+  },
+  {
+   "call_id": "e0e3bda369cc706d",
+   "ts": "2026-09-27T07:22:39.245821+00:00",
+   "purpose": "thesis_card_synth",
+   "model": "deepseek-chat",
+   "tokens_in": 3181,
+   "cached_tokens": 128,
+   "tokens_out": 217,
+   "table_cost_usd": 0.00081815,
+   "openclaw_reported_cost_usd": null,
+   "status": null
+  },
+  {
+   "call_id": "32eb254713b38c97",
+   "ts": "2026-09-27T07:24:21.871300+00:00",
+   "purpose": "thesis_card_quest",
+   "model": "deepseek-flash",
+   "tokens_in": 63980,
+   "cached_tokens": 1187712,
+   "tokens_out": 21854,
+   "table_cost_usd": 0.0429421,
+   "openclaw_reported_cost_usd": 0.052545072,
+   "status": "OK"
+  },
+  {
+   "call_id": "df7eed019972a756",
+   "ts": "2026-09-27T07:24:23.789880+00:00",
+   "purpose": "thesis_card_synth",
+   "model": "deepseek-chat",
+   "tokens_in": 3118,
+   "cached_tokens": 128,
+   "tokens_out": 196,
+   "table_cost_usd": 0.00078049,
+   "openclaw_reported_cost_usd": null,
+   "status": null
+  },
+  {
+   "call_id": "d6996a4bd8deede0",
+   "ts": "2026-09-27T07:26:19.867112+00:00",
+   "purpose": "thesis_card_quest",
+   "model": "deepseek-flash",
+   "tokens_in": 66749,
+   "cached_tokens": 1443072,
+   "tokens_out": 23389,
+   "table_cost_usd": 0.04624866,
+   "openclaw_reported_cost_usd": 0.056749931999999996,
+   "status": "OK"
+  },
+  {
+   "call_id": "e7d46b2bb9d12dbe",
+   "ts": "2026-09-27T07:26:21.922904+00:00",
+   "purpose": "thesis_card_synth",
+   "model": "deepseek-chat",
+   "tokens_in": 3018,
+   "cached_tokens": 128,
+   "tokens_out": 210,
+   "table_cost_usd": 0.00078154,
+   "openclaw_reported_cost_usd": null,
+   "status": null
+  },
+  {
+   "call_id": "bc23c824778a9f98",
+   "ts": "2026-09-27T07:28:44.932364+00:00",
+   "purpose": "thesis_card_quest",
+   "model": "deepseek-flash",
+   "tokens_in": 85736,
+   "cached_tokens": 2555136,
+   "tokens_out": 23283,
+   "table_cost_usd": 0.05309707,
+   "openclaw_reported_cost_usd": 0.06899121600000001,
+   "status": "OK"
+  },
+  {
+   "call_id": "2123f4a64ec07e97",
+   "ts": "2026-09-27T07:28:46.778587+00:00",
+   "purpose": "thesis_card_synth",
+   "model": "deepseek-chat",
+   "tokens_in": 3416,
+   "cached_tokens": 128,
+   "tokens_out": 210,
+   "table_cost_usd": 0.00084896,
+   "openclaw_reported_cost_usd": null,
+   "status": null
+  },
+  {
+   "call_id": "228d279bd910adbc",
+   "ts": "2026-09-27T07:29:28.894079+00:00",
+   "purpose": "thesis_card_quest",
+   "model": "deepseek-flash",
+   "tokens_in": 66448,
+   "cached_tokens": 2238336,
+   "tokens_out": 21439,
+   "table_cost_usd": 0.0463868,
+   "openclaw_reported_cost_usd": 0.05909121600000001,
+   "status": "OK"
+  },
+  {
+   "call_id": "180f3b39b92887ef",
+   "ts": "2026-09-27T07:29:30.797618+00:00",
+   "purpose": "thesis_card_synth",
+   "model": "deepseek-chat",
+   "tokens_in": 3549,
+   "cached_tokens": 128,
+   "tokens_out": 203,
+   "table_cost_usd": 0.0008625,
+   "openclaw_reported_cost_usd": null,
+   "status": null
+  }
+ ],
+ "receipt": "llm_price_calibration",
+ "made_utc": "2026-09-27T07:32:04.182738+00:00",
+ "route": "scripts.thesis_cards.run (OpenClaw quest + llm_analyzer synth)",
+ "batch_tickers": [
+  "ABSI",
+  "HUBS",
+  "KYTX",
+  "NTLA",
+  "PRCH",
+  "SOC",
+  "ENS",
+  "TER"
+ ],
+ "run_state": "DONE",
+ "run_done": [
+  "HUBS",
+  "ABSI",
+  "KYTX",
+  "NTLA",
+  "PRCH",
+  "SOC",
+  "ENS",
+  "TER"
+ ],
+ "run_refused": [],
+ "fit_recomputed_note": "fit recomputed offline from the same window with the final module (8-decimal rounding); the run's in-process fit used a pre-edit copy rounding to 6 decimals",
+ "ratios": {
+  "prior_table_over_provider": 1.6113,
+  "openclaw_over_provider": 2.0053,
+  "bracket_prior_table_over_provider": [
+   1.5516,
+   1.6757
+  ]
+ },
+ "uncertainty": {
+  "balance_granularity_usd": 0.01,
+  "delta_usd_bracket": [
+   0.25,
+   0.27
+  ],
+  "k_vs_prior_bracket": [
+   0.5903,
+   0.638804
+  ],
+  "relative": 0.0385,
+  "identified": "ONE equation: the level on this route's mix. The per-leg split is the prior table's shape, NOT measured."
+ },
+ "confounds": [
+  "Balance reads settled (two equal reads 20 s / 30 s apart); the window's ledger holds only this batch's 16 rows (8 quests deepseek-flash, 8 synth deepseek-chat as a table-priced offset of $0.0066).",
+  "Unledgered spend cannot be seen: two quests of the earlier 09-27 run were killed at 06:54/06:56 UTC (rc 143, no usage, cost None). If the OpenClaw gateway kept running those turns after the CLI died, their spend could post inside this window and bias k UP.",
+  "The 2026-09-27 06:45 read ($33.90) that implied a 4-6x over-statement did not survive: by 07:07 the balance was $33.79 with no ledgered priced call in between, i.e. the earlier window's spend had not finished posting when it was read. This batch measures 1.6x (table) and 2.0x (OpenClaw), not 4-6x."
+ ],
+ "prior_row": {
+  "in": 0.169413,
+  "cached_in": 0.00338826,
+  "out": 1.284835
+ }
+}

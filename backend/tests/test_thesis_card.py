@@ -1057,8 +1057,11 @@ def _costly_quest(asked, cost=0.10):
     def quest(ticker, prompt, *, model, timeout, log_dir):
         asked.append(ticker)
         reply = json.dumps({"name": ticker, "sources": ["https://ir"]})
+        # `cost_usd` is OpenClaw's own `costUsd` (reported, ~5x the provider on
+        # 2026-09-27, never summed); `priced_cost_usd` is the table's figure.
         return {"status": "OK", "reply": reply, "elapsed_s": 1.0, "log_path": "",
-                "cost_usd": cost}
+                "cost_usd": 5 * cost, "priced_cost_usd": cost,
+                "usage": {"input": 1000, "output": 100, "cache_read": 50000}}
     return quest
 
 

@@ -96,9 +96,13 @@ def test_rows_are_written_only_once_per_day(env):
 
 
 def test_refuses_over_the_cap_read_from_the_ledger(env):
-    # one call costs ~$0.0077 at the house price; a cap of $0.01 admits two
+    # a cap of 1.3 calls admits two. DERIVED from the table, not a literal: the
+    # deepseek-flash row was recalibrated from the balance on 2026-09-27
+    # ($0.0077 -> $0.0047 per stub call) and a literal $0.01 then admitted three.
+    from backend.services import llm_telemetry as LT
+    one = LT.price_call("deepseek-flash", 30000, 2000)
     calls: list[str] = []
-    res = _run(env, ask_fn=_stub_ask(calls=calls), cap_usd=0.01)
+    res = _run(env, ask_fn=_stub_ask(calls=calls), cap_usd=1.3 * one)
     assert res["state"] == "REFUSED_CAP"
     assert len(calls) == 2
     assert "cap" in res["why"]

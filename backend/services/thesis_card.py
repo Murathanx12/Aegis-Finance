@@ -765,10 +765,23 @@ def build_card(ticker: str, *, kind: str, asof: Any, engine: dict, web: dict,
     c["synth_model"] = synth.get("synth_model")
     c["engine_unavailable"] = engine.get("engine_unavailable")
     c["engine_last_filed"] = engine.get("engine_last_filed")
-    for k in ("openclaw_status", "openclaw_cost_usd", "quest_model", "source",
-              "trigger", "run_utc"):
+    for k in ("openclaw_status", "openclaw_cost_usd", "reported_cost_usd",
+              "quest_cost_usd", "quest_tokens_in", "quest_tokens_cached",
+              "quest_tokens_out", "quest_model", "source", "trigger", "run_utc"):
         if k in meta:
             c[k] = meta[k]
+    if "quest_cost_usd" in meta:
+        # ONE RULER (2026-09-27): `cost_usd` is what `card_spend` -- and so the
+        # run's cap -- sums: the quest priced by `config.LLM_PRICE_PER_MTOK`
+        # from its reported tokens (the figure its telemetry row carries) + the
+        # synth call's telemetry delta. OpenClaw's `costUsd` stays beside it as
+        # `reported_cost_usd` and is never summed.
+        q = _num(meta.get("quest_cost_usd"), 8)
+        c["cost_usd"] = (None if q is None
+                         else round(q + (_num(meta.get("deepseek_cost_usd"), 8) or 0.0), 8))
+        c["cost_ruler"] = "llm_price_table"
+        c["price_table_as_of"] = ((_cfg("LLM_PRICE_CALIBRATION", {}) or {}).get("calibrated_on")
+                                  or _cfg("LLM_PRICE_AS_OF", None))
     c["schema"] = SCHEMA_VERSION
     c["card_hash"] = card_hash(c)
     return c
@@ -843,40 +856,96 @@ def card_path(ticker: str, asof: Any, *, root: Path | None = None) -> Path:
     return r / _asof_date(asof).isoformat() / f"{_safe_name(ticker)}.json"
 
 
+REPRICED_SIDECAR = "spend_repriced.json"
+
+
+def repriced_sidecar(day: Any, *, root: Path | None = None) -> dict:
+    """`<day>/spend_repriced.json` -> {ticker: cost_usd_repriced}; {} if absent.
+
+    Cards written before the one-ruler change (2026-09-27) carry OpenClaw's
+    `costUsd` and no `cost_usd`. Their stored values are never rewritten; the
+    sidecar prices each from its telemetry row's tokens at the current table,
+    and `card_spend` reads it so a day that mixes old and new cards is summed
+    on one ruler."""
+    r = Path(root) if root is not None else cards_root()
+    p = r / _asof_date(day).isoformat() / REPRICED_SIDECAR
+    if not p.exists():
+        return {}
+    try:
+        d = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    out = {}
+    for t, row in (d.get("cards") or {}).items():
+        v = row.get("cost_usd_repriced") if isinstance(row, dict) else None
+        if isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v):
+            out[str(t).upper()] = {"cost": float(v), "card_hash": row.get("card_hash")}
+    return out
+
+
 def card_spend(day: Any, *, root: Path | None = None) -> dict:
-    """What the day's cards SAY they cost, summed as written on disk.
+    """What the day's cards cost, on ONE ruler: the price table's.
 
     This is the figure a run receipt reports and the figure the run's cap
-    reads -- one ledger for both, because on 2026-09-27 the receipt printed the
-    telemetry total ($3.38) while its own cards summed to $4.33 and the $5 cap
-    was checked against the lower number. Per card: OpenClaw's own
-    `openclaw_cost_usd` (its `costUsd`) + `deepseek_cost_usd` (the synth call).
+    reads. Per quest card, in order:
+
+    1. the day's `spend_repriced.json` sidecar, when its entry names THIS
+       card's `card_hash` (a card priced at an older table, repriced from its
+       telemetry row's tokens at the current one; the card is not rewritten,
+       and a re-carded ticker's new card does not match the old entry);
+    2. `cost_usd` (cards written since 2026-09-27): the quest priced by
+       `config.LLM_PRICE_PER_MTOK` from its reported tokens + the synth call --
+       the same arithmetic as its telemetry row, so card sum and telemetry
+       agree by construction;
+    3. LEGACY: OpenClaw's own `openclaw_cost_usd` + `deepseek_cost_usd`,
+       counted in `n_legacy_reported_ruler` -- a different ruler, named.
 
     A card is a QUEST card iff it carries `openclaw_status` (the runner always
     writes it; a hand-made seed card does not and costs nothing here). A quest
-    card whose `openclaw_cost_usd` is None is counted in `n_quest_cost_unknown`
-    -- its spend is UNKNOWN, not zero, and the caller decides what to reserve
-    for it. A re-carded ticker (`--retry-refused`) replaces its file, so the
-    replaced card's cost leaves this sum while the telemetry keeps it; the
-    run's disagreement check is what surfaces that.
+    card whose cost is None is counted in `n_quest_cost_unknown` -- UNKNOWN,
+    not zero, and the caller decides what to reserve for it. A re-carded ticker
+    (`--retry-refused`) replaces its file, so the replaced card's cost leaves
+    this sum while the telemetry keeps it; the run's disagreement check is
+    what surfaces that.
     """
-    tot, n_q, n_unk, n_syn_unk = 0.0, 0, 0, 0
+    def fin(v: Any) -> bool:
+        return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+    side = repriced_sidecar(day, root=root)
+    tot, n_q, n_unk, n_syn_unk, n_side, n_legacy = 0.0, 0, 0, 0, 0, 0
     for c in read_cards(day, root=root):
         if c.get("_unreadable") or "openclaw_status" not in c:
             continue
         n_q += 1
+        refused = str(c.get("verdict", "")).startswith("REFUSED_")
+        t = str(c.get("ticker") or "").upper()
+        e = side.get(t)
+        if e is not None and (e["card_hash"] is None or e["card_hash"] == c.get("card_hash")):
+            tot += e["cost"]
+            n_side += 1
+            continue
+        if "cost_usd" in c:
+            if fin(c.get("cost_usd")):
+                tot += float(c["cost_usd"])
+            else:
+                n_unk += 1
+            if not refused and not fin(c.get("deepseek_cost_usd")):
+                n_syn_unk += 1
+            continue
+        n_legacy += 1
         oc = c.get("openclaw_cost_usd")
-        if isinstance(oc, (int, float)) and not isinstance(oc, bool) and math.isfinite(oc):
+        if fin(oc):
             tot += float(oc)
         else:
             n_unk += 1
         ds = c.get("deepseek_cost_usd")
-        if isinstance(ds, (int, float)) and not isinstance(ds, bool) and math.isfinite(ds):
+        if fin(ds):
             tot += float(ds)
-        elif not str(c.get("verdict", "")).startswith("REFUSED_"):
+        elif not refused:
             n_syn_unk += 1                  # a synth ran and its cost was not measured
     return {"spend_per_card_sum": round(tot, 6), "n_quest_cards": n_q,
-            "n_quest_cost_unknown": n_unk, "n_synth_cost_unknown": n_syn_unk}
+            "n_quest_cost_unknown": n_unk, "n_synth_cost_unknown": n_syn_unk,
+            "n_from_repriced_sidecar": n_side, "n_legacy_reported_ruler": n_legacy}
 
 
 def spend_disagreement(per_card: float | None, telemetry: float | None) -> float | None:
@@ -907,7 +976,7 @@ def read_cards(day: Any, *, root: Path | None = None) -> list[dict]:
         return []
     out = []
     for p in sorted(d.glob("*.json")):
-        if p.name.startswith("_"):          # run receipts, not cards
+        if p.name.startswith("_") or p.name == REPRICED_SIDECAR:   # receipts, not cards
             continue
         try:
             c = json.loads(p.read_text(encoding="utf-8"))

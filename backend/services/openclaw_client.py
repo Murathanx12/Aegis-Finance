@@ -974,10 +974,17 @@ def agent(message_file: str, *, model: str = "deepseek/deepseek-v4-pro",
         openclaw_cost_usd=env.get("openclaw_cost_usd"),
         run_id=env.get("run_id"), error=(err[:300] if status != "OK" else None),
         path=telemetry_path)
+    served = env.get("response_model") or model
     return {"rc": rc, "reply": reply, "stderr": err.strip()[:600],
             "model": model, "status": status, "session_id": sid,
             "usage": env.get("usage") or {}, "call_id": call_id,
             "openclaw_cost_usd": env.get("openclaw_cost_usd"),
+            # The SAME figure the telemetry row carries (same tokens, same
+            # model string, same table): what a caller's cap must sum. OpenClaw's
+            # own `costUsd` is a second ruler and over-stated the provider ~5x
+            # on 2026-09-27 -- it travels as `openclaw_cost_usd`, never summed.
+            "priced_cost_usd": priced_cost(served, env.get("usage") or {}),
+            "response_model": env.get("response_model"),
             "latency_s": round(latency_ms / 1000.0, 2)}
 
 
@@ -1015,6 +1022,21 @@ def parse_envelope(stdout: str) -> dict:
     out["run_id"] = d.get("runId")
     out["parsed"] = True
     return out
+
+
+def priced_cost(model: Any, usage: dict) -> float | None:
+    """One OpenClaw call priced by the house table from its reported usage --
+    the exact arithmetic `_record_telemetry` writes into the ledger row. None
+    when no usage came back (UNKNOWN, not zero) or the model is unpriced."""
+    if not (usage.get("input") or usage.get("output")):
+        return None
+    try:
+        from backend.services import llm_telemetry as LT
+        return LT.price_call(str(model).split("/", 1)[-1], int(usage.get("input") or 0),
+                             int(usage.get("output") or 0),
+                             int(usage.get("cache_read") or 0))
+    except Exception:                                              # noqa: BLE001
+        return None
 
 
 def _record_telemetry(*, model: str, purpose: str, message_file: str,

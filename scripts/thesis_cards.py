@@ -43,6 +43,17 @@ REFUSES if they disagree by more than 10% (2026-09-27: receipt $3.38 from
 telemetry, cards $4.33, cap checked against the lower -- "a cap that reads a
 different ledger than the writer cannot bind"). The receipt carries
 `spend_per_card_sum`, `spend_telemetry`, `spend_disagreement`.
+
+ONE RULER (2026-09-27, later the same day): OpenClaw's `costUsd` and the price
+table BOTH over-stated the provider's balance 4-6x, so the check above compared
+two over-statements. A card's `cost_usd` -- what the cap sums -- is now the
+quest priced by `config.LLM_PRICE_PER_MTOK` from its reported tokens (the very
+figure its telemetry row carries) + the synth call; OpenClaw's figure stays on
+the card as `reported_cost_usd` and is never summed. The deepseek-flash row is
+calibrated from the balance (`scripts/llm_price_calibrate.py`). The receipt's
+THIRD line, `provider_delta`, compares the balance over a bracketing snapshot
+pair (`--bracket-balance` takes one) with all DeepSeek telemetry in that window;
+above 25% it is a WARNING carrying the calibration's age, never a refusal.
 """
 from __future__ import annotations
 
@@ -359,6 +370,7 @@ def openclaw_quest(ticker: str, prompt: str, *, model: str, timeout: float,
         status = "EMPTY_LOG"
     return {"status": status, "reply": reply, "elapsed_s": elapsed,
             "log_path": str(log), "cost_usd": res.get("openclaw_cost_usd"),
+            "priced_cost_usd": res.get("priced_cost_usd"),
             "usage": res.get("usage"), "rc": res.get("rc")}
 
 
@@ -384,7 +396,9 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
         synth_fn: Callable | None = None,
         spend_fn: Callable[[str], float | None] | None = None,
         dry_run: bool = False, retry_refused: bool = False,
-        timeout: float | None = None, forecast_path: Path | None = None) -> dict:
+        timeout: float | None = None, forecast_path: Path | None = None,
+        bracket_balance: bool = False, balance_lag_s: float | None = None,
+        provider_fn: Callable[[str, str], dict] | None = None) -> dict:
     asof_d = TC._asof_date(asof or datetime.now(timezone.utc).date())
     day = asof_d.isoformat()
     # A run against a non-default root (a test's tmp_path) must never append to
@@ -464,6 +478,9 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
         res["state"] = "DRY_RUN"
         return res
 
+    if bracket_balance:          # read BEFORE the start stamp, so the pair brackets it
+        res["balance_start"] = _balance_snapshot("thesis_cards_run_start")
+    res["run_started_utc"] = datetime.now(timezone.utc).isoformat()
     lock = threading.Lock()
     synth_lock = threading.Lock()
     inflight = {"n": 0}
@@ -536,7 +553,15 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
             meta = {"openclaw_log_path": q.get("log_path"),
                     "openclaw_elapsed_s": q.get("elapsed_s"),
                     "openclaw_status": q.get("status"),
+                    # OpenClaw's own `costUsd`: kept, never summed (2026-09-27: ~5x
+                    # the provider). The cap sums `quest_cost_usd`, priced by the
+                    # ONE table from the same tokens the telemetry row carries.
                     "openclaw_cost_usd": q.get("cost_usd"),
+                    "reported_cost_usd": q.get("cost_usd"),
+                    "quest_cost_usd": q.get("priced_cost_usd"),
+                    "quest_tokens_in": (q.get("usage") or {}).get("input"),
+                    "quest_tokens_cached": (q.get("usage") or {}).get("cache_read"),
+                    "quest_tokens_out": (q.get("usage") or {}).get("output"),
                     "quest_model": model, "source": u.get("source"),
                     "run_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
             if u.get("trigger"):
@@ -609,7 +634,8 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
                     spend_check()
             print(f"  {t:<11} {str(card.get('verdict')):<24} conf "
                   f"{str(card.get('confidence')):<5} quest {q.get('elapsed_s')}s "
-                  f"oc ${q.get('cost_usd')} synth ${synth_cost} web "
+                  f"quest ${q.get('priced_cost_usd')} (oc says ${q.get('cost_usd')}) "
+                  f"synth ${synth_cost} web "
                   f"{card.get('web_parse')}", flush=True)
         except Exception as exc:                                   # noqa: BLE001
             # One ticker's crash is that ticker's row, not the run's end.
@@ -647,8 +673,29 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
     res["spend_disagreement"] = TC.spend_disagreement(s, tel)
     res["n_quest_cost_unknown"] = cs["n_quest_cost_unknown"]
     res["n_synth_cost_unknown"] = cs["n_synth_cost_unknown"]
+    res["n_from_repriced_sidecar"] = cs.get("n_from_repriced_sidecar", 0)
+    res["n_legacy_reported_ruler"] = cs.get("n_legacy_reported_ruler", 0)
     # The receipt's headline is the figure the cap read (the cards), not telemetry.
     res["spent_usd_today"] = s
+    res["run_ended_utc"] = datetime.now(timezone.utc).isoformat()
+    if bracket_balance:
+        # DeepSeek posts spend with a lag; read after it, not at the last reply.
+        time.sleep(float(balance_lag_s if balance_lag_s is not None
+                         else getattr(_cfg, "DEEPSEEK_BALANCE_POSTING_LAG_S", 90)))
+        res["balance_end"] = _balance_snapshot("thesis_cards_run_end")
+    # The THIRD line: the provider's own balance over a bracketing snapshot pair
+    # (a WARNING above 25%, never a refusal -- the balance moves in cents).
+    if provider_fn is None and not sidecar:
+        from backend.services import llm_price_calibration as LPC
+        provider_fn = LPC.provider_delta_line
+    if provider_fn is not None:
+        try:
+            res["provider_delta"] = provider_fn(res["run_started_utc"], res["run_ended_utc"])
+        except Exception as exc:                                   # noqa: BLE001
+            res["provider_delta"] = {"status": "ERROR",
+                                     "why": f"{type(exc).__name__}: {str(exc)[:200]}"}
+    else:
+        res["provider_delta"] = {"status": "NOT_CHECKED", "why": "sidecar (test) run"}
     TC.write_digest(day, root=root)
     res["digest"] = str(day_dir / "DIGEST.md")
     day_dir.mkdir(parents=True, exist_ok=True)
@@ -659,7 +706,28 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
           f"spent today ${s} per cards / "
           f"{'UNKNOWN' if tel is None else f'${float(tel):.4f}'} per telemetry "
           f"(disagreement {res['spend_disagreement']}); {res.get('why') or ''}", flush=True)
+    pdl = res.get("provider_delta") or {}
+    if pdl.get("status") == "OK":
+        print(f"  provider_delta: balance ${pdl['balance_before_usd']} -> "
+              f"${pdl['balance_after_usd']} = ${pdl['provider_delta_usd']:.2f} vs telemetry "
+              f"(all DeepSeek, same window) ${pdl['telemetry_deepseek_usd']:.4f} "
+              f"-> {pdl.get('provider_disagreement')}", flush=True)
+    else:
+        print(f"  provider_delta: {pdl.get('status')} ({pdl.get('why') or ''})", flush=True)
+    if pdl.get("warning"):
+        print(f"  {pdl['warning']}", flush=True)
     return res
+
+
+def _balance_snapshot(label: str) -> dict:
+    """Append one balance read; never raises (a failed read is the receipt's row)."""
+    try:
+        from backend.services import deepseek_balance as DB
+        r = DB.snapshot(label)
+        return {"read_at": r.get("read_at"), "total_usd": r.get("total_usd"),
+                "persisted": r.get("persisted")}
+    except Exception as exc:                                       # noqa: BLE001
+        return {"error": f"{type(exc).__name__}: {str(exc)[:200]}"}
 
 
 def _purpose_spend(day: str, purpose: str) -> float | None:
@@ -1026,6 +1094,10 @@ def main(argv=None) -> int:
                    help="universe = names whose card is due (a)-(e); reason on the card")
     r.add_argument("--include-library", action="store_true",
                    help="trigger (a) also reads strategy-library lib_* books (default: excluded)")
+    r.add_argument("--bracket-balance", action="store_true",
+                   help="read the DeepSeek balance before and after the run (after "
+                        "the posting lag) so the receipt's provider_delta line has a pair")
+    r.add_argument("--balance-lag-s", type=float, default=None)
     for name in ("validate", "digest", "forecast", "evidence"):
         s = sub.add_parser(name)
         s.add_argument("--date", default=None)
@@ -1076,7 +1148,8 @@ def main(argv=None) -> int:
             return 2
     res = run(universe=uni, asof=day, max_quests=a.max_quests, cap_usd=a.cap_usd,
               parallel=a.parallel, model=a.model, dry_run=a.dry_run,
-              retry_refused=a.retry_refused, timeout=a.timeout)
+              retry_refused=a.retry_refused, timeout=a.timeout,
+              bracket_balance=a.bracket_balance, balance_lag_s=a.balance_lag_s)
     return 0 if res["state"] in ("DONE", "DRY_RUN") else 2
 
 
