@@ -843,6 +843,51 @@ def card_path(ticker: str, asof: Any, *, root: Path | None = None) -> Path:
     return r / _asof_date(asof).isoformat() / f"{_safe_name(ticker)}.json"
 
 
+def card_spend(day: Any, *, root: Path | None = None) -> dict:
+    """What the day's cards SAY they cost, summed as written on disk.
+
+    This is the figure a run receipt reports and the figure the run's cap
+    reads -- one ledger for both, because on 2026-09-27 the receipt printed the
+    telemetry total ($3.38) while its own cards summed to $4.33 and the $5 cap
+    was checked against the lower number. Per card: OpenClaw's own
+    `openclaw_cost_usd` (its `costUsd`) + `deepseek_cost_usd` (the synth call).
+
+    A card is a QUEST card iff it carries `openclaw_status` (the runner always
+    writes it; a hand-made seed card does not and costs nothing here). A quest
+    card whose `openclaw_cost_usd` is None is counted in `n_quest_cost_unknown`
+    -- its spend is UNKNOWN, not zero, and the caller decides what to reserve
+    for it. A re-carded ticker (`--retry-refused`) replaces its file, so the
+    replaced card's cost leaves this sum while the telemetry keeps it; the
+    run's disagreement check is what surfaces that.
+    """
+    tot, n_q, n_unk, n_syn_unk = 0.0, 0, 0, 0
+    for c in read_cards(day, root=root):
+        if c.get("_unreadable") or "openclaw_status" not in c:
+            continue
+        n_q += 1
+        oc = c.get("openclaw_cost_usd")
+        if isinstance(oc, (int, float)) and not isinstance(oc, bool) and math.isfinite(oc):
+            tot += float(oc)
+        else:
+            n_unk += 1
+        ds = c.get("deepseek_cost_usd")
+        if isinstance(ds, (int, float)) and not isinstance(ds, bool) and math.isfinite(ds):
+            tot += float(ds)
+        elif not str(c.get("verdict", "")).startswith("REFUSED_"):
+            n_syn_unk += 1                  # a synth ran and its cost was not measured
+    return {"spend_per_card_sum": round(tot, 6), "n_quest_cards": n_q,
+            "n_quest_cost_unknown": n_unk, "n_synth_cost_unknown": n_syn_unk}
+
+
+def spend_disagreement(per_card: float | None, telemetry: float | None) -> float | None:
+    """|per_card - telemetry| / max(the two). None when either is unknown;
+    0.0 when both are zero."""
+    if per_card is None or telemetry is None:
+        return None
+    hi = max(abs(float(per_card)), abs(float(telemetry)))
+    return 0.0 if hi == 0 else round(abs(float(per_card) - float(telemetry)) / hi, 4)
+
+
 def write_card(card: dict, *, root: Path | None = None) -> Path:
     p = card_path(card["ticker"], card["asof"], root=root)
     p.parent.mkdir(parents=True, exist_ok=True)

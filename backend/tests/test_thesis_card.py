@@ -418,10 +418,16 @@ def test_run_refuses_over_cap_and_unknown_spend(tmp_path):
                 "cost_usd": 0}
 
     uni = [{"ticker": "AAA", "kind": "holding", "source": "s"}]
+    # The cap reads the CARDS' own costs as written: a quest card already on
+    # disk that cost $1.50 exhausts a $1 cap even though telemetry says $0.
+    TC.write_card(_card(ticker="ZZZ", openclaw_status="OK", openclaw_cost_usd=1.5),
+                  root=tmp_path)
     r = S.run(universe=uni, asof=ASOF, root=tmp_path, max_quests=5, cap_usd=1.0,
               parallel=1, model="m", inputs=_fake_inputs(), quest_fn=quest,
-              synth_fn=lambda *a, **k: {}, spend_fn=lambda day: 1.5)
+              synth_fn=lambda *a, **k: {}, spend_fn=lambda day: 0.0)
     assert asked == [] and r["state"] == "REFUSED_CAP"
+    assert r["spend_per_card_sum"] >= 1.5 and r["spend_telemetry"] == 0.0
+    (tmp_path / ASOF / "ZZZ.json").unlink()
     r = S.run(universe=uni, asof=ASOF, root=tmp_path, max_quests=5, cap_usd=1.0,
               parallel=1, model="m", inputs=_fake_inputs(), quest_fn=quest,
               synth_fn=lambda *a, **k: {}, spend_fn=lambda day: None)
@@ -1043,3 +1049,89 @@ def test_untyped_claims_backfill_into_web_events_as_generic_claims(tmp_path):
     assert all(e["evidence_date"] == "2026-09-24" for e in got)
     again = S.backfill_claim_events(ASOF, claims_file=cf, events_path=ev)
     assert again["web_events"]["written"] == 0                     # idempotent
+
+
+# ── the cap reads what the receipt sums (2026-09-27: $3.38 vs $4.33) ────────
+
+def _costly_quest(asked, cost=0.10):
+    def quest(ticker, prompt, *, model, timeout, log_dir):
+        asked.append(ticker)
+        reply = json.dumps({"name": ticker, "sources": ["https://ir"]})
+        return {"status": "OK", "reply": reply, "elapsed_s": 1.0, "log_path": "",
+                "cost_usd": cost}
+    return quest
+
+
+def _synth(e, w, *, model):
+    return {"bull": "b", "bear": "r", "falsifier": "f", "verdict": "neutral",
+            "confidence": "low", "synth_status": "OK"}
+
+
+def test_card_spend_sums_written_costs_and_counts_unknowns(tmp_path):
+    TC.write_card(_card(ticker="Q1", openclaw_status="OK", openclaw_cost_usd=0.4,
+                        deepseek_cost_usd=0.01), root=tmp_path)
+    TC.write_card(_card(ticker="Q2", openclaw_status="OK", openclaw_cost_usd=None),
+                  root=tmp_path)
+    TC.write_card(_card(ticker="SEED"), root=tmp_path)     # no quest -> costs nothing
+    cs = TC.card_spend(ASOF, root=tmp_path)
+    assert cs["n_quest_cards"] == 2 and cs["n_quest_cost_unknown"] == 1
+    assert cs["spend_per_card_sum"] == pytest.approx(0.411)
+    assert TC.spend_disagreement(4.33, 3.38) == pytest.approx(0.2194, abs=1e-4)
+    assert TC.spend_disagreement(0.0, 0.0) == 0.0
+    assert TC.spend_disagreement(1.0, None) is None
+
+
+def test_under_reporting_telemetry_refuses_after_the_first_flush_of_five(tmp_path, capsys):
+    from scripts import thesis_cards as S
+    asked = []
+    # telemetry reports 78% of what the cards say (the 09-27 ratio, 3.38/4.33)
+    tel = lambda day: 0.78 * TC.card_spend(day, root=tmp_path)["spend_per_card_sum"]
+    uni = [{"ticker": f"T{i}", "kind": "personal", "source": "s"} for i in range(8)]
+    r = S.run(universe=uni, asof=ASOF, root=tmp_path, max_quests=8, cap_usd=5.0,
+              parallel=1, model="m", inputs=_fake_inputs(),
+              quest_fn=_costly_quest(asked), synth_fn=_synth, spend_fn=tel)
+    assert len(asked) == 5                              # nothing admitted after the check
+    assert r["state"] == "REFUSED_CAP_READER_DISAGREES"
+    chk = r["spend_check"]
+    assert chk["refused"] and chk["after_n_cards"] == 5
+    assert chk["spend_per_card_sum"] == pytest.approx(0.5)
+    assert chk["spend_telemetry"] == pytest.approx(0.39)
+    assert chk["spend_disagreement"] == pytest.approx(0.22)
+    # the receipt carries all three, and its headline is the CARDS' figure
+    rc = json.loads((tmp_path / ASOF / "_run_receipt.json").read_text(encoding="utf-8"))
+    assert rc["spend_per_card_sum"] == pytest.approx(0.5)
+    assert rc["spend_telemetry"] == pytest.approx(0.39)
+    assert rc["spend_disagreement"] == pytest.approx(0.22)
+    assert rc["spent_usd_today"] == rc["spend_per_card_sum"]
+    out = capsys.readouterr().out
+    assert "SPEND CHECK after 5 cards" in out and "telemetry $0.3900" in out
+
+
+def test_agreeing_ledgers_run_to_done_and_the_cap_binds_on_the_card_sum(tmp_path):
+    from scripts import thesis_cards as S
+    asked = []
+    tel = lambda day: 0.95 * TC.card_spend(day, root=tmp_path)["spend_per_card_sum"]
+    uni = [{"ticker": f"T{i}", "kind": "personal", "source": "s"} for i in range(8)]
+    # cap $0.75, est $0.05: admits while cards + 0.05 <= 0.75 -> 7 quests
+    r = S.run(universe=uni, asof=ASOF, root=tmp_path, max_quests=8, cap_usd=0.75,
+              parallel=1, model="m", inputs=_fake_inputs(),
+              quest_fn=_costly_quest(asked), synth_fn=_synth, spend_fn=tel)
+    assert r["spend_check"]["refused"] is False
+    assert r["state"] == "REFUSED_CAP" and len(asked) == 7
+    assert r["spend_per_card_sum"] == pytest.approx(0.7)
+    assert r["spend_disagreement"] == pytest.approx(0.05)
+
+
+def test_unknown_telemetry_at_the_check_refuses(tmp_path):
+    from scripts import thesis_cards as S
+    asked, n = [], {"calls": 0}
+
+    def tel(day):
+        n["calls"] += 1
+        return 0.0 if len(asked) < 5 else None      # readable at admit, gone at the check
+    uni = [{"ticker": f"T{i}", "kind": "personal", "source": "s"} for i in range(6)]
+    r = S.run(universe=uni, asof=ASOF, root=tmp_path, max_quests=6, cap_usd=5.0,
+              parallel=1, model="m", inputs=_fake_inputs(),
+              quest_fn=_costly_quest(asked, cost=0.0), synth_fn=_synth, spend_fn=tel)
+    assert r["state"] == "REFUSED_CAP_READER_DISAGREES" and len(asked) == 5
+    assert r["spend_check"]["spend_disagreement"] is None

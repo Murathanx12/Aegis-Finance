@@ -685,8 +685,8 @@ def void(book_id: str, reason: str, *, who: str, path: Optional[Path] = None,
 
     Refuses: an unknown id, a twin (void the parent; its twins stay as the
     controls they are), an id already voided, an empty reason or `who`, and --
-    unless `allow_after_entry` -- a book whose entry session (the first weekday
-    after `asof`) has already opened: CLAUDE.md rule 5 protects forward
+    unless `allow_after_entry` -- a book whose entry session (`entry_session`,
+    the grader's own rule) has already opened: CLAUDE.md rule 5 protects forward
     FAILURES, and voiding a book after it traded would delete one.
     """
     if not str(reason or "").strip() or not str(who or "").strip():
@@ -701,7 +701,7 @@ def void(book_id: str, reason: str, *, who: str, path: Optional[Path] = None,
     if book_id in void_rows(path):
         raise Refusal(f"REFUSED: {rec.get('name')} is already voided.")
     now = now or datetime.now(timezone.utc)
-    entry = pd.Timestamp(rec["asof"]) + pd.offsets.BDay(1)
+    entry = entry_session(rec["asof"])
     if not allow_after_entry and pd.Timestamp(now.date()) >= entry:
         raise Refusal(f"REFUSED: {rec.get('name')} entered on {entry.date()}; a book that "
                       f"has traded is graded, not voided.")
@@ -716,6 +716,42 @@ def void(book_id: str, reason: str, *, who: str, path: Optional[Path] = None,
 
 
 # ──────────────────────────────── grading ───────────────────────────────────
+
+def _entry_index(sessions: Any, asof: Any) -> int:
+    """Index of the first session STRICTLY after `asof` in sorted `sessions`.
+
+    `asof` is the book's decision DATE (the frozen_utc instant is not used: a
+    book frozen at 19:59Z on a Saturday and dated Sunday HKT enters at the
+    next session after that date either way)."""
+    d = np.asarray(sessions).astype("datetime64[ns]")
+    return int(np.searchsorted(d, np.datetime64(pd.Timestamp(asof), "ns"), side="right"))
+
+
+def entry_session(asof: Any, sessions: Any = None) -> pd.Timestamp:
+    """THE entry rule, the one `grade()` uses: the first session strictly after
+    `asof`, entered at its OPEN.
+
+    `sessions` is the calendar `grade()` counts on (the benchmark's bar dates).
+    When it is absent, or does not yet reach past `asof` (a book frozen for a
+    session that has not happened), the answer comes from the XNYS exchange
+    calendar (`market_sessions`) -- never weekday arithmetic, which is what
+    labelled a Sunday-dated book as entering Tuesday. Raises
+    `market_sessions.SessionCalendarUnavailable` rather than guess.
+    """
+    if sessions is not None and len(sessions):
+        d = np.sort(np.asarray(sessions).astype("datetime64[ns]"))
+        i = _entry_index(d, asof)
+        if i < len(d):
+            return pd.Timestamp(d[i])
+    from backend.services import market_sessions as MS
+
+    day = pd.Timestamp(asof).normalize() + pd.Timedelta(days=1)
+    for _ in range(15):
+        if MS.is_session(day):
+            return day
+        day += pd.Timedelta(days=1)
+    raise MS.SessionCalendarUnavailable(f"no XNYS session within 15 days after {asof}")
+
 
 def benchmark_of(rec: dict) -> str:
     """SPY for personal books, the WLS proxy for competition books and their
@@ -762,7 +798,6 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
                 "twin": rec.get("twin"), "parent_book_id": rec.get("parent_book_id"),
                 "benchmark": bench_sym, "status": "VOIDED",
                 "why": f"voided before entry {v.get('voided_utc')}: {v.get('reason')}"}
-    start = pd.Timestamp(rec["asof"])
     px = {s: g.sort_values("date").reset_index(drop=True)
           for s, g in bars.groupby("symbol", sort=False)}
     bench = px.get(bench_sym)
@@ -770,7 +805,7 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
     dates = np.sort(pd.Series(cal).unique()).astype("datetime64[ns]")
     if today is not None:
         dates = dates[dates <= np.datetime64(pd.Timestamp(today), "ns")]
-    i0 = int(np.searchsorted(dates, np.datetime64(start, "ns"), side="right"))
+    i0 = _entry_index(dates, rec["asof"])
     base = {"book_id": rec["book_id"], "name": rec["name"],
             "kind": rec.get("kind"), "twin": rec.get("twin"),
             "parent_book_id": rec.get("parent_book_id"),

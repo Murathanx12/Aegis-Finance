@@ -90,10 +90,10 @@ Frozen 2026-09-25; entry is the OPEN of the first session after `asof`, so every
 | human_ai_thematic_v2 | $1,000,000 | 24 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
 | cards_supports_2026-09-25 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
 | reviewer_opus_2026-09-25 | $1,000,000 | 11 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| probe_equal_2026-09-26 | $1,000,000 | 12 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| probe_inverse_vol_2026-09-26 | $1,000,000 | 12 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| probe_bigmove_tilt_2026-09-26 | $1,000,000 | 12 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| murat_core_satellite_2026-09-27 | $1,000,000 | 12 | PENDING (entry 2026-09-29) | SPY; twins: spy, random_sleeve |
+| probe_equal_2026-09-26 | $1,000,000 | 12 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| probe_inverse_vol_2026-09-26 | $1,000,000 | 12 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| probe_bigmove_tilt_2026-09-26 | $1,000,000 | 12 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| murat_core_satellite_2026-09-27 | $1,000,000 | 12 | PENDING (entry 2026-09-28) | SPY; twins: spy, random_sleeve |
 
 ### competition (11)
 
@@ -109,39 +109,39 @@ Frozen 2026-09-25; entry is the OPEN of the first session after `asof`, so every
 | comp_quality_momentum_2026-09-25 | $1,000,000 | 23 | PENDING (entry 2026-09-28) | URTH; twins: ew, sector_etf, urth, random_same_band |
 | comp_ensemble_2026-09-25 | $1,000,000 | 23 | PENDING (entry 2026-09-28) | URTH; twins: ew, sector_etf, urth, random_same_band |
 | comp_small_cap_catalyst_2026-09-25 | $1,000,000 | 25 | PENDING (entry 2026-09-28) | URTH; twins: ew, sector_etf, urth, random_same_band |
-| bloomberg_rehearsal_2026-09-27 | $1,000,000 | 10 | PENDING (entry 2026-09-29) | URTH; twins: random_same_band, next_k, iwm, spy |
+| bloomberg_rehearsal_2026-09-27 | $1,000,000 | 10 | PENDING (entry 2026-09-28) | URTH; twins: random_same_band, next_k, iwm, spy |
 
 ### lib (27)
 
 | book | start capital | positions | status | graded against |
 |---|---:|---:|---|---|
-| lib_mom_12_1_q_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_mom_no_downgrades_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_net_raises_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_big_dv_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_mom_12_1_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_mom_12_1_small_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_mom_flow_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_trend_quality_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_frog_in_pan_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_inflection_flow_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_forecast_dispersion_v1_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_book_f_seasonality_11_20_v0_2026-09-26 | $1,000,000 | 31 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_mom_12_1_q_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_mom_no_downgrades_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_net_raises_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_big_dv_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_mom_12_1_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_mom_12_1_small_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_mom_flow_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_trend_quality_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_frog_in_pan_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_inflection_flow_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_forecast_dispersion_v1_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_book_f_seasonality_11_20_v0_2026-09-26 | $1,000,000 | 31 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
 | lib_mom_12_1_liqw_sealed_2026-09-26 | $1,000,000 | 21 | voided before entry (2026-09-26, opus-builder (D+E post-review fixes, adjudicated by Fable 2026-09-26)): VOID_BEFORE_ENTRY: concentration (effN 2.0, MU 60.3% + SNDK 37.2% = 97.5%, rho 0.90, MU prints 09-30 inside the first 5 sessions) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_rev_5d_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_skill_mom_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_margin_mom_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_illiquid_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_low_dtc_mom_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_low_asset_growth_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_resid_mom_12_1_large_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_mom_12_1_secrel_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_disp_short_avoid_2026-09-27 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_qc395_sharpe252_above_trend_large_2026-09-27 | $1,000,000 | 11 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_skill_mom_2026-09-27 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_mom_flow_ivw_2026-09-27 | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_qc470_mom252_quarterly_riskparity_2026-09-27__control | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
-| lib_mom_no_downgrades_small_2026-09-27__control | $1,000,000 | 21 | PENDING (entry 2026-09-29) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_rev_5d_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_skill_mom_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_margin_mom_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_illiquid_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_low_dtc_mom_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_low_asset_growth_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_resid_mom_12_1_large_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_mom_12_1_secrel_sealed_2026-09-26 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_disp_short_avoid_2026-09-27 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_qc395_sharpe252_above_trend_large_2026-09-27 | $1,000,000 | 11 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_skill_mom_2026-09-27 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_mom_flow_ivw_2026-09-27 | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_qc470_mom252_quarterly_riskparity_2026-09-27__control | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
+| lib_mom_no_downgrades_small_2026-09-27__control | $1,000,000 | 21 | PENDING (entry 2026-09-28) | SPY; twins: ew, sector_etf, spy, random_same_band |
 
 ### twin (222)
 
@@ -243,132 +243,132 @@ Frozen 2026-09-25; entry is the OPEN of the first session after `asof`, so every
 | reviewer_opus_2026-09-25__sector_etf | $1,000,000 | 5 | PENDING (entry 2026-09-28) | twin (sector_etf) of reviewer_opus_2026-09-25 |
 | reviewer_opus_2026-09-25__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of reviewer_opus_2026-09-25 |
 | reviewer_opus_2026-09-25__random_same_band | $1,000,000 | 11 | PENDING (entry 2026-09-28) | twin (random_same_band) of reviewer_opus_2026-09-25 |
-| lib_mom_12_1_q_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_mom_12_1_q_2026-09-26 |
-| lib_mom_12_1_q_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_mom_12_1_q_2026-09-26 |
-| lib_mom_12_1_q_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_mom_12_1_q_2026-09-26 |
-| lib_mom_12_1_q_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_mom_12_1_q_2026-09-26 |
-| lib_mom_no_downgrades_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_mom_no_downgrades_2026-09-26 |
-| lib_mom_no_downgrades_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_mom_no_downgrades_2026-09-26 |
-| lib_mom_no_downgrades_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_mom_no_downgrades_2026-09-26 |
-| lib_mom_no_downgrades_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_mom_no_downgrades_2026-09-26 |
-| lib_net_raises_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_net_raises_2026-09-26 |
-| lib_net_raises_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_net_raises_2026-09-26 |
-| lib_net_raises_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_net_raises_2026-09-26 |
-| lib_net_raises_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_net_raises_2026-09-26 |
-| lib_big_dv_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_big_dv_2026-09-26 |
-| lib_big_dv_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_big_dv_2026-09-26 |
-| lib_big_dv_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_big_dv_2026-09-26 |
-| lib_big_dv_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_big_dv_2026-09-26 |
-| lib_mom_12_1_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_mom_12_1_2026-09-26 |
-| lib_mom_12_1_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_mom_12_1_2026-09-26 |
-| lib_mom_12_1_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_mom_12_1_2026-09-26 |
-| lib_mom_12_1_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_mom_12_1_2026-09-26 |
-| lib_mom_12_1_small_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_mom_12_1_small_2026-09-26 |
-| lib_mom_12_1_small_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_mom_12_1_small_2026-09-26 |
-| lib_mom_12_1_small_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_mom_12_1_small_2026-09-26 |
-| lib_mom_12_1_small_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_mom_12_1_small_2026-09-26 |
-| lib_mom_flow_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_mom_flow_2026-09-26 |
-| lib_mom_flow_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_mom_flow_2026-09-26 |
-| lib_mom_flow_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_mom_flow_2026-09-26 |
-| lib_mom_flow_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_mom_flow_2026-09-26 |
-| lib_trend_quality_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_trend_quality_2026-09-26 |
-| lib_trend_quality_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_trend_quality_2026-09-26 |
-| lib_trend_quality_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_trend_quality_2026-09-26 |
-| lib_trend_quality_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_trend_quality_2026-09-26 |
-| lib_frog_in_pan_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_frog_in_pan_2026-09-26 |
-| lib_frog_in_pan_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_frog_in_pan_2026-09-26 |
-| lib_frog_in_pan_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_frog_in_pan_2026-09-26 |
-| lib_frog_in_pan_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_frog_in_pan_2026-09-26 |
-| lib_inflection_flow_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_inflection_flow_2026-09-26 |
-| lib_inflection_flow_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_inflection_flow_2026-09-26 |
-| lib_inflection_flow_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_inflection_flow_2026-09-26 |
-| lib_inflection_flow_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_inflection_flow_2026-09-26 |
-| lib_forecast_dispersion_v1_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_forecast_dispersion_v1_2026-09-26 |
-| lib_forecast_dispersion_v1_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_forecast_dispersion_v1_2026-09-26 |
-| lib_forecast_dispersion_v1_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_forecast_dispersion_v1_2026-09-26 |
-| lib_forecast_dispersion_v1_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_forecast_dispersion_v1_2026-09-26 |
-| lib_book_f_seasonality_11_20_v0_2026-09-26__ew | $1,000,000 | 30 | PENDING (entry 2026-09-29) | twin (ew) of lib_book_f_seasonality_11_20_v0_2026-09-26 |
-| lib_book_f_seasonality_11_20_v0_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_book_f_seasonality_11_20_v0_2026-09-26 |
-| lib_book_f_seasonality_11_20_v0_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_book_f_seasonality_11_20_v0_2026-09-26 |
-| lib_book_f_seasonality_11_20_v0_2026-09-26__random_same_band | $1,000,000 | 31 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_book_f_seasonality_11_20_v0_2026-09-26 |
-| lib_mom_12_1_liqw_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_mom_12_1_liqw_sealed_2026-09-26 |
-| lib_mom_12_1_liqw_sealed_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_mom_12_1_liqw_sealed_2026-09-26 |
-| lib_mom_12_1_liqw_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_mom_12_1_liqw_sealed_2026-09-26 |
-| lib_mom_12_1_liqw_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_mom_12_1_liqw_sealed_2026-09-26 |
-| lib_rev_5d_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_rev_5d_sealed_2026-09-26 |
-| lib_rev_5d_sealed_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_rev_5d_sealed_2026-09-26 |
-| lib_rev_5d_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_rev_5d_sealed_2026-09-26 |
-| lib_rev_5d_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_rev_5d_sealed_2026-09-26 |
-| lib_skill_mom_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_skill_mom_sealed_2026-09-26 |
-| lib_skill_mom_sealed_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_skill_mom_sealed_2026-09-26 |
-| lib_skill_mom_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_skill_mom_sealed_2026-09-26 |
-| lib_skill_mom_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_skill_mom_sealed_2026-09-26 |
-| lib_margin_mom_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_margin_mom_sealed_2026-09-26 |
-| lib_margin_mom_sealed_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_margin_mom_sealed_2026-09-26 |
-| lib_margin_mom_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_margin_mom_sealed_2026-09-26 |
-| lib_margin_mom_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_margin_mom_sealed_2026-09-26 |
-| lib_illiquid_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_illiquid_sealed_2026-09-26 |
-| lib_illiquid_sealed_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_illiquid_sealed_2026-09-26 |
-| lib_illiquid_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_illiquid_sealed_2026-09-26 |
-| lib_illiquid_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_illiquid_sealed_2026-09-26 |
-| lib_low_dtc_mom_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_low_dtc_mom_sealed_2026-09-26 |
-| lib_low_dtc_mom_sealed_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_low_dtc_mom_sealed_2026-09-26 |
-| lib_low_dtc_mom_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_low_dtc_mom_sealed_2026-09-26 |
-| lib_low_dtc_mom_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_low_dtc_mom_sealed_2026-09-26 |
-| lib_low_asset_growth_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_low_asset_growth_sealed_2026-09-26 |
-| lib_low_asset_growth_sealed_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_low_asset_growth_sealed_2026-09-26 |
-| lib_low_asset_growth_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_low_asset_growth_sealed_2026-09-26 |
-| lib_low_asset_growth_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_low_asset_growth_sealed_2026-09-26 |
-| lib_resid_mom_12_1_large_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_resid_mom_12_1_large_sealed_2026-09-26 |
-| lib_resid_mom_12_1_large_sealed_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_resid_mom_12_1_large_sealed_2026-09-26 |
-| lib_resid_mom_12_1_large_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_resid_mom_12_1_large_sealed_2026-09-26 |
-| lib_resid_mom_12_1_large_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_resid_mom_12_1_large_sealed_2026-09-26 |
-| lib_mom_12_1_secrel_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_mom_12_1_secrel_sealed_2026-09-26 |
-| lib_mom_12_1_secrel_sealed_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_mom_12_1_secrel_sealed_2026-09-26 |
-| lib_mom_12_1_secrel_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_mom_12_1_secrel_sealed_2026-09-26 |
-| lib_mom_12_1_secrel_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_mom_12_1_secrel_sealed_2026-09-26 |
-| probe_equal_2026-09-26__ew | $1,000,000 | 11 | PENDING (entry 2026-09-29) | twin (ew) of probe_equal_2026-09-26 |
-| probe_equal_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of probe_equal_2026-09-26 |
-| probe_equal_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of probe_equal_2026-09-26 |
-| probe_equal_2026-09-26__random_same_band | $1,000,000 | 12 | PENDING (entry 2026-09-29) | twin (random_same_band) of probe_equal_2026-09-26 |
-| probe_inverse_vol_2026-09-26__ew | $1,000,000 | 11 | PENDING (entry 2026-09-29) | twin (ew) of probe_inverse_vol_2026-09-26 |
-| probe_inverse_vol_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of probe_inverse_vol_2026-09-26 |
-| probe_inverse_vol_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of probe_inverse_vol_2026-09-26 |
-| probe_inverse_vol_2026-09-26__random_same_band | $1,000,000 | 12 | PENDING (entry 2026-09-29) | twin (random_same_band) of probe_inverse_vol_2026-09-26 |
-| probe_bigmove_tilt_2026-09-26__ew | $1,000,000 | 11 | PENDING (entry 2026-09-29) | twin (ew) of probe_bigmove_tilt_2026-09-26 |
-| probe_bigmove_tilt_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of probe_bigmove_tilt_2026-09-26 |
-| probe_bigmove_tilt_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of probe_bigmove_tilt_2026-09-26 |
-| probe_bigmove_tilt_2026-09-26__random_same_band | $1,000,000 | 12 | PENDING (entry 2026-09-29) | twin (random_same_band) of probe_bigmove_tilt_2026-09-26 |
-| lib_disp_short_avoid_2026-09-27__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_disp_short_avoid_2026-09-27 |
-| lib_disp_short_avoid_2026-09-27__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_disp_short_avoid_2026-09-27 |
-| lib_disp_short_avoid_2026-09-27__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_disp_short_avoid_2026-09-27 |
-| lib_disp_short_avoid_2026-09-27__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_disp_short_avoid_2026-09-27 |
-| lib_qc395_sharpe252_above_trend_large_2026-09-27__ew | $1,000,000 | 10 | PENDING (entry 2026-09-29) | twin (ew) of lib_qc395_sharpe252_above_trend_large_2026-09-27 |
-| lib_qc395_sharpe252_above_trend_large_2026-09-27__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_qc395_sharpe252_above_trend_large_2026-09-27 |
-| lib_qc395_sharpe252_above_trend_large_2026-09-27__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_qc395_sharpe252_above_trend_large_2026-09-27 |
-| lib_qc395_sharpe252_above_trend_large_2026-09-27__random_same_band | $1,000,000 | 11 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_qc395_sharpe252_above_trend_large_2026-09-27 |
-| lib_skill_mom_2026-09-27__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_skill_mom_2026-09-27 |
-| lib_skill_mom_2026-09-27__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_skill_mom_2026-09-27 |
-| lib_skill_mom_2026-09-27__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_skill_mom_2026-09-27 |
-| lib_skill_mom_2026-09-27__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_skill_mom_2026-09-27 |
-| lib_mom_flow_ivw_2026-09-27__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_mom_flow_ivw_2026-09-27 |
-| lib_mom_flow_ivw_2026-09-27__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_mom_flow_ivw_2026-09-27 |
-| lib_mom_flow_ivw_2026-09-27__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_mom_flow_ivw_2026-09-27 |
-| lib_mom_flow_ivw_2026-09-27__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_mom_flow_ivw_2026-09-27 |
-| lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_qc470_mom252_quarterly_riskparity_2026-09-27__control |
-| lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_qc470_mom252_quarterly_riskparity_2026-09-27__control |
-| lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_qc470_mom252_quarterly_riskparity_2026-09-27__control |
-| lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_qc470_mom252_quarterly_riskparity_2026-09-27__control |
-| lib_mom_no_downgrades_small_2026-09-27__control__ew | $1,000,000 | 20 | PENDING (entry 2026-09-29) | twin (ew) of lib_mom_no_downgrades_small_2026-09-27__control |
-| lib_mom_no_downgrades_small_2026-09-27__control__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (sector_etf) of lib_mom_no_downgrades_small_2026-09-27__control |
-| lib_mom_no_downgrades_small_2026-09-27__control__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of lib_mom_no_downgrades_small_2026-09-27__control |
-| lib_mom_no_downgrades_small_2026-09-27__control__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-29) | twin (random_same_band) of lib_mom_no_downgrades_small_2026-09-27__control |
-| bloomberg_rehearsal_2026-09-27__random_same_band | $1,000,000 | 10 | PENDING (entry 2026-09-29) | twin (random_same_band) of bloomberg_rehearsal_2026-09-27 |
-| bloomberg_rehearsal_2026-09-27__next_k | $1,000,000 | 10 | PENDING (entry 2026-09-29) | twin (next_k) of bloomberg_rehearsal_2026-09-27 |
-| bloomberg_rehearsal_2026-09-27__iwm | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (iwm) of bloomberg_rehearsal_2026-09-27 |
-| bloomberg_rehearsal_2026-09-27__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of bloomberg_rehearsal_2026-09-27 |
-| murat_core_satellite_2026-09-27__spy | $1,000,000 | 1 | PENDING (entry 2026-09-29) | twin (spy) of murat_core_satellite_2026-09-27 |
-| murat_core_satellite_2026-09-27__random_sleeve | $1,000,000 | 12 | PENDING (entry 2026-09-29) | twin (random_sleeve) of murat_core_satellite_2026-09-27 |
+| lib_mom_12_1_q_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_mom_12_1_q_2026-09-26 |
+| lib_mom_12_1_q_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_mom_12_1_q_2026-09-26 |
+| lib_mom_12_1_q_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_mom_12_1_q_2026-09-26 |
+| lib_mom_12_1_q_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_mom_12_1_q_2026-09-26 |
+| lib_mom_no_downgrades_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_mom_no_downgrades_2026-09-26 |
+| lib_mom_no_downgrades_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_mom_no_downgrades_2026-09-26 |
+| lib_mom_no_downgrades_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_mom_no_downgrades_2026-09-26 |
+| lib_mom_no_downgrades_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_mom_no_downgrades_2026-09-26 |
+| lib_net_raises_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_net_raises_2026-09-26 |
+| lib_net_raises_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_net_raises_2026-09-26 |
+| lib_net_raises_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_net_raises_2026-09-26 |
+| lib_net_raises_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_net_raises_2026-09-26 |
+| lib_big_dv_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_big_dv_2026-09-26 |
+| lib_big_dv_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_big_dv_2026-09-26 |
+| lib_big_dv_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_big_dv_2026-09-26 |
+| lib_big_dv_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_big_dv_2026-09-26 |
+| lib_mom_12_1_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_mom_12_1_2026-09-26 |
+| lib_mom_12_1_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_mom_12_1_2026-09-26 |
+| lib_mom_12_1_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_mom_12_1_2026-09-26 |
+| lib_mom_12_1_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_mom_12_1_2026-09-26 |
+| lib_mom_12_1_small_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_mom_12_1_small_2026-09-26 |
+| lib_mom_12_1_small_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_mom_12_1_small_2026-09-26 |
+| lib_mom_12_1_small_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_mom_12_1_small_2026-09-26 |
+| lib_mom_12_1_small_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_mom_12_1_small_2026-09-26 |
+| lib_mom_flow_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_mom_flow_2026-09-26 |
+| lib_mom_flow_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_mom_flow_2026-09-26 |
+| lib_mom_flow_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_mom_flow_2026-09-26 |
+| lib_mom_flow_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_mom_flow_2026-09-26 |
+| lib_trend_quality_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_trend_quality_2026-09-26 |
+| lib_trend_quality_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_trend_quality_2026-09-26 |
+| lib_trend_quality_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_trend_quality_2026-09-26 |
+| lib_trend_quality_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_trend_quality_2026-09-26 |
+| lib_frog_in_pan_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_frog_in_pan_2026-09-26 |
+| lib_frog_in_pan_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_frog_in_pan_2026-09-26 |
+| lib_frog_in_pan_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_frog_in_pan_2026-09-26 |
+| lib_frog_in_pan_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_frog_in_pan_2026-09-26 |
+| lib_inflection_flow_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_inflection_flow_2026-09-26 |
+| lib_inflection_flow_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_inflection_flow_2026-09-26 |
+| lib_inflection_flow_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_inflection_flow_2026-09-26 |
+| lib_inflection_flow_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_inflection_flow_2026-09-26 |
+| lib_forecast_dispersion_v1_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_forecast_dispersion_v1_2026-09-26 |
+| lib_forecast_dispersion_v1_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_forecast_dispersion_v1_2026-09-26 |
+| lib_forecast_dispersion_v1_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_forecast_dispersion_v1_2026-09-26 |
+| lib_forecast_dispersion_v1_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_forecast_dispersion_v1_2026-09-26 |
+| lib_book_f_seasonality_11_20_v0_2026-09-26__ew | $1,000,000 | 30 | PENDING (entry 2026-09-28) | twin (ew) of lib_book_f_seasonality_11_20_v0_2026-09-26 |
+| lib_book_f_seasonality_11_20_v0_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_book_f_seasonality_11_20_v0_2026-09-26 |
+| lib_book_f_seasonality_11_20_v0_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_book_f_seasonality_11_20_v0_2026-09-26 |
+| lib_book_f_seasonality_11_20_v0_2026-09-26__random_same_band | $1,000,000 | 31 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_book_f_seasonality_11_20_v0_2026-09-26 |
+| lib_mom_12_1_liqw_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_mom_12_1_liqw_sealed_2026-09-26 |
+| lib_mom_12_1_liqw_sealed_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_mom_12_1_liqw_sealed_2026-09-26 |
+| lib_mom_12_1_liqw_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_mom_12_1_liqw_sealed_2026-09-26 |
+| lib_mom_12_1_liqw_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_mom_12_1_liqw_sealed_2026-09-26 |
+| lib_rev_5d_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_rev_5d_sealed_2026-09-26 |
+| lib_rev_5d_sealed_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_rev_5d_sealed_2026-09-26 |
+| lib_rev_5d_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_rev_5d_sealed_2026-09-26 |
+| lib_rev_5d_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_rev_5d_sealed_2026-09-26 |
+| lib_skill_mom_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_skill_mom_sealed_2026-09-26 |
+| lib_skill_mom_sealed_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_skill_mom_sealed_2026-09-26 |
+| lib_skill_mom_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_skill_mom_sealed_2026-09-26 |
+| lib_skill_mom_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_skill_mom_sealed_2026-09-26 |
+| lib_margin_mom_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_margin_mom_sealed_2026-09-26 |
+| lib_margin_mom_sealed_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_margin_mom_sealed_2026-09-26 |
+| lib_margin_mom_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_margin_mom_sealed_2026-09-26 |
+| lib_margin_mom_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_margin_mom_sealed_2026-09-26 |
+| lib_illiquid_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_illiquid_sealed_2026-09-26 |
+| lib_illiquid_sealed_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_illiquid_sealed_2026-09-26 |
+| lib_illiquid_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_illiquid_sealed_2026-09-26 |
+| lib_illiquid_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_illiquid_sealed_2026-09-26 |
+| lib_low_dtc_mom_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_low_dtc_mom_sealed_2026-09-26 |
+| lib_low_dtc_mom_sealed_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_low_dtc_mom_sealed_2026-09-26 |
+| lib_low_dtc_mom_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_low_dtc_mom_sealed_2026-09-26 |
+| lib_low_dtc_mom_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_low_dtc_mom_sealed_2026-09-26 |
+| lib_low_asset_growth_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_low_asset_growth_sealed_2026-09-26 |
+| lib_low_asset_growth_sealed_2026-09-26__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_low_asset_growth_sealed_2026-09-26 |
+| lib_low_asset_growth_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_low_asset_growth_sealed_2026-09-26 |
+| lib_low_asset_growth_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_low_asset_growth_sealed_2026-09-26 |
+| lib_resid_mom_12_1_large_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_resid_mom_12_1_large_sealed_2026-09-26 |
+| lib_resid_mom_12_1_large_sealed_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_resid_mom_12_1_large_sealed_2026-09-26 |
+| lib_resid_mom_12_1_large_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_resid_mom_12_1_large_sealed_2026-09-26 |
+| lib_resid_mom_12_1_large_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_resid_mom_12_1_large_sealed_2026-09-26 |
+| lib_mom_12_1_secrel_sealed_2026-09-26__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_mom_12_1_secrel_sealed_2026-09-26 |
+| lib_mom_12_1_secrel_sealed_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_mom_12_1_secrel_sealed_2026-09-26 |
+| lib_mom_12_1_secrel_sealed_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_mom_12_1_secrel_sealed_2026-09-26 |
+| lib_mom_12_1_secrel_sealed_2026-09-26__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_mom_12_1_secrel_sealed_2026-09-26 |
+| probe_equal_2026-09-26__ew | $1,000,000 | 11 | PENDING (entry 2026-09-28) | twin (ew) of probe_equal_2026-09-26 |
+| probe_equal_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of probe_equal_2026-09-26 |
+| probe_equal_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of probe_equal_2026-09-26 |
+| probe_equal_2026-09-26__random_same_band | $1,000,000 | 12 | PENDING (entry 2026-09-28) | twin (random_same_band) of probe_equal_2026-09-26 |
+| probe_inverse_vol_2026-09-26__ew | $1,000,000 | 11 | PENDING (entry 2026-09-28) | twin (ew) of probe_inverse_vol_2026-09-26 |
+| probe_inverse_vol_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of probe_inverse_vol_2026-09-26 |
+| probe_inverse_vol_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of probe_inverse_vol_2026-09-26 |
+| probe_inverse_vol_2026-09-26__random_same_band | $1,000,000 | 12 | PENDING (entry 2026-09-28) | twin (random_same_band) of probe_inverse_vol_2026-09-26 |
+| probe_bigmove_tilt_2026-09-26__ew | $1,000,000 | 11 | PENDING (entry 2026-09-28) | twin (ew) of probe_bigmove_tilt_2026-09-26 |
+| probe_bigmove_tilt_2026-09-26__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of probe_bigmove_tilt_2026-09-26 |
+| probe_bigmove_tilt_2026-09-26__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of probe_bigmove_tilt_2026-09-26 |
+| probe_bigmove_tilt_2026-09-26__random_same_band | $1,000,000 | 12 | PENDING (entry 2026-09-28) | twin (random_same_band) of probe_bigmove_tilt_2026-09-26 |
+| lib_disp_short_avoid_2026-09-27__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_disp_short_avoid_2026-09-27 |
+| lib_disp_short_avoid_2026-09-27__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_disp_short_avoid_2026-09-27 |
+| lib_disp_short_avoid_2026-09-27__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_disp_short_avoid_2026-09-27 |
+| lib_disp_short_avoid_2026-09-27__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_disp_short_avoid_2026-09-27 |
+| lib_qc395_sharpe252_above_trend_large_2026-09-27__ew | $1,000,000 | 10 | PENDING (entry 2026-09-28) | twin (ew) of lib_qc395_sharpe252_above_trend_large_2026-09-27 |
+| lib_qc395_sharpe252_above_trend_large_2026-09-27__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_qc395_sharpe252_above_trend_large_2026-09-27 |
+| lib_qc395_sharpe252_above_trend_large_2026-09-27__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_qc395_sharpe252_above_trend_large_2026-09-27 |
+| lib_qc395_sharpe252_above_trend_large_2026-09-27__random_same_band | $1,000,000 | 11 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_qc395_sharpe252_above_trend_large_2026-09-27 |
+| lib_skill_mom_2026-09-27__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_skill_mom_2026-09-27 |
+| lib_skill_mom_2026-09-27__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_skill_mom_2026-09-27 |
+| lib_skill_mom_2026-09-27__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_skill_mom_2026-09-27 |
+| lib_skill_mom_2026-09-27__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_skill_mom_2026-09-27 |
+| lib_mom_flow_ivw_2026-09-27__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_mom_flow_ivw_2026-09-27 |
+| lib_mom_flow_ivw_2026-09-27__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_mom_flow_ivw_2026-09-27 |
+| lib_mom_flow_ivw_2026-09-27__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_mom_flow_ivw_2026-09-27 |
+| lib_mom_flow_ivw_2026-09-27__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_mom_flow_ivw_2026-09-27 |
+| lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_qc470_mom252_quarterly_riskparity_2026-09-27__control |
+| lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__sector_etf | $1,000,000 | 2 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_qc470_mom252_quarterly_riskparity_2026-09-27__control |
+| lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_qc470_mom252_quarterly_riskparity_2026-09-27__control |
+| lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_qc470_mom252_quarterly_riskparity_2026-09-27__control |
+| lib_mom_no_downgrades_small_2026-09-27__control__ew | $1,000,000 | 20 | PENDING (entry 2026-09-28) | twin (ew) of lib_mom_no_downgrades_small_2026-09-27__control |
+| lib_mom_no_downgrades_small_2026-09-27__control__sector_etf | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (sector_etf) of lib_mom_no_downgrades_small_2026-09-27__control |
+| lib_mom_no_downgrades_small_2026-09-27__control__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of lib_mom_no_downgrades_small_2026-09-27__control |
+| lib_mom_no_downgrades_small_2026-09-27__control__random_same_band | $1,000,000 | 21 | PENDING (entry 2026-09-28) | twin (random_same_band) of lib_mom_no_downgrades_small_2026-09-27__control |
+| bloomberg_rehearsal_2026-09-27__random_same_band | $1,000,000 | 10 | PENDING (entry 2026-09-28) | twin (random_same_band) of bloomberg_rehearsal_2026-09-27 |
+| bloomberg_rehearsal_2026-09-27__next_k | $1,000,000 | 10 | PENDING (entry 2026-09-28) | twin (next_k) of bloomberg_rehearsal_2026-09-27 |
+| bloomberg_rehearsal_2026-09-27__iwm | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (iwm) of bloomberg_rehearsal_2026-09-27 |
+| bloomberg_rehearsal_2026-09-27__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of bloomberg_rehearsal_2026-09-27 |
+| murat_core_satellite_2026-09-27__spy | $1,000,000 | 1 | PENDING (entry 2026-09-28) | twin (spy) of murat_core_satellite_2026-09-27 |
+| murat_core_satellite_2026-09-27__random_sleeve | $1,000,000 | 12 | PENDING (entry 2026-09-28) | twin (random_sleeve) of murat_core_satellite_2026-09-27 |
 
 ### Voided before entry (1) — never graded, never counted
 

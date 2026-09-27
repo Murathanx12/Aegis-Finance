@@ -110,9 +110,23 @@ def _d(x: Any) -> Optional[str]:
     return pd.Timestamp(x).date().isoformat()
 
 
-def next_session_after(asof: str) -> str:
-    """First weekday strictly after `asof` (the llm_portfolio entry rule)."""
-    return str(np.busday_offset(np.datetime64(asof, "D"), 1, roll="forward"))
+def next_session_after(asof: str, sessions: Any = None) -> str:
+    """The entry session of a book dated `asof`, from the GRADER's own rule
+    (`llm_portfolio.entry_session`) -- one source of truth, no second calendar.
+
+    The weekday arithmetic this replaced (`busday_offset(roll="forward") + 1`)
+    rolled a Sunday-dated book to Monday and THEN added one, labelling the two
+    books frozen 2026-09-27 (Sunday) as entering Tuesday 09-29 while the grader
+    enters them at the Monday 09-28 open. If the exchange calendar cannot be
+    consulted the label says so instead of guessing.
+    """
+    from backend.services import llm_portfolio as LP
+    from backend.services import market_sessions as MS
+
+    try:
+        return LP.entry_session(asof, sessions).date().isoformat()
+    except MS.SessionCalendarUnavailable as exc:
+        return f"UNKNOWN (exchange calendar unavailable: {str(exc)[:60]})"
 
 
 # ───────────────────────────── the SPY leg ──────────────────────────────────

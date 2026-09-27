@@ -185,3 +185,62 @@ def test_a_voided_book_is_listed_not_graded(tmp_path):
     assert tw["status"] == "PENDING"
     ag = PA.aggregate(rows)
     assert ag["status_counts"]["VOIDED"] == 1 and "1 VOIDED" in ag["honest_sentence"]
+
+
+# ── entry dates come from the GRADER's rule (llm_portfolio.entry_session) ────
+# The two books frozen 2026-09-26T19:59Z (Saturday UTC; Sunday 03:59 HKT) carry
+# asof 2026-09-27, a SUNDAY. The old weekday arithmetic rolled Sunday forward to
+# Monday and then added one, labelling them Tuesday 09-29; the grader enters at
+# the Monday 09-28 open. Dates below are fixed on purpose: they are the
+# regression, not a calendar moment a fixture will drift past.
+
+def _bars_through(last: str) -> pd.DataFrame:
+    idx = pd.bdate_range("2026-09-01", last)
+    rows = []
+    for sym in ("SPY", "AAA"):
+        for i, d in enumerate(idx):
+            rows.append({"symbol": sym, "date": d, "open": 100.0 + i, "high": 101.0 + i,
+                         "low": 99.0 + i, "close": 100.5 + i, "volume": 1e7})
+    return pd.DataFrame(rows)
+
+
+def test_weekend_freeze_enters_monday_from_the_graders_rule():
+    from backend.services import llm_portfolio as LP
+    # Sunday-dated (the 09-27 books), and Saturday-dated
+    assert PA.next_session_after("2026-09-27") == "2026-09-28"
+    assert PA.next_session_after("2026-09-26") == "2026-09-28"
+    # same answer whether the grader's calendar is bars or the exchange calendar
+    sessions = _bars_through("2026-10-02")["date"].unique()
+    assert PA.next_session_after("2026-09-27", sessions) == "2026-09-28"
+    assert str(LP.entry_session("2026-09-27", sessions).date()) == "2026-09-28"
+
+
+def test_late_friday_utc_freeze_enters_monday():
+    # frozen 2026-09-25T23:30Z = Saturday 07:30 HKT: the asof date is either the
+    # Friday (UTC) or the Saturday (HKT); both enter at the Monday open, never
+    # at the Friday session that had already closed.
+    assert PA.next_session_after("2026-09-25") == "2026-09-28"
+    assert PA.next_session_after("2026-09-26") == "2026-09-28"
+
+
+def test_holiday_is_skipped_by_the_exchange_calendar():
+    # Thanksgiving 2026-11-26 is a weekday and not a session.
+    assert PA.next_session_after("2026-11-25") == "2026-11-27"
+
+
+def test_grader_and_label_agree_on_a_sunday_book():
+    """grade() is PENDING with bars through Friday and OK once the Monday bar
+    exists -- i.e. it entered on the date the label now prints."""
+    from backend.services import llm_portfolio as LP
+    rec = {"book_id": "b", "name": "sun_book", "kind": "personal", "asof": "2026-09-27",
+           "objective": "x", "n_positions": 1, "benchmark": "SPY",
+           "frozen_utc": "2026-09-26T19:59:52+00:00",
+           "positions": [{"ticker": "AAA", "weight": 1.0}]}
+    assert LP.grade(rec, _bars_through("2026-09-25"))["status"] == "PENDING"
+    assert LP.grade(rec, _bars_through("2026-09-28"))["status"] == "OK"
+    assert PA.next_session_after(rec["asof"]) == "2026-09-28"
+
+
+def test_weekday_arithmetic_is_gone():
+    import inspect
+    assert "busday_offset" not in inspect.getsource(PA.next_session_after).split('"""')[-1]

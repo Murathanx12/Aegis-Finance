@@ -33,10 +33,16 @@ Universe (default), in priority order, de-duplicated, `kind` per source:
 
 Resumable per date: a ticker with ANY card in `<ledger>/thesis_cards/<date>/`
 (including a Sonnet seed card) is skipped; `--retry-refused` re-asks REFUSED_*.
-DIGEST.md is rewritten after every card. The cap is read from the telemetry
-ledger the calls write (both purposes, today UTC) before every quest, with
-`THESIS_CARD_EST_QUEST_USD` reserved per in-flight quest; an UNKNOWN spend
-refuses the run.
+DIGEST.md is rewritten after every card. The cap reads the SAME figure the
+receipt sums: the day's cards' own costs as written (`TC.card_spend`:
+OpenClaw's `costUsd` + the synth call), with `THESIS_CARD_EST_QUEST_USD`
+reserved per in-flight quest and per card whose cost is unknown. The telemetry
+ledger is read too, as the cross-check: an UNKNOWN telemetry total refuses the
+run, and after the first flush of 5 cards both totals are printed and the run
+REFUSES if they disagree by more than 10% (2026-09-27: receipt $3.38 from
+telemetry, cards $4.33, cap checked against the lower -- "a cap that reads a
+different ledger than the writer cannot bind"). The receipt carries
+`spend_per_card_sum`, `spend_telemetry`, `spend_disagreement`.
 """
 from __future__ import annotations
 
@@ -399,7 +405,10 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
     quest_fn = quest_fn or openclaw_quest
     synth_fn = synth_fn or (lambda e, w, *, model: TC.synthesize(e, w, model=model))
     measure_synth = spend_fn is None      # real ledger -> real per-call cost
+    # `spend_fn` is the TELEMETRY total (the cross-check); the cap reads the cards.
     spend_fn = spend_fn or ledger_spend
+    flush_n = int(getattr(_cfg, "THESIS_CARD_SPEND_CHECK_AFTER", 5))
+    disagree_max = float(getattr(_cfg, "THESIS_CARD_SPEND_DISAGREE_MAX", 0.10))
     day_dir = root / day
     log_dir = day_dir / "logs"
 
@@ -423,7 +432,8 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
                            "n_skipped_existing": len(skipped),
                            "n_todo": len(todo), "cut_by_max_quests": [u["ticker"] for u in todo_cut],
                            "done": [], "refused": [], "state": "RUNNING",
-                           "forecast_rows_written": 0, "evidence": {}, "promises": {}}
+                           "forecast_rows_written": 0, "evidence": {}, "promises": {},
+                           "n_cards_written_this_run": 0, "spend_check": None}
     print(f"thesis cards {day}: universe {len(universe)}, {len(skipped)} already "
           f"carded, {len(todo)} to do (max {max_quests}), cap ${cap_usd:.2f}, "
           f"parallel {parallel}, model {model}", flush=True)
@@ -457,25 +467,61 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
     lock = threading.Lock()
     synth_lock = threading.Lock()
     inflight = {"n": 0}
-    stop = {"why": None}
+    stop = {"why": None, "state": "REFUSED_CAP"}
+
+    def card_spent() -> tuple[float, dict]:
+        """The cap's figure: the cards' own costs as written, plus `est` for
+        every quest card whose cost is unknown (UNKNOWN is not zero)."""
+        cs = TC.card_spend(day, root=root)
+        return cs["spend_per_card_sum"] + est * cs["n_quest_cost_unknown"], cs
 
     def admit() -> bool:
         with lock:
             if stop["why"]:
                 return False
-            s = spend_fn(day)
-            if s is None:
-                stop["why"] = ("today's thesis-card spend is UNKNOWN (no telemetry "
-                               "ledger, or a lower-bound total); a cap that cannot "
-                               "read cannot bind")
+            if spend_fn(day) is None:
+                stop["why"] = ("today's thesis-card spend is UNKNOWN in the telemetry "
+                               "ledger (no ledger, or a lower-bound total); the "
+                               "per-card total cannot be cross-checked, so the cap "
+                               "cannot be trusted to bind")
                 return False
+            s, _cs = card_spent()
             if s + est * (inflight["n"] + 1) > cap_usd:
-                stop["why"] = (f"spent ${s:.4f} + ${est:.2f} x {inflight['n'] + 1} "
+                stop["why"] = (f"cards spent ${s:.4f} + ${est:.2f} x {inflight['n'] + 1} "
                                f"reserved would exceed cap ${cap_usd:.2f}")
                 return False
             res["spent_usd_before_last_admit"] = round(s, 6)
             inflight["n"] += 1
             return True
+
+    def spend_check() -> None:
+        """After the first flush: print BOTH totals; refuse on disagreement.
+        Called with `lock` held."""
+        _pc, cs = card_spent()
+        try:
+            tel = spend_fn(day)
+        except Exception:                                          # noqa: BLE001
+            tel = None
+        dis = TC.spend_disagreement(cs["spend_per_card_sum"], tel)
+        tel_s = "UNKNOWN" if tel is None else f"${float(tel):.4f}"
+        dis_s = "UNKNOWN" if dis is None else f"{dis:.1%}"
+        chk = {"after_n_cards": res["n_cards_written_this_run"],
+               "spend_per_card_sum": cs["spend_per_card_sum"],
+               "spend_telemetry": None if tel is None else round(float(tel), 6),
+               "spend_disagreement": dis, "max": disagree_max,
+               "n_quest_cost_unknown": cs["n_quest_cost_unknown"], "refused": False}
+        print(f"  SPEND CHECK after {chk['after_n_cards']} cards: cards "
+              f"${cs['spend_per_card_sum']:.4f} vs telemetry {tel_s} -> disagreement "
+              f"{dis_s} (max {disagree_max:.0%})", flush=True)
+        if dis is None or dis > disagree_max:
+            chk["refused"] = True
+            stop["state"] = "REFUSED_CAP_READER_DISAGREES"
+            stop["why"] = (f"per-card spend ${cs['spend_per_card_sum']:.4f} and telemetry "
+                           f"{tel_s} disagree by {dis_s} (> {disagree_max:.0%}) after the "
+                           f"first {chk['after_n_cards']} cards; a cap that reads a "
+                           f"different ledger than the writer cannot bind -- reconcile "
+                           f"before spending more")
+        res["spend_check"] = chk
 
     def one(u: dict) -> None:
         t, kind = u["ticker"], u["kind"]
@@ -558,6 +604,9 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
                             {"ticker": t, "error": f"{type(exc).__name__}: {str(exc)[:200]}"})
                 (res["refused"] if str(card.get("verdict", "")).startswith("REFUSED_")
                  else res["done"]).append(t)
+                res["n_cards_written_this_run"] += 1
+                if res["n_cards_written_this_run"] == flush_n and res["spend_check"] is None:
+                    spend_check()
             print(f"  {t:<11} {str(card.get('verdict')):<24} conf "
                   f"{str(card.get('confidence')):<5} quest {q.get('elapsed_s')}s "
                   f"oc ${q.get('cost_usd')} synth ${synth_cost} web "
@@ -583,14 +632,22 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
             list(ex.map(one, todo))
 
     if stop["why"]:
-        res["state"] = "REFUSED_CAP"
+        res["state"] = stop["state"]
         res["why"] = stop["why"]
     else:
         res["state"] = "DONE"
     try:
-        s = spend_fn(day)
+        tel = spend_fn(day)
     except Exception:                                              # noqa: BLE001
-        s = None
+        tel = None
+    cs = TC.card_spend(day, root=root)
+    s = cs["spend_per_card_sum"]
+    res["spend_per_card_sum"] = s
+    res["spend_telemetry"] = None if tel is None else round(float(tel), 6)
+    res["spend_disagreement"] = TC.spend_disagreement(s, tel)
+    res["n_quest_cost_unknown"] = cs["n_quest_cost_unknown"]
+    res["n_synth_cost_unknown"] = cs["n_synth_cost_unknown"]
+    # The receipt's headline is the figure the cap read (the cards), not telemetry.
     res["spent_usd_today"] = s
     TC.write_digest(day, root=root)
     res["digest"] = str(day_dir / "DIGEST.md")
@@ -599,7 +656,9 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
                                                encoding="utf-8")
     print(f"{res['state']}: {len(res['done'])} carded, {len(res['refused'])} refused, "
           f"{res['forecast_rows_written']} forecast rows, "
-          f"spent today ${s}; {res.get('why') or ''}", flush=True)
+          f"spent today ${s} per cards / "
+          f"{'UNKNOWN' if tel is None else f'${float(tel):.4f}'} per telemetry "
+          f"(disagreement {res['spend_disagreement']}); {res.get('why') or ''}", flush=True)
     return res
 
 
