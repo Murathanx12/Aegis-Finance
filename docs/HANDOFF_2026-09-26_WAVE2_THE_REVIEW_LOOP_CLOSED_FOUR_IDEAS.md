@@ -249,3 +249,10 @@ on 32 blocks (cannot distinguish). HIGHEST-EV — the dress rehearsal's 10-26 re
 **Murat, when back:** delete `HANDOFF_PC` if you want the reads to stop; close the leftover Dow
 Jones tabs (or restart Chrome) and rerun the queue for the WSJ archive; Railway sleep + start
 command; relink the Railway CLI; confirm ONE mandate; fill the weekend paste inbox.
+
+## 15. 09:10 HKT 09-27 — lab restart owed
+The lab (pid 100684, started 09-26 21:02) did not finish its running job within 58 min of the STOP
+file, so the STOP was removed and it keeps running its pre-`ensure()` code: L2 typing will keep
+waiting for a model server that nothing starts. **Next session: write the STOP file when the lab is
+between jobs, wait for exit, relaunch `always_on_lab.cmd`** (the relaunch picks up `ensure()`/`touch()`
+and the health tick still has to be applied per `owed_hooks_2026-09-27.md`). CI green through `c0612f53`.
