@@ -1,0 +1,92 @@
+{
+ "receipt": "dowjones_pull.reads",
+ "source": "barrons",
+ "section": "stock_picks",
+ "column": "barrons_stock_picks",
+ "profile": "user",
+ "parent_tab": "t13",
+ "started_utc": "2026-09-26T15:37:38+00:00",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "cost_usd": 0.0,
+ "articles": [
+  {
+   "url": "https://www.barrons.com/articles/buy-brookfield-stock-price-pick-alternative-assets-energy-real-estate-85c714c1?mod=stockpicks_filter_picks",
+   "title": "Brookfield Has an Enviable Record of Boosting Profits. Its Stock Looks Cheap. - Barron's",
+   "byline": null,
+   "published_utc": "2026-09-25T05:00:00+00:00",
+   "first_seen_utc": "2026-09-26T15:51:35+00:00",
+   "chars": 7819,
+   "raw_chars": 9669,
+   "column": "barrons_stock_picks",
+   "sha": "2986b8f1eb05b24c1ff3",
+   "paywall_suspected": false,
+   "read_s": 619.72,
+   "ticker": null,
+   "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\barrons\\2026-09-26\\2986b8f1eb05b24c1ff3.json",
+   "duplicate": false
+  }
+ ],
+ "refusals": [],
+ "tab_opened": "t36",
+ "attached_to": {
+  "profile": "user",
+  "parsed": true,
+  "driver": "existing-session",
+  "transport": "chrome-mcp",
+  "running": true,
+  "pid": 129140,
+  "cdpUrl": null,
+  "cdpPort": null,
+  "executablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "attachOnly": true
+ },
+ "links_found": [
+  {
+   "text": "Brookfield Has an Enviable Record of Boosting Profits. Its Stock Looks Cheap.",
+   "url": "https://www.barrons.com/articles/buy-brookfield-stock-price-pick-alternative-assets-energy-real-estate-85c714c1?mod=stockpicks_filter_picks",
+   "has_ref": true
+  }
+ ],
+ "pages": [
+  {
+   "page": 1,
+   "what": "open_from_tab",
+   "url": "https://www.barrons.com/market-data/stocks/stock-picks",
+   "waited_s": 0.0,
+   "at": "2026-09-26T15:39:29+00:00"
+  },
+  {
+   "page": 2,
+   "what": "click",
+   "url": "https://www.barrons.com/articles/buy-brookfield-stock-price-pick-alternative-assets-energy-real-estate-85c714c1?mod=stockpicks_filter_picks",
+   "waited_s": 0.0,
+   "at": "2026-09-26T15:41:15+00:00"
+  }
+ ],
+ "in_progress": false,
+ "tab_closed": true,
+ "footprint": {
+  "verdict": "CANNOT DETERMINE: 1 gap(s), need >= 3",
+  "cv_of_gaps": null,
+  "gaps_s": [
+   106.0
+  ],
+  "pages_per_hour": 67.92,
+  "scroll_share": 1.0,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_reader\\footprint_20260926T155222Z.json"
+ },
+ "seconds_between_page_loads": [
+  106.0
+ ],
+ "throttle_waits_s": [
+  0.0,
+  0.0
+ ],
+ "throttle_targets_s": [
+  31.95,
+  39.24
+ ],
+ "n_articles": 1,
+ "chars_total": 7819,
+ "finished_utc": "2026-09-26T15:52:22+00:00"
+}

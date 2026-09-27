@@ -1,0 +1,1284 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "user",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-26T18:03:23+00:00",
+ "plan": [
+  {
+   "lane": "barrons:stock_picks",
+   "max": 10,
+   "tickers": []
+  },
+  {
+   "lane": "wsj:heard_on_the_street",
+   "max": 10,
+   "tickers": []
+  },
+  {
+   "lane": "barrons:big_money_poll",
+   "max": 3,
+   "tickers": []
+  },
+  {
+   "lane": "marketwatch:analyst_estimates",
+   "max": 40,
+   "tickers": [
+    "AARD",
+    "ABSI",
+    "AMSC",
+    "BHVN",
+    "DKNG",
+    "HUBS",
+    "KYTX",
+    "NTLA",
+    "PRCH",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "VRT",
+    "GEV",
+    "MU",
+    "TSM",
+    "HOOD",
+    "NVT",
+    "AVGO",
+    "CLS",
+    "BE",
+    "MP",
+    "LEU",
+    "CCJ",
+    "NOVT",
+    "IONQ",
+    "VRTX",
+    "WST",
+    "COGT",
+    "VKTX",
+    "AGIO",
+    "RGEN",
+    "BBIO",
+    "PRAX",
+    "AAPL",
+    "ADUS",
+    "ALG",
+    "AMZN",
+    "ARCO",
+    "AVPT"
+   ]
+  }
+ ],
+ "parent_tabs": {
+  "barrons": {
+   "tab": "chrome-mcp:8ab5bfd86096:9",
+   "label": "t9",
+   "url": "https://www.barrons.com/market-data/bonds/tmubmusd10y?countrycode=bx",
+   "how": "by_host:barrons.com"
+  },
+  "wsj": {
+   "tab": "chrome-mcp:8ab5bfd86096:14",
+   "label": "t14",
+   "url": "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38",
+   "how": "by_host:wsj.com"
+  },
+  "marketwatch": {
+   "tab": "chrome-mcp:8ab5bfd86096:17",
+   "label": "t17",
+   "url": "https://www.marketwatch.com/investing/stock/qubt/analystestimates",
+   "how": "by_host:marketwatch.com"
+  }
+ },
+ "max_pages": 69,
+ "cost_usd": 0.0,
+ "lanes": {
+  "barrons:stock_picks": {
+   "source": "barrons",
+   "section": "stock_picks",
+   "column": "barrons_stock_picks",
+   "parent_tab": "chrome-mcp:8ab5bfd86096:9",
+   "tab": "chrome-mcp:8ab5bfd86096:23",
+   "links_found": 1,
+   "skipped_already_stored": 1,
+   "articles": [],
+   "refusals": [],
+   "dropped": "EXHAUSTED",
+   "opened": {
+    "label": "t23",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:8ab5bfd86096:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:8ab5bfd86096:2",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t3",
+      "chrome-mcp:8ab5bfd86096:3",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t4",
+      "chrome-mcp:8ab5bfd86096:4",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t5",
+      "chrome-mcp:8ab5bfd86096:5",
+      "https://www.aiadvertiser.co/calendar"
+     ],
+     [
+      "t6",
+      "chrome-mcp:8ab5bfd86096:6",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t7",
+      "chrome-mcp:8ab5bfd86096:7",
+      "https://idcs-95ff50bfd6e041f3b5be372a3c4b2888.identity.oraclecloud.com/ui/v1/signin"
+     ],
+     [
+      "t8",
+      "chrome-mcp:8ab5bfd86096:8",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t9",
+      "chrome-mcp:8ab5bfd86096:9",
+      "https://www.barrons.com/market-data/bonds/tmubmusd10y?countrycode=bx"
+     ],
+     [
+      "t10",
+      "chrome-mcp:8ab5bfd86096:10",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t11",
+      "chrome-mcp:8ab5bfd86096:11",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t12",
+      "chrome-mcp:8ab5bfd86096:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t13",
+      "chrome-mcp:8ab5bfd86096:13",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t14",
+      "chrome-mcp:8ab5bfd86096:14",
+      "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38"
+     ],
+     [
+      "t15",
+      "chrome-mcp:8ab5bfd86096:15",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t16",
+      "chrome-mcp:8ab5bfd86096:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t17",
+      "chrome-mcp:8ab5bfd86096:17",
+      "https://www.marketwatch.com/investing/stock/qubt/analystestimates"
+     ],
+     [
+      "t18",
+      "chrome-mcp:8ab5bfd86096:18",
+      "https://www.wsj.com/news/archive/2026/09/25"
+     ],
+     [
+      "t19",
+      "chrome-mcp:8ab5bfd86096:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:8ab5bfd86096:20",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t21",
+      "chrome-mcp:8ab5bfd86096:21",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t22",
+      "chrome-mcp:8ab5bfd86096:22",
+      "https://platform.deepseek.com/usage"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:8ab5bfd86096:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:8ab5bfd86096:2",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t3",
+      "chrome-mcp:8ab5bfd86096:3",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t4",
+      "chrome-mcp:8ab5bfd86096:4",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t5",
+      "chrome-mcp:8ab5bfd86096:5",
+      "https://www.aiadvertiser.co/calendar"
+     ],
+     [
+      "t6",
+      "chrome-mcp:8ab5bfd86096:6",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t7",
+      "chrome-mcp:8ab5bfd86096:7",
+      "https://idcs-95ff50bfd6e041f3b5be372a3c4b2888.identity.oraclecloud.com/ui/v1/signin"
+     ],
+     [
+      "t8",
+      "chrome-mcp:8ab5bfd86096:8",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t9",
+      "chrome-mcp:8ab5bfd86096:9",
+      "https://www.barrons.com/market-data/bonds/tmubmusd10y?countrycode=bx"
+     ],
+     [
+      "t10",
+      "chrome-mcp:8ab5bfd86096:10",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t11",
+      "chrome-mcp:8ab5bfd86096:11",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t12",
+      "chrome-mcp:8ab5bfd86096:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t13",
+      "chrome-mcp:8ab5bfd86096:13",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t14",
+      "chrome-mcp:8ab5bfd86096:14",
+      "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38"
+     ],
+     [
+      "t15",
+      "chrome-mcp:8ab5bfd86096:15",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t16",
+      "chrome-mcp:8ab5bfd86096:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t17",
+      "chrome-mcp:8ab5bfd86096:17",
+      "https://www.marketwatch.com/investing/stock/qubt/analystestimates"
+     ],
+     [
+      "t18",
+      "chrome-mcp:8ab5bfd86096:18",
+      "https://www.wsj.com/news/archive/2026/09/25"
+     ],
+     [
+      "t19",
+      "chrome-mcp:8ab5bfd86096:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:8ab5bfd86096:20",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t21",
+      "chrome-mcp:8ab5bfd86096:21",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t22",
+      "chrome-mcp:8ab5bfd86096:22",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t23",
+      "chrome-mcp:8ab5bfd86096:23",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ]
+    ]
+   }
+  },
+  "wsj:heard_on_the_street": {
+   "source": "wsj",
+   "section": "heard_on_the_street",
+   "column": "wsj_heard_on_the_street",
+   "parent_tab": "chrome-mcp:8ab5bfd86096:14",
+   "tab": "chrome-mcp:8ab5bfd86096:24",
+   "links_found": 20,
+   "skipped_already_stored": 5,
+   "articles": [
+    {
+     "url": "https://www.wsj.com/finance/why-mortgage-bonds-are-at-risk-if-rates-riseand-if-they-fall-ff897dd5",
+     "title": "Why Mortgage Bonds Are at Risk if Interest Rates Rise—and if They Fall - WSJ",
+     "byline": null,
+     "published_utc": "2026-09-14T09:30:00+00:00",
+     "first_seen_utc": "2026-09-26T18:24:32+00:00",
+     "chars": 5766,
+     "raw_chars": 8577,
+     "column": "wsj_heard_on_the_street",
+     "sha": "93ea8c1ee4d99d8de0dd",
+     "paywall_suspected": false,
+     "read_s": 561.51,
+     "ticker": null,
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-26\\93ea8c1ee4d99d8de0dd.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/health/pharma/heart-disease-a-historic-strength-for-big-pharma-becomes-a-weakness-983f0062",
+     "title": "Heart Disease, a Historic Strength for Big Pharma, Becomes a Weakness - WSJ",
+     "byline": null,
+     "published_utc": "2026-09-12T09:30:00+00:00",
+     "first_seen_utc": "2026-09-26T18:45:54+00:00",
+     "chars": 5699,
+     "raw_chars": 8345,
+     "column": "wsj_heard_on_the_street",
+     "sha": "67d4f6e1cf9a36a0dd5e",
+     "paywall_suspected": false,
+     "read_s": 429.0,
+     "ticker": null,
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-26\\67d4f6e1cf9a36a0dd5e.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [],
+   "dropped": null,
+   "opened": {
+    "label": "t24",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:8ab5bfd86096:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:8ab5bfd86096:2",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t3",
+      "chrome-mcp:8ab5bfd86096:3",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t4",
+      "chrome-mcp:8ab5bfd86096:4",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t5",
+      "chrome-mcp:8ab5bfd86096:5",
+      "https://www.aiadvertiser.co/calendar"
+     ],
+     [
+      "t6",
+      "chrome-mcp:8ab5bfd86096:6",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t7",
+      "chrome-mcp:8ab5bfd86096:7",
+      "https://idcs-95ff50bfd6e041f3b5be372a3c4b2888.identity.oraclecloud.com/ui/v1/signin"
+     ],
+     [
+      "t8",
+      "chrome-mcp:8ab5bfd86096:8",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t9",
+      "chrome-mcp:8ab5bfd86096:9",
+      "https://www.barrons.com/market-data/bonds/tmubmusd10y?countrycode=bx"
+     ],
+     [
+      "t10",
+      "chrome-mcp:8ab5bfd86096:10",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t11",
+      "chrome-mcp:8ab5bfd86096:11",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t12",
+      "chrome-mcp:8ab5bfd86096:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t13",
+      "chrome-mcp:8ab5bfd86096:13",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t14",
+      "chrome-mcp:8ab5bfd86096:14",
+      "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38"
+     ],
+     [
+      "t15",
+      "chrome-mcp:8ab5bfd86096:15",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t16",
+      "chrome-mcp:8ab5bfd86096:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t17",
+      "chrome-mcp:8ab5bfd86096:17",
+      "https://www.marketwatch.com/investing/stock/qubt/analystestimates"
+     ],
+     [
+      "t18",
+      "chrome-mcp:8ab5bfd86096:18",
+      "https://www.wsj.com/news/archive/2026/09/25"
+     ],
+     [
+      "t19",
+      "chrome-mcp:8ab5bfd86096:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:8ab5bfd86096:20",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t21",
+      "chrome-mcp:8ab5bfd86096:21",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t22",
+      "chrome-mcp:8ab5bfd86096:22",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t23",
+      "chrome-mcp:8ab5bfd86096:23",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:8ab5bfd86096:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:8ab5bfd86096:2",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t3",
+      "chrome-mcp:8ab5bfd86096:3",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t4",
+      "chrome-mcp:8ab5bfd86096:4",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t5",
+      "chrome-mcp:8ab5bfd86096:5",
+      "https://www.aiadvertiser.co/calendar"
+     ],
+     [
+      "t6",
+      "chrome-mcp:8ab5bfd86096:6",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t7",
+      "chrome-mcp:8ab5bfd86096:7",
+      "https://idcs-95ff50bfd6e041f3b5be372a3c4b2888.identity.oraclecloud.com/ui/v1/signin"
+     ],
+     [
+      "t8",
+      "chrome-mcp:8ab5bfd86096:8",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t9",
+      "chrome-mcp:8ab5bfd86096:9",
+      "https://www.barrons.com/market-data/bonds/tmubmusd10y?countrycode=bx"
+     ],
+     [
+      "t10",
+      "chrome-mcp:8ab5bfd86096:10",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t11",
+      "chrome-mcp:8ab5bfd86096:11",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t12",
+      "chrome-mcp:8ab5bfd86096:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t13",
+      "chrome-mcp:8ab5bfd86096:13",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t14",
+      "chrome-mcp:8ab5bfd86096:14",
+      "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38"
+     ],
+     [
+      "t15",
+      "chrome-mcp:8ab5bfd86096:15",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t16",
+      "chrome-mcp:8ab5bfd86096:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t17",
+      "chrome-mcp:8ab5bfd86096:17",
+      "https://www.marketwatch.com/investing/stock/qubt/analystestimates"
+     ],
+     [
+      "t18",
+      "chrome-mcp:8ab5bfd86096:18",
+      "https://www.wsj.com/news/archive/2026/09/25"
+     ],
+     [
+      "t19",
+      "chrome-mcp:8ab5bfd86096:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:8ab5bfd86096:20",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t21",
+      "chrome-mcp:8ab5bfd86096:21",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t22",
+      "chrome-mcp:8ab5bfd86096:22",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t23",
+      "chrome-mcp:8ab5bfd86096:23",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t24",
+      "chrome-mcp:8ab5bfd86096:24",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ]
+    ]
+   }
+  },
+  "barrons:big_money_poll": {
+   "source": "barrons",
+   "section": "big_money_poll",
+   "column": "barrons_big_money_poll",
+   "parent_tab": "chrome-mcp:8ab5bfd86096:9",
+   "tab": "chrome-mcp:8ab5bfd86096:25",
+   "links_found": 2,
+   "skipped_already_stored": 0,
+   "articles": [
+    {
+     "url": "https://www.barrons.com/articles/barrons-big-money-poll-stock-market-outlook-5461949d",
+     "title": "Barron’s Big Money Poll: Where Investing Pros See the Stock Market Going Next - Barron's",
+     "byline": null,
+     "published_utc": "2026-04-27T12:33:00+00:00",
+     "first_seen_utc": "2026-09-26T18:31:40+00:00",
+     "chars": 12350,
+     "raw_chars": 14024,
+     "column": "barrons_big_money_poll",
+     "sha": "f9ca1f22b119b99ad5f4",
+     "paywall_suspected": false,
+     "read_s": 428.32,
+     "ticker": null,
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\barrons\\2026-09-26\\f9ca1f22b119b99ad5f4.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [],
+   "dropped": null,
+   "opened": {
+    "label": "t25",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:8ab5bfd86096:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:8ab5bfd86096:2",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t3",
+      "chrome-mcp:8ab5bfd86096:3",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t4",
+      "chrome-mcp:8ab5bfd86096:4",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t5",
+      "chrome-mcp:8ab5bfd86096:5",
+      "https://www.aiadvertiser.co/calendar"
+     ],
+     [
+      "t6",
+      "chrome-mcp:8ab5bfd86096:6",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t7",
+      "chrome-mcp:8ab5bfd86096:7",
+      "https://idcs-95ff50bfd6e041f3b5be372a3c4b2888.identity.oraclecloud.com/ui/v1/signin"
+     ],
+     [
+      "t8",
+      "chrome-mcp:8ab5bfd86096:8",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t9",
+      "chrome-mcp:8ab5bfd86096:9",
+      "https://www.barrons.com/market-data/bonds/tmubmusd10y?countrycode=bx"
+     ],
+     [
+      "t10",
+      "chrome-mcp:8ab5bfd86096:10",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t11",
+      "chrome-mcp:8ab5bfd86096:11",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t12",
+      "chrome-mcp:8ab5bfd86096:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t13",
+      "chrome-mcp:8ab5bfd86096:13",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t14",
+      "chrome-mcp:8ab5bfd86096:14",
+      "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38"
+     ],
+     [
+      "t15",
+      "chrome-mcp:8ab5bfd86096:15",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t16",
+      "chrome-mcp:8ab5bfd86096:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t17",
+      "chrome-mcp:8ab5bfd86096:17",
+      "https://www.marketwatch.com/investing/stock/qubt/analystestimates"
+     ],
+     [
+      "t18",
+      "chrome-mcp:8ab5bfd86096:18",
+      "https://www.wsj.com/news/archive/2026/09/25"
+     ],
+     [
+      "t19",
+      "chrome-mcp:8ab5bfd86096:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:8ab5bfd86096:20",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t21",
+      "chrome-mcp:8ab5bfd86096:21",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t22",
+      "chrome-mcp:8ab5bfd86096:22",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t23",
+      "chrome-mcp:8ab5bfd86096:23",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t24",
+      "chrome-mcp:8ab5bfd86096:24",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:8ab5bfd86096:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:8ab5bfd86096:2",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t3",
+      "chrome-mcp:8ab5bfd86096:3",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t4",
+      "chrome-mcp:8ab5bfd86096:4",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t5",
+      "chrome-mcp:8ab5bfd86096:5",
+      "https://www.aiadvertiser.co/calendar"
+     ],
+     [
+      "t6",
+      "chrome-mcp:8ab5bfd86096:6",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t7",
+      "chrome-mcp:8ab5bfd86096:7",
+      "https://idcs-95ff50bfd6e041f3b5be372a3c4b2888.identity.oraclecloud.com/ui/v1/signin"
+     ],
+     [
+      "t8",
+      "chrome-mcp:8ab5bfd86096:8",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t9",
+      "chrome-mcp:8ab5bfd86096:9",
+      "https://www.barrons.com/market-data/bonds/tmubmusd10y?countrycode=bx"
+     ],
+     [
+      "t10",
+      "chrome-mcp:8ab5bfd86096:10",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t11",
+      "chrome-mcp:8ab5bfd86096:11",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t12",
+      "chrome-mcp:8ab5bfd86096:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t13",
+      "chrome-mcp:8ab5bfd86096:13",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t14",
+      "chrome-mcp:8ab5bfd86096:14",
+      "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38"
+     ],
+     [
+      "t15",
+      "chrome-mcp:8ab5bfd86096:15",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t16",
+      "chrome-mcp:8ab5bfd86096:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t17",
+      "chrome-mcp:8ab5bfd86096:17",
+      "https://www.marketwatch.com/investing/stock/qubt/analystestimates"
+     ],
+     [
+      "t18",
+      "chrome-mcp:8ab5bfd86096:18",
+      "https://www.wsj.com/news/archive/2026/09/25"
+     ],
+     [
+      "t19",
+      "chrome-mcp:8ab5bfd86096:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:8ab5bfd86096:20",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t21",
+      "chrome-mcp:8ab5bfd86096:21",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t22",
+      "chrome-mcp:8ab5bfd86096:22",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t23",
+      "chrome-mcp:8ab5bfd86096:23",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t24",
+      "chrome-mcp:8ab5bfd86096:24",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t25",
+      "chrome-mcp:8ab5bfd86096:25",
+      "https://www.barrons.com/topics/big-money-poll"
+     ]
+    ]
+   }
+  },
+  "marketwatch:analyst_estimates": {
+   "source": "marketwatch",
+   "section": "analyst_estimates",
+   "column": "mw_analyst_estimates",
+   "parent_tab": "chrome-mcp:8ab5bfd86096:17",
+   "tab": "chrome-mcp:8ab5bfd86096:26",
+   "links_found": 0,
+   "skipped_already_stored": 2,
+   "articles": [
+    {
+     "url": "https://www.marketwatch.com/investing/stock/aard/analystestimates",
+     "title": "AARD | Aardvark Therapeutics Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": null,
+     "first_seen_utc": "2026-09-26T18:38:45+00:00",
+     "chars": 2373,
+     "raw_chars": 5071,
+     "column": "mw_analyst_estimates",
+     "sha": "fc3d600efccad7ecc2b6",
+     "paywall_suspected": false,
+     "read_s": 0.0,
+     "ticker": "AARD",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-26\\fc3d600efccad7ecc2b6.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [],
+   "dropped": null,
+   "opened": {
+    "label": "t26",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:8ab5bfd86096:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:8ab5bfd86096:2",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t3",
+      "chrome-mcp:8ab5bfd86096:3",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t4",
+      "chrome-mcp:8ab5bfd86096:4",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t5",
+      "chrome-mcp:8ab5bfd86096:5",
+      "https://www.aiadvertiser.co/calendar"
+     ],
+     [
+      "t6",
+      "chrome-mcp:8ab5bfd86096:6",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t7",
+      "chrome-mcp:8ab5bfd86096:7",
+      "https://idcs-95ff50bfd6e041f3b5be372a3c4b2888.identity.oraclecloud.com/ui/v1/signin"
+     ],
+     [
+      "t8",
+      "chrome-mcp:8ab5bfd86096:8",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t9",
+      "chrome-mcp:8ab5bfd86096:9",
+      "https://www.barrons.com/market-data/bonds/tmubmusd10y?countrycode=bx"
+     ],
+     [
+      "t10",
+      "chrome-mcp:8ab5bfd86096:10",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t11",
+      "chrome-mcp:8ab5bfd86096:11",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t12",
+      "chrome-mcp:8ab5bfd86096:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t13",
+      "chrome-mcp:8ab5bfd86096:13",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t14",
+      "chrome-mcp:8ab5bfd86096:14",
+      "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38"
+     ],
+     [
+      "t15",
+      "chrome-mcp:8ab5bfd86096:15",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t16",
+      "chrome-mcp:8ab5bfd86096:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t17",
+      "chrome-mcp:8ab5bfd86096:17",
+      "https://www.marketwatch.com/investing/stock/qubt/analystestimates"
+     ],
+     [
+      "t18",
+      "chrome-mcp:8ab5bfd86096:18",
+      "https://www.wsj.com/news/archive/2026/09/25"
+     ],
+     [
+      "t19",
+      "chrome-mcp:8ab5bfd86096:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:8ab5bfd86096:20",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t21",
+      "chrome-mcp:8ab5bfd86096:21",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t22",
+      "chrome-mcp:8ab5bfd86096:22",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t23",
+      "chrome-mcp:8ab5bfd86096:23",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t24",
+      "chrome-mcp:8ab5bfd86096:24",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t25",
+      "chrome-mcp:8ab5bfd86096:25",
+      "https://www.barrons.com/topics/big-money-poll"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:8ab5bfd86096:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:8ab5bfd86096:2",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t3",
+      "chrome-mcp:8ab5bfd86096:3",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t4",
+      "chrome-mcp:8ab5bfd86096:4",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t5",
+      "chrome-mcp:8ab5bfd86096:5",
+      "https://www.aiadvertiser.co/calendar"
+     ],
+     [
+      "t6",
+      "chrome-mcp:8ab5bfd86096:6",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t7",
+      "chrome-mcp:8ab5bfd86096:7",
+      "https://idcs-95ff50bfd6e041f3b5be372a3c4b2888.identity.oraclecloud.com/ui/v1/signin"
+     ],
+     [
+      "t8",
+      "chrome-mcp:8ab5bfd86096:8",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t9",
+      "chrome-mcp:8ab5bfd86096:9",
+      "https://www.barrons.com/market-data/bonds/tmubmusd10y?countrycode=bx"
+     ],
+     [
+      "t10",
+      "chrome-mcp:8ab5bfd86096:10",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t11",
+      "chrome-mcp:8ab5bfd86096:11",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t12",
+      "chrome-mcp:8ab5bfd86096:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t13",
+      "chrome-mcp:8ab5bfd86096:13",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t14",
+      "chrome-mcp:8ab5bfd86096:14",
+      "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38"
+     ],
+     [
+      "t15",
+      "chrome-mcp:8ab5bfd86096:15",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t16",
+      "chrome-mcp:8ab5bfd86096:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t17",
+      "chrome-mcp:8ab5bfd86096:17",
+      "https://www.marketwatch.com/investing/stock/qubt/analystestimates"
+     ],
+     [
+      "t18",
+      "chrome-mcp:8ab5bfd86096:18",
+      "https://www.wsj.com/news/archive/2026/09/25"
+     ],
+     [
+      "t19",
+      "chrome-mcp:8ab5bfd86096:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:8ab5bfd86096:20",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t21",
+      "chrome-mcp:8ab5bfd86096:21",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t22",
+      "chrome-mcp:8ab5bfd86096:22",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t23",
+      "chrome-mcp:8ab5bfd86096:23",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t24",
+      "chrome-mcp:8ab5bfd86096:24",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t25",
+      "chrome-mcp:8ab5bfd86096:25",
+      "https://www.barrons.com/topics/big-money-poll"
+     ],
+     [
+      "t26",
+      "chrome-mcp:8ab5bfd86096:26",
+      "https://www.marketwatch.com/investing/stock/aard/analystestimates"
+     ]
+    ]
+   }
+  }
+ },
+ "order": [
+  {
+   "turn": 0,
+   "lane": "barrons:stock_picks",
+   "what": "listing",
+   "url": "https://www.barrons.com/market-data/stocks/stock-picks",
+   "at": "2026-09-26T18:04:50+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "wsj:heard_on_the_street",
+   "what": "listing",
+   "url": "https://www.wsj.com/news/heard-on-the-street",
+   "at": "2026-09-26T18:08:02+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "barrons:big_money_poll",
+   "what": "listing",
+   "url": "https://www.barrons.com/topics/big-money-poll",
+   "at": "2026-09-26T18:11:14+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "marketwatch:analyst_estimates",
+   "what": "listing",
+   "url": "https://www.marketwatch.com/investing/stock/aard/analystestimates",
+   "at": "2026-09-26T18:14:24+00:00",
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "wsj:heard_on_the_street",
+   "url": "https://www.wsj.com/finance/why-mortgage-bonds-are-at-risk-if-rates-riseand-if-they-fall-ff897dd5",
+   "ticker": null,
+   "at": "2026-09-26T18:15:10+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 5766,
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "barrons:big_money_poll",
+   "url": "https://www.barrons.com/articles/barrons-big-money-poll-stock-market-outlook-5461949d",
+   "ticker": null,
+   "at": "2026-09-26T18:24:32+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 12350,
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/aard/analystestimates",
+   "ticker": "AARD",
+   "at": "2026-09-26T18:38:45+00:00",
+   "page_load": false,
+   "waited_s": 0.0,
+   "chars": 2373,
+   "ok": true
+  },
+  {
+   "turn": 2,
+   "lane": "wsj:heard_on_the_street",
+   "url": "https://www.wsj.com/health/pharma/heart-disease-a-historic-strength-for-big-pharma-becomes-a-weakness-983f0062",
+   "ticker": null,
+   "at": "2026-09-26T18:38:45+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 5699,
+   "ok": true
+  }
+ ],
+ "stopped": null,
+ "reattaches": 0,
+ "reattach_log": [],
+ "tab_remaps": [],
+ "orphaned_tabs": [],
+ "in_progress": true
+}

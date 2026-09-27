@@ -1,0 +1,72 @@
+{
+ "receipt": "dowjones_pull.archive",
+ "profile": "user",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-26T16:41:04+00:00",
+ "sources": [
+  "wsj"
+ ],
+ "not_built": {
+  "barrons": "no dated archive URL was seen on a live Barron's page; not guessed",
+  "marketwatch": "no dated archive URL was seen on a live MarketWatch page; not guessed"
+ },
+ "parent_tab": "t39",
+ "days": [
+  "2026-09-25",
+  "2026-09-24",
+  "2026-09-23",
+  "2026-09-22"
+ ],
+ "max_per_day": 40,
+ "max_pages": 166,
+ "per_day": {},
+ "order": [],
+ "stopped": "OpenClawRefused: REFUSED_OPERATOR_TAB_MISSING: no tab 't62' on 'user'.",
+ "cost_usd": 0.0,
+ "reattaches": 0,
+ "reattach_log": [
+  {
+   "at": "2026-09-26T16:44:41+00:00",
+   "profile": "user",
+   "attempt": 1,
+   "from_state": "stopped",
+   "start_rc": 1,
+   "start_out": "GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified.",
+   "ok": false,
+   "why": "GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified."
+  }
+ ],
+ "tab_remaps": [],
+ "orphaned_tabs": [],
+ "tab_opened": "t62",
+ "tabs_closed": {
+  "t62": false
+ },
+ "close_errors": {
+  "t62": "REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile 'user' is 'stopped', not running. It attaches to Murat's own open Chrome (chrome://inspect/#remote-debugging toggle on); Aegis never launches a br"
+ },
+ "close_recovery_error": "REFUSED_GATEWAY_DOWN: GATEWAY_NEEDS_RESTART: `start` answered 'GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified.'; the reader does not restart the gateway",
+ "tab_closed": false,
+ "footprint": {
+  "verdict": "CANNOT DETERMINE: 0 gap(s), need >= 3",
+  "cv_of_gaps": null,
+  "gaps_s": [],
+  "gap_min_s": null,
+  "pages_per_hour": null,
+  "scroll_share": null,
+  "pages": 1,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_reader\\footprint_20260926T164441Z.json"
+ },
+ "n_articles": 0,
+ "complete": false,
+ "hour_cap_waits_s": [],
+ "finished_utc": "2026-09-26T16:44:41+00:00",
+ "in_progress": false,
+ "parent_tabs": {
+  "wsj": {
+   "tab": "t39",
+   "url": "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38",
+   "how": "by_host:wsj.com"
+  }
+ }
+}

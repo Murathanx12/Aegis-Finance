@@ -60,7 +60,7 @@
    "biotech": 0.0
   }
  },
- "updated": "2026-09-26T02:50:48+00:00",
+ "updated": "2026-09-26T23:52:30+00:00",
  "schema_keys": [
   "book_size",
   "exploration_temperature",
@@ -75,12 +75,12 @@
   "source_trust",
   "watchlist_attention"
  ],
- "refreshed_utc": "2026-09-26T02:50:48+00:00",
+ "refreshed_utc": "2026-09-26T23:52:30+00:00",
  "changed_since_last": [],
  "changes": [],
  "sources": {
-  "reputation_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\reputation\\reputation_2026-09-26.json",
-  "reputation_date": "2026-09-26",
+  "reputation_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\reputation\\reputation_2026-09-27.json",
+  "reputation_date": "2026-09-27",
   "persona_receipt_section_64": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\specialists\\scoreboard_2026-09-24.json"
  },
  "observed": {

@@ -2,8 +2,8 @@
  "schema": "bridge/1",
  "date": "2026-09-27",
  "licence": "PRODUCT_EXPERIMENT",
- "generated_utc": "2026-09-26T18:37:01+00:00",
- "git_head": "615256bd",
+ "generated_utc": "2026-09-26T18:51:05+00:00",
+ "git_head": "d93f6029",
  "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-26T182110Z.json",
  "receipt_json": "backend/data/optimus/bridge/bridge_2026-09-27.json",
  "replication": "backend/data/optimus/strategy_library/replication_vectorbt_2026-09-26T164302Z.json",
@@ -171,8 +171,111 @@
   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket."
  },
  "semis_umd_regression": {
-  "status": "SMH_NOT_IN_PANEL",
-  "why": "SMH has no bars in the survivorship-free panel or the global_prices cache; the regression is not run rather than run without the sector leg"
+  "status": "OK",
+  "rows": [
+   {
+    "id": "mom_12_1_liqw",
+    "n": 31,
+    "alpha": 0.009564491442559888,
+    "t_alpha": 0.4772762690075268,
+    "beta_spy": 0.08726796856074337,
+    "beta_smh": 0.883003412952766,
+    "beta_mom": 1.0077484588822556,
+    "r2": 0.8108493147240465
+   },
+   {
+    "id": "qc372_oversold_snapback_mega",
+    "n": 31,
+    "alpha": 0.013840650493524955,
+    "t_alpha": 0.8427010291599037,
+    "beta_spy": 0.8329132521977878,
+    "beta_smh": 0.6156193893955305,
+    "beta_mom": 0.11253436684961121,
+    "r2": 0.5881755288996329
+   },
+   {
+    "id": "rd_intensity",
+    "n": 31,
+    "alpha": 0.013836953548087168,
+    "t_alpha": 0.416294287663751,
+    "beta_spy": 0.46002142119678,
+    "beta_smh": 0.8659796480255704,
+    "beta_mom": -0.008992039557339737,
+    "r2": 0.26715875607606765
+   },
+   {
+    "id": "rev_5d",
+    "n": 31,
+    "alpha": 0.021704683966207953,
+    "t_alpha": 1.429645147812195,
+    "beta_spy": 0.3681470755345166,
+    "beta_smh": 0.3549925418471641,
+    "beta_mom": 0.16356001199421658,
+    "r2": 0.4114852395231674
+   },
+   {
+    "id": "qc623_mom63_liquidity_weighted",
+    "n": 31,
+    "alpha": 0.008080006796303711,
+    "t_alpha": 0.3484066180431075,
+    "beta_spy": -0.02833564781920961,
+    "beta_smh": 0.8101963195481816,
+    "beta_mom": 0.7839434037593621,
+    "r2": 0.68195297057726
+   },
+   {
+    "id": "mom_12_1_q",
+    "n": 31,
+    "alpha": 0.022178862582069764,
+    "t_alpha": 2.184781826081791,
+    "beta_spy": -0.028308326421116525,
+    "beta_smh": 0.061054975471308004,
+    "beta_mom": 0.7856609012933916,
+    "r2": 0.8242898364335516
+   },
+   {
+    "id": "margin_mom",
+    "n": 31,
+    "alpha": 0.011123737909228496,
+    "t_alpha": 0.6556106233077635,
+    "beta_spy": 0.8859230526332306,
+    "beta_smh": 0.2647693221243672,
+    "beta_mom": 0.4403242016134348,
+    "r2": 0.5995822830729147
+   },
+   {
+    "id": "skill_mom",
+    "n": 31,
+    "alpha": 0.012305750542045675,
+    "t_alpha": 1.3335041481090546,
+    "beta_spy": 0.5037244466262015,
+    "beta_smh": 0.3507955572592479,
+    "beta_mom": 0.4459319202989416,
+    "r2": 0.8268307249550704
+   },
+   {
+    "id": "qc395_sharpe252_above_trend_large",
+    "n": 31,
+    "alpha": -0.0008489288805163668,
+    "t_alpha": -0.0563765486305347,
+    "beta_spy": 0.7935606827011292,
+    "beta_smh": 0.5135745071800938,
+    "beta_mom": 0.6082800443867239,
+    "r2": 0.7845461180624393
+   },
+   {
+    "id": "co03_reversal_in_high_margin",
+    "n": 31,
+    "alpha": 0.02229259125141436,
+    "t_alpha": 1.8382462513249027,
+    "beta_spy": 1.4915965411330694,
+    "beta_smh": -0.18408224361315906,
+    "beta_mom": 0.027099882510745354,
+    "r2": 0.3580518685444035
+   }
+  ],
+  "etf": "SMH",
+  "note": "net monthly return ~ a + b1 SPY + b2 SMH + b3 mom_12_1 (library, k=20 ew), over the 2024-26 selection-window blocks. An intercept that dies after SMH and momentum means the window rewarded a sector, not a mechanism."
  },
  "regime": {
   "status": "OK",
@@ -548,9 +651,9 @@
    "dominant_t": 4.888693929557073,
    "dominant_why": null,
    "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
-   "forward_factor_etf": "MTUM_SERIES_MISSING",
-   "forward_vs_factor_etf": "MTUM_SERIES_MISSING",
-   "factor_twin_why": "no daily bars for MTUM in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_big_dv_2026-09-26",
@@ -618,9 +721,9 @@
    "dominant_t": 7.7141121186806565,
    "dominant_why": null,
    "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
-   "forward_factor_etf": "SMH_SERIES_MISSING",
-   "forward_vs_factor_etf": "SMH_SERIES_MISSING",
-   "factor_twin_why": "no daily bars for SMH in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_mom_12_1_2026-09-26",
@@ -828,9 +931,9 @@
    "dominant_t": 6.057113112729538,
    "dominant_why": null,
    "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
-   "forward_factor_etf": "MTUM_SERIES_MISSING",
-   "forward_vs_factor_etf": "MTUM_SERIES_MISSING",
-   "factor_twin_why": "no daily bars for MTUM in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_trend_quality_2026-09-26",
@@ -1216,9 +1319,9 @@
    "dominant_t": 5.180237105961473,
    "dominant_why": null,
    "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
-   "forward_factor_etf": "SMH_SERIES_MISSING",
-   "forward_vs_factor_etf": "SMH_SERIES_MISSING",
-   "factor_twin_why": "no daily bars for SMH in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_rev_5d_sealed_2026-09-26",
@@ -1356,9 +1459,9 @@
    "dominant_t": 5.947678116913122,
    "dominant_why": null,
    "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
-   "forward_factor_etf": "MTUM_SERIES_MISSING",
-   "forward_vs_factor_etf": "MTUM_SERIES_MISSING",
-   "factor_twin_why": "no daily bars for MTUM in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_margin_mom_sealed_2026-09-26",
@@ -1566,9 +1669,9 @@
    "dominant_t": 5.353587063535217,
    "dominant_why": null,
    "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
-   "forward_factor_etf": "MTUM_SERIES_MISSING",
-   "forward_vs_factor_etf": "MTUM_SERIES_MISSING",
-   "factor_twin_why": "no daily bars for MTUM in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_low_asset_growth_sealed_2026-09-26",
@@ -1706,9 +1809,9 @@
    "dominant_t": 5.632738873309246,
    "dominant_why": null,
    "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
-   "forward_factor_etf": "SMH_SERIES_MISSING",
-   "forward_vs_factor_etf": "SMH_SERIES_MISSING",
-   "factor_twin_why": "no daily bars for SMH in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_mom_12_1_secrel_sealed_2026-09-26",
@@ -1916,9 +2019,9 @@
    "dominant_t": 4.491429885646206,
    "dominant_why": null,
    "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
-   "forward_factor_etf": "SMH_SERIES_MISSING",
-   "forward_vs_factor_etf": "SMH_SERIES_MISSING",
-   "factor_twin_why": "no daily bars for SMH in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_skill_mom_2026-09-27",
@@ -1986,9 +2089,9 @@
    "dominant_t": 5.947678116913122,
    "dominant_why": null,
    "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
-   "forward_factor_etf": "MTUM_SERIES_MISSING",
-   "forward_vs_factor_etf": "MTUM_SERIES_MISSING",
-   "factor_twin_why": "no daily bars for MTUM in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_mom_flow_ivw_2026-09-27",
@@ -2056,9 +2159,9 @@
    "dominant_t": 6.3039692060136066,
    "dominant_why": null,
    "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
-   "forward_factor_etf": "MTUM_SERIES_MISSING",
-   "forward_vs_factor_etf": "MTUM_SERIES_MISSING",
-   "factor_twin_why": "no daily bars for MTUM in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",

@@ -1,9 +1,9 @@
 {
- "t": "2026-09-26T03:57:19+00:00",
+ "t": "2026-09-27T00:02:41+00:00",
  "tag": "paper_accounts_roi",
  "account_number": "PA37CSAUFCQR",
  "equity": 999054.41,
- "last_equity": 1000000.0,
+ "last_equity": 999054.41,
  "cash": 780857.77,
  "long_market_value": 218196.64,
  "short_market_value": 0.0,
@@ -49,19 +49,19 @@
   {
    "symbol": "GOOG",
    "qty": 58.0,
-   "avg_entry_price": 342.07322,
+   "avg_entry_price": 342.072414,
    "market_value": 19782.64,
-   "unrealized_pl": -57.60676,
+   "unrealized_pl": -57.560012,
    "unrealized_plpc": -0.0029,
    "current_price": 341.08
   },
   {
    "symbol": "GOOGL",
    "qty": 58.0,
-   "avg_entry_price": 345.538483,
+   "avg_entry_price": 345.541897,
    "market_value": 19947.36,
-   "unrealized_pl": -93.872014,
-   "unrealized_plpc": -0.00468,
+   "unrealized_pl": -94.070026,
+   "unrealized_plpc": -0.00469,
    "current_price": 343.92
   },
   {
@@ -117,5 +117,5 @@
  },
  "benchmark_error": null,
  "invested_frac": 0.2184031598439168,
- "intraday_return": -0.0009455899999999406
+ "intraday_return": 0.0
 }

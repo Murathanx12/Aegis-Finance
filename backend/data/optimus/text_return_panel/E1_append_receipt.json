@@ -4,14 +4,31 @@
  "llm_spend_usd": 0.0,
  "what": "corpus rows from label_source sources only, labelled at the first session OPEN strictly after the row's PIT anchor, each minus SPY, with pit_dv_21 from the 21 sessions BEFORE the entry",
  "pit_anchor_rule": "native_stamp -> published_utc (the grade asserts the provider's own stamp is trustworthy, and anchoring a BACKFILL on first_seen would date 2015 news to today); first_seen_only -> first_seen_utc (the provider's stamp is a crawl time it may move, so only our own anchor is safe)",
- "anchors_used": {},
+ "anchors_used": {
+  "published_utc": 332,
+  "first_seen_utc": 1401
+ },
  "label_sources": [
   "alpaca_benzinga_news",
   "gdelt_doc_v2",
   "sec_edgar_8k_current_atom",
   "sec_edgar_8k_ex99_body",
   "yfinance_ticker_news",
-  "finnhub_company_news"
+  "finnhub_company_news",
+  "wsj_markets",
+  "wsj_business",
+  "wsj_world",
+  "wsj_opinion",
+  "wsj_tech",
+  "mw_topstories",
+  "mw_marketpulse",
+  "mw_realtimeheadlines",
+  "mw_bulletins",
+  "barrons_magazine",
+  "dj_reader_wsj",
+  "dj_reader_barrons",
+  "dj_reader_marketwatch",
+  "dj_digest_inbox"
  ],
  "skipped_index_state_sources": [
   "google_news_rss_en_us",
@@ -38,16 +55,34 @@
  ],
  "watermark_first_seen_utc": "2026-09-21T14:49:51+00:00",
  "funnel": {
-  "corpus_rows": 20798,
-  "no_ticker": 5771,
-  "no_symbol_bar": 8296,
-  "before_calendar": 8864,
-  "pending_future_session": 2088,
-  "no_bar_that_day": 0,
-  "dup": 1672,
-  "kept": 0
+  "corpus_rows": 8143,
+  "no_ticker": 4970,
+  "no_symbol_bar": 1,
+  "before_calendar": 0,
+  "pending_future_session": 527,
+  "no_bar_that_day": 10,
+  "dup": 998,
+  "kept": 1733
  },
- "rows_appended": 0,
+ "archive": {
+  "rows_read": 21586,
+  "archive_rows_excluded": 13443,
+  "archive_rows_excluded_by_source": {
+   "alpaca_benzinga_news": 12357,
+   "dj_reader_barrons": 2,
+   "mw_marketpulse": 30,
+   "mw_realtimeheadlines": 10,
+   "wsj_business": 20,
+   "wsj_markets": 20,
+   "wsj_opinion": 13,
+   "wsj_tech": 20,
+   "wsj_world": 20,
+   "yfinance_ticker_news": 951
+  },
+  "rows_without_stamp_pair": 3,
+  "rule": "news_registry.grade_row: pit_grade 'archive' when first_seen_utc - published_utc > 30 days; a row without both stamps cannot be proven an archive and is kept, counted in rows_without_stamp_pair"
+ },
+ "rows_appended": 1733,
  "panel_rows_before": 346415,
  "pit_violations": 0,
  "pit_violations_first_10": [],
@@ -55,10 +90,10 @@
   "panel": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
   "bars": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet"
  },
- "wall_s": 3.1,
- "written_utc": "2026-09-25T23:48:59+00:00",
- "panel_rows_after": 346415,
- "verdict": "PENDING",
- "headline": "0 rows appended from 20,798 corpus rows over 6 labelling sources; 2,088 awaiting a session that has not happened yet; 8,864 older than the first bar; 0 PIT violations",
- "next_test": "re-run after the next session's bars land to label the pending rows; 8,864 rows PREDATE the bars (the Alpaca backfill starts 2015-01-01 and prices_2025_26 starts 2025-01-02) and need older bars or a --since on the backfill; when the panel passes ~20k labelled cells over 2+ months, run N3_frozen_embedding_head and C2 against the TF-IDF and shuffled controls"
+ "wall_s": 4.78,
+ "written_utc": "2026-09-26T23:50:20+00:00",
+ "panel_rows_after": 348148,
+ "verdict": "APPENDED",
+ "headline": "1,733 rows appended from 8,143 corpus rows over 20 labelling sources (13,443 archive rows excluded); 527 awaiting a session that has not happened yet; 0 older than the first bar; 0 PIT violations",
+ "next_test": "re-run after the next session's bars land to label the pending rows; when the panel passes ~20k labelled cells over 2+ months, run N3_frozen_embedding_head and C2 against the TF-IDF and shuffled controls"
 }

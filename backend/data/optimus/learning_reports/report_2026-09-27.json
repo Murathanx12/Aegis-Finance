@@ -1,0 +1,316 @@
+{
+ "schema": "daily_learning_report/1",
+ "receipt": "daily_learning_report",
+ "date": "2026-09-27",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "generated_utc": "2026-09-27T00:03:08+00:00",
+ "base": "backend/data/optimus",
+ "read_me_first": "Every sentence is templated from receipt numbers; no LLM wrote any of it. A section with no input for this date says `no data today` or `not yet built`; nothing is borrowed from another day. Dates are UTC.",
+ "sections": {
+  "resolved": {
+   "id": "resolved",
+   "question": "What resolved today?",
+   "status": "OK",
+   "lines": [
+    "grader: 0 newly resolved; 17,484 of 26,497 records graded; 8,877 not yet due; 0 wait on a bar (`backend/data/optimus/night_factory_2026-09-27/grade_forecasts_2026-09-27.json`)",
+    "ledger rows with resolved_at=2026-09-27: n=0 (`backend/data/optimus/predictions.jsonl`)"
+   ],
+   "n_resolved_today": 0
+  },
+  "credibility": {
+   "id": "credibility",
+   "question": "Which sources gained or lost credibility?",
+   "status": "OK",
+   "lines": [
+    "source registry: no data today (no file dated 2026-09-27) (`backend/data/optimus/sources`)",
+    "no arm's held-out skill moved between reputation_2026-09-26.json and today (20 arms compared) (`backend/data/optimus/reputation/reputation_2026-09-27.json`)"
+   ]
+  },
+  "books_vs_spy": {
+   "id": "books_vs_spy",
+   "question": "Which books beat SPY?",
+   "status": "OK",
+   "lines": [
+    "frozen books: no data today (no leaderboard_2026-09-27.json)",
+    "paper accounts (own window, to date -- not a one-day number): 7 ahead of SPY, 32 behind, n=39 priced, pooled ROI -1.315% (`backend/data/optimus/paper_accounts/roi_2026-09-27.json`)",
+    "  `Cash/index by default; deviate only above a  [b109c886]` (night_books): 5.87 pp vs SPY since 2026-09-11, last mark 2026-09-25 (`backend/data/optimus/paper_accounts/roi_2026-09-27.json`)",
+    "  `Always invested - Book D's primary comparato [3b3e7049]` (night_books): 5.87 pp vs SPY since 2026-09-11, last mark 2026-09-25 (`backend/data/optimus/paper_accounts/roi_2026-09-27.json`)",
+    "  `12-1 momentum, k=12, equal weight, monthly [8dbbb73b]` (night_books): 2.01 pp vs SPY since 2026-09-11, last mark 2026-09-25 (`backend/data/optimus/paper_accounts/roi_2026-09-27.json`)"
+   ],
+   "accounts_agg": {
+    "n_ahead": 7,
+    "n_behind": 32,
+    "n": 39,
+    "roi_pct": -1.315
+   }
+  },
+  "fast_movers": {
+   "id": "fast_movers",
+   "question": "Fast movers: which did we predict, which did we miss, and why did they move?",
+   "status": "NO_DATA",
+   "lines": [
+    "no data today: no forensics/fast_movers_2026-09-27.json"
+   ]
+  },
+  "mechanism": {
+   "id": "mechanism",
+   "question": "Did AEGIS predict the mechanism?",
+   "status": "NO_DATA",
+   "lines": [
+    "no data today: no forensics/fast_movers_2026-09-27.json"
+   ]
+  },
+  "capture": {
+   "id": "capture",
+   "question": "Which strategy would have captured them?",
+   "status": "NO_DATA",
+   "lines": [
+    "no data today: no forensics/fast_movers_2026-09-27.json"
+   ]
+  },
+  "best_strategy": {
+   "id": "best_strategy",
+   "question": "Best historical / sealed / forward strategy",
+   "status": "OK",
+   "lines": [
+    "historical (HINDSIGHT, top by DSR): `mom_12_1_q` CAGR since 2020 +49.7% vs SPY +15.7%; DSR 0.198 (n=868 cells); by-year `-+++-+++++`; LOO-worst +1.52%/mo; t 2.21 on 39 blocks (`backend/data/optimus/strategy_library/leaderboard_2026-09-27.json`)",
+    "sealed: `mom_12_1_liqw` sealed_vs_spy +68.40% (`backend/data/optimus/strategy_library/leaderboard_2026-09-27.json`)",
+    "forward (best graded, own window): `Cash/index by default; deviate only above a  [b109c886]` 5.87 pp vs SPY since 2026-09-11 (last mark 2026-09-25) (`backend/data/optimus/paper_accounts/roi_2026-09-27.json`)"
+   ],
+   "library": {
+    "top1": "mom_12_1_liqw",
+    "sealed": true,
+    "key": "sealed_vs_spy"
+   }
+  },
+  "unconsumed": {
+   "id": "unconsumed",
+   "question": "Data nobody consumed",
+   "status": "OK",
+   "lines": [
+    "every receipt family and collector written on 2026-09-27 is named by a second source file",
+    "code that computes for nobody (signal_reachability orphans, `backend/tests` excluded): 24 of 461 non-test modules; 0 with no recorded reason (green); 612 test modules excluded (a test is not an orphan) (`backend/services/signal_reachability.py`)",
+    "  `backend.services.brain_queries`: OK -- the READ-ONLY query surface the Optimus MCP wraps (roadmap 11b, chunk 8, 2026-09-12). Its caller lives in the `optimus` repo: the DATA and the query layer...",
+    "  `backend.services.execution_boundary`: GAP — a precursor can be observable, correct, and unreachable, and this is what decides which. Only its own test calls it, so no live signal is currently checke...",
+    "  `backend.services.expectation_store`: AWAITS — EXPECTATION-BACKFILL-1, the first rows G4 holds. Consumer is EVENT_RESPONSE_v1 (ROADMAP_2026-08-24 §3.1).",
+    "  `backend.services.portfolio_intelligence.comparator`: OK — offline lane comparison, run attended.",
+    "  `backend.services.portfolio_intelligence.cross_asset_rotation`: OK — research module; no lane declares a cross-asset rotation arm.",
+    "  `backend.services.portfolio_intelligence.forward_ic`: OK — forward-IC analysis, run attended over collected snapshots.",
+    "  `backend.services.portfolio_intelligence.rule_evolution`: OK — offline rule-evolution research; deliberately not wired to a live decision path, since a rule that rewrites itself in production is exactly what the immuta...",
+    "  `backend.services.relative_value_labels`: AWAITS — NEURAL-RELATIVE-VALUE-1's pairwise labels. Its consumer is RELATIVE_VALUE_NN_v1 (ROADMAP_2026-08-24 §3.2), which does not exist yet. 72,495 labels over...",
+    "  `backend.services.return_model`: OK — offline quantile-return training tool; says so in line 2.",
+    "  `backend.services.scenario_forecasts`: AWAITS -- X3's contract, shipped BEFORE its two inputs exist (chunk 7, 2026-09-12). Grading needs L2's typed-event extraction over the daily corpus and pricing ...",
+    "  `backend.services.shadow_portfolios`: OK — forward shadow portfolios for finalists; attended, and the arena is the live successor to the idea.",
+    "  `backend.services.signal_optimizer`: OK — offline weight-optimisation tool, superseded by the config- driven signal engine. Kept for reference.",
+    "  `backend.services.teacher_library.adapters`: OK — offline teacher-library adapters, driven by attended research.",
+    "  `backend.services.teacher_library.adapters_13dg`: OK — 13D/G adapter; MANAGER-* is BLOCKED (13F `fdate` is a vintage stamp), so it has no live consumer by decision, not by accident.",
+    "  `backend.services.teacher_library.matched_controls`: OK — offline matched-control construction for the teacher library.",
+    "  `backend.services.thematic_momentum`: AWAITS — thematic entry logic with no book declaring it. Would be a candidate selector under the §3 programme, not a composite factor.",
+    "  `backend.services.theme_baskets`: AWAITS — point-in-time secular theme baskets; the narrative work that would consume them is LOGGED, not queued (roadmap §5).",
+    "  `backend.services.verdict_battery`: GAP — measures whether the referee kills good ideas. It has never been run against the referee it was built to check.",
+    "  `backend.services.winner_loser_factory`: GAP — matched controls are CANON rule 4 ('study losers as hard as winners'). The factory exists; no analysis path calls it.",
+    "  `backend.vendor`: OK -- VERBATIM cross-repo source, never statically imported. `backend/vendor/aat/alpha/` is a byte-identical mirror of the execution repo's `alpha/human.py` (th...",
+    "  `backend.vendor.aat.alpha`: OK -- VERBATIM cross-repo source, never statically imported. `backend/vendor/aat/alpha/` is a byte-identical mirror of the execution repo's `alpha/human.py` (th...",
+    "  `backend.vendor.aat.alpha.brains`: OK -- VERBATIM cross-repo source, never statically imported. `backend/vendor/aat/alpha/` is a byte-identical mirror of the execution repo's `alpha/human.py` (th...",
+    "  `backend.vendor.aat.alpha.brains.base`: OK -- VERBATIM cross-repo source, never statically imported. `backend/vendor/aat/alpha/` is a byte-identical mirror of the execution repo's `alpha/human.py` (th...",
+    "  `backend.vendor.aat.alpha.human`: OK -- VERBATIM cross-repo source, never statically imported. `backend/vendor/aat/alpha/` is a byte-identical mirror of the execution repo's `alpha/human.py` (th..."
+   ],
+   "unconsumed": [],
+   "orphans": [
+    "backend.services.brain_queries",
+    "backend.services.execution_boundary",
+    "backend.services.expectation_store",
+    "backend.services.portfolio_intelligence.comparator",
+    "backend.services.portfolio_intelligence.cross_asset_rotation",
+    "backend.services.portfolio_intelligence.forward_ic",
+    "backend.services.portfolio_intelligence.rule_evolution",
+    "backend.services.relative_value_labels",
+    "backend.services.return_model",
+    "backend.services.scenario_forecasts",
+    "backend.services.shadow_portfolios",
+    "backend.services.signal_optimizer",
+    "backend.services.teacher_library.adapters",
+    "backend.services.teacher_library.adapters_13dg",
+    "backend.services.teacher_library.matched_controls",
+    "backend.services.thematic_momentum",
+    "backend.services.theme_baskets",
+    "backend.services.verdict_battery",
+    "backend.services.winner_loser_factory",
+    "backend.vendor",
+    "backend.vendor.aat.alpha",
+    "backend.vendor.aat.alpha.brains",
+    "backend.vendor.aat.alpha.brains.base",
+    "backend.vendor.aat.alpha.human"
+   ],
+   "orphans_unreasoned": []
+  },
+  "compute": {
+   "id": "compute",
+   "question": "More or less compute tomorrow?",
+   "status": "NO_DATA",
+   "lines": [
+    "no data today: no LLM call stamped 2026-09-27 in the telemetry ledger (`backend/data/optimus/llm_calls_2026-09.jsonl`)"
+   ],
+   "decisions": {}
+  },
+  "decisions": {
+   "id": "decisions",
+   "question": "Decisions, plan and review today (supporting)",
+   "status": "NO_DATA",
+   "lines": [
+    "autopsy: no data today (no decisions/autopsy_2026-09-27.json)",
+    "plan: no data today (no decisions/pc_plan/2026-09-27.json)",
+    "review: no data today (no review/review_2026-09-27.json)",
+    "latest autopsy (not read as today's) (`backend/data/optimus/decisions/autopsy_2026-09-25.json`)"
+   ]
+  },
+  "learned": {
+   "id": "learned",
+   "question": "What the night learned: rules, learn runs, policy (supporting)",
+   "status": "OK",
+   "lines": [
+    "learn run `ledger_distill` x17: LEARN_DEGRADED, 0 rule(s) written -- no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24) (`backend/data/optimus/brain/learn_runs.jsonl`)"
+   ]
+  },
+  "health": {
+   "id": "health",
+   "question": "Accrual canary (supporting)",
+   "status": "OK",
+   "lines": [
+    "forecast accrual: ok -- 1618 new row(s) in the last 3 day(s) (`backend/data/optimus/predictions.jsonl`)",
+    "collector `congress`: DEGRADED -- has NEVER written a row (`backend/data/aegis_pi.db`)",
+    "collector `ark`: DEGRADED -- has NEVER written a row (`backend/data/aegis_pi.db`)",
+    "collector `13f`: DEGRADED -- 0 rows in 7d; last 2026-08-14 (`backend/data/aegis_pi.db`)",
+    "n_considered: DEGRADED -- n_considered has not moved for >= 5 contracts -- a static candidate input. n_considered [2, 2, 2, 2, 2, 2] over 2026-09-22..2026-09-27 | funnel n_candidates 25 (`backend/data/optimus/decisions`)"
+   ]
+  }
+ },
+ "closing": {
+  "works": "WHAT CURRENTLY WORKS: abs_move_exceeds h=1: the free sigma_63 vol prior +10.01% vs the live LLM arms' posterior +5.46% on the same n=775 held-out rows (prior wins 7 of 8 days) -- the prior works and the LLM does not add (best LLM cell `investigator:C_tools_only` +7.63% vs climatology, n=156; on its own rows LLM +7.64% vs prior +8.90%) (`backend/data/optimus/reputation/reputation_2026-09-27.json`, bars `backend/data/optimus/prices_2025_26/bars.parquet`); abs_move_exceeds h=5: the free sigma_63 vol prior +5.92% vs the live LLM arms' posterior +2.62% on the same n=775 held-out rows (prior wins 6 of 8 days) -- the prior works and the LLM does not add; only `investigator:D_all` beats it on its own rows, LLM +8.99% vs prior +7.66% (n=155; best of 5 live arms, a selection; prior wins 5 of 8 days) (`backend/data/optimus/reputation/reputation_2026-09-27.json`, bars `backend/data/optimus/prices_2025_26/bars.parquet`).",
+  "does_not": "WHAT DOES NOT: LLM direction: the live arms' `return_sign` h=5 held out -7.91% (n=780 rows, pooled later half vs the training-half base rate); worst live cell `investigator:C_tools_only` -11.73% (n=156) (`backend/data/optimus/reputation/reputation_2026-09-27.json`); the LLM's evidence step on magnitude h=1: posterior +5.46% vs its own stated prior +5.74% on n=775 held-out rows (reading the dossier lowered skill); the LLM's evidence step on magnitude h=5: posterior +2.62% vs its own stated prior +7.47% on n=775 held-out rows (reading the dossier lowered skill); the paper accounts: 32 of 39 behind SPY over their own windows, pooled ROI -1.315% (n=39 accounts, `backend/data/optimus/paper_accounts/roi_2026-09-27.json`).",
+  "next_experiment": "THE SINGLE HIGHEST-EV NEXT EXPERIMENT: none eligible -- no derived ranking yet (no data today or already running: `PROBE_WEIGHTING_3WAYS`: already running: frozen book(s) probe_bigmove_tilt_2026-09-26, probe_bigmove_tilt_2026-09-26__ew, probe_bigmove_tilt_2026-09-26__random_same_band; `FORMULA_VS_LLM_RESIDUAL`: no data today: no u_forecast spend today; `INVESTIGATOR_DIRECTION_CALIBRATION`: already running: 428 investigator `beats_benchmark` rows made since 2026-09-24 (u_forecast writes them daily whatever this report says)).",
+  "experiments": [
+   {
+    "id": "PROBE_WEIGHTING_3WAYS",
+    "what": "the same PROBE names weighted three ways (equal / inverse-sigma_63 / big-predicted-|move| tilt), frozen as $1M twins; arm differences regressed on SPY, IWM, MTUM, USMV",
+    "eligible": false,
+    "p_used": 0.5,
+    "capital_usd": 1000000.0,
+    "delta": 0.03375,
+    "years": 1.0,
+    "value_usd": 33750.0,
+    "cost_usd": 0.0,
+    "ev_usd": 16875.0,
+    "power": {
+     "sd_p": 0.1606925401005968,
+     "base_rate": 0.14871794871794872,
+     "n_eff": 4068.75,
+     "ceiling": 0.20396449214424847,
+     "t_max": 14.403823515059388,
+     "power": 1.0
+    },
+    "why": "already running: frozen book(s) probe_bigmove_tilt_2026-09-26, probe_bigmove_tilt_2026-09-26__ew, probe_bigmove_tilt_2026-09-26__random_same_band",
+    "delta_source": "0.5 x gamma 3 x (0.25^2 - 0.20^2): inverse-sigma cuts book vol 25% -> 20% at the same mean (reviewer H+I §5; USMV regression tests it)",
+    "measured": "positive",
+    "capital_source": "PC-PAPER capital $1,000,000 (`backend/data/optimus/paper_accounts/roi_2026-09-27.json`)"
+   },
+   {
+    "id": "FORMULA_VS_LLM_RESIDUAL",
+    "what": "write the sigma_63 prior as its own `formula:vol63` arm and grade the LLM on Brier improvement OVER it on the next 6 date blocks",
+    "eligible": false,
+    "p_used": 0.45439058036037283,
+    "capital_usd": null,
+    "delta": 1.0,
+    "years": 1.0,
+    "value_usd": null,
+    "cost_usd": 0.0,
+    "ev_usd": null,
+    "power": {
+     "t_max": 3.2932868769347134,
+     "power": 0.9087811607207457,
+     "ceiling": null,
+     "sd_p": null,
+     "n_eff": 6,
+     "note": "per-day Brier(LLM) - Brier(prior): mean +0.0098, sd 0.0073, 8 days"
+    },
+    "why": "no data today: no u_forecast spend today",
+    "delta_source": "the whole magnitude budget is freed if the prior wins",
+    "measured": "positive",
+    "capital_source": "no u_forecast spend today"
+   },
+   {
+    "id": "INVESTIGATOR_DIRECTION_CALIBRATION",
+    "what": "calibrate the investigator's DIRECTION rows over 21 sessions",
+    "eligible": false,
+    "p_used": 0.020178298109478743,
+    "capital_usd": 1000000.0,
+    "delta": 0.01,
+    "years": 1.0,
+    "value_usd": 10000.0,
+    "cost_usd": 0.0,
+    "ev_usd": 201.78298109478743,
+    "power": {
+     "sd_p": 0.023429959081801614,
+     "base_rate": 0.5,
+     "n_eff": 570.6666666666666,
+     "ceiling": 0.0021958519302995917,
+     "t_max": 0.5597096348906354,
+     "power": 0.08071319243791497
+    },
+    "why": "already running: 428 investigator `beats_benchmark` rows made since 2026-09-24 (u_forecast writes them daily whatever this report says)",
+    "delta_source": "upper bound: a direction signal this flat is worth <= 1%/yr (reviewer H+I §2.2)",
+    "measured": "non_positive",
+    "capital_source": "PC-PAPER capital $1,000,000 (`backend/data/optimus/paper_accounts/roi_2026-09-27.json`)"
+   }
+  ],
+  "vol_prior": {
+   "1": {
+    "observable": "abs_move_exceeds",
+    "horizon": 1,
+    "arm": "*",
+    "window": 63,
+    "formula": "p = 2(1 - Phi(thr / (sigma_63 * sqrt(h))))",
+    "split": "pooled rows, later half by made_at held out; climatology = training-half base rate",
+    "status": "OK",
+    "n_rows": 1560,
+    "n_heldout": 775,
+    "n_heldout_no_sigma": 5,
+    "heldout_from": "2026-08-24",
+    "heldout_to": "2026-08-27",
+    "climatology_base_rate": 0.14871794871794872,
+    "skill_llm": 0.05463180957912339,
+    "skill_prior": 0.1000753345927533,
+    "skill_llm_own_prior": 0.05736188864112468,
+    "winner": "prior",
+    "days_prior_wins": 7,
+    "n_days": 8,
+    "p_spread_llm": 0.18608280238565902,
+    "p_spread_prior": 0.1606925401005968
+   },
+   "5": {
+    "observable": "abs_move_exceeds",
+    "horizon": 5,
+    "arm": "*",
+    "window": 63,
+    "formula": "p = 2(1 - Phi(thr / (sigma_63 * sqrt(h))))",
+    "split": "pooled rows, later half by made_at held out; climatology = training-half base rate",
+    "status": "OK",
+    "n_rows": 1560,
+    "n_heldout": 775,
+    "n_heldout_no_sigma": 5,
+    "heldout_from": "2026-08-24",
+    "heldout_to": "2026-08-27",
+    "climatology_base_rate": 0.23333333333333334,
+    "skill_llm": 0.026236715963410706,
+    "skill_prior": 0.05918810531192842,
+    "skill_llm_own_prior": 0.07472789650550093,
+    "winner": "prior",
+    "days_prior_wins": 6,
+    "n_days": 8,
+    "p_spread_llm": 0.2061499931124278,
+    "p_spread_prior": 0.17421295067753517
+   }
+  }
+ }
+}
