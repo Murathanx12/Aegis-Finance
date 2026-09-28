@@ -56,6 +56,23 @@ def _clean_cache():
     OC.invalidate_profile_cache()
 
 
+@pytest.fixture(autouse=True)
+def _dedicated_instance_proven(monkeypatch):
+    """LANE O (2026-09-28): every action on the dedicated profile first PROVES
+    the Chrome behind it is the dedicated one. The real prover talks to
+    127.0.0.1:18802 and PowerShell; here it is a fake that passes and records
+    each call. `test_lane_o_muratclaw.py` tests the prover itself, both ways."""
+    calls: list = []
+    monkeypatch.setattr(OC, "_PROVER", lambda **k: calls.append(k) or {"ok": True, "pid": 1})
+    # these tests fake the CLI subprocess, so they pin the CLI transport (the
+    # dedicated profile defaults to HTTP since 2026-09-28; the HTTP route's
+    # guard parity is pinned in test_lane_o_muratclaw.py)
+    monkeypatch.setenv(OC.TRANSPORT_ENV, "cli")
+    OC._SNAPSHOTS.clear()
+    yield calls
+    OC._SNAPSHOTS.clear()
+
+
 @pytest.fixture
 def clock(monkeypatch):
     now = {"t": 1000.0}
@@ -69,8 +86,9 @@ def test_ten_verbs_cost_one_profiles_call_not_ten(monkeypatch, clock):
     results = []
     for verb in ("navigate", "wait", "snapshot", "scrollintoview", "scrollintoview",
                  "wait", "press", "snapshot", "wait", "screenshot"):
-        args = ("https://example.com/a",) if verb == "navigate" else ()
-        results.append(OC.browser(verb, *args, profile_name="muratclaw"))
+        args = (("https://www.wsj.com/news/a",) if verb == "navigate" else
+                ("PageDown",) if verb == "press" else ())
+        results.append(OC.browser(verb, *args, profile_name="muratclaw", target_id="t20"))
         clock["t"] += 5.0                      # 45 s across the run: inside the TTL
     c = fake.count()
     print(f"\nprofiles calls for 10 verbs: {c['browser profiles']} (was 10 before the cache)")
@@ -87,29 +105,32 @@ def test_without_the_cache_it_would_have_been_ten(monkeypatch, clock):
     monkeypatch.setattr(OC, "_run", fake)
     monkeypatch.setattr(OC, "OPENCLAW_PROFILE_ASSERT_TTL_S", 0.0)
     for _ in range(10):
-        OC.browser("wait", "--time", "1000", profile_name="muratclaw")
+        OC.browser("wait", "--time", "1000", profile_name="muratclaw", target_id="t20")
     assert fake.count()["browser profiles"] == 10
 
 
 def test_the_ttl_expires(monkeypatch, clock):
     fake = FakeCLI()
     monkeypatch.setattr(OC, "_run", fake)
-    OC.browser("snapshot", profile_name="muratclaw")
+    OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
     clock["t"] += OC.OPENCLAW_PROFILE_ASSERT_TTL_S - 1
-    OC.browser("snapshot", profile_name="muratclaw")
+    OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
     assert fake.count()["browser profiles"] == 1
     clock["t"] += 2
-    OC.browser("snapshot", profile_name="muratclaw")
+    OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
     assert fake.count()["browser profiles"] == 2
 
 
 def test_the_cache_is_per_profile_name(monkeypatch, clock):
     fake = FakeCLI()
     monkeypatch.setattr(OC, "_run", fake)
+    # a second allowed name (the shipped config has ONE; `user` refuses by name)
+    monkeypatch.setattr(OC._config, "OPENCLAW_ALLOWED_PROFILES", ("muratclaw", "spare"))
+    fake.profiles_out = PROFILES_OUT + "spare: stopped\n"
     OC.assert_profile(name="muratclaw")
-    OC.assert_profile(name="user")
+    OC.assert_profile(name="spare")
     OC.assert_profile(name="muratclaw")
-    OC.assert_profile(name="user")
+    OC.assert_profile(name="spare")
     assert fake.count()["browser profiles"] == 2
 
 
@@ -118,37 +139,37 @@ def test_a_failed_assertion_is_never_cached(monkeypatch, clock):
     monkeypatch.setattr(OC, "_run", fake)
     for _ in range(3):
         with pytest.raises(OC.OpenClawRefused, match="REFUSED_BROWSER_PROFILE_UNAVAILABLE"):
-            OC.browser("snapshot", profile_name="muratclaw")
+            OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
     assert fake.count()["browser profiles"] == 3
     # ... and once the profile exists again the next verb sees it at once.
     fake.profiles_out = PROFILES_OUT
-    assert OC.browser("snapshot", profile_name="muratclaw")["rc"] == 0
+    assert OC.browser("snapshot", profile_name="muratclaw", target_id="t20")["rc"] == 0
 
 
 def test_a_stopped_operator_profile_refuses_and_is_rechecked(monkeypatch, clock):
     fake = FakeCLI()
     monkeypatch.setattr(OC, "_run", fake)
-    OC.browser("snapshot", profile_name="user", target_id="t20")
-    fake.profiles_out = PROFILES_OUT.replace("user: running", "user: stopped")
+    OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
+    fake.profiles_out = PROFILES_OUT.replace("muratclaw: running", "muratclaw: stopped")
     # Cached: the stop is not seen until something invalidates or the TTL runs.
-    OC.browser("snapshot", profile_name="user", target_id="t20")
+    OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
     assert fake.count()["browser profiles"] == 1
-    OC.invalidate_profile_cache("user")
+    OC.invalidate_profile_cache("muratclaw")
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_BROWSER_PROFILE_UNAVAILABLE"):
-        OC.browser("snapshot", profile_name="user", target_id="t20")
-    assert "user" not in OC._PROFILE_CACHE
+        OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
+    assert "muratclaw" not in OC._PROFILE_CACHE
 
 
 def test_a_missing_operator_tab_invalidates_and_the_next_verb_rechecks(monkeypatch, clock):
     fake = FakeCLI()
     monkeypatch.setattr(OC, "_run", fake)
-    OC.browser("snapshot", profile_name="user", target_id="t20")
-    OC.browser("snapshot", profile_name="user", target_id="t20")
+    OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
+    OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
     assert fake.count()["browser profiles"] == 1
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_TAB_MISSING"):
-        OC.browser("snapshot", profile_name="user", target_id="t99")
-    assert "user" not in OC._PROFILE_CACHE
-    r = OC.browser("snapshot", profile_name="user", target_id="t20")
+        OC.browser("snapshot", profile_name="muratclaw", target_id="t99")
+    assert "muratclaw" not in OC._PROFILE_CACHE
+    r = OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
     assert r["profile_check"] == "checked"
     assert fake.count()["browser profiles"] == 2
 
@@ -156,8 +177,8 @@ def test_a_missing_operator_tab_invalidates_and_the_next_verb_rechecks(monkeypat
 def test_a_failed_verb_invalidates(monkeypatch, clock):
     fake = FakeCLI(verb_rc=1)
     monkeypatch.setattr(OC, "_run", fake)
-    OC.browser("snapshot", profile_name="muratclaw")
-    OC.browser("snapshot", profile_name="muratclaw")
+    OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
+    OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
     assert fake.count()["browser profiles"] == 2
 
 
@@ -191,15 +212,15 @@ def test_health_always_checks_fresh(monkeypatch, clock):
     # health(): one fresh assert_profile + one informative profiles() each.
     assert fake.count()["browser profiles"] == 1 + 2 * 2
     # The messaging-channel check runs once per health(), never per verb.
-    OC.browser("snapshot", profile_name="muratclaw")
+    OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
     assert fake.count()["channels list"] == 2
 
 
 def test_read_text_carries_seconds_and_uses_the_cache(monkeypatch, clock):
     fake = FakeCLI()
     monkeypatch.setattr(OC, "_run", fake)
-    a = OC.read_text("t1", profile_name="muratclaw")
-    b = OC.read_text("t1", profile_name="muratclaw")
+    a = OC.read_text("t20", profile_name="muratclaw")
+    b = OC.read_text("t20", profile_name="muratclaw")
     assert (a["profile_check"], b["profile_check"]) == ("checked", "cached")
     assert isinstance(a["seconds"], float)
     assert fake.count()["browser profiles"] == 1
@@ -258,13 +279,18 @@ class OperatorCLI(FakeCLI):
         n = str(tid).rsplit(":", 1)[-1] if tid else None
         if verb == "browser navigate":            # ... navigate <url> --target-id <tid>
             self.urls[n] = args[args.index("navigate") + 1]
+        if verb == "browser snapshot":
+            return subprocess.CompletedProcess(args, 0, (
+                '- link "Markets news and analysis today" [ref=e7] '
+                '[url=https://www.wsj.com/news/markets]\n'
+                '- button "Subscribe Now" [ref=e8]\n'), "")
         if verb == "browser evaluate":
             if "window.open" in args[-1]:
                 self.urls[str(max(int(k) for k in self.urls) + 1)] = WSJ_A
                 return subprocess.CompletedProcess(args, 0, "{}", "")
             return subprocess.CompletedProcess(args, 0, json.dumps(
                 {"ok": True, "result": {"url": self.urls.get(n), "title": "T",
-                                        "text": "body"}}), "")
+                                        "text": "body text " * 40}}), "")  # >= PAGE_MIN_CHARS: a real page, not BLANK (2026-09-28 page classes)
         return subprocess.CompletedProcess(args, 0, "ok", "")
 
 
@@ -287,13 +313,13 @@ def _clean_tab_cache():
 def _read_article_sequence(fake: OperatorCLI) -> None:
     """navigate, wait, snapshot, scrollintoview x2, evaluate (read_text)."""
     tab = fake.handle("1")
-    OC.browser("navigate", WSJ_A, profile_name="user", target_id=tab)
-    OC.browser("wait", "--time", "3500", profile_name="user", target_id=tab)
-    OC.browser("snapshot", "--format", "ai", profile_name="user", target_id=tab)
-    OC.browser("scrollintoview", "e12", profile_name="user", target_id=tab)
-    OC.browser("scrollintoview", "e40", profile_name="user", target_id=tab)
-    got = OC.read_text(tab, profile_name="user")
-    assert got["url"] == WSJ_A and got["text"] == "body"
+    OC.browser("navigate", WSJ_A, profile_name="muratclaw", target_id=tab)
+    OC.browser("wait", "--time", "3500", profile_name="muratclaw", target_id=tab)
+    OC.browser("snapshot", "--format", "ai", profile_name="muratclaw", target_id=tab)
+    OC.browser("scrollintoview", "e12", profile_name="muratclaw", target_id=tab)
+    OC.browser("scrollintoview", "e40", profile_name="muratclaw", target_id=tab)
+    got = OC.read_text(tab, profile_name="muratclaw")
+    assert got["url"] == WSJ_A and got["text"] == "body text " * 40
 
 
 def test_a_read_article_sequence_costs_two_listings(monkeypatch, clock):
@@ -324,29 +350,37 @@ def test_without_the_tab_cache_the_same_sequence_lists_seven_times(monkeypatch, 
     assert fake.count()["browser tabs"] >= 6
 
 
-def test_scroll_press_does_not_reread_but_navigate_click_and_enter_do(monkeypatch, clock):
+def test_scroll_press_does_not_reread_but_navigate_and_click_do_and_enter_refuses(
+        monkeypatch, clock):
     fake = OperatorCLI()
     _install(monkeypatch, fake)
     tab = fake.handle("1")
-    r = OC.browser("press", "PageDown", profile_name="user", target_id=tab)
+    r = OC.browser("press", "PageDown", profile_name="muratclaw", target_id=tab)
     assert "tab_url_after" not in r
+    # 2026-09-28, the owner's rules: Enter can submit a form -- refused, and
+    # refused BEFORE the CLI (read-only: scroll keys only)
+    n0 = len(fake.calls)
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_PRESS_KEY"):
+        OC.browser("press", "Enter", profile_name="muratclaw", target_id=tab)
+    assert len(fake.calls) == n0
+    OC.browser("snapshot", "--format", "ai", profile_name="muratclaw", target_id=tab)
     OC.reset_cli_ledger()
-    for verb, arg in (("click", "e7"), ("press", "Enter"), ("navigate", WSJ_A)):
-        r = OC.browser(verb, arg, profile_name="user", target_id=tab)
+    for verb, arg in (("click", "e7"), ("navigate", WSJ_A)):
+        r = OC.browser(verb, arg, profile_name="muratclaw", target_id=tab)
         assert r["tab_url_after"] and r["left_allowed_hosts"] is False
-    assert OC.cli_ledger()["cache"]["url_rereads"] == 3
+    assert OC.cli_ledger()["cache"]["url_rereads"] == 2
 
 
 def test_the_tab_cache_expires_after_its_ttl(monkeypatch, clock):
     fake = OperatorCLI()
     _install(monkeypatch, fake)
     tab = fake.handle("1")
-    OC.browser("wait", "--time", "1", profile_name="user", target_id=tab)
+    OC.browser("wait", "--time", "1", profile_name="muratclaw", target_id=tab)
     clock["t"] += OC.OPENCLAW_TABS_TTL_S - 1
-    OC.browser("wait", "--time", "1", profile_name="user", target_id=tab)
+    OC.browser("wait", "--time", "1", profile_name="muratclaw", target_id=tab)
     assert fake.count()["browser tabs"] == 1
     clock["t"] += 2
-    OC.browser("wait", "--time", "1", profile_name="user", target_id=tab)
+    OC.browser("wait", "--time", "1", profile_name="muratclaw", target_id=tab)
     assert fake.count()["browser tabs"] == 2
 
 
@@ -354,30 +388,30 @@ def test_a_session_nonce_change_relists_and_is_counted(monkeypatch, clock):
     fake = OperatorCLI(nonce="aaa")
     _install(monkeypatch, fake)
     OC.reset_cli_ledger()
-    OC.browser("wait", "--time", "1", profile_name="user", target_id=fake.handle("1"))
+    OC.browser("wait", "--time", "1", profile_name="muratclaw", target_id=fake.handle("1"))
     assert fake.count()["browser tabs"] == 1
     # The Chrome MCP session resets: every id is reissued under a new nonce.
     fake.nonce = "bbb"
     # A handle from the NEW session is not in the cached (aaa) listing: re-list.
-    OC.browser("wait", "--time", "1", profile_name="user", target_id=fake.handle("1"))
+    OC.browser("wait", "--time", "1", profile_name="muratclaw", target_id=fake.handle("1"))
     assert fake.count()["browser tabs"] == 2
     assert OC.cli_ledger()["cache"]["tabs_nonce_changes"] >= 1
     # An OLD handle refuses by name from a fresh listing, never from the cache.
     with pytest.raises(OC.OpenClawRefused, match=r"session 'aaa' is gone"):
-        OC.browser("wait", "--time", "1", profile_name="user", target_id="chrome-mcp:aaa:1")
-    assert "user" not in OC._TABS_CACHE
+        OC.browser("wait", "--time", "1", profile_name="muratclaw", target_id="chrome-mcp:aaa:1")
+    assert "muratclaw" not in OC._TABS_CACHE
 
 
 def test_a_refusal_naming_a_tab_invalidates_the_listing(monkeypatch, clock):
     fake = OperatorCLI()
     _install(monkeypatch, fake)
-    OC.browser("wait", "--time", "1", profile_name="user", target_id=fake.handle("1"))
-    assert "user" in OC._TABS_CACHE
+    OC.browser("wait", "--time", "1", profile_name="muratclaw", target_id=fake.handle("1"))
+    assert "muratclaw" in OC._TABS_CACHE
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_TAB_MISSING"):
-        OC.browser("wait", "--time", "1", profile_name="user", target_id=fake.handle("9"))
-    assert "user" not in OC._TABS_CACHE
+        OC.browser("wait", "--time", "1", profile_name="muratclaw", target_id=fake.handle("9"))
+    assert "muratclaw" not in OC._TABS_CACHE
     n = fake.count()["browser tabs"]
-    OC.browser("wait", "--time", "1", profile_name="user", target_id=fake.handle("1"))
+    OC.browser("wait", "--time", "1", profile_name="muratclaw", target_id=fake.handle("1"))
     assert fake.count()["browser tabs"] == n + 1
 
 
@@ -386,27 +420,27 @@ def test_a_cached_off_host_url_is_rechecked_fresh_before_refusing(monkeypatch, c
     _install(monkeypatch, fake)
     tab = fake.handle("1")
     fake.urls["1"] = "https://mail.google.com/mail/u/0"
-    OC.tabs(profile_name="user")                       # cache: tab 1 off the hosts
+    OC.tabs(profile_name="muratclaw")                       # cache: tab 1 off the hosts
     fake.urls["1"] = "https://www.wsj.com/news/markets"  # ... it came back
-    OC.browser("wait", "--time", "1", profile_name="user", target_id=tab)   # no refusal
+    OC.browser("wait", "--time", "1", profile_name="muratclaw", target_id=tab)   # no refusal
     fake.urls["1"] = "https://mail.google.com/mail/u/0"
-    OC.invalidate_tabs_cache("user")
+    OC.invalidate_tabs_cache("muratclaw")
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_TAB_HOST"):
-        OC.browser("wait", "--time", "1", profile_name="user", target_id=tab)
-    assert "user" not in OC._TABS_CACHE
+        OC.browser("wait", "--time", "1", profile_name="muratclaw", target_id=tab)
+    assert "muratclaw" not in OC._TABS_CACHE
 
 
 def test_close_and_start_invalidate_the_listing(monkeypatch, clock):
     fake = OperatorCLI()
     _install(monkeypatch, fake)
-    OC.tabs(profile_name="user")
-    assert "user" in OC._TABS_CACHE
+    OC.tabs(profile_name="muratclaw")
+    assert "muratclaw" in OC._TABS_CACHE
     OC._OPENED_TABS.add(fake.handle("2"))
     try:
-        OC.browser("close", profile_name="user", target_id=fake.handle("2"))
+        OC.browser("close", profile_name="muratclaw", target_id=fake.handle("2"))
     finally:
         OC._OPENED_TABS.discard(fake.handle("2"))
-    assert "user" not in OC._TABS_CACHE
+    assert "muratclaw" not in OC._TABS_CACHE
 
 
 def test_a_reattach_start_drops_the_listing(monkeypatch, clock):
@@ -421,7 +455,7 @@ def test_a_reattach_start_drops_the_listing(monkeypatch, clock):
 def test_open_from_tab_lists_fresh_and_polls_fresh(monkeypatch, clock):
     fake = OperatorCLI()
     _install(monkeypatch, fake)
-    OC.tabs(profile_name="user")          # a warm cache that cannot hold the new tab
+    OC.tabs(profile_name="muratclaw")          # a warm cache that cannot hold the new tab
     before = fake.count()["browser tabs"]
     out = OC.open_from_tab(fake.handle("1"), WSJ_A, sleep_fn=lambda s: None)
     try:
@@ -430,7 +464,7 @@ def test_open_from_tab_lists_fresh_and_polls_fresh(monkeypatch, clock):
         assert fake.count()["browser tabs"] - before == 2
         # the post-open listing is what stays cached: a verb on the new tab hits it
         n = fake.count()["browser tabs"]
-        OC.browser("wait", "--time", "1", profile_name="user", target_id=out["new_tab"])
+        OC.browser("wait", "--time", "1", profile_name="muratclaw", target_id=out["new_tab"])
         assert fake.count()["browser tabs"] == n
     finally:
         OC._OPENED_TABS.discard(fake.handle("3"))
@@ -448,7 +482,7 @@ def test_the_reader_footprint_carries_the_cli_ledger(monkeypatch, clock, tmp_pat
     def sleep(s):
         now["t"] += timedelta(seconds=s)
     thr = WR.Throttle(tmp_path / "thr.log", now_fn=lambda: now["t"], sleep_fn=sleep, seed=3)
-    rd = WR.Reader(profile="user", tab=fake.handle("1"), throttle=thr, lock=False)
+    rd = WR.Reader(profile="muratclaw", tab=fake.handle("1"), throttle=thr, lock=False)
     OC.reset_cli_ledger()
     rd._cli0 = rd.cli_ledger()
     art = rd.read_article(WSJ_A, store=False)
@@ -511,7 +545,7 @@ def blank_cli(monkeypatch):
 
 def test_navigate_from_our_blank_tab_to_an_allowed_host_passes(blank_cli):
     tab = blank_cli.handle("3")
-    out = OC.browser("navigate", WSJ_A, profile_name="user", target_id=tab)
+    out = OC.browser("navigate", WSJ_A, profile_name="muratclaw", target_id=tab)
     assert out["rc"] == 0 and out["tab_url_before"] == BLANK and out["own_blank_tab"]
     assert blank_cli.urls["3"] == WSJ_A
     # the landed URL is re-read from a fresh listing, and it is on the hosts
@@ -521,9 +555,9 @@ def test_navigate_from_our_blank_tab_to_an_allowed_host_passes(blank_cli):
 def test_navigate_from_our_blank_tab_to_a_foreign_host_refuses(blank_cli):
     tab = blank_cli.handle("3")
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_HOST"):
-        OC.browser("navigate", "https://example.com/x", profile_name="user", target_id=tab)
+        OC.browser("navigate", "https://example.com/x", profile_name="muratclaw", target_id=tab)
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_NAVIGATE"):
-        OC.browser("navigate", "javascript:alert(1)", profile_name="user", target_id=tab)
+        OC.browser("navigate", "javascript:alert(1)", profile_name="muratclaw", target_id=tab)
     assert blank_cli.urls["3"] == BLANK
     assert not any(OC._cmd_key(c) == "browser navigate" for c in blank_cli.calls)
 
@@ -532,37 +566,38 @@ def test_a_blank_tab_this_process_did_not_open_refuses(blank_cli):
     tab = blank_cli.handle("4")
     for verb, args in (("navigate", (WSJ_A,)), ("close", ())):
         with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_(TAB_HOST|CLOSE)"):
-            OC.browser(verb, *args, profile_name="user", target_id=tab)
+            OC.browser(verb, *args, profile_name="muratclaw", target_id=tab)
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_NOT_OUR_TAB"):
-        OC.own_blank_tab("close", tab, profile_name="user")
+        OC.own_blank_tab("close", tab, profile_name="muratclaw")
     assert blank_cli.urls["4"] == BLANK
 
 
 def test_evaluate_and_every_other_verb_on_our_blank_tab_refuse(blank_cli):
     tab = blank_cli.handle("3")
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_VERB"):
-        OC.browser("evaluate", "--fn", "() => 1", profile_name="user", target_id=tab)
-    for verb in ("snapshot", "click", "press", "wait", "screenshot"):
+        OC.browser("evaluate", "--fn", "() => 1", profile_name="muratclaw", target_id=tab)
+    for verb, args in (("snapshot", ()), ("click", ("e1",)), ("press", ("PageDown",)),
+                       ("wait", ()), ("screenshot", ())):
         with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_TAB_HOST"):
-            OC.browser(verb, profile_name="user", target_id=tab)
+            OC.browser(verb, *args, profile_name="muratclaw", target_id=tab)
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_BLANK_TAB_VERB"):
-        OC.own_blank_tab("evaluate", tab, profile_name="user")
+        OC.own_blank_tab("evaluate", tab, profile_name="muratclaw")
 
 
 def test_close_on_our_blank_tab_passes_and_forgets_the_handle(blank_cli):
     tab = blank_cli.handle("3")
-    out = OC.own_blank_tab("close", tab, profile_name="user")
+    out = OC.own_blank_tab("close", tab, profile_name="muratclaw")
     assert out["rc"] == 0 and out["via"] == "own_blank_tab"
     assert "3" not in blank_cli.urls and tab not in OC._OPENED_TABS
     # a second close of the same handle is refused: it is no longer ours
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_NOT_OUR_TAB"):
-        OC.own_blank_tab("close", tab, profile_name="user")
+        OC.own_blank_tab("close", tab, profile_name="muratclaw")
 
 
 def test_close_of_our_tab_that_is_already_gone_is_already_gone(blank_cli):
     tab = blank_cli.handle("9")
     OC._OPENED_TABS.add(tab)
-    out = OC.own_blank_tab("close", tab, profile_name="user")
+    out = OC.own_blank_tab("close", tab, profile_name="muratclaw")
     assert out["already_gone"] is True and tab not in OC._OPENED_TABS
 
 
@@ -571,14 +606,14 @@ def test_blank_is_one_cli_call_and_only_on_our_tab(blank_cli):
     tab = blank_cli.handle("3")
     blank_cli.urls["3"] = WSJ_A
     n0 = len(blank_cli.calls)
-    out = OC.own_blank_tab("blank", tab, profile_name="user")
+    out = OC.own_blank_tab("blank", tab, profile_name="muratclaw")
     assert out["rc"] == 0 and blank_cli.urls["3"] == BLANK
     assert [OC._cmd_key(c) for c in blank_cli.calls[n0:]] == ["browser navigate"]
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_NOT_OUR_TAB"):
-        OC.own_blank_tab("blank", blank_cli.handle("1"), profile_name="user")
+        OC.own_blank_tab("blank", blank_cli.handle("1"), profile_name="muratclaw")
     # the guarded verb blanks only a tab of ours, never Murat's own
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_NAVIGATE"):
-        OC.browser("navigate", BLANK, profile_name="user", target_id=blank_cli.handle("1"))
+        OC.browser("navigate", BLANK, profile_name="muratclaw", target_id=blank_cli.handle("1"))
 
 
 # ───────────────── no shell between us and the CLI (2026-09-27) ─────────────
@@ -706,5 +741,5 @@ def test_browser_names_the_route_on_its_receipt(monkeypatch, clock):
     fake = FakeCLI()
     monkeypatch.setattr(OC, "_run", fake)
     monkeypatch.setattr(OC, "cli_route", lambda: "node")
-    out = OC.browser("snapshot", profile_name="muratclaw")
+    out = OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
     assert out["cli_route"] == "node"

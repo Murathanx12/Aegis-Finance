@@ -109,6 +109,61 @@ the FX leg → chunk 6 source registry + social → era replay 2020→now.
 > running now, live, in paper accounts, and the honest answer today is 'best
 > historical net strategy vs market: none.'"
 
+> **Annotation 2026-09-28 (lane M4c): the comparator the pitch leaves out, printed beside it.**
+> On the same kind of question -- "will |move| exceed the threshold" -- a free formula,
+> p = 2(1 - Phi(thr / (sigma_63 * sqrt(h)))), scores **+10.0% held-out Brier skill at h = 1 against
+> +5.5% for the LLM arms** (+5.7% for the LLM on the prior's own rows), and wins 7 of 8 held-out
+> days; at h = 5 it is **+5.9% vs +2.6%** (6 of 8 days). Receipt:
+> `backend/data/optimus/learning_reports/report_2026-09-27.json` -> `closing.vol_prior` (committed
+> version generated 2026-09-27T00:03:08Z; identical values in the 23:58:55Z regeneration; 1,560 rows, 775 held out, 2026-08-24 -> 2026-08-27, all LLM arms pooled,
+> climatology = the training half's base rate). So on magnitude, the process's skill is below a
+> formula that costs nothing, and the pitch's "discipline matters more than model choice" must be
+> read beside that. Two further cautions: (1) +8.97% is the investigator's RECALIBRATED held-out
+> skill (raw +4.38%), while -27.98% is the personas' RAW skill (recalibrated -0.00%); like for like
+> it is raw +4.38% vs -27.98%, or recalibrated +8.97% vs -0.00%. (2) **+8.97% is UNVERIFIED against
+> its named receipt**: `NEGATIVE_RESULTS.md` §64 names `specialists/scoreboard_2026-09-24.json`,
+> and neither committed version of that file (`7b0d49d2`, `89bc65af`) nor the file on disk carries
+> the held-out split or 0.0897 -- it carries full-sample per-arm skill only (investigator arms
+> +3.7% to +8.0%). The number lives in the commit message of `7b0d49d2` and in
+> `HANDOFF_2026-09-24_THE_LEDGER_WAS_THE_ANSWER.md`. The adversarial review's "+10.2% vs +5.7%"
+> (`ADJUDICATION_2026-09-26_WAVE1.md` row 3) could not be matched to a receipt; the receipt above
+> says +10.0%.
+
+> **WITHDRAWN 2026-09-28 (lane M review F7): the sentence "a structured evidence-gathering
+> *process* beats persona-styled LLM prompting by a wide margin out of sample (+8.97% vs −27.98%
+> held-out skill)" in the pitch above.** The text is kept visible; it is no longer claimed. Why:
+> (1) it sets a RECALIBRATED figure (+8.97%) against a RAW one (−27.98%); like for like the gap is
+> raw +4.38% vs −27.98% or recalibrated +8.97% vs −0.00%; (2) its named receipt,
+> `backend/data/optimus/specialists/scoreboard_2026-09-24.json`, does not contain 0.0897 or a
+> held-out split (checked 2026-09-28 by a literal search of the file on disk; the committed
+> versions `7b0d49d2` / `89bc65af` were checked by the M4c annotation above). It is withdrawn until a
+> committed receipt reproduces it. **No process-vs-persona claim belongs in this pitch on the
+> present evidence.**
+>
+> **What the receipts DO support** (all from
+> `backend/data/optimus/learning_reports/report_2026-09-27.json` -> `closing.vol_prior`, committed
+> in `6a7a2465`; values checked identical in HEAD and on disk 2026-09-28; ONE held-out window of 4
+> calendar days, 2026-08-24 -> 2026-08-27, 775 held-out rows of 1,560; all LLM arms POOLED, arm
+> `*`, not the investigator alone; question: will |move| exceed the threshold):
+>
+> - At **h = 1 session**, the free trailing-volatility formula scores **+10.0%** Brier skill vs
+>   **+5.5%** for the LLM arms (+5.7% for the LLM on the formula's own rows) and wins 7 of 8 days.
+>   VERIFIED. Correction to the brief that asked for this: the receipt's horizon is **1 session,
+>   not 21**, and the comparator is **all LLM arms pooled, not the investigator**; no receipt was
+>   found for an investigator-only or a 21-session version of this comparison (looked in
+>   `learning_reports/report_2026-09-27.json` `closing.vol_prior`, which carries horizons 1 and 5
+>   only). The 21-session / investigator form is UNVERIFIED.
+> - At **h = 5 sessions**, like for like (the LLM on the formula's own rows) the **LLM leads:
+>   +7.5% vs +5.9%** (`skill_llm_own_prior` 0.0747 vs `skill_prior` 0.0592). VERIFIED. On all
+>   rows pooled the LLM is +2.6%, and the receipt's `winner` field says `prior` (6 of 8 days),
+>   because it compares the pooled LLM figure; both readings are printed here.
+>
+> The sentence the pitch can carry: "On one held-out week of August, a free volatility formula
+> forecast the SIZE of next-day moves better than our LLM arms (+10.0% vs +5.7% Brier skill, like
+> for like); at 5 days the LLM was ahead like for like (+7.5% vs +5.9%). Our earlier +8.97% vs
+> −27.98% comparison mixed a recalibrated number with a raw one and is withdrawn until a committed
+> receipt reproduces it."
+
 Of ~21 products surveyed, none publishes independently audited, cost-inclusive
 forward evidence vs SPY; only Danelfin and Numerai grade their own calls at all.
 
@@ -119,6 +174,9 @@ Two personas, 21 competitors, ten criteria scored 0-3 with a source each:
   criterion P2 pays for — forward, cost-inclusive evidence vs SPY — Aegis
   scores 1/3, level with Numerai, below Danelfin. The 39 priced paper accounts
   at −1.12% are the honest number.
+
+> **Correction 2026-09-28 (lane M4a; nothing above is erased).** "39 priced" is the BROKER-INCLUDED scope: website lanes, night books and twins, murat_book, the five legacy Alpaca accounts and PC-PAPER. It was NOT superseded by `3204eb4d`: that commit's `roi_2026-09-27.json` (generated 2026-09-27T06:44:32Z) still prints 39 priced, 7 ahead of SPY, 32 behind, -1.315%; the 09-26 broker-included receipt (`b137fff7`, 03:57:21Z) printed 39 / 7 / 32 / -1.124%. The "33 priced, 6 ahead, 27 behind, -0.27%" quoted on 2026-09-28 is the scheduled `--no-broker` pass (generated 2026-09-27T23:51:21Z), which overwrote the same file name and leaves out the six priced broker accounts (hack1/2/4/5/6 at -1.2% to -20.0%, PC-PAPER -0.2%): a narrower scope that flatters the aggregate, not a correction. **Current, broker-included, read-only:** 39 priced, 7 ahead of SPY, 32 behind, aggregate **-1.34%** (`backend/data/optimus/paper_accounts/roi_2026-09-28T060842Z.json`, generated 2026-09-28T06:08:42Z; hack3 BROKER_ERROR HTTP 401, never $0). Scope and receipt: `docs/research_notes/2026-09-28/lane_m_build_2026-09-28.md` §M4.
+
 - **P1 — the person who does not know how to invest:** Betterment/Wealthfront
   lead; Aegis ties on substance and scores **0 on accessibility** — no novice
   product exists yet.

@@ -1101,6 +1101,7 @@ def _row(res: dict) -> dict:
            for b in SL.PANEL_BENCHMARKS if c.get(f"{w}_vs_{b}_why")},
         "cagr_without_best_5_months": c.get("cagr_without_best_5_months"),
         "spy_cagr_same_window": c.get("spy_cagr_same_window"),
+        "spy_cagr_without_best_5_months": c.get("spy_cagr_without_best_5_months"),
         "t_active_horizon_blocks": c.get("t_active_horizon_blocks"),
         "n_blocks_horizon": c.get("n_blocks_horizon"),
         "clears_hlz_t3": c.get("clears_hlz_t3"),
@@ -1515,11 +1516,105 @@ def _num(v, nd: int = 2) -> str:
     return "n/a" if v is None else f"{v:.{nd}f}"
 
 
+# -- lane M2 (2026-09-28): the context printed beside every headline --------
+
+SS_DIR_NAME = "signal_structure"
+
+
+def _receipt_for(d: Path, stem: str, run_id: str | None) -> Path | None:
+    """The run's own receipt when it exists, else the newest `<stem>_<run id>.json`
+    (run ids sort chronologically); None when there is none."""
+    if run_id and (d / f"{stem}_{run_id}.json").exists():
+        return d / f"{stem}_{run_id}.json"
+    c = sorted(p for p in d.glob(f"{stem}_2*.json") if p.stem[len(stem) + 1:][:1].isdigit())
+    return c[-1] if c else None
+
+
+def headline_sources(run_id: str | None, *, lib: Path | None = None,
+                     ss: Path | None = None) -> dict:
+    """The three receipts the BESIDE column reads, each tagged with its run id.
+    A receipt that cannot be read is None plus a reason -- the column then
+    prints NOT COMPUTED, never a blank."""
+    lib = Path(lib) if lib is not None else out_dir()
+    ss = Path(ss) if ss is not None else Path(_cfg.OPTIMUS_LEDGER_DIR) / SS_DIR_NAME
+    out: dict = {"twins": None, "families": None, "offsets": None, "why": {}}
+    for key, d, stem in (("twins", ss, "matched_twins"), ("families", ss, "family_pool"),
+                         ("offsets", lib, "calendar_offsets")):
+        p = _receipt_for(d, stem, run_id) if d.exists() else None
+        if p is None:
+            out["why"][key] = f"no {stem}_<run>.json in {_rel(d)}"
+            continue
+        try:
+            doc = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            out["why"][key] = f"{p.name}: {type(e).__name__}"
+            continue
+        if key == "twins":
+            by = {r.get("cell"): r for r in doc.get("rows") or [] if r.get("cell")}
+            out[key] = {"run": doc.get("run_id"), "path": _rel(p), "by_key": by}
+        elif key == "families":
+            by = {r.get("family"): r for r in doc.get("rows") or [] if r.get("family")}
+            small = doc.get("families_too_small") or []
+            if isinstance(small, dict):
+                small = list(small)
+            small = [x.get("family") if isinstance(x, dict) else x for x in small]
+            out[key] = {"run": doc.get("run_id"), "path": _rel(p), "by_key": by, "too_small": small}
+        else:
+            out[key] = {"run": doc.get("run_id"), "path": _rel(p),
+                        "by_key": dict(doc.get("results") or {})}
+            corr = doc.get("cross_rule_correlation")
+            if corr is None and doc.get("monthly_series"):
+                try:
+                    from backend.services import calendar_offsets as _CO   # noqa: PLC0415
+                    corr = _CO.cross_rule_correlation(pd.read_parquet(REPO / doc["monthly_series"]))
+                except Exception as e:                    # noqa: BLE001 -- named, never silent
+                    corr = {"status": "NOT_COMPUTED", "why": f"{type(e).__name__}: {e}"}
+            out[key]["cross_rule_correlation"] = corr
+    return out
+
+
+ROW_LISTS = ("top_by_sealed_vs_spy", "bottom_by_sealed_vs_spy", "top_by_dsr",
+             "top_by_hindsight_cagr_since_2020", "bottom_by_hindsight_cagr_since_2020",
+             "controls", "all_rows")
+
+
+def annotate_headline_context(board: dict, sources: dict | None) -> dict:
+    """Every row of every list gets `headline_context` (the five BESIDE fields)."""
+    src = sources or {}
+    run = board.get("run_id")
+    for key in ROW_LISTS:
+        for r in board.get(key) or []:
+            if isinstance(r, dict):
+                r["headline_context"] = SL.headline_context(
+                    r, twins=src.get("twins"), families=src.get("families"),
+                    offsets=src.get("offsets"), board_run=run)
+                if r.get("hold_months") == 3:
+                    cn = SL.calendar_neutral(((src.get("offsets") or {}).get("by_key") or {}).get(r.get("id")))
+                    if cn is not None:
+                        r["calendar_neutral"] = cn
+    why = src.get("why") or {}
+    ob = SL.one_bet_text((src.get("offsets") or {}).get("cross_rule_correlation"))
+    if ob:
+        board["one_bet"] = ob
+    board["headline_context_sources"] = {
+        k: ((src.get(k) or {}).get("path") or f"{SL.NOT_COMPUTED}: {why.get(k)}")
+        for k in ("twins", "families", "offsets")}
+    return board
+
+
+def beside(r: dict) -> str:
+    """The BESIDE cell: the row's own context, or computed from the row alone
+    (DSR and without-best-5 are on every row; the rest print NOT COMPUTED)."""
+    ctx = r.get("headline_context") or SL.headline_context(r)
+    return SL.headline_context_text(ctx).replace("|", "/")
+
+
 def _table(rows: list) -> list[str]:
     head = ("| id | family | k | by-year vs SPY | LOO-worst (mo, active) | worst cell (k: CAGR) | "
             "best-5-mo share / CAGR without them (SPY full) | "
-            "t blocks | Sharpe (blocks) | DSR (n) | CAGR since 2020 | SPY CAGR | cum since 2020 |")
-    lines = [head, "|" + "---|" * 13]
+            "t blocks | Sharpe (blocks) | DSR (n) | CAGR since 2020 | SPY CAGR | cum since 2020 | "
+            "BESIDE THE HEADLINE |")
+    lines = [head, "|" + "---|" * 14]
     for r in rows:
         wc = r.get("worst_cell") or {}
         lines.append(
@@ -1531,15 +1626,28 @@ def _table(rows: list) -> list[str]:
             f"({r.get('n_blocks_horizon')}) | {_num(r.get('sharpe_annual'))} ({r.get('n_date_blocks')}) | "
             f"{_num(r.get('dsr'), 3)} ({r.get('dsr_n_trials')}) | "
             f"{_pct(r.get('hindsight_cagr_since_2020'))} | {_pct(r.get('hindsight_spy_cagr_since_2020'))} | "
-            f"{_pct(r.get('hindsight_cum_since_2020'), 0)} |")
+            f"{_cum_cell(r)} | {beside(r)} |")
     return lines
+
+
+def _cum_cell(r: dict) -> str:
+    """cum since 2020: the CALENDAR-NEUTRAL book first for a quarterly rule with
+    an offsets receipt; the row's own (single-calendar) figure after it."""
+    own = _pct(r.get("hindsight_cum_since_2020"), 0)
+    cn = r.get("calendar_neutral")
+    if cn and cn.get("cum_since_2020") is not None:
+        return (f"**{_pct(cn['cum_since_2020'], 0)} calendar-neutral** "
+                f"({own} on this calendar, one calendar of three)")
+    if r.get("hold_months") == 3:
+        return f"{own} (one calendar of three; calendar-neutral NOT COMPUTED)"
+    return own
 
 
 def _sealed_table(rows: list) -> list[str]:
     head = ("| id | family | k | 2024-26 vs SPY | 2024-26 CAGR (months) | SPY 2024-26 | 2024-26 DSR | "
             "dev CAGR | dev vs SPY | DSR full (n) | LOO-worst (mo) | top-5-mo share | "
-            "turnover/yr | cost bps/yr | max DD | recent-126 (SPY) | by-year |")
-    lines = [head, "|" + "---|" * 17]
+            "turnover/yr | cost bps/yr | max DD | recent-126 (SPY) | by-year | BESIDE THE HEADLINE |")
+    lines = [head, "|" + "---|" * 18]
     for r in rows:
         lines.append(
             f"| {r['id']} | {r['family']} | {r['k']} | **{_pct(r.get('sealed_vs_spy'))}** | "
@@ -1549,7 +1657,7 @@ def _sealed_table(rows: list) -> list[str]:
             f"{_num(r.get('top5_months_share_of_log_return'))} | {_num(r.get('turnover_annual'), 1)}x | "
             f"{_num(r.get('cost_bps_paid'), 0)} | {_pct(r.get('max_dd'))} | "
             f"{_pct(r.get('recent_126_return'))} ({_pct(r.get('recent_126_spy'))}) | "
-            f"`{r.get('by_year_signs')}` |")
+            f"`{r.get('by_year_signs')}` | {beside(r)} |")
     return lines
 
 
@@ -1604,6 +1712,12 @@ def render_md(board: dict, books: dict | None = None, forward: list | None = Non
     if board.get("partial"):
         L += [f"**PARTIAL:** {board['partial']} — {board['n_rules_done']} of "
               f"{board['n_rules_in_library']} rules evaluated.", ""]
+    hs = board.get("headline_context_sources")
+    L += ["**Every return below is printed beside five fields (BESIDE THE HEADLINE): the matched-"
+          "twin verdict, the family verdict, DSR, the CAGR without the best 5 months, and for "
+          "quarterly rules the spread across the three calendar offsets. NOT COMPUTED means the "
+          "run did not compute it -- it is not a pass.**"
+          + (f" Sources: {hs}." if hs else ""), ""]
     L += ["## Multiplicity (read before any row)", "",
           f"- cells looked at: **{mp['n_cells_looked_at']}** ({mp['n_candidate_rules']} rules x breadth "
           f"k=10/20/50 + own k); DSR computed at n={mp['dsr_n_trials_nominal']} and, beside it, at the "
@@ -1651,6 +1765,9 @@ def render_md(board: dict, books: dict | None = None, forward: list | None = Non
           f"({spy.get('n_months')} months). Source `{spy.get('source')}` via learner.benchmark"
           + (f"; canonical leg refused: {spy.get('canonical_refusal')}" if spy.get("canonical_refusal") else "")
           + ".", "",
+          ] + ([f"**{board['one_bet']}**", ""] if board.get("one_bet") else []) + [
+          "Quarterly rules: the `cum since 2020` column leads with the CALENDAR-NEUTRAL book "
+          "(one third on each quarterly calendar); the row's own figure is ONE calendar of three.", "",
           "## Top 10 by deflated Sharpe", ""] + _table(board["top_by_dsr"]) + [
           "", "## Top 10 by hindsight CAGR since 2020", ""] + _table(board["top_by_hindsight_cagr_since_2020"]) + [
           "", "## Bottom 10", ""] + _table(board["bottom_by_hindsight_cagr_since_2020"]) + [
@@ -2107,6 +2224,11 @@ def write_outputs(board: dict, *, out: Path, today: date, books=None, forward=No
     if lb.exists():
         raise FileExistsError(f"REFUSED: {lb} exists; a receipt is never overwritten")
     board = {**board, "run_id": run_id, "receipt": _rel(lb)}
+    try:
+        board = annotate_headline_context(board, headline_sources(run_id, lib=out))
+    except Exception as e:                                # noqa: BLE001 -- printed, never silent
+        board["headline_context_sources"] = f"{SL.NOT_COMPUTED}: {type(e).__name__}: {e}"
+        print(f"  headline context: {board['headline_context_sources']}", flush=True)
     atomic_write_json(lb, board, indent=1)
     atomic_write_json(latest, board, indent=1)
     md = render_md(board, books, forward)
@@ -2258,6 +2380,7 @@ def print_top(board: dict, log=print) -> None:
             f"{_num(r.get('t_active_horizon_blocks')):>6s} {_num(r.get('sharpe_annual')):>6s} "
             f"{_num(r.get('dsr'), 3):>6s} {_pct(r.get('hindsight_cagr_since_2020')):>8s} "
             f"{_pct(r.get('hindsight_spy_cagr_since_2020')):>7s}")
+        log(f"    beside: {beside(r)}")
 
 
 # ═════════════════════════════════ main ═════════════════════════════════════
@@ -2285,6 +2408,9 @@ def main(argv=None) -> int:
     today = date.today()
     run_id = new_run_id()
     out = Path(a.out) if a.out else (out_dir() / "smoke" if a.smoke else out_dir())
+    from backend.services import backtest_staleness as BS           # noqa: PLC0415
+    prev = BS.leaderboard_age(out_dir(), datetime.now(timezone.utc))
+    print(f"  previous board: {prev['verdict']} -- {prev['detail']}", flush=True)
     paths = XR.survivorship_free_paths()
     start = "2018-01-01" if a.smoke else _cfg.STRATEGY_LIB_START
     print(f"{JOB} {today}: panels {[p.name for p in paths]}; start {start}", flush=True)

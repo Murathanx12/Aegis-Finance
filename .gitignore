@@ -384,3 +384,11 @@ backend/data/optimus/_rehearsal_2026-09-28/
 backend/data/optimus/finra_short_volume/*
 !backend/data/optimus/finra_short_volume/manifest.json
 !backend/data/optimus/finra_short_volume/pull_receipt_*.json
+.venv_kronos/
+
+# 2026-09-28: the owner's own Telegram text and the alert ledger are LOCAL ONLY (public repo).
+backend/data/optimus/telegram/
+backend/data/optimus/alerts/
+
+# 2026-09-28 (owner): PC hardware, RAM, power-plan and driver notes are LOCAL ONLY.
+backend/data/optimus/local_pc/

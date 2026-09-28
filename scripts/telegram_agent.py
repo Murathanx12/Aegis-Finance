@@ -69,8 +69,9 @@ HELP = """*AEGIS remote*
 
 *Models* (each reply names provider, cost, latency)
 `/ask <q>` local model, started on demand
-`/research <ticker>` evidence from disk, no model (`--quest` runs the card first)
-`/deep <q>` DeepSeek · add `--nvidia` for NVIDIA
+`/research <ticker>` waits for your `/approve` tap (`--quest` runs the card first)
+`/deep <q>` DeepSeek, waits for your `/approve` tap · add `--nvidia` for NVIDIA
+_all three: rate-limited, counted per day, and under the spend cap_
 `/compare [ticker]` the extraction bake-off table (read-only)
 
 *Simulation*
@@ -83,6 +84,15 @@ HELP = """*AEGIS remote*
 *Decisions*
 `/pending` approvals waiting on you
 `/approve <id>` · `/deny <id>`
+
+*Replies* (plain text works too; read from disk, no model, no orders)
+`stock NVDA` price, moves in sigma, events, alerts, books
+`news NVDA` newest headlines on disk
+`report` books vs SPY, alerts today, red health, spend
+`digest <text or url>` store it for the next pass
+`analyze <alert id>` the frozen alert and the price since
+`ask <question>` saved for a Claude session, no model (plain `ask`, not `/ask`)
+`queue` the questions and links waiting
 
 *System*
 `/status` sim + model server (receipts)
@@ -237,11 +247,32 @@ def cmd_pending(args, msg) -> str:
 
 
 def cmd_approve(args, msg) -> str:
+    """Resolve an approval. When the request carried a PAID phone command
+    (`/deep`, `/research`), the tap runs it now -- once, only if the request is
+    younger than TELEGRAM_APPROVAL_MAX_AGE_MIN, and only through the same rate
+    limit and spend cap (`model_gate`)."""
     if not args:
         return "Usage: `/approve <id>` — see /pending"
     r = TG.resolve_approval(args[0], approved=True)
-    return (f"*APPROVED* `{args[0]}` — {r.get('what')}" if r.get("ok")
-            else f"Cannot approve: {r.get('why')}")
+    if not r.get("ok"):
+        return f"Cannot approve: {r.get('why')}"
+    head = f"*APPROVED* `{args[0]}` — {r.get('what')}"
+    ev = r.get("evidence") if isinstance(r.get("evidence"), dict) else {}
+    act = ev.get("action") if isinstance(ev.get("action"), dict) else None
+    if not act or act.get("cmd") not in PAID_MODEL_CMDS:
+        return head
+    try:
+        asked = datetime.fromisoformat(str(r.get("t")))
+    except (TypeError, ValueError):
+        return head + "\nNot run: the request time is unreadable."
+    age_min = (datetime.now(timezone.utc) - asked).total_seconds() / 60
+    lim = float(_cfg.TELEGRAM_APPROVAL_MAX_AGE_MIN)
+    if age_min > lim:
+        return head + f"\nNot run: the request is {age_min:.0f} min old (limit {lim:g}). Send it again."
+    refused = model_gate(act["cmd"])
+    if refused:
+        return head + "\nNot run: " + refused
+    return head + "\n\n" + _run_model_cmd(act["cmd"], list(act.get("args") or []))
 
 
 def cmd_deny(args, msg) -> str:
@@ -274,15 +305,121 @@ def cmd_status(args, msg) -> str:
     return "\n".join(out)
 
 
+#: (lane A review F7, 2026-09-28) Slash commands that call a model. All three
+#: pass `model_gate` (the reply rate limit, a per-day count, the lab_budget
+#: spend cap). The PAID ones do not run on the message at all: they become an
+#: approval request and run on the owner's `/approve <id>` tap.
+MODEL_CMDS: tuple[str, ...] = ("ask", "deep", "research")
+PAID_MODEL_CMDS: tuple[str, ...] = ("deep", "research")
+
+
+def _replies_ctx():
+    from backend.services import alerts_replies as AR
+    return AR, AR.Ctx()
+
+
+def model_cmds_today(now: datetime | None = None) -> int:
+    """Model commands RUN today (owner-local day), from conversation.jsonl."""
+    from backend.services import alerts as AL
+    AR, ctx = _replies_ctx()
+    now = now or datetime.now(timezone.utc)
+    day = AL.owner_day(now)
+    n = 0
+    for r in AR._read_jsonl(ctx.telegram / "conversation.jsonl"):
+        if r.get("model_cmd") and r.get("dir") == "out":
+            try:
+                if AL.owner_day(datetime.fromisoformat(str(r.get("t")))) == day:
+                    n += 1
+            except (TypeError, ValueError):
+                continue
+    return n
+
+
+def model_gate(cmd: str, now: datetime | None = None) -> str | None:
+    """None when `cmd` may call a model now; otherwise the refusal, by name."""
+    AR, ctx = _replies_ctx()
+    now = now or datetime.now(timezone.utc)
+    if AR.replies_last_minute(ctx, now) >= int(_cfg.TELEGRAM_REPLY_MAX_PER_MIN):
+        return (f"REFUSED: more than {_cfg.TELEGRAM_REPLY_MAX_PER_MIN} replies in the last "
+                f"minute; try again in a minute.")
+    n = model_cmds_today(now)
+    if n >= int(_cfg.TELEGRAM_MODEL_CMDS_MAX_PER_DAY):
+        return (f"REFUSED: {n} model commands already today (limit "
+                f"{_cfg.TELEGRAM_MODEL_CMDS_MAX_PER_DAY}, TELEGRAM_MODEL_CMDS_MAX_PER_DAY).")
+    try:
+        from backend.services import lab_budget as LB
+        sp = LB.spend_today()
+    except Exception as exc:                                       # noqa: BLE001
+        return f"REFUSED: today's LLM spend CANNOT BE DETERMINED ({type(exc).__name__})."
+    if sp.get("cap_reached"):
+        return (f"REFUSED: today's LLM spend ${sp.get('spend_today_usd', 0):.2f} has reached "
+                f"the ${sp.get('cap_usd', 0):.2f} cap.")
+    return None
+
+
+def _run_model_cmd(cmd: str, args: list) -> str:
+    from backend.services import model_routing as MR
+    AR, ctx = _replies_ctx()
+    out = MR.route(cmd, list(args))
+    AR._log(ctx, {"t": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                  "dir": "out", "chat": "owner", "cmd": cmd, "model_cmd": True,
+                  "text": str(out)[:2000]})
+    return out
+
+
+def _clean_md(text: str) -> str:
+    return "".join(c for c in str(text) if c not in "*_`[]")[:200]
+
+
 def _routed(cmd: str):
     """A handler that goes through `model_routing.route` -- the table the
     tests pin (chunk G, 2026-09-26). Money/state commands read receipts and
-    make no model call; model commands name provider, cost and latency."""
+    make no model call; model commands name provider, cost and latency, pass
+    `model_gate`, and the paid ones wait for the owner's tap (F7)."""
     def _h(args, msg) -> str:
         from backend.services import model_routing as MR
-        return MR.route(cmd, list(args))
+        if cmd not in MODEL_CMDS:
+            return MR.route(cmd, list(args))
+        refused = model_gate(cmd)
+        if refused:
+            return refused
+        if cmd in PAID_MODEL_CMDS:
+            what = _clean_md(f"/{cmd} {' '.join(args)}".strip())
+            try:
+                from backend.services import lab_budget as LB
+                sp = LB.spend_today()
+                worst = (f"one paid model call; today ${sp.get('spend_today_usd', 0):.2f} of the "
+                         f"${sp.get('cap_usd', 0):.2f} cap is spent")
+            except Exception:                                      # noqa: BLE001
+                worst = "one paid model call; today's spend could not be read"
+            TG.request_approval(what=what, why="a paid model call asked from the phone",
+                                worst_case=worst,
+                                evidence={"action": {"cmd": cmd, "args": list(args)}})
+            return ""                                  # the approval message is the reply
+        return _run_model_cmd(cmd, list(args))
     _h.__name__ = f"routed_{cmd}"
     return _h
+
+
+def _reply_cmd(cmd: str):
+    """`/stock NVDA` etc.: the same reply as the plain-text form
+    (`alerts_replies`, file reads only). `/ask` stays the local-model route
+    pinned by `test_model_routing` (behind `model_gate`); plain `ask ...` is the
+    no-model queue. The RAW message text is passed on, so a `/digest` paste
+    keeps its line breaks (F7)."""
+    def _h(args, msg) -> str:
+        from backend.services import alerts_replies as AR
+        raw = str((msg or {}).get("text") or "").lstrip("/")
+        text = raw if raw.lower().startswith(cmd) else " ".join([cmd, *args])
+        return AR.respond(text, msg) or ""
+    _h.__name__ = f"reply_{cmd}"
+    return _h
+
+
+def text_reply(text: str, msg: dict) -> str | None:
+    """The owner's plain-text messages (the poller has checked the chat)."""
+    from backend.services import alerts_replies as AR
+    return AR.respond(text, msg)
 
 
 HANDLERS = {
@@ -292,6 +429,7 @@ HANDLERS = {
     "pending": cmd_pending, "approve": cmd_approve, "deny": cmd_deny,
     **{c: _routed(c) for c in ("nav", "status", "books", "forecasts",
                                "ask", "research", "deep", "compare")},
+    **{c: _reply_cmd(c) for c in ("stock", "news", "report", "digest", "analyze", "queue")},
 }
 
 
@@ -552,7 +690,7 @@ def main(argv=None) -> int:
         return 2
 
     if a.once:
-        print(json.dumps(TG.poll(HANDLERS), indent=1))
+        print(json.dumps(TG.poll(HANDLERS, text_handler=text_reply), indent=1))
         return 0
 
     try:
@@ -571,7 +709,7 @@ def main(argv=None) -> int:
             logger.exception("daily jobs failed")
         state, err = "ok", None
         try:
-            TG.poll(HANDLERS)
+            TG.poll(HANDLERS, text_handler=text_reply)
         except TG.TelegramRefused as exc:
             logger.warning("poll refused: %s", exc)
             state, err = "refused", str(exc)[:200]

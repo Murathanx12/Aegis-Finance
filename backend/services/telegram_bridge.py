@@ -321,13 +321,57 @@ def _persist_owner(cid: str) -> None:
         logger.warning("telegram_bridge: could not persist owner id: %s", exc)
 
 
-def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None) -> list[dict]:
+#: Messages from any chat that is not the owner's, dropped since this process
+#: started (each is also a row in `inbox.jsonl` with `refused`, up to the
+#: hourly row cap below).
+STRANGERS_DROPPED = 0
+#: (lane A review F7, 2026-09-28) What ANY chat may add to `inbox.jsonl`: at
+#: most TELEGRAM_INBOUND_MAX_ROWS_PER_H_{STRANGERS,OWNER} rows per rolling hour.
+#: Beyond it no row is written (a stranger's message is still dropped unanswered;
+#: an owner's is not handled), `INBOUND_ROWS_SUPPRESSED` counts it, and ONE
+#: summary row per clock hour records the count -- so a stranger who knows the
+#: bot's name cannot fill the disk, and the flood is still visible.
+INBOUND_ROWS_SUPPRESSED: dict[str, int] = {"stranger": 0, "owner": 0}
+_INBOUND_TIMES: dict[str, list[float]] = {"stranger": [], "owner": []}
+_SUPPRESSED_NOTED_HOUR: dict[str, str] = {}
+
+
+def _inbound_allowed(who: str, *, now_s: float | None = None) -> bool:
+    """True when `who` ("stranger" | "owner") may add one more inbox row now."""
+    import time as _t
+    now_s = _t.time() if now_s is None else now_s
+    lim = int(getattr(_cfg, "TELEGRAM_INBOUND_MAX_ROWS_PER_H_STRANGERS" if who == "stranger"
+                      else "TELEGRAM_INBOUND_MAX_ROWS_PER_H_OWNER", 20))
+    ts = [t for t in _INBOUND_TIMES[who] if now_s - t < 3600.0]
+    _INBOUND_TIMES[who] = ts
+    if len(ts) >= lim:
+        INBOUND_ROWS_SUPPRESSED[who] += 1
+        hour = datetime.fromtimestamp(now_s, timezone.utc).strftime("%Y-%m-%dT%H")
+        if _SUPPRESSED_NOTED_HOUR.get(who) != hour:
+            _SUPPRESSED_NOTED_HOUR[who] = hour
+            _append(INBOX_PATH, {"t": _now(), "suppressed_rows": who,
+                                 "limit_per_h": lim,
+                                 "suppressed_total": INBOUND_ROWS_SUPPRESSED[who]})
+        return False
+    ts.append(now_s)
+    return True
+
+
+def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
+         text_handler: Callable[[str, dict], str | None] | None = None) -> list[dict]:
     """Read new messages and run the matching command. Owner only.
 
-    A message from any other chat is recorded and answered with a refusal that
-    names why, so a stranger learns nothing about the account and the owner can
-    see in `inbox.jsonl` that someone tried.
+    A message from any other chat is recorded in `inbox.jsonl`, counted in
+    `STRANGERS_DROPPED` and DROPPED -- no reply (2026-09-28, owner's two-way
+    brief: "anything else is dropped and counted"). A stranger learns nothing,
+    not even that the bot is alive.
+
+    `text_handler` (2026-09-28, `alerts_replies.respond`) answers the owner's
+    plain-text messages ("stock NVDA", "report") and any slash command the
+    fixed `handlers` dict does not name. It reads files only; its reply goes
+    through `send()` like every other, so redaction still applies.
     """
+    global STRANGERS_DROPPED
     owner = owner_chat_id()
     acted = []
     for u in updates():
@@ -336,18 +380,29 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None) ->
         text = (msg.get("text") or "").strip()
         row = {"t": _now(), "chat_id": cid, "text": text[:400],
                "from": (msg.get("from") or {}).get("username")}
-        if owner and cid != owner:
-            row["refused"] = "not the owner chat"
-            _append(INBOX_PATH, row)
-            try:
-                send("This bot is private and answers only its owner.",
-                     chat_id=cid, markdown=False, tag="refusal")
-            except TelegramRefused:
-                pass
+        if not owner or cid != owner:
+            row["refused"] = "not the owner chat" if owner else "no owner configured"
+            if _inbound_allowed("stranger"):
+                _append(INBOX_PATH, row)
+            STRANGERS_DROPPED += 1
+            continue
+        if not _inbound_allowed("owner"):
             continue
         _append(INBOX_PATH, row)
-        if not text.startswith("/"):
-            continue
+        if not text.startswith("/") or (handlers or {}).get(
+                text.split()[0].lstrip("/").split("@")[0].lower()) is None:
+            if text_handler is not None and text:
+                try:
+                    reply = text_handler(text, msg)
+                except Exception as exc:                           # noqa: BLE001
+                    reply = f"reply failed: `{type(exc).__name__}: {redact(exc)}`"
+                    logger.exception("telegram text handler failed")
+                if reply:
+                    send(reply, markdown=False, tag="reply")
+                acted.append({"cmd": "text", "args": []})
+                continue
+            if not text.startswith("/"):
+                continue
         parts = text.split()
         cmd = parts[0].lstrip("/").split("@")[0].lower()
         fn = (handlers or {}).get(cmd)

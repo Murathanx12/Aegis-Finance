@@ -175,6 +175,70 @@ attached to a quoted number. Use flat strings, not nested objects.
 SPECIALIST_DAILY = "investigator:evidence_v3"
 DAILY_HORIZONS = (1, 5)
 
+# ── the day's refusal states, each named for its TRUE cause (2026-09-28) ──────
+#: The ledger the cap reads and the spend AGREE the cap is reached.
+REFUSED_CAP = "REFUSED_CAP"
+#: The cap cannot confirm the writer's spend: the ledger did not move after a
+#: SUCCESSFUL call, is unreadable, or holds unpriced rows (a lower bound).
+REFUSED_CAP_READER_DISAGREES = "REFUSED_CAP_READER_DISAGREES"
+#: The OpenClaw gateway / CLI failed the call (`TIMEOUT`, `RC_NONZERO`, or the
+#: CLI could not be run) on every retry. NOT terminal for the day: a later sim
+#: cycle resumes it (`resume_gate`). 2026-09-27 was this, filed as REFUSED_CAP.
+REFUSED_DEPENDENCY_DOWN = "REFUSED_DEPENDENCY_DOWN"
+#: `openclaw_client.agent` statuses that are the transport's failure, not the
+#: model's answer. EMPTY_LOG / UNPARSEABLE_ENVELOPE stay per-name refusals.
+TRANSPORT_FAILURE_STATUSES = ("TIMEOUT", "RC_NONZERO")
+#: Receipt states that end the UTC day. REFUSED_DEPENDENCY_DOWN is not one of
+#: them until `FORECAST_DEP_MAX_RUNS_PER_DAY` runs have ended in it.
+TERMINAL_STATES = ("DONE", REFUSED_CAP, REFUSED_CAP_READER_DISAGREES, "DEGRADED")
+#: What the unit does without the gateway. The evidence packet is ALREADY built
+#: from disk only (no browsing: CONTRACT says so); the LLM call through OpenClaw
+#: IS the forecast. There is no forecast to degrade to, so the run refuses by
+#: the true name rather than write a number nobody made.
+DEGRADE_PATH = ("none: the packet is disk-only already and the OpenClaw call is "
+                "the forecaster; without it there is no forecast to write, so "
+                "the run refuses as REFUSED_DEPENDENCY_DOWN and a later cycle "
+                "retries. The gateway is never restarted from here.")
+
+
+def _iso_now(now_fn=None) -> str:
+    return (now_fn or (lambda: datetime.now(timezone.utc)))().isoformat(timespec="seconds")
+
+
+def resume_gate(prior: dict | None, *, now: datetime | None = None) -> dict | None:
+    """None when today's unit may (re)start; else the skip it must return.
+
+    A TERMINAL state ends the day. REFUSED_DEPENDENCY_DOWN ends it only after
+    `FORECAST_DEP_MAX_RUNS_PER_DAY` failed runs; before that, a new run waits
+    `FORECAST_DEP_RETRY_MIN_GAP_S` after the last failure. Shared by
+    `daily_forecast` and `sim_run.u_forecast` so the two cannot disagree.
+    """
+    if not prior:
+        return None
+    st = prior.get("state")
+    base = {"state": st, "n_rows_written": prior.get("n_rows_written")}
+    if st in TERMINAL_STATES:
+        return {**base, "skipped": f"already ran today ({prior.get('day')})"}
+    if st != REFUSED_DEPENDENCY_DOWN:
+        return None                                     # RUNNING: resume
+    dep = prior.get("dependency") or {}
+    runs = int(dep.get("runs_ended_down") or 0)
+    cap = int(_config.FORECAST_DEP_MAX_RUNS_PER_DAY)
+    if runs >= cap:
+        return {**base, "skipped": (f"dependency down on {runs} of {cap} runs "
+                                    f"today: no further retry today")}
+    last = dep.get("last_failed_utc")
+    now = now or datetime.now(timezone.utc)
+    try:
+        last_dt = datetime.fromisoformat(str(last)) if last else None
+    except ValueError:
+        last_dt = None
+    gap = float(_config.FORECAST_DEP_RETRY_MIN_GAP_S)
+    if last_dt is not None and (now - last_dt).total_seconds() < gap:
+        return {**base, "skipped": (f"dependency down at {last}; run {runs + 1} of "
+                                    f"{cap} waits {gap:.0f}s after the last failure")}
+    return None
+
 CONTRACT_DAILY = """You are running an INVESTIGATION, not giving an opinion.
 
 You will be shown evidence about one company. Produce TWO probabilities:
@@ -385,7 +449,9 @@ def ask(packet: dict, *, model: str = MODEL, timeout: float = 420.0,
     try:
         res = OC.agent(msg, model=model, timeout=timeout, purpose=purpose)
     except (OSError, subprocess.SubprocessError) as exc:
-        return {"refused": f"{type(exc).__name__}: {str(exc)[:120]}"}
+        # the CLI could not be launched or run: the DEPENDENCY, not the name
+        return {"refused": f"{type(exc).__name__}: {str(exc)[:120]}",
+                "transport_failed": True}
     finally:
         try:
             Path(msg).unlink()
@@ -396,7 +462,8 @@ def ask(packet: dict, *, model: str = MODEL, timeout: float = 420.0,
                                     "session_id")}
     if res.get("status") != "OK":
         return {"refused": f"openclaw {res.get('status')} (rc {res.get('rc')})",
-                "stderr": (res.get("stderr") or "")[-200:], "_call": call}
+                "stderr": (res.get("stderr") or "")[-200:], "_call": call,
+                "transport_failed": res.get("status") in TRANSPORT_FAILURE_STATUSES}
     out = parse_reply(res.get("reply") or "", keys=keys)
     out["_call"] = call
     return out
@@ -504,27 +571,50 @@ def daily_forecast(*, today: str | None = None,
                    packet_fn=None,
                    ledger_path: Path | None = None,
                    telemetry_path: Path | None = None,
-                   receipt_dir: Path | None = None) -> dict:
+                   receipt_dir: Path | None = None,
+                   sleep_fn=None,
+                   now_fn=None) -> dict:
     """Once per UTC day: h=1 AND h=5 rows for every name in the union.
 
     Idempotent. The day receipt `forecasts/day_<date>.json` is written at START
     (`state: RUNNING`) and after every name, so a crash resumes where it
     stopped instead of re-asking (and re-paying for) names already written. A
-    receipt in state DONE / REFUSED_CAP / DEGRADED ends the day.
+    receipt in a TERMINAL state (DONE / REFUSED_CAP /
+    REFUSED_CAP_READER_DISAGREES / DEGRADED) ends the day.
 
-    The cap is read from the telemetry ledger before EVERY call, and after the
-    first call the writer's own cost and the ledger's delta are printed side by
-    side: a cap that reads a different ledger than the writer cannot bind
-    (2026-09-21, $10.05 under a $2.00 cap), so a disagreement REFUSES the day.
+    EVERY REFUSAL NAMES ITS TRUE CAUSE (2026-09-28). On 2026-09-27 the OpenClaw
+    gateway dropped the first call (code 1006) and the day was filed
+    REFUSED_CAP with $0.00 of $2.00 spent -- terminal, no retry, 0 rows. Now:
+
+    * `REFUSED_CAP` only when the ledger the cap reads is readable, complete
+      and at or over the cap: reader and spend AGREE.
+    * `REFUSED_CAP_READER_DISAGREES` when the cap cannot confirm the writer:
+      after the first SUCCESSFUL call the ledger did not move (2026-09-21's
+      $10.05 under a $2.00 cap), or the ledger is unreadable or a lower bound.
+      The first-flush check is made only on a call whose status is OK; a failed
+      call costs nothing and proves nothing about the cap.
+    * `REFUSED_DEPENDENCY_DOWN` when the transport failed
+      (`TRANSPORT_FAILURE_STATUSES`, or the CLI could not be run) on
+      `FORECAST_DEP_RETRY_MAX_ATTEMPTS` calls for one name, sleeping
+      `FORECAST_DEP_RETRY_BACKOFF_S` between them. Not terminal: `resume_gate`
+      lets a later cycle resume after `FORECAST_DEP_RETRY_MIN_GAP_S`, up to
+      `FORECAST_DEP_MAX_RUNS_PER_DAY` runs. The receipt's `dependency` block
+      counts every call and every failure. Nothing here restarts the gateway.
     """
+    import time as _time
+
     from backend.services import belief_state as B
 
-    day = today or datetime.now(timezone.utc).date().isoformat()
+    sleep_fn = sleep_fn or _time.sleep
+    now_fn = now_fn or (lambda: datetime.now(timezone.utc))
+    day = today or now_fn().date().isoformat()
     max_names = int(max_names or _config.FORECAST_MAX_NAMES_PER_DAY)
     cap_usd = float(cap_usd if cap_usd is not None else _config.FORECAST_DAILY_CAP_USD)
     model = model or _config.FORECAST_MODEL
     rdir = Path(receipt_dir) if receipt_dir is not None else forecast_day_dir()
     rpath = rdir / f"day_{day}.json"
+    max_attempts = max(1, int(_config.FORECAST_DEP_RETRY_MAX_ATTEMPTS))
+    backoff = tuple(float(x) for x in _config.FORECAST_DEP_RETRY_BACKOFF_S) or (0.0,)
 
     prior = None
     if rpath.exists():
@@ -532,10 +622,9 @@ def daily_forecast(*, today: str | None = None,
             prior = json.loads(rpath.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             prior = None
-    if prior and prior.get("state") in ("DONE", "REFUSED_CAP", "DEGRADED"):
-        return {"skipped": f"already ran today ({day})", "state": prior["state"],
-                "n_rows_written": prior.get("n_rows_written"),
-                "receipt": str(rpath)}
+    gate = resume_gate(prior, now=now_fn())
+    if gate is not None:
+        return {**gate, "receipt": str(rpath)}
 
     if sources is None:
         inputs = inputs or evidence_inputs(asof=day)
@@ -562,11 +651,30 @@ def daily_forecast(*, today: str | None = None,
            "retired_weight_zero": list(RETIRED_WEIGHT_ZERO),
            "retired_note": RETIRED_NOTE,
            "done": [], "unpriced": [], "refused": [], "n_rows_written": 0,
-           "started_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
-    if prior and prior.get("state") == "RUNNING":
+           "dependency": {"name": "OpenClaw gateway (openclaw_client.agent)",
+                          "retry_policy": {
+                              "max_calls_per_name_per_run": max_attempts,
+                              "backoff_s": list(backoff),
+                              "max_runs_per_utc_day": int(_config.FORECAST_DEP_MAX_RUNS_PER_DAY),
+                              "min_gap_between_runs_s": float(_config.FORECAST_DEP_RETRY_MIN_GAP_S),
+                              "unit_timeout_s": float(_config.FORECAST_UNIT_TIMEOUT_S)},
+                          "degrade_path": DEGRADE_PATH,
+                          "n_calls": 0, "n_failed_calls": 0, "n_retries": 0,
+                          "runs": 0, "runs_ended_down": 0,
+                          "last_failed_utc": None, "failures": []},
+           "started_utc": _iso_now(now_fn)}
+    if prior and prior.get("state") in ("RUNNING", REFUSED_DEPENDENCY_DOWN):
         for k in ("done", "unpriced", "refused", "n_rows_written"):
             rec[k] = prior.get(k, rec[k])
+        pdep = prior.get("dependency") or {}
+        for k in ("n_calls", "n_failed_calls", "n_retries", "runs",
+                  "runs_ended_down", "last_failed_utc", "failures"):
+            if k in pdep:
+                rec["dependency"][k] = pdep[k]
         rec["resumed"] = True
+        rec["resumed_from_state"] = prior.get("state")
+    dep = rec["dependency"]
+    dep["runs"] = int(dep.get("runs") or 0) + 1
 
     def flush() -> None:
         rdir.mkdir(parents=True, exist_ok=True)
@@ -574,16 +682,21 @@ def daily_forecast(*, today: str | None = None,
         tmp.write_text(json.dumps(rec, indent=1, default=str), encoding="utf-8")
         tmp.replace(rpath)
 
+    def transport_failed(ans: dict, call: dict) -> bool:
+        return bool(ans.get("transport_failed")) or \
+            call.get("status") in TRANSPORT_FAILURE_STATUSES
+
     flush()
     finished = set(rec["done"]) | set(rec["unpriced"]) \
         | {r["ticker"] for r in rec["refused"]}
     first_check: dict | None = None
+    spent = 0.0
     for t in uni["tickers"]:
         if t in finished:
             continue
         s = _spent_today(day, telemetry_path=telemetry_path)
         if not s:
-            rec.update(state="REFUSED_CAP",
+            rec.update(state=REFUSED_CAP_READER_DISAGREES,
                        why=("today's u_forecast spend is UNKNOWN (no telemetry "
                             "ledger could be opened); a cap that cannot read "
                             "cannot bind, so the day is refused"))
@@ -591,13 +704,14 @@ def daily_forecast(*, today: str | None = None,
         spent = float(s.get("total_cost_usd") or 0.0)
         rec["spent_usd"] = spent
         if s.get("total_is_lower_bound"):
-            rec.update(state="REFUSED_CAP",
+            rec.update(state=REFUSED_CAP_READER_DISAGREES,
                        why=f"{s.get('n_unpriced_calls')} unpriced call(s): the "
                            f"spend total is a LOWER BOUND and cannot bind a cap")
             break
         if spent >= cap_usd:
-            rec.update(state="REFUSED_CAP",
-                       why=f"spent ${spent:.4f} >= cap ${cap_usd:.2f} today")
+            rec.update(state=REFUSED_CAP,
+                       why=f"spent ${spent:.4f} >= cap ${cap_usd:.2f} today "
+                           f"(read from the same ledger the calls write)")
             break
 
         pk = packet_fn(t)
@@ -605,21 +719,62 @@ def daily_forecast(*, today: str | None = None,
             rec["unpriced"].append(t)
             flush()
             continue
-        ans = ask_fn(pk)
-        call = ans.pop("_call", {}) or {}
-        if first_check is None and call.get("call_id"):
+
+        # ---- the call, retried while the DEPENDENCY fails (never the name) ----
+        attempt, down = 0, False
+        while True:
+            ans = ask_fn(pk)
+            call = ans.pop("_call", {}) or {}
+            dep["n_calls"] += 1
+            if not transport_failed(ans, call):
+                break
+            attempt += 1
+            dep["n_failed_calls"] += 1
+            dep["last_failed_utc"] = _iso_now(now_fn)
+            dep["failures"] = (dep["failures"] + [{
+                "ticker": t, "attempt": attempt, "utc": dep["last_failed_utc"],
+                "status": call.get("status"), "call_id": call.get("call_id"),
+                "why": str(ans.get("refused"))[:120],
+                "stderr": str(ans.get("stderr") or "")[-160:]}])[-20:]
+            flush()
+            if attempt >= max_attempts:
+                down = True
+                break
+            wait = backoff[min(attempt - 1, len(backoff) - 1)]
+            print(f"  {t}: dependency failure {attempt}/{max_attempts} "
+                  f"({call.get('status') or ans.get('refused')}); retry in "
+                  f"{wait:.0f}s", flush=True)
+            dep["n_retries"] += 1
+            sleep_fn(wait)
+        if down:
+            dep["runs_ended_down"] = int(dep.get("runs_ended_down") or 0) + 1
+            last = dep["failures"][-1]
+            rec.update(state=REFUSED_DEPENDENCY_DOWN,
+                       why=(f"the OpenClaw call failed {attempt} time(s) in a row on "
+                            f"{t} (last: {last['status'] or last['why']}); the cap "
+                            f"was NOT the cause (spent ${spent:.4f} of "
+                            f"${cap_usd:.2f}). Run {dep['runs']} ended down "
+                            f"({dep['runs_ended_down']} of "
+                            f"{int(_config.FORECAST_DEP_MAX_RUNS_PER_DAY)} allowed "
+                            f"today); a later cycle resumes after "
+                            f"{float(_config.FORECAST_DEP_RETRY_MIN_GAP_S):.0f}s"))
+            break
+
+        if first_check is None and call.get("call_id") \
+                and call.get("status", "OK") == "OK":
             after = _spent_today(day, telemetry_path=telemetry_path)
             delta = float((after or {}).get("total_cost_usd") or 0.0) - spent
             first_check = {"ledger_delta_usd": round(delta, 6),
                            "writer_openclaw_cost_usd": call.get("openclaw_cost_usd"),
-                           "ledger_rows_after": (after or {}).get("n_calls")}
+                           "ledger_rows_after": (after or {}).get("n_calls"),
+                           "call_status": call.get("status", "OK")}
             rec["first_flush_check"] = first_check
             print(f"  first flush: ledger delta ${delta:.5f}, openclaw's own "
                   f"estimate ${call.get('openclaw_cost_usd')}", flush=True)
             if delta <= 0:
-                rec.update(state="REFUSED_CAP",
-                           why=("the call was made but the ledger the cap reads "
-                                "did not move: the cap cannot bind"))
+                rec.update(state=REFUSED_CAP_READER_DISAGREES,
+                           why=("a SUCCESSFUL call was made but the ledger the cap "
+                                "reads did not move: the cap cannot bind"))
                 flush()
                 break
         ps = {h: ans.get(f"probability_{h}d") for h in DAILY_HORIZONS}
@@ -673,11 +828,15 @@ def daily_forecast(*, today: str | None = None,
                           f"{len(rec['refused'])} refused")
     s = _spent_today(day, telemetry_path=telemetry_path) or {}
     rec["spent_usd"] = s.get("total_cost_usd")
-    rec["ended_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    rec["ended_utc"] = _iso_now(now_fn)
     flush()
     return {"state": rec["state"], "n_rows_written": rec["n_rows_written"],
             "n_done": len(rec["done"]), "n_unpriced": len(rec["unpriced"]),
             "n_refused": len(rec["refused"]), "spent_usd": rec["spent_usd"],
+            "dependency_calls": dep["n_calls"],
+            "dependency_failed_calls": dep["n_failed_calls"],
+            "dependency_retries": dep["n_retries"],
+            "dependency_runs_ended_down": dep["runs_ended_down"],
             "why": rec.get("why"), "receipt": str(rpath)}
 
 

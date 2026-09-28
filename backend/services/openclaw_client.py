@@ -57,6 +57,10 @@ which is the structural fix for the WhatsApp incident, not a policy about it.
 
 THREE NAMED PROFILES, AND WHICH ONE IS MURAT'S (chunk J, 2026-09-26)
 =====================================================================
+(SUPERSEDED 2026-09-28 by LANE O below the imports: ONE profile, `muratclaw`,
+attached to the dedicated Chrome; `user` / `chrome` refuse by name. The
+operator contract described here now binds on `muratclaw`.)
+
 `muratclaw` is OpenClaw's managed automation Chrome -- its own cookie jar,
 never signed in to Google or Dow Jones. `user` is Murat's OWN running Chrome,
 attached over chrome-mcp (existing-session); `chrome` is the extension relay
@@ -115,9 +119,38 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from backend import config as _config
+from backend.services import browser_policy as _BP
+from backend.services import muratclaw_instance as _MI
 from backend.services import openclaw_temp as _OT
 
 logger = logging.getLogger(__name__)
+
+# ───────────── LANE O, 2026-09-28: ONE browser, and it is proven ─────────────
+#
+# Murat: "configure to only murat claw like as if its controlling my pc". The
+# ONLY profile is `muratclaw`, which OpenClaw reaches by ATTACHING to the
+# dedicated Chrome (`C:\Users\mrthn\ChromeMuratClaw`, 127.0.0.1:18802).
+#
+# * `user` / `chrome` (his MAIN Chrome over chrome-mcp / the extension relay)
+#   refuse BY NAME, from an argument or from the environment
+#   (REFUSED_MAIN_CHROME_PROFILE). In `openclaw.json` they are redefined as
+#   attachOnly on a closed loopback port, so OpenClaw cannot reach them either.
+# * Before every action on a dedicated profile, `_instance_check` PROVES the
+#   endpoint is the dedicated Chrome and the tab belongs to it
+#   (`muratclaw_instance.prove`); a failed proof refuses
+#   (REFUSED_NOT_MURATCLAW_INSTANCE and friends). This replaces the marker-tab
+#   rule's job of identifying the profile.
+# * The owner's standing rules (`browser_policy`): no payments, no messages or
+#   emails, read-only -- a click lands only on a LINK this process saw in its
+#   own latest snapshot of that tab, never on a social host; press is scroll
+#   keys only; checkout / billing / mail addresses refuse.
+# * `open` is allowed on the dedicated profile ONLY (`open_tab`): a new tab of
+#   the dedicated Chrome cannot land in the main one. It runs the instance
+#   check before, records the tab as ours, and re-checks the new tab's host.
+# * Every guard runs ABOVE `_run`, so the HTTP transport (`openclaw_http`,
+#   `POST /tools/invoke`) and the CLI see the same checks; `_guard(name)`
+#   counts each check on the ledger and a test compares the counts per action
+#   on both transports.
 
 PROFILE_ENV = "AEGIS_OPENCLAW_PROFILE"
 DEFAULT_PROFILE = "muratclaw"
@@ -281,7 +314,8 @@ def cli_ledger() -> dict:
 def reset_cli_ledger() -> None:
     with _LEDGER_LOCK:
         _CLI_LEDGER.update(calls=0, seconds=0.0, timeouts=0, by_cmd={},
-                           cache=_new_cache_counters())
+                           cache=_new_cache_counters(), guards={}, by_transport={},
+                           http_truncated_fallbacks=0)
 
 
 def _bump(key: str, n: int = 1) -> None:
@@ -321,31 +355,109 @@ def _profile_of(args: list[str]) -> str | None:
 
 
 def allowed_profiles() -> tuple[str, ...]:
-    return tuple(getattr(_config, "OPENCLAW_ALLOWED_PROFILES",
-                         ("muratclaw", "user", "chrome")))
+    return tuple(getattr(_config, "OPENCLAW_ALLOWED_PROFILES", ("muratclaw",)))
 
 
 def operator_profiles() -> tuple[str, ...]:
-    return tuple(getattr(_config, "OPENCLAW_OPERATOR_PROFILES", ("user", "chrome")))
+    return tuple(getattr(_config, "OPENCLAW_OPERATOR_PROFILES", ("muratclaw",)))
+
+
+def main_chrome_profiles() -> tuple[str, ...]:
+    return tuple(getattr(_config, "OPENCLAW_MAIN_CHROME_PROFILES", ("user", "chrome")))
+
+
+def dedicated_profiles() -> tuple[str, ...]:
+    return tuple(getattr(_config, "OPENCLAW_DEDICATED_PROFILES", ("muratclaw",)))
 
 
 def operator_hosts() -> tuple[str, ...]:
-    return tuple(getattr(_config, "OPENCLAW_USER_TAB_HOSTS",
-                         ("wsj.com", "barrons.com", "marketwatch.com")))
+    """Every host the dedicated browser may be on while it acts: the Dow Jones
+    sites plus the read-only social hosts (2026-09-28)."""
+    return tuple(getattr(_config, "OPENCLAW_BROWSER_HOSTS",
+                         getattr(_config, "OPENCLAW_USER_TAB_HOSTS",
+                                 ("wsj.com", "barrons.com", "marketwatch.com"))))
+
+
+def social_hosts() -> tuple[str, ...]:
+    return tuple(getattr(_config, "OPENCLAW_SOCIAL_HOSTS", ("x.com", "reddit.com",
+                                                            "stocktwits.com")))
 
 
 def profile(name: str | None = None) -> str:
     """The profile a call will use: `name` if given, else the env default.
 
-    Never substitutes one profile for another. An explicit name outside
-    `config.OPENCLAW_ALLOWED_PROFILES` refuses.
+    Never substitutes one profile for another. A name that reaches Murat's
+    MAIN Chrome (`config.OPENCLAW_MAIN_CHROME_PROFILES`) refuses by name, from
+    an argument OR from the environment; any other name outside
+    `config.OPENCLAW_ALLOWED_PROFILES` refuses too.
     """
     want = (name or os.environ.get(PROFILE_ENV) or DEFAULT_PROFILE).strip()
-    if name is not None and want not in allowed_profiles():
+    if want in main_chrome_profiles():
+        raise OpenClawRefused(
+            f"REFUSED_MAIN_CHROME_PROFILE: {want!r} attaches to Murat's MAIN Chrome. "
+            f"Since 2026-09-28 the only browser is the dedicated MuratClaw Chrome "
+            f"(profile {DEFAULT_PROFILE!r}); twice before a page opened in his main "
+            f"account.")
+    if want not in allowed_profiles():
         raise OpenClawRefused(
             f"REFUSED_BROWSER_PROFILE_NOT_ALLOWED: {want!r} is not one of "
             f"{allowed_profiles()} (config.OPENCLAW_ALLOWED_PROFILES).")
     return want
+
+
+def _guard(name: str) -> None:
+    """Count one guard evaluation on the ledger (`guards`). A test compares the
+    counts per action across transports, so a route that skips a check fails."""
+    with _LEDGER_LOCK:
+        g = _CLI_LEDGER.setdefault("guards", {})
+        g[name] = g.get(name, 0) + 1
+
+
+#: The prover; None -> `muratclaw_instance.prove` at call time. A test swaps it.
+_PROVER: Any = None
+
+
+def _instance_check(want: str, *, target_id: str | None = None,
+                    hit: dict | None = None) -> dict | None:
+    """Prove the endpoint behind a dedicated profile is the dedicated Chrome
+    (and, given a tab, that the tab belongs to it) BEFORE an action. Refuses
+    with the prover's named code; a profile that is not dedicated returns None."""
+    if want not in dedicated_profiles():
+        return None
+    _guard("instance")
+    raw = str((hit or {}).get("targetId") or target_id or "") or None
+    fn = _PROVER or _MI.prove
+    try:
+        return fn(target_id=raw, profile=want)
+    except _MI.InstanceNotProven as exc:
+        invalidate_profile_cache(want)
+        raise OpenClawRefused(str(exc)) from exc
+
+
+def _policy_urls(urls: list[str]) -> None:
+    """The owner's URL rules (payment / message / social write paths)."""
+    for u in urls:
+        _guard("policy_url")
+        why = _BP.url_refusal(u) or _BP.social_url_refusal(u, social_hosts())
+        if why:
+            raise OpenClawRefused(why)
+
+
+#: (profile, raw targetId) -> snapshots THIS process took of that tab since
+#: its page last changed. A click is judged against them (`browser_policy.
+#: click_refusal`): a ref nobody here has seen is never clicked.
+_SNAPSHOTS: dict[tuple[str, str], list[str]] = {}
+_SNAPSHOTS_MAX = 3
+
+
+def _tab_key(want: str, target_id: str | None, hit: dict | None = None) -> tuple[str, str]:
+    return (want, str((hit or {}).get("targetId") or target_id or ""))
+
+
+def _forget_snapshots(want: str, target_id: str | None, hit: dict | None = None) -> None:
+    _SNAPSHOTS.pop(_tab_key(want, target_id, hit), None)
+    if target_id:
+        _SNAPSHOTS.pop((want, str(target_id)), None)
 
 
 def is_operator_profile(name: str) -> bool:
@@ -494,6 +606,84 @@ def _strip(text: str | None) -> str:
     return _ANSI.sub("", text or "")
 
 
+TRANSPORT_ENV = "AEGIS_OPENCLAW_TRANSPORT"
+TRANSPORTS = ("cli", "http")
+
+
+def browser_transport(profile_name: str | None = None) -> str:
+    """"cli" or "http" (LANE O3): env `AEGIS_OPENCLAW_TRANSPORT`, else -- for a
+    DEDICATED profile -- `config.OPENCLAW_BROWSER_TRANSPORT_DEDICATED` (2026-09-28:
+    "http"), else `config.OPENCLAW_BROWSER_TRANSPORT`, else "cli". An unknown
+    value is "cli"."""
+    env = os.environ.get(TRANSPORT_ENV)
+    if env:
+        t = env
+    elif profile_name and profile_name in dedicated_profiles():
+        t = getattr(_config, "OPENCLAW_BROWSER_TRANSPORT_DEDICATED", None) or             getattr(_config, "OPENCLAW_BROWSER_TRANSPORT", "cli")
+    else:
+        t = getattr(_config, "OPENCLAW_BROWSER_TRANSPORT", "cli")
+    t = (t or "cli").strip().lower()
+    return t if t in TRANSPORTS else "cli"
+
+
+def _ledger_add(key: str, dt: float, transport: str) -> None:
+    """One round trip on the ledger: totals, per sub-command, and per
+    transport per sub-command (so a receipt can print seconds per verb on each)."""
+    with _LEDGER_LOCK:
+        _CLI_LEDGER["calls"] += 1
+        _CLI_LEDGER["seconds"] = round(_CLI_LEDGER["seconds"] + dt, 3)
+        row = _CLI_LEDGER["by_cmd"].setdefault(key, {"calls": 0, "seconds": 0.0})
+        row["calls"] += 1
+        row["seconds"] = round(row["seconds"] + dt, 3)
+        bt = _CLI_LEDGER.setdefault("by_transport", {}).setdefault(transport, {})
+        r2 = bt.setdefault(key, {"calls": 0, "seconds": 0.0})
+        r2["calls"] += 1
+        r2["seconds"] = round(r2["seconds"] + dt, 3)
+
+
+#: The one persistent HTTP transport of this process (lazily built). A test
+#: replaces it with a fake.
+_HTTP: Any = None
+
+
+def _http() -> Any:
+    global _HTTP
+    if _HTTP is None:
+        from backend.services import openclaw_http as _OH
+        _HTTP = _OH.HttpTransport()
+    return _HTTP
+
+
+def _run_http(args: list[str], key: str, *, timeout: float) -> subprocess.CompletedProcess | None:
+    """The browser verb over `POST /tools/invoke`, or None when the HTTP route
+    does not serve it (the caller then uses the CLI). A snapshot the gateway
+    truncated is ALSO None -- counted as `http_truncated_fallbacks` -- because a
+    truncated snapshot drops the links at the end of a page."""
+    http = _http()
+    if not http.serves(args):
+        return None
+    t0 = time.monotonic()
+    try:
+        r = http.run(list(args), timeout=timeout)
+    except subprocess.TimeoutExpired:
+        invalidate_profile_cache()
+        with _LEDGER_LOCK:
+            _CLI_LEDGER["timeouts"] += 1
+        raise
+    finally:
+        _ledger_add(key, time.monotonic() - t0, "http")
+    if r is None:
+        return None
+    if getattr(r, "http_truncated", False):
+        with _LEDGER_LOCK:
+            _CLI_LEDGER["http_truncated_fallbacks"] = \
+                _CLI_LEDGER.get("http_truncated_fallbacks", 0) + 1
+        return None
+    cp = subprocess.CompletedProcess(r.args, r.returncode, _strip(r.stdout), _strip(r.stderr))
+    cp.cli_route = "http"  # type: ignore[attr-defined]
+    return cp
+
+
 def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProcess:
     # UTF-8, not the console code page: on Windows `text=True` alone decodes
     # with cp1252, and a page's curly quote (UTF-8 E2 80 9D -> byte 0x9D, which
@@ -503,6 +693,10 @@ def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProc
     # No shell: see "no shell between us and the CLI" above. A URL with `&`
     # arrives at the CLI as one argv element, byte-identical.
     key = _cmd_key(args)
+    if args[:1] == ["browser"] and browser_transport(_profile_of(args)) == "http":
+        served = _run_http(args, key, timeout=timeout)
+        if served is not None:
+            return served
     cli = _resolve_cli()
     route = cli["route"]
     _CLI_LEDGER["cli_route"] = route
@@ -523,12 +717,7 @@ def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProc
         raise
     finally:
         dt = time.monotonic() - t0
-        with _LEDGER_LOCK:
-            _CLI_LEDGER["calls"] += 1
-            _CLI_LEDGER["seconds"] = round(_CLI_LEDGER["seconds"] + dt, 3)
-            row = _CLI_LEDGER["by_cmd"].setdefault(key, {"calls": 0, "seconds": 0.0})
-            row["calls"] += 1
-            row["seconds"] = round(row["seconds"] + dt, 3)
+        _ledger_add(key, dt, "cli")
         # Every process that loads a source-shipped plugin leaves a ~70 MB
         # `openclaw-plugin-build-*` copy in TEMP (2026-09-27: ~2,400 of them
         # filled C:). At most one sweep per interval, on a daemon thread; a
@@ -552,6 +741,11 @@ def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProc
 
 
 def check_url(url: str) -> None:
+    """`DENIED_DOMAINS`: brokerage, bank and payment hosts. Murat asked on
+    2026-09-28 that the agent "can login to alpaca anything"; declined by the
+    orchestrator and agreed by him the same day ("u are right dont give alpaca
+    or brokers to openclaw"). No LLM or browser agent has authority over
+    capital; the broker is reached only through `pc_broker`'s API path."""
     low = (url or "").lower()
     for d in DENIED_DOMAINS:
         if d in low:
@@ -895,6 +1089,26 @@ def _topology_lock() -> Any:
     return _DG.file_lock(Path(tempfile.gettempdir()) / TAB_TOPOLOGY_LOCK_NAME)
 
 
+def _click_refusal(want: str, target_id: str | None, hit: dict | None, ref: str,
+                   tab_url: str) -> str | None:
+    """`browser_policy.click_refusal` against every snapshot THIS process took
+    of the tab since its page last changed: allowed if ONE of them shows `ref`
+    as a link that passes; refused (with the first reason) otherwise."""
+    snaps = _SNAPSHOTS.get(_tab_key(want, target_id, hit)) or \
+        _SNAPSHOTS.get((want, str(target_id or ""))) or []
+    if not snaps:
+        return _BP.click_refusal(None, ref, tab_url=tab_url, social_hosts=social_hosts(),
+                                 allowed_hosts=operator_hosts())
+    first = None
+    for s in reversed(snaps):
+        why = _BP.click_refusal(s, ref, tab_url=tab_url, social_hosts=social_hosts(),
+                                allowed_hosts=operator_hosts())
+        if why is None:
+            return None
+        first = first or why
+    return first
+
+
 def _needs_url_reread(verb: str, args: tuple) -> bool:
     """navigate/click always; press unless every key is a scroll key."""
     if verb in ("navigate", "click"):
@@ -953,6 +1167,7 @@ def browser(verb: str, *args: str, url: str | None = None,
     also be in `OPERATOR_VERBS`, every URL must be on an allowed host, the tab
     must be named and currently on an allowed host, and `open` is refused.
     """
+    _guard("verb_allow")
     if verb not in ALLOWED_VERBS:
         raise OpenClawRefused(
             f"REFUSED_VERB: {verb!r} is not in the allowed set. "
@@ -965,9 +1180,24 @@ def browser(verb: str, *args: str, url: str | None = None,
     urls += [a for a in args if isinstance(a, str)
              and a.lower().startswith(("http://", "https://"))]
     for u in urls:
+        _guard("denied_domains")
         check_url(u)
+    _policy_urls(urls)
+    if verb == "open" and want in dedicated_profiles():
+        # A new tab of the DEDICATED Chrome cannot land in the main one; the
+        # instance check proves which Chrome it is before the tab is made.
+        dest = url or next((a for a in args if isinstance(a, str)
+                            and not a.startswith("--")), None)
+        return open_tab(str(dest or ""), profile_name=want, timeout=timeout)
+    if operator and verb == "press":
+        _guard("policy_press")
+        why = _BP.press_refusal([a for a in args if isinstance(a, str)
+                                 and not a.startswith("--")])
+        if why:
+            raise OpenClawRefused(why)
     if operator:
         if verb == "close":
+            _guard("own_tab")
             if not target_id or target_id not in _OPENED_TABS:
                 raise OpenClawRefused(
                     f"REFUSED_OPERATOR_CLOSE: {target_id!r} was not opened by this "
@@ -978,6 +1208,7 @@ def browser(verb: str, *args: str, url: str | None = None,
                 f"Murat's own Chrome. `open` in particular puts a new tab in his "
                 f"MAIN profile; only {sorted(OPERATOR_VERBS)} run there.")
         for u in urls:
+            _guard("host_allow")
             if not host_allowed(u):
                 raise OpenClawRefused(
                     f"REFUSED_OPERATOR_HOST: {u!r} is not on {operator_hosts()}.")
@@ -1013,9 +1244,22 @@ def _browser_checked(verb: str, args: tuple, *, url: str | None, timeout: float,
         else:
             pa = assert_profile()
         before = None
+        hit: dict | None = None
         if operator and (verb in OPERATOR_TAB_VERBS or verb == "close"):
-            before = _operator_tab(target_id, profile_name=want,
-                                   own_blank_ok=verb in OWN_BLANK_TAB_VERBS)[0]
+            _guard("host_before")
+            before, hit = _operator_tab(target_id, profile_name=want,
+                                        own_blank_ok=verb in OWN_BLANK_TAB_VERBS)
+            _instance_check(want, target_id=target_id, hit=hit)
+            if verb == "click":
+                _guard("policy_click")
+                ref = next((a for a in args if isinstance(a, str) and not a.startswith("--")),
+                           "")
+                why = _click_refusal(want, target_id, hit, ref, before or "")
+                if why:
+                    raise OpenClawRefused(why)
+        elif verb not in ("tabs", "status", "profiles", "start", "stop"):
+            # a non-operator profile acting without a tab: still prove the Chrome
+            _instance_check(want, target_id=target_id)
     except OpenClawRefused as exc:
         if "REFUSED_BROWSER_PROFILE_UNAVAILABLE" in str(exc):
             invalidate_profile_cache(want)
@@ -1045,6 +1289,12 @@ def _browser_checked(verb: str, args: tuple, *, url: str | None, timeout: float,
         invalidate_tabs_cache(want)
     if operator and verb == "close" and r.returncode == 0:
         _OPENED_TABS.discard(str(target_id))
+    if operator and target_id:
+        if verb == "snapshot" and r.returncode == 0:
+            k = _tab_key(want, target_id, hit)
+            _SNAPSHOTS[k] = (_SNAPSHOTS.get(k, []) + [out["stdout"]])[-_SNAPSHOTS_MAX:]
+        elif verb in ("navigate", "click", "close") or _needs_url_reread(verb, args):
+            _forget_snapshots(want, target_id, hit)
     if operator:
         out["target_id"] = target_id
         out["tab_url_before"] = before
@@ -1052,6 +1302,7 @@ def _browser_checked(verb: str, args: tuple, *, url: str | None, timeout: float,
             out["own_blank_tab"] = True
         out["attached_to"] = attached_to(profile_name=want)
         if target_id and _needs_url_reread(verb, args):
+            _guard("host_after")
             # The landed-URL check. A navigate whose reply names the landed
             # URL (the gateway's own post-navigate `list_pages`) is checked on
             # THAT URL and the cached listing is updated with it; otherwise --
@@ -1075,7 +1326,7 @@ def _browser_checked(verb: str, args: tuple, *, url: str | None, timeout: float,
 
 
 def own_blank_tab(verb: str, target_id: str, url: str | None = None, *,
-                  profile_name: str = "user") -> dict:
+                  profile_name: str = DEFAULT_PROFILE) -> dict:
     """The reader's blank-tab verbs, on a tab THIS process opened -- and only one.
 
     * `blank`: navigate it to `about:blank`, ONE CLI call. The guarded
@@ -1095,10 +1346,13 @@ def own_blank_tab(verb: str, target_id: str, url: str | None = None, *,
     want = profile(profile_name)
     if not is_operator_profile(want):
         raise OpenClawRefused("own_blank_tab is for operator profiles only")
+    _guard("own_tab")
     if not target_id or str(target_id) not in _OPENED_TABS:
         raise OpenClawRefused(
             f"REFUSED_NOT_OUR_TAB: {target_id!r} was not opened by this process.")
     if verb == "blank":
+        _instance_check(want, target_id=target_id)
+        _forget_snapshots(want, target_id)
         r = _run(["browser", "--browser-profile", want, "navigate", BLANK_URL,
                   "--target-id", target_id], timeout=60.0)
         invalidate_tabs_cache(want)             # the cached listing still shows the old URL
@@ -1124,7 +1378,65 @@ def own_blank_tab(verb: str, target_id: str, url: str | None = None, *,
 OPEN_FROM_TAB_TEMPLATE = "() => {{ window.open({url}, '_blank'); return 1; }}"
 
 
-def open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
+def open_tab(url: str, *, profile_name: str = DEFAULT_PROFILE, timeout: float = 90.0) -> dict:
+    """A NEW tab at `url` in the DEDICATED Chrome (LANE O1, 2026-09-28).
+
+    The CDP `open` verb was refused on the operator profiles because, attached
+    to Murat's whole running Chrome, it landed in his MAIN profile. On the
+    dedicated instance a new tab can only be a tab of that instance, so `open`
+    is allowed there and ONLY there, after:
+
+    * the URL rules (denied domains, payment / message / social-write paths,
+      the host allowlist);
+    * the instance proof (the endpoint is the dedicated Chrome);
+    then the new tab is recorded as ours (`_OPENED_TABS`), proven to be a
+    target of the dedicated endpoint, and its landed host is re-read from a
+    fresh listing (off-host refuses; the tab stays ours so `close` may remove it).
+    Held under the tab-topology lock like `open_from_tab`."""
+    want = profile(profile_name)
+    if want not in dedicated_profiles():
+        raise OpenClawRefused(
+            f"REFUSED_OPERATOR_VERB: `open` runs only on the dedicated profiles "
+            f"{dedicated_profiles()}; {want!r} is not one.")
+    _guard("denied_domains")
+    check_url(url)
+    _policy_urls([url])
+    _guard("host_allow")
+    if not (url or "").lower().startswith(("http://", "https://")) or not host_allowed(url):
+        raise OpenClawRefused(f"REFUSED_OPERATOR_HOST: {url!r} is not on {operator_hosts()}.")
+    with _topology_lock():
+        assert_profile(name=want)
+        _instance_check(want)
+        t0 = time.monotonic()
+        r = _run(["browser", "--browser-profile", want, "--json", "open", url], timeout=timeout)
+        secs = round(time.monotonic() - t0, 3)
+        invalidate_tabs_cache(want)
+        if r.returncode != 0:
+            invalidate_profile_cache(want)
+            raise OpenClawRefused(f"REFUSED_OPEN_TAB: rc {r.returncode}: "
+                                  f"{(r.stderr or r.stdout or '')[:200]!r}")
+        try:
+            d = _json_of(r.stdout)
+        except ValueError:
+            d = {}
+        tid = str(d.get("targetId") or "")
+        if not tid:
+            raise OpenClawRefused(f"REFUSED_OPEN_TAB: the reply named no targetId: "
+                                  f"{(r.stdout or '')[:160]!r}")
+        _OPENED_TABS.add(tid)
+        _instance_check(want, target_id=tid)
+        _guard("host_after")
+        landed = tab_url(tid, profile_name=want)
+        if landed and landed != BLANK_URL and not host_allowed(landed):
+            raise OpenClawRefused(
+                f"REFUSED_OPERATOR_TAB_HOST: the new tab {tid!r} is on {landed!r}; it is "
+                f"recorded as ours so `close` may remove it.")
+    return {"verb": "open", "profile": want, "rc": 0, "new_tab": tid, "target_id": tid,
+            "url": landed or d.get("url"), "seconds": secs,
+            "cli_route": getattr(r, "cli_route", None) or cli_route()}
+
+
+def open_from_tab(parent_id: str, url: str, *, profile_name: str = DEFAULT_PROFILE,
                   settle_s: float = 1.0, wait_s: float = 5.0, poll_s: float = 0.5,
                   sleep_fn: Any = None, clock: Any = None) -> dict:
     """`_open_from_tab` under the tab-topology lock (2026-09-27): the
@@ -1135,7 +1447,7 @@ def open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
                               wait_s=wait_s, poll_s=poll_s, sleep_fn=sleep_fn, clock=clock)
 
 
-def _open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
+def _open_from_tab(parent_id: str, url: str, *, profile_name: str = DEFAULT_PROFILE,
                    settle_s: float = 1.0, wait_s: float = 5.0, poll_s: float = 0.5,
                    sleep_fn: Any = None, clock: Any = None) -> dict:
     """Open `url` in a NEW tab of the same Chrome profile window as `parent_id`.
@@ -1154,7 +1466,10 @@ def _open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
     want = profile(profile_name)
     if not is_operator_profile(want):
         raise OpenClawRefused("open_from_tab is for operator profiles only")
+    _guard("denied_domains")
     check_url(url)
+    _policy_urls([url])
+    _guard("host_allow")
     if not host_allowed(url):
         raise OpenClawRefused(f"REFUSED_OPERATOR_HOST: {url!r} is not on {operator_hosts()}.")
     sleep = sleep_fn or time.sleep
@@ -1164,7 +1479,9 @@ def _open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
     # check lists it; `before` reuses that one listing), every poll is fresh,
     # and the last poll -- taken after the open -- is what stays cached.
     invalidate_tabs_cache(want)
-    assert_operator_tab(parent_id, profile_name=want)
+    _guard("host_before")
+    _, phit = _operator_tab(parent_id, profile_name=want)
+    _instance_check(want, target_id=parent_id, hit=phit)
     before = tabs(profile_name=want)
     parent = find_tab(before, parent_id)
     parent_handle = tab_handle(parent) if parent else parent_id
@@ -1192,6 +1509,7 @@ def _open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
             f"{(r.stderr or '')[:160]!r}; before={brief(before)} after={brief(after)}")
     tid, turl = tab_handle(new[0]), str(new[0].get("url") or "")
     _OPENED_TABS.add(tid)
+    _guard("host_after")
     if turl and turl != "about:blank" and not host_allowed(turl):
         raise OpenClawRefused(
             f"REFUSED_OPERATOR_TAB_HOST: the new tab {tid!r} is on {turl!r}; it is "
@@ -1216,7 +1534,9 @@ def read_text(target_id: str, *, profile_name: str | None = None,
     if is_operator_profile(want):
         # ONE listing (usually the cached one) serves both the host check and
         # the expected targetId; HEAD listed twice here.
+        _guard("host_before")
         _, hit = _operator_tab(target_id, profile_name=want)
+        _instance_check(want, target_id=target_id, hit=hit)
         expected = str(hit.get("targetId")) if hit.get("targetId") else None
     check_s = time.monotonic() - t_check
     t0 = time.monotonic()
@@ -1449,9 +1769,25 @@ def health(*, probe_web: bool = False) -> Health:
     # stays the one callers and stubs already use.)
     invalidate_profile_cache(profile())
     p = assert_profile(strict=False)
-    rows["profile_pinned"] = bool(p.get("ok"))
+    # The profile EXISTS (pinned) even while the dedicated Chrome is closed; an
+    # operator profile then reports `browser_ready: False`. The verdict keys on
+    # existence so agent-only callers (thesis cards) are not gated on a browser
+    # they do not drive; every browser ACTION proves the instance itself.
+    rows["profile_pinned"] = bool(p.get("ok") or p.get("name"))
+    rows["browser_ready"] = bool(p.get("ok"))
     rows["profile_detail"] = p.get("detail") or p.get("state")
     rows["profile_is_default_too"] = _default_profile_matches()
+    rows["transport"] = browser_transport(profile())
+    rows["main_chrome_profiles_refused"] = list(main_chrome_profiles())
+    if profile() in dedicated_profiles():
+        try:
+            fn = _PROVER or _MI.prove
+            pr = fn(target_id=None, profile=profile())
+            rows["instance"] = {"proven": True, "pid": pr.get("pid"),
+                                "endpoint": pr.get("endpoint")}
+        except _MI.InstanceNotProven as exc:
+            rows["instance"] = {"proven": False, "detail": str(exc)[:240]}
+            rows["browser_ready"] = False
 
     # Every NAMED profile's state, so a caller sees which browser is actually
     # there before a run (informative; the verdict still keys on the pinned one).

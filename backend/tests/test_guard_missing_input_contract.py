@@ -1304,6 +1304,15 @@ def _case_telegram_bridge():
     return call, TG.TelegramRefused, "send() with no owner chat id configured"
 
 
+def _case_alerts():
+    from backend.services import alerts as AL
+    # The missing input is the PRIMARY-SOURCE LINK: an event nobody can trace
+    # to a filing may confirm an alert, never originate one.
+    ev = {"ticker": "X", "source_kind": "sec_8k", "lane": "truth", "source_url": ""}
+    return (lambda: AL.assert_can_originate(ev), AL.AlertRefused,
+            "an alert event with no primary-source link")
+
+
 def _case_openclaw_client():
     import os
 
@@ -1328,6 +1337,27 @@ def _case_openclaw_client():
                 os.environ[OC.PROFILE_ENV] = saved
 
     return call, OC.OpenClawRefused, "assert_profile() with the pinned profile absent"
+
+
+def _case_muratclaw_instance():
+    """LANE O (2026-09-28): the missing input is THE DEDICATED CHROME. With no
+    browser answering on its loopback port, the prover must refuse by name --
+    never report a proof it could not make, and never fall through to "whatever
+    browser OpenClaw is attached to" (twice that was Murat's MAIN Chrome)."""
+    from backend.services import muratclaw_instance as MI
+
+    def down(url):
+        raise ConnectionRefusedError("nothing listens")
+    cfg = {"browser": {"defaultProfile": "muratclaw", "profiles": {
+        "muratclaw": {"attachOnly": True,
+                      "cdpUrl": f"http://{MI.host()}:{MI.port()}"},
+        "user": {"attachOnly": True, "cdpUrl": "http://127.0.0.1:9"},
+        "chrome": {"attachOnly": True, "cdpUrl": "http://127.0.0.1:9"}}}}
+    probes = MI.Probes(http_json=down, ws_browser_pid=lambda ws: None,
+                       process=lambda pid: None, listener=lambda p: None,
+                       read_config=lambda: cfg, chrome_processes=lambda: [])
+    return (lambda: MI.prove(probes=probes), MI.InstanceNotProven,
+            "prove() with no dedicated Chrome answering on its port")
 
 
 def _case_web_events():
@@ -1520,14 +1550,47 @@ def _case_source_scorecard():
             "a corpus folder with no article and no claim")
 
 
+def _case_calendar_offsets():
+    """Quarterly-offset triplet (lane M1, 2026-09-28): a monthly rule has no
+    quarterly calendars.
+
+    The missing input is THE 3-MONTH HOLD. The triplet re-runs a rule at its
+    three quarterly rebalance calendars; a monthly rule has one calendar, and
+    three identical "offsets" of it would read as a rule robust to its calendar.
+    """
+    from backend.services.calendar_offsets import OffsetInputMissing, offset_variants
+    from backend.services.strategy_library import Strategy, col
+    rule = Strategy("monthly_rule", "momentum", "a monthly rule", col("mom_252_21"), hold_months=1)
+    return (lambda: offset_variants(rule), OffsetInputMissing,
+            "a 1-month-hold rule offered to the quarterly offset triplet")
+
+
+def _case_lib_forward_trial():
+    """TRIAL-LIB-FWD-TWIN-1 (lane M6, 2026-09-28): a library book with no
+    frozen twin is not read.
+
+    The missing input is THE TWIN. The trial reads each frozen book against its
+    frozen matched or size-band twin; a book without one would have to be read
+    against nothing (its raw return) and pooled as if it had beaten a control.
+    """
+    from backend.services.lib_forward_trial import LibTrialInputMissing, select_pairs
+    rows = [{"book_id": "c", "name": "lib_c", "kind": "personal"}]
+    return (lambda: select_pairs(rows), LibTrialInputMissing,
+            "a lib_ book with no matched_random or random_same_band twin")
+
+
 CASES = {
+    "calendar_offsets": _case_calendar_offsets,
+    "lib_forward_trial": _case_lib_forward_trial,
     "investment_committee": _case_investment_committee,
     "fundamental_features": _case_fundamental_features,
     "web_events": _case_web_events,
     "openclaw_client": _case_openclaw_client,
+    "muratclaw_instance": _case_muratclaw_instance,
     "web_reader": _case_web_reader,
     "sim_session": _case_sim_session,
     "telegram_bridge": _case_telegram_bridge,
+    "alerts": _case_alerts,
     "xs_ranker": _case_xs_ranker,
     "llm_portfolio": _case_llm_portfolio,
     "inflection": _case_inflection,

@@ -4057,6 +4057,37 @@ FORECAST_MODEL = "deepseek/deepseek-flash"
 FORECAST_TOP_REVISION_NAMES = 20
 #: The unit gives up on the day after this long, and says so.
 FORECAST_UNIT_TIMEOUT_S = 7200
+#: A DEPENDENCY failure is not a cap (2026-09-28 incident, backend/data/optimus/
+#: incidents/u_forecast_dead_2026-09-27.json): on 2026-09-27 the OpenClaw gateway
+#: dropped the first call (code 1006, `RC_NONZERO`) and the day was filed
+#: `REFUSED_CAP` with $0.00 of a $2.00 cap spent, terminal for the UTC day.
+#: Now a transport failure (`TIMEOUT` / `RC_NONZERO` / OSError launching the
+#: CLI) is retried on the SAME name up to this many calls in one run...
+FORECAST_DEP_RETRY_MAX_ATTEMPTS = 4
+#: ...sleeping these seconds before call 2, 3 and 4 (450 s in all). Worst run:
+#: 4 calls x 420 s agent timeout + 450 s = 2,130 s, inside
+#: FORECAST_UNIT_TIMEOUT_S (7,200 s). A failed call costs $0 (0 tokens priced).
+FORECAST_DEP_RETRY_BACKOFF_S = (30.0, 120.0, 300.0)
+#: Then the run ends `REFUSED_DEPENDENCY_DOWN`, which does NOT end the day: a
+#: later sim cycle resumes it, at most this many runs per UTC day...
+FORECAST_DEP_MAX_RUNS_PER_DAY = 8
+#: ...and no sooner than this many seconds after the last failed run (8 runs x
+#: 1 h spans a reader night that holds the gateway for several hours).
+FORECAST_DEP_RETRY_MIN_GAP_S = 3600
+#: The forecast WRITERS the health probe `system_health.p_u_forecast` counts
+#: one by one (2026-09-28: it counted every specialist, so 167 thesis-card and
+#: source rows kept `u_forecast` ALIVE while evidence_v3 wrote 0). `prefix`
+#: matches the row's `specialist`; `scheduled: "utc_day"` means a caller runs
+#: it every UTC day, so ZERO rows since the start of the previous UTC day is
+#: DEGRADED by name; `None` is reported, never graded.
+FORECAST_WRITERS: dict = {
+    "u_forecast": {"prefix": "investigator:evidence_v3", "scheduled": "utc_day",
+                   "receipt": "forecasts/day_{day}.json"},
+    "thesis_card": {"prefix": "thesis_card:", "scheduled": None},
+    "source_claims": {"prefix": "source:", "scheduled": None},
+    "review": {"prefix": "review:", "scheduled": None},
+    "promise": {"prefix": "promise:", "scheduled": None},
+}
 
 
 # ── BOOK FACTORY / LLM PORTFOLIO BOOKS (Builder O2, 2026-09-25) ─────────────
@@ -4261,21 +4292,96 @@ LEARN_NUMBER_TOL_PP = 0.15
 
 
 # ── CHUNK J: DOW JONES BUNDLE THROUGH MURAT'S OWN CHROME (2026-09-26) ─────────
-#: Browser profiles Aegis may NAME. `muratclaw` is OpenClaw's managed, never
-#: signed-in automation Chrome (the default for every existing caller);
-#: `user` is Murat's own running Chrome attached over chrome-mcp
-#: (existing-session); `chrome` is the extension relay. A name outside this
-#: tuple refuses with REFUSED_BROWSER_PROFILE_NOT_ALLOWED.
-OPENCLAW_ALLOWED_PROFILES = ("muratclaw", "user", "chrome")
-#: Profiles that are Murat's REAL browser. On these, `open` is refused (a new
-#: tab lands in his MAIN Chrome profile -- it did, 2026-09-26 22:xx, a SEC page),
-#: every action names a tab, and the tab's current host must be one of
-#: `OPENCLAW_USER_TAB_HOSTS` before and after the action.
-OPENCLAW_OPERATOR_PROFILES = ("user", "chrome")
-#: The ONLY hosts the operator-profile browser may touch (Murat, 2026-09-26:
-#: "wsj/barrons/marketwatch only"). sec.gov, reddit, x.com and Yahoo go through
-#: their HTTP APIs / the managed profile, never through his Chrome.
+#: Browser profiles Aegis may NAME (LANE O, 2026-09-28). ONE: `muratclaw`,
+#: which OpenClaw now reaches ONLY by attaching to the dedicated Chrome at
+#: `OPENCLAW_DEDICATED_USER_DATA_DIR` on 127.0.0.1:`OPENCLAW_DEDICATED_CDP_PORT`
+#: (`openclaw.json`: `browser.profiles.muratclaw = {attachOnly: true, cdpUrl}`).
+#: Murat, 2026-09-28: "configure to only murat claw like as if its controlling
+#: my pc". Until 2026-09-28 this tuple also held `user` (his MAIN Chrome over
+#: chrome-mcp) and `chrome` (the extension relay); twice a page opened in his
+#: main account. A name outside this tuple refuses with
+#: REFUSED_BROWSER_PROFILE_NOT_ALLOWED.
+OPENCLAW_ALLOWED_PROFILES = ("muratclaw",)
+#: The profile names that reach (or used to reach) Murat's MAIN Chrome. Named
+#: so a request for one refuses BY NAME (REFUSED_MAIN_CHROME_PROFILE), from an
+#: argument or from AEGIS_OPENCLAW_PROFILE. In `openclaw.json` both are
+#: redefined as attachOnly on a closed loopback port, so OpenClaw itself cannot
+#: attach them to anything either.
+OPENCLAW_MAIN_CHROME_PROFILES = ("user", "chrome")
+#: The operator contract (named tab, host allowlist before and after every
+#: action, own-tab close, no typing) binds on the dedicated profile: it is a
+#: SIGNED-IN browser (two Google accounts, Dow Jones, socials), so it is held to
+#: the narrow contract, not the old managed-profile one.
+OPENCLAW_OPERATOR_PROFILES = ("muratclaw",)
+#: The profiles whose every action first PROVES the attached browser is the
+#: dedicated one (`muratclaw_instance.prove`): the CDP endpoint answers on
+#: loopback, Chrome's own `SystemInfo.getProcessInfo` names the browser PID,
+#: that PID's command line carries the dedicated --user-data-dir and port, the
+#: port's listener is that PID, and the tab acted on is listed by THAT endpoint.
+OPENCLAW_DEDICATED_PROFILES = ("muratclaw",)
+OPENCLAW_DEDICATED_CDP_HOST = "127.0.0.1"
+OPENCLAW_DEDICATED_CDP_PORT = 18802
+OPENCLAW_DEDICATED_USER_DATA_DIR = str(Path.home() / "ChromeMuratClaw")
+OPENCLAW_CHROME_EXE = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+#: OpenClaw's own config (read for the instance check; never printed -- it
+#: holds the gateway token) and the gateway's loopback address.
+OPENCLAW_CONFIG_PATH = Path.home() / ".openclaw" / "openclaw.json"
+OPENCLAW_GATEWAY_HOST = "127.0.0.1"
+OPENCLAW_GATEWAY_PORT = 18789
+#: How browser verbs reach the gateway (LANE O3): "cli" (a node process per
+#: verb, ~7-12 s each measured 2026-09-28) or "http" (one keep-alive
+#: `POST /tools/invoke`, ~0.4-2 s). Both run the SAME guards in
+#: `openclaw_client`; `AEGIS_OPENCLAW_TRANSPORT` overrides. Default stays
+#: "cli" until the owner flips it after reading the lane-O receipt.
+OPENCLAW_BROWSER_TRANSPORT = "cli"
+#: The transport for the DEDICATED profiles (2026-09-28): "http". The one
+#: unexplained HTTP rc 1 of the lane-O build was reproduced and explained:
+#: the gateway's Playwright `page.goto` waits for the "load" event with a 20 s
+#: default and MarketWatch fires it after 50-60 s ("TimeoutError: page.goto:
+#: Timeout 20000ms exceeded" in the gateway log; the HTTP reply only says "tool
+#: execution failed"). HTTP `navigate`/`open` now send
+#: `OPENCLAW_HTTP_NAVIGATE_TIMEOUT_MS`. Other profiles keep
+#: `OPENCLAW_BROWSER_TRANSPORT`; `AEGIS_OPENCLAW_TRANSPORT` overrides both.
+OPENCLAW_BROWSER_TRANSPORT_DEDICATED = "http"
+#: `timeoutMs` sent with an HTTP navigate/open (the gateway clamps to 120 s).
+OPENCLAW_HTTP_NAVIGATE_TIMEOUT_MS = 75000
+#: A reader snapshot at least this long is treated as CUT (the CLI cuts at
+#: ~40,000 chars, before the article links of a big stock page) and is re-read
+#: interactive-only; the re-read is used when it carries more links.
+WEB_READER_SNAPSHOT_CUT_CHARS = 38000
+#: The OpenClaw agent id `POST /tools/invoke` is evaluated under (None -> the
+#: gateway default, "main"). Set it to a dedicated agent entry if the owner
+#: denies `browser` to the LLM agent `main` (LANE O4 proposal), so the guarded
+#: HTTP transport keeps the browser while agent turns lose it.
+OPENCLAW_HTTP_AGENT_ID = "aegis-browser"  # O4 applied 2026-09-28 (owner: "2-yes")
+#: The Dow Jones hosts the dedicated browser may touch (Murat, 2026-09-26:
+#: "wsj/barrons/marketwatch only").
 OPENCLAW_USER_TAB_HOSTS = ("wsj.com", "barrons.com", "marketwatch.com")
+#: Social hosts, READ-ONLY, added 2026-09-28. Murat: "dont read it too slow,
+#: while its waiting make it read other pages then, reddit x and other socials
+#: are logged in too". Absolute read-only on these (enforced in
+#: `browser_policy`, both transports): no click at all, no typing, no post,
+#: reply, like, repost, follow, vote, join or DM; a search is a NAVIGATION to a
+#: search URL, never typing into a box. Rows read here carry
+#: `source_kind = "social"`: never an alert's origin, never an order's.
+#: X, Reddit and Dow Jones terms all restrict automated access; reading with a
+#: signed-in account carries account risk on each, stated to Murat 2026-09-28.
+OPENCLAW_SOCIAL_HOSTS = ("x.com", "reddit.com", "stocktwits.com")
+#: Every host the dedicated browser may be on while it acts.
+OPENCLAW_BROWSER_HOSTS = OPENCLAW_USER_TAB_HOSTS + OPENCLAW_SOCIAL_HOSTS
+#: LANE O2: the night supervisor's dependency repair. At most this many
+#: repairs (browser stop / gateway start / gateway restart) per rolling hour,
+#: with exponential backoff between attempts from REPAIR_BACKOFF_S.
+OPENCLAW_REPAIRS_PER_HOUR = 3
+OPENCLAW_REPAIR_BACKOFF_S = 60.0
+OPENCLAW_REPAIR_PORT_WAIT_S = 240.0
+#: No gateway (re)start below this much free RAM: the kill test of 2026-09-28
+#: 14:30 restarted it at 0.5-0.8 GB free and it did not bind its port for more
+#: than 15 minutes (handoff 09-28: "would not open its port under 1 GB free").
+OPENCLAW_REPAIR_MIN_FREE_GB = 1.5
+#: LANE O5: after this many page reads a run prints and records links per page
+#: and characters per page per lane; a lane at zero on EVERY page refuses.
+READER_YIELD_CHECK_AFTER = 10
 #: Human-pace throttle for `web_reader.read_article` (persisted across runs).
 #: The gap between page loads is DRAWN from [MIN, MAX] (lognormal, clipped;
 #: never the same interval twice) -- a constant interval is the machine tell.
@@ -4292,6 +4398,10 @@ WEB_READER_MAX_PER_HOUR = 180
 WEB_READER_MAX_PER_DAY = 1500
 #: Per-site daily cap (wsj / barrons / marketwatch each), inside the global one.
 WEB_READER_MAX_PER_DAY_PER_HOST = 600
+#: Per-host daily caps that REPLACE the one above for these hosts (matched on
+#: the host or a subdomain of it). The social hosts start at 150/day each
+#: (orchestrator, 2026-09-28, on Murat's widening of the allowlist).
+WEB_READER_MAX_PER_DAY_BY_HOST = {"x.com": 150, "reddit.com": 150, "stocktwits.com": 150}
 #: `dowjones_pull --archive` reads at most this many articles per archive day.
 DOWJONES_ARCHIVE_MAX_PER_DAY = 80
 #: `dowjones_pull --handoff` refuses unless this file exists. Murat creates it
@@ -4349,3 +4459,159 @@ OPENCLAW_TEMP_PROBE_BUDGET_S = 1.5
 #: concurrent CLI calls do not steal each other's tab. 1 = the old single
 #: process. See docs/research_notes/2026-09-27/reader_throughput_2026-09-27.md.
 DOWJONES_READER_WORKERS_DEFAULT = 3
+
+# ── Alerts to Telegram, INFO level only (LANE A, 2026-09-28) ─────────────────
+#: `backend/services/alerts.py` + `scripts/alert_pass.py`, run by the
+#: `AegisAlerts` scheduled task. Template-rendered from fields already on disk;
+#: NO LLM call anywhere on this path (spend reads $0.00 by construction).
+#: SENDING: the owner's standing rule (2026-09-28) is "dont send any messages or
+#: emails without asking me"; he then CONFIRMED Telegram alerts to his own phone
+#: the same day ("telegram should work, send messages to my phone, short
+#: notices"). Set False and every alert is still frozen to the ledger and closed
+#: HELD_NOT_ENABLED, and the Telegram sender is never called.
+#: 2026-09-28 review (docs/reviews/REVIEW_2026-09-28_LANE_A_ALERTS.md): held
+#: while F1 (the message says what happened), F2 (the sent text is frozen) and
+#: F3 (no "already moved" from a pre-filing close) were fixed; turned back on
+#: after a dry run whose 8 rendered messages were read (lane_a_build note,
+#: "AFTER REVIEW").
+ALERTS_SEND_ENABLED = True
+#: Hard caps, counted in the OWNER'S calendar day (Hong Kong), over alerts that
+#: were sent OR would have been (DRY_RUN / HELD_NOT_ENABLED), so a held run
+#: reports exactly what a live run would have delivered.
+ALERT_DAILY_CAP = 8
+ALERT_PER_TICKER_DAILY_CAP = 2
+#: The owner's zone. The machine is UTC+8 too, but the code COMPUTES from UTC
+#: with zoneinfo and never reads the machine's local clock (two-clocks trap).
+ALERT_OWNER_TZ = "Asia/Hong_Kong"
+#: Quiet hours, owner-local, [start, end). Alerts frozen inside are held and
+#: delivered as ONE digest by the first pass at or after the end.
+ALERT_QUIET_START_LOCAL = "00:30"
+ALERT_QUIET_END_LOCAL = "07:30"
+#: Dedup: five rewrites of one fact are one alert. Same (ticker, event type id,
+#: normalised fact key) whose first publication is within this window of the
+#: cluster's FIRST publication joins that cluster as a follow-up.
+ALERT_DEDUP_WINDOW_H = 72
+#: An event first seen longer ago than this is not alerted (it is history).
+#: 72 h spans a weekend's Friday filings on a Monday morning.
+ALERT_EVENT_MAX_AGE_H = 72
+#: A price older than this many XNYS sessions before the alert makes the alert
+#: UNPRICED by name, never a blank.
+ALERT_PRICE_MAX_STALE_SESSIONS = 2
+#: Trailing window for the stock's own daily sigma (log returns).
+ALERT_SIGMA_LOOKBACK_SESSIONS = 63
+#: |move| at or above this many sigma is flagged "already moved".
+ALERT_ALREADY_MOVED_SIGMA = 2.0
+#: The gate for any level above INFO, and the date count at which the kill rule
+#: is read: >= this many distinct alert dates GRADED at the primary horizon.
+ALERT_MIN_GRADED_DATES = 100
+ALERT_GRADE_HORIZONS = (1, 5, 21)
+ALERT_KILL_HORIZON = 5
+#: A failed send is retried by later passes up to this many attempts, then GAVE_UP.
+ALERT_MAX_SEND_ATTEMPTS = 3
+#: Form 4 insider cluster: >= this many DISTINCT insiders with open-market
+#: purchases (code P) whose filings became public within the lookback.
+ALERT_INSIDER_CLUSTER_MIN_BUYERS = 2
+ALERT_INSIDER_CLUSTER_LOOKBACK_DAYS = 30
+#: Discovery-lane headlines may CONFIRM an alert inside this window around the
+#: event, never originate one.
+ALERT_CONFIRM_WINDOW_BEFORE_H = 24
+ALERT_CONFIRM_WINDOW_AFTER_H = 72
+#: (review 2026-09-28 F3) An alert whose event became PUBLIC (SEC acceptance
+#: time; first-seen when there is none) longer ago than this at delivery time is
+#: NOT sent: it is closed TOO_OLD and counted. Measured on acceptance, not on
+#: when a collector first saw it, so a collector catching up after an outage
+#: cannot make old filings look fresh. 72 h lets a Friday after-close filing
+#: reach the owner before Monday's open (about 51-66 h later).
+ALERT_SEND_MAX_AGE_H = 72
+#: (review F4) The daily cap goes to the most important alerts, not the oldest.
+#: Declared order of fact keys, most important first; unlisted keys rank after
+#: every listed one. Ties: newer event first, then the larger |pre-alert move|
+#: in sigma when known (unknown last), then the alert id. Deterministic.
+ALERT_EVENT_TYPE_PRIORITY: tuple = (
+    "8k_item:1.03",   # bankruptcy / receivership
+    "8k_item:4.02",   # non-reliance on past financial statements
+    "8k_item:2.04",   # an obligation accelerated
+    "8k_item:3.01",   # delisting notice
+    "8k_item:4.01",   # auditor change
+    "8k_item:1.05",   # cybersecurity incident
+    "8k_item:1.02",   # a material agreement ended
+    "form4_purchase_cluster",
+    "8k_item:5.02",   # officer / director change
+    "8k_item:2.02",   # earnings
+    "8k_item:2.01",   # acquisition / disposal completed
+    "8k_item:3.02",   # unregistered share sale
+    "8k_item:1.01",   # a material agreement entered
+    "8k_item:2.03",   # debt taken on
+    "8k_item:7.01",   # Reg FD (catch-all)
+    "8k_item:8.01",   # other events (catch-all)
+)
+#: (review F4) Capped or held alerts from the last this-many hours are named in
+#: ONE line at the next allowed send, so nothing silently vanishes.
+ALERT_UNSENT_SUMMARY_LOOKBACK_H = 72
+#: (review F4/F9) The 8-K Atom source is STALE when no new row arrived for more
+#: than this many EDGAR filing hours (06:00-22:00 ET on session days).
+ALERT_8K_SOURCE_STALE_FILING_HOURS = 4
+#: (review F9) `system_health` probe `alert_receipts`: the newest pass receipt
+#: older than this many minutes is STALE (the task runs every 30).
+ALERT_RECEIPT_STALE_MIN = 75
+
+# ── ISSUER-LEVEL IDENTITY (lane P, 2026-09-28; derived after review F4) ───────
+#: One issuer, several listed share classes. `investment_committee.shortlist`
+#: keeps ONE line per issuer (the larger 60-session median dollar volume the
+#: funnel measured from its bars; score order when a line lacks it) and names
+#: every dropped line on the row and on the u_plan receipt. Without it GOOGL
+#: and GOOG entered the 2026-09-25 PROBE book as two names at 2% each: one
+#: company at 4%, twice PROBE_MAX_WEIGHT.
+#: Issuer identity is DERIVED from SEC CIK (`investment_committee.issuer_map`,
+#: over edgar_8k/company_tickers.json): the first hand list held 14 of the 22
+#: multi-class issuers in the 2026-09-24 funnel universe. THIS MAP IS ONLY AN
+#: OVERRIDE for lines SEC's current-registrant file lacks (checked 2026-09-28:
+#: CWEN-A and CUK; the other 26 hand pairs were confirmed by CIK and removed).
+#: Changes no cap, stop or sizing value.
+ISSUER_SHARE_CLASSES: dict = {
+    "Clearway Energy": ("CWEN", "CWEN-A"),            # CWEN-A absent from SEC's file
+    "Carnival": ("CCL", "CUK"),                       # plc ADR line; CUK absent from SEC's file
+}
+
+
+# -- lane M3 (2026-09-28): the backtest leaderboard's shelf life -----------------
+#: `backtest_staleness.p_backtest_leaderboard`: the newest
+#: strategy_library/leaderboard_<run id>.json older than this many days is STALE.
+#: A week: the panel is monthly, but library code and inputs move daily, and the
+#: factory has no scheduled caller (the board is as fresh as the last manual run).
+BACKTEST_LEADERBOARD_STALE_DAYS = 7
+
+
+# -- lane M5 (2026-09-28): a paper account's last mark older than this many
+#: calendar days is STALE (`scripts/paper_accounts_roi.mark_status`). Four days
+#: covers a Friday mark read on the following Monday night.
+PAPER_ACCOUNT_MARK_STALE_DAYS = 4
+
+# ── Telegram replies (LANE A phase 2, 2026-09-28) ────────────────────────────
+#: `backend/services/alerts_replies.py`, called by the existing poller in
+#: `scripts/telegram_agent.py`. Every reply READS FILES: no LLM, no browser, no
+#: backtest, no order, no shell, no user-supplied path.
+#: An inbound message longer than this is truncated, and the reply says so.
+TELEGRAM_REPLY_MAX_INBOUND_CHARS = 4000
+#: At most this many replies in any rolling 60 s; beyond it the message is
+#: logged and not answered.
+TELEGRAM_REPLY_MAX_PER_MIN = 10
+#: `news <TICKER>` looks back this many days of the discovery corpus.
+TELEGRAM_NEWS_LOOKBACK_DAYS = 14
+TELEGRAM_NEWS_MAX_ITEMS = 8
+#: (review 2026-09-28 F7) Rows ANY chat may add to `telegram/inbox.jsonl` per
+#: rolling hour. Beyond it the message writes no row (and a stranger's gets no
+#: reply anyway); the drops are counted and one summary row per hour records
+#: them, so a stranger who knows the bot's name cannot fill the disk.
+TELEGRAM_INBOUND_MAX_ROWS_PER_H_STRANGERS = 20
+TELEGRAM_INBOUND_MAX_ROWS_PER_H_OWNER = 120
+#: (review F7) `/ask`, `/deep`, `/research`: at most this many per owner-local
+#: day, on top of TELEGRAM_REPLY_MAX_PER_MIN and the lab_budget spend cap.
+#: `/deep` and `/research` spend money and wait for the owner's `/approve` tap;
+#: a tap older than TELEGRAM_APPROVAL_MAX_AGE_MIN runs nothing.
+TELEGRAM_MODEL_CMDS_MAX_PER_DAY = 20
+TELEGRAM_APPROVAL_MAX_AGE_MIN = 60
+#: (review F7) A `digest <text>` paste is stored WITH its line breaks, in full up
+#: to this many characters (Telegram's own message limit is 4,096); the reply
+#: states how much was stored. Longer articles: paste into DIGEST.md.
+TELEGRAM_DIGEST_MAX_CHARS = 4096

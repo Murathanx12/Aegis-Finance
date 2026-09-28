@@ -34,13 +34,16 @@ def no_local_equity(monkeypatch):
 def test_disagreeing_capital_bases_and_caps_are_refused_by_name():
     m = DC.account_mandate(40_000.0, equity={"equity_usd": 999_054.0,
                                              "as_of": "t", "source": "fixture"})
-    assert m["status"] == "REFUSED"
-    kinds = {r.split(":", 1)[0] for r in m["refusals"]}
+    # UNRECONCILED since 2026-09-28 (review F2): it never refused anything
+    assert m["status"] == "UNRECONCILED"
+    kinds = {r.split(":", 1)[0] for r in m["disagreements"]}
+    assert m["refusals"] == m["disagreements"]            # legacy key kept
     assert {"CAPITAL_BASES_DISAGREE", "PER_NAME_CAPS_DISAGREE"} <= kinds
     # ONE base, ONE cap, both printed
     assert m["capital_usd"] == 40_000.0
     assert m["per_name_cap"] == min(m["per_name_caps_seen"].values())
-    assert m["line"].startswith("MANDATE REFUSED: capital $40,000; per-name cap")
+    assert m["line"].startswith("MANDATE UNRECONCILED: capital $40,000; per-name cap")
+    assert "turns OK when the owner confirms ONE capital base" in m["line"]
     # the worst case is in dollars, on the one base, and on the largest seen
     c = m["largest_admissible_book_as_configured"]
     assert c["worst_case_no_stop_usd"] == pytest.approx(-c["gross_over_equity"] * 40_000.0)

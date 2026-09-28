@@ -57,6 +57,24 @@ EARNINGS_UNKNOWN.
 **The fundamentals score is a PROXY, and it is named as one.** The +39 bps/month was a walk-forward
 LightGBM over 25 JKP features, on a panel that ends 2024-12. That model is not fitted live.
 
+> **Annotation 2026-09-28 (lane M4b): the closure this tilt did not cite. The frozen books, their
+> ids and their holdings are unchanged; only this document is annotated.** On OUR tradeable panel
+> the fundamentals signal was measured and closed four days before this book was frozen: §60,
+> commit `3255206b` (2026-09-24), receipt `backend/data/optimus/xs_ranker/bakeoff_fundamentals.json`
+> (`night_rank_bakeoff --survivorship-free --with-fundamentals`, 5,481,309 rows, 3,578 symbols,
+> 122 month-blocks): **-1.34% net per 21 sessions (gross -1.15%), t -2.55 across blocks, IC +0.0020
+> (t +0.72), hit 36%, last of six models and negative at every k from 10 to 500**; at a $50M
+> liquidity floor it improves to -0.71% and stays negative (`bakeoff_fund_liquid.json`). The +39
+> bps/month quoted above is the JKP panel (`xs_ranker/fundamental_amplitude_2026-09-22.json`), not
+> ours. Scope, from `NEGATIVE_RESULTS.md` §60: what closed is a model over six ratios (`gp_at`,
+> `ope_be`, `ni_be`, `at_gr1`, `cash_at`, `debt_at`) -- **all five legs of this proxy are among
+> them** -- so the tilt rests on inputs our panel measured negative. The proxy's own construction
+> (a within-universe rank average of five legs, >= 3 required) was never backtested on our panel:
+> whether it shares the -1.34% is UNVERIFIED (looked for: `xs_ranker/`, `strategy_library/`
+> leaderboards, `rehearsal/rehearsal_2026-09-27.json`; no backtest of this score exists). Status
+> of the mechanism: FAILED_VARIANT, not MECHANISM_REJECTED. Read the 2026-10-26 grade of both
+> books against their IWM / matched twins with this beside it.
+
 The live score is the within-universe percentile-rank average of five SEC ratios from
 `fundamental_features`, joined at filed + 2d:
 
@@ -208,6 +226,13 @@ The contest book then becomes 20 × 5% fundamentals-ranked, with a WLS β of ≈
 | core | SPY, one position; it never stops | 80% |
 | satellite | fundamentals proxy top-10 over the whole eligible universe, equal weight, small caps allowed, no cap | 10 × 2% |
 | cash | declared row | 0% |
+
+> **Annotation 2026-09-28 (lane M4b):** the satellite is ranked on the same fundamentals proxy.
+> On our panel the signal it is built from was measured at -1.34% per 21 sessions, t -2.55, last
+> of six (§60, commit `3255206b`, `xs_ranker/bakeoff_fundamentals.json`); see the annotation under
+> "The fundamentals score is a PROXY" above. The book is frozen and unchanged; this is a note on
+> the document only. The adversarial review of 2026-09-28 (§8(a)) suggests the core without this
+> satellite as the owner's own-capital default -- a suggestion, not a measured result.
 
 The satellite names are:
 

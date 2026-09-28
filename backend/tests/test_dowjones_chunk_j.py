@@ -222,8 +222,30 @@ def test_throttle_spaces_page_loads_and_refuses_over_the_cap(tmp_path):
 
 # ─────────────────────────── openclaw operator rules ────────────────────────
 
+@pytest.fixture(autouse=True)
+def _dedicated_instance_proven(monkeypatch):
+    """LANE O (2026-09-28): the operator profile is the DEDICATED MuratClaw
+    Chrome, and every action on it first proves that (the real prover talks to
+    127.0.0.1:18802 and PowerShell). Here: a fake prover that passes and
+    records, and a dedicated Chrome that is "running with its port".
+    `test_lane_o_muratclaw.py` tests both, both ways."""
+    from backend.services import muratclaw_instance as MI
+    calls: list = []
+    # these tests fake the CLI subprocess, so they pin the CLI transport (the
+    # dedicated profile defaults to HTTP since 2026-09-28; the HTTP route's
+    # guard parity is pinned in test_lane_o_muratclaw.py)
+    monkeypatch.setenv(OC.TRANSPORT_ENV, "cli")
+    monkeypatch.setattr(OC, "_PROVER", lambda **k: calls.append(k) or {"ok": True, "pid": 1})
+    monkeypatch.setattr(MI, "status", lambda **k: {"running_with_port": True,
+                                                   "endpoint": "http://127.0.0.1:18802"})
+    OC._SNAPSHOTS.clear()
+    yield calls
+    OC._SNAPSHOTS.clear()
+
+
 def _fake_profiles():
-    return [{"name": "muratclaw", "state": "stopped"}, {"name": "user", "state": "running"},
+    # `user` / `chrome` are listed by OpenClaw but REFUSED by name by Aegis
+    return [{"name": "muratclaw", "state": "running"}, {"name": "user", "state": "stopped"},
             {"name": "chrome", "state": "stopped"}]
 
 
@@ -242,25 +264,76 @@ def test_an_unlisted_profile_name_refuses():
         OC.profile("somebody_elses_chrome")
 
 
-def test_explicit_user_is_honoured_and_never_swapped_for_muratclaw(monkeypatch):
+def test_user_and_chrome_refuse_by_name_and_are_never_swapped_for_muratclaw(monkeypatch):
+    # 2026-09-28 (LANE O): `user` / `chrome` reach Murat's MAIN Chrome. Refused by
+    # NAME, from an argument or from the environment -- never replaced by another.
     monkeypatch.setenv(OC.PROFILE_ENV, "muratclaw")
-    assert OC.profile("user") == "user"
+    for name in ("user", "chrome"):
+        with pytest.raises(OC.OpenClawRefused, match="REFUSED_MAIN_CHROME_PROFILE"):
+            OC.profile(name)
+    monkeypatch.setenv(OC.PROFILE_ENV, "user")
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_MAIN_CHROME_PROFILE"):
+        OC.profile()
+    monkeypatch.setenv(OC.PROFILE_ENV, "muratclaw")
+    assert OC.profile() == "muratclaw" == OC.profile("muratclaw")
 
 
-@pytest.mark.parametrize("verb", ["open", "type", "fill", "download", "batch"])
+@pytest.mark.parametrize("verb", ["type", "fill", "download", "batch"])
 def test_the_operator_profile_refuses_new_tabs_and_input(monkeypatch, verb):
     monkeypatch.setattr(OC, "profiles", _fake_profiles)
     monkeypatch.setattr(OC, "_run", lambda *a, **k: pytest.fail("must not reach the CLI"))
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_(OPERATOR_VERB|VERB)"):
-        OC.browser(verb, url="https://www.wsj.com/", profile_name="user", target_id="t20")
+        OC.browser(verb, url="https://www.wsj.com/", profile_name="muratclaw", target_id="t20")
 
 
 def test_the_operator_profile_refuses_other_hosts(monkeypatch):
     monkeypatch.setattr(OC, "profiles", _fake_profiles)
     monkeypatch.setattr(OC, "_run", lambda *a, **k: pytest.fail("must not reach the CLI"))
-    for u in ("https://www.sec.gov/", "https://x.com/", "https://mail.google.com/"):
-        with pytest.raises(OC.OpenClawRefused, match="HOST"):
-            OC.browser("navigate", u, profile_name="user", target_id="t20")
+    # x.com joined the READ-ONLY allowlist on 2026-09-28 (Murat); facebook did not.
+    # mail.google.com is refused by the owner's message rule before the host rule.
+    for u, why in (("https://www.sec.gov/", "OPERATOR_HOST"),
+                   ("https://www.facebook.com/", "OPERATOR_HOST"),
+                   ("https://mail.google.com/", "MESSAGE_URL")):
+        with pytest.raises(OC.OpenClawRefused, match=why):
+            OC.browser("navigate", u, profile_name="muratclaw", target_id="t20")
+
+
+def test_open_runs_only_on_the_dedicated_profile_and_only_after_the_proof(
+        monkeypatch, _dedicated_instance_proven):
+    """`open` was refused on the operator profiles because, attached to Murat's
+    WHOLE Chrome, it landed in his main profile. On the dedicated instance it
+    is allowed -- only after the instance proof, only to an allowed host, and
+    the new tab is recorded as ours."""
+    from backend.services import muratclaw_instance as MI
+    monkeypatch.setattr(OC, "profiles", _fake_profiles)
+    runs: list = []
+
+    def run(args, **k):
+        runs.append(list(args))
+        if "open" in args:
+            return subprocess.CompletedProcess(args, 0, json.dumps(
+                {"targetId": "A" * 32, "url": "https://www.wsj.com/"}), "")
+        return subprocess.CompletedProcess(args, 0, json.dumps({"tabs": [
+            {"targetId": "A" * 32, "tabId": "t2", "url": "https://www.wsj.com/"}]}), "")
+    monkeypatch.setattr(OC, "_run", run)
+    with pytest.raises(OC.OpenClawRefused, match="OPERATOR_HOST"):
+        OC.browser("open", url="https://www.sec.gov/")
+    assert runs == []
+    try:
+        r = OC.browser("open", url="https://www.wsj.com/")
+        assert r["new_tab"] == "A" * 32 and ("A" * 32) in OC._OPENED_TABS
+        # proven BEFORE the tab was made, and the new tab proven to be the instance's
+        assert [c.get("target_id") for c in _dedicated_instance_proven] == [None, "A" * 32]
+    finally:
+        OC._OPENED_TABS.discard("A" * 32)
+
+    def not_proven(**k):
+        raise MI.InstanceNotProven("REFUSED_NOT_MURATCLAW_INSTANCE: test")
+    monkeypatch.setattr(OC, "_PROVER", not_proven)
+    runs.clear()
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_NOT_MURATCLAW_INSTANCE"):
+        OC.browser("open", url="https://www.wsj.com/")
+    assert not any("open" in r for r in runs)
 
 
 def test_an_action_on_a_tab_off_the_allowed_hosts_refuses(monkeypatch):
@@ -270,16 +343,16 @@ def test_an_action_on_a_tab_off_the_allowed_hosts_refuses(monkeypatch):
         {"tabId": "t20", "url": "https://www.wsj.com/news/heard-on-the-street"}])
     monkeypatch.setattr(OC, "_run", lambda *a, **k: pytest.fail("must not reach the CLI"))
     with pytest.raises(OC.OpenClawRefused, match="OPERATOR_TAB_HOST"):
-        OC.browser("snapshot", profile_name="user", target_id="t24")
+        OC.browser("snapshot", profile_name="muratclaw", target_id="t24")
     with pytest.raises(OC.OpenClawRefused, match="OPERATOR_TAB_UNNAMED"):
-        OC.browser("snapshot", profile_name="user")
+        OC.browser("snapshot", profile_name="muratclaw")
 
 
 def test_close_only_touches_a_tab_this_process_opened(monkeypatch):
     monkeypatch.setattr(OC, "profiles", _fake_profiles)
     monkeypatch.setattr(OC, "_run", lambda *a, **k: pytest.fail("must not reach the CLI"))
     with pytest.raises(OC.OpenClawRefused, match="OPERATOR_CLOSE"):
-        OC.browser("close", profile_name="user", target_id="t20")
+        OC.browser("close", profile_name="muratclaw", target_id="t20")
 
 
 def test_evaluate_is_still_not_a_free_verb_and_read_text_sends_only_the_constant(monkeypatch):
@@ -295,7 +368,7 @@ def test_evaluate_is_still_not_a_free_verb_and_read_text_sends_only_the_constant
         return subprocess.CompletedProcess(args, 0, json.dumps(
             {"ok": True, "result": {"url": "https://www.wsj.com/x", "title": "T", "text": "body"}}), "")
     monkeypatch.setattr(OC, "_run", run)
-    r = OC.read_text("t20", profile_name="user")
+    r = OC.read_text("t20", profile_name="muratclaw")
     assert r["text"] == "body" and seen["argv"][-1] == OC.READ_TEXT_FN
 
 
@@ -330,7 +403,7 @@ class StubDriver:
         self.current = None
         self.closed = []
 
-    def open_from_tab(self, parent, url, profile_name="user"):
+    def open_from_tab(self, parent, url, profile_name="muratclaw"):
         self.calls.append(("open_from_tab", parent, url))
         self.current = url
         return {"new_tab": "t99", "url": url, "attached_to": {"pid": 7}}
@@ -691,7 +764,7 @@ class MultiStub:
     def tabs(self, profile_name=None):
         return self._tabs
 
-    def open_from_tab(self, parent, url, profile_name="user"):
+    def open_from_tab(self, parent, url, profile_name="muratclaw"):
         self.n += 1
         tid = f"t{self.n}"
         self.cur[tid] = url
@@ -1038,7 +1111,7 @@ class FakeOC:
         self.runs, self._tabs = [], tabs if tabs is not None else [{"tabId": "t1", "url": "u"}]
 
     def profiles(self):
-        return [{"name": "user", "state": self.state}]
+        return [{"name": "user", "state": self.state}, {"name": "muratclaw", "state": self.state}]
 
     def _run(self, args, timeout=180.0):
         self.runs.append(args)
@@ -1123,7 +1196,7 @@ class DetachingStub(MultiStub):
         self._OPENED_TABS = set()
 
     def profiles(self):
-        return [{"name": "user", "state": self.state}]
+        return [{"name": "user", "state": self.state}, {"name": "muratclaw", "state": self.state}]
 
     def _run(self, args, timeout=180.0):
         self.runs.append(args)
@@ -1141,7 +1214,7 @@ class DetachingStub(MultiStub):
     def tabs(self, profile_name=None):
         return self._tabs + [{"tabId": k, "url": v} for k, v in self.cur.items()]
 
-    def open_from_tab(self, parent, url, profile_name="user"):
+    def open_from_tab(self, parent, url, profile_name="muratclaw"):
         r = super().open_from_tab(parent, url, profile_name)
         self._OPENED_TABS.add(r["new_tab"])
         return r
@@ -1278,11 +1351,11 @@ def test_a_missing_handle_names_the_session_reset(monkeypatch):
         _tab("t40", "chrome-mcp:bbb:1", HOTS)])
     with pytest.raises(OC.OpenClawRefused,
                        match=r"session 'aaa' is gone.*\['bbb'\].*rebind by URL"):
-        OC.assert_operator_tab("chrome-mcp:aaa:4", profile_name="user")
+        OC.assert_operator_tab("chrome-mcp:aaa:4", profile_name="muratclaw")
     assert WR.is_detached("REFUSED_OPERATOR_TAB_MISSING: no tab 'chrome-mcp:aaa:4' on 'user' "
                           "(Chrome MCP session 'aaa' is gone)")
     # the label still resolves to the same tab while the session lives
-    assert OC.assert_operator_tab("t40", profile_name="user") == HOTS
+    assert OC.assert_operator_tab("t40", profile_name="muratclaw") == HOTS
 
 
 def test_parent_tabs_hold_the_handle_and_order_by_label():
@@ -1306,12 +1379,12 @@ class ResetOnFirstWaitStub(MultiStub):
         self.reset_done, self._OPENED_TABS = False, set()
 
     def profiles(self):
-        return [{"name": "user", "state": "running"}]
+        return [{"name": "muratclaw", "state": "running"}]
 
     def tabs(self, profile_name=None):
         return self._tabs + [{"tabId": k, "url": v} for k, v in self.cur.items()]
 
-    def open_from_tab(self, parent, url, profile_name="user"):
+    def open_from_tab(self, parent, url, profile_name="muratclaw"):
         r = super().open_from_tab(parent, url, profile_name)
         self._OPENED_TABS.add(r["new_tab"])
         return r
@@ -1324,7 +1397,7 @@ class ResetOnFirstWaitStub(MultiStub):
             self.cur = {shift(k): v for k, v in self.cur.items()}
         if target_id and target_id not in self.cur:
             raise OC.OpenClawRefused(
-                f"REFUSED_OPERATOR_TAB_MISSING: no tab {target_id!r} on 'user'.")
+                f"REFUSED_OPERATOR_TAB_MISSING: no tab {target_id!r} on 'muratclaw'.")
         return super().browser(verb, *args, profile_name=profile_name, target_id=target_id,
                                url=url)
 
@@ -1748,11 +1821,11 @@ def test_the_committed_v3_queue_file_parses():
 # ── the blank-tab route through the REAL openclaw_client guard ──────────────
 
 class GuardedCLI:
-    """The `openclaw` CLI for the real `openclaw_client`: `user` profile,
+    """The `openclaw` CLI for the real `openclaw_client`: the dedicated profile,
     tabs with live URLs, window.open adds a tab, navigate/close act."""
 
-    PROFILES = ("user: running (2 tabs) [existing-session]\n  transport: chrome-mcp\n"
-                "muratclaw: stopped [default]\nchrome: stopped [extension]\n")
+    PROFILES = ("muratclaw: running (2 tabs) [default]\n  port: 18802\n"
+                "user: stopped\nchrome: stopped\n")
 
     def __init__(self):
         self.calls, self.urls = [], {"1": "https://www.wsj.com/news/heard-on-the-street"}
@@ -1802,10 +1875,10 @@ def test_a_blanked_tab_is_renavigated_and_closed_through_the_real_client(ledger,
     a = "https://www.wsj.com/finance/stocks/story-a-1a2b3c4d"
     b = "https://www.wsj.com/finance/stocks/story-b-2b3c4d5e"
     try:
-        op = OC.open_from_tab(fake.h("1"), a, profile_name="user", sleep_fn=lambda s: None)
+        op = OC.open_from_tab(fake.h("1"), a, profile_name="muratclaw", sleep_fn=lambda s: None)
         tab = op["new_tab"]
         _, th = _clock_throttle(ledger / "thr.log")
-        rd = WR.Reader(profile="user", tab=tab, throttle=th, driver=OC, lock=False,
+        rd = WR.Reader(profile="muratclaw", tab=tab, throttle=th, driver=OC, lock=False,
                        parent=fake.h("1"))
         rd.pages, rd.tab_pages = 1, 1
         rd.read_article(a)                         # navigate (guarded), read, then blank
@@ -1813,14 +1886,14 @@ def test_a_blanked_tab_is_renavigated_and_closed_through_the_real_client(ledger,
         # the guard knows its own blank tab for navigate/close ONLY (2026-09-27):
         # any other verb on it still refuses on the host
         with pytest.raises(OC.OpenClawRefused, match="OPERATOR_TAB_HOST"):
-            OC.browser("snapshot", profile_name="user", target_id=tab)
+            OC.browser("snapshot", profile_name="muratclaw", target_id=tab)
         art = rd.read_article(b)                   # re-navigated through own_blank_tab_verb
         assert art["url"] == b and rd.blanked
         assert rd.close_tab() and tab not in OC._OPENED_TABS
         assert tab.rsplit(":", 1)[-1] not in fake.urls and rd.orphans() == []
         # the route never touches a tab this process did not open
         with pytest.raises(WR.ReaderRefused, match="NOT_OUR_TAB"):
-            WR.own_blank_tab_verb(OC, "user", fake.h("1"), "close")
+            WR.own_blank_tab_verb(OC, "muratclaw", fake.h("1"), "close")
     finally:
         OC._OPENED_TABS.difference_update({h for h in list(OC._OPENED_TABS)
                                            if h.startswith("chrome-mcp:zzz:")})

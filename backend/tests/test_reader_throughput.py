@@ -44,6 +44,22 @@ MARKER_URL = "https://www.wsj.com/?aegis=muratclaw"
 
 # ─────────────────────────── the interleave order ───────────────────────────
 
+
+@pytest.fixture(autouse=True)
+def _dedicated_instance_proven(monkeypatch):
+    """LANE O (2026-09-28): every action on the dedicated profile proves the
+    Chrome first; the real prover talks to 127.0.0.1:18802 and PowerShell. A
+    fake that passes and records; `test_lane_o_muratclaw.py` tests the prover."""
+    from backend.services import openclaw_client as _OCX
+    calls: list = []
+    monkeypatch.setattr(_OCX, "_PROVER", lambda **k: calls.append(k) or {"ok": True})
+    # these tests fake the CLI subprocess, so they pin the CLI transport (the
+    # dedicated profile defaults to HTTP since 2026-09-28; the HTTP route's
+    # guard parity is pinned in test_lane_o_muratclaw.py)
+    monkeypatch.setenv(_OCX.TRANSPORT_ENV, "cli")
+    _OCX._SNAPSHOTS.clear()
+    return calls
+
 def test_interleave_order_is_pinned():
     from scripts import dowjones_pull as DP
     ops = DP.interleave_order({"b": [1, 2, 3], "w": [1], "m": ["MU", "DKNG"]},
@@ -238,7 +254,7 @@ class ReplyCLI:
     """`user` profile behind the REAL guard. `navigate` replies the way
     openclaw 2026.9.5 does (`navigated to <url>`), landing on `land` when set."""
 
-    PROFILES = "user: running (3 tabs) [existing-session]\n  transport: chrome-mcp\n"
+    PROFILES = "muratclaw: running (3 tabs) [default]\n  port: 18802\nuser: stopped\n"
 
     def __init__(self, land: str | None = None, reply: bool = True):
         self.calls: list[list[str]] = []
@@ -267,7 +283,7 @@ class ReplyCLI:
             return ok(f"navigated to {self.urls[n]}" if self.reply else "ok")
         if verb == "browser evaluate":
             return ok(json.dumps({"ok": True, "targetId": tid, "result": {
-                "url": self.urls.get(n), "title": "T", "text": "body text " * 20}}))
+                "url": self.urls.get(n), "title": "T", "text": "body text " * 40}}))  # >= PAGE_MIN_CHARS: a real page, not BLANK (2026-09-28 page classes)
         return ok("ok")
 
 
@@ -320,7 +336,7 @@ def test_every_action_keeps_its_host_check_and_navigate_its_landed_url_check(
     thr = WR.Throttle(tmp_path / "thr.log", now_fn=lambda: now["t"],
                       sleep_fn=lambda s: now.__setitem__("t", now["t"] + timedelta(seconds=s)),
                       seed=3)
-    rd = WR.Reader(profile="user", tab=tab, throttle=thr, lock=False)
+    rd = WR.Reader(profile="muratclaw", tab=tab, throttle=thr, lock=False)
     OC.reset_cli_ledger()
     art = rd.read_article(WSJ_A, store=False)
     assert art["url"] == WSJ_A
@@ -351,7 +367,7 @@ def test_an_off_host_landing_in_the_navigate_reply_still_refuses(monkeypatch, re
     _install(monkeypatch, fake)
     thr = WR.Throttle(tmp_path / "thr.log", now_fn=lambda: datetime.now(timezone.utc),
                       sleep_fn=lambda s: None, min_delay_s=0, max_delay_s=0)
-    rd = WR.Reader(profile="user", tab=fake.h("1"), throttle=thr, lock=False)
+    rd = WR.Reader(profile="muratclaw", tab=fake.h("1"), throttle=thr, lock=False)
     with pytest.raises(WR.ReaderRefused, match="REFUSED_LEFT_HOSTS"):
         rd.navigate(WSJ_A)
 
@@ -361,7 +377,7 @@ def test_a_navigate_reply_without_the_url_falls_back_to_a_fresh_listing(monkeypa
     fake = ReplyCLI(reply=False)
     _install(monkeypatch, fake)
     OC.reset_cli_ledger()
-    r = OC.browser("navigate", WSJ_A, profile_name="user", target_id=fake.h("1"))
+    r = OC.browser("navigate", WSJ_A, profile_name="muratclaw", target_id=fake.h("1"))
     assert r["tab_url_after_source"] == "tabs_reread" and r["tab_url_after"] == WSJ_A
     assert OC.cli_ledger()["cache"]["url_rereads"] == 1
 
@@ -372,12 +388,12 @@ def test_attached_status_is_not_a_per_page_call(monkeypatch, real_client):
     OC._ATTACHED_CACHE.clear()
     tab = fake.h("1")
     for i in range(4):                      # four pages, 70 s apart (> the old 60 s cache)
-        OC.browser("navigate", WSJ_A, profile_name="user", target_id=tab)
+        OC.browser("navigate", WSJ_A, profile_name="muratclaw", target_id=tab)
         real_client["t"] += 70
         OC._ATTACHED_CACHE.update({k: (v[0] - 70, v[1]) for k, v in OC._ATTACHED_CACHE.items()})
     assert sum(1 for c in fake.calls if OC._cmd_key(c) == "browser status") == 1
-    OC.invalidate_profile_cache("user")     # any failure drops it: the next call re-asks
-    OC.browser("navigate", WSJ_A, profile_name="user", target_id=tab)
+    OC.invalidate_profile_cache("muratclaw")     # any failure drops it: the next call re-asks
+    OC.browser("navigate", WSJ_A, profile_name="muratclaw", target_id=tab)
     assert sum(1 for c in fake.calls if OC._cmd_key(c) == "browser status") == 2
 
 

@@ -2501,6 +2501,11 @@ def evaluate(monthly, spy, *, hold_months: int = 1,
                                          if len(rest) else None)
     sp_full = sp.dropna()
     out["spy_cagr_same_window"] = _cagr(sp_full)
+    # the like-for-like comparator (lane M2, 2026-09-28): SPY with ITS best 5
+    # months removed. A stripped rule beside an unstripped SPY flatters the rule.
+    lrs = _np.sort(_np.log1p(sp_full.to_numpy(dtype=float)))
+    out["spy_cagr_without_best_5_months"] = (
+        float(_np.exp(lrs[:-5].sum() * 12.0 / (len(lrs) - 5)) - 1.0) if len(lrs) > 5 else None)
 
     h = max(1, int(hold_months))
     blk = _np.arange(len(a)) // h
@@ -2673,6 +2678,173 @@ FORWARD_ONLY: list = [
      "green_replay_never_forward": True,
      "first_registered_utc": REGISTERED_2026_09_26},
 ]
+
+
+
+# ── the context printed BESIDE every headline number (lane M2, 2026-09-28) ──
+#
+# The 2026-09-28 fact check found "+1,323% since 2020" quoted by an outside
+# reviewer who never saw that it is the best of three quarterly calendars, that
+# the median rule loses to its matched twin, or that no family clears alpha in
+# both windows: those verdicts lived in other files. Every leaderboard row that
+# prints a return now prints five fields beside it. A field the run did not
+# compute prints NOT_COMPUTED -- never a blank, which reads as "fine".
+
+NOT_COMPUTED = "NOT COMPUTED"
+HEADLINE_CONTEXT_FIELDS = ("matched_twin", "family", "dsr", "without_best_5", "calendar_offsets")
+#: |t| on the rule - twin21 difference, in BOTH windows, for ALPHA_DETECTED
+TWIN_T_BAR = 2.0
+
+
+def _pc(v, nd: int = 1) -> str:
+    return f"{v * 100:+.{nd}f}%"
+
+
+def _src(label: str, run: str | None, board_run: str | None) -> str:
+    """A verdict from another run than the board's carries that run's id."""
+    return f" [{label} {run}]" if run and board_run and run != board_run else ""
+
+
+def twin_context(row: dict, twin_row: dict | None, *, run: str | None = None,
+                 board_run: str | None = None) -> str:
+    """Rule - matched twin (21 draws) in dev and 2024-26: ALPHA_DETECTED when
+    |t| >= TWIN_T_BAR in both windows with one sign, else CANNOT_DISTINGUISH."""
+    if not twin_row:
+        return NOT_COMPUTED
+    d, s = twin_row.get("dev") or {}, twin_row.get("sealed") or {}
+    td, ts_ = d.get("t_monthly_rule_minus_twin21"), s.get("t_monthly_rule_minus_twin21")
+    md, ms = d.get("mean_monthly_rule_minus_twin21"), s.get("mean_monthly_rule_minus_twin21")
+    if None in (td, ts_, md, ms):
+        return NOT_COMPUTED + " (twin series incomplete)"
+    same = (td >= TWIN_T_BAR and ts_ >= TWIN_T_BAR) or (td <= -TWIN_T_BAR and ts_ <= -TWIN_T_BAR)
+    v = ("ALPHA_DETECTED " + ("+" if md > 0 else "-")) if same else "CANNOT_DISTINGUISH"
+    h = int(row.get("hold_months") or 1)
+    warn = f"; monthly t on a {h}-month hold overstates" if h > 1 else ""
+    return (f"{v} (dev {_pc(md, 2)}/mo t {td:+.1f}; 2024-26 {_pc(ms, 2)}/mo t {ts_:+.1f}{warn})"
+            + _src("twins", run, board_run))
+
+
+def family_context(row: dict, fam_row: dict | None, *, too_small: bool = False,
+                   run: str | None = None, board_run: str | None = None) -> str:
+    """The pooled family's verdict vs its matched twins and vs SPY."""
+    if too_small:
+        return NOT_COMPUTED + " (family has too few rules to pool)"
+    if not fam_row:
+        return NOT_COMPUTED
+    tw = (fam_row.get("rule_minus_twin") or {}).get("verdict") or NOT_COMPUTED
+    sp = (fam_row.get("vs_spy") or {}).get("verdict") or NOT_COMPUTED
+    sg = (fam_row.get("vs_spy") or {}).get("alpha_sign") or ""
+    return (f"{fam_row.get('family')}: vs twin {tw}; vs SPY {sp}"
+            + (f" ({sg})" if sp == "ALPHA_DETECTED" and sg else "") + _src("pool", run, board_run))
+
+
+def calendar_context(row: dict, entry: dict | None, *, run: str | None = None,
+                     board_run: str | None = None) -> str:
+    """For a quarterly rule: the spread of cum-since-2020 across its three
+    calendars and the M1 verdict. A monthly rule has one calendar."""
+    h = row.get("hold_months")
+    if h is not None and int(h) != 3:
+        return f"n/a (hold {int(h)} month{'s' if int(h) != 1 else ''}: no quarterly calendar)"
+    if not entry:
+        return NOT_COMPUTED
+    cls = entry.get("classification") or entry
+    cum = cls.get("cum_net_since_2020") or {}
+    if not cum or any(v is None for v in cum.values()):
+        return NOT_COMPUTED + " (offsets incomplete)"
+    parts = " / ".join(f"{t} {_pc(cum[t], 0)}" for t in QUARTER_OFFSETS if t in cum)
+    # the CALENDAR-NEUTRAL book is the headline; one calendar is one draw of three
+    # (review 2026-09-28 F5: +1,323% was the JAJO calendar; the neutral book is +661%)
+    head = calendar_neutral_text(entry)
+    return (f"{head}; {cls.get('verdict', NOT_COMPUTED)}; single calendars (each ONE calendar of "
+            f"three) cum since 2020 {parts}" + _src("offsets", run, board_run))
+
+
+def calendar_neutral(entry: dict | None) -> dict | None:
+    """The tranche book's headline numbers from an offsets receipt entry, or None."""
+    ta = (entry or {}).get("tranche_average") or {}
+    rt = ta.get("rule_minus_twin21") or {}
+    if ta.get("cum_net_since_2020") is None or rt.get("mean_monthly") is None:
+        return None
+    st = ta.get("sealed_rule_minus_twin21") or {}
+    return {"cum_since_2020": ta.get("cum_net_since_2020"), "spy_cum_since_2020": ta.get("cum_spy_since_2020"),
+            "rule_minus_twin_monthly": rt.get("mean_monthly"), "t": rt.get("t_blocks"),
+            "sealed_rule_minus_twin_monthly": st.get("mean_monthly"), "sealed_t": st.get("t_blocks"),
+            "sealed_mde_monthly": st.get("mde_monthly")}
+
+
+def calendar_neutral_text(entry: dict | None) -> str:
+    cn = calendar_neutral(entry)
+    if cn is None:
+        return "CALENDAR-NEUTRAL " + NOT_COMPUTED
+    t = cn.get("t")
+    stt = cn.get("sealed_t")
+    sm = cn.get("sealed_rule_minus_twin_monthly")
+    sp = cn.get("spy_cum_since_2020")
+    return (f"CALENDAR-NEUTRAL (1/3 each quarterly calendar): cum since 2020 {_pc(cn['cum_since_2020'], 0)}"
+            + (f" (SPY {_pc(sp, 0)})" if sp is not None else "")
+            + f"; rule - twin {_pc(cn['rule_minus_twin_monthly'], 2)}/mo"
+            + (f" t {t:+.2f}" if t is not None else "")
+            + (f", 2024-26 {_pc(sm, 2)}/mo t {stt:+.2f}" if sm is not None and stt is not None else ""))
+
+
+def one_bet_text(corr: dict | None, listed: list | None = None) -> str | None:
+    """'These N leads are one bet' when their calendar-neutral monthly returns
+    correlate >= 0.8; None when it cannot be computed or does not apply."""
+    if not corr or corr.get("status") != "OK":
+        return None
+    rules = [r for r in corr.get("rules") or [] if listed is None or r in listed]
+    if len(rules) < 2:
+        return None
+    vals = [v for k, v in (corr.get("pairs") or {}).items()
+            if k.split("|")[0] in rules and k.split("|")[1] in rules]
+    if not vals:
+        return None
+    lo, hi = min(vals), max(vals)
+    tag = "ONE BET" if lo >= 0.8 else "correlated"
+    return (f"{tag}: {', '.join(rules)} -- their calendar-neutral monthly returns correlate "
+            f"{lo:.2f} to {hi:.2f} ({corr.get('n_months')} months); count them as one momentum bet, "
+            "not {n} independent leads".replace("{n}", str(len(rules))))
+
+
+def headline_context(row: dict, *, twins: dict | None = None, families: dict | None = None,
+                     offsets: dict | None = None, board_run: str | None = None) -> dict:
+    """{field: text} for one leaderboard row. `twins` / `families` / `offsets`:
+    {"run": id, "by_key": {...}, ...} as the loaders return them, or None."""
+    cell = f"{row.get('id')}@k{row.get('k')}"
+    tw = (twins or {}).get("by_key") or {}
+    fam = (families or {}).get("by_key") or {}
+    small = set((families or {}).get("too_small") or ())
+    off = (offsets or {}).get("by_key") or {}
+    dsr, n = row.get("dsr"), row.get("dsr_n_trials")
+    wo, sp = row.get("cagr_without_best_5_months"), row.get("spy_cagr_without_best_5_months")
+    spf = row.get("spy_cagr_same_window")
+    if wo is None:
+        w5 = NOT_COMPUTED
+    else:
+        w5 = f"{_pc(wo)} CAGR" + (f" (SPY without its best 5 {_pc(sp)})" if sp is not None else
+                                   f" (SPY with its best months {_pc(spf)})" if spf is not None else "")
+    return {
+        "matched_twin": (twin_context(row, tw.get(cell), run=(twins or {}).get("run"),
+                                      board_run=board_run) if twins is not None else NOT_COMPUTED),
+        "family": (family_context(row, fam.get(row.get("family")),
+                                  too_small=row.get("family") in small,
+                                  run=(families or {}).get("run"), board_run=board_run)
+                   if families is not None else NOT_COMPUTED),
+        "dsr": (NOT_COMPUTED if dsr is None else f"{dsr:.3f} (n={n}; bar 0.95)"),
+        "without_best_5": w5,
+        "calendar_offsets": (calendar_context(row, off.get(row.get("id")),
+                                              run=(offsets or {}).get("run"), board_run=board_run)
+                             if (offsets is not None or (row.get("hold_months") not in (None, 3)))
+                             else NOT_COMPUTED),
+    }
+
+
+def headline_context_text(ctx: dict | None) -> str:
+    """One cell of text; every field present, NOT_COMPUTED where absent."""
+    ctx = ctx or {}
+    names = {"matched_twin": "twin", "family": "family", "dsr": "DSR",
+             "without_best_5": "w/o best 5", "calendar_offsets": "calendar"}
+    return "; ".join(f"{names[f]}: {ctx.get(f) or NOT_COMPUTED}" for f in HEADLINE_CONTEXT_FIELDS)
 
 
 # ── rules contributed by a sibling module (chunk C features) ─────────────────

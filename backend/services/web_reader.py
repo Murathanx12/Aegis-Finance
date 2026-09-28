@@ -93,13 +93,15 @@ from typing import Any, Callable
 from urllib.parse import urlsplit
 
 from backend import config as _config
+from backend.services import browser_policy as BP
 from backend.services import disk_guard as DG
 
 LICENCE = "Dow Jones subscriber, personal research; not republished"
 
 #: Hard stop regardless of the allowlist -- the tabs open beside the reader.
 NEVER_HOSTS: tuple[str, ...] = ("mail.google.com", "app.alpaca.markets", "alpaca.markets",
-                                "railway.com", "railway.app", "web.whatsapp.com")
+                                "railway.com", "railway.app", "web.whatsapp.com",
+                                *BP.MESSAGE_HOSTS)
 #: Roles that are never clicked. A reader clicks LINKS.
 DENY_ROLES: frozenset[str] = frozenset({"button", "textbox", "combobox", "checkbox",
                                         "radio", "searchbox", "form", "menuitem",
@@ -127,7 +129,20 @@ def _cfg(name: str, default: Any) -> Any:
 
 
 def hosts() -> tuple[str, ...]:
-    return tuple(_cfg("OPENCLAW_USER_TAB_HOSTS", ("wsj.com", "barrons.com", "marketwatch.com")))
+    """Every host the reader may load: the Dow Jones sites plus, since
+    2026-09-28, the read-only social hosts (`config.OPENCLAW_BROWSER_HOSTS`)."""
+    return tuple(_cfg("OPENCLAW_BROWSER_HOSTS",
+                      _cfg("OPENCLAW_USER_TAB_HOSTS", ("wsj.com", "barrons.com", "marketwatch.com"))))
+
+
+def social_hosts() -> tuple[str, ...]:
+    return tuple(_cfg("OPENCLAW_SOCIAL_HOSTS", ("x.com", "reddit.com", "stocktwits.com")))
+
+
+def is_social(url_or_host: str) -> bool:
+    h = url_or_host if "://" not in (url_or_host or "") else (urlsplit(url_or_host).hostname or "")
+    h = (h or "").lower()
+    return any(h == d or h.endswith("." + d) for d in social_hosts())
 
 
 def host_ok(url: str) -> bool:
@@ -183,7 +198,7 @@ def is_gateway_down(msg: str) -> bool:
     return bool(GATEWAY_DOWN.search(msg or ""))
 
 
-def ensure_attached(profile: str = "user", *, oc: Any = None, log: list | None = None,
+def ensure_attached(profile: str = "muratclaw", *, oc: Any = None, log: list | None = None,
                     sleep_fn: Callable[[float], None] = time.sleep,
                     clock: Callable[[], float] = time.monotonic) -> dict:
     """The operator profile is RUNNING with tabs, re-attaching if it is not.
@@ -217,6 +232,17 @@ def ensure_attached(profile: str = "user", *, oc: Any = None, log: list | None =
     st = state()
     if st == "running":
         return {"reattached": False, "state": st}
+    ded = getattr(oc, "dedicated_profiles", None)
+    if callable(ded) and profile in ded():
+        # The dedicated Chrome is attach-only: `start` cannot bring it up. A
+        # closed Chrome is a DEPENDENCY fault for the supervisor
+        # (`muratclaw_instance.launch_attach`), never something the reader does.
+        from backend.services import muratclaw_instance as MI
+        ms = MI.status()
+        if not ms.get("running_with_port"):
+            raise ReaderRefused(f"REFUSED_INSTANCE_DOWN: the dedicated Chrome is not running "
+                                f"with its port ({ms.get('endpoint')}); the supervisor "
+                                f"launches it, the reader does not")
     if st is None:
         raise ReaderRefused(f"REFUSED_GATEWAY_DOWN: `browser profiles` did not list {profile!r} "
                             f"(gateway down or timing out?); the reader does not restart it")
@@ -268,24 +294,13 @@ def ensure_attached(profile: str = "user", *, oc: Any = None, log: list | None =
 # ───────────────────────────── snapshot parsing ─────────────────────────────
 
 def parse_snapshot(text: str) -> dict:
-    """`{nodes: [{role, name, ref}], links: [{text, url}]}` from `snapshot
-    --format ai --urls` output (tree lines, then a `Links:` appendix)."""
-    nodes, links, in_links = [], [], False
-    for line in (text or "").splitlines():
-        if line.strip() == "Links:":
-            in_links = True
-            continue
-        if in_links:
-            m = _SNAP_LINK.match(line)
-            if m:
-                links.append({"text": m.group(1).strip(), "url": m.group(2).strip()})
-            continue
-        m = _SNAP_NODE.match(line)
-        if m:
-            nodes.append({"role": m.group(1).lower(),
-                          "name": m.group(2).replace('\\"', '"').strip(),
-                          "ref": (m.group(3) or "").strip() or None})
-    return {"nodes": nodes, "links": links}
+    """`{nodes: [{role, name, ref, url}], links: [{text, url, ref}]}` from
+    `snapshot --format ai --urls` output, in EITHER shape: the chrome-mcp tree
+    with a `Links:` appendix, or (the attach profile, 2026-09-28) the tree with
+    each link's `[url=...]` inline and no appendix. One parser for both, in
+    `browser_policy`, so the click guard and the link chooser read a page the
+    same way. Before this, the new driver's pages parsed as 0 links."""
+    return BP.parse_snapshot(text)
 
 
 def select_links(snapshot_text: str, link_pattern: str, *, text_pattern: str | None = None,
@@ -326,7 +341,9 @@ def ref_is_clickable(snapshot_text: str, ref: str) -> bool:
     for n in parse_snapshot(snapshot_text)["nodes"]:
         if n["ref"] == ref:
             return n["role"] == "link" and n["role"] not in DENY_ROLES \
-                and not DENY_LINK_TEXT.search(n["name"])
+                and not DENY_LINK_TEXT.search(n["name"]) \
+                and BP.text_refusal(n["name"]) is None \
+                and not (n.get("url") and (BP.url_refusal(n["url"]) or not host_ok(n["url"])))
     return False
 
 
@@ -353,6 +370,10 @@ class Throttle:
     max_per_day: int = field(default_factory=lambda: int(_cfg("WEB_READER_MAX_PER_DAY", 120)))
     max_per_day_per_host: int = field(
         default_factory=lambda: int(_cfg("WEB_READER_MAX_PER_DAY_PER_HOST", 40)))
+    #: Per-host daily caps that REPLACE `max_per_day_per_host` for a host (or a
+    #: subdomain of it): the social hosts start at 150/day each (2026-09-28).
+    per_host_day_caps: dict = field(
+        default_factory=lambda: dict(_cfg("WEB_READER_MAX_PER_DAY_BY_HOST", {}) or {}))
     #: Two page loads on the SAME host are at least this far apart: the drawn
     #: target SCALED by `min_same_host_gap_s / min_delay_s` (60/20 = 3x, so a
     #: one-lane run gaps in [60, 270] s). Scaled, not shifted: `60 + jitter`
@@ -377,7 +398,10 @@ class Throttle:
     same_host_waits: list[dict] = field(default_factory=list)
     waits: list[float] = field(default_factory=list)
     targets: list[float] = field(default_factory=list)
+    #: slots given back by `refund` (an open that loaded no page)
+    refunds: list[dict] = field(default_factory=list)
     _rng: Any = field(default=None, repr=False)
+    _last_line: str | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         import numpy as np
@@ -420,6 +444,23 @@ class Throttle:
     def lock_path(self) -> Path:
         return self.path.with_name(self.path.name + ".lock")
 
+    def host_day_cap(self, host: str) -> int:
+        """The daily cap for `host`: a `per_host_day_caps` entry matching the host
+        or a parent domain of it, else `max_per_day_per_host`."""
+        h = (host or "").lower().removeprefix("www.")
+        for d, cap in (self.per_host_day_caps or {}).items():
+            if h == d or h.endswith("." + d):
+                return int(cap)
+        return int(self.max_per_day_per_host)
+
+    def last_load_by_host(self) -> dict[str, datetime]:
+        """host -> the time of its most recent load (for `pick_next_lane`)."""
+        out: dict[str, datetime] = {}
+        for t, h, _ in self._rows():
+            if h and h != "-" and (h not in out or t > out[h]):
+                out[h] = t
+        return out
+
     def acquire(self, what: str = "page", host: str = "") -> float:
         """Sleep until the next load is allowed, record it, return seconds waited.
         Raises `ReaderRefused` when the hourly, daily or per-host daily cap is spent.
@@ -438,8 +479,9 @@ class Throttle:
         if len(rows) >= self.max_per_day:
             raise ReaderRefused(f"REFUSED_THROTTLE_DAY: {len(rows)} page loads in 24 h "
                                 f">= {self.max_per_day}")
-        if host and sum(1 for r in rows if r[1] == host) >= self.max_per_day_per_host:
-            raise ReaderRefused(f"REFUSED_THROTTLE_HOST_DAY: >= {self.max_per_day_per_host} "
+        cap = self.host_day_cap(host)
+        if host and sum(1 for r in rows if r[1] == host) >= cap:
+            raise ReaderRefused(f"REFUSED_THROTTLE_HOST_DAY: >= {cap} "
                                 f"page loads on {host} in 24 h")
         while sum(1 for r in rows if now - r[0] < timedelta(hours=1)) >= self.max_per_hour:
             if not self.wait_on_hour_cap:
@@ -476,9 +518,49 @@ class Throttle:
         self.targets.append(target)
         stamp = self.now_fn() if wait > 0 else now
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        line = f"{stamp.isoformat()} {host or '-'} {target}"
         with self.path.open("a", encoding="utf-8") as fh:
-            fh.write(f"{stamp.isoformat()} {host or '-'} {target}\n")
+            fh.write(line + "\n")
+        self._last_line = line
         return wait
+
+    def refund(self, why: str = "", *, line: str | None = None) -> bool:
+        """Give back the slot the LAST `acquire` of this object took (2026-09-28),
+        or, with `line`, the slot whose throttle line that is (a lane's own load
+        in an interleaved rotation, where another lane may have acquired since).
+
+        A tab open that failed before any page loaded -- a pop-up blocked, a
+        gateway refusal, an instance refusal -- loaded nothing, so it must not
+        count against the hourly, daily or per-host caps: on 2026-09-28 sixteen
+        slots were burnt by opens that never produced a tab. Removes exactly
+        the line that acquire wrote (under the same file lock), once; returns
+        whether it was found. The pacing wait already slept is not undone."""
+        if line is None:
+            line = self._last_line
+            if not line:
+                return False
+            self._last_line = None
+        elif line == self._last_line:
+            self._last_line = None
+        with DG.file_lock(self.lock_path()):
+            try:
+                rows = self.path.read_text(encoding="utf-8").splitlines()
+            except OSError:
+                return False
+            for i in range(len(rows) - 1, -1, -1):
+                if rows[i].strip() == line:
+                    del rows[i]
+                    break
+            else:
+                return False
+            if rows:
+                DG.atomic_write_text(self.path, "".join(r + "\n" for r in rows))
+            else:   # the refunded line was the only one (atomic_write refuses empty)
+                self.path.write_text("", encoding="utf-8")
+        if self.targets:
+            self.targets.pop()
+        self.refunds.append({"line": line, "why": str(why)[:160]})
+        return True
 
 
 def throttle_path() -> Path:
@@ -880,6 +962,77 @@ def max_pages_per_tab() -> int:
     return int(_cfg("WEB_READER_MAX_PAGES_PER_TAB", 10))
 
 
+def direct_open_ok(driver: Any, profile: str) -> bool:
+    """True when `profile` is a DEDICATED instance and the driver can open a tab
+    there directly (`open_tab`, under the instance proof) -- 2026-09-28.
+
+    `window.open` from a parent tab (`open_from_tab`) existed only because the
+    old attach reached every profile of Murat's main Chrome, so a new tab had
+    to inherit the profile of a tab he opened by hand. On the dedicated Chrome
+    a fresh profile's pop-up blocker refuses a `window.open` without a user
+    gesture: 0 new tabs on every lane on 2026-09-28. The dedicated instance
+    opens directly; `open_from_tab` stays for any other operator profile."""
+    ded = getattr(driver, "dedicated_profiles", None)
+    try:
+        is_ded = callable(ded) and profile in ded()
+    except Exception:  # noqa: BLE001 -- unknown means not dedicated
+        is_ded = False
+    return bool(is_ded) and callable(getattr(driver, "open_tab", None))
+
+
+def open_lane_tab(driver: Any, profile: str, url: str, *, parent: str | None = None,
+                  throttle: Throttle | None = None, host: str = "",
+                  what: str = "open_tab", take_slot: bool = True) -> dict:
+    """Open ONE new tab at `url` for a reader lane; the open IS a page load.
+
+    * dedicated profile -> `driver.open_tab` (URL rules, instance proof, the
+      landed-host check: all inside the client); no parent tab is used;
+    * any other operator profile -> `driver.open_from_tab(parent, ...)`, which
+      needs a parent (none -> REFUSED_NO_PARENT_TAB).
+
+    The throttle slot is taken first (pacing is served before the request)
+    and GIVEN BACK when the open fails without producing a tab, so a failed
+    open never counts against the hourly or daily caps. If the client did
+    record a new tab before refusing (landed off-host), the slot stands (a
+    page did load) and that tab -- ours -- is closed here, best effort.
+    Returns the driver's dict with `how` ("direct_open" / the diff method)
+    and `label` filled in."""
+    direct = direct_open_ok(driver, profile)
+    if not direct and not parent:
+        raise ReaderRefused(f"REFUSED_NO_PARENT_TAB: {profile!r} is not a dedicated instance, "
+                            f"so a new tab needs a parent tab to open from")
+    if throttle is not None and take_slot:
+        throttle.acquire(what, host=host)
+    reg = getattr(driver, "_OPENED_TABS", None)
+    before = set(reg) if isinstance(reg, (set, frozenset)) else None
+    try:
+        if direct:
+            op = dict(driver.open_tab(url, profile_name=profile))
+            op.setdefault("how", "direct_open")
+        else:
+            op = dict(driver.open_from_tab(parent, url, profile_name=profile))
+    except BaseException as exc:
+        reg2 = getattr(driver, "_OPENED_TABS", None)
+        made = (set(reg2) - before) if (before is not None and isinstance(
+            reg2, (set, frozenset))) else set()
+        for h in sorted(made):                   # a tab WE opened that was refused after
+            try:
+                driver.browser("close", profile_name=profile, target_id=h)
+            except Exception:  # noqa: BLE001 -- best effort; accounted as an orphan
+                pass
+        try:
+            exc.tab_made = bool(made)  # type: ignore[attr-defined]
+        except Exception:  # noqa: BLE001 -- a builtin that takes no attributes
+            pass
+        if throttle is not None and take_slot and not made:
+            throttle.refund(f"open failed before any page load: {type(exc).__name__}: "
+                            f"{str(exc)[:100]}")
+        raise
+    op.setdefault("label", op.get("new_tab"))
+    op["direct"] = direct
+    return op
+
+
 def own_blank_tab_verb(driver: Any, profile: str, tab: str, verb: str,
                        url: str | None = None) -> dict:
     """`blank`, or `navigate`/`close` on a blanked tab THIS process opened.
@@ -901,6 +1054,17 @@ def own_blank_tab_verb(driver: Any, profile: str, tab: str, verb: str,
         if type(exc).__name__ == "OpenClawRefused":
             raise ReaderRefused(str(exc)) from exc
         raise
+
+
+#: A raw CDP target id (the attach profile, 2026-09-28): 128 random bits, unique
+#: to one tab of one browser, never reissued -- as safe across runs as a
+#: session-qualified chrome-mcp handle.
+CDP_TARGET_ID = re.compile(r"^[0-9A-F]{32}$")
+
+
+def is_stable_handle(h: str) -> bool:
+    parts = str(h or "").split(":")
+    return (len(parts) == 3 and parts[0] == "chrome-mcp") or bool(CDP_TARGET_ID.match(str(h or "")))
 
 
 def close_leftover_tabs(driver: Any, profile: str, handles: Any, *,
@@ -928,8 +1092,7 @@ def close_leftover_tabs(driver: Any, profile: str, handles: Any, *,
     by_handle = {str(t.get("targetId") or t.get("tabId") or ""): t for t in listing}
     opened = getattr(driver, "_OPENED_TABS", None)
     for h in handles:
-        parts = h.split(":")
-        if not (len(parts) == 3 and parts[0] == "chrome-mcp"):
+        if not is_stable_handle(h):
             out["skipped"][h] = "not session-qualified (a tN alias is reissued)"
             continue
         t = by_handle.get(h)
@@ -937,7 +1100,13 @@ def close_leftover_tabs(driver: Any, profile: str, handles: Any, *,
             out["skipped"][h] = "not present"
             continue
         u = str(t.get("url") or "")
-        if not host_ok(u):
+        # 2026-09-28: on the DEDICATED instance a raw CDP target id is unique to
+        # that Chrome, so a leftover our receipt names that sits on about:blank
+        # (a crashed run's blanked lane tab) is ours too -- these were the blank
+        # tabs piling up in the MuratClaw window. Elsewhere a blank tab could be
+        # the owner's, so it is still skipped.
+        blank_ours = u == BLANK_URL and direct_open_ok(driver, profile)
+        if not host_ok(u) and not blank_ours:
             out["skipped"][h] = f"not on a Dow Jones host ({u[:60]!r})"
             continue
         if opened is not None:
@@ -1065,9 +1234,24 @@ class Reader:
     reads: int = 0
     lock: bool = True
     parent: str | None = None
+    #: 2026-09-28: a dedicated instance re-opens a rotated tab with `open_tab`
+    #: (no parent tab); see `open_lane_tab`.
+    direct_open: bool = False
     max_tab_pages: int = field(default_factory=max_pages_per_tab)
     tab_pages: int = 0
     blank_after_read: bool = True
+    #: 2026-09-28 (Murat: "opens a website then it goes blank, but if it clicks
+    #: go back ... they launch back"): on a dedicated instance (`direct_open`)
+    #: the tab is CLOSED after its read instead of navigated to about:blank,
+    #: and the next page load opens a fresh tab AT its URL. No blank page is
+    #: ever shown, no history entry is left behind, and a blank tab never has
+    #: to be told apart from another worker's. None -> follow `direct_open`.
+    close_after_read: bool | None = None
+    retired: bool = False
+    closes_after_read: int = 0
+    #: throttle line of this Reader's last page load (a BLANK page gives it back)
+    _slot_line: str | None = None
+    slot_refunds: list[str] = field(default_factory=list)
     blanked: bool = False
     blanks: int = 0
     blank_failures: list[str] = field(default_factory=list)
@@ -1076,6 +1260,13 @@ class Reader:
     closed: dict[str, bool] = field(default_factory=dict)
     close_errors: dict[str, str] = field(default_factory=dict)
     rotations: list[dict] = field(default_factory=list)
+    #: host -> {page class -> count} for every page this Reader classified
+    page_classes: dict = field(default_factory=dict)
+    #: labels carried onto `page_log.jsonl` lines
+    lane: str | None = None
+    worker: str | None = None
+    #: write `page_log.jsonl` lines (the runs set it; a bare Reader in a test does not)
+    page_log: bool = False
     #: Local sleeps (the settle after a load, the pauses between scroll steps).
     #: None -> the throttle's `sleep_fn`, so a test's fake clock drives them.
     sleep_fn: Callable[[float], None] | None = None
@@ -1125,6 +1316,10 @@ class Reader:
         dropped while the lane waits for its next turn. Not a page load (no
         request reaches a site), so no throttle. A failure is recorded, never
         raised: the article is already stored."""
+        if self.retired:
+            return False
+        if self.direct_open and self.close_after_read is not False:
+            return self.retire()
         if not self.blank_after_read or self.blanked or self.needs_reopen:
             return False
         try:
@@ -1137,6 +1332,34 @@ class Reader:
         self.blanked, self.last_snapshot, self.loaded_at = True, "", None
         self.blanks += 1
         return True
+
+    def retire(self) -> bool:
+        """Close the tab whose page has been read (dedicated instance only);
+        the next `navigate` opens a fresh tab at its URL (`_reopen`). A close
+        that fails is recorded in `close_errors` (the tab is an orphan on the
+        receipt) and the lane still moves on to a fresh tab."""
+        if self.retired or self.needs_reopen:
+            return False
+        self.close_tab()
+        self.retired, self.last_snapshot, self.loaded_at = True, "", None
+        self.closes_after_read += 1
+        return True
+
+    def refund_slot(self, why: str) -> bool:
+        """Give back the throttle slot of this Reader's last page load (a
+        BLANK or empty page loaded nothing worth a slot; Murat 2026-09-28)."""
+        line, self._slot_line = self._slot_line, None
+        if not line:
+            return False
+        try:
+            ok = bool(self.throttle.refund(why, line=line))
+        except TypeError:          # a test double without the `line` keyword
+            return False
+        except Exception:  # noqa: BLE001 -- a receipt detail, never a failure
+            return False
+        if ok:
+            self.slot_refunds.append(str(why)[:120])
+        return ok
 
     def close_tab(self) -> bool:
         """Close the CURRENT tab (a blanked one through `own_blank_tab_verb`);
@@ -1160,6 +1383,14 @@ class Reader:
         self.closed[tab] = ok
         return ok
 
+    def count_page(self, url: str, cls: str) -> None:
+        """Count one classified page load (per host) and log it."""
+        host = host_of(url) or "-"
+        row = self.page_classes.setdefault(host, {})
+        row[cls] = row.get(cls, 0) + 1
+        if self.page_log:
+            log_page(host, cls, url, lane=self.lane, worker=self.worker)
+
     def orphans(self) -> list[str]:
         return [h for h in self.opened if not self.closed.get(h)]
 
@@ -1169,10 +1400,21 @@ class Reader:
         old = self.tab
         closed = self.close_tab()
         self._page("reopen", url)
-        op = self.driver.open_from_tab(self.parent, url, profile_name=self.profile)
+        try:
+            op = open_lane_tab(self.driver, self.profile, url, parent=self.parent,
+                               throttle=self.throttle, take_slot=False)
+        except BaseException as exc:
+            # nothing loaded: give the slot `_page` took back, and the page count
+            if not getattr(exc, "tab_made", False):
+                self.throttle.refund(f"reopen failed: {type(exc).__name__}: {str(exc)[:100]}")
+                self.pages -= 1
+                self.log.pop()
+            self.needs_reopen = True
+            raise
         self.tab = op["new_tab"]
         self.opened.append(self.tab)
         self.tab_pages, self.blanked, self.needs_reopen, self.last_snapshot = 1, False, False, ""
+        self.retired = False
         self.log[-1]["tab"] = self.tab
         self.rotations.append({"at": self.log[-1]["at"], "old": old, "old_closed": closed,
                                "new": self.tab, "why": why, "url": url})
@@ -1244,6 +1486,7 @@ class Reader:
             raise ReaderRefused(f"REFUSED_HOST: {url!r} is not on {hosts()}")
         host = (urlsplit(url or "").hostname or "").lower().removeprefix("www.") if url else ""
         waited = self.throttle.acquire(what, host=host)
+        self._slot_line = getattr(self.throttle, "_last_line", None)
         self.pages += 1
         self.log.append({"page": self.pages, "what": what, "url": url, "waited_s": waited,
                          "at": self.throttle.now_fn().isoformat(timespec="seconds")})
@@ -1257,8 +1500,10 @@ class Reader:
                                 f"{(r.get('stderr') or '')[:160]}")
 
     def navigate(self, url: str) -> None:
-        if self.parent and (self.needs_reopen or self.tab_pages >= self.max_tab_pages):
+        if (self.parent or self.direct_open) and (self.needs_reopen or self.retired or
+                                                  self.tab_pages >= self.max_tab_pages):
             self._reopen(url, "lost_on_reattach" if self.needs_reopen else
+                         "fresh_tab_per_page" if self.retired else
                          f"served {self.tab_pages} pages >= {self.max_tab_pages}")
             return
         self._page("navigate", url)
@@ -1277,15 +1522,21 @@ class Reader:
         r = self.driver.browser("snapshot", "--format", "ai", "--urls", "--limit", "900",
                                 profile_name=self.profile, target_id=self.tab)
         self.last_snapshot = r.get("stdout") or ""
-        if "\nLinks:" not in self.last_snapshot and self.last_snapshot.strip():
+        n_full = len(parse_snapshot(self.last_snapshot)["links"])
+        cut = int(_cfg("WEB_READER_SNAPSHOT_CUT_CHARS", 38000))
+        if self.last_snapshot.strip() and (n_full == 0 or len(self.last_snapshot) >= cut):
             # 2026-09-28: the CLI cuts a snapshot at ~40,000 chars and the
             # `Links:` appendix is LAST, so a big page (every WSJ / Barron's
-            # stock page: 51 of 51 returned 0 links) loses all its URLs. The
-            # interactive-only tree is small enough to keep the appendix.
+            # stock page: 51 of 51 returned 0 links) loses its URLs. The
+            # interactive-only tree is small enough to keep them. A CUT page
+            # can still show a few inline nav links (the Barron's PLTR page:
+            # 38 nav links, 0 of its 37 article links), so a snapshot at the
+            # cut length is re-read too, and the interactive one is used when
+            # it carries MORE links.
             r2 = self.driver.browser("snapshot", "--format", "ai", "--urls", "--interactive",
                                      "--compact", "--limit", "2500",
                                      profile_name=self.profile, target_id=self.tab)
-            if "\nLinks:" in (r2.get("stdout") or ""):
+            if len(parse_snapshot(r2.get("stdout") or "")["links"]) > n_full:
                 self.last_snapshot = r2.get("stdout") or ""
                 self.snapshot_fallbacks = getattr(self, "snapshot_fallbacks", 0) + 1
         return self.last_snapshot
@@ -1325,7 +1576,7 @@ class Reader:
         navigate, with the host checks before and after. No settle here."""
         url = link if isinstance(link, str) else link.get("url")
         ref = None if isinstance(link, str) else link.get("ref")
-        if (ref and self.last_snapshot and not self.blanked
+        if (ref and self.last_snapshot and not self.blanked and not self.retired
                 and ref_is_clickable(self.last_snapshot, ref)):
             self._page("click", url)
             r = self.driver.browser("click", ref, profile_name=self.profile, target_id=self.tab)
@@ -1351,16 +1602,33 @@ class Reader:
         got = self.driver.read_text(self.tab, profile_name=self.profile)
         if got.get("error") or not (got.get("text") or "").strip():
             # An empty read is a FAILURE with a name, never a page with no text.
+            self.count_page(got.get("url") or url, "BLANK")
+            self.refund_slot(f"empty read: {url}")
+            self.last_snapshot = ""
+            self.blank()
             raise ReaderRefused(f"REFUSED_EMPTY_READ: {url!r}: "
                                 f"{(got.get('error') or 'no text returned')[:200]}")
         final_url = got.get("url") or url
-        if not host_ok(final_url):
-            raise ReaderRefused(f"REFUSED_LEFT_HOSTS: read landed on {final_url!r}")
         raw = got.get("text") or ""
         title = got.get("title") or (None if isinstance(link, str) else link.get("text"))
         text = clean_text(raw, title)
+        # 2026-09-28: every load is CLASSIFIED; only OK is stored as an article
+        cls = classify_page(url=url, final_url=final_url, title=title, raw=raw, text=text)
+        self.count_page(final_url, cls)
+        if cls == "REDIRECTED_OFF_HOST":
+            raise ReaderRefused(f"REFUSED_LEFT_HOSTS: read landed on {final_url!r}")
+        if cls != "OK":
+            if cls == "BLANK":
+                self.refund_slot(f"BLANK page: {final_url}")
+            self.last_snapshot = ""
+            self.blank()
+            if cls == "CHALLENGE":
+                raise ReaderRefused(f"REFUSED_CHALLENGE: {final_url!r} shows a bot check or "
+                                    f"block page; this lane stops (nothing is done to pass it)")
+            raise ReaderRefused(f"PAGE_{cls}: {final_url!r} ({len(text)} chars) not stored")
         pub = DC.publisher_of(final_url, text)
         art = {"url": final_url, "title": title, "byline": parse_byline(text),
+               "page_class": cls,
                "published_utc": parse_published(text), "text": text,
                "first_seen_utc": DC.now_iso(), "chars": len(text), "raw_chars": len(raw),
                "publisher": pub, "origin": origin, "tab": self.tab, "profile": self.profile,
@@ -1378,3 +1646,275 @@ class Reader:
         self.last_snapshot = ""
         self.blank()
         return art
+
+
+# ───────────── every page load is CLASSIFIED before it is stored ─────────────
+#
+# Murat, 2026-09-28 17:00: "its making issues at times and opening blanks or 404
+# pages". Only an OK page is stored as an article; every other class is counted
+# per host on the receipt and in `page_log.jsonl`. A CHALLENGE (a bot check or
+# block page) stops that lane: nothing is done to get around it.
+
+PAGE_CLASSES = ("OK", "BLANK", "NOT_FOUND", "PAYWALL_STUB", "SIGNED_OUT", "CHALLENGE",
+                "REDIRECTED_OFF_HOST")
+#: visible text below this many characters is a BLANK page
+PAGE_MIN_CHARS = 200
+_NOT_FOUND = re.compile(
+    r"\b(page not found|404 error|error 404|404 not found|we can(?:'|no)t find (?:the|that) page|"
+    r"page (?:you are|you're) looking for (?:does not|doesn't|cannot|can't|could not)|"
+    r"this page (?:is|has been) (?:no longer available|removed)|symbol not found|"
+    r"no (?:results|matches) (?:found )?for)\b", re.I)
+_CHALLENGE = re.compile(
+    r"(captcha|verify (?:that )?you are (?:a )?human|are you a robot|press (?:&|and) hold|"
+    r"unusual (?:traffic|activity) from your|access (?:to this page has been )?denied|"
+    r"request (?:was |has been )?blocked|please enable (?:js|javascript) and disable any ad blocker|"
+    r"checking your browser)", re.I)
+_PAYWALL = re.compile(r"(subscribe to continue|to keep reading|continue reading your article with|"
+                      r"choose your .{0,40}subscription|this article is for subscribers|"
+                      r"already a subscriber\??\s*sign in)", re.I)
+_SIGN_IN = re.compile(r"\bsign in\b", re.I)
+#: a paywalled page shorter than this is a stub, not an article
+PAYWALL_STUB_MAX_CHARS = 2500
+
+
+def classify_page(*, url: str, final_url: str | None, title: str | None, raw: str,
+                  text: str | None = None, hosts_allowed: Callable[[str], bool] | None = None
+                  ) -> str:
+    """PURE. One of PAGE_CLASSES for a page that was loaded and read.
+
+    Order: off-host > blank > challenge > not found > signed out / paywall stub >
+    OK. The heads (title + first 1,500 chars) carry the templates; a long
+    article that merely MENTIONS "404" in its body is not NOT_FOUND."""
+    fu = final_url or url or ""
+    ok_host = hosts_allowed or host_ok
+    if fu and fu != BLANK_URL and not fu.startswith("about:") and not ok_host(fu):
+        return "REDIRECTED_OFF_HOST"
+    body = (text if text is not None else raw) or ""
+    if fu.startswith("about:") or len(body.strip()) < PAGE_MIN_CHARS:
+        return "BLANK"
+    head = f"{title or ''}\n{(raw or '')[:1500]}"
+    if _CHALLENGE.search(head) and len(body) < 4000:
+        return "CHALLENGE"
+    if _NOT_FOUND.search(head) and len(body) < 6000:
+        return "NOT_FOUND"
+    if _PAYWALL.search(raw or "") and len(body) < PAYWALL_STUB_MAX_CHARS:
+        return "SIGNED_OUT" if _SIGN_IN.search((raw or "")[:600]) else "PAYWALL_STUB"
+    return "OK"
+
+
+def snapshot_title(snapshot_text: str) -> str:
+    """The page title from an ai snapshot's `RootWebArea "..."` line ('' if none)."""
+    m = re.search(r'RootWebArea "([^"]*)"', snapshot_text or "")
+    return m.group(1) if m else ""
+
+
+def page_log_path() -> Path:
+    return Path(_config.OPTIMUS_LEDGER_DIR) / "dowjones" / "page_log.jsonl"
+
+
+def log_page(host: str, cls: str, url: str, *, lane: str | None = None,
+             worker: str | None = None, path: Path | None = None) -> None:
+    """One line per classified page load (the status file and the receipts read it)."""
+    try:
+        DG.locked_append_line(path or page_log_path(), json.dumps(
+            {"t": datetime.now(timezone.utc).isoformat(timespec="seconds"), "host": host,
+             "class": cls, "url": (url or "")[:300], "lane": lane, "worker": worker}))
+    except Exception:  # noqa: BLE001 -- a log line never fails a read
+        pass
+
+
+# ─────────────── LANE O rotation: the host that is free soonest ──────────────
+#
+# Murat, 2026-09-28: "dont read it too slow, while its waiting make it read other
+# pages then". The same-host floor (`Throttle.min_same_host_gap_s`, 18 s with the
+# current pace) is what a single-host lane waits on; with more hosts in the
+# rotation, the next load should go to the lane whose host has been idle longest
+# -- then the floor binds less and the shared DRAWN gap is what paces the run.
+
+def host_of(url: str) -> str:
+    return (urlsplit(url or "").hostname or "").lower().removeprefix("www.")
+
+
+def pick_next_lane(lanes: list[tuple[str, str]], last_load: dict[str, datetime],
+                   now: datetime, same_host_gap_s: float) -> str | None:
+    """PURE. `lanes` = [(lane_id, host)] in the caller's fair order. Returns the
+    lane whose host is free SOONEST (`last_load[host] + same_host_gap_s`; a host
+    never loaded is free now); ties keep the caller's order. None for no lanes."""
+    best, best_at = None, None
+    for lane, host in lanes:
+        t = last_load.get(host)
+        free_at = now if t is None else max(now, t + timedelta(seconds=same_host_gap_s))
+        if best_at is None or free_at < best_at:
+            best, best_at = lane, free_at
+    return best
+
+
+def host_aware_order(queues: dict[str, list], lane_host: dict[str, str], *,
+                     same_host_gap_s: float, load_s: float, start: datetime,
+                     last_load: dict[str, datetime] | None = None) -> list[tuple[str, Any]]:
+    """PURE simulation of the rotation `pick_next_lane` produces: each load
+    takes `load_s`; returns [(lane, item)] in load order. Lanes keep their own
+    item order; an exhausted lane drops out."""
+    qs = {k: list(v) for k, v in queues.items() if v}
+    seen = dict(last_load or {})
+    now = start
+    out: list[tuple[str, Any]] = []
+    order = list(qs)
+    while qs:
+        live = [(k, lane_host.get(k, k)) for k in order if k in qs]
+        k = pick_next_lane(live, seen, now, same_host_gap_s)
+        h = lane_host.get(k, k)
+        t = seen.get(h)
+        if t is not None:
+            now = max(now, t + timedelta(seconds=same_host_gap_s))
+        out.append((k, qs[k].pop(0)))
+        seen[h] = now
+        now = now + timedelta(seconds=load_s)
+        if not qs[k]:
+            del qs[k]
+        order.remove(k)
+        order.append(k)
+    return out
+
+
+# ─────────────────── LANE O5: the yield check on every run ───────────────────
+#
+# 2026-09-28 01:34-02:17: 51 of 51 WSJ / Barron's stock pages returned
+# `links_on_page: 0` for hours and nothing noticed -- page LOADS were counted,
+# page YIELD was not (handoff §5 R3). After the first N pages of a run (config
+# `READER_YIELD_CHECK_AFTER`, 10) and at the end, the run prints and records
+# links per page and characters per page per lane, and a lane that is ZERO on
+# EVERY page it has loaded refuses by name.
+
+@dataclass
+class YieldCheck:
+    after: int = field(default_factory=lambda: int(_cfg("READER_YIELD_CHECK_AFTER", 10)))
+    min_pages_per_lane: int = 2
+    rows: list[dict] = field(default_factory=list)
+    reports: list[dict] = field(default_factory=list)
+    printer: Callable[[str], None] | None = print
+
+    def record(self, lane: str, *, links: int | None = None, chars: int | None = None,
+               kind: str = "page") -> dict | None:
+        """One page's yield. Returns the report when this record triggers one
+        (the Nth page); raises `ReaderRefused` from that report when a lane is
+        zero on every page."""
+        self.rows.append({"lane": lane, "links": links, "chars": chars, "kind": kind})
+        if len(self.rows) == self.after:
+            return self.check("after_first_pages")
+        return None
+
+    def report(self, when: str) -> dict:
+        lanes: dict[str, dict] = {}
+        for r in self.rows:
+            d = lanes.setdefault(r["lane"], {"pages": 0, "links": [], "chars": []})
+            d["pages"] += 1
+            if r["links"] is not None:
+                d["links"].append(int(r["links"]))
+            if r["chars"] is not None:
+                d["chars"].append(int(r["chars"]))
+        out = {"when": when, "pages": len(self.rows), "lanes": {}}
+        zero = []
+        for lane, d in lanes.items():
+            lk, ch = d["links"], d["chars"]
+            row = {"pages": d["pages"],
+                   "links_per_page": round(sum(lk) / len(lk), 1) if lk else None,
+                   "zero_link_pages": sum(1 for x in lk if x == 0),
+                   "chars_per_page": round(sum(ch) / len(ch)) if ch else None,
+                   "zero_char_pages": sum(1 for x in ch if x == 0)}
+            out["lanes"][lane] = row
+            measured = len(lk) + len(ch)
+            all_zero = measured > 0 and all(x == 0 for x in lk) and all(x == 0 for x in ch)
+            if d["pages"] >= self.min_pages_per_lane and all_zero:
+                zero.append(lane)
+        out["zero_lanes"] = zero
+        return out
+
+    def check(self, when: str) -> dict:
+        rep = self.report(when)
+        self.reports.append(rep)
+        if self.printer:
+            self.printer("YIELD " + json.dumps(rep, default=str))
+        if rep["zero_lanes"]:
+            raise ReaderRefused(
+                f"REFUSED_ZERO_YIELD_LANE: {rep['zero_lanes']} returned 0 links and 0 "
+                f"characters on every page they loaded ({when}); a lane that yields "
+                f"nothing is a broken reader, not a quiet night (2026-09-28: 51 of 51).")
+        return rep
+
+
+# ─────────────── LANE O: social pages, READ-ONLY, source_kind = social ────────
+#
+# Murat, 2026-09-28: "reddit x and other socials are logged in too". A social
+# read is: navigate to a ticker's SEARCH or community URL (never type into a
+# search box), scroll, read the visible text, store it with url, time and host.
+# No claim extraction here. Rows carry `source_kind = "social"`: downstream, a
+# social row may never originate an alert and never an order.
+
+SOCIAL_URLS: dict[str, str] = {
+    "x.com": "https://x.com/search?q=%24{ticker}&src=typed_query&f=live",
+    "reddit.com": "https://www.reddit.com/search/?q=%24{ticker}&type=posts&sort=new",
+    "stocktwits.com": "https://stocktwits.com/symbol/{ticker}",
+}
+
+
+def social_url(host: str, ticker: str) -> str:
+    t = re.sub(r"[^A-Za-z0-9.\-]", "", ticker or "").upper()
+    if not t:
+        raise ReaderRefused(f"REFUSED_SOCIAL_TICKER: {ticker!r}")
+    tpl = SOCIAL_URLS.get(host)
+    if tpl is None:
+        raise ReaderRefused(f"REFUSED_SOCIAL_HOST: {host!r} is not one of {sorted(SOCIAL_URLS)}")
+    return tpl.format(ticker=t)
+
+
+def social_root() -> Path:
+    # from config, exactly as `corpus_root()`: a root rebuilt from `__file__`
+    # lands inside the image on deploy and moves in the frozen desktop build
+    return Path(_config.OPTIMUS_LEDGER_DIR) / "news_corpus" / "social"
+
+
+def store_social(row: dict, *, root: Path | None = None) -> Path:
+    """Append one social page to `news_corpus/social/<host>/<YYYY-MM-DD>.jsonl`
+    (locked append). The row MUST carry `source_kind = "social"`."""
+    if row.get("source_kind") != "social":
+        raise ReaderRefused("REFUSED_SOCIAL_KIND: a social row must carry source_kind='social'")
+    base = (root or social_root()) / str(row.get("host") or "unknown")
+    day = str(row.get("read_utc") or datetime.now(timezone.utc).isoformat())[:10]
+    path = base / f"{day}.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    DG.locked_append_line(path, json.dumps(row, ensure_ascii=False, default=str))
+    return path
+
+
+def read_social_page(reader: "Reader", url: str, *, ticker: str | None = None,
+                     store: bool = True, root: Path | None = None) -> dict:
+    """Load a social SEARCH / community URL in the reader's tab, scroll, read the
+    visible text, store it tagged `source_kind = "social"`. No click, no typing:
+    the client refuses both on a social host anyway."""
+    if not is_social(url):
+        raise ReaderRefused(f"REFUSED_SOCIAL_HOST: {url!r} is not on {social_hosts()}")
+    t0 = time.time()
+    reader.navigate(url)
+    steps = reader.scroll_through()
+    got = reader.driver.read_text(reader.tab, profile_name=reader.profile)
+    if got.get("error") or not (got.get("text") or "").strip():
+        raise ReaderRefused(f"REFUSED_EMPTY_READ: {url!r}: "
+                            f"{(got.get('error') or 'no text returned')[:200]}")
+    final = got.get("url") or url
+    if not host_ok(final) or not is_social(final):
+        raise ReaderRefused(f"REFUSED_LEFT_HOSTS: read landed on {final!r}")
+    text = str(got.get("text") or "")
+    row = {"source_kind": "social", "host": host_of(final), "url": final,
+           "requested_url": url, "ticker": (ticker or "").upper() or None,
+           "title": got.get("title"), "text": text, "chars": len(text),
+           "read_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+           "scroll_steps": steps, "read_s": round(time.time() - t0, 2),
+           "tab": reader.tab, "profile": reader.profile,
+           "never": ["alert_origin", "order"]}
+    if store:
+        row["stored"] = str(store_social(row, root=root))
+    reader.reads += 1
+    reader.scrolled_reads += bool(steps)
+    reader.blank()
+    return row

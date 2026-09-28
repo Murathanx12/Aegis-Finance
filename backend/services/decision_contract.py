@@ -636,19 +636,37 @@ def per_name_caps() -> dict[str, float]:
 
 
 def gross_caps() -> dict[str, float]:
-    """Every gross cap that can bind the PC-PAPER account, by source."""
+    """Every ACCOUNT-LEVEL gross cap on PC-PAPER, by source (the only ones compared).
+
+    Review 2026-09-28 F2, verified the same day: `IC_TOTAL_TILT_BUDGET` (0.10)
+    is read only by the committee's tilt rows, `roi_rank` and the contract's
+    virtual rows -- never by `sim_run.u_plan` or `pc_broker` -- so it bounds no
+    PC-PAPER order, and comparing the account's 1.00x against it printed a
+    `GROSS_CAPS_DISAGREE` that no owner decision could clear. The same holds for
+    PROBE_GROSS_CAP (0.20) and 1 - PROBE_GROSS_CAP (0.80) taken alone: they are
+    SLEEVES of one account and sum to its gross. Those three are reported in
+    `sleeve_caps()`, never compared to the account's gross.
+    """
     probe = float(config.PROBE_GROSS_CAP)
-    caps = {
-        "config.IC_TOTAL_TILT_BUDGET (committee tilts)": float(config.IC_TOTAL_TILT_BUDGET),
-        "config.PROBE_GROSS_CAP (u_plan PROBE)": probe,
-        "1 - PROBE_GROSS_CAP (u_plan EXPLOIT room)": 1.0 - probe,
-    }
+    caps = {"u_plan sleeves: PROBE_GROSS_CAP + (1 - PROBE_GROSS_CAP)": probe + (1.0 - probe)}
     try:
         from backend.services import pc_broker as _PB               # noqa: PLC0415
         caps["pc_broker.MAX_INVESTED_FRAC (broker hard limit)"] = float(_PB.MAX_INVESTED_FRAC)
     except Exception:                                              # noqa: BLE001
         pass
     return caps
+
+
+def sleeve_caps() -> dict[str, float]:
+    """Gross caps that are NOT the account's: sleeves, and the committee's tilt
+    garnish. Printed on the mandate for completeness; compared to nothing."""
+    probe = float(config.PROBE_GROSS_CAP)
+    return {
+        "config.PROBE_GROSS_CAP (u_plan PROBE sleeve)": probe,
+        "1 - PROBE_GROSS_CAP (u_plan EXPLOIT sleeve room)": 1.0 - probe,
+        "config.IC_TOTAL_TILT_BUDGET (committee tilt rows; not a PC-PAPER order limit)":
+            float(config.IC_TOTAL_TILT_BUDGET),
+    }
 
 
 def _exploit_book_size() -> int:
@@ -666,8 +684,10 @@ def account_mandate(capital: float | None, *, equity: Any = "derive") -> dict:
     `sum|notional| / equity` for the LARGEST book any path can emit on the
     account (as configured), beside the book the TIGHTEST caps would allow.
 
-    It REFUSES -- `status: REFUSED`, a named reason per disagreement -- when
-    the capital bases or the caps disagree, instead of picking one silently.
+    It is UNRECONCILED -- `status: UNRECONCILED`, a named disagreement each --
+    when the capital bases or the caps disagree, instead of picking one
+    silently. (Written `REFUSED` until 2026-09-28; it never refused anything, so
+    the word was wrong: `mandate_view` reads old receipts that carry it.)
     That is today's state (the contract sizes on the IPS's $40,000, the account
     holds ~$1,000,000; per-name caps are 2% / 3% / 10% / 12%), and it stays
     red until Murat confirms ONE mandate. No limit is changed here.
@@ -741,7 +761,7 @@ def account_mandate(capital: float | None, *, equity: Any = "derive") -> dict:
         refusals.append(f"GROSS_CAPS_DISAGREE: the largest book any path can emit is "
                         f"{gross:.2f}x equity, the tightest gross cap is "
                         f"{tight_gross:.2f} ({tight_gross_src})")
-    status = "REFUSED" if refusals else "OK"
+    status = MANDATE_UNRECONCILED if refusals else "OK"
     big = max(bases.values())
     configured["on_largest_base_seen"] = {
         "equity_usd": big, "worst_case_k_sigma_usd": -gross * stop_pct * big,
@@ -750,7 +770,8 @@ def account_mandate(capital: float | None, *, equity: Any = "derive") -> dict:
             f"(tightest: {tight_name_src}); {configured['line']}"
             + (f" [on the largest base seen, ${big:,.0f}: -${gross * stop_pct * big:,.0f} "
                f"k-sigma, ceiling -${gross * big:,.0f}]" if big > base * 1.05 else "")
-            + (f" -- {len(refusals)} disagreement(s); Murat must confirm ONE mandate"
+            + (f" -- {len(refusals)} disagreement(s); gates no order; turns OK when "
+               f"the owner confirms ONE capital base and ONE cap set"
                if refusals else ""))
     return {
         "status": status,
@@ -761,14 +782,108 @@ def account_mandate(capital: float | None, *, equity: Any = "derive") -> dict:
         "per_name_caps_seen": pn,
         "gross_cap": tight_gross, "gross_cap_source": tight_gross_src,
         "gross_caps_seen": gc,
+        "sleeve_caps_seen": sleeve_caps(),
         "largest_admissible_book_as_configured": configured,
         "largest_admissible_book_under_tightest_caps": tight,
+        "disagreements": refusals,
+        # legacy key: readers before 2026-09-28 read `refusals`; same list
         "refusals": refusals,
         "line": line,
-        "note": ("surfaces and reconciles the limits; changes none of them. A REFUSED "
-                 "mandate is a finding printed on every contract until one capital "
-                 "base and one cap are confirmed (docs/RUNBOOK_2026-09-26_SYSTEMS_FIXES.md)."),
+        "note": ("surfaces and reconciles the limits; changes none of them. An "
+                 "UNRECONCILED mandate is a finding printed on every contract until one "
+                 "capital base and one cap set are confirmed "
+                 "(docs/RUNBOOK_2026-09-26_SYSTEMS_FIXES.md)."),
+        "gates_orders": MANDATE_GATES_ORDERS,
+        "gates_orders_note": MANDATE_GATES_ORDERS_NOTE,
+        "what_makes_it_green": MANDATE_WHAT_MAKES_IT_GREEN,
     }
+
+
+# ---------------------------------------------------------------------------
+# THE MANDATE IS A RECONCILIATION, NOT AN ORDER GATE (lane P, 2026-09-28)
+# ---------------------------------------------------------------------------
+#: The adversarial review of 2026-09-28 read "MANDATE REFUSED" beside
+#: `probe_acting: true` as a bypass. It is not: `account_mandate` was built
+#: (review 2026-09-26 R4) to REPORT that three capital bases and four per-name
+#: caps disagree -- it encodes no limit of its own, so there is nothing for an
+#: order to bypass. PROBE acting in `paper_profit` is the 2026-09-25 C3 design
+#: (HANDOFF_2026-09-25_FABLE_TO_OPUS_BUILD_PLAN.md "Chunk C3"): "`acting` for
+#: PROBE is not gated on top20_net_rel_21d ... until then it is
+#: UNMEASURED_TRADE_SMALL". The defect was that the plan receipt printed no
+#: mandate at all while the contract printed REFUSED; `mandate_view` is now the
+#: one reader both surfaces print from.
+MANDATE_GATES_ORDERS = False
+#: The status word for "bases or caps disagree" (review 2026-09-28 F2). Until
+#: that day it was written `REFUSED`, which everywhere else in this codebase
+#: means "the thing did not happen" -- printed beside `n_sent: 22` it taught the
+#: reader that REFUSED means nothing. Old receipts still carry the old word;
+#: `normalise_mandate_status` maps it.
+MANDATE_UNRECONCILED = "UNRECONCILED"
+MANDATE_STATUS_LEGACY = {"REFUSED": MANDATE_UNRECONCILED}
+
+
+def normalise_mandate_status(status: Any) -> str:
+    """The current word for a mandate status, including one an old receipt wrote."""
+    s = str(status or "")
+    return MANDATE_STATUS_LEGACY.get(s, s)
+MANDATE_GATES_ORDERS_NOTE = (
+    "RECONCILIATION ONLY: this status does not gate orders and never did. The "
+    "limits that gate a PC-PAPER order are enforced in code: PROBE_MAX_WEIGHT / "
+    "PROBE_GROSS_CAP (sim_run.u_plan -> policy_state.probe_weights), "
+    "ER_EXPLOIT_MAX_WEIGHT and 1 - PROBE gross (u_plan EXPLOIT), and "
+    "pc_broker.MAX_NAME_FRAC / MAX_INVESTED_FRAC / MAX_ADV_PARTICIPATION "
+    "(pc_broker.plan_orders). PROBE acting while EXPLOIT is refused is the "
+    "2026-09-25 C3 design, not a bypass. UNRECONCILED (written REFUSED before "
+    "2026-09-28) means: the owner has not confirmed which capital base and "
+    "which cap set are THE mandate.")
+MANDATE_WHAT_MAKES_IT_GREEN = (
+    "the owner confirms ONE capital base and ONE per-name/gross cap set for "
+    "PC-PAPER (RUNBOOK_2026-09-26_SYSTEMS_FIXES.md, owner decision 1); the "
+    "config values are then set to agree and this status reads OK")
+
+
+def mandate_view(contract_mandate: Any, *, contract_status: str,
+                 contract_path: str | None) -> dict:
+    """The mandate as the day's decision contract printed it -- for any other receipt.
+
+    ONE source: the `mandate` block `account_mandate` wrote onto
+    `decisions/<asof>.json`, carried verbatim (status, line, refusals), so the
+    plan receipt and the contract can never print two different statuses for
+    one day. It is NOT recomputed here: the contract's capital is derived from
+    that day's agency options, and a second computation on another capital is
+    exactly how two statuses would appear. No contract, an unreadable one, or
+    one that predates the block -> `CANNOT DETERMINE`, by name, with what would
+    make it determinable. Never gates anything (`gates_orders: False`).
+    """
+    base = {"gates_orders": MANDATE_GATES_ORDERS,
+            "gates_orders_note": MANDATE_GATES_ORDERS_NOTE,
+            "what_makes_it_green": MANDATE_WHAT_MAKES_IT_GREEN,
+            "contract_path": contract_path, "disagreements": []}
+    if contract_status != "present":
+        return {**base, "status": "CANNOT DETERMINE", "refusals": [],
+                "source": f"contract {contract_status}",
+                "line": (f"MANDATE CANNOT DETERMINE: the day's decision contract is "
+                         f"{contract_status} ({contract_path}); the mandate is printed "
+                         f"by the contract (daily_pass step decision_contract)")}
+    if not isinstance(contract_mandate, dict) or not contract_mandate.get("status"):
+        return {**base, "status": "CANNOT DETERMINE", "refusals": [],
+                "source": "contract present, no mandate block",
+                "line": ("MANDATE CANNOT DETERMINE: the day's contract carries no "
+                         "`mandate` block (it predates 2026-09-27 or the block failed "
+                         "to build); re-run the decision contract to print one")}
+    written = str(contract_mandate.get("status"))
+    status = normalise_mandate_status(written)
+    line = str(contract_mandate.get("line") or "")
+    if written != status and line.startswith(f"MANDATE {written}"):
+        # an old receipt: the reader prints today's word, and says it did
+        line = f"MANDATE {status}" + line[len(f"MANDATE {written}"):]
+    dis = list(contract_mandate.get("disagreements")
+               or contract_mandate.get("refusals") or [])
+    return {**base, "status": status, "status_as_written": written,
+            "disagreements": dis, "refusals": dis, "line": line,
+            "source": ("decision contract (account_mandate), carried verbatim"
+                       + ("" if written == status else
+                          f"; status word {written!r} from an old receipt read as {status!r}"))}
 
 
 def candidate_set(state: dict, book: dict | None, *,

@@ -178,8 +178,10 @@ def _ledger(tmp_path, rows):
 def test_fresh_forecasts_with_a_grader_that_stopped_is_stale(tmp_path):
     now = _now()
     _ledger(tmp_path, [
+        # the fresh row is the SCHEDULED writer's: since 2026-09-28 the probe
+        # counts per writer (config.FORECAST_WRITERS), not any specialist
         {"made_at": _iso(now), "resolves_after": str((now + timedelta(days=5)).date()),
-         "resolved_at": None},
+         "resolved_at": None, "specialist": "investigator:evidence_v3"},
         {"made_at": _iso(now - timedelta(days=20)),
          "resolves_after": str((now - timedelta(days=6)).date()), "resolved_at": None},
         {"made_at": _iso(now - timedelta(days=30)),

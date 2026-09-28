@@ -448,8 +448,14 @@ def test_evaluate_is_not_an_allowed_verb():
 
 
 def test_a_missing_profile_refuses_and_never_falls_back(monkeypatch):
-    monkeypatch.setenv(OC.PROFILE_ENV, "no_such_profile")
     monkeypatch.setattr(OC, "profiles", lambda: [{"name": "openclaw", "state": "stopped"}])
+    # an unlisted name refuses before anything is asked of OpenClaw (LANE O,
+    # 2026-09-28: the environment is checked too, not only an explicit name)
+    monkeypatch.setenv(OC.PROFILE_ENV, "no_such_profile")
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_BROWSER_PROFILE_NOT_ALLOWED"):
+        OC.assert_profile()
+    # the pinned profile, absent from OpenClaw's list: refused, never swapped
+    monkeypatch.setenv(OC.PROFILE_ENV, "muratclaw")
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_BROWSER_PROFILE_UNAVAILABLE"):
         OC.assert_profile()
 
@@ -458,16 +464,29 @@ def test_the_profile_is_named_on_every_browser_call(monkeypatch):
     """Not 'whatever the default is' — the default moved four times in one day."""
     seen = {}
     monkeypatch.setenv(OC.PROFILE_ENV, "muratclaw")
-    monkeypatch.setattr(OC, "profiles", lambda: [{"name": "muratclaw", "state": "stopped"}])
+    monkeypatch.setattr(OC, "profiles", lambda: [{"name": "muratclaw", "state": "running"}])
+    # LANE O (2026-09-28): `open` runs on the dedicated Chrome only, after the
+    # instance proof (faked here), and only to an allowed host
+    monkeypatch.setattr(OC, "_PROVER", lambda **k: {"ok": True})
+    import json as _json
+    import subprocess as sp
 
     def fake_run(args, **kw):
-        seen["argv"] = args
-        import subprocess as sp
-        return sp.CompletedProcess(args, 0, "ok", "")
+        if "open" in args:
+            seen["argv"] = args
+            return sp.CompletedProcess(args, 0, _json.dumps({"targetId": "B" * 32}), "")
+        return sp.CompletedProcess(args, 0, _json.dumps({"tabs": [
+            {"targetId": "B" * 32, "url": "https://www.wsj.com/"}]}), "")
 
     monkeypatch.setattr(OC, "_run", fake_run)
-    OC.browser("open", url="https://www.sec.gov/")
-    assert seen["argv"][:4] == ["browser", "--browser-profile", "muratclaw", "open"]
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_HOST"):
+        OC.browser("open", url="https://www.sec.gov/")
+    try:
+        OC.browser("open", url="https://www.wsj.com/")
+    finally:
+        OC._OPENED_TABS.discard("B" * 32)
+    assert seen["argv"][:3] == ["browser", "--browser-profile", "muratclaw"]
+    assert seen["argv"][seen["argv"].index("open") + 1] == "https://www.wsj.com/"
 
 
 def test_profiles_parser_ignores_indented_continuation_lines(monkeypatch):

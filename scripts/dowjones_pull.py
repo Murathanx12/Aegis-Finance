@@ -22,7 +22,7 @@ ROTATION, THE ARCHIVE AND THE QUEUE (Chunk J2, 2026-09-26):
         # WSJ /news/archive/YYYY/MM/DD per trading day, newest first, <=
         # DOWJONES_ARCHIVE_MAX_PER_DAY each, resumable (a stored URL is skipped)
     python -m scripts.dowjones_pull --queue backend/data/optimus/dowjones/QUEUE_<date>.txt \
-        --handoff --profile user
+        --handoff --profile muratclaw
         # one command per line, sequential; a line that returns 0 is marked done
 
 TAB DISCIPLINE, COMPANY SEARCH, THE v3 SHORTLIST QUEUE (2026-09-27):
@@ -104,10 +104,16 @@ SECTIONS: dict[str, dict[str, tuple[str, str, str]]] = {
         # the company's quote page (seen live: wsj.com/market-data/quotes/MU/research-ratings
         # is linked from a stored page); its news list is chosen FROM the snapshot.
         # Column "" = inferred per article (dowjones_claims.column_of).
+        # 2026-09-28 live (PLTR): the WSJ stock page's news list links the Dow
+        # Jones SISTER sites -- Barron's articles and MarketWatch stories -- and no
+        # wsj.com article at all, so a wsj.com-only pattern read 0 links on every
+        # page. Sister-site article links (both on the allowlist) are taken too.
         "search": (
             "https://www.wsj.com/market-data/quotes/{TICKER}",
             r"^https://www\.wsj\.com/(?!news/|market-data|video|podcasts|livecoverage|buyside)"
-            r"[a-z-]+/[a-z0-9/-]*-[0-9a-f]{8}(\?|$)",
+            r"[a-z-]+/[a-z0-9/-]*-[0-9a-f]{8}(\?|$)"
+            r"|^https://www\.barrons\.com/articles/[a-z0-9-]+-[0-9a-f]{8}(\?|$)"
+            r"|^https://www\.marketwatch\.com/story/[a-z0-9-]+-[0-9a-f]{8}(\?|$)",
             ""),
     },
     "barrons": {
@@ -139,9 +145,45 @@ SEARCH_LINKS_PER_NAME = 3
 SEARCH_MAX_AGE_DAYS = 30
 
 
+def site_ticker(ticker: str) -> str:
+    """The ticker as the Dow Jones sites spell it in a URL: a share class takes a
+    DOT (`BRK-B` / `BRK/B` in the bars panel -> `BRK.B`: marketwatch.com/
+    investing/stock/brk.b, wsj.com/market-data/quotes/BRK.B), and no spaces."""
+    return (ticker or "").strip().replace("-", ".").replace("/", ".").replace(" ", "")
+
+
 def lane_url(source: str, section: str, ticker: str = "MU") -> str:
     """The page a lane loads for one name (`{ticker}` lower, `{TICKER}` upper)."""
-    return SECTIONS[source][section][0].format(ticker=ticker.lower(), TICKER=ticker.upper())
+    t = site_ticker(ticker)
+    return SECTIONS[source][section][0].format(ticker=t.lower(), TICKER=t.upper())
+
+
+# ─────────────── a ticker whose page is NOT_FOUND is not retried ──────────────
+
+def not_found_path() -> Path:
+    return Path(_config.OPTIMUS_LEDGER_DIR) / "dowjones" / "not_found_tickers.json"
+
+
+def not_found_tickers(source: str, path: Path | None = None) -> set[str]:
+    """Tickers whose `source` page came back NOT_FOUND once (never retried)."""
+    try:
+        d = json.loads((path or not_found_path()).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return set()
+    return {t.upper() for t in (d.get(source) or {})}
+
+
+def record_not_found(source: str, ticker: str, url: str, path: Path | None = None) -> None:
+    p = path or not_found_path()
+    with DG.file_lock(p.with_name(p.name + ".lock")):
+        try:
+            d = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            d = {}
+        d.setdefault(source, {}).setdefault(str(ticker).upper(), {
+            "first_seen_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "url": url})
+        DG.atomic_write_json(p, d)
 
 
 def _today() -> str:
@@ -175,7 +217,7 @@ def default_mw_tickers(cap: int = 10) -> list[str]:
 
 def run_reads(source: str, section: str, *, parent_tab: str, max_articles: int = 5,
               tickers: list[str] | None = None, max_pages: int = 20,
-              profile: str = "user", driver: Any = None, throttle: Any = None,
+              profile: str = "muratclaw", driver: Any = None, throttle: Any = None,
               progress_path: Path | None = None) -> dict:
     """One bounded reading session in ONE new tab opened from `parent_tab`."""
     if source not in SECTIONS or section not in SECTIONS[source]:
@@ -194,8 +236,8 @@ def run_reads(source: str, section: str, *, parent_tab: str, max_articles: int =
     reader_lock = WR.acquire_reader_lock()
     try:
         rc["startup_cleanup"] = startup_cleanup(driver, profile)
-        thr.acquire("open_from_tab", host=source + ".com")
-        opened = driver.open_from_tab(parent_tab, first_url, profile_name=profile)
+        opened = WR.open_lane_tab(driver, profile, first_url, parent=parent_tab or None,
+                                  throttle=thr, host=source + ".com")
     except Exception:
         WR.release_reader_lock(reader_lock)
         raise
@@ -203,10 +245,10 @@ def run_reads(source: str, section: str, *, parent_tab: str, max_articles: int =
     rc["tab_opened"] = tab
     rc["attached_to"] = opened.get("attached_to")
     reader = WR.Reader(profile=profile, tab=tab, throttle=thr, driver=driver,
-                       max_pages=max_pages, lock=False)
+                       max_pages=max_pages, lock=False, direct_open=bool(opened.get("direct")))
     reader._lock_path = reader_lock
-    reader.pages, reader.tab_pages, reader.parent = 1, 1, parent_tab
-    reader.log.append({"page": 1, "what": "open_from_tab", "url": first_url,
+    reader.pages, reader.tab_pages, reader.parent = 1, 1, (parent_tab or None)
+    reader.log.append({"page": 1, "what": _open_what(opened), "url": first_url,
                        "waited_s": thr.waits[-1] if thr.waits else 0.0,
                        "at": thr.now_fn().isoformat(timespec="seconds")})
     try:
@@ -283,9 +325,19 @@ def _read_current(reader: WR.Reader, url: str, column: str, ticker: str) -> dict
         raise WR.ReaderRefused(f"REFUSED_EMPTY_READ: {url!r}: "
                                f"{(got.get('error') or 'no text returned')[:200]}")
     final = got.get("url") or url
-    if not WR.host_ok(final):
-        raise WR.ReaderRefused(f"REFUSED_LEFT_HOSTS: {final!r}")
     text = WR.clean_text(got.get("text") or "", got.get("title"))
+    cls = WR.classify_page(url=url, final_url=final, title=got.get("title"),
+                           raw=got.get("text") or "", text=text)
+    reader.count_page(final, cls)
+    if cls == "REDIRECTED_OFF_HOST":
+        raise WR.ReaderRefused(f"REFUSED_LEFT_HOSTS: {final!r}")
+    if cls != "OK":
+        reader.last_snapshot = ""
+        reader.blank()
+        if cls == "CHALLENGE":
+            raise WR.ReaderRefused(f"REFUSED_CHALLENGE: {final!r} shows a bot check or "
+                                   f"block page; this lane stops")
+        raise WR.ReaderRefused(f"PAGE_{cls}: {final!r} ({len(text)} chars) not stored")
     art = {"url": final, "title": got.get("title"), "byline": None,
            "published_utc": None, "text": text, "first_seen_utc": DC.now_iso(),
            "chars": len(text), "raw_chars": len(got.get("text") or ""),
@@ -322,7 +374,7 @@ _RUN_FATAL = ("REFUSED_THROTTLE_DAY", "REFUSED_THROTTLE_HOUR", "REFUSED_SESSION_
               "REFUSED_READER_BUSY", "REFUSED_GATEWAY_DOWN", "REFUSED_REATTACH")
 #: Fatal for ONE lane: its tab is gone or wandered off the allowed hosts.
 _LANE_FATAL = ("REFUSED_LEFT_HOSTS", "REFUSED_VERB_FAILED", "REFUSED_OPERATOR_TAB",
-               "REFUSED_TABS_UNREADABLE", "REFUSED_PROFILE")
+               "REFUSED_TABS_UNREADABLE", "REFUSED_PROFILE", "REFUSED_CHALLENGE")
 
 #: WSJ's dated archive. Barron's and MarketWatch: no dated archive page has
 #: been SEEN on a live page by this code, so none is guessed (the rule is
@@ -401,24 +453,71 @@ def _tab_num(tid: str) -> int:
 #: a tab Murat opened by hand in the MuratClaw window. Everything the reader
 #: opens comes from `window.open` inside it, so it inherits that profile.
 #: No marker tab -> REFUSED_NO_MARKER_TAB; an explicit parent without it refuses too.
+#:
+#: SUPERSEDED FOR THE DEDICATED PROFILE (LANE O, 2026-09-28). With OpenClaw
+#: attached ONLY to the dedicated Chrome (`config.OPENCLAW_DEDICATED_USER_DATA_DIR`,
+#: 127.0.0.1:18802), every tab it lists IS a MuratClaw tab, so the marker is no
+#: longer what identifies the profile. The guard is not deleted, it is
+#: REPLACED by `instance_gate()`: before any tab is resolved, the attached
+#: browser is PROVEN to be the dedicated one (`muratclaw_instance.prove`) and
+#: the run refuses otherwise. The marker still binds on any operator profile
+#: that is NOT dedicated (none today).
 PARENT_MARKER: str | None = None
 MARKER_DEFAULT = "aegis=muratclaw"
+
+
+def instance_gate(profile: str, oc: Any = None) -> dict | None:
+    """LANE O: prove the browser behind `profile` is the dedicated MuratClaw
+    Chrome BEFORE any tab is resolved or opened. Returns the proof (None for a
+    profile that is not dedicated); raises `ReaderRefused` with the prover's
+    code (REFUSED_NOT_MURATCLAW_INSTANCE, REFUSED_INSTANCE_DOWN, ...)."""
+    if oc is None:
+        from backend.services import openclaw_client as oc  # type: ignore[no-redef]
+    ded = getattr(oc, "dedicated_profiles", None)
+    if not callable(ded) or profile not in ded():
+        return None
+    try:
+        return oc._instance_check(profile)
+    except Exception as exc:  # noqa: BLE001 -- the client's refusal, renamed
+        if type(exc).__name__ == "OpenClawRefused":
+            raise WR.ReaderRefused(str(exc)) from exc
+        raise
 
 
 def _has_marker(url: str) -> bool:
     return PARENT_MARKER is None or PARENT_MARKER in (url or "")
 
 
+DIRECT_HOW = "direct_open: dedicated instance, no parent tab used"
+#: the fault a run that could not open ANY lane's tab ends with; the night
+#: supervisor (`gateway_repair.classify_exit`) backs off on it
+READER_CANNOT_OPEN_TABS = "READER_CANNOT_OPEN_TABS"
+
+
+def _open_what(opened: dict) -> str:
+    return "open_tab" if opened.get("direct") else "open_from_tab"
+
+
 def resolve_parent_tabs(sources: list[str], tab_list: list[dict], *,
                         explicit: dict[str, str] | None = None,
-                        exclude: set[str] | frozenset[str] = frozenset()) -> dict[str, dict]:
+                        exclude: set[str] | frozenset[str] = frozenset(),
+                        direct: bool = False) -> dict[str, dict]:
     """source -> `{tab, url, how}`. Tab ids change on every gateway restart,
     so they are RESOLVED from `tabs` each run, never hardcoded. An explicit
     `source=tab` must exist and sit on an allowed host. Otherwise: the
     OLDEST tab (lowest id -- Murat's own, not one a run opened) whose host is
     that source's site. A source with no tab on its host borrows the oldest
     tab on any allowed host (a `window.open` from a wsj.com tab inherits the
-    same Chrome profile) and says so in `how`. No allowed tab at all refuses."""
+    same Chrome profile) and says so in `how`. No allowed tab at all refuses.
+
+    `direct=True` (2026-09-28, the DEDICATED instance, proven by
+    `instance_gate`): no parent tab is needed or used -- lanes open with
+    `open_tab` -- so every source maps to `{tab: None, how: DIRECT_HOW}`,
+    no tab of the owner's is chosen, and nothing refuses because no Dow Jones
+    tab is open. The marker rule does not apply."""
+    if direct:
+        return {src: {"tab": None, "label": None, "url": "", "how": DIRECT_HOW}
+                for src in sources}
     # the handle is the STABLE id (raw targetId when the listing has one); the
     # `tN` label only orders oldest-first and is printed (Chunk J3)
     rows = [(OCH.tab_handle(t), OCH.tab_label(t), str(t.get("url") or ""), t)
@@ -453,7 +552,7 @@ def resolve_parent_tabs(sources: list[str], tab_list: list[dict], *,
         else:
             raise WR.ReaderRefused(
                 f"REFUSED_NO_PARENT_TAB: no tab on {WR.hosts()} is open in the "
-                f"'user' profile to open {src} from (MuratClaw (Work) window)")
+                f"dedicated MuratClaw Chrome to open {src} from")
     return out
 
 
@@ -661,6 +760,16 @@ def _tab_accounting(rc: dict, readers: Any) -> None:
     if errs:
         rc["close_errors"] = errs
     rc["blanks"] = sum(r.blanks for r in readers)
+    # 2026-09-28: on the dedicated instance a read tab is CLOSED, not blanked
+    rc["closes_after_read"] = sum(getattr(r, "closes_after_read", 0) for r in readers)
+    rc["blank_slot_refunds"] = [x for r in readers for x in getattr(r, "slot_refunds", [])]
+    pc: dict[str, dict[str, int]] = {}
+    for r in readers:
+        for host, row in (getattr(r, "page_classes", None) or {}).items():
+            tgt = pc.setdefault(host, {})
+            for k, v in row.items():
+                tgt[k] = tgt.get(k, 0) + v
+    rc["page_classes"] = pc
     rc["blank_failures"] = [x for r in readers for x in r.blank_failures]
     rc["tab_rotations"] = [x for r in readers for x in r.rotations]
 
@@ -788,7 +897,8 @@ class _Recovery:
             else:
                 remap[old] = None
                 lost.append(key)
-        fresh = resolve_parent_tabs(sorted(set(parents)), tabs, exclude=taken)
+        fresh = resolve_parent_tabs(sorted(set(parents)), tabs, exclude=taken,
+                                    direct=WR.direct_open_ok(self.driver, self.profile))
         parents.update(fresh)
         for key, rd in readers.items():
             src = source_of.get(key)
@@ -802,8 +912,8 @@ class _Recovery:
             rd.close_errors.setdefault(old, "LOST: handle reissued by a re-attach")
             last = next((pg["url"] for pg in reversed(rd.log) if pg.get("url")), "") or ""
             src = source_of[key]
-            self.thr.acquire("open_from_tab", host=f"{src}.com")
-            op = self.driver.open_from_tab(parents[src]["tab"], last, profile_name=self.profile)
+            op = WR.open_lane_tab(self.driver, self.profile, last, parent=parents[src]["tab"],
+                                  throttle=self.thr, host=f"{src}.com")
             rd.tab = op["new_tab"]
             rd.opened.append(rd.tab)
             rd.last_snapshot, rd.blanked, rd.tab_pages = "", False, 1
@@ -844,7 +954,7 @@ def _close_all(driver: Any, profile: str, readers: dict[str, WR.Reader], rc: dic
     _tab_accounting(rc, readers.values())
 
 
-def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "user",
+def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "muratclaw",
              driver: Any = None, throttle: Any = None, max_pages: int | None = None,
              progress_path: Path | None = None, stored: dict[str, set[str]] | None = None,
              fresh_since: str | None = None, cleanup_handles: list[str] | None = None,
@@ -894,6 +1004,11 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
     source_of = {ln["lane"]: ln["source"] for ln in lanes}
     recovery = _Recovery(driver, profile, rc, thr)
     queued_urls: set[str] = set()
+    open_failures: list[str] = []
+    # LANE O5: after the first N pages and at the end, links/page and chars/page
+    # per lane are printed and recorded; a lane at zero on EVERY page refuses.
+    ychk = WR.YieldCheck()
+    rc["yield"] = ychk.reports
 
     def total_pages() -> int:
         return sum(r.pages for r in readers.values())
@@ -920,7 +1035,8 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
         hit = sorted(k for k, v in parents.items() if v.get("tab") in gone)
         if hit:        # a leftover had been chosen as a parent: re-resolve without it
             parents.update(resolve_parent_tabs(hit, driver.tabs(profile_name=profile),
-                                               exclude=gone))
+                                               exclude=gone,
+                                               direct=WR.direct_open_ok(driver, profile)))
             rc["parents_reresolved_after_cleanup"] = {k: parents[k]["tab"] for k in hit}
         # 1. open ONE tab per lane from its source's parent; load its listing once
         for ln in lanes:
@@ -935,13 +1051,17 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
                 st["dropped"] = ("BUDGET_SPENT before the tab opened" if explicit_budget else
                                  "REFUSED_SESSION_CAP before the tab opened")
                 continue
+            if sec in TICKER_SECTIONS:
+                nf = not_found_tickers(src)
+                st["skipped_not_found"] = sorted(t for t in ln["tickers"] if t.upper() in nf)
             if sec == "analyst_estimates":
-                todo = [t for t in ln["tickers"]
-                        if not _stored_since(stored, lane_url(src, sec, t), since)]
+                todo = [t for t in ln["tickers"] if t.upper() not in nf
+                        and not _stored_since(stored, lane_url(src, sec, t), since)]
             elif sec == "search":
                 done = (searched or {}).get(src) if searched is not None else \
                     searched_since(src, since)
-                todo = [t for t in ln["tickers"] if t.upper() not in (done or set())]
+                todo = [t for t in ln["tickers"] if t.upper() not in (done or set())
+                        and t.upper() not in nf]
                 st["searches"] = {}
             if sec in TICKER_SECTIONS:
                 st["skipped_already_stored"] = len(ln["tickers"]) - len(todo)
@@ -954,9 +1074,9 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
             opened, err = None, None
             for attempt in (1, 2):
                 try:
-                    thr.acquire("open_from_tab", host=f"{src}.com")
-                    opened = driver.open_from_tab(parents[src]["tab"], first_url,
-                                                  profile_name=profile)
+                    opened = WR.open_lane_tab(driver, profile, first_url,
+                                              parent=parents[src]["tab"], throttle=thr,
+                                              host=f"{src}.com")
                     break
                 except Exception as exc:  # noqa: BLE001 -- detached -> re-attach once
                     err = f"{type(exc).__name__}: {str(exc)[:200]}"
@@ -970,6 +1090,7 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
                     break
             if opened is None:
                 st["dropped"] = f"OPEN_FAILED: {err}"
+                open_failures.append(f"{lid}: {err}")
                 if _classify(err or "") == "run" or WR.is_gateway_down(err or ""):
                     rc["stopped"] = (err or "")[:200]
                     break
@@ -977,9 +1098,11 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
             tab = opened["new_tab"]
             st["tab"] = tab
             rd = WR.Reader(profile=profile, tab=tab, throttle=thr, driver=driver,
-                           max_pages=10 ** 6, lock=False, parent=parents[src]["tab"])
+                           max_pages=10 ** 6, lock=False, parent=parents[src]["tab"],
+                           direct_open=bool(opened.get("direct")), lane=lid, worker=worker,
+                           page_log=True)
             rd.pages, rd.tab_pages = 1, 1
-            rd.log.append({"page": 1, "what": "open_from_tab", "url": first_url,
+            rd.log.append({"page": 1, "what": _open_what(opened), "url": first_url,
                            "waited_s": thr.waits[-1] if thr.waits else 0.0,
                            "at": thr.now_fn().isoformat(timespec="seconds"), "lane": lid})
             readers[lid] = rd
@@ -1016,9 +1139,16 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
                 if not links:
                     st["refusals"].append({"why": "NO_LINKS_ON_LISTING: the snapshot showed "
                                                   "no link matching the article pattern"})
-                rd.blank()                       # the listing waits blank for its turn
+                rd.blank()                       # read done: closed (dedicated) or blanked
             save()
 
+        # EVERY lane that tried to open failed and none opened: a named fault, so the
+        # supervisor backs off instead of relaunching a reader that cannot open a tab
+        # (2026-09-28: a blocked window.open, 0 tabs on every lane, relaunched every 5 min)
+        if open_failures and not readers and not rc["stopped"]:
+            rc["stopped"] = (f"{READER_CANNOT_OPEN_TABS}: {len(open_failures)} of "
+                             f"{len(open_failures)} lane(s) failed to open a tab; first: "
+                             f"{open_failures[0]}")[:400]
         # 2. the rotation: one item per lane per turn, lane order, one shared
         #    throttle -- INTERLEAVED (2026-09-27, `interleave_order`): a lane's
         #    page is LOADED at its turn and READ right after the NEXT lane's
@@ -1059,6 +1189,8 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
                 except Exception as exc2:  # noqa: BLE001
                     msg = f"{type(exc2).__name__}: {exc2}"[:300]
             in_place[lid] = False
+            if "PAGE_NOT_FOUND" in msg and kind in ("ticker", "search") and isinstance(item, str):
+                record_not_found(st["source"], item, str(what or ""))
             st["refusals"].append({"item": what, "why": msg})
             rc["order"].append({"turn": turn, "lane": lid, "item": what,
                                 "at": thr.now_fn().isoformat(timespec="seconds"),
@@ -1114,7 +1246,20 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
             try:
                 if kind == "search":
                     src = st["source"]
-                    sel = WR.select_search_links((rd.snapshot_after_scroll() if hasattr(rd, "snapshot_after_scroll") else rd.snapshot()), SECTIONS[src]["search"][1],
+                    snap = (rd.snapshot_after_scroll() if hasattr(rd, "snapshot_after_scroll")
+                            else rd.snapshot())
+                    pcls = WR.classify_page(url=job["url"], final_url=job["url"],
+                                            title=WR.snapshot_title(snap), raw=snap[:1500],
+                                            text=snap)
+                    rd.count_page(job["url"], pcls)
+                    if pcls == "CHALLENGE":
+                        rd.blank()
+                        raise WR.ReaderRefused(f"REFUSED_CHALLENGE: {job['url']!r} shows a bot "
+                                               f"check or block page; this lane stops")
+                    if pcls in ("NOT_FOUND", "BLANK"):
+                        rd.blank()
+                        raise WR.ReaderRefused(f"PAGE_{pcls}: {job['url']!r} (search page)")
+                    sel = WR.select_search_links(snap, SECTIONS[src]["search"][1],
                                                  now=thr.now_fn(),
                                                  max_age_days=SEARCH_MAX_AGE_DAYS,
                                                  limit=SEARCH_LINKS_PER_NAME)
@@ -1131,6 +1276,7 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
                             "already_stored": len(sel["links"]) - len(take)}
                     st["searches"][item] = info
                     st["links_found"] += len(sel["links"])
+                    ychk.record(lid, links=sel["candidates"], kind="search")
                     _record_search(src, item, info)
                     if searched is not None:
                         searched.setdefault(src, set()).add(item.upper())
@@ -1151,6 +1297,7 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
                         art["ticker"] = item["ticker"]
                 stored.setdefault(WR.norm_url(art.get("url") or ""), set()).add(day)
                 st["articles"].append(_summary(art))
+                ychk.record(lid, chars=art.get("chars"), kind="article")
                 loaded = job["loaded"]
                 rc["order"].append({"turn": job["turn"], "lane": lid,
                                     "url": art.get("url"), "ticker": art.get("ticker"),
@@ -1238,6 +1385,12 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
     rc["hour_cap_waits_s"] = list(getattr(thr, "hour_cap_waits", []))
     rc["same_host_waits"] = list(getattr(thr, "same_host_waits", []))
     rc["throttle_targets_s"] = list(thr.targets)
+    if ychk.rows:
+        try:
+            ychk.check("end")
+        except WR.ReaderRefused as exc:
+            rc["yield_refused"] = str(exc)
+            rc["stopped"] = rc["stopped"] or str(exc)[:200]
     rc["per_source"] = {}
     for lid, st in rc["lanes"].items():
         ps = rc["per_source"].setdefault(st["source"], {"articles": 0, "refusals": 0,
@@ -1291,7 +1444,7 @@ def archive_url(source: str, d: date) -> str:
 
 
 def run_archive(days: list[date], *, parent_tab: str, max_per_day: int | None = None,
-                profile: str = "user", driver: Any = None, throttle: Any = None,
+                profile: str = "muratclaw", driver: Any = None, throttle: Any = None,
                 max_pages: int | None = None, progress_path: Path | None = None,
                 stored: dict[str, set[str]] | None = None,
                 cleanup_handles: list[str] | None = None) -> dict:
@@ -1334,14 +1487,16 @@ def run_archive(days: list[date], *, parent_tab: str, max_per_day: int | None = 
         rc["startup_cleanup"] = startup_cleanup(driver, profile, cleanup_handles)
         if parent_tab in set(rc["startup_cleanup"].get("closed") or []):
             parent_tab = resolve_parent_tabs(["wsj"], driver.tabs(profile_name=profile),
-                                             exclude=set(rc["startup_cleanup"]["closed"])
+                                             exclude=set(rc["startup_cleanup"]["closed"]),
+                                             direct=WR.direct_open_ok(driver, profile)
                                              )["wsj"]["tab"]
             parents["wsj"]["tab"] = rc["parent_tab"] = parent_tab
         first = archive_url("wsj", days[0])
-        thr.acquire("open_from_tab", host="wsj.com")
-        opened = driver.open_from_tab(parent_tab, first, profile_name=profile)
+        opened = WR.open_lane_tab(driver, profile, first, parent=parent_tab, throttle=thr,
+                                  host="wsj.com")
         rd = WR.Reader(profile=profile, tab=opened["new_tab"], throttle=thr, driver=driver,
-                       max_pages=budget, lock=False, parent=parent_tab)
+                       max_pages=budget, lock=False, parent=parent_tab,
+                       direct_open=bool(opened.get("direct")))
         rd.tab_pages = 1
         readers["wsj"] = rd
         rc["tab_opened"] = rd.tab
@@ -1350,7 +1505,7 @@ def run_archive(days: list[date], *, parent_tab: str, max_per_day: int | None = 
         print(f"opened wsj archive: {opened.get('label') or rd.tab} = {rd.tab} "
               f"({opened.get('how') or '?'})", flush=True)
         rd.pages = 1
-        rd.log.append({"page": 1, "what": "open_from_tab", "url": first,
+        rd.log.append({"page": 1, "what": _open_what(opened), "url": first,
                        "waited_s": thr.waits[-1] if thr.waits else 0.0,
                        "at": thr.now_fn().isoformat(timespec="seconds")})
         guarded(lambda: driver.browser("wait", "--time", "4000", profile_name=profile,
@@ -1534,7 +1689,7 @@ def build_queue_text(today: date | None = None, *, names: dict[str, list[str]] |
     lines = [
         f"# dowjones_pull queue -- generated {today.isoformat()} from the books "
         f"(personal, competition, PROBE; {n_all} distinct, first {len(tick)} kept)",
-        "# run: python -m scripts.dowjones_pull --queue <this file> --handoff --profile user",
+        "# run: python -m scripts.dowjones_pull --queue <this file> --handoff --profile muratclaw",
         "# one line = one command; a line that returns 0 gets a marker in "
         "<stem>.done/ and is skipped on re-run",
         f'--plan "barrons:stock_picks:10,wsj:heard_on_the_street:10,barrons:big_money_poll:3,'
@@ -1612,7 +1767,7 @@ def build_shortlist_queue_text(day: str, *, names: list[str] | None = None,
         f"ROI-list order first: {', '.join(ranked[:10])})",
         f"# written by: python -m scripts.dowjones_pull --write-shortlist-queue <this file> "
         f"--shortlist-date {day}",
-        "# run: python -m scripts.dowjones_pull --queue <this file> --handoff --profile user",
+        "# run: python -m scripts.dowjones_pull --queue <this file> --handoff --profile muratclaw",
         f"# (a) MarketWatch analyst estimates: {len(mw)} names ({len(mw_done)} already "
         f"snapshotted on {day} left out); one page each",
         f"# (b) WSJ quote page + Barron's stock page per name, <= {SEARCH_LINKS_PER_NAME} "
@@ -1633,6 +1788,84 @@ def build_shortlist_queue_text(day: str, *, names: list[str] | None = None,
 
 
 # ────────────────────────────────── claims ──────────────────────────────────
+
+#: 2026-09-28 (Murat: "it should always work and shouldnt be standing idle"):
+#: when every plan line of the current queue is DONE, the supervisor builds the
+#: next queue itself from these sources.
+ROLLING_UNIVERSE_GLOB = "UNIVERSE_*.txt"
+
+
+def rolling_names(*, universe_dir: Path | None = None, books: dict | None = None,
+                  extra: list[str] | None = None) -> list[str]:
+    """The union of the candidate set: the newest `UNIVERSE_*.txt` (the wide
+    candidate list), the frozen books and the contest names
+    (`digest_inbox.book_names()`), plus `extra`. Upper-case, de-duplicated."""
+    d = Path(universe_dir) if universe_dir else DF.receipts_dir()
+    names: list[str] = []
+    files = sorted(d.glob(ROLLING_UNIVERSE_GLOB))
+    if files:
+        names += [ln.strip().upper() for ln in files[-1].read_text(encoding="utf-8").splitlines()
+                  if ln.strip() and not ln.startswith("#")]
+    if books is None:
+        try:
+            from backend.services import digest_inbox as DI
+            books = DI.book_names()
+        except Exception:  # noqa: BLE001 -- a missing book is an empty book
+            books = {}
+    for k in ("personal", "competition", "probe"):
+        names += [str(t).upper() for t in (books or {}).get(k, []) if t]
+    names += [str(t).upper() for t in (extra or []) if t]
+    return list(dict.fromkeys(n for n in names if n.replace(".", "").replace("-", "").isalnum()))
+
+
+def last_read_days(names: list[str], *, stored: dict[str, set[str]] | None = None,
+                   seen_path: Path | None = None) -> dict[str, str]:
+    """ticker -> the newest day ANY site's page for it was read ('' = never):
+    the MarketWatch estimates page stored, or a WSJ / Barron's search page seen."""
+    stored = WR.stored_urls() if stored is None else stored
+    out = {n: "" for n in names}
+    for n in names:
+        days = stored.get(WR.norm_url(lane_url("marketwatch", "analyst_estimates", n))) or set()
+        if days:
+            out[n] = max(days)
+    p = Path(seen_path) if seen_path else search_seen_path()
+    if p.exists():
+        for line in p.read_text(encoding="utf-8").splitlines():
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            t, d = str(r.get("ticker") or "").upper(), str(r.get("day") or "")
+            if t in out and d > out[t]:
+                out[t] = d
+    return out
+
+
+def build_rolling_queue_text(names: list[str], last: dict[str, str], *, day: str,
+                             cap: int = 120) -> str:
+    """PURE. One rotating plan line over the names whose NEWEST read is OLDEST
+    (never-read first), MarketWatch estimates + WSJ + Barron's stock pages, at
+    most `cap` names. A name read today is skipped by the plan's own freshness
+    rule, so the queue is exhausted only when every name has been read today."""
+    order = sorted(names, key=lambda n: (last.get(n) or "", names.index(n)))[:cap]
+    if not order:
+        return f"# rolling queue {day}: no names\n"
+    tk = "|".join(order)
+    return "\n".join([
+        f"# rolling queue built {day} by the night supervisor: {len(order)} of {len(names)} "
+        f"names, oldest newest-read first (never read first)",
+        f'--plan "marketwatch:analyst_estimates:{tk},wsj:search:{tk},barrons:search:{tk}"',
+        ""])
+
+
+def queue_exhausted(path: Path) -> bool:
+    """True when every `--plan` line of the queue file has its DONE marker."""
+    lines = [(n, ln) for n, ln in queue_lines(path) if ln.startswith("--plan")]
+    if not lines:
+        return True
+    dd = queue_done_dir(path)
+    return all((dd / f"{_line_key(n, ln)}.done").exists() for n, ln in lines)
+
 
 def _done_path() -> Path:
     return WR.corpus_root() / "_claims" / "_extracted.txt"
@@ -1904,10 +2137,13 @@ def _launch_workers(a: Any, day: str, stamp: str, *, oc: Any = None,
         lanes = parse_plan(a.plan)
         groups = split_lanes_by_site(lanes, a.workers)
         WR.ensure_attached(a.profile, oc=oc, log=pre_log)
+        out["instance"] = instance_gate(a.profile, oc)
         srcs = list(dict.fromkeys(ln["source"] for ln in lanes))
-        parents = resolve_parent_tabs(srcs, oc.tabs(profile_name=a.profile),
+        direct = WR.direct_open_ok(oc, a.profile)
+        parents = resolve_parent_tabs(srcs, [] if direct else oc.tabs(profile_name=a.profile),
                                       explicit=parse_parent_tabs(a.parent_tabs),
-                                      exclude=set(getattr(oc, "_OPENED_TABS", set())))
+                                      exclude=set(getattr(oc, "_OPENED_TABS", set())),
+                                      direct=direct)
         out["parent_tabs"] = parents
         lock = WR.acquire_reader_lock()
         try:
@@ -1946,7 +2182,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-pages", type=int, default=20)
     ap.add_argument("--tickers", default="")
     ap.add_argument("--parent-tab", default="")
-    ap.add_argument("--profile", default="user")
+    ap.add_argument("--profile", default="muratclaw")
     ap.add_argument("--handoff", action="store_true",
                     help="required for any browser read; refuses unless HANDOFF_PC exists")
     ap.add_argument("--archive", default="")
@@ -1980,8 +2216,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--write-queue", default="",
                     help="write the night's queue file (from the books) to this path")
     a = ap.parse_args(argv)
-    from backend.services.openclaw_client import is_operator_profile
-    if getattr(a, "profile", None) and is_operator_profile(a.profile):
+    from backend.services.openclaw_client import dedicated_profiles, is_operator_profile
+    if getattr(a, "profile", None) and is_operator_profile(a.profile) \
+            and a.profile not in dedicated_profiles():
+        # an operator profile that is NOT the proven dedicated Chrome keeps the
+        # marker rule; the dedicated one is proven by `instance_gate` instead
         global PARENT_MARKER
         PARENT_MARKER = MARKER_DEFAULT
     out: dict[str, Any] = {}
@@ -2057,11 +2296,13 @@ def main(argv: list[str] | None = None) -> int:
             # RUNNING before `tabs`: a stopped profile is re-attached with
             # `browser start` (<= 2 attempts, 20 s each); a dead gateway refuses
             WR.ensure_attached(a.profile, oc=OCm, log=pre_log)
+            instance_gate(a.profile, OCm)
+            direct = WR.direct_open_ok(OCm, a.profile)
             parents = resolve_parent_tabs(
-                ["wsj"], OCm.tabs(profile_name=a.profile),
+                ["wsj"], [] if direct else OCm.tabs(profile_name=a.profile),
                 explicit=({"wsj": a.parent_tab} if a.parent_tab else
                           parse_parent_tabs(a.parent_tabs)),
-                exclude=set(getattr(OCm, "_OPENED_TABS", set())))
+                exclude=set(getattr(OCm, "_OPENED_TABS", set())), direct=direct)
             print(f"parent tab: wsj -> {parents['wsj']['tab']} ({parents['wsj']['how']}, "
                   f"{parents['wsj']['url'][:80]})", flush=True)
             r = run_archive(days, parent_tab=parents["wsj"]["tab"], max_per_day=a.max_per_day,
@@ -2113,13 +2354,17 @@ def main(argv: list[str] | None = None) -> int:
             lanes = parse_plan(a.plan)
             from backend.services import openclaw_client as OCm
             WR.ensure_attached(a.profile, oc=OCm, log=pre_log)   # before `tabs` (see --archive)
+            instance_gate(a.profile, OCm)
             srcs = list(dict.fromkeys(ln["source"] for ln in lanes))
             explicit = parse_parent_tabs(a.parent_tabs)
             if a.parent_tab and len(srcs) == 1:
                 explicit.setdefault(srcs[0], a.parent_tab)
-            parents = resolve_parent_tabs(srcs, OCm.tabs(profile_name=a.profile),
+            direct = WR.direct_open_ok(OCm, a.profile)
+            parents = resolve_parent_tabs(srcs,
+                                          [] if direct else OCm.tabs(profile_name=a.profile),
                                           explicit=explicit,
-                                          exclude=set(getattr(OCm, "_OPENED_TABS", set())))
+                                          exclude=set(getattr(OCm, "_OPENED_TABS", set())),
+                                          direct=direct)
             for s_, v in parents.items():
                 print(f"parent tab: {s_} -> {v['tab']} ({v['how']}, {v['url'][:80]})",
                       flush=True)
@@ -2178,7 +2423,7 @@ def main(argv: list[str] | None = None) -> int:
                   f"{_config.DOWJONES_HANDOFF_FILE} (created by Murat when he hands the "
                   f"PC over). Use scripts/digest_ingest.py for pasted articles.")
             return 2
-        if not a.parent_tab or not a.section:
+        if not a.section or (not a.parent_tab and a.profile not in dedicated_profiles()):
             print("REFUSED: --parent-tab (a MuratClaw wsj/barrons/marketwatch tab) and "
                   "--section are required")
             return 2

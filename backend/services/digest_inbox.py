@@ -54,8 +54,15 @@ from urllib.parse import quote
 from backend import config as _config
 
 ORIGIN = "pasted_by_operator"
+#: The column (claims `source_id`) of a Telegram paste whose publisher the owner
+#: did not state (lane A review F7): its claims are graded as their own cell.
+TELEGRAM_UNKNOWN_COLUMN = "telegram_paste_unknown"
 SEPARATOR = re.compile(r"^===(.*)$")
 SKIP_FILES = {"readme.md", "weekend_reading_list.md"}
+#: Reading LISTS are links for the owner, not articles (2026-09-28, lane A review
+#: F6): `READING_LIST_FROM_TELEGRAM.md` and the dated `READING_LIST_<day>.md`
+#: were otherwise ingested as a pasted "article" and sent to claim extraction.
+SKIP_PREFIXES = ("reading_list",)
 _URL = re.compile(r"https?://\S+")
 _ISO_DAY = re.compile(r"^\d{4}-\d{2}-\d{2}")
 
@@ -98,7 +105,16 @@ def parse_header(h: str) -> dict:
         if not tok:
             continue
         low = tok.lower()
-        if _URL.match(tok):
+        if low == "telegram":
+            # (lane A review F7, 2026-09-28) a paste sent from the owner's phone:
+            # its publisher is what the owner STATED (`source=`), else UNKNOWN --
+            # never inferred from the text and never defaulted to Dow Jones
+            out["via"] = "telegram"
+        elif low.startswith("source="):
+            out["stated_source"] = tok.split("=", 1)[1].strip()
+            if any(k in low for k in ("wsj", "wall street journal", "barron", "marketwatch")):
+                out["source"] = out["stated_source"]
+        elif _URL.match(tok):
             out["url"] = _URL.match(tok).group(0)
         elif _ISO_DAY.match(tok):
             out["date"] = tok[:10]
@@ -163,10 +179,17 @@ def to_article(header: dict, body: str, *, ingest_utc: str) -> dict:
     # ("Heard on the Street", "The Wall Street Journal") are exactly what
     # `clean_text` cuts, and exactly what names the column.
     pub = _publisher(header, body, url)
+    column = DC.column_of(url, title, body, pub)
+    if header.get("via") == "telegram":
+        stated = (header.get("stated_source") or "").lower()
+        pub = (_publisher({"source": stated}, "", "") if stated else None) or (
+            re.sub(r"[^a-z0-9]+", "_", stated).strip("_")[:40] if stated else "unknown")
+        # an unstated source is its own cell: never a Dow Jones column
+        column = DC.column_of(url, title, body, pub) if stated else TELEGRAM_UNKNOWN_COLUMN
     art = {"url": url or None, "title": title[:300], "byline": WR.parse_byline(text),
            "published_utc": published, "text": text, "first_seen_utc": ingest_utc,
            "publisher": pub or "dowjones", "origin": ORIGIN,
-           "column": DC.column_of(url, title, body, pub)}
+           "column": column}
     art["sha"] = DC.text_sha(text)
     return art
 
@@ -180,7 +203,7 @@ def ingest(d: Path | None = None, *, now_utc: str | None = None,
     now = now_utc or datetime.now(timezone.utc).isoformat(timespec="seconds")
     per, n_new, n_dup, n_short = [], 0, 0, 0
     for f in sorted(p for p in d.iterdir() if p.is_file() and p.suffix.lower() in (".md", ".txt")):
-        if f.name.lower() in SKIP_FILES:
+        if f.name.lower() in SKIP_FILES or f.name.lower().startswith(SKIP_PREFIXES):
             continue
         raw = f.read_text(encoding="utf-8", errors="replace")
         for h, body in split_entries(raw, header_zone=(f.name.lower() == "digest.md")):

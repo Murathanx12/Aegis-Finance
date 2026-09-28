@@ -1,0 +1,47 @@
+{
+ "receipt": "incident",
+ "id": "u_forecast_dead_2026-09-27",
+ "written_utc": "2026-09-28T06:45:00+00:00",
+ "written_by": "lane P builder (answering docs/reviews/REVIEW_2026-09-28_LANE_P_MONEY_PATH.md F1)",
+ "unit": "sim_run.u_forecast -> scripts/night_investigator_forecast.daily_forecast",
+ "writer": "investigator:evidence_v3 (h=1 and h=5 beats_benchmark rows)",
+ "summary": "The day's first OpenClaw call failed (gateway closed, code 1006, RC_NONZERO, 0 tokens, $0). daily_forecast read a zero ledger delta after it, filed the day REFUSED_CAP, and REFUSED_CAP was terminal for the UTC day: 0 rows. The cap was not the cause. The health probe counted every specialist, so 134 thesis-card and 33 source rows kept u_forecast ALIVE.",
+ "gap": {
+  "dates_utc": ["2026-09-27"],
+  "rows_written": {"2026-09-25": 118, "2026-09-26": 270, "2026-09-27": 0},
+  "rows_lost_estimate": {
+   "2026-09-27": "about 270-320: the day's universe was 160 names x 2 horizons = 320 at most; 2026-09-26 wrote 270 (135 names) at the same cap",
+   "basis": "predictions.jsonl rows with specialist investigator:evidence_v3, counted by made_at date"
+  },
+  "2026-09-28": "NOT LOST YET at 06:45Z: no forecasts/day_2026-09-28.json exists and no sim is running (sim 94f7b8ff15e5 ended 2026-09-27T23:58:44Z, 121 cycles). The unit can still write today's rows once the gateway is healthy; the review's '0 on 09-28' was a count taken before the day's run was due (it ran at 07:50Z on 09-27).",
+  "backfilled": false,
+  "backfill_policy": "none: backfilled forward evidence is forbidden (CLAUDE.md, three licences). The gap stays a gap; graders see one missing decision date."
+ },
+ "evidence": {
+  "day_receipt": "backend/data/optimus/forecasts/day_2026-09-27.json: state REFUSED_CAP, n_rows_written 0, spent_usd 0.0, first_flush_check {ledger_delta_usd 0.0, writer_openclaw_cost_usd null, ledger_rows_after 1}, started 07:50:37Z, ended 07:51:32Z",
+  "telemetry_row": "backend/data/optimus/llm_calls_2026-09.jsonl call_id 310e3938c3ddf247, ts 2026-09-27T07:51:32Z, purpose u_forecast, meta.status RC_NONZERO, rc 1, tokens 0/0, meta.cost_status UNPRICED_OPENCLAW, error 'Gateway agent call connection closed ... gateway closed (1006 ...)'",
+  "cap_never_binding": {
+   "cap_usd": 2.0,
+   "u_forecast_ledger_spend": {"2026-09-25": {"calls": 59, "usd": 0.1456, "openclaw_own_usd": 0.149, "status": "59 OK"},
+                               "2026-09-26": {"calls": 135, "usd": 0.3159, "openclaw_own_usd": 0.3284, "status": "135 OK"},
+                               "2026-09-27": {"calls": 1, "usd": 0.0, "status": "1 RC_NONZERO"}},
+   "reading": "the cap reader and the writer agreed within 2-4% whenever calls succeeded; spend was 7-16% of the cap"
+  },
+  "health_said_alive": "health/health_20260927T235132Z.json: 'u_forecast ALIVE | newest forecast made 5.5h ago; 167 made today' -- the 167 were thesis_card:v2 (134) and source:source_claim_v1 (33)",
+  "sim_cycles": "every cycle of sim 94f7b8ff15e5 after 07:51Z reported {skipped: already ran today (2026-09-27), state: REFUSED_CAP, status: DEGRADED}"
+ },
+ "root_cause": [
+  "scripts/night_investigator_forecast.py daily_forecast: the first-flush check `if delta <= 0: REFUSED_CAP` ran on the first call with a call_id whether or not the call SUCCEEDED; a failed call costs $0 and never moves the ledger, so a gateway outage read as a cap that cannot bind",
+  "REFUSED_CAP was in the terminal-state tuple of both daily_forecast and sim_run.u_forecast: no later cycle retried",
+  "backend/services/system_health.py p_u_forecast read max(made_at) over every specialist"
+ ],
+ "same_shape_as": "2026-08-27 -> 2026-09-25: rows by made_at 08-25 600, 08-26 585, 08-27 600, then 11 on 09-11 and 40 on 09-24 and nothing else, while the scoreboard stayed green. Different cause (then no scheduled caller existed), same failure of the observer (feedback_a_scoreboard_over_a_dead_ledger_is_green_forever).",
+ "fix_2026-09-28": {
+  "labels": "REFUSED_CAP only when a readable, complete ledger is at/over the cap; REFUSED_CAP_READER_DISAGREES when a SUCCESSFUL call leaves the ledger unmoved or the ledger is unreadable / a lower bound; REFUSED_DEPENDENCY_DOWN when the transport fails (TIMEOUT / RC_NONZERO / CLI cannot run)",
+  "retry": "per name: up to config.FORECAST_DEP_RETRY_MAX_ATTEMPTS = 4 calls, sleeping FORECAST_DEP_RETRY_BACKOFF_S = 30/120/300 s; worst run 4 x 420 s + 450 s = 2,130 s inside FORECAST_UNIT_TIMEOUT_S 7,200 s. REFUSED_DEPENDENCY_DOWN is not terminal: a later cycle resumes after FORECAST_DEP_RETRY_MIN_GAP_S = 3,600 s, up to FORECAST_DEP_MAX_RUNS_PER_DAY = 8 runs. The day receipt's `dependency` block counts calls, failures, retries and runs.",
+  "degrade_path": "none: the evidence packet is already disk-only (no browsing); the OpenClaw call is the forecaster, so without it the run refuses by the true name. The gateway is never restarted from this unit.",
+  "health": "p_u_forecast counts rows per writer in config.FORECAST_WRITERS; a scheduled writer (u_forecast) with 0 rows since 00:00Z of the previous UTC day, or with a REFUSED*/DEGRADED day receipt today, is DEGRADED by name. On the real ledger at 06:45Z it reads: 'DEGRADED: u_forecast | u_forecast DEGRADED (investigator:evidence_v3): 0 rows since 2026-09-27T00:00Z; newest 2026-09-26T00:30:25+00:00; thesis_card 134 (unscheduled, reported only); source_claims 33 ...'",
+  "tests": "backend/tests/test_u_forecast_dependency.py (11), backend/tests/test_u_forecast.py (2 assertions re-labelled)"
+ },
+ "not_done_here": "the forecast unit was NOT run (the OpenClaw gateway is being repaired by another builder; a paid run against a flapping dependency wastes money). The gateway was not touched."
+}

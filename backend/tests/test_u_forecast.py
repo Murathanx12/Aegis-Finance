@@ -114,7 +114,8 @@ def test_a_cap_whose_ledger_does_not_move_refuses(env):
         return {"probability_1d": 0.5, "probability_5d": 0.5,
                 "_call": {"call_id": "not-in-the-ledger", "openclaw_cost_usd": 0.01}}
     res = _run(env, ask_fn=ask, cap_usd=5.0)
-    assert res["state"] == "REFUSED_CAP"
+    # 2026-09-28: reader and writer DISAGREE -- not "the cap is reached"
+    assert res["state"] == "REFUSED_CAP_READER_DISAGREES"
     assert "did not move" in res["why"]
 
 
@@ -123,8 +124,9 @@ def test_an_unreadable_spend_ledger_refuses(env):
         f.unlink()
     res = _run(env, ask_fn=_stub_ask(), cap_usd=5.0,
                sources={"murat_book": ["AAA"]})
-    # first call: the ledger does not exist yet -> spend UNKNOWN -> refuse
-    assert res["state"] == "REFUSED_CAP"
+    # first call: the ledger does not exist yet -> spend UNKNOWN -> refuse; the
+    # cap cannot confirm anything, so it is not "the cap is reached" (09-28)
+    assert res["state"] == "REFUSED_CAP_READER_DISAGREES"
     assert "UNKNOWN" in res["why"]
     assert _ledger(env) == []
 

@@ -243,7 +243,191 @@ def shortlist(asof: Any = None, *, funnel_path: Optional[Path] = None) -> list[d
             "vol_annual": c.get("vol_annual"),
         })
     rows.sort(key=lambda r: -(r["score"] if r["score"] is not None else -math.inf))
-    return rows
+    return collapse_share_classes(rows)
+
+
+#: SEC's current-registrant ticker file, already on disk (fetched by
+#: `scripts/edgar_8k_items.py`, tracked in git). Issuer identity is DERIVED
+#: from it: one CIK = one issuer (review 2026-09-28 F4).
+SEC_COMPANY_TICKERS = Path(config.OPTIMUS_LEDGER_DIR) / "edgar_8k" / "company_tickers.json"
+
+#: NASDAQ fifth-letter codes that are NOT a common share class: G/H/I
+#: convertibles, M/N/O/P preferreds, R rights, T with warrants, U units, V
+#: when-issued, W warrants, Z misc. (GOOGM/GOOGN share Alphabet's CIK and are
+#: notes; SMCIP / MCHPP are preferreds.) A, B, C, J, K, L ... are classes.
+_NON_COMMON_5TH = frozenset("GHIMNOPRTUVWZ")
+#: A dashed suffix is a common class only when it is ONE class letter (BRK-B,
+#: HEI-A, MKC-V); BAC-PB, X-WS, -U, -R are not.
+_NON_COMMON_DASH_LETTERS = frozenset("PWURZ")
+
+
+def _norm_ticker(t: Any) -> str:
+    return str(t or "").strip().upper().replace(".", "-").replace("/", "-")
+
+
+def is_common_line(ticker: Any) -> bool:
+    """Heuristic: is this listed line a COMMON share class (not a preferred,
+    note, warrant, unit or right)? Only used INSIDE one CIK's group, so a wrong
+    answer can at worst leave two lines uncollapsed or drop a non-common line
+    from an equity shortlist -- never merge two issuers."""
+    t = _norm_ticker(ticker)
+    if not t:
+        return False
+    if "-" in t:
+        suf = t.split("-", 1)[1]
+        return len(suf) == 1 and suf.isalpha() and suf not in _NON_COMMON_DASH_LETTERS
+    if len(t) == 5 and t[-1] in _NON_COMMON_5TH:
+        return False
+    return True
+
+
+def _same_root(a: str, b: str) -> bool:
+    """Share-class lines of one issuer differ by ONE class letter: a dashed
+    class (BRK-A/BRK-B, HEI/HEI-A), one appended letter (GOOG/GOOGL, Z/ZG,
+    UA/UAA), or the fifth letter of two five-letter lines (BATRA/BATRK,
+    LBTYA/LBTYK). MSTR and its STRC/STRD preferreds do not qualify, nor do two
+    four-letter funds of one ETF trust (VIXM/VIXY) or a +2-letter note (SOJC)."""
+    ra, rb = a.split("-")[0], b.split("-")[0]
+    if ra == rb:
+        return True
+    short, long_ = sorted((ra, rb), key=len)
+    if len(long_) == len(short) + 1 and long_.startswith(short):
+        return True
+    return len(ra) == len(rb) >= 5 and ra[:-1] == rb[:-1]
+
+
+def issuer_map(sec_path: Optional[Path] = None,
+               overrides: Optional[dict] = None) -> tuple[dict[str, str], dict]:
+    """(ticker -> issuer key, status). DERIVED from SEC CIK, not typed by hand.
+
+    One CIK is one issuer. Inside a CIK, only COMMON lines (`is_common_line`)
+    that share a root (`_same_root`) are grouped, so a preferred or a note that
+    shares the CIK is never collapsed into the common. `config.
+    ISSUER_SHARE_CLASSES` is an OVERRIDE for lines SEC's current file lacks
+    (CWEN-A, CUK on 2026-09-28): an override line joins the CIK group of any
+    of its siblings SEC knows, else forms its own group. Only multi-line
+    groups are returned. SEC's file lists CURRENT registrants; a missing or
+    unreadable file leaves the overrides only, and `status` says so by name.
+    """
+    p = Path(sec_path) if sec_path is not None else SEC_COMPANY_TICKERS
+    ov = overrides if overrides is not None else (
+        getattr(config, "ISSUER_SHARE_CLASSES", None) or {})
+    status: dict[str, Any] = {"source": "SEC company_tickers.json CIK + override",
+                              "path": str(p), "error": None}
+    by_cik: dict[int, list[str]] = {}
+    title: dict[int, str] = {}
+    try:
+        raw = json.loads(p.read_text(encoding="utf-8"))
+        items = raw.values() if isinstance(raw, dict) else raw
+        for v in items:
+            if not isinstance(v, dict) or v.get("ticker") is None:
+                continue
+            cik, t = int(v["cik_str"]), _norm_ticker(v["ticker"])
+            if is_common_line(t):
+                by_cik.setdefault(cik, []).append(t)
+                title.setdefault(cik, str(v.get("title") or ""))
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        status.update(source="OVERRIDE ONLY (DEGRADED)",
+                      error=f"{type(exc).__name__}: {str(exc)[:120]}")
+    try:
+        meta = json.loads(p.with_name("company_tickers.meta.json").read_text(encoding="utf-8"))
+        status["sec_fetched_at_utc"] = meta.get("fetched_at_utc")
+    except (OSError, ValueError):
+        status["sec_fetched_at_utc"] = None
+
+    out: dict[str, str] = {}
+    for cik, lines in by_cik.items():
+        if len(lines) < 2:
+            continue
+        # cluster by shared root (transitively), so MSTR never meets STRC
+        clusters: list[list[str]] = []
+        for t in sorted(set(lines)):
+            hit = [c for c in clusters if any(_same_root(t, u) for u in c)]
+            merged = [t] + [u for c in hit for u in c]
+            clusters = [c for c in clusters if c not in hit] + [merged]
+        for c in clusters:
+            if len(c) > 1:
+                key = f"{title.get(cik, '')} (CIK {cik})".strip()
+                for t in c:
+                    out[t] = key
+    n_override = 0
+    for name, lines in ov.items():
+        norm = [_norm_ticker(t) for t in lines]
+        key = next((out[t] for t in norm if t in out), None)
+        if key is None:
+            key = f"{name} (override: absent from SEC's current file)"
+            n_override += 1
+        for t in norm:
+            out.setdefault(t, key)
+    status.update(n_lines=len(out), n_issuers=len(set(out.values())),
+                  n_override_only_issuers=n_override)
+    return out, status
+
+
+def issuer_identity_status(sec_path: Optional[Path] = None) -> dict:
+    """What the collapse used, for a receipt: source, file date, group counts."""
+    _m, st = issuer_map(sec_path)
+    return st
+
+
+def collapse_share_classes(rows: list[dict], *,
+                           issuer_of: Optional[dict[str, str]] = None) -> list[dict]:
+    """ONE line per issuer (lane P, 2026-09-28) -- the per-name cap is per ISSUER.
+
+    GOOGL and GOOG entered the 2026-09-25 PROBE book as two names at
+    `PROBE_MAX_WEIGHT` each: one company at twice the cap. Issuer identity is
+    DERIVED from SEC CIK (`issuer_map`; hand override only for lines SEC's file
+    lacks). For every issuer with more than one line in `rows`, the line
+    with the larger `median_dollar_vol` (the funnel's 60-session median of
+    close x volume, measured from its bars) is kept at its own position and
+    score; if any line lacks a dollar volume the best-SCORED line is kept and
+    the basis says so, by name. Every dropped line is written on the kept row as
+    `share_class_dropped` ({ticker, issuer, kept, basis}), so a receipt can
+    name it. Order is preserved; nothing is re-scored; a ticker in no group
+    passes untouched. Pure given `issuer_of`.
+    """
+    if issuer_of is None:
+        issuer_of, _st = issuer_map()
+    groups: dict[str, list[int]] = {}
+    for i, r in enumerate(rows):
+        iss = issuer_of.get(_norm_ticker(r.get("ticker")))
+        if iss:
+            groups.setdefault(iss, []).append(i)
+    drop: set[int] = set()
+    notes: dict[int, list[dict]] = {}
+    for iss, idx in groups.items():
+        if len(idx) < 2:
+            continue
+        mdv = {i: rows[i].get("median_dollar_vol") for i in idx}
+        if all(isinstance(v, (int, float)) and math.isfinite(v) and v > 0
+               for v in mdv.values()):
+            keep = max(idx, key=lambda i: (float(mdv[i]), -i))
+            basis = ("larger 60-session median dollar volume: "
+                     + ", ".join(f"{rows[i]['ticker']} ${float(mdv[i]) / 1e6:,.0f}m"
+                                 for i in idx))
+        else:
+            keep = min(idx)                                   # rows are score-ordered
+            missing = [rows[i]["ticker"] for i in idx
+                       if not (isinstance(mdv[i], (int, float)) and math.isfinite(mdv[i])
+                               and mdv[i] > 0)]
+            basis = (f"dollar volume missing for {', '.join(missing)}: kept the "
+                     f"best-scored line (score order), not the more liquid one")
+        for i in idx:
+            if i != keep:
+                drop.add(i)
+                notes.setdefault(keep, []).append({
+                    "ticker": rows[i]["ticker"], "issuer": iss,
+                    "kept": rows[keep]["ticker"], "basis": basis})
+    if not drop:
+        return rows
+    out = []
+    for i, r in enumerate(rows):
+        if i in drop:
+            continue
+        if i in notes:
+            r = {**r, "share_class_dropped": notes[i]}
+        out.append(r)
+    return out
 
 def build_page(funnel_path: Path) -> dict:
     """The strict committee page. RAISES on a dirty ranking gate.

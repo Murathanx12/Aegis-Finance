@@ -620,17 +620,101 @@ def _ledger_scan(ctx: ProbeCtx) -> Optional[dict]:
     return out
 
 
+_SP = re.compile(r'"specialist":\s*"([^"]*)"')
+
+
+def _writer_scan(ctx: ProbeCtx, writers: dict, since: str) -> Optional[dict]:
+    """Rows per registered forecast WRITER with made_at >= `since` (ISO, UTC)."""
+    key = ("writers", since)
+    if key in ctx.cache:
+        return ctx.cache[key]
+    p = ctx.optimus_dir / "predictions.jsonl"
+    out: Optional[dict] = None
+    if p.exists():
+        counts = {w: 0 for w in writers}
+        newest = {w: None for w in writers}
+        other = 0
+        try:
+            with open(p, "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    m = _MA.search(line)
+                    if not m:
+                        continue
+                    s = _SP.search(line)
+                    spec = s.group(1) if s else ""
+                    w = next((k for k, d in writers.items()
+                              if spec.startswith(str(d.get("prefix") or "\0"))), None)
+                    if w is not None and (newest[w] is None or m.group(1) > newest[w]):
+                        newest[w] = m.group(1)
+                    # `since` is a UTC midnight, so the date prefix decides
+                    if m.group(1)[:10] < since[:10]:
+                        continue
+                    if w is None:
+                        other += 1
+                    else:
+                        counts[w] += 1
+            out = {"counts": counts, "newest": newest, "unregistered": other}
+        except OSError:
+            out = None
+    ctx.cache[key] = out
+    return out
+
+
 def p_u_forecast(ctx: ProbeCtx) -> ProbeResult:
-    L = _ledger_scan(ctx)
-    if not L or not L["newest_made"]:
-        return _unknown("no forecast ledger, or no row carries a `made_at`")
-    newest = _ts(L["newest_made"])
-    last = last_closed_session(ctx.now)
-    v: Verdict = "ALIVE" if newest and newest.date() >= last else "STALE"
-    return ProbeResult(v, _iso(newest), _age(newest, ctx.now),
-                       f"newest forecast made {_fmt_age(_age(newest, ctx.now))} ago; "
-                       f"{L['made_today']} made today (UTC); last session {last}",
-                       delta=L["made_today"], proof="predictions.jsonl max(made_at)")
+    """PER WRITER, not per ledger (2026-09-28).
+
+    It read `max(made_at)` over every specialist, so on 2026-09-27 167
+    thesis-card and source rows printed `u_forecast ALIVE` while the unit it is
+    named after (`investigator:evidence_v3`) wrote 0 -- 2026-08-27 -> 09-25's
+    dead ledger in a new shape. Now: for each writer in
+    `config.FORECAST_WRITERS`, `new_rows_since_last_session` (a `utc_day`
+    writer's last session is the previous UTC day, so the window opens at its
+    00:00Z). A SCHEDULED writer with zero is DEGRADED by name, and so is one
+    whose day receipt today carries a refusal. Unscheduled writers are
+    reported and never graded -- they cannot make the probe green.
+    """
+    from backend import config as C                                 # noqa: PLC0415
+    writers = dict(getattr(C, "FORECAST_WRITERS", None) or {})
+    if not writers:
+        return _unknown("config.FORECAST_WRITERS is empty: no writer to count")
+    today = ctx.now.astimezone(timezone.utc).date()
+    since = datetime.combine(today - timedelta(days=1), dtime(0, 0), tzinfo=timezone.utc)
+    W = _writer_scan(ctx, writers, _iso(since))
+    if W is None:
+        return _unknown("no forecast ledger (predictions.jsonl) to count writers in")
+    bad, parts, n_sched = [], [], 0
+    for w, d in writers.items():
+        n = W["counts"].get(w, 0)
+        if not d.get("scheduled"):
+            parts.append(f"{w} {n} (unscheduled, reported only)")
+            continue
+        n_sched += n
+        why = []
+        if n == 0:
+            why.append(f"0 rows since {since:%Y-%m-%dT%H:%MZ}")
+        rel = str(d.get("receipt") or "")
+        if rel:
+            rc = _read_json(ctx.optimus_dir / rel.format(day=today.isoformat()))
+            st = rc.get("state") if isinstance(rc, dict) else None
+            if st and (str(st).startswith("REFUSED") or st == "DEGRADED"):
+                why.append(f"today's receipt {st}: {str(rc.get('why') or '')[:90]}")
+        if why:
+            bad.append(w)
+            parts.append(f"{w} DEGRADED ({d.get('prefix')}): " + "; ".join(why)
+                         + f"; newest {W['newest'].get(w) or 'never'}")
+        else:
+            parts.append(f"{w} {n} since {since:%Y-%m-%d}")
+    newest_sched = [_ts(W["newest"][w]) for w, d in writers.items()
+                    if d.get("scheduled") and W["newest"].get(w)]
+    ev = max([t for t in newest_sched if t], default=None)
+    v: Verdict = "STALE" if bad else "ALIVE"
+    return ProbeResult(v, _iso(ev), _age(ev, ctx.now) if ev else None,
+                       ("DEGRADED: " + ", ".join(bad) + " | " if bad else "")
+                       + "; ".join(parts)
+                       + f"; unregistered writers {W['unregistered']}",
+                       delta=n_sched,
+                       proof="predictions.jsonl per config.FORECAST_WRITERS prefix, "
+                             "made_at >= previous UTC day + forecasts/day_<today>.json")
 
 
 def p_forecast_ledger(ctx: ProbeCtx) -> ProbeResult:
@@ -1595,7 +1679,7 @@ PROBES: tuple[Probe, ...] = (
     Probe("lab_loop", "pc", timedelta(minutes=5), "lab_status.json: loops[*].last_tick_utc + status", p_lab_loops),
     Probe("sim_session", "pc", D1, "sim/session.json: state, heartbeat, pid cmdline", p_sim_session, True),
     Probe("live_market_loop", "pc", D1, "pc_book/*/nav.jsonl: rows tagged open_of_loop/close_of_loop", p_live_market_loop),
-    Probe("u_forecast", "pc", D1, "predictions.jsonl: max(made_at), rows made today", p_u_forecast),
+    Probe("u_forecast", "pc", D1, "predictions.jsonl per writer (config.FORECAST_WRITERS): new_rows_since_last_session + today's day receipt", p_u_forecast),
     Probe("forecast_ledger", "pc", D1, "predictions.jsonl: new_rows_since_last_run", p_forecast_ledger),
     Probe("u_review", "pc", D1, "review/review_<last_session>.json: generated_utc", p_u_review),
     Probe("u_plan", "pc", D1, "pc_book/<d>/intended_book.json: t, asof, invested_frac", p_u_plan),
@@ -1624,6 +1708,7 @@ PROBES: tuple[Probe, ...] = (
     Probe("disk_free", "pc", timedelta(minutes=5), "shutil.disk_usage on the ledger dir's volume vs DISK_FREE_STALE_GB / DISK_FREE_DEAD_GB", p_disk_free),
     Probe("zero_byte_receipts", "pc", D1, "zero-byte *.json*/.md/.csv/.parquet under the ledger dir, dated by the stamp in the name (last 24 h)", p_zero_byte_receipts),
     Probe("openclaw_temp_builds", "pc", timedelta(minutes=10), "count + time-boxed size of %TEMP%/openclaw-plugin-build-* vs OPENCLAW_TEMP_DEGRADED_COUNT / _GB", lambda ctx: __import__("backend.services.openclaw_temp", fromlist=["p_openclaw_temp_builds"]).p_openclaw_temp_builds(ctx), True),
+    Probe("backtest_leaderboard", "pc", timedelta(days=7), "strategy_library/leaderboard_<run id>.json: run id in the name vs BACKTEST_LEADERBOARD_STALE_DAYS", lambda ctx: __import__("backend.services.backtest_staleness", fromlist=["p_backtest_leaderboard"]).p_backtest_leaderboard(ctx)),
 )
 
 

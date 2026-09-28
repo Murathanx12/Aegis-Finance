@@ -39,6 +39,20 @@ The freeze gate on a lead is **construction + timing (`lead_gate`); the factory'
 
 Construction notes, from the gate booleans on the log: `qc470_mom252_quarterly_riskparity` and `mom_12_1_ivw` are inverse-vol weighted and put ~15% on JAN, above the 10% name cap, so both are `__control` rows. The existing `lib_qc470_mom252_quarterly_riskparity_2026-09-27__control` (frozen by the factory's `freeze_book`) holds the SAME names at EQUAL weight, i.e. not the rule's inverse-vol construction; the new lead book is the rule's own weights. `disp_short_avoid@k20` was already frozen with identical holdings as `lib_disp_short_avoid_2026-09-27`, so no second book was frozen -- only the twins it lacked. In `docs/BRIDGE.md`, `qc470`, `mom_12_1_ivw` and `disp_short_avoid` sit in cluster 170 with the other 12-1 momentum books: they are ONE bet there, not three confirmations.
 
+> **Annotation 2026-09-28 (lane M review F3/F4; books, ids and holdings unchanged):
+> `disp_short_avoid` is a `CALENDAR_ARTEFACT`.** Under the roadmap's rule (ROBUST only if all three
+> quarterly calendars beat the matched twin at t >= 2; ARTEFACT if the best one does and another
+> does not reach t >= 1), read on two disjoint 21-draw twin seed sets that agree: JAJO +1.61%/mo
+> t 2.32 (set B 2.35), FMAN +0.52%/mo t 0.96 (B 0.74), MJSD +0.21%/mo t 0.46 (B 0.51); cum since
+> 2020 +1,207% / +275% / +233%. Per single draw the label is ARTEFACT on 22 of 42 draws and
+> CANNOT_DISTINGUISH on 20. The first run's rule (v1) filed it CANNOT_DISTINGUISH; that rule was
+> changed AFTER those verdicts were seen, for the reason recorded in the receipt. Calendar-neutral
+> (1/3 on each calendar): rule - twin +0.81%/mo, t 1.80, 2024-26 t 0.61; cum since 2020 +466%
+> (SPY +162%). The forward book was frozen on 2026-09-25 bars, i.e. on the MJSD calendar, its
+> weakest. The other three leads read `CANNOT_DISTINGUISH` (seed sets agree). All four are ONE
+> momentum bet: their calendar-neutral monthly returns correlate 0.84 to 0.98 (115 months).
+> Receipt: `backend/data/optimus/strategy_library/calendar_offsets_2026-09-28T065615Z.json`.
+
 ## Twins (every book is graded beside these)
 
 | book | ew | ranks k+1..2k | SPY | IWM | matched random (seed) | already on the parent |

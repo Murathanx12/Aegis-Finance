@@ -203,6 +203,9 @@ table). This is the honest ceiling on any P2 claim today.
   $4,733,154 start; 7 of 39 ahead of SPY, 32 behind — `docs/PAPER_ACCOUNTS.md`
   Aggregate section). `mirror` alone is −22.16% vs SPY +2.03% in its window,
   kept on the record by policy, not hidden.
+
+> **Correction 2026-09-28 (lane M4a; nothing above is erased).** "39 priced" is the BROKER-INCLUDED scope: website lanes, night books and twins, murat_book, the five legacy Alpaca accounts and PC-PAPER. It was NOT superseded by `3204eb4d`: that commit's `roi_2026-09-27.json` (generated 2026-09-27T06:44:32Z) still prints 39 priced, 7 ahead of SPY, 32 behind, -1.315%; the 09-26 broker-included receipt (`b137fff7`, 03:57:21Z) printed 39 / 7 / 32 / -1.124%. The "33 priced, 6 ahead, 27 behind, -0.27%" quoted on 2026-09-28 is the scheduled `--no-broker` pass (generated 2026-09-27T23:51:21Z), which overwrote the same file name and leaves out the six priced broker accounts (hack1/2/4/5/6 at -1.2% to -20.0%, PC-PAPER -0.2%): a narrower scope that flatters the aggregate, not a correction. **Current, broker-included, read-only:** 39 priced, 7 ahead of SPY, 32 behind, aggregate **-1.34%** (`backend/data/optimus/paper_accounts/roi_2026-09-28T060842Z.json`, generated 2026-09-28T06:08:42Z; hack3 BROKER_ERROR HTTP 401, never $0). Scope and receipt: `docs/research_notes/2026-09-28/lane_m_build_2026-09-28.md` §M4.
+
 - **A 28% vs 115% historical backtest is still the README's headline
   backtest table.** It is disclosed as a *negative result*, but a reader
   skimming the page sees a strategy that underperformed buy-and-hold by 86

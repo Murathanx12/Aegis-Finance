@@ -197,6 +197,44 @@ def update(key: str, value: Any, *, reason: str, evidence: Any,
     return row
 
 
+def record_version_change(policy_id: str, old: str, new: str, *, reason: str,
+                          evidence: Any, effective_asof: str,
+                          actor: str = "sim_run.u_plan",
+                          path: Path | None = None) -> dict | None:
+    """Journal ONE row when a CODE policy's frozen version changes (2026-09-28).
+
+    Not a preference: nothing in `SCHEMA` moves and `policy_state.json` is not
+    written. The night cannot change code; a human did, and this row is the
+    tamper-evident "was X, is Y, because Z, from asof D" the decision autopsy
+    reads so that an exit caused by the code is never read as a change of view.
+    Idempotent: a row with the same key and `new` version already in the
+    journal returns None and appends nothing. Refuses without reason/evidence.
+    """
+    if not reason or not str(reason).strip() or evidence in (None, "", [], {}):
+        raise PolicyRefused(f"REFUSED: a version change of {policy_id} needs a "
+                            f"reason AND evidence")
+    jp = Path(path) if path is not None else JOURNAL_PATH
+    key = f"policy_version:{policy_id}"
+    if jp.exists():
+        for ln in jp.read_text(encoding="utf-8").splitlines():
+            try:
+                r = json.loads(ln)
+            except ValueError:
+                continue
+            if r.get("key") == key and r.get("new") == new:
+                return None
+    row = {"t": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+           "actor": actor, "key": key, "kind": "code_version",
+           "old": old, "new": new, "effective_asof": str(effective_asof),
+           "reason": str(reason), "evidence": evidence}
+    jp.parent.mkdir(parents=True, exist_ok=True)
+    with jp.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(row, default=str) + "\n")
+    logger.info("policy_state: %s %s -> %s from %s (%s)", key, old, new,
+                effective_asof, reason)
+    return row
+
+
 def journal(limit: int = 50) -> list[dict]:
     if not JOURNAL_PATH.exists():
         return []

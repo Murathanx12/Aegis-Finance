@@ -483,22 +483,31 @@ def u_forecast(out: Path) -> dict:
     This unit is the scheduled caller.
 
     Idempotent through the day receipt `forecasts/day_<date>.json`, which the
-    worker writes at START and after every name: a DONE / REFUSED_CAP /
-    DEGRADED receipt ends the day, a RUNNING one (a crash) resumes where it
-    stopped rather than re-paying for names already written. The dollar cap is
-    read by the worker from the same telemetry ledger its OpenClaw calls write.
+    worker writes at START and after every name: a TERMINAL receipt (DONE /
+    REFUSED_CAP / REFUSED_CAP_READER_DISAGREES / DEGRADED) ends the day, a
+    RUNNING one (a crash) resumes where it stopped rather than re-paying for
+    names already written. The dollar cap is read by the worker from the same
+    telemetry ledger its OpenClaw calls write.
     Out of process: the evidence packets need the bars panel (~3 GB peak).
+
+    A DEPENDENCY FAILURE DOES NOT END THE DAY (2026-09-28): the worker files a
+    gateway outage as REFUSED_DEPENDENCY_DOWN (on 2026-09-27 it was filed
+    REFUSED_CAP and ended the day at 0 rows). `resume_gate` -- the worker's own
+    rule, imported so the two cannot disagree -- lets a later cycle resume it
+    after FORECAST_DEP_RETRY_MIN_GAP_S, up to FORECAST_DEP_MAX_RUNS_PER_DAY runs.
+    Zero rows is DEGRADED, and a dependency refusal is DEGRADED even with rows.
     """
+    from scripts import night_investigator_forecast as NIF
     day = datetime.now(timezone.utc).date().isoformat()
     receipt = Path(_config.OPTIMUS_LEDGER_DIR) / "forecasts" / f"day_{day}.json"
     if receipt.exists():
         try:
             r = json.loads(receipt.read_text(encoding="utf-8"))
-            if r.get("state") in ("DONE", "REFUSED_CAP", "DEGRADED"):
-                return {"skipped": f"already ran today ({day})",
-                        "state": r["state"],
-                        "n_rows_written": r.get("n_rows_written"),
-                        "status": ("DEGRADED" if not r.get("n_rows_written")
+            gate = NIF.resume_gate(r)
+            if gate is not None:
+                return {**gate,
+                        "status": ("DEGRADED" if (not r.get("n_rows_written")
+                                                  or str(r.get("state")).startswith("REFUSED"))
                                    else "ok")}
         except (OSError, ValueError):
             pass
@@ -517,9 +526,10 @@ def u_forecast(out: Path) -> dict:
     if res.get("failed") or res.get("state") == "RUNNING":
         _bump_attempts(out, "forecast", day, res)
     n = int(res.get("n_rows_written") or 0)
+    ok = n > 0 and not str(res.get("state") or "").startswith("REFUSED")
     return {**{k: v for k, v in res.items()
                if isinstance(v, (int, float, str, bool, type(None)))},
-            "status": "ok" if n > 0 else "DEGRADED"}
+            "status": "ok" if ok else "DEGRADED"}
 
 
 #: The review runs pre-open, on the US venue's clock.
@@ -603,7 +613,54 @@ def u_review(out: Path, *, now_et: datetime | None = None) -> dict:
 #: both read this subfolder as well, so the rows are graded like the rest.
 PC_PLAN_SUBDIR = "pc_plan"
 PROBE_POLICY_ID = "sim_run.u_plan.probe"
-PROBE_POLICY_VERSION = "c3-v0"
+#: Every version the PROBE policy has decided under, oldest first. A version
+#: that has made a forward-paper decision is IMMUTABLE (Explore-Dirty rule 4):
+#: a selection change is a NEW entry, never an edit of an old one. `from_asof`
+#: is the first `u_plan` asof decided under it; the plan receipt prints it, and
+#: `_record_probe_version` journals the boundary once (policy_journal.jsonl).
+PROBE_POLICY_VERSIONS: tuple[dict, ...] = (
+    {"version": "c3-v0", "from_asof": "2026-09-25",
+     "what": ("C3 PROBE: committee shortlist, PROBE_MAX_WEIGHT / PROBE_GROSS_CAP, "
+              "acting while UNMEASURED_TRADE_SMALL. On the record (review "
+              "2026-09-28 F5): it ALSO spanned three changes that were never "
+              "versioned -- the drift band (09-25), the bars age gate (09-26) and "
+              "the policy_state read (09-27) -- so c3-v0 rows are one label over "
+              "four policies.")},
+    {"version": "c3-v1", "from_asof": "2026-09-28",
+     "what": ("share-class collapse: ONE line per issuer "
+              "(investment_committee.collapse_share_classes, issuer = SEC CIK "
+              "with a hand override). Effect on the first day: GOOG leaves the "
+              "PROBE book (GOOGL kept, the more liquid line) and the next "
+              "shortlist name enters. No pc_plan receipt through 2026-09-27 "
+              "carries it (checked: 0 `share_class_dropped` on 09-25/26/27).")},
+)
+PROBE_POLICY_VERSION = PROBE_POLICY_VERSIONS[-1]["version"]
+PROBE_POLICY_VERSION_FROM = PROBE_POLICY_VERSIONS[-1]["from_asof"]
+assert [v["from_asof"] for v in PROBE_POLICY_VERSIONS] == sorted(
+    v["from_asof"] for v in PROBE_POLICY_VERSIONS), "versions must be dated in order"
+
+
+def _record_probe_version(journal_path: Path | None = None) -> dict | None:
+    """Journal the current PROBE version's boundary once (idempotent)."""
+    from backend.services import policy_state as PS
+    prev = PROBE_POLICY_VERSIONS[-2] if len(PROBE_POLICY_VERSIONS) > 1 else None
+    cur = PROBE_POLICY_VERSIONS[-1]
+    return PS.record_version_change(
+        PROBE_POLICY_ID, prev["version"] if prev else "", cur["version"],
+        reason=cur["what"], effective_asof=cur["from_asof"],
+        evidence={"code": "scripts/sim_run.py PROBE_POLICY_VERSIONS",
+                  "review": "docs/reviews/REVIEW_2026-09-28_LANE_P_MONEY_PATH.md F5",
+                  "note": "docs/research_notes/2026-09-28/lane_p_money_path_2026-09-28.md"},
+        path=journal_path)
+
+
+def _policy_change_exit_reason(sym: str, dropped: dict) -> str:
+    """The reason on an EXIT caused by the share-class collapse, not by a view."""
+    return (f"POLICY CHANGE (share-class collapse), {PROBE_POLICY_ID} "
+            f"{PROBE_POLICY_VERSIONS[-2]['version'] if len(PROBE_POLICY_VERSIONS) > 1 else ''}"
+            f"->{PROBE_POLICY_VERSION} from {PROBE_POLICY_VERSION_FROM}: {sym} is a "
+            f"second line of {dropped.get('issuer')}; {dropped.get('kept')} kept "
+            f"({str(dropped.get('basis') or '')[:80]}). Not a change of view.")
 
 
 def _asof_et() -> str:
@@ -796,6 +853,9 @@ def _contract_view(folder: Path, asof: str, contract_file: Path | None) -> dict:
         view["error"] = f"{type(exc).__name__}: {exc}"[:200]
         return view
     view["status"] = "present"
+    # the contract's own mandate block, carried verbatim to the plan receipt
+    # (decision_contract.mandate_view): one status for one day, never two.
+    view["mandate_block"] = blob.get("mandate") if isinstance(blob, dict) else None
     ranked: dict[str, tuple[int, str, Any]] = {}
     for r in rows:
         if not isinstance(r, dict):
@@ -1006,6 +1066,18 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     from `config` and are passed IN to `policy_state.probe_weights`; no value in
     the state reaches them. A sandbox caller that names no `policy_state_path`
     does not read this machine's state.
+
+    THE MANDATE (lane P, 2026-09-28): the receipt prints the day's contract
+    `mandate` block verbatim (`decision_contract.mandate_view`), so the plan and
+    the contract show ONE status: OK or UNRECONCILED (written REFUSED before
+    2026-09-28; old receipts are read with the new word). It is a reconciliation
+    of capital bases and caps and gates no order, by design
+    (`MANDATE_GATES_ORDERS_NOTE`); the caps that DO gate are the config/pc_broker
+    values above. The shortlist carries one line per issuer
+    (`investment_committee.collapse_share_classes`, issuer = SEC CIK); a dropped
+    share class is named in `share_class_dropped`, and a HELD line it drops is
+    sold with a POLICY CHANGE reason (`policy_change_exits`), never "not in the
+    ranked book". The receipt prints `policy_version` and the asof it started.
     """
     from backend.services import expected_return as ER
     from backend.services import pc_broker as PB
@@ -1088,6 +1160,13 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         logger.warning("u_plan RED: %s", contract_red)
     if contract_clash:
         sl = [x for x in sl if str(x["ticker"]) not in contract_clash]
+    # The contract's mandate, printed on this receipt from the same block
+    # (lane P, 2026-09-28). A reconciliation: it gates nothing here, by design.
+    mandate = DC.mandate_view(contract.get("mandate_block"),
+                              contract_status=contract["status"],
+                              contract_path=contract["path"])
+    # One issuer, one line (investment_committee.collapse_share_classes).
+    share_class_dropped = [d for x in sl for d in (x.get("share_class_dropped") or [])]
 
     # ---- the expected-return layer (chunk 2) ----------------------------------
     er_view, er_red = None, None
@@ -1205,6 +1284,25 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     syms = [t.symbol for t in targets] + list(held)
     prices = PB.last_prices(syms) if syms else {}
     plans = PB.plan_orders(targets, equity=equity, held=held, prices=prices) if syms else []
+
+    # An EXIT the share-class collapse caused is a POLICY CHANGE, not a view
+    # (review 2026-09-28 F5): pc_broker would stamp it "not in the ranked book:
+    # exit", and the decision autopsy would read a code change as a decision.
+    dropped_by_sym = {str(d["ticker"]): d for d in share_class_dropped}
+    target_syms = {t.symbol for t in targets}
+    policy_change_exits: list[dict] = []
+    for p in plans:
+        if p.symbol in dropped_by_sym and p.symbol in held and p.symbol not in target_syms:
+            p.reason = _policy_change_exit_reason(p.symbol, dropped_by_sym[p.symbol])
+            policy_change_exits.append({"symbol": p.symbol, "side": p.side,
+                                        "qty": p.qty, "reason": p.reason})
+    version_journal: Any = "sandbox: not journaled"
+    if not sandbox and contracts_dir is None:
+        try:
+            row = _record_probe_version()
+            version_journal = ("journaled now" if row else "already journaled")
+        except Exception as exc:                                   # noqa: BLE001
+            version_journal = f"NOT JOURNALED: {type(exc).__name__}: {str(exc)[:120]}"
 
     prior_probe = _prior_probe_holdings(folder, asof)
 
@@ -1352,6 +1450,15 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
               "contract_refused_excluded": len(contract_clash),
               "contract_clash_reasons": {t: contract["refused"].get(t.upper())
                                          for t in contract_clash},
+              "mandate": mandate, "mandate_line": mandate["line"],
+              "share_class_dropped": share_class_dropped,
+              "policy_id": PROBE_POLICY_ID, "policy_version": PROBE_POLICY_VERSION,
+              "policy_version_from_asof": PROBE_POLICY_VERSION_FROM,
+              "policy_version_history": [{"version": v["version"], "from_asof": v["from_asof"]}
+                                         for v in PROBE_POLICY_VERSIONS],
+              "policy_version_journal": version_journal,
+              "policy_change_exits": policy_change_exits,
+              "issuer_identity": IC.issuer_identity_status(),
               "n_probe": n_probe, "probe_weight": w_probe, "probe_gross": probe_gross,
               "probe_weights": w_by_probe, "probe_weighting": weighting_meta,
               "order_source": order_source,
@@ -1411,6 +1518,11 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             "contract": contract["status"], "contract_red": contract_red,
             "contract_clash": contract_clash,
             "contract_refused_excluded": len(contract_clash),
+            "mandate_status": mandate["status"], "mandate_line": mandate["line"],
+            "mandate_gates_orders": mandate["gates_orders"],
+            "share_class_dropped": [d["ticker"] for d in share_class_dropped],
+            "policy_version": PROBE_POLICY_VERSION,
+            "policy_change_exits": [x["symbol"] for x in policy_change_exits],
             "n_considered": record["n_considered"], "n_probe": n_probe,
             "policy_state_used": policy_used is not None,
             "policy_state_ignored": (policy_ignored or {}).get("reason"),

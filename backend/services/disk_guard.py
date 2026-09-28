@@ -248,9 +248,15 @@ def file_lock(path: Path, *, timeout_s: Optional[float] = None, poll_s: float = 
         tl.release()
 
 
-def locked_append_line(path: Path, line: str, *, encoding: str = "utf-8") -> Path:
+def locked_append_line(path: Path, line: str, *, encoding: str = "utf-8",
+                       fsync: bool = False) -> Path:
     """Append ONE line to a shared log under `file_lock(<path>.lock)`, so two
-    writers never interleave half-lines. A full disk raises `DiskTooFull`."""
+    writers never interleave half-lines. A full disk raises `DiskTooFull`.
+
+    `fsync=True` (2026-09-28, the alert ledger): the line is on the disk, not
+    only in the OS cache, before this returns -- a ledger row that claims "this
+    was frozen before it was sent" must survive a bugcheck (the 2026-09-12
+    VIDEO_TDR crash NUL-filled an uncommitted file)."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     text = line if line.endswith(chr(10)) else line + chr(10)
@@ -259,6 +265,8 @@ def locked_append_line(path: Path, line: str, *, encoding: str = "utf-8") -> Pat
             with _open(path, "a", encoding=encoding) as fh:
                 fh.write(text)
                 fh.flush()
+                if fsync:
+                    os.fsync(fh.fileno())
         except OSError as exc:
             if _is_enospc(exc):
                 raise DiskTooFull(f"disk full appending to {path}") from exc

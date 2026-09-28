@@ -96,6 +96,16 @@ BASE_GRADE = "grade_entry_open"
 #: window the grade did not measure; the row carries the grade's own benchmark.
 BASE_NOT_SPY = "benchmark_not_spy"
 
+#: lane M5 (2026-09-28): every row also carries `mark_status` -- the state of
+#: its LAST MARK, whatever its `status` -- and `mark_age_days`. A broker read that
+#: failed is BROKER_ERROR by name (401, timeout, no key), never $0 and never
+#: absent. STALE past `config.PAPER_ACCOUNT_MARK_STALE_DAYS` calendar days.
+MARK_STATUSES = ("LIVE", "STALE", "PENDING", "VOID", "BROKER_ERROR")
+BROKER_FAMILIES = ("alpaca_fleet", "pc_paper")
+BROKER_READ_MODE = ("READ-ONLY: GET /v2/account + GET /v2/positions per account (PC-PAPER via "
+                    "pc_broker.snapshot: account, positions, latest trades); no order is placed, "
+                    "cancelled or modified; no key is printed; each account reads its OWN pair")
+
 FAMILY_ORDER = ("website_lane", "alpaca_fleet", "pc_paper", "night_books",
                 "night_books_twin", "murat_book", "agency",
                 "llm_portfolio:personal", "llm_portfolio:competition",
@@ -258,31 +268,52 @@ def collect_fleet(env: dict, http_get: Optional[Callable] = None,
     import requests
     get = http_get or requests.get
     rows = []
+    seen_keys: dict = {}
     for role in roles:
         n = role.replace("hack", "")
         kid, sec = env.get(f"AAT_HACK{n}_KEY_ID"), env.get(f"AAT_HACK{n}_SECRET_KEY")
         src = f"GET {ALPACA_PAPER}/v2/account + /v2/positions (AAT_HACK{n}_* in aegis-alpha-terminal/.env)"
         retired = RETIRED_ROLES.get(role, "")
+        read_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
         if not kid or not sec:
             rows.append(_row(role, "alpaca_fleet", source=src, start_capital=FLEET_START_USD,
-                             status="CREDENTIAL_INVALID", note=("no key pair in the env file. " + retired).strip()))
+                             status="CREDENTIAL_INVALID", note=("no key pair in the env file. " + retired).strip(),
+                             broker_error="NO_CREDENTIAL: no AAT_HACK*_KEY_ID/SECRET pair for this role",
+                             broker_read_utc=read_utc))
             continue
+        if kid in seen_keys:
+            # never alias: a key id another role already used would price THAT
+            # account twice under two names (the 2026-09-21 shadowing family)
+            rows.append(_row(role, "alpaca_fleet", source=src, start_capital=FLEET_START_USD,
+                             status="CREDENTIAL_INVALID",
+                             note=f"its key id is the one {seen_keys[kid]} uses; not read",
+                             broker_error=f"KEY_SHARED_WITH_{seen_keys[kid].upper()}: refused, not read",
+                             broker_read_utc=read_utc))
+            continue
+        seen_keys[kid] = role
         h = {"APCA-API-KEY-ID": kid, "APCA-API-SECRET-KEY": sec}
         try:
             a = get(f"{ALPACA_PAPER}/v2/account", headers=h, timeout=20)
         except Exception as e:
+            kind = "TIMEOUT" if "timeout" in type(e).__name__.lower() else "NETWORK"
             rows.append(_row(role, "alpaca_fleet", source=src, start_capital=FLEET_START_USD,
-                             status="UNPRICED", note=f"network: {type(e).__name__}"))
+                             status="UNPRICED", note=f"network: {type(e).__name__}",
+                             broker_error=f"{kind}: {type(e).__name__} on /v2/account",
+                             broker_read_utc=read_utc))
             continue
         if a.status_code in (401, 403):
             rows.append(_row(role, "alpaca_fleet", source=src, start_capital=FLEET_START_USD,
                              status="CREDENTIAL_INVALID",
                              note=(f"HTTP {a.status_code} on /v2/account -- the key is "
-                                   f"revoked or wrong, NOT a $0 account. " + retired).strip()))
+                                   f"revoked or wrong, NOT a $0 account. " + retired).strip(),
+                             broker_error=f"HTTP_{a.status_code}: credential refused on /v2/account",
+                             broker_read_utc=read_utc))
             continue
         if a.status_code != 200:
             rows.append(_row(role, "alpaca_fleet", source=src, start_capital=FLEET_START_USD,
-                             status="UNPRICED", note=f"HTTP {a.status_code} on /v2/account"))
+                             status="UNPRICED", note=f"HTTP {a.status_code} on /v2/account",
+                             broker_error=f"HTTP_{a.status_code} on /v2/account",
+                             broker_read_utc=read_utc))
             continue
         acct = a.json()
         n_pos = None
@@ -302,7 +333,7 @@ def collect_fleet(env: dict, http_get: Optional[Callable] = None,
                          account_number=acct.get("account_number"),
                          cash=float(acct.get("cash") or 0.0),
                          last_equity=float(acct.get("last_equity") or 0.0),
-                         broker_now=True))
+                         broker_now=True, broker_read_utc=read_utc))
     # A RETIRED row that still answers is priced like any other account.
     for r in rows:
         if r["status"] == "RETIRED" and r["equity"] is not None:
@@ -314,6 +345,7 @@ def collect_fleet(env: dict, http_get: Optional[Callable] = None,
 
 def collect_pc(snapshot_fn: Optional[Callable] = None) -> list[dict]:
     src = "backend.services.pc_broker.snapshot() (GET /v2/account + /v2/positions)"
+    read_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
     try:
         if snapshot_fn is None:
             import backend.config  # noqa: F401  (loads .env for the PC-PAPER pair)
@@ -326,13 +358,17 @@ def collect_pc(snapshot_fn: Optional[Callable] = None) -> list[dict]:
     except Exception as e:
         msg = str(e)
         status = "CREDENTIAL_INVALID" if ("401" in msg or "not configured" in msg) else "UNPRICED"
+        low = f"{type(e).__name__} {msg}".lower()
+        kind = ("HTTP_401" if "401" in msg else "NO_CREDENTIAL" if "not configured" in msg
+                else "TIMEOUT" if "timed out" in low or "timeout" in low else "BROKER")
         return [_row("PC-PAPER", "pc_paper", source=src, inception=PC_INCEPTION,
-                     start_capital=PC_START_USD, status=status, note=msg[:200])]
+                     start_capital=PC_START_USD, status=status, note=msg[:200],
+                     broker_error=f"{kind}: {type(e).__name__}", broker_read_utc=read_utc)]
     return [_row("PC-PAPER", "pc_paper", source=src, inception=PC_INCEPTION,
                  start_capital=PC_START_USD, equity=snap.get("equity"),
                  n_positions=snap.get("n_positions"), last_mark=None,
                  spy_base=BASE_BEFORE, account_number=snap.get("account_number"),
-                 cash=snap.get("cash"), broker_now=True,
+                 cash=snap.get("cash"), broker_now=True, broker_read_utc=read_utc,
                  note="first trades 2026-09-25")]
 
 
@@ -591,6 +627,56 @@ def attach_spy(rows: list[dict], bm) -> None:
             r["vs_spy_pp"] = round(r["roi_pct"] - s, 3)
 
 
+def _mark_stale_days() -> float:
+    return float(getattr(_config, "PAPER_ACCOUNT_MARK_STALE_DAYS", 4))
+
+
+def mark_status(r: dict, today: date, *, stale_days: Optional[float] = None) -> tuple:
+    """(mark_status, mark_age_days) for one row. BROKER_ERROR when a broker read
+    failed; VOID / PENDING from the book's own status; otherwise the age of the
+    last mark decides LIVE vs STALE. A row that should have a mark and has none
+    is STALE with age None ("never marked"), never LIVE."""
+    stale_days = _mark_stale_days() if stale_days is None else float(stale_days)
+    if r.get("broker_error"):
+        return "BROKER_ERROR", None
+    st = r.get("status")
+    if st == "VOIDED":
+        return "VOID", None
+    if st == "PENDING":
+        return "PENDING", None
+    mark = r.get("broker_read_utc") if r.get("broker_now") else r.get("last_mark")
+    d = _d(mark)
+    if d is None:
+        return "STALE", None
+    age = (today - date.fromisoformat(d)).days
+    if r.get("fresh") is False:
+        return "STALE", age
+    return ("LIVE" if age <= stale_days else "STALE"), age
+
+
+def attach_mark_status(rows: list[dict], today: Optional[date] = None) -> None:
+    today = today or datetime.now(timezone.utc).date()
+    for r in rows:
+        ms, age = mark_status(r, today)
+        r["mark_status"], r["mark_age_days"] = ms, age
+
+
+def broker_read_block(rows: list[dict], *, performed: bool, why: str = "") -> dict:
+    """The receipt's statement about the broker legs: performed or not, and
+    every failed read by account and by name."""
+    if not performed:
+        return {"performed": False, "families": list(BROKER_FAMILIES),
+                "why": why or "--no-broker",
+                "consequence": ("alpaca_fleet and pc_paper are NOT in this receipt's rows; their "
+                                "numbers exist only in a broker-read receipt")}
+    br = [r for r in rows if r["family"] in BROKER_FAMILIES]
+    errs = {r["account"]: r["broker_error"] for r in br if r.get("broker_error")}
+    return {"performed": True, "mode": BROKER_READ_MODE, "families": list(BROKER_FAMILIES),
+            "n_accounts": len(br), "n_priced": sum(1 for r in br if r.get("equity") is not None),
+            "n_broker_error": len(errs), "errors": errs,
+            "read_utc": max((r.get("broker_read_utc") or "" for r in br), default=None) or None}
+
+
 def aggregate(rows: list[dict]) -> dict:
     priced = [r for r in rows if r["roi_pct"] is not None and r["equity"] is not None
               and r["start_capital"]]
@@ -661,6 +747,7 @@ def build(*, tr: Optional[dict], tr_source: str, tr_fresh: bool, fleet_env: dict
     rows.sort(key=lambda r: (order.get(r["family"], 99),
                              -(r["roi_pct"] if r["roi_pct"] is not None else -1e9)))
     attach_spy(rows, bm)
+    attach_mark_status(rows)
     receipt = {
         "schema": SCHEMA,
         "receipt": "paper_accounts_roi",
@@ -675,6 +762,11 @@ def build(*, tr: Optional[dict], tr_source: str, tr_fresh: bool, fleet_env: dict
             "spy_leg": ("learner.benchmark.spy_total_return (yfinance adj close, total return)"
                         if bm is not None else f"UNAVAILABLE: {bm_error}"),
         },
+        "scope": receipt_scope(rows, include_fleet=include_fleet, include_pc=include_pc),
+        "broker_read": broker_read_block(rows, performed=bool(include_fleet or include_pc),
+                                         why="" if (include_fleet or include_pc) else "--no-broker"),
+        "mark_status_counts": {m: sum(1 for r in rows if r.get("mark_status") == m)
+                               for m in MARK_STATUSES},
         "rows": rows,
         "aggregate": aggregate(rows),
         "lane_nav_series": lane_series(tr),
@@ -859,6 +951,39 @@ def render_chart(rc: dict, path: Path) -> Optional[Path]:
     return path
 
 
+def receipt_scope(rows: list, *, include_fleet: bool, include_pc: bool) -> dict:
+    """What this receipt ATTEMPTED to read. Two receipts of different scope are
+    different measurements: the --no-broker pass (no Alpaca fleet, no PC-PAPER)
+    printed 33 priced / -0.27% on 2026-09-27 while the broker-included pass
+    printed 39 / -1.32%, and the narrower one overwrote the wider one in place."""
+    return {"with_broker": bool(include_fleet or include_pc),
+            "include_fleet": bool(include_fleet), "include_pc": bool(include_pc),
+            "accounts_attempted": len(rows),
+            "broker_accounts_attempted": sum(1 for r in rows if r.get("family") in BROKER_FAMILIES)}
+
+
+def scope_of(rc: dict) -> dict:
+    """The scope of a receipt, including a legacy one written before `scope`
+    existed (broker-included iff it carries a broker-family row)."""
+    sc = rc.get("scope")
+    if isinstance(sc, dict) and "with_broker" in sc:
+        return sc
+    rows = rc.get("rows") or []
+    nb = sum(1 for r in rows if r.get("family") in BROKER_FAMILIES)
+    return {"with_broker": nb > 0, "accounts_attempted": len(rows),
+            "broker_accounts_attempted": nb, "inferred": True}
+
+
+def narrower(new: dict, old: dict) -> bool:
+    """True when `new` read strictly less than `old`: it dropped the broker legs,
+    or it attempted fewer broker accounts at the same broker setting."""
+    if old.get("with_broker") and not new.get("with_broker"):
+        return True
+    if bool(old.get("with_broker")) == bool(new.get("with_broker")):
+        return int(new.get("broker_accounts_attempted") or 0) < int(old.get("broker_accounts_attempted") or 0)
+    return False
+
+
 def write_outputs(rc: dict, *, chart: bool = True, out_dir: Optional[Path] = None,
                   doc_path: Optional[Path] = None, assets: Optional[Path] = None) -> dict:
     out_dir = Path(out_dir) if out_dir is not None else OUT_DIR
@@ -866,20 +991,53 @@ def write_outputs(rc: dict, *, chart: bool = True, out_dir: Optional[Path] = Non
     assets = Path(assets) if assets is not None else ASSETS
     day = rc["generated_utc"][:10]
     out_dir.mkdir(parents=True, exist_ok=True)
-    rj = out_dir / f"roi_{day}.json"
+    sc = scope_of(rc)
+    rc.setdefault("scope", sc)
+    # a narrower scope never shares a filename with the broker-included one
+    suffix = "" if sc.get("with_broker") else ".nobroker"
+    rj = out_dir / f"roi_{day}{suffix}.json"
+    stamp = rc["generated_utc"].replace("+00:00", "Z").replace(":", "").replace("-", "")
+    run_id = f"{day}T{stamp[9:15]}Z"
+    rr = out_dir / f"roi_{run_id}{suffix}.json"
+    n = 2
+    while rr.exists():                       # same-second collision: never skip, never overwrite
+        rr = out_dir / f"roi_{run_id}{suffix}_{n}.json"
+        n += 1
+    rc["run_id"] = run_id
+    # the date-named copy is "latest" -- but never replaced by a NARROWER read
+    date_copy = True
+    if rj.exists():
+        try:
+            old_sc = scope_of(json.loads(rj.read_text(encoding="utf-8")))
+        except (OSError, ValueError) as e:
+            old_sc = None
+            rc["date_copy_note"] = f"existing {rj.name} unreadable ({type(e).__name__}); replaced"
+        if old_sc is not None and narrower(sc, old_sc):
+            date_copy = False
+            rc["date_copy_refused"] = (f"{rj.name} holds a wider scope ({old_sc}); this {sc} receipt "
+                                       f"is kept only as {rr.name}")
     png = latest = None
-    if chart:
+    if chart and date_copy:
         png = render_chart(rc, assets / f"paper_accounts_roi_{day}.png")
         if png:
             latest = assets / "paper_accounts_roi_latest.png"
             shutil.copyfile(png, latest)
             rc["chart"] = {"png": f"docs/assets/{png.name}", "latest": "docs/assets/paper_accounts_roi_latest.png"}
-    tmp = rj.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(rc, indent=1, default=str), encoding="utf-8")
-    tmp.replace(rj)
-    doc_path.parent.mkdir(parents=True, exist_ok=True)
-    doc_path.write_text(render_markdown(rc, "paper_accounts_roi_latest.png" if png else None), encoding="utf-8")
-    return {"receipt": rj, "png": png, "latest": latest, "doc": doc_path}
+    # the run-id receipt is never overwritten; the date-named copy is "latest"
+    for target in [rr] + ([rj] if date_copy else []):
+        tmp = target.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(rc, indent=1, default=str), encoding="utf-8")
+        tmp.replace(target)
+    # the human doc follows the widest scope: a --no-broker pass does not replace it
+    # while a broker-included receipt exists for the day
+    wide = out_dir / f"roi_{day}.json"
+    write_doc = date_copy and (sc.get("with_broker") or not wide.exists())
+    if write_doc:
+        doc_path.parent.mkdir(parents=True, exist_ok=True)
+        doc_path.write_text(render_markdown(rc, "paper_accounts_roi_latest.png" if png else None), encoding="utf-8")
+    return {"receipt": rj if date_copy else rr, "receipt_run": rr, "png": png, "latest": latest,
+            "doc": doc_path if write_doc else None, "scope": sc,
+            "date_copy_refused": rc.get("date_copy_refused")}
 
 
 def main(argv: Optional[list[str]] = None) -> int:
