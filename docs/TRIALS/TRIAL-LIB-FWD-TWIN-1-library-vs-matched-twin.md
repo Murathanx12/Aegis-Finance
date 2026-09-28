@@ -158,3 +158,87 @@ and `RESEARCH_CLAIM` keep every stricter gate.
   `python -m scripts.lib_forward_trial --register`.
 - The read itself: at each read date, `lib_forward_trial.pooled_z` over the grader's marks and
   `decide(...)`. No scheduled caller exists yet.
+
+---
+
+## AMENDMENT 2026-09-28 (written ~06:50Z, BEFORE the 13:30Z open; nothing above is edited)
+
+Answers `docs/reviews/REVIEW_2026-09-28_LANE_M_MEASUREMENT.md` F1 (frozen inputs not under
+version control) and F2 (the error bar used one twin type for sigma and another for rho).
+**No return from 2026-09-28 or later is used anywhere in this amendment**: the only series read
+are the backtest's monthly parquets of run `2026-09-27T082553Z`, whose last month is 2026-07-31.
+
+### A1. The frozen inputs, by sha256 (F1)
+
+| sha256 | bytes | path | git state at amendment |
+|---|---:|---|---|
+| `09239739802eb4540d8498f2da4bdc4d48af0846142a4ee29c662747e8b401f8` | 18,344 | `backend/data/optimus/trials/lib_forward_trial_2026-09-28T062024Z.json` (the registration receipt: 30 pairs, 17 clusters, 30 x 2 sigmas, registered rho) | untracked |
+| `2c75c2d318e56ed8aceab7632f39d3662e2696e075acd39b613598681f83a54d` | 2,577 | `backend/data/optimus/trials/lib_forward_trial_amendment_2026-09-28T065024Z.json` (this amendment's receipt) | untracked |
+| `23fb7eec1958033eb701306ff8a7be2395133ee68a041ff9f6f5ab55398af776` | 11,183 | `backend/services/lib_forward_trial.py` (`select_pairs`, `pooled_sd`, `pooled_z`, `decide`, the amended rho constants) | untracked |
+| `370d0b6e0f7429aac8791fb177403a1a3ffaa86200dd8970d9158a7c88846563` | 16,382 | `scripts/lib_forward_trial.py` (`estimate`, `amend`) | untracked |
+| `380d878a902c4fba087adb09b9a90e2319d18be8e41f47e8e75a36aaada9555c` | 8,197 | `backend/tests/test_lib_forward_trial.py` | untracked |
+| `88bd40926c1237316aeaa310389923d472ed04cc3b8cc65887b3de88d78225de` | 185,658 | `backend/data/optimus/bridge/bridge_2026-09-28.json` (the cluster source) | untracked |
+| `62c2bd18a9d4b8e2030d08d24f27d5e4c27d0255f8793c3b26d8bf1312104e2c` | 908,303 | `backend/data/optimus/llm_portfolio/books.jsonl` (the frozen books and twins) | tracked, unmodified |
+| `4b2b1d33801c7d6271170372de2b74bbcc34cc80efab05e8a5d2a228b7dd88ad` | 1,072,667 | `backend/data/optimus/signal_structure/matched_twins_monthly_2026-09-27T082553Z.parquet` (rule - matched twin series) | gitignored (`*.parquet`) |
+| `c55aea9b8f67cd73e0a963a93ad800ba37331029e7be28310349330b17b8ce22` | 1,521,776 | `backend/data/optimus/signal_structure/monthly_returns_2026-09-27T082553Z.parquet` (rule and `random_1@k50` series) | gitignored (`*.parquet`) |
+| `b80708f3006e5c346cf32d43a1e16aed90f8d18f75364635e74ec747dfdae9ea` | 316,152 | `backend/data/optimus/paper_accounts/roi_2026-09-28T060842Z.json` (the paper-account receipt the corrections cite) | untracked |
+| `2e03e098a9e21bbaaef5bd03af4019db350bd2409cfb7f30601fffabaad1f6c7` | 78,435 | `backend/data/optimus/strategy_library/calendar_offsets_2026-09-28T055728Z.json` | untracked |
+| `537977fa169638b78261110e4281a186cbf965a411deb3dff83fa8c3fc43f57b` | 83,586 | `backend/data/optimus/strategy_library/calendar_offsets_2026-09-28T055923Z.json` (cited in the Hypothesis section above) | untracked |
+| `143fbb599ee2a582b18fe88cbfbc1e23fca9a32ad97868bff01e99b524e307b1` | 30,985 | `backend/data/optimus/strategy_library/calendar_offsets_monthly_2026-09-28T055923Z.parquet` | gitignored (`*.parquet`) |
+
+A reader on 2026-10-26 recomputes each sha256 before reading. A mismatch on any row is
+`CANNOT_DETERMINE` until the difference is explained; it is never silently regenerated.
+
+### A2. The error bar, estimated on the twin type the trial reads (F2)
+
+The registered rho were computed from the MATCHED-twin differences (`rule_minus_twin0`) for all
+30 books, while 25 of the 30 are read against a SIZE-BAND-ONLY twin whose difference keeps the
+vol / momentum style (8+ of the 17 clusters are momentum variants). Re-estimated with the
+difference type actually read (band-only pairs: rule - `random_1@k50`, the same proxy the
+sigmas already used; the 5 matched pairs: rule - matched twin), same months, same pairs, same
+clusters. The per-book sigmas are **unchanged**: `amend` re-derives them and refuses unless they
+equal the registration receipt's to 1e-12 (they do).
+
+| | **registered** (receipt T062024Z) | **corrected (as read)** |
+|---|---:|---:|
+| rho within cluster (37 pairs) | 0.66 | **0.78** |
+| rho between clusters (341 pairs) | 0.09 | **0.40** |
+| sd(D), 21 sessions | 2.76% | **4.79%** |
+| sd(D), 63 sessions | 4.90% | **8.47%** |
+| MDE at 80% power, 21 / 63 sessions | 7.73% / 13.73% | **13.40% / 23.72%** |
+| P(false fire, one side) under zero skill if the registered bar is used | 2.3% (as documented) | **12.4%** (the real rate of the registered rule) |
+| effective independent bets among the 17 clusters, 17 / (1 + 16 rho_between) | 6.8 | **2.3** |
+
+Cross-check: the directly measured sd of the equal-weight cluster pool of the as-read series is
+4.45% a month and 8.43% a quarter (115 months), agreeing with the closed form. The band-only
+proxy is not size-matched, so 0.40 is an upper-side estimate; the truth lies between the columns.
+This amendment takes the wider bar, which can only make the trial harder to pass or to kill.
+
+**The reads on 2026-10-26 and 2026-12-24 use the CORRECTED sd(D).** Both z's are printed at
+every read (`pooled_z` returns `z` = corrected, deciding; `z_registered` beside it, never
+deciding). The deciding correlations are frozen as constants in
+`backend/services/lib_forward_trial.py` (`RHO_WITHIN_AS_READ`, `RHO_BETWEEN_AS_READ`), and
+`amend` refuses if its estimate ever differs from them.
+
+### A3. The thresholds, restated (false fire under zero skill <= 5%)
+
+The z thresholds are unchanged (−2 / +2 / +1); they now apply to the corrected sd(D), which
+restores the rates the registration documented. In pooled-D units:
+
+- **EARLY KILL (2026-10-26):** pooled D_21 <= **−9.57%** (z_21 <= −2 on sd 4.79%).
+- **SURVIVES (2026-12-24):** pooled D_63 >= **+16.95%** (z_63 >= 2 on sd 8.47%) AND D_21 > 0.
+- **KILL, relabelled `DEPRIORITIZED` in effect as the registration already states:** D_63 < **+8.47%** (z_63 < 1).
+- Otherwise `CANNOT_DISTINGUISH`, extend to 126 sessions under this same corrected bar.
+
+Zero-skill false fire on the corrected bar (2,000,000 simulations, seed 20260928, D_63 containing
+D_21 at correlation sqrt(1/3)): P(EARLY_KILL) 2.27%, P(SURVIVES) 2.14%, **P(either) 4.41% <= 5%**.
+A KILL under zero skill (84%) is the correct outcome, not a false fire.
+
+What this means, plainly: the pool behaves like about two independent bets. It can detect a
+pooled edge of ~24% over a quarter and nothing smaller. As registered, it is a monitor with a
+pre-committed interpretation, not a test that can confirm a realistic edge.
+
+Receipt: `backend/data/optimus/trials/lib_forward_trial_amendment_2026-09-28T065024Z.json`
+(`python -m scripts.lib_forward_trial --amend backend/data/optimus/trials/lib_forward_trial_2026-09-28T062024Z.json`).
+Test: `backend/tests/test_lib_forward_trial.py::test_the_grader_decides_on_the_as_read_correlation_and_prints_the_registered_beside_it`
+and `::test_estimate_takes_rho_from_the_difference_type_the_trial_reads`.

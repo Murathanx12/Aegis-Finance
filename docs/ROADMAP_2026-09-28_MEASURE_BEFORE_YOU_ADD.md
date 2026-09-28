@@ -21,12 +21,12 @@ An outside model's review (pasted by Murat) was the trigger. Its claims were che
 
 | Line | Value | Receipt |
 |---|---|---|
-| Best historical rule | `mom_12_1_q` +1,323% since 2020 vs SPY +162% — and it is ONE of three quarterly calendars (+37.9 vs −5.0 vs +8.4 pp); monthly 12-1 is +692% | leaderboard `T164302Z`, `SIGNAL_STRUCTURE_2026-09-26.md` |
+| Best historical rule | `mom_12_1_q`, held a third on each quarterly calendar: **+661% since 2020**, +1.20%/mo over its matched twin (t 2.49 full period, t 1.18 in 2024-26). The +1,323% is ONE calendar of three (+1,323 / +424 / +433%). CORRECTED 2026-09-28 after the Lane M review | `calendar_offsets_2026-09-28T055923Z.json`, `REVIEW_2026-09-28_LANE_M_MEASUREMENT.md` |
 | Rules surviving all six checks | **0** | fact check §A |
 | Top deflated Sharpe | 0.198 (bar 0.95); best family `weighted` 0.83 | same |
 | Median rule vs its matched twin, 2024-26 | −0.2% | same |
 | Ten dev-selected rules vs matched twins, 2024-26 | median −1.45 pp/yr; 2 of 10 ahead, both on the lucky calendar | adversarial review |
-| Paper accounts | 33 priced, 6 ahead of SPY, 27 behind, aggregate −0.27% | `roi_2026-09-27.json` (23:51Z) |
+| Paper accounts | **39 priced, 7 ahead of SPY, 32 behind, aggregate −1.34%** (read-only broker read, 2026-09-28). CORRECTED: the first version of this line quoted 33 / −0.27%, which is the scheduled no-broker pass and drops the six broker accounts | `roi_2026-09-28T060842Z.json` |
 | Frozen forward books | 62; with zero skill the best one looks like a 2σ result in a month with probability 46% | adversarial review §4 |
 | Forward books graded | 0 (first grade Tue 2026-09-29) | — |
 | Dow Jones sources | every cell `TOO_FEW` (9 publication dates of ~110) | `source_scorecard_2026-09-28_000228.json` |
@@ -93,7 +93,7 @@ job has no scheduled caller.
 - M2: the leaderboard prints the matched-twin and family verdict BESIDE every headline
   number. A large figure is never shown alone.
 - M3: a staleness probe on the backtest leaderboard; the factory gets a scheduled caller.
-- M4: correct the record: the stale "39 priced / −1.31%" in three docs; the rehearsal and
+- M4: correct the record: the paper-account figure (39 priced / −1.31% was RIGHT; the 33 / −0.27% figure is the narrower no-broker scope); the rehearsal and
   core-satellite book docs cite the closure of the fundamentals tilt (−1.34% per 21
   sessions, t −2.55, commit `3255206b`); the TIER 0 pitch prints the volatility prior
   beside +8.97%.
@@ -113,7 +113,7 @@ Claims from the adversarial review, each to be verified before any change:
   (session protocol item 4).
 
 ### LANE B — Bloomberg challenge (MURAT DECIDES)
-Register by **Oct 5**. Oct 12 – Nov 13. One draw, relative P&L, 20% position cap.
+Registration closes **Oct 4, 11:59 New York** (official 2026 rules; corrected from Oct 5). Initial positions due Oct 16. Oct 12 – Nov 13. One draw, relative P&L, 20% position cap.
 - The adversarial reviewer: the rehearsal book (10 × 10%, fundamentals tilt, US only) has
   roughly 0.5–3% chance of a top placing; five names × 20%, one theme, dated catalysts, no
   stops has roughly 15–25%. These are normal-approximation estimates, UNVERIFIED.

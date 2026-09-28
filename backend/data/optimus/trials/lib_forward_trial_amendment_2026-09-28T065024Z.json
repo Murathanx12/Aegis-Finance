@@ -1,0 +1,71 @@
+{
+ "schema": "trials/lib_forward_amendment/1",
+ "trial": "TRIAL-LIB-FWD-TWIN-1",
+ "run_id": "2026-09-28T065024Z",
+ "written_utc": "2026-09-28T06:50:24+00:00",
+ "amends": "backend/data/optimus/trials/lib_forward_trial_2026-09-28T062024Z.json",
+ "why": "review F2 (docs/reviews/REVIEW_2026-09-28_LANE_M_MEASUREMENT.md): the registered correlations were estimated on the matched-twin differences while 25 of 30 books are read against a size-band-only twin; re-estimated on the difference type read",
+ "uses_forward_data": false,
+ "backtest_series_last_month": "2026-07-31",
+ "sigmas": "unchanged (copied from the registration receipt, re-derived and checked equal)",
+ "rho_registered": {
+  "within": 0.6558515018340987,
+  "between": 0.09328961144204369
+ },
+ "rho_corrected_as_read": {
+  "within": 0.783815046551912,
+  "between": 0.4034623782721821,
+  "n_pairs_within": 37,
+  "n_pairs_between": 341,
+  "band_only_proxy": "rule - random_1@k50 (not size-matched: an upper-side estimate)"
+ },
+ "pool_empirical_sd_as_read": {
+  "21": 0.04451026812466208,
+  "63": 0.08425392111529341,
+  "n_months": 115
+ },
+ "pooled_sd": {
+  "21": {
+   "sd_registered": 0.02761292144447973,
+   "sd_corrected": 0.047852069903888544,
+   "ratio": 1.7329593321048233,
+   "mde80_registered": 0.07731618004454324,
+   "mde80_corrected": 0.13398579573088792,
+   "p_false_fire_one_sided_at_registered_bar": 0.12423057609137436,
+   "p_false_fire_one_sided_at_corrected_bar": 0.022750131948179216
+  },
+  "63": {
+   "sd_registered": 0.049023947647786184,
+   "sd_corrected": 0.08472850535302888,
+   "ratio": 1.728308498568149,
+   "mde80_registered": 0.1372670534138013,
+   "mde80_corrected": 0.23723981498848085,
+   "p_false_fire_one_sided_at_registered_bar": 0.12359516279310753,
+   "p_false_fire_one_sided_at_corrected_bar": 0.022750131948179216
+  }
+ },
+ "deciding": "corrected",
+ "effective_bets": {
+  "n_clusters": 17,
+  "registered": 6.8200953206386785,
+  "corrected": 2.280227008755121
+ },
+ "thresholds_z_unchanged": {
+  "early_kill": -2.0,
+  "pass": 2.0,
+  "kill": 1.0
+ },
+ "thresholds_in_pooled_D": {
+  "early_kill_D21_at_or_below": -0.09570413980777709,
+  "survives_D63_at_or_above": 0.16945701070605776,
+  "kill_D63_below": 0.08472850535302888
+ },
+ "zero_skill_false_fire_corrected": {
+  "p_early_kill": 0.022659,
+  "p_survives": 0.021411,
+  "p_any_false_fire": 0.04407,
+  "n_sim": 2000000,
+  "seed": 20260928,
+  "note": "zero skill, z on the CORRECTED bar; KILL (z63 < 1) under zero skill is the correct outcome, not a false fire"
+ }
+}

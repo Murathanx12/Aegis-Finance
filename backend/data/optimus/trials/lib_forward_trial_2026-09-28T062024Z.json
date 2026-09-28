@@ -1,0 +1,494 @@
+{
+ "schema": "trials/lib_forward/1",
+ "trial": "TRIAL-LIB-FWD-TWIN-1",
+ "param": "lib-forward-vs-twin-pooled-by-cluster",
+ "run_id": "2026-09-28T062024Z",
+ "written_utc": "2026-09-28T06:20:24+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "creates_books": false,
+ "llm_spend_usd": 0.0,
+ "doc": "docs/TRIALS/TRIAL-LIB-FWD-TWIN-1-library-vs-matched-twin.md",
+ "entry_session": "2026-09-28",
+ "read_21": "2026-10-26",
+ "read_63": "2026-12-24",
+ "counts": {
+  "books_jsonl_rows": 308,
+  "parents_live": 61,
+  "twins": 245,
+  "void": 1,
+  "lib_books_in_trial": 30,
+  "lib_with_matched_random_twin": 5,
+  "lib_with_band_only_twin": 25,
+  "clusters_in_trial": 17,
+  "bridge_distinct_bets_full": 18
+ },
+ "pairs": [
+  {
+   "book_id": "5c21859739b26b6f",
+   "name": "lib_big_dv_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "e3c835d4b629a1a8",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "974d5067e835c006",
+   "name": "lib_book_f_seasonality_11_20_v0_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "c3bd3f4870287e75",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "d93fbf2c301248ca",
+   "name": "lib_disp_short_avoid_2026-09-27",
+   "kind": "personal",
+   "twin_book_id": "67903b85cf3c0b8c",
+   "twin_type": "matched_random"
+  },
+  {
+   "book_id": "5ab343d6b1bc62a4",
+   "name": "lib_forecast_dispersion_v1_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "482d567ade18c071",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "50e6cb3b0657464d",
+   "name": "lib_frog_in_pan_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "95d576dee301ef6a",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "8f989a4bf3f759cf",
+   "name": "lib_illiquid_sealed_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "581eba63e2b5cec3",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "bec77d696dfa91e0",
+   "name": "lib_inflection_flow_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "6951436a3fbbdf7e",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "6d36d70c4ae56556",
+   "name": "lib_low_asset_growth_sealed_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "a60c51733eabeb03",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "58440bc63a0cbcb1",
+   "name": "lib_low_dtc_mom_sealed_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "bb04fa6fe9d9700a",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "139145a5269b8fd9",
+   "name": "lib_margin_mom_sealed_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "df42cb95e50c9a01",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "5d01fa2898e2cb72",
+   "name": "lib_mom_12_1_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "21b78eebdc2f42ef",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "3fd38f0d7a4dcb03",
+   "name": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+   "kind": "control",
+   "twin_book_id": "ba7cda26cb2cec30",
+   "twin_type": "matched_random"
+  },
+  {
+   "book_id": "e41dbb1e06a12088",
+   "name": "lib_mom_12_1_q_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "528f037d9b63085d",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "1144c07902e67552",
+   "name": "lib_mom_12_1_q_trend_lead_2026-09-27",
+   "kind": "personal",
+   "twin_book_id": "4f4b04f2d61cefcd",
+   "twin_type": "matched_random"
+  },
+  {
+   "book_id": "132c0abc5b9f366f",
+   "name": "lib_mom_12_1_secrel_sealed_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "0dd5ef3b39a9f0f1",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "eb6fa721a4c5f995",
+   "name": "lib_mom_12_1_small_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "10abfff23d140d85",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "40c6ffdf6c238d60",
+   "name": "lib_mom_flow_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "aa3bdf0013215ca4",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "68ba5c780776be27",
+   "name": "lib_mom_flow_ivw_2026-09-27",
+   "kind": "personal",
+   "twin_book_id": "e074487f81029fa0",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "f0517a9aa6ab0bce",
+   "name": "lib_mom_no_downgrades_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "b14ab4120e15e056",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "36d2c89bd8f45b59",
+   "name": "lib_mom_no_downgrades_small_2026-09-27__control",
+   "kind": "control",
+   "twin_book_id": "c1e5521b4aa194dd",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "a92c21d829544aa7",
+   "name": "lib_net_raises_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "84f42ec6249cc5b2",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "40b3584ea3d6a2ae",
+   "name": "lib_net_raises_ivw_lead_2026-09-27",
+   "kind": "personal",
+   "twin_book_id": "363b1e75a9e9991f",
+   "twin_type": "matched_random"
+  },
+  {
+   "book_id": "69dc804d44b74f12",
+   "name": "lib_qc395_sharpe252_above_trend_large_2026-09-27",
+   "kind": "personal",
+   "twin_book_id": "9751f91e5b4ef29d",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "7a65d45f09962ead",
+   "name": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+   "kind": "control",
+   "twin_book_id": "f7129c2a18c99fbf",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "4ffbfd2e83d06daa",
+   "name": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+   "kind": "control",
+   "twin_book_id": "fd7efadd8fae58dc",
+   "twin_type": "matched_random"
+  },
+  {
+   "book_id": "485a857d5b45847c",
+   "name": "lib_resid_mom_12_1_large_sealed_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "a0f1cb6920144501",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "f94720b48278bf55",
+   "name": "lib_rev_5d_sealed_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "f6f26ea9b31d1a36",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "2f3dd36e85505710",
+   "name": "lib_skill_mom_2026-09-27",
+   "kind": "personal",
+   "twin_book_id": "aecf7cf308fef171",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "775b9951e0b67e4b",
+   "name": "lib_skill_mom_sealed_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "405a92db91018647",
+   "twin_type": "random_same_band"
+  },
+  {
+   "book_id": "46762e2bf28c238c",
+   "name": "lib_trend_quality_2026-09-26",
+   "kind": "personal",
+   "twin_book_id": "a9e6e25f06fefb1d",
+   "twin_type": "random_same_band"
+  }
+ ],
+ "clusters": {
+  "lib_big_dv_2026-09-26": "95",
+  "lib_book_f_seasonality_11_20_v0_2026-09-26": "solo:lib_book_f_seasonality_11_20_v0_2026-09-26",
+  "lib_disp_short_avoid_2026-09-27": "170",
+  "lib_forecast_dispersion_v1_2026-09-26": "solo:lib_forecast_dispersion_v1_2026-09-26",
+  "lib_frog_in_pan_2026-09-26": "138",
+  "lib_illiquid_sealed_2026-09-26": "120",
+  "lib_inflection_flow_2026-09-26": "148",
+  "lib_low_asset_growth_sealed_2026-09-26": "153",
+  "lib_low_dtc_mom_sealed_2026-09-26": "181",
+  "lib_margin_mom_sealed_2026-09-26": "149",
+  "lib_mom_12_1_2026-09-26": "170",
+  "lib_mom_12_1_ivw_lead_2026-09-27__control": "170",
+  "lib_mom_12_1_q_2026-09-26": "170",
+  "lib_mom_12_1_q_trend_lead_2026-09-27": "84",
+  "lib_mom_12_1_secrel_sealed_2026-09-26": "170",
+  "lib_mom_12_1_small_2026-09-26": "186",
+  "lib_mom_flow_2026-09-26": "179",
+  "lib_mom_flow_ivw_2026-09-27": "179",
+  "lib_mom_no_downgrades_2026-09-26": "170",
+  "lib_mom_no_downgrades_small_2026-09-27__control": "186",
+  "lib_net_raises_2026-09-26": "103",
+  "lib_net_raises_ivw_lead_2026-09-27": "103",
+  "lib_qc395_sharpe252_above_trend_large_2026-09-27": "167",
+  "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control": "170",
+  "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control": "170",
+  "lib_resid_mom_12_1_large_sealed_2026-09-26": "167",
+  "lib_rev_5d_sealed_2026-09-26": "129",
+  "lib_skill_mom_2026-09-27": "179",
+  "lib_skill_mom_sealed_2026-09-26": "179",
+  "lib_trend_quality_2026-09-26": "190"
+ },
+ "frozen": {
+  "sigma_21": {
+   "lib_big_dv_2026-09-26": 0.04993433799437249,
+   "lib_disp_short_avoid_2026-09-27": 0.08208185272055254,
+   "lib_frog_in_pan_2026-09-26": 0.06594375715351251,
+   "lib_illiquid_sealed_2026-09-26": 0.09395055847524468,
+   "lib_inflection_flow_2026-09-26": 0.045911527498419126,
+   "lib_low_asset_growth_sealed_2026-09-26": 0.0698466279297725,
+   "lib_low_dtc_mom_sealed_2026-09-26": 0.05872737139352469,
+   "lib_margin_mom_sealed_2026-09-26": 0.07692389830149671,
+   "lib_mom_12_1_2026-09-26": 0.09542933831741962,
+   "lib_mom_12_1_ivw_lead_2026-09-27__control": 0.0769107571982357,
+   "lib_mom_12_1_q_2026-09-26": 0.090178997647145,
+   "lib_mom_12_1_q_trend_lead_2026-09-27": 0.07423018924562295,
+   "lib_mom_12_1_secrel_sealed_2026-09-26": 0.07969190323231724,
+   "lib_mom_12_1_small_2026-09-26": 0.06978630109212677,
+   "lib_mom_flow_2026-09-26": 0.06164690309276376,
+   "lib_mom_flow_ivw_2026-09-27": 0.05883344008931049,
+   "lib_mom_no_downgrades_2026-09-26": 0.09531466188623401,
+   "lib_mom_no_downgrades_small_2026-09-27__control": 0.06944993599849536,
+   "lib_net_raises_2026-09-26": 0.04650295303963894,
+   "lib_net_raises_ivw_lead_2026-09-27": 0.03285403773554396,
+   "lib_qc395_sharpe252_above_trend_large_2026-09-27": 0.0947843289812232,
+   "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control": 0.08658040845262037,
+   "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control": 0.07615281344181342,
+   "lib_resid_mom_12_1_large_sealed_2026-09-26": 0.09930154011248833,
+   "lib_rev_5d_sealed_2026-09-26": 0.10963646076460612,
+   "lib_skill_mom_2026-09-27": 0.06455976186978225,
+   "lib_skill_mom_sealed_2026-09-26": 0.06455976186978225,
+   "lib_trend_quality_2026-09-26": 0.07937002009452271,
+   "lib_book_f_seasonality_11_20_v0_2026-09-26": 0.07519150134371819,
+   "lib_forecast_dispersion_v1_2026-09-26": 0.07519150134371819
+  },
+  "sigma_63": {
+   "lib_big_dv_2026-09-26": 0.07345910102893825,
+   "lib_disp_short_avoid_2026-09-27": 0.15604403644039477,
+   "lib_frog_in_pan_2026-09-26": 0.10606847854540277,
+   "lib_illiquid_sealed_2026-09-26": 0.16408739001100858,
+   "lib_inflection_flow_2026-09-26": 0.07202381916580147,
+   "lib_low_asset_growth_sealed_2026-09-26": 0.13022089316986277,
+   "lib_low_dtc_mom_sealed_2026-09-26": 0.12375792569480051,
+   "lib_margin_mom_sealed_2026-09-26": 0.1537704230747482,
+   "lib_mom_12_1_2026-09-26": 0.17611403756112395,
+   "lib_mom_12_1_ivw_lead_2026-09-27__control": 0.15168744786160981,
+   "lib_mom_12_1_q_2026-09-26": 0.17116676512533321,
+   "lib_mom_12_1_q_trend_lead_2026-09-27": 0.12601736131686267,
+   "lib_mom_12_1_secrel_sealed_2026-09-26": 0.15494702559977916,
+   "lib_mom_12_1_small_2026-09-26": 0.12358093966365183,
+   "lib_mom_flow_2026-09-26": 0.10362548261289009,
+   "lib_mom_flow_ivw_2026-09-27": 0.09734083165095378,
+   "lib_mom_no_downgrades_2026-09-26": 0.18267401749754208,
+   "lib_mom_no_downgrades_small_2026-09-27__control": 0.12643871211084173,
+   "lib_net_raises_2026-09-26": 0.06611140018427408,
+   "lib_net_raises_ivw_lead_2026-09-27": 0.056458693723099675,
+   "lib_qc395_sharpe252_above_trend_large_2026-09-27": 0.1409930299443197,
+   "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control": 0.16589627048922714,
+   "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control": 0.1393013416597658,
+   "lib_resid_mom_12_1_large_sealed_2026-09-26": 0.1751173081063384,
+   "lib_rev_5d_sealed_2026-09-26": 0.20582091768725744,
+   "lib_skill_mom_2026-09-27": 0.11156050675158016,
+   "lib_skill_mom_sealed_2026-09-26": 0.11156050675158016,
+   "lib_trend_quality_2026-09-26": 0.13811146783586065,
+   "lib_book_f_seasonality_11_20_v0_2026-09-26": 0.13416618050286172,
+   "lib_forecast_dispersion_v1_2026-09-26": 0.13416618050286172
+  },
+  "rho_within": 0.6558515018340987,
+  "rho_between": 0.09328961144204369
+ },
+ "sigma_basis": {
+  "lib_big_dv_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_disp_short_avoid_2026-09-27": "rule - matched twin (single draw), backtest",
+  "lib_frog_in_pan_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_illiquid_sealed_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_inflection_flow_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_low_asset_growth_sealed_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_low_dtc_mom_sealed_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_margin_mom_sealed_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_mom_12_1_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_mom_12_1_ivw_lead_2026-09-27__control": "rule - matched twin (single draw), backtest",
+  "lib_mom_12_1_q_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_mom_12_1_q_trend_lead_2026-09-27": "rule - matched twin (single draw), backtest",
+  "lib_mom_12_1_secrel_sealed_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_mom_12_1_small_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_mom_flow_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_mom_flow_ivw_2026-09-27": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_mom_no_downgrades_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_mom_no_downgrades_small_2026-09-27__control": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_net_raises_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_net_raises_ivw_lead_2026-09-27": "rule - matched twin (single draw), backtest",
+  "lib_qc395_sharpe252_above_trend_large_2026-09-27": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control": "rule - matched twin (single draw), backtest",
+  "lib_resid_mom_12_1_large_sealed_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_rev_5d_sealed_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_skill_mom_2026-09-27": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_skill_mom_sealed_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_trend_quality_2026-09-26": "max(rule - matched twin, rule - random_1@k50), backtest (band-only twin)",
+  "lib_book_f_seasonality_11_20_v0_2026-09-26": "no backtest series (forward-only): the median of the others",
+  "lib_forecast_dispersion_v1_2026-09-26": "no backtest series (forward-only): the median of the others"
+ },
+ "correlation_estimates": {
+  "rho_within": 0.6558515018340987,
+  "rho_between": 0.09328961144204369,
+  "rho_all_median": 0.08141775600475537,
+  "n_pairs_within": 37,
+  "n_pairs_between": 341
+ },
+ "pooled_sd": {
+  "21": 0.02761292144447973,
+  "63": 0.049023947647786184
+ },
+ "mde_80pct": {
+  "21": 0.07731618004454324,
+  "63": 0.1372670534138013
+ },
+ "luck_table": [
+  {
+   "k": 30,
+   "rho": 0.0,
+   "p_best_ge_z": 0.49929,
+   "e_best_z": 2.0435350534547547,
+   "z_bar": 2.0,
+   "p_independent_closed_form": 0.4986181436384536
+  },
+  {
+   "k": 30,
+   "rho": 0.08,
+   "p_best_ge_z": 0.44679,
+   "e_best_z": 1.9562402004926343,
+   "z_bar": 2.0,
+   "p_independent_closed_form": null
+  },
+  {
+   "k": 30,
+   "rho": 0.09,
+   "p_best_ge_z": 0.44071,
+   "e_best_z": 1.948034198864755,
+   "z_bar": 2.0,
+   "p_independent_closed_form": null
+  },
+  {
+   "k": 30,
+   "rho": 0.3,
+   "p_best_ge_z": 0.32774,
+   "e_best_z": 1.708348250304363,
+   "z_bar": 2.0,
+   "p_independent_closed_form": null
+  },
+  {
+   "k": 17,
+   "rho": 0.0,
+   "p_best_ge_z": 0.32392,
+   "e_best_z": 1.7927418506830481,
+   "z_bar": 2.0,
+   "p_independent_closed_form": 0.32376826511092316
+  },
+  {
+   "k": 17,
+   "rho": 0.08,
+   "p_best_ge_z": 0.29698,
+   "e_best_z": 1.714549435090521,
+   "z_bar": 2.0,
+   "p_independent_closed_form": null
+  },
+  {
+   "k": 17,
+   "rho": 0.09,
+   "p_best_ge_z": 0.29807,
+   "e_best_z": 1.710405630476224,
+   "z_bar": 2.0,
+   "p_independent_closed_form": null
+  },
+  {
+   "k": 17,
+   "rho": 0.3,
+   "p_best_ge_z": 0.23606,
+   "e_best_z": 1.5024950025249968,
+   "z_bar": 2.0,
+   "p_independent_closed_form": null
+  },
+  {
+   "k": 61,
+   "rho": 0.0,
+   "p_best_ge_z": 0.75439,
+   "e_best_z": 2.3263219658714407,
+   "z_bar": 2.0,
+   "p_independent_closed_form": 0.7543352479550444
+  },
+  {
+   "k": 61,
+   "rho": 0.08,
+   "p_best_ge_z": 0.65894,
+   "e_best_z": 2.2320131842366933,
+   "z_bar": 2.0,
+   "p_independent_closed_form": null
+  },
+  {
+   "k": 61,
+   "rho": 0.09,
+   "p_best_ge_z": 0.6481,
+   "e_best_z": 2.219218945517567,
+   "z_bar": 2.0,
+   "p_independent_closed_form": null
+  },
+  {
+   "k": 61,
+   "rho": 0.3,
+   "p_best_ge_z": 0.46268,
+   "e_best_z": 1.9490235736781711,
+   "z_bar": 2.0,
+   "p_independent_closed_form": null
+  }
+ ],
+ "decision_rule": {
+  "survives": "z_63 >= 2.0 and the 21-session pooled sign > 0",
+  "kill": "z_63 < 1.0",
+  "early_kill": "z_21 <= -2.0",
+  "otherwise": "CANNOT_DISTINGUISH: extend to 126 sessions under the same rule"
+ },
+ "sources": {
+  "books": "backend/data/optimus/llm_portfolio/books.jsonl",
+  "bridge": "backend/data/optimus/bridge/bridge_2026-09-28.json",
+  "twin_series": "backend/data/optimus/signal_structure/matched_twins_monthly_2026-09-27T082553Z.parquet",
+  "net_series": "backend/data/optimus/signal_structure/monthly_returns_2026-09-27T082553Z.parquet"
+ }
+}
