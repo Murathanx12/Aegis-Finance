@@ -628,7 +628,7 @@ class World:
             chrome_status=lambda: {"running_with_port": self.chrome},
             chrome_launch=self.launch, orphan_mcp=lambda: [], kill_pid=lambda p: True,
             gateway_procs=lambda: self.procs, free_gb=lambda: self.free,
-            sleep=self.sleep, clock=lambda: self.t)
+            sleep=self.sleep, clock=lambda: self.t, reclaim=lambda need: {"ok": False})
 
     def sleep(self, s):
         self.t += s
@@ -655,11 +655,33 @@ def test_a_killed_gateway_is_started_once_and_nothing_else():
     assert w.cmds == [["gateway", "start"]]
 
 
-def test_no_gateway_start_under_the_memory_floor():
+def test_under_the_memory_floor_the_repair_reclaims_then_proceeds():
+    """2026-09-29: the floor used to END the repair -- a gate the repair could
+    never clear while a browser held the memory. Now it reclaims what the reader
+    owns first and then starts the gateway anyway (never waits forever)."""
     w = World(gw=False, free=0.6)
-    r = GR.repair("GATEWAY_DOWN", deps=w.deps())
-    assert not r["healthy"] and r["stopped_because"].startswith("LOW_MEMORY")
-    assert w.cmds == []
+    reclaims: list[float] = []
+
+    def reclaim(need):
+        reclaims.append(need)
+        w.free = 1.9                          # the recycle freed memory
+        return {"ok": True}
+    d = w.deps()
+    d.reclaim = reclaim
+    r = GR.repair("GATEWAY_DOWN", deps=d)
+    names = [s["step"] for s in r["steps"]]
+    assert reclaims == [GR.min_free_gb()]
+    assert names[0] == "reclaim_memory" and "gateway_start" in names
+    assert r["healthy"] and r["cleared_by"] == "gateway_start"
+
+
+def test_a_reclaim_that_cannot_clear_the_floor_still_does_not_block_the_repair():
+    w = World(gw=False, free=0.6)
+    d = w.deps()
+    d.reclaim = lambda need: {"ok": False}
+    r = GR.repair("GATEWAY_DOWN", deps=d)
+    assert ["gateway", "start"] in w.cmds and r["healthy"]
+    assert r["stopped_because"] is None
 
 
 def test_a_gateway_already_starting_is_waited_for_never_doubled():

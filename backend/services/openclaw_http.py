@@ -206,6 +206,18 @@ def render(verb: str, result: dict) -> tuple[str, bool]:
     return json.dumps(clean) if clean else (unwrap(text) or "ok"), False
 
 
+#: verbs that change nothing on the page: safe to send twice after a reset
+RETRY_ON_RESET: frozenset[str] = frozenset({"tabs", "status", "snapshot", "evaluate", "wait"})
+
+
+def is_reset(exc: BaseException) -> bool:
+    """A connection RESET / ABORT (the peer dropped a socket), as opposed to a
+    refused connection (nothing listening)."""
+    t = f"{type(exc).__name__}: {exc}"
+    return bool(re.search(r"ConnectionResetError|Connection aborted|10054|RemoteDisconnected",
+                          t)) and "refused" not in t.lower()
+
+
 class HttpTransport:
     """One keep-alive session to the gateway. `session` is anything with a
     `post(url, json=, headers=, timeout=)` returning an object with
@@ -218,12 +230,36 @@ class HttpTransport:
         self._token_fn = token_fn or _token_from_config
         self._url = url
         self.calls = 0
+        self.resets_retried = 0
 
     def _sess(self) -> Any:
         if self._session is None:
             import requests
             self._session = requests.Session()
         return self._session
+
+    def _port_open(self) -> bool:
+        import socket
+        from urllib.parse import urlparse
+        u = urlparse(self._url or base_url())
+        try:
+            with socket.create_connection((u.hostname or "127.0.0.1", u.port or 80), timeout=2.0):
+                return True
+        except OSError:
+            return False
+
+    def _post(self, url: str, body: dict, tok: str, timeout: float, verb: str) -> Any:
+        """One POST with `Connection: close` (no pooled socket can go stale
+        between calls: the reset of 2026-09-29 01:37 was a reused keep-alive
+        socket), retried ONCE on a reset for a verb that changes nothing."""
+        headers = {"Authorization": f"Bearer {tok}", "Connection": "close"}
+        try:
+            return self._sess().post(url, json=body, headers=headers, timeout=timeout)
+        except Exception as exc:                                    # noqa: BLE001
+            if not (is_reset(exc) and verb in RETRY_ON_RESET):
+                raise
+            self.resets_retried += 1
+            return self._sess().post(url, json=body, headers=headers, timeout=timeout)
 
     def serves(self, args: list[str]) -> bool:
         p = parse_argv([str(a) for a in args])
@@ -253,14 +289,20 @@ class HttpTransport:
             if "timeoutMs" in targs:
                 # the HTTP wait must outlast the page-load wait it carries
                 timeout = max(float(timeout), targs["timeoutMs"] / 1000.0 + 15.0)
-            r = self._sess().post(url, json=body,
-                                  headers={"Authorization": f"Bearer {tok}"}, timeout=timeout)
+            r = self._post(url, body, tok, timeout, p["verb"])
         except Exception as exc:                                    # noqa: BLE001
             name = type(exc).__name__
             if "Timeout" in name:
                 raise subprocess.TimeoutExpired(cmd=["POST", "/tools/invoke", p["verb"]],
                                                 timeout=timeout) from None
             msg = str(exc).replace(tok, "REDACTED")[:200]
+            if is_reset(exc) and self._port_open():
+                # the gateway is UP: a socket was reset under a live listener
+                # (2026-09-28 22:08 / 22:24, 2026-09-29 01:37: ConnectionResetError
+                # 10054 while the gateway process from 14:50 kept running). Not
+                # GATEWAY_DOWN: one page fails, the pool does not stop.
+                return subprocess.CompletedProcess(
+                    args, 1, "", f"gateway connection reset, port open ({name}: {msg})")
             if "Connection" in name or "refused" in msg.lower():
                 return subprocess.CompletedProcess(
                     args, 1, "", f"gateway unreachable: ECONNREFUSED ({name}: {msg})")

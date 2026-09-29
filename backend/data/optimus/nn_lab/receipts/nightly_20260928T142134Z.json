@@ -1,0 +1,14 @@
+{
+ "artefact": "NN_LAB_NIGHTLY",
+ "run_id": "nightly_20260928T142134Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "broker_authority": "NONE: writes predictions, never orders",
+ "started_utc": "2026-09-28T14:21:34+00:00",
+ "variant": "dist",
+ "status": "FAILED",
+ "error": "RuntimeError('tail rebuild would LOSE 606 labels (245546 -> 244940); refused, original table kept')",
+ "new_rows_since_last_run": 0,
+ "previous_run": "nightly_20260928T141823Z",
+ "elapsed_s": 27.4,
+ "written_utc": "2026-09-28T14:22:01+00:00"
+}

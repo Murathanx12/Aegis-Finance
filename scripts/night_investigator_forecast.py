@@ -201,6 +201,37 @@ DEGRADE_PATH = ("none: the packet is disk-only already and the OpenClaw call is 
                 "retries. The gateway is never restarted from here.")
 
 
+#: Bounded retry for the day receipt's replace. A Windows reader (AV scan, the
+#: health probe, an editor) holding the target makes `os.replace` raise
+#: PermissionError for a moment; five tries over ~1.5 s ride that out.
+RECEIPT_WRITE_BACKOFF_S = (0.05, 0.1, 0.2, 0.4, 0.8)
+
+
+def write_receipt(path: Path, rec: dict, *, sleep_fn=None,
+                  backoff: tuple = RECEIPT_WRITE_BACKOFF_S) -> bool:
+    """Atomically write the day receipt (`disk_guard.atomic_write_text`: temp ->
+    fsync -> replace), retrying a locked-file failure with backoff. Returns
+    False -- never raises -- when every attempt is refused by a lock, so the
+    caller keeps the rows it already appended and tries again on its next
+    flush. Anything that is not a lock (disk full, a bad path) still raises."""
+    import time as _time
+    from backend.services import disk_guard as DG
+    sleep_fn = sleep_fn or _time.sleep
+    text = json.dumps(rec, indent=1, default=str)
+    for i in range(len(backoff) + 1):
+        try:
+            DG.atomic_write_text(Path(path), text, check_json=True)
+            return True
+        except PermissionError as exc:
+            if i >= len(backoff):
+                print(f"  receipt {Path(path).name}: still locked after "
+                      f"{len(backoff) + 1} tries ({exc}); rows are safe in the "
+                      f"ledger, the next flush retries", flush=True)
+                return False
+            sleep_fn(float(backoff[i]))
+    return False
+
+
 def _iso_now(now_fn=None) -> str:
     return (now_fn or (lambda: datetime.now(timezone.utc)))().isoformat(timespec="seconds")
 
@@ -677,10 +708,11 @@ def daily_forecast(*, today: str | None = None,
     dep["runs"] = int(dep.get("runs") or 0) + 1
 
     def flush() -> None:
-        rdir.mkdir(parents=True, exist_ok=True)
-        tmp = rpath.with_suffix(".tmp")
-        tmp.write_text(json.dumps(rec, indent=1, default=str), encoding="utf-8")
-        tmp.replace(rpath)
+        # Never raises on a locked file (cycle 1 of 2026-09-28's sim died on the
+        # bare rename): the forecast rows are already in the ledger, and a
+        # receipt that cannot be written this time is retried at the next flush.
+        if not write_receipt(rpath, rec):
+            rec["receipt_write_failures"] = int(rec.get("receipt_write_failures") or 0) + 1
 
     def transport_failed(ans: dict, call: dict) -> bool:
         return bool(ans.get("transport_failed")) or \
@@ -837,6 +869,7 @@ def daily_forecast(*, today: str | None = None,
             "dependency_failed_calls": dep["n_failed_calls"],
             "dependency_retries": dep["n_retries"],
             "dependency_runs_ended_down": dep["runs_ended_down"],
+            "receipt_write_failures": int(rec.get("receipt_write_failures") or 0),
             "why": rec.get("why"), "receipt": str(rpath)}
 
 

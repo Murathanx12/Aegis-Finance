@@ -17,6 +17,19 @@ import pytest
 
 from scripts import bridge_report as BR
 
+
+@pytest.fixture(autouse=True)
+def _no_live_global_prices_cache(tmp_path, monkeypatch):
+    """Every test here passes its own synthetic `bars`, but `report()` still
+    unions in the machine's global_prices cache via `factor_bars` -- and
+    `union_bars` takes whichever source reaches the LATER date. When the daily
+    pass refreshed the cache's IWM to 2026-09-28 (past the toy series' 09-25),
+    the real IWM replaced the synthetic one and the factor-beta test went red
+    between two runs 25 minutes apart. Pin the input: the cache reads from an
+    empty path under tmp_path, so the reader still runs, on nothing."""
+    from backend.services import global_prices as GP
+    monkeypatch.setattr(GP, "cache_path", lambda: tmp_path / "no_global_bars.parquet")
+
 REPO = Path(__file__).resolve().parents[2]
 ROW = {"id": "toy_rule", "dev_cagr": 0.10, "dev_spy_cagr": 0.13, "sealed_cagr": 0.40,
        "sealed_spy_cagr": 0.20, "sealed_vs_spy": 0.20, "sealed_dsr": 0.05, "max_dd": -0.35,

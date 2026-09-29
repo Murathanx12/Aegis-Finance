@@ -37,9 +37,34 @@ def env(monkeypatch, tmp_path):
             "receipts": tmp_path / "forecasts"}
 
 
+#: The fake clock starts at a FIXED hour of TODAY's UTC date (2026-09-29).
+#: It used to start at `datetime.now()`, so the bounded-retries scenario (8 runs
+#: x ~4,050 s of backoff + gap = ~9 h) crossed UTC midnight whenever the suite
+#: ran after ~15:00Z; the next run then derived a NEW day, found no receipt and
+#: got a fresh budget, and the test failed by the time of day. The date stays
+#: current (never a literal calendar moment, protocol item 5); the hour is
+#: controlled.
+FAKE_CLOCK_START_HOUR_UTC = 1
+
+
+def fixed_start(hour: int = FAKE_CLOCK_START_HOUR_UTC, *, day=None) -> datetime:
+    """Today's UTC date (or `day`) at `hour`:00:00Z."""
+    d = day or datetime.now(timezone.utc).date()
+    return datetime(d.year, d.month, d.day, hour, tzinfo=timezone.utc)
+
+
+def bounded_retries_span_s() -> float:
+    """Fake seconds the bounded-retries scenario advances the clock by: every
+    allowed run fails one name through all its attempts, then waits the gap."""
+    per_run = (sum(float(x) for x in C.FORECAST_DEP_RETRY_BACKOFF_S[
+                   :max(0, int(C.FORECAST_DEP_RETRY_MAX_ATTEMPTS) - 1)])
+               + float(C.FORECAST_DEP_RETRY_MIN_GAP_S) + 1.0)
+    return per_run * int(C.FORECAST_DEP_MAX_RUNS_PER_DAY)
+
+
 class FakeClock:
-    def __init__(self):
-        self.t = datetime.now(timezone.utc)
+    def __init__(self, start: datetime | None = None):
+        self.t = start or fixed_start()
         self.slept: list[float] = []
 
     def now(self) -> datetime:
@@ -166,6 +191,44 @@ def test_the_retries_per_day_are_bounded(env):
         assert r["state"] == N.REFUSED_DEPENDENCY_DOWN
         clock.t += timedelta(seconds=C.FORECAST_DEP_RETRY_MIN_GAP_S + 1)
     last = _run(env, clock, FakeTransport(n_drops=0))
+    assert "skipped" in last and "no further retry today" in last["skipped"]
+
+
+def test_the_fake_clock_keeps_the_bounded_scenario_inside_one_utc_date():
+    """The clock fix, proven at a simulated late hour without touching the
+    machine clock: from the fixed start the whole scenario stays on one date;
+    from 20:00Z (what `datetime.now()` gave an evening run) it crosses."""
+    span = timedelta(seconds=bounded_retries_span_s())
+    start = FakeClock().t
+    assert start.hour == FAKE_CLOCK_START_HOUR_UTC
+    assert start.date() == datetime.now(timezone.utc).date()
+    assert (start + span).date() == start.date()
+    late = fixed_start(20)
+    assert (late + span).date() != late.date()      # the old failure mode is real
+
+
+def test_the_retry_budget_belongs_to_the_forecast_day_not_the_wall_date(env):
+    """PRODUCTION side of item 1. A day whose runs straddle UTC midnight keeps
+    ONE budget: the receipt is keyed on the forecast day passed in, and the gate
+    reads that receipt, never the wall clock's date."""
+    clock = FakeClock(fixed_start(20))
+    day = clock.now().date().isoformat()
+    for _ in range(int(C.FORECAST_DEP_MAX_RUNS_PER_DAY)):
+        r = N.daily_forecast(today=day, ask_fn=FakeTransport(n_drops=10_000),
+                             sources={"murat_book": ["AAA", "BBB"]}, cap_usd=5.0,
+                             packet_fn=lambda t: {"ticker": t, "asof": "x"},
+                             ledger_path=env["ledger"], telemetry_path=None,
+                             receipt_dir=env["receipts"], sleep_fn=clock.sleep,
+                             now_fn=clock.now)
+        assert r["state"] == N.REFUSED_DEPENDENCY_DOWN
+        clock.t += timedelta(seconds=C.FORECAST_DEP_RETRY_MIN_GAP_S + 1)
+    assert clock.now().date().isoformat() != day     # the wall date moved on
+    last = N.daily_forecast(today=day, ask_fn=FakeTransport(n_drops=0),
+                            sources={"murat_book": ["AAA", "BBB"]}, cap_usd=5.0,
+                            packet_fn=lambda t: {"ticker": t, "asof": "x"},
+                            ledger_path=env["ledger"], telemetry_path=None,
+                            receipt_dir=env["receipts"], sleep_fn=clock.sleep,
+                            now_fn=clock.now)
     assert "skipped" in last and "no further retry today" in last["skipped"]
 
 

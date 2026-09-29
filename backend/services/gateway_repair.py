@@ -258,6 +258,8 @@ class Deps:
     free_gb: Callable[[], float | None] = _free_gb
     sleep: Callable[[float], None] = time.sleep
     clock: Callable[[], float] = time.monotonic
+    #: need_gb -> result; frees memory the reader owns (2026-09-29)
+    reclaim: Callable[[float], dict] = None                # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         from backend.services import muratclaw_instance as MI
@@ -265,6 +267,8 @@ class Deps:
             self.chrome_status = MI.status
         if self.chrome_launch is None:
             self.chrome_launch = MI.launch_attach
+        if self.reclaim is None:
+            self.reclaim = lambda need: reclaim_memory(need_gb=need)
 
 
 def probe(deps: Deps | None = None) -> dict:
@@ -390,9 +394,19 @@ def repair(fault: str, *, deps: Deps | None = None, log: Callable[..., None] | N
                                  or fault == "GATEWAY_STUCK"):
         free = d.free_gb()
         if free is not None and free < min_free_gb():
-            say(event="repair_deferred", fault=fault, why="LOW_MEMORY", free_gb=free)
-            return done(after, None, f"LOW_MEMORY: {free} GB free < {min_free_gb()} GB; a "
-                                     f"gateway started now does not bind its port")
+            # 2026-09-29: this used to RETURN here -- a floor the repair itself
+            # could never clear, so a browser holding the memory blocked the
+            # gateway forever. Now: reclaim what the reader owns (hung tabs,
+            # idle tabs, a graceful restart of the dedicated Chrome), then go on
+            # -- below the floor too, with the bounded port wait after it.
+            rec = step("reclaim_memory", lambda: d.reclaim(min_free_gb()))
+            if rec["healthy"]:
+                return done(rec, "reclaim_memory")
+            after = rec
+            free2 = d.free_gb()
+            if free2 is not None and free2 < min_free_gb():
+                say(event="repair_below_floor", fault=fault, free_gb=free2,
+                    floor_gb=min_free_gb(), why="reclaimed what the reader owns; proceeding")
         if not after["gateway_port"]:
             procs = d.gateway_procs()
             if procs:
@@ -426,3 +440,428 @@ def repair(fault: str, *, deps: Deps | None = None, log: Callable[..., None] | N
                                                     "start"], 90.0))
     return done(after, "attach_once" if after["healthy"] else None,
                 None if after["healthy"] else "still unhealthy after one attach")
+
+
+# ── a HUNG TAB jams every attach (2026-09-29 00:59 HKT) ──────────────────────
+#
+# From 00:59 to 02:15 HKT every browser action failed with
+# `browserType.connectOverCDP: Timeout 9000ms exceeded` (the gateway's own log,
+# 343 times) while `probe()` said healthy: the gateway port answered, Chrome's
+# /json answered, the profile was "running". Two page targets of the dedicated
+# Chrome did not answer a one-line `Runtime.evaluate` in 4 s (a wsj.com tab and
+# an x.com tab left open by an earlier job), and Playwright's connectOverCDP
+# waits for EVERY page to initialise, so one hung renderer fails every attach.
+# The pool kept opening tabs (plain /json calls) and read nothing: 98 BLANK
+# pages in 75 minutes. A gateway restart does not help (the browser is external
+# to the gateway); closing the hung target does.
+
+def _loopback_ws(url: str) -> bool:
+    return bool(re.match(r"^ws://(127\.0\.0\.1|localhost)[:/]", url or ""))
+
+
+def _cdp_call(ws_url: str, method: str, params: dict | None = None,
+              timeout: float = 4.0) -> dict:
+    """One CDP command on a LOOPBACK websocket; raises on timeout."""
+    import websocket  # websocket-client, in the venv
+    if not _loopback_ws(ws_url):
+        raise ValueError(f"REFUSED_NOT_LOOPBACK: {ws_url!r}")
+    ws = websocket.create_connection(ws_url, timeout=timeout, suppress_origin=True)
+    try:
+        ws.send(json.dumps({"id": 1, "method": method, "params": params or {}}))
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            msg = json.loads(ws.recv())
+            if msg.get("id") == 1:
+                return msg
+        raise TimeoutError(f"{method}: no reply in {timeout} s")
+    finally:
+        ws.close()
+
+
+def _page_targets() -> list[dict]:
+    from backend.services import muratclaw_instance as MI
+    rows = MI._http_json(f"{MI.cdp_base()}/json/list")
+    return [t for t in rows or [] if isinstance(t, dict) and t.get("type") == "page"]
+
+
+def _page_responsive(target: dict, timeout: float) -> bool:
+    try:
+        r = _cdp_call(str(target.get("webSocketDebuggerUrl") or ""), "Runtime.evaluate",
+                      {"expression": "1", "returnByValue": True}, timeout=timeout)
+        return "result" in r
+    except Exception:                                               # noqa: BLE001
+        return False
+
+
+def _close_target(target_id: str) -> bool:
+    """`Target.closeTarget` on the dedicated Chrome's BROWSER websocket (the
+    browser process closes the tab even when its renderer is hung)."""
+    from backend.services import muratclaw_instance as MI
+    ver = MI._http_json(f"{MI.cdp_base()}/json/version")
+    r = _cdp_call(str(ver.get("webSocketDebuggerUrl") or ""), "Target.closeTarget",
+                  {"targetId": str(target_id)}, timeout=10.0)
+    return bool((r.get("result") or {}).get("success", "error" not in r))
+
+
+def _prove_dedicated() -> dict:
+    from backend.services import muratclaw_instance as MI
+    return MI.prove()
+
+
+@dataclass
+class TabDeps:
+    """Side effects of the hung-tab check, injectable."""
+    prove: Callable[[], dict] = _prove_dedicated
+    page_targets: Callable[[], list[dict]] = _page_targets
+    responsive: Callable[[dict, float], bool] = _page_responsive
+    close_target: Callable[[str], bool] = _close_target
+    clock: Callable[[], float] = time.monotonic
+
+
+def hung_page_targets(deps: TabDeps | None = None, *, timeout_s: float | None = None
+                      ) -> dict:
+    """Which page targets of the dedicated Chrome do not answer a one-line
+    evaluate within `timeout_s`. Proves the instance first; never raises."""
+    d = deps or TabDeps()
+    to = float(getattr(_config, "READER_HUNG_TAB_TIMEOUT_S", 4.0)) if timeout_s is None \
+        else timeout_s
+    t0 = d.clock()
+    try:
+        d.prove()
+    except Exception as exc:                                        # noqa: BLE001
+        return {"ok": False, "refused": f"{type(exc).__name__}: {str(exc)[:200]}",
+                "hung": [], "n_pages": None}
+    try:
+        pages = d.page_targets()
+    except Exception as exc:                                        # noqa: BLE001
+        return {"ok": False, "refused": f"list failed: {exc}"[:200], "hung": [], "n_pages": None}
+    hung = [{"id": str(p.get("id")), "url": str(p.get("url") or "")[:160]}
+            for p in pages if not d.responsive(p, to)]
+    return {"ok": True, "n_pages": len(pages), "hung": hung,
+            "seconds": round(d.clock() - t0, 2)}
+
+
+def close_hung_tabs(deps: TabDeps | None = None, *, timeout_s: float | None = None,
+                    log: Callable[..., None] | None = None) -> dict:
+    """Find the hung page targets and close each one (by target id, on the
+    PROVEN dedicated Chrome). Returns `{n_pages, hung, closed, failed}`."""
+    d = deps or TabDeps()
+    say = log or (lambda **k: None)
+    h = hung_page_targets(d, timeout_s=timeout_s)
+    out = {**h, "closed": [], "failed": []}
+    if not h.get("ok"):
+        say(event="hung_tabs_check_refused", why=h.get("refused"))
+        return out
+    for t in h["hung"]:
+        try:
+            ok = d.close_target(t["id"])
+        except Exception:                                           # noqa: BLE001
+            ok = False
+        (out["closed"] if ok else out["failed"]).append(t)
+    if h["hung"]:
+        say(event="hung_tabs_closed", n_pages=h["n_pages"], closed=out["closed"],
+            failed=out["failed"])
+    return out
+
+
+
+# ── the dedicated Chrome's memory: measure, reclaim, recycle ────────────────
+#
+# 2026-09-29: the dedicated Chrome, hours old and holding tabs an earlier job
+# left open, was the largest single holder of memory on the machine while a
+# long paper sim ran beside it (the machine's figures live under local_pc/,
+# not here). A long-lived browser grows; the repair's free-memory floor could
+# then block a gateway restart for as long as that browser held the memory. So the repair
+# RECLAIMS what the reader owns (hung tabs, idle tabs, then the dedicated Chrome
+# itself, gracefully) and then proceeds -- it never waits on the floor forever.
+
+def _chrome_memory() -> dict:
+    """Working set of every process whose command line names the dedicated
+    user-data-dir (never the main Chrome)."""
+    from backend.services import muratclaw_instance as MI
+    udd = MI.user_data_dir().replace("'", "''")
+    rows = _powershell_json(
+        "Get-CimInstance Win32_Process -Filter \"Name='chrome.exe'\" | Where-Object { "
+        "$_.CommandLine -and $_.CommandLine.ToLower().Contains('" + udd.lower() + "') } | "
+        "ForEach-Object { $p = Get-Process -Id $_.ProcessId -ErrorAction SilentlyContinue; "
+        "if ($p) { [pscustomobject]@{pid=$_.ProcessId; ws=$p.WorkingSet64; "
+        "pv=$p.PrivateMemorySize64} } } | ConvertTo-Json -Compress")
+    procs = [r for r in rows if isinstance(r, dict)]
+    # `total_gb` is PRIVATE bytes: summed working sets count shared pages once
+    # per process and overstate a many-process browser
+    return {"n_procs": len(procs),
+            "total_gb": round(sum(float(r.get("pv") or 0) for r in procs) / 2 ** 30, 2),
+            "working_set_gb": round(sum(float(r.get("ws") or 0) for r in procs) / 2 ** 30, 2)}
+
+
+def _open_blank() -> str | None:
+    """Open one about:blank page so closing every other tab never closes the
+    last window (which would end the browser)."""
+    from backend.services import muratclaw_instance as MI
+    ver = MI._http_json(f"{MI.cdp_base()}/json/version")
+    r = _cdp_call(str(ver.get("webSocketDebuggerUrl") or ""), "Target.createTarget",
+                  {"url": "about:blank"}, timeout=10.0)
+    return (r.get("result") or {}).get("targetId")
+
+
+def _browser_close() -> bool:
+    """`Browser.close` on the PROVEN dedicated Chrome: a graceful exit that
+    lets it write its profile (cookies / sign-ins survive)."""
+    from backend.services import muratclaw_instance as MI
+    ver = MI._http_json(f"{MI.cdp_base()}/json/version")
+    try:
+        _cdp_call(str(ver.get("webSocketDebuggerUrl") or ""), "Browser.close", {}, timeout=10.0)
+    except Exception:                                               # noqa: BLE001
+        pass                     # the socket closes as the browser exits: expected
+    return True
+
+
+def _pid_alive(pid: int) -> bool:
+    rows = _powershell_json(f"Get-Process -Id {int(pid)} -ErrorAction SilentlyContinue | "
+                            f"Select-Object Id | ConvertTo-Json -Compress")
+    return any(isinstance(r, dict) and r.get("Id") for r in rows)
+
+
+@dataclass
+class ChromeDeps:
+    """Side effects of reclaim / recycle, injectable (tests pass fakes)."""
+    prove: Callable[[], dict] = _prove_dedicated
+    page_targets: Callable[[], list[dict]] = _page_targets
+    close_target: Callable[[str], bool] = _close_target
+    open_blank: Callable[[], str | None] = _open_blank
+    browser_close: Callable[[], bool] = _browser_close
+    pid_alive: Callable[[int], bool] = _pid_alive
+    kill_pid: Callable[[int], bool] = _kill_pid
+    launch: Callable[[], dict] = None                      # type: ignore[assignment]
+    chrome_memory: Callable[[], dict] = _chrome_memory
+    free_gb: Callable[[], float | None] = _free_gb
+    responsive: Callable[[dict, float], bool] = _page_responsive
+    sleep: Callable[[float], None] = time.sleep
+    clock: Callable[[], float] = time.monotonic
+
+    def __post_init__(self) -> None:
+        from backend.services import muratclaw_instance as MI
+        if self.launch is None:
+            self.launch = MI.launch_attach
+
+    def tabs(self) -> TabDeps:
+        return TabDeps(prove=self.prove, page_targets=self.page_targets,
+                       responsive=self.responsive, close_target=self.close_target,
+                       clock=self.clock)
+
+
+def close_idle_tabs(own_tab_ids: list[str] | None = None, *, deps: ChromeDeps | None = None,
+                    keep_one: bool = True) -> dict:
+    """Close the reader's OWN tabs first (`own_tab_ids`), then every other
+    page of the dedicated Chrome (called only when no reader runs, so every
+    remaining page is idle). With `keep_one`, one about:blank is opened first
+    so the browser keeps a window. Proves the instance first; never raises."""
+    d = deps or ChromeDeps()
+    try:
+        d.prove()
+        pages = d.page_targets()
+    except Exception as exc:                                        # noqa: BLE001
+        return {"ok": False, "refused": f"{type(exc).__name__}: {str(exc)[:200]}",
+                "closed": [], "order": []}
+    own = [str(t) for t in (own_tab_ids or [])]
+    ids = [str(p.get("id")) for p in pages]
+    order = [t for t in own if t in ids] + [t for t in ids if t not in own]
+    blank = None
+    if keep_one and order:
+        try:
+            blank = d.open_blank()
+        except Exception:                                           # noqa: BLE001
+            blank = None
+    closed, failed = [], []
+    for t in order:
+        if t == blank:
+            continue
+        try:
+            (closed if d.close_target(t) else failed).append(t)
+        except Exception:                                           # noqa: BLE001
+            failed.append(t)
+    return {"ok": True, "closed": closed, "failed": failed, "order": order,
+            "own_first": [t for t in own if t in ids], "blank": blank}
+
+
+def recycle_dedicated_chrome(own_tab_ids: list[str] | None = None, *,
+                             deps: ChromeDeps | None = None, why: str = "",
+                             exit_wait_s: float = 30.0) -> dict:
+    """Restart the DEDICATED Chrome gracefully: prove it; close the reader's
+    own tabs first, then the rest; `Browser.close`; wait for its browser PID to
+    exit (by that PID only: `taskkill /PID /T` after `exit_wait_s`); launch it
+    again with its port (`launch_attach`). Never touches another Chrome and
+    never kills by image name. Never raises."""
+    d = deps or ChromeDeps()
+    out: dict[str, Any] = {"why": why, "steps": []}
+    t0 = d.clock()
+    try:
+        proof = d.prove()
+    except Exception as exc:                                        # noqa: BLE001
+        out.update(ok=False, refused=f"{type(exc).__name__}: {str(exc)[:200]}")
+        return out
+    pid = int(proof.get("pid") or 0)
+    out["pid_before"] = pid
+    try:
+        out["mem_before"] = d.chrome_memory()
+    except Exception:                                               # noqa: BLE001
+        out["mem_before"] = None
+    tabs = close_idle_tabs(own_tab_ids, deps=d, keep_one=False)
+    out["steps"].append({"step": "close_tabs", "closed": len(tabs.get("closed") or []),
+                         "order": tabs.get("order"), "own_first": tabs.get("own_first"),
+                         "failed": tabs.get("failed")})
+    try:
+        d.browser_close()
+        out["steps"].append({"step": "browser_close"})
+    except Exception as exc:                                        # noqa: BLE001
+        out["steps"].append({"step": "browser_close", "error": str(exc)[:160]})
+    w0 = d.clock()
+    while pid and d.pid_alive(pid) and d.clock() - w0 < exit_wait_s:
+        d.sleep(1.0)
+    if pid and d.pid_alive(pid):
+        out["steps"].append({"step": "kill_browser_pid", "pid": pid, "ok": d.kill_pid(pid)})
+    else:
+        out["steps"].append({"step": "exited", "seconds": round(d.clock() - w0, 1)})
+    try:
+        res = d.launch() or {}
+        out["steps"].append({"step": "launch_attach", "result": {
+            k: res.get(k) for k in ("launched", "why", "pid_started", "seconds_to_port")}})
+        out["ok"] = True
+    except Exception as exc:                                        # noqa: BLE001
+        out["steps"].append({"step": "launch_attach", "error": str(exc)[:200]})
+        out["ok"] = False
+    out["seconds"] = round(d.clock() - t0, 1)
+    return out
+
+
+def reclaim_memory(*, need_gb: float, own_tab_ids: list[str] | None = None,
+                   deps: ChromeDeps | None = None, log: Callable[..., None] | None = None
+                   ) -> dict:
+    """Free memory the READER owns until `need_gb` is free: hung tabs, then the
+    idle tabs of the dedicated Chrome, then a graceful restart of that Chrome.
+    Stops at the first step that clears the floor. Never raises, never waits
+    beyond the recycle's own bounded exit wait."""
+    d = deps or ChromeDeps()
+    say = log or (lambda **k: None)
+    steps: list[dict] = []
+
+    def free() -> float | None:
+        try:
+            return d.free_gb()
+        except Exception:                                           # noqa: BLE001
+            return None
+
+    f0 = free()
+    if f0 is not None and f0 >= need_gb:
+        return {"ok": True, "free_before": f0, "free_after": f0, "steps": steps}
+    h = close_hung_tabs(d.tabs())
+    steps.append({"step": "close_hung_tabs", "closed": len(h.get("closed") or []),
+                  "free_gb": free()})
+    if (steps[-1]["free_gb"] or 0.0) < need_gb:
+        c = close_idle_tabs(own_tab_ids, deps=d)
+        steps.append({"step": "close_idle_tabs", "closed": len(c.get("closed") or []),
+                      "free_gb": free()})
+    if (steps[-1]["free_gb"] or 0.0) < need_gb:
+        r = recycle_dedicated_chrome(own_tab_ids, deps=d, why="reclaim memory for a repair")
+        steps.append({"step": "recycle_dedicated_chrome", "ok": r.get("ok"),
+                      "free_gb": free()})
+    f1 = steps[-1]["free_gb"]
+    out = {"ok": f1 is not None and f1 >= need_gb, "free_before": f0, "free_after": f1,
+           "steps": steps}
+    say(event="reclaim_memory", **out)
+    return out
+
+
+def chrome_recycle_due(*, age_s: float | None, mem_gb: float | None,
+                       free_gb: float | None = None) -> str | None:
+    """PURE. Why the dedicated Chrome should be recycled now, or None:
+    * older than `READER_CHROME_RECYCLE_S`;
+    * holding more than `READER_CHROME_MAX_GB` (private bytes) whatever the
+      machine's state;
+    * holding more than `READER_CHROME_SOFT_GB` while free RAM is under
+      `READER_CHROME_LOW_FREE_GB` (the browser is what squeezes the machine).
+    A fresh browser with a full pool already holds several GB, so size alone
+    at a low bar would recycle every quarter hour for nothing (measured on the
+    first night of this rule)."""
+    max_age = float(getattr(_config, "READER_CHROME_RECYCLE_S", 7200.0))
+    max_gb = float(getattr(_config, "READER_CHROME_MAX_GB", 8.0))
+    soft_gb = float(getattr(_config, "READER_CHROME_SOFT_GB", 4.0))
+    low_free = float(getattr(_config, "READER_CHROME_LOW_FREE_GB", 3.0))
+    if mem_gb is not None and mem_gb > max_gb:
+        return f"MEMORY: the dedicated Chrome holds {mem_gb:.1f} GB > {max_gb:.1f} GB"
+    if mem_gb is not None and free_gb is not None and mem_gb > soft_gb and free_gb < low_free:
+        return (f"MEMORY_PRESSURE: the dedicated Chrome holds {mem_gb:.1f} GB > "
+                f"{soft_gb:.1f} GB with {free_gb:.1f} GB free < {low_free:.1f} GB")
+    if age_s is not None and age_s > max_age:
+        return f"AGE: {age_s / 3600:.1f} h since the last recycle > {max_age / 3600:.1f} h"
+    return None
+
+
+# ── stale tabs: pages nobody has navigated for a long time (2026-09-29) ──────
+#
+# The attach launcher's start page stayed open, idle, for the browser's whole
+# life; within 14 minutes of a relaunch it was the largest renderer, and an
+# earlier job's tabs were left open for hours. The pool's tabs live a minute or
+# two. So every few minutes the supervisor closes pages that have not been
+# NAVIGATED (performance.timeOrigin) for READER_STALE_TAB_S, except those the
+# pool names as its own and about:blank; a page that does not answer is hung
+# and is closed too. One about:blank is opened first if nothing else would be
+# left, so the browser keeps a window.
+
+def _page_loaded_at(target: dict, timeout: float) -> float | None:
+    """Epoch seconds when the page's current document began loading, or None
+    when the page does not answer (hung)."""
+    try:
+        r = _cdp_call(str(target.get("webSocketDebuggerUrl") or ""), "Runtime.evaluate",
+                      {"expression": "performance.timeOrigin", "returnByValue": True},
+                      timeout=timeout)
+        v = ((r.get("result") or {}).get("result") or {}).get("value")
+        return float(v) / 1000.0 if v is not None else None
+    except Exception:                                               # noqa: BLE001
+        return None
+
+
+def close_stale_tabs(*, keep_ids: list[str] | None = None, max_idle_s: float | None = None,
+                     prove: Callable[[], dict] = _prove_dedicated,
+                     page_targets: Callable[[], list[dict]] = _page_targets,
+                     loaded_at: Callable[[dict, float], float | None] = _page_loaded_at,
+                     close_target: Callable[[str], bool] = _close_target,
+                     open_blank: Callable[[], str | None] | None = None,
+                     now: Callable[[], float] = time.time,
+                     timeout_s: float | None = None) -> dict:
+    """Close the dedicated Chrome's pages not navigated for `max_idle_s` (and
+    hung ones), sparing `keep_ids` and about:blank. Proves first; never raises."""
+    idle = float(getattr(_config, "READER_STALE_TAB_S", 1800.0)) if max_idle_s is None \
+        else max_idle_s
+    to = float(getattr(_config, "READER_HUNG_TAB_TIMEOUT_S", 4.0)) if timeout_s is None \
+        else timeout_s
+    keep = {str(k) for k in (keep_ids or [])}
+    try:
+        prove()
+        pages = page_targets()
+    except Exception as exc:                                        # noqa: BLE001
+        return {"ok": False, "refused": f"{type(exc).__name__}: {str(exc)[:200]}",
+                "closed": []}
+    t = now()
+    stale = []
+    for p in pages:
+        pid, url = str(p.get("id")), str(p.get("url") or "")
+        if pid in keep or url.startswith("about:blank"):
+            continue
+        at = loaded_at(p, to)
+        if at is None or t - at >= idle:
+            stale.append({"id": pid, "url": url[:160],
+                          "idle_s": None if at is None else round(t - at)})
+    if stale and len(stale) == len(pages):
+        try:
+            (open_blank or _open_blank)()
+        except Exception:                                           # noqa: BLE001
+            pass
+    closed = []
+    for s in stale:
+        try:
+            if close_target(s["id"]):
+                closed.append(s)
+        except Exception:                                           # noqa: BLE001
+            pass
+    return {"ok": True, "n_pages": len(pages), "closed": closed}

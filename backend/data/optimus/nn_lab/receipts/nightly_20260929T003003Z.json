@@ -1,0 +1,829 @@
+{
+ "artefact": "NN_LAB_NIGHTLY",
+ "schema": 2,
+ "run_id": "nightly_20260929T003003Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "broker_authority": "NONE: writes predictions, never orders",
+ "started_utc": "2026-09-29T00:30:03+00:00",
+ "variant": "dist",
+ "append": {
+  "old_max_date": "2026-09-25",
+  "new_max_date": "2026-09-28",
+  "tail_start": "2026-01-15",
+  "rows_rebuilt": 103503,
+  "rows_added": 2962,
+  "new_dates": [
+   "2026-09-28"
+  ],
+  "labels_filled": 0,
+  "grid_rows_kept": 1128492,
+  "table_rows": 1131454,
+  "table_sha256": "3735796396e85c9a4a16b9633128252ced70df5b82af3ea62004fa36c58cfbe7"
+ },
+ "grade": {
+  "legacy_v0": {
+   "status": "ALREADY_REGISTERED"
+  },
+  "graded_now": 0,
+  "pending_horizons": 27,
+  "refused_unverified": [],
+  "graded_total": 0
+ },
+ "trust": {
+  "trust": {
+   "nn": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.003748,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.1,
+     "walk_forward_mean_ic": 0.00889,
+     "shrink": 0.4216,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.000352,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.0,
+     "walk_forward_mean_ic": 0.00084,
+     "shrink": 0.4186,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.002131,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 2.6,
+     "walk_forward_mean_ic": 0.01124,
+     "shrink": 0.1896,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    }
+   },
+   "lgbm": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.00428,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.1,
+     "walk_forward_mean_ic": 0.01015,
+     "shrink": 0.4216,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.007451,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.0,
+     "walk_forward_mean_ic": 0.0178,
+     "shrink": 0.4186,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.002495,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 2.6,
+     "walk_forward_mean_ic": 0.01316,
+     "shrink": 0.1896,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    }
+   },
+   "ridge": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.003141,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.1,
+     "walk_forward_mean_ic": 0.00745,
+     "shrink": 0.4216,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.005969,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.0,
+     "walk_forward_mean_ic": 0.01426,
+     "shrink": 0.4186,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.004574,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 2.6,
+     "walk_forward_mean_ic": 0.02412,
+     "shrink": 0.1896,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    }
+   },
+   "mom_12_1": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.006396,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.1,
+     "walk_forward_mean_ic": 0.01517,
+     "shrink": 0.4216,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.005274,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.0,
+     "walk_forward_mean_ic": 0.0126,
+     "shrink": 0.4186,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.002689,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 2.6,
+     "walk_forward_mean_ic": 0.01418,
+     "shrink": 0.1896,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    }
+   },
+   "zero": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "definition: the zero"
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "definition: the zero"
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "definition: the zero"
+    }
+   },
+   "ensemble": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only"
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only"
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only"
+    }
+   }
+  },
+  "trust_yesterday": {
+   "nn": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.003748,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.1,
+     "walk_forward_mean_ic": 0.00889,
+     "shrink": 0.4216,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.000352,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.0,
+     "walk_forward_mean_ic": 0.00084,
+     "shrink": 0.4186,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.002131,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 2.6,
+     "walk_forward_mean_ic": 0.01124,
+     "shrink": 0.1896,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    }
+   },
+   "lgbm": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.00428,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.1,
+     "walk_forward_mean_ic": 0.01015,
+     "shrink": 0.4216,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.007451,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.0,
+     "walk_forward_mean_ic": 0.0178,
+     "shrink": 0.4186,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.002495,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 2.6,
+     "walk_forward_mean_ic": 0.01316,
+     "shrink": 0.1896,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    }
+   },
+   "ridge": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.003141,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.1,
+     "walk_forward_mean_ic": 0.00745,
+     "shrink": 0.4216,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.005969,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.0,
+     "walk_forward_mean_ic": 0.01426,
+     "shrink": 0.4186,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.004574,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 2.6,
+     "walk_forward_mean_ic": 0.02412,
+     "shrink": 0.1896,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    }
+   },
+   "mom_12_1": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.006396,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.1,
+     "walk_forward_mean_ic": 0.01517,
+     "shrink": 0.4216,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.005274,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.0,
+     "walk_forward_mean_ic": 0.0126,
+     "shrink": 0.4186,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.002689,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 2.6,
+     "walk_forward_mean_ic": 0.01418,
+     "shrink": 0.1896,
+     "prior_strength_blocks": 11.11,
+     "source": "walk_forward_only"
+    }
+   },
+   "zero": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "definition: the zero"
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "definition: the zero"
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "definition: the zero"
+    }
+   },
+   "ensemble": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only"
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only"
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only"
+    }
+   }
+  },
+  "magnitude": {
+   "trailing_vol": {
+    "h5": {
+     "improvement_over_vol": 0.0,
+     "source": "definition: the baseline"
+    },
+    "h21": {
+     "improvement_over_vol": 0.0,
+     "source": "definition: the baseline"
+    }
+   },
+   "ridge_abs": {
+    "h5": {
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.1,
+     "walk_forward_mean_ic": 0.01641,
+     "shrink": 0.7826,
+     "prior_strength_blocks": 2.25,
+     "source": "walk_forward_only",
+     "improvement_over_vol": 0.012843
+    },
+    "h21": {
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.0,
+     "walk_forward_mean_ic": 0.01629,
+     "shrink": 0.7805,
+     "prior_strength_blocks": 2.25,
+     "source": "walk_forward_only",
+     "improvement_over_vol": 0.012714
+    }
+   },
+   "nn_width": {
+    "h5": {
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.1,
+     "walk_forward_mean_ic": 0.01612,
+     "shrink": 0.7826,
+     "prior_strength_blocks": 2.25,
+     "source": "walk_forward_only",
+     "improvement_over_vol": 0.012616
+    },
+    "h21": {
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.0,
+     "walk_forward_mean_ic": 0.01676,
+     "shrink": 0.7805,
+     "prior_strength_blocks": 2.25,
+     "source": "walk_forward_only",
+     "improvement_over_vol": 0.013081
+    }
+   }
+  },
+  "in_charge": {
+   "model": "lgbm",
+   "since": "2026-09-28T15:37:25+00:00",
+   "why": "first night: highest trust (source printed per model)",
+   "history": [],
+   "why_kept": "no forward grade was added tonight: in-charge cannot change"
+  },
+  "changes": [
+   "no change"
+  ],
+  "walk_forward_receipt": "wf_20260929_post_review.json"
+ },
+ "fit": {
+  "refit": false,
+  "why": "no new labelled grid date (newest 2026-09-16): no training tonight",
+  "models": {
+   "lgbm": {
+    "h5": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\lgbm_h5_2026-09-16_20260928T153656Z.joblib",
+    "h21": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\lgbm_h21_2026-09-16_20260928T153656Z.joblib",
+    "h63": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\lgbm_h63_2026-09-16_20260928T153656Z.joblib"
+   },
+   "ridge": {
+    "h5": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\ridge_h5_2026-09-16_20260928T153656Z.joblib",
+    "h21": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\ridge_h21_2026-09-16_20260928T153656Z.joblib",
+    "h63": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\ridge_h63_2026-09-16_20260928T153656Z.joblib"
+   },
+   "ridge_abs": {
+    "h5": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\ridge_abs_h5_2026-09-16_20260928T153656Z.joblib",
+    "h21": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\ridge_abs_h21_2026-09-16_20260928T153656Z.joblib"
+   },
+   "nn": {
+    "paths": [
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\nn_2026-09-16_20260928T153656Z_seed1204937191.pt",
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\nn_2026-09-16_20260928T153656Z_seed1021805958.pt",
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\nn_2026-09-16_20260928T153656Z_seed693316183.pt"
+    ]
+   }
+  },
+  "versions": {
+   "lgbm": "lgbm-8c23ce888242",
+   "ridge": "ridge-49abb0cb5023",
+   "ridge_abs": "ridge_abs-d6e396f1de4e",
+   "nn": "nn-960c556f1ced"
+  },
+  "newest_labelled_grid_date": "2026-09-16"
+ },
+ "freeze": {
+  "decision_date": "2026-09-28",
+  "names": 2962,
+  "in_frozen_book": 911,
+  "files": {
+   "nn": {
+    "status": "FROZEN",
+    "decision_date": "2026-09-28",
+    "model": "nn",
+    "model_version": "nn-960c556f1ced",
+    "kind": "direction",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-09-28\\nn.parquet",
+    "sha256": "b8a5b948feef8969428244c725711c5c0b8d0f4b4d1e6b27f7cab1acf52b970b",
+    "rows": 8886,
+    "names": 2962,
+    "horizons": [
+     5,
+     21,
+     63
+    ],
+    "written_utc": "2026-09-29T00:30:50+00:00",
+    "run_id": "nightly_20260929T003003Z"
+   },
+   "lgbm": {
+    "status": "FROZEN",
+    "decision_date": "2026-09-28",
+    "model": "lgbm",
+    "model_version": "lgbm-8c23ce888242",
+    "kind": "direction",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-09-28\\lgbm.parquet",
+    "sha256": "0c1e5b71ea51661d80434d47903942963cb7717858f458397158763d7c3d572c",
+    "rows": 8886,
+    "names": 2962,
+    "horizons": [
+     5,
+     21,
+     63
+    ],
+    "written_utc": "2026-09-29T00:30:50+00:00",
+    "run_id": "nightly_20260929T003003Z"
+   },
+   "ridge": {
+    "status": "FROZEN",
+    "decision_date": "2026-09-28",
+    "model": "ridge",
+    "model_version": "ridge-49abb0cb5023",
+    "kind": "direction",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-09-28\\ridge.parquet",
+    "sha256": "ad351c2dc007a40cbf7a1affcaee94df0df86053829f6b05e6e6c9e880b8ec96",
+    "rows": 8886,
+    "names": 2962,
+    "horizons": [
+     5,
+     21,
+     63
+    ],
+    "written_utc": "2026-09-29T00:30:50+00:00",
+    "run_id": "nightly_20260929T003003Z"
+   },
+   "mom_12_1": {
+    "status": "FROZEN",
+    "decision_date": "2026-09-28",
+    "model": "mom_12_1",
+    "model_version": "mom_12_1",
+    "kind": "direction",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-09-28\\mom_12_1.parquet",
+    "sha256": "c5e91996072c7afe166d55d789907c94517a552dc86d1111d33bb03e6ab1c330",
+    "rows": 8886,
+    "names": 2962,
+    "horizons": [
+     5,
+     21,
+     63
+    ],
+    "written_utc": "2026-09-29T00:30:50+00:00",
+    "run_id": "nightly_20260929T003003Z"
+   },
+   "zero": {
+    "status": "FROZEN",
+    "decision_date": "2026-09-28",
+    "model": "zero",
+    "model_version": "zero",
+    "kind": "direction",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-09-28\\zero.parquet",
+    "sha256": "912549d9a55f06235b22cb25d82f487a9e9bd6f0c3c2c2fe5653e59e7e1413dc",
+    "rows": 8886,
+    "names": 2962,
+    "horizons": [
+     5,
+     21,
+     63
+    ],
+    "written_utc": "2026-09-29T00:30:50+00:00",
+    "run_id": "nightly_20260929T003003Z"
+   },
+   "trailing_vol": {
+    "status": "FROZEN",
+    "decision_date": "2026-09-28",
+    "model": "trailing_vol",
+    "model_version": "trailing_vol",
+    "kind": "magnitude",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-09-28\\trailing_vol.parquet",
+    "sha256": "b492785db4422aae70bf2cc61c42f59b4d564eaacc7a2dab3cac4132fa1df8dd",
+    "rows": 5924,
+    "names": 2962,
+    "horizons": [
+     5,
+     21
+    ],
+    "written_utc": "2026-09-29T00:30:50+00:00",
+    "run_id": "nightly_20260929T003003Z"
+   },
+   "ridge_abs": {
+    "status": "FROZEN",
+    "decision_date": "2026-09-28",
+    "model": "ridge_abs",
+    "model_version": "ridge_abs-d6e396f1de4e",
+    "kind": "magnitude",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-09-28\\ridge_abs.parquet",
+    "sha256": "499e937acd9737472ed152002fdc1474c0a8af8c6db35b721c5b1c66375f7e82",
+    "rows": 5924,
+    "names": 2962,
+    "horizons": [
+     5,
+     21
+    ],
+    "written_utc": "2026-09-29T00:30:51+00:00",
+    "run_id": "nightly_20260929T003003Z"
+   },
+   "nn_width": {
+    "status": "FROZEN",
+    "decision_date": "2026-09-28",
+    "model": "nn_width",
+    "model_version": "nn_width",
+    "kind": "magnitude",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-09-28\\nn_width.parquet",
+    "sha256": "663ad9fbaff67355db6967377751f793ebf6921fd76f1472d12138aba6d96d92",
+    "rows": 5924,
+    "names": 2962,
+    "horizons": [
+     5,
+     21
+    ],
+    "written_utc": "2026-09-29T00:30:51+00:00",
+    "run_id": "nightly_20260929T003003Z"
+   },
+   "ensemble": {
+    "status": "FROZEN",
+    "decision_date": "2026-09-28",
+    "model": "ensemble",
+    "model_version": "ens-3cb5c6c5d34e",
+    "kind": "direction",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-09-28\\ensemble.parquet",
+    "sha256": "d28d5af0730aac07df7f8ae62a83d93d5a6dda5ea0ccf25960339aa6cb21f3c8",
+    "rows": 8886,
+    "names": 2962,
+    "horizons": [
+     5,
+     21,
+     63
+    ],
+    "written_utc": "2026-09-29T00:30:51+00:00",
+    "run_id": "nightly_20260929T003003Z",
+    "weights": {
+     "h5": {
+      "nn": 0.2134,
+      "lgbm": 0.2437,
+      "ridge": 0.1788,
+      "mom_12_1": 0.3641
+     },
+     "h21": {
+      "nn": 0.0185,
+      "lgbm": 0.3912,
+      "ridge": 0.3134,
+      "mom_12_1": 0.2769
+     },
+     "h63": {
+      "nn": 0.1792,
+      "lgbm": 0.2099,
+      "ridge": 0.3847,
+      "mom_12_1": 0.2262
+     }
+    }
+   }
+  },
+  "ensemble_weights": {
+   "h5": {
+    "nn": 0.2134,
+    "lgbm": 0.2437,
+    "ridge": 0.1788,
+    "mom_12_1": 0.3641
+   },
+   "h21": {
+    "nn": 0.0185,
+    "lgbm": 0.3912,
+    "ridge": 0.3134,
+    "mom_12_1": 0.2769
+   },
+   "h63": {
+    "nn": 0.1792,
+    "lgbm": 0.2099,
+    "ridge": 0.3847,
+    "mom_12_1": 0.2262
+   }
+  },
+  "size_forecast": {
+   "decision_date": "2026-09-28",
+   "run_id": "nightly_20260929T003003Z",
+   "written_utc": "2026-09-29T00:30:51+00:00",
+   "what": "expected ABSOLUTE excess move (vs the cross-sectional median) and a symmetric interval; it says NOTHING about direction",
+   "by_horizon": {
+    "h5": {
+     "model": "ridge_abs",
+     "why": "simplest with >= half the best posterior improvement over vol (+0.0128 vs best +0.0128)",
+     "conformal": {
+      "c50": 0.925,
+      "c90": 2.7821,
+      "n": 781613,
+      "source": "walk_forward",
+      "forward_rows_so_far": 0
+     }
+    },
+    "h21": {
+     "model": "ridge_abs",
+     "why": "simplest with >= half the best posterior improvement over vol (+0.0127 vs best +0.0131)",
+     "conformal": {
+      "c50": 0.9551,
+      "c90": 2.6998,
+      "n": 772766,
+      "source": "walk_forward",
+      "forward_rows_so_far": 0
+     }
+    }
+   },
+   "status": "FROZEN",
+   "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\size_forecast\\size_2026-09-28.parquet",
+   "sha256": "915728ad737d69588376bd5315986e6f7a6a881d5e6ba144d440bb64e0138ae7",
+   "rows": 2962
+  },
+  "ensemble_top10_h21": [
+   "ANRO",
+   "DMRA",
+   "ZURA",
+   "BW",
+   "ALTO",
+   "CLYM",
+   "QTTB",
+   "NVCT",
+   "EVC",
+   "OILU"
+  ]
+ },
+ "bars": {
+  "table_last_session": "2026-09-28",
+  "last_closed_weekday": "2026-09-28",
+  "note": "weekday calendar: the day after a US holiday can read STALE_BARS falsely"
+ },
+ "new_rows_since_last_run": 2962,
+ "previous_run": "nightly_20260928T153656Z",
+ "status": "OK",
+ "per_model": [
+  "nn         h21 graded dates 0 (0 blocks) | trust today 0.000352 yesterday 0.000352 | source walk_forward_only",
+  "lgbm       h21 graded dates 0 (0 blocks) | trust today 0.007451 yesterday 0.007451 | source walk_forward_only",
+  "ridge      h21 graded dates 0 (0 blocks) | trust today 0.005969 yesterday 0.005969 | source walk_forward_only",
+  "mom_12_1   h21 graded dates 0 (0 blocks) | trust today 0.005274 yesterday 0.005274 | source walk_forward_only",
+  "zero       h21 graded dates 0 (0 blocks) | trust today 0.0 yesterday 0.0 | source definition: the zero",
+  "ensemble   h21 graded dates 0 (0 blocks) | trust today 0.0 yesterday 0.0 | source prior_only"
+ ],
+ "elapsed_s": 48.0,
+ "written_utc": "2026-09-29T00:30:51+00:00"
+}

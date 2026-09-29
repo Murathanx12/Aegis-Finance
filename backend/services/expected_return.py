@@ -75,6 +75,49 @@ FORECAST_GRADED: dict[str, str] = {"investigator_dir": "investigator:",
                                    "thesis_card": "thesis_card:"}
 RECEIPT_SUBDIR = "expected_return"
 
+#: Forecast writers present in `predictions.jsonl` that E[r] does NOT read, and
+#: why. Printed on every receipt (`forecast_writers`) so "collected and never
+#: read" is a line each night, not a discovery (2026-09-29). Wiring any of them
+#: in changes what decides paper orders: that is the owner's decision, not a
+#: builder's, so this table only makes the omission VISIBLE.
+NOT_READ_BY_DESIGN: dict[str, str] = {
+    "source:": ("news-reader claims: NO code path into the plan. Wiring them in "
+                "would change what decides paper orders and the owner has not "
+                "decided it (2026-09-29); news is collected and NOT read here"),
+    "review:": "the daily review grades books; its rows are not a forecast component of E[r]",
+    "promise:": "promise rows track commitments, not return forecasts; not a component of E[r]",
+}
+
+
+def forecast_writers(preds: list[dict] | None) -> list[dict]:
+    """Every forecast writer (specialist prefix up to the first ':') present in
+    the ledger, marked READ (a `FORECAST_GRADED` prefix E[r] consumes) or NOT
+    READ BY DESIGN with its reason. A prefix with no registered reason is
+    `NOT READ (no reason registered)` -- never silently absent."""
+    read = {v: k for k, v in FORECAST_GRADED.items()}
+    agg: dict[str, dict] = {}
+    for r in preds or []:
+        spec = str(r.get("specialist") or "")
+        pre = (spec.split(":", 1)[0] + ":") if ":" in spec else (spec or "<none>")
+        a = agg.setdefault(pre, {"n_rows": 0, "newest": ""})
+        a["n_rows"] += 1
+        a["newest"] = max(a["newest"], str(r.get("made_at") or ""))
+    names = {str(d.get("prefix") or "").split(":", 1)[0] + ":": w
+             for w, d in (getattr(config, "FORECAST_WRITERS", None) or {}).items()}
+    out = []
+    for pre in sorted(agg):
+        a = agg[pre]
+        if pre in read:
+            status, why = "READ", f"component {read[pre]}"
+        elif pre in NOT_READ_BY_DESIGN:
+            status, why = "NOT READ BY DESIGN", NOT_READ_BY_DESIGN[pre]
+        else:
+            status = "NOT READ (no reason registered)"
+            why = "no component of E[r] consumes this prefix and no reason is on record"
+        out.append({"prefix": pre, "writer": names.get(pre), "status": status,
+                    "why": why, "n_rows": a["n_rows"], "newest_made_at": a["newest"] or None})
+    return out
+
 #: yfinance firm name -> IBES `estimid`. Only mappings that are unambiguous;
 #: an unmapped firm is neutral (multiplier 1), never guessed.
 FIRM_TO_ESTIMID: dict[str, str] = {
@@ -874,7 +917,8 @@ def build(asof: str, tickers: Iterable[str], sources: Sources, *,
             "formula": ("E[r_h] = regime_scale * sum_c w_c x_c over awake c; "
                         "phi_c = regime_scale * w_c (x_c - mean_c); sum phi + baseline = E[r]"),
             "components": list(COMPONENTS), "sizing_only": list(SIZING_ONLY),
-            "n_names": len(tickers), "fit": _fit_summary(fitted), "names": names}
+            "n_names": len(tickers), "fit": _fit_summary(fitted),
+            "forecast_writers": forecast_writers(sources.predictions), "names": names}
     if write:
         p = receipt_dir(out_dir) / f"er_{asof}.json"
         _write(p, view)
@@ -920,9 +964,14 @@ def format_top(view: dict, *, n: int = 10, horizon: int = 21) -> str:
         phi = " ".join(f"{abbrev[k2]}{v*100:+.2f}" for k2, v in c["phi"].items())
         lines.append(f"{t:<10}{c['er']*100:+6.2f}%  eq {c['er_equal']*100:+6.2f}%  "
                      f"base {c['baseline']*100:+.2f}  phi[{phi}]")
+    for w in view.get("forecast_writers") or []:
+        if w["status"] != "READ":
+            lines.append(f"  forecast writer {w['prefix']} ({w['n_rows']} rows): "
+                         f"{w['status']} -- {w['why']}")
     return "\n".join(lines)
 
 
 __all__ = ["COMPONENTS", "SIZING_ONLY", "Sources", "blend", "build", "catalyst_x",
-           "component_weights", "fit", "format_top", "oos_advantage", "pdufa_term",
+           "component_weights", "fit", "format_top", "forecast_writers",
+           "oos_advantage", "pdufa_term",
            "receipt_dir", "refit", "row_fields"]

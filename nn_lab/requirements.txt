@@ -1,0 +1,11 @@
+# nn_lab's own interpreter (nn_lab/.venv). Exact pins of tonight's working set are in
+# requirements.lock.txt. torch comes from the CUDA index:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu128
+numpy==2.2.6
+pandas==2.2.3
+pyarrow>=21
+scikit-learn>=1.5
+lightgbm==4.6.0
+scipy>=1.13
+pytest>=8
+autogluon.tabular[lightgbm]==1.6.3   # optional: nn_lab.ag_baseline only

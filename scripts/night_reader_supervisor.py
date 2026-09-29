@@ -29,6 +29,19 @@ kills by image name, and stops on its own STOP file, a missing HANDOFF_PC, or a
 disk below the floor. It never creates HANDOFF_PC.
 
     python -m scripts.night_reader_supervisor --until 08:00
+    python -m scripts.night_reader_supervisor --until 08:00 --no-pool   # the old 3-worker queue
+
+THE POOL (2026-09-28 21:45 HKT, Murat: "can openclaw read more, can it launch
+another chrome tabs to read too, this one by one is very slow"): by default
+(`config.READER_POOL_ENABLED`) the supervisor launches `scripts.reader_pool`
+-- several tabs, paced per host, section fronts, stock pages, their news, media
+and the social hosts -- instead of the rolling three-worker queue. The pool
+never runs out of work (it re-reads fronts on a schedule and names after their
+freshness window), so there is no queue to exhaust; everything else (classify,
+probe, repair, backoff, stop by PID) is unchanged. `reader_status.json` carries
+the pool's own status (tab count and why, per-host pages an hour against the
+caps, cooling hosts) and the hourly digest refreshes
+`dowjones/reading_report_<day>.md`.
     python -m scripts.night_reader_supervisor --probe          # one probe, printed
     python -m scripts.night_reader_supervisor --repair-once    # probe + repair if faulted
 """
@@ -66,6 +79,8 @@ THROTTLE = DATA / "news_corpus" / "dowjones" / "_throttle.log"
 TICK_S = 60
 LOG_TICK_EVERY = 5
 STATUS = DJ / "reader_status.json"
+POOL_STATUS = DJ / "reader_pool_status.json"
+POOL_CMD = DJ / "reader_pool_run.cmd"
 PAGE_LOG = DJ / "page_log.jsonl"
 #: a run that ended on the DAILY cap is retried this long after its launch
 #: (the cap is a rolling 24 h window), not ended for the night
@@ -94,11 +109,35 @@ def log(**row: object) -> None:
         f.write(json.dumps(row, default=str) + "\n")
 
 
+#: the command lines that are OUR readers: the queue workers and the pool
+READER_CMDLINE = "'scripts[.](dowjones_pull|reader_pool)'"
+
+
+def pool_cmd_text(*, until: str, profile: str = "muratclaw", py: str | None = None,
+                  day: str | None = None) -> str:
+    """PURE. The launcher for the pool: same python, stdin and log shape as the
+    queue launcher, so `queue_logs` and `classify_exit` read it the same way."""
+    day = day or datetime.now().strftime("%Y-%m-%d")
+    log = f"backend\\data\\optimus\\dowjones\\reader_pool_{day}.log"
+    return ("@echo off\n"
+            f"cd /d {REPO}\n"
+            f"{py or PY} -m scripts.reader_pool --handoff --profile {profile} --until {until} "
+            f"< backend\\data\\optimus\\empty_stdin.txt >> {log} 2>> {log}.err\n")
+
+
+def pool_status(path: Path | None = None) -> dict | None:
+    """The pool's own status file (tabs, hosts, caps, cooling), or None."""
+    try:
+        return json.loads((path or POOL_STATUS).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
 def reader_pids() -> list[int]:
     """PIDs of OUR reader processes, matched on the command line (never on the
     image name). No psutil in this venv, so Windows is asked directly."""
     q = ("Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object "
-         "{ $_.CommandLine -match 'scripts[.]dowjones_pull' } | ForEach-Object { $_.ProcessId }")
+         "{ $_.CommandLine -match " + READER_CMDLINE + " } | ForEach-Object { $_.ProcessId }")
     try:
         r = subprocess.run(["powershell", "-NoProfile", "-Command", q], capture_output=True,
                            text=True, timeout=60, stdin=subprocess.DEVNULL,
@@ -178,8 +217,8 @@ def page_counts(now: datetime, path: Path | None = None, max_lines: int = 4000) 
     every class per host in the last 60, the last non-OK page, and the last url
     per worker."""
     p = path or PAGE_LOG
-    out: dict = {"ok_10m": 0, "ok_60m": 0, "classes_60m": {}, "last_not_ok": None,
-                 "current_url_by_worker": {}}
+    out: dict = {"ok_10m": 0, "ok_60m": 0, "attempts_10m": 0, "classes_60m": {},
+                 "last_not_ok": None, "current_url_by_worker": {}}
     try:
         lines = p.read_text(encoding="utf-8", errors="replace").splitlines()[-max_lines:]
     except OSError:
@@ -193,6 +232,8 @@ def page_counts(now: datetime, path: Path | None = None, max_lines: int = 4000) 
             continue
         age = (now_utc - t).total_seconds()
         cls, host = r.get("class") or "?", r.get("host") or "-"
+        if age <= 600:
+            out["attempts_10m"] = out.get("attempts_10m", 0) + 1
         if age <= 3600:
             row = out["classes_60m"].setdefault(host, {})
             row[cls] = row.get(cls, 0) + 1
@@ -326,6 +367,7 @@ def digest(claims_since: str) -> None:
     step("claims", ["scripts.dowjones_pull", "--claims", "--claims-since", claims_since], 1800)
     step("three_source", ["scripts.three_source_compare"], 300)
     step("scorecard", ["scripts.source_scorecard"], 1800)
+    step("reading_report", ["backend.services.reader_report"], 300)
 
 
 def end_time(hhmm: str) -> datetime:
@@ -354,6 +396,185 @@ def repair_once(budget: GR.RepairBudget | None = None, *, deps: GR.Deps | None =
     return {"probe": pr, "repair": res}
 
 
+# ── the reader's REAL state, and what a stall triggers (2026-09-29) ──────────
+#
+# 00:59-02:15 HKT the status file said "reading" for 75 minutes while every page
+# came back BLANK: `state` was set from "is a reader process alive", never from
+# pages. A hung tab in the dedicated Chrome made every Playwright attach time
+# out (the gateway's own log, 343 lines), the gateway probe stayed green, and
+# nothing looked at pages OK. So the state is now DERIVED from pages OK and the
+# workers, and a stall is a named fault with an escalating, bounded remedy.
+
+READING, WAITING_FOR_CAP, REPAIRING, STALLED, DOWN, STARTING = (
+    "READING", "WAITING_FOR_CAP", "REPAIRING", "STALLED", "DOWN", "STARTING")
+POOL_STOP = DJ / "READER_POOL_STOP"
+#: the stall ladder: 1 close hung tabs (+ repair a faulted gateway), 2 restart
+#: the pool, 3 recycle the dedicated Chrome and restart the pool
+STALL_LADDER = ("close_hung_tabs", "restart_pool", "recycle_chrome")
+
+
+def stall_s() -> float:
+    return float(getattr(_config, "READER_STALL_S", 600.0))
+
+
+def stall_step_s() -> float:
+    return float(getattr(_config, "READER_STALL_STEP_S", 300.0))
+
+
+def last_ok_age_s(now: datetime, path: Path | None = None, max_lines: int = 4000
+                  ) -> float | None:
+    """Seconds since the newest OK page in `page_log.jsonl`, or None."""
+    p = path or PAGE_LOG
+    try:
+        lines = p.read_text(encoding="utf-8", errors="replace").splitlines()[-max_lines:]
+    except OSError:
+        return None
+    for ln in reversed(lines):
+        try:
+            r = json.loads(ln)
+        except ValueError:
+            continue
+        if r.get("class") == "OK":
+            try:
+                return max(0.0, (now.astimezone() - datetime.fromisoformat(r["t"])
+                                 ).total_seconds())
+            except (KeyError, ValueError, TypeError):
+                return None
+    return None
+
+
+def derive_state(*, alive: bool, repairing: bool, ok_10m: int, last_ok_age: float | None,
+                 since_launch_s: float | None, next_slot_in_s: float | None,
+                 attempts_10m: int, stall_after_s: float | None = None) -> str:
+    """PURE. The reader's state from what it DID, not from whether a process
+    exists:
+
+    * REPAIRING        -- the supervisor is repairing a dependency now;
+    * DOWN             -- no reader process;
+    * READING          -- at least one page OK in the last 10 minutes;
+    * WAITING_FOR_CAP  -- alive, nothing attempted in 10 min, and the next
+                          reserved open is more than a minute ahead (a cap);
+    * STARTING         -- alive, launched less than the stall window ago;
+    * STALLED          -- alive, no page OK for the stall window (a fault the
+                          supervisor acts on)."""
+    s = stall_s() if stall_after_s is None else stall_after_s
+    if repairing:
+        return REPAIRING
+    if not alive:
+        return DOWN
+    if ok_10m > 0:
+        return READING
+    if attempts_10m == 0 and next_slot_in_s is not None and next_slot_in_s > 60:
+        return WAITING_FOR_CAP
+    fresh = since_launch_s is not None and since_launch_s < s
+    ok_recent = last_ok_age is not None and last_ok_age < s
+    if fresh or ok_recent:
+        return STARTING if fresh else READING
+    return STALLED
+
+
+def attempts_10m(pc: dict) -> int:
+    """Pages of ANY class in the last 10 minutes is not in `page_counts`; the
+    60-minute classes are, so this counts the recent tail directly."""
+    return int(pc.get("attempts_10m") or 0)
+
+
+def stall_action(level: int) -> str | None:
+    """PURE. The ladder step for the n-th action of one stall episode (0-based);
+    past the last step the ladder starts again at `restart_pool`."""
+    if level < len(STALL_LADDER):
+        return STALL_LADDER[level]
+    return STALL_LADDER[1 + (level - len(STALL_LADDER)) % (len(STALL_LADDER) - 1)]
+
+
+def stop_pool_gracefully(*, wait_s: float = 180.0, pids_fn=None, kill_fn=None,
+                         sleep_fn=time.sleep, clock=time.monotonic,
+                         status_fn=None, close_fn=None) -> dict:
+    """Ask the pool to stop (its own STOP file: its threads finish the page in
+    hand and it closes its tabs), wait up to `wait_s`, then end it BY PID. The
+    tabs it named as open are closed afterwards either way. Removes the STOP
+    file. Never kills by image name."""
+    pids_fn = pids_fn or reader_pids
+    kill_fn = kill_fn or kill_pid
+    status_fn = status_fn or pool_status
+    out: dict = {"stopped_gracefully": False, "killed": [], "closed_tabs": []}
+    st = status_fn() or {}
+    tabs = list(st.get("open_tab_ids") or [])
+    try:
+        POOL_STOP.write_text("stop for a repair or a recycle\n", encoding="utf-8")
+    except OSError:
+        pass
+    t0 = clock()
+    while pids_fn() and clock() - t0 < wait_s:
+        sleep_fn(3.0)
+    left = pids_fn()
+    out["stopped_gracefully"] = not left
+    for pid in left:
+        if kill_fn(pid):
+            out["killed"].append(pid)
+    try:
+        POOL_STOP.unlink()
+    except OSError:
+        pass
+    st2 = status_fn() or {}
+    tabs = list(dict.fromkeys(tabs + list(st2.get("open_tab_ids") or [])))
+    if tabs:
+        close = close_fn or _close_listed_tabs
+        out["closed_tabs"] = close(tabs)
+    out["seconds"] = round(clock() - t0, 1)
+    return out
+
+
+def _close_listed_tabs(ids: list[str]) -> list[str]:
+    """Close the listed tabs on the PROVEN dedicated Chrome (those still there)."""
+    try:
+        GR._prove_dedicated()
+        present = {str(t.get("id")) for t in GR._page_targets()}
+    except Exception:  # noqa: BLE001 -- nothing proven, nothing closed
+        return []
+    done = []
+    for t in ids:
+        if t in present:
+            try:
+                if GR._close_target(t):
+                    done.append(t)
+            except Exception:  # noqa: BLE001
+                pass
+    return done
+
+
+def chrome_age_s(now: datetime | None = None) -> float | None:
+    """Seconds since the proven dedicated Chrome's browser process started."""
+    try:
+        from backend.services import muratclaw_instance as MI
+        created = MI.prove().get("created")
+        t = datetime.fromisoformat(str(created))
+    except Exception:  # noqa: BLE001
+        return None
+    now = now or datetime.now().astimezone()
+    return max(0.0, (now - t.astimezone()).total_seconds())
+
+
+def free_ram_gb() -> float | None:
+    try:
+        return GR._free_gb()
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def write_machine_record(row: dict) -> None:
+    """This machine's numbers (memory, tabs, Chrome size) go under local_pc/,
+    which git ignores; never into docs/."""
+    p = DATA / "local_pc" / "reader_machine.jsonl"
+    try:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with p.open("a", encoding="utf-8") as f:
+            f.write(json.dumps({"t": datetime.now().astimezone().isoformat(timespec="seconds"),
+                                **row}, default=str) + "\n")
+    except OSError:
+        pass
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--until", default="08:00", help="local HH:MM")
@@ -361,6 +582,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--claims-since", default="2026-07-01")
     ap.add_argument("--no-rolling", dest="rolling", action="store_false",
                     help="run --queue-cmd as given instead of the self-built rolling queue")
+    ap.add_argument("--pool", dest="pool", action="store_true",
+                    default=bool(getattr(_config, "READER_POOL_ENABLED", False)),
+                    help="launch the multi-tab reader pool (default from config)")
+    ap.add_argument("--no-pool", dest="pool", action="store_false")
     ap.add_argument("--probe", action="store_true", help="print one dependency probe and exit")
     ap.add_argument("--repair-once", action="store_true",
                     help="probe, repair if faulted (bounded), print, exit")
@@ -380,15 +605,45 @@ def main(argv: list[str] | None = None) -> int:
     template = Path(a.queue_cmd)
     # 2026-09-28: the supervisor builds its OWN queue (never idle): the plan over
     # the candidate set, oldest-read names first, rebuilt when it is exhausted
+    if a.pool:
+        a.rolling = False
+        GR_atomic_text(POOL_CMD, pool_cmd_text(until=a.until))
+        log(event="pool_mode", cmd=str(POOL_CMD))
     rq = rolling_queue(template) if a.rolling else None
-    queue_cmd = rq["cmd"] if rq else template
+    queue_cmd = POOL_CMD if a.pool else (rq["cmd"] if rq else template)
     if rq:
         log(event="rolling_queue", queue=str(rq["queue"]), n_names=rq["n_names"],
             n_unread_today=rq["n_unread_today"])
     logs = queue_logs(queue_cmd)
     why = "end time"
-    ticks, state, next_action, last_err = 0, "starting", "launch the reader", None
+    ticks, state, next_action, last_err = 0, STARTING, "launch the reader", None
     idle_until = 0.0
+    # 2026-09-29: the stall ladder and the scheduled Chrome recycle
+    stall_level, last_stall_act, detail = 0, 0.0, ""
+    recycle_budget = GR.RepairBudget(
+        per_hour=int(getattr(_config, "READER_CHROME_RECYCLES_PER_HOUR", 2)),
+        backoff_s=600.0)
+
+    def relaunch_now(why_: str) -> None:
+        nonlocal last_launch
+        last_launch = time.time()
+        log(event="relaunch", why=why_, launcher_pid=launch(queue_cmd),
+            queue_cmd=str(queue_cmd))
+
+    def recycle_and_relaunch(why_: str) -> dict:
+        tabs = list((pool_status() or {}).get("open_tab_ids") or [])
+        stopped_ = stop_pool_gracefully()
+        log(event="pool_stopped", why=why_, **stopped_)
+        recycle_budget.spend(time.monotonic())
+        rec = GR.recycle_dedicated_chrome(tabs, why=why_)
+        log(event="chrome_recycle", **rec)
+        pr_ = GR.probe()
+        if not pr_["healthy"]:
+            res_ = GR.repair(pr_.get("fault") or "PROFILE_DETACHED", log=log)
+            log(event="repair", fault=res_["fault"], healthy=res_["healthy"],
+                cleared_by=res_["cleared_by"], steps=[x["step"] for x in res_["steps"]])
+        relaunch_now(f"after chrome recycle: {why_}")
+        return rec
     while datetime.now() < end:
         if STOP.exists():
             why = "STOP file"
@@ -405,7 +660,66 @@ def main(argv: list[str] | None = None) -> int:
             last_loads = n
         ticks += 1
         if pids:
-            state, next_action = "reading", "keep reading"
+            now_dt = datetime.now().astimezone()
+            pc = page_counts(now_dt)
+            pst = pool_status() if a.pool else None
+            ok_age = last_ok_age_s(now_dt)
+            state = derive_state(
+                alive=True, repairing=False, ok_10m=pc["ok_10m"], last_ok_age=ok_age,
+                since_launch_s=(time.time() - last_launch) if last_launch else None,
+                next_slot_in_s=(pst or {}).get("next_slot_in_s"),
+                attempts_10m=pc["attempts_10m"])
+            next_action = "keep reading"
+            if state != STALLED:
+                stall_level = 0
+            if state == STALLED and time.time() - last_stall_act >= stall_step_s():
+                act = stall_action(stall_level)
+                if act == "recycle_chrome" and not recycle_budget.allow(time.monotonic())[0]:
+                    act = "restart_pool"
+                stall_level += 1
+                last_stall_act = time.time()
+                last_err = (f"STALLED: no page OK for {ok_age or 0:.0f} s with the reader "
+                            f"alive ({pc['attempts_10m']} attempts in 10 min)")
+                log(event="stall", level=stall_level, action=act, last_ok_age_s=ok_age,
+                    attempts_10m=pc["attempts_10m"])
+                write_status(REPAIRING, next_action=act, last_error=last_err)
+                if act == "close_hung_tabs":
+                    log(event="stall_close_hung_tabs", **GR.close_hung_tabs(log=log))
+                    pr = GR.probe()
+                    ok_b, _w = budget.allow(time.monotonic())
+                    if not pr["healthy"] and ok_b:
+                        budget.spend(time.monotonic())
+                        res = GR.repair(pr.get("fault") or "GATEWAY_DOWN", log=log)
+                        log(event="repair", fault=res["fault"], healthy=res["healthy"],
+                            cleared_by=res["cleared_by"],
+                            steps=[x["step"] for x in res["steps"]])
+                elif act == "restart_pool":
+                    log(event="pool_stopped", why="stall", **stop_pool_gracefully())
+                    relaunch_now("stall: restart the pool")
+                else:
+                    recycle_and_relaunch("stall: " + last_err)
+                state, next_action = REPAIRING, act
+            elif a.pool and ticks % LOG_TICK_EVERY == 1:
+                stale = GR.close_stale_tabs(keep_ids=list((pst or {}).get("open_tab_ids") or []))
+                if stale.get("closed"):
+                    log(event="stale_tabs_closed", closed=stale["closed"])
+                age = chrome_age_s()
+                try:
+                    mem = GR._chrome_memory()
+                except Exception:  # noqa: BLE001
+                    mem = {}
+                ram = free_ram_gb()
+                why_r = GR.chrome_recycle_due(age_s=age, mem_gb=mem.get("total_gb"),
+                                              free_gb=ram)
+                write_machine_record({"free_ram_gb": ram, "chrome": mem,
+                                      "chrome_age_s": age, "state": state,
+                                      "tabs": (pst or {}).get("tabs"),
+                                      "recycle_due": why_r})
+                if why_r and recycle_budget.allow(time.monotonic())[0]:
+                    write_status(REPAIRING, next_action="recycle the dedicated Chrome",
+                                 last_error=last_err)
+                    recycle_and_relaunch(why_r)
+                    state, next_action = STARTING, "recycled the dedicated Chrome: " + why_r
         if free < DISK_FLOOR_GB:
             why = f"disk {free:.1f} GB under the {DISK_FLOOR_GB} GB floor"
             break
@@ -424,7 +738,7 @@ def main(argv: list[str] | None = None) -> int:
                     n_unread_today=rq["n_unread_today"])
                 if rq["n_unread_today"] == 0:
                     idle_until = time.time() + ALL_READ_RETRY_S
-                    state, next_action = ("idle_all_read_today",
+                    state, detail, next_action = (WAITING_FOR_CAP, "idle_all_read_today",
                                           f"rebuild the queue in {ALL_READ_RETRY_S/60:.0f} min")
                     write_status(state, next_action=next_action, last_error=last_err)
                     time.sleep(TICK_S)
@@ -432,7 +746,7 @@ def main(argv: list[str] | None = None) -> int:
                 cls = {"kind": "NOT_STARTED", "evidence": "rolling queue rebuilt"}
             if caps_reached(cls["kind"], cls["evidence"]):
                 idle_until = last_launch + CAPS_RETRY_S
-                state, next_action = ("idle_daily_cap",
+                state, detail, next_action = (WAITING_FOR_CAP, "idle_daily_cap",
                                       f"retry at {datetime.fromtimestamp(idle_until):%H:%M}")
                 last_err = cls["evidence"]
                 log(event="reader_down", exit_kind=cls["kind"], evidence=cls["evidence"],
@@ -452,9 +766,10 @@ def main(argv: list[str] | None = None) -> int:
                 open_fault_wait_s=round(open_wait, 1) if cls["kind"] == OPEN_FAULT else None)
             if cls["kind"] not in ("NOT_STARTED",):
                 last_err = f"{cls['kind']}: {cls['evidence']}"[:300]
-            state = {"stop": "stopped", "repair": "repairing", "wait_dep": "dependency_down",
-                     "wait": "backoff", "wait_open_fault": "backoff_open_fault",
-                     "relaunch": "relaunching"}.get(act, act)
+            detail = {"stop": "stopped", "repair": "repairing", "wait_dep": "dependency_down",
+                      "wait": "backoff", "wait_open_fault": "backoff_open_fault",
+                      "relaunch": "relaunching"}.get(act, act)
+            state = {"repair": REPAIRING, "relaunch": STARTING}.get(act, DOWN)
             next_action = act
             if act == "stop":
                 finished = True
@@ -476,8 +791,12 @@ def main(argv: list[str] | None = None) -> int:
             last_hourly = time.time()
             digest(a.claims_since)
         write_status(state, next_action=next_action, last_error=last_err,
-                     extra={"restarts": restarts, "free_gb": round(free, 1),
-                            "queue": str(queue_of(queue_cmd) or "")})
+                     extra={"restarts": restarts, "free_disk_gb": round(free, 1),
+                            "free_ram_gb": free_ram_gb(), "detail": detail if not pids else "",
+                            "stall_level": stall_level,
+                            "mode": "pool" if a.pool else "queue",
+                            "queue": str(queue_of(queue_cmd) or ""),
+                            **({"pool": pool_status()} if a.pool else {})})
         time.sleep(TICK_S)
     stopped = []
     for pid in reader_pids():                      # by PID, matched on the command line

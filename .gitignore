@@ -392,3 +392,33 @@ backend/data/optimus/alerts/
 
 # 2026-09-28 (owner): PC hardware, RAM, power-plan and driver notes are LOCAL ONLY.
 backend/data/optimus/local_pc/
+
+# 2026-09-28 nn_lab: its own venv, checkpoints, the training table, walk-forward OOS
+# frames and the nightly prediction files are LOCAL (large or regenerable). Receipts
+# (with each prediction file's sha256), seeds_used.jsonl and grades.jsonl are TRACKED.
+nn_lab/.venv/
+backend/data/optimus/nn_lab/table/
+backend/data/optimus/nn_lab/models/
+backend/data/optimus/nn_lab/walkforward/
+backend/data/optimus/nn_lab/predictions/
+backend/data/optimus/nn_lab/night.lock
+backend/data/optimus/nn_lab/night_state.json
+
+# 2026-09-28 fiction backtest (AMNESIA-2): case text derived from licensed articles stays LOCAL.
+# Receipts, frozen rows (numbers, no article text), the call ledger and the instructions are tracked.
+backend/data/optimus/fiction_backtest/*/cases/
+backend/data/optimus/fiction_backtest/*/answers/
+backend/data/optimus/fiction_backtest/*/sealed/
+backend/data/optimus/fiction_backtest/*/batches/
+backend/data/optimus/fiction_backtest/*/rows/*_raw_local.jsonl
+backend/data/optimus/fiction_backtest/*/*.log
+backend/data/optimus/fiction_backtest/*/*.err
+backend/data/optimus/fiction_backtest/*/*.pid
+
+# contest desk (2026-09-29): machine-local logs and task files, and the owner's Bloomberg
+# WLS export (Terminal data is licensed; this repo is public) stay out of git
+backend/data/optimus/contest/logs/
+backend/data/optimus/contest/*.cmd
+backend/data/optimus/contest/STOP
+backend/data/optimus/contest/wls/
+backend/data/optimus/contest/calendar/confirmations_terminal*.csv

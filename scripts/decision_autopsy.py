@@ -461,6 +461,7 @@ def _us_session_complete_through() -> date:
 
 
 def load_bars(tickers: list[str], *, fetch: bool, start: str) -> tuple[pd.DataFrame, dict]:
+    from backend.services import stitched_tickers as ST
     from backend.services import xs_ranker as XR
     want = sorted(set(tickers) | {MARKET})
     paths = XR.survivorship_free_paths() + [
@@ -469,8 +470,8 @@ def load_bars(tickers: list[str], *, fetch: bool, start: str) -> tuple[pd.DataFr
     for p in paths:
         if not p.exists():
             continue
-        df = pd.read_parquet(p, columns=["symbol", "date", "open", "close"],
-                             filters=[("symbol", "in", want)])
+        df = ST.tag_source(pd.read_parquet(p, columns=["symbol", "date", "open", "close"],
+                                           filters=[("symbol", "in", want)]), p.stem)
         df = df[pd.to_datetime(df["date"]) >= pd.Timestamp(start)]
         src[p.name] = {"rows": int(len(df)),
                        "last": str(pd.to_datetime(df["date"]).max().date()) if len(df) else None}
@@ -482,7 +483,8 @@ def load_bars(tickers: list[str], *, fetch: bool, start: str) -> tuple[pd.DataFr
             f = PFB.fetch(want, start=start, end=str(end))
             if not f.empty:
                 f = f[pd.to_datetime(f["date"]) <= pd.Timestamp(end)]
-                frames.append(f[["symbol", "date", "open", "close"]])
+                frames.append(ST.tag_source(f[["symbol", "date", "open", "close"]].copy(),
+                                            "alpaca_fetch"))
             src["alpaca_fetch"] = {"rows": int(len(f)), "through": str(end),
                                    "last": str(pd.to_datetime(f["date"]).max().date()) if len(f) else None}
         except SystemExit as exc:                  # data_credential REFUSES this way
@@ -493,6 +495,7 @@ def load_bars(tickers: list[str], *, fetch: bool, start: str) -> tuple[pd.DataFr
     bars["date"] = pd.to_datetime(bars["date"])
     # Local panels first: on a collision the panel the books are marked against wins.
     bars = bars.drop_duplicates(["symbol", "date"], keep="first")
+    bars = ST.cut_reader_bars(bars, market=MARKET)   # reused tickers start at the new company
     return bars, src
 
 

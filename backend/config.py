@@ -4323,6 +4323,10 @@ OPENCLAW_DEDICATED_CDP_HOST = "127.0.0.1"
 OPENCLAW_DEDICATED_CDP_PORT = 18802
 OPENCLAW_DEDICATED_USER_DATA_DIR = str(Path.home() / "ChromeMuratClaw")
 OPENCLAW_CHROME_EXE = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+#: The dedicated Chrome's start page when the reader (re)launches it: blank.
+#: A live news home page left open for the browser's life grows and can hang
+#: (2026-09-29), and one hung tab fails every Playwright attach of the gateway.
+OPENCLAW_CHROME_START_URL = "about:blank"
 #: OpenClaw's own config (read for the instance check; never printed -- it
 #: holds the gateway token) and the gateway's loopback address.
 OPENCLAW_CONFIG_PATH = Path.home() / ".openclaw" / "openclaw.json"
@@ -4394,14 +4398,109 @@ READER_YIELD_CHECK_AFTER = 10
 WEB_READER_MIN_DELAY_S = 6.0
 WEB_READER_MAX_DELAY_S = 20.0
 WEB_READER_MIN_SAME_HOST_GAP_S = 18.0
-WEB_READER_MAX_PER_HOUR = 180
-WEB_READER_MAX_PER_DAY = 1500
+#: CAPS RAISED 2026-09-28 22:30 HKT for the reader pool. Murat, 21:45: "can
+#: openclaw read more, can it launch another chrome tabs to read too, this one
+#: by one is very slow, it needs to read wsj, barron, marketwatch per stock and
+#: the news from that too". Was 180/h, 1,500/day, 600/day per Dow Jones site.
+#: Raised only to what the day's reading needs: per Dow Jones site ~130 stock
+#: pages (MarketWatch twice: analyst + stock page) plus their news, ~120 section
+#: fronts a day and the news they show -- about 1,000 pages a site in a ~10 h
+#: night, so 120/h and 1,200/day per site (`READER_MAX_PER_HOUR_BY_HOST`); the
+#: social hosts stay at 150/day each (one read per name a day fits) and 40/h.
+#: Hourly total = 3 x 120 + 3 x 40. The gap stays DRAWN per host (never
+#: constant); the account-risk statement to the owner stands.
+WEB_READER_MAX_PER_HOUR = 480
+WEB_READER_MAX_PER_DAY = 4000
 #: Per-site daily cap (wsj / barrons / marketwatch each), inside the global one.
-WEB_READER_MAX_PER_DAY_PER_HOST = 600
+WEB_READER_MAX_PER_DAY_PER_HOST = 1200
 #: Per-host daily caps that REPLACE the one above for these hosts (matched on
 #: the host or a subdomain of it). The social hosts start at 150/day each
 #: (orchestrator, 2026-09-28, on Murat's widening of the allowlist).
 WEB_READER_MAX_PER_DAY_BY_HOST = {"x.com": 150, "reddit.com": 150, "stocktwits.com": 150}
+
+# ── The reader pool: several tabs at once, paced PER HOST (2026-09-28) ──────
+#: Murat, 2026-09-28 21:45 HKT: "can openclaw read more, can it launch another
+#: chrome tabs to read too, this one by one is very slow, it needs to read wsj,
+#: barron, marketwatch per stock and the news from that too, it should navigate
+#: them, not just the stocks, and also the media too." Earlier the same day:
+#: "it should always work and shouldnt be standing idle."
+#: MEASURED on the live run of that evening (receipts plan_2026-09-28_123154_*):
+#: per page, open ~2-7 s, settle+scroll+read ~10 s, and 46-73 s IDLE waiting for
+#: the one shared throttle (a global drawn gap of 6-20 s serialised across all
+#: three workers, the lock held through the sleep, plus a same-host floor of
+#: 3x the draw, ~60 s). The bottleneck was the PACING, not the page load, so the
+#: pool paces page OPENS per host (a drawn, jittered gap per host, reserved under
+#: the lock and slept outside it) with a short drawn gap between any two opens.
+#: More tabs are headroom for slow pages (a MarketWatch load, a CLI snapshot).
+READER_POOL_ENABLED = True
+READER_MAX_TABS = 6
+READER_TABS_PER_HOST = {"wsj.com": 2, "barrons.com": 2, "marketwatch.com": 2,
+                        "x.com": 1, "reddit.com": 1, "stocktwits.com": 1}
+#: The memory governor: below READER_MIN_FREE_GB of free RAM no new tab is
+#: opened (the count falls toward 1); one more tab is allowed only above
+#: READER_GROW_FREE_GB (hysteresis, so the count does not flap).
+READER_MIN_FREE_GB = 2.0
+READER_GROW_FREE_GB = 2.6
+#: 2026-09-29: the maximum ADAPTS -- the tabs held now plus as many more as fit
+#: above the floor at READER_TAB_GB each (never above READER_MAX_TABS).
+READER_TAB_GB = 0.5
+#: A reader process alive with no page OK for READER_STALL_S is STALLED (a named
+#: fault, not "reading"): the supervisor closes hung tabs, then restarts the
+#: pool, then recycles the dedicated Chrome, one step per READER_STALL_STEP_S.
+#: 2026-09-29 00:59-02:15 HKT the status said "reading" for 77 minutes of BLANK
+#: pages behind one hung tab.
+READER_STALL_S = 600.0
+READER_STALL_STEP_S = 300.0
+#: A page target that does not answer a one-line evaluate in this long is hung
+#: (one hung renderer times out every Playwright attach of the gateway).
+READER_HUNG_TAB_TIMEOUT_S = 4.0
+#: A page of the dedicated Chrome not NAVIGATED for this long, and not the
+#: pool's own, is closed by the supervisor (the pool's tabs live a minute or two;
+#: a launcher's start page or another job's leftovers otherwise live for hours).
+READER_STALE_TAB_S = 1800.0
+#: Long-lived browsers grow: the dedicated Chrome is recycled gracefully (tabs
+#: closed, Browser.close, relaunched with its port) when older than
+#: READER_CHROME_RECYCLE_S, or holding more than READER_CHROME_MAX_GB (private
+#: bytes), or more than READER_CHROME_SOFT_GB while free RAM is under
+#: READER_CHROME_LOW_FREE_GB; at most READER_CHROME_RECYCLES_PER_HOUR an hour.
+READER_CHROME_RECYCLE_S = 7200.0
+READER_CHROME_MAX_GB = 8.0
+READER_CHROME_SOFT_GB = 4.0
+READER_CHROME_LOW_FREE_GB = 3.0
+READER_CHROME_RECYCLES_PER_HOUR = 2
+#: Drawn gap between two page OPENS on the same host, (lo, hi) seconds, a
+#: right-skewed draw inside the range, never within 1 s of that host's previous
+#: draw (never a constant interval).
+READER_HOST_GAP_S = {"wsj.com": (10.0, 45.0), "barrons.com": (10.0, 45.0),
+                     "marketwatch.com": (10.0, 45.0), "x.com": (25.0, 90.0),
+                     "reddit.com": (25.0, 90.0), "stocktwits.com": (25.0, 90.0)}
+#: Drawn gap between ANY two opens, whatever the host (no simultaneous burst).
+READER_GLOBAL_GAP_S = (1.0, 4.0)
+#: Hourly caps per host in the pool (inside WEB_READER_MAX_PER_HOUR).
+READER_MAX_PER_HOUR_BY_HOST = {"wsj.com": 120, "barrons.com": 120, "marketwatch.com": 120,
+                               "x.com": 40, "reddit.com": 40, "stocktwits.com": 40}
+#: A host that showed a challenge, block, login wall or rate-limit page is not
+#: opened again for this long (its lanes stop; the status file says why).
+READER_HOST_COOL_S = 3600.0
+#: Section fronts: the front page and markets every 30 min during US hours
+#: (09:00-17:00 New York, weekdays), every other section every 2 h.
+READER_FRONT_FAST_S = 1800.0
+READER_FRONT_SLOW_S = 7200.0
+#: Article links taken from one section front (newest / most prominent first).
+READER_FRONT_LINKS_MAX = 12
+#: Media (video / podcast) links taken from one section front.
+READER_FRONT_MEDIA_LINKS_MAX = 3
+#: "related / read next" links are followed to this depth, only from an article
+#: that names a ticker in the universe, only on the same host.
+READER_RELATED_DEPTH = 1
+READER_RELATED_LINKS_MAX = 3
+#: Freshness windows: a stock page or a social page is not re-read inside it; a
+#: stored article url is never re-read.
+READER_STOCK_FRESH_H = 20.0
+READER_SOCIAL_FRESH_H = 12.0
+#: Captions / transcript text files a player points to may be fetched from the
+#: host it names (a CDN): text only, at most this many bytes.
+READER_CAPTIONS_MAX_BYTES = 2_000_000
 #: `dowjones_pull --archive` reads at most this many articles per archive day.
 DOWJONES_ARCHIVE_MAX_PER_DAY = 80
 #: `dowjones_pull --handoff` refuses unless this file exists. Murat creates it
@@ -4615,3 +4714,16 @@ TELEGRAM_APPROVAL_MAX_AGE_MIN = 60
 #: to this many characters (Telegram's own message limit is 4,096); the reply
 #: states how much was stored. Longer articles: paste into DIGEST.md.
 TELEGRAM_DIGEST_MAX_CHARS = 4096
+
+# ── Stitched tickers (review 2026-09-29 F4, `backend/services/stitched_tickers.py`) ──
+#: A symbol whose bars stop for MORE than this many market sessions and then
+#: resume is a CANDIDATE stitch (two companies under one reused ticker). The gap
+#: alone never decides: the registrant (SEC CIK), the source file and the price
+#: level do (see the module docstring).
+STITCH_GAP_SESSIONS = 20
+#: A price level change across the gap by at least this factor (either way) is
+#: evidence of a different security when no registrant evidence exists.
+STITCH_PRICE_JUMP_RATIO = 3.0
+#: A current CIK whose band's first filings on disk come this many days after
+#: the old segment ended is evidence of a registrant created after it.
+STITCH_CIK_BAND_MARGIN_DAYS = 180

@@ -348,18 +348,20 @@ def build_yf_units(rev: pd.DataFrame, *, start: str = YF_LEG_START) -> list[dict
 
 def load_bars(paths: Optional[Iterable[Path]] = None, *, since: Optional[str] = None) -> pd.DataFrame:
     """Union of the local daily bar files (first listed wins on a duplicate)."""
+    from backend.services import stitched_tickers as ST
     paths = [Path(p) for p in paths] if paths else [_optimus_dir() / p for p in BARS_PATHS]
     frames = []
     for p in paths:
         if not p.exists():
             continue
         flt = [("date", ">=", pd.Timestamp(since))] if since else None
-        frames.append(pd.read_parquet(p, columns=["symbol", "date", "open", "close", "volume"],
-                                      filters=flt))
+        frames.append(ST.tag_source(
+            pd.read_parquet(p, columns=["symbol", "date", "open", "close", "volume"],
+                            filters=flt), p.stem))
     if not frames:
         raise ScorecardRefused(f"NO_BARS: none of {[str(p) for p in paths]} exists")
     b = pd.concat(frames, ignore_index=True).drop_duplicates(["symbol", "date"], keep="first")
-    return b
+    return ST.cut_reader_bars(b, market=BENCHMARK)   # reused tickers start at the new company
 
 
 class PricePanel:

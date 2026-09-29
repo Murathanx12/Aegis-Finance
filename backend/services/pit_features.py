@@ -850,6 +850,17 @@ def load_news_corpus(root: Path | None = None) -> list[dict]:
     return rows
 
 
+def load_close_bars(paths) -> pd.DataFrame:
+    """symbol/date/close from the bar files, first file wins on a duplicate, and
+    reused tickers cut (`stitched_tickers.cut_reader_bars`, 2026-09-29)."""
+    from backend.services import stitched_tickers as ST
+    bars = pd.concat([ST.tag_source(pd.read_parquet(p, columns=["symbol", "date", "close"]),
+                                    Path(p).stem) for p in paths], ignore_index=True)
+    bars["date"] = pd.to_datetime(bars["date"])
+    bars = bars.drop_duplicates(["symbol", "date"], keep="first")
+    return ST.cut_reader_bars(bars)
+
+
 def main(argv: list[str] | None = None) -> int:
     import argparse
     import hashlib
@@ -865,11 +876,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     opt = _optimus()
     from backend.services import xs_ranker
-    paths = xs_ranker.survivorship_free_paths()
-    bars = pd.concat([pd.read_parquet(p, columns=["symbol", "date", "close"]) for p in paths],
-                     ignore_index=True)
-    bars["date"] = pd.to_datetime(bars["date"])
-    bars = bars.drop_duplicates(["symbol", "date"], keep="first")
+    bars = load_close_bars(xs_ranker.survivorship_free_paths())
     sess = pd.DatetimeIndex(sorted(bars["date"].unique()))
     run_date = sess.max() + pd.Timedelta(days=1)
     s = pd.Series(sess[sess >= pd.Timestamp(a.start)])

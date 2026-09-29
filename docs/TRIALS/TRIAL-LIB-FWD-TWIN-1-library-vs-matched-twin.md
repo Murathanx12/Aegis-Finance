@@ -242,3 +242,65 @@ Receipt: `backend/data/optimus/trials/lib_forward_trial_amendment_2026-09-28T065
 (`python -m scripts.lib_forward_trial --amend backend/data/optimus/trials/lib_forward_trial_2026-09-28T062024Z.json`).
 Test: `backend/tests/test_lib_forward_trial.py::test_the_grader_decides_on_the_as_read_correlation_and_prints_the_registered_beside_it`
 and `::test_estimate_takes_rho_from_the_difference_type_the_trial_reads`.
+
+
+---
+
+## NOTE 2026-09-28 ~15:40Z (answering review 2026-09-29 F4; after the first session opened, BEFORE any forward return of this trial was read; nothing above is edited): stitched tickers in the books
+
+**What was found.** `docs/reviews/REVIEW_2026-09-29_NN_LAB.md` F4, verified and widened by
+`backend/services/stitched_tickers.py` (receipt
+`backend/data/optimus/stitched_tickers/stitched_20260928T153245Z.json`; the first run `stitched_20260928T151537Z.json` has the same verdicts and a spurious `recent_file_first_trade` line, fixed; note
+`docs/research_notes/2026-09-29/stitched_tickers_2026-09-29.md`): the bar panel the library
+ranked on joins two companies' histories under one reused ticker for **62 symbols**. For 42 of
+them the new company resumed inside the 12-1 window. JAN ($2.21 in 2024, a $23.34 IPO on
+2026-03-20), LIFE ($1.90 -> $16.85) and AKTS ($0.04 -> $22.40) read as enormous 12-1 winners
+purely because the window straddles the hole; MLPI does the same from the delisted file.
+
+**Which books in this trial are affected** (from `books.jsonl`, sha256 as in A1, not modified):
+20 of the 30 pairs.
+
+- **Parent holds a stitched name (16 pairs, 7 clusters, 6 of them entirely):**
+  `lib_disp_short_avoid_2026-09-27` (AKTS, LIFE, JAN, MLPI, 5% each),
+  `lib_frog_in_pan_2026-09-26` (MLPI 5%), `lib_illiquid_sealed_2026-09-26` (ITG 5%),
+  `lib_low_dtc_mom_sealed_2026-09-26` (MLPI 5%), `lib_mom_12_1_2026-09-26`,
+  `lib_mom_12_1_q_2026-09-26`, `lib_mom_12_1_q_trend_lead_2026-09-27`,
+  `lib_mom_12_1_secrel_sealed_2026-09-26`, `lib_mom_no_downgrades_2026-09-26`,
+  `lib_qc470_mom252_quarterly_riskparity_2026-09-27__control` (each AKTS, LIFE, JAN at 5%),
+  `lib_mom_12_1_ivw_lead_2026-09-27__control` (26.3%: JAN 14.9%),
+  `lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control` (26.5%: JAN 15.0%),
+  `lib_mom_12_1_small_2026-09-26` (AKTS, MLPI), `lib_mom_flow_2026-09-26` (JAN),
+  `lib_mom_flow_ivw_2026-09-27` (JAN), `lib_mom_no_downgrades_small_2026-09-27__control` (AKTS).
+- **Only the twin holds one (4 pairs):** `lib_forecast_dispersion_v1_2026-09-26` (twin: SMHD),
+  `lib_margin_mom_sealed_2026-09-26` (twin: FIYY), `lib_rev_5d_sealed_2026-09-26` (twin: PCI, MB),
+  `lib_skill_mom_2026-09-27` (twin: ULTI). A random twin holding the NEW company is a real random
+  draw of a real security; it is listed for completeness.
+- The receipt lists every one of the 45 books (of 312) that hold a stitched name, with weights.
+
+**What is and is not contaminated.** The forward MEASUREMENT is not: JAN, LIFE and AKTS are
+real, tradable securities and the grader marks them from their own bars. What is contaminated is
+WHY they were bought: for the momentum books the 12-1 score that selected them was the splice.
+A forward "momentum book minus twin" therefore partly grades a data error that picked three
+recent IPOs.
+
+**How the reads on 2026-10-26 and 2026-12-24 handle it (decided now, before any data):**
+
+1. **The deciding read is unchanged:** the registered pooled D over all 30 books and 17
+   clusters, on the corrected sd(D) of A2. No book is dropped from it, and no frozen book, twin,
+   weight or id is changed. The contamination clause's 25% drop limit is not invoked, because
+   nothing is dropped.
+2. **Three sensitivity reads are printed beside it at both dates**, each on the SAME frozen
+   per-book sigmas and the A2 correlations:
+   - **S1:** excluding the 16 pairs whose parent holds a stitched name (14 books, 11 clusters);
+   - **S2:** excluding all 20 affected pairs (10 books, 8 clusters);
+   - **S3:** every book kept, but each affected book's (and twin's) return recomputed from its
+     non-stitched holdings, re-weighted to its original gross, from the same bars.
+3. **A SURVIVES stands only if S3 also reads z_63 >= 2 and D_21 > 0.** Otherwise the verdict
+   is printed as `NOT_ROBUST_TO_STITCH` and licenses nothing. EARLY KILL, KILL and
+   CANNOT_DISTINGUISH are taken from the deciding read as registered, with S1-S3 printed beside.
+   This can only make the trial harder to pass.
+4. S1 removes the momentum family's clusters entirely (170, 181, 84, 120, 138, 186), so S1 and S2
+   say little about momentum; S3 is the one that keeps it. That is why S3, not S1, is the
+   condition.
+
+No return from 2026-09-28 or later was read to write this note.

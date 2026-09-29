@@ -924,15 +924,17 @@ def load_close_panel(paths: Sequence[Path] | None = None) -> pd.DataFrame:
     well above the ~4 GB this machine had free on 2026-09-26."""
     from backend.services import xs_ranker as X
     ps = list(paths) if paths is not None else X.survivorship_free_paths()
+    from backend.services import stitched_tickers as ST
     frames = []
     for p in ps:
         f = pd.read_parquet(p, columns=["symbol", "date", "close"])
         f["close"] = f["close"].astype("float32")
-        frames.append(f)
+        frames.append(ST.tag_source(f, Path(p).stem))
     out = pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
     out["symbol"] = out["symbol"].astype(str)
     out["date"] = pd.to_datetime(out["date"])
-    return out.drop_duplicates(subset=["symbol", "date"], keep="first")
+    out = out.drop_duplicates(subset=["symbol", "date"], keep="first")
+    return ST.cut_reader_bars(out)          # reused tickers start at the new company
 
 
 def relative_forward_returns(bars_long: pd.DataFrame, horizons: Sequence[int] = BROKER_HORIZONS

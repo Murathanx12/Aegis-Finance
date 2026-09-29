@@ -87,10 +87,14 @@ _BAR_COLS = ["symbol", "date", "open", "high", "low", "close", "volume"]
 def load_wide(paths, *, start: str, max_symbols: int = 0,
               market: str = "SPY") -> dict:
     """Bars -> (dates x symbols) arrays on the MARKET's calendar."""
-    frames = [pd.read_parquet(p, columns=_BAR_COLS) for p in paths]
+    from backend.services import stitched_tickers as ST
+    frames = [ST.tag_source(pd.read_parquet(p, columns=_BAR_COLS), Path(p).stem)
+              for p in paths]
     df = pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
     df["date"] = pd.to_datetime(df["date"])
     df = df.drop_duplicates(subset=["symbol", "date"], keep="first")
+    # reused tickers cut BEFORE the start filter, so a gap straddling it is seen
+    df = ST.cut_reader_bars(df, market=market)
     df = df[df["date"] >= pd.Timestamp(start)]
     if max_symbols:
         syms = sorted(set(df["symbol"].unique()) - {market})[:max_symbols] + [market]

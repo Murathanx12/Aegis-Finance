@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from collections import defaultdict
 from datetime import date, datetime, timezone
@@ -50,8 +51,27 @@ from backend.services import llm_telemetry as tel             # noqa: E402
 # The recompute below re-prices every row, so an unpriced model would log once
 # per CALL. The COUNT is the finding, not forty thousand identical lines; the
 # models themselves are reported in `unpriced_models`.
+#
+# The quieting is SCOPED to the recompute call and restored after it. It used
+# to be a module-level `setLevel(ERROR)` on the telemetry logger, which meant
+# that merely IMPORTING this script silenced every telemetry warning (unpriced
+# model, failed ledger write, unreadable lines) for the rest of the process —
+# found 2026-09-29 when a test importing it emptied four telemetry tests'
+# captured warnings.
+import contextlib as _contextlib                              # noqa: E402
 import logging as _logging                                    # noqa: E402
-_logging.getLogger("backend.services.llm_telemetry").setLevel(_logging.ERROR)
+
+_TEL_LOGGER = _logging.getLogger("backend.services.llm_telemetry")
+
+
+@_contextlib.contextmanager
+def _quiet_telemetry():
+    prev = _TEL_LOGGER.level
+    _TEL_LOGGER.setLevel(_logging.ERROR)
+    try:
+        yield
+    finally:
+        _TEL_LOGGER.setLevel(prev)
 
 
 def _iso_day(ts: str) -> str:
@@ -97,9 +117,10 @@ def ledger_totals(path: Path, since: str | None) -> dict:
         if cost is None:
             # Recompute rather than trust the stored None: the price table may
             # have gained the model since the row was written.
-            cost = tel.price_call(model, int(row.get("tokens_in") or 0),
-                                  int(row.get("tokens_out") or 0),
-                                  int(row.get("cached_tokens") or 0))
+            with _quiet_telemetry():
+                cost = tel.price_call(model, int(row.get("tokens_in") or 0),
+                                      int(row.get("tokens_out") or 0),
+                                      int(row.get("cached_tokens") or 0))
         if cost is None:
             out["n_unpriced"] += 1
             out["unpriced_models"][model] += 1
@@ -119,20 +140,61 @@ def _undefault(d: dict) -> dict:
     return d
 
 
-def find_ledgers() -> list[Path]:
-    """Every telemetry ledger this host can read. Listed, not merged."""
+def ledger_bases() -> list[Path]:
+    """The BASE path(s) the writer appends beside (before month expansion)."""
     seen, out = set(), []
-    for p in (tel.ledger_path() if hasattr(tel, "ledger_path")
-              else tel.LLM_CALLS,):
-        if p and str(p) not in seen:
-            seen.add(str(p))
-            out.append(Path(p))
+    env = os.getenv(tel.LLM_TELEMETRY_PATH_ENV)
     from backend.config import DATA_DIR
-    for extra in (DATA_DIR / "optimus" / "llm_calls.jsonl",):
-        if str(extra) not in seen:
-            seen.add(str(extra))
-            out.append(extra)
+    for p in ((Path(env) if env else None), tel.LLM_CALLS,
+              DATA_DIR / "optimus" / "llm_calls.jsonl"):
+        if p is None:
+            continue
+        k = str(Path(p).resolve())
+        if k not in seen:
+            seen.add(k)
+            out.append(Path(p))
     return out
+
+
+def find_ledgers() -> list[Path]:
+    """Every telemetry ledger FILE this host can read. Listed, not merged.
+
+    2026-09-29: this read only the legacy monolith `llm_calls.jsonl`, which the
+    2026-09-12 rotation retired in favour of `llm_calls_<YYYY-MM>.jsonl` -- so
+    the telemetry half was $0.00 on every run while the provider's balance
+    moved $1.47 in one night (a cap that reads a different ledger than the
+    writer, again). The file list now comes from the WRITER's own naming rule,
+    `llm_telemetry.ledger_files`, so reader and writer cannot drift.
+    Each base appears once (`[base]` placeholder when nothing exists, so an
+    absent ledger is printed as absent rather than silently omitted).
+    """
+    seen, out = set(), []
+    for base in ledger_bases():
+        files = tel.ledger_files(base) or [base]
+        for f in files:
+            k = str(Path(f).resolve())
+            if k not in seen:
+                seen.add(k)
+                out.append(Path(f))
+    return out
+
+
+#: When provider and telemetry differ by more than this, the audit says
+#: DISAGREE by name. Absolute floor (rounding, a balance read a few calls
+#: late) or a share of the provider's own delta, whichever is larger.
+DISAGREE_TOLERANCE_USD = 0.05
+DISAGREE_TOLERANCE_FRAC = 0.05
+
+
+def agreement(provider_delta: float | None, tel_usd: float) -> dict:
+    """AGREE / DISAGREE / NOT COMPUTABLE, with the tolerance that decided it."""
+    if provider_delta is None:
+        return {"verdict": "NOT COMPUTABLE", "tolerance_usd": None,
+                "gap_usd": None}
+    tol = max(DISAGREE_TOLERANCE_USD, DISAGREE_TOLERANCE_FRAC * abs(provider_delta))
+    gap = round(provider_delta - tel_usd, 6)
+    return {"verdict": "DISAGREE" if abs(gap) > tol else "AGREE",
+            "tolerance_usd": round(tol, 6), "gap_usd": gap}
 
 
 def main(argv=None) -> int:
@@ -183,6 +245,7 @@ def main(argv=None) -> int:
 
     unaccounted = (round(provider_delta - tel_usd, 6)
                    if provider_delta is not None else None)
+    agree = agreement(provider_delta, tel_usd)
 
     report = {
         "since": since,
@@ -195,6 +258,8 @@ def main(argv=None) -> int:
         "telemetry_is_lower_bound": n_unpriced > 0,
         "n_unpriced_calls": n_unpriced,
         "unaccounted_usd": unaccounted,
+        "agreement": agree["verdict"],
+        "agreement_tolerance_usd": agree["tolerance_usd"],
         "ledgers": ledgers,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
@@ -222,6 +287,10 @@ def main(argv=None) -> int:
                    else "calls the ledger never saw" if unaccounted > 0.01
                    else "reconciled")
         print(f"  UNACCOUNTED       : ${unaccounted:.4f}   <- {verdict}")
+    print(f"  provider vs telemetry: {agree['verdict']}"
+          + (f"  (gap ${agree['gap_usd']:.4f}, tolerance ${agree['tolerance_usd']:.4f})"
+             if agree["tolerance_usd"] is not None else
+             "  (no provider delta: cannot say they agree)"))
     print()
     for led in ledgers:
         mark = "" if led["exists"] else "   (absent on this host)"

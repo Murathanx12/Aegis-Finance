@@ -1274,13 +1274,17 @@ def collect_positions(fleet_cache: Path | None = None) -> list[Position]:
 
 
 def _load_bars_since(start: pd.Timestamp) -> pd.DataFrame:
+    from backend.services import stitched_tickers as ST
     from backend.services import xs_ranker as XR
     frames = []
     for p in XR.survivorship_free_paths():
-        frames.append(pd.read_parquet(p, filters=[("date", ">=", start.to_pydatetime())]))
+        frames.append(ST.tag_source(
+            pd.read_parquet(p, filters=[("date", ">=", start.to_pydatetime())]), Path(p).stem))
     b = pd.concat(frames, ignore_index=True)
     b["date"] = pd.to_datetime(b["date"])
-    return b.drop_duplicates(["symbol", "date"]).sort_values(["symbol", "date"]).reset_index(drop=True)
+    b = b.drop_duplicates(["symbol", "date"])
+    b = ST.cut_reader_bars(b)               # reused tickers start at the new company
+    return b.sort_values(["symbol", "date"]).reset_index(drop=True)
 
 
 def load_sector_map() -> dict[str, str]:

@@ -25,6 +25,11 @@ Verdicts
 * ``UNKNOWN`` -- the evidence that would decide does not exist; ``detail``
                  says why. Missing evidence is never ALIVE, and a probe that
                  raises is UNKNOWN with the exception class.
+* ``STOPPED_BY_OPERATOR`` -- the process is gone AND its own stop record says a
+                 human stopped it on purpose (the lab's STOP file). Not ALIVE
+                 (nothing runs) and not DEAD (nothing crashed). Read from the
+                 record the process wrote on its way out, never inferred from
+                 the STOP file's presence alone.
 
 A probe that cannot go red is a broken probe: every probe has a test in
 ``test_system_health.py`` where its evidence is missing or old and the verdict
@@ -51,8 +56,9 @@ from datetime import date, datetime, time as dtime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Literal, Optional, Union
 
-Verdict = Literal["ALIVE", "STALE", "DEAD", "UNKNOWN"]
-VERDICT_ORDER = {"DEAD": 0, "STALE": 1, "UNKNOWN": 2, "ALIVE": 3}
+Verdict = Literal["ALIVE", "STALE", "DEAD", "UNKNOWN", "STOPPED_BY_OPERATOR"]
+VERDICT_ORDER = {"DEAD": 0, "STALE": 1, "UNKNOWN": 2, "STOPPED_BY_OPERATOR": 3,
+                 "ALIVE": 4}
 
 #: ALIVE tolerates this fraction of the cadence beyond it (a 5-minute
 #: heartbeat written at 5m40s is not a stall).
@@ -485,20 +491,60 @@ def _process_verdict(ctx: ProbeCtx, *, pid: Any, module: str, stamp: Optional[da
                        proof=f"pid {pid} cmdline contains {module}")
 
 
+#: The lab's own name for a deliberate stop (`always_on_lab.EXIT_REASONS`).
+LAB_OPERATOR_STOP_REASONS = ("STOP_file",)
+
+
+def _lab_stop_record(ctx: ProbeCtx, d: dict) -> Optional[dict]:
+    """The lab's record of a DELIBERATE stop, or None.
+
+    Two places the lab writes it on the way out, both for the SAME pid:
+    `lab_status.json` (`running: false`, `stopped_by`) and the lock's
+    `exit_reason`. A STOP file on disk is NOT a record: it can be left behind,
+    or written after a crash."""
+    if d.get("running") is False and str(d.get("stopped_by")) in LAB_OPERATOR_STOP_REASONS:
+        return {"source": "lab_status.json", "reason": d.get("stopped_by"),
+                "utc": d.get("utc"), "pid": d.get("pid")}
+    lock = _read_json(ctx.optimus_dir / "always_on_lab_lock.json")
+    if (isinstance(lock, dict) and str(lock.get("exit_reason")) in LAB_OPERATOR_STOP_REASONS
+            and str(lock.get("pid")) == str(d.get("pid"))):
+        return {"source": "always_on_lab_lock.json", "reason": lock.get("exit_reason"),
+                "utc": lock.get("exit_utc"), "pid": lock.get("pid")}
+    return None
+
+
 def p_always_on_lab(ctx: ProbeCtx) -> ProbeResult:
     d = _lab_status(ctx)
     if d is None:
         return _unknown("no readable lab_status.json")
     hb = float(d.get("heartbeat_minutes") or 5)
-    return _process_verdict(ctx, pid=d.get("pid"), module="always_on_lab",
-                            stamp=_ts(d.get("utc")), cadence=timedelta(minutes=hb),
-                            what="always_on_lab")
+    r = _process_verdict(ctx, pid=d.get("pid"), module="always_on_lab",
+                         stamp=_ts(d.get("utc")), cadence=timedelta(minutes=hb),
+                         what="always_on_lab")
+    if r.verdict != "DEAD":
+        return r
+    stop = _lab_stop_record(ctx, d)
+    if stop is None:
+        return r
+    t = _ts(stop.get("utc"))
+    return ProbeResult("STOPPED_BY_OPERATOR", _iso(t), _age(t, ctx.now),
+                       f"always_on_lab: stopped on purpose ({stop['reason']}) "
+                       f"{_fmt_age(_age(t, ctx.now))} ago, pid {stop.get('pid')}; "
+                       f"nothing restarts it until a human does",
+                       proof=f"{stop['source']} records {stop['reason']} for pid {stop.get('pid')}")
 
 
 def p_lab_loops(ctx: ProbeCtx) -> ProbeOut:
     d = _lab_status(ctx)
     if d is None or not isinstance(d.get("loops"), dict):
         return _unknown("no lab_status.json loops block")
+    lab = p_always_on_lab(ctx)
+    if lab.verdict == "STOPPED_BY_OPERATOR":
+        # the loops of a lab a human stopped are not stalled, they are off
+        return {name: ProbeResult("STOPPED_BY_OPERATOR", lab.evidence_utc, lab.age_s,
+                                  f"loop {name}: the lab was stopped on purpose",
+                                  proof=lab.proof)
+                for name, row in d["loops"].items() if isinstance(row, dict)}             or _unknown("lab_status.json has an empty loops block")
     periods = d.get("periods_minutes") or {}
     out: dict[str, ProbeResult] = {}
     for name, row in d["loops"].items():
@@ -1593,7 +1639,15 @@ def _name_stamp(name: str) -> tuple[Optional[datetime], bool]:
     return None, False
 
 
+#: Never receipts, whatever else is in the name: an OS lock sidecar
+#: (`disk_guard.file_lock` -> `<file>.lock`, e.g. `x.jsonl.lock`) is EMPTY by
+#: design, and counting it read as a truncated receipt (2026-09-29).
+_NOT_RECEIPT_SUFFIXES = (".lock",)
+
+
 def _is_receipt_name(name: str) -> bool:
+    if name.lower().endswith(_NOT_RECEIPT_SUFFIXES):
+        return False
     return ".json" in name or name.endswith(_RECEIPT_SUFFIXES)
 
 

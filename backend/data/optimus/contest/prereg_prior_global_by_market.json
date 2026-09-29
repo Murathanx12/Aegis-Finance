@@ -1,0 +1,167 @@
+{
+ "what": "rank(|reaction|) ~ rank(trail8) + rank(sig63), liquid on-cadence events, by group-year; iid bootstrap SE (understates a date-clustered SE)",
+ "rows": [
+  {
+   "group": "ASIA",
+   "year": 2021,
+   "n": 2840,
+   "b_vol": 0.229,
+   "se_iid_boot": 0.018,
+   "spearman_trail": 0.29,
+   "spearman_sig63": 0.246
+  },
+  {
+   "group": "ASIA",
+   "year": 2022,
+   "n": 2754,
+   "b_vol": 0.211,
+   "se_iid_boot": 0.019,
+   "spearman_trail": 0.27,
+   "spearman_sig63": 0.233
+  },
+  {
+   "group": "ASIA",
+   "year": 2023,
+   "n": 2797,
+   "b_vol": 0.214,
+   "se_iid_boot": 0.02,
+   "spearman_trail": 0.277,
+   "spearman_sig63": 0.248
+  },
+  {
+   "group": "ASIA",
+   "year": 2024,
+   "n": 3262,
+   "b_vol": 0.253,
+   "se_iid_boot": 0.017,
+   "spearman_trail": 0.263,
+   "spearman_sig63": 0.115
+  },
+  {
+   "group": "ASIA",
+   "year": 2025,
+   "n": 3375,
+   "b_vol": 0.255,
+   "se_iid_boot": 0.017,
+   "spearman_trail": 0.286,
+   "spearman_sig63": 0.182
+  },
+  {
+   "group": "ASIA",
+   "year": 2026,
+   "n": 2820,
+   "b_vol": 0.231,
+   "se_iid_boot": 0.018,
+   "spearman_trail": 0.27,
+   "spearman_sig63": 0.212
+  },
+  {
+   "group": "EU",
+   "year": 2021,
+   "n": 881,
+   "b_vol": 0.274,
+   "se_iid_boot": 0.034,
+   "spearman_trail": 0.32,
+   "spearman_sig63": 0.225
+  },
+  {
+   "group": "EU",
+   "year": 2022,
+   "n": 844,
+   "b_vol": 0.217,
+   "se_iid_boot": 0.034,
+   "spearman_trail": 0.253,
+   "spearman_sig63": 0.177
+  },
+  {
+   "group": "EU",
+   "year": 2023,
+   "n": 726,
+   "b_vol": 0.341,
+   "se_iid_boot": 0.041,
+   "spearman_trail": 0.354,
+   "spearman_sig63": 0.183
+  },
+  {
+   "group": "EU",
+   "year": 2024,
+   "n": 732,
+   "b_vol": 0.278,
+   "se_iid_boot": 0.043,
+   "spearman_trail": 0.291,
+   "spearman_sig63": 0.164
+  },
+  {
+   "group": "EU",
+   "year": 2025,
+   "n": 778,
+   "b_vol": 0.314,
+   "se_iid_boot": 0.038,
+   "spearman_trail": 0.319,
+   "spearman_sig63": 0.136
+  },
+  {
+   "group": "EU",
+   "year": 2026,
+   "n": 665,
+   "b_vol": 0.271,
+   "se_iid_boot": 0.038,
+   "spearman_trail": 0.294,
+   "spearman_sig63": 0.166
+  },
+  {
+   "group": "US",
+   "year": 2021,
+   "n": 4331,
+   "b_vol": 0.315,
+   "se_iid_boot": 0.016,
+   "spearman_trail": 0.37,
+   "spearman_sig63": 0.273
+  },
+  {
+   "group": "US",
+   "year": 2022,
+   "n": 4935,
+   "b_vol": 0.278,
+   "se_iid_boot": 0.016,
+   "spearman_trail": 0.376,
+   "spearman_sig63": 0.331
+  },
+  {
+   "group": "US",
+   "year": 2023,
+   "n": 4916,
+   "b_vol": 0.328,
+   "se_iid_boot": 0.015,
+   "spearman_trail": 0.376,
+   "spearman_sig63": 0.265
+  },
+  {
+   "group": "US",
+   "year": 2024,
+   "n": 5356,
+   "b_vol": 0.372,
+   "se_iid_boot": 0.015,
+   "spearman_trail": 0.428,
+   "spearman_sig63": 0.319
+  },
+  {
+   "group": "US",
+   "year": 2025,
+   "n": 5821,
+   "b_vol": 0.391,
+   "se_iid_boot": 0.015,
+   "spearman_trail": 0.418,
+   "spearman_sig63": 0.27
+  },
+  {
+   "group": "US",
+   "year": 2026,
+   "n": 4807,
+   "b_vol": 0.321,
+   "se_iid_boot": 0.018,
+   "spearman_trail": 0.403,
+   "spearman_sig63": 0.339
+  }
+ ]
+}

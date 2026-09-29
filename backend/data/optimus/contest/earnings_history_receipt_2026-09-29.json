@@ -1,0 +1,11 @@
+{
+ "written_utc": "20260928T181921Z",
+ "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\contest\\earnings_history_global.parquet",
+ "rows_before": null,
+ "rows_after": 80922,
+ "n_symbols": 2979,
+ "n_failed": 1,
+ "failed": [
+  "000560.SZ"
+ ]
+}

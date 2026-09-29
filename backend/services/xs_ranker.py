@@ -185,13 +185,28 @@ DELISTED_BARS_PATH = _OPTIMUS / "prices_deep" / "bars_delisted.parquet"
 _BAR_COLUMNS = {"symbol", "date", "open", "high", "low", "close", "volume"}
 
 
-def load_bars(path: Path | Iterable[Path] | None = None) -> pd.DataFrame:
+#: The stitched-ticker audit of the most recent `load_bars` call (review
+#: 2026-09-29 F4); receipts may print it.
+LAST_STITCH_AUDIT: dict = {}
+
+
+def load_bars(path: Path | Iterable[Path] | None = None, *,
+              split_stitched: bool = True) -> pd.DataFrame:
     """The daily panel, sorted and typed. Raises rather than returning empty.
 
     Accepts several parquets and concatenates them, which is how a
     survivorship-free panel is assembled: living names from one pull, dead names
     from another. A symbol present in both keeps its first occurrence, so a
     partial re-pull cannot silently duplicate a name's history.
+
+    STITCHED TICKERS (review 2026-09-29 F4). A reused ticker can carry two
+    companies -- in the living file (JAN: $2.21 to 2024-07, a $23.34 IPO from
+    2026-03) and in the delisted file, which was pulled by ticker (MLPI).
+    `stitched_tickers.split_stitched` detects them from the data (gap + SEC
+    registrant + source file + price level) and renames the OLD company's
+    segment `SYM#k`, so the living symbol's history starts at the new company's
+    first bar and every longer-window feature is NaN for it. The files are not
+    rewritten. `split_stitched=False` returns the raw concatenation (for audits).
     """
     paths = ([Path(path)] if isinstance(path, (str, Path))
              else [Path(p) for p in path] if path is not None
@@ -206,11 +221,19 @@ def load_bars(path: Path | Iterable[Path] | None = None) -> pd.DataFrame:
         missing = _BAR_COLUMNS - set(df.columns)
         if missing:
             raise RankerError(f"{p.name} is missing columns {sorted(missing)}")
+        if split_stitched:
+            df["_src"] = pd.Categorical.from_codes(np.zeros(len(df), dtype="int8"), [p.stem])
         frames.append(df)
     out = pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
     out["date"] = pd.to_datetime(out["date"])
     out = out.drop_duplicates(subset=["symbol", "date"], keep="first")
     out = out.sort_values(["symbol", "date"], kind="mergesort").reset_index(drop=True)
+    if split_stitched:
+        from backend.services import stitched_tickers as ST
+        out, audit = ST.split_stitched(out, src_col="_src")
+        out = out.drop(columns=["_src"])
+        LAST_STITCH_AUDIT.clear()
+        LAST_STITCH_AUDIT.update(audit)
     return out
 
 

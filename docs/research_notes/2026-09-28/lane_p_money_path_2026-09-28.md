@@ -1,8 +1,94 @@
 # Lane P: the paper money path, verified then built (2026-09-28)
 
-**RESULT IMPROVEMENT: NONE.** This lane fixes a reporting defect and closes one issuer-concentration hole. No new signal, no LLM spend, no broker call, no order, no sim run. No cap, stop or sizing value changed. Licence: PRODUCT_EXPERIMENT (PC-PAPER, paper money only).
+## 0. FIRST: the forecaster was dead and health said it was alive
 
-## The four rulings
+**The daily forecaster wrote 0 rows on 2026-09-27, and the health page printed `u_forecast ALIVE`.** That
+unit (`investigator:evidence_v3`) is the only input the expected-return layer is waiting on. This lane's
+first version saw `REFUSED_CAP, n_rows_written 0` and filed it as a sub-bullet. The review
+(`docs/reviews/REVIEW_2026-09-28_LANE_P_MONEY_PATH.md` F1) was right to put it first, so it goes first here.
+
+What I verified from the ledger and receipts (every figure below is re-read, not copied from the review):
+
+| check | finding |
+|---|---|
+| `predictions.jsonl`, `investigator:evidence_v3` rows by `made_at` | 09-25 **118**, 09-26 **270**, 09-27 **0**. For 09-28 there is no day receipt yet. The sim ended 2026-09-27T23:58Z, and at 06:45Z no process is running. So 09-28 is **not run yet, not lost**: the review counted it before the day's run was due. |
+| `forecasts/day_2026-09-27.json` | `REFUSED_CAP`, 0 rows, `spent_usd 0.0`, first-flush `ledger_delta_usd 0.0`, 55 s long |
+| the one call that day (`llm_calls_2026-09.jsonl`, `310e3938c3ddf247`, 07:51:32Z) | `RC_NONZERO`, rc 1, 0 tokens, error *"Gateway agent call connection closed ... (1006 ...)"*. **The call failed. The cap was not involved.** |
+| cap vs spend | `FORECAST_DAILY_CAP_USD` is $2.00. Spend was $0.1456 on 09-25 (59 OK calls; OpenClaw's own figure $0.149) and $0.3159 on 09-26 (135 OK; $0.3284). The reader and the writer agree within 2–4%, and spend was 7–16% of the cap. **The cap never came close to binding.** |
+| health `health_20260927T235132Z.json` | `u_forecast ALIVE ... 167 made today`. Those 167 rows were `thesis_card` (134) and `source` (33). |
+| the earlier outage (same shape, different cause) | rows by day: 08-25 600, 08-26 585, 08-27 600, then 11 on 09-11 and 40 on 09-24, and nothing on any other day, while the health page stayed green |
+
+**Root cause (three defects in a row):**
+1. `daily_forecast` ran its first-flush check (`if delta <= 0: REFUSED_CAP`) on the first call that carried a
+   `call_id`, whether or not the call succeeded. A failed call costs $0, so an outage looked like a cap that
+   cannot bind.
+2. `REFUSED_CAP` was a terminal state in both `daily_forecast` and `sim_run.u_forecast`, so no later cycle retried.
+3. `system_health.p_u_forecast` read `max(made_at)` over every specialist, so any other writer kept it green.
+
+**Fixed (smallest change first):**
+- **a. Every refusal names its true cause.** There are now three states:
+  - `REFUSED_CAP`: the ledger is readable and complete, and spend is at or over the cap.
+  - `REFUSED_CAP_READER_DISAGREES`: a *successful* call left the ledger unmoved, or the ledger is unreadable,
+    or its total is only a lower bound.
+  - `REFUSED_DEPENDENCY_DOWN` (new): the call failed with `TIMEOUT` or `RC_NONZERO`, or the CLI could not start.
+
+  The first-flush check now runs only on a call whose status is `OK`. A model that answered with nothing
+  (`EMPTY_LOG`) is still a refusal for that one name, not for the gateway.
+- **b. A dependency failure no longer ends the day.** Per name, the unit makes up to
+  `FORECAST_DEP_RETRY_MAX_ATTEMPTS` = 4 calls, sleeping `FORECAST_DEP_RETRY_BACKOFF_S` = 30/120/300 s between
+  them. The worst run is 4 × 420 s + 450 s = 2,130 s, which fits inside `FORECAST_UNIT_TIMEOUT_S` (7,200 s).
+  - `REFUSED_DEPENDENCY_DOWN` is not terminal. `resume_gate` is shared by the worker and `sim_run.u_forecast`,
+    so the two cannot disagree. It lets a later cycle resume after `FORECAST_DEP_RETRY_MIN_GAP_S` = 3,600 s,
+    for at most `FORECAST_DEP_MAX_RUNS_PER_DAY` = 8 runs.
+  - The receipt's `dependency` block counts calls, failed calls, retries, runs and runs that ended down, and
+    keeps the last 20 failures.
+  - **There is no fallback to degrade to.** The evidence packet is already built from disk only (no browsing),
+    and the OpenClaw call *is* the forecaster. So the unit refuses under the true name. It never restarts the
+    gateway.
+- **c. The health probe now counts each writer separately.** `config.FORECAST_WRITERS` registers the writers.
+  - `u_forecast` is scheduled every UTC day. It is DEGRADED by name if it wrote 0 rows since 00:00Z of the
+    previous UTC day, or if today's day receipt is `REFUSED*` or `DEGRADED`.
+  - `thesis_card`, `source`, `review` and `promise` are reported but never graded, so they can no longer turn
+    the probe green.
+  - Read against the real ledger just now, the probe says:
+    `DEGRADED: u_forecast | u_forecast DEGRADED (investigator:evidence_v3): 0 rows since 2026-09-27T00:00Z; newest 2026-09-26T00:30:25+00:00; thesis_card 134 (unscheduled, reported only); source_claims 33 ...`
+- **d. The gap is recorded, not backfilled.** See `backend/data/optimus/incidents/u_forecast_dead_2026-09-27.json`.
+  09-27 lost about 270–320 rows: 160 names × 2 horizons is the ceiling, and 09-26 wrote 270.
+- **e. The unit was not run.** Another builder owns the gateway repair. Once that is done, run it with
+  `.venv/Scripts/python.exe -m scripts.night_investigator_forecast --daily` (idempotent per UTC day, spends at
+  most $2.00). A healthy first flush looks like this:
+  - the console prints `first flush: ledger delta $0.002x, openclaw's own estimate $0.002x`: both positive and
+    within a few percent (09-26 averaged $0.00234 per call);
+  - the receipt `forecasts/day_<today>.json` shows `first_flush_check.call_status: OK`,
+    `dependency.n_failed_calls: 0` and `state: RUNNING`, then `DONE`, with about 2 rows per priced name
+    (≤ 320) and about $0.3–0.4 spent;
+  - health then shows `u_forecast <n> since <yesterday>`.
+
+  If the console instead prints `dependency failure 1/4 (RC_NONZERO)`, the gateway is still flapping. Stop and
+  hand back.
+
+Tests: `backend/tests/test_u_forecast_dependency.py` (11 tests). They use a fake transport that drops the
+connection the way 09-27 did, a fake clock, a fake sleep and a fake LLM. Two assertions in
+`backend/tests/test_u_forecast.py` were re-labelled to `REFUSED_CAP_READER_DISAGREES`. A true over-cap
+refusal is still `REFUSED_CAP` (pinned).
+
+## Results scoreboard
+
+**RESULT IMPROVEMENT: NONE.** This lane fixes a reporting defect, a dead-ledger blind spot and an
+issuer-concentration hole. It adds no new signal, spends nothing on the LLM, calls no broker, places no
+order and runs no sim. No cap, stop or sizing value changed. Licence: PRODUCT_EXPERIMENT (PC-PAPER, paper
+money only).
+
+## Review must-fix list (Lane P's files): what was done
+
+| # | review item | done | how |
+|---|---|---|---|
+| 1 | VERSION (F5) | **yes** | `sim_run.PROBE_POLICY_VERSIONS`: c3-v0 (from 2026-09-25) is kept unchanged, and **c3-v1 starts 2026-09-28** (share-class collapse). The boundary is checked: no `pc_plan` receipt through 09-27 carries `share_class_dropped`. The c3-v0 entry says on the record that it also covered three changes that were never versioned (the drift band, the bars age gate and the policy_state read). **Journal:** `policy_state.record_version_change` writes one `kind: code_version` row, idempotently, to `pc_book/policy_journal.jsonl`, on the first real (non-sandbox) `u_plan` run under c3-v1. No preference moves. I did not write that row by hand: the first real decision under the new version writes it. **Exit reason:** a held line that the collapse drops is sold with the reason `POLICY CHANGE (share-class collapse), sim_run.u_plan.probe c3-v0->c3-v1 from 2026-09-28: GOOG is a second line of Alphabet Inc. (CIK 1652044); GOOGL kept (...). Not a change of view.` It is listed in `policy_change_exits` on the receipt. The receipt also prints `policy_version`, `policy_version_from_asof` and the version history. |
+| 2 | NAME (F2) | **yes** | The mandate status `REFUSED` is renamed **`UNRECONCILED`** and `decision_contract.normalise_mandate_status` maps the old word. `mandate_view` reads receipts that carry the old word (the 09-27 and 09-28 contracts): it prints `UNRECONCILED`, keeps `status_as_written: "REFUSED"`, rewrites the line prefix and says so in `source`. `refusals` is kept as a legacy key beside the new `disagreements`. The line now ends *"gates no order; turns OK when the owner confirms ONE capital base and ONE cap set"*. **GROSS_CAPS_DISAGREE:** I verified that `IC_TOTAL_TILT_BUDGET` is read only by `investment_committee`'s tilt rows, `roi_rank` and the contract's virtual rows, never by `sim_run.u_plan` or `pc_broker`. So I dropped it. The same was true of PROBE 0.20 and EXPLOIT room 0.80 taken alone: they are sleeves of one account that sum to its gross. So the compared gross caps are now the account-level ones only (the broker's `MAX_INVESTED_FRAC` and the sum of the sleeves). The three sleeve caps are printed in `sleeve_caps_seen` and compared to nothing. Today's status is still UNRECONCILED, on two disagreements that are real (capital bases $40,000 / $1,000,000 / $999,054, and per-name caps 2% / 3% / 10% / 12%). |
+| 3 | MAP (F4, F6) | **yes** | Issuer identity is now **derived from SEC CIK** (`investment_committee.issuer_map`), using `backend/data/optimus/edgar_8k/company_tickers.json`. That file was already on disk and is tracked; nothing was downloaded. Only common lines are grouped (no NASDAQ fifth-letter preferred, note, warrant, unit or right; a dashed suffix must be one class letter), and only lines one class letter apart (so MSTR and STRC are not grouped, and neither are VIXM and VIXY in one ETF trust). **It reproduces all 22 in-universe groups** the review counted (the hand map had 14) plus the third classes BATRB, FWONB and LILAB. All 26 hand pairs that SEC lists come out identical. `config.ISSUER_SHARE_CLASSES` is cut down to the **override** for what SEC's file lacks: CWEN/CWEN-A and CCL/CUK. If the SEC file is missing, the collapse falls back to the override alone and the receipt says `OVERRIDE ONLY (DEGRADED)` (`issuer_identity` on every plan receipt). The test that passed on an empty map is replaced by four: a synthetic CIK file and universe where every group must collapse to one line and preferreds, notes and ETF-trust siblings must survive; override joining; the missing-file case; and the 22 review groups against the tracked SEC file. |
+| 4 | the lane note leads with F1 | **yes** | §0 above |
+
+## The four rulings (the first build, unchanged)
 
 | # | reviewer's claim | ruling | one-line reason |
 |---|---|---|---|
@@ -106,7 +192,7 @@ Worst case **before → after** on the order path:
    - `_contract_view` now carries `mandate_block`. `u_plan`'s receipt gets `mandate` and `mandate_line`; its return value gets `mandate_status`, `mandate_line` and `mandate_gates_orders`.
    - **No order behaviour changed.**
 2. **P2: one issuer, one line** (`backend/config.py`, `backend/services/investment_committee.py`, `scripts/sim_run.py`)
-   - `config.ISSUER_SHARE_CLASSES` is appended only: 28 issuers, 57 lines. 14 groups were found in the 2026-09-24 universe; the rest are dotted lines the universe filter drops today.
+   - `config.ISSUER_SHARE_CLASSES` is appended only: 28 issuers, 57 lines. 14 groups were found in the 2026-09-24 universe; the rest are dotted lines the universe filter drops today. **Superseded after review:** identity is now derived from SEC CIK, and the hand map holds only the 2 overrides SEC lacks (see must-fix #3).
    - `investment_committee.collapse_share_classes(rows)` runs inside `shortlist()`. It keeps the line with the larger funnel `median_dollar_vol` (the 60-session median of close × volume from the funnel's bars); when one is missing it keeps the best-scored line and says so.
    - Each dropped line is written as `share_class_dropped` {ticker, issuer, kept, basis} on the kept row, and on the `u_plan` receipt and return value.
    - On today's file: **GOOG is dropped** (GOOGL $8,805m vs GOOG $5,832m), and **TSM becomes PROBE name 10**.
@@ -119,11 +205,57 @@ Worst case **before → after** on the order path:
 
 At the next open, PROBE will **sell 58 GOOG (~$19.8k, PROBE_EXIT because it is a prior PROBE holding) and buy ~$20k of TSM**. ALLE's queued exit also goes then. This is the direct result of the P2 fix; no order was placed by this lane.
 
-## 5. Owed (not done here)
+## 5. OWED LATER: a specification, not built (it changes sizing, so the owner confirms a capital base first)
 
-- **Owner decision:** confirm ONE capital base and ONE cap set for PC-PAPER. This is the only thing that turns the mandate OK.
-- **Owner decision:** declare a stop, or accept that the ceiling is the gross.
-- **Broker-truth gross check** in `pc_broker.plan_orders` (§2).
-- `decision_contract` virtual PROBE rows still come from the uncollapsed funnel, so GOOG and GOOGL are graded as two names. The EXPLOIT ranking pool is not collapsed either; it had no pair on 09-25.
-- `system_health` probe (not my file): a `mandate` row that reads the plan's `mandate_status` beside the contract's.
-- `test_guard_missing_input_contract::test_every_guard_is_enrolled` is red on `alerts` and `calendar_offsets`, other builders' new modules. Not this lane's.
+No cap, stop or sizing value was changed by this lane. The items below change what can be bought, so they
+wait for owner decision 1 (one capital base, one cap set). Worst cases use equity **$999,054.41**
+(`pc_book/2026-09-27/nav.jsonl`, long MV $218,196.64, buying power $3,734,381.67 on margin), k =
+`PROBE_WORST_CASE_SIGMA` 3, σ = `PROBE_REF_DAILY_SIGMA` 2.16%/day or AVPT's 2.742%/day, and **no stop
+declared anywhere**. My recomputation from config matches the reviewer's to within $2 on every row. That $2
+is rounding: the reachable row uses 0.2184 × equity, where the review used the exact long MV.
+
+| book | Σ\|notional\|/equity | 3σ @2.16% | 3σ @2.742% | no-stop ceiling |
+|---|---|---|---|---|
+| PROBE largest admissible, 10 × 2% | 0.20 | −$12,948 | −$16,436 | −$199,811 |
+| EXPLOIT alone (shortlist empty, room 1.00) | 1.00 | −$64,739 | −$82,182 | −$999,054 |
+| **holdings path:** EXPLOIT acted at 1.00×, next day MEASURED_NEGATIVE, its names are unsendable EXITs, PROBE buys 0.20 | **1.20** | **−$77,686** | **−$98,619** | **−$1,198,865** (more than equity; margin) |
+| R2 same-asof path: 10 PROBE bought, all refused on re-plan, 10 new bought | 0.40 | −$25,895 | −$32,873 | −$399,622 |
+| reachable today (EXPLOIT refused) | 0.2184 | −$14,139 | −$17,949 | −$218,193 |
+| EXPLOIT pool with two lines of one issuer at `ER_EXPLOIT_MAX_WEIGHT` 10% each | 0.20 in one issuer | −$12,948 | −$16,436 | −$199,811 on one issuer |
+| cross-book: GOOGL PROBE 2% + GOOG EXPLOIT 10% | 0.12 in one issuer | −$7,769 | −$9,862 | −$119,887 |
+
+**S1: broker-truth gross check (F3; the 09-26 review R2, deferred twice).**
+- **Where:** `pc_broker.plan_orders`.
+- **Inputs:** `held × price` from the broker's positions, not the plan's targets.
+- **Rule:** post-order Σ market value ≤ `MAX_INVESTED_FRAC × equity`. On a breach, buys are **refused**
+  (largest first) and sells still go.
+- **Receipt:** `invested_frac_before` / `invested_frac_after` on the plan receipt, where the `u_plan` health
+  probe already looks for them.
+- **Same change:** fix `_prior_probe_holdings`' `p.stem >= asof`, so a name bought under the *current* asof
+  exits as `PROBE_EXIT`.
+- **Effect:** the 1.20× and 0.40× rows become unreachable, and the ceiling returns to −$999,054.
+- **Owner questions:** (i) is the account's gross cap 1.00× of broker equity? (ii) is a refused buy
+  acceptable over selling an EXPLOIT name while EXPLOIT is refused?
+
+**S2: issuer caps across books (F4).**
+- Run `collapse_share_classes` over the EXPLOIT pool (`ranking.json` top) and over the PROBE ∪ EXPLOIT union
+  (today the `exploit_syms` exclusion matches exact tickers only). Apply `MAX_NAME_FRAC` per **issuer**.
+- When both lines qualify, prefer the line already held, so a refresh of the dollar-volume ranking cannot
+  churn Z/ZG.
+- **Effect:** the 0.20-in-one-issuer and 0.12-in-one-issuer rows fall to 0.10 and 0.10.
+- **Also needed:** an ADR/local map (TSM / 2330.TW), which CIK cannot see.
+
+**S3: contract rows.** Collapse `decision_contract.compose_book` and the virtual PROBE/tilt rows by issuer, so
+that one issuer is graded once. Grading changes; no order does.
+
+**S4: frozen books.** Report the double Alphabet exposure on 8 books and the TSM + 2330.TW exposure on 6 books
+on their grade. **Never repair them.**
+
+**S5: stop.** The owner declares a stop, or accepts on the record that the ceiling is the gross.
+
+Other items owed from this round:
+- `system_health` has no `mandate` row. It would read the plan's `mandate_status` beside the contract's.
+  That probe is not mine this round.
+- `test_guard_missing_input_contract::test_every_guard_is_enrolled` is red on `muratclaw_instance`, another
+  builder's new module. It is not enrolled by me. This lane added no exception class (it reuses
+  `policy_state.PolicyRefused`).

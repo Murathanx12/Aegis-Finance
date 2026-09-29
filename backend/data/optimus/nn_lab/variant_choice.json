@@ -1,0 +1,1 @@
+{"variant": "dist", "chosen_from": "backend/data/optimus/nn_lab/receipts/wf_20260928_full.json", "rule": "pooled walk-forward rank IC at h21: dist +0.0100 (t 0.94) vs rank -0.0202 (t -1.04); chosen once, never re-chosen on a night validation block", "chosen_utc": "2026-09-28"}

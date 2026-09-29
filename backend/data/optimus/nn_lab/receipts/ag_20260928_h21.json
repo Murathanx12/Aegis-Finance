@@ -1,0 +1,314 @@
+{
+ "artefact": "NN_LAB_AUTOGLUON_BASELINE",
+ "run_id": "ag_20260928_h21",
+ "horizon": 21,
+ "time_limit_s_per_fold": 600,
+ "max_train_rows": 400000,
+ "subsample_seed": 1308192183,
+ "rank_ic": {
+  "mean": 0.01634,
+  "se": 0.00807,
+  "t": 2.02,
+  "n_dates": 334,
+  "n_blocks": 80,
+  "n_blocks_strict": 40
+ },
+ "rank_ic_by_year": {
+  "2020": 0.02584,
+  "2021": 0.0192,
+  "2022": -0.0306,
+  "2023": 0.0176,
+  "2024": 0.04094,
+  "2025": 0.00459,
+  "2026": 0.04439
+ },
+ "top20_minus_random_net": {
+  "mean": 0.01012,
+  "se": 0.00737,
+  "t": 1.37,
+  "n_dates": 334,
+  "n_blocks": 80,
+  "n_blocks_strict": 40
+ },
+ "top20_views": {
+  "by_hold_year": {
+   "2020": 0.0126,
+   "2021": -0.005,
+   "2022": -0.02746,
+   "2023": 0.03457,
+   "2024": 0.0126,
+   "2025": 0.01806,
+   "2026": 0.03104
+  },
+  "leave_one_year_out": {
+   "2020": 0.00972,
+   "2021": 0.01278,
+   "2022": 0.01673,
+   "2023": 0.00581,
+   "2024": 0.00967,
+   "2025": 0.00872,
+   "2026": 0.00751
+  },
+  "loyo_worst": 0.00581,
+  "best_5_hold_months": [
+   "2021-02",
+   "2026-05",
+   "2020-12",
+   "2023-02",
+   "2023-12"
+  ],
+  "mean_without_best_5_months": 0.00121,
+  "share_positive_hold_months": 0.537
+ },
+ "residual_ic_vs_mom_beta_vol_size": {
+  "mean": 0.00853,
+  "se": 0.00604,
+  "t": 1.41,
+  "n_dates": 334,
+  "n_blocks": 80,
+  "n_blocks_strict": 40
+ },
+ "probability": {
+  "brier": 0.2501,
+  "brier_base_rate": 0.25,
+  "brier_skill": -0.00041,
+  "base_rate": 0.4999,
+  "n": 762166
+ },
+ "verdict": "CANNOT_DISTINGUISH",
+ "folds": [
+  {
+   "fold": "2020",
+   "train_rows_used": 240102,
+   "groups": [
+    "price",
+    "fund",
+    "analyst"
+   ],
+   "best_model": "WeightedEnsemble_L2",
+   "models": [
+    {
+     "model": "WeightedEnsemble_L2",
+     "score_val": -0.09200841933488846
+    },
+    {
+     "model": "NeuralNetTorch",
+     "score_val": -0.09202124923467636
+    },
+    {
+     "model": "LightGBMXT",
+     "score_val": -0.0921909362077713
+    },
+    {
+     "model": "LightGBM",
+     "score_val": -0.09220145642757416
+    },
+    {
+     "model": "LightGBMLarge",
+     "score_val": -0.09220793098211288
+    }
+   ],
+   "elapsed_s": 107.0
+  },
+  {
+   "fold": "2021",
+   "train_rows_used": 339827,
+   "groups": [
+    "price",
+    "fund",
+    "analyst"
+   ],
+   "best_model": "WeightedEnsemble_L2",
+   "models": [
+    {
+     "model": "WeightedEnsemble_L2",
+     "score_val": -0.12381431460380554
+    },
+    {
+     "model": "LightGBM",
+     "score_val": -0.1239207535982132
+    },
+    {
+     "model": "LightGBMXT",
+     "score_val": -0.12400855869054794
+    },
+    {
+     "model": "LightGBMLarge",
+     "score_val": -0.12401889264583588
+    },
+    {
+     "model": "NeuralNetTorch",
+     "score_val": -0.12443189322948456
+    }
+   ],
+   "elapsed_s": 234.2
+  },
+  {
+   "fold": "2022",
+   "train_rows_used": 400000,
+   "groups": [
+    "price",
+    "fund",
+    "analyst"
+   ],
+   "best_model": "WeightedEnsemble_L2",
+   "models": [
+    {
+     "model": "WeightedEnsemble_L2",
+     "score_val": -0.09981615096330643
+    },
+    {
+     "model": "LightGBM",
+     "score_val": -0.09983327239751816
+    },
+    {
+     "model": "LightGBMXT",
+     "score_val": -0.099836066365242
+    },
+    {
+     "model": "LightGBMLarge",
+     "score_val": -0.09984911233186722
+    },
+    {
+     "model": "NeuralNetTorch",
+     "score_val": -0.09988453984260559
+    }
+   ],
+   "elapsed_s": 360.3
+  },
+  {
+   "fold": "2023",
+   "train_rows_used": 400000,
+   "groups": [
+    "price",
+    "fund",
+    "analyst"
+   ],
+   "best_model": "WeightedEnsemble_L2",
+   "models": [
+    {
+     "model": "WeightedEnsemble_L2",
+     "score_val": -0.11223313212394714
+    },
+    {
+     "model": "LightGBM",
+     "score_val": -0.11230498552322388
+    },
+    {
+     "model": "LightGBMXT",
+     "score_val": -0.11231715232133865
+    },
+    {
+     "model": "LightGBMLarge",
+     "score_val": -0.11247354745864868
+    },
+    {
+     "model": "RandomForestMSE",
+     "score_val": -0.11408587545156479
+    }
+   ],
+   "elapsed_s": 582.7
+  },
+  {
+   "fold": "2024",
+   "train_rows_used": 400000,
+   "groups": [
+    "price",
+    "fund",
+    "analyst"
+   ],
+   "best_model": "WeightedEnsemble_L2",
+   "models": [
+    {
+     "model": "WeightedEnsemble_L2",
+     "score_val": -0.09827718883752823
+    },
+    {
+     "model": "LightGBMXT",
+     "score_val": -0.09834087640047073
+    },
+    {
+     "model": "LightGBM",
+     "score_val": -0.0983671098947525
+    },
+    {
+     "model": "LightGBMLarge",
+     "score_val": -0.09837092459201813
+    },
+    {
+     "model": "NeuralNetTorch",
+     "score_val": -0.09846296161413193
+    }
+   ],
+   "elapsed_s": 742.1
+  },
+  {
+   "fold": "2025",
+   "train_rows_used": 400000,
+   "groups": [
+    "price",
+    "fund",
+    "analyst"
+   ],
+   "best_model": "WeightedEnsemble_L2",
+   "models": [
+    {
+     "model": "WeightedEnsemble_L2",
+     "score_val": -0.10424238443374634
+    },
+    {
+     "model": "LightGBMXT",
+     "score_val": -0.10425657033920288
+    },
+    {
+     "model": "LightGBMLarge",
+     "score_val": -0.10429684817790985
+    },
+    {
+     "model": "LightGBM",
+     "score_val": -0.10429756343364716
+    },
+    {
+     "model": "NeuralNetTorch",
+     "score_val": -0.10439223051071167
+    }
+   ],
+   "elapsed_s": 890.5
+  },
+  {
+   "fold": "2026",
+   "train_rows_used": 400000,
+   "groups": [
+    "price",
+    "fund",
+    "analyst"
+   ],
+   "best_model": "WeightedEnsemble_L2",
+   "models": [
+    {
+     "model": "WeightedEnsemble_L2",
+     "score_val": -0.12505804002285004
+    },
+    {
+     "model": "LightGBMXT",
+     "score_val": -0.12508030235767365
+    },
+    {
+     "model": "LightGBM",
+     "score_val": -0.12511584162712097
+    },
+    {
+     "model": "LightGBMLarge",
+     "score_val": -0.12518884241580963
+    },
+    {
+     "model": "NeuralNetTorch",
+     "score_val": -0.12623463571071625
+    }
+   ],
+   "elapsed_s": 1019.9
+  }
+ ],
+ "elapsed_s": 1021.7,
+ "written_utc": "2026-09-28T14:53:26+00:00"
+}

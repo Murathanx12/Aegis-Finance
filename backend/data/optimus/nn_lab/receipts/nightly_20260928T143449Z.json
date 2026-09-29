@@ -1,0 +1,115 @@
+{
+ "artefact": "NN_LAB_NIGHTLY",
+ "run_id": "nightly_20260928T143449Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "broker_authority": "NONE: writes predictions, never orders",
+ "started_utc": "2026-09-28T14:34:49+00:00",
+ "resumed_from": "nightly_20260928T142134Z",
+ "variant": "dist",
+ "append": {
+  "old_max_date": "2026-09-25",
+  "new_max_date": "2026-09-25",
+  "tail_start": "2026-01-15",
+  "rows_rebuilt": 102080,
+  "rows_added": 0,
+  "new_dates": [],
+  "labels_filled": 0,
+  "table_rows": 1116722
+ },
+ "grade": {
+  "graded": 0,
+  "pending": 8709
+ },
+ "train": {
+  "challenger": {
+   "version": "nn-36f2300eb71c",
+   "val_ic_21": 0.05113,
+   "val_ic_by_h": {
+    "5": 0.05188,
+    "21": 0.05113,
+    "63": 0.10192
+   },
+   "val_brier_21": 0.24969,
+   "val_brier_base_21": 0.25,
+   "fits": [
+    {
+     "best_val_ic_mean_over_horizons": 0.06348,
+     "epochs": 6,
+     "seed": 509803393,
+     "variant": "dist",
+     "val_ic_by_epoch": [
+      0.02129,
+      0.02612,
+      0.06348,
+      0.03849,
+      0.06149,
+      0.05878
+     ]
+    },
+    {
+     "best_val_ic_mean_over_horizons": 0.04063,
+     "epochs": 4,
+     "seed": 2035433309,
+     "variant": "dist",
+     "val_ic_by_epoch": [
+      0.04063,
+      0.03938,
+      0.04063,
+      0.03538
+     ]
+    },
+    {
+     "best_val_ic_mean_over_horizons": 0.07192,
+     "epochs": 7,
+     "seed": 228422904,
+     "variant": "dist",
+     "val_ic_by_epoch": [
+      0.02913,
+      0.0418,
+      0.05797,
+      0.07192,
+      0.0372,
+      0.04347,
+      0.0414
+     ]
+    }
+   ]
+  },
+  "incumbent": {
+   "version": "nn-645977cc6124",
+   "val_ic_21": 0.06361,
+   "val_ic_by_h": {
+    "5": 0.05296,
+    "21": 0.06361,
+    "63": 0.09937
+   },
+   "val_brier_21": 0.2492,
+   "val_brier_base_21": 0.25
+  },
+  "promoted": false,
+  "why": "challenger IC21 0.0511 < incumbent 0.0636 + margin 0.005",
+  "model_in_use": "nn-645977cc6124",
+  "groups_used": [
+   "price",
+   "fund",
+   "analyst",
+   "news"
+  ],
+  "seeds_drawn": [
+   509803393,
+   2035433309,
+   228422904
+  ],
+  "predictions": {
+   "status": "ALREADY_FROZEN",
+   "decision_date": "2026-09-25",
+   "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\predictions\\pred_2026-09-25_nightly_20260928T141823Z.parquet",
+   "sha256": "99a9a2a50484a2e6aa6207ffc4863d3c78307c2dc869cc928bb5a816ec6681e0"
+  }
+ },
+ "new_rows_since_last_run": 0,
+ "previous_run": "nightly_20260928T142134Z",
+ "status": "DEGRADED",
+ "elapsed_s": 63.7,
+ "written_utc": "2026-09-28T14:35:53+00:00"
+}

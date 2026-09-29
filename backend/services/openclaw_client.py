@@ -198,6 +198,75 @@ OWN_BLANK_TAB_VERBS: frozenset[str] = frozenset({"navigate", "close"})
 READ_TEXT_FN = ("() => ({url: location.href, title: document.title, "
                 "text: document.body ? document.body.innerText : ''})")
 
+#: The SECOND constant function (2026-09-28, the reader pool; Murat: "and also
+#: the media too", then "use the transcript of the videos, its much better").
+#: `read_media()` evaluates it and nothing else. It READS what the page already
+#: holds -- it clicks nothing, loads nothing, plays nothing, fetches nothing:
+#: * media counts with titles / captions (video, audio or podcast, charts or
+#:   interactives, images), each video/audio element's duration when known;
+#: * the page's own structured data (JSON-LD VideoObject / AudioObject /
+#:   PodcastEpisode: name, duration, upload date, `transcript` text);
+#: * captions / subtitle tracks the page lists (`<track kind=captions|subtitles>`)
+#:   and caption-file URLs (.vtt / .srt / .ttml / .dfxp) in the page's own HTML;
+#: * transcript sections the page shows as text;
+#: * table rows (<= 5 tables x 30 rows x 12 cells);
+#: * "related / read next" links (visible anchors inside such a block).
+#: Every string is cut to a fixed length, so the reply stays small.
+READ_MEDIA_FN = (
+    "() => { const T = (e, n) => ((e && (e.innerText || e.textContent)) || '')"
+    ".replace(/\\s+/g, ' ').trim().slice(0, n || 200); "
+    "const V = e => !!(e && (e.offsetWidth || e.offsetHeight || e.getClientRects().length)); "
+    "const root = document.querySelector('article') || document.querySelector('main') "
+    "|| document.body; if (!root) return {url: location.href, media: null}; "
+    "const A = (e, k) => ((e && e.getAttribute && e.getAttribute(k)) || '').slice(0, 200); "
+    "const cap = e => { const f = e.closest('figure'); return T(f && f.querySelector("
+    "'figcaption'), 200) || A(e, 'aria-label') || A(e, 'title') || A(e, 'alt') || ''; }; "
+    "const uq = a => [...new Set(a.filter(Boolean))].slice(0, 10); "
+    "const q = s => [...root.querySelectorAll(s)]; "
+    "const vids = q('video, iframe[src*=\"video\" i], iframe[src*=\"youtube\" i], "
+    "iframe[src*=\"brightcove\" i], [class*=\"video-player\" i], [data-type=\"video\" i]'); "
+    "const auds = q('audio, iframe[src*=\"podcast\" i], iframe[src*=\"megaphone\" i], "
+    "iframe[src*=\"omny\" i], iframe[src*=\"spotify\" i], iframe[src*=\"simplecast\" i], "
+    "[class*=\"audio-player\" i], [class*=\"podcast-player\" i]'); "
+    "const charts = q('iframe[src*=\"datawrapper\" i], iframe[src*=\"flourish\" i], "
+    "iframe[src*=\"infogram\" i], [class*=\"chart\" i], [class*=\"interactive\" i], "
+    "figure svg, figure canvas'); "
+    "const imgs = q('img').filter(i => V(i) && (i.naturalWidth || i.width || 0) >= 120); "
+    "const els = [...document.querySelectorAll('video, audio')].slice(0, 10).map(m => "
+    "({kind: m.tagName.toLowerCase(), title: cap(m), duration: isFinite(m.duration) ? "
+    "Math.round(m.duration) : null, tracks: [...m.querySelectorAll('track')].filter(t => "
+    "/captions|subtitles/i.test(t.kind || 'captions')).map(t => ({src: t.src, lang: "
+    "t.srclang || '', label: t.label || ''})).slice(0, 4)})); "
+    "const ld = []; const walk = o => { if (!o || typeof o !== 'object' || ld.length > 10) "
+    "return; if (Array.isArray(o)) { o.forEach(walk); return; } "
+    "const ty = [].concat(o['@type'] || []).join(','); "
+    "if (/VideoObject|AudioObject|PodcastEpisode|Clip/i.test(ty)) ld.push({type: ty, "
+    "name: String(o.name || '').slice(0, 300), duration: String(o.duration || ''), "
+    "published: String(o.uploadDate || o.datePublished || ''), transcript: typeof "
+    "o.transcript === 'string' ? o.transcript.slice(0, 60000) : '', caption: typeof "
+    "o.caption === 'string' ? o.caption.slice(0, 500) : ((o.caption && o.caption.contentUrl) "
+    "|| '')}); if (o['@graph']) walk(o['@graph']); if (o.video) walk(o.video); "
+    "if (o.audio) walk(o.audio); }; "
+    "document.querySelectorAll('script[type=\"application/ld+json\"]').forEach(s => { try "
+    "{ walk(JSON.parse(s.textContent)); } catch (e) {} }); "
+    "const vtt = uq((document.documentElement.innerHTML.match(/https?:[^\"'\\s<>]+?\\."
+    "(?:vtt|srt|ttml|dfxp)(?:\\?[^\"'\\s<>]*)?/gi) || []).map(u => u.replace(/\\\\u002F/gi, "
+    "'/').replace(/\\\\\\//g, '/'))).slice(0, 5); "
+    "const tx = [...document.querySelectorAll('[class*=\"transcript\" i], [id*=\"transcript\" "
+    "i]')].map(e => T(e, 60000)).filter(t => t.length > 300).slice(0, 2); "
+    "const tables = q('table').slice(0, 5).map(t => ({caption: T(t.querySelector('caption'), "
+    "200), rows: [...t.querySelectorAll('tr')].slice(0, 30).map(r => [...r.querySelectorAll("
+    "'th,td')].slice(0, 12).map(c => T(c, 80)))})); "
+    "const REL = '[class*=\"related\" i], [class*=\"read-next\" i], [class*=\"readnext\" i], "
+    "[class*=\"recommend\" i], [class*=\"more-from\" i], [data-module*=\"related\" i], aside'; "
+    "const rel = [...document.querySelectorAll('a[href]')].filter(a => V(a) && a.closest(REL))"
+    ".map(a => ({url: a.href, text: T(a, 200)})).slice(0, 60); "
+    "return {url: location.href, title: document.title, media: {video: {n: vids.length, "
+    "titles: uq(vids.map(cap))}, audio: {n: auds.length, titles: uq(auds.map(cap))}, "
+    "charts: {n: charts.length, titles: uq(charts.map(cap))}, images: {n: imgs.length, "
+    "captions: uq(imgs.map(cap))}, elements: els, structured: ld, caption_urls: vtt, "
+    "transcript_sections: tx}, tables: tables, related_links: rel}; }")
+
 
 class OpenClawRefused(RuntimeError):
     """The browser will not be driven. Never swallowed into a no-op."""
@@ -646,12 +715,20 @@ def _ledger_add(key: str, dt: float, transport: str) -> None:
 _HTTP: Any = None
 
 
+#: 2026-09-28 (the reader pool drives several tabs from threads of one process):
+#: one keep-alive transport PER THREAD, so no two threads share a
+#: `requests.Session`. A test that sets `_HTTP` still gets its fake everywhere.
+_HTTP_LOCAL = threading.local()
+
+
 def _http() -> Any:
-    global _HTTP
-    if _HTTP is None:
+    if _HTTP is not None:
+        return _HTTP
+    t = getattr(_HTTP_LOCAL, "transport", None)
+    if t is None:
         from backend.services import openclaw_http as _OH
-        _HTTP = _OH.HttpTransport()
-    return _HTTP
+        t = _HTTP_LOCAL.transport = _OH.HttpTransport()
+    return t
 
 
 def _run_http(args: list[str], key: str, *, timeout: float) -> subprocess.CompletedProcess | None:
@@ -1523,10 +1600,37 @@ def read_text(target_id: str, *, profile_name: str | None = None,
               timeout: float = 60.0) -> dict:
     """`{url, title, text}` of one tab via the FIXED `READ_TEXT_FN`.
 
-    The only JavaScript this module ever sends to a page, and it is a module
-    constant: no argument of this function reaches the page. On an operator
-    profile the tab host check applies exactly as in `browser()`.
+    One of the TWO JavaScript functions this module ever sends to a page (the
+    other is `READ_MEDIA_FN`, via `read_media`), both module constants: no
+    argument of this function reaches the page. On an operator profile the tab
+    host check applies exactly as in `browser()`.
     """
+    return _evaluate_constant(READ_TEXT_FN, target_id, profile_name=profile_name,
+                              timeout=timeout)
+
+
+def read_media(target_id: str, *, profile_name: str | None = None,
+               timeout: float = 60.0) -> dict:
+    """`{url, title, media, tables, related_links}` of one tab via the FIXED
+    `READ_MEDIA_FN` (2026-09-28): what media the page carries, its captions /
+    transcript text as the page itself exposes it, its table rows and its
+    "related" links. Same guard path as `read_text` (profile, host before,
+    instance proof, expected target), same constant-function rule. On any
+    failure `error` is set and nothing else is filled."""
+    out = _evaluate_constant(READ_MEDIA_FN, target_id, profile_name=profile_name,
+                             timeout=timeout, keys=("url", "title", "media", "tables",
+                                                    "related_links"))
+    out.pop("text", None)
+    return out
+
+
+def _evaluate_constant(fn: str, target_id: str, *, profile_name: str | None = None,
+                       timeout: float = 60.0,
+                       keys: tuple[str, ...] = ("url", "title", "text")) -> dict:
+    """The one evaluate path. `fn` must be one of this module's constants."""
+    if fn not in (READ_TEXT_FN, READ_MEDIA_FN):
+        raise OpenClawRefused("REFUSED_EVALUATE_NOT_CONSTANT: only READ_TEXT_FN and "
+                              "READ_MEDIA_FN are ever evaluated in a page")
     want = profile(profile_name)
     t_check = time.monotonic()
     pa = assert_profile(name=want)
@@ -1541,7 +1645,7 @@ def read_text(target_id: str, *, profile_name: str | None = None,
     check_s = time.monotonic() - t_check
     t0 = time.monotonic()
     r = _run(["browser", "--browser-profile", want, "--json", "evaluate",
-              "--target-id", target_id, "--fn", READ_TEXT_FN], timeout=timeout)
+              "--target-id", target_id, "--fn", fn], timeout=timeout)
     if r.returncode != 0:
         invalidate_profile_cache(want)
     out: dict[str, Any] = {"rc": r.returncode, "profile": want, "target_id": target_id,
@@ -1563,8 +1667,11 @@ def read_text(target_id: str, *, profile_name: str | None = None,
     if isinstance(val, dict) and isinstance(val.get("value"), dict):
         val = val["value"]
     if isinstance(val, dict):
-        out.update({"url": val.get("url"), "title": val.get("title"),
-                    "text": str(val.get("text") or "")})
+        if "text" in keys:
+            out.update({"url": val.get("url"), "title": val.get("title"),
+                        "text": str(val.get("text") or "")})
+        else:
+            out.update({k: val.get(k) for k in keys})
     if is_operator_profile(want):
         out["attached_to"] = attached_to(profile_name=want)
     return out

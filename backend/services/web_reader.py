@@ -400,6 +400,22 @@ class Throttle:
     targets: list[float] = field(default_factory=list)
     #: slots given back by `refund` (an open that loaded no page)
     refunds: list[dict] = field(default_factory=list)
+    #: PER-HOST PACING (the reader pool, 2026-09-28 21:45 HKT; Murat: "this one
+    #: by one is very slow"). Off by default: every existing caller keeps the
+    #: global drawn gap above. On: a page OPEN on host h waits for h's own drawn
+    #: gap (`host_gap_s[h]`, a right-skewed draw inside (lo, hi), never within
+    #: 1 s of h's previous draw) and for a short drawn gap after ANY open
+    #: (`global_gap_s`). The slot is RESERVED (a future-dated line) under the
+    #: file lock and slept OUTSIDE it, so a worker waiting for one host never
+    #: holds up a worker bound for another. Hourly caps per host
+    #: (`per_host_hour_caps`) bind inside `max_per_hour`.
+    per_host_mode: bool = False
+    host_gap_s: dict = field(default_factory=lambda: dict(_cfg("READER_HOST_GAP_S", {}) or {}))
+    global_gap_s: tuple = field(
+        default_factory=lambda: tuple(_cfg("READER_GLOBAL_GAP_S", (1.0, 4.0))))
+    per_host_hour_caps: dict = field(
+        default_factory=lambda: dict(_cfg("READER_MAX_PER_HOUR_BY_HOST", {}) or {}))
+    host_targets: dict = field(default_factory=dict)
     _rng: Any = field(default=None, repr=False)
     _last_line: str | None = field(default=None, repr=False)
 
@@ -469,9 +485,129 @@ class Throttle:
         `<throttle>.lock` (2026-09-27): with several reader processes sharing
         this file, two of them reading the same "last load" would both take
         the same slot. The lock is held THROUGH the sleep, so the next taker
-        computes its gap from the stamp this one writes."""
+        computes its gap from the stamp this one writes.
+
+        `per_host_mode`: the slot is RESERVED under the lock and slept outside
+        it (`reserve`)."""
+        if self.per_host_mode:
+            res = self.reserve(what, host)
+            if res["wait_s"] > 0:
+                self.sleep_fn(res["wait_s"])
+            return float(res["wait_s"])
         with DG.file_lock(self.lock_path()):
             return self._acquire(what, host)
+
+    # ── per-host pacing (the reader pool, 2026-09-28) ───────────────────────
+
+    def draw_between(self, lo: float, hi: float, previous: float | None) -> float:
+        """A gap inside [lo, hi]: right-skewed (beta(2, 3.5), mean ~36% of the
+        range), never clipped to an edge, never within 1 s of `previous`."""
+        lo, hi = float(lo), float(max(hi, lo))
+        if hi <= lo:
+            return round(lo, 2)
+        for _ in range(20):
+            x = lo + (hi - lo) * float(self._rng.beta(2.0, 3.5))
+            if previous is None or abs(x - previous) >= 1.0 or hi - lo < 2.0:
+                return round(x, 2)
+        return round(lo + (hi - lo) * float(self._rng.random()), 2)
+
+    def host_range(self, host: str) -> tuple[float, float]:
+        """(lo, hi) of `host`'s drawn gap (a parent-domain entry matches)."""
+        h = (host or "").lower().removeprefix("www.")
+        for d, rng in (self.host_gap_s or {}).items():
+            if h == d or h.endswith("." + d):
+                return float(rng[0]), float(rng[1])
+        return float(self.min_delay_s), float(max(self.max_delay_s, self.min_delay_s))
+
+    def host_hour_cap(self, host: str) -> int | None:
+        h = (host or "").lower().removeprefix("www.")
+        for d, cap in (self.per_host_hour_caps or {}).items():
+            if h == d or h.endswith("." + d):
+                return int(cap)
+        return None
+
+    def next_free_at(self, host: str) -> datetime:
+        """PEEK (no lock, no write): the earliest a page open on `host` could be
+        reserved, from the LOW end of each drawn range. The pool's scheduler
+        prefers a host that is free now over one it would have to wait for."""
+        rows = self._rows()
+        at = self.now_fn()
+        same = [r[0] for r in rows if host and r[1] == host]
+        if same:
+            at = max(at, max(same) + timedelta(seconds=self.host_range(host)[0]))
+        return fit_global_gap(at, [r[0] for r in rows], float(self.global_gap_s[0]))
+
+    def reserve(self, what: str = "page", host: str = "") -> dict:
+        """Reserve the next page-open slot on `host` under the file lock and
+        return `{line, slot, wait_s, target_s, global_s}` WITHOUT sleeping (the
+        caller sleeps `wait_s` outside the lock; `acquire` does exactly that).
+        The daily caps refuse. The hourly caps (all hosts, and this host's) are
+        waited out when `wait_on_hour_cap` -- the slot moves to when the window
+        frees, plus a drawn 5-60 s, up to `max_hour_wait_s` -- else refuse."""
+        with DG.file_lock(self.lock_path()):
+            return self._reserve(what, host)
+
+    def _reserve(self, what: str, host: str) -> dict:
+        now = self.now_fn()
+        rows = [r for r in self._rows() if now - r[0] < timedelta(days=1)]
+        if len(rows) >= self.max_per_day:
+            raise ReaderRefused(f"REFUSED_THROTTLE_DAY: {len(rows)} page loads in 24 h "
+                                f">= {self.max_per_day}")
+        cap = self.host_day_cap(host)
+        if host and sum(1 for r in rows if r[1] == host) >= cap:
+            raise ReaderRefused(f"REFUSED_THROTTLE_HOST_DAY: >= {cap} "
+                                f"page loads on {host} in 24 h")
+        lo, hi = self.host_range(host)
+        prev_t = self.host_targets.get(host)
+        if prev_t is None:
+            prev_t = next((r[2] for r in reversed(rows) if r[1] == host and r[2] is not None),
+                          None)
+        target = self.draw_between(lo, hi, prev_t)
+        g = self.draw_between(float(self.global_gap_s[0]), float(self.global_gap_s[1]), None)
+        slot = now
+        same = [r[0] for r in rows if host and r[1] == host]
+        if same:
+            slot = max(slot, max(same) + timedelta(seconds=target))
+        # the global gap keeps any two opens `g` apart; it does NOT queue this
+        # host behind a FUTURE-dated reservation of another host (2026-09-29:
+        # x.com's hourly cap reserved a slot 10 min ahead and every host --
+        # wsj, barrons, marketwatch included -- queued behind it: 10 idle min)
+        all_stamps = [r[0] for r in rows]
+        slot = fit_global_gap(slot, all_stamps, g)
+        hcap = self.host_hour_cap(host)
+        for _ in range(50):
+            # every open stamped after (slot - 1 h), reservations beyond `slot` included
+            win = [r for r in rows if r[0] > slot - timedelta(hours=1)]
+            win_h = [r for r in win if host and r[1] == host]
+            full_all = len(win) >= self.max_per_hour
+            full_h = bool(host) and hcap is not None and len(win_h) >= hcap
+            if not (full_all or full_h):
+                break
+            if not self.wait_on_hour_cap:
+                what_cap = (f"{self.max_per_hour} page loads" if full_all else
+                            f"{hcap} page loads on {host}")
+                raise ReaderRefused(f"REFUSED_THROTTLE_HOUR: >= {what_cap} in the last hour")
+            stamps = sorted(r[0] for r in (win if full_all else win_h))
+            k = len(stamps) - (self.max_per_hour if full_all else int(hcap or 0))
+            free_at = stamps[max(0, k)] + timedelta(hours=1)
+            slot = max(slot, free_at) + timedelta(seconds=float(self._rng.uniform(5.0, 60.0)))
+            slot = fit_global_gap(slot, all_stamps, g)
+            pause = (slot - now).total_seconds()
+            if pause > self.max_hour_wait_s:
+                raise ReaderRefused(f"REFUSED_THROTTLE_HOUR: the hourly cap would need a "
+                                    f"{pause:.0f} s wait > {self.max_hour_wait_s:.0f} s")
+            self.hour_cap_waits.append(round(pause, 1))
+        wait = max(0.0, (slot - now).total_seconds())
+        self.host_targets[host] = target
+        self.targets.append(target)
+        self.waits.append(round(wait, 2))
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        line = f"{slot.isoformat()} {host or '-'} {target}"
+        with self.path.open("a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+        self._last_line = line
+        return {"line": line, "slot": slot, "wait_s": round(wait, 3), "target_s": target,
+                "global_s": g, "what": what, "host": host}
 
     def _acquire(self, what: str, host: str) -> float:
         now = self.now_fn()
@@ -561,6 +697,18 @@ class Throttle:
             self.targets.pop()
         self.refunds.append({"line": line, "why": str(why)[:160]})
         return True
+
+
+def fit_global_gap(slot: datetime, stamps: list[datetime], gap_s: float) -> datetime:
+    """PURE. The earliest time >= `slot` that is at least `gap_s` from every
+    stamp in `stamps` (past opens and future reservations alike). A free
+    interval BEFORE a future reservation is used; the slot is not pushed behind
+    the latest reservation of every host."""
+    g = timedelta(seconds=float(gap_s))
+    for s in sorted(stamps):
+        if s - g < slot < s + g:
+            slot = s + g
+    return slot
 
 
 def throttle_path() -> Path:
@@ -932,7 +1080,13 @@ def _store_article(art: dict, root: Path) -> dict:
     rec["pit_grade"] = NR.effective_pit_grade(
         {"published_utc": rec["published_utc"], "first_seen_utc": seen,
          "pit_grade": "first_seen_only"})
-    for k in ("tab", "profile", "attached_to", "read_s"):
+    # 2026-09-28 (the reader pool): HOW the page was reached (lane, section,
+    # parent url, position on that page, depth) so grading can ask whether
+    # prominence carries information; the MEDIA it carries (video / audio /
+    # charts / images, titles and captions -- text only) and table rows; the
+    # tickers it names.
+    for k in ("tab", "profile", "attached_to", "read_s", "reached_by", "media", "tables",
+              "tickers_named", "page_kind"):
         if k in art:
             rec[k] = art[k]
     p = root / pub / day / f"{sha}.json"
@@ -1571,6 +1725,21 @@ class Reader:
         return self.finish_article(link, column=column, origin=origin, store=store,
                                    tickers=tickers, t0=t0)
 
+    def _read_media(self) -> tuple[dict | None, list[dict]]:
+        """(the `read_media` reply, its related links) for the current tab; a
+        failure is recorded on the reader and returns (None, [])."""
+        try:
+            got = self.driver.read_media(self.tab, profile_name=self.profile)
+        except Exception as exc:  # noqa: BLE001 -- the article stands without it
+            self.media_errors = getattr(self, "media_errors", []) + [
+                f"{type(exc).__name__}: {str(exc)[:120]}"]
+            return None, []
+        if got.get("error"):
+            self.media_errors = getattr(self, "media_errors", []) + [str(got["error"])[:120]]
+            return None, []
+        rel = [r for r in (got.get("related_links") or []) if isinstance(r, dict)]
+        return got, rel
+
     def load_article(self, link: dict | str) -> None:
         """The PAGE LOAD half: throttle slot, then click the snapshot ref or
         navigate, with the host checks before and after. No settle here."""
@@ -1589,10 +1758,19 @@ class Reader:
 
     def finish_article(self, link: dict | str, *, column: str | None = None,
                        origin: str = "web_reader", store: bool = True,
-                       tickers: list[str] | None = None, t0: float | None = None) -> dict:
+                       tickers: list[str] | None = None, t0: float | None = None,
+                       extra: dict | None = None, with_media: bool = False,
+                       universe: set[str] | frozenset[str] | None = None) -> dict:
         """The READ half, on the page `load_article` loaded: what is left of
         the settle, 2-3 scroll steps, the fixed innerText read, clean, store,
-        blank. No page load."""
+        blank. No page load.
+
+        The reader pool (2026-09-28) adds three optional things, all off by
+        default: `extra` fields stored with the record (`reached_by`,
+        `page_kind`); `with_media` -- a second FIXED read (`read_media`) for the
+        media the page carries, its table rows and its "related" links (the
+        links come back as `art["_related"]`, never stored); `universe` -- the
+        tickers the text names (`tickers_named`)."""
         from backend.services import dowjones_claims as DC
         url = link if isinstance(link, str) else link.get("url")
         t0 = time.time() if t0 is None else t0
@@ -1638,6 +1816,17 @@ class Reader:
                "column": column or DC.column_of(final_url, title or "", text, pub)}
         if tickers:
             art["tickers"] = list(tickers)
+        if universe:
+            art["tickers_named"] = names_tickers(text, universe)
+        if extra:
+            art.update(extra)
+        if with_media and callable(getattr(self.driver, "read_media", None)):
+            art["_media_raw"], art["_related"] = self._read_media()
+            if art["_media_raw"] is not None:
+                from backend.services import media_transcripts as MT
+                art["media"] = MT.summarize(art["_media_raw"].get("media"))
+                art["tables"] = [t for t in (art["_media_raw"].get("tables") or [])
+                                 if isinstance(t, dict) and t.get("rows")][:5]
         art["sha"] = DC.text_sha(text)
         art["scroll_steps"] = steps
         art["read_s"] = round(time.time() - t0, 2)
@@ -1851,9 +2040,15 @@ class YieldCheck:
 # No claim extraction here. Rows carry `source_kind = "social"`: downstream, a
 # social row may never originate an alert and never an order.
 
+#: 2026-09-28 (the pool): the X url no longer carries `src=typed_query` -- the
+#: page is NAVIGATED to, nothing was typed, and nothing here claims otherwise.
+#: Reddit searches the investing subreddits together (restrict_sr), newest first.
+REDDIT_SUBS = ("stocks", "investing", "wallstreetbets", "StockMarket", "options",
+               "SecurityAnalysis", "ValueInvesting")
 SOCIAL_URLS: dict[str, str] = {
-    "x.com": "https://x.com/search?q=%24{ticker}&src=typed_query&f=live",
-    "reddit.com": "https://www.reddit.com/search/?q=%24{ticker}&type=posts&sort=new",
+    "x.com": "https://x.com/search?q=%24{ticker}&f=live",
+    "reddit.com": ("https://www.reddit.com/r/" + "+".join(REDDIT_SUBS)
+                   + "/search/?q={ticker}&restrict_sr=1&sort=new"),
     "stocktwits.com": "https://stocktwits.com/symbol/{ticker}",
 }
 
@@ -1879,6 +2074,13 @@ def store_social(row: dict, *, root: Path | None = None) -> Path:
     (locked append). The row MUST carry `source_kind = "social"`."""
     if row.get("source_kind") != "social":
         raise ReaderRefused("REFUSED_SOCIAL_KIND: a social row must carry source_kind='social'")
+    # 2026-09-28 (the pool puts the social hosts in the rotation): a social row
+    # can never be marked as an alert's origin or an order's -- refused at the
+    # one place every social row is written
+    if row.get("alert_origin") or row.get("order_origin") or row.get("is_alert_origin"):
+        raise ReaderRefused("REFUSED_SOCIAL_ALERT_ORIGIN: a social row may not be an alert's "
+                            "or an order's origin")
+    row = dict(row, never=sorted(set(row.get("never") or []) | {"alert_origin", "order"}))
     base = (root or social_root()) / str(row.get("host") or "unknown")
     day = str(row.get("read_utc") or datetime.now(timezone.utc).isoformat())[:10]
     path = base / f"{day}.jsonl"
@@ -1918,3 +2120,140 @@ def read_social_page(reader: "Reader", url: str, *, ticker: str | None = None,
     reader.scrolled_reads += bool(steps)
     reader.blank()
     return row
+
+
+# ───────────── the reader pool (2026-09-28 21:45 HKT): shared helpers ─────────
+#
+# Murat: "can openclaw read more, can it launch another chrome tabs to read too
+# ... it needs to read wsj, barron, marketwatch per stock and the news from that
+# too, it should navigate them, not just the stocks, and also the media too."
+# `scripts/reader_pool.py` drives several tabs at once; these are the pure pieces
+# it shares with the rest of the reader.
+
+#: Social page classes. Anything but OK / BLANK stops that host for a cooling
+#: period (`config.READER_HOST_COOL_S`); nothing is done to get around it.
+SOCIAL_CLASSES = ("OK", "BLANK", "LOGIN_WALL", "INTERSTITIAL", "RATE_LIMITED", "CHALLENGE",
+                  "REDIRECTED_OFF_HOST")
+_SOCIAL_LOGIN_PATH = re.compile(r"/(i/flow/login|login|account/login|signin|sign-in)\b", re.I)
+_SOCIAL_LOGIN_TEXT = re.compile(
+    r"(sign in to x|log in to x|don.t miss what.s happening|log in to reddit|"
+    r"continue with google|create your account|sign up for stocktwits|log in to stocktwits|"
+    r"you must be logged in)", re.I)
+_SOCIAL_RATE = re.compile(r"(rate limit|too many requests|you are over the daily limit|"
+                          r"whoa there,? pardner|try again later|slow down)", re.I)
+_SOCIAL_INTERSTITIAL = re.compile(r"(something went wrong\.? try reloading|"
+                                  r"you.ve been blocked by network security|"
+                                  r"this content is not available|age-restricted|"
+                                  r"are you over 18)", re.I)
+#: a logged-in results page is long; a wall is short
+SOCIAL_WALL_MAX_CHARS = 1500
+
+
+def classify_social(*, url: str, final_url: str | None, title: str | None,
+                    text: str) -> str:
+    """PURE. One of SOCIAL_CLASSES for a social page that was loaded and read.
+    Order: off-host > blank > challenge > rate limit > login wall (a login
+    URL, or login text on a SHORT page) > interstitial > OK."""
+    fu = final_url or url or ""
+    if fu and not fu.startswith("about:") and not (host_ok(fu) and is_social(fu)):
+        return "REDIRECTED_OFF_HOST"
+    body = (text or "").strip()
+    if fu.startswith("about:") or len(body) < PAGE_MIN_CHARS:
+        return "BLANK"
+    head = f"{title or ''}\n{body[:1500]}"
+    short = len(body) < SOCIAL_WALL_MAX_CHARS
+    if _CHALLENGE.search(head) and len(body) < 4000:
+        return "CHALLENGE"
+    if _SOCIAL_RATE.search(head) and short:
+        return "RATE_LIMITED"
+    if _SOCIAL_LOGIN_PATH.search(urlsplit(fu).path or "") or (_SOCIAL_LOGIN_TEXT.search(head)
+                                                              and short):
+        return "LOGIN_WALL"
+    if _SOCIAL_INTERSTITIAL.search(head) and short:
+        return "INTERSTITIAL"
+    return "OK"
+
+
+#: Words that are tickers AND ordinary capitalised words; never counted as a
+#: named ticker on their own.
+TICKER_STOPWORDS = frozenset({"A", "I", "AI", "IT", "ON", "ALL", "ARE", "BE", "CAN", "FOR",
+                              "GO", "HAS", "NOW", "ONE", "OR", "SO", "TV", "US", "USA", "CEO",
+                              "CFO", "EPS", "GDP", "IPO", "ETF", "SEC", "FED", "NEW", "BIG",
+                              "OUT", "AN", "AT", "BY", "DO", "HE", "IN", "IS", "OF", "TO",
+                              "UP", "WE", "AM", "PM", "EV", "UK", "EU"})
+
+
+def names_tickers(text: str, universe: set[str] | frozenset[str]) -> list[str]:
+    """PURE. Universe tickers the text NAMES the way these sites print a
+    ticker: `(NVDA)`, `(NASDAQ: NVDA)`, `ticker: NVDA`, `$NVDA`, or a quote chip
+    `NVDA +1.2%` / `NVDA -0.4%`. A bare capitalised word is not a ticker."""
+    if not text or not universe:
+        return []
+    found: list[str] = []
+    pats = (r"\((?:[A-Za-z]+:\s*)?([A-Z]{1,5}(?:\.[A-Z])?)\)",
+            r"ticker:\s*([A-Z]{1,5}(?:\.[A-Z])?)\b",
+            r"\$([A-Z]{1,5}(?:\.[A-Z])?)\b",
+            r"\b([A-Z]{1,5}(?:\.[A-Z])?)\s+[-+]?\d{1,3}(?:\.\d+)?%")
+    for p in pats:
+        for m in re.finditer(p, text):
+            t = m.group(1).upper()
+            if t in universe and t not in TICKER_STOPWORDS and t not in found:
+                found.append(t)
+    return found
+
+
+def select_front_links(snapshot_text: str, link_pattern: str, *, now: datetime,
+                       max_age_days: int = 3, limit: int = 12) -> dict:
+    """Article links a SECTION FRONT shows, most prominent first (page order)
+    and newest first where the page prints a date: the same chooser as a
+    company page (`select_search_links`: host, pattern, no account/money text,
+    no sponsored unit), each link carrying `position` (its rank among the
+    page's matching links, 1 = first) for the `reached_by` record. Dated links
+    older than `max_age_days` are skipped; undated ones keep page order."""
+    sel = select_search_links(snapshot_text, link_pattern, now=now, max_age_days=max_age_days,
+                              limit=10 ** 6)
+    rows = [dict(lk, position=i + 1) for i, lk in enumerate(sel["links"])]
+
+    def age(lk: dict) -> float:
+        pv = lk.get("published_visible")
+        if not pv:
+            return float("inf")
+        try:
+            return (now - datetime.fromisoformat(pv)).total_seconds()
+        except ValueError:
+            return float("inf")
+    # prominence first: a link in the first few positions keeps its place; below
+    # them, dated links newest first, then undated ones in page order
+    head = rows[:3]
+    rest = sorted(rows[3:], key=lambda lk: (age(lk), lk["position"]))
+    sel["links"] = (head + rest)[:limit]
+    return sel
+
+
+def free_memory_gb() -> float | None:
+    """Free physical memory in GB (Windows `GlobalMemoryStatusEx`; elsewhere
+    /proc/meminfo), None when it cannot be read. Never raises."""
+    try:
+        import ctypes
+        import sys as _sys
+        if _sys.platform == "win32":
+            class _MS(ctypes.Structure):
+                _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                            ("ullTotalPhys", ctypes.c_ulonglong),
+                            ("ullAvailPhys", ctypes.c_ulonglong),
+                            ("ullTotalPageFile", ctypes.c_ulonglong),
+                            ("ullAvailPageFile", ctypes.c_ulonglong),
+                            ("ullTotalVirtual", ctypes.c_ulonglong),
+                            ("ullAvailVirtual", ctypes.c_ulonglong),
+                            ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+            ms = _MS()
+            ms.dwLength = ctypes.sizeof(_MS)
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(ms)):  # type: ignore[attr-defined]
+                return round(ms.ullAvailPhys / 1e9, 2)
+            return None
+        for ln in Path("/proc/meminfo").read_text().splitlines():
+            if ln.startswith("MemAvailable:"):
+                return round(int(ln.split()[1]) * 1024 / 1e9, 2)
+    except Exception:  # noqa: BLE001 -- unknown, never fatal
+        return None
+    return None

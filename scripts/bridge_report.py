@@ -565,12 +565,14 @@ def load_bars(symbols: Optional[set] = None, *, since: Optional[str] = None) -> 
         filt.append(("symbol", "in", sorted(symbols)))
     if since:
         filt.append(("date", ">=", pd.Timestamp(since)))
-    fr = [pd.read_parquet(p, columns=_COLS, filters=filt or None)
+    from backend.services import stitched_tickers as ST
+    fr = [ST.tag_source(pd.read_parquet(p, columns=_COLS, filters=filt or None), Path(p).stem)
           for p in XR.survivorship_free_paths()]
     df = pd.concat(fr, ignore_index=True)
     df["date"] = pd.to_datetime(df["date"])
-    return df.drop_duplicates(["symbol", "date"], keep="first").sort_values(
-        ["symbol", "date"]).reset_index(drop=True)
+    df = df.drop_duplicates(["symbol", "date"], keep="first")
+    df = ST.cut_reader_bars(df)             # reused tickers start at the new company
+    return df.sort_values(["symbol", "date"]).reset_index(drop=True)
 
 
 def next_session(asof: str, cal: pd.DatetimeIndex) -> str:

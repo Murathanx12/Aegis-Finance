@@ -86,9 +86,21 @@ def run(lanes: list[dict], *, driver: Any = None, throttle: Any = None, profile:
                     rd.pages, rd.tab_pages = 1, 1          # the open WAS the page load
                     rd._mark_loaded()
                     readers[ln["host"]] = rd
-                    row = _read_current(rd, ln, root)
                 else:
-                    row = WR.read_social_page(rd, ln["url"], ticker=ln["ticker"], root=root)
+                    rd.navigate(ln["url"])
+                # 2026-09-28: every social page is CLASSIFIED; a login wall, an
+                # interstitial, a rate limit or a challenge stops that host
+                # (its remaining lanes are dropped; nothing is done to pass it)
+                cls, row = read_opened(rd, url=ln["url"], ticker=ln["ticker"], root=root)
+                if cls == "BLANK":
+                    rc["refusals"].append({"lane": ln["lane"], "why": "REFUSED_EMPTY_READ: "
+                                           f"{ln['url']!r} (BLANK)"})
+                    continue
+                if cls != "OK":
+                    rc.setdefault("hosts_stopped", {})[ln["host"]] = f"{cls}: {row.get('url')}"
+                    todo = [x for x in todo if x["host"] != ln["host"]]
+                    rc["refusals"].append({"lane": ln["lane"], "why": f"HOST_STOPPED_{cls}"})
+                    continue
                 rc["rows"].append({k: row.get(k) for k in ("host", "ticker", "url", "chars",
                                                            "read_utc", "stored")})
                 ychk.record(ln["host"], chars=row.get("chars"), kind="social")
@@ -133,6 +145,53 @@ def _read_current(rd: WR.Reader, ln: dict, root: Path | None) -> dict:
     row["stored"] = str(WR.store_social(row, root=root))
     rd.blank()
     return row
+
+
+# ─────────── the reader pool (2026-09-28): the social lanes in the rotation ─────
+
+def read_opened(rd: WR.Reader, *, url: str, ticker: str | None, reached_by: dict | None = None,
+                root: Path | None = None, store: bool = True) -> tuple[str, dict]:
+    """The pool opened a tab AT a social search / community URL: scroll, read,
+    CLASSIFY (`web_reader.classify_social`), store only an OK page, tagged
+    `source_kind = "social"` with `never = [alert_origin, order]`. Returns
+    `(class, row)`; a non-OK row is not stored. No click, no typing: the client
+    refuses both on a social host on both transports."""
+    import time as _t
+    t0 = _t.time()
+    steps = rd.scroll_through()
+    got = rd.driver.read_text(rd.tab, profile_name=rd.profile)
+    final = got.get("url") or url
+    text = str(got.get("text") or "")
+    if got.get("error"):
+        text = ""
+    cls = WR.classify_social(url=url, final_url=final, title=got.get("title"), text=text)
+    rd.count_page(final, cls)
+    row = {"source_kind": "social", "host": WR.host_of(final) or WR.host_of(url), "url": final,
+           "requested_url": url, "ticker": (ticker or "").upper() or None,
+           "title": got.get("title"), "text": text, "chars": len(text), "page_class": cls,
+           "read_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+           "scroll_steps": steps, "read_s": round(_t.time() - t0, 2), "tab": rd.tab,
+           "profile": rd.profile, "reached_by": reached_by,
+           "never": ["alert_origin", "order"]}
+    if cls == "OK" and store:
+        row["stored"] = str(WR.store_social(row, root=root))
+    rd.reads += 1
+    rd.scrolled_reads += bool(steps)
+    rd.blank()
+    return cls, row
+
+
+def social_items(tickers: list[str], hosts: list[str] | None = None) -> list[dict]:
+    """PURE. The pool's social work items: per ticker, the X cashtag search,
+    the StockTwits symbol page and the Reddit search across the investing
+    subreddits -- each a URL NAVIGATED to, never typed."""
+    hs = list(hosts or WR.social_hosts())
+    out = []
+    for t in tickers:
+        for h in hs:
+            out.append({"kind": "social", "host": h, "site": h, "lane": f"social:{h}",
+                        "ticker": t.upper(), "url": WR.social_url(h, t)})
+    return out
 
 
 def main(argv: list[str] | None = None) -> int:

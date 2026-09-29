@@ -351,12 +351,16 @@ def status(*, probes: Probes | None = None) -> dict:
 
 
 def attach_argv() -> list[str]:
-    """Exactly `scripts/open_muratclaw_chrome_attach.cmd`, as an argv."""
+    """`scripts/open_muratclaw_chrome_attach.cmd` as an argv, except the start
+    page: `OPENCLAW_CHROME_START_URL` (about:blank). 2026-09-29: the old start
+    page (https://www.wsj.com/) stayed open, idle, for the browser's whole life,
+    and a live, ad-heavy home page left idle is the tab that grows and hangs;
+    a hung tab fails every attach of the gateway."""
     return [str(_cfg("OPENCLAW_CHROME_EXE",
                      r"C:\Program Files\Google\Chrome\Application\chrome.exe")),
             f"--user-data-dir={user_data_dir()}", f"--remote-debugging-port={port()}",
             f"--remote-debugging-address={host()}", "--no-first-run",
-            "https://www.wsj.com/"]
+            str(_cfg("OPENCLAW_CHROME_START_URL", "about:blank"))]
 
 
 def launch_attach(*, probes: Probes | None = None, popen: Callable[..., Any] | None = None,

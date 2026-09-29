@@ -1,0 +1,187 @@
+{
+ "artefact": "NN_LAB_NIGHTLY",
+ "run_id": "nightly_20260928T141823Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "broker_authority": "NONE: writes predictions, never orders",
+ "started_utc": "2026-09-28T14:18:23+00:00",
+ "variant": "dist",
+ "append": {
+  "old_max_date": "2026-09-25",
+  "new_max_date": "2026-09-25",
+  "tail_start": "2026-01-15",
+  "rows_rebuilt": 102080,
+  "rows_added": 0,
+  "new_dates": [],
+  "labels_filled": -606,
+  "table_rows": 1116952
+ },
+ "grade": {
+  "graded": 0,
+  "note": "no frozen predictions yet"
+ },
+ "train": {
+  "challenger": {
+   "version": "nn-645977cc6124",
+   "val_ic_21": 0.06361,
+   "val_ic_by_h": {
+    "5": 0.05296,
+    "21": 0.06361,
+    "63": 0.09937
+   },
+   "val_brier_21": 0.2492,
+   "val_brier_base_21": 0.25,
+   "fits": [
+    {
+     "best_val_ic_mean_over_horizons": 0.0732,
+     "epochs": 8,
+     "seed": 828052459,
+     "variant": "dist",
+     "val_ic_by_epoch": [
+      0.0329,
+      0.04222,
+      0.03524,
+      0.04358,
+      0.0732,
+      0.07079,
+      0.06742,
+      0.06921
+     ]
+    },
+    {
+     "best_val_ic_mean_over_horizons": 0.0782,
+     "epochs": 15,
+     "seed": 591187031,
+     "variant": "dist",
+     "val_ic_by_epoch": [
+      0.03024,
+      0.05624,
+      0.04752,
+      0.0563,
+      0.03291,
+      0.06349,
+      0.06892,
+      0.06202,
+      0.06151,
+      0.07062,
+      0.04987,
+      0.0782,
+      0.07077,
+      0.05395,
+      0.07724
+     ]
+    },
+    {
+     "best_val_ic_mean_over_horizons": 0.0461,
+     "epochs": 7,
+     "seed": 542190456,
+     "variant": "dist",
+     "val_ic_by_epoch": [
+      0.01743,
+      0.02852,
+      0.04038,
+      0.0461,
+      0.04611,
+      0.04492,
+      0.02847
+     ]
+    }
+   ]
+  },
+  "incumbent": null,
+  "promoted": true,
+  "why": "no incumbent: the first model becomes the incumbent",
+  "model_in_use": "nn-645977cc6124",
+  "groups_used": [
+   "price",
+   "fund",
+   "analyst",
+   "news"
+  ],
+  "seeds_drawn": [
+   828052459,
+   591187031,
+   542190456
+  ],
+  "predictions": {
+   "status": "FROZEN",
+   "decision_date": "2026-09-25",
+   "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\predictions\\pred_2026-09-25_nightly_20260928T141823Z.parquet",
+   "sha256": "99a9a2a50484a2e6aa6207ffc4863d3c78307c2dc869cc928bb5a816ec6681e0",
+   "rows": 8709,
+   "names": 2903,
+   "in_candidate_set": 25,
+   "in_frozen_book": 0,
+   "prob21_range": [
+    0.4011,
+    0.5727
+   ],
+   "top10_by_mean_h21": [
+    {
+     "symbol": "HPP",
+     "mean": 0.0236,
+     "sigma": 0.19480000436306,
+     "prob": 0.5727
+    },
+    {
+     "symbol": "KALU",
+     "mean": 0.0208,
+     "sigma": 0.16359999775886536,
+     "prob": 0.5686
+    },
+    {
+     "symbol": "EVH",
+     "mean": 0.0204,
+     "sigma": 0.24300000071525574,
+     "prob": 0.562
+    },
+    {
+     "symbol": "BELFA",
+     "mean": 0.0199,
+     "sigma": 0.17910000681877136,
+     "prob": 0.5683
+    },
+    {
+     "symbol": "RGNX",
+     "mean": 0.0195,
+     "sigma": 0.19110000133514404,
+     "prob": 0.5606
+    },
+    {
+     "symbol": "BELFB",
+     "mean": 0.0193,
+     "sigma": 0.17309999465942383,
+     "prob": 0.5666
+    },
+    {
+     "symbol": "SMWB",
+     "mean": 0.0192,
+     "sigma": 0.18860000371932983,
+     "prob": 0.5654
+    },
+    {
+     "symbol": "LAR",
+     "mean": 0.0173,
+     "sigma": 0.19439999759197235,
+     "prob": 0.5533
+    },
+    {
+     "symbol": "AGL",
+     "mean": 0.0172,
+     "sigma": 0.21060000360012054,
+     "prob": 0.5524
+    },
+    {
+     "symbol": "PUMP",
+     "mean": 0.0171,
+     "sigma": 0.18250000476837158,
+     "prob": 0.5533
+    }
+   ]
+  }
+ },
+ "new_rows_since_last_run": -606,
+ "previous_run": null,
+ "status": "DEGRADED",
+ "elapsed_s": 66.1,
+ "written_utc": "2026-09-28T14:19:29+00:00"
+}

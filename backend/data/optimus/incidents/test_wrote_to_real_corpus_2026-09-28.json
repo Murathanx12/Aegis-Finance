@@ -1,0 +1,80 @@
+{
+ "incident": "test_wrote_to_real_corpus",
+ "found_by": "docs/reviews/REVIEW_2026-09-28_LANE_A_ALERTS.md F5",
+ "cleaned_utc": "2026-09-28T06:46:10+00:00",
+ "cause": "backend/tests/test_alerts_replies.py::test_digest_text_goes_to_the_paste_inbox_and_a_url_is_queued_not_fetched called digest_inbox.ingest -> web_reader.store_article, which honours root= for the article file but writes the corpus row under config.OPTIMUS_LEDGER_DIR/news_corpus/<registry id>; the test's fixture text (lead 'Chip maker AAA said on Monday...', containing 'ignore all previous instructions' and a C:\\Windows path) was appended once per test run",
+ "file": "backend/data/optimus/news_corpus/dj_digest_inbox/2026-09-28.jsonl",
+ "rows_before": 8,
+ "rows_after": 0,
+ "rows_removed": 8,
+ "identification_rule": "title starts with the test fixture's lead AND first_seen_utc == the test's fixed NOW 2026-09-28T06:00:00+00:00 AND fetcher == pasted_by_operator; all removed rows carry raw_id (article sha) 31d3f3448b465792..., the fixture text's sha",
+ "removed": [
+  {
+   "line_no": 1,
+   "sha256_of_line": "66ca3b5a6ab37c2659b352b3aae83847347c206cf6c21b20c864d037d80f51a7",
+   "raw_id": "31d3f3448b4657926ca7",
+   "first_seen_utc": "2026-09-28T06:00:00+00:00",
+   "title_lead": "Chip maker AAA said on Monday that its new plant in Arizona will start volume pr"
+  },
+  {
+   "line_no": 2,
+   "sha256_of_line": "66ca3b5a6ab37c2659b352b3aae83847347c206cf6c21b20c864d037d80f51a7",
+   "raw_id": "31d3f3448b4657926ca7",
+   "first_seen_utc": "2026-09-28T06:00:00+00:00",
+   "title_lead": "Chip maker AAA said on Monday that its new plant in Arizona will start volume pr"
+  },
+  {
+   "line_no": 3,
+   "sha256_of_line": "66ca3b5a6ab37c2659b352b3aae83847347c206cf6c21b20c864d037d80f51a7",
+   "raw_id": "31d3f3448b4657926ca7",
+   "first_seen_utc": "2026-09-28T06:00:00+00:00",
+   "title_lead": "Chip maker AAA said on Monday that its new plant in Arizona will start volume pr"
+  },
+  {
+   "line_no": 4,
+   "sha256_of_line": "66ca3b5a6ab37c2659b352b3aae83847347c206cf6c21b20c864d037d80f51a7",
+   "raw_id": "31d3f3448b4657926ca7",
+   "first_seen_utc": "2026-09-28T06:00:00+00:00",
+   "title_lead": "Chip maker AAA said on Monday that its new plant in Arizona will start volume pr"
+  },
+  {
+   "line_no": 5,
+   "sha256_of_line": "66ca3b5a6ab37c2659b352b3aae83847347c206cf6c21b20c864d037d80f51a7",
+   "raw_id": "31d3f3448b4657926ca7",
+   "first_seen_utc": "2026-09-28T06:00:00+00:00",
+   "title_lead": "Chip maker AAA said on Monday that its new plant in Arizona will start volume pr"
+  },
+  {
+   "line_no": 6,
+   "sha256_of_line": "66ca3b5a6ab37c2659b352b3aae83847347c206cf6c21b20c864d037d80f51a7",
+   "raw_id": "31d3f3448b4657926ca7",
+   "first_seen_utc": "2026-09-28T06:00:00+00:00",
+   "title_lead": "Chip maker AAA said on Monday that its new plant in Arizona will start volume pr"
+  },
+  {
+   "line_no": 7,
+   "sha256_of_line": "66ca3b5a6ab37c2659b352b3aae83847347c206cf6c21b20c864d037d80f51a7",
+   "raw_id": "31d3f3448b4657926ca7",
+   "first_seen_utc": "2026-09-28T06:00:00+00:00",
+   "title_lead": "Chip maker AAA said on Monday that its new plant in Arizona will start volume pr"
+  },
+  {
+   "line_no": 8,
+   "sha256_of_line": "66ca3b5a6ab37c2659b352b3aae83847347c206cf6c21b20c864d037d80f51a7",
+   "raw_id": "31d3f3448b4657926ca7",
+   "first_seen_utc": "2026-09-28T06:00:00+00:00",
+   "title_lead": "Chip maker AAA said on Monday that its new plant in Arizona will start volume pr"
+  }
+ ],
+ "backup": "backend/data/optimus/news_corpus/dj_digest_inbox/2026-09-28.jsonl.bak_before_F5_cleanup_2026-09-28",
+ "article_file_in_real_store": "none: the test passed root=<tmp_path>/articles, so the full-text article json never reached news_corpus/dowjones/; searched backend/data/optimus for 31d3f3448b465792* -> 0 files",
+ "derived_ledger_rows": {
+  "sources/claims.jsonl": "0 rows mention the fixture text or its sha",
+  "predictions.jsonl": "0 rows mention the fixture text or its sha",
+  "news_corpus/dowjones/_claims": "the claims step reads article files (news_corpus/dowjones/<pub>/<day>/*.json), not corpus rows; the fixture article was never there, so no claim was extracted",
+  "VOID_SYNTHETIC": []
+ },
+ "fix": "the test's ctx fixture monkeypatches config.OPTIMUS_LEDGER_DIR to tmp_path; every test_alerts_*.py module carries the autouse guard backend/tests/alerts_isolation.guard_real_data, which fails a test on any write under the real backend/data tree",
+ "owed_elsewhere": "web_reader._store_article: write the corpus row under Path(root).parent / sid when a root is passed (the article root is news_corpus/dowjones), not under config.OPTIMUS_LEDGER_DIR -- another builder's file",
+ "file_after": "removed: every row was synthetic, so the day file would have been 0 bytes (a zero-byte file reads as a truncated write); the backup beside it holds all 8 rows"
+}

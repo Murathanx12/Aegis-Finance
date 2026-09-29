@@ -8,6 +8,7 @@ real OpenClaw call writes, so the cap is exercised against the real reader.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from datetime import datetime, timezone
 
 import pytest
@@ -248,3 +249,40 @@ def test_magnitude_keeps_the_shrink_and_direction_does_not():
     for obs in (B.Observable.BEATS_BENCHMARK, B.Observable.RETURN_SIGN):
         p, basis = N.recalibrate(0.60, obs)
         assert p == pytest.approx(0.60) and basis == N.SHRINK_BASIS_DIRECTION
+
+
+# ───────────── the receipt rename survives a Windows file lock (2026-09-29) ─────────────
+
+def _locked_replace(monkeypatch, n_fail: int | None):
+    """os.replace onto a `day_*.json` receipt raises PermissionError (a reader
+    holding it on Windows) `n_fail` times, or always when None."""
+    import os
+    real = os.replace
+    seen = {"n": 0}
+
+    def fake(src, dst, *a, **k):
+        if str(dst).endswith(".json") and "day_" in str(dst):
+            seen["n"] += 1
+            if n_fail is None or seen["n"] <= n_fail:
+                raise PermissionError(32, "The process cannot access the file")
+        return real(src, dst, *a, **k)
+    monkeypatch.setattr(os, "replace", fake)
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    return seen
+
+
+def test_a_transient_lock_on_the_receipt_is_retried(env, monkeypatch):
+    seen = _locked_replace(monkeypatch, n_fail=2)
+    res = _run(env, ask_fn=_stub_ask())
+    assert res["state"] == "DONE" and res["receipt_write_failures"] == 0
+    assert seen["n"] > 2
+    rc = json.loads(Path(res["receipt"]).read_text(encoding="utf-8"))
+    assert rc["state"] == "DONE"
+
+
+def test_a_receipt_that_stays_locked_does_not_lose_the_rows(env, monkeypatch):
+    _locked_replace(monkeypatch, n_fail=None)
+    res = _run(env, ask_fn=_stub_ask())          # must not raise
+    assert res["n_rows_written"] > 0 and res["receipt_write_failures"] > 0
+    assert len(_ledger(env)) == res["n_rows_written"]
+    assert not list(Path(env["receipts"]).glob("*.tmp"))   # no temp left behind
