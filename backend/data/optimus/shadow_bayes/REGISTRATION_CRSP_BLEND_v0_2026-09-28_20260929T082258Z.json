@@ -1,0 +1,80 @@
+{
+ "registration": "CRSP_BLEND_v0",
+ "licence": "PRODUCT_EXPERIMENT (paper, local frozen book, no broker orders, no LLM authority)",
+ "registered_utc": "2026-09-29T08:22:59+00:00",
+ "book_id": "b0a33a92c56fddb1",
+ "twin_book_id": "b35d287bdcbf00bb",
+ "twin": {
+  "seed": 2189145476,
+  "draws": 21,
+  "fallbacks": {
+   "cell": 1596,
+   "band_vol": 21,
+   "band": 0,
+   "any": 0
+  },
+  "matching": "band (mega>=1e9/large>=1e8/mid>=2e7/small, 63-session median $vol) x vol_63 tercile x mom_252_21 tercile among eligible names on the bars date"
+ },
+ "asof": "2026-09-28",
+ "entry": "open of 2026-09-29 (llm_portfolio.entry_session)",
+ "rules": [
+  "px_vs_ma200_large",
+  "trend_quality_trend",
+  "co03_reversal_in_high_margin",
+  "vol_compression"
+ ],
+ "sleeve_weight": 0.25,
+ "rule_receipt": "backend/data/optimus/shadow_bayes/crsp_blend_v0_2026-09-28_20260929T082258Z.json (hash 315e910a827bb584)",
+ "rule_code": "scripts/crsp_blend_book.py (uncommitted at registration: commit owed before any read)",
+ "evidence": {
+  "board": "library_board_LIB_2026-09-29T0802Z__2026-09-29T081355Z.json",
+  "full": {
+   "window": [
+    null,
+    null
+   ],
+   "n_months": 352,
+   "mean_monthly": 0.006426437724215189,
+   "n_blocks": 118,
+   "t_blocks": 5.322763439146339,
+   "se_monthly": 0.001207349865851986,
+   "mde_monthly": 0.0033805796243855605
+  },
+  "holdout_1991_2016": {
+   "window": [
+    "1991-01-01",
+    "2016-12-31"
+   ],
+   "n_months": 257,
+   "mean_monthly": 0.006272716021603618,
+   "n_blocks": 86,
+   "t_blocks": 4.571674220486661,
+   "se_monthly": 0.0013720828998475486,
+   "mde_monthly": 0.003841832119573136
+  },
+  "libwin_2017_2024": {
+   "window": [
+    "2017-01-01",
+    "2024-12-31"
+   ],
+   "n_months": 95,
+   "mean_monthly": 0.006842295382859114,
+   "n_blocks": 32,
+   "t_blocks": 2.894658632126064,
+   "se_monthly": 0.002363765905561582,
+   "mde_monthly": 0.00661854453557243
+  },
+  "years": {
+   "n_years": 30,
+   "n_positive": 26,
+   "share_positive": 0.8666666666666667
+  },
+  "dsr": 0.962,
+  "dsr_n_trials": 1298,
+  "chosen_after_looking": true
+ },
+ "primary_statistic": "book minus matched twin21, 63 and 126 sessions after entry",
+ "kill_rule": "CRSP_BLEND_v0 kill rule: book minus matched twin21 below -1.645 x its 21-draw noise sd at 126 sessions -> FAILED_VARIANT; inside +/- -> CANNOT_DISTINGUISH (expected in 2026)",
+ "honest_power": "a +0.64%/mo true edge against a ~2.5%/mo tracking sd gives a 6-month t of ~0.6: this book can kill the blend (a large negative gap), it cannot confirm it in 2026",
+ "roadmap_conflict": "a new book inside ROADMAP_2026-09-28's 'no new book to 2026-10-26' window; frozen on the 2026-09-29 builder brief (owner away); voidable before entry with llm_portfolio.void"
+}
