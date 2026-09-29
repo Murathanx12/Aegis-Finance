@@ -1,0 +1,13 @@
+# ft_lab's own interpreter (ft_lab/.venv). torch comes from the CUDA index first:
+#   pip install torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128
+transformers==5.17.0
+peft==0.21.0
+accelerate==1.15.0
+huggingface_hub==1.33.0
+safetensors==0.8.0
+numpy==2.2.6
+pandas==3.0.6
+pyarrow==25.0.1
+scikit-learn==1.9.1
+scipy==1.18.1
+pytest==9.1.1

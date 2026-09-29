@@ -108,6 +108,18 @@ def stranded_tickers(*, today: date | None = None) -> tuple[list[str], list[str]
     return sorted(want - set(dead)), dead
 
 
+def proxy_tickers(have: set[str] | None = None) -> list[str]:
+    """`config.FORECAST_PROXY_ETFS` not already in the main panel (2026-09-29).
+
+    The world digest's sector and macro implications (about a third of them)
+    are graded on these proxies (`config.WORLD_DIGEST_SUBJECT_PROXIES`); without
+    their bars every such row was written off as NOT_A_TICKER_NO_PROXY_IN_PANEL."""
+    if have is None:
+        from backend.services import paper_books as PB
+        have = set(PB.load_bars()["symbol"].unique())
+    return sorted(set(getattr(_config, "FORECAST_PROXY_ETFS", ())) - set(have))
+
+
 def _vendor_symbol(t: str) -> str:
     """The ledger's spelling, in the vendor's notation.
 
@@ -196,9 +208,17 @@ def main(argv=None) -> int:
     ap.add_argument("--end", default=None)
     ap.add_argument("--out", default=str(OUT_PARQUET))
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--proxies-only", action="store_true",
+                    help="pull only config.FORECAST_PROXY_ETFS (not the stranded ledger names)")
     a = ap.parse_args(argv)
 
-    fetchable, dead = stranded_tickers()
+    proxies = proxy_tickers()
+    if a.proxies_only:
+        fetchable, dead = [], []
+    else:
+        fetchable, dead = stranded_tickers()
+    print(f"proxy ETFs not in the main panel: {len(proxies)}")
+    fetchable = sorted(set(fetchable) | set(proxies))
     print(f"stranded and FETCHABLE   : {len(fetchable)}")
     print(f"permanently unpriceable  : {len(dead)}  {dead}")
     if a.dry_run:
@@ -219,15 +239,17 @@ def main(argv=None) -> int:
 
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
+    got = set(bars["symbol"].unique())          # what THIS pull returned
     if out.exists():
         bars = pd.concat([pd.read_parquet(out), bars], ignore_index=True)
     bars = bars.drop_duplicates(["symbol", "date"], keep="last").sort_values(
         ["symbol", "date"])
     bars.to_parquet(out, index=False)
 
-    got = set(bars["symbol"].unique())
     missed = sorted(set(fetchable) - got)
     res = {"receipt": "forecast_bars_pull", "licence": "PRODUCT_EXPERIMENT",
+           "proxies_requested": proxies,
+           "proxies_returned": sorted(set(proxies) & got),
            "llm_spend_usd": 0.0,
            "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "n_requested": len(fetchable), "n_returned": len(got),
@@ -244,7 +266,8 @@ def main(argv=None) -> int:
            "not_voided": ("the permanently-unpriceable records are NOT voided "
                           "here. Voiding edits a tamper-evident ledger and is "
                           "Murat's call, not a side effect of a price pull.")}
-    p = out.parent / f"forecast_bars_pull_{date.today()}.json"
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    p = out.parent / f"forecast_bars_pull_{run_id}.json"   # never overwritten
     p.write_text(json.dumps(res, indent=1, default=str), encoding="utf-8")
     print(f"\n{len(got)} of {len(fetchable)} symbols returned, {len(bars):,} rows, "
           f"{res['first_bar']}..{res['last_bar']}")

@@ -1,0 +1,171 @@
+{
+ "job": "ft_lab.dataset",
+ "licence": "PRODUCT_EXPERIMENT",
+ "built_utc": "2026-09-29T02:56:17+00:00",
+ "inputs": {
+  "panel": "backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+  "panel_rows": 348478,
+  "bars": "backend\\data\\optimus\\prices_deep\\bars.parquet",
+  "teacher": "backend\\data\\optimus\\typed_events\\panel_2026-09-13.jsonl"
+ },
+ "target": "|x_oc|: open-to-close of the first session whose open is after publication, minus SPY's",
+ "cells": {
+  "n_total": 138763,
+  "dropped_no_trailing_prior": 827,
+  "by_split": {
+   "train": 79435,
+   "val": 26555,
+   "test": 25365,
+   "embargo": 7408
+  },
+  "date_range_by_split": {
+   "train": [
+    "2025-01-02",
+    "2025-12-31"
+   ],
+   "val": [
+    "2026-01-16",
+    "2026-04-30"
+   ],
+   "test": [
+    "2026-05-15",
+    "2026-09-28"
+   ]
+  },
+  "symbols": 3029,
+  "median_abs_move_by_split": {
+   "train": 0.01256,
+   "val": 0.0164,
+   "test": 0.01624
+  },
+  "mag_bucket_share_by_split": {
+   "train": {
+    "SMALL": 0.4338,
+    "NEGLIGIBLE": 0.232,
+    "MODERATE": 0.2313,
+    "LARGE": 0.0764,
+    "EXTREME": 0.0264
+   },
+   "val": {
+    "SMALL": 0.3967,
+    "MODERATE": 0.2935,
+    "NEGLIGIBLE": 0.177,
+    "LARGE": 0.1027,
+    "EXTREME": 0.0302
+   },
+   "test": {
+    "SMALL": 0.3982,
+    "MODERATE": 0.2935,
+    "NEGLIGIBLE": 0.1773,
+    "LARGE": 0.104,
+    "EXTREME": 0.027
+   }
+  },
+  "title_seen_in_train_share": {
+   "val": 0.1245,
+   "test": 0.0771
+  },
+  "split_check": {
+   "spans": {
+    "train": [
+     "2025-01-02",
+     "2025-12-31"
+    ],
+    "val": [
+     "2026-01-16",
+     "2026-04-30"
+    ],
+    "test": [
+     "2026-05-15",
+     "2026-09-28"
+    ]
+   },
+   "sessions_between": {
+    "train->val": 10,
+    "val->test": 10
+   }
+  }
+ },
+ "extract": {
+  "n_total": 19996,
+  "by_split": {
+   "train": 9641,
+   "test": 5011,
+   "val": 4422,
+   "embargo": 922
+  },
+  "date_range_by_split": {
+   "train": [
+    "2025-01-02",
+    "2025-12-31"
+   ],
+   "val": [
+    "2026-01-16",
+    "2026-04-30"
+   ],
+   "test": [
+    "2026-05-15",
+    "2026-09-11"
+   ]
+  },
+  "teacher_model": [
+   "deepseek-chat"
+  ],
+  "event_type_share_train": {
+   "no_event": 0.7249,
+   "earnings_report": 0.0705,
+   "new_contract_or_partnership": 0.0318,
+   "analyst_rating_change": 0.0253,
+   "analyst_target_change": 0.025,
+   "product_launch_or_innovation": 0.0229,
+   "insider_or_institutional_ownership_change": 0.0142,
+   "tariff_or_trade_policy": 0.0112,
+   "guidance_change": 0.01,
+   "mergers_acquisitions": 0.009,
+   "regulatory_investigation_or_action": 0.0069,
+   "analyst_initiation": 0.0058,
+   "clinical_trial_result": 0.0056,
+   "regulatory_approval": 0.0043,
+   "management_change_departure": 0.0039
+  },
+  "n_event_types": 41,
+  "magnitude_share_train": {
+   "NEGLIGIBLE": 0.7385,
+   "SMALL": 0.1494,
+   "MODERATE": 0.1065,
+   "LARGE": 0.0055,
+   "EXTREME": 0.0001
+  },
+  "direction_share_train": {
+   "0": 0.7607,
+   "1": 0.1645,
+   "-1": 0.0748
+  },
+  "split_check": {
+   "spans": {
+    "train": [
+     "2025-01-02",
+     "2025-12-31"
+    ],
+    "val": [
+     "2026-01-16",
+     "2026-04-30"
+    ],
+    "test": [
+     "2026-05-15",
+     "2026-09-11"
+    ]
+   },
+   "sessions_between": {
+    "train->val": 10,
+    "val->test": 10
+   }
+  },
+  "teacher_is_not_ground_truth": "every extraction label is DeepSeek's reading of the text; agreement with it measures mimicry, not truth"
+ },
+ "leakage_guards": [
+  "assert_time_split (train < val < test, >= 10 sessions between)",
+  "assert_features_pit (no realised column; trailing priors as of the session BEFORE entry)",
+  "the panel's dollar_vol is the ENTRY day's and is barred; dv21 is recomputed from bars"
+ ]
+}

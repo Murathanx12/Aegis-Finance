@@ -1,0 +1,1267 @@
+{
+ "schema": "crsp_rebuild/emulate_vendor_universe/1",
+ "job": "momentum_on_crsp",
+ "run_id": "2026-09-29T043122Z",
+ "panel_run": "2026-09-29T041550Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-29T04:32:42+00:00",
+ "rule": "The vendor panel's membership rule, applied to CRSP.\n\n    The vendor's living panel is a universe file dated 2026-09-01 floored at a\n    median dollar volume measured THEN (`prices_deep/pull_receipt.json`); the\n    delisted pull adds names that STOPPED trading. A name that was alive at the\n    end but had shrunk below the floor is in neither. Emulation on a panel that\n    ends at `asof`: keep every symbol whose last row is more than\n    `dead_before_days` before `asof` (it died: the delisted pull), and every\n    symbol alive on the last decision date with median_dollar_vol >= the floor\n    there; drop the rest (alive but shrunk).",
+ "vendor_rule_source": "backend/data/optimus/prices_deep/pull_receipt.json (universe_asof 2026-09-01, floor_median_dollar_volume) + delisted_receipt.json",
+ "asof": "2024-12-31",
+ "floor_median_dollar_volume": 3000000.0,
+ "universe": {
+  "dead": 14353,
+  "alive_liquid": 2141,
+  "alive_shrunk_dropped": 1690
+ },
+ "vendor_same_rules": {
+  "mom_12_1_q": {
+   "source": "calendar_offsets_monthly_2026-09-29T034413Z.parquet",
+   "full_2017_2026": {
+    "window": [
+     null,
+     null
+    ],
+    "n_months": 113,
+    "mean_monthly": 0.009224,
+    "n_blocks": 38,
+    "t_blocks": 1.827841,
+    "se_monthly": 0.005047,
+    "mde_monthly": 0.01413
+   },
+   "overlap_2017_2024": {
+    "window": [
+     "2017-01-01",
+     "2024-12-31"
+    ],
+    "n_months": 93,
+    "mean_monthly": 0.01092,
+    "n_blocks": 31,
+    "t_blocks": 1.968996,
+    "se_monthly": 0.005546,
+    "mde_monthly": 0.015529
+   },
+   "by_hold_year": {
+    "2017": {
+     "sum": -0.069317,
+     "n_months": 9
+    },
+    "2018": {
+     "sum": 0.175229,
+     "n_months": 12
+    },
+    "2019": {
+     "sum": 0.20873,
+     "n_months": 12
+    },
+    "2020": {
+     "sum": 0.27119,
+     "n_months": 12
+    },
+    "2021": {
+     "sum": 0.024359,
+     "n_months": 12
+    },
+    "2022": {
+     "sum": 0.200441,
+     "n_months": 12
+    },
+    "2023": {
+     "sum": 0.148322,
+     "n_months": 12
+    },
+    "2024": {
+     "sum": 0.056651,
+     "n_months": 12
+    },
+    "2025": {
+     "sum": 0.049232,
+     "n_months": 12
+    },
+    "2026": {
+     "sum": -0.022494,
+     "n_months": 8
+    }
+   }
+  },
+  "mom_12_1_q_trend": {
+   "source": "calendar_offsets_monthly_2026-09-29T034413Z.parquet",
+   "full_2017_2026": {
+    "window": [
+     null,
+     null
+    ],
+    "n_months": 113,
+    "mean_monthly": 0.009649,
+    "n_blocks": 38,
+    "t_blocks": 2.033991,
+    "se_monthly": 0.004744,
+    "mde_monthly": 0.013283
+   },
+   "overlap_2017_2024": {
+    "window": [
+     "2017-01-01",
+     "2024-12-31"
+    ],
+    "n_months": 93,
+    "mean_monthly": 0.011072,
+    "n_blocks": 31,
+    "t_blocks": 2.128828,
+    "se_monthly": 0.005201,
+    "mde_monthly": 0.014563
+   },
+   "by_hold_year": {
+    "2017": {
+     "sum": -0.050331,
+     "n_months": 9
+    },
+    "2018": {
+     "sum": 0.238681,
+     "n_months": 12
+    },
+    "2019": {
+     "sum": 0.111941,
+     "n_months": 12
+    },
+    "2020": {
+     "sum": 0.283524,
+     "n_months": 12
+    },
+    "2021": {
+     "sum": 0.039424,
+     "n_months": 12
+    },
+    "2022": {
+     "sum": 0.180825,
+     "n_months": 12
+    },
+    "2023": {
+     "sum": 0.192189,
+     "n_months": 12
+    },
+    "2024": {
+     "sum": 0.033439,
+     "n_months": 12
+    },
+    "2025": {
+     "sum": 0.052594,
+     "n_months": 12
+    },
+    "2026": {
+     "sum": 0.008058,
+     "n_months": 8
+    }
+   }
+  },
+  "qc470_mom252_quarterly_riskparity": {
+   "source": "calendar_offsets_monthly_2026-09-29T034413Z.parquet",
+   "full_2017_2026": {
+    "window": [
+     null,
+     null
+    ],
+    "n_months": 113,
+    "mean_monthly": 0.008365,
+    "n_blocks": 38,
+    "t_blocks": 1.907788,
+    "se_monthly": 0.004385,
+    "mde_monthly": 0.012277
+   },
+   "overlap_2017_2024": {
+    "window": [
+     "2017-01-01",
+     "2024-12-31"
+    ],
+    "n_months": 93,
+    "mean_monthly": 0.009991,
+    "n_blocks": 31,
+    "t_blocks": 2.139649,
+    "se_monthly": 0.004669,
+    "mde_monthly": 0.013074
+   },
+   "by_hold_year": {
+    "2017": {
+     "sum": -0.109979,
+     "n_months": 9
+    },
+    "2018": {
+     "sum": 0.146337,
+     "n_months": 12
+    },
+    "2019": {
+     "sum": 0.267716,
+     "n_months": 12
+    },
+    "2020": {
+     "sum": 0.166743,
+     "n_months": 12
+    },
+    "2021": {
+     "sum": 0.039943,
+     "n_months": 12
+    },
+    "2022": {
+     "sum": 0.041624,
+     "n_months": 12
+    },
+    "2023": {
+     "sum": 0.211077,
+     "n_months": 12
+    },
+    "2024": {
+     "sum": 0.165688,
+     "n_months": 12
+    },
+    "2025": {
+     "sum": 0.029421,
+     "n_months": 12
+    },
+    "2026": {
+     "sum": -0.013304,
+     "n_months": 8
+    }
+   }
+  }
+ },
+ "legs": {
+  "A_crsp_all_2017": {
+   "rows": 382452,
+   "symbols": 5972,
+   "eligible_per_date_median": 1975.0,
+   "summary": {
+    "mom_12_1_q": {
+     "calendar": "CANNOT_DISTINGUISH",
+     "neutral_full": {
+      "window": [
+       null,
+       null
+      ],
+      "n_months": 93,
+      "mean_monthly": 0.001821,
+      "n_blocks": 31,
+      "t_blocks": 0.329733,
+      "se_monthly": 0.005523,
+      "mde_monthly": 0.015465
+     },
+     "neutral_overlap_2017_2024": {
+      "window": [
+       "2017-01-01",
+       "2024-12-31"
+      ],
+      "n_months": 93,
+      "mean_monthly": 0.001821,
+      "n_blocks": 31,
+      "t_blocks": 0.329733,
+      "se_monthly": 0.005523,
+      "mde_monthly": 0.015465
+     },
+     "neutral_pre_vendor": {
+      "window": [
+       null,
+       "2016-12-31"
+      ],
+      "n_months": 0,
+      "mean_monthly": null,
+      "n_blocks": 0,
+      "t_blocks": null,
+      "se_monthly": null,
+      "mde_monthly": null
+     },
+     "by_hold_year": {
+      "2017": {
+       "sum": -0.166364,
+       "n_months": 10
+      },
+      "2018": {
+       "sum": -0.019214,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.342761,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -0.232891,
+       "n_months": 12
+      },
+      "2021": {
+       "sum": -0.147443,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.15182,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.05806,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.182646,
+       "n_months": 11
+      }
+     },
+     "offset_t": {
+      "jajo": 1.085587,
+      "fman": -0.408369,
+      "mjsd": 0.124844
+     }
+    },
+    "mom_12_1_q_trend": {
+     "calendar": "CANNOT_DISTINGUISH",
+     "neutral_full": {
+      "window": [
+       null,
+       null
+      ],
+      "n_months": 93,
+      "mean_monthly": -0.001615,
+      "n_blocks": 31,
+      "t_blocks": -0.37609,
+      "se_monthly": 0.004294,
+      "mde_monthly": 0.012024
+     },
+     "neutral_overlap_2017_2024": {
+      "window": [
+       "2017-01-01",
+       "2024-12-31"
+      ],
+      "n_months": 93,
+      "mean_monthly": -0.001615,
+      "n_blocks": 31,
+      "t_blocks": -0.37609,
+      "se_monthly": 0.004294,
+      "mde_monthly": 0.012024
+     },
+     "neutral_pre_vendor": {
+      "window": [
+       null,
+       "2016-12-31"
+      ],
+      "n_months": 0,
+      "mean_monthly": null,
+      "n_blocks": 0,
+      "t_blocks": null,
+      "se_monthly": null,
+      "mde_monthly": null
+     },
+     "by_hold_year": {
+      "2017": {
+       "sum": -0.181456,
+       "n_months": 10
+      },
+      "2018": {
+       "sum": 0.05014,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.19833,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -0.233405,
+       "n_months": 12
+      },
+      "2021": {
+       "sum": -0.14156,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -0.003339,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.005829,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.155262,
+       "n_months": 11
+      }
+     },
+     "offset_t": {
+      "jajo": 0.601574,
+      "fman": -1.09556,
+      "mjsd": -0.353836
+     }
+    },
+    "qc470_mom252_quarterly_riskparity": {
+     "calendar": "CANNOT_DISTINGUISH",
+     "neutral_full": {
+      "window": [
+       null,
+       null
+      ],
+      "n_months": 93,
+      "mean_monthly": 0.004071,
+      "n_blocks": 31,
+      "t_blocks": 0.733484,
+      "se_monthly": 0.00555,
+      "mde_monthly": 0.015541
+     },
+     "neutral_overlap_2017_2024": {
+      "window": [
+       "2017-01-01",
+       "2024-12-31"
+      ],
+      "n_months": 93,
+      "mean_monthly": 0.004071,
+      "n_blocks": 31,
+      "t_blocks": 0.733484,
+      "se_monthly": 0.00555,
+      "mde_monthly": 0.015541
+     },
+     "neutral_pre_vendor": {
+      "window": [
+       null,
+       "2016-12-31"
+      ],
+      "n_months": 0,
+      "mean_monthly": null,
+      "n_blocks": 0,
+      "t_blocks": null,
+      "se_monthly": null,
+      "mde_monthly": null
+     },
+     "by_hold_year": {
+      "2017": {
+       "sum": -0.093712,
+       "n_months": 10
+      },
+      "2018": {
+       "sum": 0.012103,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.2339,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -0.153242,
+       "n_months": 12
+      },
+      "2021": {
+       "sum": -0.226608,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.24158,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.071184,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.293405,
+       "n_months": 11
+      }
+     },
+     "offset_t": {
+      "jajo": 0.683462,
+      "fman": 0.284411,
+      "mjsd": 1.015407
+     }
+    }
+   }
+  },
+  "B_crsp_end_screened_2017": {
+   "rows": 264486,
+   "symbols": 4282,
+   "eligible_per_date_median": 1873.0,
+   "summary": {
+    "mom_12_1_q": {
+     "calendar": "CALENDAR_ARTEFACT",
+     "neutral_full": {
+      "window": [
+       null,
+       null
+      ],
+      "n_months": 93,
+      "mean_monthly": 0.009336,
+      "n_blocks": 31,
+      "t_blocks": 1.626237,
+      "se_monthly": 0.005741,
+      "mde_monthly": 0.016075
+     },
+     "neutral_overlap_2017_2024": {
+      "window": [
+       "2017-01-01",
+       "2024-12-31"
+      ],
+      "n_months": 93,
+      "mean_monthly": 0.009336,
+      "n_blocks": 31,
+      "t_blocks": 1.626237,
+      "se_monthly": 0.005741,
+      "mde_monthly": 0.016075
+     },
+     "neutral_pre_vendor": {
+      "window": [
+       null,
+       "2016-12-31"
+      ],
+      "n_months": 0,
+      "mean_monthly": null,
+      "n_blocks": 0,
+      "t_blocks": null,
+      "se_monthly": null,
+      "mde_monthly": null
+     },
+     "by_hold_year": {
+      "2017": {
+       "sum": -0.188067,
+       "n_months": 10
+      },
+      "2018": {
+       "sum": 0.088673,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.324883,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 0.087129,
+       "n_months": 12
+      },
+      "2021": {
+       "sum": 0.056909,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.185982,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.100655,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.212128,
+       "n_months": 11
+      }
+     },
+     "offset_t": {
+      "jajo": 2.249042,
+      "fman": 0.631483,
+      "mjsd": 1.088705
+     }
+    },
+    "mom_12_1_q_trend": {
+     "calendar": "CANNOT_DISTINGUISH",
+     "neutral_full": {
+      "window": [
+       null,
+       null
+      ],
+      "n_months": 93,
+      "mean_monthly": 0.006976,
+      "n_blocks": 31,
+      "t_blocks": 1.297477,
+      "se_monthly": 0.005376,
+      "mde_monthly": 0.015054
+     },
+     "neutral_overlap_2017_2024": {
+      "window": [
+       "2017-01-01",
+       "2024-12-31"
+      ],
+      "n_months": 93,
+      "mean_monthly": 0.006976,
+      "n_blocks": 31,
+      "t_blocks": 1.297477,
+      "se_monthly": 0.005376,
+      "mde_monthly": 0.015054
+     },
+     "neutral_pre_vendor": {
+      "window": [
+       null,
+       "2016-12-31"
+      ],
+      "n_months": 0,
+      "mean_monthly": null,
+      "n_blocks": 0,
+      "t_blocks": null,
+      "se_monthly": null,
+      "mde_monthly": null
+     },
+     "by_hold_year": {
+      "2017": {
+       "sum": -0.208851,
+       "n_months": 10
+      },
+      "2018": {
+       "sum": 0.17766,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.252476,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 0.003164,
+       "n_months": 12
+      },
+      "2021": {
+       "sum": 0.073463,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -0.027272,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.146548,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.231553,
+       "n_months": 11
+      }
+     },
+     "offset_t": {
+      "jajo": 1.637757,
+      "fman": 0.256942,
+      "mjsd": 1.421972
+     }
+    },
+    "qc470_mom252_quarterly_riskparity": {
+     "calendar": "CANNOT_DISTINGUISH",
+     "neutral_full": {
+      "window": [
+       null,
+       null
+      ],
+      "n_months": 93,
+      "mean_monthly": 0.010089,
+      "n_blocks": 31,
+      "t_blocks": 1.885284,
+      "se_monthly": 0.005351,
+      "mde_monthly": 0.014984
+     },
+     "neutral_overlap_2017_2024": {
+      "window": [
+       "2017-01-01",
+       "2024-12-31"
+      ],
+      "n_months": 93,
+      "mean_monthly": 0.010089,
+      "n_blocks": 31,
+      "t_blocks": 1.885284,
+      "se_monthly": 0.005351,
+      "mde_monthly": 0.014984
+     },
+     "neutral_pre_vendor": {
+      "window": [
+       null,
+       "2016-12-31"
+      ],
+      "n_months": 0,
+      "mean_monthly": null,
+      "n_blocks": 0,
+      "t_blocks": null,
+      "se_monthly": null,
+      "mde_monthly": null
+     },
+     "by_hold_year": {
+      "2017": {
+       "sum": -0.13431,
+       "n_months": 10
+      },
+      "2018": {
+       "sum": 0.062544,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.253052,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 0.006743,
+       "n_months": 12
+      },
+      "2021": {
+       "sum": 0.076678,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.229803,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.087096,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.356666,
+       "n_months": 11
+      }
+     },
+     "offset_t": {
+      "jajo": 1.404907,
+      "fman": 2.149778,
+      "mjsd": 1.654796
+     }
+    }
+   }
+  },
+  "C_crsp_end_screened_1991": {
+   "rows": 1784629,
+   "symbols": 16494,
+   "eligible_per_date_median": 1675.5,
+   "summary": {
+    "mom_12_1_q": {
+     "calendar": "CALENDAR_ARTEFACT",
+     "neutral_full": {
+      "window": [
+       null,
+       null
+      ],
+      "n_months": 404,
+      "mean_monthly": 0.003511,
+      "n_blocks": 135,
+      "t_blocks": 1.240249,
+      "se_monthly": 0.002831,
+      "mde_monthly": 0.007926
+     },
+     "neutral_overlap_2017_2024": {
+      "window": [
+       "2017-01-01",
+       "2024-12-31"
+      ],
+      "n_months": 95,
+      "mean_monthly": 0.009619,
+      "n_blocks": 32,
+      "t_blocks": 1.713533,
+      "se_monthly": 0.005614,
+      "mde_monthly": 0.015718
+     },
+     "neutral_pre_vendor": {
+      "window": [
+       null,
+       "2016-12-31"
+      ],
+      "n_months": 309,
+      "mean_monthly": 0.001633,
+      "n_blocks": 103,
+      "t_blocks": 0.499871,
+      "se_monthly": 0.003267,
+      "mde_monthly": 0.009147
+     },
+     "by_hold_year": {
+      "1991": {
+       "sum": 0.314871,
+       "n_months": 9
+      },
+      "1992": {
+       "sum": -0.112359,
+       "n_months": 12
+      },
+      "1993": {
+       "sum": 0.019204,
+       "n_months": 12
+      },
+      "1994": {
+       "sum": 0.012872,
+       "n_months": 12
+      },
+      "1995": {
+       "sum": 0.124891,
+       "n_months": 12
+      },
+      "1996": {
+       "sum": -0.009259,
+       "n_months": 12
+      },
+      "1997": {
+       "sum": -0.200507,
+       "n_months": 12
+      },
+      "1998": {
+       "sum": 0.514977,
+       "n_months": 12
+      },
+      "1999": {
+       "sum": 0.339252,
+       "n_months": 12
+      },
+      "2000": {
+       "sum": 0.212042,
+       "n_months": 12
+      },
+      "2001": {
+       "sum": -0.076508,
+       "n_months": 12
+      },
+      "2002": {
+       "sum": 0.180921,
+       "n_months": 12
+      },
+      "2003": {
+       "sum": 0.088941,
+       "n_months": 12
+      },
+      "2004": {
+       "sum": -0.099306,
+       "n_months": 12
+      },
+      "2005": {
+       "sum": -0.092757,
+       "n_months": 12
+      },
+      "2006": {
+       "sum": 0.020016,
+       "n_months": 12
+      },
+      "2007": {
+       "sum": 0.011142,
+       "n_months": 12
+      },
+      "2008": {
+       "sum": -0.113782,
+       "n_months": 12
+      },
+      "2009": {
+       "sum": -0.336775,
+       "n_months": 12
+      },
+      "2010": {
+       "sum": -0.046984,
+       "n_months": 12
+      },
+      "2011": {
+       "sum": -0.11988,
+       "n_months": 12
+      },
+      "2012": {
+       "sum": 0.201279,
+       "n_months": 12
+      },
+      "2013": {
+       "sum": -0.120559,
+       "n_months": 12
+      },
+      "2014": {
+       "sum": 0.044733,
+       "n_months": 12
+      },
+      "2015": {
+       "sum": -0.147858,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -0.104022,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -0.130114,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 0.071662,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.322392,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 0.041215,
+       "n_months": 12
+      },
+      "2021": {
+       "sum": 0.078277,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.177063,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.119343,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.233988,
+       "n_months": 11
+      }
+     },
+     "offset_t": {
+      "jajo": 2.424562,
+      "fman": 0.826857,
+      "mjsd": 0.012275
+     }
+    },
+    "mom_12_1_q_trend": {
+     "calendar": "CANNOT_DISTINGUISH",
+     "neutral_full": {
+      "window": [
+       null,
+       null
+      ],
+      "n_months": 404,
+      "mean_monthly": 0.003062,
+      "n_blocks": 135,
+      "t_blocks": 1.187944,
+      "se_monthly": 0.002578,
+      "mde_monthly": 0.007218
+     },
+     "neutral_overlap_2017_2024": {
+      "window": [
+       "2017-01-01",
+       "2024-12-31"
+      ],
+      "n_months": 95,
+      "mean_monthly": 0.007121,
+      "n_blocks": 32,
+      "t_blocks": 1.415503,
+      "se_monthly": 0.005031,
+      "mde_monthly": 0.014087
+     },
+     "neutral_pre_vendor": {
+      "window": [
+       null,
+       "2016-12-31"
+      ],
+      "n_months": 309,
+      "mean_monthly": 0.001815,
+      "n_blocks": 103,
+      "t_blocks": 0.605438,
+      "se_monthly": 0.002997,
+      "mde_monthly": 0.008392
+     },
+     "by_hold_year": {
+      "1991": {
+       "sum": 0.326849,
+       "n_months": 9
+      },
+      "1992": {
+       "sum": -0.12022,
+       "n_months": 12
+      },
+      "1993": {
+       "sum": 0.022978,
+       "n_months": 12
+      },
+      "1994": {
+       "sum": -0.029277,
+       "n_months": 12
+      },
+      "1995": {
+       "sum": 0.17197,
+       "n_months": 12
+      },
+      "1996": {
+       "sum": 0.019035,
+       "n_months": 12
+      },
+      "1997": {
+       "sum": -0.234671,
+       "n_months": 12
+      },
+      "1998": {
+       "sum": 0.368483,
+       "n_months": 12
+      },
+      "1999": {
+       "sum": 0.342156,
+       "n_months": 12
+      },
+      "2000": {
+       "sum": -0.118797,
+       "n_months": 12
+      },
+      "2001": {
+       "sum": 0.0,
+       "n_months": 12
+      },
+      "2002": {
+       "sum": 0.088018,
+       "n_months": 12
+      },
+      "2003": {
+       "sum": 0.067543,
+       "n_months": 12
+      },
+      "2004": {
+       "sum": -0.154954,
+       "n_months": 12
+      },
+      "2005": {
+       "sum": -0.098796,
+       "n_months": 12
+      },
+      "2006": {
+       "sum": 0.030333,
+       "n_months": 12
+      },
+      "2007": {
+       "sum": 0.003623,
+       "n_months": 12
+      },
+      "2008": {
+       "sum": -0.0,
+       "n_months": 12
+      },
+      "2009": {
+       "sum": -0.177201,
+       "n_months": 12
+      },
+      "2010": {
+       "sum": -0.019104,
+       "n_months": 12
+      },
+      "2011": {
+       "sum": -0.076334,
+       "n_months": 12
+      },
+      "2012": {
+       "sum": 0.1219,
+       "n_months": 12
+      },
+      "2013": {
+       "sum": -0.081808,
+       "n_months": 12
+      },
+      "2014": {
+       "sum": 0.041412,
+       "n_months": 12
+      },
+      "2015": {
+       "sum": 0.062818,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 0.004746,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -0.133431,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 0.164294,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.237734,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -0.026445,
+       "n_months": 12
+      },
+      "2021": {
+       "sum": 0.073763,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -0.040766,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.142896,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.258483,
+       "n_months": 11
+      }
+     },
+     "offset_t": {
+      "jajo": 1.770313,
+      "fman": 1.465766,
+      "mjsd": -0.097716
+     }
+    },
+    "qc470_mom252_quarterly_riskparity": {
+     "calendar": "CALENDAR_ARTEFACT",
+     "neutral_full": {
+      "window": [
+       null,
+       null
+      ],
+      "n_months": 404,
+      "mean_monthly": 0.004557,
+      "n_blocks": 135,
+      "t_blocks": 1.678568,
+      "se_monthly": 0.002715,
+      "mde_monthly": 0.007602
+     },
+     "neutral_overlap_2017_2024": {
+      "window": [
+       "2017-01-01",
+       "2024-12-31"
+      ],
+      "n_months": 95,
+      "mean_monthly": 0.009902,
+      "n_blocks": 32,
+      "t_blocks": 2.021599,
+      "se_monthly": 0.004898,
+      "mde_monthly": 0.013715
+     },
+     "neutral_pre_vendor": {
+      "window": [
+       null,
+       "2016-12-31"
+      ],
+      "n_months": 309,
+      "mean_monthly": 0.002914,
+      "n_blocks": 103,
+      "t_blocks": 0.907943,
+      "se_monthly": 0.003209,
+      "mde_monthly": 0.008986
+     },
+     "by_hold_year": {
+      "1991": {
+       "sum": 0.321097,
+       "n_months": 9
+      },
+      "1992": {
+       "sum": -0.073296,
+       "n_months": 12
+      },
+      "1993": {
+       "sum": 0.01289,
+       "n_months": 12
+      },
+      "1994": {
+       "sum": 0.022891,
+       "n_months": 12
+      },
+      "1995": {
+       "sum": 0.230806,
+       "n_months": 12
+      },
+      "1996": {
+       "sum": 0.014647,
+       "n_months": 12
+      },
+      "1997": {
+       "sum": -0.159754,
+       "n_months": 12
+      },
+      "1998": {
+       "sum": 0.522022,
+       "n_months": 12
+      },
+      "1999": {
+       "sum": 0.604256,
+       "n_months": 12
+      },
+      "2000": {
+       "sum": 0.148702,
+       "n_months": 12
+      },
+      "2001": {
+       "sum": -0.191292,
+       "n_months": 12
+      },
+      "2002": {
+       "sum": 0.082716,
+       "n_months": 12
+      },
+      "2003": {
+       "sum": 0.056568,
+       "n_months": 12
+      },
+      "2004": {
+       "sum": -0.152847,
+       "n_months": 12
+      },
+      "2005": {
+       "sum": -0.107608,
+       "n_months": 12
+      },
+      "2006": {
+       "sum": 0.034829,
+       "n_months": 12
+      },
+      "2007": {
+       "sum": 0.052767,
+       "n_months": 12
+      },
+      "2008": {
+       "sum": -0.075258,
+       "n_months": 12
+      },
+      "2009": {
+       "sum": -0.319027,
+       "n_months": 12
+      },
+      "2010": {
+       "sum": -0.002151,
+       "n_months": 12
+      },
+      "2011": {
+       "sum": -0.070192,
+       "n_months": 12
+      },
+      "2012": {
+       "sum": 0.133228,
+       "n_months": 12
+      },
+      "2013": {
+       "sum": -0.022615,
+       "n_months": 12
+      },
+      "2014": {
+       "sum": -0.007671,
+       "n_months": 12
+      },
+      "2015": {
+       "sum": -0.078964,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -0.076314,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -0.061235,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 0.064617,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.272289,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -0.019634,
+       "n_months": 12
+      },
+      "2021": {
+       "sum": 0.029791,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.206047,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.07908,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.36973,
+       "n_months": 11
+      }
+     },
+     "offset_t": {
+      "jajo": 2.693286,
+      "fman": 1.185303,
+      "mjsd": 0.588301
+     }
+    }
+   }
+  }
+ },
+ "k": 20,
+ "elapsed_s": 80.2,
+ "peak_working_set_mb": 1157.4
+}

@@ -1,0 +1,9 @@
+# ft_lab: own interpreter, derived datasets, weights, run logs
+.venv/
+data/
+models/
+runs/
+*.log
+*.log.err
+*.pid
+__pycache__/

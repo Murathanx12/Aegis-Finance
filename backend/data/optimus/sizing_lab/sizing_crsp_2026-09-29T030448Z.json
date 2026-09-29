@@ -1,0 +1,8381 @@
+{
+ "schema": "sizing_lab/1",
+ "part": "crsp",
+ "run_id": "2026-09-29T030448Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-29T03:06:43+00:00",
+ "verdict_rule": "objective = log utility (mean monthly log(1+r)); read on variant MINUS its matched twin (same names, same calendar, baseline size input). ALPHA_DETECTED: mean > 0, t_blocks >= 2, LOYO worst > 0, and the alpha after regressing the diff on the market keeps t >= 2. BETA_EXPLAINS: mean > 0 and t_blocks >= 2 but the market-regression alpha has t < 2. FAILED_VARIANT: mean <= 0 and t_blocks <= -1. CANNOT_DISTINGUISH: otherwise. Declared in backend/services/move_size_sizing.py before the first run of 2026-09-29.",
+ "mde_z": 2.8,
+ "constants": {
+  "k": 20,
+  "name_cap": 0.1,
+  "kelly_mu_monthly": 0.005,
+  "kelly_fraction": 0.5,
+  "kelly_rho": 0.3,
+  "vol_target_annual": 0.15,
+  "gross_cap": 1.0,
+  "random_seeds": 20,
+  "offsets": {
+   "jajo": [
+    1,
+    4,
+    7,
+    10
+   ],
+   "fman": [
+    2,
+    5,
+    8,
+    11
+   ],
+   "mjsd": [
+    3,
+    6,
+    9,
+    12
+   ]
+  }
+ },
+ "conventions": {
+  "costs": "band round trip (xs_ranker.COST_BPS_BY_BAND), half on each weight bought or sold; zero cost refused (strategy_library.check_costs -> portfolio_farm Policy)",
+  "cash": "earns 0 (T-bills NOT credited) -- conservative against every gross < 1 variant",
+  "weights": "held constant between rebalances, drift not charged (strategy_library convention)",
+  "matched_twin": "for a sizing question the twin is the SAME names on the SAME calendar with the baseline size input: selection cancels exactly",
+  "by_year": "keyed on the HOLD month (entry = decision + 1 business day)",
+  "t": "non-overlapping 3-month date blocks (quarterly holds); MDE = 2.8 x SE",
+  "survivorship": "library panel: partially survivor-selected (living names chosen alive 2026-09-01, dead names from the inactive listed list, -30% delisting fill); crsp part: survivorship-free with CRSP delisting returns"
+ },
+ "peak_working_set_mb": 1264.8,
+ "meta": {
+  "daily_shape": [
+   3270,
+   4796
+  ],
+  "daily_rows": 9837169,
+  "delisting_returns_booked": 1761,
+  "delisting_minus30_fills": 15,
+  "earnings_events": 140409,
+  "earnings_assumption": "rdq treated as known the session before (scheduled); 2-day window d0, d0+1",
+  "universe": "crsp_pit_monthly_v1 eligible (price >= $5, >= $100M/month dollar volume)"
+ },
+ "panel": {
+  "rows": 260680,
+  "dates": 143,
+  "permnos": 4794,
+  "first": "2013-01-31",
+  "last": "2024-11-29",
+  "rows_dead_by_exit": 1113
+ },
+ "size_model": {
+  "spec_px": {
+   "vol_21": "log",
+   "vol_63": "log",
+   "vol_252": "log",
+   "maxabs_21": "log",
+   "absret_21": "abs",
+   "absret_252": "abslog",
+   "dv_log": "raw",
+   "px_log": "raw"
+  },
+  "spec_earn": {
+   "vol_21": "log",
+   "vol_63": "log",
+   "vol_252": "log",
+   "maxabs_21": "log",
+   "absret_21": "abs",
+   "absret_252": "abslog",
+   "dv_log": "raw",
+   "px_log": "raw",
+   "ems4": "log",
+   "earn_next": "raw",
+   "earn_x_ems": "raw"
+  },
+  "gap_dates": 2,
+  "n_fits": 130,
+  "first_forecast": "2014-02-28",
+  "last_fit_earn": {
+   "decision": "2024-11-29",
+   "train_last": "2024-09-30",
+   "n_train": 256818,
+   "coef": [
+    0.020057,
+    0.004247,
+    0.013928,
+    -0.012186,
+    0.003072,
+    0.003435,
+    0.000705,
+    -0.005507,
+    -0.000462,
+    0.004644,
+    0.007332
+   ]
+  }
+ },
+ "forecast_quality": {
+  "ic_mean": {
+   "size_vol": 0.332015,
+   "size_ridge": 0.346095,
+   "size_ridge_earn": 0.369155
+  },
+  "ridge_minus_vol": {
+   "n_months": 129,
+   "mean_monthly": 0.01408,
+   "n_blocks": 129,
+   "t_blocks": 6.459456,
+   "se_monthly": 0.00218,
+   "mde_monthly": 0.006103
+  },
+  "ridge_earn_minus_vol": {
+   "n_months": 129,
+   "mean_monthly": 0.03714,
+   "n_blocks": 129,
+   "t_blocks": 11.692007,
+   "se_monthly": 0.003177,
+   "mde_monthly": 0.008894
+  },
+  "ridge_earn_minus_ridge": {
+   "n_months": 129,
+   "mean_monthly": 0.02306,
+   "n_blocks": 129,
+   "t_blocks": 12.898304,
+   "se_monthly": 0.001788,
+   "mde_monthly": 0.005006
+  },
+  "ridge_earn_minus_vol_by_hold_year": {
+   "2014": {
+    "sum": 0.320052,
+    "mean": 0.032005,
+    "n_months": 10
+   },
+   "2015": {
+    "sum": 0.638558,
+    "mean": 0.053213,
+    "n_months": 12
+   },
+   "2016": {
+    "sum": 0.677922,
+    "mean": 0.056493,
+    "n_months": 12
+   },
+   "2017": {
+    "sum": 0.639586,
+    "mean": 0.053299,
+    "n_months": 12
+   },
+   "2018": {
+    "sum": 0.602806,
+    "mean": 0.050234,
+    "n_months": 12
+   },
+   "2019": {
+    "sum": 0.617549,
+    "mean": 0.051462,
+    "n_months": 12
+   },
+   "2020": {
+    "sum": 0.278243,
+    "mean": 0.023187,
+    "n_months": 12
+   },
+   "2021": {
+    "sum": -0.27002,
+    "mean": -0.022502,
+    "n_months": 12
+   },
+   "2022": {
+    "sum": 0.3553,
+    "mean": 0.029608,
+    "n_months": 12
+   },
+   "2023": {
+    "sum": 0.490477,
+    "mean": 0.040873,
+    "n_months": 12
+   },
+   "2024": {
+    "sum": 0.440629,
+    "mean": 0.040057,
+    "n_months": 11
+   }
+  }
+ },
+ "exp2_event_level": {
+  "n_events": 128221,
+  "n_months": 132,
+  "ic_ems_mean": 0.297189,
+  "ic_vol_mean": 0.254168,
+  "ic_ems_minus_vol": {
+   "n_months": 132,
+   "mean_monthly": 0.04302,
+   "n_blocks": 44,
+   "t_blocks": 6.723667,
+   "se_monthly": 0.006398,
+   "mde_monthly": 0.017915
+  },
+  "b_ems": {
+   "n_months": 132,
+   "mean_monthly": 0.227521,
+   "n_blocks": 44,
+   "t_blocks": 33.788397,
+   "se_monthly": 0.006734,
+   "mde_monthly": 0.018854
+  },
+  "b_vol": {
+   "n_months": 132,
+   "mean_monthly": 0.144717,
+   "n_blocks": 44,
+   "t_blocks": 22.841549,
+   "se_monthly": 0.006336,
+   "mde_monthly": 0.01774
+  },
+  "b_ems_by_year": {
+   "2014": 0.258748,
+   "2015": 0.252999,
+   "2016": 0.211923,
+   "2017": 0.259081,
+   "2018": 0.262695,
+   "2019": 0.255673,
+   "2020": 0.202648,
+   "2021": 0.18512,
+   "2022": 0.152883,
+   "2023": 0.223299,
+   "2024": 0.237658
+  },
+  "note": "event-level, 2-day abnormal (vs mktrf+rf) return around the Compustat rdq; ems4 = mean |abn| of the previous 2-4 events; vol63 = daily sd over the 63 sessions ending two sessions before the event; blocks = 3 calendar months"
+ },
+ "exp1_exp3_books": {
+  "equal": {
+   "mom_12_1_q": {
+    "n_months": 127,
+    "cagr": 0.053431,
+    "vol_annual": 0.355206,
+    "sharpe": 0.319641,
+    "max_dd": -0.556996,
+    "terminal_wealth": 1.734786,
+    "log_utility_monthly": 0.004338
+   },
+   "random_median": {
+    "cagr": 0.083864,
+    "vol_annual": 0.208394,
+    "sharpe": 0.49697,
+    "max_dd": -0.345974,
+    "terminal_wealth": 2.34504,
+    "log_utility_monthly": 0.006711
+   }
+  },
+  "inv_vol": {
+   "mom_12_1_q": {
+    "n_months": 127,
+    "cagr": 0.074108,
+    "vol_annual": 0.343363,
+    "sharpe": 0.377497,
+    "max_dd": -0.469617,
+    "terminal_wealth": 2.131046,
+    "log_utility_monthly": 0.005958
+   },
+   "random_median": {
+    "cagr": 0.094,
+    "vol_annual": 0.188267,
+    "sharpe": 0.568216,
+    "max_dd": -0.311751,
+    "terminal_wealth": 2.587947,
+    "log_utility_monthly": 0.007487
+   }
+  },
+  "inv_ridge": {
+   "mom_12_1_q": {
+    "n_months": 127,
+    "cagr": 0.069075,
+    "vol_annual": 0.342606,
+    "sharpe": 0.362578,
+    "max_dd": -0.501056,
+    "terminal_wealth": 2.02769,
+    "log_utility_monthly": 0.005566
+   },
+   "random_median": {
+    "cagr": 0.091295,
+    "vol_annual": 0.190133,
+    "sharpe": 0.556511,
+    "max_dd": -0.313706,
+    "terminal_wealth": 2.520913,
+    "log_utility_monthly": 0.00728
+   }
+  },
+  "inv_ridgepx": {
+   "mom_12_1_q": {
+    "n_months": 127,
+    "cagr": 0.066686,
+    "vol_annual": 0.34482,
+    "sharpe": 0.35587,
+    "max_dd": -0.505526,
+    "terminal_wealth": 1.980244,
+    "log_utility_monthly": 0.00538
+   },
+   "random_median": {
+    "cagr": 0.092672,
+    "vol_annual": 0.189897,
+    "sharpe": 0.561708,
+    "max_dd": -0.311035,
+    "terminal_wealth": 2.554766,
+    "log_utility_monthly": 0.007385
+   }
+  },
+  "inv_ridgeqm": {
+   "mom_12_1_q": {
+    "n_months": 127,
+    "cagr": 0.086466,
+    "vol_annual": 0.334051,
+    "sharpe": 0.412706,
+    "max_dd": -0.455139,
+    "terminal_wealth": 2.40532,
+    "log_utility_monthly": 0.006911
+   },
+   "random_median": {
+    "cagr": 0.091694,
+    "vol_annual": 0.18867,
+    "sharpe": 0.562677,
+    "max_dd": -0.314496,
+    "terminal_wealth": 2.53075,
+    "log_utility_monthly": 0.007311
+   }
+  },
+  "kelly_vol": {
+   "mom_12_1_q": {
+    "n_months": 127,
+    "cagr": 0.031757,
+    "vol_annual": 0.0708,
+    "sharpe": 0.477245,
+    "max_dd": -0.128847,
+    "terminal_wealth": 1.392183,
+    "log_utility_monthly": 0.002605
+   },
+   "random_median": {
+    "cagr": 0.07494,
+    "vol_annual": 0.161062,
+    "sharpe": 0.530805,
+    "max_dd": -0.307239,
+    "terminal_wealth": 2.148577,
+    "log_utility_monthly": 0.006022
+   }
+  },
+  "vt_vol": {
+   "mom_12_1_q": {
+    "n_months": 127,
+    "cagr": 0.042726,
+    "vol_annual": 0.11789,
+    "sharpe": 0.413869,
+    "max_dd": -0.20188,
+    "terminal_wealth": 1.557052,
+    "log_utility_monthly": 0.003487
+   },
+   "random_median": {
+    "cagr": 0.06577,
+    "vol_annual": 0.156054,
+    "sharpe": 0.490519,
+    "max_dd": -0.299535,
+    "terminal_wealth": 1.962338,
+    "log_utility_monthly": 0.005308
+   }
+  },
+  "kelly_ridge": {
+   "mom_12_1_q": {
+    "n_months": 127,
+    "cagr": 0.028098,
+    "vol_annual": 0.069492,
+    "sharpe": 0.43369,
+    "max_dd": -0.127904,
+    "terminal_wealth": 1.340803,
+    "log_utility_monthly": 0.002309
+   },
+   "random_median": {
+    "cagr": 0.062782,
+    "vol_annual": 0.155203,
+    "sharpe": 0.483639,
+    "max_dd": -0.304309,
+    "terminal_wealth": 1.904911,
+    "log_utility_monthly": 0.005074
+   }
+  },
+  "vt_ridge": {
+   "mom_12_1_q": {
+    "n_months": 127,
+    "cagr": 0.041861,
+    "vol_annual": 0.126431,
+    "sharpe": 0.38743,
+    "max_dd": -0.212823,
+    "terminal_wealth": 1.543434,
+    "log_utility_monthly": 0.003417
+   },
+   "random_median": {
+    "cagr": 0.061718,
+    "vol_annual": 0.149926,
+    "sharpe": 0.47804,
+    "max_dd": -0.284153,
+    "terminal_wealth": 1.884791,
+    "log_utility_monthly": 0.004991
+   }
+  },
+  "kelly_ridgeqm": {
+   "mom_12_1_q": {
+    "n_months": 127,
+    "cagr": 0.028206,
+    "vol_annual": 0.05442,
+    "sharpe": 0.5387,
+    "max_dd": -0.100916,
+    "terminal_wealth": 1.342293,
+    "log_utility_monthly": 0.002318
+   },
+   "random_median": {
+    "cagr": 0.07226,
+    "vol_annual": 0.161736,
+    "sharpe": 0.521979,
+    "max_dd": -0.305622,
+    "terminal_wealth": 2.092632,
+    "log_utility_monthly": 0.005814
+   }
+  },
+  "vt_ridgeqm": {
+   "mom_12_1_q": {
+    "n_months": 127,
+    "cagr": 0.04292,
+    "vol_annual": 0.099069,
+    "sharpe": 0.474019,
+    "max_dd": -0.176666,
+    "terminal_wealth": 1.56011,
+    "log_utility_monthly": 0.003502
+   },
+   "random_median": {
+    "cagr": 0.064631,
+    "vol_annual": 0.158053,
+    "sharpe": 0.479439,
+    "max_dd": -0.303587,
+    "terminal_wealth": 1.940273,
+    "log_utility_monthly": 0.005219
+   }
+  }
+ },
+ "exp1_exp3_comparisons": {
+  "inv_ridgeqm_minus_inv_vol": {
+   "question": "Q1 PRIMARY (b) vs (a), dispersion held equal: ridge ranks on trailing vol's per-date distribution vs trailing vol (added after the first read showed the raw ridge compresses weight dispersion)",
+   "mom_12_1_q_tranche": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": 0.000953,
+     "n_blocks": 43,
+     "t_blocks": 0.9059,
+     "se_monthly": 0.001052,
+     "mde_monthly": 0.002947
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": 0.000687,
+     "n_blocks": 43,
+     "t_blocks": 0.644756,
+     "se_monthly": 0.001066,
+     "mde_monthly": 0.002984
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.01946,
+      "mean": 0.002432,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.024773,
+      "mean": 0.002064,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.008007,
+      "mean": -0.000667,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.022603,
+      "mean": 0.001884,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.041791,
+      "mean": -0.003483,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.045094,
+      "mean": -0.003758,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.030167,
+      "mean": 0.002514,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.037665,
+      "mean": 0.003139,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.011613,
+      "mean": 0.000968,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.0749,
+      "mean": 0.006242,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.005219,
+      "mean": -0.000474,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": 0.000401,
+     "dropped_year": "2023",
+     "all": {
+      "2014": 0.000854,
+      "2015": 0.000837,
+      "2016": 0.001122,
+      "2017": 0.000856,
+      "2018": 0.001416,
+      "2019": 0.001445,
+      "2020": 0.00079,
+      "2021": 0.000725,
+      "2022": 0.000952,
+      "2023": 0.000401,
+      "2024": 0.001089
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2022-01",
+      "2023-03",
+      "2024-09",
+      "2023-10",
+      "2021-02"
+     ],
+     "share_of_total": 1.438194,
+     "mean_without_best": -0.000435
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.032821,
+     "alpha_monthly": 0.001339,
+     "t_alpha_blocks": 1.282859,
+     "mde_alpha_monthly": 0.002924
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "sharpe_diff": {
+     "diff": 0.03521,
+     "lo90": -0.027141,
+     "hi90": 0.091292,
+     "p_le_0": 0.1925
+    },
+    "variant": {
+     "n_months": 127,
+     "cagr": 0.086466,
+     "vol_annual": 0.334051,
+     "sharpe": 0.412706,
+     "max_dd": -0.455139,
+     "terminal_wealth": 2.40532,
+     "log_utility_monthly": 0.006911
+    },
+    "twin": {
+     "n_months": 127,
+     "cagr": 0.074108,
+     "vol_annual": 0.343363,
+     "sharpe": 0.377497,
+     "max_dd": -0.469617,
+     "terminal_wealth": 2.131046,
+     "log_utility_monthly": 0.005958
+    }
+   },
+   "random_control": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000102,
+     "n_blocks": 43,
+     "t_blocks": -0.997831,
+     "se_monthly": 0.000103,
+     "mde_monthly": 0.000287
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -9.3e-05,
+     "n_blocks": 43,
+     "t_blocks": -0.882436,
+     "se_monthly": 0.000106,
+     "mde_monthly": 0.000296
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.000129,
+      "mean": 1.6e-05,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.000898,
+      "mean": 7.5e-05,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.001659,
+      "mean": -0.000138,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 3.6e-05,
+      "mean": 3e-06,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.003493,
+      "mean": -0.000291,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.001649,
+      "mean": -0.000137,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.007686,
+      "mean": 0.00064,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.007035,
+      "mean": -0.000586,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.007089,
+      "mean": -0.000591,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.001169,
+      "mean": 9.7e-05,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.001988,
+      "mean": -0.000181,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.00018,
+     "dropped_year": "2020",
+     "all": {
+      "2014": -0.00011,
+      "2015": -0.000121,
+      "2016": -9.9e-05,
+      "2017": -0.000113,
+      "2018": -8.3e-05,
+      "2019": -9.9e-05,
+      "2020": -0.00018,
+      "2021": -5.2e-05,
+      "2022": -5.1e-05,
+      "2023": -0.000123,
+      "2024": -9.5e-05
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2021-05",
+      "2021-01",
+      "2020-04",
+      "2022-11",
+      "2020-08"
+     ],
+     "share_of_total": -0.891756,
+     "mean_without_best": -0.000202
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": 0.004477,
+     "alpha_monthly": -0.000155,
+     "t_alpha_blocks": -1.548727,
+     "mde_alpha_monthly": 0.00028
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 4,
+    "median_over_seeds": {
+     "tw_v": 2.53075,
+     "tw_t": 2.587947,
+     "sh_v": 0.562677,
+     "sh_t": 0.568216,
+     "dd_v": -0.314496,
+     "dd_t": -0.311751,
+     "lu_v": 0.007311,
+     "lu_t": 0.007487
+    }
+   }
+  },
+  "inv_ridge_minus_inv_vol": {
+   "question": "Q1 (b) vs (a): inverse size, raw ridge forecast vs trailing vol",
+   "mom_12_1_q_tranche": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000391,
+     "n_blocks": 43,
+     "t_blocks": -0.390139,
+     "se_monthly": 0.001003,
+     "mde_monthly": 0.002809
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.00045,
+     "n_blocks": 43,
+     "t_blocks": -0.446856,
+     "se_monthly": 0.001006,
+     "mde_monthly": 0.002818
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.029337,
+      "mean": 0.003667,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.02284,
+      "mean": 0.001903,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.002518,
+      "mean": -0.00021,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.002327,
+      "mean": 0.000194,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.05079,
+      "mean": -0.004233,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.005352,
+      "mean": -0.000446,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.032276,
+      "mean": -0.00269,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.013881,
+      "mean": 0.001157,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.043733,
+      "mean": -0.003644,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.049281,
+      "mean": 0.004107,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.032713,
+      "mean": -0.002974,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.000861,
+     "dropped_year": "2023",
+     "all": {
+      "2014": -0.000664,
+      "2015": -0.000631,
+      "2016": -0.00041,
+      "2017": -0.000453,
+      "2018": 9e-06,
+      "2019": -0.000386,
+      "2020": -0.000152,
+      "2021": -0.000553,
+      "2022": -5.2e-05,
+      "2023": -0.000861,
+      "2024": -0.000147
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2021-01",
+      "2021-02",
+      "2024-09",
+      "2020-07",
+      "2023-03"
+     ],
+     "share_of_total": -2.729497,
+     "mean_without_best": -0.00152
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.011779,
+     "alpha_monthly": -0.000253,
+     "t_alpha_blocks": -0.250221,
+     "mde_alpha_monthly": 0.00283
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "sharpe_diff": {
+     "diff": -0.014919,
+     "lo90": -0.077312,
+     "hi90": 0.039757,
+     "p_le_0": 0.6865
+    },
+    "variant": {
+     "n_months": 127,
+     "cagr": 0.069075,
+     "vol_annual": 0.342606,
+     "sharpe": 0.362578,
+     "max_dd": -0.501056,
+     "terminal_wealth": 2.02769,
+     "log_utility_monthly": 0.005566
+    },
+    "twin": {
+     "n_months": 127,
+     "cagr": 0.074108,
+     "vol_annual": 0.343363,
+     "sharpe": 0.377497,
+     "max_dd": -0.469617,
+     "terminal_wealth": 2.131046,
+     "log_utility_monthly": 0.005958
+    }
+   },
+   "random_control": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000102,
+     "n_blocks": 43,
+     "t_blocks": -0.423054,
+     "se_monthly": 0.000241,
+     "mde_monthly": 0.000674
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -7e-05,
+     "n_blocks": 43,
+     "t_blocks": -0.282407,
+     "se_monthly": 0.00025,
+     "mde_monthly": 0.000699
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.003206,
+      "mean": 0.000401,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.000999,
+      "mean": 8.3e-05,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.000663,
+      "mean": -5.5e-05,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.00111,
+      "mean": -9.3e-05,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.00556,
+      "mean": -0.000463,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.001186,
+      "mean": -9.9e-05,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.021586,
+      "mean": 0.001799,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.01123,
+      "mean": -0.000936,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.014728,
+      "mean": -0.001227,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.000902,
+      "mean": -7.5e-05,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.003347,
+      "mean": -0.000304,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.0003,
+     "dropped_year": "2020",
+     "all": {
+      "2014": -0.000136,
+      "2015": -0.000121,
+      "2016": -0.000107,
+      "2017": -0.000103,
+      "2018": -6.4e-05,
+      "2019": -0.000102,
+      "2020": -0.0003,
+      "2021": -1.5e-05,
+      "2022": 1.6e-05,
+      "2023": -0.000105,
+      "2024": -8.3e-05
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2021-01",
+      "2021-05",
+      "2020-11",
+      "2020-12",
+      "2023-01"
+     ],
+     "share_of_total": -2.229406,
+     "mean_without_best": -0.000342
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": 0.009683,
+     "alpha_monthly": -0.000216,
+     "t_alpha_blocks": -0.930748,
+     "mde_alpha_monthly": 0.000649
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 5,
+    "median_over_seeds": {
+     "tw_v": 2.520913,
+     "tw_t": 2.587947,
+     "sh_v": 0.556511,
+     "sh_t": 0.568216,
+     "dd_v": -0.313706,
+     "dd_t": -0.311751,
+     "lu_v": 0.00728,
+     "lu_t": 0.007487
+    }
+   }
+  },
+  "inv_vol_minus_equal": {
+   "question": "Q1 (a) vs equal weight",
+   "mom_12_1_q_tranche": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": 0.00162,
+     "n_blocks": 43,
+     "t_blocks": 1.201422,
+     "se_monthly": 0.001348,
+     "mde_monthly": 0.003775
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": 0.00134,
+     "n_blocks": 43,
+     "t_blocks": 1.00492,
+     "se_monthly": 0.001333,
+     "mde_monthly": 0.003734
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": -0.049298,
+      "mean": -0.006162,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": -0.019588,
+      "mean": -0.001632,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": 0.009455,
+      "mean": 0.000788,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.02522,
+      "mean": 0.002102,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.053362,
+      "mean": 0.004447,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.040369,
+      "mean": -0.003364,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.095092,
+      "mean": 0.007924,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.000577,
+      "mean": 4.8e-05,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.093951,
+      "mean": 0.007829,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.02434,
+      "mean": -0.002028,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": 0.061666,
+      "mean": 0.005606,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": 0.000962,
+     "dropped_year": "2020",
+     "all": {
+      "2014": 0.002143,
+      "2015": 0.001959,
+      "2016": 0.001707,
+      "2017": 0.00157,
+      "2018": 0.001325,
+      "2019": 0.00214,
+      "2020": 0.000962,
+      "2021": 0.001784,
+      "2022": 0.000972,
+      "2023": 0.002001,
+      "2024": 0.001242
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2020-08",
+      "2021-09",
+      "2021-07",
+      "2024-03",
+      "2024-01"
+     ],
+     "share_of_total": 0.927721,
+     "mean_without_best": 0.000122
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.017366,
+     "alpha_monthly": 0.001824,
+     "t_alpha_blocks": 1.372527,
+     "mde_alpha_monthly": 0.003722
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "sharpe_diff": {
+     "diff": 0.057856,
+     "lo90": -0.017763,
+     "hi90": 0.139321,
+     "p_le_0": 0.1
+    },
+    "variant": {
+     "n_months": 127,
+     "cagr": 0.074108,
+     "vol_annual": 0.343363,
+     "sharpe": 0.377497,
+     "max_dd": -0.469617,
+     "terminal_wealth": 2.131046,
+     "log_utility_monthly": 0.005958
+    },
+    "twin": {
+     "n_months": 127,
+     "cagr": 0.053431,
+     "vol_annual": 0.355206,
+     "sharpe": 0.319641,
+     "max_dd": -0.556996,
+     "terminal_wealth": 1.734786,
+     "log_utility_monthly": 0.004338
+    }
+   },
+   "random_control": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": 0.000904,
+     "n_blocks": 43,
+     "t_blocks": 1.164768,
+     "se_monthly": 0.000776,
+     "mde_monthly": 0.002172
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": 0.000577,
+     "n_blocks": 43,
+     "t_blocks": 0.726429,
+     "se_monthly": 0.000794,
+     "mde_monthly": 0.002223
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.003089,
+      "mean": 0.000386,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.027703,
+      "mean": 0.002309,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.004175,
+      "mean": -0.000348,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.010122,
+      "mean": 0.000844,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.016562,
+      "mean": 0.00138,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.006861,
+      "mean": 0.000572,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.043757,
+      "mean": -0.003646,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.028957,
+      "mean": 0.002413,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.064503,
+      "mean": 0.005375,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.002859,
+      "mean": -0.000238,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": 0.007764,
+      "mean": 0.000706,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": 0.000437,
+     "dropped_year": "2022",
+     "all": {
+      "2014": 0.000939,
+      "2015": 0.000757,
+      "2016": 0.001034,
+      "2017": 0.00091,
+      "2018": 0.000854,
+      "2019": 0.000938,
+      "2020": 0.001379,
+      "2021": 0.000746,
+      "2022": 0.000437,
+      "2023": 0.001023,
+      "2024": 0.000922
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2021-11",
+      "2016-01",
+      "2022-01",
+      "2021-07",
+      "2022-04"
+     ],
+     "share_of_total": 0.827536,
+     "mean_without_best": 0.000162
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.090908,
+     "alpha_monthly": 0.001973,
+     "t_alpha_blocks": 3.1497,
+     "mde_alpha_monthly": 0.001754
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 19,
+    "median_over_seeds": {
+     "tw_v": 2.587947,
+     "tw_t": 2.34504,
+     "sh_v": 0.568216,
+     "sh_t": 0.49697,
+     "dd_v": -0.311751,
+     "dd_t": -0.345974,
+     "lu_v": 0.007487,
+     "lu_t": 0.006711
+    }
+   }
+  },
+  "inv_ridge_minus_equal": {
+   "question": "Q1 (b) vs equal weight",
+   "mom_12_1_q_tranche": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": 0.001228,
+     "n_blocks": 43,
+     "t_blocks": 1.838268,
+     "se_monthly": 0.000668,
+     "mde_monthly": 0.001871
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": 0.00089,
+     "n_blocks": 43,
+     "t_blocks": 1.339705,
+     "se_monthly": 0.000665,
+     "mde_monthly": 0.001861
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": -0.01996,
+      "mean": -0.002495,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.003252,
+      "mean": 0.000271,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": 0.006937,
+      "mean": 0.000578,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.027546,
+      "mean": 0.002296,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.002572,
+      "mean": 0.000214,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.045721,
+      "mean": -0.00381,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.062816,
+      "mean": 0.005235,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.014458,
+      "mean": 0.001205,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.050218,
+      "mean": 0.004185,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.024942,
+      "mean": 0.002078,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": 0.028954,
+      "mean": 0.002632,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": 0.00081,
+     "dropped_year": "2020",
+     "all": {
+      "2014": 0.001479,
+      "2015": 0.001328,
+      "2016": 0.001296,
+      "2017": 0.001117,
+      "2018": 0.001334,
+      "2019": 0.001754,
+      "2020": 0.00081,
+      "2021": 0.001231,
+      "2022": 0.00092,
+      "2023": 0.00114,
+      "2024": 0.001095
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2020-08",
+      "2016-06",
+      "2024-01",
+      "2016-01",
+      "2023-03"
+     ],
+     "share_of_total": 0.665491,
+     "mean_without_best": 0.000428
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.029146,
+     "alpha_monthly": 0.001571,
+     "t_alpha_blocks": 2.49729,
+     "mde_alpha_monthly": 0.001762
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "sharpe_diff": {
+     "diff": 0.042937,
+     "lo90": 0.006054,
+     "hi90": 0.080787,
+     "p_le_0": 0.025
+    },
+    "variant": {
+     "n_months": 127,
+     "cagr": 0.069075,
+     "vol_annual": 0.342606,
+     "sharpe": 0.362578,
+     "max_dd": -0.501056,
+     "terminal_wealth": 2.02769,
+     "log_utility_monthly": 0.005566
+    },
+    "twin": {
+     "n_months": 127,
+     "cagr": 0.053431,
+     "vol_annual": 0.355206,
+     "sharpe": 0.319641,
+     "max_dd": -0.556996,
+     "terminal_wealth": 1.734786,
+     "log_utility_monthly": 0.004338
+    }
+   },
+   "random_control": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": 0.000802,
+     "n_blocks": 43,
+     "t_blocks": 1.355216,
+     "se_monthly": 0.000592,
+     "mde_monthly": 0.001657
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": 0.000506,
+     "n_blocks": 43,
+     "t_blocks": 0.847844,
+     "se_monthly": 0.000597,
+     "mde_monthly": 0.001672
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.006295,
+      "mean": 0.000787,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.028702,
+      "mean": 0.002392,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.004838,
+      "mean": -0.000403,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.009012,
+      "mean": 0.000751,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.011002,
+      "mean": 0.000917,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.005675,
+      "mean": 0.000473,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.022172,
+      "mean": -0.001848,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.017728,
+      "mean": 0.001477,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.049775,
+      "mean": 0.004148,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.00376,
+      "mean": -0.000313,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": 0.004417,
+      "mean": 0.000402,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": 0.000453,
+     "dropped_year": "2022",
+     "all": {
+      "2014": 0.000803,
+      "2015": 0.000636,
+      "2016": 0.000928,
+      "2017": 0.000807,
+      "2018": 0.00079,
+      "2019": 0.000836,
+      "2020": 0.001078,
+      "2021": 0.000731,
+      "2022": 0.000453,
+      "2023": 0.000918,
+      "2024": 0.00084
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2020-03",
+      "2016-01",
+      "2021-11",
+      "2021-07",
+      "2022-04"
+     ],
+     "share_of_total": 0.796913,
+     "mean_without_best": 0.00017
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.081225,
+     "alpha_monthly": 0.001758,
+     "t_alpha_blocks": 3.947002,
+     "mde_alpha_monthly": 0.001247
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 19,
+    "median_over_seeds": {
+     "tw_v": 2.520913,
+     "tw_t": 2.34504,
+     "sh_v": 0.556511,
+     "sh_t": 0.49697,
+     "dd_v": -0.313706,
+     "dd_t": -0.345974,
+     "lu_v": 0.00728,
+     "lu_t": 0.006711
+    }
+   }
+  },
+  "kelly_ridgeqm_minus_kelly_vol": {
+   "question": "Q3 PRIMARY half-Kelly on a fixed edge, dispersion held equal",
+   "mom_12_1_q_tranche": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000287,
+     "n_blocks": 43,
+     "t_blocks": -0.452677,
+     "se_monthly": 0.000635,
+     "mde_monthly": 0.001777
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000373,
+     "n_blocks": 43,
+     "t_blocks": -0.583445,
+     "se_monthly": 0.000639,
+     "mde_monthly": 0.001789
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.025433,
+      "mean": 0.003179,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.012076,
+      "mean": 0.001006,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": 0.004179,
+      "mean": 0.000348,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.009689,
+      "mean": -0.000807,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.001352,
+      "mean": -0.000113,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.036864,
+      "mean": -0.003072,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.010686,
+      "mean": -0.000891,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.014178,
+      "mean": 0.001181,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.004885,
+      "mean": -0.000407,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.003033,
+      "mean": 0.000253,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.031916,
+      "mean": -0.002901,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.00052,
+     "dropped_year": "2014",
+     "all": {
+      "2014": -0.00052,
+      "2015": -0.000422,
+      "2016": -0.000354,
+      "2017": -0.000233,
+      "2018": -0.000306,
+      "2019": 3e-06,
+      "2020": -0.000224,
+      "2021": -0.000441,
+      "2022": -0.000275,
+      "2023": -0.000344,
+      "2024": -3.9e-05
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2014-06",
+      "2021-11",
+      "2023-10",
+      "2023-03",
+      "2015-09"
+     ],
+     "share_of_total": -2.416719,
+     "mean_without_best": -0.001022
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.058553,
+     "alpha_monthly": 0.000402,
+     "t_alpha_blocks": 0.704669,
+     "mde_alpha_monthly": 0.001596
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "sharpe_diff": {
+     "diff": 0.061455,
+     "lo90": -0.052751,
+     "hi90": 0.182526,
+     "p_le_0": 0.1905
+    },
+    "variant": {
+     "n_months": 127,
+     "cagr": 0.028206,
+     "vol_annual": 0.05442,
+     "sharpe": 0.5387,
+     "max_dd": -0.100916,
+     "terminal_wealth": 1.342293,
+     "log_utility_monthly": 0.002318
+    },
+    "twin": {
+     "n_months": 127,
+     "cagr": 0.031757,
+     "vol_annual": 0.0708,
+     "sharpe": 0.477245,
+     "max_dd": -0.128847,
+     "terminal_wealth": 1.392183,
+     "log_utility_monthly": 0.002605
+    }
+   },
+   "random_control": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -8.2e-05,
+     "n_blocks": 43,
+     "t_blocks": -0.59568,
+     "se_monthly": 0.000138,
+     "mde_monthly": 0.000386
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -7.1e-05,
+     "n_blocks": 43,
+     "t_blocks": -0.504942,
+     "se_monthly": 0.00014,
+     "mde_monthly": 0.000392
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.001639,
+      "mean": 0.000205,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.001252,
+      "mean": 0.000104,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.002647,
+      "mean": -0.000221,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.001338,
+      "mean": -0.000112,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.0068,
+      "mean": -0.000567,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.001933,
+      "mean": 0.000161,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.009672,
+      "mean": 0.000806,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.005203,
+      "mean": -0.000434,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.012081,
+      "mean": -0.001007,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.006372,
+      "mean": 0.000531,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.003225,
+      "mean": -0.000293,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.000175,
+     "dropped_year": "2020",
+     "all": {
+      "2014": -0.000101,
+      "2015": -0.000102,
+      "2016": -6.8e-05,
+      "2017": -7.9e-05,
+      "2018": -3.2e-05,
+      "2019": -0.000107,
+      "2020": -0.000175,
+      "2021": -4.5e-05,
+      "2022": 1.4e-05,
+      "2023": -0.000146,
+      "2024": -6.2e-05
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2021-05",
+      "2014-06",
+      "2023-01",
+      "2020-11",
+      "2021-01"
+     ],
+     "share_of_total": -1.880671,
+     "mean_without_best": -0.000246
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": 0.007679,
+     "alpha_monthly": -0.000172,
+     "t_alpha_blocks": -1.310898,
+     "mde_alpha_monthly": 0.000368
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 7,
+    "median_over_seeds": {
+     "tw_v": 2.092632,
+     "tw_t": 2.148577,
+     "sh_v": 0.521979,
+     "sh_t": 0.530805,
+     "dd_v": -0.305622,
+     "dd_t": -0.307239,
+     "lu_v": 0.005814,
+     "lu_t": 0.006022
+    }
+   }
+  },
+  "kelly_ridge_minus_kelly_vol": {
+   "question": "Q3 half-Kelly on a fixed edge: better variance forecast vs trailing vol",
+   "mom_12_1_q_tranche": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000296,
+     "n_blocks": 43,
+     "t_blocks": -0.608129,
+     "se_monthly": 0.000487,
+     "mde_monthly": 0.001363
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000304,
+     "n_blocks": 43,
+     "t_blocks": -0.617456,
+     "se_monthly": 0.000493,
+     "mde_monthly": 0.00138
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.031783,
+      "mean": 0.003973,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.008897,
+      "mean": 0.000741,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.007468,
+      "mean": -0.000622,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.015447,
+      "mean": -0.001287,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.014639,
+      "mean": -0.00122,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.001923,
+      "mean": -0.00016,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.005175,
+      "mean": 0.000431,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.00962,
+      "mean": 0.000802,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.016692,
+      "mean": -0.001391,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.007638,
+      "mean": -0.000637,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.029271,
+      "mean": -0.002661,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.000583,
+     "dropped_year": "2014",
+     "all": {
+      "2014": -0.000583,
+      "2015": -0.000404,
+      "2016": -0.000262,
+      "2017": -0.000193,
+      "2018": -0.0002,
+      "2019": -0.00031,
+      "2020": -0.000372,
+      "2021": -0.000411,
+      "2022": -0.000182,
+      "2023": -0.000261,
+      "2024": -7.2e-05
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2014-06",
+      "2021-11",
+      "2023-03",
+      "2023-10",
+      "2021-01"
+     ],
+     "share_of_total": -1.892492,
+     "mean_without_best": -0.000892
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": 0.011402,
+     "alpha_monthly": -0.00043,
+     "t_alpha_blocks": -0.875993,
+     "mde_alpha_monthly": 0.001375
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "sharpe_diff": {
+     "diff": -0.043555,
+     "lo90": -0.176203,
+     "hi90": 0.07083,
+     "p_le_0": 0.74
+    },
+    "variant": {
+     "n_months": 127,
+     "cagr": 0.028098,
+     "vol_annual": 0.069492,
+     "sharpe": 0.43369,
+     "max_dd": -0.127904,
+     "terminal_wealth": 1.340803,
+     "log_utility_monthly": 0.002309
+    },
+    "twin": {
+     "n_months": 127,
+     "cagr": 0.031757,
+     "vol_annual": 0.0708,
+     "sharpe": 0.477245,
+     "max_dd": -0.128847,
+     "terminal_wealth": 1.392183,
+     "log_utility_monthly": 0.002605
+    }
+   },
+   "random_control": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000774,
+     "n_blocks": 43,
+     "t_blocks": -1.4029,
+     "se_monthly": 0.000552,
+     "mde_monthly": 0.001545
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000877,
+     "n_blocks": 43,
+     "t_blocks": -1.541627,
+     "se_monthly": 0.000569,
+     "mde_monthly": 0.001593
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.003078,
+      "mean": 0.000385,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": -0.002866,
+      "mean": -0.000239,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.016886,
+      "mean": -0.001407,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.00363,
+      "mean": -0.000303,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.011358,
+      "mean": -0.000946,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.000407,
+      "mean": 3.4e-05,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.002894,
+      "mean": -0.000241,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.048031,
+      "mean": -0.004003,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.005128,
+      "mean": -0.000427,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.000192,
+      "mean": -1.6e-05,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.010815,
+      "mean": -0.000983,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.000858,
+     "dropped_year": "2019",
+     "all": {
+      "2014": -0.000852,
+      "2015": -0.00083,
+      "2016": -0.000708,
+      "2017": -0.000823,
+      "2018": -0.000756,
+      "2019": -0.000858,
+      "2020": -0.00083,
+      "2021": -0.000437,
+      "2022": -0.00081,
+      "2023": -0.000853,
+      "2024": -0.000754
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2020-07",
+      "2020-05",
+      "2023-09",
+      "2020-03",
+      "2023-05"
+     ],
+     "share_of_total": -0.466533,
+     "mean_without_best": -0.001182
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.037599,
+     "alpha_monthly": -0.000332,
+     "t_alpha_blocks": -0.646402,
+     "mde_alpha_monthly": 0.001437
+    },
+    "verdict": "FAILED_VARIANT",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 1,
+    "median_over_seeds": {
+     "tw_v": 1.904911,
+     "tw_t": 2.148577,
+     "sh_v": 0.483639,
+     "sh_t": 0.530805,
+     "dd_v": -0.304309,
+     "dd_t": -0.307239,
+     "lu_v": 0.005074,
+     "lu_t": 0.006022
+    }
+   }
+  },
+  "vt_ridgeqm_minus_vt_vol": {
+   "question": "Q3 15% vol target, dispersion held equal",
+   "mom_12_1_q_tranche": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": 1.5e-05,
+     "n_blocks": 43,
+     "t_blocks": 0.02094,
+     "se_monthly": 0.000738,
+     "mde_monthly": 0.002066
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000153,
+     "n_blocks": 43,
+     "t_blocks": -0.205998,
+     "se_monthly": 0.00074,
+     "mde_monthly": 0.002073
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.018541,
+      "mean": 0.002318,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.01752,
+      "mean": 0.00146,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": 0.001587,
+      "mean": 0.000132,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.004469,
+      "mean": -0.000372,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 3e-06,
+      "mean": 0.0,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.039891,
+      "mean": -0.003324,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.004021,
+      "mean": -0.000335,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.029618,
+      "mean": 0.002468,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.000875,
+      "mean": 7.3e-05,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.013735,
+      "mean": 0.001145,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.031536,
+      "mean": -0.002867,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.00024,
+     "dropped_year": "2021",
+     "all": {
+      "2014": -0.000139,
+      "2015": -0.000135,
+      "2016": 3e-06,
+      "2017": 5.6e-05,
+      "2018": 1.7e-05,
+      "2019": 0.000364,
+      "2020": 5.2e-05,
+      "2021": -0.00024,
+      "2022": 9e-06,
+      "2023": -0.000102,
+      "2024": 0.000289
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2021-11",
+      "2014-06",
+      "2022-01",
+      "2023-03",
+      "2020-03"
+     ],
+     "share_of_total": 49.724394,
+     "mean_without_best": -0.000784
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.066885,
+     "alpha_monthly": 0.000802,
+     "t_alpha_blocks": 1.205401,
+     "mde_alpha_monthly": 0.001864
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "sharpe_diff": {
+     "diff": 0.06015,
+     "lo90": -0.012882,
+     "hi90": 0.141861,
+     "p_le_0": 0.096
+    },
+    "variant": {
+     "n_months": 127,
+     "cagr": 0.04292,
+     "vol_annual": 0.099069,
+     "sharpe": 0.474019,
+     "max_dd": -0.176666,
+     "terminal_wealth": 1.56011,
+     "log_utility_monthly": 0.003502
+    },
+    "twin": {
+     "n_months": 127,
+     "cagr": 0.042726,
+     "vol_annual": 0.11789,
+     "sharpe": 0.413869,
+     "max_dd": -0.20188,
+     "terminal_wealth": 1.557052,
+     "log_utility_monthly": 0.003487
+    }
+   },
+   "random_control": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -4e-06,
+     "n_blocks": 43,
+     "t_blocks": -0.043384,
+     "se_monthly": 9.2e-05,
+     "mde_monthly": 0.000258
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": 2.2e-05,
+     "n_blocks": 43,
+     "t_blocks": 0.235154,
+     "se_monthly": 9.5e-05,
+     "mde_monthly": 0.000267
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.002646,
+      "mean": 0.000331,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": -0.000424,
+      "mean": -3.5e-05,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.000185,
+      "mean": -1.5e-05,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.000849,
+      "mean": 7.1e-05,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.004243,
+      "mean": -0.000354,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.001307,
+      "mean": 0.000109,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.00573,
+      "mean": 0.000478,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.002385,
+      "mean": -0.000199,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.006834,
+      "mean": -0.000569,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.00367,
+      "mean": 0.000306,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.000639,
+      "mean": -5.8e-05,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -5.4e-05,
+     "dropped_year": "2020",
+     "all": {
+      "2014": -2.7e-05,
+      "2015": -1e-06,
+      "2016": -3e-06,
+      "2017": -1.2e-05,
+      "2018": 3.2e-05,
+      "2019": -1.6e-05,
+      "2020": -5.4e-05,
+      "2021": 1.6e-05,
+      "2022": 5.5e-05,
+      "2023": -3.6e-05,
+      "2024": 1e-06
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2014-06",
+      "2021-05",
+      "2020-04",
+      "2021-01",
+      "2020-11"
+     ],
+     "share_of_total": -30.026749,
+     "mean_without_best": -0.000129
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": 0.012042,
+     "alpha_monthly": -0.000146,
+     "t_alpha_blocks": -1.871107,
+     "mde_alpha_monthly": 0.000218
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 8,
+    "median_over_seeds": {
+     "tw_v": 1.940273,
+     "tw_t": 1.962338,
+     "sh_v": 0.479439,
+     "sh_t": 0.490519,
+     "dd_v": -0.303587,
+     "dd_t": -0.299535,
+     "lu_v": 0.005219,
+     "lu_t": 0.005308
+    }
+   }
+  },
+  "vt_ridge_minus_vt_vol": {
+   "question": "Q3 15% vol target: better forecast vs trailing vol",
+   "mom_12_1_q_tranche": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -6.9e-05,
+     "n_blocks": 43,
+     "t_blocks": -0.135886,
+     "se_monthly": 0.000509,
+     "mde_monthly": 0.001425
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": 1.6e-05,
+     "n_blocks": 43,
+     "t_blocks": 0.030994,
+     "se_monthly": 0.000516,
+     "mde_monthly": 0.001445
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.026639,
+      "mean": 0.00333,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.006576,
+      "mean": 0.000548,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.010897,
+      "mean": -0.000908,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.004935,
+      "mean": -0.000411,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.021327,
+      "mean": -0.001777,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.010285,
+      "mean": 0.000857,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.009198,
+      "mean": 0.000766,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.006143,
+      "mean": 0.000512,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.019754,
+      "mean": -0.001646,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.010204,
+      "mean": 0.00085,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.020917,
+      "mean": -0.001902,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.000298,
+     "dropped_year": "2014",
+     "all": {
+      "2014": -0.000298,
+      "2015": -0.000134,
+      "2016": 1.8e-05,
+      "2017": -3.3e-05,
+      "2018": 0.000109,
+      "2019": -0.000166,
+      "2020": -0.000156,
+      "2021": -0.00013,
+      "2022": 9.5e-05,
+      "2023": -0.000165,
+      "2024": 0.000105
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2014-06",
+      "2021-01",
+      "2020-04",
+      "2020-07",
+      "2020-05"
+     ],
+     "share_of_total": -9.457983,
+     "mean_without_best": -0.000753
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": 0.042739,
+     "alpha_monthly": -0.000572,
+     "t_alpha_blocks": -1.169459,
+     "mde_alpha_monthly": 0.00137
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "sharpe_diff": {
+     "diff": -0.026439,
+     "lo90": -0.107726,
+     "hi90": 0.045922,
+     "p_le_0": 0.7315
+    },
+    "variant": {
+     "n_months": 127,
+     "cagr": 0.041861,
+     "vol_annual": 0.126431,
+     "sharpe": 0.38743,
+     "max_dd": -0.212823,
+     "terminal_wealth": 1.543434,
+     "log_utility_monthly": 0.003417
+    },
+    "twin": {
+     "n_months": 127,
+     "cagr": 0.042726,
+     "vol_annual": 0.11789,
+     "sharpe": 0.413869,
+     "max_dd": -0.20188,
+     "terminal_wealth": 1.557052,
+     "log_utility_monthly": 0.003487
+    }
+   },
+   "random_control": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000224,
+     "n_blocks": 43,
+     "t_blocks": -0.556198,
+     "se_monthly": 0.000403,
+     "mde_monthly": 0.00113
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000325,
+     "n_blocks": 43,
+     "t_blocks": -0.832074,
+     "se_monthly": 0.00039,
+     "mde_monthly": 0.001093
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.004276,
+      "mean": 0.000535,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": -0.001714,
+      "mean": -0.000143,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.015996,
+      "mean": -0.001333,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.006257,
+      "mean": -0.000521,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.000274,
+      "mean": 2.3e-05,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.001333,
+      "mean": -0.000111,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.034934,
+      "mean": 0.002911,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.021998,
+      "mean": -0.001833,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.005428,
+      "mean": -0.000452,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.006697,
+      "mean": -0.000558,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.008557,
+      "mean": -0.000778,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.000552,
+     "dropped_year": "2020",
+     "all": {
+      "2014": -0.000275,
+      "2015": -0.000233,
+      "2016": -0.000109,
+      "2017": -0.000193,
+      "2018": -0.00025,
+      "2019": -0.000236,
+      "2020": -0.000552,
+      "2021": -5.7e-05,
+      "2022": -0.000201,
+      "2023": -0.00019,
+      "2024": -0.000172
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2020-03",
+      "2020-05",
+      "2020-07",
+      "2021-11",
+      "2023-09"
+     ],
+     "share_of_total": -2.012029,
+     "mean_without_best": -0.000704
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.03759,
+     "alpha_monthly": 0.000218,
+     "t_alpha_blocks": 0.581862,
+     "mde_alpha_monthly": 0.001049
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 5,
+    "median_over_seeds": {
+     "tw_v": 1.884791,
+     "tw_t": 1.962338,
+     "sh_v": 0.47804,
+     "sh_t": 0.490519,
+     "dd_v": -0.284153,
+     "dd_t": -0.299535,
+     "lu_v": 0.004991,
+     "lu_t": 0.005308
+    }
+   }
+  },
+  "kelly_vol_minus_equal": {
+   "question": "Q3 half-Kelly (trailing vol) vs fully invested equal weight",
+   "mom_12_1_q_tranche": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.001732,
+     "n_blocks": 43,
+     "t_blocks": -0.233493,
+     "se_monthly": 0.007419,
+     "mde_monthly": 0.020774
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.006646,
+     "n_blocks": 43,
+     "t_blocks": -0.867555,
+     "se_monthly": 0.00766,
+     "mde_monthly": 0.021449
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": -0.041717,
+      "mean": -0.005215,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.115629,
+      "mean": 0.009636,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": 0.081819,
+      "mean": 0.006818,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.044039,
+      "mean": -0.00367,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.214499,
+      "mean": 0.017875,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.373057,
+      "mean": -0.031088,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.115153,
+      "mean": -0.009596,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.167771,
+      "mean": 0.013981,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.154386,
+      "mean": 0.012866,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.142558,
+      "mean": -0.01188,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.237593,
+      "mean": -0.021599,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.003778,
+     "dropped_year": "2018",
+     "all": {
+      "2014": -0.001498,
+      "2015": -0.002919,
+      "2016": -0.002625,
+      "2017": -0.00153,
+      "2018": -0.003778,
+      "2019": 0.001331,
+      "2020": -0.000912,
+      "2021": -0.003372,
+      "2022": -0.003256,
+      "2023": -0.000674,
+      "2024": 0.000152
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2020-03",
+      "2022-06",
+      "2016-01",
+      "2020-08",
+      "2021-11"
+     ],
+     "share_of_total": -4.666356,
+     "mean_without_best": -0.010219
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -1.07881,
+     "alpha_monthly": 0.010961,
+     "t_alpha_blocks": 1.87192,
+     "mde_alpha_monthly": 0.016396
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "sharpe_diff": {
+     "diff": 0.157604,
+     "lo90": -0.055835,
+     "hi90": 0.405148,
+     "p_le_0": 0.1085
+    },
+    "variant": {
+     "n_months": 127,
+     "cagr": 0.031757,
+     "vol_annual": 0.0708,
+     "sharpe": 0.477245,
+     "max_dd": -0.128847,
+     "terminal_wealth": 1.392183,
+     "log_utility_monthly": 0.002605
+    },
+    "twin": {
+     "n_months": 127,
+     "cagr": 0.053431,
+     "vol_annual": 0.355206,
+     "sharpe": 0.319641,
+     "max_dd": -0.556996,
+     "terminal_wealth": 1.734786,
+     "log_utility_monthly": 0.004338
+    }
+   },
+   "random_control": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000712,
+     "n_blocks": 43,
+     "t_blocks": -0.367612,
+     "se_monthly": 0.001935,
+     "mde_monthly": 0.005419
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.001424,
+     "n_blocks": 43,
+     "t_blocks": -0.699853,
+     "se_monthly": 0.002035,
+     "mde_monthly": 0.005697
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.007086,
+      "mean": 0.000886,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.044385,
+      "mean": 0.003699,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.009441,
+      "mean": -0.000787,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.015913,
+      "mean": 0.001326,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.024925,
+      "mean": 0.002077,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.01054,
+      "mean": -0.000878,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.274128,
+      "mean": -0.022844,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.007634,
+      "mean": -0.000636,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.132421,
+      "mean": 0.011035,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.023599,
+      "mean": -0.001967,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": 0.010249,
+      "mean": 0.000932,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.001937,
+     "dropped_year": "2022",
+     "all": {
+      "2014": -0.000819,
+      "2015": -0.001172,
+      "2016": -0.000704,
+      "2017": -0.000924,
+      "2018": -0.001002,
+      "2019": -0.000694,
+      "2020": 0.001598,
+      "2021": -0.000719,
+      "2022": -0.001937,
+      "2023": -0.000581,
+      "2024": -0.000867
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2022-04",
+      "2022-01",
+      "2016-01",
+      "2021-11",
+      "2021-07"
+     ],
+     "share_of_total": -1.837832,
+     "mean_without_best": -0.002102
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.256847,
+     "alpha_monthly": 0.002311,
+     "t_alpha_blocks": 1.521134,
+     "mde_alpha_monthly": 0.004253
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 5,
+    "median_over_seeds": {
+     "tw_v": 2.148577,
+     "tw_t": 2.34504,
+     "sh_v": 0.530805,
+     "sh_t": 0.49697,
+     "dd_v": -0.307239,
+     "dd_t": -0.345974,
+     "lu_v": 0.006022,
+     "lu_t": 0.006711
+    }
+   }
+  },
+  "inv_ridgepx_minus_inv_vol": {
+   "question": "Q1 foreign slice: price-only ridge vs trailing vol",
+   "mom_12_1_q_tranche": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000578,
+     "n_blocks": 43,
+     "t_blocks": -0.580997,
+     "se_monthly": 0.000995,
+     "mde_monthly": 0.002785
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -0.000576,
+     "n_blocks": 43,
+     "t_blocks": -0.578869,
+     "se_monthly": 0.000994,
+     "mde_monthly": 0.002784
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.026549,
+      "mean": 0.003319,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.027938,
+      "mean": 0.002328,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.003858,
+      "mean": -0.000322,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.007082,
+      "mean": 0.00059,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.051268,
+      "mean": -0.004272,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.009133,
+      "mean": -0.000761,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.042561,
+      "mean": -0.003547,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.00762,
+      "mean": 0.000635,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.047493,
+      "mean": -0.003958,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.039541,
+      "mean": 0.003295,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.027809,
+      "mean": -0.002528,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.000982,
+     "dropped_year": "2023",
+     "all": {
+      "2014": -0.00084,
+      "2015": -0.000881,
+      "2016": -0.000605,
+      "2017": -0.0007,
+      "2018": -0.000192,
+      "2019": -0.000559,
+      "2020": -0.000268,
+      "2021": -0.000704,
+      "2022": -0.000225,
+      "2023": -0.000982,
+      "2024": -0.000393
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2021-01",
+      "2020-07",
+      "2021-02",
+      "2024-09",
+      "2023-10"
+     ],
+     "share_of_total": -1.796753,
+     "mean_without_best": -0.001682
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.003123,
+     "alpha_monthly": -0.000541,
+     "t_alpha_blocks": -0.542848,
+     "mde_alpha_monthly": 0.002791
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "sharpe_diff": {
+     "diff": -0.021627,
+     "lo90": -0.084276,
+     "hi90": 0.030787,
+     "p_le_0": 0.7565
+    },
+    "variant": {
+     "n_months": 127,
+     "cagr": 0.066686,
+     "vol_annual": 0.34482,
+     "sharpe": 0.35587,
+     "max_dd": -0.505526,
+     "terminal_wealth": 1.980244,
+     "log_utility_monthly": 0.00538
+    },
+    "twin": {
+     "n_months": 127,
+     "cagr": 0.074108,
+     "vol_annual": 0.343363,
+     "sharpe": 0.377497,
+     "max_dd": -0.469617,
+     "terminal_wealth": 2.131046,
+     "log_utility_monthly": 0.005958
+    }
+   },
+   "random_control": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-04-30",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 127,
+     "mean_monthly": -5.7e-05,
+     "n_blocks": 43,
+     "t_blocks": -0.230423,
+     "se_monthly": 0.000249,
+     "mde_monthly": 0.000696
+    },
+    "raw_return_diff": {
+     "n_months": 127,
+     "mean_monthly": -2.6e-05,
+     "n_blocks": 43,
+     "t_blocks": -0.102419,
+     "se_monthly": 0.000258,
+     "mde_monthly": 0.000723
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.003508,
+      "mean": 0.000438,
+      "n_months": 8
+     },
+     "2015": {
+      "sum": 0.001506,
+      "mean": 0.000125,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.000791,
+      "mean": -6.6e-05,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.000273,
+      "mean": -2.3e-05,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.003215,
+      "mean": -0.000268,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.000969,
+      "mean": -8.1e-05,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.022575,
+      "mean": 0.001881,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.010854,
+      "mean": -0.000905,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.012765,
+      "mean": -0.001064,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.002236,
+      "mean": -0.000186,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.003763,
+      "mean": -0.000342,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.00026,
+     "dropped_year": "2020",
+     "all": {
+      "2014": -9.1e-05,
+      "2015": -7.6e-05,
+      "2016": -5.6e-05,
+      "2017": -6.1e-05,
+      "2018": -3.5e-05,
+      "2019": -5.5e-05,
+      "2020": -0.00026,
+      "2021": 3.1e-05,
+      "2022": 4.8e-05,
+      "2023": -4.4e-05,
+      "2024": -3e-05
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2021-01",
+      "2021-05",
+      "2020-11",
+      "2020-12",
+      "2023-01"
+     ],
+     "share_of_total": -4.270181,
+     "mean_without_best": -0.000314
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": 0.0096,
+     "alpha_monthly": -0.00017,
+     "t_alpha_blocks": -0.710466,
+     "mde_alpha_monthly": 0.000671
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 7,
+    "median_over_seeds": {
+     "tw_v": 2.554766,
+     "tw_t": 2.587947,
+     "sh_v": 0.561708,
+     "sh_t": 0.568216,
+     "dd_v": -0.311035,
+     "dd_t": -0.311751,
+     "lu_v": 0.007385,
+     "lu_t": 0.007487
+    }
+   }
+  }
+ },
+ "exp2": {
+  "rows_flagged": {
+   "HOLD": 0,
+   "AVOID_ALL": 73969,
+   "AVOID_TOP_EMS": 24699,
+   "AVOID_TOP_VOL": 25799,
+   "AVOID_TOP_RATIO": 24698,
+   "SEEK_TOP_EMS": 24699,
+   "SEEK_BOTTOM_EMS": 24680,
+   "SEEK_TOP_VOL": 25799,
+   "ANY_EVENT": 73969,
+   "ALL": 260680
+  },
+  "books_median_over_seeds": {
+   "HOLD": {
+    "cagr": 0.052962,
+    "vol_annual": 0.228359,
+    "sharpe": 0.339104,
+    "max_dd": -0.415952,
+    "terminal_wealth": 1.742043,
+    "log_utility_monthly": 0.0043
+   },
+   "AVOID_ALL": {
+    "cagr": 0.044249,
+    "vol_annual": 0.220705,
+    "sharpe": 0.309535,
+    "max_dd": -0.410821,
+    "terminal_wealth": 1.59276,
+    "log_utility_monthly": 0.003608
+   },
+   "AVOID_TOP_EMS": {
+    "cagr": 0.051838,
+    "vol_annual": 0.225144,
+    "sharpe": 0.338086,
+    "max_dd": -0.411262,
+    "terminal_wealth": 1.721703,
+    "log_utility_monthly": 0.004212
+   },
+   "AVOID_TOP_VOL": {
+    "cagr": 0.052909,
+    "vol_annual": 0.224002,
+    "sharpe": 0.342861,
+    "max_dd": -0.40994,
+    "terminal_wealth": 1.740615,
+    "log_utility_monthly": 0.004296
+   },
+   "AVOID_TOP_RATIO": {
+    "cagr": 0.05029,
+    "vol_annual": 0.225519,
+    "sharpe": 0.333552,
+    "max_dd": -0.416672,
+    "terminal_wealth": 1.695489,
+    "log_utility_monthly": 0.004088
+   },
+   "SEEK_TOP_EMS": {
+    "cagr": 0.053394,
+    "vol_annual": 0.287629,
+    "sharpe": 0.324161,
+    "max_dd": -0.546615,
+    "terminal_wealth": 1.749383,
+    "log_utility_monthly": 0.004335
+   },
+   "SEEK_BOTTOM_EMS": {
+    "cagr": 0.058761,
+    "vol_annual": 0.190795,
+    "sharpe": 0.385632,
+    "max_dd": -0.338999,
+    "terminal_wealth": 1.847678,
+    "log_utility_monthly": 0.004758
+   },
+   "SEEK_TOP_VOL": {
+    "cagr": 0.032756,
+    "vol_annual": 0.315435,
+    "sharpe": 0.259903,
+    "max_dd": -0.580968,
+    "terminal_wealth": 1.414463,
+    "log_utility_monthly": 0.002686
+   },
+   "ANY_EVENT": {
+    "cagr": 0.065779,
+    "vol_annual": 0.233826,
+    "sharpe": 0.382592,
+    "max_dd": -0.422206,
+    "terminal_wealth": 1.983585,
+    "log_utility_monthly": 0.005309
+   },
+   "ALL": {
+    "cagr": 0.043466,
+    "vol_annual": 0.234844,
+    "sharpe": 0.305246,
+    "max_dd": -0.428628,
+    "terminal_wealth": 1.579984,
+    "log_utility_monthly": 0.003546
+   }
+  },
+  "comparisons": {
+   "AVOID_ALL_minus_HOLD": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.00059,
+     "n_blocks": 43,
+     "t_blocks": -1.592421,
+     "se_monthly": 0.000371,
+     "mde_monthly": 0.001038
+    },
+    "raw_return_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.000738,
+     "n_blocks": 43,
+     "t_blocks": -1.927365,
+     "se_monthly": 0.000383,
+     "mde_monthly": 0.001072
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.001552,
+      "mean": 0.000155,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": -0.008741,
+      "mean": -0.000728,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.007505,
+      "mean": -0.000625,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.002166,
+      "mean": 0.000181,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.012202,
+      "mean": -0.001017,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.015643,
+      "mean": -0.001304,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.02558,
+      "mean": -0.002132,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.008966,
+      "mean": 0.000747,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.000106,
+      "mean": -9e-06,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.002445,
+      "mean": 0.000204,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.021472,
+      "mean": -0.001952,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.000727,
+     "dropped_year": "2021",
+     "all": {
+      "2014": -0.000653,
+      "2015": -0.000576,
+      "2016": -0.000586,
+      "2017": -0.000669,
+      "2018": -0.000546,
+      "2019": -0.000517,
+      "2020": -0.000432,
+      "2021": -0.000727,
+      "2022": -0.00065,
+      "2023": -0.000672,
+      "2024": -0.000463
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2022-05",
+      "2014-05",
+      "2016-10",
+      "2023-08",
+      "2021-01"
+     ],
+     "share_of_total": -0.566134,
+     "mean_without_best": -0.000961
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.037089,
+     "alpha_monthly": -0.00015,
+     "t_alpha_blocks": -0.525148,
+     "mde_alpha_monthly": 0.000802
+    },
+    "verdict": "FAILED_VARIANT",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 6,
+    "median_over_seeds": {
+     "tw_v": 1.59276,
+     "tw_t": 1.742043,
+     "sh_v": 0.309535,
+     "sh_t": 0.339104,
+     "dd_v": -0.410821,
+     "dd_t": -0.415952,
+     "lu_v": 0.003608,
+     "lu_t": 0.0043
+    }
+   },
+   "AVOID_TOP_EMS_minus_HOLD": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.000345,
+     "n_blocks": 43,
+     "t_blocks": -1.605835,
+     "se_monthly": 0.000215,
+     "mde_monthly": 0.000601
+    },
+    "raw_return_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.000423,
+     "n_blocks": 43,
+     "t_blocks": -1.912012,
+     "se_monthly": 0.000221,
+     "mde_monthly": 0.000619
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.00669,
+      "mean": 0.000669,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": -0.006686,
+      "mean": -0.000557,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.007481,
+      "mean": -0.000623,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.001947,
+      "mean": 0.000162,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.011255,
+      "mean": -0.000938,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.003564,
+      "mean": -0.000297,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.015656,
+      "mean": -0.001305,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -9.2e-05,
+      "mean": -8e-06,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.007105,
+      "mean": -0.000592,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.000869,
+      "mean": -7.2e-05,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.000376,
+      "mean": -3.4e-05,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.00043,
+     "dropped_year": "2014",
+     "all": {
+      "2014": -0.00043,
+      "2015": -0.000323,
+      "2016": -0.000316,
+      "2017": -0.000397,
+      "2018": -0.000284,
+      "2019": -0.000349,
+      "2020": -0.000246,
+      "2021": -0.000379,
+      "2022": -0.000319,
+      "2023": -0.000372,
+      "2024": -0.000373
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2014-05",
+      "2022-05",
+      "2024-05",
+      "2024-03",
+      "2023-07"
+     ],
+     "share_of_total": -0.676704,
+     "mean_without_best": -0.000601
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.015818,
+     "alpha_monthly": -0.000151,
+     "t_alpha_blocks": -0.746119,
+     "mde_alpha_monthly": 0.000567
+    },
+    "verdict": "FAILED_VARIANT",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 6,
+    "median_over_seeds": {
+     "tw_v": 1.721703,
+     "tw_t": 1.742043,
+     "sh_v": 0.338086,
+     "sh_t": 0.339104,
+     "dd_v": -0.411262,
+     "dd_t": -0.415952,
+     "lu_v": 0.004212,
+     "lu_t": 0.0043
+    }
+   },
+   "AVOID_TOP_VOL_minus_HOLD": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.000178,
+     "n_blocks": 43,
+     "t_blocks": -0.839998,
+     "se_monthly": 0.000212,
+     "mde_monthly": 0.000594
+    },
+    "raw_return_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.000254,
+     "n_blocks": 43,
+     "t_blocks": -1.147726,
+     "se_monthly": 0.000221,
+     "mde_monthly": 0.000619
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.004772,
+      "mean": 0.000477,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": -0.009027,
+      "mean": -0.000752,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.003862,
+      "mean": -0.000322,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.009359,
+      "mean": 0.00078,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.004956,
+      "mean": -0.000413,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.006887,
+      "mean": -0.000574,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.013629,
+      "mean": -0.001136,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.016573,
+      "mean": 0.001381,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.008276,
+      "mean": -0.00069,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.00291,
+      "mean": -0.000242,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.004129,
+      "mean": -0.000375,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.000338,
+     "dropped_year": "2021",
+     "all": {
+      "2014": -0.000233,
+      "2015": -0.000119,
+      "2016": -0.000163,
+      "2017": -0.000276,
+      "2018": -0.000154,
+      "2019": -0.000137,
+      "2020": -8e-05,
+      "2021": -0.000338,
+      "2022": -0.000126,
+      "2023": -0.000171,
+      "2024": -0.00016
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2014-05",
+      "2022-05",
+      "2021-01",
+      "2021-05",
+      "2015-08"
+     ],
+     "share_of_total": -1.249392,
+     "mean_without_best": -0.000417
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.016645,
+     "alpha_monthly": 2.6e-05,
+     "t_alpha_blocks": 0.12609,
+     "mde_alpha_monthly": 0.00057
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 8,
+    "median_over_seeds": {
+     "tw_v": 1.740615,
+     "tw_t": 1.742043,
+     "sh_v": 0.342861,
+     "sh_t": 0.339104,
+     "dd_v": -0.40994,
+     "dd_t": -0.415952,
+     "lu_v": 0.004296,
+     "lu_t": 0.0043
+    }
+   },
+   "AVOID_TOP_EMS_minus_AVOID_TOP_VOL": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.000166,
+     "n_blocks": 43,
+     "t_blocks": -1.29908,
+     "se_monthly": 0.000128,
+     "mde_monthly": 0.000359
+    },
+    "raw_return_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.000169,
+     "n_blocks": 43,
+     "t_blocks": -1.314111,
+     "se_monthly": 0.000129,
+     "mde_monthly": 0.00036
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.001918,
+      "mean": 0.000192,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": 0.002341,
+      "mean": 0.000195,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.003619,
+      "mean": -0.000302,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.007412,
+      "mean": -0.000618,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.006298,
+      "mean": -0.000525,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.003322,
+      "mean": 0.000277,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.002027,
+      "mean": -0.000169,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.016665,
+      "mean": -0.001389,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.001171,
+      "mean": 9.8e-05,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.002041,
+      "mean": 0.00017,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": 0.003752,
+      "mean": 0.000341,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.000214,
+     "dropped_year": "2024",
+     "all": {
+      "2014": -0.000197,
+      "2015": -0.000204,
+      "2016": -0.000153,
+      "2017": -0.00012,
+      "2018": -0.00013,
+      "2019": -0.000212,
+      "2020": -0.000166,
+      "2021": -4.1e-05,
+      "2022": -0.000194,
+      "2023": -0.000201,
+      "2024": -0.000214
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2020-05",
+      "2023-07",
+      "2015-10",
+      "2019-11",
+      "2019-03"
+     ],
+     "share_of_total": -0.862401,
+     "mean_without_best": -0.000323
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": 0.000827,
+     "alpha_monthly": -0.000177,
+     "t_alpha_blocks": -1.211216,
+     "mde_alpha_monthly": 0.000408
+    },
+    "verdict": "FAILED_VARIANT",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 9,
+    "median_over_seeds": {
+     "tw_v": 1.721703,
+     "tw_t": 1.740615,
+     "sh_v": 0.338086,
+     "sh_t": 0.342861,
+     "dd_v": -0.411262,
+     "dd_t": -0.40994,
+     "lu_v": 0.004212,
+     "lu_t": 0.004296
+    }
+   },
+   "AVOID_TOP_RATIO_minus_HOLD": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.00036,
+     "n_blocks": 43,
+     "t_blocks": -1.931752,
+     "se_monthly": 0.000187,
+     "mde_monthly": 0.000522
+    },
+    "raw_return_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.000415,
+     "n_blocks": 43,
+     "t_blocks": -2.17364,
+     "se_monthly": 0.000191,
+     "mde_monthly": 0.000535
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": -0.002263,
+      "mean": -0.000226,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": -0.00402,
+      "mean": -0.000335,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.007489,
+      "mean": -0.000624,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 4.6e-05,
+      "mean": 4e-06,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.015912,
+      "mean": -0.001326,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.00069,
+      "mean": 5.8e-05,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.015895,
+      "mean": -0.001325,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.01054,
+      "mean": -0.000878,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.000263,
+      "mean": 2.2e-05,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.008538,
+      "mean": 0.000712,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": 9.2e-05,
+      "mean": 8e-06,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.00047,
+     "dropped_year": "2023",
+     "all": {
+      "2014": -0.000372,
+      "2015": -0.000363,
+      "2016": -0.000333,
+      "2017": -0.000398,
+      "2018": -0.000261,
+      "2019": -0.000403,
+      "2020": -0.000261,
+      "2021": -0.000307,
+      "2022": -0.0004,
+      "2023": -0.00047,
+      "2024": -0.000395
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2023-08",
+      "2024-05",
+      "2022-05",
+      "2017-05",
+      "2021-01"
+     ],
+     "share_of_total": -0.497776,
+     "mean_without_best": -0.000562
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.01145,
+     "alpha_monthly": -0.000206,
+     "t_alpha_blocks": -0.998653,
+     "mde_alpha_monthly": 0.000578
+    },
+    "verdict": "FAILED_VARIANT",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 6,
+    "median_over_seeds": {
+     "tw_v": 1.695489,
+     "tw_t": 1.742043,
+     "sh_v": 0.333552,
+     "sh_t": 0.339104,
+     "dd_v": -0.416672,
+     "dd_t": -0.415952,
+     "lu_v": 0.004088,
+     "lu_t": 0.0043
+    }
+   },
+   "AVOID_TOP_RATIO_minus_AVOID_TOP_VOL": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.000182,
+     "n_blocks": 43,
+     "t_blocks": -0.80254,
+     "se_monthly": 0.000227,
+     "mde_monthly": 0.000636
+    },
+    "raw_return_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.000162,
+     "n_blocks": 43,
+     "t_blocks": -0.695205,
+     "se_monthly": 0.000232,
+     "mde_monthly": 0.000651
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": -0.007035,
+      "mean": -0.000703,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": 0.005007,
+      "mean": 0.000417,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.003627,
+      "mean": -0.000302,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.009312,
+      "mean": -0.000776,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": -0.010956,
+      "mean": -0.000913,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.007577,
+      "mean": 0.000631,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.002265,
+      "mean": -0.000189,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.027113,
+      "mean": -0.002259,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.008539,
+      "mean": 0.000712,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.011448,
+      "mean": 0.000954,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": 0.004221,
+      "mean": 0.000384,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.000299,
+     "dropped_year": "2023",
+     "all": {
+      "2014": -0.000138,
+      "2015": -0.000244,
+      "2016": -0.00017,
+      "2017": -0.000121,
+      "2018": -0.000107,
+      "2019": -0.000266,
+      "2020": -0.000182,
+      "2021": 3.1e-05,
+      "2022": -0.000274,
+      "2023": -0.000299,
+      "2024": -0.000235
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2024-02",
+      "2023-08",
+      "2015-10",
+      "2019-11",
+      "2020-05"
+     ],
+     "share_of_total": -1.501418,
+     "mean_without_best": -0.000474
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": 0.005195,
+     "alpha_monthly": -0.000232,
+     "t_alpha_blocks": -1.090145,
+     "mde_alpha_monthly": 0.000596
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 9,
+    "median_over_seeds": {
+     "tw_v": 1.695489,
+     "tw_t": 1.740615,
+     "sh_v": 0.333552,
+     "sh_t": 0.342861,
+     "dd_v": -0.416672,
+     "dd_t": -0.40994,
+     "lu_v": 0.004088,
+     "lu_t": 0.004296
+    }
+   },
+   "SEEK_TOP_EMS_minus_SEEK_BOTTOM_EMS": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 129,
+     "mean_monthly": -0.000558,
+     "n_blocks": 43,
+     "t_blocks": -0.144588,
+     "se_monthly": 0.003862,
+     "mde_monthly": 0.010815
+    },
+    "raw_return_diff": {
+     "n_months": 129,
+     "mean_monthly": 0.001359,
+     "n_blocks": 43,
+     "t_blocks": 0.346418,
+     "se_monthly": 0.003924,
+     "mde_monthly": 0.010987
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": -0.058282,
+      "mean": -0.005828,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": -0.065566,
+      "mean": -0.005464,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": 0.13361,
+      "mean": 0.011134,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.028045,
+      "mean": 0.002337,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.031865,
+      "mean": 0.002655,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.198805,
+      "mean": -0.016567,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.280645,
+      "mean": 0.023387,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.047686,
+      "mean": -0.003974,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.154525,
+      "mean": -0.012877,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.047872,
+      "mean": 0.003989,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.069215,
+      "mean": -0.006292,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.003014,
+     "dropped_year": "2020",
+     "all": {
+      "2014": -0.000116,
+      "2015": -5.5e-05,
+      "2016": -0.001758,
+      "2017": -0.000855,
+      "2018": -0.000888,
+      "2019": 0.001083,
+      "2020": -0.003014,
+      "2021": -0.000208,
+      "2022": 0.000705,
+      "2023": -0.001025,
+      "2024": -2.4e-05
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2020-12",
+      "2023-01",
+      "2016-09",
+      "2023-11",
+      "2020-04"
+     ],
+     "share_of_total": -6.180213,
+     "mean_without_best": -0.004172
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": 0.374547,
+     "alpha_monthly": -0.004879,
+     "t_alpha_blocks": -1.4044,
+     "mde_alpha_monthly": 0.009727
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 9,
+    "median_over_seeds": {
+     "tw_v": 1.749383,
+     "tw_t": 1.847678,
+     "sh_v": 0.324161,
+     "sh_t": 0.385632,
+     "dd_v": -0.546615,
+     "dd_t": -0.338999,
+     "lu_v": 0.004335,
+     "lu_t": 0.004758
+    }
+   },
+   "SEEK_TOP_EMS_minus_SEEK_TOP_VOL": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 129,
+     "mean_monthly": 0.001493,
+     "n_blocks": 43,
+     "t_blocks": 0.675056,
+     "se_monthly": 0.002212,
+     "mde_monthly": 0.006194
+    },
+    "raw_return_diff": {
+     "n_months": 129,
+     "mean_monthly": 0.000889,
+     "n_blocks": 43,
+     "t_blocks": 0.408208,
+     "se_monthly": 0.002179,
+     "mde_monthly": 0.0061
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": 0.121291,
+      "mean": 0.012129,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": -0.035105,
+      "mean": -0.002925,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.047833,
+      "mean": -0.003986,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.058757,
+      "mean": -0.004896,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.068659,
+      "mean": 0.005722,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.071298,
+      "mean": -0.005942,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": -0.002727,
+      "mean": -0.000227,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": 0.211688,
+      "mean": 0.017641,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.023816,
+      "mean": -0.001985,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": -0.049791,
+      "mean": -0.004149,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": 0.080313,
+      "mean": 0.007301,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.000163,
+     "dropped_year": "2021",
+     "all": {
+      "2014": 0.000599,
+      "2015": 0.001946,
+      "2016": 0.002055,
+      "2017": 0.002149,
+      "2018": 0.00106,
+      "2019": 0.002256,
+      "2020": 0.00167,
+      "2021": -0.000163,
+      "2022": 0.00185,
+      "2023": 0.002072,
+      "2024": 0.000952
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2021-03",
+      "2014-03",
+      "2021-12",
+      "2018-03",
+      "2020-06"
+     ],
+     "share_of_total": 1.591124,
+     "mean_without_best": -0.000918
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.056791,
+     "alpha_monthly": 0.001697,
+     "t_alpha_blocks": 0.826904,
+     "mde_alpha_monthly": 0.005747
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 14,
+    "median_over_seeds": {
+     "tw_v": 1.749383,
+     "tw_t": 1.414463,
+     "sh_v": 0.324161,
+     "sh_t": 0.259903,
+     "dd_v": -0.546615,
+     "dd_t": -0.580968,
+     "lu_v": 0.004335,
+     "lu_t": 0.002686
+    }
+   },
+   "SEEK_TOP_EMS_minus_ALL": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 129,
+     "mean_monthly": -8.9e-05,
+     "n_blocks": 43,
+     "t_blocks": -0.034637,
+     "se_monthly": 0.002561,
+     "mde_monthly": 0.00717
+    },
+    "raw_return_diff": {
+     "n_months": 129,
+     "mean_monthly": 0.00108,
+     "n_blocks": 43,
+     "t_blocks": 0.421056,
+     "se_monthly": 0.002565,
+     "mde_monthly": 0.007181
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": -0.035621,
+      "mean": -0.003562,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": -0.055762,
+      "mean": -0.004647,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": 0.097762,
+      "mean": 0.008147,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.047157,
+      "mean": 0.00393,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.038863,
+      "mean": 0.003239,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": -0.114446,
+      "mean": -0.009537,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.188595,
+      "mean": 0.015716,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.112792,
+      "mean": -0.009399,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": -0.060919,
+      "mean": -0.005077,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.088052,
+      "mean": 0.007338,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.09233,
+      "mean": -0.008394,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": -0.00171,
+     "dropped_year": "2020",
+     "all": {
+      "2014": 0.000203,
+      "2015": 0.000379,
+      "2016": -0.000933,
+      "2017": -0.000501,
+      "2018": -0.00043,
+      "2019": 0.00088,
+      "2020": -0.00171,
+      "2021": 0.000866,
+      "2022": 0.000423,
+      "2023": -0.00085,
+      "2024": 0.000685
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2020-12",
+      "2020-06",
+      "2017-12",
+      "2023-11",
+      "2024-11"
+     ],
+     "share_of_total": -26.282113,
+     "mean_without_best": -0.002517
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": 0.137097,
+     "alpha_monthly": -0.001505,
+     "t_alpha_blocks": -0.597039,
+     "mde_alpha_monthly": 0.007059
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 10,
+    "median_over_seeds": {
+     "tw_v": 1.749383,
+     "tw_t": 1.579984,
+     "sh_v": 0.324161,
+     "sh_t": 0.305246,
+     "dd_v": -0.546615,
+     "dd_t": -0.428628,
+     "lu_v": 0.004335,
+     "lu_t": 0.003546
+    }
+   },
+   "ANY_EVENT_minus_ALL": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 129,
+     "mean_monthly": 0.000473,
+     "n_blocks": 43,
+     "t_blocks": 0.370892,
+     "se_monthly": 0.001275,
+     "mde_monthly": 0.003569
+    },
+    "raw_return_diff": {
+     "n_months": 129,
+     "mean_monthly": 0.000488,
+     "n_blocks": 43,
+     "t_blocks": 0.380677,
+     "se_monthly": 0.001283,
+     "mde_monthly": 0.003593
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": -0.035634,
+      "mean": -0.003563,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": 0.019617,
+      "mean": 0.001635,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": 0.060929,
+      "mean": 0.005077,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": 0.023304,
+      "mean": 0.001942,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.028514,
+      "mean": 0.002376,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.027129,
+      "mean": 0.002261,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.013986,
+      "mean": 0.001166,
+      "n_months": 12
+     },
+     "2021": {
+      "sum": -0.085056,
+      "mean": -0.007088,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.031214,
+      "mean": 0.002601,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.001064,
+      "mean": 8.9e-05,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": -0.024078,
+      "mean": -0.002189,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": 1e-06,
+     "dropped_year": "2016",
+     "all": {
+      "2014": 0.000812,
+      "2015": 0.000354,
+      "2016": 1e-06,
+      "2017": 0.000322,
+      "2018": 0.000278,
+      "2019": 0.000289,
+      "2020": 0.000402,
+      "2021": 0.001248,
+      "2022": 0.000254,
+      "2023": 0.000512,
+      "2024": 0.000721
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2022-01",
+      "2021-07",
+      "2018-06",
+      "2020-06",
+      "2021-04"
+     ],
+     "share_of_total": 2.90979,
+     "mean_without_best": -0.000939
+    },
+    "market_alpha": {
+     "n": 127,
+     "beta": -0.05458,
+     "alpha_monthly": 0.001348,
+     "t_alpha_blocks": 1.091911,
+     "mde_alpha_monthly": 0.003457
+    },
+    "verdict": "CANNOT_DISTINGUISH",
+    "n_seeds": 20,
+    "seeds_variant_beats_twin_terminal_wealth": 10,
+    "median_over_seeds": {
+     "tw_v": 1.983585,
+     "tw_t": 1.579984,
+     "sh_v": 0.382592,
+     "sh_t": 0.305246,
+     "dd_v": -0.422206,
+     "dd_t": -0.428628,
+     "lu_v": 0.005309,
+     "lu_t": 0.003546
+    }
+   }
+  },
+  "construction": "random-20 among eligible names each month-end (20 seeds), held one month, band costs; avoiding a window = the name's return with sessions d0 and d0+1 removed (cash, 0) minus one extra band round trip on that weight"
+ },
+ "exp4": {
+  "n_rows": 229741,
+  "n_dates": 128,
+  "median_names_per_date": 1755.0,
+  "mean_payoff_ret_all": -0.07155,
+  "ic_with_abs_r21": {
+   "f_vol": 0.332296,
+   "f_ridge": 0.357611,
+   "f_ridge_earn": 0.374151,
+   "imp_sig": 0.361118
+  },
+  "ic_forecast_minus_implied": {
+   "f_vol": {
+    "n_months": 128,
+    "mean_monthly": -0.028822,
+    "n_blocks": 43,
+    "t_blocks": -10.27039,
+    "se_monthly": 0.002806,
+    "mde_monthly": 0.007858
+   },
+   "f_ridge": {
+    "n_months": 128,
+    "mean_monthly": -0.003507,
+    "n_blocks": 43,
+    "t_blocks": -1.444215,
+    "se_monthly": 0.002428,
+    "mde_monthly": 0.006799
+   },
+   "f_ridge_earn": {
+    "n_months": 128,
+    "mean_monthly": 0.013034,
+    "n_blocks": 43,
+    "t_blocks": 4.526339,
+    "se_monthly": 0.00288,
+    "mde_monthly": 0.008063
+   }
+  },
+  "ic_ratio_with_realised_over_premium": {
+   "f_vol": 0.038554,
+   "f_ridge": 0.054865,
+   "f_ridge_earn": 0.093239
+  },
+  "ic_ratio_ridge_earn_minus_vol": {
+   "n_months": 128,
+   "mean_monthly": 0.054685,
+   "n_blocks": 43,
+   "t_blocks": 8.291213,
+   "se_monthly": 0.006596,
+   "mde_monthly": 0.018468
+  },
+  "conventions": {
+   "premium": "ATM straddle ~ IV_entry * sqrt(30/365) * sqrt(2/pi) per $ of spot",
+   "payoff": "|close(i+1+21)/close(i+1) - 1| (European-at-horizon, no early exercise, no dividends, no discounting, 21 sessions vs 30 calendar days)",
+   "cost": "10% of premium round trip (declared; no bid/ask on disk); sensitivity 5% / 20%",
+   "utility": "log utility of equity with 2% of equity in premium per leg",
+   "twin": "the SAME universe and month, selected by trailing vol instead of the ridge"
+  },
+  "cost_5pct": {
+   "f_vol": {
+    "long": {
+     "mean": -0.349153,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": -0.349153,
+      "n_blocks": 43,
+      "t_blocks": -19.976625,
+      "se_monthly": 0.017478,
+      "mde_monthly": 0.048939
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -3.022488,
+       "mean": -0.302249,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -4.331588,
+       "mean": -0.360966,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -5.114864,
+       "mean": -0.426239,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -4.462763,
+       "mean": -0.371897,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -4.417271,
+       "mean": -0.368106,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -4.303306,
+       "mean": -0.358609,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -2.460522,
+       "mean": -0.223684,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -4.012726,
+       "mean": -0.334394,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -5.202128,
+       "mean": -0.433511,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": -3.711682,
+       "mean": -0.309307,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": -3.652188,
+       "mean": -0.332017,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.360949,
+      "dropped_year": "2020",
+      "all": {
+       "2014": -0.353127,
+       "2015": -0.34793,
+       "2016": -0.341178,
+       "2017": -0.3468,
+       "2018": -0.347192,
+       "2019": -0.348174,
+       "2020": -0.360949,
+       "2021": -0.350679,
+       "2022": -0.340426,
+       "2023": -0.353275,
+       "2024": -0.350764
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-11",
+       "2020-03",
+       "2023-11",
+       "2017-03",
+       "2020-05"
+      ],
+      "share_of_total": -0.025416,
+      "mean_without_best": -0.372581
+     }
+    },
+    "short": {
+     "mean": 0.473088,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.473088,
+      "n_blocks": 43,
+      "t_blocks": 21.210105,
+      "se_monthly": 0.022305,
+      "mde_monthly": 0.062453
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 4.282393,
+       "mean": 0.428239,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": 5.10516,
+       "mean": 0.42543,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 5.724987,
+       "mean": 0.477082,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 6.524043,
+       "mean": 0.54367,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 5.746454,
+       "mean": 0.478871,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 5.048313,
+       "mean": 0.420693,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 3.065677,
+       "mean": 0.278698,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 5.974363,
+       "mean": 0.497864,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 7.30193,
+       "mean": 0.608494,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 6.095168,
+       "mean": 0.507931,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 5.686722,
+       "mean": 0.516975,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.45908,
+      "dropped_year": "2022",
+      "all": {
+       "2014": 0.476888,
+       "2015": 0.478018,
+       "2016": 0.472674,
+       "2017": 0.465786,
+       "2018": 0.472489,
+       "2019": 0.478508,
+       "2020": 0.491364,
+       "2021": 0.470525,
+       "2022": 0.45908,
+       "2023": 0.469483,
+       "2024": 0.468961
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2022-11",
+       "2023-04",
+       "2024-06",
+       "2024-09",
+       "2015-03"
+      ],
+      "share_of_total": 0.062562,
+      "mean_without_best": 0.461518
+     }
+    },
+    "ls": {
+     "mean": 0.061968,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.061968,
+      "n_blocks": 43,
+      "t_blocks": 6.973172,
+      "se_monthly": 0.008887,
+      "mde_monthly": 0.024882
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 0.629953,
+       "mean": 0.062995,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": 0.386786,
+       "mean": 0.032232,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 0.305061,
+       "mean": 0.025422,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 1.03064,
+       "mean": 0.085887,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 0.664592,
+       "mean": 0.055383,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.372503,
+       "mean": 0.031042,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 0.302577,
+       "mean": 0.027507,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 0.980819,
+       "mean": 0.081735,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 1.049901,
+       "mean": 0.087492,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 1.191743,
+       "mean": 0.099312,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 1.017267,
+       "mean": 0.092479,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.058104,
+      "dropped_year": "2023",
+      "all": {
+       "2014": 0.06188,
+       "2015": 0.065044,
+       "2016": 0.065748,
+       "2017": 0.059493,
+       "2018": 0.062649,
+       "2019": 0.065167,
+       "2020": 0.065207,
+       "2021": 0.059923,
+       "2022": 0.059327,
+       "2023": 0.058104,
+       "2024": 0.059099
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-11",
+       "2022-06",
+       "2014-11",
+       "2017-03",
+       "2022-01"
+      ],
+      "share_of_total": 0.239925,
+      "mean_without_best": 0.049015
+     }
+    }
+   },
+   "f_ridge": {
+    "long": {
+     "mean": -0.275341,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": -0.275341,
+      "n_blocks": 43,
+      "t_blocks": -10.902025,
+      "se_monthly": 0.025256,
+      "mde_monthly": 0.070717
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -3.417378,
+       "mean": -0.341738,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -4.575817,
+       "mean": -0.381318,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -5.543443,
+       "mean": -0.461954,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -4.020511,
+       "mean": -0.335043,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -3.925707,
+       "mean": -0.327142,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -3.49434,
+       "mean": -0.291195,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -1.098811,
+       "mean": -0.099892,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -3.565744,
+       "mean": -0.297145,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -2.404781,
+       "mean": -0.200398,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": -1.712431,
+       "mean": -0.142703,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": -1.484696,
+       "mean": -0.134972,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.291836,
+      "dropped_year": "2020",
+      "all": {
+       "2014": -0.269714,
+       "2015": -0.264378,
+       "2016": -0.256036,
+       "2017": -0.269165,
+       "2018": -0.269982,
+       "2019": -0.273701,
+       "2020": -0.291836,
+       "2021": -0.273085,
+       "2022": -0.283094,
+       "2023": -0.289062,
+       "2024": -0.288538
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-03",
+       "2018-10",
+       "2020-11",
+       "2023-11",
+       "2022-06"
+      ],
+      "share_of_total": -0.070125,
+      "mean_without_best": -0.306627
+     }
+    },
+    "short": {
+     "mean": 0.424772,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.424772,
+      "n_blocks": 43,
+      "t_blocks": 18.173974,
+      "se_monthly": 0.023373,
+      "mde_monthly": 0.065443
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 3.543853,
+       "mean": 0.354385,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": 4.481938,
+       "mean": 0.373495,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 4.845925,
+       "mean": 0.403827,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 3.960218,
+       "mean": 0.330018,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 4.502401,
+       "mean": 0.3752,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 4.678501,
+       "mean": 0.389875,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 3.532327,
+       "mean": 0.321121,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 6.024042,
+       "mean": 0.502004,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 6.791265,
+       "mean": 0.565939,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 6.680217,
+       "mean": 0.556685,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 5.330113,
+       "mean": 0.484556,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.410168,
+      "dropped_year": "2022",
+      "all": {
+       "2014": 0.430737,
+       "2015": 0.430076,
+       "2016": 0.426939,
+       "2017": 0.434574,
+       "2018": 0.4299,
+       "2019": 0.428382,
+       "2020": 0.434517,
+       "2021": 0.416782,
+       "2022": 0.410168,
+       "2023": 0.411126,
+       "2024": 0.419151
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2023-04",
+       "2024-06",
+       "2024-09",
+       "2014-05",
+       "2022-11"
+      ],
+      "share_of_total": 0.070709,
+      "mean_without_best": 0.410783
+     }
+    },
+    "ls": {
+     "mean": 0.074715,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.074715,
+      "n_blocks": 43,
+      "t_blocks": 4.549274,
+      "se_monthly": 0.016424,
+      "mde_monthly": 0.045986
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 0.063238,
+       "mean": 0.006324,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -0.046939,
+       "mean": -0.003912,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -0.348759,
+       "mean": -0.029063,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -0.030147,
+       "mean": -0.002512,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 0.288347,
+       "mean": 0.024029,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.592081,
+       "mean": 0.04934,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 1.216758,
+       "mean": 0.110614,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 1.229149,
+       "mean": 0.102429,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 2.193242,
+       "mean": 0.18277,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 2.483893,
+       "mean": 0.206991,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 1.922709,
+       "mean": 0.174792,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.061032,
+      "dropped_year": "2023",
+      "all": {
+       "2014": 0.080511,
+       "2015": 0.082849,
+       "2016": 0.085451,
+       "2017": 0.082704,
+       "2018": 0.079959,
+       "2019": 0.07734,
+       "2020": 0.07134,
+       "2021": 0.071848,
+       "2022": 0.063537,
+       "2023": 0.061032,
+       "2024": 0.065307
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-03",
+       "2023-11",
+       "2022-06",
+       "2024-09",
+       "2020-02"
+      ],
+      "share_of_total": 0.217633,
+      "mean_without_best": 0.060831
+     }
+    }
+   },
+   "f_ridge_earn": {
+    "long": {
+     "mean": -0.236174,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": -0.236174,
+      "n_blocks": 43,
+      "t_blocks": -8.653756,
+      "se_monthly": 0.027292,
+      "mde_monthly": 0.076416
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -2.466797,
+       "mean": -0.24668,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -4.610735,
+       "mean": -0.384228,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -5.118757,
+       "mean": -0.426563,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -3.649329,
+       "mean": -0.304111,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -3.062739,
+       "mean": -0.255228,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -3.236193,
+       "mean": -0.269683,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -0.761012,
+       "mean": -0.069183,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -3.384242,
+       "mean": -0.28202,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -2.052624,
+       "mean": -0.171052,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": -1.18105,
+       "mean": -0.098421,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": -0.706857,
+       "mean": -0.06426,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.252337,
+      "dropped_year": "2024",
+      "all": {
+       "2014": -0.235284,
+       "2015": -0.220859,
+       "2016": -0.216479,
+       "2017": -0.229147,
+       "2018": -0.234203,
+       "2019": -0.232708,
+       "2020": -0.251875,
+       "2021": -0.231432,
+       "2022": -0.242911,
+       "2023": -0.250425,
+       "2024": -0.252337
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-03",
+       "2024-07",
+       "2020-11",
+       "2023-11",
+       "2022-06"
+      ],
+      "share_of_total": -0.09914,
+      "mean_without_best": -0.270141
+     }
+    },
+    "short": {
+     "mean": 0.433646,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.433646,
+      "n_blocks": 43,
+      "t_blocks": 18.702667,
+      "se_monthly": 0.023186,
+      "mde_monthly": 0.064922
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 3.631871,
+       "mean": 0.363187,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": 4.506322,
+       "mean": 0.375527,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 5.236554,
+       "mean": 0.43638,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 3.878903,
+       "mean": 0.323242,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 4.947625,
+       "mean": 0.412302,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 5.125951,
+       "mean": 0.427163,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 3.168329,
+       "mean": 0.28803,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 5.904138,
+       "mean": 0.492012,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 7.120583,
+       "mean": 0.593382,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 6.359745,
+       "mean": 0.529979,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 5.626666,
+       "mean": 0.511515,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.417122,
+      "dropped_year": "2022",
+      "all": {
+       "2014": 0.439617,
+       "2015": 0.439658,
+       "2016": 0.433363,
+       "2017": 0.445067,
+       "2018": 0.435854,
+       "2019": 0.434317,
+       "2020": 0.447336,
+       "2021": 0.427608,
+       "2022": 0.417122,
+       "2023": 0.423681,
+       "2024": 0.426325
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2023-04",
+       "2024-10",
+       "2024-06",
+       "2024-09",
+       "2014-05"
+      ],
+      "share_of_total": 0.070611,
+      "mean_without_best": 0.419409
+     }
+    },
+    "ls": {
+     "mean": 0.098736,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.098736,
+      "n_blocks": 43,
+      "t_blocks": 6.056915,
+      "se_monthly": 0.016301,
+      "mde_monthly": 0.045644
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 0.582537,
+       "mean": 0.058254,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -0.052207,
+       "mean": -0.004351,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 0.058899,
+       "mean": 0.004908,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 0.114787,
+       "mean": 0.009566,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 0.942443,
+       "mean": 0.078537,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.944879,
+       "mean": 0.07874,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 1.203658,
+       "mean": 0.109423,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 1.259948,
+       "mean": 0.104996,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 2.53398,
+       "mean": 0.211165,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 2.589348,
+       "mean": 0.215779,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 2.459905,
+       "mean": 0.223628,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.086628,
+      "dropped_year": "2023",
+      "all": {
+       "2014": 0.102166,
+       "2015": 0.1094,
+       "2016": 0.108442,
+       "2017": 0.10796,
+       "2018": 0.100825,
+       "2019": 0.100804,
+       "2020": 0.097731,
+       "2021": 0.098088,
+       "2022": 0.087105,
+       "2023": 0.086628,
+       "2024": 0.086994
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2022-06",
+       "2023-11",
+       "2024-07",
+       "2022-11",
+       "2020-01"
+      ],
+      "share_of_total": 0.181884,
+      "mean_without_best": 0.084061
+     }
+    }
+   },
+   "ridge_earn_minus_vol_equity": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 128,
+     "mean_monthly": 0.000732,
+     "n_blocks": 43,
+     "t_blocks": 2.445573,
+     "se_monthly": 0.000299,
+     "mde_monthly": 0.000838
+    },
+    "raw_return_diff": {
+     "n_months": 128,
+     "mean_monthly": 0.000735,
+     "n_blocks": 43,
+     "t_blocks": 2.453265,
+     "se_monthly": 0.0003,
+     "mde_monthly": 0.000839
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": -0.000922,
+      "mean": -9.2e-05,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": -0.008768,
+      "mean": -0.000731,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.004927,
+      "mean": -0.000411,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.018373,
+      "mean": -0.001531,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.005526,
+      "mean": 0.00046,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.011419,
+      "mean": 0.000952,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.017975,
+      "mean": 0.001634,
+      "n_months": 11
+     },
+     "2021": {
+      "sum": 0.005555,
+      "mean": 0.000463,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.029607,
+      "mean": 0.002467,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.027839,
+      "mean": 0.00232,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": 0.028726,
+      "mean": 0.002611,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": 0.000552,
+     "dropped_year": "2022",
+     "all": {
+      "2014": 0.000802,
+      "2015": 0.000883,
+      "2016": 0.00085,
+      "2017": 0.000966,
+      "2018": 0.00076,
+      "2019": 0.000709,
+      "2020": 0.000647,
+      "2021": 0.000759,
+      "2022": 0.000552,
+      "2023": 0.000567,
+      "2024": 0.000555
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2020-03",
+      "2024-10",
+      "2022-10",
+      "2024-07",
+      "2022-11"
+     ],
+     "share_of_total": 0.492693,
+     "mean_without_best": 0.000386
+    },
+    "market_alpha": {
+     "t_alpha_blocks": null,
+     "note": "no market series"
+    },
+    "verdict": "ALPHA_DETECTED",
+    "sharpe_diff": {
+     "diff": 0.357263,
+     "lo90": -0.281612,
+     "hi90": 0.940059,
+     "p_le_0": 0.193
+    },
+    "variant": {
+     "n_months": 128,
+     "cagr": 0.023881,
+     "vol_annual": 0.012176,
+     "sharpe": 1.94614,
+     "max_dd": -0.01169,
+     "terminal_wealth": 1.286252,
+     "log_utility_monthly": 0.001967
+    },
+    "twin": {
+     "n_months": 128,
+     "cagr": 0.01493,
+     "vol_annual": 0.00936,
+     "sharpe": 1.588877,
+     "max_dd": -0.007264,
+     "terminal_wealth": 1.171255,
+     "log_utility_monthly": 0.001235
+    }
+   },
+   "ridge_earn_ls_equity": {
+    "metrics": {
+     "n_months": 128,
+     "cagr": 0.023881,
+     "vol_annual": 0.012176,
+     "sharpe": 1.94614,
+     "max_dd": -0.01169,
+     "terminal_wealth": 1.286252,
+     "log_utility_monthly": 0.001967
+    },
+    "log_utility_vs_cash": {
+     "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+     "span": [
+      "2014-02-28",
+      "2024-10-31"
+     ],
+     "log_utility_diff": {
+      "n_months": 128,
+      "mean_monthly": 0.001967,
+      "n_blocks": 43,
+      "t_blocks": 6.044666,
+      "se_monthly": 0.000325,
+      "mde_monthly": 0.000911
+     },
+     "raw_return_diff": {
+      "n_months": 128,
+      "mean_monthly": 0.001975,
+      "n_blocks": 43,
+      "t_blocks": 6.056915,
+      "se_monthly": 0.000326,
+      "mde_monthly": 0.000913
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 0.011588,
+       "mean": 0.001159,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -0.0011,
+       "mean": -9.2e-05,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 0.001148,
+       "mean": 9.6e-05,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 0.002196,
+       "mean": 0.000183,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 0.018789,
+       "mean": 0.001566,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.018843,
+       "mean": 0.00157,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 0.023954,
+       "mean": 0.002178,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 0.025125,
+       "mean": 0.002094,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.050527,
+       "mean": 0.004211,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.051633,
+       "mean": 0.004303,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.04903,
+       "mean": 0.004457,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.001725,
+      "dropped_year": "2023",
+      "all": {
+       "2014": 0.002035,
+       "2015": 0.00218,
+       "2016": 0.00216,
+       "2017": 0.002151,
+       "2018": 0.002008,
+       "2019": 0.002008,
+       "2020": 0.001947,
+       "2021": 0.001954,
+       "2022": 0.001735,
+       "2023": 0.001725,
+       "2024": 0.001733
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2022-06",
+       "2023-11",
+       "2024-07",
+       "2022-11",
+       "2020-01"
+      ],
+      "share_of_total": 0.181793,
+      "mean_without_best": 0.001675
+     },
+     "market_alpha": {
+      "t_alpha_blocks": null,
+      "note": "no market series"
+     },
+     "verdict": "ALPHA_DETECTED"
+    }
+   },
+   "vol_ls_equity": {
+    "metrics": {
+     "n_months": 128,
+     "cagr": 0.01493,
+     "vol_annual": 0.00936,
+     "sharpe": 1.588877,
+     "max_dd": -0.007264,
+     "terminal_wealth": 1.171255,
+     "log_utility_monthly": 0.001235
+    },
+    "log_utility_vs_cash": {
+     "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+     "span": [
+      "2014-02-28",
+      "2024-10-31"
+     ],
+     "log_utility_diff": {
+      "n_months": 128,
+      "mean_monthly": 0.001235,
+      "n_blocks": 43,
+      "t_blocks": 6.953755,
+      "se_monthly": 0.000178,
+      "mde_monthly": 0.000497
+     },
+     "raw_return_diff": {
+      "n_months": 128,
+      "mean_monthly": 0.001239,
+      "n_blocks": 43,
+      "t_blocks": 6.973172,
+      "se_monthly": 0.000178,
+      "mde_monthly": 0.000498
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 0.01251,
+       "mean": 0.001251,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": 0.007668,
+       "mean": 0.000639,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 0.006075,
+       "mean": 0.000506,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 0.020569,
+       "mean": 0.001714,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 0.013263,
+       "mean": 0.001105,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.007424,
+       "mean": 0.000619,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 0.00598,
+       "mean": 0.000544,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 0.01957,
+       "mean": 0.001631,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.02092,
+       "mean": 0.001743,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.023794,
+       "mean": 0.001983,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.020304,
+       "mean": 0.001846,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.001158,
+      "dropped_year": "2023",
+      "all": {
+       "2014": 0.001234,
+       "2015": 0.001297,
+       "2016": 0.00131,
+       "2017": 0.001185,
+       "2018": 0.001248,
+       "2019": 0.001299,
+       "2020": 0.0013,
+       "2021": 0.001194,
+       "2022": 0.001182,
+       "2023": 0.001158,
+       "2024": 0.001178
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-11",
+       "2022-06",
+       "2014-11",
+       "2017-03",
+       "2022-01"
+      ],
+      "share_of_total": 0.239856,
+      "mean_without_best": 0.000977
+     },
+     "market_alpha": {
+      "t_alpha_blocks": null,
+      "note": "no market series"
+     },
+     "verdict": "ALPHA_DETECTED"
+    }
+   }
+  },
+  "cost_10pct": {
+   "f_vol": {
+    "long": {
+     "mean": -0.399153,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": -0.399153,
+      "n_blocks": 43,
+      "t_blocks": -22.677531,
+      "se_monthly": 0.017601,
+      "mde_monthly": 0.049283
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -3.522488,
+       "mean": -0.352249,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -4.931588,
+       "mean": -0.410966,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -5.714864,
+       "mean": -0.476239,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -5.062763,
+       "mean": -0.421897,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -5.017271,
+       "mean": -0.418106,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -4.903306,
+       "mean": -0.408609,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -3.010522,
+       "mean": -0.273684,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -4.612726,
+       "mean": -0.384394,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -5.802128,
+       "mean": -0.483511,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": -4.311682,
+       "mean": -0.359307,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": -4.202188,
+       "mean": -0.382017,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.410949,
+      "dropped_year": "2020",
+      "all": {
+       "2014": -0.403127,
+       "2015": -0.39793,
+       "2016": -0.391178,
+       "2017": -0.3968,
+       "2018": -0.397192,
+       "2019": -0.398174,
+       "2020": -0.410949,
+       "2021": -0.400679,
+       "2022": -0.390426,
+       "2023": -0.403275,
+       "2024": -0.400764
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-11",
+       "2020-03",
+       "2023-11",
+       "2017-03",
+       "2020-05"
+      ],
+      "share_of_total": -0.017339,
+      "mean_without_best": -0.422581
+     }
+    },
+    "short": {
+     "mean": 0.423088,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.423088,
+      "n_blocks": 43,
+      "t_blocks": 19.047386,
+      "se_monthly": 0.022212,
+      "mde_monthly": 0.062195
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 3.782393,
+       "mean": 0.378239,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": 4.50516,
+       "mean": 0.37543,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 5.124987,
+       "mean": 0.427082,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 5.924043,
+       "mean": 0.49367,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 5.146454,
+       "mean": 0.428871,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 4.448313,
+       "mean": 0.370693,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 2.515677,
+       "mean": 0.228698,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 5.374363,
+       "mean": 0.447864,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 6.70193,
+       "mean": 0.558494,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 5.495168,
+       "mean": 0.457931,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 5.136722,
+       "mean": 0.466975,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.40908,
+      "dropped_year": "2022",
+      "all": {
+       "2014": 0.426888,
+       "2015": 0.428018,
+       "2016": 0.422674,
+       "2017": 0.415786,
+       "2018": 0.422489,
+       "2019": 0.428508,
+       "2020": 0.441364,
+       "2021": 0.420525,
+       "2022": 0.40908,
+       "2023": 0.419483,
+       "2024": 0.418961
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2022-11",
+       "2023-04",
+       "2024-06",
+       "2024-09",
+       "2015-03"
+      ],
+      "share_of_total": 0.06534,
+      "mean_without_best": 0.411518
+     }
+    },
+    "ls": {
+     "mean": 0.011968,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.011968,
+      "n_blocks": 43,
+      "t_blocks": 1.345824,
+      "se_monthly": 0.008892,
+      "mde_monthly": 0.024899
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 0.129953,
+       "mean": 0.012995,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -0.213214,
+       "mean": -0.017768,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -0.294939,
+       "mean": -0.024578,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 0.43064,
+       "mean": 0.035887,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 0.064592,
+       "mean": 0.005383,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -0.227497,
+       "mean": -0.018958,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -0.247423,
+       "mean": -0.022493,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 0.380819,
+       "mean": 0.031735,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.449901,
+       "mean": 0.037492,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.591743,
+       "mean": 0.049312,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.467267,
+       "mean": 0.042479,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.008104,
+      "dropped_year": "2023",
+      "all": {
+       "2014": 0.01188,
+       "2015": 0.015044,
+       "2016": 0.015748,
+       "2017": 0.009493,
+       "2018": 0.012649,
+       "2019": 0.015167,
+       "2020": 0.015207,
+       "2021": 0.009923,
+       "2022": 0.009327,
+       "2023": 0.008104,
+       "2024": 0.009099
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-11",
+       "2022-06",
+       "2014-11",
+       "2017-03",
+       "2022-01"
+      ],
+      "share_of_total": 1.079125,
+      "mean_without_best": -0.000985
+     }
+    }
+   },
+   "f_ridge": {
+    "long": {
+     "mean": -0.325341,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": -0.325341,
+      "n_blocks": 43,
+      "t_blocks": -12.834391,
+      "se_monthly": 0.025349,
+      "mde_monthly": 0.070978
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -3.917378,
+       "mean": -0.391738,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -5.175817,
+       "mean": -0.431318,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -6.143443,
+       "mean": -0.511954,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -4.620511,
+       "mean": -0.385043,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -4.525707,
+       "mean": -0.377142,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -4.09434,
+       "mean": -0.341195,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -1.648811,
+       "mean": -0.149892,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -4.165744,
+       "mean": -0.347145,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -3.004781,
+       "mean": -0.250398,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": -2.312431,
+       "mean": -0.192703,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": -2.034696,
+       "mean": -0.184972,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.341836,
+      "dropped_year": "2020",
+      "all": {
+       "2014": -0.319714,
+       "2015": -0.314378,
+       "2016": -0.306036,
+       "2017": -0.319165,
+       "2018": -0.319982,
+       "2019": -0.323701,
+       "2020": -0.341836,
+       "2021": -0.323085,
+       "2022": -0.333094,
+       "2023": -0.339062,
+       "2024": -0.338538
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-03",
+       "2018-10",
+       "2020-11",
+       "2023-11",
+       "2022-06"
+      ],
+      "share_of_total": -0.053345,
+      "mean_without_best": -0.356627
+     }
+    },
+    "short": {
+     "mean": 0.374772,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.374772,
+      "n_blocks": 43,
+      "t_blocks": 16.0815,
+      "se_monthly": 0.023305,
+      "mde_monthly": 0.065253
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 3.043853,
+       "mean": 0.304385,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": 3.881938,
+       "mean": 0.323495,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 4.245925,
+       "mean": 0.353827,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 3.360218,
+       "mean": 0.280018,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 3.902401,
+       "mean": 0.3252,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 4.078501,
+       "mean": 0.339875,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 2.982327,
+       "mean": 0.271121,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 5.424042,
+       "mean": 0.452004,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 6.191265,
+       "mean": 0.515939,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 6.080217,
+       "mean": 0.506685,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 4.780113,
+       "mean": 0.434556,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.360168,
+      "dropped_year": "2022",
+      "all": {
+       "2014": 0.380737,
+       "2015": 0.380076,
+       "2016": 0.376939,
+       "2017": 0.384574,
+       "2018": 0.3799,
+       "2019": 0.378382,
+       "2020": 0.384517,
+       "2021": 0.366782,
+       "2022": 0.360168,
+       "2023": 0.361126,
+       "2024": 0.369151
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2023-04",
+       "2024-06",
+       "2024-09",
+       "2014-05",
+       "2022-11"
+      ],
+      "share_of_total": 0.074931,
+      "mean_without_best": 0.360783
+     }
+    },
+    "ls": {
+     "mean": 0.024715,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.024715,
+      "n_blocks": 43,
+      "t_blocks": 1.502725,
+      "se_monthly": 0.016447,
+      "mde_monthly": 0.046052
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -0.436762,
+       "mean": -0.043676,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -0.646939,
+       "mean": -0.053912,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -0.948759,
+       "mean": -0.079063,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -0.630147,
+       "mean": -0.052512,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -0.311653,
+       "mean": -0.025971,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -0.007919,
+       "mean": -0.00066,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 0.666758,
+       "mean": 0.060614,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 0.629149,
+       "mean": 0.052429,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 1.593242,
+       "mean": 0.13277,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 1.883893,
+       "mean": 0.156991,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 1.372709,
+       "mean": 0.124792,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.011032,
+      "dropped_year": "2023",
+      "all": {
+       "2014": 0.030511,
+       "2015": 0.032849,
+       "2016": 0.035451,
+       "2017": 0.032704,
+       "2018": 0.029959,
+       "2019": 0.02734,
+       "2020": 0.02134,
+       "2021": 0.021848,
+       "2022": 0.013537,
+       "2023": 0.011032,
+       "2024": 0.015307
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-03",
+       "2023-11",
+       "2022-06",
+       "2024-09",
+       "2020-02"
+      ],
+      "share_of_total": 0.578885,
+      "mean_without_best": 0.010831
+     }
+    }
+   },
+   "f_ridge_earn": {
+    "long": {
+     "mean": -0.286174,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": -0.286174,
+      "n_blocks": 43,
+      "t_blocks": -10.444081,
+      "se_monthly": 0.027401,
+      "mde_monthly": 0.076722
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -2.966797,
+       "mean": -0.29668,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -5.210735,
+       "mean": -0.434228,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -5.718757,
+       "mean": -0.476563,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -4.249329,
+       "mean": -0.354111,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -3.662739,
+       "mean": -0.305228,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -3.836193,
+       "mean": -0.319683,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -1.311012,
+       "mean": -0.119183,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -3.984242,
+       "mean": -0.33202,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -2.652624,
+       "mean": -0.221052,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": -1.78105,
+       "mean": -0.148421,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": -1.256857,
+       "mean": -0.11426,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.302337,
+      "dropped_year": "2024",
+      "all": {
+       "2014": -0.285284,
+       "2015": -0.270859,
+       "2016": -0.266479,
+       "2017": -0.279147,
+       "2018": -0.284203,
+       "2019": -0.282708,
+       "2020": -0.301875,
+       "2021": -0.281432,
+       "2022": -0.292911,
+       "2023": -0.300425,
+       "2024": -0.302337
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-03",
+       "2024-07",
+       "2020-11",
+       "2023-11",
+       "2022-06"
+      ],
+      "share_of_total": -0.074993,
+      "mean_without_best": -0.320141
+     }
+    },
+    "short": {
+     "mean": 0.383646,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.383646,
+      "n_blocks": 43,
+      "t_blocks": 16.556356,
+      "se_monthly": 0.023172,
+      "mde_monthly": 0.064882
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 3.131871,
+       "mean": 0.313187,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": 3.906322,
+       "mean": 0.325527,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 4.636554,
+       "mean": 0.38638,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 3.278903,
+       "mean": 0.273242,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 4.347625,
+       "mean": 0.362302,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 4.525951,
+       "mean": 0.377163,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 2.618329,
+       "mean": 0.23803,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 5.304138,
+       "mean": 0.442012,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 6.520583,
+       "mean": 0.543382,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 5.759745,
+       "mean": 0.479979,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 5.076666,
+       "mean": 0.461515,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.367122,
+      "dropped_year": "2022",
+      "all": {
+       "2014": 0.389617,
+       "2015": 0.389658,
+       "2016": 0.383363,
+       "2017": 0.395067,
+       "2018": 0.385854,
+       "2019": 0.384317,
+       "2020": 0.397336,
+       "2021": 0.377608,
+       "2022": 0.367122,
+       "2023": 0.373681,
+       "2024": 0.376325
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2023-04",
+       "2024-10",
+       "2024-06",
+       "2024-09",
+       "2014-05"
+      ],
+      "share_of_total": 0.074722,
+      "mean_without_best": 0.369409
+     }
+    },
+    "ls": {
+     "mean": 0.048736,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.048736,
+      "n_blocks": 43,
+      "t_blocks": 2.974862,
+      "se_monthly": 0.016383,
+      "mde_monthly": 0.045871
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 0.082537,
+       "mean": 0.008254,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -0.652207,
+       "mean": -0.054351,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -0.541101,
+       "mean": -0.045092,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -0.485213,
+       "mean": -0.040434,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 0.342443,
+       "mean": 0.028537,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.344879,
+       "mean": 0.02874,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 0.653658,
+       "mean": 0.059423,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 0.659948,
+       "mean": 0.054996,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 1.93398,
+       "mean": 0.161165,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 1.989348,
+       "mean": 0.165779,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 1.909905,
+       "mean": 0.173628,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.036628,
+      "dropped_year": "2023",
+      "all": {
+       "2014": 0.052166,
+       "2015": 0.0594,
+       "2016": 0.058442,
+       "2017": 0.05796,
+       "2018": 0.050825,
+       "2019": 0.050804,
+       "2020": 0.047731,
+       "2021": 0.048088,
+       "2022": 0.037105,
+       "2023": 0.036628,
+       "2024": 0.036994
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2022-06",
+       "2023-11",
+       "2024-07",
+       "2022-11",
+       "2020-01"
+      ],
+      "share_of_total": 0.328411,
+      "mean_without_best": 0.034061
+     }
+    }
+   },
+   "ridge_earn_minus_vol_equity": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 128,
+     "mean_monthly": 0.000732,
+     "n_blocks": 43,
+     "t_blocks": 2.445565,
+     "se_monthly": 0.000299,
+     "mde_monthly": 0.000839
+    },
+    "raw_return_diff": {
+     "n_months": 128,
+     "mean_monthly": 0.000735,
+     "n_blocks": 43,
+     "t_blocks": 2.453265,
+     "se_monthly": 0.0003,
+     "mde_monthly": 0.000839
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": -0.000922,
+      "mean": -9.2e-05,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": -0.008777,
+      "mean": -0.000731,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.004932,
+      "mean": -0.000411,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.018392,
+      "mean": -0.001533,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.005531,
+      "mean": 0.000461,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.011431,
+      "mean": 0.000953,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.017992,
+      "mean": 0.001636,
+      "n_months": 11
+     },
+     "2021": {
+      "sum": 0.005561,
+      "mean": 0.000463,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.029637,
+      "mean": 0.00247,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.027867,
+      "mean": 0.002322,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": 0.028754,
+      "mean": 0.002614,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": 0.000553,
+     "dropped_year": "2022",
+     "all": {
+      "2014": 0.000802,
+      "2015": 0.000884,
+      "2016": 0.000851,
+      "2017": 0.000967,
+      "2018": 0.000761,
+      "2019": 0.00071,
+      "2020": 0.000648,
+      "2021": 0.00076,
+      "2022": 0.000553,
+      "2023": 0.000568,
+      "2024": 0.000556
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2020-03",
+      "2024-10",
+      "2022-10",
+      "2024-07",
+      "2022-11"
+     ],
+     "share_of_total": 0.492694,
+     "mean_without_best": 0.000387
+    },
+    "market_alpha": {
+     "t_alpha_blocks": null,
+     "note": "no market series"
+    },
+    "verdict": "ALPHA_DETECTED",
+    "sharpe_diff": {
+     "diff": 0.653757,
+     "lo90": 0.072779,
+     "hi90": 1.19077,
+     "p_le_0": 0.0295
+    },
+    "variant": {
+     "n_months": 128,
+     "cagr": 0.011685,
+     "vol_annual": 0.012176,
+     "sharpe": 0.96061,
+     "max_dd": -0.04722,
+     "terminal_wealth": 1.131925,
+     "log_utility_monthly": 0.000968
+    },
+    "twin": {
+     "n_months": 128,
+     "cagr": 0.002832,
+     "vol_annual": 0.00936,
+     "sharpe": 0.306853,
+     "max_dd": -0.018104,
+     "terminal_wealth": 1.030629,
+     "log_utility_monthly": 0.000236
+    }
+   },
+   "ridge_earn_ls_equity": {
+    "metrics": {
+     "n_months": 128,
+     "cagr": 0.011685,
+     "vol_annual": 0.012176,
+     "sharpe": 0.96061,
+     "max_dd": -0.04722,
+     "terminal_wealth": 1.131925,
+     "log_utility_monthly": 0.000968
+    },
+    "log_utility_vs_cash": {
+     "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+     "span": [
+      "2014-02-28",
+      "2024-10-31"
+     ],
+     "log_utility_diff": {
+      "n_months": 128,
+      "mean_monthly": 0.000968,
+      "n_blocks": 43,
+      "t_blocks": 2.957877,
+      "se_monthly": 0.000327,
+      "mde_monthly": 0.000916
+     },
+     "raw_return_diff": {
+      "n_months": 128,
+      "mean_monthly": 0.000975,
+      "n_blocks": 43,
+      "t_blocks": 2.974862,
+      "se_monthly": 0.000328,
+      "mde_monthly": 0.000917
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 0.001595,
+       "mean": 0.000159,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -0.013107,
+       "mean": -0.001092,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -0.010857,
+       "mean": -0.000905,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -0.009808,
+       "mean": -0.000817,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 0.006802,
+       "mean": 0.000567,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 0.006856,
+       "mean": 0.000571,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 0.012972,
+       "mean": 0.001179,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 0.013144,
+       "mean": 0.001095,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.038571,
+       "mean": 0.003214,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.039678,
+       "mean": 0.003307,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.038073,
+       "mean": 0.003461,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.000726,
+      "dropped_year": "2023",
+      "all": {
+       "2014": 0.001037,
+       "2015": 0.001181,
+       "2016": 0.001162,
+       "2017": 0.001153,
+       "2018": 0.00101,
+       "2019": 0.001009,
+       "2020": 0.000948,
+       "2021": 0.000955,
+       "2022": 0.000736,
+       "2023": 0.000726,
+       "2024": 0.000734
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2022-06",
+       "2023-11",
+       "2024-07",
+       "2022-11",
+       "2020-01"
+      ],
+      "share_of_total": 0.329297,
+      "mean_without_best": 0.000676
+     },
+     "market_alpha": {
+      "t_alpha_blocks": null,
+      "note": "no market series"
+     },
+     "verdict": "ALPHA_DETECTED"
+    }
+   },
+   "vol_ls_equity": {
+    "metrics": {
+     "n_months": 128,
+     "cagr": 0.002832,
+     "vol_annual": 0.00936,
+     "sharpe": 0.306853,
+     "max_dd": -0.018104,
+     "terminal_wealth": 1.030629,
+     "log_utility_monthly": 0.000236
+    },
+    "log_utility_vs_cash": {
+     "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+     "span": [
+      "2014-02-28",
+      "2024-10-31"
+     ],
+     "log_utility_diff": {
+      "n_months": 128,
+      "mean_monthly": 0.000236,
+      "n_blocks": 43,
+      "t_blocks": 1.32496,
+      "se_monthly": 0.000178,
+      "mde_monthly": 0.000498
+     },
+     "raw_return_diff": {
+      "n_months": 128,
+      "mean_monthly": 0.000239,
+      "n_blocks": 43,
+      "t_blocks": 1.345824,
+      "se_monthly": 0.000178,
+      "mde_monthly": 0.000498
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 0.002517,
+       "mean": 0.000252,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -0.00433,
+       "mean": -0.000361,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -0.005925,
+       "mean": -0.000494,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 0.008583,
+       "mean": 0.000715,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 0.00127,
+       "mean": 0.000106,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -0.004575,
+       "mean": -0.000381,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -0.00502,
+       "mean": -0.000456,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 0.007584,
+       "mean": 0.000632,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.008935,
+       "mean": 0.000745,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.011812,
+       "mean": 0.000984,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.009319,
+       "mean": 0.000847,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.000158,
+      "dropped_year": "2023",
+      "all": {
+       "2014": 0.000234,
+       "2015": 0.000297,
+       "2016": 0.000311,
+       "2017": 0.000186,
+       "2018": 0.000249,
+       "2019": 0.0003,
+       "2020": 0.000301,
+       "2021": 0.000195,
+       "2022": 0.000183,
+       "2023": 0.000158,
+       "2024": 0.000178
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-11",
+       "2022-06",
+       "2014-11",
+       "2017-03",
+       "2022-01"
+      ],
+      "share_of_total": 1.092184,
+      "mean_without_best": -2.3e-05
+     },
+     "market_alpha": {
+      "t_alpha_blocks": null,
+      "note": "no market series"
+     },
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   }
+  },
+  "cost_20pct": {
+   "f_vol": {
+    "long": {
+     "mean": -0.499153,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": -0.499153,
+      "n_blocks": 43,
+      "t_blocks": -27.931371,
+      "se_monthly": 0.017871,
+      "mde_monthly": 0.050038
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -4.522488,
+       "mean": -0.452249,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -6.131588,
+       "mean": -0.510966,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -6.914864,
+       "mean": -0.576239,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -6.262763,
+       "mean": -0.521897,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -6.217271,
+       "mean": -0.518106,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -6.103306,
+       "mean": -0.508609,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -4.110522,
+       "mean": -0.373684,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -5.812726,
+       "mean": -0.484394,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -7.002128,
+       "mean": -0.583511,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": -5.511682,
+       "mean": -0.459307,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": -5.302188,
+       "mean": -0.482017,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.510949,
+      "dropped_year": "2020",
+      "all": {
+       "2014": -0.503127,
+       "2015": -0.49793,
+       "2016": -0.491178,
+       "2017": -0.4968,
+       "2018": -0.497192,
+       "2019": -0.498174,
+       "2020": -0.510949,
+       "2021": -0.500679,
+       "2022": -0.490426,
+       "2023": -0.503275,
+       "2024": -0.500764
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-11",
+       "2020-03",
+       "2023-11",
+       "2017-03",
+       "2020-05"
+      ],
+      "share_of_total": -0.00604,
+      "mean_without_best": -0.522581
+     }
+    },
+    "short": {
+     "mean": 0.323088,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.323088,
+      "n_blocks": 43,
+      "t_blocks": 14.65444,
+      "se_monthly": 0.022047,
+      "mde_monthly": 0.061732
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 2.782393,
+       "mean": 0.278239,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": 3.30516,
+       "mean": 0.27543,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 3.924987,
+       "mean": 0.327082,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 4.724043,
+       "mean": 0.39367,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 3.946454,
+       "mean": 0.328871,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 3.248313,
+       "mean": 0.270693,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 1.415677,
+       "mean": 0.128698,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 4.174363,
+       "mean": 0.347864,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 5.50193,
+       "mean": 0.458494,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 4.295168,
+       "mean": 0.357931,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 4.036722,
+       "mean": 0.366975,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.30908,
+      "dropped_year": "2022",
+      "all": {
+       "2014": 0.326888,
+       "2015": 0.328018,
+       "2016": 0.322674,
+       "2017": 0.315786,
+       "2018": 0.322489,
+       "2019": 0.328508,
+       "2020": 0.341364,
+       "2021": 0.320525,
+       "2022": 0.30908,
+       "2023": 0.319483,
+       "2024": 0.318961
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2022-11",
+       "2023-04",
+       "2024-06",
+       "2024-09",
+       "2015-03"
+      ],
+      "share_of_total": 0.073473,
+      "mean_without_best": 0.311518
+     }
+    },
+    "ls": {
+     "mean": -0.088032,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": -0.088032,
+      "n_blocks": 43,
+      "t_blocks": -9.830378,
+      "se_monthly": 0.008955,
+      "mde_monthly": 0.025074
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -0.870047,
+       "mean": -0.087005,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -1.413214,
+       "mean": -0.117768,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -1.494939,
+       "mean": -0.124578,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -0.76936,
+       "mean": -0.064113,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -1.135408,
+       "mean": -0.094617,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -1.427497,
+       "mean": -0.118958,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -1.347423,
+       "mean": -0.122493,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -0.819181,
+       "mean": -0.068265,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -0.750099,
+       "mean": -0.062508,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": -0.608257,
+       "mean": -0.050688,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": -0.632733,
+       "mean": -0.057521,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.091896,
+      "dropped_year": "2023",
+      "all": {
+       "2014": -0.08812,
+       "2015": -0.084956,
+       "2016": -0.084252,
+       "2017": -0.090507,
+       "2018": -0.087351,
+       "2019": -0.084833,
+       "2020": -0.084793,
+       "2021": -0.090077,
+       "2022": -0.090673,
+       "2023": -0.091896,
+       "2024": -0.090901
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-11",
+       "2022-06",
+       "2014-11",
+       "2017-03",
+       "2022-01"
+      ],
+      "share_of_total": -0.102328,
+      "mean_without_best": -0.100985
+     }
+    }
+   },
+   "f_ridge": {
+    "long": {
+     "mean": -0.425341,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": -0.425341,
+      "n_blocks": 43,
+      "t_blocks": -16.645789,
+      "se_monthly": 0.025552,
+      "mde_monthly": 0.071547
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -4.917378,
+       "mean": -0.491738,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -6.375817,
+       "mean": -0.531318,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -7.343443,
+       "mean": -0.611954,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -5.820511,
+       "mean": -0.485043,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -5.725707,
+       "mean": -0.477142,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -5.29434,
+       "mean": -0.441195,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -2.748811,
+       "mean": -0.249892,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -5.365744,
+       "mean": -0.447145,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -4.204781,
+       "mean": -0.350398,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": -3.512431,
+       "mean": -0.292703,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": -3.134696,
+       "mean": -0.284972,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.441836,
+      "dropped_year": "2020",
+      "all": {
+       "2014": -0.419714,
+       "2015": -0.414378,
+       "2016": -0.406036,
+       "2017": -0.419165,
+       "2018": -0.419982,
+       "2019": -0.423701,
+       "2020": -0.441836,
+       "2021": -0.423085,
+       "2022": -0.433094,
+       "2023": -0.439062,
+       "2024": -0.438538
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-03",
+       "2018-10",
+       "2020-11",
+       "2023-11",
+       "2022-06"
+      ],
+      "share_of_total": -0.031619,
+      "mean_without_best": -0.456627
+     }
+    },
+    "short": {
+     "mean": 0.274772,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.274772,
+      "n_blocks": 43,
+      "t_blocks": 11.849906,
+      "se_monthly": 0.023188,
+      "mde_monthly": 0.064926
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 2.043853,
+       "mean": 0.204385,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": 2.681938,
+       "mean": 0.223495,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 3.045925,
+       "mean": 0.253827,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 2.160218,
+       "mean": 0.180018,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 2.702401,
+       "mean": 0.2252,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 2.878501,
+       "mean": 0.239875,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 1.882327,
+       "mean": 0.171121,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 4.224042,
+       "mean": 0.352004,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 4.991265,
+       "mean": 0.415939,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 4.880217,
+       "mean": 0.406685,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 3.680113,
+       "mean": 0.334556,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.260168,
+      "dropped_year": "2022",
+      "all": {
+       "2014": 0.280737,
+       "2015": 0.280076,
+       "2016": 0.276939,
+       "2017": 0.284574,
+       "2018": 0.2799,
+       "2019": 0.278382,
+       "2020": 0.284517,
+       "2021": 0.266782,
+       "2022": 0.260168,
+       "2023": 0.261126,
+       "2024": 0.269151
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2023-04",
+       "2024-06",
+       "2024-09",
+       "2014-05",
+       "2022-11"
+      ],
+      "share_of_total": 0.087985,
+      "mean_without_best": 0.260783
+     }
+    },
+    "ls": {
+     "mean": -0.075285,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": -0.075285,
+      "n_blocks": 43,
+      "t_blocks": -4.556734,
+      "se_monthly": 0.016522,
+      "mde_monthly": 0.046261
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -1.436762,
+       "mean": -0.143676,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -1.846939,
+       "mean": -0.153912,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -2.148759,
+       "mean": -0.179063,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -1.830147,
+       "mean": -0.152512,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -1.511653,
+       "mean": -0.125971,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -1.207919,
+       "mean": -0.10066,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -0.433242,
+       "mean": -0.039386,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -0.570851,
+       "mean": -0.047571,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.393242,
+       "mean": 0.03277,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.683893,
+       "mean": 0.056991,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.272709,
+       "mean": 0.024792,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.088968,
+      "dropped_year": "2023",
+      "all": {
+       "2014": -0.069489,
+       "2015": -0.067151,
+       "2016": -0.064549,
+       "2017": -0.067296,
+       "2018": -0.070041,
+       "2019": -0.07266,
+       "2020": -0.07866,
+       "2021": -0.078152,
+       "2022": -0.086463,
+       "2023": -0.088968,
+       "2024": -0.084693
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-03",
+       "2023-11",
+       "2022-06",
+       "2024-09",
+       "2020-02"
+      ],
+      "share_of_total": -0.138158,
+      "mean_without_best": -0.089169
+     }
+    }
+   },
+   "f_ridge_earn": {
+    "long": {
+     "mean": -0.386174,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": -0.386174,
+      "n_blocks": 43,
+      "t_blocks": -13.974578,
+      "se_monthly": 0.027634,
+      "mde_monthly": 0.077375
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -3.966797,
+       "mean": -0.39668,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -6.410735,
+       "mean": -0.534228,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -6.918757,
+       "mean": -0.576563,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -5.449329,
+       "mean": -0.454111,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -4.862739,
+       "mean": -0.405228,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -5.036193,
+       "mean": -0.419683,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -2.411012,
+       "mean": -0.219183,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -5.184242,
+       "mean": -0.43202,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -3.852624,
+       "mean": -0.321052,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": -2.98105,
+       "mean": -0.248421,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": -2.356857,
+       "mean": -0.21426,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.402337,
+      "dropped_year": "2024",
+      "all": {
+       "2014": -0.385284,
+       "2015": -0.370859,
+       "2016": -0.366479,
+       "2017": -0.379147,
+       "2018": -0.384203,
+       "2019": -0.382708,
+       "2020": -0.401875,
+       "2021": -0.381432,
+       "2022": -0.392911,
+       "2023": -0.400425,
+       "2024": -0.402337
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-03",
+       "2024-07",
+       "2020-11",
+       "2023-11",
+       "2022-06"
+      ],
+      "share_of_total": -0.045458,
+      "mean_without_best": -0.420141
+     }
+    },
+    "short": {
+     "mean": 0.283646,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": 0.283646,
+      "n_blocks": 43,
+      "t_blocks": 12.24539,
+      "se_monthly": 0.023163,
+      "mde_monthly": 0.064858
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": 2.131871,
+       "mean": 0.213187,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": 2.706322,
+       "mean": 0.225527,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": 3.436554,
+       "mean": 0.28638,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": 2.078903,
+       "mean": 0.173242,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": 3.147625,
+       "mean": 0.262302,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": 3.325951,
+       "mean": 0.277163,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": 1.518329,
+       "mean": 0.13803,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": 4.104138,
+       "mean": 0.342012,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 5.320583,
+       "mean": 0.443382,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 4.559745,
+       "mean": 0.379979,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 3.976666,
+       "mean": 0.361515,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": 0.267122,
+      "dropped_year": "2022",
+      "all": {
+       "2014": 0.289617,
+       "2015": 0.289658,
+       "2016": 0.283363,
+       "2017": 0.295067,
+       "2018": 0.285854,
+       "2019": 0.284317,
+       "2020": 0.297336,
+       "2021": 0.277608,
+       "2022": 0.267122,
+       "2023": 0.273681,
+       "2024": 0.276325
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2023-04",
+       "2024-10",
+       "2024-06",
+       "2024-09",
+       "2014-05"
+      ],
+      "share_of_total": 0.087294,
+      "mean_without_best": 0.269409
+     }
+    },
+    "ls": {
+     "mean": -0.051264,
+     "stats": {
+      "n_months": 128,
+      "mean_monthly": -0.051264,
+      "n_blocks": 43,
+      "t_blocks": -3.093541,
+      "se_monthly": 0.016571,
+      "mde_monthly": 0.0464
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -0.917463,
+       "mean": -0.091746,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -1.852207,
+       "mean": -0.154351,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -1.741101,
+       "mean": -0.145092,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -1.685213,
+       "mean": -0.140434,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -0.857557,
+       "mean": -0.071463,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -0.855121,
+       "mean": -0.07126,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -0.446342,
+       "mean": -0.040577,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -0.540052,
+       "mean": -0.045004,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.73398,
+       "mean": 0.061165,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.789348,
+       "mean": 0.065779,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.809905,
+       "mean": 0.073628,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.063372,
+      "dropped_year": "2023",
+      "all": {
+       "2014": -0.047834,
+       "2015": -0.0406,
+       "2016": -0.041558,
+       "2017": -0.04204,
+       "2018": -0.049175,
+       "2019": -0.049196,
+       "2020": -0.052269,
+       "2021": -0.051912,
+       "2022": -0.062895,
+       "2023": -0.063372,
+       "2024": -0.063006
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2022-06",
+       "2023-11",
+       "2024-07",
+       "2022-11",
+       "2020-01"
+      ],
+      "share_of_total": -0.236015,
+      "mean_without_best": -0.065939
+     }
+    }
+   },
+   "ridge_earn_minus_vol_equity": {
+    "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+    "span": [
+     "2014-02-28",
+     "2024-10-31"
+    ],
+    "log_utility_diff": {
+     "n_months": 128,
+     "mean_monthly": 0.000734,
+     "n_blocks": 43,
+     "t_blocks": 2.44555,
+     "se_monthly": 0.0003,
+     "mde_monthly": 0.00084
+    },
+    "raw_return_diff": {
+     "n_months": 128,
+     "mean_monthly": 0.000735,
+     "n_blocks": 43,
+     "t_blocks": 2.453265,
+     "se_monthly": 0.0003,
+     "mde_monthly": 0.000839
+    },
+    "by_hold_year": {
+     "2014": {
+      "sum": -0.000924,
+      "mean": -9.2e-05,
+      "n_months": 10
+     },
+     "2015": {
+      "sum": -0.008794,
+      "mean": -0.000733,
+      "n_months": 12
+     },
+     "2016": {
+      "sum": -0.004942,
+      "mean": -0.000412,
+      "n_months": 12
+     },
+     "2017": {
+      "sum": -0.018429,
+      "mean": -0.001536,
+      "n_months": 12
+     },
+     "2018": {
+      "sum": 0.005542,
+      "mean": 0.000462,
+      "n_months": 12
+     },
+     "2019": {
+      "sum": 0.011454,
+      "mean": 0.000954,
+      "n_months": 12
+     },
+     "2020": {
+      "sum": 0.018028,
+      "mean": 0.001639,
+      "n_months": 11
+     },
+     "2021": {
+      "sum": 0.005572,
+      "mean": 0.000464,
+      "n_months": 12
+     },
+     "2022": {
+      "sum": 0.029696,
+      "mean": 0.002475,
+      "n_months": 12
+     },
+     "2023": {
+      "sum": 0.027922,
+      "mean": 0.002327,
+      "n_months": 12
+     },
+     "2024": {
+      "sum": 0.028812,
+      "mean": 0.002619,
+      "n_months": 11
+     }
+    },
+    "loo": {
+     "worst": 0.000554,
+     "dropped_year": "2022",
+     "all": {
+      "2014": 0.000804,
+      "2015": 0.000886,
+      "2016": 0.000852,
+      "2017": 0.000969,
+      "2018": 0.000762,
+      "2019": 0.000711,
+      "2020": 0.000649,
+      "2021": 0.000762,
+      "2022": 0.000554,
+      "2023": 0.000569,
+      "2024": 0.000557
+     }
+    },
+    "carried_by": {
+     "best_months": [
+      "2020-03",
+      "2024-10",
+      "2022-10",
+      "2024-07",
+      "2022-11"
+     ],
+     "share_of_total": 0.492697,
+     "mean_without_best": 0.000387
+    },
+    "market_alpha": {
+     "t_alpha_blocks": null,
+     "note": "no market series"
+    },
+    "verdict": "ALPHA_DETECTED",
+    "sharpe_diff": {
+     "diff": 1.246747,
+     "lo90": 0.639356,
+     "hi90": 1.843369,
+     "p_le_0": 0.0
+    },
+    "variant": {
+     "n_months": 128,
+     "cagr": -0.012307,
+     "vol_annual": 0.012176,
+     "sharpe": -1.010448,
+     "max_dd": -0.166095,
+     "terminal_wealth": 0.876262,
+     "log_utility_monthly": -0.001032
+    },
+    "twin": {
+     "n_months": 128,
+     "cagr": -0.020967,
+     "vol_annual": 0.00936,
+     "sharpe": -2.257195,
+     "max_dd": -0.203221,
+     "terminal_wealth": 0.797696,
+     "log_utility_monthly": -0.001766
+    }
+   },
+   "ridge_earn_ls_equity": {
+    "metrics": {
+     "n_months": 128,
+     "cagr": -0.012307,
+     "vol_annual": 0.012176,
+     "sharpe": -1.010448,
+     "max_dd": -0.166095,
+     "terminal_wealth": 0.876262,
+     "log_utility_monthly": -0.001032
+    },
+    "log_utility_vs_cash": {
+     "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+     "span": [
+      "2014-02-28",
+      "2024-10-31"
+     ],
+     "log_utility_diff": {
+      "n_months": 128,
+      "mean_monthly": -0.001032,
+      "n_blocks": 43,
+      "t_blocks": -3.110773,
+      "se_monthly": 0.000332,
+      "mde_monthly": 0.000929
+     },
+     "raw_return_diff": {
+      "n_months": 128,
+      "mean_monthly": -0.001025,
+      "n_blocks": 43,
+      "t_blocks": -3.093541,
+      "se_monthly": 0.000331,
+      "mde_monthly": 0.000928
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -0.018422,
+       "mean": -0.001842,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -0.037158,
+       "mean": -0.003096,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -0.034903,
+       "mean": -0.002909,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -0.033852,
+       "mean": -0.002821,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -0.017209,
+       "mean": -0.001434,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -0.017154,
+       "mean": -0.00143,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -0.009024,
+       "mean": -0.00082,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -0.010854,
+       "mean": -0.000904,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": 0.014624,
+       "mean": 0.001219,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": 0.015734,
+       "mean": 0.001311,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": 0.016127,
+       "mean": 0.001466,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.001274,
+      "dropped_year": "2023",
+      "all": {
+       "2014": -0.000963,
+       "2015": -0.000818,
+       "2016": -0.000838,
+       "2017": -0.000847,
+       "2018": -0.00099,
+       "2019": -0.000991,
+       "2020": -0.001052,
+       "2021": -0.001045,
+       "2022": -0.001265,
+       "2023": -0.001274,
+       "2024": -0.001267
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2022-06",
+       "2023-11",
+       "2024-07",
+       "2022-11",
+       "2020-01"
+      ],
+      "share_of_total": -0.233763,
+      "mean_without_best": -0.001325
+     },
+     "market_alpha": {
+      "t_alpha_blocks": null,
+      "note": "no market series"
+     },
+     "verdict": "FAILED_VARIANT"
+    }
+   },
+   "vol_ls_equity": {
+    "metrics": {
+     "n_months": 128,
+     "cagr": -0.020967,
+     "vol_annual": 0.00936,
+     "sharpe": -2.257195,
+     "max_dd": -0.203221,
+     "terminal_wealth": 0.797696,
+     "log_utility_monthly": -0.001766
+    },
+    "log_utility_vs_cash": {
+     "objective": "log utility: mean monthly log(1+r_variant) - log(1+r_twin)",
+     "span": [
+      "2014-02-28",
+      "2024-10-31"
+     ],
+     "log_utility_diff": {
+      "n_months": 128,
+      "mean_monthly": -0.001766,
+      "n_blocks": 43,
+      "t_blocks": -9.83708,
+      "se_monthly": 0.00018,
+      "mde_monthly": 0.000503
+     },
+     "raw_return_diff": {
+      "n_months": 128,
+      "mean_monthly": -0.001761,
+      "n_blocks": 43,
+      "t_blocks": -9.830378,
+      "se_monthly": 0.000179,
+      "mde_monthly": 0.000501
+     },
+     "by_hold_year": {
+      "2014": {
+       "sum": -0.017498,
+       "mean": -0.00175,
+       "n_months": 10
+      },
+      "2015": {
+       "sum": -0.028363,
+       "mean": -0.002364,
+       "n_months": 12
+      },
+      "2016": {
+       "sum": -0.029961,
+       "mean": -0.002497,
+       "n_months": 12
+      },
+      "2017": {
+       "sum": -0.015424,
+       "mean": -0.001285,
+       "n_months": 12
+      },
+      "2018": {
+       "sum": -0.022751,
+       "mean": -0.001896,
+       "n_months": 12
+      },
+      "2019": {
+       "sum": -0.028608,
+       "mean": -0.002384,
+       "n_months": 12
+      },
+      "2020": {
+       "sum": -0.027052,
+       "mean": -0.002459,
+       "n_months": 11
+      },
+      "2021": {
+       "sum": -0.016425,
+       "mean": -0.001369,
+       "n_months": 12
+      },
+      "2022": {
+       "sum": -0.015072,
+       "mean": -0.001256,
+       "n_months": 12
+      },
+      "2023": {
+       "sum": -0.012189,
+       "mean": -0.001016,
+       "n_months": 12
+      },
+      "2024": {
+       "sum": -0.012685,
+       "mean": -0.001153,
+       "n_months": 11
+      }
+     },
+     "loo": {
+      "worst": -0.001843,
+      "dropped_year": "2023",
+      "all": {
+       "2014": -0.001767,
+       "2015": -0.001704,
+       "2016": -0.00169,
+       "2017": -0.001816,
+       "2018": -0.001752,
+       "2019": -0.001702,
+       "2020": -0.001701,
+       "2021": -0.001807,
+       "2022": -0.001819,
+       "2023": -0.001843,
+       "2024": -0.001823
+      }
+     },
+     "carried_by": {
+      "best_months": [
+       "2020-11",
+       "2022-06",
+       "2014-11",
+       "2017-03",
+       "2022-01"
+      ],
+      "share_of_total": -0.101787,
+      "mean_without_best": -0.002025
+     },
+     "market_alpha": {
+      "t_alpha_blocks": null,
+      "note": "no market series"
+     },
+     "verdict": "FAILED_VARIANT"
+    }
+   }
+  }
+ },
+ "elapsed_s": 115.5,
+ "monthly_series": "backend/data/optimus/sizing_lab/sizing_crsp_monthly_2026-09-29T030448Z.parquet"
+}

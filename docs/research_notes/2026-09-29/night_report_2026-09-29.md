@@ -163,3 +163,51 @@ gone 11 days without a mark.
 position sizes, compared against v0 and the random twin from the next open. Size is the only input
 with demonstrated skill, and every week of delay is a week less of forward evidence by the 26 Oct
 read.
+
+
+## Amendment 2026-09-29 (builder, after the four reviews of 2026-09-29)
+
+This is a dated amendment. The text above is unchanged.
+
+**§5, the LLM-direction sentence.** The sentence "in tonight's fiction test, DeepSeek scored
+43-45% and Claude Opus 44.6% on post-cutoff cases, where a coin scores 50%" is withdrawn as a
+reason for anything.
+
+- DeepSeek at n = 569 is a genuine `FAILED_VARIANT` on its own registered rule.
+- The Opus number is an abstention and reads `CANNOT_DISTINGUISH`:
+  - n = 120;
+  - the sd of p is 0.019;
+  - 37 of 120 answers are exactly 0.50;
+  - the AUC is 0.461.
+- By the registered leak rule, the fiction leaks for Opus: 7 of 30 famous A3 canaries were
+  identified.
+- The shadow rule's zero weight on LLM direction stays, because there is no evidence FOR a
+  weight. Receipt: `backend/data/optimus/fiction_backtest/fb_20260928/receipt_amendment_20260929T032126Z.json`.
+
+**§5, v0 and v1.**
+
+- v0 (`439fd84f869744e0`) is unchanged. Its reviewed weaknesses are recorded in
+  `backend/data/optimus/shadow_bayes/AMENDMENT_SHADOW_BAYES_v0_2026-09-29.json`:
+  - the twin was matched on the liquidity band only;
+  - its kill rule fires 48% of the time if the posterior is true, against 50% if the rule is
+    worthless;
+  - the graded 4-name book is not the rule's output;
+  - the registration is not in git.
+- A successor, **v1**, was frozen before the 2026-09-29 open:
+  - book `0f038859b2ebea62`, with a matched twin21 `be5e940728613d94` (band × vol × momentum
+    tercile, 21 draws, seed 787485596);
+  - the graded book is the rule's actual output: 10 names at 5.36% in total, plus SPY at
+    94.64%;
+  - kill rule: D < −8.3% at 63 sessions, where D is the sleeve minus the twin sleeve.
+    P(kill | worthless) is 0.05 and P(kill | posterior true) is 0.044, so a CANNOT_DISTINGUISH
+    reading is expected and was stated before entry.
+  - Registration: `backend/data/optimus/shadow_bayes/REGISTRATION_SHADOW_BAYES_v1_2026-09-28_20260929T032138Z.json`.
+  - v1 does NOT use the network lab's ensemble for direction (see the next point).
+
+**"Its trust-weighted ensemble for direction (today's trust is tiny, an IC of 0.004-0.0075)".**
+Those trust values were walk-forward IC ratios, not trust.
+
+- `nn_lab` direction trust is now earned from FORWARD graded blocks only. With zero graded
+  blocks every weight is 0, and the ensemble is the zero.
+- The nightly receipt prints, for each model: its forward blocks, its weight, and what moved
+  the weight.

@@ -207,3 +207,61 @@ beyond volatility. Masking with real headlines leaks: 13% of famous cases were i
 batches through the file arm tonight. That is the owner's hypothesis on the exact same 569
 post-cutoff events, graded by the same code in minutes. Tonight's 5.9 pp row-level MDE
 bounds what a win would have to show.
+
+
+## Amendment 2026-09-29: the Opus arm is CANNOT_DISTINGUISH, and by the registered rule its fiction LEAKS
+
+Dated amendment, written after `docs/reviews/REVIEW_2026-09-29_FICTION_BACKTEST.md`. Nothing
+above is edited, `receipt_analyze.json` is not rewritten, and no new Opus batch was run. The
+numbers below come from a NEW receipt that calls no model:
+`backend/data/optimus/fiction_backtest/fb_20260928/receipt_amendment_20260929T032126Z.json`
+(`python -m scripts.fiction_backtest amend --run fb_20260928`).
+
+**1. Opus direction, clean A3, n = 120: relabelled `CANNOT_DISTINGUISH (model abstained)`.**
+
+- The formal rule still returns `FAILED_VARIANT`: hit 44.6%, and the Wilson 95% upper bound of
+  0.539 is below 0.55. That verdict is printed unchanged.
+- The reading changes, because the model declined to forecast:
+  - the sd of p is 0.019, and p runs from 0.44 to 0.53;
+  - 37 of 120 answers (30.8%) are exactly 0.50;
+  - the AUC is 0.461;
+  - on the 83 rows where it took a side, it was right 42.2% of the time.
+- The below-coin hit rate is a calibration offset, not discrimination. The model leaned
+  bearish by a few points on a sample where 54.2% of names beat the median.
+- "Opus 44.6%, no direction skill" is withdrawn as a verdict on LLMs. It measured an
+  abstention, at n = 120 (row MDE 12.8 pp), at the level that removes the model's legitimate
+  knowledge of the company.
+- `grade_cell` and `verdicts` now print `share_p_exactly_half`, `hit_when_took_a_side`, the
+  AUC and a `direction_reading` beside the formal verdict whenever sd(p) < 0.03.
+
+**2. The registered leak rule, computed for Opus: THE FICTION LEAKS.**
+
+- The rule: "the fiction LEAKS if A3 identifies the company on > 10% of canaries or the A3
+  famous hit rate is >= 0.70".
+- Opus identified **7 of 30** A3 famous canaries (23.3%): MRNA, AMZN, SMCI, APP, MRVL, UNH and
+  COIN. The first clause fires.
+- The second clause is `NOT_EVALUATED`, because the Opus famous forecasts (batches 007-012)
+  were never answered.
+- By the registered rule, every future BACKTEST reading for Opus at this fiction level is
+  void. "The fiction level holds and is now testable on any model" is false for Opus.
+- The original receipt had no Opus leak verdict, because `leak_test` iterated only the arms
+  that had answered famous forecasts. `leak_table` now covers every arm that has famous A3
+  canaries, and marks an unevaluated clause as such.
+
+**3. Provenance of the file-arm answers.**
+
+- The answering agents were full coding sub-agents, with file, shell and web tools.
+- Their confinement was an instruction (`ANSWERING_INSTRUCTIONS.md` rule 3). The sealed plan
+  sat one directory away, and **no tool-call log was kept**.
+- The confinement test pins only the harness reader.
+- Nothing suggests a lookup tonight: a model that looked would not score 44.6%. But no file
+  on disk could rule one out, and any future file-arm score must carry its own tool log.
+
+**4. Where the number had been used as grounds for a rule.**
+
+- `docs/research_notes/2026-09-29/night_report_2026-09-29.md` §5 cited "Claude Opus 44.6%" as
+  the reason for a zero weight on LLM direction calls in the shadow book. It is amended there.
+- The zero weight stays, because there is no evidence FOR a weight. It is not "measured below
+  a coin".
+- `scripts/shadow_bayes_rule.py` v0 never cited the number: its `investigator_dir` entry
+  cites lane X and §64. The v1 successor's `llm_direction` entry states the honest reason.

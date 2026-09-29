@@ -10,6 +10,14 @@ against SPY, IWM, the panel's random portfolio and its characteristic-matched
 twin (21 draws). The verdict rule lives in `backend/services/calendar_offsets.py`
 and was written before this ran.
 
+BAR DEFECTS (2026-09-29): the panel is read through `stitched_tickers.cut_reader_bars`,
+which runs `bar_defects.screen` first (zero-volume dark runs, spike prints and proven level
+breaks). Every cell's book is checked with `bar_defects.book_defect_share` and REFUSED when
+more than `BAR_DEFECT_BOOK_MAX_SHARE` of its slots sit on a name with a SUSPECT level break
+(kept by the screen, not proven) in its 12-1 or hold window.
+`--bar-screen off` is the AUDIT leg only (the pre-screen panel, to print old beside new):
+it records the share and does not refuse, and its receipt says so.
+
 WHAT IT WRITES: one JSON receipt
 `strategy_library/calendar_offsets_<run_id>.json`. It writes NO panel, no facts
 table, no leaderboard. It REFUSES to run when its inputs are smaller than the
@@ -34,6 +42,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from backend import config as _cfg                              # noqa: E402
+from backend.services import bar_defects as BD                  # noqa: E402
 from backend.services import calendar_offsets as CO             # noqa: E402
 from backend.services import matched_twins as MT                # noqa: E402
 from backend.services import strategy_library as SL             # noqa: E402
@@ -99,12 +108,17 @@ def shrink_check(ref: dict, panel: pd.DataFrame, ratings_meta: dict | None) -> d
 
 
 def run_one(panel, spy, benches, rule, *, k: int, by_date, cache, grid, n_spy: int,
-            n_twin: int, log=print) -> dict:
+            n_twin: int, log=print, flagged: set | None = None, refuse_defects: bool = True) -> dict:
     hold: list = []
     sc = SL.selection_scores(panel, rule)
     m = SL.run_strategy(panel, rule, k=k, scores=sc, holdings=hold)
     if m is None or not len(m):
         raise CO.OffsetInputMissing(f"{rule.id}@k{k}: no month had k selectable names")
+    dshare = BD.book_defect_share(hold, flagged or set())
+    if refuse_defects and dshare["refuse"]:
+        raise BD.BarDefectRefusal(f"{rule.id}@k{k}: {dshare['flagged_slots']} of {dshare['slots']} "
+                                  f"slots ({dshare['share']:.1%}) on unproven level breaks; first "
+                                  f"{dshare['hits'][:5]}")
     ev = SL.evaluate(m, spy, hold_months=rule.hold_months,
                      registered_utc=rule.first_registered_utc, since=_cfg.STRATEGY_LIB_SINCE,
                      iwm=benches["iwm"], random_panel=benches["random_panel"])
@@ -116,6 +130,7 @@ def run_one(panel, spy, benches, rule, *, k: int, by_date, cache, grid, n_spy: i
     row = CO.offset_row(monthly=m, ev=ev, spy=spy, random_panel=benches["random_panel"], twin=tw,
                         n_trials_spy=n_spy, n_trials_twin=n_twin)
     row["cell"] = cid
+    row["bar_defect_slots"] = dshare
     row["_series"] = pd.DataFrame({"rule_net": tw["rule_net"], "twin21_net": tw["twin21_net"],
                                    "spy": spy.reindex(tw["rule_net"].index)})
     row["rebalance_months"] = list(rule.rebalance_months) if rule.rebalance_months else None
@@ -148,7 +163,10 @@ def main(argv=None) -> int:
     ap.add_argument("--k", type=int, default=20, help="the k every lead is frozen at")
     ap.add_argument("--offline", action="store_true")
     ap.add_argument("--reference-run", default=REFERENCE_RUN)
+    ap.add_argument("--bar-screen", choices=("on", "off"), default="on",
+                    help="off = the AUDIT leg (pre-screen panel, no refusal); never a decision input")
     a = ap.parse_args(argv)
+    BD.ENABLED = a.bar_screen == "on"
     try:
         DG.require_free(_cfg.DISK_FREE_DEAD_GB + 1, JOB, path=_cfg.OPTIMUS_LEDGER_DIR)
     except DG.DiskTooFull as exc:
@@ -177,6 +195,15 @@ def main(argv=None) -> int:
     print(f"  writes ONE receipt ({rp.name}); no panel, facts table or leaderboard is written",
           flush=True)
     W = F.load_wide(paths, start=_cfg.STRATEGY_LIB_START)
+    from backend.services import stitched_tickers as ST            # noqa: PLC0415
+    _full = (ST.LAST_AUDIT or {}).get("defect_screen") or {}
+    suspects = list(_full.get("suspects") or [])
+    screen_audit = BD.summary(_full)
+    stitch_audit = {k: (len(v) if isinstance(v, list) else v)
+                    for k, v in (ST.LAST_AUDIT or {}).items() if k != "defect_screen"}
+    print(f"  BAR SCREEN {a.bar_screen}: removed {screen_audit.get('rows_removed')} rows "
+          f"{screen_audit.get('rows_removed_by_reason')}, cuts {screen_audit.get('cuts_by_reason')}; "
+          f"stitch {stitch_audit.get('by_verdict')}", flush=True)
     print(f"  wide {W['close'].shape} ({W['n_bar_rows']:,} bars) {time.time()-t0:.0f}s; "
           f"peak {peak_rss_mb()} MB", flush=True)
     panel = F.build_panel(W, delist_return=float(_cfg.STRATEGY_LIB_DELIST_RETURN))
@@ -186,6 +213,12 @@ def main(argv=None) -> int:
     if need_ratings:
         panel, rmeta = F.attach_ratings(panel, W)
     panel["tiebreak"] = SL._tiebreak(panel)
+    flagged = BD.flagged_keys(panel, suspects)
+    elig_ = panel["eligible"].astype(bool) if "eligible" in panel.columns else slice(None)
+    n_impl_elig = int(BD.implausible_rows(panel[elig_]).sum())
+    print(f"  suspects {len(suspects)} -> {len(flagged)} flagged panel rows; implausible rows "
+          f"(vol_63 > {BD.IMPLAUSIBLE_VOL} or |12-1| > {BD.IMPLAUSIBLE_MOM}, descriptive): "
+          f"{n_impl_elig} eligible", flush=True)
     chk = shrink_check(ref, panel, rmeta)
     print(f"  SIZE CHECK: this {chk['this_panel']} vs reference {chk['reference_panel']}; "
           f"revision events {chk['this_revision_events']} vs {chk['reference_revision_events']}",
@@ -227,11 +260,14 @@ def main(argv=None) -> int:
                  "offsets": {}}
         try:
             entry["default"] = run_one(panel, spy, benches, rule, k=a.k, by_date=by_date,
-                                       cache=cache, grid=grid, n_spy=n_spy, n_twin=n_twin)
+                                       cache=cache, grid=grid, n_spy=n_spy, n_twin=n_twin,
+                                       flagged=flagged, refuse_defects=BD.ENABLED)
             for tag, var in CO.offset_variants(rule).items():
                 entry["offsets"][tag] = run_one(panel, spy, benches, var, k=a.k, by_date=by_date,
-                                                cache=cache, grid=grid, n_spy=n_spy, n_twin=n_twin)
-        except (CO.OffsetInputMissing, MT.TwinInputMissing, SL.RuleInputMissing) as e:
+                                                cache=cache, grid=grid, n_spy=n_spy, n_twin=n_twin,
+                                                flagged=flagged, refuse_defects=BD.ENABLED)
+        except (CO.OffsetInputMissing, MT.TwinInputMissing, SL.RuleInputMissing,
+                BD.BarDefectRefusal) as e:
             refused[rule.id] = f"{type(e).__name__}: {e}"
             print(f"    REFUSED {rule.id}: {e}", flush=True)
             continue
@@ -305,6 +341,14 @@ def main(argv=None) -> int:
             "dsr_vs_spy_n_trials": f"{n_ref} reference cells + {n_new} cells run here = {n_spy}",
             "dsr_rule_minus_twin21_n_trials": f"{n_twin} (the reference board's candidate rules, "
                                               "as the leads doc read rule - twin21)"},
+        "bar_screen": {"mode": a.bar_screen,
+                       "note": ("ON = the reader default; OFF = audit leg, pre-screen panel, "
+                                "book refusal not enforced" if a.bar_screen == "off" else
+                                "ON = the reader default; book refusal enforced"),
+                       "screen": screen_audit, "stitch": stitch_audit,
+                       "suspects": suspects, "flagged_panel_rows": len(flagged),
+                       "implausible_rows_eligible": n_impl_elig,
+                       "book_max_share": BD.BOOK_MAX_SHARE},
         "size_check": chk, "spy": spy_meta.get("source"), "iwm": iwm_meta,
         "random_panel": rp_meta, "reference_run": a.reference_run,
         "reconfirm_mom_12_1_q_vs_reference": reconfirm,

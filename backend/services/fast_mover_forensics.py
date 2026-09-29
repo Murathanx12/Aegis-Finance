@@ -1073,30 +1073,61 @@ class Adjudicator:
 
 
 # ─────────────────────────── X quests (OpenClaw) ────────────────────────────
+#
+# 2026-09-29: the quest used to tell the agent to "use the browser tool with the
+# logged-in X/Twitter account". The LLM agent has no browser, shell, write or
+# messaging tool any more (`openclaw_tool_scope`). Signed-in pages reach it ONLY
+# as text the guarded reader already stored (`news_corpus/social/`), handed over
+# as UNTRUSTED data, as `thesis_card.guarded_social_reads` does for cards. No
+# stored page for the ticker since the window opened -> no call, $0, status
+# NO_GUARDED_PAGE (not "no posts").
 
-def x_quest(ticker: str, entry_ts: str, *, workdir: Path) -> dict:
-    """Ask OpenClaw for X posts about `ticker` DATED BEFORE entry. Posts dated
-    after the entry are dropped here, not trusted to the prompt."""
-    from backend.services import openclaw_client as OC
+X_PAGES_PER_QUEST = 4
+X_PAGE_MAX_CHARS = 4000
+
+
+def x_quest(ticker: str, entry_ts: str, *, workdir: Path, root: Path | None = None,
+            agent_fn: Any = None, now: datetime | None = None) -> dict:
+    """Posts about `ticker` DATED in the 7 days up to entry, read from the
+    guarded reader's STORED pages of that ticker (read at any time since the
+    window opened, never after `now`). Posts dated after the entry are dropped
+    here, not trusted to the prompt."""
+    from backend.services import thesis_card as TC
     t = _utc(entry_ts)
     lo = (t - timedelta(days=7)).date().isoformat()
     hi = t.date().isoformat()
-    until = (t + timedelta(days=1)).date().isoformat()
+    now = now or datetime.now(timezone.utc)
+    pages = TC.stored_social_pages(since=t - timedelta(days=7), until=now, tickers=[ticker],
+                                   root=root, max_chars=X_PAGE_MAX_CHARS,
+                                   limit=X_PAGES_PER_QUEST)
+    refs = [{"url": r.get("url"), "read_utc": r.get("read_utc"), "chars": r.get("chars")}
+            for r in pages]
+    base = {"window": [lo, hi], "pages": refs, "n_pages": len(pages)}
+    if not pages:
+        return {**base, "status": "NO_GUARDED_PAGE", "posts": [], "searched": False,
+                "blocker": f"no guarded-reader page for {ticker} stored since {lo}",
+                "dropped_post_entry": 0, "n_returned": 0, "call_id": None, "usage": None,
+                "openclaw_cost_usd": 0.0, "reply_head": ""}
     msg = (
-        f"Use the browser tool with the logged-in X/Twitter account. Open "
-        f"https://x.com/search?q=%24{ticker}%20since%3A{lo}%20until%3A{until}&f=live "
-        f"and read the results (scroll once or twice). Reply with ONLY one JSON "
-        f"object, no prose: "
+        f"READ-ONLY, NO TOOLS. {TC.NO_TOOLS_SENTENCE} Do not fetch any URL; answer ONLY "
+        f"from the stored pages below."
+        f"{TC.untrusted_pages_block(pages, none_text='STORED PAGES: none.')}"
+        f"List the posts on those pages about ${ticker} dated from {lo} to {hi} "
+        f"(a relative time like \"3h\" counts back from the page's read_utc). Reply with "
+        f"ONLY one JSON object, no prose: "
         f'{{"searched": true|false, "blocker": "<why not, or empty>", '
         f'"posts": [{{"date": "YYYY-MM-DD", "author": "@handle", '
         f'"text": "first 200 chars", "url": "..."}}]}}. '
-        f"Up to 10 posts, ONLY posts dated on or before {hi}. If the page needs "
-        f"a login, is rate-limited or empty, set searched accordingly and say so "
-        f"in blocker.")
+        f"Up to 10 posts, ONLY posts dated on or before {hi}; never invent a post. If the "
+        f"pages show a login wall, a rate limit or no posts, set searched accordingly and "
+        f"say so in blocker.")
     workdir.mkdir(parents=True, exist_ok=True)
     mf = workdir / f"x_{ticker}_{hi}.txt"
     mf.write_text(msg, encoding="utf-8")
-    r = OC.agent(str(mf), model=X_MODEL, timeout=420.0,
+    if agent_fn is None:
+        from backend.services import openclaw_client as OC
+        agent_fn = OC.agent
+    r = agent_fn(str(mf), model=X_MODEL, timeout=420.0,
                  purpose=f"fast_mover_forensics:x:{ticker}")
     posts, raw, searched, blocker = [], r.get("reply") or "", None, None
     try:
@@ -1110,12 +1141,12 @@ def x_quest(ticker: str, entry_ts: str, *, workdir: Path) -> dict:
         except ValueError:
             posts = []
     keep = [p for p in posts if str(p.get("date", ""))[:10] and str(p["date"])[:10] <= hi]
-    return {"status": r.get("status"), "posts": keep, "searched": searched,
+    return {**base, "status": r.get("status"), "posts": keep, "searched": searched,
             "blocker": blocker,
             "dropped_post_entry": len(posts) - len(keep),
             "n_returned": len(posts), "call_id": r.get("call_id"),
             "usage": r.get("usage"), "openclaw_cost_usd": r.get("openclaw_cost_usd"),
-            "window": [lo, hi], "reply_head": raw[:300]}
+            "reply_head": raw[:300]}
 
 
 # ─────────────────────────── real inputs ────────────────────────────────────

@@ -480,7 +480,7 @@ def test_the_profile_is_named_on_every_browser_call(monkeypatch):
 
     monkeypatch.setattr(OC, "_run", fake_run)
     with pytest.raises(OC.OpenClawRefused, match="REFUSED_OPERATOR_HOST"):
-        OC.browser("open", url="https://www.sec.gov/")
+        OC.browser("open", url="https://www.example.org/")
     try:
         OC.browser("open", url="https://www.wsj.com/")
     finally:

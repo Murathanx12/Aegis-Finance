@@ -304,3 +304,128 @@ recent IPOs.
    condition.
 
 No return from 2026-09-28 or later was read to write this note.
+
+## AMENDMENT 2026-09-29 (sensitivity only; BEFORE the 2026-10-26 read; no forward return of this trial was read to write it; nothing above is edited): broken price histories beyond the stitched tickers
+
+**What was found.** The stitch detector counts gaps between bars, and the vendor fills some holes
+with flat ZERO-VOLUME bars, so there is no gap to count (LINE: Linn Energy at $0.1641 every
+session from 2016-05-24 to 2024-07-24, Lineage at $73.66 the next day). Other rows jump on an
+unadjusted corporate action or a re-issued equity. `backend/services/bar_defects.py` now runs
+inside `stitched_tickers.split_stitched`, so every bar reader gets it. It removes 174,417 non-trade
+rows (dark runs, zero-volume prints, spike prints) and cuts 95 proven level breaks. With the holes
+visible, the stitch detector finds 766 STITCHED gaps instead of 62. Note:
+`docs/research_notes/2026-09-29/broken_price_histories_2026-09-29.md`; receipt
+`backend/data/optimus/bar_defects/bar_defects_2026-09-29T033458Z.json`.
+
+**Which books in this trial are affected.** Receipt
+`backend/data/optimus/bar_defects/books_2026-09-29T034841Z.json`. It is read-only on
+`books.jsonl`. The test: at the book's `asof`, compute each holding's 12-1 momentum and 63-day
+volatility from the same bars with the reader before and after the screen. A holding counts as
+**selected on a broken row** when the screen cuts its history inside the 12-1 window, moves
+ln(1+mom) by more than 0.10, or changes vol_63 by more than 1.5x.
+
+- Across all 314 frozen books: **21 positions in 21 books, two tickers.**
+  - **WOLF**, 20 books. Wolfspeed's old equity closed at $1.21 on 2025-09-26 and the
+    post-reorganisation equity opened at $22.10 on 2025-09-29, an 18x "move" on 1.1x normal
+    volume. The 12-1 score that bought it was that splice.
+  - **ISRL**, 1 twin: `cards_supports_2026-09-25__random_same_band`.
+- **Pairs of this trial: 9 of 30, all on the book side** (WOLF at 5%, or 3.5% in the two
+  inverse-vol `__control` books). No twin of the trial is affected.
+  - **Already listed** in the 2026-09-28 stitched note (7):
+    - `lib_disp_short_avoid_2026-09-27`
+    - `lib_mom_12_1_2026-09-26`
+    - `lib_mom_12_1_q_2026-09-26`
+    - `lib_mom_12_1_q_trend_lead_2026-09-27`
+    - `lib_qc470_mom252_quarterly_riskparity_2026-09-27__control`
+    - `lib_mom_12_1_ivw_lead_2026-09-27__control`
+    - `lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control`
+  - **New** (2):
+    - `lib_low_asset_growth_sealed_2026-09-26`
+    - `lib_resid_mom_12_1_large_sealed_2026-09-26`
+- No holding had a SUSPECT break in its window. A suspect is a >= 3x move on 2-10x volume,
+  which the screen keeps but cannot prove.
+
+**What is and is not contaminated.** It is the same shape as the stitched note. WOLF is a real
+tradable security, and the grader marks it from its own bars. What is contaminated is WHY the
+momentum books bought it.
+
+**How the reads handle it (decided now, before any data):**
+
+1. **The deciding read is unchanged.** No book, twin, weight or id changes.
+2. **S1 and S2 are unchanged.** They are defined on the stitched pairs.
+3. **S3 is widened to S3'.** Each affected book's return is recomputed without its stitched
+   holdings AND without WOLF (and ISRL on its twin), then re-weighted to the original gross from
+   the same bars. **A SURVIVES stands only if S3' reads z_63 >= 2 and D_21 > 0.** Otherwise the
+   verdict prints as `NOT_ROBUST_TO_BAR_DEFECTS` and licenses nothing.
+4. This can only make the trial harder to pass.
+
+**The backtest the trial's leads came from moved** (hindsight, costs on, calendar-neutral,
+rule minus 21-draw matched twin; receipt
+`backend/data/optimus/strategy_library/broken_price_histories_compare_2026-09-29T034617Z.json`):
+
+| rule | cum net since 2020 | rule - twin %/mo | t | verdict |
+|---|---|---|---|---|
+| `mom_12_1_q` | +661% -> +458% | +1.20 -> +0.92 | 2.49 -> 1.83 | CANNOT_DISTINGUISH -> CALENDAR_ARTEFACT |
+| `mom_12_1_q_trend` | +304% -> +186% | +1.22 -> +0.96 | 2.80 -> 2.03 | CANNOT_DISTINGUISH -> CALENDAR_ARTEFACT |
+| `qc470_mom252_quarterly_riskparity` | +585% -> +395% | +1.12 -> +0.84 | 2.62 -> 1.91 | CANNOT_DISTINGUISH |
+| `disp_short_avoid` | +466% -> +342% | +0.81 -> +0.58 | 1.80 -> 1.26 | CALENDAR_ARTEFACT -> CANNOT_DISTINGUISH |
+
+This does not change the trial. The trial reads forward returns, not these numbers. It is
+recorded here because this backtest is the reason these books were frozen.
+
+## AMENDMENT 2026-09-29 b (context only; BEFORE the 2026-10-26 read; no forward return of this trial was read to write it; nothing above is edited): the leads rebuilt on CRSP, and a universe bias in the panel they were selected on
+
+**What was done.** The four leads were rebuilt on CRSP daily total returns, 1991-2024, with delisting
+returns and dead names included. The run used the library's own engine unchanged: quarterly offsets,
+band costs, the 21-draw matched twin on two seed sets, and the v2 calendar rule. Note:
+`docs/research_notes/2026-09-29/momentum_on_crsp_2026-09-29.md`. Receipts are in
+`backend/data/optimus/crsp_rebuild/`:
+
+- `momentum_on_crsp_2026-09-29T042053Z.json`
+- `slots_2026-09-29T042802Z.json`
+- `emulate_vendor_universe_2026-09-29T043122Z.json`
+
+**Rule minus 21-draw twin**, calendar-neutral, %/month (t on 3-month blocks, MDE):
+
+| rule | CRSP 1991-2024 | CRSP 2017-24 | vendor 2017-24 | CRSP 2017-24 under the vendor's universe rule |
+|---|---|---|---|---|
+| `mom_12_1_q` | +0.10 (t 0.33, MDE 0.83) | +0.22 (t 0.37) | +1.09 (t 1.97) | +0.93 (t 1.63) |
+| `mom_12_1_q_trend` | +0.01 (t 0.03, MDE 0.75) | -0.11 (t -0.21) | +1.11 (t 2.13) | +0.70 (t 1.30) |
+| `qc470_mom252_quarterly_riskparity` | +0.26 (t 0.90, MDE 0.82) | +0.48 (t 0.81) | +1.00 (t 2.14) | +1.01 (t 1.89) |
+| `disp_short_avoid` (1999-2024) | -0.14 (t -0.43, MDE 0.90) | +0.34 (t 0.55) | +0.82 (t 1.69) | not run |
+
+**Verdicts on CRSP:**
+
+- All four are CANNOT_DISTINGUISH on the calendar rule. None is ROBUST_TO_CALENDAR.
+- As implementations, all four are **FAILED_VARIANT**. The reasoning is in the note, section 2.
+- `mom_12_1_q` and `disp_short_avoid` carry negative four-factor alphas: -0.78%/mo (t -2.27) and
+  -1.05%/mo (t -2.83).
+- The only positive stretch in 34 years is 1998-2000.
+
+**The cause of the vendor number.** The living half of the vendor panel is a universe dated
+2026-09-01, floored at $3M median dollar volume measured on that date. The delisted pull adds names
+that stopped trading. A past winner that collapsed and stayed listed at low volume is in neither.
+Applying that rule to CRSP reproduces about 80% of the vendor's `mom_12_1_q` twin gap.
+
+**What this implies for reading the forward books (decided now, before any forward data):**
+
+1. **The trial's rule, metric, thresholds, pairs, twins and sigmas are unchanged.** No book, twin,
+   weight or id changes.
+2. **The forward read itself is not contaminated by this bias.**
+   - The books' universe was fixed on 2026-09-01, before entry on 2026-09-28. Forward, that is a
+     point-in-time universe, not look-ahead.
+   - The grader marks forward returns from real bars.
+   - The bias lives in the BACKTEST that selected the leads. It does not live in the forward
+     comparison.
+3. **The prior is now weaker than the one this file registered.** It had been written as "weak".
+   On a survivorship-free source, the historical reason these books exist is +0.10%/mo over the
+   matched twin, with an MDE of 0.83. So the null is the expected outcome. The trial's MDE (about
+   4.6% a month pooled) is 46 times the CRSP point estimate, so a SURVIVES would be surprising.
+4. **A SURVIVES licenses only a longer forward record.** It is still read as a candidate for more
+   forward evidence, never as a confirmation of the backtest. The backtest has no independent
+   support left.
+5. **A KILL is read against this amendment.** It is consistent with the CRSP rebuild. It does not
+   reject momentum as a mechanism: the published UMD was +0.26%/mo for 2017-2024 and +1.21%/mo for
+   2025 to June 2026.
+6. **Nothing about S1, S2 or S3' changes.** The stitched-ticker and bar-defect sensitivities stand
+   as written.

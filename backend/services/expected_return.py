@@ -86,6 +86,9 @@ NOT_READ_BY_DESIGN: dict[str, str] = {
                 "decided it (2026-09-29); news is collected and NOT read here"),
     "review:": "the daily review grades books; its rows are not a forecast component of E[r]",
     "promise:": "promise rows track commitments, not return forecasts; not a component of E[r]",
+    "news_digest:": ("world-digest implications (2026-09-29): graded, and read ONLY by the "
+                     "SHADOW_NEWS_v0 shadow contract with trust starting at 0; wiring them into "
+                     "the plan is the owner's decision, after graded rows exist"),
 }
 
 

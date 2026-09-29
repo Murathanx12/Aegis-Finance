@@ -78,6 +78,10 @@ PANELS: dict[str, Path] = {
     "grader_2025_26": _OPT / "prices_2025_26" / "bars.parquet",
     "ranker_deep": _OPT / "prices_deep" / "bars.parquet",
     "delisted": _OPT / "prices_deep" / "bars_delisted.parquet",
+    # the grader's supplementary panel: ledger names the ranker excludes and the
+    # sector / macro proxy ETFs (config.FORECAST_PROXY_ETFS) the world digest is
+    # graded on (2026-09-29). Not gated: it carries dead microcaps by design.
+    "forecast_only": _OPT / "prices_2025_26" / "bars_forecast_only.parquet",
 }
 
 #: Which panels an age gate may read. The delisted panel is EXCLUDED on

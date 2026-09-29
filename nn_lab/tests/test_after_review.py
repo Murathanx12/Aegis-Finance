@@ -242,7 +242,10 @@ def test_the_ensemble_is_the_zero_until_something_is_trusted():
     e, w = L.ensemble_scores(s, {"a": {"h5": {"trust": -0.01}}, "b": {"h5": {"trust": 0.0}}}, 5)
     assert np.all(e == 0)
     e, w = L.ensemble_scores(s, {"a": {"h5": {"trust": 0.03}}, "b": {"h5": {"trust": 0.01}}}, 5)
-    assert w == {"a": 0.75, "b": 0.25} and e[2] > e[0]
+    # amended 2026-09-29: a SCALE, not a share -- trust / TRUST_FULL_IC, the rest is neutral
+    full = C.TRUST_FULL_IC
+    assert w["a"] == pytest.approx(0.03 / full) and w["b"] == pytest.approx(0.01 / full)
+    assert w["neutral"] == pytest.approx(1 - 0.04 / full) and e[2] > e[0]
 
 
 def test_the_model_in_charge_changes_only_on_forward_evidence():
@@ -266,6 +269,89 @@ def test_trust_table_reads_forward_grades_by_block():
     v = tt["lgbm"]["h21"]
     assert v["graded_dates"] == 40 and v["n_forward_blocks"] == 10 and 0 < v["trust"] < 0.04
     assert tt["zero"]["h21"]["trust"] == 0.0 and tt["nn"]["h21"]["source"] == "prior_only"
+
+
+# ── trust weights earned forward only (REVIEW_2026-09-29_SHADOW_BOOK_AND_TRUST_WEIGHTS F1) ──
+
+_WF_BIG = {m: {f"h{h}": {"mean": 0.02 * (i + 1), "n_blocks": 80} for h in C.HORIZONS}
+           for i, m in enumerate(("nn", "lgbm", "ridge", "mom_12_1"))}
+_ROSTER = [m for m in C.DIRECTION_ROSTER if m != "zero"]
+
+
+def _grades(cal, model, n_dates, ic, step=5):
+    return [{"model": model, "horizon": 21, "decision_date": str(d.date()), "rank_ic": ic}
+            for d in cal[::step][:n_dates]]
+
+
+def test_zero_forward_grades_leave_every_weight_at_its_prior():
+    cal = _cal(300)
+    tt = L.trust_table([], cal, _WF_BIG)           # a rich walk-forward receipt, no forward grade
+    for m in _ROSTER:
+        v = tt[m]["h21"]
+        assert v["trust"] == 0.0 and v["source"] == "prior_only" and v["walk_forward_used"] is False
+        assert v["walk_forward_mean_ic_reported"] is not None          # printed, never used
+    w = L.ensemble_weights(tt, 21, _ROSTER)
+    assert all(w[m] == 0.0 for m in _ROSTER) and w["neutral"] == 1.0
+    scores = {m: np.arange(5.0) * (1 if i % 2 else -1) for i, m in enumerate(_ROSTER)}
+    e, _ = L.ensemble_scores(scores, tt, 21)
+    assert np.all(e == 0)
+    inc = L.decide_in_charge(None, tt, forward_added=False)
+    assert inc["model"] == "zero"
+
+
+def test_the_model_with_more_forward_evidence_moves_more_and_the_prior_is_not_normalised_away():
+    cal = _cal(400)
+    g = _grades(cal, "lgbm", 40, 0.04) + _grades(cal, "ridge", 8, 0.04)   # same IC, 10 vs 2 blocks
+    tt = L.trust_table(g, cal, {})
+    tl, tr = tt["lgbm"]["h21"], tt["ridge"]["h21"]
+    assert tl["n_forward_blocks"] == 10 and tr["n_forward_blocks"] == 2
+    assert tl["trust"] > tr["trust"] > 0 and tl["shrink"] > tr["shrink"]
+    w = L.ensemble_weights(tt, 21, _ROSTER)
+    assert w["lgbm"] > w["ridge"] > 0
+    # the weights keep the per-model shrink: their ratio is the trust ratio, not 1, and they
+    # do not sum to 1 -- the rest sits in the neutral sleeve
+    assert w["lgbm"] / w["ridge"] == pytest.approx(tl["trust"] / tr["trust"], rel=1e-3)
+    assert w["lgbm"] + w["ridge"] < 1 and w["neutral"] == pytest.approx(1 - w["lgbm"] - w["ridge"], abs=1e-6)
+
+
+def test_a_backtest_file_alone_never_moves_a_weight():
+    cal = _cal(400)
+    g = _grades(cal, "lgbm", 20, 0.03)
+    a = L.trust_table(g, cal, {})
+    b = L.trust_table(g, cal, _WF_BIG)
+    for m in _ROSTER:
+        assert a[m]["h21"]["trust"] == b[m]["h21"]["trust"]
+    assert L.ensemble_weights(a, 21, _ROSTER) == L.ensemble_weights(b, 21, _ROSTER)
+    rep = L.weight_report(b, a, _ROSTER)
+    assert all(r["moved_by"] == "unchanged" for r in rep["h21"]["models"].values())
+
+
+def test_a_walk_forward_chosen_model_in_charge_is_demoted_to_the_zero():
+    prev = {"model": "lgbm", "since": "x", "why": "first night: highest trust", "history": []}
+    tt = L.trust_table([], _cal(300), _WF_BIG)
+    inc = L.decide_in_charge(prev, tt, forward_added=False)
+    assert inc["model"] == "zero" and inc["history"][-1]["from"] == "lgbm"
+
+
+def test_the_weight_report_names_what_moved_a_weight():
+    cal = _cal(400)
+    before = L.trust_table(_grades(cal, "lgbm", 20, 0.03), cal, {})
+    after = L.trust_table(_grades(cal, "lgbm", 24, 0.03), cal, {})
+    rep = L.weight_report(after, before, _ROSTER)["h21"]["models"]
+    assert rep["lgbm"]["moved_by"].startswith("forward blocks 5 -> 6")
+    assert rep["nn"]["moved_by"] == "unchanged" and rep["lgbm"]["forward_blocks"] == 6
+
+
+def test_the_nightly_receipt_prints_blocks_weight_and_what_moved_it():
+    cal = _cal(400)
+    before = L.trust_table(_grades(cal, "lgbm", 20, 0.03), cal, {})
+    after = L.trust_table(_grades(cal, "lgbm", 24, 0.03), cal, {})
+    rec = {"trust": {"trust": after, "trust_yesterday": before,
+                     "ensemble_weights": L.weight_report(after, before, _ROSTER)}}
+    lines = N._per_model_lines(rec)
+    lg = next(x for x in lines if x.startswith("lgbm"))
+    assert "forward graded blocks 6" in lg and "weight " in lg and "moved by: forward blocks 5 -> 6" in lg
+    assert any(x.startswith("neutral (no-view) sleeve h21") for x in lines)
 
 
 # ── item 9: the size of the move ────────────────────────────────────────────

@@ -4468,6 +4468,19 @@ READER_CHROME_MAX_GB = 8.0
 READER_CHROME_SOFT_GB = 4.0
 READER_CHROME_LOW_FREE_GB = 3.0
 READER_CHROME_RECYCLES_PER_HOUR = 2
+#: 2026-09-29: a recycle is decided BEFORE the pool is stopped. When it would be
+#: refused (a tab the reader did not open is active, or the instance is not
+#: proven), the pool keeps reading and the recycle is not asked again for
+#: READER_CHROME_REFUSED_BACKOFF_S, doubling per consecutive refusal up to
+#: READER_CHROME_REFUSED_BACKOFF_MAX_S. The refusal, the backoff and the hourly
+#: recycle count persist in dowjones/chrome_recycle_state.json, so a restarted
+#: supervisor does not ask again on its first check (it did, every ~15 min).
+READER_CHROME_REFUSED_BACKOFF_S = 900.0
+READER_CHROME_REFUSED_BACKOFF_MAX_S = 7200.0
+#: 2026-09-29: the MEMORY_PRESSURE branch asks for a recycle only when the dedicated Chrome
+#: holds at least this share of the memory in use (it is what squeezes the
+#: machine; 2026-09-29 it held 4.6 of ~28.5 GB and was recycled for nothing).
+READER_CHROME_PRESSURE_SHARE = 0.25
 #: Drawn gap between two page OPENS on the same host, (lo, hi) seconds, a
 #: right-skewed draw inside the range, never within 1 s of that host's previous
 #: draw (never a constant interval).
@@ -4727,3 +4740,243 @@ STITCH_PRICE_JUMP_RATIO = 3.0
 #: A current CIK whose band's first filings on disk come this many days after
 #: the old segment ended is evidence of a registrant created after it.
 STITCH_CIK_BAND_MARGIN_DAYS = 180
+
+# ── Bar defects (2026-09-29, `backend/services/bar_defects.py`) ──────────────
+#: Runs inside `stitched_tickers.split_stitched`, so every bar reader gets it.
+#: LINE was Linn Energy at $0.1641 as a ZERO-VOLUME bar every session from
+#: 2016-05-24 to 2024-07-24 and Lineage at $73.66 the next day: no gap for the
+#: stitch detector to see. Calibrated against CRSP daily 2016-2024 (docstring).
+BAR_DEFECT_SCREEN = True
+#: zero-volume rows in a run at least this long are removed (not trades)
+BAR_DEFECT_DARK_RUN_MIN = 5
+#: a single zero-volume row that moves the close more than this is removed
+BAR_DEFECT_NONTRADE_PRINT_TOL = 0.01
+#: a >= 4x one-day move that comes back to within 25% of it in 3 sessions is a bad print
+BAR_DEFECT_SPIKE_RATIO = 4.0
+BAR_DEFECT_SPIKE_RESIDUAL = 0.25
+BAR_DEFECT_SPIKE_WINDOW = 3
+#: a >= 3x level change on volume < 2x the trailing median, or across a missing
+#: session, is a break: the symbol is cut there (no real >=3x CRSP move traded < 2.2x)
+BAR_DEFECT_BREAK_RATIO = 3.0
+BAR_DEFECT_QUIET_VOL_MULT = 2.0
+#: kept, named SUSPECT: a >= 3x move on 2-10x volume (the spin-off defects and the
+#: first real moves overlap there); a book leaning on them is refused
+BAR_DEFECT_SUSPECT_VOL_MULT = 10.0
+#: descriptive "implausible row" thresholds (printed, not a refusal), and the
+#: share of a book's slots that may sit on a SUSPECT before the book is REFUSED
+BAR_DEFECT_IMPLAUSIBLE_VOL = 3.0
+BAR_DEFECT_IMPLAUSIBLE_MOM = 20.0
+BAR_DEFECT_BOOK_MAX_SHARE = 0.02
+
+# ── WORLD DIGEST (2026-09-29, `backend/services/world_digest.py`) ────────────
+#: The owner, 2026-09-29: "digest the news see what they are implying is there
+#: another path they are leading ... browse the news like a human to get the
+#: context". PRODUCT_EXPERIMENT. Every implication is a typed, dated forecast row
+#: under `news_digest:` that enters with a weight near ZERO: direction by any
+#: LLM tested here is at or below 50% (docs/WHAT_WE_ALREADY_KNOW_LLM.md), so the
+#: graded probability is shrunk to 0.5 and the model's own number is kept in
+#: `raw_probability`. Nothing here reaches `expected_return` or `pc_broker`.
+WORLD_DIGEST_HOURS = 36
+#: Hard dollar cap per run, priced per call by `llm_analyzer.call_named` (the
+#: served model's price); the provider's balance is printed beside it.
+WORLD_DIGEST_BUDGET_USD = 0.90
+#: Share of the budget the per-item extraction may use; the rest is reserved
+#: for the synthesis so a large night cannot starve the digest itself.
+WORLD_DIGEST_EXTRACT_SHARE = 0.70
+WORLD_DIGEST_EXTRACT_MAX_CHARS = 3500
+WORLD_DIGEST_HEADLINES_PER_CALL = 20
+WORLD_DIGEST_MAX_SOCIAL_PAGES = 60
+WORLD_DIGEST_MAX_THEMES = 10
+WORLD_DIGEST_MAX_IMPLICATIONS_PER_THEME = 8
+WORLD_DIGEST_WORKERS = 8
+WORLD_DIGEST_PROMPT_VERSION = "wd_v1"
+#: Forecast horizons (sessions) an implication may carry; the model's horizon is
+#: snapped to the nearest. All are members of `belief_state.HORIZONS`.
+WORLD_DIGEST_HORIZONS = (1, 5, 20)
+#: Size bucket -> P(|return over h| > 1 trailing sigma_h), FROZEN. `normal` is
+#: the Gaussian value (0.3173): a model that always says "normal" IS the vol
+#: prior. sigma_h = 63-session daily sd x sqrt(h), measured before the write.
+WORLD_DIGEST_SIZE_BUCKET_P = {"below_normal": 0.18, "normal": 0.3173,
+                              "above_normal": 0.50, "extreme": 0.70}
+#: Sector and macro subjects -> ONE liquid US-listed proxy and the sign that
+#: turns the subject's direction into the proxy's (2026-09-29). "rates up" means
+#: yields up, so TLT DOWN (-1). A subject not in this table stays ungraded
+#: (`NOT_A_TICKER_NO_PROXY_IN_PANEL`): tariffs, fiscal, labor_market, volatility
+#: and sector `other` have no single proxy whose sign is unambiguous. The proxy's
+#: bars come from `prices_2025_26/bars_forecast_only.parquet` (FORECAST_PROXY_ETFS).
+WORLD_DIGEST_SUBJECT_PROXIES = {
+    "sector:semiconductors": ("SMH", 1), "sector:software": ("IGV", 1),
+    "sector:internet": ("FDN", 1), "sector:hardware": ("XLK", 1),
+    "sector:telecom": ("XLC", 1), "sector:media": ("XLC", 1),
+    "sector:autos": ("XLY", 1), "sector:retail": ("XRT", 1),
+    "sector:consumer_staples": ("XLP", 1), "sector:restaurants_travel": ("JETS", 1),
+    "sector:banks": ("KBE", 1), "sector:insurance": ("KIE", 1),
+    "sector:asset_managers": ("XLF", 1), "sector:fintech": ("XLF", 1),
+    "sector:biotech_pharma": ("XBI", 1), "sector:medtech_health": ("XLV", 1),
+    "sector:energy_oil_gas": ("XLE", 1), "sector:utilities_power": ("XLU", 1),
+    "sector:industrials": ("XLI", 1), "sector:aerospace_defense": ("ITA", 1),
+    "sector:materials_mining": ("XLB", 1), "sector:chemicals": ("XLB", 1),
+    "sector:real_estate": ("XLRE", 1), "sector:transport_logistics": ("IYT", 1),
+    "sector:crypto": ("IBIT", 1),
+    "macro:rates": ("TLT", -1), "macro:inflation": ("TLT", -1),
+    "macro:dollar": ("UUP", 1), "macro:oil": ("USO", 1), "macro:gold": ("GLD", 1),
+    "macro:growth": ("IWM", 1), "macro:credit": ("HYG", 1), "macro:housing": ("XHB", 1),
+    "macro:china": ("FXI", 1), "macro:japan": ("EWJ", 1), "macro:korea_taiwan": ("EWY", 1),
+    "macro:europe": ("VGK", 1), "macro:emerging": ("EEM", 1),
+    # free-text subjects the model writes outside the enum (counted on the
+    # 2026-09-29 digest: 18 of 29 non-ticker subjects were such words)
+    "sector:utilities": ("XLU", 1), "sector:defense": ("ITA", 1),
+    "sector:regional_banks": ("KRE", 1), "sector:homebuilders": ("XHB", 1),
+    "sector:airlines": ("JETS", 1), "sector:biotech": ("XBI", 1), "sector:pharma": ("XLV", 1),
+    "sector:healthcare": ("XLV", 1), "sector:energy": ("XLE", 1), "sector:oil_gas": ("XLE", 1),
+    "sector:financials": ("XLF", 1), "sector:technology": ("XLK", 1), "sector:tech": ("XLK", 1),
+    "sector:semis": ("SMH", 1), "sector:chips": ("SMH", 1), "sector:hyperscalers": ("QQQ", 1),
+    "sector:consumer_discretionary": ("XLY", 1), "sector:reits": ("XLRE", 1),
+    "sector:retailers": ("XRT", 1), "sector:transports": ("IYT", 1), "sector:insurers": ("KIE", 1),
+    "sector:materials": ("XLB", 1), "sector:mining": ("XLB", 1), "sector:staples": ("XLP", 1),
+    "sector:communication_services": ("XLC", 1), "sector:small_caps": ("IWM", 1),
+    "macro:emerging_markets": ("EEM", 1), "macro:usd": ("UUP", 1), "macro:us_dollar": ("UUP", 1),
+    "macro:us_rates": ("TLT", -1), "macro:yields": ("TLT", -1), "macro:treasury_yields": ("TLT", -1),
+    "macro:bonds": ("TLT", 1), "macro:treasuries": ("TLT", 1), "macro:crude": ("USO", 1),
+    "macro:crude_oil": ("USO", 1), "macro:silver": ("SLV", 1), "macro:high_yield": ("HYG", 1),
+    "macro:credit_spreads": ("HYG", -1), "macro:india": ("INDA", 1), "macro:brazil": ("EWZ", 1),
+    "macro:germany": ("EWG", 1), "macro:uk": ("EWU", 1), "macro:canada": ("EWC", 1),
+    "macro:korea": ("EWY", 1), "macro:taiwan": ("EWT", 1),
+}
+#: The fixed list of liquid proxies the grader's supplementary panel carries
+#: (`scripts/pull_forecast_bars`, refreshed nightly by `scripts/pull_bars_refresh`):
+#: every WORLD_DIGEST_SUBJECT_PROXIES target plus the sector SPDRs, rates/credit,
+#: metals, dollar, and the main country ETFs. Names already in the main panel
+#: (SPY, QQQ, IWM) are skipped by the puller.
+FORECAST_PROXY_ETFS = tuple(sorted({v[0] for v in WORLD_DIGEST_SUBJECT_PROXIES.values()} | {
+    "XLB", "XLC", "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY",
+    "IWM", "QQQ", "TLT", "IEF", "HYG", "LQD", "GLD", "SLV", "USO", "UUP",
+    "KRE", "SMH", "XBI", "ITA", "JETS",
+    "EWJ", "EWY", "EWT", "FXI", "VGK", "EEM", "EWZ", "INDA", "EWG", "EWU", "EWC"}))
+#: Graded direction probability = 0.5 + SHRINK x (raw - 0.5); raw = 0.5 +/-
+#: 0.25 x confidence. 0.2 keeps every graded direction row inside [0.45, 0.55].
+WORLD_DIGEST_DIR_SHRINK = 0.2
+#: Shadow trust: prior N(0, TAU^2) on the per-date Brier improvement over the
+#: control (vol prior for size, 0.25 coin for direction). Trust =
+#: clip(posterior mean / FULL, 0, MAX). No graded dates -> trust exactly 0.
+WORLD_DIGEST_TRUST_TAU = 0.01
+WORLD_DIGEST_TRUST_FULL = 0.02
+WORLD_DIGEST_TRUST_MAX = 0.25
+WORLD_DIGEST_TRUST_MIN_DATES = 3
+#: The frozen shadow book the news tilt is applied to (SHADOW_BAYES_v0). It is
+#: READ, never mutated; the tilted book is a separate shadow contract whose
+#: matched twin is this base with trust pinned at 0.
+WORLD_DIGEST_SHADOW_BASE_BOOK = "439fd84f869744e0"
+WORLD_DIGEST_SHADOW_NEW_NAME_UNIT = 0.05
+WORLD_DIGEST_EVERY_H = 6
+FORECAST_WRITERS["news_digest"] = {"prefix": "news_digest:", "scheduled": None,
+                                  "task": "AegisWorldDigest (every 6 h; reported only)"}
+
+# ── The reader's BROWSE lane: general news beyond Dow Jones (2026-09-29) ─────
+#: Murat, 2026-09-29: "digest the news see what they are implying is there an
+#: another path they are leading, not only the forecast from the websites but
+#: the stocks news and the general news brose the news like a human to get the
+#: context". FREE PUBLIC news, wire, and official-release sites, READ-ONLY, on
+#: the same dedicated Chrome and under the same guards (instance proof before
+#: every action, payment / message / social-write URL rules, NEVER_HOSTS,
+#: DENIED_DOMAINS). No sign-in, no form, no search box. A bot check, block page,
+#: paywall stub or a robots.txt disallow is RECORDED by class and the host is
+#: left alone (a challenge cools it for READER_HOST_COOL_S); nothing here
+#: disguises automation or works around a check.
+OPENCLAW_NEWS_HOSTS = ("reuters.com", "apnews.com", "cnbc.com", "finance.yahoo.com",
+                       "bbc.com", "ft.com", "asia.nikkei.com", "scmp.com",
+                       "federalreserve.gov", "bls.gov", "sec.gov", "treasury.gov")
+#: The allowlist is WIDENED by the news hosts (the Dow Jones and social hosts
+#: and every rule on them are unchanged).
+OPENCLAW_BROWSER_HOSTS = OPENCLAW_USER_TAB_HOSTS + OPENCLAW_SOCIAL_HOSTS + OPENCLAW_NEWS_HOSTS
+#: The general-news fronts are in the pool's rotation (off -> Dow Jones + social only).
+READER_NEWS_ENABLED = True
+#: Per news host: 1 tab, a drawn 20-80 s gap between opens, 30 pages an hour and
+#: 300 a day. The Dow Jones and social entries are NOT changed (merged, not raised).
+READER_TABS_PER_HOST = {**READER_TABS_PER_HOST, **{h: 1 for h in OPENCLAW_NEWS_HOSTS}}
+READER_HOST_GAP_S = {**READER_HOST_GAP_S, **{h: (20.0, 80.0) for h in OPENCLAW_NEWS_HOSTS}}
+READER_MAX_PER_HOUR_BY_HOST = {**READER_MAX_PER_HOUR_BY_HOST,
+                               **{h: 30 for h in OPENCLAW_NEWS_HOSTS}}
+WEB_READER_MAX_PER_DAY_BY_HOST = {**WEB_READER_MAX_PER_DAY_BY_HOST,
+                                  **{h: 300 for h in OPENCLAW_NEWS_HOSTS}}
+#: THE REFILL RULE: a host whose pending list is at or below this many items has
+#: its fronts revisited once they were read READER_FRONT_MIN_REVISIT_S ago
+#: (instead of waiting for the 30-min / 2-h schedule). Empty with caps free is
+#: QUEUE_EMPTY / REFILLING, never STALLED.
+READER_QUEUE_LOW_WATER = 3
+READER_FRONT_MIN_REVISIT_S = 1200.0
+#: From an article reached from a front (depth 0), at most this many outbound
+#: links (related blocks and in-article links, any allowed news host, matching
+#: that host's article shape) are followed one hop; none from depth 1.
+READER_BROWSE_FOLLOW_MAX = 3
+#: Outbound links stored with each page record (url + text), for the digest.
+READER_OUTBOUND_LINKS_STORED = 60
+#: robots.txt of a news host is read (through the same browser, one page) and
+#: kept this long; a disallowed path is never opened (class ROBOTS_DISALLOWED).
+READER_ROBOTS_TTL_S = 86400.0
+#: A host whose last READER_PAYWALL_STREAK article reads were paywall stubs or
+#: signed-out pages reads only its FRONTS (the headlines) for READER_FRONTS_ONLY_S.
+READER_PAYWALL_STREAK = 3
+READER_FRONTS_ONLY_S = 21600.0
+#: Licence line stored on a general-news record (not Dow Jones).
+READER_NEWS_LICENCE = "public web page, read for personal research; not republished"
+#: An item whose own publication date is more than this many days before AEGIS
+#: first held it is ARCHIVE for the digest: counted, never a theme. The reader
+#: stores old articles it reaches from stock pages (2025-10 and 2026-03 pieces
+#: were read on 2026-09-27); a digest of "today" must not present them as news.
+WORLD_DIGEST_MAX_ITEM_AGE_DAYS = 4
+
+#: Review 2026-09-29 (REVIEW_2026-09-29_READER_POOL.md). F3: this many BLANK
+#: pages in a row on one host cool it like a challenge (a load that reached the
+#: site always counts against the caps). F6: a recurring item whose tab open
+#: failed is retried after READER_OPEN_RETRY_S. F2: stall restarts of the pool
+#: (and Chrome recycles) are at most READER_STALL_RESTARTS_PER_HOUR in any
+#: rolling hour, doubling from READER_STALL_RESTART_BACKOFF_S; the ladder level
+#: survives pool restarts and resets only after an OK page.
+READER_BLANK_STREAK_COOL = 4
+READER_OPEN_RETRY_S = 600.0
+READER_STALL_RESTARTS_PER_HOUR = 3
+READER_STALL_RESTART_BACKOFF_S = 300.0
+
+#: 2026-09-29 (orchestrator, from the digest): the digest's asks in
+#: news_digest/read_next.jsonl are adopted by the reader pool -- a URL on an
+#: allowed host is read; a question becomes a navigation to the own search URL
+#: of two sites (reader_scheduler.SEARCH_URLS), never typing -- at most this
+#: many rows per refill, rows older than READER_READ_NEXT_MAX_AGE_H ignored,
+#: READER_SEARCH_LINKS_MAX result links taken from each search page.
+READER_READ_NEXT_PER_REFILL = 6
+READER_READ_NEXT_MAX_AGE_H = 36.0
+READER_SEARCH_LINKS_MAX = 3
+#: A link whose visible date is older than this is not queued (fronts, stock
+#: pages, searches); a stored article whose own dateline is older is flagged
+#: `archive` and its links are not followed. Measured 2026-09-29: 455 of 995
+#: Dow Jones pages stored in 36 h were archive articles, median 65 days old.
+READER_MAX_ARTICLE_AGE_DAYS = 4.0
+
+#: TRIAL-STRADDLE-FWD-1 (2026-09-29, backend/services/straddle_forward.py): a forward,
+#: $0, paper-only log of ATM straddle SELECTION by the frozen size forecast vs the
+#: option market's implied move (PRODUCT_EXPERIMENT; no broker, no orders, no LLM).
+#: Universe = the top N bars names by 63-session median dollar volume; the standard
+#: monthly expiry with calendar DTE in [MIN, MAX]; entry once per session inside the
+#: ET window; quotes refused when a leg's spread over its mid > MAX_LEG_SPREAD, the
+#: straddle's > MAX_STRADDLE_SPREAD, the strike is > MAX_STRIKE_DIST from spot, a leg's
+#: open interest < MIN_OI, a leg's last trade is older than LEG_STALE_DAYS, or (during
+#: a session) the underlying quote is older than UNDERLYING_STALE_MIN. IV inverted
+#: from the mid at RATE, q = 0. BUDGET = premium per leg as a share of equity (the
+#: utility read); EQUITY_NOTIONAL only sizes the worst-case print.
+STRADDLE_FWD_UNIVERSE_CANDIDATES = 400
+STRADDLE_FWD_MIN_PRICE = 5.0
+STRADDLE_FWD_BREADTHS = (20, 50, 100)
+STRADDLE_FWD_DTE_MIN = 21
+STRADDLE_FWD_DTE_MAX = 35
+STRADDLE_FWD_ENTRY_START_ET = "10:45"
+STRADDLE_FWD_ENTRY_END_ET = "15:30"
+STRADDLE_FWD_MAX_STRADDLE_SPREAD = 0.20
+STRADDLE_FWD_MAX_LEG_SPREAD = 0.50
+STRADDLE_FWD_MAX_STRIKE_DIST = 0.05
+STRADDLE_FWD_MIN_OI = 10
+STRADDLE_FWD_LEG_STALE_DAYS = 5.0
+STRADDLE_FWD_UNDERLYING_STALE_MIN = 30.0
+STRADDLE_FWD_RATE = 0.04
+STRADDLE_FWD_BUDGET = 0.02
+STRADDLE_FWD_EQUITY_NOTIONAL = 1_000_000.0

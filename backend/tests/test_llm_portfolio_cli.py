@@ -59,8 +59,14 @@ def test_the_filtered_bars_load_equals_the_full_load_for_the_held_symbols(tmp_pa
     got = CLI._us_bars(held)
     pd.testing.assert_frame_equal(got, want)
     assert set(got["symbol"]) == {"BBB", "DDD", "SPY"}
-    assert (got[got.symbol == "BBB"]["open"].to_numpy()
-            == deep[deep.symbol == "BBB"]["open"].to_numpy()).all()
+    # every BBB row comes from the deep panel (first occurrence wins). Rows the
+    # bar-defect screen removes (this fixture's prices jump up to 10x a day, a
+    # spike by design since 2026-09-29) are removed from BOTH loads alike.
+    bb = got[got.symbol == "BBB"].merge(deep[deep.symbol == "BBB"], on="date",
+                                        suffixes=("", "_deep"))
+    assert len(bb) == (got.symbol == "BBB").sum() > 0
+    assert (bb["open"].to_numpy() == bb["open_deep"].to_numpy()).all()
+    assert not got["symbol"].str.contains("#").any()        # cut segments are not held names
     assert len(CLI._us_bars(set())) == 0
 
 

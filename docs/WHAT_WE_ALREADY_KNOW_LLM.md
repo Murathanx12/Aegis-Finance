@@ -66,3 +66,34 @@ canary on every case (AMNESIA-1, TRIAL-LEAK-1) · contamination is sparse and dr
 per case (AMNESIA-1B) · always beat the free trailing-vol prior before crediting magnitude (09-26) ·
 a model that remembers the REGIME by its date looks skilled on famous windows (X2) · print the served
 model: `deepseek-chat` is served as `deepseek-flash`.
+
+
+## Amendment 2026-09-29 to the AMNESIA-2 row
+
+The AMNESIA-2 row above predates the Opus file arm, and its "open" cell is stale. The file arm
+answered part of its batches. Receipt:
+`backend/data/optimus/fiction_backtest/fb_20260928/receipt_amendment_20260929T032126Z.json`
+(no model called).
+
+**What the Opus arm answered, and what it scored:**
+
+- Clean A3 direction, n = 120: hit 44.6%. The formal verdict is `FAILED_VARIANT`, but the
+  reading is **`CANNOT_DISTINGUISH` (model abstained)**:
+  - the sd of p is 0.019;
+  - 37 of 120 answers are exactly 0.50;
+  - the AUC is 0.461.
+  - Do not cite this as "an LLM measured below a coin".
+- Canaries:
+  - A3 famous: identified **7/30**. By the registered leak rule, **the fiction LEAKS for
+    Opus**, and every future Opus BACKTEST reading at this level is void.
+  - A2 famous: identified 12/30.
+  - Named recall: 26/30.
+  - A3 clean: identified 5/180. All five were correct identifications, not false positives.
+
+**Still open:**
+
+- the Opus famous forecasts (batches 007-012), so that the second clause of the leak rule
+  can be evaluated;
+- an Opus A0 clean run, via a tool-less path, with a tool log.
+
+The answering agents had file, shell and web tools, and no tool-call log was kept.

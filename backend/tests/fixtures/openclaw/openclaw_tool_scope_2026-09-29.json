@@ -1,0 +1,120 @@
+{
+ "tools": {
+  "profile": "minimal",
+  "deny": [
+   "group:runtime",
+   "group:fs",
+   "group:messaging",
+   "group:nodes",
+   "terminal",
+   "screen",
+   "computer",
+   "canvas",
+   "portal",
+   "dashboard",
+   "show_widget",
+   "conversations_send",
+   "conversations_turn",
+   "sessions_send",
+   "sessions_spawn",
+   "subagents",
+   "suggest_task",
+   "cron",
+   "automations",
+   "gateway",
+   "plugins",
+   "openclaw",
+   "skill_workshop",
+   "image_generate",
+   "music_generate",
+   "video_generate",
+   "secrets",
+   "github_publish"
+  ]
+ },
+ "agents": {
+  "ownership": "explicit",
+  "defaults": {
+   "heartbeat": {
+    "agentId": "main"
+   },
+   "systemAgent": {
+    "agentId": "main"
+   }
+  },
+  "entries": {
+   "main": {
+    "tools": {
+     "profile": "minimal",
+     "alsoAllow": [
+      "web_search",
+      "web_fetch",
+      "x_search",
+      "memory_search",
+      "memory_get",
+      "bundle-mcp"
+     ],
+     "deny": [
+      "group:runtime",
+      "group:fs",
+      "group:messaging",
+      "group:nodes",
+      "browser",
+      "terminal",
+      "screen",
+      "computer",
+      "canvas",
+      "portal",
+      "dashboard",
+      "show_widget",
+      "conversations_send",
+      "conversations_turn",
+      "sessions_send",
+      "sessions_spawn",
+      "subagents",
+      "suggest_task",
+      "cron",
+      "automations",
+      "gateway",
+      "plugins",
+      "openclaw",
+      "skill_workshop",
+      "image_generate",
+      "music_generate",
+      "video_generate",
+      "secrets",
+      "github_publish"
+     ]
+    },
+    "workspace": "C:\\Users\\mrthn\\.openclaw\\workspace"
+   },
+   "aegis-browser": {
+    "name": "aegis-browser",
+    "description": "Aegis guarded reader transport only (POST /tools/invoke); no LLM turns",
+    "tools": {
+     "profile": "minimal",
+     "alsoAllow": [
+      "browser"
+     ]
+    }
+   }
+  }
+ },
+ "bindings": [
+  {
+   "agentId": "main",
+   "match": {
+    "channel": "telegram",
+    "accountId": "*"
+   }
+  }
+ ],
+ "talk": {
+  "agentId": "main"
+ },
+ "browser": {
+  "defaultProfile": "muratclaw",
+  "attachOnly": true
+ },
+ "_fixture_note": "Tool-scope shape of ~/.openclaw/openclaw.json after the 2026-09-29 fix; secrets and unrelated sections omitted."
+}

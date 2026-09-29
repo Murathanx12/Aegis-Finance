@@ -1075,8 +1075,23 @@ def _store_article(art: dict, root: Path) -> dict:
     rec = {"sha": sha, "publisher": pub, "url": art.get("url"), "title": art.get("title"),
            "byline": art.get("byline"), "published_utc": art.get("published_utc"),
            "first_seen_utc": seen, "chars": len(art.get("text") or ""),
-           "column": art.get("column"), "origin": origin, "licence": LICENCE,
+           "column": art.get("column"), "origin": origin,
+           "licence": art.get("licence") or LICENCE,
            "text": art.get("text") or ""}
+    # 2026-09-29: an article whose own dateline is more than
+    # READER_MAX_ARTICLE_AGE_DAYS before we read it is ARCHIVE (455 of 995 Dow
+    # Jones pages in 36 h were, median 65 days old); undated is not archive
+    try:
+        _pt = datetime.fromisoformat(str(rec["published_utc"])) if rec["published_utc"] else None
+        _st = datetime.fromisoformat(str(seen))
+        if _pt is not None and _pt.tzinfo is None:
+            _pt = _pt.replace(tzinfo=timezone.utc)
+        if _st.tzinfo is None:
+            _st = _st.replace(tzinfo=timezone.utc)
+        rec["archive"] = bool(_pt is not None and (_st - _pt).total_seconds() >
+                              float(_cfg("READER_MAX_ARTICLE_AGE_DAYS", 4.0)) * 86400)
+    except (TypeError, ValueError):
+        rec["archive"] = False
     rec["pit_grade"] = NR.effective_pit_grade(
         {"published_utc": rec["published_utc"], "first_seen_utc": seen,
          "pit_grade": "first_seen_only"})
@@ -1085,12 +1100,20 @@ def _store_article(art: dict, root: Path) -> dict:
     # prominence carries information; the MEDIA it carries (video / audio /
     # charts / images, titles and captions -- text only) and table rows; the
     # tickers it names.
+    # 2026-09-29 (the browse lane): every page record carries what a digest
+    # needs -- host, section, page class, the outbound links, the source kind.
     for k in ("tab", "profile", "attached_to", "read_s", "reached_by", "media", "tables",
-              "tickers_named", "page_kind"):
+              "tickers_named", "page_kind", "page_class", "host", "section",
+              "outbound_links", "source_kind"):
         if k in art:
             rec[k] = art[k]
     p = root / pub / day / f"{sha}.json"
     DG.atomic_write_json(p, rec)
+    if art.get("source_kind") == "general_news" or art.get("page_kind") == "front":
+        # not a Dow Jones row: the registry's dj_reader_* sources stay Dow Jones
+        # only; the record above is where the digest reads it
+        return {"path": str(p), "sha": sha, "duplicate": False, "registry_id": None,
+                "pit_grade": rec["pit_grade"]}
 
     sid = registry_source_id(pub, origin)
     row = {"source": sid, "first_seen_utc": seen, "published_utc": rec["published_utc"] or "",
@@ -1862,6 +1885,8 @@ _PAYWALL = re.compile(r"(subscribe to continue|to keep reading|continue reading 
                       r"choose your .{0,40}subscription|this article is for subscribers|"
                       r"already a subscriber\??\s*sign in)", re.I)
 _SIGN_IN = re.compile(r"\bsign in\b", re.I)
+_PAYWALL_TITLE = re.compile(r"^\s*(subscribe to (read|continue)|subscriber only|subscribe now)\b",
+                            re.I)
 #: a paywalled page shorter than this is a stub, not an article
 PAYWALL_STUB_MAX_CHARS = 2500
 
@@ -1888,6 +1913,10 @@ def classify_page(*, url: str, final_url: str | None, title: str | None, raw: st
         return "NOT_FOUND"
     if _PAYWALL.search(raw or "") and len(body) < PAYWALL_STUB_MAX_CHARS:
         return "SIGNED_OUT" if _SIGN_IN.search((raw or "")[:600]) else "PAYWALL_STUB"
+    # 2026-09-29: a page whose TITLE is the paywall (FT: "Subscribe to read") is
+    # a stub whatever its length (its offer text runs past the stub limit)
+    if _PAYWALL_TITLE.search(title or ""):
+        return "PAYWALL_STUB"
     return "OK"
 
 

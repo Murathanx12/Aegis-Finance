@@ -1,0 +1,21 @@
+{
+ "receipt": "openclaw_tool_audit",
+ "generated_utc": "2026-09-29T03:22:33+00:00",
+ "home": "C:\\Users\\mrthn\\.openclaw",
+ "config_found": true,
+ "window_h": 0.07579470972222221,
+ "config_problems": [],
+ "n_calls": 35,
+ "calls_by_tool": {
+  "web_search": 4,
+  "web_fetch": 31
+ },
+ "violations": [],
+ "n_violations": 0,
+ "store_errors": [],
+ "agents_audited": [
+  "aegis-browser",
+  "main"
+ ],
+ "verdict": "OK"
+}

@@ -1925,6 +1925,11 @@ def run_claims(day: str | None = None, *, cap_usd: float | None = None, llm_fn: 
     for art in arts:
         if art.get("sha") in done:
             continue
+        # 2026-09-29: the browse lane stores section-front headline lists and
+        # general-news pages in the same store; neither is a Dow Jones article
+        # and neither is sent for (paid) claim extraction here
+        if art.get("page_kind") == "front" or art.get("source_kind") == "general_news":
+            continue
         if art.get("column") == "mw_analyst_estimates" or DC.mw_ticker_of(
                 str(art.get("url") or "")):
             snap = DC.write_mw_snapshot(art, path=(sd / "mw_analyst_snapshot.jsonl")

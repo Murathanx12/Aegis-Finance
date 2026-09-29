@@ -687,34 +687,77 @@ def us_8k_events(asof: Optional[date] = None) -> pd.DataFrame:
 
 # ───────────────────────────── event -> sessions ─────────────────────────────
 
-def event_sessions(ts_utc: pd.Timestamp, symbol: str, sessions: pd.DatetimeIndex) -> tuple:
-    """(pre_idx, react_idx, timing) into `sessions` (the name's own trading days).
+def is_untimed_stamp(ts_utc: Any, symbol: str) -> bool:
+    """True when a report stamp carries a DATE but no real time of day.
 
-    timing: AMC (after the local close -> reacts next session), BMO (before the open ->
-    reacts that session), INTRA (during the session -> reacts that session, partly),
-    UNKNOWN (a midnight stamp: we cannot tell -> pre = last session before the local
-    date, react = first session AFTER it, i.e. a two-session hold covering both cases).
+    Two placeholders exist (amended 2026-09-29, REVIEW_2026-09-29_CONTEST_DESK finding 1):
+    local midnight, and **exactly 00:00:00 UTC**, which is how Yahoo writes "time not
+    supplied". 62% of Japanese stamps sat at 00:00 UTC (= 09:00 JST) and had been read as
+    INTRA, so the desk measured and traded the day BEFORE the reaction.
     """
+    t = pd.Timestamp(ts_utc)
+    t = t.tz_localize("UTC") if t.tzinfo is None else t
+    u = t.tz_convert("UTC")
+    if u.hour == 0 and u.minute == 0 and u.second == 0:
+        return True
+    loc = t.tz_convert(session_hours(symbol)[0])
+    return loc.hour == 0 and loc.minute == 0 and loc.second == 0
+
+
+def untimed_mask(ts_utc: pd.Series, symbols: pd.Series) -> pd.Series:
+    """Vectorised `is_untimed_stamp` over aligned series (same index)."""
+    t = pd.to_datetime(pd.Series(ts_utc), utc=True)
+    out = (t.dt.hour == 0) & (t.dt.minute == 0) & (t.dt.second == 0)
+    tzs = pd.Series(symbols, index=t.index).map(lambda x: session_hours(x)[0])
+    for tz, idx in tzs.groupby(tzs).groups.items():
+        loc = t.loc[idx].dt.tz_convert(tz)
+        out.loc[idx] |= (loc.dt.hour == 0) & (loc.dt.minute == 0) & (loc.dt.second == 0)
+    return out
+
+
+def stamp_timing(ts_utc: Any, symbol: str) -> tuple[pd.Timestamp, str]:
+    """(report day, timing) for one stamp in the listing's own time zone.
+
+    timing: AMC (at/after the local close), BMO (before the open), INTRA (during the
+    session), UNKNOWN (a placeholder stamp, see `is_untimed_stamp`). For a 00:00 UTC
+    placeholder the report day is the UTC date (the vendor's date), never the local date:
+    in New York 00:00 UTC is the evening BEFORE.
+    """
+    t = pd.Timestamp(ts_utc)
+    t = t.tz_localize("UTC") if t.tzinfo is None else t
     tz, o, c = session_hours(symbol)
-    loc = pd.Timestamp(ts_utc).tz_convert(tz)
-    d = pd.Timestamp(loc.date())
+    loc = t.tz_convert(tz)
+    if is_untimed_stamp(t, symbol):
+        u = t.tz_convert("UTC")
+        utc_mid = u.hour == 0 and u.minute == 0 and u.second == 0
+        day = pd.Timestamp(u.date()) if utc_mid else pd.Timestamp(loc.date())
+        return day, "UNKNOWN"
     mins = loc.hour * 60 + loc.minute
     oh, om = map(int, o.split(":"))
     ch, cm = map(int, c.split(":"))
-    if mins == 0 and loc.second == 0:
-        timing = "UNKNOWN"
-    elif mins >= ch * 60 + cm:
+    if mins >= ch * 60 + cm:
         timing = "AMC"
     elif mins < oh * 60 + om:
         timing = "BMO"
     else:
         timing = "INTRA"
+    return pd.Timestamp(loc.date()), timing
+
+
+def event_sessions(ts_utc: pd.Timestamp, symbol: str, sessions: pd.DatetimeIndex) -> tuple:
+    """(pre_idx, react_idx, timing) into `sessions` (the name's own trading days).
+
+    timing: AMC (after the local close -> reacts next session), BMO (before the open ->
+    reacts that session), INTRA (during the session -> reacts that session, partly),
+    UNKNOWN (a placeholder stamp -- local midnight or exactly 00:00 UTC: we cannot tell ->
+    pre = last session before the report day, react = first session AFTER it, i.e. a
+    two-session hold that covers the reaction under either timing).
+    """
+    d, timing = stamp_timing(ts_utc, symbol)
     ge = int(sessions.searchsorted(d, side="left"))    # first session >= d
     gt = int(sessions.searchsorted(d, side="right"))   # first session > d
     if timing == "AMC":
         pre, react = gt - 1, gt
-        if pre < 0 or sessions[pre] != d:              # announced on a non-trading day
-            pre = gt - 1
     elif timing in ("BMO", "INTRA"):
         pre, react = ge - 1, ge
     else:
@@ -760,18 +803,21 @@ def estimate_from_history(hist_ts: pd.Series, asof: date, *, horizon_days: int =
 
 
 def usual_timing(hist_ts: pd.Series, symbol: str) -> str:
-    """Majority timing of the last four prints (AMC/BMO/INTRA/UNKNOWN)."""
-    tz, o, c = session_hours(symbol)
+    """Timing of the last four prints (AMC/BMO/INTRA/UNKNOWN).
+
+    A timed label wins only with a STRICT majority of the four; placeholders count as
+    UNKNOWN votes, so a name whose history is mostly 00:00 UTC stays UNKNOWN (held two
+    sessions) instead of inheriting a fake INTRA.
+    """
     ts = pd.to_datetime(hist_ts, utc=True).sort_values().tail(4)
-    lab = []
-    for t in ts:
-        loc = t.tz_convert(tz)
-        mins = loc.hour * 60 + loc.minute
-        oh, om = map(int, o.split(":"))
-        ch, cm = map(int, c.split(":"))
-        lab.append("UNKNOWN" if mins == 0 else "AMC" if mins >= ch * 60 + cm
-                   else "BMO" if mins < oh * 60 + om else "INTRA")
-    return pd.Series(lab).mode().iloc[0] if lab else "UNKNOWN"
+    lab = [stamp_timing(t, symbol)[1] for t in ts]
+    if not lab:
+        return "UNKNOWN"
+    vc = pd.Series(lab).value_counts()
+    timed = vc.drop("UNKNOWN", errors="ignore")
+    if len(timed) and timed.iloc[0] * 2 > len(lab) and             (len(timed) == 1 or timed.iloc[0] > timed.iloc[1]):
+        return str(timed.index[0])
+    return "UNKNOWN"
 
 
 def fetch_jpx_schedule() -> pd.DataFrame:
@@ -910,11 +956,12 @@ def build_calendar(asof: date, *, window: tuple[date, date] = (CONTEST_START, CO
             if ts is None or not np.isfinite(ts):
                 continue
             t = pd.Timestamp(int(ts), unit="s", tz="UTC")
-            tz, _, _ = session_hours(r.symbol)
-            loc = t.tz_convert(tz)
             st = "VENDOR_ESTIMATE" if bool(getattr(r, "earn_is_estimate", True)) else "VENDOR_ANNOUNCED"
-            cands.append({"symbol": r.symbol, "date": pd.Timestamp(loc.date()), "status": st,
-                          "timing": "UNKNOWN", "source": "yahoo_screener", "spread_days": np.nan,
+            day, tim = stamp_timing(t, r.symbol)        # a 00:00 UTC stamp stays UNKNOWN
+            if st == "VENDOR_ESTIMATE":
+                tim = "UNKNOWN"                          # an estimated date's time is not information
+            cands.append({"symbol": r.symbol, "date": day, "status": st,
+                          "timing": tim, "source": "yahoo_screener", "spread_days": np.nan,
                           "confidence": "VENDOR"})
             n += 1
         receipt["sources"]["yahoo_screener"] = n
@@ -968,6 +1015,9 @@ def build_calendar(asof: date, *, window: tuple[date, date] = (CONTEST_START, CO
     receipt["by_status"] = cal.status.value_counts().to_dict()
     receipt["by_market"] = cal.market.value_counts().to_dict()
     receipt["n_confirmed"] = int(cal.is_confirmed.sum())
+    # a confirmed DATE with an unknown TIME is not a confirmed trade window (held two sessions)
+    receipt["n_confirmed_timed"] = int((cal.is_confirmed & (cal.timing != "UNKNOWN")).sum())
+    receipt["n_confirmed_time_unknown"] = int((cal.is_confirmed & (cal.timing == "UNKNOWN")).sum())
     return cal, receipt
 
 

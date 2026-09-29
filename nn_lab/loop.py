@@ -16,15 +16,15 @@ improve honestly from night to night:
               that delisted during the hold exits at its last close (its delisting
               return is unknown on disk); a name is never dropped.
   c. TRUST    each model's trust is the POSTERIOR MEAN of its rank IC, prior N(0, 0.03^2),
-              data = its graded forward blocks (a block = max(h, 21) sessions, so blocks
-              share almost no forward window), block noise sd 0.10. Prior strength
+              data = its OWN graded FORWARD blocks only (a block = max(h, 21) sessions, so
+              blocks share almost no forward window), block noise sd 0.10. Prior strength
               k = (0.10/0.03)^2 = 11 blocks: 1 block earns 8% of its mean, 11 blocks 50%.
-              Until forward blocks exist the walk-forward record stands in at 0.1 weight
-              per block, fading to zero as forward blocks reach k. The receipt names the
-              source of every weight.
-  d. ENSEMBLE the trust-weighted combination of the direction models' per-date ranks,
-              frozen like any other model. Negative trust weighs zero; if nothing is
-              trusted the ensemble IS the zero.
+              The shrink is per model: a model with more graded blocks moves further from 0.
+              The walk-forward record is PRINTED beside it and never enters it (amended
+              2026-09-29: it had seeded every weight, so weights were backtest IC ratios).
+  d. ENSEMBLE weight_m = max(0, trust_m) / TRUST_FULL_IC, never renormalised to 1 (that
+              cancelled the shrink); the remainder is the neutral no-view sleeve. With no
+              forward grade every weight is 0 and the ensemble IS the zero.
   e. IN CHARGE the model with the highest trust; it changes only on a night that added
               forward grades, and only by IN_CHARGE_MARGIN. A validation block never
               decides it.
@@ -316,8 +316,9 @@ def step_grade(bars: pd.DataFrame, cal: pd.DatetimeIndex, *, ledger: Path | None
                         "sha256": e["sha256"], "entry_session": o["entry_session"].iloc[0],
                         "exit_session": o["exit_session"].iloc[0], **g, "graded_utc": _now()})
     _append_jsonl(gp, new)
-    return {"graded_now": len(new), "pending_horizons": pending, "refused_unverified": refused,
-            "graded_total": len(_read_jsonl(gp))}
+    n_dir = sum(1 for g in new if g["model"] in C.DIRECTION_ROSTER and g["model"] != "zero")
+    return {"graded_now": len(new), "graded_now_direction_roster": n_dir, "pending_horizons": pending,
+            "refused_unverified": refused, "graded_total": len(_read_jsonl(gp))}
 
 
 # ─────────────────────────────── c. TRUST ────────────────────────────────────
@@ -354,7 +355,11 @@ def posterior(fwd_blocks: np.ndarray, *, wf_mean: float | None = None, wf_blocks
 
 def trust_table(grades: list[dict], cal: pd.DatetimeIndex, wf: dict, *,
                 models=C.DIRECTION_ROSTER + ("ensemble",), horizons=H) -> dict:
-    """model -> horizon -> posterior dict (direction: rank IC)."""
+    """model -> horizon -> posterior dict (direction: rank IC).
+
+    FORWARD grades only. `wf` (the walk-forward receipt) is reported on the row as
+    `walk_forward_mean_ic_reported` and does not change the trust: a backtest file alone
+    never moves a weight."""
     g = pd.DataFrame(grades)
     out: dict = {}
     for m in models:
@@ -366,7 +371,9 @@ def trust_table(grades: list[dict], cal: pd.DatetimeIndex, wf: dict, *,
             else:
                 bl, n_dates = np.array([]), 0
             w = (wf.get(m) or {}).get(f"h{h}") or {}
-            post = posterior(bl, wf_mean=w.get("mean"), wf_blocks=w.get("n_blocks") or 0)
+            post = posterior(bl)                          # forward blocks only
+            post["walk_forward_mean_ic_reported"] = w.get("mean")
+            post["walk_forward_used"] = False
             if m == "zero":
                 post = {**post, "trust": 0.0, "source": "definition: the zero"}
             out.setdefault(m, {})[f"h{h}"] = {"graded_dates": n_dates, **post}
@@ -416,14 +423,25 @@ def choose_magnitude(mag: dict, h: int) -> tuple[str, str]:
 
 def decide_in_charge(prev: dict | None, trust: dict, *, forward_added: bool, horizon: str = "h21",
                      margin: float = C.IN_CHARGE_MARGIN) -> dict:
-    """The model in charge changes ONLY on a night that added forward grades."""
-    cands = {m: v[horizon]["trust"] for m, v in trust.items() if m not in ("ensemble",) and horizon in v}
+    """The model in charge changes ONLY on a night that added forward grades, and only a
+    model with POSITIVE forward trust can be in charge; otherwise the zero is. A demotion to
+    the zero when the in-charge model has no positive trust is always allowed (it is not a
+    promotion): the 2026-09-28 'lgbm' was chosen on walk-forward trust alone."""
+    cands = {m: v[horizon]["trust"] for m, v in trust.items()
+             if m not in ("ensemble", "zero") and horizon in v and (v[horizon]["trust"] or 0) > 0}
     best = max(cands, key=lambda m: cands[m]) if cands else "zero"
     now = _now()
     if prev is None:
-        return {"model": best, "since": now, "why": "first night: highest trust (source printed per model)",
+        return {"model": best, "since": now, "why": ("first night: highest positive forward trust"
+                                                     if cands else "no model has positive forward trust"),
                 "history": []}
     cur = prev["model"]
+    if cur != "zero" and cur not in cands:
+        hist = prev.get("history", []) + [{"from": cur, "to": "zero", "at": now, "trust_from":
+                                           ((trust.get(cur) or {}).get(horizon) or {}).get("trust"),
+                                           "trust_to": 0.0}]
+        return {"model": "zero", "since": now, "history": hist,
+                "why": f"{cur} has no positive FORWARD trust: the zero is in charge"}
     if not forward_added:
         return {**prev, "why_kept": "no forward grade was added tonight: in-charge cannot change"}
     if best != cur and cands.get(best, 0) > cands.get(cur, 0) + margin:
@@ -436,22 +454,69 @@ def decide_in_charge(prev: dict | None, trust: dict, *, forward_added: bool, hor
 
 # ─────────────────────────────── d. ENSEMBLE ─────────────────────────────────
 
-def ensemble_scores(scores: dict[str, np.ndarray], trust: dict, h: int) -> tuple[np.ndarray, dict]:
-    """Trust-weighted mean of each model's cross-sectional rank in [-1, 1]. Negative or zero
-    trust weighs nothing; when nothing is trusted the ensemble is the zero."""
-    w = {m: max(0.0, trust.get(m, {}).get(f"h{h}", {}).get("trust") or 0.0)
-         for m in scores if m != "zero"}
+def ensemble_weights(trust: dict, h: int, models, *, full_ic: float = C.TRUST_FULL_IC) -> dict:
+    """{model: weight, ..., "neutral": remainder}. weight = max(0, trust) / full_ic: the
+    posterior's shrink is kept (never renormalised to 1). Only if the weights would sum
+    above 1 are they scaled down to 1, and the result says so."""
+    w = {m: max(0.0, float(((trust.get(m) or {}).get(f"h{h}") or {}).get("trust") or 0.0)) / full_ic
+         for m in models if m not in ("zero", "neutral")}
     tot = sum(w.values())
+    scaled = tot > 1.0
+    if scaled:
+        w = {m: v / tot for m, v in w.items()}
+    out: dict = {m: round(v, 6) for m, v in w.items()}
+    out["neutral"] = round(max(0.0, 1.0 - sum(w.values())), 6)
+    out["_scaled_down_to_1"] = scaled
+    return out
+
+
+def ensemble_scores(scores: dict[str, np.ndarray], trust: dict, h: int) -> tuple[np.ndarray, dict]:
+    """Trust-SCALED sum of each model's cross-sectional rank in [-1, 1]; the neutral sleeve
+    contributes 0. Negative or zero trust weighs nothing; with no forward grade every weight
+    is 0 and the ensemble is the zero."""
+    w = ensemble_weights(trust, h, list(scores))
     n = len(next(iter(scores.values())))
-    if tot <= 0:
-        return np.zeros(n), {m: 0.0 for m in w}
     acc = np.zeros(n)
     for m, s in scores.items():
-        if m == "zero" or w.get(m, 0) == 0:
+        if m == "zero" or not w.get(m):
             continue
         r = pd.Series(s).rank(pct=True).to_numpy()
-        acc += (w[m] / tot) * np.nan_to_num((r - 0.5) * 2.0, nan=0.0)
-    return acc, {m: round(v / tot, 4) for m, v in w.items()}
+        acc += w[m] * np.nan_to_num((r - 0.5) * 2.0, nan=0.0)
+    return acc, w
+
+
+def weight_report(trust: dict, prev_trust: dict | None, models, horizons=H) -> dict:
+    """Per horizon, per model: forward graded blocks, weight today and yesterday, and what
+    moved it. Only a forward grade can move a weight; the line says which."""
+    out: dict = {}
+    for h in horizons:
+        now = ensemble_weights(trust, h, models)
+        was = ensemble_weights(prev_trust, h, models) if prev_trust else None
+        rows = {}
+        for m in models:
+            if m == "zero":
+                continue
+            v = (trust.get(m) or {}).get(f"h{h}") or {}
+            pv = ((prev_trust or {}).get(m) or {}).get(f"h{h}") or {}
+            wt = now.get(m, 0.0)
+            wy = was.get(m) if was is not None else None
+            nb, pnb = v.get("n_forward_blocks", 0), pv.get("n_forward_blocks")
+            if was is None:
+                why = "no previous row"
+            elif wt == wy:
+                why = "unchanged"
+            elif nb != pnb or v.get("forward_mean_ic") != pv.get("forward_mean_ic"):
+                why = (f"forward blocks {pnb} -> {nb}, forward mean IC {pv.get('forward_mean_ic')} -> "
+                       f"{v.get('forward_mean_ic')}")
+            elif pv.get("walk_forward_used", True):
+                why = "the previous row used walk-forward trust (retired 2026-09-29); forward-only now"
+            else:
+                why = "another model's weight crossed the sum-to-1 cap (scaled)"
+            rows[m] = {"forward_blocks": nb, "graded_dates": v.get("graded_dates"), "trust": v.get("trust"),
+                       "weight": wt, "weight_yesterday": wy, "moved_by": why,
+                       "walk_forward_mean_ic_reported_not_used": v.get("walk_forward_mean_ic_reported")}
+        out[f"h{h}"] = {"models": rows, "neutral": now["neutral"], "scaled_down_to_1": now["_scaled_down_to_1"]}
+    return out
 
 
 # ─────────────────────────────── size of the move ────────────────────────────

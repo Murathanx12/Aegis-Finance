@@ -103,5 +103,13 @@ TRUST_PRIOR_SD = 0.03
 TRUST_BLOCK_SD = 0.10
 WF_BLOCK_WEIGHT = 0.10
 IN_CHARGE_MARGIN = 0.002   # a rival replaces the model in charge only by this much posterior IC
+# Amended 2026-09-29 (REVIEW_2026-09-29_SHADOW_BOOK_AND_TRUST_WEIGHTS F1): DIRECTION trust is
+# earned from FORWARD graded blocks only. The walk-forward receipt is printed beside it and
+# never enters it (it had made every weight a ratio of backtest ICs that moved whenever a
+# new wf_*.json appeared). The ensemble weight is a SCALE, not a share:
+#   weight_m = max(0, trust_m) / TRUST_FULL_IC, the rest goes to the neutral (no-view) sleeve;
+# weights are scaled down only if they would sum above 1. With no forward grade every trust
+# is its prior mean 0, every weight is 0 and the ensemble is the zero.
+TRUST_FULL_IC = 0.05       # posterior rank IC at which one model alone would carry the whole ensemble
 MAG_TOLERANCE = 0.01       # the simplest magnitude model within this of the best is used
 CONFORMAL_MIN_ROWS = 500   # graded rows needed before forward coverage replaces walk-forward coverage

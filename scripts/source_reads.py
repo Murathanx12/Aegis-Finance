@@ -13,7 +13,13 @@ source earns (or does not earn) a weight from how those rows grade. A source
 whose read returns nothing dated is logged `EMPTY_READ`; a source the quest cap
 did not reach is logged `NOT_READ_CAP`. Nothing is skipped silently.
 
-Read-only on X: the prompt forbids posting, liking, following, replying and DMs.
+NO BROWSER, NO LOGGED-IN ACCOUNT (2026-09-29). The OpenClaw agent that answers
+these quests has no browser, shell, file-write or messaging tool
+(`openclaw_tool_scope`). Signed-in pages reach it ONLY as text the guarded reader
+already stored (`news_corpus/social/<host>/<day>.jsonl`, written by
+`web_reader.read_social_page` via the reader pool), handed over in the prompt as
+UNTRUSTED data, exactly as `thesis_card.guarded_social_reads` does for cards. A
+quest with no stored page is NOT RUN ($0) and says so (`NOT_READ_NO_GUARDED_PAGE`).
 This script never imports the broker.
 """
 
@@ -53,6 +59,12 @@ QUEST_TIMEOUT_S: float = float(_cfg("SOURCE_READS_TIMEOUT_S", 420.0))
 UNKNOWN_COST_ESTIMATE_USD: float = float(_cfg("SOURCE_READS_UNKNOWN_COST_USD", 0.06))
 READ_PURPOSE = "source_read"
 DISCOVERY_PURPOSE = "source_discovery"
+#: stored guarded-reader pages handed to one quest, and their size
+GUARDED_PAGES_PER_QUEST: int = int(_cfg("SOURCE_READS_GUARDED_PAGES_PER_QUEST", 6))
+GUARDED_PAGE_MAX_CHARS: int = int(_cfg("SOURCE_READS_GUARDED_PAGE_MAX_CHARS", 3000))
+#: how far back a stored page may have been read to serve a read / discovery quest
+GUARDED_PAGE_MAX_AGE_DAYS: int = int(_cfg("SOURCE_READS_GUARDED_PAGE_MAX_AGE_DAYS", 7))
+NO_PAGE = "NOT_READ_NO_GUARDED_PAGE"
 
 PC_SNAPSHOT = REPO / "backend" / "data" / "optimus" / "paper_accounts" / "pc_snapshot" / "state_latest.json"
 MURAT_BOOK = REPO / "backend" / "data" / "murat_book.yaml"
@@ -201,46 +213,74 @@ def is_login_wall(blocker: str | None) -> bool:
                                 "sign-in", "authenticat", "onboarding"))
 
 
-READ_ONLY = ("READ-ONLY. You are using Murat's logged-in X account in the browser. Do NOT "
-             "post, reply, like, repost, follow, bookmark, or send any message. Do not open "
-             "any brokerage, bank or payment site. Only read.")
+def _read_only() -> str:
+    from backend.services import thesis_card as TC
+    return ("READ-ONLY, NO TOOLS. " + TC.NO_TOOLS_SENTENCE + " Do not fetch any URL. "
+            "Answer ONLY from the stored pages below; never invent a post, a handle, a URL "
+            "or a time.")
+
+
+READ_ONLY = _read_only()
+
+
+def guarded_pages(*, tickers: Any = (), handles: Any = (), days: int | None = None,
+                  now: datetime | None = None, hosts: Any = None,
+                  root: Path | None = None, limit: int | None = None) -> list[dict]:
+    """Stored guarded-reader pages for these tickers (their `$T` search pages)
+    and these handles (their `x.com/<handle>` profile pages, when the reader
+    stored one), read in the last `days` days and never after `now`. Profile
+    pages first, then the newest. Opens nothing."""
+    from backend.services import thesis_card as TC
+    now = now or datetime.now(timezone.utc)
+    d = GUARDED_PAGE_MAX_AGE_DAYS if days is None else int(days)
+    paths = {"/" + str(h).lstrip("@").lower() for h in handles or () if h}
+    pages = TC.stored_social_pages(since=now - timedelta(days=d), until=now,
+                                   tickers=list(tickers or ()), url_paths=paths, hosts=hosts,
+                                   root=root, max_chars=GUARDED_PAGE_MAX_CHARS)
+    from urllib.parse import urlsplit
+    pages.sort(key=lambda r: urlsplit(str(r.get("url") or "")).path.lower().rstrip("/")
+               not in paths)                                  # stable: newest kept within
+    n = GUARDED_PAGES_PER_QUEST if limit is None else int(limit)
+    return pages[:n]
+
+
+def _pages_block(pages: list[dict]) -> str:
+    from backend.services import thesis_card as TC
+    return TC.untrusted_pages_block(pages, none_text="STORED PAGES: none.")
+
+
+def _page_refs(pages: list[dict]) -> list[dict]:
+    return [{"url": r.get("url"), "read_utc": r.get("read_utc"), "chars": r.get("chars")}
+            for r in pages]
 
 
 # ─────────────────────────────── discovery ──────────────────────────────────
-def discovery_url(theme: str, tickers: tuple[str, ...]) -> str:
-    """ONE concrete page per quest (an open-ended 'go find accounts' timed out at
-    600s on 2026-09-26; chunk A's one-URL X reads finish in 1-2 minutes)."""
-    from urllib.parse import quote
-    us = [t for t in tickers if re.fullmatch(r"[A-Z]{1,5}", t)] or list(tickers)
-    q = " OR ".join("$" + t for t in us[:8])
-    return f"https://x.com/search?q={quote(q)}&f=top"
-
-
-def discovery_prompt(theme: str, desc: str, tickers: tuple[str, ...]) -> str:
-    url = discovery_url(theme, tickers)
+def discovery_prompt(theme: str, desc: str, tickers: tuple[str, ...],
+                     pages: list[dict] | None = None) -> str:
     return f"""{READ_ONLY}
+{_pages_block(pages or [])}
+Theme: {desc}. Tickers: {', '.join(tickers)}.
 
-Use the browser tool with the logged-in X account. Open {url}
-and read the results (scroll once or twice). Theme: {desc}.
-
-From the posts you see, list up to 10 distinct AUTHORS worth tracking as sources on this
-theme, and classify each author's kind as one of: company, ceo_founder, sell_side,
+From the posts on the stored pages above, list up to 10 distinct AUTHORS worth tracking as
+sources on this theme, and classify each author's kind as one of: company, ceo_founder, sell_side,
 industry_specialist, engineer_researcher, journalist, fund_manager, retail_influencer,
-government_regulatory. Only authors you actually saw on the page; never invent a handle.
+government_regulatory. Only authors that appear on the stored pages; never invent a handle.
 
 Reply with ONLY one JSON object, no prose:
 {{"theme": "{theme}", "searched": true, "blocker": "",
 "accounts": [{{"handle": "@example", "name": "display name", "kind": "industry_specialist",
 "tickers": ["TICKER"], "why": "one line",
 "latest_post_url": "https://x.com/example/status/123", "latest_post_utc": "2026-09-25T14:03:00Z"}}]}}
-If the page needs a login, is rate-limited or empty, set searched false and say why in blocker.
+If the stored pages show a login wall, a rate limit or no posts, set searched false and say
+why in blocker.
 """
 
 
 def run_discovery(*, max_quests: int = SOURCE_DISCOVERY_MAX_QUESTS,
                   cap_usd: float = SOURCE_DISCOVERY_CAP_USD,
                   turn_fn: Callable[..., dict] = openclaw_turn,
-                  registry_path: Path | None = None, day: str | None = None) -> dict:
+                  registry_path: Path | None = None, day: str | None = None,
+                  social_root: Path | None = None, now: datetime | None = None) -> dict:
     day = day or date.today().isoformat()
     reg = SR.load_registry(registry_path)
     spent, quests, new_sources, wall = 0.0, [], [], None
@@ -255,8 +295,13 @@ def run_discovery(*, max_quests: int = SOURCE_DISCOVERY_MAX_QUESTS,
             quests.append({"quest_id": f"discover:{day}:{theme}", "status": "NOT_RUN_CAP_USD"})
             continue
         qid = f"discover:{day}:{theme}"
-        print(f"  discovery quest {qid} ...", flush=True)
-        res = turn_fn(discovery_prompt(theme, desc, ticks), purpose=DISCOVERY_PURPOSE)
+        pages = guarded_pages(tickers=ticks, root=social_root, now=now)
+        if not pages:
+            quests.append({"quest_id": qid, "status": "NOT_RUN_NO_GUARDED_PAGE",
+                           "tickers": list(ticks)})
+            continue
+        print(f"  discovery quest {qid} ({len(pages)} stored pages) ...", flush=True)
+        res = turn_fn(discovery_prompt(theme, desc, ticks, pages), purpose=DISCOVERY_PURPOSE)
         spent += float(res.get("cost_usd") or 0.0)
         data = extract_json(res.get("reply") or "")
         accts = (data or {}).get("accounts") if isinstance(data, dict) else None
@@ -281,7 +326,8 @@ def run_discovery(*, max_quests: int = SOURCE_DISCOVERY_MAX_QUESTS,
                                   "REFUSED_NOT_SEARCHED" if blk else res.get("status")),
                        "blocker": blk, "parsed": accts is not None, "n_found": len(found),
                        "n_refused": len(refused), "refused": refused[:10],
-                       "handles": [s.handle for s in found], "cost_usd": round(float(res.get("cost_usd") or 0), 6),
+                       "handles": [s.handle for s in found], "pages": _page_refs(pages),
+                       "cost_usd": round(float(res.get("cost_usd") or 0), 6),
                        "cost_openclaw_usd": res.get("cost_openclaw_usd"),
                        "cost_unknown": res.get("cost_unknown", False),
                        "elapsed_s": res.get("elapsed_s"), "reply_head": (res.get("reply") or "")[:300]})
@@ -298,25 +344,18 @@ def run_discovery(*, max_quests: int = SOURCE_DISCOVERY_MAX_QUESTS,
 
 
 # ─────────────────────────────── the daily read ─────────────────────────────
-def read_url(sources: list, since: str) -> str:
-    from urllib.parse import quote
-    q = "(" + " OR ".join("from:" + s.handle.lstrip("@") for s in sources) + f") since:{since}"
-    return f"https://x.com/search?q={quote(q)}&f=live"
-
-
-def read_prompt(sources: list, tickers: list[str], *, since: str | None = None) -> str:
+def read_prompt(sources: list, tickers: list[str], *, since: str | None = None,
+                pages: list[dict] | None = None) -> str:
     since = since or (date.today() - timedelta(days=7)).isoformat()
-    url = read_url(sources, since)
     return f"""{READ_ONLY}
-
-Use the browser tool with the logged-in X account. Open {url}
-and read the results (scroll once or twice). These are the latest posts of:
+{_pages_block(pages or [])}
+Find the posts on the stored pages above written BY these handles, dated on or after {since}:
 {', '.join(s.handle for s in sources)}
 
-Report every post that is about one of these tickers or their companies:
+Report every such post that is about one of these tickers or their companies:
 {', '.join(tickers)}
-For each: its status URL (https://x.com/<handle>/status/<id>), its time in ISO 8601 UTC
-(read the post's time element; convert a relative time like "3h" using the current UTC time),
+For each: its status URL (https://x.com/<handle>/status/<id>) as it appears on the page, its
+time in ISO 8601 UTC (a relative time like "3h" counts back from the page's read_utc),
 the claim quoted closely, the direction the author implies for the stock ("up", "down" or
 "none"), and event_type from: attention_spike, product_launch, guidance_change, contract_win,
 customer_announcement, management_language_change, analyst_revision, regulatory_decision,
@@ -327,7 +366,8 @@ Reply with ONLY one JSON object, no prose, one entry per handle listed above:
 "posts": [{{"post_url": "https://x.com/example/status/123", "posted_utc": "2026-09-25T14:03:00Z",
 "ticker": "NVDA", "claim": "quoted claim", "direction": "up|down|none",
 "event_type": "attention_spike"}}]}}]}}
-If the page needs a login, is rate-limited or empty, set searched false and say why in blocker.
+A handle with no post on the stored pages is "EMPTY". If the stored pages show a login wall
+or a rate limit instead of posts, set searched false and say why in blocker.
 """
 
 
@@ -385,7 +425,8 @@ def run_reads(*, max_quests: int = SOURCE_READS_MAX_QUESTS,
               turn_fn: Callable[..., dict] = openclaw_turn,
               registry_path: Path | None = None, ledger_path: Path | None = None,
               claims_path: Path | None = None, write_events: bool = True,
-              day: str | None = None, tickers: list[str] | None = None) -> dict:
+              day: str | None = None, tickers: list[str] | None = None,
+              social_root: Path | None = None, now: datetime | None = None) -> dict:
     from backend.services import web_events as WE
     day = day or date.today().isoformat()
     reg = SR.load_registry(registry_path)
@@ -405,8 +446,17 @@ def run_reads(*, max_quests: int = SOURCE_READS_MAX_QUESTS,
             quests.append({"quest_id": qid, "status": why, "handles": [s.handle for s in batch]})
             continue
         want = sorted({t for s in batch for t in s.tickers_covered} & tset) or tickers
-        print(f"  read quest {qid}: {', '.join(s.handle for s in batch)} ...", flush=True)
-        res = turn_fn(read_prompt(batch, want if len(want) >= 3 else tickers), purpose=READ_PURPOSE)
+        ask = want if len(want) >= 3 else tickers
+        pages = guarded_pages(tickers=ask, handles=[s.handle for s in batch],
+                              root=social_root, now=now)
+        if not pages:
+            for s in batch:
+                per_source.append({"source_id": s.source_id, "handle": s.handle, "status": NO_PAGE})
+            quests.append({"quest_id": qid, "status": NO_PAGE, "handles": [s.handle for s in batch]})
+            continue
+        print(f"  read quest {qid}: {', '.join(s.handle for s in batch)} "
+              f"({len(pages)} stored pages) ...", flush=True)
+        res = turn_fn(read_prompt(batch, ask, pages=pages), purpose=READ_PURPOSE)
         spent += float(res.get("cost_usd") or 0.0)
         observed = _now()
         data = extract_json(res.get("reply") or "")
@@ -452,6 +502,7 @@ def run_reads(*, max_quests: int = SOURCE_READS_MAX_QUESTS,
             per_source.append(pr)
         quests.append({"quest_id": qid, "status": res.get("status"), "parsed": reads is not None,
                        "handles": [s.handle for s in batch], "n_claims": n_claims_q,
+                       "pages": _page_refs(pages),
                        "cost_usd": round(float(res.get("cost_usd") or 0), 6),
                        "cost_openclaw_usd": res.get("cost_openclaw_usd"),
                        "cost_unknown": res.get("cost_unknown", False),
@@ -464,7 +515,8 @@ def run_reads(*, max_quests: int = SOURCE_READS_MAX_QUESTS,
     for p in per_source:
         counts[p["status"]] = counts.get(p["status"], 0) + 1
     rc = {"receipt": "source_reads.read", "day": day, "generated_at": _now(),
-          "model": SOURCE_READS_MODEL, "tickers": tickers, "n_social_sources": len(social),
+          "model": SOURCE_READS_MODEL, "mode": "stored guarded-reader pages (no browser)",
+          "tickers": tickers, "n_social_sources": len(social),
           "n_quests_run": sum(1 for q in quests if "cost_usd" in q), "cost_usd": round(spent, 6),
           "cap_usd": cap_usd, "max_quests": max_quests, "status_counts": counts,
           "login_wall": wall, "n_claims": len(claims), "web_events": {k: we.get(k) for k in ("written", "refused", "duplicates")},
@@ -574,26 +626,25 @@ def run_seed_timelines(registry_path: Path | None = None) -> dict:
 
 
 def timeline_prompt(sources: list, tickers: list[str], *, days: int = TIMELINE_DAYS,
-                    today: date | None = None) -> str:
+                    today: date | None = None, pages: list[dict] | None = None) -> str:
     since = ((today or date.today()) - timedelta(days=days)).isoformat()
-    pages = "\n".join(f"  https://x.com/{s.handle.lstrip('@')}" for s in sources)
+    handles = "\n".join(f"  {s.handle} (https://x.com/{s.handle.lstrip('@')})" for s in sources)
     return f"""{READ_ONLY}
-
-Use the browser tool. Open each of these X profile pages IN TURN (a profile timeline, not
-a search; it usually shows without logging in):
-{pages}
-On each page, scroll the timeline two or three times and read the posts BY THAT HANDLE
-(skip reposts of other accounts and replies to others) dated on or after {since}.
+{_pages_block(pages or [])}
+Read the posts on the stored pages above that were written BY these handles (skip reposts
+of other accounts and replies to others), dated on or after {since}:
+{handles}
 
 For each handle report:
-- status: "OK" if you could see its posts, "EMPTY" if the timeline shows no posts in the
-  window, "LOGIN_WALL" if X asked you to log in / sign up instead of showing posts,
-  "NOT_FOUND" if the account does not exist or is suspended/protected;
+- status: "OK" if the stored pages show its posts, "EMPTY" if they show none of its posts
+  in the window, "LOGIN_WALL" if its stored profile page is a log-in / sign-up wall instead
+  of posts, "NOT_FOUND" if its stored profile page says the account does not exist or is
+  suspended/protected;
 - latest_post_url and latest_post_utc: the newest post by this handle you saw (any topic);
 - posts: every post by this handle in the window that mentions one of these tickers or
   their companies: {', '.join(tickers)}
-  Each with its status URL (https://x.com/<handle>/status/<id>), its time in ISO 8601 UTC
-  (read the post's time element; convert a relative time like "3h" from the current UTC time),
+  Each with its status URL (https://x.com/<handle>/status/<id>) as on the page, its time in
+  ISO 8601 UTC (a relative time like "3h" counts back from the page's read_utc),
   the ticker, the claim quoted closely, the direction the author states or clearly implies for
   the stock ("up", "down", or "none" when no direction is stated), and event_type from:
   attention_spike, product_launch, guidance_change, contract_win, customer_announcement,
@@ -606,7 +657,7 @@ Reply with ONLY one JSON object, no prose:
 "posts": [{{"post_url": "https://x.com/example/status/123", "posted_utc": "2026-09-25T14:03:00Z",
 "ticker": "NVDA", "claim": "quoted claim", "direction": "up|down|none",
 "event_type": "attention_spike"}}]}}]}}
-If no page could be read at all, set searched false and say why in blocker.
+If the stored pages show only walls or errors, set searched false and say why in blocker.
 """
 
 
@@ -624,9 +675,12 @@ def run_timeline_reads(*, max_quests: int = TIMELINE_MAX_QUESTS, cap_usd: float 
                        turn_fn: Callable[..., dict] = openclaw_turn,
                        registry_path: Path | None = None, ledger_path: Path | None = None,
                        claims_path: Path | None = None, write_events: bool = True,
-                       day: str | None = None, tickers: list[str] | None = None) -> dict:
-    """One quest per `per_quest` handles, specialists first. Every handle ends
-    with a status: OK / EMPTY_READ / NOT_FOUND / NOT_READ_LOGIN_WALL /
+                       day: str | None = None, tickers: list[str] | None = None,
+                       social_root: Path | None = None, now: datetime | None = None) -> dict:
+    """One quest per `per_quest` handles, specialists first, over the pages the
+    guarded reader STORED (each handle's profile page when stored, else the
+    `$T` pages of the tickers it covers). Every handle ends with a status: OK /
+    EMPTY_READ / NOT_FOUND / NOT_READ_LOGIN_WALL / NOT_READ_NO_GUARDED_PAGE /
     NOT_READ_CAP_QUESTS / NOT_READ_CAP_USD / NO_REPLY_FOR_SOURCE."""
     from backend.services import web_events as WE
     day = day or date.today().isoformat()
@@ -651,8 +705,17 @@ def run_timeline_reads(*, max_quests: int = TIMELINE_MAX_QUESTS, cap_usd: float 
             quests.append({"quest_id": qid, "status": why, "handles": [s.handle for s in batch]})
             continue
         want = sorted(set(base) | {t for s in batch for t in s.tickers_covered})
-        print(f"  timeline quest {qid}: {', '.join(s.handle for s in batch)} ...", flush=True)
-        res = turn_fn(timeline_prompt(batch, want), purpose=READ_PURPOSE)
+        own = sorted({t for s in batch for t in s.tickers_covered}) or want
+        pages = guarded_pages(tickers=own, handles=[s.handle for s in batch],
+                              days=TIMELINE_DAYS, hosts=["x.com"], root=social_root, now=now)
+        if not pages:
+            for s in batch:
+                per_source.append({"source_id": s.source_id, "handle": s.handle, "status": NO_PAGE})
+            quests.append({"quest_id": qid, "status": NO_PAGE, "handles": [s.handle for s in batch]})
+            continue
+        print(f"  timeline quest {qid}: {', '.join(s.handle for s in batch)} "
+              f"({len(pages)} stored pages) ...", flush=True)
+        res = turn_fn(timeline_prompt(batch, want, pages=pages), purpose=READ_PURPOSE)
         spent += float(res.get("cost_usd") or 0.0)
         observed = _now()
         data = extract_json(res.get("reply") or "")
@@ -699,6 +762,7 @@ def run_timeline_reads(*, max_quests: int = TIMELINE_MAX_QUESTS, cap_usd: float 
             walls = 0
         quests.append({"quest_id": qid, "status": res.get("status"), "parsed": reads is not None,
                        "blocker": blk, "handles": [s.handle for s in batch], "n_claims": n_claims_q,
+                       "pages": _page_refs(pages),
                        "cost_usd": round(float(res.get("cost_usd") or 0), 6),
                        "cost_openclaw_usd": res.get("cost_openclaw_usd"),
                        "cost_unknown": res.get("cost_unknown", False),
@@ -713,7 +777,8 @@ def run_timeline_reads(*, max_quests: int = TIMELINE_MAX_QUESTS, cap_usd: float 
     for p in per_source:
         counts[p["status"]] = counts.get(p["status"], 0) + 1
     rc = {"receipt": "source_reads.timelines", "day": day, "generated_at": _now(),
-          "model": SOURCE_READS_MODEL, "mode": "x.com/<handle> timelines (search is walled logged out)",
+          "model": SOURCE_READS_MODEL, "mode": "stored guarded-reader pages: x.com/<handle> profile pages when stored, else "
+                  "the covered tickers' $T pages (no browser)",
           "window_days": TIMELINE_DAYS, "tickers": base, "n_x_sources": len(xs),
           "n_quests_run": sum(1 for q in quests if "cost_usd" in q), "cost_usd": round(spent, 6),
           "cap_usd": cap_usd, "max_quests": max_quests, "handles_per_quest": per_quest,
@@ -866,8 +931,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="seed the reviewer's specialists + thematic-book company handles (verified: false)")
     ap.add_argument("--discover", action="store_true")
     ap.add_argument("--read", action="store_true",
-                    help="X handle TIMELINE reads (x.com/<handle>); search is walled logged out")
-    ap.add_argument("--read-search", action="store_true", help="the old from:-search read (walled logged out)")
+                    help="X handle reads over the guarded reader's STORED pages (no browser)")
+    ap.add_argument("--read-search", action="store_true",
+                    help="the from:-handle read over the STORED $T pages (no browser)")
     ap.add_argument("--score", action="store_true", help="scoreboard + SOURCES.md, brokers included")
     ap.add_argument("--no-brokers", action="store_true")
     ap.add_argument("--grade-promises", action="store_true")

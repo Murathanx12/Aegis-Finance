@@ -1,0 +1,4 @@
+{"model": "student", "task": "events", "set": "events_test", "n": 400, "valid": 400, "valid_rate": 1.0, "seconds": 40.9, "pages_per_min": 586.1, "batch": 16, "peak_vram_mib": 3331}
+{"model": "base", "task": "events", "set": "events_test", "n": 400, "valid": 397, "valid_rate": 0.9925, "seconds": 69.9, "pages_per_min": 343.6, "batch": 16, "peak_vram_mib": 3842}
+{"model": "student", "task": "psych", "set": "psych_test", "n": 400, "valid": 268, "valid_rate": 0.67, "seconds": 103.5, "pages_per_min": 231.9, "batch": 16, "peak_vram_mib": 3368}
+{"model": "base", "task": "psych", "set": "psych_test", "n": 400, "valid": 396, "valid_rate": 0.99, "seconds": 118.5, "pages_per_min": 202.5, "batch": 16, "peak_vram_mib": 3786}

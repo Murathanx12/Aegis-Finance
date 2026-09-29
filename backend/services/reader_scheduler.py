@@ -111,6 +111,19 @@ SECTION_FRONTS: tuple[dict, ...] = (
     {"site": "marketwatch", "section": "earnings_calendar", "kind": "front_text",
      "urls": ("https://www.marketwatch.com/tools/earnings-calendar",
               "https://www.marketwatch.com/tools/earningscalendar")},
+    # 2026-09-29, the BROWSE lane (Murat: "browse the news like a human to get the
+    # context ... not only stock forecast"): politics, opinion, commodities and the
+    # video / podcast fronts. A URL that is not found is recorded once and dropped.
+    {"site": "wsj", "section": "politics", "urls": ("https://www.wsj.com/politics",)},
+    {"site": "wsj", "section": "opinion", "urls": ("https://www.wsj.com/opinion",)},
+    {"site": "wsj", "section": "video", "urls": ("https://www.wsj.com/video",)},
+    {"site": "wsj", "section": "podcasts", "urls": ("https://www.wsj.com/podcasts",)},
+    {"site": "barrons", "section": "commodities",
+     "urls": ("https://www.barrons.com/topics/commodities",)},
+    {"site": "barrons", "section": "video", "urls": ("https://www.barrons.com/video",)},
+    {"site": "barrons", "section": "podcasts", "urls": ("https://www.barrons.com/podcasts",)},
+    {"site": "marketwatch", "section": "personal_finance",
+     "urls": ("https://www.marketwatch.com/personal-finance",)},
 )
 
 #: The per-stock pages (the MarketWatch analyst page is TEXT that is stored; the
@@ -205,8 +218,11 @@ def priority_key(item: dict, *, books: set[str], fresh: set[str],
        a parent) comes before a new list page -- found news is read before the
        next list is opened;
     3. then the name read longest ago ('' = never read comes first);
-    4. then the link's position on its page (1 = most prominent);
-    5. then the order it was found in (`seq`)."""
+    4. then how recent the link's visible date is (2026-09-29: hours since
+       `published_visible`; undated = 12 h), so today's news is read before
+       last week's;
+    5. then the link's position on its page (1 = most prominent);
+    6. then the order it was found in (`seq`)."""
     if item.get("kind") in ("front", "front_text"):
         tier = TIER_FRONT
     elif item.get("tier") is not None:
@@ -215,7 +231,8 @@ def priority_key(item: dict, *, books: set[str], fresh: set[str],
         tier = ticker_tier(item.get("ticker"), books=books, fresh=fresh)
     found = 0 if item.get("parent_url") else 1
     lr = last_read.get((item.get("ticker") or "").upper(), "") if item.get("ticker") else ""
-    return (tier, found, lr, int(item.get("position") or 0), int(item.get("seq") or 0))
+    return (tier, found, lr, round(recency_rank(item), 1), int(item.get("position") or 0),
+            int(item.get("seq") or 0))
 
 
 def choose(pending: dict[str, list[dict]], *, free_slots: dict[str, int],
@@ -418,3 +435,425 @@ def record_section_not_found(url: str, why: str, now: datetime, path: Path | Non
         d[url] = {"first_seen_utc": now.isoformat(timespec="seconds"), "why": str(why)[:200]}
         DG.atomic_write_json(p, d)
     return True
+
+
+# ═════════════════════ THE BROWSE LANE (2026-09-29) ══════════════════════════
+#
+# Murat, 2026-09-29: "digest the news see what they are implying is there an
+# another path they are leading, not only the forecast from the websites but the
+# stocks news and the general news brose the news like a human to get the
+# context, ot speisifcaly search something not only stock forecast". And: "it
+# shuld always work and shouldnt be standing idle".
+#
+# MEASURED that morning: the pool read 0 pages for 100+ minutes with the three
+# Dow Jones hosts at 437-628 of 1,200 pages for the day and `pending: 0` on each.
+# Every stock page and every front link had been read, fronts were due only
+# every 2 h outside US hours, and nothing refilled the list; the supervisor
+# called that STALLED and restarted the pool every ~15 minutes.
+#
+# So: (1) general-news fronts on free public sites (`NEWS_FRONTS`, hosts in
+# `config.OPENCLAW_NEWS_HOSTS`); (2) a host whose pending list falls to the
+# low-water mark has its fronts revisited after `READER_FRONT_MIN_REVISIT_S`
+# instead of their scheduled interval (`front_due_now`); (3) an empty list with
+# caps free is its own state, QUEUE_EMPTY / REFILLING (`host_queue_state`),
+# never a stall. Nothing here disguises automation: a bot check, block, paywall
+# or robots refusal is recorded by class and the host is left alone.
+
+#: site key -> the host it reads and its article / media URL shapes
+NEWS_SITES: dict[str, dict] = {
+    "reuters": {"host": "reuters.com",
+                "article": r"^https://www\.reuters\.com/(world|business|markets|technology|legal|"
+                           r"breakingviews|sustainability|science)/[a-z0-9/_-]*-\d{4}-\d{2}-\d{2}/?(\?|$)"},
+    "apnews": {"host": "apnews.com", "article": r"^https://apnews\.com/article/[a-z0-9-]{8,}"},
+    "cnbc": {"host": "cnbc.com",
+             "article": r"^https://www\.cnbc\.com/\d{4}/\d{2}/\d{2}/[a-z0-9-]+\.html",
+             "media": r"^https://www\.cnbc\.com/video/\d{4}/\d{2}/\d{2}/[a-z0-9-]+\.html"},
+    "yahoo": {"host": "finance.yahoo.com",
+              "article": r"^https://finance\.yahoo\.com/(news|m/[0-9a-f-]+|markets/[a-z-]+/articles)/"
+                         r"[a-z0-9-]{12,}\.html",
+              "media": r"^https://finance\.yahoo\.com/video/[a-z0-9-]{12,}\.html"},
+    "bbc": {"host": "bbc.com",
+            "article": r"^https://www\.bbc\.com/news/(articles/[a-z0-9]{8,}|[a-z-]+-\d{6,})",
+            "media": r"^https://www\.bbc\.com/news/videos/[a-z0-9]{8,}"},
+    "ft": {"host": "ft.com",
+           "article": r"^https://www\.ft\.com/content/[0-9a-f]{8}-[0-9a-f-]{27}"},
+    "nikkei": {"host": "asia.nikkei.com",
+               "article": r"^https://asia\.nikkei\.com/[a-z-]+(/[a-z0-9-]+){0,4}/"
+                          r"[a-z0-9]+(-[a-z0-9]+){3,}/?(\?|$)"},
+    "scmp": {"host": "scmp.com",
+             "article": r"^https://www\.scmp\.com/[a-z-]+(/[a-z0-9-]+)*/article/\d{6,}/"},
+    "fed": {"host": "federalreserve.gov",
+            "article": r"^https://www\.federalreserve\.gov/newsevents/(pressreleases|speech|"
+                       r"testimony)/(?![a-z-]*archive)[a-z0-9-]+\.htm"},
+    "bls": {"host": "bls.gov", "article": r"^https://www\.bls\.gov/news\.release/[a-z0-9_.]+\.htm"},
+    "sec": {"host": "sec.gov",
+            "article": r"^https://www\.sec\.gov/newsroom/(press-releases|speeches-statements)/"
+                       r"[a-z0-9-]{4,}"},
+    "treasury": {"host": "home.treasury.gov",
+                 "article": r"^https://home\.treasury\.gov/news/press-releases/[a-z]{2}\d{3,}"},
+}
+for _k, _v in NEWS_SITES.items():
+    ARTICLE_PATTERN.setdefault(_k, _v["article"])
+    if _v.get("media"):
+        MEDIA_PATTERN.setdefault(_k, _v["media"])
+
+#: General-news section fronts (free public pages). `host` names the host
+#: explicitly (a Dow Jones front derives it from `site`).
+NEWS_FRONTS: tuple[dict, ...] = (
+    {"site": "reuters", "section": "home", "urls": ("https://www.reuters.com/",)},
+    {"site": "reuters", "section": "business", "urls": ("https://www.reuters.com/business/",)},
+    {"site": "reuters", "section": "markets", "urls": ("https://www.reuters.com/markets/",)},
+    {"site": "reuters", "section": "world", "urls": ("https://www.reuters.com/world/",)},
+    {"site": "reuters", "section": "technology", "urls": ("https://www.reuters.com/technology/",)},
+    {"site": "reuters", "section": "commodities",
+     "urls": ("https://www.reuters.com/markets/commodities/",)},
+    {"site": "apnews", "section": "home", "urls": ("https://apnews.com/",)},
+    {"site": "apnews", "section": "business", "urls": ("https://apnews.com/business",)},
+    {"site": "apnews", "section": "markets", "urls": ("https://apnews.com/hub/financial-markets",)},
+    {"site": "apnews", "section": "politics", "urls": ("https://apnews.com/politics",)},
+    {"site": "apnews", "section": "world", "urls": ("https://apnews.com/world-news",)},
+    {"site": "apnews", "section": "technology", "urls": ("https://apnews.com/technology",)},
+    {"site": "cnbc", "section": "home", "urls": ("https://www.cnbc.com/world/",)},
+    {"site": "cnbc", "section": "markets", "urls": ("https://www.cnbc.com/markets/",)},
+    {"site": "cnbc", "section": "economy", "urls": ("https://www.cnbc.com/economy/",)},
+    {"site": "cnbc", "section": "technology", "urls": ("https://www.cnbc.com/technology/",)},
+    {"site": "cnbc", "section": "politics", "urls": ("https://www.cnbc.com/politics/",)},
+    {"site": "cnbc", "section": "asia", "urls": ("https://www.cnbc.com/asia-markets/",
+                                                 "https://www.cnbc.com/world-markets/")},
+    {"site": "cnbc", "section": "video", "urls": ("https://www.cnbc.com/video/",
+                                                  "https://www.cnbc.com/latest-video/")},
+    {"site": "yahoo", "section": "home", "urls": ("https://finance.yahoo.com/",)},
+    {"site": "yahoo", "section": "latest_news",
+     "urls": ("https://finance.yahoo.com/topic/latest-news/", "https://finance.yahoo.com/news/")},
+    {"site": "yahoo", "section": "stock_market",
+     "urls": ("https://finance.yahoo.com/topic/stock-market-news/",)},
+    {"site": "yahoo", "section": "economy",
+     "urls": ("https://finance.yahoo.com/topic/economic-news/",)},
+    {"site": "bbc", "section": "business", "urls": ("https://www.bbc.com/business",)},
+    {"site": "bbc", "section": "world", "urls": ("https://www.bbc.com/news/world",)},
+    {"site": "ft", "section": "home", "urls": ("https://www.ft.com/",)},
+    {"site": "ft", "section": "markets", "urls": ("https://www.ft.com/markets",)},
+    {"site": "ft", "section": "world", "urls": ("https://www.ft.com/world",)},
+    {"site": "ft", "section": "companies", "urls": ("https://www.ft.com/companies",)},
+    {"site": "nikkei", "section": "home", "urls": ("https://asia.nikkei.com/",)},
+    {"site": "nikkei", "section": "business", "urls": ("https://asia.nikkei.com/business",)},
+    {"site": "nikkei", "section": "economy", "urls": ("https://asia.nikkei.com/economy",)},
+    {"site": "nikkei", "section": "markets", "urls": ("https://asia.nikkei.com/business/markets",)},
+    {"site": "scmp", "section": "business", "urls": ("https://www.scmp.com/business",)},
+    {"site": "scmp", "section": "economy", "urls": ("https://www.scmp.com/economy",)},
+    {"site": "scmp", "section": "tech", "urls": ("https://www.scmp.com/tech",)},
+    {"site": "scmp", "section": "china", "urls": ("https://www.scmp.com/news/china",)},
+    {"site": "fed", "section": "press_releases",
+     "urls": ("https://www.federalreserve.gov/newsevents/pressreleases.htm",)},
+    {"site": "fed", "section": "speeches",
+     "urls": ("https://www.federalreserve.gov/newsevents/speeches.htm",
+              "https://www.federalreserve.gov/newsevents/speeches-testimony.htm")},
+    {"site": "bls", "section": "news_releases", "urls": ("https://www.bls.gov/bls/newsrels.htm",)},
+    {"site": "sec", "section": "press_releases",
+     "urls": ("https://www.sec.gov/newsroom/press-releases",)},
+    {"site": "treasury", "section": "press_releases",
+     "urls": ("https://home.treasury.gov/news/press-releases",)},
+)
+for _f in NEWS_FRONTS:
+    _f.setdefault("host", NEWS_SITES[_f["site"]]["host"])
+    _f.setdefault("news", True)
+
+
+def news_fronts_enabled() -> bool:
+    return bool(_cfg("READER_NEWS_ENABLED", True))
+
+
+def _on(host: str, domains: tuple[str, ...]) -> bool:
+    h = (host or "").lower().removeprefix("www.")
+    return any(h == d or h.endswith("." + d) for d in domains)
+
+
+def all_fronts() -> tuple[dict, ...]:
+    """The Dow Jones fronts, plus the general-news fronts when enabled -- only
+    those whose host is on the allowlist (`config.OPENCLAW_BROWSER_HOSTS`)."""
+    if not news_fronts_enabled():
+        return SECTION_FRONTS
+    allowed = tuple(_cfg("OPENCLAW_BROWSER_HOSTS", ()))
+    return SECTION_FRONTS + tuple(f for f in NEWS_FRONTS if _on(f["host"], allowed))
+
+
+def front_host(front: dict) -> str:
+    return front.get("host") or site_host(front["site"])
+
+
+def site_key_of_host(host: str) -> str | None:
+    """`reuters.com` -> "reuters"; `home.treasury.gov` -> "treasury"; `wsj.com`
+    -> "wsj"; unknown -> None."""
+    for k, v in NEWS_SITES.items():
+        if _on(host, (v["host"],)):
+            return k
+    for k in ("wsj", "barrons", "marketwatch"):
+        if _on(host, (f"{k}.com",)):
+            return k
+    return None
+
+
+def is_news_host(host: str) -> bool:
+    """A general-news host (not Dow Jones, not social)."""
+    return site_key_of_host(host) in NEWS_SITES
+
+
+def article_pattern_for(host: str) -> str | None:
+    k = site_key_of_host(host)
+    return ARTICLE_PATTERN.get(k) if k else None
+
+
+def any_article_pattern(url: str) -> bool:
+    """PURE. `url` matches the article pattern of the host it is on."""
+    import re
+    from urllib.parse import urlsplit
+    try:
+        h = (urlsplit(url or "").hostname or "").lower()
+    except ValueError:
+        return False
+    pat = article_pattern_for(h)
+    return bool(pat and re.search(pat, url or ""))
+
+
+# ─────────────────── the refill rule and the queue's state ───────────────────
+
+def low_water() -> int:
+    return int(_cfg("READER_QUEUE_LOW_WATER", 3))
+
+
+def min_revisit_s() -> float:
+    return float(_cfg("READER_FRONT_MIN_REVISIT_S", 1200.0))
+
+
+def front_due_now(front: dict, last_read: datetime | None, now: datetime, *,
+                  host_pending: int, low: int | None = None,
+                  revisit_s: float | None = None) -> bool:
+    """PURE. THE REFILL RULE. A front is due on its schedule (`front_due`), OR
+    early when its host's pending list is at or below the low-water mark and it
+    was read at least `READER_FRONT_MIN_REVISIT_S` ago (fronts change; an idle
+    host with caps free goes back to its fronts instead of standing still)."""
+    if front_due(front, last_read, now):
+        return True
+    lw = low_water() if low is None else int(low)
+    mr = min_revisit_s() if revisit_s is None else float(revisit_s)
+    return host_pending <= lw and (now - last_read).total_seconds() >= mr
+
+
+def next_front_due_s(fronts: list[dict] | tuple[dict, ...], last: dict[str, datetime],
+                     now: datetime, *, pending_by_host: dict[str, int],
+                     dropped: set[str] | None = None, blocked: set[str] | None = None,
+                     host: str | None = None) -> float | None:
+    """PURE. Seconds until the soonest front (on `host`, or on any unblocked
+    host) becomes due under `front_due_now` (0 = due now); None when none."""
+    lw, mr = low_water(), min_revisit_s()
+    best: float | None = None
+    for f in fronts:
+        h = front_host(f)
+        if (host is not None and h != host) or (blocked and h in blocked) \
+                or front_url(f, dropped or set()) is None:
+            continue
+        lr = last.get(front_key(f))
+        if lr is None:
+            return 0.0
+        waits = [front_interval_s(f, now)]
+        if pending_by_host.get(h, 0) <= lw:
+            waits.append(mr)
+        s = max(0.0, min(waits) - (now - lr).total_seconds())
+        best = s if best is None else min(best, s)
+    return best
+
+
+#: the pool's own words for what it is doing (the supervisor reads them)
+Q_READING, Q_REFILLING, Q_EMPTY, Q_WAITING_FOR_CAP, Q_COOLING = (
+    "READING", "REFILLING", "QUEUE_EMPTY", "WAITING_FOR_CAP", "COOLING")
+
+
+def host_queue_state(*, pending: int, in_flight: int, capped: bool, cooling: bool,
+                     front_due_in_s: float | None) -> str:
+    """PURE. One host's state:
+    * COOLING         -- it showed a challenge / block / wall; left alone;
+    * WAITING_FOR_CAP -- its hourly or daily cap is spent;
+    * READING         -- something in flight or pending;
+    * REFILLING       -- nothing pending and one of its fronts is due now;
+    * QUEUE_EMPTY     -- nothing pending, caps free, the next front revisit is
+                         ahead (`front_due_in_s`). A state of its own: never a
+                         stall, never a reason to restart anything."""
+    if cooling:
+        return Q_COOLING
+    if capped:
+        return Q_WAITING_FOR_CAP
+    if in_flight > 0 or pending > 0:
+        return Q_READING
+    if front_due_in_s is not None and front_due_in_s <= 0:
+        return Q_REFILLING
+    return Q_EMPTY
+
+
+def pool_queue_state(host_states: dict[str, str]) -> str:
+    """PURE. The whole pool: READING if any host reads; else REFILLING if any
+    host refills; else QUEUE_EMPTY if any host with free caps has nothing to
+    do; else WAITING_FOR_CAP (every host capped or cooling)."""
+    vals = set(host_states.values())
+    for s in (Q_READING, Q_REFILLING, Q_EMPTY):
+        if s in vals:
+            return s
+    return Q_WAITING_FOR_CAP if vals else Q_EMPTY
+
+
+# ─────────────────────────────── robots.txt ──────────────────────────────────
+
+def robots_url(host: str) -> str:
+    """The robots.txt a host serves (bare two-label hosts get `www.` except the
+    ones that live on the bare name)."""
+    h = (host or "").lower()
+    if h.count(".") == 1 and h not in ("apnews.com",):
+        h = "www." + h
+    return f"https://{h}/robots.txt"
+
+
+def robots_host(host: str) -> str:
+    """The host a robots.txt record is kept under: the news site's own host."""
+    k = site_key_of_host(host)
+    return NEWS_SITES[k]["host"] if k in NEWS_SITES else (host or "").lower().removeprefix("www.")
+
+
+def robots_allows(robots_text: str | None, url: str, agent: str = "*") -> bool:
+    """PURE. What the site's robots.txt says about `url` for `agent` (the
+    `*` group unless a named group matches). No file / no groups = allowed
+    (the standard reading of a missing robots.txt)."""
+    if not robots_text or "user-agent" not in robots_text.lower():
+        return True
+    from urllib.robotparser import RobotFileParser
+    rp = RobotFileParser()
+    try:
+        rp.parse(robots_text.splitlines())
+        return bool(rp.can_fetch(agent, url))
+    except Exception:  # noqa: BLE001 -- an unparseable file refuses nothing
+        return True
+
+
+def robots_dir() -> Path:
+    return Path(_config.OPTIMUS_LEDGER_DIR) / "dowjones" / "robots"
+
+
+def robots_record(host: str, *, path: Path | None = None) -> dict | None:
+    try:
+        return json.loads(((path or robots_dir()) / f"{host}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def robots_fresh(rec: dict | None, now: datetime) -> bool:
+    ttl = float(_cfg("READER_ROBOTS_TTL_S", 86400.0))
+    try:
+        return rec is not None and (now - datetime.fromisoformat(rec["fetched_utc"])
+                                    ).total_seconds() < ttl
+    except (KeyError, ValueError, TypeError):
+        return False
+
+
+def save_robots(host: str, *, text: str, cls: str, now: datetime,
+                path: Path | None = None) -> dict:
+    rec = {"host": host, "fetched_utc": now.isoformat(timespec="seconds"), "class": cls,
+           "text": (text or "")[:200_000]}
+    DG.atomic_write_json((path or robots_dir()) / f"{host}.json", rec)
+    return rec
+
+
+# ─────────── what the digest asks the reader to read next (2026-09-29) ───────
+#
+# The world digest writes `news_digest/read_next.jsonl`: rows with a `url`
+# (read it, when its host is allowed) or a `search_query` (a question it wants
+# answered). A query becomes a NAVIGATION to a site's own search URL -- never
+# typing into a box -- on the sites below, each only if its host is allowed and
+# (for a general-news host) its robots.txt allows the search path.
+
+SEARCH_URLS: dict[str, str] = {
+    "apnews": "https://apnews.com/search?q={q}",
+    "cnbc": "https://www.cnbc.com/search/?query={q}&qsearchterm={q}",
+    "ft": "https://www.ft.com/search?q={q}",
+    "scmp": "https://www.scmp.com/search/{q}",
+    "reuters": "https://www.reuters.com/site-search/?query={q}",
+    "wsj": "https://www.wsj.com/search?query={q}",
+    "marketwatch": "https://www.marketwatch.com/search?q={q}",
+    "barrons": "https://www.barrons.com/search?query={q}",
+}
+#: each question is searched on this many sites, one general-news site and one
+#: Dow Jones site in turn, so fifty questions do not become four hundred loads
+SEARCH_SITES_PER_QUESTION = 2
+
+
+def search_url(site: str, query: str) -> str | None:
+    """PURE. The site's own search URL for `query` (None: no search page)."""
+    from urllib.parse import quote_plus
+    tpl = SEARCH_URLS.get(site)
+    q = " ".join(str(query or "").split())[:160]
+    return tpl.format(q=quote_plus(q)) if tpl and q else None
+
+
+def search_sites_for(n: int, *, allowed: tuple[str, ...] | None = None,
+                     per_question: int = SEARCH_SITES_PER_QUESTION) -> list[str]:
+    """PURE. The sites question number `n` is searched on: alternating a
+    general-news site and a Dow Jones site, rotating so the load spreads."""
+    allowed = tuple(_cfg("OPENCLAW_BROWSER_HOSTS", ())) if allowed is None else allowed
+    host = {k: (NEWS_SITES[k]["host"] if k in NEWS_SITES else f"{k}.com") for k in SEARCH_URLS}
+    news = [k for k in SEARCH_URLS if k in NEWS_SITES and _on(host[k], allowed)]
+    dj = [k for k in SEARCH_URLS if k not in NEWS_SITES and _on(host[k], allowed)]
+    out: list[str] = []
+    for i in range(per_question):
+        grp = (news, dj)[i % 2] or news or dj
+        if grp:
+            k = grp[(n + i // 2) % len(grp)]
+            if k not in out:
+                out.append(k)
+    return out
+
+
+def read_next_path() -> Path:
+    return Path(_cfg("READER_READ_NEXT_FILE",
+                     Path(_config.OPTIMUS_LEDGER_DIR) / "news_digest" / "read_next.jsonl"))
+
+
+def read_next_key(row: dict) -> str:
+    """PURE. One row's identity (the digest may write the same ask again)."""
+    u = str(row.get("url") or "").strip()
+    if u:
+        return "url:" + u
+    q = " ".join(str(row.get("search_query") or row.get("question") or "").lower().split())
+    return "q:" + q
+
+
+# ────────────────────── publication time: current or archive ─────────────────
+
+def max_article_age_days() -> float:
+    return float(_cfg("READER_MAX_ARTICLE_AGE_DAYS", 4.0))
+
+
+def is_archive(published_utc: str | None, seen: datetime) -> bool:
+    """PURE. An article whose own dateline is more than READER_MAX_ARTICLE_AGE_DAYS
+    before we read it (undated = not known to be archive)."""
+    if not published_utc:
+        return False
+    try:
+        t = datetime.fromisoformat(str(published_utc))
+    except ValueError:
+        return False
+    if t.tzinfo is None:
+        t = t.replace(tzinfo=timezone.utc)
+    return (seen - t).total_seconds() > max_article_age_days() * 86400
+
+
+def recency_rank(item: dict, now: datetime | None = None) -> float:
+    """PURE. Hours since the date the link showed (smaller = sooner); an
+    undated link ranks as 12 h (a front's top stories are often undated)."""
+    pv = item.get("published_visible")
+    if not pv:
+        return 12.0
+    try:
+        t = datetime.fromisoformat(str(pv))
+    except ValueError:
+        return 12.0
+    if t.tzinfo is None:
+        t = t.replace(tzinfo=timezone.utc)
+    now = now or datetime.now(timezone.utc)
+    return max(0.0, (now - t).total_seconds() / 3600.0)

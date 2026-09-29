@@ -65,6 +65,7 @@ COMMANDS: tuple[str, ...] = ("stock", "news", "report", "digest", "analyze", "as
 HELP = """AEGIS replies (read from disk; no advice, no orders)
 stock TICKER - price, moves in sigma, analyst snapshot, events, alerts, books
 news TICKER - newest headlines on disk
+news - the latest world digest: themes, second-order implications, tone (read from disk)
 report - paper books vs SPY, alerts today and the ones not sent, red health, LLM spend
 digest TEXT - stored with its line breaks for tonight's claim extraction (add source=wsj to name the paper)
 digest URL - added to the phone reading list; nothing fetches it
@@ -290,6 +291,8 @@ def _book_verdicts(ctx: Ctx, ids: list[str]) -> Optional[str]:
 
 def cmd_news(arg: str, ctx: Ctx, now: datetime) -> str:
     from backend.services import alerts_sources as S
+    if str(arg or "").strip().lower() in ("", "world", "today", "all", "digest"):
+        return _world_digest(ctx)
     t = _ticker(arg)
     if not t:
         return "Which ticker? e.g. news NVDA"
@@ -330,6 +333,15 @@ def cmd_news(arg: str, ctx: Ctx, now: datetime) -> str:
         out.append(f"{s['ts'][:10]} {s['src']}: {s['title'][:90]}"
                    + (f" (+{s['copies']} copies)" if s["copies"] else ""))
     return "\n".join(out)
+
+
+def _world_digest(ctx: Ctx) -> str:
+    """The newest `digest/world_digest_*.short.txt`, read from disk. Written by
+    `scripts/world_digest.py`; nothing here runs a model or starts a run."""
+    from backend.services import world_digest as WD
+    txt = WD.latest_short(ctx.optimus)
+    return txt or ("No world digest on disk yet (`python -m scripts.world_digest` writes one). "
+                   "For one stock: news TICKER")
 
 
 def _to_dt(ts: str) -> Optional[datetime]:
@@ -417,7 +429,7 @@ def cmd_digest(arg: str, ctx: Ctx, now: datetime) -> str:
     a bare URL on the phone reading list. Never fetches, never calls a model."""
     raw = str(arg or "").replace("\r\n", "\n").strip()
     if not raw:
-        return "digest what? Send: digest <text or url>"
+        return _world_digest(ctx) + "\n\n(To file an article: digest <text or url>)"
     if _URL.match(raw):
         p = ctx.telegram / "reading_queue.jsonl"
         DG.locked_append_line(p, json.dumps({"t": now.isoformat(timespec="seconds"),

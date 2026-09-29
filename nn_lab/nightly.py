@@ -322,10 +322,14 @@ def step_trust(forward_added: bool) -> dict:
             if old.get("trust") != v["trust"] or old.get("graded_dates") != v["graded_dates"]:
                 changes.append(f"{m} {hk}: trust {old.get('trust')} -> {v['trust']} "
                                f"(graded dates {old.get('graded_dates')} -> {v['graded_dates']}, source {v['source']})")
-    row = {"written_utc": L._now(), "walk_forward_receipt": wf.get("_receipt"), "trust": trust,
+    weights = L.weight_report(trust, (prev or {}).get("trust"), [m for m in C.DIRECTION_ROSTER if m != "zero"])
+    row = {"written_utc": L._now(), "walk_forward_receipt": wf.get("_receipt"),
+           "trust_rule": "forward graded blocks only; walk-forward reported, not used (amended 2026-09-29)",
+           "trust": trust, "ensemble_weights": weights,
            "magnitude": mag, "in_charge": inc.get("model"), "forward_added": forward_added}
     L._append_jsonl(C.TRUST_LEDGER, [row])
     return {"trust": trust, "trust_yesterday": (prev or {}).get("trust"), "magnitude": mag,
+            "ensemble_weights": weights,
             "in_charge": inc, "changes": changes or ["no change"], "walk_forward_receipt": wf.get("_receipt"),
             "_wf": wf}
 
@@ -605,7 +609,10 @@ def main(time_box_min: float = C.NIGHT_TIME_BOX_MIN, variant: str | None = None)
     ctx: dict = {}
     steps = (("append", step_append),
              ("grade", step_grade),
-             ("trust", lambda: step_trust(forward_added=(rec.get("grade") or {}).get("graded_now", 0) > 0)),
+             # only a DIRECTION-roster grade is forward evidence for the model in charge (F8):
+             # the legacy v0 file and the magnitude models never move it
+             ("trust", lambda: step_trust(forward_added=(rec.get("grade") or {})
+                                          .get("graded_now_direction_roster", 0) > 0)),
              ("fit", lambda: step_fit(run_id, variant)),
              ("freeze", lambda: step_freeze(run_id, ctx["trust"]["trust"], ctx["trust"]["magnitude"],
                                             ctx["trust"]["_wf"])))
@@ -652,14 +659,22 @@ def main(time_box_min: float = C.NIGHT_TIME_BOX_MIN, variant: str | None = None)
 
 
 def _per_model_lines(rec: dict) -> list[str]:
+    """Per model at h21: forward graded blocks, trust, ensemble WEIGHT and what moved it."""
     tr = (rec.get("trust") or {}).get("trust") or {}
     ty = (rec.get("trust") or {}).get("trust_yesterday") or {}
+    ew = (((rec.get("trust") or {}).get("ensemble_weights") or {}).get("h21") or {})
+    wm = ew.get("models") or {}
     out = []
     for m, hv in tr.items():
         v = hv.get("h21", {})
         y = (ty.get(m) or {}).get("h21", {})
-        out.append(f"{m:10s} h21 graded dates {v.get('graded_dates')} ({v.get('n_forward_blocks')} blocks) | "
-                   f"trust today {v.get('trust')} yesterday {y.get('trust')} | source {v.get('source')}")
+        w = wm.get(m) or {}
+        out.append(f"{m:10s} h21 forward graded blocks {v.get('n_forward_blocks')} "
+                   f"({v.get('graded_dates')} dates) | trust today {v.get('trust')} yesterday {y.get('trust')} "
+                   f"| weight {w.get('weight', 'n/a')} (was {w.get('weight_yesterday', 'n/a')}) "
+                   f"| moved by: {w.get('moved_by', 'n/a')} | source {v.get('source')}")
+    if ew:
+        out.append(f"neutral (no-view) sleeve h21 {ew.get('neutral')}; scaled down to 1: {ew.get('scaled_down_to_1')}")
     return out
 
 

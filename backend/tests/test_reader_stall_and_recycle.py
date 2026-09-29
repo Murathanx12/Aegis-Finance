@@ -195,7 +195,8 @@ class FakeMachine:
                              kill_pid=kill, launch=launch,
                              chrome_memory=lambda: {"total_gb": 8.0},
                              free_gb=lambda: self.free, responsive=self.cdp.responsive,
-                             sleep=self.sleep, clock=lambda: self.t)
+                             sleep=self.sleep, clock=lambda: self.t,
+                             visible=lambda t, to: False)
 
     def sleep(self, s):
         self.t += s
@@ -203,14 +204,16 @@ class FakeMachine:
 
 def test_reclaim_stops_at_the_first_step_that_clears_the_floor():
     m = FakeMachine(1.0, FakeCDP(["h", "x"], hung=["h"]))
-    out = GR.reclaim_memory(need_gb=1.5, deps=m.deps(frees_on_close=0.6))
+    out = GR.reclaim_memory(need_gb=1.5, own_tab_ids=["h", "x"],
+                            deps=m.deps(frees_on_close=0.6))
     assert out["ok"] and [s["step"] for s in out["steps"]] == ["close_hung_tabs"]
     assert "launch" not in m.events
 
 
 def test_reclaim_recycles_the_dedicated_chrome_when_tabs_are_not_enough():
     m = FakeMachine(0.6, FakeCDP(["a", "b"]))
-    out = GR.reclaim_memory(need_gb=1.5, own_tab_ids=["b"], deps=m.deps(frees_on_recycle=3.0))
+    out = GR.reclaim_memory(need_gb=1.5, own_tab_ids=["a", "b"],
+                            deps=m.deps(frees_on_recycle=3.0))
     assert [s["step"] for s in out["steps"]] == ["close_hung_tabs", "close_idle_tabs",
                                                  "recycle_dedicated_chrome"]
     assert out["ok"] and out["free_after"] >= 1.5
@@ -218,8 +221,58 @@ def test_reclaim_recycles_the_dedicated_chrome_when_tabs_are_not_enough():
 
 def test_reclaim_never_waits_when_nothing_frees():
     m = FakeMachine(0.6, FakeCDP(["a"]))
-    out = GR.reclaim_memory(need_gb=1.5, deps=m.deps())
+    out = GR.reclaim_memory(need_gb=1.5, own_tab_ids=["a"], deps=m.deps())
     assert out["ok"] is False and len(out["steps"]) == 3        # returned, did not loop
+
+
+# 2026-09-29 (review of the morning fixes, F1): the reclaim closes ONLY the
+# tabs the reader opened, and never recycles a Chrome holding somebody else's.
+
+def test_reclaim_never_closes_a_tab_the_reader_did_not_open():
+    c = FakeCDP(["ours", "owners", "hung_other"], hung=["hung_other"])
+    m = FakeMachine(0.6, c)
+    out = GR.reclaim_memory(need_gb=1.5, own_tab_ids=["ours"], deps=m.deps())
+    assert c.closed == ["ours"]
+    assert "browser_close" not in m.events and "launch" not in m.events
+    rec = out["steps"][-1]
+    assert rec["step"] == "recycle_dedicated_chrome" and rec["ok"] is False
+    assert rec["refused"].startswith("OWNER_OR_OTHER_TABS")
+    assert out["steps"][0]["spared"] == 1 and out["ok"] is False
+
+
+def test_reclaim_with_no_known_own_tabs_closes_nothing():
+    c = FakeCDP(["a", "b"])
+    m = FakeMachine(0.6, c)
+    GR.reclaim_memory(need_gb=1.5, own_tab_ids=None, deps=m.deps())
+    assert c.closed == [] and "browser_close" not in m.events
+
+
+def test_about_blank_pages_do_not_block_the_reclaim_recycle():
+    c = FakeCDP(["ours"])
+    c.pages.append({"id": "blank", "url": "about:blank", "type": "page"})
+    m = FakeMachine(0.6, c)
+    out = GR.reclaim_memory(need_gb=1.5, own_tab_ids=["ours"],
+                            deps=m.deps(frees_on_recycle=3.0))
+    assert out["ok"] and "browser_close" in m.events
+
+
+def test_the_recycle_refuses_while_a_foreign_tab_is_active():
+    c = FakeCDP(["ours", "owners"])
+    m = FakeMachine(3.0, c)
+    d = m.deps()
+    d.visible = lambda t, to: t["id"] == "owners"
+    out = GR.recycle_dedicated_chrome(["ours"], deps=d, why="AGE")
+    assert out["ok"] is False and out["refused"].startswith("OWNER_MAY_BE_USING")
+    assert c.closed == [] and m.events == []
+
+
+def test_the_recycle_proceeds_when_only_our_tab_is_active():
+    c = FakeCDP(["ours", "leftover"])
+    m = FakeMachine(3.0, c)
+    d = m.deps()
+    d.visible = lambda t, to: t["id"] == "ours"
+    out = GR.recycle_dedicated_chrome(["ours"], deps=d, why="AGE")
+    assert out["ok"] and m.events[-1] == "launch"
 
 
 def test_idle_tabs_keep_one_window_and_close_ours_first():
@@ -434,3 +487,149 @@ def test_closing_every_page_opens_a_blank_first():
 def test_the_relaunched_chrome_starts_blank_not_on_a_live_home_page():
     from backend.services import muratclaw_instance as MI
     assert MI.attach_argv()[-1] == "about:blank"
+
+
+# ───────── 5. the recycle is decided BEFORE the pool is stopped (09-29) ──────
+#
+# 11:12-12:00 HKT on 2026-09-29: four supervisors, each restarted by a STOP
+# file, each found a recycle due on its first memory check, STOPPED the pool,
+# and then had the recycle refused (OWNER_MAY_BE_USING x2, instance down x1):
+# a pool restart for nothing each time, re-asked by every new supervisor
+# because the refusal and the hourly count lived only in the process.
+
+def test_the_preflight_refuses_without_closing_or_launching_anything():
+    c = FakeCDP(["ours", "owners"])
+    m = FakeMachine(3.0, c)
+    d = m.deps()
+    d.visible = lambda t, to: t["id"] == "owners"
+    pre = GR.recycle_preflight(["ours"], deps=d)
+    assert pre["ok"] is False and pre["refused"].startswith("OWNER_MAY_BE_USING")
+    assert [a["id"] for a in pre["active_foreign"]] == ["owners"]
+    assert c.closed == [] and m.events == []
+
+
+def test_the_preflight_second_look_counts_a_tab_the_pool_just_listed_as_its_own():
+    c = FakeCDP(["ours", "just_opened"])
+    m = FakeMachine(3.0, c)
+    d = m.deps()
+    d.visible = lambda t, to: True                  # every reader tab is its window's active tab
+    pre = GR.recycle_preflight(["ours"], deps=d, own_again=lambda: ["ours", "just_opened"],
+                               settle_s=20.0)
+    assert pre["ok"] is True and m.t == 20.0        # waited once for the status to catch up
+
+
+def test_the_preflight_refuses_an_unproven_instance():
+    c = FakeCDP(["a"])
+    m = FakeMachine(3.0, c)
+    d = m.deps()
+
+    def no_proof():
+        raise RuntimeError("REFUSED_INSTANCE_DOWN")
+    d.prove = no_proof
+    pre = GR.recycle_preflight(["a"], deps=d)
+    assert pre["ok"] is False and "REFUSED_INSTANCE_DOWN" in pre["refused"]
+
+
+def test_a_refused_recycle_is_logged_once_and_not_asked_again_inside_its_backoff():
+    asked = []
+
+    def refuse():
+        asked.append(1)
+        return {"ok": False, "refused": "OWNER_MAY_BE_USING: a tab ...",
+                "active_foreign": [{"id": "x", "url": "https://www.wsj.com/world"}]}
+    g1 = S.recycle_gate("MEMORY_PRESSURE", now=1000.0, preflight=refuse, state={})
+    assert g1["go"] is False and g1["reason"] == "refused" and g1["log"]["event"] == \
+        "chrome_recycle_refused"
+    base = S.refused_backoff_s(1)
+    # every later tick inside the backoff: no preflight, no log, no pool stop
+    for t in (1060.0, 1000.0 + base - 1):
+        g = S.recycle_gate("MEMORY_PRESSURE", now=t, preflight=refuse, state=g1["state"])
+        assert g["go"] is False and g["reason"] == "refusal_backoff" and g["log"] is None
+    assert len(asked) == 1
+    # after it: asked again; the same refusal is not logged again, and waits twice as long
+    g2 = S.recycle_gate("MEMORY_PRESSURE", now=1000.0 + base + 1, preflight=refuse,
+                        state=g1["state"])
+    assert g2["log"] is None and g2["wait_s"] == round(min(2 * base, S.refused_backoff_s(99)))
+    # when it clears: go, and the clearing is logged once
+    g3 = S.recycle_gate("AGE", now=1e6, preflight=lambda: {"ok": True}, state=g2["state"])
+    assert g3["go"] is True and g3["log"]["event"] == "chrome_recycle_refusal_cleared"
+    assert "retry_after" not in g3["state"]
+
+
+def test_the_refusal_and_the_hourly_count_survive_a_supervisor_restart(tmp_path):
+    f = tmp_path / "chrome_recycle_state.json"
+    g = S.recycle_gate("AGE", now=5000.0, state=S.load_recycle_state(f),
+                       preflight=lambda: {"ok": False, "refused": "OWNER_MAY_BE_USING: x"})
+    S.save_recycle_state(g["state"], f)
+    # a new supervisor process reads the file: still backing off
+    g2 = S.recycle_gate("AGE", now=5060.0, state=S.load_recycle_state(f),
+                        preflight=lambda: pytest.fail("re-asked inside the backoff"))
+    assert g2["reason"] == "refusal_backoff"
+    st = {}
+    for t in (100.0, 200.0):
+        st = S.record_recycle_result(st, {"ok": True}, why="AGE", now=t)
+    S.save_recycle_state(st, f)
+    g3 = S.recycle_gate("AGE", now=300.0, state=S.load_recycle_state(f), per_hour=2,
+                        preflight=lambda: pytest.fail("over the hour's count"))
+    assert g3["go"] is False and g3["reason"] == "hourly_budget"
+
+
+def test_the_supervisor_gates_the_recycle_before_it_stops_the_pool():
+    """Source order inside `recycle_and_relaunch`: the gate is called, and a
+    skipped gate returns, before `stop_pool_gracefully` is reached."""
+    import ast
+    import inspect
+    src = inspect.getsource(S.main)
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "recycle_and_relaunch")
+    calls = [(n.lineno, n.func.id) for n in ast.walk(fn)
+             if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)]
+    first = {name: min(ln for ln, nm in calls if nm == name)
+             for name in ("recycle_gate", "stop_pool_gracefully")}
+    assert first["recycle_gate"] < first["stop_pool_gracefully"]
+    skip_return = [n.lineno for n in ast.walk(fn) if isinstance(n, ast.Return)
+                   and isinstance(n.value, ast.Dict)
+                   and any(isinstance(k, ast.Constant) and k.value == "skipped"
+                           for k in n.value.keys)]
+    assert skip_return and skip_return[0] < first["stop_pool_gracefully"]
+
+
+def test_a_tab_the_reader_opened_stays_its_own_after_the_pool_is_gone(tmp_path):
+    """12:19 HKT 2026-09-29: the preflight passed, the pool was stopped, and two
+    of the pool's own search tabs left open by the stop refused the recycle as
+    OWNER_MAY_BE_USING. Every tab id the pool opened is published and kept."""
+    st = S.remember_reader_tabs({"open_tab_ids": ["A"], "reader_tab_ids": ["A", "B", "C"],
+                                 "orphaned_tabs": ["D"]}, {})
+    st = S.remember_reader_tabs({"open_tab_ids": [], "reader_tab_ids": ["E"]}, st)  # a new pool
+    assert st["reader_tab_ids"] == ["A", "B", "C", "D", "E"]
+    c = FakeCDP(["B", "owner"])
+    m = FakeMachine(3.0, c)
+    d = m.deps()
+    d.visible = lambda t, to: True
+    pre = GR.recycle_preflight(st["reader_tab_ids"], deps=d)
+    assert [a["id"] for a in pre["active_foreign"]] == ["owner"]       # B is ours; owner is not
+    c2 = FakeCDP(["B", "blank"])
+    c2.pages[1]["url"] = "about:blank"
+    m2 = FakeMachine(3.0, c2)
+    d2 = m2.deps()
+    d2.visible = lambda t, to: True
+    assert GR.recycle_preflight(st["reader_tab_ids"], deps=d2)["ok"] is True
+
+
+def test_the_pool_status_names_every_tab_the_reader_opened(tmp_path):
+    p = tmp_path / "reader_pool_status.json"
+    p.write_text(json.dumps({"open_tab_ids": ["T1"], "reader_tab_ids": ["T0", "T1"],
+                             "orphaned_tabs": ["T9"]}), encoding="utf-8")
+    assert GR.pool_open_tab_ids(p) == ["T1", "T0", "T9"]
+
+
+def test_memory_pressure_recycles_only_a_chrome_that_is_the_squeezer():
+    """12:19 HKT 2026-09-29: Chrome 4.6 GB, 2.9 GB free of 31.4 -- other jobs
+    held the memory; recycling the browser every ~20 min relieved nothing."""
+    assert GR.chrome_recycle_due(age_s=1536, mem_gb=4.6, free_gb=2.9, total_gb=31.4) is None
+    assert GR.chrome_recycle_due(age_s=1536, mem_gb=5.0, free_gb=2.5, total_gb=16.0).startswith(
+        "MEMORY_PRESSURE")                                # 5.0 of 13.5 GB in use
+    assert GR.chrome_recycle_due(age_s=60, mem_gb=9.0, free_gb=2.9, total_gb=31.4).startswith(
+        "MEMORY")                                         # the hard size bar still binds
+    assert GR.chrome_recycle_due(age_s=3 * 3600, mem_gb=2.0, free_gb=2.9,
+                                 total_gb=31.4).startswith("AGE")

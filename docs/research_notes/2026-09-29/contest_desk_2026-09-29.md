@@ -3,6 +3,8 @@
 **Licence:** `PRODUCT_EXPERIMENT`, family of one. Utility: "contest rank, right tail".
 Whatever this book returns is never evidence for or against the project's skill.
 
+> **AMENDED 2026-09-29 (see the AMENDMENT at the end):** the negative medians below are the zero-skill NULL's, not the rule's history (ROT_ALL's actual-sign median is positive), and the Asian report times were misread. The original text is kept unchanged below.
+
 **Every rule below loses more often than it wins.** The median relative result is negative for
 every rule, every fill, and every era. The desk sells variance for rank, and it assumes zero
 skill at predicting direction. $0 LLM, no orders, no broker calls, nothing sent.
@@ -210,3 +212,234 @@ or next-open fills take away most of the rotation's advantage.
 **HIGHEST-EV EXPERIMENT:** on Oct 12, place the two small test tickets (one US, one Asian) and
 read the fill convention. That one observation decides between ROT and MAX TAIL, and between
 roughly 9% and 2–4% odds of a top-10 result. It costs nothing.
+
+
+---
+
+## AMENDMENT 2026-09-29 (builder, after `docs/reviews/REVIEW_2026-09-29_CONTEST_DESK.md`)
+
+This is a dated amendment. The text above is unchanged, and so are the receipts it cites. Each
+correction below was checked against the code and the receipts before it was written.
+
+**RESULTS SCOREBOARD.**
+
+- RESULT IMPROVEMENT: **NONE in edge.**
+- The owner had been told two wrong things, both corrected below:
+  - the median of the zero-skill null was presented as the rotation's own median;
+  - Asian report times were read wrongly.
+- The comparison the owner asked for ran on 31 seasons, 3 event pools and 4 books.
+- Its verdict: **keep the desk's rule; the reviewer's book is not measurably better or worse.**
+- LLM spend: $0. No network was used.
+- New receipts:
+  - `contest/sim/sim_20260929T030501Z.json` (the same sim, with corrected timing);
+  - `contest/compare/compare_20260929T031424Z.json`, with `_derived.md` / `_derived.json` and `_daily.parquet`;
+  - `contest/compare/prior_by_market_timingfix_20260929T032407Z.json`.
+
+### A1. A 00:00 UTC report stamp is "time unknown" (finding 1: verified)
+
+**What was wrong.**
+
+- Yahoo writes "time not supplied" as exactly 00:00 UTC. That is 13,298 of 21,458 Japanese
+  history stamps (62%).
+- The code read these as 09:00 JST, i.e. INTRA, so the desk measured and traded the day BEFORE
+  the reaction.
+- Across all non-US history, the fix reclassifies **17,281 of 80,922** stamps to UNKNOWN:
+
+  | market | stamps reclassified |
+  |---|---|
+  | JP | 13,298 |
+  | EU | 1,341 |
+  | TW | 1,231 |
+  | CN | 745 |
+  | KR | 276 |
+  | HK | 163 |
+  | IN | 128 |
+  | ID | 99 |
+
+- The note's line "only ~3% of Asian report stamps lack a time" was wrong.
+
+**What changed** (`contest_calendar.is_untimed_stamp` / `stamp_timing` / `untimed_mask`):
+
+- An untimed report is held for two sessions, from the session before its day to the session
+  after it. That covers the reaction whether the print comes before the open or after the
+  close.
+- The same rule is now used by `event_sessions`, `usual_timing`, `dedupe_stamps` and the live
+  desk's calendar stamps (`contest_desk.calendar_stamp`).
+- `usual_timing` now needs a strict majority of real times.
+- The live desk used to assume AMC for an unknown time. That buys a BMO print a day late and
+  can sell before the reaction.
+- The screener's real release times (20:00 or 12:30 UTC) are now read, except on estimated
+  dates.
+
+**"Confirmed" now separates the date from the time.**
+
+- The calendar receipt carries `n_confirmed_timed` and `n_confirmed_time_unknown`.
+- The sheet prints "DATE CONFIRMED, TIME UNKNOWN (held two sessions)".
+- On `calendar_2026-09-29.parquet`, all 64 CONFIRMED (JPX) rows are confirmed dates with
+  **unknown times**: 58 were UNKNOWN, and 6 carried a placeholder INTRA. **Confirmed and timed:
+  0.** The file on disk predates the fix; the next calendar build writes the split.
+
+**The Asia analysis, re-run** (next-open fills; NULL = zero direction skill):
+
+| ROT_ASIA | NULL P(> +40%), Oct 2019-25 | NULL P(> +40%), 2024-26 | realised median, Oct | realised median, 2024-26 |
+|---|---|---|---|---|
+| before (`sim_20260928T182048Z`) | 0.0% | 0.2% | +7.5% | n/a (not printed) |
+| after (`sim_20260929T030501Z`) | 0.1% | 0.8% | +10.2% | +14.2% (9 of 11 seasons positive) |
+
+**Restated conclusion.**
+
+- An Asia-only rotation still does not reach the right tail under zero skill: P(> +40%) stays
+  at or below 1%, now measured on the correct sessions.
+- Asian earnings reactions are too small to carry a five-name book past +40%.
+- Their size is still predictable. Re-measured with the corrected timing, b is 0.20-0.28 in
+  Asia excluding India, 0.14-0.19 in India, 0.18-0.33 in Europe, and unchanged in the US.
+- ROT_ALL and ROT_US are indistinguishable (2024-26 NULL P(> +40%): 8.9% vs 9.1%). Asia adds
+  nothing to the tail.
+
+### A2. The rotation's own distribution (finding 2: verified)
+
+**The median in the header is the null's, not the rule's.** The header's "every rule's median is
+negative" is the median of the zero-skill null, which puts one random sign on each day. The
+same receipt stores the actual-sign path as `realised`.
+
+**ROT_ALL, next-open fills, all 31 seasons 2019-26, actual signs.** Measured on the corrected
+timing (`sim_20260929T030501Z`); the pre-fix receipt is in brackets.
+
+| statistic | value |
+|---|---|
+| median | +6.3% [+11.1%] |
+| mean | +12.5% [+12.7%] |
+| seasons positive | 21 of 31 [20] |
+| above +20% | 10 of 31 [10] |
+| above +40% | 6 of 31 [5] |
+| below −20% | 4 of 31 [4] |
+
+**October seasons only (the contest's season, 7 of them).**
+
+| rule | median | positive | above +20% | above +40% | below −20% |
+|---|---|---|---|---|---|
+| ROT_ALL | +12.1% | 5 of 7 | 2 of 7 | 1 of 7 | 2 of 7 |
+| ROT_US | +1.3% | 4 of 7 | 2 of 7 | 1 of 7 | 2 of 7 |
+
+The null's medians (−2.5% to −4%) are a property of the null, and the tables now print both.
+
+**Is the positive realised drift real, or survivorship?** The US event pool (SEC 8-K item 2.02)
+holds events for 0 of the 1,638 names in the panel whose bars stop early. IBES actuals (on
+disk: announcement date and New York time) add 700 of them, with 10,958 events. Book-level
+results from `compare_20260929T031424Z`, 10 bps a side:
+
+- **Survivorship inside IBES:** dead names included minus dead names excluded.
+  - +1.2 pp a season on average (median 0.0, t 1.56).
+  - Including the dead names did NOT lower the result.
+  - The last season where any difference appears is 2022-Jul. The bars hold almost no deaths
+    after 2022, so for 2023-26 survivorship is **unmeasured**. It is bounded only by the
+    2019-22 reading, which pointed the other way.
+- **The print itself:** the desk rule minus a control that holds, in each slot, a liquid
+  company with no report within 5 sessions and the nearest 63-session volatility.
+  - SEC pool: +9.0 pp a season on average (median +1.5, 18 of 31 seasons positive, t 1.76).
+    Leaving out the best season gives +6.2.
+  - IBES pool: +9.8 pp (median +5.0, t 2.03).
+  - A random ranking of reporting names also has a positive realised median: +2.9% after the
+    fix, and +8.3% in Octobers.
+- **Reading:** most of the drift belongs to holding names that are reporting, and it is right
+  skewed (2020 and 2025-Jul dominate). That is consistent with the documented
+  announcement-period effect. At about 30 seasons and t ≤ 2.03 it is **not a claim**. It is a
+  reason to expect the realised path to beat the null, not to size on.
+
+### A3. The reviewer's book against the current one (the owner's brief, 2026-09-29)
+
+**Utility, declared: RISK-SEEKING.** The objective is a top-10 finish of about 2,700 teams.
+The quantity maximised is P(relative > +40%). A loss worse than "not top 10" is not
+penalised. The top-10 line itself is soft, somewhere between +20% and +55%.
+
+**Contest rules applied.**
+
+- US listings only; five slots at 20% of NAV; long only.
+- Gross exposure is never above 100%; the simulator asserts it.
+- Buy at the open of the session before the print, sell at the next open. An untimed print is
+  held two sessions.
+- Costs of 0, 10 and 25 bps a side. Commissions are the owner's to confirm.
+- Benchmark: ACWI, as a proxy for WLS.
+
+**The four books.**
+
+| book | what it holds |
+|---|---|
+| CURRENT | the desk's rule: trailing mean \|earnings reaction\|; cash when fewer than 5 names report |
+| CURRENT_FILL | the same, with empty slots filled by the most volatile liquid operating companies |
+| REVIEWER | ranked by the expected earnings move, i.e. the mean rank of trailing \|reaction\| and nn_lab's walk-forward size-of-move forecast (from 2020); empty slots filled with the most volatile names |
+| VOLMATCH_CONTROL | the control from A2 |
+
+The option-implied move could not be used: no history of it exists on disk.
+
+**How to read the P columns.**
+
+- **NULL** is zero direction skill.
+- **BOOT** resamples the season's own days, so it keeps that season's drift. It is an
+  optimistic, conditional reading.
+- The truth for a new October is between the two.
+- Realised counts are seasons out of n.
+
+**The contest table** (SEC 8-K pool, the desk's own; 10 bps a side). Each P cell reads
+P(> +20% / > +40% / > +60% / < −20%).
+
+| window | book | realised median | realised > +20 / > +40 / > +60 / < −20 | NULL P | BOOT P |
+|---|---|---|---|---|---|
+| Oct 2019-25 (n 7) | CURRENT | −2.5% | 2 / 0 / 0 / 2 | 12.1 / 3.2 / 0.8 / 21.9% | 34.0 / 16.8 / 6.7 / 29.9% |
+| | CURRENT_FILL | −3.2% | 2 / 0 / 0 / 2 | 12.9 / 3.3 / 1.0 / 25.0% | 33.2 / 16.0 / 5.9 / 30.2% |
+| | REVIEWER | −3.6% | 1 / 1 / 1 / 1 | 13.0 / 3.6 / 0.7 / 25.0% | 35.2 / 22.9 / 13.2 / 31.1% |
+| 2024-26, all seasons (n 11) | CURRENT | +3.4% | 4 / 2 / 1 / 2 | 17.3 / 7.8 / 3.2 / 31.1% | 39.3 / 22.8 / 14.6 / 18.5% |
+| | CURRENT_FILL | +3.3% | 4 / 2 / 1 / 2 | 19.2 / 8.4 / 3.7 / 31.5% | 38.7 / 21.2 / 12.8 / 18.1% |
+| | REVIEWER | +6.1% | 3 / 2 / 2 / 1 | 18.3 / 7.7 / 2.8 / 32.7% | 39.8 / 28.3 / 20.2 / 17.4% |
+| 2019-26, all (n 31) | CURRENT | +0.1% | 8 / 3 / 1 / 7 | 13.1 / 4.3 / 1.7 / 24.4% | 30.0 / 15.9 / 7.8 / 24.6% |
+| | REVIEWER | −0.3% | 7 / 4 / 2 / 6 | 15.1 / 5.5 / 1.8 / 27.1% | 32.2 / 19.4 / 11.3 / 23.6% |
+
+**The effect of costs** (CURRENT, 2024-26, NULL / BOOT P(> +40%)):
+
+| cost a side | NULL | BOOT |
+|---|---|---|
+| 0 bps | 9.1% | 26.2% |
+| 10 bps | 7.8% | 22.8% |
+| 25 bps | 5.2% | 17.9% |
+
+Every season is printed on its own line, all four P's, in
+`contest/compare/compare_20260929T031424Z_derived.md`.
+
+**Paired season differences, 10 bps** (`_derived.json`):
+
+| comparison | SEC pool | IBES pool |
+|---|---|---|
+| REVIEWER minus CURRENT | +1.0 pp (t 0.36) | −1.4 pp (t −0.49) |
+| CURRENT_FILL minus CURRENT | −1.0 pp (t −1.2) | — |
+
+Two reasons the reviewer's changes do not show:
+
+- The size-of-move blend moves the ranking. Its sign flips with the event pool.
+- The no-cash rule is almost never used. In season there is nearly always a fifth reporting
+  name: fillers averaged 0.1-0.2 of the 5 slots.
+
+**Which book maximises P(top 10).**
+
+- Under the null the books cannot be told apart. P(> +40%) is 3-4% for Octobers and about 8%
+  for 2024-26 at 10 bps.
+- Under the season-drift bootstrap, REVIEWER is ahead on the SEC pool (22.9% against 16.8% in
+  October) and behind on the IBES pool (22.3% against 27.2% in 2024-26).
+- None of the differences is distinguishable. **Recommendation: keep CURRENT**, the frozen
+  desk rule:
+  - it is the book the registered TRIAL-CONTEST-MAG-1 grades;
+  - the reviewer's changes buy no measurable odds;
+  - the implied-move ranking cannot be backtested here.
+- **The honest odds** for a top-10 finish with CURRENT at 10 bps:
+  - P(> +40%) between about 3% (the October null) and about 17-23% (a season whose drift
+    repeats);
+  - realised history: 3 of 31 seasons above +40%, and 0 of 7 Octobers.
+- **The price:** P(< −20%) is 22-31% under the null.
+- If fills turn out to be at the next open with 25 bps a side, every tail probability falls
+  by about a third.
+
+**Not done here:**
+
+- The vendor-date miss rate (finding 3). The dry run and the simulation use the actual dates;
+  the live desk will not have them.
+- Pricing the implied move (finding 4). The desk already snapshots it forward, into
+  `contest/implied/`, for the trial.

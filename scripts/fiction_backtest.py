@@ -1540,7 +1540,8 @@ def grade_cell(g: pd.DataFrame) -> dict:
             "model_minus_momentum": (_block(hit.loc[mom.index] - mh, mom["week"]) if len(mh) else None),
             "brier": float(((p - y) ** 2).mean()), "brier_base_rate": float(((base - y) ** 2).mean()),
             "brier_coin": 0.25, "base_rate": base, "mean_p": float(p.mean()), "sd_p": float(p.std()),
-            "ece": PP.ece(p.tolist(), y.tolist()).get("ece"), "reliability": rel}
+            "ece": PP.ece(p.tolist(), y.tolist()).get("ece"), "reliability": rel,
+            "auc": auc(p.to_numpy(), y.to_numpy()), **abstention(p.to_numpy(), y.to_numpy())}
     d = g[g["r5"].notna()]
     if len(d):
         y = d["r5"].astype(float)
@@ -1596,6 +1597,126 @@ def grade_cell(g: pd.DataFrame) -> dict:
     return out
 
 
+ABSTAIN_SD = 0.03          # sd of p below this = the model declined to forecast (0.50 +/- a tilt)
+LEAK_ID_RATE = 0.10        # registered: A3 famous identified on > 10% of canaries -> the fiction leaks
+LEAK_HIT = 0.70            # registered: A3 famous hit rate >= 0.70 -> the fiction leaks
+
+
+def auc(p, y) -> float | None:
+    """Mann-Whitney AUC of p against the binary outcome y (ties count half)."""
+    p, y = np.asarray(p, float), np.asarray(y, int)
+    pos, neg = p[y == 1], p[y == 0]
+    if not len(pos) or not len(neg):
+        return None
+    r = pd.Series(np.concatenate([pos, neg])).rank().to_numpy()
+    return float((r[:len(pos)].sum() - len(pos) * (len(pos) + 1) / 2) / (len(pos) * len(neg)))
+
+
+def abstention(p, y) -> dict:
+    """How much of a direction cell is the model declining to forecast."""
+    p, y = np.asarray(p, float), np.asarray(y, int)
+    tie = p == 0.5
+    side = ~tie
+    hit_side = float(((p[side] > 0.5).astype(int) == y[side]).mean()) if side.any() else None
+    return {"share_p_exactly_half": float(tie.mean()) if len(p) else None,
+            "n_took_a_side": int(side.sum()), "hit_when_took_a_side": hit_side,
+            "abstained": bool(len(p) and float(np.std(p, ddof=1)) < ABSTAIN_SD)}
+
+
+def leak_table(F: pd.DataFrame, canaries: dict) -> dict:
+    """The registered leak rule per arm, over EVERY arm that answered the famous A3 canaries or
+    the famous forecasts. A clause with no data is NOT_EVALUATED, never 'passed' (amended
+    2026-09-29: the Opus arm answered the canaries only and got no leak verdict at all)."""
+    hits: dict = {}
+    if F is not None and len(F):
+        for arm, g in F[F["part"] == "famous"].groupby("arm"):
+            for lv, gg in g.groupby("level"):
+                d = gg[gg["beat5"].notna()]
+                hits.setdefault(arm, {})[lv] = (float(((d["p_beat_median_5d"] > 0.5).astype(int)
+                                                       == d["beat5"].astype(int)).mean()) if len(d) else None)
+    arms = set(hits) | {k.split("|")[0] for k in canaries if k.endswith("|famous|A3_SYNTHETIC")}
+    out = {}
+    for arm in sorted(arms):
+        cr = canaries.get(f"{arm}|famous|A3_SYNTHETIC") or {}
+        idr = cr.get("identified_rate")
+        h3 = (hits.get(arm) or {}).get("A3_SYNTHETIC")
+        clauses = {"identified_rate_gt_10pct": (None if idr is None else bool(idr > LEAK_ID_RATE)),
+                   "famous_A3_hit_ge_0.70": (None if h3 is None else bool(h3 >= LEAK_HIT))}
+        fired = [k for k, v in clauses.items() if v]
+        evaluated = [k for k, v in clauses.items() if v is not None]
+        out[arm] = {"famous_hit_by_level": hits.get(arm, {}), "A3_canary_identified_rate": idr,
+                    "A3_canary_identified": cr.get("identified_company"), "A3_canary_n": cr.get("n"),
+                    "clauses": clauses, "clauses_evaluated": evaluated,
+                    "fiction_leaks": (True if fired else (False if len(evaluated) == 2 else
+                                                          (None if not evaluated else "NOT_FIRED_ON_PARTIAL_EVIDENCE")))}
+    return out
+
+
+def stage_amend(run: str, *, note: str = "") -> dict:
+    """A NEW receipt beside receipt_analyze.json (which is never rewritten): the direction cells
+    re-read with AUC and the abstention figures, and the registered leak rule for every arm.
+    No model is called."""
+    from backend.services import disk_guard as DG                      # noqa: PLC0415
+    rd = RUN_ROOT / run
+    base = json.loads((rd / "receipt_analyze.json").read_text(encoding="utf-8"))
+    plan = load_plan(rd, "clean")
+    cases = {c["case_id"]: c for c in plan["cases"]}
+    packets = plan["packets"]
+    allb = load_bars("2017-01-01")
+    cal = np.array(sorted(allb["date"].unique()))
+    need = set()
+    for pk in packets:
+        i = int(np.searchsorted(cal, np.datetime64(pd.Timestamp(pk["decision_date"]))))
+        for j in (i - 252, i - 21, i, i + H_SHORT, i + H_LONG):
+            if 0 <= j < len(cal):
+                need.add(pd.Timestamp(cal[j]))
+    syms = {pk["symbol"] for pk in packets}
+    oc = outcomes_for(packets, allb[allb["symbol"].isin(syms) | allb["date"].isin(need)]
+                      .sort_values(["symbol", "date"]))
+    del allb
+    okey = {k: r for k, r in zip(oc["key"], oc.to_dict("records"))}
+    rows = []
+    for f in sorted((rd / "rows").glob("*.jsonl")):
+        if not f.name.endswith("_raw_local.jsonl"):
+            rows += [json.loads(ln) for ln in f.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    R = pd.DataFrame(rows)
+    fc = R[(R["kind"] == "forecast") & R["parsed_ok"]]
+    flat = []
+    for _, r in fc.iterrows():
+        o = okey.get(cases[r["case_id"]]["key"]) if r["case_id"] in cases else None
+        if o is None:
+            continue
+        flat.append({"arm": r["arm"], "level": r["level"], "part": r["part"], **o,
+                     "p5": float(r["answer"]["p_beat_median_5d"])})
+    F = pd.DataFrame(flat)
+    cells = {}
+    for (arm, part, level), g in F.groupby(["arm", "part", "level"]):
+        d = g[g["beat5"].notna()]
+        y = d["beat5"].astype(int).to_numpy()
+        p = d["p5"].to_numpy()
+        prior = (base.get("cells") or {}).get(f"{arm}|{part}|{level}", {})
+        cells[f"{arm}|{part}|{level}"] = {"n": int(len(d)), "auc": auc(p, y), "sd_p": float(np.std(p, ddof=1)),
+                                           **abstention(p, y),
+                                           "formal_direction_verdict": (prior.get("verdicts") or {}).get("direction")}
+    famous_F = F.rename(columns={"p5": "p_beat_median_5d"}) if len(F) else F
+    rec = {"experiment": "AMNESIA-2 amendment (no model called)", "run": run,
+           "amends": "receipt_analyze.json (unchanged on disk)", "generated_at": datetime.now(timezone.utc).isoformat(),
+           "rule_leak": f"A3 famous identified > {LEAK_ID_RATE:.0%} of canaries OR A3 famous hit >= {LEAK_HIT}",
+           "abstain_sd": ABSTAIN_SD, "cells": cells,
+           "leak_test": leak_table(famous_F, base.get("canaries") or {}),
+           "provenance_note": ("the file arm's answering agents were full coding sub-agents with file, "
+                               "shell and web tools; their confinement was an instruction "
+                               "(ANSWERING_INSTRUCTIONS.md rule 3), sealed/ sat one directory away, and "
+                               "no tool-call log was kept. The harness test pins only the READER's "
+                               "confinement."), "note": note}
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    out = rd / f"receipt_amendment_{stamp}.json"
+    DG.atomic_write_json(out, rec)
+    print(json.dumps({"out": str(out), "leak_test": rec["leak_test"],
+                      "opus": {k: v for k, v in cells.items() if "opus" in k}}, indent=1, default=str))
+    return rec
+
+
 def _t(block: dict) -> float:
     """A block's t, with a zero-spread block read as +/-inf by its mean's sign
     (X2._date_block returns NaN there, which would hide a perfect score)."""
@@ -1616,6 +1737,11 @@ def verdicts(cell: dict) -> dict:
                     and d["hit"] <= d["momentum_hit_same_rows"])
         v["direction"] = ("ALPHA_DETECTED" if dir_ok and not beta else "BETA_EXPLAINS" if dir_ok
                           else "FAILED_VARIANT" if hi < 0.55 else "CANNOT_DISTINGUISH")
+        if d.get("abstained"):
+            # the formal rule is printed unchanged; the READING is that the model declined to
+            # forecast, which measures no skill either way (REVIEW_2026-09-29_FICTION_BACKTEST 1)
+            v["direction_reading"] = (f"CANNOT_DISTINGUISH (model abstained: sd_p {d['sd_p']:.3f}, "
+                                      f"{d['share_p_exactly_half']:.0%} of p exactly 0.50)")
     r = cell.get("range5")
     if r:
         dv = r["diff_vs_vol_prior"]
@@ -1729,19 +1855,7 @@ def stage_analyze(run: str) -> dict:
                 cell = grade_cell(g.reset_index(drop=True))
                 cell["verdicts"] = verdicts(cell)
                 receipt["cells"][f"{arm}|{part}|{level}"] = cell
-            leak = {}
-            for arm, g in F[F["part"] == "famous"].groupby("arm"):
-                hit = {}
-                for lv, gg in g.groupby("level"):
-                    d = gg[gg["beat5"].notna()]
-                    hit[lv] = (float(((d["p_beat_median_5d"] > 0.5).astype(int) == d["beat5"].astype(int)).mean())
-                               if len(d) else None)
-                cr = receipt["canaries"].get(f"{arm}|famous|A3_SYNTHETIC", {})
-                leak[arm] = {"famous_hit_by_level": hit,
-                             "A3_canary_identified_rate": cr.get("identified_rate"),
-                             "fiction_leaks": bool((cr.get("identified_rate") or 0) > 0.10
-                                                   or (hit.get("A3_SYNTHETIC") or 0) >= 0.70)}
-            receipt["leak_test"] = leak
+            receipt["leak_test"] = leak_table(F, receipt["canaries"])
             n_by = F[F["part"] == "clean"].groupby(["arm", "level"]).size()
             receipt["mde_note"] = {f"{a}|{lv}": {"n": int(n),
                                                  "row_mde80_pp": round(2.8 * math.sqrt(0.25 / n) * 100, 1)}
@@ -1763,7 +1877,7 @@ def stage_analyze(run: str) -> dict:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("stage", choices=["plan", "probe-nvidia", "run", "ingest", "analyze"])
+    ap.add_argument("stage", choices=["plan", "probe-nvidia", "run", "ingest", "analyze", "amend"])
     ap.add_argument("--run", required=True)
     ap.add_argument("--part", default="clean")
     ap.add_argument("--arm", default="deepseek")
@@ -1787,6 +1901,8 @@ def main(argv=None) -> int:
                   a.model_id, a.allow_local, tuple(a.kinds.split(",")))
     elif a.stage == "ingest":
         stage_ingest(a.run, a.arm, a.model_id)
+    elif a.stage == "amend":
+        stage_amend(a.run)
     else:
         stage_analyze(a.run)
     return 0

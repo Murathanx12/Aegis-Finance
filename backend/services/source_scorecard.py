@@ -163,6 +163,11 @@ def load_corpus(root: Optional[Path] = None) -> Corpus:
                 d = json.loads(p.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 continue
+            # 2026-09-29: the browse lane's front headline records and general-
+            # news pages share this store; the scorecard grades Dow Jones claims
+            if isinstance(d, dict) and (d.get("page_kind") == "front"
+                                        or d.get("source_kind") == "general_news"):
+                continue
             if isinstance(d, dict) and d.get("sha"):
                 c.articles[str(d["sha"])] = d
         cdir = root / "_claims"

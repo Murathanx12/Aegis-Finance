@@ -422,3 +422,7 @@ backend/data/optimus/contest/*.cmd
 backend/data/optimus/contest/STOP
 backend/data/optimus/contest/wls/
 backend/data/optimus/contest/calendar/confirmations_terminal*.csv
+
+# 2026-09-29: digests paraphrase subscriber articles; the repo is public
+backend/data/optimus/digest/
+backend/data/optimus/news_digest/read_next.jsonl

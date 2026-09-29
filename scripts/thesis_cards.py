@@ -398,8 +398,12 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
         dry_run: bool = False, retry_refused: bool = False,
         timeout: float | None = None, forecast_path: Path | None = None,
         bracket_balance: bool = False, balance_lag_s: float | None = None,
-        provider_fn: Callable[[str, str], dict] | None = None) -> dict:
+        provider_fn: Callable[[str, str], dict] | None = None,
+        social_fn: Callable[[str, Any], list[dict]] | None = None) -> dict:
     asof_d = TC._asof_date(asof or datetime.now(timezone.utc).date())
+    # a test root never reads the real social corpus
+    social_fn = social_fn or ((lambda t, a: []) if root is not None
+                              else (lambda t, a: TC.guarded_social_reads(t, asof=a)))
     day = asof_d.isoformat()
     # A run against a non-default root (a test's tmp_path) must never append to
     # the real forecast ledger: its rows go beside its cards unless told otherwise.
@@ -464,7 +468,8 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
         e = engine_for(u["ticker"], asof_d, inputs)
         qp = TC.quest_prompt(u["ticker"], e,
                              prior_card=TC.previous_card(u["ticker"], asof_d, root=root),
-                             open_promises=TC.open_promises(u["ticker"], path=promises_file))
+                             open_promises=TC.open_promises(u["ticker"], path=promises_file),
+                             social_reads=social_fn(u["ticker"], asof_d))
         print(f"\n===== ENGINE SIDE {u['ticker']} ({u['kind']}, {u['source']}) =====")
         print(json.dumps(e, indent=1, default=str))
         print(f"\n===== OPENCLAW QUEST PROMPT ({len(qp)} chars) =====")
@@ -546,9 +551,13 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
             return
         try:
             e = engine_for(t, asof_d, inputs)
+            # signed-in pages come ONLY from the guarded reader's store; the
+            # agent itself has no browser (2026-09-29)
+            social = social_fn(t, asof_d)
             prompt = TC.quest_prompt(t, e,
                                      prior_card=TC.previous_card(t, asof_d, root=root),
-                                     open_promises=TC.open_promises(t, path=promises_file))
+                                     open_promises=TC.open_promises(t, path=promises_file),
+                                     social_reads=social)
             q = quest_fn(t, prompt, model=model, timeout=timeout, log_dir=log_dir)
             meta = {"openclaw_log_path": q.get("log_path"),
                     "openclaw_elapsed_s": q.get("elapsed_s"),
@@ -563,6 +572,9 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
                     "quest_tokens_cached": (q.get("usage") or {}).get("cache_read"),
                     "quest_tokens_out": (q.get("usage") or {}).get("output"),
                     "quest_model": model, "source": u.get("source"),
+                    "guarded_social_reads": [{"host": r["host"], "url": r.get("url"),
+                                              "read_utc": r.get("read_utc")}
+                                             for r in social],
                     "run_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
             if u.get("trigger"):
                 meta["trigger"] = u["trigger"]

@@ -24,8 +24,11 @@ RULES
                  window, held (the frozen book's fundamentals tilt and size band are NOT
                  reproduced; stated)
 
-EVERY RULE HERE LOSES MORE OFTEN THAN IT WINS under zero skill: the median relative
-result is negative. It is a choice of variance for rank. Seasons are reported one by
+Under the zero-skill NULL every rule's median relative result is negative: it is a choice
+of variance for rank. The null is not the rule's history. The ACTUAL-sign path of each
+season is stored as `realised` and printed beside the null (amended 2026-09-29: the
+2026-09-29 note reported the null's median as if it were the rotation's; ROT_ALL at
+next_open had a realised median of +11.1% over 31 seasons). Seasons are reported one by
 one; any pooled line says what it pools.
 
 PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. No network.
@@ -247,7 +250,9 @@ def run(draws: int = 4000, from_year: int = 2017) -> dict:
             "caveats": ["zero direction skill by construction (daily sign flip)",
                         "US report dates: SEC 8-K 2.02 acceptance times; elsewhere Yahoo earnings dates (vendor)",
                         "a report with no time stamp is held two sessions (both cases covered)",
-                        "survivor-selected outside the US: today's listings only",
+                        "survivor-selected in EVERY market: outside the US today's listings only; "
+                        "in the US the 8-K event pool covers 47 of 1,784 delisted names "
+                        "(bounded in contest_book_compare, amended 2026-09-29)",
                         "WLS membership not applied (not on disk)",
                         "each rotation step is one day even when a hold spans two sessions",
                         "prices converted to USD with Yahoo daily FX closes"]}
@@ -271,13 +276,19 @@ def table(res: dict) -> str:
                                               p40=("P>+40%", "mean"), p100=("P>+100%", "mean"),
                                               med=("median", "mean"), p05=("p05", "mean"),
                                               p40_min=("P>+40%", "min"), p40_max=("P>+40%", "max"),
-                                              real_gt20=("realised", lambda s: int((s > 0.2).sum())))
+                                              real_gt20=("realised", lambda s: int((s > 0.2).sum())),
+                                              real_gt40=("realised", lambda s: int((s > 0.4).sum())),
+                                              real_pos=("realised", lambda s: int((s > 0).sum())),
+                                              real_med=("realised", "median"))
         lines.append(f"### {title} (mean of per-season numbers; n = seasons)\n")
-        lines.append("| rule | fill | n | P>+20% | P>+40% (range) | P>+100% | median | p05 | realised > +20% |")
-        lines.append("|---|---|---|---|---|---|---|---|---|")
+        lines.append("| rule | fill | n | NULL P>+20% | NULL P>+40% (range) | NULL P>+100% | NULL median | NULL p05 "
+                     "| REALISED median | realised > 0 | realised > +20% | realised > +40% |")
+        lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|")
         for (rule, fill), r in g.iterrows():
             lines.append(f"| {rule} | {fill} | {int(r.n)} | {r.p20:.1%} | {r.p40:.1%} ({r.p40_min:.1%}-{r.p40_max:.1%}) "
-                         f"| {r.p100:.1%} | {r.med:+.1%} | {r.p05:+.1%} | {int(r.real_gt20)} of {int(r.n)} |")
+                         f"| {r.p100:.1%} | {r.med:+.1%} | {r.p05:+.1%} | {r.real_med:+.1%} "
+                         f"| {int(r.real_pos)} of {int(r.n)} | {int(r.real_gt20)} of {int(r.n)} "
+                         f"| {int(r.real_gt40)} of {int(r.n)} |")
         lines.append("")
     lines += season_table(df, "next_open")
     return "\n".join(lines)
@@ -287,12 +298,14 @@ def season_table(df: pd.DataFrame, fill: str) -> list[str]:
     """Every season on its own line: P(> +40% rel) / median, one fill. No pooling."""
     sub = df[df.fill == fill]
     rules = sorted(sub.rule.unique())
-    out = [f"### Every season, fill = {fill}: P(> +40% relative) / median relative\n",
+    out = [f"### Every season, fill = {fill}: NULL P(> +40% relative) / NULL median / REALISED\n",
            "| season | " + " | ".join(rules) + " |", "|---|" + "---|" * len(rules)]
     for w, g in sub.groupby("window", sort=False):
         gi = g.set_index("rule")
         out.append(f"| {w} | " + " | ".join(
-            f"{gi.at[r, 'P>+40%']:.1%} / {gi.at[r, 'median']:+.1%}" if r in gi.index else "n/a"
+            f"{gi.at[r, 'P>+40%']:.1%} / {gi.at[r, 'median']:+.1%} / "
+            + (f"{gi.at[r, 'realised']:+.1%}" if "realised" in gi.columns else "n/a")
+            if r in gi.index else "n/a"
             for r in rules) + " |")
     out.append("")
     return out

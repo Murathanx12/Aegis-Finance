@@ -125,8 +125,8 @@ def dedupe_stamps(raw: pd.DataFrame, *, days: int = 4) -> pd.DataFrame:
     r = r.sort_values(["symbol", "ts_utc"]).reset_index(drop=True)
     new_grp = (r.symbol != r.symbol.shift()) | ((r.ts_utc - r.ts_utc.shift()).dt.days > days)
     r["grp"] = new_grp.cumsum()
-    loc_mid = r.ts_utc.dt.tz_convert("America/New_York")
-    r["untimed"] = ((loc_mid.dt.hour == 0) & (loc_mid.dt.minute == 0)).astype(int)
+    # a placeholder is local midnight OR exactly 00:00 UTC (Yahoo's "time not supplied")
+    r["untimed"] = cc.untimed_mask(r.ts_utc, r.symbol).astype(int).to_numpy()
     r["prio"] = r.source.map(SOURCE_PRIORITY).fillna(9)
     r = r.sort_values(["grp", "untimed", "prio"]).drop_duplicates("grp", keep="first")
     return r.drop(columns=["grp", "untimed", "prio"]).sort_values(["symbol", "ts_utc"]).reset_index(drop=True)
@@ -507,6 +507,8 @@ def render_sheet(s: Sheet, *, header_extra: str = "") -> tuple[str, str]:
         L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
         for r in top.sort_values("buy_open_hkt").itertuples():
             conf = "CONFIRMED" if getattr(r, "date_confirmed", False) else f"NOT CONFIRMED ({r.date_status})"
+            if getattr(r, "date_confirmed", False) and r.timing == "UNKNOWN":
+                conf = "DATE CONFIRMED, TIME UNKNOWN (held two sessions)"
             L.append(f"| {r.rank} | {r.bbg_ticker} | {str(getattr(r, 'name', '') or '')[:28]} | {r.market} "
                      f"| {r.buy_open_hkt:%a %H:%M} | {pd.Timestamp(r.ts_utc).tz_convert(cc.session_hours(r.symbol)[0]):%a %d %b %H:%M} local, {r.timing} "
                      f"| {conf} | {_fmt_pct(r.trail_abs)} over {int(r.n_prior)} "
@@ -549,7 +551,10 @@ def render_sheet(s: Sheet, *, header_extra: str = "") -> tuple[str, str]:
     if len(nxt):
         short.append("Reserves: " + ", ".join(nxt.bbg_ticker.head(3)) + ".")
     unconf = int((~top.date_confirmed).sum()) if len(top) and "date_confirmed" in top else 0
-    short.append(f"{unconf} of {len(top)} dates NOT confirmed: check EVTS. Zero-skill lottery; not evidence.")
+    untimed = int((top.date_confirmed & (top.timing == "UNKNOWN")).sum())         if len(top) and "date_confirmed" in top else 0
+    short.append(f"{unconf} of {len(top)} dates NOT confirmed"
+                 + (f", {untimed} confirmed with time UNKNOWN (two-session hold)" if untimed else "")
+                 + ": check EVTS. Zero-skill lottery; not evidence.")
     return md, " ".join(short)
 
 
@@ -665,15 +670,8 @@ def run_live(d: date, *, refresh: bool = True, preview: bool = False) -> int:
     # the calendar's upcoming dates become future stamps (timing from the calendar)
     fut = []
     for r in calendar.itertuples():
-        tz, o, c = cc.session_hours(r.symbol)
-        hm = {"AMC": c, "BMO": "07:00", "INTRA": "12:00"}.get(r.timing)
-        if hm is None:
-            hm = c              # unknown timing: assume after the close (buy the session before)
-        h, m = map(int, hm.split(":"))
-        if r.timing == "AMC":
-            m += 5
-        ts = pd.Timestamp(datetime(r.date.year, r.date.month, r.date.day, h, min(m, 59)), tz=tz)
-        fut.append({"symbol": r.symbol, "ts_utc": ts.tz_convert("UTC"), "source": r.status})
+        fut.append({"symbol": r.symbol, "ts_utc": calendar_stamp(r.symbol, r.date, r.timing),
+                    "source": r.status})
     if fut:
         raw = pd.concat([raw[raw.ts_utc < pd.Timestamp.now(tz="UTC")], pd.DataFrame(fut)], ignore_index=True)
     events = build_events(panel, raw)
@@ -703,6 +701,24 @@ def run_live(d: date, *, refresh: bool = True, preview: bool = False) -> int:
     cc.write_json(receipt, out_dir / f"{d}_receipt.json")
     print(short)
     return 0
+
+
+def calendar_stamp(symbol: str, day: Any, timing: Optional[str]) -> pd.Timestamp:
+    """A calendar row -> a synthetic UTC stamp that `event_sessions` maps back to its timing.
+
+    AMC -> 5 minutes after the local close; BMO -> 07:00 local; INTRA -> 12:00 local.
+    Unknown timing -> LOCAL MIDNIGHT, which event_sessions reads as UNKNOWN and holds for TWO
+    sessions, so the reaction is covered whether the print comes before the open or after the
+    close (amended 2026-09-29: it used to assume AMC, which buys a BMO print a day late and can
+    sell before the reaction)."""
+    tz, o, c = cc.session_hours(symbol)
+    hm = {"AMC": c, "BMO": "07:00", "INTRA": "12:00"}.get(str(timing or "").upper(), "00:00")
+    h, m = map(int, hm.split(":"))
+    if str(timing).upper() == "AMC":
+        m += 5
+        h, m = h + m // 60, m % 60
+    d = pd.Timestamp(day)
+    return pd.Timestamp(datetime(d.year, d.month, d.day, h, m), tz=tz).tz_convert("UTC")
 
 
 def extend_future_sessions(events: pd.DataFrame, panel: Panel, d: date) -> pd.DataFrame:

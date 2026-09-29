@@ -1,0 +1,311 @@
+{
+ "what": "rank(|reaction|) ~ rank(trail8) + rank(sig63), liquid on-cadence events, by group-year; iid bootstrap SE; report timing CORRECTED (00:00 UTC stamps = UNKNOWN, two-session hold)",
+ "supersedes_reading_of": "prereg_prior_global_by_market.json (not modified)",
+ "rows": [
+  {
+   "group": "ASIA",
+   "year": 2021,
+   "n": 2389,
+   "b_vol": 0.251,
+   "se_iid_boot": 0.019,
+   "timing": {
+    "AMC": 840,
+    "UNKNOWN": 716,
+    "INTRA": 511,
+    "BMO": 322
+   }
+  },
+  {
+   "group": "ASIA",
+   "year": 2022,
+   "n": 2331,
+   "b_vol": 0.263,
+   "se_iid_boot": 0.022,
+   "timing": {
+    "AMC": 802,
+    "UNKNOWN": 748,
+    "INTRA": 498,
+    "BMO": 283
+   }
+  },
+  {
+   "group": "ASIA",
+   "year": 2023,
+   "n": 2400,
+   "b_vol": 0.204,
+   "se_iid_boot": 0.02,
+   "timing": {
+    "AMC": 825,
+    "UNKNOWN": 724,
+    "INTRA": 521,
+    "BMO": 330
+   }
+  },
+  {
+   "group": "ASIA",
+   "year": 2024,
+   "n": 2648,
+   "b_vol": 0.283,
+   "se_iid_boot": 0.02,
+   "timing": {
+    "AMC": 1066,
+    "UNKNOWN": 721,
+    "INTRA": 618,
+    "BMO": 243
+   }
+  },
+  {
+   "group": "ASIA",
+   "year": 2025,
+   "n": 2761,
+   "b_vol": 0.261,
+   "se_iid_boot": 0.019,
+   "timing": {
+    "AMC": 1077,
+    "UNKNOWN": 725,
+    "INTRA": 714,
+    "BMO": 245
+   }
+  },
+  {
+   "group": "ASIA",
+   "year": 2026,
+   "n": 2332,
+   "b_vol": 0.217,
+   "se_iid_boot": 0.02,
+   "timing": {
+    "AMC": 956,
+    "INTRA": 705,
+    "UNKNOWN": 504,
+    "BMO": 167
+   }
+  },
+  {
+   "group": "EU",
+   "year": 2021,
+   "n": 881,
+   "b_vol": 0.241,
+   "se_iid_boot": 0.039,
+   "timing": {
+    "BMO": 496,
+    "INTRA": 251,
+    "UNKNOWN": 76,
+    "AMC": 58
+   }
+  },
+  {
+   "group": "EU",
+   "year": 2022,
+   "n": 844,
+   "b_vol": 0.182,
+   "se_iid_boot": 0.034,
+   "timing": {
+    "BMO": 529,
+    "INTRA": 187,
+    "UNKNOWN": 83,
+    "AMC": 45
+   }
+  },
+  {
+   "group": "EU",
+   "year": 2023,
+   "n": 726,
+   "b_vol": 0.33,
+   "se_iid_boot": 0.042,
+   "timing": {
+    "BMO": 412,
+    "INTRA": 166,
+    "UNKNOWN": 106,
+    "AMC": 42
+   }
+  },
+  {
+   "group": "EU",
+   "year": 2024,
+   "n": 733,
+   "b_vol": 0.247,
+   "se_iid_boot": 0.044,
+   "timing": {
+    "BMO": 457,
+    "INTRA": 162,
+    "UNKNOWN": 77,
+    "AMC": 37
+   }
+  },
+  {
+   "group": "EU",
+   "year": 2025,
+   "n": 778,
+   "b_vol": 0.257,
+   "se_iid_boot": 0.039,
+   "timing": {
+    "BMO": 403,
+    "UNKNOWN": 212,
+    "INTRA": 120,
+    "AMC": 43
+   }
+  },
+  {
+   "group": "EU",
+   "year": 2026,
+   "n": 667,
+   "b_vol": 0.253,
+   "se_iid_boot": 0.043,
+   "timing": {
+    "BMO": 303,
+    "UNKNOWN": 243,
+    "INTRA": 87,
+    "AMC": 34
+   }
+  },
+  {
+   "group": "IN",
+   "year": 2021,
+   "n": 452,
+   "b_vol": 0.152,
+   "se_iid_boot": 0.049,
+   "timing": {
+    "AMC": 276,
+    "INTRA": 170,
+    "BMO": 6
+   }
+  },
+  {
+   "group": "IN",
+   "year": 2022,
+   "n": 421,
+   "b_vol": 0.189,
+   "se_iid_boot": 0.052,
+   "timing": {
+    "AMC": 270,
+    "INTRA": 144,
+    "BMO": 4,
+    "UNKNOWN": 3
+   }
+  },
+  {
+   "group": "IN",
+   "year": 2023,
+   "n": 396,
+   "b_vol": 0.136,
+   "se_iid_boot": 0.055,
+   "timing": {
+    "AMC": 230,
+    "INTRA": 156,
+    "BMO": 6,
+    "UNKNOWN": 4
+   }
+  },
+  {
+   "group": "IN",
+   "year": 2024,
+   "n": 614,
+   "b_vol": 0.171,
+   "se_iid_boot": 0.041,
+   "timing": {
+    "AMC": 379,
+    "INTRA": 229,
+    "BMO": 4,
+    "UNKNOWN": 2
+   }
+  },
+  {
+   "group": "IN",
+   "year": 2025,
+   "n": 614,
+   "b_vol": 0.148,
+   "se_iid_boot": 0.041,
+   "timing": {
+    "AMC": 367,
+    "INTRA": 211,
+    "UNKNOWN": 28,
+    "BMO": 8
+   }
+  },
+  {
+   "group": "IN",
+   "year": 2026,
+   "n": 487,
+   "b_vol": 0.182,
+   "se_iid_boot": 0.045,
+   "timing": {
+    "AMC": 266,
+    "INTRA": 200,
+    "UNKNOWN": 14,
+    "BMO": 7
+   }
+  },
+  {
+   "group": "US",
+   "year": 2021,
+   "n": 4333,
+   "b_vol": 0.315,
+   "se_iid_boot": 0.017,
+   "timing": {
+    "AMC": 2273,
+    "BMO": 1905,
+    "INTRA": 155
+   }
+  },
+  {
+   "group": "US",
+   "year": 2022,
+   "n": 4935,
+   "b_vol": 0.279,
+   "se_iid_boot": 0.017,
+   "timing": {
+    "AMC": 2633,
+    "BMO": 2141,
+    "INTRA": 161
+   }
+  },
+  {
+   "group": "US",
+   "year": 2023,
+   "n": 4916,
+   "b_vol": 0.328,
+   "se_iid_boot": 0.016,
+   "timing": {
+    "AMC": 2568,
+    "BMO": 2206,
+    "INTRA": 142
+   }
+  },
+  {
+   "group": "US",
+   "year": 2024,
+   "n": 5356,
+   "b_vol": 0.372,
+   "se_iid_boot": 0.015,
+   "timing": {
+    "AMC": 2815,
+    "BMO": 2389,
+    "INTRA": 152
+   }
+  },
+  {
+   "group": "US",
+   "year": 2025,
+   "n": 5821,
+   "b_vol": 0.391,
+   "se_iid_boot": 0.013,
+   "timing": {
+    "AMC": 3048,
+    "BMO": 2631,
+    "INTRA": 142
+   }
+  },
+  {
+   "group": "US",
+   "year": 2026,
+   "n": 4807,
+   "b_vol": 0.321,
+   "se_iid_boot": 0.018,
+   "timing": {
+    "AMC": 2568,
+    "BMO": 2127,
+    "INTRA": 112
+   }
+  }
+ ]
+}

@@ -51,6 +51,11 @@ def test_cut_stitched_renames_the_old_company_and_keeps_every_row():
 def test_us_suspension_by_the_same_registrant_is_kept():
     days, bars = _stitched_world("SUSP")
     bars = bars[bars.symbol == "SUSP"].copy()
+    # a genuine suspension resumes near its old price level. Since 2026-09-29 a
+    # >= 3x level break is cut even for the same registrant (`bar_defects`: a
+    # chapter 11 keeps the CIK and cancels the shares -- GPOR, VAL, CBL, CRC)
+    late = bars["date"] >= days[460]
+    bars.loc[late, ["open", "close"]] *= 2.0 / 25.0
     bars["src"] = "bars"
     regs = {"by_ticker": {"SUSP": {"cik": 1, "first_filed": pd.Timestamp(days[0]) - pd.Timedelta(days=900),
                                    "source": "test"}},
@@ -58,6 +63,26 @@ def test_us_suspension_by_the_same_registrant_is_kept():
     out = cc.cut_stitched(bars, "US", regs=regs)
     assert set(out.symbol) == {"SUSP"}
     assert cc.STITCH_AUDIT["US"]["kept_as_suspension"] == ["SUSP"]
+    # the REGISTRANT is what keeps it: the same bars with no registrant evidence are cut
+    unknown = cc.cut_stitched(bars.copy(), "US", regs=NO_REGS)
+    assert "SUSP#1" in set(unknown.symbol)
+    assert cc.STITCH_AUDIT["US"]["kept_as_suspension"] == []
+
+
+def test_a_same_registrant_level_break_of_3x_or_more_is_cut_by_the_defect_screen():
+    """The fixture's original ~$2 -> ~$25 resumption (12.5x): kept as a suspension by
+    the registrant rule, then cut by `bar_defects` (a chapter 11 keeps the CIK)."""
+    days, bars = _stitched_world("SUSP")
+    bars = bars[bars.symbol == "SUSP"].copy()
+    bars["src"] = "bars"
+    regs = {"by_ticker": {"SUSP": {"cik": 1, "first_filed": pd.Timestamp(days[0]) - pd.Timedelta(days=900),
+                                   "source": "test"}},
+            "cik_first": None, "sources": ["test"]}
+    out = cc.cut_stitched(bars, "US", regs=regs)
+    assert cc.STITCH_AUDIT["US"]["kept_as_suspension"] == ["SUSP"]
+    assert "SUSP" in cc.STITCH_AUDIT["US"]["defect_cut_symbols"]
+    assert "SUSP#1" in set(out.symbol) and len(out) == len(bars)       # renamed, never dropped
+    assert out[out.symbol == "SUSP"].date.min() == days[460]
 
 
 def test_load_bars_usd_applies_the_cut(tmp_path, monkeypatch):
@@ -135,11 +160,19 @@ def test_sheet_shows_the_nn_size_column_without_reranking(tmp_path, monkeypatch)
 
 def test_season_table_prints_every_season_without_pooling():
     from scripts import contest_rotation_sim as sim
-    df = pd.DataFrame([{"window": w, "rule": r, "fill": "next_open", "P>+40%": p, "median": -0.01}
-                       for w, p in (("2024-Oct", 0.1), ("2025-Oct", 0.2)) for r in ("ROT_ALL", "HIVOL_BH")])
+    # every row `run()` writes carries `realised` (the season's actual-sign path) beside
+    # the zero-skill NULL; the table prints both, per season, never pooled
+    df = pd.DataFrame([{"window": w, "rule": r, "fill": "next_open", "P>+40%": p, "median": -0.01,
+                        "realised": real}
+                       for w, p, real in (("2024-Oct", 0.1, 0.123), ("2025-Oct", 0.2, -0.045))
+                       for r in ("ROT_ALL", "HIVOL_BH")])
     lines = sim.season_table(df, "next_open")
-    assert any(ln.startswith("| 2024-Oct |") for ln in lines)
-    assert any(ln.startswith("| 2025-Oct |") and "20.0%" in ln for ln in lines)
+    assert any(ln.startswith("| 2024-Oct |") and "+12.3%" in ln for ln in lines)
+    assert any(ln.startswith("| 2025-Oct |") and "20.0%" in ln and "-4.5%" in ln for ln in lines)
+    assert not any("n/a" in ln for ln in lines)
+    # a table from an older receipt (no `realised` column) says n/a, it does not raise
+    old = sim.season_table(df.drop(columns=["realised"]), "next_open")
+    assert any(ln.startswith("| 2024-Oct |") and "n/a" in ln for ln in old)
 
 
 def test_a_report_after_the_last_bar_never_borrows_the_last_bar_as_its_buy_session():

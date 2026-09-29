@@ -100,7 +100,15 @@ def _us_bars(symbols=None):
     paths = XR.survivorship_free_paths()
     if symbols is None:
         return XR.load_bars(paths)
-    syms = sorted({str(x) for x in symbols})
+    import numpy as np
+
+    held = sorted({str(x) for x in symbols})
+    # 2026-09-29: the full load now runs `stitched_tickers.split_stitched` (the
+    # bar-defect screen, then the stitch cut), which reads each name against the
+    # market series (SPY) -- so the filtered read takes SPY too, runs the SAME
+    # split, and only then keeps the held names (a cut `SYM#k` segment is not
+    # the held symbol, exactly as in the full load)
+    syms = sorted(set(held) | {"SPY"}) if held else []
     frames = []
     for pth in paths:
         pth = Path(pth)
@@ -112,10 +120,17 @@ def _us_bars(symbols=None):
         missing = XR._BAR_COLUMNS - set(df.columns)
         if missing:
             raise XR.RankerError(f"{pth.name} is missing columns {sorted(missing)}")
+        df["_src"] = pd.Categorical.from_codes(np.zeros(len(df), dtype="int8"), [pth.stem])
         frames.append(df)
     out = pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
     out["date"] = pd.to_datetime(out["date"])
     out = out.drop_duplicates(subset=["symbol", "date"], keep="first")
+    out = out.sort_values(["symbol", "date"], kind="mergesort").reset_index(drop=True)
+    if len(out):
+        from backend.services import stitched_tickers as ST
+        out, _audit = ST.split_stitched(out, src_col="_src")
+    out = out.drop(columns=["_src"])
+    out = out[out["symbol"].isin(held)]
     return out.sort_values(["symbol", "date"], kind="mergesort").reset_index(drop=True)
 
 

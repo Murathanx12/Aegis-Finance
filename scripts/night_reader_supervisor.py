@@ -35,10 +35,14 @@ THE POOL (2026-09-28 21:45 HKT, Murat: "can openclaw read more, can it launch
 another chrome tabs to read too, this one by one is very slow"): by default
 (`config.READER_POOL_ENABLED`) the supervisor launches `scripts.reader_pool`
 -- several tabs, paced per host, section fronts, stock pages, their news, media
-and the social hosts -- instead of the rolling three-worker queue. The pool
-never runs out of work (it re-reads fronts on a schedule and names after their
-freshness window), so there is no queue to exhaust; everything else (classify,
-probe, repair, backoff, stop by PID) is unchanged. `reader_status.json` carries
+and the social hosts -- instead of the rolling three-worker queue. CORRECTED
+2026-09-29: the pool CAN run out of work (every name read inside its freshness
+window, fronts not yet due); that morning it sat empty for 100+ minutes while
+this supervisor called it STALLED and restarted it ~20 times. The pool now
+refills itself (the browse lane: fronts revisited when a host's list runs low)
+and names its state (READING / REFILLING / QUEUE_EMPTY / WAITING_FOR_CAP);
+QUEUE_EMPTY and WAITING_FOR_CAP are healthy here, never a stall. Everything
+else (classify, probe, repair, backoff, stop by PID) is unchanged. `reader_status.json` carries
 the pool's own status (tab count and why, per-host pages an hour against the
 caps, cooling hosts) and the hourly digest refreshes
 `dowjones/reading_report_<day>.md`.
@@ -407,6 +411,14 @@ def repair_once(budget: GR.RepairBudget | None = None, *, deps: GR.Deps | None =
 
 READING, WAITING_FOR_CAP, REPAIRING, STALLED, DOWN, STARTING = (
     "READING", "WAITING_FOR_CAP", "REPAIRING", "STALLED", "DOWN", "STARTING")
+#: 2026-09-29: the pool's own queue states (reader_scheduler.Q_*)
+QUEUE_EMPTY, REFILLING = "QUEUE_EMPTY", "REFILLING"
+#: a pool status older than this is not trusted for its queue state
+POOL_STATUS_FRESH_S = 180.0
+STALL_LADDER_FILE = DJ / "stall_ladder.json"
+#: 2026-09-29: the Chrome recycle's refusal, backoff and hourly count, kept
+#: across supervisor restarts (see `recycle_gate`)
+RECYCLE_STATE_FILE = DJ / "chrome_recycle_state.json"
 POOL_STOP = DJ / "READER_POOL_STOP"
 #: the stall ladder: 1 close hung tabs (+ repair a faulted gateway), 2 restart
 #: the pool, 3 recycle the dedicated Chrome and restart the pool
@@ -445,7 +457,8 @@ def last_ok_age_s(now: datetime, path: Path | None = None, max_lines: int = 4000
 
 def derive_state(*, alive: bool, repairing: bool, ok_10m: int, last_ok_age: float | None,
                  since_launch_s: float | None, next_slot_in_s: float | None,
-                 attempts_10m: int, stall_after_s: float | None = None) -> str:
+                 attempts_10m: int, stall_after_s: float | None = None,
+                 pool_state: str | None = None) -> str:
     """PURE. The reader's state from what it DID, not from whether a process
     exists:
 
@@ -454,9 +467,15 @@ def derive_state(*, alive: bool, repairing: bool, ok_10m: int, last_ok_age: floa
     * READING          -- at least one page OK in the last 10 minutes;
     * WAITING_FOR_CAP  -- alive, nothing attempted in 10 min, and the next
                           reserved open is more than a minute ahead (a cap);
+    * QUEUE_EMPTY      -- alive, nothing attempted in 10 min, and the POOL says
+                          its list is empty with caps free (2026-09-29): it is
+                          waiting for its next front revisit, not stalled;
+    * REFILLING        -- the pool says a front is due and is being queued;
     * STARTING         -- alive, launched less than the stall window ago;
-    * STALLED          -- alive, no page OK for the stall window (a fault the
-                          supervisor acts on)."""
+    * STALLED          -- alive, no page OK for the stall window while there
+                          was work to do (a fault the supervisor acts on).
+    `pool_state` is the pool's own `queue_state` (None: not in pool mode, or
+    its status file is stale)."""
     s = stall_s() if stall_after_s is None else stall_after_s
     if repairing:
         return REPAIRING
@@ -464,13 +483,197 @@ def derive_state(*, alive: bool, repairing: bool, ok_10m: int, last_ok_age: floa
         return DOWN
     if ok_10m > 0:
         return READING
+    if attempts_10m == 0 and pool_state in (QUEUE_EMPTY, WAITING_FOR_CAP):
+        return pool_state
     if attempts_10m == 0 and next_slot_in_s is not None and next_slot_in_s > 60:
         return WAITING_FOR_CAP
     fresh = since_launch_s is not None and since_launch_s < s
     ok_recent = last_ok_age is not None and last_ok_age < s
     if fresh or ok_recent:
+        if pool_state == REFILLING:
+            return REFILLING
         return STARTING if fresh else READING
     return STALLED
+
+
+def pool_state_of(pst: dict | None, now: datetime | None = None) -> str | None:
+    """The pool's `queue_state` from its status file, or None when there is no
+    status or it is older than POOL_STATUS_FRESH_S (a dead writer's last word
+    is not the pool's state)."""
+    if not pst or not pst.get("queue_state"):
+        return None
+    try:
+        t = datetime.fromisoformat(str(pst.get("t")))
+        now = now or datetime.now().astimezone()
+        if (now.astimezone() - t).total_seconds() > POOL_STATUS_FRESH_S:
+            return None
+    except (TypeError, ValueError):
+        return None
+    return str(pst["queue_state"])
+
+
+def next_action_for(state: str, pst: dict | None = None) -> str:
+    """PURE. The words beside a state (never "keep reading" beside a stall)."""
+    nxt = (pst or {}).get("next_front_due_s")
+    if state == READING:
+        return "keep reading"
+    if state == QUEUE_EMPTY:
+        return ("queue empty, caps free: revisit the fronts in "
+                f"{nxt:.0f} s" if isinstance(nxt, (int, float)) else
+                "queue empty, caps free: revisit the fronts when due")
+    if state == REFILLING:
+        return "refilling the list from the section fronts"
+    if state == WAITING_FOR_CAP:
+        return "wait for the hourly / daily cap window (or a cooling host)"
+    if state == STARTING:
+        return "starting: first pages"
+    return "see the stall ladder"
+
+
+def load_ladder(path: Path | None = None, now: float | None = None) -> dict:
+    """The stall ladder as the last supervisor left it (level, last action
+    time), if written in the last hour; else level 0."""
+    try:
+        d = json.loads((path or STALL_LADDER_FILE).read_text(encoding="utf-8"))
+        if (now or time.time()) - float(d.get("saved", 0)) <= 3600:
+            return {"level": int(d.get("level", 0)), "last_act": float(d.get("last_act", 0.0))}
+    except (OSError, ValueError, TypeError):
+        pass
+    return {"level": 0, "last_act": 0.0}
+
+
+def save_ladder(level: int, last_act: float, path: Path | None = None) -> None:
+    try:
+        GR_atomic_json(path or STALL_LADDER_FILE, {"level": int(level),
+                                                   "last_act": float(last_act),
+                                                   "saved": time.time()})
+    except OSError:
+        pass
+
+
+# ── the Chrome recycle is decided before anything is stopped (2026-09-29) ────
+#
+# Measured in night_reader_supervisor.jsonl, 11:12-12:00 HKT: four supervisors
+# (each restarted by a STOP file about every 15 minutes) each found a recycle
+# due on their first memory check, 5-6 minutes in (MEMORY_PRESSURE twice, AGE
+# twice), because the hourly recycle budget and the last refusal lived only in
+# the process. Each STOPPED the pool first; the recycle was then refused
+# (OWNER_MAY_BE_USING twice, the instance not proven once) and the pool was
+# relaunched for nothing. Now: the refusal is checked first, with no side
+# effect; a refusal leaves the pool reading and is not asked again until its
+# backoff (persisted) runs out; the recycle count per hour is persisted too.
+
+def load_recycle_state(path: Path | None = None) -> dict:
+    try:
+        d = json.loads((path or RECYCLE_STATE_FILE).read_text(encoding="utf-8"))
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def save_recycle_state(st: dict, path: Path | None = None) -> None:
+    try:
+        GR_atomic_json(path or RECYCLE_STATE_FILE, st)
+    except OSError:
+        pass
+
+
+#: tab ids the reader opened, remembered across pool and supervisor restarts
+READER_TABS_KEEP = 2000
+
+
+def remember_reader_tabs(pst: dict | None, state: dict) -> dict:
+    """Merge every tab id the pool status names as the reader's (open,
+    opened this run, orphaned) into `state["reader_tab_ids"]` (oldest dropped
+    past READER_TABS_KEEP). A tab the reader opened stays the reader's after
+    the process that opened it is gone: at 12:19 HKT on 2026-09-29 two of the
+    pool's own search tabs, left open by its stop, refused the recycle as
+    somebody else's."""
+    st = dict(state or {})
+    p = pst or {}
+    ids = [*(st.get("reader_tab_ids") or []), *(p.get("reader_tab_ids") or []),
+           *(p.get("open_tab_ids") or []), *(p.get("orphaned_tabs") or [])]
+    st["reader_tab_ids"] = list(dict.fromkeys(str(t) for t in ids if t))[-READER_TABS_KEEP:]
+    return st
+
+
+def refused_backoff_s(n: int) -> float:
+    """The wait after the n-th consecutive refusal (n >= 1): doubling, capped."""
+    base = float(getattr(_config, "READER_CHROME_REFUSED_BACKOFF_S", 900.0))
+    cap = float(getattr(_config, "READER_CHROME_REFUSED_BACKOFF_MAX_S", 7200.0))
+    return min(cap, base * (2 ** max(0, int(n) - 1)))
+
+
+def _refusal_kind(refused: str | None) -> str:
+    return str(refused or "").split(":", 1)[0].strip() or "UNKNOWN"
+
+
+def recycle_gate(why: str, *, now: float, preflight, state: dict,
+                 per_hour: int | None = None) -> dict:
+    """Decide a due recycle WITHOUT stopping anything. Returns
+    `{"go": bool, "reason": ..., "wait_s": ..., "log": row-or-None, "state": new}`:
+
+    * inside a refusal backoff -> go False, silently (no re-ask each tick);
+    * the hourly recycle count reached -> go False, silently;
+    * `preflight()` refuses -> go False; the refusal is recorded with a
+      doubling backoff and logged only when it is new (a new kind of refusal);
+    * otherwise go True (the caller stops the pool, then recycles).
+
+    `preflight` is a zero-argument call returning `GR.recycle_preflight`'s
+    dict. `state` is `load_recycle_state()`; the caller saves `out["state"]`."""
+    st = dict(state or {})
+    ph = int(per_hour if per_hour is not None
+             else getattr(_config, "READER_CHROME_RECYCLES_PER_HOUR", 2))
+    stamps = [float(t) for t in (st.get("recycled_at") or []) if now - float(t) < 3600.0]
+    st["recycled_at"] = stamps
+    retry = float(st.get("retry_after") or 0.0)
+    if retry > now:
+        return {"go": False, "reason": "refusal_backoff", "wait_s": round(retry - now),
+                "log": None, "state": st}
+    if len(stamps) >= ph:
+        return {"go": False, "reason": "hourly_budget",
+                "wait_s": round(stamps[0] + 3600.0 - now), "log": None, "state": st}
+    pre = preflight() or {}
+    if not pre.get("ok"):
+        n = int(st.get("n_refused") or 0) + 1
+        kind = _refusal_kind(pre.get("refused"))
+        new_episode = kind != st.get("refused_kind")
+        wait = refused_backoff_s(n)
+        st.update(n_refused=n, refused_kind=kind, refused=str(pre.get("refused"))[:300],
+                  refused_at=now, retry_after=now + wait, refused_why=why,
+                  active_foreign=pre.get("active_foreign") or [])
+        return {"go": False, "reason": "refused", "wait_s": round(wait),
+                "log": ({"event": "chrome_recycle_refused", "why": why,
+                         "refused": st["refused"], "active_foreign": st["active_foreign"],
+                         "n_refused": n, "retry_in_s": round(wait),
+                         "pool": "kept reading (not stopped)"} if new_episode else None),
+                "state": st}
+    log_row = None
+    if st.get("n_refused"):
+        log_row = {"event": "chrome_recycle_refusal_cleared", "was": st.get("refused"),
+                   "n_refused": st.get("n_refused")}
+    for k in ("n_refused", "refused_kind", "refused", "refused_at", "retry_after",
+              "refused_why", "active_foreign"):
+        st.pop(k, None)
+    return {"go": True, "reason": "ok", "wait_s": 0, "log": log_row, "state": st}
+
+
+def record_recycle_result(state: dict, rec: dict, *, why: str, now: float) -> dict:
+    """After a recycle ran (the pool was stopped): count it for the hourly
+    budget; a late refusal (the pages changed between the preflight and the
+    recycle) starts a backoff like any other."""
+    st = dict(state or {})
+    st["recycled_at"] = [float(t) for t in (st.get("recycled_at") or [])
+                         if now - float(t) < 3600.0] + [now]
+    if rec.get("ok"):
+        st["last_ok_at"] = now
+    elif rec.get("refused"):
+        n = int(st.get("n_refused") or 0) + 1
+        st.update(n_refused=n, refused_kind=_refusal_kind(rec.get("refused")),
+                  refused=str(rec.get("refused"))[:300], refused_at=now,
+                  retry_after=now + refused_backoff_s(n), refused_why=why,
+                  active_foreign=rec.get("active_foreign") or [])
+    return st
 
 
 def attempts_10m(pc: dict) -> int:
@@ -619,10 +822,13 @@ def main(argv: list[str] | None = None) -> int:
     ticks, state, next_action, last_err = 0, STARTING, "launch the reader", None
     idle_until = 0.0
     # 2026-09-29: the stall ladder and the scheduled Chrome recycle
-    stall_level, last_stall_act, detail = 0, 0.0, ""
-    recycle_budget = GR.RepairBudget(
-        per_hour=int(getattr(_config, "READER_CHROME_RECYCLES_PER_HOUR", 2)),
-        backoff_s=600.0)
+    _lad = load_ladder()
+    stall_level, last_stall_act, detail = _lad["level"], _lad["last_act"], ""
+    #: review 2026-09-29 F2: stall restarts / recycles are bounded per hour
+    stall_budget = GR.RepairBudget(
+        per_hour=int(getattr(_config, "READER_STALL_RESTARTS_PER_HOUR", 3)),
+        backoff_s=float(getattr(_config, "READER_STALL_RESTART_BACKOFF_S", 300.0)))
+    stall_restarts = 0
 
     def relaunch_now(why_: str) -> None:
         nonlocal last_launch
@@ -630,13 +836,39 @@ def main(argv: list[str] | None = None) -> int:
         log(event="relaunch", why=why_, launcher_pid=launch(queue_cmd),
             queue_cmd=str(queue_cmd))
 
+    def _own_tabs() -> list[str]:
+        """The pool's open tabs plus every tab the reader is known to have
+        opened (persisted), so a tab it left behind is never 'foreign'."""
+        st_ = remember_reader_tabs(pool_status(), load_recycle_state())
+        save_recycle_state(st_)
+        return list(st_["reader_tab_ids"])
+
     def recycle_and_relaunch(why_: str) -> dict:
-        tabs = list((pool_status() or {}).get("open_tab_ids") or [])
+        """Decide first (no side effect), THEN stop the pool and recycle.
+        Returns `{"skipped": True, ...}` without touching the pool when the
+        recycle would be refused, is in its backoff, or is over its hour."""
+        tabs = _own_tabs()
+        gate = recycle_gate(
+            why_, now=time.time(), state=load_recycle_state(),
+            preflight=lambda: GR.recycle_preflight(tabs, own_again=_own_tabs,
+                                                   settle_s=20.0))
+        save_recycle_state(gate["state"])
+        if gate["log"]:
+            log(**gate["log"])
+        if not gate["go"]:
+            return {"skipped": True, "reason": gate["reason"], "wait_s": gate["wait_s"]}
+        tabs = _own_tabs() or tabs
+        write_status(REPAIRING, next_action="recycle the dedicated Chrome: " + why_,
+                     last_error=last_err)
         stopped_ = stop_pool_gracefully()
         log(event="pool_stopped", why=why_, **stopped_)
-        recycle_budget.spend(time.monotonic())
+        # re-read after the stop: the pool's final status names every tab it
+        # opened, including one it opened while stopping
+        tabs = list(dict.fromkeys([*tabs, *_own_tabs()]))
         rec = GR.recycle_dedicated_chrome(tabs, why=why_)
         log(event="chrome_recycle", **rec)
+        save_recycle_state(record_recycle_result(load_recycle_state(), rec, why=why_,
+                                                 now=time.time()))
         pr_ = GR.probe()
         if not pr_["healthy"]:
             res_ = GR.repair(pr_.get("fault") or "PROFILE_DETACHED", log=log)
@@ -668,20 +900,37 @@ def main(argv: list[str] | None = None) -> int:
                 alive=True, repairing=False, ok_10m=pc["ok_10m"], last_ok_age=ok_age,
                 since_launch_s=(time.time() - last_launch) if last_launch else None,
                 next_slot_in_s=(pst or {}).get("next_slot_in_s"),
-                attempts_10m=pc["attempts_10m"])
-            next_action = "keep reading"
-            if state != STALLED:
+                attempts_10m=pc["attempts_10m"], pool_state=pool_state_of(pst, now_dt))
+            next_action = next_action_for(state, pst)
+            if pc["ok_10m"] > 0 and stall_level:
+                # the ladder resets only after an OK page (review F2), never
+                # because a restart made the next ten minutes read STARTING
                 stall_level = 0
-            if state == STALLED and time.time() - last_stall_act >= stall_step_s():
-                act = stall_action(stall_level)
-                if act == "recycle_chrome" and not recycle_budget.allow(time.monotonic())[0]:
-                    act = "restart_pool"
+                save_ladder(0, last_stall_act)
+            if state in (READING, QUEUE_EMPTY, REFILLING, WAITING_FOR_CAP) and last_err:
+                log(event="error_cleared", state=state, was=last_err)
+                last_err = None
+            act = stall_action(stall_level) if state == STALLED else None
+            if act in ("restart_pool", "recycle_chrome") and \
+                    time.time() - last_stall_act >= stall_step_s():
+                ok_s, wait_s = stall_budget.allow(time.monotonic())
+                if not ok_s:
+                    if ticks % LOG_TICK_EVERY == 0:
+                        log(event="stall_restart_deferred", level=stall_level, action=act,
+                            wait_s=round(wait_s, 1))
+                    next_action = f"stalled: {act} deferred {wait_s:.0f} s (hourly budget)"
+                    act = None
+            if state == STALLED and act and time.time() - last_stall_act >= stall_step_s():
+                if act in ("restart_pool", "recycle_chrome"):
+                    stall_budget.spend(time.monotonic())
+                    stall_restarts += 1
                 stall_level += 1
                 last_stall_act = time.time()
+                save_ladder(stall_level, last_stall_act)
                 last_err = (f"STALLED: no page OK for {ok_age or 0:.0f} s with the reader "
                             f"alive ({pc['attempts_10m']} attempts in 10 min)")
                 log(event="stall", level=stall_level, action=act, last_ok_age_s=ok_age,
-                    attempts_10m=pc["attempts_10m"])
+                    attempts_10m=pc["attempts_10m"], stall_restarts=stall_restarts)
                 write_status(REPAIRING, next_action=act, last_error=last_err)
                 if act == "close_hung_tabs":
                     log(event="stall_close_hung_tabs", **GR.close_hung_tabs(log=log))
@@ -697,9 +946,18 @@ def main(argv: list[str] | None = None) -> int:
                     log(event="pool_stopped", why="stall", **stop_pool_gracefully())
                     relaunch_now("stall: restart the pool")
                 else:
-                    recycle_and_relaunch("stall: " + last_err)
+                    rec_s = recycle_and_relaunch("stall: " + last_err)
+                    if rec_s.get("skipped"):
+                        # the recycle would be refused / is backing off: the
+                        # stalled pool is still restarted (the ladder's step 2)
+                        act = "restart_pool"
+                        log(event="pool_stopped",
+                            why=f"stall (recycle skipped: {rec_s.get('reason')})",
+                            **stop_pool_gracefully())
+                        relaunch_now("stall: restart the pool")
                 state, next_action = REPAIRING, act
             elif a.pool and ticks % LOG_TICK_EVERY == 1:
+                save_recycle_state(remember_reader_tabs(pst, load_recycle_state()))
                 stale = GR.close_stale_tabs(keep_ids=list((pst or {}).get("open_tab_ids") or []))
                 if stale.get("closed"):
                     log(event="stale_tabs_closed", closed=stale["closed"])
@@ -709,16 +967,22 @@ def main(argv: list[str] | None = None) -> int:
                 except Exception:  # noqa: BLE001
                     mem = {}
                 ram = free_ram_gb()
+                try:
+                    total = GR._total_gb()
+                except Exception:  # noqa: BLE001 -- unknown: the share test is skipped
+                    total = None
                 why_r = GR.chrome_recycle_due(age_s=age, mem_gb=mem.get("total_gb"),
-                                              free_gb=ram)
-                write_machine_record({"free_ram_gb": ram, "chrome": mem,
+                                              free_gb=ram, total_gb=total)
+                rec_r = recycle_and_relaunch(why_r) if why_r else None
+                write_machine_record({"free_ram_gb": ram, "total_ram_gb": total, "chrome": mem,
                                       "chrome_age_s": age, "state": state,
                                       "tabs": (pst or {}).get("tabs"),
-                                      "recycle_due": why_r})
-                if why_r and recycle_budget.allow(time.monotonic())[0]:
-                    write_status(REPAIRING, next_action="recycle the dedicated Chrome",
-                                 last_error=last_err)
-                    recycle_and_relaunch(why_r)
+                                      "recycle_due": why_r,
+                                      "recycle": (None if rec_r is None else
+                                                  {k: rec_r.get(k) for k in
+                                                   ("skipped", "reason", "wait_s", "ok",
+                                                    "refused")})})
+                if rec_r is not None and not rec_r.get("skipped"):
                     state, next_action = STARTING, "recycled the dedicated Chrome: " + why_r
         if free < DISK_FLOOR_GB:
             why = f"disk {free:.1f} GB under the {DISK_FLOOR_GB} GB floor"
@@ -793,15 +1057,21 @@ def main(argv: list[str] | None = None) -> int:
         write_status(state, next_action=next_action, last_error=last_err,
                      extra={"restarts": restarts, "free_disk_gb": round(free, 1),
                             "free_ram_gb": free_ram_gb(), "detail": detail if not pids else "",
-                            "stall_level": stall_level,
+                            "stall_level": stall_level, "stall_restarts": stall_restarts,
                             "mode": "pool" if a.pool else "queue",
                             "queue": str(queue_of(queue_cmd) or ""),
                             **({"pool": pool_status()} if a.pool else {})})
         time.sleep(TICK_S)
+    # 2026-09-29: the pool is asked to stop by its own STOP file first (it
+    # finishes the page in hand, closes its tabs, saves its carried links);
+    # only a pool still alive after the wait is ended BY PID. A hard kill left
+    # its tabs open in the dedicated Chrome, where the next recycle counted
+    # them as somebody else's.
     stopped = []
-    for pid in reader_pids():                      # by PID, matched on the command line
-        if kill_pid(pid):                          # each is one of OUR reader processes
-            stopped.append(pid)
+    if reader_pids():
+        st_ = stop_pool_gracefully(wait_s=180.0)
+        stopped = st_.get("killed") or []
+        log(event="pool_stopped", why="supervisor stopping: " + why, **st_)
     log(event="stopping", why=why, reader_pids_stopped=stopped)
     write_status("stopped", next_action="none: " + why, last_error=last_err)
     digest(a.claims_since)

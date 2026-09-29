@@ -1409,6 +1409,13 @@ def p_openclaw_gateway(ctx: ProbeCtx) -> ProbeResult:
                        proof="openclaw gateway status: Connectivity probe: ok")
 
 
+def p_openclaw_tool_scope(ctx: ProbeCtx) -> ProbeResult:
+    """What an OpenClaw LLM turn may do (config) and did (transcripts, 24 h).
+    2026-09-29: a thesis-card quest drove the signed-in Chrome through `exec`."""
+    from backend.services import openclaw_tool_scope as OTS          # noqa: PLC0415
+    return OTS.p_openclaw_tool_scope(ctx)
+
+
 def p_openclaw_api_bridge(ctx: ProbeCtx) -> ProbeResult:
     return _unknown("openclaw_api_bridge writes no heartbeat or receipt; nothing derivable")
 
@@ -1750,6 +1757,7 @@ PROBES: tuple[Probe, ...] = (
     Probe("telegram_agent", "pc", timedelta(seconds=60), "telegram/heartbeat.json|update_offset.json + agent.pid cmdline", p_telegram_agent, True),
     Probe("openclaw_gateway", "pc", timedelta(minutes=5), "`openclaw gateway status`: Runtime, Connectivity probe, Capability", p_openclaw_gateway, True),
     Probe("openclaw_api_bridge", "pc", D1, "none written", p_openclaw_api_bridge),
+    Probe("openclaw_tool_scope", "pc", D1, "~/.openclaw/openclaw.json tool policy + agents/*/agent/openclaw-agent.sqlite tool calls (24 h, read-only)", p_openclaw_tool_scope),
     Probe("llama_server", "pc", D1, "GET :8080/health + owner note + lab l2_typing", p_llama_server, True),
     Probe("llama_reaper", "pc", timedelta(seconds=30), "llama_reaper.log.jsonl[-1]: t, action", p_llama_reaper),
     Probe("optimus_brain", "pc", timedelta(hours=24), "optimus aegis-health-latest.md: `generated` stamp", p_optimus_brain),

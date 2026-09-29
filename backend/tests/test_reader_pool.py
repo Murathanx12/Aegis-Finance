@@ -553,6 +553,8 @@ def _stored(ledger) -> dict[str, dict]:
     out = {}
     for p in (ledger / "news_corpus" / "dowjones").glob("*/*/*.json"):
         r = json.loads(p.read_text(encoding="utf-8"))
+        if r.get("page_kind") == "front":   # 2026-09-29: a front's headline record
+            continue
         out[r["url"]] = r
     return out
 

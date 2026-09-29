@@ -1579,7 +1579,34 @@ def _case_lib_forward_trial():
             "a lib_ book with no matched_random or random_same_band twin")
 
 
+def _case_world_digest():
+    # BudgetExceeded is also the spend CEILING (tested in test_world_digest);
+    # the missing input is the budget itself: a meter with none declared (or a
+    # NaN, which compared False against every spend) must refuse to exist
+    from backend.services.world_digest import BudgetExceeded, Meter
+    return (lambda: Meter(float("nan"), llm=lambda *a, **k: pytest.fail("a paid call ran")),
+            BudgetExceeded, "a paid-call meter with no finite budget declared")
+
+
+def _case_bar_defects():
+    # the missing input is the screen's result: a book is not certified clean
+    # against a flagged-row set nobody handed in
+    from backend.services.bar_defects import BarDefectRefusal, assert_book_clean
+    hold = [{"date": "2026-01-30", "symbols": ["AAA", "BBB"]}]
+    return (lambda: assert_book_clean(hold, None), BarDefectRefusal,
+            "assert_book_clean() with no flagged-row set")
+
+
+def _case_bar_defects_empty_book():
+    from backend.services.bar_defects import BarDefectRefusal, assert_book_clean
+    return (lambda: assert_book_clean([], set()), BarDefectRefusal,
+            "assert_book_clean() on a book with no held slot")
+
+
 CASES = {
+    "world_digest": _case_world_digest,
+    "bar_defects": _case_bar_defects,
+    "bar_defects_empty_book": _case_bar_defects_empty_book,
     "calendar_offsets": _case_calendar_offsets,
     "lib_forward_trial": _case_lib_forward_trial,
     "investment_committee": _case_investment_committee,

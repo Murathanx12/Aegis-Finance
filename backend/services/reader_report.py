@@ -82,11 +82,15 @@ def gather(day: str, *, root: Path | None = None, universe: list[str] | None = N
         except (KeyError, ValueError, TypeError):
             pass
     arts: list[dict] = []
+    fronts_stored = 0
     corpus = root / "news_corpus" / "dowjones"
     for p in corpus.glob(f"*/{day}/*.json"):
         try:
             rec = json.loads(p.read_text(encoding="utf-8"))
         except (OSError, ValueError):
+            continue
+        if rec.get("page_kind") == "front":      # a front's headline record, not an article
+            fronts_stored += 1
             continue
         arts.append({k: rec.get(k) for k in ("publisher", "title", "url", "first_seen_utc",
                                              "reached_by", "tickers_named", "media", "column")})
@@ -136,7 +140,7 @@ def gather(day: str, *, root: Path | None = None, universe: list[str] | None = N
             "sections_dropped": dropped,
             "universe_size": len(uni),
             "tickers_covered": len(covered & set(uni)) if uni else len(covered),
-            "n_pages": len(pages), "n_articles": len(arts)}
+            "n_pages": len(pages), "n_articles": len(arts), "n_front_records": fronts_stored}
 
 
 def render(g: dict) -> str:
@@ -181,6 +185,136 @@ def render(g: dict) -> str:
         L += [f"- {r}" for r in rows]
         L.append("")
     return "\n".join(L).rstrip() + "\n"
+
+
+# ───────────── everything read in the last N hours (2026-09-29) ──────────────
+#
+# The one call a digest job makes ("what did the reader read since ..."). It
+# reads files only: the page store (`news_corpus/dowjones/<publisher>/<day>/
+# <sha>.json`, which since 2026-09-29 also holds the general-news pages and the
+# section-front headline records), the social rows and the media transcripts.
+
+PAGE_FIELDS = ("url", "host", "publisher", "section", "title", "published_utc",
+               "fetched_utc", "text", "outbound_links", "page_class", "page_kind",
+               "source_kind", "column", "reached_by", "tickers_named", "media", "tables",
+               "byline", "sha", "chars", "archive", "path")
+
+
+def _t(s: Any) -> datetime | None:
+    try:
+        t = datetime.fromisoformat(str(s))
+    except (TypeError, ValueError):
+        return None
+    return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
+
+
+def _host(url: str) -> str:
+    from urllib.parse import urlsplit
+    try:
+        return (urlsplit(url or "").hostname or "").lower().removeprefix("www.")
+    except ValueError:
+        return ""
+
+
+def pages_read_since(hours: float = 6.0, *, now: datetime | None = None,
+                     root: Path | None = None, include_text: bool = True,
+                     include_social: bool = True, include_transcripts: bool = True,
+                     kinds: tuple[str, ...] | None = None,
+                     hosts: tuple[str, ...] | None = None,
+                     include_archive: bool = True) -> list[dict]:
+    """Every page the reader READ and stored in the last `hours`, newest first.
+
+    One dict per page with `PAGE_FIELDS`: `url`, `host`, `publisher`, `section`,
+    `title`, `published_utc` (the page's own dateline, None when it prints
+    none), `fetched_utc` (when WE read it), `text`, `outbound_links` ([{url,
+    text}]), `page_class` ("OK" for every stored page), `page_kind` ("front" =
+    a section front's headline list in page order; "article" / "media" /
+    "stock_text" / "front_text"; "social"), `source_kind` ("dowjones",
+    "general_news", "social"), `column`, `reached_by` (lane, section, parent
+    url, position, depth, via), `tickers_named`, `media`, `tables`, `sha`,
+    `path`; plus `transcripts` ([{media_kind, title, transcript,
+    transcript_source}]) when the page carried media with a published
+    transcript. Only OK pages are stored, so blocked / paywalled / blank pages
+    are not here: they are counted in `page_log.jsonl` (see `gather`).
+
+    `archive` is True when the page's own dateline is more than
+    READER_MAX_ARTICLE_AGE_DAYS before we read it (`include_archive=False`
+    drops those). `kinds` / `hosts` filter (a host matches itself or a subdomain);
+    `include_text=False` drops the text for a cheap index. Files only; no
+    network, no LLM. Missing folders are empty, never an error."""
+    root = Path(root) if root else ledger()
+    now = now or datetime.now(timezone.utc)
+    since = now - timedelta(hours=float(hours))
+    days = sorted({(since + timedelta(days=i)).date().isoformat()
+                   for i in range((now.date() - since.date()).days + 1)} | {now.date().isoformat()})
+
+    def host_ok(h: str) -> bool:
+        return not hosts or any(h == d or h.endswith("." + d) for d in hosts)
+
+    tx: dict[str, list[dict]] = defaultdict(list)
+    if include_transcripts:
+        troot = root / "news_corpus" / "media_transcripts"
+        for d in days:
+            for p in (troot.glob(f"*/{d}.jsonl") if troot.exists() else []):
+                for r in _jsonl(p):
+                    if r.get("transcript") and r.get("transcript") != "NONE_PUBLISHED":
+                        tx[str(r.get("url") or "")].append(
+                            {k: r.get(k) for k in ("media_kind", "title", "duration_s",
+                                                   "transcript", "transcript_source",
+                                                   "published")})
+    out: list[dict] = []
+    corpus = root / "news_corpus" / "dowjones"
+    for d in days:
+        for p in corpus.glob(f"*/{d}/*.json"):
+            if p.parts[-3].startswith("_"):
+                continue
+            try:
+                rec = json.loads(p.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            t = _t(rec.get("first_seen_utc"))
+            if t is None or t < since or t > now + timedelta(minutes=5):
+                continue
+            h = rec.get("host") or _host(rec.get("url") or "")
+            kind = rec.get("page_kind") or "article"
+            if (kinds and kind not in kinds) or not host_ok(h):
+                continue
+            if not include_archive and rec.get("archive"):
+                continue
+            row = {k: rec.get(k) for k in PAGE_FIELDS}
+            row.update(host=h, page_kind=kind, fetched_utc=rec.get("first_seen_utc"),
+                       page_class=rec.get("page_class") or "OK",
+                       source_kind=rec.get("source_kind") or (
+                           "dowjones" if rec.get("publisher") in ("wsj", "barrons", "marketwatch")
+                           else "unknown"),
+                       section=rec.get("section") or (rec.get("reached_by") or {}).get("section"),
+                       outbound_links=rec.get("outbound_links") or [], path=str(p),
+                       archive=bool(rec.get("archive")))
+            if not include_text:
+                row.pop("text", None)
+            if tx.get(rec.get("url") or ""):
+                row["transcripts"] = tx[rec["url"]]
+            out.append(row)
+    if include_social and (not kinds or "social" in kinds):
+        sroot = root / "news_corpus" / "social"
+        for d in days:
+            for p in (sroot.glob(f"*/{d}.jsonl") if sroot.exists() else []):
+                for r in _jsonl(p):
+                    t = _t(r.get("read_utc"))
+                    h = r.get("host") or _host(r.get("url") or "")
+                    if t is None or t < since or t > now + timedelta(minutes=5) or not host_ok(h):
+                        continue
+                    row = {"url": r.get("url"), "host": h, "publisher": h, "section": None,
+                           "title": r.get("title"), "published_utc": None,
+                           "fetched_utc": r.get("read_utc"), "text": r.get("text"),
+                           "outbound_links": [], "page_class": "OK", "page_kind": "social",
+                           "source_kind": "social", "ticker": r.get("ticker"),
+                           "chars": r.get("chars"), "path": str(p)}
+                    if not include_text:
+                        row.pop("text", None)
+                    out.append(row)
+    out.sort(key=lambda r: str(r.get("fetched_utc") or ""), reverse=True)
+    return out
 
 
 def write_report(day: str | None = None, *, universe: list[str] | None = None,

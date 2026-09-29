@@ -655,10 +655,10 @@ def test_a_killed_gateway_is_started_once_and_nothing_else():
     assert w.cmds == [["gateway", "start"]]
 
 
-def test_under_the_memory_floor_the_repair_reclaims_then_proceeds():
-    """2026-09-29: the floor used to END the repair -- a gate the repair could
-    never clear while a browser held the memory. Now it reclaims what the reader
-    owns first and then starts the gateway anyway (never waits forever)."""
+def test_under_the_memory_floor_the_repair_reclaims_then_starts_once_the_floor_clears():
+    """The floor used to END the repair -- a gate the repair could never clear
+    while a browser held the memory. It now reclaims what the reader owns
+    first; when that lifts free memory over the floor, the gateway starts."""
     w = World(gw=False, free=0.6)
     reclaims: list[float] = []
 
@@ -675,13 +675,47 @@ def test_under_the_memory_floor_the_repair_reclaims_then_proceeds():
     assert r["healthy"] and r["cleared_by"] == "gateway_start"
 
 
-def test_a_reclaim_that_cannot_clear_the_floor_still_does_not_block_the_repair():
+def test_a_reclaim_that_cannot_clear_the_floor_starts_no_gateway():
+    """The 2026-09-28 14:30 kill test, run 1: at 0.5-0.8 GB free a started
+    gateway did not bind its port for 19.6 minutes. c0ac5310 started it anyway
+    after a failed reclaim; reverted 2026-09-29 to the measured rule. The fake
+    gateway here WOULD bind at once, so this pins the rule, not the fake."""
     w = World(gw=False, free=0.6)
     d = w.deps()
     d.reclaim = lambda need: {"ok": False}
     r = GR.repair("GATEWAY_DOWN", deps=d)
-    assert ["gateway", "start"] in w.cmds and r["healthy"]
-    assert r["stopped_because"] is None
+    assert [s["step"] for s in r["steps"]] == ["reclaim_memory"]
+    assert not any(c[:1] == ["gateway"] for c in w.cmds)
+    assert not r["healthy"] and r["stopped_because"].startswith("LOW_MEMORY")
+
+
+def test_the_repair_docstring_states_the_rule_the_code_follows():
+    doc = GR.repair.__doc__ or ""
+    assert "NO gateway (re)start below `OPENCLAW_REPAIR_MIN_FREE_GB`" in doc
+    assert "LOW_MEMORY" in doc and "RECLAIMS" in doc
+
+
+def test_a_latched_gateway_under_the_floor_is_not_restarted_either():
+    w = World(gw=True, latched=True, free=0.7)
+    d = w.deps()
+    d.reclaim = lambda need: {"ok": False}
+    r = GR.repair("GATEWAY_STUCK", deps=d)
+    assert ["gateway", "restart"] not in w.cmds and ["gateway", "start"] not in w.cmds
+    assert r["stopped_because"].startswith("LOW_MEMORY")
+
+
+def test_the_default_reclaim_closes_only_the_pools_own_tabs(tmp_path, monkeypatch):
+    st = tmp_path / "reader_pool_status.json"
+    st.write_text(json.dumps({"open_tab_ids": ["T1", "T2"]}), encoding="utf-8")
+    assert GR.pool_open_tab_ids(st) == ["T1", "T2"]
+    assert GR.pool_open_tab_ids(tmp_path / "missing.json") == []
+    seen = {}
+    monkeypatch.setattr(GR, "pool_open_tab_ids", lambda path=None: ["T1"])
+    monkeypatch.setattr(GR, "reclaim_memory",
+                        lambda *, need_gb, own_tab_ids=None, **k: seen.update(
+                            need=need_gb, own=own_tab_ids) or {"ok": False})
+    GR.Deps(chrome_status=lambda: {}, chrome_launch=lambda: {}).reclaim(1.5)
+    assert seen == {"need": 1.5, "own": ["T1"]}
 
 
 def test_a_gateway_already_starting_is_waited_for_never_doubled():
@@ -817,8 +851,12 @@ def test_the_social_hosts_have_their_own_daily_cap(tmp_path):
 
 def test_the_social_caps_in_config_are_150_each():
     from backend import config as C
-    assert C.WEB_READER_MAX_PER_DAY_BY_HOST == {"x.com": 150, "reddit.com": 150,
-                                               "stocktwits.com": 150}
+    caps = C.WEB_READER_MAX_PER_DAY_BY_HOST
+    assert {h: caps[h] for h in ("x.com", "reddit.com", "stocktwits.com")} == {
+        "x.com": 150, "reddit.com": 150, "stocktwits.com": 150}
+    # 2026-09-29: the only other entries are the general-news hosts of the
+    # browse lane (their own caps); no Dow Jones host gets a per-host entry
+    assert set(caps) - {"x.com", "reddit.com", "stocktwits.com"} <= set(C.OPENCLAW_NEWS_HOSTS)
     assert set(C.OPENCLAW_SOCIAL_HOSTS) == {"x.com", "reddit.com", "stocktwits.com"}
     assert set(C.OPENCLAW_USER_TAB_HOSTS) <= set(C.OPENCLAW_BROWSER_HOSTS)
     assert C.OPENCLAW_ALLOWED_PROFILES == ("muratclaw",)

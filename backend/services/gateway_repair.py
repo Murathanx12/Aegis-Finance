@@ -45,6 +45,7 @@ import socket
 import subprocess
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Callable
 
 from backend import config as _config
@@ -232,6 +233,15 @@ def _free_gb() -> float | None:
     return None
 
 
+def _total_gb() -> float | None:
+    rows = _powershell_json("Get-CimInstance Win32_OperatingSystem | Select-Object "
+                            "TotalVisibleMemorySize | ConvertTo-Json -Compress")
+    for r in rows:
+        if isinstance(r, dict) and r.get("TotalVisibleMemorySize") is not None:
+            return round(float(r["TotalVisibleMemorySize"]) / (1024 * 1024), 2)
+    return None
+
+
 def _gw_host() -> str:
     return str(getattr(_config, "OPENCLAW_GATEWAY_HOST", "127.0.0.1"))
 
@@ -268,7 +278,10 @@ class Deps:
         if self.chrome_launch is None:
             self.chrome_launch = MI.launch_attach
         if self.reclaim is None:
-            self.reclaim = lambda need: reclaim_memory(need_gb=need)
+            # only the tabs the READER POOL says it opened are the reader's to
+            # close (2026-09-29 review F1 of the morning fixes)
+            self.reclaim = lambda need: reclaim_memory(need_gb=need,
+                                                       own_tab_ids=pool_open_tab_ids())
 
 
 def probe(deps: Deps | None = None) -> dict:
@@ -327,9 +340,18 @@ def repair(fault: str, *, deps: Deps | None = None, log: Callable[..., None] | N
     Returns `{fault, steps: [...], healthy, cleared_by, stopped_because}`;
     never raises.
 
-    Two rules from the kill test of 2026-09-28 14:30 (see the lane-O note):
+    Two rules from the kill test of 2026-09-28 14:30 (see the lane-O note,
+    `docs/research_notes/2026-09-28/lane_o_build_2026-09-28.md` section 3):
     * NO gateway (re)start below `OPENCLAW_REPAIR_MIN_FREE_GB` free RAM -- at
-      0.5-0.8 GB a started gateway did not bind its port for 15+ minutes;
+      0.5-0.8 GB a started gateway did not bind its port for 19.6 minutes (run
+      1, FAILED); with ample memory the same start bound in 42 s (run 2). Below
+      the floor the repair first RECLAIMS what the reader owns (its own hung and
+      idle tabs, then a graceful recycle of the dedicated Chrome only when every
+      page in it is the reader's), re-reads free memory, and if it is still
+      under the floor it stops with `LOW_MEMORY` and starts nothing. The
+      supervisor's repair budget retries later. (c0ac5310 briefly started the
+      gateway below the floor anyway; that contradicted the measurement and was
+      reverted on 2026-09-29.)
     * NEVER `gateway restart` while a gateway process is still coming up:
       `restart` ended the task's root and started a second tree beside the
       first, and two gateways then competed for one port."""
@@ -394,19 +416,22 @@ def repair(fault: str, *, deps: Deps | None = None, log: Callable[..., None] | N
                                  or fault == "GATEWAY_STUCK"):
         free = d.free_gb()
         if free is not None and free < min_free_gb():
-            # 2026-09-29: this used to RETURN here -- a floor the repair itself
-            # could never clear, so a browser holding the memory blocked the
-            # gateway forever. Now: reclaim what the reader owns (hung tabs,
-            # idle tabs, a graceful restart of the dedicated Chrome), then go on
-            # -- below the floor too, with the bounded port wait after it.
+            # Reclaim what the READER owns first (the floor used to be a gate
+            # the repair itself could never clear while a browser held the
+            # memory), then re-read. Still under the floor -> no start: the
+            # kill test measured a 19.6-minute non-bind at 0.5-0.8 GB free.
             rec = step("reclaim_memory", lambda: d.reclaim(min_free_gb()))
             if rec["healthy"]:
                 return done(rec, "reclaim_memory")
             after = rec
             free2 = d.free_gb()
             if free2 is not None and free2 < min_free_gb():
-                say(event="repair_below_floor", fault=fault, free_gb=free2,
-                    floor_gb=min_free_gb(), why="reclaimed what the reader owns; proceeding")
+                say(event="repair_deferred", fault=fault, why="LOW_MEMORY", free_gb=free2,
+                    floor_gb=min_free_gb())
+                return done(after, None, f"LOW_MEMORY: {free2} GB free < {min_free_gb()} GB "
+                                         f"after reclaiming the reader's own memory; a gateway "
+                                         f"started now does not bind its port (kill test "
+                                         f"2026-09-28, run 1)")
         if not after["gateway_port"]:
             procs = d.gateway_procs()
             if procs:
@@ -542,17 +567,24 @@ def hung_page_targets(deps: TabDeps | None = None, *, timeout_s: float | None = 
 
 
 def close_hung_tabs(deps: TabDeps | None = None, *, timeout_s: float | None = None,
-                    log: Callable[..., None] | None = None) -> dict:
+                    log: Callable[..., None] | None = None,
+                    only_ids: list[str] | None = None) -> dict:
     """Find the hung page targets and close each one (by target id, on the
-    PROVEN dedicated Chrome). Returns `{n_pages, hung, closed, failed}`."""
+    PROVEN dedicated Chrome). Returns `{n_pages, hung, closed, failed, spared}`.
+    With `only_ids`, a hung tab outside that list is reported in `spared` and
+    left open (the memory reclaim closes only the reader's own tabs)."""
     d = deps or TabDeps()
     say = log or (lambda **k: None)
     h = hung_page_targets(d, timeout_s=timeout_s)
-    out = {**h, "closed": [], "failed": []}
+    out = {**h, "closed": [], "failed": [], "spared": []}
     if not h.get("ok"):
         say(event="hung_tabs_check_refused", why=h.get("refused"))
         return out
+    allowed = None if only_ids is None else {str(i) for i in only_ids}
     for t in h["hung"]:
+        if allowed is not None and t["id"] not in allowed:
+            out["spared"].append(t)
+            continue
         try:
             ok = d.close_target(t["id"])
         except Exception:                                           # noqa: BLE001
@@ -616,6 +648,64 @@ def _browser_close() -> bool:
     return True
 
 
+def _page_visible(target: dict, timeout: float) -> bool | None:
+    """True when the page is the ACTIVE tab of a shown window
+    (`document.visibilityState == "visible"`), None when it does not answer.
+    A constant expression, like `_page_responsive`."""
+    try:
+        r = _cdp_call(str(target.get("webSocketDebuggerUrl") or ""), "Runtime.evaluate",
+                      {"expression": "document.visibilityState", "returnByValue": True},
+                      timeout=timeout)
+        v = ((r.get("result") or {}).get("result") or {}).get("value")
+        return None if v is None else v == "visible"
+    except Exception:                                               # noqa: BLE001
+        return None
+
+
+def pool_open_tab_ids(path: Path | None = None) -> list[str]:
+    """The tab ids the reader pool names as its OWN (`open_tab_ids` in its
+    status file). Empty when there is no pool status: then nothing is the
+    reader's, and the memory reclaim closes nothing."""
+    p = path or (Path(_config.OPTIMUS_LEDGER_DIR) / "dowjones" / "reader_pool_status.json")
+    try:
+        st = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    # 2026-09-29: plus every tab the pool process opened and may have left
+    # (`reader_tab_ids`, `orphaned_tabs`): still the reader's, never the owner's
+    ids = [*(st.get("open_tab_ids") or []), *(st.get("reader_tab_ids") or []),
+           *(st.get("orphaned_tabs") or [])]
+    return list(dict.fromkeys(str(t) for t in ids if t))
+
+
+def _is_blank(url: Any) -> bool:
+    return str(url or "").startswith("about:blank")
+
+
+def foreign_pages(pages: list[dict], own_tab_ids: list[str] | None) -> list[dict]:
+    """PURE. Pages of the dedicated Chrome the reader did not open (about:blank
+    excluded: it is the launcher's start page and the keep-a-window page)."""
+    own = {str(t) for t in (own_tab_ids or [])}
+    return [p for p in pages if str(p.get("id")) not in own and not _is_blank(p.get("url"))]
+
+
+def owner_may_be_using(pages: list[dict], own_tab_ids: list[str] | None,
+                       visible: Callable[[dict, float], bool | None],
+                       timeout: float = 4.0) -> list[dict]:
+    """The foreign pages that are the ACTIVE tab of a shown window: somebody
+    other than the reader (the owner, an attended session) may be using the
+    window. A page that does not answer is not counted (it cannot be in use)."""
+    out = []
+    for p in foreign_pages(pages, own_tab_ids):
+        try:
+            v = visible(p, timeout)
+        except Exception:                                           # noqa: BLE001
+            v = None
+        if v:
+            out.append({"id": str(p.get("id")), "url": str(p.get("url") or "")[:160]})
+    return out
+
+
 def _pid_alive(pid: int) -> bool:
     rows = _powershell_json(f"Get-Process -Id {int(pid)} -ErrorAction SilentlyContinue | "
                             f"Select-Object Id | ConvertTo-Json -Compress")
@@ -638,6 +728,8 @@ class ChromeDeps:
     responsive: Callable[[dict, float], bool] = _page_responsive
     sleep: Callable[[float], None] = time.sleep
     clock: Callable[[], float] = time.monotonic
+    #: target -> True when it is the active tab of a shown window (2026-09-29)
+    visible: Callable[[dict, float], bool | None] = _page_visible
 
     def __post_init__(self) -> None:
         from backend.services import muratclaw_instance as MI
@@ -651,11 +743,13 @@ class ChromeDeps:
 
 
 def close_idle_tabs(own_tab_ids: list[str] | None = None, *, deps: ChromeDeps | None = None,
-                    keep_one: bool = True) -> dict:
-    """Close the reader's OWN tabs first (`own_tab_ids`), then every other
-    page of the dedicated Chrome (called only when no reader runs, so every
-    remaining page is idle). With `keep_one`, one about:blank is opened first
-    so the browser keeps a window. Proves the instance first; never raises."""
+                    keep_one: bool = True, only_own: bool = False) -> dict:
+    """Close the reader's OWN tabs first (`own_tab_ids`), then -- unless
+    `only_own` -- every other page of the dedicated Chrome (the recycle, which
+    ends the browser anyway). The memory reclaim passes `only_own=True`: a tab
+    the reader did not open is never closed by it. With `keep_one`, one
+    about:blank is opened first so the browser keeps a window. Proves the
+    instance first; never raises."""
     d = deps or ChromeDeps()
     try:
         d.prove()
@@ -665,7 +759,8 @@ def close_idle_tabs(own_tab_ids: list[str] | None = None, *, deps: ChromeDeps | 
                 "closed": [], "order": []}
     own = [str(t) for t in (own_tab_ids or [])]
     ids = [str(p.get("id")) for p in pages]
-    order = [t for t in own if t in ids] + [t for t in ids if t not in own]
+    order = [t for t in own if t in ids] + ([] if only_own else
+                                            [t for t in ids if t not in own])
     blank = None
     if keep_one and order:
         try:
@@ -681,7 +776,50 @@ def close_idle_tabs(own_tab_ids: list[str] | None = None, *, deps: ChromeDeps | 
         except Exception:                                           # noqa: BLE001
             failed.append(t)
     return {"ok": True, "closed": closed, "failed": failed, "order": order,
-            "own_first": [t for t in own if t in ids], "blank": blank}
+            "own_first": [t for t in own if t in ids], "blank": blank,
+            "spared": [t for t in ids if t not in own] if only_own else []}
+
+
+def recycle_preflight(own_tab_ids: list[str] | None = None, *,
+                      deps: ChromeDeps | None = None,
+                      own_again: Callable[[], list[str]] | None = None,
+                      settle_s: float = 0.0) -> dict:
+    """Would `recycle_dedicated_chrome` refuse right now? Asked BEFORE the
+    caller stops anything (2026-09-29: the supervisor stopped the pool, THEN
+    the recycle refused, and the reader restarted for nothing). No side
+    effect: it proves the instance and reads which pages are active.
+
+    `own_again` (optional) re-reads the reader's own tab ids after `settle_s`:
+    the pool's status file lags its tabs by up to its write interval, so a tab
+    it opened seconds ago is not yet listed as its own. A foreign active page
+    counts only if it is still there, still active and still not the reader's
+    on the second look. Never raises.
+
+    Returns `{"ok": bool, "refused": str | None, "active_foreign": [...],
+    "pid": int | None}`."""
+    d = deps or ChromeDeps()
+    try:
+        proof = d.prove()
+    except Exception as exc:                                        # noqa: BLE001
+        return {"ok": False, "refused": f"{type(exc).__name__}: {str(exc)[:200]}",
+                "active_foreign": [], "pid": None}
+    pid = int(proof.get("pid") or 0) or None
+    try:
+        active = owner_may_be_using(d.page_targets(), own_tab_ids, d.visible)
+        if active and own_again is not None:
+            if settle_s > 0:
+                d.sleep(settle_s)
+            own2 = list(own_tab_ids or []) + [str(t) for t in (own_again() or [])]
+            first = {a["id"] for a in active}
+            active = [a for a in owner_may_be_using(d.page_targets(), own2, d.visible)
+                      if a["id"] in first]
+    except Exception as exc:                                        # noqa: BLE001
+        return {"ok": False, "refused": f"page list failed: {type(exc).__name__}: "
+                                        f"{str(exc)[:160]}", "active_foreign": [], "pid": pid}
+    if active:
+        return {"ok": False, "refused": "OWNER_MAY_BE_USING: a tab the reader did not open "
+                                        "is active", "active_foreign": active, "pid": pid}
+    return {"ok": True, "refused": None, "active_foreign": [], "pid": pid}
 
 
 def recycle_dedicated_chrome(own_tab_ids: list[str] | None = None, *,
@@ -695,13 +833,19 @@ def recycle_dedicated_chrome(own_tab_ids: list[str] | None = None, *,
     d = deps or ChromeDeps()
     out: dict[str, Any] = {"why": why, "steps": []}
     t0 = d.clock()
-    try:
-        proof = d.prove()
-    except Exception as exc:                                        # noqa: BLE001
-        out.update(ok=False, refused=f"{type(exc).__name__}: {str(exc)[:200]}")
+    # never under somebody's hands: a tab the reader did not open that is the
+    # ACTIVE tab of a shown window means the owner (or an attended session)
+    # may be using this Chrome right now. The same check a caller runs first
+    # (`recycle_preflight`), repeated here because the pages can change.
+    pre = recycle_preflight(own_tab_ids, deps=d)
+    if pre["pid"] is not None:
+        out["pid_before"] = pre["pid"]
+    if not pre["ok"]:
+        out.update(ok=False, refused=pre["refused"])
+        if pre["active_foreign"]:
+            out["active_foreign"] = pre["active_foreign"]
         return out
-    pid = int(proof.get("pid") or 0)
-    out["pid_before"] = pid
+    pid = int(pre["pid"] or 0)
     try:
         out["mem_before"] = d.chrome_memory()
     except Exception:                                               # noqa: BLE001
@@ -737,10 +881,16 @@ def recycle_dedicated_chrome(own_tab_ids: list[str] | None = None, *,
 def reclaim_memory(*, need_gb: float, own_tab_ids: list[str] | None = None,
                    deps: ChromeDeps | None = None, log: Callable[..., None] | None = None
                    ) -> dict:
-    """Free memory the READER owns until `need_gb` is free: hung tabs, then the
-    idle tabs of the dedicated Chrome, then a graceful restart of that Chrome.
-    Stops at the first step that clears the floor. Never raises, never waits
-    beyond the recycle's own bounded exit wait."""
+    """Free memory the READER owns until `need_gb` is free: its own hung
+    tabs, then its own idle tabs, then a graceful restart of the dedicated
+    Chrome. Stops at the first step that clears the floor. Never raises, never
+    waits beyond the recycle's own bounded exit wait.
+
+    OWN means listed in `own_tab_ids` (the pool's `open_tab_ids`). A tab the
+    reader did not open is never closed here, and the recycle (which ends every
+    tab) runs only when every page is the reader's or about:blank; any other
+    page (the owner's, an attended session's, another job's) refuses it with
+    `OWNER_OR_OTHER_TABS`."""
     d = deps or ChromeDeps()
     say = log or (lambda **k: None)
     steps: list[dict] = []
@@ -754,17 +904,27 @@ def reclaim_memory(*, need_gb: float, own_tab_ids: list[str] | None = None,
     f0 = free()
     if f0 is not None and f0 >= need_gb:
         return {"ok": True, "free_before": f0, "free_after": f0, "steps": steps}
-    h = close_hung_tabs(d.tabs())
+    own = [str(t) for t in (own_tab_ids or [])]
+    h = close_hung_tabs(d.tabs(), only_ids=own)
     steps.append({"step": "close_hung_tabs", "closed": len(h.get("closed") or []),
-                  "free_gb": free()})
+                  "spared": len(h.get("spared") or []), "free_gb": free()})
     if (steps[-1]["free_gb"] or 0.0) < need_gb:
-        c = close_idle_tabs(own_tab_ids, deps=d)
+        c = close_idle_tabs(own, deps=d, only_own=True)
         steps.append({"step": "close_idle_tabs", "closed": len(c.get("closed") or []),
-                      "free_gb": free()})
+                      "spared": len(c.get("spared") or []), "free_gb": free()})
     if (steps[-1]["free_gb"] or 0.0) < need_gb:
-        r = recycle_dedicated_chrome(own_tab_ids, deps=d, why="reclaim memory for a repair")
-        steps.append({"step": "recycle_dedicated_chrome", "ok": r.get("ok"),
-                      "free_gb": free()})
+        try:
+            others = foreign_pages(d.page_targets(), own)
+        except Exception as exc:                                    # noqa: BLE001
+            others = [{"id": "?", "url": f"page list failed: {exc}"[:160]}]
+        if others:
+            steps.append({"step": "recycle_dedicated_chrome", "ok": False,
+                          "refused": f"OWNER_OR_OTHER_TABS: {len(others)} page(s) the "
+                                     f"reader did not open", "free_gb": free()})
+        else:
+            r = recycle_dedicated_chrome(own, deps=d, why="reclaim memory for a repair")
+            steps.append({"step": "recycle_dedicated_chrome", "ok": r.get("ok"),
+                          "refused": r.get("refused"), "free_gb": free()})
     f1 = steps[-1]["free_gb"]
     out = {"ok": f1 is not None and f1 >= need_gb, "free_before": f0, "free_after": f1,
            "steps": steps}
@@ -773,23 +933,34 @@ def reclaim_memory(*, need_gb: float, own_tab_ids: list[str] | None = None,
 
 
 def chrome_recycle_due(*, age_s: float | None, mem_gb: float | None,
-                       free_gb: float | None = None) -> str | None:
+                       free_gb: float | None = None,
+                       total_gb: float | None = None) -> str | None:
     """PURE. Why the dedicated Chrome should be recycled now, or None:
     * older than `READER_CHROME_RECYCLE_S`;
     * holding more than `READER_CHROME_MAX_GB` (private bytes) whatever the
       machine's state;
     * holding more than `READER_CHROME_SOFT_GB` while free RAM is under
-      `READER_CHROME_LOW_FREE_GB` (the browser is what squeezes the machine).
+      `READER_CHROME_LOW_FREE_GB` AND the browser is what squeezes the
+      machine: its private bytes are at least `READER_CHROME_PRESSURE_SHARE`
+      of the memory in use (`total_gb - free_gb`; the share test is skipped
+      when `total_gb` is unknown).
     A fresh browser with a full pool already holds several GB, so size alone
     at a low bar would recycle every quarter hour for nothing (measured on the
-    first night of this rule)."""
+    first night of this rule). 2026-09-29, the same failure through the
+    pressure branch: other jobs held ~31 GB, the pooled Chrome regrew past
+    4 GB about 20 minutes after each recycle (2.0 GB at 5 min, 3.7 at 14,
+    4.6 at 26), and every such crossing asked for a recycle that could not
+    relieve memory the browser was not holding (4.6 of ~28.5 GB in use)."""
     max_age = float(getattr(_config, "READER_CHROME_RECYCLE_S", 7200.0))
     max_gb = float(getattr(_config, "READER_CHROME_MAX_GB", 8.0))
     soft_gb = float(getattr(_config, "READER_CHROME_SOFT_GB", 4.0))
     low_free = float(getattr(_config, "READER_CHROME_LOW_FREE_GB", 3.0))
     if mem_gb is not None and mem_gb > max_gb:
         return f"MEMORY: the dedicated Chrome holds {mem_gb:.1f} GB > {max_gb:.1f} GB"
-    if mem_gb is not None and free_gb is not None and mem_gb > soft_gb and free_gb < low_free:
+    share = float(getattr(_config, "READER_CHROME_PRESSURE_SHARE", 0.25))
+    in_use = (total_gb - free_gb) if (total_gb is not None and free_gb is not None) else None
+    squeezer = in_use is None or in_use <= 0 or (mem_gb or 0.0) >= share * in_use
+    if mem_gb is not None and free_gb is not None and mem_gb > soft_gb and free_gb < low_free             and squeezer:
         return (f"MEMORY_PRESSURE: the dedicated Chrome holds {mem_gb:.1f} GB > "
                 f"{soft_gb:.1f} GB with {free_gb:.1f} GB free < {low_free:.1f} GB")
     if age_s is not None and age_s > max_age:

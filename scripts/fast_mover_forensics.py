@@ -321,7 +321,8 @@ def main(argv=None) -> int:
                           workdir=F.OUT_DIR / "_quests")
             cost = q.get("openclaw_cost_usd")
             spent += float(cost or 0)
-            fails = fails + 1 if q["status"] != "OK" else 0
+            # no stored guarded-reader page is $0 and no call: not a failed quest
+            fails = fails + 1 if q["status"] not in ("OK", "NO_GUARDED_PAGE") else 0
             q.update(ticker=c.position.ticker, S=c.S, entry_ts=c.position.entry_ts)
             quests.append(q)
             for cc in cases:

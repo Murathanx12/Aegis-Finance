@@ -1,0 +1,603 @@
+{
+ "schema": "bar_defects/books/1",
+ "run_id": "2026-09-29T034841Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "written_utc": "2026-09-29T03:48:41+00:00",
+ "llm_spend_usd": 0.0,
+ "read_only": "books.jsonl, the bar files and the trial receipt were read, never written",
+ "tolerances": {
+  "mom_log_abs": 0.1,
+  "vol_ratio": 1.5
+ },
+ "n_books": 314,
+ "n_positions": 3977,
+ "n_positions_selected_on_broken_row": 21,
+ "n_books_with_one": 21,
+ "tickers_selected_on_broken_row": [
+  "ISRL",
+  "WOLF"
+ ],
+ "n_positions_suspect_only": 0,
+ "trial": {
+  "receipt": "lib_forward_trial_2026-09-28T062024Z.json",
+  "n_pairs": 30,
+  "pairs_affected": [
+   {
+    "book": "lib_disp_short_avoid_2026-09-27",
+    "book_id": "d93fbf2c301248ca",
+    "twin_book_id": "67903b85cf3c0b8c",
+    "twin_type": "matched_random",
+    "book_side": true,
+    "twin_side": false,
+    "book_weight": 0.05,
+    "twin_weight": 0.0
+   },
+   {
+    "book": "lib_low_asset_growth_sealed_2026-09-26",
+    "book_id": "6d36d70c4ae56556",
+    "twin_book_id": "a60c51733eabeb03",
+    "twin_type": "random_same_band",
+    "book_side": true,
+    "twin_side": false,
+    "book_weight": 0.05,
+    "twin_weight": 0.0
+   },
+   {
+    "book": "lib_mom_12_1_2026-09-26",
+    "book_id": "5d01fa2898e2cb72",
+    "twin_book_id": "21b78eebdc2f42ef",
+    "twin_type": "random_same_band",
+    "book_side": true,
+    "twin_side": false,
+    "book_weight": 0.05,
+    "twin_weight": 0.0
+   },
+   {
+    "book": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+    "book_id": "3fd38f0d7a4dcb03",
+    "twin_book_id": "ba7cda26cb2cec30",
+    "twin_type": "matched_random",
+    "book_side": true,
+    "twin_side": false,
+    "book_weight": 0.03531,
+    "twin_weight": 0.0
+   },
+   {
+    "book": "lib_mom_12_1_q_2026-09-26",
+    "book_id": "e41dbb1e06a12088",
+    "twin_book_id": "528f037d9b63085d",
+    "twin_type": "random_same_band",
+    "book_side": true,
+    "twin_side": false,
+    "book_weight": 0.05,
+    "twin_weight": 0.0
+   },
+   {
+    "book": "lib_mom_12_1_q_trend_lead_2026-09-27",
+    "book_id": "1144c07902e67552",
+    "twin_book_id": "4f4b04f2d61cefcd",
+    "twin_type": "matched_random",
+    "book_side": true,
+    "twin_side": false,
+    "book_weight": 0.05,
+    "twin_weight": 0.0
+   },
+   {
+    "book": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+    "book_id": "7a65d45f09962ead",
+    "twin_book_id": "f7129c2a18c99fbf",
+    "twin_type": "random_same_band",
+    "book_side": true,
+    "twin_side": false,
+    "book_weight": 0.05,
+    "twin_weight": 0.0
+   },
+   {
+    "book": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+    "book_id": "4ffbfd2e83d06daa",
+    "twin_book_id": "fd7efadd8fae58dc",
+    "twin_type": "matched_random",
+    "book_side": true,
+    "twin_side": false,
+    "book_weight": 0.03556,
+    "twin_weight": 0.0
+   },
+   {
+    "book": "lib_resid_mom_12_1_large_sealed_2026-09-26",
+    "book_id": "485a857d5b45847c",
+    "twin_book_id": "a0f1cb6920144501",
+    "twin_type": "random_same_band",
+    "book_side": true,
+    "twin_side": false,
+    "book_weight": 0.05,
+    "twin_weight": 0.0
+   }
+  ]
+ },
+ "books": [
+  {
+   "book_id": "0ec7a7108291f4bb",
+   "name": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__ew",
+   "kind": "twin",
+   "asof": "2026-09-27",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "1144c07902e67552",
+   "name": "lib_mom_12_1_q_trend_lead_2026-09-27",
+   "kind": "personal",
+   "asof": "2026-09-27",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "2cc265ad037fae46",
+   "name": "lib_mom_12_1_liqw_sealed_2026-09-26__ew",
+   "kind": "twin",
+   "asof": "2026-09-26",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "2fb54ddd9dde0b04",
+   "name": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control__ew",
+   "kind": "twin",
+   "asof": "2026-09-27",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "485a857d5b45847c",
+   "name": "lib_resid_mom_12_1_large_sealed_2026-09-26",
+   "kind": "personal",
+   "asof": "2026-09-26",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "59ea08099cb25312",
+   "name": "lib_low_asset_growth_sealed_2026-09-26__ew",
+   "kind": "twin",
+   "asof": "2026-09-26",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "5d01fa2898e2cb72",
+   "name": "lib_mom_12_1_2026-09-26",
+   "kind": "personal",
+   "asof": "2026-09-26",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "5d2ce60804a20d37",
+   "name": "lib_mom_12_1_ivw_lead_2026-09-27__control__ew",
+   "kind": "twin",
+   "asof": "2026-09-27",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "6d36d70c4ae56556",
+   "name": "lib_low_asset_growth_sealed_2026-09-26",
+   "kind": "personal",
+   "asof": "2026-09-26",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "7a65d45f09962ead",
+   "name": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+   "kind": "control",
+   "asof": "2026-09-27",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "8e78209f77acf36b",
+   "name": "lib_mom_12_1_q_trend_lead_2026-09-27__ew",
+   "kind": "twin",
+   "asof": "2026-09-27",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "9400f79fada66555",
+   "name": "lib_disp_short_avoid_2026-09-27__ew",
+   "kind": "twin",
+   "asof": "2026-09-27",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "a313813bc4f6f741",
+   "name": "lib_mom_12_1_2026-09-26__ew",
+   "kind": "twin",
+   "asof": "2026-09-26",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "bd9b977b6241b11b",
+   "name": "lib_resid_mom_12_1_large_sealed_2026-09-26__ew",
+   "kind": "twin",
+   "asof": "2026-09-26",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "d93fbf2c301248ca",
+   "name": "lib_disp_short_avoid_2026-09-27",
+   "kind": "personal",
+   "asof": "2026-09-27",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "e41dbb1e06a12088",
+   "name": "lib_mom_12_1_q_2026-09-26",
+   "kind": "personal",
+   "asof": "2026-09-26",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "f16d01a11ab3ccc4",
+   "name": "lib_mom_12_1_q_2026-09-26__ew",
+   "kind": "twin",
+   "asof": "2026-09-26",
+   "weight_selected_on_broken_row": 0.05,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.05,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "df55d0a76fdd48fd",
+   "name": "cards_supports_2026-09-25__random_same_band",
+   "kind": "twin",
+   "asof": "2026-09-25",
+   "weight_selected_on_broken_row": 0.049,
+   "positions": [
+    {
+     "ticker": "ISRL",
+     "weight": 0.049,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": -0.0198,
+     "mom_on": NaN,
+     "vol_off": 1.9825,
+     "vol_on": NaN
+    }
+   ]
+  },
+  {
+   "book_id": "4ffbfd2e83d06daa",
+   "name": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+   "kind": "control",
+   "asof": "2026-09-27",
+   "weight_selected_on_broken_row": 0.03556,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.0356,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "3fd38f0d7a4dcb03",
+   "name": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+   "kind": "control",
+   "asof": "2026-09-27",
+   "weight_selected_on_broken_row": 0.03531,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.0353,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  },
+  {
+   "book_id": "76ea751d6ef35ab5",
+   "name": "lib_mom_12_1_liqw_sealed_2026-09-26",
+   "kind": "personal",
+   "asof": "2026-09-26",
+   "weight_selected_on_broken_row": 0.00103,
+   "positions": [
+    {
+     "ticker": "WOLF",
+     "weight": 0.001,
+     "why": [
+      "history_cut_inside_12_1_window"
+     ],
+     "suspect_in_window": false,
+     "mom_off": 11.1306,
+     "mom_on": NaN,
+     "vol_off": 1.112,
+     "vol_on": 1.112
+    }
+   ]
+  }
+ ],
+ "screen": {
+  "enabled": true,
+  "rules": {
+   "dark_run_min_sessions": 5,
+   "nontrade_print_tol": 0.01,
+   "spike_ratio": 4.0,
+   "spike_residual": 0.25,
+   "spike_window_sessions": 3,
+   "break_ratio": 3.0,
+   "quiet_volume_mult": 2.0
+  },
+  "volume_available": true,
+  "rows_in": 8563385,
+  "rows_removed": 174417,
+  "rows_removed_by_reason": {
+   "DARK_RUN": 173795,
+   "NONTRADE_PRINT": 609,
+   "SPIKE_PRINT": 13
+  },
+  "rows_removed_by_year": {
+   "2016": 12029,
+   "2017": 16102,
+   "2018": 23987,
+   "2019": 30625,
+   "2020": 31157,
+   "2021": 21227,
+   "2022": 17664,
+   "2023": 14169,
+   "2024": 6612,
+   "2025": 488,
+   "2026": 357
+  },
+  "symbols_with_rows_removed": 697,
+  "n_dark_runs": 7264,
+  "nontrade_prints": 609,
+  "n_spikes": 7,
+  "n_cuts": 95,
+  "n_suspects": 20,
+  "cuts_by_reason": {
+   "QUIET_LEVEL_BREAK": 63,
+   "GAP_LEVEL_BREAK": 32
+  }
+ }
+}

@@ -1,0 +1,83 @@
+{
+ "policy_hash": "a0f7e02d84444332",
+ "frozen_utc": "2026-09-29T03:44:12Z",
+ "body": {
+  "trial": "TRIAL-STRADDLE-FWD-1",
+  "version": 1,
+  "licence": "PRODUCT_EXPERIMENT",
+  "what": "forward paper log of ATM straddle SELECTION by the frozen size forecast vs the option market's implied move, against a twin selected by trailing volatility. No broker, no orders, no LLM.",
+  "inputs": {
+   "size_model": {
+    "file": "backend/data/optimus/straddle_forward/model_ridge_pit_v1.json",
+    "model_sha": "6d65591f62156cae",
+    "target": "abs_r21 = |close(entry+21 sessions)/close(entry) - 1|",
+    "spec": {
+     "vol_21": "log",
+     "vol_63": "log",
+     "vol_252": "log",
+     "maxabs_21": "log",
+     "absret_21": "abs",
+     "absret_252": "abslog",
+     "dv_log": "raw",
+     "px_log": "raw",
+     "ems4": "log",
+     "earn_next_pit": "raw",
+     "earn_x_ems_pit": "raw"
+    },
+    "train_span": [
+     "2013-01-31",
+     "2024-10-31"
+    ],
+    "n_train": 258712
+   },
+   "bars": "backend/data/optimus/prices_2025_26/bars.parquet (Alpaca SIP, adjustment=all, refreshed nightly by scripts/pull_bars_refresh.py); decision close = its newest session",
+   "earnings": "yfinance earnings calendar: report dates strictly before the pull time only; the next-earnings flag is the POINT-IN-TIME projection (last done report + 91-day steps), never the actual future report date",
+   "chains": "yfinance option_chain (free, delayed ~15 min); the underlying quote from the same call",
+   "market": "SPY from the bars file (2-day abnormal earnings moves)"
+  },
+  "universe": "top 400 bars symbols by 63-session median dollar volume at the decision close, price >= $5, known ETFs/index proxies excluded, underlying quoteType EQUITY",
+  "expiry_rule": "the standard monthly (third Friday, or the session before it) with calendar DTE in [21, 35] on the entry day; no such expiry -> no entry that day (OBSERVE_ONLY snapshot)",
+  "entry": "one entry per XNYS session, first scheduled pass in 10:45-15:30 America/New_York; strike = the listed strike nearest spot carried by both a call and a put",
+  "quote_filters": {
+   "max_strike_dist": 0.05,
+   "max_leg_spread_over_mid": 0.5,
+   "max_straddle_spread_over_mid": 0.2,
+   "min_open_interest_per_leg": 10,
+   "leg_last_trade_max_age_days": 5.0,
+   "underlying_quote_max_age_min": 30.0,
+   "refuse": "zero/missing bid or ask, crossed quotes, unpriceable mid (IV outside band)"
+  },
+  "implied_move": "iv_atm = mean of call and put IV inverted from the MID (European BSM, r = 0.04, q = 0); implied move = iv_atm * sqrt(T_to_expiry_close) * sqrt(2/pi)",
+  "ranking": "gap = log(forecast E|r21| * sqrt(sessions_to_expiry / 21) / implied move); LONG = largest gaps, SHORT = smallest; ties by symbol; a cell needs >= 2*breadth + 10 usable names",
+  "breadths_per_leg": [
+   20,
+   50,
+   100
+  ],
+  "primary_breadth": "100 per leg if that cell ran (>= 210 usable names) on >= 80% of the entry sessions in the read; otherwise 50 per leg. Declared before the first entry because the 2026-09-28 closing-quote dry run had 164 usable of 400 (the 100 cell could not run); mechanical, not chosen after a result.",
+  "twin": "the SAME usable names on the SAME quotes, ranked by trailing 63-session vol * sqrt(21/252) * sqrt(2/pi) instead of the ridge",
+  "fill_convention": "LONG straddle bought at call ask + put ask; SHORT sold at call bid + put bid",
+  "exit": "held to expiry; marked at INTRINSIC |S_T - K| from the bars close on the expiry session (split-rescaled, dividends not); no exit cost charged (sensitivity: 5% of intrinsic)",
+  "costs": "the quoted spread paid at entry (ask for longs, bid for shorts); nothing assumed",
+  "objective": "log utility of equity with 2% of equity in premium per leg: log(1 + b*ls_ridge) - log(1 + b*ls_vol), ls = (long + short)/2 return on premium; secondary: the ridge L/S vs cash at quoted costs",
+  "statistics": "one observation per EXPIRY (cohorts sharing an expiry averaged); t / SE / MDE = 2.8 SE over expiry blocks (move_size_sizing.block_stats, block_len 1)",
+  "power": {
+   "history": "2014-2024 100/leg diff +8.2 bp of equity/month, monthly sd ~19.5 bp (se 1.72 bp x 3 x sqrt(43 blocks) / sqrt 3)",
+   "blocks_for_mde_equal_to_history_effect": 44,
+   "note": "the forward universe is ~300-400 names, so 100/leg is ~a tercile (the lab's 100/leg was ~6% of 1,755 names; its quintile cell was +6.8 bp, t 5.28). A forward confirmation at the historical effect needs ~44 expiries (~3.7 years)."
+  },
+  "kill_rule": "from 6 expiry blocks, at every grade: if the PRIMARY-cell diff has mean <= 0 and t <= -1 (FAILED_VARIANT) the selector is RETIRED_FROM_CURRENT_SEARCH. At 6 blocks (SE ~8 bp) the rule fires on a true zero with ~16% chance per look and on the historical +8.2 bp with ~2%: it detects a reversal, it cannot confirm.",
+  "first_read": "after 12 graded expiry blocks (MDE ~15.8 bp, about twice the historical effect): report, do not promote",
+  "promotion": "none from this contract. CAPITAL_CANDIDATE needs matured forward evidence AND a defined-risk form (long straddles only, or short legs wrapped in wings).",
+  "no_llm": true,
+  "no_broker": true,
+  "code_at_freeze": {
+   "backend/services/straddle_forward.py": "30410de3fc3965ef",
+   "scripts/straddle_forward.py": "4fc9d544af907945",
+   "note": "every SESSION row records the code hashes it ran; a decision-changing edit is a new contract version"
+  },
+  "first_entry_session": "the first XNYS session with a standard monthly 21-35 calendar days out (from 2026-09-29: 2026-10-16 -> the 2026-11-20 expiry)",
+  "first_grade": "the 2026-11-20 expiry close, graded on the first scheduled pass after the nightly bars refresh carries that session",
+  "worst_case": "printed on every snapshot for the ridge short leg at 3 and 10 sigma, $1,000,000 notional"
+ }
+}

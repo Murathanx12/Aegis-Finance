@@ -234,9 +234,23 @@ def split_stitched(bars: pd.DataFrame, *, src_col: str = "src", regs: dict | Non
     """Cut every STITCHED / GAP_UNRESOLVED symbol at its gap(s): earlier segments become
     `SYM#k` (dead names), the symbol itself starts at the new company's first bar.
 
-    Returns (bars, audit). Rows are never dropped and prices never changed."""
+    FIRST (2026-09-29) the bar-defect screen (`bar_defects.screen`) runs: rows
+    that were never trades (zero-volume dark runs, zero-volume prints that move
+    the price, spike-and-revert prints) are removed, so a hole the vendor filled
+    with flat zero-volume bars (LINE 2016-2024) becomes a gap this module can
+    see; and level breaks the screen proves (quiet-volume or across a missing
+    session) are cut exactly like a stitched gap. The stitch cut itself never
+    drops a row or changes a price.
+
+    Returns (bars, audit); `audit["defect_screen"]` lists every removed run,
+    spike and defect cut."""
     global LAST_AUDIT
+    from backend.services import bar_defects as BD          # noqa: PLC0415
     b = bars.sort_values(["symbol", "date"], kind="mergesort").reset_index(drop=True)
+    dcuts = None
+    d_audit: dict = {"enabled": False}
+    if "close" in b.columns:
+        b, dcuts, d_audit = BD.screen(b, market=market)
     g = gaps if gaps is not None else detect(b, src_col=src_col, regs=regs, market=market)
     cut = g[g["verdict"].isin(CUT_VERDICTS)] if len(g) else g
     audit = {"gap_sessions_threshold": GAP_SESSIONS, "candidates": int(len(g)),
@@ -244,15 +258,34 @@ def split_stitched(bars: pd.DataFrame, *, src_col: str = "src", regs: dict | Non
              "cut_symbols": sorted(cut["symbol"].unique().tolist()) if len(cut) else [],
              "kept_as_suspension": sorted(g.loc[g["verdict"] == "SUSPENSION", "symbol"].unique().tolist())
              if len(g) else [],
-             "registrant_sources": list((regs or registrants()).get("sources", [])) if len(g) else []}
-    if not len(cut):
+             "registrant_sources": list((regs or registrants()).get("sources", [])) if len(g) else [],
+             "defect_cut_symbols": sorted(set(dcuts["symbol"].astype(str))) if dcuts is not None
+             and len(dcuts) else [],
+             "defect_screen": d_audit}
+    parts = []
+    if len(cut):
+        parts.append(cut[["symbol", "first_after"]])
+    if dcuts is not None and len(dcuts):
+        parts.append(dcuts[["symbol", "first_after"]])
+    if not parts:
         LAST_AUDIT = audit
         return b, audit
+    allcuts = pd.concat(parts, ignore_index=True)
+    allcuts["first_after"] = pd.to_datetime(allcuts["first_after"])
+    allcuts = allcuts.drop_duplicates()
     sym = b["symbol"].astype(str).values.copy()
     dates = pd.to_datetime(b["date"]).values
-    for s, gg in cut.groupby("symbol"):
-        rows = np.flatnonzero(sym == s)
-        cuts = sorted(pd.to_datetime(gg["first_after"]).values)
+    # b is sorted by symbol: each symbol's rows are one contiguous range
+    sym_sorted = sym.astype("U")
+    contiguous = bool(len(sym_sorted) < 2 or (sym_sorted[1:] >= sym_sorted[:-1]).all())
+    for s, gg in allcuts.groupby("symbol"):
+        if contiguous:
+            lo = int(np.searchsorted(sym_sorted, s, side="left"))
+            hi = int(np.searchsorted(sym_sorted, s, side="right"))
+            rows = np.arange(lo, hi)
+        else:                                   # e.g. a categorical sorted by category order
+            rows = np.flatnonzero(sym == s)
+        cuts = sorted(set(pd.to_datetime(gg["first_after"]).values))
         seg = np.searchsorted(np.asarray(cuts, dtype="datetime64[ns]"), dates[rows], side="right")
         last = len(cuts)
         early = seg < last
@@ -283,7 +316,9 @@ def cut_reader_bars(bars: pd.DataFrame, *, src_col: str = SRC_COL,
     not go through `xs_ranker.load_bars` calls this after its own concat and
     dedupe. A reused ticker's history starts at the new company's first bar;
     the old company's rows are renamed `SYM#k`, never dropped, no price changes,
-    no file rewritten. Drops `src_col` when present. Returns long bars sorted by
+    no file rewritten. Rows that were never trades (zero-volume dark runs, spike
+    prints) are removed and proven level breaks cut first (`bar_defects`, via
+    `split_stitched`). Drops `src_col` when present. Returns long bars sorted by
     (symbol, date)."""
     if bars is None or not len(bars):
         return bars.drop(columns=[src_col], errors="ignore") if bars is not None else bars

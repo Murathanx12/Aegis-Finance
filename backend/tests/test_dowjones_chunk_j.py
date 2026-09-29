@@ -291,7 +291,7 @@ def test_the_operator_profile_refuses_other_hosts(monkeypatch):
     monkeypatch.setattr(OC, "_run", lambda *a, **k: pytest.fail("must not reach the CLI"))
     # x.com joined the READ-ONLY allowlist on 2026-09-28 (Murat); facebook did not.
     # mail.google.com is refused by the owner's message rule before the host rule.
-    for u, why in (("https://www.sec.gov/", "OPERATOR_HOST"),
+    for u, why in (("https://www.example.org/", "OPERATOR_HOST"),
                    ("https://www.facebook.com/", "OPERATOR_HOST"),
                    ("https://mail.google.com/", "MESSAGE_URL")):
         with pytest.raises(OC.OpenClawRefused, match=why):
@@ -317,7 +317,7 @@ def test_open_runs_only_on_the_dedicated_profile_and_only_after_the_proof(
             {"targetId": "A" * 32, "tabId": "t2", "url": "https://www.wsj.com/"}]}), "")
     monkeypatch.setattr(OC, "_run", run)
     with pytest.raises(OC.OpenClawRefused, match="OPERATOR_HOST"):
-        OC.browser("open", url="https://www.sec.gov/")
+        OC.browser("open", url="https://www.example.org/")
     assert runs == []
     try:
         r = OC.browser("open", url="https://www.wsj.com/")
@@ -385,7 +385,7 @@ def test_open_from_tab_json_encodes_the_url_and_records_the_new_tab(monkeypatch)
         return subprocess.CompletedProcess(args, 0, "{}", "")
     monkeypatch.setattr(OC, "_run", run)
     with pytest.raises(OC.OpenClawRefused, match="OPERATOR_HOST"):
-        OC.open_from_tab("t20", "https://www.sec.gov/", sleep_fn=lambda s: None)
+        OC.open_from_tab("t20", "https://www.example.org/", sleep_fn=lambda s: None)
     r = OC.open_from_tab("t20", "https://www.wsj.com/news/heard-on-the-street",
                          sleep_fn=lambda s: None)
     assert r["new_tab"] == "t40" and "t40" in OC._OPENED_TABS
