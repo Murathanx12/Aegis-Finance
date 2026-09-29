@@ -363,6 +363,35 @@ def attach_argv() -> list[str]:
             str(_cfg("OPENCLAW_CHROME_START_URL", "about:blank"))]
 
 
+def verify_launch(pid: Any, main_before: list[int], *, probes: Probes | None = None) -> dict:
+    """After a launch (2026-09-29): the started PID is a chrome.exe browser
+    process whose OS command line carries the dedicated `--user-data-dir`,
+    `--remote-debugging-port=<port>` and a LOOPBACK `--remote-debugging-address`,
+    and the other Chrome browser processes are the same PIDs as before (nothing
+    of the owner's was started or ended). Reports; never kills, never raises."""
+    pr = probes or PROBES
+    try:
+        procs = pr.chrome_processes()
+    except Exception as exc:                                        # noqa: BLE001
+        return {"verified": False, "verify_problem": f"process list failed: {exc}"[:160]}
+    mine = [p for p in procs if p.get("pid") == pid]
+    main_after = sorted(p["pid"] for p in procs if not is_dedicated_cmdline(p["cmdline"]))
+    out: dict[str, Any] = {"main_chrome_before": list(main_before),
+                           "main_chrome_after": main_after}
+    cl = mine[0]["cmdline"] if mine else ""
+    addr = re.search(r"--remote-debugging-address=(\S+)", cl)
+    if not mine:
+        out.update(verified=False, verify_problem=f"pid {pid} is not a Chrome browser process")
+    elif not is_dedicated_cmdline(cl, want_port=port()):
+        out.update(verified=False, verify_problem=f"pid {pid} command line is not the "
+                                                  f"dedicated folder with port {port()}")
+    elif not addr or addr.group(1).strip('"') not in _LOOPBACK:
+        out.update(verified=False, verify_problem=f"pid {pid} does not bind loopback only")
+    else:
+        out["verified"] = True
+    return out
+
+
 def launch_attach(*, probes: Probes | None = None, popen: Callable[..., Any] | None = None,
                   wait_s: float = 30.0, sleep_fn: Callable[[float], None] = time.sleep,
                   clock: Callable[[], float] = time.monotonic) -> dict:
@@ -382,6 +411,7 @@ def launch_attach(*, probes: Probes | None = None, popen: Callable[..., Any] | N
                       f"the dedicated folder is held by pid "
                       f"{[d['pid'] for d in st['dedicated']]} without --remote-debugging-port="
                       f"{port()}; close that window, then launch again")
+    main_before = sorted(m["pid"] for m in st.get("main_chrome") or [])
     po = popen or subprocess.Popen
     proc = po(attach_argv(), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
               stderr=subprocess.DEVNULL, shell=False,
@@ -390,8 +420,10 @@ def launch_attach(*, probes: Probes | None = None, popen: Callable[..., Any] | N
     while clock() - t0 < wait_s:
         try:
             pr.http_json(f"{cdp_base()}/json/version")
-            return {"launched": True, "pid_started": getattr(proc, "pid", None),
-                    "seconds_to_port": round(clock() - t0, 2)}
+            out = {"launched": True, "pid_started": getattr(proc, "pid", None),
+                   "seconds_to_port": round(clock() - t0, 2)}
+            out.update(verify_launch(out["pid_started"], main_before, probes=pr))
+            return out
         except Exception:                                           # noqa: BLE001
             sleep_fn(0.3)
     raise _refuse("REFUSED_INSTANCE_DOWN", f"launched, but {cdp_base()} did not answer within "

@@ -91,7 +91,7 @@ The grader takes the entry price from that session's opening bar. That bar did n
 until the 06:31 bar refresh, so no entry price could be checked during the night. See the
 daily-pass section below.
 
-**The 06:30 daily pass had not finished by 07:25.** It started 06:30:01 (PID 138448). The bar
+**The 06:30 daily pass had not finished by 07:25.** It started 06:30:01. The bar
 refresh landed at 06:31, and the 28 Sep session is now on disk (e.g. SPY open 768.35, TSM 448.39,
 JAZZ 235.67). At 07:25 the pass was on the analyst-snapshot step at 250 of 2,362 symbols, about
 158 minutes in total, so the book grade and the paper-accounts receipt come after roughly 09:30.

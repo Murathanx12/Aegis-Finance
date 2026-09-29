@@ -104,3 +104,75 @@ largest move of the day more often than themes built from Dow Jones fronts alone
 purely calendar-based control: themes from the same fronts one day stale. Cost: $0 in reads (they happen
 anyway) plus the digest's own LLM spend. If general news adds no lead over Dow Jones fronts, cut the
 news hosts to the official-release sites and spend the caps on depth instead.
+
+---
+
+## APPENDIX, 2026-09-29 afternoon: "always work" — why the dedicated Chrome went down, and what now recovers it
+
+Machine-level evidence is under
+`backend/data/optimus/local_pc/reader_drops_2026-09-29.md`, not here.
+
+### Scoreboard
+
+| line | value |
+|---|---|
+| RESULT IMPROVEMENT (money) | **NONE**. No reader output feeds a sized decision yet |
+| Sustained run, no pool restart | **41.2 min** (pool launched by the supervisor, then left alone): **277 OK pages = 404 OK/hour**; full 10-minute buckets 59 / 83 / 76 OK pages (354-498/h). Not OK in the run: 6 ROBOTS_DISALLOWED (never loaded), 3 PAYWALL_STUB, 2 BLANK, 2 NOT_FOUND |
+| OK/hour by host in that run | barrons 68.5, wsj 55.4, cnbc 43.7, asia.nikkei 43.7, scmp 43.7, marketwatch 39.3, apnews 35.0, bbc 29.1, finance.yahoo 13.1, ft 11.7, bls 8.7, federalreserve 5.8, home.treasury 2.9, sec 2.9. x / reddit / stocktwits: 0 (each at its 150-in-24-h cap, rolling; unchanged) |
+| Kind of page (OK) | **general news 59.6%** (165), Dow Jones news and fronts 31.4% (87), **stock pages 9.0%** (25). Stock pages are few by design in the afternoon: every name was read inside its 20 h freshness window |
+| X handle timelines | 37 registry handles now queued as `x.com/<handle>` profile pages (pool start line: "37 X handles"); none read yet because x.com is at 150/150 in the rolling 24 h (frees this evening) |
+| Tests | new `backend/tests/test_reader_always_up.py` (20 tests); reader, browser and guard files re-run: 640 + 434 passed |
+| LLM spend | $0 added |
+
+### 1. The causes, with evidence
+
+**The morning / midday drops were clean exits, not crashes: Chrome ends when its last tab closes.**
+The dedicated Chrome's own session log records every start and exit. Its exits at 11:51, 12:56
+and 15:31 local all read `EXIT tab_count 0`, and the next start says `crashed: false`; there is no
+crash dump and no Windows error for them. The pool closes each tab after its read (the 09-28
+"close, never blank" rule). Once the launch's about:blank start page was gone, the pool closing
+its last open tab ended the browser. 12:56:05 was mid-reading (the gateway's last good request was
+0.5 s earlier). 11:51 and 15:31 happened while the supervisor stopped the pool for a scheduled
+recycle: the pool's own tab closes ended the browser before the recycle ran, which is why those
+recycles logged "did not answer". Which step removed the start page is **not identified**. It was
+seen vanishing live at 16:00:03-16:00:33 while the full test suite ran; the pool never recorded that
+tab as its own. The "12:58:47" event is the supervisor relaunching the pool after it had relaunched
+Chrome at 12:57:44. It was not a second drop.
+
+**The ~15:23 event was a sleep, not a Chrome drop.** The machine was asleep for about two hours
+(the event-log lines are in the local_pc record).
+The dedicated Chrome and the pool both survived the sleep. On its first tick after resume the
+supervisor's PID query came back empty, so it reported the live pool as down and read CHROME_DOWN from
+an old log line. Its probe said PROFILE_DETACHED, and one attach fixed that. Then the overdue hourly
+digest ran inside the loop. Nothing in the machine's settings was changed. Keeping the machine awake while away
+is the owner's setting.
+
+**Two further drops at 16:07:34 and 16:21:37 were real browser crashes**: crash dumps, and the next
+start says `crashed: true`. The dumps show two different in-browser check failures. Both came at moments when this session added DevTools traffic (a test
+run, then a diagnostic watcher). Causation is not shown. The diagnostic watcher was stopped. The
+supervisor relaunched Chrome within about 70 s both times.
+
+**Found on the way (not fixed, owner or builder decides):** the fast test suite's network guard allows
+loopback, so a unit test can reach the LIVE dedicated Chrome and gateway. A diagnostic plugin that
+refused ports 18802/18789 showed `test_pc_live_stack::TestOpenClawHealthCanActuallyGoGreen` (2 tests)
+connecting to the live 127.0.0.1:18802. No other reader test did.
+
+### 2. What changed
+
+| change | where |
+|---|---|
+| **Anchor page.** One about:blank page is kept open in the proven dedicated Chrome. It is opened only when none is left. The supervisor checks every tick while the pool reads, and the pool checks before closing its **last** open tab | `gateway_repair.ensure_anchor_tab`; `reader_pool.Pool._keep_window` (`keep_window=` hook, None in tests); supervisor main loop |
+| **Chrome down under a live pool** is caught on the next tick by a loopback port check, and repaired through the existing bounded `repair`. That repair launches ONLY the dedicated folder, only when no process holds it, with exactly `attach_argv()`. Before, the supervisor waited for the pool to fail and exit | `night_reader_supervisor.chrome_port_open`, main loop (`chrome_down_while_reading`) |
+| **Launch verified by PID and command line.** The started PID must be a Chrome browser process whose OS command line has the dedicated `--user-data-dir`, `--remote-debugging-port=18802` and a loopback `--remote-debugging-address`. The other Chrome browser PIDs are listed before and after (`main_chrome_before/after`). A mismatch is reported (`verified: false`) and nothing is killed. Live at 16:22:47: `verified: true` | `muratclaw_instance.verify_launch`, `launch_attach` |
+| **Sleep / resume.** A 60 s tick sleep that overruns by more than 120 s counts as a suspend. The next tick first probes and repairs (bounded), logs `resumed` with the seconds slept, reports STARTING instead of STALLED for 10 minutes, and holds the hourly digest for 15 minutes | `slept_through`, `resume_state`, `defer_digest_after_resume`, main loop |
+| **A failed or empty PID query is not "the reader is down".** It falls back to the pool's own PID from its status file. That PID must be alive, be python, and have been created before the status was written, so a reused PID does not count. A failed query with no proof waits for up to 3 ticks and never relaunches a second pool beside a live one | `reader_pids_checked`, `live_reader_pids`, `pid_started_before` |
+| **X handle timelines.** The registry's X handles are queued as `https://x.com/<handle>` profile pages: well-formed handles only, X's own route names refused, tier 2, once per `READER_X_HANDLE_FRESH_H` = 24 h, remembered per handle in `_social_seen.jsonl`. They are read-only like every social page: navigated, never typed, no click, follow or post. **Caps unchanged**: 37 handles spend at most 37 of x.com's 150 daily loads. `source_reads.guarded_pages` already prefers these profile pages | `social_browser_pull.x_handle_url / x_handle_items / registry_x_handles`; `reader_pool.Pool._refill_handles`, `_mark_read`, `social_last_reads`; `config.READER_X_HANDLE_FRESH_H` |
+| Sign-in / free sign-up: **design only, not built** | `docs/research_notes/2026-09-29/browser_signin_signup_design_2026-09-29.md` |
+
+### WHAT DOES NOT (still)
+
+- The anchor makes the clean exit a non-event, but what removed the start page is unknown, and the two afternoon crashes are unexplained.
+- Recovery after a crash still takes about 2 minutes. The pool exits on its failed re-attach, and the supervisor relaunches it one tick after repairing Chrome.
+- The pool's `sustained_ok_per_hour` counts a sleep as run time. That is why it read 69.9/h after the two-hour sleep.
+- Handle pages are untested live today (x.com is capped). The first reads will come when the rolling 24 h window frees.
+- Resume handling is unit-tested only. The machine was not put to sleep on purpose.

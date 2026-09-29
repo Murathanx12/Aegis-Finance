@@ -592,6 +592,11 @@ class Meter:
         self.by_stage: Counter = Counter()
         self._lock = threading.Lock()
         self._llm = llm
+        self._tl = threading.local()
+
+    def last_model(self) -> str:
+        """The model that answered this thread's last call ("deepseek:<served>")."""
+        return getattr(self._tl, "model", None) or "deepseek:unknown"
 
     def remaining(self) -> float:
         return self.budget - self.spent
@@ -611,6 +616,7 @@ class Meter:
             res = LA.call_named("deepseek", system, user, purpose=purpose,
                                 max_tokens=max_tokens, production_budget=False,
                                 temperature=0.2)
+        self._tl.model = "deepseek:" + str(res.get("served_model") or res.get("model") or "unknown")
         cost = res.get("cost_usd")
         if cost is None:
             ti, to = int(res.get("tokens_in") or 0), int(res.get("tokens_out") or 0)
@@ -643,10 +649,82 @@ def _item_prompt(item: Item) -> tuple[str, int]:
     return head + f"<<<ITEM\ntitle: {title}\n{text}\nITEM>>>", flagged + f2
 
 
+# ─────────────── optional LOCAL first stage (ft_lab student), default OFF ───────────
+#
+# `WORLD_DIGEST_LOCAL_EXTRACT` (default False). When True, every new single item (not the
+# headline batches) is first typed by the fine-tuned local student -- Qwen2.5-1.5B + the
+# ft_lab LoRA, distilled from DeepSeek's L2 typed events -- run OUT OF PROCESS with the
+# ft_lab interpreter, so this module never imports torch. Its reading rides on the row as
+# `local_event` (event_type / direction / magnitude / confidence + `model`). It ANNOTATES:
+# DeepSeek still types every row (topic, summary, tickers, sectors, tone ... the student
+# was never trained on those), so what the digest synthesises and writes to the forecast
+# ledger does not change. Any refusal (flag off, no interpreter, no adapter, free RAM under
+# the floor, GPU busy, crash, timeout) falls back to DeepSeek alone and says why in
+# `local_stage`. Measured 2026-09-29 (docs/research_notes/2026-09-29/ft_lab_first_run_...):
+# event type right on ~91% of 150 held-out documents vs ~94% for DeepSeek under a blind
+# DeepSeek judge; its typical error is a real event read as no_event.
+
+def _local_student_runner(items: list[Item]) -> dict[str, dict]:
+    import subprocess
+    import tempfile
+    root = Path(__file__).resolve().parents[2]
+    py = root / "ft_lab" / ".venv" / "Scripts" / "python.exe"
+    if not py.exists():
+        raise RuntimeError("ft_lab interpreter not installed")
+    with tempfile.TemporaryDirectory() as td:
+        inp, out = Path(td) / "in.jsonl", Path(td) / "out.jsonl"
+        with open(inp, "w", encoding="utf-8") as fh:
+            for it in items:
+                scope = next((t for t in it.tickers_named if _TICKER.match(t)), None) or it.source
+                fh.write(json.dumps({"item_id": it.item_id, "scope": scope,
+                                     "date": str(it.published_utc or it.first_seen_utc or "")[:10],
+                                     "title": it.title, "body": it.text[:1200]}) + "\n")
+        cp = subprocess.run([str(py), "-m", "ft_lab.local_extract", "--in", str(inp), "--out", str(out),
+                             "--min-free-ram-gb", str(float(_cfg.WORLD_DIGEST_LOCAL_MIN_FREE_RAM_GB))],
+                            cwd=str(root), capture_output=True, text=True,
+                            timeout=float(_cfg.WORLD_DIGEST_LOCAL_TIMEOUT_S))
+        last = (cp.stdout or "").strip().splitlines()[-1:] or [""]
+        if cp.returncode != 0:
+            raise RuntimeError(f"rc {cp.returncode}: {last[0][:200]}")
+        got = {}
+        for line in out.read_text(encoding="utf-8").splitlines():
+            r = json.loads(line)
+            got[str(r["item_id"])] = r
+        return got
+
+
+def local_event_stage(items: list[Item], *,
+                      runner: Optional[Callable[[list[Item]], dict]] = None) -> dict:
+    """{"status": OFF | OK | FALLBACK_DEEPSEEK, "reason", "n", "n_valid", "by_item"}.
+    Never raises: a local failure is a fallback to DeepSeek, not a lost digest."""
+    if not bool(getattr(_cfg, "WORLD_DIGEST_LOCAL_EXTRACT", False)):
+        return {"status": "OFF", "by_item": {}}
+    singles = [i for i in items if i.kind != "headline"]
+    if not singles:
+        return {"status": "OK", "n": 0, "n_valid": 0, "by_item": {}}
+    try:
+        got = (runner or _local_student_runner)(singles)
+    except Exception as exc:  # noqa: BLE001 -- every failure is the same fallback, named
+        return {"status": "FALLBACK_DEEPSEEK", "reason": f"{type(exc).__name__}: {exc}"[:300],
+                "n": len(singles), "by_item": {}}
+    by = {}
+    for it in singles:
+        r = got.get(it.item_id) or {}
+        ev = r.get("local_event")
+        model = str(r.get("model") or "local:unknown")
+        by[it.item_id] = {**ev, "model": model} if isinstance(ev, dict) \
+            else {"event_type": None, "model": model, "refused": True}
+    return {"status": "OK", "n": len(singles), "n_valid": sum(1 for v in by.values() if v.get("event_type")),
+            "by_item": by}
+
+
 def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
                   stage_cap: float, workers: int = 8,
-                  cache_file: Optional[Path] = None) -> dict:
-    """Stage 1. Cached rows are reused; new ones are paid for, typed and cached."""
+                  cache_file: Optional[Path] = None,
+                  local_runner: Optional[Callable[[list[Item]], dict]] = None) -> dict:
+    """Stage 1. Cached rows are reused; new ones are paid for, typed and cached.
+    Every new row records `extract_model`; with WORLD_DIGEST_LOCAL_EXTRACT on, single items
+    also carry the local student's `local_event` (see `local_event_stage`)."""
     rows: list[dict] = []
     todo: list[Item] = []
     hits = 0
@@ -663,6 +741,7 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
     batches = [heads[k:k + per] for k in range(0, len(heads), per)]
     stats: Counter = Counter()
     lock = threading.Lock()
+    local = local_event_stage(singles, runner=local_runner)
 
     def one(it: Item) -> None:
         prompt, flagged = _item_prompt(it)
@@ -679,6 +758,9 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
             if row is None:
                 stats["unparsed"] += 1
                 return
+            row["extract_model"] = meter.last_model()
+            if local["status"] != "OFF":
+                row["local_event"] = local["by_item"].get(it.item_id)
             row["injection_lines_removed"] = flagged
             stats["injection_items"] += int(flagged > 0)
             rows.append(row)
@@ -702,6 +784,7 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
             with lock:
                 stats["budget_skipped"] += len(b)
             return
+        served = meter.last_model()
         got = _parse_json(reply)
         arr = got.get("rows") if isinstance(got, dict) else got
         if not isinstance(arr, list):
@@ -721,6 +804,7 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
                     stats["unparsed"] += 1
                     continue
                 row["injection_lines_removed"] = 0
+                row["extract_model"] = served
                 rows.append(row)
                 new_cache.append({"cache_key": cache_key(it), "row": row,
                                   "cached_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")})
@@ -732,7 +816,8 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
         list(ex.map(one, singles))
         list(ex.map(batch, batches))
     return {"rows": rows, "cache_hits": hits, "n_new_single": len(singles),
-            "n_new_headline_batches": len(batches), **dict(stats)}
+            "n_new_headline_batches": len(batches), **dict(stats),
+            "local_stage": {k: v for k, v in local.items() if k != "by_item"}}
 
 
 # ─────────────────────────────── bars: sigma and "already moved" ────────────
@@ -1464,7 +1549,8 @@ def latest_short(root: Optional[Path] = None) -> Optional[str]:
 
 
 __all__ = ["Item", "Meter", "BudgetExceeded", "collect", "sanitize_text", "type_row",
-           "type_implication", "extract_items", "find_themes", "implications_for",
+           "type_implication", "extract_items", "local_event_stage", "find_themes",
+           "implications_for",
            "implication_records", "existing_keys", "grade", "trust_from", "shadow_contract",
            "freeze_contract", "news_signal", "shadow_decision", "base_book", "render",
            "render_short", "latest_short", "tone", "price_state", "vol_prior_p",

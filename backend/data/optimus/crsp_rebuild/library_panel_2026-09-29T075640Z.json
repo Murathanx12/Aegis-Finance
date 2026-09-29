@@ -1,0 +1,133 @@
+{
+ "schema": "crsp_rebuild/library_panel/1",
+ "job": "library_on_crsp",
+ "run_id": "2026-09-29T075640Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-29T08:01:28+00:00",
+ "construction": "momentum_on_crsp --part panel, unchanged, keeping EVERY build_panel column (floats stored as float32 except close / fwd_ret / median_dollar_vol)",
+ "rows": 2033164,
+ "dates": 408,
+ "symbols": 18184,
+ "columns": [
+  "date",
+  "symbol",
+  "mom_21",
+  "mom_63",
+  "mom_126",
+  "mom_252",
+  "mom_252_21",
+  "mom_126_21",
+  "mom_63_21",
+  "mom_252_126",
+  "rev_5",
+  "vol_21",
+  "vol_63",
+  "vol_252",
+  "vol_ratio",
+  "median_dollar_vol",
+  "dollar_vol_log",
+  "turnover_surge",
+  "px_vs_52w_high",
+  "px_vs_52w_low",
+  "px_vs_ma200",
+  "ma50_vs_ma200",
+  "amihud",
+  "max_ret_21",
+  "max_drawdown_63",
+  "skew_63",
+  "up_days_12_1",
+  "info_discreteness",
+  "beta_63",
+  "idio_vol_63",
+  "resid_mom_63",
+  "beta_252",
+  "resid_mom_12_1",
+  "seas_same_month",
+  "seas_lag12",
+  "ovn_252",
+  "gap_share_21",
+  "mkt_trend_up",
+  "mkt_trend_down",
+  "mkt_stress",
+  "mkt_calm",
+  "close",
+  "eligible",
+  "fwd_ret",
+  "delisted_in_period",
+  "is_month_end"
+ ],
+ "eras": [
+  {
+   "era": [
+    1991,
+    1995
+   ],
+   "rows": 375492,
+   "cols": 46,
+   "seconds": 53.9,
+   "peak_mb": 4402.7
+  },
+  {
+   "era": [
+    1996,
+    2000
+   ],
+   "rows": 425392,
+   "cols": 46,
+   "seconds": 67.2,
+   "peak_mb": 5552.5
+  },
+  {
+   "era": [
+    2001,
+    2005
+   ],
+   "rows": 314492,
+   "cols": 46,
+   "seconds": 53.9,
+   "peak_mb": 5552.5
+  },
+  {
+   "era": [
+    2006,
+    2010
+   ],
+   "rows": 267095,
+   "cols": 46,
+   "seconds": 34.4,
+   "peak_mb": 5552.5
+  },
+  {
+   "era": [
+    2011,
+    2015
+   ],
+   "rows": 227226,
+   "cols": 46,
+   "seconds": 27.8,
+   "peak_mb": 5552.5
+  },
+  {
+   "era": [
+    2016,
+    2020
+   ],
+   "rows": 220906,
+   "cols": 46,
+   "seconds": 28.4,
+   "peak_mb": 5552.5
+  },
+  {
+   "era": [
+    2021,
+    2024
+   ],
+   "rows": 202561,
+   "cols": 46,
+   "seconds": 18.3,
+   "peak_mb": 5552.5
+  }
+ ],
+ "seconds": 287.7
+}

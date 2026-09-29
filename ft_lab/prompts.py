@@ -52,8 +52,21 @@ PSYCH_KEYS = ["tone", "emotion", "uncertainty", "surprise", "mgmt_confidence", "
               "expected_move"]
 
 
+def _clean_num(v):
+    """Round floats to 2 dp and turn NaN into null. 2026-09-29: the first student was trained on
+    targets like 0.7000000000000001 and NaN, learned to emit them, and ran out of its 110-token
+    budget mid-object on 131 of 400 test replies -- the '67% valid' was truncation, not schema."""
+    if isinstance(v, float):
+        return None if v != v else round(v, 2)
+    return v
+
+
+PSYCH_MAX_NEW_TOKENS = 200   # the first run used 110; float noise made replies longer than that
+EVENTS_MAX_NEW_TOKENS = 60
+
+
 def psych_target(row: dict) -> str:
-    return json.dumps({k: row.get(k) for k in PSYCH_KEYS})
+    return json.dumps({k: _clean_num(row.get(k)) for k in PSYCH_KEYS})
 
 
 def parse_json(text: str) -> dict | None:
@@ -87,7 +100,8 @@ def valid_psych(o: dict | None) -> dict | None:
     try:
         out = {"tone": min(max(float(o["tone"]), -1.0), 1.0), "emotion": o["emotion"],
                "uncertainty": float(o["uncertainty"]), "surprise": float(o["surprise"]),
-               "mgmt_confidence": None if o.get("mgmt_confidence") is None else float(o["mgmt_confidence"]),
+               "mgmt_confidence": None if o.get("mgmt_confidence") is None or o.get("mgmt_confidence") != o.get("mgmt_confidence")
+               else float(o["mgmt_confidence"]),
                "novelty": float(o["novelty"]), "attention": float(o["attention"]),
                "expected_move": o["expected_move"]}
     except (KeyError, TypeError, ValueError):

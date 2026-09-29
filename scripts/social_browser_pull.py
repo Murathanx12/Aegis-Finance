@@ -194,6 +194,68 @@ def social_items(tickers: list[str], hosts: list[str] | None = None) -> list[dic
     return out
 
 
+# ─────────── X handle timelines (2026-09-29): the registry's accounts ───────────
+#
+# `scripts/source_reads.py` reads ONLY pages the reader stored, and looks for a
+# handle's own profile page (`x.com/<handle>`) first. The pool stored only
+# `$TICKER` search pages, so every registered handle's quest had nothing of its
+# own to read. These items put each handle's profile/timeline page in the pool's
+# queue. Same caps as every x.com page (the host's hour/day caps are not
+# raised), NAVIGATED to (never typed), scrolled and read; no click, no follow,
+# no form, no post -- the client refuses those on a social host by name.
+
+import re as _re
+
+#: X's own route names: never a handle, some of them are write or account pages
+X_RESERVED = frozenset({
+    "home", "explore", "search", "notifications", "messages", "settings", "i", "compose",
+    "intent", "share", "login", "logout", "signup", "account", "tos", "privacy", "jobs",
+    "about", "download", "hashtag", "lists", "bookmarks", "communities", "premium",
+    "verified", "follow", "followers", "following", "x", "twitter"})
+_X_HANDLE = _re.compile(r"^[A-Za-z0-9_]{1,15}$")
+
+
+def x_handle_url(handle: Any) -> str:
+    """PURE. `https://x.com/<handle>` for a well-formed, non-reserved handle;
+    refuses anything else by name."""
+    h = str(handle or "").strip().lstrip("@")
+    if not _X_HANDLE.match(h) or h.lower() in X_RESERVED:
+        raise WR.ReaderRefused(f"REFUSED_X_HANDLE: {handle!r}")
+    return f"https://x.com/{h}"
+
+
+def x_handle_items(handles: Any) -> list[dict]:
+    """PURE. One profile/timeline page per X handle (deduplicated, case-blind),
+    as pool work items. `tier` 2: the registry holds accounts chosen for the
+    book's themes, read like a book name's page."""
+    out, seen = [], set()
+    for hd in handles or ():
+        try:
+            url = x_handle_url(hd)
+        except WR.ReaderRefused:
+            continue
+        h = "@" + url.rsplit("/", 1)[1]
+        if h.lower() in seen:
+            continue
+        seen.add(h.lower())
+        out.append({"kind": "social", "host": "x.com", "site": "x.com",
+                    "lane": "social:x.com:handle", "handle": h, "ticker": None,
+                    "tier": 2, "url": url})
+    return out
+
+
+def registry_x_handles(path: Path | None = None) -> list[str]:
+    """The X handles in the source registry (`source_registry`), [] when it
+    cannot be read."""
+    try:
+        from backend.services import source_registry as SR
+        reg = SR.load_registry(path)
+    except Exception:  # noqa: BLE001 -- no registry, no handle pages
+        return []
+    return sorted({str(s.handle) for s in reg.values()
+                   if getattr(s, "platform", None) == "x" and getattr(s, "handle", None)})
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--tickers", required=True)

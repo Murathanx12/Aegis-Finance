@@ -1,0 +1,51 @@
+{
+ "job": "ft_lab.truth_eval.summarize",
+ "judge": "deepseek (blind A/B order), explicit rubric",
+ "n_docs": 150,
+ "n_judged": 150,
+ "deepseek_fresh_refusals": 0,
+ "all": {
+  "n": 150,
+  "student_event_type": 0.907,
+  "student_direction": 0.907,
+  "student_magnitude": 0.873,
+  "deepseek_event_type": 0.94,
+  "deepseek_direction": 0.933,
+  "deepseek_magnitude": 0.907,
+  "material_error_student": 17,
+  "material_error_deepseek": 9
+ },
+ "teacher_event_docs": {
+  "n": 75,
+  "student_event_type": 0.867,
+  "student_direction": 0.853,
+  "student_magnitude": 0.8,
+  "deepseek_event_type": 0.933,
+  "deepseek_direction": 0.907,
+  "deepseek_magnitude": 0.853,
+  "material_error_student": 13,
+  "material_error_deepseek": 6
+ },
+ "teacher_no_event_docs": {
+  "n": 75,
+  "student_event_type": 0.947,
+  "student_direction": 0.96,
+  "student_magnitude": 0.947,
+  "deepseek_event_type": 0.947,
+  "deepseek_direction": 0.96,
+  "deepseek_magnitude": 0.96,
+  "material_error_student": 4,
+  "material_error_deepseek": 3
+ },
+ "event_type_disagreements": {
+  "n": 21,
+  "judge_verdicts": {
+   "deepseek": 11,
+   "student": 6,
+   "neither": 3,
+   "both": 1
+  }
+ },
+ "fresh_deepseek_vs_0913_teacher_event_agreement": 0.96,
+ "caveat": "the judge is DeepSeek; agreement rows are rarely overruled (0 of the S=D rows were 'neither'), so accuracy is an upper bound and the judge leans to DeepSeek's reading"
+}

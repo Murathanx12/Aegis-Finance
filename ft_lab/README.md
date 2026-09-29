@@ -1,7 +1,8 @@
 # ft_lab: fine-tuning a small local LLM to turn news into numbers
 
-Started 2026-09-29. Licence: `PRODUCT_EXPERIMENT`. **No broker authority, not wired into
-anything live.** Nothing in `backend/`, `scripts/` or `engine/` imports this package.
+Started 2026-09-29. Licence: `PRODUCT_EXPERIMENT`. **No broker authority.** Nothing in
+`backend/`, `scripts/` or `engine/` imports this package; the world digest can CALL
+`ft_lab.local_extract` as a subprocess when `WORLD_DIGEST_LOCAL_EXTRACT` is True (default False).
 
 The question the owner asked: can a fine-tuned local model turn non-numeric text (news
 psychology, events) into numbers cheaply, and do those numbers help predict the SIZE of the
@@ -24,7 +25,11 @@ Receipts: `backend/data/optimus/ft_lab/receipts/` (`dataset.json`, `baselines.js
 | `train_extract.py` | LoRA SFT on Qwen2.5-1.5B-Instruct: text -> typed-event JSON and psychology JSON (distillation from DeepSeek). |
 | `infer.py` | Batched generation, base zero-shot vs student, pages per minute. |
 | `analyze.py` | Grades everything into `first_run.json`. |
-| `loader.py` | `load_extractor()` -- one function returning a callable, for a future digest job. |
+| `loader.py` | `load_extractor()` -- one function returning a callable. |
+| `bulk_events.py` | Resumable bulk conversion with the typed-event student: test cells, val cells, the reader's stored pages, train cells, then the rest of the panel. Appends `data/bulk_events.jsonl` every 2,048 rows; progress + resume command in `receipts/bulk_events_progress.json`. |
+| `analyze_bulk.py` | Grades the bulk rows: student fields over T2 (priors + TF-IDF) for SIZE, fit on val / graded on test; move size by event type; post-event DRIFT by type (selected on val, graded on test, after 20 bps). `receipts/bulk_analysis.json`. |
+| `truth_eval.py` | 150 held-out documents: student vs a fresh DeepSeek label, adjudicated by a blind DeepSeek judge with a rubric (project interpreter, paid, capped). `receipts/truth_eval.json`. |
+| `local_extract.py` | CLI the world digest's OPTIONAL local stage calls out of process (`WORLD_DIGEST_LOCAL_EXTRACT`, default False). Refuses (rc 3) without adapter / RAM / a free GPU; the digest then falls back to DeepSeek. |
 | `safety.py` | RAM floor, VRAM cap, awake-time box, STOP file, working-set trim. |
 
 ## Run

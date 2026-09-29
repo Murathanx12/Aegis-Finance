@@ -1,0 +1,41 @@
+{
+ "job": "ft_lab.bulk_events",
+ "licence": "PRODUCT_EXPERIMENT",
+ "model": "qwen2.5-1.5b-instruct+ft_lab/extract_qwen15_lora/last",
+ "updated_utc": "2026-09-29T08:53:07+00:00",
+ "queue_rows": 343126,
+ "done_rows": 67584,
+ "by_source_split": {
+  "panel_cell_first_doc:test": {
+   "queued": 25365,
+   "done": 25365
+  },
+  "panel_cell_first_doc:train": {
+   "queued": 79435,
+   "done": 13608
+  },
+  "panel_cell_first_doc:val": {
+   "queued": 26555,
+   "done": 26555
+  },
+  "panel_other_doc:rest": {
+   "queued": 209715,
+   "done": 0
+  },
+  "reader:reader": {
+   "queued": 1742,
+   "done": 1742
+  },
+  "reader_social:reader": {
+   "queued": 314,
+   "done": 314
+  }
+ },
+ "resume_command": "ft_lab\\.venv\\Scripts\\python.exe -m ft_lab.bulk_events --minutes 80",
+ "state": "stopped",
+ "stop_reason": "time_box",
+ "rows_this_run": 12288,
+ "pages_per_min_this_run": 795.2,
+ "awake_min_this_run": 15.5,
+ "peak_vram_mib": 3720
+}

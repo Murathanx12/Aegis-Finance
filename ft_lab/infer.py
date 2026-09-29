@@ -110,7 +110,7 @@ def main(argv=None) -> int:
     tok, model = load(a.model)
     S.trim_working_set()
     prompts = [messages(a.model, a.task, r) for r in rows]
-    max_new = 60 if a.task == "events" else 110
+    max_new = P.EVENTS_MAX_NEW_TOKENS if a.task == "events" else P.PSYCH_MAX_NEW_TOKENS
     torch.cuda.synchronize()
     t0 = time.time()
     outs = generate(tok, model, prompts, a.bs, max_new)

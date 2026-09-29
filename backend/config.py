@@ -4926,6 +4926,16 @@ READER_NEWS_LICENCE = "public web page, read for personal research; not republis
 #: were read on 2026-09-27); a digest of "today" must not present them as news.
 WORLD_DIGEST_MAX_ITEM_AGE_DAYS = 4
 
+#: 2026-09-29 ft_lab: an OPTIONAL local first stage in the digest's per-article
+#: extraction -- the fine-tuned Qwen2.5-1.5B typed-event student, run out of
+#: process with the ft_lab interpreter. DEFAULT OFF; DeepSeek stays the extractor
+#: of every row and the local reading only rides along as `local_event`. Any
+#: refusal (no interpreter / adapter, RAM under the floor, GPU busy, crash,
+#: timeout) falls back to DeepSeek alone (world_digest.local_event_stage).
+WORLD_DIGEST_LOCAL_EXTRACT = False
+WORLD_DIGEST_LOCAL_MIN_FREE_RAM_GB = 3.0
+WORLD_DIGEST_LOCAL_TIMEOUT_S = 900.0
+
 #: Review 2026-09-29 (REVIEW_2026-09-29_READER_POOL.md). F3: this many BLANK
 #: pages in a row on one host cool it like a challenge (a load that reached the
 #: site always counts against the caps). F6: a recurring item whose tab open
@@ -4980,3 +4990,9 @@ STRADDLE_FWD_UNDERLYING_STALE_MIN = 30.0
 STRADDLE_FWD_RATE = 0.04
 STRADDLE_FWD_BUDGET = 0.02
 STRADDLE_FWD_EQUITY_NOTIONAL = 1_000_000.0
+
+# ── the reader: X handle timelines (2026-09-29) ──────────────────────────────
+# The source registry's X handles are read as profile/timeline pages inside
+# x.com's EXISTING caps (WEB_READER_MAX_PER_DAY_BY_HOST is not raised). Once a
+# day each: 37 handles spend ~37 of x.com's 150 daily loads.
+READER_X_HANDLE_FRESH_H = 24.0

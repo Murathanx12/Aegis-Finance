@@ -207,13 +207,30 @@ def stock_last_reads(*, stored: dict[str, set[str]]) -> dict[tuple[str, str], da
     return out
 
 
+def SB_registry_handles() -> list[str]:
+    """The source registry's X handles (2026-09-29), [] on any failure."""
+    try:
+        from scripts import social_browser_pull as SB
+        return SB.registry_x_handles()
+    except Exception:  # noqa: BLE001
+        return []
+
+
+def _anchor_fn() -> Any:
+    from backend.services import gateway_repair as GR
+    return GR.ensure_anchor_tab
+
+
 def social_last_reads() -> dict[tuple[str, str], datetime]:
     out: dict[tuple[str, str], datetime] = {}
     try:
         for ln in SOCIAL_SEEN.read_text(encoding="utf-8", errors="replace").splitlines():
             try:
                 r = json.loads(ln)
-                out[(r["host"], r["ticker"])] = datetime.fromisoformat(r["at"])
+                who = r.get("ticker") or r.get("handle")      # 2026-09-29: X handles
+                if not who:
+                    continue
+                out[(r["host"], who)] = datetime.fromisoformat(r["at"])
             except (ValueError, KeyError, TypeError):
                 continue
     except OSError:
@@ -240,13 +257,20 @@ class Pool:
                  stock_last: dict | None = None, social_last: dict | None = None,
                  persist: bool = True, alert_fn: Any = None,
                  reader_sleep: Any = None, front_links_max: int | None = None,
-                 read_next_path: Path | None = None) -> None:
+                 read_next_path: Path | None = None, x_handles: list[str] | None = None,
+                 keep_window: Any = None) -> None:
         self.driver, self.thr, self.profile = driver, throttle, profile
         self.names = [n.upper() for n in dict.fromkeys(names)]
         self.universe = set(self.names)
         self.books, self.fresh = set(books), set(fresh)
         self.fronts = list(RS.all_fronts() if fronts is None else fronts)
         self.social, self.stock_pages = social, stock_pages
+        #: 2026-09-29: the registry's X handles, read as profile/timeline pages
+        #: inside x.com's existing caps (main() passes them; tests pass their own)
+        self.x_handles = list(x_handles or [])
+        #: 2026-09-29: called before a tab is closed so the dedicated Chrome
+        #: keeps a page (`gateway_repair.ensure_anchor_tab`); None in tests
+        self.keep_window = keep_window
         self.gov = governor or RS.TabGovernor()
         self.cooling = cooling or RS.HostCooling()
         self.until, self.max_pages = until, max_pages
@@ -467,7 +491,46 @@ class Pool:
                         if last is not None and (now - last).total_seconds() < social_h * 3600:
                             continue
                         added += self._add(dict(it, key=f"{it['lane']}:{t}"))
+            added += self._refill_handles(now)
         return added
+
+    def _refill_handles(self, now: datetime) -> int:
+        """The registry's X handles whose profile page is older than
+        `READER_X_HANDLE_FRESH_H` (default 24 h) -> pending. Only with the
+        social lane on and x.com a social host; x.com's caps are unchanged, so a
+        handle page spends the same hourly / daily budget as a $TICKER search."""
+        if not (self.social and self.x_handles and "x.com" in WR.social_hosts()):
+            return 0
+        from scripts import social_browser_pull as SB
+        fresh_h = float(getattr(_config, "READER_X_HANDLE_FRESH_H", 24.0))
+        added = 0
+        for it in SB.x_handle_items(self.x_handles):
+            last = self.social_last.get(("x.com", it["handle"]))
+            if last is not None and (now - last).total_seconds() < fresh_h * 3600:
+                continue
+            added += self._add(dict(it, key=f"{it['lane']}:{it['handle'].lower()}"))
+        return added
+
+    def _keep_window(self) -> None:
+        """Before a tab is closed: make sure the dedicated Chrome keeps a page
+        (2026-09-29: closing the last tab ended the browser, 12:56 local, and
+        the pool noticed ~90 s later). Never raises; a new anchor is printed."""
+        if self.keep_window is None:
+            return
+        with self.lock:
+            # only when this is the pool's LAST open tab: with another tab of
+            # ours open the browser keeps a window anyway, and the anchor check
+            # is a listing of the browser's targets, not free
+            if len(self.open_tabs) > 1:
+                return
+        try:
+            r = self.keep_window() or {}
+        except Exception as exc:  # noqa: BLE001 -- the read goes on either way
+            self.errors.append(f"keep_window: {type(exc).__name__}: {str(exc)[:120]}")
+            return
+        if r.get("opened"):
+            self.printer(f"ANCHOR opened {r['opened']}: no blank page was left in the "
+                         f"dedicated Chrome ({r.get('n_pages')} page(s))")
 
     def _blocked(self, now: datetime) -> set[str]:
         out = set(self.cooling.active(now))
@@ -605,6 +668,7 @@ class Pool:
             outcome = self._fail(it, exc, rd)
         finally:
             if not rd.retired:
+                self._keep_window()
                 rd.retire()
             for tab, ok in rd.closed.items():
                 if not ok:
@@ -696,15 +760,18 @@ class Pool:
                         {"source": it["lane"], "ticker": it["ticker"], "day": now.date().isoformat(),
                          "at": now.isoformat(timespec="seconds"), "by": "reader_pool"}))
             elif it["kind"] == "social":
-                self.social_last[(it["host"], it["ticker"])] = now
+                who = it.get("ticker") or it.get("handle")
+                self.social_last[(it["host"], who)] = now
                 if self.persist:
                     DG.locked_append_line(SOCIAL_SEEN, json.dumps(
-                        {"host": it["host"], "ticker": it["ticker"],
+                        {"host": it["host"], "ticker": it.get("ticker"),
+                         "handle": it.get("handle"),
                          "at": now.isoformat(timespec="seconds")}))
 
     def _reached_by(self, it: dict) -> dict:
         return {k: it.get(k) for k in ("lane", "section", "parent_url", "position", "depth",
-                                       "ticker", "link_text", "via", "question", "digest_id",
+                                       "ticker", "handle", "link_text", "via", "question",
+                                       "digest_id",
                                        "theme", "published_visible")
                 if it.get(k) is not None} \
             | {"kind": it["kind"], "via": it.get("via") or "direct"}
@@ -1532,9 +1599,12 @@ def main(argv: list[str] | None = None) -> int:
                     fresh=fresh_names(_now()), fronts=fronts, social=not a.no_social,
                     governor=gov, until=end_time(a.until), max_pages=a.max_pages,
                     front_last={} if a.trial else None, persist=True,
-                    front_links_max=a.front_links)
+                    front_links_max=a.front_links,
+                    x_handles=[] if (a.trial or a.no_social) else SB_registry_handles(),
+                    keep_window=_anchor_fn())
         print(f"pool: {len(names)} names, {len(pool.fronts)} fronts, social "
-              f"{'on' if pool.social else 'off'}, up to {gov.max_tabs} tabs "
+              f"{'on' if pool.social else 'off'} ({len(pool.x_handles)} X handles), "
+              f"up to {gov.max_tabs} tabs "
               f"({pool.per_host}), receipt {rpath}", flush=True)
         rc = pool.run(receipt_path=rpath)
     except Exception as exc:  # noqa: BLE001 -- the refusal is printed for the supervisor

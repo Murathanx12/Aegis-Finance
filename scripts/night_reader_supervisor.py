@@ -46,6 +46,14 @@ else (classify, probe, repair, backoff, stop by PID) is unchanged. `reader_statu
 the pool's own status (tab count and why, per-host pages an hour against the
 caps, cooling hosts) and the hourly digest refreshes
 `dowjones/reading_report_<day>.md`.
+ALWAYS UP (2026-09-29 afternoon): the dedicated Chrome ended under a live pool
+(its last tab closed) and the machine slept for two hours. While the pool
+reads, every tick checks the dedicated Chrome's port (and relaunches ONLY the
+dedicated Chrome, only when nothing holds its folder, through the bounded
+repair) and keeps one about:blank ANCHOR page open; a suspend is detected from
+the tick's own sleep and handled first (probe + repair, no stall call for 10
+minutes, the digest waits); a failed PID query is "unknown", not "down".
+
     python -m scripts.night_reader_supervisor --probe          # one probe, printed
     python -m scripts.night_reader_supervisor --repair-once    # probe + repair if faulted
 """
@@ -139,16 +147,10 @@ def pool_status(path: Path | None = None) -> dict | None:
 
 def reader_pids() -> list[int]:
     """PIDs of OUR reader processes, matched on the command line (never on the
-    image name). No psutil in this venv, so Windows is asked directly."""
-    q = ("Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object "
-         "{ $_.CommandLine -match " + READER_CMDLINE + " } | ForEach-Object { $_.ProcessId }")
-    try:
-        r = subprocess.run(["powershell", "-NoProfile", "-Command", q], capture_output=True,
-                           text=True, timeout=60, stdin=subprocess.DEVNULL,
-                           creationflags=0x08000000)
-    except (OSError, subprocess.TimeoutExpired):
-        return []
-    return [int(x) for x in (r.stdout or "").split() if x.strip().isdigit()]
+    image name). No psutil in this venv, so Windows is asked directly. A FAILED
+    query reads as [] here; the main loop uses `live_reader_pids`, which tells
+    the two apart (2026-09-29)."""
+    return reader_pids_checked() or []
 
 
 def kill_pid(pid: int) -> bool:
@@ -778,6 +780,148 @@ def write_machine_record(row: dict) -> None:
         pass
 
 
+# ── ALWAYS UP (2026-09-29 afternoon): a Chrome that went away, a machine that
+# slept, a PID query that failed ────────────────────────────────────────────
+#
+# MEASURED that day. (1) The dedicated Chrome ended three times, each a CLEAN
+# exit: its own session log (`Default/Preferences` sessions.event_log) holds an
+# EXIT event with `tab_count 0` each time, there is no crash dump and no WER
+# entry. Chrome on Windows ends when its last tab closes, and the pool CLOSES
+# each tab after its read; with nothing else open the browser went too, and the
+# pool noticed only when its next action failed (~90 s later). The fix is an
+# ANCHOR: one about:blank page kept open (`gateway_repair.ensure_anchor_tab`),
+# checked every tick, plus a port check every tick that relaunches the
+# dedicated Chrome at once (the same bounded `repair`, which launches ONLY the
+# dedicated folder, only when nothing holds it). (2) The machine slept for two
+# hours (lid closed on battery; the machine's own numbers are under local_pc/).
+# On resume the PID query returned nothing while the pool was alive, so the
+# supervisor treated a live pool as down, and the overdue hourly digest then
+# held the loop for minutes. A suspend is now detected from the tick's own sleep
+# (a 60 s sleep that took hours), the dependency is probed and repaired first,
+# stalls are not called for a grace period, and the digest waits.
+
+#: a tick's sleep that overran by more than this = the machine was suspended
+RESUME_GAP_S = 120.0
+#: after a resume, a no-page state is STARTING (not STALLED) for this long
+RESUME_GRACE_S = 600.0
+#: after a resume the hourly digest waits this long (the reader comes first)
+RESUME_DIGEST_DEFER_S = 900.0
+
+
+def slept_through(sleep_started: float, now: float, *, tick_s: float | None = None,
+                  gap_s: float | None = None) -> float | None:
+    """PURE. Seconds the machine was suspended during one tick's `time.sleep`,
+    or None. Measured on the wall clock around the sleep only, so a long digest
+    or a slow repair is never mistaken for a suspend."""
+    over = (now - sleep_started) - (TICK_S if tick_s is None else tick_s)
+    return over if over > (RESUME_GAP_S if gap_s is None else gap_s) else None
+
+
+def resume_state(state: str, *, now: float, grace_until: float) -> str:
+    """PURE. Inside the resume grace a STALLED reader is STARTING: the last OK
+    page is hours old because the machine was asleep, not because it stalled."""
+    return STARTING if state == STALLED and now < grace_until else state
+
+
+def defer_digest_after_resume(last_hourly: float, *, now: float) -> float:
+    """PURE. The `last_hourly` stamp that makes the next digest due
+    RESUME_DIGEST_DEFER_S from now (never earlier than it already was)."""
+    return max(last_hourly, now - HOURLY_S + RESUME_DIGEST_DEFER_S)
+
+
+def reader_pids_checked() -> list[int] | None:
+    """`reader_pids`, but None when the query itself FAILED (non-zero exit,
+    timeout, no PowerShell) -- which is not the same as "no reader"."""
+    q = ("Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object "
+         "{ $_.CommandLine -match " + READER_CMDLINE + " } | ForEach-Object { $_.ProcessId }")
+    try:
+        r = subprocess.run(["powershell", "-NoProfile", "-Command", q], capture_output=True,
+                           text=True, timeout=60, stdin=subprocess.DEVNULL,
+                           creationflags=0x08000000)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if r.returncode != 0:
+        return None
+    return [int(x) for x in (r.stdout or "").split() if x.strip().isdigit()]
+
+
+def pid_started_before(created: datetime | None, stamp: datetime | None) -> bool:
+    """PURE. A PID named in a status file is still that process only if it
+    was created BEFORE the status was written (else Windows reused the PID)."""
+    if created is None or stamp is None:
+        return False
+    return created.astimezone() <= stamp.astimezone()
+
+
+def _pool_status_pid() -> tuple[int | None, datetime | None]:
+    st = pool_status() or {}
+    try:
+        return int(st.get("pid") or 0) or None, datetime.fromisoformat(str(st.get("t")))
+    except (TypeError, ValueError):
+        return None, None
+
+
+def _python_pid_created(pid: int) -> datetime | None:
+    """Creation time of a LIVE python process `pid` (Win32, no shell, no WMI),
+    or None when it is gone, not python, or unreadable."""
+    try:
+        import ctypes
+        from datetime import timezone as _tz
+        from ctypes import wintypes
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        h = k32.OpenProcess(0x1000, False, int(pid))       # QUERY_LIMITED_INFORMATION
+        if not h:
+            return None
+        try:
+            code = wintypes.DWORD()
+            if not k32.GetExitCodeProcess(h, ctypes.byref(code)) or code.value != 259:
+                return None                                 # 259 = STILL_ACTIVE
+            buf = ctypes.create_unicode_buffer(1024)
+            n = wintypes.DWORD(1024)
+            if not k32.QueryFullProcessImageNameW(h, 0, buf, ctypes.byref(n)) or \
+                    not buf.value.lower().endswith(("python.exe", "pythonw.exe")):
+                return None
+            ft = [wintypes.FILETIME() for _ in range(4)]
+            if not k32.GetProcessTimes(h, *[ctypes.byref(f) for f in ft]):
+                return None
+            ticks = (ft[0].dwHighDateTime << 32) | ft[0].dwLowDateTime
+            return datetime(1601, 1, 1, tzinfo=_tz.utc) + timedelta(microseconds=ticks // 10)
+        finally:
+            k32.CloseHandle(h)
+    except Exception:  # noqa: BLE001 -- not Windows, or the API refused: unknown
+        return None
+
+
+def _pool_pid_alive(pid: int, stamp: datetime | None) -> bool:
+    return pid_started_before(_python_pid_created(pid), stamp)
+
+
+def live_reader_pids(*, query=None, pool_pid=None, alive=None) -> tuple[list[int], str]:
+    """The reader PIDs and how they were known.
+
+    * `query`: the command-line query answered with PIDs;
+    * `pool_status` / `pool_status_query_failed`: the query came back empty or
+      FAILED while the pool's own status file names a python PID that is alive
+      and was created before that status was written (2026-09-29: right after a
+      resume the query returned nothing while the pool was reading);
+    * `query_failed`: the query failed and nothing else proves a reader;
+    * `none`: no reader."""
+    pids = (query or reader_pids_checked)()
+    if pids:
+        return list(pids), "query"
+    pid, stamp = (pool_pid or _pool_status_pid)()
+    if pid and (alive or _pool_pid_alive)(pid, stamp):
+        return [pid], "pool_status" if pids is not None else "pool_status_query_failed"
+    return [], "none" if pids is not None else "query_failed"
+
+
+def chrome_port_open() -> bool:
+    """The dedicated Chrome's debugging port answers on loopback (one socket
+    connect; no PowerShell)."""
+    from backend.services import muratclaw_instance as MI
+    return GR._port_open(MI.host(), MI.port(), timeout=2.0)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--until", default="08:00", help="local HH:MM")
@@ -876,6 +1020,21 @@ def main(argv: list[str] | None = None) -> int:
                 cleared_by=res_["cleared_by"], steps=[x["step"] for x in res_["steps"]])
         relaunch_now(f"after chrome recycle: {why_}")
         return rec
+    # 2026-09-29: sleep / resume and a failed PID query (see `slept_through`)
+    pending_resume: float | None = None
+    resume_grace_until = 0.0
+    pid_query_failures = 0
+
+    def tick_sleep() -> None:
+        """The tick's sleep, measured: a 60 s sleep that took far longer means
+        the machine was suspended; the next tick handles the resume first."""
+        nonlocal pending_resume
+        t_ = time.time()
+        time.sleep(TICK_S)
+        gap = slept_through(t_, time.time())
+        if gap is not None:
+            pending_resume = gap
+
     while datetime.now() < end:
         if STOP.exists():
             why = "STOP file"
@@ -883,8 +1042,35 @@ def main(argv: list[str] | None = None) -> int:
         if not HANDOFF.exists():
             why = "HANDOFF_PC absent"
             break
+        if pending_resume is not None:
+            slept, pending_resume = pending_resume, None
+            resume_grace_until = time.time() + RESUME_GRACE_S
+            last_hourly = defer_digest_after_resume(last_hourly, now=time.time())
+            pr_r = GR.probe()
+            row_r: dict = {"slept_s": round(slept), "probe_fault": pr_r.get("fault"),
+                           "healthy": pr_r.get("healthy")}
+            if not pr_r.get("healthy"):
+                ok_r, w_r = budget.allow(time.monotonic())
+                if ok_r:
+                    budget.spend(time.monotonic())
+                    res_r = GR.repair(pr_r.get("fault") or "PROFILE_DETACHED", log=log)
+                    row_r.update(repair_healthy=res_r["healthy"], cleared_by=res_r["cleared_by"])
+                else:
+                    row_r["repair_deferred_s"] = round(w_r, 1)
+            log(event="resumed", grace_s=RESUME_GRACE_S,
+                digest_deferred_s=RESUME_DIGEST_DEFER_S, **row_r)
+            write_machine_record({"event": "resumed", "free_ram_gb": free_ram_gb(), **row_r})
         free = shutil.disk_usage(str(DATA)).free / 1e9
-        pids = reader_pids()
+        pids, pid_how = live_reader_pids()
+        if pid_how == "query_failed" and pid_query_failures < 3:
+            # unknown is not down: a live pool is never relaunched beside itself
+            pid_query_failures += 1
+            log(event="pid_query_failed", n=pid_query_failures)
+            tick_sleep()
+            continue
+        if pid_how not in ("query", "none", "query_failed"):
+            log(event="pid_query_fallback", how=pid_how, pids=pids)
+        pid_query_failures = 0 if pid_how != "query_failed" else pid_query_failures
         n = loads()
         if ticks % LOG_TICK_EVERY == 0:
             log(event="tick", reader_procs=len(pids), page_loads_total=n,
@@ -893,6 +1079,24 @@ def main(argv: list[str] | None = None) -> int:
         ticks += 1
         if pids:
             now_dt = datetime.now().astimezone()
+            if a.pool:
+                # 2026-09-29: the dedicated Chrome can end under a live pool
+                # (its last tab closed); relaunch it now, not after the pool
+                # has failed its next page and exited
+                if not chrome_port_open():
+                    pr_c = GR.probe()
+                    ok_c, w_c = budget.allow(time.monotonic())
+                    log(event="chrome_down_while_reading", probe_fault=pr_c.get("fault"),
+                        repair_wait_s=0.0 if ok_c else round(w_c, 1))
+                    if not pr_c.get("healthy") and ok_c:
+                        budget.spend(time.monotonic())
+                        res_c = GR.repair(pr_c.get("fault") or "CHROME_DOWN", log=log)
+                        log(event="repair", fault=res_c["fault"], healthy=res_c["healthy"],
+                            cleared_by=res_c["cleared_by"],
+                            steps=[x["step"] for x in res_c["steps"]])
+                anc = GR.ensure_anchor_tab()
+                if anc.get("opened"):
+                    log(event="anchor_opened", tab=anc["opened"], n_pages=anc.get("n_pages"))
             pc = page_counts(now_dt)
             pst = pool_status() if a.pool else None
             ok_age = last_ok_age_s(now_dt)
@@ -901,7 +1105,10 @@ def main(argv: list[str] | None = None) -> int:
                 since_launch_s=(time.time() - last_launch) if last_launch else None,
                 next_slot_in_s=(pst or {}).get("next_slot_in_s"),
                 attempts_10m=pc["attempts_10m"], pool_state=pool_state_of(pst, now_dt))
+            state = resume_state(state, now=time.time(), grace_until=resume_grace_until)
             next_action = next_action_for(state, pst)
+            if state == STARTING and time.time() < resume_grace_until:
+                next_action = "resuming after a sleep: first pages"
             if pc["ok_10m"] > 0 and stall_level:
                 # the ladder resets only after an OK page (review F2), never
                 # because a restart made the next ten minutes read STARTING
@@ -1005,7 +1212,7 @@ def main(argv: list[str] | None = None) -> int:
                     state, detail, next_action = (WAITING_FOR_CAP, "idle_all_read_today",
                                           f"rebuild the queue in {ALL_READ_RETRY_S/60:.0f} min")
                     write_status(state, next_action=next_action, last_error=last_err)
-                    time.sleep(TICK_S)
+                    tick_sleep()
                     continue
                 cls = {"kind": "NOT_STARTED", "evidence": "rolling queue rebuilt"}
             if caps_reached(cls["kind"], cls["evidence"]):
@@ -1016,7 +1223,7 @@ def main(argv: list[str] | None = None) -> int:
                 log(event="reader_down", exit_kind=cls["kind"], evidence=cls["evidence"],
                     action="wait_caps")
                 write_status(state, next_action=next_action, last_error=last_err)
-                time.sleep(TICK_S)
+                tick_sleep()
                 continue
             pr = GR.probe()
             ok_budget, wait = budget.allow(time.monotonic())
@@ -1061,7 +1268,7 @@ def main(argv: list[str] | None = None) -> int:
                             "mode": "pool" if a.pool else "queue",
                             "queue": str(queue_of(queue_cmd) or ""),
                             **({"pool": pool_status()} if a.pool else {})})
-        time.sleep(TICK_S)
+        tick_sleep()
     # 2026-09-29: the pool is asked to stop by its own STOP file first (it
     # finishes the page in hand, closes its tabs, saves its carried links);
     # only a pool still alive after the wait is ended BY PID. A hard kill left

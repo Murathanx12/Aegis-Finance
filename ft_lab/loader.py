@@ -52,7 +52,8 @@ def load_extractor(adapter_dir: str | Path | None = None, device: str = "cuda",
             chunk = rows[i:i + batch_size]
             texts = [tok.apply_chat_template(_messages(r), add_generation_prompt=True, tokenize=False) for r in chunk]
             enc = tok(texts, return_tensors="pt", padding=True, truncation=True, max_length=640).to(device)
-            g = model.generate(**enc, max_new_tokens=110, do_sample=False, pad_token_id=tok.pad_token_id)
+            mx = P.EVENTS_MAX_NEW_TOKENS if all(r["task"] == "events" for r in chunk) else P.PSYCH_MAX_NEW_TOKENS
+            g = model.generate(**enc, max_new_tokens=mx, do_sample=False, pad_token_id=tok.pad_token_id)
             dec = tok.batch_decode(g[:, enc["input_ids"].shape[1]:], skip_special_tokens=True)
             for r, d in zip(chunk, dec):
                 v = P.valid_events if r["task"] == "events" else P.valid_psych

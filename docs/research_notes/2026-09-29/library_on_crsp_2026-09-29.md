@@ -295,3 +295,207 @@ Owed, in order:
    yet in `part_board`.
 4. **A combination search with the full count.** Enumerate every 4-cluster blend, not only the one
    read, and deflate at that count, before calling the blend anything but a forward candidate.
+
+
+---
+
+## 2026-09-29 (afternoon): the two follow-ups the CRSP_BLEND review named
+
+Licence `PRODUCT_EXPERIMENT`, $0, no LLM, no network. No book, ledger or earlier receipt was touched.
+Engine unchanged: `run_one`, the 21-draw matched twin, set B alongside. Receipts:
+
+- `crsp_rebuild/followups_daily_FU_2026-09-29T0855Z.{parquet,json}` hold the skip ratios and spreads
+  per name and month.
+- `crsp_rebuild/followups_FU_2026-09-29T0900Z.json` holds every statistic quoted below.
+- `followups_series_FU_2026-09-29T0900Z__<tag>.parquet` holds the monthly series.
+
+The code is `scripts/crsp_blend_followups.py` and `scripts/crsp_blend_followups_run.py`, with tests in
+`backend/tests/test_crsp_blend_followups.py`. The baseline reproduces the board: `co03` rule minus twin
+is +0.70%/mo, t 2.93, over 406 months.
+
+### RESULTS SCOREBOARD
+
+**RESULT IMPROVEMENT: NONE.**
+
+- `co03`'s gap over its twin survives a one-day skip, a four-month fundamentals lag and per-name
+  spreads: +0.56%/mo in 2001-2024, but at t 1.91.
+- It is about zero after 2016.
+- As a book it loses to the market once real spreads are charged.
+- "Large-cap trend survives" does not survive a rank floor after 2000, except in one band width that is
+  carried by 2021.
+
+### A. `co03_reversal_in_high_margin`: skip a day, charge real spreads, lag the fundamentals
+
+**Decision line, written into the script before the run:** rule minus twin21 with all three changes,
+over 2001-2024.
+
+- At least +0.40%/mo with t >= 2: it remains a candidate.
+- At or below +0.10%/mo: FAILED_VARIANT.
+- Anything else: CANNOT_DISTINGUISH.
+
+**What changed:**
+
+1. **Entry one session later.** The book enters at the open of t+2, or the close of t+1 when there is
+   no open, and exits one session later too. 1991 has no CRSP opens; half of 1992 has them; after that,
+   87-99% do.
+2. **Per-name, per-month cost from the Corwin-Schultz (2012) high-low spread estimator.**
+   - It uses CRSP `askhi`/`bidlo` with the overnight adjustment and averages the 20 two-day estimates
+     that end at the decision date. Negative two-day estimates are set to 0, and the estimate is capped
+     at 20%.
+   - It is charged as a full round trip every month to every name held by the book and by the twin
+     alike.
+   - The median for eligible names is 64-82 bp, against a flat median of 35 bp.
+   - **Known biases, all of which make it an upper bound for these names:**
+     - volatility leaks into the high-low range;
+     - flooring negatives at 0 biases the average up, most for low-spread names;
+     - CRSP high/low on no-trade days are ask/bid;
+     - charging a full round trip overcharges the book slightly, because its turnover is 92%, not 100%.
+   - The engine's flat band schedule is charged to the twin at the rule's own rate, so it cancels in the
+     rule-minus-twin gap. That is why "on top of flat" and "instead of flat" give identical gaps and
+     differ only against the market.
+3. **Fundamentals lag.** A WRDS ratio row is usable only from max(`public_date`, fiscal period end +
+   122 days).
+
+**Rule minus twin21, %/mo (t on 3-month blocks, MDE at 80% power):**
+
+| variant | 1991-2024 | 2001-2024 | 2017-2024 | 2020-24 | LOO-worst 2001-24 (year dropped) |
+|---|---|---|---|---|---|
+| as run (board) | +0.70 (2.93, MDE 0.67) | +0.59 (2.12, 0.78) | +0.02 (0.04) | -0.27 (-0.45) | +0.37 (2001) |
+| skip 1 day | +0.60 (2.55) | +0.60 (1.99) | -0.02 (-0.05) | -0.31 (-0.61) | +0.31 (2001) |
+| 4-month fundamentals lag | +0.73 (2.97) | +0.64 (2.24) | +0.14 (0.30) | +0.01 (0.02) | +0.43 (2001) |
+| CS spreads, on top of flat | +0.64 (2.71) | +0.54 (1.95) | -0.02 (-0.04) | -0.31 (-0.52) | +0.33 (2001) |
+| **all three** | **+0.54 (2.28, MDE 0.66)** | **+0.56 (1.91, MDE 0.82)** | **-0.01 (-0.03, MDE 1.12)** | **-0.20 (-0.38, MDE 1.50)** | **+0.30 (2001)** |
+
+**Rule minus market, all three changes, %/mo:**
+
+| cost | 1991-2024 | 2001-2024 | 2017-2024 | 2020-24 | book CAGR (market 11.2%) |
+|---|---|---|---|---|---|
+| CS on top of flat | -0.88 (t -2.51) | -0.81 (-1.52) | -1.63 (-1.98) | -1.91 (-1.63) | **-5.9%** |
+| CS instead of flat | -0.63 (-1.79) | -0.57 (-1.06) | -1.40 (-1.70) | -1.68 (-1.43) | **-3.0%** |
+| as run (flat only) | +0.44 (1.25) | +0.31 (0.63) | -0.29 (-0.35) | -0.40 (-0.33) | 10.9% |
+
+**Rule minus twin by hold year, all three changes (sum, %):**
+
+| 1991 | 1992 | 1993 | 1994 | 1995 | 1996 | 1997 | 1998 | 1999 | 2000 | 2001 | 2002 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| +8 | -2 | -8 | +5 | +8 | -20 | -4 | +42 | +25 | +4 | **+79** | +15 |
+
+| 2003 | 2004 | 2005 | 2006 | 2007 | 2008 | 2009 | 2010 | 2011 | 2012 | 2013 | 2014 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| +16 | +16 | +21 | +11 | +7 | -19 | +14 | +2 | +2 | -12 | -16 | +3 |
+
+| 2015 | 2016 | 2017 | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| +20 | +5 | +9 | +2 | 0 | +25 | -4 | +1 | -19 | -14 |
+
+**Turnover and capacity (all three changes):**
+
+- Turnover is 92% a month.
+- The median pick trades $8M/day in the 1990s, $14M in the 2000s, $17M in the 2010s and $21M in the
+  2020s. The 10th-percentile pick trades $4-5M/day.
+- A $10M book puts $0.5M in each name: 3.7% of the median pick's daily volume, and 11.6% of the
+  10th-percentile pick's.
+- A $100M book puts 37% and 116% respectively, so it is not implementable. Capacity is in the single-digit
+  millions.
+
+**What it says:**
+
+- **The bid-ask-bounce hypothesis is mostly refuted for the gap.** The skip moves 1991-2024 by -0.10 and
+  2001-2024 by 0.00. Per-name spreads move the gap only -0.06, because the twin's names are just as
+  illiquid.
+- **The gap is between two losing portfolios once real spreads are charged.** The book pays about
+  1.2%/mo in spread, against 0.25%/mo on the flat schedule. The twin compounds at -9.6% a year and the
+  book at -5.9%.
+- **The whole 2001-2024 number predates 2017.** 2017-2024 is -0.01 and the 2020s are -0.20.
+- **2001 alone is +79 of a 2001-2024 total of +161.** Dropping it leaves +0.30%/mo.
+
+**Verdict: the gap over the twin is CANNOT_DISTINGUISH.** +0.56 is above the +0.40 bar, but t 1.91 is
+below 2, and the result sits in the pre-stated middle band.
+
+- As a stand-alone book at realistic spreads, `co03` loses to the market in every window. It is
+  **DEPRIORITIZED**, and it is not a capital idea at any size.
+- The reviewer's two branches were "keeps +0.4 at t 2: re-register" and "about zero: void". Neither
+  fired.
+
+### B. "Large-cap trend survives" with a RANK floor
+
+The eligible set on each date is cut to the top 300 or top 500 names by trailing 63-session median
+dollar volume. `px_vs_ma200` and `mom_12_1` then run with no further band filter, and the twin draws
+from the same cut. The nominal-$100M board versions are shown beside them. Their series starts
+1995-07.
+
+**Rule minus twin21, %/mo (t):**
+
+| cell | 1991-2024 | 2001-2024 | 2017-2024 | 2020-24 | 2009 (sum) | 1995-99 share of total | LOO-worst 2001-24 |
+|---|---|---|---|---|---|---|---|
+| px_vs_ma200, top 300 | +0.63 (2.21, MDE 0.80) | +0.32 (1.29, 0.70) | +0.76 (1.73) | +1.18 (1.84) | -37 | 56% | +0.19 (2024) |
+| px_vs_ma200, top 500 | +0.96 (2.68, 1.00) | **+0.84 (2.05, 1.15)** | +1.93 (1.83) | +2.55 (1.54) | -24 | 38% | +0.56 (2021) |
+| px_vs_ma200_large ($100M, board) | +0.93 (2.54) | +0.77 (2.02) | +1.85 (1.96) | +2.62 (1.75) | -41 | 32% | +0.50 (2021) |
+| mom_12_1, top 300 | +0.84 (2.80, 0.84) | +0.41 (1.54, 0.74) | +1.06 (1.72) | +1.74 (1.91) | -12 | 47% | +0.21 (2024) |
+| mom_12_1, top 500 | +0.58 (1.90, 0.86) | +0.11 (0.42, 0.73) | +0.91 (1.72) | +0.93 (1.14) | -24 | 74% | -0.02 (2024) |
+| mom_12_1_large ($100M, board) | +0.75 (2.77) | +0.38 (1.46) | +0.62 (1.06) | +0.94 (1.08) | -18 | 44% | +0.25 (2024) |
+
+**Rule minus market, %/mo (t):**
+
+| cell | 1991-2024 | 2001-2024 | 2017-2024 | 2020-24 | 2009 (sum) | CAGR (market 11.2%) |
+|---|---|---|---|---|---|---|
+| px_vs_ma200, top 300 | +0.80 (2.16) | +0.25 (0.78) | +0.86 (1.60) | +1.63 (2.11) | -24 | 17.5% |
+| px_vs_ma200, top 500 | +1.12 (2.42) | +0.81 (1.73) | +2.02 (1.80) | +3.05 (1.76) | -16 | 20.1% |
+| mom_12_1, top 300 | +0.94 (2.28) | +0.36 (1.05) | +1.13 (1.57) | +2.05 (2.00) | -8 | 18.0% |
+| mom_12_1, top 500 | +0.94 (2.11) | +0.34 (0.90) | +1.35 (1.79) | +1.88 (1.67) | -23 | 17.0% |
+
+**Turnover and capacity:**
+
+- px_vs_ma200 turns over 42-46% a month and mom_12_1 32-33%.
+- In the top 300, the median pick trades $23-26M/day in the 1990s and $370-430M/day in the 2020s.
+- A $100M book is 3-6% of the median pick's daily volume. Capacity is not the constraint.
+
+**What it says:**
+
+- **Over 1991-2024, a rank floor keeps a t above 2 in three of four cells.** That is the part the review
+  suspected: the full-sample number is not only the nominal floor's 17-to-113-name mega-cap book.
+- **1995-1999 still carries 38-74% of every total.**
+- **After 2000 the picture changes:**
+  - `mom_12_1` is +0.11 to +0.41%/mo, t 0.4-1.5;
+  - px_vs_ma200 in the top 300 is +0.32, t 1.3;
+  - only px_vs_ma200 in the top 500 reaches t 2.05, and its worst leave-one-year-out drops 2021, a
+    single +88% year.
+- **The result flips with band width.** Top 300 vs top 500 is +0.32 vs +0.84 for trend, and +0.41 vs
+  +0.11 for momentum, in opposite directions. A mechanism should not do that.
+- **2009 is a -12% to -37% year against the twin in every cell.**
+
+**Verdict:**
+
+- **`px_vs_ma200` in a rank band: CANNOT_DISTINGUISH over 2001-2024.** One of two band widths clears
+  t 2, and that one leans on 2021.
+- **`mom_12_1` in a rank band: CANNOT_DISTINGUISH**, about zero at the top 500.
+- **"Large-cap trend survives, small momentum does not" is DEPRIORITIZED as a finding.** It is not
+  purely the nominal-floor artefact the review suspected, because the full-sample t survives a rank
+  floor. But its post-2000 evidence is one band width and one year.
+
+### For the owner: `CRSP_BLEND_v0` before entry (recommendation only)
+
+**Neither pre-stated trigger fired:**
+
+- **Void trigger:** `co03` about zero. It did not fire: the gap is +0.56 in 2001-2024.
+- **Re-register trigger:** at least +0.4 at t >= 2, plus a rank-based trend sleeve. It did not fire:
+  t 1.91, and the rank-based trend is unstable across band widths.
+
+**Recommendation: do not void. Keep it as a free shadow labelled CANNOT_DISTINGUISH / DEPRIORITIZED.**
+
+- Do not re-register it or upgrade it.
+- Quote nothing from it as evidence.
+- Fix its kill line (review section 6) before any read.
+
+**What argues against keeping it, and why it does not change the recommendation:**
+
+- Both sleeves that carry the blend read about zero or negative since 2017: `co03` is -0.01 in 2017-2024
+  and -0.20 in the 2020s.
+- The sleeves the forward window will actually test are therefore the ones with the weakest recent
+  evidence.
+
+Voiding would save only attention. The shadow costs nothing and cannot adjudicate anything before
+2027 either way.
+
+**Owed:** the same skip, spread and lag treatment for `vol_compression`, the blend's other small-name
+sleeve. It was not run here.

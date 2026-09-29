@@ -1,0 +1,1824 @@
+{
+ "job": "ft_lab.analyze_bulk",
+ "licence": "PRODUCT_EXPERIMENT",
+ "built_utc": "2026-09-29T08:32:52+00:00",
+ "cost_round_trip": 0.002,
+ "min_type_n": 30,
+ "coverage": {
+  "val_cells": 26555,
+  "val_with_student": 26545,
+  "test_cells": 25365,
+  "test_with_student": 25353
+ },
+ "event_share_test": {
+  "no_event": 0.7866,
+  "earnings_report": 0.0596,
+  "new_contract_or_partnership": 0.0243,
+  "analyst_target_change": 0.0214,
+  "analyst_rating_change": 0.0209,
+  "insider_or_institutional_ownership_change": 0.0126,
+  "mergers_acquisitions": 0.0106,
+  "product_launch_or_innovation": 0.008,
+  "management_change_appointment": 0.0073,
+  "analyst_initiation": 0.0062,
+  "guidance_change": 0.0062,
+  "clinical_trial_result": 0.0059,
+  "regulatory_approval": 0.0056,
+  "tariff_or_trade_policy": 0.0042,
+  "regulatory_investigation_or_action": 0.0031
+ },
+ "size_over_T2_tfidf": {
+  "fit_block": "val",
+  "alpha": 10000.0,
+  "n_event_types_as_features": 20,
+  "n_fit": 26545,
+  "n_test": 25353,
+  "ic_test": {
+   "mean": 0.4176,
+   "se": 0.0111,
+   "t": 37.59,
+   "mde": 0.0311,
+   "n_dates": 91,
+   "n_blocks": 21,
+   "pooled_spearman": 0.4205,
+   "by_month": {
+    "2026-05": 0.4589,
+    "2026-06": 0.4288,
+    "2026-07": 0.4212,
+    "2026-08": 0.4218,
+    "2026-09": 0.3697
+   },
+   "loo_month_worst": 0.4125
+  },
+  "ic_base": {
+   "mean": 0.4188,
+   "se": 0.0113,
+   "t": 37.17,
+   "mde": 0.0315,
+   "n_dates": 91,
+   "n_blocks": 21,
+   "pooled_spearman": 0.4218,
+   "by_month": {
+    "2026-05": 0.4601,
+    "2026-06": 0.4304,
+    "2026-07": 0.4243,
+    "2026-08": 0.4218,
+    "2026-09": 0.3694
+   },
+   "loo_month_worst": 0.4137
+  },
+  "increment": {
+   "mean": -0.0012,
+   "se": 0.0006,
+   "t": -1.94,
+   "mde": 0.0017,
+   "n_dates": 91,
+   "n_blocks": 21,
+   "by_month": {
+    "2026-05": -0.0012,
+    "2026-06": -0.0016,
+    "2026-07": -0.0031,
+    "2026-08": -0.0,
+    "2026-09": 0.0003
+   },
+   "share_of_months_positive": 0.2
+  }
+ },
+ "size_over_B2": {
+  "fit_block": "val",
+  "alpha": 10000.0,
+  "n_event_types_as_features": 20,
+  "n_fit": 26545,
+  "n_test": 25353,
+  "ic_test": {
+   "mean": 0.4121,
+   "se": 0.0107,
+   "t": 38.69,
+   "mde": 0.0298,
+   "n_dates": 91,
+   "n_blocks": 21,
+   "pooled_spearman": 0.4134,
+   "by_month": {
+    "2026-05": 0.4507,
+    "2026-06": 0.4226,
+    "2026-07": 0.4177,
+    "2026-08": 0.4118,
+    "2026-09": 0.3697
+   },
+   "loo_month_worst": 0.4074
+  },
+  "ic_base": {
+   "mean": 0.4119,
+   "se": 0.0111,
+   "t": 37.08,
+   "mde": 0.0311,
+   "n_dates": 91,
+   "n_blocks": 21,
+   "pooled_spearman": 0.4139,
+   "by_month": {
+    "2026-05": 0.4517,
+    "2026-06": 0.4244,
+    "2026-07": 0.421,
+    "2026-08": 0.4096,
+    "2026-09": 0.3639
+   },
+   "loo_month_worst": 0.407
+  },
+  "increment": {
+   "mean": 0.0003,
+   "se": 0.0013,
+   "t": 0.19,
+   "mde": 0.0038,
+   "n_dates": 91,
+   "n_blocks": 21,
+   "by_month": {
+    "2026-05": -0.001,
+    "2026-06": -0.0019,
+    "2026-07": -0.0033,
+    "2026-08": 0.0022,
+    "2026-09": 0.0058
+   },
+   "share_of_months_positive": 0.4
+  }
+ },
+ "tfidf_over_B2_same_cells": {
+  "mean": 0.0069,
+  "se": 0.002,
+  "t": 3.46,
+  "mde": 0.0056,
+  "n_dates": 91,
+  "n_blocks": 21,
+  "by_month": {
+   "2026-05": 0.0084,
+   "2026-06": 0.006,
+   "2026-07": 0.0032,
+   "2026-08": 0.0122,
+   "2026-09": 0.0055
+  },
+  "share_of_months_positive": 1.0
+ },
+ "student_vs_tfidf_same_cells": {
+  "mean": -0.0067,
+  "se": 0.0018,
+  "t": -3.73,
+  "mde": 0.005,
+  "n_dates": 91,
+  "n_blocks": 21,
+  "by_month": {
+   "2026-05": -0.0094,
+   "2026-06": -0.0078,
+   "2026-07": -0.0066,
+   "2026-08": -0.01,
+   "2026-09": 0.0004
+  },
+  "share_of_months_positive": 0.2
+ },
+ "conditional": {
+  "size_by_type_test": {
+   "analyst_initiation": {
+    "n": 158,
+    "median_abs_1d": 0.0168,
+    "mean_abs_1d": 0.02833,
+    "median_abs_5d": 0.04118,
+    "mean_rel_log_1d": -0.4791,
+    "rel_minus_no_event": {
+     "mean": -0.0751,
+     "se": 0.1221,
+     "t": -0.61,
+     "mde": 0.342,
+     "n_dates": 69,
+     "n_blocks": 19,
+     "by_month": {
+      "2026-05": 0.39525,
+      "2026-06": 0.3301,
+      "2026-07": -0.34071,
+      "2026-08": -0.12292,
+      "2026-09": -0.67994
+     },
+     "share_months_positive": 0.4,
+     "n_cells": 158
+    }
+   },
+   "analyst_rating_change": {
+    "n": 530,
+    "median_abs_1d": 0.01631,
+    "mean_abs_1d": 0.02471,
+    "median_abs_5d": 0.03838,
+    "mean_rel_log_1d": -0.3552,
+    "rel_minus_no_event": {
+     "mean": -0.0249,
+     "se": 0.0746,
+     "t": -0.33,
+     "mde": 0.2088,
+     "n_dates": 86,
+     "n_blocks": 21,
+     "by_month": {
+      "2026-05": 0.20371,
+      "2026-06": -0.07417,
+      "2026-07": 0.06773,
+      "2026-08": -0.16413,
+      "2026-09": -0.05511
+     },
+     "share_months_positive": 0.4,
+     "n_cells": 530
+    }
+   },
+   "analyst_target_change": {
+    "n": 543,
+    "median_abs_1d": 0.01759,
+    "mean_abs_1d": 0.02424,
+    "median_abs_5d": 0.04427,
+    "mean_rel_log_1d": -0.3702,
+    "rel_minus_no_event": {
+     "mean": -0.0232,
+     "se": 0.0896,
+     "t": -0.26,
+     "mde": 0.251,
+     "n_dates": 82,
+     "n_blocks": 21,
+     "by_month": {
+      "2026-05": 0.08089,
+      "2026-06": 0.01842,
+      "2026-07": -0.12818,
+      "2026-08": -0.05053,
+      "2026-09": 0.08914
+     },
+     "share_months_positive": 0.6,
+     "n_cells": 543
+    }
+   },
+   "clinical_trial_result": {
+    "n": 149,
+    "median_abs_1d": 0.01639,
+    "mean_abs_1d": 0.03266,
+    "median_abs_5d": 0.04885,
+    "mean_rel_log_1d": -0.3292,
+    "rel_minus_no_event": {
+     "mean": 0.1367,
+     "se": 0.099,
+     "t": 1.38,
+     "mde": 0.2772,
+     "n_dates": 69,
+     "n_blocks": 21,
+     "by_month": {
+      "2026-05": 0.32332,
+      "2026-06": 0.10098,
+      "2026-07": 0.20438,
+      "2026-08": -0.10278,
+      "2026-09": 0.34233
+     },
+     "share_months_positive": 0.8,
+     "n_cells": 149
+    }
+   },
+   "debt_issuance_or_obligation": {
+    "n": 64,
+    "median_abs_1d": 0.01646,
+    "mean_abs_1d": 0.03174,
+    "median_abs_5d": 0.05752,
+    "mean_rel_log_1d": -0.3943,
+    "rel_minus_no_event": {
+     "mean": -0.0763,
+     "se": 0.1899,
+     "t": -0.4,
+     "mde": 0.5317,
+     "n_dates": 46,
+     "n_blocks": 19,
+     "by_month": {
+      "2026-05": 0.19573,
+      "2026-06": -0.14739,
+      "2026-07": -0.20683,
+      "2026-08": -0.06143,
+      "2026-09": -0.02478
+     },
+     "share_months_positive": 0.2,
+     "n_cells": 64
+    }
+   },
+   "divestiture_asset_sale": {
+    "n": 49,
+    "median_abs_1d": 0.01425,
+    "mean_abs_1d": 0.0358,
+    "median_abs_5d": 0.03413,
+    "mean_rel_log_1d": -0.3631,
+    "rel_minus_no_event": {
+     "mean": 0.074,
+     "se": 0.2217,
+     "t": 0.33,
+     "mde": 0.6208,
+     "n_dates": 33,
+     "n_blocks": 14,
+     "by_month": {
+      "2026-05": -0.09624,
+      "2026-06": 0.01007,
+      "2026-07": 0.4892,
+      "2026-08": -0.03481,
+      "2026-09": -0.49877
+     },
+     "share_months_positive": 0.4,
+     "n_cells": 49
+    }
+   },
+   "earnings_report": {
+    "n": 1511,
+    "median_abs_1d": 0.01952,
+    "mean_abs_1d": 0.031,
+    "median_abs_5d": 0.04518,
+    "mean_rel_log_1d": -0.1205,
+    "rel_minus_no_event": {
+     "mean": 0.2411,
+     "se": 0.0644,
+     "t": 3.74,
+     "mde": 0.1804,
+     "n_dates": 88,
+     "n_blocks": 21,
+     "by_month": {
+      "2026-05": 0.30385,
+      "2026-06": 0.24701,
+      "2026-07": 0.18435,
+      "2026-08": 0.2755,
+      "2026-09": 0.22218
+     },
+     "share_months_positive": 1.0,
+     "n_cells": 1511
+    }
+   },
+   "equity_issuance_dilution": {
+    "n": 71,
+    "median_abs_1d": 0.02762,
+    "mean_abs_1d": 0.04086,
+    "median_abs_5d": 0.07173,
+    "mean_rel_log_1d": -0.4596,
+    "rel_minus_no_event": {
+     "mean": -0.0126,
+     "se": 0.157,
+     "t": -0.08,
+     "mde": 0.4397,
+     "n_dates": 50,
+     "n_blocks": 18,
+     "by_month": {
+      "2026-05": -0.52345,
+      "2026-06": 0.07118,
+      "2026-07": 0.13476,
+      "2026-08": -0.16717,
+      "2026-09": 0.65779
+     },
+     "share_months_positive": 0.6,
+     "n_cells": 71
+    }
+   },
+   "guidance_change": {
+    "n": 157,
+    "median_abs_1d": 0.0194,
+    "mean_abs_1d": 0.02813,
+    "median_abs_5d": 0.0394,
+    "mean_rel_log_1d": -0.1738,
+    "rel_minus_no_event": {
+     "mean": 0.1572,
+     "se": 0.1139,
+     "t": 1.38,
+     "mde": 0.3189,
+     "n_dates": 65,
+     "n_blocks": 21,
+     "by_month": {
+      "2026-05": 0.11322,
+      "2026-06": 0.05034,
+      "2026-07": 0.15779,
+      "2026-08": 0.26323,
+      "2026-09": 0.15264
+     },
+     "share_months_positive": 1.0,
+     "n_cells": 157
+    }
+   },
+   "insider_or_institutional_ownership_change": {
+    "n": 320,
+    "median_abs_1d": 0.0142,
+    "mean_abs_1d": 0.02147,
+    "median_abs_5d": 0.03888,
+    "mean_rel_log_1d": -0.5,
+    "rel_minus_no_event": {
+     "mean": -0.1965,
+     "se": 0.1318,
+     "t": -1.49,
+     "mde": 0.369,
+     "n_dates": 86,
+     "n_blocks": 21,
+     "by_month": {
+      "2026-05": 0.11472,
+      "2026-06": -0.06066,
+      "2026-07": -0.25542,
+      "2026-08": -0.23225,
+      "2026-09": -0.48742
+     },
+     "share_months_positive": 0.2,
+     "n_cells": 320
+    }
+   },
+   "litigation_filed": {
+    "n": 64,
+    "median_abs_1d": 0.01956,
+    "mean_abs_1d": 0.02552,
+    "median_abs_5d": 0.03841,
+    "mean_rel_log_1d": -0.3345,
+    "rel_minus_no_event": {
+     "mean": 0.0141,
+     "se": 0.249,
+     "t": 0.06,
+     "mde": 0.6971,
+     "n_dates": 35,
+     "n_blocks": 17,
+     "by_month": {
+      "2026-05": -0.45882,
+      "2026-06": 0.06043,
+      "2026-07": -0.01056,
+      "2026-08": 0.06632,
+      "2026-09": 0.53434
+     },
+     "share_months_positive": 0.6,
+     "n_cells": 64
+    }
+   },
+   "management_change_appointment": {
+    "n": 185,
+    "median_abs_1d": 0.01108,
+    "mean_abs_1d": 0.01793,
+    "median_abs_5d": 0.04404,
+    "mean_rel_log_1d": -0.4083,
+    "rel_minus_no_event": {
+     "mean": -0.0473,
+     "se": 0.1034,
+     "t": -0.46,
+     "mde": 0.2896,
+     "n_dates": 59,
+     "n_blocks": 20,
+     "by_month": {
+      "2026-05": -0.01978,
+      "2026-06": -0.15232,
+      "2026-07": -0.01401,
+      "2026-08": 0.28095,
+      "2026-09": -0.23993
+     },
+     "share_months_positive": 0.2,
+     "n_cells": 185
+    }
+   },
+   "management_change_departure": {
+    "n": 60,
+    "median_abs_1d": 0.01089,
+    "mean_abs_1d": 0.02231,
+    "median_abs_5d": 0.04583,
+    "mean_rel_log_1d": -0.6819,
+    "rel_minus_no_event": {
+     "mean": -0.3066,
+     "se": 0.1868,
+     "t": -1.64,
+     "mde": 0.523,
+     "n_dates": 40,
+     "n_blocks": 16,
+     "by_month": {
+      "2026-05": 0.20936,
+      "2026-06": -0.80001,
+      "2026-07": 0.0563,
+      "2026-08": -0.30726,
+      "2026-09": -0.55194
+     },
+     "share_months_positive": 0.4,
+     "n_cells": 60
+    }
+   },
+   "mergers_acquisitions": {
+    "n": 268,
+    "median_abs_1d": 0.01427,
+    "mean_abs_1d": 0.02851,
+    "median_abs_5d": 0.03294,
+    "mean_rel_log_1d": -0.2912,
+    "rel_minus_no_event": {
+     "mean": -0.0127,
+     "se": 0.069,
+     "t": -0.18,
+     "mde": 0.1932,
+     "n_dates": 80,
+     "n_blocks": 20,
+     "by_month": {
+      "2026-05": -0.43506,
+      "2026-06": -0.07955,
+      "2026-07": 0.15194,
+      "2026-08": -0.16405,
+      "2026-09": 0.26442
+     },
+     "share_months_positive": 0.4,
+     "n_cells": 268
+    }
+   },
+   "new_contract_or_partnership": {
+    "n": 615,
+    "median_abs_1d": 0.01936,
+    "mean_abs_1d": 0.02815,
+    "median_abs_5d": 0.04993,
+    "mean_rel_log_1d": -0.3474,
+    "rel_minus_no_event": {
+     "mean": 0.0049,
+     "se": 0.0766,
+     "t": 0.06,
+     "mde": 0.2145,
+     "n_dates": 88,
+     "n_blocks": 21,
+     "by_month": {
+      "2026-05": 0.12626,
+      "2026-06": 0.07006,
+      "2026-07": 0.08778,
+      "2026-08": -0.19244,
+      "2026-09": -0.01393
+     },
+     "share_months_positive": 0.6,
+     "n_cells": 615
+    }
+   },
+   "no_event": {
+    "n": 19943,
+    "median_abs_1d": 0.01595,
+    "mean_abs_1d": 0.025,
+    "median_abs_5d": 0.04235,
+    "mean_rel_log_1d": -0.3564,
+    "rel_minus_no_event": {
+     "mean": 0.0182,
+     "se": 0.0218,
+     "t": 0.83,
+     "mde": 0.0611,
+     "n_dates": 93,
+     "n_blocks": 21,
+     "by_month": {
+      "2026-05": 0.02688,
+      "2026-06": 0.01688,
+      "2026-07": 0.04234,
+      "2026-08": -0.0576,
+      "2026-09": 0.07086
+     },
+     "share_months_positive": 0.8,
+     "n_cells": 19943
+    }
+   },
+   "product_launch_or_innovation": {
+    "n": 202,
+    "median_abs_1d": 0.01664,
+    "mean_abs_1d": 0.02521,
+    "median_abs_5d": 0.04781,
+    "mean_rel_log_1d": -0.5264,
+    "rel_minus_no_event": {
+     "mean": -0.1226,
+     "se": 0.1189,
+     "t": -1.03,
+     "mde": 0.3329,
+     "n_dates": 77,
+     "n_blocks": 21,
+     "by_month": {
+      "2026-05": -0.06483,
+      "2026-06": -0.01283,
+      "2026-07": -0.15319,
+      "2026-08": -0.11085,
+      "2026-09": -0.34442
+     },
+     "share_months_positive": 0.0,
+     "n_cells": 202
+    }
+   },
+   "regulatory_approval": {
+    "n": 142,
+    "median_abs_1d": 0.01844,
+    "mean_abs_1d": 0.02831,
+    "median_abs_5d": 0.04042,
+    "mean_rel_log_1d": -0.1809,
+    "rel_minus_no_event": {
+     "mean": 0.1332,
+     "se": 0.1375,
+     "t": 0.97,
+     "mde": 0.3851,
+     "n_dates": 64,
+     "n_blocks": 20,
+     "by_month": {
+      "2026-05": 0.0722,
+      "2026-06": 0.00099,
+      "2026-07": 0.11972,
+      "2026-08": 0.33724,
+      "2026-09": 0.09883
+     },
+     "share_months_positive": 1.0,
+     "n_cells": 142
+    }
+   },
+   "regulatory_investigation_or_action": {
+    "n": 79,
+    "median_abs_1d": 0.01334,
+    "mean_abs_1d": 0.02254,
+    "median_abs_5d": 0.04264,
+    "mean_rel_log_1d": -0.2505,
+    "rel_minus_no_event": {
+     "mean": 0.1069,
+     "se": 0.1887,
+     "t": 0.57,
+     "mde": 0.5285,
+     "n_dates": 50,
+     "n_blocks": 18,
+     "by_month": {
+      "2026-05": 1.1337,
+      "2026-06": 0.21156,
+      "2026-07": 0.27288,
+      "2026-08": -0.3504,
+      "2026-09": -0.44573
+     },
+     "share_months_positive": 0.6,
+     "n_cells": 79
+    }
+   },
+   "tariff_or_trade_policy": {
+    "n": 107,
+    "median_abs_1d": 0.01386,
+    "mean_abs_1d": 0.01754,
+    "median_abs_5d": 0.0329,
+    "mean_rel_log_1d": -0.5802,
+    "rel_minus_no_event": {
+     "mean": -0.2758,
+     "se": 0.183,
+     "t": -1.51,
+     "mde": 0.5124,
+     "n_dates": 34,
+     "n_blocks": 15,
+     "by_month": {
+      "2026-06": 0.16749,
+      "2026-07": -0.33691,
+      "2026-08": -0.57271,
+      "2026-09": 0.05808
+     },
+     "share_months_positive": 0.5,
+     "n_cells": 107
+    }
+   }
+  },
+  "drift_by_type": {
+   "h1": {
+    "selected_on_val": [
+     "analyst_initiation",
+     "divestiture_asset_sale",
+     "earnings_report",
+     "equity_issuance_dilution",
+     "guidance_change",
+     "litigation_filed",
+     "management_change_departure",
+     "tariff_or_trade_policy"
+    ],
+    "types": {
+     "analyst_initiation": {
+      "val_net": {
+       "mean": 0.0026,
+       "t": 0.86,
+       "mde": 0.0085,
+       "n_cells": 112,
+       "share_months_positive": 0.5
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": 0.0094,
+       "se": 0.0067,
+       "t": 1.41,
+       "mde": 0.0188,
+       "n_dates": 68,
+       "n_blocks": 19,
+       "by_month": {
+        "2026-05": 0.0452,
+        "2026-06": 0.03037,
+        "2026-07": -0.00801,
+        "2026-08": -0.00323,
+        "2026-09": -0.00288
+       },
+       "share_months_positive": 0.4,
+       "n_cells": 153
+      },
+      "test_gross_mean": 0.0114,
+      "verdict": "CANNOT_DISTINGUISH"
+     },
+     "analyst_rating_change": {
+      "val_net": {
+       "mean": -0.0038,
+       "t": -1.73,
+       "mde": 0.0062,
+       "n_cells": 418,
+       "share_months_positive": 0.0
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": 0.001,
+       "se": 0.0026,
+       "t": 0.38,
+       "mde": 0.0072,
+       "n_dates": 86,
+       "n_blocks": 21,
+       "by_month": {
+        "2026-05": 0.00628,
+        "2026-06": 0.00066,
+        "2026-07": -0.00123,
+        "2026-08": 0.00348,
+        "2026-09": -0.00324
+       },
+       "share_months_positive": 0.6,
+       "n_cells": 528
+      },
+      "test_gross_mean": 0.003,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "analyst_target_change": {
+      "val_net": {
+       "mean": -0.0019,
+       "t": -0.67,
+       "mde": 0.0079,
+       "n_cells": 435,
+       "share_months_positive": 0.25
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": -0.0054,
+       "se": 0.002,
+       "t": -2.74,
+       "mde": 0.0055,
+       "n_dates": 82,
+       "n_blocks": 21,
+       "by_month": {
+        "2026-05": -0.00398,
+        "2026-06": -0.00377,
+        "2026-07": -0.00381,
+        "2026-08": -0.00548,
+        "2026-09": -0.01453
+       },
+       "share_months_positive": 0.0,
+       "n_cells": 543
+      },
+      "test_gross_mean": -0.0034,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "clinical_trial_result": {
+      "val_net": {
+       "mean": -0.0105,
+       "t": -1.76,
+       "mde": 0.0166,
+       "n_cells": 103,
+       "share_months_positive": 0.0
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": 0.0061,
+       "se": 0.01,
+       "t": 0.61,
+       "mde": 0.0281,
+       "n_dates": 69,
+       "n_blocks": 21,
+       "by_month": {
+        "2026-05": -0.00325,
+        "2026-06": 0.01772,
+        "2026-07": -0.0154,
+        "2026-08": 0.01961,
+        "2026-09": 0.00118
+       },
+       "share_months_positive": 0.6,
+       "n_cells": 149
+      },
+      "test_gross_mean": 0.0081,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "debt_issuance_or_obligation": {
+      "val_net": {
+       "mean": -0.0143,
+       "t": -1.01,
+       "mde": 0.0396,
+       "n_cells": 39,
+       "share_months_positive": 0.25
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": 0.0026,
+       "se": 0.0136,
+       "t": 0.19,
+       "mde": 0.0381,
+       "n_dates": 46,
+       "n_blocks": 19,
+       "by_month": {
+        "2026-05": -0.03075,
+        "2026-06": 0.01941,
+        "2026-07": 0.01175,
+        "2026-08": 0.00247,
+        "2026-09": -0.00488
+       },
+       "share_months_positive": 0.6,
+       "n_cells": 62
+      },
+      "test_gross_mean": 0.0046,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "divestiture_asset_sale": {
+      "val_net": {
+       "mean": 0.0004,
+       "t": 0.1,
+       "mde": 0.0106,
+       "n_cells": 39,
+       "share_months_positive": 0.25
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": 0.0095,
+       "se": 0.0231,
+       "t": 0.41,
+       "mde": 0.0646,
+       "n_dates": 31,
+       "n_blocks": 14,
+       "by_month": {
+        "2026-05": -0.00327,
+        "2026-06": -0.01727,
+        "2026-07": 0.04799,
+        "2026-08": -0.00735,
+        "2026-09": -0.0044
+       },
+       "share_months_positive": 0.2,
+       "n_cells": 47
+      },
+      "test_gross_mean": 0.0115,
+      "verdict": "CANNOT_DISTINGUISH"
+     },
+     "earnings_report": {
+      "val_net": {
+       "mean": 0.0007,
+       "t": 0.27,
+       "mde": 0.0074,
+       "n_cells": 736,
+       "share_months_positive": 0.5
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": -0.0016,
+       "se": 0.0026,
+       "t": -0.61,
+       "mde": 0.0073,
+       "n_dates": 87,
+       "n_blocks": 21,
+       "by_month": {
+        "2026-05": -0.01119,
+        "2026-06": -0.00063,
+        "2026-07": 0.00366,
+        "2026-08": -0.00381,
+        "2026-09": -0.00065
+       },
+       "share_months_positive": 0.2,
+       "n_cells": 1055
+      },
+      "test_gross_mean": 0.0004,
+      "verdict": "FAILED_VARIANT"
+     },
+     "equity_issuance_dilution": {
+      "val_net": {
+       "mean": 0.0131,
+       "t": 3.1,
+       "mde": 0.0118,
+       "n_cells": 57,
+       "share_months_positive": 1.0
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": 0.005,
+       "se": 0.0076,
+       "t": 0.67,
+       "mde": 0.0212,
+       "n_dates": 50,
+       "n_blocks": 18,
+       "by_month": {
+        "2026-05": 0.01698,
+        "2026-06": -0.00417,
+        "2026-07": 0.02226,
+        "2026-08": -0.0038,
+        "2026-09": -0.01157
+       },
+       "share_months_positive": 0.4,
+       "n_cells": 71
+      },
+      "test_gross_mean": 0.007,
+      "verdict": "CANNOT_DISTINGUISH"
+     },
+     "guidance_change": {
+      "val_net": {
+       "mean": 0.0005,
+       "t": 0.09,
+       "mde": 0.0164,
+       "n_cells": 61,
+       "share_months_positive": 0.75
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": -0.0046,
+       "se": 0.0035,
+       "t": -1.3,
+       "mde": 0.0099,
+       "n_dates": 64,
+       "n_blocks": 21,
+       "by_month": {
+        "2026-05": -0.00241,
+        "2026-06": 0.00388,
+        "2026-07": -0.01051,
+        "2026-08": -0.01011,
+        "2026-09": 0.00084
+       },
+       "share_months_positive": 0.4,
+       "n_cells": 155
+      },
+      "test_gross_mean": -0.0026,
+      "verdict": "FAILED_VARIANT"
+     },
+     "insider_or_institutional_ownership_change": {
+      "val_net": {
+       "mean": -0.0051,
+       "t": -1.64,
+       "mde": 0.0087,
+       "n_cells": 213,
+       "share_months_positive": 0.0
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": -0.0024,
+       "se": 0.0024,
+       "t": -0.98,
+       "mde": 0.0068,
+       "n_dates": 84,
+       "n_blocks": 20,
+       "by_month": {
+        "2026-05": -0.0008,
+        "2026-06": -0.00581,
+        "2026-07": 0.00182,
+        "2026-08": -0.0015,
+        "2026-09": -0.00672
+       },
+       "share_months_positive": 0.2,
+       "n_cells": 313
+      },
+      "test_gross_mean": -0.0004,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "litigation_filed": {
+      "val_net": {
+       "mean": 0.0021,
+       "t": 0.53,
+       "mde": 0.0112,
+       "n_cells": 56,
+       "share_months_positive": 0.75
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": 0.0051,
+       "se": 0.0064,
+       "t": 0.8,
+       "mde": 0.018,
+       "n_dates": 35,
+       "n_blocks": 17,
+       "by_month": {
+        "2026-05": 0.03392,
+        "2026-06": 0.00863,
+        "2026-07": -0.00948,
+        "2026-08": 0.00097,
+        "2026-09": 0.01878
+       },
+       "share_months_positive": 0.8,
+       "n_cells": 64
+      },
+      "test_gross_mean": 0.0071,
+      "verdict": "CANNOT_DISTINGUISH"
+     },
+     "management_change_appointment": {
+      "val_net": {
+       "mean": -0.0109,
+       "t": -2.47,
+       "mde": 0.0124,
+       "n_cells": 51,
+       "share_months_positive": 0.25
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": -0.0028,
+       "se": 0.0062,
+       "t": -0.46,
+       "mde": 0.0174,
+       "n_dates": 37,
+       "n_blocks": 19,
+       "by_month": {
+        "2026-05": 0.00663,
+        "2026-06": -0.00085,
+        "2026-07": -0.01117,
+        "2026-08": -0.00034,
+        "2026-09": 0.00038
+       },
+       "share_months_positive": 0.4,
+       "n_cells": 46
+      },
+      "test_gross_mean": -0.0008,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "management_change_departure": {
+      "val_net": {
+       "mean": 0.0018,
+       "t": 0.54,
+       "mde": 0.0093,
+       "n_cells": 57,
+       "share_months_positive": 0.75
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": -0.004,
+       "se": 0.0042,
+       "t": -0.97,
+       "mde": 0.0117,
+       "n_dates": 40,
+       "n_blocks": 16,
+       "by_month": {
+        "2026-05": -0.0001,
+        "2026-06": -0.00124,
+        "2026-07": -0.02102,
+        "2026-08": 0.01234,
+        "2026-09": -0.00866
+       },
+       "share_months_positive": 0.2,
+       "n_cells": 60
+      },
+      "test_gross_mean": -0.002,
+      "verdict": "FAILED_VARIANT"
+     },
+     "mergers_acquisitions": {
+      "val_net": {
+       "mean": -0.0019,
+       "t": -0.59,
+       "mde": 0.0091,
+       "n_cells": 218,
+       "share_months_positive": 0.5
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": 0.0006,
+       "se": 0.0067,
+       "t": 0.09,
+       "mde": 0.0186,
+       "n_dates": 80,
+       "n_blocks": 20,
+       "by_month": {
+        "2026-05": 0.00067,
+        "2026-06": 0.01998,
+        "2026-07": -0.00689,
+        "2026-08": -0.00225,
+        "2026-09": -0.01247
+       },
+       "share_months_positive": 0.4,
+       "n_cells": 267
+      },
+      "test_gross_mean": 0.0026,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "new_contract_or_partnership": {
+      "val_net": {
+       "mean": -0.0035,
+       "t": -1.27,
+       "mde": 0.0078,
+       "n_cells": 654,
+       "share_months_positive": 0.25
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": -0.0015,
+       "se": 0.0029,
+       "t": -0.52,
+       "mde": 0.0081,
+       "n_dates": 88,
+       "n_blocks": 21,
+       "by_month": {
+        "2026-05": 0.0044,
+        "2026-06": 0.01092,
+        "2026-07": -0.01167,
+        "2026-08": -0.00494,
+        "2026-09": -0.00331
+       },
+       "share_months_positive": 0.4,
+       "n_cells": 615
+      },
+      "test_gross_mean": 0.0005,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "product_launch_or_innovation": {
+      "val_net": {
+       "mean": -0.0029,
+       "t": -1.47,
+       "mde": 0.0056,
+       "n_cells": 258,
+       "share_months_positive": 0.5
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": -0.0019,
+       "se": 0.0029,
+       "t": -0.67,
+       "mde": 0.0081,
+       "n_dates": 77,
+       "n_blocks": 21,
+       "by_month": {
+        "2026-05": -0.00011,
+        "2026-06": -0.00462,
+        "2026-07": -0.00169,
+        "2026-08": -0.00039,
+        "2026-09": -0.00118
+       },
+       "share_months_positive": 0.0,
+       "n_cells": 202
+      },
+      "test_gross_mean": 0.0001,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "regulatory_approval": {
+      "val_net": {
+       "mean": -0.0066,
+       "t": -1.45,
+       "mde": 0.0127,
+       "n_cells": 122,
+       "share_months_positive": 0.25
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": -0.0018,
+       "se": 0.0042,
+       "t": -0.43,
+       "mde": 0.0117,
+       "n_dates": 64,
+       "n_blocks": 20,
+       "by_month": {
+        "2026-05": -0.00027,
+        "2026-06": -0.0023,
+        "2026-07": -0.0072,
+        "2026-08": 0.00061,
+        "2026-09": 0.00546
+       },
+       "share_months_positive": 0.4,
+       "n_cells": 142
+      },
+      "test_gross_mean": 0.0002,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "regulatory_investigation_or_action": {
+      "val_net": {
+       "mean": -0.0156,
+       "t": -2.78,
+       "mde": 0.0157,
+       "n_cells": 98,
+       "share_months_positive": 0.0
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": -0.0022,
+       "se": 0.0053,
+       "t": -0.43,
+       "mde": 0.0147,
+       "n_dates": 50,
+       "n_blocks": 18,
+       "by_month": {
+        "2026-05": -0.03307,
+        "2026-06": -0.00334,
+        "2026-07": 0.00674,
+        "2026-08": -0.0015,
+        "2026-09": -0.00444
+       },
+       "share_months_positive": 0.2,
+       "n_cells": 79
+      },
+      "test_gross_mean": -0.0002,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "tariff_or_trade_policy": {
+      "val_net": {
+       "mean": 0.0019,
+       "t": 0.39,
+       "mde": 0.0137,
+       "n_cells": 133,
+       "share_months_positive": 0.5
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": -0.0029,
+       "se": 0.008,
+       "t": -0.37,
+       "mde": 0.0225,
+       "n_dates": 34,
+       "n_blocks": 15,
+       "by_month": {
+        "2026-06": 0.00188,
+        "2026-07": -0.00132,
+        "2026-08": -0.00665,
+        "2026-09": -0.00157
+       },
+       "share_months_positive": 0.25,
+       "n_cells": 107
+      },
+      "test_gross_mean": -0.0009,
+      "verdict": "FAILED_VARIANT"
+     }
+    },
+    "pooled_selected_test_net": {
+     "mean": -0.0005,
+     "se": 0.0015,
+     "t": -0.33,
+     "mde": 0.0043,
+     "n_dates": 91,
+     "n_blocks": 21,
+     "by_month": {
+      "2026-05": -0.00334,
+      "2026-06": 0.00271,
+      "2026-07": -0.0005,
+      "2026-08": -0.00302,
+      "2026-09": 0.00027
+     },
+     "share_months_positive": 0.4,
+     "n_cells": 1712
+    }
+   },
+   "h5": {
+    "selected_on_val": [
+     "analyst_target_change",
+     "divestiture_asset_sale",
+     "equity_issuance_dilution",
+     "litigation_filed",
+     "management_change_appointment",
+     "management_change_departure",
+     "mergers_acquisitions",
+     "new_contract_or_partnership",
+     "tariff_or_trade_policy"
+    ],
+    "types": {
+     "analyst_initiation": {
+      "val_net": {
+       "mean": -0.0163,
+       "t": -1.68,
+       "mde": 0.027,
+       "n_cells": 112,
+       "share_months_positive": 0.0
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": 0.0307,
+       "se": 0.021,
+       "t": 1.46,
+       "mde": 0.0589,
+       "n_dates": 67,
+       "n_blocks": 18,
+       "by_month": {
+        "2026-05": 0.19159,
+        "2026-06": 0.05792,
+        "2026-07": -0.0027,
+        "2026-08": -0.01246,
+        "2026-09": -0.0096
+       },
+       "share_months_positive": 0.4,
+       "n_cells": 152
+      },
+      "test_gross_mean": 0.0327,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "analyst_rating_change": {
+      "val_net": {
+       "mean": -0.0053,
+       "t": -1.54,
+       "mde": 0.0096,
+       "n_cells": 418,
+       "share_months_positive": 0.0
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": 0.0038,
+       "se": 0.0046,
+       "t": 0.83,
+       "mde": 0.013,
+       "n_dates": 82,
+       "n_blocks": 20,
+       "by_month": {
+        "2026-05": 0.01832,
+        "2026-06": 0.01836,
+        "2026-07": -0.009,
+        "2026-08": -0.00278,
+        "2026-09": 0.00021
+       },
+       "share_months_positive": 0.6,
+       "n_cells": 519
+      },
+      "test_gross_mean": 0.0058,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "analyst_target_change": {
+      "val_net": {
+       "mean": 0.0046,
+       "t": 0.6,
+       "mde": 0.0215,
+       "n_cells": 435,
+       "share_months_positive": 0.75
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": -0.0049,
+       "se": 0.0057,
+       "t": -0.86,
+       "mde": 0.016,
+       "n_dates": 80,
+       "n_blocks": 19,
+       "by_month": {
+        "2026-05": 0.01551,
+        "2026-06": -0.01147,
+        "2026-07": -0.01982,
+        "2026-08": 0.00259,
+        "2026-09": 0.00883
+       },
+       "share_months_positive": 0.6,
+       "n_cells": 540
+      },
+      "test_gross_mean": -0.0029,
+      "verdict": "FAILED_VARIANT"
+     },
+     "clinical_trial_result": {
+      "val_net": {
+       "mean": -0.0213,
+       "t": -2.42,
+       "mde": 0.0246,
+       "n_cells": 103,
+       "share_months_positive": 0.0
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": 0.0176,
+       "se": 0.0125,
+       "t": 1.41,
+       "mde": 0.035,
+       "n_dates": 65,
+       "n_blocks": 20,
+       "by_month": {
+        "2026-05": 0.02194,
+        "2026-06": 0.03063,
+        "2026-07": -0.02727,
+        "2026-08": 0.03695,
+        "2026-09": 0.03099
+       },
+       "share_months_positive": 0.8,
+       "n_cells": 141
+      },
+      "test_gross_mean": 0.0196,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "debt_issuance_or_obligation": {
+      "val_net": {
+       "mean": -0.0004,
+       "t": -0.02,
+       "mde": 0.0517,
+       "n_cells": 39,
+       "share_months_positive": 0.25
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": 0.0069,
+       "se": 0.0202,
+       "t": 0.34,
+       "mde": 0.0565,
+       "n_dates": 42,
+       "n_blocks": 18,
+       "by_month": {
+        "2026-05": -0.05893,
+        "2026-06": 0.0201,
+        "2026-07": 0.0025,
+        "2026-08": 0.03121,
+        "2026-09": 0.00915
+       },
+       "share_months_positive": 0.8,
+       "n_cells": 53
+      },
+      "test_gross_mean": 0.0089,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "divestiture_asset_sale": {
+      "val_net": {
+       "mean": 0.0021,
+       "t": 0.26,
+       "mde": 0.0233,
+       "n_cells": 39,
+       "share_months_positive": 0.75
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": -0.0393,
+       "se": 0.0215,
+       "t": -1.83,
+       "mde": 0.0601,
+       "n_dates": 28,
+       "n_blocks": 13,
+       "by_month": {
+        "2026-05": -1e-05,
+        "2026-06": -0.05323,
+        "2026-07": -0.0796,
+        "2026-08": 0.00568,
+        "2026-09": -0.00595
+       },
+       "share_months_positive": 0.2,
+       "n_cells": 44
+      },
+      "test_gross_mean": -0.0373,
+      "verdict": "FAILED_VARIANT"
+     },
+     "earnings_report": {
+      "val_net": {
+       "mean": -0.0013,
+       "t": -0.24,
+       "mde": 0.0147,
+       "n_cells": 736,
+       "share_months_positive": 0.25
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": -0.005,
+       "se": 0.0039,
+       "t": -1.29,
+       "mde": 0.0108,
+       "n_dates": 84,
+       "n_blocks": 20,
+       "by_month": {
+        "2026-05": 0.00436,
+        "2026-06": -0.00816,
+        "2026-07": 0.00089,
+        "2026-08": -0.01294,
+        "2026-09": -0.00331
+       },
+       "share_months_positive": 0.4,
+       "n_cells": 1049
+      },
+      "test_gross_mean": -0.003,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "equity_issuance_dilution": {
+      "val_net": {
+       "mean": 0.0399,
+       "t": 2.73,
+       "mde": 0.0409,
+       "n_cells": 57,
+       "share_months_positive": 1.0
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": 0.0046,
+       "se": 0.0145,
+       "t": 0.32,
+       "mde": 0.0406,
+       "n_dates": 50,
+       "n_blocks": 18,
+       "by_month": {
+        "2026-05": 0.00661,
+        "2026-06": -0.00389,
+        "2026-07": 0.07104,
+        "2026-08": -0.06631,
+        "2026-09": 0.03306
+       },
+       "share_months_positive": 0.6,
+       "n_cells": 71
+      },
+      "test_gross_mean": 0.0066,
+      "verdict": "CANNOT_DISTINGUISH"
+     },
+     "guidance_change": {
+      "val_net": {
+       "mean": -0.0095,
+       "t": -0.96,
+       "mde": 0.0278,
+       "n_cells": 61,
+       "share_months_positive": 0.25
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": 0.002,
+       "se": 0.0074,
+       "t": 0.28,
+       "mde": 0.0206,
+       "n_dates": 62,
+       "n_blocks": 20,
+       "by_month": {
+        "2026-05": 0.03908,
+        "2026-06": 0.00492,
+        "2026-07": -0.01228,
+        "2026-08": -0.00064,
+        "2026-09": 0.00355
+       },
+       "share_months_positive": 0.6,
+       "n_cells": 153
+      },
+      "test_gross_mean": 0.004,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "insider_or_institutional_ownership_change": {
+      "val_net": {
+       "mean": -0.0002,
+       "t": -0.02,
+       "mde": 0.0249,
+       "n_cells": 213,
+       "share_months_positive": 0.5
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": 0.0026,
+       "se": 0.0055,
+       "t": 0.48,
+       "mde": 0.0154,
+       "n_dates": 81,
+       "n_blocks": 19,
+       "by_month": {
+        "2026-05": -0.00849,
+        "2026-06": -0.01006,
+        "2026-07": 0.00347,
+        "2026-08": 0.01428,
+        "2026-09": 0.01273
+       },
+       "share_months_positive": 0.6,
+       "n_cells": 306
+      },
+      "test_gross_mean": 0.0046,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "litigation_filed": {
+      "val_net": {
+       "mean": 0.0125,
+       "t": 0.75,
+       "mde": 0.0466,
+       "n_cells": 56,
+       "share_months_positive": 0.75
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": 0.0069,
+       "se": 0.0103,
+       "t": 0.67,
+       "mde": 0.0288,
+       "n_dates": 35,
+       "n_blocks": 17,
+       "by_month": {
+        "2026-05": 0.02807,
+        "2026-06": 0.03962,
+        "2026-07": -0.01549,
+        "2026-08": -0.00933,
+        "2026-09": 0.02856
+       },
+       "share_months_positive": 0.6,
+       "n_cells": 64
+      },
+      "test_gross_mean": 0.0089,
+      "verdict": "CANNOT_DISTINGUISH"
+     },
+     "management_change_appointment": {
+      "val_net": {
+       "mean": 0.0087,
+       "t": 0.89,
+       "mde": 0.0272,
+       "n_cells": 51,
+       "share_months_positive": 0.75
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": -0.0144,
+       "se": 0.0141,
+       "t": -1.02,
+       "mde": 0.0396,
+       "n_dates": 34,
+       "n_blocks": 17,
+       "by_month": {
+        "2026-05": -0.10442,
+        "2026-06": 0.01621,
+        "2026-07": -0.03589,
+        "2026-08": -0.01278,
+        "2026-09": -0.04727
+       },
+       "share_months_positive": 0.2,
+       "n_cells": 40
+      },
+      "test_gross_mean": -0.0124,
+      "verdict": "FAILED_VARIANT"
+     },
+     "management_change_departure": {
+      "val_net": {
+       "mean": 0.0223,
+       "t": 2.46,
+       "mde": 0.0254,
+       "n_cells": 57,
+       "share_months_positive": 1.0
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": 0.0043,
+       "se": 0.0265,
+       "t": 0.16,
+       "mde": 0.0743,
+       "n_dates": 40,
+       "n_blocks": 16,
+       "by_month": {
+        "2026-05": -0.03202,
+        "2026-06": 0.01053,
+        "2026-07": -0.00322,
+        "2026-08": 0.02451,
+        "2026-09": -0.016
+       },
+       "share_months_positive": 0.4,
+       "n_cells": 60
+      },
+      "test_gross_mean": 0.0063,
+      "verdict": "CANNOT_DISTINGUISH"
+     },
+     "mergers_acquisitions": {
+      "val_net": {
+       "mean": 0.0009,
+       "t": 0.1,
+       "mde": 0.0254,
+       "n_cells": 218,
+       "share_months_positive": 0.75
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": 0.011,
+       "se": 0.0226,
+       "t": 0.49,
+       "mde": 0.0633,
+       "n_dates": 77,
+       "n_blocks": 19,
+       "by_month": {
+        "2026-05": -0.00682,
+        "2026-06": 0.0674,
+        "2026-07": 0.00685,
+        "2026-08": -0.01177,
+        "2026-09": -0.03357
+       },
+       "share_months_positive": 0.4,
+       "n_cells": 258
+      },
+      "test_gross_mean": 0.013,
+      "verdict": "CANNOT_DISTINGUISH"
+     },
+     "new_contract_or_partnership": {
+      "val_net": {
+       "mean": 0.0004,
+       "t": 0.04,
+       "mde": 0.0257,
+       "n_cells": 654,
+       "share_months_positive": 0.75
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": -0.0076,
+       "se": 0.0082,
+       "t": -0.93,
+       "mde": 0.0228,
+       "n_dates": 84,
+       "n_blocks": 20,
+       "by_month": {
+        "2026-05": 0.04061,
+        "2026-06": -0.01372,
+        "2026-07": -0.01658,
+        "2026-08": -0.01756,
+        "2026-09": -0.00235
+       },
+       "share_months_positive": 0.2,
+       "n_cells": 589
+      },
+      "test_gross_mean": -0.0056,
+      "verdict": "FAILED_VARIANT"
+     },
+     "product_launch_or_innovation": {
+      "val_net": {
+       "mean": -0.0146,
+       "t": -1.88,
+       "mde": 0.0218,
+       "n_cells": 258,
+       "share_months_positive": 0.25
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": -0.0029,
+       "se": 0.0079,
+       "t": -0.37,
+       "mde": 0.0222,
+       "n_dates": 73,
+       "n_blocks": 20,
+       "by_month": {
+        "2026-05": 0.04438,
+        "2026-06": -0.02255,
+        "2026-07": -0.01724,
+        "2026-08": -0.00182,
+        "2026-09": 0.03144
+       },
+       "share_months_positive": 0.4,
+       "n_cells": 190
+      },
+      "test_gross_mean": -0.0009,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "regulatory_approval": {
+      "val_net": {
+       "mean": -0.012,
+       "t": -0.82,
+       "mde": 0.0409,
+       "n_cells": 122,
+       "share_months_positive": 0.5
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": 0.0058,
+       "se": 0.0087,
+       "t": 0.67,
+       "mde": 0.0243,
+       "n_dates": 62,
+       "n_blocks": 20,
+       "by_month": {
+        "2026-05": 0.00937,
+        "2026-06": 0.0172,
+        "2026-07": -0.01462,
+        "2026-08": 0.02525,
+        "2026-09": -0.01626
+       },
+       "share_months_positive": 0.6,
+       "n_cells": 139
+      },
+      "test_gross_mean": 0.0078,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "regulatory_investigation_or_action": {
+      "val_net": {
+       "mean": -0.0118,
+       "t": -0.8,
+       "mde": 0.0412,
+       "n_cells": 98,
+       "share_months_positive": 0.5
+      },
+      "selected_on_val": false,
+      "test_net": {
+       "mean": 0.0112,
+       "se": 0.0092,
+       "t": 1.21,
+       "mde": 0.0258,
+       "n_dates": 50,
+       "n_blocks": 18,
+       "by_month": {
+        "2026-05": 0.02328,
+        "2026-06": 0.03527,
+        "2026-07": -0.00826,
+        "2026-08": 0.0088,
+        "2026-09": -0.00904
+       },
+       "share_months_positive": 0.6,
+       "n_cells": 79
+      },
+      "test_gross_mean": 0.0132,
+      "verdict": "NOT_SELECTED_ON_VAL"
+     },
+     "tariff_or_trade_policy": {
+      "val_net": {
+       "mean": 0.0174,
+       "t": 1.43,
+       "mde": 0.0341,
+       "n_cells": 133,
+       "share_months_positive": 0.75
+      },
+      "selected_on_val": true,
+      "test_net": {
+       "mean": -0.0108,
+       "se": 0.0093,
+       "t": -1.16,
+       "mde": 0.026,
+       "n_dates": 33,
+       "n_blocks": 14,
+       "by_month": {
+        "2026-06": 0.01287,
+        "2026-07": -0.01515,
+        "2026-08": -0.02362,
+        "2026-09": 0.00086
+       },
+       "share_months_positive": 0.5,
+       "n_cells": 106
+      },
+      "test_gross_mean": -0.0088,
+      "verdict": "FAILED_VARIANT"
+     }
+    },
+    "pooled_selected_test_net": {
+     "mean": -0.0033,
+     "se": 0.0043,
+     "t": -0.76,
+     "mde": 0.012,
+     "n_dates": 86,
+     "n_blocks": 20,
+     "by_month": {
+      "2026-05": 0.02374,
+      "2026-06": -0.00384,
+      "2026-07": -0.00789,
+      "2026-08": -0.00561,
+      "2026-09": -0.01217
+     },
+     "share_months_positive": 0.2,
+     "n_cells": 1772
+    }
+   }
+  }
+ }
+}

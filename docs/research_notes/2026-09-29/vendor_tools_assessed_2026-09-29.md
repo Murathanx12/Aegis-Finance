@@ -10,8 +10,8 @@ use deepseek api as you wish and nvidia api. do you think bob from ibm is
 useful, or any nvidia, microsoft, meta, amazon, oracle things we need to set up
 and build."*
 
-Context: one HKU student, one Windows laptop, 8GB NVIDIA GPU, 32GB RAM (often
-nearly full), a 13-TOPS NPU. Paid today: DeepSeek API (cheap, the only paid
+Context: one HKU student, one Windows laptop with a local graphics card, an NPU and
+limited free memory (specifics in the local_pc record). Paid today: DeepSeek API (cheap, the only paid
 LLM), Railway (~$60 last month, being reduced), news subscriptions. An NVIDIA
 API key exists and is underused. OpenClaw runs locally.
 
@@ -77,7 +77,7 @@ is already cheaper and already integrated. **Effort**: 1–2h to test.
 FOR US** — free tier is real but not big enough to matter next to DeepSeek.
 
 **Granite models.** Open-weight, Apache 2.0, on Hugging Face
-(`ibm-granite/*`). 2B/8B dense variants fit an 8GB-VRAM laptop comfortably at
+(`ibm-granite/*`). 2B/8B dense variants fit the local graphics card comfortably at
 4-bit/8-bit GGUF, the same class as the models already run locally via
 llama.cpp (Qwen2.5-7B, Qwen3-30B-A3B). IBM's own reported MMLU (65.5 for the
 8B) is a **self-reported eval**, not independently verified — treat as
@@ -157,16 +157,16 @@ it is underused past that.
   **Verdict: TRY ONE EXPERIMENT.**
 
 **NIM containers run locally.** Downloadable, but sized for datacenter GPUs
-(Nemotron-Ultra needs 8×H100). Nothing finance-relevant fits 8GB.
+(Nemotron-Ultra needs 8×H100). Nothing finance-relevant fits the local graphics card.
 **Verdict: NOT FOR US** — API path only.
 
 **TensorRT / TensorRT-LLM for the local model.** Best independent data found
 (Jan/Menlo Research benchmarks) shows TensorRT-LLM 30–70% faster than
 llama.cpp on a 7B int4 model — but measured on 24GB-class RTX 4090/3090 cards,
-not 8GB, and no verified 8GB benchmark exists. Windows setup additionally
+not on a card of the local class, and no verified benchmark at that class exists. Windows setup additionally
 requires Python 3.10 only, MS-MPI, and per-GPU engine compilation (one
 hobbyist repo left this "in progress" for exactly that reason). **Verdict: NOT
-FOR US** — unverified gain at this VRAM tier, real setup/maintenance cost.
+FOR US** — unverified gain on the local graphics card, real setup/maintenance cost.
 
 **RAPIDS.** Already judged not worth it on Windows — not re-researched, stays
 closed.
@@ -206,12 +206,12 @@ Copilot Student** (unlimited completions + limited AI-credit chat/agent use),
 free Pro-tier Codespaces, the same $100 Azure credit, $50 MongoDB Atlas
 credit, JetBrains, GitHub Pro. No card. **Use**: marginal directly (Claude
 Code is already the primary coding tool) but Codespaces is a spare cloud box
-if the 32GB-RAM laptop is maxed, and it's the cleanest path to claim the Azure
+if the laptop's memory is maxed, and it's the cleanest path to claim the Azure
 credit above. **Verdict: ADOPT NOW** — free, zero risk, treat as a bonus.
 Effort: 30 min.
 
 **Phi small models (Hugging Face).** `Phi-4-mini-instruct`: 3.8B, dense,
-**MIT licence**, GGUF Q4/Q5 quantization fits comfortably in 8GB VRAM. No
+**MIT licence**, GGUF Q4/Q5 quantization fits comfortably on the local graphics card. No
 evidence found that it beats what's already running locally (Qwen2.5-7B /
 Qwen3-30B-A3B) — its edge is footprint and tool-use tuning, not demonstrated
 reasoning superiority. **Verdict: TRY ONE EXPERIMENT** — mainly relevant as an
@@ -224,11 +224,11 @@ NuGet/pip packages), built on Windows ML/ONNX Runtime, targeting CPU/GPU/NPU
 via execution providers. **NPU support is confirmed specifically for
 Qualcomm/Snapdragon (QNN)**; hardware-optimized NPU/GPU execution providers
 are gated behind Windows 11 24H2 (build 26100)+. Whether this laptop's
-specific 13-TOPS NPU (most likely Intel or AMD silicon, not Snapdragon) has a
+specific NPU has a
 working execution provider today is **UNVERIFIED** — must be checked directly
 (`foundry model list` + Task Manager NPU utilization) before crediting any
 VRAM savings. **Use, if it works**: offload Phi-4-mini to the NPU, freeing the
-8GB discrete GPU for Qwen3-30B-A3B. **Verdict: TRY ONE EXPERIMENT** — check OS
+local graphics card for Qwen3-30B-A3B. **Verdict: TRY ONE EXPERIMENT** — check OS
 build and NPU vendor/EP availability first (2–3h bounded test); don't plan
 around it until confirmed.
 
@@ -264,7 +264,7 @@ encoder-decoder TSFM (direct multi-step regression, "up to 250× faster, 20×
 more memory-efficient" than original Chronos per its own model card);
 Chronos-2 (2025, 120M params) adds multivariate/covariate support neither
 Chronos nor Bolt have. Free weights, Apache 2.0, no card; Bolt-Small (48M) /
-Base (205M) run on CPU or trivially on an 8GB GPU. Amazon's own benchmarks are
+Base (205M) run on CPU or trivially on the local graphics card. Amazon's own benchmarks are
 aggregated over 27 generic GluonTS/Monash datasets — none are equity returns.
 Independent evidence on real financial data already exists and reaches the
 **same negative as tonight's in-house Kronos result**: Noguer i Alonso &
@@ -291,7 +291,7 @@ directly serves the stated requirement that a new nightly-trained tabular
 network must beat LightGBM. **Verdict: TRY ONE EXPERIMENT** — cheap, no
 dependency risk, exactly a `PRODUCT_EXPERIMENT`-licensed one-day check. Effort
 2–4h; bound with `presets='medium_quality'`/`time_limit` since `best_quality`
-(bagging + multi-layer stacking) is slow/RAM-heavy on a 32GB box that's often
+(bagging + multi-layer stacking) is slow/RAM-heavy on a box whose memory is often
 nearly full.
 
 **AWS Free Tier.** $200 signup credit ($100 immediate + up to $100 earned),
@@ -565,7 +565,7 @@ decision**, not something to sign up for automatically.
   TimesFM). Running another TSFM is the same experiment again, not a new one.
 - **RAPIDS, Qlib, RD-Agent(Q)** — already evaluated, already closed, not
   re-opened by this note.
-- **TensorRT-LLM, local NIM containers** — no verified gain at 8GB VRAM, and
+- **TensorRT-LLM, local NIM containers** — no verified gain on the local graphics card, and
   real Windows setup friction for TensorRT-LLM specifically.
 - **Amazon Bedrock** — duplicates the existing DeepSeek integration via a
   markup layer, no free tier, card required, against the single-provider house

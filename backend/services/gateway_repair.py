@@ -636,6 +636,37 @@ def _open_blank() -> str | None:
     return (r.get("result") or {}).get("targetId")
 
 
+def ensure_anchor_tab(*, prove: Callable[[], dict] = _prove_dedicated,
+                      page_targets: Callable[[], list[dict]] = _page_targets,
+                      open_blank: Callable[[], str | None] | None = None) -> dict:
+    """Keep ONE about:blank page open in the PROVEN dedicated Chrome.
+
+    2026-09-29: the dedicated Chrome ended cleanly three times that day, each
+    time with `tab_count 0` in its own session log: Chrome on Windows ends when
+    its last tab closes, the reader closes each tab after its read, and the
+    launch's about:blank start page was no longer there. An anchor page makes
+    "the reader closed its last tab" a non-event. Opens a page only when no
+    about:blank page exists; proves the instance first; never raises.
+    Returns `{ok, opened, anchor, n_pages}` or `{ok: False, refused}`."""
+    try:
+        prove()
+        pages = page_targets()
+    except Exception as exc:                                        # noqa: BLE001
+        return {"ok": False, "refused": f"{type(exc).__name__}: {str(exc)[:200]}",
+                "opened": None}
+    blanks = [p for p in pages if _is_blank(p.get("url"))]
+    if blanks:
+        return {"ok": True, "opened": None, "anchor": str(blanks[0].get("id")),
+                "n_pages": len(pages)}
+    try:
+        tid = (open_blank or _open_blank)()
+    except Exception as exc:                                        # noqa: BLE001
+        return {"ok": False, "refused": f"open failed: {type(exc).__name__}: "
+                                        f"{str(exc)[:160]}", "opened": None,
+                "n_pages": len(pages)}
+    return {"ok": bool(tid), "opened": tid, "anchor": tid, "n_pages": len(pages)}
+
+
 def _browser_close() -> bool:
     """`Browser.close` on the PROVEN dedicated Chrome: a graceful exit that
     lets it write its profile (cookies / sign-ins survive)."""
@@ -869,7 +900,8 @@ def recycle_dedicated_chrome(own_tab_ids: list[str] | None = None, *,
     try:
         res = d.launch() or {}
         out["steps"].append({"step": "launch_attach", "result": {
-            k: res.get(k) for k in ("launched", "why", "pid_started", "seconds_to_port")}})
+            k: res.get(k) for k in ("launched", "why", "pid_started", "seconds_to_port",
+                                    "verified", "verify_problem")}})
         out["ok"] = True
     except Exception as exc:                                        # noqa: BLE001
         out["steps"].append({"step": "launch_attach", "error": str(exc)[:200]})
