@@ -1,0 +1,42 @@
+{
+ "registration": "SHADOW_BAYES_v1",
+ "licence": "PRODUCT_EXPERIMENT (paper, local frozen book, no broker orders, no LLM authority)",
+ "registered_utc": "2026-09-29T03:21:38+00:00",
+ "book_id": "0f038859b2ebea62",
+ "twin_book_id": "be5e940728613d94",
+ "twin": {
+  "seed": 787485596,
+  "draws": 21,
+  "fallbacks": {
+   "cell": 210,
+   "band_vol": 0,
+   "band": 0,
+   "any": 0
+  },
+  "matching": "band (mega>=1e9/large>=1e8/mid>=2e7/small, 63-session median $vol) x vol_63 tercile x mom_12_1 tercile, over the eligible universe on the bars date"
+ },
+ "asof": "2026-09-28",
+ "entry": "open of 2026-09-29 (llm_portfolio.entry_session)",
+ "rule_receipt": "backend/data/optimus/shadow_bayes/rule_v1_2026-09-28_20260929T032138Z.json (hash 4151a7372ef0139c)",
+ "rule_code": "scripts/shadow_bayes_rule.py main_v1 (uncommitted at registration: commit owed before any read; the files are in git-tracked paths, none ignored)",
+ "graded_book": "the rule's actual output: sleeve names at live size + SPY for the rest (not renormalised)",
+ "primary_statistic": {
+  "statistic": "D = sleeve minus matched twin21 sleeve, 63 sessions",
+  "n_eff_names": 9.21,
+  "sd_D": 0.05055,
+  "expected_D_at_posterior": 0.00333,
+  "kill_if": "D < -1.645 x sd_D = -0.0832",
+  "P_kill_if_rule_worthless": 0.05,
+  "P_kill_if_posterior_true": 0.0435,
+  "P_pass_if_posterior_true (D > +z sd)": 0.0572,
+  "mde80_one_sided_5pct": 0.1257,
+  "reading": "the design can reject a rule that loses badly; it cannot confirm an edge this small. D inside +/- z sd reads CANNOT_DISTINGUISH, which is the expected outcome and is stated before entry"
+ },
+ "read_dates": "21 and 63 sessions after entry",
+ "secondary": [
+  "Brier / reliability of P(beats twin 21s): resolution near zero by construction; reported, never deciding",
+  "book vs SPY (beta read, not a test)"
+ ],
+ "relation_to_v0": "v0 439fd84f869744e0 is unchanged and still graded; see backend/data/optimus/shadow_bayes/AMENDMENT_SHADOW_BAYES_v0_2026-09-29.json",
+ "roadmap_conflict": "a new book inside ROADMAP_2026-09-28's 'no new book to 2026-10-26' window; registered on the orchestrator's instruction of 2026-09-29 (owner away); voidable before entry with llm_portfolio.void"
+}

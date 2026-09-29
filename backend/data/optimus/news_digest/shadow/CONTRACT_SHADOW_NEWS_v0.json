@@ -1,0 +1,31 @@
+{
+ "name": "SHADOW_NEWS_v0",
+ "licence": "PRODUCT_EXPERIMENT (shadow only: no broker, no live plan, no LLM authority)",
+ "base_book_id": "439fd84f869744e0",
+ "matched_twin": "the base book itself = this rule with both trusts pinned at 0",
+ "rule": "per name i with news implications at horizon 5 or 20: d_i = mean(sign x confidence), s_i = mean size multiple (below_normal 0.6, normal 1, above_normal 1.6, extreme 2.5). Base name: w' = w (1 + trust_dir d_i) / (1 + trust_size (s_i - 1)). New name with d_i > 0 in the US panel: w' = trust_dir d_i x NEW_NAME_UNIT. The tilted sleeve is renormalised to the base sleeve's total.",
+ "trust": "size and direction separately: clip(posterior / FULL, 0, MAX) of the per-date Brier improvement of graded news_digest rows over their control, prior N(0, TAU^2); fewer than MIN_DATES graded dates -> 0",
+ "params": {
+  "TAU": 0.01,
+  "FULL": 0.02,
+  "MAX": 0.25,
+  "MIN_DATES": 3,
+  "NEW_NAME_UNIT": 0.05,
+  "SIZE_BUCKET_P": {
+   "below_normal": 0.18,
+   "normal": 0.3173,
+   "above_normal": 0.5,
+   "extreme": 0.7
+  },
+  "DIR_SHRINK": 0.2,
+  "PROMPT_VERSION": "wd_v1"
+ },
+ "prompt_hashes": {
+  "extract": "3114beecbff92aa3",
+  "headline": "d2655900a360cc30",
+  "implication": "fc8844faf2c0f6c0"
+ },
+ "grading": "daily: sum_i (w'_i - w_i) x r_i over the next 5 and 20 sessions = the news tilt's own return; read vs zero by date block",
+ "contract_hash": "f3b149ea42311760",
+ "frozen_utc": "2026-09-29T03:01:24+00:00"
+}

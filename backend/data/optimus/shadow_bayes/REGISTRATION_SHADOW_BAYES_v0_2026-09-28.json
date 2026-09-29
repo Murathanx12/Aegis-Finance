@@ -1,0 +1,18 @@
+{
+ "registration": "SHADOW_BAYES_v0",
+ "licence": "PRODUCT_EXPERIMENT (paper, local frozen book, no broker orders, no LLM authority)",
+ "registered_utc": "2026-09-28T14:06:00Z",
+ "book_id": "439fd84f869744e0",
+ "twins": {"ew": "3e0a91bed8759db0", "spy": "d00f3ab5451adc9e", "random_same_band": "ec29c635db8ac686"},
+ "asof": "2026-09-28",
+ "entry": "open of 2026-09-29 (llm_portfolio.entry_session: first XNYS session strictly after asof)",
+ "rule_receipt": "backend/data/optimus/shadow_bayes/rule_2026-09-28_20260928T140452Z.json (hash 4ec3bc19f0166ab7)",
+ "rule_code": "scripts/shadow_bayes_rule.py (uncommitted at registration)",
+ "inputs": "the live plan's own candidate set for asof 2026-09-28 (45 names in er_2026-09-28.json), bars through 2026-09-25",
+ "primary_comparison": "book 439fd84f869744e0 minus its random_same_band twin ec29c635db8ac686, NAV at 21 and 63 sessions (llm_portfolio.grade)",
+ "secondary": ["book vs spy twin", "book vs ew twin (sizing effect)", "live-size book = 0.037 x sleeve + 0.963 x SPY vs PC-PAPER NAV over the same window (PC-PAPER is the current plan: 10 x 2% PROBE + ~80% cash)", "calibration of the stated P(beats SPY over 21 sessions): Brier and reliability; with p in 0.506-0.510 the resolution is near zero by construction and the grade will say so"],
+ "read_dates": ["2026-10-27 (21 sessions after entry)", "2026-12-24 (63 sessions)"],
+ "kill_rule": "at 63 sessions, if the sleeve trails its random_same_band twin, the rule's v0 priors are recorded FAILED_VARIANT; no v0 parameter is changed before then",
+ "known_weakness": "4 names; one draw of a random twin; MDE at 63 sessions is several percent, so a null here will read CANNOT_DISTINGUISH. The book exists to start the calibration record, not to prove an edge.",
+ "roadmap_conflict": "ROADMAP_2026-09-28 section 1/3 says no new book for 21 sessions (to 2026-10-26). This one was frozen on the orchestrator's explicit instruction of 2026-09-28 (one shadow book). It may be voided before entry with llm_portfolio.void(book_id, reason, who=...) and then never grades."
+}

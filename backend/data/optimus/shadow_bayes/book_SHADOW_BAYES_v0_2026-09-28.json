@@ -1,0 +1,48 @@
+{
+ "name": "SHADOW_BAYES_v0 sleeve 2026-09-28",
+ "kind": "personal",
+ "objective": "beat SPY over 21 and 63 sessions: the active sleeve of a shrunk-prior, fractional-Kelly rule; the live-size book is 0.037 x this sleeve + 0.963 x SPY",
+ "model": "shadow_bayes_rule v0 (deterministic; no LLM)",
+ "strategy": "alpha_i = sum_j post_mean_j * e_ij; prior N(0,0.005^2); dev SE x2.0; w = 0.25 * alpha / s^2, cap 0.1; sleeve cap by TE 0.0762; rule receipt rule_2026-09-28_20260928T140452Z.json hash 4ec3bc19f0166ab7",
+ "horizon_days": [
+  21,
+  63
+ ],
+ "twins_requested": [
+  "random_same_band",
+  "spy",
+  "ew"
+ ],
+ "positions": [
+  {
+   "ticker": "JAZZ",
+   "weight": 0.32849435335870486,
+   "thesis": "P(beats SPY over 21 sessions) = 0.510; alpha_21 +0.196% from exposures {\"momentum_12_1\": 0.816, \"profitability_gp\": -0.292, \"ranker_lgbm\": 0.0}",
+   "falsifier": "the sleeve trails its random_same_band twin at 63 sessions, or the stated probabilities are miscalibrated (Brier worse than 0.25) when graded"
+  },
+  {
+   "ticker": "TS",
+   "weight": 0.3105861117316742,
+   "thesis": "P(beats SPY over 21 sessions) = 0.509; alpha_21 +0.176% from exposures {\"momentum_12_1\": 0.652, \"profitability_gp\": -0.599, \"ranker_lgbm\": 0.0}",
+   "falsifier": "the sleeve trails its random_same_band twin at 63 sessions, or the stated probabilities are miscalibrated (Brier worse than 0.25) when graded"
+  },
+  {
+   "ticker": "SNDR",
+   "weight": 0.19239366537902164,
+   "thesis": "P(beats SPY over 21 sessions) = 0.507; alpha_21 +0.149% from exposures {\"momentum_12_1\": 0.677, \"profitability_gp\": 0.021, \"ranker_lgbm\": 0.0}",
+   "falsifier": "the sleeve trails its random_same_band twin at 63 sessions, or the stated probabilities are miscalibrated (Brier worse than 0.25) when graded"
+  },
+  {
+   "ticker": "TSM",
+   "weight": 0.16852586953059928,
+   "thesis": "P(beats SPY over 21 sessions) = 0.506; alpha_21 +0.138% from exposures {\"momentum_12_1\": 0.551, \"profitability_gp\": -0.308, \"ranker_lgbm\": 0.0}",
+   "falsifier": "the sleeve trails its random_same_band twin at 63 sessions, or the stated probabilities are miscalibrated (Brier worse than 0.25) when graded"
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.0,
+   "thesis": "fully invested sleeve",
+   "falsifier": "n/a"
+  }
+ ]
+}

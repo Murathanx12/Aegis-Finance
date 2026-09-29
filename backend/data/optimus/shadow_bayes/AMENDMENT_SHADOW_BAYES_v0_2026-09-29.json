@@ -1,0 +1,48 @@
+{
+ "amendment": "SHADOW_BAYES_v0",
+ "dated": "2026-09-29",
+ "written_before": "the book's first read (2026-10-27); written about 10 hours before its entry open (2026-09-29 13:30Z)",
+ "amends": "backend/data/optimus/shadow_bayes/REGISTRATION_SHADOW_BAYES_v0_2026-09-28.json (NOT modified)",
+ "book_id": "439fd84f869744e0",
+ "twins": {"ew": "3e0a91bed8759db0", "spy": "d00f3ab5451adc9e", "random_same_band": "ec29c635db8ac686"},
+ "what_does_not_change": "the book, its three twins, the rule receipt (hash 4ec3bc19f0166ab7), the read dates and the grading. Nothing is voided; v0 grades as frozen.",
+ "source": "docs/reviews/REVIEW_2026-09-29_SHADOW_BOOK_AND_TRUST_WEIGHTS.md F2, F3, F4, F7; each item re-checked against the files named",
+ "weaknesses": [
+  {
+   "id": "TWIN_MATCHED_ON_LIQUIDITY_ONLY",
+   "what": "the primary twin ec29c635db8ac686 replaces each name with a random live name from the same one of four dollar-volume bands (llm_portfolio.twins). Volatility and 12-1 momentum are not matched, and no seed is on the book row or the registration.",
+   "why_it_matters": "the momentum evidence the rule uses (matched_twins_2026-09-27T082553Z.json, mom_12_1@k20) was measured against twins matched on band x vol_63 tercile x mom_252_21 tercile. v0's comparison therefore contains the whole momentum factor and a volatility mismatch that the evidence had removed. A win could be factor momentum or luck; a loss could be one volatile replacement (TSM -> ALAB).",
+   "checked": "books.jsonl line 312: JAZZ->CM, TS->VNT, SNDR->LMAT, TSM->ALAB; no seed field"
+  },
+  {
+   "id": "KILL_RULE_HAS_NO_POWER",
+   "what": "kill rule: 'at 63 sessions, if the sleeve trails its random_same_band twin -> FAILED_VARIANT'.",
+   "computed_here": "from the rule receipt: effective names 3.71; residual sd per name 7.5-9.0% per 21 sessions; one twin draw, so sd(sleeve minus twin) over 63 sessions ~ 10.0%; expected difference at the posterior +0.51%. P(kill | the posterior is true) = 0.48; P(kill | the rule is worthless) = 0.50.",
+   "reading": "the registered kill rule cannot tell a correct rule from a worthless one. A FAILED_VARIANT written on 2026-12-24 under it carries about two percentage points of information and must be read as CANNOT_DISTINGUISH, not as a rejection. The Brier falsifier has the same defect: with p between 0.506 and 0.510, it fires whenever fewer than half of four names beat SPY."
+  },
+  {
+   "id": "GRADED_BOOK_IS_NOT_THE_RULE_OUTPUT",
+   "what": "MIN_WEIGHT (0.005) was applied AFTER the sleeve scale (0.144), dropping GOOGL (0.0048), INCY, KEX, STNG, PDS, CSTM, CHD and WDS; the four survivors were renormalised to 100% of the sleeve (JAZZ 32.8%).",
+   "rule_output": "3.67% of capital across the rule's names plus 96.33% SPY. The frozen 4-name sleeve is about 27x more concentrated than the rule's own sizing, and a 5 bp threshold decided its membership.",
+   "reading": "any ROI row that shows 'SHADOW_BAYES_v0 sleeve' at $1M start capital shows the threshold artefact's swings, not the rule's."
+  },
+  {
+   "id": "REGISTRATION_NOT_IN_GIT",
+   "what": "at the time of this amendment `git show HEAD:backend/data/optimus/llm_portfolio/books.jsonl` does not contain 439fd84f869744e0, and backend/data/optimus/shadow_bayes/ is untracked. None of these paths is git-ignored.",
+   "reading": "the freeze time and the twin draw are provable only once committed. The commit is owed by whoever commits next; this builder was instructed not to commit."
+  },
+  {
+   "id": "EVIDENCE_DRAW_AND_DECLARED_T",
+   "what": "v0 uses the matched-twin draw 0 (dev +2.17%/mo t 2.59; sealed +0.79% t 0.46) rather than the twin21 mean (dev +1.81% t 2.28; sealed +0.36% t 0.24), and ranker_lgbm's t of -0.7 was declared, not computed.",
+   "reading": "v0's posterior momentum edge (+0.22%/mo) is overstated by roughly a fifth; the sign does not change."
+  }
+ ],
+ "successor": {
+  "registration": "backend/data/optimus/shadow_bayes/REGISTRATION_SHADOW_BAYES_v1_2026-09-28_20260929T032138Z.json",
+  "book_id": "0f038859b2ebea62",
+  "twin_book_id": "be5e940728613d94 (matched_twin21: band x vol_63 tercile x mom_12_1 tercile, 21 draws, seed 787485596)",
+  "graded_book": "the rule's actual output: 10 names at live size (5.36% in total) + SPY 94.64%",
+  "kill_rule": "D = sleeve minus matched twin21 sleeve over 63 sessions; kill if D < -1.645 x sd_D (-8.3%); P(kill | worthless) 0.05, P(kill | posterior true) 0.044; MDE80 12.6%. D inside +/- 1.645 sd reads CANNOT_DISTINGUISH, stated before entry.",
+  "entry": "open of 2026-09-29"
+ }
+}

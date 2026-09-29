@@ -125,3 +125,42 @@ regression, the bootstrap seed and draw count, the window, the 500 floor, the 0.
   quoted as evidence for it.
 - No buy/sell language may be attached to x until a `MAGNITUDE_BEYOND_IMPLIED` verdict AND a
   cost test exist.
+
+
+## Amendment 2026-09-29: which report stamps count as untimed (before any data in the window)
+
+This amendment is dated 2026-09-29, before the window's first reaction session (2026-10-12). No
+data from the window existed when it was written. The hypothesis, the primary metric, the
+decision rule, the MDE and every frozen parameter are unchanged.
+
+**What changed: which stamps are untimed.** The registered text says "a report without a time is
+held two sessions (`contest_calendar.event_sessions`, UNKNOWN)", and that still holds. What
+changed is which stamps count as "without a time":
+
+- Until now only a stamp at local midnight counted.
+- Yahoo writes "time not supplied" as **exactly 00:00:00 UTC**, which is 09:00 in Tokyo and
+  08:00 in Hong Kong.
+- `event_sessions` had read those stamps as INTRA or BMO. The reaction window it measured was
+  therefore the day BEFORE the print (`REVIEW_2026-09-29_CONTEST_DESK.md` finding 1).
+- From this amendment on, a stamp at 00:00:00 UTC is UNKNOWN (`contest_calendar.is_untimed_stamp`).
+  Its report day is the UTC date.
+- In the history this reclassifies 17,281 of 80,922 non-US stamps, 13,298 of them Japanese.
+
+**Effect on the primary measurement (US):** none.
+
+- US report times come from the SEC 8-K acceptance time.
+- Where the desk's calendar supplies a US time, Yahoo's 00:00 UTC placeholders are 0.3% of the
+  stamps.
+
+**Effect on the secondary measurement (global):**
+
+- Its non-US y is graded with the corrected `event_sessions`.
+- The prior quoted for it (b 0.21-0.26 for Asia) was measured on the old windows.
+- It was re-measured with the corrected timing as a NEW receipt:
+  `backend/data/optimus/contest/compare/prior_by_market_timingfix_20260929T032407Z.json`.
+  - Asia excluding India: b 0.20-0.28.
+  - India: 0.14-0.19. The original pooled India into Asia.
+  - Europe: 0.18-0.33.
+  - US: unchanged.
+- The original receipt is not modified. The secondary decision rule's 0.10 threshold is
+  unchanged.
