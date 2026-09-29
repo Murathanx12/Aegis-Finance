@@ -1,0 +1,67 @@
+{
+ "role": "hack5",
+ "long": "BE261016C00290000",
+ "short": "BE261016C00320000",
+ "task": "Hack5CloseDryTest",
+ "started_utc": "20260929T105005Z",
+ "dry_run": true,
+ "events": [
+  {
+   "t": "2026-09-29T10:50:06+00:00",
+   "kind": "start_positions",
+   "long_qty": 7,
+   "short_qty": -7
+  },
+  {
+   "t": "2026-09-29T10:50:07+00:00",
+   "kind": "clock",
+   "is_open": false,
+   "next_open": "2026-09-29T09:30:00-04:00"
+  },
+  {
+   "t": "2026-09-29T10:50:10+00:00",
+   "kind": "dry_run_order",
+   "body": {
+    "order_class": "mleg",
+    "qty": "7",
+    "type": "limit",
+    "limit_price": "-5.16",
+    "time_in_force": "day",
+    "client_order_id": "manual-close-hack5-20260929T105005Z-0",
+    "legs": [
+     {
+      "symbol": "BE261016C00290000",
+      "ratio_qty": "1",
+      "side": "sell",
+      "position_intent": "sell_to_close"
+     },
+     {
+      "symbol": "BE261016C00320000",
+      "ratio_qty": "1",
+      "side": "buy",
+      "position_intent": "buy_to_close"
+     }
+    ]
+   },
+   "quote": {
+    "long_bid": 8.29,
+    "long_ask": 8.67,
+    "short_bid": 3.03,
+    "short_ask": 3.62,
+    "mid_credit": 5.155,
+    "natural_credit": 4.67,
+    "limit_credit": 5.16
+   }
+  },
+  {
+   "t": "2026-09-29T10:50:11+00:00",
+   "kind": "finish",
+   "status": "dry_run"
+  }
+ ],
+ "status": "dry_run",
+ "final_positions": {
+  "long_qty": 7,
+  "short_qty": -7
+ }
+}

@@ -1,0 +1,15 @@
+{
+ "trial": "TRIAL-PT-REVERSAL-1",
+ "file": "docs/TRIALS/TRIAL-PT-REVERSAL-1-price-target-next-session-fade.md",
+ "sha256": "7a292db967543fef9db1923721f5b32653190cf8f9f4c93e8984a241c0b1b246",
+ "bytes": 11507,
+ "registered_utc": "2026-09-29T10:39:19+00:00",
+ "registered_local": "2026-09-29T18:39:19",
+ "before": "any further conversion of 2025 cells and any join of 2025 outcomes to PT labels",
+ "train_cells_total": 79435,
+ "train_cells_converted_at_registration": 13608,
+ "bulk_events_jsonl_bytes_at_registration": 26452339,
+ "lint_prereg_verdict": "UNPOWERED_AT_REGISTRATION (smallest resolvable 0.58pp vs declared 0.34pp); proceeding as PRODUCT_EXPERIMENT read, stated in the file",
+ "licence": "PRODUCT_EXPERIMENT",
+ "committed": false
+}

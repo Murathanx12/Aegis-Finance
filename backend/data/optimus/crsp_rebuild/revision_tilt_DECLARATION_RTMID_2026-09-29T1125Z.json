@@ -1,0 +1,75 @@
+{
+ "schema": "crsp_rebuild/revision_tilt_declaration/1",
+ "job": "revision_tilt_on_crsp",
+ "licence": "PRODUCT_EXPERIMENT",
+ "inputs": {
+  "panel": "2026-09-29T075640Z",
+  "fund": "2026-09-29T041550Z",
+  "bridge": "EB_2026-09-29T1055Z",
+  "cs_daily": "FU_2026-09-29T0855Z",
+  "flow_start_decision_date": "1999-09-30"
+ },
+ "splits_hold_month": {
+  "design": [
+   "1999-10-01",
+   "2008-12-31"
+  ],
+  "validate": [
+   "2009-01-01",
+   "2016-12-31"
+  ],
+  "late_2017_2024": [
+   "2017-01-01",
+   "2024-12-31"
+  ]
+ },
+ "variant_grid": {
+  "signal": [
+   "net_raises",
+   "breadth",
+   "ear_flow"
+  ],
+  "active_share": [
+   0.1,
+   0.2,
+   0.3
+  ],
+  "band": [
+   0.0005,
+   0.001
+  ]
+ },
+ "n_variants": 18,
+ "fixed": {
+  "base_n": 1000,
+  "base_rank": "ranks 501-1500 by trailing median daily dollar volume (panel median_dollar_vol), eligible names",
+  "base_scheme": "equal",
+  "base_scheme_sensitivity": "cap",
+  "cap_per_name": 0.01,
+  "turnover_budget_active_monthly": 0.15,
+  "sector_neutral": "PIT gsector (WRDS ratios), unknown sector = own group",
+  "long_only": true,
+  "rebalance": "monthly at the panel's month-end decision dates",
+  "base_rank_lo": 500
+ },
+ "costs": {
+  "primary": "per name per month: max(Corwin-Schultz round-trip spread capped at 20%, the engine's flat band schedule 6/10/18/35 bps); flat band where CS is missing; charged as |trade| x spread / 2 on ACTUAL traded weight, book and base alike; the market leg (FF mktrf + rf) is costless",
+  "sensitivity": "flat band schedule only, same turnover scaling"
+ },
+ "selection_rule": "Among the 18 variants, choose the one with the highest t (3-month blocks, hold month) of (book net - base net, primary costs) over the DESIGN window; ties -> smaller active share. Nothing else is read before the choice.",
+ "decision_rule": "CANDIDATE iff, for the ONE chosen config over VALIDATE 2009-2016 (hold month), book net - market (primary costs) has mean > 0 AND t (3-month blocks) >= 2 AND is positive in >= 5 of the 8 hold years. Else CANNOT_DISTINGUISH if the mean is > 0, FAILED_VARIANT if <= 0. 2017-2024 is read last and is labelled NOT a clean holdout (the library's rules were written on the 2016-2026 vendor calendar). If CANDIDATE: register ONE forward shadow (tilt on the current rank 501-1500 equal-weight base, bar-defect screen on) plus the untilted base as its matched comparison, kill line sized from the active return's sd. Otherwise register nothing.",
+ "search_count": {
+  "prior": 42397,
+  "this_experiment_design_cells": 18,
+  "validation_cells": 1,
+  "total_for_deflation": 42416
+ },
+ "market": "FF daily mktrf + rf compounded over (decision date, next decision date] (momentum_on_crsp.spy_series)",
+ "statistics": "3-month blocks keyed on the hold month (crsp_rebuild.window_stats); MDE = 2.8 x SE",
+ "profile": "mid501_1500",
+ "why": "revision_tilt_2026-09-29.md HIGHEST-EV: move the base, not the tilt; the names where net_raises found its twin gap; equal-weight base because no cap-weighted index tracks there",
+ "inputs_reused_from": "revision_tilt_inputs_RT_2026-09-29T1110Z.parquet (same panel/fund/bridge/cs runs; it holds every eligible name, not only the top 500)",
+ "primary_scheme": "equal (the verdict reads the equal-weight base)",
+ "declaration_hash": "35f520cd56bbbe89",
+ "written_utc": "2026-09-29T11:13:21+00:00"
+}

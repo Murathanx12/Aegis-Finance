@@ -42,6 +42,7 @@ import pytest
 from backend.tests import ledger_guard
 
 _REAL_CONNECT = socket.socket.connect
+_REAL_CONNECT_EX = socket.socket.connect_ex
 _REAL_CREATE_CONNECTION = socket.create_connection
 _LOOPBACK = {"127.0.0.1", "::1", "localhost", "0.0.0.0"}
 
@@ -324,38 +325,112 @@ def _disk_cache_to_tmp(tmp_path_factory):
         yield
 
 
+#: Real processes on this machine that a test must NEVER reach, even over
+#: loopback (2026-09-29): the dedicated Chrome's DevTools port and the OpenClaw
+#: gateway. Two health() tests proved the instance against the LIVE Chrome, and
+#: Chrome crashed twice that afternoon soon after test traffic hit its port.
+#: The loopback allowance exists for local TEST servers on ephemeral ports, not
+#: for the owner's running browser. Port numbers come from `backend.config`
+#: (one copy), read at fixture time so a monkeypatched config is honoured.
+_PROTECTED_PORT_CONFIG_KEYS = ("OPENCLAW_DEDICATED_CDP_PORT", "OPENCLAW_GATEWAY_PORT")
+
+_PROTECTED_MESSAGE = (
+    "REFUSED loopback connect to {target!r}: port {port} is a live local "
+    "service on the owner's machine ({key}), never a test fixture. Use a fake "
+    "(e.g. openclaw_client._PROVER) instead of the real endpoint."
+)
+
+
+class ProtectedLocalPortRefused(ConnectionRefusedError):
+    """Raised by the suite's guard for a connect to a protected local port.
+
+    A ConnectionRefusedError subclass on purpose: production code that treats a
+    refused connect as "service down" behaves exactly as if the service were
+    closed, which is the deterministic state a unit test should see.
+    """
+
+
+def protected_local_ports() -> dict:
+    """{port: config key} for the local services tests must never reach."""
+    from backend import config as _cfg
+    out = {}
+    for key in _PROTECTED_PORT_CONFIG_KEYS:
+        val = getattr(_cfg, key, None)
+        if val is not None:
+            out[int(val)] = key
+    return out
+
+
+def _is_loopback(host) -> bool:
+    h = str(host or "").strip("[]").lower()
+    return h in _LOOPBACK or h.startswith("127.")
+
+
+def _port_of(address):
+    if isinstance(address, (tuple, list)) and len(address) >= 2:
+        try:
+            return int(address[1])
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def _url_host_port(url):
+    from urllib.parse import urlsplit
+    try:
+        parts = urlsplit(str(url))
+        host = parts.hostname or ""
+        port = parts.port
+    except ValueError:
+        return "", None
+    if port is None:
+        port = {"http": 80, "ws": 80, "https": 443, "wss": 443}.get(parts.scheme)
+    return host, port
+
+
 @pytest.fixture(autouse=True)
 def _block_network(request):
-    """Block non-loopback sockets for non-slow/non-network tests (fail fast, loud)."""
+    """Block non-loopback sockets for non-slow/non-network tests (fail fast, loud).
+
+    Loopback to a PROTECTED port (the dedicated Chrome's CDP port, the OpenClaw
+    gateway) is refused for EVERY test, slow or not: those are the owner's
+    running processes, and no test is entitled to them.
+    """
     marker = request.node.get_closest_marker("slow") or request.node.get_closest_marker("network")
-    if marker is not None:
-        yield  # slow/network tests are allowed to reach the network
-        return
+    allow_remote = marker is not None
+    protected = protected_local_ports()
+
+    def _refuse_protected(host, port, target):
+        if port in protected and _is_loopback(host):
+            raise ProtectedLocalPortRefused(_PROTECTED_MESSAGE.format(
+                target=target, port=port, key=protected[port]))
+
+    def _check(address):
+        host = _host_of(address)
+        _refuse_protected(host, _port_of(address), address)
+        if allow_remote or host in _LOOPBACK:
+            return
+        raise RuntimeError(_BLOCK_MESSAGE.format(target=address))
 
     def _guard_connect(self, address):
-        host = _host_of(address)
-        if host in _LOOPBACK:
-            return _REAL_CONNECT(self, address)
-        raise RuntimeError(
-            f"BLOCKED live network connect to {address!r} in a non-slow test. "
-            "Unit tests must be offline — mark it @pytest.mark.slow (or .network) "
-            "or mock the fetch. (This is the 2.5h-hang bug class.)"
-        )
+        _check(address)
+        return _REAL_CONNECT(self, address)
+
+    def _guard_connect_ex(self, address):
+        # Only the protected-port refusal here: connect_ex was never part of
+        # the remote block, and widening that is a separate decision.
+        _refuse_protected(_host_of(address), _port_of(address), address)
+        return _REAL_CONNECT_EX(self, address)
 
     def _guard_create_connection(address, *args, **kwargs):
-        host = _host_of(address)
-        if host in _LOOPBACK:
-            return _REAL_CREATE_CONNECTION(address, *args, **kwargs)
-        raise RuntimeError(
-            f"BLOCKED live network connect to {address!r} in a non-slow test. "
-            "Unit tests must be offline — mark it @pytest.mark.slow (or .network) "
-            "or mock the fetch. (This is the 2.5h-hang bug class.)"
-        )
+        _check(address)
+        return _REAL_CREATE_CONNECTION(address, *args, **kwargs)
 
     socket.socket.connect = _guard_connect
+    socket.socket.connect_ex = _guard_connect_ex
     socket.create_connection = _guard_create_connection
 
-    # curl_cffi bypasses Python sockets entirely (libcurl via CFFI), so the two
+    # curl_cffi bypasses Python sockets entirely (libcurl via CFFI), so the
     # patches above cannot see it — and yfinance 1.1.0 uses exactly that
     # transport. Patch its Session.request, which every curl_cffi entry point
     # (`requests.get`, `Session.get`, yfinance's pooled session) funnels through.
@@ -369,8 +444,9 @@ def _block_network(request):
         _real_curl_request = _curl_requests.Session.request
 
         def _guard_curl(self, method, url, *args, **kwargs):
-            host = str(url).split("//")[-1].split("/")[0].split(":")[0]
-            if host in _LOOPBACK:
+            host, port = _url_host_port(url)
+            _refuse_protected(host, port, url)
+            if allow_remote or host in _LOOPBACK:
                 return _real_curl_request(self, method, url, *args, **kwargs)
             raise RuntimeError(_BLOCK_MESSAGE.format(target=url))
 
@@ -383,6 +459,7 @@ def _block_network(request):
         yield
     finally:
         socket.socket.connect = _REAL_CONNECT
+        socket.socket.connect_ex = _REAL_CONNECT_EX
         socket.create_connection = _REAL_CREATE_CONNECTION
         for mod, real in _curl_patched:
             mod.Session.request = real

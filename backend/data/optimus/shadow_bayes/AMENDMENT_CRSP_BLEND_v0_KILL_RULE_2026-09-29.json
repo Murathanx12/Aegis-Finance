@@ -1,0 +1,234 @@
+{
+ "amendment": "CRSP_BLEND_v0 kill rule",
+ "dated": "2026-09-29",
+ "written_utc": "2026-09-29T11:11:30+00:00",
+ "written_before": "any read of the book (first reading at 21 sessions after the 2026-09-29 entry)",
+ "amends": {
+  "path": "backend/data/optimus/shadow_bayes/REGISTRATION_CRSP_BLEND_v0_2026-09-28_20260929T082258Z.json",
+  "sha256": "237b8b241bb7d8fd04935fbeb271cd93dbf8d589dc3889dc689b40c4247e89fa",
+  "modified": false,
+  "book_id": "b0a33a92c56fddb1",
+  "twin_book_id": "b35d287bdcbf00bb"
+ },
+ "what_does_not_change": "the book, its twin, the four rules, the rule receipt (hash 315e910a827bb584), the entry, the primary statistic (book minus matched twin21) and the licence. Nothing is voided.",
+ "owner_decision": "keep the book; its FORWARD record is the evidence (2026-09-29)",
+ "source": "docs/reviews/REVIEW_2026-09-29_CRSP_BLEND.md section 6 and Verdict; docs/research_notes/2026-09-29/library_on_crsp_2026-09-29.md (afternoon follow-ups)",
+ "reviewed_weaknesses": [
+  {
+   "id": "CHOSEN_AFTER_LOOKING",
+   "what": "rank 2 of 40,920 candidate blends; the '1991-2016 holdout' was used to select it; the combination search was not deflated at its full count"
+  },
+  {
+   "id": "SELECTION_FAILS_FORWARD",
+   "what": "the same selection procedure (filter -> clusters -> best four) run forward in time earns about 0 on fixed splits and +0.14 to +0.34%/mo, t < 1.6, walk-forward: FAILED_VARIANT as a procedure"
+  },
+  {
+   "id": "WEAK_BENCHMARK",
+   "what": "the twin compounds at 5.9%/yr against the market's 10.5%; against the market the blend is t 1.6 and about zero in 2010-2019"
+  },
+  {
+   "id": "ERA_DEPENDENT_UNIVERSE",
+   "what": "a nominal $100M floor makes 1995-99 a 17-to-113-name mega-cap book, where the biggest years sit"
+  },
+  {
+   "id": "COSTS_AND_CAPACITY",
+   "what": "two sleeves turn over 77-92%/month in $3-20M/day names at a flat 2026 cost schedule; era spreads cut the vs-market edge to +0.17%/mo (t 0.6)"
+  },
+  {
+   "id": "DECAY",
+   "what": "co03 -0.27 and vol_compression -0.03 %/mo in the 2020s"
+  },
+  {
+   "id": "KILL_SD_UNDEFINED",
+   "what": "the registered '21-draw noise sd' was never computed for this book; the only implementation is idiosyncratic-only and ignores the book-vs-twin factor mismatch (market -0.15, SMB -0.25, BAB +0.2), giving a line near -4.7% and a ~21% false kill under zero edge"
+  }
+ ],
+ "followups_2026_09_29": {
+  "receipt": "backend/data/optimus/crsp_rebuild/followups_FU_2026-09-29T0900Z.json",
+  "selection_procedure_forward": "fails forward: ~0 on fixed splits, +0.14 to +0.34%/mo t < 1.6 walk-forward",
+  "co03_with_frictions": "skip one day + Corwin-Schultz per-name spreads + 4-month fundamentals lag: rule minus twin +0.56%/mo, t 1.91 (MDE 0.82) in 2001-2024, -0.01 in 2017-2024, and 2001 alone is +79 of +161; rule minus MARKET -0.81%/mo (t -1.52) in 2001-2024, book CAGR -5.9% vs the market's 11.2%. CANNOT_DISTINGUISH vs the twin, DEPRIORITIZED, negative vs the market",
+  "large_cap_trend_rank_floor": "with a top-300/500 dollar-volume rank floor, 1991-2024 keeps t > 2 in three of four cells but 1995-99 carries 38-74% of every total; after 2000 mom_12_1 is +0.11 to +0.41%/mo (t 0.4-1.5) and px_vs_ma200 top-300 +0.32 (t 1.3); only px_vs_ma200 top-500 reaches t 2.05, carried by 2021: large-cap trend fades after 2000"
+ },
+ "measured_gap_volatility": {
+  "series": "backend/data/optimus/crsp_rebuild/library_series_LIB_2026-09-29T0802Z",
+  "construction": "mean of the four rules' (rule_net - twin21_net) monthly series, as in crsp_blend_book.evidence()",
+  "window": [
+   "1995-07-31",
+   "2024-10-31"
+  ],
+  "n_months": 352,
+  "sd_monthly_full": 0.02366,
+  "sd_monthly_2017_2024": 0.02816,
+  "sd_6m_overlapping_sum_full": 0.05772,
+  "sd_6m_sqrt_time_full": 0.05795,
+  "lag1_autocorr": -0.007,
+  "sd_monthly_vs_market_full": 0.04746,
+  "sd_used": 0.02816,
+  "sd_used_rule": "max(full-sample, 2017-2024) monthly sd, scaled by sqrt(months): holds the false kill at <= 5% in either regime",
+  "scale": "book scale: each of the four sleeves is 0.25 of the book; held weights sum to 1.0 (gated-off sleeves hold cash)"
+ },
+ "kill_rule": {
+  "replaces": "CRSP_BLEND_v0 kill rule: book minus matched twin21 below -1.645 x its 21-draw noise sd at 126 sessions -> FAILED_VARIANT; inside +/- -> CANNOT_DISTINGUISH (expected in 2026)",
+  "statistic": "D = book minus matched twin21 (b0a33a92c56fddb1 minus b35d287bdcbf00bb), cumulative, 126 sessions after entry",
+  "kill_line": -0.113457,
+  "rule": "D_126 < -11.35% -> FAILED_VARIANT; D_126 > +11.35% -> evidence FOR (still CANNOT_DISTINGUISH as a claim); otherwise CANNOT_DISTINGUISH",
+  "P_kill_if_zero_edge": 0.05,
+  "old_line_as_reviewed": -0.047,
+  "old_line_real_false_kill_rate": 0.2478,
+  "computation": {
+   "statistic": "D = book minus matched twin (sleeve scale), summed over 126 sessions",
+   "sd_source": "measured monthly sd x sqrt(months)",
+   "gap_sd_monthly": 0.028157,
+   "months": 6.0,
+   "sd_D_sqrt_time": 0.068971,
+   "sd_D": 0.068971,
+   "z": 1.645,
+   "kill_line": -0.113457,
+   "kill_if": "D < -1.645 x sd_D = -0.1135",
+   "P_kill_if_zero_edge": 0.05,
+   "claimed_edge_monthly": 0.0064,
+   "expected_D_if_claim_true": 0.0384,
+   "P_kill_if_claim_true": 0.0138,
+   "P_D_above_plus_z_sd_if_claim_true": 0.1382,
+   "P_D_positive_if_claim_true": 0.7112,
+   "P_D_positive_if_zero_edge": 0.5,
+   "mde80_one_sided_5pct": 0.171503,
+   "months_to_t2_if_claim_true": 77.4
+  }
+ },
+ "power": {
+  "claimed_edge_0.64pct_mo": {
+   "expected_D_if_claim_true": 0.0384,
+   "P_kill_if_claim_true": 0.0138,
+   "P_D_above_plus_z_sd_if_claim_true": 0.1382,
+   "P_D_positive_if_claim_true": 0.7112,
+   "mde80_one_sided_5pct": 0.171503,
+   "months_to_t2_if_claim_true": 77.4
+  },
+  "walk_forward_0.30pct_mo": {
+   "expected_D_if_claim_true": 0.018,
+   "P_kill_if_claim_true": 0.0283,
+   "P_D_above_plus_z_sd_if_claim_true": 0.0832,
+   "P_D_positive_if_claim_true": 0.6029,
+   "months_to_t2_if_claim_true": 352.4
+  },
+  "reading": "at 126 sessions the book can only catch a large negative gap. Under the claimed edge it reaches the 'evidence for' band with the probability above, and P(D > 0) is only modestly above the 0.5 of a zero edge. Confirming the claim at t 2 takes the months stated: years."
+ },
+ "reading_schedule": {
+  "sessions": [
+   21,
+   63,
+   126
+  ],
+  "every_reading_reports": [
+   "D vs the matched twin21 (b35d287bdcbf00bb), cumulative, with its +/-1.645 sd band from by_session",
+   "D vs the MARKET (SPY total return) over the same sessions, with its sd from by_session",
+   "the luck table below, printed beside the number",
+   "the realised daily sd of the forward gap beside the measured sd used here; a realised sd more than 50% above it at 63 sessions is reported (the line is NOT moved)"
+  ],
+  "by_session": {
+   "21": {
+    "sd_D_vs_twin": 0.028157,
+    "band_vs_twin_1645": [
+     -0.0463,
+     0.0463
+    ],
+    "sd_D_vs_market": 0.04746,
+    "expected_D_if_claim_true": 0.0064,
+    "P_D_positive_if_claim_true": 0.5899,
+    "action": "report only: no kill, no promotion (one kill look keeps the false-kill rate at 5%)"
+   },
+   "63": {
+    "sd_D_vs_twin": 0.04877,
+    "band_vs_twin_1645": [
+     -0.0802,
+     0.0802
+    ],
+    "sd_D_vs_market": 0.08221,
+    "expected_D_if_claim_true": 0.0192,
+    "P_D_positive_if_claim_true": 0.6531,
+    "action": "report only: no kill, no promotion (one kill look keeps the false-kill rate at 5%)"
+   },
+   "126": {
+    "sd_D_vs_twin": 0.068971,
+    "band_vs_twin_1645": [
+     -0.1135,
+     0.1135
+    ],
+    "sd_D_vs_market": 0.11626,
+    "expected_D_if_claim_true": 0.0384,
+    "P_D_positive_if_claim_true": 0.7112,
+    "action": "KILL TEST (the only one)"
+   }
+  }
+ },
+ "luck_table": {
+  "what": "P(the best of K zero-skill books reads z >= 2) and E[best z]; K = 4 shadow books frozen 2026-09-28/29, 30 library books, 61 live parent books",
+  "rows": [
+   {
+    "k": 4,
+    "rho": 0.0,
+    "p_best_ge_z": 0.08784,
+    "e_best_z": 1.0322917152960576,
+    "z_bar": 2.0,
+    "p_independent_closed_form": 0.08794194790060494
+   },
+   {
+    "k": 4,
+    "rho": 0.3,
+    "p_best_ge_z": 0.08044,
+    "e_best_z": 0.8623505029502702,
+    "z_bar": 2.0,
+    "p_independent_closed_form": null
+   },
+   {
+    "k": 30,
+    "rho": 0.0,
+    "p_best_ge_z": 0.49733,
+    "e_best_z": 2.041059305675881,
+    "z_bar": 2.0,
+    "p_independent_closed_form": 0.4986181436384536
+   },
+   {
+    "k": 30,
+    "rho": 0.3,
+    "p_best_ge_z": 0.32805,
+    "e_best_z": 1.7078467498073366,
+    "z_bar": 2.0,
+    "p_independent_closed_form": null
+   },
+   {
+    "k": 61,
+    "rho": 0.0,
+    "p_best_ge_z": 0.75553,
+    "e_best_z": 2.325608115477892,
+    "z_bar": 2.0,
+    "p_independent_closed_form": 0.7543352479550444
+   },
+   {
+    "k": 61,
+    "rho": 0.3,
+    "p_best_ge_z": 0.45886,
+    "e_best_z": 1.9425399762665405,
+    "z_bar": 2.0,
+    "p_independent_closed_form": null
+   }
+  ]
+ },
+ "what_counts_as_evidence": {
+  "against": [
+   "D_126 < -11.35% vs the twin: FAILED_VARIANT (5% false-kill rate under zero edge)",
+   "D vs the market negative at 126 sessions with D vs the twin inside the band: the twin-relative gap is not making money; stays DEPRIORITIZED, never a capital candidate",
+   "a 21- or 63-session reading is never a kill on its own"
+  ],
+  "for": [
+   "D_126 > +11.35% vs the twin AND positive vs the market: evidence for; moves P(edge) up; still CANNOT_DISTINGUISH as a claim, still PRODUCT_EXPERIMENT",
+   "a positive D inside the band moves P(edge) only slightly: its likelihood ratio claim-vs-zero is exp((D*mu - mu^2/2)/sd_D^2), printed on each reading",
+   "a claim (RESEARCH_CLAIM / CAPITAL_CANDIDATE) needs forward months counted in years (months_to_t2 above); nothing in 2026 or 2027 settles it"
+  ],
+  "not_evidence": "the book being the best of the shadow books at any reading (see the luck table)"
+ },
+ "licence": "PRODUCT_EXPERIMENT (unchanged)",
+ "llm_spend_usd": 0.0,
+ "code": "scripts/crsp_blend_v0_kill_amendment.py; scripts/shadow_bayes_rule.kill_rule_from_measured_gap"
+}

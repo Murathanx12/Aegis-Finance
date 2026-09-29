@@ -3,3 +3,5 @@
 {"model": "student", "task": "psych", "set": "psych_test", "n": 400, "valid": 268, "valid_rate": 0.67, "seconds": 103.5, "pages_per_min": 231.9, "batch": 16, "peak_vram_mib": 3368}
 {"model": "base", "task": "psych", "set": "psych_test", "n": 400, "valid": 396, "valid_rate": 0.99, "seconds": 118.5, "pages_per_min": 202.5, "batch": 16, "peak_vram_mib": 3786}
 {"model": "student", "task": "psych", "set": "psych_test", "n": 400, "valid": 399, "valid_rate": 0.9975, "seconds": 192.5, "pages_per_min": 124.7, "batch": 16, "peak_vram_mib": 3368}
+{"model": "student", "task": "psych", "set": "psych_test", "n": 1006, "valid": 1004, "valid_rate": 0.998, "seconds": 147.2, "pages_per_min": 410.0, "batch": 16, "peak_vram_mib": 3417}
+{"note": "the row above is the v2 adapter (extract_qwen15_lora_v2/last), file gen_student_v2_psych_psych_test.jsonl"}

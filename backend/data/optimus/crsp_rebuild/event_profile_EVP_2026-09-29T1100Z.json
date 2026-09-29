@@ -1,0 +1,271 @@
+{
+ "schema": "crsp_rebuild/event_profile/1",
+ "bridge_run": "EB_2026-09-29T1055Z",
+ "written_utc": "2026-09-29T10:54:22+00:00",
+ "profiles": {
+  "net_raises": {
+   "turnover_per_month": 0.4365448504983388,
+   "median_pick_adv_musd_by_decade": {
+    "1990": 184.185819859375,
+    "2000": 96.5860079075,
+    "2010": 213.31309295750003,
+    "2020": 521.1813167219525
+   },
+   "p10_pick_adv_musd_by_decade": {
+    "1990": 29.668691875,
+    "2000": 29.75868375,
+    "2010": 76.847348352,
+    "2020": 156.7943100835
+   },
+   "capacity": {
+    "$1M": {
+     "per_name_usd": 50000.0,
+     "pct_of_median_pick_adv": 0.024189845815033837,
+     "pct_of_p10_pick_adv": 0.07926233161643075
+    },
+    "$10M": {
+     "per_name_usd": 500000.0,
+     "pct_of_median_pick_adv": 0.2418984581503384,
+     "pct_of_p10_pick_adv": 0.7926233161643075
+    },
+    "$100M": {
+     "per_name_usd": 5000000.0,
+     "pct_of_median_pick_adv": 2.4189845815033837,
+     "pct_of_p10_pick_adv": 7.926233161643073
+    }
+   },
+   "n_rebalances": 302
+  },
+  "net_raises_trend": {
+   "turnover_per_month": 0.6194352159468438,
+   "median_pick_adv_musd_by_decade": {
+    "1990": 167.99685359375,
+    "2000": 155.174872,
+    "2010": 216.0411165,
+    "2020": 552.9355962114901
+   },
+   "p10_pick_adv_musd_by_decade": {
+    "1990": 40.734525,
+    "2000": 39.718615328000006,
+    "2010": 80.89872373200001,
+    "2020": 160.591039144
+   },
+   "capacity": {
+    "$1M": {
+     "per_name_usd": 50000.0,
+     "pct_of_median_pick_adv": 0.023124760988806253,
+     "pct_of_p10_pick_adv": 0.0696450431585229
+    },
+    "$10M": {
+     "per_name_usd": 500000.0,
+     "pct_of_median_pick_adv": 0.2312476098880626,
+     "pct_of_p10_pick_adv": 0.696450431585229
+    },
+    "$100M": {
+     "per_name_usd": 5000000.0,
+     "pct_of_median_pick_adv": 2.312476098880625,
+     "pct_of_p10_pick_adv": 6.964504315852291
+    }
+   },
+   "n_rebalances": 302
+  },
+  "flow_in_winners": {
+   "turnover_per_month": 0.44086378737541526,
+   "median_pick_adv_musd_by_decade": {
+    "1990": 192.9968685625,
+    "2000": 96.776304685,
+    "2010": 210.290031805,
+    "2020": 495.718314627535
+   },
+   "p10_pick_adv_musd_by_decade": {
+    "1990": 29.668691875,
+    "2000": 28.488780807500003,
+    "2010": 76.847348352,
+    "2020": 150.350945334
+   },
+   "capacity": {
+    "$1M": {
+     "per_name_usd": 50000.0,
+     "pct_of_median_pick_adv": 0.025004611168983705,
+     "pct_of_p10_pick_adv": 0.07867575107792855
+    },
+    "$10M": {
+     "per_name_usd": 500000.0,
+     "pct_of_median_pick_adv": 0.25004611168983704,
+     "pct_of_p10_pick_adv": 0.7867575107792856
+    },
+    "$100M": {
+     "per_name_usd": 5000000.0,
+     "pct_of_median_pick_adv": 2.5004611168983706,
+     "pct_of_p10_pick_adv": 7.867575107792855
+    }
+   },
+   "n_rebalances": 302
+  },
+  "ear_flow": {
+   "turnover_per_month": 0.4757475083056479,
+   "median_pick_adv_musd_by_decade": {
+    "1990": 40.746230296875,
+    "2000": 28.770725565,
+    "2010": 63.793467299999996,
+    "2020": 151.5665119735325
+   },
+   "p10_pick_adv_musd_by_decade": {
+    "1990": 8.4560138046875,
+    "2000": 6.9559241515,
+    "2010": 15.1511814615,
+    "2020": 29.05792733
+   },
+   "capacity": {
+    "$1M": {
+     "per_name_usd": 50000.0,
+     "pct_of_median_pick_adv": 0.10075036464854657,
+     "pct_of_p10_pick_adv": 0.4342865359079554
+    },
+    "$10M": {
+     "per_name_usd": 500000.0,
+     "pct_of_median_pick_adv": 1.0075036464854656,
+     "pct_of_p10_pick_adv": 4.342865359079553
+    },
+    "$100M": {
+     "per_name_usd": 5000000.0,
+     "pct_of_median_pick_adv": 10.075036464854659,
+     "pct_of_p10_pick_adv": 43.42865359079553
+    }
+   },
+   "n_rebalances": 302
+  },
+  "mom_flow_trend": {
+   "turnover_per_month": 0.6142857142857142,
+   "median_pick_adv_musd_by_decade": {
+    "1990": 88.6596884375,
+    "2000": 52.420607,
+    "2010": 100.227989375,
+    "2020": 163.24930711
+   },
+   "p10_pick_adv_musd_by_decade": {
+    "1990": 21.00215925,
+    "2000": 12.645925965,
+    "2010": 24.731431960000002,
+    "2020": 39.05256661200001
+   },
+   "capacity": {
+    "$1M": {
+     "per_name_usd": 50000.0,
+     "pct_of_median_pick_adv": 0.05519973524981735,
+     "pct_of_p10_pick_adv": 0.2352530604883561
+    },
+    "$10M": {
+     "per_name_usd": 500000.0,
+     "pct_of_median_pick_adv": 0.5519973524981734,
+     "pct_of_p10_pick_adv": 2.3525306048835612
+    },
+    "$100M": {
+     "per_name_usd": 5000000.0,
+     "pct_of_median_pick_adv": 5.519973524981734,
+     "pct_of_p10_pick_adv": 23.525306048835613
+    }
+   },
+   "n_rebalances": 302
+  },
+  "flow_acceleration": {
+   "turnover_per_month": 0.9476744186046512,
+   "median_pick_adv_musd_by_decade": {
+    "1990": 66.902192515625,
+    "2000": 84.98747128125,
+    "2010": 148.8209471828375,
+    "2020": 347.87260043000003
+   },
+   "p10_pick_adv_musd_by_decade": {
+    "1990": 11.507333125,
+    "2000": 17.9345777,
+    "2010": 45.13044454,
+    "2020": 108.621159863
+   },
+   "capacity": {
+    "$1M": {
+     "per_name_usd": 50000.0,
+     "pct_of_median_pick_adv": 0.03701376648770628,
+     "pct_of_p10_pick_adv": 0.1498960517160002
+    },
+    "$10M": {
+     "per_name_usd": 500000.0,
+     "pct_of_median_pick_adv": 0.3701376648770628,
+     "pct_of_p10_pick_adv": 1.4989605171600018
+    },
+    "$100M": {
+     "per_name_usd": 5000000.0,
+     "pct_of_median_pick_adv": 3.701376648770628,
+     "pct_of_p10_pick_adv": 14.989605171600019
+    }
+   },
+   "n_rebalances": 302
+  },
+  "upgrades_net_90": {
+   "turnover_per_month": 0.6245125348189415,
+   "median_pick_adv_musd_by_decade": {
+    "1990": 26.4234234375,
+    "2000": 56.726985875,
+    "2010": 86.27099969,
+    "2020": 172.8551267817775
+   },
+   "p10_pick_adv_musd_by_decade": {
+    "1990": 6.53432225,
+    "2000": 9.490549350000002,
+    "2010": 14.964765139499999,
+    "2020": 23.7975407525
+   },
+   "capacity": {
+    "$1M": {
+     "per_name_usd": 50000.0,
+     "pct_of_median_pick_adv": 0.06874515154257031,
+     "pct_of_p10_pick_adv": 0.4143570864815601
+    },
+    "$10M": {
+     "per_name_usd": 500000.0,
+     "pct_of_median_pick_adv": 0.6874515154257032,
+     "pct_of_p10_pick_adv": 4.143570864815602
+    },
+    "$100M": {
+     "per_name_usd": 5000000.0,
+     "pct_of_median_pick_adv": 6.874515154257033,
+     "pct_of_p10_pick_adv": 41.43570864815601
+    }
+   },
+   "n_rebalances": 360
+  },
+  "net_raises_secrel": {
+   "turnover_per_month": 0.504485049833887,
+   "median_pick_adv_musd_by_decade": {
+    "1990": 45.298337,
+    "2000": 91.32987325,
+    "2010": 181.563843080895,
+    "2020": 388.0133881990075
+   },
+   "p10_pick_adv_musd_by_decade": {
+    "1990": 8.031025796875,
+    "2000": 24.50446998,
+    "2010": 56.109609590000005,
+    "2020": 91.21574056200001
+   },
+   "capacity": {
+    "$1M": {
+     "per_name_usd": 50000.0,
+     "pct_of_median_pick_adv": 0.030591996971976163,
+     "pct_of_p10_pick_adv": 0.10674274491879873
+    },
+    "$10M": {
+     "per_name_usd": 500000.0,
+     "pct_of_median_pick_adv": 0.30591996971976165,
+     "pct_of_p10_pick_adv": 1.0674274491879872
+    },
+    "$100M": {
+     "per_name_usd": 5000000.0,
+     "pct_of_median_pick_adv": 3.059199697197616,
+     "pct_of_p10_pick_adv": 10.674274491879872
+    }
+   },
+   "n_rebalances": 302
+  }
+ }
+}

@@ -370,3 +370,148 @@ Next, by information per dollar: (a) pre-register the analyst_target_change reve
 on the 2025 train cells once converted (they are outside this look); (b) retrain the psychology
 student on the cleaned targets with more teacher rows; (c) turn `WORLD_DIGEST_LOCAL_EXTRACT` on for
 a week only if someone will grade `local_event` against the digest's DeepSeek rows. Uncommitted.
+
+---
+
+# 2026-09-29 evening: the price-target reversal, registered and read once on 2025
+
+Licence `PRODUCT_EXPERIMENT`. Trial: `docs/TRIALS/TRIAL-PT-REVERSAL-1-price-target-next-session-fade.md`
+(left byte-identical after the read; the result lives in the receipt and here). Receipts under
+`backend/data/optimus/ft_lab/receipts/`: `pt_reversal_registration.json`, `pt_reversal_read.json`,
+`bulk_events_pt2025_progress.json`, `psych_v2_agreement.json`, `infer_runs.jsonl`. Code (new
+files only): `ft_lab/bulk_pt_priority.py`, `ft_lab/pt_reversal_read.py`, `ft_lab/retrain_v2.py`,
+`ft_lab/tests/test_bulk_pt_priority.py`.
+
+## RESULTS SCOREBOARD
+
+**RESULT IMPROVEMENT: NONE. The afternoon's one lead failed its registered read.**
+
+| item | result |
+|---|---|
+| Registration | sha256 `7a292db967543fef9db1923721f5b32653190cf8f9f4c93e8984a241c0b1b246`, 2026-09-29T10:39:19Z (18:39 local), before any further 2025 conversion |
+| Rows converted by the student this evening, $0 | **65,827** (every remaining 2025 cell; the train block is now 79,435 of 79,435 converted, 79,412 valid), ~1,190 pages/min, 55 awake minutes |
+| **TRIAL-PT-REVERSAL-1, 2025 read (723 cells, 206 dates, 52 weekly blocks)** | gross fade **-0.14% (t -0.91, MDE 0.44%)**, 6 of 12 months positive, leave-one-month-out worst -0.21%; net of 20 bps -0.34% (t -2.18) |
+| Verdict | **FAILED_VARIANT** (registered rule: gross mean <= 0); lead `RETIRED_FROM_CURRENT_SEARCH`; no forward log |
+| Psychology student retrained on cleaned targets (new adapter; the old one is untouched) | 99.8% valid, **410 pages/min (vs 125)**; agreement with DeepSeek the same or slightly better (same 400 cells: tone rho 0.76 vs 0.75, emotion kappa 0.55 vs 0.51) |
+| LLM spend | $0.00 |
+
+## 1. Registration (before anything was converted or read)
+
+- Hypothesis: after the student reads an analyst price-target change with a direction, the next
+  session (entry open to close, minus SPY) moves against it. Traded as a FADE,
+  `R = -direction * x_oc`, 20 bps round trip, with 40 and 60 bps sensitivity lines.
+- What the afternoon's number actually was: the "follow" trade lost -0.54% net. The FADE was
+  **+0.34% gross, +0.14% net** on the test block. September 2026 carried much of it, and the
+  validation block showed about zero. It was found after **38 looks**, and the test block was
+  declared spent.
+- Untouched sample: the 2025 block (79,435 cells, of which 13,608 were converted at
+  registration). I confirmed it was unused for this question: 2025 had fed only SIZE (|move|)
+  models and type shares, and no signed return had been joined to a direction label there.
+- Primary: the mean over dates of the per-date mean gross fade, SE on weekly blocks,
+  MDE = 2.8 x SE. The rules:
+  - `CONDITIONAL_POSITIVE` needs m > 0, t >= 2, positive in at least 7 of 12 months, and a
+    leave-one-month-out worst above 0.
+  - A forward paper log also needs net20 >= +0.10% with t >= 2, and net40 > 0.
+  - `FAILED_VARIANT` if m <= 0, or if t < 2 and MDE <= 0.34%.
+  - Otherwise `CANNOT_DISTINGUISH`.
+- The corpse-check linter returned **`UNPOWERED_AT_REGISTRATION`**. It says the smallest effect
+  it can resolve is 0.58pp, assuming 252 independent days a year, against the declared 0.34pp.
+  Going ahead anyway was a stated deviation, recorded in the trial and the receipt. It was
+  allowed only because the read cost $0 and an underpowered positive could not advance.
+- The registration also got the sample size wrong, which only the label count (no outcomes)
+  showed. It expected about 1,700 directional PT cells, from the test-block share (2.1%); 2025
+  has **723 (0.91%)**. The student finds fewer price-target stories in 2025 than in 2026 because
+  the wire mix differs. The realised MDE was therefore 0.44%, not 0.35-0.40%.
+
+## 2. Conversion (text-only prioritisation)
+
+`ft_lab/bulk_pt_priority.py` reordered the remaining 2025 cells:
+- first the 1,061 cells whose first document matches a price-target regex, then the rest;
+- output was appended to the same `bulk_events.jsonl`, with the same keys and the same frozen
+  adapter tag;
+- the regex only ordered the queue, and the event is the student's label.
+
+The run converted the whole block and stopped at the end of the queue at 19:37 local, so the
+prioritisation made no difference in the end. Free RAM fell to 0.7 GB for about a minute, while
+the model loaded next to my label count and the test suite. The job paused itself
+(`safety.wait_for_ram`) and resumed, and no stop was needed.
+
+## 3. The single read (2025, `pt_reversal_read.json`)
+
+| line | mean | t | MDE | months + |
+|---|---|---|---|---|
+| **gross fade (primary)** | **-0.14%** | **-0.91** | **0.44%** | 6 / 12 |
+| net of 20 bps | -0.34% | -2.18 | 0.44% | 5 / 12 |
+| net of 40 bps | -0.54% | -3.45 | 0.44% | 2 / 12 |
+| net of 60 bps | -0.74% | -4.71 | 0.44% | 1 / 12 |
+| raises only, gross (reported) | -0.23% | -1.18 | 0.56% | 5 / 12 |
+| cuts only, gross (reported) | -0.13% | -0.57 | 0.62% | 5 / 12 |
+| 5-session fade, gross (reported) | -0.08% | -0.29 | 0.80% | 6 / 12 |
+
+By month (gross fade): Jan -0.94%, Feb +0.05%, Mar +0.66%, Apr +0.23%, May -0.43%, Jun +0.36%,
+Jul +0.60%, Aug -0.69%, Sep -0.47%, Oct -0.55%, Nov -0.55%, Dec +0.22%.
+(`top5_dates_share_of_total` in the receipt is negative because the total is negative; it is
+not meaningful here.)
+
+**Verdict: FAILED_VARIANT.**
+- In 2025 the sign is the opposite of the fade: if anything a slight continuation (t 0.91,
+  cannot be told from zero), for both raises and cuts.
+- The test-block result is what 38 looks produce: one tail.
+- This closes the student's price-target reading on the first document at the next session. It
+  does not close price-target information in general.
+- The MDE (0.44%) is above the 0.34% the lead was found at, so a small true reversal is not
+  excluded; there is no evidence for one either.
+- No forward log.
+
+## 4. Psychology student, retrained on cleaned targets
+
+The setup:
+- the same data (9,641 event and 2,500 psychology teacher rows), hyper-parameters and seed;
+- targets rounded to 2 dp, with NaN written as null;
+- written to `ft_lab/models/extract_qwen15_lora_v2/last`. The frozen `extract_qwen15_lora/last`,
+  which every bulk row and the trial refer to, is untouched;
+- one epoch, 22 awake minutes.
+
+Graded on the DeepSeek psychology test cells:
+
+| | v1 (200-token budget) | v2 same 400 cells | v2 all 1,006 cells |
+|---|---|---|---|
+| valid JSON | 99.75% | 100% | 99.8% |
+| pages/min | 125 | 410 (1,006-cell run) | 410 |
+| Spearman tone / uncertainty / surprise / novelty / attention | 0.75 / 0.58 / 0.54 / 0.58 / 0.56 | 0.76 / 0.54 / 0.57 / 0.58 / 0.61 | 0.78 / 0.60 / 0.56 / 0.60 / 0.64 |
+| emotion kappa / expected_move weighted kappa | 0.51 / 0.39 | 0.55 / 0.39 | 0.57 / 0.41 |
+
+- Shorter answers made it 3.3x faster at the same agreement.
+- The v2 adapter's EVENT half has not been re-graded and is not used anywhere; the typed-event
+  student is still v1.
+- The first eval attempt was refused because the training process still held its own VRAM when
+  it called `infer.preflight`. The eval was rerun in a fresh process.
+
+## Verdicts (evening)
+
+- **TRIAL-PT-REVERSAL-1: FAILED_VARIANT** (gross -0.14%, t -0.91, MDE 0.44%, 723 cells, 52 blocks).
+  The lead is retired from the current search.
+- **Psychology student v2: fixed** for speed and validity; agreement unchanged. Not wired.
+
+## CONTINUE FROM HERE (evening)
+
+```powershell
+# from the repo root
+# 1. the remaining panel documents (panel_other_doc: 209,715 rows, ~3 GPU hours at ~1,190/min, $0; resumable)
+Start-Process ft_lab\.venv\Scripts\python.exe -ArgumentList "-m","ft_lab.bulk_events","--minutes","80" -RedirectStandardOutput ft_lab\runs\bulk_events.log -RedirectStandardError ft_lab\runs\bulk_events.log.err -WindowStyle Hidden -PassThru
+#    record the CHILD python PID; stop with New-Item ft_lab\runs\STOP
+# 2. the PT trial is spent: `-m ft_lab.pt_reversal_read --read` now refuses (receipt exists); --count still works
+# 3. psychology v2 eval only (adapter already trained):
+ft_lab\.venv\Scripts\python.exe -m ft_lab.retrain_v2 --skip-train --until 23:59
+# tests
+ft_lab\.venv\Scripts\python.exe -m pytest ft_lab/tests -q -p no:cacheprovider   # 20 pass
+```
+
+Still owed:
+- Commit the trial file together with this note. Until then, the hash in
+  `pt_reversal_registration.json` is the tamper evidence.
+- Register the row in `rule_experiments` as FAILED_VARIANT so the cumulative trial count
+  includes it.
+
+With the 2025 block fully typed, the highest-EV next step is the afternoon's item (a): the
+event-type-conditioned size prior on 2025 as a second fold, against TF-IDF. Uncommitted.

@@ -1,0 +1,416 @@
+{
+ "schema": "crsp_rebuild/revision_tilt_design/1",
+ "job": "revision_tilt_on_crsp",
+ "tag": "RTMID_2026-09-29T1125Z",
+ "declaration_hash": "35f520cd56bbbe89",
+ "written_utc": "2026-09-29T11:13:46+00:00",
+ "design_window_hold": [
+  "1999-10-01",
+  "2008-12-31"
+ ],
+ "variants": {
+  "net_raises_as10_b5": {
+   "id": "net_raises_as10_b5",
+   "signal": "net_raises",
+   "active_share": 0.1,
+   "band": 0.0005,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.0009082618864776057,
+    "n_blocks": 37,
+    "t_blocks": 1.68322632501943,
+    "se_monthly": 0.0005395958184453427,
+    "mde_monthly": 0.0015108682916469595
+   },
+   "mean_turnover_active": 0.05628037027285927,
+   "mean_turnover_book": 0.08990648771914236,
+   "mean_active_share": 0.0971062547783728,
+   "last_decision": "2008-11-28"
+  },
+  "net_raises_as10_b10": {
+   "id": "net_raises_as10_b10",
+   "signal": "net_raises",
+   "active_share": 0.1,
+   "band": 0.001,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.0016234196504685881,
+    "n_blocks": 37,
+    "t_blocks": 1.6516728339093507,
+    "se_monthly": 0.0009828942010422913,
+    "mde_monthly": 0.0027521037629184156
+   },
+   "mean_turnover_active": 0.04011061125642186,
+   "mean_turnover_book": 0.07033450595351834,
+   "mean_active_share": 0.15113868176059853,
+   "last_decision": "2008-11-28"
+  },
+  "net_raises_as20_b5": {
+   "id": "net_raises_as20_b5",
+   "signal": "net_raises",
+   "active_share": 0.2,
+   "band": 0.0005,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.001080435836093855,
+    "n_blocks": 37,
+    "t_blocks": 1.4645890240861197,
+    "se_monthly": 0.0007377058125695226,
+    "mde_monthly": 0.002065576275194663
+   },
+   "mean_turnover_active": 0.09789692371712268,
+   "mean_turnover_book": 0.13113044135953683,
+   "mean_active_share": 0.19212843210948538,
+   "last_decision": "2008-11-28"
+  },
+  "net_raises_as20_b10": {
+   "id": "net_raises_as20_b10",
+   "signal": "net_raises",
+   "active_share": 0.2,
+   "band": 0.001,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.0014871846147788902,
+    "n_blocks": 37,
+    "t_blocks": 1.5909399370237265,
+    "se_monthly": 0.0009347836333539164,
+    "mde_monthly": 0.002617394173390966
+   },
+   "mean_turnover_active": 0.056615968823443386,
+   "mean_turnover_book": 0.08788110111890171,
+   "mean_active_share": 0.18698977312668563,
+   "last_decision": "2008-11-28"
+  },
+  "net_raises_as30_b5": {
+   "id": "net_raises_as30_b5",
+   "signal": "net_raises",
+   "active_share": 0.3,
+   "band": 0.0005,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.0012032064513425144,
+    "n_blocks": 37,
+    "t_blocks": 1.2615609035308137,
+    "se_monthly": 0.0009537442449072583,
+    "mde_monthly": 0.002670483885740323
+   },
+   "mean_turnover_active": 0.13557178336526984,
+   "mean_turnover_book": 0.16826386671315252,
+   "mean_active_share": 0.27727535821295235,
+   "last_decision": "2008-11-28"
+  },
+  "net_raises_as30_b10": {
+   "id": "net_raises_as30_b10",
+   "signal": "net_raises",
+   "active_share": 0.3,
+   "band": 0.001,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.001547523186357691,
+    "n_blocks": 37,
+    "t_blocks": 1.4595250206368058,
+    "se_monthly": 0.0010602923310506118,
+    "mde_monthly": 0.002968818526941713
+   },
+   "mean_turnover_active": 0.10171645147555632,
+   "mean_turnover_book": 0.1338989950354646,
+   "mean_active_share": 0.28465580310256516,
+   "last_decision": "2008-11-28"
+  },
+  "breadth_as10_b5": {
+   "id": "breadth_as10_b5",
+   "signal": "breadth",
+   "active_share": 0.1,
+   "band": 0.0005,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.0008571583589906813,
+    "n_blocks": 37,
+    "t_blocks": 1.6257960153157835,
+    "se_monthly": 0.0005272238035496679,
+    "mde_monthly": 0.0014762266499390702
+   },
+   "mean_turnover_active": 0.059217307369648815,
+   "mean_turnover_book": 0.09288962609231823,
+   "mean_active_share": 0.1009535840474918,
+   "last_decision": "2008-11-28"
+  },
+  "breadth_as10_b10": {
+   "id": "breadth_as10_b10",
+   "signal": "breadth",
+   "active_share": 0.1,
+   "band": 0.001,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.0016567723538935012,
+    "n_blocks": 37,
+    "t_blocks": 1.6364799739248925,
+    "se_monthly": 0.0010124000172882896,
+    "mde_monthly": 0.0028347200484072107
+   },
+   "mean_turnover_active": 0.041961486481568985,
+   "mean_turnover_book": 0.0726014144085349,
+   "mean_active_share": 0.1474574684389123,
+   "last_decision": "2008-11-28"
+  },
+  "breadth_as20_b5": {
+   "id": "breadth_as20_b5",
+   "signal": "breadth",
+   "active_share": 0.2,
+   "band": 0.0005,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.0010019070283576788,
+    "n_blocks": 37,
+    "t_blocks": 1.4213813278221845,
+    "se_monthly": 0.0007048826439086429,
+    "mde_monthly": 0.0019736714029442
+   },
+   "mean_turnover_active": 0.10833436716450053,
+   "mean_turnover_book": 0.14158047440624266,
+   "mean_active_share": 0.19686960699864822,
+   "last_decision": "2008-11-28"
+  },
+  "breadth_as20_b10": {
+   "id": "breadth_as20_b10",
+   "signal": "breadth",
+   "active_share": 0.2,
+   "band": 0.001,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.0015308968958279462,
+    "n_blocks": 37,
+    "t_blocks": 1.6210858954048741,
+    "se_monthly": 0.0009443650704551947,
+    "mde_monthly": 0.002644222197274545
+   },
+   "mean_turnover_active": 0.06268015033706446,
+   "mean_turnover_book": 0.09430521601754069,
+   "mean_active_share": 0.1893504941983293,
+   "last_decision": "2008-11-28"
+  },
+  "breadth_as30_b5": {
+   "id": "breadth_as30_b5",
+   "signal": "breadth",
+   "active_share": 0.3,
+   "band": 0.0005,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.001087834400821583,
+    "n_blocks": 37,
+    "t_blocks": 1.1956913201903374,
+    "se_monthly": 0.0009097953480572352,
+    "mde_monthly": 0.0025474269745602582
+   },
+   "mean_turnover_active": 0.1446742447564809,
+   "mean_turnover_book": 0.17727384946132027,
+   "mean_active_share": 0.2752408304894709,
+   "last_decision": "2008-11-28"
+  },
+  "breadth_as30_b10": {
+   "id": "breadth_as30_b10",
+   "signal": "breadth",
+   "active_share": 0.3,
+   "band": 0.001,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.0015267790406883937,
+    "n_blocks": 37,
+    "t_blocks": 1.5209143820621105,
+    "se_monthly": 0.0010038560083956414,
+    "mde_monthly": 0.0028107968235077958
+   },
+   "mean_turnover_active": 0.11325078482961784,
+   "mean_turnover_book": 0.14540465321488455,
+   "mean_active_share": 0.2918004848863365,
+   "last_decision": "2008-11-28"
+  },
+  "ear_flow_as10_b5": {
+   "id": "ear_flow_as10_b5",
+   "signal": "ear_flow",
+   "active_share": 0.1,
+   "band": 0.0005,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.000808552857733458,
+    "n_blocks": 37,
+    "t_blocks": 1.6494672393994587,
+    "se_monthly": 0.0004901903101924215,
+    "mde_monthly": 0.00137253286853878
+   },
+   "mean_turnover_active": 0.05649256725773017,
+   "mean_turnover_book": 0.09012024003352213,
+   "mean_active_share": 0.09551482619415999,
+   "last_decision": "2008-11-28"
+  },
+  "ear_flow_as10_b10": {
+   "id": "ear_flow_as10_b10",
+   "signal": "ear_flow",
+   "active_share": 0.1,
+   "band": 0.001,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.0015024107760518355,
+    "n_blocks": 37,
+    "t_blocks": 1.6697961008980395,
+    "se_monthly": 0.0008997570273662862,
+    "mde_monthly": 0.002519319676625601
+   },
+   "mean_turnover_active": 0.041209586812487486,
+   "mean_turnover_book": 0.07144949452368712,
+   "mean_active_share": 0.14845233089572943,
+   "last_decision": "2008-11-28"
+  },
+  "ear_flow_as20_b5": {
+   "id": "ear_flow_as20_b5",
+   "signal": "ear_flow",
+   "active_share": 0.2,
+   "band": 0.0005,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.0007795777080173575,
+    "n_blocks": 37,
+    "t_blocks": 1.2359915204473115,
+    "se_monthly": 0.0006307306280994746,
+    "mde_monthly": 0.0017660457586785288
+   },
+   "mean_turnover_active": 0.1032837635589264,
+   "mean_turnover_book": 0.13612543846618205,
+   "mean_active_share": 0.19483552960890324,
+   "last_decision": "2008-11-28"
+  },
+  "ear_flow_as20_b10": {
+   "id": "ear_flow_as20_b10",
+   "signal": "ear_flow",
+   "active_share": 0.2,
+   "band": 0.001,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.001404243447699336,
+    "n_blocks": 37,
+    "t_blocks": 1.7526402636685323,
+    "se_monthly": 0.0008012160149510939,
+    "mde_monthly": 0.002243404841863063
+   },
+   "mean_turnover_active": 0.05816510545850482,
+   "mean_turnover_book": 0.08937896420867969,
+   "mean_active_share": 0.18280824798230233,
+   "last_decision": "2008-11-28"
+  },
+  "ear_flow_as30_b5": {
+   "id": "ear_flow_as30_b5",
+   "signal": "ear_flow",
+   "active_share": 0.3,
+   "band": 0.0005,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.0008659445593143998,
+    "n_blocks": 37,
+    "t_blocks": 1.0765580866583095,
+    "se_monthly": 0.0008043639911733284,
+    "mde_monthly": 0.0022522191752853194
+   },
+   "mean_turnover_active": 0.1355308298586556,
+   "mean_turnover_book": 0.1676305082459342,
+   "mean_active_share": 0.2689352957457058,
+   "last_decision": "2008-11-28"
+  },
+  "ear_flow_as30_b10": {
+   "id": "ear_flow_as30_b10",
+   "signal": "ear_flow",
+   "active_share": 0.3,
+   "band": 0.001,
+   "design_active_vs_base": {
+    "window": [
+     "1999-10-01",
+     "2008-12-31"
+    ],
+    "n_months": 111,
+    "mean_monthly": 0.001149531771959839,
+    "n_blocks": 37,
+    "t_blocks": 1.4145858858348246,
+    "se_monthly": 0.0008126277686430031,
+    "mde_monthly": 0.0022753577522004087
+   },
+   "mean_turnover_active": 0.10950871054350285,
+   "mean_turnover_book": 0.14110592513829998,
+   "mean_active_share": 0.2908484045031356,
+   "last_decision": "2008-11-28"
+  }
+ },
+ "chosen": "ear_flow_as20_b10",
+ "chosen_config": {
+  "signal": "ear_flow",
+  "active_share": 0.2,
+  "band": 0.001
+ },
+ "selection_hash": "86a0cf6a53e445a8"
+}

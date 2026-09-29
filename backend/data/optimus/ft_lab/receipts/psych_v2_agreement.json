@@ -1,0 +1,46 @@
+{
+ "job": "ft_lab.retrain_v2 psych agreement",
+ "licence": "PRODUCT_EXPERIMENT",
+ "v1_400": {
+  "n": 400,
+  "valid_rate": 0.9975,
+  "spearman_tone": 0.7528,
+  "spearman_uncertainty": 0.581,
+  "spearman_surprise": 0.54,
+  "spearman_novelty": 0.5829,
+  "spearman_attention": 0.5632,
+  "spearman_mgmt_confidence": null,
+  "mgmt_confidence_null_agreement": 0.9599,
+  "emotion_accuracy": 0.6591,
+  "emotion_kappa": 0.5078,
+  "expected_move_weighted_kappa": 0.3907
+ },
+ "v2_same_400": {
+  "n": 400,
+  "valid_rate": 1.0,
+  "spearman_tone": 0.7616,
+  "spearman_uncertainty": 0.5409,
+  "spearman_surprise": 0.5725,
+  "spearman_novelty": 0.5786,
+  "spearman_attention": 0.6076,
+  "spearman_mgmt_confidence": null,
+  "mgmt_confidence_null_agreement": 0.96,
+  "emotion_accuracy": 0.685,
+  "emotion_kappa": 0.5481,
+  "expected_move_weighted_kappa": 0.3919
+ },
+ "v2_all_1006": {
+  "n": 1006,
+  "valid_rate": 0.998,
+  "spearman_tone": 0.7801,
+  "spearman_uncertainty": 0.595,
+  "spearman_surprise": 0.5615,
+  "spearman_novelty": 0.5975,
+  "spearman_attention": 0.6392,
+  "spearman_mgmt_confidence": null,
+  "mgmt_confidence_null_agreement": 0.9582,
+  "emotion_accuracy": 0.6932,
+  "emotion_kappa": 0.5675,
+  "expected_move_weighted_kappa": 0.4142
+ }
+}

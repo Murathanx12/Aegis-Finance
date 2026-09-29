@@ -429,6 +429,63 @@ def kill_rule_power(held: dict[str, float], alpha21: dict[str, float], sig21: di
                         "and is stated before entry")}
 
 
+def kill_rule_from_measured_gap(gap_sd_monthly: float, *, sessions: int = 126,
+                                claimed_edge_monthly: float | None = None,
+                                horizon_sd: float | None = None, z: float = KILL_Z_V1,
+                                sessions_per_month: float = 21.0) -> dict:
+    """Kill line from the gap's MEASURED volatility (added 2026-09-29).
+
+    `kill_rule_power` builds sd(D) from each name's residual sd and assumes the
+    names independent, so it leaves out every factor the book and its twin do
+    not share (market, size, betting-against-beta, ...). For CRSP_BLEND_v0 that
+    gave a line near -4.7% where the measured gap sd over 126 sessions is 5.8%:
+    a ~21% false kill under zero edge instead of 5%. This function takes the
+    sd of the (book - twin) series itself, which carries every exposure the two
+    do not share. It is NEW; `kill_rule_power` is unchanged for the books
+    already frozen on it.
+
+    gap_sd_monthly: sd of the monthly (book - twin) gap, measured.
+    horizon_sd:     optional sd of the gap summed over `sessions`, measured
+                    directly (e.g. overlapping 6-month sums); when given it is
+                    used instead of the sqrt-time scaling, so autocorrelation
+                    in the gap is carried too.
+    """
+    if not (gap_sd_monthly and gap_sd_monthly > 0 and math.isfinite(gap_sd_monthly)):
+        raise ValueError("REFUSED: a kill line needs a positive, finite measured gap sd")
+    months = sessions / float(sessions_per_month)
+    sd_sqrt_t = gap_sd_monthly * math.sqrt(months)
+    sd = float(horizon_sd) if horizon_sd is not None else sd_sqrt_t
+    if not (sd > 0 and math.isfinite(sd)):
+        raise ValueError("REFUSED: horizon_sd must be positive and finite")
+    Phi = lambda x: 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))       # noqa: E731
+    line = -z * sd
+    out = {"statistic": f"D = book minus matched twin (sleeve scale), summed over {sessions} sessions",
+           "sd_source": "measured horizon sd" if horizon_sd is not None else "measured monthly sd x sqrt(months)",
+           "gap_sd_monthly": round(gap_sd_monthly, 6), "months": round(months, 3),
+           "sd_D_sqrt_time": round(sd_sqrt_t, 6), "sd_D": round(sd, 6), "z": z,
+           "kill_line": round(line, 6), "kill_if": f"D < -{z} x sd_D = {line:+.4f}",
+           "P_kill_if_zero_edge": round(1.0 - Phi(z), 4)}
+    if claimed_edge_monthly is not None:
+        mu = claimed_edge_monthly * months
+        out.update({"claimed_edge_monthly": claimed_edge_monthly, "expected_D_if_claim_true": round(mu, 6),
+                    "P_kill_if_claim_true": round(Phi(-z - mu / sd), 4),
+                    "P_D_above_plus_z_sd_if_claim_true": round(1.0 - Phi(z - mu / sd), 4),
+                    "P_D_positive_if_claim_true": round(Phi(mu / sd), 4),
+                    "P_D_positive_if_zero_edge": 0.5,
+                    "mde80_one_sided_5pct": round((z + 0.8416) * sd, 6),
+                    "months_to_t2_if_claim_true": (round((2.0 * gap_sd_monthly / claimed_edge_monthly) ** 2, 1)
+                                                   if claimed_edge_monthly > 0 else None)})
+    return out
+
+
+def false_kill_rate(kill_line: float, sd_D: float, edge_D: float = 0.0) -> float:
+    """P(D < kill_line) when D ~ N(edge_D, sd_D^2): the rate a stated line kills
+    a book whose true gap is `edge_D` (0 = no edge)."""
+    if not (sd_D > 0):
+        raise ValueError("REFUSED: sd_D must be positive")
+    return 0.5 * (1.0 + math.erf((kill_line - edge_D) / (sd_D * math.sqrt(2.0))))
+
+
 def main_v1(a) -> int:
     post = {k: {**posterior_v1(v["obs"]), "receipt": v["receipt"]} for k, v in EVIDENCE_V1.items()}
     te = tracking_error(EVIDENCE_V1["momentum_12_1"]["obs"])

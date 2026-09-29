@@ -1090,7 +1090,16 @@ class TestOpenClawHealthCanActuallyGoGreen:
                             lambda strict=True: {"ok": True, "state": "running"})
         monkeypatch.setattr(OC, "_default_profile_matches", lambda: True)
         monkeypatch.setattr(OC, "_channel_count", lambda: 0)
+        # A FAKE instance prover (2026-09-29). Without it health() proved the
+        # dedicated Chrome over the REAL 127.0.0.1 CDP port -- test traffic
+        # on the owner's live browser, which crashed twice that afternoon.
+        proofs = []
+        monkeypatch.setattr(OC, "_PROVER", lambda **k: proofs.append(k)
+                            or {"ok": True, "pid": 4242, "endpoint": "fake"})
         h = OC.health()
+        if OC.profile() in OC.dedicated_profiles():
+            assert proofs, "health() must prove the instance through the stub"
+            assert h.rows["instance"]["proven"] is True
         assert h.rows["gateway_probe_ok"] is True
         assert h.rows["gateway_running"] is True
         assert h.ok is True, f"a healthy gateway must read READY: {h.rows['verdict']}"
@@ -1109,6 +1118,9 @@ class TestOpenClawHealthCanActuallyGoGreen:
                             lambda strict=True: {"ok": True, "state": "running"})
         monkeypatch.setattr(OC, "_default_profile_matches", lambda: True)
         monkeypatch.setattr(OC, "_channel_count", lambda: 1)
+        # Fake prover: never the live Chrome's CDP port from a test (2026-09-29).
+        monkeypatch.setattr(OC, "_PROVER", lambda **k: {"ok": True, "pid": 4242,
+                                                        "endpoint": "fake"})
         h = OC.health()
         assert h.ok is False and "messaging channel" in h.rows["verdict"]
 
