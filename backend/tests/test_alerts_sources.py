@@ -84,6 +84,44 @@ def test_a_specific_item_outranks_the_catch_all_that_furnishes_it(tmp_path):
     assert evs[0]["fact_key"] == "8k_item:5.02" and "also Item(s) 7.01" in evs[0]["fact"]
 
 
+def test_the_official_lane_feeds_the_8k_reader_and_its_freshness(tmp_path):
+    # 2026-09-30: the Atom collector refreshes ~once a day, so every US
+    # afternoon the 4-filing-hour rule went DEGRADED while the official-sources
+    # lane was reading the same EDGAR feed every 15 minutes. Both are read now;
+    # an accession already in the Atom corpus is not read twice.
+    corpus = tmp_path / "news_corpus"
+    _write(corpus, S.ATOM_DIR, "2026-09-28", [_atom(
+        1372612, "Item 1.02: Termination of a Material Definitive Agreement",
+        seen="2026-09-27T20:00:00+00:00")])
+    off = tmp_path / "official" / "tables" / "filing_events.jsonl"
+    off.parent.mkdir(parents=True)
+    base = {"source": "sec_8k", "form_type": "8-K", "role": "Filer",
+            "public_utc": "2026-09-28T05:10:00+00:00", "first_seen_utc": "2026-09-28T05:20:00+00:00"}
+    rows = [dict(base, accession="0001193125-26-401392", cik="1372612", company="BOX INC",
+                 items=["1.02"], index_url="u1"),                          # same filing: not twice
+            dict(base, accession="0001652044-26-000009", cik="1652044", company="Alphabet Inc.",
+                 items=["5.02", "9.01"], index_url="u2"),
+            dict(base, accession="0001652044-26-000009", cik="1652044", company="Alphabet Inc.",
+                 items=["5.02"], index_url="u2", role="Subject"),          # a second role row
+            dict(base, source="sec_13dg", accession="0000000001-26-000001", cik="1652044",
+                 form_type="SC 13D", items=[], index_url="u3")]
+    off.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    assert S.official_filing_events_path(corpus) == off
+    evs, st = S.read_8k_events(now=NOW, universe=["BOX", "GOOGL"], root=corpus, cik_map=CIK)
+    assert sorted(e["ticker"] for e in evs) == ["BOX", "GOOGL"]
+    g = next(e for e in evs if e["ticker"] == "GOOGL")
+    assert g["fact_key"] == "8k_item:5.02" and g["source_url"] == "u2"
+    assert st["official_rows_read"] == 1
+    assert st["newest_first_seen_utc"] == "2026-09-28T05:20:00+00:00"
+    assert st["newest_first_seen_utc_atom"] == "2026-09-27T20:00:00+00:00"
+    # a Monday 06:00Z read: the Atom row alone is within limits here, so prove
+    # the freshness moves with the official row by reading 9 filing hours later
+    later = datetime(2026, 9, 28, 19, 0, tzinfo=UTC)                  # 15:00 ET Monday
+    assert S.source_staleness_8k(st["newest_first_seen_utc_atom"], later)["state"] == "STALE"
+    fresh = datetime(2026, 9, 28, 8, 0, tzinfo=UTC)
+    assert S.source_staleness_8k(st["newest_first_seen_utc"], fresh)["state"] == "OK"
+
+
 def _form4(rows):
     return pd.DataFrame(rows, columns=["symbol", "event_time_utc", "observed_at_utc",
                                        "observed_at_basis", "insider_cik", "insider_trans_code",

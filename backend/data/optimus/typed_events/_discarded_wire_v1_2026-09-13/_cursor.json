@@ -1,0 +1,13 @@
+{
+ "job": "L2_typed_events",
+ "last_run_utc": "2026-09-13T07:27:53+00:00",
+ "note": "the last (first_seen_utc, raw_id) typed per source. A run types rows strictly after it; there is no other mode.",
+ "per_source": {
+  "alpaca_benzinga_news": [
+   "2026-09-11T12:06:30+00:00",
+   "5115190"
+  ]
+ },
+ "rows_written_total": 44,
+ "runs": 1
+}

@@ -1195,10 +1195,17 @@ def implications_for(theme: dict, rows: list[dict], meter: Meter, *, px: Optiona
 
 def implication_records(imp: dict, *, theme: dict, digest_id: str, made_at: str,
                         px: pd.DataFrame, stitched: set[str], model: str,
-                        prompt_hash: str, have: set[tuple]) -> tuple[list, str]:
-    """Rows for ONE implication, or ([], reason). A size row always (vs one
-    trailing sigma, with the vol prior's own probability on the row); a
-    direction row when a direction is stated, shrunk to 0.5."""
+                        prompt_hash: str, have: set[tuple], specialist: str = SPECIALIST,
+                        write_size: bool = True) -> tuple[list, str]:
+    """Rows for ONE implication, or ([], reason). A size row (vs one trailing
+    sigma, with the vol prior's own probability on the row) unless
+    `write_size` is False; a direction row when a direction is stated, shrunk
+    to 0.5. `specialist` is the writer's sub-tag (2026-09-30: the official-
+    source sections write `news_digest:insider_v0` etc.; every `news_digest:`
+    prefix is graded by `grade`). One (day, ticker, observable, horizon,
+    direction) is written once per day PER SUB-TAG."""
+    if not specialist.startswith(SPECIALIST_PREFIX):
+        return [], "SPECIALIST_OUTSIDE_NEWS_DIGEST"
     from backend.services import belief_state as B
     if imp.get("refused"):
         return [], imp["refused"]
@@ -1222,7 +1229,7 @@ def implication_records(imp: dict, *, theme: dict, digest_id: str, made_at: str,
             "price_at_write": ps["last_close"], "price_bar": ps["last_bar"],
             "sigma_d": ps["sigma_d"], "urls": theme["urls"][:8]}
     common = dict(
-        ticker=t, specialist=SPECIALIST, horizon_days=h, made_at=made_at,
+        ticker=t, specialist=specialist, horizon_days=h, made_at=made_at,
         model=model, model_version=_cfg.WORLD_DIGEST_PROMPT_VERSION,
         prompt=prompt_hash, input_snapshot=snap, mechanism_id=MECHANISM_ID,
         decision_date=day, licence=LICENCE,
@@ -1237,12 +1244,13 @@ def implication_records(imp: dict, *, theme: dict, digest_id: str, made_at: str,
                    "already_moved_5d_sigma": round(ps["move_5d_sigma"], 3),
                    "source_urls": theme["urls"][:8],
                    "proxy_of": imp.get("proxy_of"),
+                   "rule": imp.get("rule"), "sub_tag": specialist,
                    "matched_control": ("size: vol_prior_p (same name, horizon, threshold; "
                                        "252-session frequency); direction: a 0.5 coin and "
                                        "SPY as benchmark")}
     out = []
-    key_s = (day, t, "abs_move_exceeds", h, "size")
-    if key_s not in have:
+    key_s = (day, t, "abs_move_exceeds", h, "size", specialist)
+    if write_size and key_s not in have:
         p = float(_cfg.WORLD_DIGEST_SIZE_BUCKET_P[imp["size_bucket"]])
         out.append(B.make_prediction(
             observable=B.Observable.ABS_MOVE_EXCEEDS, threshold=round(thr, 6),
@@ -1258,7 +1266,7 @@ def implication_records(imp: dict, *, theme: dict, digest_id: str, made_at: str,
             **common))
         have.add(key_s)
     if imp["direction"] in ("up", "down"):
-        key_d = (day, t, "beats_benchmark", h, imp["direction"])
+        key_d = (day, t, "beats_benchmark", h, imp["direction"], specialist)
         if key_d not in have:
             sign = 1.0 if imp["direction"] == "up" else -1.0
             raw = 0.5 + sign * 0.25 * float(imp["confidence"])
@@ -1286,11 +1294,13 @@ def existing_keys(preds: list[dict]) -> set[tuple]:
             continue
         iu = r.get("inputs_used") or {}
         day = str(r.get("decision_date") or r.get("made_at") or "")[:10]
+        sp = str(r.get("specialist"))
         if r.get("observable") == "abs_move_exceeds":
-            have.add((day, r.get("ticker"), "abs_move_exceeds", int(r.get("horizon_days") or 0), "size"))
+            have.add((day, r.get("ticker"), "abs_move_exceeds", int(r.get("horizon_days") or 0),
+                      "size", sp))
         else:
             have.add((day, r.get("ticker"), "beats_benchmark", int(r.get("horizon_days") or 0),
-                      iu.get("direction")))
+                      iu.get("direction"), sp))
     return have
 
 
@@ -1465,6 +1475,11 @@ def render(d: dict) -> str:
          f"of ${d['spend']['budget_usd']:.2f} cap (priced per call); provider balance "
          f"{d['balance'].get('before')} -> {d['balance'].get('after')} "
          f"(the balance moves with every process on the key, not only this one).", ""]
+    if d.get("changes"):                  # 2026-09-30: where the news is leading
+        L += render_changes(d["changes"])
+    if d.get("theme_merges"):
+        L += ["Near-duplicate themes merged: " + "; ".join(
+            f"\"{m['merged']}\" into \"{m['kept']}\" ({m['why']})" for m in d["theme_merges"]), ""]
     L += ["## Themes", ""]
     for k, th in enumerate(d["themes"], 1):
         tn = th["tone"]
@@ -1499,6 +1514,9 @@ def render(d: dict) -> str:
                   for u in th["unknowns"]]
         L.append("- sources: " + " ".join(f"<{u}>" for u in th["urls"][:6]))
         L.append("")
+    if d.get("sections"):                 # 2026-09-30: insiders, policy, positioning
+        from backend.services import digest_sections as DS
+        L += DS.render(d["sections"]).splitlines() + [""]
     w = d["writes"]
     L += ["## What was written", "",
           f"- forecast rows: {w['n_rows']} ({w['n_size']} size, {w['n_direction']} direction) "
@@ -1518,6 +1536,13 @@ def render(d: dict) -> str:
 
 def render_short(d: dict, max_chars: int = 3500) -> str:
     L = [f"World digest {d['stamp']} ({d['n_items']} items read; ${d['spend']['spent_usd']:.2f})"]
+    ch = d.get("changes") or {}
+    if ch.get("previous"):                # 2026-09-30: what changed, first
+        bits = [f"NEW {t}" for t in ch.get("new", [])[:3]]
+        bits += [f"{c['trend'].upper()} {c['title']}" for c in ch.get("continuing", [])
+                 if c["trend"] != "steady"][:3]
+        bits += [f"DROPPED {t}" for t in ch.get("dropped", [])[:2]]
+        L.append("Since last digest: " + ("; ".join(bits) if bits else "no theme changed"))
     for k, th in enumerate(d["themes"][:6], 1):
         tn = th["tone"]
         L.append(f"{k}. {th['title']} [{th['status']}; {th['n_independent_sources']} sources; "
@@ -1525,6 +1550,19 @@ def render_short(d: dict, max_chars: int = 3500) -> str:
         for imp in [i for i in th["implications"] if i["order"] == 2][:2]:
             L.append(f"   -> {imp['subject']} {imp['direction']} ({imp['size_bucket']}, "
                      f"{imp['horizon_sessions']}s): {imp['chain'][:140]}")
+    sec = d.get("sections") or {}
+    if sec:                               # 2026-09-30: the official-source sections
+        ins = sec["insiders"]["findings"]
+        if ins.get("cluster_buys"):
+            L.append("Insider cluster buys: " + "; ".join(
+                f"{c['ticker']} x{c['n_insiders']} ${c['value_usd']:,.0f}"
+                for c in ins["cluster_buys"][:5]))
+        for c in (sec["policy"]["findings"].get("changes") or [])[:3]:
+            L.append(f"Policy: {c['title']} -- {c['first_order']}"[:220])
+        pos = sec["positioning"]["findings"]
+        if pos.get("cot_extremes"):
+            L.append("Crowded (COT 3y extreme): " + "; ".join(
+                f"{e['market'][:24]} {e['side']}" for e in pos["cot_extremes"][:4]))
     L.append("Direction calls are graded at weight ~0 (LLM direction <= coin here). Not advice, no orders.")
     out = "\n".join(L)
     return out[:max_chars]
@@ -1548,10 +1586,178 @@ def latest_short(root: Optional[Path] = None) -> Optional[str]:
         return None
 
 
+
+# ─────────────── near-duplicate themes, and what changed (2026-09-30) ───────────
+#
+# The morning of 2026-09-29 printed "US-Iran war lifts oil, yields" and
+# "Treasury yields spike, bond selloff" as two themes in three of five runs:
+# the reduce step keeps both when their candidate chunks name the same story
+# from two ends. Measured on those five digests: the pair shared the keyword
+# phrase "treasury yields" every time, their source URLs overlapped 0.00-0.42,
+# and once both claimed to continue the SAME previous theme. The owner asked to
+# see where the news is LEADING, so each digest now also opens with what
+# changed since the previous one.
+
+_THEME_STOP = frozenset({"ai", "us", "the", "and", "of", "in", "on", "for", "to", "a",
+                         "stocks", "markets", "market", "news", "deal", "deals"})
+
+
+def _kw_phrases(th: dict) -> set[str]:
+    """Multi-word keyword phrases, lower-cased (a one-word keyword such as
+    "Boeing" is a name, not a story, and a single shared word is too weak)."""
+    out = set()
+    for k in th.get("keywords") or []:
+        w = [x for x in re.findall(r"[a-z0-9$%.-]+", str(k).lower()) if x not in _THEME_STOP]
+        if len(w) >= 2:
+            out.add(" ".join(w))
+    return out
+
+
+def themes_are_near_duplicates(a: dict, b: dict, *, row_overlap: float = 0.4) -> Optional[str]:
+    """PURE. Why two themes of ONE digest are the same story, or None:
+    `same_continues` (both continue the same previous theme), `keyword_phrase`
+    (an identical multi-word keyword phrase) or `row_overlap` / `url_overlap`
+    (the share of the smaller theme's rows, or source URLs, the other also holds)."""
+    ca, cb = a.get("continues"), b.get("continues")
+    if ca and cb and str(ca).strip().lower() == str(cb).strip().lower():
+        return "same_continues"
+    if _kw_phrases(a) & _kw_phrases(b):
+        return "keyword_phrase"
+    for key in ("rows", "urls"):
+        A, B = set(a.get(key) or []), set(b.get(key) or [])
+        if A and B and len(A & B) / min(len(A), len(B)) >= row_overlap:
+            return f"{key[:-1]}_overlap"
+    return None
+
+
+def merge_near_duplicate_themes(themes: list[dict]) -> tuple[list[dict], list[dict]]:
+    """PURE. Fold every theme into the first (best-ranked) earlier theme it
+    duplicates (`themes_are_near_duplicates`): rows and URLs are unioned, the
+    keywords joined (at most 6), the kept title is the survivor's, and the
+    survivor records `merged_from`. Order is kept. Returns (themes, merges)."""
+    kept: list[dict] = []
+    merges: list[dict] = []
+    for th in themes:
+        th = dict(th)
+        host, reason = None, None
+        for k in kept:
+            why = themes_are_near_duplicates(k, th)
+            if why:
+                host, reason = k, why
+                break
+        if host is None:
+            kept.append(th)
+            continue
+        host["rows"] = sorted(set(host.get("rows") or []) | set(th.get("rows") or []))
+        if host.get("urls") is not None or th.get("urls") is not None:
+            host["urls"] = list(dict.fromkeys(list(host.get("urls") or []) + list(th.get("urls") or [])))
+        kw = list(dict.fromkeys(list(host.get("keywords") or []) + list(th.get("keywords") or [])))
+        host["keywords"] = kw[:6]
+        if not host.get("continues") and th.get("continues"):
+            host["continues"] = th["continues"]
+        host.setdefault("merged_from", []).append(th.get("title"))
+        merges.append({"kept": host.get("title"), "merged": th.get("title"), "why": reason})
+    return kept, merges
+
+
+def previous_digest(before_stamp: Optional[str] = None, root: Optional[Path] = None
+                    ) -> Optional[dict]:
+    """The newest real digest JSON (out_dir, never a dry run) older than
+    `before_stamp`, or None."""
+    d = out_dir(root)
+    files = sorted(d.glob("world_digest_*.json")) if d.exists() else []
+    for fp in reversed(files):
+        stamp = fp.stem.removeprefix("world_digest_")
+        if before_stamp and stamp >= before_stamp:
+            continue
+        try:
+            got = json.loads(fp.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(got, dict) and got.get("themes") is not None and not got.get("dry_run"):
+            return got
+    return None
+
+
+def _match_prev(th: dict, prev_themes: list[dict]) -> Optional[dict]:
+    c = str(th.get("continues") or "").strip().lower()
+    for p in prev_themes:
+        if c and str(p.get("title") or "").strip().lower() == c:
+            return p
+    for p in prev_themes:
+        if _kw_phrases(th) & _kw_phrases(p):
+            return p
+    return None
+
+
+def _imp_keys(th: dict) -> set[tuple]:
+    return {(str(i.get("subject")), str(i.get("direction"))) for i in th.get("implications") or []
+            if not i.get("refused")}
+
+
+def what_changed(cur: dict, prev: Optional[dict]) -> dict:
+    """PURE. What is NEW, what GREW or FADED, and what DROPPED since the
+    previous digest -- by theme support (news rows), tone and implications.
+    `cur` / `prev` are digest dicts (`themes` with `n_news_rows`, `tone`,
+    `implications`)."""
+    if not prev:
+        return {"previous": None, "new": [t.get("title") for t in cur.get("themes") or []],
+                "continuing": [], "dropped": [], "note": "no previous digest to compare with"}
+    pts = list(prev.get("themes") or [])
+    used: set[int] = set()
+    new, cont = [], []
+    for th in cur.get("themes") or []:
+        free = [x for k, x in enumerate(pts) if k not in used]
+        p = _match_prev(th, free)
+        if p is None:
+            new.append(th.get("title"))
+            continue
+        used.add(next(k for k, x in enumerate(pts) if x is p))
+        n0, n1 = int(p.get("n_news_rows") or 0), int(th.get("n_news_rows") or 0)
+        s0 = (p.get("tone") or {}).get("sentiment_news")
+        s1 = (th.get("tone") or {}).get("sentiment_news")
+        k0, k1 = _imp_keys(p), _imp_keys(th)
+        trend = ("growing" if n1 >= max(n0 * 1.25, n0 + 5) else
+                 "fading" if n1 <= min(n0 * 0.75, n0 - 5) else "steady")
+        cont.append({"title": th.get("title"), "was": p.get("title"), "news_rows": [n0, n1],
+                     "trend": trend, "sentiment": [s0, s1],
+                     "sentiment_delta": (round(s1 - s0, 2) if isinstance(s0, (int, float))
+                                         and isinstance(s1, (int, float)) else None),
+                     "new_implications": sorted(f"{a} {b}" for a, b in k1 - k0)[:8],
+                     "dropped_implications": sorted(f"{a} {b}" for a, b in k0 - k1)[:8]})
+    dropped = [x.get("title") for k, x in enumerate(pts) if k not in used]
+    return {"previous": prev.get("stamp"), "new": new, "continuing": cont, "dropped": dropped}
+
+
+def render_changes(ch: Optional[dict], *, limit: int = 8) -> list[str]:
+    """Markdown lines for the top of the digest."""
+    if not ch:
+        return []
+    L = ["## What changed since the previous digest"
+         + (f" ({ch['previous']})" if ch.get("previous") else ""), ""]
+    if not ch.get("previous"):
+        return L + [f"- {ch.get('note', 'no previous digest')}", ""]
+    L += [f"- **new**: {t}" for t in ch.get("new", [])[:limit]] or ["- new: none"]
+    order = {"growing": 0, "fading": 1, "steady": 2}
+    for c in sorted(ch.get("continuing", []), key=lambda c: order.get(c["trend"], 3))[:limit]:
+        sd = c.get("sentiment_delta")
+        extra = []
+        if c["new_implications"]:
+            extra.append("new calls: " + ", ".join(c["new_implications"][:5]))
+        if c["dropped_implications"]:
+            extra.append("no longer: " + ", ".join(c["dropped_implications"][:5]))
+        L.append(f"- **{c['trend']}**: {c['title']} (news rows {c['news_rows'][0]} -> "
+                 f"{c['news_rows'][1]}" + ("" if sd is None else f", tone {sd:+.2f}") + ")"
+                 + (f"; {'; '.join(extra)}" if extra else ""))
+    L += [f"- **dropped**: {t}" for t in ch.get("dropped", [])[:limit]]
+    return L + [""]
+
+
 __all__ = ["Item", "Meter", "BudgetExceeded", "collect", "sanitize_text", "type_row",
            "type_implication", "extract_items", "local_event_stage", "find_themes",
            "implications_for",
            "implication_records", "existing_keys", "grade", "trust_from", "shadow_contract",
            "freeze_contract", "news_signal", "shadow_decision", "base_book", "render",
            "render_short", "latest_short", "tone", "price_state", "vol_prior_p",
-           "stitched_symbols", "load_closes", "subject_proxy"]
+           "stitched_symbols", "load_closes", "subject_proxy", "merge_near_duplicate_themes",
+           "themes_are_near_duplicates", "previous_digest", "what_changed", "render_changes"]

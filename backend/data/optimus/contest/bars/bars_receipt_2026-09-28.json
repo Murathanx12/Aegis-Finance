@@ -1,0 +1,138 @@
+{
+ "written_utc": "20260928T145822Z",
+ "receipts": {
+  "FX": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\contest\\bars\\bars_FX.parquet",
+   "rows_before": null,
+   "rows_after": 30284,
+   "market": "FX",
+   "n_symbols": 16,
+   "failed": [],
+   "n_failed": 0,
+   "last_date": "2026-09-25"
+  },
+  "JP": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\contest\\bars\\bars_JP.parquet",
+   "rows_before": null,
+   "rows_after": 1226156,
+   "market": "JP",
+   "n_symbols": 714,
+   "failed": [],
+   "n_failed": 0,
+   "last_date": "2026-09-25"
+  },
+  "KR": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\contest\\bars\\bars_KR.parquet",
+   "rows_before": null,
+   "rows_after": 479712,
+   "market": "KR",
+   "n_symbols": 292,
+   "failed": [],
+   "n_failed": 0,
+   "last_date": "2026-09-23"
+  },
+  "TW": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\contest\\bars\\bars_TW.parquet",
+   "rows_before": null,
+   "rows_after": 691874,
+   "market": "TW",
+   "n_symbols": 410,
+   "failed": [],
+   "n_failed": 0,
+   "last_date": "2026-09-24"
+  },
+  "HK": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\contest\\bars\\bars_HK.parquet",
+   "rows_before": null,
+   "rows_after": 535412,
+   "market": "HK",
+   "n_symbols": 399,
+   "failed": [
+    "2099.HK"
+   ],
+   "n_failed": 1,
+   "last_date": "2026-09-25"
+  },
+  "CN": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\contest\\bars\\bars_CN.parquet",
+   "rows_before": null,
+   "rows_after": 940852,
+   "market": "CN",
+   "n_symbols": 600,
+   "failed": [],
+   "n_failed": 0,
+   "last_date": "2026-09-24"
+  },
+  "IN": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\contest\\bars\\bars_IN.parquet",
+   "rows_before": null,
+   "rows_after": 697262,
+   "market": "IN",
+   "n_symbols": 491,
+   "failed": [
+    "SSRETAIL.NS",
+    "HDFCBANK.BO",
+    "ICICIBANK.BO",
+    "RELIANCE.BO",
+    "ITC.BO",
+    "SBIN.BO",
+    "HINDZINC.BO",
+    "LT.BO"
+   ],
+   "n_failed": 8,
+   "last_date": "2026-09-25"
+  },
+  "ID": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\contest\\bars\\bars_ID.parquet",
+   "rows_before": null,
+   "rows_after": 46208,
+   "market": "ID",
+   "n_symbols": 30,
+   "failed": [],
+   "n_failed": 0,
+   "last_date": "2026-09-25"
+  },
+  "EU": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\contest\\bars\\bars_EU.parquet",
+   "rows_before": null,
+   "rows_after": 1215108,
+   "market": "EU",
+   "n_symbols": 684,
+   "failed": [
+    "0QNO.L",
+    "0QYU.L",
+    "0R2H.L",
+    "0I47.L",
+    "0PMJ.L",
+    "0KHZ.L",
+    "0GRX.L",
+    "0YXG.L",
+    "0HJI.L",
+    "0P59.L",
+    "0L3I.L",
+    "0R0H.L",
+    "0HR2.L",
+    "0R2B.L",
+    "0IR9.L",
+    "0QZA.L"
+   ],
+   "n_failed": 16,
+   "last_date": "2026-09-25"
+  },
+  "US": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\contest\\bars\\bars_US.parquet",
+   "rows_before": null,
+   "rows_after": 112584,
+   "market": "US",
+   "n_symbols": 74,
+   "failed": [],
+   "n_failed": 0,
+   "last_date": "2026-09-25"
+  }
+ },
+ "caveats": [
+  "local-currency bars; USD via the day's Yahoo FX close in load_bars_usd",
+  "unadjusted (auto_adjust=False)",
+  "only sessions before the UTC day"
+ ]
+}

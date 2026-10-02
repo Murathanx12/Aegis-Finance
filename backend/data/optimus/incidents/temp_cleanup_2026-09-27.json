@@ -1,0 +1,12 @@
+{
+ "deleted_entries": 18206,
+ "kept_recent_24h": 3795,
+ "in_use_or_failed": 9,
+ "kept_by_name": [
+  "claude",
+  "openclaw"
+ ],
+ "freed_gb": 9.7,
+ "c_free_gb_after": 124.6,
+ "at": "2026-09-27T20:51:10"
+}

@@ -1,0 +1,896 @@
+{"key": "0:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DHR", "provider": "deepseek"}
+{"key": "0:5", "sample": 0, "parsed": true, "value": {"company": "Corning", "ticker": "GLW"}, "symbol": "GLW", "provider": "deepseek"}
+{"key": "0:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MSCI", "provider": "deepseek"}
+{"key": "0:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UMC", "provider": "deepseek"}
+{"key": "0:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LEVI", "provider": "deepseek"}
+{"key": "1:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CAKE", "provider": "deepseek"}
+{"key": "0:3", "sample": 0, "parsed": true, "value": {"company": "RTX Corporation", "ticker": "RTX"}, "symbol": "RTX", "provider": "deepseek"}
+{"key": "1:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CRH", "provider": "deepseek"}
+{"key": "1:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AWR", "provider": "deepseek"}
+{"key": "0:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "APH", "provider": "deepseek"}
+{"key": "1:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PODD", "provider": "deepseek"}
+{"key": "1:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HST", "provider": "deepseek"}
+{"key": "1:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EIX", "provider": "deepseek"}
+{"key": "1:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WING", "provider": "deepseek"}
+{"key": "2:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LAD", "provider": "deepseek"}
+{"key": "2:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VRT", "provider": "deepseek"}
+{"key": "1:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RDN", "provider": "deepseek"}
+{"key": "2:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LNC", "provider": "deepseek"}
+{"key": "2:3", "sample": 0, "parsed": true, "value": {"company": "International Flavors & Fragrances", "ticker": "IFF"}, "symbol": "IFF", "provider": "deepseek"}
+{"key": "2:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TTE", "provider": "deepseek"}
+{"key": "2:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CRK", "provider": "deepseek"}
+{"key": "3:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SHOP", "provider": "deepseek"}
+{"key": "2:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TDC", "provider": "deepseek"}
+{"key": "2:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GFS", "provider": "deepseek"}
+{"key": "3:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "APP", "provider": "deepseek"}
+{"key": "3:4", "sample": 0, "parsed": true, "value": {"company": "Lockheed Martin", "ticker": "LMT"}, "symbol": "MLM", "provider": "deepseek"}
+{"key": "3:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BIRK", "provider": "deepseek"}
+{"key": "3:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PAG", "provider": "deepseek"}
+{"key": "3:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HUBS", "provider": "deepseek"}
+{"key": "4:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AVTR", "provider": "deepseek"}
+{"key": "3:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HLT", "provider": "deepseek"}
+{"key": "3:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TMUS", "provider": "deepseek"}
+{"key": "4:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DDOG", "provider": "deepseek"}
+{"key": "4:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LEU", "provider": "deepseek"}
+{"key": "4:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GEO", "provider": "deepseek"}
+{"key": "4:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PLMR", "provider": "deepseek"}
+{"key": "4:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "QDEL", "provider": "deepseek"}
+{"key": "4:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FAF", "provider": "deepseek"}
+{"key": "4:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GTY", "provider": "deepseek"}
+{"key": "5:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CAVA", "provider": "deepseek"}
+{"key": "5:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BEAM", "provider": "deepseek"}
+{"key": "0:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SBUX", "provider": "deepseek"}
+{"key": "5:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DOCN", "provider": "deepseek"}
+{"key": "5:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CSGP", "provider": "deepseek"}
+{"key": "5:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SLDP", "provider": "deepseek"}
+{"key": "5:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TEM", "provider": "deepseek"}
+{"key": "5:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LAND", "provider": "deepseek"}
+{"key": "5:8", "sample": 0, "parsed": true, "value": {"company": "Dillard's", "ticker": "DDS"}, "symbol": "DDS", "provider": "deepseek"}
+{"key": "6:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SUPN", "provider": "deepseek"}
+{"key": "6:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CYTK", "provider": "deepseek"}
+{"key": "6:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KTOS", "provider": "deepseek"}
+{"key": "6:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CCC", "provider": "deepseek"}
+{"key": "6:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RRC", "provider": "deepseek"}
+{"key": "6:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IPAR", "provider": "deepseek"}
+{"key": "7:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MATX", "provider": "deepseek"}
+{"key": "6:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GPOR", "provider": "deepseek"}
+{"key": "7:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ABCL", "provider": "deepseek"}
+{"key": "6:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DRS", "provider": "deepseek"}
+{"key": "7:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AXON", "provider": "deepseek"}
+{"key": "7:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NRG", "provider": "deepseek"}
+{"key": "7:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "JAZZ", "provider": "deepseek"}
+{"key": "7:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CIFR", "provider": "deepseek"}
+{"key": "7:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LIVN", "provider": "deepseek"}
+{"key": "8:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ZGN", "provider": "deepseek"}
+{"key": "8:4", "sample": 0, "parsed": true, "value": {"company": "Tyson Foods", "ticker": "TSN"}, "symbol": "TSN", "provider": "deepseek"}
+{"key": "8:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "APTV", "provider": "deepseek"}
+{"key": "8:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SPG", "provider": "deepseek"}
+{"key": "7:7", "sample": 0, "parsed": true, "value": {"company": "American Tower", "ticker": "AMT"}, "symbol": "AMT", "provider": "deepseek"}
+{"key": "8:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TWST", "provider": "deepseek"}
+{"key": "8:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CSWC", "provider": "deepseek"}
+{"key": "8:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "REPL", "provider": "deepseek"}
+{"key": "9:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DXC", "provider": "deepseek"}
+{"key": "8:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IDXX", "provider": "deepseek"}
+{"key": "9:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PHM", "provider": "deepseek"}
+{"key": "9:5", "sample": 0, "parsed": true, "value": {"company": "Thermo Fisher Scientific", "ticker": "TMO"}, "symbol": "TMO", "provider": "deepseek"}
+{"key": "9:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DLX", "provider": "deepseek"}
+{"key": "9:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PFSI", "provider": "deepseek"}
+{"key": "9:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MSFT", "provider": "deepseek"}
+{"key": "9:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TSLA", "provider": "deepseek"}
+{"key": "9:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "META", "provider": "deepseek"}
+{"key": "10:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SNDK", "provider": "deepseek"}
+{"key": "10:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CVCO", "provider": "deepseek"}
+{"key": "10:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SIGI", "provider": "deepseek"}
+{"key": "10:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RMD", "provider": "deepseek"}
+{"key": "10:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DOV", "provider": "deepseek"}
+{"key": "10:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "JBSS", "provider": "deepseek"}
+{"key": "10:6", "sample": 0, "parsed": true, "value": {"company": "Pro-Dex, Inc.", "ticker": "PDEX"}, "symbol": "PDEX", "provider": "deepseek"}
+{"key": "10:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LMT", "provider": "deepseek"}
+{"key": "11:1", "sample": 0, "parsed": true, "value": {"company": "Royal Caribbean Cruises", "ticker": "RCL"}, "symbol": "RCL", "provider": "deepseek"}
+{"key": "11:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NOK", "provider": "deepseek"}
+{"key": "11:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CFR", "provider": "deepseek"}
+{"key": "11:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ORC", "provider": "deepseek"}
+{"key": "11:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GLW", "provider": "deepseek"}
+{"key": "11:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DOW", "provider": "deepseek"}
+{"key": "11:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TSCO", "provider": "deepseek"}
+{"key": "11:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OSIS", "provider": "deepseek"}
+{"key": "12:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ASO", "provider": "deepseek"}
+{"key": "12:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OKLO", "provider": "deepseek"}
+{"key": "12:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SAIC", "provider": "deepseek"}
+{"key": "12:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DLTR", "provider": "deepseek"}
+{"key": "12:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BURL", "provider": "deepseek"}
+{"key": "12:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CTRN", "provider": "deepseek"}
+{"key": "12:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TROX", "provider": "deepseek"}
+{"key": "12:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SMTC", "provider": "deepseek"}
+{"key": "13:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BOH", "provider": "deepseek"}
+{"key": "13:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ZION", "provider": "deepseek"}
+{"key": "13:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SFBS", "provider": "deepseek"}
+{"key": "13:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FLXS", "provider": "deepseek"}
+{"key": "13:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CLF", "provider": "deepseek"}
+{"key": "13:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ISTR", "provider": "deepseek"}
+{"key": "14:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RTX", "provider": "deepseek"}
+{"key": "13:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NTST", "provider": "deepseek"}
+{"key": "13:7", "sample": 0, "parsed": true, "value": {"company": "Badger Meter", "ticker": "BMI"}, "symbol": "GWRE", "provider": "deepseek"}
+{"key": "14:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WRB", "provider": "deepseek"}
+{"key": "14:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UCB", "provider": "deepseek"}
+{"key": "14:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PRCH", "provider": "deepseek"}
+{"key": "14:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ORRF", "provider": "deepseek"}
+{"key": "14:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DHR", "provider": "deepseek"}
+{"key": "15:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BOKF", "provider": "deepseek"}
+{"key": "14:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HWC", "provider": "deepseek"}
+{"key": "14:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SON", "provider": "deepseek"}
+{"key": "15:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PEBO", "provider": "deepseek"}
+{"key": "15:4", "sample": 0, "parsed": true, "value": {"company": "D.R. Horton", "ticker": "DHI"}, "symbol": "DHI", "provider": "deepseek"}
+{"key": "15:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VMI", "provider": "deepseek"}
+{"key": "15:3", "sample": 0, "parsed": true, "value": {"company": "3M", "ticker": "MMM"}, "symbol": "MMM", "provider": "deepseek"}
+{"key": "15:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EWBC", "provider": "deepseek"}
+{"key": "15:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HAL", "provider": "deepseek"}
+{"key": "15:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NOC", "provider": "deepseek"}
+{"key": "16:1", "sample": 0, "parsed": true, "value": {"company": "Valmont Industries", "ticker": "VMI"}, "symbol": "MXL", "provider": "deepseek"}
+{"key": "16:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OFG", "provider": "deepseek"}
+{"key": "16:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MBWM", "provider": "deepseek"}
+{"key": "16:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IBKR", "provider": "deepseek"}
+{"key": "16:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GPC", "provider": "deepseek"}
+{"key": "16:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DGX", "provider": "deepseek"}
+{"key": "16:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AUB", "provider": "deepseek"}
+{"key": "16:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TSCO", "provider": "deepseek"}
+{"key": "17:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ACGL", "provider": "deepseek"}
+{"key": "17:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CINF", "provider": "deepseek"}
+{"key": "17:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MKTX", "provider": "deepseek"}
+{"key": "17:4", "sample": 0, "parsed": true, "value": {"company": "Kohl's", "ticker": "KSS"}, "symbol": "KSS", "provider": "deepseek"}
+{"key": "17:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "COUR", "provider": "deepseek"}
+{"key": "17:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SNAP", "provider": "deepseek"}
+{"key": "18:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DAC", "provider": "deepseek"}
+{"key": "17:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PGR", "provider": "deepseek"}
+{"key": "17:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BRX", "provider": "deepseek"}
+{"key": "18:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "REXR", "provider": "deepseek"}
+{"key": "18:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WAT", "provider": "deepseek"}
+{"key": "18:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MEDP", "provider": "deepseek"}
+{"key": "18:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BIIB", "provider": "deepseek"}
+{"key": "18:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SBH", "provider": "deepseek"}
+{"key": "18:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CLF", "provider": "deepseek"}
+{"key": "19:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AIG", "provider": "deepseek"}
+{"key": "18:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UDR", "provider": "deepseek"}
+{"key": "19:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "COUR", "provider": "deepseek"}
+{"key": "19:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MKTX", "provider": "deepseek"}
+{"key": "19:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UFCS", "provider": "deepseek"}
+{"key": "19:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RPD", "provider": "deepseek"}
+{"key": "19:5", "sample": 0, "parsed": true, "value": {"company": "S&P Global", "ticker": "SPGI"}, "symbol": "SPGI", "provider": "deepseek"}
+{"key": "19:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EXEL", "provider": "deepseek"}
+{"key": "20:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ARMK", "provider": "deepseek"}
+{"key": "19:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FUBO", "provider": "deepseek"}
+{"key": "20:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "JMIA", "provider": "deepseek"}
+{"key": "20:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MNTN", "provider": "deepseek"}
+{"key": "20:2", "sample": 0, "parsed": true, "value": {"company": "Mattel", "ticker": "MAT"}, "symbol": "HAS", "provider": "deepseek"}
+{"key": "20:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MIR", "provider": "deepseek"}
+{"key": "20:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LSCC", "provider": "deepseek"}
+{"key": "20:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TDC", "provider": "deepseek"}
+{"key": "21:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMSC", "provider": "deepseek"}
+{"key": "21:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ECL", "provider": "deepseek"}
+{"key": "20:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HOG", "provider": "deepseek"}
+{"key": "21:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AIZ", "provider": "deepseek"}
+{"key": "21:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SAIC", "provider": "deepseek"}
+{"key": "21:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FISV", "provider": "deepseek"}
+{"key": "21:6", "sample": 0, "parsed": true, "value": {"company": "Mattel", "ticker": "MAT"}, "symbol": "MAT", "provider": "deepseek"}
+{"key": "21:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OSCR", "provider": "deepseek"}
+{"key": "22:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NIO", "provider": "deepseek"}
+{"key": "21:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "JHX", "provider": "deepseek"}
+{"key": "22:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BBY", "provider": "deepseek"}
+{"key": "22:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OUST", "provider": "deepseek"}
+{"key": "22:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ACEL", "provider": "deepseek"}
+{"key": "22:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SRRK", "provider": "deepseek"}
+{"key": "23:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NCLH", "provider": "deepseek"}
+{"key": "22:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "STAA", "provider": "deepseek"}
+{"key": "22:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ORN", "provider": "deepseek"}
+{"key": "22:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "THO", "provider": "deepseek"}
+{"key": "23:2", "sample": 0, "parsed": true, "value": {"company": "AST SpaceMobile", "ticker": "ASTS"}, "symbol": "ASTS", "provider": "deepseek"}
+{"key": "23:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AZO", "provider": "deepseek"}
+{"key": "23:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GTLB", "provider": "deepseek"}
+{"key": "23:6", "sample": 0, "parsed": true, "value": {"company": "Quantum Computing Inc.", "ticker": "QUBT"}, "symbol": "RGTI", "provider": "deepseek"}
+{"key": "23:7", "sample": 0, "parsed": true, "value": {"company": "Ingram Micro", "ticker": "INGM"}, "symbol": "KOS", "provider": "deepseek"}
+{"key": "23:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RIGL", "provider": "deepseek"}
+{"key": "24:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HYMC", "provider": "deepseek"}
+{"key": "23:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ACHR", "provider": "deepseek"}
+{"key": "24:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ONON", "provider": "deepseek"}
+{"key": "24:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BOX", "provider": "deepseek"}
+{"key": "24:3", "sample": 0, "parsed": true, "value": {"company": "Quantum Computing Inc.", "ticker": "QUBT"}, "symbol": "QBTS", "provider": "deepseek"}
+{"key": "24:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BBAI", "provider": "deepseek"}
+{"key": "24:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BGS", "provider": "deepseek"}
+{"key": "24:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "QUBT", "provider": "deepseek"}
+{"key": "24:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ASAN", "provider": "deepseek"}
+{"key": "25:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GLPI", "provider": "deepseek"}
+{"key": "25:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AKAM", "provider": "deepseek"}
+{"key": "25:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMC", "provider": "deepseek"}
+{"key": "25:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RNG", "provider": "deepseek"}
+{"key": "25:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IBRX", "provider": "deepseek"}
+{"key": "25:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PPL", "provider": "deepseek"}
+{"key": "25:6", "sample": 0, "parsed": true, "value": {"company": "Comfort Systems USA", "ticker": "FIX"}, "symbol": "FIX", "provider": "deepseek"}
+{"key": "25:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OPEN", "provider": "deepseek"}
+{"key": "26:2", "sample": 0, "parsed": true, "value": {"company": "HP Inc.", "ticker": "HPQ"}, "symbol": "HPE", "provider": "deepseek"}
+{"key": "26:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SEPN", "provider": "deepseek"}
+{"key": "26:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OKTA", "provider": "deepseek"}
+{"key": "26:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ZIM", "provider": "deepseek"}
+{"key": "26:7", "sample": 0, "parsed": true, "value": {"company": "Broadcom", "ticker": "AVGO"}, "symbol": "AVGO", "provider": "deepseek"}
+{"key": "26:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KFY", "provider": "deepseek"}
+{"key": "26:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SBET", "provider": "deepseek"}
+{"key": "26:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FCEL", "provider": "deepseek"}
+{"key": "27:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DBX", "provider": "deepseek"}
+{"key": "27:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMN", "provider": "deepseek"}
+{"key": "27:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMH", "provider": "deepseek"}
+{"key": "27:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SYRE", "provider": "deepseek"}
+{"key": "27:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AWK", "provider": "deepseek"}
+{"key": "27:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ALRM", "provider": "deepseek"}
+{"key": "28:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "APPN", "provider": "deepseek"}
+{"key": "28:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LKQ", "provider": "deepseek"}
+{"key": "28:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CARG", "provider": "deepseek"}
+{"key": "27:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IRTC", "provider": "deepseek"}
+{"key": "27:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GRAL", "provider": "deepseek"}
+{"key": "28:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CPRT", "provider": "deepseek"}
+{"key": "28:6", "sample": 0, "parsed": true, "value": {"company": "Molson Coors", "ticker": "TAP"}, "symbol": "TAP", "provider": "deepseek"}
+{"key": "28:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RNG", "provider": "deepseek"}
+{"key": "28:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BBDC", "provider": "deepseek"}
+{"key": "29:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ONTO", "provider": "deepseek"}
+{"key": "29:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FIG", "provider": "deepseek"}
+{"key": "29:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WSC", "provider": "deepseek"}
+{"key": "29:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PLSE", "provider": "deepseek"}
+{"key": "29:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AXTI", "provider": "deepseek"}
+{"key": "28:8", "sample": 0, "parsed": true, "value": {"company": "eBay", "ticker": "EBAY"}, "symbol": "EBAY", "provider": "deepseek"}
+{"key": "29:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BNL", "provider": "deepseek"}
+{"key": "29:7", "sample": 0, "parsed": true, "value": {"company": "eBay Inc.", "ticker": "EBAY"}, "symbol": "ETSY", "provider": "deepseek"}
+{"key": "30:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FRME", "provider": "deepseek"}
+{"key": "29:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HLIT", "provider": "deepseek"}
+{"key": "30:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HXL", "provider": "deepseek"}
+{"key": "30:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EFSC", "provider": "deepseek"}
+{"key": "30:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NEE", "provider": "deepseek"}
+{"key": "30:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "COLB", "provider": "deepseek"}
+{"key": "30:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PTEN", "provider": "deepseek"}
+{"key": "30:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BANR", "provider": "deepseek"}
+{"key": "30:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HBAN", "provider": "deepseek"}
+{"key": "31:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CHDN", "provider": "deepseek"}
+{"key": "31:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AZZ", "provider": "deepseek"}
+{"key": "31:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BANC", "provider": "deepseek"}
+{"key": "31:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "COUR", "provider": "deepseek"}
+{"key": "31:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HLX", "provider": "deepseek"}
+{"key": "31:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CVBF", "provider": "deepseek"}
+{"key": "32:2", "sample": 0, "parsed": true, "value": {"company": "Tesla", "ticker": "TSLA"}, "symbol": "TSLA", "provider": "deepseek"}
+{"key": "32:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LUV", "provider": "deepseek"}
+{"key": "31:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LOB", "provider": "deepseek"}
+{"key": "31:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GEV", "provider": "deepseek"}
+{"key": "32:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HON", "provider": "deepseek"}
+{"key": "32:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMP", "provider": "deepseek"}
+{"key": "32:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ESQ", "provider": "deepseek"}
+{"key": "32:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WCN", "provider": "deepseek"}
+{"key": "32:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "APPF", "provider": "deepseek"}
+{"key": "33:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UNP", "provider": "deepseek"}
+{"key": "33:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HELE", "provider": "deepseek"}
+{"key": "33:3", "sample": 0, "parsed": true, "value": {"company": "Freeport-McMoRan Inc.", "ticker": "FCX"}, "symbol": "FCX", "provider": "deepseek"}
+{"key": "32:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AAL", "provider": "deepseek"}
+{"key": "33:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "QCRH", "provider": "deepseek"}
+{"key": "33:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OII", "provider": "deepseek"}
+{"key": "33:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CMCSA", "provider": "deepseek"}
+{"key": "33:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FAF", "provider": "deepseek"}
+{"key": "33:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CNOB", "provider": "deepseek"}
+{"key": "34:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LMT", "provider": "deepseek"}
+{"key": "34:3", "sample": 0, "parsed": true, "value": {"company": "Keurig Dr Pepper", "ticker": "KDP"}, "symbol": "KDP", "provider": "deepseek"}
+{"key": "34:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PKG", "provider": "deepseek"}
+{"key": "34:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ROP", "provider": "deepseek"}
+{"key": "34:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "INFY", "provider": "deepseek"}
+{"key": "34:7", "sample": 0, "parsed": true, "value": {"company": "Thermo Fisher Scientific", "ticker": "TMO"}, "symbol": "TMO", "provider": "deepseek"}
+{"key": "34:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ORI", "provider": "deepseek"}
+{"key": "35:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GGG", "provider": "deepseek"}
+{"key": "35:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SNA", "provider": "deepseek"}
+{"key": "35:4", "sample": 0, "parsed": true, "value": {"company": "S&T Bancorp", "ticker": "STBA"}, "symbol": "STBA", "provider": "deepseek"}
+{"key": "35:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ASB", "provider": "deepseek"}
+{"key": "35:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ROL", "provider": "deepseek"}
+{"key": "35:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SAP", "provider": "deepseek"}
+{"key": "35:7", "sample": 0, "parsed": true, "value": {"company": "Boyd Gaming", "ticker": "BYD"}, "symbol": "BLMN", "provider": "deepseek"}
+{"key": "35:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ARR", "provider": "deepseek"}
+{"key": "36:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MXL", "provider": "deepseek"}
+{"key": "34:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IBCP", "provider": "deepseek"}
+{"key": "36:2", "sample": 0, "parsed": true, "value": {"company": "Hasbro", "ticker": "HAS"}, "symbol": "HAS", "provider": "deepseek"}
+{"key": "36:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KALU", "provider": "deepseek"}
+{"key": "36:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RLI", "provider": "deepseek"}
+{"key": "36:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LADR", "provider": "deepseek"}
+{"key": "36:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TCBI", "provider": "deepseek"}
+{"key": "36:7", "sample": 0, "parsed": true, "value": {"company": "First Financial Bancorp", "ticker": "FFBC"}, "symbol": "FFBC", "provider": "deepseek"}
+{"key": "36:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EGBN", "provider": "deepseek"}
+{"key": "37:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SIG", "provider": "deepseek"}
+{"key": "37:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TITN", "provider": "deepseek"}
+{"key": "37:2", "sample": 0, "parsed": true, "value": {"company": "United States Antimony Corporation", "ticker": "UAMY"}, "symbol": "UAMY", "provider": "deepseek"}
+{"key": "37:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AXTI", "provider": "deepseek"}
+{"key": "37:6", "sample": 0, "parsed": true, "value": {"company": "Ollie's Bargain Outlet Holdings, Inc.", "ticker": "OLLI"}, "symbol": "OLLI", "provider": "deepseek"}
+{"key": "37:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ACN", "provider": "deepseek"}
+{"key": "37:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ARCO", "provider": "deepseek"}
+{"key": "37:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RCAT", "provider": "deepseek"}
+{"key": "38:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "COUR", "provider": "deepseek"}
+{"key": "38:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NWL", "provider": "deepseek"}
+{"key": "38:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RBLX", "provider": "deepseek"}
+{"key": "38:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MSTR", "provider": "deepseek"}
+{"key": "38:5", "sample": 0, "parsed": true, "value": {"company": "Biogen", "ticker": "BIIB"}, "symbol": "BIIB", "provider": "deepseek"}
+{"key": "38:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MBUU", "provider": "deepseek"}
+{"key": "38:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FTNT", "provider": "deepseek"}
+{"key": "39:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BBW", "provider": "deepseek"}
+{"key": "39:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TNXP", "provider": "deepseek"}
+{"key": "38:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RDDT", "provider": "deepseek"}
+{"key": "39:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LEN", "provider": "deepseek"}
+{"key": "39:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BLDP", "provider": "deepseek"}
+{"key": "39:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FIZZ", "provider": "deepseek"}
+{"key": "39:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BMBL", "provider": "deepseek"}
+{"key": "40:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RBRK", "provider": "deepseek"}
+{"key": "39:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KODK", "provider": "deepseek"}
+{"key": "39:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NIO", "provider": "deepseek"}
+{"key": "40:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CAPR", "provider": "deepseek"}
+{"key": "40:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PATH", "provider": "deepseek"}
+{"key": "40:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LEN", "provider": "deepseek"}
+{"key": "40:7", "sample": 0, "parsed": true, "value": {"company": "El Pollo Loco Holdings", "ticker": "LOCO"}, "symbol": "ALLO", "provider": "deepseek"}
+{"key": "41:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CYH", "provider": "deepseek"}
+{"key": "40:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KODK", "provider": "deepseek"}
+{"key": "40:6", "sample": 0, "parsed": true, "value": {"company": "Kohl's", "ticker": "KSS"}, "symbol": "KSS", "provider": "deepseek"}
+{"key": "40:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OLMA", "provider": "deepseek"}
+{"key": "41:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "INBX", "provider": "deepseek"}
+{"key": "41:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BKU", "provider": "deepseek"}
+{"key": "41:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TEL", "provider": "deepseek"}
+{"key": "41:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BWB", "provider": "deepseek"}
+{"key": "41:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BWFG", "provider": "deepseek"}
+{"key": "41:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OZK", "provider": "deepseek"}
+{"key": "41:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MOH", "provider": "deepseek"}
+{"key": "42:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CME", "provider": "deepseek"}
+{"key": "42:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WSBC", "provider": "deepseek"}
+{"key": "42:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PNFP", "provider": "deepseek"}
+{"key": "42:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VRT", "provider": "deepseek"}
+{"key": "42:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NOC", "provider": "deepseek"}
+{"key": "42:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LVS", "provider": "deepseek"}
+{"key": "43:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TXN", "provider": "deepseek"}
+{"key": "42:8", "sample": 0, "parsed": true, "value": {"company": "Western Alliance Bancorporation", "ticker": "WAL"}, "symbol": "WAL", "provider": "deepseek"}
+{"key": "43:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CACI", "provider": "deepseek"}
+{"key": "42:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NLY", "provider": "deepseek"}
+{"key": "43:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UAL", "provider": "deepseek"}
+{"key": "43:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FBP", "provider": "deepseek"}
+{"key": "44:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PEGA", "provider": "deepseek"}
+{"key": "43:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OTIS", "provider": "deepseek"}
+{"key": "43:8", "sample": 0, "parsed": true, "value": {"company": "Old National Bancorp", "ticker": "ONB"}, "symbol": "ONB", "provider": "deepseek"}
+{"key": "44:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GSHD", "provider": "deepseek"}
+{"key": "43:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ENPH", "provider": "deepseek"}
+{"key": "44:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "STM", "provider": "deepseek"}
+{"key": "43:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WAB", "provider": "deepseek"}
+{"key": "44:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ALK", "provider": "deepseek"}
+{"key": "44:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CCS", "provider": "deepseek"}
+{"key": "45:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KMI", "provider": "deepseek"}
+{"key": "44:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EQT", "provider": "deepseek"}
+{"key": "45:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KNX", "provider": "deepseek"}
+{"key": "44:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WFRD", "provider": "deepseek"}
+{"key": "44:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NVTS", "provider": "deepseek"}
+{"key": "45:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ELV", "provider": "deepseek"}
+{"key": "45:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GEV", "provider": "deepseek"}
+{"key": "45:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ELS", "provider": "deepseek"}
+{"key": "45:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CCI", "provider": "deepseek"}
+{"key": "45:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UNH", "provider": "deepseek"}
+{"key": "45:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IBM", "provider": "deepseek"}
+{"key": "46:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GENI", "provider": "deepseek"}
+{"key": "46:2", "sample": 0, "parsed": true, "value": {"company": "Grocery Outlet Holding Corp", "ticker": "GO"}, "symbol": "GNW", "provider": "deepseek"}
+{"key": "46:1", "sample": 0, "parsed": true, "value": {"company": "Grocery Outlet Holding Corp", "ticker": "GO"}, "symbol": "SKM", "provider": "deepseek"}
+{"key": "46:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BWMN", "provider": "deepseek"}
+{"key": "46:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CRWD", "provider": "deepseek"}
+{"key": "46:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CBRL", "provider": "deepseek"}
+{"key": "47:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RGTI", "provider": "deepseek"}
+{"key": "46:8", "sample": 0, "parsed": true, "value": {"company": "Li Auto", "ticker": "LI"}, "symbol": "NIO", "provider": "deepseek"}
+{"key": "46:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BILI", "provider": "deepseek"}
+{"key": "47:2", "sample": 0, "parsed": true, "value": {"company": "Bath & Body Works", "ticker": "BBWI"}, "symbol": "BBWI", "provider": "deepseek"}
+{"key": "47:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VSTM", "provider": "deepseek"}
+{"key": "47:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GTLB", "provider": "deepseek"}
+{"key": "47:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BBY", "provider": "deepseek"}
+{"key": "47:5", "sample": 0, "parsed": true, "value": {"company": "Grocery Outlet Holding Corp", "ticker": "GO"}, "symbol": "BWLP", "provider": "deepseek"}
+{"key": "47:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OKTA", "provider": "deepseek"}
+{"key": "47:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ARDT", "provider": "deepseek"}
+{"key": "48:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GIS", "provider": "deepseek"}
+{"key": "48:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TITN", "provider": "deepseek"}
+{"key": "48:4", "sample": 0, "parsed": true, "value": {"company": "Williams-Sonoma", "ticker": "WSM"}, "symbol": "WSM", "provider": "deepseek"}
+{"key": "48:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "JBL", "provider": "deepseek"}
+{"key": "48:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DLO", "provider": "deepseek"}
+{"key": "48:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CSIQ", "provider": "deepseek"}
+{"key": "48:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OLLI", "provider": "deepseek"}
+{"key": "49:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CTAS", "provider": "deepseek"}
+{"key": "48:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DOCU", "provider": "deepseek"}
+{"key": "49:1", "sample": 0, "parsed": true, "value": {"company": "Worthington Steel", "ticker": "WS"}, "symbol": "TECK", "provider": "deepseek"}
+{"key": "49:5", "sample": 0, "parsed": true, "value": {"company": "Intrusion Inc.", "ticker": "INTZ"}, "symbol": "ONDS", "provider": "deepseek"}
+{"key": "49:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BYND", "provider": "deepseek"}
+{"key": "49:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ABSI", "provider": "deepseek"}
+{"key": "49:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SYM", "provider": "deepseek"}
+{"key": "49:7", "sample": 0, "parsed": true, "value": {"company": "Pony AI", "ticker": "PONY"}, "symbol": "WRD", "provider": "deepseek"}
+{"key": "50:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WGO", "provider": "deepseek"}
+{"key": "49:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PAYX", "provider": "deepseek"}
+{"key": "50:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PDD", "provider": "deepseek"}
+{"key": "50:4", "sample": 0, "parsed": true, "value": {"company": "Worthington Steel", "ticker": "WS"}, "symbol": "SBSW", "provider": "deepseek"}
+{"key": "50:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NAVN", "provider": "deepseek"}
+{"key": "50:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NEXT", "provider": "deepseek"}
+{"key": "50:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CHWY", "provider": "deepseek"}
+{"key": "50:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TITN", "provider": "deepseek"}
+{"key": "50:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PONY", "provider": "deepseek"}
+{"key": "51:1", "sample": 0, "parsed": true, "value": {"company": "Carnival Corporation", "ticker": "CCL"}, "symbol": "CCL", "provider": "deepseek"}
+{"key": "51:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VELO", "provider": "deepseek"}
+{"key": "51:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WYFI", "provider": "deepseek"}
+{"key": "51:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "USAR", "provider": "deepseek"}
+{"key": "51:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OXM", "provider": "deepseek"}
+{"key": "51:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GME", "provider": "deepseek"}
+{"key": "51:7", "sample": 0, "parsed": true, "value": {"company": "J.M. Smucker", "ticker": "SJM"}, "symbol": "SJM", "provider": "deepseek"}
+{"key": "51:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VOR", "provider": "deepseek"}
+{"key": "52:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMG", "provider": "deepseek"}
+{"key": "52:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RARE", "provider": "deepseek"}
+{"key": "52:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TWLO", "provider": "deepseek"}
+{"key": "52:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ENB", "provider": "deepseek"}
+{"key": "52:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BROS", "provider": "deepseek"}
+{"key": "52:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WEN", "provider": "deepseek"}
+{"key": "52:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FSLY", "provider": "deepseek"}
+{"key": "52:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NEU", "provider": "deepseek"}
+{"key": "53:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AUPH", "provider": "deepseek"}
+{"key": "53:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NHI", "provider": "deepseek"}
+{"key": "53:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CABO", "provider": "deepseek"}
+{"key": "53:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IONQ", "provider": "deepseek"}
+{"key": "53:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FOUR", "provider": "deepseek"}
+{"key": "53:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PACS", "provider": "deepseek"}
+{"key": "53:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMPH", "provider": "deepseek"}
+{"key": "54:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PRAA", "provider": "deepseek"}
+{"key": "54:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UUUU", "provider": "deepseek"}
+{"key": "53:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CRSP", "provider": "deepseek"}
+{"key": "54:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FLUT", "provider": "deepseek"}
+{"key": "54:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AAOI", "provider": "deepseek"}
+{"key": "54:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OPEN", "provider": "deepseek"}
+{"key": "54:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MFIC", "provider": "deepseek"}
+{"key": "54:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ESTC", "provider": "deepseek"}
+{"key": "54:7", "sample": 0, "parsed": true, "value": {"company": "IonQ", "ticker": "IONQ"}, "symbol": "QBTS", "provider": "deepseek"}
+{"key": "55:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EBS", "provider": "deepseek"}
+{"key": "55:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "INTU", "provider": "deepseek"}
+{"key": "55:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SHAK", "provider": "deepseek"}
+{"key": "55:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TXNM", "provider": "deepseek"}
+{"key": "55:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WULF", "provider": "deepseek"}
+{"key": "55:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HRL", "provider": "deepseek"}
+{"key": "56:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NVAX", "provider": "deepseek"}
+{"key": "55:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DNUT", "provider": "deepseek"}
+{"key": "55:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CTKB", "provider": "deepseek"}
+{"key": "56:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NWN", "provider": "deepseek"}
+{"key": "56:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SHEN", "provider": "deepseek"}
+{"key": "56:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FDUS", "provider": "deepseek"}
+{"key": "56:4", "sample": 0, "parsed": true, "value": {"company": "TJX Companies", "ticker": "TJX"}, "symbol": "TJX", "provider": "deepseek"}
+{"key": "56:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HUT", "provider": "deepseek"}
+{"key": "56:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NTLA", "provider": "deepseek"}
+{"key": "57:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PENN", "provider": "deepseek"}
+{"key": "57:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SLDP", "provider": "deepseek"}
+{"key": "57:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DCI", "provider": "deepseek"}
+{"key": "56:3", "sample": 0, "parsed": true, "value": {"company": "JinkoSolar", "ticker": "JKS"}, "symbol": "JKS", "provider": "deepseek"}
+{"key": "57:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CON", "provider": "deepseek"}
+{"key": "57:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SNOW", "provider": "deepseek"}
+{"key": "57:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CELH", "provider": "deepseek"}
+{"key": "57:7", "sample": 0, "parsed": true, "value": {"company": "D-Wave Quantum", "ticker": "QBTS"}, "symbol": "QUBT", "provider": "deepseek"}
+{"key": "58:2", "sample": 0, "parsed": true, "value": {"company": "Warner Bros. Discovery", "ticker": "WBD"}, "symbol": "WBD", "provider": "deepseek"}
+{"key": "58:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PSNL", "provider": "deepseek"}
+{"key": "58:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DRH", "provider": "deepseek"}
+{"key": "57:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SMR", "provider": "deepseek"}
+{"key": "58:4", "sample": 0, "parsed": true, "value": {"company": "Lowe's Companies, Inc.", "ticker": "LOW"}, "symbol": "LOW", "provider": "deepseek"}
+{"key": "58:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMRX", "provider": "deepseek"}
+{"key": "58:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BWIN", "provider": "deepseek"}
+{"key": "59:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SOFI", "provider": "deepseek"}
+{"key": "58:8", "sample": 0, "parsed": true, "value": {"company": "Papa John's International", "ticker": "PZZA"}, "symbol": "PZZA", "provider": "deepseek"}
+{"key": "58:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OSPN", "provider": "deepseek"}
+{"key": "59:2", "sample": 0, "parsed": true, "value": {"company": "Novavax", "ticker": "NVAX"}, "symbol": "SNY", "provider": "deepseek"}
+{"key": "59:3", "sample": 0, "parsed": true, "value": {"company": "Flutter Entertainment", "ticker": "FLUT"}, "symbol": "FTRE", "provider": "deepseek"}
+{"key": "59:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FIGR", "provider": "deepseek"}
+{"key": "59:8", "sample": 0, "parsed": true, "value": {"company": "Energy Fuels Inc.", "ticker": "UUUU"}, "symbol": "UUUU", "provider": "deepseek"}
+{"key": "59:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ARLO", "provider": "deepseek"}
+{"key": "59:4", "sample": 0, "parsed": true, "value": {"company": "ANI Pharmaceuticals", "ticker": "ANIP"}, "symbol": "ANIP", "provider": "deepseek"}
+{"key": "59:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GSAT", "provider": "deepseek"}
+{"key": "60:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NTLA", "provider": "deepseek"}
+{"key": "60:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SOC", "provider": "deepseek"}
+{"key": "60:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CABO", "provider": "deepseek"}
+{"key": "60:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NTNX", "provider": "deepseek"}
+{"key": "60:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FIGS", "provider": "deepseek"}
+{"key": "60:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "URBN", "provider": "deepseek"}
+{"key": "60:2", "sample": 0, "parsed": true, "value": {"company": "JinkoSolar", "ticker": "JKS"}, "symbol": "JKS", "provider": "deepseek"}
+{"key": "60:8", "sample": 0, "parsed": true, "value": {"company": "Coupang", "ticker": "CPNG"}, "symbol": "GCO", "provider": "deepseek"}
+{"key": "61:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EVER", "provider": "deepseek"}
+{"key": "61:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMC", "provider": "deepseek"}
+{"key": "61:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DPZ", "provider": "deepseek"}
+{"key": "61:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OKE", "provider": "deepseek"}
+{"key": "61:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BCC", "provider": "deepseek"}
+{"key": "61:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BMRN", "provider": "deepseek"}
+{"key": "61:8", "sample": 0, "parsed": true, "value": {"company": "Coca-Cola FEMSA", "ticker": "KOF"}, "symbol": "KOF", "provider": "deepseek"}
+{"key": "61:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AESI", "provider": "deepseek"}
+{"key": "62:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CAG", "provider": "deepseek"}
+{"key": "62:3", "sample": 0, "parsed": true, "value": {"company": "Dave & Buster's Entertainment", "ticker": "PLAY"}, "symbol": "PLAY", "provider": "deepseek"}
+{"key": "62:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TLRY", "provider": "deepseek"}
+{"key": "62:5", "sample": 0, "parsed": true, "value": {"company": "MSC Industrial Direct Co., Inc.", "ticker": "MSM"}, "symbol": "MSM", "provider": "deepseek"}
+{"key": "63:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TPR", "provider": "deepseek"}
+{"key": "62:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BYND", "provider": "deepseek"}
+{"key": "62:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KULR", "provider": "deepseek"}
+{"key": "63:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "QLYS", "provider": "deepseek"}
+{"key": "62:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PVH", "provider": "deepseek"}
+{"key": "62:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SIDU", "provider": "deepseek"}
+{"key": "63:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FTNT", "provider": "deepseek"}
+{"key": "63:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GOOGL", "provider": "deepseek"}
+{"key": "63:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RGA", "provider": "deepseek"}
+{"key": "63:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ELF", "provider": "deepseek"}
+{"key": "63:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SNA", "provider": "deepseek"}
+{"key": "64:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SYM", "provider": "deepseek"}
+{"key": "63:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AGCO", "provider": "deepseek"}
+{"key": "64:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GEN", "provider": "deepseek"}
+{"key": "64:4", "sample": 0, "parsed": true, "value": {"company": "Cummins Inc.", "ticker": "CMI"}, "symbol": "CMI", "provider": "deepseek"}
+{"key": "64:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UNM", "provider": "deepseek"}
+{"key": "64:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EHC", "provider": "deepseek"}
+{"key": "64:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MBUU", "provider": "deepseek"}
+{"key": "64:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ROK", "provider": "deepseek"}
+{"key": "64:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GOOG", "provider": "deepseek"}
+{"key": "65:2", "sample": 0, "parsed": true, "value": {"company": "Snap Inc.", "ticker": "SNAP"}, "symbol": "SNAP", "provider": "deepseek"}
+{"key": "65:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MTD", "provider": "deepseek"}
+{"key": "65:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PTON", "provider": "deepseek"}
+{"key": "65:5", "sample": 0, "parsed": true, "value": {"company": "Bristol Myers Squibb", "ticker": "BMY"}, "symbol": "BMY", "provider": "deepseek"}
+{"key": "65:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EXPO", "provider": "deepseek"}
+{"key": "65:7", "sample": 0, "parsed": true, "value": {"company": "Eli Lilly and Company", "ticker": "LLY"}, "symbol": "LLY", "provider": "deepseek"}
+{"key": "65:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GOLD", "provider": "deepseek"}
+{"key": "66:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "REG", "provider": "deepseek"}
+{"key": "65:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VTR", "provider": "deepseek"}
+{"key": "66:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "XPO", "provider": "deepseek"}
+{"key": "66:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VSAT", "provider": "deepseek"}
+{"key": "66:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "COP", "provider": "deepseek"}
+{"key": "66:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MGY", "provider": "deepseek"}
+{"key": "66:4", "sample": 0, "parsed": true, "value": {"company": "SiriusXM Holdings Inc.", "ticker": "SIRI"}, "symbol": "SIRI", "provider": "deepseek"}
+{"key": "67:1", "sample": 0, "parsed": true, "value": {"company": "O'Reilly Automotive", "ticker": "ORLY"}, "symbol": "ORLY", "provider": "deepseek"}
+{"key": "66:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TRI", "provider": "deepseek"}
+{"key": "67:2", "sample": 0, "parsed": true, "value": {"company": "Central Garden & Pet", "ticker": "CENT"}, "symbol": "CENT", "provider": "deepseek"}
+{"key": "66:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MOH", "provider": "deepseek"}
+{"key": "67:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BSX", "provider": "deepseek"}
+{"key": "67:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ATEN", "provider": "deepseek"}
+{"key": "67:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TTMI", "provider": "deepseek"}
+{"key": "67:8", "sample": 0, "parsed": true, "value": {"company": "Tapestry, Inc.", "ticker": "TPR"}, "symbol": "CAL", "provider": "deepseek"}
+{"key": "67:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GEHC", "provider": "deepseek"}
+{"key": "68:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "STC", "provider": "deepseek"}
+{"key": "68:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FOXA", "provider": "deepseek"}
+{"key": "68:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMSC", "provider": "deepseek"}
+{"key": "68:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FLEX", "provider": "deepseek"}
+{"key": "68:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FUBO", "provider": "deepseek"}
+{"key": "68:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ALL", "provider": "deepseek"}
+{"key": "68:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ELF", "provider": "deepseek"}
+{"key": "67:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMD", "provider": "deepseek"}
+{"key": "68:6", "sample": 0, "parsed": true, "value": {"company": "Old Dominion Freight Line", "ticker": "ODFL"}, "symbol": "ODFL", "provider": "deepseek"}
+{"key": "69:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CPAY", "provider": "deepseek"}
+{"key": "69:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NYT", "provider": "deepseek"}
+{"key": "69:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FORM", "provider": "deepseek"}
+{"key": "69:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "STE", "provider": "deepseek"}
+{"key": "69:1", "sample": 0, "parsed": true, "value": {"company": "Stanley Black & Decker", "ticker": "SWK"}, "symbol": "SWK", "provider": "deepseek"}
+{"key": "69:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PAHC", "provider": "deepseek"}
+{"key": "69:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FMC", "provider": "deepseek"}
+{"key": "70:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FOX", "provider": "deepseek"}
+{"key": "69:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WOLF", "provider": "deepseek"}
+{"key": "70:3", "sample": 0, "parsed": true, "value": {"company": "Align Technology", "ticker": "ALGN"}, "symbol": "ALGN", "provider": "deepseek"}
+{"key": "70:5", "sample": 0, "parsed": true, "value": {"company": "Take-Two Interactive", "ticker": "TTWO"}, "symbol": "TTWO", "provider": "deepseek"}
+{"key": "70:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NVS", "provider": "deepseek"}
+{"key": "70:4", "sample": 0, "parsed": true, "value": {"company": "AbbVie", "ticker": "ABBV"}, "symbol": "ABBV", "provider": "deepseek"}
+{"key": "70:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EGP", "provider": "deepseek"}
+{"key": "70:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PSX", "provider": "deepseek"}
+{"key": "71:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMGN", "provider": "deepseek"}
+{"key": "71:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MUSA", "provider": "deepseek"}
+{"key": "70:7", "sample": 0, "parsed": true, "value": {"company": "Yum! Brands", "ticker": "YUM"}, "symbol": "YUM", "provider": "deepseek"}
+{"key": "71:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FLNC", "provider": "deepseek"}
+{"key": "71:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "COR", "provider": "deepseek"}
+{"key": "71:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CMG", "provider": "deepseek"}
+{"key": "71:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CRNC", "provider": "deepseek"}
+{"key": "71:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "JCI", "provider": "deepseek"}
+{"key": "71:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ESTC", "provider": "deepseek"}
+{"key": "72:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ITW", "provider": "deepseek"}
+{"key": "72:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MTCH", "provider": "deepseek"}
+{"key": "72:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ADM", "provider": "deepseek"}
+{"key": "72:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EPD", "provider": "deepseek"}
+{"key": "72:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EMR", "provider": "deepseek"}
+{"key": "72:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CSL", "provider": "deepseek"}
+{"key": "72:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MZTI", "provider": "deepseek"}
+{"key": "73:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "THG", "provider": "deepseek"}
+{"key": "73:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ENPH", "provider": "deepseek"}
+{"key": "72:8", "sample": 0, "parsed": true, "value": {"company": "Galaxy Digital", "ticker": "GLXY"}, "symbol": "GLXY", "provider": "deepseek"}
+{"key": "73:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PNR", "provider": "deepseek"}
+{"key": "73:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "POWL", "provider": "deepseek"}
+{"key": "73:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PLTR", "provider": "deepseek"}
+{"key": "73:6", "sample": 0, "parsed": true, "value": {"company": "Madison Square Garden Entertainment", "ticker": "MSGE"}, "symbol": "MSGE", "provider": "deepseek"}
+{"key": "73:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CHTR", "provider": "deepseek"}
+{"key": "73:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HMN", "provider": "deepseek"}
+{"key": "74:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "COLM", "provider": "deepseek"}
+{"key": "74:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PEP", "provider": "deepseek"}
+{"key": "74:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DVA", "provider": "deepseek"}
+{"key": "74:3", "sample": 0, "parsed": true, "value": {"company": "Jack Henry & Associates", "ticker": "JKHY"}, "symbol": "JKHY", "provider": "deepseek"}
+{"key": "74:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EQNR", "provider": "deepseek"}
+{"key": "74:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RNR", "provider": "deepseek"}
+{"key": "74:7", "sample": 0, "parsed": true, "value": {"company": "Merck & Co.", "ticker": "MRK"}, "symbol": "MRK", "provider": "deepseek"}
+{"key": "75:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ALLY", "provider": "deepseek"}
+{"key": "75:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CNS", "provider": "deepseek"}
+{"key": "75:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "STT", "provider": "deepseek"}
+{"key": "74:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "INNV", "provider": "deepseek"}
+{"key": "75:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PEP", "provider": "deepseek"}
+{"key": "75:6", "sample": 0, "parsed": true, "value": {"company": "F.N.B. Corporation", "ticker": "FNB"}, "symbol": "FNB", "provider": "deepseek"}
+{"key": "76:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "JKS", "provider": "deepseek"}
+{"key": "75:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FITB", "provider": "deepseek"}
+{"key": "75:5", "sample": 0, "parsed": true, "value": {"company": "Autoliv Inc", "ticker": "ALV"}, "symbol": "PII", "provider": "deepseek"}
+{"key": "76:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AVBH", "provider": "deepseek"}
+{"key": "76:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SYY", "provider": "deepseek"}
+{"key": "75:8", "sample": 0, "parsed": true, "value": {"company": "U.S. Bancorp", "ticker": "USB"}, "symbol": "USB", "provider": "deepseek"}
+{"key": "76:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "XYL", "provider": "deepseek"}
+{"key": "76:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KNSA", "provider": "deepseek"}
+{"key": "77:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HYMC", "provider": "deepseek"}
+{"key": "76:5", "sample": 0, "parsed": true, "value": {"company": "Seagate Technology Holdings", "ticker": "STX"}, "symbol": "SIMO", "provider": "deepseek"}
+{"key": "76:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CINF", "provider": "deepseek"}
+{"key": "76:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CVLT", "provider": "deepseek"}
+{"key": "77:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LGIH", "provider": "deepseek"}
+{"key": "77:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CZR", "provider": "deepseek"}
+{"key": "77:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PRCH", "provider": "deepseek"}
+{"key": "77:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GSK", "provider": "deepseek"}
+{"key": "77:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UNM", "provider": "deepseek"}
+{"key": "77:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CMS", "provider": "deepseek"}
+{"key": "77:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BKNG", "provider": "deepseek"}
+{"key": "78:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EPD", "provider": "deepseek"}
+{"key": "78:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CECO", "provider": "deepseek"}
+{"key": "78:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TRU", "provider": "deepseek"}
+{"key": "78:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SUI", "provider": "deepseek"}
+{"key": "78:2", "sample": 0, "parsed": true, "value": {"company": "Kimberly-Clark", "ticker": "KMB"}, "symbol": "KMB", "provider": "deepseek"}
+{"key": "79:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PSA", "provider": "deepseek"}
+{"key": "78:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UCTT", "provider": "deepseek"}
+{"key": "78:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FFIV", "provider": "deepseek"}
+{"key": "78:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "STX", "provider": "deepseek"}
+{"key": "79:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LSTR", "provider": "deepseek"}
+{"key": "79:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FELE", "provider": "deepseek"}
+{"key": "79:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PCAR", "provider": "deepseek"}
+{"key": "79:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SLDE", "provider": "deepseek"}
+{"key": "79:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CDNS", "provider": "deepseek"}
+{"key": "79:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HOPE", "provider": "deepseek"}
+{"key": "80:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AWI", "provider": "deepseek"}
+{"key": "80:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ITRI", "provider": "deepseek"}
+{"key": "80:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FSBC", "provider": "deepseek"}
+{"key": "79:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UHS", "provider": "deepseek"}
+{"key": "80:4", "sample": 0, "parsed": true, "value": {"company": "NXP Semiconductors", "ticker": "NXPI"}, "symbol": "NXPI", "provider": "deepseek"}
+{"key": "80:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ARE", "provider": "deepseek"}
+{"key": "80:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PNR", "provider": "deepseek"}
+{"key": "81:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CSGP", "provider": "deepseek"}
+{"key": "81:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EIX", "provider": "deepseek"}
+{"key": "80:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ROG", "provider": "deepseek"}
+{"key": "81:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NOV", "provider": "deepseek"}
+{"key": "81:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BRO", "provider": "deepseek"}
+{"key": "80:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ZBH", "provider": "deepseek"}
+{"key": "81:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SPOT", "provider": "deepseek"}
+{"key": "81:7", "sample": 0, "parsed": true, "value": {"company": "Sherwin-Williams", "ticker": "SHW"}, "symbol": "SHW", "provider": "deepseek"}
+{"key": "81:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MDLZ", "provider": "deepseek"}
+{"key": "81:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HLT", "provider": "deepseek"}
+{"key": "82:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CSR", "provider": "deepseek"}
+{"key": "82:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SSRM", "provider": "deepseek"}
+{"key": "82:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RSG", "provider": "deepseek"}
+{"key": "82:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NNE", "provider": "deepseek"}
+{"key": "82:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FLR", "provider": "deepseek"}
+{"key": "82:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KVUE", "provider": "deepseek"}
+{"key": "82:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CDNS", "provider": "deepseek"}
+{"key": "83:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NEU", "provider": "deepseek"}
+{"key": "83:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NAMS", "provider": "deepseek"}
+{"key": "82:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TCMD", "provider": "deepseek"}
+{"key": "83:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MDT", "provider": "deepseek"}
+{"key": "83:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ANDE", "provider": "deepseek"}
+{"key": "83:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CZR", "provider": "deepseek"}
+{"key": "83:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TOL", "provider": "deepseek"}
+{"key": "83:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HRL", "provider": "deepseek"}
+{"key": "84:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SOFI", "provider": "deepseek"}
+{"key": "83:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LDOS", "provider": "deepseek"}
+{"key": "84:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "APPF", "provider": "deepseek"}
+{"key": "84:4", "sample": 0, "parsed": true, "value": {"company": "Ermenegildo Zegna", "ticker": "ZGN"}, "symbol": "ZGN", "provider": "deepseek"}
+{"key": "84:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ARCB", "provider": "deepseek"}
+{"key": "84:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SBUX", "provider": "deepseek"}
+{"key": "84:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RMD", "provider": "deepseek"}
+{"key": "84:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GNTX", "provider": "deepseek"}
+{"key": "85:2", "sample": 0, "parsed": true, "value": {"company": "American Eagle Outfitters", "ticker": "AEO"}, "symbol": "AEO", "provider": "deepseek"}
+{"key": "85:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CAL", "provider": "deepseek"}
+{"key": "85:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FDX", "provider": "deepseek"}
+{"key": "84:8", "sample": 0, "parsed": true, "value": {"company": "UiPath", "ticker": "PATH"}, "symbol": "PATH", "provider": "deepseek"}
+{"key": "85:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ONDS", "provider": "deepseek"}
+{"key": "85:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SEDG", "provider": "deepseek"}
+{"key": "85:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FIVE", "provider": "deepseek"}
+{"key": "85:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SATL", "provider": "deepseek"}
+{"key": "85:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SCHL", "provider": "deepseek"}
+{"key": "86:2", "sample": 0, "parsed": true, "value": {"company": "Bloomin' Brands", "ticker": "BLMN"}, "symbol": "BLMN", "provider": "deepseek"}
+{"key": "86:1", "sample": 0, "parsed": true, "value": {"company": "Keysight Technologies", "ticker": "KEYS"}, "symbol": "ERIC", "provider": "deepseek"}
+{"key": "86:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TJX", "provider": "deepseek"}
+{"key": "86:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PLAB", "provider": "deepseek"}
+{"key": "86:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "YOU", "provider": "deepseek"}
+{"key": "86:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KEYS", "provider": "deepseek"}
+{"key": "86:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PNTG", "provider": "deepseek"}
+{"key": "87:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SHOO", "provider": "deepseek"}
+{"key": "87:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PTGX", "provider": "deepseek"}
+{"key": "86:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NGVT", "provider": "deepseek"}
+{"key": "87:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CELH", "provider": "deepseek"}
+{"key": "87:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MANU", "provider": "deepseek"}
+{"key": "87:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CHRD", "provider": "deepseek"}
+{"key": "87:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ARRY", "provider": "deepseek"}
+{"key": "87:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HEI", "provider": "deepseek"}
+{"key": "88:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VCYT", "provider": "deepseek"}
+{"key": "87:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ADMA", "provider": "deepseek"}
+{"key": "88:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FERG", "provider": "deepseek"}
+{"key": "88:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CQP", "provider": "deepseek"}
+{"key": "88:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HPQ", "provider": "deepseek"}
+{"key": "88:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ROOT", "provider": "deepseek"}
+{"key": "88:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MGRC", "provider": "deepseek"}
+{"key": "88:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FATE", "provider": "deepseek"}
+{"key": "89:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MATX", "provider": "deepseek"}
+{"key": "89:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ECVT", "provider": "deepseek"}
+{"key": "89:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IONS", "provider": "deepseek"}
+{"key": "88:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DBRG", "provider": "deepseek"}
+{"key": "89:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NVTS", "provider": "deepseek"}
+{"key": "89:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CCO", "provider": "deepseek"}
+{"key": "89:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ERIE", "provider": "deepseek"}
+{"key": "90:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GTN", "provider": "deepseek"}
+{"key": "89:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MDXG", "provider": "deepseek"}
+{"key": "90:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RXRX", "provider": "deepseek"}
+{"key": "90:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ACRS", "provider": "deepseek"}
+{"key": "89:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VIPS", "provider": "deepseek"}
+{"key": "90:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VRDN", "provider": "deepseek"}
+{"key": "90:5", "sample": 0, "parsed": true, "value": {"company": "Acadia Healthcare", "ticker": "ACHC"}, "symbol": "ALB", "provider": "deepseek"}
+{"key": "90:7", "sample": 0, "parsed": true, "value": {"company": "Diageo", "ticker": "DEO"}, "symbol": "DEO", "provider": "deepseek"}
+{"key": "90:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ACHC", "provider": "deepseek"}
+{"key": "90:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VSEC", "provider": "deepseek"}
+{"key": "91:1", "sample": 0, "parsed": true, "value": {"company": "Lowe's", "ticker": "LOW"}, "symbol": "LOW", "provider": "deepseek"}
+{"key": "91:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TDOC", "provider": "deepseek"}
+{"key": "91:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HUT", "provider": "deepseek"}
+{"key": "91:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AXON", "provider": "deepseek"}
+{"key": "91:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IONQ", "provider": "deepseek"}
+{"key": "91:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IEP", "provider": "deepseek"}
+{"key": "91:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RDW", "provider": "deepseek"}
+{"key": "92:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FIX", "provider": "deepseek"}
+{"key": "91:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KBR", "provider": "deepseek"}
+{"key": "92:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NOK", "provider": "deepseek"}
+{"key": "92:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "INTC", "provider": "deepseek"}
+{"key": "92:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMTB", "provider": "deepseek"}
+{"key": "92:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BYD", "provider": "deepseek"}
+{"key": "93:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CHTR", "provider": "deepseek"}
+{"key": "92:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HTH", "provider": "deepseek"}
+{"key": "92:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ERIE", "provider": "deepseek"}
+{"key": "92:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GBCI", "provider": "deepseek"}
+{"key": "93:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UVE", "provider": "deepseek"}
+{"key": "93:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HCA", "provider": "deepseek"}
+{"key": "93:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "APOG", "provider": "deepseek"}
+{"key": "93:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SSB", "provider": "deepseek"}
+{"key": "93:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PFG", "provider": "deepseek"}
+{"key": "93:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HIG", "provider": "deepseek"}
+{"key": "93:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ORC", "provider": "deepseek"}
+{"key": "94:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NBTB", "provider": "deepseek"}
+{"key": "94:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EBC", "provider": "deepseek"}
+{"key": "94:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BKR", "provider": "deepseek"}
+{"key": "94:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KNSL", "provider": "deepseek"}
+{"key": "94:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SXT", "provider": "deepseek"}
+{"key": "94:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FHB", "provider": "deepseek"}
+{"key": "94:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AXP", "provider": "deepseek"}
+{"key": "94:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FBIZ", "provider": "deepseek"}
+{"key": "95:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMPX", "provider": "deepseek"}
+{"key": "95:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TTC", "provider": "deepseek"}
+{"key": "95:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BURL", "provider": "deepseek"}
+{"key": "95:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RGTI", "provider": "deepseek"}
+{"key": "95:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ALTO", "provider": "deepseek"}
+{"key": "95:7", "sample": 0, "parsed": true, "value": {"company": "Rigetti Computing", "ticker": "RGTI"}, "symbol": "QBTS", "provider": "deepseek"}
+{"key": "95:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MEOH", "provider": "deepseek"}
+{"key": "95:8", "sample": 0, "parsed": true, "value": {"company": "Smith & Wesson Brands", "ticker": "SWBI"}, "symbol": "SWBI", "provider": "deepseek"}
+{"key": "96:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MAT", "provider": "deepseek"}
+{"key": "96:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "USFD", "provider": "deepseek"}
+{"key": "96:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ZTS", "provider": "deepseek"}
+{"key": "96:2", "sample": 0, "parsed": true, "value": {"company": "Anheuser-Busch InBev", "ticker": "BUD"}, "symbol": "BUD", "provider": "deepseek"}
+{"key": "96:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NBIS", "provider": "deepseek"}
+{"key": "96:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CBL", "provider": "deepseek"}
+{"key": "96:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "QSR", "provider": "deepseek"}
+{"key": "96:4", "sample": 0, "parsed": true, "value": {"company": "Maplebear Inc.", "ticker": "CART"}, "symbol": "CART", "provider": "deepseek"}
+{"key": "97:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FBIN", "provider": "deepseek"}
+{"key": "97:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BFAM", "provider": "deepseek"}
+{"key": "97:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BIO", "provider": "deepseek"}
+{"key": "97:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HASI", "provider": "deepseek"}
+{"key": "97:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IPGP", "provider": "deepseek"}
+{"key": "97:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MHK", "provider": "deepseek"}
+{"key": "97:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ATOM", "provider": "deepseek"}
+{"key": "98:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SHOP", "provider": "deepseek"}
+{"key": "98:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HWM", "provider": "deepseek"}
+{"key": "98:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "VRTX", "provider": "deepseek"}
+{"key": "97:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AMG", "provider": "deepseek"}
+{"key": "98:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AEP", "provider": "deepseek"}
+{"key": "98:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CRSR", "provider": "deepseek"}
+{"key": "98:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IRM", "provider": "deepseek"}
+{"key": "98:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OSCR", "provider": "deepseek"}
+{"key": "99:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ASTH", "provider": "deepseek"}
+{"key": "99:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TDW", "provider": "deepseek"}
+{"key": "98:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EXPE", "provider": "deepseek"}
+{"key": "99:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ADT", "provider": "deepseek"}
+{"key": "99:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NUVB", "provider": "deepseek"}
+{"key": "99:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ADSK", "provider": "deepseek"}
+{"key": "99:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KEP", "provider": "deepseek"}
+{"key": "99:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GRRR", "provider": "deepseek"}
+{"key": "99:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HLIO", "provider": "deepseek"}
+{"key": "100:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SGML", "provider": "deepseek"}
+{"key": "100:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CHWY", "provider": "deepseek"}
+{"key": "100:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WYFI", "provider": "deepseek"}
+{"key": "100:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AGX", "provider": "deepseek"}
+{"key": "100:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CMC", "provider": "deepseek"}
+{"key": "100:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KYTX", "provider": "deepseek"}
+{"key": "100:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NMAX", "provider": "deepseek"}
+{"key": "101:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DOMO", "provider": "deepseek"}
+{"key": "101:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HPK", "provider": "deepseek"}
+{"key": "101:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SNOW", "provider": "deepseek"}
+{"key": "100:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GAP", "provider": "deepseek"}
+{"key": "101:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CAG", "provider": "deepseek"}
+{"key": "101:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PATH", "provider": "deepseek"}
+{"key": "102:1", "sample": 0, "parsed": true, "value": {"company": "Casey's General Stores", "ticker": "CASY"}, "symbol": "CASY", "provider": "deepseek"}
+{"key": "101:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WOOF", "provider": "deepseek"}
+{"key": "101:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SERV", "provider": "deepseek"}
+{"key": "101:6", "sample": 0, "parsed": true, "value": {"company": "Rivian", "ticker": "RIVN"}, "symbol": "NIO", "provider": "deepseek"}
+{"key": "102:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "JOYY", "provider": "deepseek"}
+{"key": "102:2", "sample": 0, "parsed": true, "value": {"company": "Domo Inc", "ticker": "DOMO"}, "symbol": "TIC", "provider": "deepseek"}
+{"key": "102:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NIO", "provider": "deepseek"}
+{"key": "102:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UMAC", "provider": "deepseek"}
+{"key": "102:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UNFI", "provider": "deepseek"}
+{"key": "102:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TDOC", "provider": "deepseek"}
+{"key": "103:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ABM", "provider": "deepseek"}
+{"key": "102:7", "sample": 0, "parsed": true, "value": {"company": "Uranium Energy Corp.", "ticker": "UEC"}, "symbol": "UEC", "provider": "deepseek"}
+{"key": "103:3", "sample": 0, "parsed": true, "value": {"company": "Kohl's", "ticker": "KSS"}, "symbol": "KSS", "provider": "deepseek"}
+{"key": "103:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UUUU", "provider": "deepseek"}
+{"key": "103:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GRPN", "provider": "deepseek"}
+{"key": "103:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GAP", "provider": "deepseek"}
+{"key": "104:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PLD", "provider": "deepseek"}
+{"key": "103:7", "sample": 0, "parsed": true, "value": {"company": "Domo Inc", "ticker": "DOMO"}, "symbol": "BLDP", "provider": "deepseek"}
+{"key": "103:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TER", "provider": "deepseek"}
+{"key": "103:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OUST", "provider": "deepseek"}
+{"key": "104:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MRSH", "provider": "deepseek"}
+{"key": "104:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SFNC", "provider": "deepseek"}
+{"key": "104:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "USB", "provider": "deepseek"}
+{"key": "104:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TRV", "provider": "deepseek"}
+{"key": "104:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IIIN", "provider": "deepseek"}
+{"key": "104:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GSBC", "provider": "deepseek"}
+{"key": "105:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SBCF", "provider": "deepseek"}
+{"key": "104:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HOMB", "provider": "deepseek"}
+{"key": "105:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SOFI", "provider": "deepseek"}
+{"key": "105:2", "sample": 0, "parsed": true, "value": {"company": "Old Dominion Freight Line", "ticker": "ODFL"}, "symbol": "ODFL", "provider": "deepseek"}
+{"key": "105:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ORN", "provider": "deepseek"}
+{"key": "105:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AZN", "provider": "deepseek"}
+{"key": "105:5", "sample": 0, "parsed": true, "value": {"company": "Stanley Black & Decker", "ticker": "SWK"}, "symbol": "SWK", "provider": "deepseek"}
+{"key": "105:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TER", "provider": "deepseek"}
+{"key": "105:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ABBV", "provider": "deepseek"}
+{"key": "106:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EME", "provider": "deepseek"}
+{"key": "106:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "AFL", "provider": "deepseek"}
+{"key": "106:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OHI", "provider": "deepseek"}
+{"key": "106:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TDOC", "provider": "deepseek"}
+{"key": "106:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PSN", "provider": "deepseek"}
+{"key": "106:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RNST", "provider": "deepseek"}
+{"key": "106:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "TTE", "provider": "deepseek"}
+{"key": "107:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "NOG", "provider": "deepseek"}
+{"key": "107:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RUSHA", "provider": "deepseek"}
+{"key": "107:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HUM", "provider": "deepseek"}
+{"key": "106:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "WING", "provider": "deepseek"}
+{"key": "107:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "PSX", "provider": "deepseek"}
+{"key": "107:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "DAN", "provider": "deepseek"}
+{"key": "107:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LMND", "provider": "deepseek"}
+{"key": "107:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SMG", "provider": "deepseek"}
+{"key": "107:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "KGC", "provider": "deepseek"}
+{"key": "108:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "COCO", "provider": "deepseek"}
+{"key": "108:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CLVT", "provider": "deepseek"}
+{"key": "108:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BKNG", "provider": "deepseek"}
+{"key": "108:3", "sample": 0, "parsed": true, "value": {"company": "Bank of N.T. Butterfield & Son Limited", "ticker": "NTB"}, "symbol": "NTB", "provider": "deepseek"}
+{"key": "108:6", "sample": 0, "parsed": true, "value": {"company": "Yum! Brands", "ticker": "YUM"}, "symbol": "YUM", "provider": "deepseek"}
+{"key": "108:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "FVRR", "provider": "deepseek"}
+{"key": "108:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GEHC", "provider": "deepseek"}
+{"key": "108:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MGM", "provider": "deepseek"}
+{"key": "109:2", "sample": 0, "parsed": true, "value": {"company": "First Commonwealth Financial Corporation", "ticker": "FCF"}, "symbol": "FCF", "provider": "deepseek"}
+{"key": "109:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "LII", "provider": "deepseek"}
+{"key": "109:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CRS", "provider": "deepseek"}
+{"key": "109:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "RUSHB", "provider": "deepseek"}
+{"key": "109:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CMG", "provider": "deepseek"}
+{"key": "109:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HAYW", "provider": "deepseek"}
+{"key": "110:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "OKE", "provider": "deepseek"}
+{"key": "109:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CAR", "provider": "deepseek"}
+{"key": "109:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CWH", "provider": "deepseek"}
+{"key": "110:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "APAM", "provider": "deepseek"}
+{"key": "110:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "BXP", "provider": "deepseek"}
+{"key": "110:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "MKL", "provider": "deepseek"}
+{"key": "110:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CTO", "provider": "deepseek"}
+{"key": "110:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "GNRC", "provider": "deepseek"}
+{"key": "110:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "HIW", "provider": "deepseek"}
+{"key": "110:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SRAD", "provider": "deepseek"}
+{"key": "111:2", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "CPF", "provider": "deepseek"}
+{"key": "111:4", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "YUMC", "provider": "deepseek"}
+{"key": "111:1", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "UMBF", "provider": "deepseek"}
+{"key": "111:5", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "EEFT", "provider": "deepseek"}
+{"key": "111:3", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "JKS", "provider": "deepseek"}
+{"key": "111:6", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "SBUX", "provider": "deepseek"}
+{"key": "111:7", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "IEX", "provider": "deepseek"}
+{"key": "111:8", "sample": 0, "parsed": true, "value": {"company": "UNKNOWN", "ticker": "UNKNOWN"}, "symbol": "ASH", "provider": "deepseek"}

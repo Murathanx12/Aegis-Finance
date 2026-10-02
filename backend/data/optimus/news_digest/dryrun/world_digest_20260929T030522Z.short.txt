@@ -1,0 +1,2 @@
+World digest 20260929T030522Z (984 items read; $0.00)
+Direction calls are graded at weight ~0 (LLM direction <= coin here). Not advice, no orders.

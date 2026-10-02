@@ -1,0 +1,124 @@
+{
+ "cycle": 36,
+ "at": "2026-09-28T16:49:54+00:00",
+ "mode": "paper_profit",
+ "elapsed_s": 20.5,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 3.7,
+   "result": {
+    "equity": 998552.41,
+    "cash": 800653.35,
+    "n_positions": 10,
+    "invested_frac": 0.19818595200225894
+   }
+  },
+  "funnel": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "candidate set is fresh",
+    "generated_at": "2026-09-24T02:48:34+00:00",
+    "age_days": 4.58,
+    "n_candidates": 25
+   }
+  },
+  "analyst": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "already attempted this session"
+   }
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 0.2,
+   "result": {
+    "skipped": "bars unchanged since the last rank",
+    "bars_line": "BARS_FRESH: newest=2026-09-25 sessions_old=0 (limit 2, last closed session 2026-09-25)",
+    "asof": "2026-09-25",
+    "n_eligible": 2907,
+    "top1": "TE"
+   }
+  },
+  "forecast": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "state": "DONE",
+    "n_rows_written": 270,
+    "skipped": "already ran today (2026-09-28)",
+    "status": "ok"
+   }
+  },
+  "review": {
+   "ok": true,
+   "elapsed_s": 4.2,
+   "result": {
+    "intraday": "no held name beyond 2 sigma",
+    "n_watched": 359
+   }
+  },
+  "plan": {
+   "ok": true,
+   "elapsed_s": 7.2,
+   "result": {
+    "planned": true,
+    "verdict": "MEASURED_NEGATIVE",
+    "acting": true,
+    "bars_line": "BARS_FRESH (limit 2, last closed session 2026-09-25)",
+    "exploit_acting": false,
+    "blend_verdict": "UNMEASURED",
+    "er_present": true,
+    "er_red": null,
+    "probe_verdict": "UNMEASURED_TRADE_SMALL",
+    "probe_acting": true,
+    "shortlist": 22,
+    "shortlist_red": null,
+    "contract": "present",
+    "contract_red": null,
+    "contract_refused_excluded": 2,
+    "mandate_status": "UNRECONCILED",
+    "mandate_line": "MANDATE UNRECONCILED: capital $40,000; per-name cap 2% (tightest: config.PROBE_MAX_WEIGHT (u_plan PROBE)); as configured: 18 EXPLOIT x 10% (gross <= 80%) + 10 PROBE x 2% (<= 20%) = sum|notional|/equity 1.00; x stop 6.48% = -$2,592; no stop, so the ceiling is -$40,000 on $40,000 [on the largest base seen, $1,000,000: -$64,800 k-sigma, ceiling -$1,000,000] -- 3 disagreement(s); Murat must confirm ONE mandate",
+    "mandate_gates_orders": false,
+    "policy_version": "c3-v1",
+    "n_considered": 45,
+    "n_probe": 10,
+    "policy_state_used": true,
+    "policy_state_ignored": null,
+    "order_source": "shortlist order (no shortlist name carries a contributing component)",
+    "probe_weighting": "equal",
+    "probe_gross": 0.2,
+    "n_orders": 0,
+    "n_probe_orders": 0,
+    "n_exploit_orders": 0,
+    "n_sent": 0,
+    "send_block": null,
+    "turnover_usd": 0,
+    "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,428 on $998,558; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$199,712",
+    "decisions_new": 0,
+    "top1": "NVDA"
+   }
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 5.0,
+   "result": {
+    "forecasts": "0 newly resolved; 17,524 of 28,915 records now carry an outcome; 0 voided as unresolvable this run; 259 wait on a bar, 10,996 are not yet due",
+    "decisions": "nothing_to_do"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "unit": "distil",
+    "skipped": "already ran today (2026-09-28)",
+    "day": "2026-09-28",
+    "rc": 0
+   }
+  }
+ },
+ "errors": []
+}

@@ -1,0 +1,30 @@
+{
+ "day": "2026-09-30",
+ "buys": [
+  {
+   "symbol": "PRGS",
+   "bbg_ticker": "PRGS US Equity",
+   "react_date": "2026-10-01"
+  },
+  {
+   "symbol": "MU",
+   "bbg_ticker": "MU US Equity",
+   "react_date": "2026-10-01"
+  },
+  {
+   "symbol": "AYI",
+   "bbg_ticker": "AYI US Equity",
+   "react_date": "2026-10-01"
+  },
+  {
+   "symbol": "ACN",
+   "bbg_ticker": "ACN US Equity",
+   "react_date": "2026-10-01"
+  },
+  {
+   "symbol": "4088.T",
+   "bbg_ticker": "4088 JT Equity",
+   "react_date": "2026-10-05"
+  }
+ ]
+}

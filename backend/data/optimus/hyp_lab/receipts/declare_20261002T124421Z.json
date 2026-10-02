@@ -1,0 +1,86 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-10-02",
+ "declared_utc": "2026-10-02T12:44:21+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [],
+ "cells": [
+  {
+   "hyp_id": "H-3c5504c060",
+   "title": "Crude spike lifts integrated majors over E&Ps",
+   "family": "macro_readthrough_commodity",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "CL=F",
+    "targets": [
+     "XOM",
+     "CVX",
+     "COP",
+     "EOG",
+     "PXD"
+    ],
+    "expected_sign": 1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "Integrated-vs-EP relative return from t+1 open to close shows no positive response to crude shocks.",
+   "separation_from_beta": "Long XOM/CVX vs short FANG,OXY,DVN spread is positive after crude shocks; both legs share energy beta so XLE-hedge nets it out."
+  },
+  {
+   "hyp_id": "H-baefacbdf9",
+   "title": "Tanker rates read through to refiners' crude sourcing cost",
+   "family": "macro_readthrough_commodity",
+   "target": "direction",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "basket:FRO,STNG,DHT,INSW",
+    "targets": [
+     "VLO",
+     "PBF",
+     "DINO",
+     "PSX",
+     "MPC"
+    ],
+    "expected_sign": -1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "Refiner basket open-to-close t+1 move is indistinguishable from XLE-hedged control after a tanker shock.",
+   "separation_from_beta": "Effect persists after hedging XLE and SPY; only refiners with high import share (VLO, PBF, DINO) react, not domestic-heavy ones."
+  },
+  {
+   "hyp_id": "H-ae6502fd26",
+   "title": "Yield spike -> homebuilders lag",
+   "family": "macro_readthrough_rates",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "^TNX",
+    "targets": [
+     "DHI",
+     "LEN",
+     "PHM",
+     "NVR",
+     "TOL",
+     "KBH",
+     "MTH",
+     "TMHC"
+    ],
+    "expected_sign": -1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {
+    "design": "2016-2022",
+    "confirm": "2023-2026"
+   },
+   "refutation": "confirm-fold mean signed residual <= 0, or t < 2 with MDE below the design effect",
+   "separation_from_beta": "same-day beta printed apart; lag residual after SPY beta"
+  }
+ ],
+ "sha256": "98743f437378fb97daf4b8722735bf669830327baa1105d14e76e3e2f057d477"
+}

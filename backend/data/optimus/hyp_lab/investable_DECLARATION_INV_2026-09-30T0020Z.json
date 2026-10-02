@@ -1,0 +1,59 @@
+{
+ "schema": "hyp_lab/investable_declaration/1",
+ "job": "hyp_investable",
+ "licence": "PRODUCT_EXPERIMENT",
+ "written_before_any_spread_was_read": true,
+ "candidates": [
+  "quality_composite",
+  "cash_lowvol",
+  "ope_be",
+  "revision_trend_on_small"
+ ],
+ "revision_definition": "conditional C06 restricted to the small band: net_raises top 20% of eligible covered names and >= 1, band small (median $ volume < $20M), market close above its 200-day MA at d; months with < 5 names or trend off hold nothing (spread 0)",
+ "variants": {
+  "A_long_vs_market": "rule net (EW, actual traded weight x max(CS, flat band)/2) - market (FF mkt+rf, costless)",
+  "B_beta_hedged": "(rule net - rf) - beta_t x (market - rf) - future cost 0.12%/yr; beta_t = OLS of the rule's gross excess on the market excess over the 36 months strictly before d (min 24; before that beta = 1)",
+  "C_short_twin_basket": "rule net - (twin basket gross + its own traded-weight spread cost + borrow by band 0.25/0.30/0.60/1.50%/yr mega/large/mid/small); the twin basket = the selection's cell mix x every non-selected eligible name in the cell, EW within a cell, drifted between months",
+  "D_short_band_index": "rule net - (band-matched cap-weighted index of eligible names, the rule's band mix, + 0.35%/yr all-in short cost) -- long the picks, short the size index",
+  "E_overlay_top500": "top-500-by-dollar-volume cap-weighted base + a 20% active-share tilt toward the rule's score (cap 0.5%/name, band 0.1%, active turnover budget 15%/mo, sector-balanced), costs on traded weight for book and base; read as book net - market"
+ },
+ "overlay": {
+  "base_n": 500,
+  "scheme": "cap",
+  "active_share": 0.2,
+  "cap": 0.005,
+  "band": 0.001,
+  "budget": 0.15
+ },
+ "decision": "A variant SURVIVES iff design (hold months 1991-2008; revision 1999-10..2008) mean > 0 AND validate (2009-2016) mean > 0 with t >= 2 on 3-month blocks AND a strict majority of the 8 validate years > 0. 2017-2024 is read last, as description. A REGISTRATION candidate additionally needs 2017-2024 mean > 0. At most two registrations.",
+ "honesty": "These four leads were chosen AFTER their validation windows were partly read: the board already printed rule-twin and rule-market for 2009-2016 and 2017-2024, and the revision cell's small-band trend-on split was seen on the full 1999-2024 sample. Variants A and C are therefore implementation reads of numbers whose sign is known; B, D and E are constructions never computed before. No read here is a clean out-of-sample test; nothing from it can be a RESEARCH_CLAIM.",
+ "splits": {
+  "design": [
+   "1991-01-01",
+   "2008-12-31"
+  ],
+  "validate": [
+   "2009-01-01",
+   "2016-12-31"
+  ],
+  "late": [
+   "2017-01-01",
+   "2024-12-31"
+  ]
+ },
+ "costs": "long legs: traded weight x max(Corwin-Schultz capped 20%, flat band 6/10/18/35 bps)/2",
+ "borrow_annual": {
+  "mega": 0.0025,
+  "large": 0.003,
+  "mid": 0.006,
+  "small": 0.015,
+  "na": 0.015
+ },
+ "search_count": {
+  "prior": 42666,
+  "cells_this_run": 19,
+  "after": 42685
+ },
+ "sha16": "c76ff99faf23691d",
+ "written_utc": "2026-09-29T16:01:48+00:00"
+}

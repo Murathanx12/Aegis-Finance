@@ -1,0 +1,161 @@
+{
+ "day": "2026-10-02",
+ "mode": "REHEARSAL",
+ "freeze_utc": "2026-10-02T06:35:22",
+ "licence": "PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. Never evidence of skill.",
+ "window_hkt": [
+  "2026-10-02 14:00:00+08:00",
+  "2026-10-03 14:00:00+08:00"
+ ],
+ "nav_usd": 1040268.65,
+ "cap": {
+  "of_notional": 200000.0,
+  "of_nav": 208053.73,
+  "binding": 200000.0,
+  "binding_reading": "20% of notional"
+ },
+ "tickets": [
+  {
+   "n": 1,
+   "side": "SELL",
+   "bbg": "NKE US Equity",
+   "symbol": "NKE",
+   "market": "US",
+   "qty": 5380,
+   "order_type": "MARKET AT OPEN",
+   "limit_local": null,
+   "currency": "USD",
+   "session_date": "2026-10-02",
+   "open_utc": "2026-10-02 13:30:00+00:00",
+   "open_hkt": "Fri 02 Oct 21:30",
+   "open_ny": "Fri 09:30",
+   "notional_usd": 0.0,
+   "status": "LIVE",
+   "note": "report has happened by this open",
+   "report": "",
+   "code": "",
+   "extra": {
+    "pos_id": "2026-10-01:NKE US"
+   }
+  }
+ ],
+ "control": {
+  "n_lines": 1,
+  "n_buy": 0,
+  "n_sell": 1,
+  "buy_shares": 0,
+  "sell_shares": 5380,
+  "buy_notional_usd": 0.0,
+  "sheet_code": "B2AB3A21"
+ },
+ "reserves": [],
+ "refused": [
+  {
+   "symbol": "2GB.DE",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "AIV",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "CHRN",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "CURR",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "GRFS",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "JDW.L",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "LONN.SW",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  }
+ ],
+ "n_ranked": 0,
+ "calendar_file": "calendar_2026-10-02.parquet",
+ "bars_age": [
+  "CN: last bar 2026-09-30 (2 days)",
+  "EU: last bar 2026-10-01 (1 days)",
+  "HK: last bar 2026-09-30 (2 days)",
+  "ID: last bar 2026-10-01 (1 days)",
+  "IN: last bar 2026-10-01 (1 days)",
+  "JP: last bar 2026-10-01 (1 days)",
+  "KR: last bar 2026-09-23 (9 days) STALE",
+  "TW: last bar 2026-10-01 (1 days)",
+  "US: last bar 2026-10-01 (1 days)"
+ ],
+ "refresh": {
+  "calendar": "refreshed",
+  "bars": {
+   "FX": {
+    "n_symbols": 16,
+    "rows_after": 30348,
+    "n_failed": 0,
+    "last_date": "2026-10-01"
+   },
+   "JP": {
+    "n_symbols": 754,
+    "rows_after": 1229621,
+    "n_failed": 0,
+    "last_date": "2026-10-01"
+   },
+   "EU": {
+    "n_symbols": 732,
+    "rows_after": 1219317,
+    "n_failed": 2,
+    "last_date": "2026-10-01"
+   },
+   "ID": {
+    "n_symbols": 31,
+    "rows_after": 46294,
+    "n_failed": 0,
+    "last_date": "2026-10-01"
+   },
+   "US": {
+    "n_symbols": 134,
+    "rows_after": 117714,
+    "n_failed": 1,
+    "last_date": "2026-10-01"
+   },
+   "IN": {
+    "n_symbols": 495,
+    "rows_after": 697566,
+    "n_failed": 0,
+    "last_date": "2026-10-01"
+   },
+   "TW": {
+    "n_symbols": 410,
+    "rows_after": 691880,
+    "n_failed": 0,
+    "last_date": "2026-10-01"
+   },
+   "CN": {
+    "n_symbols": 600,
+    "rows_after": 940897,
+    "n_failed": 0,
+    "last_date": "2026-09-30"
+   },
+   "HK": {
+    "n_symbols": 400,
+    "rows_after": 535516,
+    "n_failed": 0,
+    "last_date": "2026-09-30"
+   }
+  },
+  "implied": {
+   "n": 25,
+   "n_with_value": 20
+  }
+ },
+ "notes": [
+  "No name reports in this window: every slot stays in cash (the rule holds cash; filling slots measured -1.0 pp, t -1.2)."
+ ]
+}

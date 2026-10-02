@@ -1,0 +1,521 @@
+{
+ "artefact": "NN_LAB_SIZE_WALKFORWARD",
+ "run_id": "size_20260929T133547Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "target": "|y_h| (excess vs the cross-sectional median), rank IC per date, SE over blocks of max(h,21) sessions",
+ "folds": [
+  {
+   "fold": "2020",
+   "coef": {
+    "earn_h5": [
+     -3.2355,
+     0.6846,
+     0.272
+    ],
+    "text_h5": "NO_TRAINING_NEWS: equals trailing vol",
+    "earn_h21": [
+     -2.4683,
+     0.6707,
+     0.1678
+    ],
+    "text_h21": "NO_TRAINING_NEWS: equals trailing vol"
+   }
+  },
+  {
+   "fold": "2021",
+   "coef": {
+    "earn_h5": [
+     -3.2738,
+     0.669,
+     0.2707
+    ],
+    "text_h5": "NO_TRAINING_NEWS: equals trailing vol",
+    "earn_h21": [
+     -2.4962,
+     0.6595,
+     0.1858
+    ],
+    "text_h21": "NO_TRAINING_NEWS: equals trailing vol"
+   }
+  },
+  {
+   "fold": "2022",
+   "coef": {
+    "earn_h5": [
+     -3.2569,
+     0.6582,
+     0.2424
+    ],
+    "text_h5": "NO_TRAINING_NEWS: equals trailing vol",
+    "earn_h21": [
+     -2.5613,
+     0.5883,
+     0.1678
+    ],
+    "text_h21": "NO_TRAINING_NEWS: equals trailing vol"
+   }
+  },
+  {
+   "fold": "2023",
+   "coef": {
+    "earn_h5": [
+     -3.2373,
+     0.6675,
+     0.2322
+    ],
+    "text_h5": "NO_TRAINING_NEWS: equals trailing vol",
+    "earn_h21": [
+     -2.5178,
+     0.6156,
+     0.1562
+    ],
+    "text_h21": "NO_TRAINING_NEWS: equals trailing vol"
+   }
+  },
+  {
+   "fold": "2024",
+   "coef": {
+    "earn_h5": [
+     -3.2184,
+     0.6805,
+     0.2369
+    ],
+    "text_h5": "NO_TRAINING_NEWS: equals trailing vol",
+    "earn_h21": [
+     -2.5089,
+     0.6279,
+     0.1611
+    ],
+    "text_h21": "NO_TRAINING_NEWS: equals trailing vol"
+   }
+  },
+  {
+   "fold": "2025",
+   "coef": {
+    "earn_h5": [
+     -3.2182,
+     0.684,
+     0.2492
+    ],
+    "text_h5": "NO_TRAINING_NEWS: equals trailing vol",
+    "earn_h21": [
+     -2.4982,
+     0.6389,
+     0.1655
+    ],
+    "text_h21": "NO_TRAINING_NEWS: equals trailing vol"
+   }
+  },
+  {
+   "fold": "2026",
+   "coef": {
+    "earn_h5": [
+     -3.2108,
+     0.6901,
+     0.2643
+    ],
+    "text_h5": "NO_TRAINING_NEWS: equals trailing vol",
+    "earn_h21": [
+     -2.4879,
+     0.6513,
+     0.1856
+    ],
+    "text_h21": "NO_TRAINING_NEWS: equals trailing vol"
+   }
+  }
+ ],
+ "by_horizon": {
+  "h5": {
+   "vol": {
+    "ic": {
+     "mean": 0.33398,
+     "se": 0.00471,
+     "t": 70.96,
+     "n_dates": 337,
+     "n_blocks": 81,
+     "n_blocks_strict": 41
+    },
+    "by_year": {
+     "2020": 0.28714,
+     "2021": 0.3494,
+     "2022": 0.34319,
+     "2023": 0.30647,
+     "2024": 0.33695,
+     "2025": 0.34998,
+     "2026": 0.37629
+    }
+   },
+   "ridge_abs": {
+    "ic": {
+     "mean": 0.35039,
+     "se": 0.00416,
+     "t": 84.24,
+     "n_dates": 337,
+     "n_blocks": 81,
+     "n_blocks_strict": 41
+    },
+    "by_year": {
+     "2020": 0.31198,
+     "2021": 0.35702,
+     "2022": 0.36261,
+     "2023": 0.32529,
+     "2024": 0.34965,
+     "2025": 0.37084,
+     "2026": 0.38487
+    }
+   },
+   "vol_earn": {
+    "ic": {
+     "mean": 0.34116,
+     "se": 0.00488,
+     "t": 69.89,
+     "n_dates": 337,
+     "n_blocks": 81,
+     "n_blocks_strict": 41
+    },
+    "by_year": {
+     "2020": 0.29011,
+     "2021": 0.34934,
+     "2022": 0.34963,
+     "2023": 0.3177,
+     "2024": 0.34904,
+     "2025": 0.36124,
+     "2026": 0.38247
+    }
+   },
+   "ridge_abs_plus": {
+    "ic": {
+     "mean": 0.35585,
+     "se": 0.0043,
+     "t": 82.75,
+     "n_dates": 337,
+     "n_blocks": 81,
+     "n_blocks_strict": 41
+    },
+    "by_year": {
+     "2020": 0.31451,
+     "2021": 0.35635,
+     "2022": 0.36768,
+     "2023": 0.33469,
+     "2024": 0.3588,
+     "2025": 0.37912,
+     "2026": 0.38908
+    }
+   },
+   "vol_text": {
+    "ic": {
+     "mean": 0.33398,
+     "se": 0.00471,
+     "t": 70.96,
+     "n_dates": 337,
+     "n_blocks": 81,
+     "n_blocks_strict": 41
+    },
+    "by_year": {
+     "2020": 0.28714,
+     "2021": 0.3494,
+     "2022": 0.34319,
+     "2023": 0.30647,
+     "2024": 0.33695,
+     "2025": 0.34998,
+     "2026": 0.37629
+    }
+   },
+   "vol_earn_minus_vol": {
+    "mean": 0.00718,
+    "se": 0.00122,
+    "t": 5.88,
+    "n_dates": 337,
+    "n_blocks": 81,
+    "n_blocks_strict": 41,
+    "by_year": {
+     "2020": 0.00296,
+     "2021": -5e-05,
+     "2022": 0.00644,
+     "2023": 0.01122,
+     "2024": 0.01209,
+     "2025": 0.01126,
+     "2026": 0.00619
+    }
+   },
+   "ridge_abs_plus_minus_ridge_abs": {
+    "mean": 0.00546,
+    "se": 0.00092,
+    "t": 5.94,
+    "n_dates": 337,
+    "n_blocks": 81,
+    "n_blocks_strict": 41,
+    "by_year": {
+     "2020": 0.00254,
+     "2021": -0.00067,
+     "2022": 0.00506,
+     "2023": 0.0094,
+     "2024": 0.00915,
+     "2025": 0.00828,
+     "2026": 0.00421
+    }
+   },
+   "ridge_abs_minus_vol": {
+    "mean": 0.01641,
+    "se": 0.00133,
+    "t": 12.3,
+    "n_dates": 337,
+    "n_blocks": 81,
+    "n_blocks_strict": 41,
+    "by_year": {
+     "2020": 0.02483,
+     "2021": 0.00762,
+     "2022": 0.01942,
+     "2023": 0.01882,
+     "2024": 0.01271,
+     "2025": 0.02086,
+     "2026": 0.00858
+    }
+   },
+   "vol_text_minus_vol": {
+    "mean": 0.0,
+    "se": 0.0,
+    "t": null,
+    "n_dates": 337,
+    "n_blocks": 81,
+    "n_blocks_strict": 41,
+    "by_year": {
+     "2020": 0.0,
+     "2021": 0.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0,
+     "2025": 0.0,
+     "2026": 0.0
+    }
+   },
+   "vol_text_minus_vol_on_news_rows": {
+    "mean": 0.0,
+    "se": 0.0,
+    "t": null,
+    "n_dates": 65,
+    "n_blocks": 17,
+    "n_blocks_strict": 9,
+    "by_year": {
+     "2025": 0.0,
+     "2026": 0.0
+    },
+    "rows": 54078
+   },
+   "vol_earn_minus_vol_living_only": {
+    "mean": 0.00733,
+    "se": 0.00124,
+    "t": 5.89,
+    "n_dates": 337,
+    "n_blocks": 81,
+    "n_blocks_strict": 41
+   },
+   "earnings_projection": {
+    "share_expected": 0.1562,
+    "share_realised": 0.0837,
+    "precision": 0.464,
+    "recall": 0.8654,
+    "median_abs_move_ratio_expected_vs_not": 1.2993
+   }
+  },
+  "h21": {
+   "vol": {
+    "ic": {
+     "mean": 0.34175,
+     "se": 0.00593,
+     "t": 57.6,
+     "n_dates": 334,
+     "n_blocks": 80,
+     "n_blocks_strict": 40
+    },
+    "by_year": {
+     "2020": 0.27791,
+     "2021": 0.36943,
+     "2022": 0.34542,
+     "2023": 0.32425,
+     "2024": 0.35166,
+     "2025": 0.35187,
+     "2026": 0.38635
+    }
+   },
+   "ridge_abs": {
+    "ic": {
+     "mean": 0.35804,
+     "se": 0.00558,
+     "t": 64.22,
+     "n_dates": 334,
+     "n_blocks": 80,
+     "n_blocks_strict": 40
+    },
+    "by_year": {
+     "2020": 0.30345,
+     "2021": 0.37703,
+     "2022": 0.36625,
+     "2023": 0.33956,
+     "2024": 0.3654,
+     "2025": 0.37253,
+     "2026": 0.39391
+    }
+   },
+   "vol_earn": {
+    "ic": {
+     "mean": 0.34456,
+     "se": 0.00617,
+     "t": 55.87,
+     "n_dates": 334,
+     "n_blocks": 80,
+     "n_blocks_strict": 40
+    },
+    "by_year": {
+     "2020": 0.27358,
+     "2021": 0.36503,
+     "2022": 0.34805,
+     "2023": 0.33222,
+     "2024": 0.36083,
+     "2025": 0.35672,
+     "2026": 0.39077
+    }
+   },
+   "ridge_abs_plus": {
+    "ic": {
+     "mean": 0.36012,
+     "se": 0.0057,
+     "t": 63.17,
+     "n_dates": 334,
+     "n_blocks": 80,
+     "n_blocks_strict": 40
+    },
+    "by_year": {
+     "2020": 0.30176,
+     "2021": 0.37566,
+     "2022": 0.36796,
+     "2023": 0.34491,
+     "2024": 0.37106,
+     "2025": 0.37455,
+     "2026": 0.39722
+    }
+   },
+   "vol_text": {
+    "ic": {
+     "mean": 0.34175,
+     "se": 0.00593,
+     "t": 57.6,
+     "n_dates": 334,
+     "n_blocks": 80,
+     "n_blocks_strict": 40
+    },
+    "by_year": {
+     "2020": 0.27791,
+     "2021": 0.36943,
+     "2022": 0.34542,
+     "2023": 0.32425,
+     "2024": 0.35166,
+     "2025": 0.35187,
+     "2026": 0.38635
+    }
+   },
+   "vol_earn_minus_vol": {
+    "mean": 0.0028,
+    "se": 0.00114,
+    "t": 2.46,
+    "n_dates": 334,
+    "n_blocks": 80,
+    "n_blocks_strict": 40,
+    "by_year": {
+     "2020": -0.00433,
+     "2021": -0.0044,
+     "2022": 0.00263,
+     "2023": 0.00797,
+     "2024": 0.00917,
+     "2025": 0.00485,
+     "2026": 0.00442
+    }
+   },
+   "ridge_abs_plus_minus_ridge_abs": {
+    "mean": 0.00207,
+    "se": 0.00066,
+    "t": 3.13,
+    "n_dates": 334,
+    "n_blocks": 80,
+    "n_blocks_strict": 40,
+    "by_year": {
+     "2020": -0.00169,
+     "2021": -0.00137,
+     "2022": 0.00171,
+     "2023": 0.00536,
+     "2024": 0.00566,
+     "2025": 0.00202,
+     "2026": 0.00332
+    }
+   },
+   "ridge_abs_minus_vol": {
+    "mean": 0.01629,
+    "se": 0.0014,
+    "t": 11.66,
+    "n_dates": 334,
+    "n_blocks": 80,
+    "n_blocks_strict": 40,
+    "by_year": {
+     "2020": 0.02555,
+     "2021": 0.0076,
+     "2022": 0.02083,
+     "2023": 0.01531,
+     "2024": 0.01374,
+     "2025": 0.02066,
+     "2026": 0.00756
+    }
+   },
+   "vol_text_minus_vol": {
+    "mean": 0.0,
+    "se": 0.0,
+    "t": null,
+    "n_dates": 334,
+    "n_blocks": 80,
+    "n_blocks_strict": 40,
+    "by_year": {
+     "2020": 0.0,
+     "2021": 0.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0,
+     "2025": 0.0,
+     "2026": 0.0
+    }
+   },
+   "vol_text_minus_vol_on_news_rows": {
+    "mean": 0.0,
+    "se": 0.0,
+    "t": null,
+    "n_dates": 62,
+    "n_blocks": 16,
+    "n_blocks_strict": 8,
+    "by_year": {
+     "2025": 0.0,
+     "2026": 0.0
+    },
+    "rows": 54078
+   },
+   "vol_earn_minus_vol_living_only": {
+    "mean": 0.00316,
+    "se": 0.00115,
+    "t": 2.76,
+    "n_dates": 334,
+    "n_blocks": 80,
+    "n_blocks_strict": 40
+   },
+   "earnings_projection": {
+    "share_expected": 0.3672,
+    "share_realised": 0.2924,
+    "precision": 0.7533,
+    "recall": 0.946,
+    "median_abs_move_ratio_expected_vs_not": 1.2234
+   }
+  }
+ },
+ "oos_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\walkforward\\oos_size_20260929T133547Z.parquet",
+ "elapsed_s": 43.3,
+ "trust_rule": "reported only; members enter the nightly through FORWARD graded magnitude blocks (prior 0), never through this receipt",
+ "coverage_caveat": "8-K item 2.02 pull (2026) covers 84% of living and 3% of dead names; uncovered = no earnings expected; no coverage flag is a feature",
+ "survivorship_caveat": "PARTIALLY SURVIVOR-SELECTED (table receipt); deaths 2023-26 nearly absent",
+ "written_utc": "2026-09-29T13:36:31+00:00"
+}

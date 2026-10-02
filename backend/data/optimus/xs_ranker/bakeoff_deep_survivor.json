@@ -1,0 +1,209 @@
+{
+ "receipt": "xs_rank_bakeoff",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-22T04:27:32+00:00",
+ "panel": {
+  "rows": 5089726,
+  "decision_dates": 2547,
+  "month_blocks": 122,
+  "first": "2016-07-01",
+  "last": "2026-08-19",
+  "symbols": 2989
+ },
+ "book_size": 20,
+ "folds": [
+  {
+   "train_end": "2021-01-21",
+   "test": "2021-02-22..2022-03-02",
+   "n_train": 1887023,
+   "n_test": 539117,
+   "signs_chosen_on_train": {}
+  },
+  {
+   "train_end": "2022-03-02",
+   "test": "2022-03-31..2023-04-13",
+   "n_train": 2464735,
+   "n_test": 553842,
+   "signs_chosen_on_train": {}
+  },
+  {
+   "train_end": "2023-04-13",
+   "test": "2023-05-12..2024-05-23",
+   "n_train": 3061704,
+   "n_test": 565219,
+   "signs_chosen_on_train": {}
+  },
+  {
+   "train_end": "2024-05-23",
+   "test": "2024-06-25..2025-07-09",
+   "n_train": 3669640,
+   "n_test": 617735,
+   "signs_chosen_on_train": {}
+  },
+  {
+   "train_end": "2025-07-09",
+   "test": "2025-08-07..2026-08-19",
+   "n_train": 4332821,
+   "n_test": 706993,
+   "signs_chosen_on_train": {}
+  }
+ ],
+ "results": {
+  "composite_prior": {
+   "k": 20,
+   "n_dates": 1300,
+   "n_blocks": 67,
+   "mean_net_rel_21d": -0.001955593870024363,
+   "mean_gross_rel_21d": 0.0014920138222833277,
+   "mean_cost_bps": 34.476076923076924,
+   "block_se": 0.004381545374886278,
+   "t_across_blocks": -0.14588248880267835,
+   "hit_rate_dates": 0.45153846153846156,
+   "worst_date": {
+    "date": "2022-04-12",
+    "gross": -0.1896892238549555,
+    "net": -0.19310422385495551,
+    "cost_bps": 34.15,
+    "n": 20
+   },
+   "best_date": {
+    "date": "2026-03-31",
+    "gross": 0.38431949385323955,
+    "net": 0.38115949385323955,
+    "cost_bps": 31.6,
+    "n": 20
+   },
+   "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+   "ic_mean": -0.008436710800639248,
+   "ic_std": 0.09291365240954098,
+   "ic_t": -3.2738992170801833,
+   "ic_n_dates": 1300,
+   "ic_hit": 0.44846153846153847,
+   "ic_note": "t is across DATES. Overlapping 21-session windows mean consecutive dates are not independent, so this t is OPTIMISTIC and is reported as a diagnostic, not a claim.",
+   "decile_mean_rel_pct": {
+    "0": -0.07,
+    "1": -0.14,
+    "2": -0.1,
+    "3": -0.09,
+    "4": -0.02,
+    "5": -0.03,
+    "6": 0.01,
+    "7": 0.06,
+    "8": 0.12,
+    "9": 0.26
+   },
+   "n_oos_rows": 2982906
+  },
+  "composite": {
+   "status": "REFUSED",
+   "why": "no scored rows. For `composite` this means no feature cleared COMPOSITE_MIN_T=1.5 on ANY training fold, so the composite had nothing to compose. That is a finding, not a bug: the features that look signed on the full sample do not survive being chosen inside a fold."
+  },
+  "lgbm_full": {
+   "k": 20,
+   "n_dates": 1300,
+   "n_blocks": 67,
+   "mean_net_rel_21d": -0.004211564129106211,
+   "mean_gross_rel_21d": -0.0024696987444908273,
+   "mean_cost_bps": 17.418653846153845,
+   "block_se": 0.007945723054780534,
+   "t_across_blocks": -0.5665535184240829,
+   "hit_rate_dates": 0.43,
+   "worst_date": {
+    "date": "2021-12-22",
+    "gross": -0.2855853286248319,
+    "net": -0.2871603286248319,
+    "cost_bps": 15.75,
+    "n": 20
+   },
+   "best_date": {
+    "date": "2025-04-21",
+    "gross": 0.48765053511301054,
+    "net": 0.4859705351130105,
+    "cost_bps": 16.8,
+    "n": 20
+   },
+   "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+   "ic_mean": 0.019829048898843547,
+   "ic_std": 0.11360119240112296,
+   "ic_t": 6.293477298725645,
+   "ic_n_dates": 1300,
+   "ic_hit": 0.5638461538461539,
+   "ic_note": "t is across DATES. Overlapping 21-session windows mean consecutive dates are not independent, so this t is OPTIMISTIC and is reported as a diagnostic, not a claim.",
+   "decile_mean_rel_pct": {
+    "0": -0.0,
+    "1": 0.17,
+    "2": 0.03,
+    "3": -0.07,
+    "4": -0.06,
+    "5": -0.07,
+    "6": -0.01,
+    "7": -0.02,
+    "8": 0.02,
+    "9": 0.03
+   },
+   "n_oos_rows": 2982906
+  },
+  "lgbm_small": {
+   "k": 20,
+   "n_dates": 1300,
+   "n_blocks": 67,
+   "mean_net_rel_21d": -0.0011743811196592835,
+   "mean_gross_rel_21d": -0.00021863111965928238,
+   "mean_cost_bps": 9.5575,
+   "block_se": 0.00442114024257064,
+   "t_across_blocks": -0.34305379372441824,
+   "hit_rate_dates": 0.4753846153846154,
+   "worst_date": {
+    "date": "2021-12-06",
+    "gross": -0.1809096711554288,
+    "net": -0.1817096711554288,
+    "cost_bps": 8.0,
+    "n": 20
+   },
+   "best_date": {
+    "date": "2021-05-10",
+    "gross": 0.37416289860450186,
+    "net": 0.37322289860450186,
+    "cost_bps": 9.4,
+    "n": 20
+   },
+   "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+   "ic_mean": 0.01024100008755609,
+   "ic_std": 0.09021088016645729,
+   "ic_t": 4.093126112901417,
+   "ic_n_dates": 1300,
+   "ic_hit": 0.5553846153846154,
+   "ic_note": "t is across DATES. Overlapping 21-session windows mean consecutive dates are not independent, so this t is OPTIMISTIC and is reported as a diagnostic, not a claim.",
+   "decile_mean_rel_pct": {
+    "0": 0.16,
+    "1": 0.1,
+    "2": 0.11,
+    "3": 0.07,
+    "4": 0.02,
+    "5": 0.02,
+    "6": -0.01,
+    "7": -0.05,
+    "8": -0.16,
+    "9": -0.26
+   },
+   "n_oos_rows": 2982906
+  }
+ },
+ "winner": {
+  "model": "lgbm_small",
+  "mean_net_rel_21d": -0.0011743811196592835,
+  "t_across_blocks": -0.34305379372441824
+ },
+ "verdict": "ALL NEGATIVE: the best of 4 rankers (lgbm_small) still earned -0.12% relative per 21 sessions net over 67 month-blocks. Price/volume alone does not rank this cross-section at this horizon. The live loop must stay in observe; the next move is another INPUT (fundamentals, revisions, typed news), not another model.",
+ "read_me_first": "PRODUCT_EXPERIMENT. Feature signs are chosen on each fold's TRAINING rows and frozen before its test rows are scored. t is across month blocks, and overlapping 21-session windows still make it optimistic. This selects a ranker for PAPER deployment; it is not an alpha claim.",
+ "survivorship": {
+  "n_symbols": 3060,
+  "panel_last_session": "2026-09-21",
+  "stopped_30d_before_end": 0,
+  "stopped_90d_before_end": 0,
+  "stopped_180d_before_end": 0,
+  "fraction_dead_90d": 0.0,
+  "verdict": "SURVIVOR-SELECTED: no symbol stops trading, which cannot happen in a real US cross-section. Every result over this panel is biased toward whatever the dead names were \u2014 small, illiquid and distressed."
+ }
+}

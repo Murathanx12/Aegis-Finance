@@ -1,0 +1,102 @@
+{
+ "job": "hyp_lab.nightly",
+ "started_utc": "2026-09-29T16:14:23+00:00",
+ "night": "2026-09-29",
+ "k": 3,
+ "cap_usd": 0.4,
+ "free_ram_gb_start": 6.45,
+ "generation": [
+  {
+   "provider": "deepseek",
+   "ok": true,
+   "n_items": 8,
+   "n_rows": 8,
+   "status": {
+    "NEEDS_CELL": 4,
+    "PROPOSED": 3,
+    "DUPLICATE_IN_LEDGER": 1
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\generate_deepseek_20260929T161434Z.json",
+   "served_model": "deepseek-flash"
+  },
+  {
+   "provider": "local",
+   "ok": false,
+   "status": "SKIPPED_SERVER_NOT_UP"
+  }
+ ],
+ "declared": [
+  "H-3c9e80c849",
+  "H-70ee91a160",
+  "H-9ac0049bfe"
+ ],
+ "declare_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\declare_20260929T161437Z.json",
+ "results": [
+  {
+   "hyp_id": "H-3c9e80c849",
+   "title": "AI leader shock -> semi equipment lag",
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00520 <= 0",
+   "design": {
+    "mean": -0.00193,
+    "t": -1.45,
+    "mde": 0.003723,
+    "n": 110,
+    "n_blocks": 55
+   },
+   "confirm": {
+    "mean": -0.005201,
+    "t": -2.33,
+    "mde": 0.006256,
+    "n": 47,
+    "n_blocks": 30
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-3c9e80c849_20260929T161442Z.json"
+  },
+  {
+   "hyp_id": "H-70ee91a160",
+   "title": "Oil shock lifts tanker stocks next session",
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00088 <= 0",
+   "design": {
+    "mean": -0.001565,
+    "t": -0.57,
+    "mde": 0.007642,
+    "n": 97,
+    "n_blocks": 44
+   },
+   "confirm": {
+    "mean": -0.000884,
+    "t": -0.33,
+    "mde": 0.007484,
+    "n": 57,
+    "n_blocks": 26
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-70ee91a160_20260929T161442Z.json"
+  },
+  {
+   "hyp_id": "H-9ac0049bfe",
+   "title": "Yield spike -> utilities lag",
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00083 <= 0",
+   "design": {
+    "mean": 0.000579,
+    "t": 0.47,
+    "mde": 0.003415,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "confirm": {
+    "mean": -0.00083,
+    "t": -0.39,
+    "mde": 0.005888,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-9ac0049bfe_20260929T161442Z.json"
+  }
+ ],
+ "spend_this_run_usd": 0.00283,
+ "wall_min": 0.3,
+ "status": "OK"
+}

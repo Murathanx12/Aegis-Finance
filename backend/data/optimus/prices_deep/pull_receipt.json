@@ -1,0 +1,26 @@
+{
+ "job": "pull_deep_bars",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "credential_source": "terminal repo .env, HACK3 (data endpoint only)",
+ "universe": {
+  "universe_file": "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\universe\\HIGH_DISPERSION_US_v1_2026-09-01.json",
+  "universe_asof": "2026-09-01",
+  "members_total": 9668,
+  "after_floor_and_etf_filter": 3056,
+  "floor_median_dollar_volume": 3000000.0,
+  "symbols_pulled": 3056
+ },
+ "start_requested": "2016-01-01",
+ "symbols_requested": 3060,
+ "symbols_with_bars": 3060,
+ "bars": 6787642,
+ "sessions": 2694,
+ "first_session": "2016-01-04",
+ "last_session": "2026-09-21",
+ "parquet": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars.parquet",
+ "parquet_mb": 160.89,
+ "elapsed_s": 2783.2,
+ "written_utc": "2026-09-22T04:22:01+00:00",
+ "headline": "6,787,642 daily bars for 3060 symbols over 2694 sessions, 2016-01-04..2026-09-21"
+}

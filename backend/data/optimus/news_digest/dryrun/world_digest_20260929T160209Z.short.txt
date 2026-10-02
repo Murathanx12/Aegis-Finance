@@ -1,0 +1,5 @@
+World digest 20260929T160209Z (83 items read; $0.00)
+Since last digest: DROPPED US-Iran war lifts oil, yields; equities pressured; DROPPED Treasury yields spike, bond selloff pressures stocks and mortgages
+Insider cluster buys: ATCH x5 $162,524
+Crowded (COT 3y extreme): UST BOND - CHICAGO BOARD net_at_3y_high; UST 5Y NOTE - CHICAGO BO net_at_3y_high; 5 YEAR ERIS SOFR SWAP -  net_at_3y_high; 2 YEAR ERIS SOFR SWAP -  net_at_3y_high
+Direction calls are graded at weight ~0 (LLM direction <= coin here). Not advice, no orders.

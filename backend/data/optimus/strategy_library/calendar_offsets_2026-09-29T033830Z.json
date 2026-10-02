@@ -1,0 +1,199 @@
+{
+ "schema": "strategy_library/calendar_offsets/1",
+ "job": "M1_calendar_offset_triplet",
+ "run_id": "2026-09-29T033830Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-29T03:40:16+00:00",
+ "label": "HINDSIGHT: every rule was registered 2026-09-26, after every month here; this receipt asks whether a lead survives a change of rebalance CALENDAR, nothing more",
+ "why": "ROADMAP_2026-09-28 lane M1; adversarial review 2026-09-28 \u00a71 and \u00a75.2: only mom_12_1_q had been run at its three quarterly offsets",
+ "verdict_rule": "v2 (changed 2026-09-28 AFTER the first verdicts were seen; review F3/F4/F9): an offset BEATS its matched twin when the full-window mean monthly rule - twin > 0 AND t >= 2 on its rebalance blocks. ROBUST_TO_CALENDAR = all three beat; CALENDAR_ARTEFACT = the best offset (highest t) beats and at least one other has t < 1; CANNOT_DISTINGUISH = otherwise; NOT_COMPUTED = an offset with no t or < 3 blocks. Read on 2 disjoint seed sets of 21 twin draws; sets that disagree -> CANNOT_DISTINGUISH. Why changed: v1's LOSES needed mean <= 0, which a 12-1-tercile-matched twin almost never gives a momentum sort, so v1 could almost never say ARTEFACT.",
+ "beats_t": 2.0,
+ "reach_t": 1.0,
+ "mde_z": 2.8,
+ "verdict_rule_v1": "an offset BEATS its matched twin when the full-window mean monthly rule - twin21 > 0 AND t >= 2 on the rule's own rebalance blocks; LOSES when that mean <= 0. ROBUST_TO_CALENDAR = all three offsets beat; CALENDAR_ARTEFACT = >= 1 beats and >= 1 other loses; CANNOT_DISTINGUISH = anything else. Declared in backend/services/calendar_offsets.py before the 2026-09-28 run.",
+ "rule_changed_after_first_verdicts": {
+  "changed_utc": "2026-09-28T07:00Z (approx.)",
+  "first_verdict_receipts": [
+   "calendar_offsets_2026-09-28T055728Z.json",
+   "calendar_offsets_2026-09-28T055923Z.json"
+  ],
+  "first_verdicts": "4 x CANNOT_DISTINGUISH under v1",
+  "why": "review F3 (docs/reviews/REVIEW_2026-09-28_LANE_M_MEASUREMENT.md): v1's LOSES needed mean <= 0, which a 12-1-tercile-matched twin almost never gives a momentum sort, so v1 could almost never label a calendar artefact; v2 is the roadmap's LANE M1 rule (committed in b1010061 before either run). F4: one seed set decided labels at t 2.04-2.12, so v2 reads two disjoint 21-draw seed sets and stores every draw's t. F9: a missing t is NOT_COMPUTED, not a measured null. This receipt is a NEW run id; the two earlier receipts are kept unchanged."
+ },
+ "seed_sets": {
+  "n_sets": 2,
+  "draws_per_set": 21,
+  "set_a": "seed_for(cell, j), j = 0..20",
+  "set_b": "seed_for(cell, j), j = 21..41"
+ },
+ "k": 20,
+ "rules": [
+  "mom_12_1_q",
+  "disp_short_avoid",
+  "qc470_mom252_quarterly_riskparity",
+  "mom_12_1_q_trend"
+ ],
+ "offsets": {
+  "jajo": [
+   1,
+   4,
+   7,
+   10
+  ],
+  "fman": [
+   2,
+   5,
+   8,
+   11
+  ],
+  "mjsd": [
+   3,
+   6,
+   9,
+   12
+  ]
+ },
+ "conventions": {
+  "engine": "strategy_library.run_strategy with rebalance_months; band costs on (cost_scale 1.0)",
+  "twin": "matched_twins: size band x vol_63 tercile x 12-1 tercile, 21 seeded draws (seed_for(cell id)); twin net = twin gross - the rule's cost that month",
+  "t_blocks": "non-overlapping rebalance periods (block value = sum of monthly differences)",
+  "mde": "MDE_Z x SE, in %/month",
+  "by_year": "keyed on the HOLD month (entry session = decision date + 1 business day)",
+  "dsr_vs_spy_n_trials": "868 reference cells + 16 cells run here = 884",
+  "dsr_rule_minus_twin21_n_trials": "288 (the reference board's candidate rules, as the leads doc read rule - twin21)"
+ },
+ "bar_screen": {
+  "mode": "on",
+  "note": "ON = the reader default; book refusal enforced",
+  "screen": {
+   "enabled": true,
+   "rules": {
+    "dark_run_min_sessions": 5,
+    "nontrade_print_tol": 0.01,
+    "spike_ratio": 4.0,
+    "spike_residual": 0.25,
+    "spike_window_sessions": 3,
+    "break_ratio": 3.0,
+    "quiet_volume_mult": 2.0
+   },
+   "volume_available": true,
+   "rows_in": 8563385,
+   "rows_removed": 174417,
+   "rows_removed_by_reason": {
+    "DARK_RUN": 173795,
+    "NONTRADE_PRINT": 609,
+    "SPIKE_PRINT": 13
+   },
+   "rows_removed_by_year": {
+    "2016": 12029,
+    "2017": 16102,
+    "2018": 23987,
+    "2019": 30625,
+    "2020": 31157,
+    "2021": 21227,
+    "2022": 17664,
+    "2023": 14169,
+    "2024": 6612,
+    "2025": 488,
+    "2026": 357
+   },
+   "symbols_with_rows_removed": 697,
+   "n_dark_runs": 7264,
+   "nontrade_prints": 609,
+   "n_spikes": 7,
+   "n_cuts": 95,
+   "cuts_by_reason": {
+    "QUIET_LEVEL_BREAK": 63,
+    "GAP_LEVEL_BREAK": 32
+   }
+  },
+  "stitch": {
+   "gap_sessions_threshold": 20,
+   "candidates": 795,
+   "by_verdict": {
+    "STITCHED": 766,
+    "SUSPENSION": 29
+   },
+   "cut_symbols": 343,
+   "kept_as_suspension": 24,
+   "registrant_sources": 2,
+   "defect_cut_symbols": 91
+  },
+  "implausible_rows_panel": 603,
+  "implausible_rows_eligible": 219,
+  "book_max_share": 0.02
+ },
+ "size_check": {
+  "reference_run": "2026-09-27T082553Z",
+  "reference_panel": {
+   "rows": 372754,
+   "dates": 117,
+   "symbols": 4787,
+   "first": "2017-01-31",
+   "last": "2026-09-25",
+   "fingerprint": "3a8c19576fafb9a4"
+  },
+  "this_panel": {
+   "rows": 365079,
+   "dates": 117,
+   "symbols": 5245,
+   "first": "2017-01-31",
+   "last": "2026-09-28"
+  },
+  "reference_revision_events": 393586,
+  "this_revision_events": 393637,
+  "tolerance": 0.01,
+  "refuse": []
+ },
+ "spy": "spy_tr_yf_adjclose",
+ "iwm": {
+  "source": "iwm_tr_yf_adjclose",
+  "status": "OK",
+  "alignment": "daily total return compounded over (month-end, next month-end]"
+ },
+ "random_panel": {
+  "status": "OK",
+  "n_controls": 3,
+  "controls": [
+   "random_1@k50",
+   "random_2@k50",
+   "random_3@k50"
+  ],
+  "refused": {},
+  "k": 50,
+  "n_months": 115
+ },
+ "reference_run": "2026-09-27T082553Z",
+ "reconfirm_mom_12_1_q_vs_reference": {
+  "jajo": {
+   "reference_cum_since_2020": 13.233869,
+   "this_cum_since_2020": null,
+   "reference_sealed_vs_spy": 0.378698,
+   "this_sealed_vs_spy": null
+  },
+  "fman": {
+   "reference_cum_since_2020": 4.239375,
+   "this_cum_since_2020": null,
+   "reference_sealed_vs_spy": -0.049686,
+   "this_sealed_vs_spy": null
+  },
+  "mjsd": {
+   "reference_cum_since_2020": 4.325309,
+   "this_cum_since_2020": null,
+   "reference_sealed_vs_spy": 0.083871,
+   "this_sealed_vs_spy": null
+  }
+ },
+ "results": {},
+ "refused": {
+  "mom_12_1_q": "BarDefectRefusal: mom_12_1_q@k20: 30 of 780 slots (3.8%) on implausible rows; first [{'date': '2017-10-31', 'symbol': 'ZGNX'}, {'date': '2020-01-31', 'symbol': 'CCXI#1'}, {'date': '2020-07-31', 'symbol': 'TRIL#1'}, {'date': '2020-10-30', 'symbol': 'TRIL#1'}, {'date': '2020-10-30', 'symbol': 'NVAX'}]",
+  "disp_short_avoid": "BarDefectRefusal: disp_short_avoid@k20: 23 of 780 slots (2.9%) on implausible rows; first [{'date': '2017-10-31', 'symbol': 'ZGNX'}, {'date': '2020-01-31', 'symbol': 'CCXI#1'}, {'date': '2020-07-31', 'symbol': 'TRIL#1'}, {'date': '2020-10-30', 'symbol': 'TRIL#1'}, {'date': '2021-04-30', 'symbol': 'MARA'}]",
+  "qc470_mom252_quarterly_riskparity": "BarDefectRefusal: qc470_mom252_quarterly_riskparity@k20: 30 of 780 slots (3.8%) on implausible rows; first [{'date': '2017-10-31', 'symbol': 'ZGNX'}, {'date': '2020-01-31', 'symbol': 'CCXI#1'}, {'date': '2020-07-31', 'symbol': 'TRIL#1'}, {'date': '2020-10-30', 'symbol': 'TRIL#1'}, {'date': '2020-10-30', 'symbol': 'NVAX'}]",
+  "mom_12_1_q_trend": "BarDefectRefusal: mom_12_1_q_trend@k20: 32 of 780 slots (4.1%) on implausible rows; first [{'date': '2017-10-31', 'symbol': 'ZGNX'}, {'date': '2018-11-30', 'symbol': 'NIHD'}, {'date': '2019-02-28', 'symbol': 'AXSM'}, {'date': '2020-01-31', 'symbol': 'CCXI#1'}, {'date': '2020-07-31', 'symbol': 'TRIL#1'}]"
+ },
+ "summary": {},
+ "summary_v1_rule": {},
+ "elapsed_s": 106.2,
+ "peak_working_set_mb": 5173.1
+}

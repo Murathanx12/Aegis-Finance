@@ -1,0 +1,4 @@
+C:\Users\mrthn\aegis-finance\scripts\night_p6_bars_and_regret.py:207: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  return p.pct_change()
+C:\Users\mrthn\aegis-finance\scripts\night_p6_bars_and_regret.py:207: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  return p.pct_change()

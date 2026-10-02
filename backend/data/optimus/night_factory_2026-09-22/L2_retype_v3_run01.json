@@ -1,0 +1,170 @@
+{
+ "job": "L2_retype_v3",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 1,
+ "run_date": "2026-09-22",
+ "smoke": false,
+ "llm_spend_usd": 0.0,
+ "spend_note": "the LOCAL reader costs compute, not dollars. This job takes no cloud backend and no --max-usd; if it ever does, the spend comes from the call ledger like every other job's.",
+ "question": "Vocabulary v3 added `foreign_entrant_capacity` and `growth_constraint_cited`. Every row typed before 2026-09-19 was answered against a table that could not offer either. Which of the rows a declared keyword screen lets through carry them?",
+ "target_ids": [
+  "foreign_entrant_capacity",
+  "growth_constraint_cited"
+ ],
+ "vocabulary": {
+  "version": 3,
+  "hash": "ef173fa7f72760a9bcc1c7f469ffcc96199357572177241fdadd058c25ec4aad",
+  "n_types": 45,
+  "previous_version": 2,
+  "previous_hash": "b06e322af733c3c006c5c31a0f95218289578d77edcee393d103ea9f2e6262bc"
+ },
+ "prefilter": {
+  "terms": {
+   "foreign_entrant_capacity": [
+    "qualif",
+    "certif",
+    "compatib",
+    "interoperab",
+    "validated on",
+    "capacity parity",
+    "domestic alternative",
+    "local supplier",
+    "market share",
+    "entrant",
+    "new entrant",
+    "chinese rival",
+    "domestic rival",
+    "state-backed",
+    "import substitution",
+    "yield parity",
+    "mass production",
+    "ramp capacity"
+   ],
+   "growth_constraint_cited": [
+    "constraint",
+    "constrained",
+    "bottleneck",
+    "supply limited",
+    "capacity limited",
+    "shortage",
+    "allocation",
+    "could ship more",
+    "limited by",
+    "held back by",
+    "gating factor",
+    "binding constraint",
+    "we are short",
+    "sold out",
+    "lead time",
+    "backlog we cannot",
+    "if we could get",
+    "waiting on"
+   ]
+  },
+  "n_terms": {
+   "foreign_entrant_capacity": 18,
+   "growth_constraint_cited": 18
+  },
+  "match": "case-insensitive substring over title + body",
+  "prefilter_sha256": "58a62da4d492eeb6",
+  "it_is_a_SCREEN": "recall is UNKNOWN and unmeasured. The terms were written from the spec's own examples and the vocabulary rows' definitions BEFORE any row was read; a document that names its constraint in words none of them contain is never asked. No RATE may be quoted from this denominator -- only counts, and only of what was screened in.",
+  "why_a_screen_at_all": "both v3 ids are rare by construction and the corpus holds 163,288 distinct texts. Re-reading all of them for two ids is the cost this job exists to avoid."
+ },
+ "backend": "local_gguf",
+ "never_starts_or_stops_a_server": "with no reader answering this job writes PENDING_MODEL and the frozen candidate hash, so the run that happens when a server IS up asks the same question rather than a similar one",
+ "output": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events\\retype_v3_2026-09-22.jsonl",
+ "selection": {
+  "corpus_rows": 37305,
+  "panel_units": 163285,
+  "screened_in": 355,
+  "already_read": 2000,
+  "by_id": {
+   "foreign_entrant_capacity": 190,
+   "growth_constraint_cited": 168
+  },
+  "candidates": 355,
+  "already_read_total": 1931
+ },
+ "truncated_at": null,
+ "candidate_fingerprint": {
+  "n_units": 355,
+  "sha256": "79168a3660412eb9",
+  "first": [
+   "1fa48acf6805789803f15e5cddd8f6825b1d505a0814bcd8f43faf41f4596fea",
+   "3b1fc9a2eb49945185c469fd75ea83edac9297ad619a1a085ed07aafe28e4862",
+   "5425029d9135e31ab18e852fa49f79089a7de197f2eda2ee7260e74cee001f04"
+  ],
+  "last": [
+   "ffdd868c6f133581c63446baa36d7c85da97dd49dcf52981914d44f7f45a753e",
+   "ffe6d61295104d68a376340a0915953cbcacdaa9053d88271710eacabb4af2c6",
+   "ffe6d61295104d68a376340a0915953cbcacdaa9053d88271710eacabb4af2c6"
+  ]
+ },
+ "typed": 350,
+ "refused": 5,
+ "on_target_rows": 63,
+ "by_type": {
+  "growth_constraint_cited": 54,
+  "no_event": 126,
+  "management_change_appointment": 4,
+  "foreign_entrant_capacity": 9,
+  "earnings_report": 35,
+  "product_recall_or_defect": 9,
+  "debt_issuance_or_obligation": 4,
+  "regulatory_approval": 3,
+  "product_launch_or_innovation": 33,
+  "new_contract_or_partnership": 18,
+  "dividend_cut_or_suspension": 6,
+  "analyst_initiation": 4,
+  "analyst_rating_change": 11,
+  "tariff_or_trade_policy": 4,
+  "stock_split": 1,
+  "credit_rating_change": 1,
+  "dividend_increase": 4,
+  "stock_buyback": 3,
+  "litigation_filed": 2,
+  "regulatory_investigation_or_action": 3,
+  "macro_labor_report": 2,
+  "management_change_departure": 2,
+  "insider_or_institutional_ownership_change": 1,
+  "equity_issuance_dilution": 1,
+  "mergers_acquisitions": 2,
+  "macro_rate_decision": 3,
+  "divestiture_asset_sale": 1,
+  "cybersecurity_incident": 1,
+  "analyst_target_change": 1,
+  "earnings_preannouncement": 1,
+  "regular_dividend_declaration": 1
+ },
+ "refusals": {
+  "REFUSED_UNPARSEABLE": 2,
+  "REFUSED_SCHEMA": 3
+ },
+ "reader": {
+  "stopped": "complete",
+  "stop_detail": null,
+  "submitted": 355,
+  "collected": 355,
+  "retries": 0,
+  "rate_limited_rows": 0,
+  "tokens_in": 691057,
+  "tokens_out": 27824,
+  "discarded_after_the_failure": 0,
+  "workers": 1
+ },
+ "headline": "350 text(s) re-read against v3 (45 ids), 63 carried one of ['foreign_entrant_capacity', 'growth_constraint_cited'], 5 refused; screen let 355 of 200590 through",
+ "next_test": "an on-target count is a COUNT and not a rate: the prefilter's recall is unmeasured, so the denominator is the screen and not the corpus. TRIAL-DRAFT-FOREIGN-ENTRANT-IC-v0 \u00a74's MDE is filled in from the event count this job produces, and it is filled in BEFORE any return is joined.",
+ "verdict": "63 row(s) carry a v3 id. The rows are typed and joined to nothing; this job writes features, never a signal.",
+ "on_target_share_is_not_quotable": "the denominator is the SCREEN. A share computed against it would describe the keyword list, not the corpus.",
+ "elapsed_s": 553.2,
+ "written_utc": "2026-09-21T17:35:20+00:00",
+ "stage": "features",
+ "awake_s": 553.2,
+ "slept_s": 0.0,
+ "box_s": 3600.0,
+ "wall_minus_monotonic_s": 0.0,
+ "sleep_gaps": [],
+ "child_pid": 65616,
+ "killed_pids": [],
+ "exit_code": 0
+}

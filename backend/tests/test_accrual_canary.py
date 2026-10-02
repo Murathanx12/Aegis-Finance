@@ -264,3 +264,26 @@ def test_health_full_carries_the_accrual_row_and_names_a_quiet_ledger(monkeypatc
     body = client.get("/api/health/full").json()
     assert any(r.startswith("forecast_accrual:") and "0 new rows" in r
                for r in body["degraded_reasons"]), body["degraded_reasons"]
+
+
+def test_a_one_shot_session_is_archived_after_its_turn(monkeypatch, tmp_path, tele):
+    # 2026-09-30, measured: every forecast call failed with "bundle-mcp: live
+    # runtime limit (256) reached" -- 666 finished one-shot sessions each kept
+    # an MCP runtime alive. A session this module named is archived after its
+    # turn; a caller-supplied session is the caller's and is left alone.
+    from backend.services import openclaw_client as OC
+    calls = []
+
+    def run(cmd, **k):
+        calls.append(list(cmd))
+        return subprocess.CompletedProcess(cmd, 0, json.dumps(_ENVELOPE), "")
+    monkeypatch.setattr(subprocess, "run", run)
+    msg = tmp_path / "m.md"
+    msg.write_text("hello", encoding="utf-8")
+    r = OC.agent(str(msg), purpose="u_forecast")
+    archives = [c for c in calls if "sessions" in c and "archive" in c]
+    assert len(archives) == 1 and f"{OC.SESSION_KEY_PREFIX}{r['session_id']}" in archives[0]
+    assert r["session_released"] is True
+    calls.clear()
+    r2 = OC.agent(str(msg), purpose="u_forecast", session_id="caller-owned")
+    assert not [c for c in calls if "archive" in c] and r2["session_released"] is None

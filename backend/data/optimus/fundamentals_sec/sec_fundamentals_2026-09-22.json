@@ -1,0 +1,798 @@
+{
+ "receipt": "pull_sec_fundamentals",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "at": "2026-09-22T09:16:23+00:00",
+ "asof_requested": null,
+ "n_requested": 8,
+ "n_rows": 8,
+ "n_no_cik": 0,
+ "no_cik": [],
+ "n_failed": 0,
+ "failed": [],
+ "gp_at_coverage": 0.875,
+ "newest_filing": "2026-09-10",
+ "oldest_filing": "2026-06-03",
+ "elapsed_s": 16.4,
+ "rows": [
+  {
+   "ticker": "NVDA",
+   "cik": 1045810,
+   "observed_at": "2026-09-22T09:16:09+00:00",
+   "latest_filed": "2026-08-26",
+   "facts": {
+    "revenue": {
+     "val": 177837000000,
+     "filed": "2026-08-26",
+     "end": "2026-07-26",
+     "fy": 2027,
+     "fp": "Q2",
+     "tag": "Revenues",
+     "form": "10-Q"
+    },
+    "cogs": {
+     "val": 44538000000,
+     "filed": "2026-08-26",
+     "end": "2026-07-26",
+     "fy": 2027,
+     "fp": "Q2",
+     "tag": "CostOfRevenue",
+     "form": "10-Q"
+    },
+    "operating_income": {
+     "val": 117270000000,
+     "filed": "2026-08-26",
+     "end": "2026-07-26",
+     "fy": 2027,
+     "fp": "Q2",
+     "tag": "OperatingIncomeLoss",
+     "form": "10-Q"
+    },
+    "net_income": {
+     "val": 118010000000,
+     "filed": "2026-08-26",
+     "end": "2026-07-26",
+     "fy": 2027,
+     "fp": "Q2",
+     "tag": "NetIncomeLoss",
+     "form": "10-Q"
+    },
+    "assets": {
+     "val": 320272000000,
+     "filed": "2026-08-26",
+     "end": "2026-07-26",
+     "fy": 2027,
+     "fp": "Q2",
+     "tag": "Assets",
+     "form": "10-Q"
+    },
+    "equity": {
+     "val": 228984000000,
+     "filed": "2026-08-26",
+     "end": "2026-07-26",
+     "fy": 2027,
+     "fp": "Q2",
+     "tag": "StockholdersEquity",
+     "form": "10-Q"
+    },
+    "cash": {
+     "val": 22443000000,
+     "filed": "2026-08-26",
+     "end": "2026-07-26",
+     "fy": 2027,
+     "fp": "Q2",
+     "tag": "CashAndCashEquivalentsAtCarryingValue",
+     "form": "10-Q"
+    },
+    "debt": {
+     "val": 32366000000,
+     "filed": "2026-08-26",
+     "end": "2026-07-26",
+     "fy": 2027,
+     "fp": "Q2",
+     "tag": "LongTermDebtNoncurrent",
+     "form": "10-Q"
+    },
+    "shares": {
+     "val": 24100000000,
+     "filed": "2026-08-26",
+     "end": "2026-08-21",
+     "fy": 2027,
+     "fp": "Q2",
+     "tag": "EntityCommonStockSharesOutstanding",
+     "form": "10-Q"
+    }
+   },
+   "missing_facts": [],
+   "ratios": {
+    "gp_at": 0.4162056002397962,
+    "gp_at_why": "ok",
+    "ope_be": 0.5121318520071272,
+    "ope_be_why": "ok",
+    "ni_be": 0.5153635188484785,
+    "ni_be_why": "ok",
+    "book_equity": 228984000000
+   },
+   "read_me_first": "`filed` is when the number became PUBLIC; `end` is the period it describes. Join features on `filed`."
+  },
+  {
+   "ticker": "MU",
+   "cik": 723125,
+   "observed_at": "2026-09-22T09:16:11+00:00",
+   "latest_filed": "2026-06-25",
+   "facts": {
+    "revenue": {
+     "val": 78959000000,
+     "filed": "2026-06-25",
+     "end": "2026-05-28",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "form": "10-Q"
+    },
+    "cogs": {
+     "val": 18502000000,
+     "filed": "2026-06-25",
+     "end": "2026-05-28",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "CostOfGoodsAndServicesSold",
+     "form": "10-Q"
+    },
+    "operating_income": {
+     "val": 55589000000,
+     "filed": "2026-06-25",
+     "end": "2026-05-28",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "OperatingIncomeLoss",
+     "form": "10-Q"
+    },
+    "net_income": {
+     "val": 47268000000,
+     "filed": "2026-06-25",
+     "end": "2026-05-28",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "NetIncomeLoss",
+     "form": "10-Q"
+    },
+    "assets": {
+     "val": 134112000000,
+     "filed": "2026-06-25",
+     "end": "2026-05-28",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "Assets",
+     "form": "10-Q"
+    },
+    "equity": {
+     "val": 100724000000,
+     "filed": "2026-06-25",
+     "end": "2026-05-28",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "StockholdersEquity",
+     "form": "10-Q"
+    },
+    "cash": {
+     "val": 24995000000,
+     "filed": "2026-06-25",
+     "end": "2026-05-28",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "CashAndCashEquivalentsAtCarryingValue",
+     "form": "10-Q"
+    },
+    "debt": {
+     "val": 8844000000,
+     "filed": "2025-12-18",
+     "end": "2025-11-27",
+     "fy": 2026,
+     "fp": "Q1",
+     "tag": "LongTermDebt",
+     "form": "10-Q"
+    },
+    "shares": {
+     "val": 1129393151,
+     "filed": "2026-06-25",
+     "end": "2026-06-17",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "EntityCommonStockSharesOutstanding",
+     "form": "10-Q"
+    }
+   },
+   "missing_facts": [],
+   "ratios": {
+    "gp_at": 0.45079485802911,
+    "gp_at_why": "ok",
+    "ope_be": 0.5518942853738931,
+    "ope_be_why": "ok",
+    "ni_be": 0.4692823954568921,
+    "ni_be_why": "ok",
+    "book_equity": 100724000000
+   },
+   "read_me_first": "`filed` is when the number became PUBLIC; `end` is the period it describes. Join features on `filed`."
+  },
+  {
+   "ticker": "AAPL",
+   "cik": 320193,
+   "observed_at": "2026-09-22T09:16:13+00:00",
+   "latest_filed": "2026-07-31",
+   "facts": {
+    "revenue": {
+     "val": 364357000000,
+     "filed": "2026-07-31",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "form": "10-Q"
+    },
+    "cogs": {
+     "val": 185575000000,
+     "filed": "2026-07-31",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "CostOfGoodsAndServicesSold",
+     "form": "10-Q"
+    },
+    "operating_income": {
+     "val": 122432000000,
+     "filed": "2026-07-31",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "OperatingIncomeLoss",
+     "form": "10-Q"
+    },
+    "net_income": {
+     "val": 101464000000,
+     "filed": "2026-07-31",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "NetIncomeLoss",
+     "form": "10-Q"
+    },
+    "assets": {
+     "val": 383266000000,
+     "filed": "2026-07-31",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "Assets",
+     "form": "10-Q"
+    },
+    "equity": {
+     "val": 107520000000,
+     "filed": "2026-07-31",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "StockholdersEquity",
+     "form": "10-Q"
+    },
+    "cash": {
+     "val": 39544000000,
+     "filed": "2026-07-31",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "CashAndCashEquivalentsAtCarryingValue",
+     "form": "10-Q"
+    },
+    "debt": {
+     "val": 71340000000,
+     "filed": "2026-07-31",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "LongTermDebtNoncurrent",
+     "form": "10-Q"
+    },
+    "shares": {
+     "val": 14594180000,
+     "filed": "2026-07-31",
+     "end": "2026-07-17",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "EntityCommonStockSharesOutstanding",
+     "form": "10-Q"
+    }
+   },
+   "missing_facts": [],
+   "ratios": {
+    "gp_at": 0.46646976251480693,
+    "gp_at_why": "ok",
+    "ope_be": 1.1386904761904761,
+    "ope_be_why": "ok",
+    "ni_be": 0.9436755952380952,
+    "ni_be_why": "ok",
+    "book_equity": 107520000000
+   },
+   "read_me_first": "`filed` is when the number became PUBLIC; `end` is the period it describes. Join features on `filed`."
+  },
+  {
+   "ticker": "AVGO",
+   "cik": 1730168,
+   "observed_at": "2026-09-22T09:16:15+00:00",
+   "latest_filed": "2026-09-10",
+   "facts": {
+    "revenue": {
+     "val": 71089000000,
+     "filed": "2026-09-10",
+     "end": "2026-08-02",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "form": "10-Q"
+    },
+    "cogs": {
+     "val": 22061000000,
+     "filed": "2026-09-10",
+     "end": "2026-08-02",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "CostOfRevenue",
+     "form": "10-Q"
+    },
+    "operating_income": {
+     "val": 35306000000,
+     "filed": "2026-09-10",
+     "end": "2026-08-02",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "OperatingIncomeLoss",
+     "form": "10-Q"
+    },
+    "net_income": {
+     "val": 5895000000,
+     "filed": "2024-12-20",
+     "end": "2024-11-03",
+     "fy": 2024,
+     "fp": "FY",
+     "tag": "NetIncomeLoss",
+     "form": "10-K"
+    },
+    "assets": {
+     "val": 188148000000,
+     "filed": "2026-09-10",
+     "end": "2026-08-02",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "Assets",
+     "form": "10-Q"
+    },
+    "equity": {
+     "val": 99690000000,
+     "filed": "2026-09-10",
+     "end": "2026-08-02",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "form": "10-Q"
+    },
+    "cash": {
+     "val": 23975000000,
+     "filed": "2026-09-10",
+     "end": "2026-08-02",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "CashAndCashEquivalentsAtCarryingValue",
+     "form": "10-Q"
+    },
+    "debt": {
+     "val": 57167000000,
+     "filed": "2026-09-10",
+     "end": "2026-08-02",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "LongTermDebtNoncurrent",
+     "form": "10-Q"
+    },
+    "shares": {
+     "val": 4773629865,
+     "filed": "2026-09-10",
+     "end": "2026-08-28",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "EntityCommonStockSharesOutstanding",
+     "form": "10-Q"
+    }
+   },
+   "missing_facts": [],
+   "ratios": {
+    "gp_at": 0.26058209494653145,
+    "gp_at_why": "ok",
+    "ope_be": 0.3541578894573177,
+    "ope_be_why": "ok",
+    "ni_be": 0.059133313271140533,
+    "ni_be_why": "ok",
+    "book_equity": 99690000000
+   },
+   "read_me_first": "`filed` is when the number became PUBLIC; `end` is the period it describes. Join features on `filed`."
+  },
+  {
+   "ticker": "AMD",
+   "cik": 2488,
+   "observed_at": "2026-09-22T09:16:17+00:00",
+   "latest_filed": "2026-08-05",
+   "facts": {
+    "revenue": {
+     "val": 21789000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "form": "10-Q"
+    },
+    "cogs": {
+     "val": 10170000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "CostOfGoodsAndServicesSold",
+     "form": "10-Q"
+    },
+    "operating_income": {
+     "val": 3466000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "OperatingIncomeLoss",
+     "form": "10-Q"
+    },
+    "net_income": {
+     "val": 3680000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "NetIncomeLoss",
+     "form": "10-Q"
+    },
+    "assets": {
+     "val": 84464000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "Assets",
+     "form": "10-Q"
+    },
+    "equity": {
+     "val": 67224000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "StockholdersEquity",
+     "form": "10-Q"
+    },
+    "cash": {
+     "val": 5086000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "CashAndCashEquivalentsAtCarryingValue",
+     "form": "10-Q"
+    },
+    "debt": {
+     "val": 2351000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-27",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "LongTermDebtNoncurrent",
+     "form": "10-Q"
+    },
+    "shares": {
+     "val": 1632475042,
+     "filed": "2026-08-05",
+     "end": "2026-07-29",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "EntityCommonStockSharesOutstanding",
+     "form": "10-Q"
+    }
+   },
+   "missing_facts": [],
+   "ratios": {
+    "gp_at": 0.13756156469028225,
+    "gp_at_why": "ok",
+    "ope_be": 0.05155896703558253,
+    "ope_be_why": "ok",
+    "ni_be": 0.054742353921218616,
+    "ni_be_why": "ok",
+    "book_equity": 67224000000
+   },
+   "read_me_first": "`filed` is when the number became PUBLIC; `end` is the period it describes. Join features on `filed`."
+  },
+  {
+   "ticker": "COST",
+   "cik": 909832,
+   "observed_at": "2026-09-22T09:16:18+00:00",
+   "latest_filed": "2026-06-03",
+   "facts": {
+    "revenue": {
+     "val": 207431000000,
+     "filed": "2026-06-03",
+     "end": "2026-05-10",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "form": "10-Q"
+    },
+    "cogs": {
+     "val": 180748000000,
+     "filed": "2026-06-03",
+     "end": "2026-05-10",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "CostOfGoodsAndServicesSold",
+     "form": "10-Q"
+    },
+    "operating_income": {
+     "val": 7884000000,
+     "filed": "2026-06-03",
+     "end": "2026-05-10",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "OperatingIncomeLoss",
+     "form": "10-Q"
+    },
+    "net_income": {
+     "val": 6228000000,
+     "filed": "2026-06-03",
+     "end": "2026-05-10",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "NetIncomeLoss",
+     "form": "10-Q"
+    },
+    "assets": {
+     "val": 86430000000,
+     "filed": "2026-06-03",
+     "end": "2026-05-10",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "Assets",
+     "form": "10-Q"
+    },
+    "equity": {
+     "val": 33509000000,
+     "filed": "2026-06-03",
+     "end": "2026-05-10",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "StockholdersEquity",
+     "form": "10-Q"
+    },
+    "cash": {
+     "val": 18946000000,
+     "filed": "2026-06-03",
+     "end": "2026-05-10",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "CashAndCashEquivalentsAtCarryingValue",
+     "form": "10-Q"
+    },
+    "debt": {
+     "val": 5670000000,
+     "filed": "2026-06-03",
+     "end": "2026-05-10",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "LongTermDebtNoncurrent",
+     "form": "10-Q"
+    },
+    "shares": {
+     "val": 443478804,
+     "filed": "2026-06-03",
+     "end": "2026-05-27",
+     "fy": 2026,
+     "fp": "Q3",
+     "tag": "EntityCommonStockSharesOutstanding",
+     "form": "10-Q"
+    }
+   },
+   "missing_facts": [],
+   "ratios": {
+    "gp_at": 0.30872382274673144,
+    "gp_at_why": "ok",
+    "ope_be": 0.23528007400996748,
+    "ope_be_why": "ok",
+    "ni_be": 0.18586051508549942,
+    "ni_be_why": "ok",
+    "book_equity": 33509000000
+   },
+   "read_me_first": "`filed` is when the number became PUBLIC; `end` is the period it describes. Join features on `filed`."
+  },
+  {
+   "ticker": "LLY",
+   "cik": 59478,
+   "observed_at": "2026-09-22T09:16:20+00:00",
+   "latest_filed": "2026-08-05",
+   "facts": {
+    "revenue": {
+     "val": 42773000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-30",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "Revenues",
+     "form": "10-Q"
+    },
+    "cogs": {
+     "val": 6845000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-30",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "CostOfGoodsAndServicesSold",
+     "form": "10-Q"
+    },
+    "net_income": {
+     "val": 14491000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-30",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "NetIncomeLoss",
+     "form": "10-Q"
+    },
+    "assets": {
+     "val": 142283000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-30",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "Assets",
+     "form": "10-Q"
+    },
+    "equity": {
+     "val": 33879000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-30",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "StockholdersEquity",
+     "form": "10-Q"
+    },
+    "cash": {
+     "val": 8950000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-30",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "CashAndCashEquivalentsAtCarryingValue",
+     "form": "10-Q"
+    },
+    "debt": {
+     "val": 47858000000,
+     "filed": "2026-08-05",
+     "end": "2026-06-30",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "LongTermDebtNoncurrent",
+     "form": "10-Q"
+    },
+    "shares": {
+     "val": 941357065,
+     "filed": "2026-08-05",
+     "end": "2026-08-03",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "EntityCommonStockSharesOutstanding",
+     "form": "10-Q"
+    }
+   },
+   "missing_facts": [
+    "operating_income"
+   ],
+   "ratios": {
+    "gp_at": 0.2525108410702614,
+    "gp_at_why": "ok",
+    "ope_be": null,
+    "ope_be_why": "numerator fact absent",
+    "ni_be": 0.4277280911479087,
+    "ni_be_why": "ok",
+    "book_equity": 33879000000
+   },
+   "read_me_first": "`filed` is when the number became PUBLIC; `end` is the period it describes. Join features on `filed`."
+  },
+  {
+   "ticker": "JPM",
+   "cik": 19617,
+   "observed_at": "2026-09-22T09:16:22+00:00",
+   "latest_filed": "2026-08-06",
+   "facts": {
+    "revenue": {
+     "val": 182447000000,
+     "filed": "2026-02-13",
+     "end": "2025-12-31",
+     "fy": 2025,
+     "fp": "FY",
+     "tag": "Revenues",
+     "form": "10-K"
+    },
+    "net_income": {
+     "val": 37649000000,
+     "filed": "2026-08-06",
+     "end": "2026-06-30",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "NetIncomeLoss",
+     "form": "10-Q"
+    },
+    "assets": {
+     "val": 5015069000000,
+     "filed": "2026-08-06",
+     "end": "2026-06-30",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "Assets",
+     "form": "10-Q"
+    },
+    "equity": {
+     "val": 374598000000,
+     "filed": "2026-08-06",
+     "end": "2026-06-30",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "StockholdersEquity",
+     "form": "10-Q"
+    },
+    "cash": {
+     "val": 278793000000,
+     "filed": "2019-02-26",
+     "end": "2018-12-31",
+     "fy": 2018,
+     "fp": "FY",
+     "tag": "CashAndCashEquivalentsAtCarryingValue",
+     "form": "10-K"
+    },
+    "debt": {
+     "val": 269929000000,
+     "filed": "2014-08-04",
+     "end": "2014-06-30",
+     "fy": 2014,
+     "fp": "Q2",
+     "tag": "LongTermDebt",
+     "form": "10-Q"
+    },
+    "shares": {
+     "val": 2658186195,
+     "filed": "2026-08-06",
+     "end": "2026-06-30",
+     "fy": 2026,
+     "fp": "Q2",
+     "tag": "EntityCommonStockSharesOutstanding",
+     "form": "10-Q"
+    }
+   },
+   "missing_facts": [
+    "cogs",
+    "operating_income"
+   ],
+   "ratios": {
+    "gp_at": null,
+    "gp_at_why": "numerator fact absent",
+    "ope_be": null,
+    "ope_be_why": "numerator fact absent",
+    "ni_be": 0.10050507477349052,
+    "ni_be_why": "ok",
+    "book_equity": 374598000000
+   },
+   "read_me_first": "`filed` is when the number became PUBLIC; `end` is the period it describes. Join features on `filed`."
+  }
+ ],
+ "headline": "8 companies, gp_at computable for 7 (88%), newest filing 2026-09-10"
+}

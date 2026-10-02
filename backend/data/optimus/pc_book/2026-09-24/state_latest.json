@@ -1,0 +1,21 @@
+{
+ "t": "2026-09-24T16:03:49+00:00",
+ "tag": "sim",
+ "account_number": "PA37CSAUFCQR",
+ "equity": 1000000.0,
+ "last_equity": 1000000.0,
+ "cash": 1000000.0,
+ "long_market_value": 0.0,
+ "short_market_value": 0.0,
+ "buying_power": 4000000.0,
+ "n_positions": 0,
+ "positions": [],
+ "benchmarks": {
+  "SPY": 763.885,
+  "QQQ": 735.565,
+  "IWM": 279.175
+ },
+ "benchmark_error": null,
+ "invested_frac": 0.0,
+ "intraday_return": 0.0
+}

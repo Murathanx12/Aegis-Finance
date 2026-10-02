@@ -67,7 +67,7 @@ import shutil
 import subprocess
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -218,6 +218,123 @@ def caps_reached(kind: str, evidence: str) -> bool:
     return kind == "POLICY_STOP" and "REFUSED_THROTTLE_DAY" in (evidence or "")
 
 
+def throttle_stamps(path: Path | None = None) -> list[datetime]:
+    """Every page-load stamp in the throttle log (unreadable lines skipped)."""
+    out = []
+    try:
+        for ln in (path or THROTTLE).read_text(encoding="utf-8", errors="replace").splitlines():
+            parts = ln.split()
+            if not parts:
+                continue
+            try:
+                t = datetime.fromisoformat(parts[0])
+            except ValueError:
+                continue
+            out.append(t if t.tzinfo else t.replace(tzinfo=timezone.utc))
+    except OSError:
+        pass
+    return out
+
+
+def caps_wait_s(stamps: list[datetime], now: datetime, max_day: int,
+                min_room: int = 20) -> float:
+    """PURE. After a run that ended on the daily page cap: seconds until the
+    rolling 24 h window has `min_room` free loads again (0 = now).
+
+    2026-09-30: the wait used to be `last_launch + CAPS_RETRY_S`, and when that
+    moment passed the next tick re-read the SAME log tail, found the same
+    REFUSED_THROTTLE_DAY, and computed the same (already past) moment -- so the
+    supervisor printed "retry at 19:14" at 21:25 and never relaunched, while
+    the window had 127 free loads. The window itself is the evidence now."""
+    win = sorted(t for t in stamps if timedelta(0) <= now - t < timedelta(days=1))
+    need = len(win) - (int(max_day) - int(min_room))
+    if need <= 0:
+        return 0.0
+    free_at = win[need - 1] + timedelta(days=1)
+    return max(0.0, (free_at - now).total_seconds())
+
+
+#: Central banks read by the reader: official public sites, NOT commercial banks.
+#: Labelled in `reader_status.json` so a "bank" in the tab strip is explained.
+CENTRAL_BANK_HOSTS = ("federalreserve.gov", "ecb.europa.eu", "boj.or.jp", "bankofengland.co.uk",
+                      "hkma.gov.hk", "pbc.gov.cn")
+CENTRAL_BANK_LABEL = "central bank (public releases)"
+
+
+def central_bank_label(url: str) -> str | None:
+    """PURE. The label for a central bank's public page, else None."""
+    from urllib.parse import urlsplit
+    try:
+        h = (urlsplit(url or "").hostname or "").lower()
+    except ValueError:
+        return None
+    return CENTRAL_BANK_LABEL if any(h == d or h.endswith("." + d)
+                                     for d in CENTRAL_BANK_HOSTS) else None
+
+
+#: frame targets already logged by `sweep_money_pages` (2026-09-30: one Piano
+#: frame in a tab was logged on every tick while the tab stayed open)
+_MONEY_SEEN: set[str] = set()
+
+
+def sweep_money_pages(*, targets=None, close=None, seen: set[str] | None = None) -> list[dict]:
+    """2026-09-30 ("openclaw opens banks"): close every PAGE of the dedicated
+    Chrome whose address is a bank / broker / payment / checkout / mail address
+    (`browser_policy.money_url_refusal`) -- a pop-up a news page opened, which
+    the reader never navigates to itself. Proves the instance before closing.
+    Returns the pages closed (and frames seen). Never raises."""
+    from backend.services import browser_policy as BP
+    try:
+        if targets is None:
+            from scripts.reader_pool import _cdp_targets as targets
+        if close is None:
+            from scripts.reader_pool import _close_money_target as close
+        rows = list(targets() or [])
+    except Exception:  # noqa: BLE001 -- the Chrome may be down; the loop repairs that
+        return []
+    out = []
+    for t in rows:
+        why = BP.money_url_refusal(str(t.get("url") or ""))
+        if not why:
+            continue
+        tid = str(t.get("id") or "")
+        memo = _MONEY_SEEN if seen is None else seen
+        if tid and t.get("type") != "page" and tid in memo:
+            continue                      # a frame already reported
+        if tid:
+            memo.add(tid)
+        ok = None
+        if t.get("type") == "page":
+            try:
+                ok = bool(close(str(t.get("id"))))
+            except Exception:  # noqa: BLE001
+                ok = False
+        out.append({"type": t.get("type"), "url": str(t.get("url") or "")[:160], "closed": ok,
+                    "why": why[:60]})
+    return out
+
+
+def lanes_summary(now: datetime | None = None) -> dict:
+    """Per budget lane and per host: loads and OK pages in the last hour and
+    day, from `dowjones/budget_lanes.jsonl` (written by the pool, so this is
+    readable while the pool is down)."""
+    from backend.services import reader_scheduler as RS
+    now = now or datetime.now(timezone.utc)
+    c = RS.lane_counts(RS.read_budget_log(now=now), now)
+    lanes = {lane: {"loads_60m": c["lane_60m"].get(lane, 0), "ok_60m": c["ok_lane_60m"].get(lane, 0),
+                    "loads_24h": c["lane_24h"].get(lane, 0), "ok_24h": c["ok_lane_24h"].get(lane, 0)}
+             for lane in RS.BUDGET_LANES}
+    try:                                   # the official API sources, same window
+        from backend.services import official_sources as OS
+        official = {k: {x: v.get(x) for x in ("lane", "req_60m", "req_24h", "ok_24h")}
+                    for k, v in OS.request_counts(now=now).items()}
+    except Exception as exc:  # noqa: BLE001 -- the browser lanes print either way
+        official = {"error": f"{type(exc).__name__}: {exc}"[:160]}
+    return {"lanes": lanes, "ok_by_host_60m": dict(c["ok_host_60m"]),
+            "ok_by_host_24h": dict(c["ok_host_24h"]),
+            "hour_allowance_now": RS.hour_allowance(now), "official_sources": official}
+
+
 def page_counts(now: datetime, path: Path | None = None, max_lines: int = 4000) -> dict:
     """From the tail of `page_log.jsonl`: OK pages in the last 10 and 60 minutes,
     every class per host in the last 60, the last non-OK page, and the last url
@@ -266,6 +383,14 @@ def write_status(state: str, *, next_action: str, last_error: str | None = None,
            "classes_60m": pc["classes_60m"], "last_not_ok_page": pc["last_not_ok"],
            "last_error": (last_error or "")[:300] or None, "next_action": next_action,
            **(extra or {})}
+    labels = {w: central_bank_label(u) for w, u in (row.get("current_url_by_worker") or {}).items()
+              if central_bank_label(u)}
+    if labels:                             # 2026-09-30: a central bank is not a bank account
+        row["labels_by_worker"] = labels
+    try:                                   # 2026-09-30: pages by budget lane and host
+        row["by_lane"] = lanes_summary()
+    except Exception as exc:  # noqa: BLE001 -- a status line never stops the loop
+        row["by_lane"] = {"error": f"{type(exc).__name__}: {exc}"[:200]}
     try:
         GR_atomic_json(path or STATUS, row)
     except OSError:
@@ -367,6 +492,55 @@ def step(name: str, args: list[str], timeout: int) -> dict:
         row = {"step": name, "rc": "TIMEOUT", "seconds": timeout}
     log(**row)
     return row
+
+
+OFFICIAL_LOG = DATA / "official" / "official_sources.log"
+
+
+def official_due(last_launch: float, now: float, *, every_s: float | None = None,
+                 child_alive: bool = False, enabled: bool | None = None) -> bool:
+    """PURE. Launch the official-sources run now? Only when enabled, no earlier
+    run is still alive, and `OFFICIAL_SOURCES_EVERY_S` has passed."""
+    en = bool(getattr(_config, "OFFICIAL_SOURCES_ENABLED", True)) if enabled is None else enabled
+    ev = float(getattr(_config, "OFFICIAL_SOURCES_EVERY_S", 900.0)) if every_s is None else every_s
+    return en and not child_alive and (now - last_launch) >= ev
+
+
+def launch_official() -> int:
+    """`python -m scripts.official_sources --due`, out of process, no window;
+    its output appends to `official/official_sources.log`. Returns the PID
+    (the supervisor never waits on it; the run holds its own lock)."""
+    # 2026-09-30: one log file PER RUN. A shared `official_sources.log` was held
+    # open by another writer (a `cmd >>` redirection keeps the file locked on
+    # Windows) and the launch failed with PermissionError at 22:12 and 22:13
+    logs = OFFICIAL_LOG.parent / "logs"
+    logs.mkdir(parents=True, exist_ok=True)
+    for old in sorted(logs.glob("due_*.log"))[:-200]:      # keep the last 200
+        try:
+            old.unlink()
+        except OSError:
+            pass
+    fh = (logs / f"due_{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}_{os.getpid()}.log").open(
+        "a", encoding="utf-8")
+    p = subprocess.Popen([PY, "-m", "scripts.official_sources", "--due"], cwd=str(REPO),
+                         creationflags=0x08000000 | 0x00000200, stdin=subprocess.DEVNULL,
+                         stdout=fh, stderr=subprocess.STDOUT)
+    return p.pid
+
+
+def pid_alive(pid: int | None) -> bool:
+    """True when `pid` is a live python process running scripts.official_sources
+    (checked by its command line, never by image name alone)."""
+    if not pid:
+        return False
+    try:
+        r = subprocess.run(["powershell", "-NoProfile", "-Command",
+                            f"(Get-CimInstance Win32_Process -Filter \"ProcessId={int(pid)}\").CommandLine"],
+                           capture_output=True, text=True, timeout=30, stdin=subprocess.DEVNULL,
+                           creationflags=0x08000000)
+        return "scripts.official_sources" in (r.stdout or "")
+    except Exception:  # noqa: BLE001 -- unknown: treat as alive, try next tick
+        return True
 
 
 def digest(claims_since: str) -> None:
@@ -965,6 +1139,7 @@ def main(argv: list[str] | None = None) -> int:
     why = "end time"
     ticks, state, next_action, last_err = 0, STARTING, "launch the reader", None
     idle_until = 0.0
+    last_official, official_pid = 0.0, None
     # 2026-09-29: the stall ladder and the scheduled Chrome recycle
     _lad = load_ladder()
     stall_level, last_stall_act, detail = _lad["level"], _lad["last_act"], ""
@@ -1215,16 +1390,24 @@ def main(argv: list[str] | None = None) -> int:
                     tick_sleep()
                     continue
                 cls = {"kind": "NOT_STARTED", "evidence": "rolling queue rebuilt"}
-            if caps_reached(cls["kind"], cls["evidence"]):
-                idle_until = last_launch + CAPS_RETRY_S
+            cap_wait = (caps_wait_s(throttle_stamps(), datetime.now(timezone.utc),
+                                    int(getattr(_config, "WEB_READER_MAX_PER_DAY", 4000)))
+                        if caps_reached(cls["kind"], cls["evidence"]) else None)
+            if cap_wait is not None and cap_wait > 0:
+                idle_until = time.time() + max(60.0, min(cap_wait, CAPS_RETRY_S))
                 state, detail, next_action = (WAITING_FOR_CAP, "idle_daily_cap",
                                       f"retry at {datetime.fromtimestamp(idle_until):%H:%M}")
                 last_err = cls["evidence"]
                 log(event="reader_down", exit_kind=cls["kind"], evidence=cls["evidence"],
-                    action="wait_caps")
+                    action="wait_caps", window_frees_in_s=round(cap_wait, 1))
                 write_status(state, next_action=next_action, last_error=last_err)
                 tick_sleep()
                 continue
+            if cap_wait is not None:
+                # the window has room again: the old run's refusal is history,
+                # not a reason to stop (decide() would read POLICY_STOP as "stop")
+                log(event="caps_freed", evidence=cls["evidence"][:200])
+                cls = {"kind": "CAPS_FREED", "evidence": "the rolling 24 h window has room"}
             pr = GR.probe()
             ok_budget, wait = budget.allow(time.monotonic())
             ok_open, open_wait = open_budget.allow(time.monotonic())
@@ -1258,6 +1441,25 @@ def main(argv: list[str] | None = None) -> int:
                 last_launch = time.time()
                 log(event="relaunch", n=restarts, launcher_pid=launch(queue_cmd),
                     queue_cmd=str(queue_cmd))
+        # 2026-09-30: the official API sources (SEC, House, CFTC, FINRA, Federal
+        # Register, central banks), out of process, never blocking this loop
+        if official_due(last_official, time.time()) and official_due(
+                last_official, time.time(), child_alive=pid_alive(official_pid)):
+            try:
+                official_pid = launch_official()
+                last_official = time.time()
+                log(event="official_sources_launched", pid=official_pid)
+            except Exception as exc:  # noqa: BLE001 -- reading goes on either way
+                # retry in ~2 minutes, not after the full interval
+                last_official = time.time() - float(getattr(
+                    _config, "OFFICIAL_SOURCES_EVERY_S", 900.0)) + 120.0
+                log(event="official_sources_launch_failed", error=f"{type(exc).__name__}: {exc}"[:200])
+        # 2026-09-30: a pop-up on a bank / payment / checkout / mail address is
+        # closed on the next tick (the pool also sweeps after every read)
+        if a.pool and pids:
+            swept = sweep_money_pages()
+            if swept:
+                log(event="money_pages", pages=swept)
         if time.time() - last_hourly >= HOURLY_S:
             last_hourly = time.time()
             digest(a.claims_since)

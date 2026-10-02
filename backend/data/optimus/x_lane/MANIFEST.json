@@ -1,0 +1,97 @@
+{
+ "elasticity_2026-09-12_run01.parquet": {
+  "bytes": 170868,
+  "columns": [
+   "uid",
+   "symbols",
+   "effective_at",
+   "event_type",
+   "belief_elasticity_sign_flip",
+   "belief_elasticity_escalation",
+   "belief_elasticity_placebo_null",
+   "flip_pass",
+   "n_pairs"
+  ],
+  "consumer": "E1's tabular head, left-joined on (symbol, effective_at); NaN where C1 has no counterfactual for that cell -- LightGBM handles NaN natively and this table is never fillna(0)'d",
+  "rows": 5469,
+  "run": 1,
+  "sha256": "17f0b15f29659486fb24eb4576e03ac05089c0cfe4d4ef90839182f59a98a2c5",
+  "written_by": "scripts/night_x2_elasticity.py"
+ },
+ "elasticity_2026-09-22_run01.parquet": {
+  "bytes": 170868,
+  "columns": [
+   "uid",
+   "symbols",
+   "effective_at",
+   "event_type",
+   "belief_elasticity_sign_flip",
+   "belief_elasticity_escalation",
+   "belief_elasticity_placebo_null",
+   "flip_pass",
+   "n_pairs"
+  ],
+  "consumer": "E1's tabular head, left-joined on (symbol, effective_at); NaN where C1 has no counterfactual for that cell -- LightGBM handles NaN natively and this table is never fillna(0)'d",
+  "rows": 5469,
+  "run": 1,
+  "sha256": "17f0b15f29659486fb24eb4576e03ac05089c0cfe4d4ef90839182f59a98a2c5",
+  "written_by": "scripts/night_x2_elasticity.py"
+ },
+ "elasticity_2026-09-27_run01.parquet": {
+  "bytes": 101480,
+  "columns": [
+   "uid",
+   "symbols",
+   "effective_at",
+   "event_type",
+   "belief_elasticity_sign_flip",
+   "belief_elasticity_escalation",
+   "belief_elasticity_placebo_null",
+   "flip_pass",
+   "n_pairs"
+  ],
+  "consumer": "E1's tabular head, left-joined on (symbol, effective_at); NaN where C1 has no counterfactual for that cell -- LightGBM handles NaN natively and this table is never fillna(0)'d",
+  "rows": 3078,
+  "run": 1,
+  "sha256": "79458a119fb742bf8b18c16be94e4b94f757cd65f67f379390297080f5c599af",
+  "written_by": "scripts/night_x2_elasticity.py"
+ },
+ "elasticity_2026-09-30_run01.parquet": {
+  "bytes": 164937,
+  "columns": [
+   "uid",
+   "symbols",
+   "effective_at",
+   "event_type",
+   "belief_elasticity_sign_flip",
+   "belief_elasticity_escalation",
+   "belief_elasticity_placebo_null",
+   "flip_pass",
+   "n_pairs"
+  ],
+  "consumer": "E1's tabular head, left-joined on (symbol, effective_at); NaN where C1 has no counterfactual for that cell -- LightGBM handles NaN natively and this table is never fillna(0)'d",
+  "rows": 5254,
+  "run": 1,
+  "sha256": "e42b253b83f849b42dfdb53c375a522c0bb66b794bcd34af7071c61817fa1384",
+  "written_by": "scripts/night_x2_elasticity.py"
+ },
+ "elasticity_2026-10-01_run01.parquet": {
+  "bytes": 166529,
+  "columns": [
+   "uid",
+   "symbols",
+   "effective_at",
+   "event_type",
+   "belief_elasticity_sign_flip",
+   "belief_elasticity_escalation",
+   "belief_elasticity_placebo_null",
+   "flip_pass",
+   "n_pairs"
+  ],
+  "consumer": "E1's tabular head, left-joined on (symbol, effective_at); NaN where C1 has no counterfactual for that cell -- LightGBM handles NaN natively and this table is never fillna(0)'d",
+  "rows": 5306,
+  "run": 1,
+  "sha256": "07dee3c446570b66a44d37476b55821adf2aebc32e039b6937ba532726ac9f3b",
+  "written_by": "scripts/night_x2_elasticity.py"
+ }
+}

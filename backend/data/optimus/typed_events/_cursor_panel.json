@@ -1,0 +1,14 @@
+{
+ "distinct_texts": 163284,
+ "job": "L2_typed_events",
+ "last_run_utc": "2026-09-13T11:34:20+00:00",
+ "note": "A RECEIPT, NOT THE RESUME. The resume is the set of `text_sha256` values in `panel_*.jsonl` themselves (`panel_typed_hashes`), because --stratified picks a scattered subset and a watermark over a total order would skip every text before the last one sampled.",
+ "panel": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+ "rows_written_total": 19996,
+ "run": 1,
+ "runs": 1,
+ "source": "panel",
+ "stratified": 20000,
+ "texts_typed_this_run": 19996,
+ "texts_typed_total": 19996
+}

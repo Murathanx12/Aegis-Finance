@@ -1,0 +1,147 @@
+{
+ "hyp_id": "H-baefacbdf9",
+ "title": "Tanker rates read through to refiners' crude sourcing cost",
+ "night": "2026-10-02",
+ "run_utc": "2026-10-02T12:53:46+00:00",
+ "result": {
+  "cell_type": "macro_lead_lag",
+  "params": {
+   "driver": "basket:FRO,STNG,DHT,INSW",
+   "targets": [
+    "VLO",
+    "PBF",
+    "DINO",
+    "PSX",
+    "MPC"
+   ],
+   "expected_sign": -1,
+   "h": 1,
+   "shock_z": 2.0
+  },
+  "targets_used": [
+   "VLO",
+   "PBF",
+   "DINO",
+   "PSX",
+   "MPC"
+  ],
+  "beta_to_spy_design": 1.322,
+  "window": "open(t+1) -> close(t+1), residual of beta x SPY; etf: targets use close t -> close t+1",
+  "design": {
+   "primary_signed_next_resid": {
+    "mean": -0.001631,
+    "se": 0.002239,
+    "t": -0.73,
+    "mde": 0.006269,
+    "n": 92,
+    "n_blocks": 50
+   },
+   "net_of_cost": -0.003631,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": -0.011958,
+    "se": 0.003028,
+    "t": -3.95,
+    "mde": 0.008478,
+    "n": 92,
+    "n_blocks": 50
+   },
+   "placebo_all_days_signed_next": {
+    "mean": 0.000612,
+    "se": 0.00049,
+    "t": 1.25,
+    "mde": 0.001372,
+    "n": 1721,
+    "n_blocks": 82
+   },
+   "n_shocks": 92,
+   "by_year": {
+    "2016": {
+     "mean": 0.00063,
+     "n": 8
+    },
+    "2017": {
+     "mean": -0.005608,
+     "n": 9
+    },
+    "2018": {
+     "mean": 0.000772,
+     "n": 20
+    },
+    "2019": {
+     "mean": -0.00142,
+     "n": 13
+    },
+    "2020": {
+     "mean": -0.007755,
+     "n": 19
+    },
+    "2021": {
+     "mean": 0.00226,
+     "n": 12
+    },
+    "2022": {
+     "mean": 0.001696,
+     "n": 11
+    }
+   },
+   "loo_year_worst": -0.002298,
+   "span": [
+    "2016-03-08",
+    "2022-12-12"
+   ]
+  },
+  "confirm": {
+   "primary_signed_next_resid": {
+    "mean": -0.001873,
+    "se": 0.003504,
+    "t": -0.53,
+    "mde": 0.009811,
+    "n": 46,
+    "n_blocks": 26
+   },
+   "net_of_cost": -0.003873,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": -0.007995,
+    "se": 0.004007,
+    "t": -2.0,
+    "mde": 0.01122,
+    "n": 46,
+    "n_blocks": 26
+   },
+   "placebo_all_days_signed_next": {
+    "mean": -0.000608,
+    "se": 0.000583,
+    "t": -1.04,
+    "mde": 0.001633,
+    "n": 939,
+    "n_blocks": 45
+   },
+   "n_shocks": 46,
+   "by_year": {
+    "2023": {
+     "mean": 0.002625,
+     "n": 14
+    },
+    "2024": {
+     "mean": 0.002517,
+     "n": 12
+    },
+    "2025": {
+     "mean": -0.00672,
+     "n": 9
+    },
+    "2026": {
+     "mean": -0.00842,
+     "n": 11
+    }
+   },
+   "loo_year_worst": -0.00384,
+   "span": [
+    "2023-01-04",
+    "2026-08-27"
+   ]
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.00187 <= 0"
+ }
+}

@@ -1,0 +1,129 @@
+{
+ "cycle": 1,
+ "at": "2026-09-28T13:47:20+00:00",
+ "mode": "paper_profit",
+ "elapsed_s": 4866.0,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 3.6,
+   "result": {
+    "equity": 997900.77,
+    "cash": 780857.77,
+    "n_positions": 11,
+    "invested_frac": 0.21749958164678038
+   }
+  },
+  "funnel": {
+   "ok": true,
+   "elapsed_s": 0.1,
+   "result": {
+    "skipped": "candidate set is fresh",
+    "generated_at": "2026-09-24T02:48:34+00:00",
+    "age_days": 4.4,
+    "n_candidates": 25
+   }
+  },
+  "analyst": {
+   "ok": true,
+   "elapsed_s": 3634.3,
+   "result": {
+    "pulled": true,
+    "rc": 0
+   },
+   "slow": "3634s exceeds SLOW_UNIT_S 1800s; reported, not killed \u2014 the loop stops at boundaries by design"
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 128.0,
+   "result": {
+    "n_eligible": 2907,
+    "ic_mean": 0.017484967530512614,
+    "top20_net_rel_21d": -0.010667045935328827,
+    "top1": "TE"
+   }
+  },
+  "forecast": {
+   "ok": true,
+   "elapsed_s": 1055.3,
+   "result": {
+    "failed": "rc 1",
+    "stderr": "2\\Lib\\pathlib.py\", line 1376, in replace\n    os.replace(self, target)\nPermissionError: [WinError 5] Access is denied: 'C:\\\\Users\\\\mrthn\\\\aegis-finance\\\\backend\\\\data\\\\optimus\\\\forecasts\\\\day_2026-09-28.tmp' -> 'C:\\\\Users\\\\mrthn\\\\aegis-finance\\\\backend\\\\data\\\\optimus\\\\forecasts\\\\day_2026-09-28.json'\n",
+    "status": "DEGRADED"
+   }
+  },
+  "review": {
+   "ok": true,
+   "elapsed_s": 9.4,
+   "result": {
+    "morning": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\review\\morning_2026-09-28.md",
+    "asof": "2026-09-28",
+    "n_rows": 1173,
+    "n_minted": 1077,
+    "review": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\review\\review_2026-09-28.json"
+   }
+  },
+  "plan": {
+   "ok": true,
+   "elapsed_s": 21.8,
+   "result": {
+    "planned": true,
+    "verdict": "MEASURED_NEGATIVE",
+    "acting": true,
+    "bars_line": "BARS_FRESH (limit 2, last closed session 2026-09-25)",
+    "exploit_acting": false,
+    "blend_verdict": "UNMEASURED",
+    "er_present": true,
+    "er_red": null,
+    "probe_verdict": "UNMEASURED_TRADE_SMALL",
+    "probe_acting": true,
+    "shortlist": 22,
+    "shortlist_red": null,
+    "contract": "present",
+    "contract_red": null,
+    "contract_refused_excluded": 2,
+    "mandate_status": "UNRECONCILED",
+    "mandate_line": "MANDATE UNRECONCILED: capital $40,000; per-name cap 2% (tightest: config.PROBE_MAX_WEIGHT (u_plan PROBE)); as configured: 18 EXPLOIT x 10% (gross <= 80%) + 10 PROBE x 2% (<= 20%) = sum|notional|/equity 1.00; x stop 6.48% = -$2,592; no stop, so the ceiling is -$40,000 on $40,000 [on the largest base seen, $1,000,000: -$64,800 k-sigma, ceiling -$1,000,000] -- 3 disagreement(s); Murat must confirm ONE mandate",
+    "mandate_gates_orders": false,
+    "policy_version": "c3-v1",
+    "n_considered": 45,
+    "n_probe": 10,
+    "policy_state_used": true,
+    "policy_state_ignored": null,
+    "order_source": "shortlist order (no shortlist name carries a contributing component)",
+    "probe_weighting": "equal",
+    "probe_gross": 0.2,
+    "n_orders": 3,
+    "n_probe_orders": 1,
+    "n_exploit_orders": 0,
+    "n_sent": 3,
+    "send_block": null,
+    "turnover_usd": 59177.2,
+    "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,418 on $997,936; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$199,587",
+    "decisions_new": 40,
+    "top1": "NVDA"
+   }
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 10.5,
+   "result": {
+    "forecasts": "0 newly resolved; 17,524 of 28,529 records now carry an outcome; 0 voided as unresolvable this run; 0 wait on a bar, 10,869 are not yet due",
+    "decisions": "nothing_to_do"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 3.0,
+   "result": {
+    "unit": "distil",
+    "day": "2026-09-28",
+    "rc": 3,
+    "status": "DEGRADED rc 3",
+    "tail": "RADED\",\n  \"reason\": \"no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24)\",\n  \"n_rules_written\": 0,\n  \"answered_by\": null,\n  \"local_status\": null,\n  \"cost_usd\": 0.0,\n  \"cost_is_lower_bound\": false,\n  \"learned_md\": \"C:\\\\Users\\\\mrthn\\\\aegis-finance\\\\backend\\\\data\\\\optimus\\\\brain\\\\LEARNED_2026-09.md\",\n  \"rules\": []\n },\n \"policy_state\": {\n  \"changed_since_last\": [],\n  \"path\": \"C:\\\\Users\\\\mrthn\\\\aegis-finance\\\\backend\\\\data\\\\optimus\\\\pc_book\\\\policy_state.json\"\n }\n}\nLEARN_DEGRADED 2026-09-28: no new graded rows since 2026-09-26 (17484 graded, resolved through 2026-09-24)\n",
+    "ran_utc": "2026-09-28T13:47:20+00:00"
+   }
+  }
+ },
+ "errors": []
+}

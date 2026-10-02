@@ -10,7 +10,7 @@ use deepseek api as you wish and nvidia api. do you think bob from ibm is
 useful, or any nvidia, microsoft, meta, amazon, oracle things we need to set up
 and build."*
 
-Context: one HKU student, one Windows laptop with a local graphics card, an NPU and
+Context: one HKU student, one Windows laptop with a local graphics card, an on-device accelerator and
 limited free memory (specifics in the local_pc record). Paid today: DeepSeek API (cheap, the only paid
 LLM), Railway (~$60 last month, being reduced), news subscriptions. An NVIDIA
 API key exists and is underused. OpenClaw runs locally.
@@ -162,7 +162,7 @@ it is underused past that.
 
 **TensorRT / TensorRT-LLM for the local model.** Best independent data found
 (Jan/Menlo Research benchmarks) shows TensorRT-LLM 30–70% faster than
-llama.cpp on a 7B int4 model — but measured on 24GB-class RTX 4090/3090 cards,
+llama.cpp on a 7B int4 model — but measured on flagship desktop cards,
 not on a card of the local class, and no verified benchmark at that class exists. Windows setup additionally
 requires Python 3.10 only, MS-MPI, and per-GPU engine compilation (one
 hobbyist repo left this "in progress" for exactly that reason). **Verdict: NOT
@@ -215,21 +215,21 @@ Effort: 30 min.
 evidence found that it beats what's already running locally (Qwen2.5-7B /
 Qwen3-30B-A3B) — its edge is footprint and tool-use tuning, not demonstrated
 reasoning superiority. **Verdict: TRY ONE EXPERIMENT** — mainly relevant as an
-NPU-offload candidate (below), not a reasoning upgrade. Effort: ~1h to
+accelerator-offload candidate (below), not a reasoning upgrade. Effort: ~1h to
 download a GGUF and spot-benchmark tok/s and quality vs Qwen2.5-7B.
 
-**Windows ML / DirectML / Foundry Local (the NPU).** Foundry Local is a real,
+**Windows ML / DirectML / Foundry Local (the on-device accelerator).** Foundry Local is a real,
 shipping product (`winget install Microsoft.FoundryLocal`, stable
-NuGet/pip packages), built on Windows ML/ONNX Runtime, targeting CPU/GPU/NPU
-via execution providers. **NPU support is confirmed specifically for
-Qualcomm/Snapdragon (QNN)**; hardware-optimized NPU/GPU execution providers
-are gated behind Windows 11 24H2 (build 26100)+. Whether this laptop's
-specific NPU has a
+NuGet/pip packages), built on Windows ML/ONNX Runtime, targeting CPU, GPU and neural accelerators
+via execution providers. **Neural-accelerator support is confirmed specifically for
+Qualcomm/Snapdragon (QNN)**; hardware-optimized accelerator execution providers
+are gated behind Windows 11 24H2 (build 26100)+. Whether the local
+accelerator has a
 working execution provider today is **UNVERIFIED** — must be checked directly
-(`foundry model list` + Task Manager NPU utilization) before crediting any
-VRAM savings. **Use, if it works**: offload Phi-4-mini to the NPU, freeing the
+(`foundry model list` + Task Manager accelerator utilization) before crediting any
+graphics-memory savings. **Use, if it works**: offload Phi-4-mini to the accelerator, freeing the
 local graphics card for Qwen3-30B-A3B. **Verdict: TRY ONE EXPERIMENT** — check OS
-build and NPU vendor/EP availability first (2–3h bounded test); don't plan
+build and accelerator vendor/EP availability first (2–3h bounded test); don't plan
 around it until confirmed.
 
 **Playwright vs OpenClaw's browser driver, for this week's actual reader

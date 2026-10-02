@@ -1,0 +1,918 @@
+{
+ "stamp_utc": "20260929T224502Z",
+ "read_only": true,
+ "accounts": [
+  {
+   "role": "hack1",
+   "status": "ok",
+   "account_number": "PA3WXDS3MJ53",
+   "equity": 90560.44,
+   "cash": 21432.35,
+   "positions": [
+    {
+     "symbol": "AVGO",
+     "qty": 11.0,
+     "price": 356.1851,
+     "market_value": 3918.0361,
+     "unrealized_plpc": "-0.00377",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "331.08",
+       "qty": "11",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack1-20260929-stop-AVGO-6179662c4c"
+      }
+     ]
+    },
+    {
+     "symbol": "BBIO",
+     "qty": 10.0,
+     "price": 65.97,
+     "market_value": 659.7,
+     "unrealized_plpc": "-0.0108",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "61.04",
+       "qty": "10",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack1-20260929-stop-BBIO-afe5e68499"
+      }
+     ]
+    },
+    {
+     "symbol": "BE",
+     "qty": 9.0,
+     "price": 293.25,
+     "market_value": 2639.25,
+     "unrealized_plpc": "-0.01029",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "260.87",
+       "qty": "9",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack1-20260929-stop-BE-b9f7a2a8e6"
+      }
+     ]
+    },
+    {
+     "symbol": "CLS",
+     "qty": 9.0,
+     "price": 366.47,
+     "market_value": 3298.23,
+     "unrealized_plpc": "0.00353",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "321.38",
+       "qty": "9",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack1-20260929-stop-CLS-18077293d2"
+      }
+     ]
+    },
+    {
+     "symbol": "GEV",
+     "qty": 6.0,
+     "price": 966.5,
+     "market_value": 5799.0,
+     "unrealized_plpc": "0.01047",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "862.19",
+       "qty": "6",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack1-20260929-stop-GEV-eb55a738c6"
+      }
+     ]
+    },
+    {
+     "symbol": "HOOD",
+     "qty": 42.0,
+     "price": 117.4842,
+     "market_value": 4934.3364,
+     "unrealized_plpc": "0.01762",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "101.66",
+       "qty": "42",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack1-20260929-stop-HOOD-053b1878ba"
+      }
+     ]
+    },
+    {
+     "symbol": "MP",
+     "qty": 61.0,
+     "price": 45.47,
+     "market_value": 2773.67,
+     "unrealized_plpc": "0.00776",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "39.67",
+       "qty": "61",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack1-20260929-stop-MP-4f2d344b57"
+      }
+     ]
+    },
+    {
+     "symbol": "MU",
+     "qty": 5.0,
+     "price": 1071.2915,
+     "market_value": 5356.4575,
+     "unrealized_plpc": "0.00064",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "942.01",
+       "qty": "5",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack1-20260929-stop-MU-a1a8bdf1a1"
+      }
+     ]
+    },
+    {
+     "symbol": "NVT",
+     "qty": 25.0,
+     "price": 161.68,
+     "market_value": 4042.0,
+     "unrealized_plpc": "0.00672",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "144.49",
+       "qty": "25",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack1-20260929-stop-NVT-48db56f14a"
+      }
+     ]
+    },
+    {
+     "symbol": "RGEN",
+     "qty": 3.0,
+     "price": 194.57,
+     "market_value": 583.71,
+     "unrealized_plpc": "0.00923",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "178.87",
+       "qty": "3",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack1-20260929-stop-RGEN-0f470cf161"
+      }
+     ]
+    },
+    {
+     "symbol": "SYM",
+     "qty": 574.0,
+     "price": 41.5,
+     "market_value": 23821.0,
+     "unrealized_plpc": "-0.03556",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "38.73",
+       "qty": "574",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-fe65ed7ff3f7262abc48d8c5"
+      }
+     ]
+    },
+    {
+     "symbol": "TSM",
+     "qty": 10.0,
+     "price": 457.16,
+     "market_value": 4571.6,
+     "unrealized_plpc": "0.00035",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "423.62",
+       "qty": "10",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack1-20260929-stop-TSM-14b8bb030c"
+      }
+     ]
+    },
+    {
+     "symbol": "VRT",
+     "qty": 27.0,
+     "price": 249.3,
+     "market_value": 6731.1,
+     "unrealized_plpc": "-0.00028",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "219.03",
+       "qty": "27",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack1-20260929-stop-VRT-b34d02fd59"
+      }
+     ]
+    }
+   ],
+   "open_orders": 13,
+   "gross_over_equity": 0.763,
+   "worst_case_at_stops_usd": 6532.89,
+   "worst_case_pct_equity": 7.21,
+   "flags": []
+  },
+  {
+   "role": "hack2",
+   "status": "ok",
+   "account_number": "PA33ON4NRJAX",
+   "equity": 99252.21,
+   "cash": 49650.64,
+   "positions": [
+    {
+     "symbol": "AFRM",
+     "qty": 72.0,
+     "price": 69.35,
+     "market_value": 4993.2,
+     "unrealized_plpc": "0.01419",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "61.96",
+       "qty": "72",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack2-20260929-stop-AFRM-8794468532"
+      }
+     ]
+    },
+    {
+     "symbol": "AMD",
+     "qty": 8.0,
+     "price": 608.051,
+     "market_value": 4864.408,
+     "unrealized_plpc": "-0.00818",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "539.06",
+       "qty": "8",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack2-20260929-stop-AMD-8bee59ed14"
+      }
+     ]
+    },
+    {
+     "symbol": "CRWD",
+     "qty": 19.0,
+     "price": 263.54,
+     "market_value": 5007.26,
+     "unrealized_plpc": "0.01765",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "227.97",
+       "qty": "19",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack2-20260929-stop-CRWD-132520fbde"
+      }
+     ]
+    },
+    {
+     "symbol": "DELL",
+     "qty": 9.0,
+     "price": 540.07,
+     "market_value": 4860.63,
+     "unrealized_plpc": "-0.00642",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "477.92",
+       "qty": "9",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack2-20260929-stop-DELL-20ad28bff4"
+      }
+     ]
+    },
+    {
+     "symbol": "GTLB",
+     "qty": 106.0,
+     "price": 46.4832,
+     "market_value": 4927.2192,
+     "unrealized_plpc": "-0.00251",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "41.77",
+       "qty": "106",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack2-20260929-stop-GTLB-4edaaab427"
+      }
+     ]
+    },
+    {
+     "symbol": "MDB",
+     "qty": 15.0,
+     "price": 336.66,
+     "market_value": 5049.9,
+     "unrealized_plpc": "0.02525",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "288.79",
+       "qty": "15",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack2-20260929-stop-MDB-6d35b2f776"
+      }
+     ]
+    },
+    {
+     "symbol": "NET",
+     "qty": 14.0,
+     "price": 352.26,
+     "market_value": 4931.64,
+     "unrealized_plpc": "0.00077",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "312.78",
+       "qty": "14",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack2-20260929-stop-NET-e98722456d"
+      }
+     ]
+    },
+    {
+     "symbol": "S",
+     "qty": 216.0,
+     "price": 23.31,
+     "market_value": 5034.96,
+     "unrealized_plpc": "0.02237",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "20.1",
+       "qty": "216",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack2-20260929-stop-S-3a3c97422f"
+      }
+     ]
+    },
+    {
+     "symbol": "XYZ",
+     "qty": 67.0,
+     "price": 74.05,
+     "market_value": 4961.35,
+     "unrealized_plpc": "0.01341",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "67.96",
+       "qty": "67",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack2-20260929-stop-XYZ-fde0ea5b7d"
+      }
+     ]
+    },
+    {
+     "symbol": "ZS",
+     "qty": 25.0,
+     "price": 198.84,
+     "market_value": 4971.0,
+     "unrealized_plpc": "0.01119",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "173.01",
+       "qty": "25",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack2-20260929-stop-ZS-2cf82784c2"
+      }
+     ]
+    }
+   ],
+   "open_orders": 10,
+   "gross_over_equity": 0.5,
+   "worst_case_at_stops_usd": 5836.7,
+   "worst_case_pct_equity": 5.88,
+   "flags": []
+  },
+  {
+   "role": "hack3",
+   "status": "HTTP_401",
+   "flags": []
+  },
+  {
+   "role": "hack4",
+   "status": "ok",
+   "account_number": "PA3R9XHMCVDA",
+   "equity": 79683.43,
+   "cash": 7968.46,
+   "positions": [
+    {
+     "symbol": "AAPL",
+     "qty": 15.0,
+     "price": 330.05,
+     "market_value": 4950.75,
+     "unrealized_plpc": "-0.00221",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "313.24",
+       "qty": "15",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack4-20260929-stop-AAPL-7248407aec"
+      }
+     ]
+    },
+    {
+     "symbol": "ALLE",
+     "qty": 32.0,
+     "price": 155.43,
+     "market_value": 4973.76,
+     "unrealized_plpc": "0.00245",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "146.26",
+       "qty": "32",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack4-20260929-stop-ALLE-cc8659a3ab"
+      }
+     ]
+    },
+    {
+     "symbol": "AVPT",
+     "qty": 288.0,
+     "price": 13.6834,
+     "market_value": 3940.8192,
+     "unrealized_plpc": "0.02115",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "12.33",
+       "qty": "288",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack4-20260929-stop-AVPT-c43ec46a3c"
+      }
+     ]
+    },
+    {
+     "symbol": "BIOA",
+     "qty": 2261.0,
+     "price": 7.14,
+     "market_value": 16143.54,
+     "unrealized_plpc": "-0.09276",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "6.93",
+       "qty": "2261",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-d3388a9659e83d73f1ceaca5"
+      }
+     ]
+    },
+    {
+     "symbol": "GOOG",
+     "qty": 14.0,
+     "price": 337.8471,
+     "market_value": 4729.8594,
+     "unrealized_plpc": "0.0064",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "314.59",
+       "qty": "14",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack4-20260929-stop-GOOG-10abb8e218"
+      }
+     ]
+    },
+    {
+     "symbol": "INCY",
+     "qty": 39.0,
+     "price": 123.009,
+     "market_value": 4797.351,
+     "unrealized_plpc": "0.00728",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "115.82",
+       "qty": "39",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack4-20260929-stop-INCY-e64ed9c483"
+      }
+     ]
+    },
+    {
+     "symbol": "JAZZ",
+     "qty": 21.0,
+     "price": 232.35,
+     "market_value": 4879.35,
+     "unrealized_plpc": "0.00741",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "218.47",
+       "qty": "21",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack4-20260929-stop-JAZZ-c9dc8950c1"
+      }
+     ]
+    },
+    {
+     "symbol": "NVDA",
+     "qty": 17.0,
+     "price": 228.0423,
+     "market_value": 3876.7191,
+     "unrealized_plpc": "-0.01023",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "213.45",
+       "qty": "17",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack4-20260929-stop-NVDA-d17db78d72"
+      }
+     ]
+    },
+    {
+     "symbol": "RZLV",
+     "qty": 8650.0,
+     "price": 2.12,
+     "market_value": 18338.0,
+     "unrealized_plpc": "-0.07826",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "2.02",
+       "qty": "8650",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-3f7b53d248b1f4829cf04172"
+      }
+     ]
+    },
+    {
+     "symbol": "SNDR",
+     "qty": 159.0,
+     "price": 31.98,
+     "market_value": 5084.82,
+     "unrealized_plpc": "0.00534",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "29.91",
+       "qty": "159",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack4-20260929-stop-SNDR-3a210b9420"
+      }
+     ]
+    }
+   ],
+   "open_orders": 10,
+   "gross_over_equity": 0.9,
+   "worst_case_at_stops_usd": 3749.83,
+   "worst_case_pct_equity": 4.71,
+   "flags": []
+  },
+  {
+   "role": "hack5",
+   "status": "ok",
+   "account_number": "PA3T8OTGULCD",
+   "equity": 94649.51,
+   "cash": 5104.73,
+   "positions": [
+    {
+     "symbol": "SPY",
+     "qty": 117.0,
+     "price": 765.34,
+     "market_value": 89544.78,
+     "unrealized_plpc": "0.00332",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "686.54",
+       "qty": "117",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack5-20260929-stop-SPY-ac51144c5f"
+      }
+     ]
+    }
+   ],
+   "open_orders": 1,
+   "gross_over_equity": 0.946,
+   "worst_case_at_stops_usd": 9219.6,
+   "worst_case_pct_equity": 9.74,
+   "flags": []
+  },
+  {
+   "role": "hack6",
+   "status": "ok",
+   "account_number": "PA3I816FLXE9",
+   "equity": 81646.17,
+   "cash": 20219.04,
+   "positions": [
+    {
+     "symbol": "ABEO",
+     "qty": 1079.0,
+     "price": 5.1094,
+     "market_value": 5513.0426,
+     "unrealized_plpc": "-0.04853",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "4.83",
+       "qty": "1079",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-b5c31053e54dab9bc981d0bb"
+      }
+     ]
+    },
+    {
+     "symbol": "AKAM",
+     "qty": 7.0,
+     "price": 108.5721,
+     "market_value": 760.0047,
+     "unrealized_plpc": "0.02003",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "95.64",
+       "qty": "7",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack6-20260929-stop-AKAM-dfed8ccc63"
+      }
+     ]
+    },
+    {
+     "symbol": "ARDX",
+     "qty": 1693.0,
+     "price": 3.4069,
+     "market_value": 5767.8817,
+     "unrealized_plpc": "0.00499",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "3.05",
+       "qty": "1693",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-3c002a549a3bb66d5f6a6457"
+      }
+     ]
+    },
+    {
+     "symbol": "ATR",
+     "qty": 43.0,
+     "price": 123.29,
+     "market_value": 5301.47,
+     "unrealized_plpc": "-0.02345",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "113.62",
+       "qty": "43",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-796b30907cf2126cb0edaf6c"
+      }
+     ]
+    },
+    {
+     "symbol": "BABA",
+     "qty": 7.0,
+     "price": 107.9269,
+     "market_value": 755.4883,
+     "unrealized_plpc": "0.00276",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "98.75",
+       "qty": "7",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack6-20260929-stop-BABA-8f2f62ba47"
+      }
+     ]
+    },
+    {
+     "symbol": "CALX",
+     "qty": 169.0,
+     "price": 33.53,
+     "market_value": 5666.57,
+     "unrealized_plpc": "-0.0312",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "31.15",
+       "qty": "169",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-df88b83ad2d3708777c0cb91"
+      }
+     ]
+    },
+    {
+     "symbol": "EVLV",
+     "qty": 1084.0,
+     "price": 4.72,
+     "market_value": 5116.48,
+     "unrealized_plpc": "-0.06719",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "4.55",
+       "qty": "1084",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-1e84aa9a8c46c732aa182196"
+      }
+     ]
+    },
+    {
+     "symbol": "INVA",
+     "qty": 258.0,
+     "price": 21.11,
+     "market_value": 5446.38,
+     "unrealized_plpc": "-0.00378",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "19.07",
+       "qty": "258",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-04d4f115baed11bb77207ce0"
+      }
+     ]
+    },
+    {
+     "symbol": "KKR",
+     "qty": 8.0,
+     "price": 93.92,
+     "market_value": 751.36,
+     "unrealized_plpc": "0.01261",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "86.2",
+       "qty": "8",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack6-20260929-stop-KKR-fec591a12d"
+      }
+     ]
+    },
+    {
+     "symbol": "KTOS",
+     "qty": 121.0,
+     "price": 43.2324,
+     "market_value": 5231.1204,
+     "unrealized_plpc": "-0.08696",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "42.62",
+       "qty": "121",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-23b056316eb993facbe508fe"
+      }
+     ]
+    },
+    {
+     "symbol": "MAZE",
+     "qty": 242.0,
+     "price": 27.02,
+     "market_value": 6538.84,
+     "unrealized_plpc": "0.14492",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "21.24",
+       "qty": "242",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-187391ba5ec61e5fcc845155"
+      }
+     ]
+    },
+    {
+     "symbol": "MRVL",
+     "qty": 3.0,
+     "price": 263.5,
+     "market_value": 790.5,
+     "unrealized_plpc": "0.00011",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "236.95",
+       "qty": "3",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack6-20260929-stop-MRVL-841276fb27"
+      }
+     ]
+    },
+    {
+     "symbol": "NBIS",
+     "qty": 3.0,
+     "price": 239.5,
+     "market_value": 718.5,
+     "unrealized_plpc": "-0.01026",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "217.72",
+       "qty": "3",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack6-20260929-stop-NBIS-a0164b2a54"
+      }
+     ]
+    },
+    {
+     "symbol": "NVDA",
+     "qty": 3.0,
+     "price": 228.0078,
+     "market_value": 684.0234,
+     "unrealized_plpc": "-0.01",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "213.42",
+       "qty": "3",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack6-20260929-stop-NVDA-97443de63c"
+      }
+     ]
+    },
+    {
+     "symbol": "PRVA",
+     "qty": 263.0,
+     "price": 19.62,
+     "market_value": 5160.06,
+     "unrealized_plpc": "-0.05446",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "18.68",
+       "qty": "263",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-e054a720dead4aa05f0f4213"
+      }
+     ]
+    },
+    {
+     "symbol": "SPCX",
+     "qty": 5.0,
+     "price": 149.37,
+     "market_value": 746.85,
+     "unrealized_plpc": "0.00505",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "133.81",
+       "qty": "5",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack6-20260929-stop-SPCX-6f0dd494f4"
+      }
+     ]
+    },
+    {
+     "symbol": "STRO",
+     "qty": 374.0,
+     "price": 16.1,
+     "market_value": 6021.4,
+     "unrealized_plpc": "0.04818",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "13.82",
+       "qty": "374",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-e830354efc8fe0b18e234569"
+      }
+     ]
+    },
+    {
+     "symbol": "TSM",
+     "qty": 1.0,
+     "price": 457.16,
+     "market_value": 457.16,
+     "unrealized_plpc": "0.0002",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "423.78",
+       "qty": "1",
+       "tif": "gtc",
+       "client_order_id": "aegisfm-hack6-20260929-stop-TSM-ed8861e12a"
+      }
+     ]
+    }
+   ],
+   "open_orders": 18,
+   "gross_over_equity": 0.752,
+   "worst_case_at_stops_usd": 5523.59,
+   "worst_case_pct_equity": 6.77,
+   "flags": []
+  }
+ ],
+ "website": {
+  "status": "DEGRADED",
+  "newest_lane_nav": "2026-09-29"
+ },
+ "n_flags": 0
+}

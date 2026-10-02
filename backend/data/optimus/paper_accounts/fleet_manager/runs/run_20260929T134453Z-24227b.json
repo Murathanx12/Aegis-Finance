@@ -1,0 +1,519 @@
+{
+ "schema": "fleet_manager_run/1",
+ "run_id": "20260929T134453Z-24227b",
+ "pass": "open",
+ "live_flag": false,
+ "started_utc": "2026-09-29T13:44:54+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "modes": {
+  "_doc": "Owner-controlled. contract: v1 (hold what the loop left, loop's own terms) or v2 (the proposal). maintenance/entries: LIVE or DRY. The script never edits this file after creating it. `--live` on the command line is also required for anything LIVE.",
+  "hack1": {
+   "contract": "v1",
+   "maintenance": "LIVE",
+   "entries": "DRY"
+  },
+  "hack2": {
+   "contract": "v1",
+   "maintenance": "LIVE",
+   "entries": "DRY"
+  },
+  "hack3": {
+   "skip": "key answers HTTP 401 (retired 2026-09-22); credentials are the owner's"
+  },
+  "hack4": {
+   "contract": "v1",
+   "maintenance": "LIVE",
+   "entries": "DRY"
+  },
+  "hack5": {
+   "contract": "v1",
+   "maintenance": "DRY",
+   "entries": "DRY",
+   "not_before_utc": "2026-09-29T15:00:00Z",
+   "why": "the BE 290/320 spread is closed by a separate one-shot task tonight"
+  },
+  "hack6": {
+   "contract": "v1",
+   "maintenance": "LIVE",
+   "entries": "DRY"
+  }
+ },
+ "issuer_map": "ok",
+ "n_stitched": 62,
+ "digest": "world_digest_20260929T103001Z.json",
+ "baseline": "2026-09-29T13:23:27Z",
+ "accounts": [
+  {
+   "role": "hack2",
+   "pass": "open",
+   "account_number": "PA33ON4NRJAX",
+   "equity": 98820.5,
+   "cash": 98820.5,
+   "last_equity": 98820.5,
+   "n_positions": 0,
+   "n_open_orders": 0,
+   "positions": [],
+   "clock": {
+    "session_day_et": "2026-09-29",
+    "is_open": true,
+    "minutes_to_close": 375.0
+   },
+   "reconcile": {
+    "status": "OK",
+    "ok": true,
+    "mismatches": [],
+    "foreign_orders": [],
+    "source": "state",
+    "since": "2026-09-29T13:43:23+00:00",
+    "n_fills_since": 0
+   },
+   "contract_active": {
+    "version": "v1",
+    "policy_hash": "56d8443e7bf58f8d",
+    "alpha_source": "DRIFT (post_event_drift, window universe)",
+    "frozen_utc": "2026-09-29T13:37:43+00:00"
+   },
+   "contract_proposed": {
+    "version": "v2",
+    "policy_hash": "2301fa30c7b851df",
+    "alpha_source": "analyst revision flow (net raises x firms, 90 days, >= 3 firms)"
+   },
+   "sigma": {
+    "ABNB": 0.03114,
+    "AFRM": 0.03122,
+    "AMD": 0.04428,
+    "AMGN": 0.02126,
+    "CRM": 0.03846,
+    "CRWD": 0.04596,
+    "DDOG": 0.04184,
+    "DELL": 0.05155,
+    "ESTC": 0.03963,
+    "GTLB": 0.03434,
+    "MDB": 0.04711,
+    "NET": 0.03704,
+    "OKTA": 0.05012,
+    "PANW": 0.03858,
+    "S": 0.03971,
+    "SNOW": 0.03031,
+    "TGT": 0.01841,
+    "WDAY": 0.04125,
+    "XYZ": 0.02332,
+    "ZS": 0.04034
+   },
+   "panel": {
+    "panel": "bars.parquet",
+    "last_bar": "2026-09-28",
+    "symbols_asked": 21,
+    "symbols_found": 21,
+    "screen": {
+     "enabled": true,
+     "rules": {
+      "dark_run_min_sessions": 5,
+      "nontrade_print_tol": 0.01,
+      "spike_ratio": 4.0,
+      "spike_residual": 0.25,
+      "spike_window_sessions": 3,
+      "break_ratio": 3.0,
+      "quiet_volume_mult": 2.0
+     },
+     "volume_available": true,
+     "rows_in": 5754,
+     "rows_removed": 0,
+     "rows_removed_by_reason": {},
+     "rows_removed_by_year": {},
+     "symbols_with_rows_removed": 0,
+     "n_dark_runs": 0,
+     "nontrade_prints": 0,
+     "n_spikes": 0,
+     "n_cuts": 0,
+     "n_suspects": 0,
+     "cuts_by_reason": {}
+    },
+    "moved_5d_sigma": {
+     "ABNB": -0.926,
+     "AFRM": -0.774,
+     "AMD": -0.126,
+     "AMGN": 1.336,
+     "CRM": -0.45,
+     "CRWD": 0.386,
+     "DDOG": 1.031,
+     "DELL": -0.481,
+     "ESTC": -0.223,
+     "GTLB": -0.937,
+     "MDB": -1.692,
+     "NET": 0.08,
+     "OKTA": 0.506,
+     "PANW": 0.634,
+     "S": -0.502,
+     "SNOW": -0.49,
+     "SPY": -0.65,
+     "TGT": 0.111,
+     "WDAY": -0.188,
+     "XYZ": -1.132,
+     "ZS": -0.414
+    }
+   },
+   "stop_table": [],
+   "flags": [],
+   "lot_entry": {},
+   "v2_targets": {
+    "n": 20,
+    "gross_frac": 1.0,
+    "legacy_names": [],
+    "drops": []
+   },
+   "worst_case_now": {
+    "worst_usd": 0,
+    "worst_pct_equity": 0.0,
+    "gross_usd": 0.0,
+    "gross_over_equity": 0.0,
+    "n_names": 0,
+    "per_name": []
+   },
+   "worst_case_after_plan": {
+    "worst_usd": 3892.83,
+    "worst_pct_equity": 3.94,
+    "gross_usd": 49285.34,
+    "gross_over_equity": 0.4987,
+    "n_names": 10,
+    "per_name": [
+     {
+      "symbol": "CRM",
+      "worst_usd": 394.9616,
+      "basis": "planned stop 0.080"
+     },
+     {
+      "symbol": "ABNB",
+      "worst_usd": 395.3664,
+      "basis": "planned stop 0.080"
+     },
+     {
+      "symbol": "S",
+      "worst_usd": 394.3184,
+      "basis": "planned stop 0.080"
+     },
+     {
+      "symbol": "ZS",
+      "worst_usd": 393.24,
+      "basis": "planned stop 0.080"
+     },
+     {
+      "symbol": "XYZ",
+      "worst_usd": 348.94576099362945,
+      "basis": "planned stop 0.070"
+     },
+     {
+      "symbol": "GTLB",
+      "worst_usd": 392.81840000000005,
+      "basis": "planned stop 0.080"
+     },
+     {
+      "symbol": "AMD",
+      "worst_usd": 392.7232,
+      "basis": "planned stop 0.080"
+     },
+     {
+      "symbol": "SNOW",
+      "worst_usd": 397.22399999999993,
+      "basis": "planned stop 0.080"
+     },
+     {
+      "symbol": "DELL",
+      "worst_usd": 391.7231999999999,
+      "basis": "planned stop 0.080"
+     },
+     {
+      "symbol": "NET",
+      "worst_usd": 391.5072,
+      "basis": "planned stop 0.080"
+     }
+    ]
+   },
+   "worst_case_formula_v1": {
+    "n": 8,
+    "notional_frac": 0.125,
+    "stop_frac": 0.08,
+    "worst_frac": 0.08,
+    "worst_usd": 7905.64,
+    "gross_over_equity": 1.0
+   },
+   "worst_case_formula_v2": {
+    "n": 20,
+    "notional_frac": 0.05,
+    "stop_frac": 0.12,
+    "worst_frac": 0.12,
+    "worst_usd": 11858.46,
+    "gross_over_equity": 1.0
+   },
+   "actions": [
+    {
+     "kind": "buy",
+     "symbol": "CRM",
+     "side": "buy",
+     "qty": 22,
+     "type": "limit",
+     "limit": 224.41,
+     "stop": null,
+     "mode": "DRY",
+     "refused": null,
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 22",
+     "coid": "aegisfm-hack2-20260929-buy-CRM-ccb0a6f9fb"
+    },
+    {
+     "kind": "buy",
+     "symbol": "ABNB",
+     "side": "buy",
+     "qty": 32,
+     "type": "limit",
+     "limit": 154.44,
+     "stop": null,
+     "mode": "DRY",
+     "refused": null,
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 32",
+     "coid": "aegisfm-hack2-20260929-buy-ABNB-e1e1af6a18"
+    },
+    {
+     "kind": "buy",
+     "symbol": "S",
+     "side": "buy",
+     "qty": 218,
+     "type": "limit",
+     "limit": 22.61,
+     "stop": null,
+     "mode": "DRY",
+     "refused": null,
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 218",
+     "coid": "aegisfm-hack2-20260929-buy-S-b3ea2c52f1"
+    },
+    {
+     "kind": "buy",
+     "symbol": "ZS",
+     "side": "buy",
+     "qty": 25,
+     "type": "limit",
+     "limit": 196.62,
+     "stop": null,
+     "mode": "DRY",
+     "refused": null,
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 25",
+     "coid": "aegisfm-hack2-20260929-buy-ZS-5eb36a0234"
+    },
+    {
+     "kind": "buy",
+     "symbol": "XYZ",
+     "side": "buy",
+     "qty": 67,
+     "type": "limit",
+     "limit": 74.43,
+     "stop": null,
+     "mode": "DRY",
+     "refused": null,
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 67",
+     "coid": "aegisfm-hack2-20260929-buy-XYZ-e87e6f38aa"
+    },
+    {
+     "kind": "buy",
+     "symbol": "GTLB",
+     "side": "buy",
+     "qty": 107,
+     "type": "limit",
+     "limit": 45.89,
+     "stop": null,
+     "mode": "DRY",
+     "refused": null,
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 107",
+     "coid": "aegisfm-hack2-20260929-buy-GTLB-07776ed92b"
+    },
+    {
+     "kind": "buy",
+     "symbol": "AMD",
+     "side": "buy",
+     "qty": 8,
+     "type": "limit",
+     "limit": 613.63,
+     "stop": null,
+     "mode": "DRY",
+     "refused": null,
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 8",
+     "coid": "aegisfm-hack2-20260929-buy-AMD-91e441767c"
+    },
+    {
+     "kind": "buy",
+     "symbol": "SNOW",
+     "side": "buy",
+     "qty": 15,
+     "type": "limit",
+     "limit": 331.02,
+     "stop": null,
+     "mode": "DRY",
+     "refused": null,
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 15",
+     "coid": "aegisfm-hack2-20260929-buy-SNOW-2716b55bb2"
+    },
+    {
+     "kind": "buy",
+     "symbol": "DELL",
+     "side": "buy",
+     "qty": 9,
+     "type": "limit",
+     "limit": 544.06,
+     "stop": null,
+     "mode": "DRY",
+     "refused": null,
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 9",
+     "coid": "aegisfm-hack2-20260929-buy-DELL-a9ee891391"
+    },
+    {
+     "kind": "buy",
+     "symbol": "NET",
+     "side": "buy",
+     "qty": 14,
+     "type": "limit",
+     "limit": 349.56,
+     "stop": null,
+     "mode": "DRY",
+     "refused": null,
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 14",
+     "coid": "aegisfm-hack2-20260929-buy-NET-9455f75a67"
+    },
+    {
+     "kind": "buy",
+     "symbol": "AFRM",
+     "side": "buy",
+     "qty": 70,
+     "type": "limit",
+     "limit": 69.88,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $54,177 would exceed $49,410 left of 50% x equity",
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 70",
+     "coid": "aegisfm-hack2-20260929-buy-AFRM-c34b3e0948"
+    },
+    {
+     "kind": "buy",
+     "symbol": "CRWD",
+     "side": "buy",
+     "qty": 19,
+     "type": "limit",
+     "limit": 258.0,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $54,187 would exceed $49,410 left of 50% x equity",
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 19",
+     "coid": "aegisfm-hack2-20260929-buy-CRWD-bab8e0130e"
+    },
+    {
+     "kind": "buy",
+     "symbol": "MDB",
+     "side": "buy",
+     "qty": 15,
+     "type": "limit",
+     "limit": 325.49,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $54,168 would exceed $49,410 left of 50% x equity",
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 15",
+     "coid": "aegisfm-hack2-20260929-buy-MDB-7f4c92b0f7"
+    },
+    {
+     "kind": "buy",
+     "symbol": "TGT",
+     "side": "buy",
+     "qty": 31,
+     "type": "limit",
+     "limit": 157.06,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $54,154 would exceed $49,410 left of 50% x equity",
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 31",
+     "coid": "aegisfm-hack2-20260929-buy-TGT-09a01e1ccf"
+    },
+    {
+     "kind": "buy",
+     "symbol": "ESTC",
+     "side": "buy",
+     "qty": 56,
+     "type": "limit",
+     "limit": 86.92,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $54,153 would exceed $49,410 left of 50% x equity",
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 56",
+     "coid": "aegisfm-hack2-20260929-buy-ESTC-bfcd14e72d"
+    },
+    {
+     "kind": "buy",
+     "symbol": "WDAY",
+     "side": "buy",
+     "qty": 26,
+     "type": "limit",
+     "limit": 186.31,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $54,129 would exceed $49,410 left of 50% x equity",
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 26",
+     "coid": "aegisfm-hack2-20260929-buy-WDAY-df518d22a0"
+    },
+    {
+     "kind": "buy",
+     "symbol": "OKTA",
+     "side": "buy",
+     "qty": 24,
+     "type": "limit",
+     "limit": 201.19,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $54,114 would exceed $49,410 left of 50% x equity",
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 24",
+     "coid": "aegisfm-hack2-20260929-buy-OKTA-365835038a"
+    },
+    {
+     "kind": "buy",
+     "symbol": "DDOG",
+     "side": "buy",
+     "qty": 18,
+     "type": "limit",
+     "limit": 262.25,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $54,006 would exceed $49,410 left of 50% x equity",
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 18",
+     "coid": "aegisfm-hack2-20260929-buy-DDOG-6d426f523f"
+    },
+    {
+     "kind": "buy",
+     "symbol": "AMGN",
+     "side": "buy",
+     "qty": 11,
+     "type": "limit",
+     "limit": 418.08,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $53,884 would exceed $49,410 left of 50% x equity",
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 11",
+     "coid": "aegisfm-hack2-20260929-buy-AMGN-50992d8342"
+    },
+    {
+     "kind": "buy",
+     "symbol": "PANW",
+     "side": "buy",
+     "qty": 12,
+     "type": "limit",
+     "limit": 380.89,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $53,856 would exceed $49,410 left of 50% x equity",
+     "reason": "target 0.0500 of equity (scale 1.000); held 0 -> 12",
+     "coid": "aegisfm-hack2-20260929-buy-PANW-96dc71985c"
+    }
+   ],
+   "state_written": "2026-09-29T13:45:08+00:00",
+   "grade": {
+    "status": "ALREADY_GRADED",
+    "session": "2026-09-28"
+   },
+   "status": "ok"
+  }
+ ],
+ "finished_utc": "2026-09-29T13:45:11+00:00"
+}

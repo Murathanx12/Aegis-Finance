@@ -1,0 +1,1120 @@
+{
+ "schema": "hyp_lab/investable_decompose/1",
+ "tag": "INV_2026-09-30T0020Z",
+ "written_utc": "2026-09-29T16:02:41+00:00",
+ "job": "hyp_investable",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "note": "Descriptive: no candidate is selected on these numbers; the spread declaration is written from the construction, not from this table. All %/mo keyed on the hold month; t on 3-month blocks. The market is FF mkt+rf, costless.",
+ "splits": {
+  "design": [
+   "1991-01-01",
+   "2008-12-31"
+  ],
+  "validate": [
+   "2009-01-01",
+   "2016-12-31"
+  ],
+  "late": [
+   "2017-01-01",
+   "2024-12-31"
+  ]
+ },
+ "universe": {
+  "vw_eligible_minus_market (eligibility filters + cap measure)": {
+   "full": {
+    "mean_monthly": 3.2640576305685234e-05,
+    "t_blocks": 0.1399263695733042,
+    "mde_monthly": 0.0006531550410020445
+   },
+   "design": {
+    "mean_monthly": -3.18631889254448e-05,
+    "t_blocks": -0.1209813919159932,
+    "mde_monthly": 0.0007374433999998569
+   },
+   "validate": {
+    "mean_monthly": 5.001936140857163e-05,
+    "t_blocks": 0.08193567119333348,
+    "mde_monthly": 0.0017093191512831
+   },
+   "late": {
+    "mean_monthly": 0.00016106106214585248,
+    "t_blocks": 0.21405644256712758,
+    "mde_monthly": 0.0021067853347462983
+   }
+  },
+  "ew_eligible_minus_vw_eligible (equal weighting = size tilt)": {
+   "full": {
+    "mean_monthly": 0.00017170905628393718,
+    "t_blocks": 0.1563413548966215,
+    "mde_monthly": 0.0030752282907675686
+   },
+   "design": {
+    "mean_monthly": 0.0007028124319815166,
+    "t_blocks": 0.4688231218353193,
+    "mde_monthly": 0.004197478148783557
+   },
+   "validate": {
+    "mean_monthly": 0.001901220985063226,
+    "t_blocks": 1.0093530079062654,
+    "mde_monthly": 0.005274090151293626
+   },
+   "late": {
+    "mean_monthly": -0.0027779790588507085,
+    "t_blocks": -0.915800525501665,
+    "mde_monthly": 0.008493488645380607
+   }
+  },
+  "ew_eligible_minus_market": {
+   "full": {
+    "mean_monthly": 0.00020434963258962233,
+    "t_blocks": 0.18645639409306405,
+    "mde_monthly": 0.0030687012587262445
+   },
+   "design": {
+    "mean_monthly": 0.0006709492430560707,
+    "t_blocks": 0.47883160257366514,
+    "mde_monthly": 0.003923420823645366
+   },
+   "validate": {
+    "mean_monthly": 0.001951240346471798,
+    "t_blocks": 0.9129667234772711,
+    "mde_monthly": 0.005984306798512847
+   },
+   "late": {
+    "mean_monthly": -0.002616917996704855,
+    "t_blocks": -0.7715065987773606,
+    "mde_monthly": 0.009497482461440502
+   }
+  },
+  "ew_delisting_rows_contribution": {
+   "full": {
+    "mean_monthly": 4.0909044627485156e-05,
+    "t_blocks": 3.818581297067251,
+    "mde_monthly": 2.9996827629395137e-05
+   },
+   "design": {
+    "mean_monthly": 7.138480600610605e-05,
+    "t_blocks": 4.122859566371685,
+    "mde_monthly": 4.848029713342837e-05
+   },
+   "validate": {
+    "mean_monthly": 8.550011372672999e-06,
+    "t_blocks": 0.5020689175607644,
+    "mde_monthly": 4.7682760286762775e-05
+   },
+   "late": {
+    "mean_monthly": 4.63723932283753e-06,
+    "t_blocks": 0.44438039842378235,
+    "mde_monthly": 2.921881826921327e-05
+   }
+  },
+  "ew_small_minus_market": {
+   "full": {
+    "mean_monthly": 0.00011001966337310302,
+    "t_blocks": 0.08024760212442456,
+    "mde_monthly": 0.003838807008426847
+   },
+   "design": {
+    "mean_monthly": 0.000794783132533807,
+    "t_blocks": 0.47485755204886,
+    "mde_monthly": 0.004686442832156287
+   },
+   "validate": {
+    "mean_monthly": 0.0025342710604816135,
+    "t_blocks": 0.9343642223493385,
+    "mde_monthly": 0.007594424957225609
+   },
+   "late": {
+    "mean_monthly": -0.0038894780207528795,
+    "t_blocks": -0.9263660154617307,
+    "mde_monthly": 0.011756193854628685
+   }
+  },
+  "ew_mid_minus_market": {
+   "full": {
+    "mean_monthly": 0.0006062278248449711,
+    "t_blocks": 0.6049754460608985,
+    "mde_monthly": 0.0028057963684612894
+   },
+   "design": {
+    "mean_monthly": 0.0014676576262858336,
+    "t_blocks": 1.1789093532420092,
+    "mde_monthly": 0.0034857992620885908
+   },
+   "validate": {
+    "mean_monthly": 0.0016855457767703385,
+    "t_blocks": 0.8517845589943773,
+    "mde_monthly": 0.00554075338079485
+   },
+   "late": {
+    "mean_monthly": -0.0024340030245720897,
+    "t_blocks": -0.7106866435460907,
+    "mde_monthly": 0.009589611020120228
+   }
+  },
+  "ew_large_minus_market": {
+   "full": {
+    "mean_monthly": -0.0006937712438866202,
+    "t_blocks": -0.5388658454241336,
+    "mde_monthly": 0.0036049037053992087
+   },
+   "design": {
+    "mean_monthly": -0.0015804369859369804,
+    "t_blocks": -0.7056557665376535,
+    "mde_monthly": 0.006271079711197138
+   },
+   "validate": {
+    "mean_monthly": 0.0009427607228575367,
+    "t_blocks": 0.688753172344416,
+    "mde_monthly": 0.0038326212204814174
+   },
+   "late": {
+    "mean_monthly": -0.000340865288798324,
+    "t_blocks": -0.15858945862496263,
+    "mde_monthly": 0.006018198289536734
+   }
+  },
+  "ew_mega_minus_market": {
+   "full": {
+    "mean_monthly": 0.00276677643360752,
+    "t_blocks": 0.7867083129740993,
+    "mde_monthly": 0.009847327003338924
+   },
+   "design": {
+    "mean_monthly": 0.002346691581978287,
+    "t_blocks": 0.30620847832151366,
+    "mde_monthly": 0.021458375240152695
+   },
+   "validate": {
+    "mean_monthly": 0.0014786689203495386,
+    "t_blocks": 0.4292658750226359,
+    "mde_monthly": 0.009645008415263343
+   },
+   "late": {
+    "mean_monthly": 0.004705203169474635,
+    "t_blocks": 1.5995421004266692,
+    "mde_monthly": 0.008236462717058043
+   }
+  },
+  "ew_universe_one_full_round_trip_cost": {
+   "full": {
+    "mean_monthly": -0.008622664845400444,
+    "t_blocks": -37.645692178569725,
+    "mde_monthly": 0.0006413339792664301
+   },
+   "design": {
+    "mean_monthly": -0.008750718536865846,
+    "t_blocks": -27.8261634711928,
+    "mde_monthly": 0.0008805386315145536
+   },
+   "validate": {
+    "mean_monthly": -0.008091056461586163,
+    "t_blocks": -19.117481430540536,
+    "mde_monthly": 0.0011850388438850283
+   },
+   "late": {
+    "mean_monthly": -0.00887006338414897,
+    "t_blocks": -19.271454694737628,
+    "mde_monthly": 0.0012887546824578333
+   }
+  }
+ },
+ "band_share_of_eligible_names": {
+  "mega": {
+   "design": 0.00247655824336302,
+   "validate": 0.005836491223838752,
+   "late": 0.0131806579298532
+  },
+  "large": {
+   "design": 0.06875069095058593,
+   "validate": 0.16503028982805226,
+   "late": 0.20743594641361343
+  },
+  "mid": {
+   "design": 0.2403899302240587,
+   "validate": 0.3323780276073726,
+   "late": 0.33813425332533786
+  },
+  "small": {
+   "design": 0.6883828205819924,
+   "validate": 0.49675519134073637,
+   "late": 0.4412491423311956
+  }
+ },
+ "per_rule": {
+  "quality_composite": {
+   "components": {
+    "A_eligible_vw_minus_market": {
+     "full": {
+      "mean_monthly": 3.2640576305685234e-05,
+      "t_blocks": 0.1399263695733042,
+      "mde_monthly": 0.0006531550410020445
+     },
+     "design": {
+      "mean_monthly": -3.18631889254448e-05,
+      "t_blocks": -0.1209813919159932,
+      "mde_monthly": 0.0007374433999998569
+     },
+     "validate": {
+      "mean_monthly": 5.001936140857163e-05,
+      "t_blocks": 0.08193567119333348,
+      "mde_monthly": 0.0017093191512831
+     },
+     "late": {
+      "mean_monthly": 0.00016106106214585248,
+      "t_blocks": 0.21405644256712758,
+      "mde_monthly": 0.0021067853347462983
+     }
+    },
+    "B_equal_weight_minus_vw": {
+     "full": {
+      "mean_monthly": 0.00017170905628393718,
+      "t_blocks": 0.1563413548966215,
+      "mde_monthly": 0.0030752282907675686
+     },
+     "design": {
+      "mean_monthly": 0.0007028124319815166,
+      "t_blocks": 0.4688231218353193,
+      "mde_monthly": 0.004197478148783557
+     },
+     "validate": {
+      "mean_monthly": 0.001901220985063226,
+      "t_blocks": 1.0093530079062654,
+      "mde_monthly": 0.005274090151293626
+     },
+     "late": {
+      "mean_monthly": -0.0027779790588507085,
+      "t_blocks": -0.915800525501665,
+      "mde_monthly": 0.008493488645380607
+     }
+    },
+    "C_twin_cells_minus_ew_universe": {
+     "full": {
+      "mean_monthly": 0.0006193342960000788,
+      "t_blocks": 0.6973770357346913,
+      "mde_monthly": 0.002486654908235251
+     },
+     "design": {
+      "mean_monthly": 0.0011021828934164417,
+      "t_blocks": 0.9364427873519477,
+      "mde_monthly": 0.003295569300387134
+     },
+     "validate": {
+      "mean_monthly": -0.000979394597095341,
+      "t_blocks": -0.5104749177342683,
+      "mde_monthly": 0.005372065848090275
+     },
+     "late": {
+      "mean_monthly": 0.0011421292990805238,
+      "t_blocks": 0.4724117631661028,
+      "mde_monthly": 0.006769437780280343
+     }
+    },
+    "D_twin_basket_cost_one_full_round_trip": {
+     "full": {
+      "mean_monthly": -0.007271203225379157,
+      "t_blocks": -42.17996910418028,
+      "mde_monthly": 0.0004826786141254879
+     },
+     "design": {
+      "mean_monthly": -0.007606111677304632,
+      "t_blocks": -33.99237874811225,
+      "mde_monthly": 0.0006265261061683038
+     },
+     "validate": {
+      "mean_monthly": -0.006905685666070902,
+      "t_blocks": -20.755410578697642,
+      "mde_monthly": 0.0009316086420783206
+     },
+     "late": {
+      "mean_monthly": -0.006882617630954052,
+      "t_blocks": -19.912659791853727,
+      "mde_monthly": 0.0009677928296929598
+     }
+    },
+    "twin_basket_gross_minus_market (A+B+C)": {
+     "full": {
+      "mean_monthly": 0.0008236839285897007,
+      "t_blocks": 1.0476919865923717,
+      "mde_monthly": 0.002201329235658729
+     },
+     "design": {
+      "mean_monthly": 0.001773132136472513,
+      "t_blocks": 1.496050269668985,
+      "mde_monthly": 0.0033185849986321226
+     },
+     "validate": {
+      "mean_monthly": 0.0009718457493764564,
+      "t_blocks": 0.7535941888132115,
+      "mde_monthly": 0.003610919694775613
+     },
+     "late": {
+      "mean_monthly": -0.0014747886976243325,
+      "t_blocks": -0.794324345772336,
+      "mde_monthly": 0.005198642563741428
+     }
+    },
+    "rule_gross_minus_twin_basket_gross (pure selection)": {
+     "full": {
+      "mean_monthly": 0.0019521262580202102,
+      "t_blocks": 1.6308804581867544,
+      "mde_monthly": 0.0033515353593320664
+     },
+     "design": {
+      "mean_monthly": 0.002543955040831135,
+      "t_blocks": 1.4680908692172994,
+      "mde_monthly": 0.004851929988587689
+     },
+     "validate": {
+      "mean_monthly": 0.0006347332957519786,
+      "t_blocks": 0.3160469915291293,
+      "mde_monthly": 0.00562338283780732
+     },
+     "late": {
+      "mean_monthly": 0.0019439845324770656,
+      "t_blocks": 0.8035021544997525,
+      "mde_monthly": 0.0067742901004722335
+     }
+    },
+    "rule_net_minus_market (this engine, actual turnover x spread)": {
+     "full": {
+      "mean_monthly": 0.0017507755963154454,
+      "t_blocks": 1.2902599682051406,
+      "mde_monthly": 0.0037993674069440268
+     },
+     "design": {
+      "mean_monthly": 0.003185438369316093,
+      "t_blocks": 1.4901966435004335,
+      "mde_monthly": 0.0059852687717333874
+     },
+     "validate": {
+      "mean_monthly": 0.0007544202979012574,
+      "t_blocks": 0.3803612360801586,
+      "mde_monthly": 0.0055536070286572314
+     },
+     "late": {
+      "mean_monthly": -0.0004892495357622076,
+      "t_blocks": -0.21306139371461136,
+      "mde_monthly": 0.006429596072055721
+     }
+    },
+    "rule_cost_monthly": {
+     "full": {
+      "mean_monthly": -0.0010250345902944656,
+      "t_blocks": -22.696783111906175,
+      "mde_monthly": 0.00012645390488482576
+     },
+     "design": {
+      "mean_monthly": -0.0011316488079875563,
+      "t_blocks": -18.678138413227725,
+      "mde_monthly": 0.0001696430657201451
+     },
+     "validate": {
+      "mean_monthly": -0.0008521587472271773,
+      "t_blocks": -16.379787765814896,
+      "mde_monthly": 0.00014567004935288856
+     },
+     "late": {
+      "mean_monthly": -0.0009584453706149411,
+      "t_blocks": -7.427430718273115,
+      "mde_monthly": 0.0003613156607599814
+     }
+    },
+    "library_twin21_net_minus_market (the quoted drag, run BR_CS_2026-09-29T1545Z)": {
+     "full": {
+      "mean_monthly": -0.006707688838319475,
+      "t_blocks": -8.801723304380646,
+      "mde_monthly": 0.0021338467590712494
+     },
+     "design": {
+      "mean_monthly": -0.006259421899180995,
+      "t_blocks": -5.44094926901181,
+      "mde_monthly": 0.0032211991788870216
+     },
+     "validate": {
+      "mean_monthly": -0.006226424666766654,
+      "t_blocks": -4.512360339071875,
+      "mde_monthly": 0.0038636074597119922
+     },
+     "late": {
+      "mean_monthly": -0.00820851781078099,
+      "t_blocks": -4.933496831694551,
+      "mde_monthly": 0.004658734089486038
+     }
+    },
+    "library_twin21_net_minus_twin_basket_gross (cost + draw noise)": {
+     "full": {
+      "mean_monthly": -0.0075313727669091765,
+      "t_blocks": -25.40257292662487,
+      "mde_monthly": 0.0008301459780573314
+     },
+     "design": {
+      "mean_monthly": -0.008032554035653507,
+      "t_blocks": -19.2288658646593,
+      "mde_monthly": 0.0011696556343016708
+     },
+     "validate": {
+      "mean_monthly": -0.007198270416143112,
+      "t_blocks": -13.192157681250666,
+      "mde_monthly": 0.0015278135428782964
+     },
+     "late": {
+      "mean_monthly": -0.006733729113156659,
+      "t_blocks": -9.819100988749769,
+      "mde_monthly": 0.0019201800183582091
+     }
+    }
+   },
+   "months_invested": 406,
+   "mean_turnover": 0.13898331798553729,
+   "mean_twin_turnover": 0.43124414826937174,
+   "share_small_picks": 0.48731527093596055,
+   "seconds": 12.0
+  },
+  "cash_lowvol": {
+   "components": {
+    "A_eligible_vw_minus_market": {
+     "full": {
+      "mean_monthly": 3.2640576305685234e-05,
+      "t_blocks": 0.1399263695733042,
+      "mde_monthly": 0.0006531550410020445
+     },
+     "design": {
+      "mean_monthly": -3.18631889254448e-05,
+      "t_blocks": -0.1209813919159932,
+      "mde_monthly": 0.0007374433999998569
+     },
+     "validate": {
+      "mean_monthly": 5.001936140857163e-05,
+      "t_blocks": 0.08193567119333348,
+      "mde_monthly": 0.0017093191512831
+     },
+     "late": {
+      "mean_monthly": 0.00016106106214585248,
+      "t_blocks": 0.21405644256712758,
+      "mde_monthly": 0.0021067853347462983
+     }
+    },
+    "B_equal_weight_minus_vw": {
+     "full": {
+      "mean_monthly": 0.00017170905628393718,
+      "t_blocks": 0.1563413548966215,
+      "mde_monthly": 0.0030752282907675686
+     },
+     "design": {
+      "mean_monthly": 0.0007028124319815166,
+      "t_blocks": 0.4688231218353193,
+      "mde_monthly": 0.004197478148783557
+     },
+     "validate": {
+      "mean_monthly": 0.001901220985063226,
+      "t_blocks": 1.0093530079062654,
+      "mde_monthly": 0.005274090151293626
+     },
+     "late": {
+      "mean_monthly": -0.0027779790588507085,
+      "t_blocks": -0.915800525501665,
+      "mde_monthly": 0.008493488645380607
+     }
+    },
+    "C_twin_cells_minus_ew_universe": {
+     "full": {
+      "mean_monthly": 0.00037002005002092635,
+      "t_blocks": 0.2971366991247558,
+      "mde_monthly": 0.0034867996552105343
+     },
+     "design": {
+      "mean_monthly": 0.0009163168972649788,
+      "t_blocks": 0.5175858482507215,
+      "mde_monthly": 0.00495702755593717
+     },
+     "validate": {
+      "mean_monthly": -0.0018494240803536538,
+      "t_blocks": -0.7634235634188875,
+      "mde_monthly": 0.006783111857065996
+     },
+     "late": {
+      "mean_monthly": 0.0013764707274786985,
+      "t_blocks": 0.4756602050964467,
+      "mde_monthly": 0.00810267076296383
+     }
+    },
+    "D_twin_basket_cost_one_full_round_trip": {
+     "full": {
+      "mean_monthly": -0.006278438957654524,
+      "t_blocks": -38.29073206256585,
+      "mde_monthly": 0.0004591092448352282
+     },
+     "design": {
+      "mean_monthly": -0.006526606303818943,
+      "t_blocks": -32.03020468111104,
+      "mde_monthly": 0.0005705395214495754
+     },
+     "validate": {
+      "mean_monthly": -0.005895252070604672,
+      "t_blocks": -17.551800770296843,
+      "mde_monthly": 0.0009404565385466098
+     },
+     "late": {
+      "mean_monthly": -0.00610401750219595,
+      "t_blocks": -16.87055281808871,
+      "mde_monthly": 0.001013081740144479
+     }
+    },
+    "twin_basket_gross_minus_market (A+B+C)": {
+     "full": {
+      "mean_monthly": 0.0005743696826105487,
+      "t_blocks": 0.6684605801467002,
+      "mde_monthly": 0.0024058787594574277
+     },
+     "design": {
+      "mean_monthly": 0.0015872661403210505,
+      "t_blocks": 1.15007980844169,
+      "mde_monthly": 0.003864379811102711
+     },
+     "validate": {
+      "mean_monthly": 0.00010181626611814345,
+      "t_blocks": 0.08167101232639726,
+      "mde_monthly": 0.003490657664330886
+     },
+     "late": {
+      "mean_monthly": -0.0012404472692261566,
+      "t_blocks": -0.6330372262066355,
+      "mde_monthly": 0.00548664787795513
+     }
+    },
+    "rule_gross_minus_twin_basket_gross (pure selection)": {
+     "full": {
+      "mean_monthly": 0.0024256001323720135,
+      "t_blocks": 2.2774313328437295,
+      "mde_monthly": 0.00298216691440754
+     },
+     "design": {
+      "mean_monthly": 0.003777227012721171,
+      "t_blocks": 2.675186358862729,
+      "mde_monthly": 0.00395345752290522
+     },
+     "validate": {
+      "mean_monthly": 0.0013326566087418369,
+      "t_blocks": 0.7340651410768532,
+      "mde_monthly": 0.0050832525557653165
+     },
+     "late": {
+      "mean_monthly": 0.0004711032796712555,
+      "t_blocks": 0.18669586426537058,
+      "mde_monthly": 0.0070654440486402695
+     }
+    },
+    "rule_net_minus_market (this engine, actual turnover x spread)": {
+     "full": {
+      "mean_monthly": 0.001920839015834772,
+      "t_blocks": 1.665128307230444,
+      "mde_monthly": 0.0032299908787707787
+     },
+     "design": {
+      "mean_monthly": 0.004248833937513076,
+      "t_blocks": 2.6239035743984753,
+      "mde_monthly": 0.004533983314445508
+     },
+     "validate": {
+      "mean_monthly": 0.0004982603000429686,
+      "t_blocks": 0.27744151605760003,
+      "mde_monthly": 0.005028551097704737
+     },
+     "late": {
+      "mean_monthly": -0.0019102278414791479,
+      "t_blocks": -0.6996966670521567,
+      "mde_monthly": 0.00764422385871236
+     }
+    },
+    "rule_cost_monthly": {
+     "full": {
+      "mean_monthly": -0.0010791307991477894,
+      "t_blocks": -18.796508965289668,
+      "mde_monthly": 0.00016075145885832026
+     },
+     "design": {
+      "mean_monthly": -0.0011156592155291442,
+      "t_blocks": -17.0245810725137,
+      "mde_monthly": 0.00018349031850922154
+     },
+     "validate": {
+      "mean_monthly": -0.0009362125748170113,
+      "t_blocks": -11.475354833462525,
+      "mde_monthly": 0.00022843696317289937
+     },
+     "late": {
+      "mean_monthly": -0.001140883851924247,
+      "t_blocks": -6.124429722331436,
+      "mde_monthly": 0.0005215954676955334
+     }
+    },
+    "library_twin21_net_minus_market (the quoted drag, run BR_CS_2026-09-29T1545Z)": {
+     "full": {
+      "mean_monthly": -0.005643265656037105,
+      "t_blocks": -6.5404278146827926,
+      "mde_monthly": 0.002415919001725155
+     },
+     "design": {
+      "mean_monthly": -0.004733287524138281,
+      "t_blocks": -3.5294655800174324,
+      "mde_monthly": 0.0037550175138757764
+     },
+     "validate": {
+      "mean_monthly": -0.0055367957962775315,
+      "t_blocks": -3.9297774170338124,
+      "mde_monthly": 0.003945014331442401
+     },
+     "late": {
+      "mean_monthly": -0.007810280444407277,
+      "t_blocks": -4.047005166810956,
+      "mde_monthly": 0.005403695904241455
+     }
+    },
+    "library_twin21_net_minus_twin_basket_gross (cost + draw noise)": {
+     "full": {
+      "mean_monthly": -0.0062176353386476525,
+      "t_blocks": -24.146737545857277,
+      "mde_monthly": 0.0007209826551164985
+     },
+     "design": {
+      "mean_monthly": -0.006320553664459331,
+      "t_blocks": -15.528054274096162,
+      "mde_monthly": 0.0011397146060990466
+     },
+     "validate": {
+      "mean_monthly": -0.005638612062395674,
+      "t_blocks": -12.498803295427843,
+      "mde_monthly": 0.0012631700332849704
+     },
+     "late": {
+      "mean_monthly": -0.00656983317518112,
+      "t_blocks": -13.948129750082419,
+      "mde_monthly": 0.0013188530089776685
+     }
+    }
+   },
+   "months_invested": 406,
+   "mean_turnover": 0.17407723744004683,
+   "mean_twin_turnover": 0.3927327306235087,
+   "share_small_picks": 0.46551724137931033,
+   "seconds": 9.9
+  },
+  "ope_be": {
+   "components": {
+    "A_eligible_vw_minus_market": {
+     "full": {
+      "mean_monthly": 3.2640576305685234e-05,
+      "t_blocks": 0.1399263695733042,
+      "mde_monthly": 0.0006531550410020445
+     },
+     "design": {
+      "mean_monthly": -3.18631889254448e-05,
+      "t_blocks": -0.1209813919159932,
+      "mde_monthly": 0.0007374433999998569
+     },
+     "validate": {
+      "mean_monthly": 5.001936140857163e-05,
+      "t_blocks": 0.08193567119333348,
+      "mde_monthly": 0.0017093191512831
+     },
+     "late": {
+      "mean_monthly": 0.00016106106214585248,
+      "t_blocks": 0.21405644256712758,
+      "mde_monthly": 0.0021067853347462983
+     }
+    },
+    "B_equal_weight_minus_vw": {
+     "full": {
+      "mean_monthly": 0.00017170905628393718,
+      "t_blocks": 0.1563413548966215,
+      "mde_monthly": 0.0030752282907675686
+     },
+     "design": {
+      "mean_monthly": 0.0007028124319815166,
+      "t_blocks": 0.4688231218353193,
+      "mde_monthly": 0.004197478148783557
+     },
+     "validate": {
+      "mean_monthly": 0.001901220985063226,
+      "t_blocks": 1.0093530079062654,
+      "mde_monthly": 0.005274090151293626
+     },
+     "late": {
+      "mean_monthly": -0.0027779790588507085,
+      "t_blocks": -0.915800525501665,
+      "mde_monthly": 0.008493488645380607
+     }
+    },
+    "C_twin_cells_minus_ew_universe": {
+     "full": {
+      "mean_monthly": 0.0006770875775533002,
+      "t_blocks": 0.9917532262983493,
+      "mde_monthly": 0.0019116098308299455
+     },
+     "design": {
+      "mean_monthly": 0.0011799500894674453,
+      "t_blocks": 1.089846301180718,
+      "mde_monthly": 0.0030314919148961743
+     },
+     "validate": {
+      "mean_monthly": 0.00013433011629093237,
+      "t_blocks": 0.2140558206048034,
+      "mde_monthly": 0.001757131969370847
+     },
+     "late": {
+      "mean_monthly": 8.75010114443112e-05,
+      "t_blocks": 0.0740798508771087,
+      "mde_monthly": 0.003307280308251532
+     }
+    },
+    "D_twin_basket_cost_one_full_round_trip": {
+     "full": {
+      "mean_monthly": -0.008225885510987664,
+      "t_blocks": -40.52597579625599,
+      "mde_monthly": 0.0005683386760768219
+     },
+     "design": {
+      "mean_monthly": -0.008032836476266356,
+      "t_blocks": -33.51888213155872,
+      "mde_monthly": 0.0006710230384553656
+     },
+     "validate": {
+      "mean_monthly": -0.008188303187293914,
+      "t_blocks": -19.326740685717745,
+      "mde_monthly": 0.0011862967117557465
+     },
+     "late": {
+      "mean_monthly": -0.008700763885089566,
+      "t_blocks": -18.264640403644623,
+      "mde_monthly": 0.0013338416930118936
+     }
+    },
+    "twin_basket_gross_minus_market (A+B+C)": {
+     "full": {
+      "mean_monthly": 0.0008814372101429219,
+      "t_blocks": 0.9362217266379809,
+      "mde_monthly": 0.0026361535074207053
+     },
+     "design": {
+      "mean_monthly": 0.0018508993325235172,
+      "t_blocks": 1.4483194729971443,
+      "mde_monthly": 0.003578297625413523
+     },
+     "validate": {
+      "mean_monthly": 0.0020855704627627297,
+      "t_blocks": 0.9969195532131981,
+      "mde_monthly": 0.005857641448513955
+     },
+     "late": {
+      "mean_monthly": -0.002529416985260544,
+      "t_blocks": -0.8308259311900742,
+      "mde_monthly": 0.00852449026065514
+     }
+    },
+    "rule_gross_minus_twin_basket_gross (pure selection)": {
+     "full": {
+      "mean_monthly": 0.0024066160381424704,
+      "t_blocks": 1.9941921238136784,
+      "mde_monthly": 0.003379075078238807
+     },
+     "design": {
+      "mean_monthly": 0.0009234429187688746,
+      "t_blocks": 0.5255553922690553,
+      "mde_monthly": 0.004919824267028251
+     },
+     "validate": {
+      "mean_monthly": 0.0041722414554068625,
+      "t_blocks": 1.6797083492298994,
+      "mde_monthly": 0.00695494314860983
+     },
+     "late": {
+      "mean_monthly": 0.0039790600445418515,
+      "t_blocks": 1.4671509796560522,
+      "mde_monthly": 0.007593879756893928
+     }
+    },
+    "rule_net_minus_market (this engine, actual turnover x spread)": {
+     "full": {
+      "mean_monthly": 0.001995657591993619,
+      "t_blocks": 1.3705304888590815,
+      "mde_monthly": 0.004077137504787518
+     },
+     "design": {
+      "mean_monthly": 0.0015930812652531763,
+      "t_blocks": 0.7344199718111217,
+      "mde_monthly": 0.0060736740746697455
+     },
+     "validate": {
+      "mean_monthly": 0.004870601901160163,
+      "t_blocks": 1.8304677599227115,
+      "mde_monthly": 0.007450382695527116
+     },
+     "late": {
+      "mean_monthly": 1.544503248427759e-06,
+      "t_blocks": 0.00036870843429408716,
+      "mde_monthly": 0.011729075587526899
+     }
+    },
+    "rule_cost_monthly": {
+     "full": {
+      "mean_monthly": -0.0012923956562917735,
+      "t_blocks": -19.95356906019944,
+      "mde_monthly": 0.0001813564193302667
+     },
+     "design": {
+      "mean_monthly": -0.0011812609860392146,
+      "t_blocks": -18.178830071321585,
+      "mde_monthly": 0.00018194409364812036
+     },
+     "validate": {
+      "mean_monthly": -0.0013872100170094293,
+      "t_blocks": -7.894476336005427,
+      "mde_monthly": 0.0004920133878812519
+     },
+     "late": {
+      "mean_monthly": -0.0014480985560328815,
+      "t_blocks": -8.238165317934723,
+      "mde_monthly": 0.0004921819119197477
+     }
+    },
+    "library_twin21_net_minus_market (the quoted drag, run BR_CS_2026-09-29T1545Z)": {
+     "full": {
+      "mean_monthly": -0.006927847806727898,
+      "t_blocks": -7.363100174079722,
+      "mde_monthly": 0.002634484578537269
+     },
+     "design": {
+      "mean_monthly": -0.006326434948606208,
+      "t_blocks": -4.818683506026214,
+      "mde_monthly": 0.0036761115009824466
+     },
+     "validate": {
+      "mean_monthly": -0.005408815892849202,
+      "t_blocks": -3.0141635786033825,
+      "mde_monthly": 0.005024506502395957
+     },
+     "late": {
+      "mean_monthly": -0.009823961788080723,
+      "t_blocks": -3.4209392546734403,
+      "mde_monthly": 0.008040801358588234
+     }
+    },
+    "library_twin21_net_minus_twin_basket_gross (cost + draw noise)": {
+     "full": {
+      "mean_monthly": -0.00780928501687082,
+      "t_blocks": -23.84806295337984,
+      "mde_monthly": 0.0009168878030045356
+     },
+     "design": {
+      "mean_monthly": -0.008177334281129725,
+      "t_blocks": -19.017531221423276,
+      "mde_monthly": 0.0012039699433420805
+     },
+     "validate": {
+      "mean_monthly": -0.007494386355611932,
+      "t_blocks": -11.341778658825312,
+      "mde_monthly": 0.0018501755700711926
+     },
+     "late": {
+      "mean_monthly": -0.007294544802820177,
+      "t_blocks": -10.230134110816929,
+      "mde_monthly": 0.0019965256786125827
+     }
+    }
+   },
+   "months_invested": 406,
+   "mean_turnover": 0.15634486268310205,
+   "mean_twin_turnover": 0.4327994741037544,
+   "share_small_picks": 0.4677339901477832,
+   "seconds": 8.3
+  },
+  "revision_trend_on_small": {
+   "components": {
+    "A_eligible_vw_minus_market": {
+     "full": {
+      "mean_monthly": -0.00036139258592277296,
+      "t_blocks": -1.1218405308871908,
+      "mde_monthly": 0.0009019991814554236
+     },
+     "design": {
+      "mean_monthly": -2.7940348290932397e-05,
+      "t_blocks": -0.05008205285974713,
+      "mde_monthly": 0.0015620960153869756
+     },
+     "validate": {
+      "mean_monthly": -0.0006786300806145784,
+      "t_blocks": -0.9612675837779877,
+      "mde_monthly": 0.0019767276643749567
+     },
+     "late": {
+      "mean_monthly": -0.00031660862042904843,
+      "t_blocks": -0.5511647141082568,
+      "mde_monthly": 0.0016084196148797973
+     }
+    },
+    "B_equal_weight_minus_vw": {
+     "full": {
+      "mean_monthly": -0.0004941877025133168,
+      "t_blocks": -0.3078662896182233,
+      "mde_monthly": 0.004494566679428296
+     },
+     "design": {
+      "mean_monthly": 0.0019020851173368646,
+      "t_blocks": 0.7233190196296687,
+      "mde_monthly": 0.007363055835680899
+     },
+     "validate": {
+      "mean_monthly": 0.0016804909253599854,
+      "t_blocks": 0.9741434023565078,
+      "mde_monthly": 0.004830268910742908
+     },
+     "late": {
+      "mean_monthly": -0.004744008668888701,
+      "t_blocks": -1.5490964677522066,
+      "mde_monthly": 0.008574820580517357
+     }
+    },
+    "C_twin_cells_minus_ew_universe": {
+     "full": {
+      "mean_monthly": 0.0018728932276104524,
+      "t_blocks": 2.091609445091731,
+      "mde_monthly": 0.002507208527679639
+     },
+     "design": {
+      "mean_monthly": 0.00394739932545328,
+      "t_blocks": 1.961454651701042,
+      "mde_monthly": 0.005634959799699616
+     },
+     "validate": {
+      "mean_monthly": 0.0008046251826469034,
+      "t_blocks": 0.8884407839942872,
+      "mde_monthly": 0.0025358476918207478
+     },
+     "late": {
+      "mean_monthly": 0.0012223210861001344,
+      "t_blocks": 0.7993098319221335,
+      "mde_monthly": 0.004281817768774531
+     }
+    },
+    "D_twin_basket_cost_one_full_round_trip": {
+     "full": {
+      "mean_monthly": -0.0089597211211715,
+      "t_blocks": -38.084882401956264,
+      "mde_monthly": 0.000658718566451227
+     },
+     "design": {
+      "mean_monthly": -0.008926959986701193,
+      "t_blocks": -14.807418728309226,
+      "mde_monthly": 0.0016880381666371255
+     },
+     "validate": {
+      "mean_monthly": -0.008244084176623763,
+      "t_blocks": -31.958366962476916,
+      "mde_monthly": 0.00072229709739704
+     },
+     "late": {
+      "mean_monthly": -0.009721778940656008,
+      "t_blocks": -22.187723429016035,
+      "mde_monthly": 0.0012268487626016886
+     }
+    },
+    "twin_basket_gross_minus_market (A+B+C)": {
+     "full": {
+      "mean_monthly": 0.0010173129391743629,
+      "t_blocks": 0.4533129731749847,
+      "mde_monthly": 0.006283685661448442
+     },
+     "design": {
+      "mean_monthly": 0.005821544094499212,
+      "t_blocks": 1.5739410115207306,
+      "mde_monthly": 0.010356375077137445
+     },
+     "validate": {
+      "mean_monthly": 0.001806486027392311,
+      "t_blocks": 0.8408559735564248,
+      "mde_monthly": 0.0060154902097024196
+     },
+     "late": {
+      "mean_monthly": -0.003838296203217615,
+      "t_blocks": -0.8807516586971291,
+      "mde_monthly": 0.012202337926796978
+     }
+    },
+    "rule_gross_minus_twin_basket_gross (pure selection)": {
+     "full": {
+      "mean_monthly": 0.007086293582356777,
+      "t_blocks": 4.919025924824796,
+      "mde_monthly": 0.004033648599098548
+     },
+     "design": {
+      "mean_monthly": 0.007983386538340388,
+      "t_blocks": 2.270908632917557,
+      "mde_monthly": 0.009843408925983243
+     },
+     "validate": {
+      "mean_monthly": 0.005849378039409644,
+      "t_blocks": 3.9905280108513512,
+      "mde_monthly": 0.00410428355992239
+     },
+     "late": {
+      "mean_monthly": 0.007600312834553168,
+      "t_blocks": 2.5035669387796826,
+      "mde_monthly": 0.008500222465440382
+     }
+    },
+    "rule_net_minus_market (this engine, actual turnover x spread)": {
+     "full": {
+      "mean_monthly": 0.003847957130244046,
+      "t_blocks": 1.7070877017940516,
+      "mde_monthly": 0.006311497618640318
+     },
+     "design": {
+      "mean_monthly": 0.009855380715976898,
+      "t_blocks": 2.4052310427344414,
+      "mde_monthly": 0.011472937740468888
+     },
+     "validate": {
+      "mean_monthly": 0.003761201293176734,
+      "t_blocks": 1.68284273524079,
+      "mde_monthly": 0.0062580794986692384
+     },
+     "late": {
+      "mean_monthly": -0.001121887003909269,
+      "t_blocks": -0.28925846568982017,
+      "mde_monthly": 0.010859781073147364
+     }
+    },
+    "rule_cost_monthly": {
+     "full": {
+      "mean_monthly": -0.004255649391287094,
+      "t_blocks": -31.417005158623276,
+      "mde_monthly": 0.00037927925451332307
+     },
+     "design": {
+      "mean_monthly": -0.003949549916862702,
+      "t_blocks": -13.756552664727423,
+      "mde_monthly": 0.0008038888838459359
+     },
+     "validate": {
+      "mean_monthly": -0.0038946627736252196,
+      "t_blocks": -24.700174784327718,
+      "mde_monthly": 0.0004414971092864443
+     },
+     "late": {
+      "mean_monthly": -0.004883903635244821,
+      "t_blocks": -17.827999698825696,
+      "mde_monthly": 0.0007670479251570914
+     }
+    }
+   },
+   "months_invested": 218,
+   "mean_turnover": 0.4991878688521302,
+   "mean_twin_turnover": 0.3624787189658283,
+   "share_small_picks": 1.0,
+   "seconds": 3.5
+  }
+ },
+ "seconds": 36.6
+}

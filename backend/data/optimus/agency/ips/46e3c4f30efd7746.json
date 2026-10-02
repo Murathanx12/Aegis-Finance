@@ -1,0 +1,79 @@
+{
+ "ips": {
+  "ips_id": "ips-91f0b07e4273ebef",
+  "ips_hash": "46e3c4f30efd7746",
+  "created_utc": "2026-09-14T08:32:22+00:00",
+  "schema_version": "1.0.0",
+  "licence": "PRODUCT_EXPERIMENT",
+  "amends_ips_hash": null,
+  "client_facts": {
+   "capital_usd": 40000.0,
+   "horizon_months": 12,
+   "intake_answers_hash": "49f2c8620cbda8b2"
+  },
+  "objectives_and_constraints": {
+   "personality": "extreme_growth",
+   "liquidity_need": 0.0,
+   "cash_floor_pct": 0.0,
+   "constraints": []
+  },
+  "risk_profile": {
+   "ability_score": 1.0,
+   "willingness_score": 3.0,
+   "composite_score": 1.0,
+   "questionnaire_version": "AEGIS-RQ-1",
+   "answers": [
+    1,
+    0,
+    3,
+    0,
+    2,
+    4,
+    2,
+    4
+   ]
+  },
+  "eligible_universe": {
+   "source": "ips_eligible_universe",
+   "floor_dollar_vol_usd": 5000000.0,
+   "excluded_tickers": [],
+   "excluded_sectors": []
+  },
+  "review_cadence": {
+   "daily_review": true,
+   "rebalance_frequency": "daily"
+  },
+  "personality": "extreme_growth"
+ },
+ "ips_prose_md": "This investment policy is designed for someone with a high tolerance for risk and a focus on achieving significant growth over a short period. The primary goal is to maximize returns within a one-year horizon, with a substantial portion of the capital allocated to high-growth opportunities. The total capital available for investment is $40,000, and the policy aims to invest the entire amount, meaning that no cash is kept on the sidelines.\n\nThe policy is structured to withstand significant market fluctuations. A \"bad day\" in the market can be quite costly, as the stop loss is set at -15%, meaning that if the investment value drops by 15%, the position will be automatically sold to limit further losses. This helps protect against severe drawdowns, with the worst-case scenario representing a 22.5% loss of the equity, equivalent to a $9,000 loss on the initial $40,000 investment.\n\nThe investment is reviewed monthly, with a focus on performance and risk management. Given the one-year horizon, the policy is designed to be flexible and responsive to market conditions, ensuring that the investment strategy remains aligned with the owner's risk tolerance and growth objectives. Regular reviews help in adjusting the portfolio as needed to maintain the desired level of risk and return.",
+ "prose_source": "local_gguf:local",
+ "validated_by": "jsonschema 4.26.0",
+ "numeric_fields": {
+  "capital_usd": 40000.0,
+  "horizon_months": 12.0,
+  "horizon_years": 1.0,
+  "liquidity_need": 0.0,
+  "cash_floor_pct": 0.0,
+  "invested_fraction": 1.0,
+  "ability_score": 1.0,
+  "willingness_score": 3.0,
+  "composite_score": 1.0,
+  "n_questions": 8.0,
+  "n_excluded_tickers": 0.0,
+  "n_excluded_sectors": 0.0,
+  "floor_dollar_vol_usd": 5000000.0,
+  "k": 8.0,
+  "max_single_name": 0.3,
+  "gross_cap": 1.5,
+  "stop_loss": -0.15,
+  "drawdown_budget": -0.5,
+  "personality_cash_floor": 0.0,
+  "worst_case_pct_of_equity": 0.225,
+  "worst_case_usd": -9000.0
+ },
+ "echoes": [
+  "declared extreme_growth, above the questionnaire's own band (balanced) at composite 1.0. A personality is a DECLARED PREFERENCE; the band is the engine's read of the answers, and the two are recorded separately so neither is mistaken for the other.",
+  "amendment rule: new_ips (no prior IPS in this lineage)"
+ ],
+ "saved_utc": "2026-09-14T08:32:27+00:00"
+}

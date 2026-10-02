@@ -984,8 +984,68 @@ def narrower(new: dict, old: dict) -> bool:
     return False
 
 
+def doc_accounts(text: str) -> dict:
+    """{account: family} from the "Priced and broker accounts" table of a doc.
+
+    The table is the public record of which accounts exist. Parsed from the
+    rendered markdown itself (not a sidecar) so the guard below also protects
+    a doc written before this function existed.
+    """
+    out: dict = {}
+    on = False
+    for line in (text or "").splitlines():
+        if line.startswith("## "):
+            on = line.strip() == "## Priced and broker accounts"
+            continue
+        if not on or not line.startswith("| ") or line.startswith("| account |"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) >= 2 and cells[0] and not set(cells[0]) <= set("-: "):
+            out[cells[0]] = cells[1]
+    return out
+
+
+HIGH_WATER_NAME = "doc_accounts_high_water.json"
+
+
+def _read_high_water(out_dir: Path) -> dict:
+    try:
+        d = json.loads((Path(out_dir) / HIGH_WATER_NAME).read_text(encoding="utf-8"))
+        return dict(d.get("accounts") or {})
+    except (OSError, ValueError):
+        return {}
+
+
+def _write_high_water(out_dir: Path, accounts: dict, generated_utc: Optional[str]) -> None:
+    p = Path(out_dir) / HIGH_WATER_NAME
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps({"accounts": accounts, "generated_utc": generated_utc,
+                               "why": "the accounts the last written PAPER_ACCOUNTS.md listed; "
+                                      "a rewrite that drops one is refused"}, indent=1),
+                   encoding="utf-8")
+    tmp.replace(p)
+
+
+def doc_drop_check(new_text: str, old_text: Optional[str]) -> dict:
+    """Which accounts the doc on disk lists that `new_text` would DROP.
+
+    2026-10-02: a `--no-broker` pass on a day with no broker receipt rewrote
+    docs/PAPER_ACCOUNTS.md without hack1-6 and PC-PAPER, and nothing said so;
+    committed, it would have erased the fleet from the public record. A doc
+    that loses accounts is REFUSED (the old one stays) unless the caller passes
+    `allow_drop` -- retiring an account is a decision, never a side effect.
+    """
+    old = doc_accounts(old_text or "")
+    new = doc_accounts(new_text)
+    dropped = sorted(a for a in old if a not in new)
+    return {"old_n": len(old), "new_n": len(new), "dropped": dropped,
+            "dropped_broker": sorted(a for a in dropped if old[a] in BROKER_FAMILIES)}
+
+
 def write_outputs(rc: dict, *, chart: bool = True, out_dir: Optional[Path] = None,
-                  doc_path: Optional[Path] = None, assets: Optional[Path] = None) -> dict:
+                  doc_path: Optional[Path] = None, assets: Optional[Path] = None,
+                  allow_drop: bool = False) -> dict:
     out_dir = Path(out_dir) if out_dir is not None else OUT_DIR
     doc_path = Path(doc_path) if doc_path is not None else DOC_PATH
     assets = Path(assets) if assets is not None else ASSETS
@@ -1032,12 +1092,39 @@ def write_outputs(rc: dict, *, chart: bool = True, out_dir: Optional[Path] = Non
     # while a broker-included receipt exists for the day
     wide = out_dir / f"roi_{day}.json"
     write_doc = date_copy and (sc.get("with_broker") or not wide.exists())
+    doc_refused = None
     if write_doc:
-        doc_path.parent.mkdir(parents=True, exist_ok=True)
-        doc_path.write_text(render_markdown(rc, "paper_accounts_roi_latest.png" if png else None), encoding="utf-8")
+        text = render_markdown(rc, "paper_accounts_roi_latest.png" if png else None)
+        try:
+            old_text = doc_path.read_text(encoding="utf-8") if doc_path.exists() else None
+        except OSError:
+            old_text = None
+        chk = doc_drop_check(text, old_text)
+        # The doc on disk may ALREADY be a bad one (cbfcb3d3, 2026-09-28, had
+        # dropped the fleet the day after 3204eb4d listed it), so the guard also
+        # reads the last doc this generator wrote WITH every account -- a
+        # high-water mark kept beside the receipts.
+        hw = _read_high_water(out_dir)
+        if hw:
+            more = sorted(a for a in hw if a not in doc_accounts(text) and a not in chk["dropped"])
+            chk["dropped"] = sorted(chk["dropped"] + more)
+            chk["dropped_broker"] = sorted(set(chk["dropped_broker"])
+                                           | {a for a in more if hw[a] in BROKER_FAMILIES})
+        if chk["dropped"] and not allow_drop:
+            write_doc = False
+            doc_refused = (f"REFUSED to rewrite {doc_path.name}: it would drop {len(chk['dropped'])} "
+                           f"account(s) the current doc lists ({chk['dropped'][:12]}; broker: "
+                           f"{chk['dropped_broker']}). Scope of this run: {sc}. The old doc is kept; "
+                           f"rerun WITH the broker read, or pass --allow-drop to retire them.")
+            rc["doc_refused"] = doc_refused
+            print("  " + doc_refused, flush=True)
+        else:
+            doc_path.parent.mkdir(parents=True, exist_ok=True)
+            doc_path.write_text(text, encoding="utf-8")
+            _write_high_water(out_dir, doc_accounts(text), rc.get("generated_utc"))
     return {"receipt": rj if date_copy else rr, "receipt_run": rr, "png": png, "latest": latest,
             "doc": doc_path if write_doc else None, "scope": sc,
-            "date_copy_refused": rc.get("date_copy_refused")}
+            "date_copy_refused": rc.get("date_copy_refused"), "doc_refused": doc_refused}
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -1047,6 +1134,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--docs-dir", default=None,
                     help="write PAPER_ACCOUNTS.md and assets/ here instead of the repo's docs/ "
                          "(a rehearsal on AEGIS_DATA_DIR copies)")
+    ap.add_argument("--allow-drop", action="store_true",
+                    help="let the doc drop accounts the current doc lists (retiring them)")
     ap.add_argument("--json", action="store_true",
                     help="end with one `<<<{summary}>>>` line (the daily pass reads it)")
     a = ap.parse_args(argv)
@@ -1061,7 +1150,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     dd = Path(a.docs_dir) if a.docs_dir else None
     out = write_outputs(rc, chart=not a.no_chart,
                         doc_path=(dd / "PAPER_ACCOUNTS.md") if dd else None,
-                        assets=(dd / "assets") if dd else None)
+                        assets=(dd / "assets") if dd else None, allow_drop=a.allow_drop)
     for r in rc["rows"]:
         if r["family"].startswith("llm_portfolio"):
             continue
@@ -1080,6 +1169,18 @@ def main(argv: Optional[list[str]] = None) -> int:
         print("<<<" + json.dumps({"status": "ok", "receipt": str(out["receipt"]),
                                   "doc": str(out["doc"]), "n_rows": len(rc["rows"]),
                                   "llm_by_status": by_status,
+                                  "scope": out.get("scope"),
+                                  "broker_rows": sum(1 for r in rc["rows"]
+                                                     if r.get("family") in BROKER_FAMILIES),
+                                  "broker_statuses": sorted({str(r.get("status")) for r in rc["rows"]
+                                                             if r.get("family") in BROKER_FAMILIES}),
+                                  "broker_error_accounts": sorted(
+                                      str(r.get("account")) for r in rc["rows"]
+                                      if r.get("family") in BROKER_FAMILIES
+                                      and any(t in str(r.get("status")).upper()
+                                              for t in ("ERROR", "INVALID", "UNREADABLE",
+                                                        "FAILED", "STALE"))),
+                                  "doc_refused": out.get("doc_refused"),
                                   "website_lanes": rc["sources"]["website_lanes"]["source"],
                                   "spy_leg": rc["sources"]["spy_leg"]}, default=str) + ">>>")
     return 0

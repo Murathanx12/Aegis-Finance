@@ -1,0 +1,71 @@
+{
+ "graded_utc": "20260929T134933Z",
+ "today_utc": "2026-09-29",
+ "price_source": "yfinance",
+ "n_positions": 5,
+ "n_closed": 0,
+ "states": {
+  "PENDING_ENTRY": 5
+ },
+ "pnl_usd_0bps": 0,
+ "nav_usd_0bps": 1000000.0,
+ "book_ret_0bps": 0.0,
+ "nav_usd_10bps": 1000000.0,
+ "book_ret_10bps": 0.0,
+ "nav_usd_25bps": 1000000.0,
+ "book_ret_25bps": 0.0,
+ "rows": [
+  {
+   "pos_id": "2026-09-30:PRGS US",
+   "sheet": "2026-09-30",
+   "symbol": "PRGS",
+   "bbg": "PRGS US Equity",
+   "market": "US",
+   "qty": 4833,
+   "entry_session": "2026-09-30",
+   "state": "PENDING_ENTRY"
+  },
+  {
+   "pos_id": "2026-09-30:MU US",
+   "sheet": "2026-09-30",
+   "symbol": "MU",
+   "bbg": "MU US Equity",
+   "market": "US",
+   "qty": 180,
+   "entry_session": "2026-09-30",
+   "state": "PENDING_ENTRY"
+  },
+  {
+   "pos_id": "2026-09-30:AYI US",
+   "sheet": "2026-09-30",
+   "symbol": "AYI",
+   "bbg": "AYI US Equity",
+   "market": "US",
+   "qty": 622,
+   "entry_session": "2026-09-30",
+   "state": "PENDING_ENTRY"
+  },
+  {
+   "pos_id": "2026-09-30:ACN US",
+   "sheet": "2026-09-30",
+   "symbol": "ACN",
+   "bbg": "ACN US Equity",
+   "market": "US",
+   "qty": 1091,
+   "entry_session": "2026-09-30",
+   "state": "PENDING_ENTRY"
+  },
+  {
+   "pos_id": "2026-09-30:4088 JT",
+   "sheet": "2026-09-30",
+   "symbol": "4088.T",
+   "bbg": "4088 JT Equity",
+   "market": "JP",
+   "qty": 10600,
+   "entry_session": "2026-10-01",
+   "state": "PENDING_ENTRY"
+  }
+ ],
+ "licence": "PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. Never evidence of skill.",
+ "benchmark": "ACWI opens (WLS proxy)"
+}

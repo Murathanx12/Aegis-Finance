@@ -1,0 +1,215 @@
+{
+ "schema": "fleet_manager_run/1",
+ "run_id": "20260929T160153Z-40503c",
+ "pass": "open",
+ "live_flag": false,
+ "started_utc": "2026-09-29T16:01:54+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "modes": {
+  "_doc": "Owner-controlled. contract: v1 (hold what the loop left, loop's own terms) or v2 (the proposal). maintenance/entries: LIVE or DRY. The script never edits this file after creating it. `--live` on the command line is also required for anything LIVE.",
+  "hack1": {
+   "contract": "v1",
+   "maintenance": "LIVE",
+   "entries": "DRY"
+  },
+  "hack2": {
+   "contract": "v1",
+   "maintenance": "LIVE",
+   "entries": "DRY"
+  },
+  "hack3": {
+   "skip": "key answers HTTP 401 (retired 2026-09-22); credentials are the owner's"
+  },
+  "hack4": {
+   "contract": "v1",
+   "maintenance": "LIVE",
+   "entries": "DRY"
+  },
+  "hack5": {
+   "contract": "v2",
+   "maintenance": "LIVE",
+   "entries": "LIVE",
+   "set_utc": "2026-09-29T16:02Z",
+   "why": "owner 2026-09-29 'update the hacks daily... full freedom': hack5 is the market-like CONTROL (v2 98f677b18293c710)"
+  },
+  "hack6": {
+   "contract": "v1",
+   "maintenance": "LIVE",
+   "entries": "DRY"
+  },
+  "_history": [
+   {
+    "t": "2026-09-29T16:02Z",
+    "change": "hack5 -> v2 LIVE/LIVE (control)",
+    "by": "operator on the owner's instruction"
+   }
+  ]
+ },
+ "issuer_map": "ok",
+ "n_stitched": 62,
+ "digest": "world_digest_20260929T141930Z.json",
+ "baseline": "2026-09-29T13:23:27Z",
+ "accounts": [
+  {
+   "role": "hack5",
+   "pass": "open",
+   "account_number": "PA3T8OTGULCD",
+   "equity": 94353.12,
+   "cash": 94353.12,
+   "last_equity": 91455.47,
+   "n_positions": 0,
+   "n_open_orders": 0,
+   "positions": [],
+   "clock": {
+    "session_day_et": "2026-09-29",
+    "is_open": true,
+    "minutes_to_close": 238.0
+   },
+   "rebaselined": true,
+   "reconcile": {
+    "status": "REBASELINED",
+    "ok": true,
+    "mismatches": [],
+    "foreign_orders": [],
+    "why": "owner/operator accepted broker truth as the record"
+   },
+   "contract_active": {
+    "version": "v2",
+    "policy_hash": "98f677b18293c710",
+    "alpha_source": "market-like CONTROL: ~95% SPY, the rest cash (no selection, no view)",
+    "frozen_utc": "2026-09-29T16:01:42+00:00"
+   },
+   "contract_proposed": {
+    "version": "v2",
+    "policy_hash": "98f677b18293c710",
+    "alpha_source": "market-like CONTROL: ~95% SPY, the rest cash (no selection, no view)"
+   },
+   "sigma": {
+    "SPY": 0.00702
+   },
+   "panel": {
+    "panel": "bars.parquet",
+    "last_bar": "2026-09-28",
+    "symbols_asked": 1,
+    "symbols_found": 1,
+    "screen": {
+     "enabled": true,
+     "rules": {
+      "dark_run_min_sessions": 5,
+      "nontrade_print_tol": 0.01,
+      "spike_ratio": 4.0,
+      "spike_residual": 0.25,
+      "spike_window_sessions": 3,
+      "break_ratio": 3.0,
+      "quiet_volume_mult": 2.0
+     },
+     "volume_available": true,
+     "rows_in": 273,
+     "rows_removed": 0,
+     "rows_removed_by_reason": {},
+     "rows_removed_by_year": {},
+     "symbols_with_rows_removed": 0,
+     "n_dark_runs": 0,
+     "nontrade_prints": 0,
+     "n_spikes": 0,
+     "n_cuts": 0,
+     "n_suspects": 0,
+     "cuts_by_reason": {}
+    },
+    "moved_5d_sigma": {
+     "SPY": -0.65
+    }
+   },
+   "stop_table": [],
+   "flags": [],
+   "lot_entry": {},
+   "v2_targets": {
+    "n": 1,
+    "gross_frac": 0.95,
+    "legacy_names": [],
+    "drops": []
+   },
+   "worst_case_now": {
+    "worst_usd": 0,
+    "worst_pct_equity": 0.0,
+    "gross_usd": 0.0,
+    "gross_over_equity": 0.0,
+    "n_names": 0,
+    "per_name": []
+   },
+   "worst_case_after_plan": {
+    "worst_usd": 8935.76,
+    "worst_pct_equity": 9.47,
+    "gross_usd": 89357.58,
+    "gross_over_equity": 0.9471,
+    "n_names": 1,
+    "per_name": [
+     {
+      "symbol": "SPY",
+      "worst_usd": 8935.758,
+      "basis": "planned stop 0.100"
+     }
+    ]
+   },
+   "worst_case_formula_v1": {
+    "n": 6,
+    "notional_frac": 0.03,
+    "stop_frac": 0.5,
+    "worst_frac": 0.09,
+    "worst_usd": 8491.78,
+    "gross_over_equity": 0.18
+   },
+   "worst_case_formula_v2": {
+    "n": 1,
+    "notional_frac": 0.95,
+    "stop_frac": 0.1,
+    "worst_frac": 0.095,
+    "worst_usd": 8963.55,
+    "gross_over_equity": 0.95
+   },
+   "worst_case_printed_before_orders_utc": "2026-09-29T16:02:02+00:00",
+   "actions": [
+    {
+     "kind": "buy",
+     "symbol": "SPY",
+     "side": "buy",
+     "qty": 117,
+     "type": "limit",
+     "limit": 763.74,
+     "stop": null,
+     "mode": "DRY",
+     "refused": null,
+     "reason": "target 0.9500 of equity (scale 1.000); held 0 -> 117",
+     "coid": "aegisfm-hack5-20260929-buy-SPY-f64a976d85"
+    }
+   ],
+   "stop_counterfactual": {
+    "registered_now": [],
+    "rows_written": []
+   },
+   "state_written": "2026-09-29T16:02:02+00:00",
+   "grade": {
+    "schema": "fleet_manager_grade/1",
+    "role": "hack5",
+    "session": "2026-09-28",
+    "contract_version": "v2",
+    "policy_hash": "98f677b18293c710",
+    "account_return": -0.04180397456264817,
+    "spy_return": -0.007597070071951761,
+    "twin_return": -0.007217216568354173,
+    "twin_priced_share": 1.0,
+    "vs_spy": -0.034207,
+    "vs_twin": -0.034587,
+    "declared_cost_drag": 0.0,
+    "note": "account return is the broker's equity change (paper fills, no commission); the declared cost drag is what the contract charges on that day's turnover",
+    "written_utc": "2026-09-29T16:02:06+00:00",
+    "equity_prev": 95445.47,
+    "equity": 91455.47,
+    "prev_session": "2026-09-25",
+    "alpha_source": "market-like CONTROL: ~95% SPY, the rest cash (no selection, no view)"
+   },
+   "status": "ok"
+  }
+ ],
+ "finished_utc": "2026-09-29T16:02:06+00:00"
+}

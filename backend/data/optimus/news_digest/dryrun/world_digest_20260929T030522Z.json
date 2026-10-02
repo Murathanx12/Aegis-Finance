@@ -1,0 +1,104 @@
+{
+ "stamp": "20260929T030522Z",
+ "window": {
+  "since": "2026-09-28T21:05:22+00:00",
+  "until": "2026-09-29T03:05:22+00:00"
+ },
+ "n_items": 984,
+ "counts": {
+  "article": 45,
+  "archive_dropped": 86,
+  "undated_kept": 34,
+  "stock_page": 3,
+  "duplicate_url": 1,
+  "transcript": 1,
+  "social": 0,
+  "social_available": 0,
+  "headline": 935,
+  "duplicate_headline": 147
+ },
+ "n_rows": 970,
+ "extraction": {
+  "cache_hits": 970,
+  "dry_run": true
+ },
+ "themes": [],
+ "spend": {
+  "budget_usd": 0.0,
+  "spent_usd": 0.0,
+  "calls": 0,
+  "failed": 0,
+  "unpriced_calls": 0,
+  "served_models": {},
+  "statuses": {},
+  "by_stage_usd": {}
+ },
+ "balance": {
+  "before": null,
+  "after": null,
+  "delta_all_processes": null
+ },
+ "writes": {
+  "n_rows": 0,
+  "n_size": 0,
+  "n_direction": 0,
+  "written": false,
+  "not_written": {},
+  "prediction_ids": [],
+  "first_5d": "2026-10-09",
+  "first_20d": "2026-10-31"
+ },
+ "shadow": {
+  "contract_hash": "f3b149ea42311760",
+  "base_book_id": "439fd84f869744e0",
+  "base_found": true,
+  "base_weights": {
+   "JAZZ": 0.32849435335870486,
+   "TS": 0.3105861117316742,
+   "SNDR": 0.19239366537902164,
+   "TSM": 0.16852586953059928
+  },
+  "trust_dir": 0.0,
+  "trust_size": 0.0,
+  "grade": {
+   "n_open": 95,
+   "size": {
+    "n_rows": 0,
+    "n_dates": 0,
+    "mean_improvement": null,
+    "se": null,
+    "posterior_mean": 0.0,
+    "trust": 0.0,
+    "note": "no graded dates: the prior (0) stands"
+   },
+   "direction": {
+    "n_rows": 0,
+    "n_dates": 0,
+    "mean_improvement": null,
+    "se": null,
+    "posterior_mean": 0.0,
+    "trust": 0.0,
+    "note": "no graded dates: the prior (0) stands"
+   }
+  },
+  "grade_note": "direction: no graded dates: the prior (0) stands; size: no graded dates: the prior (0) stands; 95 news_digest rows open",
+  "signal_names": 0,
+  "base_names_with_news": [],
+  "actual_diff": [],
+  "actual_diff_text": "nothing: identical to the base book",
+  "illustrative_trust": 0.5,
+  "illustrative_diff": [],
+  "illustrative_diff_text": "nothing: identical to the base book"
+ },
+ "weak": [
+  "Direction: the model's calls are recorded shrunk to 0.5; nothing here shows direction skill, and the record says LLM direction is at or below a coin.",
+  "Size buckets are relative to the name's own trailing sigma; the frozen map (below_normal 0.18 / normal 0.317 / above_normal 0.50 / extreme 0.70) is a declared guess, graded against the 252-session frequency on the same row.",
+  "Sector and macro implications are typed but NOT graded: no sector ETF is in the price panel.",
+  "Independent-source counts count columns/hosts; two columns of one newsroom count twice.",
+  "One run's rows share one decision date: the effective sample is date blocks, not rows.",
+  "Balance delta includes every process on the DeepSeek key during the run; the per-call price sum ($0.000) is this run's own figure."
+ ],
+ "licence": "PRODUCT_EXPERIMENT",
+ "runtime_s": 7.2,
+ "dry_run": true
+}

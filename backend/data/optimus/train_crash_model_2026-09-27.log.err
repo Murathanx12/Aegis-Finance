@@ -1,0 +1,114 @@
+2026-09-27 01:00:04,392 [__main__] INFO: ============================================================
+2026-09-27 01:00:04,392 [__main__] INFO: AEGIS FINANCE — Crash Model Training
+2026-09-27 01:00:04,392 [__main__] INFO: ============================================================
+2026-09-27 01:00:04,392 [__main__] INFO: Step 1: Fetching market data...
+2026-09-27 01:00:04,412 [backend.cache] INFO: Disk cache initialized at C:\Users\mrthn\aegis-finance\.cache
+2026-09-27 01:00:04,425 [backend.services.data_fetcher] INFO: Fetching market data from Yahoo Finance (batch mode)...
+2026-09-27 01:00:08,556 [backend.services.data_fetcher] INFO: Batch fetched 12/12 tickers
+2026-09-27 01:00:10,203 [backend.services.data_fetcher] INFO: Batch fetched 11/11 tickers
+2026-09-27 01:00:10,210 [backend.services.data_fetcher] INFO: Fetched 9259 observations, 23 series, range 1990-01-02 to 2026-09-25
+2026-09-27 01:00:10,234 [backend.services.data_fetcher] INFO: Fetching macroeconomic indicators from FRED (parallel)...
+2026-09-27 01:00:15,756 [backend.services.data_fetcher] INFO:   sahm_rule: -0.07
+2026-09-27 01:00:17,198 [backend.services.data_fetcher] INFO:   recession_prob: 0.76
+2026-09-27 01:00:17,418 [backend.services.data_fetcher] INFO:   insured_unemployment_rate: 1.10
+2026-09-27 01:00:18,919 [backend.services.data_fetcher] INFO:   yield_spread: 0.93
+2026-09-27 01:00:19,027 [backend.services.data_fetcher] INFO:   unemployment: 4.10
+2026-09-27 01:00:21,437 [backend.services.data_fetcher] INFO:   fed_funds: 3.63
+2026-09-27 01:00:22,089 [backend.services.data_fetcher] WARNING: Failed to fetch ig_oas (BAMLC0A0CM): None
+2026-09-27 01:00:22,700 [backend.services.data_fetcher] INFO:   cpi: 334.13
+2026-09-27 01:00:26,383 [backend.services.data_fetcher] INFO:   consumer_sentiment: 51.70
+2026-09-27 01:00:27,236 [backend.services.data_fetcher] INFO:   vix_fred: 14.21
+2026-09-27 01:00:28,298 [backend.services.data_fetcher] INFO:   hy_oas: 2.80
+2026-09-27 01:00:30,950 [backend.services.data_fetcher] INFO:   tips_10y: 2.85
+2026-09-27 01:00:31,507 [backend.services.data_fetcher] INFO:   margin_credit: 742321.00
+2026-09-27 01:00:31,608 [backend.services.data_fetcher] INFO:   mfg_employment: 12638.00
+2026-09-27 01:00:31,888 [backend.services.data_fetcher] INFO:   consumer_credit: 5186204.07
+2026-09-27 01:00:32,623 [backend.services.data_fetcher] INFO:   industrial_prod: 103.07
+2026-09-27 01:00:34,050 [backend.services.data_fetcher] INFO:   business_loans: 2945.05
+2026-09-27 01:00:35,669 [backend.services.data_fetcher] INFO:   initial_claims: 197000.00
+2026-09-27 01:00:35,692 [backend.services.data_fetcher] INFO:   sloos_cc: 6.70
+2026-09-27 01:00:36,152 [backend.services.data_fetcher] INFO:   sloos_ci: 0.00
+2026-09-27 01:00:36,331 [backend.services.data_fetcher] INFO:   lei: 1.72
+2026-09-27 01:00:38,600 [backend.services.data_fetcher] INFO:   nfci: -0.56
+2026-09-27 01:00:38,864 [backend.services.data_fetcher] INFO:   initial_claims_4wk: 202250.00
+2026-09-27 01:00:38,865 [backend.services.data_fetcher] INFO: Loaded 22/23 FRED series
+2026-09-27 01:00:38,871 [__main__] INFO: Data: 9259 rows, 23 columns, range 1990-01-02 to 2026-09-25
+2026-09-27 01:00:38,871 [__main__] INFO: Step 2: Building feature matrix...
+2026-09-27 01:00:39,669 [__main__] INFO: Built 171 features
+2026-09-27 01:00:39,671 [__main__] INFO: Step 3: Building crash targets (method: standard)...
+2026-09-27 01:00:39,799 [__main__] INFO:   3m: 9259 valid samples, 3.2% crash rate
+2026-09-27 01:00:39,799 [__main__] INFO:   6m: 9259 valid samples, 7.7% crash rate
+2026-09-27 01:00:39,800 [__main__] INFO:   12m: 9259 valid samples, 15.6% crash rate
+2026-09-27 01:00:39,800 [__main__] INFO: Step 4: Running LASSO feature selection...
+2026-09-27 01:00:39,811 [engine.training.feature_selection] INFO: Feature selection: 154 features, 5555 samples, 4.0% crash rate
+2026-09-27 01:00:41,295 [engine.training.feature_selection] INFO: MI ranking: top 10 = ['fred_consumer_credit', 'fred_unemployment_chg_12m', 'fred_business_loans_chg_12m', 'fred_industrial_prod_chg_12m', 'fred_mfg_employment_chg_12m', 'fred_mfg_employment', 'max_daily_loss_21d', 'fred_mfg_employment_chg_3m', 'fred_consumer_credit_chg_12m', 'fred_sahm_rule_chg_3m']
+C:\Users\mrthn\aegis-finance\.venv\Lib\site-packages\sklearn\linear_model\_logistic.py:1780: FutureWarning: The default value for l1_ratios will change from None to (0.0,) in version 1.10. From version 1.10 onwards, only array-like with values in [0, 1] will be allowed, None will be forbidden. To avoid this warning, explicitly set a value, e.g. l1_ratios=(0,).
+  warnings.warn(
+C:\Users\mrthn\aegis-finance\.venv\Lib\site-packages\sklearn\linear_model\_logistic.py:1811: FutureWarning: 'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratios' instead. Use l1_ratios=(0,) instead of penalty='l2'  and l1_ratios=(1,) instead of penalty='l1'.
+  warnings.warn(
+C:\Users\mrthn\aegis-finance\.venv\Lib\site-packages\sklearn\linear_model\_logistic.py:1823: FutureWarning: The fitted attributes of LogisticRegressionCV will be simplified in scikit-learn 1.10 to remove redundancy. Set`use_legacy_attributes=False` to enable the new behavior now, or set it to `True` to silence this warning during the transition period while keeping the deprecated behavior for the time being. The default value of use_legacy_attributes will change from True to False in scikit-learn 1.10. See the docstring of LogisticRegressionCV for more details.
+  warnings.warn(
+C:\Users\mrthn\aegis-finance\.venv\Lib\site-packages\sklearn\linear_model\_sag.py:348: ConvergenceWarning: The max_iter was reached which means the coef_ did not converge
+  warnings.warn(
+2026-09-27 01:02:32,966 [engine.training.feature_selection] INFO: LASSO: 6/60 features survived (non-zero coefficients)
+2026-09-27 01:02:32,967 [engine.training.feature_selection] INFO: Selected 20 features: ['fred_lei_chg_3m', 'vol_x_mom_12m', 'fred_sloos_cc_chg_12m', 'fred_industrial_prod_zscore', 'sma_200d_dev', 'fred_sloos_ci_chg_3m', 'fred_consumer_credit', 'fred_unemployment_chg_12m', 'fred_business_loans_chg_12m', 'fred_industrial_prod_chg_12m', 'fred_mfg_employment_chg_12m', 'fred_mfg_employment', 'max_daily_loss_21d', 'fred_mfg_employment_chg_3m', 'fred_consumer_credit_chg_12m', 'fred_sahm_rule_chg_3m', 'fred_consumer_credit_chg_3m', 'fred_business_loans', 'fred_cpi_chg_12m', 'fred_industrial_prod']
+2026-09-27 01:02:32,970 [__main__] INFO: Selected 20 features via LASSO
+2026-09-27 01:02:32,971 [__main__] INFO: Step 5: Training LightGBM + Logistic Regression...
+2026-09-27 01:02:33,564 [backend.services.crash_model] INFO:   3m: Using uniqueness-weighted samples
+C:\Users\mrthn\aegis-finance\.venv\Lib\site-packages\sklearn\linear_model\_logistic.py:1135: FutureWarning: 'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None.
+  warnings.warn(
+C:\Users\mrthn\aegis-finance\.venv\Lib\site-packages\sklearn\metrics\_ranking.py:442: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+2026-09-27 01:02:33,664 [backend.services.crash_model] INFO:   3m: Brier=0.0049, AUC=nan, crash_rate=3.0%, range=[0.01, 0.09]
+2026-09-27 01:02:34,216 [backend.services.crash_model] INFO:   6m: Using uniqueness-weighted samples
+C:\Users\mrthn\aegis-finance\.venv\Lib\site-packages\sklearn\linear_model\_logistic.py:1135: FutureWarning: 'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None.
+  warnings.warn(
+C:\Users\mrthn\aegis-finance\.venv\Lib\site-packages\sklearn\metrics\_ranking.py:442: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+2026-09-27 01:02:34,308 [backend.services.crash_model] INFO:   6m: Brier=0.0352, AUC=nan, crash_rate=7.0%, range=[0.01, 0.24]
+2026-09-27 01:02:34,876 [backend.services.crash_model] INFO:   12m: Using uniqueness-weighted samples
+C:\Users\mrthn\aegis-finance\.venv\Lib\site-packages\sklearn\linear_model\_logistic.py:1135: FutureWarning: 'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None.
+  warnings.warn(
+C:\Users\mrthn\aegis-finance\.venv\Lib\site-packages\sklearn\metrics\_ranking.py:442: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+2026-09-27 01:02:34,953 [backend.services.crash_model] INFO:   12m: Brier=0.1411, AUC=nan, crash_rate=13.8%, range=[0.38, 0.38]
+2026-09-27 01:02:34,954 [__main__] INFO: Training results:
+2026-09-27 01:02:34,954 [__main__] INFO:   3m: Brier=0.0049, AUC=nan, range=(0.01, 0.09075043630017451)
+2026-09-27 01:02:34,954 [__main__] INFO:   6m: Brier=0.0352, AUC=nan, range=(0.01, 0.2388451443569554)
+2026-09-27 01:02:34,954 [__main__] INFO:   12m: Brier=0.1411, AUC=nan, range=(0.3756906077348066, 0.3756906077348066)
+2026-09-27 01:02:34,954 [__main__] INFO: Step 6: Saving model to backend\models\crash_model.pkl
+2026-09-27 01:02:34,966 [backend.services.crash_model] INFO: Model saved to backend\models\crash_model.pkl (sidecar crash_model.meta.json)
+2026-09-27 01:02:34,966 [__main__] INFO: Step 6b: Calibrating conformal prediction intervals...
+2026-09-27 01:02:34,970 [backend.services.conformal_predictor] INFO: Conformal 3m: 1852 cal samples, median score=0.0719, p90=0.0908
+2026-09-27 01:02:34,972 [backend.services.conformal_predictor] INFO: Conformal 6m: 1852 cal samples, median score=0.2388, p90=0.7612
+2026-09-27 01:02:34,974 [backend.services.conformal_predictor] INFO: Conformal 12m: 1852 cal samples, median score=0.3757, p90=0.6243
+2026-09-27 01:02:34,974 [__main__] INFO:   Conformal 3m: n=1852, median_score=0.0719, p90=0.0908
+2026-09-27 01:02:34,975 [__main__] INFO:   Conformal 6m: n=1852, median_score=0.2388, p90=0.7612
+2026-09-27 01:02:34,975 [__main__] INFO:   Conformal 12m: n=1852, median_score=0.3757, p90=0.6243
+2026-09-27 01:02:34,976 [backend.services.conformal_predictor] INFO: Conformal predictor saved to backend\models\conformal_scores.pkl
+2026-09-27 01:02:34,976 [__main__] INFO:   Conformal scores saved to backend\models\conformal_scores.pkl
+2026-09-27 01:02:34,976 [__main__] INFO: Step 7: Smoke test — predicting on latest data...
+2026-09-27 01:02:34,978 [__main__] INFO:   Current 3m crash probability: 7.1%
+2026-09-27 01:02:34,979 [__main__] INFO:   Current 6m crash probability: 12.9%
+2026-09-27 01:02:34,981 [__main__] INFO:   Current 12m crash probability: 37.6%
+2026-09-27 01:02:34,981 [__main__] INFO: 
+Top 15 features by importance:
+2026-09-27 01:02:34,981 [__main__] INFO:   fred_consumer_credit_chg_12m        0.4123
+2026-09-27 01:02:34,981 [__main__] INFO:   fred_business_loans                 0.3427
+2026-09-27 01:02:34,982 [__main__] INFO:   fred_cpi_chg_12m                    0.3366
+2026-09-27 01:02:34,982 [__main__] INFO:   fred_mfg_employment                 0.3153
+2026-09-27 01:02:34,982 [__main__] INFO:   fred_unemployment_chg_12m           0.3001
+2026-09-27 01:02:34,982 [__main__] INFO:   fred_industrial_prod_zscore         0.2553
+2026-09-27 01:02:34,982 [__main__] INFO:   fred_mfg_employment_chg_3m          0.2305
+2026-09-27 01:02:34,982 [__main__] INFO:   fred_lei_chg_3m                     0.2092
+2026-09-27 01:02:34,982 [__main__] INFO:   fred_industrial_prod                0.1879
+2026-09-27 01:02:34,982 [__main__] INFO:   max_daily_loss_21d                  0.1122
+2026-09-27 01:02:34,983 [__main__] INFO:   fred_sloos_ci_chg_3m                0.1064
+2026-09-27 01:02:34,983 [__main__] INFO:   fred_consumer_credit_chg_3m         0.0851
+2026-09-27 01:02:34,983 [__main__] INFO:   vol_x_mom_12m                       0.0426
+2026-09-27 01:02:34,983 [__main__] INFO:   fred_consumer_credit                0.0426
+2026-09-27 01:02:34,983 [__main__] INFO:   fred_industrial_prod_chg_12m        0.0213
+2026-09-27 01:02:34,983 [__main__] INFO: 
+============================================================
+2026-09-27 01:02:34,983 [__main__] INFO: Training complete. Model saved to backend\models\crash_model.pkl
+2026-09-27 01:02:34,984 [__main__] INFO: ============================================================

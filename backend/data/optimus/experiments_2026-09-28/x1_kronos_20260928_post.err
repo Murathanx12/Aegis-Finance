@@ -1,0 +1,91 @@
+C:\Users\mrthn\aegis-finance\.venv_kronos\Lib\site-packages\torch\nn\modules\module.py:1370: UserWarning: expandable_segments not supported on this platform (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\c10/cuda/CUDAAllocatorConfig.h:39.)
+  return t.to(
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:156: RuntimeWarning: Degrees of freedom <= 0 for slice.
+  var = np.nanvar(lr, axis=1, ddof=1)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:156: RuntimeWarning: Degrees of freedom <= 0 for slice.
+  var = np.nanvar(lr, axis=1, ddof=1)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:156: RuntimeWarning: Degrees of freedom <= 0 for slice.
+  var = np.nanvar(lr, axis=1, ddof=1)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:157: RuntimeWarning: Mean of empty slice
+  ret = np.nanmean(p[:, -1] / float(last_close) - 1.0)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:156: RuntimeWarning: Degrees of freedom <= 0 for slice.
+  var = np.nanvar(lr, axis=1, ddof=1)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py:233: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  return pd.bdate_range(pd.Timestamp(t) + pd.Timedelta(days=1), periods=h)
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py", line 536, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py", line 497, in main
+    res = analyze(df)
+          ^^^^^^^^^^^
+  File "C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py", line 429, in analyze
+    per = per_date_table(df)
+          ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mrthn\aegis-finance\scripts\exp_kronos_2026_09_28.py", line 397, in per_date_table
+    "vol_rankcorr_kronos": v["k_vol"].corr(v["real_vol"], method="spearman"),
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mrthn\aegis-finance\.venv_kronos\Lib\site-packages\pandas\core\series.py", line 2977, in corr
+    return nanops.nancorr(
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\mrthn\aegis-finance\.venv_kronos\Lib\site-packages\pandas\core\nanops.py", line 85, in _f
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mrthn\aegis-finance\.venv_kronos\Lib\site-packages\pandas\core\nanops.py", line 1614, in nancorr
+    f = get_corr_func(method)
+        ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mrthn\aegis-finance\.venv_kronos\Lib\site-packages\pandas\core\nanops.py", line 1629, in get_corr_func
+    from scipy.stats import spearmanr
+ModuleNotFoundError: No module named 'scipy'

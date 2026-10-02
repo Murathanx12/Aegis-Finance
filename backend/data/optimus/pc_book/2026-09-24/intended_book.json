@@ -1,0 +1,123 @@
+{
+ "t": "2026-09-24T15:58:57+00:00",
+ "mode": "observe",
+ "verdict": "MEASURED_NEGATIVE",
+ "acting": false,
+ "equity": 1000000.0,
+ "n_targets": 18,
+ "n_orders": 18,
+ "turnover_usd": 999275.8,
+ "refusals": [],
+ "book": [
+  {
+   "rank": 1,
+   "symbol": "FLNC",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.004486079631033344
+  },
+  {
+   "rank": 2,
+   "symbol": "BW",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.004486079631033344
+  },
+  {
+   "rank": 3,
+   "symbol": "TE",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.003686079631033344
+  },
+  {
+   "rank": 4,
+   "symbol": "CDNL",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.004486079631033344
+  },
+  {
+   "rank": 5,
+   "symbol": "JAN",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.004486079631033344
+  },
+  {
+   "rank": 6,
+   "symbol": "Q",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.003686079631033344
+  },
+  {
+   "rank": 7,
+   "symbol": "VOR",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.006186079631033344
+  },
+  {
+   "rank": 8,
+   "symbol": "MSFT",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.003286079631033344
+  },
+  {
+   "rank": 9,
+   "symbol": "BLDR",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.003686079631033344
+  },
+  {
+   "rank": 10,
+   "symbol": "HURN",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.004486079631033344
+  },
+  {
+   "rank": 11,
+   "symbol": "XRX",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.006186079631033344
+  },
+  {
+   "rank": 12,
+   "symbol": "WDS",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.006186079631033344
+  },
+  {
+   "rank": 13,
+   "symbol": "DBVT",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.006186079631033344
+  },
+  {
+   "rank": 14,
+   "symbol": "MUSA",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.003686079631033344
+  },
+  {
+   "rank": 15,
+   "symbol": "SOC",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.004486079631033344
+  },
+  {
+   "rank": 16,
+   "symbol": "PRCH",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.004486079631033344
+  },
+  {
+   "rank": 17,
+   "symbol": "AGX",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.003686079631033344
+  },
+  {
+   "rank": 18,
+   "symbol": "PR",
+   "weight": 0.05555555555555555,
+   "expected_relative_return_21d": -0.003686079631033344
+  }
+ ],
+ "sent": [],
+ "why_not": "mode=observe"
+}

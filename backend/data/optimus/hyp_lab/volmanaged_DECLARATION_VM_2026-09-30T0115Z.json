@@ -1,0 +1,44 @@
+{
+ "schema": "hyp_lab/volmanaged_declaration/1",
+ "licence": "PRODUCT_EXPERIMENT",
+ "written_before_any_policy_return": true,
+ "market": "FF daily mkt+rf (CRSP value-weighted, costless)",
+ "forecasters": {
+  "rv22": "sqrt(mean r^2, 22 sessions)",
+  "rv63": "sqrt(mean r^2, 63 sessions)",
+  "har": "log RV(t+1..t+h) on log rv1, rv5, rv22 (design OLS), exp(fit + s^2/2)",
+  "har_ei": "har + earnings-season intensity over the hold window (known beforehand)"
+ },
+ "rebalance": {
+  "M": 21,
+  "W": 5
+ },
+ "exposure": "w = c / sigma_hat, clipped to [0, 2.0]",
+ "costs": {
+  "trade_per_unit_dw": 0.0002,
+  "lever_spread_annual": 0.005
+ },
+ "benchmark": "rf + mean(w over the window) x (mkt - rf): buy-and-hold at the SAME average exposure; matched realised vol printed beside",
+ "splits": {
+  "design": [
+   "1991-01-01",
+   "2008-12-31"
+  ],
+  "validate": [
+   "2009-01-01",
+   "2016-12-31"
+  ],
+  "late": [
+   "2017-01-01",
+   "2024-12-31"
+  ]
+ },
+ "decision": "A cell (forecaster x rebalance) SURVIVES iff, against buy-and-hold at the SAME mean exposure over the window, the monthly log-return difference is > 0 in design (1991-2008) AND > 0 in validate (2009-2016) with t >= 2 on 3-month blocks AND a strict majority of validate years > 0. The ENGINE question is read separately: har_ei - rv22 (paired policies, same rebalance) > 0 in validate at t >= 2. The exposure constant c is set on DESIGN dates only (mean exposure 1 there); HAR coefficients are fitted on design decision dates whose target window ends by 2008-12-31. 2017-2024 is read last, as description.",
+ "search_count": {
+  "prior": 42685,
+  "cells": 8,
+  "after": 42693
+ },
+ "sha16": "2f172790b925bfc1",
+ "written_utc": "2026-09-29T16:08:04+00:00"
+}

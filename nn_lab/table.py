@@ -77,6 +77,7 @@ class PITViolation(RuntimeError):
 # ─────────────────────────────── bars ────────────────────────────────────────
 
 REUSED_TICKERS: list[str] = []   # filled by load_bars; printed on the table receipt
+RENAMED_DEAD: list[str] = []     # dead companies kept as `SYM#d` (RENAME_REUSED_DEAD)
 
 
 def load_bars(paths: Iterable[Path], start: str | None = None,
@@ -111,6 +112,17 @@ def load_bars(paths: Iterable[Path], start: str | None = None,
                 df = df[lim.isna() | (df["date"] > lim)]
             else:
                 clash = df["symbol"].isin(last.index)
+                if C.RENAME_REUSED_DEAD and clash.any():
+                    # F3 (2026-09-30): a dead company whose ticker a later company reuses is its
+                    # own dead name `SYM#d` when its bars END before the earlier file's FIRST bar
+                    # for that ticker (no overlap = two companies); an overlap is still dropped.
+                    first = prev.groupby("symbol")["date"].min()
+                    dl = df.loc[clash].groupby("symbol")["date"].max()
+                    ok = dl[dl < first.reindex(dl.index)].index
+                    ren = clash & df["symbol"].isin(ok)
+                    RENAMED_DEAD.extend(sorted(df.loc[ren, "symbol"].unique().tolist()))
+                    df.loc[ren, "symbol"] = df.loc[ren, "symbol"] + "#d"
+                    clash = clash & ~ren
                 REUSED_TICKERS.extend(sorted(df.loc[clash, "symbol"].unique().tolist()))
                 df = df[~clash]
         frames.append(df)
@@ -272,11 +284,13 @@ def price_rows(bars: pd.DataFrame, cal: pd.DatetimeIndex, *, keep_dates: pd.Date
     mret = mkt / mkt.shift(1) - 1.0
     m63 = mkt / mkt.shift(63) - 1.0
     keep = set(pd.DatetimeIndex(keep_dates)) if keep_dates is not None else None
+    from nn_lab.universe_filter import excluded as _etf_excluded
+    excluded = _etf_excluded()          # ETFs / ETNs / funds (EXCLUDE_ETFS); exact symbol only
     last_session = cal[-1]
     cal_pos_end = len(cal) - 1
     out = []
     for sym, s in bars.groupby("symbol", sort=False, observed=True):
-        if sym in C.INDEX_PROXIES or len(s) < C.MIN_HISTORY_SESSIONS:
+        if sym in C.INDEX_PROXIES or sym in excluded or len(s) < C.MIN_HISTORY_SESSIONS:
             continue
         s = s.reset_index(drop=True)
         f = _price_block(s, mret, m63)
@@ -597,25 +611,39 @@ def survivorship(df: pd.DataFrame) -> dict:
     return {"n_symbols": int(last.size), "n_dead_symbols": dead,
             "rows_from_dead_symbols": int(df["dead"].sum()),
             "rows_with_delisting_exit_21": int(df.get("delist_exit_21", pd.Series(False)).sum()),
+            "dead_by_last_year": (df[df["dead"]].groupby("symbol")["date"].max().dt.year
+                                  .value_counts().sort_index().to_dict()),
             "verdict": ("PARTIALLY SURVIVOR-SELECTED: living names were chosen alive on 2026-09-01; "
-                        "dead names come only from the 1,784-symbol inactive listed list (no OTC, "
-                        "no pre-2016 deaths); a dead name exits at its last close, true delisting "
-                        "return unknown. Every result carries this caveat.")}
+                        "dead names come from the inactive listed list (mostly 2018-22 deaths) plus, "
+                        "when USE_CRSP_DEATHS, CRSP-verified 2016-2024 deaths (nn_lab/deaths_crsp.py); "
+                        "no OTC, no 2025-26 deaths beyond the inactive list; a dead name exits at its "
+                        "last close, true delisting return unknown. Every result carries this caveat.")}
 
 
 def build(start: str = "2016-01-01", symbols_limit: int | None = None, out: Path | None = None,
-          bars_paths: Iterable[Path] | None = None) -> dict:
+          bars_paths: Iterable[Path] | None = None, extend_only: Iterable[Path] = ()) -> dict:
     """Build the full table from the deep + delisted bars. Returns the receipt."""
     t0 = datetime.now(timezone.utc)
     out = Path(out or C.TABLE_PATH)
     out.parent.mkdir(parents=True, exist_ok=True)
     paths = list(bars_paths or [C.BARS_DEEP, C.BARS_DELISTED])
+    if bars_paths is None and C.USE_CRSP_DEATHS and C.BARS_DELISTED_CRSP.exists():
+        paths.append(C.BARS_DELISTED_CRSP)      # F3: 2016-2024 deaths from CRSP (nn_lab/deaths_crsp.py)
     syms = None
     if symbols_limit:
         allsyms = pd.read_parquet(paths[0], columns=["symbol"])["symbol"].unique()
         rng = np.random.default_rng(20260928)
         syms = list(rng.choice(allsyms, size=min(symbols_limit, len(allsyms)), replace=False)) + [C.MARKET]
-    bars = load_bars(paths, start=start, symbols=syms)
+    bars = load_bars(paths, start=start, symbols=syms, extend_only=extend_only)
+    raw_note = "OFF (config.USE_CLOSE_RAW)"
+    if C.USE_CLOSE_RAW:
+        from nn_lab import raw_prices as RP
+        if RP.RAW_MONTHLY.exists():
+            ratios = RP.month_end_ratios(bars, pd.read_parquet(RP.RAW_MONTHLY))
+            bars = RP.attach_close_raw(bars, ratios)
+            raw_note = f"ON: close_raw on {float(bars['close_raw'].notna().mean()):.1%} of bars"
+        else:
+            raw_note = f"ON but {RP.RAW_MONTHLY.name} absent: close_raw NaN"
     cal = session_calendar(bars)
     grid = cal[grid_mask(cal)]
     rows = price_rows(bars, cal, keep_dates=grid, keep_last=True)
@@ -629,6 +657,14 @@ def build(start: str = "2016-01-01", symbols_limit: int | None = None, out: Path
     rec = describe(rows)
     rec.update({"artefact": "NN_LAB_TABLE", "path": str(out), "pit_violations": pit,
                 "delisted_symbols_dropped_as_reused_tickers": sorted(set(REUSED_TICKERS)),
+                "close_raw": raw_note,
+                "dead_symbols_renamed_as_reused_tickers": {"n": len(set(RENAMED_DEAD)),
+                                                           "examples": sorted(set(RENAMED_DEAD))[:25]},
+                "etf_exclusions": {"flag": C.EXCLUDE_ETFS, "file": str(C.ETF_EXCLUSIONS),
+                                   "n_in_file": len(__import__("nn_lab.universe_filter",
+                                                               fromlist=["excluded"]).excluded())},
+                "dead_names_by_last_year": (rows[rows["dead"]].groupby("symbol")["date"].max().dt.year
+                                            .value_counts().sort_index().to_dict()),
                 "symbols_split_at_gaps_over_20_sessions": {"n": len(SPLIT_SYMBOLS),
                                                            "examples": sorted(SPLIT_SYMBOLS)[:25]},
                 "bars_sources": [str(p) for p in paths], "symbols_limit": symbols_limit,

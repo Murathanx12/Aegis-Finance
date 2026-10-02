@@ -1,0 +1,4 @@
+{
+ "why": "REFUSED: the PC paper account is not configured. Set ALPACA_PC_KEY_ID and ALPACA_PC_SECRET_KEY in .env (the PC-PAPER pair). Present: ALPACA_PC_KEY_ID=NO, ALPACA_PC_SECRET_KEY=NO. No other role's credential is substituted, by design.",
+ "t": "2026-09-22T05:10:16+00:00"
+}

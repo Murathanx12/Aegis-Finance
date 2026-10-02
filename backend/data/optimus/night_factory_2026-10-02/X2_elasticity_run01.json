@@ -1,0 +1,18 @@
+{
+ "verdict": "FAILED",
+ "headline": "exited 1073807364 with no receipt",
+ "exit_code": 1073807364,
+ "log_tail": "",
+ "elapsed_s": 4362.6,
+ "awake_s": 4362.6,
+ "slept_s": 0.0,
+ "box_s": 7200.0,
+ "wall_minus_monotonic_s": 0.0,
+ "sleep_gaps": [],
+ "child_pid": 186824,
+ "killed_pids": [],
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "X2_elasticity",
+ "run": 1,
+ "written_utc": "2026-10-01T20:00:17+00:00"
+}

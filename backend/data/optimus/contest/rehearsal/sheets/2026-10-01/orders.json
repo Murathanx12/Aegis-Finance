@@ -1,0 +1,287 @@
+{
+ "day": "2026-10-01",
+ "mode": "REHEARSAL",
+ "freeze_utc": "2026-10-01T06:33:28",
+ "licence": "PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. Never evidence of skill.",
+ "window_hkt": [
+  "2026-10-01 14:00:00+08:00",
+  "2026-10-02 14:00:00+08:00"
+ ],
+ "nav_usd": 1000000.0,
+ "cap": {
+  "of_notional": 200000.0,
+  "of_nav": 200000.0,
+  "binding": 200000.0,
+  "binding_reading": "20% of notional"
+ },
+ "tickets": [
+  {
+   "n": 1,
+   "side": "SELL",
+   "bbg": "PRGS US Equity",
+   "symbol": "PRGS",
+   "market": "US",
+   "qty": 4833,
+   "order_type": "MARKET AT OPEN",
+   "limit_local": null,
+   "currency": "USD",
+   "session_date": "2026-10-01",
+   "open_utc": "2026-10-01 13:30:00+00:00",
+   "open_hkt": "Thu 01 Oct 21:30",
+   "open_ny": "Thu 09:30",
+   "notional_usd": 0.0,
+   "status": "LIVE",
+   "note": "report has happened by this open",
+   "report": "",
+   "code": "JM",
+   "extra": {
+    "pos_id": "2026-09-30:PRGS US"
+   }
+  },
+  {
+   "n": 2,
+   "side": "SELL",
+   "bbg": "MU US Equity",
+   "symbol": "MU",
+   "market": "US",
+   "qty": 180,
+   "order_type": "MARKET AT OPEN",
+   "limit_local": null,
+   "currency": "USD",
+   "session_date": "2026-10-01",
+   "open_utc": "2026-10-01 13:30:00+00:00",
+   "open_hkt": "Thu 01 Oct 21:30",
+   "open_ny": "Thu 09:30",
+   "notional_usd": 0.0,
+   "status": "LIVE",
+   "note": "report has happened by this open",
+   "report": "",
+   "code": "R7",
+   "extra": {
+    "pos_id": "2026-09-30:MU US"
+   }
+  },
+  {
+   "n": 3,
+   "side": "SELL",
+   "bbg": "AYI US Equity",
+   "symbol": "AYI",
+   "market": "US",
+   "qty": 622,
+   "order_type": "MARKET AT OPEN",
+   "limit_local": null,
+   "currency": "USD",
+   "session_date": "2026-10-01",
+   "open_utc": "2026-10-01 13:30:00+00:00",
+   "open_hkt": "Thu 01 Oct 21:30",
+   "open_ny": "Thu 09:30",
+   "notional_usd": 0.0,
+   "status": "LIVE",
+   "note": "report has happened by this open",
+   "report": "",
+   "code": "Y3",
+   "extra": {
+    "pos_id": "2026-09-30:AYI US"
+   }
+  },
+  {
+   "n": 4,
+   "side": "SELL",
+   "bbg": "ACN US Equity",
+   "symbol": "ACN",
+   "market": "US",
+   "qty": 1091,
+   "order_type": "MARKET AT OPEN",
+   "limit_local": null,
+   "currency": "USD",
+   "session_date": "2026-10-01",
+   "open_utc": "2026-10-01 13:30:00+00:00",
+   "open_hkt": "Thu 01 Oct 21:30",
+   "open_ny": "Thu 09:30",
+   "notional_usd": 0.0,
+   "status": "LIVE",
+   "note": "report has happened by this open",
+   "report": "",
+   "code": "EP",
+   "extra": {
+    "pos_id": "2026-09-30:ACN US"
+   }
+  },
+  {
+   "n": 5,
+   "side": "BUY",
+   "bbg": "NKE US Equity",
+   "symbol": "NKE",
+   "market": "US",
+   "qty": 5380,
+   "order_type": "LIMIT",
+   "limit_local": 37.17,
+   "currency": "USD",
+   "session_date": "2026-10-01",
+   "open_utc": "2026-10-01 13:30:00+00:00",
+   "open_hkt": "Thu 01 Oct 21:30",
+   "open_ny": "Thu 09:30",
+   "notional_usd": 199974.6,
+   "status": "LIVE",
+   "note": "report 2026-10-01 AMC, sell at the 2026-10-02 open; NOT CONFIRMED (VENDOR_ANNOUNCED); lot 1",
+   "report": "AMC NOT CONFIRMED (VENDOR_ANNOUNCED)",
+   "code": "7F",
+   "extra": {
+    "exit_session": "2026-10-02",
+    "exit_open_utc": "2026-10-02 13:30:00+00:00",
+    "ref_local": 35.400001525878906,
+    "fx_local_per_usd": 1.0,
+    "rank": 1,
+    "trail_abs": 0.07442859560251236,
+    "date_status": "VENDOR_ANNOUNCED",
+    "timing": "AMC",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 5380,
+     "limit_local": 37.17,
+     "notional_usd_at_limit": 199974.6,
+     "notional_usd_at_ref": 190452.01,
+     "lot": 1,
+     "lot_status": "1"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 200000.0,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  }
+ ],
+ "control": {
+  "n_lines": 5,
+  "n_buy": 1,
+  "n_sell": 4,
+  "buy_shares": 5380,
+  "sell_shares": 6726,
+  "buy_notional_usd": 199974.6,
+  "sheet_code": "1772ED78"
+ },
+ "reserves": [],
+ "refused": [
+  {
+   "symbol": "0QZ6.L",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "1NKE.MI",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "3148.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "3612.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "6474.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "7965.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "8923.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "BC94.L",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  },
+  {
+   "symbol": "NKE.DE",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "TMQ",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  }
+ ],
+ "n_ranked": 1,
+ "calendar_file": "calendar_2026-10-01.parquet",
+ "bars_age": [
+  "CN: last bar 2026-09-30 (1 days)",
+  "EU: last bar 2026-09-30 (1 days)",
+  "HK: last bar 2026-09-30 (1 days)",
+  "ID: last bar 2026-09-30 (1 days)",
+  "IN: last bar 2026-09-30 (1 days)",
+  "JP: last bar 2026-09-30 (1 days)",
+  "KR: last bar 2026-09-23 (8 days) STALE",
+  "TW: last bar 2026-09-30 (1 days)",
+  "US: last bar 2026-09-30 (1 days)"
+ ],
+ "refresh": {
+  "calendar": "refreshed",
+  "bars": {
+   "FX": {
+    "n_symbols": 16,
+    "rows_after": 30332,
+    "n_failed": 0,
+    "last_date": "2026-09-30"
+   },
+   "EU": {
+    "n_symbols": 732,
+    "rows_after": 1219251,
+    "n_failed": 2,
+    "last_date": "2026-09-30"
+   },
+   "US": {
+    "n_symbols": 132,
+    "rows_after": 117504,
+    "n_failed": 0,
+    "last_date": "2026-09-30"
+   },
+   "CN": {
+    "n_symbols": 600,
+    "rows_after": 940888,
+    "n_failed": 0,
+    "last_date": "2026-09-30"
+   },
+   "JP": {
+    "n_symbols": 753,
+    "rows_after": 1229473,
+    "n_failed": 0,
+    "last_date": "2026-09-30"
+   },
+   "HK": {
+    "n_symbols": 400,
+    "rows_after": 535510,
+    "n_failed": 0,
+    "last_date": "2026-09-30"
+   },
+   "IN": {
+    "n_symbols": 492,
+    "rows_after": 697371,
+    "n_failed": 1,
+    "last_date": "2026-09-30"
+   },
+   "ID": {
+    "n_symbols": 31,
+    "rows_after": 46293,
+    "n_failed": 0,
+    "last_date": "2026-09-30"
+   },
+   "TW": {
+    "n_symbols": 410,
+    "rows_after": 691876,
+    "n_failed": 0,
+    "last_date": "2026-09-30"
+   }
+  },
+  "implied": {
+   "n": 25,
+   "n_with_value": 20
+  }
+ },
+ "notes": [
+  "1 of 5 slots filled: 80% of the book stays in cash by rule (fewer names report in this window)."
+ ]
+}

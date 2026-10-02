@@ -1,0 +1,686 @@
+{
+ "receipt": "daily_pass",
+ "scoreboard": {
+  "receipt": "morning_scoreboard",
+  "roadmap_item": "chunk 21",
+  "licence": "PRODUCT_EXPERIMENT",
+  "llm_spend_usd": 0.0,
+  "date": "2026-09-26",
+  "written_utc": "2026-09-25T23:49:12+00:00",
+  "nav_vs_spy": {
+   "n_books": 22,
+   "mean_since_inception_pct": 1.0704,
+   "window": {
+    "first_date": "2026-09-11",
+    "last_date": "2026-09-21"
+   },
+   "books": [
+    {
+     "book": "book:000b263cf7ec2286",
+     "pct": -2.4274,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:0b4039242299f2e0",
+     "pct": 4.4522,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:1934ec97aa4b1620",
+     "pct": 0.0,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:1dc244805b119552",
+     "pct": -1.1552,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:1ece648f7410da8e",
+     "pct": 2.1813,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:2c0eb59f611b009c",
+     "pct": 0.5173,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:32adc8a0ec8ca0fe",
+     "pct": -0.9987,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:33418f0ea53a2f1a",
+     "pct": -0.3957,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:364486e140074b55",
+     "pct": 0.5173,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:3b3e7049e693c3e4",
+     "pct": 10.1653,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:4359eba886a8a505",
+     "pct": 0.0,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:57c7af9fb85e59e8",
+     "pct": 0.8012,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:60c4658f92c49e48",
+     "pct": -1.2514,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:625c391913d9718c",
+     "pct": 0.0,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:6310ca122657f8b1",
+     "pct": -0.145,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:668a4e273abf21ff",
+     "pct": -0.145,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:8dbbb73b6159d61d",
+     "pct": 4.0404,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:9d62cc74239b435d",
+     "pct": -1.5146,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:a82e6e453c14c241",
+     "pct": 0.0,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:b109c8861c43e3c6",
+     "pct": 10.1653,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:c3adfbc0192576c0",
+     "pct": 0.0,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    },
+    {
+     "book": "book:f46aaaa40b8c039a",
+     "pct": -1.2595,
+     "first_date": "2026-09-11",
+     "last_date": "2026-09-21",
+     "n_marks": 2
+    }
+   ],
+   "benchmark_symbol": "SPY",
+   "benchmark_pct": 0.9916,
+   "excess_pct": 0.0787,
+   "n_benchmark_marks": 7
+  },
+  "exploit_pnl": "CANNOT DETERMINE: no EXPLOIT decision has been SCORED yet — the ledger holds no `SCORED` row for one (0 scored row(s) carried no usable realised return). A decision is scored when its own expiry passes and the grader joins it to close-to-close returns; until then a P&L number would be invented",
+  "explore_pnl": "CANNOT DETERMINE: no EXPLORE decision has been SCORED yet — the ledger holds no `SCORED` row for one (0 scored row(s) carried no usable realised return). A decision is scored when its own expiry passes and the grader joins it to close-to-close returns; until then a P&L number would be invented",
+  "decisions": {
+   "contract": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-26.json",
+   "count_by_direction": {
+    "BUY": 3,
+    "WATCH": 0,
+    "SELL": 0,
+    "PROBE": 92,
+    "REFUSED": 2
+   },
+   "count_by_authority": {
+    "EXPLOIT": 0,
+    "EXPLORE": 3,
+    "PROBE": 92,
+    "REFUSED": 2
+   },
+   "ledger_states": {
+    "DECIDED": 97,
+    "DELIVERED": 0,
+    "SEEN_BY_EXECUTOR": 0,
+    "REFUSED": 0,
+    "ORDER_SUBMITTED": 0,
+    "REVISED": 0,
+    "FILLED": 0,
+    "SCORED": 0
+   },
+   "n_decisions_in_ledger_today": 97
+  },
+  "probe_panel": {
+   "receipt": "probe_panel.census",
+   "roadmap_item": "chunk 23a",
+   "asof": "2026-09-26",
+   "rows_written": 792,
+   "rows_open": 792,
+   "rows_graded": 0,
+   "hypotheses_written": 6,
+   "hypotheses_with_a_grade": 0,
+   "hypotheses_measured": 0,
+   "measured": [],
+   "min_graded": 30,
+   "min_blocks": 6,
+   "ledger": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\ledger.jsonl",
+   "basis": "792 virtual PROBE row(s) written, 792 still open (their own expiry has not passed), 0 graded; 0 hypothesis-horizon read(s) clear both gates (n >= 30 AND blocks >= 6). A PROBE row holds no capital: it is a virtual position written so a hypothesis with no panel can build one forward, one graded row at a time."
+  },
+  "capital_resolution": {
+   "benchmark_pct": 1.0,
+   "active_exploit_pct": 0.0,
+   "active_explore_pct": 0.0,
+   "cash_pct": 0.0,
+   "sums_to": 1.0,
+   "capital_usd": 40000.0,
+   "n_exploit_names": 0,
+   "n_explore_names": 0,
+   "probe_count": 92,
+   "n_probe_names": 23,
+   "n_probe_hypotheses": 3,
+   "probe_pct": 0.0,
+   "probe_basis": "92 virtual PROBE row(s) across 23 name(s) and 3 hypothesis id(s) resolved 0.00% of capital, BY CONSTRUCTION: a PROBE row carries zero weight and zero dollars and is graded at its own expiry. It is counted here so a day that wrote virtual rows and moved no dollar does not read as a day that did nothing (roadmap §16.2).",
+   "agency_book_rows_excluded": 3,
+   "basis": "benchmark = 1 - exploit - explore - cash; the two active shares are the position budgets the authorities funded, cash is config.IC_CASH_FLOOR_PCT, and the benchmark core is the residual. Agency Option rows are ALTERNATIVE whole books at this same capital and are excluded — counting them would resolve one dollar three times.",
+   "nothing_happened_is_not_allowed": "every dollar resolved today: 100.00% benchmark core, 0.00% active EXPLOIT across 0 name(s), 0.00% active EXPLORE across 0 name(s), 0.00% cash. 'No active trade' is an allowed outcome; 'nothing happened' is not, and this line is the proof it did not happen.",
+   "dollars": {
+    "benchmark_usd": 40000.0,
+    "active_exploit_usd": 0.0,
+    "active_explore_usd": 0.0,
+    "cash_usd": 0.0
+   }
+  },
+  "forecasts": {
+   "newly_resolved": 0,
+   "graded_after_this_run": 17484,
+   "n_records": 26148,
+   "not_yet_due": 8528,
+   "waiting_on_a_bar": 130,
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-26\\grade_forecasts_2026-09-26.json",
+   "headline": "0 newly resolved; 17,484 of 26,148 records now carry an outcome; 130 wait on a bar, 8,528 are not yet due"
+  },
+  "calibration": "CANNOT DETERMINE: the newest calibration receipt (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-25\\decision_vs_reality_2026-09-26.json) resolved 0 forecast(s) inside its trailing_24h window, so its Brier is null. A number here would be a Brier over an empty set",
+  "strongest_new_positive": {
+   "book": "disposition_overhang_conditioner_v0",
+   "stamped": "2026-09-21",
+   "smoke": false,
+   "signed": null,
+   "mean_excess_net_monthly": 0.003978,
+   "nw_lag2_t": 2.1283,
+   "n_blocks": 395,
+   "floor_usd": 3000000.0,
+   "verdict": "CANNOT DETERMINE: this receipt generation carries no verdict field",
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\first_books\\replay\\disposition_overhang_conditioner_v0_2026-09-21T173526Z.json"
+  },
+  "strongest_killed": "CANNOT DETERMINE: no non-smoke book replay receipt stamped in the last 7 day(s) carries a kill verdict (FAILED_VARIANT, MECHANISM_REJECTED)",
+  "learning_changed_capital": "no: the split is identical to 2026-09-25 — same names, same authorities, same shares of capital. Nothing learned since then has moved a dollar",
+  "window_days": 7,
+  "read_me_first": "Every number here was read off a receipt that already existed; this module computes nothing and writes nothing. A field that could not be derived says CANNOT DETERMINE and names the file it wanted — never a zero, because a zero in a P&L column reads as 'we broke even' when it means 'nothing has been scored'.",
+  "headline": "2026-09-26: 100.0% benchmark / 0.00% exploit / 0.00% explore / 0.0% cash; decisions 3 BUY, 0 WATCH, 2 REFUSED; learning changed capital — no: the split is identical to 2026-09-25 — same names, same authorities, same shares of capital. Nothing learned since then has moved a dollar"
+ },
+ "roadmap_item": "chunk 12 T1",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "stage": "pnl",
+ "step_stages": {
+  "news_pull": "raw",
+  "analyst_snapshot": "raw",
+  "e1_append": "normalized",
+  "book_cadence": "pnl",
+  "decision_contract": "pnl",
+  "grade_forecasts": "pnl",
+  "coverage": "raw",
+  "scoreboard": "pnl"
+ },
+ "date": "2026-09-26",
+ "run": 1,
+ "git_head": "da9a6e38f54965f1f901d7321b22a80a65300b50",
+ "started_utc": "2026-09-25T22:30:13+00:00",
+ "finished_utc": "2026-09-25T23:49:12+00:00",
+ "elapsed_s": 4738.75,
+ "declared_steps": [
+  "news_pull",
+  "decision_contract",
+  "analyst_snapshot",
+  "e1_append",
+  "book_cadence",
+  "grade_forecasts",
+  "coverage",
+  "scoreboard"
+ ],
+ "step_boxes_s": {
+  "news_pull": 2400,
+  "analyst_snapshot": 3600,
+  "e1_append": 600,
+  "book_cadence": 900,
+  "decision_contract": 600,
+  "grade_forecasts": 900,
+  "coverage": 300,
+  "scoreboard": 300
+ },
+ "stale_sibling_killed": null,
+ "siblings": {
+  "siblings": [],
+  "stale_h": 6.0,
+  "stale": [],
+  "young": [],
+  "probe_ran": true,
+  "killed": [],
+  "checked": true
+ },
+ "steps": [
+  {
+   "step": "news_pull",
+   "status": "ok",
+   "utc": "2026-09-25T22:53:50+00:00",
+   "rows": 514,
+   "seconds": 1416.44,
+   "refusals": [],
+   "sources": 19,
+   "resolution_rate": 0.4553,
+   "receipt_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\_receipts\\20260925T225350Z_ALL.json",
+   "headline": "514 new rows over 19 sources; 0 RED, 0 refused",
+   "what": "every registered news source, into the corpus",
+   "box_s": 2400.0
+  },
+  {
+   "step": "decision_contract",
+   "status": "ok",
+   "utc": "2026-09-25T22:53:55+00:00",
+   "rows": 97,
+   "seconds": 5.24,
+   "refusals": [
+    "capital $40,000 — the declared IPS capital (agency Strategy.sizing.notional_usd)"
+   ],
+   "count_by_direction": {
+    "BUY": 3,
+    "WATCH": 0,
+    "SELL": 0,
+    "PROBE": 92,
+    "REFUSED": 2
+   },
+   "count_by_refusal_class": {
+    "EDGE_BELOW_BAR": 2
+   },
+   "count_by_terminal_state": {
+    "NEGATIVE_EV": 2
+   },
+   "worst_case_largest_admissible_book": {
+    "n_names": 10,
+    "notional_pct_per_name": 0.03,
+    "gross_over_equity": 0.1,
+    "stop_pct": null,
+    "worst_case_usd": -100000.0,
+    "worst_case_pct_of_equity": 0.1,
+    "equity_usd": 1000000.0,
+    "verdict": "10 names x 3% = 30% uncapped, held to 10% by IC_TOTAL_TILT_BUDGET; no stop is declared, so the worst case is the whole tilt exposure $100,000 of $1,000,000",
+    "tilt_gross_over_equity": 0.1,
+    "book_gross_over_equity": 1.0,
+    "book_gross_note": "the core funds the tilts (core_scale = 1 - tilt_total), so total gross is 1.00x equity and no path here levers the book"
+   },
+   "licence": "PRODUCT_EXPERIMENT",
+   "ledger": {
+    "state": "DECIDED",
+    "by": "daily_pass",
+    "written": 97,
+    "duplicate": 0,
+    "refused": []
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-26.json",
+   "what": "what the engine would buy today, at what size, and what would make it wrong — plus a REFUSED row per candidate that did not clear",
+   "box_s": 600.0
+  },
+  {
+   "step": "analyst_snapshot",
+   "status": "ok",
+   "utc": "2026-09-25T23:48:56+00:00",
+   "rows": 829,
+   "seconds": 3301.23,
+   "refusals": [
+    "the sweep reached its own 3300s budget after 829 of 2362 symbols and stopped itself; the parquet holds the symbols reached and the remaining 1533 carry no row for 2026-09-25"
+   ],
+   "by_status": {
+    "ok": 818,
+    "partial": 0,
+    "empty": 11,
+    "error": 0
+   },
+   "coverage_rate": 0.9867,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\analyst_snapshots\\2026-09-25.parquet",
+   "budget_s": 3300.0,
+   "truncated": true,
+   "symbols_not_reached": 1533,
+   "name_table_update": {
+    "updated": 0,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\news_entities\\issuers.csv",
+    "note": "existing primary_name values are never overwritten"
+   },
+   "headline": "829 (symbol, date) rows for 2026-09-25 over the tradable universe (2,362 available, median dollar volume >= $10,000,000, price >= $5, ETFs excluded); 818 carried at least one analyst field; TRUNCATED at the 3300s budget with 1,533 symbols not reached",
+   "what": "today's consensus rows per symbol",
+   "box_s": 3600.0
+  },
+  {
+   "step": "e1_append",
+   "status": "nothing_to_do",
+   "utc": "2026-09-25T23:48:59+00:00",
+   "rows": 0,
+   "seconds": 3.16,
+   "refusals": [],
+   "verdict": "PENDING",
+   "funnel": {
+    "corpus_rows": 20798,
+    "no_ticker": 5771,
+    "no_symbol_bar": 8296,
+    "before_calendar": 8864,
+    "pending_future_session": 2088,
+    "no_bar_that_day": 0,
+    "dup": 1672,
+    "kept": 0
+   },
+   "headline": "0 rows appended from 20,798 corpus rows over 6 labelling sources; 2,088 awaiting a session that has not happened yet; 8,864 older than the first bar; 0 PIT violations",
+   "what": "the text-and-return panel append, PIT re-verified",
+   "box_s": 600.0
+  },
+  {
+   "step": "book_cadence",
+   "status": "nothing_to_do",
+   "utc": "2026-09-25T23:49:08+00:00",
+   "rows": 0,
+   "seconds": 8.73,
+   "refusals": [
+    "monthly: {'book_id': 'book:1934ec97aa4b1620', 'stage': 'decide', 'reason': 'the short-interest composite resolved 4133 CRSP permno(s) at 2026-09-21, and the local bars a",
+    "monthly: {'book_id': 'book:4359eba886a8a505', 'stage': 'decide', 'reason': \"no [0]-day insider cluster filed in the 31 day(s) ending 2026-09-21 landed on a name inside t",
+    "monthly: {'book_id': 'book:625c391913d9718c', 'stage': 'decide', 'reason': \"no [4, 5]-day insider cluster filed in the 31 day(s) ending 2026-09-21 landed on a name insid",
+    "monthly: {'book_id': 'book:a82e6e453c14c241', 'stage': 'decide', 'reason': 'the Grinblatt-Han reference price weights past prices by TURNOVER, and turnover needs shares ",
+    "monthly: {'book_id': 'book:c3adfbc0192576c0', 'stage': 'decide', 'reason': 'the Grinblatt-Han reference price weights past prices by TURNOVER, and turnover needs shares "
+   ],
+   "per_cadence": [
+    {
+     "cadence": "30m",
+     "status": "skipped",
+     "reason": "outside US RTH — 2026-09-25 is an XNYS session but 19:48 ET is outside 09:30-16:00"
+    },
+    {
+     "cadence": "daily",
+     "status": "nothing_to_do",
+     "books_considered": 0,
+     "decisions": 0,
+     "marked": 0,
+     "refused": [],
+     "reason": "no holding book declares cadence 'daily'",
+     "bar_date": "2026-09-21"
+    },
+    {
+     "cadence": "weekly",
+     "status": "nothing_to_do",
+     "books_considered": 0,
+     "decisions": 0,
+     "marked": 0,
+     "refused": [],
+     "reason": "no holding book declares cadence 'weekly'",
+     "bar_date": "2026-09-21"
+    },
+    {
+     "cadence": "monthly",
+     "status": "ok",
+     "books_considered": 22,
+     "decisions": 0,
+     "marked": 22,
+     "refused": [
+      {
+       "book_id": "book:1934ec97aa4b1620",
+       "stage": "decide",
+       "reason": "the short-interest composite resolved 4133 CRSP permno(s) at 2026-09-21, and the local bars are keyed on ticker with no permno map for the 2025-26 vintage (CRSP ends 2024-12-31). This book MARKS but does not DECIDE forward until the FINRA forward leg is ingested; its 1990-2024 evidence comes from the replay job, in permno space."
+      },
+      {
+       "book_id": "book:4359eba886a8a505",
+       "stage": "decide",
+       "reason": "no [0]-day insider cluster filed in the 31 day(s) ending 2026-09-21 landed on a name inside the book's universe (0 cluster name(s) found, 2827 in universe). The book holds nothing rather than holding something else."
+      },
+      {
+       "book_id": "book:625c391913d9718c",
+       "stage": "decide",
+       "reason": "no [4, 5]-day insider cluster filed in the 31 day(s) ending 2026-09-21 landed on a name inside the book's universe (0 cluster name(s) found, 2827 in universe). The book holds nothing rather than holding something else."
+      },
+      {
+       "book_id": "book:a82e6e453c14c241",
+       "stage": "decide",
+       "reason": "the Grinblatt-Han reference price weights past prices by TURNOVER, and turnover needs shares outstanding, which the 2025-26 ticker bars do not carry and no offline panel supplies for that vintage. This book MARKS but does not DECIDE forward; its evidence comes from the replay job on CRSP, where `shrout` exists."
+      },
+      {
+       "book_id": "book:c3adfbc0192576c0",
+       "stage": "decide",
+       "reason": "the Grinblatt-Han reference price weights past prices by TURNOVER, and turnover needs shares outstanding, which the 2025-26 ticker bars do not carry and no offline panel supplies for that vintage. This book MARKS but does not DECIDE forward; its evidence comes from the replay job on CRSP, where `shrout` exists."
+      }
+     ],
+     "reason": null,
+     "bar_date": "2026-09-21"
+    },
+    {
+     "cadence": "quarterly",
+     "status": "nothing_to_do",
+     "books_considered": 0,
+     "decisions": 0,
+     "marked": 0,
+     "refused": [],
+     "reason": "no holding book declares cadence 'quarterly'",
+     "bar_date": "2026-09-21"
+    }
+   ],
+   "us_rth": {
+    "inside": false,
+    "session": true,
+    "basis": "exchange_calendars XNYS",
+    "et": "2026-09-25T19:48:59-04:00",
+    "rth_et": "09:30:00-16:00:00",
+    "why": "2026-09-25 is an XNYS session but 19:48 ET is outside 09:30-16:00"
+   },
+   "what": "every paper book due today (30m only inside US RTH)",
+   "box_s": 900.0
+  },
+  {
+   "step": "grade_forecasts",
+   "status": "nothing_to_do",
+   "utc": "2026-09-25T23:49:10+00:00",
+   "rows": 0,
+   "seconds": 1.91,
+   "refusals": [
+    "NO_BAR_FOR_RESOLUTION_DATE: 130 record(s)"
+   ],
+   "totals": {
+    "graded": 17484,
+    "RECORD_LACKS_TARGET": 0,
+    "MECHANISM_HAS_NO_GRADER": 0,
+    "NO_BAR_FOR_RESOLUTION_DATE": 130,
+    "QUARANTINED": 0,
+    "VOID": 6,
+    "not_yet_due": 8528
+   },
+   "bars": {
+    "available": true,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+    "symbols": 3060,
+    "first_bar": "2025-01-02",
+    "last_bar": "2026-09-21",
+    "basis": "`paper_books.load_bars()` — the same local daily panel the paper books are marked against and the agency proposes against. No vendor is called: a step inside the daily pass must not depend on one being up."
+   },
+   "n_records": 26148,
+   "graded_after_this_run": 17484,
+   "n_unpriceable_tickers": 7,
+   "licence": "PRODUCT_EXPERIMENT",
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-26\\grade_forecasts_2026-09-26.json",
+   "headline": "0 newly resolved; 17,484 of 26,148 records now carry an outcome; 130 wait on a bar, 8,528 are not yet due",
+   "what": "every forecast whose window has closed, resolved from the local bars — with a NAMED reason per record that did not",
+   "box_s": 900.0
+  },
+  {
+   "step": "coverage",
+   "status": "ok",
+   "utc": "2026-09-25T23:49:12+00:00",
+   "rows": 4686,
+   "seconds": 1.78,
+   "refusals": [
+    "alpaca_benzinga_news"
+   ],
+   "sources": 27,
+   "regions": [
+    {
+     "region": "GLOBAL",
+     "rows_today": 2013
+    },
+    {
+     "region": "US",
+     "rows_today": 571
+    },
+    {
+     "region": "KR",
+     "rows_today": 375
+    },
+    {
+     "region": "JP",
+     "rows_today": 357
+    },
+    {
+     "region": "CN",
+     "rows_today": 358
+    },
+    {
+     "region": "HK",
+     "rows_today": 341
+    },
+    {
+     "region": "IN",
+     "rows_today": 271
+    },
+    {
+     "region": "EU",
+     "rows_today": 266
+    },
+    {
+     "region": "SG",
+     "rows_today": 134
+    }
+   ],
+   "totals": {
+    "sources": 27,
+    "implemented": 20,
+    "rows_total": 79803,
+    "rows_today": 4686,
+    "red": [
+     "alpaca_benzinga_news"
+    ],
+    "never_pulled": [],
+    "label_sources": [
+     "alpaca_benzinga_news",
+     "gdelt_doc_v2",
+     "sec_edgar_8k_current_atom",
+     "sec_edgar_8k_ex99_body",
+     "yfinance_ticker_news",
+     "finnhub_company_news"
+    ],
+    "mean_resolution_rate": 0.1927
+   },
+   "what": "the per-source coverage card, derived from disk",
+   "box_s": 300.0
+  },
+  {
+   "step": "scoreboard",
+   "status": "ok",
+   "utc": "2026-09-25T23:49:12+00:00",
+   "rows": 1,
+   "seconds": 0.15,
+   "refusals": [
+    "calibration: CANNOT DETERMINE: the newest calibration receipt (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-25\\decision_vs_reality_2026-09-26.json) resolved 0 forecast(s) inside its trailing_24h window, so its Brier is null. A number here would be a Brier over an empty set",
+    "exploit_pnl: CANNOT DETERMINE: no EXPLOIT decision has been SCORED yet — the ledger holds no `SCORED` row for one (0 scored row(s) carried no usable realised return). A decision is scored when its own expiry passes and the grader joins it to close-to-close returns; until then a P&L number would be i",
+    "explore_pnl: CANNOT DETERMINE: no EXPLORE decision has been SCORED yet — the ledger holds no `SCORED` row for one (0 scored row(s) carried no usable realised return). A decision is scored when its own expiry passes and the grader joins it to close-to-close returns; until then a P&L number would be i",
+    "strongest_killed: CANNOT DETERMINE: no non-smoke book replay receipt stamped in the last 7 day(s) carries a kill verdict (FAILED_VARIANT, MECHANISM_REJECTED)"
+   ],
+   "n_fields_cannot_determine": 4,
+   "fields_cannot_determine": [
+    "calibration",
+    "exploit_pnl",
+    "explore_pnl",
+    "strongest_killed"
+   ],
+   "licence": "PRODUCT_EXPERIMENT",
+   "headline": "2026-09-26: 100.0% benchmark / 0.00% exploit / 0.00% explore / 0.0% cash; decisions 3 BUY, 0 WATCH, 2 REFUSED; learning changed capital — no: the split is identical to 2026-09-25 — same names, same authorities, same shares of capital. Nothing learned since then has moved a dollar",
+   "what": "the economic scoreboard, composed from the receipts this pass has just written -- printed FIRST on the receipt",
+   "box_s": 300.0
+  }
+ ],
+ "step_status_counts": {
+  "ok": 5,
+  "nothing_to_do": 3,
+  "refused": 0,
+  "error": 0,
+  "skipped": 0,
+  "timeout": 0
+ },
+ "steps_that_did_not_run": [],
+ "us_rth": {
+  "inside": false,
+  "session": true,
+  "basis": "exchange_calendars XNYS",
+  "et": "2026-09-25T19:48:59-04:00",
+  "rth_et": "09:30:00-16:00:00",
+  "why": "2026-09-25 is an XNYS session but 19:48 ET is outside 09:30-16:00"
+ },
+ "forced": false,
+ "prior_receipts": [],
+ "read_me_first": "One row per DECLARED step, in order, always — the runner walks the step list, not the list of things that worked. `refused` NAMES the missing precondition and is a finding, not a failure; `nothing_to_do` means the step ran correctly and there was nothing, which is not the same as zero; `timeout` means the step outlived `box_s` and its thread was abandoned, and the pass went on — which is why one wedged step can no longer cost a week the way 2026-09-14's did. Nothing here places an order, arms a lane, or asks a model for anything.",
+ "headline": "5 ok / 3 nothing-to-do / 0 refused / 0 error / 0 skipped / 0 timed out over 8 steps"
+}

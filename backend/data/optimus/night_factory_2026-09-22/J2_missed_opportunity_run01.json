@@ -1,0 +1,4605 @@
+{
+ "job": "J2_missed_opportunity",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 1,
+ "run_date": "2026-09-22",
+ "smoke": false,
+ "stage": "pnl",
+ "queue_stage": "screen",
+ "queue_stage_note": "'screen' is this job's place in the night QUEUE. Its STAGE CONTRACT stamp is `pnl`, because it reads the day decision contract \u2014 the latest artefact in the chain \u2014 and no stage may read one produced by a later one.",
+ "question": "Murat, 2026-09-21: every night, find the largest market moves AEGIS did NOT capture, and for each ask whether the information was observable beforehand. Then make that the ONE paid question of the night, asked of BOTH readers on the SAME cases, so the paid model has to earn its cost.",
+ "prompt": {
+  "system_sha256": "439da9823b84a9aaf855b8ffdf3ff15572d4fb244634a1d4db0d9fe61e02719e",
+  "prompt_sha256": "75a2d0f638f12f68ecb28b2148733d4528e37af68ab0d900118b7c21e7d61aa8",
+  "schema_sha256": "6e31b25546e95fe493bb3fa21949b9084966828b911b7d957a34480b2ea979bd",
+  "schema_in_system": true,
+  "required_fields": [
+   "foreseeable",
+   "precursor_class",
+   "which_of_our_sources_would_have_carried_it",
+   "confidence",
+   "one_sentence_mechanism"
+  ],
+  "enum": [
+   "insider_cluster",
+   "revision_breadth",
+   "coverage_change",
+   "news_volume",
+   "typed_event",
+   "search_interest",
+   "short_interest",
+   "supplier_readthrough",
+   "none"
+  ],
+  "temperature": 0.0,
+  "max_tokens": 320
+ },
+ "deepseek_leg": "ARMED",
+ "paid_leg_gate": {
+  "asked_by_flag": false,
+  "AEGIS_NIGHT_PAID_OK_set": true,
+  "DEEPSEEK_API_KEY_present": true,
+  "value_read": false,
+  "run": true,
+  "refused": null,
+  "why_env_not_flag": "scripts.night_factory launches every job with NO per-job CLI arguments, so a paid leg switched only by --backend can never run in the night queue"
+ },
+ "cost_cap": {
+  "hard_max_usd": 4.5,
+  "soft_stop_usd": 4.0,
+  "config_keys": [
+   "MISSED_OPP_MAX_USD",
+   "MISSED_OPP_SOFT_STOP_USD"
+  ],
+  "why_two": "the soft stop is where this job stops asking; the hard cap is the _RunCap backstop for billing that lands after the last read. One number would be either too tight to finish or too loose to bind",
+  "purpose_read": "j2_missed_opportunity",
+  "checked": "BEFORE every submission, never refunded after",
+  "run_level_refusals": [
+   "REFUSED_NO_LEDGER",
+   "REFUSED_UNPRICED_CALL",
+   "REFUSED_CAP_READER_DISAGREES"
+  ]
+ },
+ "precursor_classes": [
+  "insider_cluster",
+  "revision_breadth",
+  "coverage_change",
+  "news_volume",
+  "typed_event",
+  "search_interest",
+  "short_interest",
+  "supplier_readthrough",
+  "none"
+ ],
+ "unadjudicable_classes": [],
+ "screen": {
+  "window_sessions": 21,
+  "subwindow_sessions": 5,
+  "top_k": 30,
+  "benchmark": "SPY",
+  "dollar_vol_floor": 5000000.0,
+  "dollar_vol_floor_why": "without a floor the same sub-dollar tape wins every night and the receipt says nothing about anything we could have traded",
+  "n_symbols_in_panel": 3060,
+  "n_priced_every_session": 3059,
+  "n_over_the_floor": 2766,
+  "n_ranked": 2766,
+  "first_session": "2026-08-12",
+  "last_session": "2026-09-11",
+  "excess_is": "sum of daily (r_symbol - r_SPY) over the sub-window"
+ },
+ "contracts": {
+  "files": [],
+  "days_with_no_contract": [
+   "2026-08-12",
+   "2026-08-13",
+   "2026-08-14",
+   "2026-08-17",
+   "2026-08-18",
+   "2026-08-19",
+   "2026-08-20",
+   "2026-08-21",
+   "2026-08-24",
+   "2026-08-25",
+   "2026-08-26",
+   "2026-08-27",
+   "2026-08-28",
+   "2026-08-31",
+   "2026-09-01",
+   "2026-09-02",
+   "2026-09-03",
+   "2026-09-04",
+   "2026-09-08",
+   "2026-09-09",
+   "2026-09-10",
+   "2026-09-11"
+  ],
+  "ledger_rows_in_window": 0,
+  "ledger_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\ledger.jsonl",
+  "n_names_with_a_row": 0
+ },
+ "paper_holdings": {
+  "state": "NOT_HELD",
+  "detail": "backend.services.paper_books exposes no cheap holdings reader; this column is NOT_HELD rather than an empty set pretending we hold nothing",
+  "n_symbols": 0
+ },
+ "news_panel": {
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+  "present": true,
+  "n_rows": 340466
+ },
+ "masking": {
+  "function": "scripts.r7_news_representation.mask_company over tokenise \u2014 the SAME function night_x_anonymisation_gap and night_scenario_gym mask with",
+  "name_token_source": "crsp__stocknames_v2 (r7.company_name_map)",
+  "n_tickers_with_tokens": 21107,
+  "dates_shifted": false,
+  "dates_why": "the question is about a DATED window; the gym shifts dates only because its cases are fiction"
+ },
+ "ledger": {
+  "ok": true,
+  "reason": null,
+  "base": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_calls.jsonl",
+  "files": [
+   "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_calls_2026-08.jsonl",
+   "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_calls_2026-09.jsonl"
+  ],
+  "n_files": 2,
+  "checked": "the ledger STREAM and the directory it appends into, not the pre-rotation monolith -- that file is legitimately gone since 2026-09-12"
+ },
+ "top_missed": [
+  {
+   "ticker": "MRNA",
+   "window_start": "2026-08-13",
+   "window_end": "2026-08-19",
+   "excess_pct": 176.3317,
+   "abs_excess_pct": 176.3317,
+   "direction": "UP",
+   "median_dollar_vol": 2337534696.0,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-13; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 1 pre-move observation(s) for MRNA; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 1 pre-move observation(s) for MRNA; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "3 pre-move row(s) in 30 days against a base rate of 17.6; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 3,
+     "base_rate": 17.571,
+     "n_rows_total": 352
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-13 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 3,
+    "masked_tokens": 8,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "yes",
+     "precursor_class": "typed_event",
+     "which_of_our_sources_would_have_carried_it": [
+      "typed_event"
+     ],
+     "confidence": 0.85,
+     "one_sentence_mechanism": "approval of a new flu vaccine and advancement of an ebola vaccine into human trials suggest positive developments.",
+     "reader_note": "",
+     "hit": false,
+     "why": "said typed_event; PRESENT set is []",
+     "usage": {
+      "tokens_in": 690,
+      "tokens_out": 78,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "yes",
+     "precursor_class": "typed_event",
+     "which_of_our_sources_would_have_carried_it": [
+      "typed_event",
+      "news_volume"
+     ],
+     "confidence": 0.62,
+     "one_sentence_mechanism": "Two positive typed events (Ebola Phase 1 start, FDA flu vaccine approval) days before the window primed a sharp upward move.",
+     "reader_note": "Earnings beat and reaffirmed guidance added to the setup.",
+     "hit": false,
+     "why": "said typed_event; PRESENT set is []",
+     "usage": {
+      "tokens_in": 668,
+      "tokens_out": 107,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "0559b59bdb35"
+  },
+  {
+   "ticker": "DFNS",
+   "window_start": "2026-08-18",
+   "window_end": "2026-08-24",
+   "excess_pct": -83.7163,
+   "abs_excess_pct": 83.7163,
+   "direction": "DOWN",
+   "median_dollar_vol": 7925792.0,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "the panel carries no Form 4 row for this name",
+     "n_filers": 0,
+     "n_rows": 0
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for DFNS; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for DFNS; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "PRESENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "32 pre-move row(s) in 30 days against a base rate of 9.1; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 32,
+     "base_rate": 9.137,
+     "n_rows_total": 60
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-18 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [
+    "news_volume"
+   ],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 12,
+    "masked_tokens": 5,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.0,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": false,
+     "why": "said none; PRESENT set is ['news_volume']",
+     "usage": {
+      "tokens_in": 1574,
+      "tokens_out": 53,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.55,
+     "one_sentence_mechanism": "The prior reports show only a speculative micro-cap spike and a bearish short report, with no observable precursor that would have signaled the sharp decline.",
+     "reader_note": "Only a bearish short-seller report and search-interest spike appear; neither reliably predicts the drop.",
+     "hit": false,
+     "why": "said none; PRESENT set is ['news_volume']",
+     "usage": {
+      "tokens_in": 1459,
+      "tokens_out": 107,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "6098e4d818d3"
+  },
+  {
+   "ticker": "CAPR",
+   "window_start": "2026-08-13",
+   "window_end": "2026-08-19",
+   "excess_pct": 78.6488,
+   "abs_excess_pct": 78.6488,
+   "direction": "UP",
+   "median_dollar_vol": 53924017.3,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-13; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for CAPR; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for CAPR; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "PRESENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "16 pre-move row(s) in 30 days against a base rate of 4.9; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 16,
+     "base_rate": 4.942,
+     "n_rows_total": 99
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-13 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [
+    "news_volume"
+   ],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 12,
+    "masked_tokens": 8,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "yes",
+     "precursor_class": "typed_event",
+     "which_of_our_sources_would_have_carried_it": [
+      "typed_event"
+     ],
+     "confidence": 0.85,
+     "one_sentence_mechanism": "FDA panel rejected [co]\u2019s deramiocel data, leading to a sharp stock decline.",
+     "reader_note": "",
+     "hit": false,
+     "why": "said typed_event; PRESENT set is ['news_volume']",
+     "usage": {
+      "tokens_in": 1468,
+      "tokens_out": 79,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.62,
+     "one_sentence_mechanism": "The prior reports describe an FDA panel rejection and fraud allegations, which would predict further weakness, not a sharp rebound five sessions later.",
+     "reader_note": "No listed precursor source captures a post-panel reversal.",
+     "hit": false,
+     "why": "said none; PRESENT set is ['news_volume']",
+     "usage": {
+      "tokens_in": 1360,
+      "tokens_out": 95,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "f16168f26ddb"
+  },
+  {
+   "ticker": "AMLX",
+   "window_start": "2026-08-17",
+   "window_end": "2026-08-21",
+   "excess_pct": 74.4454,
+   "abs_excess_pct": 74.4454,
+   "direction": "UP",
+   "median_dollar_vol": 59307648.7,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-17; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for AMLX; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for AMLX; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "0 pre-move row(s) in 30 days against a base rate of 1.6; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 0,
+     "base_rate": 1.617,
+     "n_rows_total": 29
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-17 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 0,
+    "masked_tokens": 0,
+    "refused": "NO_PRE_MOVE_ROWS"
+   },
+   "case_id": null,
+   "readers": {
+    "local_gguf": null,
+    "deepseek": null,
+    "why": "no pre-move corpus row, so neither reader was asked"
+   }
+  },
+  {
+   "ticker": "ARCT",
+   "window_start": "2026-08-19",
+   "window_end": "2026-08-25",
+   "excess_pct": 68.987,
+   "abs_excess_pct": 68.987,
+   "direction": "UP",
+   "median_dollar_vol": 15659098.0,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-19; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for ARCT; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for ARCT; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "0 pre-move row(s) in 30 days against a base rate of 2.3; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 0,
+     "base_rate": 2.304,
+     "n_rows_total": 44
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-19 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 0,
+    "masked_tokens": 0,
+    "refused": "NO_PRE_MOVE_ROWS"
+   },
+   "case_id": null,
+   "readers": {
+    "local_gguf": null,
+    "deepseek": null,
+    "why": "no pre-move corpus row, so neither reader was asked"
+   }
+  },
+  {
+   "ticker": "ALMS",
+   "window_start": "2026-08-26",
+   "window_end": "2026-09-01",
+   "excess_pct": -65.3219,
+   "abs_excess_pct": 65.3219,
+   "direction": "DOWN",
+   "median_dollar_vol": 22548805.3,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-26; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for ALMS; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for ALMS; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "1 pre-move row(s) in 30 days against a base rate of 1.8; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 1,
+     "base_rate": 1.783,
+     "n_rows_total": 34
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-26 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 1,
+    "masked_tokens": 2,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.95,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 558,
+      "tokens_out": 54,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.7,
+     "one_sentence_mechanism": "A single positive efficacy report ahead of an FDA filing carries no observable precursor of a sharp five-day decline.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 553,
+      "tokens_out": 79,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "fb5468aaf999"
+  },
+  {
+   "ticker": "PURR",
+   "window_start": "2026-08-19",
+   "window_end": "2026-08-25",
+   "excess_pct": 55.0478,
+   "abs_excess_pct": 55.0478,
+   "direction": "UP",
+   "median_dollar_vol": 277105744.2,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "the panel carries no Form 4 row for this name",
+     "n_filers": 0,
+     "n_rows": 0
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for PURR; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for PURR; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "15 pre-move row(s) in 30 days against a base rate of 9.4; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 15,
+     "base_rate": 9.398,
+     "n_rows_total": 78
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-19 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 12,
+    "masked_tokens": 3,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "yes",
+     "precursor_class": "typed_event",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.85,
+     "one_sentence_mechanism": "stan druckenmiller's $23 million bet in hyperliquid strategies indirectly exposed him to hype, signaling a potential bullish move.",
+     "reader_note": "",
+     "hit": false,
+     "why": "said typed_event; PRESENT set is []",
+     "usage": {
+      "tokens_in": 1204,
+      "tokens_out": 88,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "yes",
+     "precursor_class": "news_volume",
+     "which_of_our_sources_would_have_carried_it": [
+      "news_volume",
+      "coverage_change"
+     ],
+     "confidence": 0.42,
+     "one_sentence_mechanism": "A dense cluster of bullish HYPE-specific headlines and a high-profile Druckenmiller stake disclosure just before the window raised the odds of a sharp upward move.",
+     "reader_note": "Signals are mixed: JPMorgan caution and AI-rotation warnings cut the other way.",
+     "hit": false,
+     "why": "said news_volume; PRESENT set is []",
+     "usage": {
+      "tokens_in": 1154,
+      "tokens_out": 120,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "abf8c9fcfbb3"
+  },
+  {
+   "ticker": "ASST",
+   "window_start": "2026-08-19",
+   "window_end": "2026-08-25",
+   "excess_pct": 54.4363,
+   "abs_excess_pct": 54.4363,
+   "direction": "UP",
+   "median_dollar_vol": 234057300.6,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-19; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for ASST; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for ASST; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "1 pre-move row(s) in 30 days against a base rate of 5.3; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 1,
+     "base_rate": 5.276,
+     "n_rows_total": 102
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-19 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 1,
+    "masked_tokens": 1,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "hit": null,
+     "refused": "REFUSED_SCHEMA",
+     "why": "precursor_class: 'whale_activity' is not one of the nine"
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.7,
+     "one_sentence_mechanism": "A generic whale-activity alert two days prior carries no directional signal about a sharp five-day outperformance.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 566,
+      "tokens_out": 79,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "d8fbb3db4677"
+  },
+  {
+   "ticker": "EYPT",
+   "window_start": "2026-08-17",
+   "window_end": "2026-08-21",
+   "excess_pct": -53.8749,
+   "abs_excess_pct": 53.8749,
+   "direction": "DOWN",
+   "median_dollar_vol": 19941949.7,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-17; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for EYPT; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for EYPT; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "1 pre-move row(s) in 30 days against a base rate of 1.7; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 1,
+     "base_rate": 1.696,
+     "n_rows_total": 32
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-17 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 1,
+    "masked_tokens": 1,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.0,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 628,
+      "tokens_out": 53,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "yes",
+     "precursor_class": "revision_breadth",
+     "which_of_our_sources_would_have_carried_it": [
+      "revision_breadth",
+      "coverage_change"
+     ],
+     "confidence": 0.55,
+     "one_sentence_mechanism": "A broker slashed the price target 39% just before the window, signaling negative analyst revisions that preceded the sharp decline.",
+     "reader_note": "Only one target cut is cited; breadth is thin.",
+     "hit": false,
+     "why": "said revision_breadth; PRESENT set is []",
+     "usage": {
+      "tokens_in": 621,
+      "tokens_out": 109,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "418e88e14f12"
+  },
+  {
+   "ticker": "ACVA",
+   "window_start": "2026-09-04",
+   "window_end": "2026-09-11",
+   "excess_pct": 53.0079,
+   "abs_excess_pct": 53.0079,
+   "direction": "UP",
+   "median_dollar_vol": 24399948.6,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-09-04; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 1 pre-move observation(s) for ACVA; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 1 pre-move observation(s) for ACVA; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "3 pre-move row(s) in 30 days against a base rate of 2.0; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 3,
+     "base_rate": 2.013,
+     "n_rows_total": 40
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-09-04 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 3,
+    "masked_tokens": 0,
+    "any_mask": false,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.0,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 758,
+      "tokens_out": 53,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.7,
+     "one_sentence_mechanism": "The only pre-move reports are generic pre-market movers roundups about unrelated tickers, carrying no observable precursor for this specific sharp upward move.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 738,
+      "tokens_out": 88,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "6d6e13d2ca56"
+  },
+  {
+   "ticker": "MRVI",
+   "window_start": "2026-08-19",
+   "window_end": "2026-08-25",
+   "excess_pct": 49.3522,
+   "abs_excess_pct": 49.3522,
+   "direction": "UP",
+   "median_dollar_vol": 21894438.4,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-19; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for MRVI; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for MRVI; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "0 pre-move row(s) in 30 days against a base rate of 1.0; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 0,
+     "base_rate": 0.974,
+     "n_rows_total": 19
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-19 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 0,
+    "masked_tokens": 0,
+    "refused": "NO_PRE_MOVE_ROWS"
+   },
+   "case_id": null,
+   "readers": {
+    "local_gguf": null,
+    "deepseek": null,
+    "why": "no pre-move corpus row, so neither reader was asked"
+   }
+  },
+  {
+   "ticker": "HTFL",
+   "window_start": "2026-08-14",
+   "window_end": "2026-08-20",
+   "excess_pct": 48.6391,
+   "abs_excess_pct": 48.6391,
+   "direction": "UP",
+   "median_dollar_vol": 85938411.6,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-14; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for HTFL; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for HTFL; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "1 pre-move row(s) in 30 days against a base rate of 1.5; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 1,
+     "base_rate": 1.524,
+     "n_rows_total": 19
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-14 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 1,
+    "masked_tokens": 1,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "yes",
+     "precursor_class": "coverage_change",
+     "which_of_our_sources_would_have_carried_it": [
+      "coverage_change"
+     ],
+     "confidence": 0.85,
+     "one_sentence_mechanism": "positive analyst coverage initiation likely boosted investor sentiment and buying interest.",
+     "reader_note": "",
+     "hit": false,
+     "why": "said coverage_change; PRESENT set is []",
+     "usage": {
+      "tokens_in": 571,
+      "tokens_out": 70,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "yes",
+     "precursor_class": "coverage_change",
+     "which_of_our_sources_would_have_carried_it": [
+      "coverage_change"
+     ],
+     "confidence": 0.55,
+     "one_sentence_mechanism": "A fresh bullish analyst initiation days earlier can draw buyers and lift the stock in the following sessions.",
+     "reader_note": "Only one pre-move report; thin evidence.",
+     "hit": false,
+     "why": "said coverage_change; PRESENT set is []",
+     "usage": {
+      "tokens_in": 566,
+      "tokens_out": 93,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "77297d033eca"
+  },
+  {
+   "ticker": "ETON",
+   "window_start": "2026-08-14",
+   "window_end": "2026-08-20",
+   "excess_pct": 48.2432,
+   "abs_excess_pct": 48.2432,
+   "direction": "UP",
+   "median_dollar_vol": 33989590.9,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-14; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for ETON; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for ETON; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "0 pre-move row(s) in 30 days against a base rate of 1.3; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 0,
+     "base_rate": 1.313,
+     "n_rows_total": 26
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-14 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 0,
+    "masked_tokens": 0,
+    "refused": "NO_PRE_MOVE_ROWS"
+   },
+   "case_id": null,
+   "readers": {
+    "local_gguf": null,
+    "deepseek": null,
+    "why": "no pre-move corpus row, so neither reader was asked"
+   }
+  },
+  {
+   "ticker": "TTAN",
+   "window_start": "2026-09-04",
+   "window_end": "2026-09-11",
+   "excess_pct": -47.4672,
+   "abs_excess_pct": 47.4672,
+   "direction": "DOWN",
+   "median_dollar_vol": 93447486.4,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-09-04; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for TTAN; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for TTAN; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "1 pre-move row(s) in 30 days against a base rate of 2.7; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 1,
+     "base_rate": 2.732,
+     "n_rows_total": 53
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-09-04 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 1,
+    "masked_tokens": 0,
+    "any_mask": false,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.0,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 572,
+      "tokens_out": 53,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.7,
+     "one_sentence_mechanism": "The only pre-move report is a generic analyst-roundup piece with no company-specific signal, so nothing observable beforehand carried the sharp decline.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 565,
+      "tokens_out": 86,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "659158f0615f"
+  },
+  {
+   "ticker": "RARE",
+   "window_start": "2026-09-03",
+   "window_end": "2026-09-10",
+   "excess_pct": -45.9901,
+   "abs_excess_pct": 45.9901,
+   "direction": "DOWN",
+   "median_dollar_vol": 48477953.4,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-09-03; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for RARE; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for RARE; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "4 pre-move row(s) in 30 days against a base rate of 3.4; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 4,
+     "base_rate": 3.372,
+     "n_rows_total": 67
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-09-03 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 4,
+    "masked_tokens": 2,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.95,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 777,
+      "tokens_out": 54,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.6,
+     "one_sentence_mechanism": "The prior reports show only a positive FDA approval and unrelated analyst/whale notes, with no observable precursor pointing to a sharp decline.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 752,
+      "tokens_out": 85,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "8c5697e0be31"
+  },
+  {
+   "ticker": "ARX",
+   "window_start": "2026-08-13",
+   "window_end": "2026-08-19",
+   "excess_pct": 43.995,
+   "abs_excess_pct": 43.995,
+   "direction": "UP",
+   "median_dollar_vol": 34751349.3,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-13; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for ARX; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for ARX; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "1 pre-move row(s) in 30 days against a base rate of 1.3; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 1,
+     "base_rate": 1.321,
+     "n_rows_total": 17
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-13 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 1,
+    "masked_tokens": 0,
+    "any_mask": false,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "yes",
+     "precursor_class": "coverage_change",
+     "which_of_our_sources_would_have_carried_it": [
+      "coverage_change"
+     ],
+     "confidence": 0.85,
+     "one_sentence_mechanism": "cathie wood's increased coverage and buying of x-energy stock likely boosted investor sentiment.",
+     "reader_note": "",
+     "hit": false,
+     "why": "said coverage_change; PRESENT set is []",
+     "usage": {
+      "tokens_in": 547,
+      "tokens_out": 76,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.7,
+     "one_sentence_mechanism": "A single celebrity-investor accumulation story is not a systematic precursor and does not predict a sharp five-day move.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 542,
+      "tokens_out": 81,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "02b00a566127"
+  },
+  {
+   "ticker": "REAX",
+   "window_start": "2026-08-26",
+   "window_end": "2026-09-01",
+   "excess_pct": -42.6169,
+   "abs_excess_pct": 42.6169,
+   "direction": "DOWN",
+   "median_dollar_vol": 17290387.6,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "the panel carries no Form 4 row for this name",
+     "n_filers": 0,
+     "n_rows": 0
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for REAX; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for REAX; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "2 pre-move row(s) in 30 days against a base rate of 0.8; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 2,
+     "base_rate": 0.836,
+     "n_rows_total": 15
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-26 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 2,
+    "masked_tokens": 2,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.95,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 661,
+      "tokens_out": 54,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.7,
+     "one_sentence_mechanism": "The only pre-move reports were a buyback announcement and a general market preview, neither of which signals a sharp decline.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 643,
+      "tokens_out": 83,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "4c52a5cebda8"
+  },
+  {
+   "ticker": "WEAV",
+   "window_start": "2026-08-13",
+   "window_end": "2026-08-19",
+   "excess_pct": 42.5977,
+   "abs_excess_pct": 42.5977,
+   "direction": "UP",
+   "median_dollar_vol": 20334404.6,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-13; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for WEAV; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for WEAV; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "2 pre-move row(s) in 30 days against a base rate of 1.3; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 2,
+     "base_rate": 1.266,
+     "n_rows_total": 23
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-13 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 2,
+    "masked_tokens": 0,
+    "any_mask": false,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.0,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 683,
+      "tokens_out": 53,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.7,
+     "one_sentence_mechanism": "The only pre-move reports are generic after-market and intraday gainers lists about unrelated tickers, carrying no observable precursor for this specific move.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 663,
+      "tokens_out": 88,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "8a10d149c23e"
+  },
+  {
+   "ticker": "AVAH",
+   "window_start": "2026-08-13",
+   "window_end": "2026-08-19",
+   "excess_pct": 41.0263,
+   "abs_excess_pct": 41.0263,
+   "direction": "UP",
+   "median_dollar_vol": 43281107.2,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-13; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for AVAH; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for AVAH; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "0 pre-move row(s) in 30 days against a base rate of 1.6; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 0,
+     "base_rate": 1.597,
+     "n_rows_total": 28
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-13 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 0,
+    "masked_tokens": 0,
+    "refused": "NO_PRE_MOVE_ROWS"
+   },
+   "case_id": null,
+   "readers": {
+    "local_gguf": null,
+    "deepseek": null,
+    "why": "no pre-move corpus row, so neither reader was asked"
+   }
+  },
+  {
+   "ticker": "ANF",
+   "window_start": "2026-08-20",
+   "window_end": "2026-08-26",
+   "excess_pct": 39.4431,
+   "abs_excess_pct": 39.4431,
+   "direction": "UP",
+   "median_dollar_vol": 214753714.7,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-20; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for ANF; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for ANF; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "63 pre-move row(s) in 30 days against a base rate of 42.1; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 63,
+     "base_rate": 42.06,
+     "n_rows_total": 844
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-20 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 12,
+    "masked_tokens": 46,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.0,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 1569,
+      "tokens_out": 53,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "yes",
+     "precursor_class": "coverage_change",
+     "which_of_our_sources_would_have_carried_it": [
+      "coverage_change",
+      "news_volume"
+     ],
+     "confidence": 0.55,
+     "one_sentence_mechanism": "A cluster of analyst actions and news around 8/18-8/19, including a downgrade and a raised price target, signaled shifting sentiment before the sharp move up.",
+     "reader_note": "Mixed signals; downgrade and insider sale cut against the bullish read.",
+     "hit": false,
+     "why": "said coverage_change; PRESENT set is []",
+     "usage": {
+      "tokens_in": 1493,
+      "tokens_out": 119,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "5c61120fb520"
+  },
+  {
+   "ticker": "TEM",
+   "window_start": "2026-08-17",
+   "window_end": "2026-08-21",
+   "excess_pct": 38.0383,
+   "abs_excess_pct": 38.0383,
+   "direction": "UP",
+   "median_dollar_vol": 358142425.4,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-17; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for TEM; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for TEM; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "12 pre-move row(s) in 30 days against a base rate of 12.0; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 12,
+     "base_rate": 11.96,
+     "n_rows_total": 238
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-17 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 12,
+    "masked_tokens": 14,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "yes",
+     "precursor_class": "typed_event",
+     "which_of_our_sources_would_have_carried_it": [
+      "typed_event"
+     ],
+     "confidence": 0.85,
+     "one_sentence_mechanism": "the acquisition of Personalis for $1.5 billion was a significant event that could drive positive sentiment.",
+     "reader_note": "",
+     "hit": false,
+     "why": "said typed_event; PRESENT set is []",
+     "usage": {
+      "tokens_in": 1234,
+      "tokens_out": 79,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.55,
+     "one_sentence_mechanism": "The pre-move reports show only post-earnings weakness and a peer-driven one-day bounce, with no observable precursor that would have signaled a sharp 5-day outperformance.",
+     "reader_note": "Only generic news/whale items existed; no revision, coverage, insider, or short-interest signal.",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 1175,
+      "tokens_out": 114,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "0fc44bc0913b"
+  },
+  {
+   "ticker": "AEHR",
+   "window_start": "2026-08-18",
+   "window_end": "2026-08-24",
+   "excess_pct": -37.6255,
+   "abs_excess_pct": 37.6255,
+   "direction": "DOWN",
+   "median_dollar_vol": 311937328.8,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-18; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for AEHR; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for AEHR; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "9 pre-move row(s) in 30 days against a base rate of 6.4; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 9,
+     "base_rate": 6.436,
+     "n_rows_total": 130
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-18 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 9,
+    "masked_tokens": 14,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.0,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 1214,
+      "tokens_out": 53,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.6,
+     "one_sentence_mechanism": "The only pre-move item was a positive silicon photonics order that had already lifted shares, so no observable precursor signaled the subsequent sharp decline.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 1148,
+      "tokens_out": 87,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "8746e1bd56f7"
+  },
+  {
+   "ticker": "FDMT",
+   "window_start": "2026-08-13",
+   "window_end": "2026-08-19",
+   "excess_pct": 37.6015,
+   "abs_excess_pct": 37.6015,
+   "direction": "UP",
+   "median_dollar_vol": 11308802.8,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-13; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for FDMT; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for FDMT; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "1 pre-move row(s) in 30 days against a base rate of 1.1; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 1,
+     "base_rate": 1.085,
+     "n_rows_total": 20
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-13 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 1,
+    "masked_tokens": 2,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "yes",
+     "precursor_class": "typed_event",
+     "which_of_our_sources_would_have_carried_it": [
+      "typed_event"
+     ],
+     "confidence": 0.85,
+     "one_sentence_mechanism": "positive phase 2b data for a novel eye therapy could boost investor interest and expectations.",
+     "reader_note": "",
+     "hit": false,
+     "why": "said typed_event; PRESENT set is []",
+     "usage": {
+      "tokens_in": 570,
+      "tokens_out": 76,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.7,
+     "one_sentence_mechanism": "The only prior report was positive Phase 2b data three weeks earlier, which does not explain a sharp move starting 2026-08-13.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 568,
+      "tokens_out": 89,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "c63bf4de6c4c"
+  },
+  {
+   "ticker": "CABO",
+   "window_start": "2026-08-17",
+   "window_end": "2026-08-21",
+   "excess_pct": -37.5018,
+   "abs_excess_pct": 37.5018,
+   "direction": "DOWN",
+   "median_dollar_vol": 7677865.3,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-17; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for CABO; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for CABO; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "2 pre-move row(s) in 30 days against a base rate of 1.1; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 2,
+     "base_rate": 1.127,
+     "n_rows_total": 21
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-17 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 2,
+    "masked_tokens": 0,
+    "any_mask": false,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.0,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 685,
+      "tokens_out": 53,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.6,
+     "one_sentence_mechanism": "The only prior reports describe a sharp post-earnings rally, which carries no observable signal of the subsequent reversal.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 666,
+      "tokens_out": 80,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "168ed93282fb"
+  },
+  {
+   "ticker": "CXM",
+   "window_start": "2026-09-01",
+   "window_end": "2026-09-08",
+   "excess_pct": -37.4471,
+   "abs_excess_pct": 37.4471,
+   "direction": "DOWN",
+   "median_dollar_vol": 21368601.9,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-09-01; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for CXM; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for CXM; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "1 pre-move row(s) in 30 days against a base rate of 1.4; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 1,
+     "base_rate": 1.421,
+     "n_rows_total": 27
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-09-01 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 1,
+    "masked_tokens": 0,
+    "any_mask": false,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "yes",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.85,
+     "one_sentence_mechanism": "The RSI warning for tech stocks, including [co], could have signaled potential sell-off.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 574,
+      "tokens_out": 73,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.7,
+     "one_sentence_mechanism": "A generic momentum-warning listicle naming no specific catalyst does not carry a sharp idiosyncratic decline.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 568,
+      "tokens_out": 78,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "95f62ec216b9"
+  },
+  {
+   "ticker": "DKS",
+   "window_start": "2026-08-19",
+   "window_end": "2026-08-25",
+   "excess_pct": -36.8125,
+   "abs_excess_pct": 36.8125,
+   "direction": "DOWN",
+   "median_dollar_vol": 422116055.0,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-19; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for DKS; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for DKS; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "5 pre-move row(s) in 30 days against a base rate of 7.3; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 5,
+     "base_rate": 7.323,
+     "n_rows_total": 145
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-19 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 5,
+    "masked_tokens": 5,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.0,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 801,
+      "tokens_out": 53,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.6,
+     "one_sentence_mechanism": "The pre-move reports contain only generic tariff and analyst commentary with no observable precursor tied to the sharp decline.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 782,
+      "tokens_out": 80,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "563f61e478a7"
+  },
+  {
+   "ticker": "CRML",
+   "window_start": "2026-08-21",
+   "window_end": "2026-08-27",
+   "excess_pct": 35.9924,
+   "abs_excess_pct": 35.9924,
+   "direction": "UP",
+   "median_dollar_vol": 40436782.0,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-21; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for CRML; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for CRML; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "1 pre-move row(s) in 30 days against a base rate of 5.4; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 1,
+     "base_rate": 5.45,
+     "n_rows_total": 107
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-21 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 1,
+    "masked_tokens": 0,
+    "any_mask": false,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "yes",
+     "precursor_class": "news_volume",
+     "which_of_our_sources_would_have_carried_it": [
+      "news_volume"
+     ],
+     "confidence": 0.85,
+     "one_sentence_mechanism": "positive news on critical metal shares due to a finalist bid for a rare earth project likely boosted investor sentiment.",
+     "reader_note": "",
+     "hit": false,
+     "why": "said news_volume; PRESENT set is []",
+     "usage": {
+      "tokens_in": 552,
+      "tokens_out": 79,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.7,
+     "one_sentence_mechanism": "The only prior report was a sector roundup noting a bid finalist position, which does not signal the sharp five-day outperformance that followed.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 553,
+      "tokens_out": 87,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "4208d0bf1beb"
+  },
+  {
+   "ticker": "IOVA",
+   "window_start": "2026-08-14",
+   "window_end": "2026-08-20",
+   "excess_pct": 35.9364,
+   "abs_excess_pct": 35.9364,
+   "direction": "UP",
+   "median_dollar_vol": 99775828.5,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-14; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for IOVA; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for IOVA; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "5 pre-move row(s) in 30 days against a base rate of 2.9; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 5,
+     "base_rate": 2.857,
+     "n_rows_total": 56
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-14 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 5,
+    "masked_tokens": 5,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "yes",
+     "precursor_class": "typed_event",
+     "which_of_our_sources_would_have_carried_it": [
+      "typed_event"
+     ],
+     "confidence": 0.85,
+     "one_sentence_mechanism": "better-than-expected q2 results led to a sharp increase in [co] stock.",
+     "reader_note": "",
+     "hit": false,
+     "why": "said typed_event; PRESENT set is []",
+     "usage": {
+      "tokens_in": 906,
+      "tokens_out": 76,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.55,
+     "one_sentence_mechanism": "The sharp move began after the pre-period reports; nothing observable beforehand signaled the upcoming surge.",
+     "reader_note": "Only post-move coverage describes the catalyst.",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 870,
+      "tokens_out": 85,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "3605ef52ed49"
+  },
+  {
+   "ticker": "CRDO",
+   "window_start": "2026-08-28",
+   "window_end": "2026-09-03",
+   "excess_pct": -35.5375,
+   "abs_excess_pct": 35.5375,
+   "direction": "DOWN",
+   "median_dollar_vol": 1125687981.5,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "0 distinct open-market buyer(s) filed in the 30 days before 2026-08-28; a cluster is >= 2",
+     "n_filers": 0,
+     "n_rows": 0,
+     "dollars": 0.0,
+     "anchor": "observed_at_utc (the FILING, not the trade)"
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for CRDO; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for CRDO; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "39 pre-move row(s) in 30 days against a base rate of 46.7; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 39,
+     "base_rate": 46.667,
+     "n_rows_total": 938
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-08-28 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 12,
+    "masked_tokens": 3,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.0,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 1267,
+      "tokens_out": 53,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "yes",
+     "precursor_class": "coverage_change",
+     "which_of_our_sources_would_have_carried_it": [
+      "coverage_change",
+      "news_volume"
+     ],
+     "confidence": 0.55,
+     "one_sentence_mechanism": "A fresh sell initiation on valuation and customer-concentration risk, followed by a downgrade to hold, signaled analyst skepticism ahead of the Sept 1 earnings test.",
+     "reader_note": "Reports show a sell initiation then a hold downgrade before the print.",
+     "hit": false,
+     "why": "said coverage_change; PRESENT set is []",
+     "usage": {
+      "tokens_in": 1186,
+      "tokens_out": 115,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "60bf98936d4d"
+  },
+  {
+   "ticker": "NUAI",
+   "window_start": "2026-09-01",
+   "window_end": "2026-09-08",
+   "excess_pct": 35.5054,
+   "abs_excess_pct": 35.5054,
+   "direction": "UP",
+   "median_dollar_vol": 28539317.1,
+   "aegis": {
+    "direction": "absent",
+    "in_universe": false,
+    "held_in_paper_books": false,
+    "summary": "not in the universe \u2014 no day contract and no ledger row in this window names it",
+    "n_rows": 0,
+    "rows": []
+   },
+   "precursors": {
+    "insider_cluster": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+     "detail": "the panel carries no Form 4 row for this name",
+     "n_filers": 0,
+     "n_rows": 0
+    },
+    "revision_breadth": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for NUAI; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "coverage_change": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\analyst_snapshots.jsonl",
+     "detail": "the ledger holds 0 pre-move observation(s) for NUAI; a revision needs two. NOT_HELD, not ABSENT: 'we never looked' and 'we looked and it was flat' are different answers"
+    },
+    "news_volume": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+     "detail": "1 pre-move row(s) in 30 days against a base rate of 2.7; a burst is >= 3 rows AND >= 2.0x the base",
+     "n_rows": 1,
+     "base_rate": 2.703,
+     "n_rows_total": 31
+    },
+    "typed_event": {
+     "state": "ABSENT",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+     "detail": "0 non-negligible typed event(s) dated in the 30 days before 2026-09-01 (52300 rows scanned)",
+     "events": [],
+     "n_events": 0
+    },
+    "search_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trends_sentiment_cache.json",
+     "detail": "no search-interest cache on this checkout; `trends_sentiment.get_ticker_attention` is a LIVE fetch and this job makes no network call"
+    },
+    "short_interest": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\short_interest_v1.parquet",
+     "detail": "no short-interest table on this checkout"
+    },
+    "supplier_readthrough": {
+     "state": "NOT_HELD",
+     "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\supply_chain\\supplier_customer_edges.parquet",
+     "detail": "no supplier/customer edge table on this checkout. It is in the reader's vocabulary anyway: a reader naming a class we cannot adjudicate is graded a MISS, and the receipt says so"
+    }
+   },
+   "precursors_present": [],
+   "precursors_not_held": [
+    "coverage_change",
+    "revision_breadth",
+    "search_interest",
+    "short_interest",
+    "supplier_readthrough"
+   ],
+   "digest": {
+    "n_rows": 1,
+    "masked_tokens": 1,
+    "any_mask": true,
+    "refused": null
+   },
+   "readers": {
+    "local_gguf": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.0,
+     "one_sentence_mechanism": "",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 573,
+      "tokens_out": 53,
+      "model": "local"
+     }
+    },
+    "deepseek": {
+     "foreseeable": "no",
+     "precursor_class": "none",
+     "which_of_our_sources_would_have_carried_it": [],
+     "confidence": 0.7,
+     "one_sentence_mechanism": "The only prior report is a routine earnings call transcript with no observable precursor signal pointing to a sharp five-day outperformance.",
+     "reader_note": "",
+     "hit": true,
+     "why": "said none; PRESENT set is []",
+     "usage": {
+      "tokens_in": 569,
+      "tokens_out": 82,
+      "model": "deepseek-chat"
+     }
+    }
+   },
+   "case_id": "41321e2bf421"
+  }
+ ],
+ "paired": {
+  "local_gguf": {
+   "n_graded": 24,
+   "n_hit": 14,
+   "hit_rate": 0.5833,
+   "brier": {
+    "brier": 0.688854,
+    "n": 24,
+    "hit_rate": 0.5833,
+    "brier_of_always_predicting_the_base_rate": 0.243056,
+    "note": "a Brier above the base-rate column means the stated confidence is worse than a constant"
+   }
+  },
+  "deepseek": {
+   "n_graded": 25,
+   "n_hit": 17,
+   "hit_rate": 0.68,
+   "brier": {
+    "brier": 0.179708,
+    "n": 25,
+    "hit_rate": 0.68,
+    "brier_of_always_predicting_the_base_rate": 0.2176,
+    "note": "a Brier above the base-rate column means the stated confidence is worse than a constant"
+   }
+  },
+  "mcnemar": {
+   "n_paired": 24,
+   "n_only_deepseek": 5,
+   "n_only_local_gguf": 3,
+   "p_exact": 0.726562,
+   "note": null,
+   "test": "exact binomial McNemar on discordant pairs, two-sided"
+  },
+  "n_cases": 30,
+  "n_askable": 25,
+  "design": "the SAME masked digest, the SAME frozen schema, the SAME cases, graded against the SAME deterministic PRESENT set. The only thing that differs is the reader"
+ },
+ "rows": [
+  {
+   "case_id": "0559b59bdb35",
+   "ticker": "MRNA",
+   "window_start": "2026-08-13",
+   "window_end": "2026-08-19",
+   "excess_pct": 176.3317,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "yes",
+    "precursor_class": "typed_event",
+    "which_of_our_sources_would_have_carried_it": [
+     "typed_event"
+    ],
+    "confidence": 0.85,
+    "one_sentence_mechanism": "approval of a new flu vaccine and advancement of an ebola vaccine into human trials suggest positive developments.",
+    "reader_note": "",
+    "hit": false,
+    "why": "said typed_event; PRESENT set is []",
+    "usage": {
+     "tokens_in": 690,
+     "tokens_out": 78,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "yes",
+    "precursor_class": "typed_event",
+    "which_of_our_sources_would_have_carried_it": [
+     "typed_event",
+     "news_volume"
+    ],
+    "confidence": 0.62,
+    "one_sentence_mechanism": "Two positive typed events (Ebola Phase 1 start, FDA flu vaccine approval) days before the window primed a sharp upward move.",
+    "reader_note": "Earnings beat and reaffirmed guidance added to the setup.",
+    "hit": false,
+    "why": "said typed_event; PRESENT set is []",
+    "usage": {
+     "tokens_in": 668,
+     "tokens_out": 107,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "6098e4d818d3",
+   "ticker": "DFNS",
+   "window_start": "2026-08-18",
+   "window_end": "2026-08-24",
+   "excess_pct": -83.7163,
+   "present": [
+    "news_volume"
+   ],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.0,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": false,
+    "why": "said none; PRESENT set is ['news_volume']",
+    "usage": {
+     "tokens_in": 1574,
+     "tokens_out": 53,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.55,
+    "one_sentence_mechanism": "The prior reports show only a speculative micro-cap spike and a bearish short report, with no observable precursor that would have signaled the sharp decline.",
+    "reader_note": "Only a bearish short-seller report and search-interest spike appear; neither reliably predicts the drop.",
+    "hit": false,
+    "why": "said none; PRESENT set is ['news_volume']",
+    "usage": {
+     "tokens_in": 1459,
+     "tokens_out": 107,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "f16168f26ddb",
+   "ticker": "CAPR",
+   "window_start": "2026-08-13",
+   "window_end": "2026-08-19",
+   "excess_pct": 78.6488,
+   "present": [
+    "news_volume"
+   ],
+   "local_gguf": {
+    "foreseeable": "yes",
+    "precursor_class": "typed_event",
+    "which_of_our_sources_would_have_carried_it": [
+     "typed_event"
+    ],
+    "confidence": 0.85,
+    "one_sentence_mechanism": "FDA panel rejected [co]\u2019s deramiocel data, leading to a sharp stock decline.",
+    "reader_note": "",
+    "hit": false,
+    "why": "said typed_event; PRESENT set is ['news_volume']",
+    "usage": {
+     "tokens_in": 1468,
+     "tokens_out": 79,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.62,
+    "one_sentence_mechanism": "The prior reports describe an FDA panel rejection and fraud allegations, which would predict further weakness, not a sharp rebound five sessions later.",
+    "reader_note": "No listed precursor source captures a post-panel reversal.",
+    "hit": false,
+    "why": "said none; PRESENT set is ['news_volume']",
+    "usage": {
+     "tokens_in": 1360,
+     "tokens_out": 95,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "fb5468aaf999",
+   "ticker": "ALMS",
+   "window_start": "2026-08-26",
+   "window_end": "2026-09-01",
+   "excess_pct": -65.3219,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.95,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 558,
+     "tokens_out": 54,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.7,
+    "one_sentence_mechanism": "A single positive efficacy report ahead of an FDA filing carries no observable precursor of a sharp five-day decline.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 553,
+     "tokens_out": 79,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "abf8c9fcfbb3",
+   "ticker": "PURR",
+   "window_start": "2026-08-19",
+   "window_end": "2026-08-25",
+   "excess_pct": 55.0478,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "yes",
+    "precursor_class": "typed_event",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.85,
+    "one_sentence_mechanism": "stan druckenmiller's $23 million bet in hyperliquid strategies indirectly exposed him to hype, signaling a potential bullish move.",
+    "reader_note": "",
+    "hit": false,
+    "why": "said typed_event; PRESENT set is []",
+    "usage": {
+     "tokens_in": 1204,
+     "tokens_out": 88,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "yes",
+    "precursor_class": "news_volume",
+    "which_of_our_sources_would_have_carried_it": [
+     "news_volume",
+     "coverage_change"
+    ],
+    "confidence": 0.42,
+    "one_sentence_mechanism": "A dense cluster of bullish HYPE-specific headlines and a high-profile Druckenmiller stake disclosure just before the window raised the odds of a sharp upward move.",
+    "reader_note": "Signals are mixed: JPMorgan caution and AI-rotation warnings cut the other way.",
+    "hit": false,
+    "why": "said news_volume; PRESENT set is []",
+    "usage": {
+     "tokens_in": 1154,
+     "tokens_out": 120,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "d8fbb3db4677",
+   "ticker": "ASST",
+   "window_start": "2026-08-19",
+   "window_end": "2026-08-25",
+   "excess_pct": 54.4363,
+   "present": [],
+   "local_gguf": {
+    "hit": null,
+    "refused": "REFUSED_SCHEMA",
+    "why": "precursor_class: 'whale_activity' is not one of the nine"
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.7,
+    "one_sentence_mechanism": "A generic whale-activity alert two days prior carries no directional signal about a sharp five-day outperformance.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 566,
+     "tokens_out": 79,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "418e88e14f12",
+   "ticker": "EYPT",
+   "window_start": "2026-08-17",
+   "window_end": "2026-08-21",
+   "excess_pct": -53.8749,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.0,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 628,
+     "tokens_out": 53,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "yes",
+    "precursor_class": "revision_breadth",
+    "which_of_our_sources_would_have_carried_it": [
+     "revision_breadth",
+     "coverage_change"
+    ],
+    "confidence": 0.55,
+    "one_sentence_mechanism": "A broker slashed the price target 39% just before the window, signaling negative analyst revisions that preceded the sharp decline.",
+    "reader_note": "Only one target cut is cited; breadth is thin.",
+    "hit": false,
+    "why": "said revision_breadth; PRESENT set is []",
+    "usage": {
+     "tokens_in": 621,
+     "tokens_out": 109,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "6d6e13d2ca56",
+   "ticker": "ACVA",
+   "window_start": "2026-09-04",
+   "window_end": "2026-09-11",
+   "excess_pct": 53.0079,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.0,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 758,
+     "tokens_out": 53,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.7,
+    "one_sentence_mechanism": "The only pre-move reports are generic pre-market movers roundups about unrelated tickers, carrying no observable precursor for this specific sharp upward move.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 738,
+     "tokens_out": 88,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "77297d033eca",
+   "ticker": "HTFL",
+   "window_start": "2026-08-14",
+   "window_end": "2026-08-20",
+   "excess_pct": 48.6391,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "yes",
+    "precursor_class": "coverage_change",
+    "which_of_our_sources_would_have_carried_it": [
+     "coverage_change"
+    ],
+    "confidence": 0.85,
+    "one_sentence_mechanism": "positive analyst coverage initiation likely boosted investor sentiment and buying interest.",
+    "reader_note": "",
+    "hit": false,
+    "why": "said coverage_change; PRESENT set is []",
+    "usage": {
+     "tokens_in": 571,
+     "tokens_out": 70,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "yes",
+    "precursor_class": "coverage_change",
+    "which_of_our_sources_would_have_carried_it": [
+     "coverage_change"
+    ],
+    "confidence": 0.55,
+    "one_sentence_mechanism": "A fresh bullish analyst initiation days earlier can draw buyers and lift the stock in the following sessions.",
+    "reader_note": "Only one pre-move report; thin evidence.",
+    "hit": false,
+    "why": "said coverage_change; PRESENT set is []",
+    "usage": {
+     "tokens_in": 566,
+     "tokens_out": 93,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "659158f0615f",
+   "ticker": "TTAN",
+   "window_start": "2026-09-04",
+   "window_end": "2026-09-11",
+   "excess_pct": -47.4672,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.0,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 572,
+     "tokens_out": 53,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.7,
+    "one_sentence_mechanism": "The only pre-move report is a generic analyst-roundup piece with no company-specific signal, so nothing observable beforehand carried the sharp decline.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 565,
+     "tokens_out": 86,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "8c5697e0be31",
+   "ticker": "RARE",
+   "window_start": "2026-09-03",
+   "window_end": "2026-09-10",
+   "excess_pct": -45.9901,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.95,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 777,
+     "tokens_out": 54,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.6,
+    "one_sentence_mechanism": "The prior reports show only a positive FDA approval and unrelated analyst/whale notes, with no observable precursor pointing to a sharp decline.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 752,
+     "tokens_out": 85,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "02b00a566127",
+   "ticker": "ARX",
+   "window_start": "2026-08-13",
+   "window_end": "2026-08-19",
+   "excess_pct": 43.995,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "yes",
+    "precursor_class": "coverage_change",
+    "which_of_our_sources_would_have_carried_it": [
+     "coverage_change"
+    ],
+    "confidence": 0.85,
+    "one_sentence_mechanism": "cathie wood's increased coverage and buying of x-energy stock likely boosted investor sentiment.",
+    "reader_note": "",
+    "hit": false,
+    "why": "said coverage_change; PRESENT set is []",
+    "usage": {
+     "tokens_in": 547,
+     "tokens_out": 76,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.7,
+    "one_sentence_mechanism": "A single celebrity-investor accumulation story is not a systematic precursor and does not predict a sharp five-day move.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 542,
+     "tokens_out": 81,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "4c52a5cebda8",
+   "ticker": "REAX",
+   "window_start": "2026-08-26",
+   "window_end": "2026-09-01",
+   "excess_pct": -42.6169,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.95,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 661,
+     "tokens_out": 54,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.7,
+    "one_sentence_mechanism": "The only pre-move reports were a buyback announcement and a general market preview, neither of which signals a sharp decline.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 643,
+     "tokens_out": 83,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "8a10d149c23e",
+   "ticker": "WEAV",
+   "window_start": "2026-08-13",
+   "window_end": "2026-08-19",
+   "excess_pct": 42.5977,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.0,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 683,
+     "tokens_out": 53,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.7,
+    "one_sentence_mechanism": "The only pre-move reports are generic after-market and intraday gainers lists about unrelated tickers, carrying no observable precursor for this specific move.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 663,
+     "tokens_out": 88,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "5c61120fb520",
+   "ticker": "ANF",
+   "window_start": "2026-08-20",
+   "window_end": "2026-08-26",
+   "excess_pct": 39.4431,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.0,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 1569,
+     "tokens_out": 53,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "yes",
+    "precursor_class": "coverage_change",
+    "which_of_our_sources_would_have_carried_it": [
+     "coverage_change",
+     "news_volume"
+    ],
+    "confidence": 0.55,
+    "one_sentence_mechanism": "A cluster of analyst actions and news around 8/18-8/19, including a downgrade and a raised price target, signaled shifting sentiment before the sharp move up.",
+    "reader_note": "Mixed signals; downgrade and insider sale cut against the bullish read.",
+    "hit": false,
+    "why": "said coverage_change; PRESENT set is []",
+    "usage": {
+     "tokens_in": 1493,
+     "tokens_out": 119,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "0fc44bc0913b",
+   "ticker": "TEM",
+   "window_start": "2026-08-17",
+   "window_end": "2026-08-21",
+   "excess_pct": 38.0383,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "yes",
+    "precursor_class": "typed_event",
+    "which_of_our_sources_would_have_carried_it": [
+     "typed_event"
+    ],
+    "confidence": 0.85,
+    "one_sentence_mechanism": "the acquisition of Personalis for $1.5 billion was a significant event that could drive positive sentiment.",
+    "reader_note": "",
+    "hit": false,
+    "why": "said typed_event; PRESENT set is []",
+    "usage": {
+     "tokens_in": 1234,
+     "tokens_out": 79,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.55,
+    "one_sentence_mechanism": "The pre-move reports show only post-earnings weakness and a peer-driven one-day bounce, with no observable precursor that would have signaled a sharp 5-day outperformance.",
+    "reader_note": "Only generic news/whale items existed; no revision, coverage, insider, or short-interest signal.",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 1175,
+     "tokens_out": 114,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "8746e1bd56f7",
+   "ticker": "AEHR",
+   "window_start": "2026-08-18",
+   "window_end": "2026-08-24",
+   "excess_pct": -37.6255,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.0,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 1214,
+     "tokens_out": 53,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.6,
+    "one_sentence_mechanism": "The only pre-move item was a positive silicon photonics order that had already lifted shares, so no observable precursor signaled the subsequent sharp decline.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 1148,
+     "tokens_out": 87,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "c63bf4de6c4c",
+   "ticker": "FDMT",
+   "window_start": "2026-08-13",
+   "window_end": "2026-08-19",
+   "excess_pct": 37.6015,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "yes",
+    "precursor_class": "typed_event",
+    "which_of_our_sources_would_have_carried_it": [
+     "typed_event"
+    ],
+    "confidence": 0.85,
+    "one_sentence_mechanism": "positive phase 2b data for a novel eye therapy could boost investor interest and expectations.",
+    "reader_note": "",
+    "hit": false,
+    "why": "said typed_event; PRESENT set is []",
+    "usage": {
+     "tokens_in": 570,
+     "tokens_out": 76,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.7,
+    "one_sentence_mechanism": "The only prior report was positive Phase 2b data three weeks earlier, which does not explain a sharp move starting 2026-08-13.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 568,
+     "tokens_out": 89,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "168ed93282fb",
+   "ticker": "CABO",
+   "window_start": "2026-08-17",
+   "window_end": "2026-08-21",
+   "excess_pct": -37.5018,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.0,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 685,
+     "tokens_out": 53,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.6,
+    "one_sentence_mechanism": "The only prior reports describe a sharp post-earnings rally, which carries no observable signal of the subsequent reversal.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 666,
+     "tokens_out": 80,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "95f62ec216b9",
+   "ticker": "CXM",
+   "window_start": "2026-09-01",
+   "window_end": "2026-09-08",
+   "excess_pct": -37.4471,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "yes",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.85,
+    "one_sentence_mechanism": "The RSI warning for tech stocks, including [co], could have signaled potential sell-off.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 574,
+     "tokens_out": 73,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.7,
+    "one_sentence_mechanism": "A generic momentum-warning listicle naming no specific catalyst does not carry a sharp idiosyncratic decline.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 568,
+     "tokens_out": 78,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "563f61e478a7",
+   "ticker": "DKS",
+   "window_start": "2026-08-19",
+   "window_end": "2026-08-25",
+   "excess_pct": -36.8125,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.0,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 801,
+     "tokens_out": 53,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.6,
+    "one_sentence_mechanism": "The pre-move reports contain only generic tariff and analyst commentary with no observable precursor tied to the sharp decline.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 782,
+     "tokens_out": 80,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "4208d0bf1beb",
+   "ticker": "CRML",
+   "window_start": "2026-08-21",
+   "window_end": "2026-08-27",
+   "excess_pct": 35.9924,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "yes",
+    "precursor_class": "news_volume",
+    "which_of_our_sources_would_have_carried_it": [
+     "news_volume"
+    ],
+    "confidence": 0.85,
+    "one_sentence_mechanism": "positive news on critical metal shares due to a finalist bid for a rare earth project likely boosted investor sentiment.",
+    "reader_note": "",
+    "hit": false,
+    "why": "said news_volume; PRESENT set is []",
+    "usage": {
+     "tokens_in": 552,
+     "tokens_out": 79,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.7,
+    "one_sentence_mechanism": "The only prior report was a sector roundup noting a bid finalist position, which does not signal the sharp five-day outperformance that followed.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 553,
+     "tokens_out": 87,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "3605ef52ed49",
+   "ticker": "IOVA",
+   "window_start": "2026-08-14",
+   "window_end": "2026-08-20",
+   "excess_pct": 35.9364,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "yes",
+    "precursor_class": "typed_event",
+    "which_of_our_sources_would_have_carried_it": [
+     "typed_event"
+    ],
+    "confidence": 0.85,
+    "one_sentence_mechanism": "better-than-expected q2 results led to a sharp increase in [co] stock.",
+    "reader_note": "",
+    "hit": false,
+    "why": "said typed_event; PRESENT set is []",
+    "usage": {
+     "tokens_in": 906,
+     "tokens_out": 76,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.55,
+    "one_sentence_mechanism": "The sharp move began after the pre-period reports; nothing observable beforehand signaled the upcoming surge.",
+    "reader_note": "Only post-move coverage describes the catalyst.",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 870,
+     "tokens_out": 85,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "60bf98936d4d",
+   "ticker": "CRDO",
+   "window_start": "2026-08-28",
+   "window_end": "2026-09-03",
+   "excess_pct": -35.5375,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.0,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 1267,
+     "tokens_out": 53,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "yes",
+    "precursor_class": "coverage_change",
+    "which_of_our_sources_would_have_carried_it": [
+     "coverage_change",
+     "news_volume"
+    ],
+    "confidence": 0.55,
+    "one_sentence_mechanism": "A fresh sell initiation on valuation and customer-concentration risk, followed by a downgrade to hold, signaled analyst skepticism ahead of the Sept 1 earnings test.",
+    "reader_note": "Reports show a sell initiation then a hold downgrade before the print.",
+    "hit": false,
+    "why": "said coverage_change; PRESENT set is []",
+    "usage": {
+     "tokens_in": 1186,
+     "tokens_out": 115,
+     "model": "deepseek-chat"
+    }
+   }
+  },
+  {
+   "case_id": "41321e2bf421",
+   "ticker": "NUAI",
+   "window_start": "2026-09-01",
+   "window_end": "2026-09-08",
+   "excess_pct": 35.5054,
+   "present": [],
+   "local_gguf": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.0,
+    "one_sentence_mechanism": "",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 573,
+     "tokens_out": 53,
+     "model": "local"
+    }
+   },
+   "deepseek": {
+    "foreseeable": "no",
+    "precursor_class": "none",
+    "which_of_our_sources_would_have_carried_it": [],
+    "confidence": 0.7,
+    "one_sentence_mechanism": "The only prior report is a routine earnings call transcript with no observable precursor signal pointing to a sharp five-day outperformance.",
+    "reader_note": "",
+    "hit": true,
+    "why": "said none; PRESENT set is []",
+    "usage": {
+     "tokens_in": 569,
+     "tokens_out": 82,
+     "model": "deepseek-chat"
+    }
+   }
+  }
+ ],
+ "legs": {
+  "local_gguf": {
+   "backend": "local_gguf",
+   "refused": null,
+   "metered": false,
+   "n_asked": 25,
+   "n_ok": 24,
+   "refusals": {
+    "REFUSED_SCHEMA": 1
+   }
+  },
+  "deepseek": {
+   "backend": "deepseek",
+   "refused": null,
+   "metered": true,
+   "n_asked": 25,
+   "n_ok": 25,
+   "refusals": {}
+  }
+ },
+ "unforeseeable_count": 10,
+ "unforeseeable": [
+  "ALMS",
+  "ACVA",
+  "TTAN",
+  "RARE",
+  "REAX",
+  "WEAV",
+  "AEHR",
+  "CABO",
+  "DKS",
+  "NUAI"
+ ],
+ "unforeseeable_definition": "no precursor class was PRESENT and BOTH readers answered foreseeable=no. It is the honest residual, not a failure",
+ "curriculum": [],
+ "curriculum_floor_names": 3,
+ "spend": {
+  "usd": 0.006436,
+  "calls": 50,
+  "tokens_in": 41631,
+  "tokens_out": 3910,
+  "cached_tokens": 0,
+  "since_utc": "2026-09-21T14:29:44+00:00",
+  "purpose": "j2_missed_opportunity",
+  "source": "backend/services/llm_telemetry.read_calls()",
+  "note": "a list-price reconstruction from the call ledger, not a bill. `scripts/llm_cost_audit.py --snapshot` reconciles against the provider's own balance and is the ground truth"
+ },
+ "llm_spend_usd": 0.006436,
+ "spend_is_a_lower_bound": false,
+ "spend_caveat": null,
+ "cap_block": {
+  "max_usd": 4.5,
+  "backend": "deepseek",
+  "metered": true,
+  "purpose": "j2_missed_opportunity",
+  "first_flush_agreement": {
+   "cap_usd": 0.000251,
+   "receipt_usd": 0.000251,
+   "cap_calls": 2,
+   "receipt_calls": 2,
+   "agree": true,
+   "delta_usd": 0.0,
+   "delta_calls": 0,
+   "tolerance_usd": 0.05,
+   "tolerance_calls": 1,
+   "cap_purpose": "j2_missed_opportunity",
+   "receipt_purpose": "j2_missed_opportunity",
+   "cap_since_utc": "2026-09-21T14:29:44+00:00",
+   "receipt_since_utc": "2026-09-21T14:29:44+00:00",
+   "cap_ledger_path": null,
+   "metered": true,
+   "why": "a dollar cap is only a cap if the number it compares is the number the writer produces. Two readers of one file that disagree by 8,000 rows is not a rounding error (MUST NOT REGRESS \u00a738)."
+  },
+  "first_flush_agreement_note": null,
+  "estimated_spend_at_stop_usd": 0.005929,
+  "usd_per_row_used": 0.00012614,
+  "usd_per_row_source": "THIS RUN's own ledger rows (43 calls)",
+  "ledger_reads": 6,
+  "checked": "before every submission, against the ledger total refreshed every 5 rows",
+  "also_in_force": "lab_budget's UTC-DAY cap, but only on the `--reader` path (lab_reader.resolve); a direct `--backend deepseek` run is capped by --max-usd alone",
+  "unmetered_note": null
+ },
+ "paid_stop": null,
+ "balance_before": {
+  "total_usd": 49.2,
+  "read_at": "2026-09-21T14:30:28.428201+00:00",
+  "label": "before",
+  "error": null
+ },
+ "balance_after": {
+  "total_usd": 49.2,
+  "read_at": "2026-09-21T14:31:30.316848+00:00",
+  "label": "after",
+  "error": null
+ },
+ "balance_delta_usd": 0.0,
+ "balance_is_the_ground_truth": "our telemetry prices what it recognises; the provider's balance prices what it billed. When they disagree the balance is right.",
+ "headline": "30 largest unmatched move(s) over 21 sessions (best 5-session |excess vs SPY|, floor $5,000,000); 30 not in the universe, 0 carried a BUY/PROBE; 10 with no precursor and both readers saying unforeseeable; local 0.5833 vs deepseek 0.68 hit rate; $0.0064 of $4.50",
+ "verdict": "NO_IMPROVEMENT: deepseek 0.68 vs local_gguf 0.5833 (diff +0.0967), McNemar exact p=0.726562 against alpha 0.05. One night is one night: the standing question is whether the difference accumulates across nights, not whether it cleared a threshold tonight.",
+ "next_test": "each curriculum line is a hypothesis, not a finding: it enters as its own PRODUCT_EXPERIMENT book with a matched-date control, never as a weight folded into arena_composite (CLAUDE.md, THE BOTTLENECK).",
+ "elapsed_s": 109.0,
+ "written_utc": "2026-09-21T14:31:30+00:00",
+ "awake_s": 109.0,
+ "slept_s": 0.0,
+ "box_s": 2700.0,
+ "wall_minus_monotonic_s": -0.0,
+ "sleep_gaps": [],
+ "child_pid": 30200,
+ "killed_pids": [],
+ "exit_code": 0
+}

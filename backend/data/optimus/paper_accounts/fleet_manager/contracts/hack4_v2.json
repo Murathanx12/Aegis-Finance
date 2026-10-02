@@ -1,0 +1,114 @@
+{
+ "schema": "fleet_manager_contract/1",
+ "role": "hack4",
+ "version": "v2",
+ "licence": "PRODUCT_EXPERIMENT",
+ "status": "PROPOSED (dry-run until the owner sets modes.json contract=v2, entries=LIVE)",
+ "alpha_source": "the engine's candidate funnel (PROBE shortlist) sized by 1/sigma_63 (size-of-move / risk-parity weighting)",
+ "why_this_account": "hack4 was the engine-ranked tracker book; this is the engine's current shortlist with the one measured skill (move size) in the sizing",
+ "caps": {
+  "max_gross_frac": 1.0,
+  "max_name_frac": 0.1,
+  "daily_turnover_frac": 0.5,
+  "max_orders_per_run": 60,
+  "min_order_usd": 250.0,
+  "shorting": false,
+  "new_options": false,
+  "leverage": false
+ },
+ "costs": {
+  "assumed_bps_per_side": 10.0,
+  "fill_convention": "DAY limit at ask x (1+10bps) for buys and bid x (1-10bps) for sells; an unfilled limit is not traded; last trade when the IEX quote is one-sided or wider than 2%"
+ },
+ "objective": "terminal wealth vs SPY and vs the frozen twin, graded daily; the question is whether this alpha source's errors differ from the other accounts'; no claim of skill",
+ "legacy": "names held when v2 becomes active and not targeted by it keep their v1 terms (stop, horizon) and are not counted as capacity: v2 fills what remains of the gross cap",
+ "selection": {
+  "kind": "frozen_book",
+  "book_id": "61fa183ee45aa10a",
+  "book_name": "probe_inverse_vol_2026-09-26",
+  "book_frozen_utc": "2026-09-26T08:59:40+00:00",
+  "book_asof": "2026-09-26",
+  "positions": [
+   {
+    "ticker": "NVDA",
+    "weight": 0.08030923080309231
+   },
+   {
+    "ticker": "INCY",
+    "weight": 0.0961683609616836
+   },
+   {
+    "ticker": "AAPL",
+    "weight": 0.10207816102078161
+   },
+   {
+    "ticker": "SNDR",
+    "weight": 0.10105535101055352
+   },
+   {
+    "ticker": "META",
+    "weight": 0.0643387206433872
+   },
+   {
+    "ticker": "AVPT",
+    "weight": 0.07608990076089901
+   },
+   {
+    "ticker": "AMZN",
+    "weight": 0.07667348076673482
+   },
+   {
+    "ticker": "GOOGL",
+    "weight": 0.0927007609270076
+   },
+   {
+    "ticker": "GOOG",
+    "weight": 0.09393407093934071
+   },
+   {
+    "ticker": "ALLE",
+    "weight": 0.10197694101976942
+   },
+   {
+    "ticker": "JAZZ",
+    "weight": 0.11467502114675023
+   },
+   {
+    "ticker": "CASH",
+    "weight": 0.0
+   }
+  ],
+  "rule": "hold the book's weights, each clipped at max_name_frac (never renormalised: what is clipped or dropped stays cash); drop bar-defect / stitched names and a second share class of one issuer; enter with DAY limits near the quote inside the daily turnover budget; hold to the horizon; a new book is a new version",
+  "horizon_sessions": 21
+ },
+ "twin": {
+  "kind": "frozen_book_twin",
+  "book_id": "5d578a72cd528f21",
+  "weights": {
+   "T": 0.10207816102078163,
+   "SU": 0.10197694101976944,
+   "WDC": 0.07667348076673483,
+   "SNN": 0.07608990076089903,
+   "TSLA": 0.09393407093934072,
+   "MRK": 0.09270076092700762,
+   "ASX": 0.09616836096168362,
+   "SEDG": 0.11467502114675024,
+   "JPM": 0.06433872064338722,
+   "WFC": 0.08030923080309232,
+   "CARG": 0.10105535101055353
+  }
+ },
+ "stop_rule": {
+  "quoted_in": "daily sigma",
+  "sigma": "63-session sd of close-to-close returns on the bar-defect-screened panel (Alpaca daily bars when a name is not in the panel)",
+  "k_sigma": 3.0,
+  "min_frac": 0.04,
+  "max_frac": 0.12,
+  "distance": "clip(k_sigma x sigma, min_frac, max_frac) of the reference price",
+  "never_loosen": "a replaced stop is never below the stop it replaces",
+  "order": "GTC sell stop for the full long quantity; renewed within 7 days of its expiry"
+ },
+ "exits": "horizon (21 sessions from the first v2 fill) -> cash; resting stops",
+ "policy_hash": "a0c5313766c52c9a",
+ "frozen_utc": "2026-09-29T13:37:46+00:00"
+}

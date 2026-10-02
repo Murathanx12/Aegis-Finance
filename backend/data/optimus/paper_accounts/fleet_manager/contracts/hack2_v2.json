@@ -1,0 +1,155 @@
+{
+ "schema": "fleet_manager_contract/1",
+ "role": "hack2",
+ "version": "v2",
+ "licence": "PRODUCT_EXPERIMENT",
+ "status": "PROPOSED (dry-run until the owner sets modes.json contract=v2, entries=LIVE)",
+ "alpha_source": "analyst revision flow (net raises x firms, 90 days, >= 3 firms)",
+ "why_this_account": "hack2 was the post-event DRIFT book: an analyst action is its nearest measured event family; the account is flat, so nothing is displaced",
+ "caps": {
+  "max_gross_frac": 1.0,
+  "max_name_frac": 0.1,
+  "daily_turnover_frac": 0.5,
+  "max_orders_per_run": 60,
+  "min_order_usd": 250.0,
+  "shorting": false,
+  "new_options": false,
+  "leverage": false
+ },
+ "costs": {
+  "assumed_bps_per_side": 10.0,
+  "fill_convention": "DAY limit at ask x (1+10bps) for buys and bid x (1-10bps) for sells; an unfilled limit is not traded; last trade when the IEX quote is one-sided or wider than 2%"
+ },
+ "objective": "terminal wealth vs SPY and vs the frozen twin, graded daily; the question is whether this alpha source's errors differ from the other accounts'; no claim of skill",
+ "legacy": "names held when v2 becomes active and not targeted by it keep their v1 terms (stop, horizon) and are not counted as capacity: v2 fills what remains of the gross cap",
+ "selection": {
+  "kind": "frozen_book",
+  "book_id": "cb8d492bb8bf9ade",
+  "book_name": "revision_flow_v0",
+  "book_frozen_utc": "2026-09-25T05:54:13+00:00",
+  "book_asof": "2026-09-25",
+  "positions": [
+   {
+    "ticker": "OKTA",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "SNOW",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "CRWD",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "PANW",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "CRM",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "ABNB",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "AFRM",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "GTLB",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "AMD",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "ESTC",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "TGT",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "NET",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "DDOG",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "MDB",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "ZS",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "WDAY",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "S",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "XYZ",
+    "weight": 0.04999999999999999
+   },
+   {
+    "ticker": "DELL",
+    "weight": 0.04999999999999999
+   }
+  ],
+  "rule": "hold the book's weights, each clipped at max_name_frac (never renormalised: what is clipped or dropped stays cash); drop bar-defect / stitched names and a second share class of one issuer; enter with DAY limits near the quote inside the daily turnover budget; hold to the horizon; a new book is a new version",
+  "horizon_sessions": 21
+ },
+ "twin": {
+  "kind": "frozen_book_twin",
+  "book_id": "e74c9063d451e316",
+  "weights": {
+   "ACAD": 0.04999999999999999,
+   "ARES": 0.04999999999999999,
+   "ASND": 0.04999999999999999,
+   "BTGO": 0.04999999999999999,
+   "CASY": 0.04999999999999999,
+   "CCEP": 0.04999999999999999,
+   "CENX": 0.04999999999999999,
+   "CG": 0.04999999999999999,
+   "DNOW": 0.04999999999999999,
+   "EQPT": 0.04999999999999999,
+   "FIVN": 0.04999999999999999,
+   "HAL": 0.04999999999999999,
+   "HXL": 0.04999999999999999,
+   "INR": 0.04999999999999999,
+   "IQV": 0.04999999999999999,
+   "KNSL": 0.04999999999999999,
+   "NDAQ": 0.04999999999999999,
+   "REYN": 0.04999999999999999,
+   "VCTR": 0.04999999999999999,
+   "WVE": 0.04999999999999999
+  }
+ },
+ "stop_rule": {
+  "quoted_in": "daily sigma",
+  "sigma": "63-session sd of close-to-close returns on the bar-defect-screened panel (Alpaca daily bars when a name is not in the panel)",
+  "k_sigma": 3.0,
+  "min_frac": 0.04,
+  "max_frac": 0.12,
+  "distance": "clip(k_sigma x sigma, min_frac, max_frac) of the reference price",
+  "never_loosen": "a replaced stop is never below the stop it replaces",
+  "order": "GTC sell stop for the full long quantity; renewed within 7 days of its expiry"
+ },
+ "exits": "horizon (21 sessions from the first v2 fill) -> cash; resting stops",
+ "policy_hash": "2301fa30c7b851df",
+ "frozen_utc": "2026-09-29T13:37:43+00:00"
+}

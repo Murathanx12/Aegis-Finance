@@ -1,0 +1,40 @@
+{
+ "schema": "hyp_lab/restatement_declaration/1",
+ "rules": [
+  "quality_composite",
+  "cash_lowvol"
+ ],
+ "decision": "Restatement effect = mean paired monthly difference (FIRST - LATEST) of rule gross - twin-basket gross, 2010-2024 hold months, t on 3-month blocks. Declared reading: if |effect| < MDE, 'restatement does not measurably move the ranking'; if LATEST > FIRST at t >= 2, 'part of the edge is restated data', and the share = effect / LATEST's rule-twin mean is reported. Compustat is printed beside as the third vintage.",
+ "windows": {
+  "all_2010_2024": [
+   "2010-01-01",
+   "2024-12-31"
+  ],
+  "2010_2016": [
+   "2010-01-01",
+   "2016-12-31"
+  ],
+  "2017_2024": [
+   "2017-01-01",
+   "2024-12-31"
+  ]
+ },
+ "inputs_tag": "INV_2026-09-30T0020Z",
+ "flows": [
+  "revenue",
+  "cogs",
+  "operating_income"
+ ],
+ "stocks": [
+  "assets",
+  "equity",
+  "debt",
+  "cash"
+ ],
+ "timing": "both vintages usable from the FIRST annual filing + 2 days; stale after 460 days",
+ "coverage_rule": "rows where FIRST, LATEST and Compustat all give the rule's inputs",
+ "search_count_added": 0,
+ "search_note": "a measurement of the data, not a new rule; the rules are unchanged",
+ "sha16": "69b06304422948dd",
+ "written_utc": "2026-09-29T16:04:51+00:00"
+}

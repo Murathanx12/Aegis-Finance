@@ -59,6 +59,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import time
 from datetime import date, datetime, time as dtime, timedelta, timezone
@@ -235,12 +236,106 @@ def bars_age(paths: dict[str, Path] | list[Path] | None = None, *,
 
 # ================================================================ the merge
 
+def vendor_symbol(t: str) -> str:
+    """A panel's spelling in the vendor's notation (`BRK-B` -> `BRK.B`).
+
+    THE DEFECT (2026-09-29 22:30 UTC -> 2026-10-02): the forecast-only panel,
+    added on 09-29, carries Yahoo-style class shares. Alpaca answers
+    `{"message":"invalid symbol: BRK-B"}` with HTTP 400 for the WHOLE request,
+    and P6's puller retried that chunk four times and raised, so ONE ticker in
+    a 139-name side panel froze all four panels for three sessions. Only a
+    trailing single letter is rewritten (same rule as `pull_forecast_bars`).
+    """
+    m = re.fullmatch(r"([A-Z]{1,5})-([A-Z])", str(t))
+    return f"{m.group(1)}.{m.group(2)}" if m else str(t)
+
+
+def _invalid_symbol(exc: BaseException) -> str | None:
+    """The symbol a vendor 400 names, or None (the body is read once)."""
+    if getattr(exc, "code", None) != 400:
+        return None
+    body = getattr(exc, "_aegis_body", None)
+    if body is None:
+        try:
+            body = exc.read().decode("utf-8", "replace")            # type: ignore[attr-defined]
+        except Exception:                                          # noqa: BLE001
+            body = ""
+        try:
+            exc._aegis_body = body                                  # type: ignore[attr-defined]
+        except Exception:                                          # noqa: BLE001
+            pass
+    m = re.search(r"invalid symbol:\s*([^\"}\s,]+)", body or "")
+    return m.group(1) if m else None
+
+
+def pull_chunked(symbols: list[str], start: str, get: Callable[[dict], dict], *,
+                 batch: int = 100, retries: int = 3,
+                 sleep: Callable[[float], None] = time.sleep) -> tuple[Any, list[str]]:
+    """Daily bars for `symbols` from `start`; returns (frame, rejected symbols).
+
+    `get(params) -> json` is the network seam. A 400 that names an invalid
+    symbol drops EXACTLY that symbol from its batch and retries the batch, with
+    no back-off (a 400 is not transient); any other error is retried
+    `retries` times and then raised -- a venue outage must still REFUSE the
+    whole refresh, never write a panel with holes in it. Rows come back under
+    the PANEL's spelling, not the vendor's.
+    """
+    import pandas as pd                                            # noqa: PLC0415
+    rows: list[tuple] = []
+    rejected: list[str] = []
+    for i in range(0, len(symbols), batch):
+        chunk = {vendor_symbol(t): t for t in symbols[i:i + batch]}
+        token = None
+        while chunk:
+            params = {"symbols": ",".join(sorted(chunk)), "start": start, "timeframe": "1Day",
+                      "adjustment": "all", "limit": 10000, "feed": "sip"}
+            if token:
+                params["page_token"] = token
+            d = None
+            for attempt in range(retries + 1):
+                try:
+                    d = get(params)
+                    break
+                except Exception as exc:                           # noqa: BLE001
+                    bad = _invalid_symbol(exc)
+                    if bad is not None:
+                        d = {"_invalid": bad}
+                        break
+                    if attempt == retries:
+                        raise
+                    sleep(2.0 * (attempt + 1))
+            if d is not None and "_invalid" in d:
+                bad = d["_invalid"]
+                if bad not in chunk or token:
+                    raise RuntimeError(f"vendor rejected {bad!r}, which is not in the batch "
+                                       f"(or arrived mid-pagination); refusing")
+                rejected.append(chunk.pop(bad))
+                print(f"    REJECTED by vendor: {bad} (invalid symbol); "
+                      f"{len(chunk)} left in this batch", flush=True)
+                continue
+            for sym, bars in ((d or {}).get("bars") or {}).items():
+                ps = chunk.get(sym, sym)
+                for b in bars:
+                    rows.append((ps, b["t"][:10], b["o"], b["h"], b["l"], b["c"], b["v"],
+                                 b.get("vw"), b.get("n")))
+            token = (d or {}).get("next_page_token")
+            if not token:
+                break
+    df = pd.DataFrame(rows, columns=["symbol", "date", "open", "high", "low", "close",
+                                     "volume", "vwap", "trades"])
+    df["date"] = pd.to_datetime(df["date"])
+    return df.sort_values(["symbol", "date"], kind="mergesort").reset_index(drop=True), rejected
+
+
 def _pull_default(symbols: list[str], start: str) -> Any:
-    """P6's own puller and credential resolver — imported, never re-implemented."""
+    """P6's credential resolver and HTTP call, with per-symbol rejection."""
     from scripts import night_p6_bars_and_regret as P6             # noqa: PLC0415
     kid, sec, src = P6.data_credential()
     print(f"    credential: {src}", flush=True)
-    return P6.pull_bars(symbols, start, None, kid, sec), src
+    df, rejected = pull_chunked(symbols, start,
+                                lambda params: P6._get("/v2/stocks/bars", params, kid, sec))
+    df.attrs["rejected_symbols"] = rejected
+    return df, src
 
 
 def drift_symbols(path: Path, new_df, *, overlap_start: date, newest: date) -> list[str]:
@@ -454,6 +549,14 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
         return _finish(receipt, t0, receipt_dir, index, now_utc=now_utc, panels=panels, write=True)
     receipt["pull"]["credential_source"] = cred
     receipt["pull"]["rows_returned"] = int(len(new_df)) if new_df is not None else 0
+    rejected = list(getattr(new_df, "attrs", {}).get("rejected_symbols") or [])
+    receipt["pull"]["rejected_symbols"] = rejected
+    if rejected:
+        # Loud, not fatal: a rejected name keeps its old bars and stops advancing,
+        # which the per-symbol age of the panel shows. It is NOT a reason to
+        # freeze the other 4,900 names (that is what 09-29 -> 10-02 was).
+        receipt["warning"] = (f"VENDOR_REJECTED {len(rejected)} symbol(s): "
+                              f"{rejected[:10]} -- their bars do not advance")
     if new_df is None or not len(new_df):
         receipt["status"] = "refused"
         receipt["reason"] = "the venue returned no bars; nothing overwritten"
@@ -531,7 +634,8 @@ def _finish(receipt: dict, t0: float, receipt_dir: Path | None, index: Path | No
     added = sum(int((r or {}).get("rows_added") or 0) for r in receipt["panels"].values())
     receipt["headline"] = (f"bars refresh {receipt.get('status')}: +{added:,} rows; "
                            f"{after['line']}"
-                           + (f"; {receipt['reason']}" if receipt.get("reason") else ""))
+                           + (f"; {receipt['reason']}" if receipt.get("reason") else "")
+                           + (f"; {receipt['warning']}" if receipt.get("warning") else ""))
     if write:
         rd = Path(receipt_dir or RECEIPT_DIR)
         rd.mkdir(parents=True, exist_ok=True)

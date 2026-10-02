@@ -33,12 +33,12 @@ NOW = datetime.now(timezone.utc).replace(microsecond=0)
 
 CNBC_FRONT = "https://www.cnbc.com/markets/"
 CNBC_ROBOTS = "https://www.cnbc.com/robots.txt"
-FED_ROBOTS = "https://www.federalreserve.gov/robots.txt"
+FED_ROBOTS = "https://www.bls.gov/robots.txt"   # 2026-09-30: the Fed left the browser; BLS stands in
 _D = NOW.strftime("%Y/%m/%d")
 CNBC_A1 = f"https://www.cnbc.com/{_D}/treasury-yields-jump-after-jobs-report.html"
 CNBC_A2 = f"https://www.cnbc.com/{_D}/oil-prices-slide-on-supply-worries.html"
 CNBC_BLOCKED = f"https://www.cnbc.com/{_D}/private-page-robots-disallow.html"
-FED_PR = "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260101a.htm"
+FED_PR = "https://www.bls.gov/news.release/cpi.nr0.htm"
 X_POST = "https://x.com/someone/status/1234567890"
 LONG = "Treasury yields rose sharply after the payrolls report surprised. " * 20
 
@@ -53,7 +53,7 @@ def _pages() -> dict:
             ("A Search Result Page That Robots Disallow", CNBC_BLOCKED)])},
         CNBC_A1: {"title": "Treasury yields jump", "text": LONG,
                   "snapshot": _snap("Treasury yields jump", [
-                      ("Federal Reserve issues FOMC statement", FED_PR),
+                      ("Consumer Price Index release", FED_PR),
                       ("Someone posted about yields on X today", X_POST),
                       ("Oil Prices Slide On Supply Worries Today", CNBC_A2)])},
         CNBC_A2: {"title": "Oil slides", "text": "Oil prices slid on supply worries. " * 30},
@@ -107,7 +107,7 @@ def _drain(pool, n=60):
 # ───────────────────────────── 1. the refill rule ────────────────────────────
 
 def test_a_starving_host_revisits_its_fronts_early_and_a_busy_one_waits():
-    fed = _front("fed:press_releases")            # a slow front: every 2 h on schedule
+    fed = _front("bls:news_releases")            # a slow front: every 2 h on schedule
     last = NOW - timedelta(minutes=25)
     assert not RS.front_due(fed, last, NOW)
     assert RS.front_due_now(fed, last, NOW, host_pending=0, low=3, revisit_s=1200)
@@ -119,7 +119,7 @@ def test_a_starving_host_revisits_its_fronts_early_and_a_busy_one_waits():
 
 
 def test_next_front_due_counts_the_early_revisit_for_an_empty_host():
-    fed = _front("fed:press_releases")
+    fed = _front("bls:news_releases")
     last = {RS.front_key(fed): NOW - timedelta(minutes=15)}
     s_empty = RS.next_front_due_s([fed], last, NOW, pending_by_host={})
     s_busy = RS.next_front_due_s([fed], last, NOW, pending_by_host={fed["host"]: 10})
@@ -187,13 +187,13 @@ def test_article_shapes_per_host(url, ok):
 
 def test_outbound_links_put_articles_first_and_dedupe():
     snap = _snap("A page", [("Home", "https://www.cnbc.com/"),
-                            ("Federal Reserve issues FOMC statement", FED_PR),
+                            ("Consumer Price Index release", FED_PR),
                             ("Federal Reserve issues FOMC statement", FED_PR + "?x=1"),
                             ("A long navigation link to a section", "https://www.cnbc.com/world/"),
                             ("javascript thing that is long enough", "javascript:void(0)")])
     out = RP.outbound_links(snap)
     assert [o["url"] for o in out] == [FED_PR, "https://www.cnbc.com/world/"]
-    assert RP.site_of(FED_PR) == "fed" and RP.site_of("https://finance.yahoo.com/x") == "yahoo"
+    assert RP.site_of(FED_PR) == "bls" and RP.site_of("https://finance.yahoo.com/x") == "yahoo"
 
 
 def test_robots_rules_are_read_and_a_disallowed_page_is_never_opened(ledger):
@@ -386,8 +386,11 @@ def test_news_hosts_are_allowed_and_nothing_else_moved():
     assert all(_config.READER_MAX_PER_HOUR_BY_HOST[h] == 120
                for h in ("wsj.com", "barrons.com", "marketwatch.com"))
     # every news front is on an allowed host
-    for f in RS.NEWS_FRONTS:
+    for f in RS.all_fronts():
         assert WR.host_ok(f["urls"][0]), f["urls"][0]
+    # 2026-09-30: the Fed is read by feed only; its fronts are not in the rotation
+    assert not any("federalreserve" in f["urls"][0] for f in RS.all_fronts())
+    assert not WR.host_ok("https://www.federalreserve.gov/newsevents/pressreleases.htm")
 
 
 # ─────────────── 7. the digest's asks, and current vs archive ────────────────

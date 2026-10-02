@@ -1,0 +1,241 @@
+{
+ "receipt": "fundamental_amplitude",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "target": "ret_exc_lead1m",
+ "purge_months": 1,
+ "cost_floor_bps": 20.0,
+ "folds": [
+  {
+   "train_end": "2014-01-31",
+   "test": "2014-02-28..2016-03-31",
+   "n_train": 215591,
+   "n_test": 49791
+  },
+  {
+   "train_end": "2016-03-31",
+   "test": "2016-04-30..2018-05-31",
+   "n_train": 265382,
+   "n_test": 48104
+  },
+  {
+   "train_end": "2018-05-31",
+   "test": "2018-06-30..2020-07-31",
+   "n_train": 313486,
+   "n_test": 50424
+  },
+  {
+   "train_end": "2020-07-31",
+   "test": "2020-08-31..2022-09-30",
+   "n_train": 363910,
+   "n_test": 61019
+  },
+  {
+   "train_end": "2022-09-30",
+   "test": "2022-10-31..2024-12-31",
+   "n_train": 424929,
+   "n_test": 55466
+  }
+ ],
+ "results": {
+  "price": {
+   "n_features": 15,
+   "features": [
+    "ret_1_0",
+    "ret_3_1",
+    "ret_6_1",
+    "ret_12_1",
+    "ret_12_7",
+    "rvol_252d",
+    "rvol_21d",
+    "rmax5_rvol_21d",
+    "rvolhl_21d",
+    "turnover_126d",
+    "dolvol_126d",
+    "market_equity",
+    "beta_60m",
+    "prc_highprc_252d",
+    "ivol_capm_252d"
+   ],
+   "ic_mean": 0.03720459144142552,
+   "ic_t": 4.604534877283441,
+   "ic_n_months": 131,
+   "by_k": {
+    "20": {
+     "k": 20,
+     "n_months": 131,
+     "gross_spread_pct": -0.19667500676730462,
+     "t": -0.44789749964910974,
+     "hit_rate": 0.5038167938931297,
+     "gross_spread_bps": -19.667500676730462
+    },
+    "50": {
+     "k": 50,
+     "n_months": 131,
+     "gross_spread_pct": -0.008368528541029655,
+     "t": -0.026959222613551017,
+     "hit_rate": 0.48854961832061067,
+     "gross_spread_bps": -0.8368528541029655
+    },
+    "100": {
+     "k": 100,
+     "n_months": 131,
+     "gross_spread_pct": 0.1377279147545734,
+     "t": 0.571451240537528,
+     "hit_rate": 0.5572519083969466,
+     "gross_spread_bps": 13.77279147545734
+    }
+   }
+  },
+  "fundamental": {
+   "n_features": 25,
+   "features": [
+    "gp_at",
+    "cop_at",
+    "ope_be",
+    "ni_be",
+    "ebit_sale",
+    "at_gr1",
+    "sale_gr1",
+    "be_me",
+    "at_me",
+    "sale_me",
+    "debt_at",
+    "netdebt_me",
+    "noa_at",
+    "cash_at",
+    "ocf_at",
+    "capx_gr1",
+    "inv_gr1a",
+    "eqnpo_12m",
+    "ni_inc8q",
+    "f_score",
+    "o_score",
+    "z_score",
+    "qmj",
+    "qmj_prof",
+    "qmj_growth"
+   ],
+   "ic_mean": 0.029472965195477322,
+   "ic_t": 3.992053352540655,
+   "ic_n_months": 131,
+   "by_k": {
+    "20": {
+     "k": 20,
+     "n_months": 131,
+     "gross_spread_pct": 0.3884091319981918,
+     "t": 0.9443000144582512,
+     "hit_rate": 0.5419847328244275,
+     "gross_spread_bps": 38.840913199819184
+    },
+    "50": {
+     "k": 50,
+     "n_months": 131,
+     "gross_spread_pct": 0.3945423709848942,
+     "t": 1.3650931192515694,
+     "hit_rate": 0.5801526717557252,
+     "gross_spread_bps": 39.454237098489415
+    },
+    "100": {
+     "k": 100,
+     "n_months": 131,
+     "gross_spread_pct": 0.3837122559234742,
+     "t": 1.7841274732644,
+     "hit_rate": 0.5725190839694656,
+     "gross_spread_bps": 38.37122559234742
+    }
+   }
+  },
+  "both": {
+   "n_features": 40,
+   "features": [
+    "ret_1_0",
+    "ret_3_1",
+    "ret_6_1",
+    "ret_12_1",
+    "ret_12_7",
+    "rvol_252d",
+    "rvol_21d",
+    "rmax5_rvol_21d",
+    "rvolhl_21d",
+    "turnover_126d",
+    "dolvol_126d",
+    "market_equity",
+    "beta_60m",
+    "prc_highprc_252d",
+    "ivol_capm_252d",
+    "gp_at",
+    "cop_at",
+    "ope_be",
+    "ni_be",
+    "ebit_sale",
+    "at_gr1",
+    "sale_gr1",
+    "be_me",
+    "at_me",
+    "sale_me",
+    "debt_at",
+    "netdebt_me",
+    "noa_at",
+    "cash_at",
+    "ocf_at",
+    "capx_gr1",
+    "inv_gr1a",
+    "eqnpo_12m",
+    "ni_inc8q",
+    "f_score",
+    "o_score",
+    "z_score",
+    "qmj",
+    "qmj_prof",
+    "qmj_growth"
+   ],
+   "ic_mean": 0.04015449875049756,
+   "ic_t": 4.796203626500538,
+   "ic_n_months": 131,
+   "by_k": {
+    "20": {
+     "k": 20,
+     "n_months": 131,
+     "gross_spread_pct": 0.13774583623074896,
+     "t": 0.31424505244613066,
+     "hit_rate": 0.5267175572519084,
+     "gross_spread_bps": 13.774583623074896
+    },
+    "50": {
+     "k": 50,
+     "n_months": 131,
+     "gross_spread_pct": 0.07331542832573375,
+     "t": 0.2003075655058613,
+     "hit_rate": 0.549618320610687,
+     "gross_spread_bps": 7.3315428325733745
+    },
+    "100": {
+     "k": 100,
+     "n_months": 131,
+     "gross_spread_pct": 0.1994140499530925,
+     "t": 0.7508109943466015,
+     "hit_rate": 0.6106870229007634,
+     "gross_spread_bps": 19.94140499530925
+    }
+   }
+  }
+ },
+ "written_utc": "2026-09-22T04:55:49+00:00",
+ "panel": {
+  "panel": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\aegis_panel\\aegis_panel_v2.parquet",
+  "rows_total": 4157680,
+  "rows_kept": 480395,
+  "start": "2005-01-01",
+  "size_groups_kept": [
+   "mega",
+   "large",
+   "small"
+  ],
+  "months": 240,
+  "first": "2005-01-31",
+  "last": "2024-12-31",
+  "features_absent_from_this_vintage": []
+ },
+ "verdict": "GO: fundamental holds 38.4-39.5 bps across k=20/50/100 (IC +0.0295, t +3.99, 131 OOS months), clearing the 20 bps floor at every k and beating price-only (-19.7 bps worst-cell) by +58.0 bps on the SAME panel. Note that `both` is WORSE (7.3-19.9 bps): adding the price features DILUTES the fundamental signal, the same way lgbm_full lost to lgbm_small in NEGATIVE_RESULTS.md \u00a759. Ship the smaller feature set. This is a GO on the DATA WORK -- building a current fundamental vintage -- and NOT a claim the edge survives live: different universe, monthly rebalance, no fills, and this panel ends 2024-12."
+}

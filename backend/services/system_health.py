@@ -515,6 +515,33 @@ def _lab_stop_record(ctx: ProbeCtx, d: dict) -> Optional[dict]:
 
 def p_always_on_lab(ctx: ProbeCtx) -> ProbeResult:
     d = _lab_status(ctx)
+    from backend import config as C                                 # noqa: PLC0415
+    marker = ctx.optimus_dir / str(getattr(C, "ALWAYS_ON_LAB_OFF_MARKER", "always_on_lab_OFF"))
+    if marker.exists():
+        # 2026-10-02: OFF is a persistent marker every launcher honours. A lab
+        # process alive while it exists is a VIOLATION (DEAD verdict: the
+        # guardrail failed), not a healthy lab.
+        # dated by the stamp WRITTEN IN the marker, never its mtime (protocol 7)
+        try:
+            m = re.search(r"\d{4}-\d{2}-\d{2}T[0-9:+\-Z.]+",
+                          marker.read_text(encoding="utf-8", errors="replace"))
+        except OSError:
+            m = None
+        mt = _ts(m.group(0)) if m else None
+        if d is not None:
+            r = _process_verdict(ctx, pid=d.get("pid"), module="always_on_lab",
+                                 stamp=_ts(d.get("utc")),
+                                 cadence=timedelta(minutes=float(d.get("heartbeat_minutes") or 5)),
+                                 what="always_on_lab")
+            if r.verdict == "ALIVE":
+                return ProbeResult("DEAD", r.evidence_utc, r.age_s,
+                                   f"always_on_lab: OFF marker present since {_iso(mt)} but the "
+                                   f"lab is RUNNING (pid {d.get('pid')}) -- a launcher ignored it",
+                                   proof=f"{marker.name} exists AND {r.proof}")
+        return ProbeResult("STOPPED_BY_OPERATOR", _iso(mt), _age(mt, ctx.now),
+                           f"always_on_lab: OFF (marker {marker.name}, since {_iso(mt) or 'an undated write'}); "
+                           f"no launcher starts it until the marker is deleted",
+                           proof=f"{marker} exists")
     if d is None:
         return _unknown("no readable lab_status.json")
     hb = float(d.get("heartbeat_minutes") or 5)
@@ -1159,6 +1186,47 @@ def p_book_grader(ctx: ProbeCtx) -> ProbeResult:
                               "daily_pass steps grade_books/paper_accounts/bridge_report"))
 
 
+def _session_report_gaps(ctx: ProbeCtx) -> list[str]:
+    """The finished sim session's learning report, judged from its own rows.
+
+    2026-10-02: ad32603783de COMPLETED 2026-09-29T23:56Z, its exit-time report
+    raised into a logger, and this row said ok for three days. Now: the newest
+    finished session in `sim/session.json` must have an `ok` row in
+    `learning_reports/report_runs.jsonl`, or its day's report must carry a
+    `generated_utc` after the session ended; a newest row of FAILED is named."""
+    out: list[str] = []
+    s = _read_json(ctx.optimus_dir / "sim" / "session.json") or {}
+    s = s.get("session") if isinstance(s.get("session"), dict) else s
+    if not isinstance(s, dict) or s.get("state") not in ("COMPLETED", "STOPPED"):
+        return out
+    sid = s.get("id")
+    end = _ts(s.get("finished_utc") or s.get("ended_utc") or s.get("planned_end"))
+    rows = []
+    rp = ctx.optimus_dir / "learning_reports" / "report_runs.jsonl"
+    try:
+        for ln in rp.read_text(encoding="utf-8").splitlines():
+            try:
+                r = json.loads(ln)
+            except ValueError:
+                continue
+            if r.get("session") == sid:
+                rows.append(r)
+    except OSError:
+        pass
+    if rows and rows[-1].get("status") != "ok":
+        return [f"learning report for session {sid} FAILED: {str(rows[-1].get('error'))[:80]}"]
+    if rows:
+        return out
+    if end is not None:
+        rep = _read_json(ctx.optimus_dir / "learning_reports" / f"report_{end.date().isoformat()}.json") or {}
+        g = _ts(rep.get("generated_utc"))
+        if g is not None and g >= end:
+            return out
+    out.append(f"session {sid} {s.get('state')} with NO learning report (no ok row, "
+               f"no report generated after it ended)")
+    return out
+
+
 def p_learn_rota(ctx: ProbeCtx) -> ProbeResult:
     day = _newest_pc_book(ctx)
     files = sorted(day.glob("learn_*.json")) if day else []
@@ -1187,6 +1255,7 @@ def p_learn_rota(ctx: ProbeCtx) -> ProbeResult:
                 notes.append(f"{unit}=current")
         else:
             notes.append(f"{unit}=undated result")
+    bad.extend(_session_report_gaps(ctx))
     v: Verdict = "STALE" if bad else _by_age(newest, timedelta(days=1), ctx.now)
     if v == "UNKNOWN":
         return _unknown(f"learn receipts in {day.name} carry no run stamp")
@@ -1380,6 +1449,24 @@ def p_telegram_agent(ctx: ProbeCtx) -> ProbeResult:
 _ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 
+def _reader_evidence(ctx: ProbeCtx, *, max_age_min: float = 60.0) -> dict:
+    """Did the reader load pages THROUGH the gateway recently? From its own
+    `dowjones/reader_status.json` (`t`, `pages_ok_60m`); never a file mtime."""
+    d = _read_json(ctx.optimus_dir / "dowjones" / "reader_status.json")
+    if not isinstance(d, dict):
+        return {"ok": False, "why": "no readable reader_status.json"}
+    t = _ts(d.get("t"))
+    n = int(d.get("pages_ok_60m") or 0)
+    if t is None:
+        return {"ok": False, "why": "reader_status.json carries no stamp"}
+    age = _age(t, ctx.now)
+    if age is None or age > max_age_min * 60:
+        return {"ok": False, "why": f"reader status is {_fmt_age(age)} old"}
+    if n <= 0:
+        return {"ok": False, "why": "pages_ok_60m is 0"}
+    return {"ok": True, "pages_ok_60m": n, "utc": _iso(t), "age_s": age}
+
+
 def p_openclaw_gateway(ctx: ProbeCtx) -> ProbeResult:
     try:
         from backend.services import openclaw_client as OC          # noqa: PLC0415
@@ -1401,9 +1488,23 @@ def p_openclaw_gateway(ctx: ProbeCtx) -> ProbeResult:
                            f"gateway runtime running={running}, connectivity probe ok={probe_ok}",
                            proof="openclaw gateway status")
     if cap and "no-operator" in cap:
+        # 2026-10-02: `connected-no-operator-scope` is the STATUS CLI's own probe
+        # connection (it connects without an operator-scoped token, so the
+        # deep status RPCs are unreadable); it is not what the gateway can
+        # serve. The row said "degraded" for days while the reader read through
+        # it. Capability is now taken from the reader's own evidence.
+        ev = _reader_evidence(ctx)
+        if ev.get("ok"):
+            return ProbeResult("ALIVE", ev.get("utc") or _iso(ctx.now), ev.get("age_s") or 0.0,
+                               f"gateway running, probe ok; the status CLI has no operator "
+                               f"scope ({cap}), capability PROVEN by the reader: "
+                               f"{ev['pages_ok_60m']} pages OK in 60 min (as of {ev.get('utc')})",
+                               proof="openclaw gateway status + dowjones/reader_status.json")
         return ProbeResult("STALE", _iso(ctx.now), 0.0,
-                           f"gateway up but degraded capability: {cap}",
-                           proof="openclaw gateway status: Capability")
+                           f"gateway running, probe ok, but capability UNPROVEN: the status "
+                           f"CLI has no operator scope ({cap}) and the reader shows no OK page "
+                           f"in the last hour ({ev.get('why')})",
+                           proof="openclaw gateway status: Capability + dowjones/reader_status.json")
     return ProbeResult("ALIVE", _iso(ctx.now), 0.0,
                        f"gateway running, probe ok, capability {cap or 'not printed'}",
                        proof="openclaw gateway status: Connectivity probe: ok")

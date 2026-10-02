@@ -1178,7 +1178,7 @@ class TestTheAnalystPullIsOncePerDayNotPerSession:
     def test_it_skips_on_todays_receipt_without_a_session_stamp(self, tmp_path, monkeypatch):
         import json as _j
         import sys
-        from datetime import date
+        from datetime import date, datetime, timezone
         from pathlib import Path
         sys.argv = ["x"]
         import scripts.sim_run as SR
@@ -1187,13 +1187,37 @@ class TestTheAnalystPullIsOncePerDayNotPerSession:
         root = tmp_path / "ledger"
         (root / "analyst").mkdir(parents=True)
         (root / "analyst" / f"analyst_pull_{date.today().isoformat()}.json").write_text(
-            _j.dumps({"n_snapshots": 3086, "n_revision_rows": 392201}), encoding="utf-8")
+            _j.dumps({"n_snapshots": 3086, "n_revision_rows": 392201,
+                      # the gate reads the puller's own stamp (2026-09-30)
+                      "written_utc": datetime.now(timezone.utc).isoformat()}),
+            encoding="utf-8")
         monkeypatch.setattr(C, "OPTIMUS_LEDGER_DIR", root)
         monkeypatch.setattr(SR, "_in_subprocess",
                             lambda *a, **k: pytest.fail("re-pulled after today's receipt"))
         r = SR.u_analyst(tmp_path)          # no session stamp present
         assert "already pulled today" in r["skipped"]
         assert r["n_revision_rows"] == 392201, "the gate must read the WORK, not a note"
+
+    def test_local_midnight_is_not_a_new_us_day(self, tmp_path):
+        # 2026-09-30: a pull finished 22:46 local (UTC+8) = 10:46 ET, and the
+        # next cycle at 00:05 local = 12:05 ET the SAME US day re-ran 80 minutes
+        # because the gate keyed on the machine's date. Key on the US day.
+        import json as _j
+        from datetime import datetime, timezone
+        from scripts import pull_analyst_targets as PA
+
+        (tmp_path / "analyst_pull_2026-09-29.json").write_text(_j.dumps(
+            {"n_snapshots": 3096, "written_utc": "2026-09-29T14:46:03+00:00"}),
+            encoding="utf-8")
+        same_us_day = datetime(2026, 9, 29, 16, 5, tzinfo=timezone.utc)   # 00:05 local
+        next_us_day = datetime(2026, 9, 30, 13, 0, tzinfo=timezone.utc)
+        assert PA.pulled_this_us_day(tmp_path, same_us_day) is not None
+        assert PA.pulled_this_us_day(tmp_path, next_us_day) is None
+        # an empty pull is not a completed pull
+        (tmp_path / "analyst_pull_2026-09-29.json").write_text(_j.dumps(
+            {"n_snapshots": 0, "written_utc": "2026-09-29T14:46:03+00:00"}),
+            encoding="utf-8")
+        assert PA.pulled_this_us_day(tmp_path, same_us_day) is None
 
     def test_an_unreadable_receipt_is_not_proof_of_a_good_pull(self, tmp_path, monkeypatch):
         import sys

@@ -1,0 +1,71 @@
+{
+ "job": "hyp_llm_theories JOB3",
+ "run": "r3",
+ "licence": "PRODUCT_EXPERIMENT",
+ "declared_utc": "2026-09-29T13:51:16+00:00",
+ "before_any_model_call": true,
+ "data": {
+  "cells": "ft_lab\\data\\cells.parquet",
+  "preds": "ft_lab\\data\\preds_baselines.parquet",
+  "post_cutoff": "test block 2026-05-15..2026-09-28; DeepSeek measured cutoff 2025-12 (X2 probe); Qwen2.5-7B cutoff earlier. The val block (2026-01-16..04-30) is also post-cutoff and is used ONLY to fit the stacking/Platt maps for arm (b)."
+ },
+ "sample": {
+  "seed": 20260930,
+  "q1_test_cells": 960,
+  "val_cells": 960,
+  "q2_pairs": 400,
+  "self_consistency_cells": 120,
+  "stratified_by": "week",
+  "filters": "ticker >= 3 letters, SEC title present, blinded text leak-free (X2.leaks) else dropped"
+ },
+ "event": "y > vol21_absx (|open-to-close minus SPY| > the name's trailing 21-session mean |abnormal move|)",
+ "train_base_rate": 0.4455,
+ "test_sample_event_rate": 0.4198,
+ "arms": {
+  "q1_text": [
+   "deepseek",
+   "local"
+  ],
+  "q1_num": [
+   "deepseek",
+   "local"
+  ],
+  "q2_text": [
+   "deepseek",
+   "local"
+  ],
+  "q2_num": [
+   "deepseek"
+  ],
+  "q1_text_selfconsistency": "deepseek k=5 at T=0.7 on the first n_sc test cells; plus DeepSeek+local mean",
+  "id_canary": [
+   "deepseek",
+   "local"
+  ],
+  "temperature_single": 0.0
+ },
+ "baselines": {
+  "p_base": "train base rate",
+  "p_LB1": "logistic on trailing priors (vol prior), train",
+  "p_LT2": "logistic on trailing priors + news counts + T2 TF-IDF rel forecast, train",
+  "p_pairnum": "logistic on T2 difference, train-block pairs",
+  "vol_a_higher": "heuristic"
+ },
+ "metrics": "Brier, BSS, AUC, ECE; paired per-row Brier difference (ref - arm) with SE over weekly blocks of entry dates; MDE = 2.8 SE; by month",
+ "verdict_rules": {
+  "q1_text": "SKILL_OVER_VOL_PRIOR if Brier improvement vs p_LB1 > 0 with t >= 2; FAILED_VARIANT if mean <= 0 and MDE <= 0.01; else CANNOT_DISTINGUISH. (vs p_base reported.)",
+  "q1_num_b": "LLM_ADDS if stack(L_T2 logit, LLM logit) Platt-fitted on the val sample beats L_T2 recalibrated on the same val sample, on test, t >= 2; FAILED_VARIANT if mean <= 0 and MDE <= 0.005; else CANNOT_DISTINGUISH. Raw LLM-num vs p_LT2 also reported.",
+  "q2": "SKILL if accuracy - 0.5 > 0 with t >= 2 AND Brier beats p_pairnum with t >= 2 for 'adds'; otherwise as above.",
+  "sc_c": "SC_HELPS if Brier(mean of k) < Brier(single sample 1) with t >= 2; else CANNOT_DISTINGUISH / FAILED_VARIANT.",
+  "leak": "an arm whose identified share > 10% reports its metrics split by identified / not; a skill that lives only in identified rows is not credited.",
+  "scale_rule": "scale an arm beyond the first sample only if its point estimate beats its reference"
+ },
+ "cost_estimate_usd": "about 0.6-0.9 DeepSeek at peak list price; local $0; cap 2.40 via hyp_llm",
+ "closed_not_repeated": [
+  "AMNESIA-2 direction",
+  "X2 blind direction/range",
+  "world digest headline size buckets",
+  "ft_lab zero-shot size buckets vs vol prior"
+ ],
+ "sha256": "f46a3545a8a2536b3967c5b544124c99ae587cc5ec14346d822211da004e5c3c"
+}

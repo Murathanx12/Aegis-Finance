@@ -140,7 +140,13 @@ def calls(monkeypatch) -> list[str]:
         return {"status": "ok", "rc": 0, "receipt": "bridge_fixture.json", "n_rows": 2,
                 "n_forward_graded": 2, "identical_holdings": []}
 
+    def _shadow(**kw):
+        # 2026-09-30: the shadow scoreboard child reads the live leaderboard
+        # and bars; stubbed like the other book-grading children
+        return {"status": "ok", "rc": 0, "receipt": "shadow_fixture.json", "books": {}}
+
     monkeypatch.setattr(DP, "run_grade_books", _grade_books)
+    monkeypatch.setattr(DP, "run_shadow_grade", _shadow)
     monkeypatch.setattr(DP, "run_paper_accounts", _paper_accounts)
     monkeypatch.setattr(DP, "run_bridge_report", _bridge)
 
@@ -942,7 +948,10 @@ def test_the_child_runner_reads_the_summary_and_names_a_failure(monkeypatch) -> 
     argvs = [a for a, _ in seen[-3:]]
     assert argvs[0][2:] == ["scripts.llm_portfolio", "grade", "--json"]
     assert "--no-pull" not in argvs[0]
-    assert argvs[1][2:] == ["scripts.paper_accounts_roi", "--no-broker", "--json"]
+    # 2026-10-02: WITH the read-only broker GETs (config
+    # DAILY_PASS_PAPER_ACCOUNTS_BROKER_READ); `--no-broker` silently dropped
+    # hack1-6 and PC-PAPER from every scheduled receipt from 09-28 on.
+    assert argvs[1][2:] == ["scripts.paper_accounts_roi", "--json"]
     assert argvs[2][2:] == ["scripts.bridge_report", "report", "--json"]
     assert all(kw["timeout"] == 5 for _a, kw in seen[-3:])
     assert all(kw.get("shell") in (None, False) for _a, kw in seen)

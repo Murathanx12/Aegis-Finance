@@ -1,0 +1,311 @@
+{
+ "stamp_utc": "20260929T132327Z",
+ "read_only": true,
+ "accounts": [
+  {
+   "role": "hack1",
+   "status": "ok",
+   "account_number": "PA3WXDS3MJ53",
+   "equity": 90876.96,
+   "cash": 66575.01,
+   "positions": [
+    {
+     "symbol": "SYM",
+     "qty": 574.0,
+     "price": 42.3379,
+     "market_value": 24301.9546,
+     "unrealized_plpc": "-0.01608",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "38.73",
+       "qty": "574",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-fe65ed7ff3f7262abc48d8c5"
+      }
+     ]
+    }
+   ],
+   "open_orders": 1,
+   "gross_over_equity": 0.267,
+   "worst_case_at_stops_usd": 2070.93,
+   "worst_case_pct_equity": 2.28,
+   "flags": []
+  },
+  {
+   "role": "hack2",
+   "status": "ok",
+   "account_number": "PA33ON4NRJAX",
+   "equity": 98820.5,
+   "cash": 98820.5,
+   "positions": [],
+   "open_orders": 0,
+   "gross_over_equity": 0.0,
+   "worst_case_at_stops_usd": 0.0,
+   "worst_case_pct_equity": 0.0,
+   "flags": []
+  },
+  {
+   "role": "hack3",
+   "status": "HTTP_401",
+   "flags": []
+  },
+  {
+   "role": "hack4",
+   "status": "ok",
+   "account_number": "PA3R9XHMCVDA",
+   "equity": 80030.78,
+   "cash": 45031.44,
+   "positions": [
+    {
+     "symbol": "BIOA",
+     "qty": 2261.0,
+     "price": 7.2925,
+     "market_value": 16488.3425,
+     "unrealized_plpc": "-0.07338",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "6.93",
+       "qty": "2261",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-d3388a9659e83d73f1ceaca5"
+      }
+     ]
+    },
+    {
+     "symbol": "RZLV",
+     "qty": 8650.0,
+     "price": 2.14,
+     "market_value": 18511.0,
+     "unrealized_plpc": "-0.06957",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "2.02",
+       "qty": "8650",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-3f7b53d248b1f4829cf04172"
+      }
+     ]
+    }
+   ],
+   "open_orders": 2,
+   "gross_over_equity": 0.437,
+   "worst_case_at_stops_usd": 1857.61,
+   "worst_case_pct_equity": 2.32,
+   "flags": []
+  },
+  {
+   "role": "hack5",
+   "status": "ok",
+   "account_number": "PA3T8OTGULCD",
+   "equity": 91273.47,
+   "cash": 88053.47,
+   "positions": [
+    {
+     "symbol": "BE261016C00290000",
+     "qty": 7.0,
+     "price": 8.15,
+     "market_value": 5705.0,
+     "unrealized_plpc": "-0.38722",
+     "asset_class": "us_option",
+     "expiry": "2026-10-16"
+    },
+    {
+     "symbol": "BE261016C00320000",
+     "qty": -7.0,
+     "price": 3.55,
+     "market_value": -2485.0,
+     "unrealized_plpc": "0.47015",
+     "asset_class": "us_option",
+     "expiry": "2026-10-16"
+    }
+   ],
+   "open_orders": 0,
+   "gross_over_equity": 0.09,
+   "worst_case_at_stops_usd": 3220.0,
+   "worst_case_pct_equity": 3.53,
+   "flags": []
+  },
+  {
+   "role": "hack6",
+   "status": "ok",
+   "account_number": "PA3I816FLXE9",
+   "equity": 82197.19,
+   "cash": 25866.99,
+   "positions": [
+    {
+     "symbol": "ABEO",
+     "qty": 1079.0,
+     "price": 5.35,
+     "market_value": 5772.65,
+     "unrealized_plpc": "-0.00372",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "4.83",
+       "qty": "1079",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-b5c31053e54dab9bc981d0bb"
+      }
+     ]
+    },
+    {
+     "symbol": "ARDX",
+     "qty": 1693.0,
+     "price": 3.44,
+     "market_value": 5823.92,
+     "unrealized_plpc": "0.01475",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "3.05",
+       "qty": "1693",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-3c002a549a3bb66d5f6a6457"
+      }
+     ]
+    },
+    {
+     "symbol": "ATR",
+     "qty": 43.0,
+     "price": 124.45,
+     "market_value": 5351.35,
+     "unrealized_plpc": "-0.01426",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "113.62",
+       "qty": "43",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-796b30907cf2126cb0edaf6c"
+      }
+     ]
+    },
+    {
+     "symbol": "CALX",
+     "qty": 169.0,
+     "price": 33.19,
+     "market_value": 5609.11,
+     "unrealized_plpc": "-0.04103",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "31.15",
+       "qty": "169",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-df88b83ad2d3708777c0cb91"
+      }
+     ]
+    },
+    {
+     "symbol": "EVLV",
+     "qty": 1084.0,
+     "price": 4.7605,
+     "market_value": 5160.382,
+     "unrealized_plpc": "-0.05919",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "4.55",
+       "qty": "1084",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-1e84aa9a8c46c732aa182196"
+      }
+     ]
+    },
+    {
+     "symbol": "INVA",
+     "qty": 258.0,
+     "price": 21.25,
+     "market_value": 5482.5,
+     "unrealized_plpc": "0.00283",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "19.07",
+       "qty": "258",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-04d4f115baed11bb77207ce0"
+      }
+     ]
+    },
+    {
+     "symbol": "KTOS",
+     "qty": 121.0,
+     "price": 44.6,
+     "market_value": 5396.6,
+     "unrealized_plpc": "-0.05808",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "42.62",
+       "qty": "121",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-23b056316eb993facbe508fe"
+      }
+     ]
+    },
+    {
+     "symbol": "MAZE",
+     "qty": 242.0,
+     "price": 26.85,
+     "market_value": 6497.7,
+     "unrealized_plpc": "0.13771",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "21.24",
+       "qty": "242",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-187391ba5ec61e5fcc845155"
+      }
+     ]
+    },
+    {
+     "symbol": "PRVA",
+     "qty": 263.0,
+     "price": 19.87,
+     "market_value": 5225.81,
+     "unrealized_plpc": "-0.04241",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "18.68",
+       "qty": "263",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-e054a720dead4aa05f0f4213"
+      }
+     ]
+    },
+    {
+     "symbol": "STRO",
+     "qty": 374.0,
+     "price": 16.07,
+     "market_value": 6010.18,
+     "unrealized_plpc": "0.04622",
+     "asset_class": "us_equity",
+     "stops": [
+      {
+       "stop_price": "13.82",
+       "qty": "374",
+       "tif": "gtc",
+       "client_order_id": "aat-stop-e830354efc8fe0b18e234569"
+      }
+     ]
+    }
+   ],
+   "open_orders": 10,
+   "gross_over_equity": 0.685,
+   "worst_case_at_stops_usd": 5574.09,
+   "worst_case_pct_equity": 6.78,
+   "flags": []
+  }
+ ],
+ "website": {
+  "status": "DEGRADED",
+  "newest_lane_nav": "2026-09-18"
+ },
+ "n_flags": 1
+}

@@ -1,0 +1,34 @@
+{"owner":"parent","job":"t2_f2025","launcher_pid":173244,"child_pid":"","utc":"2026-09-29T13:33:27.4347003Z"}
+{"child_pid":"175788,183000","launcher_pid":169940,"utc":"2026-09-29T13:35:06.6239677Z","owner":"job4","job":"size_members build"}
+{"owner":"parent","job":"t2_f2025","launcher_pid":181564,"child_pid":"","utc":"2026-09-29T13:35:29.7924936Z"}
+{"child_pid":"127056","launcher_pid":174272,"utc":"2026-09-29T13:35:50.6010673Z","owner":"job4","job":"size_members evaluate"}
+{"owner":"job3","job":"llama-server Qwen2.5-7B (started via llama_server.ensure)","child_pid":"112536","utc":"2026-09-29T13:36:27Z"}
+{"owner":"parent","job":"t2_f2025","launcher_pid":3512,"child_pid":"148528 181420","utc":"2026-09-29T13:37:27.7527543Z"}
+{"child_pid":"174692","launcher_pid":118556,"utc":"2026-09-29T13:38:33.3730656Z","owner":"job4","job":"alpaca inactive assets"}
+{"child_pid":"182900","launcher_pid":120196,"utc":"2026-09-29T13:39:10.0658605Z","owner":"job4","job":"size_members evaluate 2"}
+{"owner":"job3","job":"local 7B chain (cmd launcher 176860)","launcher_pid":176860,"child_pid":"172168,176032","stop":"backend/data/optimus/hyp_lab/job3_r1/STOP","utc":"2026-09-29T13:39:42Z"}
+{"owner":"parent","job":"run_declared_8","launcher_pid":136552,"child_pid":"164940","utc":"2026-09-29T13:40:59.0038035Z"}
+{"child_pid":"161840","launcher_pid":177132,"utc":"2026-09-29T13:45:53.1618757Z","owner":"job4","job":"deaths_crsp pull"}
+{"owner":"job4","launcher_pid":68832,"stop_file":"backend/data/optimus/nn_lab/STOP_DEATHS_PULL","child_pid":"141044","utc":"2026-09-29T13:52:02.6732179Z","job":"deaths_crsp pull v2 parallel"}
+{"child_pid":"137220","launcher_pid":175296,"utc":"2026-09-29T14:13:41.9883790Z","owner":"job4","job":"nn_lab.rebuild"}
+{"owner":"job4","launcher_pid":169896,"stop_file":"backend/data/optimus/nn_lab/STOP_RAW_PULL","child_pid":"180944","utc":"2026-09-29T14:13:52.0791191Z","job":"raw monthly pull"}
+{"launcher_pid":159268,"utc":"2026-09-29T14:15:18.8962748Z","owner":"job4","job":"size build+evaluate on rebuilt table"}
+{"child_pid":"","launcher_pid":181296,"utc":"2026-09-29T14:26:45.9801882Z","owner":"job4","job":"nightly sandbox dry-run"}
+{"child_pid":"","launcher_pid":172896,"utc":"2026-09-29T14:27:02.1747623Z","owner":"job4","job":"nightly sandbox dry-run 2"}
+{"launcher_pid":175256,"utc":"2026-09-29T14:27:16.9999024Z","owner":"job4","job":"nightly sandbox dry-run 3"}
+{"launcher_pid":147836,"utc":"2026-09-29T14:27:27.9133485Z","owner":"job4","job":"nightly sandbox dry-run 4"}
+{"launcher_pid":174872,"utc":"2026-09-29T14:29:17.8883499Z","owner":"job4","job":"walkforward --no-nn hyg_20260930_nonn"}
+{"child_pid":145684,"utc":"2026-09-29T14:31:28.3807992Z","owner":"job4","job":"walkforward hyg stopped by PID for RAM floor"}
+{"owner":"job4","launcher_pid":174864,"stop_file":"backend/data/optimus/nn_lab/STOP_JOB4_EVALS","child_pid":"178388","utc":"2026-09-29T14:32:22.4872490Z","job":"queued evals (RAM-gated)"}
+{"owner":"parent","job":"nightly_k0_smoke","stopped_pid":136816,"reason":"coordinator STOP","utc":"2026-09-29T14:41:37.2141248Z"}
+{"owner":"parent","job":"nightly_k0_smoke","stopped_pid":174128,"reason":"coordinator STOP","utc":"2026-09-29T14:41:37.2728408Z"}
+{"owner":"parent","job":"nightly_k0_smoke","stopped_pid":167320,"reason":"coordinator STOP","utc":"2026-09-29T14:41:37.3294461Z"}
+{"owner":"parent","job":"nightly_k0_smoke","stopped_pid":143208,"reason":"coordinator STOP","utc":"2026-09-29T14:41:37.3803817Z"}
+{"owner":"parent","job":"nightly_k0_smoke","stopped_pid":181132,"reason":"coordinator STOP","utc":"2026-09-29T14:41:37.5280485Z"}
+{"pid": 189456, "job": "investable_decompose", "started": "2026-09-30T00:02:04.8523046+08:00"}
+{"pid": 187592, "parent": 189456, "job": "investable_decompose child"}
+{"pid": 189460, "parent": 188764, "job": "investable_run child", "started": "2026-09-30T00:03:40.5420710+08:00"}
+{"pid": 189804, "parent": 176036, "job": "insider_events child", "started": "2026-09-30T00:10:24.0100189+08:00"}
+{"pid_cmd": 182120, "children": "conhost.exe:183976,python.exe:190912,python.exe:188056", "job": "hyp_lab nightly manual", "started": "2026-09-30T00:14:33.4687650+08:00"}
+{"pid": 155604, "parent": 186420, "job": "twin_board child", "started": "2026-09-30T00:17:54.2983419+08:00"}
+{"pid": 72652, "parent": 187212, "job": "ft_lab bulk_events 300 awake min", "started": "2026-09-30T00:46:35.8723389+08:00"}

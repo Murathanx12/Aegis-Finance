@@ -1,0 +1,45 @@
+{
+  "script": "scripts/research_congress_leadership_split.py",
+  "generated_at_utc": "2026-09-20T10:19:04.701265+00:00",
+  "licence": "PRODUCT_EXPERIMENT",
+  "stage": "screen",
+  "llm_spend_usd": 0.0,
+  "trial": "TRIAL-CONGRESS-IC",
+  "canonical_doc": "docs/TRIALS/TRIAL-CONGRESS-IC.md",
+  "research_note_source": "docs/research_notes/2026-09-20/research_horizon_and_winners.md \u00a75 item 1",
+  "leadership_roster_is_a_construction": true,
+  "leadership_roster_size": 32,
+  "leadership_roster_sources": [
+    "https://www.congress.gov/browse",
+    "https://www.senate.gov/senators/leadership.htm",
+    "https://www.senate.gov/general/committee_assignments/assignments.htm",
+    "https://www.acr.org/News-and-Publications/New-Congressional-Committee-Leadership-Named-as-119th-Congress-Begins",
+    "https://scalise.house.gov/press-releases/Scalise-Applauds-Committee-Chairs-for-119th-Congress"
+  ],
+  "min_purchases_per_group": 30,
+  "horizons_sessions": [
+    21,
+    63,
+    126
+  ],
+  "null_design": {
+    "method": "circular_shift",
+    "min_shift_sessions": 63,
+    "n_draws": 400
+  },
+  "pit_store_check": {
+    "db_exists": true,
+    "rows": 0,
+    "as_of_min": null,
+    "as_of_max": null,
+    "note": "aggregate ticker-level score only; no member identity persisted even when non-empty (see module docstring)"
+  },
+  "live_fetch_status": "error",
+  "live_fetch_error": "FMP senate-latest returned 402 \u2014 daily FMP quota exhausted; congress source unavailable this run (retries next slot)",
+  "live_fetch_n_raw_disclosures": 0,
+  "purchases_common_stock_total": 0,
+  "purchases_leadership": 0,
+  "purchases_non_leadership": 0,
+  "verdict": "REFUSED: UNDERPOWERED",
+  "refusal_reason": "leadership purchases=0, non_leadership purchases=0; both below the pre-registered floor of 30 per group. PIT store rows for congress_score:*=0 (aggregate-only, no member identity even if non-empty). Live fetch status='error', error='FMP senate-latest returned 402 \u2014 daily FMP quota exhausted; congress source unavailable this run (retries next slot)'. No backtest was run."
+}

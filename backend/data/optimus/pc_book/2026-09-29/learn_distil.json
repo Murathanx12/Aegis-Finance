@@ -1,0 +1,8 @@
+{
+ "unit": "distil",
+ "day": "2026-09-29",
+ "rc": 0,
+ "status": "ok",
+ "tail": "\n  \"changed_since_last\": [],\n  \"path\": \"C:\\\\Users\\\\mrthn\\\\aegis-finance\\\\backend\\\\data\\\\optimus\\\\pc_book\\\\policy_state.json\"\n }\n}\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\n | policy_state refreshed",
+ "ran_utc": "2026-09-29T16:13:34+00:00"
+}

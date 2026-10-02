@@ -1,0 +1,2 @@
+{"stage": "first", "before": {"total_usd": 33.51, "read_at": "2026-09-28T08:06:27.675169+00:00"}, "after": {"total_usd": 33.51, "read_at": "2026-09-28T08:06:33.233206+00:00"}, "n_calls": 2, "spent_usd_served_row": 0.0027208700000000002}
+{"stage": "run", "before": {"total_usd": 33.51, "read_at": "2026-09-28T08:06:42.914695+00:00"}, "after": {"total_usd": 33.46, "read_at": "2026-09-28T08:10:30.513889+00:00"}, "n_calls": 126, "spent_usd_served_row": 0.07308485000000002}

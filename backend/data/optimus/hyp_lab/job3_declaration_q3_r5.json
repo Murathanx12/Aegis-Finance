@@ -1,0 +1,34 @@
+{
+ "job": "hyp_llm_theories JOB3 amendment Q3",
+ "run": "r5",
+ "declared_utc": "2026-09-29T14:06:18+00:00",
+ "before_any_q3_call": true,
+ "why": "Q1 DeepSeek text answers had sd_p 0.0065 (abstention around the stated base rate); Q3 forces a within-date ranking without an anchor",
+ "groups": {
+  "test": 112,
+  "val": 1,
+  "items_per_group": 8,
+  "distinct_test_dates": 48
+ },
+ "arms": {
+  "q3_text": [
+   "deepseek",
+   "local if time"
+  ],
+  "q3_num": [
+   "deepseek"
+  ],
+  "q3_text_k3": "deepseek, 3 samples at T=0.7, mean score"
+ },
+ "target": "rel = log(|x_oc|+1e-4) - log(vol21_absx): move size relative to the name's own normal",
+ "metric": "within-group Spearman(score, rel), mean over groups, SE over weekly blocks of entry date, MDE 2.8 SE; paired increment vs p_LT2 ranks; fixed 50/50 average of within-group ranks (LLM, p_LT2) vs p_LT2 (no fitting); by month",
+ "verdict_rules": {
+  "q3_text": "SKILL if IC > 0 with t >= 2; FAILED_VARIANT if IC <= 0 and MDE <= 0.05; else CANNOT_DISTINGUISH",
+  "q3_adds": "ADDS if rank-average(LLM, LT2) - LT2 > 0 with t >= 2; FAILED_VARIANT if <= 0 and MDE <= 0.03; else CANNOT_DISTINGUISH"
+ },
+ "cost_estimate_usd": "< 0.20 DeepSeek",
+ "graded_split": "val (post-cutoff 2026-01-16..04-30; a second fold, no fitting in Q3)",
+ "subset": "earnings_report cells only (ft_lab student label of the first document)",
+ "added_metric": "IC(score, log|move| - T2 forecast): does the LLM rank what the numbers + TF-IDF model missed (declared with the r2 scale-up, before its calls)",
+ "sha256": "93fae90e24c4ac9ac43a3e64c813279b0cbeb32255dbfd8fcdffb3685888943a"
+}

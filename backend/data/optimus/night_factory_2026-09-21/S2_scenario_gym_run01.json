@@ -1,0 +1,506 @@
+{
+ "job": "S2_scenario_gym",
+ "lane": "GUT",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "panel": "PANEL-B",
+ "backend": "local_gguf",
+ "stage": "features",
+ "PREREGISTRATION": {
+  "spec": "docs/research_notes/2026-09-20/spec_decision_engine_and_scenario_gym.md Part C",
+  "brief": "Murat, 2026-09-20: a gut feeling, tested against good and bad made-up scenarios built from our own data",
+  "primary": "the twin MOVEMENT lift over the control twin, block-paired with a Newey-West lag-2 t",
+  "secondary": "sign accuracy, Brier, calibration by confidence decile, and the net long-short against the shuffled control",
+  "prompt": {
+   "system_sha256": "7a704a53cfd44f3497c85490c7f8c5fad0c70eb1b07c8a4f89f084a30d1b8cd0",
+   "prompt_sha256": "de826427092fcfca654ca9716568198509144ef502bb439b34997259306c5ed9",
+   "schema_sha256": "31a706e2b551bc735b5faf9affebc1dfbdc98ffb5c98fabb3cd218e9de77df0f",
+   "schema_in_system": true,
+   "required_fields": [
+    "direction",
+    "size_pct",
+    "expected_return_20d",
+    "confidence",
+    "falsifier"
+   ],
+   "temperature": 0.0,
+   "max_tokens": 160
+  },
+  "counterfactual_library_hash": "dc1d71a5509ad532ab37175ab8d304c31637deb4a5d41652c794879ea92e58d1",
+  "unmapped_event_ids": []
+ },
+ "question": "Does a committed decision MOVE the right way when one favourable or one adverse development is appended to an otherwise byte-identical fictional scenario -- and does it move more than it does on an unrelated appended sentence?",
+ "cost_model": {
+  "cost_bps_per_side": 25.0,
+  "charged_on": "realised turnover sum|dw| per monthly rebalance"
+ },
+ "counterfactual_library_hash": "dc1d71a5509ad532ab37175ab8d304c31637deb4a5d41652c794879ea92e58d1",
+ "adoption_line": "adoption: NOT_ADOPTED \u2014 reliability_weight 0 until N>=300 over >=12 independent month blocks and a forward record exists",
+ "construction": {
+  "news_rows": 340466,
+  "symbol_month_groups": 36899,
+  "with_a_forward_label": 34984,
+  "cells_at_min_docs": 18521,
+  "min_docs_per_cell": 3,
+  "bars": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+  "market_symbol": "SPY",
+  "convention": "enter at the first open of M+1, exit at the first open of M+2, minus SPY over the same two opens",
+  "symbols_with_a_label": 3060,
+  "label_rows": 59348,
+  "dropped_for_a_calendar_gap": 0
+ },
+ "masking": {
+  "documents_in_digests": 106623,
+  "documents_with_at_least_one_masked_token": 44726,
+  "mask_hit_rate": 0.4195,
+  "cells_whose_symbol_has_a_CRSP_issuer_name": 15817,
+  "note": "a document with no masked token is one where neither the ticker nor an issuer-name token appeared in its text -- common for a headline that never names the company -- but a HIGH rate of them would be a mask leak"
+ },
+ "typed_events": {
+  "typed_event_files_read": 5,
+  "typed_rows_scanned": 45404,
+  "cells": 300,
+  "cells_with_a_typed_event": 27,
+  "coverage": 0.09,
+  "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+  "vocabulary_hash": "ef173fa7f72760a9bcc1c7f469ffcc96199357572177241fdadd058c25ec4aad",
+  "vocabulary_version": 3,
+  "note": "a cell with no typed row is keyed `no_event` and takes the generic development pair; the coverage above is what separates 'twins keyed by the dominant event' from 'most twins were generic'"
+ },
+ "cells_frozen": {
+  "n_cells": 300,
+  "cells_sha256": "612c599880a196eb3cf3204d97bff3a4043cb651b062dae2ce5b0f0718ad9980",
+  "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-21\\S2_scenario_gym_run01_cells.json",
+  "seed": 20260920,
+  "stratified_by": "month block (canon section 58's dependence unit)",
+  "drawn_from_cells": 18521,
+  "months": [
+   "2025-01",
+   "2025-02",
+   "2025-03",
+   "2025-04",
+   "2025-05",
+   "2025-06",
+   "2025-07",
+   "2025-08",
+   "2025-09",
+   "2025-10",
+   "2025-11",
+   "2025-12",
+   "2026-01",
+   "2026-02",
+   "2026-03",
+   "2026-04",
+   "2026-05",
+   "2026-06",
+   "2026-07"
+  ]
+ },
+ "fiction": {
+  "entity_masking": "night_r2_monthly_llm.widened_digests (the SAME mask_company/tokenise X_anon_gap uses)",
+  "date_shift_days_range": [
+   120,
+   600
+  ],
+  "numbers": "kept verbatim; a bare four-digit year is not shifted",
+  "twins_whose_appended_text_already_appeared_in_the_base": 0,
+  "arms": [
+   "real",
+   "good_twin",
+   "bad_twin",
+   "control_good_twin",
+   "control_bad_twin",
+   "control_shuffled"
+  ]
+ },
+ "MDE": {
+  "PRIMARY_block_level": {
+   "date_blocks": 19,
+   "monthly_sd_pp": 5.5312,
+   "MDE_monthly_pp": 3.5531,
+   "MDE_annualised_pp": 42.637,
+   "basis": "the run's OWN monthly long-short series"
+  },
+  "secondary_per_decision": {
+   "N_decisions": 128,
+   "cross_sectional_sd_pct": 21.2522,
+   "MDE_mean_20d_pp": 5.26,
+   "MDE_sign_accuracy_pp": 12.37,
+   "basis": "2.8 * sd / sqrt(N), two-sided 5%, 80% power"
+  },
+  "which_decides": "the BLOCK figure. N decisions drawn from ~19 month blocks collapse to an effective n near the block count for anything that shares a month's market move (canon section 58); the per-decision line is reported and never deciding"
+ },
+ "arms": {
+  "real": {
+   "label": "real",
+   "cells": 300,
+   "date_blocks": 19,
+   "dropped_unlabelled": 0,
+   "directional_calls": 128,
+   "share_flat": 0.573,
+   "sign_accuracy": 0.4219,
+   "long_short_monthly_mean_pct": -0.689,
+   "long_short_ann_pct": -8.268,
+   "long_short_ann_pct_NET": -14.11,
+   "t_nw_blocks": -0.55,
+   "t_nw_blocks_NET": -0.939,
+   "monthly_sd_pp": 5.533,
+   "turnover_per_rebalance": 1.9474,
+   "cost_bps_per_side": 25.0,
+   "cost_drag_ann_pct": 5.842
+  },
+  "good_twin": {
+   "label": "good_twin",
+   "cells": 300,
+   "date_blocks": 19,
+   "dropped_unlabelled": 0,
+   "directional_calls": 245,
+   "share_flat": 0.183,
+   "sign_accuracy": 0.4163,
+   "long_short_monthly_mean_pct": 0.5729,
+   "long_short_ann_pct": 6.875,
+   "long_short_ann_pct_NET": 1.057,
+   "t_nw_blocks": 0.5,
+   "t_nw_blocks_NET": 0.077,
+   "monthly_sd_pp": 5.313,
+   "turnover_per_rebalance": 1.9393,
+   "cost_bps_per_side": 25.0,
+   "cost_drag_ann_pct": 5.818
+  },
+  "bad_twin": {
+   "label": "bad_twin",
+   "cells": 300,
+   "date_blocks": 19,
+   "dropped_unlabelled": 0,
+   "directional_calls": 170,
+   "share_flat": 0.433,
+   "sign_accuracy": 0.5118,
+   "long_short_monthly_mean_pct": -1.2688,
+   "long_short_ann_pct": -15.226,
+   "long_short_ann_pct_NET": -21.068,
+   "t_nw_blocks": -1.08,
+   "t_nw_blocks_NET": -1.493,
+   "monthly_sd_pp": 6.664,
+   "turnover_per_rebalance": 1.9474,
+   "cost_bps_per_side": 25.0,
+   "cost_drag_ann_pct": 5.842
+  },
+  "control_good_twin": {
+   "label": "control_good_twin",
+   "cells": 299,
+   "date_blocks": 19,
+   "dropped_unlabelled": 0,
+   "directional_calls": 205,
+   "share_flat": 0.314,
+   "sign_accuracy": 0.4146,
+   "long_short_monthly_mean_pct": 0.5445,
+   "long_short_ann_pct": 6.534,
+   "long_short_ann_pct_NET": 0.72,
+   "t_nw_blocks": 0.348,
+   "t_nw_blocks_NET": 0.038,
+   "monthly_sd_pp": 7.401,
+   "turnover_per_rebalance": 1.9378,
+   "cost_bps_per_side": 25.0,
+   "cost_drag_ann_pct": 5.813
+  },
+  "control_bad_twin": {
+   "label": "control_bad_twin",
+   "cells": 300,
+   "date_blocks": 19,
+   "dropped_unlabelled": 0,
+   "directional_calls": 108,
+   "share_flat": 0.64,
+   "sign_accuracy": 0.5463,
+   "long_short_monthly_mean_pct": -0.6799,
+   "long_short_ann_pct": -8.159,
+   "long_short_ann_pct_NET": -14.001,
+   "t_nw_blocks": -0.336,
+   "t_nw_blocks_NET": -0.576,
+   "monthly_sd_pp": 9.196,
+   "turnover_per_rebalance": 1.9474,
+   "cost_bps_per_side": 25.0,
+   "cost_drag_ann_pct": 5.842
+  },
+  "control_shuffled": {
+   "label": "control_shuffled",
+   "cells": 300,
+   "date_blocks": 19,
+   "dropped_unlabelled": 0,
+   "directional_calls": 122,
+   "share_flat": 0.593,
+   "sign_accuracy": 0.459,
+   "long_short_monthly_mean_pct": 1.2808,
+   "long_short_ann_pct": 15.37,
+   "long_short_ann_pct_NET": 9.528,
+   "t_nw_blocks": 0.899,
+   "t_nw_blocks_NET": 0.558,
+   "monthly_sd_pp": 5.522,
+   "turnover_per_rebalance": 1.9474,
+   "cost_bps_per_side": 25.0,
+   "cost_drag_ann_pct": 5.842
+  }
+ },
+ "PRIMARY_twin_movement": {
+  "good_twin": {
+   "label": "good_twin",
+   "n_pairs": 300,
+   "date_blocks": 19,
+   "up_strict_rate": 0.5433,
+   "down_strict_rate": 0.04,
+   "up_or_flat_rate": 0.96,
+   "down_or_flat_rate": 0.4567,
+   "unmoved_rate": 0.1933,
+   "direction_flip_rate": 0.0267,
+   "mean_d_size_pct": 1.1567,
+   "mean_d_confidence": -0.0553,
+   "mean_d_expected_return_20d": 1.071
+  },
+  "bad_twin": {
+   "label": "bad_twin",
+   "n_pairs": 300,
+   "date_blocks": 19,
+   "up_strict_rate": 0.05,
+   "down_strict_rate": 0.53,
+   "up_or_flat_rate": 0.47,
+   "down_or_flat_rate": 0.95,
+   "unmoved_rate": 0.16,
+   "direction_flip_rate": 0.16,
+   "mean_d_size_pct": 0.9,
+   "mean_d_confidence": -0.0206,
+   "mean_d_expected_return_20d": -1.89
+  },
+  "control_good_twin": {
+   "label": "control_good_twin",
+   "n_pairs": 299,
+   "date_blocks": 19,
+   "up_strict_rate": 0.4114,
+   "down_strict_rate": 0.0502,
+   "up_or_flat_rate": 0.9498,
+   "down_or_flat_rate": 0.5886,
+   "unmoved_rate": 0.3211,
+   "direction_flip_rate": 0.0067,
+   "mean_d_size_pct": 0.8227,
+   "mean_d_confidence": -0.0417,
+   "mean_d_expected_return_20d": 0.7401
+  },
+  "control_bad_twin": {
+   "label": "control_bad_twin",
+   "n_pairs": 300,
+   "date_blocks": 19,
+   "up_strict_rate": 0.0633,
+   "down_strict_rate": 0.4467,
+   "up_or_flat_rate": 0.5533,
+   "down_or_flat_rate": 0.9367,
+   "unmoved_rate": 0.2367,
+   "direction_flip_rate": 0.0833,
+   "mean_d_size_pct": 0.3833,
+   "mean_d_confidence": 0.008,
+   "mean_d_expected_return_20d": -1.4033
+  },
+  "good_twin_lift_vs_control": {
+   "label": "good twin raises, minus an UNRELATED favourable development",
+   "paired_blocks": 19,
+   "lift_pp": 13.224,
+   "t_nw_blocks": 4.914,
+   "arm_rate": 0.5433,
+   "control_rate": 0.4114,
+   "note": "the twin's strict movement rate minus the CONTROL twin's, block by block; a difference over the same month blocks, not two levels subtracted"
+  },
+  "bad_twin_lift_vs_control": {
+   "label": "bad twin lowers, minus an UNRELATED adverse development",
+   "paired_blocks": 19,
+   "lift_pp": 8.421,
+   "t_nw_blocks": 2.158,
+   "arm_rate": 0.53,
+   "control_rate": 0.4467,
+   "note": "the twin's strict movement rate minus the CONTROL twin's, block by block; a difference over the same month blocks, not two levels subtracted"
+  },
+  "gut_score": 0.5367,
+  "gut_score_vs_control_pp": 10.822,
+  "reading": "the pass rate on its own is not the finding: a model that answers the same thing every time passes the spec's `delta >= 0` condition at 100%, which is why unmoved_rate and the strict rates are printed and the LIFT over the SIGN-MATCHED control twin is the primary. Each lift differences a twin against an unrelated development of the same sign, so what it isolates is relevance, not valence -- the first smoke run's single favourable control made the bad twin look strong for the wrong reason"
+ },
+ "secondary_returns": {
+  "real_minus_shuffled_control": {
+   "label": "real decisions minus the shuffled-digest control",
+   "blocks": 19,
+   "mean_ann_pct": -23.638,
+   "t_nw": -1.57,
+   "arm_ann_pct": -8.268,
+   "control_ann_pct": 15.37,
+   "monthly_sd_of_difference_pp": 6.016,
+   "mean_ann_pct_NET": -23.638,
+   "t_nw_NET": -1.57,
+   "arm_ann_pct_NET": -14.11,
+   "control_ann_pct_NET": 9.528,
+   "cost_cancellation": {
+    "arm_turnover_per_rebalance": 1.9474,
+    "control_turnover_per_rebalance": 1.9474,
+    "arm_cost_drag_ann_pct": 5.842,
+    "control_cost_drag_ann_pct": 5.842,
+    "cost_effect_on_the_difference_ann_pct": 0.0,
+    "reading": "the two books rebalance identically on the same dates, so the cost line cancels in the DIFFERENCE to the extent the turnovers match; the levels are NOT cost-robust and are reported gross beside net"
+   }
+  },
+  "net_ann_pct_real": -14.11,
+  "net_ann_pct_shuffled_control": 9.528,
+  "caution": "X_anon_gap's 09-19 run found BOTH of its arms lose money net on this panel (raw -18.89%/yr, masked -16.87%/yr). This block is reported, never deciding: the gym is graded on MOVEMENT and may never become a trading arm"
+ },
+ "calibration": {
+  "refusal_class": null,
+  "n": 128,
+  "min_n": 45,
+  "ece": 0.315391,
+  "brier": 0.34453828124999997,
+  "brier_decomposition": {
+   "reliability": 0.09950665690104163,
+   "resolution": 0.000406901041666667,
+   "uncertainty": 0.243896484375
+  },
+  "by_decile": [
+   {
+    "bin_id": 0,
+    "p_lo": 0.65,
+    "p_hi": 0.72,
+    "n": 48,
+    "mean_forecast": 0.7035416666666666,
+    "mean_outcome": 0.3958333333333333,
+    "outcome_se": 0.07058524774394487,
+    "overconfidence": 0.3077083333333333
+   },
+   {
+    "bin_id": 1,
+    "p_lo": 0.75,
+    "p_hi": 0.85,
+    "n": 80,
+    "mean_forecast": 0.7575,
+    "mean_outcome": 0.4375,
+    "outcome_se": 0.0554632479665589,
+    "overconfidence": 0.31999999999999995
+   }
+  ],
+  "base_rate": 0.4219,
+  "mean_confidence": 0.7373
+ },
+ "refusals": {
+  "PENDING_MODEL": 0,
+  "REFUSED_SCHEMA": 1,
+  "REFUSED_LANGUAGE": 0,
+  "INSUFFICIENT_N": 0
+ },
+ "refusal_terminal_states": {
+  "PENDING_MODEL": "DATA_MISSING",
+  "REFUSED_SCHEMA": "OTHER_TYPED",
+  "REFUSED_LANGUAGE": "OTHER_TYPED",
+  "INSUFFICIENT_N": "DATA_MISSING"
+ },
+ "adoption": {
+  "state": "NOT_ADOPTED",
+  "reliability_weight": 0.0,
+  "reliability_weight_measured_not_granted": 0.000406901041666667,
+  "entered_as": "candidate field only: gut_signal {direction, confidence, reliability_weight}",
+  "never": "veto or override; it can never flip a REFUSED to a BUY, never override a hard gate, and never act alone",
+  "requires": {
+   "min_n": 300,
+   "min_independent_blocks": 12,
+   "forward_record": true,
+   "re_measured_on": "calibration.py's rolling window (ROLLING_N=200, ROLLING_DAYS=90)"
+  },
+  "n_independent_blocks": 19,
+  "why_not": "N 128 < 300; no forward record exists for this gym yet",
+  "line": "adoption: NOT_ADOPTED \u2014 reliability_weight 0 until N>=300 over >=12 independent month blocks and a forward record exists"
+ },
+ "answers_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-21\\S2_scenario_gym_answers_run01.jsonl",
+ "resumed": false,
+ "already_on_disk_at_start": 0,
+ "stopped_early": false,
+ "stopped_reason": null,
+ "usage": {
+  "tokens_in": 1155213,
+  "tokens_out": 103744,
+  "cost_usd": 0.0,
+  "calls": 1800,
+  "planned_calls": 1800
+ },
+ "P1_P6": {
+  "P1_temporal_integrity": {
+   "anonymised": true,
+   "date_shifted_placebo_run": true,
+   "time_locked_control_run": false,
+   "time_locked_control_model": "ChronoGPT is not distributed as GGUF and needs a transformers path this job does not have (spec_lane_x section 1.6); the date SHIFT is a fiction device here, not a time-locked model",
+   "cutoff_stated": true,
+   "cutoff_date": "2024-06-30",
+   "cutoff_source": "community cutoff trackers + provider pages for Qwen2.5-7B-Instruct; NOT an official Alibaba cutoff page (spec_lane_x section 1.3)",
+   "cutoff_confidence": "MEDIUM",
+   "evidence_paths": {
+    "anonymised": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-21\\S2_scenario_gym_run01_cells.json",
+    "date_shifted_placebo_run": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-21\\S2_scenario_gym_run01_cells.json",
+    "time_locked_control_run": null
+   }
+  },
+  "P2_dynamic_universe": {
+   "universe_vintage_id": null,
+   "delisting_handled": true,
+   "note": "the forward label requires the SUCCESSOR month to be literally the next one, so a delisted or halted name contributes no two-month return labelled as one (night_r2_monthly_llm.widened_forward_excess)"
+  },
+  "P3_direction_flip": {
+   "pass_rate": 0.16,
+   "n": 300,
+   "test": "the twin test IS this job's direction-flip test: one appended development of known sign, and the rate at which the committed decision's direction flips with it"
+  },
+  "P4_calibration_ece": {
+   "ece": 0.315391,
+   "n_bins": 10,
+   "brier": 0.34453828124999997,
+   "brier_decomposition": {
+    "reliability": 0.09950665690104163,
+    "resolution": 0.000406901041666667,
+    "uncertainty": 0.243896484375
+   }
+  },
+  "P5_full_frictions": {
+   "cost_curve_id": "r2_trial.COST_BPS_PER_SIDE (25 bps/side on realised turnover)",
+   "cost_bps_per_side": 25.0,
+   "realised_bps": 48.69,
+   "costed": true,
+   "gross_reported_separately": true
+  },
+  "P6_disaggregation": {
+   "single_agent_baseline_run": true,
+   "field_provenance": {
+    "direction, size_pct, expected_return_20d, confidence, falsifier": "Qwen2.5-7B-Instruct-Q4_K_M via this job's frozen SYSTEM+PROMPT (sha256 on the receipt), temperature 0",
+    "good_twin / bad_twin / control_good_twin / control_bad_twin text": "DETERMINISTIC: night_scenario_gym.DEVELOPMENT_FAMILIES keyed by the cell's dominant typed event, hashed as counterfactual_library_hash. No model wrote a twin",
+    "masking": "night_r2_monthly_llm.widened_digests, i.e. r7_news_representation.mask_company over tokenise -- the same function night_x_anonymisation_gap masks with",
+    "date shift": "night_scenario_gym.shift_dates, a fixed per-cell seeded offset; numbers are kept verbatim",
+    "fwd": "deterministic: SPY-excess open-to-open month return from bars.parquet",
+    "movement, lift, t": "deterministic arithmetic in night_scenario_gym"
+   },
+   "homogeneity_metric": null
+  }
+ },
+ "LAP": {
+  "score": null,
+  "study_verdict": null,
+  "applies": false,
+  "reason_if_not_applicable": "PANEL-B is entirely AFTER Qwen2.5-7B's ~2024-06 cutoff, so every case here is already the post-cutoff arm; the date shift makes the case unlookuppable, it does not make the model older"
+ },
+ "anonymisation_gap": {
+  "value_pct_pt": null,
+  "t": null,
+  "adopted_arm": null,
+  "reason": "not measured by this job: every arm reads the MASKED text, so there is no raw arm to difference. X_anon_gap measures the gap on these cells"
+ },
+ "elapsed_s": 2144.9,
+ "written_utc": "2026-09-20T17:31:01+00:00",
+ "headline": "300 cases x 6 arms, 1800 calls: gut score 0.5367 (good up 0.5433, bad down 0.53), vs control 10.822 pp (good t 4.914, bad t 2.158); sign accuracy 0.4219; refusals {'REFUSED_SCHEMA': 1}; NOT_ADOPTED",
+ "verdict": "NOT_ADOPTED (reliability_weight 0): the gym measures whether the reader's decision MOVES with the story. adoption: NOT_ADOPTED - reliability_weight 0 until N>=300 over >=12 independent month blocks and a forward record exists",
+ "family_max_p": null,
+ "run": 1,
+ "awake_s": 2144.9,
+ "slept_s": 0.0,
+ "box_s": 5400.0,
+ "wall_minus_monotonic_s": 0.0,
+ "sleep_gaps": [],
+ "child_pid": 65000,
+ "killed_pids": [],
+ "exit_code": 0
+}

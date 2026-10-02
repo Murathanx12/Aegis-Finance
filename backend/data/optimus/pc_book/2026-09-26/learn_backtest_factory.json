@@ -1,0 +1,8 @@
+{
+ "unit": "backtest_factory",
+ "day": "2026-09-26",
+ "rc": 0,
+ "status": "ok",
+ "tail": "6-09-26: forward_21d_vs_spy=PENDING (no session has opened since it was frozen); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=None\n-> C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\leaderboard_2026-09-26.json  (62s)\nC:\\Users\\mrthn\\aegis-finance\\learner\\benchmark.py:416: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.\n  r = close.astype(\"float64\").pct_change().dropna()\n",
+ "ran_utc": "2026-09-26T00:41:50+00:00"
+}

@@ -432,7 +432,7 @@ files only): `ft_lab/bulk_pt_priority.py`, `ft_lab/pt_reversal_read.py`, `ft_lab
 - the regex only ordered the queue, and the event is the student's label.
 
 The run converted the whole block and stopped at the end of the queue at 19:37 local, so the
-prioritisation made no difference in the end. Free RAM fell to 0.7 GB for about a minute, while
+prioritisation made no difference in the end. Free memory fell below the measured memory floor for about a minute, while
 the model loaded next to my label count and the test suite. The job paused itself
 (`safety.wait_for_ram`) and resumed, and no stop was needed.
 
@@ -484,7 +484,7 @@ Graded on the DeepSeek psychology test cells:
 - Shorter answers made it 3.3x faster at the same agreement.
 - The v2 adapter's EVENT half has not been re-graded and is not used anywhere; the typed-event
   student is still v1.
-- The first eval attempt was refused because the training process still held its own VRAM when
+- The first eval attempt was refused because the training process still held its own graphics memory when
   it called `infer.preflight`. The eval was rerun in a fresh process.
 
 ## Verdicts (evening)

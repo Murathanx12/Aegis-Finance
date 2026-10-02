@@ -335,10 +335,14 @@ def u_analyst(out: Path) -> dict:
     # The day's own receipt is the honest test of "already done": it is written
     # by the puller itself, so the gate reads the work rather than a note about
     # the work.
-    day = date.today().isoformat()
-    receipt = (Path(_config.OPTIMUS_LEDGER_DIR) / "analyst"
-               / f"analyst_pull_{day}.json")
-    if receipt.exists():
+    #
+    # 2026-09-30: and "a day" is the US/Eastern day the vendor's numbers belong
+    # to, not the machine's (UTC+8) -- local midnight is noon ET, so keying on
+    # `date.today()` re-ran the 80-minute pull mid-session for the same US day.
+    from scripts import pull_analyst_targets as _PA
+    day = _PA.us_day()
+    receipt = _PA.pulled_this_us_day()
+    if receipt is not None:
         try:
             r = json.loads(receipt.read_text(encoding="utf-8"))
             return {"skipped": f"already pulled today ({day})",
@@ -1000,6 +1004,29 @@ def bars_gate(ranking_asof: Any, *, bars_paths: list[Path] | None = None,
     return gate
 
 
+def why_zero_orders(*, exploit_acting: bool, probe_acting: bool, n_probe: int,
+                    held: dict, probe_syms: list, mandate_gates: bool,
+                    blend_verdict: Any) -> str:
+    """PURE. The named reason a plan placed no order (2026-10-02).
+
+    Session ad32603783de placed 0 orders in 91 cycles and the receipt only said
+    "MANDATE UNRECONCILED", which read as the cause. It was not: the mandate
+    gates nothing; EXPLOIT was off (MEASURED_NEGATIVE) and the PROBE book was
+    already held at its targets, so the planner had nothing to change."""
+    parts = []
+    if mandate_gates:
+        parts.append("the mandate gates orders")
+    if not exploit_acting:
+        parts.append(f"EXPLOIT not acting (blend verdict {blend_verdict})")
+    if not probe_acting:
+        parts.append("PROBE not acting")
+    elif n_probe:
+        have = sum(1 for s in probe_syms if s in (held or {}))
+        parts.append(f"PROBE book already held ({have} of {n_probe} targets in the account; "
+                     f"no target moved past the rebalance band)")
+    return "; ".join(parts) or "no target differed from the holdings"
+
+
 def u_plan(out: Path, mode: str, *, asof: str | None = None,
            funnel_path: Path | None = None, ledger_path: Path | None = None,
            contracts_dir: Path | None = None, er_sources: Any = None,
@@ -1520,6 +1547,18 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             "contract_refused_excluded": len(contract_clash),
             "mandate_status": mandate["status"], "mandate_line": mandate["line"],
             "mandate_gates_orders": mandate["gates_orders"],
+            # 2026-10-02: the numbers that disagree, printed, not only the word
+            # (ad32603783de placed 0 orders and the mandate was blamed; it gates
+            # nothing -- see `why_zero_orders`)
+            "mandate_capital_bases": mandate.get("capital_bases_seen"),
+            "mandate_disagreements": mandate.get("disagreements"),
+            "why_zero_orders": (None if record["n_orders"] else
+                                why_zero_orders(exploit_acting=exploit_acting,
+                                                probe_acting=probe_acting,
+                                                n_probe=n_probe, held=held,
+                                                probe_syms=probe_syms,
+                                                mandate_gates=bool(mandate["gates_orders"]),
+                                                blend_verdict=blend_grade["verdict"])),
             "share_class_dropped": [d["ticker"] for d in share_class_dropped],
             "policy_version": PROBE_POLICY_VERSION,
             "policy_change_exits": [x["symbol"] for x in policy_change_exits],
@@ -1752,7 +1791,7 @@ def keep_awake(on: bool) -> str:
         return f"unavailable: {type(exc).__name__}: {exc}"
 
 
-def learning_report_at_exit(day: str | None = None) -> dict:
+def learning_report_at_exit(day: str | None = None, session_id: str | None = None) -> dict:
     """Chunk I: write the daily learning report for the session's last UTC day.
 
     Called once, on the clean exit path of `run()`, after `SS.finish`. Never
@@ -1762,9 +1801,14 @@ def learning_report_at_exit(day: str | None = None) -> dict:
     day = day or datetime.now(timezone.utc).date().isoformat()
     try:
         from scripts import daily_learning_report as DLR
-        res = DLR.write_report(day)
-        logger.info("learning report %s: %s", day, res.get("md"))
-        return res
+        # 2026-10-02: ALWAYS a row in learning_reports/report_runs.jsonl, ok or
+        # FAILED -- ad32603783de's exit report raised into this logger only and
+        # nothing showed it for three days. `task_keeper catchup` retries any
+        # finished session without an ok row.
+        row = DLR.report_for_session(session_id or "unknown", day)
+        (logger.info if row.get("status") == "ok" else logger.warning)(
+            "learning report %s: %s", day, row)
+        return row
     except Exception as exc:                                       # noqa: BLE001
         logger.warning("learning report %s failed: %s: %s", day, type(exc).__name__, exc)
         return {"failed": f"{type(exc).__name__}: {exc}"[:300], "day": day}
@@ -1829,7 +1873,7 @@ def run(session_id: str) -> int:
                 logger.info("sim %s: %s (%s) after %d cycles", session_id, state, why, n)
                 # AFTER the checkpoint: a report that fails must never cost
                 # the session its finish row (chunk I, 2026-09-26).
-                learning_report_at_exit()
+                learning_report_at_exit(session_id=session_id)
                 return 0
 
             n += 1

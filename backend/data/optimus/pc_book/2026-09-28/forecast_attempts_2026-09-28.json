@@ -1,0 +1,7 @@
+{
+ "n": 1,
+ "last": {
+  "failed": "rc 1",
+  "stderr": "2\\Lib\\pathlib.py\", line 1376, in replace\n    os.replace(self, target)\nPermissionError: [WinError 5] Access is denied: 'C:\\\\Users\\\\mrthn\\\\aegis-finance\\\\backend\\\\data\\\\optimus\\\\forecasts\\\\day_2026-09-28.tmp' -> 'C:\\\\Users\\\\mrthn\\\\aegis-finance\\\\backend\\\\data\\\\optimus\\\\forecasts\\\\day_2026-09-28.json'\n"
+ }
+}

@@ -1,0 +1,104 @@
+{
+ "schema": "crsp_rebuild/pit_eightk/1",
+ "job": "bridges_on_crsp",
+ "run_id": "PB_2026-09-29T1420Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-29T13:33:07+00:00",
+ "panel_run": "2026-09-29T075640Z",
+ "source": "edgar_8k/eightk_items.parquet (EDGAR submissions API, 2013-01 .. 2026-09)",
+ "timing": "acceptance time in New York; usable from the next business day",
+ "link": {
+  "rows_with_permno_in_file": 23319,
+  "ticker_dated_link": {
+   "rows_in": 270300,
+   "rows_linked": 172274,
+   "link_rate": 0.6373
+  }
+ },
+ "n_filings": 195593,
+ "first": "2013-01-02",
+ "last": "2026-09-03",
+ "SURVIVORSHIP_WARNING": "the 8-K pull covered 2,594 CIKs chosen from TODAY's ticker list and starts 2013: dead issuers are absent and there is no design window (1991-2008). 8-K rules are run as DESCRIPTION only and cannot meet the decision line.",
+ "seconds": 2.0,
+ "names_per_month_by_year": {
+  "n8k_90": {
+   "2013": 391,
+   "2014": 552,
+   "2015": 729,
+   "2016": 888,
+   "2017": 1045,
+   "2018": 1221,
+   "2019": 1369,
+   "2020": 1530,
+   "2021": 1732,
+   "2022": 1881,
+   "2023": 1958,
+   "2024": 2038
+  },
+  "n101_90": {
+   "2013": 391,
+   "2014": 552,
+   "2015": 729,
+   "2016": 888,
+   "2017": 1045,
+   "2018": 1221,
+   "2019": 1369,
+   "2020": 1530,
+   "2021": 1732,
+   "2022": 1881,
+   "2023": 1958,
+   "2024": 2038
+  },
+  "n701_90": {
+   "2013": 391,
+   "2014": 552,
+   "2015": 729,
+   "2016": 888,
+   "2017": 1045,
+   "2018": 1221,
+   "2019": 1369,
+   "2020": 1530,
+   "2021": 1732,
+   "2022": 1881,
+   "2023": 1958,
+   "2024": 2038
+  },
+  "n502_180": {
+   "2013": 391,
+   "2014": 552,
+   "2015": 729,
+   "2016": 888,
+   "2017": 1045,
+   "2018": 1221,
+   "2019": 1369,
+   "2020": 1530,
+   "2021": 1732,
+   "2022": 1881,
+   "2023": 1958,
+   "2024": 2038
+  },
+  "distress_365": {
+   "2013": 391,
+   "2014": 552,
+   "2015": 729,
+   "2016": 888,
+   "2017": 1045,
+   "2018": 1221,
+   "2019": 1369,
+   "2020": 1530,
+   "2021": 1732,
+   "2022": 1881,
+   "2023": 1958,
+   "2024": 2038
+  }
+ },
+ "rows": 2033164,
+ "columns": [
+  "n8k_90",
+  "n101_90",
+  "n701_90",
+  "n502_180",
+  "distress_365"
+ ]
+}

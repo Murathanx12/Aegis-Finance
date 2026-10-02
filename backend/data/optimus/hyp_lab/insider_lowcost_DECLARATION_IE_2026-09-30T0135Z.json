@@ -1,0 +1,28 @@
+{
+ "schema": "hyp_lab/insider_lowcost_declaration/1",
+ "parent_tag": "IE_2026-09-30T0135Z",
+ "subset": "rt <= 0.004",
+ "note": "Declared AFTER the aggregate read (gross +1.1-1.5%/5 sessions, round trip 136 bps mean, net ~0): the low-cost subset (event round trip <= 40 bps) was NOT read. Same cells, same decision rule, search +4.",
+ "decision": "A cell (horizon x benchmark) SURVIVES iff the monthly mean (events grouped by entry month) of net abnormal return is > 0 in design (entries 2006-2008) AND > 0 in validate (2009-2016) with t >= 2 on 3-month blocks AND a strict majority of validate years > 0. Net = stock return from the entry-session OPEN to the close H-1 sessions later, minus the benchmark over the same sessions (market: FF mkt+rf close-to-close incl. the entry day; band: equal-weight CRSP common stocks of the name's size band), minus a round trip of max(Corwin-Schultz, flat band). 2017-2024 is read last.",
+ "splits": {
+  "design": [
+   "2006-01-01",
+   "2008-12-31"
+  ],
+  "validate": [
+   "2009-01-01",
+   "2016-12-31"
+  ],
+  "late": [
+   "2017-01-01",
+   "2024-12-31"
+  ]
+ },
+ "search_count": {
+  "prior": 42697,
+  "cells": 4,
+  "after": 42701
+ },
+ "sha16": "d95d3e38f38c5d22",
+ "written_utc": "2026-09-29T16:16:31+00:00"
+}

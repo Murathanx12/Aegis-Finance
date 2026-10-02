@@ -152,6 +152,8 @@ def main(argv: list[str] | None = None) -> int:
         _print(r["state"])
         return 0
     u = r["universe"]
+    if (r.get("bars_health") or {}).get("state") == "DEGRADED":
+        _print("!! " + r["bars_health"]["line"])
     _print(f"alert pass {r['run_id']}  mode {r['mode']}  llm spend ${r['llm_spend_usd']:.2f}")
     _print(f"universe: {u['n']} tickers ({u['n_funnel']} funnel + {u['n_book_tickers']} book "
            f"names over {u['n_books']} books); funnel age {u['funnel_age_days']} d "

@@ -1,0 +1,102 @@
+{
+ "job": "hyp_lab.nightly",
+ "started_utc": "2026-10-02T12:43:04+00:00",
+ "night": "2026-10-02",
+ "k": 3,
+ "cap_usd": 0.4,
+ "free_ram_gb_start": 3.66,
+ "generation": [
+  {
+   "provider": "deepseek",
+   "ok": true,
+   "n_items": 8,
+   "n_rows": 8,
+   "status": {
+    "PROPOSED": 5,
+    "DUPLICATE_IN_LEDGER": 2,
+    "NEEDS_CELL": 1
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\generate_deepseek_20261002T124417Z.json",
+   "served_model": "deepseek-flash"
+  },
+  {
+   "provider": "local",
+   "ok": false,
+   "status": "SKIPPED_SERVER_NOT_UP"
+  }
+ ],
+ "declared": [
+  "H-3c5504c060",
+  "H-baefacbdf9",
+  "H-ae6502fd26"
+ ],
+ "declare_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\declare_20261002T124421Z.json",
+ "results": [
+  {
+   "hyp_id": "H-3c5504c060",
+   "title": "Crude spike lifts integrated majors over E&Ps",
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00186 <= 0",
+   "design": {
+    "mean": 0.000449,
+    "t": 0.3,
+    "mde": 0.004144,
+    "n": 97,
+    "n_blocks": 44
+   },
+   "confirm": {
+    "mean": -0.001865,
+    "t": -0.96,
+    "mde": 0.005417,
+    "n": 57,
+    "n_blocks": 26
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-3c5504c060_20261002T124426Z.json"
+  },
+  {
+   "hyp_id": "H-baefacbdf9",
+   "title": "Tanker rates read through to refiners' crude sourcing cost",
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00187 <= 0",
+   "design": {
+    "mean": -0.001631,
+    "t": -0.73,
+    "mde": 0.006269,
+    "n": 92,
+    "n_blocks": 50
+   },
+   "confirm": {
+    "mean": -0.001873,
+    "t": -0.53,
+    "mde": 0.009811,
+    "n": 46,
+    "n_blocks": 26
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-baefacbdf9_20261002T125346Z.json"
+  },
+  {
+   "hyp_id": "H-ae6502fd26",
+   "title": "Yield spike -> homebuilders lag",
+   "verdict": "CANNOT_DISTINGUISH",
+   "reason": "confirm +0.00269 t 0.99; MDE 0.00760 > effect worth having 0.00200",
+   "design": {
+    "mean": -0.005351,
+    "t": -2.87,
+    "mde": 0.005212,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "confirm": {
+    "mean": 0.002689,
+    "t": 0.99,
+    "mde": 0.007595,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-ae6502fd26_20261002T125346Z.json"
+  }
+ ],
+ "spend_this_run_usd": 0.00259,
+ "wall_min": 10.7,
+ "status": "OK"
+}

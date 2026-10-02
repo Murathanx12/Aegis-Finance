@@ -1,0 +1,93 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-09-29",
+ "declared_utc": "2026-09-29T16:14:37+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [],
+ "cells": [
+  {
+   "hyp_id": "H-3c9e80c849",
+   "title": "AI leader shock -> semi equipment lag",
+   "family": "equity_readthrough_supply_chain",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "basket:NVDA,AVGO,AMD",
+    "targets": [
+     "AMAT",
+     "LRCX",
+     "KLAC",
+     "ASML",
+     "TSM",
+     "TER",
+     "ONTO"
+    ],
+    "expected_sign": 1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {
+    "design": "2016-2022",
+    "confirm": "2023-2026"
+   },
+   "refutation": "confirm-fold mean signed residual <= 0, or t < 2 with MDE below the design effect",
+   "separation_from_beta": "same-day co-move (sector beta) printed apart; lag residual after SPY beta"
+  },
+  {
+   "hyp_id": "H-70ee91a160",
+   "title": "Oil shock lifts tanker stocks next session",
+   "family": "macro_readthrough_commodity",
+   "target": "direction",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "CL=F",
+    "targets": [
+     "FRO",
+     "DHT",
+     "EURN",
+     "STNG",
+     "INSW"
+    ],
+    "expected_sign": 1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "If tanker basket shows no significant next-session abnormal return relative to vol-matched transports, the hypothesis is refuted.",
+   "separation_from_beta": "Compare tanker basket's next-session return to its market-beta-adjusted return and to a vol-matched basket of other transports; effect should be present only for tankers."
+  },
+  {
+   "hyp_id": "H-9ac0049bfe",
+   "title": "Yield spike -> utilities lag",
+   "family": "macro_readthrough_rates",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "^TNX",
+    "targets": [
+     "NEE",
+     "DUK",
+     "SO",
+     "D",
+     "AEP",
+     "EXC",
+     "SRE",
+     "XEL",
+     "ED",
+     "PEG"
+    ],
+    "expected_sign": -1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {
+    "design": "2016-2022",
+    "confirm": "2023-2026"
+   },
+   "refutation": "confirm-fold mean signed residual <= 0, or t < 2 with MDE below the design effect",
+   "separation_from_beta": "same-day beta printed apart; lag residual after SPY beta"
+  }
+ ],
+ "sha256": "2ed41678cd5addbbb4a7963eeffa3d7c90deb2a7e61d4965be5086ed5c543f82"
+}

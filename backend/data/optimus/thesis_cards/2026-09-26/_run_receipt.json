@@ -1,0 +1,52 @@
+{
+ "receipt": "thesis_cards_run",
+ "day": "2026-09-26",
+ "model": "deepseek/deepseek-flash",
+ "cap_usd": 0.3,
+ "max_quests": 1,
+ "parallel": 1,
+ "n_universe": 1,
+ "n_skipped_existing": 0,
+ "n_todo": 1,
+ "cut_by_max_quests": [],
+ "done": [
+  "MU"
+ ],
+ "refused": [],
+ "state": "DONE",
+ "forecast_rows_written": 2,
+ "evidence": {
+  "MU": {
+   "n_claims": 26,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 18,
+   "claims_written": 26,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-26.jsonl",
+    "accepted": 6,
+    "written": 6,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 20
+  }
+ },
+ "promises": {
+  "MU": {
+   "n_promises": 5,
+   "promises_written": 5,
+   "grades_written": 0,
+   "forecast_rows_written": 5,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  }
+ },
+ "spent_usd_before_last_admit": 0.0,
+ "spent_usd_today": 0.07029500000000001,
+ "digest": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\2026-09-26\\DIGEST.md"
+}

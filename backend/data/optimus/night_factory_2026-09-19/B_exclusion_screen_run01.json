@@ -1,0 +1,961 @@
+{
+ "job": "B_exclusion_screen",
+ "family": "EXCLUSION_SCREEN_2026_09_19",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "run_date": "2026-09-19",
+ "window": [
+  1990,
+  2024
+ ],
+ "smoke": false,
+ "floor_usd": 10000000.0,
+ "host_book": "seasonality_11_20_v0",
+ "host_prereg": "TRIAL-DRAFT-F-calendar-seasonality-v0 (UNSIGNED)",
+ "exclude_share": 0.1,
+ "cost_curve": "flat_25bps_pending_5c",
+ "cost_bps_per_side": 25.0,
+ "question": "NEGATIVE_RESULTS \u00a726/\u00a727/\u00a728 measure enormous rank information (IC t up to 11.3) living in a SHORT leg a long-only book cannot hold, and say three separate times that using these signals as EXCLUSION SCREENS is untested. Does removing the worst decile of io_level / io_abn / skew_25d / skew_resid from an existing long-only book's pool beat (a) the unscreened book and (b) a random exclusion of the same count, at the same cost model?",
+ "registered_construction": {
+  "host_book": "seasonality_11_20_v0",
+  "host_construction": {
+   "columns": [
+    "seas_11_15an",
+    "seas_16_20an"
+   ],
+   "cut": "top tercile of the equal-weight mean of the within-month z-scores",
+   "k": 30,
+   "hold": "one month, monthly rebalance"
+  },
+  "screen": "remove the worst 10% of the POOL by the screen's own rank, before selection",
+  "worst_end_is_the_ledgers": "frozen per screen in SCREENS from the measured \u00a726/\u00a727/\u00a728 receipts, before this file computed anything",
+  "controls": [
+   "the unscreened book on the identical months",
+   "a random exclusion of the SAME COUNT, re-drawn per floor",
+   "the host book's own random-universe twin"
+  ],
+  "floor_usd": 10000000.0,
+  "cost_curve": "flat_25bps_pending_5c",
+  "cost_bps_per_side": 25.0,
+  "blocks": "one return per MONTH (CANON \u00a758); Newey-West lag 2",
+  "honours_the_registration": true,
+  "why": "Book C's 2026-09-13 lesson: run 1 warmed a 60-month overhang at 24 months and the receipt said `confirm_slice 1995-2024` anyway. A receipt that does not print its own construction cannot be checked against the registration that licensed it. A SMOKE run cannot honour the registered window and says so here."
+ },
+ "months_in_panel": 420,
+ "permnos_in_panel": 18684,
+ "host_coverage": {
+  "clause": "TRIAL-DRAFT-F's contamination clause: exclude a year whose covered share inside the eligible band falls below 0.1, or whose MEDIAN month carries fewer than 90 covered names",
+  "floor_usd": 10000000.0,
+  "per_year": {
+   "1990": {
+    "months": 12,
+    "median_eligible_names": 143.0,
+    "median_covered_names": 94.0,
+    "covered_share": 0.6655,
+    "excluded": false,
+    "why": null
+   },
+   "1991": {
+    "months": 12,
+    "median_eligible_names": 175.5,
+    "median_covered_names": 104.0,
+    "covered_share": 0.598,
+    "excluded": false,
+    "why": null
+   },
+   "1992": {
+    "months": 12,
+    "median_eligible_names": 193.0,
+    "median_covered_names": 110.5,
+    "covered_share": 0.571,
+    "excluded": false,
+    "why": null
+   },
+   "1993": {
+    "months": 12,
+    "median_eligible_names": 255.5,
+    "median_covered_names": 162.5,
+    "covered_share": 0.6353,
+    "excluded": false,
+    "why": null
+   },
+   "1994": {
+    "months": 12,
+    "median_eligible_names": 287.0,
+    "median_covered_names": 169.5,
+    "covered_share": 0.6025,
+    "excluded": false,
+    "why": null
+   },
+   "1995": {
+    "months": 12,
+    "median_eligible_names": 381.0,
+    "median_covered_names": 203.5,
+    "covered_share": 0.5357,
+    "excluded": false,
+    "why": null
+   },
+   "1996": {
+    "months": 12,
+    "median_eligible_names": 482.5,
+    "median_covered_names": 245.5,
+    "covered_share": 0.5009,
+    "excluded": false,
+    "why": null
+   },
+   "1997": {
+    "months": 12,
+    "median_eligible_names": 591.0,
+    "median_covered_names": 289.5,
+    "covered_share": 0.4911,
+    "excluded": false,
+    "why": null
+   },
+   "1998": {
+    "months": 12,
+    "median_eligible_names": 669.5,
+    "median_covered_names": 322.5,
+    "covered_share": 0.4723,
+    "excluded": false,
+    "why": null
+   },
+   "1999": {
+    "months": 12,
+    "median_eligible_names": 770.0,
+    "median_covered_names": 307.5,
+    "covered_share": 0.3884,
+    "excluded": false,
+    "why": null
+   },
+   "2000": {
+    "months": 12,
+    "median_eligible_names": 961.5,
+    "median_covered_names": 320.0,
+    "covered_share": 0.3163,
+    "excluded": false,
+    "why": null
+   },
+   "2001": {
+    "months": 12,
+    "median_eligible_names": 859.5,
+    "median_covered_names": 324.5,
+    "covered_share": 0.3806,
+    "excluded": false,
+    "why": null
+   },
+   "2002": {
+    "months": 12,
+    "median_eligible_names": 813.5,
+    "median_covered_names": 333.5,
+    "covered_share": 0.4176,
+    "excluded": false,
+    "why": null
+   },
+   "2003": {
+    "months": 12,
+    "median_eligible_names": 852.0,
+    "median_covered_names": 344.0,
+    "covered_share": 0.414,
+    "excluded": false,
+    "why": null
+   },
+   "2004": {
+    "months": 12,
+    "median_eligible_names": 994.0,
+    "median_covered_names": 407.0,
+    "covered_share": 0.4132,
+    "excluded": false,
+    "why": null
+   },
+   "2005": {
+    "months": 12,
+    "median_eligible_names": 1087.5,
+    "median_covered_names": 460.0,
+    "covered_share": 0.4218,
+    "excluded": false,
+    "why": null
+   },
+   "2006": {
+    "months": 12,
+    "median_eligible_names": 1239.0,
+    "median_covered_names": 520.0,
+    "covered_share": 0.4193,
+    "excluded": false,
+    "why": null
+   },
+   "2007": {
+    "months": 12,
+    "median_eligible_names": 1373.0,
+    "median_covered_names": 585.5,
+    "covered_share": 0.4256,
+    "excluded": false,
+    "why": null
+   },
+   "2008": {
+    "months": 12,
+    "median_eligible_names": 1291.5,
+    "median_covered_names": 572.5,
+    "covered_share": 0.4545,
+    "excluded": false,
+    "why": null
+   },
+   "2009": {
+    "months": 12,
+    "median_eligible_names": 1014.5,
+    "median_covered_names": 478.5,
+    "covered_share": 0.4729,
+    "excluded": false,
+    "why": null
+   },
+   "2010": {
+    "months": 12,
+    "median_eligible_names": 1091.5,
+    "median_covered_names": 501.5,
+    "covered_share": 0.4589,
+    "excluded": false,
+    "why": null
+   },
+   "2011": {
+    "months": 12,
+    "median_eligible_names": 1161.5,
+    "median_covered_names": 538.0,
+    "covered_share": 0.4588,
+    "excluded": false,
+    "why": null
+   },
+   "2012": {
+    "months": 12,
+    "median_eligible_names": 1113.0,
+    "median_covered_names": 538.5,
+    "covered_share": 0.4875,
+    "excluded": false,
+    "why": null
+   },
+   "2013": {
+    "months": 12,
+    "median_eligible_names": 1165.5,
+    "median_covered_names": 560.0,
+    "covered_share": 0.4816,
+    "excluded": false,
+    "why": null
+   },
+   "2014": {
+    "months": 12,
+    "median_eligible_names": 1341.5,
+    "median_covered_names": 634.0,
+    "covered_share": 0.4727,
+    "excluded": false,
+    "why": null
+   },
+   "2015": {
+    "months": 12,
+    "median_eligible_names": 1354.5,
+    "median_covered_names": 645.0,
+    "covered_share": 0.475,
+    "excluded": false,
+    "why": null
+   },
+   "2016": {
+    "months": 12,
+    "median_eligible_names": 1305.5,
+    "median_covered_names": 652.5,
+    "covered_share": 0.5048,
+    "excluded": false,
+    "why": null
+   },
+   "2017": {
+    "months": 12,
+    "median_eligible_names": 1353.0,
+    "median_covered_names": 692.5,
+    "covered_share": 0.5125,
+    "excluded": false,
+    "why": null
+   },
+   "2018": {
+    "months": 12,
+    "median_eligible_names": 1446.0,
+    "median_covered_names": 743.0,
+    "covered_share": 0.5138,
+    "excluded": false,
+    "why": null
+   },
+   "2019": {
+    "months": 12,
+    "median_eligible_names": 1382.5,
+    "median_covered_names": 727.5,
+    "covered_share": 0.5272,
+    "excluded": false,
+    "why": null
+   },
+   "2020": {
+    "months": 12,
+    "median_eligible_names": 1428.5,
+    "median_covered_names": 732.5,
+    "covered_share": 0.507,
+    "excluded": false,
+    "why": null
+   },
+   "2021": {
+    "months": 12,
+    "median_eligible_names": 1700.0,
+    "median_covered_names": 785.5,
+    "covered_share": 0.4589,
+    "excluded": false,
+    "why": null
+   },
+   "2022": {
+    "months": 12,
+    "median_eligible_names": 1552.0,
+    "median_covered_names": 773.5,
+    "covered_share": 0.4954,
+    "excluded": false,
+    "why": null
+   },
+   "2023": {
+    "months": 12,
+    "median_eligible_names": 1473.0,
+    "median_covered_names": 759.0,
+    "covered_share": 0.5177,
+    "excluded": false,
+    "why": null
+   },
+   "2024": {
+    "months": 12,
+    "median_eligible_names": 1540.5,
+    "median_covered_names": 803.5,
+    "covered_share": 0.5216,
+    "excluded": false,
+    "why": null
+   }
+  },
+  "excluded_years": [],
+  "n_excluded_years": 0
+ },
+ "screens": {
+  "io_level": {
+   "screen": "io_level",
+   "worst_end": "low",
+   "ledger_receipt": "NEGATIVE_RESULTS \u00a726/\u00a728: 150.6 of 150.8 bps (99.9%) of the decile spread sits in the SHORT leg -- LOW institutional ownership predicts UNDERperformance; high IO predicts nothing (banked book gross t +0.02 at IC t 11.29)",
+   "source": "wrds/tr13f_s34_<year>.parquet holdings summed per (fdate, cusip8), linked by wrds/tr13f_permno_link.json, divided by CRSP month-end shrout, lagged 60 calendar days from the filing date",
+   "ran": true,
+   "n_blocks": 419,
+   "rank_months": 344,
+   "degenerate_rank_months": 0,
+   "median_excluded_per_month": 41,
+   "median_pool_size": 500,
+   "months_with_no_rank_in_pool": 76,
+   "PRIMARY_vs_unscreened": {
+    "label": "screened_minus_unscreened",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": -0.000237,
+    "nw_lag2_t": -0.5174,
+    "p_two_sided": 0.604911,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.000164,
+      "nw_lag2_t": 0.6387
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": 0.000299,
+      "nw_lag2_t": 0.5024
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": -0.000287,
+      "nw_lag2_t": -0.4599
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": -0.001363,
+      "nw_lag2_t": -0.7854
+     }
+    },
+    "n_positive_eras": 2,
+    "n_eras_read": 4
+   },
+   "PRIMARY_vs_random_exclusion_twin": {
+    "label": "screened_minus_random_exclusion_twin",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": 6e-05,
+    "nw_lag2_t": 0.151,
+    "p_two_sided": 0.879968,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": -0.000222,
+      "nw_lag2_t": -0.8062
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": 0.00043,
+      "nw_lag2_t": 0.5851
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": 0.000543,
+      "nw_lag2_t": 0.5892
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": -0.000474,
+      "nw_lag2_t": -0.4017
+     }
+    },
+    "n_positive_eras": 2,
+    "n_eras_read": 4
+   },
+   "SECONDARY_vs_host_random_universe_twin": {
+    "label": "screened_minus_host_random_universe_twin",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": 0.003172,
+    "nw_lag2_t": 2.2626,
+    "p_two_sided": 0.023663,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.004165,
+      "nw_lag2_t": 1.7979
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": 0.000923,
+      "nw_lag2_t": 0.3716
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": 0.001987,
+      "nw_lag2_t": 0.7206
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": 0.005788,
+      "nw_lag2_t": 1.6389
+     }
+    },
+    "n_positive_eras": 4,
+    "n_eras_read": 4
+   },
+   "REFERENCE_unscreened_vs_host_twin": {
+    "label": "unscreened_minus_host_random_universe_twin",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": 0.003409,
+    "nw_lag2_t": 2.2839,
+    "p_two_sided": 0.022378,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.004001,
+      "nw_lag2_t": 1.728
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": 0.000624,
+      "nw_lag2_t": 0.2398
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": 0.002275,
+      "nw_lag2_t": 0.7957
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": 0.007151,
+      "nw_lag2_t": 1.8014
+     }
+    },
+    "n_positive_eras": 4,
+    "n_eras_read": 4
+   },
+   "verdict_block": {
+    "verdict": "FAILED_VARIANT",
+    "reading": "the screen is -0.000237/month against the unscreened book (t -0.5174) and +0.000060/month against a random exclusion of the same count (t 0.151); a point estimate at or below zero is not rescued by under-power"
+   },
+   "verdict": "FAILED_VARIANT \u2014 the screen is -0.000237/month against the unscreened book (t -0.5174) and +0.000060/month against a random exclusion of the same count (t 0.151); a point estimate at or below zero is not rescued by under-power",
+   "headline": "io_level (exclude worst 10%, low end): -0.000237/month t -0.5174 vs unscreened | 6e-05/month t 0.151 vs the random exclusion, over 419 blocks at $10,000,000 -> FAILED_VARIANT"
+  },
+  "io_abn": {
+   "screen": "io_abn",
+   "worst_end": "low",
+   "ledger_receipt": "NEGATIVE_RESULTS \u00a726: io_abn small IC t 10.64, gross t +1.16; the pre-declared comparison fired -- residualising REMOVED information (pooled io_level 7.77 vs io_abn 6.89)",
+   "source": "io_level residualised within each month on log_mktcap, mom_12_1, log_dvol, inv_price, log_age (Kirk-STYLE; this checkout's own columns)",
+   "ran": true,
+   "n_blocks": 419,
+   "rank_months": 344,
+   "degenerate_rank_months": 0,
+   "median_excluded_per_month": 41,
+   "median_pool_size": 500,
+   "months_with_no_rank_in_pool": 76,
+   "PRIMARY_vs_unscreened": {
+    "label": "screened_minus_unscreened",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": -0.000448,
+    "nw_lag2_t": -1.0176,
+    "p_two_sided": 0.308867,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.000112,
+      "nw_lag2_t": 0.4996
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": -0.000375,
+      "nw_lag2_t": -0.7028
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": 0.000123,
+      "nw_lag2_t": 0.2256
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": -0.001735,
+      "nw_lag2_t": -1.0214
+     }
+    },
+    "n_positive_eras": 2,
+    "n_eras_read": 4
+   },
+   "PRIMARY_vs_random_exclusion_twin": {
+    "label": "screened_minus_random_exclusion_twin",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": -0.00033,
+    "nw_lag2_t": -0.699,
+    "p_two_sided": 0.484535,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.000454,
+      "nw_lag2_t": 1.6047
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": -0.001138,
+      "nw_lag2_t": -1.4285
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": -3e-05,
+      "nw_lag2_t": -0.0538
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": -0.000555,
+      "nw_lag2_t": -0.3239
+     }
+    },
+    "n_positive_eras": 1,
+    "n_eras_read": 4
+   },
+   "SECONDARY_vs_host_random_universe_twin": {
+    "label": "screened_minus_host_random_universe_twin",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": 0.002847,
+    "nw_lag2_t": 1.9266,
+    "p_two_sided": 0.054032,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.00573,
+      "nw_lag2_t": 2.1162
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": 0.001149,
+      "nw_lag2_t": 0.4075
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": -0.000121,
+      "nw_lag2_t": -0.0421
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": 0.003995,
+      "nw_lag2_t": 1.1682
+     }
+    },
+    "n_positive_eras": 3,
+    "n_eras_read": 4
+   },
+   "REFERENCE_unscreened_vs_host_twin": {
+    "label": "unscreened_minus_host_random_universe_twin",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": 0.003296,
+    "nw_lag2_t": 2.2071,
+    "p_two_sided": 0.027308,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.005618,
+      "nw_lag2_t": 2.1028
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": 0.001524,
+      "nw_lag2_t": 0.544
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": -0.000244,
+      "nw_lag2_t": -0.0826
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": 0.00573,
+      "nw_lag2_t": 1.638
+     }
+    },
+    "n_positive_eras": 3,
+    "n_eras_read": 4
+   },
+   "verdict_block": {
+    "verdict": "FAILED_VARIANT",
+    "reading": "the screen is -0.000448/month against the unscreened book (t -1.0176) and -0.000330/month against a random exclusion of the same count (t -0.699); a point estimate at or below zero is not rescued by under-power"
+   },
+   "verdict": "FAILED_VARIANT \u2014 the screen is -0.000448/month against the unscreened book (t -1.0176) and -0.000330/month against a random exclusion of the same count (t -0.699); a point estimate at or below zero is not rescued by under-power",
+   "headline": "io_abn (exclude worst 10%, low end): -0.000448/month t -1.0176 vs unscreened | -0.00033/month t -0.699 vs the random exclusion, over 419 blocks at $10,000,000 -> FAILED_VARIANT"
+  },
+  "skew_25d": {
+   "screen": "skew_25d",
+   "worst_end": "high",
+   "ledger_receipt": "NEGATIVE_RESULTS \u00a727/\u00a728: 93.4 of 105.8 bps (88%) in the short leg -- HIGH put-call skew predicts UNDERperformance (IC t 8.34, banked book gross t +1.01)",
+   "source": "learner/features_options.parquet `skew_25d_30d` (25-delta put IV minus 25-delta call IV), the month's LAST daily observation",
+   "ran": true,
+   "n_blocks": 419,
+   "rank_months": 324,
+   "degenerate_rank_months": 0,
+   "median_excluded_per_month": 49,
+   "median_pool_size": 500,
+   "months_with_no_rank_in_pool": 96,
+   "PRIMARY_vs_unscreened": {
+    "label": "screened_minus_unscreened",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": -0.000574,
+    "nw_lag2_t": -1.1245,
+    "p_two_sided": 0.260792,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": -3.6e-05,
+      "nw_lag2_t": -0.0936
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": -0.000332,
+      "nw_lag2_t": -0.3048
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": -0.000881,
+      "nw_lag2_t": -0.6675
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": -0.001276,
+      "nw_lag2_t": -1.0718
+     }
+    },
+    "n_positive_eras": 0,
+    "n_eras_read": 4
+   },
+   "PRIMARY_vs_random_exclusion_twin": {
+    "label": "screened_minus_random_exclusion_twin",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": -0.00027,
+    "nw_lag2_t": -0.5259,
+    "p_two_sided": 0.598985,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.000669,
+      "nw_lag2_t": 1.3965
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": -0.000357,
+      "nw_lag2_t": -0.3118
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": -0.000236,
+      "nw_lag2_t": -0.1822
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": -0.001354,
+      "nw_lag2_t": -1.21
+     }
+    },
+    "n_positive_eras": 1,
+    "n_eras_read": 4
+   },
+   "SECONDARY_vs_host_random_universe_twin": {
+    "label": "screened_minus_host_random_universe_twin",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": 0.002589,
+    "nw_lag2_t": 1.9869,
+    "p_two_sided": 0.046932,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.0028,
+      "nw_lag2_t": 1.2642
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": 0.00263,
+      "nw_lag2_t": 1.1708
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": 0.002735,
+      "nw_lag2_t": 1.1795
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": 0.002148,
+      "nw_lag2_t": 0.6128
+     }
+    },
+    "n_positive_eras": 4,
+    "n_eras_read": 4
+   },
+   "REFERENCE_unscreened_vs_host_twin": {
+    "label": "unscreened_minus_host_random_universe_twin",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": 0.003164,
+    "nw_lag2_t": 2.2589,
+    "p_two_sided": 0.02389,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.002836,
+      "nw_lag2_t": 1.182
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": 0.002962,
+      "nw_lag2_t": 1.1854
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": 0.003617,
+      "nw_lag2_t": 1.5162
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": 0.003424,
+      "nw_lag2_t": 0.9436
+     }
+    },
+    "n_positive_eras": 4,
+    "n_eras_read": 4
+   },
+   "verdict_block": {
+    "verdict": "FAILED_VARIANT",
+    "reading": "the screen is -0.000574/month against the unscreened book (t -1.1245) and -0.000270/month against a random exclusion of the same count (t -0.5259); a point estimate at or below zero is not rescued by under-power"
+   },
+   "verdict": "FAILED_VARIANT \u2014 the screen is -0.000574/month against the unscreened book (t -1.1245) and -0.000270/month against a random exclusion of the same count (t -0.5259); a point estimate at or below zero is not rescued by under-power",
+   "headline": "skew_25d (exclude worst 10%, high end): -0.000574/month t -1.1245 vs unscreened | -0.00027/month t -0.5259 vs the random exclusion, over 419 blocks at $10,000,000 -> FAILED_VARIANT"
+  },
+  "skew_resid": {
+   "screen": "skew_resid",
+   "worst_end": "high",
+   "ledger_receipt": "NEGATIVE_RESULTS \u00a727: skew_resid IC t 7.90, gross t +1.02 -- the third residualisation receipt, same shape",
+   "source": "skew_25d_30d residualised within each month on atm_iv_30d, log_mktcap, log_dvol",
+   "ran": true,
+   "n_blocks": 419,
+   "rank_months": 324,
+   "degenerate_rank_months": 0,
+   "median_excluded_per_month": 49,
+   "median_pool_size": 500,
+   "months_with_no_rank_in_pool": 96,
+   "PRIMARY_vs_unscreened": {
+    "label": "screened_minus_unscreened",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": -0.000309,
+    "nw_lag2_t": -0.5892,
+    "p_two_sided": 0.555695,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 5.6e-05,
+      "nw_lag2_t": 0.1246
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": 0.000533,
+      "nw_lag2_t": 0.5794
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": -0.000547,
+      "nw_lag2_t": -0.5397
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": -0.001605,
+      "nw_lag2_t": -0.9781
+     }
+    },
+    "n_positive_eras": 2,
+    "n_eras_read": 4
+   },
+   "PRIMARY_vs_random_exclusion_twin": {
+    "label": "screened_minus_random_exclusion_twin",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": -0.000197,
+    "nw_lag2_t": -0.3485,
+    "p_two_sided": 0.727452,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.000138,
+      "nw_lag2_t": 0.2587
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": 0.000315,
+      "nw_lag2_t": 0.3102
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": -0.000234,
+      "nw_lag2_t": -0.2254
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": -0.00122,
+      "nw_lag2_t": -0.6883
+     }
+    },
+    "n_positive_eras": 2,
+    "n_eras_read": 4
+   },
+   "SECONDARY_vs_host_random_universe_twin": {
+    "label": "screened_minus_host_random_universe_twin",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": 0.003023,
+    "nw_lag2_t": 2.3774,
+    "p_two_sided": 0.017437,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.003208,
+      "nw_lag2_t": 1.7678
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": 0.001762,
+      "nw_lag2_t": 0.7403
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": 0.000835,
+      "nw_lag2_t": 0.2806
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": 0.006283,
+      "nw_lag2_t": 2.0557
+     }
+    },
+    "n_positive_eras": 4,
+    "n_eras_read": 4
+   },
+   "REFERENCE_unscreened_vs_host_twin": {
+    "label": "unscreened_minus_host_random_universe_twin",
+    "n_blocks": 419,
+    "mean_excess_net_monthly": 0.003332,
+    "nw_lag2_t": 2.5609,
+    "p_two_sided": 0.010441,
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 119,
+      "mean_monthly": 0.003152,
+      "nw_lag2_t": 1.5827
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_monthly": 0.00123,
+      "nw_lag2_t": 0.5182
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_monthly": 0.001382,
+      "nw_lag2_t": 0.4785
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_monthly": 0.007888,
+      "nw_lag2_t": 2.5331
+     }
+    },
+    "n_positive_eras": 4,
+    "n_eras_read": 4
+   },
+   "verdict_block": {
+    "verdict": "FAILED_VARIANT",
+    "reading": "the screen is -0.000309/month against the unscreened book (t -0.5892) and -0.000197/month against a random exclusion of the same count (t -0.3485); a point estimate at or below zero is not rescued by under-power"
+   },
+   "verdict": "FAILED_VARIANT \u2014 the screen is -0.000309/month against the unscreened book (t -0.5892) and -0.000197/month against a random exclusion of the same count (t -0.3485); a point estimate at or below zero is not rescued by under-power",
+   "headline": "skew_resid (exclude worst 10%, high end): -0.000309/month t -0.5892 vs unscreened | -0.000197/month t -0.3485 vs the random exclusion, over 419 blocks at $10,000,000 -> FAILED_VARIANT"
+  }
+ },
+ "n_ran": 4,
+ "n_refused": 0,
+ "holm": {
+  "family": "EXCLUSION_SCREEN_2026_09_19",
+  "declared_family_size": 4,
+  "legs_with_a_p_value": [
+   "io_abn",
+   "io_level",
+   "skew_25d",
+   "skew_resid"
+  ],
+  "legs_without": [],
+  "per_leg": {
+   "io_abn": {
+    "p_raw": 0.484535,
+    "holm_alpha": 0.0125,
+    "rejects_at_holm": false
+   },
+   "skew_25d": {
+    "p_raw": 0.598985,
+    "holm_alpha": 0.016667,
+    "rejects_at_holm": false
+   },
+   "skew_resid": {
+    "p_raw": 0.727452,
+    "holm_alpha": 0.025,
+    "rejects_at_holm": false
+   },
+   "io_level": {
+    "p_raw": 0.879968,
+    "holm_alpha": 0.05,
+    "rejects_at_holm": false
+   }
+  },
+  "note": "Holm is computed against the DECLARED family size, not the number of legs that happened to run. A leg that could not run does not make the correction cheaper for the ones that did.",
+  "primary_is_the_random_exclusion_difference": "Holm runs over `screened_minus_random_exclusion_twin`, because that is the comparison that separates the RANK from the REMOVAL. The difference against the unscreened book is reported for every screen and corrects nothing."
+ },
+ "family_max_p": 0.879968,
+ "headline": "io_level (exclude worst 10%, low end): -0.000237/month t -0.5174 vs unscreened | 6e-05/month t 0.151 vs the random exclusion, over 419 blocks at $10,000,000 -> FAILED_VARIANT; io_abn (exclude worst 10%, low end): -0.000448/month t -1.0176 vs unscreened | -0.00033/month t -0.699 vs the random exclusion, over 419 blocks at $10,000,000 -> FAILED_VARIANT; skew_25d (exclude worst 10%, high end): -0.000574/month t -1.1245 vs unscreened | -0.00027/month t -0.5259 vs the random exclusion, over 419 blocks at $10,000,000 -> FAILED_VARIANT; skew_resid (exclude worst 10%, high end): -0.000309/month t -0.5892 vs unscreened | -0.000197/month t -0.3485 vs the random exclusion, over 419 blocks at $10,000,000 -> FAILED_VARIANT",
+ "next_test": "a screen whose difference against the RANDOM exclusion clears Holm at this family's declared size earns one thing: the same read at the OTHER floor, with the twin re-drawn there. It does not earn a book -- \u00a726/\u00a727 close the long-only return source and this job never reopened it.",
+ "verdict": "read each screen against BOTH of its controls under the family Holm block; a screen that beats only one of them has not been shown to be a screen",
+ "elapsed_s": 138.0,
+ "written_utc": "2026-09-19T06:09:59+00:00",
+ "run": 1,
+ "stage": "pnl",
+ "awake_s": 138.0,
+ "slept_s": 0.0,
+ "box_s": 7800.0,
+ "wall_minus_monotonic_s": 0.0,
+ "sleep_gaps": [],
+ "child_pid": 43452,
+ "killed_pids": [],
+ "exit_code": 0
+}

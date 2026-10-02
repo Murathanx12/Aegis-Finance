@@ -1,0 +1,321 @@
+{
+ "run_utc": "20260929T135128Z",
+ "today": "2026-09-29",
+ "drills": [
+  {
+   "pass": true,
+   "evidence": {
+    "receipt": "vendor_miss_20260929T133948Z.json",
+    "A_ibes_vs_sec": {
+     "n_matched": 73744,
+     "share_same_date": 0.9322,
+     "share_off_ge2bd": 0.0132,
+     "share_reaction_session_differs": 0.0304
+    },
+    "B_pattern_14d": {
+     "n": 19210,
+     "share_exact": 0.2774,
+     "share_off_ge2bd": 0.5925
+    },
+    "D_forward": {
+     "nasdaq_forward_rows": 62,
+     "with_yahoo_date": 22,
+     "share_same_date": 0.7273,
+     "share_same_date_when_yahoo_says_announced": 0.8889,
+     "reading": "two forward vendors disagreeing on the same future print; the realised check is prospective (graded by the rehearsal as the prints happen)"
+    },
+    "second_freeze_refused": true,
+    "reserves_on_sheet": 2
+   },
+   "action": "Before each BUY, EVTS <GO>: if the date moved out of the hold, SKIP and take the next reserve. A moved date AFTER entry: sell at the planned exit anyway (the rule never extends a hold).",
+   "verdict": "PASS",
+   "drill": "01 earnings date moved or wrong"
+  },
+  {
+   "pass": true,
+   "evidence": {
+    "timing": "UNKNOWN",
+    "sessions_held": 2,
+    "buy": "2026-10-01",
+    "sell": "2026-10-05",
+    "jp_00utc_stamp": "UNKNOWN"
+   },
+   "action": "An unknown report time is held TWO sessions (buy the session before the date, sell the session after it). Confirm the time on EVTS; if it is known, the one-session hold applies.",
+   "verdict": "PASS",
+   "drill": "02 report time unknown"
+  },
+  {
+   "pass": true,
+   "evidence": {
+    "buys": 3,
+    "gross_at_limit": 0.5999,
+    "notes": [
+     "3 of 5 slots filled: 40% of the book stays in cash by rule (fewer names report in this window)."
+    ]
+   },
+   "action": "Fewer than five names: buy what there is and leave the rest in cash (filling slots with high-vol names measured -1.0 pp a season, t -1.2). Do NOT double a slot: the 20% cap binds.",
+   "verdict": "PASS",
+   "drill": "03 fewer than five names"
+  },
+  {
+   "pass": true,
+   "evidence": {
+    "membership": {
+     "AAA": "CONFIRMED_WLS",
+     "BBB": "NOT_IN_WLS_EXPORT",
+     "CCC": "CONFIRMED_WLS"
+    },
+    "top": [
+     "AAA",
+     "CCC"
+    ],
+    "refused": [
+     {
+      "symbol": "BBB",
+      "refusal": "REFUSED_NOT_IN_WLS"
+     }
+    ]
+   },
+   "action": "With the MEMB export in contest/wls/, a non-member is refused and the next name moves up. Without it every name says UNCONFIRMED: check MEMB on the Terminal before each BUY.",
+   "verdict": "PASS",
+   "drill": "04 name not in WLS"
+  },
+  {
+   "pass": true,
+   "evidence": {
+    "halted_at_entry": "NO_FILL_HALTED",
+    "gap_above_limit": "NO_FILL_ABOVE_LIMIT",
+    "halted_at_exit_exits_next_open": "2026-09-14",
+    "gap_40pct_check": {
+     "verdict": "GAP",
+     "ratio": 1.4,
+     "action": "price moved beyond the guard with no split ratio: SKIP the ticket (the limit protects a buy)"
+    }
+   },
+   "action": "Halted at the buy: no fill, cash. Halted at the sell: sell at the next open. A gap beyond the limit: the BUY does not fill; never chase it with a market order.",
+   "verdict": "PASS",
+   "drill": "05 halted or gapping name"
+  },
+  {
+   "pass": true,
+   "evidence": {
+    "source_after_outage": "disk_fallback",
+    "grade_state": "PENDING_PRICE",
+    "pull_bars": {
+     "pull_bars": {
+      "n_failed": null,
+      "failed": [
+       "ZZZNOTREAL"
+      ],
+      "rows": 0
+     }
+    },
+    "stale_banner_rule": "any market > 4 days -> STALE banner"
+   },
+   "action": "Price source down: the sheet is still written from the last bars and carries a PRICE SOURCE STALE banner; check every reference price on the Terminal. Grading waits (PENDING), never guesses.",
+   "verdict": "PASS",
+   "drill": "06 price source down"
+  },
+  {
+   "pass": true,
+   "logic_pass": true,
+   "machine_pass": true,
+   "evidence": {
+    "tasks": {
+     "AegisContestRehearsal": {
+      "Wake": true,
+      "Catchup": true,
+      "Battery": false,
+      "StopOnBattery": false,
+      "Start": "2026-09-30T14:30:00+08:00",
+      "End": "2026-10-15T23:59:00",
+      "Logon": 3,
+      "State": "Ready"
+     },
+     "AegisContestDesk": {
+      "Wake": true,
+      "Catchup": true,
+      "Battery": false,
+      "StopOnBattery": false,
+      "Start": "2026-10-09T14:30:00+08:00",
+      "End": "2026-11-14T23:59:00",
+      "Logon": 3,
+      "State": "Ready"
+     }
+    },
+    "power_plan_wake_timers_ac": false,
+    "ac_sleep_never": true,
+    "late_buys_void": [
+     "VOID_LATE",
+     "VOID_LATE",
+     "VOID_LATE"
+    ],
+    "missed_sell": "OVERDUE"
+   },
+   "action": "Tasks wake the PC and run late when missed (StartWhenAvailable). A sheet frozen after a session opened VOIDS that session's buys; a missed sell prints as OVERDUE for the next open. Interactive-only tasks need the owner signed in: leave the PC signed in and plugged in.",
+   "verdict": "PASS",
+   "drill": "07 PC asleep at sheet time"
+  },
+  {
+   "pass": true,
+   "evidence": {
+    "jp_sports_day": "2026-10-12",
+    "jp_source": "exchange_calendars:XTKS",
+    "jp_buy_session_for_next_day_print": "2026-10-09",
+    "cn_sessions_oct1_3": 0,
+    "us_open_that_day": true,
+    "early_closes_oct_nov": {
+     "XNYS": [
+      "2026-11-27"
+     ],
+     "XLON": [],
+     "XSTO": [
+      "2026-10-30"
+     ],
+     "XHKG": [],
+     "XTKS": []
+    }
+   },
+   "finding": "Before tonight the desk assigned future sessions with pd.bdate_range (weekdays): it would have bought Japanese names on Sports Day (contest day 1) and Chinese names in Golden Week. Fixed: desk.future_sessions uses exchange_calendars.",
+   "action": "Holidays come from exchange_calendars (verify on the Terminal's CDR <GO>). No US holiday or half day falls inside Oct 12 - Nov 13; the US half day is Nov 27, after the contest.",
+   "verdict": "PASS",
+   "drill": "08 holiday or half day"
+  },
+  {
+   "pass": true,
+   "evidence": {
+    "2_for_1": {
+     "verdict": "SPLIT_SUSPECT",
+     "ratio": 0.5025,
+     "split_ratio": 0.5,
+     "action": "price is 0.50x the sheet's: check CACS for a split. If confirmed, SHARES = sheet shares / 0.5 (same dollars); the limit scales the same way"
+    },
+    "1_for_10_consolidation": {
+     "verdict": "SPLIT_SUSPECT",
+     "ratio": 9.9,
+     "split_ratio": 10.0,
+     "action": "price is 9.90x the sheet's: check CACS for a split. If confirmed, SHARES = sheet shares / 10 (same dollars); the limit scales the same way"
+    }
+   },
+   "action": "If the Terminal price is beyond 30% of the sheet's reference, look at CACS <GO>. A split: shares = sheet shares / ratio, same dollars. No split: SKIP (gap).",
+   "verdict": "PASS",
+   "drill": "09 split between sheet and fill"
+  },
+  {
+   "pass": true,
+   "evidence": {
+    "kept": [
+     "GOOGL",
+     "FOXA",
+     "AAA"
+    ],
+    "refused": [
+     {
+      "symbol": "GOOG",
+      "refusal": "REFUSED_SAME_ISSUER_AS GOOGL"
+     },
+     {
+      "symbol": "FOX",
+      "refusal": "REFUSED_SAME_ISSUER_AS FOXA"
+     }
+    ],
+    "universe_issuers_with_2plus_listings": 2453,
+    "examples": [
+     "NM:bank of america",
+     "NM:morgan stanley",
+     "NM:telefonaktiebolaget lm ericsson publ",
+     "NM:alphabet",
+     "NM:roche",
+     "NM:allstate",
+     "NM:jpmorgan chase and",
+     "NM:nokia"
+    ]
+   },
+   "finding": "The desk ranked every listing separately: two classes of one issuer report on the same day and would have taken two slots (40% on one print). The order sheet keeps the better-ranked one.",
+   "action": "One line per issuer; the refused class is printed with REFUSED_SAME_ISSUER_AS.",
+   "verdict": "PASS",
+   "drill": "10 two share classes"
+  },
+  {
+   "pass": true,
+   "evidence": {
+    "defect_file": "bar_defects_2026-09-29T035954Z.json",
+    "flagged_example": "AKTS",
+    "defect_date": "2026-01-09",
+    "refusal": "REFUSED_DEFECT_FLAGGED (CUT 2026-01-09 in bar_defects_2026-09-29T035954Z.json)",
+    "stitched_cut_loaded_this_process": []
+   },
+   "action": "A name with a bar defect inside its trailing window is refused (its past-move average is not trusted); a reused ticker's old history is cut before any feature (contest_calendar.cut_stitched).",
+   "verdict": "PASS",
+   "drill": "11 stitched or defect-flagged ticker"
+  },
+  {
+   "pass": true,
+   "evidence": {
+    "A_pct_nav_after_+50pct": 0.2727,
+    "A_trim_shares_if_cap_at_all_times": 667,
+    "notional_at_limit": 199920.0,
+    "buys_with_3_slots_held": 2
+   },
+   "finding": "The desk bought five new names every day even while two-session holds were still open (gross could exceed 100%, i.e. leverage the T&C forbid). The order sheet counts held slots.",
+   "action": "OWNER MUST CONFIRM whether the 20% cap binds at entry or at all times. Until then: size so the notional AT THE LIMIT is under min(20% NAV, $200k); if a position drifts above 20% and the rule is 'at all times', sell the printed trim shares at the next open.",
+   "verdict": "PASS",
+   "drill": "12 20% cap breached by drift"
+  },
+  {
+   "pass": true,
+   "evidence": {
+    "correct": {
+     "ok": true,
+     "kinds": [],
+     "codes_match": true
+    },
+    "slipped_zero": {
+     "ok": false,
+     "kinds": [
+      "QTY_SLIPPED_ZERO"
+     ],
+     "codes_match": false
+    },
+    "transposed_digits": {
+     "ok": false,
+     "kinds": [
+      "QTY_MISMATCH"
+     ],
+     "codes_match": false
+    },
+    "side_flipped": {
+     "ok": false,
+     "kinds": [
+      "SIDE_FLIPPED"
+     ],
+     "codes_match": false
+    },
+    "ticker_typo": {
+     "ok": false,
+     "kinds": [
+      "TICKER_TYPO"
+     ],
+     "codes_match": false
+    },
+    "no_exchange_code": {
+     "ok": false,
+     "kinds": [
+      "EXCHANGE_CODE_MISSING"
+     ],
+     "codes_match": false
+    },
+    "missing_line": {
+     "ok": false,
+     "kinds": [
+      "MISSING_TICKET"
+     ],
+     "codes_match": false
+    }
+   },
+   "action": "Type from the sheet, then paste the blotter into `contest_rehearsal verify`: it names every missing ticket, wrong quantity (a slipped zero, swapped digits), flipped side and mistyped ticker, and prints the SHEET CODE only when the entry is exact.",
+   "verdict": "PASS",
+   "drill": "13 manual-entry mistake"
+  }
+ ]
+}

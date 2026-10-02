@@ -1,0 +1,121 @@
+{
+ "job": "N9_library_autopsy",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 3,
+ "run_date": "2026-09-21",
+ "smoke": false,
+ "question": "NEGATIVE_RESULTS \u00a751: the precursor library warns on 12-17% of exceptional moves and fires on 15.3% of ALL days -- coverage IS the base rate, lift 0.82-1.15 against an MDE of 0.25-0.62. \u00a751's own fix is more autopsy-generated precursors. What does the reader propose for the moves nothing warned about?",
+ "held_panel": [
+  "DIA",
+  "XLV",
+  "XLI",
+  "XLP",
+  "XLU",
+  "XLB"
+ ],
+ "held_panel_why": "PREREG_N9_MINE_THE_85 Amendment 1's six securities -- in neither the selection slice (SPY/XLF/XLE, pre-2016) nor the foreign one (QQQ/IWM/XLK, post-2016). A precursor mined from a security a later test will score it on is not a candidate, it is a memory.",
+ "horizons": [
+  20,
+  60
+ ],
+ "tail_q": 0.1,
+ "warning_window_sessions": 5,
+ "output_is_candidates_only": {
+  "status_on_every_row": "CANDIDATE",
+  "admission_path": "scripts/library_measure_2006_2019.py + scripts/library_placebo_null.py",
+  "why": "\u00a737/\u00a741. This job generates; it may not admit. A generator that could also admit its own output is the same defect with the sign flipped."
+ },
+ "cost_cap": {
+  "max_usd": 2.0,
+  "config_key": "N9_LIBRARY_AUTOPSY_MAX_USD",
+  "checked": "BEFORE every submission, never refunded after",
+  "also_breached_by": "an UNPRICED call. A row whose `cost_usd` is None is summed as 0.0 by every total that reads it, so the cap over it is a lower bound of zero. The run stops by name (REFUSED_UNPRICED_CALL) and prints the model id it could not price.",
+  "requires": "a readable, appendable call ledger, else REFUSED_NO_LEDGER before the first submission"
+ },
+ "incumbent_library": {
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\research_gym\\autopsies_20260815T170529Z.jsonl",
+  "n_rows": 6,
+  "n_compiled": 6,
+  "n_uncompilable": 0,
+  "refused": null
+ },
+ "coverage": {
+  "n_exceptional": 16632,
+  "n_covered": 3425,
+  "n_unwarned": 11392,
+  "covered_share": 0.2059,
+  "library_fires_on_share_of_all_days": 0.1381,
+  "lift_vs_base_rate": 1.4915,
+  "tail_q": 0.1,
+  "warning_window_sessions": 5,
+  "note": "\u00a751's own metric: coverage is only coverage if it exceeds the share of ALL days the library fires on. Lift 1.0 is where the library sat on 2026-08-17."
+ },
+ "n_moves_this_run": 11392,
+ "reader": {
+  "asked_for": "deepseek",
+  "backend": "deepseek",
+  "refused": null
+ },
+ "ledger": {
+  "ok": true,
+  "reason": null,
+  "base": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_calls.jsonl",
+  "files": [
+   "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_calls_2026-08.jsonl",
+   "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_calls_2026-09.jsonl"
+  ],
+  "n_files": 2,
+  "checked": "the ledger STREAM and the directory it appends into, not the pre-rotation monolith -- that file is legitimately gone since 2026-09-12"
+ },
+ "metered": true,
+ "autopsies": {
+  "moves_offered": 11392,
+  "moves_already_done": 3050,
+  "moves_attempted": 8340,
+  "candidates_filed": 8338,
+  "refusals": {
+   "REFUSED_UNPARSEABLE": 2,
+   "REFUSED_READER_ERROR": 2
+  },
+  "n_refused": 4,
+  "stopped": "complete",
+  "stop_detail": null,
+  "unpriced": null,
+  "stopped_on_cap": false,
+  "flush_every": 50,
+  "cursor_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\research_gym\\library_candidates_cursor.json",
+  "candidates_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\research_gym\\library_candidates.jsonl"
+ },
+ "cap_block": {
+  "max_usd": 2.0,
+  "backend": "deepseek",
+  "metered": true,
+  "estimated_spend_at_stop_usd": 0.013238,
+  "usd_per_row_used": 0.00031518,
+  "usd_per_row_source": "MEASURED 2026-09-13 ledger mean",
+  "ledger_reads": 167,
+  "checked": "before every submission, against the ledger total refreshed every 50 rows",
+  "also_in_force": "lab_budget's UTC-DAY cap, but only on the `--reader` path (lab_reader.resolve); a direct `--backend deepseek` run is capped by --max-usd alone",
+  "unmetered_note": null
+ },
+ "spend": {
+  "usd": 10.047856,
+  "calls": 8342,
+  "tokens_in": 7508099,
+  "tokens_out": 6830361,
+  "cached_tokens": 0,
+  "since_utc": "2026-09-20T16:56:02+00:00",
+  "purpose": "n9_library_autopsy",
+  "source": "backend/services/llm_telemetry.read_calls()",
+  "note": "a list-price reconstruction from the call ledger, not a bill. `scripts/llm_cost_audit.py --snapshot` reconciles against the provider's own balance and is the ground truth"
+ },
+ "llm_spend_usd": 10.047856,
+ "spend_is_a_lower_bound": false,
+ "spend_caveat": null,
+ "headline": "11392 of 16632 exceptional moves unwarned (library covers 0.2059, fires on 0.1381 of all days, lift 1.4915); 8338 CANDIDATE precursor(s) filed, 4 refused {'REFUSED_UNPARSEABLE': 2, 'REFUSED_READER_ERROR': 2}, $10.0479 of $2.00 spent; stopped=complete",
+ "next_test": "none of these is a library member. Each has to clear scripts/library_measure_2006_2019.py + scripts/library_placebo_null.py on foreign slices with its parent move barred, and the metric that decides is \u00a751's LIFT over the library's own firing rate -- not whether the rule fires.",
+ "verdict": "8338 candidates for scripts/library_measure_2006_2019.py + scripts/library_placebo_null.py. A candidate is a proposal, not a precursor: nothing here changes the library's measured coverage until the measurement job runs.",
+ "elapsed_s": 17979.1,
+ "written_utc": "2026-09-20T21:55:41+00:00",
+ "stage": "signal"
+}

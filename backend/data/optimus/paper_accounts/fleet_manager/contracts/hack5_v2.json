@@ -1,0 +1,56 @@
+{
+ "schema": "fleet_manager_contract/1",
+ "role": "hack5",
+ "version": "v2",
+ "licence": "PRODUCT_EXPERIMENT",
+ "status": "PROPOSED (dry-run until the owner sets modes.json contract=v2, entries=LIVE)",
+ "alpha_source": "market-like CONTROL: ~95% SPY, the rest cash (no selection, no view)",
+ "why_this_account": "the options mandate cannot run under 'no new options'; the fleet needs a market-like control whose errors are the market's, so every other account is graded against a real executed control, not only an index",
+ "caps": {
+  "max_gross_frac": 1.0,
+  "max_name_frac": 0.1,
+  "daily_turnover_frac": 1.0,
+  "max_orders_per_run": 60,
+  "min_order_usd": 250.0,
+  "shorting": false,
+  "new_options": false,
+  "leverage": false,
+  "name_cap_overrides": {
+   "SPY": 0.95
+  }
+ },
+ "costs": {
+  "assumed_bps_per_side": 10.0,
+  "fill_convention": "DAY limit at ask x (1+10bps) for buys and bid x (1-10bps) for sells; an unfilled limit is not traded; last trade when the IEX quote is one-sided or wider than 2%"
+ },
+ "objective": "terminal wealth vs SPY and vs the frozen twin, graded daily; the question is whether this alpha source's errors differ from the other accounts'; no claim of skill",
+ "legacy": "names held when v2 becomes active and not targeted by it keep their v1 terms (stop, horizon) and are not counted as capacity: v2 fills what remains of the gross cap",
+ "selection": {
+  "kind": "market_control",
+  "symbol": "SPY",
+  "weight": 0.95,
+  "rule": "hold 95% of equity in SPY, the rest cash; enter with DAY limits near the quote (the whole position in one session: the control's turnover budget is 100% of equity); no rebalancing drift trades below the minimum order; no view, no selection",
+  "horizon_sessions": null
+ },
+ "stop_rule": {
+  "quoted_in": "daily sigma",
+  "sigma": "63-session sd of close-to-close returns on the bar-defect-screened panel (Alpaca daily bars when a name is not in the panel)",
+  "k_sigma": 3.0,
+  "min_frac": 0.1,
+  "max_frac": 0.1,
+  "distance": "clip(k_sigma x sigma, min_frac, max_frac) of the reference price",
+  "never_loosen": "a replaced stop is never below the stop it replaces",
+  "order": "GTC sell stop for the full long quantity; renewed within 7 days of its expiry",
+  "why": "a DISASTER stop, far outside noise (~12 daily sigma on SPY): a control stopped out by a wiggle would stop being the market"
+ },
+ "twin": {
+  "kind": "ideal_control",
+  "weights": {
+   "SPY": 0.95
+  },
+  "note": "the unexecuted ideal: account minus twin = the control's execution drag"
+ },
+ "exits": "none by rule (held as the benchmark); the disaster stop; a new control is a new version",
+ "policy_hash": "98f677b18293c710",
+ "frozen_utc": "2026-09-29T16:01:42+00:00"
+}

@@ -1,0 +1,95 @@
+2026-09-24 10:43:22,984 INFO funnel cache universe.json is 1065.9h old (ttl 168.0h) — refetching
+2026-09-24 10:43:36,278 INFO funnel stage 1: 200/5339 fetched
+2026-09-24 10:43:37,899 ERROR $AMRO: possibly delisted; no price data found  (period=1y)
+2026-09-24 10:43:43,728 ERROR 
+1 Failed download:
+2026-09-24 10:43:43,729 ERROR ['AMRO']: possibly delisted; no price data found  (period=1y)
+2026-09-24 10:43:43,837 INFO funnel stage 1: 400/5339 fetched
+2026-09-24 10:43:51,169 INFO funnel stage 1: 600/5339 fetched
+2026-09-24 10:43:53,842 ERROR $BTRY: possibly delisted; no price data found  (period=1y)
+2026-09-24 10:43:58,515 ERROR 
+1 Failed download:
+2026-09-24 10:43:58,515 ERROR ['BTRY']: possibly delisted; no price data found  (period=1y)
+2026-09-24 10:43:58,619 INFO funnel stage 1: 800/5339 fetched
+2026-09-24 10:44:05,668 INFO funnel stage 1: 1000/5339 fetched
+2026-09-24 10:44:12,641 INFO funnel stage 1: 1200/5339 fetched
+2026-09-24 10:44:19,544 INFO funnel stage 1: 1400/5339 fetched
+2026-09-24 10:44:26,573 INFO funnel stage 1: 1600/5339 fetched
+2026-09-24 10:44:33,809 INFO funnel stage 1: 1800/5339 fetched
+2026-09-24 10:44:41,092 INFO funnel stage 1: 2000/5339 fetched
+2026-09-24 10:44:48,065 INFO funnel stage 1: 2200/5339 fetched
+2026-09-24 10:44:55,144 INFO funnel stage 1: 2400/5339 fetched
+2026-09-24 10:45:02,377 INFO funnel stage 1: 2600/5339 fetched
+2026-09-24 10:45:03,788 ERROR $KDC: possibly delisted; no price data found  (period=1y)
+2026-09-24 10:45:09,323 ERROR 
+1 Failed download:
+2026-09-24 10:45:09,323 ERROR ['KDC']: possibly delisted; no price data found  (period=1y)
+2026-09-24 10:45:09,428 INFO funnel stage 1: 2800/5339 fetched
+2026-09-24 10:45:16,384 INFO funnel stage 1: 3000/5339 fetched
+2026-09-24 10:45:23,682 INFO funnel stage 1: 3200/5339 fetched
+2026-09-24 10:45:30,631 INFO funnel stage 1: 3400/5339 fetched
+2026-09-24 10:45:37,636 INFO funnel stage 1: 3600/5339 fetched
+2026-09-24 10:45:44,944 INFO funnel stage 1: 3800/5339 fetched
+2026-09-24 10:45:48,989 ERROR $PTNM: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-09-24 10:45:52,245 ERROR 
+1 Failed download:
+2026-09-24 10:45:52,245 ERROR ['PTNM']: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-09-24 10:45:52,314 INFO funnel stage 1: 4000/5339 fetched
+2026-09-24 10:45:59,608 INFO funnel stage 1: 4200/5339 fetched
+2026-09-24 10:46:06,811 INFO funnel stage 1: 4400/5339 fetched
+2026-09-24 10:46:13,734 ERROR $SVA: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-09-24 10:46:14,408 ERROR 
+1 Failed download:
+2026-09-24 10:46:14,408 ERROR ['SVA']: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-09-24 10:46:14,478 INFO funnel stage 1: 4600/5339 fetched
+2026-09-24 10:46:21,671 INFO funnel stage 1: 4800/5339 fetched
+2026-09-24 10:46:28,734 INFO funnel stage 1: 5000/5339 fetched
+2026-09-24 10:46:38,469 ERROR $VTA: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-09-24 10:46:38,472 ERROR 
+1 Failed download:
+2026-09-24 10:46:38,472 ERROR ['VTA']: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-09-24 10:46:38,624 INFO funnel stage 1: 5200/5339 fetched
+2026-09-24 10:46:43,685 INFO funnel stage 1: 5339/5339 fetched
+2026-09-24 10:46:45,452 INFO funnel stage 1: 2901 of 5339 priced names pass eligibility
+2026-09-24 10:46:45,506 INFO funnel stage 2: 250 shortlisted across 5 size bands
+2026-09-24 10:46:47,440 WARNING finnhub stock/price-target:NVDA -> 403
+2026-09-24 10:46:50,097 WARNING finnhub stock/price-target:JAZZ -> 403
+2026-09-24 10:46:52,731 WARNING finnhub stock/price-target:SON -> 403
+2026-09-24 10:46:55,290 WARNING finnhub stock/price-target:PAGS -> 403
+2026-09-24 10:46:57,779 WARNING finnhub stock/price-target:HTLD -> 403
+2026-09-24 10:47:00,552 WARNING finnhub stock/price-target:AAPL -> 403
+2026-09-24 10:47:03,289 WARNING finnhub stock/price-target:RVTY -> 403
+2026-09-24 10:47:05,907 WARNING finnhub stock/price-target:STNG -> 403
+2026-09-24 10:47:08,541 WARNING finnhub stock/price-target:AVPT -> 403
+2026-09-24 10:47:11,113 WARNING finnhub stock/price-target:EIG -> 403
+2026-09-24 10:47:13,875 WARNING finnhub stock/price-target:MSFT -> 403
+2026-09-24 10:47:16,650 WARNING finnhub stock/price-target:BR -> 403
+2026-09-24 10:47:19,222 WARNING finnhub stock/price-target:HWC -> 403
+2026-09-24 10:47:21,825 WARNING finnhub stock/price-target:ALG -> 403
+2026-09-24 10:47:24,397 WARNING finnhub stock/price-target:BHRB -> 403
+2026-09-24 10:47:26,965 WARNING finnhub stock/price-target:META -> 403
+2026-09-24 10:47:30,624 WARNING finnhub stock/price-target:INCY -> 403
+2026-09-24 10:47:33,295 WARNING finnhub stock/price-target:TS -> 403
+2026-09-24 10:47:35,872 WARNING finnhub stock/price-target:HTGC -> 403
+2026-09-24 10:47:38,480 WARNING finnhub stock/price-target:NAVI -> 403
+2026-09-24 10:47:41,716 WARNING finnhub stock/price-target:AMZN -> 403
+2026-09-24 10:47:45,043 WARNING finnhub stock/price-target:CHD -> 403
+2026-09-24 10:47:48,586 WARNING finnhub stock/price-target:GMAB -> 403
+2026-09-24 10:47:51,158 WARNING finnhub stock/price-target:ADUS -> 403
+2026-09-24 10:47:53,721 WARNING finnhub stock/price-target:ARCO -> 403
+2026-09-24 10:47:56,276 WARNING finnhub stock/price-target:GOOGL -> 403
+2026-09-24 10:47:59,001 WARNING finnhub stock/price-target:DD -> 403
+2026-09-24 10:48:01,561 WARNING finnhub stock/price-target:HLNE -> 403
+2026-09-24 10:48:04,451 WARNING finnhub stock/price-target:SNDR -> 403
+2026-09-24 10:48:07,223 WARNING finnhub stock/price-target:PDS -> 403
+2026-09-24 10:48:09,813 WARNING finnhub stock/price-target:GOOG -> 403
+2026-09-24 10:48:12,868 WARNING finnhub stock/price-target:NTRS -> 403
+2026-09-24 10:48:15,499 WARNING finnhub stock/price-target:CHH -> 403
+2026-09-24 10:48:18,068 WARNING finnhub stock/price-target:FFIN -> 403
+2026-09-24 10:48:20,607 WARNING finnhub stock/price-target:OBK -> 403
+2026-09-24 10:48:23,179 WARNING finnhub stock/price-target:TSM -> 403
+2026-09-24 10:48:25,849 WARNING finnhub stock/price-target:ALLE -> 403
+2026-09-24 10:48:28,437 WARNING finnhub stock/price-target:CBSH -> 403
+2026-09-24 10:48:31,268 WARNING finnhub stock/price-target:CNA -> 403
+2026-09-24 10:48:33,874 WARNING finnhub stock/price-target:LOB -> 403
+2026-09-24 10:48:34,531 INFO funnel stage 3: 40 enriched, 0 failed, 80 calls (budget 120)

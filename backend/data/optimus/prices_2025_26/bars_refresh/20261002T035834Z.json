@@ -1,0 +1,70 @@
+{
+ "receipt": "bars_refresh",
+ "run_id": "20261002T035834Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "started_utc": "2026-10-02T03:58:35+00:00",
+ "dry_run": false,
+ "last_closed_session": "2026-10-01",
+ "calendar": "XNYS",
+ "age_before": {
+  "stale": true,
+  "newest": "2026-09-28",
+  "sessions_old": 3,
+  "max_age_sessions": 2,
+  "last_closed_session": "2026-10-01",
+  "calendar": "XNYS",
+  "panels": {
+   "grader_2025_26": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+    "newest": "2026-09-28",
+    "sessions_old": 3,
+    "state": "STALE"
+   },
+   "ranker_deep": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars.parquet",
+    "newest": "2026-09-28",
+    "sessions_old": 3,
+    "state": "STALE"
+   }
+  },
+  "line": "BARS_STALE: newest=2026-09-28 sessions_old=3 (limit 2, last closed session 2026-10-01, XNYS)"
+ },
+ "panels": {},
+ "pull": {
+  "start": "2026-09-18",
+  "symbols": 4930,
+  "feed": "sip",
+  "adjustment": "all",
+  "keep_through": "2026-10-01"
+ },
+ "status": "refused",
+ "reason": "pull failed, nothing overwritten: HTTPError: HTTP Error 400: Bad Request",
+ "age_after": {
+  "stale": true,
+  "newest": "2026-09-28",
+  "sessions_old": 3,
+  "max_age_sessions": 2,
+  "last_closed_session": "2026-10-01",
+  "calendar": "XNYS",
+  "panels": {
+   "grader_2025_26": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+    "newest": "2026-09-28",
+    "sessions_old": 3,
+    "state": "STALE"
+   },
+   "ranker_deep": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars.parquet",
+    "newest": "2026-09-28",
+    "sessions_old": 3,
+    "state": "STALE"
+   }
+  },
+  "line": "BARS_STALE: newest=2026-09-28 sessions_old=3 (limit 2, last closed session 2026-10-01, XNYS)"
+ },
+ "line": "BARS_STALE: newest=2026-09-28 sessions_old=3 (limit 2, last closed session 2026-10-01, XNYS)",
+ "elapsed_s": 31.8,
+ "written_utc": "2026-10-02T03:59:06+00:00",
+ "headline": "bars refresh refused: +0 rows; BARS_STALE: newest=2026-09-28 sessions_old=3 (limit 2, last closed session 2026-10-01, XNYS); pull failed, nothing overwritten: HTTPError: HTTP Error 400: Bad Request"
+}

@@ -1738,8 +1738,10 @@ def agent(message_file: str, *, model: str = "deepseek/deepseek-v4-pro",
         run_id=env.get("run_id"), error=(err[:300] if status != "OK" else None),
         path=telemetry_path)
     served = env.get("response_model") or model
+    released = release_session(sid) if session_id is None else None
     return {"rc": rc, "reply": reply, "stderr": err.strip()[:600],
             "model": model, "status": status, "session_id": sid,
+            "session_released": released,
             "usage": env.get("usage") or {}, "call_id": call_id,
             "openclaw_cost_usd": env.get("openclaw_cost_usd"),
             # The SAME figure the telemetry row carries (same tokens, same
@@ -1749,6 +1751,32 @@ def agent(message_file: str, *, model: str = "deepseek/deepseek-v4-pro",
             "priced_cost_usd": priced_cost(served, env.get("usage") or {}),
             "response_model": env.get("response_model"),
             "latency_s": round(latency_ms / 1000.0, 2)}
+
+
+#: The gateway's key for a session opened with `agent --session-id <sid>`.
+SESSION_KEY_PREFIX = "agent:main:explicit:"
+
+
+def release_session(sid: str, *, timeout: float = 60.0) -> bool:
+    """Archive a ONE-SHOT session the moment its turn is over.
+
+    2026-09-30, measured: the forecast unit failed 8 of 8 calls with
+    `bundle-mcp: live runtime limit (256) reached; stop or reset unused
+    sessions before connecting another MCP runtime`. Every `agent()` call opens
+    a fresh session (by design, see above) and, since the read-only tool scope
+    of 2026-09-29 allows `bundle-mcp`, each one kept an MCP runtime alive after
+    its turn; 666 finished sessions were stored and the gateway refused the
+    257th live runtime. Archiving releases the live artefacts; the archive stays
+    searchable. Best-effort: a failed release is returned as False and never
+    fails the call whose reply is already in hand. Only sessions this module
+    named itself are released -- a caller-supplied `session_id` is the caller's.
+    """
+    try:
+        r = _run(["sessions", "archive", f"{SESSION_KEY_PREFIX}{sid}", "--json"],
+                 timeout=timeout)
+        return r.returncode == 0
+    except Exception:                                   # noqa: BLE001
+        return False
 
 
 def parse_envelope(stdout: str) -> dict:

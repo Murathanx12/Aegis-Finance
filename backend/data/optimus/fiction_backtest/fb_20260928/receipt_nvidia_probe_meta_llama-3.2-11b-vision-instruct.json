@@ -1,0 +1,9 @@
+{
+ "model": "meta/llama-3.2-11b-vision-instruct",
+ "ok": true,
+ "status": "OK",
+ "served_model": "meta/llama-3.2-11b-vision-instruct",
+ "text": "OK",
+ "error": "",
+ "at": "2026-09-28T14:13:47.601497+00:00"
+}

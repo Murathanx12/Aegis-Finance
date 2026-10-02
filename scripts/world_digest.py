@@ -145,7 +145,10 @@ def run(a: argparse.Namespace) -> int:
     stitched = WD.stitched_symbols()
     themes_raw = [] if a.dry_run else WD.find_themes(
         rows, meter, prev_titles=previous_titles(), max_themes=int(_cfg.WORLD_DIGEST_MAX_THEMES))
-    _p(f"themes: {len(themes_raw)}; spend ${meter.spent:.4f}")
+    # 2026-09-30: fold near-duplicate themes (one story found from two ends)
+    themes_raw, theme_merges = WD.merge_near_duplicate_themes(themes_raw)
+    _p(f"themes: {len(themes_raw)} (merged {len(theme_merges)} near-duplicates); "
+       f"spend ${meter.spent:.4f}")
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=4) as exr:
         themes = list(exr.map(lambda th: WD.implications_for(th, rows, meter, px=px,
@@ -169,6 +172,41 @@ def run(a: argparse.Namespace) -> int:
                 recs += rs
             else:
                 not_written[why] += 1
+    # 2026-09-30: the OFFICIAL-SOURCE sections (insiders, congress, policy,
+    # positioning): the same frozen rows, each under its own news_digest: sub-tag
+    sections: dict = {}
+    if not getattr(a, "no_sections", False):
+        try:
+            from backend.services import digest_sections as DS
+            sections = DS.build(now, meter, universe=universe, llm=not a.dry_run)
+            ph_s = WD._sha(DS.POLICY_SYSTEM, n=16)
+            wr, nw = Counter(), Counter()
+            for name in ("insiders", "congress", "policy", "positioning"):
+                sec = sections[name]
+                for imp in sec["implications"]:
+                    srcs = [x.get("url") for x in (sec["findings"].get("changes") or [])
+                            for x in (x.get("sources") or [])] if name == "policy" else []
+                    th_s = {"title": f"section:{name}:{imp.get('change') or imp.get('rule')}",
+                            "urls": [u for u in srcs if u][:8]}
+                    rs, why = WD.implication_records(
+                        imp, theme=th_s, digest_id=stamp, made_at=made_at, px=px,
+                        stitched=stitched,
+                        model=model if name == "policy" else f"rule:{imp.get('rule')}",
+                        prompt_hash=ph_s if name == "policy" else f"rule:{imp.get('rule')}",
+                        have=have, specialist=sec["specialist"],
+                        write_size=bool(imp.get("write_size")))
+                    imp["written"] = why
+                    if rs:
+                        recs += rs
+                        wr[name] += len(rs)
+                    else:
+                        nw[f"{name}:{why}"] += 1
+            sections["written"] = dict(wr)
+            sections["not_written"] = dict(nw)
+            _p(f"sections: rows {dict(wr)}; not written {dict(nw)}; spend ${meter.spent:.4f}")
+        except Exception as exc:                                     # noqa: BLE001
+            sections = {"error": f"{type(exc).__name__}: {exc}"[:300]}
+            _p(f"sections FAILED: {sections['error']}")
     if recs and not a.dry_run and not a.no_write:
         B.append(recs)
     n_size = sum(1 for r in recs if r.observable == "abs_move_exceeds")
@@ -183,7 +221,10 @@ def run(a: argparse.Namespace) -> int:
         contract = WD.shadow_contract() if a.dry_run else WD.freeze_contract()
         g = WD.grade(preds)
         base, rec = WD.base_book()
-        sig = WD.news_signal(i for th in themes for i in th["implications"])
+        sec_imps = [i for k in ("insiders", "congress", "policy", "positioning")
+                    for i in (sections.get(k) or {}).get("implications", [])] \
+            if isinstance(sections, dict) and "error" not in sections else []
+        sig = WD.news_signal([i for th in themes for i in th["implications"]] + sec_imps)
         td, ts = g["direction"]["trust"], g["size"]["trust"]
         actual = WD.shadow_decision(base, sig, trust_dir=td, trust_size=ts, universe=universe)
         tau_t = float(_cfg.WORLD_DIGEST_TRUST_TAU) / float(_cfg.WORLD_DIGEST_TRUST_FULL)
@@ -226,6 +267,13 @@ def run(a: argparse.Namespace) -> int:
 
     # what to read next -> a file the reader agent can adopt (no reader hook is touched)
     if not a.dry_run:
+        pol_unknowns = ((sections.get("policy") or {}).get("findings") or {}).get("unknowns") \
+            if isinstance(sections, dict) else None
+        for u in pol_unknowns or []:
+            DG.locked_append_line(WD.work_dir() / "read_next.jsonl", json.dumps(
+                {"t": made_at, "digest_id": stamp, "theme": "section:policy",
+                 "question": u["question"], "search_query": u["read_next"],
+                 "state": "QUEUED_FOR_READER_NOT_FETCHED"}))
         for th in themes:
             for u in th["unknowns"]:
                 DG.locked_append_line(WD.work_dir() / "read_next.jsonl", json.dumps(
@@ -260,7 +308,15 @@ def run(a: argparse.Namespace) -> int:
                     "prediction_ids": [r.prediction_id for r in recs],
                     "first_5d": first_5, "first_20d": first_20},
          "shadow": shadow, "weak": weak, "licence": WD.LICENCE,
+         "sections": sections if isinstance(sections, dict) and "error" not in sections else {},
+         "sections_error": sections.get("error") if isinstance(sections, dict) else None,
          "runtime_s": round(time.perf_counter() - t0, 1), "dry_run": bool(a.dry_run)}
+    d["theme_merges"] = theme_merges
+    try:                                  # 2026-09-30: what changed since the last digest
+        d["changes"] = WD.what_changed(d, WD.previous_digest(stamp))
+    except Exception as exc:              # noqa: BLE001 -- the digest still renders
+        d["changes"] = {"previous": None, "new": [], "continuing": [], "dropped": [],
+                        "note": f"change summary failed: {type(exc).__name__}: {exc}"[:200]}
     od = (WD.work_dir() / "dryrun") if a.dry_run else WD.out_dir()
     od.mkdir(parents=True, exist_ok=True)
     DG.atomic_write_text(od / f"world_digest_{stamp}.md", WD.render(d))
@@ -486,6 +542,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--budget", type=float, default=float(_cfg.WORLD_DIGEST_BUDGET_USD))
     ap.add_argument("--dry-run", action="store_true", help="cached extractions only; no call, no rows")
     ap.add_argument("--no-write", action="store_true", help="pay and render, but write no forecast rows")
+    ap.add_argument("--no-sections", action="store_true",
+                    help="skip the official-source sections (insiders, policy, positioning)")
     ap.add_argument("--grade", action="store_true")
     ap.add_argument("--backtest", action="store_true")
     ap.add_argument("--bt-per-day", type=int, default=40)

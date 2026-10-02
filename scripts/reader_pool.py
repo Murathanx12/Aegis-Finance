@@ -258,7 +258,8 @@ class Pool:
                  persist: bool = True, alert_fn: Any = None,
                  reader_sleep: Any = None, front_links_max: int | None = None,
                  read_next_path: Path | None = None, x_handles: list[str] | None = None,
-                 keep_window: Any = None) -> None:
+                 keep_window: Any = None, budget: bool | None = None,
+                 target_scan: Any = None, close_target: Any = None) -> None:
         self.driver, self.thr, self.profile = driver, throttle, profile
         self.names = [n.upper() for n in dict.fromkeys(names)]
         self.universe = set(self.names)
@@ -345,6 +346,24 @@ class Pool:
             RS.read_next_path() if persist else None)
         self.read_next_done: set[str] = read_next_adopted() if persist else set()
         self.read_next_n = len(self.read_next_done)
+        #: THE READING BUDGET (2026-09-30, `reader_scheduler.budget_verdict`):
+        #: lanes with declared shares, an hourly allowance shaped by the
+        #: sessions, the rows of every load by lane (`dowjones/budget_lanes.jsonl`)
+        #: 2026-09-30 ("openclaw opens banks"): after every read the dedicated
+        #: Chrome's targets are listed and any page or frame on a money /
+        #: checkout / mail address is dealt with (`_sweep_money_frames`); None in
+        #: tests that do not exercise it
+        self.target_scan, self.close_target = target_scan, close_target
+        self.money_events: list[dict] = []
+        #: 2026-09-30: target ids already reported (a frame in a tab another worker
+        #: still holds was re-logged after every read: 3 rows for one frame)
+        self.money_seen: set[str] = set()
+        self.budget_on = RS.budget_enabled() if budget is None else bool(budget)
+        self.budget_path = RS.budget_log_path() if persist else None
+        self.budget_rows: list[dict] = RS.read_budget_log() if persist else []
+        self.lane_inflight: Counter = Counter()
+        self.budget_block: dict = {}
+        self.budget_grants: Counter = Counter()
         self.carried_in = self._load_carry() if persist else 0
         self.started = self.now_fn()
 
@@ -362,6 +381,7 @@ class Pool:
             return False
         self.seq += 1
         it = dict(it, seq=self.seq, key=k)
+        it["blane"] = RS.budget_lane(it, books=self.books, fresh=self.fresh)
         self.queued.add(k)
         self.pending.append(it)
         return True
@@ -559,18 +579,92 @@ class Pool:
                     at = max(at, max(same) + timedelta(seconds=self.thr.host_range(h)[0]))
                 # not behind another host's FUTURE reservation (2026-09-29)
                 free_at[h] = WR.fit_global_gap(at, stamps, glo)
-            it = RS.choose(by_host, free_slots=free, blocked=self._blocked(now),
+            blocked = self._blocked(now)
+            if self.budget_on:
+                by_host = self._budget_filter(by_host, free=free, blocked=blocked, rows=rows,
+                                              now=now)
+                if not by_host:
+                    return None
+            it = RS.choose(by_host, free_slots=free, blocked=blocked,
                            free_at=free_at, now=now, key=self._key,
                            in_flight=dict(self.inflight))
             if it is None:
                 return None
             self.pending.remove(it)
             self.inflight[it["host"]] += 1
+            lane = it.get("blane") or RS.budget_lane(it, books=self.books, fresh=self.fresh)
+            it["blane"] = lane
+            self.lane_inflight[lane] += 1
+            if self.budget_on:
+                self.budget_grants[(self.budget_block.get("grant") or {}).get(lane, "?")] += 1
             return it
+
+    def _budget_counts(self, now: datetime) -> dict:
+        """Loads per lane from the budget log plus the pages in flight."""
+        c = RS.lane_counts(self.budget_rows, now)
+        for lane, n in self.lane_inflight.items():
+            c["lane_60m"][lane] += max(0, n)
+            c["lane_24h"][lane] += max(0, n)
+        return c
+
+    def _budget_filter(self, by_host: dict[str, list[dict]], *, free: dict[str, int],
+                       blocked: set[str], rows: list, now: datetime) -> dict[str, list[dict]]:
+        """THE READING BUDGET, applied (called under the lock by `take`). The
+        total loads come from the throttle log (every reader on the machine,
+        reservations ahead included); the per-lane loads from the budget log.
+        Items whose lane may not spend now stay pending; the verdicts are kept
+        for the status file."""
+        n60 = sum(1 for r in rows if now - r[0] < timedelta(hours=1))
+        n10 = sum(1 for r in rows if now - r[0] < timedelta(minutes=10))
+        n24 = sum(1 for r in rows if now - r[0] < timedelta(days=1))
+        if n24 >= int(self.thr.max_per_day):
+            self.budget_block = {"t": now.isoformat(timespec="seconds"),
+                                 "state": "WAITING_FOR_CAP",
+                                 "why": f"DAY_CAP: {n24} loads in 24 h >= {self.thr.max_per_day}"}
+            return {}
+        c = self._budget_counts(now)
+        servable = {it.get("blane") for h, items in by_host.items()
+                    if h not in blocked and free.get(h, 0) > 0 for it in items}
+        servable.discard(None)
+        verdicts = {lane: RS.budget_verdict(lane, now=now, loads_60m=n60, loads_10m=n10,
+                                            lane_60m=c["lane_60m"], lane_24h=c["lane_24h"],
+                                            servable_lanes=servable)
+                    for lane in servable}
+        ok = {lane for lane, (g, _) in verdicts.items() if g}
+        self.budget_block = {"t": now.isoformat(timespec="seconds"),
+                             "state": ("READING" if ok else "WAITING_FOR_BUDGET") if servable
+                             else "NOTHING_SERVABLE",
+                             "loads_60m": n60, "loads_10m": n10, "loads_24h": n24,
+                             "verdicts": {k: v[1] for k, v in sorted(verdicts.items())},
+                             "grant": {k: v[1] for k, v in verdicts.items() if v[0]}}
+        out = {h: [it for it in items if it.get("blane") in ok] for h, items in by_host.items()}
+        return {h: v for h, v in out.items() if v}
+
+    def _budget_record(self, it: dict, outcome: str) -> None:
+        """One load spent: a row in the budget log (lane, host, kind, outcome)."""
+        now = self.now_fn()
+        row = {"t": now.isoformat(timespec="seconds"),
+               "lane": it.get("blane") or RS.budget_lane(it, books=self.books, fresh=self.fresh),
+               "host": it["host"], "kind": it.get("kind"), "outcome": str(outcome or "")[:40]}
+        with self.lock:
+            self.budget_rows.append(row)
+            if len(self.budget_rows) > 30000:
+                cut = now - timedelta(days=1)
+                self.budget_rows = [r for r in self.budget_rows
+                                    if datetime.fromisoformat(r["t"]) > cut]
+        if self.budget_path is not None:
+            try:
+                DG.locked_append_line(self.budget_path, json.dumps(row))
+            except Exception as exc:  # noqa: BLE001 -- the page was read either way
+                with self.lock:
+                    self.errors.append(f"budget log: {exc}"[:200])
 
     def release(self, it: dict) -> None:
         with self.lock:
             self.inflight[it["host"]] -= 1
+            lane = it.get("blane")
+            if lane and self.lane_inflight.get(lane, 0) > 0:
+                self.lane_inflight[lane] -= 1
 
     def requeue(self, it: dict) -> None:
         with self.lock:
@@ -618,9 +712,17 @@ class Pool:
             res = self.thr.reserve("open", host)
         except WR.ReaderRefused as exc:
             msg = str(exc)
-            if "REFUSED_THROTTLE_DAY" in msg:
+            if "REFUSED_THROTTLE_DAY" in msg and not self.budget_on:
                 self.requeue(it)
                 self.stop(msg)
+            elif "REFUSED_THROTTLE_DAY" in msg:
+                # 2026-09-30: with the budget on, the pool WAITS for the rolling
+                # window instead of exiting (the supervisor sat on a stale log
+                # tail for hours: "retry at 19:14" printed at 21:25)
+                with self.lock:
+                    self.budget_block = {"t": self.now_fn().isoformat(timespec="seconds"),
+                                         "state": "WAITING_FOR_CAP", "why": msg[:200]}
+                self.requeue(it)
             else:                         # a host cap: that host rests, the item waits
                 rest = timedelta(hours=1) if "HOST_DAY" in msg else timedelta(minutes=10)
                 with self.lock:
@@ -638,6 +740,8 @@ class Pool:
         except Exception as exc:  # noqa: BLE001 -- classified below
             if not getattr(exc, "tab_made", False):
                 self.thr.refund(f"open failed: {type(exc).__name__}", line=res["line"])
+            else:
+                self._budget_record(it, "OPEN_FAILED")
             self._fail(it, exc)
             with self.lock:                  # not lost for the life of the process
                 if it["kind"] in RECURRING:
@@ -667,6 +771,8 @@ class Pool:
         except Exception as exc:  # noqa: BLE001 -- classified below
             outcome = self._fail(it, exc, rd)
         finally:
+            if self._sweep_money_frames(host, url):
+                outcome = "PAYWALL_STUB"          # a checkout frame on the page: metered
             if not rd.retired:
                 self._keep_window()
                 rd.retire()
@@ -688,8 +794,76 @@ class Pool:
                 self.timings = self.timings[-2000:]
                 self.stats[host][it["kind"]] += 1
             self._blank_outcome(host, outcome, url)
+            self._budget_record(it, outcome)
             if self.max_pages is not None and self.pages >= self.max_pages:
                 self.stop(f"BUDGET_SPENT: {self.pages} pages >= --max-pages {self.max_pages}")
+
+    def _sweep_money_frames(self, host: str, url: str) -> bool:
+        """The dedicated Chrome's pages and frames on a bank / broker / payment /
+        checkout / mail address (`browser_policy.money_url_refusal`), right after
+        a read, while the tab is still open. A FRAME (Piano / Tinypass checkout
+        embedded by a metered article, measured 2026-09-30) cannot be blocked by
+        the browser tool, so the page that carried it is classed PAYWALL_STUB,
+        its tab is closed by the caller as always, and its host reads only its
+        fronts for READER_FRONTS_ONLY_S (the metered articles are left alone). A
+        PAGE (a pop-up) is closed at once. True when the page just read is the
+        one blamed. Never raises."""
+        if self.target_scan is None:
+            return False
+        from backend.services import browser_policy as BP
+        try:
+            targets = list(self.target_scan() or [])
+        except Exception as exc:  # noqa: BLE001 -- a scan failure never stops reading
+            with self.lock:
+                self.errors.append(f"money sweep: {type(exc).__name__}: {exc}"[:200])
+            return False
+        blamed_self = False
+        by_id = {str(t.get("id")): t for t in targets if t.get("id")}
+        for t in targets:
+            turl = str(t.get("url") or "")
+            why = BP.money_url_refusal(turl)
+            if not why:
+                continue
+            tid = str(t.get("id") or "")
+            if tid and tid in self.money_seen and t.get("type") != "page":
+                continue                  # this frame was already reported
+            if tid:
+                with self.lock:
+                    self.money_seen.add(tid)
+            # the page that CARRIES the frame (its parent chain), not the page
+            # this worker happened to finish: frames of every tab are listed
+            carrier = frame_carrier_url(t, by_id)
+            blame = money_frame_host(turl) or (WR.host_of(carrier) if carrier else None) or host
+            closed = None
+            if t.get("type") == "page" and self.close_target is not None:
+                try:
+                    closed = bool(self.close_target(str(t.get("id"))))
+                except Exception:  # noqa: BLE001
+                    closed = False
+            until = self.now_fn() + timedelta(
+                seconds=float(getattr(_config, "READER_FRONTS_ONLY_S", 21600.0)))
+            with self.lock:
+                self.fronts_only_until[blame] = max(until, self.fronts_only_until.get(blame, until))
+                self.pending = [x for x in self.pending
+                                if not (x["host"] == blame and x["kind"] == "article")]
+                self.classes[blame]["PAYWALL_CHECKOUT_FRAME"] += 1
+                ev = {"t": self.now_fn().isoformat(timespec="seconds"), "host": blame,
+                      "page_read": url, "carrier_page": (carrier or "")[:200],
+                      "target_type": t.get("type"), "target_url": turl[:200],
+                      "closed": closed, "why": why[:80]}
+                self.money_events.append(ev)
+                self.money_events = self.money_events[-50:]
+            blamed_self = blamed_self or blame == host
+            self.printer(f"MONEY_FRAME {t.get('type')} {turl[:100]} on {blame}: "
+                         f"{'closed' if closed else 'tab closed after the read'}; "
+                         f"{blame} reads fronts only until {until:%H:%M}Z")
+            if self.persist:
+                try:
+                    WR.log_page(blame, "PAYWALL_CHECKOUT_FRAME", turl[:300], lane="money_sweep",
+                                worker="pool")
+                except Exception:  # noqa: BLE001
+                    pass
+        return blamed_self
 
     def _blank_outcome(self, host: str, outcome: str, url: str) -> None:
         """READER_BLANK_STREAK_COOL blank pages in a row on one host cool it like
@@ -790,9 +964,20 @@ class Pool:
                 self.classes[it["host"]][cls] += 1
             if cls == "BLANK":
                 rd.refund_slot(f"BLANK social page: {it['url']}")
+                # 2026-09-30: say WHAT came back (title, length), so a blank
+                # profile page can be told from a signed-out one
+                with self.lock:
+                    self.errors.append(f"{it.get('lane')}: BLANK {it['url']} title="
+                                       f"{str(row.get('title') or '')[:60]!r} "
+                                       f"chars={row.get('chars')}"[:300])
+                    self.errors = self.errors[-200:]
             elif cls != "OK":
                 self._cool(it["host"], cls, row.get("url") or it["url"])
-            self._mark_read(it)
+            if not (cls == "BLANK" and it.get("handle")):
+                # a BLANK handle page is NOT marked read (2026-09-30: all of the
+                # first four were blank and would have waited 24 h); it is retried
+                # after the host's blank-streak cooling, which bounds the retries
+                self._mark_read(it)
             return cls
         return self._read_article(it, rd)
 
@@ -1124,6 +1309,10 @@ class Pool:
                     continue
                 if self.stored.get(WR.norm_url(it.get("url") or "")):
                     continue
+                # 2026-09-30: a host that LEFT the allowlist since (the Fed) or a
+                # refused address is never carried into the new pool
+                if it.get("kind") != "social" and not WR.host_ok(str(it.get("url") or "")):
+                    continue
                 it = {k: v for k, v in it.items() if k != "seq"}
                 if it.get("kind") == "search" or it.get("via") == "read_next":
                     it["tier"] = RS.TIER_FRONT        # the digest's asks rank with the fronts
@@ -1320,6 +1509,14 @@ class Pool:
                 pending=v["pending"], in_flight=v["open_tabs"], capped=capped,
                 cooling=bool(v["cooling"]), front_due_in_s=due)
         qstate = RS.pool_queue_state(host_states)
+        # 2026-09-30: something is pending but the READING BUDGET says not now
+        # (this hour's allowance or the day cap is spent): that is a wait for a
+        # cap, healthy, never a stall
+        if (self.budget_on and qstate in (RS.Q_READING, RS.Q_REFILLING)
+                and sum(self.inflight.values()) == 0
+                and self.budget_block.get("state") in ("WAITING_FOR_BUDGET", "WAITING_FOR_CAP")
+                and _age_s(self.budget_block.get("t"), now) < 120):
+            qstate = RS.Q_WAITING_FOR_CAP
         blocked = {h for h, s in host_states.items() if s in (RS.Q_COOLING, RS.Q_WAITING_FOR_CAP)}
         nxt = RS.next_front_due_s(self.fronts, self.front_last, now, pending_by_host=pend,
                                   dropped=self.dropped, blocked=blocked)
@@ -1351,9 +1548,11 @@ class Pool:
                                               if now - r[0] < timedelta(hours=1)),
                          "loads_24h_all": sum(1 for r in rows if now - r[0] < timedelta(days=1))},
                 "hosts": by_host, "pending_by_tier": dict(tiers),
+                "budget": self._budget_status(now),
                 "pages_this_run": self.pages, "media": {h: dict(c) for h, c in
                                                         self.media_counts.items()},
                 "cooling_events": self.cool_events[-10:], "last_errors": self.errors[-5:],
+                "money_frames": self.money_events[-10:],
                 "fronts": self.front_results,
                 "orphaned_tabs": self.orphans,
                 # 2026-09-29: the tab ids, so a supervisor that stops this
@@ -1363,6 +1562,38 @@ class Pool:
                 # the earliest reserved open still ahead (a far-future value with
                 # no page reads = waiting for a cap, not stalled)
                 "next_slot_in_s": next_slot_in_s(rows, now)}
+
+    def _budget_status(self, now: datetime) -> dict:
+        """THE READING BUDGET in the status file: the declared plan, and per
+        lane the loads and OK pages in the last hour and day, what is pending,
+        and the last verdict (called under the lock)."""
+        plan = RS.budget_plan(now)
+        c = RS.lane_counts(self.budget_rows, now)
+        pend = Counter(it.get("blane") or "?" for it in self.pending)
+        verd = self.budget_block.get("verdicts") or {}
+        lanes = {}
+        for lane in RS.BUDGET_LANES:
+            lanes[lane] = {"share": plan["shares"].get(lane),
+                           "day_target": plan["day_target"].get(lane),
+                           "hour_quota": plan["hour_quota_now"].get(lane),
+                           "loads_60m": c["lane_60m"].get(lane, 0),
+                           "ok_60m": c["ok_lane_60m"].get(lane, 0),
+                           "loads_24h": c["lane_24h"].get(lane, 0),
+                           "ok_24h": c["ok_lane_24h"].get(lane, 0),
+                           "in_flight": self.lane_inflight.get(lane, 0),
+                           "pending": pend.get(lane, 0),
+                           "verdict": verd.get(lane)}
+        return {"enabled": self.budget_on,
+                "state": self.budget_block.get("state"), "why": self.budget_block.get("why"),
+                "hour_allowance_now": plan["hour_allowance_now"],
+                "ten_min_allowance_now": plan["ten_min_allowance_now"],
+                "loads_60m_all_readers": self.budget_block.get("loads_60m"),
+                "loads_24h_all_readers": self.budget_block.get("loads_24h"),
+                "grants_this_run": dict(self.budget_grants),
+                "lanes": lanes,
+                "ok_by_host_60m": dict(c["ok_host_60m"]),
+                "ok_by_host_24h": dict(c["ok_host_24h"]),
+                "hourly_allowance_utc": plan["hourly_allowance_utc"]}
 
     def receipt(self) -> dict:
         with self.lock:
@@ -1393,7 +1624,8 @@ class Pool:
                 "fronts": self.front_results,
                 "open_tabs_now": sorted(self.open_tabs), "orphaned_tabs": self.orphans,
                 "reader_tab_ids": self.all_reader_tab_ids(),
-                "throttle_targets_s": self.thr.targets[-200:]}
+                "throttle_targets_s": self.thr.targets[-200:],
+                "budget": self._budget_status(self.now_fn())}
 
     def run(self, *, status_path: Path | None = STATUS, receipt_path: Path | None = None,
             status_every_s: float = 15.0, report_every_s: float = 3600.0) -> dict:
@@ -1460,6 +1692,14 @@ class Pool:
         return self.receipt()
 
 
+def _age_s(iso: str | None, now: datetime) -> float:
+    """PURE. Seconds since an ISO stamp (inf when missing or unreadable)."""
+    try:
+        return (now - datetime.fromisoformat(str(iso))).total_seconds()
+    except (TypeError, ValueError):
+        return float("inf")
+
+
 def read_next_adopted(path: Path | None = None) -> set[str]:
     """Keys of digest asks already adopted (any earlier run)."""
     out: set[str] = set()
@@ -1473,6 +1713,50 @@ def read_next_adopted(path: Path | None = None) -> set[str]:
     except OSError:
         pass
     return out
+
+
+def frame_carrier_url(target: dict, by_id: dict[str, dict], max_depth: int = 6) -> str | None:
+    """PURE. The URL of the top-level PAGE that holds a frame target, walking
+    `parentId` up the DevTools target list (None for a page, or when the chain
+    is not listed)."""
+    t, seen = target, 0
+    while t is not None and seen < max_depth:
+        pid = str(t.get("parentId") or "")
+        if not pid:
+            return str(t.get("url") or "") if t is not target else None
+        t = by_id.get(pid)
+        seen += 1
+    return str(t.get("url") or "") if t is not None and t is not target else None
+
+
+def money_frame_host(frame_url: str) -> str | None:
+    """PURE. The allowed reader host a checkout frame names in its own query
+    (Piano passes the embedding page as `url=`), else None."""
+    from urllib.parse import parse_qsl, urlsplit
+    try:
+        q = parse_qsl(urlsplit(frame_url or "").query)
+    except ValueError:
+        return None
+    for _, v in q:
+        if v.startswith("http"):
+            h = WR.host_of(v)
+            if h and WR.host_ok(v.split("?")[0]):
+                return h
+    return None
+
+
+def _cdp_targets() -> list[dict]:
+    """Every target (pages AND out-of-process frames) of the dedicated Chrome's
+    loopback DevTools endpoint (read-only listing)."""
+    from backend.services import muratclaw_instance as MI
+    return [t for t in MI._http_json(f"{MI.cdp_base()}/json/list") or [] if isinstance(t, dict)]
+
+
+def _close_money_target(target_id: str) -> bool:
+    """Close one page of the PROVEN dedicated Chrome (the instance proof first)."""
+    from backend.services import gateway_repair as GR
+    GR._prove_dedicated()
+    return GR._close_target(target_id)
 
 
 def site_of(url: str) -> str:
@@ -1601,7 +1885,8 @@ def main(argv: list[str] | None = None) -> int:
                     front_last={} if a.trial else None, persist=True,
                     front_links_max=a.front_links,
                     x_handles=[] if (a.trial or a.no_social) else SB_registry_handles(),
-                    keep_window=_anchor_fn())
+                    keep_window=_anchor_fn(), target_scan=_cdp_targets,
+                    close_target=_close_money_target)
         print(f"pool: {len(names)} names, {len(pool.fronts)} fronts, social "
               f"{'on' if pool.social else 'off'} ({len(pool.x_handles)} X handles), "
               f"up to {gov.max_tabs} tabs "

@@ -200,6 +200,12 @@ def step_append() -> dict:
     """Rebuild the tail (every grid date from the first with a pending label) + the newest session."""
     from nn_lab import table as T
     tab = pd.read_parquet(C.TABLE_PATH)
+    # 2026-09-30: an ETF/ETN/fund leaving the universe is a deliberate universe change, not a
+    # shrink: its stored rows are dropped here, counted, and the shrink guard compares the rest.
+    from nn_lab.universe_filter import excluded as _etf_excluded
+    _ex = tab["symbol"].isin(_etf_excluded())
+    dropped_etf_rows = int(_ex.sum())
+    tab = tab[~_ex].reset_index(drop=True)
     old_max = tab["date"].max()
     cal_old = pd.DatetimeIndex(pd.read_parquet(C.TABLE_PATH.parent / "calendar.parquet")["date"])
     bars = T.load_bars([C.BARS_DEEP, C.BARS_RECENT, C.BARS_DELISTED], start="2025-01-01",
@@ -231,6 +237,7 @@ def step_append() -> dict:
             "tail_start": str(tail_start.date()), "rows_rebuilt": int(len(rows)),
             "rows_added": int((rows["date"] > old_max).sum()), "new_dates": [str(d.date()) for d in new_dates],
             "labels_filled": chk["labels_filled"], "grid_rows_kept": chk["grid_rows_kept"],
+            "etf_rows_dropped_from_stored_table": dropped_etf_rows,
             "table_rows": int(len(new)), "table_sha256": sha256_file(C.TABLE_PATH)}
 
 
@@ -464,13 +471,21 @@ def step_freeze(run_id: str, trust: dict, mag: dict, wf: dict) -> dict:
             mag_parts["trailing_vol"].append(frame(h, pred_abs=vol))
             mag_parts["ridge_abs"].append(frame(h, pred_abs=np.clip(ra, 1e-4, None)))
             mag_parts["nn_width"].append(frame(h, pred_abs=nw))
+    members = _size_member_parts(live, frame)
+    for m, mp in members.get("parts", {}).items():
+        mag_parts[m] = mp
+    out["size_members"] = {"roster": list(members.get("parts", {})), "coef": members.get("coef")}
+    mag_parts = {m: v for m, v in mag_parts.items() if v}
     ver = state["versions"]
     for m in C.DIRECTION_ROSTER:
         out["files"][m] = L.freeze(pd.concat(parts[m], ignore_index=True), model=m, decision_date=dd,
                                    model_version=ver.get(m, m), run_id=run_id, kind="direction")
     for m in C.MAGNITUDE_ROSTER:
+        if m not in mag_parts:
+            continue
         out["files"][m] = L.freeze(pd.concat(mag_parts[m], ignore_index=True), model=m, decision_date=dd,
-                                   model_version=ver.get(m, m), run_id=run_id, kind="magnitude")
+                                   model_version=ver.get(m, members.get("versions", {}).get(m, m)),
+                                   run_id=run_id, kind="magnitude")
     ens, weights = [], {}
     for h in H:
         s, w = L.ensemble_scores(scores[h], trust, h)
@@ -485,6 +500,42 @@ def step_freeze(run_id: str, trust: dict, mag: dict, wf: dict) -> dict:
     top = pd.DataFrame({"symbol": sym, "ens21": ens[H.index(21)]["score"].to_numpy()})
     out["ensemble_top10_h21"] = top.nlargest(10, "ens21")["symbol"].tolist()
     return out
+
+
+def _size_member_parts(live: pd.DataFrame, frame) -> dict:
+    """The size members (nn_lab/size_members.py) for the newest date, when the flag is on.
+    They are MAGNITUDE models: frozen and graded like trailing vol, weighted only by forward
+    graded blocks (prior 0). A failure here never fails the night: the members are skipped
+    and the reason is on the receipt."""
+    from nn_lab import size_members as SM
+    roster = SM.member_roster()
+    if not roster:
+        return {}
+    try:
+        pr = SM.nightly_member_predictions(live)
+    except Exception as e:                                     # noqa: BLE001
+        return {"coef": {"error": repr(e)[:300]}}
+    parts, versions = {}, {}
+    for m in roster:
+        if m not in pr:
+            continue
+        parts[m] = [frame(h, pred_abs=np.clip(pr[m][h], 1e-4, None)) for h in C.MAGNITUDE_HORIZONS]
+        versions[m] = f"{m}-" + hashlib.sha256(json.dumps({k: v for k, v in pr["_coef"].items()
+                                                           if k.startswith(m)}, sort_keys=True)
+                                               .encode()).hexdigest()[:12]
+    return {"parts": parts, "coef": pr.get("_coef"), "versions": versions}
+
+
+def step_size_members() -> dict:
+    """Rebuild the size members' sidecar (earnings expected in the window, text residual) for
+    every row of the table, from releases and news known strictly before each row's t."""
+    from nn_lab import size_members as SM
+    try:
+        return SM.build()
+    except Exception as e:                                     # noqa: BLE001
+        # never fails the night: the freeze step then scores from the previous sidecar
+        # (a live row it lacks reads "no earnings expected") and says so here
+        return {"status": "SIDECAR_REBUILD_FAILED", "error": repr(e)[:300]}
 
 
 def _conformal(model: str, h: int, wf: dict) -> dict:
@@ -509,7 +560,7 @@ def _conformal(model: str, h: int, wf: dict) -> dict:
         o = pd.read_parquet(op)
         y = o.get(f"y_{h}")
         col = {"trailing_vol": f"vol_sigma_{h}", "ridge_abs": f"ridgeabs_score_{h}",
-               "nn_width": None}[model]
+               "nn_width": None}.get(model)      # a size member has no walk-forward column
         if model == "nn_width" and f"nndist_q95_{h}" in o:
             pa = (o[f"nndist_q95_{h}"] - o[f"nndist_q05_{h}"]) / 3.29 * L.SQRT_2_PI
         elif col and col in o:
@@ -607,7 +658,8 @@ def main(time_box_min: float = C.NIGHT_TIME_BOX_MIN, variant: str | None = None)
     rec["variant"] = variant
     ran_now: set[str] = set()
     ctx: dict = {}
-    steps = (("append", step_append),
+    from nn_lab import size_members as _SM
+    steps = (("append", step_append),) + ((("size_members", step_size_members),) if _SM.member_roster() else ()) + (
              ("grade", step_grade),
              # only a DIRECTION-roster grade is forward evidence for the model in charge (F8):
              # the legacy v0 file and the magnitude models never move it

@@ -1,0 +1,270 @@
+{
+ "receipt": "daily_pass",
+ "roadmap_item": "chunk 12 T1",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "stage": "pnl",
+ "step_stages": {
+  "news_pull": "raw",
+  "analyst_snapshot": "raw",
+  "e1_append": "normalized",
+  "book_cadence": "pnl",
+  "coverage": "raw"
+ },
+ "date": "2026-09-13",
+ "run": 1,
+ "git_head": "d7cd86354882dea59559db687672db02c47a8004",
+ "started_utc": "2026-09-13T09:45:16+00:00",
+ "finished_utc": "2026-09-13T13:37:16+00:00",
+ "elapsed_s": 13920.5,
+ "declared_steps": [
+  "news_pull",
+  "analyst_snapshot",
+  "e1_append",
+  "book_cadence",
+  "coverage"
+ ],
+ "steps": [
+  {
+   "step": "news_pull",
+   "status": "ok",
+   "utc": "2026-09-13T10:13:55+00:00",
+   "rows": 3120,
+   "seconds": 1718.63,
+   "refusals": [],
+   "sources": 18,
+   "resolution_rate": 0.7587,
+   "receipt_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\_receipts\\20260913T101355Z_ALL.json",
+   "headline": "3,120 new rows over 18 sources; 0 RED, 0 refused",
+   "what": "every registered news source, into the corpus"
+  },
+  {
+   "step": "analyst_snapshot",
+   "status": "ok",
+   "utc": "2026-09-13T13:36:59+00:00",
+   "rows": 3056,
+   "seconds": 12184.28,
+   "refusals": [],
+   "by_status": {
+    "ok": 2954,
+    "partial": 18,
+    "empty": 84,
+    "error": 0
+   },
+   "coverage_rate": 0.9725,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\analyst_snapshots\\2026-09-13.parquet",
+   "name_table_update": {
+    "updated": 2847,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\news_entities\\issuers.csv",
+    "note": "existing primary_name values are never overwritten"
+   },
+   "headline": "3,056 (symbol, date) rows for 2026-09-13; 2,972 carried at least one analyst field",
+   "what": "today's consensus rows per symbol"
+  },
+  {
+   "step": "e1_append",
+   "status": "ok",
+   "utc": "2026-09-13T13:37:04+00:00",
+   "rows": 1,
+   "seconds": 4.73,
+   "refusals": [],
+   "verdict": "APPENDED",
+   "funnel": {
+    "corpus_rows": 16191,
+    "no_ticker": 1668,
+    "no_symbol_bar": 9006,
+    "before_calendar": 9261,
+    "pending_future_session": 2352,
+    "no_bar_that_day": 0,
+    "dup": 0,
+    "kept": 1
+   },
+   "headline": "1 rows appended from 16,191 corpus rows over 5 labelling sources; 2,352 awaiting a session that has not happened yet; 9,261 older than the first bar; 0 PIT violations",
+   "what": "the text-and-return panel append, PIT re-verified"
+  },
+  {
+   "step": "book_cadence",
+   "status": "nothing_to_do",
+   "utc": "2026-09-13T13:37:16+00:00",
+   "rows": 0,
+   "seconds": 12.15,
+   "refusals": [
+    "monthly: {'book_id': 'book:1934ec97aa4b1620', 'stage': 'decide', 'reason': 'the short-interest composite resolved 4133 CRSP permno(s) at 2026-09-11, and the local bars a",
+    "monthly: {'book_id': 'book:4359eba886a8a505', 'stage': 'decide', 'reason': \"no [0]-day insider cluster filed in the 31 day(s) ending 2026-09-11 landed on a name inside t",
+    "monthly: {'book_id': 'book:625c391913d9718c', 'stage': 'decide', 'reason': \"no [4, 5]-day insider cluster filed in the 31 day(s) ending 2026-09-11 landed on a name insid",
+    "monthly: {'book_id': 'book:a82e6e453c14c241', 'stage': 'decide', 'reason': 'the Grinblatt-Han reference price weights past prices by TURNOVER, and turnover needs shares ",
+    "monthly: {'book_id': 'book:c3adfbc0192576c0', 'stage': 'decide', 'reason': 'the Grinblatt-Han reference price weights past prices by TURNOVER, and turnover needs shares "
+   ],
+   "per_cadence": [
+    {
+     "cadence": "30m",
+     "status": "skipped",
+     "reason": "outside US RTH — 2026-09-13 is not an XNYS session"
+    },
+    {
+     "cadence": "daily",
+     "status": "nothing_to_do",
+     "books_considered": 0,
+     "decisions": 0,
+     "marked": 0,
+     "refused": [],
+     "reason": "no holding book declares cadence 'daily'",
+     "bar_date": "2026-09-11"
+    },
+    {
+     "cadence": "weekly",
+     "status": "nothing_to_do",
+     "books_considered": 0,
+     "decisions": 0,
+     "marked": 0,
+     "refused": [],
+     "reason": "no holding book declares cadence 'weekly'",
+     "bar_date": "2026-09-11"
+    },
+    {
+     "cadence": "monthly",
+     "status": "ok",
+     "books_considered": 22,
+     "decisions": 0,
+     "marked": 22,
+     "refused": [
+      {
+       "book_id": "book:1934ec97aa4b1620",
+       "stage": "decide",
+       "reason": "the short-interest composite resolved 4133 CRSP permno(s) at 2026-09-11, and the local bars are keyed on ticker with no permno map for the 2025-26 vintage (CRSP ends 2024-12-31). This book MARKS but does not DECIDE forward until the FINRA forward leg is ingested; its 1990-2024 evidence comes from the replay job, in permno space."
+      },
+      {
+       "book_id": "book:4359eba886a8a505",
+       "stage": "decide",
+       "reason": "no [0]-day insider cluster filed in the 31 day(s) ending 2026-09-11 landed on a name inside the book's universe (0 cluster name(s) found, 2834 in universe). The book holds nothing rather than holding something else."
+      },
+      {
+       "book_id": "book:625c391913d9718c",
+       "stage": "decide",
+       "reason": "no [4, 5]-day insider cluster filed in the 31 day(s) ending 2026-09-11 landed on a name inside the book's universe (0 cluster name(s) found, 2834 in universe). The book holds nothing rather than holding something else."
+      },
+      {
+       "book_id": "book:a82e6e453c14c241",
+       "stage": "decide",
+       "reason": "the Grinblatt-Han reference price weights past prices by TURNOVER, and turnover needs shares outstanding, which the 2025-26 ticker bars do not carry and no offline panel supplies for that vintage. This book MARKS but does not DECIDE forward; its evidence comes from the replay job on CRSP, where `shrout` exists."
+      },
+      {
+       "book_id": "book:c3adfbc0192576c0",
+       "stage": "decide",
+       "reason": "the Grinblatt-Han reference price weights past prices by TURNOVER, and turnover needs shares outstanding, which the 2025-26 ticker bars do not carry and no offline panel supplies for that vintage. This book MARKS but does not DECIDE forward; its evidence comes from the replay job on CRSP, where `shrout` exists."
+      }
+     ],
+     "reason": null,
+     "bar_date": "2026-09-11"
+    },
+    {
+     "cadence": "quarterly",
+     "status": "nothing_to_do",
+     "books_considered": 0,
+     "decisions": 0,
+     "marked": 0,
+     "refused": [],
+     "reason": "no holding book declares cadence 'quarterly'",
+     "bar_date": "2026-09-11"
+    }
+   ],
+   "us_rth": {
+    "inside": false,
+    "session": false,
+    "basis": "exchange_calendars XNYS",
+    "et": "2026-09-13T09:37:04-04:00",
+    "rth_et": "09:30:00-16:00:00",
+    "why": "2026-09-13 is not an XNYS session"
+   },
+   "what": "every paper book due today (30m only inside US RTH)"
+  },
+  {
+   "step": "coverage",
+   "status": "ok",
+   "utc": "2026-09-13T13:37:16+00:00",
+   "rows": 16577,
+   "seconds": 0.68,
+   "refusals": [
+    "reddit_securityanalysis_rss"
+   ],
+   "sources": 26,
+   "regions": [
+    {
+     "region": "GLOBAL",
+     "rows_today": 16150
+    },
+    {
+     "region": "US",
+     "rows_today": 161
+    },
+    {
+     "region": "JP",
+     "rows_today": 57
+    },
+    {
+     "region": "IN",
+     "rows_today": 38
+    },
+    {
+     "region": "EU",
+     "rows_today": 37
+    },
+    {
+     "region": "HK",
+     "rows_today": 37
+    },
+    {
+     "region": "SG",
+     "rows_today": 37
+    },
+    {
+     "region": "KR",
+     "rows_today": 34
+    },
+    {
+     "region": "CN",
+     "rows_today": 26
+    }
+   ],
+   "totals": {
+    "sources": 26,
+    "implemented": 18,
+    "rows_total": 23059,
+    "rows_today": 16577,
+    "red": [
+     "reddit_securityanalysis_rss"
+    ],
+    "never_pulled": [],
+    "label_sources": [
+     "alpaca_benzinga_news",
+     "gdelt_doc_v2",
+     "sec_edgar_8k_current_atom",
+     "yfinance_ticker_news",
+     "finnhub_company_news"
+    ],
+    "mean_resolution_rate": 0.1205
+   },
+   "what": "the per-source coverage card, derived from disk"
+  }
+ ],
+ "step_status_counts": {
+  "ok": 4,
+  "nothing_to_do": 1,
+  "refused": 0,
+  "error": 0,
+  "skipped": 0
+ },
+ "steps_that_did_not_run": [],
+ "us_rth": {
+  "inside": false,
+  "session": false,
+  "basis": "exchange_calendars XNYS",
+  "et": "2026-09-13T09:37:04-04:00",
+  "rth_et": "09:30:00-16:00:00",
+  "why": "2026-09-13 is not an XNYS session"
+ },
+ "forced": true,
+ "prior_receipts": [],
+ "read_me_first": "One row per DECLARED step, in order, always — the runner walks the step list, not the list of things that worked. `refused` NAMES the missing precondition and is a finding, not a failure; `nothing_to_do` means the step ran correctly and there was nothing, which is not the same as zero. Nothing here places an order, arms a lane, or asks a model for anything.",
+ "headline": "4 ok / 1 nothing-to-do / 0 refused / 0 error / 0 skipped over 5 steps"
+}

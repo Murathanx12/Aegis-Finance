@@ -1,0 +1,58 @@
+{
+ "_doc": "Owner-controlled. contract: v1 (hold what the loop left, loop's own terms) or v2 (the proposal). maintenance/entries: LIVE or DRY. The script never edits this file after creating it. `--live` on the command line is also required for anything LIVE.",
+ "hack1": {
+  "contract": "v2",
+  "maintenance": "LIVE",
+  "entries": "LIVE",
+  "set_utc": "2026-09-29T16:06Z",
+  "why": "owner 2026-09-29: v2 bdae86290ea38481 entries LIVE only in the cash already held; legacy names keep v1 terms (horizon, stop), never sold to make room"
+ },
+ "hack2": {
+  "contract": "v2",
+  "maintenance": "LIVE",
+  "entries": "LIVE",
+  "set_utc": "2026-09-29T16:04Z",
+  "why": "owner 2026-09-29 'update the hacks daily... full freedom': analyst revision flow v2 2301fa30c7b851df"
+ },
+ "hack3": {
+  "skip": "key answers HTTP 401 (retired 2026-09-22); credentials are the owner's"
+ },
+ "hack4": {
+  "contract": "v2",
+  "maintenance": "LIVE",
+  "entries": "LIVE",
+  "set_utc": "2026-09-29T16:06Z",
+  "why": "owner 2026-09-29: v2 a0c5313766c52c9a entries LIVE only in the cash already held; legacy names keep v1 terms (horizon, stop), never sold to make room"
+ },
+ "hack5": {
+  "contract": "v2",
+  "maintenance": "LIVE",
+  "entries": "LIVE",
+  "set_utc": "2026-09-29T16:02Z",
+  "why": "owner 2026-09-29 'update the hacks daily... full freedom': hack5 is the market-like CONTROL (v2 98f677b18293c710)"
+ },
+ "hack6": {
+  "contract": "v2",
+  "maintenance": "LIVE",
+  "entries": "LIVE",
+  "set_utc": "2026-09-29T16:06Z",
+  "why": "owner 2026-09-29: v2 12fa05317df05ce1 entries LIVE only in the cash already held; legacy names keep v1 terms (horizon, stop), never sold to make room"
+ },
+ "_history": [
+  {
+   "t": "2026-09-29T16:02Z",
+   "change": "hack5 -> v2 LIVE/LIVE (control)",
+   "by": "operator on the owner's instruction"
+  },
+  {
+   "t": "2026-09-29T16:04Z",
+   "change": "hack2 -> v2 LIVE/LIVE",
+   "by": "operator on the owner's instruction"
+  },
+  {
+   "t": "2026-09-29T16:06Z",
+   "change": "hack1/hack4/hack6 -> v2 LIVE/LIVE (legacy kept)",
+   "by": "operator on the owner's instruction"
+  }
+ ]
+}

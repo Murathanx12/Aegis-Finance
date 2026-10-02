@@ -1,0 +1,17 @@
+{
+ "stamp": "20261001T144630Z",
+ "now_utc": "2026-10-01T14:46:30.609378+00:00",
+ "grade": {},
+ "window": {
+  "now_et": "2026-10-01T10:46:30.609378-04:00",
+  "session_date": "2026-10-01",
+  "is_session": true,
+  "window_et": [
+   "10:45",
+   "15:30"
+  ],
+  "in_window": true,
+  "reason": "IN_WINDOW"
+ },
+ "state": "REFUSED: bars newest 2026-09-28 is not the previous session"
+}

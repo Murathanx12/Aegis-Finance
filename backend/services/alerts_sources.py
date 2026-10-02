@@ -256,10 +256,40 @@ def _vocab_pick(codes: list[str]) -> tuple[str, str, list[str], Optional[int]]:
     return best, etype, ids, prior
 
 
+def official_filing_events_path(corpus: Optional[Path] = None) -> Path:
+    """The official-sources lane's `filing_events` table, derived from the SAME
+    ledger root as the news corpus (so a test's tmp corpus never reads the live
+    table)."""
+    corpus = Path(corpus or corpus_root())
+    return corpus.parent / "official" / "tables" / "filing_events.jsonl"
+
+
+def _official_as_atom(r: dict) -> dict:
+    """An official-lane `filing_events` 8-K row in the Atom row's shape: the
+    items arrive as codes (no titles), so the body carries each item's plain
+    noun; `first_seen_utc` stays the lane's own stamp."""
+    items = [str(c) for c in (r.get("items") or [])]
+    body = " ".join(f"Item {c}: {(ITEM_PLAIN.get(c) or ('', ''))[1] or 'item ' + c}"
+                    for c in items)
+    try:
+        cik10 = f"{int(r.get('cik')):010d}"
+    except (TypeError, ValueError):
+        cik10 = str(r.get("cik") or "")
+    return {"source": "official_sources.sec_8k",
+            "first_seen_utc": r.get("first_seen_utc"),
+            "published_utc": r.get("public_utc"),
+            "url": r.get("index_url") or "",
+            "title": f"{r.get('form_type') or '8-K'} - {r.get('company') or ''} ({cik10}) (Filer)",
+            "body": body, "entity_tags": [f"cik:{cik10}"],
+            "raw_id": r.get("accession")}
+
+
 def read_8k_events(*, now: datetime, universe: Iterable[str], root: Optional[Path] = None,
                    cik_map: Optional[dict] = None,
-                   max_age_h: Optional[float] = None) -> tuple[list[dict], dict]:
-    """Typed truth-lane events from the 8-K Atom corpus, first seen within `max_age_h`."""
+                   max_age_h: Optional[float] = None,
+                   official_path: Optional[Path] = None) -> tuple[list[dict], dict]:
+    """Typed truth-lane events from the 8-K Atom corpus AND the official-sources
+    lane's `filing_events` table, first seen within `max_age_h`."""
     from backend.services import event_vocabulary as V
     root = Path(root or corpus_root())
     max_age_h = float(max_age_h if max_age_h is not None else _cfg.ALERT_EVENT_MAX_AGE_H)
@@ -278,60 +308,81 @@ def read_8k_events(*, now: datetime, universe: Iterable[str], root: Optional[Pat
                 ex99[m.group(1)] = str(r["url"])
     files = [root / ATOM_DIR / f"{d}.jsonl" for d in days]
     stats["atom_files_present"] = sum(p.exists() for p in files)
+    atom_rows = [r for p in files for r in _read_jsonl(p)]
+    # 2026-09-30: the official-sources lane reads the same EDGAR 8-K feed every
+    # 15 minutes under the reader supervisor, while the Atom collector above
+    # refreshes about once a day -- so every US afternoon the 4-filing-hour
+    # staleness rule went DEGRADED over a feed that was, in fact, being read.
+    # Both are read; an accession already in the Atom corpus is not read twice.
+    seen_acc = {str(r.get("raw_id") or "") for r in atom_rows}
+    off_rows = []
+    for r in _read_jsonl(Path(official_path) if official_path is not None
+                         else official_filing_events_path(root)):
+        if r.get("source") != "sec_8k" or str(r.get("role") or "Filer") != "Filer":
+            continue
+        acc = str(r.get("accession") or "")
+        if not acc or acc in seen_acc:
+            continue
+        seen_acc.add(acc)
+        off_rows.append(_official_as_atom(r))
+    stats["official_rows_read"] = len(off_rows)
+    for label, rows in (("atom", atom_rows), ("official", off_rows)):
+        ts = [t for t in (_utc(r.get("first_seen_utc")) for r in rows) if t is not None]
+        stats[f"newest_first_seen_utc_{label}"] = (max(ts).isoformat(timespec="seconds")
+                                                   if ts else None)
     newest_seen = None
     events = []
-    for p in files:
-        for r in _read_jsonl(p):
-            stats["rows_read"] += 1
-            seen = _utc(r.get("first_seen_utc"))
-            if seen is not None and (newest_seen is None or seen > newest_seen):
-                newest_seen = seen
-            if seen is None or seen > now or (now - seen).total_seconds() > max_age_h * 3600:
-                stats["outside_age_window"] += 1
-                continue
-            cik = _cik_of(r)
-            names = [(t, c) for t, c in cmap.get(cik, []) if t in uni] if cik else []
-            if not names:
-                stats["ticker_not_in_universe"] += 1
-                continue
-            items = parse_8k_items(r.get("body") or "")
-            codes = [c for c, _ in items if c in qualifying]
-            if not codes:
-                stats["no_qualifying_item"] += 1
-                continue
-            ticker, company = names[0]
-            primary, etype, cands, prior = _vocab_pick(codes)
-            text = dict(items)[primary]
-            form = str(r.get("title") or "8-K").split(" - ")[0].strip() or "8-K"
-            acc = str(r.get("raw_id") or "").replace("-", "")
-            pr_url = ex99.get(acc)
-            others = [c for c in codes if c != primary]
-            published = _utc(r.get("published_utc"))
-            also = f"; also Item(s) {', '.join(others)}" if others else ""
-            # the important words FIRST (ticker, what happened, the item), the
-            # company's long legal name last, so a cut loses only the name
-            fact_line = (f"{ticker} {plain_item(primary, text)} "
-                         f"({form} Item {primary}{also}). {company.rstrip('.')}.")
-            fact = (f"{company} ({ticker}) filed a Form {form} with the SEC"
-                    + (f", accepted {published:%Y-%m-%d %H:%M} UTC" if published else "")
-                    + f", reporting Item {primary} ({text})"
-                    + (f"; also Item(s) {', '.join(others)}" if others else "") + ".")
-            events.append({
-                "ticker": ticker, "company": company, "source_kind": "sec_8k",
-                "lane": "truth", "event_type_id": etype, "event_type_candidates": cands,
-                "direction_prior": prior, "fact": fact, "fact_line": fact_line,
-                "fact_key": f"8k_item:{primary}", "primary_item": primary,
-                "typing_rule_version": TYPING_RULE_VERSION,
-                "headline": f"{form} Item {primary}: {text[:70]}",
-                "items": codes, "form": form, "amendment": form.upper().endswith("/A"),
-                "accession": r.get("raw_id"),
-                "source_url": pr_url or str(r.get("url") or ""),
-                "source_url_kind": ("company press release (EX-99 on the 8-K)" if pr_url
-                                    else "SEC filing index"),
-                "observed_utc": seen.isoformat(timespec="seconds"),
-                "published_utc": published.isoformat(timespec="seconds") if published else None,
-                "sibling_tickers": [t for t, _ in names[1:]]})
-            stats["events"] += 1
+    for r in atom_rows + off_rows:
+        stats["rows_read"] += 1
+        seen = _utc(r.get("first_seen_utc"))
+        if seen is not None and (newest_seen is None or seen > newest_seen):
+            newest_seen = seen
+        if seen is None or seen > now or (now - seen).total_seconds() > max_age_h * 3600:
+            stats["outside_age_window"] += 1
+            continue
+        cik = _cik_of(r)
+        names = [(t, c) for t, c in cmap.get(cik, []) if t in uni] if cik else []
+        if not names:
+            stats["ticker_not_in_universe"] += 1
+            continue
+        items = parse_8k_items(r.get("body") or "")
+        codes = [c for c, _ in items if c in qualifying]
+        if not codes:
+            stats["no_qualifying_item"] += 1
+            continue
+        ticker, company = names[0]
+        primary, etype, cands, prior = _vocab_pick(codes)
+        text = dict(items)[primary]
+        form = str(r.get("title") or "8-K").split(" - ")[0].strip() or "8-K"
+        acc = str(r.get("raw_id") or "").replace("-", "")
+        pr_url = ex99.get(acc)
+        others = [c for c in codes if c != primary]
+        published = _utc(r.get("published_utc"))
+        also = f"; also Item(s) {', '.join(others)}" if others else ""
+        # the important words FIRST (ticker, what happened, the item), the
+        # company's long legal name last, so a cut loses only the name
+        fact_line = (f"{ticker} {plain_item(primary, text)} "
+                     f"({form} Item {primary}{also}). {company.rstrip('.')}.")
+        fact = (f"{company} ({ticker}) filed a Form {form} with the SEC"
+                + (f", accepted {published:%Y-%m-%d %H:%M} UTC" if published else "")
+                + f", reporting Item {primary} ({text})"
+                + (f"; also Item(s) {', '.join(others)}" if others else "") + ".")
+        events.append({
+            "ticker": ticker, "company": company, "source_kind": "sec_8k",
+            "lane": "truth", "event_type_id": etype, "event_type_candidates": cands,
+            "direction_prior": prior, "fact": fact, "fact_line": fact_line,
+            "fact_key": f"8k_item:{primary}", "primary_item": primary,
+            "typing_rule_version": TYPING_RULE_VERSION,
+            "headline": f"{form} Item {primary}: {text[:70]}",
+            "items": codes, "form": form, "amendment": form.upper().endswith("/A"),
+            "accession": r.get("raw_id"),
+            "source_url": pr_url or str(r.get("url") or ""),
+            "source_url_kind": ("company press release (EX-99 on the 8-K)" if pr_url
+                                else "SEC filing index"),
+            "observed_utc": seen.isoformat(timespec="seconds"),
+            "published_utc": published.isoformat(timespec="seconds") if published else None,
+            "sibling_tickers": [t for t, _ in names[1:]]})
+        stats["events"] += 1
     stats["newest_first_seen_utc"] = newest_seen.isoformat(timespec="seconds") if newest_seen else None
     return events, dict(stats)
 

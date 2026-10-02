@@ -1,0 +1,14 @@
+ERROR yfinance: HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"No fundamentals data found for symbol: FOX"}}}
+ERROR yfinance: HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"No fundamentals data found for symbol: GOOGM"}}}
+ERROR yfinance: HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"No fundamentals data found for symbol: GOOGM"}}}
+ERROR yfinance: HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"No fundamentals data found for symbol: GOOGN"}}}
+ERROR yfinance: HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"No fundamentals data found for symbol: GOOGN"}}}
+ERROR daily_pass: daily pass step coverage raised
+Traceback (most recent call last):
+  File "C:\Users\mrthn\aegis-finance\scripts\daily_pass.py", line 660, in run_daily_pass
+    "detail": result.get("detail"),
+  File "C:\Users\mrthn\aegis-finance\scripts\daily_pass.py", line 296, in call_boxed
+    def call_boxed(fn: Callable[[], dict], timeout_s: float, what: str) -> dict:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mrthn\aegis-finance\scripts\news_pull.py", line 246, in call_with_timeout
+scripts.news_pull.FetchError: coverage: ImportError: cannot import name 'sentinel' from 'typing_extensions' (C:\Users\mrthn\aegis-finance\.venv\Lib\site-packages\typing_extensions.py)

@@ -1,0 +1,57 @@
+{
+ "schema": "fleet_manager_contract/1",
+ "role": "hack2",
+ "version": "v1",
+ "licence": "PRODUCT_EXPERIMENT",
+ "name": "hack2 v1: hold and manage what the Railway loop left",
+ "alpha_source": "DRIFT (post_event_drift, window universe)",
+ "selection": {
+  "kind": "legacy_hold",
+  "input": "post_event_drift brain inside the Railway loop",
+  "input_status": "loop down 2026-09-29: input not produced",
+  "entries": "NONE. The mandate fails CLOSED without its selection input (execution repo skim layer: 'no sealed book, no trade'); the loop is down and the input is not produced, so this version never buys."
+ },
+ "legacy_terms": {
+  "expected_horizon_sessions": 5,
+  "min_normal_hold_sessions": 2,
+  "stop_frac": 0.08,
+  "profit_target_frac": null
+ },
+ "exits": "HORIZON: a position whose lot entry (from broker fills) is >= expected_horizon_sessions weekday sessions old is sold with a DAY limit near the bid. A resting stop is the other exit. THESIS_INVALIDATED on an empty seal is NOT applied: an empty seal is a missing input, not a verdict on the name.",
+ "options": "none held",
+ "stop_rule": {
+  "quoted_in": "daily sigma",
+  "sigma": "63-session sd of close-to-close returns on the bar-defect-screened panel (Alpaca daily bars when a name is not in the panel)",
+  "k_sigma": 3.0,
+  "min_frac": 0.04,
+  "max_frac": 0.08,
+  "distance": "clip(k_sigma x sigma, min_frac, max_frac) of the reference price",
+  "never_loosen": "a replaced stop is never below the stop it replaces",
+  "order": "GTC sell stop for the full long quantity; renewed within 7 days of its expiry"
+ },
+ "caps": {
+  "max_gross_frac": 1.0,
+  "max_name_frac": 0.1,
+  "daily_turnover_frac": 0.5,
+  "max_orders_per_run": 60,
+  "min_order_usd": 250.0,
+  "shorting": false,
+  "new_options": false,
+  "leverage": false
+ },
+ "costs": {
+  "assumed_bps_per_side": 10.0,
+  "fill_convention": "DAY limit at ask x (1+10bps) for buys and bid x (1-10bps) for sells; an unfilled limit is not traded; last trade when the IEX quote is one-sided or wider than 2%"
+ },
+ "objective": "terminal wealth of the account vs SPY and vs the matched random twin, graded daily; no claim of skill (PRODUCT_EXPERIMENT)",
+ "twin": {
+  "kind": "matched_random_twin",
+  "weights": {}
+ },
+ "inputs": [
+  "broker positions, orders, fills (Alpaca paper, this account's own key)",
+  "sigma_63 from the bar-defect-screened local panel"
+ ],
+ "policy_hash": "56d8443e7bf58f8d",
+ "frozen_utc": "2026-09-29T13:37:43+00:00"
+}

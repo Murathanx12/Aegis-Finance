@@ -1,0 +1,30 @@
+{
+ "day": "2026-10-12",
+ "buys": [
+  {
+   "symbol": "UNH",
+   "bbg_ticker": "UNH US Equity",
+   "react_date": "2026-10-13"
+  },
+  {
+   "symbol": "ACI",
+   "bbg_ticker": "ACI US Equity",
+   "react_date": "2026-10-13"
+  },
+  {
+   "symbol": "WFC",
+   "bbg_ticker": "WFC US Equity",
+   "react_date": "2026-10-13"
+  },
+  {
+   "symbol": "600256.SS",
+   "bbg_ticker": "600256 CH Equity",
+   "react_date": "2026-10-14"
+  },
+  {
+   "symbol": "BLK",
+   "bbg_ticker": "BLK US Equity",
+   "react_date": "2026-10-13"
+  }
+ ]
+}

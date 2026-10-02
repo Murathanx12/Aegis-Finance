@@ -1,0 +1,106 @@
+{
+ "hyp_id": "H-0508c8b2b4",
+ "title": "Abnormal attention predicts move size beyond priors and TF-IDF",
+ "night": "2026-09-29",
+ "run_utc": "2026-09-29T13:45:43+00:00",
+ "result": {
+  "cell_type": "size_feature_increment",
+  "params": {
+   "feature_set": "abn_attention",
+   "design_fold": "F2025",
+   "confirm_fold": "F2026"
+  },
+  "features": [
+   "abn_attention",
+   "src_prior5"
+  ],
+  "design": {
+   "fold": "F2025",
+   "base": "T2",
+   "alpha": 10000.0,
+   "n_test_cells": 30546,
+   "coef": {
+    "abn_attention": 0.00507,
+    "src_prior5": 0.01773
+   },
+   "increment": {
+    "mean": -0.001427,
+    "se": 0.000337,
+    "t": -4.24,
+    "mde": 0.000943,
+    "n": 85,
+    "n_blocks": 18,
+    "by_month": {
+     "2025-09": -0.0009,
+     "2025-10": -0.0017,
+     "2025-11": -0.0014,
+     "2025-12": -0.0018
+    },
+    "months_positive": "0/4",
+    "loo_month_worst": -0.001615
+   }
+  },
+  "design_over_B2 (reported)": {
+   "mean": -0.001739,
+   "se": 0.000713,
+   "t": -2.44,
+   "mde": 0.001997,
+   "n": 85,
+   "n_blocks": 18,
+   "by_month": {
+    "2025-09": -0.0021,
+    "2025-10": -0.0008,
+    "2025-11": -0.0013,
+    "2025-12": -0.0028
+   },
+   "months_positive": "0/4",
+   "loo_month_worst": -0.002093
+  },
+  "confirm": {
+   "fold": "F2026",
+   "base": "T2",
+   "alpha": 10000.0,
+   "n_test_cells": 25365,
+   "coef": {
+    "abn_attention": 0.00921,
+    "src_prior5": 0.02477
+   },
+   "increment": {
+    "mean": -0.001074,
+    "se": 0.000624,
+    "t": -1.72,
+    "mde": 0.001747,
+    "n": 91,
+    "n_blocks": 21,
+    "by_month": {
+     "2026-05": 0.0002,
+     "2026-06": -0.0005,
+     "2026-07": -0.0003,
+     "2026-08": -0.0008,
+     "2026-09": -0.0038
+    },
+    "months_positive": "1/5",
+    "loo_month_worst": -0.001308
+   }
+  },
+  "confirm_over_B2 (reported)": {
+   "mean": -0.00121,
+   "se": 0.001229,
+   "t": -0.98,
+   "mde": 0.003442,
+   "n": 91,
+   "n_blocks": 21,
+   "by_month": {
+    "2026-05": 0.0029,
+    "2026-06": -0.0013,
+    "2026-07": -0.0018,
+    "2026-08": 0.0015,
+    "2026-09": -0.0061
+   },
+   "months_positive": "2/5",
+   "loo_month_worst": -0.002037
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.00107 <= 0"
+ }
+}

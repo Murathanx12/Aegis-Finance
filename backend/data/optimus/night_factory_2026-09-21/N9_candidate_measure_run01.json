@@ -1,0 +1,67 @@
+{
+ "job": "N9_candidate_measure",
+ "licence": "PRODUCT_EXPERIMENT",
+ "stage": "screen",
+ "llm_spend_usd": 0.0,
+ "run_date": "2026-09-21",
+ "written_utc": "2026-09-21T03:29:01+00:00",
+ "candidates_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\research_gym\\library_candidates.jsonl",
+ "n_candidates": 11386,
+ "n_refused": 3,
+ "refusals": {
+  "RULE_UNEVALUABLE": 3
+ },
+ "panel": {
+  "securities": [
+   "DIA",
+   "XLV",
+   "XLI",
+   "XLP",
+   "XLU",
+   "XLB"
+  ],
+  "start": "2003-01-01",
+  "end": "2026-09-21",
+  "sessions": {
+   "DIA": 5965,
+   "XLV": 5965,
+   "XLI": 5965,
+   "XLP": 5965,
+   "XLU": 5965,
+   "XLB": 5965
+  }
+ },
+ "construction": {
+  "seed": 20260920,
+  "null": "circular date-shift of the firing mask, 400 shifts, |shift| >= 63 sessions",
+  "min_fires": 10,
+  "origin_window_excluded_sessions": 63,
+  "screen": "BH-FDR q=0.10 over the family (canon section 63)",
+  "horizon": "each candidate's own move horizon (20 or 60 sessions), gross of costs"
+ },
+ "ORIGIN_read_IN_SAMPLE_SCREEN": {
+  "n_reads": 11383,
+  "n_measured": 8486,
+  "n_too_few_fires": 2897,
+  "raw_p_le_0_05": 564,
+  "expected_by_chance_at_0_05": 424.3,
+  "bh_fdr_q10_survivors": 0,
+  "bh_family_n": 8486,
+  "median_excess_in_tail_direction_pct": -0.027,
+  "share_excess_positive": 0.492
+ },
+ "FOREIGN_read_parent_barred": {
+  "n_reads": 11383,
+  "n_measured": 10247,
+  "n_too_few_fires": 1136,
+  "raw_p_le_0_05": 1142,
+  "expected_by_chance_at_0_05": 512.4,
+  "bh_fdr_q10_survivors": 0,
+  "bh_family_n": 10247,
+  "median_excess_in_tail_direction_pct": 0.187,
+  "share_excess_positive": 0.557
+ },
+ "rows": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-21\\N9_candidate_measure_rows.jsonl",
+ "elapsed_s": 580.7,
+ "read_me_first": "The ORIGIN read is in-sample by construction (the rule was written while looking at a move on that security); only the FOREIGN read can promote anything, and even that is a SCREEN, not a claim. Survivors go to the registered admission path, never straight to a book."
+}

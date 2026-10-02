@@ -1,0 +1,194 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-09-29",
+ "declared_utc": "2026-09-29T13:39:17+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [
+  "LOOK 0 (smoke test of the code, before this declaration): H-c12383c5f7 at exactly these params was run once on both folds (design 97 shocks mean -0.23%/t -0.94; confirm 57 shocks +0.35%/t 1.10). Params were written before that run and are not changed.",
+  "LOOK 0: event_readthrough was smoke-run at min_ratio 3.0 and min_source_dv_pct 0.5 (206 candidate events; comention design 54 / confirm 50 events, size_t1 +0.10 t 0.79 / +0.18 t 1.32; corr_peer +0.05 t 0.79 / +0.003 t 0.03; all CANNOT_DISTINGUISH). The declared cells use min_ratio 2.0 and no dollar-volume filter to raise the event count (power), a change made for MDE, not for sign; the smoke variants are recorded here and count as looks.",
+  "The size cells (H-0508c8b2b4, H-d90a84da8c, H-57ab67541e) have had no outcome look at these features. H-57ab67541e design fold F2026 WAS seen by the afternoon ft_lab run (earnings +0.24 log ratio); its confirm fold 2025 H2 has not been joined to event types for size.",
+  "Slot 8 is the top-ranked GENERATED runnable row that is coherent: H-4e1d453114 (ranked higher) was skipped by the declarer because its basket mixes energy (+) and transports (-) under one expected sign; H-f4c998e55b (DeepSeek, REITs vs yield spikes) runs instead. AI-semis (H-3c9e80c849) stays queued for the nightly.",
+  "Multiplicity: 8 cells tonight, plus 2 smoke looks; no correction is applied to the per-cell verdicts, so a single CONDITIONAL_POSITIVE among 8 is expected by chance with probability about 0.2 at t>=2; read any positive as a lead for a forward log, not a finding."
+ ],
+ "cells": [
+  {
+   "hyp_id": "H-c12383c5f7",
+   "title": "Oil shock -> airlines lag",
+   "family": "macro_readthrough_commodity",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "CL=F",
+    "targets": [
+     "DAL",
+     "UAL",
+     "LUV",
+     "AAL",
+     "ALK",
+     "JBLU"
+    ],
+    "expected_sign": -1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {
+    "design": "2016-2022",
+    "confirm": "2023-2026"
+   },
+   "refutation": "confirm-fold (2023-26) mean signed residual <= 0, or t < 2 with MDE below the design effect",
+   "separation_from_beta": "the same-day response is ordinary oil beta and is printed separately; the test is the open t+1 -> close t+h residual after the basket's SPY beta (design-fold estimate)"
+  },
+  {
+   "hyp_id": "H-fc9a95991b",
+   "title": "Yield spike -> regional banks lag",
+   "family": "macro_readthrough_rates",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "^TNX",
+    "targets": [
+     "ZION",
+     "KEY",
+     "CFG",
+     "RF",
+     "HBAN",
+     "FITB",
+     "MTB",
+     "CMA",
+     "WAL",
+     "EWBC"
+    ],
+    "expected_sign": -1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {
+    "design": "2016-2022",
+    "confirm": "2023-2026"
+   },
+   "refutation": "confirm-fold mean signed residual <= 0, or t < 2 with MDE below the design effect",
+   "separation_from_beta": "same-day response printed apart; the lag residual after SPY beta is the test"
+  },
+  {
+   "hyp_id": "H-4d7c66c90d",
+   "title": "Earnings shock read-through to text-linked names (next-session size)",
+   "family": "event_readthrough_text_link",
+   "target": "co_movement",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "comention",
+    "event_type": "earnings_report",
+    "min_ratio": 2.0,
+    "k": 5,
+    "min_source_dv_pct": 0,
+    "lookback_days": 180
+   },
+   "split": {
+    "design": "2025",
+    "confirm": "2026-01..09"
+   },
+   "refutation": "confirm-fold (2026) linked-minus-control log size ratio at t+1 <= 0, or t < 2 with MDE below the design effect",
+   "separation_from_beta": "vol-matched unlinked names on the same date are the control; the 252-session correlation peers (factor beta) run as their own cell for comparison"
+  },
+  {
+   "hyp_id": "H-242b74a461",
+   "title": "Earnings shock read-through to correlation peers (factor-beta control)",
+   "family": "event_readthrough_corr_peer",
+   "target": "co_movement",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "corr_peer",
+    "event_type": "earnings_report",
+    "min_ratio": 2.0,
+    "k": 5,
+    "min_source_dv_pct": 0,
+    "lookback_days": 180
+   },
+   "split": {
+    "design": "2025",
+    "confirm": "2026-01..09"
+   },
+   "refutation": "confirm-fold linked-minus-control log size ratio at t+1 <= 0, or t < 2 with MDE below the design effect",
+   "separation_from_beta": "this IS the beta link: it is the comparison for the text-link cell"
+  },
+  {
+   "hyp_id": "H-0508c8b2b4",
+   "title": "Abnormal attention predicts move size beyond priors and TF-IDF",
+   "family": "size_attention",
+   "target": "size",
+   "cell_type": "size_feature_increment",
+   "params": {
+    "feature_set": "abn_attention",
+    "design_fold": "F2025",
+    "confirm_fold": "F2026"
+   },
+   "split": {
+    "design": "F2025",
+    "confirm": "F2026"
+   },
+   "refutation": "confirm-fold (2026 test block) paired IC increment over T2 <= 0, or t < 2 with MDE below the design effect",
+   "separation_from_beta": "the base is trailing vol + news counts + TF-IDF (T2); the increment is paired per date"
+  },
+  {
+   "hyp_id": "H-d90a84da8c",
+   "title": "Cross-source disagreement predicts move size beyond TF-IDF",
+   "family": "size_disagreement",
+   "target": "size",
+   "cell_type": "size_feature_increment",
+   "params": {
+    "feature_set": "tone_agreement",
+    "design_fold": "F2025",
+    "confirm_fold": "F2026"
+   },
+   "split": {
+    "design": "F2025",
+    "confirm": "F2026"
+   },
+   "refutation": "confirm-fold paired IC increment over T2 <= 0, or t < 2 with MDE below the design effect",
+   "separation_from_beta": "base T2 includes the bag of words and the trailing vol; paired per date"
+  },
+  {
+   "hyp_id": "H-57ab67541e",
+   "title": "Event-type size prior, 2025 as a second fold",
+   "family": "size_event_prior",
+   "target": "size",
+   "cell_type": "size_feature_increment",
+   "params": {
+    "feature_set": "event_prior",
+    "design_fold": "F2026",
+    "confirm_fold": "F2025"
+   },
+   "split": {
+    "design": "F2026 (already seen: earnings +0.24)",
+    "confirm": "F2025"
+   },
+   "refutation": "confirm-fold (2025 H2) paired IC increment over T2 <= 0, or t < 2 with MDE below the design effect",
+   "separation_from_beta": "base T2 (trailing vol + TF-IDF, which already carries the words); paired per date"
+  },
+  {
+   "hyp_id": "H-f4c998e55b",
+   "title": "Rate spike compresses REIT dividend yield spread",
+   "family": "macro_readthrough_rates",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "^TNX",
+    "targets": [
+     "VNQ",
+     "SPG",
+     "O",
+     "PLD",
+     "CCI"
+    ],
+    "expected_sign": -1,
+    "h": 5,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "If the REIT basket does not underperform its beta-adjusted expectation and shows no significant negative abnormal return relative to utilities (another rate-sensitive sector) after the yield spike, the hypothesis is refuted.",
+   "separation_from_beta": "Compare REIT basket return to a duration-matched bond proxy and to the broad market, isolating the rate sensitivity beyond equity beta."
+  }
+ ],
+ "sha256": "5a15f7bf64c664bc0223bb7aea5eabb094d16038d72a57305b2013d54dea4e90"
+}

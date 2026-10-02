@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\mrthn\aegis-finance\scripts\night_inflection_baserate.py", line 405, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\mrthn\aegis-finance\scripts\night_inflection_baserate.py", line 397, in main
+    out = Path(a.out) if a.out else OUT / f"baserate_{date.today()}.json"
+                         ^^^^^
+AttributeError: 'NoneType' object has no attribute 'out'

@@ -1,0 +1,14 @@
+{
+ "t": "2026-10-01T19:30:43+00:00",
+ "positions": {
+  "SPY": 117.0
+ },
+ "run_id": "20261001T193000Z-80a5e7",
+ "contract": "v2",
+ "policy_hash": "98f677b18293c710",
+ "v2_names": [
+  "SPY"
+ ],
+ "news_entries": {},
+ "v2_started": "2026-09-29"
+}

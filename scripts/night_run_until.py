@@ -367,7 +367,11 @@ class Night:
                                  self.stop_at - timedelta(minutes=KILL_JOBS_LEAD_MIN))
             self.grade_reality()
             if self.lab:
-                self._popen("lab", ["-m", "scripts.always_on_lab"])
+                from scripts.always_on_lab import off_marker_state   # noqa: PLC0415
+                if off_marker_state()["off"]:
+                    print("  lab: NOT started -- always_on_lab OFF marker present", flush=True)
+                else:
+                    self._popen("lab", ["-m", "scripts.always_on_lab"])
             if self.queue:
                 self.run_factory("night_factory_phase2", self.queue,
                                  self.stop_at - timedelta(minutes=KILL_JOBS_LEAD_MIN))

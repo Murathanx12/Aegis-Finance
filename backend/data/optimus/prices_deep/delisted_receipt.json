@@ -1,0 +1,43 @@
+{
+ "job": "pull_delisted_bars",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "credential_source": "terminal repo .env, HACK3 (data endpoint only)",
+ "assets": {
+  "inactive_us_equity_total": 19175,
+  "on_a_listed_venue": 2868,
+  "excluded_otc": 16307,
+  "excluded_non_ticker_identifiers": 1020,
+  "examples_excluded": [
+   "0029900E0",
+   "003CVR016",
+   "003RGT016",
+   "004CVR049",
+   "004ESC018",
+   "007975113",
+   "007CVR038",
+   "008CNT040"
+  ],
+  "venues": [
+   "NASDAQ",
+   "NYSE",
+   "ARCA",
+   "AMEX",
+   "BATS"
+  ],
+  "why_otc_excluded": "the OTC tape cannot absorb a retail ticket without being it; xs_ranker's liquidity floor drops it anyway",
+  "why_identifiers_excluded": "the inactive list carries administrative identifiers as well as tickers -- `INDU_DELISTED`, `929ESC010`, `185CNT011`. The bars endpoint answers HTTP 400 for the whole BATCH when one of them is in it, so a single bad identifier silently costs 100 real symbols. Measured 2026-09-22 on a 25-symbol smoke run."
+ },
+ "start_requested": "2016-01-01",
+ "symbols_requested": 1830,
+ "symbols_with_bars": 1784,
+ "symbols_whose_bars_stop_early": 1574,
+ "bars": 1860140,
+ "first_session": "2016-01-04",
+ "last_session": "2026-09-21",
+ "parquet": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars_delisted.parquet",
+ "parquet_mb": 38.44,
+ "elapsed_s": 786.8,
+ "written_utc": "2026-09-22T04:35:32+00:00",
+ "headline": "1,860,140 bars for 1,784 DELISTED symbols, 1,574 of which stop trading before the end \u2014 the names the survivor panel could never have shown"
+}

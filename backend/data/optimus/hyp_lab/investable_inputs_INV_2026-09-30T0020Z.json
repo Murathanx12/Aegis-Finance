@@ -1,0 +1,25 @@
+{
+ "schema": "hyp_lab/investable_inputs/1",
+ "tag": "INV_2026-09-30T0020Z",
+ "written_utc": "2026-09-29T16:01:58+00:00",
+ "rows": 2032756,
+ "dates": 408,
+ "sources": {
+  "panel": "2026-09-29T075640Z",
+  "fund": "2026-09-29T041550Z",
+  "pit": "PB_2026-09-29T1420Z",
+  "event": "EB_2026-09-29T1055Z",
+  "cs": "FU_2026-09-29T0855Z",
+  "mcap": "CRSP msf |prc| x shrout, same month"
+ },
+ "coverage_eligible": {
+  "mcap": 1.0,
+  "cs_spread": 0.9967806133483955,
+  "gp_at": 0.9550515117424366,
+  "ope_be": 0.9121569579363561,
+  "cash_at": 0.9917469179313145,
+  "debt_at": 0.952966457071992,
+  "net_raises": 0.8448159161247859
+ },
+ "seconds": 9.4
+}

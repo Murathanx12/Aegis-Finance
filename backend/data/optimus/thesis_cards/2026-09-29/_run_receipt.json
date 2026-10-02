@@ -1,0 +1,77 @@
+{
+ "receipt": "thesis_cards_run",
+ "day": "2026-09-29",
+ "model": "deepseek/deepseek-flash",
+ "cap_usd": 0.5,
+ "max_quests": 1,
+ "parallel": 1,
+ "n_universe": 1,
+ "n_skipped_existing": 0,
+ "n_todo": 1,
+ "cut_by_max_quests": [],
+ "done": [
+  "AAOI"
+ ],
+ "refused": [],
+ "state": "DONE",
+ "forecast_rows_written": 2,
+ "evidence": {
+  "AAOI": {
+   "n_claims": 17,
+   "n_future_refused": 0,
+   "n_already_written": 0,
+   "n_untyped": 10,
+   "claims_written": 17,
+   "claims_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\claims\\claims.jsonl",
+   "web_events": {
+    "receipt": "web_events.append",
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-29.jsonl",
+    "accepted": 2,
+    "written": 2,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   },
+   "n_untyped_claims_ledger_only": 15,
+   "untyped_claims": {
+    "accepted": 15,
+    "written": 15,
+    "duplicates": 0,
+    "refused": 0,
+    "refusals": []
+   }
+  }
+ },
+ "promises": {
+  "AAOI": {
+   "n_promises": 6,
+   "promises_written": 6,
+   "grades_written": 0,
+   "forecast_rows_written": 0,
+   "n_unparseable": 0,
+   "unchanged": 0,
+   "card_grade_refused_numeric": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\promises\\promises.jsonl"
+  }
+ },
+ "n_cards_written_this_run": 1,
+ "spend_check": null,
+ "run_started_utc": "2026-09-29T03:19:28.946979+00:00",
+ "spent_usd_before_last_admit": 0.0,
+ "spend_per_card_sum": 0.023981,
+ "spend_telemetry": 0.023981,
+ "spend_disagreement": 0.0,
+ "n_quest_cost_unknown": 0,
+ "n_synth_cost_unknown": 0,
+ "n_from_repriced_sidecar": 0,
+ "n_legacy_reported_ruler": 0,
+ "spent_usd_today": 0.023981,
+ "run_ended_utc": "2026-09-29T03:22:17.384832+00:00",
+ "provider_delta": {
+  "status": "NO_BRACKETING_PAIR",
+  "warning": null,
+  "calibration_age_days": 2,
+  "why": "no balance snapshot at/before the run start AND at/after its end"
+ },
+ "digest": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\2026-09-29\\DIGEST.md"
+}

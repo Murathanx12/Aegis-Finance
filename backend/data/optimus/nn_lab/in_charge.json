@@ -1,0 +1,15 @@
+{
+ "model": "zero",
+ "since": "2026-09-30T00:31:20+00:00",
+ "history": [
+  {
+   "from": "lgbm",
+   "to": "zero",
+   "at": "2026-09-30T00:31:20+00:00",
+   "trust_from": 0.0,
+   "trust_to": 0.0
+  }
+ ],
+ "why": "lgbm has no positive FORWARD trust: the zero is in charge",
+ "why_kept": "no forward grade was added tonight: in-charge cannot change"
+}

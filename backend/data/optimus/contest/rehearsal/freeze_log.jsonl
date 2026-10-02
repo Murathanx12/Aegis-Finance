@@ -1,0 +1,4 @@
+{"day": "2026-09-29", "freeze_utc": "2026-09-29T13:43:10", "sha256": "d16b7da1dc265f594cab53bfdfa6e20e63d168e9fcb5e2955c75be70070de4d3", "sheet_code": "E3B0C442", "n_live": 0, "n_void_late": 5}
+{"day": "2026-09-30", "freeze_utc": "2026-09-29T13:48:41", "sha256": "971ba47acd491c96d55340900f842270681e72373581ba147046fbd6a1ab616a", "sheet_code": "BE6D9938", "n_live": 5, "n_void_late": 0}
+{"day": "2026-10-01", "freeze_utc": "2026-10-01T06:33:28", "sha256": "2385fbdb9b96e06f5fb1065b01cd0021ad3bc0eb85e2275b6d08e74aba945fed", "sheet_code": "1772ED78", "n_live": 5, "n_void_late": 0}
+{"day": "2026-10-02", "freeze_utc": "2026-10-02T06:35:22", "sha256": "97334bb5150a3fe9acdcbc60354bf09fd87c7b8ade4f0f5b09833bd6d23ef8dd", "sheet_code": "B2AB3A21", "n_live": 1, "n_void_late": 0}

@@ -1,0 +1,18 @@
+{
+ "why_exited": "STOPPED by C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\STOP (since 2026-09-29T14:41:35+00:00, 70.0 h old) -- WARNING: older than 48 h, possibly forgotten; delete it to resume",
+ "stop": {
+  "stop_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\STOP",
+  "stop_since_utc": "2026-09-29T14:41:35+00:00",
+  "stop_age_h": 70.0,
+  "stale": true,
+  "warn_after_h": 48.0,
+  "line": "STOPPED by C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\STOP (since 2026-09-29T14:41:35+00:00, 70.0 h old) -- WARNING: older than 48 h, possibly forgotten; delete it to resume"
+ },
+ "job": "hyp_lab.nightly",
+ "started_utc": "2026-10-02T12:38:58+00:00",
+ "night": "2026-10-02",
+ "k": 3,
+ "cap_usd": 0.4,
+ "status": "REFUSED",
+ "reason": "STOPPED by C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\STOP (since 2026-09-29T14:41:35+00:00, 70.0 h old) -- WARNING: older than 48 h, possibly forgotten; delete it to resume"
+}

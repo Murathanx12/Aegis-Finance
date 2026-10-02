@@ -1,0 +1,112 @@
+{
+ "t": "2026-09-25T18:17:16+00:00",
+ "tag": "plan",
+ "account_number": "PA37CSAUFCQR",
+ "equity": 999180.34,
+ "last_equity": 1000000.0,
+ "cash": 800795.17,
+ "long_market_value": 198385.17,
+ "short_market_value": 0.0,
+ "buying_power": 3758659.16,
+ "n_positions": 10,
+ "positions": [
+  {
+   "symbol": "AAPL",
+   "qty": 58.0,
+   "avg_entry_price": 335.18,
+   "market_value": 19730.5618,
+   "unrealized_pl": 290.1218,
+   "unrealized_plpc": 0.01492,
+   "current_price": 340.1821
+  },
+  {
+   "symbol": "ALLE",
+   "qty": 129.0,
+   "avg_entry_price": 153.56,
+   "market_value": 20011.77,
+   "unrealized_pl": 202.53,
+   "unrealized_plpc": 0.01022,
+   "current_price": 155.13
+  },
+  {
+   "symbol": "AMZN",
+   "qty": 79.0,
+   "avg_entry_price": 248.46,
+   "market_value": 19742.8979,
+   "unrealized_pl": 114.5579,
+   "unrealized_plpc": 0.00584,
+   "current_price": 249.9101
+  },
+  {
+   "symbol": "AVPT",
+   "qty": 1524.0,
+   "avg_entry_price": 13.19,
+   "market_value": 19902.2208,
+   "unrealized_pl": -199.3392,
+   "unrealized_plpc": -0.00992,
+   "current_price": 13.0592
+  },
+  {
+   "symbol": "GOOG",
+   "qty": 58.0,
+   "avg_entry_price": 342.07322,
+   "market_value": 19791.34,
+   "unrealized_pl": -48.90676,
+   "unrealized_plpc": -0.00247,
+   "current_price": 341.23
+  },
+  {
+   "symbol": "GOOGL",
+   "qty": 58.0,
+   "avg_entry_price": 345.538483,
+   "market_value": 19962.44,
+   "unrealized_pl": -78.792014,
+   "unrealized_plpc": -0.00393,
+   "current_price": 344.18
+  },
+  {
+   "symbol": "INCY",
+   "qty": 160.0,
+   "avg_entry_price": 125.99,
+   "market_value": 19878.4,
+   "unrealized_pl": -280.0,
+   "unrealized_plpc": -0.01389,
+   "current_price": 124.24
+  },
+  {
+   "symbol": "META",
+   "qty": 26.0,
+   "avg_entry_price": 757.100769,
+   "market_value": 19536.66,
+   "unrealized_pl": -147.959994,
+   "unrealized_plpc": -0.00752,
+   "current_price": 751.41
+  },
+  {
+   "symbol": "NVDA",
+   "qty": 88.0,
+   "avg_entry_price": 226.599432,
+   "market_value": 19797.8,
+   "unrealized_pl": -142.950016,
+   "unrealized_plpc": -0.00717,
+   "current_price": 224.975
+  },
+  {
+   "symbol": "SNDR",
+   "qty": 642.0,
+   "avg_entry_price": 32.026293,
+   "market_value": 20033.61,
+   "unrealized_pl": -527.270106,
+   "unrealized_plpc": -0.02564,
+   "current_price": 31.205
+  }
+ ],
+ "benchmarks": {
+  "SPY": 771.36,
+  "QQQ": 745.36,
+  "IWM": 282.065
+ },
+ "benchmark_error": null,
+ "invested_frac": 0.19854791178137074,
+ "intraday_return": -0.0008196599999999998
+}

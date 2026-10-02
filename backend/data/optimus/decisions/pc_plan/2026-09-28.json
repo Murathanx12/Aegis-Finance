@@ -1,0 +1,3639 @@
+{
+ "date": "2026-09-28",
+ "source": "sim_run.u_plan",
+ "rows": [
+  {
+   "decision_id": "bcb8f46182fd54de",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "NVDA",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $25354.9m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 38%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.95 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 1.0,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for NVDA: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 5,
+   "horizon": {
+    "sessions": 5,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-05T00:00:00+00:00",
+   "expiry_basis": "5 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-05",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 86,
+    "price": 232.05,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE NVDA",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.023849291916242986,
+    "stop_sigma_pct": 0.07154787574872895,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1428.0035035189662,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE NVDA: 1 x 2.00% x 7.15% (3 sigma of 2.38%/day) = -$1,428 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": "equal",
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": 5,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "7db64d8d7cd0a9632ec3273d03547a5f378f2b8fbc11499abd7a27abdacc27d0"
+  },
+  {
+   "decision_id": "8cd3872e1b82127c",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "NVDA",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $25354.9m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 38%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.95 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 1.0,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for NVDA: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 21,
+   "horizon": {
+    "sessions": 21,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-27T00:00:00+00:00",
+   "expiry_basis": "21 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-27",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 86,
+    "price": 232.05,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE NVDA",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.023849291916242986,
+    "stop_sigma_pct": 0.07154787574872895,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1428.0035035189662,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE NVDA: 1 x 2.00% x 7.15% (3 sigma of 2.38%/day) = -$1,428 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.00047136136479147866,
+   "er_equal": 0.00047136136479147866,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.000938292578403461,
+     "weight": 0.5,
+     "phi": 0.0004356358399730355
+    },
+    "source_reliability": {
+     "x": 4.43015117949627e-06,
+     "weight": 0.5,
+     "phi": 2.1320694135364783e-06
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 21,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "936d5cb6d0edf426fb63bea13d07d35bd1abc96a83525fa86257f6315b395dfa"
+  },
+  {
+   "decision_id": "67bba6f3eac240c7",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "NVDA",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $25354.9m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 38%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.95 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 1.0,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for NVDA: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 63,
+   "horizon": {
+    "sessions": 63,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-12-28T00:00:00+00:00",
+   "expiry_basis": "63 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-12-28",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 86,
+    "price": 232.05,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE NVDA",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.023849291916242986,
+    "stop_sigma_pct": 0.07154787574872895,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1428.0035035189662,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE NVDA: 1 x 2.00% x 7.15% (3 sigma of 2.38%/day) = -$1,428 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.002443384620317321,
+   "er_equal": 0.002443384620317321,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.00486380477204174,
+     "weight": 0.5,
+     "phi": 0.0022581950727336647
+    },
+    "source_reliability": {
+     "x": 2.296446859290305e-05,
+     "weight": 0.5,
+     "phi": 1.1051957168336381e-05
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 63,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "6695ad9458ee9dddaa65db9faff84ed554b4c2c36ddac787b65783d941351575"
+  },
+  {
+   "decision_id": "5600e0a947d7c9ae",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "NVDA",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $25354.9m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 38%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.95 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 1.0,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for NVDA: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 126,
+   "horizon": {
+    "sessions": 126,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2027-03-31T00:00:00+00:00",
+   "expiry_basis": "126 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2027-03-31",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 86,
+    "price": 232.05,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE NVDA",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.023849291916242986,
+    "stop_sigma_pct": 0.07154787574872895,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1428.0035035189662,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE NVDA: 1 x 2.00% x 7.15% (3 sigma of 2.38%/day) = -$1,428 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": null,
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": null,
+   "er_absent": "no E[r] at h=126 (E[r] horizons [5, 21, 63])",
+   "artifact_sha256": "dce0d43fa541c630c2c1065f310567b6706d26adafd1c54d73d6957241fbdbef"
+  },
+  {
+   "decision_id": "5078f8826bac9406",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "INCY",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $173.9m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 33%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.76 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9820512820512819,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for INCY: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 5,
+   "horizon": {
+    "sessions": 5,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-05T00:00:00+00:00",
+   "expiry_basis": "5 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-05",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 161,
+    "price": 123.88,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE INCY",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.020997093470433017,
+    "stop_sigma_pct": 0.06299128041129905,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1257.2248746333835,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE INCY: 1 x 2.00% x 6.30% (3 sigma of 2.10%/day) = -$1,257 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": "equal",
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": 5,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "f86eac186e55e7c4763564c3fe09a264407ac23431f3fdc959dcbfc742a097b1"
+  },
+  {
+   "decision_id": "101a1e51e1f64b2e",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "INCY",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $173.9m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 33%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.76 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9820512820512819,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for INCY: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 21,
+   "horizon": {
+    "sessions": 21,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-27T00:00:00+00:00",
+   "expiry_basis": "21 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-27",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 161,
+    "price": 123.88,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE INCY",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.020997093470433017,
+    "stop_sigma_pct": 0.06299128041129905,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1257.2248746333835,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE INCY: 1 x 2.00% x 6.30% (3 sigma of 2.10%/day) = -$1,257 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -3.351044922869504e-05
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -8.300617621165692e-08
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 21,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "3894b25eafad25d280ee536bb772f927208f1177bf38f3c825dc3dea58b25fb3"
+  },
+  {
+   "decision_id": "b7b5ff47d4c2b407",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "INCY",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $173.9m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 33%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.76 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9820512820512819,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for INCY: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 63,
+   "horizon": {
+    "sessions": 63,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-12-28T00:00:00+00:00",
+   "expiry_basis": "63 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-12-28",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 161,
+    "price": 123.88,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE INCY",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.020997093470433017,
+    "stop_sigma_pct": 0.06299128041129905,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1257.2248746333835,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE INCY: 1 x 2.00% x 6.30% (3 sigma of 2.10%/day) = -$1,257 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -0.00017370731328720498
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -4.302771281151436e-07
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 63,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "3a856ebb973ee5e9458a881c8c50094b41df71a0628c686f895143c40fe007a0"
+  },
+  {
+   "decision_id": "dc608d88cfe602de",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "INCY",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $173.9m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 33%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.76 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9820512820512819,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for INCY: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 126,
+   "horizon": {
+    "sessions": 126,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2027-03-31T00:00:00+00:00",
+   "expiry_basis": "126 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2027-03-31",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 161,
+    "price": 123.88,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE INCY",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.020997093470433017,
+    "stop_sigma_pct": 0.06299128041129905,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1257.2248746333835,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE INCY: 1 x 2.00% x 6.30% (3 sigma of 2.10%/day) = -$1,257 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": null,
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": null,
+   "er_absent": "no E[r] at h=126 (E[r] horizons [5, 21, 63])",
+   "artifact_sha256": "411a7a7c373bea4e2c898c4aedaed1db9cd8cd4fe8ef34b66009dba505d3fc45"
+  },
+  {
+   "decision_id": "de16084a76ae7d74",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "AAPL",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $13637.3m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 25%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.61 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.964102564102564,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for AAPL: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 5,
+   "horizon": {
+    "sessions": 5,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-05T00:00:00+00:00",
+   "expiry_basis": "5 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-05",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 0,
+    "price": 342.47,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE AAPL",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.01546731505106597,
+    "stop_sigma_pct": 0.04640194515319791,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -926.1230966740292,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE AAPL: 1 x 2.00% x 4.64% (3 sigma of 1.55%/day) = -$926 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": "equal",
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": 5,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "48d2285bf2783444b9560017b652ac41cf51cace920c4dd0b2b4a1efc442274c"
+  },
+  {
+   "decision_id": "d59e4387794c807c",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "AAPL",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $13637.3m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 25%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.61 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.964102564102564,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for AAPL: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 21,
+   "horizon": {
+    "sessions": 21,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-27T00:00:00+00:00",
+   "expiry_basis": "21 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-27",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 0,
+    "price": 342.47,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE AAPL",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.01546731505106597,
+    "stop_sigma_pct": 0.04640194515319791,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -926.1230966740292,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE AAPL: 1 x 2.00% x 4.64% (3 sigma of 1.55%/day) = -$926 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": -0.001015118007340609,
+   "er_equal": -0.001015118007340609,
+   "er_by_component": {
+    "ranker": {
+     "x": -0.003045354022021827,
+     "weight": 0.3333333333333333,
+     "phi": 0.00041333333333333326
+    },
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.3333333333333333,
+     "phi": -2.234029948579669e-05
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.3333333333333333,
+     "phi": -5.533745080777128e-08
+    }
+   },
+   "weights": {
+    "ranker": 0.3333333333333333,
+    "revision_flow": 0.3333333333333333,
+    "source_reliability": 0.3333333333333333
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "ranker",
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 21,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "50e6c679cacc30db094e37b8c3a93411154c0d3de44763aaef98b987172c9c14"
+  },
+  {
+   "decision_id": "c968da186fc505e8",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "AAPL",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $13637.3m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 25%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.61 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.964102564102564,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for AAPL: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 63,
+   "horizon": {
+    "sessions": 63,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-12-28T00:00:00+00:00",
+   "expiry_basis": "63 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-12-28",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 0,
+    "price": 342.47,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE AAPL",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.01546731505106597,
+    "stop_sigma_pct": 0.04640194515319791,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -926.1230966740292,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE AAPL: 1 x 2.00% x 4.64% (3 sigma of 1.55%/day) = -$926 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -0.00017370731328720498
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -4.302771281151436e-07
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 63,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "eabf0a6c566cee89f0f9f002526826fcc7ccebee49499c510127559e4e6d6dba"
+  },
+  {
+   "decision_id": "2718e87fec613cc5",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "AAPL",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $13637.3m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 25%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.61 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.964102564102564,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for AAPL: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 126,
+   "horizon": {
+    "sessions": 126,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2027-03-31T00:00:00+00:00",
+   "expiry_basis": "126 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2027-03-31",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 0,
+    "price": 342.47,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE AAPL",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.01546731505106597,
+    "stop_sigma_pct": 0.04640194515319791,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -926.1230966740292,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE AAPL: 1 x 2.00% x 4.64% (3 sigma of 1.55%/day) = -$926 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": null,
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": null,
+   "er_absent": "no E[r] at h=126 (E[r] horizons [5, 21, 63])",
+   "artifact_sha256": "e4051b854bcdab722136f916452cdd829827761345c8c434cd7a9a4cd3284547"
+  },
+  {
+   "decision_id": "61c239ad8ebb54a0",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "SNDR",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $23.8m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 41%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.51 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9461538461538461,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for SNDR: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 5,
+   "horizon": {
+    "sessions": 5,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-05T00:00:00+00:00",
+   "expiry_basis": "5 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-05",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 637,
+    "price": 31.325,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE SNDR",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.02555459299719706,
+    "stop_sigma_pct": 0.07666377899159117,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1530.1103470558419,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE SNDR: 1 x 2.00% x 7.67% (3 sigma of 2.56%/day) = -$1,530 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": "equal",
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": 5,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "a2a1eeedb6729cad24d0ba7b411d9881b92becd400af79dc07410d9c4436fa9f"
+  },
+  {
+   "decision_id": "463d48751e5b6307",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "SNDR",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $23.8m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 41%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.51 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9461538461538461,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for SNDR: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 21,
+   "horizon": {
+    "sessions": 21,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-27T00:00:00+00:00",
+   "expiry_basis": "21 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-27",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 637,
+    "price": 31.325,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE SNDR",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.02555459299719706,
+    "stop_sigma_pct": 0.07666377899159117,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1530.1103470558419,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE SNDR: 1 x 2.00% x 7.67% (3 sigma of 2.56%/day) = -$1,530 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -3.351044922869504e-05
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -8.300617621165692e-08
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 21,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "c6ef1e27ce8a949f13ad2b73ca75f3e8ae6ed7039a9209c611f424bd79da4646"
+  },
+  {
+   "decision_id": "28e2dfe9b173392d",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "SNDR",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $23.8m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 41%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.51 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9461538461538461,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for SNDR: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 63,
+   "horizon": {
+    "sessions": 63,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-12-28T00:00:00+00:00",
+   "expiry_basis": "63 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-12-28",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 637,
+    "price": 31.325,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE SNDR",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.02555459299719706,
+    "stop_sigma_pct": 0.07666377899159117,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1530.1103470558419,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE SNDR: 1 x 2.00% x 7.67% (3 sigma of 2.56%/day) = -$1,530 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -0.00017370731328720498
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -4.302771281151436e-07
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 63,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "bf9dc49f59ee882e14fce866141f98062d415f5e0e3936c39cc6febaee1ea36a"
+  },
+  {
+   "decision_id": "04903a6cf41ae47c",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "SNDR",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $23.8m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 41%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.51 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9461538461538461,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for SNDR: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 126,
+   "horizon": {
+    "sessions": 126,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2027-03-31T00:00:00+00:00",
+   "expiry_basis": "126 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2027-03-31",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 637,
+    "price": 31.325,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE SNDR",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.02555459299719706,
+    "stop_sigma_pct": 0.07666377899159117,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1530.1103470558419,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE SNDR: 1 x 2.00% x 7.67% (3 sigma of 2.56%/day) = -$1,530 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": null,
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": null,
+   "er_absent": "no E[r] at h=126 (E[r] horizons [5, 21, 63])",
+   "artifact_sha256": "49782dc243f2ff3e5f611f9995c90405b3351ca65b600410851611088a68517f"
+  },
+  {
+   "decision_id": "86ed3a0b41e6c439",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "META",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $10534.6m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 41%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.49 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9282051282051282,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for META: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 5,
+   "horizon": {
+    "sessions": 5,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-05T00:00:00+00:00",
+   "expiry_basis": "5 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-05",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 27,
+    "price": 723.5,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE META",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.025966712141506396,
+    "stop_sigma_pct": 0.07790013642451919,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1554.7864499777975,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE META: 1 x 2.00% x 7.79% (3 sigma of 2.60%/day) = -$1,555 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": "equal",
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": 5,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "681c677609110f126e9bf9e11e6e3dba5add6e5f4d983f9716ae0ddaa8c8a293"
+  },
+  {
+   "decision_id": "31b8424ccd472563",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "META",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $10534.6m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 41%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.49 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9282051282051282,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for META: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 21,
+   "horizon": {
+    "sessions": 21,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-27T00:00:00+00:00",
+   "expiry_basis": "21 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-27",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 27,
+    "price": 723.5,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE META",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.025966712141506396,
+    "stop_sigma_pct": 0.07790013642451919,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1554.7864499777975,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE META: 1 x 2.00% x 7.79% (3 sigma of 2.60%/day) = -$1,555 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": "equal",
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": 21,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "817bb5f7410a9b678786c094e0b184a5096237bbc9e40ce6c1b3ce658eb71c00"
+  },
+  {
+   "decision_id": "8c595247d2818fc0",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "META",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $10534.6m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 41%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.49 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9282051282051282,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for META: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 63,
+   "horizon": {
+    "sessions": 63,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-12-28T00:00:00+00:00",
+   "expiry_basis": "63 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-12-28",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 27,
+    "price": 723.5,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE META",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.025966712141506396,
+    "stop_sigma_pct": 0.07790013642451919,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1554.7864499777975,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE META: 1 x 2.00% x 7.79% (3 sigma of 2.60%/day) = -$1,555 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": "equal",
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": 63,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "e8cd7a6c537e0ee26ac7c5e1a9207009572a704fff29b5b6cee231fc31b6f830"
+  },
+  {
+   "decision_id": "8b4225c885f5cc95",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "META",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $10534.6m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 41%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.49 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9282051282051282,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for META: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 126,
+   "horizon": {
+    "sessions": 126,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2027-03-31T00:00:00+00:00",
+   "expiry_basis": "126 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2027-03-31",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 27,
+    "price": 723.5,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE META",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.025966712141506396,
+    "stop_sigma_pct": 0.07790013642451919,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1554.7864499777975,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE META: 1 x 2.00% x 7.79% (3 sigma of 2.60%/day) = -$1,555 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": null,
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": null,
+   "er_absent": "no E[r] at h=126 (E[r] horizons [5, 21, 63])",
+   "artifact_sha256": "ce303c36026ed068e9a95ffb245c4f0ea56c74884d33325d881bc178e2859a66"
+  },
+  {
+   "decision_id": "3ec670772af37bf4",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "AVPT",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $24.3m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 44%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.45 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9102564102564101,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for AVPT: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 5,
+   "horizon": {
+    "sessions": 5,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-05T00:00:00+00:00",
+   "expiry_basis": "5 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-05",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 1577,
+    "price": 12.65,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE AVPT",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.027419700518522102,
+    "stop_sigma_pct": 0.0822591015555663,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1641.785783133581,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE AVPT: 1 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$1,642 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": "equal",
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": 5,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "b0a82bfc5e2b02dd195f8de69d3e415d7a3c1acab07197e039d621d61a318b1b"
+  },
+  {
+   "decision_id": "8a3a7fb73a0436c7",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "AVPT",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $24.3m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 44%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.45 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9102564102564101,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for AVPT: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 21,
+   "horizon": {
+    "sessions": 21,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-27T00:00:00+00:00",
+   "expiry_basis": "21 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-27",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 1577,
+    "price": 12.65,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE AVPT",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.027419700518522102,
+    "stop_sigma_pct": 0.0822591015555663,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1641.785783133581,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE AVPT: 1 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$1,642 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -3.351044922869504e-05
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -8.300617621165692e-08
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 21,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "a6d80bd85563ce1c03244490bd1ede2d733bb82781170db299cfaa28f8cfb5fa"
+  },
+  {
+   "decision_id": "ff9d014928faaddd",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "AVPT",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $24.3m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 44%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.45 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9102564102564101,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for AVPT: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 63,
+   "horizon": {
+    "sessions": 63,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-12-28T00:00:00+00:00",
+   "expiry_basis": "63 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-12-28",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 1577,
+    "price": 12.65,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE AVPT",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.027419700518522102,
+    "stop_sigma_pct": 0.0822591015555663,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1641.785783133581,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE AVPT: 1 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$1,642 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -0.00017370731328720498
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -4.302771281151436e-07
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 63,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "2d60d177ef872b123c2b88457737b80500e96a14ae60172f519de55d38f803a7"
+  },
+  {
+   "decision_id": "756c80a561743184",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "AVPT",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $24.3m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 44%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.45 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.9102564102564101,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for AVPT: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 126,
+   "horizon": {
+    "sessions": 126,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2027-03-31T00:00:00+00:00",
+   "expiry_basis": "126 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2027-03-31",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 1577,
+    "price": 12.65,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE AVPT",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.027419700518522102,
+    "stop_sigma_pct": 0.0822591015555663,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1641.785783133581,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE AVPT: 1 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$1,642 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": null,
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": null,
+   "er_absent": "no E[r] at h=126 (E[r] horizons [5, 21, 63])",
+   "artifact_sha256": "1113ba7e8c8df9f095400a8b36f34a0344b43d95ccd337b4f55d99cd5adfbb1e"
+  },
+  {
+   "decision_id": "78a7c6f5ab3db665",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "AMZN",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $8860.7m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 34%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.44 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8923076923076922,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for AMZN: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 5,
+   "horizon": {
+    "sessions": 5,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-05T00:00:00+00:00",
+   "expiry_basis": "5 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-05",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 81,
+    "price": 246.015,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE AMZN",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.02172288207623824,
+    "stop_sigma_pct": 0.06516864622871472,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1300.6822936437202,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE AMZN: 1 x 2.00% x 6.52% (3 sigma of 2.17%/day) = -$1,301 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": "equal",
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": 5,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "6d9531fa4b59a7eeedb6d7ec084df1695960cb28c1bf276e47d7ef3e4e89333a"
+  },
+  {
+   "decision_id": "2c73d79ad969c5ff",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "AMZN",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $8860.7m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 34%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.44 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8923076923076922,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for AMZN: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 21,
+   "horizon": {
+    "sessions": 21,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-27T00:00:00+00:00",
+   "expiry_basis": "21 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-27",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 81,
+    "price": 246.015,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE AMZN",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.02172288207623824,
+    "stop_sigma_pct": 0.06516864622871472,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1300.6822936437202,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE AMZN: 1 x 2.00% x 6.52% (3 sigma of 2.17%/day) = -$1,301 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0004692553865459088,
+   "er_equal": 0.0004692553865459088,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.000938292578403461,
+     "weight": 0.5,
+     "phi": 0.0004356358399730355
+    },
+    "source_reliability": {
+     "x": 2.1819468835651686e-07,
+     "weight": 0.5,
+     "phi": 2.609116796660151e-08
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 21,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "e2b6600817aea965ea4a160cc6f67bbaf148bd8bd6639ed1dc0f585fee444816"
+  },
+  {
+   "decision_id": "15e3e6e37be526de",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "AMZN",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $8860.7m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 34%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.44 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8923076923076922,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for AMZN: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 63,
+   "horizon": {
+    "sessions": 63,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-12-28T00:00:00+00:00",
+   "expiry_basis": "63 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-12-28",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 81,
+    "price": 246.015,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE AMZN",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.02172288207623824,
+    "stop_sigma_pct": 0.06516864622871472,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1300.6822936437202,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE AMZN: 1 x 2.00% x 6.52% (3 sigma of 2.17%/day) = -$1,301 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0024324679113116423,
+   "er_equal": 0.0024324679113116423,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.00486380477204174,
+     "weight": 0.5,
+     "phi": 0.0022581950727336647
+    },
+    "source_reliability": {
+     "x": 1.1310505815449944e-06,
+     "weight": 0.5,
+     "phi": 1.3524816265735358e-07
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 63,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "167602255192a78b6bca2bf2816619142dd26ceae1d9e5f23232817c343fd3b7"
+  },
+  {
+   "decision_id": "92a673a549449458",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "AMZN",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $8860.7m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 34%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.44 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8923076923076922,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for AMZN: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 126,
+   "horizon": {
+    "sessions": 126,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2027-03-31T00:00:00+00:00",
+   "expiry_basis": "126 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2027-03-31",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 81,
+    "price": 246.015,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE AMZN",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.02172288207623824,
+    "stop_sigma_pct": 0.06516864622871472,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1300.6822936437202,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE AMZN: 1 x 2.00% x 6.52% (3 sigma of 2.17%/day) = -$1,301 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": null,
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": null,
+   "er_absent": "no E[r] at h=126 (E[r] horizons [5, 21, 63])",
+   "artifact_sha256": "25d995779857a18a85771dbeaebd8995cd05a503e0c51134789e59a97b78266d"
+  },
+  {
+   "decision_id": "813d15ebaa8f135a",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "GOOGL",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $8805.3m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 32%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.39 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8564102564102563,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for GOOGL: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 5,
+   "horizon": {
+    "sessions": 5,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-05T00:00:00+00:00",
+   "expiry_basis": "5 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-05",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 0,
+    "price": 342.77,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE GOOGL",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.020003219557454575,
+    "stop_sigma_pct": 0.06000965867236373,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1197.715542667737,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE GOOGL: 1 x 2.00% x 6.00% (3 sigma of 2.00%/day) = -$1,198 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": "equal",
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": 5,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "ef0edcbd6af34da612bfec780c13db950fc221be64793b7ff6bbfb69fd76f7ab"
+  },
+  {
+   "decision_id": "6c0455aefa05e74d",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "GOOGL",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $8805.3m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 32%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.39 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8564102564102563,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for GOOGL: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 21,
+   "horizon": {
+    "sessions": 21,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-27T00:00:00+00:00",
+   "expiry_basis": "21 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-27",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 0,
+    "price": 342.77,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE GOOGL",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.020003219557454575,
+    "stop_sigma_pct": 0.06000965867236373,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1197.715542667737,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE GOOGL: 1 x 2.00% x 6.00% (3 sigma of 2.00%/day) = -$1,198 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -3.351044922869504e-05
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -8.300617621165692e-08
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 21,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "f104e0a4361ef7cbf44df8dc1b0624bffbd82a373826e3c4055f9ff5c177cc30"
+  },
+  {
+   "decision_id": "146bcc3aa5a75d7f",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "GOOGL",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $8805.3m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 32%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.39 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8564102564102563,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for GOOGL: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 63,
+   "horizon": {
+    "sessions": 63,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-12-28T00:00:00+00:00",
+   "expiry_basis": "63 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-12-28",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 0,
+    "price": 342.77,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE GOOGL",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.020003219557454575,
+    "stop_sigma_pct": 0.06000965867236373,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1197.715542667737,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE GOOGL: 1 x 2.00% x 6.00% (3 sigma of 2.00%/day) = -$1,198 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -0.00017370731328720498
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -4.302771281151436e-07
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 63,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "e7dd4d0405ab8e201a31c954df88ab0675d7c81de2cb93cb2969aff4936281df"
+  },
+  {
+   "decision_id": "a4301360f6cc26a4",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "GOOGL",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $8805.3m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 32%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.39 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8564102564102563,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for GOOGL: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 126,
+   "horizon": {
+    "sessions": 126,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2027-03-31T00:00:00+00:00",
+   "expiry_basis": "126 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2027-03-31",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 0,
+    "price": 342.77,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE GOOGL",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.020003219557454575,
+    "stop_sigma_pct": 0.06000965867236373,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1197.715542667737,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE GOOGL: 1 x 2.00% x 6.00% (3 sigma of 2.00%/day) = -$1,198 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": null,
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": null,
+   "er_absent": "no E[r] at h=126 (E[r] horizons [5, 21, 63])",
+   "artifact_sha256": "68b5b93be896c72b19e932768abffc8d0b8a07ba982b3941ec183afecaa32ff1"
+  },
+  {
+   "decision_id": "881e9103f4c29934",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "JAZZ",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $177.0m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 37%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8205128205128205,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for JAZZ: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 5,
+   "horizon": {
+    "sessions": 5,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-05T00:00:00+00:00",
+   "expiry_basis": "5 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-05",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 0,
+    "price": 236.855,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE JAZZ",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.023508828400119995,
+    "stop_sigma_pct": 0.07052648520035998,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1407.6178629074352,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE JAZZ: 1 x 2.00% x 7.05% (3 sigma of 2.35%/day) = -$1,408 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": "equal",
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": 5,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "cb83e3d4bed96ce4f75eaa5aa8a6f080941631cdfe3d471a0aae9ce9ccd50cc0"
+  },
+  {
+   "decision_id": "415eb71b5eea284f",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "JAZZ",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $177.0m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 37%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8205128205128205,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for JAZZ: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 21,
+   "horizon": {
+    "sessions": 21,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-27T00:00:00+00:00",
+   "expiry_basis": "21 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-27",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 0,
+    "price": 236.855,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE JAZZ",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.023508828400119995,
+    "stop_sigma_pct": 0.07052648520035998,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1407.6178629074352,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE JAZZ: 1 x 2.00% x 7.05% (3 sigma of 2.35%/day) = -$1,408 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -3.351044922869504e-05
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -8.300617621165692e-08
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 21,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "656f8b03aac7dc8861e398d75e2d67c9336de40cb4d37ff2c4b8a76a74ad96f8"
+  },
+  {
+   "decision_id": "65fdeb5120565c63",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "JAZZ",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $177.0m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 37%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8205128205128205,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for JAZZ: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 63,
+   "horizon": {
+    "sessions": 63,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-12-28T00:00:00+00:00",
+   "expiry_basis": "63 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-12-28",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 0,
+    "price": 236.855,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE JAZZ",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.023508828400119995,
+    "stop_sigma_pct": 0.07052648520035998,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1407.6178629074352,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE JAZZ: 1 x 2.00% x 7.05% (3 sigma of 2.35%/day) = -$1,408 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -0.00017370731328720498
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -4.302771281151436e-07
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 63,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "687088ee5777f4457a31d9e3462cd7c6f5d63fbcbe98ec9ad13fca79a1e8fa03"
+  },
+  {
+   "decision_id": "9b303134d718b1c6",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "JAZZ",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $177.0m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 37%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8205128205128205,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "9c2aeb559aec",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 9c2aeb559aec for JAZZ: one grade covers both writers. Contract basis: sha256('insider_opportunistic|UNATTRIBUTED|2026-09')[:12] = 9c2aeb559aec; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 126,
+   "horizon": {
+    "sessions": 126,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2027-03-31T00:00:00+00:00",
+   "expiry_basis": "126 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2027-03-31",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 0,
+    "price": 236.855,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE JAZZ",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.023508828400119995,
+    "stop_sigma_pct": 0.07052648520035998,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1407.6178629074352,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE JAZZ: 1 x 2.00% x 7.05% (3 sigma of 2.35%/day) = -$1,408 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": null,
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": null,
+   "er_absent": "no E[r] at h=126 (E[r] horizons [5, 21, 63])",
+   "artifact_sha256": "c4e4e62fb35f7679af6494cfd7ab8aee2d03dae22e5e27322136d8dc863c4f3c"
+  },
+  {
+   "decision_id": "2521fe699143396c",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "TSM",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $4760.7m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 40%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 7.68 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8025641025641026,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "425aff9d8ea8",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 425aff9d8ea8 for TSM: one grade covers both writers. Contract basis: sha256('NO_RANK_BEARING_SIGNAL|UNATTRIBUTED|2026-09')[:12] = 425aff9d8ea8; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 5,
+   "horizon": {
+    "sessions": 5,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-05T00:00:00+00:00",
+   "expiry_basis": "5 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-05",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 44,
+    "price": 446.9,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE TSM",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.02543437412386357,
+    "stop_sigma_pct": 0.07630312237159072,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1522.912105157834,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE TSM: 1 x 2.00% x 7.63% (3 sigma of 2.54%/day) = -$1,523 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": "equal",
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": 5,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "1a91715394ee855917de9005cfb12bcfdfb9658b48a6f560bac81657a20485fa"
+  },
+  {
+   "decision_id": "4d05eed657e3b19b",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "TSM",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $4760.7m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 40%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 7.68 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8025641025641026,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "425aff9d8ea8",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 425aff9d8ea8 for TSM: one grade covers both writers. Contract basis: sha256('NO_RANK_BEARING_SIGNAL|UNATTRIBUTED|2026-09')[:12] = 425aff9d8ea8; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 21,
+   "horizon": {
+    "sessions": 21,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-10-27T00:00:00+00:00",
+   "expiry_basis": "21 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-10-27",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 44,
+    "price": 446.9,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE TSM",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.02543437412386357,
+    "stop_sigma_pct": 0.07630312237159072,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1522.912105157834,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE TSM: 1 x 2.00% x 7.63% (3 sigma of 2.54%/day) = -$1,523 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -3.351044922869504e-05
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -8.300617621165692e-08
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 21,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "af701f5ae00b7a283613dc2200969f44adf0dbc76644a818b80565b15a722115"
+  },
+  {
+   "decision_id": "2873437548c60dc8",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "TSM",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $4760.7m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 40%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 7.68 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8025641025641026,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "425aff9d8ea8",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 425aff9d8ea8 for TSM: one grade covers both writers. Contract basis: sha256('NO_RANK_BEARING_SIGNAL|UNATTRIBUTED|2026-09')[:12] = 425aff9d8ea8; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 63,
+   "horizon": {
+    "sessions": 63,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2026-12-28T00:00:00+00:00",
+   "expiry_basis": "63 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2026-12-28",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 44,
+    "price": 446.9,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE TSM",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.02543437412386357,
+    "stop_sigma_pct": 0.07630312237159072,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1522.912105157834,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE TSM: 1 x 2.00% x 7.63% (3 sigma of 2.54%/day) = -$1,523 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": 0.0,
+   "er_equal": 0.0,
+   "er_by_component": {
+    "revision_flow": {
+     "x": 0.0,
+     "weight": 0.5,
+     "phi": -0.00017370731328720498
+    },
+    "source_reliability": {
+     "x": -0.0,
+     "weight": 0.5,
+     "phi": -4.302771281151436e-07
+    }
+   },
+   "weights": {
+    "revision_flow": 0.5,
+    "source_reliability": 0.5
+   },
+   "weights_source": "equal",
+   "components_awake": [
+    "revision_flow",
+    "source_reliability"
+   ],
+   "regime": "risk_on",
+   "er_horizon": 63,
+   "calibration_vintage": {
+    "sweep": "revision_flow_sweep_2026-09-25.json",
+    "cards": "2026-09-27",
+    "fit_asof": "2026-09-28"
+   },
+   "artifact_sha256": "f9aa48a47a21ad929c9155878cd682a0091dd00b76511fc504be4bc024f2f4cc"
+  },
+  {
+   "decision_id": "913a8a92751e14a6",
+   "asof": "2026-09-28",
+   "policy_id": "sim_run.u_plan.probe",
+   "policy_version": "c3-v1",
+   "information_cutoff_utc": "2026-09-24T02:48:34",
+   "licence": "PRODUCT_EXPERIMENT",
+   "ticker": "TSM",
+   "source": "investment_committee",
+   "thesis_source": "funnel:profitability_small@2026-09-24T02:48:34",
+   "reasons": [
+    "liquid: median 60d dollar volume $4760.7m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 40%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 7.68 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)"
+   ],
+   "shortlist_score": 0.8025641025641026,
+   "direction": "PROBE",
+   "authority": "PROBE",
+   "hypothesis_id": "425aff9d8ea8",
+   "shortlist_hypothesis_id": "C3_committee_shortlist_probe_v0",
+   "hypothesis_id_basis": "the day's decision contract (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-28.json) carries hypothesis 425aff9d8ea8 for TSM: one grade covers both writers. Contract basis: sha256('NO_RANK_BEARING_SIGNAL|UNATTRIBUTED|2026-09')[:12] = 425aff9d8ea8; the funnel snapshot's own generated_at (2026-09-24T02:48:34+00:00) -> month 2026-09. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "horizon_sessions": 126,
+   "horizon": {
+    "sessions": 126,
+    "basis": "config.PROBE_HORIZONS_SESSIONS"
+   },
+   "expiry_utc": "2027-03-31T00:00:00+00:00",
+   "expiry_basis": "126 trading sessions after 2026-09-28 on the XNYS calendar (counterfactual_prices.sessions_after) = 2027-03-31",
+   "mode": "paper_profit",
+   "acting": true,
+   "virtual": false,
+   "position_budget": {
+    "weight": 0.02,
+    "dollars": 19958.7128,
+    "shares": 44,
+    "price": 446.9,
+    "capital_usd": 997935.64,
+    "virtual": false,
+    "basis": "config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; weighting equal; orders only while the venue is open"
+   },
+   "ranking_verdict": {
+    "verdict": "MEASURED_NEGATIVE",
+    "top20_net_rel_21d": -0.010667045935328827,
+    "ranking_asof": "2026-09-25",
+    "model_version": "e1d2b359192a"
+   },
+   "probe_verdict": {
+    "verdict": "UNMEASURED_TRADE_SMALL",
+    "n_days_scored": 0,
+    "min_days": 21
+   },
+   "maximum_loss": {
+    "label": "PROBE TSM",
+    "n_names": 1,
+    "notional_pct": 0.02,
+    "stop_declared": false,
+    "adverse_sigma": 3.0,
+    "daily_sigma": 0.02543437412386357,
+    "stop_sigma_pct": 0.07630312237159072,
+    "gross_over_equity": 0.02,
+    "equity_usd": 997935.64,
+    "worst_case_k_sigma_usd": -1522.912105157834,
+    "worst_case_no_stop_usd": -19958.7128,
+    "line": "PROBE TSM: 1 x 2.00% x 7.63% (3 sigma of 2.54%/day) = -$1,523 on $997,936; sum|notional|/equity = 0.02; no stop is declared, so the ceiling is -$19,959"
+   },
+   "built_utc": "2026-09-28T13:47:00+00:00",
+   "er_total": null,
+   "er_equal": null,
+   "er_by_component": {},
+   "weights": {},
+   "weights_source": null,
+   "components_awake": [],
+   "regime": "risk_on",
+   "er_horizon": null,
+   "er_absent": "no E[r] at h=126 (E[r] horizons [5, 21, 63])",
+   "artifact_sha256": "8564e9ba52e36eca6f5ca65ac5e03d287f8d5fa5b36a5142ff214bdbb2f87829"
+  }
+ ]
+}

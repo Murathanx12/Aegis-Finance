@@ -1,0 +1,3 @@
+World digest 20260929T140826Z (2013 items read; $0.00)
+Crowded (COT 3y extreme): UST BOND - CHICAGO BOARD crowded_long; UST 5Y NOTE - CHICAGO BO crowded_long; EURO SHORT TERM RATE - C crowded_short; 5 YEAR ERIS SOFR SWAP -  crowded_long
+Direction calls are graded at weight ~0 (LLM direction <= coin here). Not advice, no orders.

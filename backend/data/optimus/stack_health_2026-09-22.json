@@ -1,0 +1,72 @@
+{
+ "receipt": "stack_health",
+ "at": "2026-09-22T09:14:38+00:00",
+ "deep": true,
+ "green": false,
+ "red": [
+  "local_model",
+  "telegram",
+  "data_freshness"
+ ],
+ "rows": {
+  "broker": {
+   "ok": true,
+   "s": 1.29,
+   "account": "PA37CSAUFCQR",
+   "equity": 1000000.0,
+   "cash": 1000000.0,
+   "positions": 0,
+   "status": "ACTIVE"
+  },
+  "local_model": {
+   "listening": false,
+   "ready": false,
+   "pid": null,
+   "s": 0.67,
+   "ok": false
+  },
+  "deepseek": {
+   "key_present": true,
+   "ok": true,
+   "s": 1.05,
+   "reply": "PONG",
+   "provider_model": "deepseek-flash",
+   "priced": "confirm before any paid run"
+  },
+  "openclaw": {
+   "ok": true,
+   "s": 34.27,
+   "profile": "muratclaw",
+   "gateway": true,
+   "pinned": true,
+   "channels": 0,
+   "verdict": "READY"
+  },
+  "simulation": {
+   "ok": true,
+   "s": 0.38,
+   "state": "STOPPED",
+   "cycle": 2,
+   "resumable": true,
+   "warn": null
+  },
+  "telegram": {
+   "ok": false,
+   "s": 1.06,
+   "state": "AWAITING /start \u2014 no owner chat id yet",
+   "bot": "murat_aegis_bot",
+   "owner_set": false
+  },
+  "data_freshness": {
+   "ok": false,
+   "s": 0.43,
+   "blocking": [
+    "fundamentals",
+    "decision_funnel",
+    "events_typed"
+   ],
+   "n_sources": 11
+  }
+ },
+ "read_me_first": "Every row is a MEASUREMENT, not a config read. A green here is a claim the night can do its job."
+}

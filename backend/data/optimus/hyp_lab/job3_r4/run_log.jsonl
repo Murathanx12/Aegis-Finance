@@ -1,0 +1,2 @@
+{"tag": "q3_text_deepseek_test", "jobs": 129, "calls": 129, "parsed": 129, "wall_s": 22.9, "spent_night": {"calls": 10522, "ledger_usd": 0.5247392000000042, "own_peak_usd": 1.3071765000000064, "binding_usd": 1.3071765000000064, "night": "2026-09-29"}}
+{"tag": "q3_num_deepseek_test", "jobs": 129, "calls": 129, "parsed": 129, "wall_s": 22.9, "spent_night": {"calls": 10651, "ledger_usd": 0.5449298800000049, "own_peak_usd": 1.358411400000007, "binding_usd": 1.358411400000007, "night": "2026-09-29"}}

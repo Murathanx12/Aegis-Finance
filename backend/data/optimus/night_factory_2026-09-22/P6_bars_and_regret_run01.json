@@ -1,0 +1,18 @@
+{
+ "verdict": "FAILED",
+ "headline": "exited 1 with no receipt",
+ "exit_code": 1,
+ "log_tail": "    pulling 3060 symbols from 2025-01-01 (no end: the venue clips its own delay window), feed sip, credential: process environment (APCA_API_KEY_ID)\n    retry 1 on batch 0: HTTPError HTTP Error 401: Unauthorized\n    retry 2 on batch 0: HTTPError HTTP Error 401: Unauthorized\n    retry 3 on batch 0: HTTPError HTTP Error 401: Unauthorized\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\night_factory_jobs.py\", line 1984, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\night_factory_jobs.py\", line 1970, in main\n    payload = fn()\n              ^^^^\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\night_factory_jobs.py\", line 1456, in call\n    return getattr(importlib.import_module(module), attr)(*a, **kw)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\night_p6_bars_and_regret.py\", line 444, in P6_bars_and_regret\n    a = P6a_pull_bars(limit=limit, smoke=smoke)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\night_p6_bars_and_regret.py\", line 175, in P6a_pull_bars\n    df = pull_bars(syms, START, end, kid, sec)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\night_p6_bars_and_regret.py\", line 139, in pull_bars\n    d = _get(\"/v2/stocks/bars\", {\"symbols\": \",\".join(chunk), \"start\": start, \"end\": end,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\night_p6_bars_and_regret.py\", line 109, in _get\n    with urllib.request.urlopen(req, timeout=timeout) as fh:      # noqa: S310 allowlisted host\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\urllib\\request.py\", line 215, in urlopen\n    return opener.open(url, data, timeout)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\urllib\\request.py\", line 521, in open\n    response = meth(req, response)\n               ^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\urllib\\request.py\", line 630, in http_response\n    response = self.parent.error(\n               ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\urllib\\request.py\", line 559, in error\n    return self._call_chain(*args)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\urllib\\request.py\", line 492, in _call_chain\n    result = func(*args)\n             ^^^^^^^^^^^\n  File \"C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\urllib\\request.py\", line 639, in http_error_default\n    raise HTTPError(req.full_url, code, msg, hdrs, fp)\nurllib.error.HTTPError: HTTP Error 401: Unauthorized\n",
+ "elapsed_s": 17.0,
+ "awake_s": 17.0,
+ "slept_s": 0.0,
+ "box_s": 3600.0,
+ "wall_minus_monotonic_s": 0.0,
+ "sleep_gaps": [],
+ "child_pid": 62896,
+ "killed_pids": [],
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "P6_bars_and_regret",
+ "run": 1,
+ "written_utc": "2026-09-21T14:28:40+00:00"
+}

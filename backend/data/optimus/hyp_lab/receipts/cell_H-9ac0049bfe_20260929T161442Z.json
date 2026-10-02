@@ -1,0 +1,157 @@
+{
+ "hyp_id": "H-9ac0049bfe",
+ "title": "Yield spike -> utilities lag",
+ "night": "2026-09-29",
+ "run_utc": "2026-09-29T16:14:42+00:00",
+ "result": {
+  "cell_type": "macro_lead_lag",
+  "params": {
+   "driver": "^TNX",
+   "targets": [
+    "NEE",
+    "DUK",
+    "SO",
+    "D",
+    "AEP",
+    "EXC",
+    "SRE",
+    "XEL",
+    "ED",
+    "PEG"
+   ],
+   "expected_sign": -1,
+   "h": 1,
+   "shock_z": 2.0
+  },
+  "targets_used": [
+   "NEE",
+   "DUK",
+   "SO",
+   "D",
+   "AEP",
+   "EXC",
+   "SRE",
+   "XEL",
+   "ED",
+   "PEG"
+  ],
+  "beta_to_spy_design": 0.621,
+  "window": "open(t+1) -> close(t+1), residual of beta x SPY; etf: targets use close t -> close t+1",
+  "design": {
+   "primary_signed_next_resid": {
+    "mean": 0.000579,
+    "se": 0.00122,
+    "t": 0.47,
+    "mde": 0.003415,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "net_of_cost": -0.001421,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.002881,
+    "se": 0.001557,
+    "t": 1.85,
+    "mde": 0.004361,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "placebo_all_days_signed_next": {
+    "mean": 0.000212,
+    "se": 0.000239,
+    "t": 0.89,
+    "mde": 0.000669,
+    "n": 1721,
+    "n_blocks": 82
+   },
+   "n_shocks": 93,
+   "by_year": {
+    "2016": {
+     "mean": 0.001917,
+     "n": 6
+    },
+    "2017": {
+     "mean": -0.005471,
+     "n": 9
+    },
+    "2018": {
+     "mean": -0.003555,
+     "n": 14
+    },
+    "2019": {
+     "mean": 0.001935,
+     "n": 18
+    },
+    "2020": {
+     "mean": 0.004043,
+     "n": 16
+    },
+    "2021": {
+     "mean": 0.002816,
+     "n": 13
+    },
+    "2022": {
+     "mean": 0.000307,
+     "n": 17
+    }
+   },
+   "loo_year_worst": -0.000141,
+   "span": [
+    "2016-05-18",
+    "2022-11-10"
+   ]
+  },
+  "confirm": {
+   "primary_signed_next_resid": {
+    "mean": -0.00083,
+    "se": 0.002103,
+    "t": -0.39,
+    "mde": 0.005888,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "net_of_cost": -0.00283,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.011064,
+    "se": 0.00208,
+    "t": 5.32,
+    "mde": 0.005825,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "placebo_all_days_signed_next": {
+    "mean": -7.1e-05,
+    "se": 0.000374,
+    "t": -0.19,
+    "mde": 0.001047,
+    "n": 936,
+    "n_blocks": 45
+   },
+   "n_shocks": 47,
+   "by_year": {
+    "2023": {
+     "mean": -0.0003,
+     "n": 11
+    },
+    "2024": {
+     "mean": -0.000349,
+     "n": 14
+    },
+    "2025": {
+     "mean": -0.003178,
+     "n": 9
+    },
+    "2026": {
+     "mean": -0.000171,
+     "n": 13
+    }
+   },
+   "loo_year_worst": -0.001082,
+   "span": [
+    "2023-03-10",
+    "2026-09-23"
+   ]
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.00083 <= 0"
+ }
+}

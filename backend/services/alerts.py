@@ -735,7 +735,8 @@ def plan_delivery(rows: list[dict], *, now: datetime, kill: dict) -> dict:
 
 
 def deliver(rows: list[dict], *, now: datetime, mode: str, kill: dict,
-            sender: Optional[Callable[[str], Any]], root: Optional[Path] = None) -> dict:
+            sender: Optional[Callable[[str], Any]], root: Optional[Path] = None,
+            health_line: Optional[str] = None) -> dict:
     """Carry out `plan_delivery`. Every outcome is a SEND_RESULT row appended AFTER
     the frozen rows it refers to; a delivered (or would-be) message's row holds
     its exact text, sha256 and versions. The sender is called only in MODE_LIVE."""
@@ -768,6 +769,10 @@ def deliver(rows: list[dict], *, now: datetime, mode: str, kill: dict,
             header = (kill["why"] if kill.get("mode") == "DIGEST_ONLY" else
                       f"AEGIS alerts held over quiet hours ({_cfg.ALERT_QUIET_START_LOCAL}-"
                       f"{_cfg.ALERT_QUIET_END_LOCAL} HKT): {len(batch)}")
+            if health_line:
+                # 2026-10-02: the bars froze for three days and every digest
+                # read as normal. A degraded input heads the digest.
+                header = f"{health_line}\n{header}"
             groups = [(batch, render_digest(batch, header=header, at=now), True, header)]
         else:
             groups = [([r], render(r, at=now), False, None) for r in batch]
@@ -923,7 +928,12 @@ def _run_pass_locked(*, now: datetime, dry_run: bool, root: Path, events: Option
     uni = universe or S.alert_universe(now=now)
     receipt["universe"] = {k: v for k, v in uni.items() if k != "tickers"}
     rows = read_ledger(root)
+    bars_health: Optional[dict] = None
     if bars is None:
+        # production path only: an injected frame (tests) is its own age
+        from backend.services import bars_health as BH             # noqa: PLC0415
+        bars_health = BH.check(now)
+        receipt["bars_health"] = bars_health
         bars = S.load_price_bars(now=now)
     grade = grade_alerts(rows, bars)
     receipt["grading"] = grade
@@ -946,7 +956,9 @@ def _run_pass_locked(*, now: datetime, dry_run: bool, root: Path, events: Option
                        n_graded_dates=grade["n_alert_dates_graded"], root=root)
     receipt["freeze"] = fz
     dv = deliver(rows, now=now, mode=mode, kill=kill,
-                 sender=sender if sender is not None else telegram_sender, root=root)
+                 sender=sender if sender is not None else telegram_sender, root=root,
+                 health_line=(bars_health or {}).get("line")
+                 if (bars_health or {}).get("state") == "DEGRADED" else None)
     receipt["delivery"] = {"plan_action": dv["plan_action"], "held": dv["held"],
                            "n_delivered_or_would": dv["n_delivered_or_would"],
                            "n_too_old": dv["n_too_old"],
@@ -956,6 +968,9 @@ def _run_pass_locked(*, now: datetime, dry_run: bool, root: Path, events: Option
     st8 = ((receipt.get("sources") or {}).get("sec_8k") or {}).get("staleness") or {}
     receipt["state"] = "OK" if st8.get("state", "OK") == "OK" else \
         f"DEGRADED: 8-K source {st8.get('state')} ({st8.get('why')})"
+    if (bars_health or {}).get("state") == "DEGRADED":
+        receipt["state"] = (bars_health["line"] if receipt["state"] == "OK"
+                            else f"{receipt['state']}; {bars_health['line']}")
     return _finish(receipt, root, write_receipt)
 
 

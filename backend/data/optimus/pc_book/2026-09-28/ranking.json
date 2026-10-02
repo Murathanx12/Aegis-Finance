@@ -1,0 +1,187 @@
+{
+ "receipt": "sim_ranking",
+ "asof": "2026-09-25",
+ "n_eligible": 2907,
+ "model_version": "e1d2b359192a",
+ "ic_mean": 0.017484967530512614,
+ "ic_t": 5.832581913200961,
+ "top20_net_rel_21d": -0.010667045935328827,
+ "top": [
+  {
+   "rank": 1,
+   "symbol": "TE",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0034453540220218274,
+   "calibration_measured": true
+  },
+  {
+   "rank": 2,
+   "symbol": "JAN",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.004245354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 3,
+   "symbol": "BW",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.004245354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 4,
+   "symbol": "MLPI",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005945354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 5,
+   "symbol": "CDNL",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.004245354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 6,
+   "symbol": "AGX",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0034453540220218274,
+   "calibration_measured": true
+  },
+  {
+   "rank": 7,
+   "symbol": "PLTR",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.003045354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 8,
+   "symbol": "ACVA",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.004245354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 9,
+   "symbol": "DBVT",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005945354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 10,
+   "symbol": "LITE",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.003045354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 11,
+   "symbol": "MWH",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.004245354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 12,
+   "symbol": "Q",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0034453540220218274,
+   "calibration_measured": true
+  },
+  {
+   "rank": 13,
+   "symbol": "MSFT",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.003045354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 14,
+   "symbol": "AAPL",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.003045354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 15,
+   "symbol": "XRX",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005945354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 16,
+   "symbol": "STX",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.003045354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 17,
+   "symbol": "FRMI",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.004245354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 18,
+   "symbol": "WDS",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005945354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 19,
+   "symbol": "MEC",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005945354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 20,
+   "symbol": "DUOL",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0034453540220218274,
+   "calibration_measured": true
+  },
+  {
+   "rank": 21,
+   "symbol": "FLNC",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.004245354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 22,
+   "symbol": "CSTM",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.004245354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 23,
+   "symbol": "LAR",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005945354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 24,
+   "symbol": "KEX",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.004245354022021827,
+   "calibration_measured": true
+  },
+  {
+   "rank": 25,
+   "symbol": "LGN",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.004245354022021827,
+   "calibration_measured": true
+  }
+ ],
+ "bars_fingerprint": "bars.parquet:161894451:1790435665|bars_delisted.parquet:38458362:1790435666"
+}

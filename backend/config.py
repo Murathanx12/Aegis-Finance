@@ -4885,7 +4885,12 @@ FORECAST_WRITERS["news_digest"] = {"prefix": "news_digest:", "scheduled": None,
 #: disguises automation or works around a check.
 OPENCLAW_NEWS_HOSTS = ("reuters.com", "apnews.com", "cnbc.com", "finance.yahoo.com",
                        "bbc.com", "ft.com", "asia.nikkei.com", "scmp.com",
-                       "federalreserve.gov", "bls.gov", "sec.gov", "treasury.gov")
+                       "bls.gov", "sec.gov", "treasury.gov")
+#: 2026-09-30: federalreserve.gov LEFT the visible browser. Its press releases,
+#: speeches and testimony are read by feed (`official_sources` fed_rss) and each
+#: item's full text is fetched by plain HTTP, so no page with a bank's name opens
+#: in the window the owner watches and no content is lost. Every central bank is
+#: feed / API only (the owner's check list: dowjones/WHAT_THE_READER_OPENS.md).
 #: The allowlist is WIDENED by the news hosts (the Dow Jones and social hosts
 #: and every rule on them are unchanged).
 OPENCLAW_BROWSER_HOSTS = OPENCLAW_USER_TAB_HOSTS + OPENCLAW_SOCIAL_HOSTS + OPENCLAW_NEWS_HOSTS
@@ -4996,3 +5001,138 @@ STRADDLE_FWD_EQUITY_NOTIONAL = 1_000_000.0
 # x.com's EXISTING caps (WEB_READER_MAX_PER_DAY_BY_HOST is not raised). Once a
 # day each: 37 handles spend ~37 of x.com's 150 daily loads.
 READER_X_HANDLE_FRESH_H = 24.0
+
+# ── hyp_lab: the hypothesis ledger that learns (2026-09-29 night) ────────────
+# A ledger of typed hypotheses (mechanism, precursor known beforehand, what
+# separates it from factor beta, test design with a declared split, status,
+# verdict, receipts). Seeded from the day's notes, the world digest's
+# second-order paths and LLM generation (DeepSeek + the local model), deduped
+# against docs/TRIALS and the closed list, ranked by
+# P(changes the roadmap) x value - cost. The nightly runner executes the top
+# few PRE-DECLARED cells and writes verdicts back so the next generation sees
+# them. PRODUCT_EXPERIMENT; no LLM authority over capital; nothing trades.
+HYP_LAB_NIGHT_CAP_USD = 3.00          # every hyp_lab-owned DeepSeek call, per night
+HYP_LAB_NIGHTLY_CAP_USD = 0.40        # the scheduled nightly's own cap (generation only)
+HYP_LAB_PRICE_IN_PER_M = 0.30         # peak list price, so the cap binds even if the ledger prices $0
+HYP_LAB_PRICE_OUT_PER_M = 1.20
+HYP_LAB_MAX_CELLS_PER_NIGHT = 8
+HYP_LAB_MIN_FREE_RAM_GB = 3.0
+HYP_LAB_NIGHTLY_TIME_BOX_MIN = 60
+
+
+# ── FLEET DAILY MANAGER (2026-09-29 night; `backend/services/fleet_manager.py`) ──
+#: Murat: "update the hacks positions daily. do either locally or with railway."
+#: The Railway loops are down ($20/mo budget), so the hack1-hack6 paper accounts
+#: are managed from this PC by `scripts/fleet_manager_run.py`. Every value below
+#: is a HARD limit checked in code before any order; none is a target.
+FLEET_MANAGER_ROLES: tuple = ("hack1", "hack2", "hack3", "hack4", "hack5", "hack6")
+FLEET_MANAGER_MAX_GROSS_FRAC = 1.00        # sum|notional| / equity; 1.0 = no leverage
+FLEET_MANAGER_MAX_NAME_FRAC = 0.10         # one name, as a fraction of equity
+FLEET_MANAGER_DAILY_TURNOVER_FRAC = 0.50   # non-protective order notional per session / equity
+FLEET_MANAGER_MAX_ORDERS_PER_RUN = 60      # circuit breaker per account per run
+FLEET_MANAGER_MIN_ORDER_USD = 250.0        # below this the cost is the edge
+#: Stops are quoted in DAILY SIGMA (63-session sd of close-to-close returns on
+#: the bar-defect-screened panel), never a fixed percent: -2% is 0.93 sigma on
+#: a 2.16%/day name (memory 09-24). Distance = clip(K x sigma, MIN, contract max).
+FLEET_MANAGER_STOP_K_SIGMA = 3.0
+FLEET_MANAGER_STOP_MIN_FRAC = 0.04
+FLEET_MANAGER_SIGMA_WINDOW = 63
+#: A resting GTC stop expiring within this many days is replaced.
+FLEET_MANAGER_STOP_RENEW_DAYS = 7
+#: Limit orders near the quote: buy at ask x (1+slip), sell at bid x (1-slip).
+FLEET_MANAGER_LIMIT_SLIP_BPS = 10.0
+#: A quote whose spread exceeds this fraction of the mid is not a quote to trade on.
+FLEET_MANAGER_MAX_SPREAD_FRAC = 0.02
+#: Orders only while the venue is open and at least this long before its close.
+FLEET_MANAGER_MIN_MINUTES_TO_CLOSE = 5
+#: Declared cost per side for every contract (paper fills are free; the grade is not).
+FLEET_MANAGER_COST_BPS_PER_SIDE = 10.0
+FLEET_MANAGER_OPTION_ALERT_DTE = 5
+#: News sleeve (hack6 v2 proposal): SHADOW_NEWS_v0's typed `news_signal` over the
+#: newest world digest, names with d > 0 only, this much equity each, at most N.
+FLEET_MANAGER_NEWS_UNIT_FRAC = 0.01
+FLEET_MANAGER_NEWS_MAX_NAMES = 10
+FLEET_MANAGER_NEWS_HOLD_SESSIONS = 5
+FLEET_MANAGER_NEWS_MAX_DIGEST_AGE_H = 36
+#: A name that already moved more than this many 5-session sigmas is not entered.
+FLEET_MANAGER_NEWS_MAX_ALREADY_MOVED_SIGMA = 2.0
+#: Market CONTROL (hack5 v2, 2026-09-30): ~95% one broad ETF, the rest cash; a
+#: disaster stop far outside noise (10% on SPY is ~12 daily sigma), so the
+#: control is stopped out by a crash, never by a wiggle.
+FLEET_MANAGER_CONTROL_SYMBOL = "SPY"
+FLEET_MANAGER_CONTROL_WEIGHT = 0.95
+FLEET_MANAGER_CONTROL_STOP_FRAC = 0.10
+#: Source trust from fleet grades (forward only, nn_lab/loop.py style): trust is
+#: the posterior mean of a source's mean DAILY excess over the control, prior
+#: N(0, PRIOR_SD^2), from COMPLETED blocks of BLOCK_SESSIONS graded sessions only
+#: -- a partial block counts nothing, so one night's grade cannot move a weight.
+#: k = (BLOCK_SD/PRIOR_SD)^2 ~ 20 blocks (~100 sessions) to reach a 50% shrink.
+FLEET_TRUST_BLOCK_SESSIONS = 5
+FLEET_TRUST_PRIOR_SD = 0.001        # 10 bps/day prior sd of a source's true daily excess
+FLEET_TRUST_BLOCK_SD = 0.0045       # sd of a 5-session mean of daily excess (~1%/day / sqrt 5)
+FLEET_TRUST_FULL = 0.0005           # posterior excess (5 bps/day) at which a source earns full weight
+
+# ── contest order sheet + dress rehearsal (2026-09-29 night) ─────────────────
+# The Bloomberg challenge book as tickets the owner types into TMSG. The cap is
+# applied as min(20% of current NAV, 20% of the $1M notional) at the LIMIT
+# price, so a gap up to the limit cannot breach it. Contest capital, the cap's
+# basis and board lots are OWNER-CONFIRM items (docs/CONTEST_RUNBOOK_2026-10.md).
+CONTEST_NOTIONAL_USD = 1_000_000.0
+CONTEST_POSITION_CAP = 0.20
+CONTEST_BUY_LIMIT_BAND = 0.05        # buy limit = last close x 1.05
+CONTEST_SPLIT_GUARD = 0.30           # Terminal price beyond +-30% of the sheet: split or gap check
+CONTEST_DEFECT_LOOKBACK_DAYS = 730   # a bar-defect flag inside this window refuses the name
+
+# ── THE READING BUDGET and the OFFICIAL sources (2026-09-30) ─────────────────
+# Murat, 2026-09-29: "use openclaw to review stocks or the general news and the
+# market positions, insider traders, politics etc anything needed", "digest
+# everything". MEASURED: first-come spent the 4,000 browser loads by 10:44 UTC
+# and the reader then stood WAITING_FOR_CAP for hours. The same total is now
+# spent by lane (declared shares) and by hour (heavier before and during the
+# Asian and US sessions): `reader_scheduler.budget_verdict`. The Dow Jones and
+# social per-host caps are NOT changed. The page-load total is NOT raised; the
+# owner's "read more" is met by the official APIs below, each with its own
+# small daily cap (`official_sources.SOURCES`), which never touch the browser.
+READER_BUDGET_ENABLED = True
+READER_BUDGET_SHARES = {
+    "book_names": 0.24, "universe_names": 0.12, "markets_news": 0.20, "macro_world": 0.12,
+    "politics_policy": 0.08, "official_releases": 0.04, "social": 0.11,
+    "digest_asks": 0.06, "overhead": 0.03}
+#: UTC hours 0-23: Asia 00-07 (1.4), Europe 08-10 (0.8), US pre-open 11-12
+#: (1.3), US session 13-19 (1.6), US evening 20-22 (0.7), Asia pre-open 23 (1.2)
+READER_BUDGET_HOUR_WEIGHTS = (1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 0.8, 0.8, 0.8, 1.3, 1.3,
+                              1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 0.7, 0.7, 0.7, 1.2)
+READER_BUDGET_MIN_PER_HOUR = 60
+#: rolling-10-minute ceiling = hour allowance / 6 x this (smooths the hour)
+READER_BUDGET_BURST = 1.25
+#: a lane that has spent this multiple of its daily share borrows nothing while
+#: another lane with something servable is under its own hourly share
+READER_BUDGET_LANE_DAY_MULT = 1.6
+#: the official API sources (backend/services/official_sources.py): launched by
+#: the night reader supervisor out of process every this many seconds, each
+#: source then read only when its own interval has passed; a bot check cools
+#: a source for OFFICIAL_COOL_S
+OFFICIAL_SOURCES_ENABLED = True
+OFFICIAL_SOURCES_EVERY_S = 900.0
+OFFICIAL_COOL_S = 86400.0
+
+# ── automation fixes 2026-10-02 ─────────────────────────────────────────────
+#: The daily pass's `paper_accounts` step reads the brokers (READ-ONLY GETs:
+#: /v2/account + /v2/positions per account, PC-PAPER via pc_broker.snapshot).
+#: It ran `--no-broker` from 2026-09-28 to 10-02 and every receipt silently
+#: dropped hack1-6 and PC-PAPER. False restores the narrow pass AND prints a
+#: DEGRADED line at the top of the receipt; it is never silent.
+DAILY_PASS_PAPER_ACCOUNTS_BROKER_READ = True
+#: A kill-switch STOP file older than this is REPORTED (receipt + health) as a
+#: stale stop the owner may have forgotten; it still stops (owner's call,
+#: 2026-10-02: report, keep the stop). hyp_lab/STOP from 09-29 22:41 blocked
+#: every nightly for three days with nobody told.
+STOP_FILE_STALE_WARN_H = 48.0
+#: `always_on_lab` stays OFF while this marker exists (2026-10-02). Every
+#: launcher of the lab checks it (`always_on_lab.off_marker_state()`); the
+#: health rows report it. Deleting the file is the owner's switch back ON.
+ALWAYS_ON_LAB_OFF_MARKER = "always_on_lab_OFF"
+#: Broker accounts known to be unreadable on purpose (retired keys). The daily
+#: pass NOTES them and does not degrade on them; any OTHER unreadable broker
+#: account is a DEGRADED line. hack3: key answers HTTP 401 since 2026-09-22.
+PAPER_ACCOUNTS_RETIRED_UNREADABLE: tuple = ("hack3",)

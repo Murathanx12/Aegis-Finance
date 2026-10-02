@@ -1,0 +1,114 @@
+{
+ "job": "hyp_llm_theories JOB3 verdicts",
+ "written_utc": "2026-09-29T14:51:18+00:00",
+ "declarations": [
+  "job3_declaration_r1.json",
+  "job3_declaration_r3.json",
+  "job3_declaration_q3_r1.json",
+  "job3_declaration_q3_r2.json",
+  "job3_declaration_q3_r4.json",
+  "job3_declaration_q3_r5.json"
+ ],
+ "analyses": [
+  "job3_analysis_r1.json",
+  "job3_analysis_r3.json",
+  "job3_analysis_q3_r1.json",
+  "job3_analysis_q3_r2.json",
+  "job3_analysis_q3_r4.json",
+  "job3_analysis_q3_r5.json"
+ ],
+ "verdicts": [
+  {
+   "cell": "Q1 text, DeepSeek (r3, n 960)",
+   "numbers": "abstained: sd_p 0.0056; Brier vs base +0.00006 (t 0.19, MDE 0.0009); vs vol prior L_B1 -0.0008 (t -0.22, MDE 0.0095); AUC 0.504",
+   "verdict": "FAILED_VARIANT (abstention)"
+  },
+  {
+   "cell": "Q1 text, local 7B (r1, n 240)",
+   "numbers": "abstained: 237/240 at 0.45; vs base -0.0011 (t -1.98); AUC 0.489",
+   "verdict": "FAILED_VARIANT (abstention)"
+  },
+  {
+   "cell": "Q1 numbers+text, DeepSeek vs numbers alone L_T2 (r3, n 960)",
+   "numbers": "-0.0016 Brier (t -1.36, MDE 0.0033); AUC 0.552 vs L_T2 on same cells",
+   "verdict": "FAILED_VARIANT"
+  },
+  {
+   "cell": "(b) stack L_T2 + LLM(text), Platt on val, vs L_T2 recal (r3)",
+   "numbers": "-0.0005 (t -1.28, MDE 0.0011)",
+   "verdict": "FAILED_VARIANT"
+  },
+  {
+   "cell": "(b) stack L_T2 + LLM(numbers), vs L_T2 recal (r3)",
+   "numbers": "+0.00013 (t 0.42, MDE 0.0009)",
+   "verdict": "CANNOT_DISTINGUISH (bounded below ~0.001 Brier)"
+  },
+  {
+   "cell": "(c) self-consistency, DeepSeek k=5 T=0.7 (Q1, n 120)",
+   "numbers": "mean-of-5 minus single -0.0002 Brier (t -0.21, MDE 0.0028); within-item sd 0.004",
+   "verdict": "FAILED_VARIANT (nothing to average)"
+  },
+  {
+   "cell": "(c) Q3 k=3 mean vs single (r1, 150 groups)",
+   "numbers": "rel IC 0.010 vs 0.025",
+   "verdict": "no gain"
+  },
+  {
+   "cell": "Q2 pairwise text, DeepSeek (r3, 400 pairs)",
+   "numbers": "acc 55.9% (t 2.67 vs coin) but -6.4 pp vs higher-vol heuristic (t -2.05); Brier vs pair-numbers model -0.041 (t -2.64)",
+   "verdict": "PASS vs coin / FAILED vs numbers"
+  },
+  {
+   "cell": "Q2 pairwise numbers+text, DeepSeek (r3, 400 pairs)",
+   "numbers": "acc 64.6% vs vol heuristic 62.3% (+2.4 pp, t 1.38, MDE 4.8 pp); Brier vs pair-numbers -0.004 (t -0.76, MDE 0.016)",
+   "verdict": "CANNOT_DISTINGUISH"
+  },
+  {
+   "cell": "Q2 pairwise text, local 7B (r1, 200 pairs)",
+   "numbers": "acc 52% (t 0.53); AUC 0.50; position bias mean p_a 0.68; Brier worse than coin (t -2.21)",
+   "verdict": "FAILED_VARIANT"
+  },
+  {
+   "cell": "Q3 within-date ranking of relative surprise, DeepSeek text (r2, 600 groups)",
+   "numbers": "rel IC +0.042 (t 2.09, MDE 0.056), May negative; L_T2 +0.133; rank-average minus L_T2 -0.035 (t -2.03); IC vs residual of T2 +0.004 (t 0.22, MDE 0.049)",
+   "verdict": "PASS alone / adds nothing beyond numbers"
+  },
+  {
+   "cell": "Q3 numbers+text, DeepSeek (r2, 600 groups)",
+   "numbers": "rel IC +0.058 (t 3.76) < L_T2 0.133; residual -0.021 (t -1.34, MDE 0.045)",
+   "verdict": "adds nothing beyond numbers"
+  },
+  {
+   "cell": "Q3 local 7B text (r2, 60 groups)",
+   "numbers": "rel IC +0.017 (t 0.44, MDE 0.11); residual -0.010",
+   "verdict": "CANNOT_DISTINGUISH (underpowered, near zero)"
+  },
+  {
+   "cell": "Q3 earnings-only, DeepSeek text, test fold (r4, 129 groups)",
+   "numbers": "rel IC +0.035 (t 0.73, MDE 0.13); residual +0.030 (t 0.58)",
+   "verdict": "CANNOT_DISTINGUISH"
+  },
+  {
+   "cell": "Q3 earnings-only, DeepSeek text, val fold (r5, 112 groups)",
+   "numbers": "rel IC -0.068 (t -2.41, MDE 0.079); residual -0.038 (t -1.39)",
+   "verdict": "FAILED_VARIANT (second fold opposite sign)"
+  }
+ ],
+ "leak": {
+  "deepseek_q1_items_identified": 0.0625,
+  "local_q1_items_identified": 0.0167,
+  "deepseek_q3_items_identified_r2": 0.0694,
+  "deepseek_q3_earnings_identified": [
+   0.0988,
+   0.0982
+  ],
+  "note": "all below the 10% line; dropping identified items leaves every Q3 reading unchanged in sign"
+ },
+ "spend_deepseek_job3": {
+  "calls": 12688,
+  "ledger_usd": 0.6066,
+  "own_peak_usd": 1.5034,
+  "cap_usd": 2.4
+ },
+ "stopped_by": "owner pause order relayed 2026-09-29 ~22:52 local; llama-server stopped by PID 112536; GPU_LOCK removed"
+}

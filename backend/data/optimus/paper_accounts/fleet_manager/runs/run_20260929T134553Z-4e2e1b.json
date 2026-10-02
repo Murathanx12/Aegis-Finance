@@ -1,0 +1,523 @@
+{
+ "schema": "fleet_manager_run/1",
+ "run_id": "20260929T134553Z-4e2e1b",
+ "pass": "preclose",
+ "live_flag": false,
+ "started_utc": "2026-09-29T13:45:53+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "modes": {
+  "_doc": "Owner-controlled. contract: v1 (hold what the loop left, loop's own terms) or v2 (the proposal). maintenance/entries: LIVE or DRY. The script never edits this file after creating it. `--live` on the command line is also required for anything LIVE.",
+  "hack1": {
+   "contract": "v1",
+   "maintenance": "LIVE",
+   "entries": "DRY"
+  },
+  "hack2": {
+   "contract": "v1",
+   "maintenance": "LIVE",
+   "entries": "DRY"
+  },
+  "hack3": {
+   "skip": "key answers HTTP 401 (retired 2026-09-22); credentials are the owner's"
+  },
+  "hack4": {
+   "contract": "v1",
+   "maintenance": "LIVE",
+   "entries": "DRY"
+  },
+  "hack5": {
+   "contract": "v1",
+   "maintenance": "DRY",
+   "entries": "DRY",
+   "not_before_utc": "2026-09-29T15:00:00Z",
+   "why": "the BE 290/320 spread is closed by a separate one-shot task tonight"
+  },
+  "hack6": {
+   "contract": "v1",
+   "maintenance": "LIVE",
+   "entries": "DRY"
+  }
+ },
+ "issuer_map": "ok",
+ "n_stitched": 62,
+ "digest": "world_digest_20260929T103001Z.json",
+ "baseline": "2026-09-29T13:23:27Z",
+ "accounts": [
+  {
+   "role": "hack1",
+   "pass": "preclose",
+   "account_number": "PA3WXDS3MJ53",
+   "equity": 90947.05,
+   "cash": 66575.01,
+   "last_equity": 90683.01,
+   "n_positions": 1,
+   "n_open_orders": 1,
+   "positions": [
+    {
+     "symbol": "SYM",
+     "qty": 574.0,
+     "price": 42.46,
+     "market_value": 24372.04,
+     "unrealized_plpc": -0.01325,
+     "asset_class": "us_equity"
+    }
+   ],
+   "clock": {
+    "session_day_et": "2026-09-29",
+    "is_open": true,
+    "minutes_to_close": 374.0
+   },
+   "reconcile": {
+    "status": "OK",
+    "ok": true,
+    "mismatches": [],
+    "foreign_orders": [],
+    "source": "state",
+    "since": "2026-09-29T13:42:56+00:00",
+    "n_fills_since": 0
+   },
+   "contract_active": {
+    "version": "v1",
+    "policy_hash": "bde68d4af4b40dc4",
+    "alpha_source": "THEME BASKET (theme_basket brain, 39-name themes universe, shares only)",
+    "frozen_utc": "2026-09-29T13:37:42+00:00"
+   },
+   "contract_proposed": {
+    "version": "v2",
+    "policy_hash": "bdae86290ea38481",
+    "alpha_source": "human + AI thematic curation (the owner's themes: AI power, memory/foundry, prediction markets, nuclear/resources, biotech catalysts)"
+   },
+   "sigma": {
+    "AGIO": 0.03439,
+    "AVGO": 0.02478,
+    "BBIO": 0.02812,
+    "BE": 0.06934,
+    "CCJ": 0.0264,
+    "CLS": 0.05074,
+    "COGT": 0.02851,
+    "DKNG": 0.03041,
+    "GEV": 0.03243,
+    "HOOD": 0.0459,
+    "IONQ": 0.04857,
+    "LEU": 0.04876,
+    "MP": 0.04055,
+    "MU": 0.04985,
+    "NOVT": 0.03104,
+    "NVT": 0.03312,
+    "PRAX": 0.03568,
+    "RGEN": 0.02723,
+    "SYM": 0.03755,
+    "TSM": 0.02436,
+    "VKTX": 0.05682,
+    "VRT": 0.04405,
+    "VRTX": 0.01824,
+    "WST": 0.01565
+   },
+   "panel": {
+    "panel": "bars.parquet",
+    "last_bar": "2026-09-28",
+    "symbols_asked": 25,
+    "symbols_found": 25,
+    "screen": {
+     "enabled": true,
+     "rules": {
+      "dark_run_min_sessions": 5,
+      "nontrade_print_tol": 0.01,
+      "spike_ratio": 4.0,
+      "spike_residual": 0.25,
+      "spike_window_sessions": 3,
+      "break_ratio": 3.0,
+      "quiet_volume_mult": 2.0
+     },
+     "volume_available": true,
+     "rows_in": 6850,
+     "rows_removed": 0,
+     "rows_removed_by_reason": {},
+     "rows_removed_by_year": {},
+     "symbols_with_rows_removed": 0,
+     "n_dark_runs": 0,
+     "nontrade_prints": 0,
+     "n_spikes": 0,
+     "n_cuts": 0,
+     "n_suspects": 0,
+     "cuts_by_reason": {}
+    },
+    "moved_5d_sigma": {
+     "AGIO": -0.203,
+     "AVGO": -0.651,
+     "BBIO": 0.007,
+     "BE": -0.237,
+     "CCJ": -1.125,
+     "CLS": 0.31,
+     "COGT": -0.069,
+     "DKNG": -0.542,
+     "GEV": 0.052,
+     "HOOD": -0.541,
+     "IONQ": 0.925,
+     "LEU": -0.858,
+     "MP": -0.783,
+     "MU": 0.086,
+     "NOVT": 0.834,
+     "NVT": 0.09,
+     "PRAX": -0.554,
+     "RGEN": 1.216,
+     "SPY": -0.65,
+     "SYM": -0.531,
+     "TSM": 0.319,
+     "VKTX": 0.763,
+     "VRT": -0.276,
+     "VRTX": 0.814,
+     "WST": 1.096
+    }
+   },
+   "stop_table": [
+    {
+     "symbol": "SYM",
+     "qty": 574.0,
+     "price": 42.46,
+     "sigma_d": 0.037553063713227565,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0376 = 0.1127, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "38.73",
+       "qty": "574",
+       "client_order_id": "aat-stop-fe65ed7ff3f7262abc48d8c5",
+       "expires_at": "2026-12-08T21:00:00Z",
+       "distance_frac": 0.0878,
+       "distance_sigma": 2.34
+      }
+     ]
+    }
+   ],
+   "flags": [],
+   "lot_entry": {
+    "SYM": {
+     "date": "2026-09-09",
+     "how": "exact",
+     "sessions_held": 14
+    }
+   },
+   "v2_targets": {
+    "n": 23,
+    "gross_frac": 0.96,
+    "legacy_names": [
+     "SYM"
+    ],
+    "drops": [
+     {
+      "symbol": "VRT",
+      "why": "weight 0.120 clipped to 0.100",
+      "clipped": true
+     }
+    ]
+   },
+   "v2_plan_note": "pre-close pass: no new entries (maintenance and exits only)",
+   "worst_case_now": {
+    "worst_usd": 2141.02,
+    "worst_pct_equity": 2.35,
+    "gross_usd": 24372.04,
+    "gross_over_equity": 0.268,
+    "n_names": 1,
+    "per_name": [
+     {
+      "symbol": "SYM",
+      "worst_usd": 2141.0200000000023,
+      "basis": "resting stop 38.73"
+     }
+    ]
+   },
+   "worst_case_after_plan": {
+    "worst_usd": 2141.02,
+    "worst_pct_equity": 2.35,
+    "gross_usd": 24372.04,
+    "gross_over_equity": 0.268,
+    "n_names": 1,
+    "per_name": [
+     {
+      "symbol": "SYM",
+      "worst_usd": 2141.0200000000023,
+      "basis": "resting stop 38.73"
+     }
+    ]
+   },
+   "worst_case_formula_v1": {
+    "n": 8,
+    "notional_frac": 0.125,
+    "stop_frac": 0.1,
+    "worst_frac": 0.1,
+    "worst_usd": 9094.7,
+    "gross_over_equity": 1.0
+   },
+   "worst_case_formula_v2": {
+    "n": 23,
+    "notional_frac": 0.0417,
+    "stop_frac": 0.12,
+    "worst_frac": 0.1152,
+    "worst_usd": 10477.1,
+    "gross_over_equity": 0.96
+   },
+   "actions": [],
+   "state_written": "2026-09-29T13:46:02+00:00",
+   "status": "ok"
+  },
+  {
+   "role": "hack4",
+   "pass": "preclose",
+   "account_number": "PA3R9XHMCVDA",
+   "equity": 79578.84,
+   "cash": 45031.44,
+   "last_equity": 79603.42,
+   "n_positions": 2,
+   "n_open_orders": 2,
+   "positions": [
+    {
+     "symbol": "BIOA",
+     "qty": 2261.0,
+     "price": 7.15,
+     "market_value": 16166.15,
+     "unrealized_plpc": -0.09149,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "RZLV",
+     "qty": 8650.0,
+     "price": 2.125,
+     "market_value": 18381.25,
+     "unrealized_plpc": -0.07609,
+     "asset_class": "us_equity"
+    }
+   ],
+   "clock": {
+    "session_day_et": "2026-09-29",
+    "is_open": true,
+    "minutes_to_close": 373.9
+   },
+   "reconcile": {
+    "status": "OK",
+    "ok": true,
+    "mismatches": [],
+    "foreign_orders": [],
+    "source": "state",
+    "since": "2026-09-29T13:43:54+00:00",
+    "n_fills_since": 0
+   },
+   "contract_active": {
+    "version": "v1",
+    "policy_hash": "617d923978288fcf",
+    "alpha_source": "TRACKER PROFIT-MAX (sealed upside x consensus, k=5 x 20%)",
+    "frozen_utc": "2026-09-29T13:37:46+00:00"
+   },
+   "contract_proposed": {
+    "version": "v2",
+    "policy_hash": "a0c5313766c52c9a",
+    "alpha_source": "the engine's candidate funnel (PROBE shortlist) sized by 1/sigma_63 (size-of-move / risk-parity weighting)"
+   },
+   "sigma": {
+    "AAPL": 0.01778,
+    "ALLE": 0.019,
+    "AMZN": 0.02592,
+    "AVPT": 0.02649,
+    "BIOA": 0.09248,
+    "GOOG": 0.02098,
+    "GOOGL": 0.02146,
+    "INCY": 0.01952,
+    "JAZZ": 0.01706,
+    "META": 0.03257,
+    "NVDA": 0.02449,
+    "RZLV": 0.05237,
+    "SNDR": 0.01957
+   },
+   "panel": {
+    "panel": "bars.parquet",
+    "last_bar": "2026-09-28",
+    "symbols_asked": 14,
+    "symbols_found": 14,
+    "screen": {
+     "enabled": true,
+     "rules": {
+      "dark_run_min_sessions": 5,
+      "nontrade_print_tol": 0.01,
+      "spike_ratio": 4.0,
+      "spike_residual": 0.25,
+      "spike_window_sessions": 3,
+      "break_ratio": 3.0,
+      "quiet_volume_mult": 2.0
+     },
+     "volume_available": true,
+     "rows_in": 3836,
+     "rows_removed": 0,
+     "rows_removed_by_reason": {},
+     "rows_removed_by_year": {},
+     "symbols_with_rows_removed": 0,
+     "n_dark_runs": 0,
+     "nontrade_prints": 0,
+     "n_spikes": 0,
+     "n_cuts": 0,
+     "n_suspects": 0,
+     "cuts_by_reason": {}
+    },
+    "moved_5d_sigma": {
+     "AAPL": -0.043,
+     "ALLE": 0.625,
+     "AMZN": -0.821,
+     "AVPT": 0.392,
+     "BIOA": -0.544,
+     "GOOG": -0.711,
+     "GOOGL": -0.718,
+     "INCY": 0.031,
+     "JAZZ": -0.345,
+     "META": -0.475,
+     "NVDA": 0.119,
+     "RZLV": -0.668,
+     "SNDR": -0.53,
+     "SPY": -0.65
+    }
+   },
+   "stop_table": [
+    {
+     "symbol": "BIOA",
+     "qty": 2261.0,
+     "price": 7.15,
+     "sigma_d": 0.09248450540423936,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0925 = 0.2775, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "6.93",
+       "qty": "2261",
+       "client_order_id": "aat-stop-d3388a9659e83d73f1ceaca5",
+       "expires_at": "2026-12-21T21:00:00Z",
+       "distance_frac": 0.0308,
+       "distance_sigma": 0.33
+      }
+     ]
+    },
+    {
+     "symbol": "RZLV",
+     "qty": 8650.0,
+     "price": 2.125,
+     "sigma_d": 0.052373237943827505,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0524 = 0.1571, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "2.02",
+       "qty": "8650",
+       "client_order_id": "aat-stop-3f7b53d248b1f4829cf04172",
+       "expires_at": "2026-12-21T21:00:00Z",
+       "distance_frac": 0.0494,
+       "distance_sigma": 0.94
+      }
+     ]
+    }
+   ],
+   "flags": [],
+   "lot_entry": {
+    "BIOA": {
+     "date": "2026-09-21",
+     "how": "exact",
+     "sessions_held": 6
+    },
+    "RZLV": {
+     "date": "2026-09-09",
+     "how": "exact",
+     "sessions_held": 14
+    }
+   },
+   "v2_targets": {
+    "n": 10,
+    "gross_frac": 0.8875,
+    "legacy_names": [
+     "BIOA",
+     "RZLV"
+    ],
+    "drops": [
+     {
+      "symbol": "JAZZ",
+      "why": "weight 0.115 clipped to 0.100",
+      "clipped": true
+     },
+     {
+      "symbol": "AAPL",
+      "why": "weight 0.102 clipped to 0.100",
+      "clipped": true
+     },
+     {
+      "symbol": "ALLE",
+      "why": "weight 0.102 clipped to 0.100",
+      "clipped": true
+     },
+     {
+      "symbol": "SNDR",
+      "why": "weight 0.101 clipped to 0.100",
+      "clipped": true
+     },
+     {
+      "symbol": "GOOGL",
+      "why": "second share class of issuer Alphabet Inc. (CIK 1652044) (kept GOOG)"
+     }
+    ]
+   },
+   "v2_plan_note": "pre-close pass: no new entries (maintenance and exits only)",
+   "worst_case_now": {
+    "worst_usd": 1405.67,
+    "worst_pct_equity": 1.77,
+    "gross_usd": 34547.4,
+    "gross_over_equity": 0.4341,
+    "n_names": 2,
+    "per_name": [
+     {
+      "symbol": "BIOA",
+      "worst_usd": 497.42000000000144,
+      "basis": "resting stop 6.93"
+     },
+     {
+      "symbol": "RZLV",
+      "worst_usd": 908.2499999999999,
+      "basis": "resting stop 2.02"
+     }
+    ]
+   },
+   "worst_case_after_plan": {
+    "worst_usd": 1405.67,
+    "worst_pct_equity": 1.77,
+    "gross_usd": 34547.4,
+    "gross_over_equity": 0.4341,
+    "n_names": 2,
+    "per_name": [
+     {
+      "symbol": "BIOA",
+      "worst_usd": 497.42000000000144,
+      "basis": "resting stop 6.93"
+     },
+     {
+      "symbol": "RZLV",
+      "worst_usd": 908.2499999999999,
+      "basis": "resting stop 2.02"
+     }
+    ]
+   },
+   "worst_case_formula_v1": {
+    "n": 5,
+    "notional_frac": 0.2,
+    "stop_frac": 0.12,
+    "worst_frac": 0.12,
+    "worst_usd": 9549.46,
+    "gross_over_equity": 1.0
+   },
+   "worst_case_formula_v2": {
+    "n": 11,
+    "notional_frac": 0.0891,
+    "stop_frac": 0.12,
+    "worst_frac": 0.1176,
+    "worst_usd": 9360.52,
+    "gross_over_equity": 0.9802
+   },
+   "actions": [],
+   "state_written": "2026-09-29T13:46:14+00:00",
+   "status": "ok"
+  }
+ ],
+ "finished_utc": "2026-09-29T13:46:15+00:00"
+}

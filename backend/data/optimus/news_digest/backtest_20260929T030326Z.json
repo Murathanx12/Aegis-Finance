@@ -1,0 +1,120 @@
+{
+ "receipt": "world_digest_backtest",
+ "stamp": "20260929T030326Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "question": "does the digest's size bucket beat the trailing-volatility prior?",
+ "sample": {
+  "n_headlines": 600,
+  "n_publication_dates": 15,
+  "window": "2026-09-10..2026-09-25 published (post the 2025-12 cutoff)",
+  "seed": 20260929,
+  "per_day": 40
+ },
+ "counts": {
+  "short_history": 4,
+  "open_h5": 108
+ },
+ "spend": {
+  "budget_usd": 0.15,
+  "spent_usd": 0.02005,
+  "calls": 15,
+  "failed": 0,
+  "unpriced_calls": 0,
+  "served_models": {
+   "deepseek-flash": 15
+  },
+  "statuses": {
+   "OK": 15
+  },
+  "by_stage_usd": {
+   "bt": 0.02005
+  }
+ },
+ "convention": "entry OPEN of first session opening after publication; exit CLOSE of entry+h-1; threshold = 63-session daily sd before entry x sqrt(h); vol prior = 252-session frequency of |r_h| > threshold",
+ "h1": {
+  "n_rows": 596,
+  "n_date_blocks": 15,
+  "base_rate_exceed": 0.1443,
+  "brier_model": 0.14453,
+  "brier_vol_prior": 0.13154,
+  "brier_normal_0.317": 0.1534,
+  "improvement_per_date_mean": -0.01304,
+  "improvement_se_by_date": 0.00603,
+  "t_by_date": -2.16,
+  "dates_model_better": 4,
+  "by_year": {
+   "2026": -0.01299
+  },
+  "by_bucket": {
+   "above_normal": {
+    "n": 34,
+    "hit_rate": 0.1471,
+    "p_model": 0.5,
+    "p_vol": 0.2286
+   },
+   "below_normal": {
+    "n": 299,
+    "hit_rate": 0.1304,
+    "p_model": 0.18,
+    "p_vol": 0.2499
+   },
+   "extreme": {
+    "n": 3,
+    "hit_rate": 0.0,
+    "p_model": 0.7,
+    "p_vol": 0.247
+   },
+   "normal": {
+    "n": 260,
+    "hit_rate": 0.1615,
+    "p_model": 0.3173,
+    "p_vol": 0.2396
+   }
+  },
+  "direction_n": 105,
+  "direction_hit_vs_spy": 0.5048,
+  "direction_hit_by_date_mean": 0.5043
+ },
+ "h5": {
+  "n_rows": 488,
+  "n_date_blocks": 13,
+  "base_rate_exceed": 0.1701,
+  "brier_model": 0.1562,
+  "brier_vol_prior": 0.15008,
+  "brier_normal_0.317": 0.16283,
+  "improvement_per_date_mean": -0.00338,
+  "improvement_se_by_date": 0.00657,
+  "t_by_date": -0.51,
+  "dates_model_better": 6,
+  "by_year": {
+   "2026": -0.00611
+  },
+  "by_bucket": {
+   "above_normal": {
+    "n": 23,
+    "hit_rate": 0.2174,
+    "p_model": 0.5,
+    "p_vol": 0.2584
+   },
+   "below_normal": {
+    "n": 268,
+    "hit_rate": 0.1828,
+    "p_model": 0.18,
+    "p_vol": 0.2691
+   },
+   "normal": {
+    "n": 197,
+    "hit_rate": 0.1472,
+    "p_model": 0.3173,
+    "p_vol": 0.2581
+   }
+  },
+  "direction_n": 80,
+  "direction_hit_vs_spy": 0.5375,
+  "direction_hit_by_date_mean": 0.6043
+ },
+ "lines": [
+  "h=1: n 596 over 15 dates; exceed-rate 0.144; Brier model 0.1445 vs vol prior 0.1315 (vs 0.317 const 0.1534); per-date improvement -0.0130 se 0.00603 t -2.16; model better on 4/15 dates; by year {'2026': -0.01299}; direction hit vs SPY 0.5048 (n 105)",
+  "h=5: n 488 over 13 dates; exceed-rate 0.170; Brier model 0.1562 vs vol prior 0.1501 (vs 0.317 const 0.1628); per-date improvement -0.0034 se 0.00657 t -0.51; model better on 6/13 dates; by year {'2026': -0.00611}; direction hit vs SPY 0.5375 (n 80)"
+ ]
+}

@@ -207,6 +207,48 @@ def stop_path() -> Path:
     return out_dir() / "STOP"
 
 
+def off_marker_path() -> Path:
+    """The PERSISTENT off switch: `backend/data/optimus/<ALWAYS_ON_LAB_OFF_MARKER>`.
+
+    WHY (2026-10-02). The lab was switched OFF on 2026-09-27 with `STOP`, and
+    relaunched itself on 09-30 12:03, 09-30 20:20 and 10-02 11:58 local, each
+    with a ~4.5 GB llama-server. Two causes, both measured:
+      1. `stop_path()` lives in TODAY's dated night folder, so a STOP written on
+         09-27 stops nothing on 09-30: the new day's folder has no STOP.
+      2. `Startup/AegisAlwaysOnLab.vbs` (written 2026-09-13) runs
+         `always_on_lab.cmd` at every LOGON; the three relaunches sit two minutes
+         after the three `Kernel-Boot` 27 events (09-30 12:00, 20:19, 10-02 11:56),
+         beside the LogonTrigger tasks' own last-run times.
+    This marker is not dated, so OFF stays OFF across days and boots, and every
+    launcher (the .cmd, `main()`, `night_run_until --lab`) honours it.
+    """
+    return data_dir() / str(getattr(_config, "ALWAYS_ON_LAB_OFF_MARKER", "always_on_lab_OFF"))
+
+
+def off_marker_state(path: Path | None = None, *, now: datetime | None = None) -> dict:
+    """`{"off": bool, "path", "since_utc", "age_h", "note"}` -- reads the marker only."""
+    p = Path(path) if path is not None else off_marker_path()
+    if not p.exists():
+        return {"off": False, "path": str(p)}
+    now = now or datetime.now(timezone.utc)
+    import re as _re                                               # noqa: PLC0415
+    try:
+        note = p.read_text(encoding="utf-8", errors="replace").strip()[:300]
+    except OSError:
+        note = ""
+    # dated by the stamp written IN the marker (protocol 7); an undated marker
+    # is still OFF, it just has no age
+    m = _re.search(r"\d{4}-\d{2}-\d{2}T[0-9:+\-Z.]+", note)
+    try:
+        mt = datetime.fromisoformat(m.group(0).replace("Z", "+00:00")) if m else None
+    except ValueError:
+        mt = None
+    return {"off": True, "path": str(p),
+            "since_utc": mt.isoformat(timespec="seconds") if mt else None,
+            "age_h": round((now - mt).total_seconds() / 3600.0, 1) if mt else None,
+            "note": note}
+
+
 def model_server_hold_path() -> Path:
     """The operator's hold on the lab's starter (`LAB_MODEL_SERVER_HOLD_NAME`)."""
     return data_dir() / str(_config.LAB_MODEL_SERVER_HOLD_NAME)
@@ -2976,6 +3018,14 @@ def main(argv: list[str] | None = None) -> int:
         report = acceptance_report()
         path = write_acceptance(report)
         print(json.dumps({**report, "path": str(path)}, indent=1, default=str))
+        return 0
+    off = off_marker_state()
+    if off["off"]:
+        # OFF means off: exit BEFORE the lock, the model server or any loop.
+        print(f"{datetime.now(timezone.utc).isoformat(timespec='seconds')} OFF: "
+              f"{off['path']} exists (since {off.get('since_utc')}); the lab does not "
+              f"start. Delete the marker to switch it back on. {off.get('note') or ''}",
+              flush=True)
         return 0
     try:
         payload = run_forever(max_ticks=a.ticks)

@@ -627,13 +627,16 @@ def telegram_line(d: Optional[date] = None) -> str:
 
 # ───────────────────────────── live CLI ─────────────────────────────
 
-def run_live(d: date, *, refresh: bool = True, preview: bool = False) -> int:
-    """The evening sheet. `preview` writes to contest/preview/ (never read as holdings)."""
-    out_dir = PREVIEW if preview else SHEETS
-    if STOP_FILE.exists():
-        print(f"STOP file present ({STOP_FILE}); no sheet written.")
-        return 0
-    receipt: dict = {"day": str(d), "started_utc": cc.utc_stamp()}
+def live_sheet(d: date, *, refresh: bool = True, cal_dir: Optional[Path] = None,
+               cal_window: Optional[tuple] = None, holdings_dir: Path = SHEETS,
+               receipt: Optional[dict] = None) -> dict:
+    """Build (do not write) the evening sheet: refreshes, calendar, events, ranking.
+
+    `cal_dir`/`cal_window` let the dress rehearsal build a near-dated calendar in its OWN
+    folder (the contest calendar in contest/calendar/ is never touched by a rehearsal).
+    Returns {"sheet", "calendar", "cal_file", "panel", "events", "header", "receipt"}."""
+    receipt = receipt if receipt is not None else {"day": str(d), "started_utc": cc.utc_stamp()}
+    cal_dir = Path(cal_dir) if cal_dir is not None else cc.CAL_DIR
     ufiles = sorted(cc.UNIV_DIR.glob("universe_*.parquet"))
     if refresh and (not ufiles or ufiles[-1].name < f"universe_{d - timedelta(days=7)}.parquet"):
         try:
@@ -643,18 +646,24 @@ def run_live(d: date, *, refresh: bool = True, preview: bool = False) -> int:
             receipt["universe"] = f"REFRESH FAILED {type(exc).__name__}: {exc}"
     if refresh:
         try:
-            cc.cmd_calendar(d)
+            if cal_window is None and cal_dir == cc.CAL_DIR:
+                cc.cmd_calendar(d)
+            else:
+                cal, rec = cc.build_calendar(d, window=cal_window or (cc.CONTEST_START, cc.CONTEST_END))
+                cal_dir.mkdir(parents=True, exist_ok=True)
+                cc.safe_write_parquet(cal, cal_dir / f"calendar_{d}.parquet", allow_shrink=True)
+                cc.write_json({"written_utc": cc.utc_stamp(), **rec}, cal_dir / f"calendar_{d}_receipt.json")
             receipt["calendar"] = "refreshed"
         except Exception as exc:                                # noqa: BLE001
             receipt["calendar"] = f"REFRESH FAILED {type(exc).__name__}: {exc} (using the last file)"
     universe = cc.latest_universe()
-    cal_files = sorted(cc.CAL_DIR.glob("calendar_*.parquet"))
+    cal_files = sorted(Path(cal_dir).glob("calendar_*.parquet"))
     calendar = pd.read_parquet(cal_files[-1]) if cal_files else pd.DataFrame()
     if refresh and not calendar.empty:
         soon = calendar[(calendar.date >= pd.Timestamp(d) - pd.Timedelta(days=3))
                         & (calendar.date <= pd.Timestamp(d) + pd.Timedelta(days=10))]
         held = []
-        prevh = sorted(x for x in SHEETS.glob("*_holdings.json") if x.name < f"{d}_holdings.json")
+        prevh = sorted(x for x in Path(holdings_dir).glob("*_holdings.json") if x.name < f"{d}_holdings.json")
         if prevh:
             held = [x["symbol"] for x in json.loads(prevh[-1].read_text(encoding="utf-8")).get("buys", [])]
         try:
@@ -676,17 +685,30 @@ def run_live(d: date, *, refresh: bool = True, preview: bool = False) -> int:
         raw = pd.concat([raw[raw.ts_utc < pd.Timestamp.now(tz="UTC")], pd.DataFrame(fut)], ignore_index=True)
     events = build_events(panel, raw)
     events = extend_future_sessions(events, panel, d)
-    prev = sorted(x for x in SHEETS.glob("*_holdings.json") if x.name < f"{d}_holdings.json")
+    prev = sorted(x for x in Path(holdings_dir).glob("*_holdings.json") if x.name < f"{d}_holdings.json")
     holdings = None
     if prev:
         h = json.loads(prev[-1].read_text(encoding="utf-8"))
         holdings = pd.DataFrame(h.get("buys", []))
     sh = make_sheet(d, events, panel, universe, holdings=holdings, live=refresh, calendar=calendar)
     ages = bars_age_lines(panel, d)
-    md, short = render_sheet(sh, header_extra=f"Calendar: {cal_files[-1].name if cal_files else 'NONE'}; "
-                                              f"universe membership: "
-                                              f"{'WLS export' if cc.load_wls_export() is not None else 'PROXY (unconfirmed)'}.  "
-                                              f"Bars: " + "; ".join(ages))
+    header = (f"Calendar: {cal_files[-1].name if cal_files else 'NONE'}; universe membership: "
+              f"{'WLS export' if cc.load_wls_export() is not None else 'PROXY (unconfirmed)'}.  "
+              f"Bars: " + "; ".join(ages))
+    return {"sheet": sh, "calendar": calendar, "cal_file": cal_files[-1].name if cal_files else None,
+            "panel": panel, "events": events, "header": header, "receipt": receipt, "bars_age": ages}
+
+
+def run_live(d: date, *, refresh: bool = True, preview: bool = False) -> int:
+    """The evening sheet. `preview` writes to contest/preview/ (never read as holdings)."""
+    out_dir = PREVIEW if preview else SHEETS
+    if STOP_FILE.exists():
+        print(f"STOP file present ({STOP_FILE}); no sheet written.")
+        return 0
+    receipt: dict = {"day": str(d), "started_utc": cc.utc_stamp()}
+    L = live_sheet(d, refresh=refresh, receipt=receipt)
+    sh = L["sheet"]
+    md, short = render_sheet(sh, header_extra=L["header"])
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / f"{d}.md").write_text(md, encoding="utf-8")
     (out_dir / f"{d}.txt").write_text(short + "\n", encoding="utf-8")
@@ -721,14 +743,63 @@ def calendar_stamp(symbol: str, day: Any, timing: Optional[str]) -> pd.Timestamp
     return pd.Timestamp(datetime(d.year, d.month, d.day, h, m), tz=tz).tz_convert("UTC")
 
 
+# Exchange calendars for FUTURE sessions (added 2026-09-29 by the dress rehearsal: weekday
+# sessions put a buy on Japan's Sports Day -- contest day 1 -- and on China's Golden Week).
+XCAL_BY_MARKET = {"US": "XNYS", "JP": "XTKS", "KR": "XKRX", "TW": "XTAI", "HK": "XHKG", "CN": "XSHG",
+                  "IN": "XBOM", "ID": "XIDX"}
+XCAL_BY_EU_SUFFIX = {".L": "XLON", ".DE": "XETR", ".PA": "XPAR", ".AS": "XAMS", ".SW": "XSWX",
+                     ".MI": "XMIL", ".MC": "XMAD", ".ST": "XSTO", ".CO": "XCSE", ".HE": "XHEL",
+                     ".OL": "XOSL", ".BR": "XBRU"}
+_XCAL_CACHE: dict = {}
+
+
+def exchange_code(symbol: str) -> Optional[str]:
+    mk = cc.market_of(symbol)
+    if mk == "EU":
+        s = str(symbol).upper()
+        for suf, code in XCAL_BY_EU_SUFFIX.items():
+            if s.endswith(suf.upper()):
+                return code
+        return None
+    return XCAL_BY_MARKET.get(mk)
+
+
+def future_sessions(symbol: str, start: Any, end: Any) -> tuple[pd.DatetimeIndex, str]:
+    """(sessions, source). Exchange calendar when available, weekdays otherwise (labelled)."""
+    code = exchange_code(symbol)
+    s0, s1 = pd.Timestamp(start).normalize(), pd.Timestamp(end).normalize()
+    key = (code, s0, s1)
+    if key in _XCAL_CACHE:
+        return _XCAL_CACHE[key]
+    out = (pd.bdate_range(s0, s1), "WEEKDAYS (no exchange calendar)")
+    if code:
+        try:
+            import warnings                                   # noqa: PLC0415
+            import exchange_calendars as xc                   # noqa: PLC0415
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                cal = xc.get_calendar(code)
+                lo, hi = max(s0, cal.first_session), min(s1, cal.last_session)
+                sess = pd.DatetimeIndex(cal.sessions_in_range(lo, hi)).tz_localize(None)
+            if hi < s1:                                       # beyond the calendar's horizon
+                sess = sess.append(pd.bdate_range(hi + pd.Timedelta(days=1), s1))
+            out = (sess, f"exchange_calendars:{code}")
+        except Exception:                                     # noqa: BLE001
+            pass
+    _XCAL_CACHE[key] = out
+    return out
+
+
 def extend_future_sessions(events: pd.DataFrame, panel: Panel, d: date) -> pd.DataFrame:
-    """Future events have no bar yet for their buy/react sessions: assign them by weekday."""
+    """Future events have no bar yet for their buy/react sessions: assign them from the
+    exchange's calendar (holidays excluded), weekdays only when no calendar is available."""
     ev = events.copy()
     miss = ev.pre_date.isna() | ev.react_date.isna()
     fut = ev[miss & (pd.to_datetime(ev.ts_utc, utc=True) > pd.Timestamp(d - timedelta(days=3), tz="UTC"))]
     for i, r in fut.iterrows():
         tz, o, c = cc.session_hours(r.symbol)
-        sess = pd.bdate_range(pd.Timestamp(d) - pd.Timedelta(days=10), pd.Timestamp(d) + pd.Timedelta(days=60))
+        sess, _src = future_sessions(r.symbol, pd.Timestamp(d) - pd.Timedelta(days=10),
+                                     pd.Timestamp(d) + pd.Timedelta(days=60))
         pre, react, timing = cc.event_sessions(r.ts_utc, r.symbol, sess)
         ev.at[i, "pre_date"] = sess[pre] if 0 <= pre < len(sess) else pd.NaT
         ev.at[i, "react_date"] = sess[react] if 0 <= react < len(sess) else pd.NaT

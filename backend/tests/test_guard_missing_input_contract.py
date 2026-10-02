@@ -1579,6 +1579,31 @@ def _case_lib_forward_trial():
             "a lib_ book with no matched_random or random_same_band twin")
 
 
+def _case_official_sources():
+    # 2026-09-30: the missing input is the source's declaration (its daily cap,
+    # host gap, lane): a request for a source not in SOURCES refuses before any
+    # network call (the transport fails the test if it is reached)
+    import tempfile
+    from pathlib import Path
+    from backend.services.official_sources import Fetcher, SourceRefused
+    fx = Fetcher(base=Path(tempfile.mkdtemp()), log_requests=False,
+                 http=lambda *a, **k: pytest.fail("a request left for an undeclared source"))
+    return (lambda: fx.get("undeclared_source", "https://example.org/x"), SourceRefused,
+            "a request for a source with no declared cap")
+
+
+def _case_fleet_manager():
+    # 2026-09-30: the missing input is the frozen strategy contract. A role
+    # asked to trade under a version nobody froze must refuse before any
+    # decision, never fall back to a default rule set
+    import tempfile
+    from pathlib import Path
+    from backend.services.fleet_manager import FleetRefusal, load_contract
+    base = Path(tempfile.mkdtemp())
+    return (lambda: load_contract("undeclared_role", "v0", base=base), FleetRefusal,
+            "a fleet role with no frozen contract")
+
+
 def _case_world_digest():
     # BudgetExceeded is also the spend CEILING (tested in test_world_digest);
     # the missing input is the budget itself: a meter with none declared (or a
@@ -1604,7 +1629,9 @@ def _case_bar_defects_empty_book():
 
 
 CASES = {
+    "fleet_manager": _case_fleet_manager,
     "world_digest": _case_world_digest,
+    "official_sources": _case_official_sources,
     "bar_defects": _case_bar_defects,
     "bar_defects_empty_book": _case_bar_defects_empty_book,
     "calendar_offsets": _case_calendar_offsets,

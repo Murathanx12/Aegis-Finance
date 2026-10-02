@@ -1,0 +1,3313 @@
+{
+ "job": "S2_scenario_gym",
+ "run": 1,
+ "seed": 20260920,
+ "stratified_by": "month block",
+ "drawn_from_cells": 18521,
+ "n_cells": 300,
+ "cells_sha256": "612c599880a196eb3cf3204d97bff3a4043cb651b062dae2ce5b0f0718ad9980",
+ "counterfactual_library_hash": "dc1d71a5509ad532ab37175ab8d304c31637deb4a5d41652c794879ea92e58d1",
+ "cells": [
+  {
+   "cell": [
+    "A",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -445,
+   "as_of": "2025-01"
+  },
+  {
+   "cell": [
+    "AAPL",
+    "2026-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 462,
+   "as_of": "2027-09"
+  },
+  {
+   "cell": [
+    "ABBV",
+    "2026-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 381,
+   "as_of": "2027-07"
+  },
+  {
+   "cell": [
+    "ABCB",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -576,
+   "as_of": "2024-12"
+  },
+  {
+   "cell": [
+    "ABVX",
+    "2025-12"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": -386,
+   "as_of": "2024-11"
+  },
+  {
+   "cell": [
+    "ACHC",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": 242,
+   "as_of": "2025-11"
+  },
+  {
+   "cell": [
+    "ACHC",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": -301,
+   "as_of": "2025-03"
+  },
+  {
+   "cell": [
+    "ACHC",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 277,
+   "as_of": "2026-11"
+  },
+  {
+   "cell": [
+    "ADBE",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": -230,
+   "as_of": "2025-09"
+  },
+  {
+   "cell": [
+    "ADM",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -584,
+   "as_of": "2024-04"
+  },
+  {
+   "cell": [
+    "ADP",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": -299,
+   "as_of": "2025-04"
+  },
+  {
+   "cell": [
+    "AEIS",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 138,
+   "as_of": "2026-01"
+  },
+  {
+   "cell": [
+    "AEO",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 156,
+   "as_of": "2025-08"
+  },
+  {
+   "cell": [
+    "AEP",
+    "2025-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -162,
+   "as_of": "2024-08"
+  },
+  {
+   "cell": [
+    "AIR",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -534,
+   "as_of": "2024-07"
+  },
+  {
+   "cell": [
+    "ALAB",
+    "2026-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": 562,
+   "as_of": "2027-12"
+  },
+  {
+   "cell": [
+    "ALB",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -297,
+   "as_of": "2025-03"
+  },
+  {
+   "cell": [
+    "AME",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 575,
+   "as_of": "2027-02"
+  },
+  {
+   "cell": [
+    "AMKR",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 181,
+   "as_of": "2025-08"
+  },
+  {
+   "cell": [
+    "AMP",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 301,
+   "as_of": "2026-01"
+  },
+  {
+   "cell": [
+    "AMPG",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -248,
+   "as_of": "2025-09"
+  },
+  {
+   "cell": [
+    "AMZN",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": 556,
+   "as_of": "2027-11"
+  },
+  {
+   "cell": [
+    "ANAB",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 453,
+   "as_of": "2026-09"
+  },
+  {
+   "cell": [
+    "ANGO",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 217,
+   "as_of": "2026-11"
+  },
+  {
+   "cell": [
+    "APAM",
+    "2025-02"
+   ],
+   "event_type": "earnings_report",
+   "family": "analyst",
+   "control_family": "capital_return",
+   "date_offset_days": 314,
+   "as_of": "2025-12"
+  },
+  {
+   "cell": [
+    "APH",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 406,
+   "as_of": "2027-06"
+  },
+  {
+   "cell": [
+    "ARCB",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -200,
+   "as_of": "2024-11"
+  },
+  {
+   "cell": [
+    "ARCO",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 317,
+   "as_of": "2027-03"
+  },
+  {
+   "cell": [
+    "AUR",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 553,
+   "as_of": "2027-05"
+  },
+  {
+   "cell": [
+    "AWK",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": 546,
+   "as_of": "2027-08"
+  },
+  {
+   "cell": [
+    "AXON",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -482,
+   "as_of": "2024-09"
+  },
+  {
+   "cell": [
+    "B",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": -442,
+   "as_of": "2024-06"
+  },
+  {
+   "cell": [
+    "BA",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -275,
+   "as_of": "2025-06"
+  },
+  {
+   "cell": [
+    "BKSY",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": -394,
+   "as_of": "2024-05"
+  },
+  {
+   "cell": [
+    "BLDR",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": 467,
+   "as_of": "2027-06"
+  },
+  {
+   "cell": [
+    "BLK",
+    "2026-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 436,
+   "as_of": "2027-08"
+  },
+  {
+   "cell": [
+    "BLKB",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -366,
+   "as_of": "2024-02"
+  },
+  {
+   "cell": [
+    "BMRN",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": -500,
+   "as_of": "2024-05"
+  },
+  {
+   "cell": [
+    "BNTX",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 310,
+   "as_of": "2026-07"
+  },
+  {
+   "cell": [
+    "BR",
+    "2025-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 569,
+   "as_of": "2026-08"
+  },
+  {
+   "cell": [
+    "BRO",
+    "2025-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 587,
+   "as_of": "2026-08"
+  },
+  {
+   "cell": [
+    "BRO",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 587,
+   "as_of": "2027-02"
+  },
+  {
+   "cell": [
+    "BROS",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": 221,
+   "as_of": "2025-10"
+  },
+  {
+   "cell": [
+    "BTSG",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 443,
+   "as_of": "2027-01"
+  },
+  {
+   "cell": [
+    "C",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 434,
+   "as_of": "2026-11"
+  },
+  {
+   "cell": [
+    "CACI",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 406,
+   "as_of": "2026-11"
+  },
+  {
+   "cell": [
+    "CAL",
+    "2025-10"
+   ],
+   "event_type": "earnings_report",
+   "family": "analyst",
+   "control_family": "credit",
+   "date_offset_days": 127,
+   "as_of": "2026-02"
+  },
+  {
+   "cell": [
+    "CAPR",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": 428,
+   "as_of": "2027-05"
+  },
+  {
+   "cell": [
+    "CARR",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 303,
+   "as_of": "2026-03"
+  },
+  {
+   "cell": [
+    "CB",
+    "2025-12"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 401,
+   "as_of": "2027-01"
+  },
+  {
+   "cell": [
+    "CBRE",
+    "2025-12"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": -437,
+   "as_of": "2024-10"
+  },
+  {
+   "cell": [
+    "CC",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 400,
+   "as_of": "2026-03"
+  },
+  {
+   "cell": [
+    "CC",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": 337,
+   "as_of": "2027-01"
+  },
+  {
+   "cell": [
+    "CCI",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 518,
+   "as_of": "2026-12"
+  },
+  {
+   "cell": [
+    "CG",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": -191,
+   "as_of": "2025-08"
+  },
+  {
+   "cell": [
+    "CHA",
+    "2025-11"
+   ],
+   "event_type": "earnings_report",
+   "family": "analyst",
+   "control_family": "macro",
+   "date_offset_days": -194,
+   "as_of": "2025-05"
+  },
+  {
+   "cell": [
+    "CHEF",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": -588,
+   "as_of": "2024-03"
+  },
+  {
+   "cell": [
+    "CHRN",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 247,
+   "as_of": "2027-03"
+  },
+  {
+   "cell": [
+    "CL",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 278,
+   "as_of": "2027-02"
+  },
+  {
+   "cell": [
+    "CLF",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -420,
+   "as_of": "2024-08"
+  },
+  {
+   "cell": [
+    "CLX",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 518,
+   "as_of": "2027-04"
+  },
+  {
+   "cell": [
+    "CNC",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -350,
+   "as_of": "2025-01"
+  },
+  {
+   "cell": [
+    "CNC",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": 136,
+   "as_of": "2026-07"
+  },
+  {
+   "cell": [
+    "COHR",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -314,
+   "as_of": "2024-09"
+  },
+  {
+   "cell": [
+    "COO",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 381,
+   "as_of": "2027-03"
+  },
+  {
+   "cell": [
+    "COP",
+    "2025-12"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -140,
+   "as_of": "2025-07"
+  },
+  {
+   "cell": [
+    "CRM",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": -329,
+   "as_of": "2025-08"
+  },
+  {
+   "cell": [
+    "CROX",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": -142,
+   "as_of": "2025-02"
+  },
+  {
+   "cell": [
+    "CROX",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 555,
+   "as_of": "2027-04"
+  },
+  {
+   "cell": [
+    "CSL",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": -411,
+   "as_of": "2024-08"
+  },
+  {
+   "cell": [
+    "CSL",
+    "2026-02"
+   ],
+   "event_type": "earnings_report",
+   "family": "analyst",
+   "control_family": "operations",
+   "date_offset_days": -472,
+   "as_of": "2024-10"
+  },
+  {
+   "cell": [
+    "CSX",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 197,
+   "as_of": "2025-11"
+  },
+  {
+   "cell": [
+    "CURB",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -337,
+   "as_of": "2024-11"
+  },
+  {
+   "cell": [
+    "CVNA",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 142,
+   "as_of": "2025-07"
+  },
+  {
+   "cell": [
+    "CWST",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -357,
+   "as_of": "2024-02"
+  },
+  {
+   "cell": [
+    "DAKT",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 162,
+   "as_of": "2026-02"
+  },
+  {
+   "cell": [
+    "DBI",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": 220,
+   "as_of": "2026-02"
+  },
+  {
+   "cell": [
+    "DECK",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": -500,
+   "as_of": "2025-03"
+  },
+  {
+   "cell": [
+    "DELL",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": -338,
+   "as_of": "2024-03"
+  },
+  {
+   "cell": [
+    "DG",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 548,
+   "as_of": "2027-03"
+  },
+  {
+   "cell": [
+    "DHR",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": -525,
+   "as_of": "2023-09"
+  },
+  {
+   "cell": [
+    "DHR",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": 298,
+   "as_of": "2027-02"
+  },
+  {
+   "cell": [
+    "DKS",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -560,
+   "as_of": "2024-03"
+  },
+  {
+   "cell": [
+    "DLB",
+    "2025-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -284,
+   "as_of": "2024-04"
+  },
+  {
+   "cell": [
+    "DNN",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 207,
+   "as_of": "2026-12"
+  },
+  {
+   "cell": [
+    "DNUT",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 401,
+   "as_of": "2026-12"
+  },
+  {
+   "cell": [
+    "DPZ",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": -469,
+   "as_of": "2024-08"
+  },
+  {
+   "cell": [
+    "DRI",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 182,
+   "as_of": "2025-09"
+  },
+  {
+   "cell": [
+    "DT",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -247,
+   "as_of": "2024-09"
+  },
+  {
+   "cell": [
+    "DUOL",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 547,
+   "as_of": "2026-11"
+  },
+  {
+   "cell": [
+    "DY",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -539,
+   "as_of": "2025-01"
+  },
+  {
+   "cell": [
+    "EBAY",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 246,
+   "as_of": "2026-01"
+  },
+  {
+   "cell": [
+    "ELF",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -286,
+   "as_of": "2024-12"
+  },
+  {
+   "cell": [
+    "EME",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 292,
+   "as_of": "2027-05"
+  },
+  {
+   "cell": [
+    "EQIX",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": -347,
+   "as_of": "2024-09"
+  },
+  {
+   "cell": [
+    "EQT",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 340,
+   "as_of": "2026-01"
+  },
+  {
+   "cell": [
+    "ESAB",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": -203,
+   "as_of": "2024-08"
+  },
+  {
+   "cell": [
+    "ET",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -170,
+   "as_of": "2024-10"
+  },
+  {
+   "cell": [
+    "ETD",
+    "2025-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -143,
+   "as_of": "2024-08"
+  },
+  {
+   "cell": [
+    "EXC",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 235,
+   "as_of": "2026-03"
+  },
+  {
+   "cell": [
+    "FBIZ",
+    "2025-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 542,
+   "as_of": "2026-07"
+  },
+  {
+   "cell": [
+    "FCN",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -187,
+   "as_of": "2024-10"
+  },
+  {
+   "cell": [
+    "FDS",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -467,
+   "as_of": "2024-05"
+  },
+  {
+   "cell": [
+    "FJET",
+    "2025-12"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -432,
+   "as_of": "2024-10"
+  },
+  {
+   "cell": [
+    "FN",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 167,
+   "as_of": "2025-10"
+  },
+  {
+   "cell": [
+    "FNV",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 361,
+   "as_of": "2026-03"
+  },
+  {
+   "cell": [
+    "FOX",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 219,
+   "as_of": "2025-12"
+  },
+  {
+   "cell": [
+    "FRO",
+    "2025-11"
+   ],
+   "event_type": "earnings_report",
+   "family": "analyst",
+   "control_family": "credit",
+   "date_offset_days": -253,
+   "as_of": "2025-03"
+  },
+  {
+   "cell": [
+    "FTDR",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 383,
+   "as_of": "2026-06"
+  },
+  {
+   "cell": [
+    "FUBO",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 250,
+   "as_of": "2026-01"
+  },
+  {
+   "cell": [
+    "FUBO",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 335,
+   "as_of": "2027-04"
+  },
+  {
+   "cell": [
+    "FVRR",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -314,
+   "as_of": "2025-06"
+  },
+  {
+   "cell": [
+    "FWRG",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -430,
+   "as_of": "2024-01"
+  },
+  {
+   "cell": [
+    "GD",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 196,
+   "as_of": "2026-03"
+  },
+  {
+   "cell": [
+    "GD",
+    "2025-12"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 192,
+   "as_of": "2026-06"
+  },
+  {
+   "cell": [
+    "GEV",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": 386,
+   "as_of": "2027-03"
+  },
+  {
+   "cell": [
+    "GFS",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -319,
+   "as_of": "2025-04"
+  },
+  {
+   "cell": [
+    "GILT",
+    "2026-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": -408,
+   "as_of": "2025-05"
+  },
+  {
+   "cell": [
+    "GIS",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -510,
+   "as_of": "2025-02"
+  },
+  {
+   "cell": [
+    "GNTX",
+    "2025-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": 406,
+   "as_of": "2026-02"
+  },
+  {
+   "cell": [
+    "GOLD",
+    "2025-01"
+   ],
+   "event_type": "analyst_rating_change",
+   "family": "analyst",
+   "control_family": "guidance",
+   "date_offset_days": 250,
+   "as_of": "2025-09"
+  },
+  {
+   "cell": [
+    "GOLD",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 272,
+   "as_of": "2027-01"
+  },
+  {
+   "cell": [
+    "GPK",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 506,
+   "as_of": "2026-12"
+  },
+  {
+   "cell": [
+    "GRPN",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 122,
+   "as_of": "2026-08"
+  },
+  {
+   "cell": [
+    "GT",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -186,
+   "as_of": "2025-08"
+  },
+  {
+   "cell": [
+    "GWW",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 266,
+   "as_of": "2026-12"
+  },
+  {
+   "cell": [
+    "HD",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": -225,
+   "as_of": "2025-03"
+  },
+  {
+   "cell": [
+    "HEI",
+    "2025-12"
+   ],
+   "event_type": "analyst_target_change",
+   "family": "analyst",
+   "control_family": "regulatory",
+   "date_offset_days": 569,
+   "as_of": "2027-07"
+  },
+  {
+   "cell": [
+    "HL",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 270,
+   "as_of": "2026-05"
+  },
+  {
+   "cell": [
+    "HLNE",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -233,
+   "as_of": "2025-07"
+  },
+  {
+   "cell": [
+    "HOG",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -449,
+   "as_of": "2023-11"
+  },
+  {
+   "cell": [
+    "HPE",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -545,
+   "as_of": "2024-07"
+  },
+  {
+   "cell": [
+    "HPK",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -212,
+   "as_of": "2025-08"
+  },
+  {
+   "cell": [
+    "HPQ",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 126,
+   "as_of": "2026-11"
+  },
+  {
+   "cell": [
+    "HQY",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 239,
+   "as_of": "2026-07"
+  },
+  {
+   "cell": [
+    "HUM",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -509,
+   "as_of": "2024-05"
+  },
+  {
+   "cell": [
+    "HUN",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -446,
+   "as_of": "2024-04"
+  },
+  {
+   "cell": [
+    "HYMC",
+    "2025-12"
+   ],
+   "event_type": "insider_or_institutional_ownership_change",
+   "family": "capital_return",
+   "control_family": "analyst",
+   "date_offset_days": -395,
+   "as_of": "2024-11"
+  },
+  {
+   "cell": [
+    "IFF",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 568,
+   "as_of": "2027-09"
+  },
+  {
+   "cell": [
+    "INTU",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 565,
+   "as_of": "2027-11"
+  },
+  {
+   "cell": [
+    "IR",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -183,
+   "as_of": "2025-02"
+  },
+  {
+   "cell": [
+    "ITRI",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": 124,
+   "as_of": "2026-08"
+  },
+  {
+   "cell": [
+    "JBLU",
+    "2025-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 325,
+   "as_of": "2025-12"
+  },
+  {
+   "cell": [
+    "JNJ",
+    "2025-12"
+   ],
+   "event_type": "regulatory_investigation_or_action",
+   "family": "regulatory",
+   "control_family": "capital_return",
+   "date_offset_days": -173,
+   "as_of": "2025-06"
+  },
+  {
+   "cell": [
+    "JPM",
+    "2025-04"
+   ],
+   "event_type": "earnings_report",
+   "family": "analyst",
+   "control_family": "generic",
+   "date_offset_days": 526,
+   "as_of": "2026-09"
+  },
+  {
+   "cell": [
+    "JPM",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -300,
+   "as_of": "2024-09"
+  },
+  {
+   "cell": [
+    "KEYS",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 154,
+   "as_of": "2025-11"
+  },
+  {
+   "cell": [
+    "KFY",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 130,
+   "as_of": "2026-02"
+  },
+  {
+   "cell": [
+    "KGC",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": 128,
+   "as_of": "2026-08"
+  },
+  {
+   "cell": [
+    "KKR",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -321,
+   "as_of": "2024-04"
+  },
+  {
+   "cell": [
+    "KLAC",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": -564,
+   "as_of": "2024-08"
+  },
+  {
+   "cell": [
+    "KLAR",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -312,
+   "as_of": "2025-01"
+  },
+  {
+   "cell": [
+    "KMT",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -361,
+   "as_of": "2024-11"
+  },
+  {
+   "cell": [
+    "KNSA",
+    "2026-04"
+   ],
+   "event_type": "earnings_report",
+   "family": "analyst",
+   "control_family": "legal",
+   "date_offset_days": -392,
+   "as_of": "2025-03"
+  },
+  {
+   "cell": [
+    "KTOS",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 549,
+   "as_of": "2026-09"
+  },
+  {
+   "cell": [
+    "L",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -245,
+   "as_of": "2025-06"
+  },
+  {
+   "cell": [
+    "LAZ",
+    "2025-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 565,
+   "as_of": "2026-08"
+  },
+  {
+   "cell": [
+    "LBRT",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 384,
+   "as_of": "2026-03"
+  },
+  {
+   "cell": [
+    "LEA",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": 417,
+   "as_of": "2026-05"
+  },
+  {
+   "cell": [
+    "LHX",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": -395,
+   "as_of": "2024-07"
+  },
+  {
+   "cell": [
+    "LI",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -451,
+   "as_of": "2025-01"
+  },
+  {
+   "cell": [
+    "LION",
+    "2026-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -369,
+   "as_of": "2025-06"
+  },
+  {
+   "cell": [
+    "LLYVK",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 305,
+   "as_of": "2027-01"
+  },
+  {
+   "cell": [
+    "LNTH",
+    "2025-01"
+   ],
+   "event_type": "mergers_acquisitions",
+   "family": "corporate_action",
+   "control_family": "credit",
+   "date_offset_days": 155,
+   "as_of": "2025-06"
+  },
+  {
+   "cell": [
+    "LOAR",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 136,
+   "as_of": "2025-09"
+  },
+  {
+   "cell": [
+    "LOCO",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": -449,
+   "as_of": "2024-12"
+  },
+  {
+   "cell": [
+    "LOW",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -265,
+   "as_of": "2025-10"
+  },
+  {
+   "cell": [
+    "LSCC",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -600,
+   "as_of": "2023-06"
+  },
+  {
+   "cell": [
+    "LULU",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": -249,
+   "as_of": "2024-10"
+  },
+  {
+   "cell": [
+    "LUV",
+    "2025-04"
+   ],
+   "event_type": "analyst_target_change",
+   "family": "analyst",
+   "control_family": "credit",
+   "date_offset_days": 295,
+   "as_of": "2026-02"
+  },
+  {
+   "cell": [
+    "LVS",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 433,
+   "as_of": "2026-06"
+  },
+  {
+   "cell": [
+    "LVS",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 230,
+   "as_of": "2027-03"
+  },
+  {
+   "cell": [
+    "MCO",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 433,
+   "as_of": "2026-05"
+  },
+  {
+   "cell": [
+    "MDB",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -575,
+   "as_of": "2024-03"
+  },
+  {
+   "cell": [
+    "META",
+    "2026-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 340,
+   "as_of": "2027-05"
+  },
+  {
+   "cell": [
+    "MGM",
+    "2026-06"
+   ],
+   "event_type": "mergers_acquisitions",
+   "family": "corporate_action",
+   "control_family": "demand",
+   "date_offset_days": -298,
+   "as_of": "2025-08"
+  },
+  {
+   "cell": [
+    "MKC",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 242,
+   "as_of": "2026-09"
+  },
+  {
+   "cell": [
+    "MKSI",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 154,
+   "as_of": "2026-04"
+  },
+  {
+   "cell": [
+    "MLI",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": -414,
+   "as_of": "2024-08"
+  },
+  {
+   "cell": [
+    "MMM",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -379,
+   "as_of": "2024-02"
+  },
+  {
+   "cell": [
+    "MMM",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 270,
+   "as_of": "2026-05"
+  },
+  {
+   "cell": [
+    "MNTS",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": -489,
+   "as_of": "2024-09"
+  },
+  {
+   "cell": [
+    "MOS",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 430,
+   "as_of": "2026-10"
+  },
+  {
+   "cell": [
+    "MPWR",
+    "2025-12"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -317,
+   "as_of": "2025-02"
+  },
+  {
+   "cell": [
+    "MRAM",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 506,
+   "as_of": "2027-10"
+  },
+  {
+   "cell": [
+    "MS",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": 343,
+   "as_of": "2026-10"
+  },
+  {
+   "cell": [
+    "MSCI",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": 385,
+   "as_of": "2026-05"
+  },
+  {
+   "cell": [
+    "MSTR",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -154,
+   "as_of": "2024-09"
+  },
+  {
+   "cell": [
+    "MTB",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": 453,
+   "as_of": "2026-12"
+  },
+  {
+   "cell": [
+    "MTDR",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 491,
+   "as_of": "2026-10"
+  },
+  {
+   "cell": [
+    "MTN",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": 315,
+   "as_of": "2026-03"
+  },
+  {
+   "cell": [
+    "MTN",
+    "2026-06"
+   ],
+   "event_type": "earnings_report",
+   "family": "analyst",
+   "control_family": "capital_return",
+   "date_offset_days": -538,
+   "as_of": "2024-12"
+  },
+  {
+   "cell": [
+    "MU",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 570,
+   "as_of": "2027-03"
+  },
+  {
+   "cell": [
+    "MUR",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 486,
+   "as_of": "2026-07"
+  },
+  {
+   "cell": [
+    "NEM",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 198,
+   "as_of": "2025-09"
+  },
+  {
+   "cell": [
+    "NET",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -182,
+   "as_of": "2025-11"
+  },
+  {
+   "cell": [
+    "NSP",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 178,
+   "as_of": "2025-08"
+  },
+  {
+   "cell": [
+    "NTNX",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 346,
+   "as_of": "2026-05"
+  },
+  {
+   "cell": [
+    "O",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -367,
+   "as_of": "2025-01"
+  },
+  {
+   "cell": [
+    "ODFL",
+    "2026-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 577,
+   "as_of": "2028-01"
+  },
+  {
+   "cell": [
+    "OKLO",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 403,
+   "as_of": "2026-08"
+  },
+  {
+   "cell": [
+    "ONON",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 416,
+   "as_of": "2026-06"
+  },
+  {
+   "cell": [
+    "OPEN",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -351,
+   "as_of": "2024-06"
+  },
+  {
+   "cell": [
+    "OSIS",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -552,
+   "as_of": "2023-11"
+  },
+  {
+   "cell": [
+    "OTIS",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -327,
+   "as_of": "2024-05"
+  },
+  {
+   "cell": [
+    "OUT",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": 182,
+   "as_of": "2025-11"
+  },
+  {
+   "cell": [
+    "OZK",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": -519,
+   "as_of": "2023-11"
+  },
+  {
+   "cell": [
+    "PAAS",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -198,
+   "as_of": "2024-11"
+  },
+  {
+   "cell": [
+    "PBF",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": 443,
+   "as_of": "2026-08"
+  },
+  {
+   "cell": [
+    "PDD",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": -289,
+   "as_of": "2025-04"
+  },
+  {
+   "cell": [
+    "PEP",
+    "2026-07"
+   ],
+   "event_type": "earnings_report",
+   "family": "analyst",
+   "control_family": "regulatory",
+   "date_offset_days": -296,
+   "as_of": "2025-09"
+  },
+  {
+   "cell": [
+    "PFE",
+    "2025-07"
+   ],
+   "event_type": "regulatory_investigation_or_action",
+   "family": "regulatory",
+   "control_family": "legal",
+   "date_offset_days": -521,
+   "as_of": "2024-02"
+  },
+  {
+   "cell": [
+    "PFGC",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -545,
+   "as_of": "2023-10"
+  },
+  {
+   "cell": [
+    "PG",
+    "2025-12"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -344,
+   "as_of": "2025-01"
+  },
+  {
+   "cell": [
+    "PINS",
+    "2025-01"
+   ],
+   "event_type": "analyst_target_change",
+   "family": "analyst",
+   "control_family": "legal",
+   "date_offset_days": 341,
+   "as_of": "2025-12"
+  },
+  {
+   "cell": [
+    "PKX",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": -482,
+   "as_of": "2025-01"
+  },
+  {
+   "cell": [
+    "PONY",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": -492,
+   "as_of": "2024-09"
+  },
+  {
+   "cell": [
+    "PRGS",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 307,
+   "as_of": "2026-02"
+  },
+  {
+   "cell": [
+    "PSIX",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": -380,
+   "as_of": "2024-02"
+  },
+  {
+   "cell": [
+    "PSKY",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 316,
+   "as_of": "2026-09"
+  },
+  {
+   "cell": [
+    "PSKY",
+    "2026-05"
+   ],
+   "event_type": "analyst_target_change",
+   "family": "analyst",
+   "control_family": "legal",
+   "date_offset_days": 370,
+   "as_of": "2027-05"
+  },
+  {
+   "cell": [
+    "PTC",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 480,
+   "as_of": "2026-10"
+  },
+  {
+   "cell": [
+    "PWR",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": -563,
+   "as_of": "2024-07"
+  },
+  {
+   "cell": [
+    "PZZA",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -495,
+   "as_of": "2024-07"
+  },
+  {
+   "cell": [
+    "QBTS",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 411,
+   "as_of": "2027-08"
+  },
+  {
+   "cell": [
+    "RCKT",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 185,
+   "as_of": "2026-09"
+  },
+  {
+   "cell": [
+    "RDDT",
+    "2025-12"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 562,
+   "as_of": "2027-06"
+  },
+  {
+   "cell": [
+    "RDW",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": -362,
+   "as_of": "2024-06"
+  },
+  {
+   "cell": [
+    "RDW",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 185,
+   "as_of": "2026-02"
+  },
+  {
+   "cell": [
+    "RDY",
+    "2025-01"
+   ],
+   "event_type": "earnings_report",
+   "family": "analyst",
+   "control_family": "demand",
+   "date_offset_days": 536,
+   "as_of": "2026-07"
+  },
+  {
+   "cell": [
+    "REGN",
+    "2025-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 257,
+   "as_of": "2025-11"
+  },
+  {
+   "cell": [
+    "RMD",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 288,
+   "as_of": "2026-07"
+  },
+  {
+   "cell": [
+    "ROK",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": -230,
+   "as_of": "2024-12"
+  },
+  {
+   "cell": [
+    "RTX",
+    "2025-12"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -378,
+   "as_of": "2024-12"
+  },
+  {
+   "cell": [
+    "RXT",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": -301,
+   "as_of": "2025-05"
+  },
+  {
+   "cell": [
+    "SAIL",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 140,
+   "as_of": "2026-10"
+  },
+  {
+   "cell": [
+    "SAM",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -377,
+   "as_of": "2024-07"
+  },
+  {
+   "cell": [
+    "SBGI",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": 558,
+   "as_of": "2027-10"
+  },
+  {
+   "cell": [
+    "SCHL",
+    "2025-09"
+   ],
+   "event_type": "earnings_report",
+   "family": "analyst",
+   "control_family": "capital_return",
+   "date_offset_days": 131,
+   "as_of": "2026-01"
+  },
+  {
+   "cell": [
+    "SGI",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": -511,
+   "as_of": "2024-09"
+  },
+  {
+   "cell": [
+    "SGML",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -391,
+   "as_of": "2025-02"
+  },
+  {
+   "cell": [
+    "SHOP",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -343,
+   "as_of": "2025-05"
+  },
+  {
+   "cell": [
+    "SITE",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 590,
+   "as_of": "2027-09"
+  },
+  {
+   "cell": [
+    "SMCI",
+    "2026-01"
+   ],
+   "event_type": "product_launch_or_innovation",
+   "family": "demand",
+   "control_family": "operations",
+   "date_offset_days": -382,
+   "as_of": "2024-12"
+  },
+  {
+   "cell": [
+    "SNDK",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -279,
+   "as_of": "2025-10"
+  },
+  {
+   "cell": [
+    "SOFI",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 207,
+   "as_of": "2025-11"
+  },
+  {
+   "cell": [
+    "SOUN",
+    "2025-01"
+   ],
+   "event_type": "new_contract_or_partnership",
+   "family": "demand",
+   "control_family": "macro",
+   "date_offset_days": 454,
+   "as_of": "2026-04"
+  },
+  {
+   "cell": [
+    "SPGI",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 507,
+   "as_of": "2027-06"
+  },
+  {
+   "cell": [
+    "SPGI",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": -414,
+   "as_of": "2025-05"
+  },
+  {
+   "cell": [
+    "STLD",
+    "2025-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 293,
+   "as_of": "2025-11"
+  },
+  {
+   "cell": [
+    "STNE",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": 427,
+   "as_of": "2027-04"
+  },
+  {
+   "cell": [
+    "STX",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -224,
+   "as_of": "2025-01"
+  },
+  {
+   "cell": [
+    "SXT",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": 147,
+   "as_of": "2025-12"
+  },
+  {
+   "cell": [
+    "T",
+    "2026-06"
+   ],
+   "event_type": "regulatory_investigation_or_action",
+   "family": "regulatory",
+   "control_family": "capital_return",
+   "date_offset_days": -281,
+   "as_of": "2025-09"
+  },
+  {
+   "cell": [
+    "TAP",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": -334,
+   "as_of": "2024-06"
+  },
+  {
+   "cell": [
+    "TDG",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 501,
+   "as_of": "2026-08"
+  },
+  {
+   "cell": [
+    "TDUP",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -511,
+   "as_of": "2023-11"
+  },
+  {
+   "cell": [
+    "TDW",
+    "2025-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": 493,
+   "as_of": "2026-09"
+  },
+  {
+   "cell": [
+    "TEL",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -254,
+   "as_of": "2025-08"
+  },
+  {
+   "cell": [
+    "TEVA",
+    "2025-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -401,
+   "as_of": "2024-01"
+  },
+  {
+   "cell": [
+    "TIGO",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": -291,
+   "as_of": "2025-04"
+  },
+  {
+   "cell": [
+    "TITN",
+    "2025-11"
+   ],
+   "event_type": "divestiture_asset_sale",
+   "family": "corporate_action",
+   "control_family": "guidance",
+   "date_offset_days": 315,
+   "as_of": "2026-09"
+  },
+  {
+   "cell": [
+    "TLN",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": 422,
+   "as_of": "2026-10"
+  },
+  {
+   "cell": [
+    "TMUS",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 265,
+   "as_of": "2026-04"
+  },
+  {
+   "cell": [
+    "TNXP",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 379,
+   "as_of": "2026-08"
+  },
+  {
+   "cell": [
+    "TOYO",
+    "2026-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": -137,
+   "as_of": "2026-01"
+  },
+  {
+   "cell": [
+    "TPB",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -459,
+   "as_of": "2024-05"
+  },
+  {
+   "cell": [
+    "TRV",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -540,
+   "as_of": "2024-07"
+  },
+  {
+   "cell": [
+    "TSLX",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -548,
+   "as_of": "2024-08"
+  },
+  {
+   "cell": [
+    "TXN",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": 502,
+   "as_of": "2026-10"
+  },
+  {
+   "cell": [
+    "TXRH",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -349,
+   "as_of": "2024-05"
+  },
+  {
+   "cell": [
+    "UHS",
+    "2025-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": 588,
+   "as_of": "2026-11"
+  },
+  {
+   "cell": [
+    "UHS",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -595,
+   "as_of": "2024-02"
+  },
+  {
+   "cell": [
+    "UNP",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 468,
+   "as_of": "2026-09"
+  },
+  {
+   "cell": [
+    "UPST",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "operations",
+   "date_offset_days": 377,
+   "as_of": "2026-09"
+  },
+  {
+   "cell": [
+    "URBN",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -396,
+   "as_of": "2024-05"
+  },
+  {
+   "cell": [
+    "USB",
+    "2025-12"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "regulatory",
+   "date_offset_days": -585,
+   "as_of": "2024-05"
+  },
+  {
+   "cell": [
+    "USFD",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 264,
+   "as_of": "2026-03"
+  },
+  {
+   "cell": [
+    "UTI",
+    "2026-02"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": -279,
+   "as_of": "2025-05"
+  },
+  {
+   "cell": [
+    "V",
+    "2026-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 282,
+   "as_of": "2026-10"
+  },
+  {
+   "cell": [
+    "VG",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": 151,
+   "as_of": "2026-01"
+  },
+  {
+   "cell": [
+    "VKTX",
+    "2025-01"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 476,
+   "as_of": "2026-05"
+  },
+  {
+   "cell": [
+    "VKTX",
+    "2026-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": 403,
+   "as_of": "2027-07"
+  },
+  {
+   "cell": [
+    "VNET",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": 271,
+   "as_of": "2026-06"
+  },
+  {
+   "cell": [
+    "WDS",
+    "2026-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "corporate_action",
+   "date_offset_days": -473,
+   "as_of": "2025-02"
+  },
+  {
+   "cell": [
+    "WELL",
+    "2025-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 274,
+   "as_of": "2026-04"
+  },
+  {
+   "cell": [
+    "WELL",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": -339,
+   "as_of": "2025-06"
+  },
+  {
+   "cell": [
+    "WEX",
+    "2026-04"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 470,
+   "as_of": "2027-07"
+  },
+  {
+   "cell": [
+    "WLK",
+    "2026-03"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "legal",
+   "date_offset_days": 325,
+   "as_of": "2027-02"
+  },
+  {
+   "cell": [
+    "WM",
+    "2025-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": 457,
+   "as_of": "2026-09"
+  },
+  {
+   "cell": [
+    "WM",
+    "2025-08"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "capital_return",
+   "date_offset_days": 483,
+   "as_of": "2026-12"
+  },
+  {
+   "cell": [
+    "WOOF",
+    "2026-07"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": -337,
+   "as_of": "2025-08"
+  },
+  {
+   "cell": [
+    "WOR",
+    "2026-06"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "analyst",
+   "date_offset_days": -518,
+   "as_of": "2025-01"
+  },
+  {
+   "cell": [
+    "WSM",
+    "2025-12"
+   ],
+   "event_type": "analyst_rating_change",
+   "family": "analyst",
+   "control_family": "credit",
+   "date_offset_days": -529,
+   "as_of": "2024-07"
+  },
+  {
+   "cell": [
+    "WTW",
+    "2025-11"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "demand",
+   "date_offset_days": -345,
+   "as_of": "2024-12"
+  },
+  {
+   "cell": [
+    "WYNN",
+    "2025-10"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "credit",
+   "date_offset_days": 202,
+   "as_of": "2026-05"
+  },
+  {
+   "cell": [
+    "XRX",
+    "2026-05"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "guidance",
+   "date_offset_days": 245,
+   "as_of": "2027-01"
+  },
+  {
+   "cell": [
+    "XYZ",
+    "2025-09"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -471,
+   "as_of": "2024-06"
+  },
+  {
+   "cell": [
+    "XYZ",
+    "2025-12"
+   ],
+   "event_type": "no_event",
+   "family": "generic",
+   "control_family": "macro",
+   "date_offset_days": -579,
+   "as_of": "2024-05"
+  },
+  {
+   "cell": [
+    "ZM",
+    "2025-09"
+   ],
+   "event_type": "analyst_rating_change",
+   "family": "analyst",
+   "control_family": "demand",
+   "date_offset_days": -518,
+   "as_of": "2024-04"
+  }
+ ],
+ "written_utc": "2026-09-20T16:55:27+00:00"
+}

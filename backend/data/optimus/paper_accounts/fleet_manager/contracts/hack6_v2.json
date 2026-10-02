@@ -1,0 +1,49 @@
+{
+ "schema": "fleet_manager_contract/1",
+ "role": "hack6",
+ "version": "v2",
+ "licence": "PRODUCT_EXPERIMENT",
+ "status": "PROPOSED (dry-run until the owner sets modes.json contract=v2, entries=LIVE)",
+ "alpha_source": "world-digest typed implications through SHADOW_NEWS_v0's frozen news_signal (d > 0 only), fixed 1% of equity per name, <= 10 names, 5 sessions",
+ "why_this_account": "hack6 keeps its ten tracker names under v1 terms; the free cash carries a small news sleeve so news is tested at small weight",
+ "caps": {
+  "max_gross_frac": 1.0,
+  "max_name_frac": 0.1,
+  "daily_turnover_frac": 0.5,
+  "max_orders_per_run": 60,
+  "min_order_usd": 250.0,
+  "shorting": false,
+  "new_options": false,
+  "leverage": false
+ },
+ "costs": {
+  "assumed_bps_per_side": 10.0,
+  "fill_convention": "DAY limit at ask x (1+10bps) for buys and bid x (1-10bps) for sells; an unfilled limit is not traded; last trade when the IEX quote is one-sided or wider than 2%"
+ },
+ "objective": "terminal wealth vs SPY and vs the frozen twin, graded daily; the question is whether this alpha source's errors differ from the other accounts'; no claim of skill",
+ "legacy": "names held when v2 becomes active and not targeted by it keep their v1 terms (stop, horizon) and are not counted as capacity: v2 fills what remains of the gross cap",
+ "selection": {
+  "kind": "news_sleeve",
+  "rule": "world_digest.news_signal over the newest digest's typed implications (horizon 5 or 20, ticker subjects, not refused; social-only implications never reach the digest's implication list): d_i = mean(sign x confidence). Long only: names with d_i > 0, strongest first, excluding bar-defect / stitched names and names that already moved > 2 five-session sigma; 1% of equity each, at most 10 names; held 5 sessions, then exited unless re-signalled",
+  "digest_max_age_h": 36,
+  "llm_authority": "none: only typed, validated fields reach this rule; no free text decides an order",
+  "sources_refused": "X / Reddit / StockTwits never originate an order (SOCIAL_ONLY is refused upstream)"
+ },
+ "twin": {
+  "kind": "v1_matched_random_twin_plus_cash",
+  "note": "the sleeve's own random twin is drawn at entry with seed = hash(role, day)"
+ },
+ "stop_rule": {
+  "quoted_in": "daily sigma",
+  "sigma": "63-session sd of close-to-close returns on the bar-defect-screened panel (Alpaca daily bars when a name is not in the panel)",
+  "k_sigma": 3.0,
+  "min_frac": 0.04,
+  "max_frac": 0.1,
+  "distance": "clip(k_sigma x sigma, min_frac, max_frac) of the reference price",
+  "never_loosen": "a replaced stop is never below the stop it replaces",
+  "order": "GTC sell stop for the full long quantity; renewed within 7 days of its expiry"
+ },
+ "exits": "5 sessions unless re-signalled; resting stops; legacy names keep v1 terms",
+ "policy_hash": "12fa05317df05ce1",
+ "frozen_utc": "2026-09-29T13:37:49+00:00"
+}

@@ -111,25 +111,51 @@ def _flag(root, path: str) -> bool | None:
     return None
 
 
-def _is_10b5_1(tx, root) -> bool | None:
-    """Was this trade made under a pre-arranged plan?
+def rule_10b5_1(tx, root) -> tuple[bool | None, str]:
+    """Was this trade made under a pre-arranged plan? -> (flag, basis).
 
     R6 names 10b5-1 vs discretionary as a mechanism to test, and it is the one
-    field most likely to be misread. Since the 2023 amendments there is an
-    explicit element; before that the only evidence is a footnote, and a filing
-    with neither is genuinely UNKNOWN. Returning False for "no element" would
-    quietly relabel every pre-2023 planned sale as discretionary — which is the
-    exact direction that would manufacture a finding.
+    field most likely to be misread. A filing with no evidence at all is
+    genuinely UNKNOWN. Returning False for "no element" would quietly relabel
+    every pre-2023 planned sale as discretionary -- which is the exact direction
+    that would manufacture a finding.
+
+    The evidence, in order:
+
+    1. a per-line `transactionCoding/rule10b5-1Checked` (basis `line_element`);
+    2. the FILING-level checkbox `<aff10b5One>` that the post-2023 schema
+       (X0609) puts directly under `ownershipDocument` (basis `filing_box`).
+       MEASURED 2026-09-30 on live EDGAR filings: this is the element filers
+       use, spelled `1` / `0` / `false`; `rule10b5-1Checked` appeared in none,
+       so before this fix nearly every current Form 4 read as unknown. A
+       checked box is True. An explicitly UNchecked box is False: it is the
+       filer's statement for the filing, not an absence;
+    3. a footnote naming "10b5-1" when the filing has no box (older filings;
+       basis `footnote`);
+    4. nothing -> (None, "none").
     """
     explicit = tx.find(".//transactionCoding/rule10b5-1Checked")
     if explicit is None:
         explicit = root.find(".//rule10b5-1Checked")
     if explicit is not None and (explicit.text or "").strip():
-        return (explicit.text or "").strip().lower() in ("1", "true")
+        return (explicit.text or "").strip().lower() in ("1", "true"), "line_element"
+    box = root.find("aff10b5One")
+    if box is None:
+        box = root.find(".//aff10b5One")
+    raw = (box.text or "").strip().lower() if box is not None else ""
+    if raw in ("1", "true", "y", "yes"):
+        return True, "filing_box"
+    if raw in ("0", "false", "n", "no"):
+        return False, "filing_box"
     blob = " ".join(f.text or "" for f in root.findall(".//footnote")).lower()
     if "10b5-1" in blob:
-        return True
-    return None
+        return True, "footnote"
+    return None, "none"
+
+
+def _is_10b5_1(tx, root) -> bool | None:
+    """The flag alone (see `rule_10b5_1`)."""
+    return rule_10b5_1(tx, root)[0]
 
 
 def _owner_role(root) -> str:
@@ -242,6 +268,7 @@ def parse_ownership_form(xml_text: str | bytes) -> dict:
                 "ownership_type": _txt(
                     tx, ".//ownershipNature/directOrIndirectOwnership"),
                 "rule_10b5_1": _is_10b5_1(tx, root),
+                "rule_10b5_1_basis": rule_10b5_1(tx, root)[1],
                 # The judgement a signal layer needs and must not re-derive from
                 # the code by hand every time.
                 "is_discretionary_market_trade": code in DISCRETIONARY_MARKET_CODES,

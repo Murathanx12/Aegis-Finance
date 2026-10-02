@@ -1,0 +1,151 @@
+{
+ "hyp_id": "H-3c9e80c849",
+ "title": "AI leader shock -> semi equipment lag",
+ "night": "2026-09-29",
+ "run_utc": "2026-09-29T16:14:42+00:00",
+ "result": {
+  "cell_type": "macro_lead_lag",
+  "params": {
+   "driver": "basket:NVDA,AVGO,AMD",
+   "targets": [
+    "AMAT",
+    "LRCX",
+    "KLAC",
+    "ASML",
+    "TSM",
+    "TER",
+    "ONTO"
+   ],
+   "expected_sign": 1,
+   "h": 1,
+   "shock_z": 2.0
+  },
+  "targets_used": [
+   "AMAT",
+   "LRCX",
+   "KLAC",
+   "ASML",
+   "TSM",
+   "TER",
+   "ONTO"
+  ],
+  "beta_to_spy_design": 1.482,
+  "window": "open(t+1) -> close(t+1), residual of beta x SPY; etf: targets use close t -> close t+1",
+  "design": {
+   "primary_signed_next_resid": {
+    "mean": -0.00193,
+    "se": 0.00133,
+    "t": -1.45,
+    "mde": 0.003723,
+    "n": 110,
+    "n_blocks": 55
+   },
+   "net_of_cost": -0.00393,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.010271,
+    "se": 0.001926,
+    "t": 5.33,
+    "mde": 0.005394,
+    "n": 110,
+    "n_blocks": 55
+   },
+   "placebo_all_days_signed_next": {
+    "mean": -0.000792,
+    "se": 0.000273,
+    "t": -2.9,
+    "mde": 0.000765,
+    "n": 1721,
+    "n_blocks": 82
+   },
+   "n_shocks": 110,
+   "by_year": {
+    "2016": {
+     "mean": -0.003399,
+     "n": 10
+    },
+    "2017": {
+     "mean": -0.000439,
+     "n": 10
+    },
+    "2018": {
+     "mean": -0.002348,
+     "n": 23
+    },
+    "2019": {
+     "mean": 0.000585,
+     "n": 12
+    },
+    "2020": {
+     "mean": -0.003103,
+     "n": 24
+    },
+    "2021": {
+     "mean": -0.00302,
+     "n": 19
+    },
+    "2022": {
+     "mean": 0.000411,
+     "n": 12
+    }
+   },
+   "loo_year_worst": -0.002238,
+   "span": [
+    "2016-04-22",
+    "2022-11-30"
+   ]
+  },
+  "confirm": {
+   "primary_signed_next_resid": {
+    "mean": -0.005201,
+    "se": 0.002234,
+    "t": -2.33,
+    "mde": 0.006256,
+    "n": 47,
+    "n_blocks": 30
+   },
+   "net_of_cost": -0.007201,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.028038,
+    "se": 0.003735,
+    "t": 7.51,
+    "mde": 0.010457,
+    "n": 47,
+    "n_blocks": 30
+   },
+   "placebo_all_days_signed_next": {
+    "mean": -0.000659,
+    "se": 0.000497,
+    "t": -1.33,
+    "mde": 0.001393,
+    "n": 936,
+    "n_blocks": 45
+   },
+   "n_shocks": 47,
+   "by_year": {
+    "2023": {
+     "mean": -0.001842,
+     "n": 9
+    },
+    "2024": {
+     "mean": -0.001356,
+     "n": 16
+    },
+    "2025": {
+     "mean": -0.004453,
+     "n": 13
+    },
+    "2026": {
+     "mean": -0.016475,
+     "n": 9
+    }
+   },
+   "loo_year_worst": -0.007185,
+   "span": [
+    "2023-01-23",
+    "2026-07-30"
+   ]
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.00520 <= 0"
+ }
+}

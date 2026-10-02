@@ -1,0 +1,669 @@
+{
+ "receipt": "grade_forecasts",
+ "roadmap_item": "chunk 18b",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "stage": "pnl",
+ "date": "2026-09-25",
+ "started_utc": "2026-09-25T15:57:27+00:00",
+ "written_utc": "2026-09-25T15:57:29+00:00",
+ "ledger_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\predictions.jsonl",
+ "population": null,
+ "bars": {
+  "available": true,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+  "symbols": 3060,
+  "first_bar": "2025-01-02",
+  "last_bar": "2026-09-21",
+  "basis": "`paper_books.load_bars()` — the same local daily panel the paper books are marked against and the agency proposes against. No vendor is called: a step inside the daily pass must not depend on one being up."
+ },
+ "graded_by": "backend.services.forecast_grader -> ledger_resolver.resolve_due -> belief_state.resolve_one; no return arithmetic lives in the grader itself",
+ "n_records": 26148,
+ "newly_resolved": 0,
+ "graded_before_this_run": 17484,
+ "graded_after_this_run": 17484,
+ "resolver_status": "ok",
+ "resolver_reason": null,
+ "resolver_due": 130,
+ "resolver_priced_from": "fresh_fetch",
+ "unpriceable": [
+  {
+   "ticker": "CL=F",
+   "n_due_records_stranded": 2,
+   "prediction_ids": [
+    "bd2b1f8d37f2c032",
+    "e0aafe370293f93a"
+   ],
+   "reason": "no usable bars from the live fetch and none in the frozen CSV — these records stay OVERDUE and keep the ledger canary DEGRADED until priced or voided"
+  },
+  {
+   "ticker": "DX-Y.NYB",
+   "n_due_records_stranded": 1,
+   "prediction_ids": [
+    "ba1c162441db7d1f"
+   ],
+   "reason": "no usable bars from the live fetch and none in the frozen CSV — these records stay OVERDUE and keep the ledger canary DEGRADED until priced or voided"
+  },
+  {
+   "ticker": "EA",
+   "n_due_records_stranded": 27,
+   "prediction_ids": [
+    "c7a479ddc27c62dd",
+    "4b931ea4b433d351",
+    "0c96c0b9d2babeea",
+    "b3e8155a5869816f",
+    "06e36a2ef876f53b",
+    "da3915aa48dba552",
+    "612a320f28896b5c",
+    "b4870552c6d79ece",
+    "d042ce8fbb480044",
+    "356f4da280912de9",
+    "3529f9cca79f828d",
+    "ffe63a6f32e14535",
+    "9fe85e0f6eda3e19",
+    "da741a5ffe85c77b",
+    "95a33de8be7f4720",
+    "906157fa9fb1d26b",
+    "8eda4a29959b9df2",
+    "548e9019eac75655",
+    "3e4e400d73eb7b26",
+    "e93f58790305bd19"
+   ],
+   "reason": "no usable bars from the live fetch and none in the frozen CSV — these records stay OVERDUE and keep the ledger canary DEGRADED until priced or voided"
+  },
+  {
+   "ticker": "ES=F",
+   "n_due_records_stranded": 1,
+   "prediction_ids": [
+    "fd3151afd0bf25e6"
+   ],
+   "reason": "no usable bars from the live fetch and none in the frozen CSV — these records stay OVERDUE and keep the ledger canary DEGRADED until priced or voided"
+  },
+  {
+   "ticker": "GC=F",
+   "n_due_records_stranded": 1,
+   "prediction_ids": [
+    "cf5fb1ace4be56dc"
+   ],
+   "reason": "no usable bars from the live fetch and none in the frozen CSV — these records stay OVERDUE and keep the ledger canary DEGRADED until priced or voided"
+  },
+  {
+   "ticker": "ZN=F",
+   "n_due_records_stranded": 1,
+   "prediction_ids": [
+    "cc0c01e01ff9ca38"
+   ],
+   "reason": "no usable bars from the live fetch and none in the frozen CSV — these records stay OVERDUE and keep the ledger canary DEGRADED until priced or voided"
+  },
+  {
+   "ticker": "^VIX",
+   "n_due_records_stranded": 1,
+   "prediction_ids": [
+    "1343da0878e5ff1c"
+   ],
+   "reason": "no usable bars from the live fetch and none in the frozen CSV — these records stay OVERDUE and keep the ledger canary DEGRADED until priced or voided"
+  }
+ ],
+ "n_unpriceable_tickers": 7,
+ "quarantine": null,
+ "quarantine_note": null,
+ "health": {
+  "status": "DEGRADED",
+  "problems": [
+   "130 forecast(s) past due and unresolved"
+  ],
+  "notices": [],
+  "persistence": {
+   "ledger_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\predictions.jsonl",
+   "data_dir": "C:\\Users\\mrthn\\aegis-finance\\backend\\data",
+   "volume_configured": false,
+   "under_data_dir": true,
+   "status": "ok",
+   "note": "AEGIS_DATA_DIR is unset, so DATA_DIR is the in-repo backend/data — the expected LOCAL configuration. This check cannot distinguish a dev box from a deployment that forgot the variable; the volume-mount contract itself is pinned by test_deploy_gate.py"
+  },
+  "n_records": 26148,
+  "n_void": 6,
+  "n_resolved": 17484,
+  "n_overdue": 130,
+  "n_overdue_actionable": 130,
+  "n_overdue_quarantined": 0,
+  "overdue_actionable": [
+   {
+    "prediction_id": "bd2b1f8d37f2c032",
+    "ticker": "CL=F",
+    "specialist": "why_moved:geopolitical",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-08-16"
+   },
+   {
+    "prediction_id": "1343da0878e5ff1c",
+    "ticker": "^VIX",
+    "specialist": "why_moved:geopolitical",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-08-16"
+   },
+   {
+    "prediction_id": "c7a479ddc27c62dd",
+    "ticker": "EA",
+    "specialist": "macro_rates",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-08-22"
+   },
+   {
+    "prediction_id": "4b931ea4b433d351",
+    "ticker": "EA",
+    "specialist": "macro_rates",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "0c96c0b9d2babeea",
+    "ticker": "EA",
+    "specialist": "macro_rates",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "b3e8155a5869816f",
+    "ticker": "EA",
+    "specialist": "company_fundamental",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "06e36a2ef876f53b",
+    "ticker": "EA",
+    "specialist": "options_volatility",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-08-22"
+   },
+   {
+    "prediction_id": "da3915aa48dba552",
+    "ticker": "EA",
+    "specialist": "options_volatility",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "612a320f28896b5c",
+    "ticker": "EA",
+    "specialist": "accounting_forensics",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "b4870552c6d79ece",
+    "ticker": "EA",
+    "specialist": "analyst_revisions",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-08-22"
+   },
+   {
+    "prediction_id": "d042ce8fbb480044",
+    "ticker": "EA",
+    "specialist": "analyst_revisions",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "356f4da280912de9",
+    "ticker": "EA",
+    "specialist": "analyst_revisions",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "3529f9cca79f828d",
+    "ticker": "EA",
+    "specialist": "geopolitical",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "ca0e66e031298566",
+    "ticker": "AVB",
+    "specialist": "execution_momentum",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-08-22"
+   },
+   {
+    "prediction_id": "f8fae92a255c546e",
+    "ticker": "AVB",
+    "specialist": "execution_momentum",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "6d299d23bbec1e4e",
+    "ticker": "AVB",
+    "specialist": "execution_momentum",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "ffe63a6f32e14535",
+    "ticker": "EA",
+    "specialist": "skeptic",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "5f4f08f437ec1ea3",
+    "ticker": "AVB",
+    "specialist": "macro_rates",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "507e18de50c1a01c",
+    "ticker": "AVB",
+    "specialist": "macro_rates",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   },
+   {
+    "prediction_id": "1fce8329ade4dc0a",
+    "ticker": "AVB",
+    "specialist": "company_fundamental",
+    "made_at": "2026-08-12",
+    "resolves_after": "2026-09-13"
+   }
+  ],
+  "last_written": "2026-09-25",
+  "days_quiet": 0,
+  "distinct_specialists": 37,
+  "distinct_models": 10
+ },
+ "counts_by_mechanism": {
+  "paper_book_v1": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 6
+  },
+  "x3_scenario_forecast_v1": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "reaction_longshort_v1": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "hiring_pivot_ai_v1": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "holders_13f_v1": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "pivot_to_ai_narrative_v1": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "management_motivation_v1": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "biotech": {
+   "graded": 1,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 13
+  },
+  "semis_compute": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 21
+  },
+  "energy_materials": {
+   "graded": 132,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 164
+  },
+  "software_consumer": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 10
+  },
+  "skeptic": {
+   "graded": 1162,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 3,
+   "QUARANTINED": 0,
+   "VOID": 6,
+   "not_yet_due": 570
+  },
+  "why_moved:company_news": {
+   "graded": 4,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "why_moved:macro_rates": {
+   "graded": 1,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "why_moved:sector_factor": {
+   "graded": 4,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "why_moved:options_vol": {
+   "graded": 4,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "why_moved:revisions": {
+   "graded": 4,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "why_moved:skeptic": {
+   "graded": 4,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "why_moved:geopolitical": {
+   "graded": 2,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 2,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "execution_momentum": {
+   "graded": 1277,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 6,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 367
+  },
+  "event_news": {
+   "graded": 1118,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 3,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 565
+  },
+  "behavioral_narrative": {
+   "graded": 1096,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 4,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 606
+  },
+  "macro_rates": {
+   "graded": 1122,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 7,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 558
+  },
+  "geopolitical": {
+   "graded": 1049,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 3,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 681
+  },
+  "analyst_revisions": {
+   "graded": 1225,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 6,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 474
+  },
+  "options_volatility": {
+   "graded": 1322,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 4,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 331
+  },
+  "company_fundamental": {
+   "graded": 799,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 4,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 909
+  },
+  "accounting_forensics": {
+   "graded": 866,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 3,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 840
+  },
+  "ownership_flow": {
+   "graded": 1139,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 4,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 555
+  },
+  "semis_technology": {
+   "graded": 310,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 1,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 283
+  },
+  "biotech_pharma": {
+   "graded": 163,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 266
+  },
+  "investigator:A_snapshot": {
+   "graded": 936,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 15,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 120
+  },
+  "investigator:B_tools": {
+   "graded": 936,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 15,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 120
+  },
+  "investigator:C_tools_only": {
+   "graded": 936,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 15,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 120
+  },
+  "investigator:D_all": {
+   "graded": 936,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 15,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 120
+  },
+  "investigator:B_anon": {
+   "graded": 936,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 15,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 120
+  },
+  "headline_arena_v1": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 5,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 0
+  },
+  "investigator:evidence_v2": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 40
+  },
+  "investigator:evidence_v3": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 118
+  },
+  "thesis_card_v1": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 166
+  },
+  "review:v0": {
+   "graded": 0,
+   "RECORD_LACKS_TARGET": 0,
+   "MECHANISM_HAS_NO_GRADER": 0,
+   "NO_BAR_FOR_RESOLUTION_DATE": 0,
+   "QUARANTINED": 0,
+   "VOID": 0,
+   "not_yet_due": 385
+  }
+ },
+ "totals": {
+  "graded": 17484,
+  "RECORD_LACKS_TARGET": 0,
+  "MECHANISM_HAS_NO_GRADER": 0,
+  "NO_BAR_FOR_RESOLUTION_DATE": 130,
+  "QUARANTINED": 0,
+  "VOID": 6,
+  "not_yet_due": 8528
+ },
+ "n_still_refused": 136,
+ "buckets": [
+  "graded",
+  "RECORD_LACKS_TARGET",
+  "MECHANISM_HAS_NO_GRADER",
+  "NO_BAR_FOR_RESOLUTION_DATE",
+  "QUARANTINED",
+  "VOID",
+  "not_yet_due"
+ ],
+ "read_me_first": "Every record in the ledger is in exactly one bucket of the closed set, and every mechanism is listed even at zero — the failure this step exists to fix was 17,614 due records sitting in no bucket at all while an hourly roll-up reported the number and nothing acted on it. `graded` is read back OFF the ledger after the resolver ran, never predicted. `NO_BAR_FOR_RESOLUTION_DATE` is not a fault in the record: the local panel ends at `bars.last_bar` and those records grade on a later day. Nothing here computes a return: `belief_state.resolve_one` does, with every guard it already had.",
+ "headline": "0 newly resolved; 17,484 of 26,148 records now carry an outcome; 130 wait on a bar, 8,528 are not yet due"
+}

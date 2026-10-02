@@ -113,3 +113,25 @@ IN_CHARGE_MARGIN = 0.002   # a rival replaces the model in charge only by this m
 TRUST_FULL_IC = 0.05       # posterior rank IC at which one model alone would carry the whole ensemble
 MAG_TOLERANCE = 0.01       # the simplest magnitude model within this of the best is used
 CONFORMAL_MIN_ROWS = 500   # graded rows needed before forward coverage replaces walk-forward coverage
+
+# ---- 2026-09-30 night (JOB4): universe hygiene + size members -----------------------
+# F3: deaths the inactive-asset list never listed, recovered from CRSP (nn_lab/deaths_crsp.py).
+BARS_DELISTED_CRSP = OPTIMUS / "prices_deep" / "bars_delisted_crsp.parquet"
+USE_CRSP_DEATHS = True            # table.build reads the file when it exists
+# F3: a dead company whose ticker a later company reuses becomes `SYM#d` (its own dead name)
+# instead of being dropped, when its bars end before the living company's first bar.
+RENAME_REUSED_DEAD = True
+# Universe: ETFs / ETNs / funds are not companies; their structural decay is free "skill".
+ETF_EXCLUSIONS = OUT / "universe_meta" / "etf_exclusions.json"
+EXCLUDE_ETFS = True               # price_rows skips every symbol in ETF_EXCLUSIONS
+# Size members (nn_lab/size_members.py): the earnings-cadence prior and the TF-IDF text member
+# are frozen and graded nightly as MAGNITUDE models; they earn weight only through forward
+# graded blocks (prior 0). Off = the roster is exactly MAGNITUDE_ROSTER above.
+SIZE_MEMBERS_NIGHTLY = True    # ON 2026-09-30: the earnings-cadence member, frozen + graded; weight only from forward blocks
+SIZE_MEMBER_ROSTER = ("vol_earn",)   # vol_text measured NEGATIVE at h5/h21 (size_20260929T141548Z); available, not rostered
+if SIZE_MEMBERS_NIGHTLY:
+    # frozen, graded and trusted exactly like the other magnitude models (forward blocks only)
+    MAGNITUDE_ROSTER = MAGNITUDE_ROSTER + tuple(m for m in SIZE_MEMBER_ROSTER if m not in MAGNITUDE_ROSTER)
+# F1 remedy (nn_lab/raw_prices.py): close_raw from monthly RAW bars; OFF until the nightly has a
+# monthly raw refresh (a live row without close_raw would differ from its training rows).
+USE_CLOSE_RAW = False

@@ -1,0 +1,123 @@
+{
+ "job": "L4b_qwen3_extraction",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 1,
+ "run_id": "20261001T083135Z-p100504",
+ "smoke": false,
+ "stage": "raw",
+ "llm_spend_usd": 0.0,
+ "arms": [
+  "local_7b",
+  "local_30b"
+ ],
+ "model": {
+  "local_7b": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+  "local_30b": "Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf"
+ },
+ "question": "On E-G1's frozen 240 items, does Qwen3-30B-A3B read news into typed fields better than the incumbent 7B -- by enough, reliably enough, and fast enough to replace it for L2 typing?",
+ "decision_rule": {
+  "replace_7b_for_l2_typing_only_if": [
+   "field accuracy (30B - 7B) >= 3 points on the SAME 240 items",
+   "AND the paired difference's t >= 2",
+   "AND the nightly typing backlog at the 30B's measured mean seconds/item fits in 8 hours"
+  ],
+  "otherwise": "KEEP_7B -- and the 30B file is a candidate to move to the archive drive (a decided KEEP is not a reason to hold 17.28 GiB on C:)",
+  "incomplete": "INCOMPLETE if either arm did not read every item -- an unfinished comparison decides nothing, and never defaults to KEEP",
+  "min_gain_pts": 3.0,
+  "min_t": 2.0,
+  "night_hours": 8.0,
+  "scope": "L2 typing ONLY. R2-Qwen3 (the monthly digest read) keeps its own registered two-condition rule in TRIAL-R2 s.6 / L4's protocol"
+ },
+ "decision": null,
+ "wire_system_sha256": "4c832e7e615d101de36bb1cbbe1c9dfcdc0ac6db5f65c5a2819c4e0baca80a43",
+ "status": "REFUSED_RAM",
+ "qwen3_setting": {
+  "n_cpu_moe": 48,
+  "source": "DEFAULT",
+  "detail": "no L4 receipt with a measured best setting; config default used"
+ },
+ "configs": {
+  "local_7b": {
+   "name": "qwen25_7b",
+   "model": "C:\\Users\\mrthn\\llama\\models\\Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+   "port": 8093,
+   "n_cpu_moe": 0
+  },
+  "local_30b": {
+   "name": "qwen3_30b_moe48",
+   "model": "C:\\Users\\mrthn\\llama\\models\\Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf",
+   "port": 8093,
+   "n_cpu_moe": 48
+  }
+ },
+ "preflight": {
+  "ok": false,
+  "refusals": [
+   {
+    "code": "REFUSED_RAM",
+    "detail": "8.1 GiB free RAM < 20 GiB; a 17 GiB mmapped model on a short machine pages the weights and measures the disk, not the model"
+   }
+  ],
+  "seen": {
+   "utc": "2026-10-01T08:31:36+00:00",
+   "job_pid": 100504,
+   "default_port": {
+    "port": 8080,
+    "listener_pid": null
+   },
+   "owner_note": null,
+   "named_ports": {
+    "8093": null
+   },
+   "sim_session": {
+    "state": "COMPLETED",
+    "pid_alive": false
+   },
+   "gpu": {
+    "contended": false,
+    "reason": "0 MiB held by other processes, card at 0 MiB (threshold 3072)",
+    "card": {
+     "used_mib": 0,
+     "total_mib": 8151,
+     "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU"
+    }
+   },
+   "ram_available_gib": 8.08,
+   "disk": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-10-01",
+    "volume": "C:\\",
+    "free_bytes": 270627471360,
+    "total_bytes": 1022580748288,
+    "free_gb": 252.04,
+    "total_gb": 952.4
+   },
+   "power_plan": {
+    "may_sleep": false
+   }
+  },
+  "floors": {
+   "ram_gib": 20.0,
+   "disk_gib": 25.0
+  }
+ },
+ "headline": "L4b not run: REFUSED_RAM",
+ "verdict": "REFUSED (REFUSED_RAM): 8.1 GiB free RAM < 20 GiB; a 17 GiB mmapped model on a short machine pages the weights and measures the disk, not the model",
+ "next_test": "the lab's idle-GPU queue re-dispatches L4b on a later day",
+ "receipt_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-10-01\\L4b_qwen3_extraction_run01.json",
+ "written_utc": "2026-10-01T08:31:37+00:00",
+ "elapsed_s": 3.0,
+ "budget": {
+  "budget_s": 4800.0,
+  "awake_s": 1.6,
+  "slept_s": 0.0,
+  "sleep_gap_s": 300.0
+ },
+ "awake_s": 3.0,
+ "slept_s": 0.0,
+ "box_s": 5400.0,
+ "wall_minus_monotonic_s": 0.0,
+ "sleep_gaps": [],
+ "child_pid": 101168,
+ "killed_pids": [],
+ "exit_code": 0
+}

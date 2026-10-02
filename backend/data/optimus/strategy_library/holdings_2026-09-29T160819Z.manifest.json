@@ -1,0 +1,41 @@
+{
+ "schema": "strategy_library/holdings_manifest/1",
+ "run_id": "2026-09-29T160819Z",
+ "date": "2026-09-30",
+ "written_utc": "2026-09-29T16:12:17+00:00",
+ "format": "holdings: one row per (rule, k, rebalance date, symbol) with weight; a rebalance to cash is symbol '' weight NaN risk_off True. cell_monthly: one row per (rule, k, month) with gross / cost / net. Reader: matched_twins.cell_records",
+ "files": {
+  "holdings": {
+   "path": "backend/data/optimus/strategy_library/holdings_2026-09-29T160819Z.parquet",
+   "bytes": 4639042,
+   "sha256": "4cfcfb1609713d453c07dec2295f9fca40da70369c24e6a64d08a205a124d4ff",
+   "rows": 2530748,
+   "committed": false,
+   "why_not_committed": "*.parquet is gitignored repo-wide",
+   "n_cells": 919,
+   "n_rules": 307
+  },
+  "cell_monthly": {
+   "path": "backend/data/optimus/strategy_library/cell_monthly_2026-09-29T160819Z.parquet",
+   "bytes": 2265207,
+   "sha256": "3105726852e225c650350b1cabc52336ea59d8dbedd7a9f92d0dd5e69ad05d83",
+   "rows": 104615,
+   "committed": false,
+   "why_not_committed": "*.parquet is gitignored repo-wide"
+  },
+  "twin_panel": {
+   "path": "backend/data/optimus/strategy_library/twin_panel_2026-09-29T160819Z.parquet",
+   "bytes": 12685295,
+   "sha256": "fe44b7c2ebee1f8ad439455a24c490a5bf04ceb27db882b7a6d2aeabc966c184",
+   "rows": 365079,
+   "committed": false,
+   "why_not_committed": "*.parquet is gitignored repo-wide; 12.7 MB > the 5 MB limit"
+  }
+ },
+ "check": {
+  "n_ok_cells": 919,
+  "n_cells_with_holdings": 919,
+  "n_cells_monthly_rows_equal_n_months": 919,
+  "mismatches_first_20": []
+ }
+}

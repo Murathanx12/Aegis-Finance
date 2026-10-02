@@ -1,0 +1,1 @@
+ORDERS 2026-10-02 [B2AB3A21]: SELL NKE US 5,380. Control: 1 lines, BUY shares 0, SELL shares 5,380.

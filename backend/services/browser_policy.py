@@ -70,7 +70,8 @@ PAYMENT_HOST_LABELS = frozenset({"store", "shop", "buy", "checkout", "billing", 
 #: Messaging hosts, and DM paths on otherwise-allowed hosts.
 MESSAGE_HOSTS: tuple[str, ...] = ("mail.google.com", "gmail.com", "outlook.live.com",
                                   "outlook.office.com", "web.whatsapp.com", "messenger.com",
-                                  "web.telegram.org", "discord.com", "chat.reddit.com")
+                                  "web.telegram.org", "discord.com", "chat.reddit.com",
+                                  "mail.yahoo.com", "proton.me", "protonmail.com")
 MESSAGE_PATH = re.compile(r"(^|/)(messages|message|compose|inbox|chat|dm|i/chat)(/|$)",
                           re.I)
 #: Social write paths reachable by URL (x.com/intent/tweet, /submit, /compose).
@@ -97,11 +98,87 @@ def on_hosts(url: str, hosts: tuple[str, ...]) -> bool:
     return bool(h) and any(h == d or h.endswith("." + d) for d in hosts)
 
 
-def url_refusal(url: str) -> str | None:
-    """REFUSED_PAYMENT_URL / REFUSED_MESSAGE_URL / REFUSED_SOCIAL_WRITE_URL, or
-    None. Applied to every navigate / open / click destination."""
+#: 2026-09-30, the owner: "openclaw opens banks". The dedicated Chrome's own
+#: history for the 4 h before showed NO bank, broker or payment-account visit,
+#: but three loads of `buy.tinypass.com/checkout/offer/show?...` -- the Piano
+#: subscription checkout that SCMP embeds in a metered article (a frame the
+#: page loads, never a navigation of ours). These hosts are refused on EVERY
+#: path: a navigation / open / click (here), the reader's host check
+#: (`web_reader.NEVER_HOSTS`), the official-sources fetcher, the digest's
+#: read_next asks; and a page or frame of the dedicated Chrome that shows one is
+#: closed by the pool (`reader_pool.Pool._sweep_money_frames`).
+#: Commercial banks, brokers, payment and money-transfer services (incl. the
+#: common Hong Kong ones), crypto exchanges, and mail. Matched as the host or a
+#: subdomain of it, never as a substring: central banks (federalreserve.gov,
+#: ecb.europa.eu, boj.or.jp, bankofengland.co.uk, hkma.gov.hk, pbc.gov.cn) are
+#: official public sites and are NOT on it.
+MONEY_HOSTS: tuple[str, ...] = (
+    # Hong Kong banks / virtual banks / brokers
+    "hsbc.com", "hsbc.com.hk", "hsbc.co.uk", "hangseng.com", "bochk.com", "sc.com",
+    "standardchartered.com", "standardchartered.com.hk", "za.group", "mox.com",
+    "futuhk.com", "futunn.com", "futuholdings.com", "moomoo.com", "hkbea.com",
+    "dbs.com.hk", "dbs.com", "citibank.com.hk", "icbcasia.com", "itigerup.com",
+    "tigerbrokers.com", "livibank.com", "welab.bank", "airstarbank.com", "fusionbank.com",
+    # brokers
+    "interactivebrokers.com", "interactivebrokers.com.hk", "ibkr.com", "alpaca.markets",
+    "schwab.com", "fidelity.com", "robinhood.com", "vanguard.com", "etrade.com",
+    "webull.com", "tdameritrade.com", "firstrade.com", "tastytrade.com",
+    # payment / money transfer / card
+    "paypal.com", "paypal.me", "wise.com", "transferwise.com", "revolut.com", "stripe.com",
+    "venmo.com", "americanexpress.com", "payme.hsbc", "alipay.com", "wechatpay.com",
+    # US / UK commercial banks
+    "chase.com", "bankofamerica.com", "wellsfargo.com", "citi.com", "citibank.com",
+    "usbank.com", "capitalone.com", "barclays.co.uk", "lloydsbank.com",
+    # crypto exchanges
+    "coinbase.com", "binance.com", "kraken.com", "okx.com", "bybit.com")
+#: (mail and messaging hosts are MESSAGE_HOSTS below: refused as
+#: REFUSED_MESSAGE_URL on every path, and in web_reader.NEVER_HOSTS)
+#: Subscription / checkout providers that news sites embed as frames or open
+#: as pop-ups (a checkout is never a page the reader reads).
+CHECKOUT_HOSTS: tuple[str, ...] = ("tinypass.com", "piano.io", "checkout.stripe.com",
+                                   "pay.google.com", "js.stripe.com", "zuora.com",
+                                   "recurly.com", "chargebee.com", "paddle.com")
+#: A checkout / subscription / payment / billing / cart path, whole segment
+#: (a segment that STARTS with "checkout" too), and Piano's "/offer/show".
+CHECKOUT_PATH = re.compile(
+    r"(^|/)(checkout[^/]*|subscribe|subscription|subscriptions|payment|payments|billing|"
+    r"cart)(/|$)|/offer/show", re.I)
+
+
+def _on(host: str, domains: tuple[str, ...]) -> bool:
+    h = (host or "").lower().rstrip(".")
+    return bool(h) and any(h == d or h.endswith("." + d) for d in domains)
+
+
+def money_url_refusal(url: str) -> str | None:
+    """PURE. REFUSED_MONEY_HOST (a bank, broker, payment or crypto host)
+    or REFUSED_PAYMENT_URL (a checkout / subscription provider, or a checkout /
+    subscribe / payment / billing / cart / offer path), else None."""
     if not url or url == "about:blank":
         return None
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return f"REFUSED_URL_UNPARSEABLE: {url!r}"
+    host = (parts.hostname or "").lower()
+    if _on(host, MONEY_HOSTS):
+        return (f"REFUSED_MONEY_HOST: {url!r} is a bank, broker, payment, crypto or mail "
+                f"host; never opened by the reader (owner, 2026-09-28 and 2026-09-30)")
+    if _on(host, CHECKOUT_HOSTS) or CHECKOUT_PATH.search(parts.path or "/"):
+        return (f"REFUSED_PAYMENT_URL: {url!r} is a subscription checkout / payment "
+                f"address. Murat, 2026-09-28: \"dont use any payments\".")
+    return None
+
+
+def url_refusal(url: str) -> str | None:
+    """REFUSED_MONEY_HOST / REFUSED_PAYMENT_URL / REFUSED_MESSAGE_URL /
+    REFUSED_SOCIAL_WRITE_URL, or None. Applied to every navigate / open / click
+    destination."""
+    if not url or url == "about:blank":
+        return None
+    m = money_url_refusal(url)
+    if m:
+        return m
     try:
         parts = urlsplit(url)
     except ValueError:

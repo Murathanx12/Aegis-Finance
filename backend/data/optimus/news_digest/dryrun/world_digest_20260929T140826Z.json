@@ -1,0 +1,4243 @@
+{
+ "stamp": "20260929T140826Z",
+ "window": {
+  "since": "2026-09-28T14:08:26+00:00",
+  "until": "2026-09-29T14:08:26+00:00"
+ },
+ "n_items": 2013,
+ "counts": {
+  "article": 871,
+  "undated_kept": 894,
+  "duplicate_url": 495,
+  "archive_dropped": 953,
+  "too_short": 27,
+  "stock_page": 134,
+  "transcript": 43,
+  "social": 60,
+  "social_available": 314,
+  "headline": 905,
+  "duplicate_headline": 177
+ },
+ "n_rows": 1899,
+ "extraction": {
+  "cache_hits": 1899,
+  "dry_run": true
+ },
+ "themes": [],
+ "spend": {
+  "budget_usd": 0.0,
+  "spent_usd": 0.0,
+  "calls": 0,
+  "failed": 0,
+  "unpriced_calls": 0,
+  "served_models": {},
+  "statuses": {},
+  "by_stage_usd": {}
+ },
+ "balance": {
+  "before": null,
+  "after": null,
+  "delta_all_processes": null
+ },
+ "writes": {
+  "n_rows": 18,
+  "n_size": 7,
+  "n_direction": 11,
+  "written": false,
+  "not_written": {},
+  "prediction_ids": [
+   "3893da097fe069eb",
+   "369d7658c7f30fce",
+   "67fa11e17a1c729e",
+   "292856a57f4839d1",
+   "c28927afd18455fc",
+   "7505354701a86ddb",
+   "9e3df06e751c27c3",
+   "bd7a5106e4981bec",
+   "245ced523f3c6ad4",
+   "97f4245d86ba85ad",
+   "f198f12b41239f56",
+   "f793120cd0657d35",
+   "b15ffa2666081f78",
+   "3b836235517c72ce",
+   "17a5223f588fb582",
+   "b36a158cab52ef58",
+   "e7271ce82670ff60",
+   "1fb1cf8c17e6e54a"
+  ],
+  "first_5d": "2026-10-09",
+  "first_20d": "2026-10-31"
+ },
+ "shadow": {
+  "contract_hash": "f3b149ea42311760",
+  "base_book_id": "439fd84f869744e0",
+  "base_found": true,
+  "base_weights": {
+   "JAZZ": 0.32849435335870486,
+   "TS": 0.3105861117316742,
+   "SNDR": 0.19239366537902164,
+   "TSM": 0.16852586953059928
+  },
+  "trust_dir": 0.0,
+  "trust_size": 0.0,
+  "grade": {
+   "n_open": 185,
+   "size": {
+    "n_rows": 0,
+    "n_dates": 0,
+    "mean_improvement": null,
+    "se": null,
+    "posterior_mean": 0.0,
+    "trust": 0.0,
+    "note": "no graded dates: the prior (0) stands"
+   },
+   "direction": {
+    "n_rows": 0,
+    "n_dates": 0,
+    "mean_improvement": null,
+    "se": null,
+    "posterior_mean": 0.0,
+    "trust": 0.0,
+    "note": "no graded dates: the prior (0) stands"
+   }
+  },
+  "grade_note": "direction: no graded dates: the prior (0) stands; size: no graded dates: the prior (0) stands; 185 news_digest rows open",
+  "signal_names": 19,
+  "base_names_with_news": [],
+  "actual_diff": [],
+  "actual_diff_text": "nothing: identical to the base book",
+  "illustrative_trust": 0.5,
+  "illustrative_diff": [
+   {
+    "ticker": "ACN",
+    "base": 0.0,
+    "news": 0.0072,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "AVGO",
+    "base": 0.0,
+    "news": 0.0072,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "IWM",
+    "base": 0.0,
+    "news": 0.006,
+    "signal": {
+     "d": 0.25,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "JAZZ",
+    "base": 0.3285,
+    "news": 0.317,
+    "signal": null
+   },
+   {
+    "ticker": "MSFT",
+    "base": 0.0,
+    "news": 0.0072,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "PG",
+    "base": 0.0,
+    "news": 0.0072,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "SNDR",
+    "base": 0.1924,
+    "news": 0.1857,
+    "signal": null
+   },
+   {
+    "ticker": "TS",
+    "base": 0.3106,
+    "news": 0.2997,
+    "signal": null
+   },
+   {
+    "ticker": "TSM",
+    "base": 0.1685,
+    "news": 0.1626,
+    "signal": null
+   }
+  ],
+  "illustrative_diff_text": "ACN 0.000 -> 0.007; AVGO 0.000 -> 0.007; IWM 0.000 -> 0.006; JAZZ 0.329 -> 0.317; MSFT 0.000 -> 0.007; PG 0.000 -> 0.007; SNDR 0.192 -> 0.186; TS 0.311 -> 0.300; TSM 0.169 -> 0.163"
+ },
+ "weak": [
+  "Direction: the model's calls are recorded shrunk to 0.5; nothing here shows direction skill, and the record says LLM direction is at or below a coin.",
+  "Size buckets are relative to the name's own trailing sigma; the frozen map (below_normal 0.18 / normal 0.317 / above_normal 0.50 / extreme 0.70) is a declared guess, graded against the 252-session frequency on the same row.",
+  "Sector and macro implications are typed but NOT graded: no sector ETF is in the price panel.",
+  "Independent-source counts count columns/hosts; two columns of one newsroom count twice.",
+  "One run's rows share one decision date: the effective sample is date blocks, not rows.",
+  "Balance delta includes every process on the DeepSeek key during the run; the per-call price sum ($0.000) is this run's own figure."
+ ],
+ "licence": "PRODUCT_EXPERIMENT",
+ "sections": {
+  "insiders": {
+   "findings": {
+    "window_days": 10.0,
+    "n_rows_in_window": 0,
+    "n_open_market_buys": 0,
+    "n_open_market_sales": 0,
+    "n_under_10b5_1_skipped": 0,
+    "cluster_buys": [],
+    "large_buys": [],
+    "large_exec_sales": []
+   },
+   "implications": [],
+   "specialist": "news_digest:insider_v0"
+  },
+  "congress": {
+   "findings": {
+    "window_days": 30.0,
+    "n_trades": 423,
+    "n_members": 26,
+    "median_lag_days": 23,
+    "buys": [
+     {
+      "ticker": "MSFT",
+      "n_members": 2,
+      "n_trades": 4,
+      "amount_lo_sum": 780004,
+      "members": [
+       "Gilbert Cisneros",
+       "Josh Gottheimer"
+      ],
+      "last_disclosure": "2026-09-14",
+      "median_lag_days": 31
+     },
+     {
+      "ticker": "AVGO",
+      "n_members": 2,
+      "n_trades": 3,
+      "amount_lo_sum": 3003,
+      "members": [
+       "David J. Taylor",
+       "Richard W. Allen"
+      ],
+      "last_disclosure": "2026-09-22",
+      "median_lag_days": 10
+     },
+     {
+      "ticker": "ACN",
+      "n_members": 2,
+      "n_trades": 3,
+      "amount_lo_sum": 3003,
+      "members": [
+       "Gilbert Cisneros",
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "PG",
+      "n_members": 2,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "David J. Taylor",
+       "Lloyd Doggett"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "FWONK",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 31003,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 33
+     },
+     {
+      "ticker": "MRK",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 30002,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "HUBB",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 18004,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 26
+     },
+     {
+      "ticker": "LTH",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 18004,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "CHRW",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 17003,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 28
+     },
+     {
+      "ticker": "ETN",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 14
+     },
+     {
+      "ticker": "GMED",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "MOG.A",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "PWR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 14
+     },
+     {
+      "ticker": "ALKS",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 36
+     },
+     {
+      "ticker": "MSB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 35
+     },
+     {
+      "ticker": "SFM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 50
+     },
+     {
+      "ticker": "ESE",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 3003,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 20
+     },
+     {
+      "ticker": "PEP",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "NFLX",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Byron Donalds"
+      ],
+      "last_disclosure": "2026-09-15",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "AORT",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 50
+     },
+     {
+      "ticker": "HMN",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "HLI",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 50
+     },
+     {
+      "ticker": "TTD",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "SPCX",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 28
+     },
+     {
+      "ticker": "AEP",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "David J. Taylor"
+      ],
+      "last_disclosure": "2026-09-05",
+      "median_lag_days": 10
+     },
+     {
+      "ticker": "EPAC",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "SKWD",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "AAPL",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Cleo Fields"
+      ],
+      "last_disclosure": "2026-09-02",
+      "median_lag_days": 20
+     },
+     {
+      "ticker": "BSX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "CB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "KO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "LIN",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Thomas H. Kean Jr"
+      ],
+      "last_disclosure": "2026-09-12",
+      "median_lag_days": 33
+     },
+     {
+      "ticker": "NVO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "WMT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "TSM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Richard W. Allen"
+      ],
+      "last_disclosure": "2026-09-22",
+      "median_lag_days": 41
+     },
+     {
+      "ticker": "IBP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "David J. Taylor"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 9
+     },
+     {
+      "ticker": "MCD",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "AMAT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Josh Gottheimer"
+      ],
+      "last_disclosure": "2026-09-14",
+      "median_lag_days": 39
+     },
+     {
+      "ticker": "QSR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Josh Gottheimer"
+      ],
+      "last_disclosure": "2026-09-14",
+      "median_lag_days": 39
+     },
+     {
+      "ticker": "MTZ",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Thomas H. Kean Jr"
+      ],
+      "last_disclosure": "2026-09-12",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "AMD",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "AGIO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "APH",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "APG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 37
+     },
+     {
+      "ticker": "APP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "ATRC",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "KMX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "CDW",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "CECO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "COIN",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "CSGP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "DCO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "FSV",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "GS",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "PODD",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "IBM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "INTU",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "NEO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "NVDA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "John J Mr McGuire III"
+      ],
+      "last_disclosure": "2026-09-02",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "SHAK",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 30
+     },
+     {
+      "ticker": "SKHY",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "SNOW",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "TYL",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "WPM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "WDAY",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "BRK.B",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 33
+     },
+     {
+      "ticker": "MRNA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "BWXT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 37
+     },
+     {
+      "ticker": "MLM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "FITB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "David J. Taylor"
+      ],
+      "last_disclosure": "2026-09-05",
+      "median_lag_days": 10
+     },
+     {
+      "ticker": "ABCB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "BCPC",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "BCRX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "COMP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 50
+     },
+     {
+      "ticker": "CRWD",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "CSW",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 50
+     },
+     {
+      "ticker": "FERG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 50
+     },
+     {
+      "ticker": "GBCI",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 45
+     },
+     {
+      "ticker": "HQY",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "IRT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "MRVL",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "MTX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "NHI",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "NSA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "PLTR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "PRAX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 36
+     },
+     {
+      "ticker": "SAIL",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 45
+     },
+     {
+      "ticker": "SF",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "COCO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 56
+     },
+     {
+      "ticker": "PCVX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 50
+     },
+     {
+      "ticker": "WDC",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "EQIX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Michael Rulli"
+      ],
+      "last_disclosure": "2026-09-02",
+      "median_lag_days": 26
+     }
+    ],
+    "sells": [
+     {
+      "ticker": "MSFT",
+      "n_members": 4,
+      "n_trades": 5,
+      "amount_lo_sum": 781005,
+      "members": [
+       "David J. Taylor",
+       "Josh Gottheimer",
+       "Kevin Hern",
+       "Thomas H. Kean Jr"
+      ],
+      "last_disclosure": "2026-09-14",
+      "median_lag_days": 16
+     },
+     {
+      "ticker": "AAPL",
+      "n_members": 4,
+      "n_trades": 5,
+      "amount_lo_sum": 104005,
+      "members": [
+       "John J Mr McGuire III",
+       "Kevin Hern",
+       "Pete Sessions",
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 17
+     },
+     {
+      "ticker": "GOOGL",
+      "n_members": 3,
+      "n_trades": 3,
+      "amount_lo_sum": 266003,
+      "members": [
+       "John W. Rose",
+       "Pete Sessions",
+       "Thomas H. Kean Jr"
+      ],
+      "last_disclosure": "2026-09-18",
+      "median_lag_days": 16
+     },
+     {
+      "ticker": "STE",
+      "n_members": 2,
+      "n_trades": 2,
+      "amount_lo_sum": 115002,
+      "members": [
+       "April McClain Delaney",
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "ROL",
+      "n_members": 2,
+      "n_trades": 2,
+      "amount_lo_sum": 65002,
+      "members": [
+       "April McClain Delaney",
+       "Richard W. Allen"
+      ],
+      "last_disclosure": "2026-09-22",
+      "median_lag_days": 41
+     },
+     {
+      "ticker": "NKE",
+      "n_members": 2,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "Gilbert Cisneros",
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 19
+     },
+     {
+      "ticker": "ADBE",
+      "n_members": 2,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "Gilbert Cisneros",
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 42
+     },
+     {
+      "ticker": "IBM",
+      "n_members": 2,
+      "n_trades": 3,
+      "amount_lo_sum": 3003,
+      "members": [
+       "Gilbert Cisneros",
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 16
+     },
+     {
+      "ticker": "ITT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 250001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "MLM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 250001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "DVN",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 230004,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "VIK",
+      "n_members": 1,
+      "n_trades": 6,
+      "amount_lo_sum": 119006,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 35
+     },
+     {
+      "ticker": "BSX",
+      "n_members": 1,
+      "n_trades": 6,
+      "amount_lo_sum": 118006,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "WAB",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 115002,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 37
+     },
+     {
+      "ticker": "HD",
+      "n_members": 1,
+      "n_trades": 7,
+      "amount_lo_sum": 112007,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "MRSH",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 103004,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 16
+     },
+     {
+      "ticker": "LH",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 103004,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "LYV",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 102003,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "PTC",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 100002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "XOM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "BRO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "BWXT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "CHRW",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "CNM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "EME",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "ENTG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "HUBB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "FWONK",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "LTH",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "MKL",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "NDAQ",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "PAYX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "SIG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "SGI",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "TDG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "TRMB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "BABA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 42
+     },
+     {
+      "ticker": "ITW",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 95004,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "OKE",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 65002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "PG",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 51002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 27
+     },
+     {
+      "ticker": "SCI",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 51002,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 36
+     },
+     {
+      "ticker": "CR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 50001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "CLH",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 50001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "PKG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 50001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "LAMR",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 46004,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "ROK",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 45003,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "TJX",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 32004,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "CPAY",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 31003,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "CDNS",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 30002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "LIN",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 30002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "LMT",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 30002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "ORLY",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 30002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "MIDD",
+      "n_members": 1,
+      "n_trades": 6,
+      "amount_lo_sum": 20006,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "TDY",
+      "n_members": 1,
+      "n_trades": 5,
+      "amount_lo_sum": 19005,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 19
+     },
+     {
+      "ticker": "IQV",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 17003,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 17
+     },
+     {
+      "ticker": "DHR",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "EMR",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 11
+     },
+     {
+      "ticker": "NEE",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "AIO",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "TSCO",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 28
+     },
+     {
+      "ticker": "BA",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 19
+     },
+     {
+      "ticker": "RA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "CNP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 10
+     },
+     {
+      "ticker": "CB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "CXT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "HON",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "NVS",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 29
+     },
+     {
+      "ticker": "PBA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 29
+     },
+     {
+      "ticker": "PRGS",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "UNH",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "ABBV",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Pete Sessions"
+      ],
+      "last_disclosure": "2026-09-18",
+      "median_lag_days": 4
+     },
+     {
+      "ticker": "DLTR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "STRL",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "ESE",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "MFP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 37
+     },
+     {
+      "ticker": "CRNX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 36
+     },
+     {
+      "ticker": "FN",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 50
+     },
+     {
+      "ticker": "HONA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 13
+     },
+     {
+      "ticker": "ICLR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 18
+     },
+     {
+      "ticker": "MDT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 8
+     },
+     {
+      "ticker": "DIS",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "CL",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 4004,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "CSX",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 29
+     },
+     {
+      "ticker": "LOW",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "NVO",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "VUZI",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "GOOG",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 28
+     },
+     {
+      "ticker": "JPM",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 28
+     },
+     {
+      "ticker": "HWM",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Byron Donalds"
+      ],
+      "last_disclosure": "2026-09-15",
+      "median_lag_days": 35
+     },
+     {
+      "ticker": "PH",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Byron Donalds"
+      ],
+      "last_disclosure": "2026-09-15",
+      "median_lag_days": 35
+     },
+     {
+      "ticker": "EA",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "PHR",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 16
+     },
+     {
+      "ticker": "QCOM",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 28
+     },
+     {
+      "ticker": "AMGN",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "David J. Taylor"
+      ],
+      "last_disclosure": "2026-09-05",
+      "median_lag_days": 10
+     },
+     {
+      "ticker": "VLTO",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 18
+     },
+     {
+      "ticker": "ETN",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "ETV",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 17
+     },
+     {
+      "ticker": "F",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "STX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 10
+     },
+     {
+      "ticker": "SBUX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "WMT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 29
+     },
+     {
+      "ticker": "AMCR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Thomas H. Kean Jr"
+      ],
+      "last_disclosure": "2026-09-12",
+      "median_lag_days": 33
+     },
+     {
+      "ticker": "JNJ",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Thomas H. Kean Jr"
+      ],
+      "last_disclosure": "2026-09-12",
+      "median_lag_days": 16
+     },
+     {
+      "ticker": "AMD",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "APP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "NET",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "COHR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "COIN",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "CCI",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "DASH",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 13
+     },
+     {
+      "ticker": "DCO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "META",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "NVDA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "NXPI",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 36
+     },
+     {
+      "ticker": "TSLA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "TXRH",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 30
+     },
+     {
+      "ticker": "VRSK",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "MRNA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "VRTX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "David J. Taylor"
+      ],
+      "last_disclosure": "2026-09-05",
+      "median_lag_days": 10
+     },
+     {
+      "ticker": "AVAV",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 64
+     },
+     {
+      "ticker": "CMCSA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "STZ",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "CRDO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 64
+     },
+     {
+      "ticker": "DD",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "FDX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 45
+     },
+     {
+      "ticker": "KVUE",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "LITE",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "MTSI",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 50
+     },
+     {
+      "ticker": "PSKY",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "PGR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "RBC",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 50
+     },
+     {
+      "ticker": "SMTC",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 50
+     },
+     {
+      "ticker": "SPXC",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 50
+     },
+     {
+      "ticker": "UBER",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "VZ",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "VIAV",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 45
+     },
+     {
+      "ticker": "ZTS",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-04",
+      "median_lag_days": 49
+     },
+     {
+      "ticker": "VSAT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Jonathan Jackson"
+      ],
+      "last_disclosure": "2026-09-03",
+      "median_lag_days": 6
+     },
+     {
+      "ticker": "ALL",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Michael Rulli"
+      ],
+      "last_disclosure": "2026-09-02",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "ALC",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 27
+     },
+     {
+      "ticker": "BUD",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 14
+     },
+     {
+      "ticker": "BIIB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 14
+     },
+     {
+      "ticker": "CARR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 18
+     },
+     {
+      "ticker": "GAP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 19
+     },
+     {
+      "ticker": "HRL",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 19
+     },
+     {
+      "ticker": "KMB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 14
+     },
+     {
+      "ticker": "OTIS",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "SOLS",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 27
+     },
+     {
+      "ticker": "WAT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-01",
+      "median_lag_days": 19
+     }
+    ]
+   },
+   "implications": [
+    {
+     "subject": "MSFT",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "2 House member(s) disclosed purchases of MSFT (>= $780,004); disclosed a median 31 days after the trade, so only the disclosure date is tradable and much of any edge may be spent",
+     "contradiction": "the stock underperforms SPY over 20 sessions from the disclosure",
+     "mentioned": null,
+     "rule": "congress_cluster_buy",
+     "write_size": false,
+     "written": "OK"
+    },
+    {
+     "subject": "AVGO",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "2 House member(s) disclosed purchases of AVGO (>= $3,003); disclosed a median 10 days after the trade, so only the disclosure date is tradable and much of any edge may be spent",
+     "contradiction": "the stock underperforms SPY over 20 sessions from the disclosure",
+     "mentioned": null,
+     "rule": "congress_cluster_buy",
+     "write_size": false,
+     "written": "OK"
+    },
+    {
+     "subject": "ACN",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "2 House member(s) disclosed purchases of ACN (>= $3,003); disclosed a median 22 days after the trade, so only the disclosure date is tradable and much of any edge may be spent",
+     "contradiction": "the stock underperforms SPY over 20 sessions from the disclosure",
+     "mentioned": null,
+     "rule": "congress_cluster_buy",
+     "write_size": false,
+     "written": "OK"
+    },
+    {
+     "subject": "PG",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "2 House member(s) disclosed purchases of PG (>= $2,002); disclosed a median 22 days after the trade, so only the disclosure date is tradable and much of any edge may be spent",
+     "contradiction": "the stock underperforms SPY over 20 sessions from the disclosure",
+     "mentioned": null,
+     "rule": "congress_cluster_buy",
+     "write_size": false,
+     "written": "OK"
+    }
+   ],
+   "specialist": "news_digest:congress_v0"
+  },
+  "policy": {
+   "findings": {
+    "n_rows_read": 57,
+    "changes": [],
+    "unknowns": [],
+    "refused": {
+     "LLM_OFF": 1
+    }
+   },
+   "implications": [],
+   "specialist": "news_digest:policy_v0",
+   "rows": [
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Nuclear Regulatory Commission Modernization: Rulemaking Procedure, Federal Advisory Committee Act Alignment, Access, and Security; Correction and Confirmation of Effective Date",
+     "url": "https://www.federalregister.gov/public-inspection/2026-19963/nuclear-regulatory-commission-modernization-rulemaking-procedure-federal-advisory-committee-act"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Forms and Procedures for Review of State Certifications by the Stablecoin Certification Review Committee",
+     "url": "https://www.federalregister.gov/public-inspection/2026-19966/forms-and-procedures-for-review-of-state-certifications-by-the-stablecoin-certification-review"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Cuban Assets Control Regulations",
+     "url": "https://www.federalregister.gov/public-inspection/2026-19973/cuban-assets-control-regulations"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Cuba Sanctions",
+     "url": "https://www.federalregister.gov/public-inspection/2026-19977/cuba-sanctions"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Iranian Transactions and Sanctions Regulations",
+     "url": "https://www.federalregister.gov/public-inspection/2026-19978/iranian-transactions-and-sanctions-regulations"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Publication of Venezuela Sanctions Regulations Web General Licenses 46C, 47A, 48B, 50B, 51B, 52A, and 54A",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20006/publication-of-venezuela-sanctions-regulations-web-general-licenses-46c-47a-48b-50b-51b-52a-and-54a"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Removing Duplicative Penalties Information and Reorganizing Certain Parts",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20007/removing-duplicative-penalties-information-and-reorganizing-certain-parts"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Publication of Venezuela Sanctions Regulations Web General Licenses 52, 53, 54, 55, 56, 57, and 58",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20008/publication-of-venezuela-sanctions-regulations-web-general-licenses-52-53-54-55-56-57-and-58"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Publication of Venezuela Sanctions Regulations Web General Licenses 46D, 47B, 48C, 50C, 51C, 52B, 54B, and 61A",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20009/publication-of-venezuela-sanctions-regulations-web-general-licenses-46d-47b-48c-50c-51c-52b-54b-and"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Publication of Iran-Related Web General Licenses X and X1",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20010/publication-of-iran-related-web-general-licenses-x-and-x1"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Publication of Transnational Criminal Organizations Sanctions Regulations Web General License 2",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20011/publication-of-transnational-criminal-organizations-sanctions-regulations-web-general-license-2"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Publication of Venezuela Sanctions Regulations Web General License 5W",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20012/publication-of-venezuela-sanctions-regulations-web-general-license-5w"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Publication of Russian Harmful Foreign Activities Sanctions Regulations Web General Licenses 131E, 131F, and 131G",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20014/publication-of-russian-harmful-foreign-activities-sanctions-regulations-web-general-licenses-131e"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Extensions of Credit by Federal Reserve Banks (Regulation A)",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20036/extensions-of-credit-by-federal-reserve-banks-regulation-a"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Reserve Requirements of Depository Institutions (Regulation D)",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20037/reserve-requirements-of-depository-institutions-regulation-d"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Television Broadcasting Services: Savannah, GA",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20038/television-broadcasting-services-savannah-ga"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Television Broadcasting Services: Norwell, MA",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20039/television-broadcasting-services-norwell-ma"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Air Quality State Implementation Plans; Approvals and Promulgations: Reconsideration and Repeal of Air Plan Partial Approval and Partial Disapproval of North Dakota's Regional Haze State Implementation Plan for the Second Implementation Period; Correction",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20060/air-quality-state-implementation-plans-approvals-and-promulgations-reconsideration-and-repeal-of-air"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Medical Devices: Gastroenterology-Urology Devices; Classification of the Flushing and Storage Solution for Vascular Autografts at Room Temperature",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20075/medical-devices-gastroenterology-urology-devices-classification-of-the-flushing-and-storage-solution"
+    },
+    {
+     "public_utc": "2026-09-29T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Petition for Rulemaking: Malik Tony Singleton",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20078/petition-for-rulemaking-malik-tony-singleton"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Withdrawal of International Airport Designation of Chalk Seaplane Base",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/C1-2026-17108/withdrawal-of-international-airport-designation-of-chalk-seaplane-base"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Airworthiness Directives; The Boeing Company Airplanes",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/2026-19956/airworthiness-directives-the-boeing-company-airplanes"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Medicare Program; Hospital Inpatient Prospective Payment Systems for Acute Care Hospitals (IPPS) and the Long-Term Care Hospital Prospective Payment System and Policy Changes and Fiscal Year (FY) 2027 Rates; Requirements for Quality Programs; Other Policy Changes; and Adoption of Updated Versions of",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/2026-19946/medicare-program-hospital-inpatient-prospective-payment-systems-for-acute-care-hospitals-ipps-and"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Magnuson-Stevens Act Provisions; Fisheries Off West Coast States; Pacific Coast Groundfish Fishery; 2025-2026 Biennial Specifications and Management Measures; Inseason Adjustments; Correction",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/2026-19901/magnuson-stevens-act-provisions-fisheries-off-west-coast-states-pacific-coast-groundfish-fishery"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Application Procedures for Board-Supervised Insured Depository Institutions Seeking Approval for a Subsidiary To Issue Payment Stablecoins",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/2026-19899/application-procedures-for-board-supervised-insured-depository-institutions-seeking-approval-for-a"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Airworthiness Directives; Leonardo S.p.a. Helicopters",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/2026-19892/airworthiness-directives-leonardo-spa-helicopters"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Airworthiness Directives; MD Helicopters, LLC Helicopters",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/2026-19891/airworthiness-directives-md-helicopters-llc-helicopters"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Airworthiness Directives; Airbus Helicopters Deutschland GmbH (AHD) Helicopters",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/2026-19890/airworthiness-directives-airbus-helicopters-deutschland-gmbh-ahd-helicopters"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Rescission of Title V Emergency Affirmative Defense Rule; Corrections",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/2026-19889/rescission-of-title-v-emergency-affirmative-defense-rule-corrections"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Election To Pay in Installments Tax on Gain From Certain Farmland Property",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/2026-19888/election-to-pay-in-installments-tax-on-gain-from-certain-farmland-property"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Almonds Grown in California; Extension of Inedible Disposition Obligation Deadline",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/2026-19887/almonds-grown-in-california-extension-of-inedible-disposition-obligation-deadline"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Sodium Salt of Acifluorfen; Pesticide Tolerance",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/2026-19884/sodium-salt-of-acifluorfen-pesticide-tolerance"
+    },
+    {
+     "public_utc": "2026-09-29T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Implementing the Federal Reserve Board's Responsibilities Under the GENIUS Act",
+     "url": "https://www.federalregister.gov/documents/2026/09/29/2026-19860/implementing-the-federal-reserve-boards-responsibilities-under-the-genius-act"
+    },
+    {
+     "public_utc": "2026-09-29T08:00:00+00:00",
+     "source": "ecb_press",
+     "title": "ECB amends monetary policy implementation guidelines as part of regular review",
+     "url": "https://www.ecb.europa.eu//press/pr/date/2026/html/ecb.pr260929~050089e922.en.html"
+    },
+    {
+     "public_utc": "2026-09-28T21:41:45+00:00",
+     "source": "wh_news",
+     "title": "President Trump Calls on Congress to Save College Sports",
+     "url": "https://www.whitehouse.gov/releases/2026/09/president-trump-calls-on-congress-to-save-college-sports/"
+    },
+    {
+     "public_utc": "2026-09-28T19:59:28+00:00",
+     "source": "wh_actions",
+     "title": "Nominations Sent to the Senate",
+     "url": "https://www.whitehouse.gov/presidential-actions/2026/09/nominations-sent-to-the-senate-e1fc/"
+    },
+    {
+     "public_utc": "2026-09-28T19:59:28+00:00",
+     "source": "wh_news",
+     "title": "Nominations Sent to the Senate",
+     "url": "https://www.whitehouse.gov/presidential-actions/2026/09/nominations-sent-to-the-senate-e1fc/"
+    },
+    {
+     "public_utc": "2026-09-28T19:56:22+00:00",
+     "source": "wh_news",
+     "title": "Mined, Melted, and Poured in America: President Trump Reverses Years of Anti-Mining Policy",
+     "url": "https://www.whitehouse.gov/releases/2026/09/mined-melted-and-poured-in-america-president-trump-reverses-years-of-anti-mining-policy/"
+    },
+    {
+     "public_utc": "2026-09-28T17:25:00+00:00",
+     "source": "fed_speech",
+     "title": "Cook, An Update on AI and the Economy",
+     "url": "https://www.federalreserve.gov/newsevents/speech/cook20260928a.htm"
+    },
+    {
+     "public_utc": "2026-09-28T13:30:00+00:00",
+     "source": "ecb_press",
+     "title": "Christine Lagarde: Hearing of the Committee on Economic and Monetary Affairs of the European Parliament",
+     "url": "https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp260928~a875675544.en.html"
+    }
+   ]
+  },
+  "positioning": {
+   "findings": {
+    "cot_latest_report": "2026-09-22",
+    "cot_contracts": 121,
+    "cot_extremes": [
+     {
+      "market": "UST BOND - CHICAGO BOARD OF TRADE",
+      "code": "020601",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -8.584,
+      "pctile_3y": 1.0,
+      "chg_z": 1.643,
+      "proxy": "TLT",
+      "side": "crowded_long"
+     },
+     {
+      "market": "UST 5Y NOTE - CHICAGO BOARD OF TRADE",
+      "code": "044601",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -28.154,
+      "pctile_3y": 1.0,
+      "chg_z": 1.314,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "EURO SHORT TERM RATE - CHICAGO MERCANTILE EXCHANGE",
+      "code": "047745",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -73.438,
+      "pctile_3y": 0.0,
+      "chg_z": -1.786,
+      "proxy": null,
+      "side": "crowded_short"
+     },
+     {
+      "market": "5 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE",
+      "code": "344605",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": 1.317,
+      "pctile_3y": 1.0,
+      "chg_z": 0.436,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "2 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE",
+      "code": "342603",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": 49.563,
+      "pctile_3y": 1.0,
+      "chg_z": 2.645,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "CHAINLINK PERP STYLE - COINBASE DERIVATIVES, LLC",
+      "code": "170LM2",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -76.988,
+      "pctile_3y": 0.0,
+      "chg_z": -3.349,
+      "proxy": null,
+      "side": "crowded_short"
+     },
+     {
+      "market": "CRUDE OIL, LIGHT SWEET-WTI - ICE FUTURES EUROPE",
+      "code": "067411",
+      "report": "disagg",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "managed_money",
+      "net_pct_oi": -0.658,
+      "pctile_3y": 1.0,
+      "chg_z": 0.96,
+      "proxy": "USO",
+      "side": "crowded_long"
+     },
+     {
+      "market": "GASOLINE RBOB - NEW YORK MERCANTILE EXCHANGE",
+      "code": "111659",
+      "report": "disagg",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "managed_money",
+      "net_pct_oi": 26.596,
+      "pctile_3y": 1.0,
+      "chg_z": 1.625,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "MINI SOYBEANS - CHICAGO BOARD OF TRADE",
+      "code": "005603",
+      "report": "disagg",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "managed_money",
+      "net_pct_oi": 0.0,
+      "pctile_3y": 1.0,
+      "chg_z": 0.0,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "LEAN HOGS - CHICAGO MERCANTILE EXCHANGE",
+      "code": "054642",
+      "report": "disagg",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "managed_money",
+      "net_pct_oi": -14.647,
+      "pctile_3y": 0.0064,
+      "chg_z": -0.366,
+      "proxy": null,
+      "side": "crowded_short"
+     },
+     {
+      "market": "RUSSELL E-MINI - CHICAGO MERCANTILE EXCHANGE",
+      "code": "239742",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -26.017,
+      "pctile_3y": 0.0128,
+      "chg_z": -0.839,
+      "proxy": "IWM",
+      "side": "crowded_short"
+     },
+     {
+      "market": "MSCI EAFE  - ICE FUTURES U.S.",
+      "code": "244041",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": 5.992,
+      "pctile_3y": 0.9872,
+      "chg_z": -0.039,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "SOYBEANS - CHICAGO BOARD OF TRADE",
+      "code": "005602",
+      "report": "disagg",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "managed_money",
+      "net_pct_oi": 23.795,
+      "pctile_3y": 0.9872,
+      "chg_z": 0.801,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "DOW JONES U.S. REAL ESTATE IDX - CHICAGO BOARD OF TRADE",
+      "code": "124606",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -12.925,
+      "pctile_3y": 0.0192,
+      "chg_z": -2.952,
+      "proxy": null,
+      "side": "crowded_short"
+     },
+     {
+      "market": "CORN - CHICAGO BOARD OF TRADE",
+      "code": "002602",
+      "report": "disagg",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "managed_money",
+      "net_pct_oi": 21.79,
+      "pctile_3y": 0.9808,
+      "chg_z": -0.307,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "CARDONA - COINBASE DERIVATIVES, LLC",
+      "code": "174LM1",
+      "report": "tff",
+      "report_date": "2026-09-08",
+      "public_utc": "2026-09-11T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -7.377,
+      "pctile_3y": 0.9722,
+      "chg_z": 0.445,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "DOGECOIN - COINBASE DERIVATIVES, LLC",
+      "code": "168DC1",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -50.988,
+      "pctile_3y": 0.971,
+      "chg_z": -2.068,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "UST 2Y NOTE - CHICAGO BOARD OF TRADE",
+      "code": "042601",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -29.756,
+      "pctile_3y": 0.9679,
+      "chg_z": -0.675,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "EURO FX/BRITISH POUND XRATE - CHICAGO MERCANTILE EXCHANGE",
+      "code": "299741",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": 1.45,
+      "pctile_3y": 0.9679,
+      "chg_z": 0.576,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "XRP - CHICAGO MERCANTILE EXCHANGE",
+      "code": "176740",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -18.482,
+      "pctile_3y": 0.9655,
+      "chg_z": -1.296,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "NANO SOLANA PERP STYLE - COINBASE DERIVATIVES, LLC",
+      "code": "177LM3",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -33.516,
+      "pctile_3y": 0.9649,
+      "chg_z": 0.074,
+      "proxy": null,
+      "side": "crowded_long"
+     },
+     {
+      "market": "SOFR-3M - CHICAGO MERCANTILE EXCHANGE",
+      "code": "134741",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -19.991,
+      "pctile_3y": 0.0449,
+      "chg_z": 2.177,
+      "proxy": null,
+      "side": "crowded_short"
+     },
+     {
+      "market": "COPPER- #1 - COMMODITY EXCHANGE INC.",
+      "code": "085692",
+      "report": "disagg",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "managed_money",
+      "net_pct_oi": 27.356,
+      "pctile_3y": 0.9551,
+      "chg_z": 1.85,
+      "proxy": null,
+      "side": "crowded_long"
+     }
+    ],
+    "cot_big_moves": [
+     {
+      "market": "MICRO E-MINI S&P 500 INDEX - CHICAGO MERCANTILE EXCHANGE",
+      "code": "13874U",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -0.321,
+      "pctile_3y": 0.5577,
+      "chg_z": 6.938,
+      "proxy": null
+     },
+     {
+      "market": "AVALANCHE PERP STYLE - COINBASE DERIVATIVES, LLC",
+      "code": "171LM2",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -67.613,
+      "pctile_3y": 0.4615,
+      "chg_z": -4.822,
+      "proxy": null
+     },
+     {
+      "market": "CHAINLINK PERP STYLE - COINBASE DERIVATIVES, LLC",
+      "code": "170LM2",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -76.988,
+      "pctile_3y": 0.0,
+      "chg_z": -3.349,
+      "proxy": null
+     },
+     {
+      "market": "DOW JONES U.S. REAL ESTATE IDX - CHICAGO BOARD OF TRADE",
+      "code": "124606",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -12.925,
+      "pctile_3y": 0.0192,
+      "chg_z": -2.952,
+      "proxy": null
+     },
+     {
+      "market": "2 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE",
+      "code": "342603",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": 49.563,
+      "pctile_3y": 1.0,
+      "chg_z": 2.645,
+      "proxy": null
+     },
+     {
+      "market": "1K SHIB PERP - COINBASE DERIVATIVES, LLC",
+      "code": "172LM2",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -40.844,
+      "pctile_3y": 0.4444,
+      "chg_z": -2.628,
+      "proxy": null
+     },
+     {
+      "market": "ADJUSTED INT RATE S&P 500 TOTL - CHICAGO MERCANTILE EXCHANGE",
+      "code": "13874W",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": 5.968,
+      "pctile_3y": 0.7179,
+      "chg_z": 2.509,
+      "proxy": null
+     },
+     {
+      "market": "BBG COMMODITY - CHICAGO BOARD OF TRADE",
+      "code": "221602",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": 3.09,
+      "pctile_3y": 0.9487,
+      "chg_z": -2.353,
+      "proxy": null
+     },
+     {
+      "market": "HEDERA PERP STYLE - COINBASE DERIVATIVES, LLC",
+      "code": "180LM4",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -63.167,
+      "pctile_3y": 0.25,
+      "chg_z": -2.245,
+      "proxy": null
+     },
+     {
+      "market": "SOFR-3M - CHICAGO MERCANTILE EXCHANGE",
+      "code": "134741",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -19.991,
+      "pctile_3y": 0.0449,
+      "chg_z": 2.177,
+      "proxy": null
+     },
+     {
+      "market": "E-MINI S&P 400 STOCK INDEX - CHICAGO MERCANTILE EXCHANGE",
+      "code": "33874A",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": 6.829,
+      "pctile_3y": 0.8846,
+      "chg_z": 2.134,
+      "proxy": null
+     },
+     {
+      "market": "E-MINI S&P ENERGY INDEX - CHICAGO MERCANTILE EXCHANGE",
+      "code": "138749",
+      "report": "tff",
+      "report_date": "2026-09-22",
+      "public_utc": "2026-09-25T19:30:00+00:00",
+      "group": "lev_money",
+      "net_pct_oi": -1.282,
+      "pctile_3y": 0.5705,
+      "chg_z": 2.078,
+      "proxy": null
+     }
+    ],
+    "si_settlement": "2026-09-15",
+    "si_crowded_shorts": [
+     {
+      "symbol": "SVRA",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 43343616.0,
+      "change_pct": 4.63,
+      "days_to_cover": 36.25,
+      "avg_daily_volume": 1195686.0
+     },
+     {
+      "symbol": "LXEO",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 20627916.0,
+      "change_pct": 0.7,
+      "days_to_cover": 33.44,
+      "avg_daily_volume": 616778.0
+     },
+     {
+      "symbol": "OGG",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 24604363.0,
+      "change_pct": -0.4,
+      "days_to_cover": 29.75,
+      "avg_daily_volume": 827017.0
+     },
+     {
+      "symbol": "TEVA",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 31478314.0,
+      "change_pct": 11467.47,
+      "days_to_cover": 27.35,
+      "avg_daily_volume": 1150992.0
+     },
+     {
+      "symbol": "PRTA",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 8544664.0,
+      "change_pct": 0.58,
+      "days_to_cover": 26.53,
+      "avg_daily_volume": 322027.0
+     },
+     {
+      "symbol": "IMO",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 19004666.0,
+      "change_pct": -3.17,
+      "days_to_cover": 26.2,
+      "avg_daily_volume": 725296.0
+     },
+     {
+      "symbol": "IEP",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 17398935.0,
+      "change_pct": -4.48,
+      "days_to_cover": 24.68,
+      "avg_daily_volume": 704949.0
+     },
+     {
+      "symbol": "OTTR",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 4790407.0,
+      "change_pct": -0.31,
+      "days_to_cover": 22.99,
+      "avg_daily_volume": 208378.0
+     },
+     {
+      "symbol": "CCCC",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 40189287.0,
+      "change_pct": 7.42,
+      "days_to_cover": 22.68,
+      "avg_daily_volume": 1771956.0
+     },
+     {
+      "symbol": "BCAX",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 11191724.0,
+      "change_pct": 3.19,
+      "days_to_cover": 22.56,
+      "avg_daily_volume": 496027.0
+     },
+     {
+      "symbol": "ZBIO",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 11871346.0,
+      "change_pct": 1.44,
+      "days_to_cover": 22.43,
+      "avg_daily_volume": 529251.0
+     },
+     {
+      "symbol": "CNQ",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 182920552.0,
+      "change_pct": 61.63,
+      "days_to_cover": 22.08,
+      "avg_daily_volume": 8283071.0
+     },
+     {
+      "symbol": "LBRX",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 5617182.0,
+      "change_pct": 6.42,
+      "days_to_cover": 21.45,
+      "avg_daily_volume": 261863.0
+     },
+     {
+      "symbol": "DDD",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 43937708.0,
+      "change_pct": 0.49,
+      "days_to_cover": 21.31,
+      "avg_daily_volume": 2062066.0
+     },
+     {
+      "symbol": "FTS",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 14307807.0,
+      "change_pct": -4.96,
+      "days_to_cover": 21.28,
+      "avg_daily_volume": 672440.0
+     }
+    ],
+    "si_rising_shorts": [
+     {
+      "symbol": "TEVA",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 31478314.0,
+      "change_pct": 11467.47,
+      "days_to_cover": 27.35,
+      "avg_daily_volume": 1150992.0
+     },
+     {
+      "symbol": "UUP",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 7456289.0,
+      "change_pct": 414.9,
+      "days_to_cover": 4.83,
+      "avg_daily_volume": 1545127.0
+     },
+     {
+      "symbol": "TRLV",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 5117058.0,
+      "change_pct": 254.22,
+      "days_to_cover": 2.84,
+      "avg_daily_volume": 1803727.0
+     },
+     {
+      "symbol": "BWLP",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 1595030.0,
+      "change_pct": 143.07,
+      "days_to_cover": 2.74,
+      "avg_daily_volume": 582113.0
+     },
+     {
+      "symbol": "APH",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 31544237.0,
+      "change_pct": 132.61,
+      "days_to_cover": 2.75,
+      "avg_daily_volume": 11480110.0
+     },
+     {
+      "symbol": "LYG",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 9213756.0,
+      "change_pct": 120.62,
+      "days_to_cover": 1.0,
+      "avg_daily_volume": 14519336.0
+     },
+     {
+      "symbol": "CHA",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 1865003.0,
+      "change_pct": 95.14,
+      "days_to_cover": 1.25,
+      "avg_daily_volume": 1491608.0
+     },
+     {
+      "symbol": "TECK",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 13955380.0,
+      "change_pct": 85.31,
+      "days_to_cover": 4.46,
+      "avg_daily_volume": 3130326.0
+     },
+     {
+      "symbol": "SKM",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 3283903.0,
+      "change_pct": 83.05,
+      "days_to_cover": 2.08,
+      "avg_daily_volume": 1577633.0
+     },
+     {
+      "symbol": "BSBR",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 7921853.0,
+      "change_pct": 79.35,
+      "days_to_cover": 1.56,
+      "avg_daily_volume": 5068939.0
+     },
+     {
+      "symbol": "LTM",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 3204337.0,
+      "change_pct": 73.17,
+      "days_to_cover": 4.19,
+      "avg_daily_volume": 764673.0
+     },
+     {
+      "symbol": "MMED",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 13594922.0,
+      "change_pct": 68.66,
+      "days_to_cover": 4.85,
+      "avg_daily_volume": 2805245.0
+     },
+     {
+      "symbol": "BKV",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 10035138.0,
+      "change_pct": 64.43,
+      "days_to_cover": 2.89,
+      "avg_daily_volume": 3476246.0
+     },
+     {
+      "symbol": "UROY",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 5218128.0,
+      "change_pct": 63.67,
+      "days_to_cover": 1.58,
+      "avg_daily_volume": 3295989.0
+     },
+     {
+      "symbol": "CNQ",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 182920552.0,
+      "change_pct": 61.63,
+      "days_to_cover": 22.08,
+      "avg_daily_volume": 8283071.0
+     }
+    ],
+    "short_volume_spikes": [
+     {
+      "symbol": "DK",
+      "date": "2026-09-25",
+      "ratio": 0.887,
+      "z": 4.55,
+      "total_volume": 3648584.124764
+     },
+     {
+      "symbol": "CM",
+      "date": "2026-09-25",
+      "ratio": 0.9734,
+      "z": 4.13,
+      "total_volume": 4251397.103413
+     },
+     {
+      "symbol": "FATE",
+      "date": "2026-09-25",
+      "ratio": 0.8339,
+      "z": 3.19,
+      "total_volume": 1530802.045411
+     },
+     {
+      "symbol": "ONON",
+      "date": "2026-09-25",
+      "ratio": 0.6517,
+      "z": 3.03,
+      "total_volume": 5131886.07831
+     }
+    ]
+   },
+   "implications": [
+    {
+     "subject": "TLT",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "CFTC TFF UST BOND - CHICAGO BOARD OF TRADE: lev_money net -8.584% of open interest, 100% percentile of 3 years (crowded_long); crowded speculative positioning tends to unwind against itself",
+     "contradiction": "the proxy keeps moving with the crowd over 20 sessions",
+     "mentioned": null,
+     "rule": "cot_crowded",
+     "write_size": false,
+     "written": "OK"
+    },
+    {
+     "subject": "USO",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "CFTC DISAGG CRUDE OIL, LIGHT SWEET-WTI - ICE FUTURES EUROPE: managed_money net -0.658% of open interest, 100% percentile of 3 years (crowded_long); crowded speculative positioning tends to unwind against itself",
+     "contradiction": "the proxy keeps moving with the crowd over 20 sessions",
+     "mentioned": null,
+     "rule": "cot_crowded",
+     "write_size": false,
+     "written": "OK"
+    },
+    {
+     "subject": "IWM",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "CFTC TFF RUSSELL E-MINI - CHICAGO MERCANTILE EXCHANGE: lev_money net -26.017% of open interest, 1% percentile of 3 years (crowded_short); crowded speculative positioning tends to unwind against itself",
+     "contradiction": "the proxy keeps moving with the crowd over 20 sessions",
+     "mentioned": null,
+     "rule": "cot_crowded",
+     "write_size": false,
+     "written": "OK"
+    },
+    {
+     "subject": "SVRA",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 36.2 days to cover, 4.63% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "OK"
+    },
+    {
+     "subject": "LXEO",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 33.4 days to cover, 0.7% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "OK"
+    },
+    {
+     "subject": "OGG",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 29.8 days to cover, -0.4% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "OK"
+    },
+    {
+     "subject": "TEVA",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 27.4 days to cover, 11467.47% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "PRTA",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 26.5 days to cover, 0.58% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "OK"
+    },
+    {
+     "subject": "IMO",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 26.2 days to cover, -3.17% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "OK"
+    },
+    {
+     "subject": "IEP",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 24.7 days to cover, -4.48% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "OK"
+    },
+    {
+     "subject": "OTTR",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 23.0 days to cover, -0.31% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "OK"
+    },
+    {
+     "subject": "DK",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.2,
+     "order": 1,
+     "chain": "off-exchange short-sale share 0.89 on 2026-09-25, 4.5 sd above the name's own 60-day level",
+     "contradiction": "the stock beats SPY over 5 sessions",
+     "mentioned": null,
+     "rule": "short_volume_spike",
+     "write_size": false,
+     "written": "OK"
+    },
+    {
+     "subject": "CM",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.2,
+     "order": 1,
+     "chain": "off-exchange short-sale share 0.97 on 2026-09-25, 4.1 sd above the name's own 60-day level",
+     "contradiction": "the stock beats SPY over 5 sessions",
+     "mentioned": null,
+     "rule": "short_volume_spike",
+     "write_size": false,
+     "written": "OK"
+    },
+    {
+     "subject": "FATE",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.2,
+     "order": 1,
+     "chain": "off-exchange short-sale share 0.83 on 2026-09-25, 3.2 sd above the name's own 60-day level",
+     "contradiction": "the stock beats SPY over 5 sessions",
+     "mentioned": null,
+     "rule": "short_volume_spike",
+     "write_size": false,
+     "written": "OK"
+    },
+    {
+     "subject": "ONON",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.2,
+     "order": 1,
+     "chain": "off-exchange short-sale share 0.65 on 2026-09-25, 3.0 sd above the name's own 60-day level",
+     "contradiction": "the stock beats SPY over 5 sessions",
+     "mentioned": null,
+     "rule": "short_volume_spike",
+     "write_size": false,
+     "written": "OK"
+    }
+   ],
+   "specialist": "news_digest:positioning_v0"
+  },
+  "tables": {
+   "insider_tx": {
+    "rows": 0,
+    "public_last_24h": 0,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\insider_tx.jsonl"
+   },
+   "filing_events": {
+    "rows": 403,
+    "public_last_24h": 244,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\filing_events.jsonl"
+   },
+   "politician_filings": {
+    "rows": 403,
+    "public_last_24h": 0,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_filings.jsonl"
+   },
+   "politician_trades": {
+    "rows": 855,
+    "public_last_24h": 0,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_trades.jsonl"
+   },
+   "positioning_cot": {
+    "rows": 15208,
+    "public_last_24h": 0,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\positioning_cot.jsonl"
+   },
+   "short_interest": {
+    "rows": 45164,
+    "public_last_24h": 0,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\short_interest.jsonl"
+   },
+   "policy_events": {
+    "rows": 560,
+    "public_last_24h": 249,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\policy_events.jsonl"
+   }
+  },
+  "written": {
+   "congress": 4,
+   "positioning": 14
+  },
+  "not_written": {
+   "positioning:NO_BARS": 1
+  }
+ },
+ "sections_error": null,
+ "runtime_s": 13.8,
+ "dry_run": true
+}

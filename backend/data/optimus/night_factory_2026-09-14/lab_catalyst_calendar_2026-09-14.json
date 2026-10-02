@@ -1,0 +1,326 @@
+{
+ "receipt": "lab_catalyst_calendar",
+ "licence": "PRODUCT_EXPERIMENT",
+ "stage": "raw",
+ "llm_spend_usd": 0.0,
+ "utc": "2026-09-14T08:09:02+00:00",
+ "date": "2026-09-14",
+ "tickers": [
+  "AARD",
+  "ABSI",
+  "AMSC",
+  "BHVN",
+  "DKNG",
+  "HUBS",
+  "KYTX",
+  "NTLA",
+  "PRCH",
+  "QUBT",
+  "SLDP",
+  "SOC"
+ ],
+ "ticker_refusal": null,
+ "per_ticker": {
+  "0_7d": [],
+  "8_30d": [],
+  "31_90d": [
+   {
+    "ticker": "SLDP",
+    "kind": "earnings",
+    "event_time": "2026-11-02",
+    "first_public_time": null,
+    "days_away": 49,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.1173",
+    "receipt": "162716fa3600a6df",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.1173,
+     "revenue_estimate": 1621116
+    }
+   },
+   {
+    "ticker": "HUBS",
+    "kind": "earnings",
+    "event_time": "2026-11-03",
+    "first_public_time": null,
+    "days_away": 50,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate 3.3255",
+    "receipt": "9e8bd8196ef92bce",
+    "detail": {
+     "hour": "amc",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": 3.3255,
+     "revenue_estimate": 942991672
+    }
+   },
+   {
+    "ticker": "PRCH",
+    "kind": "earnings",
+    "event_time": "2026-11-03",
+    "first_public_time": null,
+    "days_away": 50,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate 0.0017",
+    "receipt": "c984ff2d6d76f1fd",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": 0.0017,
+     "revenue_estimate": 139983096
+    }
+   },
+   {
+    "ticker": "DKNG",
+    "kind": "earnings",
+    "event_time": "2026-11-04",
+    "first_public_time": null,
+    "days_away": 51,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.3474",
+    "receipt": "0961ff5e828b51db",
+    "detail": {
+     "hour": "amc",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.3474,
+     "revenue_estimate": 1439344858
+    }
+   },
+   {
+    "ticker": "NTLA",
+    "kind": "earnings",
+    "event_time": "2026-11-04",
+    "first_public_time": null,
+    "days_away": 51,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.8171",
+    "receipt": "029b2f514b31d1ec",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.8171,
+     "revenue_estimate": 10674300
+    }
+   },
+   {
+    "ticker": "BHVN",
+    "kind": "earnings",
+    "event_time": "2026-11-09",
+    "first_public_time": null,
+    "days_away": 56,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.771",
+    "receipt": "04081002ad1155f8",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.771,
+     "revenue_estimate": 0
+    }
+   },
+   {
+    "ticker": "ABSI",
+    "kind": "earnings",
+    "event_time": "2026-11-10",
+    "first_public_time": null,
+    "days_away": 57,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.2053",
+    "receipt": "bd25343741c4426b",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.2053,
+     "revenue_estimate": 869172
+    }
+   },
+   {
+    "ticker": "KYTX",
+    "kind": "earnings",
+    "event_time": "2026-11-10",
+    "first_public_time": null,
+    "days_away": 57,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.7018",
+    "receipt": "10bdcd339d3ddecb",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.7018,
+     "revenue_estimate": 0
+    }
+   },
+   {
+    "ticker": "AARD",
+    "kind": "earnings",
+    "event_time": "2026-11-11",
+    "first_public_time": null,
+    "days_away": 58,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.7813",
+    "receipt": "2241afa26fabd0c7",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.7813,
+     "revenue_estimate": 0
+    }
+   },
+   {
+    "ticker": "SOC",
+    "kind": "earnings",
+    "event_time": "2026-11-11",
+    "first_public_time": null,
+    "days_away": 58,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.1077",
+    "receipt": "9b4c0c35c7acebdb",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.1077,
+     "revenue_estimate": 186559796
+    }
+   },
+   {
+    "ticker": "QUBT",
+    "kind": "earnings",
+    "event_time": "2026-11-12",
+    "first_public_time": null,
+    "days_away": 59,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.0434",
+    "receipt": "defd1a439807dc90",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.0434,
+     "revenue_estimate": 7697124
+    }
+   }
+  ],
+  "beyond_90d": [],
+  "tickers_checked": 12,
+  "tickers_blind": [],
+  "events_found": 11,
+  "failures": [],
+  "coverage": {
+   "covered": [
+    "scheduled earnings dates (Finnhub, free tier)",
+    "earnings estimate + surprise history (Finnhub)",
+    "anything hand-entered under `catalysts:` in the book"
+   ],
+   "uncovered": [
+    "FDA/PDUFA action dates",
+    "clinical readout windows",
+    "secondary offerings and shelf takedowns",
+    "13D/13G filings",
+    "lockup expiries",
+    "index adds/deletes",
+    "investor days",
+    "guidance updates outside earnings"
+   ],
+   "vendor_available": true,
+   "tickers_checked": 12,
+   "tickers_requested": 12,
+   "tickers_not_retrieved": 0,
+   "not_retrieved": [],
+   "events_found": 11,
+   "grade": "v0 — earnings only",
+   "warning": "an empty calendar means no EARNINGS date was found in the window. It is NOT evidence that nothing is scheduled: PDUFA dates, readouts, offerings and lockups have no entitled source here and must be entered by hand."
+  }
+ },
+ "macro": [],
+ "legs": {
+  "CPI": "REFUSED",
+  "NFP": "REFUSED",
+  "FOMC": "0 date(s) (FOMC_SCHEDULE_NOT_SEEDED)"
+ },
+ "refusals": [
+  {
+   "kind": "CPI",
+   "refusal": "FRED_FETCH_FAILED: HTTPSConnectionPool(host='api.stlouisfed.org', port=443): Max retries exceeded with url: /fred/release/dates?release_id=10&include_release_dates_with_no_data=tr"
+  },
+  {
+   "kind": "NFP",
+   "refusal": "FRED_FETCH_FAILED: HTTPSConnectionPool(host='api.stlouisfed.org', port=443): Max retries exceeded with url: /fred/release/dates?release_id=50&include_release_dates_with_no_data=tr"
+  },
+  {
+   "kind": "FOMC",
+   "refusal": "FOMC_SCHEDULE_NOT_SEEDED",
+   "detail": "Copy the meeting dates from https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm into C:\\Users\\mrthn\\aegis-finance\\backend\\data\\fomc_schedule.json as {\"verified_on\": \"<YYYY-MM-DD>\", \"source_url\": \"...\", \"dates\": [\"<YYYY-MM-DD>\", ...]}. They are NOT invented here: a wrong scheduled date is worse than an absent one, because a reader plans around it."
+  }
+ ],
+ "horizon_days": 120,
+ "fomc_table": {
+  "status": "FOMC_SCHEDULE_NOT_SEEDED",
+  "verified_on": null,
+  "age_days": null,
+  "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\fomc_schedule.json"
+ },
+ "uncovered": [
+  "ECB and BoJ decisions",
+  "Treasury refunding",
+  "PCE and GDP release dates (FRED ids not declared here)",
+  "any intra-meeting action, by definition"
+ ],
+ "note": "`engine_probability` is null on every entry: X3 is not wired, and a fabricated probability attached to a real date is the one failure this block could cause that nobody would notice."
+}

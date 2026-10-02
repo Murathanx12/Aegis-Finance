@@ -1,0 +1,900 @@
+{
+  "night": "2026-09-30",
+  "status": "void",
+  "void_reason": "no forecast cell survived cross-arm intersection (0 cells produced across 5 arms, 0 held by all) \u2014 there is nothing paired to compare",
+  "tickers": [
+    "MDT",
+    "DKNG",
+    "SLB",
+    "TJX",
+    "KR",
+    "SO",
+    "EXC",
+    "AAPL",
+    "MU",
+    "OKE",
+    "MLM",
+    "SPGI",
+    "HAL",
+    "XEL",
+    "ORCL",
+    "META",
+    "BA",
+    "NKE",
+    "VZ",
+    "DUK",
+    "VMC",
+    "FDX",
+    "WEC",
+    "EOG",
+    "ACN",
+    "AMD",
+    "TMUS",
+    "CAT",
+    "ENPH",
+    "CRWD",
+    "CME",
+    "XYZ",
+    "CSX",
+    "JNJ",
+    "XOM",
+    "SHW",
+    "GD",
+    "HD",
+    "BRK-B",
+    "CEG"
+  ],
+  "trigger_report": {
+    "as_of": "2026-09-30",
+    "k_requested": 40,
+    "n_universe": 180,
+    "n_eligible": 179,
+    "n_selected": 40,
+    "n_excluded": 1,
+    "short_of_k": false,
+    "tickers": [
+      "MDT",
+      "DKNG",
+      "SLB",
+      "TJX",
+      "KR",
+      "SO",
+      "EXC",
+      "AAPL",
+      "MU",
+      "OKE",
+      "MLM",
+      "SPGI",
+      "HAL",
+      "XEL",
+      "ORCL",
+      "META",
+      "BA",
+      "NKE",
+      "VZ",
+      "DUK",
+      "VMC",
+      "FDX",
+      "WEC",
+      "EOG",
+      "ACN",
+      "AMD",
+      "TMUS",
+      "CAT",
+      "ENPH",
+      "CRWD",
+      "CME",
+      "XYZ",
+      "CSX",
+      "JNJ",
+      "XOM",
+      "SHW",
+      "GD",
+      "HD",
+      "BRK-B",
+      "CEG"
+    ],
+    "selected": [
+      {
+        "ticker": "MDT",
+        "score": 5.7439,
+        "components": {
+          "abs_resid_return_z_1d": 1.7859,
+          "volume_z_20d": 2.958,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "DKNG",
+        "score": 4.5328,
+        "components": {
+          "abs_resid_return_z_1d": 2.3826,
+          "volume_z_20d": 2.1503,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SLB",
+        "score": 3.9658,
+        "components": {
+          "abs_resid_return_z_1d": 1.2469,
+          "volume_z_20d": 2.7188,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "TJX",
+        "score": 3.6087,
+        "components": {
+          "abs_resid_return_z_1d": 1.9695,
+          "volume_z_20d": 1.6392,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "KR",
+        "score": 3.5349,
+        "components": {
+          "abs_resid_return_z_1d": 1.0784,
+          "volume_z_20d": 1.4565,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SO",
+        "score": 3.4965,
+        "components": {
+          "abs_resid_return_z_1d": 1.4048,
+          "volume_z_20d": 2.0917,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "EXC",
+        "score": 3.0305,
+        "components": {
+          "abs_resid_return_z_1d": 0.7031,
+          "volume_z_20d": 2.3274,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "AAPL",
+        "score": 3.0166,
+        "components": {
+          "abs_resid_return_z_1d": 1.566,
+          "volume_z_20d": 0.4505,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "MU",
+        "score": 3.0153,
+        "components": {
+          "abs_resid_return_z_1d": 0.3782,
+          "volume_z_20d": 1.1371,
+          "earnings_within_5d": 1.5,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "OKE",
+        "score": 2.9528,
+        "components": {
+          "abs_resid_return_z_1d": 1.3871,
+          "volume_z_20d": 0.5657,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "MLM",
+        "score": 2.7914,
+        "components": {
+          "abs_resid_return_z_1d": 1.2964,
+          "volume_z_20d": 1.495,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SPGI",
+        "score": 2.7069,
+        "components": {
+          "abs_resid_return_z_1d": 0.4842,
+          "volume_z_20d": 2.2227,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "HAL",
+        "score": 2.7037,
+        "components": {
+          "abs_resid_return_z_1d": 1.3676,
+          "volume_z_20d": 0.3361,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "XEL",
+        "score": 2.702,
+        "components": {
+          "abs_resid_return_z_1d": 1.7977,
+          "volume_z_20d": 0.9043,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "ORCL",
+        "score": 2.6669,
+        "components": {
+          "abs_resid_return_z_1d": 1.6939,
+          "volume_z_20d": 0.973,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "META",
+        "score": 2.652,
+        "components": {
+          "abs_resid_return_z_1d": 1.2032,
+          "volume_z_20d": 0.4488,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "BA",
+        "score": 2.579,
+        "components": {
+          "abs_resid_return_z_1d": 1.0842,
+          "volume_z_20d": 1.4948,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "NKE",
+        "score": 2.5706,
+        "components": {
+          "abs_resid_return_z_1d": 0.8042,
+          "volume_z_20d": 0.2663,
+          "earnings_within_5d": 1.5,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "VZ",
+        "score": 2.4454,
+        "components": {
+          "abs_resid_return_z_1d": 1.0164,
+          "volume_z_20d": 0.429,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "DUK",
+        "score": 2.3758,
+        "components": {
+          "abs_resid_return_z_1d": 0.6275,
+          "volume_z_20d": 0.7484,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "VMC",
+        "score": 2.3461,
+        "components": {
+          "abs_resid_return_z_1d": 0.7234,
+          "volume_z_20d": 1.6227,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "FDX",
+        "score": 2.3125,
+        "components": {
+          "abs_resid_return_z_1d": 0.4295,
+          "volume_z_20d": 0.883,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "WEC",
+        "score": 2.282,
+        "components": {
+          "abs_resid_return_z_1d": 1.0772,
+          "volume_z_20d": 1.2048,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "EOG",
+        "score": 2.2084,
+        "components": {
+          "abs_resid_return_z_1d": 0.4631,
+          "volume_z_20d": 0.7453,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "ACN",
+        "score": 2.1492,
+        "components": {
+          "abs_resid_return_z_1d": 0.5328,
+          "volume_z_20d": 0.1164,
+          "earnings_within_5d": 1.5,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "AMD",
+        "score": 2.0815,
+        "components": {
+          "abs_resid_return_z_1d": 0.1599,
+          "volume_z_20d": 0.9216,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "TMUS",
+        "score": 2.0519,
+        "components": {
+          "abs_resid_return_z_1d": 0.819,
+          "volume_z_20d": 0.2329,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "CAT",
+        "score": 2.0473,
+        "components": {
+          "abs_resid_return_z_1d": 0.6255,
+          "volume_z_20d": 0.4218,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "ENPH",
+        "score": 2.047,
+        "components": {
+          "abs_resid_return_z_1d": 1.1736,
+          "volume_z_20d": 0.8733,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "CRWD",
+        "score": 2.0375,
+        "components": {
+          "abs_resid_return_z_1d": 0.3813,
+          "volume_z_20d": 0.6562,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "CME",
+        "score": 2.0158,
+        "components": {
+          "abs_resid_return_z_1d": 0.0752,
+          "volume_z_20d": 0.9406,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "XYZ",
+        "score": 1.9994,
+        "components": {
+          "abs_resid_return_z_1d": 0.6498,
+          "volume_z_20d": 0.3496,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "CSX",
+        "score": 1.9885,
+        "components": {
+          "abs_resid_return_z_1d": 0.2369,
+          "volume_z_20d": 0.7516,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "JNJ",
+        "score": 1.9564,
+        "components": {
+          "abs_resid_return_z_1d": 1.3109,
+          "volume_z_20d": 0.6455,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "XOM",
+        "score": 1.9494,
+        "components": {
+          "abs_resid_return_z_1d": 0.6358,
+          "volume_z_20d": 1.3136,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SHW",
+        "score": 1.946,
+        "components": {
+          "abs_resid_return_z_1d": 0.2692,
+          "volume_z_20d": 0.6769,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "GD",
+        "score": 1.9256,
+        "components": {
+          "abs_resid_return_z_1d": 0.4659,
+          "volume_z_20d": 1.4597,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "HD",
+        "score": 1.9193,
+        "components": {
+          "abs_resid_return_z_1d": 0.3356,
+          "volume_z_20d": 1.5837,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "BRK-B",
+        "score": 1.9183,
+        "components": {
+          "abs_resid_return_z_1d": 0.1783,
+          "volume_z_20d": 0.7399,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "CEG",
+        "score": 1.8571,
+        "components": {
+          "abs_resid_return_z_1d": 0.8107,
+          "volume_z_20d": 1.0464,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      }
+    ],
+    "excluded": [
+      {
+        "ticker": "AVB",
+        "score": 0.0,
+        "components": {
+          "earnings_within_5d": 0.0
+        },
+        "eligible": false,
+        "reason": "liquidity unverifiable: dollar_volume_20d unavailable \u2014 excluded rather than admitted, because the floor cannot be cleared by a value nobody has"
+      }
+    ],
+    "weights": {
+      "abs_resid_return_z_1d": 1.0,
+      "volume_z_20d": 1.0,
+      "earnings_within_5d": 1.5,
+      "filing_within_2d": 1.0
+    },
+    "amendment": "amendment-1 2026-08-19: >=1 measured continuous component required; selected rows carried on the night receipt"
+  },
+  "per_arm": {
+    "A_snapshot": {
+      "n_cells": 0,
+      "n_with_forecasts": 0,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {},
+      "rows": []
+    },
+    "B_tools": {
+      "n_cells": 0,
+      "n_with_forecasts": 0,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {},
+      "rows": []
+    },
+    "C_tools_only": {
+      "n_cells": 0,
+      "n_with_forecasts": 0,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {},
+      "rows": []
+    },
+    "D_all": {
+      "n_cells": 0,
+      "n_with_forecasts": 0,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {},
+      "rows": []
+    },
+    "B_anon": {
+      "n_cells": 0,
+      "n_with_forecasts": 0,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {},
+      "rows": []
+    }
+  },
+  "records_written": 0,
+  "calls": 9,
+  "spend_usd": 0.005052,
+  "served_models": [
+    "deepseek-flash"
+  ],
+  "budget": {
+    "measured_cost_night_1": 0.005052,
+    "measured_cost_status": "measured",
+    "projected_40_night_cost": 0.2021,
+    "current_balance": 23.99,
+    "balance_as_of": "2026-08-24",
+    "funding_gap_or_surplus": 23.7879,
+    "fundable_nights_at_this_rate": 4748,
+    "nights_required": 40,
+    "funding_average_per_night": 0.5998,
+    "safety_ceiling_per_night": 12.0,
+    "note": "The ceiling is a stop, not a plan. The planning number is funding_average_per_night; a night under the ceiling but over the average shortens the trial rather than fitting in it. The funding decision is made BEFORE the accrual clock starts, not when the balance runs out."
+  },
+  "cell_pairing": {
+    "n_cells_union": 0,
+    "n_cells_paired": 0,
+    "n_cells_dropped_unpaired": 0,
+    "per_arm": {
+      "A_snapshot": {
+        "n_cells": 0,
+        "n_dropped_for_pairing": 0
+      },
+      "B_tools": {
+        "n_cells": 0,
+        "n_dropped_for_pairing": 0
+      },
+      "C_tools_only": {
+        "n_cells": 0,
+        "n_dropped_for_pairing": 0
+      },
+      "D_all": {
+        "n_cells": 0,
+        "n_dropped_for_pairing": 0
+      },
+      "B_anon": {
+        "n_cells": 0,
+        "n_dropped_for_pairing": 0
+      }
+    },
+    "key": "night x ticker x observable x horizon_days x threshold"
+  },
+  "chain_yield": {
+    "n_chains": 5,
+    "n_chains_minted_nothing": 5,
+    "n_calls_resolved": 9,
+    "n_calls_in_barren_chains": 9
+  },
+  "truncation": {
+    "n_cells": 0,
+    "n_cells_truncated": 0,
+    "pooled_rate": 0.0,
+    "per_arm_rate": {},
+    "worst_arm": null,
+    "worst_arm_rate": 0.0,
+    "spread": 0.0
+  },
+  "decision_lag_minutes": 14.93,
+  "decision_lag_minutes_at_end": 15.27,
+  "timing": {
+    "projected_minutes": 271.0,
+    "projected_finish_utc": "2026-09-30T12:46+00:00",
+    "next_open_utc": "2026-09-30T13:30+00:00",
+    "next_session": "2026-09-30",
+    "hours_until_open": 5.25,
+    "minutes_of_headroom": 44.0,
+    "call_seconds_assumed": 8.7,
+    "n_calls_projected": 1428,
+    "calls_per_cell_assumed": 7.14,
+    "calls_per_cell_basis": "MEASURED_MAX_OVER_COMPLETED_NIGHTS",
+    "calls_per_cell_declared": 4.8,
+    "calls_per_cell_nights_measured": 13,
+    "decision_basis": "MEASURED_DURATION_BOUND",
+    "decision_clock": "run_night_elapsed",
+    "modelled_serial_minutes": 207.1,
+    "measured_duration_bound": {
+      "value": 271.0,
+      "basis": "MEASURED_WORST_COMPLETED_NIGHT_X_DECLARED_FACTOR",
+      "n_nights": 13,
+      "observed": [
+        {
+          "night": "2026-08-17",
+          "minutes": 115.36,
+          "projected_minutes": 69.6,
+          "projection_error_minutes": 45.8,
+          "projection_ratio": 1.658
+        },
+        {
+          "night": "2026-08-18",
+          "minutes": 113.48,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -117.2,
+          "projection_ratio": 0.492
+        },
+        {
+          "night": "2026-08-19",
+          "minutes": 109.7,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -121.0,
+          "projection_ratio": 0.475
+        },
+        {
+          "night": "2026-08-21",
+          "minutes": 108.53,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -122.2,
+          "projection_ratio": 0.47
+        },
+        {
+          "night": "2026-08-24",
+          "minutes": 112.64,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -118.1,
+          "projection_ratio": 0.488
+        },
+        {
+          "night": "2026-08-25",
+          "minutes": 106.26,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -124.4,
+          "projection_ratio": 0.461
+        },
+        {
+          "night": "2026-08-26",
+          "minutes": 108.17,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -122.5,
+          "projection_ratio": 0.469
+        },
+        {
+          "night": "2026-08-27",
+          "minutes": 117.48,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -113.2,
+          "projection_ratio": 0.509
+        },
+        {
+          "night": "2026-09-22",
+          "minutes": 56.71,
+          "projected_minutes": 235.0,
+          "projection_error_minutes": -178.3,
+          "projection_ratio": 0.241
+        },
+        {
+          "night": "2026-09-24",
+          "minutes": 58.89,
+          "projected_minutes": 235.0,
+          "projection_error_minutes": -176.1,
+          "projection_ratio": 0.251
+        },
+        {
+          "night": "2026-09-25",
+          "minutes": 135.52,
+          "projected_minutes": 235.0,
+          "projection_error_minutes": -99.5,
+          "projection_ratio": 0.577
+        },
+        {
+          "night": "2026-09-28",
+          "minutes": 55.08,
+          "projected_minutes": 271.0,
+          "projection_error_minutes": -215.9,
+          "projection_ratio": 0.203
+        },
+        {
+          "night": "2026-09-29",
+          "minutes": 57.39,
+          "projected_minutes": 271.0,
+          "projection_error_minutes": -213.6,
+          "projection_ratio": 0.212
+        }
+      ],
+      "worst_minutes": 135.52,
+      "safety_factor": 2.0,
+      "clock": "run_night_elapsed"
+    },
+    "runner_concurrency_derived": 5,
+    "concurrency_basis": "DERIVED_FROM_FROZEN_PREREG",
+    "projected_minutes_at_runner_concurrency": 103.5,
+    "arm_concurrency": 5,
+    "concurrency_efficiency_declared": 2.0,
+    "calendar": "XNYS",
+    "actual_finish_utc": "2026-09-30T08:15+00:00",
+    "actual_minutes": 0.4,
+    "actual_headroom_minutes": 314.6,
+    "finished_before_open": true,
+    "measured": {}
+  },
+  "arm_start_skew_ms": [],
+  "dropped_cells": [
+    {
+      "ticker": "MDT",
+      "reason": "arm A_snapshot raised ResearchBudgetExhausted: zero-yield rate 100.0% exceeds 40% over 51 resolvable calls (of 59 total, 8 pending) \u2014 halting for inspection: this campaign is buying tokens, not information"
+    }
+  ],
+  "implementation_version": 2,
+  "arm_implementation_fingerprint": "19461700cec485a6",
+  "git_commit": "8ac6446827560d732be0dc6f3876e9e09f302656",
+  "git_dirty": true,
+  "planned_start_utc": null,
+  "actual_start_utc": "2026-09-30T08:15:00+00:00",
+  "start_delay_minutes": null,
+  "arm_failures": {
+    "A_snapshot": {
+      "n_cells": 0,
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {}
+    },
+    "B_tools": {
+      "n_cells": 0,
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {}
+    },
+    "C_tools_only": {
+      "n_cells": 0,
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {}
+    },
+    "D_all": {
+      "n_cells": 0,
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {}
+    },
+    "B_anon": {
+      "n_cells": 0,
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {}
+    }
+  },
+  "execution_mode": "cells_sequential_arms_concurrent",
+  "arm_concurrency": 5,
+  "peak_calls_in_flight": 5,
+  "sandbox": false,
+  "elapsed_s": 21.30885499995202,
+  "trial": "INTERNET-INVESTIGATOR-FWD-1"
+}

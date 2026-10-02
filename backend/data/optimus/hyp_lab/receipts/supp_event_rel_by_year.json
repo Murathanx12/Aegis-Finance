@@ -1,0 +1,156 @@
+{
+ "job": "hyp_lab.supplementary",
+ "note": "descriptive companion to H-57ab67541e (reported, not deciding): mean log(|move|/trailing vol) by student event type minus no_event, weekly-block SE",
+ "result": {
+  "2025": {
+   "earnings_report": {
+    "n": 2094,
+    "rel_vs_no_event": 0.294,
+    "t": 5.19,
+    "mde": 0.159,
+    "weeks": 53,
+    "months_positive": "12/12"
+   },
+   "guidance_change": {
+    "n": 260,
+    "rel_vs_no_event": 0.365,
+    "t": 4.41,
+    "mde": 0.231,
+    "weeks": 48,
+    "months_positive": "11/12"
+   },
+   "analyst_target_change": {
+    "n": 728,
+    "rel_vs_no_event": 0.002,
+    "t": 0.04,
+    "mde": 0.141,
+    "weeks": 52,
+    "months_positive": "5/12"
+   },
+   "clinical_trial_result": {
+    "n": 294,
+    "rel_vs_no_event": 0.052,
+    "t": 0.64,
+    "mde": 0.226,
+    "weeks": 50,
+    "months_positive": "6/12"
+   },
+   "equity_issuance_dilution": {
+    "n": 146,
+    "rel_vs_no_event": -0.026,
+    "t": -0.26,
+    "mde": 0.284,
+    "weeks": 45,
+    "months_positive": "6/12"
+   },
+   "new_contract_or_partnership": {
+    "n": 1452,
+    "rel_vs_no_event": -0.057,
+    "t": -1.91,
+    "mde": 0.084,
+    "weeks": 53,
+    "months_positive": "2/12"
+   }
+  },
+  "2025H2": {
+   "earnings_report": {
+    "n": 1092,
+    "rel_vs_no_event": 0.208,
+    "t": 2.2,
+    "mde": 0.265,
+    "weeks": 27,
+    "months_positive": "6/6"
+   },
+   "guidance_change": {
+    "n": 173,
+    "rel_vs_no_event": 0.389,
+    "t": 4.08,
+    "mde": 0.267,
+    "weeks": 27,
+    "months_positive": "6/6"
+   },
+   "analyst_target_change": {
+    "n": 451,
+    "rel_vs_no_event": 0.015,
+    "t": 0.28,
+    "mde": 0.15,
+    "weeks": 27,
+    "months_positive": "3/6"
+   },
+   "clinical_trial_result": {
+    "n": 189,
+    "rel_vs_no_event": 0.094,
+    "t": 0.76,
+    "mde": 0.349,
+    "weeks": 26,
+    "months_positive": "3/6"
+   },
+   "equity_issuance_dilution": {
+    "n": 99,
+    "rel_vs_no_event": 0.034,
+    "t": 0.23,
+    "mde": 0.412,
+    "weeks": 25,
+    "months_positive": "4/6"
+   },
+   "new_contract_or_partnership": {
+    "n": 856,
+    "rel_vs_no_event": -0.021,
+    "t": -0.6,
+    "mde": 0.099,
+    "weeks": 27,
+    "months_positive": "1/6"
+   }
+  },
+  "2026": {
+   "earnings_report": {
+    "n": 2786,
+    "rel_vs_no_event": 0.224,
+    "t": 5.1,
+    "mde": 0.123,
+    "weeks": 37,
+    "months_positive": "9/9"
+   },
+   "guidance_change": {
+    "n": 220,
+    "rel_vs_no_event": 0.174,
+    "t": 1.79,
+    "mde": 0.273,
+    "weeks": 35,
+    "months_positive": "6/9"
+   },
+   "analyst_target_change": {
+    "n": 980,
+    "rel_vs_no_event": 0.028,
+    "t": 0.51,
+    "mde": 0.157,
+    "weeks": 37,
+    "months_positive": "4/9"
+   },
+   "clinical_trial_result": {
+    "n": 252,
+    "rel_vs_no_event": 0.067,
+    "t": 0.67,
+    "mde": 0.278,
+    "weeks": 36,
+    "months_positive": "4/9"
+   },
+   "equity_issuance_dilution": {
+    "n": 128,
+    "rel_vs_no_event": -0.062,
+    "t": -0.58,
+    "mde": 0.301,
+    "weeks": 34,
+    "months_positive": "2/9"
+   },
+   "new_contract_or_partnership": {
+    "n": 1269,
+    "rel_vs_no_event": -0.051,
+    "t": -1.23,
+    "mde": 0.116,
+    "weeks": 37,
+    "months_positive": "4/9"
+   }
+  }
+ }
+}

@@ -1,0 +1,258 @@
+{
+ "t": "2026-09-26T02:50:42+00:00",
+ "asof": "2026-09-25",
+ "mode": "paper_profit",
+ "verdict": "MEASURED_NEGATIVE",
+ "acting": true,
+ "exploit_acting": false,
+ "probe_verdict": "UNMEASURED_TRADE_SMALL",
+ "probe_acting": true,
+ "probe_grade": {
+  "hypothesis_id": "C3_committee_shortlist_probe_v0",
+  "horizon_sessions": 5,
+  "n_days_scored": 0,
+  "min_days": 21,
+  "mean_excess_per_day": null,
+  "verdict": "UNMEASURED_TRADE_SMALL",
+  "may_trade": true,
+  "why": "0 of 21 scored decision days at h=5: unmeasured, so it trades at the probe cap"
+ },
+ "equity": 999054.41,
+ "n_targets": 10,
+ "n_considered": 46,
+ "blend_grade": {
+  "horizon_sessions": 21,
+  "n_days_scored": 0,
+  "min_days": 21,
+  "mean_signed_excess_per_day": null,
+  "verdict": "UNMEASURED",
+  "may_trade": false,
+  "why": "the E[r] blend has 0 of 21 scored decision days at h=21: EXPLOIT waits for its own grade"
+ },
+ "exploit_basis": "E[r_21] > 0, descending",
+ "er": {
+  "present": true,
+  "red": null,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\expected_return\\er_2026-09-25.json",
+  "weights_source": {
+   "h5": "equal",
+   "h21": "equal",
+   "h63": "equal"
+  },
+  "regime": {
+   "regime": "risk_on",
+   "cell": "TREND_UP x VIX_LOW",
+   "trend": "TREND_UP",
+   "vix": 14.21,
+   "trend_return": 0.01216,
+   "trend_observed_at": "2026-09-21",
+   "reason": null,
+   "vix_refusal": null,
+   "scale": 1.0
+  },
+  "n_names": 46,
+  "n_priced_h21": 40,
+  "awake_h21": {
+   "ranker": 25,
+   "revision_flow": 29,
+   "source_reliability": 28
+  },
+  "unavailable": {},
+  "calibration_vintage": {
+   "sweep": "revision_flow_sweep_2026-09-25.json",
+   "cards": "2026-09-25",
+   "fit_asof": "2026-09-25"
+  }
+ },
+ "er_top": [
+  "E[r_21] top 10 of 40 priced (weights equal, regime risk_on x1.0):",
+  "NVDA       +0.05%  eq  +0.05%  base +0.00  phi[rev+0.04 src+0.00]",
+  "AMZN       +0.05%  eq  +0.05%  base +0.00  phi[rev+0.04 src+0.00]",
+  "INCY       +0.00%  eq  +0.00%  base +0.00  phi[rev-0.00 src-0.00]",
+  "AAPL       +0.00%  eq  +0.00%  base +0.00  phi[rev-0.00 src-0.00]",
+  "SNDR       +0.00%  eq  +0.00%  base +0.00  phi[rev-0.00 src-0.00]",
+  "AVPT       +0.00%  eq  +0.00%  base +0.00  phi[rev-0.00 src-0.00]",
+  "GOOGL      +0.00%  eq  +0.00%  base +0.00  phi[rev-0.00 src-0.00]",
+  "GOOG       +0.00%  eq  +0.00%  base +0.00  phi[rev-0.00 src-0.00]",
+  "JAZZ       +0.00%  eq  +0.00%  base +0.00  phi[rev-0.00 src-0.00]",
+  "TSM        +0.00%  eq  +0.00%  base +0.00  phi[rev-0.00 src-0.00]"
+ ],
+ "shortlist": 23,
+ "shortlist_red": null,
+ "contract": "present",
+ "contract_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\2026-09-25.json",
+ "contract_red": null,
+ "contract_clash": [
+  "ALLE",
+  "SON"
+ ],
+ "contract_refused_excluded": 2,
+ "contract_clash_reasons": {
+  "ALLE": "NEGATIVE_EV/EDGE_BELOW_BAR: insider_opportunistic's measured net read is -0.072556%/month, which is not above EXPLORE_MIN_NET_PCT 0 \u2014 a hypothesis with no positive expected value is not wo",
+  "SON": "NEGATIVE_EV/EDGE_BELOW_BAR: insider_opportunistic's measured net read is -0.072556%/month, which is not above EXPLORE_MIN_NET_PCT 0 \u2014 a hypothesis with no positive expected value is not wo"
+ },
+ "n_probe": 10,
+ "probe_weight": 0.02,
+ "probe_gross": 0.2,
+ "n_orders": 1,
+ "orders_by_state": {
+  "EXIT": 1
+ },
+ "sendable_by_state": {
+  "PROBE": 0,
+  "PROBE_EXIT": 0,
+  "EXPLOIT": 0,
+  "EXIT": 0
+ },
+ "n_to_send": 0,
+ "send_block": null,
+ "turnover_usd": 19927.92,
+ "worst_case": {
+  "largest_admissible": {
+   "label": "largest admissible PROBE book",
+   "n_names": 10,
+   "notional_pct": 0.02,
+   "stop_declared": false,
+   "adverse_sigma": 3.0,
+   "daily_sigma": 0.027419700518522102,
+   "stop_sigma_pct": 0.0822591015555663,
+   "gross_over_equity": 0.2,
+   "equity_usd": 999054.41,
+   "worst_case_k_sigma_usd": -16436.263634345276,
+   "worst_case_no_stop_usd": -199810.882,
+   "line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,436 on $999,054; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$199,811"
+  },
+  "largest_admissible_exploit": {
+   "label": "largest admissible EXPLOIT book (gross <= 1 - PROBE gross, <= 10%/name)",
+   "n_names": 18,
+   "notional_pct": 0.05555555555555555,
+   "stop_declared": false,
+   "adverse_sigma": 3.0,
+   "daily_sigma": 0.0216,
+   "stop_sigma_pct": 0.0648,
+   "gross_over_equity": 1.0,
+   "equity_usd": 999054.41,
+   "worst_case_k_sigma_usd": -64738.725768,
+   "worst_case_no_stop_usd": -999054.41,
+   "line": "largest admissible EXPLOIT book (gross <= 1 - PROBE gross, <= 10%/name): 18 x 5.56% x 6.48% (3 sigma of 2.16%/day) = -$64,739 on $999,054; sum|notional|/equity = 1.00; no stop is declared, so the ceiling is -$999,054"
+  },
+  "planned_probe": {
+   "label": "planned PROBE book",
+   "n_names": 10,
+   "notional_pct": 0.02,
+   "stop_declared": false,
+   "adverse_sigma": 3.0,
+   "daily_sigma": 0.027419700518522102,
+   "stop_sigma_pct": 0.0822591015555663,
+   "gross_over_equity": 0.2,
+   "equity_usd": 999054.41,
+   "worst_case_k_sigma_usd": -16436.263634345276,
+   "worst_case_no_stop_usd": -199810.882,
+   "line": "planned PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,436 on $999,054; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$199,811"
+  },
+  "acting_book_gross_over_equity": 0.2
+ },
+ "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,436 on $999,054; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$199,811",
+ "decisions": {
+  "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions\\pc_plan\\2026-09-25.json",
+  "new_rows": 0,
+  "ledger_decided": 0,
+  "ledger_refused": []
+ },
+ "refusals": [
+  {
+   "symbol": "JAZZ",
+   "refused": "drift $238 < band $1,998 (10% of the target): rounding churn, not a decision"
+  },
+  {
+   "symbol": "SNDR",
+   "refused": "drift $94 < band $1,998 (10% of the target): rounding churn, not a decision"
+  },
+  {
+   "symbol": "AMZN",
+   "refused": "drift $250 < band $1,998 (10% of the target): rounding churn, not a decision"
+  },
+  {
+   "symbol": "AVPT",
+   "refused": "drift $156 < band $1,998 (10% of the target): rounding churn, not a decision"
+  },
+  {
+   "symbol": "INCY",
+   "refused": "drift $124 < band $1,998 (10% of the target): rounding churn, not a decision"
+  }
+ ],
+ "book": [
+  {
+   "rank": null,
+   "symbol": "NVDA",
+   "weight": 0.02,
+   "state": "PROBE",
+   "expected_relative_return_21d": null
+  },
+  {
+   "rank": null,
+   "symbol": "INCY",
+   "weight": 0.02,
+   "state": "PROBE",
+   "expected_relative_return_21d": null
+  },
+  {
+   "rank": null,
+   "symbol": "AAPL",
+   "weight": 0.02,
+   "state": "PROBE",
+   "expected_relative_return_21d": null
+  },
+  {
+   "rank": null,
+   "symbol": "SNDR",
+   "weight": 0.02,
+   "state": "PROBE",
+   "expected_relative_return_21d": null
+  },
+  {
+   "rank": null,
+   "symbol": "META",
+   "weight": 0.02,
+   "state": "PROBE",
+   "expected_relative_return_21d": null
+  },
+  {
+   "rank": null,
+   "symbol": "AVPT",
+   "weight": 0.02,
+   "state": "PROBE",
+   "expected_relative_return_21d": null
+  },
+  {
+   "rank": null,
+   "symbol": "AMZN",
+   "weight": 0.02,
+   "state": "PROBE",
+   "expected_relative_return_21d": null
+  },
+  {
+   "rank": null,
+   "symbol": "GOOGL",
+   "weight": 0.02,
+   "state": "PROBE",
+   "expected_relative_return_21d": null
+  },
+  {
+   "rank": null,
+   "symbol": "GOOG",
+   "weight": 0.02,
+   "state": "PROBE",
+   "expected_relative_return_21d": null
+  },
+  {
+   "rank": null,
+   "symbol": "JAZZ",
+   "weight": 0.02,
+   "state": "PROBE",
+   "expected_relative_return_21d": null
+  }
+ ],
+ "sent": [],
+ "why_not": "EXPLOIT: ranking verdict MEASURED_NEGATIVE: refusing to buy a measured negative"
+}

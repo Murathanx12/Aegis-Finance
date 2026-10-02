@@ -1,0 +1,3 @@
+{"tag": "q3_text_deepseek_test", "jobs": 600, "calls": 600, "parsed": 600, "wall_s": 83.5, "spent_night": {"calls": 3552, "ledger_usd": 0.21133702000000043, "own_peak_usd": 0.512597099999998, "binding_usd": 0.512597099999998, "night": "2026-09-29"}}
+{"tag": "q3_num_deepseek_test", "jobs": 600, "calls": 600, "parsed": 600, "wall_s": 82.0, "spent_night": {"calls": 4152, "ledger_usd": 0.2887089900000002, "own_peak_usd": 0.7029620999999988, "binding_usd": 0.7029620999999988, "night": "2026-09-29"}}
+{"tag": "q3_text_local_test", "jobs": 60, "calls": 60, "parsed": 60, "wall_s": 488.7, "spent_night": {"calls": 12691, "ledger_usd": 0.6102561100000128, "own_peak_usd": 1.5091695000000118, "binding_usd": 1.5091695000000118, "night": "2026-09-29"}}

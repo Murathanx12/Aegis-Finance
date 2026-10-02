@@ -164,3 +164,31 @@ changed is which stamps count as "without a time":
   - US: unchanged.
 - The original receipt is not modified. The secondary decision rule's 0.10 threshold is
   unchanged.
+
+
+## Amendment 2026-09-29 (night): future sessions from exchange calendars; book-level refusals (before any data in the window)
+
+Dated 2026-09-29, before the window's first reaction session (2026-10-12). No data from the window
+existed when it was written. The hypothesis, the primary metric, the decision rule, the MDE and every
+frozen parameter are unchanged.
+
+**What changed.**
+
+- `contest_desk.extend_future_sessions` assigned a future report's buy and reaction sessions by
+  WEEKDAY. It now uses the listing's exchange calendar (`exchange_calendars`; weekdays only where no
+  calendar exists, labelled). Before the change a Japanese report on the morning after Sports Day
+  (the second Monday of October, the contest's first day) would have been given the holiday as its
+  buy session, and Chinese reports in Golden Week the same.
+- The contest BOOK (the order sheet, `scripts/contest_orders.py` + `contest_rehearsal.build_tickets`)
+  now refuses, before sizing: a second listing of an issuer already on the sheet; a name whose US bars
+  carry a `bar_defects` flag inside the trailing window; a date whose only source is
+  ESTIMATED_PATTERN (the pattern estimator was exact on 27.7% of 19,210 past US prints, 14 days
+  ahead). It also never holds more than five positions at any open (a two-session hold keeps its
+  slot).
+
+**Effect on the measurements:** none on what is graded.
+
+- The trial grades EVERY eligible report in the window on realised bars, held or not. The book-level
+  refusals change what is held, not what is measured.
+- Realised reaction sessions come from bars, which never contain a holiday; the calendar change only
+  moves the desk's forward guess of them.

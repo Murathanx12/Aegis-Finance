@@ -1,0 +1,584 @@
+{
+ "receipt": "always_on_lab",
+ "licence": "PRODUCT_EXPERIMENT",
+ "utc": "2026-10-02T12:09:57+00:00",
+ "date": "2026-10-02",
+ "running": true,
+ "stopped_by": null,
+ "pid": 73432,
+ "started_utc": "2026-10-02T03:58:29+00:00",
+ "ticks": 61,
+ "heartbeat_minutes": 5,
+ "power_plan": "ok (or CANNOT DETERMINE)",
+ "power_refusal": null,
+ "power_checked_utc": "2026-10-02T11:40:34+00:00",
+ "periods_minutes": {
+  "daily_pass_dispatch": 5,
+  "night_launcher_dispatch": 5,
+  "news_pull": 15,
+  "social_pull": 360,
+  "l2_typing": 15,
+  "decision_vs_reality": 60,
+  "catalyst_calendar": 360,
+  "nn_lab": 1440,
+  "idle_gpu_queue": 5,
+  "thematic_streams": 1440,
+  "health": 30,
+  "status": 5
+ },
+ "loops": {
+  "daily_pass_dispatch": {
+   "last_tick_utc": "2026-10-02T12:09:57+00:00",
+   "status": "ok",
+   "what": "the daily pass at its local time, on the lab's own clock",
+   "due": true,
+   "n": 0,
+   "driver": "daily_pass",
+   "date": "2026-10-02",
+   "local_time": "06:30",
+   "local_now": "2026-10-02 20:09",
+   "weekdays_only": false,
+   "fallback_task": "AegisDailyPass",
+   "reason": "DISPATCHED_THIS_DATE",
+   "detail": "this lab dispatched daily_pass at 2026-10-02T03:58:32+00:00 (pid 85312) and its receipt is on disk",
+   "yielded_to": "daily_pass",
+   "pids": [
+    215164
+   ],
+   "seconds": 0.0,
+   "result": "refused",
+   "receipt_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-10-02\\daily_pass_2026-10-02.json",
+   "driver_verdict": "9 ok / 4 nothing-to-do / 1 refused / 0 error / 0 skipped / 0 timed out over 14 steps",
+   "dispatched": {
+    "date": "2026-10-02",
+    "driver": "daily_pass",
+    "at_utc": "2026-10-02T03:58:32+00:00",
+    "pid": 85312,
+    "result": "refused",
+    "log": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\lab_dispatch_daily_pass_2026-10-02.log",
+    "argv": [
+     "C:\\Users\\mrthn\\aegis-finance\\.venv\\Scripts\\python.exe",
+     "-m",
+     "scripts.daily_pass"
+    ]
+   },
+   "pid": 85312,
+   "argv": [
+    "C:\\Users\\mrthn\\aegis-finance\\.venv\\Scripts\\python.exe",
+    "-m",
+    "scripts.daily_pass"
+   ],
+   "log": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\lab_dispatch_daily_pass_2026-10-02.log",
+   "headline": "the lab dispatched daily_pass at local 11:58 as pid 85312; its receipt, not its exit code, is the outcome",
+   "elapsed_s": 29485.9,
+   "box_s": 21600.0
+  },
+  "night_launcher_dispatch": {
+   "last_tick_utc": "2026-10-02T12:09:57+00:00",
+   "status": "ok",
+   "what": "the IIF-1 night launcher at its local time, weekdays",
+   "due": true,
+   "n": 0,
+   "driver": "night_launcher",
+   "date": "2026-10-02",
+   "local_time": "16:00",
+   "local_now": "2026-10-02 20:09",
+   "weekdays_only": true,
+   "fallback_task": "AegisIIF1NightLauncher",
+   "reason": "DISPATCHED_THIS_DATE",
+   "detail": "this lab dispatched night_launcher at 2026-10-02T08:33:06+00:00 (pid 207464) and its receipt is on disk",
+   "seconds": 0.0,
+   "result": "refused",
+   "receipt_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\iif1_launches\\2026-10-02.json",
+   "driver_verdict": "REFUSED",
+   "dispatched": {
+    "date": "2026-10-02",
+    "driver": "night_launcher",
+    "at_utc": "2026-10-02T08:33:06+00:00",
+    "pid": 207464,
+    "result": "refused",
+    "log": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\lab_dispatch_night_launcher_2026-10-02.log",
+    "argv": [
+     "C:\\Users\\mrthn\\aegis-finance\\.venv\\Scripts\\python.exe",
+     "-m",
+     "scripts.run_night_launcher",
+     "--scheduled"
+    ]
+   },
+   "pid": 207464,
+   "argv": [
+    "C:\\Users\\mrthn\\aegis-finance\\.venv\\Scripts\\python.exe",
+    "-m",
+    "scripts.run_night_launcher",
+    "--scheduled"
+   ],
+   "log": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\lab_dispatch_night_launcher_2026-10-02.log",
+   "headline": "the lab dispatched night_launcher at local 16:20 as pid 207464; its receipt, not its exit code, is the outcome",
+   "elapsed_s": 13011.9
+  },
+  "news_pull": {
+   "last_tick_utc": "2026-10-02T12:09:57+00:00",
+   "status": "ok",
+   "what": "every registered source into the corpus, with first_seen_utc",
+   "due": true,
+   "reason": "DAILY_PASS_RUNNING",
+   "detail": "daily_pass is running as pid(s) [85312, 141784]; this loop yields rather than launching a second copy of the same underlying job",
+   "yielded_to": "daily_pass",
+   "pids": [
+    85312,
+    141784
+   ],
+   "n": 60,
+   "rows_new": 60,
+   "sources_red": [],
+   "seconds": 266.6,
+   "error": "news_pull: no return in 900s (thread abandoned)",
+   "sources_pulled": 29,
+   "sources_refused": [],
+   "sources_skipped": [],
+   "cadence_minutes": 15,
+   "resolution_rate": 0.2833,
+   "receipt_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\_receipts\\20261002T121424Z_ALL.json",
+   "headline": "60 new rows over 29 sources; 0 RED, 0 refused"
+  },
+  "social_pull": {
+   "last_tick_utc": "2026-10-02T09:59:12+00:00",
+   "status": "ok",
+   "what": "Reddit posts and comments, YouTube search — free tiers only",
+   "due": false,
+   "n": 12,
+   "rows_new": 12,
+   "reason": "DAILY_PASS_RUNNING",
+   "refusals": {
+    "reddit": "REDDIT_KEYS_ABSENT"
+   },
+   "keys_present": {
+    "reddit": {
+     "REDDIT_CLIENT_ID": false,
+     "REDDIT_CLIENT_SECRET": false,
+     "REDDIT_USER_AGENT": false
+    },
+    "youtube": {
+     "YOUTUBE_API_KEY": true
+    }
+   },
+   "detail": "daily_pass is running as pid(s) [85312, 141784]; this loop yields rather than launching a second copy of the same underlying job",
+   "cadence_minutes": 360,
+   "seconds": 7.48,
+   "per_source": [
+    {
+     "source": "reddit",
+     "status": "REFUSED",
+     "rows": 0,
+     "posts": 0,
+     "comments": 0,
+     "searches": null,
+     "dupes": 0,
+     "refused": "REDDIT_KEYS_ABSENT"
+    },
+    {
+     "source": "youtube",
+     "status": "OK",
+     "rows": 12,
+     "posts": null,
+     "comments": null,
+     "searches": 5,
+     "dupes": 101,
+     "refused": ""
+    }
+   ],
+   "metered_sources": "X/Twitter is pay-per-read and is NOT on this cadence, by spec §4.3 — it is not implemented at all",
+   "headline": "12 new social row(s) over 2 source(s); 1 refused (REDDIT_KEYS_ABSENT)",
+   "yielded_to": "daily_pass",
+   "pids": [
+    85312,
+    141784
+   ]
+  },
+  "l2_typing": {
+   "last_tick_utc": "2026-10-02T12:09:57+00:00",
+   "status": "PENDING_MODEL",
+   "what": "type new corpus rows into the frozen event vocabulary",
+   "due": true,
+   "n": 0,
+   "rows_typed_this_tick": 0,
+   "backlog_remaining": 1148,
+   "rows_on_disk": 67141,
+   "reader": "local",
+   "backend": "local",
+   "metered": false,
+   "estimated_usd": 0.0,
+   "cost_source": "not_metered",
+   "spend_today_usd": 0.0,
+   "spend_cap_usd": 3.0,
+   "reader_overlap": {
+    "status": "CANNOT DETERMINE",
+    "why": "KeyError: 'event_type'",
+    "target_rows": 200
+   },
+   "llama_server_up": true,
+   "llama_server_foreign": false,
+   "headline": "40 units waiting from corpus; $0.01 at the measured $/row, 0.01 h at 1 workers; $0.00",
+   "seconds": 14.21,
+   "detail": "the model server is not ready; the lab has started the model server 40 time(s) on 2026-10-01 (idle stops included); a loop that flaps start -> stop -> start stops here",
+   "error": "l2_typing: no return in 900s (thread abandoned)",
+   "model_server_start": {
+    "attempted": false,
+    "started": false,
+    "starts_today": 40,
+    "restarts_after_death_today": 1,
+    "cap": 3,
+    "total_ceiling": 40,
+    "mode": "on_demand",
+    "reason": "MODEL_SERVER_TOTAL_START_CEILING_REACHED",
+    "detail": "the lab has started the model server 40 time(s) on 2026-10-01 (idle stops included); a loop that flaps start -> stop -> start stops here"
+   }
+  },
+  "decision_vs_reality": {
+   "last_tick_utc": "2026-10-02T11:40:34+00:00",
+   "status": "nothing_to_do",
+   "what": "what we said vs what happened, across every mechanism",
+   "due": false,
+   "n": 0,
+   "n_resolved": 0,
+   "pool_size": 32957,
+   "mechanisms_reported": 7,
+   "mechanisms_with_resolutions": 0,
+   "undeclared_mechanisms": [],
+   "worst_miss_id": null,
+   "worst_miss_brier": null,
+   "receipt_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-10-02\\decision_vs_reality_2026-10-02.json",
+   "headline": "0 record(s) resolved in the trailing 24h across 0 mechanism(s) of 7 reported",
+   "seconds": 0.49
+  },
+  "catalyst_calendar": {
+   "last_tick_utc": "2026-10-02T09:59:12+00:00",
+   "status": "ok",
+   "what": "earnings plus FOMC/CPI/NFP, every entry with its provenance",
+   "due": false,
+   "n": 17,
+   "macro_events": 6,
+   "ticker_events": 11,
+   "tickers_checked": 12,
+   "macro_legs": {
+    "CPI": "3 date(s)",
+    "NFP": "3 date(s)",
+    "FOMC": "0 date(s) (FOMC_SCHEDULE_NOT_SEEDED)"
+   },
+   "fomc_table": "FOMC_SCHEDULE_NOT_SEEDED",
+   "refusals": [
+    "FOMC_SCHEDULE_NOT_SEEDED"
+   ],
+   "receipt_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-10-02\\lab_catalyst_calendar_2026-10-02.json",
+   "headline": "6 macro date(s) and 11 ticker event(s) over 12 name(s); 1 named refusal(s); every engine_probability null (AWAITING_L2)",
+   "seconds": 12.03
+  },
+  "nn_lab": {
+   "last_tick_utc": "2026-10-02T04:09:41+00:00",
+   "status": "ok",
+   "what": "E1 refit, E4 ADWIN gate, E5 stopping rules, on tonight's table",
+   "due": false,
+   "n": 12,
+   "reason": "NIGHT_FACTORY_ALREADY_RUNNING",
+   "detail": "night_factory is running as pid(s) [27228, 58036, 65492, 78692]; this loop yields rather than launching a second copy of the same underlying job",
+   "idle_minutes": 0.2,
+   "seconds": 1551.01,
+   "held_out_month": "2026-09",
+   "heads": 12,
+   "beat_last_night": 0,
+   "undecided": 0,
+   "event_source": "typed_l2",
+   "refusals": [],
+   "receipt_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-10-02\\NN_lab_2026-10-02.json",
+   "headline": "12 head(s) on held-out 2026-09; 0 beat last night, 0 undecided (fewer than 2 nights of history); 0 job(s) did not complete",
+   "yielded_to": "night_factory",
+   "pids": [
+    27228,
+    58036,
+    65492,
+    78692
+   ],
+   "model_server_start": {
+    "attempted": false,
+    "started": false,
+    "starts_today": 9,
+    "restarts_after_death_today": 1,
+    "cap": 3,
+    "total_ceiling": 40,
+    "mode": "boot_starter",
+    "reason": "LAB_STARTS_MODEL_SERVER_DISABLED",
+    "detail": "config.LAB_STARTS_MODEL_SERVER is off; the desktop app and a human are the only starters"
+   }
+  },
+  "idle_gpu_queue": {
+   "last_tick_utc": "2026-10-02T12:09:57+00:00",
+   "status": "skipped",
+   "what": "the next registered job, only when nothing needs the model",
+   "due": true,
+   "n": 0,
+   "reason": "GPU_BUSY",
+   "detail": "['L4_qwen3_measure', 'L4b_qwen3_extraction'] need the card for a different model and the 7B server (pid 210272) is listening; they wait for its idle stop",
+   "idle_minutes": 15.4,
+   "queue_remaining": [
+    "L4_qwen3_measure",
+    "L4b_qwen3_extraction"
+   ],
+   "dispatched_on": {
+    "L2_typed_events": "2026-10-02",
+    "X_anon_gap": "2026-10-02",
+    "X2_elasticity": "2026-10-02",
+    "L4_qwen3_measure": "2026-10-01",
+    "E1_event_head": "2026-10-02",
+    "X4_regime_route": "2026-10-02",
+    "L2_retype_v3": "2026-10-02",
+    "S1_social_features": "2026-10-02",
+    "L4b_qwen3_extraction": "2026-10-01"
+   },
+   "seconds": 1.35,
+   "yielded_to": "daily_pass",
+   "pids": [
+    85312,
+    141784
+   ],
+   "error": "idle_gpu_queue: no return in 60s (thread abandoned)",
+   "job": "X4_regime_route",
+   "box_minutes": 90,
+   "verdict": "EXPLORATORY_IN_SAMPLE: routing to risk_on keeps 10/19 blocks and -4.04%/yr net against the unrouted -3.513%/yr. This is a look at already-collected data under the explore-dirty licence; the rule is not admitted until it is evaluated on blocks it did not choose.",
+   "job_headline": "routed -4.04%/yr net on 10 blocks vs unrouted -3.513%/yr on 19; regimes {'unknown': 2, 'risk_off': 7, 'risk_on': 10}",
+   "queue": [
+    "L2_typed_events",
+    "L2_retype_v3",
+    "S1_social_features",
+    "X_anon_gap",
+    "X2_elasticity",
+    "E1_event_head",
+    "X4_regime_route",
+    "L4_qwen3_measure",
+    "L4b_qwen3_extraction"
+   ],
+   "headline": "X4_regime_route finished (EXPLORATORY_IN_SAMPLE: routing to risk_on keeps 10/19 blocks and -4.04%/yr net against the unrouted -3.513%/yr. This is a look at already-collected data under the explore-dirty licence; the rule is not admitted until it is evaluated on blocks it did not choose.) after 15s; slot released, 2 job(s) left in today's queue",
+   "running_job": null,
+   "model_server_start": {
+    "attempted": false,
+    "started": false,
+    "starts_today": 14,
+    "restarts_after_death_today": 1,
+    "cap": 3,
+    "total_ceiling": 40,
+    "mode": "boot_starter",
+    "reason": "LAB_STARTS_MODEL_SERVER_DISABLED",
+    "detail": "config.LAB_STARTS_MODEL_SERVER is off; the desktop app and a human are the only starters"
+   },
+   "elapsed_s": 15.1,
+   "reaped_by_lab": false,
+   "killed_pids": [],
+   "timeouts_today": null,
+   "slot": null,
+   "skipped_today": {}
+  },
+  "thematic_streams": {
+   "last_tick_utc": "2026-10-02T04:09:41+00:00",
+   "status": "nothing_to_do",
+   "what": "Murat's themes as typed hypothesis streams",
+   "due": false,
+   "n": 0,
+   "observations": 0,
+   "forecasts": 0,
+   "tickers_checked": 12,
+   "streams": {
+    "hiring_pivot_ai_v1": "collector_present",
+    "holders_13f_v1": "observing",
+    "pivot_to_ai_narrative_v1": "placeholder",
+    "management_motivation_v1": "placeholder"
+   },
+   "blocked": {
+    "hiring_pivot_ai_v1": "the collector `scripts/hiring_pull.py` now EXISTS and pulls Greenhouse/Lever/Ashby into `backend/data/optimus/hiring/<date>.jsonl` with a board map and a cursor. What blocks the stream now is the TRIAL, not the fetcher: TRIAL-HIRING-PIVOT-1 is still unwritten, so `label_source` stays false and nothing here may label a return. Coverage is also a measured fraction with a structural false-negative rate -- a board under an unguessable token is indistinguishable from no board at a three-request budget -- so the denominator travels with every number. LinkedIn itself is banned; the ATS boards are the legal substitute.",
+    "pivot_to_ai_narrative_v1": "the frozen 43-id event vocabulary carries NO strategic-pivot class. `new_contract_or_partnership` and `product_launch_or_innovation` are the nearest ids and neither is a pivot. A new vocabulary id is chunk-15 work, and typing rows against the wrong id would be worse than not typing them.",
+    "management_motivation_v1": "no collector exists. It would need an LLM read of earnings-call transcripts or shareholder letters, and this repository does not ingest either as a labelled source. Named here so the stream can start accruing the day one exists, rather than being invented later with no history."
+   },
+   "receipt_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-10-02\\lab_theme_streams_2026-10-02.json",
+   "headline": "1 observing, 1 awaiting a collector, 2 placeholder; 0 observation(s), 0 forecast(s)",
+   "seconds": 0.02
+  },
+  "health": {
+   "last_tick_utc": "2026-10-02T11:59:37+00:00",
+   "status": "ok",
+   "what": "every subsystem probed from the evidence it wrote ($0, no model)",
+   "due": false,
+   "n": 61,
+   "rows": 61,
+   "counts": {
+    "DEAD": 0,
+    "STALE": 16,
+    "UNKNOWN": 15,
+    "STOPPED_BY_OPERATOR": 0,
+    "ALIVE": 30
+   },
+   "exit_code": 2,
+   "receipt_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\health\\health_20261002T115938Z.json",
+   "non_alive": [
+    "STALE accrual_canary -- forecast_accrual: ok 1276 new row(s) in the last 3 day(s); n_considered: DEGRADED n_considered has not moved for >= 5 contracts -- a static candidate input. n_considered [2 [ev",
+    "STALE always_on_lab -- always_on_lab: pid 73432 answers but its heartbeat is 9m old (cadence 5m) [evidence 2026-10-02T11:50Z]; proof: pid 73432 cmdline contains always_on_lab",
+    "STALE bars_panel -- newest bar 2026-09-28, 3 session(s) behind the last closed session 2026-10-01 (limit BARS_MAX_AGE_SESSIONS=2) [evidence 2026-09-28T00:00Z]; proof: bars.parquet max(date)=2026-09-28",
+    "STALE book_grader -- paper books graded through 2026-09-28, 3 session(s) behind 2026-10-01; llm books: leaderboard_2026-10-02.json bars through 2026-10-01, 0 session(s) behind 2026-10-01 (limit 1); PE",
+    "STALE decision_contract -- 2026-10-02.json written 7.6h ago; n_considered has not moved for >= 5 contracts -- a static candidate input. n_considered [2, 2, 2, 2, 2, 2] over 2026-09-27..2026-10-02 | fu",
+    "STALE dowjones_feeds -- 10 feeds, 0 new item(s) [evidence 2026-09-27T14:01Z]; proof: dowjones/feeds_2026-09-27.json generated_utc",
+    "STALE forecast_grader -- 307 due-but-unresolved row(s); newest resolved_at 2026-09-29; 676 wait on a bar (daily_pass); resolved_at has not moved while due rows exist [evidence 2026-09-29T00:00Z]; proo",
+    "STALE iif1_night -- no receipt for weekday 2026-10-02; newest 2026-10-01.json [evidence 2026-10-01T00:00Z]; proof: iif1_nights/2026-10-01.json",
+    "STALE learn_rota -- ok: backtest_factory=ok, breadth_check=undated result, distil=ok, survivorship_audit=current (2026-09-29) [evidence 2026-09-29T16:13Z]; proof: pc_book/2026-09-29/learn_*.json",
+    "STALE live_market_loop -- no NAV row tagged open_of_loop/close_of_loop in any pc_book/*/nav.jsonl -- live_market_loop has never run end-to-end (its role is done by sim_run); proof: 0 tagged rows",
+    "STALE openclaw_gateway -- gateway up but degraded capability: connected-no-operator-scope [evidence 2026-10-02T11:59Z]; proof: openclaw gateway status: Capability",
+    "STALE optimus_brain -- brain health page generated 19.2d ago -- tools/refresh_aegis.py has no scheduled caller [evidence 2026-09-13T06:59Z]; proof: aegis-health-latest.md `generated` stamp",
+    "STALE ranking -- ranking in 2026-09-29 is as of 2026-09-28, 3 session(s) behind 2026-10-01 (limit 2) [evidence 2026-09-28T00:00Z]; proof: 2026-09-29/ranking.json asof=2026-09-28",
+    "STALE u_forecast -- DEGRADED: u_forecast | u_forecast DEGRADED (investigator:evidence_v3): 0 rows since 2026-10-01T00:00Z; newest 2026-09-29T15:18:16+00:00; thesis_card 0 (unscheduled, reported only);",
+    "STALE u_plan -- plan t=2026-09-29T23:51:30+00:00 asof 2026-09-29 (last session 2026-10-01), acting=True, n_to_send=0; invested_frac not in the receipt, cap check not possible; acting on a ranking as o",
+    "STALE u_review -- no review for the last session 2026-10-01; newest is review_2026-09-29.json [evidence 2026-09-29T00:00Z]; proof: review/review_2026-09-29.json",
+    "UNKNOWN openclaw_api_bridge -- openclaw_api_bridge writes no heartbeat or receipt; nothing derivable",
+    "UNKNOWN railway_fleet -- CLI linked to aat-loop-hack3 (not a live fleet service), so the fleet's `cycle full exited rc=0` lines cannot be read read-only from here",
+    "UNKNOWN social:reddit -- reddit: REDDIT_KEYS_ABSENT -- refused, not collected [evidence 2026-10-02T09:59Z]",
+    "UNKNOWN task:AegisAlerts -- Last Run 2/10/2026 7:37:41 pm, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisAnalystPanelDaily -- Last Run 1/10/2026 5:30:00 am, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisContestDesk -- Last Run 30/11/1999 12:00:00 am, Last Result 267011; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisContestRehearsal -- Last Run 2/10/2026 2:30:02 pm, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisFleetDailyCheck -- Last Run 1/10/2026 6:45:01 am, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisFleetManagerOpen -- Last Run 1/10/2026 10:45:00 pm, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisFleetManagerPreclose -- Last Run 2/10/2026 3:30:00 am, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisHypLabNightly -- Last Run 1/10/2026 9:30:01 am, Last Result 3; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisNNLabNightly -- Last Run 1/10/2026 8:30:01 am, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisStraddleForward -- Last Run 2/10/2026 7:46:30 pm, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisWRDSPullNight -- one-shot task, Last Run 22/8/2026 6:24:37 am, Last Result 0; retired -- delete it",
+    "UNKNOWN task:AegisWorldDigest -- Last Run 2/10/2026 6:30:01 pm, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task"
+   ],
+   "headline": "health rc 2: {'DEAD': 0, 'STALE': 16, 'UNKNOWN': 15, 'STOPPED_BY_OPERATOR': 0, 'ALIVE': 30}",
+   "seconds": 16.46
+  },
+  "status": {
+   "last_tick_utc": "2026-10-02T12:09:57+00:00",
+   "status": "ok",
+   "what": "lab_status.json, every tick, whether or not anything happened",
+   "due": true,
+   "note": "lab_status.json written at the end of the tick",
+   "seconds": 0.0
+  }
+ },
+ "last_model_call_utc": "2026-10-02T06:21:19+00:00",
+ "idle_minutes": 348.6481859166667,
+ "model_server_starts": {
+  "date": "2026-10-02",
+  "n": 28,
+  "after_death": 1,
+  "last_pid": 210272,
+  "last_outcome": "started",
+  "last_start_utc": "2026-10-02T12:14:25+00:00",
+  "last_kind": "after_idle_stop"
+ },
+ "model_server_starts_today": 28,
+ "model_server_start_cap_per_day": 3,
+ "model_server_restarts_after_death_today": 1,
+ "model_server_total_start_ceiling_per_day": 40,
+ "lab_starts_model_server": false,
+ "model_server_hold": false,
+ "llama_server": {
+  "up": true,
+  "ready": true,
+  "owned_by_us": true,
+  "foreign_owner_pid": null,
+  "detail": "ready as PID 210272, started by Aegis"
+ },
+ "spend_today_usd": 0.0,
+ "spend_cap_usd": 3.0,
+ "spend_cap_reached": false,
+ "thematic_streams": {
+  "hiring_pivot_ai_v1": "collector_present",
+  "holders_13f_v1": "observing",
+  "pivot_to_ai_narrative_v1": "placeholder",
+  "management_motivation_v1": "placeholder"
+ },
+ "drivers": {
+  "daily_pass": {
+   "local_time": "06:30",
+   "weekdays_only": false,
+   "module": "scripts.daily_pass",
+   "args": [],
+   "box_s": 21600.0,
+   "fallback_scheduled_task": "AegisDailyPass",
+   "last_status": "ok",
+   "last_reason": "DISPATCHED_THIS_DATE",
+   "last_result": "refused",
+   "last_dispatch": {
+    "date": "2026-10-02",
+    "driver": "daily_pass",
+    "at_utc": "2026-10-02T03:58:32+00:00",
+    "pid": 85312,
+    "result": "refused",
+    "log": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\lab_dispatch_daily_pass_2026-10-02.log",
+    "argv": [
+     "C:\\Users\\mrthn\\aegis-finance\\.venv\\Scripts\\python.exe",
+     "-m",
+     "scripts.daily_pass"
+    ]
+   },
+   "last_tick_utc": "2026-10-02T12:09:57+00:00"
+  },
+  "night_launcher": {
+   "local_time": "16:00",
+   "weekdays_only": true,
+   "module": "scripts.run_night_launcher",
+   "args": [
+    "--scheduled"
+   ],
+   "box_s": 900.0,
+   "fallback_scheduled_task": "AegisIIF1NightLauncher",
+   "last_status": "ok",
+   "last_reason": "DISPATCHED_THIS_DATE",
+   "last_result": "refused",
+   "last_dispatch": {
+    "date": "2026-10-02",
+    "driver": "night_launcher",
+    "at_utc": "2026-10-02T08:33:06+00:00",
+    "pid": 207464,
+    "result": "refused",
+    "log": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\lab_dispatch_night_launcher_2026-10-02.log",
+    "argv": [
+     "C:\\Users\\mrthn\\aegis-finance\\.venv\\Scripts\\python.exe",
+     "-m",
+     "scripts.run_night_launcher",
+     "--scheduled"
+    ]
+   },
+   "last_tick_utc": "2026-10-02T12:09:57+00:00"
+  }
+ },
+ "single_instance_lock": {
+  "pid": 73432,
+  "started_utc": "2026-10-02T03:58:29+00:00",
+  "hostname": "R12",
+  "started_by": "always_on_lab",
+  "overwrote": {
+   "pid": 69400,
+   "started_utc": "2026-09-30T12:20:54+00:00",
+   "hostname": "R12",
+   "started_by": "always_on_lab",
+   "overwrote": {
+    "pid": 173376,
+    "started_utc": "2026-09-30T04:03:03+00:00",
+    "hostname": "R12",
+    "started_by": "always_on_lab",
+    "overwrote": null,
+    "overwrote_why": null,
+    "previous_exit_reason": "STOP_file",
+    "previous_exit_utc": "2026-09-27T14:28:16+00:00"
+   },
+   "overwrote_why": "pid 173376 is not alive",
+   "previous_exit_reason": "not_recorded (killed or crashed)",
+   "previous_exit_utc": null
+  },
+  "overwrote_why": "pid 69400 is not alive",
+  "previous_exit_reason": "not_recorded (killed or crashed)",
+  "previous_exit_utc": null
+ },
+ "previous_exit_reason": "not_recorded (killed or crashed)",
+ "previous_exit_utc": null,
+ "stop_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-10-02\\STOP",
+ "read_me_first": "One block per DECLARED loop, every tick, whether or not it ran — a loop that found nothing says `nothing_to_do` with a count, never an omitted key. `last_tick_utc` advances only on a SUCCESSFUL tick, so a loop whose stamp stops moving while `utc` keeps moving is stuck, which is the signal this file exists to make visible. Nothing here places an order. The lab DOES start the model server when nothing is listening (2026-09-18, after an unclean reboot left every model loop PENDING_MODEL for a day) — capped per date, never for a foreign server, and it still stops nothing."
+}

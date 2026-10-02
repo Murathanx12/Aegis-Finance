@@ -1,0 +1,167 @@
+{
+ "job": "S1_social_features",
+ "licence": "PRODUCT_EXPERIMENT",
+ "stage": "signal",
+ "run": 1,
+ "run_date": "2026-09-26",
+ "smoke": false,
+ "llm_spend_usd": 0.0,
+ "spend_note": "the LOCAL reader costs compute, not dollars",
+ "seed": 20260919,
+ "seed_note": "DECLARED. hash() is salted per process, so a seed derived from it draws a different control every night under one printed number",
+ "variables_declared": [
+  "mention_velocity",
+  "stance_dispersion",
+  "hype_lateness",
+  "growth_constraint_cited",
+  "supplier_link"
+ ],
+ "refusal_names_declared": [
+  "NO_SOCIAL_ROWS",
+  "PENDING_MODEL",
+  "NO_BARS",
+  "NO_TYPED_ROWS"
+ ],
+ "vocabulary": {
+  "version": 3,
+  "hash": "ef173fa7f72760a9bcc1c7f469ffcc96199357572177241fdadd058c25ec4aad",
+  "constraint_id": "growth_constraint_cited"
+ },
+ "stance_contract": {
+  "backend": "local_gguf",
+  "prompt_hash": "7abaee3d289fbbd67dbb2c464637d5d101620ff6f3640521b081b7001ca9186d",
+  "enum_on_the_wire": false,
+  "why": "the enum is in the LITERAL system text and not only in the validator -- 2026-09-13, when a prompt referred to a schema it never sent and 54% of the first flush came back with invented values"
+ },
+ "pit_rule": "every social row is pit_grade index_state and label_source false. This table may be JOINED to the return panel and may never supply its LABEL (invariant 20). The feature date is the EASTERN date of the `first_seen_utc` we wrote, and the trailing return window ends STRICTLY BEFORE it.",
+ "not_a_claim": "no variable here has a TRIALS entry yet (spec \u00a73.6). This job computes columns and their controls; it ranks nothing, selects nothing and joins no return.",
+ "output": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\social\\features_2026-09-26.parquet",
+ "social_read": {
+  "files": 1,
+  "rows": 208,
+  "dir": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\social",
+  "window": [
+   "2026-06-28",
+   "2026-09-26"
+  ]
+ },
+ "typed_read": {
+  "files": 16,
+  "rows": 432,
+  "dir": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events",
+  "refused": ""
+ },
+ "variables": {
+  "mention_velocity": {
+   "computed": true,
+   "sources": [
+    "youtube"
+   ],
+   "pairs": 73,
+   "tickers": 73,
+   "baseline_days": 60,
+   "per_source": "computed SEPARATELY per source: pooling before the ratio hides which platform moved",
+   "zero_baseline": "velocity is None, never inf and never 1.0 -- 'first ever mention' and 'ten times its usual' are different facts",
+   "null": {
+    "name": "shuffled_ticker",
+    "how": "each mention's ticker reassigned within its OWN day's pool: aggregate volume survives, ticker-specific information does not",
+    "pairs": 73
+   }
+  },
+  "stance_dispersion": {
+   "computed": false,
+   "candidates": {
+    "n_units": 0,
+    "sha256": "4f53cda18c2baa0c",
+    "first": [],
+    "last": []
+   },
+   "min_comments": 5,
+   "refused": "",
+   "why": "no comment on this date names a ticker"
+  },
+  "hype_lateness": {
+   "computed": true,
+   "refused": "",
+   "trailing": {
+    "refused": "",
+    "sessions": 20,
+    "names_priced": 72,
+    "rule": "strictly BEFORE the feature date; the day itself is never in the window"
+   },
+   "names_with_both": 72,
+   "hypothesis": "mention velocity and TRAILING return correlate at high percentiles -- velocity is lagging once already extreme, so {high velocity, high trailing return, LOW dispersion} should be the WORST forward cell, not the best",
+   "null": {
+    "name": "shuffled_ticker_percentile",
+    "names": 73,
+    "literature": "the WSB peak-attention finding (-8.5% HPR at peak attention) is the LITERATURE's version of this null; the prereg must distinguish from it rather than reproduce it"
+   }
+  },
+  "growth_constraint_cited": {
+   "computed": true,
+   "refused": "",
+   "paths": [
+    "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events"
+   ],
+   "issuers": 128,
+   "rows": 432,
+   "id": "growth_constraint_cited",
+   "reads_no_text": "this counts what L2 already typed; it calls no model"
+  },
+  "supplier_link": {
+   "computed": true,
+   "refused": "",
+   "exhibit_sources": [
+    "sec_edgar_8k_ex99_body"
+   ],
+   "issuers": 0,
+   "links": 0,
+   "why_exhibit_only": "the Ex-99 FEED row carries no body and could never produce a supplier mention; counting it would put rows in the denominator that had no chance to answer",
+   "negative_results_12": "this is the event-conditioned, daily-resolution successor \u00a712 named as the ONLY admissible revival of the supply-chain corpse, and it is registered fresh rather than treated as a re-run",
+   "null": {
+    "name": "same_sector_non_supplier",
+    "status": "NOT COMPUTED here: it needs a sector map and a matched control pool, and it is the prereg's first requirement rather than a column"
+   }
+  }
+ },
+ "rows": 73,
+ "columns": [
+  "date",
+  "ticker",
+  "mention_n_youtube",
+  "mention_velocity_youtube",
+  "mention_velocity_null_youtube",
+  "stance_n",
+  "stance_entropy",
+  "stance_variance",
+  "stance_mean",
+  "hype_velocity_pct",
+  "hype_velocity_pct_null",
+  "trailing_20d_return",
+  "trailing_20d_return_pct",
+  "growth_constraint_cited_n",
+  "supplier_link_n",
+  "supplier_named_inputs"
+ ],
+ "tickers": 73,
+ "computed": [
+  "mention_velocity",
+  "hype_lateness",
+  "growth_constraint_cited",
+  "supplier_link"
+ ],
+ "refused": {},
+ "headline": "73 (date, ticker) row(s) for 2026-09-26; 4 of 5 variable(s) computed, 0 refused (none)",
+ "next_test": "a column is not a finding. Each of the five owes its own TRIALS entry with its primary statistic named BEFORE any return is joined -- and \u00a72.5 will score RESURRECTION against NEGATIVE_RESULTS \u00a712, which is allowed only if the draft names daily event-conditioning as the changed instrument.",
+ "verdict": "4 variable(s) computed with their nulls; 0 refused BY NAME. Nothing here is a signal.",
+ "elapsed_s": 4.0,
+ "written_utc": "2026-09-26T13:53:41+00:00",
+ "awake_s": 4.0,
+ "slept_s": 0.0,
+ "box_s": 1800.0,
+ "wall_minus_monotonic_s": 0.0,
+ "sleep_gaps": [],
+ "child_pid": 133880,
+ "killed_pids": [],
+ "exit_code": 0
+}

@@ -1,0 +1,541 @@
+{
+ "job": "E4_adwin_gated_refit",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 1,
+ "smoke": false,
+ "stage": "signal",
+ "llm_spend_usd": 0.0,
+ "question": "Does refitting only when ADWIN signals a change on the head's own error stream cost anything against refitting every month, on identical test dates?",
+ "method": {
+  "module": "backend.services.adwin",
+  "algorithm": "ADWIN2 (bucket-compressed adaptive windowing)",
+  "citation": "Bifet & Gavalda, Learning from Time-Changing Data with Adaptive Windowing, SDM 2007, 443-448",
+  "library": "NONE -- implemented here",
+  "why_not_river": "the spec's first choice is river.drift.ADWIN (BSD-3). This venv cannot install it offline: `pip install --no-index river` reports 'Could not find a version that satisfies the requirement river (from versions: none)'. The spec's own fallback was taken so E4 is not BLOCKED on a packaging decision.",
+  "cut_test": "|mu0 - mu1| > sqrt(2/m * var * ln(2/delta')) + 2/(3m) * ln(2/delta'), m = 1/(1/n0 + 1/n1), delta' = delta/width",
+  "stream_domain": "[0, 1] REQUIRED -- the bound's additive 2/(3m) ln(2/delta') term does not scale with the data, so an unscaled 0.008 -> 0.052 error step produced zero detections here while the same step scaled into [0, 1] fired 55 observations later. `to_unit(x, scale)` with a frozen `unit_scale` is the one place that scaling happens."
+ },
+ "design": {
+  "head": "LightGBM on E1's typed-event table (the M5 mandatory control)",
+  "arm": "EVENT",
+  "horizon_sessions": 5,
+  "embargo_sessions": 5,
+  "delta": 0.05,
+  "seed": 20260910,
+  "fixed_control": "refit every test month -- this IS E1/E2/N3's existing walk-forward, not a separate control run",
+  "cost_bps_per_side": 25.0,
+  "cost_source": "scripts.night_g3_evolve_v2.COST_BPS (imported, not retyped)"
+ },
+ "inputs": [
+  "news_returns_2025_26.parquet",
+  "bars.parquet"
+ ],
+ "status": "done",
+ "written_utc": "2026-09-21T14:33:15+00:00",
+ "known_answer": {
+  "stream": {
+   "n_stable": 200,
+   "n_drifted": 200,
+   "change_at": 200,
+   "stable_mean": 0.1,
+   "drifted_mean": 0.35,
+   "domain": "[0, 1] -- required by the bound, see adwin.declaration()"
+  },
+  "delta_sweep": {
+   "0.002": {
+    "fired_at": [
+     319
+    ],
+    "first_detection_after_change": 119,
+    "false_alarms_before_the_change": 0,
+    "false_alarms_on_2000_stationary_steps": 0
+   },
+   "0.01": {
+    "fired_at": [
+     319
+    ],
+    "first_detection_after_change": 119,
+    "false_alarms_before_the_change": 0,
+    "false_alarms_on_2000_stationary_steps": 0
+   },
+   "0.05": {
+    "fired_at": [
+     255,
+     319
+    ],
+    "first_detection_after_change": 55,
+    "false_alarms_before_the_change": 0,
+    "false_alarms_on_2000_stationary_steps": 0
+   },
+   "0.2": {
+    "fired_at": [
+     255,
+     319
+    ],
+    "first_detection_after_change": 55,
+    "false_alarms_before_the_change": 0,
+    "false_alarms_on_2000_stationary_steps": 0
+   }
+  },
+  "delta_used_in_the_real_run": 0.05,
+  "first_detection_after_change": 55,
+  "false_alarms_on_2000_stationary_steps": 0,
+  "detection_granularity_steps": 32,
+  "unscaled_stream_finding": "the same step at the scale a real mean-absolute-error stream lives on (0.008 -> 0.052) fires ZERO times: the bound's additive term does not scale with the data. `to_unit` with a frozen `unit_scale` is why the real run can detect anything at all.",
+  "note": "the test runs on a clock of min_clock steps -- the paper's own cost reduction -- so a detection lag below that number is not resolvable"
+ },
+ "panel": {
+  "horizon_sessions": 5,
+  "label": "x_oc_h5",
+  "label_definition": "SPY-excess cumulative return, entry-session OPEN to the CLOSE of session +4 (5 sessions held)",
+  "cells_lost_to_short_forward_window": 196,
+  "label_reconstruction_check": {
+   "rows": 129983,
+   "median_abs_diff": 0.0,
+   "max_abs_diff": 0.00116869,
+   "rows_over_1e_6": 3555,
+   "share_over_1e_6": 0.02735,
+   "note": "the panel's x_oc vs the same quantity rebuilt from the CURRENT bars. The SPY leg reconciles exactly; the difference is a bar-vintage revision on a handful of names, not a second label definition."
+  },
+  "pit_check": {
+   "rows_checked": 340466,
+   "rows_with_publication_timestamp": 340466,
+   "rows_violating_pit": 0,
+   "hours_publication_to_entry_open": {
+    "min": 0.0,
+    "p05": 0.642,
+    "median": 17.611,
+    "max": 5292.96
+   }
+  },
+  "panel_rows_used": 340466,
+  "unique_texts": 163285,
+  "cells_before_price_join": 137253,
+  "cells": 129983,
+  "symbols": 3019,
+  "date_range": [
+   "2025-02-05",
+   "2026-09-04"
+  ],
+  "dollar_vol_column_of_panel": "IGNORED -- it is the entry session's own close x volume (not PIT)"
+ },
+ "features": {
+  "kept_types": [
+   "earnings_report",
+   "earnings_preannouncement",
+   "guidance_change",
+   "mergers_acquisitions",
+   "divestiture_asset_sale",
+   "spinoff",
+   "bankruptcy_or_going_concern",
+   "delisting_or_listing_risk",
+   "debt_issuance_or_obligation",
+   "equity_issuance_dilution",
+   "stock_buyback",
+   "dividend_increase",
+   "dividend_cut_or_suspension",
+   "regular_dividend_declaration",
+   "stock_split",
+   "reverse_stock_split",
+   "credit_rating_change",
+   "new_contract_or_partnership",
+   "product_launch_or_innovation",
+   "product_recall_or_defect",
+   "clinical_trial_result",
+   "regulatory_approval",
+   "regulatory_investigation_or_action",
+   "litigation_filed",
+   "litigation_settlement",
+   "management_change_departure",
+   "management_change_appointment",
+   "cybersecurity_incident",
+   "insider_or_institutional_ownership_change",
+   "macro_rate_decision",
+   "macro_inflation_print",
+   "macro_labor_report",
+   "tariff_or_trade_policy",
+   "sanction",
+   "index_rebalance"
+  ],
+  "dropped_sparse_types": [
+   "debt_covenant_or_default_trigger",
+   "special_dividend",
+   "contract_loss_or_termination",
+   "auditor_or_accounting_change"
+  ],
+  "n_feature_columns": 350,
+  "proxy": "typed by entity_tags where present and otherwise by a KEYWORD proxy over the 39-id vocabulary's own definitions and example headlines -- NOT by L2, which is not built"
+ },
+ "timeline": [
+  {
+   "test_month": "2025-08",
+   "adwin_refit": true,
+   "reason": "first fit",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 21,
+    "mean": 0.2773559,
+    "variance": 0.0032939907,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 21
+   },
+   "mean_abs_error": 0.053146
+  },
+  {
+   "test_month": "2025-09",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 42,
+    "mean": 0.29075277,
+    "variance": 0.0039356512,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 42
+   },
+   "mean_abs_error": 0.05828
+  },
+  {
+   "test_month": "2025-10",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 65,
+    "mean": 0.29275797,
+    "variance": 0.0029947605,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 65
+   },
+   "mean_abs_error": 0.056798
+  },
+  {
+   "test_month": "2025-11",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 84,
+    "mean": 0.29886926,
+    "variance": 0.0027441742,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 84
+   },
+   "mean_abs_error": 0.061274
+  },
+  {
+   "test_month": "2025-12",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 106,
+    "mean": 0.29566377,
+    "variance": 0.0028531881,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 106
+   },
+   "mean_abs_error": 0.054308
+  },
+  {
+   "test_month": "2026-01",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 126,
+    "mean": 0.30134948,
+    "variance": 0.0030596482,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 126
+   },
+   "mean_abs_error": 0.063517
+  },
+  {
+   "test_month": "2026-02",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 145,
+    "mean": 0.30530314,
+    "variance": 0.0029348576,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 145
+   },
+   "mean_abs_error": 0.063525
+  },
+  {
+   "test_month": "2026-03",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 167,
+    "mean": 0.3045649,
+    "variance": 0.0027129757,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 167
+   },
+   "mean_abs_error": 0.057427
+  },
+  {
+   "test_month": "2026-04",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 188,
+    "mean": 0.30823161,
+    "variance": 0.002760529,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 188
+   },
+   "mean_abs_error": 0.064649
+  },
+  {
+   "test_month": "2026-05",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 208,
+    "mean": 0.3170438,
+    "variance": 0.0035136976,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 208
+   },
+   "mean_abs_error": 0.076623
+  },
+  {
+   "test_month": "2026-06",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 229,
+    "mean": 0.32237354,
+    "variance": 0.0036372548,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 229
+   },
+   "mean_abs_error": 0.071887
+  },
+  {
+   "test_month": "2026-07",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 251,
+    "mean": 0.32364024,
+    "variance": 0.0040023002,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 251
+   },
+   "mean_abs_error": 0.064541
+  },
+  {
+   "test_month": "2026-08",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 272,
+    "mean": 0.32200211,
+    "variance": 0.0038383583,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 272
+   },
+   "mean_abs_error": 0.057949
+  },
+  {
+   "test_month": "2026-09",
+   "adwin_refit": false,
+   "reason": "no change signalled -- the STALE model predicts this month",
+   "model_fitted_for": "2025-08",
+   "adwin_state": {
+    "width": 276,
+    "mean": 0.32177443,
+    "variance": 0.0037873459,
+    "n_detections": 0,
+    "last_detection_at": null,
+    "delta": 0.05,
+    "max_buckets": 5,
+    "min_clock": 32,
+    "observations_seen": 276
+   },
+   "mean_abs_error": 0.05869
+  }
+ ],
+ "cost": {
+  "refits": {
+   "FIXED": 14,
+   "ADWIN": 1
+  },
+  "fit_seconds": {
+   "FIXED": 28.66,
+   "ADWIN": 0.87
+  },
+  "error_unit_scale": 0.19161507,
+  "error_unit_scale_note": "4 x the median mean-absolute-error of the FIRST graded month, frozen -- ADWIN's bound requires a [0, 1] stream"
+ },
+ "results": {
+  "arms": {
+   "FIXED": {
+    "ic": {
+     "mean": -0.002724,
+     "t": -0.573,
+     "p": 0.5669,
+     "n_date_blocks": 276
+    },
+    "gross": {
+     "mean": -0.000451,
+     "t": -0.169,
+     "p": 0.8662,
+     "n_date_blocks": 276,
+     "ann_pct": -11.356
+    },
+    "net": {
+     "mean": -0.003759,
+     "t": -1.407,
+     "p": 0.1606,
+     "n_date_blocks": 276,
+     "ann_pct": -94.73
+    },
+    "mean_daily_turnover": 1.3234,
+    "cost_bps_per_unit_turnover": 25.0
+   },
+   "ADWIN": {
+    "ic": {
+     "mean": 0.007625,
+     "t": 1.742,
+     "p": 0.0827,
+     "n_date_blocks": 276
+    },
+    "gross": {
+     "mean": 0.006011,
+     "t": 2.375,
+     "p": 0.0183,
+     "n_date_blocks": 276,
+     "ann_pct": 151.477
+    },
+    "net": {
+     "mean": 0.002503,
+     "t": 0.988,
+     "p": 0.3243,
+     "n_date_blocks": 276,
+     "ann_pct": 63.071
+    },
+    "mean_daily_turnover": 1.4033,
+    "cost_bps_per_unit_turnover": 25.0
+   }
+  },
+  "vs": {
+   "ADWIN_minus_FIXED": {
+    "ic": {
+     "mean": 0.010349,
+     "t": 1.818,
+     "p": 0.0702,
+     "n_date_blocks": 276
+    },
+    "net": {
+     "mean": 0.006262,
+     "t": 1.561,
+     "p": 0.1196,
+     "n_date_blocks": 276,
+     "ann_pct": 157.801
+    }
+   }
+  },
+  "horizon_caveats": {
+   "horizon_sessions": 5,
+   "n_date_blocks_reported": 276,
+   "n_effective_independent_blocks": 55,
+   "overlap_note": "each date label spans 5 sessions, so consecutive dates share 4 of them. The reported n of 276 is NOT 276 independent observations: it is about 55. Divide every t in this receipt by roughly sqrt(5) = 2.24 before reading it as significance, and treat a per-era cell with fewer than 5 dates as CANNOT DETERMINE.",
+   "annualisation_note": "ann_pct in every cell is mean x 252 x 100 of that daily series. At horizon 5 it counts the same capital about 5 times over; divide by 5 for a first-order comparable figure. IC is horizon-agnostic and is the number to use for any cross-horizon comparison."
+  },
+  "stale_vs_fresh": {
+   "n_dates_on_a_stale_model": 255,
+   "n_dates_on_a_fresh_model": 21,
+   "ic_on_stale_dates": {
+    "mean": 0.007938,
+    "t": 1.715,
+    "p": 0.0875,
+    "n_date_blocks": 255
+   },
+   "ic_on_fresh_dates": {
+    "mean": 0.00382,
+    "t": 0.302,
+    "p": 0.7655,
+    "n_date_blocks": 21
+   },
+   "max_model_age_months": 13
+  }
+ },
+ "headline": "ADWIN refit 1 times vs FIXED 14 on 276 identical test dates; ADWIN - FIXED IC +0.0103 (t 1.818, p 0.0702); 255 dates ran on a stale model, max age 13 months; fit seconds 0.87 vs 28.66",
+ "verdict": "ADWIN NEVER FIRED after the mandatory first fit, so the ADWIN arm is one model carried across every test month (max age 13 months). That is a fact about the ERROR STREAM -- at this scale it is stationary to the detector -- and only secondarily about the cadence. Read the stale-vs-fresh IC split, not the refit count: a monthly refit that changes nothing is ceremony, and a detector that cannot see the drift is not evidence there is none.",
+ "next_test": "feed E3's realised coverage the same stale/fresh split -- a stale model should show up as a coverage cost before it shows up as an IC cost, because risk resolves faster than return",
+ "daily_csv": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-22\\E4_adwin_gated_refit_run01_daily.csv",
+ "elapsed_s": 104.0,
+ "awake_s": 104.0,
+ "slept_s": 0.0,
+ "box_s": 3600.0,
+ "wall_minus_monotonic_s": -0.0,
+ "sleep_gaps": [],
+ "child_pid": 45864,
+ "killed_pids": [],
+ "exit_code": 0
+}

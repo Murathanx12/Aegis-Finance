@@ -1,0 +1,112 @@
+{
+ "hyp_id": "H-d90a84da8c",
+ "title": "Cross-source disagreement predicts move size beyond TF-IDF",
+ "night": "2026-09-29",
+ "run_utc": "2026-09-29T13:46:50+00:00",
+ "result": {
+  "cell_type": "size_feature_increment",
+  "params": {
+   "feature_set": "tone_agreement",
+   "design_fold": "F2025",
+   "confirm_fold": "F2026"
+  },
+  "features": [
+   "tone_sd",
+   "tone_abs",
+   "tone_oppose",
+   "multi_doc"
+  ],
+  "design": {
+   "fold": "F2025",
+   "base": "T2",
+   "alpha": 10000.0,
+   "n_test_cells": 30546,
+   "coef": {
+    "tone_sd": 0.00399,
+    "tone_abs": 0.01986,
+    "tone_oppose": -0.01165,
+    "multi_doc": 0.00021
+   },
+   "increment": {
+    "mean": -0.000749,
+    "se": 0.000255,
+    "t": -2.94,
+    "mde": 0.000714,
+    "n": 85,
+    "n_blocks": 18,
+    "by_month": {
+     "2025-09": -0.001,
+     "2025-10": -0.0016,
+     "2025-11": -0.0009,
+     "2025-12": 0.0004
+    },
+    "months_positive": "1/4",
+    "loo_month_worst": -0.001168
+   }
+  },
+  "design_over_B2 (reported)": {
+   "mean": -0.001401,
+   "se": 0.000272,
+   "t": -5.15,
+   "mde": 0.000761,
+   "n": 85,
+   "n_blocks": 18,
+   "by_month": {
+    "2025-09": -0.0016,
+    "2025-10": -0.0021,
+    "2025-11": -0.0008,
+    "2025-12": -0.001
+   },
+   "months_positive": "0/4",
+   "loo_month_worst": -0.001581
+  },
+  "confirm": {
+   "fold": "F2026",
+   "base": "T2",
+   "alpha": 10000.0,
+   "n_test_cells": 25365,
+   "coef": {
+    "tone_sd": 0.00346,
+    "tone_abs": 0.01119,
+    "tone_oppose": -0.00964,
+    "multi_doc": -4e-05
+   },
+   "increment": {
+    "mean": -0.000128,
+    "se": 0.000322,
+    "t": -0.4,
+    "mde": 0.000902,
+    "n": 91,
+    "n_blocks": 21,
+    "by_month": {
+     "2026-05": -0.0003,
+     "2026-06": 0.0002,
+     "2026-07": -0.0007,
+     "2026-08": 0.0002,
+     "2026-09": -0.0002
+    },
+    "months_positive": "2/5",
+    "loo_month_worst": -0.000234
+   }
+  },
+  "confirm_over_B2 (reported)": {
+   "mean": -0.000566,
+   "se": 0.00055,
+   "t": -1.03,
+   "mde": 0.001541,
+   "n": 91,
+   "n_blocks": 21,
+   "by_month": {
+    "2026-05": 0.0019,
+    "2026-06": -0.0011,
+    "2026-07": -0.001,
+    "2026-08": 0.0009,
+    "2026-09": -0.0026
+   },
+   "months_positive": "2/5",
+   "loo_month_worst": -0.000998
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.00013 <= 0"
+ }
+}

@@ -1,0 +1,187 @@
+{
+ "receipt": "sim_ranking",
+ "asof": "2026-09-28",
+ "n_eligible": 2899,
+ "model_version": "955631a712b5",
+ "ic_mean": 0.016154926294941283,
+ "ic_t": 5.398951163402586,
+ "top20_net_rel_21d": -0.00872973404006997,
+ "top": [
+  {
+   "rank": 1,
+   "symbol": "TE",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.003918576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 2,
+   "symbol": "FLNC",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0047185769780065554,
+   "calibration_measured": true
+  },
+  {
+   "rank": 3,
+   "symbol": "CDNL",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0047185769780065554,
+   "calibration_measured": true
+  },
+  {
+   "rank": 4,
+   "symbol": "BW",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0047185769780065554,
+   "calibration_measured": true
+  },
+  {
+   "rank": 5,
+   "symbol": "AGX",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.003918576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 6,
+   "symbol": "Q",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.003918576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 7,
+   "symbol": "UAMY",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0047185769780065554,
+   "calibration_measured": true
+  },
+  {
+   "rank": 8,
+   "symbol": "AA",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.003918576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 9,
+   "symbol": "LMB",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.006418576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 10,
+   "symbol": "DOCS",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0047185769780065554,
+   "calibration_measured": true
+  },
+  {
+   "rank": 11,
+   "symbol": "LITE",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0035185769780065553,
+   "calibration_measured": true
+  },
+  {
+   "rank": 12,
+   "symbol": "LCID",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0047185769780065554,
+   "calibration_measured": true
+  },
+  {
+   "rank": 13,
+   "symbol": "AAOI",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.003918576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 14,
+   "symbol": "WDS",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.006418576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 15,
+   "symbol": "TBN",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.006418576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 16,
+   "symbol": "OI",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0047185769780065554,
+   "calibration_measured": true
+  },
+  {
+   "rank": 17,
+   "symbol": "TSM",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0035185769780065553,
+   "calibration_measured": true
+  },
+  {
+   "rank": 18,
+   "symbol": "LAR",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.006418576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 19,
+   "symbol": "BMA",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0047185769780065554,
+   "calibration_measured": true
+  },
+  {
+   "rank": 20,
+   "symbol": "TCMD",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.006418576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 21,
+   "symbol": "PBR",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.003918576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 22,
+   "symbol": "DBVT",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.006418576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 23,
+   "symbol": "LWLG",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.006418576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 24,
+   "symbol": "AAUC",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.006418576978006556,
+   "calibration_measured": true
+  },
+  {
+   "rank": 25,
+   "symbol": "MWH",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0047185769780065554,
+   "calibration_measured": true
+  }
+ ],
+ "bars_fingerprint": "bars.parquet:165119063:1790634710|bars_delisted.parquet:38470757:1790634711"
+}

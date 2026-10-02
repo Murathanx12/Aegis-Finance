@@ -1,0 +1,104 @@
+{
+ "schema": "crsp_rebuild/conditionals_declaration/1",
+ "job": "conditionals_on_crsp",
+ "run_id": "CD_2026-09-29T1410Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "written_utc": "2026-09-29T14:04:20+00:00",
+ "written_before_any_cell_ran": true,
+ "cells": {
+  "C01_surprise_then_raises": {
+   "question": "does revision flow right after a positive earnings surprise carry the drift?",
+   "condition": "days_since_earn <= 45 AND ear_last in the top 30% of the month AND net_raises_30 >= 1",
+   "when": "1999-09-30",
+   "prior": "ear_flow was the best single rule of 2026-09-29 (twin t 3.9)"
+  },
+  "C02_insider_cluster_after_drawdown": {
+   "question": "do 3+ distinct insiders buying within 30 days after a large drawdown predict recovery?",
+   "condition": "distinct open-market insider buyers with filings usable in (d-30, d] >= 3 AND px_vs_52w_high <= -0.40",
+   "when": "2006-06-30",
+   "prior": "Cohen-Malloy-Pomorski; TRIAL-DRAFT-B (cluster length) is a different definition and is not run under its name"
+  },
+  "C03_squeeze_with_rising_estimates": {
+   "question": "do heavily shorted names with rising price targets squeeze?",
+   "condition": "si_ratio in the top 10% of the month AND net_raises >= 1 AND mom_21 > 0",
+   "when": "1999-09-30",
+   "prior": "short-squeeze folklore; NEGATIVE_RESULTS \u00a724 closed si_chg net of turnover"
+  },
+  "C04_concentrated_13f_initiation": {
+   "question": "does a new position by a concentrated fund (3-25 names) carry information?",
+   "condition": "n_conc_init >= 1 (a manager holding 3-25 names initiated the position last quarter)",
+   "when": "1996-08-30",
+   "prior": "Cohen-Polk-Silli best ideas; conviction of concentrated managers"
+  },
+  "C05_raise_in_low_coverage": {
+   "question": "are target raises more informative where few analysts look?",
+   "condition": "net_raises >= 1 AND n_firms <= 2 (at most two brokers active in 90 days)",
+   "when": "1999-09-30",
+   "prior": "Hong-Lim-Stein slow diffusion in low-coverage names"
+  },
+  "C06_raises_trend_on": {
+   "question": "does the revision signal work when the market trend is up?",
+   "condition": "net_raises in the top 20% of covered names (net_raises >= 1) AND mkt_trend_up == 1; otherwise the market",
+   "when": "1999-09-30",
+   "prior": "regime gating; revision flow is the one consistent relative signal"
+  },
+  "C07_raises_trend_off": {
+   "question": "does the revision signal work when the market trend is down?",
+   "condition": "as C06 but mkt_trend_up == 0; otherwise the market",
+   "when": "1999-09-30",
+   "prior": "the complement of C06"
+  },
+  "C08_raises_high_vol": {
+   "question": "does the revision signal work in a high-volatility market?",
+   "condition": "as C06's selection, months where the market's 63-session realised vol at d is above its trailing 5-year median; otherwise the market",
+   "when": "1999-09-30",
+   "prior": "information is slower to be priced when attention is scarce"
+  },
+  "C09_raises_low_vol": {
+   "question": "does the revision signal work in a low-volatility market?",
+   "condition": "as C08 with vol at or below its trailing 5-year median; otherwise the market",
+   "when": "1999-09-30",
+   "prior": "the complement of C08"
+  },
+  "C10_lead_raise_in_beaten_down": {
+   "question": "does a raise that leads price (no run-up) in a beaten-down name predict recovery?",
+   "condition": "lead_raises_90 >= 1 AND px_vs_52w_high <= -0.30",
+   "when": "1999-09-30",
+   "prior": "lead/chase was the vendor board's other ALPHA_DETECTED family"
+  }
+ },
+ "decision_rule": "CANDIDATE iff VALIDATE (2009-2016) net-minus-market mean > 0, t >= 2 (3-month blocks), >= 5 of 8 years positive, AND DESIGN (source start .. 2008) net-minus-market mean > 0 and gross-minus-twin mean > 0. Else CANNOT_DISTINGUISH if the validate net-minus-market mean > 0, else FAILED_VARIANT. A CANDIDATE with DSR (net-minus-market, source start .. 2016) < 0.95 at the full count is NOT_DEFLATED_SURVIVOR: registration as a free forward shadow only. 2017-2024 is read last as description.",
+ "engine": "(the same for every cell, fixed before any read):\n* monthly decision on the CRSP month-end panel; hold one month; names that\n  meet the condition AND are eligible, equal weight; a month with fewer than\n  MIN_NAMES names holds the MARKET (difference 0 vs the market, NaN vs twin);\n* the matched twin is the cell-mean of NON-selected eligible names in the same\n  size band x vol_63 tercile x 12-1 tercile cell (`matched_twins` cells),\n  weighted by the selection's cell mix: the infinite-draw version of the\n  21-draw twin; it is read GROSS vs GROSS (the information in the selection),\n  because a twin that pays the same turnover pays the same cost;\n* costs: each traded weight |w_t - w_{t-1}| pays half the name's spread, the\n  spread being max(Corwin-Schultz at the decision date (cap 20%), the flat\n  6/10/18/35 bps band); era-realistic and scaled by ACTUAL turnover;\n* market = CRSP-era FF market + rf compounded over the hold, costless.",
+ "splits_hold_month": {
+  "design": [
+   "1991-01-01",
+   "2008-12-31"
+  ],
+  "validate": [
+   "2009-01-01",
+   "2016-12-31"
+  ],
+  "holdout": [
+   "2017-01-01",
+   "2024-12-31"
+  ],
+  "full": [
+   null,
+   null
+  ]
+ },
+ "min_names": 5,
+ "breakdowns": [
+  "size band (mega/large/mid/small by 63-session median dollar volume)",
+  "era (design / validate / 2017-2024)",
+  "by hold year"
+ ],
+ "search_count": {
+  "before_tonight": 42416,
+  "library_cells_tonight": 170,
+  "conditional_looks": 80,
+  "n_trials_for_dsr": 42666
+ },
+ "honesty_note": "the revision-flow family was chosen knowing 2026-09-29's validation numbers for net_raises/ear_flow as stand-alone books; the conditions, thresholds and regimes were not tuned on any window",
+ "sha16": "4b50bdb5cc28425e"
+}

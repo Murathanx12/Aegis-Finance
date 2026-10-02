@@ -1,0 +1,146 @@
+{
+ "hyp_id": "H-f4c998e55b",
+ "title": "Rate spike compresses REIT dividend yield spread",
+ "night": "2026-09-29",
+ "run_utc": "2026-09-29T13:46:53+00:00",
+ "result": {
+  "cell_type": "macro_lead_lag",
+  "params": {
+   "driver": "^TNX",
+   "targets": [
+    "VNQ",
+    "SPG",
+    "O",
+    "PLD",
+    "CCI"
+   ],
+   "expected_sign": -1,
+   "h": 5,
+   "shock_z": 2.0
+  },
+  "targets_used": [
+   "SPG",
+   "O",
+   "PLD",
+   "CCI"
+  ],
+  "beta_to_spy_design": 0.944,
+  "window": "open(t+1) -> close(t+5), residual of beta x SPY; etf: targets use close t -> close t+5",
+  "design": {
+   "primary_signed_next_resid": {
+    "mean": 0.002321,
+    "se": 0.002252,
+    "t": 1.03,
+    "mde": 0.006306,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "net_of_cost": 0.000321,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.00493,
+    "se": 0.001581,
+    "t": 3.12,
+    "mde": 0.004426,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "placebo_all_days_signed_next": {
+    "mean": 0.001293,
+    "se": 0.000556,
+    "t": 2.32,
+    "mde": 0.001557,
+    "n": 1721,
+    "n_blocks": 82
+   },
+   "n_shocks": 93,
+   "by_year": {
+    "2016": {
+     "mean": 0.012168,
+     "n": 6
+    },
+    "2017": {
+     "mean": 0.000373,
+     "n": 9
+    },
+    "2018": {
+     "mean": 0.004635,
+     "n": 14
+    },
+    "2019": {
+     "mean": 0.002233,
+     "n": 18
+    },
+    "2020": {
+     "mean": 0.000834,
+     "n": 16
+    },
+    "2021": {
+     "mean": 0.000228,
+     "n": 13
+    },
+    "2022": {
+     "mean": 0.001062,
+     "n": 17
+    }
+   },
+   "loo_year_worst": 0.001641,
+   "span": [
+    "2016-05-18",
+    "2022-11-10"
+   ]
+  },
+  "confirm": {
+   "primary_signed_next_resid": {
+    "mean": -3.7e-05,
+    "se": 0.003503,
+    "t": -0.01,
+    "mde": 0.009808,
+    "n": 46,
+    "n_blocks": 29
+   },
+   "net_of_cost": -0.002037,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.009242,
+    "se": 0.002322,
+    "t": 3.98,
+    "mde": 0.006501,
+    "n": 46,
+    "n_blocks": 29
+   },
+   "placebo_all_days_signed_next": {
+    "mean": 1.3e-05,
+    "se": 0.000835,
+    "t": 0.02,
+    "mde": 0.002338,
+    "n": 932,
+    "n_blocks": 45
+   },
+   "n_shocks": 46,
+   "by_year": {
+    "2023": {
+     "mean": -0.000323,
+     "n": 11
+    },
+    "2024": {
+     "mean": 0.001544,
+     "n": 14
+    },
+    "2025": {
+     "mean": -0.000526,
+     "n": 9
+    },
+    "2026": {
+     "mean": -0.001252,
+     "n": 12
+    }
+   },
+   "loo_year_worst": -0.000729,
+   "span": [
+    "2023-03-10",
+    "2026-09-10"
+   ]
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.00004 <= 0"
+ }
+}

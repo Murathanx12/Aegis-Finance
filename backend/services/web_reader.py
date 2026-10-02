@@ -101,7 +101,10 @@ LICENCE = "Dow Jones subscriber, personal research; not republished"
 #: Hard stop regardless of the allowlist -- the tabs open beside the reader.
 NEVER_HOSTS: tuple[str, ...] = ("mail.google.com", "app.alpaca.markets", "alpaca.markets",
                                 "railway.com", "railway.app", "web.whatsapp.com",
-                                *BP.MESSAGE_HOSTS)
+                                *BP.MESSAGE_HOSTS,
+                                # 2026-09-30: banks, brokers, payment, crypto, mail and
+                                # subscription-checkout providers (browser_policy)
+                                *BP.MONEY_HOSTS, *BP.CHECKOUT_HOSTS)
 #: Roles that are never clicked. A reader clicks LINKS.
 DENY_ROLES: frozenset[str] = frozenset({"button", "textbox", "combobox", "checkbox",
                                         "radio", "searchbox", "form", "menuitem",
@@ -151,6 +154,8 @@ def host_ok(url: str) -> bool:
     except ValueError:
         return False
     if not h or any(h == n or h.endswith("." + n) for n in NEVER_HOSTS):
+        return False
+    if BP.money_url_refusal(url):          # a checkout / payment path on any host
         return False
     return any(h == d or h.endswith("." + d) for d in hosts())
 

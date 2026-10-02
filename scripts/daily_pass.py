@@ -88,12 +88,13 @@ import argparse
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import time
 from datetime import date, datetime, time as dtime, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger("daily_pass")
 
@@ -437,11 +438,86 @@ def run_grade_books(timeout_s: float = 840.0) -> dict:
     return _run_module_child(["scripts.llm_portfolio", "grade", "--json"], timeout_s)
 
 
-def run_paper_accounts(timeout_s: float = 540.0) -> dict:
-    """`python -m scripts.paper_accounts_roi --no-broker --json` (reads the
-    leaderboard `grade_books` has just written; no broker GETs)."""
-    return _run_module_child(["scripts.paper_accounts_roi", "--no-broker", "--json"],
-                             timeout_s)
+def run_shadow_grade(timeout_s: float = 300.0) -> dict:
+    """`python -m scripts.shadow_grade --json` (2026-09-30): the shadow books read
+    the way their registrations say -- D vs the registered twin on the sleeve
+    scale, D vs the market, the kill line in force (the AMENDED one for
+    CRSP_BLEND_v0) -- and SHADOW_NEWS_v0's tilt graded by its contract's own
+    rule, which no frozen-book grader computes. Reads the leaderboard
+    `run_grade_books` has just written."""
+    return _run_module_child(["scripts.shadow_grade", "--json"], timeout_s)
+
+
+def run_paper_accounts(timeout_s: float = 540.0, *, broker: Optional[bool] = None) -> dict:
+    """`python -m scripts.paper_accounts_roi --json`, WITH the read-only broker
+    GETs unless `config.DAILY_PASS_PAPER_ACCOUNTS_BROKER_READ` is False.
+
+    2026-10-02: this ran `--no-broker` from 09-28 on, so every scheduled receipt
+    silently dropped hack1-6 and PC-PAPER and regenerated docs/PAPER_ACCOUNTS.md
+    without them. The broker legs are GET /v2/account + /v2/positions only
+    (`paper_accounts_roi.BROKER_READ_MODE`); a pass without them is now a
+    DEGRADED line, never a quiet narrower table."""
+    if broker is None:
+        broker = bool(getattr(_config, "DAILY_PASS_PAPER_ACCOUNTS_BROKER_READ", True))
+    args = ["scripts.paper_accounts_roi", "--json"] + ([] if broker else ["--no-broker"])
+    res = _run_module_child(args, timeout_s)
+    res["broker_requested"] = bool(broker)
+    return res
+
+
+def _broker_read_degraded(res: dict) -> Optional[str]:
+    """The DEGRADED line for a paper-accounts run that did not read the brokers,
+    or None. Pure: reads only the child's summary."""
+    if not res.get("broker_requested"):
+        return ("DEGRADED paper_accounts: broker read DISABLED by config -- hack1-6 and "
+                "PC-PAPER are absent from this receipt")
+    if str(res.get("status")) != "ok":
+        return f"DEGRADED paper_accounts: the run refused ({str(res.get('reason'))[:160]})"
+    sc = res.get("scope") or {}
+    n = int(res.get("broker_rows") or 0)
+    if not sc.get("with_broker") or n == 0:
+        return ("DEGRADED paper_accounts: no broker rows in the receipt (scope "
+                f"{sc}) -- hack1-6 and PC-PAPER are missing")
+    # A DECLARED-retired account (config) is noted on the row, never degraded:
+    # hack3 has answered 401 since 2026-09-22 and a line that is red every day
+    # forever is a gate that cannot go green.
+    retired = set(getattr(_config, "PAPER_ACCOUNTS_RETIRED_UNREADABLE", ()))
+    errs = [a for a in (res.get("broker_error_accounts") or []) if a not in retired]
+    if errs:
+        return (f"DEGRADED paper_accounts: {n} broker rows, unreadable now: {errs}")
+    return None
+
+
+#: public name for tests and readers; the step calls the private one (pure,
+#: so it is not a seam the AST guard must see stubbed)
+broker_read_degraded = _broker_read_degraded
+
+
+_SESSIONS_OLD = re.compile(r"sessions_old=(\d+|UNKNOWN)")
+
+
+def degraded_lines(rows: list[dict]) -> list[str]:
+    """The DEGRADED lines a reader must see FIRST, derived from the step rows.
+
+    Pure (no disk): the bars line is the bars_refresh step's own `bars_line`
+    (`pull_bars_refresh.bars_age`, read from the parquet's date column), and a
+    gated panel missing ONE closed session is degraded here -- stricter than
+    `BARS_MAX_AGE_SESSIONS`, which gates acting, not telling."""
+    out: list[str] = []
+    by = {r.get("step"): r for r in rows}
+    bl = str((by.get("bars_refresh") or {}).get("bars_line") or "")
+    m = _SESSIONS_OLD.search(bl)
+    if not bl or not m:
+        out.append("DEGRADED bars: CANNOT DETERMINE the panel age (bars_refresh "
+                   "returned no age line)")
+    elif m.group(1) == "UNKNOWN" or int(m.group(1)) >= 1:
+        out.append(f"DEGRADED bars: {m.group(1)} closed session(s) missing -- {bl}")
+    pa = by.get("paper_accounts") or {}
+    if pa.get("broker_degraded"):
+        out.append(str(pa["broker_degraded"]))
+    if pa.get("doc_refused"):
+        out.append(f"DEGRADED paper_accounts doc: {str(pa['doc_refused'])[:200]}")
+    return out
 
 
 def run_bridge_report(timeout_s: float = 540.0) -> dict:
@@ -899,7 +975,13 @@ def step_grade_books(ctx: dict) -> dict:
             refusals.append(f"{k}: {sc[k]} book(s)")
     if res.get("n_benchmark_missing"):
         refusals.append(f"benchmark missing on {res['n_benchmark_missing']} grade(s)")
+    # 2026-09-30: the shadow scoreboard reads what the child above just wrote.
+    # Its failure is a named refusal on this row, never a failed step.
+    shadow = run_shadow_grade(timeout_s=min(300.0, _child_box("grade_books")))
+    if str(shadow.get("status")) != "ok":
+        refusals.append("SHADOW scoreboard: " + str(shadow.get("reason") or shadow.get("status")))
     return _row("grade_books", status, rows=int(sc.get("OK") or 0),
+                shadow_books=shadow.get("books"), shadow_receipt=shadow.get("receipt"),
                 seconds=round(time.time() - t0, 2), refusals=refusals,
                 receipt_path=res.get("leaderboard"), bars_through=res.get("bars_through"),
                 status_counts=sc, n_deferred_entry=res.get("n_deferred_entry"),
@@ -918,12 +1000,18 @@ def step_paper_accounts(ctx: dict) -> dict:
     ok = str(res.get("status")) == "ok"
     llm = res.get("llm_by_status") or {}
     refusals = [] if ok else [str(res.get("reason") or "no summary")]
+    degraded = _broker_read_degraded(res)          # pure: reads the summary only
+    if degraded:
+        refusals.append(degraded)
+    if res.get("doc_refused"):
+        refusals.append(str(res["doc_refused"])[:300])
     if llm.get("UNGRADED"):
         refusals.append(f"UNGRADED llm books: {llm['UNGRADED']}")
     return _row("paper_accounts", "ok" if ok else "refused",
                 rows=int(res.get("n_rows") or 0), seconds=round(time.time() - t0, 2),
                 refusals=refusals, receipt_path=res.get("receipt"), doc=res.get("doc"),
-                llm_by_status=llm, rc=res.get("rc"))
+                llm_by_status=llm, rc=res.get("rc"), broker_degraded=degraded,
+                broker_rows=res.get("broker_rows"), doc_refused=res.get("doc_refused"))
 
 
 def step_bridge_report(ctx: dict) -> dict:
@@ -1273,6 +1361,10 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
     }
     # `disk free: <n> GB`, measured now (2026-09-27: C: reached 0 bytes and
     # nothing printed it). `print_receipt` leads with it when STALE/DEAD.
+    receipt["degraded"] = degraded_lines(rows)
+    if receipt["degraded"]:
+        receipt["headline"] = (f"DEGRADED({len(receipt['degraded'])}) | "
+                               f"{receipt['headline']}")
     receipt["disk"] = disk_status()
     if receipt["disk"].get("verdict") in ("DEAD", "STALE"):
         receipt["headline"] = f"{receipt['disk'].get('line')} | {receipt['headline']}"
@@ -1325,6 +1417,8 @@ def print_receipt(receipt: dict) -> None:
     disk_bad = disk.get("verdict") in ("DEAD", "STALE")
     if disk_bad:
         print(f"  !! {disk.get('line')}")
+    for line in receipt.get("degraded") or []:
+        print(f"  !! {line}")
     print(f"  git HEAD   {receipt['git_head']}")
     print(f"  elapsed    {receipt['elapsed_s']}s")
     if disk and not disk_bad:

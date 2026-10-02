@@ -1,0 +1,219 @@
+{
+ "hyp_id": "H-242b74a461",
+ "title": "Earnings shock read-through to correlation peers (factor-beta control)",
+ "night": "2026-09-29",
+ "run_utc": "2026-09-29T13:44:04+00:00",
+ "result": {
+  "cell_type": "event_readthrough",
+  "params": {
+   "link": "corr_peer",
+   "event_type": "earnings_report",
+   "min_ratio": 2.0,
+   "k": 5,
+   "min_source_dv_pct": 0,
+   "lookback_days": 180
+  },
+  "outcome_units": "size: log(|x_oc|/vol21) linked minus vol-matched unlinked, same date; signed: sign(source move) x (x_oc linked - x_oc controls)",
+  "n_events_candidate": 1412,
+  "design": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.013016,
+    "se": 0.043445,
+    "t": 0.3,
+    "mde": 0.121645,
+    "n": 628,
+    "n_blocks": 52
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": 0.00029,
+    "se": 0.000821,
+    "t": 0.35,
+    "mde": 0.002297,
+    "n": 628,
+    "n_blocks": 52
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.213555,
+    "se": 0.041321,
+    "t": 5.17,
+    "mde": 0.115699,
+    "n": 628,
+    "n_blocks": 52
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.006508,
+    "se": 0.000845,
+    "t": 7.7,
+    "mde": 0.002365,
+    "n": 628,
+    "n_blocks": 52
+   },
+   "n_events": 628,
+   "mean_links": 5.0,
+   "by_month_size_t1": {
+    "2025-01": {
+     "mean": 0.137691,
+     "n": 38
+    },
+    "2025-02": {
+     "mean": -0.00825,
+     "n": 106
+    },
+    "2025-03": {
+     "mean": -0.012386,
+     "n": 30
+    },
+    "2025-04": {
+     "mean": -0.149101,
+     "n": 20
+    },
+    "2025-05": {
+     "mean": 0.045495,
+     "n": 88
+    },
+    "2025-06": {
+     "mean": -0.09379,
+     "n": 27
+    },
+    "2025-07": {
+     "mean": 0.068619,
+     "n": 41
+    },
+    "2025-08": {
+     "mean": -0.034194,
+     "n": 76
+    },
+    "2025-09": {
+     "mean": -0.065059,
+     "n": 24
+    },
+    "2025-10": {
+     "mean": -0.03641,
+     "n": 51
+    },
+    "2025-11": {
+     "mean": 0.098232,
+     "n": 102
+    },
+    "2025-12": {
+     "mean": -0.044683,
+     "n": 25
+    }
+   },
+   "loo_month_worst_size_t1": -0.003508
+  },
+  "confirm": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.043783,
+    "se": 0.033964,
+    "t": 1.29,
+    "mde": 0.0951,
+    "n": 774,
+    "n_blocks": 34
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -0.000724,
+    "se": 0.001011,
+    "t": -0.72,
+    "mde": 0.002831,
+    "n": 774,
+    "n_blocks": 34
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.194701,
+    "se": 0.042378,
+    "t": 4.59,
+    "mde": 0.118659,
+    "n": 774,
+    "n_blocks": 34
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.009302,
+    "se": 0.001125,
+    "t": 8.27,
+    "mde": 0.00315,
+    "n": 774,
+    "n_blocks": 34
+   },
+   "n_events": 774,
+   "mean_links": 5.0,
+   "by_month_size_t1": {
+    "2026-01": {
+     "mean": -0.037078,
+     "n": 25
+    },
+    "2026-02": {
+     "mean": 0.062485,
+     "n": 195
+    },
+    "2026-03": {
+     "mean": 0.118301,
+     "n": 77
+    },
+    "2026-04": {
+     "mean": 0.017754,
+     "n": 141
+    },
+    "2026-05": {
+     "mean": -0.035324,
+     "n": 53
+    },
+    "2026-06": {
+     "mean": -0.000839,
+     "n": 45
+    },
+    "2026-07": {
+     "mean": 0.028413,
+     "n": 80
+    },
+    "2026-08": {
+     "mean": 0.037086,
+     "n": 131
+    },
+    "2026-09": {
+     "mean": 0.214686,
+     "n": 27
+    }
+   },
+   "loo_month_worst_size_t1": 0.035551
+  },
+  "verdict": "CANNOT_DISTINGUISH",
+  "reason": "confirm +0.04378 t 1.29; MDE 0.09510 > effect worth having 0.05000",
+  "direction_verdict_reported": {
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00072 <= 0"
+  },
+  "examples": [
+   {
+    "t": "2026-01-30",
+    "source": "SNDR",
+    "links": "WERN,KNX,LSTR,HUBG,CVLG",
+    "size_t1": "2.0126921535835494"
+   },
+   {
+    "t": "2025-05-05",
+    "source": "ALNY",
+    "links": "IONS,HQH,ARGX,RXO,RARE",
+    "size_t1": "1.6883415717680745"
+   },
+   {
+    "t": "2026-03-18",
+    "source": "SMTC",
+    "links": "COHR,MTSI,MKSI,MPWR,NVT",
+    "size_t1": "1.6118263140355251"
+   },
+   {
+    "t": "2025-02-13",
+    "source": "KGC",
+    "links": "AEM,AGI,WPM,PAAS,B",
+    "size_t1": "1.5825162461810318"
+   },
+   {
+    "t": "2026-05-28",
+    "source": "NTNX",
+    "links": "WDAY,DT,PD,CRM,ZS",
+    "size_t1": "1.5773539577948612"
+   }
+  ]
+ }
+}

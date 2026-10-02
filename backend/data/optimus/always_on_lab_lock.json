@@ -1,0 +1,28 @@
+{
+ "pid": 73432,
+ "started_utc": "2026-10-02T03:58:29+00:00",
+ "hostname": "R12",
+ "started_by": "always_on_lab",
+ "overwrote": {
+  "pid": 69400,
+  "started_utc": "2026-09-30T12:20:54+00:00",
+  "hostname": "R12",
+  "started_by": "always_on_lab",
+  "overwrote": {
+   "pid": 173376,
+   "started_utc": "2026-09-30T04:03:03+00:00",
+   "hostname": "R12",
+   "started_by": "always_on_lab",
+   "overwrote": null,
+   "overwrote_why": null,
+   "previous_exit_reason": "STOP_file",
+   "previous_exit_utc": "2026-09-27T14:28:16+00:00"
+  },
+  "overwrote_why": "pid 173376 is not alive",
+  "previous_exit_reason": "not_recorded (killed or crashed)",
+  "previous_exit_utc": null
+ },
+ "overwrote_why": "pid 69400 is not alive",
+ "previous_exit_reason": "not_recorded (killed or crashed)",
+ "previous_exit_utc": null
+}

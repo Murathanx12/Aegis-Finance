@@ -1,0 +1,31 @@
+{
+ "receipt": "openclaw_collector",
+ "job": "edgar_8k",
+ "at": "2026-09-22T09:00:06+00:00",
+ "profile": "muratclaw",
+ "n_parsed": 40,
+ "observed": "The EDGAR 'Latest Filings' page rendered a full list of 40 eight-K filings, all dated 2026-09-21, and I extracted each company name and CIK exactly as shown.",
+ "read_me_first": "Evidence only. `web_events` refuses any row that carries an expected return, a rank or an action, so this path cannot emit a decision.",
+ "status": "OK",
+ "ledger": {
+  "receipt": "web_events.append",
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_events\\events_2026-09-22.jsonl",
+  "accepted": 40,
+  "written": 39,
+  "duplicates": 1,
+  "refused": 0,
+  "refusals": []
+ },
+ "summary": {
+  "day": "2026-09-22",
+  "n_events": 39,
+  "n_tickers": 1,
+  "by_event_type": {
+   "filing_8k": 39
+  },
+  "by_confidence_source": {
+   "REGULATOR": 39
+  },
+  "read_me_first": "Evidence, not decisions. Nothing here carries an expected return, a rank or an action \u2014 the ranker decides what an observation is worth."
+ }
+}

@@ -1,0 +1,479 @@
+{
+ "job": "J1_error_dataset",
+ "licence": "PRODUCT_EXPERIMENT",
+ "stage": "pnl",
+ "llm_spend_usd": 0.0,
+ "run": 1,
+ "smoke": false,
+ "date": "2026-09-21",
+ "question": "Of every graded forecast and decision this programme has made, WHICH WAY was it wrong, how much error sits behind each way, and what experiment does the biggest pile justify?",
+ "method": {
+  "clusters": [
+   "UNGRADEABLE",
+   "REFUSED_THEN_PERFORMED",
+   "EXPLORE_DESERVED_MORE",
+   "COSTS_KILLED_EDGE",
+   "RIGHT_THESIS_WRONG_HORIZON",
+   "HIGH_CONFIDENCE_WRONG",
+   "WRONG_DIRECTION",
+   "RIGHT_DIRECTION_WRONG_MAGNITUDE",
+   "LOW_CONFIDENCE_RIGHT",
+   "CORRECT_UNREMARKABLE"
+  ],
+  "precedence": [
+   "UNGRADEABLE",
+   "REFUSED_THEN_PERFORMED",
+   "EXPLORE_DESERVED_MORE",
+   "COSTS_KILLED_EDGE",
+   "RIGHT_THESIS_WRONG_HORIZON",
+   "HIGH_CONFIDENCE_WRONG",
+   "WRONG_DIRECTION",
+   "RIGHT_DIRECTION_WRONG_MAGNITUDE",
+   "LOW_CONFIDENCE_RIGHT",
+   "CORRECT_UNREMARKABLE"
+  ],
+  "precedence_note": "first match wins; every row also carries `cluster_candidates` -- every rule that fired -- so the population can be re-cut without re-running",
+  "benchmark": "SPY",
+  "cost_round_trip_bps": 50.0,
+  "cost_source": "config.J1_COST_BPS_PER_SIDE, pinned equal to night_g3_evolve_v2.COST_BPS by test",
+  "high_confidence_p": 0.7,
+  "low_confidence_p": 0.55,
+  "performed_excess_pct": 5.0,
+  "horizon_grid": [
+   1,
+   2,
+   5,
+   20,
+   60,
+   120,
+   252
+  ],
+  "llm": "NONE. There is no call site in this module."
+ },
+ "inputs": {
+  "predictions": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\predictions.jsonl",
+  "decisions_dir": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decisions"
+ },
+ "status": "done",
+ "written_utc": "2026-09-21T14:28:58+00:00",
+ "bars": {
+  "available": true,
+  "symbols": 3060,
+  "benchmark_present": true
+ },
+ "n_prediction_records": 24839,
+ "n_decision_rows": 200,
+ "n_rows": 25039,
+ "n_gradeable": 14703,
+ "n_ungradeable": 10336,
+ "counts_by_cluster": {
+  "UNGRADEABLE": 10336,
+  "LOW_CONFIDENCE_RIGHT": 4033,
+  "RIGHT_DIRECTION_WRONG_MAGNITUDE": 2983,
+  "CORRECT_UNREMARKABLE": 2823,
+  "WRONG_DIRECTION": 2200,
+  "RIGHT_THESIS_WRONG_HORIZON": 1460,
+  "HIGH_CONFIDENCE_WRONG": 922,
+  "COSTS_KILLED_EDGE": 282
+ },
+ "counts_by_mechanism": {
+  "skeptic": 1741,
+  "geopolitical": 1733,
+  "company_fundamental": 1712,
+  "accounting_forensics": 1709,
+  "behavioral_narrative": 1706,
+  "analyst_revisions": 1705,
+  "ownership_flow": 1698,
+  "macro_rates": 1687,
+  "event_news": 1686,
+  "options_volatility": 1657,
+  "execution_momentum": 1650,
+  "investigator:A_snapshot": 951,
+  "investigator:B_anon": 951,
+  "investigator:B_tools": 951,
+  "investigator:C_tools_only": 951,
+  "investigator:D_all": 951,
+  "semis_technology": 594,
+  "biotech_pharma": 429,
+  "energy_materials": 296,
+  "insider_opportunistic": 137,
+  "CANNOT DETERMINE: no rank-bearing signal is available for this name": 35,
+  "profitability_small": 22,
+  "semis_compute": 21,
+  "biotech": 14,
+  "software_consumer": 10,
+  "mom_12_1": 6,
+  "paper_book_v1": 6,
+  "headline_arena_v1": 5,
+  "why_moved:company_news": 4,
+  "why_moved:geopolitical": 4,
+  "why_moved:options_vol": 4,
+  "why_moved:revisions": 4,
+  "why_moved:sector_factor": 4,
+  "why_moved:skeptic": 4,
+  "why_moved:macro_rates": 1
+ },
+ "counts_by_horizon": {
+  "20": 8130,
+  "5": 7742,
+  "60": 5399,
+  "1": 1700,
+  "120": 1131,
+  "252": 684,
+  "2": 91,
+  "504": 42,
+  "126": 38,
+  "21": 38,
+  "63": 38,
+  "0": 6
+ },
+ "counts_by_calibration_bucket": {
+  "p60-70": 6760,
+  "p50-60": 2120,
+  "p40-50": 1288,
+  "p30-40": 1276,
+  "p70-80": 1234,
+  "p0-10": 730,
+  "p10-20": 712,
+  "p20-30": 564,
+  "p80-90": 15,
+  "p90-100": 4
+ },
+ "ungradeable_reasons": {
+  "NOT_GRADED": 10130,
+  "WINDOW_NOT_CLOSED": 194,
+  "NO_HORIZON": 6,
+  "VOID": 6
+ },
+ "decision_ledger_states": {
+  "DECIDED": 86
+ },
+ "falsifier": {
+  "rows_with_a_falsifier": 200,
+  "fired": 0,
+  "not_fired": 165,
+  "no_falsifier_declared": 24874
+ },
+ "brier": {
+  "overall": {
+   "n": 14703,
+   "brier": 0.262538,
+   "climatology_p": 0.339931,
+   "brier_climatology": 0.224378,
+   "skill": -0.170073
+  },
+  "by_observable": {
+   "abs_move_exceeds": {
+    "n": 7486,
+    "brier": 0.259778,
+    "climatology_p": 0.23417,
+    "brier_climatology": 0.179335,
+    "skill": -0.448565
+   },
+   "beats_benchmark": {
+    "n": 1856,
+    "brier": 0.263448,
+    "climatology_p": 0.436961,
+    "brier_climatology": 0.246026,
+    "skill": -0.070813
+   },
+   "drawdown_exceeds": {
+    "n": 291,
+    "brier": 0.25198,
+    "climatology_p": 0.573883,
+    "brier_climatology": 0.244541,
+    "skill": -0.030421
+   },
+   "return_sign": {
+    "n": 5070,
+    "brier": 0.266887,
+    "climatology_p": 0.44714,
+    "brier_climatology": 0.247206,
+    "skill": -0.079616
+   }
+  },
+  "definition": "climatology = the base rate of outcome==1 in the same population; skill = 1 - brier / brier_climatology"
+ },
+ "largest_errors": [
+  {
+   "ticker": "RTX",
+   "date": "2026-08-19",
+   "mechanism": "investigator:A_snapshot",
+   "expected": 0.02,
+   "actual": 1,
+   "actual_return": -0.036578,
+   "excess_return": -0.028178,
+   "abs_error": 0.98,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "NOC",
+   "date": "2026-08-17",
+   "mechanism": "investigator:C_tools_only",
+   "expected": 0.02,
+   "actual": 1,
+   "actual_return": 0.033209,
+   "excess_return": 0.039965,
+   "abs_error": 0.98,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "NOC",
+   "date": "2026-08-17",
+   "mechanism": "investigator:B_tools",
+   "expected": 0.03,
+   "actual": 1,
+   "actual_return": 0.033209,
+   "excess_return": 0.039965,
+   "abs_error": 0.97,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "NOC",
+   "date": "2026-08-17",
+   "mechanism": "investigator:D_all",
+   "expected": 0.03,
+   "actual": 1,
+   "actual_return": 0.033209,
+   "excess_return": 0.039965,
+   "abs_error": 0.97,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "V",
+   "date": "2026-08-19",
+   "mechanism": "investigator:B_tools",
+   "expected": 0.04,
+   "actual": 1,
+   "actual_return": 0.050227,
+   "excess_return": 0.054102,
+   "abs_error": 0.96,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "NOC",
+   "date": "2026-08-17",
+   "mechanism": "investigator:B_anon",
+   "expected": 0.04,
+   "actual": 1,
+   "actual_return": 0.033209,
+   "excess_return": 0.039965,
+   "abs_error": 0.96,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "MRK",
+   "date": "2026-08-24",
+   "mechanism": "investigator:A_snapshot",
+   "expected": 0.04,
+   "actual": 1,
+   "actual_return": 0.038431,
+   "excess_return": 0.035235,
+   "abs_error": 0.96,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "LMT",
+   "date": "2026-08-18",
+   "mechanism": "investigator:B_tools",
+   "expected": 0.05,
+   "actual": 1,
+   "actual_return": -0.083422,
+   "excess_return": -0.081415,
+   "abs_error": 0.95,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "V",
+   "date": "2026-08-19",
+   "mechanism": "investigator:B_anon",
+   "expected": 0.05,
+   "actual": 1,
+   "actual_return": 0.050227,
+   "excess_return": 0.054102,
+   "abs_error": 0.95,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "ROST",
+   "date": "2026-08-21",
+   "mechanism": "investigator:B_anon",
+   "expected": 0.95,
+   "actual": 0,
+   "actual_return": 0.010353,
+   "excess_return": 0.013291,
+   "abs_error": 0.95,
+   "cluster": "HIGH_CONFIDENCE_WRONG"
+  },
+  {
+   "ticker": "INTU",
+   "date": "2026-08-18",
+   "mechanism": "investigator:A_snapshot",
+   "expected": 0.05,
+   "actual": 1,
+   "actual_return": 0.034417,
+   "excess_return": 0.032319,
+   "abs_error": 0.95,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "TJX",
+   "date": "2026-08-18",
+   "mechanism": "investigator:A_snapshot",
+   "expected": 0.05,
+   "actual": 1,
+   "actual_return": -0.042095,
+   "excess_return": -0.044193,
+   "abs_error": 0.95,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "V",
+   "date": "2026-08-19",
+   "mechanism": "investigator:D_all",
+   "expected": 0.05,
+   "actual": 1,
+   "actual_return": 0.050227,
+   "excess_return": 0.054102,
+   "abs_error": 0.95,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "NOC",
+   "date": "2026-08-17",
+   "mechanism": "investigator:A_snapshot",
+   "expected": 0.05,
+   "actual": 1,
+   "actual_return": 0.033209,
+   "excess_return": 0.039965,
+   "abs_error": 0.95,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "MS",
+   "date": "2026-08-19",
+   "mechanism": "investigator:D_all",
+   "expected": 0.06,
+   "actual": 1,
+   "actual_return": -0.031648,
+   "excess_return": -0.023248,
+   "abs_error": 0.94,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "MNST",
+   "date": "2026-08-24",
+   "mechanism": "investigator:D_all",
+   "expected": 0.93,
+   "actual": 0,
+   "actual_return": -0.003884,
+   "excess_return": -0.00708,
+   "abs_error": 0.93,
+   "cluster": "HIGH_CONFIDENCE_WRONG"
+  },
+  {
+   "ticker": "CDNS",
+   "date": "2026-08-26",
+   "mechanism": "investigator:B_tools",
+   "expected": 0.07,
+   "actual": 1,
+   "actual_return": 0.038455,
+   "excess_return": 0.031902,
+   "abs_error": 0.93,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "WMT",
+   "date": "2026-08-17",
+   "mechanism": "investigator:A_snapshot",
+   "expected": 0.07,
+   "actual": 1,
+   "actual_return": -0.066369,
+   "excess_return": -0.054462,
+   "abs_error": 0.93,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "CRM",
+   "date": "2026-08-26",
+   "mechanism": "investigator:D_all",
+   "expected": 0.08,
+   "actual": 1,
+   "actual_return": 0.225805,
+   "excess_return": 0.219252,
+   "abs_error": 0.92,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  },
+  {
+   "ticker": "CDNS",
+   "date": "2026-08-26",
+   "mechanism": "investigator:B_anon",
+   "expected": 0.08,
+   "actual": 1,
+   "actual_return": 0.038455,
+   "excess_return": 0.031902,
+   "abs_error": 0.92,
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE"
+  }
+ ],
+ "curriculum": [
+  {
+   "cluster": "RIGHT_DIRECTION_WRONG_MAGNITUDE",
+   "count": 2983,
+   "n_with_measured_error": 2983,
+   "mean_abs_error": 0.644506,
+   "priority": 1922.5608,
+   "experiment": "Re-grade the threshold observables against the REALISED distribution of |return| at that horizon: if the calls are biased one way, the threshold prior is wrong and it is a constant, not a model."
+  },
+  {
+   "cluster": "WRONG_DIRECTION",
+   "count": 2200,
+   "n_with_measured_error": 2200,
+   "mean_abs_error": 0.592032,
+   "priority": 1302.47,
+   "experiment": "Split the sign misses by mechanism and re-ask whether the mechanism has ANY directional content: a mechanism whose sign accuracy is 0.5 on its own graded rows should be reduced to a magnitude/volatility forecaster rather than repaired as a direction forecaster."
+  },
+  {
+   "cluster": "LOW_CONFIDENCE_RIGHT",
+   "count": 4033,
+   "n_with_measured_error": 4033,
+   "mean_abs_error": 0.280769,
+   "priority": 1132.3405,
+   "experiment": "Test whether the p<=0.55 rows carry usable information the sizing throws away -- a mechanism that is right at 0.52 more often than 52% is under-confident, and under-confidence costs size, not accuracy."
+  },
+  {
+   "cluster": "RIGHT_THESIS_WRONG_HORIZON",
+   "count": 1460,
+   "n_with_measured_error": 1460,
+   "mean_abs_error": 0.599226,
+   "priority": 874.87,
+   "experiment": "Re-issue this mechanism's forecasts at the neighbouring horizon that was right and grade the pair: if the shifted horizon wins on the same cases, the mechanism's horizon is mis-specified, not its thesis."
+  },
+  {
+   "cluster": "HIGH_CONFIDENCE_WRONG",
+   "count": 922,
+   "n_with_measured_error": 922,
+   "mean_abs_error": 0.703743,
+   "priority": 648.851,
+   "experiment": "Fit a monotone recalibration on the p>=0.70 bucket alone and test it out of sample: an over-confident tail is the cheapest calibration repair there is, and it needs no new signal."
+  }
+ ],
+ "curriculum_excluded": {
+  "clusters": [
+   "CORRECT_UNREMARKABLE"
+  ],
+  "why": "the declared residual carries no experiment; it is counted in counts_by_cluster and excluded from the ranked curriculum so a top-5 slot is not spent saying 'no experiment'"
+ },
+ "rows_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-21\\J1_error_dataset_rows.jsonl",
+ "headline": "25039 error rows (14703 gradeable, 10336 ungradeable and every one carries its reason); biggest cluster UNGRADEABLE at 10336; Brier 0.262538 vs climatology 0.224378 (skill -0.170073) on 14703 graded rows",
+ "verdict": "CURRICULUM: RIGHT_DIRECTION_WRONG_MAGNITUDE carries the most total error (2983 rows x mean |error| 0.644506). Re-grade the threshold observables against the REALISED distribution of |return| at that horizon: if the calls are biased one way, the threshold prior is wrong and it is a constant, not a model.",
+ "elapsed_s": 3.0,
+ "awake_s": 3.0,
+ "slept_s": 0.0,
+ "box_s": 1200.0,
+ "wall_minus_monotonic_s": 0.0,
+ "sleep_gaps": [],
+ "child_pid": 71156,
+ "killed_pids": [],
+ "exit_code": 0
+}

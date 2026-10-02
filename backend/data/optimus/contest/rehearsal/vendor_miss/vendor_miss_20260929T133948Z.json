@@ -1,0 +1,121 @@
+{
+ "what": "vendor date/time miss rates from files on disk; no network",
+ "sections": {
+  "A_ibes_vs_sec8k": {
+   "n_matched": 73744,
+   "share_same_date": 0.9322,
+   "share_off_1bd": 0.0546,
+   "share_off_ge2bd": 0.0132,
+   "n_both_timed": 68509,
+   "share_timing_class_differs": 0.0522,
+   "share_reaction_session_differs": 0.0304,
+   "ibes_unknown_time_share": 0.0798,
+   "by_year": {
+    "2015": {
+     "n": 1690,
+     "same_day": 0.8675,
+     "off_ge_1bd": 0.1325
+    },
+    "2016": {
+     "n": 3798,
+     "same_day": 0.8826,
+     "off_ge_1bd": 0.1174
+    },
+    "2017": {
+     "n": 4493,
+     "same_day": 0.907,
+     "off_ge_1bd": 0.093
+    },
+    "2018": {
+     "n": 5201,
+     "same_day": 0.9112,
+     "off_ge_1bd": 0.0888
+    },
+    "2019": {
+     "n": 5883,
+     "same_day": 0.9147,
+     "off_ge_1bd": 0.0853
+    },
+    "2020": {
+     "n": 6543,
+     "same_day": 0.9222,
+     "off_ge_1bd": 0.0778
+    },
+    "2021": {
+     "n": 7276,
+     "same_day": 0.9324,
+     "off_ge_1bd": 0.0676
+    },
+    "2022": {
+     "n": 7987,
+     "same_day": 0.9448,
+     "off_ge_1bd": 0.0552
+    },
+    "2023": {
+     "n": 8397,
+     "same_day": 0.9459,
+     "off_ge_1bd": 0.0541
+    },
+    "2024": {
+     "n": 8739,
+     "same_day": 0.9485,
+     "off_ge_1bd": 0.0515
+    },
+    "2025": {
+     "n": 9187,
+     "same_day": 0.9561,
+     "off_ge_1bd": 0.0439
+    },
+    "2026": {
+     "n": 4550,
+     "same_day": 0.9567,
+     "off_ge_1bd": 0.0433
+    }
+   },
+   "reading": "disagreement between two AFTER-THE-FACT sources: a floor on date error, not the forward miss rate"
+  },
+  "B_pattern_estimator_14d_ahead": {
+   "n": 19210,
+   "share_exact": 0.2774,
+   "share_within_1bd": 0.4075,
+   "share_off_ge2bd": 0.5925,
+   "by_confidence": {
+    "HIGH": {
+     "n": 12467,
+     "exact": 0.3144
+    },
+    "LOW": {
+     "n": 1278,
+     "exact": 0.0806
+    },
+    "MEDIUM": {
+     "n": 5465,
+     "exact": 0.239
+    }
+   },
+   "by_year": {
+    "2022": 0.307,
+    "2023": 0.3084,
+    "2024": 0.2559,
+    "2025": 0.2422,
+    "2026": 0.2782
+   },
+   "reading": "the desk's ESTIMATED_PATTERN rows (projected from past same-quarter prints) as a FORWARD estimate"
+  },
+  "C_nasdaq_vs_yahoo_same_days": {
+   "nasdaq_rows": 180,
+   "matched_to_yahoo": 42,
+   "share_same_date": 0.9762,
+   "share_timing_differs": 0.0,
+   "nasdaq_unknown_time_share": 0.8222,
+   "fetched": "all Nasdaq day files were fetched 2026-09-28 (past days retro, 09-29..10-02 forward)"
+  },
+  "D_forward_nasdaq_vs_yahoo_screener": {
+   "nasdaq_forward_rows": 62,
+   "with_yahoo_date": 22,
+   "share_same_date": 0.7273,
+   "share_same_date_when_yahoo_says_announced": 0.8889,
+   "reading": "two forward vendors disagreeing on the same future print; the realised check is prospective (graded by the rehearsal as the prints happen)"
+  }
+ }
+}

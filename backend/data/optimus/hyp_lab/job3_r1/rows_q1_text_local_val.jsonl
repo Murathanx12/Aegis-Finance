@@ -1,0 +1,2 @@
+{"key": "SNPS|2026-02-25", "sample": 0, "provider": "local", "q": "q1", "arm": "text", "parsed": true, "value": 0.45, "served_model": "C:\\Users\\mrthn\\llama\\models\\Qwen2.5-7B-Instruct-Q4_K_M.gguf", "status": "OK", "raw": null, "utc": "2026-09-29T14:41:19+00:00"}
+{"key": "EOG|2026-01-16", "sample": 0, "provider": "local", "q": "q1", "arm": "text", "parsed": true, "value": 0.45, "served_model": "C:\\Users\\mrthn\\llama\\models\\Qwen2.5-7B-Instruct-Q4_K_M.gguf", "status": "OK", "raw": null, "utc": "2026-09-29T14:41:25+00:00"}

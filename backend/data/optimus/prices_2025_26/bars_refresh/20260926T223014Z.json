@@ -1,0 +1,121 @@
+{
+ "receipt": "bars_refresh",
+ "run_id": "20260926T223014Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "started_utc": "2026-09-26T22:30:14+00:00",
+ "dry_run": false,
+ "last_closed_session": "2026-09-25",
+ "calendar": "XNYS",
+ "age_before": {
+  "stale": false,
+  "newest": "2026-09-25",
+  "sessions_old": 0,
+  "max_age_sessions": 2,
+  "last_closed_session": "2026-09-25",
+  "calendar": "XNYS",
+  "panels": {
+   "grader_2025_26": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+    "newest": "2026-09-25",
+    "sessions_old": 0,
+    "state": "FRESH"
+   },
+   "ranker_deep": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars.parquet",
+    "newest": "2026-09-25",
+    "sessions_old": 0,
+    "state": "FRESH"
+   }
+  },
+  "line": "BARS_FRESH: newest=2026-09-25 sessions_old=0 (limit 2, last closed session 2026-09-25)"
+ },
+ "panels": {
+  "grader_2025_26": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+   "rows_before": 1287668,
+   "rows_after": 1287668,
+   "rows_added": 0,
+   "symbols_before": 3060,
+   "symbols_after": 3060,
+   "newest_before": "2026-09-25",
+   "newest_after": "2026-09-25",
+   "first_date": "2025-01-02",
+   "duplicate_keys": 0,
+   "changed": false,
+   "readjusted": 0,
+   "status": "unchanged"
+  },
+  "ranker_deep": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars.parquet",
+   "rows_before": 6799858,
+   "rows_after": 6799858,
+   "rows_added": 0,
+   "symbols_before": 3060,
+   "symbols_after": 3060,
+   "newest_before": "2026-09-25",
+   "newest_after": "2026-09-25",
+   "first_date": "2016-01-04",
+   "duplicate_keys": 0,
+   "changed": false,
+   "readjusted": 0,
+   "status": "unchanged"
+  },
+  "delisted": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars_delisted.parquet",
+   "rows_before": 1860975,
+   "rows_after": 1860975,
+   "rows_added": 0,
+   "symbols_before": 1784,
+   "symbols_after": 1784,
+   "newest_before": "2026-09-25",
+   "newest_after": "2026-09-25",
+   "first_date": "2016-01-04",
+   "duplicate_keys": 0,
+   "changed": false,
+   "readjusted": 0,
+   "status": "unchanged"
+  }
+ },
+ "pull": {
+  "start": "2026-09-15",
+  "symbols": 4793,
+  "feed": "sip",
+  "adjustment": "all",
+  "keep_through": "2026-09-25",
+  "credential_source": "terminal repo .env, HACK1 (data endpoint only, verified)",
+  "rows_returned": 28908
+ },
+ "readjusted_symbols": {
+  "n": 0,
+  "sample": []
+ },
+ "status": "unchanged",
+ "age_after": {
+  "stale": false,
+  "newest": "2026-09-25",
+  "sessions_old": 0,
+  "max_age_sessions": 2,
+  "last_closed_session": "2026-09-25",
+  "calendar": "XNYS",
+  "panels": {
+   "grader_2025_26": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+    "newest": "2026-09-25",
+    "sessions_old": 0,
+    "state": "FRESH"
+   },
+   "ranker_deep": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars.parquet",
+    "newest": "2026-09-25",
+    "sessions_old": 0,
+    "state": "FRESH"
+   }
+  },
+  "line": "BARS_FRESH: newest=2026-09-25 sessions_old=0 (limit 2, last closed session 2026-09-25)"
+ },
+ "line": "BARS_FRESH: newest=2026-09-25 sessions_old=0 (limit 2, last closed session 2026-09-25)",
+ "elapsed_s": 83.4,
+ "written_utc": "2026-09-26T22:31:37+00:00",
+ "headline": "bars refresh unchanged: +0 rows; BARS_FRESH: newest=2026-09-25 sessions_old=0 (limit 2, last closed session 2026-09-25)"
+}

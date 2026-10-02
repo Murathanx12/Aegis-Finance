@@ -1,0 +1,448 @@
+{
+ "window": [
+  "2026-09-14",
+  "2026-09-25"
+ ],
+ "benchmark": "ACWI",
+ "days": [
+  {
+   "day": "2026-09-14",
+   "n_candidates": 6,
+   "n_eligible": 2,
+   "n_bought": 2,
+   "names": [
+    {
+     "symbol": "PLAY",
+     "market": "US",
+     "timing": "AMC",
+     "trail_abs": 0.1192,
+     "r_close_fill": -0.1901,
+     "r_next_open_fill": -0.0691,
+     "react_date": "2026-09-15"
+    },
+    {
+     "symbol": "9961.HK",
+     "market": "HK",
+     "timing": "BMO",
+     "trail_abs": 0.0659,
+     "r_close_fill": 0.0384,
+     "r_next_open_fill": 0.0057,
+     "react_date": "2026-09-16"
+    }
+   ]
+  },
+  {
+   "day": "2026-09-15",
+   "n_candidates": 0,
+   "n_eligible": 0,
+   "n_bought": 0,
+   "names": []
+  },
+  {
+   "day": "2026-09-16",
+   "n_candidates": 2,
+   "n_eligible": 1,
+   "n_bought": 1,
+   "names": [
+    {
+     "symbol": "LEN",
+     "market": "US",
+     "timing": "AMC",
+     "trail_abs": 0.044,
+     "r_close_fill": 0.0171,
+     "r_next_open_fill": 0.0046,
+     "react_date": "2026-09-17"
+    }
+   ]
+  },
+  {
+   "day": "2026-09-17",
+   "n_candidates": 1,
+   "n_eligible": 1,
+   "n_bought": 1,
+   "names": [
+    {
+     "symbol": "4716.T",
+     "market": "JP",
+     "timing": "INTRA",
+     "trail_abs": 0.0126,
+     "r_close_fill": -0.0306,
+     "r_next_open_fill": -0.0259,
+     "react_date": "2026-09-24"
+    }
+   ]
+  },
+  {
+   "day": "2026-09-18",
+   "n_candidates": 2,
+   "n_eligible": 1,
+   "n_bought": 1,
+   "names": [
+    {
+     "symbol": "ANAB",
+     "market": "US",
+     "timing": "UNKNOWN",
+     "trail_abs": 0.074,
+     "r_close_fill": -0.0232,
+     "r_next_open_fill": -0.0124,
+     "react_date": "2026-09-22"
+    }
+   ]
+  },
+  {
+   "day": "2026-09-21",
+   "n_candidates": 4,
+   "n_eligible": 4,
+   "n_bought": 4,
+   "names": [
+    {
+     "symbol": "MLKN",
+     "market": "US",
+     "timing": "BMO",
+     "trail_abs": 0.1204,
+     "r_close_fill": -0.0015,
+     "r_next_open_fill": -0.0094,
+     "react_date": "2026-09-22"
+    },
+    {
+     "symbol": "THO",
+     "market": "US",
+     "timing": "BMO",
+     "trail_abs": 0.0651,
+     "r_close_fill": 0.0552,
+     "r_next_open_fill": 0.0605,
+     "react_date": "2026-09-22"
+    },
+    {
+     "symbol": "ABVX.PA",
+     "market": "EU",
+     "timing": "AMC",
+     "trail_abs": 0.0458,
+     "r_close_fill": -0.0481,
+     "r_next_open_fill": -0.0376,
+     "react_date": "2026-09-22"
+    },
+    {
+     "symbol": "AZO",
+     "market": "US",
+     "timing": "BMO",
+     "trail_abs": 0.0336,
+     "r_close_fill": 0.0326,
+     "r_next_open_fill": 0.0109,
+     "react_date": "2026-09-22"
+    }
+   ]
+  },
+  {
+   "day": "2026-09-22",
+   "n_candidates": 8,
+   "n_eligible": 6,
+   "n_bought": 5,
+   "names": [
+    {
+     "symbol": "WOR",
+     "market": "US",
+     "timing": "AMC",
+     "trail_abs": 0.0777,
+     "r_close_fill": 0.0129,
+     "r_next_open_fill": 0.1444,
+     "react_date": "2026-09-23"
+    },
+    {
+     "symbol": "CBRL",
+     "market": "US",
+     "timing": "BMO",
+     "trail_abs": 0.0724,
+     "r_close_fill": 0.0449,
+     "r_next_open_fill": 0.0455,
+     "react_date": "2026-09-23"
+    },
+    {
+     "symbol": "KBH",
+     "market": "US",
+     "timing": "AMC",
+     "trail_abs": 0.054,
+     "r_close_fill": -0.0296,
+     "r_next_open_fill": -0.0454,
+     "react_date": "2026-09-23"
+    },
+    {
+     "symbol": "CTAS",
+     "market": "US",
+     "timing": "BMO",
+     "trail_abs": 0.0349,
+     "r_close_fill": -0.0344,
+     "r_next_open_fill": -0.0014,
+     "react_date": "2026-09-23"
+    },
+    {
+     "symbol": "PAYX",
+     "market": "US",
+     "timing": "BMO",
+     "trail_abs": 0.0347,
+     "r_close_fill": -0.0877,
+     "r_next_open_fill": -0.0522,
+     "react_date": "2026-09-23"
+    }
+   ]
+  },
+  {
+   "day": "2026-09-23",
+   "n_candidates": 9,
+   "n_eligible": 5,
+   "n_bought": 5,
+   "names": [
+    {
+     "symbol": "BB",
+     "market": "US",
+     "timing": "BMO",
+     "trail_abs": 0.1203,
+     "r_close_fill": 0.0418,
+     "r_next_open_fill": -0.0209,
+     "react_date": "2026-09-24"
+    },
+    {
+     "symbol": "SNX",
+     "market": "US",
+     "timing": "BMO",
+     "trail_abs": 0.0604,
+     "r_close_fill": -0.0987,
+     "r_next_open_fill": -0.0753,
+     "react_date": "2026-09-24"
+    },
+    {
+     "symbol": "DRI",
+     "market": "US",
+     "timing": "BMO",
+     "trail_abs": 0.0522,
+     "r_close_fill": -0.0302,
+     "r_next_open_fill": -0.0289,
+     "react_date": "2026-09-24"
+    },
+    {
+     "symbol": "FUL",
+     "market": "US",
+     "timing": "AMC",
+     "trail_abs": 0.0472,
+     "r_close_fill": -0.0042,
+     "r_next_open_fill": -0.0242,
+     "react_date": "2026-09-24"
+    },
+    {
+     "symbol": "HM-B.ST",
+     "market": "EU",
+     "timing": "BMO",
+     "trail_abs": 0.0336,
+     "r_close_fill": -0.0285,
+     "r_next_open_fill": -0.0499,
+     "react_date": "2026-09-24"
+    }
+   ]
+  },
+  {
+   "day": "2026-09-24",
+   "n_candidates": 4,
+   "n_eligible": 3,
+   "n_bought": 3,
+   "names": [
+    {
+     "symbol": "SCHL",
+     "market": "US",
+     "timing": "AMC",
+     "trail_abs": 0.1216,
+     "r_close_fill": -0.0712,
+     "r_next_open_fill": -0.1569,
+     "react_date": "2026-09-25"
+    },
+    {
+     "symbol": "NB",
+     "market": "US",
+     "timing": "UNKNOWN",
+     "trail_abs": 0.0509,
+     "r_close_fill": null,
+     "r_next_open_fill": null,
+     "react_date": null
+    },
+    {
+     "symbol": "COST",
+     "market": "US",
+     "timing": "AMC",
+     "trail_abs": 0.0243,
+     "r_close_fill": 0.0293,
+     "r_next_open_fill": -0.024,
+     "react_date": "2026-09-25"
+    }
+   ]
+  },
+  {
+   "day": "2026-09-25",
+   "n_candidates": 1,
+   "n_eligible": 0,
+   "n_bought": 0,
+   "names": []
+  }
+ ],
+ "close_before_report": {
+  "nav_end": 0.9289,
+  "days": [
+   {
+    "day": "2026-09-14",
+    "book_return": -0.0303,
+    "n": 2
+   },
+   {
+    "day": "2026-09-15",
+    "book_return": 0,
+    "n": 0
+   },
+   {
+    "day": "2026-09-16",
+    "book_return": 0.0034,
+    "n": 1
+   },
+   {
+    "day": "2026-09-17",
+    "book_return": -0.0061,
+    "n": 1
+   },
+   {
+    "day": "2026-09-18",
+    "book_return": -0.0046,
+    "n": 1
+   },
+   {
+    "day": "2026-09-21",
+    "book_return": 0.0076,
+    "n": 4
+   },
+   {
+    "day": "2026-09-22",
+    "book_return": -0.0188,
+    "n": 5
+   },
+   {
+    "day": "2026-09-23",
+    "book_return": -0.024,
+    "n": 5
+   },
+   {
+    "day": "2026-09-24",
+    "status": "UNSCORED (reaction not yet in the bars)"
+   },
+   {
+    "day": "2026-09-25",
+    "book_return": 0,
+    "n": 0
+   }
+  ]
+ },
+ "next_open": {
+  "nav_end": 0.9634,
+  "days": [
+   {
+    "day": "2026-09-14",
+    "book_return": -0.0127,
+    "n": 2
+   },
+   {
+    "day": "2026-09-15",
+    "book_return": 0,
+    "n": 0
+   },
+   {
+    "day": "2026-09-16",
+    "book_return": 0.0009,
+    "n": 1
+   },
+   {
+    "day": "2026-09-17",
+    "book_return": -0.0052,
+    "n": 1
+   },
+   {
+    "day": "2026-09-18",
+    "book_return": -0.0025,
+    "n": 1
+   },
+   {
+    "day": "2026-09-21",
+    "book_return": 0.0049,
+    "n": 4
+   },
+   {
+    "day": "2026-09-22",
+    "book_return": 0.0182,
+    "n": 5
+   },
+   {
+    "day": "2026-09-23",
+    "book_return": -0.0398,
+    "n": 5
+   },
+   {
+    "day": "2026-09-24",
+    "status": "UNSCORED (reaction not yet in the bars)"
+   },
+   {
+    "day": "2026-09-25",
+    "book_return": 0,
+    "n": 0
+   }
+  ]
+ },
+ "next_open_25bps": {
+  "nav_end": 0.9451,
+  "days": [
+   {
+    "day": "2026-09-14",
+    "book_return": -0.0147,
+    "n": 2
+   },
+   {
+    "day": "2026-09-15",
+    "book_return": 0,
+    "n": 0
+   },
+   {
+    "day": "2026-09-16",
+    "book_return": -0.0001,
+    "n": 1
+   },
+   {
+    "day": "2026-09-17",
+    "book_return": -0.0062,
+    "n": 1
+   },
+   {
+    "day": "2026-09-18",
+    "book_return": -0.0035,
+    "n": 1
+   },
+   {
+    "day": "2026-09-21",
+    "book_return": 0.0009,
+    "n": 4
+   },
+   {
+    "day": "2026-09-22",
+    "book_return": 0.0132,
+    "n": 5
+   },
+   {
+    "day": "2026-09-23",
+    "book_return": -0.0448,
+    "n": 5
+   },
+   {
+    "day": "2026-09-24",
+    "status": "UNSCORED (reaction not yet in the bars)"
+   },
+   {
+    "day": "2026-09-25",
+    "book_return": 0,
+    "n": 0
+   }
+  ]
+ },
+ "benchmark_return_window": 0.005
+}

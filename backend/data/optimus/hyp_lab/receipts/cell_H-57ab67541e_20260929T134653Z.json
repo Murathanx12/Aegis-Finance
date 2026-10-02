@@ -1,0 +1,106 @@
+{
+ "hyp_id": "H-57ab67541e",
+ "title": "Event-type size prior, 2025 as a second fold",
+ "night": "2026-09-29",
+ "run_utc": "2026-09-29T13:46:53+00:00",
+ "result": {
+  "cell_type": "size_feature_increment",
+  "params": {
+   "feature_set": "event_prior",
+   "design_fold": "F2026",
+   "confirm_fold": "F2025"
+  },
+  "features": [
+   "event_prior",
+   "earnings_flag"
+  ],
+  "design": {
+   "fold": "F2026",
+   "base": "T2",
+   "alpha": 10000.0,
+   "n_test_cells": 25365,
+   "coef": {
+    "event_prior": 0.01929,
+    "earnings_flag": 0.00516
+   },
+   "increment": {
+    "mean": -0.000949,
+    "se": 0.000882,
+    "t": -1.08,
+    "mde": 0.00247,
+    "n": 91,
+    "n_blocks": 21,
+    "by_month": {
+     "2026-05": -0.0019,
+     "2026-06": -0.0015,
+     "2026-07": -0.0037,
+     "2026-08": 0.0008,
+     "2026-09": 0.0017
+    },
+    "months_positive": "2/5",
+    "loo_month_worst": -0.001547
+   }
+  },
+  "design_over_B2 (reported)": {
+   "mean": 6.4e-05,
+   "se": 0.001995,
+   "t": 0.03,
+   "mde": 0.005585,
+   "n": 91,
+   "n_blocks": 21,
+   "by_month": {
+    "2026-05": -0.0014,
+    "2026-06": -0.0023,
+    "2026-07": -0.005,
+    "2026-08": 0.0033,
+    "2026-09": 0.0065
+   },
+   "months_positive": "2/5",
+   "loo_month_worst": -0.001405
+  },
+  "confirm": {
+   "fold": "F2025",
+   "base": "T2",
+   "alpha": 10000.0,
+   "n_test_cells": 30546,
+   "coef": {
+    "event_prior": 0.02773,
+    "earnings_flag": 0.00275
+   },
+   "increment": {
+    "mean": 9.6e-05,
+    "se": 0.000311,
+    "t": 0.31,
+    "mde": 0.000871,
+    "n": 85,
+    "n_blocks": 18,
+    "by_month": {
+     "2025-09": -0.0009,
+     "2025-10": 0.0006,
+     "2025-11": 0.001,
+     "2025-12": -0.0002
+    },
+    "months_positive": "2/4",
+    "loo_month_worst": -0.000152
+   }
+  },
+  "confirm_over_B2 (reported)": {
+   "mean": 0.000348,
+   "se": 0.0005,
+   "t": 0.7,
+   "mde": 0.001399,
+   "n": 85,
+   "n_blocks": 18,
+   "by_month": {
+    "2025-09": -0.0012,
+    "2025-10": 0.0007,
+    "2025-11": 0.0021,
+    "2025-12": -0.0
+   },
+   "months_positive": "2/4",
+   "loo_month_worst": -0.000154
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm t 0.31 < 2 and MDE 0.00087 <= effect worth having 0.00200"
+ }
+}

@@ -1,0 +1,2387 @@
+{
+ "schema": "fleet_manager_run/1",
+ "run_id": "20260929T160646Z-0edf2f",
+ "pass": "open",
+ "live_flag": true,
+ "started_utc": "2026-09-29T16:06:46+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "modes": {
+  "_doc": "Owner-controlled. contract: v1 (hold what the loop left, loop's own terms) or v2 (the proposal). maintenance/entries: LIVE or DRY. The script never edits this file after creating it. `--live` on the command line is also required for anything LIVE.",
+  "hack1": {
+   "contract": "v2",
+   "maintenance": "LIVE",
+   "entries": "LIVE",
+   "set_utc": "2026-09-29T16:06Z",
+   "why": "owner 2026-09-29: v2 bdae86290ea38481 entries LIVE only in the cash already held; legacy names keep v1 terms (horizon, stop), never sold to make room"
+  },
+  "hack2": {
+   "contract": "v2",
+   "maintenance": "LIVE",
+   "entries": "LIVE",
+   "set_utc": "2026-09-29T16:04Z",
+   "why": "owner 2026-09-29 'update the hacks daily... full freedom': analyst revision flow v2 2301fa30c7b851df"
+  },
+  "hack3": {
+   "skip": "key answers HTTP 401 (retired 2026-09-22); credentials are the owner's"
+  },
+  "hack4": {
+   "contract": "v2",
+   "maintenance": "LIVE",
+   "entries": "LIVE",
+   "set_utc": "2026-09-29T16:06Z",
+   "why": "owner 2026-09-29: v2 a0c5313766c52c9a entries LIVE only in the cash already held; legacy names keep v1 terms (horizon, stop), never sold to make room"
+  },
+  "hack5": {
+   "contract": "v2",
+   "maintenance": "LIVE",
+   "entries": "LIVE",
+   "set_utc": "2026-09-29T16:02Z",
+   "why": "owner 2026-09-29 'update the hacks daily... full freedom': hack5 is the market-like CONTROL (v2 98f677b18293c710)"
+  },
+  "hack6": {
+   "contract": "v2",
+   "maintenance": "LIVE",
+   "entries": "LIVE",
+   "set_utc": "2026-09-29T16:06Z",
+   "why": "owner 2026-09-29: v2 12fa05317df05ce1 entries LIVE only in the cash already held; legacy names keep v1 terms (horizon, stop), never sold to make room"
+  },
+  "_history": [
+   {
+    "t": "2026-09-29T16:02Z",
+    "change": "hack5 -> v2 LIVE/LIVE (control)",
+    "by": "operator on the owner's instruction"
+   },
+   {
+    "t": "2026-09-29T16:04Z",
+    "change": "hack2 -> v2 LIVE/LIVE",
+    "by": "operator on the owner's instruction"
+   },
+   {
+    "t": "2026-09-29T16:06Z",
+    "change": "hack1/hack4/hack6 -> v2 LIVE/LIVE (legacy kept)",
+    "by": "operator on the owner's instruction"
+   }
+  ]
+ },
+ "issuer_map": "ok",
+ "n_stitched": 62,
+ "digest": "world_digest_20260929T141930Z.json",
+ "baseline": "2026-09-29T13:23:27Z",
+ "accounts": [
+  {
+   "role": "hack1",
+   "pass": "open",
+   "account_number": "PA3WXDS3MJ53",
+   "equity": 90602.65,
+   "cash": 66575.01,
+   "last_equity": 90683.01,
+   "n_positions": 1,
+   "n_open_orders": 1,
+   "positions": [
+    {
+     "symbol": "SYM",
+     "qty": 574.0,
+     "price": 41.86,
+     "market_value": 24027.64,
+     "unrealized_plpc": -0.02719,
+     "asset_class": "us_equity"
+    }
+   ],
+   "clock": {
+    "session_day_et": "2026-09-29",
+    "is_open": true,
+    "minutes_to_close": 233.1
+   },
+   "reconcile": {
+    "status": "OK",
+    "ok": true,
+    "mismatches": [],
+    "foreign_orders": [],
+    "source": "state",
+    "since": "2026-09-29T16:05:40+00:00",
+    "n_fills_since": 0
+   },
+   "contract_active": {
+    "version": "v2",
+    "policy_hash": "bdae86290ea38481",
+    "alpha_source": "human + AI thematic curation (the owner's themes: AI power, memory/foundry, prediction markets, nuclear/resources, biotech catalysts)",
+    "frozen_utc": "2026-09-29T13:37:42+00:00"
+   },
+   "contract_proposed": {
+    "version": "v2",
+    "policy_hash": "bdae86290ea38481",
+    "alpha_source": "human + AI thematic curation (the owner's themes: AI power, memory/foundry, prediction markets, nuclear/resources, biotech catalysts)"
+   },
+   "sigma": {
+    "AGIO": 0.03439,
+    "AVGO": 0.02478,
+    "BBIO": 0.02812,
+    "BE": 0.06934,
+    "CCJ": 0.0264,
+    "CLS": 0.05074,
+    "COGT": 0.02851,
+    "DKNG": 0.03041,
+    "GEV": 0.03243,
+    "HOOD": 0.0459,
+    "IONQ": 0.04857,
+    "LEU": 0.04876,
+    "MP": 0.04055,
+    "MU": 0.04985,
+    "NOVT": 0.03104,
+    "NVT": 0.03312,
+    "PRAX": 0.03568,
+    "RGEN": 0.02723,
+    "SYM": 0.03755,
+    "TSM": 0.02436,
+    "VKTX": 0.05682,
+    "VRT": 0.04405,
+    "VRTX": 0.01824,
+    "WST": 0.01565
+   },
+   "panel": {
+    "panel": "bars.parquet",
+    "last_bar": "2026-09-28",
+    "symbols_asked": 25,
+    "symbols_found": 25,
+    "screen": {
+     "enabled": true,
+     "rules": {
+      "dark_run_min_sessions": 5,
+      "nontrade_print_tol": 0.01,
+      "spike_ratio": 4.0,
+      "spike_residual": 0.25,
+      "spike_window_sessions": 3,
+      "break_ratio": 3.0,
+      "quiet_volume_mult": 2.0
+     },
+     "volume_available": true,
+     "rows_in": 6825,
+     "rows_removed": 0,
+     "rows_removed_by_reason": {},
+     "rows_removed_by_year": {},
+     "symbols_with_rows_removed": 0,
+     "n_dark_runs": 0,
+     "nontrade_prints": 0,
+     "n_spikes": 0,
+     "n_cuts": 0,
+     "n_suspects": 0,
+     "cuts_by_reason": {}
+    },
+    "moved_5d_sigma": {
+     "AGIO": -0.203,
+     "AVGO": -0.651,
+     "BBIO": 0.007,
+     "BE": -0.237,
+     "CCJ": -1.125,
+     "CLS": 0.31,
+     "COGT": -0.069,
+     "DKNG": -0.542,
+     "GEV": 0.052,
+     "HOOD": -0.541,
+     "IONQ": 0.925,
+     "LEU": -0.858,
+     "MP": -0.783,
+     "MU": 0.086,
+     "NOVT": 0.834,
+     "NVT": 0.09,
+     "PRAX": -0.554,
+     "RGEN": 1.216,
+     "SPY": -0.65,
+     "SYM": -0.531,
+     "TSM": 0.319,
+     "VKTX": 0.763,
+     "VRT": -0.276,
+     "VRTX": 0.814,
+     "WST": 1.096
+    }
+   },
+   "stop_table": [
+    {
+     "symbol": "SYM",
+     "qty": 574.0,
+     "price": 41.86,
+     "sigma_d": 0.037553063713227565,
+     "target_stop_frac": 0.1127,
+     "target_stop_how": "3 x sigma 0.0376 = 0.1127",
+     "resting": [
+      {
+       "stop_price": "38.73",
+       "qty": "574",
+       "client_order_id": "aat-stop-fe65ed7ff3f7262abc48d8c5",
+       "expires_at": "2026-12-08T21:00:00Z",
+       "distance_frac": 0.0748,
+       "distance_sigma": 1.99
+      }
+     ]
+    }
+   ],
+   "flags": [],
+   "lot_entry": {
+    "SYM": {
+     "date": "2026-09-09",
+     "how": "exact",
+     "sessions_held": 14
+    }
+   },
+   "v2_targets": {
+    "n": 23,
+    "gross_frac": 0.96,
+    "legacy_names": [
+     "SYM"
+    ],
+    "drops": [
+     {
+      "symbol": "VRT",
+      "why": "weight 0.120 clipped to 0.100",
+      "clipped": true
+     }
+    ]
+   },
+   "worst_case_now": {
+    "worst_usd": 1796.62,
+    "worst_pct_equity": 1.98,
+    "gross_usd": 24027.64,
+    "gross_over_equity": 0.2652,
+    "n_names": 1,
+    "per_name": [
+     {
+      "symbol": "SYM",
+      "worst_usd": 1796.6200000000015,
+      "basis": "resting stop 38.73"
+     }
+    ]
+   },
+   "worst_case_after_plan": {
+    "worst_usd": 6574.56,
+    "worst_pct_equity": 7.26,
+    "gross_usd": 69304.73,
+    "gross_over_equity": 0.7649,
+    "n_names": 13,
+    "per_name": [
+     {
+      "symbol": "SYM",
+      "worst_usd": 1796.6200000000015,
+      "basis": "resting stop 38.73"
+     },
+     {
+      "symbol": "VRT",
+      "worst_usd": 810.0323999999999,
+      "basis": "planned stop 0.120"
+     },
+     {
+      "symbol": "GEV",
+      "worst_usd": 558.3579856797825,
+      "basis": "planned stop 0.097"
+     },
+     {
+      "symbol": "MU",
+      "worst_usd": 649.2479999999999,
+      "basis": "planned stop 0.120"
+     },
+     {
+      "symbol": "HOOD",
+      "worst_usd": 582.5232,
+      "basis": "planned stop 0.120"
+     },
+     {
+      "symbol": "TSM",
+      "worst_usd": 334.39392998924876,
+      "basis": "planned stop 0.073"
+     },
+     {
+      "symbol": "NVT",
+      "worst_usd": 399.1556860721009,
+      "basis": "planned stop 0.099"
+     },
+     {
+      "symbol": "AVGO",
+      "worst_usd": 295.0588623354205,
+      "basis": "planned stop 0.074"
+     },
+     {
+      "symbol": "CLS",
+      "worst_usd": 394.79400000000004,
+      "basis": "planned stop 0.120"
+     },
+     {
+      "symbol": "MP",
+      "worst_usd": 330.64439999999996,
+      "basis": "planned stop 0.120"
+     },
+     {
+      "symbol": "BE",
+      "worst_usd": 320.0472,
+      "basis": "planned stop 0.120"
+     },
+     {
+      "symbol": "BBIO",
+      "worst_usd": 56.407159659628576,
+      "basis": "planned stop 0.084"
+     },
+     {
+      "symbol": "RGEN",
+      "worst_usd": 47.280611203431,
+      "basis": "planned stop 0.082"
+     }
+    ]
+   },
+   "worst_case_formula_v1": {
+    "n": 8,
+    "notional_frac": 0.125,
+    "stop_frac": 0.1,
+    "worst_frac": 0.1,
+    "worst_usd": 9060.26,
+    "gross_over_equity": 1.0
+   },
+   "worst_case_formula_v2": {
+    "n": 23,
+    "notional_frac": 0.0417,
+    "stop_frac": 0.12,
+    "worst_frac": 0.1152,
+    "worst_usd": 10437.43,
+    "gross_over_equity": 0.96
+   },
+   "worst_case_printed_before_orders_utc": "2026-09-29T16:07:01+00:00",
+   "actions": [
+    {
+     "kind": "buy",
+     "symbol": "VRT",
+     "side": "buy",
+     "qty": 27,
+     "type": "limit",
+     "limit": 250.01,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0765 of equity (scale 0.765); held 0 -> 27",
+     "coid": "aegisfm-hack1-20260929-buy-VRT-5bb076ae35",
+     "outcome": "submitted pending_new id a61ea4bd-3cce-4068-8bf4-fee26802adb0",
+     "order_id": "a61ea4bd-3cce-4068-8bf4-fee26802adb0",
+     "entry_status": "filled",
+     "filled_qty": "27",
+     "filled_avg_price": "249.37"
+    },
+    {
+     "kind": "buy",
+     "symbol": "GEV",
+     "side": "buy",
+     "qty": 6,
+     "type": "limit",
+     "limit": 956.51,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0689 of equity (scale 0.765); held 0 -> 6",
+     "coid": "aegisfm-hack1-20260929-buy-GEV-302ea1286c",
+     "outcome": "submitted pending_new id fc4ccf69-36da-489d-934f-3c5fd42c8b70",
+     "order_id": "fc4ccf69-36da-489d-934f-3c5fd42c8b70",
+     "entry_status": "filled",
+     "filled_qty": "6",
+     "filled_avg_price": "956.49"
+    },
+    {
+     "kind": "buy",
+     "symbol": "MU",
+     "side": "buy",
+     "qty": 5,
+     "type": "limit",
+     "limit": 1082.08,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0689 of equity (scale 0.765); held 0 -> 5",
+     "coid": "aegisfm-hack1-20260929-buy-MU-d0f405982c",
+     "outcome": "submitted pending_new id 7d87caf7-fccf-4c78-9e72-a64e9163d68e",
+     "order_id": "7d87caf7-fccf-4c78-9e72-a64e9163d68e",
+     "entry_status": "filled",
+     "filled_qty": "5",
+     "filled_avg_price": "1070.61"
+    },
+    {
+     "kind": "buy",
+     "symbol": "HOOD",
+     "side": "buy",
+     "qty": 42,
+     "type": "limit",
+     "limit": 115.58,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0536 of equity (scale 0.765); held 0 -> 42",
+     "coid": "aegisfm-hack1-20260929-buy-HOOD-29d88b28aa",
+     "outcome": "submitted pending_new id 4d004bcb-b297-45cc-ac71-ae75b43a335f",
+     "order_id": "4d004bcb-b297-45cc-ac71-ae75b43a335f",
+     "entry_status": "filled",
+     "filled_qty": "42",
+     "filled_avg_price": "115.45"
+    },
+    {
+     "kind": "buy",
+     "symbol": "TSM",
+     "side": "buy",
+     "qty": 10,
+     "type": "limit",
+     "limit": 457.59,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0536 of equity (scale 0.765); held 0 -> 10",
+     "coid": "aegisfm-hack1-20260929-buy-TSM-248c614235",
+     "outcome": "submitted pending_new id 7b66fd7f-2ddd-41d4-9a2c-35b3cd12bfa3",
+     "order_id": "7b66fd7f-2ddd-41d4-9a2c-35b3cd12bfa3",
+     "entry_status": "filled",
+     "filled_qty": "10",
+     "filled_avg_price": "457"
+    },
+    {
+     "kind": "buy",
+     "symbol": "NVT",
+     "side": "buy",
+     "qty": 25,
+     "type": "limit",
+     "limit": 160.71,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0459 of equity (scale 0.765); held 0 -> 25",
+     "coid": "aegisfm-hack1-20260929-buy-NVT-e7ce2f7b1b",
+     "outcome": "submitted pending_new id 396a6f90-cbb9-462e-a9cc-9129d73bc371",
+     "order_id": "396a6f90-cbb9-462e-a9cc-9129d73bc371",
+     "entry_status": "filled",
+     "filled_qty": "25",
+     "filled_avg_price": "160.6"
+    },
+    {
+     "kind": "buy",
+     "symbol": "AVGO",
+     "side": "buy",
+     "qty": 11,
+     "type": "limit",
+     "limit": 360.87,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0459 of equity (scale 0.765); held 0 -> 11",
+     "coid": "aegisfm-hack1-20260929-buy-AVGO-1b00e9cabe",
+     "outcome": "submitted pending_new id 25571553-fcc7-42bf-9966-9e1832a9c340",
+     "order_id": "25571553-fcc7-42bf-9966-9e1832a9c340",
+     "entry_status": "filled",
+     "filled_qty": "11",
+     "filled_avg_price": "357.533636"
+    },
+    {
+     "kind": "buy",
+     "symbol": "CLS",
+     "side": "buy",
+     "qty": 9,
+     "type": "limit",
+     "limit": 365.55,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0383 of equity (scale 0.765); held 0 -> 9",
+     "coid": "aegisfm-hack1-20260929-buy-CLS-6cea5e202d",
+     "outcome": "submitted pending_new id 55a994a9-1b94-4fce-8939-57a84886ebaa",
+     "order_id": "55a994a9-1b94-4fce-8939-57a84886ebaa",
+     "entry_status": "filled",
+     "filled_qty": "9",
+     "filled_avg_price": "365.18"
+    },
+    {
+     "kind": "buy",
+     "symbol": "MP",
+     "side": "buy",
+     "qty": 61,
+     "type": "limit",
+     "limit": 45.17,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0306 of equity (scale 0.765); held 0 -> 61",
+     "coid": "aegisfm-hack1-20260929-buy-MP-de9cb2e119",
+     "outcome": "submitted pending_new id 7b0cf206-3f17-4e53-bfab-b4fc4cab3de4",
+     "order_id": "7b0cf206-3f17-4e53-bfab-b4fc4cab3de4",
+     "entry_status": "filled",
+     "filled_qty": "61",
+     "filled_avg_price": "45.12"
+    },
+    {
+     "kind": "buy",
+     "symbol": "BE",
+     "side": "buy",
+     "qty": 9,
+     "type": "limit",
+     "limit": 296.34,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0306 of equity (scale 0.765); held 0 -> 9",
+     "coid": "aegisfm-hack1-20260929-buy-BE-969d845db2",
+     "outcome": "submitted pending_new id d18e2cf1-1c6b-4508-91a3-4ba93b85a954",
+     "order_id": "d18e2cf1-1c6b-4508-91a3-4ba93b85a954",
+     "entry_status": "filled",
+     "filled_qty": "9",
+     "filled_avg_price": "296.3"
+    },
+    {
+     "kind": "buy",
+     "symbol": "VRTX",
+     "side": "buy",
+     "qty": 5,
+     "type": "limit",
+     "limit": 525.05,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $46,655 would exceed $45,301 left of 50% x equity",
+     "reason": "target 0.0306 of equity (scale 0.765); held 0 -> 5",
+     "coid": "aegisfm-hack1-20260929-buy-VRTX-70e50a9b05"
+    },
+    {
+     "kind": "buy",
+     "symbol": "COGT",
+     "side": "buy",
+     "qty": 66,
+     "type": "limit",
+     "limit": 31.51,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $46,109 would exceed $45,301 left of 50% x equity",
+     "reason": "target 0.0230 of equity (scale 0.765); held 0 -> 66",
+     "coid": "aegisfm-hack1-20260929-buy-COGT-1ad2fbace2"
+    },
+    {
+     "kind": "buy",
+     "symbol": "DKNG",
+     "side": "buy",
+     "qty": 101,
+     "type": "limit",
+     "limit": 20.46,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $46,096 would exceed $45,301 left of 50% x equity",
+     "reason": "target 0.0230 of equity (scale 0.765); held 0 -> 101",
+     "coid": "aegisfm-hack1-20260929-buy-DKNG-9e7479ddd3"
+    },
+    {
+     "kind": "buy",
+     "symbol": "VKTX",
+     "side": "buy",
+     "qty": 64,
+     "type": "limit",
+     "limit": 32.2,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $46,090 would exceed $45,301 left of 50% x equity",
+     "reason": "target 0.0230 of equity (scale 0.765); held 0 -> 64",
+     "coid": "aegisfm-hack1-20260929-buy-VKTX-2be2eae4f8"
+    },
+    {
+     "kind": "buy",
+     "symbol": "NOVT",
+     "side": "buy",
+     "qty": 14,
+     "type": "limit",
+     "limit": 142.28,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $46,022 would exceed $45,301 left of 50% x equity",
+     "reason": "target 0.0230 of equity (scale 0.765); held 0 -> 14",
+     "coid": "aegisfm-hack1-20260929-buy-NOVT-4a93ad46b7"
+    },
+    {
+     "kind": "buy",
+     "symbol": "WST",
+     "side": "buy",
+     "qty": 5,
+     "type": "limit",
+     "limit": 374.89,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $45,904 would exceed $45,301 left of 50% x equity",
+     "reason": "target 0.0230 of equity (scale 0.765); held 0 -> 5",
+     "coid": "aegisfm-hack1-20260929-buy-WST-eae2c198b5"
+    },
+    {
+     "kind": "buy",
+     "symbol": "LEU",
+     "side": "buy",
+     "qty": 10,
+     "type": "limit",
+     "limit": 138.68,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $45,416 would exceed $45,301 left of 50% x equity",
+     "reason": "target 0.0153 of equity (scale 0.765); held 0 -> 10",
+     "coid": "aegisfm-hack1-20260929-buy-LEU-ffce38eb29"
+    },
+    {
+     "kind": "buy",
+     "symbol": "AGIO",
+     "side": "buy",
+     "qty": 42,
+     "type": "limit",
+     "limit": 32.91,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $45,412 would exceed $45,301 left of 50% x equity",
+     "reason": "target 0.0153 of equity (scale 0.765); held 0 -> 42",
+     "coid": "aegisfm-hack1-20260929-buy-AGIO-a49bedc789"
+    },
+    {
+     "kind": "buy",
+     "symbol": "CCJ",
+     "side": "buy",
+     "qty": 16,
+     "type": "limit",
+     "limit": 86.3,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $45,410 would exceed $45,301 left of 50% x equity",
+     "reason": "target 0.0153 of equity (scale 0.765); held 0 -> 16",
+     "coid": "aegisfm-hack1-20260929-buy-CCJ-84d9ed5406"
+    },
+    {
+     "kind": "buy",
+     "symbol": "BBIO",
+     "side": "buy",
+     "qty": 10,
+     "type": "limit",
+     "limit": 66.87,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0077 of equity (scale 0.765); held 0 -> 10",
+     "coid": "aegisfm-hack1-20260929-buy-BBIO-89d625afdf",
+     "outcome": "submitted pending_new id 7a498ccd-bc62-43b9-b1b4-488dc7a7b019",
+     "order_id": "7a498ccd-bc62-43b9-b1b4-488dc7a7b019",
+     "entry_status": "filled",
+     "filled_qty": "10",
+     "filled_avg_price": "66.69"
+    },
+    {
+     "kind": "buy",
+     "symbol": "IONQ",
+     "side": "buy",
+     "qty": 15,
+     "type": "limit",
+     "limit": 44.26,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $45,362 would exceed $45,301 left of 50% x equity",
+     "reason": "target 0.0077 of equity (scale 0.765); held 0 -> 15",
+     "coid": "aegisfm-hack1-20260929-buy-IONQ-9a2d54d687"
+    },
+    {
+     "kind": "buy",
+     "symbol": "RGEN",
+     "side": "buy",
+     "qty": 3,
+     "type": "limit",
+     "limit": 192.9,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0077 of equity (scale 0.765); held 0 -> 3",
+     "coid": "aegisfm-hack1-20260929-buy-RGEN-627bb124d7",
+     "outcome": "submitted pending_new id fc33f68a-9516-4b03-aae9-e63ccc3ad0b5",
+     "order_id": "fc33f68a-9516-4b03-aae9-e63ccc3ad0b5",
+     "entry_status": "new",
+     "filled_qty": "0",
+     "filled_avg_price": null
+    },
+    {
+     "kind": "buy",
+     "symbol": "PRAX",
+     "side": "buy",
+     "qty": 2,
+     "type": "limit",
+     "limit": 282.61,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $45,842 would exceed $45,301 left of 50% x equity",
+     "reason": "target 0.0077 of equity (scale 0.765); held 0 -> 2",
+     "coid": "aegisfm-hack1-20260929-buy-PRAX-0821f744e8"
+    }
+   ],
+   "entry_protection": [
+    {
+     "kind": "stop_new",
+     "symbol": "AVGO",
+     "side": "sell",
+     "qty": 11,
+     "type": "stop",
+     "stop": 331.08,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack1-20260929-stop-AVGO-6179662c4c",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 9873a8d6-b970-41df-8605-70a72a2ace3f",
+     "order_id": "9873a8d6-b970-41df-8605-70a72a2ace3f"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "BBIO",
+     "side": "sell",
+     "qty": 10,
+     "type": "stop",
+     "stop": 61.04,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack1-20260929-stop-BBIO-afe5e68499",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 44df2724-c351-42fa-a2ec-5ebbebc9c00a",
+     "order_id": "44df2724-c351-42fa-a2ec-5ebbebc9c00a"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "BE",
+     "side": "sell",
+     "qty": 9,
+     "type": "stop",
+     "stop": 260.87,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack1-20260929-stop-BE-b9f7a2a8e6",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 93dca69a-0516-4348-96b1-0794b87d799b",
+     "order_id": "93dca69a-0516-4348-96b1-0794b87d799b"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "CLS",
+     "side": "sell",
+     "qty": 9,
+     "type": "stop",
+     "stop": 321.38,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack1-20260929-stop-CLS-18077293d2",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 4cca90a9-7d3f-45c0-bfb6-d88e7d6d688d",
+     "order_id": "4cca90a9-7d3f-45c0-bfb6-d88e7d6d688d"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "GEV",
+     "side": "sell",
+     "qty": 6,
+     "type": "stop",
+     "stop": 862.19,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack1-20260929-stop-GEV-eb55a738c6",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id f36fce8f-62de-482a-ae3e-f4f4c7a99ec4",
+     "order_id": "f36fce8f-62de-482a-ae3e-f4f4c7a99ec4"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "HOOD",
+     "side": "sell",
+     "qty": 42,
+     "type": "stop",
+     "stop": 101.66,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack1-20260929-stop-HOOD-053b1878ba",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 6317dcd6-5260-4938-905c-4046e1969fcc",
+     "order_id": "6317dcd6-5260-4938-905c-4046e1969fcc"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "MP",
+     "side": "sell",
+     "qty": 61,
+     "type": "stop",
+     "stop": 39.67,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack1-20260929-stop-MP-4f2d344b57",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id e2bef178-50dc-498e-af4c-dda062eb1716",
+     "order_id": "e2bef178-50dc-498e-af4c-dda062eb1716"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "MU",
+     "side": "sell",
+     "qty": 5,
+     "type": "stop",
+     "stop": 942.01,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack1-20260929-stop-MU-a1a8bdf1a1",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 2b0a7b5d-7a53-4028-b411-40f18b49f469",
+     "order_id": "2b0a7b5d-7a53-4028-b411-40f18b49f469"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "NVT",
+     "side": "sell",
+     "qty": 25,
+     "type": "stop",
+     "stop": 144.49,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack1-20260929-stop-NVT-48db56f14a",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 216200bc-1499-4b1b-9eac-62d5fb8bc515",
+     "order_id": "216200bc-1499-4b1b-9eac-62d5fb8bc515"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "TSM",
+     "side": "sell",
+     "qty": 10,
+     "type": "stop",
+     "stop": 423.62,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack1-20260929-stop-TSM-14b8bb030c",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 9904d49d-f125-4396-8d6f-4f70f4de7324",
+     "order_id": "9904d49d-f125-4396-8d6f-4f70f4de7324"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "VRT",
+     "side": "sell",
+     "qty": 27,
+     "type": "stop",
+     "stop": 219.03,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack1-20260929-stop-VRT-b34d02fd59",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 179c9717-c5f9-4318-8bd4-933d86857ab0",
+     "order_id": "179c9717-c5f9-4318-8bd4-933d86857ab0"
+    }
+   ],
+   "entry_protection_flags": [],
+   "stop_counterfactual": {
+    "registered_now": [],
+    "rows_written": []
+   },
+   "state_written": "2026-09-29T16:08:53+00:00",
+   "grade": {
+    "status": "ALREADY_GRADED",
+    "session": "2026-09-28"
+   },
+   "status": "ok"
+  },
+  {
+   "role": "hack4",
+   "pass": "open",
+   "account_number": "PA3R9XHMCVDA",
+   "equity": 79477.1,
+   "cash": 45031.44,
+   "last_equity": 79603.42,
+   "n_positions": 2,
+   "n_open_orders": 2,
+   "positions": [
+    {
+     "symbol": "BIOA",
+     "qty": 2261.0,
+     "price": 7.105,
+     "market_value": 16064.405,
+     "unrealized_plpc": -0.0972,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "RZLV",
+     "qty": 8650.0,
+     "price": 2.125,
+     "market_value": 18381.25,
+     "unrealized_plpc": -0.07609,
+     "asset_class": "us_equity"
+    }
+   ],
+   "clock": {
+    "session_day_et": "2026-09-29",
+    "is_open": true,
+    "minutes_to_close": 231.0
+   },
+   "reconcile": {
+    "status": "OK",
+    "ok": true,
+    "mismatches": [],
+    "foreign_orders": [],
+    "source": "state",
+    "since": "2026-09-29T16:06:01+00:00",
+    "n_fills_since": 0
+   },
+   "contract_active": {
+    "version": "v2",
+    "policy_hash": "a0c5313766c52c9a",
+    "alpha_source": "the engine's candidate funnel (PROBE shortlist) sized by 1/sigma_63 (size-of-move / risk-parity weighting)",
+    "frozen_utc": "2026-09-29T13:37:46+00:00"
+   },
+   "contract_proposed": {
+    "version": "v2",
+    "policy_hash": "a0c5313766c52c9a",
+    "alpha_source": "the engine's candidate funnel (PROBE shortlist) sized by 1/sigma_63 (size-of-move / risk-parity weighting)"
+   },
+   "sigma": {
+    "AAPL": 0.01778,
+    "ALLE": 0.019,
+    "AMZN": 0.02592,
+    "AVPT": 0.02649,
+    "BIOA": 0.09248,
+    "GOOG": 0.02098,
+    "GOOGL": 0.02146,
+    "INCY": 0.01952,
+    "JAZZ": 0.01706,
+    "META": 0.03257,
+    "NVDA": 0.02449,
+    "RZLV": 0.05237,
+    "SNDR": 0.01957
+   },
+   "panel": {
+    "panel": "bars.parquet",
+    "last_bar": "2026-09-28",
+    "symbols_asked": 14,
+    "symbols_found": 14,
+    "screen": {
+     "enabled": true,
+     "rules": {
+      "dark_run_min_sessions": 5,
+      "nontrade_print_tol": 0.01,
+      "spike_ratio": 4.0,
+      "spike_residual": 0.25,
+      "spike_window_sessions": 3,
+      "break_ratio": 3.0,
+      "quiet_volume_mult": 2.0
+     },
+     "volume_available": true,
+     "rows_in": 3822,
+     "rows_removed": 0,
+     "rows_removed_by_reason": {},
+     "rows_removed_by_year": {},
+     "symbols_with_rows_removed": 0,
+     "n_dark_runs": 0,
+     "nontrade_prints": 0,
+     "n_spikes": 0,
+     "n_cuts": 0,
+     "n_suspects": 0,
+     "cuts_by_reason": {}
+    },
+    "moved_5d_sigma": {
+     "AAPL": -0.043,
+     "ALLE": 0.625,
+     "AMZN": -0.821,
+     "AVPT": 0.392,
+     "BIOA": -0.544,
+     "GOOG": -0.711,
+     "GOOGL": -0.718,
+     "INCY": 0.031,
+     "JAZZ": -0.345,
+     "META": -0.475,
+     "NVDA": 0.119,
+     "RZLV": -0.668,
+     "SNDR": -0.53,
+     "SPY": -0.65
+    }
+   },
+   "stop_table": [
+    {
+     "symbol": "BIOA",
+     "qty": 2261.0,
+     "price": 7.105,
+     "sigma_d": 0.09248450540423936,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0925 = 0.2775, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "6.93",
+       "qty": "2261",
+       "client_order_id": "aat-stop-d3388a9659e83d73f1ceaca5",
+       "expires_at": "2026-12-21T21:00:00Z",
+       "distance_frac": 0.0246,
+       "distance_sigma": 0.27
+      }
+     ]
+    },
+    {
+     "symbol": "RZLV",
+     "qty": 8650.0,
+     "price": 2.125,
+     "sigma_d": 0.052373237943827505,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0524 = 0.1571, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "2.02",
+       "qty": "8650",
+       "client_order_id": "aat-stop-3f7b53d248b1f4829cf04172",
+       "expires_at": "2026-12-21T21:00:00Z",
+       "distance_frac": 0.0494,
+       "distance_sigma": 0.94
+      }
+     ]
+    }
+   ],
+   "flags": [],
+   "lot_entry": {
+    "BIOA": {
+     "date": "2026-09-21",
+     "how": "exact",
+     "sessions_held": 6
+    },
+    "RZLV": {
+     "date": "2026-09-09",
+     "how": "exact",
+     "sessions_held": 14
+    }
+   },
+   "v2_targets": {
+    "n": 10,
+    "gross_frac": 0.8875,
+    "legacy_names": [
+     "BIOA",
+     "RZLV"
+    ],
+    "drops": [
+     {
+      "symbol": "JAZZ",
+      "why": "weight 0.115 clipped to 0.100",
+      "clipped": true
+     },
+     {
+      "symbol": "AAPL",
+      "why": "weight 0.102 clipped to 0.100",
+      "clipped": true
+     },
+     {
+      "symbol": "ALLE",
+      "why": "weight 0.102 clipped to 0.100",
+      "clipped": true
+     },
+     {
+      "symbol": "SNDR",
+      "why": "weight 0.101 clipped to 0.100",
+      "clipped": true
+     },
+     {
+      "symbol": "GOOGL",
+      "why": "second share class of issuer Alphabet Inc. (CIK 1652044) (kept GOOG)"
+     }
+    ]
+   },
+   "worst_case_now": {
+    "worst_usd": 1303.93,
+    "worst_pct_equity": 1.64,
+    "gross_usd": 34445.65,
+    "gross_over_equity": 0.4334,
+    "n_names": 2,
+    "per_name": [
+     {
+      "symbol": "BIOA",
+      "worst_usd": 395.6750000000016,
+      "basis": "resting stop 6.93"
+     },
+     {
+      "symbol": "RZLV",
+      "worst_usd": 908.2499999999999,
+      "basis": "resting stop 2.02"
+     }
+    ]
+   },
+   "worst_case_after_plan": {
+    "worst_usd": 3567.52,
+    "worst_pct_equity": 4.49,
+    "gross_usd": 71540.03,
+    "gross_over_equity": 0.9001,
+    "n_names": 10,
+    "per_name": [
+     {
+      "symbol": "BIOA",
+      "worst_usd": 395.6750000000016,
+      "basis": "resting stop 6.93"
+     },
+     {
+      "symbol": "RZLV",
+      "worst_usd": 908.2499999999999,
+      "basis": "resting stop 2.02"
+     },
+     {
+      "symbol": "SNDR",
+      "worst_usd": 297.3809315120238,
+      "basis": "planned stop 0.059"
+     },
+     {
+      "symbol": "AAPL",
+      "worst_usd": 264.92954129491045,
+      "basis": "planned stop 0.053"
+     },
+     {
+      "symbol": "ALLE",
+      "worst_usd": 282.9468428926332,
+      "basis": "planned stop 0.057"
+     },
+     {
+      "symbol": "JAZZ",
+      "worst_usd": 248.11044672308464,
+      "basis": "planned stop 0.051"
+     },
+     {
+      "symbol": "INCY",
+      "worst_usd": 279.0067431653824,
+      "basis": "planned stop 0.059"
+     },
+     {
+      "symbol": "GOOG",
+      "worst_usd": 296.21075276099606,
+      "basis": "planned stop 0.063"
+     },
+     {
+      "symbol": "NVDA",
+      "worst_usd": 288.0408823649948,
+      "basis": "planned stop 0.073"
+     },
+     {
+      "symbol": "AVPT",
+      "worst_usd": 306.97186975157234,
+      "basis": "planned stop 0.079"
+     }
+    ]
+   },
+   "worst_case_formula_v1": {
+    "n": 5,
+    "notional_frac": 0.2,
+    "stop_frac": 0.12,
+    "worst_frac": 0.12,
+    "worst_usd": 9537.25,
+    "gross_over_equity": 1.0
+   },
+   "worst_case_formula_v2": {
+    "n": 11,
+    "notional_frac": 0.0891,
+    "stop_frac": 0.12,
+    "worst_frac": 0.1176,
+    "worst_usd": 9348.55,
+    "gross_over_equity": 0.9802
+   },
+   "worst_case_printed_before_orders_utc": "2026-09-29T16:09:08+00:00",
+   "actions": [
+    {
+     "kind": "buy",
+     "symbol": "SNDR",
+     "side": "buy",
+     "qty": 159,
+     "type": "limit",
+     "limit": 31.85,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0638 of equity (scale 0.638); held 0 -> 159",
+     "coid": "aegisfm-hack4-20260929-buy-SNDR-e62e58424d",
+     "outcome": "submitted pending_new id d87afddb-8438-491c-b760-2799de64c6ca",
+     "order_id": "d87afddb-8438-491c-b760-2799de64c6ca",
+     "entry_status": "filled",
+     "filled_qty": "159",
+     "filled_avg_price": "31.81"
+    },
+    {
+     "kind": "buy",
+     "symbol": "AAPL",
+     "side": "buy",
+     "qty": 15,
+     "type": "limit",
+     "limit": 331.06,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0638 of equity (scale 0.638); held 0 -> 15",
+     "coid": "aegisfm-hack4-20260929-buy-AAPL-fb279f8756",
+     "outcome": "submitted pending_new id f9c678e4-a1f7-493e-85cf-4441e01b0dd7",
+     "order_id": "f9c678e4-a1f7-493e-85cf-4441e01b0dd7",
+     "entry_status": "filled",
+     "filled_qty": "15",
+     "filled_avg_price": "330.78"
+    },
+    {
+     "kind": "buy",
+     "symbol": "ALLE",
+     "side": "buy",
+     "qty": 32,
+     "type": "limit",
+     "limit": 155.11,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0638 of equity (scale 0.638); held 0 -> 32",
+     "coid": "aegisfm-hack4-20260929-buy-ALLE-f6fc4d015b",
+     "outcome": "submitted pending_new id 2fd95963-2205-41c8-b8ee-98d4e800b908",
+     "order_id": "2fd95963-2205-41c8-b8ee-98d4e800b908",
+     "entry_status": "filled",
+     "filled_qty": "32",
+     "filled_avg_price": "155.05"
+    },
+    {
+     "kind": "buy",
+     "symbol": "JAZZ",
+     "side": "buy",
+     "qty": 21,
+     "type": "limit",
+     "limit": 230.9,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0638 of equity (scale 0.638); held 0 -> 21",
+     "coid": "aegisfm-hack4-20260929-buy-JAZZ-c40deff0c9",
+     "outcome": "submitted pending_new id 4ad8a450-51e8-4f7a-a818-34b895efa221",
+     "order_id": "4ad8a450-51e8-4f7a-a818-34b895efa221",
+     "entry_status": "filled",
+     "filled_qty": "21",
+     "filled_avg_price": "230.64"
+    },
+    {
+     "kind": "buy",
+     "symbol": "INCY",
+     "side": "buy",
+     "qty": 39,
+     "type": "limit",
+     "limit": 122.15,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0614 of equity (scale 0.638); held 0 -> 39",
+     "coid": "aegisfm-hack4-20260929-buy-INCY-d34762adb7",
+     "outcome": "submitted pending_new id 26f8d6ee-ebab-43f9-9b7c-a0e8eae69759",
+     "order_id": "26f8d6ee-ebab-43f9-9b7c-a0e8eae69759",
+     "entry_status": "new",
+     "filled_qty": "0",
+     "filled_avg_price": null
+    },
+    {
+     "kind": "buy",
+     "symbol": "GOOG",
+     "side": "buy",
+     "qty": 14,
+     "type": "limit",
+     "limit": 336.09,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0600 of equity (scale 0.638); held 0 -> 14",
+     "coid": "aegisfm-hack4-20260929-buy-GOOG-5f82e7a3bc",
+     "outcome": "submitted pending_new id 115eaf9c-8778-481f-aac8-3a5e13597892",
+     "order_id": "115eaf9c-8778-481f-aac8-3a5e13597892",
+     "entry_status": "filled",
+     "filled_qty": "14",
+     "filled_avg_price": "335.697857"
+    },
+    {
+     "kind": "buy",
+     "symbol": "NVDA",
+     "side": "buy",
+     "qty": 17,
+     "type": "limit",
+     "limit": 230.63,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0513 of equity (scale 0.638); held 0 -> 17",
+     "coid": "aegisfm-hack4-20260929-buy-NVDA-59f684e791",
+     "outcome": "submitted pending_new id e8eeb504-4d86-4c60-9d9f-bc4182fee342",
+     "order_id": "e8eeb504-4d86-4c60-9d9f-bc4182fee342",
+     "entry_status": "filled",
+     "filled_qty": "17",
+     "filled_avg_price": "230.4"
+    },
+    {
+     "kind": "buy",
+     "symbol": "AVPT",
+     "side": "buy",
+     "qty": 288,
+     "type": "limit",
+     "limit": 13.41,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0486 of equity (scale 0.638); held 0 -> 288",
+     "coid": "aegisfm-hack4-20260929-buy-AVPT-2b295826a6",
+     "outcome": "submitted pending_new id b3657281-e39a-46da-bec8-9dc0a3f7b546",
+     "order_id": "b3657281-e39a-46da-bec8-9dc0a3f7b546",
+     "entry_status": "filled",
+     "filled_qty": "288",
+     "filled_avg_price": "13.4"
+    },
+    {
+     "kind": "buy",
+     "symbol": "AMZN",
+     "side": "buy",
+     "qty": 15,
+     "type": "limit",
+     "limit": 246.72,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $40,795 would exceed $39,739 left of 50% x equity",
+     "reason": "target 0.0489 of equity (scale 0.638); held 0 -> 15",
+     "coid": "aegisfm-hack4-20260929-buy-AMZN-a78c1b98d1"
+    },
+    {
+     "kind": "buy",
+     "symbol": "META",
+     "side": "buy",
+     "qty": 4,
+     "type": "limit",
+     "limit": 720.68,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "daily turnover budget: $39,977 would exceed $39,739 left of 50% x equity",
+     "reason": "target 0.0411 of equity (scale 0.638); held 0 -> 4",
+     "coid": "aegisfm-hack4-20260929-buy-META-95f1878e0f"
+    }
+   ],
+   "entry_protection": [
+    {
+     "kind": "stop_new",
+     "symbol": "AAPL",
+     "side": "sell",
+     "qty": 15,
+     "type": "stop",
+     "stop": 313.24,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack4-20260929-stop-AAPL-7248407aec",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 278c84f9-33b7-4b8c-9aba-e362e02ed6b3",
+     "order_id": "278c84f9-33b7-4b8c-9aba-e362e02ed6b3"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "ALLE",
+     "side": "sell",
+     "qty": 32,
+     "type": "stop",
+     "stop": 146.26,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack4-20260929-stop-ALLE-cc8659a3ab",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id b3663875-580b-40ff-8c28-467b971b00f4",
+     "order_id": "b3663875-580b-40ff-8c28-467b971b00f4"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "AVPT",
+     "side": "sell",
+     "qty": 288,
+     "type": "stop",
+     "stop": 12.33,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack4-20260929-stop-AVPT-c43ec46a3c",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 3ab9b127-a526-4a12-adf5-377494f71835",
+     "order_id": "3ab9b127-a526-4a12-adf5-377494f71835"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "GOOG",
+     "side": "sell",
+     "qty": 14,
+     "type": "stop",
+     "stop": 314.59,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack4-20260929-stop-GOOG-10abb8e218",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 984644ef-a97d-431f-a978-a3a99dda2f38",
+     "order_id": "984644ef-a97d-431f-a978-a3a99dda2f38"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "JAZZ",
+     "side": "sell",
+     "qty": 21,
+     "type": "stop",
+     "stop": 218.47,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack4-20260929-stop-JAZZ-c9dc8950c1",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 1619d510-b4de-4138-af1f-d44506d29340",
+     "order_id": "1619d510-b4de-4138-af1f-d44506d29340"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "NVDA",
+     "side": "sell",
+     "qty": 17,
+     "type": "stop",
+     "stop": 213.45,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack4-20260929-stop-NVDA-d17db78d72",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 523e9a72-16ed-4862-8826-ef7ab8417b7e",
+     "order_id": "523e9a72-16ed-4862-8826-ef7ab8417b7e"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "SNDR",
+     "side": "sell",
+     "qty": 159,
+     "type": "stop",
+     "stop": 29.91,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack4-20260929-stop-SNDR-3a210b9420",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 227e417c-0d27-4b07-9eaf-c5bd0e3f3728",
+     "order_id": "227e417c-0d27-4b07-9eaf-c5bd0e3f3728"
+    }
+   ],
+   "entry_protection_flags": [],
+   "stop_counterfactual": {
+    "registered_now": [],
+    "registered_total": [
+     "BIOA",
+     "RZLV"
+    ],
+    "rows_written": []
+   },
+   "state_written": "2026-09-29T16:10:35+00:00",
+   "grade": {
+    "status": "ALREADY_GRADED",
+    "session": "2026-09-28"
+   },
+   "status": "ok"
+  },
+  {
+   "role": "hack6",
+   "pass": "open",
+   "account_number": "PA3I816FLXE9",
+   "equity": 81322.91,
+   "cash": 25866.99,
+   "last_equity": 81877.63,
+   "n_positions": 10,
+   "n_open_orders": 10,
+   "positions": [
+    {
+     "symbol": "ABEO",
+     "qty": 1079.0,
+     "price": 5.13,
+     "market_value": 5535.27,
+     "unrealized_plpc": -0.04469,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "ARDX",
+     "qty": 1693.0,
+     "price": 3.365,
+     "market_value": 5696.945,
+     "unrealized_plpc": -0.00737,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "ATR",
+     "qty": 43.0,
+     "price": 122.52,
+     "market_value": 5268.36,
+     "unrealized_plpc": -0.02954,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "CALX",
+     "qty": 169.0,
+     "price": 33.0,
+     "market_value": 5577.0,
+     "unrealized_plpc": -0.04652,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "EVLV",
+     "qty": 1084.0,
+     "price": 4.665,
+     "market_value": 5056.86,
+     "unrealized_plpc": -0.07806,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "INVA",
+     "qty": 258.0,
+     "price": 20.86,
+     "market_value": 5381.88,
+     "unrealized_plpc": -0.01557,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "KTOS",
+     "qty": 121.0,
+     "price": 43.79,
+     "market_value": 5298.59,
+     "unrealized_plpc": -0.07518,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "MAZE",
+     "qty": 242.0,
+     "price": 27.07,
+     "market_value": 6550.94,
+     "unrealized_plpc": 0.14703,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "PRVA",
+     "qty": 263.0,
+     "price": 19.38,
+     "market_value": 5096.94,
+     "unrealized_plpc": -0.06602,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "STRO",
+     "qty": 374.0,
+     "price": 16.01,
+     "market_value": 5987.74,
+     "unrealized_plpc": 0.04232,
+     "asset_class": "us_equity"
+    }
+   ],
+   "clock": {
+    "session_day_et": "2026-09-29",
+    "is_open": true,
+    "minutes_to_close": 229.3
+   },
+   "reconcile": {
+    "status": "OK",
+    "ok": true,
+    "mismatches": [],
+    "foreign_orders": [],
+    "source": "state",
+    "since": "2026-09-29T16:06:30+00:00",
+    "n_fills_since": 0
+   },
+   "contract_active": {
+    "version": "v2",
+    "policy_hash": "12fa05317df05ce1",
+    "alpha_source": "world-digest typed implications through SHADOW_NEWS_v0's frozen news_signal (d > 0 only), fixed 1% of equity per name, <= 10 names, 5 sessions",
+    "frozen_utc": "2026-09-29T13:37:49+00:00"
+   },
+   "contract_proposed": {
+    "version": "v2",
+    "policy_hash": "12fa05317df05ce1",
+    "alpha_source": "world-digest typed implications through SHADOW_NEWS_v0's frozen news_signal (d > 0 only), fixed 1% of equity per name, <= 10 names, 5 sessions"
+   },
+   "digest": {
+    "file": "world_digest_20260929T141930Z.json",
+    "age_h": 1.9,
+    "fresh": true,
+    "n_implications": 80,
+    "n_ticker_signals": 35
+   },
+   "sigma": {
+    "ABEO": 0.0363,
+    "AKAM": 0.03659,
+    "AMD": 0.04428,
+    "ARDX": 0.02886,
+    "ATR": 0.01312,
+    "AVGO": 0.02478,
+    "BABA": 0.02745,
+    "CALX": 0.02171,
+    "EVLV": 0.02689,
+    "INVA": 0.01499,
+    "KKR": 0.02344,
+    "KTOS": 0.03685,
+    "MAZE": 0.04465,
+    "MRVL": 0.05342,
+    "MU": 0.04985,
+    "NBIS": 0.08649,
+    "NVDA": 0.02449,
+    "PRVA": 0.01813,
+    "SPCX": 0.04547,
+    "STRO": 0.0395,
+    "TSM": 0.02436,
+    "XLE": 0.01355
+   },
+   "panel": {
+    "panel": "bars.parquet",
+    "last_bar": "2026-09-28",
+    "symbols_asked": 24,
+    "symbols_found": 22,
+    "screen": {
+     "enabled": true,
+     "rules": {
+      "dark_run_min_sessions": 5,
+      "nontrade_print_tol": 0.01,
+      "spike_ratio": 4.0,
+      "spike_residual": 0.25,
+      "spike_window_sessions": 3,
+      "break_ratio": 3.0,
+      "quiet_volume_mult": 2.0
+     },
+     "volume_available": true,
+     "rows_in": 5807,
+     "rows_removed": 0,
+     "rows_removed_by_reason": {},
+     "rows_removed_by_year": {},
+     "symbols_with_rows_removed": 0,
+     "n_dark_runs": 0,
+     "nontrade_prints": 0,
+     "n_spikes": 0,
+     "n_cuts": 0,
+     "n_suspects": 0,
+     "cuts_by_reason": {}
+    },
+    "moved_5d_sigma": {
+     "ABEO": -0.826,
+     "AKAM": -0.877,
+     "AMD": -0.126,
+     "ARDX": -0.398,
+     "ATR": 0.29,
+     "AVGO": -0.651,
+     "BABA": -0.984,
+     "CALX": -1.297,
+     "EVLV": -0.945,
+     "INVA": 0.269,
+     "KKR": -1.436,
+     "KTOS": -1.129,
+     "MAZE": 1.995,
+     "MRVL": -0.178,
+     "MU": 0.086,
+     "NBIS": -0.02,
+     "NVDA": 0.119,
+     "PRVA": 0.417,
+     "SPCX": -0.413,
+     "SPY": -0.65,
+     "STRO": -0.222,
+     "TSM": 0.319
+    }
+   },
+   "stop_table": [
+    {
+     "symbol": "ABEO",
+     "qty": 1079.0,
+     "price": 5.13,
+     "sigma_d": 0.036296685674355914,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0363 = 0.1089, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "4.83",
+       "qty": "1079",
+       "client_order_id": "aat-stop-b5c31053e54dab9bc981d0bb",
+       "expires_at": "2026-12-14T21:00:00Z",
+       "distance_frac": 0.0585,
+       "distance_sigma": 1.61
+      }
+     ]
+    },
+    {
+     "symbol": "ARDX",
+     "qty": 1693.0,
+     "price": 3.365,
+     "sigma_d": 0.028858038652215208,
+     "target_stop_frac": 0.0866,
+     "target_stop_how": "3 x sigma 0.0289 = 0.0866",
+     "resting": [
+      {
+       "stop_price": "3.05",
+       "qty": "1693",
+       "client_order_id": "aat-stop-3c002a549a3bb66d5f6a6457",
+       "expires_at": "2026-12-15T21:00:00Z",
+       "distance_frac": 0.0936,
+       "distance_sigma": 3.24
+      }
+     ]
+    },
+    {
+     "symbol": "ATR",
+     "qty": 43.0,
+     "price": 122.52,
+     "sigma_d": 0.01311678303180192,
+     "target_stop_frac": 0.04,
+     "target_stop_how": "3 x sigma 0.0131 = 0.0394, clipped to [0.040, 0.100] -> 0.0400",
+     "resting": [
+      {
+       "stop_price": "113.62",
+       "qty": "43",
+       "client_order_id": "aat-stop-796b30907cf2126cb0edaf6c",
+       "expires_at": "2026-12-07T21:00:00Z",
+       "distance_frac": 0.0726,
+       "distance_sigma": 5.54
+      }
+     ]
+    },
+    {
+     "symbol": "CALX",
+     "qty": 169.0,
+     "price": 33.0,
+     "sigma_d": 0.02170846327054354,
+     "target_stop_frac": 0.0651,
+     "target_stop_how": "3 x sigma 0.0217 = 0.0651",
+     "resting": [
+      {
+       "stop_price": "31.15",
+       "qty": "169",
+       "client_order_id": "aat-stop-df88b83ad2d3708777c0cb91",
+       "expires_at": "2026-12-08T21:00:00Z",
+       "distance_frac": 0.0561,
+       "distance_sigma": 2.58
+      }
+     ]
+    },
+    {
+     "symbol": "EVLV",
+     "qty": 1084.0,
+     "price": 4.665,
+     "sigma_d": 0.02688710255408859,
+     "target_stop_frac": 0.0807,
+     "target_stop_how": "3 x sigma 0.0269 = 0.0807",
+     "resting": [
+      {
+       "stop_price": "4.55",
+       "qty": "1084",
+       "client_order_id": "aat-stop-1e84aa9a8c46c732aa182196",
+       "expires_at": "2026-12-07T21:00:00Z",
+       "distance_frac": 0.0247,
+       "distance_sigma": 0.92
+      }
+     ]
+    },
+    {
+     "symbol": "INVA",
+     "qty": 258.0,
+     "price": 20.86,
+     "sigma_d": 0.014987800191780887,
+     "target_stop_frac": 0.045,
+     "target_stop_how": "3 x sigma 0.0150 = 0.0450",
+     "resting": [
+      {
+       "stop_price": "19.07",
+       "qty": "258",
+       "client_order_id": "aat-stop-04d4f115baed11bb77207ce0",
+       "expires_at": "2026-12-07T21:00:00Z",
+       "distance_frac": 0.0858,
+       "distance_sigma": 5.73
+      }
+     ]
+    },
+    {
+     "symbol": "KTOS",
+     "qty": 121.0,
+     "price": 43.79,
+     "sigma_d": 0.03685011928034337,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0369 = 0.1106, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "42.62",
+       "qty": "121",
+       "client_order_id": "aat-stop-23b056316eb993facbe508fe",
+       "expires_at": "2026-12-14T21:00:00Z",
+       "distance_frac": 0.0267,
+       "distance_sigma": 0.73
+      }
+     ]
+    },
+    {
+     "symbol": "MAZE",
+     "qty": 242.0,
+     "price": 27.07,
+     "sigma_d": 0.04465016071207569,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0447 = 0.1340, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "21.24",
+       "qty": "242",
+       "client_order_id": "aat-stop-187391ba5ec61e5fcc845155",
+       "expires_at": "2026-12-16T21:00:00Z",
+       "distance_frac": 0.2154,
+       "distance_sigma": 4.82
+      }
+     ]
+    },
+    {
+     "symbol": "PRVA",
+     "qty": 263.0,
+     "price": 19.38,
+     "sigma_d": 0.01812596620155211,
+     "target_stop_frac": 0.0544,
+     "target_stop_how": "3 x sigma 0.0181 = 0.0544",
+     "resting": [
+      {
+       "stop_price": "18.68",
+       "qty": "263",
+       "client_order_id": "aat-stop-e054a720dead4aa05f0f4213",
+       "expires_at": "2026-12-07T21:00:00Z",
+       "distance_frac": 0.0361,
+       "distance_sigma": 1.99
+      }
+     ]
+    },
+    {
+     "symbol": "STRO",
+     "qty": 374.0,
+     "price": 16.01,
+     "sigma_d": 0.03949600310022938,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0395 = 0.1185, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "13.82",
+       "qty": "374",
+       "client_order_id": "aat-stop-e830354efc8fe0b18e234569",
+       "expires_at": "2026-12-16T21:00:00Z",
+       "distance_frac": 0.1368,
+       "distance_sigma": 3.46
+      }
+     ]
+    }
+   ],
+   "flags": [],
+   "lot_entry": {
+    "ABEO": {
+     "date": "2026-09-15",
+     "how": "exact",
+     "sessions_held": 10
+    },
+    "ARDX": {
+     "date": "2026-09-16",
+     "how": "exact",
+     "sessions_held": 9
+    },
+    "ATR": {
+     "date": "2026-09-08",
+     "how": "exact",
+     "sessions_held": 15
+    },
+    "CALX": {
+     "date": "2026-09-09",
+     "how": "exact",
+     "sessions_held": 14
+    },
+    "EVLV": {
+     "date": "2026-09-08",
+     "how": "exact",
+     "sessions_held": 15
+    },
+    "INVA": {
+     "date": "2026-09-08",
+     "how": "exact",
+     "sessions_held": 15
+    },
+    "KTOS": {
+     "date": "2026-09-15",
+     "how": "exact",
+     "sessions_held": 10
+    },
+    "MAZE": {
+     "date": "2026-09-17",
+     "how": "exact",
+     "sessions_held": 8
+    },
+    "PRVA": {
+     "date": "2026-09-08",
+     "how": "exact",
+     "sessions_held": 15
+    },
+    "STRO": {
+     "date": "2026-09-17",
+     "how": "exact",
+     "sessions_held": 8
+    }
+   },
+   "v2_targets": {
+    "n": 10,
+    "gross_frac": 0.1,
+    "legacy_names": [
+     "ABEO",
+     "ARDX",
+     "ATR",
+     "CALX",
+     "EVLV",
+     "INVA",
+     "KTOS",
+     "MAZE",
+     "PRVA",
+     "STRO"
+    ],
+    "drops": [
+     {
+      "symbol": "XLE",
+      "why": "not in the screened panel (sigma from Alpaca IEX bars, unscreened)"
+     },
+     {
+      "symbol": "AVGO",
+      "why": "beyond the 10-name sleeve"
+     },
+     {
+      "symbol": "AMD",
+      "why": "beyond the 10-name sleeve"
+     }
+    ]
+   },
+   "worst_case_now": {
+    "worst_usd": 4694.42,
+    "worst_pct_equity": 5.77,
+    "gross_usd": 55450.53,
+    "gross_over_equity": 0.6819,
+    "n_names": 10,
+    "per_name": [
+     {
+      "symbol": "ABEO",
+      "worst_usd": 323.6999999999998,
+      "basis": "resting stop 4.83"
+     },
+     {
+      "symbol": "ARDX",
+      "worst_usd": 533.2950000000006,
+      "basis": "resting stop 3.05"
+     },
+     {
+      "symbol": "ATR",
+      "worst_usd": 382.69999999999965,
+      "basis": "resting stop 113.62"
+     },
+     {
+      "symbol": "CALX",
+      "worst_usd": 312.65000000000026,
+      "basis": "resting stop 31.15"
+     },
+     {
+      "symbol": "EVLV",
+      "worst_usd": 124.66000000000022,
+      "basis": "resting stop 4.55"
+     },
+     {
+      "symbol": "INVA",
+      "worst_usd": 461.81999999999977,
+      "basis": "resting stop 19.07"
+     },
+     {
+      "symbol": "KTOS",
+      "worst_usd": 141.57000000000022,
+      "basis": "resting stop 42.62"
+     },
+     {
+      "symbol": "MAZE",
+      "worst_usd": 1410.8600000000004,
+      "basis": "resting stop 21.24"
+     },
+     {
+      "symbol": "PRVA",
+      "worst_usd": 184.09999999999982,
+      "basis": "resting stop 18.68"
+     },
+     {
+      "symbol": "STRO",
+      "worst_usd": 819.0600000000005,
+      "basis": "resting stop 13.82"
+     }
+    ]
+   },
+   "worst_case_after_plan": {
+    "worst_usd": 5194.28,
+    "worst_pct_equity": 6.39,
+    "gross_usd": 61109.94,
+    "gross_over_equity": 0.7514,
+    "n_names": 18,
+    "per_name": [
+     {
+      "symbol": "ABEO",
+      "worst_usd": 323.6999999999998,
+      "basis": "resting stop 4.83"
+     },
+     {
+      "symbol": "ARDX",
+      "worst_usd": 533.2950000000006,
+      "basis": "resting stop 3.05"
+     },
+     {
+      "symbol": "ATR",
+      "worst_usd": 382.69999999999965,
+      "basis": "resting stop 113.62"
+     },
+     {
+      "symbol": "CALX",
+      "worst_usd": 312.65000000000026,
+      "basis": "resting stop 31.15"
+     },
+     {
+      "symbol": "EVLV",
+      "worst_usd": 124.66000000000022,
+      "basis": "resting stop 4.55"
+     },
+     {
+      "symbol": "INVA",
+      "worst_usd": 461.81999999999977,
+      "basis": "resting stop 19.07"
+     },
+     {
+      "symbol": "KTOS",
+      "worst_usd": 141.57000000000022,
+      "basis": "resting stop 42.62"
+     },
+     {
+      "symbol": "MAZE",
+      "worst_usd": 1410.8600000000004,
+      "basis": "resting stop 21.24"
+     },
+     {
+      "symbol": "PRVA",
+      "worst_usd": 184.09999999999982,
+      "basis": "resting stop 18.68"
+     },
+     {
+      "symbol": "STRO",
+      "worst_usd": 819.0600000000005,
+      "basis": "resting stop 13.82"
+     },
+     {
+      "symbol": "MRVL",
+      "worst_usd": 79.242,
+      "basis": "planned stop 0.100"
+     },
+     {
+      "symbol": "BABA",
+      "worst_usd": 62.11050697892206,
+      "basis": "planned stop 0.082"
+     },
+     {
+      "symbol": "AKAM",
+      "worst_usd": 74.613,
+      "basis": "planned stop 0.100"
+     },
+     {
+      "symbol": "SPCX",
+      "worst_usd": 74.59000000000002,
+      "basis": "planned stop 0.100"
+     },
+     {
+      "symbol": "KKR",
+      "worst_usd": 52.22978971927816,
+      "basis": "planned stop 0.070"
+     },
+     {
+      "symbol": "NBIS",
+      "worst_usd": 72.669,
+      "basis": "planned stop 0.100"
+     },
+     {
+      "symbol": "NVDA",
+      "worst_usd": 50.83294794207865,
+      "basis": "planned stop 0.073"
+     },
+     {
+      "symbol": "TSM",
+      "worst_usd": 33.576047350873104,
+      "basis": "planned stop 0.073"
+     }
+    ]
+   },
+   "worst_case_formula_v1": {
+    "n": 15,
+    "notional_frac": 0.0667,
+    "stop_frac": 0.1,
+    "worst_frac": 0.1,
+    "worst_usd": 8132.29,
+    "gross_over_equity": 1.0
+   },
+   "worst_case_formula_v2": {
+    "n": 10,
+    "notional_frac": 0.01,
+    "stop_frac": 0.1,
+    "worst_frac": 0.01,
+    "worst_usd": 813.23,
+    "gross_over_equity": 0.1
+   },
+   "worst_case_printed_before_orders_utc": "2026-09-29T16:10:56+00:00",
+   "actions": [
+    {
+     "kind": "buy",
+     "symbol": "MRVL",
+     "side": "buy",
+     "qty": 3,
+     "type": "limit",
+     "limit": 264.14,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0100 of equity (scale 1.000); held 0 -> 3",
+     "coid": "aegisfm-hack6-20260929-buy-MRVL-cf30b20849",
+     "outcome": "submitted pending_new id 55add162-8b51-451d-98db-29316475d37b",
+     "order_id": "55add162-8b51-451d-98db-29316475d37b",
+     "entry_status": "filled",
+     "filled_qty": "3",
+     "filled_avg_price": "263.47"
+    },
+    {
+     "kind": "buy",
+     "symbol": "BABA",
+     "side": "buy",
+     "qty": 7,
+     "type": "limit",
+     "limit": 107.74,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0100 of equity (scale 1.000); held 0 -> 7",
+     "coid": "aegisfm-hack6-20260929-buy-BABA-888d40d3f6",
+     "outcome": "submitted pending_new id 55e48bd6-ffd0-4c38-b20a-51d1cbb472d8",
+     "order_id": "55e48bd6-ffd0-4c38-b20a-51d1cbb472d8",
+     "entry_status": "filled",
+     "filled_qty": "7",
+     "filled_avg_price": "107.63"
+    },
+    {
+     "kind": "buy",
+     "symbol": "AKAM",
+     "side": "buy",
+     "qty": 7,
+     "type": "limit",
+     "limit": 106.59,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0100 of equity (scale 1.000); held 0 -> 7",
+     "coid": "aegisfm-hack6-20260929-buy-AKAM-d3405e8f90",
+     "outcome": "submitted pending_new id 1e028af0-f4e3-4359-aca9-e976a1239a1c",
+     "order_id": "1e028af0-f4e3-4359-aca9-e976a1239a1c",
+     "entry_status": "filled",
+     "filled_qty": "7",
+     "filled_avg_price": "106.44"
+    },
+    {
+     "kind": "buy",
+     "symbol": "SPCX",
+     "side": "buy",
+     "qty": 5,
+     "type": "limit",
+     "limit": 149.18,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0100 of equity (scale 1.000); held 0 -> 5",
+     "coid": "aegisfm-hack6-20260929-buy-SPCX-619b9277c1",
+     "outcome": "submitted pending_new id 3cf4931d-7a04-4a30-8e68-c14daf175843",
+     "order_id": "3cf4931d-7a04-4a30-8e68-c14daf175843",
+     "entry_status": "filled",
+     "filled_qty": "5",
+     "filled_avg_price": "148.62"
+    },
+    {
+     "kind": "buy",
+     "symbol": "KKR",
+     "side": "buy",
+     "qty": 8,
+     "type": "limit",
+     "limit": 92.84,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0100 of equity (scale 1.000); held 0 -> 8",
+     "coid": "aegisfm-hack6-20260929-buy-KKR-deb719e99a",
+     "outcome": "submitted pending_new id a5107a6f-db96-4f23-aaf3-3ac3dd49da8c",
+     "order_id": "a5107a6f-db96-4f23-aaf3-3ac3dd49da8c",
+     "entry_status": "filled",
+     "filled_qty": "8",
+     "filled_avg_price": "92.75"
+    },
+    {
+     "kind": "buy",
+     "symbol": "NBIS",
+     "side": "buy",
+     "qty": 3,
+     "type": "limit",
+     "limit": 242.23,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0100 of equity (scale 1.000); held 0 -> 3",
+     "coid": "aegisfm-hack6-20260929-buy-NBIS-a7a2b70632",
+     "outcome": "submitted pending_new id 6392792b-5631-4f25-9a80-37f73ea9867b",
+     "order_id": "6392792b-5631-4f25-9a80-37f73ea9867b",
+     "entry_status": "filled",
+     "filled_qty": "3",
+     "filled_avg_price": "241.983333"
+    },
+    {
+     "kind": "buy",
+     "symbol": "NVDA",
+     "side": "buy",
+     "qty": 3,
+     "type": "limit",
+     "limit": 230.64,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0100 of equity (scale 1.000); held 0 -> 3",
+     "coid": "aegisfm-hack6-20260929-buy-NVDA-ba92623f20",
+     "outcome": "submitted pending_new id 64693562-378b-4d99-a08a-e87ff63ccd33",
+     "order_id": "64693562-378b-4d99-a08a-e87ff63ccd33",
+     "entry_status": "filled",
+     "filled_qty": "3",
+     "filled_avg_price": "230.31"
+    },
+    {
+     "kind": "buy",
+     "symbol": "TSM",
+     "side": "buy",
+     "qty": 1,
+     "type": "limit",
+     "limit": 459.46,
+     "stop": null,
+     "mode": "LIVE",
+     "refused": null,
+     "reason": "target 0.0100 of equity (scale 1.000); held 0 -> 1",
+     "coid": "aegisfm-hack6-20260929-buy-TSM-ddf140ed07",
+     "outcome": "submitted pending_new id f05e1f6c-2073-46b1-a6fb-e5fafc60343f",
+     "order_id": "f05e1f6c-2073-46b1-a6fb-e5fafc60343f",
+     "entry_status": "filled",
+     "filled_qty": "1",
+     "filled_avg_price": "457.07"
+    },
+    {
+     "kind": "buy",
+     "symbol": "EADSY",
+     "side": "",
+     "qty": 0,
+     "type": "",
+     "limit": null,
+     "stop": null,
+     "mode": "REFUSED",
+     "refused": "no price for EADSY; cannot size safely",
+     "reason": "target",
+     "coid": ""
+    }
+   ],
+   "entry_protection": [
+    {
+     "kind": "stop_new",
+     "symbol": "AKAM",
+     "side": "sell",
+     "qty": 7,
+     "type": "stop",
+     "stop": 95.64,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack6-20260929-stop-AKAM-dfed8ccc63",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id fe10808f-fe31-4cd3-bc11-fd57700c76f4",
+     "order_id": "fe10808f-fe31-4cd3-bc11-fd57700c76f4"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "BABA",
+     "side": "sell",
+     "qty": 7,
+     "type": "stop",
+     "stop": 98.75,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack6-20260929-stop-BABA-8f2f62ba47",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id a2c3b186-f3e6-4ad0-89d1-dcc1a98ca59e",
+     "order_id": "a2c3b186-f3e6-4ad0-89d1-dcc1a98ca59e"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "KKR",
+     "side": "sell",
+     "qty": 8,
+     "type": "stop",
+     "stop": 86.2,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack6-20260929-stop-KKR-fec591a12d",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 5cf2203d-16ec-47c6-8921-018b23594136",
+     "order_id": "5cf2203d-16ec-47c6-8921-018b23594136"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "MRVL",
+     "side": "sell",
+     "qty": 3,
+     "type": "stop",
+     "stop": 236.95,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack6-20260929-stop-MRVL-841276fb27",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id d1cf178d-4946-4975-ac51-3ce0445c0cd7",
+     "order_id": "d1cf178d-4946-4975-ac51-3ce0445c0cd7"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "NBIS",
+     "side": "sell",
+     "qty": 3,
+     "type": "stop",
+     "stop": 217.72,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack6-20260929-stop-NBIS-a0164b2a54",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 1358dd47-510a-466f-8e0e-698292f80bfa",
+     "order_id": "1358dd47-510a-466f-8e0e-698292f80bfa"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "NVDA",
+     "side": "sell",
+     "qty": 3,
+     "type": "stop",
+     "stop": 213.42,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack6-20260929-stop-NVDA-97443de63c",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 37b8dbd0-806d-4f6e-9be2-23949febdf52",
+     "order_id": "37b8dbd0-806d-4f6e-9be2-23949febdf52"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "SPCX",
+     "side": "sell",
+     "qty": 5,
+     "type": "stop",
+     "stop": 133.81,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack6-20260929-stop-SPCX-6f0dd494f4",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id fe0f9a44-60dc-469f-94ca-31691c158ff4",
+     "order_id": "fe0f9a44-60dc-469f-94ca-31691c158ff4"
+    },
+    {
+     "kind": "stop_new",
+     "symbol": "TSM",
+     "side": "sell",
+     "qty": 1,
+     "type": "stop",
+     "stop": 423.78,
+     "mode": "LIVE",
+     "refused": null,
+     "coid": "aegisfm-hack6-20260929-stop-TSM-ed8861e12a",
+     "reason": "entry protection",
+     "outcome": "submitted pending_new id 91ae8bd6-bd57-4a40-a7a9-ac0f9be08794",
+     "order_id": "91ae8bd6-bd57-4a40-a7a9-ac0f9be08794"
+    }
+   ],
+   "entry_protection_flags": [],
+   "stop_counterfactual": {
+    "registered_now": [],
+    "registered_total": [
+     "EVLV",
+     "KTOS"
+    ],
+    "rows_written": []
+   },
+   "state_written": "2026-09-29T16:12:09+00:00",
+   "grade": {
+    "status": "ALREADY_GRADED",
+    "session": "2026-09-28"
+   },
+   "status": "ok"
+  }
+ ],
+ "finished_utc": "2026-09-29T16:12:12+00:00"
+}

@@ -426,3 +426,17 @@ backend/data/optimus/contest/calendar/confirmations_terminal*.csv
 # 2026-09-29: digests paraphrase subscriber articles; the repo is public
 backend/data/optimus/digest/
 backend/data/optimus/news_digest/read_next.jsonl
+
+# 2026-10-02 finisher: browser-automation debug output, and two machine-local
+# runtime paths (the task_keeper launch log/state, and the always_on_lab OFF
+# switch -- a per-machine switch, not repo state)
+.playwright-mcp/
+backend/data/optimus/task_keeper/
+backend/data/optimus/always_on_lab_OFF
+
+# 2026-10-02: reader page stores (subscriber text), locks and pids stay local
+backend/data/optimus/dowjones/pages/
+backend/data/optimus/web_reader/
+backend/data/optimus/official/tables/
+*.lock
+*.pid

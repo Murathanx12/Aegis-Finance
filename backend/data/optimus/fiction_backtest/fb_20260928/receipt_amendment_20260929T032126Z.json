@@ -1,0 +1,196 @@
+{
+ "experiment": "AMNESIA-2 amendment (no model called)",
+ "run": "fb_20260928",
+ "amends": "receipt_analyze.json (unchanged on disk)",
+ "generated_at": "2026-09-29T03:21:26.307981+00:00",
+ "rule_leak": "A3 famous identified > 10% of canaries OR A3 famous hit >= 0.7",
+ "abstain_sd": 0.03,
+ "cells": {
+  "deepseek|clean|A0_NAMED": {
+   "n": 569,
+   "auc": 0.4401483444364645,
+   "sd_p": 0.08033380675614325,
+   "share_p_exactly_half": 0.0351493848857645,
+   "n_took_a_side": 549,
+   "hit_when_took_a_side": 0.4444444444444444,
+   "abstained": false,
+   "formal_direction_verdict": "FAILED_VARIANT"
+  },
+  "deepseek|clean|A2_MASKED": {
+   "n": 569,
+   "auc": 0.42839099531934915,
+   "sd_p": 0.07905359904249977,
+   "share_p_exactly_half": 0.026362038664323375,
+   "n_took_a_side": 554,
+   "hit_when_took_a_side": 0.4296028880866426,
+   "abstained": false,
+   "formal_direction_verdict": "FAILED_VARIANT"
+  },
+  "deepseek|clean|A3_SYNTHETIC": {
+   "n": 569,
+   "auc": 0.4266326555883008,
+   "sd_p": 0.08620770691706924,
+   "share_p_exactly_half": 0.01757469244288225,
+   "n_took_a_side": 559,
+   "hit_when_took_a_side": 0.43828264758497315,
+   "abstained": false,
+   "formal_direction_verdict": "FAILED_VARIANT"
+  },
+  "deepseek|famous|A0_NAMED": {
+   "n": 30,
+   "auc": 0.6085972850678733,
+   "sd_p": 0.0976393787150557,
+   "share_p_exactly_half": 0.03333333333333333,
+   "n_took_a_side": 29,
+   "hit_when_took_a_side": 0.5862068965517241,
+   "abstained": false,
+   "formal_direction_verdict": "CANNOT_DISTINGUISH"
+  },
+  "deepseek|famous|A2_MASKED": {
+   "n": 30,
+   "auc": 0.6334841628959276,
+   "sd_p": 0.10560444522166063,
+   "share_p_exactly_half": 0.0,
+   "n_took_a_side": 30,
+   "hit_when_took_a_side": 0.6,
+   "abstained": false,
+   "formal_direction_verdict": "CANNOT_DISTINGUISH"
+  },
+  "deepseek|famous|A3_SYNTHETIC": {
+   "n": 30,
+   "auc": 0.579185520361991,
+   "sd_p": 0.1092192774866811,
+   "share_p_exactly_half": 0.03333333333333333,
+   "n_took_a_side": 29,
+   "hit_when_took_a_side": 0.6206896551724138,
+   "abstained": false,
+   "formal_direction_verdict": "CANNOT_DISTINGUISH"
+  },
+  "file:opus|clean|A3_SYNTHETIC": {
+   "n": 120,
+   "auc": 0.4612587412587413,
+   "sd_p": 0.018991373539256267,
+   "share_p_exactly_half": 0.30833333333333335,
+   "n_took_a_side": 83,
+   "hit_when_took_a_side": 0.42168674698795183,
+   "abstained": true,
+   "formal_direction_verdict": "FAILED_VARIANT"
+  },
+  "nvidia:meta/llama-3.2-11b-vision-instruct|clean|A0_NAMED": {
+   "n": 490,
+   "auc": 0.4745814992663732,
+   "sd_p": 0.08958421268917925,
+   "share_p_exactly_half": 0.0,
+   "n_took_a_side": 490,
+   "hit_when_took_a_side": 0.47346938775510206,
+   "abstained": false,
+   "formal_direction_verdict": "CANNOT_DISTINGUISH"
+  },
+  "nvidia:meta/llama-3.2-11b-vision-instruct|clean|A2_MASKED": {
+   "n": 296,
+   "auc": 0.4551826484018265,
+   "sd_p": 0.07246399583040297,
+   "share_p_exactly_half": 0.0,
+   "n_took_a_side": 296,
+   "hit_when_took_a_side": 0.44932432432432434,
+   "abstained": false,
+   "formal_direction_verdict": "CANNOT_DISTINGUISH"
+  },
+  "nvidia:meta/llama-3.2-11b-vision-instruct|clean|A3_SYNTHETIC": {
+   "n": 461,
+   "auc": 0.4937217194570136,
+   "sd_p": 0.10957018648470285,
+   "share_p_exactly_half": 0.0,
+   "n_took_a_side": 461,
+   "hit_when_took_a_side": 0.4967462039045553,
+   "abstained": false,
+   "formal_direction_verdict": "CANNOT_DISTINGUISH"
+  },
+  "nvidia:meta/llama-3.2-11b-vision-instruct|famous|A0_NAMED": {
+   "n": 23,
+   "auc": 0.6628787878787878,
+   "sd_p": 0.06623708763718501,
+   "share_p_exactly_half": 0.0,
+   "n_took_a_side": 23,
+   "hit_when_took_a_side": 0.6086956521739131,
+   "abstained": false,
+   "formal_direction_verdict": "CANNOT_DISTINGUISH"
+  },
+  "nvidia:meta/llama-3.2-11b-vision-instruct|famous|A2_MASKED": {
+   "n": 11,
+   "auc": 0.6,
+   "sd_p": 0.045226701686664546,
+   "share_p_exactly_half": 0.0,
+   "n_took_a_side": 11,
+   "hit_when_took_a_side": 0.7272727272727273,
+   "abstained": false,
+   "formal_direction_verdict": "CANNOT_DISTINGUISH"
+  },
+  "nvidia:meta/llama-3.2-11b-vision-instruct|famous|A3_SYNTHETIC": {
+   "n": 25,
+   "auc": 0.4930555555555556,
+   "sd_p": 0.09553009996854396,
+   "share_p_exactly_half": 0.0,
+   "n_took_a_side": 25,
+   "hit_when_took_a_side": 0.48,
+   "abstained": false,
+   "formal_direction_verdict": "CANNOT_DISTINGUISH"
+  }
+ },
+ "leak_test": {
+  "deepseek": {
+   "famous_hit_by_level": {
+    "A0_NAMED": 0.6,
+    "A2_MASKED": 0.6,
+    "A3_SYNTHETIC": 0.6
+   },
+   "A3_canary_identified_rate": 0.0,
+   "A3_canary_identified": 0,
+   "A3_canary_n": 30,
+   "clauses": {
+    "identified_rate_gt_10pct": false,
+    "famous_A3_hit_ge_0.70": false
+   },
+   "clauses_evaluated": [
+    "identified_rate_gt_10pct",
+    "famous_A3_hit_ge_0.70"
+   ],
+   "fiction_leaks": false
+  },
+  "file:opus": {
+   "famous_hit_by_level": {},
+   "A3_canary_identified_rate": 0.23333333333333334,
+   "A3_canary_identified": 7,
+   "A3_canary_n": 30,
+   "clauses": {
+    "identified_rate_gt_10pct": true,
+    "famous_A3_hit_ge_0.70": null
+   },
+   "clauses_evaluated": [
+    "identified_rate_gt_10pct"
+   ],
+   "fiction_leaks": true
+  },
+  "nvidia:meta/llama-3.2-11b-vision-instruct": {
+   "famous_hit_by_level": {
+    "A0_NAMED": 0.6086956521739131,
+    "A2_MASKED": 0.7272727272727273,
+    "A3_SYNTHETIC": 0.48
+   },
+   "A3_canary_identified_rate": 0.0,
+   "A3_canary_identified": 0,
+   "A3_canary_n": 30,
+   "clauses": {
+    "identified_rate_gt_10pct": false,
+    "famous_A3_hit_ge_0.70": false
+   },
+   "clauses_evaluated": [
+    "identified_rate_gt_10pct",
+    "famous_A3_hit_ge_0.70"
+   ],
+   "fiction_leaks": false
+  }
+ },
+ "provenance_note": "the file arm's answering agents were full coding sub-agents with file, shell and web tools; their confinement was an instruction (ANSWERING_INSTRUCTIONS.md rule 3), sealed/ sat one directory away, and no tool-call log was kept. The harness test pins only the READER's confinement.",
+ "note": ""
+}

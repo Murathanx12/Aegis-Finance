@@ -1,0 +1,248 @@
+{
+ "receipt": "horizon_sweep",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-23T16:37:49+00:00",
+ "hypothesis": "\u00a759's toll is paid per ROUND TRIP, not per day. If the signal is slow-moving, gross(H) should grow with H faster than the ~constant toll, and some H turns the same ordering profitable with no new data.",
+ "held_fixed": [
+  "features",
+  "folds",
+  "cost model",
+  "breadth k",
+  "universe"
+ ],
+ "purge_rule": "PURGE = H, so long-horizon cells are not leaking",
+ "survivorship": {
+  "n_symbols": 4793,
+  "panel_last_session": "2026-09-21",
+  "stopped_30d_before_end": 1574,
+  "stopped_90d_before_end": 1573,
+  "stopped_180d_before_end": 1567,
+  "fraction_dead_90d": 0.3282,
+  "verdict": "1,573 of 4,793 symbols (32.8%) stop trading well before the end, so delistings are represented."
+ },
+ "horizons": {
+  "21": {
+   "horizon": 21,
+   "status": "OK",
+   "n_oos_rows": 3080630,
+   "n_folds_used": 4,
+   "ic_mean": 0.01618907642186815,
+   "ic_std": 0.11090736715711613,
+   "ic_t": 5.303329892422086,
+   "ic_n_dates": 1320,
+   "ic_hit": 0.5515151515151515,
+   "ic_note": "t is across DATES. Overlapping 21-session windows mean consecutive dates are not independent, so this t is OPTIMISTIC and is reported as a diagnostic, not a claim.",
+   "by_k": {
+    "20": {
+     "gross_per_hold": -0.009164010296164786,
+     "net_per_hold": -0.010877711053740542,
+     "cost_bps": 17.137007575757575,
+     "net_per_year": -0.1305325326448865,
+     "gross_per_year": -0.10996812355397742,
+     "t_across_blocks": -1.646439431394348,
+     "hit_rate": 0.40606060606060607,
+     "n_blocks": 67
+    },
+    "50": {
+     "gross_per_hold": -0.006488197521571843,
+     "net_per_hold": -0.008143421763996085,
+     "cost_bps": 16.552242424242422,
+     "net_per_year": -0.09772106116795301,
+     "gross_per_year": -0.07785837025886212,
+     "t_across_blocks": -1.8252227056006711,
+     "hit_rate": 0.4265151515151515,
+     "n_blocks": 67
+    },
+    "100": {
+     "gross_per_hold": -0.003994226282600224,
+     "net_per_hold": -0.005647581585630526,
+     "cost_bps": 16.533553030303032,
+     "net_per_year": -0.06777097902756632,
+     "gross_per_year": -0.04793071539120268,
+     "t_across_blocks": -1.7764389234098785,
+     "hit_rate": 0.44166666666666665,
+     "n_blocks": 67
+    },
+    "200": {
+     "gross_per_hold": -0.0028615822987390145,
+     "net_per_hold": -0.0045698216926784085,
+     "cost_bps": 17.08239393939394,
+     "net_per_year": -0.0548378603121409,
+     "gross_per_year": -0.034338987584868176,
+     "t_across_blocks": -1.9526333982961346,
+     "hit_rate": 0.44772727272727275,
+     "n_blocks": 67
+    }
+   },
+   "purge_sessions": 21
+  },
+  "42": {
+   "horizon": 42,
+   "status": "OK",
+   "n_oos_rows": 2850037,
+   "n_folds_used": 4,
+   "ic_mean": 0.011416987649880323,
+   "ic_std": 0.10609980726941423,
+   "ic_t": 3.7662138888823775,
+   "ic_n_dates": 1225,
+   "ic_hit": 0.5493877551020409,
+   "ic_note": "t is across DATES. Overlapping 21-session windows mean consecutive dates are not independent, so this t is OPTIMISTIC and is reported as a diagnostic, not a claim.",
+   "by_k": {
+    "20": {
+     "gross_per_hold": -0.014016898811075734,
+     "net_per_hold": -0.015687070239647164,
+     "cost_bps": 16.701714285714285,
+     "net_per_year": -0.09412242143788299,
+     "gross_per_year": -0.0841013928664544,
+     "t_across_blocks": -0.8910018651554806,
+     "hit_rate": 0.42857142857142855,
+     "n_blocks": 62
+    },
+    "50": {
+     "gross_per_hold": -0.011693916171726984,
+     "net_per_hold": -0.013266851681931063,
+     "cost_bps": 15.729355102040815,
+     "net_per_year": -0.07960111009158638,
+     "gross_per_year": -0.0701634970303619,
+     "t_across_blocks": -1.2355295518257392,
+     "hit_rate": 0.4073469387755102,
+     "n_blocks": 62
+    },
+    "100": {
+     "gross_per_hold": -0.009625681443484788,
+     "net_per_hold": -0.011187312463892951,
+     "cost_bps": 15.616310204081632,
+     "net_per_year": -0.06712387478335771,
+     "gross_per_year": -0.057754088660908726,
+     "t_across_blocks": -1.3179128685481267,
+     "hit_rate": 0.4204081632653061,
+     "n_blocks": 62
+    },
+    "200": {
+     "gross_per_hold": -0.007572587636191903,
+     "net_per_hold": -0.009197599472926598,
+     "cost_bps": 16.25011836734694,
+     "net_per_year": -0.05518559683755959,
+     "gross_per_year": -0.04543552581715142,
+     "t_across_blocks": -1.7756153134286836,
+     "hit_rate": 0.4057142857142857,
+     "n_blocks": 62
+    }
+   },
+   "purge_sessions": 42
+  },
+  "63": {
+   "horizon": 63,
+   "status": "OK",
+   "n_oos_rows": 2618025,
+   "n_folds_used": 4,
+   "ic_mean": 0.007405855261210656,
+   "ic_std": 0.09031121098438367,
+   "ic_t": 2.755373804342407,
+   "ic_n_dates": 1129,
+   "ic_hit": 0.5562444641275465,
+   "ic_note": "t is across DATES. Overlapping 21-session windows mean consecutive dates are not independent, so this t is OPTIMISTIC and is reported as a diagnostic, not a claim.",
+   "by_k": {
+    "20": {
+     "gross_per_hold": -0.010835076951674325,
+     "net_per_hold": -0.012576631424659273,
+     "cost_bps": 17.415544729849426,
+     "net_per_year": -0.05030652569863709,
+     "gross_per_year": -0.0433403078066973,
+     "t_across_blocks": -0.9078993805098936,
+     "hit_rate": 0.48272807794508416,
+     "n_blocks": 58
+    },
+    "50": {
+     "gross_per_hold": -0.01115701205717552,
+     "net_per_hold": -0.012751727734766304,
+     "cost_bps": 15.947156775907883,
+     "net_per_year": -0.05100691093906522,
+     "gross_per_year": -0.04462804822870208,
+     "t_across_blocks": -1.2954333407794887,
+     "hit_rate": 0.47741364038972545,
+     "n_blocks": 58
+    },
+    "100": {
+     "gross_per_hold": -0.010064230842648302,
+     "net_per_hold": -0.011621824288175316,
+     "cost_bps": 15.57593445527015,
+     "net_per_year": -0.046487297152701265,
+     "gross_per_year": -0.04025692337059321,
+     "t_across_blocks": -1.5699356066331962,
+     "hit_rate": 0.45438441098317095,
+     "n_blocks": 58
+    },
+    "200": {
+     "gross_per_hold": -0.009010652296258274,
+     "net_per_hold": -0.010600442375974838,
+     "cost_bps": 15.897900797165637,
+     "net_per_year": -0.04240176950389935,
+     "gross_per_year": -0.036042609185033096,
+     "t_across_blocks": -1.9946906654069563,
+     "hit_rate": 0.41895482728077943,
+     "n_blocks": 58
+    }
+   },
+   "purge_sessions": 63
+  },
+  "126": {
+   "horizon": 126,
+   "status": "OK",
+   "n_oos_rows": 1933927,
+   "n_folds_used": 4,
+   "ic_mean": 0.024743682280870934,
+   "ic_std": 0.06874276814587019,
+   "ic_t": 10.450837655754471,
+   "ic_n_dates": 843,
+   "ic_hit": 0.6476868327402135,
+   "ic_note": "t is across DATES. Overlapping 21-session windows mean consecutive dates are not independent, so this t is OPTIMISTIC and is reported as a diagnostic, not a claim.",
+   "by_k": {
+    "20": {
+     "gross_per_hold": -0.01240412492906462,
+     "net_per_hold": -0.014187742959906853,
+     "cost_bps": 17.8361803084223,
+     "net_per_year": -0.028375485919813707,
+     "gross_per_year": -0.02480824985812924,
+     "t_across_blocks": -0.4320402706673634,
+     "hit_rate": 0.4389086595492289,
+     "n_blocks": 44
+    },
+    "50": {
+     "gross_per_hold": -0.020148586927639028,
+     "net_per_hold": -0.021775671150652078,
+     "cost_bps": 16.270842230130487,
+     "net_per_year": -0.043551342301304155,
+     "gross_per_year": -0.040297173855278055,
+     "t_across_blocks": -1.2137825229097197,
+     "hit_rate": 0.45670225385527874,
+     "n_blocks": 44
+    },
+    "100": {
+     "gross_per_hold": -0.013574546279044529,
+     "net_per_hold": -0.01509198518770407,
+     "cost_bps": 15.17438908659549,
+     "net_per_year": -0.03018397037540814,
+     "gross_per_year": -0.027149092558089057,
+     "t_across_blocks": -1.3557680745634022,
+     "hit_rate": 0.4555160142348754,
+     "n_blocks": 44
+    },
+    "200": {
+     "gross_per_hold": -0.008471712739272845,
+     "net_per_hold": -0.009948772644373674,
+     "cost_bps": 14.770599051008304,
+     "net_per_year": -0.019897545288747348,
+     "gross_per_year": -0.01694342547854569,
+     "t_across_blocks": -1.543503448119815,
+     "hit_rate": 0.42823250296559906,
+     "n_blocks": 44
+    }
+   },
+   "purge_sessions": 126
+  }
+ },
+ "verdict": "HORIZON DOES NOT RESCUE IT: the best cell anywhere is H=126 k=200 at -1.99%/yr, still negative. The edge does not grow with the holding period faster than the signal decays, so the 28-vs-35 bps problem is not a turnover problem. \u00a759 stands and the next move is a different INPUT, not a different holding rule.",
+ "read_me_first": "Compare the PER-YEAR column, never the per-hold one: a 1% edge per 126 sessions is not better than 0.5% per 21, and the per-hold number alone makes it look it."
+}

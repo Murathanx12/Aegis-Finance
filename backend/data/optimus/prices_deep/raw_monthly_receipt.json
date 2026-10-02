@@ -1,0 +1,13 @@
+{
+ "job": "nn_lab.raw_prices pull",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "credential_source": "terminal repo .env",
+ "tickers_requested": 6214,
+ "tickers_with_bars": 6212,
+ "monthly_bars": 474514,
+ "failed_chunks_symbols": 0,
+ "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars_raw_monthly.parquet",
+ "elapsed_s": 931.3,
+ "written_utc": "2026-09-29T14:29:20+00:00"
+}

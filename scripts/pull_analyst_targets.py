@@ -67,7 +67,7 @@ import json
 import sys
 import time
 import warnings
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -89,6 +89,42 @@ SLEEP_S = 0.15
 #: Consecutive failures before the run stops and says so. A collector that
 #: quietly returns 40 names out of 3,000 is the house failure mode.
 MAX_CONSECUTIVE_FAILURES = 25
+
+
+def us_day(now: datetime | None = None) -> str:
+    """The US/Eastern calendar day the vendor's numbers belong to.
+
+    2026-09-30: the gate used to key on `date.today()` -- the MACHINE's day,
+    UTC+8. Local midnight falls at noon ET, in the middle of one US session,
+    so a pull finished at 22:46 local and a session cycle at 00:05 local were
+    two "days" and the second re-ran an 80-minute pull of the same US day.
+    """
+    from zoneinfo import ZoneInfo
+    now = now or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    return now.astimezone(ZoneInfo("America/New_York")).date().isoformat()
+
+
+def pulled_this_us_day(out: Path | None = None,
+                       now: datetime | None = None) -> Path | None:
+    """The receipt of a completed full pull written on the current US day.
+
+    Reads the puller's OWN receipts and their `written_utc` stamps (never a
+    file mtime, never the filename's day): the work, not a note about it. A
+    receipt with zero snapshots or an unreadable stamp does not count.
+    """
+    out = Path(out) if out else Path(_config.OPTIMUS_LEDGER_DIR) / "analyst"
+    today = us_day(now)
+    for p in sorted(out.glob("analyst_pull_*.json"), reverse=True):
+        try:
+            r = json.loads(p.read_text(encoding="utf-8"))
+            w = datetime.fromisoformat(str(r["written_utc"]))
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+        if (r.get("n_snapshots") or 0) > 0 and us_day(w) == today:
+            return p
+    return None
 
 
 def universe_from_bars(limit: int | None = None) -> list[str]:
@@ -196,7 +232,17 @@ def main(argv=None) -> int:
     ap.add_argument("--universe", default="bars", choices=("bars",))
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--force", action="store_true",
+                    help="pull even if a full pull already completed this US day")
     a = ap.parse_args(argv)
+
+    if not (a.tickers or a.limit or a.force):
+        done = pulled_this_us_day()
+        if done is not None:
+            print(f"SKIP: a full pull already completed on US day {us_day()} "
+                  f"({done.name}); the vendor's snapshot is daily. --force to re-pull.",
+                  flush=True)
+            return 0
 
     syms = ([s.strip().upper() for s in a.tickers.split(",") if s.strip()]
             if a.tickers else universe_from_bars(a.limit))
@@ -237,7 +283,7 @@ def main(argv=None) -> int:
         time.sleep(SLEEP_S)
 
     OUT.mkdir(parents=True, exist_ok=True)
-    day = str(date.today())
+    day = us_day()
     written = {}
     # Snapshots APPEND. Each night's row is a new observation, and the series of
     # them is what eventually makes the level point-in-time usable -- from the

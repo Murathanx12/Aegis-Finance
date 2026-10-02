@@ -1,0 +1,383 @@
+{
+ "receipt": "xs_rank_bakeoff",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-22T04:45:01+00:00",
+ "panel": {
+  "rows": 5481309,
+  "decision_dates": 2547,
+  "month_blocks": 122,
+  "first": "2016-07-01",
+  "last": "2026-08-19",
+  "symbols": 3578
+ },
+ "book_size": 20,
+ "folds": [
+  {
+   "train_end": "2021-01-21",
+   "test": "2021-02-22..2022-03-02",
+   "n_train": 2223386,
+   "n_test": 571236,
+   "signs_chosen_on_train": {}
+  },
+  {
+   "train_end": "2022-03-02",
+   "test": "2022-03-31..2023-04-13",
+   "n_train": 2836642,
+   "n_test": 560048,
+   "signs_chosen_on_train": {}
+  },
+  {
+   "train_end": "2023-04-13",
+   "test": "2023-05-12..2024-05-23",
+   "n_train": 3440881,
+   "n_test": 568592,
+   "signs_chosen_on_train": {}
+  },
+  {
+   "train_end": "2024-05-23",
+   "test": "2024-06-25..2025-07-09",
+   "n_train": 4052464,
+   "n_test": 621351,
+   "signs_chosen_on_train": {}
+  },
+  {
+   "train_end": "2025-07-09",
+   "test": "2025-08-07..2026-08-19",
+   "n_train": 4719557,
+   "n_test": 711498,
+   "signs_chosen_on_train": {}
+  }
+ ],
+ "results": {
+  "composite_prior": {
+   "k": 20,
+   "n_dates": 1300,
+   "n_blocks": 67,
+   "mean_net_rel_21d": -0.002200516984669668,
+   "mean_gross_rel_21d": 0.0012442868614841794,
+   "mean_cost_bps": 34.44803846153846,
+   "block_se": 0.004532498850510743,
+   "t_across_blocks": -0.27811493769274614,
+   "hit_rate_dates": 0.4546153846153846,
+   "worst_date": {
+    "date": "2022-04-12",
+    "gross": -0.21108656485438596,
+    "net": -0.21450156485438596,
+    "cost_bps": 34.15,
+    "n": 20
+   },
+   "best_date": {
+    "date": "2026-03-31",
+    "gross": 0.3842701325359624,
+    "net": 0.38111013253596243,
+    "cost_bps": 31.6,
+    "n": 20
+   },
+   "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+   "ic_mean": -0.008847418338097223,
+   "ic_std": 0.09282430289043345,
+   "ic_t": -3.4365806669341064,
+   "ic_n_dates": 1300,
+   "ic_hit": 0.4492307692307692,
+   "ic_note": "t is across DATES. Overlapping 21-session windows mean consecutive dates are not independent, so this t is OPTIMISTIC and is reported as a diagnostic, not a claim.",
+   "decile_mean_rel_pct": {
+    "0": -0.1,
+    "1": -0.15,
+    "2": -0.11,
+    "3": -0.11,
+    "4": -0.04,
+    "5": -0.02,
+    "6": 0.03,
+    "7": 0.06,
+    "8": 0.15,
+    "9": 0.29
+   },
+   "breadth": {
+    "10": {
+     "net": -0.0007610331597607062,
+     "gross": 0.0027002976094700625,
+     "t": 0.07765594829459102,
+     "hit": 0.4623076923076923,
+     "cost_bps": 34.61330769230769,
+     "n_dates": 1300
+    },
+    "20": {
+     "net": -0.002200516984669668,
+     "gross": 0.0012442868614841794,
+     "t": -0.27811493769274614,
+     "hit": 0.4546153846153846,
+     "cost_bps": 34.44803846153846,
+     "n_dates": 1300
+    },
+    "50": {
+     "net": -0.0006177140500827953,
+     "gross": 0.002807978257609513,
+     "t": -0.01652978787880425,
+     "hit": 0.45615384615384613,
+     "cost_bps": 34.25692307692307,
+     "n_dates": 1300
+    },
+    "100": {
+     "net": -0.0008008896533523964,
+     "gross": 0.0026065803466476046,
+     "t": -0.21428340307002863,
+     "hit": 0.4653846153846154,
+     "cost_bps": 34.0747,
+     "n_dates": 1300
+    },
+    "200": {
+     "net": -0.0008147252014396363,
+     "gross": 0.002557834798560363,
+     "t": -0.28227089283991935,
+     "hit": 0.4723076923076923,
+     "cost_bps": 33.7256,
+     "n_dates": 1300
+    },
+    "300": {
+     "net": -0.0008540138301886468,
+     "gross": 0.002480508990324173,
+     "t": -0.30912724640471767,
+     "hit": 0.46153846153846156,
+     "cost_bps": 33.34522820512821,
+     "n_dates": 1300
+    },
+    "500": {
+     "net": -0.0012703805682493072,
+     "gross": 0.001979108816366078,
+     "t": -0.6841678314566468,
+     "hit": 0.4461538461538462,
+     "cost_bps": 32.49489384615385,
+     "n_dates": 1300
+    }
+   },
+   "n_oos_rows": 3032725
+  },
+  "composite": {
+   "status": "REFUSED",
+   "why": "no scored rows. For `composite` this means no feature cleared COMPOSITE_MIN_T=1.5 on ANY training fold, so the composite had nothing to compose. That is a finding, not a bug: the features that look signed on the full sample do not survive being chosen inside a fold."
+  },
+  "lgbm_full": {
+   "k": 20,
+   "n_dates": 1300,
+   "n_blocks": 67,
+   "mean_net_rel_21d": -0.004704179290871497,
+   "mean_gross_rel_21d": -0.0029574831370253454,
+   "mean_cost_bps": 17.466961538461536,
+   "block_se": 0.007785539087380331,
+   "t_across_blocks": -0.6900973865606406,
+   "hit_rate_dates": 0.42538461538461536,
+   "worst_date": {
+    "date": "2021-12-22",
+    "gross": -0.25477316291008173,
+    "net": -0.25613816291008173,
+    "cost_bps": 13.65,
+    "n": 20
+   },
+   "best_date": {
+    "date": "2025-04-21",
+    "gross": 0.4186919391355285,
+    "net": 0.4168269391355285,
+    "cost_bps": 18.65,
+    "n": 20
+   },
+   "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+   "ic_mean": 0.022673554567185276,
+   "ic_std": 0.10806864034890659,
+   "ic_t": 7.564698077544043,
+   "ic_n_dates": 1300,
+   "ic_hit": 0.583076923076923,
+   "ic_note": "t is across DATES. Overlapping 21-session windows mean consecutive dates are not independent, so this t is OPTIMISTIC and is reported as a diagnostic, not a claim.",
+   "decile_mean_rel_pct": {
+    "0": 0.05,
+    "1": 0.16,
+    "2": 0.06,
+    "3": -0.1,
+    "4": -0.09,
+    "5": -0.1,
+    "6": 0.0,
+    "7": 0.01,
+    "8": -0.02,
+    "9": 0.03
+   },
+   "breadth": {
+    "10": {
+     "net": -0.006203507758052916,
+     "gross": -0.004403869296514455,
+     "t": -0.7367133475388317,
+     "hit": 0.41615384615384615,
+     "cost_bps": 17.996384615384613,
+     "n_dates": 1300
+    },
+    "20": {
+     "net": -0.004704179290871497,
+     "gross": -0.0029574831370253454,
+     "t": -0.6900973865606406,
+     "hit": 0.42538461538461536,
+     "cost_bps": 17.466961538461536,
+     "n_dates": 1300
+    },
+    "50": {
+     "net": -0.0014919062802716421,
+     "gross": 0.00020238448895912761,
+     "t": -0.4212379493688967,
+     "hit": 0.45384615384615384,
+     "cost_bps": 16.942907692307696,
+     "n_dates": 1300
+    },
+    "100": {
+     "net": -0.0009723432668359108,
+     "gross": 0.0007124028870102439,
+     "t": -0.43228383830286093,
+     "hit": 0.4646153846153846,
+     "cost_bps": 16.847461538461538,
+     "n_dates": 1300
+    },
+    "200": {
+     "net": -0.0014011672991874932,
+     "gross": 0.00032002231619712197,
+     "t": -0.6580144578304397,
+     "hit": 0.4684615384615385,
+     "cost_bps": 17.211896153846155,
+     "n_dates": 1300
+    },
+    "300": {
+     "net": -0.0015497404040084673,
+     "gross": 0.000217167288299225,
+     "t": -0.8379139375258944,
+     "hit": 0.47846153846153844,
+     "cost_bps": 17.669076923076922,
+     "n_dates": 1300
+    },
+    "500": {
+     "net": -0.0016405884391213687,
+     "gross": 0.0002000040224170929,
+     "t": -1.1494965978156761,
+     "hit": 0.4646153846153846,
+     "cost_bps": 18.405924615384617,
+     "n_dates": 1300
+    }
+   },
+   "n_oos_rows": 3032725
+  },
+  "lgbm_small": {
+   "k": 20,
+   "n_dates": 1300,
+   "n_blocks": 67,
+   "mean_net_rel_21d": -0.0015027247596684746,
+   "mean_gross_rel_21d": -0.0005742786058223209,
+   "mean_cost_bps": 9.284461538461539,
+   "block_se": 0.0047420176230626235,
+   "t_across_blocks": -0.5613713712607704,
+   "hit_rate_dates": 0.47923076923076924,
+   "worst_date": {
+    "date": "2021-12-06",
+    "gross": -0.1932221581472145,
+    "net": -0.1940621581472145,
+    "cost_bps": 8.4,
+    "n": 20
+   },
+   "best_date": {
+    "date": "2021-05-10",
+    "gross": 0.3613176783207371,
+    "net": 0.36035767832073706,
+    "cost_bps": 9.6,
+    "n": 20
+   },
+   "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+   "ic_mean": 0.011207411272646652,
+   "ic_std": 0.0905101501356567,
+   "ic_t": 4.46457065292409,
+   "ic_n_dates": 1300,
+   "ic_hit": 0.563076923076923,
+   "ic_note": "t is across DATES. Overlapping 21-session windows mean consecutive dates are not independent, so this t is OPTIMISTIC and is reported as a diagnostic, not a claim.",
+   "decile_mean_rel_pct": {
+    "0": 0.17,
+    "1": 0.18,
+    "2": 0.05,
+    "3": 0.05,
+    "4": 0.05,
+    "5": 0.02,
+    "6": -0.0,
+    "7": -0.07,
+    "8": -0.16,
+    "9": -0.29
+   },
+   "breadth": {
+    "10": {
+     "net": -0.0022676106782544385,
+     "gross": -0.001396179909023669,
+     "t": -0.42420528146387904,
+     "hit": 0.46076923076923076,
+     "cost_bps": 8.714307692307692,
+     "n_dates": 1300
+    },
+    "20": {
+     "net": -0.0015027247596684746,
+     "gross": -0.0005742786058223209,
+     "t": -0.5613713712607704,
+     "hit": 0.47923076923076924,
+     "cost_bps": 9.284461538461539,
+     "n_dates": 1300
+    },
+    "50": {
+     "net": -0.003194436097630821,
+     "gross": -0.0022122653284000517,
+     "t": -1.273560740782889,
+     "hit": 0.4815384615384615,
+     "cost_bps": 9.821707692307694,
+     "n_dates": 1300
+    },
+    "100": {
+     "net": -0.003759896299366321,
+     "gross": -0.0027138770685970906,
+     "t": -1.6368792221680724,
+     "hit": 0.46384615384615385,
+     "cost_bps": 10.460192307692308,
+     "n_dates": 1300
+    },
+    "200": {
+     "net": -0.003849953352039932,
+     "gross": -0.0027254960443476245,
+     "t": -2.034678838660279,
+     "hit": 0.44846153846153847,
+     "cost_bps": 11.244573076923077,
+     "n_dates": 1300
+    },
+    "300": {
+     "net": -0.003781506642041189,
+     "gross": -0.0025793651035796498,
+     "t": -2.2580906947499875,
+     "hit": 0.4492307692307692,
+     "cost_bps": 12.021415384615384,
+     "n_dates": 1300
+    },
+    "500": {
+     "net": -0.0033108498232645176,
+     "gross": -0.0019481196694183635,
+     "t": -2.5089430913297908,
+     "hit": 0.45076923076923076,
+     "cost_bps": 13.627301538461538,
+     "n_dates": 1300
+    }
+   },
+   "n_oos_rows": 3032725
+  }
+ },
+ "winner": {
+  "model": "lgbm_small",
+  "mean_net_rel_21d": -0.0015027247596684746,
+  "t_across_blocks": -0.5613713712607704
+ },
+ "verdict": "ALL NEGATIVE: the best of 4 rankers (lgbm_small) still earned -0.15% relative per 21 sessions net over 67 month-blocks. Price/volume alone does not rank this cross-section at this horizon. Widest read: composite_prior at k=50 nets -0.06%; the best GROSS cell is composite_prior at k=50 at +0.28% before costs of ~9 bps. The ordering carries a real but TINY edge that its own transaction costs consume \u2014 so the next move is a signal with more amplitude, not a cheaper execution. The live loop must stay in observe; the next move is another INPUT (fundamentals, revisions, typed news), not another model.",
+ "read_me_first": "PRODUCT_EXPERIMENT. Feature signs are chosen on each fold's TRAINING rows and frozen before its test rows are scored. t is across month blocks, and overlapping 21-session windows still make it optimistic. This selects a ranker for PAPER deployment; it is not an alpha claim.",
+ "survivorship": {
+  "n_symbols": 4793,
+  "panel_last_session": "2026-09-21",
+  "stopped_30d_before_end": 1574,
+  "stopped_90d_before_end": 1573,
+  "stopped_180d_before_end": 1567,
+  "fraction_dead_90d": 0.3282,
+  "verdict": "1,573 of 4,793 symbols (32.8%) stop trading well before the end, so delistings are represented."
+ }
+}

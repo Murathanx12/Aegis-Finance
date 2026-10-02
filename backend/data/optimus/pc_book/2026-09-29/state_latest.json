@@ -1,0 +1,112 @@
+{
+ "t": "2026-09-29T23:51:26+00:00",
+ "tag": "plan",
+ "account_number": "PA37CSAUFCQR",
+ "equity": 999275.67,
+ "last_equity": 999372.58,
+ "cash": 800653.35,
+ "long_market_value": 198622.32,
+ "short_market_value": 0.0,
+ "buying_power": 3758755.89,
+ "n_positions": 10,
+ "positions": [
+  {
+   "symbol": "AAPL",
+   "qty": 58.0,
+   "avg_entry_price": 335.18,
+   "market_value": 19157.4,
+   "unrealized_pl": -283.04,
+   "unrealized_plpc": -0.01456,
+   "current_price": 330.3
+  },
+  {
+   "symbol": "AMZN",
+   "qty": 79.0,
+   "avg_entry_price": 248.46,
+   "market_value": 19518.53,
+   "unrealized_pl": -109.81,
+   "unrealized_plpc": -0.00559,
+   "current_price": 247.07
+  },
+  {
+   "symbol": "AVPT",
+   "qty": 1524.0,
+   "avg_entry_price": 13.19,
+   "market_value": 20853.5016,
+   "unrealized_pl": 751.9416,
+   "unrealized_plpc": 0.03741,
+   "current_price": 13.6834
+  },
+  {
+   "symbol": "GOOGL",
+   "qty": 58.0,
+   "avg_entry_price": 345.541897,
+   "market_value": 19805.9676,
+   "unrealized_pl": -235.462426,
+   "unrealized_plpc": -0.01175,
+   "current_price": 341.4822
+  },
+  {
+   "symbol": "INCY",
+   "qty": 160.0,
+   "avg_entry_price": 125.99,
+   "market_value": 19681.44,
+   "unrealized_pl": -476.96,
+   "unrealized_plpc": -0.02366,
+   "current_price": 123.009
+  },
+  {
+   "symbol": "JAZZ",
+   "qty": 84.0,
+   "avg_entry_price": 237.35,
+   "market_value": 19517.4,
+   "unrealized_pl": -420.0,
+   "unrealized_plpc": -0.02107,
+   "current_price": 232.35
+  },
+  {
+   "symbol": "META",
+   "qty": 26.0,
+   "avg_entry_price": 757.100769,
+   "market_value": 19344.0,
+   "unrealized_pl": -340.619994,
+   "unrealized_plpc": -0.0173,
+   "current_price": 744.0
+  },
+  {
+   "symbol": "NVDA",
+   "qty": 88.0,
+   "avg_entry_price": 226.599432,
+   "market_value": 20085.12,
+   "unrealized_pl": 144.369984,
+   "unrealized_plpc": 0.00724,
+   "current_price": 228.24
+  },
+  {
+   "symbol": "SNDR",
+   "qty": 642.0,
+   "avg_entry_price": 32.026293,
+   "market_value": 20531.16,
+   "unrealized_pl": -29.720106,
+   "unrealized_plpc": -0.00145,
+   "current_price": 31.98
+  },
+  {
+   "symbol": "TSM",
+   "qty": 44.0,
+   "avg_entry_price": 446.71,
+   "market_value": 20127.8,
+   "unrealized_pl": 472.56,
+   "unrealized_plpc": 0.02404,
+   "current_price": 457.45
+  }
+ ],
+ "benchmarks": {
+  "SPY": 764.38,
+  "QQQ": 738.9,
+  "IWM": 279.25
+ },
+ "benchmark_error": null,
+ "invested_frac": 0.1987662923885658,
+ "intraday_return": -9.697084144522083e-05
+}

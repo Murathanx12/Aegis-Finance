@@ -1,0 +1,65 @@
+{
+ "receipt": "lab_theme_streams_run",
+ "licence": "PRODUCT_EXPERIMENT",
+ "stage": "raw",
+ "llm_spend_usd": 0.0,
+ "utc": "2026-09-13T11:04:25+00:00",
+ "date": "2026-09-13",
+ "origin": "murat_theme",
+ "origin_text": "linkedin theory, business pivot to ai, motivation, holders, the business, the future anything",
+ "streams": [
+  {
+   "mechanism_id": "hiring_pivot_ai_v1",
+   "theme": "hiring / 'linkedin theory'",
+   "readiness": "registered_awaiting_collector",
+   "n_fired": 0,
+   "n_observations": 0,
+   "due": true,
+   "status": "REGISTERED_AWAITING_COLLECTOR",
+   "blocked_by": "the registry row is `implemented: false` and its own note says the collector `scripts/hiring_pull.py` is not built and the company-to-board-token mapping does not exist. LinkedIn itself is banned; the ATS boards are the legal substitute and they still need a fetcher."
+  },
+  {
+   "mechanism_id": "holders_13f_v1",
+   "theme": "holders",
+   "readiness": "observing",
+   "n_fired": 0,
+   "n_observations": 12,
+   "due": true,
+   "unavailable": [],
+   "status": "ok",
+   "may_forecast": {
+    "mechanism_id": "holders_13f_v1",
+    "n_observations": 12,
+    "required": 15,
+    "may_forecast": false,
+    "why_not": "12 observation(s) of the 15 needed to anchor a probability that is not invented"
+   }
+  },
+  {
+   "mechanism_id": "pivot_to_ai_narrative_v1",
+   "theme": "business pivot to AI, beyond the hiring proxy",
+   "readiness": "placeholder",
+   "n_fired": 0,
+   "n_observations": 0,
+   "due": true,
+   "status": "PLACEHOLDER",
+   "blocked_by": "the frozen 43-id event vocabulary carries NO strategic-pivot class. `new_contract_or_partnership` and `product_launch_or_innovation` are the nearest ids and neither is a pivot. A new vocabulary id is chunk-15 work, and typing rows against the wrong id would be worse than not typing them."
+  },
+  {
+   "mechanism_id": "management_motivation_v1",
+   "theme": "management motivation",
+   "readiness": "placeholder",
+   "n_fired": 0,
+   "n_observations": 0,
+   "due": true,
+   "status": "PLACEHOLDER",
+   "blocked_by": "no collector exists. It would need an LLM read of earnings-call transcripts or shareholder letters, and this repository does not ingest either as a labelled source. Named here so the stream can start accruing the day one exists, rather than being invented later with no history."
+  }
+ ],
+ "not_a_stream": {
+  "theme": "the business, the future, anything",
+  "why": "a catch-all mechanism_id with no falsifiable `applies_when` is the shape M2's schema refuses (`applies_when` is a typed condition list, minItems 1). This surface is X3's once X3 is wired; an untyped bucket now would put ungradeable rows in a ledger whose whole value is that everything in it can be graded."
+ },
+ "registry_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\lab_theme_streams.json",
+ "headline": "1 observing, 1 awaiting a collector, 2 placeholder; 12 observation(s), 0 forecast(s)"
+}

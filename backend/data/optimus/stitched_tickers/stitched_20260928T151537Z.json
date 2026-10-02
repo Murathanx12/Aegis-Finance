@@ -1,0 +1,2371 @@
+{
+ "artefact": "STITCHED_TICKERS",
+ "run_id": "20260928T151537Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "sources": [
+  "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars.parquet",
+  "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars_delisted.parquet"
+ ],
+ "panel_last_session": "2026-09-25",
+ "gap_sessions_threshold": 20,
+ "price_jump_ratio": 3.0,
+ "registrant_sources": [
+  "sec_facts_history.parquet",
+  "company_tickers.json"
+ ],
+ "n_candidate_gaps": 63,
+ "by_verdict": {
+  "STITCHED": 62,
+  "SUSPENSION": 1
+ },
+ "cut_symbols": [
+  "AHL",
+  "AKTS",
+  "APC",
+  "AT",
+  "ATC",
+  "BID",
+  "BITA",
+  "BREW",
+  "BVAL",
+  "CAI",
+  "CCXI",
+  "CEFZ",
+  "CHA",
+  "CHAC",
+  "CTAA",
+  "EMES",
+  "FIYY",
+  "FLAG",
+  "FLXN",
+  "FLY",
+  "FLYT",
+  "FNG",
+  "GLDW",
+  "GNMX",
+  "HAWK",
+  "ITG",
+  "JAN",
+  "JCAP",
+  "JHDG",
+  "JONE",
+  "LEND",
+  "LIFE",
+  "LMNX",
+  "LOGO",
+  "MB",
+  "MIC",
+  "MLPI",
+  "NIQ",
+  "NP",
+  "NYNY",
+  "PAAC",
+  "PCI",
+  "PPLC",
+  "PS",
+  "RISE",
+  "SCA",
+  "SEMG",
+  "SIC",
+  "SMHD",
+  "STLR",
+  "TACO",
+  "TAPR",
+  "THOR",
+  "TIER",
+  "TRIL",
+  "ULTI",
+  "UN",
+  "VIA",
+  "WLTH",
+  "XCOM",
+  "XDIV",
+  "XE"
+ ],
+ "cut_and_resumed_inside_12_1_window": [
+  "AKTS",
+  "APC",
+  "AT",
+  "ATC",
+  "BID",
+  "BITA",
+  "BREW",
+  "CCXI",
+  "CTAA",
+  "FIYY",
+  "FLYT",
+  "FNG",
+  "GLDW",
+  "GNMX",
+  "HAWK",
+  "ITG",
+  "JAN",
+  "JHDG",
+  "JONE",
+  "LEND",
+  "LIFE",
+  "LMNX",
+  "MIC",
+  "MLPI",
+  "NP",
+  "NYNY",
+  "PAAC",
+  "PPLC",
+  "PS",
+  "RISE",
+  "SCA",
+  "SIC",
+  "SMHD",
+  "STLR",
+  "THOR",
+  "TRIL",
+  "ULTI",
+  "UN",
+  "VIA",
+  "WLTH",
+  "XCOM",
+  "XE"
+ ],
+ "gaps": [
+  {
+   "symbol": "AHL",
+   "gap_index": 1,
+   "last_before": "2019-02-14",
+   "close_before": 42.74,
+   "first_after": "2025-05-08",
+   "close_after": 32.5,
+   "gap_sessions": 1566,
+   "price_ratio": 0.7604117922321011,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 347,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "AKTS",
+   "gap_index": 1,
+   "last_before": "2024-12-17",
+   "close_before": 0.0372,
+   "first_after": "2026-01-09",
+   "close_after": 22.4,
+   "gap_sessions": 265,
+   "price_ratio": 602.1505376344086,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 2035832.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2026-05-11",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 2035832 first filed 2026-05-11 after the old segment ended 2024-12-17",
+    "price_jump: 0.0372 -> 22.4 (x602.15)",
+    "recent_file_first_trade: prices_2025_26 starts 2026-01-09 (the older file has history to 2024-12-17)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 178,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "APC",
+   "gap_index": 1,
+   "last_before": "2019-08-08",
+   "close_before": 69.92,
+   "first_after": "2026-02-12",
+   "close_after": 16.86,
+   "gap_sessions": 1637,
+   "price_ratio": 0.24113272311212813,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": 2080921.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2026-05-11",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 2080921 first filed 2026-05-11 after the old segment ended 2019-08-08",
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 69.92 -> 16.86 (x0.24)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 155,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "AT",
+   "gap_index": 1,
+   "last_before": "2021-05-14",
+   "close_before": 3.02,
+   "first_after": "2026-09-15",
+   "close_after": 20.03,
+   "gap_sessions": 1339,
+   "price_ratio": 6.6324503311258285,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 3.02 -> 20.03 (x6.63)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 8,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "ATC",
+   "gap_index": 1,
+   "last_before": "2022-08-16",
+   "close_before": 20.15,
+   "first_after": "2026-05-12",
+   "close_after": 21.68,
+   "gap_sessions": 937,
+   "price_ratio": 1.0759305210918115,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 94,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "BID",
+   "gap_index": 1,
+   "last_before": "2019-10-02",
+   "close_before": 56.99,
+   "first_after": "2026-07-20",
+   "close_after": 9.84,
+   "gap_sessions": 1706,
+   "price_ratio": 0.1726618705035971,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": 2094919.0,
+   "cik_source": "company_tickers",
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "2025-12-31",
+   "evidence": [
+    "cik_band_after: CIK 2094919 (no filings on disk); CIKs numbered near it first filed ~2025-12-31 (ESTIMATE), after the old segment ended 2019-10-02",
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 56.99 -> 9.84 (x0.17)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 48,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "BITA",
+   "gap_index": 1,
+   "last_before": "2020-11-04",
+   "close_before": 15.36,
+   "first_after": "2026-06-16",
+   "close_after": 50.87,
+   "gap_sessions": 1408,
+   "price_ratio": 3.3118489583333335,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": 2089969.0,
+   "cik_source": "company_tickers",
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "2025-12-14",
+   "evidence": [
+    "cik_band_after: CIK 2089969 (no filings on disk); CIKs numbered near it first filed ~2025-12-14 (ESTIMATE), after the old segment ended 2020-11-04",
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 15.36 -> 50.87 (x3.31)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 70,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "BREW",
+   "gap_index": 1,
+   "last_before": "2020-09-29",
+   "close_before": 16.51,
+   "first_after": "2026-05-06",
+   "close_after": 25.5139,
+   "gap_sessions": 1406,
+   "price_ratio": 1.545360387643852,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 98,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "BVAL",
+   "gap_index": 1,
+   "last_before": "2020-07-30",
+   "close_before": 15.9,
+   "first_after": "2025-06-23",
+   "close_after": 24.86,
+   "gap_sessions": 1229,
+   "price_ratio": 1.5635220125786162,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 317,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "CAI",
+   "gap_index": 1,
+   "last_before": "2021-11-22",
+   "close_before": 56.0,
+   "first_after": "2025-06-18",
+   "close_after": 28.0,
+   "gap_sessions": 895,
+   "price_ratio": 0.5,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 2019410.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2025-08-12",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 2019410 first filed 2025-08-12 after the old segment ended 2021-11-22",
+    "recent_file_first_trade: prices_2025_26 starts 2025-06-18 (the older file has history to 2021-11-22)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 319,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "CCXI",
+   "gap_index": 1,
+   "last_before": "2022-10-19",
+   "close_before": 51.99,
+   "first_after": "2026-02-09",
+   "close_after": 10.26,
+   "gap_sessions": 828,
+   "price_ratio": 0.19734564339296018,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 2074973.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2026-03-26",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 2074973 first filed 2026-03-26 after the old segment ended 2022-10-19",
+    "price_jump: 51.99 -> 10.26 (x0.20)",
+    "recent_file_first_trade: prices_2025_26 starts 2026-02-09 (the older file has history to 2022-10-19)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 158,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "CEFZ",
+   "gap_index": 1,
+   "last_before": "2020-03-26",
+   "close_before": 3.275,
+   "first_after": "2025-08-04",
+   "close_after": 7.116,
+   "gap_sessions": 1345,
+   "price_ratio": 2.172824427480916,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 288,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "CHA",
+   "gap_index": 1,
+   "last_before": "2021-01-08",
+   "close_before": 24.87,
+   "first_after": "2025-04-17",
+   "close_after": 30.5,
+   "gap_sessions": 1073,
+   "price_ratio": 1.2263771612384398,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 2013649.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2026-04-29",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 2013649 first filed 2026-04-29 after the old segment ended 2021-01-08",
+    "recent_file_first_trade: prices_2025_26 starts 2025-04-17 (the older file has history to 2021-01-08)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 361,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "CHAC",
+   "gap_index": 1,
+   "last_before": "2019-10-28",
+   "close_before": 10.55,
+   "first_after": "2025-05-19",
+   "close_after": 9.9,
+   "gap_sessions": 1396,
+   "price_ratio": 0.938388625592417,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 340,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "CTAA",
+   "gap_index": 1,
+   "last_before": "2021-02-12",
+   "close_before": 25.06,
+   "first_after": "2026-04-16",
+   "close_after": 9.89,
+   "gap_sessions": 1298,
+   "price_ratio": 0.3946528332003193,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": 2094073.0,
+   "cik_source": "company_tickers",
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "2025-12-31",
+   "evidence": [
+    "cik_band_after: CIK 2094073 (no filings on disk); CIKs numbered near it first filed ~2025-12-31 (ESTIMATE), after the old segment ended 2021-02-12",
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 112,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "EMES",
+   "gap_index": 1,
+   "last_before": "2019-05-31",
+   "close_before": 0.2087,
+   "first_after": "2025-05-15",
+   "close_after": 19.94,
+   "gap_sessions": 1498,
+   "price_ratio": 95.54384283660758,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 0.2087 -> 19.94 (x95.54)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 342,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "FIYY",
+   "gap_index": 1,
+   "last_before": "2020-12-10",
+   "close_before": 101.08,
+   "first_after": "2026-05-05",
+   "close_after": 24.67,
+   "gap_sessions": 1354,
+   "price_ratio": 0.24406410763751485,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 101.1 -> 24.67 (x0.24)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 99,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "FLAG",
+   "gap_index": 1,
+   "last_before": "2023-09-12",
+   "close_before": 7.826,
+   "first_after": "2025-04-16",
+   "close_after": 24.14,
+   "gap_sessions": 400,
+   "price_ratio": 3.0845898287758757,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 7.826 -> 24.14 (x3.08)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 362,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "FLXN",
+   "gap_index": 1,
+   "last_before": "2021-11-18",
+   "close_before": 8.209,
+   "first_after": "2025-07-03",
+   "close_after": 22.57,
+   "gap_sessions": 907,
+   "price_ratio": 2.749421366792545,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 309,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "FLY",
+   "gap_index": 1,
+   "last_before": "2021-08-02",
+   "close_before": 17.03,
+   "first_after": "2025-08-07",
+   "close_after": 60.35,
+   "gap_sessions": 1008,
+   "price_ratio": 3.543746330005872,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 1860160.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2025-09-22",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 1860160 first filed 2025-09-22 after the old segment ended 2021-08-02",
+    "price_jump: 17.03 -> 60.35 (x3.54)",
+    "recent_file_first_trade: prices_2025_26 starts 2025-08-07 (the older file has history to 2021-08-02)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 285,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "FLYT",
+   "gap_index": 1,
+   "last_before": "2022-01-14",
+   "close_before": 49.0088,
+   "first_after": "2025-10-23",
+   "close_after": 24.5694,
+   "gap_sessions": 946,
+   "price_ratio": 0.501326292420953,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 231,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "FNG",
+   "gap_index": 1,
+   "last_before": "2019-10-04",
+   "close_before": 10.41,
+   "first_after": "2026-06-16",
+   "close_after": 12.7717,
+   "gap_sessions": 1682,
+   "price_ratio": 1.2268683957732949,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 70,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "GLDW",
+   "gap_index": 1,
+   "last_before": "2019-09-09",
+   "close_before": 119.47,
+   "first_after": "2025-10-30",
+   "close_after": 40.1,
+   "gap_sessions": 1545,
+   "price_ratio": 0.3356491169331213,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 226,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "GNMX",
+   "gap_index": 1,
+   "last_before": "2020-02-03",
+   "close_before": 0.1659,
+   "first_after": "2026-05-06",
+   "close_after": 25.7062,
+   "gap_sessions": 1572,
+   "price_ratio": 154.94996986136226,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 0.1659 -> 25.71 (x154.95)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 98,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "HAWK",
+   "gap_index": 1,
+   "last_before": "2018-06-14",
+   "close_before": 45.15,
+   "first_after": "2026-05-07",
+   "close_after": 34.0,
+   "gap_sessions": 1984,
+   "price_ratio": 0.7530454042081949,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 1750704.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2026-06-22",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 1750704 first filed 2026-06-22 after the old segment ended 2018-06-14",
+    "recent_file_first_trade: prices_2025_26 starts 2026-05-07 (the older file has history to 2018-06-14)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 97,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "ITG",
+   "gap_index": 1,
+   "last_before": "2019-02-28",
+   "close_before": 30.23,
+   "first_after": "2026-07-01",
+   "close_after": 17.71,
+   "gap_sessions": 1844,
+   "price_ratio": 0.585841878928217,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 2110117.0,
+   "cik_source": "company_tickers",
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "2026-05-06",
+   "evidence": [
+    "cik_band_after: CIK 2110117 (no filings on disk); CIKs numbered near it first filed ~2026-05-06 (ESTIMATE), after the old segment ended 2019-02-28",
+    "recent_file_first_trade: prices_2025_26 starts 2026-07-01 (the older file has history to 2019-02-28)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 60,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "JAN",
+   "gap_index": 1,
+   "last_before": "2024-07-12",
+   "close_before": 2.206,
+   "first_after": "2026-03-20",
+   "close_after": 23.34,
+   "gap_sessions": 423,
+   "price_ratio": 10.580235720761559,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 2100805.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2026-05-06",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 2100805 first filed 2026-05-06 after the old segment ended 2024-07-12",
+    "price_jump: 2.206 -> 23.34 (x10.58)",
+    "recent_file_first_trade: prices_2025_26 starts 2026-03-20 (the older file has history to 2024-07-12)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 130,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "JCAP",
+   "gap_index": 1,
+   "last_before": "2020-11-05",
+   "close_before": 16.2,
+   "first_after": "2025-06-26",
+   "close_after": 17.44,
+   "gap_sessions": 1163,
+   "price_ratio": 1.0765432098765433,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 2046042.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2025-08-14",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 2046042 first filed 2025-08-14 after the old segment ended 2020-11-05",
+    "recent_file_first_trade: prices_2025_26 starts 2025-06-26 (the older file has history to 2020-11-05)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 314,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "JHDG",
+   "gap_index": 1,
+   "last_before": "2019-03-14",
+   "close_before": 25.44,
+   "first_after": "2026-04-08",
+   "close_after": 25.59,
+   "gap_sessions": 1776,
+   "price_ratio": 1.0058962264150944,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 118,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "JONE",
+   "gap_index": 1,
+   "last_before": "2018-11-26",
+   "close_before": 2.13,
+   "first_after": "2026-09-03",
+   "close_after": 9.84,
+   "gap_sessions": 1952,
+   "price_ratio": 4.619718309859155,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": 2129056.0,
+   "cik_source": "company_tickers",
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "2026-05-26",
+   "evidence": [
+    "cik_band_after: CIK 2129056 (no filings on disk); CIKs numbered near it first filed ~2026-05-26 (ESTIMATE), after the old segment ended 2018-11-26",
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 2.13 -> 9.84 (x4.62)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 15,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "LEND",
+   "gap_index": 1,
+   "last_before": "2021-06-25",
+   "close_before": 15.95,
+   "first_after": "2026-05-18",
+   "close_after": 24.58,
+   "gap_sessions": 1228,
+   "price_ratio": 1.541065830721003,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 90,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "LIFE",
+   "gap_index": 1,
+   "last_before": "2024-06-04",
+   "close_before": 1.9,
+   "first_after": "2026-01-29",
+   "close_after": 16.85,
+   "gap_sessions": 414,
+   "price_ratio": 8.86842105263158,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 1788451.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2026-03-17",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 1788451 first filed 2026-03-17 after the old segment ended 2024-06-04",
+    "price_jump: 1.9 -> 16.85 (x8.87)",
+    "recent_file_first_trade: prices_2025_26 starts 2026-01-29 (the older file has history to 2024-06-04)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 165,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "LMNX",
+   "gap_index": 1,
+   "last_before": "2021-07-13",
+   "close_before": 36.99,
+   "first_after": "2025-10-16",
+   "close_after": 16.3173,
+   "gap_sessions": 1071,
+   "price_ratio": 0.4411273317112733,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 236,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "LOGO",
+   "gap_index": 1,
+   "last_before": "2018-09-28",
+   "close_before": 16.71,
+   "first_after": "2025-05-28",
+   "close_after": 19.9055,
+   "gap_sessions": 1673,
+   "price_ratio": 1.1912327947336923,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 334,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "MB",
+   "gap_index": 1,
+   "last_before": "2019-02-14",
+   "close_before": 36.46,
+   "first_after": "2025-04-10",
+   "close_after": 4.1,
+   "gap_sessions": 1547,
+   "price_ratio": 0.1124520021941854,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": 2027265.0,
+   "cik_source": "company_tickers",
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "2024-08-13",
+   "evidence": [
+    "cik_band_after: CIK 2027265 (no filings on disk); CIKs numbered near it first filed ~2024-08-13 (ESTIMATE), after the old segment ended 2019-02-14",
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 36.46 -> 4.1 (x0.11)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 366,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "MIC",
+   "gap_index": 1,
+   "last_before": "2022-07-20",
+   "close_before": 4.09,
+   "first_after": "2026-06-26",
+   "close_after": 21.6708,
+   "gap_sessions": 987,
+   "price_ratio": 5.298484107579462,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 4.09 -> 21.67 (x5.30)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 63,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "MLPI",
+   "gap_index": 1,
+   "last_before": "2020-11-23",
+   "close_before": 9.978,
+   "first_after": "2025-12-18",
+   "close_after": 44.08,
+   "gap_sessions": 1273,
+   "price_ratio": 4.417718981759871,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 9.978 -> 44.08 (x4.42)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 192,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "NBIS",
+   "gap_index": 1,
+   "last_before": "2024-08-19",
+   "close_before": 18.94,
+   "first_after": "2024-10-21",
+   "close_after": 20.0,
+   "gap_sessions": 44,
+   "price_ratio": 1.0559662090813093,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 1513845.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2012-03-02",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "same_registrant: CIK 1513845 filed from 2012-03-02, before the old segment ended",
+    "recent_file_first_trade: prices_2025_26 starts 2025-01-02 (the older file has history to 2024-08-19)"
+   ],
+   "verdict": "SUSPENSION",
+   "sessions_since_resume": 483,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "NIQ",
+   "gap_index": 1,
+   "last_before": "2023-06-23",
+   "close_before": 12.87,
+   "first_after": "2025-07-23",
+   "close_after": 19.01,
+   "gap_sessions": 521,
+   "price_ratio": 1.4770784770784773,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 2054696.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2025-08-15",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 2054696 first filed 2025-08-15 after the old segment ended 2023-06-23",
+    "recent_file_first_trade: prices_2025_26 starts 2025-07-23 (the older file has history to 2023-06-23)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 296,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "NP",
+   "gap_index": 1,
+   "last_before": "2022-07-05",
+   "close_before": 32.0,
+   "first_after": "2025-10-01",
+   "close_after": 24.8,
+   "gap_sessions": 814,
+   "price_ratio": 0.775,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 2067129.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2025-11-12",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 2067129 first filed 2025-11-12 after the old segment ended 2022-07-05",
+    "recent_file_first_trade: prices_2025_26 starts 2025-10-01 (the older file has history to 2022-07-05)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 247,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "NYNY",
+   "gap_index": 1,
+   "last_before": "2019-11-15",
+   "close_before": 9.75,
+   "first_after": "2026-05-06",
+   "close_after": 25.38,
+   "gap_sessions": 1624,
+   "price_ratio": 2.603076923076923,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 98,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "PAAC",
+   "gap_index": 1,
+   "last_before": "2020-06-16",
+   "close_before": 7.61,
+   "first_after": "2026-04-06",
+   "close_after": 10.0,
+   "gap_sessions": 1457,
+   "price_ratio": 1.314060446780552,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": 2087446.0,
+   "cik_source": "company_tickers",
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "2025-11-13",
+   "evidence": [
+    "cik_band_after: CIK 2087446 (no filings on disk); CIKs numbered near it first filed ~2025-11-13 (ESTIMATE), after the old segment ended 2020-06-16",
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 120,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "PCI",
+   "gap_index": 1,
+   "last_before": "2021-12-10",
+   "close_before": 19.4,
+   "first_after": "2025-08-01",
+   "close_after": 47.7,
+   "gap_sessions": 912,
+   "price_ratio": 2.4587628865979383,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 289,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "PPLC",
+   "gap_index": 1,
+   "last_before": "2020-09-25",
+   "close_before": 43.17,
+   "first_after": "2026-03-04",
+   "close_after": 49.32,
+   "gap_sessions": 1364,
+   "price_ratio": 1.1424600416956219,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": 922224.0,
+   "cik_source": "company_tickers",
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "2010-02-19",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 142,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "PS",
+   "gap_index": 1,
+   "last_before": "2021-04-05",
+   "close_before": 22.37,
+   "first_after": "2026-04-29",
+   "close_after": 24.12,
+   "gap_sessions": 1273,
+   "price_ratio": 1.078229772016093,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 2026053.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2026-06-04",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 2026053 first filed 2026-06-04 after the old segment ended 2021-04-05",
+    "recent_file_first_trade: prices_2025_26 starts 2026-04-29 (the older file has history to 2021-04-05)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 103,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "RISE",
+   "gap_index": 1,
+   "last_before": "2020-10-30",
+   "close_before": 19.57,
+   "first_after": "2026-04-23",
+   "close_after": 19.13,
+   "gap_sessions": 1374,
+   "price_ratio": 0.9775166070516096,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 107,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "SCA",
+   "gap_index": 1,
+   "last_before": "2021-02-11",
+   "close_before": 22.11,
+   "first_after": "2026-05-27",
+   "close_after": 22.07,
+   "gap_sessions": 1327,
+   "price_ratio": 0.9981908638625057,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 84,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "SEMG",
+   "gap_index": 1,
+   "last_before": "2019-12-04",
+   "close_before": 15.01,
+   "first_after": "2025-05-14",
+   "close_after": 25.31,
+   "gap_sessions": 1367,
+   "price_ratio": 1.6862091938707529,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 343,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "SIC",
+   "gap_index": 1,
+   "last_before": "2021-10-20",
+   "close_before": 14.49,
+   "first_after": "2026-08-17",
+   "close_after": 49.8334,
+   "gap_sessions": 1209,
+   "price_ratio": 3.439158040027605,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 14.49 -> 49.83 (x3.44)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 28,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "SMHD",
+   "gap_index": 1,
+   "last_before": "2020-03-20",
+   "close_before": 2.37,
+   "first_after": "2026-08-04",
+   "close_after": 41.617,
+   "gap_sessions": 1600,
+   "price_ratio": 17.559915611814343,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 2.37 -> 41.62 (x17.56)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 37,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "STLR",
+   "gap_index": 1,
+   "last_before": "2018-12-13",
+   "close_before": 10.4,
+   "first_after": "2026-04-01",
+   "close_after": 20.33,
+   "gap_sessions": 1833,
+   "price_ratio": 1.954807692307692,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 122,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "TACO",
+   "gap_index": 1,
+   "last_before": "2022-03-07",
+   "close_before": 12.51,
+   "first_after": "2025-06-05",
+   "close_after": 10.3,
+   "gap_sessions": 815,
+   "price_ratio": 0.8233413269384493,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": 2033122.0,
+   "cik_source": "company_tickers",
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "2024-09-26",
+   "evidence": [
+    "cik_band_after: CIK 2033122 (no filings on disk); CIKs numbered near it first filed ~2024-09-26 (ESTIMATE), after the old segment ended 2022-03-07",
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 328,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "TAPR",
+   "gap_index": 1,
+   "last_before": "2020-11-30",
+   "close_before": 77.0,
+   "first_after": "2025-04-01",
+   "close_after": 24.312,
+   "gap_sessions": 1088,
+   "price_ratio": 0.31574025974025977,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": 312070.0,
+   "cik_source": "company_tickers",
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "2009-07-23",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 77 -> 24.31 (x0.32)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 373,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "THOR",
+   "gap_index": 1,
+   "last_before": "2020-01-22",
+   "close_before": 67.71,
+   "first_after": "2026-06-23",
+   "close_after": 24.88,
+   "gap_sessions": 1612,
+   "price_ratio": 0.3674494166297445,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 66,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "TIER",
+   "gap_index": 1,
+   "last_before": "2019-06-14",
+   "close_before": 28.42,
+   "first_after": "2025-06-26",
+   "close_after": 25.14,
+   "gap_sessions": 1516,
+   "price_ratio": 0.884588318085855,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 314,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "TRIL",
+   "gap_index": 1,
+   "last_before": "2021-11-16",
+   "close_before": 18.44,
+   "first_after": "2025-09-30",
+   "close_after": 20.0449,
+   "gap_sessions": 970,
+   "price_ratio": 1.0870336225596529,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 248,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "ULTI",
+   "gap_index": 1,
+   "last_before": "2019-05-02",
+   "close_before": 172.82,
+   "first_after": "2025-10-31",
+   "close_after": 13.47,
+   "gap_sessions": 1635,
+   "price_ratio": 0.07794236778150677,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 172.8 -> 13.47 (x0.08)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 225,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "UN",
+   "gap_index": 1,
+   "last_before": "2020-11-27",
+   "close_before": 60.5,
+   "first_after": "2026-07-07",
+   "close_after": 26.2239,
+   "gap_sessions": 1405,
+   "price_ratio": 0.4334528925619835,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 57,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "VIA",
+   "gap_index": 1,
+   "last_before": "2024-06-13",
+   "close_before": 10.995,
+   "first_after": "2025-09-12",
+   "close_after": 49.51,
+   "gap_sessions": 312,
+   "price_ratio": 4.502955889040473,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 1603015.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2025-11-14",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 1603015 first filed 2025-11-14 after the old segment ended 2024-06-13",
+    "price_jump: 10.99 -> 49.51 (x4.50)",
+    "recent_file_first_trade: prices_2025_26 starts 2025-09-12 (the older file has history to 2024-06-13)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 260,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "WLTH",
+   "gap_index": 1,
+   "last_before": "2023-06-12",
+   "close_before": 8.325,
+   "first_after": "2025-12-12",
+   "close_after": 14.19,
+   "gap_sessions": 629,
+   "price_ratio": 1.7045045045045046,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 1524566.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2026-01-23",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 1524566 first filed 2026-01-23 after the old segment ended 2023-06-12",
+    "recent_file_first_trade: prices_2025_26 starts 2025-12-12 (the older file has history to 2023-06-12)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 196,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "XCOM",
+   "gap_index": 1,
+   "last_before": "2020-10-01",
+   "close_before": 62.5,
+   "first_after": "2026-06-03",
+   "close_after": 25.256,
+   "gap_sessions": 1423,
+   "price_ratio": 0.404096,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 79,
+   "resumed_inside_12_1_window": true
+  },
+  {
+   "symbol": "XDIV",
+   "gap_index": 1,
+   "last_before": "2021-12-10",
+   "close_before": 105.7343,
+   "first_after": "2025-07-10",
+   "close_after": 25.26,
+   "gap_sessions": 896,
+   "price_ratio": 0.23890071622926526,
+   "old_src": "bars_delisted",
+   "new_src": "bars_delisted",
+   "cik": NaN,
+   "cik_source": null,
+   "cik_first_filed": "NaT",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "inactive_source: old segment from the inactive-asset pull (bars_delisted); a second listing period under the ticker follows (in bars_delisted)",
+    "price_jump: 105.7 -> 25.26 (x0.24)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 305,
+   "resumed_inside_12_1_window": false
+  },
+  {
+   "symbol": "XE",
+   "gap_index": 1,
+   "last_before": "2017-09-05",
+   "close_before": 9.7344,
+   "first_after": "2026-04-24",
+   "close_after": 29.2,
+   "gap_sessions": 2170,
+   "price_ratio": 2.9996712689020377,
+   "old_src": "bars",
+   "new_src": "bars",
+   "cik": 2088896.0,
+   "cik_source": "sec_facts_history",
+   "cik_first_filed": "2026-06-04",
+   "cik_band_first_filed": "NaT",
+   "evidence": [
+    "new_registrant: CIK 2088896 first filed 2026-06-04 after the old segment ended 2017-09-05",
+    "recent_file_first_trade: prices_2025_26 starts 2026-04-24 (the older file has history to 2017-09-05)"
+   ],
+   "verdict": "STITCHED",
+   "sessions_since_resume": 106,
+   "resumed_inside_12_1_window": true
+  }
+ ],
+ "blast_radius": {
+  "ranking": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\pc_book\\2026-09-28\\ranking.json",
+   "asof": "2026-09-25",
+   "n_top": 25,
+   "stitched_in_top": [
+    {
+     "rank": 2,
+     "symbol": "JAN"
+    },
+    {
+     "rank": 4,
+     "symbol": "MLPI"
+    }
+   ]
+  },
+  "intended_book": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\pc_book\\2026-09-28\\intended_book.json",
+   "t": "2026-09-28T15:14:56+00:00",
+   "symbols": [
+    "AAPL",
+    "AMZN",
+    "AVPT",
+    "GOOGL",
+    "INCY",
+    "JAZZ",
+    "META",
+    "NVDA",
+    "SNDR",
+    "TSM"
+   ],
+   "stitched": [],
+   "probe_weights_stitched": []
+  },
+  "decisions_jsonl_stitched_mentions": [],
+  "paper_positions": {
+   "paper_accounts/pc_snapshot/state_latest.json": {
+    "t": "2026-09-28T12:29:09+00:00",
+    "positions": [
+     "AAPL",
+     "ALLE",
+     "AMZN",
+     "AVPT",
+     "GOOG",
+     "GOOGL",
+     "INCY",
+     "JAZZ",
+     "META",
+     "NVDA",
+     "SNDR"
+    ],
+    "stitched": []
+   },
+   "review/state_latest.json": {
+    "t": "2026-09-28T14:09:53+00:00",
+    "positions": [
+     "AAPL",
+     "AMZN",
+     "AVPT",
+     "GOOGL",
+     "INCY",
+     "JAZZ",
+     "META",
+     "NVDA",
+     "SNDR",
+     "TSM"
+    ],
+    "stitched": []
+   },
+   "pc_book/state_latest.json": {
+    "t": "2026-09-25T13:48:58+00:00",
+    "positions": [
+     "AAPL",
+     "ALLE",
+     "AMZN",
+     "AVPT",
+     "GOOG",
+     "GOOGL",
+     "INCY",
+     "META",
+     "NVDA",
+     "SNDR"
+    ],
+    "stitched": []
+   },
+   "pc_book/2026-09-28/state_latest.json": {
+    "t": "2026-09-28T15:14:52+00:00",
+    "positions": [
+     "AAPL",
+     "AMZN",
+     "AVPT",
+     "GOOGL",
+     "INCY",
+     "JAZZ",
+     "META",
+     "NVDA",
+     "SNDR",
+     "TSM"
+    ],
+    "stitched": []
+   }
+  },
+  "candidate_funnel": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\funnel_history\\funnel_2026-09-24.json",
+   "n_symbols": 25,
+   "stitched": []
+  },
+  "frozen_books": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_portfolio\\books.jsonl",
+   "n_books_total": 312,
+   "n_books_holding_stitched": 45,
+   "books": [
+    {
+     "book_id": "4ffbfd2e83d06daa",
+     "name": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+     "kind": "control",
+     "frozen_utc": "2026-09-27T08:47:04+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.0629,
+      "LIFE": 0.0523,
+      "JAN": 0.1496
+     },
+     "stitched_weight": 0.2647
+    },
+    {
+     "book_id": "3fd38f0d7a4dcb03",
+     "name": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+     "kind": "control",
+     "frozen_utc": "2026-09-27T08:47:04+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.0624,
+      "LIFE": 0.0519,
+      "JAN": 0.1485
+     },
+     "stitched_weight": 0.2628
+    },
+    {
+     "book_id": "380be9ef9d5ff617",
+     "name": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control__ranks_k1_2k",
+     "kind": "twin",
+     "frozen_utc": "2026-09-27T08:47:04+00:00",
+     "stitched_holdings": {
+      "MLPI": 0.234
+     },
+     "stitched_weight": 0.234
+    },
+    {
+     "book_id": "20b02566f94cbb04",
+     "name": "lib_mom_12_1_ivw_lead_2026-09-27__control__ranks_k1_2k",
+     "kind": "twin",
+     "frozen_utc": "2026-09-27T08:47:04+00:00",
+     "stitched_holdings": {
+      "MLPI": 0.2291
+     },
+     "stitched_weight": 0.2291
+    },
+    {
+     "book_id": "d93fbf2c301248ca",
+     "name": "lib_disp_short_avoid_2026-09-27",
+     "kind": "personal",
+     "frozen_utc": "2026-09-26T17:37:26+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05,
+      "MLPI": 0.05
+     },
+     "stitched_weight": 0.2
+    },
+    {
+     "book_id": "9400f79fada66555",
+     "name": "lib_disp_short_avoid_2026-09-27__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-26T17:37:26+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05,
+      "MLPI": 0.05
+     },
+     "stitched_weight": 0.2
+    },
+    {
+     "book_id": "e41dbb1e06a12088",
+     "name": "lib_mom_12_1_q_2026-09-26",
+     "kind": "personal",
+     "frozen_utc": "2026-09-25T18:53:07+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "f16d01a11ab3ccc4",
+     "name": "lib_mom_12_1_q_2026-09-26__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-25T18:53:07+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "f0517a9aa6ab0bce",
+     "name": "lib_mom_no_downgrades_2026-09-26",
+     "kind": "personal",
+     "frozen_utc": "2026-09-25T18:53:08+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "10a4e908bcb91820",
+     "name": "lib_mom_no_downgrades_2026-09-26__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-25T18:53:08+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "5d01fa2898e2cb72",
+     "name": "lib_mom_12_1_2026-09-26",
+     "kind": "personal",
+     "frozen_utc": "2026-09-25T18:53:08+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "a313813bc4f6f741",
+     "name": "lib_mom_12_1_2026-09-26__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-25T18:53:08+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "2cc265ad037fae46",
+     "name": "lib_mom_12_1_liqw_sealed_2026-09-26__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-26T08:59:38+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "132c0abc5b9f366f",
+     "name": "lib_mom_12_1_secrel_sealed_2026-09-26",
+     "kind": "personal",
+     "frozen_utc": "2026-09-26T08:59:40+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "JAN": 0.05,
+      "LIFE": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "8eb4f35f5d0352c3",
+     "name": "lib_mom_12_1_secrel_sealed_2026-09-26__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-26T08:59:40+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "JAN": 0.05,
+      "LIFE": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "7a65d45f09962ead",
+     "name": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+     "kind": "control",
+     "frozen_utc": "2026-09-26T17:37:27+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "0ec7a7108291f4bb",
+     "name": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-26T17:37:27+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "2fb54ddd9dde0b04",
+     "name": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-27T08:47:04+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "5d2ce60804a20d37",
+     "name": "lib_mom_12_1_ivw_lead_2026-09-27__control__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-27T08:47:04+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "1144c07902e67552",
+     "name": "lib_mom_12_1_q_trend_lead_2026-09-27",
+     "kind": "personal",
+     "frozen_utc": "2026-09-27T08:47:04+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "8e78209f77acf36b",
+     "name": "lib_mom_12_1_q_trend_lead_2026-09-27__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-27T08:47:04+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "LIFE": 0.05,
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.15
+    },
+    {
+     "book_id": "528f037d9b63085d",
+     "name": "lib_mom_12_1_q_2026-09-26__random_same_band",
+     "kind": "twin",
+     "frozen_utc": "2026-09-25T18:53:08+00:00",
+     "stitched_holdings": {
+      "GNMX": 0.05,
+      "PPLC": 0.05
+     },
+     "stitched_weight": 0.1
+    },
+    {
+     "book_id": "eb6fa721a4c5f995",
+     "name": "lib_mom_12_1_small_2026-09-26",
+     "kind": "personal",
+     "frozen_utc": "2026-09-25T18:53:08+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "MLPI": 0.05
+     },
+     "stitched_weight": 0.1
+    },
+    {
+     "book_id": "bd18058f14ded23c",
+     "name": "lib_mom_12_1_small_2026-09-26__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-25T18:53:08+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05,
+      "MLPI": 0.05
+     },
+     "stitched_weight": 0.1
+    },
+    {
+     "book_id": "10abfff23d140d85",
+     "name": "lib_mom_12_1_small_2026-09-26__random_same_band",
+     "kind": "twin",
+     "frozen_utc": "2026-09-25T18:53:09+00:00",
+     "stitched_holdings": {
+      "HAWK": 0.05,
+      "BITA": 0.05
+     },
+     "stitched_weight": 0.1
+    },
+    {
+     "book_id": "f6f26ea9b31d1a36",
+     "name": "lib_rev_5d_sealed_2026-09-26__random_same_band",
+     "kind": "twin",
+     "frozen_utc": "2026-09-26T08:59:38+00:00",
+     "stitched_holdings": {
+      "PCI": 0.05,
+      "MB": 0.05
+     },
+     "stitched_weight": 0.1
+    },
+    {
+     "book_id": "0dd5ef3b39a9f0f1",
+     "name": "lib_mom_12_1_secrel_sealed_2026-09-26__random_same_band",
+     "kind": "twin",
+     "frozen_utc": "2026-09-26T08:59:40+00:00",
+     "stitched_holdings": {
+      "PAAC": 0.05,
+      "PPLC": 0.05
+     },
+     "stitched_weight": 0.1
+    },
+    {
+     "book_id": "b14ab4120e15e056",
+     "name": "lib_mom_no_downgrades_2026-09-26__random_same_band",
+     "kind": "twin",
+     "frozen_utc": "2026-09-25T18:53:08+00:00",
+     "stitched_holdings": {
+      "STLR": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "40c6ffdf6c238d60",
+     "name": "lib_mom_flow_2026-09-26",
+     "kind": "personal",
+     "frozen_utc": "2026-09-25T18:53:09+00:00",
+     "stitched_holdings": {
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "32979a3fd6eb06b8",
+     "name": "lib_mom_flow_2026-09-26__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-25T18:53:09+00:00",
+     "stitched_holdings": {
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "50e6cb3b0657464d",
+     "name": "lib_frog_in_pan_2026-09-26",
+     "kind": "personal",
+     "frozen_utc": "2026-09-25T18:53:10+00:00",
+     "stitched_holdings": {
+      "MLPI": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "01f9ce2f98eb6b50",
+     "name": "lib_frog_in_pan_2026-09-26__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-25T18:53:10+00:00",
+     "stitched_holdings": {
+      "MLPI": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "482d567ade18c071",
+     "name": "lib_forecast_dispersion_v1_2026-09-26__random_same_band",
+     "kind": "twin",
+     "frozen_utc": "2026-09-25T18:53:11+00:00",
+     "stitched_holdings": {
+      "SMHD": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "df42cb95e50c9a01",
+     "name": "lib_margin_mom_sealed_2026-09-26__random_same_band",
+     "kind": "twin",
+     "frozen_utc": "2026-09-26T08:59:39+00:00",
+     "stitched_holdings": {
+      "FIYY": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "8f989a4bf3f759cf",
+     "name": "lib_illiquid_sealed_2026-09-26",
+     "kind": "personal",
+     "frozen_utc": "2026-09-26T08:59:39+00:00",
+     "stitched_holdings": {
+      "ITG": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "4223fb9ab8e5fc70",
+     "name": "lib_illiquid_sealed_2026-09-26__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-26T08:59:39+00:00",
+     "stitched_holdings": {
+      "ITG": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "58440bc63a0cbcb1",
+     "name": "lib_low_dtc_mom_sealed_2026-09-26",
+     "kind": "personal",
+     "frozen_utc": "2026-09-26T08:59:39+00:00",
+     "stitched_holdings": {
+      "MLPI": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "1c23d7242e2402ff",
+     "name": "lib_low_dtc_mom_sealed_2026-09-26__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-26T08:59:39+00:00",
+     "stitched_holdings": {
+      "MLPI": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "aecf7cf308fef171",
+     "name": "lib_skill_mom_2026-09-27__random_same_band",
+     "kind": "twin",
+     "frozen_utc": "2026-09-26T17:37:27+00:00",
+     "stitched_holdings": {
+      "ULTI": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "68ba5c780776be27",
+     "name": "lib_mom_flow_ivw_2026-09-27",
+     "kind": "personal",
+     "frozen_utc": "2026-09-26T17:37:27+00:00",
+     "stitched_holdings": {
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "3fbe8ecb083e24cf",
+     "name": "lib_mom_flow_ivw_2026-09-27__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-26T17:37:27+00:00",
+     "stitched_holdings": {
+      "JAN": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "36d2c89bd8f45b59",
+     "name": "lib_mom_no_downgrades_small_2026-09-27__control",
+     "kind": "control",
+     "frozen_utc": "2026-09-26T17:37:27+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "2905fc0caf36b222",
+     "name": "lib_mom_no_downgrades_small_2026-09-27__control__ew",
+     "kind": "twin",
+     "frozen_utc": "2026-09-26T17:37:27+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "b67086822d079f24",
+     "name": "lib_mom_12_1_q_trend_lead_2026-09-27__ranks_k1_2k",
+     "kind": "twin",
+     "frozen_utc": "2026-09-27T08:47:04+00:00",
+     "stitched_holdings": {
+      "MLPI": 0.05
+     },
+     "stitched_weight": 0.05
+    },
+    {
+     "book_id": "76ea751d6ef35ab5",
+     "name": "lib_mom_12_1_liqw_sealed_2026-09-26",
+     "kind": "personal",
+     "frozen_utc": "2026-09-26T08:59:38+00:00",
+     "stitched_holdings": {
+      "AKTS": 0.0003,
+      "LIFE": 0.0009,
+      "JAN": 0.002
+     },
+     "stitched_weight": 0.0031
+    }
+   ]
+  },
+  "trial_lib_fwd_twin_1": {
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\trials\\lib_forward_trial_2026-09-28T062024Z.json",
+   "n_pairs": 30,
+   "n_pairs_affected": 20,
+   "pairs_affected": [
+    {
+     "book_id": "d93fbf2c301248ca",
+     "name": "lib_disp_short_avoid_2026-09-27",
+     "twin_book_id": "67903b85cf3c0b8c",
+     "twin_type": "matched_random",
+     "stitched_on": [
+      "book"
+     ]
+    },
+    {
+     "book_id": "5ab343d6b1bc62a4",
+     "name": "lib_forecast_dispersion_v1_2026-09-26",
+     "twin_book_id": "482d567ade18c071",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "twin"
+     ]
+    },
+    {
+     "book_id": "50e6cb3b0657464d",
+     "name": "lib_frog_in_pan_2026-09-26",
+     "twin_book_id": "95d576dee301ef6a",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "book"
+     ]
+    },
+    {
+     "book_id": "8f989a4bf3f759cf",
+     "name": "lib_illiquid_sealed_2026-09-26",
+     "twin_book_id": "581eba63e2b5cec3",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "book"
+     ]
+    },
+    {
+     "book_id": "58440bc63a0cbcb1",
+     "name": "lib_low_dtc_mom_sealed_2026-09-26",
+     "twin_book_id": "bb04fa6fe9d9700a",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "book"
+     ]
+    },
+    {
+     "book_id": "139145a5269b8fd9",
+     "name": "lib_margin_mom_sealed_2026-09-26",
+     "twin_book_id": "df42cb95e50c9a01",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "twin"
+     ]
+    },
+    {
+     "book_id": "5d01fa2898e2cb72",
+     "name": "lib_mom_12_1_2026-09-26",
+     "twin_book_id": "21b78eebdc2f42ef",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "book"
+     ]
+    },
+    {
+     "book_id": "3fd38f0d7a4dcb03",
+     "name": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+     "twin_book_id": "ba7cda26cb2cec30",
+     "twin_type": "matched_random",
+     "stitched_on": [
+      "book"
+     ]
+    },
+    {
+     "book_id": "e41dbb1e06a12088",
+     "name": "lib_mom_12_1_q_2026-09-26",
+     "twin_book_id": "528f037d9b63085d",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "book",
+      "twin"
+     ]
+    },
+    {
+     "book_id": "1144c07902e67552",
+     "name": "lib_mom_12_1_q_trend_lead_2026-09-27",
+     "twin_book_id": "4f4b04f2d61cefcd",
+     "twin_type": "matched_random",
+     "stitched_on": [
+      "book"
+     ]
+    },
+    {
+     "book_id": "132c0abc5b9f366f",
+     "name": "lib_mom_12_1_secrel_sealed_2026-09-26",
+     "twin_book_id": "0dd5ef3b39a9f0f1",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "book",
+      "twin"
+     ]
+    },
+    {
+     "book_id": "eb6fa721a4c5f995",
+     "name": "lib_mom_12_1_small_2026-09-26",
+     "twin_book_id": "10abfff23d140d85",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "book",
+      "twin"
+     ]
+    },
+    {
+     "book_id": "40c6ffdf6c238d60",
+     "name": "lib_mom_flow_2026-09-26",
+     "twin_book_id": "aa3bdf0013215ca4",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "book"
+     ]
+    },
+    {
+     "book_id": "68ba5c780776be27",
+     "name": "lib_mom_flow_ivw_2026-09-27",
+     "twin_book_id": "e074487f81029fa0",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "book"
+     ]
+    },
+    {
+     "book_id": "f0517a9aa6ab0bce",
+     "name": "lib_mom_no_downgrades_2026-09-26",
+     "twin_book_id": "b14ab4120e15e056",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "book",
+      "twin"
+     ]
+    },
+    {
+     "book_id": "36d2c89bd8f45b59",
+     "name": "lib_mom_no_downgrades_small_2026-09-27__control",
+     "twin_book_id": "c1e5521b4aa194dd",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "book"
+     ]
+    },
+    {
+     "book_id": "7a65d45f09962ead",
+     "name": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+     "twin_book_id": "f7129c2a18c99fbf",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "book"
+     ]
+    },
+    {
+     "book_id": "4ffbfd2e83d06daa",
+     "name": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+     "twin_book_id": "fd7efadd8fae58dc",
+     "twin_type": "matched_random",
+     "stitched_on": [
+      "book"
+     ]
+    },
+    {
+     "book_id": "f94720b48278bf55",
+     "name": "lib_rev_5d_sealed_2026-09-26",
+     "twin_book_id": "f6f26ea9b31d1a36",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "twin"
+     ]
+    },
+    {
+     "book_id": "2f3dd36e85505710",
+     "name": "lib_skill_mom_2026-09-27",
+     "twin_book_id": "aecf7cf308fef171",
+     "twin_type": "random_same_band",
+     "stitched_on": [
+      "twin"
+     ]
+    }
+   ]
+  }
+ },
+ "mutated": "NOTHING: bar files, frozen books, ledgers and receipts are read only",
+ "written_utc": "2026-09-28T15:15:37+00:00"
+}

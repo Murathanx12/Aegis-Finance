@@ -1,0 +1,83 @@
+{
+ "role": "hack5",
+ "long": "BE261016C00290000",
+ "short": "BE261016C00320000",
+ "task": "Hack5CloseSpread",
+ "started_utc": "20260929T133500Z",
+ "dry_run": false,
+ "events": [
+  {
+   "t": "2026-09-29T13:35:01+00:00",
+   "kind": "start_positions",
+   "long_qty": 7,
+   "short_qty": -7
+  },
+  {
+   "t": "2026-09-29T13:35:02+00:00",
+   "kind": "clock",
+   "is_open": true,
+   "next_open": "2026-09-30T09:30:00-04:00"
+  },
+  {
+   "t": "2026-09-29T13:35:07+00:00",
+   "kind": "submit",
+   "step": 0,
+   "http": 200,
+   "body": {
+    "order_class": "mleg",
+    "qty": "7",
+    "type": "limit",
+    "limit_price": "-8.88",
+    "time_in_force": "day",
+    "client_order_id": "manual-close-hack5-20260929T133500Z-0",
+    "legs": [
+     {
+      "symbol": "BE261016C00290000",
+      "ratio_qty": "1",
+      "side": "sell",
+      "position_intent": "sell_to_close"
+     },
+     {
+      "symbol": "BE261016C00320000",
+      "ratio_qty": "1",
+      "side": "buy",
+      "position_intent": "buy_to_close"
+     }
+    ]
+   },
+   "quote": {
+    "long_bid": 16.68,
+    "long_ask": 16.76,
+    "short_bid": 7.63,
+    "short_ask": 8.05,
+    "mid_credit": 8.88,
+    "natural_credit": 8.63,
+    "limit_credit": 8.88
+   },
+   "order_id": "b6cb25f7-5a3f-4bfc-8015-f6490c978c2e",
+   "status": "pending_new",
+   "error": null
+  },
+  {
+   "t": "2026-09-29T13:36:08+00:00",
+   "kind": "filled",
+   "order_id": "b6cb25f7-5a3f-4bfc-8015-f6490c978c2e",
+   "filled_avg_price": "-9"
+  },
+  {
+   "t": "2026-09-29T13:36:11+00:00",
+   "kind": "finish",
+   "status": "flat"
+  }
+ ],
+ "status": "flat",
+ "final_positions": {
+  "long_qty": 0,
+  "short_qty": 0
+ },
+ "tasks_deleted": {
+  "Hack5CloseSpread": "SUCCESS: The scheduled task \"Hack5CloseSpread\" was successfully deleted.",
+  "Hack5CloseSpreadFallback": "SUCCESS: The scheduled task \"Hack5CloseSpreadFallback\" was successfully deleted.",
+  "Hack5CloseSpreadRetry": "ERROR: The system cannot find the file specified."
+ }
+}

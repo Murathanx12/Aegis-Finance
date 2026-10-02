@@ -857,3 +857,272 @@ def recency_rank(item: dict, now: datetime | None = None) -> float:
         t = t.replace(tzinfo=timezone.utc)
     now = now or datetime.now(timezone.utc)
     return max(0.0, (now - t).total_seconds() / 3600.0)
+
+
+
+# ═════════════════════ THE READING BUDGET (2026-09-30) ═══════════════════════
+#
+# Murat, 2026-09-29: "use openclaw to review stocks or the general news and the
+# market positions, insider traders, politics etc anything needed", "digest
+# everything".
+#
+# MEASURED the evening before: the pool read ~400 OK pages an hour first-come,
+# spent its 4,000 page loads per rolling 24 h by 10:44 UTC, and then stood
+# WAITING_FOR_CAP for hours (the throttle log: 307-385 loads an hour at
+# 03:00-10:00 UTC, 11-43 an hour at 21:00-02:00 UTC). The cap did its job; the
+# ORDER did not: first-come spends the day on whatever refilled fastest (the
+# Dow Jones hosts took 2,345 of the 3,873 loads in the window) and leaves the
+# US session with nothing.
+#
+# So the same 4,000 loads are now SPENT BY RULE:
+# * LANES with declared shares (`budget_lane` classifies every queued item);
+# * an HOURLY ALLOWANCE shaped by the sessions (`hour_allowance`: heavier in
+#   the hours before and during the Asian and US sessions, never below the
+#   floor, the curve sums to the daily total), enforced on a rolling hour AND
+#   on a rolling 10 minutes (so an hour's allowance is not spent in a burst and
+#   the reader is never silent for most of an hour);
+# * a lane under its own hourly share is always served; a lane over it may
+#   BORROW only when no other lane with something servable is under its share
+#   (work-conserving: an idle lane's share is not wasted); a lane that has
+#   spent `READER_BUDGET_LANE_DAY_MULT` x its daily share borrows nothing
+#   while another lane is waiting.
+# The Dow Jones and social per-host caps are NOT changed; they bind inside this.
+
+BUDGET_LANES: tuple[str, ...] = (
+    "book_names", "universe_names", "markets_news", "macro_world", "politics_policy",
+    "official_releases", "social", "digest_asks", "overhead")
+
+#: declared shares of the browser's daily page loads (sum 1.0); `config`
+#: `READER_BUDGET_SHARES` overrides
+DEFAULT_BUDGET_SHARES: dict[str, float] = {
+    "book_names": 0.24, "universe_names": 0.12, "markets_news": 0.20, "macro_world": 0.12,
+    "politics_policy": 0.08, "official_releases": 0.04, "social": 0.11,
+    "digest_asks": 0.06, "overhead": 0.03}
+
+#: relative weight of each UTC hour (index 0-23). Asia session 00-08 UTC (Tokyo,
+#: Hong Kong, Shanghai), its pre-open at 23; Europe 08-11; US pre-open 11-13;
+#: US session 13-20 (09:30-16:00 ET); US evening 20-23.
+DEFAULT_HOUR_WEIGHTS: tuple[float, ...] = (
+    1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4,      # 00-07 Asia
+    0.8, 0.8, 0.8,                               # 08-10 Europe
+    1.3, 1.3,                                    # 11-12 US pre-open
+    1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6,           # 13-19 US session
+    0.7, 0.7, 0.7,                               # 20-22 US evening
+    1.2)                                         # 23 Asia pre-open
+
+OFFICIAL_BROWSER_HOSTS = ("federalreserve.gov", "bls.gov", "sec.gov", "treasury.gov")
+_POLITICS = ("politic", "policy", "opinion", "government", "congress", "white-house",
+             "whitehouse", "election", "tariff", "geopolit", "washington", "regulat")
+_MACRO = ("economy", "economic", "world", "asia", "china", "commodit", "global",
+          "currenc", "rates", "bonds")
+_MACRO_HOSTS = ("asia.nikkei.com", "scmp.com")
+
+
+def budget_enabled() -> bool:
+    return bool(_cfg("READER_BUDGET_ENABLED", True))
+
+
+def budget_shares() -> dict[str, float]:
+    """The declared shares, normalised to sum 1 over `BUDGET_LANES` (a lane
+    missing from the config gets 0)."""
+    raw = dict(_cfg("READER_BUDGET_SHARES", DEFAULT_BUDGET_SHARES) or DEFAULT_BUDGET_SHARES)
+    s = {k: max(0.0, float(raw.get(k, 0.0))) for k in BUDGET_LANES}
+    tot = sum(s.values()) or 1.0
+    return {k: v / tot for k, v in s.items()}
+
+
+def hour_weights() -> tuple[float, ...]:
+    w = tuple(float(x) for x in (_cfg("READER_BUDGET_HOUR_WEIGHTS", DEFAULT_HOUR_WEIGHTS)
+                                 or DEFAULT_HOUR_WEIGHTS))
+    return w if len(w) == 24 and all(x >= 0 for x in w) and sum(w) > 0 else DEFAULT_HOUR_WEIGHTS
+
+
+def budget_day_total() -> int:
+    return int(_cfg("READER_BUDGET_DAY_TOTAL", _cfg("WEB_READER_MAX_PER_DAY", 4000)))
+
+
+def hour_allowance(now: datetime, *, day_total: int | None = None,
+                   weights: tuple[float, ...] | None = None) -> int:
+    """PURE. Page loads allowed in the rolling hour ending at `now`: the day's
+    total spread by the UTC-hour weights (the 24 allowances sum to about the
+    total), never below `READER_BUDGET_MIN_PER_HOUR`."""
+    w = weights or hour_weights()
+    tot = budget_day_total() if day_total is None else int(day_total)
+    h = now.astimezone(timezone.utc).hour
+    floor = int(_cfg("READER_BUDGET_MIN_PER_HOUR", 60))
+    return max(floor, int(round(tot * w[h] / sum(w))))
+
+
+def ten_min_allowance(hour_allow: int) -> int:
+    """PURE. The rolling-10-minute ceiling: a sixth of the hour, with slack
+    (`READER_BUDGET_BURST`, default 1.5x) so one slow page does not starve."""
+    burst = float(_cfg("READER_BUDGET_BURST", 1.5))
+    return max(3, int(round(hour_allow / 6.0 * burst)))
+
+
+def _host_of(url: str) -> str:
+    from urllib.parse import urlsplit
+    try:
+        return (urlsplit(url or "").hostname or "").lower()
+    except ValueError:
+        return ""
+
+
+def budget_lane(item: dict, *, books: set[str] | frozenset[str] = frozenset(),
+                fresh: set[str] | frozenset[str] = frozenset()) -> str:
+    """PURE. Which budget lane a queued item spends from.
+
+    * robots.txt reads -> overhead; social hosts -> social;
+    * a digest ask (a site search, a URL the digest asked for) -> digest_asks;
+    * an official host (Fed, BLS, SEC, Treasury) -> official_releases;
+    * a stock page, or the news a stock page showed (it carries the ticker and
+      a ticker tier) -> book_names (book / contest / fresh-filing names) or
+      universe_names (the rest);
+    * a front or its news: politics / policy / opinion sections -> politics_policy;
+      economy / world / Asia sections and the Asian hosts -> macro_world;
+      everything else -> markets_news."""
+    kind = str(item.get("kind") or "")
+    host = str(item.get("host") or _host_of(str(item.get("url") or ""))).lower()
+    host = host.removeprefix("www.")
+    lane = str(item.get("lane") or "")
+    if kind == "robots" or lane.startswith("robots:"):
+        return "overhead"
+    if kind == "social" or _on(host, tuple(_cfg("OPENCLAW_SOCIAL_HOSTS",
+                                                 ("x.com", "reddit.com", "stocktwits.com")))):
+        return "social"
+    if kind == "search" or item.get("via") == "read_next" or lane.startswith(
+            ("search:", "read_next")):
+        return "digest_asks"
+    if _on(host, OFFICIAL_BROWSER_HOSTS):
+        return "official_releases"
+    tk = str(item.get("ticker") or "").upper()
+    tier = item.get("tier")
+    if kind in ("stock_links", "stock_text") or (
+            tk and (tier is None or int(tier) >= TIER_BOOK)):
+        t = ticker_tier(tk, books=set(books), fresh=set(fresh))
+        return "book_names" if t in (TIER_BOOK, TIER_FRESH) else "universe_names"
+    text = " ".join((str(item.get("section") or ""), lane,
+                     str(item.get("url") or "").split("?")[0])).lower()
+    if any(w in text for w in _POLITICS):
+        return "politics_policy"
+    if _on(host, _MACRO_HOSTS) or any(w in text for w in _MACRO):
+        return "macro_world"
+    return "markets_news"
+
+
+def lane_hour_quota(lane: str, hour_allow: int, shares: dict[str, float] | None = None) -> int:
+    """PURE. A lane's own share of this hour's allowance (a lane with a
+    non-zero share always gets at least one page)."""
+    sh = (shares or budget_shares()).get(lane, 0.0)
+    return 0 if sh <= 0 else max(1, int(round(sh * hour_allow)))
+
+
+def budget_verdict(lane: str, *, now: datetime, loads_60m: int, loads_10m: int,
+                   lane_60m: dict[str, int], lane_24h: dict[str, int],
+                   servable_lanes: set[str] | frozenset[str],
+                   shares: dict[str, float] | None = None,
+                   day_total: int | None = None) -> tuple[bool, str]:
+    """PURE. May one more page load be spent on `lane` now?
+
+    Refusals, in order: the rolling hour's allowance is spent
+    (`HOUR_BUDGET_SPENT`); the rolling 10 minutes' ceiling is spent
+    (`PACE_10M`); the lane has spent `READER_BUDGET_LANE_DAY_MULT` x its daily
+    share while another servable lane is under its own (`LANE_DAY_SHARE_SPENT`);
+    the lane is over its hourly share and another lane with something servable
+    is still under its own (`LEAVE_FOR:<lane>`). Grants: `OWN_SHARE` (under its
+    hourly share) or `BORROW` (nobody servable is under theirs, so the idle
+    share is not wasted)."""
+    shares = shares or budget_shares()
+    tot = budget_day_total() if day_total is None else int(day_total)
+    allow = hour_allowance(now, day_total=tot)
+    if loads_60m >= allow:
+        return False, f"HOUR_BUDGET_SPENT: {loads_60m} >= {allow} this hour"
+    if loads_10m >= ten_min_allowance(allow):
+        return False, f"PACE_10M: {loads_10m} >= {ten_min_allowance(allow)} in 10 min"
+    mult = float(_cfg("READER_BUDGET_LANE_DAY_MULT", 1.6))
+    day_max = shares.get(lane, 0.0) * tot * mult
+    under = [x for x in sorted(servable_lanes) if x != lane
+             and lane_60m.get(x, 0) < lane_hour_quota(x, allow, shares)]
+    if lane_24h.get(lane, 0) >= day_max and under:
+        return False, f"LANE_DAY_SHARE_SPENT: {lane_24h.get(lane, 0)} >= {day_max:.0f}"
+    if lane_60m.get(lane, 0) < lane_hour_quota(lane, allow, shares):
+        return True, "OWN_SHARE"
+    if under:
+        return False, f"LEAVE_FOR:{under[0]}"
+    return True, "BORROW"
+
+
+def budget_plan(now: datetime, *, shares: dict[str, float] | None = None,
+                day_total: int | None = None) -> dict:
+    """PURE. The declared plan, for the status file and the receipts: shares,
+    per-lane daily targets, this hour's allowance and each lane's quota, and
+    the 24 hourly allowances."""
+    shares = shares or budget_shares()
+    tot = budget_day_total() if day_total is None else int(day_total)
+    allow = hour_allowance(now, day_total=tot)
+    base = now.astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0)
+    hours = {f"{h:02d}": hour_allowance(base.replace(hour=h), day_total=tot) for h in range(24)}
+    return {"day_total": tot, "hour_allowance_now": allow,
+            "ten_min_allowance_now": ten_min_allowance(allow),
+            "shares": {k: round(v, 4) for k, v in shares.items()},
+            "day_target": {k: int(round(v * tot)) for k, v in shares.items()},
+            "hour_quota_now": {k: lane_hour_quota(k, allow, shares) for k in shares},
+            "hourly_allowance_utc": hours}
+
+
+def budget_log_path() -> Path:
+    return Path(_config.OPTIMUS_LEDGER_DIR) / "dowjones" / "budget_lanes.jsonl"
+
+
+def lane_counts(rows: list[dict], now: datetime) -> dict:
+    """PURE. From budget-log rows `{t, lane, host, outcome}`: loads and OK pages
+    per lane and per host over the last 60 min and 24 h, plus total loads in
+    the last 10 / 60 min and 24 h."""
+    from collections import Counter
+    out: dict = {"lane_60m": Counter(), "lane_24h": Counter(), "ok_lane_60m": Counter(),
+                 "ok_lane_24h": Counter(), "host_24h": Counter(), "ok_host_24h": Counter(),
+                 "ok_host_60m": Counter(), "loads_10m": 0, "loads_60m": 0, "loads_24h": 0}
+    for r in rows:
+        try:
+            t = datetime.fromisoformat(str(r["t"]))
+        except (KeyError, ValueError, TypeError):
+            continue
+        age = max(0.0, (now - t).total_seconds())
+        if age >= 86400:
+            continue
+        lane, host, ok = r.get("lane") or "?", r.get("host") or "?", r.get("outcome") == "OK"
+        out["lane_24h"][lane] += 1
+        out["host_24h"][host] += 1
+        out["loads_24h"] += 1
+        if ok:
+            out["ok_lane_24h"][lane] += 1
+            out["ok_host_24h"][host] += 1
+        if age < 3600:
+            out["lane_60m"][lane] += 1
+            out["loads_60m"] += 1
+            if ok:
+                out["ok_lane_60m"][lane] += 1
+                out["ok_host_60m"][host] += 1
+        if age < 600:
+            out["loads_10m"] += 1
+    return out
+
+
+def read_budget_log(path: Path | None = None, now: datetime | None = None,
+                    max_lines: int = 20000) -> list[dict]:
+    """The budget log's rows of the last 24 h (the tail, bounded)."""
+    p = path or budget_log_path()
+    now = now or datetime.now(timezone.utc)
+    out = []
+    try:
+        lines = p.read_text(encoding="utf-8", errors="replace").splitlines()[-max_lines:]
+    except OSError:
+        return []
+    for ln in lines:
+        try:
+            r = json.loads(ln)
+            if (now - datetime.fromisoformat(str(r["t"]))).total_seconds() < 86400:
+                out.append(r)
+        except (ValueError, KeyError, TypeError):
+            continue
+    return out

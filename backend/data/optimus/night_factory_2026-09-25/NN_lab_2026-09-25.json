@@ -1,0 +1,233 @@
+{
+ "receipt": "NN_lab",
+ "licence": "PRODUCT_EXPERIMENT",
+ "stage": "features",
+ "llm_spend_usd": 0.0,
+ "utc": "2026-09-25T04:27:54+00:00",
+ "date": "2026-09-25",
+ "held_out_month": "2026-08",
+ "held_out_month_rule": "the most recent FULLY-CLOSED calendar month, derived from today and FIXED for the comparison: re-evaluating last night's head on a new month would confound 'did the head improve' with 'did the month get easier', and the answer would look like learning either way",
+ "sequence": [
+  {
+   "job": "E1_event_head",
+   "status": "done",
+   "box_minutes": 60,
+   "verdict": "FAILED_VARIANT: NEITHER treatment -- the 43-way one-hot type block NOR the scalar direction x confidence score the published literature uses -- beats its own capacity-matched shuffled control under any model, so what either earns is the panel's calendar and universe, not the events. This closes THIS READ of the LLM-typed rows at 32,379 of 130,719 cells (24.8% coverage); below ~5% coverage the shuffled control has little power, and the next test is typing the panel's own headlines, not another head.",
+   "headline": "GBM/EVENT: EVENT - SHUFFLE IC -0.0018 (t -0.379, Holm p 1.0) over 280 date blocks -> NO | GBM/SCALAR: SCALAR - SCALAR_SHUFFLE IC +0.0019 (t 0.599, Holm p 1.0) over 280 date blocks -> NO | StockMixer_T1/EVENT: EVENT - SHUFFLE IC +0.0043 (t 0.756, Holm p 1.0) over 280 date blocks -> NO | StockMixer_T1/SCALAR: SCALAR - SCALAR_SHUFFLE IC +0.0008 (t 0.249, Holm p 1.0) over 280 date blocks -> NO | StockMixer_T1 - GBM on the identical table: IC +0.0092 (t 1.685, p 0.0932) -> NO",
+   "event_source": "typed_l2",
+   "daily_csv": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-10\\E1_event_head_h5_run01_daily.csv",
+   "seconds": 1549.6
+  },
+  {
+   "job": "E4_adwin_gated_refit",
+   "status": "done",
+   "box_minutes": 45,
+   "verdict": "ADWIN NEVER FIRED after the mandatory first fit, so the ADWIN arm is one model carried across every test month (max age 13 months). That is a fact about the ERROR STREAM -- at this scale it is stationary to the detector -- and only secondarily about the cadence. Read the stale-vs-fresh IC split, not the refit count: a monthly refit that changes nothing is ceremony, and a detector that cannot see the drift is not evidence there is none.",
+   "headline": "ADWIN refit 1 times vs FIXED 14 on 280 identical test dates; ADWIN - FIXED IC +0.0124 (t 2.233, p 0.0263); 259 dates ran on a stale model, max age 13 months; fit seconds 1.08 vs 32.94",
+   "event_source": null,
+   "daily_csv": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-10\\E4_adwin_gated_refit_run01_daily.csv",
+   "seconds": 138.5
+  },
+  {
+   "job": "E5_stopping_rules",
+   "status": "done",
+   "box_minutes": 20,
+   "verdict": "STOPPING RULES APPLIED: 4 lineages admitted at banks_met>=2 out of 251 (595 distinct genomes); 1 ACTIVE, 3 CANNOT_DETERMINE; PBO insufficient_windows",
+   "headline": "4 lineages admitted at banks_met>=2 out of 251 (595 distinct genomes); 1 ACTIVE, 3 CANNOT_DETERMINE; PBO insufficient_windows",
+   "event_source": null,
+   "daily_csv": null,
+   "seconds": 0.2
+  }
+ ],
+ "held_out_ic": {
+  "heads": {
+   "GBM_EVENT": {
+    "ic": 0.009728,
+    "n_date_blocks": 21
+   },
+   "StockMixer_T1_EVENT": {
+    "ic": 0.020447,
+    "n_date_blocks": 21
+   },
+   "GBM_SCALAR": {
+    "ic": -0.006092,
+    "n_date_blocks": 21
+   },
+   "StockMixer_T1_SCALAR": {
+    "ic": 0.002192,
+    "n_date_blocks": 21
+   },
+   "GBM_TFIDF": {
+    "ic": 0.00482,
+    "n_date_blocks": 21
+   },
+   "StockMixer_T1_TFIDF": {
+    "ic": 0.013159,
+    "n_date_blocks": 21
+   },
+   "GBM_SHUFFLE": {
+    "ic": 0.005413,
+    "n_date_blocks": 21
+   },
+   "StockMixer_T1_SHUFFLE": {
+    "ic": 0.001729,
+    "n_date_blocks": 21
+   },
+   "GBM_SCALAR_SHUFFLE": {
+    "ic": 0.013058,
+    "n_date_blocks": 21
+   },
+   "StockMixer_T1_SCALAR_SHUFFLE": {
+    "ic": 0.007644,
+    "n_date_blocks": 21
+   },
+   "GBM_NOTEXT": {
+    "ic": 0.026211,
+    "n_date_blocks": 21
+   },
+   "StockMixer_T1_NOTEXT": {
+    "ic": -0.005859,
+    "n_date_blocks": 21
+   }
+  },
+  "status": "ok",
+  "month": "2026-08",
+  "n_dates": 21,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-10\\E1_event_head_h5_run01_daily.csv"
+ },
+ "comparisons": [
+  {
+   "head": "GBM_EVENT",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.009728,
+   "ic_last_night": 0.010469,
+   "beat_last_night": false,
+   "delta": -0.000741,
+   "n_nights_compared": 5,
+   "last_night_date": "2026-09-19"
+  },
+  {
+   "head": "GBM_NOTEXT",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.026211,
+   "ic_last_night": 0.026801,
+   "beat_last_night": false,
+   "delta": -0.00059,
+   "n_nights_compared": 5,
+   "last_night_date": "2026-09-19"
+  },
+  {
+   "head": "GBM_SCALAR",
+   "held_out_month": "2026-08",
+   "ic_tonight": -0.006092,
+   "ic_last_night": 0.007341,
+   "beat_last_night": false,
+   "delta": -0.013433,
+   "n_nights_compared": 5,
+   "last_night_date": "2026-09-19"
+  },
+  {
+   "head": "GBM_SCALAR_SHUFFLE",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.013058,
+   "ic_last_night": 0.025431,
+   "beat_last_night": false,
+   "delta": -0.012373,
+   "n_nights_compared": 5,
+   "last_night_date": "2026-09-19"
+  },
+  {
+   "head": "GBM_SHUFFLE",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.005413,
+   "ic_last_night": 0.002714,
+   "beat_last_night": true,
+   "delta": 0.002699,
+   "n_nights_compared": 5,
+   "last_night_date": "2026-09-19"
+  },
+  {
+   "head": "GBM_TFIDF",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.00482,
+   "ic_last_night": -0.006431,
+   "beat_last_night": true,
+   "delta": 0.011251,
+   "n_nights_compared": 5,
+   "last_night_date": "2026-09-19"
+  },
+  {
+   "head": "StockMixer_T1_EVENT",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.020447,
+   "ic_last_night": 0.022047,
+   "beat_last_night": false,
+   "delta": -0.0016,
+   "n_nights_compared": 5,
+   "last_night_date": "2026-09-19"
+  },
+  {
+   "head": "StockMixer_T1_NOTEXT",
+   "held_out_month": "2026-08",
+   "ic_tonight": -0.005859,
+   "ic_last_night": -0.015897,
+   "beat_last_night": true,
+   "delta": 0.010038,
+   "n_nights_compared": 5,
+   "last_night_date": "2026-09-19"
+  },
+  {
+   "head": "StockMixer_T1_SCALAR",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.002192,
+   "ic_last_night": 0.018059,
+   "beat_last_night": false,
+   "delta": -0.015867,
+   "n_nights_compared": 5,
+   "last_night_date": "2026-09-19"
+  },
+  {
+   "head": "StockMixer_T1_SCALAR_SHUFFLE",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.007644,
+   "ic_last_night": -0.000303,
+   "beat_last_night": true,
+   "delta": 0.007947,
+   "n_nights_compared": 5,
+   "last_night_date": "2026-09-19"
+  },
+  {
+   "head": "StockMixer_T1_SHUFFLE",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.001729,
+   "ic_last_night": -0.016828,
+   "beat_last_night": true,
+   "delta": 0.018557,
+   "n_nights_compared": 5,
+   "last_night_date": "2026-09-19"
+  },
+  {
+   "head": "StockMixer_T1_TFIDF",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.013159,
+   "ic_last_night": 0.031216,
+   "beat_last_night": false,
+   "delta": -0.018057,
+   "n_nights_compared": 5,
+   "last_night_date": "2026-09-19"
+  }
+ ],
+ "n_heads": 12,
+ "n_beat_last_night": 5,
+ "n_undecided": 0,
+ "event_source": "typed_l2",
+ "history_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab_history.jsonl",
+ "refusals": [],
+ "never": [
+  "no training on future information: the held-out month is CLOSED before the refit that grades against it starts, and the embargo is the head's own, not a copy",
+  "no target leakage: this module adds no feature and touches no column",
+  "no live book's frozen Strategy is changed: a mutation is a NEW book",
+  "DEPRIORITIZED, never deleted, never re-promoted on the same regime"
+ ],
+ "headline": "12 head(s) on held-out 2026-08; 5 beat last night, 0 undecided (fewer than 2 nights of history); 0 job(s) did not complete"
+}

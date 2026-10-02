@@ -1,0 +1,31 @@
+{
+ "job": "hyp_llm_theories JOB3 amendment Q3",
+ "run": "r1",
+ "declared_utc": "2026-09-29T13:41:24+00:00",
+ "before_any_q3_call": true,
+ "why": "Q1 DeepSeek text answers had sd_p 0.0065 (abstention around the stated base rate); Q3 forces a within-date ranking without an anchor",
+ "groups": {
+  "test": 150,
+  "val": 40,
+  "items_per_group": 8,
+  "distinct_test_dates": 75
+ },
+ "arms": {
+  "q3_text": [
+   "deepseek",
+   "local if time"
+  ],
+  "q3_num": [
+   "deepseek"
+  ],
+  "q3_text_k3": "deepseek, 3 samples at T=0.7, mean score"
+ },
+ "target": "rel = log(|x_oc|+1e-4) - log(vol21_absx): move size relative to the name's own normal",
+ "metric": "within-group Spearman(score, rel), mean over groups, SE over weekly blocks of entry date, MDE 2.8 SE; paired increment vs p_LT2 ranks; fixed 50/50 average of within-group ranks (LLM, p_LT2) vs p_LT2 (no fitting); by month",
+ "verdict_rules": {
+  "q3_text": "SKILL if IC > 0 with t >= 2; FAILED_VARIANT if IC <= 0 and MDE <= 0.05; else CANNOT_DISTINGUISH",
+  "q3_adds": "ADDS if rank-average(LLM, LT2) - LT2 > 0 with t >= 2; FAILED_VARIANT if <= 0 and MDE <= 0.03; else CANNOT_DISTINGUISH"
+ },
+ "cost_estimate_usd": "< 0.05 DeepSeek",
+ "sha256": "6496bf58b1b5a15887f2882de2c391e915f5cbb0306e557fa80948342e786e48"
+}

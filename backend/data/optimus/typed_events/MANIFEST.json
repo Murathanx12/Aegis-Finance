@@ -1,0 +1,138 @@
+{
+ "job": "L2_typed_events",
+ "what": "one typed row per corpus document, L2's frozen vocabulary. The .jsonl files are DATA and are gitignored; this manifest is tracked.",
+ "typed_rows_total": 73247,
+ "files": [
+  {
+   "file": "2026-09-13.jsonl",
+   "rows": 12293,
+   "sha256": "2c1623a8f299fe4db2cdcf5b9f9f93169d42f831e6b5c3d93adecdb29070d739"
+  },
+  {
+   "file": "2026-09-13_refusals.jsonl",
+   "rows": 227,
+   "sha256": "1ec7887bc1969fad0b9983e046fde67437ab22bdc224430cde37dcac4af0dca1"
+  },
+  {
+   "file": "2026-09-19.jsonl",
+   "rows": 7863,
+   "sha256": "c5b590b741751820930478fb6ef36ac7895e01e2a56722783f108aba9b8769e2"
+  },
+  {
+   "file": "2026-09-19_refusals.jsonl",
+   "rows": 1436,
+   "sha256": "50e897d1bfaa4ad04570cf7e0ee0517ff2d9d038c28342de4e5849b5ca32d38e"
+  },
+  {
+   "file": "2026-09-20.jsonl",
+   "rows": 10148,
+   "sha256": "001c91f3b24ec740f9dff7ab6d9e253c4409e32de6f8d440e1eb4c1b107d2348"
+  },
+  {
+   "file": "2026-09-20_refusals.jsonl",
+   "rows": 1752,
+   "sha256": "a7f46ca0d7b7418e6b40cc92f87498c625e08f40cc8e2a6a7b46806d1900b324"
+  },
+  {
+   "file": "2026-09-21.jsonl",
+   "rows": 3478,
+   "sha256": "11572488d8cd50ee038a74ffc78c1598943f0abf6d7e51e5818b5bb17ad063b0"
+  },
+  {
+   "file": "2026-09-21_refusals.jsonl",
+   "rows": 98,
+   "sha256": "64d011c63f89fcd45b9472408f6d1b9d5dadc9deaabe2b4e13f68d37b9c7ac73"
+  },
+  {
+   "file": "2026-09-25.jsonl",
+   "rows": 3756,
+   "sha256": "7e6ec994477c050d82a6570f80f13475446e82e57b61cd4193a2befb560bd7d9"
+  },
+  {
+   "file": "2026-09-25_refusals.jsonl",
+   "rows": 44,
+   "sha256": "6b0b6d1fa13e9d5da0a2df4cc9f728b897fcfce36fbb99c28e6920b8baee7523"
+  },
+  {
+   "file": "2026-09-27.jsonl",
+   "rows": 7437,
+   "sha256": "a1a8c3d6233b4164b762070d8b31641c2ce88a7580925d226cc18673a550a1d3"
+  },
+  {
+   "file": "2026-09-27_refusals.jsonl",
+   "rows": 263,
+   "sha256": "dfd43bd925ec557dbe49b7445e93d322156985b9c3a0ab67704e4f47b530a476"
+  },
+  {
+   "file": "2026-09-30.jsonl",
+   "rows": 3838,
+   "sha256": "65be36ddf9423722a2725bc20d15d92d38b71b6dc0524ed6e2e8bfccfba31bcd"
+  },
+  {
+   "file": "2026-09-30_refusals.jsonl",
+   "rows": 125,
+   "sha256": "5f476ad460614ef494deb3ef69655f3792116f424b13fc10eb5d90084a07d192"
+  },
+  {
+   "file": "2026-10-01.jsonl",
+   "rows": 1879,
+   "sha256": "c3a2429ea47ab6577367a82407e218f7ac7140ca804413263fbe0896944d6025"
+  },
+  {
+   "file": "2026-10-01_refusals.jsonl",
+   "rows": 68,
+   "sha256": "28e622aa15107f7bec9d2fa3f64711ddacbfce2137a7bd7aa22702bd4c93c171"
+  },
+  {
+   "file": "panel_2026-09-13.jsonl",
+   "rows": 19996,
+   "sha256": "26577f7f30e5c0b02d84328758d44286ff6a371f1623d738df9f853dcb365474"
+  },
+  {
+   "file": "panel_2026-09-13_refusals.jsonl",
+   "rows": 4,
+   "sha256": "481b45c7e548fd4517cf9b15618f980f0cda209204367f4e213bcc1250629354"
+  },
+  {
+   "file": "retype_v3_2026-09-19.jsonl",
+   "rows": 1000,
+   "sha256": "8493791b87ebb8eb6deaa1e0b2128cebd415f97722a8907e80dd439d7366f61f"
+  },
+  {
+   "file": "retype_v3_2026-09-21.jsonl",
+   "rows": 1000,
+   "sha256": "2e12e1d9ec2258205c255fb998e1cbd7a1d67bbc2aa08d245cc8ab26e6b10907"
+  },
+  {
+   "file": "retype_v3_2026-09-22.jsonl",
+   "rows": 355,
+   "sha256": "798e76a04e0e0d4642054ff9ac7ebeabe98fadb7a3bd0e3d81132db63d4892e9"
+  },
+  {
+   "file": "retype_v3_2026-09-26.jsonl",
+   "rows": 8,
+   "sha256": "ee2cc6ad5be2fb76a8fdc6b8e1f912855505a8426bbf3bc5ca137e54b1134ecd"
+  },
+  {
+   "file": "retype_v3_2026-09-27.jsonl",
+   "rows": 146,
+   "sha256": "7548e915f10ec31912783d8d9fcfa56a7cc573f4cc439d6cee51eb8cdf1e4318"
+  },
+  {
+   "file": "retype_v3_2026-09-30.jsonl",
+   "rows": 42,
+   "sha256": "ca7962aee3c0994db1b89cb757db5b00608cc297840db1cf07b84cb5ccb4f6a5"
+  },
+  {
+   "file": "retype_v3_2026-10-01.jsonl",
+   "rows": 8,
+   "sha256": "903a3a851113bf39b7371b876012eefd63b03d5bd4dbbd80a0048ab47190fe7b"
+  }
+ ],
+ "vocabulary_hash": "ef173fa7f72760a9bcc1c7f469ffcc96199357572177241fdadd058c25ec4aad",
+ "prompt_hash_A": "1181c9a55916655ef8ad0865a0863b4dc3ecba1f355c9cae03a25a28fc0bc4d1",
+ "prompt_hash_B": "f01f749a5334513c5e2ab1e6015269f718d67057334888ae6e0995d2d6d6d3e7",
+ "schema": "aegis://schemas/typed_event_row.json",
+ "rebuild": "python -m scripts.night_l2_typed_events --max-rows 0",
+ "written_utc": "2026-10-01T16:44:13+00:00"
+}

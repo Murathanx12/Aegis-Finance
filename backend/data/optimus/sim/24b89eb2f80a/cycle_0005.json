@@ -1,0 +1,118 @@
+{
+ "cycle": 5,
+ "at": "2026-09-26T17:37:40+00:00",
+ "mode": "paper_profit",
+ "elapsed_s": 372.7,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 3.4,
+   "result": {
+    "equity": 999054.41,
+    "cash": 780857.77,
+    "n_positions": 11,
+    "invested_frac": 0.2184031598439168
+   }
+  },
+  "funnel": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "candidate set is fresh",
+    "generated_at": "2026-09-24T02:48:34+00:00",
+    "age_days": 2.61,
+    "n_candidates": 25
+   }
+  },
+  "analyst": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "already pulled today (2026-09-27)",
+    "n_snapshots": 3096,
+    "n_revision_rows": 393552
+   }
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 0.2,
+   "result": {
+    "skipped": "bars unchanged since the last rank",
+    "bars_line": "BARS_FRESH: newest=2026-09-25 sessions_old=0 (limit 2, last closed session 2026-09-25)",
+    "asof": "2026-09-25",
+    "n_eligible": 2907,
+    "top1": "TE"
+   }
+  },
+  "forecast": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "already ran today (2026-09-26)",
+    "state": "DONE",
+    "n_rows_written": 270,
+    "status": "ok"
+   }
+  },
+  "review": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "weekend: no session to review for"
+   }
+  },
+  "plan": {
+   "ok": true,
+   "elapsed_s": 7.4,
+   "result": {
+    "planned": true,
+    "verdict": "MEASURED_NEGATIVE",
+    "acting": true,
+    "bars_line": "BARS_FRESH (limit 2, last closed session 2026-09-25)",
+    "exploit_acting": false,
+    "blend_verdict": "UNMEASURED",
+    "er_present": true,
+    "er_red": null,
+    "probe_verdict": "UNMEASURED_TRADE_SMALL",
+    "probe_acting": true,
+    "shortlist": 23,
+    "shortlist_red": null,
+    "contract": "present",
+    "contract_red": null,
+    "contract_refused_excluded": 2,
+    "n_considered": 46,
+    "n_probe": 10,
+    "n_orders": 1,
+    "n_probe_orders": 0,
+    "n_exploit_orders": 0,
+    "n_sent": 0,
+    "send_block": "venue closed: orders wait for the open",
+    "turnover_usd": 19927.92,
+    "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,436 on $999,054; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$199,811",
+    "decisions_new": 0,
+    "top1": "NVDA"
+   }
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 3.6,
+   "result": {
+    "forecasts": "0 newly resolved; 17,484 of 26,455 records now carry an outcome; 0 voided as unresolvable this run; 0 wait on a bar, 8,835 are not yet due",
+    "decisions": "nothing_to_do"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 358.1,
+   "result": {
+    "unit": "backtest_factory",
+    "day": "2026-09-26",
+    "rc": 0,
+    "status": "ok",
+    "tail": "024': -0.088366, '2025': -0.057131, '2026': -0.318468}; excluding []: sum -0.862216\nCONTROL GAP mom_12_1_q_mjsd_minus_mom_12_1: by year {'2017': -0.028828, '2018': -0.090559, '2019': 0.024373, '2020': -0.568155, '2021': -0.098619, '2022': -0.072487, '2023': -0.096659, '2024': 0.209912, '2025': -0.02039, '2026': -0.102289}; excluding []: sum -0.843701\n  replication file: C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\top10_for_replication_2026-09-26T173143Z.json\n-> C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\leaderboard_2026-09-26T173143Z.json  (357s)\n",
+    "ran_utc": "2026-09-26T17:37:40+00:00"
+   }
+  }
+ },
+ "errors": []
+}

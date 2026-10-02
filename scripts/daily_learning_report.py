@@ -401,6 +401,64 @@ def s_books(day: str, base: Path) -> dict:
     return sec
 
 
+def s_fleet(day: str, base: Path) -> dict:
+    """Which ALPHA SOURCE is ahead in the managed paper fleet (hack1-hack6), graded
+    daily vs SPY, the matched twin and the market CONTROL (hack5 v2) -- with the
+    luck table beside it, because the best of five accounts looks good by chance
+    most of the time. Weights come only from COMPLETED blocks (forward-only trust,
+    nn_lab/loop.py style): one night's grade cannot move one."""
+    sec = _section("fleet_sources", "Which alpha source is ahead in the paper fleet (and how likely is that by luck)?")
+    root = base / "paper_accounts" / "fleet_manager"
+    gp = root / "grades.jsonl"
+    grades = [g for g in _jsonl(gp) if str(g.get("session") or "") <= day]
+    sec["scoreboard"] = None
+    if not grades:
+        _nodata(sec, f"no fleet grade rows on or before {day}", gp)
+        return sec
+    from backend.services import fleet_manager as FM
+    alpha_of: dict[str, str] = {}
+    for cf in sorted((root / "contracts").glob("*.json")):
+        c = _load(cf)
+        if isinstance(c, dict) and c.get("policy_hash"):
+            alpha_of[c["policy_hash"]] = f"{c.get('role')} {c.get('version')}: {c.get('alpha_source')}"
+    sb = FM.source_scoreboard(grades, alpha_of)
+    sec["scoreboard"] = sb
+    lk = sb["luck"]
+    _say(sec, f"{sb['n_grade_rows']} graded account-sessions through {day}; control = "
+              f"{sb['control_role']} v2 (market-like, ~95% SPY)", gp)
+    if sb["ahead"]:
+        _say(sec, sb["ahead"], gp)
+    _say(sec, f"luck table: best of {lk['k_accounts']} beats its benchmark by chance p = "
+              f"{lk['p_best_of_k_beats_benchmark_by_chance']}; shows t >= 2 by chance p = "
+              f"{lk['p_best_of_k_shows_t_ge_2_by_chance']}"
+              + (f"; at least this far ahead by chance p = {lk['p_best_of_k_at_least_this_by_chance']}"
+                 if lk.get("p_best_of_k_at_least_this_by_chance") is not None else ""), gp)
+    for t in sb["table"]:
+        tr = t["trust"]
+        _say(sec, f"  `{t['role']}` {t['contract_version']} ({str(t['alpha_source'])[:60]}): "
+                  f"{t['n_sessions']} session(s) {t['first']}..{t['last']}, return {_pct(t['cum_return'])}, "
+                  f"vs SPY {_pct(t['sum_vs_spy'])}, vs twin {_pct(t['sum_vs_twin'])}, vs control "
+                  f"{_pct(t['sum_vs_control'])}; completed blocks {t['completed_blocks']}, trust "
+                  f"{_pct(tr['trust_daily_excess'], 3)}/day, weight {_num(tr['weight'], 3)} "
+                  f"(shrink {_num(tr['shrink'], 3)})", gp)
+    cp = root / "stop_counterfactual" / "daily.jsonl"
+    latest: dict = {}
+    for r in _jsonl(cp):
+        if str(r.get("asof_session") or "") <= day:
+            k = (r.get("role"), r.get("symbol"))
+            if k not in latest or r["asof_session"] >= latest[k]["asof_session"]:
+                latest[k] = r
+    if latest:
+        for (role, sym), r in sorted(latest.items()):
+            _say(sec, f"  tight-stop counterfactual `{role}` {sym} (stop {r.get('tight_stop_sigma')} sigma) "
+                      f"through {r['asof_session']}: tight ${r['tight']['pnl_usd']:,.0f}, 3-sigma "
+                      f"${r['wide_3sigma']['pnl_usd']:,.0f}, hold ${r['hold']['pnl_usd']:,.0f} "
+                      f"(tight - hold ${r['tight_minus_hold_usd']:,.0f})", cp)
+    else:
+        _say(sec, f"tight-stop counterfactual: {NO_DATA} (first row after the first completed session)")
+    return sec
+
+
 def _forensics(day: str, base: Path) -> tuple[Path, Any, str]:
     folder = base / "forensics"
     p = folder / f"fast_movers_{day}.json"
@@ -1379,6 +1437,7 @@ def build(day: str, *, base: Path | None = None, repo: Path | None = None,
     S["resolved"] = s_resolved(day, base, ledger)
     S["credibility"] = s_credibility(day, base)
     S["books_vs_spy"] = s_books(day, base)
+    S["fleet_sources"] = s_fleet(day, base)
     S["fast_movers"], S["mechanism"], movers = s_fast_movers(day, base)
     S["capture"] = s_capture(day, base, movers)
     S["best_strategy"] = s_best(day, base, S["books_vs_spy"])
@@ -1474,6 +1533,96 @@ def write_report(day: str, *, base: Path | None = None, out: Path | None = None,
     mp.write_text(render_md(rep), encoding="utf-8")
     return {"json": str(jp), "md": str(mp), "closing": rep["closing"],
             "unconsumed": rep["sections"]["unconsumed"].get("unconsumed", [])}
+
+
+RUNS_NAME = "report_runs.jsonl"
+
+
+def record_run(row: dict, *, base: Path | None = None) -> dict:
+    """Append one attempt (ok or FAILED) to `learning_reports/report_runs.jsonl`.
+
+    2026-10-02: session ad32603783de COMPLETED at 2026-09-29T23:56Z and its
+    exit-time report raised; the exception went to the sim's logger and nowhere
+    else, so for three days nothing showed the report was missing while the
+    health row for learning said ok. Every attempt is a row now."""
+    d = out_dir(base)
+    d.mkdir(parents=True, exist_ok=True)
+    row = {"utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), **row}
+    with (d / RUNS_NAME).open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(row, default=str) + "\n")
+    return row
+
+
+def report_for_session(session_id: str, day: str, *, base: Path | None = None,
+                       writer=None, **kw) -> dict:
+    """Write the report for `day` on behalf of a finished session; ALWAYS leaves a row."""
+    writer = writer or write_report
+    try:
+        res = writer(day, base=base, **kw)
+        return record_run({"session": session_id, "day": day, "status": "ok",
+                           "md": res.get("md")}, base=base)
+    except Exception as exc:                                       # noqa: BLE001
+        return record_run({"session": session_id, "day": day, "status": "FAILED",
+                           "error": f"{type(exc).__name__}: {exc}"[:400]}, base=base)
+
+
+def unreported_sessions(sessions: list[dict], runs: list[dict], *, now: datetime,
+                        max_age_days: float = 4.0,
+                        report_stamps: dict | None = None) -> list[dict]:
+    """PURE. Finished sessions (COMPLETED/STOPPED, last row per id) ended within
+    `max_age_days` that have no `ok` run row AND whose day's report was not
+    generated after the session ended (`report_stamps`: day -> the report's own
+    `generated_utc`, never a file mtime). Each: {"session", "day", "state"}."""
+    report_stamps = report_stamps or {}
+    last: dict = {}
+    for s in sessions:
+        if s.get("id"):
+            last[s["id"]] = s
+    ok = {r.get("session") for r in runs if r.get("status") == "ok"}
+    out = []
+    for sid, s in last.items():
+        if s.get("state") not in ("COMPLETED", "STOPPED") or sid in ok:
+            continue
+        end = s.get("finished_utc") or s.get("ended_utc") or s.get("planned_end") or s.get("started")
+        try:
+            t = datetime.fromisoformat(str(end).replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=timezone.utc)
+        if (now - t).total_seconds() > max_age_days * 86400 or t > now:
+            continue
+        stamp = report_stamps.get(t.date().isoformat())
+        try:
+            g = datetime.fromisoformat(str(stamp).replace("Z", "+00:00")) if stamp else None
+        except ValueError:
+            g = None
+        if g is not None and g >= t:
+            continue
+        out.append({"session": sid, "day": t.date().isoformat(), "state": s.get("state")})
+    return out
+
+
+def ensure_session_reports(*, base: Path | None = None, now: datetime | None = None,
+                           sessions_path: Path | None = None, writer=None) -> list[dict]:
+    """The catch-up: every recently finished sim session gets its report (or a FAILED row)."""
+    now = now or datetime.now(timezone.utc)
+    sp = Path(sessions_path) if sessions_path else ((Path(base) if base is not None else _base_default()) / "sim" / "sessions.jsonl")
+    runs_p = out_dir(base) / RUNS_NAME
+    sessions = list(_jsonl(sp))
+    stamps: dict = {}
+    for s in sessions:
+        for k in ("finished_utc", "ended_utc", "planned_end", "started"):
+            if s.get(k):
+                day = str(s[k])[:10]
+                try:
+                    stamps[day] = json.loads((out_dir(base) / f"report_{day}.json")
+                                             .read_text(encoding="utf-8")).get("generated_utc")
+                except (OSError, ValueError):
+                    pass
+                break
+    todo = unreported_sessions(sessions, list(_jsonl(runs_p)), now=now, report_stamps=stamps)
+    return [report_for_session(t["session"], t["day"], base=base, writer=writer) for t in todo]
 
 
 def main(argv: list[str] | None = None) -> int:

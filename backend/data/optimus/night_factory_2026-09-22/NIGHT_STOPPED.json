@@ -1,0 +1,295 @@
+{
+ "receipt": "NIGHT_STOPPED",
+ "date": "2026-09-22",
+ "why": "stop_at reached",
+ "stop_at": "2026-09-22T07:30",
+ "stopped_utc": "2026-09-21T23:30:35+00:00",
+ "pids": {
+  "night_factory_phase1": 78304,
+  "night_factory_phase2": 58036,
+  "lab": 636,
+  "llama_server": 67388
+ },
+ "model_server": {
+  "action": "stopped",
+  "reason": null,
+  "pid": 67388
+ },
+ "morning_report": {
+  "rc": 0,
+  "tail": "26-09-22: Q1 NO \u00e2\u20ac\u201d 0 measured improvement line(s), 2 belief line(s), 28 receipt(s) read\nNO receipt in this night's folder carries a MODEL_IMPROVED:/CAPITAL_CHANGED:/WEIGHT_CHANGED: line with a measured before -> after, so nothing measurable moved. Engineering happened; the numbers did not. (3 line(s) carried the prefix and no measured before -> after, and do not count.)\nreport:  C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-22\\MORNING_REPORT_2026-09-22.md\nreceipt: C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-22\\J3_morning_report_run01.json\n"
+ },
+ "census": {
+  "ours": {
+   "night_factory_phase1": {
+    "pid": 78304,
+    "alive": false,
+    "descendants_alive": []
+   },
+   "night_factory_phase2": {
+    "pid": 58036,
+    "alive": false,
+    "descendants_alive": []
+   },
+   "lab": {
+    "pid": 636,
+    "alive": false,
+    "descendants_alive": []
+   },
+   "llama_server": {
+    "pid": 67388,
+    "alive": null,
+    "descendants_alive": []
+   }
+  },
+  "gpu": "GPU: NVIDIA GeForce RTX 5060 Laptop GPU, 595.97, 487 MiB, 8151 MiB"
+ },
+ "keys": {
+  "APCA_API_KEY_ID": "present",
+  "APCA_API_SECRET_KEY": "present",
+  "FRED_API_KEY": "present",
+  "DEEPSEEK_API_KEY": "present"
+ },
+ "events": [
+  {
+   "t": "2026-09-21T22:28:55",
+   "msg": "started night_factory_phase2 pid 58036: -m scripts.night_factory -> night_factory_phase2_2026-09-22.log"
+  },
+  {
+   "t": "2026-09-21T22:30:25",
+   "msg": "heartbeat: 540 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-21T22:40:25",
+   "msg": "heartbeat: 530 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-21T22:50:25",
+   "msg": "heartbeat: 520 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-21T23:00:25",
+   "msg": "heartbeat: 510 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-21T23:10:25",
+   "msg": "heartbeat: 500 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-21T23:20:25",
+   "msg": "heartbeat: 490 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-21T23:30:25",
+   "msg": "heartbeat: 480 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-21T23:40:26",
+   "msg": "heartbeat: 470 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-21T23:50:26",
+   "msg": "heartbeat: 460 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T00:00:26",
+   "msg": "heartbeat: 450 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T00:10:26",
+   "msg": "heartbeat: 440 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T00:20:26",
+   "msg": "heartbeat: 430 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T00:30:26",
+   "msg": "heartbeat: 420 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T00:40:26",
+   "msg": "heartbeat: 410 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T00:50:26",
+   "msg": "heartbeat: 400 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T01:00:26",
+   "msg": "heartbeat: 390 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T01:10:26",
+   "msg": "heartbeat: 380 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T01:20:26",
+   "msg": "heartbeat: 370 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T01:30:26",
+   "msg": "heartbeat: 360 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T01:40:26",
+   "msg": "heartbeat: 350 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T01:50:26",
+   "msg": "heartbeat: 340 min to stop; alive: ['lab', 'night_factory_phase2']"
+  },
+  {
+   "t": "2026-09-22T01:50:56",
+   "msg": "night_factory_phase2 exited 0"
+  },
+  {
+   "t": "2026-09-22T02:00:26",
+   "msg": "heartbeat: 330 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T02:10:26",
+   "msg": "heartbeat: 320 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T02:20:26",
+   "msg": "heartbeat: 310 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T02:30:26",
+   "msg": "heartbeat: 300 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T02:40:26",
+   "msg": "heartbeat: 290 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T02:50:26",
+   "msg": "heartbeat: 280 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T03:00:26",
+   "msg": "heartbeat: 270 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T03:10:26",
+   "msg": "heartbeat: 260 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T03:20:26",
+   "msg": "heartbeat: 250 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T03:30:26",
+   "msg": "heartbeat: 240 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T03:40:26",
+   "msg": "heartbeat: 230 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T03:50:26",
+   "msg": "heartbeat: 220 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T04:00:26",
+   "msg": "heartbeat: 210 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T04:10:26",
+   "msg": "heartbeat: 200 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T04:20:26",
+   "msg": "heartbeat: 190 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T04:30:26",
+   "msg": "heartbeat: 180 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T04:40:26",
+   "msg": "heartbeat: 170 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T04:50:26",
+   "msg": "heartbeat: 160 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T05:00:26",
+   "msg": "heartbeat: 150 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T05:10:26",
+   "msg": "heartbeat: 140 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T05:20:26",
+   "msg": "heartbeat: 130 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T05:30:26",
+   "msg": "heartbeat: 120 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T05:40:26",
+   "msg": "heartbeat: 110 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T05:50:26",
+   "msg": "heartbeat: 100 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T06:00:26",
+   "msg": "heartbeat: 90 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T06:10:26",
+   "msg": "heartbeat: 80 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T06:20:26",
+   "msg": "heartbeat: 70 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T06:30:26",
+   "msg": "heartbeat: 60 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T06:40:26",
+   "msg": "heartbeat: 50 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T06:50:26",
+   "msg": "heartbeat: 40 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T07:00:26",
+   "msg": "STOP file written (C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-22\\STOP); no new job starts"
+  },
+  {
+   "t": "2026-09-22T07:00:26",
+   "msg": "heartbeat: 30 min to stop; alive: ['lab']"
+  },
+  {
+   "t": "2026-09-22T07:10:26",
+   "msg": "heartbeat: 20 min to stop; alive: []"
+  },
+  {
+   "t": "2026-09-22T07:20:26",
+   "msg": "heartbeat: 10 min to stop; alive: []"
+  },
+  {
+   "t": "2026-09-22T07:30:33",
+   "msg": "model server: {'action': 'stopped', 'reason': None, 'pid': 67388}"
+  },
+  {
+   "t": "2026-09-22T07:30:33",
+   "msg": "balance snapshot (end): balance now      : $49.03"
+  },
+  {
+   "t": "2026-09-22T07:30:34",
+   "msg": "morning report: rc 0"
+  }
+ ]
+}

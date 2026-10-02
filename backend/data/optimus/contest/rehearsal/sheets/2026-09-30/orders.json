@@ -1,0 +1,402 @@
+{
+ "day": "2026-09-30",
+ "mode": "REHEARSAL",
+ "freeze_utc": "2026-09-29T13:48:41",
+ "licence": "PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. Never evidence of skill.",
+ "window_hkt": [
+  "2026-09-30 14:00:00+08:00",
+  "2026-10-01 14:00:00+08:00"
+ ],
+ "nav_usd": 1000000.0,
+ "cap": {
+  "of_notional": 200000.0,
+  "of_nav": 200000.0,
+  "binding": 200000.0,
+  "binding_reading": "20% of notional"
+ },
+ "tickets": [
+  {
+   "n": 1,
+   "side": "BUY",
+   "bbg": "PRGS US Equity",
+   "symbol": "PRGS",
+   "market": "US",
+   "qty": 4833,
+   "order_type": "LIMIT",
+   "limit_local": 41.38,
+   "currency": "USD",
+   "session_date": "2026-09-30",
+   "open_utc": "2026-09-30 13:30:00+00:00",
+   "open_hkt": "Wed 30 Sep 21:30",
+   "open_ny": "Wed 09:30",
+   "notional_usd": 199989.54,
+   "status": "LIVE",
+   "note": "report 2026-10-01 AMC; NOT CONFIRMED (VENDOR_ANNOUNCED); lot 1",
+   "report": "AMC NOT CONFIRMED (VENDOR_ANNOUNCED)",
+   "code": "9W",
+   "extra": {
+    "exit_session": "2026-10-01",
+    "exit_open_utc": "2026-10-01 13:30:00+00:00",
+    "ref_local": 39.40999984741211,
+    "fx_local_per_usd": 1.0,
+    "rank": 1,
+    "trail_abs": 0.09654649347066879,
+    "date_status": "VENDOR_ANNOUNCED",
+    "timing": "AMC",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 4833,
+     "limit_local": 41.38,
+     "notional_usd_at_limit": 199989.54,
+     "notional_usd_at_ref": 190468.53,
+     "lot": 1,
+     "lot_status": "1"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 200000.0,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  },
+  {
+   "n": 2,
+   "side": "BUY",
+   "bbg": "MU US Equity",
+   "symbol": "MU",
+   "market": "US",
+   "qty": 180,
+   "order_type": "LIMIT",
+   "limit_local": 1107.0,
+   "currency": "USD",
+   "session_date": "2026-09-30",
+   "open_utc": "2026-09-30 13:30:00+00:00",
+   "open_hkt": "Wed 30 Sep 21:30",
+   "open_ny": "Wed 09:30",
+   "notional_usd": 199260.0,
+   "status": "LIVE",
+   "note": "report 2026-10-01 AMC; NOT CONFIRMED (VENDOR_ANNOUNCED); lot 1",
+   "report": "AMC NOT CONFIRMED (VENDOR_ANNOUNCED)",
+   "code": "HD",
+   "extra": {
+    "exit_session": "2026-10-01",
+    "exit_open_utc": "2026-10-01 13:30:00+00:00",
+    "ref_local": 1053.97998046875,
+    "fx_local_per_usd": 1.0,
+    "rank": 2,
+    "trail_abs": 0.09061299264431,
+    "date_status": "VENDOR_ANNOUNCED",
+    "timing": "AMC",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 180,
+     "limit_local": 1107.0,
+     "notional_usd_at_limit": 199260.0,
+     "notional_usd_at_ref": 189716.4,
+     "lot": 1,
+     "lot_status": "1"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 200000.0,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  },
+  {
+   "n": 3,
+   "side": "BUY",
+   "bbg": "AYI US Equity",
+   "symbol": "AYI",
+   "market": "US",
+   "qty": 622,
+   "order_type": "LIMIT",
+   "limit_local": 321.21,
+   "currency": "USD",
+   "session_date": "2026-09-30",
+   "open_utc": "2026-09-30 13:30:00+00:00",
+   "open_hkt": "Wed 30 Sep 21:30",
+   "open_ny": "Wed 09:30",
+   "notional_usd": 199792.62,
+   "status": "LIVE",
+   "note": "report 2026-10-01 BMO; NOT CONFIRMED (VENDOR_ANNOUNCED); lot 1",
+   "report": "BMO NOT CONFIRMED (VENDOR_ANNOUNCED)",
+   "code": "AC",
+   "extra": {
+    "exit_session": "2026-10-01",
+    "exit_open_utc": "2026-10-01 13:30:00+00:00",
+    "ref_local": 305.9100036621094,
+    "fx_local_per_usd": 1.0,
+    "rank": 3,
+    "trail_abs": 0.08071115612983704,
+    "date_status": "VENDOR_ANNOUNCED",
+    "timing": "BMO",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 622,
+     "limit_local": 321.21,
+     "notional_usd_at_limit": 199792.62,
+     "notional_usd_at_ref": 190276.02,
+     "lot": 1,
+     "lot_status": "1"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 200000.0,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  },
+  {
+   "n": 4,
+   "side": "BUY",
+   "bbg": "ACN US Equity",
+   "symbol": "ACN",
+   "market": "US",
+   "qty": 1091,
+   "order_type": "LIMIT",
+   "limit_local": 183.19,
+   "currency": "USD",
+   "session_date": "2026-09-30",
+   "open_utc": "2026-09-30 13:30:00+00:00",
+   "open_hkt": "Wed 30 Sep 21:30",
+   "open_ny": "Wed 09:30",
+   "notional_usd": 199860.29,
+   "status": "LIVE",
+   "note": "report 2026-10-01 BMO; NOT CONFIRMED (VENDOR_ANNOUNCED); lot 1",
+   "report": "BMO NOT CONFIRMED (VENDOR_ANNOUNCED)",
+   "code": "AD",
+   "extra": {
+    "exit_session": "2026-10-01",
+    "exit_open_utc": "2026-10-01 13:30:00+00:00",
+    "ref_local": 174.47000122070312,
+    "fx_local_per_usd": 1.0,
+    "rank": 4,
+    "trail_abs": 0.0664048120379448,
+    "date_status": "VENDOR_ANNOUNCED",
+    "timing": "BMO",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 1091,
+     "limit_local": 183.19,
+     "notional_usd_at_limit": 199860.29,
+     "notional_usd_at_ref": 190346.77,
+     "lot": 1,
+     "lot_status": "1"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 200000.0,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  },
+  {
+   "n": 5,
+   "side": "BUY",
+   "bbg": "4088 JT Equity",
+   "symbol": "4088.T",
+   "market": "JP",
+   "qty": 10600,
+   "order_type": "LIMIT",
+   "limit_local": 2959.0,
+   "currency": "JPY",
+   "session_date": "2026-10-01",
+   "open_utc": "2026-10-01 00:00:00+00:00",
+   "open_hkt": "Thu 01 Oct 08:00",
+   "open_ny": "Wed 20:00",
+   "notional_usd": 199192.19,
+   "status": "LIVE",
+   "note": "report 2026-10-05 UNKNOWN; NOT CONFIRMED (VENDOR_ESTIMATE); lot 100 (UNVERIFIED)",
+   "report": "UNKNOWN NOT CONFIRMED (VENDOR_ESTIMATE)",
+   "code": "Y6",
+   "extra": {
+    "exit_session": "2026-10-05",
+    "exit_open_utc": "2026-10-05 00:00:00+00:00",
+    "ref_local": 2818.0,
+    "fx_local_per_usd": 157.46299743652344,
+    "rank": 5,
+    "trail_abs": 0.05620821192860603,
+    "date_status": "VENDOR_ESTIMATE",
+    "timing": "UNKNOWN",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 10600,
+     "limit_local": 2959.0,
+     "notional_usd_at_limit": 199192.19,
+     "notional_usd_at_ref": 189700.44,
+     "lot": 100,
+     "lot_status": "100 (UNVERIFIED)"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 200000.0,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  }
+ ],
+ "control": {
+  "n_lines": 5,
+  "n_buy": 5,
+  "n_sell": 0,
+  "buy_shares": 17326,
+  "sell_shares": 0,
+  "buy_notional_usd": 998094.64,
+  "sheet_code": "BE6D9938"
+ },
+ "reserves": [
+  {
+   "symbol": "HUBG",
+   "bbg_ticker": "HUBG US Equity",
+   "rank": "6",
+   "pre_date": "2026-09-30"
+  },
+  {
+   "symbol": "MKC",
+   "bbg_ticker": "MKC US Equity",
+   "rank": "8",
+   "pre_date": "2026-09-30"
+  }
+ ],
+ "refused": [
+  {
+   "symbol": "1ACN.MI",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "1MKC.MI",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "1MU.MI",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  },
+  {
+   "symbol": "2531.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "3549.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "7611.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "ANGO",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "KOF.PA",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "MTE.DE",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  },
+  {
+   "symbol": "MU.SW",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "SAGA.L",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "SKIS-B.ST",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "VFS",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "FIZZ",
+   "refusal": "REFUSED_DATE_ESTIMATED_ONLY (pattern date exact on 28% of past prints; confirm on EVTS to use)"
+  }
+ ],
+ "n_ranked": 7,
+ "calendar_file": "calendar_2026-09-30.parquet",
+ "bars_age": [
+  "CN: last bar 2026-09-28 (2 days)",
+  "EU: last bar 2026-09-28 (2 days)",
+  "HK: last bar 2026-09-28 (2 days)",
+  "ID: last bar 2026-09-28 (2 days)",
+  "IN: last bar 2026-09-28 (2 days)",
+  "JP: last bar 2026-09-28 (2 days)",
+  "KR: last bar 2026-09-23 (7 days) STALE",
+  "TW: last bar 2026-09-24 (6 days) STALE",
+  "US: last bar 2026-09-28 (2 days)"
+ ],
+ "refresh": {
+  "calendar": "refreshed",
+  "bars": {
+   "FX": {
+    "n_symbols": 16,
+    "rows_after": 30300,
+    "n_failed": 0,
+    "last_date": "2026-09-28"
+   },
+   "EU": {
+    "n_symbols": 732,
+    "rows_after": 1219186,
+    "n_failed": 2,
+    "last_date": "2026-09-28"
+   },
+   "US": {
+    "n_symbols": 132,
+    "rows_after": 117398,
+    "n_failed": 0,
+    "last_date": "2026-09-28"
+   },
+   "JP": {
+    "n_symbols": 753,
+    "rows_after": 1229345,
+    "n_failed": 0,
+    "last_date": "2026-09-28"
+   },
+   "CN": {
+    "n_symbols": 600,
+    "rows_after": 940864,
+    "n_failed": 0,
+    "last_date": "2026-09-28"
+   },
+   "HK": {
+    "n_symbols": 400,
+    "rows_after": 535500,
+    "n_failed": 0,
+    "last_date": "2026-09-28"
+   },
+   "IN": {
+    "n_symbols": 492,
+    "rows_after": 697356,
+    "n_failed": 1,
+    "last_date": "2026-09-28"
+   },
+   "TW": {
+    "n_symbols": 410,
+    "rows_after": 691874,
+    "n_failed": 0,
+    "last_date": "2026-09-24"
+   },
+   "ID": {
+    "n_symbols": 31,
+    "rows_after": 46291,
+    "n_failed": 0,
+    "last_date": "2026-09-28"
+   }
+  },
+  "implied": {
+   "n": 31,
+   "n_with_value": 27
+  }
+ },
+ "notes": []
+}

@@ -1,0 +1,154 @@
+{
+ "receipt": "fleet_trade_autopsy",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "read_only": true,
+ "at": "2026-09-23T16:37:21+00:00",
+ "n_fills": 500,
+ "n_trips": 358,
+ "open_lots_excluded": 31824.0,
+ "realised_pnl": -39384.18999999998,
+ "entered_notional": 942229.7799999999,
+ "bps_per_position": -417.9892297609187,
+ "hit_rate": 0.27714285714285714,
+ "median_hold_days": 1.0,
+ "n_option_trips_excluded_from_features": 0,
+ "by_book": [
+  {
+   "book": "hack4",
+   "trips": 132,
+   "pnl": -16472.44,
+   "hit": 0.3636363636,
+   "med_hold": 2.0
+  },
+  {
+   "book": "hack6",
+   "trips": 183,
+   "pnl": -15903.28,
+   "hit": 0.2295081967,
+   "med_hold": 1.0
+  },
+  {
+   "book": "hack1",
+   "trips": 26,
+   "pnl": -6093.62,
+   "hit": 0.2692307692,
+   "med_hold": 0.0
+  },
+  {
+   "book": "hack2",
+   "trips": 9,
+   "pnl": -914.85,
+   "hit": 0.0,
+   "med_hold": 0.0
+  }
+ ],
+ "entry_discriminators": [
+  {
+   "feature": "amihud",
+   "winners_mean": 1.0620823893509088,
+   "losers_mean": 0.8804934052240904,
+   "t": 2.1100498635877107,
+   "n_win": 97,
+   "n_lose": 239
+  },
+  {
+   "feature": "px_vs_52w_high",
+   "winners_mean": -0.5709304334265441,
+   "losers_mean": -0.5154418162527231,
+   "t": -2.097407086402793,
+   "n_win": 97,
+   "n_lose": 239
+  },
+  {
+   "feature": "rev_5",
+   "winners_mean": -0.05223662860598102,
+   "losers_mean": -0.03053613588356092,
+   "t": -1.6304001525275191,
+   "n_win": 97,
+   "n_lose": 239
+  },
+  {
+   "feature": "vol_21",
+   "winners_mean": 0.6390323981223759,
+   "losers_mean": 0.584133388130804,
+   "t": 1.5915279909791724,
+   "n_win": 97,
+   "n_lose": 239
+  },
+  {
+   "feature": "turnover_surge",
+   "winners_mean": 0.720651443053819,
+   "losers_mean": 0.6757147141962335,
+   "t": 1.5175773306499922,
+   "n_win": 97,
+   "n_lose": 239
+  },
+  {
+   "feature": "mom_63",
+   "winners_mean": -0.18463324422064015,
+   "losers_mean": -0.14717326530040187,
+   "t": -1.4795019692730396,
+   "n_win": 97,
+   "n_lose": 239
+  },
+  {
+   "feature": "mom_252_21",
+   "winners_mean": -0.007577602331385458,
+   "losers_mean": 0.08110578142227867,
+   "t": -1.4385836879311245,
+   "n_win": 97,
+   "n_lose": 239
+  },
+  {
+   "feature": "dollar_vol_log",
+   "winners_mean": 17.519539662584076,
+   "losers_mean": 17.867436526732643,
+   "t": -1.277576264355131,
+   "n_win": 97,
+   "n_lose": 239
+  },
+  {
+   "feature": "skew_63",
+   "winners_mean": -0.14627407731340242,
+   "losers_mean": 0.05270268055808102,
+   "t": -1.2454617050669832,
+   "n_win": 97,
+   "n_lose": 239
+  },
+  {
+   "feature": "median_dollar_vol",
+   "winners_mean": 2558337880.21567,
+   "losers_mean": 1607614460.9710255,
+   "t": 1.0265923502333167,
+   "n_win": 97,
+   "n_lose": 239
+  },
+  {
+   "feature": "mom_21",
+   "winners_mean": -0.028998098700065686,
+   "losers_mean": -0.011451199834177613,
+   "t": -0.8797947879765737,
+   "n_win": 97,
+   "n_lose": 239
+  },
+  {
+   "feature": "vol_63",
+   "winners_mean": 0.6847684433955233,
+   "losers_mean": 0.6643954703098108,
+   "t": 0.7899235346397313,
+   "n_win": 97,
+   "n_lose": 239
+  },
+  {
+   "feature": "beta_63",
+   "winners_mean": 2.10942093626774,
+   "losers_mean": 2.1486113431780764,
+   "t": -0.22687664452939807,
+   "n_win": 97,
+   "n_lose": 239
+  }
+ ],
+ "verdict": "350 closed trips, hit rate 28%, -418 bps per position taken. Far beyond what friction can explain, so the entries are directionally wrong rather than merely expensive. Winners and losers differ at ENTRY on: amihud (t +2.1), px_vs_52w_high (t -2.1). That is a 'stop doing this' rule available tonight \u2014 it needs no new model and no new data, and it is worth testing on the panel before it is believed.",
+ "read_me_first": "Closed round trips only \u2014 an open position has no realised return and including its mark would mix what happened with what might. Entry features are AS OF THE ENTRY DATE, which is the only way to ask what was knowable when the decision was made."
+}

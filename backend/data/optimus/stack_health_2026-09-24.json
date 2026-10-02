@@ -1,0 +1,68 @@
+{
+ "receipt": "stack_health",
+ "at": "2026-09-24T14:46:54+00:00",
+ "deep": false,
+ "green": false,
+ "red": [
+  "local_model",
+  "data_freshness"
+ ],
+ "rows": {
+  "broker": {
+   "ok": true,
+   "s": 1.06,
+   "account": "PA37CSAUFCQR",
+   "equity": 1000000.0,
+   "cash": 1000000.0,
+   "positions": 0,
+   "status": "ACTIVE"
+  },
+  "local_model": {
+   "listening": true,
+   "ready": false,
+   "pid": 111152,
+   "s": 0.14,
+   "ok": false
+  },
+  "deepseek": {
+   "key_present": true,
+   "ok": true,
+   "detail": "key present; --deep asks it a question"
+  },
+  "openclaw": {
+   "ok": true,
+   "s": 71.54,
+   "profile": "muratclaw",
+   "gateway": true,
+   "pinned": true,
+   "channels": 0,
+   "verdict": "READY"
+  },
+  "simulation": {
+   "ok": true,
+   "s": 0.0,
+   "state": "COMPLETED",
+   "cycle": 121,
+   "resumable": true,
+   "warn": null
+  },
+  "telegram": {
+   "ok": true,
+   "s": 0.67,
+   "state": "READY",
+   "bot": "murat_aegis_bot",
+   "owner_set": true
+  },
+  "data_freshness": {
+   "ok": false,
+   "s": 2.37,
+   "blocking": [
+    "fundamentals",
+    "events_typed",
+    "insider"
+   ],
+   "n_sources": 11
+  }
+ },
+ "read_me_first": "Every row is a MEASUREMENT, not a config read. A green here is a claim the night can do its job."
+}

@@ -1,0 +1,166 @@
+{
+ "job": "nn_lab.deaths_crsp",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "credential_source": "terminal repo .env",
+ "crsp_deaths_2016_2024_plain_ticker": 2408,
+ "already_in_inactive_list": 615,
+ "deaths_by_year_crsp": {
+  "2016": 284,
+  "2017": 248,
+  "2018": 210,
+  "2019": 227,
+  "2020": 181,
+  "2021": 189,
+  "2022": 324,
+  "2023": 400,
+  "2024": 345
+ },
+ "tickers_requested": 1778,
+ "tickers_with_bars": 1760,
+ "verification": {
+  "matched": 1459,
+  "no_bars": 20,
+  "mismatch": 262,
+  "too_short": 52,
+  "examples_mismatch": [
+   {
+    "ticker": "VIVO",
+    "permno": 10530,
+    "median_abs_diff": 0.0324,
+    "corr": 0.034
+   },
+   {
+    "ticker": "ACET",
+    "permno": 10656,
+    "median_abs_diff": 0.0417,
+    "corr": 0.089
+   },
+   {
+    "ticker": "EBIX",
+    "permno": 11481,
+    "median_abs_diff": 0.0001,
+    "corr": 0.764
+   },
+   {
+    "ticker": "TORM",
+    "permno": 12190,
+    "median_abs_diff": 0.0,
+    "corr": 0.862
+   },
+   {
+    "ticker": "OFED",
+    "permno": 12502,
+    "median_abs_diff": 0.0003,
+    "corr": 0.244
+   },
+   {
+    "ticker": "WBKC",
+    "permno": 12509,
+    "median_abs_diff": 0.0002,
+    "corr": 0.136
+   },
+   {
+    "ticker": "STRZB",
+    "permno": 13009,
+    "median_abs_diff": 0.0097,
+    "corr": 0.652
+   },
+   {
+    "ticker": "GTWN",
+    "permno": 13529,
+    "median_abs_diff": 0.0002,
+    "corr": 0.89
+   },
+   {
+    "ticker": "LVNTB",
+    "permno": 13554,
+    "median_abs_diff": 0.0085,
+    "corr": 0.226
+   },
+   {
+    "ticker": "TRNX",
+    "permno": 13556,
+    "median_abs_diff": 0.0,
+    "corr": 0.662
+   },
+   {
+    "ticker": "LMCB",
+    "permno": 13758,
+    "median_abs_diff": 0.012,
+    "corr": 0.424
+   },
+   {
+    "ticker": "WBB",
+    "permno": 13885,
+    "median_abs_diff": 0.0,
+    "corr": 0.89
+   }
+  ]
+ },
+ "dropped_same_series_under_new_permno": {
+  "n": 24,
+  "examples": [
+   "ADT",
+   "BATRA",
+   "BATRK",
+   "BIOA",
+   "BTU",
+   "BV",
+   "CCXI",
+   "CORZ",
+   "CRC",
+   "DBD",
+   "DD",
+   "DOW",
+   "EVER",
+   "FOR",
+   "FOX",
+   "FOXA",
+   "GPOR",
+   "HAWK",
+   "JCI",
+   "KNX",
+   "NATL",
+   "SE",
+   "SN",
+   "SPB"
+  ]
+ },
+ "renamed_on_collision": {
+  "n": 14,
+  "examples": [
+   "RPRX#c",
+   "FIG#c",
+   "IHS#c",
+   "LIME#c",
+   "DYN#c",
+   "WOOF#c",
+   "ADPT#c",
+   "SNOW#c",
+   "TLN#c",
+   "RELY#c",
+   "GLF#c2",
+   "RXDX#c2",
+   "VELO#c",
+   "DO#c2"
+  ]
+ },
+ "symbols_written": 1435,
+ "bars": 1170694,
+ "deaths_by_year_written": {
+  "2016": 208,
+  "2017": 217,
+  "2018": 132,
+  "2019": 52,
+  "2020": 58,
+  "2021": 33,
+  "2022": 144,
+  "2023": 316,
+  "2024": 275
+ },
+ "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars_delisted_crsp.parquet",
+ "elapsed_s": 9.8,
+ "still_missing": "deaths after the CRSP vintage (2025-26): no free list on disk",
+ "written_utc": "2026-09-29T14:13:31+00:00"
+}

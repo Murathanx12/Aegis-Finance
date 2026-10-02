@@ -1,0 +1,149 @@
+{
+ "job": "L2_retype_v3",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 1,
+ "run_date": "2026-10-02",
+ "smoke": false,
+ "llm_spend_usd": 0.0,
+ "spend_note": "the LOCAL reader costs compute, not dollars. This job takes no cloud backend and no --max-usd; if it ever does, the spend comes from the call ledger like every other job's.",
+ "question": "Vocabulary v3 added `foreign_entrant_capacity` and `growth_constraint_cited`. Every row typed before 2026-09-19 was answered against a table that could not offer either. Which of the rows a declared keyword screen lets through carry them?",
+ "target_ids": [
+  "foreign_entrant_capacity",
+  "growth_constraint_cited"
+ ],
+ "vocabulary": {
+  "version": 3,
+  "hash": "ef173fa7f72760a9bcc1c7f469ffcc96199357572177241fdadd058c25ec4aad",
+  "n_types": 45,
+  "previous_version": 2,
+  "previous_hash": "b06e322af733c3c006c5c31a0f95218289578d77edcee393d103ea9f2e6262bc"
+ },
+ "prefilter": {
+  "terms": {
+   "foreign_entrant_capacity": [
+    "qualif",
+    "certif",
+    "compatib",
+    "interoperab",
+    "validated on",
+    "capacity parity",
+    "domestic alternative",
+    "local supplier",
+    "market share",
+    "entrant",
+    "new entrant",
+    "chinese rival",
+    "domestic rival",
+    "state-backed",
+    "import substitution",
+    "yield parity",
+    "mass production",
+    "ramp capacity"
+   ],
+   "growth_constraint_cited": [
+    "constraint",
+    "constrained",
+    "bottleneck",
+    "supply limited",
+    "capacity limited",
+    "shortage",
+    "allocation",
+    "could ship more",
+    "limited by",
+    "held back by",
+    "gating factor",
+    "binding constraint",
+    "we are short",
+    "sold out",
+    "lead time",
+    "backlog we cannot",
+    "if we could get",
+    "waiting on"
+   ]
+  },
+  "n_terms": {
+   "foreign_entrant_capacity": 18,
+   "growth_constraint_cited": 18
+  },
+  "match": "case-insensitive substring over title + body",
+  "prefilter_sha256": "58a62da4d492eeb6",
+  "it_is_a_SCREEN": "recall is UNKNOWN and unmeasured. The terms were written from the spec's own examples and the vocabulary rows' definitions BEFORE any row was read; a document that names its constraint in words none of them contain is never asked. No RATE may be quoted from this denominator -- only counts, and only of what was screened in.",
+  "why_a_screen_at_all": "both v3 ids are rare by construction and the corpus holds 163,288 distinct texts. Re-reading all of them for two ids is the cost this job exists to avoid."
+ },
+ "backend": "local_gguf",
+ "never_starts_or_stops_a_server": "with no reader answering this job writes PENDING_MODEL and the frozen candidate hash, so the run that happens when a server IS up asks the same question rather than a similar one",
+ "output": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events\\retype_v3_2026-10-02.jsonl",
+ "selection": {
+  "corpus_rows": 66269,
+  "panel_units": 170712,
+  "screened_in": 41,
+  "already_read": 2948,
+  "by_id": {
+   "foreign_entrant_capacity": 26,
+   "growth_constraint_cited": 18
+  },
+  "candidates": 41,
+  "already_read_total": 2442
+ },
+ "truncated_at": null,
+ "candidate_fingerprint": {
+  "n_units": 41,
+  "sha256": "0223f71e77eef6ac",
+  "first": [
+   "07810e1f32819537b74e64d79524f2cb3c5b304ce63b09ffc4030fff67ddf61e",
+   "1c6189a3acb332eb9a0b04abe2cf912d4da7b7a020f1af35346a0ce193caeefa",
+   "2251db1678a5c848c72bfc83c680685e1ae6c2ca5237dbb2d63223bfb3178974"
+  ],
+  "last": [
+   "e92076e3b389f456642dfbc19af3a68b1019b444715c6aef6085378cce59a4b8",
+   "f2659d1081bf61f005d9bed5238418f69814165874704d52c9ed9d54c4009ea0",
+   "fe0d2e33e5773567ad6a82159efa6ea77d49d1b0a2afc94c2fa4ead7361beb9e"
+  ]
+ },
+ "typed": 36,
+ "refused": 5,
+ "on_target_rows": 0,
+ "by_type": {
+  "new_contract_or_partnership": 5,
+  "no_event": 13,
+  "stock_buyback": 2,
+  "debt_issuance_or_obligation": 3,
+  "mergers_acquisitions": 3,
+  "equity_issuance_dilution": 4,
+  "auditor_or_accounting_change": 1,
+  "management_change_appointment": 3,
+  "divestiture_asset_sale": 1,
+  "stock_split": 1
+ },
+ "refusals": {
+  "REFUSED_LANGUAGE": 1,
+  "REFUSED_SCHEMA": 4
+ },
+ "reader": {
+  "stopped": "complete",
+  "stop_detail": null,
+  "submitted": 41,
+  "collected": 41,
+  "retries": 0,
+  "rate_limited_rows": 0,
+  "tokens_in": 87664,
+  "tokens_out": 3864,
+  "discarded_after_the_failure": 0,
+  "workers": 1
+ },
+ "headline": "36 text(s) re-read against v3 (45 ids), 0 carried one of ['foreign_entrant_capacity', 'growth_constraint_cited'], 5 refused; screen let 41 of 236981 through",
+ "next_test": "an on-target count is a COUNT and not a rate: the prefilter's recall is unmeasured, so the denominator is the screen and not the corpus. TRIAL-DRAFT-FOREIGN-ENTRANT-IC-v0 \u00a74's MDE is filled in from the event count this job produces, and it is filled in BEFORE any return is joined.",
+ "verdict": "0 row(s) carry a v3 id. The rows are typed and joined to nothing; this job writes features, never a signal.",
+ "on_target_share_is_not_quotable": "the denominator is the SCREEN. A share computed against it would describe the keyword list, not the corpus.",
+ "elapsed_s": 116.1,
+ "written_utc": "2026-10-01T17:12:51+00:00",
+ "stage": "features",
+ "awake_s": 116.1,
+ "slept_s": 0.0,
+ "box_s": 3600.0,
+ "wall_minus_monotonic_s": 0.0,
+ "sleep_gaps": [],
+ "child_pid": 212400,
+ "killed_pids": [],
+ "exit_code": 0
+}
