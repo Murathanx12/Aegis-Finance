@@ -908,6 +908,10 @@ class TestTheFunnelNowHasAScheduledCaller:
         src = _P(SR.__file__).read_text(encoding="utf-8")
         i, j = src.index('c.unit("funnel"'), src.index('c.unit("rank"')
         assert i < j, "the funnel must refresh BEFORE the rank reads it"
+        # and in the loop that actually runs, by the named order
+        ran = SR.cycle_unit_order_in_source()
+        assert ran == list(SR.CYCLE_UNIT_ORDER)
+        assert ran.index("funnel") < ran.index("rank")
 
     def test_a_fresh_snapshot_costs_nothing(self, tmp_path, monkeypatch):
         import json as _j

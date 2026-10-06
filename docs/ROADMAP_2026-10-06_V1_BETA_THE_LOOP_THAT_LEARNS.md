@@ -279,6 +279,30 @@ survivor-aware free data); six-role fleet reset (owner's broker-UI act, §6 D2).
 
 ---
 
+### 5a. STATUS AFTER NIGHT ONE (2026-10-07 05:30 HKT) AND THE SECOND WAVE
+
+Night one: C1-C12 BUILT, each reviewed by a second Opus and fixed (`docs/reviews/REVIEW_2026-10-06_*.md`); C13 (two suite
+failures) and C14 (gateway process leak) added. Merge gate: full suite rerun on the morning of 10-07.
+
+Second wave (owner, 2026-10-07 05:15: "take up the roadmap, divide it into manageable chunks, build with agents,
+address everything my prompt said and the GPT report offered"). At most five builders at once (memory lesson).
+
+| id | chunk | from | gate | acceptance |
+|---|---|---|---|---|
+| C15 | Review follow-ups owed: sticky-twin per-draw turnover check v2; `book_dna` lane-beta lag check; ROT5_DIR event replay as our receipt with a momentum control; contest horizon worst case (print gap percentile, 23-session hold); `opportunities_build` scheduled; nn_lab revisions log tracked; first live planner run on the $0 sources | reviews C1/C3/C9/C4/C5/C7 | suite green on night one | each item has a receipt or a dated refusal |
+| C16 | Public-flow SENSORS: USAspending awards + DoD contracts, Senate LDA lobbying $, FEC PAC $, prediction-market and crypto state as market-state inputs, fiscal-year-end spending theory cell | R6 note | R6 | pulls with provenance + latency fields; cells declared and hashed; no trade signal from a sensor alone |
+| C17 | WORLD STATE + REGIME ROWS: structured belief table updated per digest cycle; regime-classification forecast row graded like every arm; fact/claim/interpretation/forecast provenance fields; scenario objects (2027/2030) as Explorer LABELS; the graded news→decision connection and its trust rule | R7 note | R7; grades from 10-09 for trust | beliefs persist and decay; regime rows in the ledger; scenario labels on the Explorer; trust can only grow by rule |
+| C18 | ANALYST REPUTATION: replace `n>=5` with reputation-weighted consensus (firm → sector × horizon → global shrinkage from ANALYST-SKILL-1) in the Explorer and ROT5_DIR; the snowball FOLLOW-THROUGH leg as a free shadow series (return leg stays unregistered: unpowered) | R5 §2, R8 | none | consensus field carries weights and n_effective; shadow series writes rows |
+| C19 | PAPER ARENA + FORECAST LAB + THEORY LAB + SYSTEM HEALTH website pages (evidence ladder on every book; Winner/Loser DNA; calibration and magnitude-vs-direction; theory states; progress-aware health), and the README refreshed with labels | C3/C8/C11/C12 receipts | none | `frontend_check` 0/0/0; every number on a page names its receipt |
+| C20 | SIX-ROLE FLEET as frozen v3 contracts (not launched: no new book before 10-26; owner's broker-UI act), PC-PAPER benchmark-core option built behind a flag OFF (D14), the Telegram serve child restarted on the merged code | roadmap §6 D2/D14 | D2/D14 owner | contracts hashed; flag OFF; cockpit live |
+| C21 | EXTRACTION CASCADE: local 7B first pass → DeepSeek escalation on low confidence/material events, yield and quality receipts; the OpenClaw consent-dismiss click enabled with a receipt (read-only safe); `sessionIdleTtlMs` is the owner's config line | ft_lab receipts; R3 | none | cost per typed event and error rate per arm on one receipt |
+| C22 | OUTSIDE TOOLS: OpenBB platform as a research tool (local probe, licence check, one MCP query); LEAN DEFERRED (no finalist, no free survivor-aware data); BLPAPI OWNER (terminal PC) | R1 | none | a probe receipt; a written refusal for the deferred two |
+| C23 | FUNDING + DOCUMENTATION: evidence pack draft from receipts (labels, costs, decision story), the V1 Beta doc with an architecture diagram, the public README | R2, R9 | none | one doc the owner can file from; no "proven" anywhere |
+| C24 | DESKTOP .exe: the new pages in the static export; offline behaviour of `/opportunities` and `/brain` without keys | C4 | none | desktop export exit 0; a receipt from a launch via Start-Process |
+
+Still gated on time, not on work: contextual bandit over source/policy weights (63 regret sessions); regime trust (10-09
+grades); forward reads 10-26/10-27; the contest (10-12). Still the owner's: D1, D2, D5, D7, D13, D14, D15, D16, D17.
+
 ## 6. OWNER DECISIONS (what I did by default, and what only Murat can do)
 
 | # | decision | default applied tonight | what Murat does |

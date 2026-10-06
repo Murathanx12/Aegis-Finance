@@ -265,6 +265,27 @@ def run(a: argparse.Namespace) -> int:
                        "illustrative_diff_text": "not computed"})
     _p(f"shadow: {shadow.get('actual_diff_text')} | illustrative: {shadow.get('illustrative_diff_text')}")
 
+    # C17 (2026-10-07): world state (beliefs, $0), regime rows (one call, once
+    # per session), scenarios, the dormant news wire. Fails on its own; the
+    # digest continues and the receipt says why.
+    ws_rc: dict = {"state": "NOT_RUN"}
+    try:
+        from backend.services import world_state as WS
+        ws_themes = [{**th, "rows_idx": list(tr.get("rows") or [])}
+                     for tr, th in zip(themes_raw, themes)]
+        sec_imps_ws = [i for k in ("insiders", "congress", "policy", "positioning")
+                       for i in (sections.get(k) or {}).get("implications", [])] \
+            if isinstance(sections, dict) and "error" not in sections else []
+        ws_rc = WS.run_cycle(rows, ws_themes, digest_id=stamp, now=datetime.now(timezone.utc),
+                             meter=None if a.dry_run else meter, px=px, preds=preds,
+                             extra_implications=sec_imps_ws,
+                             write=not (a.dry_run or a.no_write), append_records=B.append)
+        for ln in WS.render_lines(ws_rc):
+            _p(ln)
+    except Exception as exc:                                         # noqa: BLE001
+        ws_rc = {"state": f"REFUSED: {type(exc).__name__}: {exc}"[:300]}
+        _p(f"world state FAILED: {ws_rc['state']}")
+
     # what to read next -> a file the reader agent can adopt (no reader hook is touched)
     if not a.dry_run:
         pol_unknowns = ((sections.get("policy") or {}).get("findings") or {}).get("unknowns") \
@@ -312,6 +333,7 @@ def run(a: argparse.Namespace) -> int:
          "sections_error": sections.get("error") if isinstance(sections, dict) else None,
          "runtime_s": round(time.perf_counter() - t0, 1), "dry_run": bool(a.dry_run)}
     d["theme_merges"] = theme_merges
+    d["world_state"] = {k: v for k, v in ws_rc.items() if k != "table"}
     try:                                  # 2026-09-30: what changed since the last digest
         d["changes"] = WD.what_changed(d, WD.previous_digest(stamp))
     except Exception as exc:              # noqa: BLE001 -- the digest still renders
@@ -319,7 +341,14 @@ def run(a: argparse.Namespace) -> int:
                         "note": f"change summary failed: {type(exc).__name__}: {exc}"[:200]}
     od = (WD.work_dir() / "dryrun") if a.dry_run else WD.out_dir()
     od.mkdir(parents=True, exist_ok=True)
-    DG.atomic_write_text(od / f"world_digest_{stamp}.md", WD.render(d))
+    md = WD.render(d)
+    try:
+        from backend.services import world_state as WS
+        md += "\n\n## World state, regime rows, scenarios (C17)\n\n" + "\n".join(
+            f"- {ln}" for ln in WS.render_lines(ws_rc))
+    except Exception as exc:                                         # noqa: BLE001
+        md += f"\n\n## World state (C17)\n\n- not rendered: {type(exc).__name__}: {exc}"[:400]
+    DG.atomic_write_text(od / f"world_digest_{stamp}.md", md)
     DG.atomic_write_text(od / f"world_digest_{stamp}.short.txt", WD.render_short(d))
     DG.atomic_write_json(od / f"world_digest_{stamp}.json", d)
     _p(f"spend ${spend['spent_usd']:.4f} of ${spend['budget_usd']:.2f}; calls {spend['calls']} "

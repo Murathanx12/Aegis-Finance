@@ -24,6 +24,10 @@ price / sigma63 ......... llm_portfolio/global_bars.parquet, then prices_2025_26
 analyst targets ......... analyst/target_snapshots.parquet (latest row per ticker), else the MarketWatch snapshot
 analyst count / mix ..... stock_lists/<asof>/yf_analyst_v3.json, then the MarketWatch snapshot
 revision flow ........... analyst/target_revisions.parquet through services/revision_flow.compute
+analyst reputation ...... services/analyst_reputation (C18): per-firm weights from the month's
+                          analyst/reputation_weights_<YYYY-MM>.json, every number from the revision file.
+                          LABELLED: the weight did not persist out of sample (review C18 F1) -- plumbing,
+                          never skill; the weighted target-level upside is DIAGNOSTIC_ONLY, never displayed.
 name / why / dates ...... thesis_cards/<newest day>/<ticker>.json
 earnings dates .......... the card, straddle_forward/earnings_cache.json, v3_facts EDGAR+91d, MW
 insiders ................ official/tables/insider_tx.jsonl (SEC Form 4, EDGAR acceptance time)
@@ -389,6 +393,47 @@ def load_revisions(tickers: set[str], asof: pd.Timestamp) -> tuple[dict, Optiona
         return {}, f"ERROR {type(e).__name__}: {e}"
 
 
+def load_reputation(now: datetime, *, write: bool = True) -> dict:
+    """C18: the month's reputation weights + the revision rows FIRST SEEN before now.
+    `write=False` (dry run) computes in memory and writes nothing (review F11).
+    A failure is a named ERROR carried onto every row's missing_because, never a raise."""
+    from backend.services import analyst_reputation as AR  # noqa: PLC0415
+    try:
+        asof = pd.Timestamp(now.astimezone(timezone.utc).replace(tzinfo=None))
+        rv = AR.load_revisions()
+        blob, path, fresh = AR.monthly_receipt(asof, rv=rv, write=write)
+        where = path.relative_to(REPO).as_posix() if path else "in memory (dry run: nothing written)"
+        pit = blob.get("pit") or {}
+        return {"known": AR.known_before(rv, asof), "tabs": AR.tables_from_receipt(blob),
+                "sectors": AR.load_identity_sectors(),
+                "label": blob.get("label") or AR.PERSISTENCE_LABEL_UNKNOWN,
+                "pit_status": pit.get("status"),
+                "source": (f"services/analyst_reputation over {where} "
+                           f"(weights as of {blob.get('asof')}; {'written by this run' if fresh else 'read back'}); "
+                           f"rows first seen before {asof.isoformat(timespec='minutes')} UTC; "
+                           f"PIT {pit.get('status')}"),
+                "receipt": where, "weights_asof": blob.get("asof"),
+                "asof": asof, "error": None}
+    except Exception as exc:                                        # noqa: BLE001
+        return {"error": f"ERROR {type(exc).__name__}: {str(exc)[:200]}"}
+
+
+def reputation_for(t: str, sector: Optional[str], price: Optional[float], rep: dict) -> tuple[Optional[dict], Optional[str]]:
+    """(consensus, why-missing). Sector falls back exactly as the reputation receipt's does."""
+    if rep.get("error"):
+        return None, f"analyst reputation unavailable: {rep['error']}"
+    from backend.services import analyst_reputation as AR  # noqa: PLC0415
+    sec = _config.WHY_MOVED_TICKER_SECTOR.get(t) or rep["sectors"].get(t) or "UNKNOWN"
+    c = AR.ticker_consensus(rep["known"], t, sec, rep["tabs"], rep["asof"], price=price)
+    if c is None:
+        return None, f"no firm with a dated target action on this ticker in the last {AR.COVER_DAYS} days"
+    c["source"] = rep["source"]
+    c["receipt"] = rep["receipt"]
+    c["label"] = rep.get("label") or AR.PERSISTENCE_LABEL_UNKNOWN
+    c["pit_status"] = rep.get("pit_status")
+    return c, None
+
+
 def load_cards() -> dict[str, list[tuple[str, dict]]]:
     """EVERY card per ticker, oldest day first: [(day, card), ...]. F5: "why picked" may
     only quote a card dated on or before the list's freeze; a later one is commentary."""
@@ -661,6 +706,12 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
     else:
         miss["price"] = "no bar in global_bars or prices_2025_26 for this ticker"
 
+    # analyst reputation (C18): weights, never a gate
+    rep, rep_miss = reputation_for(t, sector, (price or {}).get("value") if not foreign else None,
+                                   ctx.get("reputation") or {"error": "reputation context not loaded"})
+    if rep_miss:
+        miss["analyst_reputation"] = rep_miss
+
     # analysts
     n_an, n_src = None, None
     if yf.get("n") is not None:
@@ -701,7 +752,15 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
     if upside is not None:
         med = upside.get("median")
         single = bool(analyst and analyst.get("low") is not None and analyst.get("low") == analyst.get("high")) or n_an == 1
-        upside["n_targets"] = n_an
+        upside["n_targets"] = n_an          # yfinance opinion count: never compared with the revision file
+        if rep and e.get("why_list") and "n < 5" in str(e.get("why_list")):
+            # review F4: the replacement numbers come from ONE source (the revision file)
+            # and are not set against the yfinance count above
+            upside["cliff_replaced"] = {"old_rule": "n analysts >= 5 (stock lists v3.2)",
+                                        "n_covering_firms": rep.get("n_covering_firms"),
+                                        "sum_of_weights": rep.get("sum_of_weights"),
+                                        "label": rep.get("label"),
+                                        "note": "the list's frozen rule still excluded it; coverage is printed, not gated"}
         upside["single_target"] = single
         upside["low_upside"] = (med is not None and med < LOW_UPSIDE)
         upside["low_upside_threshold"] = LOW_UPSIDE
@@ -950,7 +1009,7 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
         "eligibility": e.get("eligibility"),
         "sector": sector, "sector_source": sector_src, "theme": theme,
         "price": price, "analyst": analyst, "upside": upside, "revision": revision,
-        "move_score": move, "analyst_stance": stance, "why_picked": why,
+        "move_score": move, "analyst_stance": stance, "analyst_reputation": rep, "why_picked": why,
         "card": ({"day": pre_day, "verdict": pre_card.get("verdict"), "confidence": pre_card.get("confidence"),
                   "card_hash": pre_card.get("card_hash")} if pre_card else None),
         "later_commentary": later, "freeze_date": str(freeze)[:10] if freeze else None,
@@ -961,7 +1020,7 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
     }
 
 
-def build(now: Optional[datetime] = None) -> dict:
+def build(now: Optional[datetime] = None, *, write_receipts: bool = True) -> dict:
     now = now or _now()
     today = now.date().isoformat()
     md_lists, md_src = lists_from_md()
@@ -986,14 +1045,14 @@ def build(now: Optional[datetime] = None) -> dict:
            "dated_firms": firms, "dated_firms_ok": not firms_src.startswith("ERROR"),
            "runway": runway_table(tickers, today), "insider_window_days": win, "revision_through": rv_through,
            "news": load_news(tickers, now.date()), "earn_cache": load_earnings_cache(), "ciks": load_ciks(),
-           "spy_dates": spy_dates}
+           "spy_dates": spy_dates, "reputation": load_reputation(now, write=write_receipts)}
     out_lists = []
     for lst in lists:
         rows = [build_row(e, lst, ctx) for e in lst["entries"] if e.get("ticker")]
         meta = {k: v for k, v in lst.items() if k != "entries"}
         meta["coverage"] = {f: sum(1 for r in rows if r.get(f)) for f in
                             ("company_name", "exchange", "sector", "price", "analyst", "revision", "move_score",
-                             "analyst_stance", "catalysts", "news", "insiders", "falsifier")}
+                             "analyst_stance", "analyst_reputation", "catalysts", "news", "insiders", "falsifier")}
         meta["n_high_risk_innovation"] = sum(1 for r in rows if r["lane"] == "HIGH_RISK_INNOVATION")
         out_lists.append({**meta, "rows": rows})
     return {
@@ -1001,6 +1060,10 @@ def build(now: Optional[datetime] = None) -> dict:
         "run_id": now.strftime("%Y%m%dT%H%M%SZ"), "builder": "scripts/opportunities_build.py",
         "licence": "PRODUCT_EXPERIMENT: nothing here is a claim of alpha and none of it is an order.",
         "legend": {"move_score": MOVE_EXPLAIN, "analyst_stance": DIRECTION_EXPLAIN,
+                   "analyst_reputation": ("Covering firms and the sum of their reputation weights, both from the dated "
+                                          "revision file. " + str(ctx["reputation"].get("label") or "") + ": the weight is "
+                                          "plumbing, not skill. Target-level upside re-weighted by it is DIAGNOSTIC_ONLY "
+                                          "and not shown."),
                    "high_risk_innovation": (f"Three separate flags: COVERAGE (fewer than {COVERAGE_MIN_FIRMS} firms with a "
                                             f"dated target action in {COVERAGE_WINDOW_DAYS} days), BINARY EVENT (an FDA / "
                                             f"trial date within {BINARY_WINDOW_SESSIONS} weekdays) and RUNWAY (cash below "
@@ -1013,6 +1076,8 @@ def build(now: Optional[datetime] = None) -> dict:
                    "bars_last_spy": spy_dates[-1] if spy_dates else None,
                    "revision_flow": rv_pulled, "revision_through": rv_through,
                    "dated_firms": firms_src,
+                   "analyst_reputation": ctx["reputation"].get("source") or ctx["reputation"].get("error"),
+                   "analyst_reputation_label": ctx["reputation"].get("label"),
                    "insider_coverage_from": cov_from or None, "insider_window_days": win,
                    "stale_after_days": _config.OPPORTUNITIES_STALE_DAYS},
         "lists": out_lists,
@@ -1036,7 +1101,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap = argparse.ArgumentParser(description="Build the Opportunity Explorer receipt.")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args(argv)
-    blob = build()
+    blob = build(write_receipts=not a.dry_run)   # F11: a dry run writes nothing
     for lst in blob["lists"]:
         print(f"{lst['list_id']:<34} n={len(lst['rows']):>4}  HRI={lst['n_high_risk_innovation']:>3}  {lst['coverage']}")
     if a.dry_run:

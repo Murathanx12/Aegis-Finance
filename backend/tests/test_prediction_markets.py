@@ -54,6 +54,10 @@ def pm_dir(tmp_path, monkeypatch):
     d = tmp_path / "pmkt"
     monkeypatch.setattr(config, "PREDICTION_MARKET_DIR", d)
     monkeypatch.setattr(pm, "_PAGE_SLEEP_S", 0)
+    # C16 (2026-10-07): the default Kalshi storage is now "derived_only" (D18);
+    # these tests pin the raw path they were written for. The derived path is
+    # tested in test_public_flow_sensors.py.
+    monkeypatch.setattr(config, "PREDMARKET_KALSHI_STORAGE", "raw")
     return d
 
 

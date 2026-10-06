@@ -30,6 +30,10 @@ import {
   MonitorCog,
   Compass,
   Brain,
+  Swords,
+  LineChart,
+  FlaskConical,
+  HeartPulse,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -83,6 +87,16 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/portfolio-intelligence/risk-watch", label: "Risk Watch", icon: Activity, code: "RISK", advancedOnly: true },
       { href: "/risk", label: "Risk Layer", icon: ShieldCheck, code: "SIZE" },
       { href: "/retirement", label: "Retirement", icon: Target, code: "RETIRE" },
+    ],
+  },
+  {
+    // C19 (2026-10-07): the legibility pages. Every number names its receipt.
+    title: "Evidence",
+    items: [
+      { href: "/arena", label: "Paper Arena", icon: Swords, code: "ARENA" },
+      { href: "/forecast-lab", label: "Forecast Lab", icon: LineChart, code: "FLAB" },
+      { href: "/theory-lab", label: "Theory Lab", icon: FlaskConical, code: "TLAB" },
+      { href: "/health", label: "System Health", icon: HeartPulse, code: "HLTH" },
     ],
   },
   {

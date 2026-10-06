@@ -1011,6 +1011,28 @@ ORDER_BLOCKING_DISAGREEMENTS = ("ACCOUNT_MISMATCH", "NO_BROKER_EQUITY_READ",
                                 "WORST_CASE_ABOVE_LIMIT")
 
 
+def _plan_news_tilt(targets: list, *, sandbox: bool) -> dict:
+    """C17 B3: apply (or, by default, NOT apply) the news tilt to the post-gate
+    target weights in place. Returns the receipt block with its `line`. A
+    failure is a line on the receipt, never a changed weight."""
+    import backend.config as _cfg_live
+    on = bool(getattr(_cfg_live, "NEWS_TILT_IN_PLAN", False))
+    if sandbox:
+        return {"enabled": on, "applied": False, "weights": None,
+                "line": f"news tilt: sandbox, digest not read, applied=False (flag {on})"}
+    try:
+        from backend.services import world_state as WS
+        w = {t.symbol: float(t.weight) for t in targets}
+        res = WS.plan_news_tilt(w, enabled=on)
+        if res["applied"]:
+            for t in targets:
+                t.weight = float(res["weights"][t.symbol])
+        return res
+    except Exception as exc:                                       # noqa: BLE001
+        return {"enabled": on, "applied": False, "weights": None,
+                "line": f"news tilt: REFUSED {type(exc).__name__}: {exc}"[:200] + ", applied=False"}
+
+
 def _order_path_gate(targets: list, *, snap: dict, equity: float, probe_syms: list,
                      ex_syms: list, exploit_acting: bool, probe_acting: bool,
                      probe_sigma: dict, bars_paths: list | None, sandbox: bool) -> dict:
@@ -1465,6 +1487,13 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     # C11 review F5: the replay reproduces the targets BEFORE this gate; the
     # gate's own scale travels to the story beside the post-gate weights.
     pre_gate_w = {t.symbol: float(t.weight) for t in targets}
+    # ---- C17: the dormant news wire (config.NEWS_TILT_IN_PLAN, default False) --
+    # BEFORE the order-path gate (review F10): a tilted weight is re-gated like
+    # any other. Flag off, or KEY 1 failing on both arms: `plan_news_tilt`
+    # returns the weights object untouched, so the targets are byte-identical.
+    # A sandbox caller does not read this machine's digest. It never adds a
+    # name and never raises gross. `pre_gate_w` above is the UNtilted book.
+    news_tilt = _plan_news_tilt(targets, sandbox=sandbox)
     risk_gate = _order_path_gate(
         targets, snap=snap, equity=equity, probe_syms=[x["ticker"] for x in probe_rows],
         ex_syms=ex_syms, exploit_acting=exploit_acting, probe_acting=probe_acting,
@@ -1693,7 +1722,9 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
               "sent": sent,
               "decision_story": {k: v for k, v in story.items()
                                  if k not in ("stories", "alternatives")},
-              "decision_story_line": story.get("line")}
+              "decision_story_line": story.get("line"),
+              "news_tilt": {k: v for k, v in news_tilt.items() if k != "weights"},
+              "news_tilt_line": news_tilt["line"]}
     if not to_send:
         why = []
         if mode != "paper_profit":
@@ -2042,6 +2073,26 @@ def run(session_id: str) -> int:
                 PB.close_lease()
             except Exception:                                      # noqa: BLE001
                 logger.warning("could not close the broker lease", exc_info=True)
+
+
+#: THE CYCLE'S UNIT ORDER, named once (2026-10-07). `_run_loop` calls
+#: `c.unit(<name>, ...)` in exactly this order, and `cycle_unit_order_in_source()`
+#: proves it from the source, so a refactor that moves the loop (C2 split `run`
+#: into `run` + `_run_loop` for the broker lease, which silently broke a test that
+#: read `run`'s source) cannot reorder the units without a red suite.
+#: funnel BEFORE rank: a ranking over last month's candidate set is the 2026-09-22
+#: failure. analyst after the funnel, before the rank. forecast and review after
+#: the rank, before the plan.
+CYCLE_UNIT_ORDER: tuple[str, ...] = (
+    "reconcile", "funnel", "analyst", "rank", "forecast", "review", "plan", "grade", "learn",
+)
+
+
+def cycle_unit_order_in_source() -> list[str]:
+    """The unit names `_run_loop` actually passes to `c.unit`, in source order."""
+    import inspect                                                 # noqa: PLC0415
+    import re                                                      # noqa: PLC0415
+    return re.findall(r'c\.unit\("([a-z_]+)"', inspect.getsource(_run_loop))
 
 
 def _run_loop(session_id: str, s: dict, mode: str) -> int:

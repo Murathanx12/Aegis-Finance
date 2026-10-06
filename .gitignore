@@ -458,3 +458,10 @@ backend/data/optimus/web_reader/
 backend/data/optimus/official/tables/
 *.lock
 *.pid
+
+# C16 public-flow sensors (review F9, 2026-10-07): the tables are NOT committed. The crypto
+# rows carry CoinGecko / Binance / OKX market data whose terms restrict redistribution;
+# USAspending and LDA rows are public records but live with them. Receipts (counts,
+# statuses, citations) stay tracked.
+backend/data/optimus/public_flow/tables/
+backend/data/optimus/public_flow/requests.jsonl

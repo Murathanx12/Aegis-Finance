@@ -1584,6 +1584,41 @@ def _case_regret_ledger():
             "pnl() on a decision with no round-trip cost declared")
 
 
+def _case_analyst_reputation():
+    """Analyst reputation (C18, 2026-10-07): no revisions file, no weights.
+
+    The missing input is THE DATED ANALYST FILE. Weighting a consensus from an
+    absent file would print every covering firm at the prior weight 1.0 -- a
+    reputation computed from nothing that reads exactly like one computed from
+    a clean record.
+    """
+    import tempfile
+    from pathlib import Path
+
+    from backend.services.analyst_reputation import ReputationRefused, load_revisions
+    absent = Path(tempfile.mkdtemp()) / "target_revisions.parquet"
+    return (lambda: load_revisions(absent), ReputationRefused,
+            "load_revisions() on an analyst file that does not exist")
+
+
+def _case_snowball_shadow():
+    """Snowball shadow (C18, 2026-10-07): no raise events, no base rate.
+
+    The missing input is THE RAISES. A cross-sectional rho over zero events
+    would be a correlation of nothing; it must refuse, not print 0.
+    """
+    import pandas as pd
+
+    from backend.services.snowball_shadow import SnowballRefused, cross_sectional_rho
+    rv = pd.DataFrame({"ticker": pd.Series(dtype=str), "firm": pd.Series(dtype=str),
+                       "target_action": pd.Series(dtype=str),
+                       "event_date": pd.Series(dtype="datetime64[ns]"),
+                       "first_seen": pd.Series(dtype="datetime64[ns]")})
+    closes = pd.DataFrame({"SPY": [1.0, 1.01]}, index=pd.to_datetime(["2026-01-02", "2026-01-05"]))
+    return (lambda: cross_sectional_rho(rv, closes, n_boot=1, asof=pd.Timestamp("2026-02-01")),
+            SnowballRefused, "cross_sectional_rho() with no raise events")
+
+
 def _case_calendar_offsets():
     """Quarterly-offset triplet (lane M1, 2026-09-28): a monthly rule has no
     quarterly calendars.
@@ -1647,6 +1682,18 @@ def _case_world_digest():
             BudgetExceeded, "a paid-call meter with no finite budget declared")
 
 
+def _case_world_state():
+    # C17: the missing input is the evidence set's NAME. A belief update with no
+    # digest id cannot be made idempotent (a re-run would double-count), so it
+    # refuses rather than updating the table from an unnamed batch
+    from datetime import datetime, timezone
+
+    from backend.services.world_state import WorldStateRefused, update_beliefs
+    return (lambda: update_beliefs(None, [], [], digest_id="",
+                                   now=datetime(2026, 10, 7, tzinfo=timezone.utc)),
+            WorldStateRefused, "a belief update with no digest id")
+
+
 def _case_bar_defects():
     # the missing input is the screen's result: a book is not certified clean
     # against a flagged-row set nobody handed in
@@ -1662,9 +1709,25 @@ def _case_bar_defects_empty_book():
             "assert_book_clean() on a book with no held slot")
 
 
+def _case_public_flow_common():
+    """Public-flow sensors (C16, 2026-10-07): no crosswalk refuses.
+
+    The missing input is THE CROSSWALK. Matching USAspending recipients or LDA
+    clients against nothing would label every row NOT_MAPPED and read as a
+    quiet day; `load_crosswalk` refuses instead."""
+    from pathlib import Path as _P
+
+    from backend.services.public_flow_common import (PublicFlowRefused,
+                                                     load_crosswalk)
+    return (lambda: load_crosswalk(_P("does/not/exist/crosswalk.yaml")),
+            PublicFlowRefused, "load_crosswalk() with no crosswalk file")
+
+
 CASES = {
+    "public_flow_common": _case_public_flow_common,
     "fleet_manager": _case_fleet_manager,
     "world_digest": _case_world_digest,
+    "world_state": _case_world_state,
     "official_sources": _case_official_sources,
     "bar_defects": _case_bar_defects,
     "bar_defects_empty_book": _case_bar_defects_empty_book,
@@ -1777,6 +1840,8 @@ CASES = {
     "source_scorecard": _case_source_scorecard,
     "ledger_archive": _case_ledger_archive,
     "regret_ledger": _case_regret_ledger,
+    "analyst_reputation": _case_analyst_reputation,
+    "snowball_shadow": _case_snowball_shadow,
 }
 
 

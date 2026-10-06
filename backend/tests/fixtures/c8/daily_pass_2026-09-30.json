@@ -1,0 +1,178 @@
+{
+ "_fixture": "C8 review F1: the REAL 2026-09-30 daily pass (BRK-B blackout), trimmed to steps; machine paths scrubbed. Tests re-date the stamps relative to today.",
+ "date": "2026-09-30",
+ "headline": "9 ok / 4 nothing-to-do / 1 refused / 0 error / 0 skipped / 0 timed out over 14 steps",
+ "started_utc": "2026-09-29T22:30:17+00:00",
+ "finished_utc": "2026-09-29T23:53:21+00:00",
+ "steps": [
+  {
+   "step": "bars_refresh",
+   "status": "refused",
+   "utc": "2026-09-29T22:30:45+00:00",
+   "rows": 0,
+   "refusals": [
+    "pull failed, nothing overwritten: HTTPError: HTTP Error 400: Bad Request"
+   ]
+  },
+  {
+   "step": "news_pull",
+   "status": "ok",
+   "utc": "2026-09-29T22:55:54+00:00",
+   "rows": 1141,
+   "refusals": []
+  },
+  {
+   "step": "decision_contract",
+   "status": "ok",
+   "utc": "2026-09-29T22:55:59+00:00",
+   "rows": 97,
+   "refusals": [
+    "capital $40,000 \u2014 the declared IPS capital (agency Strategy.sizing.notional_usd)"
+   ]
+  },
+  {
+   "step": "analyst_snapshot",
+   "status": "ok",
+   "utc": "2026-09-29T23:51:02+00:00",
+   "rows": 837,
+   "refusals": [
+    "the sweep reached its own 3300s budget after 837 of 2362 symbols and stopped itself; the parquet holds the symbols reached and the remaining 1525 carry no row for 2026-09-29"
+   ]
+  },
+  {
+   "step": "e1_append",
+   "status": "nothing_to_do",
+   "utc": "2026-09-29T23:51:06+00:00",
+   "rows": 0,
+   "refusals": []
+  },
+  {
+   "step": "book_cadence",
+   "status": "nothing_to_do",
+   "utc": "2026-09-29T23:51:16+00:00",
+   "rows": 0,
+   "refusals": [
+    "monthly: {'book_id': 'book:1934ec97aa4b1620', 'stage': 'decide', 'reason': 'the short-interest composite resolved 4133 CRSP permno(s) at 2026-09-28, and the local bars a",
+    "monthly: {'book_id': 'book:4359eba886a8a505', 'stage': 'decide', 'reason': \"no [0]-day insider cluster filed in the 31 day(s) ending 2026-09-28 landed on a name inside t",
+    "monthly: {'book_id': 'book:625c391913d9718c', 'stage': 'decide', 'reason': \"no [4, 5]-day insider cluster filed in the 31 day(s) ending 2026-09-28 landed on a name insid",
+    "monthly: {'book_id': 'book:a82e6e453c14c241', 'stage': 'decide', 'reason': 'the Grinblatt-Han reference price weights past prices by TURNOVER, and turnover needs shares ",
+    "monthly: {'book_id': 'book:c3adfbc0192576c0', 'stage': 'decide', 'reason': 'the Grinblatt-Han reference price weights past prices by TURNOVER, and turnover needs shares "
+   ]
+  },
+  {
+   "step": "grade_forecasts",
+   "status": "nothing_to_do",
+   "utc": "2026-09-29T23:51:20+00:00",
+   "rows": 0,
+   "refusals": [
+    "NO_BAR_FOR_RESOLUTION_DATE: 159 record(s)"
+   ]
+  },
+  {
+   "step": "grade_promises",
+   "status": "nothing_to_do",
+   "utc": "2026-09-29T23:51:20+00:00",
+   "rows": 0,
+   "refusals": []
+  },
+  {
+   "step": "grade_books",
+   "status": "ok",
+   "utc": "2026-09-29T23:52:34+00:00",
+   "rows": 314,
+   "refusals": []
+  },
+  {
+   "step": "paper_accounts",
+   "status": "ok",
+   "utc": "2026-09-29T23:52:40+00:00",
+   "rows": 360,
+   "refusals": []
+  },
+  {
+   "step": "bridge_report",
+   "status": "ok",
+   "utc": "2026-09-29T23:52:48+00:00",
+   "rows": 32,
+   "refusals": []
+  },
+  {
+   "step": "coverage",
+   "status": "ok",
+   "utc": "2026-09-29T23:52:52+00:00",
+   "rows": 1870,
+   "refusals": [
+    "alpaca_benzinga_news",
+    "wsj_markets",
+    "wsj_business",
+    "wsj_world",
+    "wsj_opinion",
+    "wsj_tech",
+    "mw_marketpulse",
+    "mw_realtimeheadlines",
+    "barrons_magazine"
+   ]
+  },
+  {
+   "step": "scoreboard",
+   "status": "ok",
+   "utc": "2026-09-29T23:52:53+00:00",
+   "rows": 1,
+   "refusals": [
+    "calibration: CANNOT DETERMINE: the newest calibration receipt (<path>) resolved 0 forecast(s) inside its trailing_24h window, so its Brier is null. A number here would be a Brier over an empty set",
+    "exploit_pnl: CANNOT DETERMINE: no EXPLOIT decision has been SCORED yet \u2014 the ledger holds no `SCORED` row for one (0 scored row(s) carried no usable realised return). A decision is scored when its own expiry passes and the grader joins it to close-to-close returns; until then a P&L number would be i",
+    "explore_pnl: CANNOT DETERMINE: no EXPLORE decision has been SCORED yet \u2014 the ledger holds no `SCORED` row for one (0 scored row(s) carried no usable realised return). A decision is scored when its own expiry passes and the grader joins it to close-to-close returns; until then a P&L number would be i",
+    "strongest_killed: CANNOT DETERMINE: no non-smoke book replay receipt stamped in the last 7 day(s) carries a kill verdict (FAILED_VARIANT, MECHANISM_REJECTED)",
+    "strongest_new_positive: CANNOT DETERMINE: no non-smoke book replay receipt stamped in the last 7 day(s) carries a positive net excess over its twin. Nothing new is positive, which is a reading and not a gap"
+   ]
+  },
+  {
+   "step": "health",
+   "status": "ok",
+   "utc": "2026-09-29T23:53:21+00:00",
+   "rows": 61,
+   "refusals": [
+    "STALE accrual_canary -- forecast_accrual: ok 4293 new row(s) in the last 3 day(s); n_considered: DEGRADED n_considered has not moved for >= 5 contracts -- a static candidate input. n_c",
+    "STALE book_grader -- paper books graded through 2026-09-28, 1 session(s) behind 2026-09-29; llm books: leaderboard_2026-09-29.json bars through 2026-09-29, 0 session(s) behind 2026-",
+    "STALE decision_contract -- 2026-09-30.json written 57m ago; n_considered has not moved for >= 5 contracts -- a static candidate input. n_considered [2, 2, 2, 2, 2, 2] over 2026-09-25..202",
+    "STALE dowjones_feeds -- 10 feeds, 0 new item(s)",
+    "STALE live_market_loop -- no NAV row tagged open_of_loop/close_of_loop in any pc_book/*/nav.jsonl -- live_market_loop has never run end-to-end (its role is done by sim_run)",
+    "STALE llama_server -- server down and l2_typing has waited PENDING_MODEL for 2.5d -- typing never happens unattended",
+    "STALE news_collectors -- 1,141 new rows over 29 sources; 0 RED, 0 refused; 23/32 sources wrote within 3 d; quiet: alpaca_benzinga_news (8.1d), barrons_magazine (3.4d), mw_marketpulse (3",
+    "STALE openclaw_gateway -- gateway up but degraded capability: connected-no-operator-scope",
+    "STALE optimus_brain -- brain health page generated 16.7d ago -- tools/refresh_aegis.py has no scheduled caller",
+    "STALE railway_backend -- commit 8ac64468; uptime 40574s; response 3.49s; all_fresh=True; expected_nav_date 2026-09-29; lane last_nav_date ['2026-09-29']; uptime < 1 day: the container w",
+    "STALE social:youtube -- youtube: OK, 3 row(s) on the last tick",
+    "STALE u_forecast -- DEGRADED: u_forecast | u_forecast DEGRADED (investigator:evidence_v3): today's receipt REFUSED_DEPENDENCY_DOWN: the OpenClaw call failed 4 time(s) in a row on A",
+    "UNKNOWN openclaw_api_bridge -- openclaw_api_bridge writes no heartbeat or receipt; nothing derivable",
+    "UNKNOWN railway_fleet -- CLI linked to aat-loop-hack3 (not a live fleet service), so the fleet's `cycle full exited rc=0` lines cannot be read read-only from here",
+    "UNKNOWN social:reddit -- reddit: REDDIT_KEYS_ABSENT -- refused, not collected",
+    "UNKNOWN task:AegisAlerts -- Last Run 30/9/2026 7:37:41 am, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisAnalystPanelDaily -- Last Run 30/9/2026 5:30:00 am, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisContestDesk -- Last Run 30/11/1999 12:00:00 am, Last Result 267011; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisContestRehearsal -- Last Run 29/9/2026 9:49:30 pm, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisFleetDailyCheck -- Last Run 30/9/2026 6:45:01 am, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisFleetManagerOpen -- Last Run 30/11/1999 12:00:00 am, Last Result 267011; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisFleetManagerPreclose -- Last Run 30/9/2026 3:30:01 am, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisHypLabNightly -- Last Run 30/11/1999 12:00:00 am, Last Result 267011; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisNNLabNightly -- Last Run 29/9/2026 8:30:01 am, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisStraddleForward -- Last Run 30/9/2026 7:46:30 am, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "UNKNOWN task:AegisWRDSPullNight -- one-shot task, Last Run 22/8/2026 6:24:37 am, Last Result 0; retired -- delete it",
+    "UNKNOWN task:AegisWorldDigest -- Last Run 30/9/2026 6:30:01 am, Last Result 0; Last Result is cmd's rc, not the job's, and no receipt is mapped for this task",
+    "STOPPED_BY_OPERATOR always_on_lab -- always_on_lab: stopped on purpose (STOP_file) 2.4d ago, pid 152180; nothing restarts it until a human does",
+    "STOPPED_BY_OPERATOR lab_loop:catalyst_calendar -- loop catalyst_calendar: the lab was stopped on purpose",
+    "STOPPED_BY_OPERATOR lab_loop:daily_pass_dispatch -- loop daily_pass_dispatch: the lab was stopped on purpose",
+    "STOPPED_BY_OPERATOR lab_loop:decision_vs_reality -- loop decision_vs_reality: the lab was stopped on purpose",
+    "STOPPED_BY_OPERATOR lab_loop:health -- loop health: the lab was stopped on purpose",
+    "STOPPED_BY_OPERATOR lab_loop:idle_gpu_queue -- loop idle_gpu_queue: the lab was stopped on purpose",
+    "STOPPED_BY_OPERATOR lab_loop:l2_typing -- loop l2_typing: the lab was stopped on purpose",
+    "STOPPED_BY_OPERATOR lab_loop:news_pull -- loop news_pull: the lab was stopped on purpose",
+    "STOPPED_BY_OPERATOR lab_loop:night_launcher_dispatch -- loop night_launcher_dispatch: the lab was stopped on purpose",
+    "STOPPED_BY_OPERATOR lab_loop:nn_lab -- loop nn_lab: the lab was stopped on purpose",
+    "STOPPED_BY_OPERATOR lab_loop:social_pull -- loop social_pull: the lab was stopped on purpose",
+    "STOPPED_BY_OPERATOR lab_loop:status -- loop status: the lab was stopped on purpose",
+    "STOPPED_BY_OPERATOR lab_loop:thematic_streams -- loop thematic_streams: the lab was stopped on purpose"
+   ]
+  }
+ ]
+}

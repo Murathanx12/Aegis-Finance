@@ -166,6 +166,103 @@ CELLS = {
         "honesty": ("ear_drift / ear_mom (PEAD continuation) decay post-2009 and are DEPRIORITIZED on CRSP; "
                     "none of the 12 earnings_event library rules conditioned on a streak count."),
     },
+    # C16 (2026-10-07): DECLARED ONLY -- no runner exists yet; `--part run` refuses by name.
+    "fiscal_year_end_spending": {
+        "family": "fiscal_calendar", "target": "return", "declared_only": True, "fy_gate": "basket_stat",
+        "source": "public_flow_sensors_2026-10-07",
+        "source_ref": "docs/research_notes/2026-10-07/public_flow_sensors_2026-10-07.md",
+        "title": "Federal fiscal-year-end spending: federal contractors in August-September",
+        "mechanism": "Agencies obligate unspent fiscal-year funds before Sept 30 (use it or lose it; fiscal Q4 "
+                     "carries a disproportionate share of contract obligations), producing an order/revenue "
+                     "uptick for federal-exposed contractors that the market may under-anticipate.",
+        "precursor": "(review F8, 2026-10-07) this is a CALENDAR effect conditional on federal exposure: the "
+                     "only inputs knowable before Aug 1 are the calendar and the name's federal revenue share "
+                     "from its last 10-K customer segment ending before Aug 1 (Compustat seg_customer GOVDOM / "
+                     "business-segment sales). Fiscal-Q4 agency obligations are NOT knowable on Aug 1 (only "
+                     "July has happened and DoD's July publishes ~October); the agency-month snapshots are a "
+                     "forward diagnostic of the mechanism, never a precursor",
+        "separation_from_beta": "within-name: the same names' own Oct-Jul monthly excess return is the baseline, "
+                                "so name beta and sector beta cancel; benchmark = CRSP value-weighted market; "
+                                "control cohort = matched non-federal names of the same size band and SIC2 over "
+                                "the same Aug-Sep months (a calendar effect common to all stocks is not this one)",
+        "refutation": "validate (FY2017-FY2024) Aug-Sep minus own-baseline excess return <= 0, or t < 2 with MDE "
+                      "below the effect worth having; AND (dose) the high-federal-share tercile must not be "
+                      "below the low tercile -- an effect that does not scale with federal exposure is not "
+                      "this mechanism",
+        "universe": "crosswalk tickers (backend/data/crosswalks/usaspending_recipient_ticker.yaml) linked to CRSP "
+                    "common stock (shrcd 10/11) by ticker over the name's date range, restricted to names with "
+                    "Compustat GOVDOM customer-segment rows; federal share = GOVDOM sales / total segment sales "
+                    "in the last fiscal year ending before the decision date",
+        "inputs": {"crosswalk": "backend/data/crosswalks/usaspending_recipient_ticker.yaml",
+                   "crsp_names": "backend/data/optimus/wrds/bulk/crsp__stocknames.parquet",
+                   "comp_names": "backend/data/optimus/wrds/bulk/comp__names.parquet",
+                   "seg_customer": "backend/data/optimus/wrds/bulk/compseg__seg_customer.parquet",
+                   "crsp_daily": "backend/data/optimus/wrds/crsp_dsf_<year>.parquet (2008-2024)",
+                   "agency_months": "backend/data/optimus/public_flow/tables/gov_agency_month_obligations.jsonl "
+                                    "(forward snapshots only; history needs the bulk archive -- named, not assumed)"},
+        "event": "one per (permno, fiscal year): the Aug 1 - Sep 30 window; statistical unit for the primary = "
+                 "the FISCAL YEAR (one equal-weight basket per FY), because every name's window is the same "
+                 "calendar months and name-months are cross-sectionally correlated",
+        "entry": "OPEN of the first CRSP session on or after Aug 1; exit CLOSE of the last session on or before Sep 30",
+        "horizons": ["Aug1-Sep30 (~42 sessions)"],
+        "primary": "per FY: equal-weight basket (Aug-Sep compounded excess vs VW market) minus the same basket's "
+                   "mean monthly excess over the prior Oct-Jul x 2 months; net of one round trip "
+                   "(max(Corwin-Schultz, flat band))",
+        "reported": ["by FY and leave-one-FY-out", "federal-share terciles (dose)",
+                     "matched non-federal control over the same months", "gross and net"],
+        "splits": {"design": ("2008-10-01", "2016-09-30"), "validate": ("2016-10-01", "2024-09-30")},
+        "sign": "+1", "min_effect": 0.005,
+        "honesty": ("No corpse found for fiscal-year-end spend in hyp_lab or the strategy library; the nearest "
+                    "siblings (macro_lead_lag oil/yield cells) ended CANNOT_DISTINGUISH, so the prior is modest. "
+                    "Only 8 fiscal years per split: the gate's name-month MDE is an i.i.d. LOWER bound and the "
+                    "honest unit is the fiscal year -- with 8 validate FYs the comparison is likely unpowered; "
+                    "that is printed, not hidden. The agency-month precursor has NO point-in-time history "
+                    "before the first snapshot (2026-10-07): any backtest that uses today's revised monthly "
+                    "totals as if known in August is look-ahead and is barred. The gate links by TICKER over each "
+                    "CRSP name range, so a ticker reused by an unrelated firm inside 2008-2024 is counted (the "
+                    "gate's n is an upper bound); the runner must link by the crosswalk company's gvkey/permco. "
+                    "REVIEW F7/F8 (2026-10-07): the universe is now linked by permco with crosswalk dates, and "
+                    "the gate is computed at the FISCAL-YEAR unit from the DESIGN fold. DISCLOSURE: while "
+                    "building that gate the builder printed the per-FY statistic for ALL FYs 2009-2024, "
+                    "validate included; the history validate fold is therefore SEEN and can no longer confirm "
+                    "anything -- a positive would need forward fiscal years (FY2027+)."),
+    },
+    # Review F8 (2026-10-07): the within-year DOSE version -- same months, high minus low tercile of
+    # federal revenue share -- has more independent variation than the calendar. DECLARED ONLY.
+    "fiscal_year_end_dose": {
+        "family": "fiscal_calendar", "target": "return", "declared_only": True, "fy_gate": "dose_stat",
+        "source": "public_flow_sensors_2026-10-07",
+        "source_ref": "docs/reviews/REVIEW_2026-10-07_C16_PUBLIC_FLOW_SENSORS.md",
+        "title": "Fiscal-year-end spending, within-year dose: high vs low federal revenue share in Aug-Sep",
+        "mechanism": "If use-it-or-lose-it obligations lift federal contractors in Aug-Sep, the lift should scale "
+                     "with the share of revenue that is federal; a common calendar effect does not.",
+        "precursor": "federal revenue share (GOVDOM customer sales / business-segment sales) from the last 10-K "
+                     "segment year ending before Aug 1 of the FY -- knowable before the window opens",
+        "separation_from_beta": "a within-FY difference of two baskets over the SAME months: market, calendar and "
+                                "the contractor sector's common move cancel; each leg is also net of its own "
+                                "Oct-Jul baseline",
+        "refutation": "validate (FY2017-FY2024) top-minus-bottom tercile Aug-Sep statistic <= 0, or t < 2 with MDE "
+                      "below the effect worth having",
+        "universe": "as fiscal_year_end_spending (permco-linked, crosswalk-dated, GOVDOM names), names with a "
+                    "federal share in that FY; terciles within each FY",
+        "inputs": {"crosswalk": "backend/data/crosswalks/usaspending_recipient_ticker.yaml",
+                   "crsp_names": "backend/data/optimus/wrds/bulk/crsp__stocknames.parquet",
+                   "comp_names": "backend/data/optimus/wrds/bulk/comp__names.parquet",
+                   "seg_customer": "backend/data/optimus/wrds/bulk/compseg__seg_customer.parquet",
+                   "crsp_monthly": "backend/data/optimus/wrds/bulk/crsp__msf.parquet",
+                   "market": "backend/data/optimus/wrds/ff_factors_monthly.parquet"},
+        "event": "one per fiscal year: the top-minus-bottom tercile spread of the per-FY statistic",
+        "entry": "Aug 1 - Sep 30, monthly CRSP returns",
+        "horizons": ["Aug1-Sep30"],
+        "primary": "per FY: [top tercile basket stat] minus [bottom tercile basket stat], stat = Aug-Sep "
+                   "compounded excess vs FF market minus 2 x mean monthly excess over the preceding Oct-Jul",
+        "reported": ["by FY", "leave-one-FY-out", "tercile counts"],
+        "splits": {"design": ("2008-10-01", "2016-09-30"), "validate": ("2016-10-01", "2024-09-30")},
+        "sign": "+1", "min_effect": 0.005,
+        "honesty": ("Declared after review F8 asked for it. DISCLOSURE: the builder printed this per-FY spread "
+                    "for ALL FYs 2009-2024 (validate included) while building the FY-unit gate; the history "
+                    "validate fold is SEEN, so a history read cannot confirm -- forward FYs only."),
+    },
 }
 
 
@@ -306,8 +403,10 @@ def ledger_row(cell: str, run: str) -> dict:
     c = CELLS[cell]
     return L.make_hypothesis(title=c["title"], mechanism=c["mechanism"], precursor=c["precursor"],
                              separation_from_beta=c["separation_from_beta"], refutation=c["refutation"],
-                             target=c["target"], family=c["family"], source="theory_objects_2026-10-06",
-                             source_ref="docs/research_notes/2026-10-06/snowball_and_theory_objects_2026-10-06.md",
+                             target=c["target"], family=c["family"],
+                             source=c.get("source", "theory_objects_2026-10-06"),
+                             source_ref=c.get("source_ref", "docs/research_notes/2026-10-06/"
+                                                            "snowball_and_theory_objects_2026-10-06.md"),
                              cell_type=f"theory_{cell}", params={"run": run}, split=c["splits"],
                              negative_informative=True, expected_power=0.6, cpu_min=20.0,
                              notes="declared cell (scripts.hyp_theory_cells); $0")
@@ -322,6 +421,9 @@ def declaration(cell: str, run: str) -> dict:
             "verdict_vocabulary": list(VOCAB), **{k: v for k, v in c.items()}}
     if cell == "hi52":
         body["input_sha256"] = {r: file_sha(REPO / p) for r, p in c["inputs"].items()}
+    if cell in ("fiscal_year_end_spending", "fiscal_year_end_dose"):
+        body["input_sha256"] = {r: file_sha(REPO / p) for r, p in c["inputs"].items()
+                                if r in ("crosswalk", "crsp_names", "comp_names", "seg_customer")}
     return body
 
 
@@ -376,7 +478,165 @@ def gate_labels(cell: str) -> Optional[tuple[pd.Series, tuple[str, str]]]:
         Q = Q[(Q["anndats"] >= "1993-06-01") & (Q["anndats"] <= "2024-09-30")]
         Q = Q[(Q["streak"] >= 3) | (Q["streak"] == 1)]
         return Q["streak"] >= 3, ("STREAK3P", "STREAK1")
+    if cell in ("fiscal_year_end_spending", "fiscal_year_end_dose"):
+        return fiscal_ye_labels()
     return None
+
+
+def _crosswalk_ticker_windows() -> dict[str, Optional[str]]:
+    """ticker -> earliest valid_from over its crosswalk entries (None = open)."""
+    import yaml  # noqa: PLC0415
+    inp = CELLS["fiscal_year_end_spending"]["inputs"]
+    cw = yaml.safe_load((REPO / inp["crosswalk"]).read_text(encoding="utf-8"))["entries"]
+    out: dict[str, Optional[str]] = {}
+    for e in cw:
+        t, vf = str(e["ticker"]).upper(), (str(e["valid_from"])[:10] if e.get("valid_from") else None)
+        if t not in out:
+            out[t] = vf
+        elif out[t] is not None and (vf is None or vf < out[t]):
+            out[t] = vf
+    return out
+
+
+def fiscal_ye_universe() -> pd.DataFrame:
+    """Labels only (no returns). Review F7 (2026-10-07): link by COMPANY, not by
+    ticker string. For each crosswalk ticker the company is the CRSP permco that
+    holds the ticker most recently; every name row of that permco is kept (so
+    Harris/HRS, AmerisourceBergen/ABC, UTX, old SAIC count as their company) and
+    any OTHER permco that once used the ticker (Cortex as COR, MDRNA as MRNA,
+    Protective Life as PL) is dropped. One permno per permco (HEI's two share
+    classes counted once). Months before the ticker's earliest crosswalk
+    `valid_from` are dropped. `govdom` = Compustat carries GOVDOM customer rows."""
+    inp = CELLS["fiscal_year_end_spending"]["inputs"]
+    win = _crosswalk_ticker_windows()
+    N = pd.read_parquet(REPO / inp["crsp_names"], columns=["permno", "permco", "ticker", "namedt",
+                                                           "nameenddt", "shrcd"])
+    N = N[N["shrcd"].isin([10, 11])].copy()
+    N["namedt"], N["nameenddt"] = pd.to_datetime(N["namedt"]), pd.to_datetime(N["nameenddt"])
+    hold = N[N["ticker"].isin(list(win))].sort_values("nameenddt")
+    cur = hold.groupby("ticker").tail(1)[["ticker", "permco", "permno"]]
+    rows = []
+    for _, c in cur.iterrows():
+        comp = N[N["permco"] == c["permco"]]
+        # one permno per company: the one that carries the ticker most recently
+        comp = comp[comp["permno"] == c["permno"]].copy()
+        comp["xw_ticker"] = c["ticker"]
+        comp["valid_from"] = win.get(c["ticker"])
+        rows.append(comp)
+    U = pd.concat(rows, ignore_index=True) if rows else N.iloc[0:0]
+    cn = pd.read_parquet(REPO / inp["comp_names"], columns=["gvkey", "tic"])
+    sc = pd.read_parquet(REPO / inp["seg_customer"], columns=["gvkey", "ctype"])
+    gov = set(sc.loc[sc["ctype"] == "GOVDOM", "gvkey"].astype(str))
+    gtic = set(cn.loc[cn["gvkey"].astype(str).isin(gov), "tic"].astype(str).str.upper())
+    U["govdom"] = U["xw_ticker"].isin(gtic)
+    return U
+
+
+def fiscal_ye_name_months() -> pd.DataFrame:
+    """(permno, month) listed in FY2009-FY2024 inside the crosswalk window, GOVDOM names only."""
+    U = fiscal_ye_universe()
+    U = U[U["govdom"]]
+    months = pd.period_range("2008-10", "2024-09", freq="M")
+    out = []
+    for _, r in U.iterrows():
+        lo, hi = r["namedt"].to_period("M"), r["nameenddt"].to_period("M")
+        vf = pd.Timestamp(r["valid_from"]).to_period("M") if r["valid_from"] else None
+        for m in months:
+            if lo <= m <= hi and (vf is None or m >= vf):
+                out.append((int(r["permno"]), r["xw_ticker"], m))
+    return pd.DataFrame(out, columns=["permno", "ticker", "month"]).drop_duplicates(["permno", "month"])
+
+
+def fiscal_ye_labels() -> tuple[pd.Series, tuple[str, str]]:
+    """One bool per (permno, month): True = August or September."""
+    M = fiscal_ye_name_months()
+    return M["month"].dt.month.isin([8, 9]).reset_index(drop=True), ("AUG_SEP", "OTHER_MONTHS")
+
+
+def _fed_share_by_ticker_fy() -> pd.DataFrame:
+    """GOVDOM sales / business-segment sales from the last fiscal year ending
+    before Aug 1 of each FY's calendar year (knowable before the window opens)."""
+    inp = CELLS["fiscal_year_end_spending"]["inputs"]
+    sc = pd.read_parquet(REPO / inp["seg_customer"], columns=["gvkey", "ctype", "salecs", "datadate"])
+    sa = pd.read_parquet(REPO / "backend/data/optimus/wrds/bulk/compseg__seg_annfund.parquet",
+                         columns=["gvkey", "stype", "sales", "datadate", "srcdate"])
+    cn = pd.read_parquet(REPO / inp["comp_names"], columns=["gvkey", "tic"])
+    g = sc[sc["ctype"] == "GOVDOM"].groupby(["gvkey", "datadate"], as_index=False)["salecs"].sum()
+    sa = sa[sa["stype"] == "BUSSEG"].sort_values("srcdate").drop_duplicates(
+        ["gvkey", "datadate", "stype"], keep="last")
+    t = sa.groupby(["gvkey", "datadate"], as_index=False)["sales"].sum()
+    m = g.merge(t, on=["gvkey", "datadate"])
+    m = m[m["sales"] > 0]
+    m["share"] = (m["salecs"] / m["sales"]).clip(0, 1)
+    m = m.merge(cn.assign(tic=cn["tic"].astype(str).str.upper()), on="gvkey")
+    rows = []
+    for fy in range(2009, 2025):
+        cut = pd.Timestamp(f"{fy}-08-01")
+        x = m[pd.to_datetime(m["datadate"]) < cut].sort_values("datadate").groupby("tic").tail(1)
+        rows += [(r["tic"], fy, float(r["share"])) for _, r in x.iterrows()]
+    return pd.DataFrame(rows, columns=["ticker", "fy", "fed_share"])
+
+
+def fiscal_ye_fy_series() -> pd.DataFrame:
+    """Per FY: the declared primary statistic for (a) the equal-weight GOVDOM
+    basket and (b) the within-year DOSE spread (top minus bottom tercile of
+    federal share). stat = Aug-Sep compounded excess (vs FF market) minus 2 x the
+    mean monthly excess over the preceding Oct-Jul. DESIGN FOLD ONLY is used by
+    the gate (power), never validate."""
+    M = fiscal_ye_name_months()
+    perm = sorted(M["permno"].unique().tolist())
+    R = pd.read_parquet(REPO / "backend/data/optimus/wrds/bulk/crsp__msf.parquet",
+                        columns=["permno", "date", "ret"], filters=[("permno", "in", perm)])
+    R["month"] = pd.to_datetime(R["date"]).dt.to_period("M")
+    F = pd.read_parquet(REPO / "backend/data/optimus/wrds/ff_factors_monthly.parquet",
+                        columns=["date", "mktrf", "rf"])
+    F["month"] = pd.to_datetime(F["date"]).dt.to_period("M")
+    F["mkt"] = F["mktrf"] + F["rf"]
+    X = M.merge(R[["permno", "month", "ret"]], on=["permno", "month"]).merge(F[["month", "mkt"]], on="month")
+    X["ex"] = X["ret"] - X["mkt"]
+    X["fy"] = X["month"].dt.year + (X["month"].dt.month >= 10).astype(int)
+    S = _fed_share_by_ticker_fy()
+    X = X.merge(S, on=["ticker", "fy"], how="left")
+    out = []
+    for fy, g in X.groupby("fy"):
+        def stat(sub: pd.DataFrame) -> Optional[float]:
+            w = sub[sub["month"].dt.month.isin([8, 9])].groupby("month")["ex"].mean()
+            b = sub[~sub["month"].dt.month.isin([8, 9])].groupby("month")["ex"].mean()
+            if len(w) < 2 or len(b) < 6:
+                return None
+            return float((1 + w).prod() - 1 - 2 * b.mean())
+        base = stat(g)
+        sh = g.dropna(subset=["fed_share"]).drop_duplicates("permno")[["permno", "fed_share"]]
+        dose = None
+        if len(sh) >= 9:
+            lo, hi = sh["fed_share"].quantile([1 / 3, 2 / 3])
+            top = set(sh.loc[sh["fed_share"] >= hi, "permno"])
+            bot = set(sh.loc[sh["fed_share"] <= lo, "permno"])
+            a, b = stat(g[g["permno"].isin(top)]), stat(g[g["permno"].isin(bot)])
+            dose = (a - b) if a is not None and b is not None else None
+        out.append({"fy": int(fy), "basket_stat": base, "dose_stat": dose,
+                    "n_names": int(g["permno"].nunique()), "n_with_share": int(len(sh))})
+    return pd.DataFrame(out)
+
+
+def fy_unit_gate(design: pd.Series, n_validate: int, min_effect: float, *,
+                 max_mde_mult: Optional[float] = None) -> dict:
+    """Review F8: the gate at the cell's OWN unit, the fiscal year. sd of the
+    per-FY statistic over the DESIGN fold; MDE = 2.8 sd / sqrt(n_validate);
+    REFUSES when MDE > max_mde_mult x the effect worth having."""
+    from backend import config as C  # noqa: PLC0415
+    mult = C.THEORY_GATE_MAX_MDE_MULT if max_mde_mult is None else max_mde_mult
+    x = pd.Series(design, dtype=float).dropna()
+    sd = float(x.std(ddof=1)) if len(x) >= 3 else float("nan")
+    mde = 2.8 * sd / math.sqrt(n_validate) if n_validate > 0 and sd == sd else float("inf")
+    reasons = []
+    if not (mde <= mult * min_effect):
+        reasons.append(f"FY-unit MDE {mde:.4f} (design sd {sd:.4f} over {len(x)} FYs, {n_validate} validate "
+                       f"FYs) > {mult:g} x effect worth having {min_effect:.4f}: the comparison can never be read")
+    return {"unit": "fiscal year", "n_design_fy": int(len(x)), "n_validate_fy": int(n_validate),
+            "design_sd": round(sd, 5) if sd == sd else None, "mde": round(mde, 5) if mde != float("inf") else None,
+            "max_mde_mult": mult, "min_effect": min_effect, "refused": bool(reasons), "reasons": reasons,
+            "note": "sd from the DESIGN fold only (power, not a result); validate untouched"}
 
 
 def part_declare(cell: str, run: str, *, ledger: bool = True, labels=None) -> int:
@@ -390,6 +650,24 @@ def part_declare(cell: str, run: str, *, ledger: bool = True, labels=None) -> in
     if cell == "hi52" and any(v is None for v in body["input_sha256"].values()):
         say(f"REFUSED: a fair-twin input is missing: {body['input_sha256']}")
         return 2
+    fyg = CELLS[cell].get("fy_gate")
+    if fyg and labels is None:
+        S = fiscal_ye_fy_series()
+        lo, hi = CELLS[cell]["splits"]["design"]
+        dfy = S[(S["fy"] >= int(lo[:4]) + 1) & (S["fy"] <= int(hi[:4]))][fyg]
+        vlo, vhi = CELLS[cell]["splits"]["validate"]
+        n_val = int(((S["fy"] >= int(vlo[:4]) + 1) & (S["fy"] <= int(vhi[:4]))).sum())
+        g = fy_unit_gate(dfy, n_val, CELLS[cell]["min_effect"])
+        say(f"  FY gate ({fyg}): design sd {g['design_sd']}  MDE {g['mde']}  vs {g['max_mde_mult']}x"
+            f"{g['min_effect']}  {'REFUSED' if g['refused'] else 'ok'}")
+        body["fy_gate"] = g
+        if g["refused"]:
+            gp = OUT / f"theory_{cell}_GATE_REFUSED_{run}.json"
+            if not gp.exists():
+                _write_new(gp, {"schema": "hyp_lab/theory_cell_gate/1", "cell": cell, "run": run,
+                                "written_utc": _now(), "verdict": "UNPOWERED_AT_DECLARATION", "fy_gate": g})
+            say("REFUSED (UNPOWERED_AT_DECLARATION): " + "; ".join(g["reasons"]))
+            return 2
     lab = labels if labels is not None else gate_labels(cell)
     if lab is not None:
         g = declaration_gate(lab[0], CELLS[cell]["min_effect"], labels=lab[1])
@@ -817,6 +1095,10 @@ def run_beat_streak(decl: dict, run: str) -> dict:
 
 def part_run(cell: str, run: str, *, ram_probe=free_gb, sleep=time.sleep) -> int:
     from backend.services import hyp_lab as L  # noqa: PLC0415
+    if CELLS.get(cell, {}).get("declared_only"):
+        say(f"REFUSED: {cell} is DECLARED ONLY (C16, 2026-10-07): no runner exists yet; its precursor "
+            f"has no point-in-time history before the first agency-month snapshot")
+        return 2
     dp = decl_path(cell, run)
     if not dp.exists():
         say(f"REFUSED: no declaration {dp.name}")

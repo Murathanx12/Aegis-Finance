@@ -96,3 +96,50 @@ their own.
   the daily pass health step, which copies every non-ALIVE row.
 - `daily_pass.step_health` still counts `verdict != "ALIVE"`. That is correct under the coarse
   verdict, but it does not print the fine states yet. That file is C7's tonight.
+
+## Review fixes (2026-10-07, `docs/reviews/REVIEW_2026-10-07_C8_PROGRESS_AWARE_HEALTH.md`, 58/100)
+
+The first version replaced "UNKNOWN by omission" with "ALIVE by omission" in five readers. Replayed on
+the BRK-B blackout, the daily pass read ALIVE_PROGRESSING three days running. What changed:
+
+- **One status mapping** (`task_receipts.map_status` / `receipt_status`) that every reader calls.
+  An unrecognised status word is DEGRADED, never OK. A parametrised property test feeds every
+  declared task a fresh REFUSED / DEGRADED / STOPPED / DEAD reading and asserts that none of them
+  reads ALIVE_*.
+- **Worst real receipts committed as fixtures** (`backend/tests/fixtures/c8/`, trimmed, machine
+  paths scrubbed, re-dated to today in the tests). The 2026-09-30 daily pass now reads DEGRADED
+  "bars_refresh=refused". The 2026-10-01 straddle pass now reads REFUSED. A synthetic all-ERROR
+  fleet run reads DEAD, and a single ERROR reads DEGRADED (fleet daily and both fleet-manager
+  passes share `accounts_status`). A grading step that did `nothing_to_do` while due rows wait
+  reads DEGRADED.
+- **Contest desk:** never-run after its first sheet day (2026-10-09) reads STALE (DEAD if
+  unregistered). A calendar import failure reads UNKNOWN with the exception class.
+- **Straddle:** session-only, with its window read from `STRADDLE_FWD_ENTRY_START/END_ET`. It
+  reads idle-expected after the window when the last window produced, and STALE when it did not.
+- **Other readers:**
+  - the world digest reads zero items, failed LLM calls and `sections_error`;
+  - alerts read their own `state` and `bars_health`;
+  - the sim owner's `outside_window` reads idle-expected;
+  - a failed analyst pull reads REFUSED, and a receipt from a MANUAL pull before the task's first
+    run says so.
+- **Substance hash:** exact volatile key names plus an anchored suffix rule. Progress keys such as
+  `rows_written`, `outcome` and `coverage_rate` are kept. ISO dates, compact stamps and hex ids are
+  normalised inside values. Readers declare progress fields (the rehearsal hashes
+  `grade.relative_0bps`, `grade.n_closed`, so 10-03, 10-04 and 10-05 hash identical). A producer
+  may write `identical_ok: true` with a reason.
+- **Registration states:**
+  - an unregistered task whose last receipt is an old refusal reads DEAD;
+  - a Disabled task reads STALE unless the owner wrote `task_keeper/disabled/<name>`;
+  - the Telegram brief names REFUSED rows;
+  - `AegisPublicFlow` reads UNREGISTERED (coarse STOPPED_BY_OPERATOR) until its review passes.
+- **Non-task rows:** `railway_fleet` and `social:reddit` read STOPPED_BY_OPERATOR with their
+  reasons (`config.RAILWAY_FLEET_STOPPED_REASON`; no key provisioned). `u_plan` reads DEGRADED
+  "no plan written for session X". `decision_contract` and `accrual_canary` lead with the cause.
+- **Repo scan:** reads task names structurally (AST assignments to TASK-named variables, and
+  `/TN` / `-TaskName` inside non-docstring literals, plus `.ps1` files). `OpenClaw Gateway` is now
+  read from the scheduler and has a row.
+
+Probe after the fixes (`--no-write`, 2026-10-06 23:26 UTC): DEAD 0, STALE 12, REFUSED 0,
+**UNKNOWN 0**, STOPPED_BY_OPERATOR 16, ALIVE 49. Task rows (22, including OpenClaw Gateway):
+16 progressing, 4 idle-expected (analyst pull, contest desk, sim owner, straddle),
+2 DEGRADED (`AegisDataCatalog` unregistered, `AegisWRDSPullNight` retired), 1 UNREGISTERED.

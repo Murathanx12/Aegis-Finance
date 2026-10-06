@@ -343,12 +343,16 @@ def test_old_news_dowjones_reaper_and_red_sources_are_not_alive(tmp_path):
 
 
 def test_social_refused_source_is_unknown(tmp_path):
+    # C8 review F8 (2026-10-07): a key never provisioned is a declared stop, not
+    # an unknown; any other refusal stays UNKNOWN with its reason
     _lab(tmp_path, _now(), loops={"social_pull": {
         "last_tick_utc": _iso(_now()), "cadence_minutes": 360,
         "per_source": [{"source": "reddit", "status": "REFUSED", "refused": "REDDIT_KEYS_ABSENT"},
+                       {"source": "x", "status": "REFUSED", "refused": "RATE_LIMITED"},
                        {"source": "youtube", "status": "OK", "rows": 3}]}})
     out = SH.p_social_sources(_ctx(tmp_path))
-    assert out["reddit"].verdict == "UNKNOWN" and out["youtube"].verdict == "ALIVE"
+    assert out["reddit"].verdict == "STOPPED_BY_OPERATOR" and "no key provisioned" in out["reddit"].detail
+    assert out["x"].verdict == "UNKNOWN" and out["youtube"].verdict == "ALIVE"
 
 
 def test_llama_waiting_units_over_an_hour_is_stale(tmp_path):
@@ -372,9 +376,17 @@ def test_git_ahead_and_ci_red_are_stale(tmp_path):
     assert SH.p_ci(ctx).verdict == "STALE"
 
 
-def test_railway_cli_linked_to_a_retired_service_is_unknown(tmp_path):
-    r = SH.p_railway_fleet(_ctx(tmp_path, run=lambda a, t: (0, "Linked service\n\naat-loop-hack3\n")))
+def test_railway_cli_linked_to_a_retired_service_is_unknown(tmp_path, monkeypatch):
+    # C8 review F8: while config declares the loops stopped on purpose the row is
+    # STOPPED_BY_OPERATOR with that reason; with no declared stop it stays UNKNOWN
+    from backend import config as C
+    ctx = _ctx(tmp_path, run=lambda a, t: (0, "Linked service\n\naat-loop-hack3\n"))
+    monkeypatch.setattr(C, "RAILWAY_FLEET_STOPPED_REASON", "")
+    r = SH.p_railway_fleet(ctx)
     assert r.verdict == "UNKNOWN" and "aat-loop-hack3" in r.detail
+    monkeypatch.setattr(C, "RAILWAY_FLEET_STOPPED_REASON", "stopped on purpose")
+    r = SH.p_railway_fleet(ctx)
+    assert r.verdict == "STOPPED_BY_OPERATOR" and "aat-loop-hack3" in r.detail
 
 
 # ─────────────────────────────────────────────────────────── exit codes

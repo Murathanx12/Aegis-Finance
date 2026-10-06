@@ -1,0 +1,257 @@
+# Recipient / lobbying-client name -> ticker crosswalk (chunk C16, 2026-10-07; dated after review F7).
+#
+# HAND-CURATED, first pass ("explore dirty"): the largest public federal
+# contractors by federal dollars, across defence primes, IT services, health,
+# energy and aerospace. No free UEI -> ticker crosswalk exists (every one found
+# is a paid product; docs/research_notes/2026-10-07/public_flow_sensors_2026-10-07.md section 1).
+# A fuzzy EDGAR-name join is a LATER stretch, not this file.
+#
+# Fields
+#   ticker                 the listed symbol TODAY of the company that owned the recipient on the event date.
+#                          A predecessor that is the SAME company (a rename: Harris -> L3Harris, Anthem ->
+#                          Elevance, SAIC -> Leidos 2013, UTX -> RTX) maps to today's ticker; a company that
+#                          was a SEPARATE listing before an acquisition (Raytheon Company before 2020-04,
+#                          Rockwell Collins before 2018-11, Aerojet before 2023-07) is dated out.
+#   valid_from / valid_to  the entry maps only events dated inside [valid_from, valid_to] (inclusive; empty =
+#                          open). Matching uses the event's own date (USAspending action date, LDA period end).
+#   company, sector        display
+#   recipient_patterns     USAspending `Recipient Name` prefixes (normalised: upper case, & -> AND,
+#                          punctuation dropped). A name matches a pattern when it equals it or starts
+#                          with it followed by a space; the LONGEST matching pattern wins; two tickers
+#                          tied on the longest pattern = AMBIGUOUS (never guessed); two entries of the SAME
+#                          ticker tied = the LOWER confidence binds.
+#   lda_client_patterns    Senate LDA `client.name` prefixes, same rule.
+#   uei                    Recipient UEIs SEEN in a live pull (filled from receipts, never invented). A UEI
+#                          match is used only for events on or after 2022-04-04 (the UEI era) and only when
+#                          the entry is valid on the event date.
+#   confidence             high   = distinctive name, the listed parent has owned the recipient throughout
+#                          medium = an acquired unit, a renamed predecessor, a name a subsidiary / JV /
+#                                   unrelated firm can share, or a recent spin-off changed the owner
+#                          low    = an M&O / joint-venture contractor: the dollars fund a national lab or a
+#                                   JV and are NOT the parent's own revenue
+#   note                   why the confidence is not high
+#
+# Excluded on purpose (private or foreign-only): Bechtel, General Atomics, SpaceX, Blue Origin,
+# Deloitte, ManTech (Carlyle 2022), Maxar (Advent 2023), Triad National Security.
+# Identity attributes of any person or group are NEVER a field here (roadmap 2026-10-06 section 2 item 10).
+
+entries:
+  - {ticker: LMT, company: Lockheed Martin, sector: defence, confidence: high,
+     recipient_patterns: [LOCKHEED MARTIN], lda_client_patterns: [LOCKHEED MARTIN],
+     uei: [FYHNA5WC8XD7, G4KDGE4JFFK7, G9CZJMSCRR28, H11HD5VHGHN3, H7PNSVNN5827, HDHVQ4EF8A89, KDT2YLB34NT6, LTKKCY4XML96, LXKGXB75YKY6, MLZQLK2GQDW7, NMHFLDYJJ4C5, QBUFVVJCH8J4, SJDEB3MKJEW5, UTJWTSLMFNG4, VXHLJL9WVYE7, WUVWJLHRU5A5]}
+  - {ticker: LMT, company: Lockheed Martin (Sikorsky), sector: defence, confidence: medium, valid_from: 2015-11-06,
+     recipient_patterns: [SIKORSKY AIRCRAFT], lda_client_patterns: [], note: "Sikorsky was a UTX unit before 2015-11-06", uei: []}
+  - {ticker: RTX, company: RTX, sector: defence, confidence: high, valid_from: 2020-04-03,
+     recipient_patterns: [RTX CORP, RAYTHEON TECHNOLOGIES], lda_client_patterns: [RTX, RAYTHEON TECHNOLOGIES],
+     uei: [F1ZBMFDJMGL3, FBTTZQ8ZLK26, KLW3ZYL15493, LWF3QUSCDNG1, NBSLHP77ZJQ1, NM28F17E1ZY7, S7NEKPHEMP26, Y5ZZFR2AQC63, YD6LTFVUZNG1]}
+  - {ticker: RTX, company: RTX (Raytheon units), sector: defence, confidence: medium, valid_from: 2020-04-03,
+     recipient_patterns: [RAYTHEON], lda_client_patterns: [RAYTHEON],
+     note: "Raytheon Company was a separate listing (RTN) before the 2020-04-03 merger", uei: []}
+  - {ticker: RTX, company: RTX (Pratt and Whitney, a UTX unit throughout), sector: aerospace, confidence: medium,
+     recipient_patterns: [PRATT AND WHITNEY, UNITED TECHNOLOGIES], lda_client_patterns: [PRATT AND WHITNEY, UNITED TECHNOLOGIES],
+     note: "UTX is RTX's own predecessor listing (renamed 2020-04-03)", uei: []}
+  - {ticker: RTX, company: RTX (Collins Aerospace), sector: aerospace, confidence: medium, valid_from: 2018-11-26,
+     recipient_patterns: [COLLINS AEROSPACE, ROCKWELL COLLINS], lda_client_patterns: [COLLINS AEROSPACE],
+     note: "Rockwell Collins was a separate listing (COL) before 2018-11-26", uei: []}
+  - {ticker: GD, company: General Dynamics, sector: defence, confidence: high,
+     recipient_patterns: [GENERAL DYNAMICS, ELECTRIC BOAT, BATH IRON WORKS, GULFSTREAM AEROSPACE, NATIONAL STEEL AND SHIPBUILDING],
+     lda_client_patterns: [GENERAL DYNAMICS, GULFSTREAM AEROSPACE],
+     uei: [D93YKLC3MK67, LDUJLC79HNK5, MU3CM1145E44, MWDRZJ2ZVPV7, NGABP44KQF33, NYM8TAUFLXP3, S4ZAF64LJ1G3, SMNWM6HN79X5, Z2L7LVNEAPC3, ZT1MXQNNJ4A5]}
+  - {ticker: BA, company: Boeing, sector: aerospace, confidence: high,
+     recipient_patterns: [BOEING, THE BOEING COMPANY], lda_client_patterns: [BOEING, THE BOEING COMPANY],
+     uei: [D27FSZD2L2U9, DLEKTJFY1UX7, FBRTAX7SGND3, HLWWEH2CCXW5, JJM4FRDZJDX1, LAJJQWA1PF31, NU2UC8MX6NK1, QL4CHNKHQQF4, RMYAXLTM5S24, SML4NN2CT556, TXT3HAAZREF1, VH1ZJJ9CW9B4, WDW1NAE5MCL5, WZWRLY4G3PL8]}
+  - {ticker: NOC, company: Northrop Grumman, sector: defence, confidence: high,
+     recipient_patterns: [NORTHROP GRUMMAN], lda_client_patterns: [NORTHROP GRUMMAN],
+     uei: [DCA4UMKB63Q9, DJUCEANK2KP4, GV68LKRDAV26, KV8YDNS7VMT9, LALWKM623MU7, LRVQERN7YNH9, PQGNEEY9W5M3, Q11ZHUFBW741, REBFXSNFXAL4, T9XKQSKMW4J1, VSBAFMDKTWL4, X1MRDHSQMJ58, ZGQ3ANLXB2N4]}
+  - {ticker: NOC, company: Northrop Grumman (shipbuilding before the HII spin), sector: defence, confidence: medium,
+     valid_to: 2011-03-30, recipient_patterns: [NEWPORT NEWS SHIPBUILDING, NORTHROP GRUMMAN SHIPBUILDING],
+     lda_client_patterns: [], note: "spun off as HII on 2011-03-31", uei: []}
+  - {ticker: LDOS, company: Leidos, sector: it_services, confidence: high, valid_from: 2013-09-27,
+     recipient_patterns: [LEIDOS], lda_client_patterns: [LEIDOS],
+     uei: [E9BSACNAJ7G1, FG7CGCHSNML9, GKGQZ967KUA8, HV8BH9BPG8Y9, JSTDGZNFP4A3, KTMAJCY6JXM3, LK5RJU5V68X6, MDSWM6MB1BH7, MYKLJHTX3MM7, QLNMVC12KWY3, R8DWHMDFAFF1, UE9QJD4KK1L6, WEFTSLL9UN87, X1NCU18Q19T9, X38JVP4R72E1]}
+  - {ticker: LDOS, company: Leidos (old SAIC, its own predecessor), sector: it_services, confidence: medium, valid_to: 2013-09-26,
+     recipient_patterns: [SCIENCE APPLICATIONS INTERNATIONAL CORP], lda_client_patterns: [SCIENCE APPLICATIONS INTERNATIONAL],
+     note: "old SAIC renamed itself Leidos on 2013-09-27 and spun the new SAIC", uei: []}
+  - {ticker: LDOS, company: Leidos (Dynetics), sector: defence, confidence: medium, valid_from: 2020-01-31,
+     recipient_patterns: [DYNETICS], lda_client_patterns: [DYNETICS], note: "acquired by Leidos 2020-01-31", uei: []}
+  - {ticker: HUM, company: Humana, sector: health, confidence: high,
+     recipient_patterns: [HUMANA, HUMANA MILITARY HEALTHCARE SERVICES], lda_client_patterns: [HUMANA], uei: []}
+  - {ticker: CNC, company: Centene, sector: health, confidence: high,
+     recipient_patterns: [CENTENE], lda_client_patterns: [CENTENE], uei: []}
+  - {ticker: CNC, company: Centene (Health Net Federal Services), sector: health, confidence: medium, valid_from: 2016-03-24,
+     recipient_patterns: [HEALTH NET FEDERAL SERVICES], lda_client_patterns: [],
+     note: "Health Net acquired 2016-03-24; other Health Net entities exist", uei: []}
+  - {ticker: BAH, company: Booz Allen Hamilton, sector: it_services, confidence: high, valid_from: 2010-11-17,
+     recipient_patterns: [BOOZ ALLEN HAMILTON], lda_client_patterns: [BOOZ ALLEN HAMILTON],
+     uei: [JCBMLGPE6Z71, KHK6E1JW9C15, VZHBEXPGE6G3]}
+  - {ticker: PLTR, company: Palantir, sector: it_services, confidence: high, valid_from: 2020-09-30,
+     recipient_patterns: [PALANTIR], lda_client_patterns: [PALANTIR], uei: [FSY4LVSBGWB7, HNN4F9JZWDY8]}
+  - {ticker: LHX, company: L3Harris, sector: defence, confidence: high, valid_from: 2019-06-29,
+     recipient_patterns: [L3HARRIS], lda_client_patterns: [L3HARRIS, L3 HARRIS], uei: []}
+  - {ticker: LHX, company: L3Harris (Harris, its own predecessor), sector: defence, confidence: medium,
+     recipient_patterns: [HARRIS CORPORATION], lda_client_patterns: [HARRIS CORPORATION],
+     note: "Harris (HRS) renamed itself L3Harris on 2019-06-29", uei: []}
+  - {ticker: LHX, company: L3Harris (L3 units), sector: defence, confidence: medium, valid_from: 2019-06-29,
+     recipient_patterns: [L3 TECHNOLOGIES], lda_client_patterns: [], note: "L3 was a separate listing (LLL) before 2019-06-29", uei: []}
+  - {ticker: LHX, company: L3Harris (Aerojet Rocketdyne), sector: defence, confidence: medium, valid_from: 2023-07-28,
+     recipient_patterns: [AEROJET ROCKETDYNE], lda_client_patterns: [AEROJET ROCKETDYNE],
+     note: "Aerojet Rocketdyne was a separate listing (AJRD) before 2023-07-28", uei: []}
+  - {ticker: HII, company: Huntington Ingalls, sector: defence, confidence: high, valid_from: 2011-03-31,
+     recipient_patterns: [HUNTINGTON INGALLS, NEWPORT NEWS SHIPBUILDING], lda_client_patterns: [HUNTINGTON INGALLS], uei: []}
+  - {ticker: CACI, company: CACI International, sector: it_services, confidence: high,
+     recipient_patterns: [CACI], lda_client_patterns: [CACI], uei: []}
+  - {ticker: SAIC, company: Science Applications International (new), sector: it_services, confidence: medium, valid_from: 2013-09-27,
+     recipient_patterns: [SCIENCE APPLICATIONS INTERNATIONAL CORP], lda_client_patterns: [SCIENCE APPLICATIONS INTERNATIONAL],
+     note: "the name belonged to today's Leidos before 2013-09-27", uei: []}
+  - {ticker: KBR, company: KBR, sector: engineering, confidence: medium,
+     recipient_patterns: [KBR, KELLOGG BROWN AND ROOT], lda_client_patterns: [KBR],
+     note: "short three-letter stem", uei: []}
+  - {ticker: AMTM, company: Amentum, sector: engineering, confidence: high, valid_from: 2024-09-27,
+     recipient_patterns: [AMENTUM], lda_client_patterns: [AMENTUM], uei: []}
+  - {ticker: AMTM, company: Amentum (Jacobs Technology), sector: engineering, confidence: medium, valid_from: 2024-09-27,
+     recipient_patterns: [JACOBS TECHNOLOGY], lda_client_patterns: [JACOBS TECHNOLOGY],
+     note: "Jacobs' government unit merged into Amentum 2024-09-27", uei: []}
+  - {ticker: J, company: Jacobs Solutions, sector: engineering, confidence: high,
+     recipient_patterns: [JACOBS ENGINEERING, JACOBS SOLUTIONS], lda_client_patterns: [JACOBS ENGINEERING, JACOBS SOLUTIONS], uei: []}
+  - {ticker: J, company: Jacobs (Jacobs Technology before the Amentum merger), sector: engineering, confidence: medium,
+     valid_to: 2024-09-26, recipient_patterns: [JACOBS TECHNOLOGY], lda_client_patterns: [JACOBS TECHNOLOGY],
+     note: "Amentum's since 2024-09-27", uei: []}
+  - {ticker: VVX, company: V2X, sector: it_services, confidence: high, valid_from: 2022-07-05,
+     recipient_patterns: [V2X], lda_client_patterns: [V2X], uei: []}
+  - {ticker: VVX, company: V2X (Vectrus, its own predecessor), sector: it_services, confidence: medium, valid_from: 2014-09-29,
+     recipient_patterns: [VECTRUS], lda_client_patterns: [VECTRUS], note: "Vectrus renamed itself V2X 2022-07-05", uei: []}
+  - {ticker: VVX, company: V2X (Vertex Aerospace), sector: aerospace, confidence: medium, valid_from: 2022-07-05,
+     recipient_patterns: [VERTEX AEROSPACE], lda_client_patterns: [], note: "private before the 2022-07-05 merger", uei: []}
+  - {ticker: PSN, company: Parsons, sector: engineering, confidence: high, valid_from: 2019-05-08,
+     recipient_patterns: [PARSONS GOVERNMENT SERVICES, PARSONS CORPORATION], lda_client_patterns: [PARSONS CORPORATION], uei: []}
+  - {ticker: TXT, company: Textron, sector: defence, confidence: high,
+     recipient_patterns: [TEXTRON, BELL TEXTRON, BELL HELICOPTER TEXTRON], lda_client_patterns: [TEXTRON], uei: []}
+  - {ticker: OSK, company: Oshkosh, sector: defence, confidence: high,
+     recipient_patterns: [OSHKOSH], lda_client_patterns: [OSHKOSH], uei: []}
+  - {ticker: AVAV, company: AeroVironment, sector: defence, confidence: high,
+     recipient_patterns: [AEROVIRONMENT], lda_client_patterns: [AEROVIRONMENT], uei: []}
+  - {ticker: KTOS, company: Kratos Defense, sector: defence, confidence: high,
+     recipient_patterns: [KRATOS], lda_client_patterns: [KRATOS], uei: []}
+  - {ticker: MRCY, company: Mercury Systems, sector: defence, confidence: high,
+     recipient_patterns: [MERCURY SYSTEMS, MERCURY MISSION SYSTEMS], lda_client_patterns: [MERCURY SYSTEMS], uei: []}
+  - {ticker: CW, company: Curtiss-Wright, sector: defence, confidence: high,
+     recipient_patterns: [CURTISS WRIGHT], lda_client_patterns: [CURTISS WRIGHT], uei: []}
+  - {ticker: TDY, company: Teledyne, sector: defence, confidence: high,
+     recipient_patterns: [TELEDYNE], lda_client_patterns: [TELEDYNE], uei: []}
+  - {ticker: HON, company: Honeywell, sector: aerospace, confidence: high,
+     recipient_patterns: [HONEYWELL], lda_client_patterns: [HONEYWELL], uei: []}
+  - {ticker: HON, company: Honeywell (NNSA M and O contractors), sector: energy, confidence: low,
+     recipient_patterns: [HONEYWELL FEDERAL MANUFACTURING AND TECHNOLOGIES, NATIONAL TECHNOLOGY AND ENGINEERING SOLUTIONS OF SANDIA],
+     lda_client_patterns: [],
+     note: "Kansas City National Security Campus and Sandia M and O: the dollars fund NNSA sites, not Honeywell revenue", uei: []}
+  - {ticker: GE, company: GE Aerospace, sector: aerospace, confidence: medium,
+     recipient_patterns: [GENERAL ELECTRIC, GE AVIATION, GE AEROSPACE], lda_client_patterns: [GE AEROSPACE, GENERAL ELECTRIC],
+     note: "GE split 2023-24 (GEHC, GEV); General Electric rows can belong to any of the three", uei: []}
+  - {ticker: GE, company: GE (healthcare unit before the spin), sector: health, confidence: medium, valid_to: 2023-01-03,
+     recipient_patterns: [GE HEALTHCARE, GE MEDICAL SYSTEMS], lda_client_patterns: [GE HEALTHCARE], uei: []}
+  - {ticker: GEV, company: GE Vernova, sector: energy, confidence: high, valid_from: 2024-04-02,
+     recipient_patterns: [GE VERNOVA], lda_client_patterns: [GE VERNOVA], uei: []}
+  - {ticker: GEHC, company: GE HealthCare, sector: health, confidence: high, valid_from: 2023-01-04,
+     recipient_patterns: [GE HEALTHCARE, GE MEDICAL SYSTEMS], lda_client_patterns: [GE HEALTHCARE], uei: []}
+  - {ticker: BWXT, company: BWX Technologies, sector: energy, confidence: high,
+     recipient_patterns: [BWX TECHNOLOGIES, BWXT], lda_client_patterns: [BWX TECHNOLOGIES, BWXT], uei: []}
+  - {ticker: LEU, company: Centrus Energy, sector: energy, confidence: high,
+     recipient_patterns: [CENTRUS ENERGY, AMERICAN CENTRIFUGE OPERATING], lda_client_patterns: [CENTRUS ENERGY], uei: []}
+  - {ticker: FLR, company: Fluor, sector: engineering, confidence: high,
+     recipient_patterns: [FLUOR], lda_client_patterns: [FLUOR], uei: []}
+  - {ticker: FLR, company: Fluor (M and O and JV contractors), sector: energy, confidence: low,
+     recipient_patterns: [FLUOR MARINE PROPULSION, SAVANNAH RIVER NUCLEAR SOLUTIONS], lda_client_patterns: [],
+     note: "Naval Nuclear Laboratory M and O and a Fluor-led JV; not Fluor's own revenue", uei: []}
+  - {ticker: ACM, company: AECOM, sector: engineering, confidence: high,
+     recipient_patterns: [AECOM], lda_client_patterns: [AECOM], uei: []}
+  - {ticker: TTEK, company: Tetra Tech, sector: engineering, confidence: high,
+     recipient_patterns: [TETRA TECH], lda_client_patterns: [TETRA TECH], uei: []}
+  - {ticker: ICFI, company: ICF International, sector: it_services, confidence: medium,
+     recipient_patterns: [ICF INCORPORATED, ICF INTERNATIONAL, ICF MACRO], lda_client_patterns: [ICF INTERNATIONAL],
+     note: "three-letter stem", uei: []}
+  - {ticker: MMS, company: Maximus, sector: it_services, confidence: high,
+     recipient_patterns: [MAXIMUS], lda_client_patterns: [MAXIMUS], uei: []}
+  - {ticker: IBM, company: IBM, sector: it_services, confidence: high,
+     recipient_patterns: [INTERNATIONAL BUSINESS MACHINES, IBM CORPORATION], lda_client_patterns: [IBM, INTERNATIONAL BUSINESS MACHINES], uei: []}
+  - {ticker: ACN, company: Accenture, sector: it_services, confidence: high,
+     recipient_patterns: [ACCENTURE FEDERAL SERVICES, ACCENTURE], lda_client_patterns: [ACCENTURE], uei: []}
+  - {ticker: MSFT, company: Microsoft, sector: it_services, confidence: high,
+     recipient_patterns: [MICROSOFT], lda_client_patterns: [MICROSOFT], uei: []}
+  - {ticker: AMZN, company: Amazon (AWS), sector: it_services, confidence: high,
+     recipient_patterns: [AMAZON WEB SERVICES, AMAZON COM SERVICES], lda_client_patterns: [AMAZON], uei: []}
+  - {ticker: ORCL, company: Oracle, sector: it_services, confidence: high,
+     recipient_patterns: [ORACLE AMERICA, ORACLE CORPORATION], lda_client_patterns: [ORACLE], uei: []}
+  - {ticker: ORCL, company: Oracle (Cerner), sector: health, confidence: medium, valid_from: 2022-06-08,
+     recipient_patterns: [CERNER], lda_client_patterns: [CERNER],
+     note: "Cerner was a separate listing (CERN) before 2022-06-08", uei: []}
+  - {ticker: GOOGL, company: Alphabet, sector: it_services, confidence: medium,
+     recipient_patterns: [GOOGLE PUBLIC SECTOR, GOOGLE LLC], lda_client_patterns: [GOOGLE],
+     note: "two share classes; GOOGL used", uei: []}
+  - {ticker: DELL, company: Dell Technologies, sector: it_services, confidence: medium, valid_from: 2018-12-28,
+     recipient_patterns: [DELL FEDERAL SYSTEMS, DELL MARKETING], lda_client_patterns: [DELL TECHNOLOGIES],
+     note: "the pre-2013 Dell Inc is a different CRSP company; private 2013-18", uei: []}
+  - {ticker: HPE, company: Hewlett Packard Enterprise, sector: it_services, confidence: high, valid_from: 2015-11-01,
+     recipient_patterns: [HEWLETT PACKARD ENTERPRISE], lda_client_patterns: [HEWLETT PACKARD ENTERPRISE], uei: []}
+  - {ticker: CSCO, company: Cisco, sector: it_services, confidence: high,
+     recipient_patterns: [CISCO SYSTEMS], lda_client_patterns: [CISCO SYSTEMS], uei: []}
+  - {ticker: MSI, company: Motorola Solutions, sector: telecom, confidence: high, valid_from: 2011-01-04,
+     recipient_patterns: [MOTOROLA SOLUTIONS], lda_client_patterns: [MOTOROLA SOLUTIONS], uei: []}
+  - {ticker: CDW, company: CDW, sector: it_services, confidence: high, valid_from: 2013-06-27,
+     recipient_patterns: [CDW GOVERNMENT], lda_client_patterns: [CDW], uei: []}
+  - {ticker: VZ, company: Verizon, sector: telecom, confidence: medium,
+     recipient_patterns: [VERIZON], lda_client_patterns: [VERIZON], note: "Verizon Business units only partly federal", uei: []}
+  - {ticker: T, company: "AT and T", sector: telecom, confidence: medium,
+     recipient_patterns: [AT AND T], lda_client_patterns: [AT AND T], note: "normalised ampersand; short stem", uei: []}
+  - {ticker: MCK, company: McKesson, sector: health, confidence: high,
+     recipient_patterns: [MCKESSON], lda_client_patterns: [MCKESSON], uei: []}
+  - {ticker: COR, company: Cencora, sector: health, confidence: high, valid_from: 2023-08-30,
+     recipient_patterns: [CENCORA], lda_client_patterns: [CENCORA], uei: []}
+  - {ticker: COR, company: Cencora (AmerisourceBergen, its own predecessor), sector: health, confidence: medium,
+     recipient_patterns: [AMERISOURCEBERGEN, AMERISOURCE BERGEN], lda_client_patterns: [AMERISOURCEBERGEN],
+     note: "renamed Cencora 2023-08-30 (ticker ABC -> COR); COR before belonged to unrelated firms", uei: []}
+  - {ticker: CAH, company: Cardinal Health, sector: health, confidence: high,
+     recipient_patterns: [CARDINAL HEALTH], lda_client_patterns: [CARDINAL HEALTH], uei: []}
+  - {ticker: UNH, company: UnitedHealth Group, sector: health, confidence: medium,
+     recipient_patterns: [UNITEDHEALTH, UNITED HEALTHCARE, OPTUM], lda_client_patterns: [UNITEDHEALTH GROUP, OPTUM],
+     note: "many Optum subsidiaries; prefix covers most", uei: []}
+  - {ticker: CVS, company: CVS Health, sector: health, confidence: high,
+     recipient_patterns: [CVS PHARMACY, CVS HEALTH], lda_client_patterns: [CVS HEALTH], uei: []}
+  - {ticker: CVS, company: CVS Health (Aetna), sector: health, confidence: medium, valid_from: 2018-11-28,
+     recipient_patterns: [AETNA], lda_client_patterns: [AETNA], note: "Aetna was a separate listing before 2018-11-28", uei: []}
+  - {ticker: CI, company: Cigna, sector: health, confidence: high,
+     recipient_patterns: [CIGNA], lda_client_patterns: [CIGNA], uei: []}
+  - {ticker: CI, company: Cigna (Express Scripts), sector: health, confidence: medium, valid_from: 2018-12-20,
+     recipient_patterns: [EXPRESS SCRIPTS], lda_client_patterns: [EXPRESS SCRIPTS],
+     note: "Express Scripts was a separate listing before 2018-12-20", uei: []}
+  - {ticker: ELV, company: Elevance Health, sector: health, confidence: high, valid_from: 2022-06-28,
+     recipient_patterns: [ELEVANCE HEALTH], lda_client_patterns: [ELEVANCE HEALTH], uei: []}
+  - {ticker: ELV, company: Elevance Health (Anthem, its own predecessor), sector: health, confidence: medium,
+     recipient_patterns: [ANTHEM INC, ANTHEM INSURANCE COMPANIES], lda_client_patterns: [ANTHEM INC],
+     note: "renamed Elevance 2022-06-28; a bare 'ANTHEM' prefix matched unrelated firms and was removed", uei: []}
+  - {ticker: PFE, company: Pfizer, sector: health, confidence: high,
+     recipient_patterns: [PFIZER], lda_client_patterns: [PFIZER], uei: []}
+  - {ticker: MRNA, company: Moderna, sector: health, confidence: high, valid_from: 2018-12-07,
+     recipient_patterns: [MODERNA], lda_client_patterns: [MODERNA],
+     note: "listed 2018-12-07; MRNA before belonged to MDRNA / Marina Biotech", uei: []}
+  - {ticker: MRK, company: Merck, sector: health, confidence: high,
+     recipient_patterns: [MERCK SHARP AND DOHME], lda_client_patterns: [MERCK AND CO, MERCK SHARP AND DOHME],
+     note: "a bare 'MERCK' LDA prefix matched Merck KGaA and was removed", uei: []}
+  - {ticker: GILD, company: Gilead Sciences, sector: health, confidence: high,
+     recipient_patterns: [GILEAD SCIENCES], lda_client_patterns: [GILEAD SCIENCES], uei: []}
+  - {ticker: JNJ, company: Johnson and Johnson, sector: health, confidence: medium,
+     recipient_patterns: [JOHNSON AND JOHNSON, JANSSEN], lda_client_patterns: [JOHNSON AND JOHNSON],
+     note: "Janssen units are J and J; Kenvue spun 2023", uei: []}
+  - {ticker: FDX, company: FedEx, sector: logistics, confidence: high,
+     recipient_patterns: [FEDERAL EXPRESS, FEDEX], lda_client_patterns: [FEDEX], uei: []}
+  - {ticker: UPS, company: UPS, sector: logistics, confidence: high,
+     recipient_patterns: [UNITED PARCEL SERVICE], lda_client_patterns: [UNITED PARCEL SERVICE], uei: []}
+  - {ticker: RKLB, company: Rocket Lab, sector: aerospace, confidence: high, valid_from: 2021-08-25,
+     recipient_patterns: [ROCKET LAB], lda_client_patterns: [ROCKET LAB], uei: []}
+  - {ticker: PL, company: Planet Labs, sector: aerospace, confidence: high, valid_from: 2021-12-08,
+     recipient_patterns: [PLANET LABS], lda_client_patterns: [PLANET LABS],
+     note: "PL before 2015 was Protective Life", uei: []}
+  - {ticker: HEI, company: HEICO, sector: aerospace, confidence: medium,
+     recipient_patterns: [HEICO], lda_client_patterns: [HEICO], note: "short stem; two share classes (HEI, HEI.A)", uei: []}
+  - {ticker: TDG, company: TransDigm, sector: aerospace, confidence: medium,
+     recipient_patterns: [TRANSDIGM], lda_client_patterns: [TRANSDIGM],
+     note: "most TransDigm sales are under subsidiary names this pattern misses", uei: []}

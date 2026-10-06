@@ -823,6 +823,14 @@ from backend.routers import opportunities as _opportunities  # noqa: E402
 
 app.include_router(_opportunities.router)
 
+# C19 (2026-10-07): the legibility pages (Paper Arena, Forecast Lab, Theory Lab,
+# System Health) read the newest receipts; they build nothing.
+from backend.routers import arena_v1 as _arena_v1  # noqa: E402
+from backend.routers import legibility_v1 as _legibility_v1  # noqa: E402
+
+app.include_router(_arena_v1.router)
+app.include_router(_legibility_v1.router)
+
 
 #: Resolved once, at import, and cached: `git rev-parse HEAD` is a subprocess
 #: and `/api/health` is polled every 250 ms by the desktop splash.

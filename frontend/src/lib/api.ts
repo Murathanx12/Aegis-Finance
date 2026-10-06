@@ -4255,6 +4255,10 @@ export interface OppInsiderTx {
   public_utc: string | null; transaction_date: string | null; owner: string | null; role: string | null;
   side: "BUY" | "SELL"; shares: number | null; value_usd: number | null; rule_10b5_1: boolean | null; url: string | null;
 }
+export interface OppWeightBearingFirm {
+  firm: string; weight: number; stance: number | null; target: number | null; n_cell: number;
+}
+
 export interface OppRow {
   ticker: string;
   company_name: string | null;
@@ -4282,6 +4286,16 @@ export interface OppRow {
     low: number | null; median: number | null; high: number | null; basis: string;
     n_targets: number | null; single_target: boolean; low_upside: boolean; low_upside_threshold: number;
     targets_date: string | null; price_date: string | null;
+    // C18 (review F4): replacement coverage for the old n >= 5 rule, from the revision file only
+    cliff_replaced?: { old_rule: string; n_covering_firms: number | null; sum_of_weights: number | null;
+      label: string | null; note: string };
+  } | null;
+  /** C18 analyst reputation. Every number from the revision file. `label` says the weight did
+   *  not persist out of sample: plumbing, never skill. weighted_upside_DIAGNOSTIC_ONLY is never displayed. */
+  analyst_reputation?: {
+    label: string; source: string; receipt: string; pit_status: string | null;
+    n_covering_firms: number; sum_of_weights: number; mean_weight: number;
+    weight_bearing_firms: OppWeightBearingFirm[];
   } | null;
   revision: {
     net_raises_90d: number | null; n_firms_90d: number | null; median_target_change_90d: number | null;
@@ -4403,4 +4417,239 @@ export interface OptimusDigest {
 }
 export function getOptimusDigest() {
   return fetchAPI<OptimusDigest>("/api/optimus/digest");
+}
+
+
+// ── Legibility pages (C19, 2026-10-07; review fixes) ───────────────────────
+// Read-only. Every response lists the receipts it read (`receipts`): file, sha256 of the
+// bytes read, its own stamp, age, FRESH / STALE / UNKNOWN / MISSING, and the card that used
+// it. A null value carries its reason in `missing_because`. 404 = no receipt on disk.
+// Every payload passed the server's deny-by-default sanitiser: no dollar equity, no
+// account numbers, no machine details.
+export interface LegReceipt {
+  kind: string; file: string | null; sha256: string | null; stamp_utc: string | null; age_hours: number | null;
+  stale_after_hours: number; status: "FRESH" | "STALE" | "UNKNOWN" | "MISSING"; line: string;
+  role?: string | null; missing_because?: string;
+}
+interface LegBase {
+  schema: string; page: string; served_utc: string; receipts: LegReceipt[]; status: string;
+  missing_because: Record<string, string>;
+}
+export interface ArenaHolding { ticker: string; weight: number | null }
+export interface ArenaBook {
+  account: string; family: string; category: "twin" | "control" | "strategy" | null;
+  twin_kind: string | null; twin_of: string | null; strategy: string | null; book_id: string | null;
+  status: string | null; mark_status: string | null; mark_age_days: number | null;
+  inception: string | null; last_mark: string | null; sessions_graded: number | null;
+  return_pct: number | null; spy_same_window_pct: number | null; vs_spy_pp: number | null; spy_base: string | null;
+  evidence_label: string | null; evidence_rung: string | null; evidence_n: number | null; evidence_why: string | null;
+  n_holdings: number | null; holdings: ArenaHolding[]; holdings_source: string | null;
+  beta_vs_spy: number | null; beta_n_obs: number | null; cash_fraction: number | null; one_name_why: string | null;
+  subwindows_status: string | null; subwindows_n_positive: number | null;
+  subwindows: { from: string; to: string; excess_pp: number }[] | null;
+  manager_last_run: string | null; note: string | null; source: string | null;
+  error_type: string | null; error_why: string | null;
+  decomposition: Record<string, unknown> | null;
+  missing_because: Record<string, string>;
+}
+export interface ArenaCluster {
+  cluster_id: number; n: number; members: string[]; families: string[]; shared_basket: string[];
+  excess_pp_mean: number | null; excess_pp_median: number | null; excess_pp_total: number | null;
+  tied_for_largest: boolean | null;
+}
+export interface ArenaResponse extends LegBase {
+  evidence_ladder: string[];
+  receipt_choice: { served: string; served_is_nobroker: boolean; line: string;
+    newest_broker_file: string | null; newest_broker_age_hours: number | null };
+  top: {
+    top_line: string | null; collapse_line: string | null; evidence_density_line: string | null;
+    honest_sentence: string | null; read_me_first: string | null; book_dna_read_me_first: string | null;
+    label_ceiling: string | null; licence: string | null;
+  };
+  numbers: {
+    n_rows: number; n_ahead_raw: number | null; n_behind_spy: number | null; n_ahead_twins: number | null;
+    n_ahead_controls: number | null; n_ahead_strategy: number | null; n_holdings_clusters_ahead: number | null;
+    effective_bets_exante: number | null; effective_bets_exante_spy_residual: number | null;
+    exante_window: string[] | null; exante_n_books: number | null;
+    collapse_factor_twins_controls: number | null; collapse_factor_holdings_overlap: number | null;
+    collapse_factor_exante: number | null; jaccard_threshold: number | null; n_ahead_dense: number | null;
+    cluster_count_sensitivity: Record<string, number> | null;
+    most_frequent_names: { ticker: string; n_books: number; of: number }[] | null;
+    exante_construction: string | null; min_sessions_to_rank: number; n_strategy_ge_min_sessions: number;
+    n_owner_personal_dropped: number;
+  };
+  by_family: Record<string, { n: number | null; n_priced: number | null; roi_pct: number | null }> | null;
+  broker_read: { performed: boolean | null; n_accounts: number | null; n_priced: number | null;
+    errors: Record<string, string> | null; read_utc: string | null };
+  clusters: ArenaCluster[]; winners: ArenaBook[]; short_lived: ArenaBook[]; losers: ArenaBook[]; books: ArenaBook[];
+  filters: { families: Record<string, number>; labels: Record<string, number>; categories: Record<string, number> };
+  links: Record<string, string>;
+}
+export interface ArenaStory {
+  decision_id: string; session: string | null; asof: string | null; ticker: string | null; action: string | null;
+  state: string | null; cohort: string | null; acting: boolean | null; abstention: boolean | null;
+  target_weight: number | null; held_weight: number | null; plan_full_weight: number | null;
+  selector_rank: number | null; reason: string | null; refused: string | null; policy_version: string | null;
+  mode: string | null; replay_matches_actual: boolean | null; order_or_abstention_id: string | null;
+  order_link: boolean;
+  alternatives: { alt: string; target_weight: number | null; status: string | null; why: string | null }[];
+  built_utc: string | null;
+}
+export interface RegretH5Row {
+  cohort: string; mean_names: number; book_scaled_gross: number; mean_net_excess_vs_spy_bps: number | null;
+  vs_band_control_bps: number | null; t_vs_spy: number | null; n_date_blocks: number; mde_bps: number | null;
+}
+export interface ArenaStoriesResponse extends LegBase {
+  month: string; n_decisions: number; stories: ArenaStory[]; scope: string;
+  regret: { run_id: string | null; asof: string | null; line: string | null; status: string | null;
+    h5_table: RegretH5Row[]; missing_because: string | null } | null;
+}
+export function getArenaLatest() {
+  return fetchAPI<ArenaResponse>("/api/arena/v1/latest");
+}
+export function getArenaStories(ticker?: string) {
+  const q = ticker ? `?ticker=${encodeURIComponent(ticker)}` : "";
+  return fetchAPI<ArenaStoriesResponse>(`/api/arena/v1/stories${q}`);
+}
+
+export interface CalibBin {
+  arm_prefix: string; horizon: number; observable: string; bin: number; n: number;
+  p_mean: number | null; p_lo: number | null; p_hi: number | null; base_rate: number | null;
+  wilson_lo: number | null; wilson_hi: number | null; n_dates: number | null; n_date_blocks: number | null;
+  thin: boolean; blocks_missing_because: string | null;
+}
+export interface KindHorizonRow {
+  kind: string; horizon_days: number | null; n_arms: number; n_arms_scored: number; n_arms_positive: number;
+  n_rows_heldout: number; best_arm: string | null; best_skill: number | null; worst_arm: string | null;
+  worst_skill: number | null;
+}
+export interface SigmaPriorRow {
+  horizon: string; baseline: string; observable: string | null; formula: string | null; split: string | null;
+  status: string | null; n_rows: number | null; n_heldout: number | null; heldout_from: string | null;
+  heldout_to: string | null; climatology_base_rate: number | null; skill_llm: number | null; skill_prior: number | null;
+  skill_llm_own_prior: number | null; winner: string | null; days_prior_wins: number | null; n_days: number | null;
+}
+export interface WfModelRow {
+  model: string; horizon: string; rank_ic: number | null; rank_ic_t: number | null; rank_ic_loyo_worst: number | null;
+  top20_minus_random_net: number | null; top20_t: number | null; n_blocks: number | null; verdict: string | null;
+  brier_skill: number | null;
+}
+export interface ForecastLabResponse extends LegBase {
+  house_finding: { claim: string; reading: string;
+    evidence: { what: string; value: number | null; unit: string; baseline: string; n: number | null; receipt: string;
+      sanity_check: string | null }[] };
+  calibration: Record<string, CalibBin[]> | null;
+  calibration_note: string | null;
+  skill: {
+    split: string | null; baseline: string; n_graded: number | null; n_ledger: number | null; made_at_range: string[] | null;
+    by_kind_horizon: KindHorizonRow[];
+    arms_by_observable: { arm: string; observable: string; horizon_days: number | null; kind: string; n: number;
+      n_total: number | null; skill: number | null; disc: number | null }[];
+    arms: { arm: string; family: string | null; n: number; n_total: number | null; brier: number | null;
+      clim: number | null; skill: number | null; disc: number | null; calib_gap: number | null; weight: number | null }[];
+    tuned: Record<string, unknown>;
+  } | null;
+  sigma_prior: SigmaPriorRow[] | null;
+  closing: { works: string | null; does_not: string | null; next_experiment: string | null } | null;
+  grades: { headline: string | null; date: string | null; totals: Record<string, number> | null; n_records: number | null;
+    graded_after_this_run: number | null; newly_resolved: number | null; health_status: string | null;
+    problems: string[] | null; n_overdue: number | null; distinct_specialists: number | null } | null;
+  trust: { rule: string; min_graded_dates: number;
+    news: { arm: string; control: string; n_dates: number | null; n_rows: number | null; mean_improvement: number | null;
+      se: number | null; posterior_mean: number | null; trust: number | null; below_min_dates: boolean }[];
+    nn_lab: { arm: string; horizon: string; graded_dates: number | null; trust: number | null; source: string | null;
+      walk_forward_mean_ic_reported: number | null }[] };
+  regime: { note: string | null; n_fields: number | null; trust: number | null; pooled_note: string | null;
+    vs_persistence: Record<string, number | string | null> | null; vs_base_rate: Record<string, number | string | null> | null;
+    fields: Record<string, Record<string, unknown>> | null; regime_write: Record<string, unknown>;
+    baselines: string[]; news_tilt_line: string | null } | null;
+  tournament: { rule: string | null;
+    nightly_table: Record<string, Record<string, Record<string, number | null>>> | null;
+    nightly_table_receipt: string | null; nightly_table_written_utc: string | null; nightly_table_note: string | null;
+    cited_run: string | null; cited_missing_because: string | null;
+    cited_models: WfModelRow[];
+    cited_magnitude: { horizon: string; predictor: string; ic_with_abs_y: number | null; t: number | null;
+      n_blocks: number | null }[];
+    survivorship_caveat: string | null; per_model: string[] | null; status: string | null;
+    earned_forward_weight: string[]; sentence: string | null } | null;
+  review_rerun: { run_id: string | null; label: string; models: WfModelRow[] } | null;
+  analyst_reputation: { asof: string | null; month: string | null; limits: string[] | null; n_firms: number;
+    n_sectors: number; pit: Record<string, unknown>; constants: Record<string, unknown> | null;
+    top_firms_by_claims: { firm: string; n_claims: number | null; weight_mean: number | null; raw_edge: number | null }[] } | null;
+}
+export function getForecastLab() {
+  return fetchAPI<ForecastLabResponse>("/api/legibility/v1/forecast-lab");
+}
+
+export interface TwinCell { mean_monthly: number | null; t: number | null; mde_monthly: number | null }
+export interface TwinBoardRow {
+  rule: string; family: string | null; status: string | null; reason: string | null;
+  columns: Record<string, Record<string, TwinCell>>; turnover: number | null; rule_cost_bps: number | null;
+  twin_cost_bps: number | null; sticky_turnover_ok: boolean | null;
+  source_run: string | null; superseded_in: string | null; superseded_why: string | null;
+}
+export interface TwinBoard {
+  twin_kind: string; run_id: string; summary_file: string | null; rows_file: string | null;
+  summary: Record<string, unknown> | null; windows: Record<string, (string | null)[]> | null;
+  cost_convention: string | null; four_columns: string[] | null; upper_bound_note: string;
+  other_boards_not_served: string[]; n_rows: number; rows_served: boolean;
+  supersessions_applied: { supplement_run: string; rules: string[]; why: string | null; file: string | null }[];
+  rows: TwinBoardRow[];
+}
+export interface TheoryRow {
+  hyp_id: string | null; title: string | null; family: string; family_raw: string | null;
+  target: string | null; status: string | null; verdict: string | null; powered: boolean; state: string; state_rule: string;
+  confirm_mean: number | null; confirm_t: number | null; confirm_mde: number | null; reason: string | null;
+  reread_of: string | null; declaration_sha256: string | null; run_id: string | null; receipts: string[];
+  created_utc: string | null; refutation: string | null; mechanism: string | null; precursor: string | null;
+}
+export interface TheoryFamily {
+  family: string; n_rows: number; CONDITIONAL_POSITIVE: number; FAILED_VARIANT: number; CANNOT_DISTINGUISH: number;
+  REFUSED: number; failed_powered: number; positive_weighted: number; rereads: number; p_positive: number;
+  budget_weight: number;
+}
+export type BoardKind = "sticky" | "basket";
+export interface TheoryLabResponse extends LegBase {
+  states: string[]; state_counts: Record<string, number>; powered_rule: string;
+  state_map: { input: string; state: string }[];
+  theories: TheoryRow[]; n_negative: number; n_uninformative: number;
+  families: TheoryFamily[];
+  family_prior: number[];
+  theory_cells: { cell: string; run: string; hyp_id?: string; verdict?: string | null; reason?: string | null;
+    declaration_sha256?: string | null; declaration_file?: string | null; results_file?: string | null;
+    honesty?: string | null; title?: string | null }[];
+  boards: { sticky: TwinBoard | null; basket: TwinBoard | null };
+  board_served: BoardKind;
+  crsp: { sentence: string | null; source: string | null; missing_because: string | null;
+    counts_from_board: { board: string; n_ok: number | null; fair_twin_t_ge_2: number | null;
+      pure_selection_t_ge_2: number | null; net_minus_market_validate_t_ge_2: number | null;
+      beats_fair_twin_and_market_validate: string[] | null; note: string | null } | null };
+  links: Record<string, string>;
+}
+export function getTheoryLab(board: BoardKind = "sticky") {
+  return fetchAPI<TheoryLabResponse>(`/api/legibility/v1/theory-lab?board=${board}`);
+}
+
+export interface HealthProbeRow {
+  name: string; probe: string; where: string | null; verdict: string; state: string;
+  cadence_s: number | null; evidence: string | null; evidence_utc: string | null; age_s_at_probe: number | null;
+  age_s_now: number | null; detail: string | null; proof: string | null; same_output: boolean;
+  missing_because: string | null;
+}
+export interface TaskOwnerRow {
+  task: string; receipt: string; cadence_h: number; session_only: boolean; retired: boolean;
+  registered_only: boolean; hash_rule_off: string | null; state: string | null; verdict: string | null;
+  detail: string | null; missing_because: string | null;
+}
+export interface SystemHealthResponse extends LegBase {
+  generated_utc: string | null; health_line: string; exit_code: number | null;
+  counts: Record<string, number> | null; state_counts: Record<string, number> | null;
+  read_me_first: string | null; source: string | null;
+  groups: { verdict: string; n: number; states: Record<string, number>; rows: HealthProbeRow[] }[];
+  process_census: HealthProbeRow[]; same_output_rows: HealthProbeRow[];
+  task_owners: TaskOwnerRow[];
+  same_output_rule: string;
+}
+export function getSystemHealth() {
+  return fetchAPI<SystemHealthResponse>("/api/legibility/v1/system-health");
 }

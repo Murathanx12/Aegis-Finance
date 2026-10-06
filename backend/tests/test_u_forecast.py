@@ -162,11 +162,13 @@ def test_the_smoke_reply_shape_parses():
 # ── the sim wiring ───────────────────────────────────────────────────────────
 
 def test_forecast_and_review_run_after_rank_and_before_plan():
-    import inspect
     from scripts import sim_run as SR
-    src = inspect.getsource(SR.run)
-    i = {k: src.index(f'c.unit("{k}"') for k in ("rank", "forecast", "review", "plan")}
-    assert i["rank"] < i["forecast"] < i["review"] < i["plan"]
+    # The loop moved from `run` into `_run_loop` (broker lease, 2026-10-06); the
+    # order is now named once and proven against the code that runs it.
+    assert SR.cycle_unit_order_in_source() == list(SR.CYCLE_UNIT_ORDER)
+    o = SR.CYCLE_UNIT_ORDER
+    assert (o.index("funnel") < o.index("analyst") < o.index("rank")
+            < o.index("forecast") < o.index("review") < o.index("plan"))
 
 
 def test_u_forecast_skips_on_todays_receipt_without_a_subprocess(monkeypatch, tmp_path):

@@ -1,0 +1,2408 @@
+{
+"note": "C18 pin (2026-10-07): pit_features.firm_reliability output on a fixed synthetic corpus (rng seed 7100019). C18 does not modify pit_features.py; a change here means ANALYST-SKILL-1's registered reproduction moved.",
+"asof": "2025-03-01 00:00:00",
+"corpus": [
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-12-11 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-07-18 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-05-16 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-04-05 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-01-25 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-01-27 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-05-22 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-04-13 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-03-19 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-04-08 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-08-23 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-07-24 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-09-06 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-05-12 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-02-09 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-01-11 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-02-28 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-03-27 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-01-06 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-03-10 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-07-10 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-02-18 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-03-04 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-07-09 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-08-07 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-10-12 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-02-25 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-05-19 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-01-12 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-01-25 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-12-30 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-12-24 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-04-24 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-12-28 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-09-20 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-05-04 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-01-09 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-03-28 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-06-08 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-05-12 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-03-26 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-03-19 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-11-12 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-04-05 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-11-12 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-09-18 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-01-21 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-09-28 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-05-12 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-08-12 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-03-29 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-08-16 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-06-30 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-11-10 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-09-19 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-10-06 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-04-24 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-01-10 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-03-31 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-05-23 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-06-02 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-03-15 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-01-29 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-05-05 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-09-02 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-02-14 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-04-28 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-03-18 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-07-13 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-04-09 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-02-11 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-09-07 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-11-17 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-03-10 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-01-18 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-05-27 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-07-31 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-11-01 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-04-25 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-12-30 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-03-28 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-05-04 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-03-24 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-02-03 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-04-02 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-07-08 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-03-20 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-04-06 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-10-09 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-04-04 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-02-22 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-03-23 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-03-01 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-01-08 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-06-20 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-12-04 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-05-04 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-12-05 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-09-20 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-11-24 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-07-19 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-02-18 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-02-27 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-08-12 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-02-13 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-01-16 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-02-07 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-02-28 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-03-01 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-04-29 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-05-18 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-06-24 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-08-23 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-04-08 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-05-12 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-05-03 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-01-02 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-02-20 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-01-25 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-06-28 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-04-05 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-03-07 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-03-02 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-01-17 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-04-12 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-04-20 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-10-13 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-10-20 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-06-07 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-08-27 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-01-30 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-05-03 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-06-30 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-05-02 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-01-16 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-01-31 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-02-07 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-01-11 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-01-02 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-05-27 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-06-09 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-04-25 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-03-31 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-03-09 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-01-12 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-01-23 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-01-14 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-01-07 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-08-10 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-08-02 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-12-07 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-05-06 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-09-10 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-04-10 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-06-28 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-04-06 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-07-11 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-04-27 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-04-05 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-05-02 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-05-15 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-04-20 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-02-22 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-02-13 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-03-21 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-09-11 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-06-25 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-06-15 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-04-27 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-04-27 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-08-19 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-11-22 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-03-25 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-10-29 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-05-16 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-06-29 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-01-13 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-07-28 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-10-24 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-08-01 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-04-17 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-07-06 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-01-30 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-04-27 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-10-08 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-12-29 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-02-27 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-10-28 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-01-31 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-08-19 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-12-17 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-03-26 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-05-07 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-06-04 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-01-04 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-03-31 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-06-19 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-07-27 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-01-07 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-11-29 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-03-29 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-10-19 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-12-07 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-12-26 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-05-27 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-06-08 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-03-01 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-05-05 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-07-08 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-06-28 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-11-30 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-01-30 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-04-10 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-11-02 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-03-29 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-02-08 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-07-31 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-07-14 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-03-04 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-01-03 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-11-07 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-03-16 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-09-05 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-03-09 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-05-10 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-05-14 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-08-04 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-04-23 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-03-08 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-03-23 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-01-15 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-04-08 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-12-04 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-02-23 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-09-13 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-11-13 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-05-02 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-10-25 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-03-09 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-10-20 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-10-06 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-10-11 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-02-06 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-10-05 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-08-09 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-04-27 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-03-09 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-03-11 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-11-11 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-05-20 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-10-23 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-03-19 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-04-16 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-08-10 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-06-19 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-04-15 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-07-14 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-03-03 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-03-15 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-03-28 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-05-24 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-04-05 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-03-28 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-03-13 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-05-04 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-08-04 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-12-29 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-09-12 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-05-04 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-05-04 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-10-28 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-06-12 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-11-18 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-04-12 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-03-17 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-01-06 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-03-08 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-02-21 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-05-20 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-07-08 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-05-24 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-03-30 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-06-24 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-01-22 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-10-12 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-02-12 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-07-24 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-09-08 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-02-15 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-10-18 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-04-01 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-12-18 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-02-20 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-09-26 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-06-18 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-08-02 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-01-10 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-01-21 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-04-09 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-03-19 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-12-17 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-04-22 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-07-11 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-03-10 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-07-20 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-11-10 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-10-04 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-03-13 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-05-10 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-10-26 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-01-16 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-04-25 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-09-22 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-05-09 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-09-09 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-11-27 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-01-13 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-06-30 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-03-04 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-05-07 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-02-28 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-11-12 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-02-05 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-02-27 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-04-19 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-10-14 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-04-10 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-11-08 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-12-03 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-12-26 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-04-25 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-06-19 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-02-03 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-04-08 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-08-18 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-12-21 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-05-10 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-03-17 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-03-02 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-02-12 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-12-12 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-06-19 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-03-26 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-04-05 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-08-19 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-12-22 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-07-01 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-07-01 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-04-26 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-05-23 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-03-18 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-04-08 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-06-16 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-11-30 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-01-06 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-02-09 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-09-21 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-06-22 00:00:00"
+},
+{
+"estimid": "F0",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-02-10 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-06-03 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-12-26 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-01-29 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-01-15 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-03-07 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-08-08 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-03-06 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-01-21 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-08-27 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-03-10 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-08-05 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-08-31 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-03-19 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-11-11 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-03-22 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-05-17 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-09-30 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-12-22 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-10-03 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-07-08 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-10-14 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-03-06 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-07-05 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-02-19 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2024-08-18 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-06-02 00:00:00"
+},
+{
+"estimid": "F6",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-04-04 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-03-04 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-02-05 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2025-04-13 00:00:00"
+},
+{
+"estimid": "F1",
+"direction": -1,
+"outcome": 0.0,
+"public_at": "2025-02-13 00:00:00"
+},
+{
+"estimid": "F3",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-02-11 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2024-01-08 00:00:00"
+},
+{
+"estimid": "F5",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-11-06 00:00:00"
+},
+{
+"estimid": "F2",
+"direction": -1,
+"outcome": 1.0,
+"public_at": "2025-02-16 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-06-08 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-04-20 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2025-02-04 00:00:00"
+},
+{
+"estimid": "F7",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-04-20 00:00:00"
+},
+{
+"estimid": "F8",
+"direction": 1,
+"outcome": 0.0,
+"public_at": "2024-12-14 00:00:00"
+},
+{
+"estimid": "F4",
+"direction": 1,
+"outcome": 1.0,
+"public_at": "2024-08-04 00:00:00"
+}
+],
+"expected_csv": "estimid,n,edge,shrunk,weight\r\nF0,28,0.053039101819589596,0.030939476061427263,1.3093947606142726\r\nF1,21,0.10899940168232858,0.055828961837290247,1.5\r\nF2,34,0.01412982044258948,0.0088965536120007831,1.0889655361200079\r\nF3,29,-0.005462531114339253,-0.0032329265778742516,0.96767073422125749\r\nF4,36,0.033149927458870576,0.021310667652131084,1.2131066765213108\r\nF5,20,-0.1994826311899483,-0.09974131559497415,0.5\r\nF6,27,-0.12076501236392839,-0.069375645400554603,0.5\r\nF7,28,0.053039101819589596,0.030939476061427263,1.3093947606142726\r\nF8,40,0.011893323478689322,0.007928882319126215,1.0792888231912621\r\n",
+"expected_sha256": "66141fd3d27c28423a8e367d3f54e2fdd87dcc16638dc8708805920b41dc1011"
+}

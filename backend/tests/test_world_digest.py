@@ -88,8 +88,9 @@ def test_type_row_validates_every_field():
     assert r["macro"] == ["rates"]
     assert r["sentiment"] == 1.0                      # clamped
     assert r["event_type"] == "earnings" and r["novelty"] == "new_fact"
+    # C17 review F9: each claim carries its own provenance (an analyst's view = FORECAST)
     assert r["forward_claims"] == [{"subject": "MU", "direction": "up", "horizon": "weeks",
-                                    "who": "analyst"}]
+                                    "who": "analyst", "provenance": "FORECAST"}]
     assert r["source_kind"] == "news"
     assert WD.type_row("not a dict", _item()) is None
     assert WD.type_row({"event_type": "alien"}, _item())["event_type"] == "other"

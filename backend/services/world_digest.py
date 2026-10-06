@@ -86,6 +86,9 @@ from backend import config as _cfg
 LICENCE = "PRODUCT_EXPERIMENT"
 SPECIALIST_PREFIX = "news_digest:"
 SPECIALIST = "news_digest:implication_v0"
+#: C17: the regime-classification rows (`world_state.regime_records`). Graded by
+#: `grade` under its OWN key: they are never pooled into size or direction trust.
+REGIME_SPECIALIST = "news_digest:regime_v0"
 MECHANISM_ID = "news_digest_v0"
 BENCHMARK = "SPY"
 NORMAL_P_1SIGMA = 0.3173
@@ -107,6 +110,28 @@ NOVELTY = ("new_fact", "update", "opinion", "recap", "data_page")
 DIRECTIONS = ("up", "down", "none")
 SIZE_BUCKETS = ("below_normal", "normal", "above_normal", "extreme")
 KINDS = ("article", "stock_page", "transcript", "social", "headline")
+
+#: C17 (2026-10-07): the EPISTEMIC KIND of every digest row, implication, forecast
+#: row and belief update -- what the owner called fact vs claim vs interpretation
+#: vs prediction. DERIVED IN CODE from fields that already exist (kind, event
+#: type, novelty, the forward claims' `who`, whether a row carries a graded
+#: probability); never asked of the model. `provenance_author` says WHOSE it is,
+#: so an "AEGIS_INTERPRETATION" is (INTERPRETATION, AEGIS) and a newspaper's
+#: opinion is (INTERPRETATION, THIRD_PARTY) -- the two are not the same evidence.
+#: review F9: FACT is a POSITIVE rule (a reported number, a filing, an official
+#: release); a row no rule claims is UNCLASSIFIED, never FACT by default.
+#: Provenance is OBSERVATION-ONLY: it weights no evidence and changes no number.
+PROVENANCE = ("FACT", "COMPANY_CLAIM", "INTERPRETATION", "FORECAST", "UNCLASSIFIED")
+_FACT_EVENTS = frozenset({"earnings", "macro_data", "central_bank", "m_and_a", "capital_markets",
+                          "management_change", "regulation_legal", "labor"})
+#: official publishers by URL HOST (a substring match on the whole URL let
+#: base64 Google-News links containing "sec"/"bea" through)
+_OFFICIAL_HOSTS = ("sec.gov", "treasury.gov", "federalregister.gov", "whitehouse.gov",
+                   "federalreserve.gov", "bls.gov", "bea.gov", "census.gov", "fda.gov", "cftc.gov",
+                   "finra.org", "ecb.europa.eu", "bankofengland.co.uk", "boj.or.jp")
+PROVENANCE_AUTHORS = ("SOURCE", "COMPANY", "THIRD_PARTY", "AEGIS")
+_COMPANY_WHO = frozenset({"company", "management", "mgmt", "ceo", "cfo", "issuer", "firm",
+                          "executive", "executives", "exec", "coo", "chairman", "board"})
 
 _TICKER = re.compile(r"^[A-Z]{1,5}(?:\.[A-Z])?$")
 _URLISH = re.compile(r"https?://|www\.", re.I)
@@ -490,6 +515,59 @@ def _ticker_in_text(t: str, text: str, title: str = "") -> bool:
         f"${t}" in hay
 
 
+def claim_provenance(claim: dict) -> str:
+    """A forward claim's own kind: management's words are COMPANY_CLAIM, anyone
+    else's forward view is FORECAST (ungraded)."""
+    return "COMPANY_CLAIM" if str(claim.get("who") or "").lower() in _COMPANY_WHO else "FORECAST"
+
+
+def row_provenance(row: dict) -> dict:
+    """(provenance, author, basis) of one TYPED row, derived from its own fields.
+    The first rule that fires wins; the basis names it. FACT needs a POSITIVE
+    rule; a row no rule claims is UNCLASSIFIED (review F9). Reported actuals that
+    carry a management outlook stay FACT at row level; the outlook is labelled on
+    the claim itself (`claim_provenance`). Never raises."""
+    if not isinstance(row, dict):
+        return {"provenance": "UNCLASSIFIED", "provenance_author": "SOURCE",
+                "provenance_basis": "UNREADABLE_ROW"}
+    claims = [c for c in row.get("forward_claims") or [] if isinstance(c, dict)]
+    who = {str(c.get("who") or "").lower() for c in claims}
+    ev, nov, kind = row.get("event_type"), row.get("novelty"), row.get("kind")
+    from urllib.parse import urlparse
+    try:
+        host = (urlparse(str(row.get("url") or "")).hostname or "").lower()
+    except ValueError:
+        host = ""
+    official = bool(host) and any(host == h or host.endswith("." + h) for h in _OFFICIAL_HOSTS)
+    reported = nov in ("new_fact", "update", "data_page")
+    if kind == "transcript":
+        p, a, b = "COMPANY_CLAIM", "COMPANY", "TRANSCRIPT"
+    elif ev == "guidance":
+        p, a, b = "COMPANY_CLAIM", "COMPANY", "GUIDANCE_EVENT"
+    elif ev == "earnings" and nov == "new_fact":
+        p, a, b = "FACT", "SOURCE", ("REPORTED_ACTUALS_WITH_COMPANY_OUTLOOK" if who & _COMPANY_WHO
+                                     else "REPORTED_ACTUALS")
+    elif who & _COMPANY_WHO:
+        p, a, b = "COMPANY_CLAIM", "COMPANY", "COMPANY_FORWARD_CLAIM"
+    elif ev == "analyst_action":
+        p, a, b = "INTERPRETATION", "THIRD_PARTY", "ANALYST_OPINION"
+    elif claims:
+        p, a, b = "FORECAST", "THIRD_PARTY", "THIRD_PARTY_FORWARD_CLAIM_UNGRADED"
+    elif row.get("source_kind") == "social" or kind == "social":
+        p, a, b = "INTERPRETATION", "THIRD_PARTY", "SOCIAL_POST"
+    elif nov == "opinion":
+        p, a, b = "INTERPRETATION", "THIRD_PARTY", "OPINION"
+    elif reported and official:
+        p, a, b = "FACT", "SOURCE", "OFFICIAL_RELEASE"
+    elif reported and ev in _FACT_EVENTS:
+        p, a, b = "FACT", "SOURCE", f"REPORTED_{str(ev).upper()}"
+    elif nov == "data_page" or kind == "stock_page":
+        p, a, b = "FACT", "SOURCE", "DATA_PAGE"
+    else:
+        p, a, b = "UNCLASSIFIED", "SOURCE", f"NO_POSITIVE_RULE_{str(nov or 'none').upper()}"
+    return {"provenance": p, "provenance_author": a, "provenance_basis": b}
+
+
 def type_row(raw: Any, item: Item) -> Optional[dict]:
     """Validate one model reply into the typed row. None when the reply is not
     an object. Every enum is checked, every number clamped, every string capped
@@ -518,9 +596,10 @@ def type_row(raw: Any, item: Item) -> Optional[dict]:
             claims.append({"subject": subj, "direction": d,
                            "horizon": str(c.get("horizon") or "")[:10].lower(),
                            "who": str(c.get("who") or "")[:12].lower()})
+            claims[-1]["provenance"] = claim_provenance(claims[-1])
     ev = str(raw.get("event_type") or "other").lower()
     nov = str(raw.get("novelty") or "").lower()
-    return {
+    out = {
         "item_id": item.item_id, "kind": item.kind, "source": item.source,
         "source_kind": "social" if item.is_social else "news",
         "url": item.url, "first_seen_utc": item.first_seen_utc,
@@ -541,6 +620,8 @@ def type_row(raw: Any, item: Item) -> Optional[dict]:
         "novelty": nov if nov in NOVELTY else "recap",
         "forward_claims": claims,
     }
+    out.update(row_provenance(out))           # C17: derived, never asked of the model
+    return out
 
 
 def cache_key(item: Item) -> str:
@@ -1133,7 +1214,10 @@ def type_implication(raw: Any, *, theme_tickers: set[str], universe: Optional[se
            "size_bucket": b if b in SIZE_BUCKETS else "normal",
            "horizon_sessions": hz, "confidence": _clip(raw.get("confidence"), 0, 1) or 0.0,
            "order": order, "chain": chain, "contradiction": contra,
-           "mentioned": (subj in theme_tickers) if st == "ticker" else None}
+           "mentioned": (subj in theme_tickers) if st == "ticker" else None,
+           # C17: an implication is Aegis's own read of the evidence
+           "provenance": "INTERPRETATION", "provenance_author": "AEGIS",
+           "provenance_basis": "DIGEST_IMPLICATION"}
     if st == "ticker" and universe is not None:
         out["in_panel"] = subj in universe
     return out
@@ -1245,6 +1329,7 @@ def implication_records(imp: dict, *, theme: dict, digest_id: str, made_at: str,
                    "source_urls": theme["urls"][:8],
                    "proxy_of": imp.get("proxy_of"),
                    "rule": imp.get("rule"), "sub_tag": specialist,
+                   "provenance": "FORECAST", "provenance_author": "AEGIS",
                    "matched_control": ("size: vol_prior_p (same name, horizon, threshold; "
                                        "252-session frequency); direction: a 0.5 coin and "
                                        "SPY as benchmark")}
@@ -1311,6 +1396,8 @@ def grade(preds: list[dict]) -> dict:
     block. Size: Brier(model) vs Brier(vol_prior_p). Direction: Brier(raw) vs
     0.25. The trust each would earn under the shrunk prior is printed."""
     size, dirn = defaultdict(list), defaultdict(list)
+    reg_p, reg_b, reg_v = defaultdict(list), defaultdict(list), defaultdict(list)
+    reg_excluded = 0
     n_open = 0
     for r in preds:
         if not str(r.get("specialist") or "").startswith(SPECIALIST_PREFIX):
@@ -1321,12 +1408,35 @@ def grade(preds: list[dict]) -> dict:
         day = str(r.get("decision_date") or r.get("made_at") or "")[:10]
         o = float(r["outcome"])
         iu = r.get("inputs_used") or {}
+        if r.get("specialist") == REGIME_SPECIALIST:
+            # C17: every null graded separately; a row whose baseline could not
+            # be computed adds nothing to that baseline's series (never a 0.5).
+            # Rows of an excluded prompt version (regime_v0 = v0_incoherent,
+            # review F1) are skipped by rule; blocks are ENTRY SESSIONS (F2).
+            if str(r.get("model_version") or "") in (getattr(_cfg, "WORLD_STATE_REGIME_EXCLUDED_VERSIONS", {}) or {}):
+                reg_excluded += 1
+                continue
+            raw = float(r.get("raw_probability") or r["probability"])
+            blk = str(iu.get("entry_session") or day)
+            for ser, key in ((reg_p, "baseline_persistence_p"), (reg_b, "baseline_base_rate_p"),
+                             (reg_v, "baseline_ewma_vol_p")):
+                if iu.get(key) is not None:
+                    ser[blk].append((float(iu[key]) - o) ** 2 - (raw - o) ** 2)
+            continue
         if r.get("observable") == "abs_move_exceeds" and iu.get("vol_prior_p") is not None:
             size[day].append((float(iu["vol_prior_p"]) - o) ** 2 - (float(r["probability"]) - o) ** 2)
         elif r.get("observable") == "beats_benchmark":
             raw = float(r.get("raw_probability") or r["probability"])
             dirn[day].append(0.25 - (raw - o) ** 2)
-    return {"n_open": n_open, "size": trust_from(size), "direction": trust_from(dirn)}
+    vp, vb, vv = trust_from(reg_p), trust_from(reg_b), trust_from(reg_v)
+    trusts = [float(vp["trust"]), float(vb["trust"])] + ([float(vv["trust"])] if vv["n_rows"] else [])
+    return {"n_open": n_open, "size": trust_from(size), "direction": trust_from(dirn),
+            "regime": {"vs_persistence": vp, "vs_base_rate": vb, "vs_ewma_vol": vv,
+                       # it must beat EVERY null it has: the smallest trust is the one it earned
+                       "trust": min(trusts), "excluded_by_rule": reg_excluded,
+                       "note": ("regime rows vs persistence AND base rate (AND EWMA vol for stress), "
+                                "blocked by entry session; trust = the smallest; regime_v0 rows "
+                                "excluded as v0_incoherent")}}
 
 
 def trust_from(by_day: dict[str, list[float]]) -> dict:

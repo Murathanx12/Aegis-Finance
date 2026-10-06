@@ -1,0 +1,100 @@
+{
+ "source_receipt": "backend/data/optimus/opportunities/opportunities_2026-10-06_20261006T225957Z.json",
+ "generated_utc": "2026-10-06T22:59:57+00:00",
+ "analyst_reputation_label": "REPUTATION_WEIGHT: NOT_PERSISTENT_OOS (rho -0.32; -0.28 month x direction)",
+ "rows": [
+  {
+   "list_id": "roi_v3",
+   "ticker": "KYTX",
+   "eligibility": "EXCLUDED_BY_v3.2_RULE",
+   "n_targets": 5,
+   "n_covering_firms": 4,
+   "sum_of_weights": 4.5184,
+   "mean_weight": 1.1296,
+   "label": "REPUTATION_WEIGHT: NOT_PERSISTENT_OOS (rho -0.32; -0.28 month x direction)",
+   "pit_status": "NOT_PIT",
+   "weighted_upside_shown": false,
+   "weighted_upside_DIAGNOSTIC_ONLY": null,
+   "weighted_median_target_missing_because": "stale_target: no covering firm's target is <= 90 days old",
+   "cliff_replaced": null
+  },
+  {
+   "list_id": "roi_v3",
+   "ticker": "SOC",
+   "eligibility": "EXCLUDED_BY_v3.2_RULE",
+   "n_targets": 4,
+   "n_covering_firms": 5,
+   "sum_of_weights": 5.7675,
+   "mean_weight": 1.1535,
+   "label": "REPUTATION_WEIGHT: NOT_PERSISTENT_OOS (rho -0.32; -0.28 month x direction)",
+   "pit_status": "NOT_PIT",
+   "weighted_upside_shown": false,
+   "weighted_upside_DIAGNOSTIC_ONLY": 1.8818,
+   "weighted_median_target_missing_because": null,
+   "cliff_replaced": {
+    "old_rule": "n analysts >= 5 (stock lists v3.2)",
+    "n_covering_firms": 5,
+    "sum_of_weights": 5.7675,
+    "label": "REPUTATION_WEIGHT: NOT_PERSISTENT_OOS (rho -0.32; -0.28 month x direction)",
+    "note": "the list's frozen rule still excluded it; coverage is printed, not gated"
+   }
+  },
+  {
+   "list_id": "roi_v3",
+   "ticker": "NOVT",
+   "eligibility": "EXCLUDED_BY_v3.2_RULE",
+   "n_targets": 2,
+   "n_covering_firms": 1,
+   "sum_of_weights": 1.1114,
+   "mean_weight": 1.1114,
+   "label": "REPUTATION_WEIGHT: NOT_PERSISTENT_OOS (rho -0.32; -0.28 month x direction)",
+   "pit_status": "NOT_PIT",
+   "weighted_upside_shown": false,
+   "weighted_upside_DIAGNOSTIC_ONLY": null,
+   "weighted_median_target_missing_because": "stale_target: no covering firm's target is <= 90 days old",
+   "cliff_replaced": {
+    "old_rule": "n analysts >= 5 (stock lists v3.2)",
+    "n_covering_firms": 1,
+    "sum_of_weights": 1.1114,
+    "label": "REPUTATION_WEIGHT: NOT_PERSISTENT_OOS (rho -0.32; -0.28 month x direction)",
+    "note": "the list's frozen rule still excluded it; coverage is printed, not gated"
+   }
+  },
+  {
+   "list_id": "roi_v3",
+   "ticker": "QUBT",
+   "eligibility": "EXCLUDED_BY_v3.2_RULE",
+   "n_targets": 6,
+   "n_covering_firms": 6,
+   "sum_of_weights": 6.7232,
+   "mean_weight": 1.1205,
+   "label": "REPUTATION_WEIGHT: NOT_PERSISTENT_OOS (rho -0.32; -0.28 month x direction)",
+   "pit_status": "NOT_PIT",
+   "weighted_upside_shown": false,
+   "weighted_upside_DIAGNOSTIC_ONLY": 3.0302,
+   "weighted_median_target_missing_because": null,
+   "cliff_replaced": null
+  },
+  {
+   "list_id": "roi_v3",
+   "ticker": "SLDP",
+   "eligibility": "EXCLUDED_BY_v3.2_RULE",
+   "n_targets": 2,
+   "n_covering_firms": 2,
+   "sum_of_weights": 2.0925,
+   "mean_weight": 1.0462,
+   "label": "REPUTATION_WEIGHT: NOT_PERSISTENT_OOS (rho -0.32; -0.28 month x direction)",
+   "pit_status": "NOT_PIT",
+   "weighted_upside_shown": false,
+   "weighted_upside_DIAGNOSTIC_ONLY": null,
+   "weighted_median_target_missing_because": "stale_target: no covering firm's target is <= 90 days old",
+   "cliff_replaced": {
+    "old_rule": "n analysts >= 5 (stock lists v3.2)",
+    "n_covering_firms": 2,
+    "sum_of_weights": 2.0925,
+    "label": "REPUTATION_WEIGHT: NOT_PERSISTENT_OOS (rho -0.32; -0.28 month x direction)",
+    "note": "the list's frozen rule still excluded it; coverage is printed, not gated"
+   }
+  }
+ ]
+}

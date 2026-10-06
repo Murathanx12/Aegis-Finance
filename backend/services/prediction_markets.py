@@ -333,14 +333,84 @@ def _write_receipt(day: str, source: str, body: dict) -> None:
                      type(exc).__name__, exc)
 
 
+# ── Kalshi storage mode (C16, 2026-10-07; owner decision D18) ────────────────
+# Kalshi's Developer Agreement is quoted as barring "collecting, caching,
+# aggregating, or storing" API data except to facilitate one's own trading (the
+# quote is UNVERIFIED first-hand: review F9), and its Data Terms bar ML/AI use.
+# Default `none` until the owner decides D18: the receipt only, because a
+# derived aggregate may itself be the prohibited "aggregating". Under
+# `derived_only` the raw rows live in memory for one call, and only a DERIVED
+# daily aggregate is written -- one implied distribution per FOMC meeting (the
+# V1 FED_DECISION parser, the regime variable this corpus maps to) plus
+# category counts. `raw` restores the registered pre-10-07 behaviour; `none`
+# writes the receipt alone. Polymarket is unaffected. Existing files are never
+# deleted. Cost, stated plainly: under `derived_only` the cross-venue pairing
+# of TRIAL-PREDMARKET-2 and the per-contract Brier of TRIAL-PREDMARKET-1 have no
+# new Kalshi rows to read -- that is the trade-off the owner decides (D18).
+
+KALSHI_STORAGE_MODES = ("derived_only", "raw", "none")
+_FED_BPS = {"maintain": 0, "hike_25": 25, "hike_50plus": 50, "cut_25": -25, "cut_50plus": -50}
+
+
+def kalshi_storage_mode() -> str:
+    m = str(getattr(config, "PREDMARKET_KALSHI_STORAGE", "none") or "").strip().lower()
+    if m not in KALSHI_STORAGE_MODES:
+        raise PredictionMarketFetchError(
+            f"PREDMARKET_KALSHI_STORAGE={m!r} is not one of {KALSHI_STORAGE_MODES}; "
+            f"nothing fetched (an unknown storage mode is not silently 'raw')")
+    return m
+
+
+def _derived_file(day: str, source: str):
+    return config.PREDICTION_MARKET_DIR / "derived" / f"{day}.{source}.json"
+
+
+def kalshi_derived(rows: list[dict], day: str) -> dict:
+    """PURE. The derived daily aggregate kept instead of raw Kalshi rows: per FOMC
+    meeting the implied distribution (mids normalised to their sum) and the
+    implied expected change in bps; per category the market count and total OI.
+    No ticker, title or quote of an individual contract is kept."""
+    from backend.services.prediction_market_matching import parse_kalshi
+    meetings: dict = {}
+    for r in rows:
+        key = parse_kalshi(r)
+        if key is None or r.get("mid") is None:
+            continue
+        _fam, meeting, cls = key
+        meetings.setdefault(meeting, {}).setdefault(cls, []).append(float(r["mid"]))
+    fed = {}
+    for meeting, classes in sorted(meetings.items()):
+        mids = {c: v[0] for c, v in classes.items() if len(v) == 1}   # duplicates void a class
+        tot = sum(mids.values())
+        if not mids or tot <= 0:
+            continue
+        dist = {c: round(m / tot, 4) for c, m in mids.items()}
+        fed[meeting] = {"classes": sorted(mids), "mid_sum": round(tot, 4),
+                        "implied_distribution": dist,
+                        "expected_change_bps": round(sum(_FED_BPS[c] * p for c, p in dist.items()), 2),
+                        "complete": set(mids) == set(_FED_BPS)}
+    cats: dict = {}
+    for r in rows:
+        c = r.get("category") or "uncategorised"
+        a = cats.setdefault(c, {"n_markets": 0, "open_interest": 0.0})
+        a["n_markets"] += 1
+        a["open_interest"] = round(a["open_interest"] + float(r.get("open_interest") or 0.0), 2)
+    return {"day": day, "source": "kalshi", "storage": "derived_only",
+            "regime_variables": {"fed_decision_by_meeting": fed}, "by_category": cats,
+            "n_markets_seen": len(rows), "banner": BANNER}
+
+
 def _snapshot_source(source: str, now: datetime) -> dict:
     """One source's daily snapshot. The fetch happens BEFORE any write.
 
-    `status` is one of `ok` / `ok_empty` / `already_written`. A fetch failure
-    raises PredictionMarketFetchError and writes NOTHING — the missing
+    `status` is one of `ok` / `ok_empty` / `already_written` (and, for Kalshi
+    outside the `raw` mode, `ok_derived_only` / `ok_receipt_only`). A fetch
+    failure raises PredictionMarketFetchError and writes NOTHING — the missing
     receipt for the day is the evidence.
     """
     day = now.date().isoformat()
+    if source == "kalshi" and kalshi_storage_mode() != "raw":
+        return _snapshot_kalshi_restricted(now, kalshi_storage_mode())
     df = _day_file(day, source)
     if df.exists() and df.stat().st_size > 0:
         with df.open("r", encoding="utf-8") as fh:
@@ -374,6 +444,40 @@ def _snapshot_source(source: str, now: datetime) -> dict:
 
     body = {**base, "status": "ok"}
     _write_receipt(day, source, body)
+    return body
+
+
+def _snapshot_kalshi_restricted(now: datetime, mode: str) -> dict:
+    """Kalshi under `derived_only` / `none`: raw rows never touch disk."""
+    day = now.date().isoformat()
+    dfile = _derived_file(day, "kalshi")
+    rp = _receipt_path(day, "kalshi")
+    if (mode == "derived_only" and dfile.exists()) or (mode == "none" and rp.exists()):
+        return {"status": "already_written", "day": day, "source": "kalshi", "storage": mode}
+    fetched = SOURCES["kalshi"](now=now)
+    rows = fetched["rows"]
+    base = {"day": day, "source": "kalshi",
+            "ran_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "rows_seen": len(rows), "rows_written": 0, "storage": mode,
+            "events_seen": fetched["events_seen"], "pages": fetched["pages"],
+            "pages_truncated": fetched["pages_truncated"],
+            "terms_note": ("Kalshi Developer Agreement / Data Terms restrict storing API data "
+                           "and ML/AI use; raw rows are not persisted (owner decision D18)")}
+    if not rows:
+        body = {**base, "status": "ok_empty"}
+        _write_receipt(day, "kalshi", body)
+        return body
+    if mode == "derived_only":
+        d = kalshi_derived(rows, day)
+        dfile.parent.mkdir(parents=True, exist_ok=True)
+        tmp = dfile.with_suffix(".tmp")
+        tmp.write_text(json.dumps(d, indent=1, default=str), encoding="utf-8")
+        tmp.replace(dfile)
+        body = {**base, "status": "ok_derived_only", "derived_path": str(dfile),
+                "n_fed_meetings": len(d["regime_variables"]["fed_decision_by_meeting"])}
+    else:
+        body = {**base, "status": "ok_receipt_only"}
+    _write_receipt(day, "kalshi", body)
     return body
 
 

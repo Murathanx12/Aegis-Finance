@@ -1,0 +1,62 @@
+{
+  "_note": "CONSTRUCTED from the documented LDA v1 filing schema, NOT a saved live response: on 2026-10-07 lda.gov answered 403 Access Denied to every request from this machine (and to a third-party fetcher), so no live page could be saved. Amounts and uuids are illustrative test values.",
+  "count": 3,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "url": "https://lda.gov/api/v1/filings/00000000-0000-4000-8000-000000000001/",
+      "filing_uuid": "00000000-0000-4000-8000-000000000001",
+      "filing_type": "Q2",
+      "filing_type_display": "2nd Quarter - Report",
+      "filing_year": 2026,
+      "filing_period": "second_quarter",
+      "filing_period_display": "2nd Quarter (Apr 1 - Jun 30)",
+      "filing_document_url": "https://lda.gov/filings/public/filing/00000000-0000-4000-8000-000000000001/print/",
+      "income": null,
+      "expenses": "3250000.00",
+      "dt_posted": "2026-07-18T14:02:11-04:00",
+      "termination_date": null,
+      "registrant": {"id": 101, "name": "LOCKHEED MARTIN CORPORATION"},
+      "client": {"id": 9001, "client_id": 1, "name": "LOCKHEED MARTIN CORPORATION", "state": "MD", "country": "USA"},
+      "lobbying_activities": [
+        {"general_issue_code": "DEF", "general_issue_code_display": "Defense"},
+        {"general_issue_code": "BUD", "general_issue_code_display": "Budget/Appropriations"}
+      ]
+    },
+    {
+      "url": "https://lda.gov/api/v1/filings/00000000-0000-4000-8000-000000000002/",
+      "filing_uuid": "00000000-0000-4000-8000-000000000002",
+      "filing_type": "Q2",
+      "filing_type_display": "2nd Quarter - Report",
+      "filing_year": 2026,
+      "filing_period": "second_quarter",
+      "filing_period_display": "2nd Quarter (Apr 1 - Jun 30)",
+      "filing_document_url": null,
+      "income": "80000.00",
+      "expenses": null,
+      "dt_posted": "2026-07-20T09:15:00-04:00",
+      "termination_date": null,
+      "registrant": {"id": 202, "name": "EXAMPLE GOVERNMENT RELATIONS LLC"},
+      "client": {"id": 9002, "client_id": 7, "name": "Lockheed Martin Corp.", "state": "MD", "country": "USA"},
+      "lobbying_activities": [{"general_issue_code": "AER", "general_issue_code_display": "Aerospace"}]
+    },
+    {
+      "url": "https://lda.gov/api/v1/filings/00000000-0000-4000-8000-000000000003/",
+      "filing_uuid": "00000000-0000-4000-8000-000000000003",
+      "filing_type": "Q2",
+      "filing_type_display": "2nd Quarter - Report",
+      "filing_year": 2026,
+      "filing_period": "second_quarter",
+      "filing_period_display": "2nd Quarter (Apr 1 - Jun 30)",
+      "filing_document_url": null,
+      "income": "20000.00",
+      "expenses": null,
+      "dt_posted": "2026-07-21T10:00:00-04:00",
+      "termination_date": null,
+      "registrant": {"id": 203, "name": "EXAMPLE ADVOCACY GROUP"},
+      "client": {"id": 9003, "client_id": 3, "name": "Lockheedville Water District", "state": "CA", "country": "USA"},
+      "lobbying_activities": []
+    }
+  ]
+}

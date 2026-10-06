@@ -1,0 +1,18 @@
+{
+ "stamp": "20261001T174630Z",
+ "now_utc": "2026-10-01T17:46:30.661968+00:00",
+ "grade": {},
+ "window": {
+  "now_et": "2026-10-01T13:46:30.661968-04:00",
+  "session_date": "2026-10-01",
+  "is_session": true,
+  "window_et": [
+   "10:45",
+   "15:30"
+  ],
+  "in_window": true,
+  "reason": "IN_WINDOW"
+ },
+ "state": "REFUSED: bars newest 2026-09-28 is not the previous session",
+ "_fixture": "C8 review F4: the REAL 2026-10-01 straddle-forward refusal pass"
+}

@@ -222,6 +222,33 @@ function UpsideCell({ r }: { r: OppRow }) {
       <div className="text-[10px] text-muted-foreground tabular-nums">
         {u.n_targets != null ? `${u.n_targets} analyst${u.n_targets === 1 ? "" : "s"}` : "analyst count n/a"}
       </div>
+      <NEffective r={r} />
+    </div>
+  );
+}
+
+/** C18 (review F1/F3/F5): coverage from the revision file, under the persistence label.
+ *  The weight did not persist out of sample, so nothing here is presented as skill and no
+ *  re-weighted target or upside is shown. Never compared with the yfinance count above. */
+function NEffective({ r }: { r: OppRow }) {
+  const a = r.analyst_reputation;
+  if (!a) {
+    const why = r.missing_because.analyst_reputation;
+    return why ? <div className="text-[10px] text-muted-foreground" title={why}>revision-file coverage n/a</div> : null;
+  }
+  const firms = (a.weight_bearing_firms ?? [])
+    .map((f) => `${f.firm} w ${f.weight.toFixed(2)}`)
+    .join("\n");
+  const tip = [
+    a.label,
+    "The reputation weight is plumbing, NOT skill: first-half weights did not rank second-half firm edges.",
+    `${a.n_covering_firms} firm(s) with a dated row in the revision file in 365 days; sum of weights ${a.sum_of_weights.toFixed(2)} (each in [0.5, 1.5]).`,
+    a.pit_status ? `PIT: ${a.pit_status}` : null,
+    firms ? `weights (not skill):\n${firms}` : null,
+  ].filter(Boolean).join("\n");
+  return (
+    <div className="text-[10px] tabular-nums text-muted-foreground cursor-help" title={tip}>
+      revision file: {a.n_covering_firms} firm{a.n_covering_firms === 1 ? "" : "s"}, sum w {a.sum_of_weights.toFixed(1)}
     </div>
   );
 }

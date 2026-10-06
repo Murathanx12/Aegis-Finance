@@ -1,0 +1,71 @@
+{
+ "peggedAssets": [
+  {
+   "id": "1",
+   "name": "Tether",
+   "symbol": "USDT",
+   "gecko_id": "tether",
+   "pegType": "peggedUSD",
+   "priceSource": "defillama",
+   "pegMechanism": "fiat-backed",
+   "circulating": {
+    "peggedUSD": 184197451133.08795
+   },
+   "circulatingPrevDay": {
+    "peggedUSD": 184052567100.5511
+   },
+   "circulatingPrevWeek": {
+    "peggedUSD": 183838520399.009
+   },
+   "circulatingPrevMonth": {
+    "peggedUSD": 183375029576.1319
+   },
+   "price": 0.9999724995938598
+  },
+  {
+   "id": "2",
+   "name": "USD Coin",
+   "symbol": "USDC",
+   "gecko_id": "usd-coin",
+   "pegType": "peggedUSD",
+   "priceSource": "defillama",
+   "pegMechanism": "fiat-backed",
+   "circulating": {
+    "peggedUSD": 74275422018.27965
+   },
+   "circulatingPrevDay": {
+    "peggedUSD": 74198305513.0548
+   },
+   "circulatingPrevWeek": {
+    "peggedUSD": 74856181846.06946
+   },
+   "circulatingPrevMonth": {
+    "peggedUSD": 74718093677.1849
+   },
+   "price": 0.999959098637797
+  },
+  {
+   "id": "209",
+   "name": "Sky Dollar",
+   "symbol": "USDS",
+   "gecko_id": "usds",
+   "pegType": "peggedUSD",
+   "priceSource": "defillama",
+   "pegMechanism": "crypto-backed",
+   "circulating": {
+    "peggedUSD": 7031557789.669533
+   },
+   "circulatingPrevDay": {
+    "peggedUSD": 6720134303.099913
+   },
+   "circulatingPrevWeek": {
+    "peggedUSD": 6597898059.92898
+   },
+   "circulatingPrevMonth": {
+    "peggedUSD": 6589653592.903654
+   },
+   "price": 0.9999110118689312
+  }
+ ],
+ "_note": "trimmed to the first 3 assets of a live response, 2026-10-07"
+}

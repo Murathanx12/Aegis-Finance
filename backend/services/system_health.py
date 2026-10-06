@@ -938,7 +938,15 @@ def p_u_plan(ctx: ProbeCtx) -> ProbeResult:
     day = _newest_pc_book(ctx)
     d = _read_json(day / "intended_book.json") if day else None
     if not isinstance(d, dict):
-        return _unknown("no pc_book/<day>/intended_book.json")
+        if day is None:
+            return _unknown("no pc_book/<day>/ folder at all: the planner has never written here")
+        last = last_closed_session(ctx.now)
+        prior = sorted(ctx.optimus_dir.glob("pc_book/20??-??-??/intended_book.json"))
+        newest_plan = prior[-1].parent.name if prior else "none"
+        return ProbeResult("STALE", None, None,
+                           f"no plan written for session {last}: pc_book/{day.name}/ has no "
+                           f"intended_book.json (newest plan: {newest_plan})",
+                           proof=f"pc_book/{day.name}/intended_book.json absent", state="DEGRADED")
     t = _ts(d.get("t"))
     asof = _ts(d.get("asof"))
     if t is None or asof is None:
@@ -1072,7 +1080,7 @@ def p_decision_contract(ctx: ProbeCtx) -> ProbeResult:
             # number is static because the eligibility gate passes the same few
             # names, not because the candidate file is old.
             cause = _n_considered_cause(d)
-            detail += "; CAUSE: " + cause
+            detail = f"CAUSE: {cause}. " + detail
             if cause.startswith("NOT a stale file"):
                 state = "DEGRADED"
     except Exception as exc:                                        # noqa: BLE001
@@ -1385,6 +1393,14 @@ def p_learn_rota(ctx: ProbeCtx) -> ProbeResult:
                        proof=f"pc_book/{day.name}/learn_*.json")
 
 
+def _extra_task_names() -> tuple:
+    try:
+        from backend.services import task_receipts as TR            # noqa: PLC0415
+        return TR.EXTRA_TASK_NAMES
+    except Exception:                                               # noqa: BLE001
+        return ()
+
+
 def _schtasks(ctx: ProbeCtx) -> Optional[dict]:
     """{task name: row dict} from `schtasks /query /fo CSV /v`, or None."""
     if "schtasks" in ctx.cache:
@@ -1403,7 +1419,7 @@ def _schtasks(ctx: ProbeCtx) -> Optional[dict]:
                 if header and len(r) == len(header):
                     row = dict(zip(header, r))
                     name = row.get("TaskName", "").lstrip("\\")
-                    if name.startswith("Aegis"):
+                    if name.startswith("Aegis") or name in _extra_task_names():
                         out[name] = row
     ctx.cache["schtasks"] = out
     return out
@@ -1508,8 +1524,15 @@ def p_social_sources(ctx: ProbeCtx) -> ProbeOut:
         name = s.get("source", "?")
         st = str(s.get("status"))
         if s.get("refused"):
-            out[name] = _unknown(f"{name}: {s['refused']} -- refused, not collected",
-                                 evidence_utc=_iso(t), age_s=_age(t, ctx.now))
+            why = str(s["refused"])
+            if "KEYS_ABSENT" in why.upper() or "NOT_PROVISIONED" in why.upper():
+                out[name] = ProbeResult("STOPPED_BY_OPERATOR", _iso(t), _age(t, ctx.now),
+                                        f"{name}: {why} -- no key provisioned, so not collected "
+                                        f"(a declared absence; provision the key to start it)",
+                                        proof="lab_status.loops.social_pull.per_source[].refused")
+            else:
+                out[name] = _unknown(f"{name}: {why} -- refused, not collected",
+                                     evidence_utc=_iso(t), age_s=_age(t, ctx.now))
             continue
         v = _by_age(t, timedelta(minutes=per * 2), ctx.now)
         if st not in ("OK", "ok"):
@@ -1808,6 +1831,12 @@ def p_railway_fleet(ctx: ProbeCtx) -> ProbeResult:
         return _unknown(f"`railway status` did not answer ({str(txt)[:100]})")
     m = re.search(r"Linked service\s+(\S+)", txt or "")
     svc = m.group(1) if m else None
+    from backend import config as C                                 # noqa: PLC0415
+    stopped = str(getattr(C, "RAILWAY_FLEET_STOPPED_REASON", "") or "")
+    if stopped:
+        return ProbeResult("STOPPED_BY_OPERATOR", None, None,
+                           f"{stopped}; CLI linked to {svc or 'no service'}",
+                           proof="config.RAILWAY_FLEET_STOPPED_REASON + `railway status`")
     if svc not in FLEET_SERVICES:
         return _unknown(f"CLI linked to {svc or 'no service'} (not a live fleet service), so the "
                         f"fleet's `cycle full exited rc=0` lines cannot be read read-only from here")
@@ -1859,7 +1888,15 @@ def p_accrual_canary(ctx: ProbeCtx) -> ProbeResult:
     rows["n_considered"] = AC.n_considered_row(
         ctx.optimus_dir / "decisions", ctx.path("funnel", ctx.optimus_dir.parent / "funnel_night10.json"))
     st = [r.get("status") for r in rows.values()]
-    reasons = [f"{k}: {r.get('status')} {str(r.get('reason') or '')[:90]}" for k, r in rows.items()]
+    reasons = []
+    for k, r in rows.items():
+        txt = str(r.get("reason") or "")
+        if k == "n_considered" and r.get("status") == "DEGRADED":
+            newest = _newest_named(ctx.optimus_dir / "decisions", "20??-??-??.json")
+            dc = _read_json(newest) if newest else None
+            if isinstance(dc, dict):
+                txt = f"CAUSE: {_n_considered_cause(dc)}. {txt}"
+        reasons.append(f"{k}: {r.get('status')} {txt[:400]}")
     if all(s == "UNKNOWN" for s in st):
         return _unknown("; ".join(reasons))
     v: Verdict = "STALE" if any(s in ("DEGRADED", "UNKNOWN") for s in st) else "ALIVE"
@@ -2276,8 +2313,15 @@ def non_alive_lines(*, limit: int = 12) -> list[str]:
             rows = run(ctx=make_ctx(allow_proc=False))["rows"]
             src = "computed now, file probes only (no probe receipt within 2 h)"
         bad = [r for r in rows if r["verdict"] in ("DEAD", "STALE")]
+        # C8 review F7: a REFUSED row (nn_lab, the contest live gate) is named,
+        # after DEAD/STALE, not only counted
+        refused = [r for r in rows if r["verdict"] == "REFUSED"]
         unk = sum(1 for r in rows if r["verdict"] == "UNKNOWN")
-        head = (f"_subsystems: {len(bad)} DEAD/STALE, {unk} UNKNOWN of {len(rows)} ({src})_")
+        head = (f"_subsystems: {len(bad)} DEAD/STALE, {unk} UNKNOWN of {len(rows)} ({src})_"
+                if not refused else
+                f"_subsystems: {len(bad)} DEAD/STALE, {len(refused)} REFUSED, {unk} UNKNOWN of "
+                f"{len(rows)} ({src})_")
+        bad = bad + refused
         body = [f"- {row_line(r)}" for r in bad[:limit]
                 if r.get("probe") != "disk_free" and r.get("name") != "disk_free"] + (
             [f"- ... {len(bad) - limit} more in backend/data/optimus/health/HEALTH.md"]

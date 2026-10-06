@@ -4993,6 +4993,109 @@ WORLD_DIGEST_EVERY_H = 6
 FORECAST_WRITERS["news_digest"] = {"prefix": "news_digest:", "scheduled": None,
                                   "task": "AegisWorldDigest (every 6 h; reported only)"}
 
+# ── WORLD STATE + REGIME ROWS + SCENARIOS (C17, 2026-10-07, `backend/services/world_state.py`) ──
+#: Spec: docs/research_notes/2026-10-07/world_state_and_regime_rows_2026-10-07.md.
+#: The belief table is UPDATED IN CODE from the digest's typed rows and
+#: implications ($0, no new question to the model); the regime row is one
+#: DeepSeek call per cycle, written once per session. PRODUCT_EXPERIMENT.
+#: Half-life (days) of each belief's confidence: confidence x 0.5 ** (hours / (hl x 24)).
+WORLD_STATE_HALF_LIFE_DAYS = {
+    "ai_demand": 21, "semiconductor_capex": 21, "grid_power_demand": 21,
+    "commodity_shortages": 10, "rates": 7, "inflation": 14, "credit": 10, "dollar": 10,
+    "liquidity": 7, "consumer_conditions": 14, "china_policy": 10, "geopolitical_risk": 5,
+    "defense_procurement": 21, "energy_security": 10, "biotech_regulatory": 14,
+    "prediction_market_state": 5}
+#: Weight of this cycle's evidence against the decayed prior (signed confidence).
+WORLD_STATE_NEW_EVIDENCE_WEIGHT = 0.5
+#: |signed score| a cycle needs before it calls a direction (below: mixed/none).
+WORLD_STATE_DIRECTION_THRESHOLD = 0.10
+#: Independent news sources at which a cycle's evidence counts at full strength.
+WORLD_STATE_FULL_SOURCES = 5
+#: Ceiling on any belief's confidence: a news-derived belief is never certain.
+WORLD_STATE_MAX_CONFIDENCE = 0.90
+#: A decayed belief below this confidence leaves the table (listed as expired).
+WORLD_STATE_EXPIRE_CONFIDENCE = 0.02
+#: Regime row (one DeepSeek call per cycle, once per session): horizons and the
+#: stage cap. The graded probability is shrunk toward the 252-session base rate
+#: by WORLD_DIGEST_DIR_SHRINK; the model's own number is `raw_probability`.
+WORLD_STATE_REGIME_HORIZONS = (1, 5)
+WORLD_STATE_REGIME_STAGE_CAP_USD = 0.05
+#: regime_v1 (review 2026-10-07 F1): a FIXED event per variable, the model is shown
+#: the base rate and persistence and asked for P(event) directly; sectors are 13
+#: P(beats SPY) numbers. v0 graded a label's event that contradicted the label on
+#: 5 of 14 rows: its rows stay in the ledger and are EXCLUDED from every grade by
+#: this rule (labelled at read time; ledger rows are never rewritten).
+WORLD_STATE_REGIME_PROMPT_VERSION = "regime_v1"
+WORLD_STATE_REGIME_EXCLUDED_VERSIONS = {"regime_v0": "v0_incoherent"}
+#: F7: the price panel must hold the last CLOSED XNYS session before the write
+#: (lag-1 persistence, the just-closed session shown to the model); more lag -> REFUSED.
+WORLD_STATE_REGIME_MAX_PANEL_LAG_SESSIONS = 0
+#: F5: the declared effect a regime field must show, and the per-date sd assumed
+#: before two dates exist (the review's simulation, 0.0335). N_needed =
+#: ceil((2.8 x sd / delta)^2) independent entry sessions.
+WORLD_STATE_REGIME_DELTA_BRIER = 0.005
+WORLD_STATE_REGIME_SD_PRIOR = 0.0335
+#: F3: the belief table is a Beta posterior on vote signs over ROOT EVENTS
+#: (syndicated copies of one story = one vote), updated only by root events not
+#: yet applied, decayed by elapsed time at each topic's half-life. A topic needs
+#: this pseudo-count before its confidence is large: conf = |2m-1| x n/(n+PRIOR).
+WORLD_STATE_BETA_PRIOR = 3.0
+#: Root events already applied are remembered this long (a digest window is 24-36 h).
+WORLD_STATE_APPLIED_MEMORY_DAYS = 7
+#: belief_stability = share of beliefs whose direction changed since the last
+#: cycle; above this the receipt says DEGRADED.
+WORLD_STATE_STABILITY_MAX = 0.25
+#: Baselines need this many h-session windows in the trailing 252 sessions, or
+#: they are null with a reason (never a fabricated 0.5).
+WORLD_STATE_REGIME_MIN_WINDOWS = 60
+#: Scenario update: p = sigmoid(logit(prior) + K x sum(weight x signed belief)),
+#: the shift capped at MAX_LOGIT_SHIFT. Computed from the CURRENT table, so it
+#: is idempotent and cannot ratchet.
+WORLD_STATE_SCENARIO_K = 0.6
+WORLD_STATE_SCENARIO_MAX_LOGIT_SHIFT = 0.5
+#: F8: scenarios read a SLOW average of the belief table, not the table itself:
+#: smoothed += (1 - 0.5 ** (days / TIME_CONSTANT)) x (belief - smoothed), and the
+#: probability moves at most MAX_DAILY_MOVE x elapsed days per update. Two
+#: digests 45 minutes apart move a 2027 scenario by < 0.001.
+WORLD_STATE_SCENARIO_TIME_CONSTANT_DAYS = 30
+WORLD_STATE_SCENARIO_MAX_DAILY_MOVE = 0.01
+#: F8: the declared priors, each with version, author and date. A changed value
+#: is a RESTATEMENT (logged PRIOR_RESTATED), never a belief-driven move.
+WORLD_STATE_SCENARIO_PRIORS = {
+    sid: {"prior": p, "version": 1, "declared_by": "C17 builder (Opus), not the owner",
+          "declared_at": "2026-10-07"}
+    for sid, p in (("ai_capex_supercycle_2027", 0.40), ("ai_capex_digestion_2027", 0.25),
+                   ("higher_for_longer_2027", 0.30), ("us_recession_2027", 0.25),
+                   ("taiwan_strait_crisis_2027", 0.08), ("energy_supply_shock_2027", 0.15),
+                   ("grid_electrification_2030", 0.50), ("biotech_regulatory_tailwind_2030", 0.35))}
+#: A prediction-market match prices a scenario only from a snapshot this fresh.
+WORLD_STATE_SCENARIO_MARKET_MAX_AGE_DAYS = 7
+#: THE DORMANT NEWS WIRE (C17 B3). When True, `u_plan` applies
+#: `world_digest.shadow_decision`'s tilt to its post-gate weights. Default OFF,
+#: and a provable no-op while both trusts are 0 (`world_state.plan_news_tilt`
+#: short-circuits; the receipt prints "news tilt: trust t, applied=False").
+#: Flipping it is an OWNER decision, never a builder's.
+NEWS_TILT_IN_PLAN = False
+#: How trust may grow -- by rule only, never by edit. Both keys must hold before
+#: the owner may set NEWS_TILT_IN_PLAN = True.
+NEWS_TILT_TRUST_RULE = (
+    "trust = world_digest.trust_from(): exactly 0 while graded news_digest dates < "
+    "WORLD_DIGEST_TRUST_MIN_DATES (3); after that clip(posterior / WORLD_DIGEST_TRUST_FULL, 0, "
+    "WORLD_DIGEST_TRUST_MAX) of the per-date Brier improvement over the row's own control, "
+    "prior N(0, WORLD_DIGEST_TRUST_TAU^2). KEY 1 (per arm): n dates >= N_MDE, lower bound > 0, "
+    "trust >= 0.05. KEY 2: "
+    "the PC plan's own regret rows (decision_story plan_plus_shadow_news_full vs plan_full, "
+    "net of round-trip cost): mean - 1.64 x se > 0 over >= NEWS_TILT_MIN_MDC_SESSIONS graded "
+    "sessions. KEY 1 per arm: see NEWS_TILT_KEY1_*. Both, or the flag stays False.")
+NEWS_TILT_MIN_MDC_SESSIONS = 20
+#: KEY 1 (review 2026-10-07 F4), per ARM -- the direction trust gates only the d
+#: term, the size trust only the s term, never max(). An arm's key holds only when
+#: n independent dates >= N_MDE = ceil((2.8 x sd_date / DELTA)^2), posterior mean -
+#: Z x posterior sd > 0, and trust >= MIN_TRUST. Below it the arm's trust is not used.
+NEWS_TILT_KEY1_DELTA_BRIER = 0.02
+NEWS_TILT_KEY1_Z = 1.64
+NEWS_TILT_KEY1_MIN_TRUST = 0.05
+
 # ── The reader's BROWSE lane: general news beyond Dow Jones (2026-09-29) ─────
 #: Murat, 2026-09-29: "digest the news see what they are implying is there an
 #: another path they are leading, not only the forecast from the websites but
@@ -5422,6 +5525,46 @@ OPPORTUNITIES_BADGE_MIN_FLAGS = 2
 #: F3: a median-target upside below this is LOW UPSIDE (grey, never green).
 OPPORTUNITIES_LOW_UPSIDE = 0.05
 
+# ── Analyst reputation + snowball shadow (CHUNK C18, 2026-10-07) ─────────────
+# Declared and FROZEN here before any read of the weights or the snowball rows
+# (spec docs/research_notes/2026-10-07/analyst_reputation_spec_2026-10-07.md):
+# a prior chosen after the diagnostic is not a prior. K1 is NOT redeclared: it is
+# pit_features.SKILL_SHRINK_K (= 20), unchanged, used at two levels.
+#: (firm, sector, horizon) cell shrunk toward the firm's sector-anchored edge with
+#: this pseudo-count (= 2 x K1: a cell is a strict subset of the firm's claims).
+ANALYST_REP_K_SUB = 40
+#: The only horizon on disk (12-month targets): the horizon level is DEGENERATE today.
+ANALYST_REP_HORIZON = "12m"
+#: A claim = a dated target raise/lower; outcome = sign x (stock - SPY) over this
+#: many sessions from the close of the first session STRICTLY after the event day.
+ANALYST_REP_CLAIM_SESSIONS = 63
+#: A firm covers a ticker when its latest row on it is at most this many days old.
+ANALYST_REP_COVER_DAYS = 365
+#: Review F4 (2026-10-07): a covering firm's target enters the weighted target only
+#: if its latest row is at most this old; otherwise null with `stale_target`.
+ANALYST_REP_TARGET_MAX_AGE_DAYS = 90
+#: Review F1: split-half persistence test, firm-bootstrap seed (outside board seeds).
+ANALYST_REP_PERSIST_SEED = 7_100_020
+#: Snowball follow-through shadow (TRIAL-ANALYST-SNOWBALL-1 primary 1, unsigned):
+SNOWBALL_GAP_DAYS = 90              # the quiet spell first_movers() reads
+SNOWBALL_HISTORY_DAYS = 90          # raise history required BEFORE the quiet window
+SNOWBALL_HORIZON_SESSIONS = 63      # follow-through window, XNYS sessions
+SNOWBALL_THRESHOLD = 2              # >= this many OTHER distinct firms raise
+#: Expanding-window base rate = (k + a) / (n + 2a), a = PSEUDO / 2, prior 0.5:
+#: a thin early history gets a wide prior, never the full-sample 36%.
+SNOWBALL_PRIOR_PSEUDO = 20
+#: Review F9 (2026-10-07): the base rate uses only events whose window closed in the
+#: TRAILING this-many months before the t0 day (the all-history mean lagged the
+#: coverage-driven drift by ~10pp). Declared before the ledger was rewritten.
+SNOWBALL_BASE_WINDOW_MONTHS = 24
+#: A row is FORWARD only when written within this many days of its t0 day; every
+#: other row is REPLAY (historical, never forward evidence).
+SNOWBALL_FORWARD_MAX_LAG_DAYS = 3
+#: cross_sectional_rho bootstrap: month-block resamples and a seed outside every
+#: seed used on this board (session protocol item 9).
+SNOWBALL_RHO_BOOT = 1000
+SNOWBALL_RHO_SEED = 7_100_018
+
 # ── Progress-aware health (CHUNK C8, 2026-10-07) ─────────────────────────────
 #: `task_receipts`: each scheduled task's DECLARED cadence in hours -- the longest
 #: gap between two of its receipts while it is meant to be producing. The probe
@@ -5436,6 +5579,7 @@ HEALTH_TASK_CADENCE_H = {
     "AegisFleetManagerPreclose": 24.0, "AegisFleetDailyCheck": 24.0,
     "AegisReaderSupervisor": 0.5, "AegisCatchUp": 2.0, "AegisTelegramAgent": 0.05,
     "AegisAnalystPanelDaily": 24.0, "AegisAnalystPull": 168.0, "AegisBrainRefresh": 24.0,
+    "AegisPublicFlow": 24.0,
 }
 #: "Same output for too long": a receipt series whose SUBSTANCE hash (the receipt
 #: with its stamps/run ids removed) is unchanged across at least this many
@@ -5456,3 +5600,96 @@ PC_SIGMA_FALLBACK_DAILY = 0.049
 #: skipped by the mandate (review C2 F5); override only by env when the owner
 #: rotates the account on purpose.
 PC_PAPER_ACCOUNT_NUMBER = os.getenv("AEGIS_PC_PAPER_ACCOUNT", "PA37CSAUFCQR")
+
+# ── Public-flow SENSORS (chunk C16, 2026-10-07) ───────────────────────────────
+#: Provenance + latency sensors, NEVER a trade signal on their own (roadmap
+#: 2026-10-06 §2 item 10: dollars of contracts and lobbying are variables;
+#: identity groups never are). Tables + receipts live under this directory.
+PUBLIC_FLOW_DIR = OPTIMUS_LEDGER_DIR / "public_flow"
+#: Hand-curated recipient/client -> ticker crosswalk (confidence per entry).
+PUBLIC_FLOW_CROSSWALK = BACKEND_DIR / "data" / "crosswalks" / "usaspending_recipient_ticker.yaml"
+#: USAspending: documented global limit 1,000 requests / 300 s. We pace at one
+#: request per 0.5 s (<= 600 / 300 s) and cap a rolling day well below it.
+USASPENDING_API_BASE = "https://api.usaspending.gov/api/v2"
+USASPENDING_MIN_GAP_S = 0.5
+USASPENDING_DAY_CAP = 2000
+USASPENDING_PAGE_LIMIT = 100
+USASPENDING_MAX_PAGES_PER_RECIPIENT = 30
+#: Contracts only (A=BPA call, B=purchase order, C=delivery order, D=definitive).
+USASPENDING_CONTRACT_TYPES = ("A", "B", "C", "D")
+#: Review F1 (2026-10-07): the daily job pulls by LAST-MODIFIED date, not action
+#: date. DoD publishes contract actions ~90 days late, so a 14-day action-date
+#: window could never see them; a transaction appears in the modified window on
+#: the day it is published, whatever its action date. Rows are then kept when
+#: their action date is inside a rolling ACTION window (older modifications are
+#: counted, not stored). `first_seen_utc` keeps its meaning.
+USASPENDING_MODIFIED_LOOKBACK_DAYS = 3
+USASPENDING_ACTION_WINDOW_DAYS = 120
+#: Review F2: page on a sort that does not tie ("Award ID"; "Action Date" ties
+#: served 2 GD rows twice and 2 never). Every recipient is reconciled against
+#: `spending_by_transaction_count`; a mismatch REFUSES that recipient.
+USASPENDING_SORT = "Award ID"
+#: Review F6: an agency-month total is SETTLED once the fetch date is this many
+#: days past the month end (DoD's ~90-day publication delay + margin).
+USASPENDING_SETTLE_DAYS = {"Department of Defense": 100, "_default": 45}
+#: Review F12: a recipient whose expected rows in the window (its previous-90-day
+#: rate x window) are at least this many and that returns ZERO is DEGRADED; a
+#: first-contact backfill of >= 60 days that returns zero is DEGRADED too.
+USASPENDING_EXPECTED_ROWS_FLOOR = 5
+#: Toptier awarding agencies for the monthly x agency obligation snapshots
+#: (the fiscal-year-end precursor). Snapshotted per fetch day: late reports
+#: REVISE a month, and the revision path is itself the latency measurement.
+USASPENDING_AGENCIES = ("Department of Defense", "Department of Health and Human Services",
+                        "Department of Energy", "National Aeronautics and Space Administration",
+                        "Department of Homeland Security", "Department of Veterans Affairs",
+                        "General Services Administration")
+#: Senate LDA (lda.senate.gov -> lda.gov): anonymous tier 15 requests/min.
+LDA_API_BASE = "https://lda.gov/api/v1"
+LDA_MIN_GAP_S = 4.2
+LDA_DAY_CAP = 600
+LDA_MAX_PAGES_PER_CLIENT = 5
+#: `task_keeper public_flow` runs LDA when its last receipt is this old
+#: (filings are quarterly; dated by the receipt's own stamp, never mtime).
+LDA_EVERY_DAYS = 7.0
+#: Crypto risk-appetite sensor endpoints (public, no key, no trading).
+DEFILLAMA_STABLECOINS_BASE = "https://stablecoins.llama.fi"
+BINANCE_FAPI_BASE = "https://fapi.binance.com"
+OKX_API_BASE = "https://www.okx.com"
+#: Kalshi storage mode (owner decision D18, C16 note). Kalshi's Developer
+#: Agreement is quoted as barring "collecting, caching, aggregating, or storing"
+#: API data except for one's own trading (the quote is UNVERIFIED first-hand:
+#: review F9), and its Data Terms bar ML/AI use. Default "none" (review F9): the
+#: receipt only, until the owner decides D18, because a derived daily aggregate
+#: may itself be the prohibited "aggregating". "derived_only" keeps one derived
+#: aggregate per mapped regime variable; "raw" is the pre-2026-10-07 behaviour.
+#: Polymarket is unaffected. Existing files are not deleted.
+PREDMARKET_KALSHI_STORAGE = os.getenv("AEGIS_PREDMARKET_KALSHI_STORAGE", "none")
+
+# ── Legibility pages (C19, 2026-10-07): Paper Arena / Forecast Lab / Theory Lab / System Health ──
+#: `backend/services/legibility.py` serves the newest receipt of each kind (chosen by the
+#: stamp in its NAME or its own `generated_utc`, never the file mtime) and prints its age.
+#: A receipt older than this many HOURS is STALE on the page: a red banner, never hidden.
+#: Each limit is the producer's cadence plus a margin, so a missed run turns the page red.
+LEGIBILITY_STALE_HOURS: dict = {
+    "paper_accounts_roi": 48.0,     # daily pass + the evening ROI run
+    "book_dna": 48.0,               # written with the ROI receipt
+    "system_health": 26.0,          # the daily pass's last step (+ manual probes)
+    "forecast_reputation": 48.0,    # nightly reputation refit
+    "learning_report": 48.0,        # daily learning report
+    "grade_forecasts": 48.0,        # the night factory's grade step
+    "nn_lab_nightly": 48.0,         # AegisNNLabNightly
+    "nn_lab_walkforward": 24.0 * 14,  # an ~8 min GPU refit, run by hand after reviews
+    "world_state": 24.0,            # AegisWorldDigest every 6 h
+    "hyp_lab_ledger": 24.0 * 7,     # AegisHypLabNightly; the theory folds change slowly
+    "twin_board": 24.0 * 30,        # CRSP boards are rerun after a construction change
+    "analyst_reputation": 24.0 * 40,  # monthly receipt
+    "decision_story": 48.0,         # the PC-PAPER plan writes per session
+    "regret": 48.0,                 # daily pass `regret` step
+    "handoff_doc": 24.0 * 14,       # the handoff the CRSP sentence is quoted from (dated by its name)
+}
+#: (C8 review F8) The Railway fleet loops (aat-loop-hack*) were stopped ON PURPOSE on
+#: 2026-09-29 (session S60, to hold the bill at $20). While this is non-empty the
+#: `railway_fleet` probe reads STOPPED_BY_OPERATOR with this reason instead of a
+#: permanent UNKNOWN; empty it when the loops are restarted.
+RAILWAY_FLEET_STOPPED_REASON = ("Railway fleet loops stopped on purpose 2026-09-29 (S60: bill held at "
+                                "$20; the PC runs the fleet manager instead)")

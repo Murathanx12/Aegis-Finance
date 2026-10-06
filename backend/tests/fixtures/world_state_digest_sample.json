@@ -1,0 +1,2592 @@
+{
+ "source": "real typed rows from the extract cache (enum fields only; summaries, topics, urls and claim subjects removed) + implications of digest 20261006T163002Z",
+ "rows": [
+  {
+   "item_id": "b681c9b9480e23c28e41",
+   "kind": "article",
+   "source": "news_scmp_read_next",
+   "source_kind": "news",
+   "event_type": "geopolitics",
+   "tickers": [],
+   "sectors": [
+    "energy_oil_gas"
+   ],
+   "countries": [
+    "RU",
+    "UA",
+    "US"
+   ],
+   "macro": [
+    "oil"
+   ],
+   "sentiment": 0.1,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.7,
+   "novelty": "new_fact",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "weeks",
+     "who": "management"
+    }
+   ],
+   "first_seen_utc": "2026-10-05T03:30:53+00:00"
+  },
+  {
+   "item_id": "8dc44741a607ea729534",
+   "kind": "article",
+   "source": "front_barrons_economy_and_policy",
+   "source_kind": "news",
+   "event_type": "macro_data",
+   "tickers": [],
+   "sectors": [
+    "banks",
+    "crypto",
+    "energy_oil_gas",
+    "internet",
+    "software"
+   ],
+   "countries": [
+    "AR",
+    "US"
+   ],
+   "macro": [
+    "fiscal",
+    "growth",
+    "inflation",
+    "labor_market",
+    "oil",
+    "rates"
+   ],
+   "sentiment": -0.1,
+   "fear_greed": 0.1,
+   "mgmt_confidence": null,
+   "uncertainty": 0.5,
+   "novelty": "recap",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "management"
+    },
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "management"
+    },
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "weeks",
+     "who": "author"
+    }
+   ],
+   "first_seen_utc": "2026-10-03T05:54:16+00:00"
+  },
+  {
+   "item_id": "f2d7e771009cd5253132",
+   "kind": "article",
+   "source": "front_apnews_politics",
+   "source_kind": "news",
+   "event_type": "geopolitics",
+   "tickers": [],
+   "sectors": [
+    "aerospace_defense",
+    "media",
+    "other"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [
+    "fiscal"
+   ],
+   "sentiment": -0.1,
+   "fear_greed": -0.1,
+   "mgmt_confidence": null,
+   "uncertainty": 0.6,
+   "novelty": "recap",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "months",
+     "who": "management"
+    },
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "months",
+     "who": "management"
+    }
+   ],
+   "first_seen_utc": "2026-09-29T22:01:16+00:00"
+  },
+  {
+   "item_id": "20cc583b7503845c5103",
+   "kind": "social",
+   "source": "x.com",
+   "source_kind": "social",
+   "event_type": "other",
+   "tickers": [
+    "APH",
+    "AUR",
+    "PCAR",
+    "SNDR",
+    "TSLA",
+    "UBER"
+   ],
+   "sectors": [
+    "autos",
+    "transport_logistics"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.3,
+   "fear_greed": 0.2,
+   "mgmt_confidence": 0.4,
+   "uncertainty": 0.3,
+   "novelty": "recap",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "management"
+    },
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "management"
+    },
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "months",
+     "who": "management"
+    }
+   ],
+   "first_seen_utc": "2026-10-02T15:46:23+00:00"
+  },
+  {
+   "item_id": "ed930bb3c834b8b16254",
+   "kind": "article",
+   "source": "wsj_other",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "retail"
+   ],
+   "countries": [],
+   "macro": [],
+   "sentiment": 0.4,
+   "fear_greed": 0.3,
+   "mgmt_confidence": 0.5,
+   "uncertainty": 0.2,
+   "novelty": "new_fact",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "management"
+    }
+   ],
+   "first_seen_utc": "2026-09-30T02:10:46+00:00"
+  },
+  {
+   "item_id": "7487d8b550df2ca9c5a1",
+   "kind": "article",
+   "source": "wsj_other",
+   "source_kind": "news",
+   "event_type": "geopolitics",
+   "tickers": [],
+   "sectors": [
+    "banks"
+   ],
+   "countries": [
+    "EU",
+    "US"
+   ],
+   "macro": [
+    "europe",
+    "fiscal",
+    "growth",
+    "tariffs"
+   ],
+   "sentiment": 0.2,
+   "fear_greed": 0.1,
+   "mgmt_confidence": 0.4,
+   "uncertainty": 0.3,
+   "novelty": "opinion",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "management"
+    },
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "management"
+    },
+    {
+     "subject": "redacted",
+     "direction": "down",
+     "horizon": "months",
+     "who": "management"
+    }
+   ],
+   "first_seen_utc": "2026-09-29T04:32:58+00:00"
+  },
+  {
+   "item_id": "fd16ba3ba2d60913f978",
+   "kind": "article",
+   "source": "wsj_other",
+   "source_kind": "news",
+   "event_type": "regulation_legal",
+   "tickers": [],
+   "sectors": [
+    "banks",
+    "crypto"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.1,
+   "fear_greed": 0.1,
+   "mgmt_confidence": 0.3,
+   "uncertainty": 0.5,
+   "novelty": "new_fact",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "months",
+     "who": "management"
+    },
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "months",
+     "who": "author"
+    }
+   ],
+   "first_seen_utc": "2026-10-05T12:28:32+00:00"
+  },
+  {
+   "item_id": "bf46e5b3b7d9000cbc59",
+   "kind": "article",
+   "source": "marketwatch_other",
+   "source_kind": "news",
+   "event_type": "product",
+   "tickers": [],
+   "sectors": [
+    "asset_managers",
+    "fintech"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.5,
+   "fear_greed": 0.3,
+   "mgmt_confidence": 0.7,
+   "uncertainty": 0.2,
+   "novelty": "new_fact",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "management"
+    },
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "months",
+     "who": "management"
+    }
+   ],
+   "first_seen_utc": "2026-09-30T01:02:34+00:00"
+  },
+  {
+   "item_id": "0ad10f5e90bf048f7b88",
+   "kind": "article",
+   "source": "marketwatch_other",
+   "source_kind": "news",
+   "event_type": "guidance",
+   "tickers": [],
+   "sectors": [
+    "hardware",
+    "industrials"
+   ],
+   "countries": [
+    "FR"
+   ],
+   "macro": [
+    "growth"
+   ],
+   "sentiment": 0.7,
+   "fear_greed": 0.6,
+   "mgmt_confidence": 0.6,
+   "uncertainty": 0.2,
+   "novelty": "new_fact",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "management"
+    },
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "analyst"
+    }
+   ],
+   "first_seen_utc": "2026-09-29T08:18:35+00:00"
+  },
+  {
+   "item_id": "4b6e9515f30297ac172b",
+   "kind": "headline",
+   "source": "zacks",
+   "source_kind": "news",
+   "event_type": "guidance",
+   "tickers": [
+    "APO",
+    "ARES"
+   ],
+   "sectors": [
+    "asset_managers"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.4,
+   "fear_greed": 0.3,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-28T22:53:34+00:00"
+  },
+  {
+   "item_id": "c19bf4cda66629caaa02",
+   "kind": "headline",
+   "source": "portal.sina.com.hk",
+   "source_kind": "news",
+   "event_type": "guidance",
+   "tickers": [],
+   "sectors": [
+    "autos",
+    "energy_oil_gas"
+   ],
+   "countries": [
+    "CN"
+   ],
+   "macro": [
+    "china"
+   ],
+   "sentiment": 0.4,
+   "fear_greed": 0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-29T22:41:59+00:00"
+  },
+  {
+   "item_id": "8dd070d38d2755f1a7ee",
+   "kind": "headline",
+   "source": "zacks",
+   "source_kind": "news",
+   "event_type": "guidance",
+   "tickers": [
+    "ALK"
+   ],
+   "sectors": [
+    "restaurants_travel"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.5,
+   "fear_greed": 0.4,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T22:54:27+00:00"
+  },
+  {
+   "item_id": "71faa1a987143ce857a9",
+   "kind": "article",
+   "source": "wsj_other",
+   "source_kind": "news",
+   "event_type": "guidance",
+   "tickers": [],
+   "sectors": [
+    "autos"
+   ],
+   "countries": [
+    "CN",
+    "SE",
+    "US"
+   ],
+   "macro": [
+    "china"
+   ],
+   "sentiment": -0.7,
+   "fear_greed": -0.5,
+   "mgmt_confidence": -0.4,
+   "uncertainty": 0.6,
+   "novelty": "new_fact",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "down",
+     "horizon": "months",
+     "who": "analyst"
+    },
+    {
+     "subject": "redacted",
+     "direction": "down",
+     "horizon": "months",
+     "who": "management"
+    }
+   ],
+   "first_seen_utc": "2026-10-03T04:46:32+00:00"
+  },
+  {
+   "item_id": "d96c05280df5cd54ba6f",
+   "kind": "headline",
+   "source": "investor's business daily",
+   "source_kind": "news",
+   "event_type": "guidance",
+   "tickers": [
+    "AMD",
+    "HPE"
+   ],
+   "sectors": [
+    "hardware",
+    "software"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.7,
+   "fear_greed": 0.5,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T22:54:27+00:00"
+  },
+  {
+   "item_id": "c00c0bacf3ac4e69dd1e",
+   "kind": "headline",
+   "source": "digitimes.com",
+   "source_kind": "news",
+   "event_type": "guidance",
+   "tickers": [],
+   "sectors": [
+    "semiconductors"
+   ],
+   "countries": [
+    "KR"
+   ],
+   "macro": [
+    "korea_taiwan"
+   ],
+   "sentiment": 0.4,
+   "fear_greed": 0.3,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T06:08:20+00:00"
+  },
+  {
+   "item_id": "3a014e51a80e13fc7ae5",
+   "kind": "headline",
+   "source": "gn:biz.chosun.com",
+   "source_kind": "news",
+   "event_type": "guidance",
+   "tickers": [],
+   "sectors": [
+    "semiconductors"
+   ],
+   "countries": [
+    "KR",
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.5,
+   "fear_greed": 0.4,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-01T10:24:30+00:00"
+  },
+  {
+   "item_id": "61ad43997367adb14405",
+   "kind": "headline",
+   "source": "zacks",
+   "source_kind": "news",
+   "event_type": "market_moves",
+   "tickers": [
+    "ARCC"
+   ],
+   "sectors": [
+    "asset_managers",
+    "fintech"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.1,
+   "fear_greed": 0.1,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "opinion",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T22:54:27+00:00"
+  },
+  {
+   "item_id": "b6dfd1512e9b181a0f5c",
+   "kind": "headline",
+   "source": "gn:women's health",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [
+    "TGT"
+   ],
+   "sectors": [
+    "other"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.3,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0,
+   "novelty": "opinion",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-05T02:24:19+00:00"
+  },
+  {
+   "item_id": "1e3a1c379c669545ad6b",
+   "kind": "headline",
+   "source": "wsj_world",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "media",
+    "restaurants_travel"
+   ],
+   "countries": [
+    "CN"
+   ],
+   "macro": [
+    "china"
+   ],
+   "sentiment": -0.3,
+   "fear_greed": -0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.4,
+   "novelty": "opinion",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-06T16:22:09+00:00"
+  },
+  {
+   "item_id": "9212b3d3f05f8272c80c",
+   "kind": "headline",
+   "source": "gn:slate",
+   "source_kind": "news",
+   "event_type": "regulation_legal",
+   "tickers": [],
+   "sectors": [
+    "other"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [
+    "fiscal"
+   ],
+   "sentiment": -0.4,
+   "fear_greed": -0.3,
+   "mgmt_confidence": null,
+   "uncertainty": 0.5,
+   "novelty": "opinion",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-01T13:32:47+00:00"
+  },
+  {
+   "item_id": "a06bdf2d21fde7d16250",
+   "kind": "headline",
+   "source": "vjmedia.com.hk",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "other"
+   ],
+   "countries": [
+    "HK"
+   ],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.5,
+   "novelty": "opinion",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T05:48:53+00:00"
+  },
+  {
+   "item_id": "0a4d3f5b78cde108496f",
+   "kind": "headline",
+   "source": "373news.com",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "retail"
+   ],
+   "countries": [
+    "JP"
+   ],
+   "macro": [],
+   "sentiment": 0.2,
+   "fear_greed": 0.1,
+   "mgmt_confidence": null,
+   "uncertainty": 0.1,
+   "novelty": "opinion",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-03T03:53:12+00:00"
+  },
+  {
+   "item_id": "62a8ec003e5e70686547",
+   "kind": "headline",
+   "source": "gn:\u671d\u65e5\u65b0\u805e",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "hardware",
+    "retail"
+   ],
+   "countries": [
+    "JP"
+   ],
+   "macro": [],
+   "sentiment": 0.1,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "opinion",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-28T22:54:02+00:00"
+  },
+  {
+   "item_id": "79f7ab15332894a4fc83",
+   "kind": "headline",
+   "source": "mp.cnfol.com",
+   "source_kind": "news",
+   "event_type": "market_moves",
+   "tickers": [],
+   "sectors": [
+    "biotech_pharma",
+    "real_estate",
+    "software"
+   ],
+   "countries": [
+    "CN"
+   ],
+   "macro": [],
+   "sentiment": 0.3,
+   "fear_greed": 0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "opinion",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T06:08:20+00:00"
+  },
+  {
+   "item_id": "c94c1ae1bf70d9a6de3c",
+   "kind": "headline",
+   "source": "gn:the guardian",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "other"
+   ],
+   "countries": [
+    "GB"
+   ],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T21:02:58+00:00"
+  },
+  {
+   "item_id": "f18d6859b03a02eee8dc",
+   "kind": "headline",
+   "source": "gn:yahoo\u80a1\u5e02",
+   "source_kind": "news",
+   "event_type": "market_moves",
+   "tickers": [],
+   "sectors": [
+    "semiconductors"
+   ],
+   "countries": [
+    "TW"
+   ],
+   "macro": [],
+   "sentiment": 0.2,
+   "fear_greed": 0.3,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T09:11:05+00:00"
+  },
+  {
+   "item_id": "60f47628a19513233c70",
+   "kind": "headline",
+   "source": "news.dayoo.com",
+   "source_kind": "news",
+   "event_type": "macro_data",
+   "tickers": [],
+   "sectors": [
+    "transport_logistics"
+   ],
+   "countries": [
+    "CN"
+   ],
+   "macro": [
+    "china",
+    "growth"
+   ],
+   "sentiment": 0.3,
+   "fear_greed": 0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.1,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-05T02:12:49+00:00"
+  },
+  {
+   "item_id": "8710691d114fa33d6f45",
+   "kind": "headline",
+   "source": "gn:\ub3d9\uc544\uc77c\ubcf4",
+   "source_kind": "news",
+   "event_type": "macro_data",
+   "tickers": [],
+   "sectors": [
+    "real_estate"
+   ],
+   "countries": [
+    "KR"
+   ],
+   "macro": [
+    "housing"
+   ],
+   "sentiment": 0.1,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.4,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-06T03:15:49+00:00"
+  },
+  {
+   "item_id": "80b2d12cb9d86a16f6f0",
+   "kind": "headline",
+   "source": "sec_edgar_8k_current_atom",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [
+    "CTVA"
+   ],
+   "sectors": [
+    "chemicals",
+    "materials_mining"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T17:10:07+00:00"
+  },
+  {
+   "item_id": "31b5eb4a9bc2d156dab9",
+   "kind": "headline",
+   "source": "gn:\u4e1c\u65b9\u8d22\u5bcc",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "media"
+   ],
+   "countries": [
+    "CN"
+   ],
+   "macro": [],
+   "sentiment": 0.4,
+   "fear_greed": 0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-01T13:13:44+00:00"
+  },
+  {
+   "item_id": "1c271da23454f77ac656",
+   "kind": "headline",
+   "source": "gn:the star",
+   "source_kind": "news",
+   "event_type": "macro_data",
+   "tickers": [],
+   "sectors": [
+    "consumer_staples"
+   ],
+   "countries": [
+    "SG"
+   ],
+   "macro": [],
+   "sentiment": -0.2,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-05T02:24:23+00:00"
+  },
+  {
+   "item_id": "9b746e1e4760ac802e02",
+   "kind": "headline",
+   "source": "gn:mlb.com",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "media"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.1,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.1,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T12:23:19+00:00"
+  },
+  {
+   "item_id": "f16f57fba86d8d9e85e0",
+   "kind": "headline",
+   "source": "agara.co.jp",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "media"
+   ],
+   "countries": [
+    "JP"
+   ],
+   "macro": [],
+   "sentiment": -0.2,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-29T22:41:59+00:00"
+  },
+  {
+   "item_id": "aa150c63cd6a68eb5b9e",
+   "kind": "headline",
+   "source": "gn:euronews.com",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "other"
+   ],
+   "countries": [
+    "FR"
+   ],
+   "macro": [],
+   "sentiment": -0.6,
+   "fear_greed": -0.5,
+   "mgmt_confidence": null,
+   "uncertainty": 0.7,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-01T13:13:27+00:00"
+  },
+  {
+   "item_id": "4b332ac5bb8a2c60b994",
+   "kind": "headline",
+   "source": "gn:app.xinhuanet.com",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [],
+   "countries": [
+    "CN"
+   ],
+   "macro": [],
+   "sentiment": 0.4,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.1,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-02T09:04:19+00:00"
+  },
+  {
+   "item_id": "ed53ca0a56e70182640e",
+   "kind": "headline",
+   "source": "gn:kcrg",
+   "source_kind": "news",
+   "event_type": "product",
+   "tickers": [
+    "FCF"
+   ],
+   "sectors": [
+    "aerospace_defense"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.2,
+   "fear_greed": 0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.4,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-29T22:54:34+00:00"
+  },
+  {
+   "item_id": "cc3fee91256080f73930",
+   "kind": "headline",
+   "source": "gn:reuters",
+   "source_kind": "news",
+   "event_type": "geopolitics",
+   "tickers": [],
+   "sectors": [
+    "other"
+   ],
+   "countries": [
+    "GB"
+   ],
+   "macro": [],
+   "sentiment": -0.3,
+   "fear_greed": -0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-05T02:24:13+00:00"
+  },
+  {
+   "item_id": "d9989ed10e7af04d79a3",
+   "kind": "headline",
+   "source": "gn:\ud558\uc774\ub2e5",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "medtech_health"
+   ],
+   "countries": [
+    "KR"
+   ],
+   "macro": [],
+   "sentiment": 0.3,
+   "fear_greed": 0.1,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-03T04:05:04+00:00"
+  },
+  {
+   "item_id": "b0e9451eafefabbeab8d",
+   "kind": "headline",
+   "source": "gn:\ud55c\uaca8\ub808",
+   "source_kind": "news",
+   "event_type": "regulation_legal",
+   "tickers": [],
+   "sectors": [
+    "biotech_pharma"
+   ],
+   "countries": [
+    "KR"
+   ],
+   "macro": [],
+   "sentiment": -0.4,
+   "fear_greed": -0.3,
+   "mgmt_confidence": null,
+   "uncertainty": 0.4,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T09:50:10+00:00"
+  },
+  {
+   "item_id": "26d0d29cc8334cfc580c",
+   "kind": "headline",
+   "source": "gn:\u65b0\u534e\u7f51",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "materials_mining"
+   ],
+   "countries": [
+    "PH"
+   ],
+   "macro": [],
+   "sentiment": -0.5,
+   "fear_greed": -0.3,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-02T06:09:26+00:00"
+  },
+  {
+   "item_id": "6c3c941e571dfca2bdd4",
+   "kind": "article",
+   "source": "front_apnews_technology",
+   "source_kind": "news",
+   "event_type": "ai_tech",
+   "tickers": [],
+   "sectors": [],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.5,
+   "novelty": "recap",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-06T13:19:49+00:00"
+  },
+  {
+   "item_id": "31b8389a9ca565fbd3f9",
+   "kind": "headline",
+   "source": "portal.sina.com.hk",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "media"
+   ],
+   "countries": [
+    "CN"
+   ],
+   "macro": [
+    "china"
+   ],
+   "sentiment": 0.1,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "recap",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-02T05:28:14+00:00"
+  },
+  {
+   "item_id": "ebcb89ce1a7691446d7e",
+   "kind": "headline",
+   "source": "the wall street journal",
+   "source_kind": "news",
+   "event_type": "market_moves",
+   "tickers": [
+    "BA"
+   ],
+   "sectors": [
+    "internet",
+    "semiconductors",
+    "software"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": -0.2,
+   "fear_greed": -0.1,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "recap",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-28T22:53:34+00:00"
+  },
+  {
+   "item_id": "2feff9c6196ea8fb48bb",
+   "kind": "article",
+   "source": "wsj_other",
+   "source_kind": "news",
+   "event_type": "geopolitics",
+   "tickers": [],
+   "sectors": [],
+   "countries": [
+    "RU",
+    "UA"
+   ],
+   "macro": [],
+   "sentiment": -0.6,
+   "fear_greed": -0.7,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "recap",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-04T04:12:30+00:00"
+  },
+  {
+   "item_id": "4cd4f9949153d6bf9313",
+   "kind": "headline",
+   "source": "businesstimes.com.sg",
+   "source_kind": "news",
+   "event_type": "market_moves",
+   "tickers": [],
+   "sectors": [],
+   "countries": [
+    "US"
+   ],
+   "macro": [
+    "rates"
+   ],
+   "sentiment": 0.4,
+   "fear_greed": 0.3,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "recap",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-02T12:50:16+00:00"
+  },
+  {
+   "item_id": "68841f1b4a269827d5b3",
+   "kind": "article",
+   "source": "news_nikkei_home",
+   "source_kind": "news",
+   "event_type": "geopolitics",
+   "tickers": [],
+   "sectors": [],
+   "countries": [
+    "CN",
+    "US"
+   ],
+   "macro": [
+    "china",
+    "tariffs"
+   ],
+   "sentiment": 0.2,
+   "fear_greed": 0.1,
+   "mgmt_confidence": null,
+   "uncertainty": 0.4,
+   "novelty": "recap",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-29T10:33:20+00:00"
+  },
+  {
+   "item_id": "14c92b04ff66049ac372",
+   "kind": "headline",
+   "source": "gn:\u4e2d\u56fd\u65e5\u62a5\u7f51",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "other"
+   ],
+   "countries": [
+    "CN"
+   ],
+   "macro": [],
+   "sentiment": 0.8,
+   "fear_greed": 0.6,
+   "mgmt_confidence": null,
+   "uncertainty": 0.1,
+   "novelty": "recap",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-02T05:49:18+00:00"
+  },
+  {
+   "item_id": "36435a8edf766625602a",
+   "kind": "article",
+   "source": "news_cnbc_video",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [],
+   "countries": [],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "recap",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-29T14:07:07+00:00"
+  },
+  {
+   "item_id": "653df85f6d1aba5002b4",
+   "kind": "headline",
+   "source": "gn:kbs \ub274\uc2a4",
+   "source_kind": "news",
+   "event_type": "management_change",
+   "tickers": [],
+   "sectors": [
+    "other"
+   ],
+   "countries": [
+    "KR"
+   ],
+   "macro": [],
+   "sentiment": -0.1,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.5,
+   "novelty": "update",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-01T10:24:29+00:00"
+  },
+  {
+   "item_id": "90fc0b21a9794601c908",
+   "kind": "headline",
+   "source": "gn:moneycontrol.com",
+   "source_kind": "news",
+   "event_type": "management_change",
+   "tickers": [
+    "TGT"
+   ],
+   "sectors": [
+    "banks"
+   ],
+   "countries": [
+    "IN"
+   ],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "update",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-01T03:42:58+00:00"
+  },
+  {
+   "item_id": "9f3ce02d99303d0ea8b1",
+   "kind": "headline",
+   "source": "sec_edgar_8k_ex99_body",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "real_estate"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.1,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "update",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-01T11:41:45+00:00"
+  },
+  {
+   "item_id": "0a664bca50ea99ebcf6f",
+   "kind": "headline",
+   "source": "lasprovincias.es",
+   "source_kind": "news",
+   "event_type": "macro_data",
+   "tickers": [],
+   "sectors": [
+    "utilities_power"
+   ],
+   "countries": [
+    "ES"
+   ],
+   "macro": [
+    "europe"
+   ],
+   "sentiment": 0.1,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "update",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-03T03:53:12+00:00"
+  },
+  {
+   "item_id": "b523dc5b945b79868551",
+   "kind": "headline",
+   "source": "diodeo.com",
+   "source_kind": "news",
+   "event_type": "regulation_legal",
+   "tickers": [],
+   "sectors": [
+    "hardware",
+    "software"
+   ],
+   "countries": [
+    "KR",
+    "US"
+   ],
+   "macro": [],
+   "sentiment": -0.3,
+   "fear_greed": -0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.6,
+   "novelty": "update",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-28T22:42:34+00:00"
+  },
+  {
+   "item_id": "bc0713cb7f1e40860224",
+   "kind": "headline",
+   "source": "gn:cna",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "other"
+   ],
+   "countries": [
+    "PT"
+   ],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "update",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-05T02:24:23+00:00"
+  },
+  {
+   "item_id": "17648bc540cd64f81f12",
+   "kind": "headline",
+   "source": "zacks",
+   "source_kind": "news",
+   "event_type": "capital_markets",
+   "tickers": [
+    "ACN",
+    "CDW"
+   ],
+   "sectors": [
+    "hardware"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.3,
+   "fear_greed": 0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "update",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T22:54:27+00:00"
+  },
+  {
+   "item_id": "dffaaece977d44e89538",
+   "kind": "headline",
+   "source": "gn:the new york times",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "update",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-30T14:16:39+00:00"
+  },
+  {
+   "item_id": "9bb95d5457c35c03dbaf",
+   "kind": "social",
+   "source": "reddit.com",
+   "source_kind": "social",
+   "event_type": "other",
+   "tickers": [
+    "NOVT"
+   ],
+   "sectors": [],
+   "countries": [],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-29T16:27:46+00:00"
+  },
+  {
+   "item_id": "9267b272e7a24fb0ddb5",
+   "kind": "social",
+   "source": "x.com",
+   "source_kind": "social",
+   "event_type": "market_moves",
+   "tickers": [
+    "ABSI",
+    "CABA",
+    "COHR",
+    "CORZ",
+    "GPN",
+    "HMY",
+    "JD",
+    "SIMO",
+    "SNDK",
+    "UMAC"
+   ],
+   "sectors": [
+    "biotech_pharma",
+    "crypto",
+    "fintech",
+    "hardware",
+    "internet",
+    "materials_mining"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": -0.2,
+   "fear_greed": 0.1,
+   "mgmt_confidence": null,
+   "uncertainty": 0.6,
+   "novelty": "opinion",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-06T15:44:32+00:00"
+  },
+  {
+   "item_id": "45d44b05c6bcff527ab8",
+   "kind": "social",
+   "source": "reddit.com",
+   "source_kind": "social",
+   "event_type": "other",
+   "tickers": [
+    "PRCH"
+   ],
+   "sectors": [],
+   "countries": [],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-02T14:56:57+00:00"
+  },
+  {
+   "item_id": "2d3285a43c4d14143cfe",
+   "kind": "social",
+   "source": "x.com",
+   "source_kind": "social",
+   "event_type": "other",
+   "tickers": [
+    "SRAD"
+   ],
+   "sectors": [
+    "internet",
+    "media"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": -0.3,
+   "fear_greed": -0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.6,
+   "novelty": "recap",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-02T14:51:36+00:00"
+  },
+  {
+   "item_id": "9abde8378e584a04190f",
+   "kind": "social",
+   "source": "reddit.com",
+   "source_kind": "social",
+   "event_type": "other",
+   "tickers": [
+    "VELO"
+   ],
+   "sectors": [],
+   "countries": [],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-06T09:46:34+00:00"
+  },
+  {
+   "item_id": "608c09722f3fb8575949",
+   "kind": "social",
+   "source": "x.com",
+   "source_kind": "social",
+   "event_type": "market_moves",
+   "tickers": [
+    "MU",
+    "NVDA"
+   ],
+   "sectors": [
+    "semiconductors"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.4,
+   "fear_greed": 0.5,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "recap",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-04T00:30:45+00:00"
+  },
+  {
+   "item_id": "4d6d8673e10cf08759de",
+   "kind": "social",
+   "source": "reddit.com",
+   "source_kind": "social",
+   "event_type": "other",
+   "tickers": [
+    "IONQ"
+   ],
+   "sectors": [],
+   "countries": [],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-29T21:38:06+00:00"
+  },
+  {
+   "item_id": "223f64dcdf7adc7948e5",
+   "kind": "social",
+   "source": "x.com",
+   "source_kind": "social",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [],
+   "countries": [],
+   "macro": [],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.9,
+   "novelty": "data_page",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-02T13:49:39+00:00"
+  },
+  {
+   "item_id": "2e44b6994df760dcfb55",
+   "kind": "article",
+   "source": "wsj_other",
+   "source_kind": "news",
+   "event_type": "product",
+   "tickers": [
+    "META"
+   ],
+   "sectors": [
+    "internet",
+    "software"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.1,
+   "fear_greed": 0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.4,
+   "novelty": "opinion",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "author"
+    }
+   ],
+   "first_seen_utc": "2026-09-29T00:53:40+00:00"
+  },
+  {
+   "item_id": "6494a28442a623603367",
+   "kind": "article",
+   "source": "barrons_stock_picks",
+   "source_kind": "news",
+   "event_type": "product",
+   "tickers": [
+    "DJIA",
+    "ITA",
+    "RTX",
+    "SPX"
+   ],
+   "sectors": [
+    "aerospace_defense",
+    "industrials"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [
+    "fiscal"
+   ],
+   "sentiment": -0.2,
+   "fear_greed": -0.3,
+   "mgmt_confidence": null,
+   "uncertainty": 0.5,
+   "novelty": "new_fact",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "weeks",
+     "who": "analyst"
+    },
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "months",
+     "who": "analyst"
+    }
+   ],
+   "first_seen_utc": "2026-10-02T15:29:32+00:00"
+  },
+  {
+   "item_id": "f7cf1ecaa62aaa642439",
+   "kind": "article",
+   "source": "news_bbc_business",
+   "source_kind": "news",
+   "event_type": "ai_tech",
+   "tickers": [],
+   "sectors": [],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.1,
+   "fear_greed": 0.2,
+   "mgmt_confidence": 0.4,
+   "uncertainty": 0.5,
+   "novelty": "new_fact",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "months",
+     "who": "author"
+    },
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "months",
+     "who": "author"
+    }
+   ],
+   "first_seen_utc": "2026-09-29T22:11:09+00:00"
+  },
+  {
+   "item_id": "d1b273b7e1f7fad54364",
+   "kind": "social",
+   "source": "stocktwits.com",
+   "source_kind": "social",
+   "event_type": "product",
+   "tickers": [
+    "ABBV",
+    "GMAB"
+   ],
+   "sectors": [
+    "biotech_pharma"
+   ],
+   "countries": [],
+   "macro": [],
+   "sentiment": 0.8,
+   "fear_greed": 0.6,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "new_fact",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "market"
+    }
+   ],
+   "first_seen_utc": "2026-10-06T05:24:06+00:00"
+  },
+  {
+   "item_id": "10b0b9e0709dc23c71a9",
+   "kind": "article",
+   "source": "barrons_stock_picks",
+   "source_kind": "news",
+   "event_type": "analyst_action",
+   "tickers": [
+    "NVDA",
+    "PLTR"
+   ],
+   "sectors": [
+    "software"
+   ],
+   "countries": [],
+   "macro": [],
+   "sentiment": 0.6,
+   "fear_greed": 0.5,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "opinion",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "author"
+    }
+   ],
+   "first_seen_utc": "2026-10-06T08:35:53+00:00"
+  },
+  {
+   "item_id": "2ff1383d60f7f16f887f",
+   "kind": "social",
+   "source": "stocktwits.com",
+   "source_kind": "social",
+   "event_type": "market_moves",
+   "tickers": [
+    "AAOI"
+   ],
+   "sectors": [
+    "hardware",
+    "telecom"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.6,
+   "fear_greed": 0.7,
+   "mgmt_confidence": null,
+   "uncertainty": 0.5,
+   "novelty": "opinion",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "weeks",
+     "who": "market"
+    },
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "days",
+     "who": "market"
+    },
+    {
+     "subject": "redacted",
+     "direction": "down",
+     "horizon": "weeks",
+     "who": "market"
+    }
+   ],
+   "first_seen_utc": "2026-10-06T07:37:33+00:00"
+  },
+  {
+   "item_id": "881d08a6a85075e5f5b2",
+   "kind": "stock_page",
+   "source": "mw_analyst_estimates",
+   "source_kind": "news",
+   "event_type": "analyst_action",
+   "tickers": [
+    "DBVT"
+   ],
+   "sectors": [
+    "biotech_pharma"
+   ],
+   "countries": [
+    "FR"
+   ],
+   "macro": [],
+   "sentiment": 0.3,
+   "fear_greed": 0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "data_page",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "analyst"
+    }
+   ],
+   "first_seen_utc": "2026-09-28T20:33:30+00:00"
+  },
+  {
+   "item_id": "fe5bda7bcca5986931d2",
+   "kind": "article",
+   "source": "wsj_other",
+   "source_kind": "news",
+   "event_type": "geopolitics",
+   "tickers": [],
+   "sectors": [],
+   "countries": [
+    "AU",
+    "GB",
+    "NL",
+    "US"
+   ],
+   "macro": [],
+   "sentiment": -0.3,
+   "fear_greed": -0.2,
+   "mgmt_confidence": null,
+   "uncertainty": 0.4,
+   "novelty": "opinion",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "months",
+     "who": "author"
+    }
+   ],
+   "first_seen_utc": "2026-09-30T01:59:23+00:00"
+  },
+  {
+   "item_id": "c337fa9ce3d0098c9613",
+   "kind": "transcript",
+   "source": "cnbc.com:media",
+   "source_kind": "news",
+   "event_type": "m_and_a",
+   "tickers": [],
+   "sectors": [
+    "internet",
+    "medtech_health",
+    "utilities_power"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.6,
+   "fear_greed": 0.4,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "new_fact",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "market"
+    },
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "market"
+    }
+   ],
+   "first_seen_utc": "2026-10-06T16:00:09+00:00"
+  },
+  {
+   "item_id": "2860dae6af7867502abe",
+   "kind": "transcript",
+   "source": "finance.yahoo.com:media",
+   "source_kind": "news",
+   "event_type": "product",
+   "tickers": [],
+   "sectors": [
+    "software"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.6,
+   "fear_greed": 0.5,
+   "mgmt_confidence": 0.7,
+   "uncertainty": 0.4,
+   "novelty": "new_fact",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "management"
+    }
+   ],
+   "first_seen_utc": "2026-09-30T02:00:31+00:00"
+  },
+  {
+   "item_id": "0dbefc3a0ce7526b0a9f",
+   "kind": "transcript",
+   "source": "wsj.com:media",
+   "source_kind": "news",
+   "event_type": "other",
+   "tickers": [],
+   "sectors": [
+    "consumer_staples",
+    "retail"
+   ],
+   "countries": [
+    "CA",
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.6,
+   "fear_greed": 0.5,
+   "mgmt_confidence": null,
+   "uncertainty": 0.1,
+   "novelty": "recap",
+   "forward_claims": [],
+   "first_seen_utc": "2026-10-02T13:21:24+00:00"
+  },
+  {
+   "item_id": "5a3f78f803398ead7dcf",
+   "kind": "transcript",
+   "source": "cnbc.com:media",
+   "source_kind": "news",
+   "event_type": "commodity",
+   "tickers": [],
+   "sectors": [
+    "energy_oil_gas"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [
+    "europe",
+    "oil",
+    "rates"
+   ],
+   "sentiment": 0.1,
+   "fear_greed": 0.1,
+   "mgmt_confidence": null,
+   "uncertainty": 0.6,
+   "novelty": "new_fact",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "down",
+     "horizon": "weeks",
+     "who": "author"
+    }
+   ],
+   "first_seen_utc": "2026-10-02T15:29:38+00:00"
+  },
+  {
+   "item_id": "c650217bfdd930f8a496",
+   "kind": "transcript",
+   "source": "finance.yahoo.com:media",
+   "source_kind": "news",
+   "event_type": "market_moves",
+   "tickers": [],
+   "sectors": [],
+   "countries": [],
+   "macro": [
+    "growth",
+    "oil",
+    "rates"
+   ],
+   "sentiment": 0.4,
+   "fear_greed": 0.3,
+   "mgmt_confidence": null,
+   "uncertainty": 0.4,
+   "novelty": "opinion",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "analyst"
+    },
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "analyst"
+    },
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "months",
+     "who": "analyst"
+    }
+   ],
+   "first_seen_utc": "2026-09-29T14:11:14+00:00"
+  },
+  {
+   "item_id": "9fda039635765464a736",
+   "kind": "transcript",
+   "source": "finance.yahoo.com:media",
+   "source_kind": "news",
+   "event_type": "macro_data",
+   "tickers": [],
+   "sectors": [],
+   "countries": [
+    "US"
+   ],
+   "macro": [
+    "labor_market",
+    "rates"
+   ],
+   "sentiment": 0.0,
+   "fear_greed": 0.0,
+   "mgmt_confidence": null,
+   "uncertainty": 0.3,
+   "novelty": "data_page",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "down",
+     "horizon": "months",
+     "who": "analyst"
+    },
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "weeks",
+     "who": "market"
+    }
+   ],
+   "first_seen_utc": "2026-10-02T14:04:39+00:00"
+  },
+  {
+   "item_id": "e030794aa53efc3931f1",
+   "kind": "transcript",
+   "source": "cnbc.com:media",
+   "source_kind": "news",
+   "event_type": "m_and_a",
+   "tickers": [
+    "AMD"
+   ],
+   "sectors": [
+    "semiconductors"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [],
+   "sentiment": 0.4,
+   "fear_greed": 0.3,
+   "mgmt_confidence": null,
+   "uncertainty": 0.2,
+   "novelty": "new_fact",
+   "forward_claims": [],
+   "first_seen_utc": "2026-09-29T07:44:39+00:00"
+  },
+  {
+   "item_id": "bc337df306f792809532",
+   "kind": "transcript",
+   "source": "wsj.com:media",
+   "source_kind": "news",
+   "event_type": "regulation_legal",
+   "tickers": [],
+   "sectors": [
+    "media"
+   ],
+   "countries": [
+    "US"
+   ],
+   "macro": [
+    "growth",
+    "rates",
+    "volatility"
+   ],
+   "sentiment": -0.2,
+   "fear_greed": -0.1,
+   "mgmt_confidence": null,
+   "uncertainty": 0.7,
+   "novelty": "opinion",
+   "forward_claims": [
+    {
+     "subject": "redacted",
+     "direction": "up",
+     "horizon": "weeks",
+     "who": "author"
+    },
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "weeks",
+     "who": "market"
+    },
+    {
+     "subject": "redacted",
+     "direction": "none",
+     "horizon": "months",
+     "who": "author"
+    }
+   ],
+   "first_seen_utc": "2026-10-06T06:25:10+00:00"
+  }
+ ],
+ "themes": [
+  {
+   "title": "Global bond selloff drives yields to multi-decade highs",
+   "implications": [
+    {
+     "subject": "TLT",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.6,
+     "order": 1,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "regional_banks",
+     "subject_type": "sector",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.5,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "utilities",
+     "subject_type": "sector",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.55,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "homebuilders",
+     "subject_type": "sector",
+     "direction": "down",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.6,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "gold",
+     "subject_type": "macro",
+     "direction": "none",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.5,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "PTC",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 1,
+     "confidence": 0.4,
+     "order": 1,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "RXO",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 1,
+     "confidence": 0.4,
+     "order": 1,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "FSLY",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.45,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    }
+   ]
+  },
+  {
+   "title": "AI trade drives record highs in chips and megacaps",
+   "implications": [
+    {
+     "subject": "NVDA",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.6,
+     "order": 1,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "AMD",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.65,
+     "order": 1,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "MU",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.5,
+     "order": 1,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "AVGO",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.55,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "TSM",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.6,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "VST",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.5,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "INTC",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.55,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "smh",
+     "subject_type": "sector",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.6,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    }
+   ]
+  },
+  {
+   "title": "AI data-center buildout fuels nuclear deals and debt boom",
+   "implications": [
+    {
+     "subject": "CEG",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.55,
+     "order": 1,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "CCJ",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 20,
+     "confidence": 0.5,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "LEU",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.5,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "VST",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.45,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "GEV",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 20,
+     "confidence": 0.45,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "APLD",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.4,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "rates",
+     "subject_type": "macro",
+     "direction": "up",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 20,
+     "confidence": 0.4,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "utilities_power",
+     "subject_type": "sector",
+     "direction": "up",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 20,
+     "confidence": 0.5,
+     "order": 1,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    }
+   ]
+  },
+  {
+   "title": "Oil falls on Iran deal hopes; Houthi attacks raise Red Sea risk",
+   "implications": [
+    {
+     "subject": "xle",
+     "subject_type": "sector",
+     "direction": "down",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.55,
+     "order": 1,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "DAL",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.5,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "FDX",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.4,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "GLNG",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.6,
+     "order": 1,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "LNG",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.55,
+     "order": 1,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "tanker_shipping",
+     "subject_type": "sector",
+     "direction": "up",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.5,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "us",
+     "subject_type": "macro",
+     "direction": "up",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 20,
+     "confidence": 0.4,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    },
+    {
+     "subject": "rates",
+     "subject_type": "macro",
+     "direction": "down",
+     "size_bucket": "below_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.45,
+     "order": 2,
+     "refused": null,
+     "chain": "fixture",
+     "contradiction": "fixture"
+    }
+   ]
+  }
+ ]
+}

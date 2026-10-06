@@ -4,8 +4,11 @@
     python -m scripts.task_keeper catchup     # run any daily Aegis task whose trigger was missed
     python -m scripts.task_keeper sim         # start the US-session sim, or write why not
     python -m scripts.task_keeper catalog     # data catalog receipt + report unsealed closed ledger months
+                                              # (then the snowball shadow grade, C18)
+    python -m scripts.task_keeper snowball    # C18: snowball follow-through shadow rows + grades
     python -m scripts.task_keeper analyst     # weekly analyst-target pull (refuses in US hours)
     python -m scripts.task_keeper brain       # refresh the Optimus brain (tools/refresh_aegis.py)
+    python -m scripts.task_keeper public_flow # C16 sensors: USAspending daily, LDA weekly, crypto daily
     python -m scripts.task_keeper register-owners [--apply]   # C8: AegisAnalystPull + AegisBrainRefresh
     python -m scripts.task_keeper status      # print every decision, change nothing
     python -m scripts.task_keeper register    # print (never run) the task registrations
@@ -76,7 +79,9 @@ CATCHUP_TASKS = ("AegisDailyPass", "AegisFleetDailyCheck", "AegisNNLabNightly",
                  "AegisAnalystPanelDaily", "AegisHypLabNightly", "AegisContestRehearsal",
                  "AegisDataCatalog",
                  # C8 (2026-10-07): the two owners for jobs that had none
-                 "AegisBrainRefresh", "AegisAnalystPull")
+                 "AegisBrainRefresh", "AegisAnalystPull",
+                 # C16 (2026-10-07): the public-flow sensors' daily owner
+                 "AegisPublicFlow")
 CATCHUP_MAX_AGE_H = 20.0
 CATCHUP_GRACE_MIN = 15.0
 
@@ -595,6 +600,31 @@ def run_regret(*, grade: Callable[[], dict] | None = None,
     return log(row, log_path)
 
 
+# ================================================================ snowball (C18)
+# The snowball FOLLOW-THROUGH shadow series (`services/snowball_shadow`): append
+# a row per new t0 event, grade every row whose 63-session window closed. Its
+# own grader, because `belief_state.resolve_one` reads only prices. Runs daily
+# after `catalog` (same scheduled task, AegisDataCatalog, caught up by `catchup`),
+# so it needed no new task registration. Nothing trades; no LLM; no network.
+
+def run_snowball(*, job: Callable[[], dict] | None = None,
+                 log_path: Path | None = None) -> dict:
+    row: dict = {"job": "snowball"}
+    try:
+        if job is None:
+            from backend.services import snowball_shadow as SS       # noqa: PLC0415
+            job = SS.run
+        g = job()
+        row["snowball"] = {k: g.get(k) for k in ("status", "path", "rows_total", "rows_new",
+                                                   "rows_graded_now", "forward_new", "first_seen_basis")}
+        bad = g.get("status") != "ok"
+    except Exception as exc:                                       # noqa: BLE001
+        row["snowball"] = {"status": "REFUSED", "why": f"{type(exc).__name__}: {str(exc)[:300]}"}
+        bad = True
+    row["action"] = "refused" if bad else "ok"
+    return log(row, log_path)
+
+
 # ================================================================ owners (C8)
 #
 # WHY (chunk C8, 2026-10-07). Two jobs had NO scheduled caller:
@@ -657,6 +687,62 @@ def run_analyst_pull(*, now_utc: datetime | None = None,
     return log(row, log_path or ANALYST_LOG)
 
 
+# ================================================================ public flow (C16)
+#
+# WHY (chunk C16, 2026-10-07). Three SENSORS with provenance + latency, never a
+# trade signal on their own: USAspending contract transactions for the crosswalk
+# recipients (DAILY, a 14-day incremental window; rows dedupe on the
+# transaction id) plus the agency x month obligation snapshot; Senate LDA
+# lobbying filings (WEEKLY: filings are quarterly; due when the newest LDA
+# receipt -- dated by its OWN stamp, never mtime -- is LDA_EVERY_DAYS old); the
+# crypto risk-appetite snapshot (daily). Each step that cannot run is a REFUSED
+# entry with its reason; zero new USAspending rows on a weekday is DEGRADED.
+
+TASK_PUBLIC_FLOW = "AegisPublicFlow"
+PUBLIC_FLOW_LOG = KEEPER_DIR / "public_flow.jsonl"
+
+
+def lda_due(now_utc: datetime, last: Optional[dict]) -> bool:
+    """PURE. LDA runs when no receipt exists or the newest is LDA_EVERY_DAYS old."""
+    if not last:
+        return True
+    try:
+        t = datetime.fromisoformat(str(last.get("written_utc")))
+    except (TypeError, ValueError):
+        return True
+    return (now_utc - t).total_seconds() >= float(_config.LDA_EVERY_DAYS) * 86400
+
+
+def run_public_flow(*, now_utc: datetime | None = None, steps: dict | None = None,
+                    log_path: Path | None = None) -> dict:
+    now_utc = now_utc or _now()
+    row: dict = {"job": "public_flow"}
+    if steps is None:
+        from backend.services import crypto_market as CM            # noqa: PLC0415
+        from backend.services import lobbying_lda as LDA             # noqa: PLC0415
+        from backend.services import public_flow_common as PF        # noqa: PLC0415
+        from backend.services import usaspending_awards as USA       # noqa: PLC0415
+        steps = {"usaspending": lambda: USA.pull(),
+                 "usaspending_agency_months": lambda: USA.pull_agency_months(),
+                 "lda": (lambda: LDA.pull()) if lda_due(now_utc, PF.last_receipt(LDA.SOURCE)) else None,
+                 "crypto": lambda: CM.risk_sensor_snapshot()}
+    statuses = []
+    for name, fn in steps.items():
+        if fn is None:
+            row[name] = {"status": "NOT_DUE", "why": f"last receipt younger than {_config.LDA_EVERY_DAYS} days"}
+            continue
+        try:
+            r = fn()
+            row[name] = {k: r.get(k) for k in ("status", "rows_added", "rows_read", "receipt",
+                                                 "refusals") if k in r}
+        except Exception as exc:                                   # noqa: BLE001
+            row[name] = {"status": "REFUSED", "why": f"{type(exc).__name__}: {str(exc)[:300]}"}
+        statuses.append(row[name].get("status"))
+    row["action"] = ("refused" if statuses and all(s == "REFUSED" for s in statuses) else
+                     "degraded" if any(s in ("REFUSED", "DEGRADED") for s in statuses) else "ok")
+    return log(row, log_path or PUBLIC_FLOW_LOG)
+
+
 def optimus_root() -> Path:
     return Path(os.getenv("OPTIMUS_ROOT", str(REPO.parent / "optimus")))
 
@@ -712,6 +798,11 @@ def owner_registration_ps() -> str:
         f"-WorkingDirectory '{REPO}'",
         "Register-ScheduledTask -TaskName '" + TASK_BRAIN + "' -Action $a -Settings $S -Force "
         "-Trigger @(New-ScheduledTaskTrigger -Daily -At 05:45)",
+        "# C16 public-flow sensors: 06:15 HKT daily (US evening; LDA weekly inside the job)",
+        f"$a = New-ScheduledTaskAction -Execute '{pyw}' -Argument '-m scripts.task_keeper public_flow' "
+        f"-WorkingDirectory '{REPO}'",
+        "Register-ScheduledTask -TaskName '" + TASK_PUBLIC_FLOW + "' -Action $a -Settings $S -Force "
+        "-Trigger @(New-ScheduledTaskTrigger -Daily -At 06:15)",
     ])
 
 
@@ -786,13 +877,17 @@ def main(argv: list[str] | None = None) -> int:
     _ensure_streams()
     ap = argparse.ArgumentParser(prog="task_keeper")
     ap.add_argument("job", choices=("reader", "catchup", "sim", "status", "register", "catalog",
-                                   "regret",
-                                   "analyst", "brain", "register-owners"))
+                                   "regret", "snowball",
+                                   "analyst", "brain", "register-owners", "public_flow"))
     ap.add_argument("--apply", action="store_true",
                     help="register-owners: run the registration, not only print it")
     a = ap.parse_args(argv)
     if a.job == "register-owners":
         return register_owners(apply=a.apply)
+    if a.job == "public_flow":
+        out = run_public_flow()
+        print(json.dumps(out, default=str))
+        return 2 if out.get("action") == "refused" else 0
     if a.job in ("analyst", "brain"):
         out = run_analyst_pull() if a.job == "analyst" else run_brain_refresh()
         print(json.dumps(out, default=str))
@@ -807,6 +902,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if a.job == "catalog":
         out = run_catalog()
+        print(json.dumps(out, default=str))
+        # C18: the daily snowball grade rides the catalog's daily firing; its own
+        # keeper row; it never changes the catalog's exit code.
+        print(json.dumps(run_snowball(), default=str))
+        return 2 if out.get("action") == "refused" else 0
+    if a.job == "snowball":
+        out = run_snowball()
         print(json.dumps(out, default=str))
         return 2 if out.get("action") == "refused" else 0
     if a.job == "regret":

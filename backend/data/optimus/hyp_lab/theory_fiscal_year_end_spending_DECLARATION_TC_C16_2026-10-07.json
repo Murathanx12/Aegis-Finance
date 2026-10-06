@@ -1,0 +1,88 @@
+{
+ "schema": "hyp_lab/theory_cell_declaration/1",
+ "cell": "fiscal_year_end_spending",
+ "run": "TC_C16_2026-10-07",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "decision": "Primary series = monthly mean of the declared quantity, indexed by the month the position is held (hyp_investable.spread_stats: t on non-overlapping 3-month blocks, MDE = 2.8 SE). CANDIDATE iff design mean > 0 AND validate mean > 0 with t >= 2 AND a strict majority of validate years > 0 AND the leave-one-year-out worst validate mean > 0. FAILED_VARIANT iff validate mean <= 0, or validate t < 2 with validate MDE <= the effect worth having (max(design mean, min_effect)). Otherwise CANNOT_DISTINGUISH. Late (2017-2024) is read last and never decides. A cell whose sign is 'design' multiplies the series by the sign of its design mean first (the design fold fixes the direction; validate decides).",
+ "verdict_vocabulary": [
+  "CANDIDATE",
+  "FAILED_VARIANT",
+  "CANNOT_DISTINGUISH",
+  "REFUSED"
+ ],
+ "family": "fiscal_calendar",
+ "target": "return",
+ "declared_only": true,
+ "source": "public_flow_sensors_2026-10-07",
+ "source_ref": "docs/research_notes/2026-10-07/public_flow_sensors_2026-10-07.md",
+ "title": "Federal fiscal-year-end spending: federal contractors in August-September",
+ "mechanism": "Agencies obligate unspent fiscal-year funds before Sept 30 (use it or lose it; fiscal Q4 carries a disproportionate share of contract obligations), producing an order/revenue uptick for federal-exposed contractors that the market may under-anticipate.",
+ "precursor": "fiscal-Q4 (Jul-Sep) contract obligations by awarding agency vs the agency's trailing 3-FY Q4 share, as SNAPSHOTTED on the decision date (usaspending_awards.pull_agency_months; a month total revises as late reports land, DoD ~90 days), plus the name's federal revenue share from its last 10-K customer segment (Compustat seg_customer ctype GOVDOM) -- both knowable before Aug 1",
+ "separation_from_beta": "within-name: the same names' own Oct-Jul monthly excess return is the baseline, so name beta and sector beta cancel; benchmark = CRSP value-weighted market; control cohort = matched non-federal names of the same size band and SIC2 over the same Aug-Sep months (a calendar effect common to all stocks is not this one)",
+ "refutation": "validate (FY2017-FY2024) Aug-Sep minus own-baseline excess return <= 0, or t < 2 with MDE below the effect worth having; AND (dose) the high-federal-share tercile must not be below the low tercile -- an effect that does not scale with federal exposure is not this mechanism",
+ "universe": "crosswalk tickers (backend/data/crosswalks/usaspending_recipient_ticker.yaml) linked to CRSP common stock (shrcd 10/11) by ticker over the name's date range, restricted to names with Compustat GOVDOM customer-segment rows; federal share = GOVDOM sales / total segment sales in the last fiscal year ending before the decision date",
+ "inputs": {
+  "crosswalk": "backend/data/crosswalks/usaspending_recipient_ticker.yaml",
+  "crsp_names": "backend/data/optimus/wrds/bulk/crsp__stocknames.parquet",
+  "comp_names": "backend/data/optimus/wrds/bulk/comp__names.parquet",
+  "seg_customer": "backend/data/optimus/wrds/bulk/compseg__seg_customer.parquet",
+  "crsp_daily": "backend/data/optimus/wrds/crsp_dsf_<year>.parquet (2008-2024)",
+  "agency_months": "backend/data/optimus/public_flow/tables/gov_agency_month_obligations.jsonl (forward snapshots only; history needs the bulk archive -- named, not assumed)"
+ },
+ "event": "one per (permno, fiscal year): the Aug 1 - Sep 30 window; statistical unit for the primary = the FISCAL YEAR (one equal-weight basket per FY), because every name's window is the same calendar months and name-months are cross-sectionally correlated",
+ "entry": "OPEN of the first CRSP session on or after Aug 1; exit CLOSE of the last session on or before Sep 30",
+ "horizons": [
+  "Aug1-Sep30 (~42 sessions)"
+ ],
+ "primary": "per FY: equal-weight basket (Aug-Sep compounded excess vs VW market) minus the same basket's mean monthly excess over the prior Oct-Jul x 2 months; net of one round trip (max(Corwin-Schultz, flat band))",
+ "reported": [
+  "by FY and leave-one-FY-out",
+  "federal-share terciles (dose)",
+  "matched non-federal control over the same months",
+  "gross and net"
+ ],
+ "splits": {
+  "design": [
+   "2008-10-01",
+   "2016-09-30"
+  ],
+  "validate": [
+   "2016-10-01",
+   "2024-09-30"
+  ]
+ },
+ "sign": "+1",
+ "min_effect": 0.005,
+ "honesty": "No corpse found for fiscal-year-end spend in hyp_lab or the strategy library; the nearest siblings (macro_lead_lag oil/yield cells) ended CANNOT_DISTINGUISH, so the prior is modest. Only 8 fiscal years per split: the gate's name-month MDE is an i.i.d. LOWER bound and the honest unit is the fiscal year -- with 8 validate FYs the comparison is likely unpowered; that is printed, not hidden. The agency-month precursor has NO point-in-time history before the first snapshot (2026-10-07): any backtest that uses today's revised monthly totals as if known in August is look-ahead and is barred. The gate links by TICKER over each CRSP name range, so a ticker reused by an unrelated firm inside 2008-2024 is counted (the gate's n is an upper bound); the runner must link by the crosswalk company's gvkey/permco.",
+ "input_sha256": {
+  "crosswalk": "74ab19b877e5d4b15eb04aa87e789d29bc8730e918037565b22c8fbf5d8361c3",
+  "crsp_names": "8875036f25c6708cdbf68efdc6c3a8a61e5785fd79e6e10292349efd708c1e6f",
+  "comp_names": "4df2dee0a6602aee31baa2f171552742cd1353184018483df42811c786059a1a",
+  "seg_customer": "0c9ee17b496d7d30aab1450b1a6b0ea01ac18931c7b91ba6ca96c45b874f6fb0"
+ },
+ "gate": {
+  "n_events": 8577,
+  "n_AUG_SEP": 1443,
+  "n_OTHER_MONTHS": 7134,
+  "class_split": {
+   "AUG_SEP": 0.1682,
+   "OTHER_MONTHS": 0.8318
+  },
+  "control_mde_lower_bound": 0.00829,
+  "event_sd_preset": 0.25,
+  "max_class_share": 0.9,
+  "max_mde_mult": 2.0,
+  "refused": false,
+  "reasons": []
+ },
+ "dedup": {
+  "nearest_closed": "backend/data/optimus/crsp_rebuild/library_rules_BR_CS_2026-09-29T1545Z.jsonl#revenue_growth",
+  "cos_closed": 0.042,
+  "nearest_ledger": "H-aca81f5b8f",
+  "cos_ledger": 0.046
+ },
+ "hyp_id": "H-5c26e79507",
+ "sha256": "bc92b200ab31792053a0c85e157696a8c9a912cd3a7082b3dee7911ceb4f18fd",
+ "written_utc": "2026-10-06T21:52:43+00:00"
+}

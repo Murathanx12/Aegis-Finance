@@ -184,14 +184,35 @@ def _age_days(stamp: Any, now: datetime) -> Optional[float]:
         return None
 
 
+def _scenarios() -> Optional[dict]:
+    """C17: the world-state scenario file, read at serve time (LABELS only)."""
+    try:
+        from backend.services import world_state as WS
+        return WS.load_scenarios()
+    except Exception:                                          # noqa: BLE001 -- labels are optional
+        return None
+
+
+def _scenario_tags(row: dict, scen: Optional[dict]) -> list[dict]:
+    """C17: `scenario_tags` -- 2027/2030 scenario LABELS for the row's sector
+    (`world_state.scenario_tags_for`). A third column beside direction and
+    magnitude; never a weight. [] when no scenario file exists or none applies."""
+    if not scen:
+        return []
+    from backend.services import world_state as WS
+    return WS.scenario_tags_for(row, scen)
+
+
 def with_ages(lst: dict, now: Optional[datetime] = None) -> dict:
     """Attach `last_update_age_days` to every row at SERVE time (an age baked
     into the receipt would be wrong the next day)."""
     now = now or datetime.now(timezone.utc)
+    scen = _scenarios()
     rows = []
     for r in lst.get("rows") or []:
         r = dict(r)
         r["last_update_age_days"] = _age_days(r.get("last_update_utc"), now)
+        r["scenario_tags"] = _scenario_tags(r, scen)
         rows.append(r)
     out = dict(lst)
     out["rows"] = rows
