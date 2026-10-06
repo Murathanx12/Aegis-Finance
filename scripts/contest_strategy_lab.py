@@ -66,6 +66,9 @@ BOOKS: dict[str, dict] = {
     "ROT5_SIZE": {"k": 5, "rank": "size", "exit": "through"},
     "ROT5_RANDOM": {"k": 5, "rank": "random", "exit": "through"},
     "MAXTAIL_BH": {"k": 5, "rank": "maxtail", "exit": "hold"},
+    # REVIEW C9 (2026-10-07): the reviewer's MAXTAIL_EVT_v1 -- the same, restricted to names with a
+    # print inside the window (from day 2 to the last day), held through it to the end
+    "MAXTAIL_EVT": {"k": 5, "rank": "maxtail_evt", "exit": "hold"},
     # the live desk holds VENDOR dates, the sim holds actual prints: a missed date is a slot that
     # holds the name through an ordinary session (its own open->open 5 sessions earlier) instead
     "ROT5_TRAIL_MISS10": {"k": 5, "rank": "trail", "exit": "through", "miss": 0.10},
@@ -105,7 +108,8 @@ def rank_key(gg: pd.DataFrame, t: int, rank: str, size: Optional[np.ndarray], rn
 
 def book_path(days: np.ndarray, ev: pd.DataFrame, m: cbc.Mkt, *, k: int, rank: str, exit: str,
               size: Optional[np.ndarray] = None, oc: Optional[np.ndarray] = None,
-              operating: Optional[np.ndarray] = None, rng=None, miss: float = 0.0) -> pd.DataFrame:
+              operating: Optional[np.ndarray] = None, rng=None, miss: float = 0.0,
+              jump: Optional[np.ndarray] = None) -> pd.DataFrame:
     """One season, one book. Daily rows: book return, bench return, weight traded, gross.
 
     Enter at the open of pre_i. exit='through' leaves at the open of react_i; exit='before'
@@ -113,11 +117,20 @@ def book_path(days: np.ndarray, ev: pd.DataFrame, m: cbc.Mkt, *, k: int, rank: s
     buys on the first day and holds to the window's end."""
     rng = rng if rng is not None else np.random.default_rng(SEED)
     rows = []
-    if rank == "maxtail":
+    if rank in ("maxtail", "maxtail_evt"):
         t0 = int(days[0])
         elig = m.liq[t0] & np.isfinite(m.sig[t0])
         if operating is not None:
             elig &= operating
+        if jump is not None:
+            # the frozen books' data-defect rule (contest_direction.JUMP_LOG): a x2 one-day move in the
+            # 63 own sessions before t0 is a split / spin / stitch / bad print, not volatility
+            elig &= ~jump[t0]
+        if rank == "maxtail_evt":
+            inwin = ev[(ev.pre_i > t0) & (ev.pre_i <= int(days[-1]))].ci.astype(int).unique()
+            mask = np.zeros_like(elig)
+            mask[inwin] = True
+            elig &= mask
         cand = np.flatnonzero(elig)
         pick = cand[np.argsort(-m.sig[t0, cand], kind="stable")[:k]] if len(cand) else np.array([], int)
         alive = set(int(j) for j in pick)
@@ -181,6 +194,24 @@ def book_path(days: np.ndarray, ev: pd.DataFrame, m: cbc.Mkt, *, k: int, rank: s
     return pd.DataFrame(rows)
 
 
+def jump_matrix(panel: desk.Panel, thresh: float = float(np.log(2.0)), n: int = 63) -> np.ndarray:
+    """jump[t, j]: the name had a one-day |log close ratio| >= `thresh` in its last `n` own sessions
+    BEFORE t (known before the open of t)."""
+    C = panel.close
+    out = np.zeros(C.shape, dtype=bool)
+    for j in range(C.shape[1]):
+        m = np.isfinite(C[:, j]) & (C[:, j] > 0)
+        if m.sum() < 3:
+            continue
+        lr = np.abs(np.diff(np.log(C[m, j].astype("float64")), prepend=np.nan)) >= thresh
+        rr = pd.Series(lr).rolling(n, min_periods=1).max().to_numpy() > 0
+        col = np.full(C.shape[0], np.nan)
+        col[np.flatnonzero(m)] = rr
+        col = pd.Series(col).ffill().fillna(0).to_numpy() > 0
+        out[1:, j] = col[:-1]
+    return out
+
+
 def run(draws: int = 4000, from_year: int = 2019) -> dict:
     from scripts import contest_rotation_sim as rsim           # noqa: PLC0415
     long = cc.load_bars_usd([], include_us=True)
@@ -190,6 +221,7 @@ def run(draws: int = 4000, from_year: int = 2019) -> dict:
     del long
     m = cbc.market(panel)
     oc = oc_matrix(panel)
+    jump = jump_matrix(panel)
     size = cbc.size_forecast_matrix(panel)
     ib = cbc.ibes_stamps()
     ibes_max = pd.Timestamp(ib.ts_utc.max()).tz_convert(None).normalize()
@@ -222,7 +254,7 @@ def run(draws: int = 4000, from_year: int = 2019) -> dict:
             for book, spec in BOOKS.items():
                 d = book_path(days, evs, m, k=spec["k"], rank=spec["rank"], exit=spec["exit"], size=size,
                               oc=oc, operating=op, rng=np.random.default_rng(SEED + len(res["seasons"])),
-                              miss=spec.get("miss", 0.0))
+                              miss=spec.get("miss", 0.0), jump=jump)
                 b, bn, tr = d.book.to_numpy(), d.bench.to_numpy(), d.traded.to_numpy()
                 out = {"max_gross": float(d.gross.max()), "avg_gross": round(float(d.gross.mean()), 3)}
                 for cb in COSTS_BPS:
@@ -318,7 +350,8 @@ def report(res: dict) -> str:
         for era, f in (("all", lambda w: True), ("Oct", lambda w: w.endswith("Oct"))):
             for a, b in (("ROT5_TRAIL", "ROT5_RANDOM"), ("ROT3_TRAIL", "ROT5_TRAIL"),
                          ("ROT5_TRAIL", "ROT5_TRAIL_BEFORE"), ("ROT5_BLEND", "ROT5_TRAIL"),
-                         ("ROT5_SIZE", "ROT5_TRAIL"), ("ROT5_TRAIL", "MAXTAIL_BH")):
+                         ("ROT5_SIZE", "ROT5_TRAIL"), ("ROT5_TRAIL", "MAXTAIL_BH"),
+                         ("MAXTAIL_EVT", "MAXTAIL_BH"), ("MAXTAIL_EVT", "ROT5_TRAIL")):
                 p = paired(res, pool, a, b, era=f)
                 if p.get("n", 0) >= 3:
                     L.append(f"| {pool} | {era} | {a} | {b} | {p['n']} | {p['mean']:+.1%} | {p['median']:+.1%} "

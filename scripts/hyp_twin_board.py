@@ -8,7 +8,7 @@ every month while the rule paid only its own measured turnover; that asymmetry W
 drag. This board is the one implementation of `matched_twins.twin_cost_convention()`:
 
 - the rule: its library picks (`strategy_library.run_strategy` holdings, carried for the
-  hold), equal weight, charged `matched_twins.trade_cost` on its own traded weight at the
+  hold), at the rule's OWN weights (EW for an EW rule; since 2026-10-07), charged `matched_twins.trade_cost` on its own traded weight at the
   per-name round trip max(Corwin-Schultz at the decision date (cap 20%), flat band);
 - the twin: the matched twin BASKET (selection's size x vol x 12-1 cell mix over every
   non-selected eligible name in those cells -- the infinite-draw twin), HELD as a portfolio,
@@ -21,6 +21,13 @@ twin, net minus market, and the full-round-trip twin as a labelled UPPER BOUND n
 reads), each on full / design / validate / late / 1991-2016 windows with t on 3-month blocks
 and the MDE, plus by hold year and leave-one-year-out for the fair twin and the market line.
 The board's own flat-run rule - twin21 is kept beside as `board_rule_minus_twin21_flat`.
+
+`--twin sticky` (CHUNK C1b, 2026-10-07) replaces the basket with the STICKY matched twin
+(`matched_twins.twin_series_sticky`: 21 draws, one partner per rule holding, drawn when the
+rule enters the name and held until it exits), so the twin's turnover equals the rule's by
+construction; a row whose median |twin turnover - rule turnover| exceeds
+`config.STICKY_TWIN_TURNOVER_TOLERANCE` is REFUSED with the gap. Every row carries
+`twin_kind` ("basket" or "sticky"). Use a NEW run id: a run id is written once.
 
 A transformation of already-run rules: no new rule, no new search count. Receipts carry the
 run id in their name and are never overwritten: `hyp_lab/twin_board_<R>.jsonl`,
@@ -50,9 +57,13 @@ RUNS = {"LIB_2026-09-29T0802Z": "LIB_2026-09-29T0802Z", "EVT_FLAT_2026-09-29T110
 
 
 def carried_picks(hold: list, dates, rule, gate: pd.Series | None) -> dict:
-    """{date: symbols} for every decision date: the last rebalance's names carried for at most
-    `hold_months` dates; a gated-off date holds nothing."""
-    reb = {pd.Timestamp(h["date"]): list(h["symbols"]) for h in hold}
+    """{date: {symbol: target weight}} for every decision date: the last rebalance's book, WITH
+    its weights (review F4 of C1: the weights were dropped and nine ivw / liqw / risk-parity
+    rules were scored as their EW parent), carried for at most `hold_months` dates; a gated-off
+    date holds nothing. A holding without weights is equal weight."""
+    from backend.services import hyp_investable as HI                # noqa: PLC0415
+    reb = {pd.Timestamp(h["date"]): HI.book_weights({"symbols": h["symbols"], "weights": h.get("weights")})
+           for h in hold}
     out, cur, age = {}, None, 0
     hm = max(1, int(rule.hold_months or 1))
     for d in sorted(pd.DatetimeIndex(dates)):
@@ -71,7 +82,7 @@ def carried_picks(hold: list, dates, rule, gate: pd.Series | None) -> dict:
 
 #: windows every column is read on (hold month); 1991-2016 is the bridges board's t window
 WINDOWS = {"full": (None, None), **SPLITS, "design_validate": ("1991-01-01", "2016-12-31")}
-SCHEMA = "hyp_lab/twin_board/2"
+SCHEMA = "hyp_lab/twin_board/3"   # 3: rule weights carried; twin_kind on every row
 
 
 def fair_series(B: pd.DataFrame, market: pd.Series) -> pd.DataFrame:
@@ -113,11 +124,72 @@ def column_stats(s: pd.Series, *, by_year: bool) -> dict:
     return out
 
 
+TWIN_KINDS = ("basket", "sticky")
+#: the panel column each non-equal weight rule reads (`strategy_library._weights`). It is not in
+#: `rule.requires`, so the board must add it: without it `_weights` fills every name with the same
+#: value and the rule is scored as its EW parent (found 2026-10-07 for the two inv_amihud rules).
+WEIGHT_COLUMNS = {"inv_vol": "vol_63", "inv_amihud": "amihud"}
+#: the dated declaration of the sticky construction; a sticky run refuses without it, or when
+#: the declared code hash no longer matches the code
+STICKY_DECLARATION = REPO / "docs" / "research_notes" / "2026-10-06" / "DECLARATION_TWIN_STICKY_v1.json"
+
+
+def sticky_declaration() -> dict:
+    """The TWIN_STICKY_v1 declaration, checked: refuses (TwinInputMissing) when absent or when
+    `twin_series_sticky`'s source no longer hashes to the declared value."""
+    import hashlib                                                   # noqa: PLC0415
+    import inspect                                                   # noqa: PLC0415
+    from backend.services import matched_twins as MT                 # noqa: PLC0415
+    if not STICKY_DECLARATION.exists():
+        raise MT.TwinInputMissing(f"{STICKY_DECLARATION.name} absent: the sticky twin is undeclared")
+    d = json.loads(STICKY_DECLARATION.read_text(encoding="utf-8"))
+    src = (inspect.getsource(MT.twin_series_sticky) + inspect.getsource(MT._sticky_pick)
+           + inspect.getsource(MT.sticky_turnover_check))
+    have = hashlib.sha256(src.encode("utf-8")).hexdigest()
+    if have != d["code"]["source_sha256"]:
+        raise MT.TwinInputMissing(f"sticky code hash {have[:16]} != declared {d['code']['source_sha256'][:16]}")
+    return {"path": str(STICKY_DECLARATION.relative_to(REPO)).replace("\\", "/"),
+            "sha256": d["sha256_of_body_without_this_field"], "code_sha256": have}
+#: the rule's own columns from `run_book` and from `twin_series_sticky` must agree to this
+RULE_RECON_ATOL = 1e-9
+
+
+def sticky_book(B: pd.DataFrame, rid: str, pk: dict, by_date: dict, cell_cache: dict) -> tuple[pd.DataFrame, dict]:
+    """`run_book` frame -> the same frame with its twin columns REPLACED by the sticky twin's,
+    plus the receipt fields (`twin_kind`, the turnover check, the (re)draw counts).
+
+    Refuses (TwinInputMissing) when the rule's own gross / cost / turnover rebuilt inside
+    `twin_series_sticky` differ from `run_book`'s (the two would not be the same book), and
+    when the sticky check fails (median |twin turnover - rule turnover| over tolerance)."""
+    from backend.services import matched_twins as MT                 # noqa: PLC0415
+    K = MT.twin_series_sticky({"id": rid, "held_symbols_by_date": pk}, by_date=by_date,
+                              cell_cache=cell_cache, dates=list(B.index))
+    K = K.reindex(B.index)
+    for c in ("gross", "cost", "turnover"):
+        a, b = B[c].to_numpy(dtype=float), K[c].to_numpy(dtype=float)
+        bad = ~((np.isnan(a) & np.isnan(b)) | (np.abs(a - b) <= RULE_RECON_ATOL))
+        if bad.any():
+            raise MT.TwinInputMissing(f"sticky twin rebuilt the rule's {c!r} differently from run_book on "
+                                      f"{int(bad.sum())} month(s) (first {B.index[bad][0].date()})")
+    chk = MT.sticky_turnover_check(K)
+    if not chk["ok"]:
+        raise MT.TwinInputMissing(chk["reason"])
+    B = B.copy()
+    for c in ("twin_gross", "twin_cost", "twin_turnover", "twin_full_rt"):
+        B[c] = K[c]
+    counts = {f"twin_{r}": int(K[f"twin_{r}"].sum()) for r in MT.STICKY_REASONS}
+    counts.update(twin_fallback=int(K["twin_fallback"].sum()), twin_cash_slots=int(K["twin_cash_slots"].sum()))
+    return B, {"twin_kind": MT.STICKY_TWIN_KIND, "construction": MT.STICKY_TWIN_CONSTRUCTION,
+               "n_draws": K.attrs.get("n_draws"),
+               "sticky_turnover_check": chk, "sticky_counts_summed_over_draws": counts}
+
+
 def fair_row(S: pd.DataFrame, board: pd.Series | None = None) -> dict:
     """One board row: all four columns side by side (+ the old flat board line)."""
     from backend.services import matched_twins as MT                 # noqa: PLC0415
     inv = S["invested"].astype(bool)
-    row = {"cost_convention": MT.TWIN_COST_CONVENTION, "four_columns": list(MT.FOUR_COLUMNS),
+    row = {"cost_convention": MT.TWIN_COST_CONVENTION, "cost_composition": MT.TWIN_COST_COMPOSITION,
+           "four_columns": list(MT.FOUR_COLUMNS),
            "upper_bound_column_never_in_verdicts": MT.UPPER_BOUND_COLUMN}
     for c in MT.FOUR_COLUMNS:
         row[c] = column_stats(S[c], by_year=c in ("fair_twin_net", "net_minus_market"))
@@ -168,15 +240,29 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--run-id", required=True)
     ap.add_argument("--only", default="")
+    ap.add_argument("--twin", choices=TWIN_KINDS, default="basket",
+                    help="basket = the C1 fair board's monthly-rebuilt twin; sticky = C1b")
     a = ap.parse_args(argv)
     from backend.services import matched_twins as MT                 # noqa: PLC0415
     from backend.services import strategy_library as SL              # noqa: PLC0415
+    from backend import config as C                                  # noqa: PLC0415
     jl = OUT / f"twin_board_{a.run_id}.jsonl"
     summ_p = OUT / f"twin_board_SUMMARY_{a.run_id}.json"
     if summ_p.exists():
         say(f"REFUSED: {summ_p.name} exists (a run id is written once)")
         return 2
-    if not _mem_ok():
+    decl = None
+    if a.twin == "sticky":
+        try:
+            decl = sticky_declaration()
+        except MT.TwinInputMissing as e:
+            say(f"REFUSED: {e}")
+            return 2
+        from scripts.bridges_on_crsp import wait_for_memory          # noqa: PLC0415
+        if not wait_for_memory(4.0, 3600):
+            say("REFUSED: under 4 GB free for 60 minutes; nothing was scored")
+            return 3
+    elif not _mem_ok():
         say("REFUSED: under 3 GB free for 30 minutes; nothing was scored")
         return 3
     from scripts import bridges_on_crsp_run as BR                    # noqa: PLC0415
@@ -186,8 +272,12 @@ def main(argv=None) -> int:
     if jl.exists():
         for ln in jl.read_text(encoding="utf-8").splitlines():
             try:
-                done.add(json.loads(ln)["rule"])
-            except Exception:                                        # noqa: BLE001 -- torn tail
+                row = json.loads(ln)
+                if row.get("twin_kind", "basket") != a.twin:
+                    say(f"REFUSED: {jl.name} holds twin_kind {row.get('twin_kind', 'basket')!r}, not {a.twin!r}")
+                    return 2
+                done.add(row["rule"])
+            except (ValueError, KeyError):                                        # noqa: BLE001 -- torn tail
                 pass
     todo = []
     for run in RUNS:
@@ -218,19 +308,35 @@ def main(argv=None) -> int:
         say(f"  panel {len(P):,} x {P.shape[1]} {time.time()-t0:.0f}s")
         base = ["date", "symbol", "eligible", "fwd_ret", "median_dollar_vol", "delisted_in_period", "vol_63",
                 "mom_252_21", "_sp", "tiebreak"]
+        by_date, cell_cache = {}, {}
+        if a.twin == "sticky":
+            by_date = {pd.Timestamp(d): g for d, g in
+                       P[["date", "symbol", "eligible", "fwd_ret", "median_dollar_vol", "vol_63", "mom_252_21",
+                          "_sp"]].groupby("date", sort=True)}
+            say(f"  sticky: {len(by_date)} dates grouped {time.time()-t0:.0f}s")
     for rid, run in todo:
         tr = time.time()
         rule = rules.get(rid)
-        rec = {"rule": rid, "run": run}
+        rec = {"rule": rid, "run": run, "twin_kind": a.twin}
+        if decl:
+            rec["sticky_declaration_sha256"] = decl["sha256"]
         try:
+            wcol = WEIGHT_COLUMNS.get(rule.weight_rule)
+            if wcol and wcol not in P.columns:       # strategy_library would silently fall back to EW
+                raise MT.TwinInputMissing(f"weight rule {rule.weight_rule!r} needs column {wcol!r}, absent")
             need = list(dict.fromkeys(base + [c for c in rule.requires if c in P.columns]
-                                      + ([rule.regime_gate] if rule.regime_gate else [])))
+                                      + ([rule.regime_gate] if rule.regime_gate else []) + ([wcol] if wcol else [])))
             Q = P[need]
             hold: list = []
             SL.run_strategy(Q, rule, k=int(rule.k), holdings=hold)
             gate = Q.groupby("date")[rule.regime_gate].first() if rule.regime_gate else None
             pk = carried_picks(hold, dates, rule, gate)
-            S = fair_series(run_book(Q, pk), mkt)
+            B = run_book(Q, pk)
+            if a.twin == "sticky":
+                B, extra = sticky_book(B, rid, pk, by_date, cell_cache)
+                rec.update(extra)
+            S = fair_series(B, mkt)
+            S.attrs["twin_kind"] = a.twin
             S.to_parquet(sdir / f"{rid}.parquet")
             L = pd.read_parquet(CR_OUT / f"library_series_{run}" / f"{rid}.parquet")
             rec.update(family=rule.family, **fair_row(S, (L["rule_net"] - L["twin21_net"]).dropna()), status="OK")
@@ -247,11 +353,22 @@ def main(argv=None) -> int:
     ok = [r for r in rows if r.get("status") == "OK"]
     refused = [r["rule"] for r in rows if r.get("status") != "OK"]
     summ = {"n_rules": len(rows), "n_refused": len(refused), "refused": refused, **summarise(ok)}
+    if a.twin == "sticky":
+        gaps = [r["sticky_turnover_check"]["median_abs_gap"] for r in ok if r.get("sticky_turnover_check")]
+        summ["sticky_median_of_median_abs_turnover_gap"] = float(np.median(gaps)) if gaps else None
+        summ["refused_reasons"] = {r["rule"]: r["status"] for r in rows if r.get("status") != "OK"}
     _write(summ_p, {"schema": SCHEMA, "run_id": a.run_id, "written_utc": _now(), "licence": "PRODUCT_EXPERIMENT",
                     "status": "OK" if not refused else f"PARTIAL: {len(refused)} rules refused (named)",
+                    "twin_kind": a.twin,
                     "cost_convention": MT.TWIN_COST_CONVENTION, "cost_convention_doc": MT.twin_cost_convention.__doc__,
+                    "cost_composition": MT.TWIN_COST_COMPOSITION, "rule_weights": "carried (schema 3)",
                     "four_columns": list(MT.FOUR_COLUMNS), "windows": WINDOWS, "llm_spend_usd": 0.0,
-                    "supersedes_for_twin_reads": "twin_board_SUMMARY_TB_2026-09-30_1.json (schema 1)",
+                    "sticky_declaration": decl,
+                    "supersedes_for_twin_reads": ("twin_board_SUMMARY_FT_2026-10-06_1.json (schema 2: rule weights "
+                                                  "dropped for 9 non-EW rules)"
+                                                  if a.twin == "basket" else
+                                                  "nothing: a sticky-twin board BESIDE the basket board"),
+                    "sticky_tolerance": (C.STICKY_TWIN_TURNOVER_TOLERANCE if a.twin == "sticky" else None),
                     "summary": summ, "seconds": round(time.time() - t0, 1)})
     say(f"-> summary {summ}")
     return 0

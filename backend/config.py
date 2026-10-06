@@ -3311,6 +3311,12 @@ DAILY_PASS_STEP_BOX_S: dict = {
     # Sum of boxes 14,820 s < LAB_DRIVER_BOX_S["daily_pass"] = 21,600 s.
     "dowjones_feeds": 300,
     "query_planner_yield": 120,
+    # 2026-10-06 (C11, review F4). The regret ledger had no scheduled caller:
+    # the decision stories' frozen alternatives priced on the bars once their
+    # 5/21/63-session horizons mature. Out of process (a symbol-filtered bar
+    # load plus a date-window universe for the same-band control).
+    # Sum of boxes 15,420 s < LAB_DRIVER_BOX_S["daily_pass"] = 21,600 s.
+    "regret": 600,
 }
 
 # ── SYSTEMS FIXES (review 2026-09-26) ────────────────────────────────────────
@@ -4743,6 +4749,17 @@ BOOK_DNA_TIMING_SHARE = 0.70
 #: a loser whose top holding is >= this fraction of the book NOW is still
 #: sizing_concentration -- and its `why` says "by WEIGHT, not by P&L share".
 BOOK_DNA_LOSER_WEIGHT_FALLBACK = 0.20
+#: Review 2026-10-06 (docs/reviews/REVIEW_2026-10-06_C3_BOOK_DNA.md):
+#: F3 -- a P&L rule (sizing / selection) may fire only when the P&L the module
+#: can see explains >= this share of the shortfall; else `not_determinable`.
+BOOK_DNA_LOSS_COVERAGE_MIN = 0.80
+#: F6 -- `one_name_dependence` only on the excess basis, |excess| >= this, and a
+#: reconstruction within BOOK_DNA_ONE_NAME_MAX_RECON_GAP_PP of the receipt.
+BOOK_DNA_ONE_NAME_MIN_EXCESS_PP = 1.0
+BOOK_DNA_ONE_NAME_MAX_RECON_GAP_PP = 0.25
+#: F1 -- ex-ante effective bets: frozen weights priced over this many sessions
+#: before the earliest inception (participation ratio, raw and SPY-residual).
+BOOK_DNA_EXANTE_SESSIONS = 150
 #: Website lanes whose daily returns correlate >= this form one risk-dial family;
 #: lanes whose holdings have Jaccard >= BOOK_DNA_LANE_IDENTITY_JACCARD are
 #: printed as one book with different treatment (mirror / conviction).
@@ -5104,6 +5121,31 @@ HYP_LAB_NIGHTLY_TIME_BOX_MIN = 60
 HYP_LAB_FAMILY_POSTERIOR_FLOOR = 0.15
 HYP_LAB_FAMILY_MIN_WEIGHT = 0.25
 HYP_LAB_FAMILY_MAX_SHARE = 0.5         # no family may take more than half of one generation round
+#: Review 2026-10-06 (docs/reviews/REVIEW_2026-10-06_C12_THEORY_CELLS.md F6-F8):
+#: a FIXED family taxonomy. A generated label outside it is filed under UNMAPPED and gets the
+#: MEDIAN quota (renaming can no longer buy a fresh full quota); aliases fold known splits.
+HYP_LAB_FAMILIES = (
+    "macro_readthrough_commodity", "macro_readthrough_rates", "equity_readthrough_supply_chain",
+    "event_readthrough_corr_peer", "event_readthrough_text_link", "event_readthrough_supply_chain",
+    "size_attention", "size_disagreement", "size_event_prior", "llm_size_reading",
+    "llm_belief_elasticity", "llm_leakage", "investable_spread", "risk_timing", "data_vintage",
+    "insider_event", "digest_forward", "vol_compression", "official_disclosure",
+    "price_location", "earnings_streak")
+HYP_LAB_FAMILY_ALIASES = {"insider_hold": "insider_event"}
+HYP_LAB_UNMAPPED_FAMILY = "family_unmapped"
+#: the posterior counts only POWERED negatives (CANNOT_DISTINGUISH = 0, an unpowered
+#: FAILED_VARIANT = 0, a re-read of an already-run rule = 0); a verdict older than
+#: HYP_LAB_VERDICT_DECAY_DAYS counts half.
+HYP_LAB_VERDICT_DECAY_DAYS = 180
+#: a shrunk family keeps at least one cell RUN per this many days (exploration floor)
+HYP_LAB_SHRUNK_FAMILY_MIN_RUN_DAYS = 7
+#: theory-cell declaration gate (scripts/hyp_theory_cells.py): refuse when one class of the
+#: separating variable holds more than MAX_CLASS_SHARE of events, or when the control's
+#: labels-only MDE (2.8 x EVENT_SD / sqrt(n_control), a LOWER bound: i.i.d., no blocking)
+#: exceeds MAX_MDE_MULT x the declared effect worth having.
+THEORY_GATE_MAX_CLASS_SHARE = 0.90
+THEORY_GATE_EVENT_SD = 0.25            # per-event sd of a 63-session single-name excess return (preset)
+THEORY_GATE_MAX_MDE_MULT = 2.0
 
 
 # ── FLEET DAILY MANAGER (2026-09-29 night; `backend/services/fleet_manager.py`) ──
@@ -5213,10 +5255,20 @@ QUERY_PLANNER_TURN_TIMEOUT_S = 240.0
 #: turn is charged QUERY_PLANNER_UNKNOWN_COST_USD, never zero)
 QUERY_PLANNER_RUN_USD_CAP = 0.30
 QUERY_PLANNER_UNKNOWN_COST_USD = 0.03
-#: 2026-10-06, measured on the first live run: `web_search` fired and answered
-#: "disabled or no provider is available". After this many consecutive such
-#: queries the planner probes ONCE per 24 h instead of spending its budget.
-QUERY_PLANNER_TOOL_UNAVAILABLE_STREAK = 3
+#: Review 2026-10-06 F1. Agent search turns are issued ONLY when a search
+#: provider is DECLARED here (measured: OpenClaw's `web_search` answers "disabled
+#: or no provider is available" and `x_search` is not offered). None = no agent
+#: turn at all; setting it is an OWNER decision (Brave is card-gated; "no
+#: payments"). `x_search` templates exist only when the agent is offered it.
+QUERY_PLANNER_SEARCH_PROVIDER = None
+QUERY_PLANNER_X_SEARCH_OFFERED = False
+#: With no provider, the SAME templates run against the $0 keyless sources:
+#: Google News RSS search (publisher + headline -> the publisher's own search
+#: page; the Google redirect is never opened) and EDGAR full-text search (the
+#: company's own 8-Ks). No LLM turn, no gateway.
+QUERY_PLANNER_FREE_SOURCES_ENABLED = True
+#: the single-run lock; an older lock is a crashed run and is taken
+QUERY_PLANNER_LOCK_MAX_S = 3600.0
 #: hosts a search may return that are REFUSED on top of the browser's own
 #: money / checkout / mail / message refusals (audit 2026-10-06 §C: ToS or
 #: robots.txt; search-engine result pages; consumer-AI chat UIs; login walls)
@@ -5341,3 +5393,38 @@ OPPORTUNITIES_RUNWAY_MIN_QUARTERS = 4
 OPPORTUNITIES_BADGE_MIN_FLAGS = 2
 #: F3: a median-target upside below this is LOW UPSIDE (grey, never green).
 OPPORTUNITIES_LOW_UPSIDE = 0.05
+
+# ── Progress-aware health (CHUNK C8, 2026-10-07) ─────────────────────────────
+#: `task_receipts`: each scheduled task's DECLARED cadence in hours -- the longest
+#: gap between two of its receipts while it is meant to be producing. The probe
+#: allows cadence x (1 + system_health.GRACE); a `session_only` task also gets
+#: 24 h per non-XNYS day since its newest receipt. Ages come from the receipt's
+#: own stamp, never mtime. Read from the live triggers on 2026-10-07.
+HEALTH_TASK_CADENCE_H = {
+    "AegisDailyPass": 24.0, "AegisIIF1NightLauncher": 24.0, "AegisNNLabNightly": 24.0,
+    "AegisSimOwner": 1.0, "AegisDataCatalog": 24.0, "AegisContestRehearsal": 24.0,
+    "AegisContestDesk": 24.0, "AegisHypLabNightly": 24.0, "AegisWorldDigest": 6.0,
+    "AegisAlerts": 0.5, "AegisStraddleForward": 0.5, "AegisFleetManagerOpen": 24.0,
+    "AegisFleetManagerPreclose": 24.0, "AegisFleetDailyCheck": 24.0,
+    "AegisReaderSupervisor": 0.5, "AegisCatchUp": 2.0, "AegisTelegramAgent": 0.05,
+    "AegisAnalystPanelDaily": 24.0, "AegisAnalystPull": 168.0, "AegisBrainRefresh": 24.0,
+}
+#: "Same output for too long": a receipt series whose SUBSTANCE hash (the receipt
+#: with its stamps/run ids removed) is unchanged across at least this many
+#: consecutive probes AND for longer than the allowed age, with no declared idle
+#: reason, is STALE even though its stamps keep moving (roadmap §7).
+HEALTH_PROGRESS_SAME_HASH_PROBES = 2
+#: `task_keeper analyst`: the weekly analyst-target pull (~60-80 min measured).
+ANALYST_PULL_TIMEOUT_MIN = 150
+#: `task_keeper brain`: `tools/refresh_aegis.py` in the sibling Optimus repo.
+BRAIN_REFRESH_TIMEOUT_MIN = 60
+#: `openclaw_api_bridge` is called on demand by the agent; a last call older than
+#: this is reported as idle (ALIVE_IDLE_EXPECTED), never as DEAD.
+OPENCLAW_BRIDGE_IDLE_DAYS = 7
+#: A name with no panel sigma is priced at the universe p90; when the panel is
+#: unreadable, at this (the measured universe p90 on 2026-10-05, review C2 F1).
+PC_SIGMA_FALLBACK_DAILY = 0.049
+#: The paper account PC-PAPER must be. A broker read from any other account is
+#: skipped by the mandate (review C2 F5); override only by env when the owner
+#: rotates the account on purpose.
+PC_PAPER_ACCOUNT_NUMBER = os.getenv("AEGIS_PC_PAPER_ACCOUNT", "PA37CSAUFCQR")

@@ -19,12 +19,12 @@ being used as the warehouse for a ledger that outgrew it.
 
 The answer built here:
 
-* the closed month is converted to Parquet under `<data root>/ledger_archive/`
-  (ignored by the blanket `*.parquet` rule -- outside git);
+* the closed month is converted to a zstd Parquet under `<data root>/ledger_archive/`
+  (178 MB -> 13 MB), which IS COMMITTED (`.gitignore` un-ignores it): the
+  bytes, not only a claim about them, reach every clone;
 * a small JSON MANIFEST is committed under `ledger_manifests/`: schema, rows,
   first/last stamp, sha256 of the jsonl AND of the parquet, the paths, and the
-  command that produced it. The manifest is what git carries; the bytes live on
-  disk and in whatever backup the owner chooses;
+  command that produced it;
 * the Parquet is LOSSLESS: every line is stored verbatim (as bytes) with its
   line number, so `b"\\n".join(lines)` reproduces the jsonl byte for byte, and
   the archive REFUSES unless that round trip reproduces the jsonl's sha256;
@@ -32,8 +32,11 @@ The answer built here:
   `archived: true` in the manifest, and the writers that file rows by month
   refuse to append to an archived month (`is_archived`), so the manifest's
   sha256 stays true;
-* the sealed-month guard accepts a manifest whose recorded size matches the
-  file on disk as "sealed" -- the month is accounted for without a 178 MB blob.
+* the sealed-month guard accepts the archive in place of `git add -f` ONLY
+  when `verify_seal` holds: the parquet exists, hashes to the manifest, is
+  TRACKED by git, and the jsonl still hashes to the manifest (review F2);
+* the daily job only SCANS AND REPORTS (`scan_report`); sealing is an attended
+  `--apply` plus a commit (review F4).
 
 What it does NOT do: rewrite git history. The 178 MB file was never committed
 (it is gitignored by `llm_calls_[0-9]...jsonl`), so there is nothing in history
@@ -96,11 +99,44 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _repo_root() -> Path:
+    """The checkout, honouring `AEGIS_REPO_ROOT` (frozen-path defect family,
+    same rule as `data_catalog._repo_root`). Inside the packaged app
+    `__file__` is under `_internal/`; a module-relative REPO made every path
+    absolute and `is_archived` silently False (review F3)."""
+    env = os.getenv("AEGIS_REPO_ROOT")
+    if env and Path(env).is_dir():
+        return Path(env).resolve()
+    return REPO
+
+
 def _rel(path: Path) -> str:
     try:
-        return Path(path).resolve().relative_to(REPO).as_posix()
+        return Path(path).resolve().relative_to(_repo_root()).as_posix()
     except ValueError:
         return Path(path).as_posix()
+
+
+def _abs(rel: str) -> Path:
+    """A manifest path back to a file: repo-relative paths resolve against the
+    checkout; absolute ones (tests in a temp dir) stay as they are."""
+    q = Path(rel)
+    return q if q.is_absolute() else _repo_root() / q
+
+
+def _same_file(path: Path, recorded: Optional[str]) -> bool:
+    if not recorded:
+        return False
+    if _rel(Path(path)) == recorded:
+        return True
+    try:
+        if Path(path).resolve() == _abs(recorded).resolve():
+            return True
+    except OSError:
+        pass
+    # a relocated tree with the same layout (`<anywhere>/backend/data/...`)
+    return (not Path(recorded).is_absolute()
+            and Path(path).as_posix().endswith("/" + recorded))
 
 
 def _sha256_file(path: Path) -> str:
@@ -141,7 +177,10 @@ def manifest_for(path: Path, manifest_dir: Path | None = None) -> Optional[dict]
         return None
     if not man.get("archived"):
         return None
-    if (man.get("jsonl") or {}).get("path") != _rel(Path(path)):
+    stem, month = parse_month_file(path)
+    if man.get("ledger") not in (None, stem) or man.get("month") not in (None, month):
+        return None
+    if not _same_file(Path(path), (man.get("jsonl") or {}).get("path")):
         return None
     return man
 
@@ -164,17 +203,70 @@ def refuse_if_archived(path: Path, manifest_dir: Path | None = None) -> None:
             f"manifest false; nothing was written.")
 
 
+def is_tracked(path: Path) -> bool:
+    """True when git tracks `path`. Any failure to ask is False (not sealed)."""
+    try:
+        r = subprocess.run(["git", "ls-files", "--error-unmatch", "--", _rel(path)],
+                           cwd=str(_repo_root()), capture_output=True, text=True, timeout=30)
+        return r.returncode == 0
+    except Exception:                                              # noqa: BLE001
+        return False
+
+
+def verify_seal(path: Path, manifest_dir: Path | None = None, *, tracked=None) -> dict:
+    """Is this closed month SEALED by its archive? (review F2, 2026-10-07)
+
+    A manifest alone seals nothing; it is a claim about bytes. The month is
+    sealed only when ALL of these hold, each checked fresh (never from a cache):
+      1. a manifest names this file and carries sha256s for the jsonl AND the parquet;
+      2. the parquet exists and hashes to `parquet.sha256`;
+      3. git TRACKS the parquet -- the bytes reach another clone, which is the
+         point of sealing (a gitignored parquet is "one laptop only" again);
+      4. the jsonl, while on disk, hashes to `jsonl.sha256` (a same-size
+         in-place edit is caught; size alone was not enough).
+    Returns {"sealed", "reason", "manifest"}."""
+    tracked = tracked or is_tracked
+    mp = manifest_path(path, manifest_dir)
+    out: dict = {"sealed": False, "manifest": _rel(mp) if mp.exists() else None}
+    man = manifest_for(path, manifest_dir)
+    if man is None:
+        out["reason"] = ("no archive manifest names this file" if not mp.exists()
+                         else "manifest present but not a valid archive of this file")
+        return out
+    j, pqm = man.get("jsonl") or {}, man.get("parquet") or {}
+    if not (j.get("sha256") and pqm.get("sha256") and pqm.get("path")):
+        out["reason"] = ("manifest lacks jsonl.sha256 / parquet.sha256 / parquet.path "
+                         "(forged or partial)")
+        return out
+    pq_path = _abs(pqm["path"])
+    if not pq_path.exists():
+        out["reason"] = f"parquet {pqm['path']} is missing"
+        return out
+    if _sha256_file(pq_path) != pqm["sha256"]:
+        out["reason"] = f"parquet {pqm['path']} does not hash to the manifest's sha256"
+        return out
+    if not tracked(pq_path):
+        out["reason"] = (f"parquet {pqm['path']} is not tracked by git; run: "
+                         f"git add {pqm['path']} {out['manifest']}")
+        return out
+    if Path(path).exists() and _sha256_file(Path(path)) != j["sha256"]:
+        out["reason"] = f"{Path(path).name} no longer hashes to the manifest's jsonl sha256"
+        return out
+    out.update(sealed=True, reason=None)
+    return out
+
+
 def git_status(path: Path) -> str:
     """tracked / ignored / untracked / outside_repo / unknown."""
     rel = _rel(path)
     if rel.startswith("/") or re.match(r"^[A-Za-z]:", rel):
         return "outside_repo"
     try:
-        r = subprocess.run(["git", "ls-files", "--error-unmatch", "--", rel], cwd=str(REPO),
-                           capture_output=True, text=True, timeout=30)
+        r = subprocess.run(["git", "ls-files", "--error-unmatch", "--", rel],
+                           cwd=str(_repo_root()), capture_output=True, text=True, timeout=30)
         if r.returncode == 0:
             return "tracked"
-        r = subprocess.run(["git", "check-ignore", "-q", "--", rel], cwd=str(REPO),
+        r = subprocess.run(["git", "check-ignore", "-q", "--", rel], cwd=str(_repo_root()),
                            capture_output=True, text=True, timeout=30)
         return "ignored" if r.returncode == 0 else "untracked"
     except Exception:                                              # noqa: BLE001
@@ -255,11 +347,26 @@ def archive_month(path: Path, *, now: datetime | None = None,
     adir = Path(archive_dir or ARCHIVE_DIR)
     mpath = manifest_path(path, mdir)
     raw = path.read_bytes()
+    if not raw:
+        raise ArchiveRefused(f"{path.name} is empty: there is no closed month to archive")
     jsonl_sha = hashlib.sha256(raw).hexdigest()
 
     if mpath.exists():
         prior = json.loads(mpath.read_text(encoding="utf-8"))
         if (prior.get("jsonl") or {}).get("sha256") == jsonl_sha:
+            # "identical" only while the archive it points at is still there and
+            # still the same bytes (review F4): a green line over a missing
+            # parquet is the failure this module exists to prevent.
+            pqm = prior.get("parquet") or {}
+            pq_prior = _abs(pqm["path"]) if pqm.get("path") else None
+            if pq_prior is None or not pq_prior.exists():
+                raise ArchiveRefused(
+                    f"{_rel(mpath)} matches {path.name} but its parquet {pqm.get('path')} "
+                    f"is MISSING. Restore it, or move the manifest aside and re-archive attended.")
+            if _sha256_file(pq_prior) != pqm.get("sha256"):
+                raise ArchiveRefused(
+                    f"{_rel(mpath)} matches {path.name} but its parquet no longer hashes to "
+                    f"the recorded sha256. Nothing rewritten.")
             return {**prior, "action": "identical", "manifest_path": _rel(mpath)}
         raise ArchiveRefused(
             f"{_rel(mpath)} records sha256 {str((prior.get('jsonl') or {}).get('sha256'))[:12]} "
@@ -351,7 +458,7 @@ def restore_bytes(manifest: dict, *, archive_path: Path | None = None) -> bytes:
     """Rebuild the jsonl bytes from the parquet and check them against the manifest."""
     import pyarrow.parquet as pq
 
-    p = Path(archive_path) if archive_path else REPO / manifest["parquet"]["path"]
+    p = Path(archive_path) if archive_path else _abs(manifest["parquet"]["path"])
     lines = pq.read_table(p, columns=["line"]).column("line").to_pylist()
     data = _join_lines(lines, bool(manifest["jsonl"]["trailing_newline"]))
     if hashlib.sha256(data).hexdigest() != manifest["jsonl"]["sha256"]:
@@ -367,7 +474,7 @@ def archive_closed(root: Path | None = None, *, min_bytes: int = MIN_BYTES,
         if not (c["closed"] and c["over_floor"]):
             continue
         try:
-            r = archive_month(REPO / c["path"], now=now, apply=apply)
+            r = archive_month(_abs(c["path"]), now=now, apply=apply)
             rows.append({"path": c["path"], "action": r["action"],
                          "manifest": r.get("manifest_path"), "rows": r["jsonl"]["rows"],
                          "bytes": r["jsonl"]["bytes"],
@@ -382,6 +489,35 @@ def archive_closed(root: Path | None = None, *, min_bytes: int = MIN_BYTES,
             "status": "REFUSED" if any(r["action"] in ("REFUSED", "FAILED") for r in rows) else "OK"}
 
 
+def scan_report(root: Path | None = None, *, min_bytes: int = MIN_BYTES,
+                now: datetime | None = None, tracked=None) -> dict:
+    """WHAT THE UNATTENDED DAILY JOB RUNS (review F4): scan and report, never seal.
+
+    Sealing a month is an attended `--apply` followed by a commit, as the old
+    `git add -f` was. Lists every closed month over the floor with its seal
+    state (`verify_seal`) and the exact command; OK only when nothing needs a person."""
+    rows = []
+    for c in find_candidates(root, min_bytes=min_bytes, now=now):
+        if not (c["closed"] and c["over_floor"]):
+            continue
+        v = verify_seal(_abs(c["path"]), tracked=tracked)
+        row = {"path": c["path"], "bytes": c["bytes"], "month": c["month"],
+               "sealed": v["sealed"], "manifest": v["manifest"], "why": v["reason"]}
+        if not v["sealed"] and "; run: " in (v["reason"] or ""):
+            row["command"] = v["reason"].split("; run: ", 1)[1] + "   # then commit"
+        elif not v["sealed"]:
+            row["command"] = (f"python -m backend.services.ledger_archive --ledger {c['path']} "
+                              f"--apply   # then commit the parquet + manifest")
+        rows.append(row)
+    pending = [r for r in rows if not r["sealed"]]
+    return {"job": "ledger_archive_scan", "utc": (now or _now()).isoformat(timespec="seconds"),
+            "min_bytes": min_bytes, "apply": False, "months": rows,
+            "status": "OK" if not pending else "ATTENTION",
+            "headline": (f"{len(pending)} closed month(s) over the floor are not sealed; "
+                         f"sealing is an attended --apply + commit" if pending
+                         else "every closed month over the floor is sealed")}
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="ledger_archive", description=__doc__.split("\n\n")[0])
     ap.add_argument("--scan", action="store_true", help="list month files; write nothing")
@@ -391,7 +527,8 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     floor = int(a.min_mb * 1024 * 1024)
     if a.scan or not (a.apply or a.ledger):
-        print(json.dumps(find_candidates(min_bytes=floor), indent=1))
+        out = scan_report(min_bytes=floor)
+        print(json.dumps(out, indent=1))
         return 0
     if a.ledger:
         try:

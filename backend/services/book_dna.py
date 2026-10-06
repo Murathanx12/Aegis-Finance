@@ -58,8 +58,23 @@ NOT_COMPUTABLE = "NOT_COMPUTABLE"
 #: The ladder from roadmap section 7. This module may award only the first three.
 LABEL_LADDER = ("OBSERVED", "EARLY_EVIDENCE", "REPLICATED", "VALIDATED_EDGE")
 LABEL_CEILING = "REPLICATED"
-ERROR_TYPES = ("control_artifact", "unmanaged", "sizing_concentration",
+ERROR_TYPES = ("control_artifact", "decomposed", "unmanaged", "sizing_concentration",
                "timing_exit", "selection", "not_determinable")
+#: Review F4: the loser rules, in the order they are tried, printed on the receipt.
+LOSER_RULE_ORDER = (
+    "control_artifact: a twin or a kind=control book",
+    "decomposed: a lane in an identity group (same names): the group's best excess is the "
+    "common shortfall (selection), the member's gap to it is treatment/sizing",
+    "unmanaged: no manager run in BOOK_DNA_UNMANAGED_SESSIONS sessions",
+    "coverage gate: the P&L this module can see must explain >= BOOK_DNA_LOSS_COVERAGE_MIN of "
+    "the shortfall, else no P&L rule may fire",
+    "sizing_concentration: top-1 > BOOK_DNA_LOSER_SIZING_SHARE of the same-direction loss",
+    "timing_exit: the worst third >= BOOK_DNA_TIMING_SHARE of the GROSS negative sub-window loss",
+    "selection: a covered loss spread across names (a positive finding, never the fall-through)",
+    "sizing_concentration by WEIGHT: no P&L share computable and top-1 weight >= "
+    "BOOK_DNA_LOSER_WEIGHT_FALLBACK",
+    "not_determinable: none of the above has evidence; the coverage ratio is printed",
+)
 CASH_TICKERS = {"CASH", "USD", "$CASH"}
 
 _OPT = Path(_config.OPTIMUS_LEDGER_DIR)
@@ -86,6 +101,11 @@ def params() -> dict:
         "fair_twin_kinds": list(_cfg("BOOK_DNA_FAIR_TWIN_KINDS",
                                      ("matched_twin21", "matched_random", "random_same_band"))),
         "one_name_share": float(_cfg("BOOK_DNA_ONE_NAME_SHARE", 0.50)),
+        "one_name_min_excess_pp": float(_cfg("BOOK_DNA_ONE_NAME_MIN_EXCESS_PP", 1.0)),
+        "one_name_max_recon_gap_pp": float(_cfg("BOOK_DNA_ONE_NAME_MAX_RECON_GAP_PP", 0.25)),
+        "loss_coverage_min": float(_cfg("BOOK_DNA_LOSS_COVERAGE_MIN", 0.80)),
+        "exante_sessions": int(_cfg("BOOK_DNA_EXANTE_SESSIONS", 150)),
+        "loser_rule_order": list(LOSER_RULE_ORDER),
         "n_losers": int(_cfg("BOOK_DNA_N_LOSERS", 10)),
         "unmanaged_sessions": int(_cfg("BOOK_DNA_UNMANAGED_SESSIONS", 5)),
         "loser_sizing_share": float(_cfg("BOOK_DNA_LOSER_SIZING_SHARE", 0.40)),
@@ -410,10 +430,10 @@ def subwindows(series: Optional[list], sessions: Optional[int], min_cover: float
 
 def tail_from_contributions(contrib: dict, *, basis: str, note: str = "",
                             min_abs: float = 1e-4) -> dict:
-    """Top-1 / top-2 holdings' share of the signed total. The top names are the
-    largest contributors IN THE DIRECTION of the total (gains for a winner,
-    losses for a loser), so a share above 100% means everything else netted
-    against it."""
+    """Top-1 / top-2 holdings' share of the contributions IN THE DIRECTION of the
+    total (gains for a winner, losses for a loser). `share` is top / sum of the
+    same-direction contributions, so it is bounded 0..1 (review F6: a share of a
+    near-zero NET exploded past 700%); `share_of_net` is kept beside it."""
     vals = {k: v for k, v in contrib.items() if _num(v) is not None}
     tot = sum(vals.values())
     if not vals or abs(tot) < min_abs:
@@ -421,12 +441,15 @@ def tail_from_contributions(contrib: dict, *, basis: str, note: str = "",
                 "why": "no priced contribution" if not vals else "total ~ 0: a share of nothing"}
     sgn = 1.0 if tot > 0 else -1.0
     ranked = sorted(vals.items(), key=lambda kv: -sgn * kv[1])
+    gross = sum(v for v in vals.values() if sgn * v > 0)
     t1 = ranked[0]
-    t2 = ranked[1] if len(ranked) > 1 else (None, 0.0)
+    t2 = ranked[1] if len(ranked) > 1 and sgn * ranked[1][1] > 0 else (None, 0.0)
     out = {"status": "OK", "basis": basis, "total": round(tot, 6),
-           "top1": {"ticker": t1[0], "share": round(t1[1] / tot, 3)},
+           "gross_same_direction": round(gross, 6),
+           "top1": {"ticker": t1[0], "share": round(t1[1] / gross, 3) if gross else None,
+                    "share_of_net": round(t1[1] / tot, 3)},
            "top2": {"tickers": [t1[0]] + ([t2[0]] if t2[0] else []),
-                    "share": round((t1[1] + t2[1]) / tot, 3)}}
+                    "share": round((t1[1] + t2[1]) / gross, 3) if gross else None}}
     if note:
         out["note"] = note
     return out
@@ -472,6 +495,29 @@ def concentration(weights: dict, sector_map: dict) -> dict:
 def _top1(w: dict) -> dict:
     t = max(w.items(), key=lambda kv: kv[1])
     return {"ticker": t[0], "weight": round(t[1], 3)}
+
+
+def _one_name(e: dict, tail: dict, p: dict) -> tuple:
+    """Review F6: the flag is computed only on the EXCESS basis, for a non-twin,
+    when |excess| >= BOOK_DNA_ONE_NAME_MIN_EXCESS_PP and the reconstruction
+    agrees with the receipt within BOOK_DNA_ONE_NAME_MAX_RECON_GAP_PP; the share
+    is top-1 / same-direction contributions (0..1)."""
+    if e["category"] == "twin":
+        return None, "twin: not flagged"
+    if tail.get("status") != "OK":
+        return None, f"tail NOT_COMPUTABLE ({tail.get('why')})"
+    if tail.get("basis") != "active_contribution":
+        return None, f"basis {tail.get('basis')} is not the excess"
+    ex = e.get("excess_pp")
+    if ex is None or abs(ex) < p["one_name_min_excess_pp"]:
+        return None, f"|excess| < {p['one_name_min_excess_pp']} pp: a share of noise"
+    gap = abs(float(tail.get("reconstructed_excess_pp") or 0.0) - ex)
+    if gap > p["one_name_max_recon_gap_pp"]:
+        return None, f"reconstruction off by {gap:.2f} pp"
+    sh = (tail.get("top1") or {}).get("share")
+    if sh is None:
+        return None, "no same-direction contribution"
+    return bool(sh > p["one_name_share"]), f"top-1 {tail['top1']['ticker']} = {sh:.0%} of same-direction"
 
 
 def evidence_label(*, sessions: Optional[int], excess_pp: Optional[float], sub: dict,
@@ -606,7 +652,9 @@ def book_rows(receipt: dict, inputs: dict, px: Prices, p: dict, today: date) -> 
         e = {"account": acct, "family": fam, "status": r.get("status"),
              "return_pct": r.get("roi_pct"), "spy_leg_pct": spy_leg, "excess_pp": excess,
              "inception": r.get("inception"), "last_mark": r.get("last_mark"),
-             "twin_of": None, "book_id": r.get("book_id")}
+             "start_capital": _num(r.get("start_capital")),
+             "twin_of": None, "book_id": r.get("book_id"),
+             "category": "twin" if fam.endswith("twin") else "strategy"}
         weights: dict = {}
         holdings_source = None
         tail: dict = {"status": NOT_COMPUTABLE, "why": "no holdings source for this family"}
@@ -621,6 +669,9 @@ def book_rows(receipt: dict, inputs: dict, px: Prices, p: dict, today: date) -> 
             if b.get("kind") == "twin":
                 e["twin_of"] = names.get(b.get("parent_book_id"), b.get("parent_book_id"))
                 e["twin_kind"] = b.get("twin")
+            elif b.get("kind") == "control":
+                # review F5: a control is evidence about the control, never a bet
+                e["category"] = "control"
             sessions = g.get("sessions", sessions)
             weights = {str(x["ticker"]): float(x.get("weight") or 0.0) for x in b.get("positions") or []
                        if x.get("ticker")}
@@ -732,9 +783,16 @@ def book_rows(receipt: dict, inputs: dict, px: Prices, p: dict, today: date) -> 
         e["n_holdings"] = len([t for t in weights if t not in CASH_TICKERS]) or None
         e["tickers"] = sorted(t for t in weights if t not in CASH_TICKERS)
         e["weights"] = {t: (round(w, 5) if _num(w) is not None else None) for t, w in weights.items()}
+        # coverage: how much of the shortfall/excess the P&L this module can SEE explains
+        # (review F3: hack4's open P&L was -$181 of a -$19,424 shortfall)
+        if tail.get("status") == "OK" and excess:
+            if tail.get("basis") == "unrealized_pl" and e["start_capital"]:
+                seen = abs(float(tail["total"])) / abs(excess / 100.0 * e["start_capital"])
+            else:
+                seen = abs(float(tail["total"]) * 100.0) / abs(excess)
+            tail["coverage_of_excess"] = round(seen, 3)
         e["tail"] = tail
-        top1 = (tail.get("top1") or {}).get("share") if tail.get("status") == "OK" else None
-        e["one_name_dependence"] = (None if top1 is None else bool(top1 > p["one_name_share"]))
+        e["one_name_dependence"], e["one_name_why"] = _one_name(e, tail, p)
         e["concentration"] = concentration(weights, smap)
         e["beta_vs_spy"] = beta_of(series, p["min_beta_obs"])
         e["cash_fraction"] = cash
@@ -747,17 +805,20 @@ def book_rows(receipt: dict, inputs: dict, px: Prices, p: dict, today: date) -> 
         e["rule"] = rule_of.get(r.get("book_id"))
         e["_series"] = series
         out.append(e)
-    # frozen replications: another non-twin book of the same rule that also qualifies
+    # frozen replications: another strategy book of the same rule that is ITSELF
+    # EARLY_EVIDENCE (review F7: a positive sibling was enough before)
+    for e in out:
+        e["_early"] = evidence_label(
+            sessions=e["sessions_graded"], excess_pp=e["excess_pp"], sub=e["subwindows"],
+            fair_twin_excess_pp=None, replicated_by=None, p=p)["label"] == "EARLY_EVIDENCE"
     by_rule: dict = {}
     for e in out:
-        if e.get("rule") and not e["family"].endswith("twin"):
+        if e.get("rule") and e["category"] == "strategy":
             by_rule.setdefault(e["rule"], []).append(e)
     for e in out:
         rep = None
         for o in by_rule.get(e.get("rule"), []):
-            if o is e:
-                continue
-            if (o["sessions_graded"] or 0) >= p["early_min_sessions"] and (o["excess_pp"] or 0) > 0:
+            if o is not e and o["_early"]:
                 rep = o["account"]
                 break
         e["evidence"] = evidence_label(
@@ -925,44 +986,141 @@ def lanes_block(receipt: dict, books: list[dict], inputs: dict, p: dict) -> dict
             "n_lanes": len(names), "n_independent_lane_families": len(families)}
 
 
+# ───────────────────────────── ex-ante effective bets (review F1) ───────────
+
+def participation_ratio(corr: np.ndarray) -> float:
+    """Effective number of bets of a correlation matrix: (sum lambda)^2 / sum lambda^2.
+    N for N uncorrelated books, 1 for N copies of one book."""
+    lam = np.clip(np.linalg.eigvalsh(corr), 0.0, None)
+    return float(lam.sum() ** 2 / (lam ** 2).sum()) if (lam ** 2).sum() > 0 else float("nan")
+
+
+def exante_bets(books: list[dict], px: Prices, p: dict) -> dict:
+    """Price each book's FROZEN weights (constant weights, daily) over the
+    `exante_sessions` SPY sessions before the EARLIEST inception among them, and
+    count bets on that return correlation -- raw and SPY-residual. Works on day 1
+    of a book, when a realised-series correlation is impossible (review F1: the
+    realised edge needed 15 periods and 34 of 39 winners had 5-6)."""
+    held = [b for b in books if b.get("tickers") and b.get("inception")]
+    if len(held) < 2:
+        return {"status": NOT_COMPUTABLE, "why": f"{len(held)} book(s) with holdings"}
+    end = min(str(b["inception"])[:10] for b in held)
+    dates = [d for d in px.dates("SPY") if d < end][-(p["exante_sessions"] + 1):]
+    if len(dates) < p["min_beta_obs"] + 1:
+        return {"status": NOT_COMPUTABLE, "why": f"{len(dates)} sessions of bars before {end}"}
+    close = px.close.reindex(dates).ffill()
+    rets = close.pct_change().iloc[1:]
+    spy = rets["SPY"].to_numpy()
+    cols, names, excluded = [], [], {}
+    for b in held:
+        w = {t: float(v) for t, v in (b.get("weights") or {}).items()
+             if t not in CASH_TICKERS and _num(v) is not None and float(v) > 0}
+        inv = sum(w.values())
+        ok = {t: v for t, v in w.items() if t in rets.columns and rets[t].notna().mean() >= 0.9}
+        if inv <= 0 or sum(ok.values()) / inv < 0.8:
+            excluded[b["account"]] = f"{(sum(ok.values()) / inv if inv else 0):.0%} of the weight has the window's bars"
+            continue
+        wt = np.array(list(ok.values())) / sum(ok.values())
+        cols.append(rets[list(ok)].fillna(0.0).to_numpy() @ wt)
+        names.append(b["account"])
+    if len(cols) < 2:
+        return {"status": NOT_COMPUTABLE, "why": "fewer than 2 books priced over the window",
+                "excluded": excluded}
+    M = np.column_stack(cols)
+    raw = np.corrcoef(M.T)
+    vs = float(np.var(spy))
+    betas = [float(np.cov(spy, M[:, i], ddof=0)[0, 1] / vs) if vs > 0 else float("nan")
+             for i in range(M.shape[1])]
+    R = np.column_stack([M[:, i] - M[:, i].mean() - betas[i] * (spy - spy.mean())
+                         for i in range(M.shape[1])])
+    res = np.corrcoef(R.T)
+    lam = np.clip(np.linalg.eigvalsh(raw), 0.0, None)
+    iu = np.triu_indices(len(names), 1)
+    uf = _UF(len(names))
+    for i, j in zip(*iu):
+        if raw[i, j] >= p["corr_threshold"]:
+            uf.union(i, j)
+    n_corr_clusters = len({uf.find(i) for i in range(len(names))})
+    return {"status": "OK", "window": [dates[1], dates[-1]], "n_sessions": len(dates) - 1,
+            "construction": "frozen weights held constant, daily; names with < 90% of the "
+                            "window's bars dropped, book dropped if they are > 20% of its weight",
+            "n_books": len(names), "books": names, "excluded": excluded,
+            "effective_bets_raw": round(participation_ratio(raw), 2),
+            "effective_bets_spy_residual": round(participation_ratio(res), 2),
+            "top_eigen_share_raw": round(float(lam.max() / lam.sum()), 3),
+            "median_pairwise_corr_raw": round(float(np.median(raw[iu])), 3),
+            "median_pairwise_corr_residual": round(float(np.median(res[iu])), 3),
+            f"clusters_at_corr_{p['corr_threshold']:.2f}_raw": n_corr_clusters,
+            "beta_vs_spy": {n: round(b, 2) for n, b in zip(names, betas)}}
+
+
 # ───────────────────────────── losers ───────────────────────────────────────
 
-def classify_loser(b: dict, p: dict) -> dict:
-    """The declared rule order (config): control_artifact -> unmanaged ->
-    sizing_concentration -> timing_exit -> selection; not_determinable when the
-    evidence for every rule is missing."""
-    if b["family"].endswith("twin"):
+def _identity_group(b: dict, lanes: dict, books_by: dict) -> Optional[list]:
+    for st in (lanes or {}).get("identity_statements") or []:
+        if b["account"] in st.get("lanes", []):
+            return [books_by[a] for a in st["lanes"] if a in books_by]
+    return None
+
+
+def classify_loser(b: dict, p: dict, group: Optional[list] = None) -> dict:
+    """LOSER_RULE_ORDER, in order (printed on the receipt as `params.loser_rule_order`).
+    `selection` is a positive finding (a covered loss spread across names), never
+    the fall-through; a loss the visible P&L does not cover is `not_determinable`."""
+    if b.get("category") in ("twin", "control") or b["family"].endswith("twin"):
+        what = "control twin" if b.get("category") != "control" else "kind=control book"
         return {"error_type": "control_artifact",
-                "why": f"a control twin of {b.get('twin_of')}: informative about the control, not a strategy"}
+                "why": f"a {what} ({b.get('twin_of') or b['account']}): informative about the "
+                       f"control, not a strategy"}
+    if group and len(group) > 1 and b.get("excess_pp") is not None:
+        best = max(g["excess_pp"] for g in group if g.get("excess_pp") is not None)
+        common = min(best, 0.0)
+        diff = b["excess_pp"] - common
+        return {"error_type": "decomposed",
+                "decomposition": {"group": [g["account"] for g in group],
+                                  "common_shortfall_pp_selection": round(common, 3),
+                                  "differential_pp_treatment_sizing": round(diff, 3)},
+                "why": (f"same names as {', '.join(g['account'] for g in group if g is not b)}: "
+                        f"{common:+.2f} pp shared by the group's best member is SELECTION; "
+                        f"this book's further {diff:+.2f} pp is TREATMENT/SIZING")}
     ms = b.get("manager_sessions_since")
     if ms is not None and ms > p["unmanaged_sessions"]:
         return {"error_type": "unmanaged",
                 "why": f"no manager run in {ms} sessions (last {str(b.get('manager_last_run'))[:19]})"}
     t = b.get("tail") or {}
-    if t.get("status") == "OK" and (t.get("total") or 0) < 0:
-        s1 = t["top1"]["share"]
+    cov = t.get("coverage_of_excess") if t.get("status") == "OK" else None
+    covered = cov is not None and cov >= p["loss_coverage_min"] and (t.get("total") or 0) < 0
+    if covered:
+        s1 = t["top1"]["share"] or 0.0
         if s1 > p["loser_sizing_share"]:
             return {"error_type": "sizing_concentration",
-                    "why": f"{t['top1']['ticker']} carries {s1:.0%} of the loss ({t['basis']})"}
-    elif t.get("status") != "OK":
+                    "why": f"{t['top1']['ticker']} carries {s1:.0%} of the same-direction loss "
+                           f"({t['basis']}, coverage {cov:.0%})"}
+    sub = b.get("subwindows") or {}
+    if sub.get("status") == "OK" and (b.get("excess_pp") or 0) < 0:
+        w = sub["windows"]
+        gross = sum(-x["excess_pp"] for x in w if x["excess_pp"] < 0)
+        worst = min(w, key=lambda x: x["excess_pp"])
+        if gross > 0 and worst["excess_pp"] < 0 and -worst["excess_pp"] / gross >= p["timing_share"]:
+            return {"error_type": "timing_exit",
+                    "why": f"{-worst['excess_pp'] / gross:.0%} of the gross negative sub-window loss "
+                           f"in {worst['from']}..{worst['to']}"}
+    if covered:
+        return {"error_type": "selection",
+                "why": f"the visible P&L covers {cov:.0%} of the loss and no name carries > "
+                       f"{p['loser_sizing_share']:.0%} of it"}
+    if t.get("status") != "OK":
         c = b.get("concentration") or {}
         tw = c.get("top1_weight_of_invested") or c.get("top1_weight_of_equity") or {}
         if tw and float(tw.get("weight") or 0) >= p["loser_weight_fallback"]:
             return {"error_type": "sizing_concentration",
                     "why": (f"by WEIGHT, not by P&L share (not computable: {t.get('why')}): "
                             f"{tw['ticker']} is {float(tw['weight']):.0%} of the book now")}
-    sub = b.get("subwindows") or {}
-    if sub.get("status") == "OK" and (b.get("excess_pp") or 0) < 0:
-        w = sub["windows"]
-        tot = sum(x["excess_pp"] for x in w)
-        worst = min(w, key=lambda x: x["excess_pp"])
-        if tot < 0 and worst["excess_pp"] < 0 and worst["excess_pp"] / tot >= p["timing_share"]:
-            return {"error_type": "timing_exit",
-                    "why": f"{worst['excess_pp'] / tot:.0%} of the shortfall in {worst['from']}..{worst['to']}"}
-    if t.get("status") == "OK" or (b.get("concentration") or {}).get("status") == "OK":
-        return {"error_type": "selection", "why": "loss not concentrated in one name or one third of the window"}
-    return {"error_type": "not_determinable",
-            "why": f"no holdings P&L and no full-window series ({t.get('why') or sub.get('why')})"}
+    why = (f"the P&L this module can see covers {cov:.0%} of the shortfall (< "
+           f"{p['loss_coverage_min']:.0%}); the loss sits in closed positions or turnover it does not read"
+           if cov is not None else
+           f"no holdings P&L and no full-window series ({t.get('why') or sub.get('why')})")
+    return {"error_type": "not_determinable", "coverage_of_loss": cov, "why": why}
 
 
 # ───────────────────────────── the receipt ──────────────────────────────────
@@ -971,40 +1129,80 @@ def _public(b: dict) -> dict:
     return {k: v for k, v in b.items() if not k.startswith("_")}
 
 
+def _clusters_of(books: list[dict], thr: float, p: dict) -> tuple[list[dict], list[dict]]:
+    comps, edges = cluster(books, jaccard_threshold=thr, corr_threshold=p["corr_threshold"],
+                           min_corr_obs=p["min_corr_obs"])
+    out = []
+    for idx in comps:
+        mem = [books[i] for i in idx]
+        ex = [m["excess_pp"] for m in mem]
+        out.append({"n": len(mem), "members": [m["account"] for m in mem],
+                    "families": sorted({m["family"] for m in mem}),
+                    "n_with_holdings": sum(1 for m in mem if m["tickers"]),
+                    "shared_basket": _basket(mem, p["basket_top"]),
+                    "excess_pp_total": round(float(np.sum(ex)), 3),
+                    "excess_pp_mean": round(float(np.mean(ex)), 3),
+                    "excess_pp_median": round(float(np.median(ex)), 3)})
+    # review F2: size, then TOTAL excess, then name -- never the ROI row order
+    out.sort(key=lambda c: (-c["n"], -c["excess_pp_total"], c["members"][0]))
+    for k, c in enumerate(out):
+        c["cluster_id"] = k
+    top = out[0]["n"] if out else 0
+    for c in out:
+        c["tied_for_largest"] = bool(c["n"] == top and sum(1 for x in out if x["n"] == top) > 1)
+    return out, edges
+
+
 def build(receipt: dict, inputs: dict, px: Prices, *, today: Optional[date] = None,
           prices_source: str = "") -> dict:
     p = params()
     today = today or date.today()
     books = book_rows(receipt, inputs, px, p, today)
-    ahead = [b for b in books if (b["excess_pp"] or 0) > 0 and b["excess_pp"] is not None]
-    nt = [b for b in ahead if not b["family"].endswith("twin")]
-    comps, edges = cluster(nt, jaccard_threshold=p["jaccard_threshold"],
-                           corr_threshold=p["corr_threshold"], min_corr_obs=p["min_corr_obs"])
-    clusters = []
-    for k, idx in enumerate(comps):
-        mem = [nt[i] for i in idx]
-        ex = [m["excess_pp"] for m in mem]
-        clusters.append({"cluster_id": k, "n": len(mem), "members": [m["account"] for m in mem],
-                         "families": sorted({m["family"] for m in mem}),
-                         "n_with_holdings": sum(1 for m in mem if m["tickers"]),
-                         "shared_basket": _basket(mem, p["basket_top"]),
-                         "excess_pp_mean": round(float(np.mean(ex)), 3),
-                         "excess_pp_median": round(float(np.median(ex)), 3)})
-    sens = {}
+    ahead = [b for b in books if b["excess_pp"] is not None and b["excess_pp"] > 0]
+    twins = [b for b in ahead if b["category"] == "twin"]
+    controls = [b for b in ahead if b["category"] == "control"]
+    strat = [b for b in ahead if b["category"] == "strategy"]
+    clusters, edges = _clusters_of(strat, p["jaccard_threshold"], p)
+    sens, loose = {}, None
     for thr in p["jaccard_sensitivity"]:
-        cs, _ = cluster(nt, jaccard_threshold=thr, corr_threshold=p["corr_threshold"],
-                        min_corr_obs=p["min_corr_obs"])
+        cs, _ = _clusters_of(strat, thr, p)
         sens[f"{thr:.2f}"] = len(cs)
-    twins_ahead = [b for b in ahead if b["family"].endswith("twin")]
-    cl_of = {a: c["cluster_id"] for c in clusters for a in c["members"]}
+        if loose is None or thr < loose[0]:
+            loose = (thr, cs[0] if cs else None)
+    dense = [b for b in ahead if (b["sessions_graded"] or 0) >= p["early_min_sessions"]]
+    short_strat = [b for b in strat if b not in dense]
+    ex = exante_bets(short_strat, px, p)
+    # the most frequent names across the strategy books with holdings (review F2)
+    held = [b for b in strat if b["tickers"]]
+    freq: dict = {}
+    for b in held:
+        for t in b["tickers"]:
+            freq[t] = freq.get(t, 0) + 1
+    top_names = [{"ticker": t, "n_books": n, "of": len(held)}
+                 for t, n in sorted(freq.items(), key=lambda kv: (-kv[1], kv[0]))[:p["basket_top"]]]
+    tilt = None
+    if top_names and ex.get("status") == "OK":
+        t0 = top_names[0]["ticker"]
+        bs = [ex["beta_vs_spy"][b["account"]] for b in held
+              if t0 in b["tickers"] and b["account"] in ex["beta_vs_spy"]]
+        if bs:
+            tilt = {"ticker": t0, "n_books": top_names[0]["n_books"], "of": len(held),
+                    "median_exante_beta_of_its_books": round(float(np.median(bs)), 2),
+                    "sector": (inputs.get("sector_map") or {}).get(t0)}
+    cl_names = {a for c in clusters for a in c["members"]}
+    lanes = lanes_block(receipt, books, inputs, p)
+    books_by = {b["account"]: b for b in books}
     losers = sorted([b for b in books if b["excess_pp"] is not None],
                     key=lambda b: b["excess_pp"])[:p["n_losers"]]
     loser_rows = []
     for b in losers:
         row = _public(b)
-        row.update(classify_loser(b, p))
+        row.update(classify_loser(b, p, _identity_group(b, lanes, books_by)))
         loser_rows.append(row)
-    summary = summarise(len(ahead), len(nt), clusters, p, sens)
+    summary = summarise(n_raw=len(ahead), twins=twins, controls=controls, strat=strat,
+                        clusters=clusters, sens=sens, loose=loose, exante=ex, dense=dense,
+                        short_strat=short_strat, top_names=top_names, tilt=tilt,
+                        n_books=len(books), p=p)
     return {
         "schema": SCHEMA, "receipt": "book_dna", "licence": "PRODUCT_EXPERIMENT",
         "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -1014,18 +1212,23 @@ def build(receipt: dict, inputs: dict, px: Prices, *, today: Optional[date] = No
         "sources": {"prices": prices_source, "sector_map": inputs.get("sector_source"),
                     "gaps": inputs.get("gaps") or {}},
         "summary": summary,
-        "clusters": clusters, "cluster_edges": edges,
+        "exante_bets": ex,
+        "holdings_clusters": clusters, "cluster_edges": edges,
         "cluster_count_sensitivity": sens,
-        "twins_ahead": {"n": len(twins_ahead),
-                        "n_whose_parent_is_ahead": sum(1 for t in twins_ahead if t.get("twin_of") in cl_of),
-                        "by_parent": _count_by(twins_ahead, "twin_of")},
-        "lanes": lanes_block(receipt, books, inputs, p),
+        "loosest_threshold_largest_cluster": {"jaccard": loose[0] if loose else None,
+                                              "cluster": loose[1] if loose else None},
+        "most_frequent_names_in_strategy_winners": top_names,
+        "controls_ahead": [b["account"] for b in controls],
+        "twins_ahead": {"n": len(twins),
+                        "n_whose_parent_is_ahead": sum(1 for t in twins if t.get("twin_of") in cl_names),
+                        "by_parent": _count_by(twins, "twin_of")},
+        "lanes": lanes,
         "books": [_public(b) for b in books],
         "losers": loser_rows,
         "read_me_first": ("A count of books ahead of SPY is not a count of bets: twins re-price a "
-                          "parent, and books holding the same names are one exposure. Every label "
-                          "here is at most REPLICATED; most rows are OBSERVED(n) over a handful of "
-                          "sessions. Nothing here is a claim."),
+                          "parent, controls are controls, and books holding the same names or the "
+                          "same exposure are one bet (ex-ante effective bets). Every label is at "
+                          "most REPLICATED; nothing here is a claim."),
     }
 
 
@@ -1037,23 +1240,53 @@ def _count_by(rows: list, key: str) -> dict:
     return dict(sorted(out.items(), key=lambda kv: -kv[1]))
 
 
-def summarise(n_raw: int, n_nt: int, clusters: list, p: dict,
-              sensitivity: Optional[dict] = None) -> dict:
+def _basket_str(c: Optional[dict]) -> str:
+    if not c:
+        return "none"
+    bs = [x["ticker"] for x in c.get("shared_basket") or []]
+    return ", ".join(bs) if bs else f"{c['members'][0]} (no shared holdings)"
+
+
+def summarise(*, n_raw: int, twins: list, controls: list, strat: list, clusters: list,
+              sens: dict, loose: Optional[tuple], exante: dict, dense: list, short_strat: list,
+              top_names: list, tilt: Optional[dict], n_books: int, p: dict) -> dict:
     k = len(clusters)
     big = clusters[0] if clusters else None
-    basket = [x["ticker"] for x in (big or {}).get("shared_basket") or []]
-    share = (big["n"] / n_nt) if big and n_nt else None
-    s = {"n_ahead_raw": n_raw, "n_ahead_non_twin": n_nt,
-         "n_independent_clusters_ahead": k,
-         "collapse_factor": round(n_raw / k, 2) if k else None,
-         "largest_cluster_share": None if share is None else round(share, 3),
+    nS = len(strat)
+    exb = exante.get("effective_bets_raw") if exante.get("status") == "OK" else None
+    exr = exante.get("effective_bets_spy_residual") if exante.get("status") == "OK" else None
+    s = {"n_ahead_raw": n_raw, "n_ahead_twins": len(twins), "n_ahead_controls": len(controls),
+         "n_ahead_strategy": nS,
+         "n_ahead_non_twin": nS + len(controls),
+         "n_holdings_clusters_ahead": k,
+         "effective_bets_exante": exb, "effective_bets_exante_spy_residual": exr,
+         "exante_window": exante.get("window"), "exante_n_books": exante.get("n_books"),
+         "collapse_factor_twins_controls": round(n_raw / nS, 2) if nS else None,
+         "collapse_factor_holdings_overlap": round(nS / k, 2) if k else None,
+         "collapse_factor_exante": (round(len(short_strat) / exb, 2) if exb else None),
          "largest_cluster_size": big["n"] if big else 0,
-         "largest_cluster_basket": basket,
-         "largest_cluster_members_sample": (big or {}).get("members", [])[:5],
+         "largest_cluster_share": round(big["n"] / nS, 3) if big and nS else None,
+         "largest_cluster_basket": [x["ticker"] for x in (big or {}).get("shared_basket") or []],
+         "largest_cluster_tied": bool((big or {}).get("tied_for_largest")),
+         "clusters_ge3": [{"n": c["n"], "basket": [x["ticker"] for x in c["shared_basket"]],
+                           "excess_pp_total": c["excess_pp_total"], "members": c["members"]}
+                          for c in clusters if c["n"] >= 3],
+         "loosest_largest": ({"jaccard": loose[0], "n": loose[1]["n"],
+                              "basket": [x["ticker"] for x in loose[1]["shared_basket"]]}
+                             if loose and loose[1] else None),
+         "most_frequent_names": top_names, "tilt": tilt,
          "jaccard_threshold": p["jaccard_threshold"],
-         "cluster_count_sensitivity": dict(sensitivity or {}),
+         "cluster_count_sensitivity": dict(sens or {}),
+         "n_ahead_dense": len(dense),
+         "dense_ahead": [{"account": b["account"], "excess_pp": b["excess_pp"],
+                          "sessions": b["sessions_graded"]} for b in dense],
+         "evidence_density_line": (
+             f"every label is OBSERVED(n) because of data density, not a verdict: only "
+             f"{len(dense)} of {n_raw} books ahead of SPY {'has' if len(dense) == 1 else 'have'} "
+             f">= {p['early_min_sessions']} sessions"),
          "book_dna_status": "OK"}
     s["collapse_line"] = collapse_line(s)
+    s["top_line"] = top_line(s, short_strat)
     return s
 
 
@@ -1064,28 +1297,68 @@ def collapse_line(s: dict) -> str:
                 f"({s.get('why') or 'book_dna did not run on this receipt'}) -- "
                 f"the count is NOT a count of independent bets")
     if s.get("n_ahead_raw", 0) == 0:
-        return "0 ahead of SPY = 0 non-twin = 0 independent clusters"
-    bs = s.get("largest_cluster_basket") or []
-    name = (", ".join(bs) if bs else
-            f"{(s.get('largest_cluster_members_sample') or ['?'])[0]} (no shared holdings)")
+        return "0 ahead of SPY = 0 twins + 0 controls + 0 strategy books"
+    ex = s.get("effective_bets_exante")
+    exs = (f"{ex:.1f} ex-ante bets ({s.get('effective_bets_exante_spy_residual'):.1f} net of SPY; "
+           f"{s.get('exante_n_books')} books priced over {s.get('exante_window')})"
+           if ex is not None else "ex-ante bets NOT_COMPUTABLE")
     sh = s.get("largest_cluster_share")
-    line = (f"{s['n_ahead_raw']} ahead of SPY = {s['n_ahead_non_twin']} non-twin = "
-            f"{s['n_independent_clusters_ahead']} independent clusters; largest cluster = "
-            f"{name} ({'n/a' if sh is None else f'{100 * sh:.0f}%'})")
-    sens = s.get("cluster_count_sensitivity") or {}
-    if len(sens) > 1:
-        ks = sorted(sens)
-        line += (f" [Jaccard {s.get('jaccard_threshold'):.2f}; clusters "
-                 + ", ".join(f"{sens[k]} at {k}" for k in ks) + "]")
-    return line
+    big = (f"{', '.join(s.get('largest_cluster_basket') or []) or 'no shared holdings'} "
+           f"({s.get('largest_cluster_size')} books, {'n/a' if sh is None else f'{100 * sh:.0f}%'}"
+           f"{'; a size tie, broken by total excess' if s.get('largest_cluster_tied') else ''})")
+    line = (f"{s['n_ahead_raw']} ahead of SPY = {s['n_ahead_twins']} twins + "
+            f"{s['n_ahead_controls']} controls + {s['n_ahead_strategy']} strategy books; "
+            f"the strategy books = {s['n_holdings_clusters_ahead']} holdings clusters at Jaccard "
+            f"{s['jaccard_threshold']:.2f}, ~ {exs}; largest holdings cluster = {big}")
+    lo = s.get("loosest_largest")
+    if lo:
+        line += f"; at Jaccard {lo['jaccard']:.2f} the largest is {', '.join(lo['basket'][:5])} ({lo['n']} books)"
+    f1, f2 = s.get("collapse_factor_twins_controls"), s.get("collapse_factor_holdings_overlap")
+    line += f" [collapse: twins+controls x{f1}, holdings overlap x{f2}"
+    if s.get("collapse_factor_exante"):
+        line += f", ex-ante x{s['collapse_factor_exante']}"
+    return line + "]"
+
+
+def top_line(s: dict, short_strat: list) -> str:
+    """The PAPER_ACCOUNTS.md top line (review's wording, from this receipt's numbers)."""
+    if s.get("book_dna_status") != "OK":
+        return collapse_line(s)
+    d = s.get("dense_ahead") or []
+    n_raw = s["n_ahead_raw"]
+    if d:
+        who = "; ".join(f"{x['account']}, {x['excess_pp']:+.2f} pp / {x['sessions']} sessions" for x in d)
+        head = (f"{len(d)} book{'s' if len(d) != 1 else ''} with >= 21 sessions "
+                f"{'is' if len(d) == 1 else 'are'} ahead of SPY ({who}).")
+    else:
+        head = "No book with >= 21 sessions is ahead of SPY."
+    dn = {x["account"] for x in d}
+    tw = s["n_ahead_twins"]
+    ct = s["n_ahead_controls"]
+    ss = [b for b in short_strat if b["account"] not in dn]
+    sess = [b["sessions_graded"] for b in ss if b.get("sessions_graded") is not None]
+    span = (f"{min(sess)}-{max(sess)}-session" if sess and min(sess) != max(sess)
+            else f"{sess[0]}-session" if sess else "short")
+    ex = s.get("effective_bets_exante")
+    exs = (f" ~ {ex:.1f} ex-ante bets ({s.get('effective_bets_exante_spy_residual'):.1f} net of SPY)"
+           if ex is not None else "")
+    t = s.get("tilt")
+    tilt = ""
+    if t:
+        tilt = (f", the most common name {t['ticker']} ({t['n_books']} of {t['of']} books"
+                + (f", {t['sector']}" if t.get("sector") else "")
+                + f"; its books' ex-ante beta ~ {t['median_exante_beta_of_its_books']:.1f})")
+    return (f"{head} The other {n_raw - len(d)} \"ahead\" are {tw} control twins, {ct} controls "
+            f"and {len(ss)} {span} books{exs}{tilt}. Nothing here is evidence yet.")
 
 
 def refused_summary(n_ahead_raw: Any, why: str) -> dict:
-    s = {"n_ahead_raw": n_ahead_raw, "n_ahead_non_twin": None,
-         "n_independent_clusters_ahead": None, "collapse_factor": None,
+    s = {"n_ahead_raw": n_ahead_raw, "n_ahead_non_twin": None, "n_ahead_strategy": None,
+         "n_holdings_clusters_ahead": None, "effective_bets_exante": None,
          "largest_cluster_share": None, "largest_cluster_basket": [],
          "book_dna_status": "REFUSED", "why": why[:300]}
     s["collapse_line"] = collapse_line(s)
+    s["top_line"] = s["collapse_line"]
     return s
 
 
@@ -1126,5 +1399,6 @@ def run(receipt: dict, *, out_dir: Path = PA_DIR, run_id: str, bars: Optional[pd
 
 __all__ = ["SCHEMA", "LABEL_LADDER", "LABEL_CEILING", "ERROR_TYPES", "NOT_COMPUTABLE",
            "Prices", "build", "classify_loser", "cluster", "collapse_line", "evidence_label",
+           "exante_bets", "participation_ratio", "top_line",
            "jaccard", "lanes_block", "load_inputs", "params", "refused_summary", "run",
            "summarise", "tail_from_contributions", "write"]

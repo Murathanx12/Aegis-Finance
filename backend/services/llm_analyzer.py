@@ -284,9 +284,10 @@ def openclaw_usage(path=None, *, months: int = 2, now: Optional[datetime] = None
     Reads the newest `months` monthly files (incrementally, see `_OPENCLAW_SCAN`)
     and never writes. Under pytest with no explicit path it reads NOTHING and
     says so -- the same rule `llm_telemetry` applies to writes -- so a unit test
-    never scans the real ledger. `usd` is priced from the stored tokens at
-    current list prices; rows with no usage are counted in `unpriced` and make
-    `usd` a declared LOWER BOUND."""
+    never scans the real ledger. `usd` sums each row's STORED `cost_usd` (the
+    price at call time); `usd_repriced_today_prices` reprices the stored tokens
+    at today's list prices. Rows with no cost (no usage came back) are counted
+    in `unpriced_calls` and make `usd` a declared LOWER BOUND."""
     from backend.services import llm_telemetry as _tel
     now = now or datetime.now(timezone.utc)
     base = _tel._resolve_path(path)

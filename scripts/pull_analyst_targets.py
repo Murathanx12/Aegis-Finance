@@ -299,11 +299,22 @@ def main(argv=None) -> int:
     if revs:
         p = OUT / "target_revisions.parquet"
         df = pd.DataFrame(revs)
+        df["first_seen_utc"] = df["pulled_at"]
+        key = ["ticker", "event_date", "firm", "to_grade"]
         if p.exists():
-            df = pd.concat([pd.read_parquet(p), df], ignore_index=True)
+            old = pd.read_parquet(p)
+            if "first_seen_utc" not in old.columns:
+                # rows from before this column: their last pulled_at is an UPPER bound on when they
+                # were first known (the old dedupe overwrote pulled_at with keep="last")
+                old["first_seen_utc"] = old["pulled_at"]
+            df = pd.concat([old, df], ignore_index=True)
+            # first_seen keeps MIN semantics: a re-served row keeps the pull that first served it,
+            # so a row the vendor adds or rewrites later can never pass a point-in-time check for
+            # a decision made before it appeared (contest_direction / REVIEW C9 F1).
+            first = df.groupby(key, dropna=False)["first_seen_utc"].transform("min")
             # The vendor re-serves the same historical events every pull.
-            df = df.drop_duplicates(["ticker", "event_date", "firm", "to_grade"],
-                                    keep="last")
+            df = df.drop_duplicates(key, keep="last")
+            df["first_seen_utc"] = first.loc[df.index]
         df.to_parquet(p, index=False)
         written["target_revisions"] = f"{len(df):,} rows (deduped on event)"
     if trends:

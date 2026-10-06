@@ -1,0 +1,60 @@
+{
+ "schema": "hyp_lab/theory_cell_declaration/1",
+ "cell": "beat_streak",
+ "run": "TC_2026-10-06_1",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "decision": "Primary series = monthly mean of the declared quantity, indexed by the month the position is held (hyp_investable.spread_stats: t on non-overlapping 3-month blocks, MDE = 2.8 SE). CANDIDATE iff design mean > 0 AND validate mean > 0 with t >= 2 AND a strict majority of validate years > 0 AND the leave-one-year-out worst validate mean > 0. FAILED_VARIANT iff validate mean <= 0, or validate t < 2 with validate MDE <= the effect worth having (max(design mean, min_effect)). Otherwise CANNOT_DISTINGUISH. Late (2017-2024) is read last and never decides. A cell whose sign is 'design' multiplies the series by the sign of its design mean first (the design fold fixes the direction; validate decides).",
+ "verdict_vocabulary": [
+  "CANDIDATE",
+  "FAILED_VARIANT",
+  "CANNOT_DISTINGUISH",
+  "REFUSED"
+ ],
+ "family": "earnings_streak",
+ "target": "return",
+ "title": "Consecutive EPS beats: does post-announcement drift shrink as the streak grows",
+ "mechanism": "Expectations ratchet: after several beats the market prices the next beat in, so the post-announcement drift of a streak beat is smaller than that of a first beat (or, the rival: streaks signal persistent under-reaction and drift is larger).",
+ "precursor": "number of consecutive quarters with IBES actual EPS > consensus mean, ending at this announcement (knowable at the announcement)",
+ "separation_from_beta": "drift is abnormal vs the size band; the primary is a within-month DIFFERENCE (streak >= 3 beats minus first beats), so market and band beta cancel",
+ "refutation": "validate (2009-2016) signed (streak>=3 - streak 1) 63-session drift difference <= 0, or t < 2 with MDE below the effect worth having",
+ "inputs": {
+  "surprise": "backend/data/optimus/wrds/bulk/tr_ibes__surpsumu.parquet (EPS, QTR, usfirm=1)",
+  "link": "backend/data/optimus/wrds/bulk/wrdsapps_link_crsp_ibes__ibcrsphist.parquet",
+  "crsp_daily": "backend/data/optimus/wrds/crsp_dsf_<year>.parquet (1993-2024)",
+  "bands": "backend/data/optimus/crsp_rebuild/library_panel_2026-09-29T075640Z.parquet",
+  "spreads": "backend/data/optimus/crsp_rebuild/followups_daily_FU_2026-09-29T0855Z.parquet"
+ },
+ "event": "one per (IBES ticker, fiscal quarter) announcement; beat = actual > surpmean; streak = consecutive beats ending here, reset by a miss/meet or a quarter gap > 4 months; permno via the ibcrsphist row active on anndats",
+ "entry": "OPEN of the first CRSP session strictly after anndats + 1 business day",
+ "horizons": [
+  21,
+  63
+ ],
+ "primary": "monthly mean of (H=63 gross abnormal drift vs size band | streak >= 3) minus (same | streak == 1), sign fixed by the design fold",
+ "reported": [
+  "drift by streak bucket miss/1/2/3/4/5+ per split, H21 and H63",
+  "[e-1,e+1] reaction by bucket",
+  "streak >= 3 net vs band and market (the tradeable leg)"
+ ],
+ "splits": {
+  "design": [
+   "1994-01-01",
+   "2008-12-31"
+  ],
+  "validate": [
+   "2009-01-01",
+   "2016-12-31"
+  ],
+  "late": [
+   "2017-01-01",
+   "2024-12-31"
+  ]
+ },
+ "sign": "design",
+ "min_effect": 0.003,
+ "honesty": "ear_drift / ear_mom (PEAD continuation) decay post-2009 and are DEPRIORITIZED on CRSP; none of the 12 earnings_event library rules conditioned on a streak count.",
+ "hyp_id": "H-3471279117",
+ "sha256": "f2697a8784a993f76ba1a2a840c85e28eea6f75167d1444e2564f0bb03ca6d65",
+ "written_utc": "2026-10-06T16:06:33+00:00"
+}

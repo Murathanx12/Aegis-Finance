@@ -1,0 +1,58 @@
+{
+ "schema": "hyp_lab/theory_cell_declaration/1",
+ "cell": "insider_hold",
+ "run": "TC_2026-10-06_1",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "decision": "Primary series = monthly mean of the declared quantity, indexed by the month the position is held (hyp_investable.spread_stats: t on non-overlapping 3-month blocks, MDE = 2.8 SE). CANDIDATE iff design mean > 0 AND validate mean > 0 with t >= 2 AND a strict majority of validate years > 0 AND the leave-one-year-out worst validate mean > 0. FAILED_VARIANT iff validate mean <= 0, or validate t < 2 with validate MDE <= the effect worth having (max(design mean, min_effect)). Otherwise CANNOT_DISTINGUISH. Late (2017-2024) is read last and never decides. A cell whose sign is 'design' multiplies the series by the sign of its design mean first (the design fold fixes the direction; validate decides).",
+ "verdict_vocabulary": [
+  "CANDIDATE",
+  "FAILED_VARIANT",
+  "CANNOT_DISTINGUISH",
+  "REFUSED"
+ ],
+ "family": "insider_hold",
+ "target": "return",
+ "title": "Insider buy with no sale by the buyers within 90 days",
+ "mechanism": "An insider who buys and then does not sell is signalling conviction rather than liquidity or diversification timing; the conviction cohort should drift more than insiders who buy and quickly sell.",
+ "precursor": "officer/director open-market buy (Form 4, not 10b5-1) on day t, and NO open-market sale of the same stock filed by any of those buyers in (t, t+90 days]; knowable at t+90",
+ "separation_from_beta": "benchmark = equal-weight CRSP common stocks of the same size band (matched non-event names) over the same sessions; control cohort = buy-then-sold events entered the same way",
+ "refutation": "validate (2009-2016) HOLD-cohort net abnormal 63-session return vs the size band <= 0, or t < 2 with MDE below the effect worth having",
+ "inputs": {
+  "insider": "backend/data/optimus/sec_insider/insider_events_v1.parquet",
+  "crsp_daily": "backend/data/optimus/wrds/crsp_dsf_<year>.parquet (2006-2024)",
+  "bands": "backend/data/optimus/crsp_rebuild/library_panel_2026-09-29T075640Z.parquet",
+  "spreads": "backend/data/optimus/crsp_rebuild/followups_daily_FU_2026-09-29T0855Z.parquet"
+ },
+ "event": "firm-level: the first officer/director open-market buy on a permno after >= 90 days with none; buyers = the CIKs buying that permno on that public day; HOLD iff none of them files an open-market sale of that permno with public date in (t, t+90]; SOLD otherwise",
+ "entry": "OPEN of the first CRSP session strictly after t + 90 calendar days (when 'no sale' is knowable)",
+ "horizons": [
+  21,
+  63
+ ],
+ "primary": "HOLD cohort, H=63, net (minus a round trip of max(Corwin-Schultz, flat band)) abnormal vs size band",
+ "reported": [
+  "HOLD/SOLD x H21/H63 x market/band, gross and net, mean round trip",
+  "HOLD - SOLD gross"
+ ],
+ "splits": {
+  "design": [
+   "2006-01-01",
+   "2008-12-31"
+  ],
+  "validate": [
+   "2009-01-01",
+   "2016-12-31"
+  ],
+  "late": [
+   "2017-01-01",
+   "2024-12-31"
+  ]
+ },
+ "sign": "+1",
+ "min_effect": 0.005,
+ "honesty": "Prior from memory: insider CLUSTER drift is real gross (t ~6) and EQUALS the spread (insider_events_RESULTS_IE_2026-09-30T0135Z: gross +1.1-1.5%/5 sessions, round trip 136 bps). The no-subsequent-sale cut was not in any of the 15 library insider rules nor the IE cells.",
+ "hyp_id": "H-aca81f5b8f",
+ "sha256": "32984679f7ccc6868dcfde591a475f9d9f8ae7b6eabb63c116a8ff31505c0131",
+ "written_utc": "2026-10-06T16:06:32+00:00"
+}

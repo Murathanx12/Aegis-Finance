@@ -285,6 +285,221 @@ def twin_series(rule: dict, panel: pd.DataFrame, *, seed: int,
     return out.set_index("date")
 
 
+# ── the STICKY twin (CHUNK C1b, 2026-10-07) ─────────────────────────────────
+#
+# `twin_series` above is the REGISTERED construction (forward trials LIB-FWD-TWIN-1 and
+# CRSP_BLEND_v0 were frozen on it): it redraws every partner at every rebalance, and the
+# fair-twin board's basket re-cuts the terciles every month, so the twin churns ~0.39-0.43
+# a month while a quality rule turns over 0.11-0.17 -- a holding rule then beats its twin
+# on costs alone (`docs/research_notes/2026-10-06/fair_twin_reissue_2026-10-06.md`).
+# The sticky twin is the fair control for a HOLDING rule: one partner per rule holding,
+# drawn when the rule ENTERS the name, held until the rule exits it.
+
+STICKY_TWIN_KIND = "sticky"
+#: the construction's declared name (`docs/research_notes/2026-10-06/DECLARATION_TWIN_STICKY_v1.json`)
+STICKY_TWIN_CONSTRUCTION = "TWIN_STICKY_v1"
+#: why a partner was (re)drawn or dropped; every one but `exit` is a draw
+STICKY_REASONS = ("entry", "exit", "died", "collision", "unmatched_retry")
+_CASH_PREFIX = "__cash__:"
+
+
+def _sticky_pick(ci: CellIndex, s: str, panel_d: pd.DataFrame, ok: set, taken: set,
+                 rng: np.random.Generator) -> tuple:
+    """One partner for rule name `s`: its cell as of this date, falling back as `draw_twins`
+    does; candidates are eligible with a forward return and not in `taken`. Rejection
+    sampling (deterministic given the rng) before the filtered list, so a big cell costs
+    O(1) per draw."""
+    b, v, m = ci.cell_of(s, panel_d)
+    levels = []
+    if b is not None:
+        if v is not None and m is not None:
+            levels.append("cell")
+        if v is not None:
+            levels.append("band_vol")
+        levels.append("band")
+    levels.append("any")
+    for lv in levels:
+        cand = ci.candidates(lv, b, v, m)
+        if not len(cand):
+            continue
+        for _ in range(16):
+            x = cand[int(rng.integers(len(cand)))]
+            if x in ok and x not in taken:
+                return x, lv
+        cand = [x for x in cand if x in ok and x not in taken]
+        if cand:
+            return cand[int(rng.integers(len(cand)))], lv
+    return None, "none"
+
+
+def twin_series_sticky(rule: dict, panel: Optional[pd.DataFrame] = None, *,
+                       n_draws: Optional[int] = None, by_date: Optional[dict] = None,
+                       cell_cache: Optional[dict] = None, dates: Optional[Iterable] = None,
+                       spread_col: str = "_sp", default_spread: float = 0.0035) -> pd.DataFrame:
+    """Month by month: the rule's EW book and its STICKY matched twin, both charged
+    `trade_cost` on their own traded weight (`twin_cost_convention`).
+
+    `rule`: `id` (draw j is seeded `seed_for(id, j)`) and `held_symbols_by_date`: the
+    rule's book at EVERY decision date it is invested (carried between rebalances, as
+    `scripts.hyp_twin_board.carried_picks` writes it): a list (equal weight) or a dict
+    {symbol: target weight} (inverse-vol, liquidity, risk-parity rules); a date absent from it
+    holds cash. Target weights are renormalised over the names on the panel that date.
+    `panel` (or `by_date`): date, symbol, eligible, median_dollar_vol, vol_63, mom_252_21,
+    fwd_ret and, optionally, the per-name round trip `spread_col`. `cell_cache` (date ->
+    cells) may be shared across rules: the cells depend on the date only.
+
+    The sticky rule, per draw (`n_draws` independent draws, default `STICKY_TWIN_N_DRAWS`):
+    * a name ENTERING the rule's book gets a partner drawn from the same size x vol x 12-1
+      cell AS OF THAT DATE (fallbacks as `draw_twins`), excluding the rule's own names and
+      the draw's other partners;
+    * the partner is HELD while the rule holds the matched name, and dropped when the rule
+      exits it;
+    * a partner no longer on the panel (delisted) or without a forward return that date is
+      replaced at that decision date from the matched name's cell (`died`), and a partner the
+      rule itself now holds is replaced too (`collision`) -- both are twin trades the rule did
+      not make, both counted and charged;
+    * each partner carries ITS matched name's target weight (so an ivw / liqw rule's twin is
+      weighted like the rule); both books drift between dates and are re-weighted to target
+      at every date, exactly as `scripts.hyp_investable.run_book` treats the rule. A slot with
+      no candidate at all holds cash (earns 0, trades free).
+
+    Columns: the rule's gross / cost / turnover; the twin's gross / cost / turnover / the
+    full-round-trip UPPER BOUND, each the MEAN over the draws (a draw's cost is what that
+    one twin pays); (re)draws by reason (summed over draws), fallbacks and cash slots.
+    The registered `twin_series` is not touched by this function."""
+    from backend import config as C                                 # noqa: PLC0415
+    from backend.services import hyp_investable as HI               # noqa: PLC0415
+    from backend.services.hyp_investable import book_weights, target_weights  # noqa: PLC0415
+    rid = rule.get("id")
+    book = {pd.Timestamp(d): book_weights(v) for d, v in (rule.get("held_symbols_by_date") or {}).items()}
+    if not book:
+        raise TwinInputMissing(f"{rid}: no holdings")
+    nd = int(n_draws if n_draws is not None else C.STICKY_TWIN_N_DRAWS)
+    if by_date is None:
+        if panel is None:
+            raise TwinInputMissing(f"{rid}: neither a panel nor by_date")
+        by_date = {pd.Timestamp(d): g for d, g in panel.groupby(pd.DatetimeIndex(panel["date"]))}
+    else:
+        by_date = {pd.Timestamp(d): g for d, g in by_date.items()}
+    cache = cell_cache if cell_cache is not None else {}
+    grid = sorted(pd.Timestamp(d) for d in (dates if dates is not None else by_date))
+    rngs = [np.random.default_rng(seed_for(str(rid), j)) for j in range(nd)]
+    partners: list = [dict() for _ in range(nd)]        # draw -> {rule name: partner or None}
+    prev_twin: list = [dict() for _ in range(nd)]
+    prev_book: dict = {}
+    rows = []
+    for d in grid:
+        g0 = by_date.get(d)
+        if g0 is None or not g0["fwd_ret"].notna().any():
+            continue
+        g = g0.drop_duplicates("symbol").set_index("symbol")
+        fwd = g["fwd_ret"].astype(float)
+        spread = g[spread_col].astype(float).to_dict() if spread_col in g.columns else {}
+        w = target_weights(book.get(d) or {}, g.index)
+        sel = list(w)
+        sel_set = set(sel)
+        rec = {"date": d, "n": len(sel), **{f"twin_{r}": 0 for r in STICKY_REASONS},
+               "twin_fallback": 0, "twin_cash_slots": 0}
+        c, to = trade_cost(prev_book, w, spread, default_spread)
+        rec.update(gross=HI.book_return(w, fwd) if sel else np.nan, cost=c, turnover=to)
+        prev_book = HI.drift(w, fwd) if sel else {}
+        if sel and d not in cache:
+            ct = cell_table(g0)
+            okd = set(g.index[g["eligible"].astype(bool).to_numpy() & fwd.notna().to_numpy()])
+            cache[d] = (CellIndex(ct), okd)
+        tg, tc, tto, tub = [], [], [], []
+        for j in range(nd):
+            pj = partners[j]
+            for s in [s for s in pj if s not in sel_set]:
+                del pj[s]
+                rec["twin_exit"] += 1
+            if sel:
+                ci, okd = cache[d]
+                taken = sel_set | {p for p in pj.values() if p is not None}
+                for s in sel:
+                    old = pj.get(s)
+                    if s not in pj:
+                        reason = "entry"
+                    elif old is None:
+                        reason = "unmatched_retry"
+                    elif old not in g.index or not np.isfinite(fwd.get(old, np.nan)):
+                        reason = "died"
+                    elif old in sel_set:
+                        reason = "collision"
+                    else:
+                        continue
+                    if old is not None and old not in sel_set:
+                        taken.discard(old)
+                    pick, lv = _sticky_pick(ci, s, g0, okd, taken, rngs[j])
+                    pj[s] = pick
+                    if pick is not None:
+                        taken.add(pick)
+                    rec[f"twin_{reason}"] += 1
+                    if lv != "cell":
+                        rec["twin_fallback"] += 1
+            wt: dict = {}
+            for s in sel:
+                p = pj.get(s)
+                key = p if p is not None else _CASH_PREFIX + s
+                wt[key] = wt.get(key, 0.0) + w[s]
+            sp = dict(spread)
+            for k in list(wt) + list(prev_twin[j]):
+                if k.startswith(_CASH_PREFIX):
+                    sp[k] = 0.0
+            cj, toj = trade_cost(prev_twin[j], wt, sp, default_spread)
+            tc.append(cj)
+            tto.append(toj)
+            if sel:
+                real = {k: v for k, v in wt.items() if not k.startswith(_CASH_PREFIX)}
+                tg.append(HI.book_return(wt, fwd))
+                tub.append(twin_full_round_trip_upper_bound(real, spread, default_spread))
+                rec["twin_cash_slots"] += len(wt) - len(real)
+            prev_twin[j] = HI.drift(wt, fwd) if sel else {}
+        rec.update(twin_gross=float(np.mean(tg)) if tg else np.nan, twin_cost=float(np.mean(tc)),
+                   twin_turnover=float(np.mean(tto)), twin_turnover_draw_sd=float(np.std(tto)),
+                   twin_full_rt=float(np.mean(tub)) if tub else 0.0)
+        rows.append(rec)
+    if not rows:
+        raise TwinInputMissing(f"{rid}: no decision date with forward returns")
+    out = pd.DataFrame(rows).set_index("date")
+    out.attrs.update(twin_kind=STICKY_TWIN_KIND, n_draws=nd, cost_convention=TWIN_COST_CONVENTION)
+    return out
+
+
+def sticky_turnover_check(frame: pd.DataFrame, tolerance: Optional[float] = None) -> dict:
+    """The receipt's construction check: the median over INVESTED months of |twin one-way
+    turnover - rule one-way turnover| must sit at or below `STICKY_TWIN_TURNOVER_TOLERANCE`;
+    otherwise `ok` is False and `reason` names the gap (the board REFUSES the row).
+
+    Months with a death or collision redraw are EXCLUDED from the median (the TWIN_STICKY_v1
+    declaration, written before the board run): those are twin trades by design, counted on the
+    receipt; the check is that the twin trades when, and as much as, the rule trades."""
+    from backend import config as C                                 # noqa: PLC0415
+    tol = float(tolerance if tolerance is not None else C.STICKY_TWIN_TURNOVER_TOLERANCE)
+    for c in ("turnover", "twin_turnover", "n"):
+        if c not in frame.columns:
+            raise TwinInputMissing(f"sticky frame lacks {c!r}")
+    inv = frame["n"] > 0
+    redraw = pd.Series(False, index=frame.index)
+    for c in ("twin_died", "twin_collision"):
+        if c in frame.columns:
+            redraw |= frame[c] > 0
+    excluded = int((inv & redraw).sum())
+    inv = inv & ~redraw
+    gap = (frame.loc[inv, "twin_turnover"] - frame.loc[inv, "turnover"]).abs()
+    if not len(gap):
+        return {"ok": False, "tolerance": tol, "median_abs_gap": None, "n_months": 0,
+                "reason": "REFUSED: no invested month to compare turnover on"}
+    med = float(gap.median())
+    out = {"ok": bool(med <= tol), "tolerance": tol, "median_abs_gap": med, "n_months": int(len(gap)),
+           "n_months_excluded_death_or_collision": excluded,
+           "p90_abs_gap": float(gap.quantile(0.9)),
+           "mean_rule_turnover": float(frame.loc[inv, "turnover"].mean()),
+           "mean_twin_turnover": float(frame.loc[inv, "twin_turnover"].mean())}
+    out["reason"] = ("OK" if out["ok"] else
+                     f"REFUSED: median |twin turnover - rule turnover| {med:.4f} > tolerance {tol:.4f}")
+    return out
+
 # ── holdings for every cell (the factory's sidecar) ─────────────────────────
 #
 # The factory stores, per (rule, k) cell, the held symbols and weights at every
@@ -445,6 +660,25 @@ def twin_cost_convention() -> str:
       `UPPER_BOUND_COLUMN` for comparison. No verdict reads it.
     """
     return TWIN_COST_CONVENTION
+
+
+#: How the per-name round trip a trade pays is COMPOSED (review F2 of C1, 2026-10-07): the
+#: Corwin-Schultz estimate at the decision date, capped at `CS_CAP`, floored by the flat band
+#: cost -- max(CS capped, flat band), charged ONCE on the traded weight. Never CS ADDED on top
+#: of the flat cost (the 09-29 bridges runs subtracted CS from every forward return AND charged
+#: the flat band). Every board that prices a rule or a twin calls `round_trip_spread`.
+TWIN_COST_COMPOSITION = "MAX_CS_CAPPED_OR_FLAT_BAND_ON_TRADED_WEIGHT"
+CS_CAP = 0.20
+#: the round trip charged when a name has neither (e.g. it is off the panel on the exit date)
+DEFAULT_ROUND_TRIP = 0.0035
+
+
+def round_trip_spread(cs_spread, flat_band) -> np.ndarray:
+    """max(Corwin-Schultz capped at `CS_CAP`, flat band); flat alone where CS is missing.
+    The ONE composition (`TWIN_COST_COMPOSITION`) for a rule and its twin, on every board."""
+    flat = np.asarray(flat_band, dtype=float)
+    cs = np.minimum(np.asarray(cs_spread, dtype=float), CS_CAP)
+    return np.where(np.isfinite(cs), np.maximum(cs, flat), flat)
 
 
 def trade_cost(prev_w: dict, w: dict, spread: dict, default: float) -> tuple[float, float]:

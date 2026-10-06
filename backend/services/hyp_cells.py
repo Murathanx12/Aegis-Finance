@@ -107,14 +107,18 @@ def verdict(design: dict, confirm: dict, min_effect: float) -> dict:
     if cm is None or ct is None or cmde is None:
         return {"verdict": "REFUSED", "reason": "confirm fold has no usable estimate"}
     worth = max(float(dm) if dm is not None else 0.0, float(min_effect))
+    # review 2026-10-06 F6: every verdict says whether the confirm fold could see the effect worth
+    # having; the family posterior counts only POWERED negatives
+    powered = bool(cmde <= worth)
     if cm > 0 and ct >= 2 and (dm is not None and dm > 0):
-        return {"verdict": "CONDITIONAL_POSITIVE", "reason": f"confirm {cm:+.5f} t {ct} and design {dm:+.5f} > 0"}
+        return {"verdict": "CONDITIONAL_POSITIVE", "reason": f"confirm {cm:+.5f} t {ct} and design {dm:+.5f} > 0",
+                "powered": powered}
     if cm <= 0:
-        return {"verdict": "FAILED_VARIANT", "reason": f"confirm mean {cm:+.5f} <= 0"}
+        return {"verdict": "FAILED_VARIANT", "reason": f"confirm mean {cm:+.5f} <= 0", "powered": powered}
     if cmde <= worth:
-        return {"verdict": "FAILED_VARIANT",
+        return {"verdict": "FAILED_VARIANT", "powered": powered,
                 "reason": f"confirm t {ct} < 2 and MDE {cmde:.5f} <= effect worth having {worth:.5f}"}
-    return {"verdict": "CANNOT_DISTINGUISH",
+    return {"verdict": "CANNOT_DISTINGUISH", "powered": powered,
             "reason": f"confirm {cm:+.5f} t {ct}; MDE {cmde:.5f} > effect worth having {worth:.5f}"}
 
 

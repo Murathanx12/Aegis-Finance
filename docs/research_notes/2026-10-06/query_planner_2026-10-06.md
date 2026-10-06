@@ -164,3 +164,50 @@ call.
   adding it to the reader allowlist by hand. Nothing promotes one automatically.
 - **Commands:** `python -m backend.services.query_planner --yield` (files only) and `--plan`
   (prints, runs nothing).
+
+---
+
+## 7. After the adversarial review (`docs/reviews/REVIEW_2026-10-06_C7_QUERY_PLANNER.md`, 64/100)
+
+All of F1–F7 are applied, plus the review's Q7 measurement. The planner was **not** run live
+again and the supervisor was not restarted.
+
+| # | fix |
+|---|---|
+| F1 | **Gate on a declared provider, not a streak.** The streak gate never fired, because an un-offered `x_search` turn records no error. `QUERY_PLANNER_SEARCH_PROVIDER = None` (the default) means **no agent search turn at all**; the receipt says `agent_search: REFUSED, NO_SEARCH_PROVIDER_DECLARED: ... owner decision`. The same fixed templates then run against two $0 keyless sources: **Google News RSS** (each item's publisher and headline; an allowlisted publisher with its own search page becomes a navigation to that page's search for the headline, and the Google redirect is never opened) and **EDGAR full-text search** (the company's own 8-Ks, last 7 days, through the one SEC choke point `insider_form4._sec_get`). `x_search` is templated only when `QUERY_PLANNER_X_SEARCH_OFFERED`. A turn whose tool never fired and left no result is recorded as `not offered`, which counts as `tool_unavailable`. |
+| F2 | **Attribution is recorded, not inferred.** The pool stamps `lane=qp:<query_id>` (and the query id) on the page and on every result link a planner search leads to. `dowjones_claims.write_forecasts` carries `reached_by.lane` / `query_id` onto the claim row, and `source_registry.write_claims` keeps it. The receipt counts a planner page only when its lane is `qp:` **and** it was read after the query was issued **and** the fixed lanes had not read it earlier. It counts a planner claim only when the claim carries the query id. At admission, a URL the reader has already stored is `already_read`, not admitted; `share_already_read` is on the receipt. |
+| F3 | `pid_alive(pid, needle)`; the supervisor passes `backend.services.query_planner`. The planner also holds a single-run lock (`dowjones/query_planner.lock`, stale after 1 h), so a second launch writes `ALREADY_RUNNING`. |
+| F4 | In a planner turn, any tool other than the query's own (`web_fetch` included) is a violation that stops the run. |
+| F5 | `mw_marketpulse` / `mw_realtimeheadlines` are `implemented: false` in `news_sources.yaml`, with a note, so `news_pull` and `always_on_lab` stop polling them. The "frozen since" dates are corrected from the live feed to **2025-07-03** and **2025-06-11**. `feed_verdict` documents that it measures what we stored, not what the feed serves. |
+| F6 | Per-host buckets use the real host (the normalised URL has no scheme). Tested with `https://www.` post URLs. |
+| F7 | A receipt is written only for a run that passed STOP / enabled / due / lock. Those four append one line to `dowjones/query_planner_runs.jsonl` instead. The forecast-ledger scan is cached in `dowjones/query_planner_pred_cache.json`, keyed by the ledger's size and mtime. |
+| Q7 | The receipt carries `claims_per_page_same_hosts`: planner claims per page against fixed-lane claims per page on the same hosts in the same window. It also shows pages excluded because they were read before the query, or already read by the fixed lanes. |
+| F8 | `openclaw_usage` docstring corrected: `usd` is the stored call-time cost. |
+
+### The first $0 run (dry: real HTTP to Google News RSS and EDGAR; no gateway, no agent turn, nothing written)
+
+`python -m backend.services.query_planner --run --dry --max 8`:
+
+- **8 queries, 8 answered, $0.00.** 76 candidates were classified; 18 is the cap per Google
+  News query.
+- **6 admitted:**
+  - 5 site searches: FT, Barron's, CNBC, WSJ, Reuters, each for a headline Google News showed;
+  - 1 SEC 8-K: the 2026-09-30 SNDR filing.
+- **53 quarantined.** The top hosts are fool.com, marketbeat, seekingalpha, tikr, tradingview,
+  barchart, trefis and benzinga. These are written once per host per run, for review.
+- **13 `no_site_search`.** Yahoo Finance is allowed but has no search page here, and its
+  redirect is never opened.
+- 4 duplicates, 0 refused, 0 already read.
+- 2 EDGAR queries (JAZZ, IONQ) found no own 8-K in 7 days.
+
+**Reading it:** about 1 Google News item in 12 lands on a host the reader is allowed to open and
+can search. The open question for the 3% is unchanged: do those site-search pages produce
+claims at the fixed reader's rate on the same hosts? The `claims_per_page_same_hosts` block
+answers that per window. A first read needs about two weeks, at roughly 120 loads a day against
+a fixed rate near 2%.
+
+**Caveat found while fixing:** `dowjones_pull --claims` extracts claims only from Dow Jones
+articles; it skips `general_news` hosts (CNBC, Reuters, FT pages are stored but sent for no
+extraction). Of the planner's admitted site searches, only WSJ / Barron's / MarketWatch results
+can become claims through that path today. The receipt will show this as pages with no claims
+on those hosts.

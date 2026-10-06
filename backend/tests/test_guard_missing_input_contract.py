@@ -1550,6 +1550,26 @@ def _case_source_scorecard():
             "a corpus folder with no article and no claim")
 
 
+def _case_ledger_archive():
+    """Ledger archive (2026-10-06): a month file that is not there refuses.
+
+    The missing input is THE MONTH FILE. Archiving a path that does not exist
+    would write a manifest for zero rows, and a manifest is what tells every
+    writer that month is closed -- an empty archive would bar real appends.
+    """
+    import tempfile
+    from datetime import datetime, timezone
+    from pathlib import Path
+
+    from backend.services.ledger_archive import ArchiveRefused, archive_month
+    folder = Path(tempfile.mkdtemp())
+    absent = folder / "decisions_2020-01.jsonl"
+    return (lambda: archive_month(absent, now=datetime(2026, 1, 1, tzinfo=timezone.utc),
+                                  archive_dir=folder / "archive",
+                                  manifest_dir=folder / "manifests"),
+            ArchiveRefused, "archive_month() on a month file that does not exist")
+
+
 def _case_calendar_offsets():
     """Quarterly-offset triplet (lane M1, 2026-09-28): a monthly rule has no
     quarterly calendars.
@@ -1741,6 +1761,7 @@ CASES = {
     "disk_guard_file_lock": _case_disk_guard_file_lock,
     "finra_short_volume": _case_finra_short_volume,
     "source_scorecard": _case_source_scorecard,
+    "ledger_archive": _case_ledger_archive,
 }
 
 

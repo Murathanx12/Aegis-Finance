@@ -31,8 +31,11 @@ def sandbox(tmp_path, monkeypatch):
     return tmp_path
 
 
+BALANCED = (pd.Series([True] * 60_000 + [False] * 40_000), ("STREAK3P", "STREAK1"))   # control MDE ~0.35% < 2 x 0.3%
+
+
 def test_declare_then_mutated_declaration_refuses_and_is_recorded(sandbox):
-    assert T.part_declare("beat_streak", "TEST_RUN") == 0
+    assert T.part_declare("beat_streak", "TEST_RUN", labels=BALANCED) == 0
     p = T.decl_path("beat_streak", "TEST_RUN")
     doc = json.loads(p.read_text(encoding="utf-8"))
     assert T.verify_declaration(doc) == (True, "ok")
@@ -51,8 +54,8 @@ def test_declare_then_mutated_declaration_refuses_and_is_recorded(sandbox):
 
 
 def test_declaration_is_never_overwritten(sandbox):
-    assert T.part_declare("beat_streak", "R1", ledger=False) == 0
-    assert T.part_declare("beat_streak", "R1", ledger=False) == 2
+    assert T.part_declare("beat_streak", "R1", ledger=False, labels=BALANCED) == 0
+    assert T.part_declare("beat_streak", "R1", ledger=False, labels=BALANCED) == 2
 
 
 def test_declaration_hash_covers_the_decision_rule(sandbox):
@@ -144,3 +147,33 @@ def test_one_year_carrying_the_validate_mean_is_not_a_candidate():
     v = T.theory_verdict(design, validate, -0.0004, 0.002)
     assert v["verdict"] == "CANNOT_DISTINGUISH"
     assert any("leave-one-year-out" in f for f in v["fails"])
+
+
+def test_declaration_gate_refuses_a_degenerate_split_and_an_unreadable_control(sandbox):
+    """Review 2026-10-06 F2: insider_hold was 98% HOLD with a SOLD control whose MDE was ~6%.
+    The gate prints the split and the control MDE and refuses BEFORE anything is hashed."""
+    degenerate = pd.Series([True] * 9820 + [False] * 180)
+    g = T.declaration_gate(degenerate, 0.005, labels=("HOLD", "SOLD"))
+    assert g["refused"] and g["class_split"]["HOLD"] == 0.982 and g["n_SOLD"] == 180
+    assert any("does not separate" in r for r in g["reasons"])
+    assert any("can never be read" in r for r in g["reasons"])
+    assert g["control_mde_lower_bound"] == pytest.approx(2.8 * 0.25 / 180 ** 0.5, abs=1e-5)
+    rc = T.part_declare("insider_hold", "GATE_RUN", labels=(degenerate, ("HOLD", "SOLD")))
+    assert rc == 2
+    assert not T.decl_path("insider_hold", "GATE_RUN").exists(), "nothing is declared past a refused gate"
+    receipt = json.loads((sandbox / "theory_insider_hold_GATE_REFUSED_GATE_RUN.json").read_text(encoding="utf-8"))
+    assert receipt["gate"]["refused"]
+    assert L.load_state() == {}, "a refused gate writes no ledger row"
+    # a balanced, well-populated split passes and the gate rides in the hashed declaration
+    assert T.part_declare("beat_streak", "GATE_OK", labels=BALANCED) == 0
+    doc = json.loads(T.decl_path("beat_streak", "GATE_OK").read_text(encoding="utf-8"))
+    assert doc["gate"]["refused"] is False and T.verify_declaration(doc)[0]
+
+
+def test_theory_verdict_reports_power():
+    d = {"mean_monthly": 0.001, "t_blocks": 0.5, "mde_monthly": 0.003, "years_positive": "2 of 4"}
+    v = {"mean_monthly": -0.002, "t_blocks": -0.8, "mde_monthly": 0.012, "years_positive": "3 of 8"}
+    r = T.theory_verdict(d, v, -0.003, 0.003)
+    assert r["verdict"] == "FAILED_VARIANT" and r["powered"] is False, "a sign-only failure at MDE 1.2% is unpowered"
+    v2 = {**v, "mde_monthly": 0.002}
+    assert T.theory_verdict(d, v2, -0.003, 0.003)["powered"] is True

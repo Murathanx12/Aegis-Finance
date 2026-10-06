@@ -642,7 +642,8 @@ def broker_equity_files() -> list[Path]:
 
 
 def pc_paper_equity(*, now: datetime | None = None,
-                    files: list[Path] | None = None) -> dict | None:
+                    files: list[Path] | None = None,
+                    expected_account: str | None = "config") -> dict | None:
     """PC-PAPER's newest broker-truth equity read, from the files
     `pc_broker.snapshot` wrote (2026-10-06: the contract's capital is derived
     from THIS, never from a literal).
@@ -657,9 +658,17 @@ def pc_paper_equity(*, now: datetime | None = None,
     best: dict | None = None
     best_t: datetime | None = None
     paths = list(files) if files is not None else broker_equity_files()
+    want = (getattr(config, "PC_PAPER_ACCOUNT_NUMBER", None)
+            if expected_account == "config" else expected_account)
+    foreign = 0
     for p in paths:
         hit = _equity_row_from(Path(p))
         if not hit:
+            continue
+        acct = hit["row"].get("account_number")
+        if want and acct and str(acct) != str(want):
+            # review C2 F5: another account's $1M must never size this one
+            foreign += 1
             continue
         try:
             t = datetime.fromisoformat(hit["stamp"].replace("Z", "+00:00"))
@@ -690,6 +699,10 @@ def pc_paper_equity(*, now: datetime | None = None,
             "as_of": best_t.isoformat(timespec="seconds"),
             "age_days": max(0.0, (now - best_t).total_seconds() / 86400.0),
             "source": src,
+            "account_number": row.get("account_number"),
+            "account_verified": bool(want and row.get("account_number")
+                                     and str(row.get("account_number")) == str(want)),
+            "n_foreign_account_reads_skipped": foreign,
             "positions": pos,
             "n_files_read": len(paths)}
 
@@ -757,78 +770,26 @@ BROKER_CAP_KEY = "pc_broker.MAX_NAME_FRAC (broker hard limit)"
 REFERENCE_STOP_PCT = 0.02
 
 
-def worst_case_table(*, equity: float, ex_n: int, ex_w: float, ex_gross: float,
-                     probe_n: int, probe_w: float, probe_gross: float,
-                     gross: float, k_sigma: float, daily_sigma: float,
-                     limit_frac: float) -> dict:
-    """PURE. Session protocol item 4 for the largest admissible PC-PAPER book.
+def risk_inputs() -> dict:
+    """What the worst-case gate prices: per-name panel sigmas and the ranker's
+    top names (`pc_risk`). An indirection so a test replaces it."""
+    from backend.services import pc_risk as PR                     # noqa: PLC0415
+    return {"sigmas": PR.panel_sigmas(),
+            "exploit": PR.exploit_candidates(_exploit_book_size())}
 
-    `n names x notional% x stop%` and `sum|notional| / equity`, per sleeve and
-    in total, in dollars on `equity`. No stop order is declared anywhere on the
-    PC path, so stop% is the k-sigma session (`k_sigma` daily sigmas of
-    `daily_sigma`), quoted in BOTH percent and sigma, and the no-stop ceiling
-    (the whole gross) is printed beside it. The verdict is REFUSE when the
-    one-day k-sigma loss exceeds `limit_frac` of equity; nothing is widened to
-    make it pass.
-    """
-    stop_pct = float(k_sigma) * float(daily_sigma)
-    ex_n_at_cap = int(ex_gross / ex_w + 1e-9) if ex_w > 0 else 0
 
-    def _row(label: str, n: int, w: float, g: float, note: str) -> dict:
-        return {"sleeve": label, "n_names": int(n), "notional_pct": float(w),
-                "gross_over_equity": float(g), "stop_pct": stop_pct,
-                "stop_sigma": float(k_sigma),
-                "worst_case_k_sigma_usd": -g * stop_pct * equity,
-                "worst_case_no_stop_usd": -g * equity,
-                "line": (f"{label}: {n} x {w:.2%} x {stop_pct:.2%} ({k_sigma:g} sigma) "
-                         f"= -${g * stop_pct * equity:,.0f}; sum|notional|/equity "
-                         f"{g:.2f}; no-stop ceiling -${g * equity:,.0f}" + note)}
-
-    rows = [
-        _row("EXPLOIT", ex_n_at_cap, ex_w, ex_gross,
-             f" ({ex_n} ranked names, <= {ex_w:.0%} each, gross <= {ex_gross:.0%})"),
-        _row("PROBE", probe_n, probe_w, probe_gross, ""),
-    ]
-    total_k = gross * stop_pct * equity
-    frac = gross * stop_pct
-    verdict = "PASS" if frac <= float(limit_frac) + 1e-12 else "REFUSE"
-    total = {"sleeve": "TOTAL", "n_names": ex_n_at_cap + probe_n,
-             "gross_over_equity": gross, "stop_pct": stop_pct, "stop_sigma": float(k_sigma),
-             "worst_case_k_sigma_usd": -total_k, "worst_case_no_stop_usd": -gross * equity,
-             "worst_case_k_sigma_frac_of_equity": frac,
-             "line": (f"TOTAL: sum|notional|/equity {gross:.2f} x {stop_pct:.2%} "
-                      f"({k_sigma:g} sigma of {daily_sigma:.2%}/day) = -${total_k:,.0f} "
-                      f"= {frac:.2%} of ${equity:,.0f}; no-stop ceiling "
-                      f"-${gross * equity:,.0f}")}
-    ref_sigma = REFERENCE_STOP_PCT / float(daily_sigma) if daily_sigma else None
-    return {
-        "equity_usd": float(equity),
-        "stop_declared": False,
-        "stop_basis": (f"no stop order is declared on the PC path; the {k_sigma:g}-sigma "
-                       f"session of the median name ({daily_sigma:.2%}/day) stands in: "
-                       f"{stop_pct:.2%} = {k_sigma:g} sigma. For scale, a "
-                       f"-{REFERENCE_STOP_PCT:.0%} stop is "
-                       + (f"{ref_sigma:.2f}" if ref_sigma else "?")
-                       + " sigma (2026-09-24: such stops filled on 89% of trades)"),
-        "rows": rows + [total],
-        "gate": {"limit_frac_of_equity": float(limit_frac),
-                 "worst_case_k_sigma_frac_of_equity": frac,
-                 "verdict": verdict,
-                 # the per-name daily sigma at which this book would hit the
-                 # limit: the reference sigma is the MEDIAN name, and a book of
-                 # small illiquid names can carry more
-                 "daily_sigma_at_limit": (float(limit_frac) / (float(k_sigma) * gross)
-                                          if k_sigma and gross else None),
-                 "line": (f"WORST CASE {verdict}: one-day {k_sigma:g}-sigma loss of the "
-                          f"largest admissible book {frac:.2%} of equity "
-                          f"(-${total_k:,.0f}) vs limit {float(limit_frac):.0%} "
-                          f"(config.PC_WORST_CASE_MAX_FRAC_OF_EQUITY)")},
-    }
+def _held_weights(equity: dict | None) -> dict[str, float]:
+    if not equity or not equity.get("equity_usd"):
+        return {}
+    eq = float(equity["equity_usd"])
+    return {str(p["symbol"]): float(p["market_value"]) / eq
+            for p in equity.get("positions") or []
+            if isinstance(p.get("market_value"), (int, float)) and p["market_value"] > 0}
 
 
 def account_mandate(capital: float | None, *, equity: Any = "derive",
                     capital_source: str | None = None,
-                    now: datetime | None = None) -> dict:
+                    now: datetime | None = None, risk: Any = "derive") -> dict:
     """ONE capital base -- the broker's equity -- and the worst case in dollars.
 
     OWNER DECISION 2026-10-06: PC-PAPER is a ~$1,000,000 paper experiment, so
@@ -905,23 +866,40 @@ def account_mandate(capital: float | None, *, equity: Any = "derive",
     sig = float(config.PROBE_REF_DAILY_SIGMA)
     stop_pct = k * sig
     limit = float(config.PC_WORST_CASE_MAX_FRAC_OF_EQUITY)
-    table = worst_case_table(equity=base, ex_n=n_ex, ex_w=ex_w, ex_gross=ex_gross,
-                             probe_n=n_probe, probe_w=probe_w, probe_gross=probe_gross,
-                             gross=gross, k_sigma=k, daily_sigma=sig, limit_frac=limit)
+    from backend.services import pc_risk as PR                     # noqa: PLC0415
+    if risk == "derive":
+        try:
+            risk = risk_inputs()
+        except Exception as exc:                                   # noqa: BLE001
+            logger.warning("mandate: risk inputs unreadable (%s)", exc)
+            risk = {"sigmas": {}, "exploit": {"symbols": [], "source": None}}
+    risk = risk or {"sigmas": {}, "exploit": {"symbols": [], "source": None}}
+    table = PR.largest_admissible(
+        equity=base, exploit_syms=list((risk.get("exploit") or {}).get("symbols") or []),
+        held_weights=_held_weights(equity), sigmas=risk.get("sigmas") or {},
+        ex_w=ex_w, ex_gross=ex_gross, probe_gross=probe_gross, k=k, limit=limit,
+        source=str((risk.get("exploit") or {}).get("source")))
+    gate = {k_: table[k_] for k_ in ("verdict", "trading_verdict", "exploit_gross_cap",
+                                     "total_frac", "total_usd", "limit_frac_of_equity",
+                                     "line")}
+    gate["universe_median_frac"] = table["universe"]["median"]["frac"]
+    gate["universe_p90_frac"] = table["universe"]["p90"]["frac"]
     n_all = n_ex + n_probe
     loosest_w = max(ex_w, probe_w)
     configured = {
         "n_names": n_all, "per_name_pct_max": loosest_w,
         "gross_over_equity": gross, "stop_declared": False,
-        "stop_pct_used": stop_pct, "stop_sigma_used": k,
-        "stop_basis": table["stop_basis"],
-        "worst_case_k_sigma_usd": -gross * stop_pct * base,
-        "worst_case_k_sigma_frac_of_equity": gross * stop_pct,
+        "stop_sigma_used": k,
+        "stop_basis": (f"no stop order is declared on the PC path; each name's own "
+                       f"{k:g}-sigma day stands in ({table['sigma_source']}). For scale, "
+                       f"a -2% stop is {0.02 / sig:.2f} sigma of the old median name"),
+        "worst_case_k_sigma_usd": table["total_usd"],
+        "worst_case_k_sigma_frac_of_equity": table["total_frac"],
         "worst_case_no_stop_usd": -gross * base,
         "line": (f"as configured: {n_ex} EXPLOIT x {ex_w:.0%} (gross <= {1 - probe_gross:.0%}) "
                  f"+ {n_probe} PROBE x {probe_w:.0%} (<= {probe_gross:.0%}) = "
-                 f"sum|notional|/equity {gross:.2f}; x stop {stop_pct:.2%} ({k:g} sigma) = "
-                 f"-${gross * stop_pct * base:,.0f} ({gross * stop_pct:.2%} of equity); "
+                 f"sum|notional|/equity {gross:.2f}; priced per name at {k:g} sigma = "
+                 f"-${-table['total_usd']:,.0f} ({table['total_frac']:.2%} of equity); "
                  f"no stop, so the ceiling is -${gross * base:,.0f} on ${base:,.0f}"),
     }
     n_tight = int(tight_gross / tight_name) if tight_name > 0 else 0
@@ -937,6 +915,11 @@ def account_mandate(capital: float | None, *, equity: Any = "derive",
     tol = float(config.PC_MANDATE_CAPITAL_TOLERANCE)
     max_age = float(config.PC_MANDATE_EQUITY_MAX_AGE_DAYS)
     refusals: list[str] = []
+    want_acct = getattr(config, "PC_PAPER_ACCOUNT_NUMBER", None)
+    if equity and want_acct and equity.get("account_number") \
+            and str(equity["account_number"]) != str(want_acct):
+        refusals.append(f"ACCOUNT_MISMATCH: the broker read is account "
+                        f"{equity['account_number']}, PC-PAPER is {want_acct}")
     if not equity:
         refusals.append("NO_BROKER_EQUITY_READ: no pc_broker.snapshot read of PC-PAPER "
                         "exists, so the capital could not be derived "
@@ -966,21 +949,32 @@ def account_mandate(capital: float | None, *, equity: Any = "derive",
         refusals.append(f"GROSS_CAPS_DISAGREE: the largest book any path can emit is "
                         f"{gross:.2f}x equity, the tightest gross cap is "
                         f"{tight_gross:.2f} ({tight_gross_src})")
-    if table["gate"]["verdict"] != "PASS":
-        refusals.append("WORST_CASE_ABOVE_LIMIT: " + table["gate"]["line"])
+    if table["trading_verdict"] == "REFUSE":
+        # the largest book failing the line is answered by sizing EXPLOIT down
+        # (pc_risk.cap_book, every cycle); only a book that cannot pass at ANY
+        # EXPLOIT size is a disagreement
+        refusals.append("WORST_CASE_ABOVE_LIMIT: " + table["line"])
     status = MANDATE_UNRECONCILED if refusals else "OK"
     kinds = ", ".join(r.split(":", 1)[0] for r in refusals)
-    line = (f"MANDATE {status}: capital ${base:,.0f} ({cap_src})"
+    line = (f"MANDATE {status}: CAPITAL_SOURCE {'broker' if eq_usd and base == eq_usd else 'other'}; "
+            f"capital ${base:,.0f} ({cap_src})"
             + (f"; broker equity ${eq_usd:,.0f} read {equity.get('as_of')}" if equity
                else "; broker equity UNREAD")
             + f"; per-name cap {tight_name:.0%} (tightest: {tight_name_src}); "
-            + f"{configured['line']}; {table['gate']['line']}"
+            + f"{configured['line']}; {table['line']}"
             + (f" -- {len(refusals)} disagreement(s): {kinds}; gates no order by "
                f"itself; turns OK when {MANDATE_WHAT_MAKES_IT_GREEN}" if refusals else ""))
     return {
         "status": status,
         "capital_usd": base,
         "capital_source": cap_src,
+        "capital_source_kind": ("broker" if eq_usd and base == eq_usd else "other"),
+        "capital_check_note": ("when capital is DERIVED from the broker equity, comparing "
+                               "the two is a tautology; the substantive checks are the "
+                               "read's age and account, and `positions_reconciliation` "
+                               "on the contract (review C2 F2)"),
+        "account_number": (equity or {}).get("account_number"),
+        "account_verified": bool((equity or {}).get("account_verified")),
         "capital_basis": "the contract's own capital -- every dollar on this file is sized on it",
         "broker_equity_usd": eq_usd,
         "broker_equity_as_of": (equity or {}).get("as_of"),
@@ -999,7 +993,7 @@ def account_mandate(capital: float | None, *, equity: Any = "derive",
         "largest_admissible_book_as_configured": configured,
         "largest_admissible_book_under_tightest_caps": tight,
         "worst_case_table": table,
-        "worst_case_gate": table["gate"],
+        "worst_case_gate": gate,
         "disagreements": refusals,
         # legacy key: readers before 2026-09-28 read `refusals`; same list
         "refusals": refusals,
@@ -1049,7 +1043,10 @@ MANDATE_GATES_ORDERS_NOTE = (
     "(pc_broker.plan_orders). PROBE acting while EXPLOIT is refused is the "
     "2026-09-25 C3 design, not a bypass. UNRECONCILED (written REFUSED before "
     "2026-09-28) means: the owner has not confirmed which capital base and "
-    "which cap set are THE mandate.")
+    "which cap set are THE mandate. SINCE 2026-10-06 (review C2 F3) sim_run.u_plan "
+    "re-checks the capital, the account and the per-name worst case on EVERY cycle "
+    "from its own live broker read and blocks or sizes down before any submit; this "
+    "contract block remains a report.")
 MANDATE_WHAT_MAKES_IT_GREEN = (
     "ONE capital base: the contract's capital is the PC-PAPER broker equity read "
     "(owner decision 2026-10-06), within config.PC_MANDATE_CAPITAL_TOLERANCE and no "
@@ -1264,6 +1261,91 @@ def scaled_views_block(rows: list[dict], *, capital: float | None,
     }
 
 
+def positions_reconciliation(rows: list[dict], *, capital: float | None,
+                             equity: dict | None, resolution: dict | None) -> dict:
+    """The contract's book against the broker's book (review C2 F2).
+
+    Two checks the capital line could never make:
+    * SLEEVE_BASIS_DISAGREES -- an agency BUY row's dollars are not its weight
+      x the contract capital (they are sized on the IPS capital), so the file
+      carries two dollar bases;
+    * POSITIONS_DISAGREE -- the share of equity the contract resolves to cash
+      differs from the cash the broker actually holds by more than
+      `PC_MANDATE_CAPITAL_TOLERANCE` (the benchmark core the contract counts is
+      not a position the account holds).
+    Reporting only; never an order."""
+    tol = float(config.PC_MANDATE_CAPITAL_TOLERANCE)
+    dis: list[str] = []
+    basis: list[dict] = []
+    for r in rows or []:
+        if r.get("instrument_kind") != "book" or r.get("direction") != "BUY":
+            continue
+        pb = r.get("position_budget") or {}
+        try:
+            dollars, w = float(pb.get("dollars") or 0.0), float(pb.get("weight") or 0.0)
+        except (TypeError, ValueError):
+            continue
+        if not capital or dollars <= 0:
+            continue
+        want = w * float(capital)
+        ok = want > 0 and abs(dollars - want) <= tol * want
+        basis.append({"row": r.get("ticker"), "dollars": dollars, "weight": w,
+                      "weight_x_capital": want, "agrees": ok})
+        if not ok:
+            dis.append(f"SLEEVE_BASIS_DISAGREES: {r.get('ticker')} is sized ${dollars:,.0f} "
+                       f"(the IPS basis), not {w:.0%} x contract capital "
+                       f"${float(capital):,.0f} = ${want:,.0f}")
+    held = _held_weights(equity)
+    broker = None
+    if equity and equity.get("equity_usd"):
+        eq = float(equity["equity_usd"])
+        cash = equity.get("cash_usd")
+        cash_pct = (float(cash) / eq) if isinstance(cash, (int, float)) else (1.0 - sum(held.values()))
+        benchmark_syms = {"SPY", "VOO", "IVV", "VTI"}
+        broker = {"cash_pct": cash_pct, "invested_pct": sum(held.values()),
+                  "n_names": len(held),
+                  "benchmark_etf_pct": sum(v for k_, v in held.items() if k_ in benchmark_syms),
+                  "as_of": equity.get("as_of"),
+                  "line": (f"BROKER HOLDS: {cash_pct:.2%} cash, {sum(held.values()):.2%} in "
+                           f"{len(held)} name(s), "
+                           f"{sum(v for k_, v in held.items() if k_ in benchmark_syms):.2%} in a "
+                           f"benchmark ETF (read {equity.get('as_of')})")}
+        if resolution:
+            c_cash = float(resolution.get("cash_pct") or 0.0)
+            c_core = float(resolution.get("benchmark_pct") or 0.0)
+            not_held_core = max(0.0, c_core - broker["benchmark_etf_pct"])
+            if abs((c_cash + not_held_core) - cash_pct) > tol:
+                dis.append(
+                    f"POSITIONS_DISAGREE: the contract resolves {c_core:.2%} to the "
+                    f"benchmark core and {c_cash:.2%} to cash; the broker holds "
+                    f"{broker['benchmark_etf_pct']:.2%} in a benchmark ETF and "
+                    f"{cash_pct:.2%} cash")
+    else:
+        dis.append("POSITIONS_UNREAD: no broker read of PC-PAPER positions")
+    contract_names = {str(r.get("ticker")) for r in rows or []
+                      if r.get("instrument_kind") != "book"
+                      and float((r.get("position_budget") or {}).get("weight") or 0) > 0}
+    return {"status": "OK" if not dis else MANDATE_UNRECONCILED,
+            "disagreements": dis, "sleeve_basis": basis, "broker": broker,
+            "contract_names_not_held": sorted(contract_names - set(held)),
+            "held_names_not_in_contract": sorted(set(held) - contract_names),
+            "note": ("the PC-PAPER book is placed by sim_run.u_plan (PROBE/EXPLOIT), not by "
+                     "this contract's committee rows; names held but absent here are "
+                     "expected, a cash mismatch is not hidden"),
+            "line": ("POSITIONS " + ("OK" if not dis else
+                                     f"{MANDATE_UNRECONCILED}: " + "; ".join(
+                                         d.split(':', 1)[0] for d in dis))
+                     + (f" -- {broker['line']}" if broker else ""))}
+
+
+def _repo_relative(p: Any) -> str:
+    """A path as receipts carry it: relative to the repo, never a machine path."""
+    try:
+        return Path(p).resolve().relative_to(Path(config.BACKEND_DIR).resolve().parent).as_posix()
+    except (ValueError, TypeError, OSError):
+        return Path(str(p)).name
+
+
 def candidate_set(state: dict, book: dict | None, *,
                   funnel_path: Path | None = None) -> dict:
     """The size AND age of the candidate set at each hop (review 2026-09-26 R5).
@@ -1304,7 +1386,7 @@ def candidate_set(state: dict, book: dict | None, *,
             f"(= n_considered); excluded: "
             + (", ".join(f"{n} {why}" for why, n in excluded.most_common()) or "none"))
     return {
-        "candidates_source": str(src),
+        "candidates_source": _repo_relative(src),
         "n_candidates": n_cands,
         "candidates_generated_at": gen,
         "candidates_age_days": age,
@@ -2578,6 +2660,27 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
     except Exception as exc:                                       # noqa: BLE001
         mandate = {"status": "CANNOT DETERMINE",
                    "line": f"MANDATE CANNOT DETERMINE: {type(exc).__name__}: {exc}"}
+    cres = capital_resolution(rows, capital=capital)
+    try:
+        prec = positions_reconciliation(rows, capital=capital, equity=equity_read,
+                                        resolution=cres)
+    except Exception as exc:                                       # noqa: BLE001
+        prec = {"status": "CANNOT DETERMINE", "disagreements": [],
+                "line": f"POSITIONS CANNOT DETERMINE: {type(exc).__name__}: {exc}"}
+    if prec.get("broker"):
+        cres["broker_actual"] = prec["broker"]
+        cres["nothing_happened_is_not_allowed"] += (
+            f" THE ACCOUNT ITSELF: {prec['broker']['line']}.")
+    if isinstance(mandate, dict) and mandate.get("status") and prec.get("disagreements"):
+        mandate = {**mandate,
+                   "capital_status": mandate.get("status"),
+                   "status": MANDATE_UNRECONCILED,
+                   "disagreements": list(mandate.get("disagreements") or [])
+                   + list(prec["disagreements"]),
+                   "line": (str(mandate.get("line") or "").replace(
+                       f"MANDATE {mandate.get('status')}", f"MANDATE {MANDATE_UNRECONCILED}", 1)
+                       + f" | {prec['line']}")}
+        mandate["refusals"] = mandate["disagreements"]
     try:
         scaled = scaled_views_block(rows, capital=capital, equity=equity_read)
     except Exception as exc:                                       # noqa: BLE001
@@ -2605,6 +2708,8 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
             "broker_equity_source": mandate.get("broker_equity_source"),
             "tolerance": mandate.get("capital_tolerance"),
             "status": mandate.get("status"),
+            "capital_status": mandate.get("capital_status", mandate.get("status")),
+            "positions_status": prec.get("status"),
             "disagreements": mandate.get("disagreements") or [],
             "worst_case_gate": mandate.get("worst_case_gate"),
         },
@@ -2616,7 +2721,8 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
         "probe": probe_census_over_rows(rows),
         **roi_block,
         **_authority_payload_block(rows, book),
-        "capital_resolution": capital_resolution(rows, capital=capital),
+        "capital_resolution": cres,
+        "positions_reconciliation": prec,
         "worst_case_largest_admissible_book": largest_admissible_book(capital),
         "notes": list(notes or []),
         "degradation_reasons": list((book or {}).get("degradation_reasons") or []),
@@ -2804,9 +2910,11 @@ def capital_resolution(rows: list[dict], *, capital: float | None = None
             "benchmark = 1 - exploit - explore - cash; the two active shares "
             "are the position budgets the authorities funded, cash is "
             "config.IC_CASH_FLOOR_PCT, and the benchmark core is the residual. "
-            "Agency Option rows are ALTERNATIVE whole books at this same "
-            "capital and are excluded — counting them would resolve one dollar "
-            "three times."),
+            "Agency Option rows are ALTERNATIVE whole books sized on their OWN "
+            "basis (the IPS capital, see positions_reconciliation.sleeve_basis), "
+            "not on this capital, and are excluded — counting them would resolve "
+            "one dollar three times. This split is the contract's NOTIONAL book; "
+            "`broker_actual` is what the account holds."),
         "nothing_happened_is_not_allowed": (
             f"every dollar resolved today: {benchmark:.2%} benchmark core, "
             f"{exploit:.2%} active EXPLOIT across {n_exploit} name(s), "

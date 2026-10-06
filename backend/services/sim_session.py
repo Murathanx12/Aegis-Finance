@@ -88,6 +88,13 @@ from backend import config as _cfg
 STATE_DIR = _cfg.OPTIMUS_LEDGER_DIR / "sim"
 SESSION_PATH = STATE_DIR / "session.json"
 STOP_FLAG = STATE_DIR / "STOP_REQUESTED"
+#: O_EXCL lock around check-then-spawn (review C2 F7): two starters (owner,
+#: button, Telegram) landing in the same second cannot both pass the check.
+START_LOCK = STATE_DIR / "start.lock"
+#: A lock older than this is a crashed starter's, and is broken.
+START_LOCK_STALE_S = 300
+#: RUNNING with no pid yet, this young, is a start in progress -- not UNCLEAN.
+STARTING_GRACE_S = 120
 HISTORY_PATH = STATE_DIR / "sessions.jsonl"
 
 #: The durations the button offers. An arbitrary duration is how a "quick test"
@@ -175,7 +182,15 @@ def status() -> dict:
         except ValueError:
             age = None
 
-    if state in ("RUNNING", "STOPPING") and not alive:
+    started_age = None
+    try:
+        started_age = (datetime.now(timezone.utc)
+                       - datetime.fromisoformat(str(s.get("started")))).total_seconds()
+    except (TypeError, ValueError):
+        started_age = None
+    if state == "RUNNING" and not s.get("pid") and started_age is not None             and started_age < STARTING_GRACE_S:
+        state = "STARTING"
+    elif state in ("RUNNING", "STOPPING") and not alive:
         state = "UNCLEAN"
         s["unclean_reason"] = (
             f"pid {s.get('pid')} is gone and no stop receipt was written. The "
@@ -222,8 +237,34 @@ def start(*, hours: float | None = None, minutes: float | None = None,
     returning a pid. Production spawns `scripts.sim_run` detached, which is the
     only way a button-started job survives the request that started it.
     """
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    _take_start_lock()
+    try:
+        return _start_locked(hours=hours, minutes=minutes, resume=resume, mode=mode,
+                             launcher=launcher)
+    finally:
+        START_LOCK.unlink(missing_ok=True)
+
+
+def _take_start_lock() -> None:
+    try:
+        if START_LOCK.exists() and time.time() - START_LOCK.stat().st_mtime > START_LOCK_STALE_S:
+            START_LOCK.unlink(missing_ok=True)
+    except OSError:
+        pass
+    try:
+        fd = os.open(str(START_LOCK), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError as exc:
+        raise SimRefused(f"another start is in progress ({START_LOCK.name} exists); "
+                         f"one session at a time") from exc
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(json.dumps({"pid": os.getpid(), "at": _now()}))
+
+
+def _start_locked(*, hours: float | None, minutes: float | None, resume: bool,
+                  mode: str, launcher: Any) -> dict:
     cur = status()
-    if cur["state"] in ("RUNNING", "STOPPING"):
+    if cur["state"] in ("RUNNING", "STOPPING", "STARTING"):
         raise SimRefused(
             f"a simulation is already {cur['state']} (session "
             f"{cur['session'].get('id')}, cycle {cur.get('cycle')}). One session "

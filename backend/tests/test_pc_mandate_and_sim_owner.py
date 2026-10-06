@@ -43,6 +43,9 @@ def _fresh(equity_usd: float = EQ, *, age: timedelta = timedelta(0), positions=N
 @pytest.fixture(autouse=True)
 def no_local_equity(monkeypatch):
     monkeypatch.setattr(DC, "pc_paper_equity", lambda **_: None)
+    # no machine bars or ranking: names without a sigma price at the fallback
+    monkeypatch.setattr(DC, "risk_inputs",
+                        lambda: {"sigmas": {}, "exploit": {"symbols": [], "source": None}})
 
 
 # ───────────────────────── 1. capital is derived from equity ─────────────────
@@ -118,33 +121,120 @@ def test_the_newest_read_wins_by_its_own_stamp_not_the_file_time(tmp_path):
 
 # ───────────────────────── 2. the worst case, printed and gated ──────────────
 
-def test_the_worst_case_table_is_on_the_contract_in_dollars_and_sigma(monkeypatch):
-    monkeypatch.setattr(DC, "pc_paper_equity", lambda **_: _fresh())
+HOT = {f"X{i}": 0.06 for i in range(8)}          # the ranker's names: 6%/day
+CALM = {f"H{i}": 0.02 for i in range(10)}        # the held PROBE names: 2%/day
+
+
+def _risk(sigmas: dict, exploit: list) -> dict:
+    return {"sigmas": sigmas, "exploit": {"symbols": exploit, "source": "fixture"}}
+
+
+def _held(names: list, w: float = 0.02) -> list:
+    return [{"symbol": n, "market_value": w * EQ, "current_price": 10.0} for n in names]
+
+
+def test_the_worst_case_is_priced_per_name_by_sleeve_and_the_verdict_is_derived(monkeypatch):
+    sig = {**HOT, **CALM, **{f"U{i}": 0.01 * (i + 1) for i in range(10)}}
+    monkeypatch.setattr(DC, "risk_inputs", lambda: _risk(sig, list(HOT)))
+    monkeypatch.setattr(DC, "pc_paper_equity", lambda **_: _fresh(positions=_held(list(CALM))))
     blob = DC.payload([], asof=_now().date(), capital=EQ, candidates=None)
     t = blob["mandate"]["worst_case_table"]
     rows = {r["sleeve"]: r for r in t["rows"]}
-    assert set(rows) == {"EXPLOIT", "PROBE", "TOTAL"}
-    k, sig = float(config.PROBE_WORST_CASE_SIGMA), float(config.PROBE_REF_DAILY_SIGMA)
-    tot = rows["TOTAL"]
-    assert tot["stop_sigma"] == k and tot["stop_pct"] == pytest.approx(k * sig)
-    assert tot["worst_case_k_sigma_usd"] == pytest.approx(
-        -tot["gross_over_equity"] * k * sig * EQ)
-    assert rows["PROBE"]["worst_case_k_sigma_usd"] == pytest.approx(
-        -config.PROBE_GROSS_CAP * k * sig * EQ)
-    assert tot["gross_over_equity"] <= 1.0                  # never levered
-    assert "sigma" in t["stop_basis"] and "-2% stop" in t["stop_basis"]
-    assert t["gate"]["verdict"] == "PASS"
-    assert blob["capital_reconciliation"]["worst_case_gate"]["verdict"] == "PASS"
+    k = float(config.PROBE_WORST_CASE_SIGMA)
+    ex_w = min(config.ER_EXPLOIT_MAX_WEIGHT, 0.12)
+    ex_gross = rows["EXPLOIT"]["gross_over_equity"]
+    assert rows["EXPLOIT"]["worst_case_k_sigma_frac"] == pytest.approx(ex_gross * k * 0.06)
+    assert rows["PROBE"]["worst_case_k_sigma_frac"] == pytest.approx(
+        config.PROBE_GROSS_CAP * k * 0.02)
+    assert rows["EXPLOIT"]["avg_sigma"] == pytest.approx(0.06)
+    total = ex_gross * k * 0.06 + config.PROBE_GROSS_CAP * k * 0.02
+    limit = float(config.PC_WORST_CASE_MAX_FRAC_OF_EQUITY)
+    # the verdict is DERIVED from the config and the names, never asserted as PASS
+    want = "PASS" if total <= limit else "REFUSE"
+    assert t["verdict"] == want and t["total_frac"] == pytest.approx(total)
+    assert t["universe"]["median"]["frac"] is not None and t["universe"]["p90"]["frac"] is not None
+    if want == "REFUSE":
+        cap = (limit - config.PROBE_GROSS_CAP * k * 0.02) / (k * 0.06)
+        assert t["trading_verdict"] == "PASS_EXPLOIT_CAPPED"
+        assert t["exploit_gross_cap"] == pytest.approx(cap)
+        # sized down, not refused outright: no WORST_CASE disagreement
+        assert not any(d.startswith("WORST_CASE") for d in blob["mandate"]["disagreements"])
+    assert ex_w > 0
 
 
-def test_a_worst_case_above_the_limit_refuses_and_the_owner_will_not_trade(monkeypatch):
-    monkeypatch.setattr(config, "PROBE_REF_DAILY_SIGMA", 0.06)   # 3 x 6% x 1.00 = 18%
-    m = DC.account_mandate(None, equity=_fresh())
-    assert m["worst_case_gate"]["verdict"] == "REFUSE"
-    assert m["status"] == "UNRECONCILED"
+def test_a_probe_book_over_the_limit_refuses_and_the_owner_will_not_trade(monkeypatch):
+    sig = {**{n: 0.30 for n in CALM}}                # PROBE alone: 0.20 x 3 x 30% = 18%
+    m = DC.account_mandate(None, equity=_fresh(positions=_held(list(CALM))),
+                           risk=_risk(sig, list(HOT)))
+    assert m["worst_case_gate"]["trading_verdict"] == "REFUSE"
     assert any(d.startswith("WORST_CASE_ABOVE_LIMIT") for d in m["disagreements"])
-    mode, why = K.sim_owner_mode(m)
+    mode, why = K.sim_owner_mode(m, {"ok": True})
     assert mode == "observe" and why.startswith("WORST CASE REFUSE")
+
+
+def test_a_failed_live_read_never_trades_on_a_file():
+    ok = {"status": "OK", "account_verified": True, "disagreements": [],
+          "worst_case_gate": {"trading_verdict": "PASS"}}
+    assert K.sim_owner_mode(ok, {"ok": True})[0] == config.SIM_OWNER_MODE
+    mode, why = K.sim_owner_mode(ok, {"ok": False, "why": "HTTP 503"})
+    assert mode == "observe" and why.startswith("LIVE BROKER READ FAILED")
+    mode, why = K.sim_owner_mode({**ok, "account_verified": False}, {"ok": True})
+    assert mode == "observe" and why.startswith("ACCOUNT UNVERIFIED")
+
+
+def test_a_read_from_another_account_is_skipped(tmp_path):
+    want = config.PC_PAPER_ACCOUNT_NUMBER
+    mine, other = tmp_path / "a.json", tmp_path / "b.json"
+    t = _now()
+    mine.write_text(json.dumps({"t": (t - timedelta(days=1)).isoformat(), "equity": 1e6,
+                                "account_number": want}), encoding="utf-8")
+    other.write_text(json.dumps({"t": t.isoformat(), "equity": 2e6,
+                                 "account_number": "SOMEONE_ELSE"}), encoding="utf-8")
+    eq = REAL_PC_PAPER_EQUITY(files=[mine, other])
+    assert eq["equity_usd"] == 1e6 and eq["account_verified"] is True
+    assert eq["n_foreign_account_reads_skipped"] == 1
+    m = DC.account_mandate(None, equity={**_fresh(), "account_number": "SOMEONE_ELSE"})
+    assert any(d.startswith("ACCOUNT_MISMATCH") for d in m["disagreements"])
+
+
+def test_positions_and_sleeve_basis_are_reconciled_against_the_broker():
+    rows = [{"ticker": "AGENCY_BOOK:x", "instrument_kind": "book", "direction": "BUY",
+             "position_budget": {"weight": 0.1, "dollars": 0.04 * EQ}}]
+    eq = {**_fresh(positions=_held(list(CALM))), "cash_usd": 0.8 * EQ}
+    res = DC.capital_resolution([], capital=EQ)                 # all core, no active
+    r = DC.positions_reconciliation(rows, capital=EQ, equity=eq, resolution=res)
+    kinds = {d.split(":")[0] for d in r["disagreements"]}
+    assert kinds == {"SLEEVE_BASIS_DISAGREES", "POSITIONS_DISAGREE"}
+    assert r["broker"]["cash_pct"] == pytest.approx(0.8)
+    assert r["status"] == "UNRECONCILED"
+
+
+def test_the_contract_states_the_broker_cash_beside_its_notional_core(monkeypatch):
+    monkeypatch.setattr(DC, "pc_paper_equity",
+                        lambda **_: {**_fresh(positions=_held(list(CALM))), "cash_usd": 0.8 * EQ})
+    blob = DC.payload([], asof=_now().date(), capital=EQ)
+    cr = blob["capital_resolution"]
+    assert cr["broker_actual"]["cash_pct"] == pytest.approx(0.8)
+    assert "80.00% cash" in cr["nothing_happened_is_not_allowed"]
+    assert "same capital" not in cr["basis"]
+    assert blob["mandate"]["status"] == "UNRECONCILED"
+    assert blob["capital_reconciliation"]["capital_status"] == "OK"
+    assert blob["capital_reconciliation"]["positions_status"] == "UNRECONCILED"
+
+
+def test_the_order_path_sizes_exploit_down_and_blocks_an_over_limit_probe():
+    from backend.services import pc_risk as PR
+    k, limit = 3.0, 0.10
+    w = {**{f"X{i}": 0.10 for i in range(8)}, **{f"H{i}": 0.02 for i in range(10)}}
+    sleeve = {s: ("EXPLOIT" if s.startswith("X") else "PROBE") for s in w}
+    cb = PR.cap_book(w, sleeve, {**HOT, **CALM}, k=k, limit=limit, fallback=0.05)
+    assert cb["before_frac"] == pytest.approx(0.8 * 3 * 0.06 + 0.2 * 3 * 0.02)
+    assert cb["after_frac"] == pytest.approx(limit) and cb["block"] is None
+    assert all(cb["weights"][f"H{i}"] == 0.02 for i in range(10))     # PROBE untouched
+    assert cb["weights"]["X0"] < 0.10
+    hot_probe = PR.cap_book({f"H{i}": 0.02 for i in range(10)}, {}, {f"H{i}": 0.30 for i in range(10)},
+                            k=k, limit=limit, fallback=0.05)
+    assert hot_probe["block"] and hot_probe["block"].startswith("WORST CASE REFUSE")
 
 
 def test_the_limits_are_not_moved_by_the_mandate():
@@ -362,3 +452,65 @@ def test_health_the_owners_pause_is_stopped_by_operator(tmp_path):
     _session_file(ctx, now)
     _owner_row(ctx, now - timedelta(minutes=5), job="sim", action="paused", why="OWNER_STOP")
     assert SH.p_sim_session(ctx).verdict == "STOPPED_BY_OPERATOR"
+
+
+# ───────────────────────── review C2 F3 / F6 / F7 / F8 ───────────────────────
+
+def test_the_owner_pause_also_stops_a_running_session(tmp_path):
+    sim = {"state": "RUNNING", "session": {"id": "live", "pid": 1, "mode": "paper_profit"}}
+    asked: list = []
+    (tmp_path / "OWNER_STOP").write_text("x", encoding="utf-8")
+    row = K.ensure_sim(now_utc=_et_on_a_weekday(10, 0), status=lambda: sim,
+                       start=lambda **kw: pytest.fail("must not start"),
+                       session_day=lambda d: True, stop_path=tmp_path / "OWNER_STOP",
+                       log_path=tmp_path / "owner.jsonl",
+                       stop_running=lambda **kw: asked.append(kw) or {"ok": True})
+    assert row["action"] == "paused" and asked == [{"reason": "OWNER_STOP"}]
+    assert row["stop_requested"] == {"ok": True}
+
+
+def test_a_concurrent_start_is_refused_by_the_lock(tmp_path, monkeypatch):
+    from backend.services import sim_session as SS
+    monkeypatch.setattr(SS, "STATE_DIR", tmp_path)
+    monkeypatch.setattr(SS, "SESSION_PATH", tmp_path / "session.json")
+    monkeypatch.setattr(SS, "STOP_FLAG", tmp_path / "STOP_REQUESTED")
+    monkeypatch.setattr(SS, "HISTORY_PATH", tmp_path / "sessions.jsonl")
+    monkeypatch.setattr(SS, "START_LOCK", tmp_path / "start.lock")
+    (tmp_path / "start.lock").write_text("{}", encoding="utf-8")       # a starter in flight
+    with pytest.raises(SS.SimRefused, match="another start is in progress"):
+        SS.start(hours=6, mode="observe", launcher=lambda s: 4242)
+    (tmp_path / "start.lock").unlink()
+    first = SS.start(hours=6, mode="observe", launcher=lambda s: None)  # pid not yet known
+    assert SS.status()["state"] == "STARTING"
+    with pytest.raises(SS.SimRefused):
+        SS.start(hours=6, mode="observe", launcher=lambda s: 4243)
+    assert not (tmp_path / "start.lock").exists() and first["id"]
+
+
+def test_health_says_observe_only_and_counts_orders(tmp_path):
+    now = _now()
+    ctx = SH.ProbeCtx(optimus_dir=tmp_path / "optimus", now=now, repo=tmp_path, allow_proc=False,
+                      pid_cmdline=lambda p: "python -m scripts.sim_run --session s1")
+    (ctx.optimus_dir / "sim").mkdir(parents=True)
+    (ctx.optimus_dir / "sim" / "session.json").write_text(json.dumps(
+        {"id": "s1", "state": "RUNNING", "pid": 77, "mode": "observe",
+         "heartbeat": now.isoformat()}), encoding="utf-8")
+    day = ctx.optimus_dir / "pc_book" / now.date().isoformat()
+    day.mkdir(parents=True)
+    (day / "decisions.jsonl").write_text(json.dumps(
+        {"t": now.isoformat(), "sent": [{"status": "accepted"}, {"status": "skipped"}]}) + "\n",
+        encoding="utf-8")
+    r = SH.p_sim_session(ctx)
+    assert "orders sent 1" in r.detail
+    assert r.verdict == "ALIVE_OBSERVE_ONLY"
+
+
+def test_the_window_holds_across_the_dst_change():
+    """2026-11-02 is the first Monday on EST: 09:00 ET is 14:00 UTC (not 13:00)."""
+    from zoneinfo import ZoneInfo
+    est_monday = datetime(2026, 11, 2, 9, 0, tzinfo=ZoneInfo("America/New_York"))
+    assert est_monday.astimezone(timezone.utc).hour == 14
+    w = K.sim_window(est_monday.astimezone(timezone.utc), session_day=True)
+    assert w["in_window"] and w["now_et"].endswith("-05:00")
+    early = (est_monday - timedelta(minutes=30)).astimezone(timezone.utc)
+    assert not K.sim_window(early, session_day=True)["in_window"]

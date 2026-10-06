@@ -690,12 +690,41 @@ def render_md(doc: dict) -> str:
 #: where the fair-twin board (`scripts/hyp_twin_board.py`) writes its per-rule series
 FAIR_DIR = OPT / "hyp_lab"
 FAIR_HEADLINE_NOTE = (
-    "Re-issued 2026-10-06 (CHUNK C1): the SAME headline rule, read on the fair twin "
+    "Re-issued 2026-10-06 (CHUNK C1; headline tightened 2026-10-07, see `headline_rule`): read on the fair twin "
     "(`matched_twins.TWIN_COST_CONVENTION`: the twin basket held as a portfolio, charged the rule's per-trade "
     "model max(CS, flat band) on its OWN traded weight; the rule likewise). Calendar and FF3+UMD verdicts are "
     "carried from the original row (they were read on rule - twin21 at flat costs, where the twin pays the "
     "rule's cost and the difference is pure selection). The full-round-trip twin is printed as an UPPER BOUND "
     "and decides nothing.")
+
+
+#: the label a fair-twin ALPHA read gets when pure selection does not agree (review F3 of C1)
+NET_EDGE_LABEL = "NET_EDGE_FROM_TURNOVER"
+FAIR_HEADLINE_RULE = (
+    "fair-twin headline (2026-10-07, review F3 of C1), in order: FAILED_VARIANT if the fair-twin (rule net - "
+    "twin net, both on their own turnover) mean over 1991-2024 is <= 0; CALENDAR_ARTEFACT if the carried "
+    "quarterly v2 calendar verdict says so; ALPHA_DETECTED only if pure selection (rule gross - twin gross) "
+    "t >= 2 AND fair-twin t >= 2 on 3-month blocks AND the 1991-2016 fair-twin holdout mean > 0 AND the "
+    "carried FF3+UMD verdict is not BETA_EXPLAINS; NET_EDGE_FROM_TURNOVER when every ALPHA condition holds "
+    "except pure selection t >= 2 (a low-turnover book nets more than a churning style replica: an "
+    "implementation fact, not selection alpha); BETA_EXPLAINS if fair t >= 2 but FF3+UMD says so; else "
+    "CANNOT_DISTINGUISH.")
+FAIR_RECEIPT_CAVEATS = (
+    "Review F5 of C1: the cost step (pure selection -> fair twin) mixes the per-name cost model "
+    "(max(Corwin-Schultz, flat band), `matched_twins.TWIN_COST_COMPOSITION`) with the twin's turnover; the two "
+    "enter as a product and cannot be separated from this receipt. The calendar and FF3+UMD verdicts are CARRIED "
+    "from the original library row, which was a different book (rule - twin21 at flat costs, factory engine); "
+    "they were not re-read on the fair-twin series.")
+
+
+def fair_headline(fair_full: dict, selection_full: dict, calendar: Optional[str], holdout: dict,
+                  factor_net: Optional[str]) -> str:
+    """`headline` on the fair-twin column, then ALPHA_DETECTED is withheld unless pure selection
+    agrees (t >= 2): otherwise `NET_EDGE_LABEL`. A cost asymmetry can never produce an alpha word."""
+    h = headline(fair_full, calendar, holdout, factor_net)
+    if h == "ALPHA_DETECTED" and not ((selection_full or {}).get("t_blocks") or 0.0) >= 2.0:
+        return NET_EDGE_LABEL
+    return h
 
 
 def fair_headline_row(old: dict, fair: dict) -> dict:
@@ -706,7 +735,8 @@ def fair_headline_row(old: dict, fair: dict) -> dict:
     f = fair[MT.FOUR_COLUMNS[1]]
     cal = (old.get("calendar") or {}).get("verdict")
     f4 = (old.get("ff3_umd_net") or {}).get("verdict")
-    new = headline(f.get("full") or {}, cal, f.get("design_validate") or {}, f4)
+    new = fair_headline(f.get("full") or {}, (fair.get(MT.FOUR_COLUMNS[0]) or {}).get("full") or {}, cal,
+                        f.get("design_validate") or {}, f4)
     cols = {}
     for c in MT.FOUR_COLUMNS:
         w = fair.get(c) or {}
@@ -766,10 +796,12 @@ def part_fair_board(run_id: str, fair_run: str, board_id: Optional[str] = None) 
                   and (r["t_net_minus_market_validate"] or 0) >= 2)
     status = ("REFUSED: no rule scored" if not rows else
               "OK" if not refused else f"PARTIAL: {len(refused)} rules refused (named in `refused`)")
-    doc = {"schema": "crsp_rebuild/library_fair_board/1", "job": JOB, "run_id": run_id, "fair_run": fair_run,
+    doc = {"schema": "crsp_rebuild/library_fair_board/2", "job": JOB, "run_id": run_id, "fair_run": fair_run,
            "board_id": bid, "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
            "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "status": status,
-           "headline_rule": HEADLINE_RULE, "reissue_note": FAIR_HEADLINE_NOTE,
+           "headline_rule": FAIR_HEADLINE_RULE, "headline_rule_of_the_original_board": HEADLINE_RULE,
+           "reissue_note": FAIR_HEADLINE_NOTE, "caveats": FAIR_RECEIPT_CAVEATS,
+           "cost_composition": MT.TWIN_COST_COMPOSITION,
            "cost_convention": MT.TWIN_COST_CONVENTION, "four_columns": list(MT.FOUR_COLUMNS),
            "upper_bound_column_never_in_verdicts": MT.UPPER_BOUND_COLUMN,
            "n_rules": len(rows), "headline_counts_old": cnt("headline_old"),

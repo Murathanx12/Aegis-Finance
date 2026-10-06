@@ -13,6 +13,8 @@ the wiring: **$0.00**. The nightly caps ($3/night, $0.40/run) are unchanged.
 None of the primaries was positive, so protocol item 11 (by year plus leave-one-year-out on any
 positive) had nothing to rescue or kill. Both are still printed in every receipt and below.
 
+> **CORRECTION 2026-10-06 (review):** for (b) and (c) the "primary" column is per 63 sessions, not per month. (b): the -1.82% is ~70% benchmark artefact (buy-and-hold band: -0.53%, t -1.68); against the market the declared rule reads CANNOT_DISTINGUISH; the cell is degenerate (98% HOLD) and row 3 was not tested. (c): not band-neutral; the sign flips vs the market. The three labels stand on their declared primaries, and all three are **unpowered** negatives (validate MDE > the effect worth having), so under the amended posterior (§6) they count **0**; hi52 is also a re-read (+0).
+
 ---
 
 ## 1. The generation shrink (D6, borrowed from RD-Agent(Q))
@@ -54,6 +56,8 @@ into generation.
 families this chunk created (`price_location`, `insider_hold`, `earnings_streak`) now each sit
 at 0.1667 (one FAILED_VARIANT against the prior), which is above the floor. The prior is
 Beta(1,4), so a family reaches the floor on its second clean failure.
+
+> **CORRECTION 2026-10-06 (review F6-F8):** the posterior rule above was amended the same day (§6): only POWERED negatives count, CANNOT_DISTINGUISH counts 0, re-reads count 0, and verdicts older than 180 days count half. Under that rule **no family is currently below 0.15**, so the first receipt's shrink of macro_readthrough_commodity / event_readthrough_corr_peer / llm_size_reading was driven by unpowered failures and half-counted CANNOT_DISTINGUISH rows; the next `plan --apply` / nightly rewrites both preferences from the amended posterior.
 
 ---
 
@@ -137,12 +141,16 @@ Results: `hyp_lab/theory_insider_hold_RESULTS_TC_2026-10-06_1.json`. Events:
   construction, given 766 SOLD events.
 - Primary by hold year: negative in all 19 years (2006-2024). LOO is moot.
 
+> **CORRECTION 2026-10-06 (review F10, units/blocking):** for (b) and (c), every `mean_monthly` in the receipts and in this note is the mean **per 63-session event return**, grouped by entry month, not a monthly return; MDEs are in the same unit ("-1.82%/63d" above is right; any "/mo" for (b)/(c) is wrong). `primary_by_hold_year` **sums 12 overlapping monthly cohorts**, which is how "2008: -75.7%" appears: the 2008 by-year MEAN is -6.31% per 63 sessions (12 cohorts). By-year means, HOLD H63 net vs the (biased) band: 2006 -0.35%, 2007 -2.51%, 2008 -6.31%, 2009 -4.58%, 2010 -1.69%, 2011 -2.10%, 2012 -0.64%, 2013 -0.94%, 2014 -2.09%, 2015 -1.63%, 2016 -0.92%, 2017 -1.31%, 2018 -1.94%, 2019 -0.06%, 2020 -5.14%, 2021 -4.41%, 2022 -2.57%, 2023 -1.38%, 2024 -4.21%. A 63-session hold read on 3-month blocks overlaps adjacent blocks; 6-month-block t beside the shipped t: design -3.11 / -3.55, validate -5.75 / **-4.45**, late -4.91 / -5.68 (recomputed from the saved events parquet; no cell re-run).
+
 **Benchmark caveat (affects (b) and (c)).** The size-band equal-weight index is rebalanced daily
 over CRSP common stocks. Over the same sessions it beat the market by about 0.8 pp/63d (r_band
 3.52% vs r_mkt 2.69% on these events). That is the known upward bias of a daily-rebalanced
 equal-weight benchmark. The band-relative lines therefore read too negative. The verdict does
 not depend on it: against the market, the HOLD validate net is +0.30% at t 0.29, design is
 -3.79%, late is -3.09%, so it is `FAILED_VARIANT` either way.
+
+> **CORRECTION 2026-10-06 (review F1/F2, docs/reviews/REVIEW_2026-10-06_C12_THEORY_CELLS.md):** (b)'s band bias is **+1.49 pp per 63 sessions** (small band +1.83 pp; mid/large/mega +0.22 pp; by year up to +6.3 pp in 2009), not 0.8 pp — the 0.8 was band minus MARKET, two different indexes. Against a buy-and-hold band the HOLD validate net is **-0.53% per 63 sessions (t -1.68, 3 of 8 years)**, so about 70% of the -1.82% headline was benchmark. Against the market the declared rule gives **CANNOT_DISTINGUISH** (validate +0.30%, t 0.29, MDE 2.90% > the 0.50% worth having); the rule does not read design or late for FAILED_VARIANT. "FAILED_VARIANT either way" is **withdrawn**: the verdict stands on the declared band-relative net primary by sign only, and that primary is unpowered (validate MDE 0.89% > 0.50%). (b) is also **degenerate by construction**: 98.2% of events are HOLD (Section 16(b)), so the cell measured all officer/director buys entered 90 days late, and the SOLD control (n about 770-790) has an MDE near 6% on month blocks, so HOLD-SOLD can never be read. Row 3 of the theory table (conviction) was **not tested**. The declaration gate added after the review (§6) refuses this cell: split 98.2/1.8, SOLD labels-only MDE >= 2.49% vs 2 x 0.50%.
 
 ### (c) Consecutive-beat streaks: FAILED_VARIANT (the bar does NOT measurably rise)
 
@@ -166,6 +174,8 @@ toward the **ratchet** (design raw difference -0.37%/mo, so the sign applied is 
 | **validate 2009-2016** | **-0.48%** | **-1.11** | 1.20% | 3 of 8 |
 | late 2017-2024 | -0.09% | -0.07 | 3.63% | 2 of 8 |
 
+> **CORRECTION 2026-10-06 (review F10):** the units in this table are **per 63 sessions**, not per month ("-0.48%/mo" in the summary table is -0.48% per 63 sessions). 6-month-block t beside the 3-month t: design 0.84 / 0.65, validate -1.11 / **-1.16**, late -0.07 / -0.06 (recomputed from the saved events parquet). By-year values in the receipt are sums of 12 overlapping cohorts; read the by-year means instead (validate: 2009 +2.16%, 2010 -1.62%, 2011 -1.74%, 2012 -0.97%, 2013 +0.64%, 2014 -1.21%, 2015 -1.26%, 2016 +0.17%, signed toward the ratchet).
+
 **The owner's question, drift by streak length** (H63 gross drift vs size band; the [e-1, e+1]
 reaction in brackets):
 
@@ -185,6 +195,8 @@ How to read it:
   +0.9-1.5% at 5+. The market does price streaks in at the announcement.
 - **Post-event drift does not shrink with the streak.** After 2009 it slightly improves with the
   streak, the rival story. That is not the declared direction, and it is not significant.
+
+> **CORRECTION 2026-10-06 (review F3, docs/reviews/REVIEW_2026-10-06_C12_THEORY_CELLS.md):** (c)'s primary is **not band-neutral**: in validate 74% of streak-1 events are small-band against 59% of streak >= 3, and the daily-rebalance bias is +1.8 pp in small vs +0.2 pp elsewhere, so the difference carries about +0.25 pp of benchmark toward the streaks. The validate event-mean difference is +0.30 pp vs the band but **-0.28 pp vs the market**: its sign depends on the benchmark. The line "After 2009 it slightly improves with the streak, the rival story" is **withdrawn**. What stands: no direction was found, so FAILED_VARIANT on "no ratchet in post-announcement drift"; and that negative is unpowered (validate MDE 1.20% per 63 sessions > 0.37% worth having), so it counts 0 in the family posterior. The reaction-shrink statement below is a point estimate untested against surprise SIZE (review F5: 5+ minus 1 = -1.44 pp, 95% CI [-2.02, -0.86], 8 of 8 validate years; streak beats may simply be smaller beats; cf. the meet-or-beat literature, Bartov-Givoly-Hayn, Kasznik-McNichols).
 - **The only standing fact is the old one.** Misses drift down (PEAD's negative leg) relative to
   beats. That is not this cell's question.
 - Levels sit below zero everywhere because of the band bias above; only the cross-bucket
@@ -209,7 +221,7 @@ How to read it:
 **Licence, stated honestly:** the return leg is `PRODUCT_EXPERIMENT`-shadow grade, underpowered as
 a `RESEARCH_CLAIM`. It is NOT signed and NOT in the experiment registry.
 
-Linter output (`C:/Users/mrthn/Aegis module/scripts/lint_prereg.py`; the skill names this path,
+Linter output (`<home>/Aegis module/scripts/lint_prereg.py`; the skill names this path,
 and there is no `scripts.lint_prereg` in this repo):
 
 ```
@@ -257,3 +269,73 @@ exit=1
 - A non-daily-rebalanced size-band benchmark for event studies. The current one is biased upward
   by about 0.8 pp/63d.
 - A measured `cross_sectional_rho` before the snowball draft can be signed for its return leg.
+
+---
+
+## 5. LEAD for the next $0 night (post-hoc, NOT a finding): row 13 as the owner wrote it
+
+Recorded 2026-10-06 from the review (F4); read post hoc by the reviewer on the shipped
+`theory_beat_streak_events_TC_2026-10-06_1.parquet`, undeclared, so it is a **lead**, not evidence.
+Row 13's falsifier is the **NEXT** announcement (reaction and miss probability), which this cell did
+not measure:
+
+- P(next quarter beats) rises with the streak: **61% after a first beat, 69% after 3, 81% after 5+**
+  (validate 2009-16).
+- Next-announcement [e-1, e+1] CAR, 5+ minus 1: **+0.45 pp** (mean of yearly differences, se 0.10),
+  **13 of 16 years** positive 2009-24; design 1993-2008 points the same way (+0.51% vs +0.15%).
+- By band: small +0.57 pp, mid +0.33 pp, large about 0. **Below a ~100 bp round trip.**
+- The ratchet is partial: the reward for the next beat shrinks (+2.04% -> +1.41%) and the penalty for a
+  miss grows (-3.47% -> -4.28%); the higher beat probability outweighs both.
+
+**The row-13 cell for the next $0 night, and its pre-declaration gate** (all of it before any hash):
+
+1. Declared primary = next-announcement CAR (5+ minus 1) and P(next beat) by streak, **controlling SUE
+   (IBES actual - surpmean, standardised) and size band**, plus a tradeable leg "hold into the next
+   announcement" (enter e-2 close, exit e+1 close, net of the round trip).
+2. Benchmark: market and a **buy-and-hold** band formed at entry; print each cohort's band mix
+   (review F1/F3); never the daily-rebalanced band.
+3. Decision slice: design and validate 1993-2024 have both been SEEN by the reviewer's read, so the
+   deciding slice must be unseen: pre-1993 IBES if `surpsum` reaches there, else a forward shadow log
+   from the signing date. 1993-2024 may be reported, never decide.
+4. Gate (`hyp_theory_cells.declaration_gate`): print the class split (streak 5+ vs 1) and the control
+   MDE; refuse above 90% in one class or a control MDE above 2 x the declared effect; and state, in the
+   declaration, the row-13 falsifier it answers.
+5. Cost line: the effect sits below a ~100 bp round trip in small/mid where it lives; a CANDIDATE here
+   is a fact about analysts and prices, not a trade, unless the hold-into leg clears costs.
+
+---
+
+## 6. Amendments after the adversarial review (2026-10-06)
+
+Review: `docs/reviews/REVIEW_2026-10-06_C12_THEORY_CELLS.md` (58/100). The three verdict labels stand on their declared primaries; the
+corrections above are dated. Code changed (no cell re-run, $0):
+
+- **Re-reads count +0.** Theory rows now go through `hyp_lab.dedupe()`. The dedupe corpus includes
+  every library rule already RUN on CRSP (`crsp_rebuild/library_rules_*.jsonl`, 296 rule names), and
+  an exact rule-name token marks the row `reread_of`. A generated row is then a DUPLICATE_OF_CLOSED; a
+  declared cell records `reread_of` in its declaration. Either way the posterior counts it 0. The hi52
+  ledger row (H-25702b3bfd) was annotated append-only with `reread_of = library_rules_LIB_2026-09-29T0802Z.jsonl#hi52`.
+- **Declaration gate.** `declaration_gate` prints the separating variable's class split and the
+  control's labels-only MDE before hashing, and refuses above 90% in one class or a control MDE above
+  2 x the effect worth having. Run labels-only now: insider_hold **REFUSED** (98.2% / 1.8%, SOLD
+  n = 790, MDE >= 2.49%); beat_streak passes (57.9% / 42.1%, MDE >= 0.22%). It does not yet check
+  cohort band mix (owed).
+- **Powered-only posterior.** CANNOT_DISTINGUISH = 0; FAILED_VARIANT counts only when powered (explicit
+  flag from the verdict rule, now emitted by `hyp_cells.verdict` and `theory_verdict`; inferred for old
+  rows as confirm t <= -2 or confirm MDE <= a positive design mean; unknown = not powered); verdicts
+  older than 180 days count half. The three C12 rows were annotated `powered = false`
+  (validate MDE 0.87% / 0.89% / 1.20% vs worth 0.20% / 0.50% / 0.37%).
+- **Fixed taxonomy.** `config.HYP_LAB_FAMILIES` (21 families) + `HYP_LAB_FAMILY_ALIASES`
+  (`insider_hold -> insider_event`); any other generated label becomes `family_unmapped` with the
+  MEDIAN quota, keeping its text in `family_label`.
+- **The prompt never names shrunk families or caps**; it names the fixed label list.
+- **Both levers are policy_state preferences**: `hyp_family_ev_weight` (>= 0.25) and the new
+  `hyp_family_gen_quota` (>= 1), written together with the posteriors as evidence.
+- **Weekly exploration floor.** A shrunk family with no RUN in 7 days gets its best runnable row a
+  guaranteed nightly slot (`weekly_guarantee`; `nightly` receipt `weekly_guarantee`).
+- Tests: `test_hyp_lab_family_budget.py` (16) and `test_hyp_theory_cells.py` (11) pin re-read = +0,
+  unmapped = median quota, powered-only posterior, decay, recovery after failures + one positive, the
+  weekly floor, and the gate refusal.
+- Still owed from the review: event-study benchmark buy-and-hold (F1), the gate's band-mix check (F3),
+  delisting returns and the entry-day convention (F11), and committing a declaration before its run so
+  the timing is tamper-evident beyond the local file (F9).

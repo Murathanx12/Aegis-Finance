@@ -151,26 +151,37 @@ def untracked_closed_months(directory: Path | None = None, *,
     missing = []
     archived = []
     for month, q in on_disk:
-        # SEALED BY MANIFEST (2026-10-06, C10). A closed month over GitHub's
-        # 100 MB blob limit cannot be `git add -f`-ed; `ledger_archive` seals
-        # it as Parquet outside git plus a COMMITTED manifest instead. The
-        # manifest counts only while its recorded size matches the file.
+        # SEALED BY ARCHIVE (2026-10-06 C10, hardened 10-07 after review F2).
+        # A closed month over GitHub's 100 MB blob limit cannot be `git add
+        # -f`-ed; `ledger_archive` seals it as a COMMITTED zstd Parquet plus a
+        # committed manifest instead. A manifest alone is a claim, not a seal:
+        # `verify_seal` requires the parquet to exist, hash to the manifest, be
+        # TRACKED by git, and the jsonl to still hash to the manifest. Anything
+        # less keeps the month RED with the reason.
         if q.name not in tracked:
+            seal = None
             try:
                 from backend.services import ledger_archive as _LA    # noqa: PLC0415
-                man = _LA.manifest_for(q)
-            except Exception:                                        # noqa: BLE001
-                man = None
-            if man is not None and (man.get("jsonl") or {}).get("bytes") == q.stat().st_size:
-                archived.append({"month": month, "file": _rel(q),
-                                 "manifest": _rel(_LA.manifest_path(q))})
+                if _LA.manifest_path(q).exists():
+                    seal = _LA.verify_seal(q)
+            except Exception as exc:                                 # noqa: BLE001
+                seal = {"sealed": False, "manifest": None,
+                        "reason": f"seal check failed ({type(exc).__name__}: {exc})"}
+            if seal and seal["sealed"]:
+                archived.append({"month": month, "file": _rel(q), "manifest": seal["manifest"]})
                 continue
-            missing.append({
+            row = {
                 "month": month,
                 "file": _rel(q),
                 "rows": sum(1 for _ in q.open(encoding="utf-8", errors="replace")),
                 "command": f"git add -f {_rel(q)}",
-            })
+            }
+            if seal is not None:
+                row["archive_not_sealed"] = seal["reason"]
+                row["command"] = (f"fix the archive ({seal['reason']}), or "
+                                  f"python -m backend.services.ledger_archive --ledger "
+                                  f"{_rel(q)} --apply and commit the parquet + manifest")
+            missing.append(row)
     return {"checked": True, "reason": None, "months": missing, "archived": archived}
 
 

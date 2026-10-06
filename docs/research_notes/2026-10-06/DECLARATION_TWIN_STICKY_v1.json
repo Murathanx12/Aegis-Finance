@@ -1,0 +1,24 @@
+{
+ "code": {
+  "function": "backend.services.matched_twins.twin_series_sticky (+ _sticky_pick, sticky_turnover_check)",
+  "source_sha256": "a4b29e5136c49510de66f4a8067d1a06ffa5cad54b638ade541fb24b87814e31"
+ },
+ "construction": [
+  "When the rule ENTERS name s at decision date d, each draw j draws one partner from s's (size band x vol_63 tercile x 12-1 tercile) cell as of d, among names eligible at d with a forward return, not held by the rule and not already a partner in draw j. Seed of draw j = matched_twins.seed_for(rule_id, j). Fallbacks cell -> band_vol -> band -> any, counted.",
+  "The partner is held exactly as long as the rule holds s, at s's target weight (EW, ivw, liqw, risk parity alike), with the rule's drift and re-weight-to-target convention (scripts.hyp_investable.run_book).",
+  "Redraws: the rule exits s (partner sold, reason exit); the partner is off the panel or has no forward return at a decision date (reason died, redrawn that date); the partner is now held by the rule (reason collision). An unmatched slot holds cash and retries (reason unmatched_retry). Every reason is counted on the receipt.",
+  "Both legs pay matched_twins.trade_cost on their own traded weight at the per-name round trip matched_twins.round_trip_spread (TWIN_COST_COMPOSITION).",
+  "Draws: 21 (config.STICKY_TWIN_N_DRAWS); twin gross, cost and turnover are the mean over draws."
+ ],
+ "declaration": "TWIN_STICKY_v1",
+ "declared_utc": "2026-10-06T17:48:58+00:00",
+ "licence": "PRODUCT_EXPERIMENT (a control construction for historical boards; no book, no order, $0 LLM)",
+ "printed": "beside, never instead of, the basket fair twin and the registered twin21: a separate run id of scripts.hyp_twin_board --twin sticky, every row carrying twin_kind.",
+ "receipt_check": {
+  "rule": "median over invested months, EXCLUDING months with a died or collision redraw, of |twin one-way turnover - rule one-way turnover| <= tolerance; else the board row is REFUSED with the gap.",
+  "tolerance": 0.03
+ },
+ "sha256_of_body_without_this_field": "7333553e17ea6471c772cab934944fa2b223324fe29d430d90ac10f8a835e988",
+ "status": "NEW construction. It is NOT the registered twin. TRIAL-LIB-FWD-TWIN-1 and CRSP_BLEND_v0 stay on their frozen twin books; the registered monthly construction `matched_twins.twin_series` is unchanged (pinned byte-identical by backend/tests/test_sticky_twin.py).",
+ "what_was_seen_before_this_declaration": "A pre-declaration sticky run (run id STK_2026-10-07_1) scored 254 of 301 rules on an engine that dropped rule weights, with the tolerance check INCLUDING death/collision months, before it was killed for low memory. 17 of the 254 rows were refused at 0.03 (mostly short-horizon reversal rules and rules confined to the large / mega bands, random_large among them; median gaps 0.0305-0.0784). Its per-rule t-values were printed to a log. That run is VOID: it is not read, cited or resumed. The exclusion of death/collision months comes from the adversarial review's spec (docs/reviews/REVIEW_2026-10-06_C1_FAIR_TWIN.md, 'The sticky twin', item 4), not from those refusals; the tolerance 0.03 is unchanged from its first declaration in config.py."
+}

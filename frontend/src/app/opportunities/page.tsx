@@ -85,27 +85,58 @@ function ExtLink({ href, children, className = "" }: { href: string; children: R
 
 // ───────────────────────────── cells ─────────────────────────────
 
-const DIR_TONE: Record<string, string> = {
-  UP: "bg-emerald-600/15 text-emerald-700 dark:text-emerald-400 border-emerald-600/30",
-  DOWN: "bg-red-600/15 text-red-700 dark:text-red-400 border-red-600/30",
+// Analyst stance is what analysts SAY (rating + 90-day revisions). Deliberately
+// muted tones: it is not a forecast, and it is never green on its own (F2).
+const STANCE_TONE: Record<string, string> = {
+  POSITIVE: "bg-sky-600/10 text-sky-800 dark:text-sky-300 border-sky-600/30",
+  NEGATIVE: "bg-orange-600/10 text-orange-800 dark:text-orange-300 border-orange-600/30",
   NEUTRAL: "bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/30",
-  MIXED: "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30",
+  MIXED: "bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30",
 };
 
-function DirectionCell({ r }: { r: OppRow }) {
-  const d = r.direction;
-  if (!d) return <Missing why={r.missing_because.direction} />;
+/** F13: the FDA words the owner asked about, explained in place. */
+const GLOSSARY: Record<string, string> = {
+  CRL: "FDA Complete Response Letter: not approvable as filed; the company must fix the issues and resubmit.",
+  PDUFA: "PDUFA date: the FDA's target date to decide on an application.",
+  BLA: "Biologics License Application: the filing asking the FDA to approve a biologic.",
+  NDA: "New Drug Application: the filing asking the FDA to approve a drug.",
+  sNDA: "Supplemental NDA: an application to change or extend an approved drug's label.",
+};
+
+function Glossed({ text }: { text: string | null | undefined }) {
+  if (!text) return null;
+  const parts = text.split(/\b(CRL|PDUFA|BLA|sNDA|NDA)\b/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        GLOSSARY[part] ? (
+          <abbr key={i} title={GLOSSARY[part]} className="cursor-help underline decoration-dotted underline-offset-2">{part}</abbr>
+        ) : (
+          <React.Fragment key={i}>{part}</React.Fragment>
+        ),
+      )}
+    </>
+  );
+}
+
+function StanceCell({ r }: { r: OppRow }) {
+  const d = r.analyst_stance;
+  if (!d) return <Missing why={r.missing_because.analyst_stance} />;
   const tip = [
     d.consensus ? `consensus: ${d.consensus}` : "no consensus rating",
     d.revision_sign == null ? "no 90-day revisions" :
       `revisions: ${r.revision?.net_raises_90d ?? 0} net raises (${r.revision?.n_firms_90d ?? 0} firms)`,
+    d.revisions_through ? `revision data through ${d.revisions_through}` : "",
     d.single_source ? "single source" : "",
   ].filter(Boolean).join(" · ");
   return (
-    <span title={tip}>
-      <Badge className={DIR_TONE[d.label] ?? DIR_TONE.NEUTRAL}>{d.label}</Badge>
-      {d.single_source && <span className="ml-1 text-[10px] text-muted-foreground">1 src</span>}
-    </span>
+    <div title={tip} className="min-w-[90px]">
+      <Badge className={STANCE_TONE[d.label] ?? STANCE_TONE.NEUTRAL}>{d.label.toLowerCase()}</Badge>
+      {d.single_source && <span className="ml-1 text-[10px] text-muted-foreground">1 source</span>}
+      {d.conflicts_with_upside && (
+        <div className="mt-1 text-[10px] text-amber-700 dark:text-amber-400">price is above the median target</div>
+      )}
+    </div>
   );
 }
 
@@ -141,20 +172,14 @@ function TargetCell({ r }: { r: OppRow }) {
   const min = Math.min(...vals), max = Math.max(...vals);
   const span = max - min || 1;
   const at = (v: number) => `${((v - min) / span) * 100}%`;
-  const up = r.upside;
-  const medUp = up?.median;
+  const single = !!r.upside?.single_target;
   return (
     <div className="min-w-[180px] text-xs">
       <div className="flex items-baseline justify-between gap-2">
         <span className="tabular-nums font-medium">{p ? money(p.value, p.currency) : "—"}</span>
-        <span
-          className={`tabular-nums font-semibold ${medUp == null ? "" : medUp >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400"}`}
-          title={up ? `upside to the median target, ${up.basis}` : r.missing_because.upside}
-        >
-          {medUp == null ? "—" : `${pct(medUp, 0, true)} to median`}
-        </span>
+        {single && <Badge variant="outline" className="text-[10px]">single target</Badge>}
       </div>
-      {lo != null && hi != null && (
+      {lo != null && hi != null && !single && (
         <div className="relative my-1.5 h-2 rounded bg-muted" aria-hidden>
           <div className="absolute top-0 h-2 rounded bg-sky-500/25" style={{ left: at(lo), width: `calc(${at(hi)} - ${at(lo)})` }} />
           {med != null && <div className="absolute -top-0.5 h-3 w-0.5 bg-sky-600 dark:bg-sky-400" style={{ left: at(med) }} />}
@@ -166,13 +191,46 @@ function TargetCell({ r }: { r: OppRow }) {
         <span title="median target">M {money(med, p?.currency)}</span>
         <span title="highest target">H {money(hi, p?.currency)}</span>
       </div>
+      {/* F7: the two dates behind this cell, visible without hovering */}
       <div className="text-[10px] text-muted-foreground">
-        {a.n != null ? `${a.n} analysts` : "analyst count n/a"}
-        {a.consensus ? ` · ${a.consensus.replace(/_/g, " ")}` : ""}
+        targets {day(a.observed_utc)}{a.n_source ? ` (n from ${a.n_source.split(",")[0]})` : ""}
+        {" · "}close {p ? day(p.date) : "n/a"}
       </div>
     </div>
   );
 }
+
+/** F2/F3: upside has its own cell. Green only at or above the threshold AND more than
+ *  one target; below it is grey and tagged LOW UPSIDE; never green for a sign alone. */
+function UpsideCell({ r }: { r: OppRow }) {
+  const u = r.upside;
+  if (!u || u.median == null) return <Missing why={r.missing_because.upside ?? r.missing_because.analyst} />;
+  const strong = !u.low_upside && !u.single_target;
+  const tone = u.median < 0 ? "text-red-700 dark:text-red-400"
+    : strong ? "text-emerald-700 dark:text-emerald-400" : "text-zinc-500 dark:text-zinc-400";
+  return (
+    <div className="min-w-[96px] text-xs" title={`median-target upside, ${u.basis}`}>
+      <span className={`tabular-nums font-semibold ${tone}`}>{pct(u.median, 0, true)}</span>
+      <span className="text-[10px] text-muted-foreground"> to median</span>
+      <div className="mt-0.5 flex flex-wrap gap-1">
+        {u.low_upside && (
+          <Badge className="bg-zinc-500/15 text-zinc-700 dark:text-zinc-300 border-zinc-500/30 text-[10px]"
+            title={`median-target upside below ${pct(u.low_upside_threshold, 0)}`}>LOW UPSIDE</Badge>
+        )}
+        {u.single_target && <Badge variant="outline" className="text-[10px]">single target</Badge>}
+      </div>
+      <div className="text-[10px] text-muted-foreground tabular-nums">
+        {u.n_targets != null ? `${u.n_targets} analyst${u.n_targets === 1 ? "" : "s"}` : "analyst count n/a"}
+      </div>
+    </div>
+  );
+}
+
+const FLAG_LABEL: Record<string, string> = {
+  coverage: "thin coverage",
+  binary_event: "binary FDA/trial event",
+  runway: "short cash runway",
+};
 
 function TickerCell({ r }: { r: OppRow }) {
   return (
@@ -182,9 +240,15 @@ function TickerCell({ r }: { r: OppRow }) {
           {r.ticker}
         </ExtLink>
         {r.lane === "HIGH_RISK_INNOVATION" && (
-          <Badge className="bg-fuchsia-600/15 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-600/30" title={r.risk_flags.join(" · ")}>
+          <Badge className="bg-fuchsia-600/15 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-600/30"
+            title={`${r.risk_flags.length} of 3 flags: ${r.risk_flags.join(", ")}`}>
             <Rocket className="h-3 w-3" /> High-Risk Innovation
           </Badge>
+        )}
+        {r.lane !== "HIGH_RISK_INNOVATION" && r.risk_flags.length === 1 && (
+          <span className="text-[10px] text-fuchsia-700/80 dark:text-fuchsia-300/80" title={r.risk_checks[r.risk_flags[0]]?.detail}>
+            1 risk flag: {FLAG_LABEL[r.risk_flags[0]] ?? r.risk_flags[0]}
+          </span>
         )}
         {r.lane === "BENCHMARK" && <Badge variant="outline">benchmark</Badge>}
         {r.eligibility?.startsWith("EXCLUDED") && (
@@ -226,26 +290,49 @@ function Detail({ r }: { r: OppRow }) {
   return (
     <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3 text-sm bg-muted/30">
       <section>
-        <h4 className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">Why the engine picked it</h4>
+        <h4 className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">
+          Why the engine picked it{r.freeze_date ? ` (evidence dated on or before the ${r.freeze_date} freeze)` : ""}
+        </h4>
         {r.why_picked.length ? (
           <ul className="space-y-2">
             {r.why_picked.map((w, i) => (
               <li key={i}>
-                <p>{w.reason}</p>
+                <p><Glossed text={w.reason} /></p>
                 <p className="text-[11px] text-muted-foreground">service: {w.service}</p>
               </li>
             ))}
           </ul>
         ) : <Missing why={r.missing_because.why_picked} />}
+        {r.later_commentary && (
+          <div className="mt-3 rounded-md border border-dashed border-border p-2">
+            <h4 className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Later commentary (post-freeze)</h4>
+            <p className="text-xs">
+              card {r.later_commentary.day}: {r.later_commentary.verdict}/{r.later_commentary.confidence}
+              {r.later_commentary.text ? <> — <Glossed text={r.later_commentary.text} /></> : null}
+            </p>
+            <p className="text-[11px] text-muted-foreground">{r.later_commentary.note}</p>
+          </div>
+        )}
         <h4 className="text-xs uppercase tracking-wide text-muted-foreground mt-3 mb-1">What would prove it wrong</h4>
-        <p>{r.falsifier ?? <Missing why={r.missing_because.falsifier} />}</p>
+        <p>{r.falsifier ? <Glossed text={r.falsifier} /> : <Missing why={r.missing_because.falsifier} />}</p>
         <p className="mt-2 text-xs text-muted-foreground">
           Horizon: {r.horizon ?? "none declared"} · Evidence: <b>{r.evidence.label}</b>
           {r.evidence.sessions != null ? ` (${r.evidence.sessions} sessions)` : ""} — {r.evidence.note}
         </p>
-        {r.risk_flags.length > 0 && (
-          <p className="mt-2 text-xs text-fuchsia-700 dark:text-fuchsia-300">Risk flags: {r.risk_flags.join(" · ")}</p>
-        )}
+        <h4 className="text-xs uppercase tracking-wide text-muted-foreground mt-3 mb-1">
+          Risk checks ({r.risk_flags.length} of 3 on; the badge needs 2)
+        </h4>
+        <ul className="space-y-0.5 text-xs">
+          {Object.entries(r.risk_checks ?? {}).map(([k, v]) => (
+            <li key={k}>
+              <span className={v.on ? "text-fuchsia-700 dark:text-fuchsia-300 font-medium"
+                : v.on === null ? "text-muted-foreground italic" : "text-muted-foreground"}>
+                {v.on ? "FLAG" : v.on === null ? (k === "high_volatility_info" ? "info" : "n/a") : "ok"}
+              </span>{" "}
+              <b>{FLAG_LABEL[k] ?? k.replace(/_/g, " ")}</b>: {v.detail}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section>
@@ -256,7 +343,7 @@ function Detail({ r }: { r: OppRow }) {
               <li key={i}>
                 <span className="font-mono tabular-nums">{c.date}</span>{" "}
                 <span className="font-medium">{c.kind}</span>
-                {c.detail ? <span className="text-muted-foreground"> — {c.detail}</span> : null}
+                {c.detail ? <span className="text-muted-foreground"> — <Glossed text={c.detail} /></span> : null}
                 {c.url && <> {" "}<ExtLink href={c.url}>source</ExtLink></>}
                 <div className="text-[11px] text-muted-foreground">{c.source}</div>
               </li>
@@ -279,12 +366,15 @@ function Detail({ r }: { r: OppRow }) {
       </section>
 
       <section>
-        <h4 className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">Insiders (SEC Form 4, open market)</h4>
+        <h4 className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">
+          Insiders (SEC Form 4, open market{r.insiders?.covers_from ? `, data since ${r.insiders.covers_from}` : ""})
+        </h4>
         {r.insiders ? (
           <>
             <p className="tabular-nums">
               {r.insiders.n_buys} buys ({usd(r.insiders.buy_usd)}) · {r.insiders.n_sells} sells ({usd(r.insiders.sell_usd)})
-              · {r.insiders.n_insiders} people · {r.insiders.n_10b5_1} under a 10b5-1 plan · last {r.insiders.window_days} days
+              · {r.insiders.n_insiders} people · {r.insiders.n_10b5_1} under a 10b5-1 plan
+              · {r.insiders.window_days} days covered (the table starts {r.insiders.covers_from ?? "n/a"})
             </p>
             <ul className="mt-1 space-y-1 text-xs">
               {r.insiders.recent.map((t, i) => (
@@ -321,8 +411,9 @@ function Detail({ r }: { r: OppRow }) {
         )}
         {r.revision && (
           <p className="mt-3 text-xs text-muted-foreground">
-            Analyst target revisions, last 90 days: {r.revision.net_raises_90d ?? 0} net raises across {r.revision.n_firms_90d ?? 0} firms,
+            Analyst target revisions, 90 days to {r.revision.asof}: {r.revision.net_raises_90d ?? 0} net raises across {r.revision.n_firms_90d ?? 0} firms,
             median change {pct(r.revision.median_target_change_90d, 1, true)}.
+            {r.analyst_stance?.revisions_through ? ` Revision data ends ${r.analyst_stance.revisions_through}; nothing after that date is counted.` : ""}
           </p>
         )}
         <h4 className="text-xs uppercase tracking-wide text-muted-foreground mt-3 mb-1">Links</h4>
@@ -344,9 +435,9 @@ function Detail({ r }: { r: OppRow }) {
 
 // ───────────────────────────── sorting ─────────────────────────────
 
-type SortKey = "default" | "ticker" | "weight" | "sector" | "upside" | "move" | "direction" | "catalyst" | "insiders" | "analysts";
+type SortKey = "default" | "ticker" | "weight" | "sector" | "upside" | "move" | "stance" | "catalyst" | "insiders" | "analysts";
 
-const DIR_ORDER: Record<string, number> = { UP: 3, MIXED: 2, NEUTRAL: 1, DOWN: 0 };
+const STANCE_ORDER: Record<string, number> = { POSITIVE: 3, MIXED: 2, NEUTRAL: 1, NEGATIVE: 0 };
 
 function sortValue(r: OppRow, k: SortKey): number | string | null {
   switch (k) {
@@ -355,7 +446,7 @@ function sortValue(r: OppRow, k: SortKey): number | string | null {
     case "sector": return r.sector ?? r.theme;
     case "upside": return r.upside?.median ?? null;
     case "move": return r.move_score?.expected_abs_move_21s ?? null;
-    case "direction": return r.direction ? DIR_ORDER[r.direction.label] ?? null : null;
+    case "stance": return r.analyst_stance ? STANCE_ORDER[r.analyst_stance.label] ?? null : null;
     case "catalyst": return nextCatalyst(r)?.date ?? null;
     case "insiders": return insiderNet(r);
     case "analysts": return r.analyst?.n ?? null;
@@ -494,10 +585,18 @@ export default function OpportunitiesPage() {
         {resp && (
           <p className="mt-1 text-xs text-muted-foreground">
             Receipt <span className="font-mono">{resp.receipt_file}</span> · built {resp.generated_utc?.slice(0, 16).replace("T", " ")} UTC
-            · {resp.licence}
+            {resp.freshness?.age_days != null ? ` · ${resp.freshness.age_days.toFixed(1)} days old` : ""}
+            {" · "}{resp.licence}
           </p>
         )}
       </div>
+
+      {resp?.freshness && resp.freshness.status !== "FRESH" && (
+        <div className="rounded-lg border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-800 dark:text-red-300 flex gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span><b>{resp.freshness.status}:</b> {resp.freshness.line}. Prices, targets and insider rows below are as of the receipt, not today.</span>
+        </div>
+      )}
 
       {/* legend: magnitude vs direction, in two sentences */}
       <Card>
@@ -507,13 +606,18 @@ export default function OpportunitiesPage() {
             <p className="text-muted-foreground">How far the stock may move over the next 21 trading sessions, up or down, from its own recent volatility. It says how big, never which way.</p>
           </div>
           <div>
-            <p className="font-semibold flex items-center gap-1.5"><Badge className={DIR_TONE.UP}>UP</Badge> Direction</p>
-            <p className="text-muted-foreground">The analysts&apos; consensus rating plus whether their price targets were raised or cut over 90 days. It never comes from volatility.</p>
+            <p className="font-semibold flex items-center gap-1.5"><Badge className={STANCE_TONE.POSITIVE}>positive</Badge> Analyst stance</p>
+            <p className="text-muted-foreground">What analysts say: their consensus rating plus whether targets were raised or cut over 90 days. It is not a forecast, and it can sit beside a negative upside. Upside has its own column: grey and &quot;LOW UPSIDE&quot; below +5%, never green from one target.</p>
           </div>
           <div>
             <p className="font-semibold flex items-center gap-1.5"><Rocket className="h-4 w-4 text-fuchsia-600 dark:text-fuchsia-400" /> High-Risk Innovation</p>
-            <p className="text-muted-foreground">Fewer than 5 analysts, a 21-session move of 15% or more, an &quot;against&quot; card, or a binary FDA/trial date. Shown in the list with its flags, not hidden.</p>
+            <p className="text-muted-foreground">Three separate checks: thin coverage (fewer than 3 firms with a dated target in 180 days), a binary FDA/trial event within 63 weekdays, and short cash runway (under 4 quarters of operating loss). The badge needs 2 of the 3; a single flag is printed under the ticker.</p>
           </div>
+        </CardContent>
+        <CardContent className="pt-0 pb-3 text-xs text-muted-foreground">
+          FDA words: {Object.entries(GLOSSARY).map(([k, v], i) => (
+            <span key={k}>{i ? " · " : ""}<abbr title={v} className="cursor-help underline decoration-dotted underline-offset-2">{k}</abbr> = {v.split(":")[0]}</span>
+          ))}
         </CardContent>
       </Card>
 
@@ -536,7 +640,9 @@ export default function OpportunitiesPage() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">{list.title}</CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  {list.kind} · as of {list.asof ?? "—"}
+                  {list.kind} · {list.kind === "book" ? "frozen" : "listed"} {list.asof ?? "—"}
+                  {resp.inputs?.revision_through ? ` · analyst revisions through ${resp.inputs.revision_through}` : ""}
+                  {resp.inputs?.insider_coverage_from ? ` · Form 4 data since ${resp.inputs.insider_coverage_from}` : ""}
                   {list.benchmark ? ` · benchmark ${list.benchmark}` : ""}
                   {list.horizon ? ` · horizon ${list.horizon}` : ""}
                   {list.book_id ? ` · book_id ${list.book_id}` : ""}
@@ -589,6 +695,12 @@ export default function OpportunitiesPage() {
                   </span>
                 </div>
 
+                {sort.k === "move" && !list.magnitude_ranking && (
+                  <div className="mb-2 rounded-lg border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm text-amber-900 dark:text-amber-200 flex gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>Sorted by MoveScore: this is now a MAGNITUDE ranking (how far, not which way). It is not a long list.</span>
+                  </div>
+                )}
                 {/* the table: sticky header, scrolls inside the card */}
                 <div className="max-h-[75vh] overflow-auto rounded-lg border border-border">
                   <table className="w-full text-sm">
@@ -598,13 +710,15 @@ export default function OpportunitiesPage() {
                         <Th label="Ticker" k="ticker" sort={sort} setSort={setSort} />
                         <Th label={isBook ? "Weight" : "Rank / score"} k="weight" sort={sort} setSort={setSort} className="text-right" />
                         <Th label="Sector" k="sector" sort={sort} setSort={setSort} />
-                        <Th label="Price vs targets" k="upside" sort={sort} setSort={setSort} title="sorted by upside to the median target" />
+                        <th className="sticky top-0 z-10 bg-background py-2 pr-3 text-left text-[11px] uppercase tracking-wide font-medium text-muted-foreground">Price vs targets (L / M / H)</th>
+                        <Th label="Upside" k="upside" sort={sort} setSort={setSort} title="median-target upside; grey below +5%, tagged when a single target" />
                         <th className="sticky top-0 z-10 bg-background py-2 pr-3 text-left text-[11px] uppercase tracking-wide font-medium text-muted-foreground">Why picked</th>
                         <Th label="Next date / news" k="catalyst" sort={sort} setSort={setSort} />
-                        <Th label="Insiders" k="insiders" sort={sort} setSort={setSort} title="net open-market Form 4 dollars, last 180 days" />
-                        <Th label="Coverage" k="analysts" sort={sort} setSort={setSort} title="analyst count; short interest" />
+                        <Th label={resp.inputs?.insider_coverage_from ? `Insiders (since ${String(resp.inputs.insider_coverage_from).slice(5)})` : "Insiders"}
+                          k="insiders" sort={sort} setSort={setSort}
+                          title={`net open-market Form 4 dollars; the table holds filings since ${resp.inputs?.insider_coverage_from ?? "n/a"} (${resp.inputs?.insider_window_days ?? "?"} days), not 180`} />
                         <Th label="MoveScore" k="move" sort={sort} setSort={setSort} title="MAGNITUDE: expected size of the 21-session move, either way" />
-                        <Th label="Direction" k="direction" sort={sort} setSort={setSort} title="consensus + 90-day revisions; never from volatility" />
+                        <Th label="Analyst stance" k="stance" sort={sort} setSort={setSort} title={`what analysts say: consensus + 90-day revisions (data through ${resp.inputs?.revision_through ?? "n/a"}); not a forecast`} />
                       </tr>
                     </thead>
                     <tbody>
@@ -633,10 +747,11 @@ export default function OpportunitiesPage() {
                                 {r.sector ?? (r.theme ? <span className="text-muted-foreground">theme: {r.theme}</span> : <Missing why={r.missing_because.sector} />)}
                               </td>
                               <td className="py-2.5 pr-3"><TargetCell r={r} /></td>
+                              <td className="py-2.5 pr-3"><UpsideCell r={r} /></td>
                               <td className="py-2.5 pr-3 text-xs max-w-[280px]">
                                 {r.why_picked[0] ? (
                                   <>
-                                    <p className="line-clamp-3">{r.why_picked[0].reason}</p>
+                                    <p className="line-clamp-3"><Glossed text={r.why_picked[0].reason} /></p>
                                     <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{r.why_picked[0].service}
                                       {r.why_picked.length > 1 ? ` · +${r.why_picked.length - 1} more` : ""}</p>
                                   </>
@@ -659,17 +774,15 @@ export default function OpportunitiesPage() {
                                     </span>
                                     <div className="text-[10px] text-muted-foreground">{r.insiders.n_buys} buy · {r.insiders.n_sells} sell</div>
                                   </>
-                                ) : <Missing why={r.missing_because.insiders} />}
-                              </td>
-                              <td className="py-2.5 pr-3 text-xs whitespace-nowrap tabular-nums">
-                                {r.analyst?.n != null ? `${r.analyst.n} analysts` : <Missing why={r.missing_because["analyst.n"] ?? r.missing_because.analyst} />}
-                                <div className="text-[10px] text-muted-foreground">
-                                  {r.short_interest?.days_to_cover != null ? `${r.short_interest.days_to_cover.toFixed(1)}d to cover` : ""}
-                                  {r.politicians ? ` · ${r.politicians.n} Congress trade${r.politicians.n === 1 ? "" : "s"}` : ""}
-                                </div>
+                                ) : r.is_foreign ? <Missing why={r.missing_because.insiders} /> : (
+                                  <span className="text-muted-foreground" title={r.missing_because.insiders}>
+                                    none since {String(resp.inputs?.insider_coverage_from ?? "").slice(5) || "n/a"}
+                                  </span>
+                                )}
+                                {r.insiders && <div className="text-[10px] text-muted-foreground">since {r.insiders.covers_from?.slice(5)}</div>}
                               </td>
                               <td className="py-2.5 pr-3"><MoveCell r={r} /></td>
-                              <td className="py-2.5 pr-3"><DirectionCell r={r} /></td>
+                              <td className="py-2.5 pr-3"><StanceCell r={r} /></td>
                             </tr>
                             {isOpen && (
                               <tr className="border-b border-border">
@@ -692,7 +805,7 @@ export default function OpportunitiesPage() {
                 </div>
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   Every external link opens in a new tab. An &quot;n/a&quot; carries its reason on hover; the expanded row lists them all.
-                  Price is the last close on the bars panel; targets are the newest analyst snapshot.
+                  Price is the last close on the bars panel; targets are the newest analyst snapshot; both dates are printed under each price.
                 </p>
               </CardContent>
             </Card>

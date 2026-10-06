@@ -34,6 +34,9 @@ Verdicts
                  it, and its own fresh receipt names why (2026-10-06: the sim
                  owner's `sim/owner.jsonl`). Not DEAD (nothing crashed, the
                  owner fired) and not ALIVE (nothing runs). Exit code 2.
+* ``ALIVE_OBSERVE_ONLY`` -- the process runs but CANNOT trade (a sim in
+                 `observe` mode): a running loop is not a trading account
+                 (review C2 F6). Exit code 0; the detail says why.
 
 A probe that cannot go red is a broken probe: every probe has a test in
 ``test_system_health.py`` where its evidence is missing or old and the verdict
@@ -60,9 +63,10 @@ from datetime import date, datetime, time as dtime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Literal, Optional, Union
 
-Verdict = Literal["ALIVE", "STALE", "DEAD", "UNKNOWN", "STOPPED_BY_OPERATOR", "REFUSED"]
+Verdict = Literal["ALIVE", "STALE", "DEAD", "UNKNOWN", "STOPPED_BY_OPERATOR", "REFUSED",
+                  "ALIVE_OBSERVE_ONLY"]
 VERDICT_ORDER = {"DEAD": 0, "STALE": 1, "REFUSED": 2, "UNKNOWN": 3,
-                 "STOPPED_BY_OPERATOR": 4, "ALIVE": 5}
+                 "STOPPED_BY_OPERATOR": 4, "ALIVE_OBSERVE_ONLY": 5, "ALIVE": 6}
 
 #: ALIVE tolerates this fraction of the cadence beyond it (a 5-minute
 #: heartbeat written at 5m40s is not a stall).
@@ -92,6 +96,9 @@ class ProbeResult:
     detail: str
     delta: Optional[int] = None
     proof: str = ""
+    #: the fine state beside the coarse verdict (C8, 2026-10-07): ALIVE_PROGRESSING /
+    #: ALIVE_IDLE_EXPECTED / DEGRADED / ... (task_receipts.STATES). None = same as verdict.
+    state: Optional[str] = None
 
 
 @dataclass
@@ -606,6 +613,31 @@ def _sim_owner_row(ctx: ProbeCtx) -> tuple[Optional[dict], Optional[float]]:
     return row, _age(_ts(row.get("utc")), ctx.now)
 
 
+def _plan_census(ctx: ProbeCtx) -> str:
+    """Plans written and orders SENT in the newest pc_book day (review C2 F6):
+    a heartbeat says the loop lives, not that the account trades."""
+    try:
+        days = sorted(p for p in (ctx.optimus_dir / "pc_book").glob("20??-??-??")
+                      if (p / "decisions.jsonl").is_file())
+    except OSError:
+        days = []
+    if not days:
+        return "plans today: none written"
+    n_plans = n_sent = 0
+    last = None
+    for line in _tail_lines(days[-1] / "decisions.jsonl", 8 * 1024 * 1024):
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        n_plans += 1
+        last = _ts(rec.get("t")) or last
+        n_sent += sum(1 for x in rec.get("sent") or []
+                      if isinstance(x, dict) and str(x.get("status")) not in ("skipped", "FAILED"))
+    return (f"plans {days[-1].name}: {n_plans}, last {_fmt_age(_age(last, ctx.now))} ago, "
+            f"orders sent {n_sent}")
+
+
 def _owner_max_age_s() -> float:
     try:
         from backend import config as C                             # noqa: PLC0415
@@ -638,7 +670,10 @@ def p_sim_session(ctx: ProbeCtx) -> ProbeResult:
                              cadence=timedelta(minutes=10), what=f"sim {s.get('id')} {state}")
         if r.verdict == "DEAD":
             r.detail += " -- UNCLEAN: no stop receipt was written"
-        r.detail += f" (mode {s.get('mode')})"
+        r.detail += f" (mode {s.get('mode')}); {_plan_census(ctx)}"
+        if r.verdict == "ALIVE" and str(s.get("mode")) != "paper_profit":
+            r = ProbeResult("ALIVE_OBSERVE_ONLY", r.evidence_utc, r.age_s,
+                            r.detail + " -- the session cannot place orders", proof=r.proof)
         if owner and owner.get("session") == s.get("id") and owner.get("trade_refused"):
             r.detail += f"; trading refused by the owner: {owner['trade_refused']}"
         return r
@@ -1022,6 +1057,7 @@ def p_decision_contract(ctx: ProbeCtx) -> ProbeResult:
     if dt is None:
         return _unknown(f"{newest.name} carries no written_utc")
     v = _by_age(dt, timedelta(days=1), ctx.now)
+    state: Optional[str] = None
     detail = f"{newest.name} written {_fmt_age(_age(dt, ctx.now))} ago"
     try:
         from backend.services import accrual_canary as AC           # noqa: PLC0415
@@ -1029,10 +1065,39 @@ def p_decision_contract(ctx: ProbeCtx) -> ProbeResult:
         detail += f"; {nc.get('reason') or nc.get('line') or nc.get('status')}"
         if nc.get("status") == "DEGRADED":
             v = "STALE"
+            # C8 (2026-10-07): say WHICH cause. After C2 refreshed the funnel the
+            # number is static because the eligibility gate passes the same few
+            # names, not because the candidate file is old.
+            cause = _n_considered_cause(d)
+            detail += "; CAUSE: " + cause
+            if cause.startswith("NOT a stale file"):
+                state = "DEGRADED"
     except Exception as exc:                                        # noqa: BLE001
         detail += f"; n_considered row unavailable ({type(exc).__name__})"
     return ProbeResult(v, _iso(dt), _age(dt, ctx.now), detail,
-                       proof=f"decisions/{newest.name} written_utc")
+                       proof=f"decisions/{newest.name} written_utc",
+                       state=state if v == "STALE" else None)
+
+
+def _n_considered_cause(contract: dict) -> str:
+    """Why n_considered is not moving, from the contract's own candidate_set."""
+    cs = contract.get("candidate_set") or {}
+    n_c, n_k = cs.get("n_candidates"), cs.get("n_considered")
+    age = cs.get("candidates_age_days")
+    try:
+        from backend.services import investment_committee as IC     # noqa: PLC0415
+        limit = float(IC.FUNNEL_STALE_DAYS)
+    except Exception:                                               # noqa: BLE001
+        limit = 10.0
+    if n_c is None or age is None:
+        return "the contract carries no candidate_set, so stale-file vs eligibility cannot be told apart"
+    if float(age) > limit:
+        return (f"a STALE candidate file: {n_c} candidates generated {float(age):.1f} d ago "
+                f"(limit {limit:g} d)")
+    ex = cs.get("excluded_by_gate") or {}
+    ex_txt = ", ".join(f"{v} {k}" for k, v in sorted(ex.items(), key=lambda kv: -kv[1])) or "not itemised"
+    return (f"NOT a stale file -- the candidate set is fresh ({n_c} candidates, {float(age):.1f} d old); "
+            f"only {n_k} of {n_c} pass the eligibility gate (excluded: {ex_txt})")
 
 
 def _daily_pass_receipt(ctx: ProbeCtx, day: date) -> Optional[dict]:
@@ -1570,7 +1635,36 @@ def p_openclaw_tool_scope(ctx: ProbeCtx) -> ProbeResult:
 
 
 def p_openclaw_api_bridge(ctx: ProbeCtx) -> ProbeResult:
-    return _unknown("openclaw_api_bridge writes no heartbeat or receipt; nothing derivable")
+    """The read-only MCP bridge's own heartbeat (C8, 2026-10-07): rewritten on
+    server start and on every tool call. The agent calls it ON DEMAND, so a quiet
+    week is idle, not dead; a last call that ERRORED is DEGRADED. No heartbeat at
+    all is UNKNOWN -- the bridge has not been called since it learned to write one."""
+    from backend import config as C                                 # noqa: PLC0415
+    hb_p = ctx.path("openclaw_bridge_hb", ctx.optimus_dir / "openclaw_api_bridge" / "heartbeat.json")
+    hb = _read_json(hb_p)
+    if not isinstance(hb, dict):
+        return _unknown("no openclaw_api_bridge/heartbeat.json: the bridge has not started or been "
+                        "called since its heartbeat landed (2026-10-07)")
+    last = _ts(hb.get("last_call_utc"))
+    started = _ts(hb.get("started_utc"))
+    t = last or started
+    if t is None:
+        return _unknown("openclaw_api_bridge heartbeat carries no stamp")
+    counts_txt = f"{hb.get('n_calls', 0)} call(s), {hb.get('n_errors', 0)} error(s) this server run"
+    if last is not None and hb.get("last_error"):
+        return ProbeResult("STALE", _iso(last), _age(last, ctx.now),
+                           f"last call {hb.get('last_tool')} {hb.get('last_route')} ERRORED: "
+                           f"{hb.get('last_error')}; {counts_txt}",
+                           proof="openclaw_api_bridge/heartbeat.json last_error", state="DEGRADED")
+    idle_s = float(C.OPENCLAW_BRIDGE_IDLE_DAYS) * 86400
+    what = (f"last call {hb.get('last_tool')} {_fmt_age(_age(last, ctx.now))} ago" if last
+            else f"server started {_fmt_age(_age(started, ctx.now))} ago, no call yet")
+    state = "ALIVE_PROGRESSING" if (last and (_age(last, ctx.now) or 0) <= idle_s) else "ALIVE_IDLE_EXPECTED"
+    return ProbeResult("ALIVE", _iso(t), _age(t, ctx.now),
+                       f"{what}; {counts_txt}"
+                       + ("" if state == "ALIVE_PROGRESSING" else
+                          " (declared idle: the agent calls the bridge on demand)"),
+                       proof="openclaw_api_bridge/heartbeat.json", state=state)
 
 
 def p_llama_server(ctx: ProbeCtx) -> ProbeResult:
@@ -1647,33 +1741,35 @@ def p_optimus_brain(ctx: ProbeCtx) -> ProbeResult:
     v = _by_age(t, timedelta(hours=24), ctx.now)
     return ProbeResult(v, _iso(t), _age(t, ctx.now),
                        f"brain health page generated {_fmt_age(_age(t, ctx.now))} ago"
-                       + ("" if v == "ALIVE" else " -- tools/refresh_aegis.py has no scheduled caller"),
+                       + ("" if v == "ALIVE" else
+                          " -- its caller is the AegisBrainRefresh task (`task_keeper brain`); "
+                          "see the task:AegisBrainRefresh row for whether it ran or refused"),
                        proof="aegis-health-latest.md `generated` stamp")
 
 
-#: Tasks whose outcome another probe judges from the job's own receipt; their
-#: schtasks row is not repeated (Last Result is cmd's rc, not the job's).
-_TASK_RECEIPT = {"AegisDailyPass": "daily_pass", "AegisIIF1NightLauncher": "iif1_night",
-                 "AegisTelegramAgent": "telegram_agent"}
-
-
 def p_scheduled_tasks(ctx: ProbeCtx) -> ProbeOut:
+    """One row per Aegis task, judged by the RECEIPT it must advance (C8, 2026-10-07).
+
+    Never by schtasks' "Last Result": that is cmd's / pythonw's exit code, not the
+    job's (17 rows read UNKNOWN on it every night). The scheduler is read only to
+    know WHICH tasks exist, whether one is Disabled, and whether it has ever run.
+    A task declared in `task_receipts.TASK_RECEIPT` but absent from the scheduler
+    is a row too: nothing will write its next receipt."""
+    from backend.services import task_receipts as TR                # noqa: PLC0415
     tasks = _schtasks(ctx)
     if tasks is None:
-        return _unknown("`schtasks /query /fo CSV /v` could not be read")
+        return _unknown("`schtasks /query /fo CSV /v` could not be read, so which tasks exist "
+                        "cannot be derived")
     out = {}
-    for name, row in tasks.items():
-        lr = f"Last Run {row.get('Last Run Time')}, Last Result {row.get('Last Result')}"
-        if row.get("Scheduled Task State") == "Disabled":
-            continue
-        if name in _TASK_RECEIPT:
-            continue
-        if row.get("Next Run Time") in ("N/A", "") and "One Time" in str(row.get("Schedule Type")):
-            out[name] = _unknown(f"one-shot task, {lr}; retired -- delete it")
-        else:
-            out[name] = _unknown(f"{lr}; Last Result is cmd's rc, not the job's, and no receipt "
-                                 f"is mapped for this task")
-    return out or _unknown("no Aegis* scheduled tasks found")
+    for name in sorted(set(tasks) | set(TR.TASK_RECEIPT)):
+        row = tasks.get(name)
+        spec = TR.TASK_RECEIPT.get(name)
+        if row is None and spec is not None and (spec.retired or spec.registered_only):
+            continue                                  # retired/deleted, or never registered by design
+        j = TR.judge(ctx, name, row, spec)
+        out[name] = ProbeResult(j.verdict, _iso(j.stamp), _age(j.stamp, ctx.now), j.detail,
+                                proof=j.proof or (spec.receipt if spec else ""), state=j.state)
+    return out or _unknown("no Aegis* scheduled tasks found and none declared")
 
 
 def p_railway_backend(ctx: ProbeCtx) -> ProbeResult:
@@ -1909,12 +2005,12 @@ PROBES: tuple[Probe, ...] = (
     Probe("dowjones_feeds", "pc", D1, "dowjones/feeds_<d>.json: generated_utc", p_dowjones_feeds),
     Probe("telegram_agent", "pc", timedelta(seconds=60), "telegram/heartbeat.json|update_offset.json + agent.pid cmdline", p_telegram_agent, True),
     Probe("openclaw_gateway", "pc", timedelta(minutes=5), "`openclaw gateway status`: Runtime, Connectivity probe, Capability", p_openclaw_gateway, True),
-    Probe("openclaw_api_bridge", "pc", D1, "none written", p_openclaw_api_bridge),
+    Probe("openclaw_api_bridge", "pc", D1, "openclaw_api_bridge/heartbeat.json: last_call_utc, last_error (written per call)", p_openclaw_api_bridge),
     Probe("openclaw_tool_scope", "pc", D1, "~/.openclaw/openclaw.json tool policy + agents/*/agent/openclaw-agent.sqlite tool calls (24 h, read-only)", p_openclaw_tool_scope),
     Probe("llama_server", "pc", D1, "GET :8080/health + owner note + lab l2_typing", p_llama_server, True),
     Probe("llama_reaper", "pc", timedelta(seconds=30), "llama_reaper.log.jsonl[-1]: t, action", p_llama_reaper),
     Probe("optimus_brain", "pc", timedelta(hours=24), "optimus aegis-health-latest.md: `generated` stamp", p_optimus_brain),
-    Probe("task", "pc", D1, "schtasks /query /fo CSV /v (Last Run; never Last Result alone)", p_scheduled_tasks, True),
+    Probe("task", "pc", D1, "each task's own receipt (task_receipts.TASK_RECEIPT); schtasks only says which tasks exist", p_scheduled_tasks, True),
     Probe("railway_backend", "external", D1, "GET /api/health/full: deploy.uptime_seconds, scheduler.nav.all_fresh", p_railway_backend, True),
     Probe("railway_fleet", "external", D1, "`railway status` linked service (+ logs)", p_railway_fleet, True),
     Probe("ci", "external", D1, "gh run list --commit origin/main: conclusion", p_ci, True),
@@ -1945,8 +2041,10 @@ def _default_railway_url() -> str:
 
 
 def _row(p: Probe, name: str, r: ProbeResult) -> dict:
-    return {"name": name, "probe": p.name, "where": p.where,
-            "cadence_s": p.cadence.total_seconds(), "evidence": p.evidence, **asdict(r)}
+    d = {"name": name, "probe": p.name, "where": p.where,
+         "cadence_s": p.cadence.total_seconds(), "evidence": p.evidence, **asdict(r)}
+    d["state"] = r.state or r.verdict
+    return d
 
 
 def run_probes(ctx: ProbeCtx, *, only: Optional[set] = None,
@@ -1990,6 +2088,16 @@ def counts(rows: list[dict]) -> dict:
     for r in rows:
         c[r["verdict"]] = c.get(r["verdict"], 0) + 1
     return c
+
+
+def state_counts(rows: list[dict]) -> dict:
+    """The fine states (C8): ALIVE_PROGRESSING / ALIVE_IDLE_EXPECTED / DEGRADED ...
+    A row without a fine state counts under its verdict."""
+    c: dict = {}
+    for r in rows:
+        k = r.get("state") or r["verdict"]
+        c[k] = c.get(k, 0) + 1
+    return dict(sorted(c.items()))
 
 
 def exit_code(rows: list[dict]) -> int:
@@ -2039,6 +2147,7 @@ def run(*, ctx: Optional[ProbeCtx] = None, only: Optional[set] = None,
     out = {"receipt": "system_health", "generated_utc": _iso(ctx.now),
            "source": ("railway_local" if on_railway() else "pc"),
            "allow_proc": ctx.allow_proc, "counts": counts(rows),
+           "state_counts": state_counts(rows),
            "exit_code": exit_code(rows), "rows": rows,
            "read_me_first": ("Every verdict is derived from evidence the producer wrote (a stamp "
                              "inside a receipt, a pid answering with its module, an HTTP body "
@@ -2077,20 +2186,24 @@ def row_line(r: dict) -> str:
 
 def render_table(out: dict, width: int = 150) -> str:
     L = [f"system health {out['generated_utc']}  counts {out['counts']}  rc {out['exit_code']}",
-         f"{'verdict':<8} {'subsystem':<34} {'age':>7}  detail", "-" * width]
+         f"states {out.get('state_counts') or '-'}",
+         f"{'verdict':<8} {'state':<19} {'subsystem':<34} {'age':>7}  detail", "-" * width]
     for r in out["rows"]:
-        L.append(f"{r['verdict']:<8} {r['name'][:34]:<34} {_fmt_age(r.get('age_s')):>7}  "
-                 f"{str(r['detail'])[:width - 54]}")
+        st = r.get("state") or r["verdict"]
+        L.append(f"{r['verdict']:<8} {(st if st != r['verdict'] else ''):<19} {r['name'][:34]:<34} "
+                 f"{_fmt_age(r.get('age_s')):>7}  {str(r['detail'])[:width - 74]}")
     return "\n".join(L)
 
 
 def render_md(out: dict) -> str:
     L = [f"# HEALTH — {out['generated_utc']}", "",
-         f"counts {out['counts']} · exit code {out['exit_code']} · source {out['source']}", "",
-         "| verdict | subsystem | evidence (UTC) | age | detail | proof |",
-         "|---|---|---|---|---|---|"]
+         f"counts {out['counts']} · exit code {out['exit_code']} · source {out['source']}",
+         f"states {out.get('state_counts') or '-'}", "",
+         "| verdict | state | subsystem | evidence (UTC) | age | detail | proof |",
+         "|---|---|---|---|---|---|---|"]
     for r in out["rows"]:
-        L.append(f"| {r['verdict']} | {r['name']} | {r.get('evidence_utc') or '-'} | "
+        L.append(f"| {r['verdict']} | {r.get('state') or r['verdict']} | {r['name']} | "
+                 f"{r.get('evidence_utc') or '-'} | "
                  f"{_fmt_age(r.get('age_s'))} | {str(r['detail']).replace('|', '/')} | "
                  f"{str(r.get('proof') or '').replace('|', '/')} |")
     L += ["", out["read_me_first"], ""]
@@ -2112,8 +2225,9 @@ def api_block(*, ttl_s: float = 60.0) -> dict:
         out = run(ctx=make_ctx(allow_proc=False))
         block = {"generated_utc": out["generated_utc"],
                  "source": "railway_local" if on_railway() else "pc_request",
-                 "counts": out["counts"], "exit_code": out["exit_code"],
-                 "rows": [{k: r.get(k) for k in ("name", "verdict", "where", "evidence_utc",
+                 "counts": out["counts"], "state_counts": out.get("state_counts"),
+                 "exit_code": out["exit_code"],
+                 "rows": [{k: r.get(k) for k in ("name", "verdict", "state", "where", "evidence_utc",
                                                  "age_s", "detail", "delta", "proof")}
                           for r in out["rows"]]}
     except Exception as exc:                                        # noqa: BLE001

@@ -154,6 +154,12 @@ STEPS: tuple[tuple[str, str], ...] = (
     # G-fix owed hook 1 (docs/OPENCLAW_2026-09-26_LOCAL_SERVICE.md). The only
     # other caller is the Telegram agent, dead from 09-23 to 09-26; the
     # once-per-UTC-day stamp is shared, so the two never grade the same day.
+    # 2026-10-06 (C11, review F4). AFTER grade_forecasts and bars_refresh: the
+    # decision stories' frozen alternatives (every HOLD/REFUSE with its BUY
+    # counterfactual) priced once a horizon matures, by cohort, as net excess
+    # over SPY and a same-band control. Out of process; never fails the pass.
+    ("regret", "the regret ledger: frozen decision alternatives graded at 5/21/63 "
+               "sessions, by cohort, excess over SPY and a same-band control"),
     ("grade_promises", "numbered promises vs the 8-K EX-99, once per UTC day, "
                        "no LLM"),
     # 2026-09-27 (docs/REHEARSAL_2026-09-28_MONDAY_ENTRY.md: "NOTHING SCHEDULES
@@ -1025,6 +1031,30 @@ def _child_box(step: str) -> float:
     return max(30.0, float(_STEP_BOXES[step]) - 60.0)
 
 
+def run_regret(timeout_s: float = 540.0) -> dict:
+    """`python -m backend.services.regret_ledger --json` (C11, 2026-10-06)."""
+    return _run_module_child(["backend.services.regret_ledger", "--json"], timeout_s)
+
+
+def step_regret(ctx: dict) -> dict:
+    """The regret ledger (C11 review F4: it had no scheduled caller). `ok` when
+    rows graded, `nothing_to_do` when nothing has matured, `refused` when the
+    child failed -- named, never a failed pass."""
+    t0 = time.time()
+    res = run_regret(timeout_s=_child_box("regret"))
+    st = str(res.get("status") or "refused")
+    status = st if st in ("ok", "nothing_to_do") else "refused"
+    refusals = [] if status != "refused" else [str(res.get("reason") or res.get("line")
+                                                     or "the regret child returned no summary")]
+    if res.get("n_refused"):
+        refusals.append(f"{res['n_refused']} (decision, horizon) row(s) REFUSED on a basis break")
+    return _row("regret", status, rows=int(res.get("n_rows") or 0),
+                seconds=round(time.time() - t0, 2), refusals=refusals,
+                receipt=res.get("path"), headline=res.get("line"),
+                live_stories=res.get("live_stories"), pending=res.get("pending"),
+                rc=res.get("rc"))
+
+
 def step_grade_books(ctx: dict) -> dict:
     """The llm_portfolio leaderboard, graded in PULL mode (2026-09-27).
 
@@ -1182,6 +1212,7 @@ def step_health(ctx: dict) -> dict:
 _HANDLERS: dict[str, Callable[[dict], dict]] = {
     "bars_refresh": step_bars_refresh,
     "grade_promises": step_grade_promises,
+    "regret": step_regret,
     "news_pull": step_news_pull,
     "dowjones_feeds": step_dowjones_feeds,
     "query_planner_yield": step_query_planner_yield,
@@ -1390,6 +1421,8 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
                         "news_pull": "raw", "analyst_snapshot": "raw",
                         "e1_append": "normalized", "book_cadence": "pnl",
                         "decision_contract": "pnl", "grade_forecasts": "pnl",
+                        # C11: a regret is an outcome; nothing upstream may read it
+                        "regret": "pnl",
                         "coverage": "raw", "scoreboard": "pnl",
                         # 2026-10-06 (C7): a corpus pull, and a read of reader
                         # receipts that nothing trades on

@@ -535,6 +535,9 @@ def launch_official() -> int:
 #: double a day's queries), audits the read-only tool scope before and after,
 #: and writes `dowjones/query_planner_<run_id>.json` every time, NOT_DUE included.
 PLANNER_CHECK_S = 1800.0
+#: the planner's own command line (review 2026-10-06 F3: `pid_alive` used to
+#: match only official_sources, so a hung planner never read as alive)
+PLANNER_NEEDLE = "backend.services.query_planner"
 
 
 def planner_due(last_launch: float, now: float, *, child_alive: bool = False,
@@ -564,9 +567,10 @@ def launch_planner() -> int:
     return p.pid
 
 
-def pid_alive(pid: int | None) -> bool:
-    """True when `pid` is a live python process running scripts.official_sources
-    (checked by its command line, never by image name alone)."""
+def pid_alive(pid: int | None, needle: str = "scripts.official_sources") -> bool:
+    """True when `pid` is a live python process whose command line carries
+    `needle` (default: scripts.official_sources; the query planner passes
+    `PLANNER_NEEDLE`). Checked by command line, never by image name alone."""
     if not pid:
         return False
     try:
@@ -574,7 +578,7 @@ def pid_alive(pid: int | None) -> bool:
                             f"(Get-CimInstance Win32_Process -Filter \"ProcessId={int(pid)}\").CommandLine"],
                            capture_output=True, text=True, timeout=30, stdin=subprocess.DEVNULL,
                            creationflags=0x08000000)
-        return "scripts.official_sources" in (r.stdout or "")
+        return needle in (r.stdout or "")
     except Exception:  # noqa: BLE001 -- unknown: treat as alive, try next tick
         return True
 
@@ -1492,7 +1496,8 @@ def main(argv: list[str] | None = None) -> int:
                     _config, "OFFICIAL_SOURCES_EVERY_S", 900.0)) + 120.0
                 log(event="official_sources_launch_failed", error=f"{type(exc).__name__}: {exc}"[:200])
         # 2026-10-06 (C7): the query planner (it decides itself whether it is due)
-        if planner_due(last_planner, time.time(), child_alive=pid_alive(planner_pid)):
+        if planner_due(last_planner, time.time(),
+                       child_alive=pid_alive(planner_pid, PLANNER_NEEDLE)):
             try:
                 planner_pid = launch_planner()
                 last_planner = time.time()

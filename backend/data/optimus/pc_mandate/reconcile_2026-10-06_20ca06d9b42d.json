@@ -1,0 +1,221 @@
+{
+ "receipt": "pc_mandate_reconcile",
+ "run_id": "20ca06d9b42d",
+ "utc": "2026-10-06T15:56:37+00:00",
+ "contract_path": "decisions/2026-10-06.json",
+ "before": {
+  "written_utc": "2026-10-06T03:16:55+00:00",
+  "capital_usd": 40000.0,
+  "mandate_status": "UNRECONCILED",
+  "mandate_line": "MANDATE UNRECONCILED: capital $40,000; per-name cap 2% (tightest: config.PROBE_MAX_WEIGHT (u_plan PROBE)); as configured: 18 EXPLOIT x 10% (gross <= 80%) + 10 PROBE x 2% (<= 20%) = sum|notional|/equity 1.00; x stop 6.48% = -$2,592; no stop, so the ceiling is -$40,000 on $40,000 [on the largest base seen, $1,000,000: -$64,800 k-sigma, ceiling -$1,000,000] -- 2 disagreement(s); gates no order; turns OK when the owner confirms ONE capital base and ONE cap set",
+  "candidate_set_line": "candidates 25 (funnel_night10.json, generated 2026-09-24T02:48:34+00:00, 12.0 d old) -> 25 scored {'WATCH': 2, 'NO_ACTION': 7, 'HOLD': 16} -> 2 eligible for the ROI ranking (= n_considered); excluded: 16 ranking score <= 0, 7 no licensed evidence (NO_EVIDENCE)",
+  "capital_reconciliation": null,
+  "worst_case_table": null,
+  "scaled_views_40000_held": null,
+  "count_by_direction": {
+   "BUY": 3,
+   "WATCH": 0,
+   "SELL": 0,
+   "PROBE": 92,
+   "REFUSED": 2
+  }
+ },
+ "after": {
+  "written_utc": "2026-10-06T15:56:37+00:00",
+  "capital_usd": 1003532.05,
+  "mandate_status": "OK",
+  "mandate_line": "MANDATE OK: capital $1,003,532 (derived: PC-PAPER broker equity read 2026-10-06T15:48:56+00:00 (state_latest.json)); broker equity $1,003,532 read 2026-10-06T15:48:56+00:00; per-name cap 2% (tightest: config.PROBE_MAX_WEIGHT (u_plan PROBE)); as configured: 18 EXPLOIT x 10% (gross <= 80%) + 10 PROBE x 2% (<= 20%) = sum|notional|/equity 1.00; x stop 6.48% (3 sigma) = -$65,029 (6.48% of equity); no stop, so the ceiling is -$1,003,532 on $1,003,532; WORST CASE PASS: one-day 3-sigma loss of the largest admissible book 6.48% of equity (-$65,029) vs limit 10% (config.PC_WORST_CASE_MAX_FRAC_OF_EQUITY)",
+  "candidate_set_line": "candidates 25 (funnel_night10.json, generated 2026-10-06T15:51:08+00:00, 0.0 d old) -> 25 scored {'WATCH': 2, 'NO_ACTION': 4, 'HOLD': 19} -> 2 eligible for the ROI ranking (= n_considered); excluded: 19 ranking score <= 0, 4 no licensed evidence (NO_EVIDENCE)",
+  "capital_reconciliation": {
+   "capital_usd": 1003532.05,
+   "capital_source": "derived: PC-PAPER broker equity read 2026-10-06T15:48:56+00:00 (state_latest.json)",
+   "broker_equity_usd": 1003532.05,
+   "broker_equity_as_of": "2026-10-06T15:48:56+00:00",
+   "broker_equity_source": "pc_book/state_latest.json",
+   "tolerance": 0.05,
+   "status": "OK",
+   "disagreements": [],
+   "worst_case_gate": {
+    "limit_frac_of_equity": 0.1,
+    "worst_case_k_sigma_frac_of_equity": 0.0648,
+    "verdict": "PASS",
+    "daily_sigma_at_limit": 0.03333333333333333,
+    "line": "WORST CASE PASS: one-day 3-sigma loss of the largest admissible book 6.48% of equity (-$65,029) vs limit 10% (config.PC_WORST_CASE_MAX_FRAC_OF_EQUITY)"
+   }
+  },
+  "worst_case_table": {
+   "equity_usd": 1003532.05,
+   "stop_declared": false,
+   "stop_basis": "no stop order is declared on the PC path; the 3-sigma session of the median name (2.16%/day) stands in: 6.48% = 3 sigma. For scale, a -2% stop is 0.93 sigma (2026-09-24: such stops filled on 89% of trades)",
+   "rows": [
+    {
+     "sleeve": "EXPLOIT",
+     "n_names": 8,
+     "notional_pct": 0.1,
+     "gross_over_equity": 0.8,
+     "stop_pct": 0.0648,
+     "stop_sigma": 3.0,
+     "worst_case_k_sigma_usd": -52023.101472,
+     "worst_case_no_stop_usd": -802825.6400000001,
+     "line": "EXPLOIT: 8 x 10.00% x 6.48% (3 sigma) = -$52,023; sum|notional|/equity 0.80; no-stop ceiling -$802,826 (18 ranked names, <= 10% each, gross <= 80%)"
+    },
+    {
+     "sleeve": "PROBE",
+     "n_names": 10,
+     "notional_pct": 0.02,
+     "gross_over_equity": 0.2,
+     "stop_pct": 0.0648,
+     "stop_sigma": 3.0,
+     "worst_case_k_sigma_usd": -13005.775368,
+     "worst_case_no_stop_usd": -200706.41000000003,
+     "line": "PROBE: 10 x 2.00% x 6.48% (3 sigma) = -$13,006; sum|notional|/equity 0.20; no-stop ceiling -$200,706"
+    },
+    {
+     "sleeve": "TOTAL",
+     "n_names": 18,
+     "gross_over_equity": 1.0,
+     "stop_pct": 0.0648,
+     "stop_sigma": 3.0,
+     "worst_case_k_sigma_usd": -65028.87684,
+     "worst_case_no_stop_usd": -1003532.05,
+     "worst_case_k_sigma_frac_of_equity": 0.0648,
+     "line": "TOTAL: sum|notional|/equity 1.00 x 6.48% (3 sigma of 2.16%/day) = -$65,029 = 6.48% of $1,003,532; no-stop ceiling -$1,003,532"
+    }
+   ],
+   "gate": {
+    "limit_frac_of_equity": 0.1,
+    "worst_case_k_sigma_frac_of_equity": 0.0648,
+    "verdict": "PASS",
+    "daily_sigma_at_limit": 0.03333333333333333,
+    "line": "WORST CASE PASS: one-day 3-sigma loss of the largest admissible book 6.48% of equity (-$65,029) vs limit 10% (config.PC_WORST_CASE_MAX_FRAC_OF_EQUITY)"
+   }
+  },
+  "scaled_views_40000_held": {
+   "label": "PC-PAPER held book",
+   "level_usd": 40000.0,
+   "source_capital_usd": 1003532.05,
+   "scale": 0.03985921525874535,
+   "n_names": 10,
+   "n_executable": 10,
+   "n_not_executable": 0,
+   "not_executable": [],
+   "no_price": [],
+   "target_gross_over_level": 0.20216572116456072,
+   "executable_gross_over_level": 0.179183015,
+   "executable_usd": 7167.32,
+   "cash_residual_usd": 919.31,
+   "tracking_gap": 0.022982706164560704,
+   "rows": [
+    {
+     "ticker": "AAPL",
+     "weight": 0.019264516763565248,
+     "target_usd": 770.58,
+     "price": 333.32,
+     "shares": 2,
+     "notional_usd": 666.64,
+     "weight_executable": 0.016666,
+     "executable": true
+    },
+    {
+     "ticker": "AMZN",
+     "weight": 0.020114639089005678,
+     "target_usd": 804.59,
+     "price": 255.515,
+     "shares": 3,
+     "notional_usd": 766.54,
+     "weight_executable": 0.019163625,
+     "executable": true
+    },
+    {
+     "ticker": "AVPT",
+     "weight": 0.022604898368716774,
+     "target_usd": 904.2,
+     "price": 14.885,
+     "shares": 60,
+     "notional_usd": 893.1,
+     "weight_executable": 0.0223275,
+     "executable": true
+    },
+    {
+     "ticker": "GOOGL",
+     "weight": 0.020126831026472943,
+     "target_usd": 805.07,
+     "price": 348.24,
+     "shares": 2,
+     "notional_usd": 696.48,
+     "weight_executable": 0.017412,
+     "executable": true
+    },
+    {
+     "ticker": "INCY",
+     "weight": 0.018290596697933065,
+     "target_usd": 731.62,
+     "price": 114.72,
+     "shares": 6,
+     "notional_usd": 688.32,
+     "weight_executable": 0.017207999999999998,
+     "executable": true
+    },
+    {
+     "ticker": "JAZZ",
+     "weight": 0.019561707072534452,
+     "target_usd": 782.47,
+     "price": 233.7,
+     "shares": 3,
+     "notional_usd": 701.1,
+     "weight_executable": 0.017527499999999998,
+     "executable": true
+    },
+    {
+     "ticker": "META",
+     "weight": 0.019227224083177015,
+     "target_usd": 769.09,
+     "price": 742.1206,
+     "shares": 1,
+     "notional_usd": 742.12,
+     "weight_executable": 0.018553015,
+     "executable": true
+    },
+    {
+     "ticker": "NVDA",
+     "weight": 0.02117983177517848,
+     "target_usd": 847.19,
+     "price": 241.53,
+     "shares": 3,
+     "notional_usd": 724.59,
+     "weight_executable": 0.018114750000000002,
+     "executable": true
+    },
+    {
+     "ticker": "SNDR",
+     "weight": 0.020599641037872183,
+     "target_usd": 823.99,
+     "price": 32.2,
+     "shares": 25,
+     "notional_usd": 805.0,
+     "weight_executable": 0.020125000000000004,
+     "executable": true
+    },
+    {
+     "ticker": "TSM",
+     "weight": 0.021195835250104867,
+     "target_usd": 847.83,
+     "price": 483.425,
+     "shares": 1,
+     "notional_usd": 483.43,
+     "weight_executable": 0.012085625000000001,
+     "executable": true
+    }
+   ],
+   "places_orders": false,
+   "line": "SCALED VIEW PC-PAPER held book at $40,000 (x0.0399 of $1,003,532): 10 of 10 names executable in whole shares; target gross 20.22%, executable 17.92%; tracking gap 2.30%; places no order"
+  },
+  "count_by_direction": {
+   "BUY": 3,
+   "WATCH": 1,
+   "SELL": 0,
+   "PROBE": 92,
+   "REFUSED": 1
+  }
+ }
+}

@@ -32,7 +32,7 @@ import { setComputing } from "./computing";
  */
 export const PUBLIC_API_FALLBACK = "https://aegis-finance-production.up.railway.app";
 
-export function resolveApiBase(raw: string | undefined, desktop: boolean): string {
+export function resolveApiBase(raw: string | undefined, desktop: boolean, isProd = false): string {
   if (desktop) return "";
   const v = (raw ?? "").trim().replace(/\/+$/, "");
   if (/^https?:\/\/[^\s/[\]]+/i.test(v)) return v;
@@ -40,15 +40,19 @@ export function resolveApiBase(raw: string | undefined, desktop: boolean): strin
   if (typeof console !== "undefined") {
     console.error(
       `[aegis] NEXT_PUBLIC_API_URL is not an absolute http(s) URL (got ${v.length} chars ` +
-        `starting "${v.slice(0, 1)}"); using ${PUBLIC_API_FALLBACK}. Fix the build environment.`,
+        `starting "${v.slice(0, 1)}"); using ${isProd ? PUBLIC_API_FALLBACK : "http://localhost:8000"}. ` +
+        `Fix the build environment.`,
     );
   }
-  return PUBLIC_API_FALLBACK;
+  // F10 (review 2026-10-06): only a PRODUCTION build may fall back to the production
+  // API; a developer's malformed value goes to localhost, never silently to prod.
+  return isProd ? PUBLIC_API_FALLBACK : "http://localhost:8000";
 }
 
 export const API_BASE = resolveApiBase(
   process.env.NEXT_PUBLIC_API_URL,
   process.env.NEXT_PUBLIC_AEGIS_DESKTOP_BUILD === "1",
+  process.env.NODE_ENV === "production",
 );
 
 // Backend serves stale-while-revalidate, so a healthy response is fast; a
@@ -4274,22 +4278,29 @@ export interface OppRow {
     n: number | null; n_source: string | null; observed_utc: string | null; snapshot_price: number | null;
     source: string; consensus: string | null; mix: Record<string, number> | null;
   } | null;
-  upside: { low: number | null; median: number | null; high: number | null; basis: string } | null;
+  upside: {
+    low: number | null; median: number | null; high: number | null; basis: string;
+    n_targets: number | null; single_target: boolean; low_upside: boolean; low_upside_threshold: number;
+    targets_date: string | null; price_date: string | null;
+  } | null;
   revision: {
     net_raises_90d: number | null; n_firms_90d: number | null; median_target_change_90d: number | null;
     n_events_90d: number | null; asof: string; source: string; pulled: string | null;
   } | null;
   move_score: { label: "MAGNITUDE"; expected_abs_move_21s: number; sigma63_daily: number; bars_to: string; explain: string } | null;
-  direction: {
-    label: "UP" | "DOWN" | "NEUTRAL" | "MIXED"; consensus: string | null; consensus_sign: number | null;
-    revision_sign: number | null; single_source: boolean; explain: string;
+  analyst_stance: {
+    label: "POSITIVE" | "NEGATIVE" | "NEUTRAL" | "MIXED"; consensus: string | null; consensus_sign: number | null;
+    revision_sign: number | null; single_source: boolean; conflicts_with_upside: boolean;
+    revisions_through: string | null; explain: string;
   } | null;
   why_picked: { reason: string; service: string }[];
   card: { day: string; verdict: string; confidence: string; card_hash: string | null } | null;
+  later_commentary: { day: string; verdict: string | null; confidence: string | null; text: string | null; note: string } | null;
+  freeze_date: string | null;
   catalysts: OppCatalyst[];
   news: OppNews[];
   insiders: {
-    window_days: number; n_buys: number; n_sells: number; buy_usd: number; sell_usd: number;
+    window_days: number; covers_from: string | null; n_buys: number; n_sells: number; buy_usd: number; sell_usd: number;
     n_insiders: number; n_10b5_1: number; recent: OppInsiderTx[]; source: string; table_covers_from_utc: string | null;
   } | null;
   short_interest: {
@@ -4306,6 +4317,7 @@ export interface OppRow {
   evidence: { label: "OBSERVED" | "EARLY_EVIDENCE" | string; sessions: number | null; note: string };
   lane: "HIGH_RISK_INNOVATION" | "CORE" | "BENCHMARK";
   risk_flags: string[];
+  risk_checks: Record<string, { on: boolean | null; detail: string }>;
   last_update_utc: string | null;
   last_update_age_days: number | null;
   links: OppLink;
@@ -4337,8 +4349,9 @@ export interface OpportunitiesResponse {
   run_id: string;
   licence: string;
   legend: Record<string, string>;
-  inputs: Record<string, string | null>;
+  inputs: Record<string, string | number | null>;
   receipt_file: string;
+  freshness: { age_days: number | null; stale_after_days: number; status: "FRESH" | "STALE" | "UNKNOWN"; line: string };
   lists: OppListMeta[];
   list: OppList | null;
 }

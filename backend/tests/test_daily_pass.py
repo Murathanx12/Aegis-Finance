@@ -150,6 +150,14 @@ def calls(monkeypatch) -> list[str]:
     monkeypatch.setattr(DP, "run_paper_accounts", _paper_accounts)
     monkeypatch.setattr(DP, "run_bridge_report", _bridge)
 
+    # 2026-10-06 (C11 review F4): the regret ledger child reads the live
+    # decision stories and the bar panels; stubbed like the book graders.
+    def _regret(**kw):
+        seen.append("regret")
+        return {"status": "nothing_to_do", "rc": 0, "n_rows": 0, "path": "regret_fixture.json",
+                "line": "nothing matured yet", "live_stories": {"n": 0}}
+    monkeypatch.setattr(DP, "run_regret", _regret)
+
     def _news(**kw):
         seen.append("news_pull")
         return {"rows_new": 7, "sources": 3, "red": [], "refused": [],
@@ -326,7 +334,7 @@ def test_every_declared_step_runs_in_order(out, calls, rth_open) -> None:
     assert outer == ["bars_refresh", "news_pull", "dowjones_feeds", "decision_contract",
                      "analyst_snapshot", "e1_append", "book_cadence",
                      "book_cadence", "book_cadence", "grade_forecasts",
-                     "grade_promises", "grade_books", "paper_accounts",
+                     "regret", "grade_promises", "grade_books", "paper_accounts",
                      "bridge_report", "coverage", "query_planner_yield",
                      "scoreboard", "health"]
 

@@ -1,0 +1,57 @@
+{
+ "schema": "hyp_lab/theory_cell_declaration/1",
+ "cell": "hi52",
+ "run": "TC_2026-10-06_1",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "decision": "Primary series = monthly mean of the declared quantity, indexed by the month the position is held (hyp_investable.spread_stats: t on non-overlapping 3-month blocks, MDE = 2.8 SE). CANDIDATE iff design mean > 0 AND validate mean > 0 with t >= 2 AND a strict majority of validate years > 0 AND the leave-one-year-out worst validate mean > 0. FAILED_VARIANT iff validate mean <= 0, or validate t < 2 with validate MDE <= the effect worth having (max(design mean, min_effect)). Otherwise CANNOT_DISTINGUISH. Late (2017-2024) is read last and never decides. A cell whose sign is 'design' multiplies the series by the sign of its design mean first (the design fold fixes the direction; validate decides).",
+ "verdict_vocabulary": [
+  "CANDIDATE",
+  "FAILED_VARIANT",
+  "CANNOT_DISTINGUISH",
+  "REFUSED"
+ ],
+ "family": "price_location",
+ "target": "return",
+ "title": "Standalone 52-week-high nearness on CRSP, fair twin",
+ "mechanism": "Anchoring on the 52-week high makes investors under-react to good news near the high (George-Hwang); names nearest their high keep drifting up.",
+ "precursor": "price / 52-week high at the month-end decision date (CRSP, strategy_library rule hi52, k=20)",
+ "separation_from_beta": "fair matched twin (size x vol x 12-1 momentum cell mix, same cost convention): the momentum beta the high carries is in the twin",
+ "refutation": "validate (2009-2016) fair-twin-net mean <= 0, or t < 2 with MDE below the effect worth having",
+ "inputs": {
+  "hi52": "backend/data/optimus/hyp_lab/fair_twin_series_FT_2026-10-06_1/hi52.parquet",
+  "hi52_large": "backend/data/optimus/hyp_lab/fair_twin_series_FT_2026-10-06_1/hi52_large.parquet",
+  "hi52_q": "backend/data/optimus/hyp_lab/fair_twin_series_FT_2026-10-06_1/hi52_q.parquet"
+ },
+ "primary": "hi52: fair_twin_net (monthly, net of own-turnover costs, vs the fair twin)",
+ "reported": [
+  "pure_selection",
+  "fair_twin_net",
+  "net_minus_market"
+ ],
+ "splits": {
+  "design": [
+   "1991-01-01",
+   "2008-12-31"
+  ],
+  "validate": [
+   "2009-01-01",
+   "2016-12-31"
+  ],
+  "late": [
+   "2017-01-01",
+   "2024-12-31"
+  ]
+ },
+ "sign": "+1",
+ "min_effect": 0.002,
+ "honesty": "Declared AFTER the 2026-09-29 library board printed hi52 FAILED_VARIANT (rule - twin21 -0.33%/mo, t -2.44, LIB_2026-09-29T0802Z) and after a partial view of the FT_2026-10-06_1 board row. This is a re-read of an already-run rule under the hyp_lab decision rule on the fair twin, not a fresh test: search count +0, and a CANDIDATE here would be a finding to test forward, never a prior. The snowball note's 'standalone hi52 never run on CRSP' was wrong: it was run, by name, in LIB_2026-09-29T0802Z.",
+ "input_sha256": {
+  "hi52": "b7ab564e986c6004b71c550a396bfd9885570b4c63a2dc3396ed2e217f99288b",
+  "hi52_large": "4231bff3f32ea2eb21e2ebb0147867a6620b925a002b13a06a0ae276ba7b7716",
+  "hi52_q": "73efce41ee3901e276b26a9fba82034e3ad062401beaee8c6aea16079ad8b50f"
+ },
+ "hyp_id": "H-25702b3bfd",
+ "sha256": "751bd2b23de6176f7b2595c906d3da30358f5d5d156a9587dcdb3ad0b6a732d5",
+ "written_utc": "2026-10-06T16:06:32+00:00"
+}

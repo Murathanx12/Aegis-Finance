@@ -420,6 +420,20 @@ def block_missed(receipts: dict) -> list[str]:
     return lines
 
 
+def block_regret() -> list[str]:
+    """What not deciding cost (C11, 2026-10-06): the newest regret-ledger
+    receipt, read through `policy_state.regret_view` (its production caller).
+    Abstention regret is reported, never rewarded, until 63 graded sessions."""
+    try:
+        from backend.services import policy_state as PS
+        v = PS.regret_view()
+    except Exception as exc:                                       # noqa: BLE001
+        return [f"- regret ledger: CANNOT DETERMINE ({type(exc).__name__}: {str(exc)[:160]})"]
+    if not v.get("use"):
+        return [f"- regret ledger: {v.get('reason')}"]
+    return [f"- regret ledger ({v.get('run_id')}, trusted={v.get('trusted')}): {v.get('line')}"]
+
+
 def block_drift(receipts: dict) -> list[str]:
     stem, e4 = find_receipt(receipts, "E4_adwin")
     if not isinstance(e4, dict):
@@ -671,6 +685,7 @@ def render(day: str, folder: Path, receipts: dict, contract: dict | None,
     L.append("")
     L.append("## 6. Missed opportunities")
     L += block_missed(receipts)
+    L += block_regret()
     L.append("")
     L.append("## 7. Drift")
     L += block_drift(receipts)

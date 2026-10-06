@@ -43,7 +43,7 @@ asked.
 ## 1. SNOWBALL — pre-registration DRAFT (NOT registered)
 
 **Status: DRAFT only.** This researcher does not register trials. Before registration the orchestrator
-must run `cd "C:/Users/mrthn/Aegis module" && python scripts/lint_prereg.py <this draft, extracted>`.
+must run `cd "<home>/Aegis module" && python scripts/lint_prereg.py <this draft, extracted>`.
 Named corpses to feed it, found by reading receipts (not by running the linter):
 
 - **Nearest same-mechanism closure:** `docs/research_notes/2026-09-30/bridges_and_conditionals_2026-09-30.md`

@@ -114,6 +114,12 @@ SCHEMA: dict[str, tuple[Any, float, float, str]] = {
                              "per hyp_lab family, the EV multiplier in ranking; "
                              "< 1 only while the family's posterior P(positive) "
                              "is below HYP_LAB_FAMILY_POSTERIOR_FLOOR"),
+    # Review 2026-10-06 F7: the generation QUOTA is a preference too, not code. Low bound 1:
+    # no value can stop a family being generated.
+    "hyp_family_gen_quota": ({}, 1, 8,
+                             "per hyp_lab family, how many of one 8-hypothesis "
+                             "generation round it may take; moved only by "
+                             "`scripts.hyp_lab` from the family posterior"),
 }
 
 #: Keys whose value is one of a declared set, not a number in a range.
@@ -821,3 +827,30 @@ def probe_weights(tickers: list[str], sigma: dict[str, float], scheme: str, *,
     return w, {"scheme": scheme, "applied": applied, "fallback_why": why,
                "gross": sum(w.values()), "max_weight_cap": float(max_weight),
                "gross_cap": float(gross_cap)}
+
+
+# ─────────────────────────── C11: the regret ledger (READ) ──────────────────
+
+def regret_view(regret_dir: Path | None = None) -> dict:
+    """The newest regret-ledger receipt's summary, READ ONLY (C11, 2026-10-06).
+
+    A PREFERENCE input at most: nothing here can reach a risk limit, and this
+    module never writes a regret value into `policy_state.json`. Until the
+    sample reaches `regret_ledger.TRUST_SESSIONS` graded sessions the view says
+    so (`trusted: False`), and abstention regret is reported, not rewarded."""
+    d = Path(regret_dir) if regret_dir is not None else (
+        _cfg.OPTIMUS_LEDGER_DIR / "decision_story" / "regret")
+    files = sorted(d.glob("regret_*.json")) if d.is_dir() else []
+    if not files:
+        return {"use": False, "reason": f"no regret receipt under {d}"}
+    try:
+        rec = json.loads(files[-1].read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return {"use": False, "reason": f"unparseable {files[-1].name}: {exc}"[:200]}
+    summ = rec.get("summary") or {}
+    n_max = max([v.get("n_sessions", 0) for v in (summ.get("by_horizon") or {}).values()] or [0])
+    return {"use": True, "path": str(files[-1]), "run_id": rec.get("run_id"),
+            "asof": rec.get("asof"), "line": rec.get("line"),
+            "by_horizon": summ.get("by_horizon"), "mdc": summ.get("mdc"),
+            "n_sessions_max": n_max, "trusted": n_max >= 63,
+            "may_change": "preferences only; never a risk limit; never a reward until trusted"}

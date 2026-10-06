@@ -236,9 +236,9 @@ def test_live_gate_refuses_without_memb_and_registered_and_writes_a_receipt(tmp_
     assert rec["result"] == "REFUSED" and rec["reasons"] == reasons and rec["places_orders"] is False
     assert "REFUSED" in (tmp_path / "logs" / "contest_live_gate.log").read_text(encoding="utf-8")
     (tmp_path / "wls").mkdir()
-    (tmp_path / "wls" / "memb.csv").write_text("Ticker\nAAPL US Equity\nMSFT US Equity\n", encoding="utf-8")
+    _memb(tmp_path / "wls" / "memb.csv", 1200)
     ok, reasons = cd.live_gate(tmp_path)
-    assert not ok and reasons == [r for r in reasons if "REGISTERED" in r]
+    assert not ok and len(reasons) == 1 and "REGISTERED" in reasons[0]
     (tmp_path / "REGISTERED").write_text("", encoding="utf-8")
     assert cd.live_gate(tmp_path) == (True, [])
 
@@ -290,3 +290,184 @@ def test_runbook_prints_the_derived_times():
         assert f"{ny:%b} {ny.day} {ny:%H:%M} NY" in text, k
         assert f"{hk:%b} {hk.day} {hk:%H:%M} HKT" in text, k
     assert "Oct 4 23:59 HKT" not in text
+
+
+# ───────────────────────────── review C9 fixes ─────────────────────────────
+
+def _memb(path: Path, n: int, header: str = "WLS Index Members") -> None:
+    rows = "\n".join(f"T{i:05d} US Equity,Name {i}" for i in range(n))
+    path.write_text(f"{header},\nTicker,Name\n{rows}\n" if header else f"Ticker,Name\n{rows}\n", encoding="utf-8")
+
+
+def test_wls_check_needs_the_wls_header_and_a_thousand_rows(tmp_path):
+    w = tmp_path / "wls"
+    w.mkdir()
+    _memb(w / "memb.csv", 10)
+    ok, why, info = cd.wls_export_check(w)
+    assert not ok and "1000" in why.replace(",", "")
+    _memb(w / "memb.csv", 1500, header="")                     # another index's MEMB: no WLS anywhere
+    ok, why, _ = cd.wls_export_check(w)
+    assert not ok and "WLS" in why
+    _memb(w / "memb.csv", 1500)
+    ok, why, info = cd.wls_export_check(w)
+    assert ok and info["rows"] >= 1000 and info["file"] == "memb.csv"
+
+
+def test_first_seen_after_the_freeze_is_excluded_and_the_source_is_fingerprinted():
+    day = _us_session_ahead()
+    now = _before(day)
+    rev = _rev(day)
+    rev["first_seen_utc"] = rev["pulled_at"]
+    # the vendor ADDS a Sell on E dated last month, first served after the freeze: a rewrite of history
+    extra = pd.DataFrame([{"ticker": "E", "event_date": str(pd.Timestamp(day) - pd.Timedelta(days=30)), "firm": "F7",
+                           "to_grade": "Sell", "action": "down", "target_action": "Lowers",
+                           "pulled_at": (now + pd.Timedelta(hours=3)).isoformat(),
+                           "first_seen_utc": (now + pd.Timedelta(hours=3)).isoformat()},
+                          {"ticker": "E", "event_date": str(pd.Timestamp(day) - pd.Timedelta(days=31)), "firm": "F8",
+                           "to_grade": "Sell", "action": "down", "target_action": "Lowers",
+                           "pulled_at": (now + pd.Timedelta(hours=3)).isoformat(),
+                           "first_seen_utc": (now + pd.Timedelta(hours=3)).isoformat()}])
+    rev2 = pd.concat([rev, extra], ignore_index=True)
+    d, meta = cd.analyst_direction(["E"], day, rev2, now_utc=now)
+    assert d.verdict.iloc[0] == "ADMIT" and meta["rows_first_seen_after_the_freeze_excluded"] == 2
+    later, _ = cd.analyst_direction(["E"], day, rev2, now_utc=now + pd.Timedelta(hours=4))
+    assert d.n_sell.iloc[0] == 0 and later.n_sell.iloc[0] == 2  # visible only to a decision made after it
+    fp = meta["fingerprint"]
+    assert len(fp["sha256"]) == 64 and fp["rows"] == len(rev2)
+
+
+def test_contract_covers_the_code_and_a_new_version_records_what_it_supersedes(tmp_path, monkeypatch):
+    src = tmp_path / "strategy.py"
+    src.write_text("x = 1\n", encoding="utf-8")
+    monkeypatch.setattr(cd, "CODE_FILES", (src,))
+    a = cd.contract_sha("ROT5_DIR")
+    src.write_text("x = 2\n", encoding="utf-8")
+    assert cd.contract_sha("ROT5_DIR") != a                    # the code is in the hash, not only the prose
+    src.write_bytes(b"x = 2\r\n")
+    assert cd.contract_sha("ROT5_DIR") == cd.contract_sha("ROT5_DIR")
+    log = tmp_path / "log.jsonl"
+    r1 = cd.ensure_contract("ROT5_DIR", log)
+    assert r1["code_sha256"] == cd.code_sha() and r1["rule_sha256"] == cd.rule_sha("ROT5_DIR")
+    src.write_text("x = 3\n", encoding="utf-8")
+    with pytest.raises(cd.ContractChanged):
+        cd.ensure_contract("ROT5_DIR", log)
+    bumped = {**cd.RULES, "ROT5_DIR": {**cd.RULES["ROT5_DIR"], "version": cd.RULES["ROT5_DIR"]["version"] + 1}}
+    monkeypatch.setattr(cd, "RULES", bumped)
+    r2 = cd.ensure_contract("ROT5_DIR", log)
+    assert r2["supersedes"] == r1["contract_sha256"]
+
+
+@pytest.mark.parametrize("raw", [
+    "ROT5_DIR".encode("utf-16"),                              # PowerShell 5.1: echo ROT5_DIR > BOOK
+    "﻿ROT5_DIR\r\n".encode("utf-8"),                     # Set-Content -Encoding utf8 (BOM)
+    b"  rot5_dir  \n\n",
+])
+def test_book_file_tolerates_powershell_encodings(tmp_path, raw):
+    p = tmp_path / "BOOK"
+    p.write_bytes(raw)
+    assert cd.read_book_file(p) == ("ROT5_DIR", None)
+
+
+def test_a_bad_book_file_never_loses_the_day(tmp_path):
+    orig = cc.CONTEST
+    try:
+        cc.CONTEST = tmp_path
+        (tmp_path / "live").mkdir()
+        (tmp_path / "live" / "BOOK").write_text("ROT6_WHATEVER", encoding="utf-8")
+        book, why = reh.live_book(TODAY)
+        assert book == "ROT5_TRAIL" and "ROT6_WHATEVER" in why
+        txt = (tmp_path / "live" / f"REFUSED_{TODAY}.txt").read_text(encoding="utf-8")
+        assert "trades the default ROT5_TRAIL" in txt and "Set-Content" in txt
+        (tmp_path / "live" / "BOOK").write_bytes("MAXTAIL_EVT".encode("utf-16"))
+        assert reh.live_book(TODAY) == ("MAXTAIL_EVT", None)
+    finally:
+        cc.CONTEST = orig
+
+
+def test_dry_previews_are_bannered_and_never_under_live(tmp_path):
+    md, short = reh._dryify("# ORDER SHEET 2026-01-01  (frozen x UTC)\n\nbody | LIVE |\n", "ORDERS x",
+                            name="ROT5_TRAIL", day=TODAY, stamp="s", gate="g")
+    first = md.splitlines()[0]
+    assert first.startswith("# " + reh.DRY_TITLE) and "frozen x" not in first and "ORDER SHEET 2026" not in md
+    assert short.startswith(reh.DRY_TITLE) and md.count(reh.DRY_TITLE) >= 2
+    orig = cc.CONTEST
+    try:
+        cc.CONTEST = tmp_path
+        reh.use_mode("contest")
+        root = reh._dry_root()
+        assert (tmp_path / "live") not in root.parents and root != tmp_path / "live"
+    finally:
+        cc.CONTEST = orig
+        reh.use_mode("rehearsal")
+
+
+def test_drift_line_prints_the_trim_and_says_the_rule_is_open():
+    held = [{"pos_id": "p1", "symbol": "UP", "bbg": "UP US Equity", "qty": 2000},
+            {"pos_id": "p2", "symbol": "FLAT", "bbg": "FLAT US Equity", "qty": 1000}]
+    px = {"UP": 124.0, "FLAT": 100.0}
+    lines, recs = reh.drift_lines(held, [], 1_048_000.0, lambda s: (px[s], 1.0, "USD"))
+    assert "NOT settled" in lines[0]
+    up = next(r for r in recs if r["symbol"] == "UP")
+    assert up["pct_nav"] == pytest.approx(248_000 / 1_048_000, abs=1e-4)
+    assert up["trim_shares_if_at_all_times"] == int(np.ceil((248_000 - 200_000) / 124.0))
+    assert next(r for r in recs if r["symbol"] == "FLAT")["trim_shares_if_at_all_times"] == 0
+
+
+def test_contest_window_refuses_first_day_asia_and_europe_and_prints_after_the_end():
+    start = cd.contest_start_utc()
+    first = pd.Timestamp(start.tz_convert("America/New_York").date())
+    last = pd.Timestamp(cc.CONTEST_END)
+    r = pd.DataFrame({"symbol": ["7203.T", "SAP.DE", "AAPL", "MSFT"],
+                      "pre_date": [first, first, first, last],
+                      "react_date": [first + pd.Timedelta(days=1)] * 3 + [last + pd.Timedelta(days=3)]})
+    ok, refused = reh._contest_window_filter(r)
+    assert list(ok.symbol) == ["AAPL"]
+    why = dict(zip(refused.symbol, refused.refusal))
+    assert why["7203.T"].startswith("REFUSED_BEFORE_CONTEST_START") and why["SAP.DE"].startswith("REFUSED_BEFORE")
+    assert why["MSFT"].startswith("REFUSED_REACTS_AFTER_CONTEST_END")
+
+
+def _panel_and_events(day: date):
+    dates = pd.bdate_range(end=pd.Timestamp(day) - pd.Timedelta(days=1), periods=90)
+    rng = np.random.default_rng(7)
+    syms = ["AAA", "BBB", "CCC", "JMP", "DDD", "EEE", "FFF"]
+    vol = {"AAA": 0.06, "BBB": 0.05, "CCC": 0.04, "JMP": 0.02, "DDD": 0.03, "EEE": 0.025, "FFF": 0.022}
+    C = np.empty((len(dates), len(syms)))
+    for j, s in enumerate(syms):
+        C[:, j] = 50 * np.exp(np.cumsum(rng.normal(0, vol[s], len(dates))))
+    C[60:, syms.index("JMP")] *= 3.0                       # a x3 one-day jump: a split / stitch, not volatility
+    lr = np.vstack([np.full((1, C.shape[1]), np.nan), np.diff(np.log(C), axis=0)])
+    sig = pd.DataFrame(lr).rolling(63, min_periods=40).std().to_numpy()
+    panel = desk.Panel(dates, pd.Index(syms), C.astype("float32"), C.astype("float32"),
+                       np.full(C.shape, 50e6, dtype="float32"), sig.astype("float32"),
+                       np.array(["US"] * len(syms)), {s: i for i, s in enumerate(syms)})
+    ev = pd.DataFrame({"symbol": [s for s in syms for _ in range(4)], "absr": 0.05})
+    return panel, ev
+
+
+def test_maxtail_ranks_raw_sigma_and_refuses_x2_jumps():
+    day = _us_session_ahead()
+    panel, ev = _panel_and_events(day)
+    ranked, jumps = cd.maxtail_ranked(day, panel, ev, None)
+    assert list(jumps.symbol) == ["JMP"] and jumps.refusal.iloc[0].startswith("REFUSED_JUMP_X2")
+    assert "JMP" not in set(ranked.symbol)
+    assert list(ranked.symbol[:3]) == ["AAA", "BBB", "CCC"]    # raw sigma63 order, no ex-max estimator
+    only, _ = cd.maxtail_ranked(day, panel, ev, None, only={"CCC", "DDD"})
+    assert set(only.symbol) == {"CCC", "DDD"}
+
+
+def test_contest_maxtail_buys_once_after_the_start_and_holds_past_the_end():
+    day = _us_session_ahead()
+    panel, ev = _panel_and_events(day)
+    now = _before(day)
+    nb = co.session_open_utc("AAPL", day) - pd.Timedelta(minutes=1)
+    hold = co.session_open_utc("AAPL", day) + pd.Timedelta(days=30)
+    r, jumps, desc = reh._maxtail_as_ranked(day, {"panel": panel, "events": ev}, now, None, name="MAXTAIL_BH",
+                                            not_before=nb, hold_after=hold)
+    assert len(r) >= 5 and "JMP" not in set(r.symbol) and "raw sigma63" in desc
+    assert all(co.session_open_utc(s, p) >= nb for s, p in zip(r.symbol, r.pre_date))
+    assert all(co.session_open_utc(s, x) > hold for s, x in zip(r.symbol, r.react_date))
+    t, _, _ = reh.build_tickets(day, r, [], nav_usd=1e6, now_utc=now, price_of=_price)
+    buys = [x for x in t if x.side == "BUY"]
+    assert len(buys) == reh.K
+    cd.assert_cap(t, nav_usd=1e6, cap_binding=200_000.0)

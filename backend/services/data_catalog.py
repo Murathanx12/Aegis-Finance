@@ -110,6 +110,20 @@ GENERIC_DIRS = {"data", "optimus", "backend", "receipts", "raw", "parsed", "cach
                 "archive", "history", "runs", "results", "output", "inputs", "work"}
 TOKEN = re.compile(r"[A-Za-z0-9_.\-]+")
 
+#: Paths that code BUILDS at run time from a variable, so no static token names
+#: them (review F7). Each entry is a glob over the catalog path plus the code
+#: that builds it, as `file:line` and the exact snippet; a test checks the
+#: snippet is still in that file, so an entry cannot outlive the code. A match
+#: reads `RUNTIME_BUILT`, never "no static reference".
+RUNTIME_PATTERNS: tuple[dict, ...] = (
+    {"glob": "backend/data/optimus/contest/bars/bars_*.parquet",
+     "built_by": "scripts/contest_calendar.py:453",
+     "snippet": 'BARS_DIR / f"bars_{market}.parquet"'},
+    {"glob": "backend/data/optimus/wrds/bulk/*__*.parquet",
+     "built_by": "scripts/wrds_pull_catchup.py:620 (also wrds_pull_everything.py:288)",
+     "snippet": "BULK / f\"{p['schema']}__{p['table']}.parquet\""},
+)
+
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -125,11 +139,25 @@ class Root:
     display_prefix: Optional[str] = None
 
 
+def _repo_root() -> Path:
+    """The checkout, honouring `AEGIS_REPO_ROOT` (frozen-path defect family).
+
+    Inside the packaged app `__file__` lives under `_internal/`, which carries
+    no `backend/data`, so a catalogue rooted there would walk an empty tree and
+    report nothing without failing. `test_frozen_path_family.py` is the gate.
+    """
+    env = os.getenv("AEGIS_REPO_ROOT")
+    if env and Path(env).is_dir():
+        return Path(env).resolve()
+    return REPO
+
+
 def default_roots() -> list[Root]:
     llama = os.getenv(LLAMA_ENV)
+    repo = _repo_root()
     return [
-        Root("data", REPO / "backend" / "data"),
-        Root("ft_lab", REPO / "ft_lab" / "data"),
+        Root("data", repo / "backend" / "data"),
+        Root("ft_lab", repo / "ft_lab" / "data"),
         Root("llama_models", Path(llama) if llama else Path.home() / "llama" / "models",
              "<llama models>"),
     ]
@@ -140,7 +168,7 @@ def _display(root: Root, p: Path) -> str:
     if root.display_prefix is not None:
         return f"{root.display_prefix}/{rel}" if rel != "." else root.display_prefix
     try:
-        return p.resolve().relative_to(REPO).as_posix()
+        return p.resolve().relative_to(_repo_root()).as_posix()
     except ValueError:
         return f"<{root.label}>/{rel}"
 
@@ -583,7 +611,7 @@ def provenance_for(display: str, *, rules: list[ProvRule], is_dir: bool = False,
 
 def _git(args: list[str], stdin: Optional[str] = None) -> Optional[str]:
     try:
-        r = subprocess.run(["git", *args], cwd=str(REPO), input=stdin, capture_output=True,
+        r = subprocess.run(["git", *args], cwd=str(_repo_root()), input=stdin, capture_output=True,
                            text=True, encoding="utf-8", timeout=300)
     except Exception:                                              # noqa: BLE001
         return None
@@ -663,7 +691,7 @@ def build_code_index() -> TokenIndex:
     texts = {}
     for p in files:
         try:
-            texts[p] = (REPO / p).read_text(encoding="utf-8", errors="replace")
+            texts[p] = (_repo_root() / p).read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
     return TokenIndex.from_texts(texts)
@@ -674,7 +702,7 @@ def build_doc_index() -> TokenIndex:
     texts = {}
     for p in files:
         try:
-            texts[p] = (REPO / p).read_text(encoding="utf-8", errors="replace")
+            texts[p] = (_repo_root() / p).read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
     return TokenIndex.from_texts(texts)
@@ -728,6 +756,16 @@ def consumers_for(display: str, ix: TokenIndex, *, is_dir: bool = False,
     return tests_only or {"match": None, "n": 0, "n_tests": 0, "files": []}
 
 
+def runtime_built(display: str, patterns: Iterable[dict] = RUNTIME_PATTERNS) -> Optional[dict]:
+    """The declared runtime pattern this path matches, or None. `*` stays
+    inside one path segment."""
+    for pat in patterns:
+        rx = "^" + re.escape(pat["glob"]).replace(r"\*", "[^/]*") + "$"
+        if re.match(rx, display):
+            return pat
+    return None
+
+
 def doc_mentions(display: str, ix: TokenIndex) -> int:
     name = Path(display).name
     stem = name.split(".")[0]
@@ -739,6 +777,16 @@ def doc_mentions(display: str, ix: TokenIndex) -> int:
 
 
 # ============================================================ build
+
+def _consumers_or_runtime(display: str, ix: TokenIndex) -> dict:
+    c = consumers_for(display, ix)
+    if c["n"] == 0:
+        rt = runtime_built(display)
+        if rt is not None:
+            return {"match": "RUNTIME_BUILT", "token": rt["glob"], "n": 0,
+                    "n_tests": c.get("n_tests", 0), "files": [rt["built_by"]]}
+    return c
+
 
 def _row_id(display: str, is_dir: bool = False) -> str:
     return ("dir:" if is_dir else "") + display
@@ -753,7 +801,8 @@ def _ledger_manifests() -> dict[str, dict]:
                 m = json.loads(mp.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 continue
-            rel = mp.relative_to(REPO).as_posix() if mp.is_relative_to(REPO) else mp.name
+            root = _repo_root()
+            rel = mp.relative_to(root).as_posix() if mp.is_relative_to(root) else mp.name
             for key in ("jsonl", "parquet"):
                 if (m.get(key) or {}).get("path"):
                     out[m[key]["path"]] = {"path": rel, "command": m.get("command"),
@@ -772,7 +821,8 @@ def build_catalog(*, roots: Optional[list[Root]] = None, cache_path: Optional[Pa
     roots = roots if roots is not None else default_roots()
     entries = walk(roots, skip=[CATALOG_DIR])
     if manifest_text is None:
-        manifest_text = MANIFEST_DOC.read_text(encoding="utf-8") if MANIFEST_DOC.exists() else ""
+        mdoc = _repo_root() / "docs" / "DATA_MANIFEST.md"
+        manifest_text = mdoc.read_text(encoding="utf-8") if mdoc.exists() else ""
     rules = load_manifest_rules(manifest_text)
     code_ix = code_index if code_index is not None else build_code_index()
     doc_ix = doc_index if doc_index is not None else build_doc_index()
@@ -819,7 +869,7 @@ def build_catalog(*, roots: Optional[list[Root]] = None, cache_path: Optional[Pa
             "provenance": provenance_for(fe.display, rules=rules, sidecar=sc,
                                          ledger_manifest=ledgers.get(fe.display)),
             "git": gmap.get(fe.display, "outside_repo") if fe.in_repo else "outside_repo",
-            "consumers": consumers_for(fe.display, code_ix),
+            "consumers": _consumers_or_runtime(fe.display, code_ix),
             "doc_mentions": doc_mentions(fe.display, doc_ix),
         }
         if res.get("error"):
@@ -863,17 +913,67 @@ def build_catalog(*, roots: Optional[list[Root]] = None, cache_path: Optional[Pa
         "cache": {"hits": len(own) - len(todo), "inspected": len(todo)},
         "consumer_method": ("tokens of tracked + untracked code files (py/ts/js/cmd/ps1/yaml...), "
                             "matched by basename, then stem, then name family, then a specific "
-                            "parent directory; heuristic -- a dynamic path built at run time "
-                            "can be missed"),
-        "summary": summary, "duplicates": dups, "rows": rows,
+                            "parent directory; then the declared RUNTIME_PATTERNS (paths built "
+                            "from a variable). 'no static reference' is a question, never a "
+                            "deletion list"),
+        "summary": summary,
+        "findings": {
+            "replays": [g for g in dups if g["class"] == "REPLAY"],
+            "variant_identical": [g for g in dups if g["class"] == "VARIANT_IDENTICAL"],
+            "data_checks": [g for g in dups if g["class"] == "DATA_CHECK"],
+        },
+        "duplicates": dups, "rows": rows,
     }
 
 
 def _safe_rel(p: Path) -> str:
     try:
-        return p.resolve().relative_to(REPO).as_posix()
+        return p.resolve().relative_to(_repo_root()).as_posix()
     except ValueError:
         return "<outside repo>"
+
+
+_RUN_TOKEN = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{6}Z|\d{8}T\d{6}Z|\d{4}-\d{2}-\d{2}|\d{8}|run\d+")
+_WRDS_BULK = re.compile(r"/wrds/bulk/(?:_quarantine_truncated/)?(?P<schema>[^/]+?)__(?P<table>[^/]+)\.parquet$")
+
+
+def classify_duplicate(paths: list[str]) -> tuple[str, str]:
+    """`(class, why)` for a group of byte-identical files (review F1).
+
+    ALIAS     -- one WRDS table pulled under two library names: disk to reclaim.
+    DATA_CHECK-- two DIFFERENTLY NAMED source tables with the same bytes: either
+                 the pull returned one table twice or upstream serves one under
+                 two names. A data question, not a disk question.
+    SNAPSHOT  -- a dated copy beside its undated live file: keep, it is history.
+    REPLAY    -- the same run family under different run ids / dates / runNN
+                 with identical bytes: two runs that should have differed did
+                 not (CLAUDE.md protocol 9). A FINDING for the morning report.
+    VARIANT_IDENTICAL -- a declared variant (`x_ivw`, `x_liqw`, ...) identical to
+                 its parent in the same directory: the variant path did nothing.
+    OTHER     -- none of the above."""
+    m = [_WRDS_BULK.search(p) for p in paths]
+    if all(m):
+        tables = {x.group("table") for x in m}
+        if len(tables) == 1:
+            return "ALIAS", "one WRDS table under several library names"
+        return "DATA_CHECK", ("differently named WRDS tables are byte-identical: "
+                              + " = ".join(sorted(tables)))
+    norm = {_RUN_TOKEN.sub("<RUN>", p) for p in paths}
+    stripped = {re.sub(r"[_\-.]?<RUN>", "", _RUN_TOKEN.sub("<RUN>", p)) for p in paths}
+    if len(norm) == 1:
+        return "REPLAY", "same run family, different run ids, identical bytes"
+    if len(stripped) == 1:
+        if any(not _RUN_TOKEN.search(Path(p).name) and not _RUN_TOKEN.search(str(Path(p).parent))
+               for p in paths):
+            return "SNAPSHOT", "a dated copy of an undated live file"
+        return "REPLAY", "same run family, different run ids, identical bytes"
+    dirs = {str(Path(p).parent) for p in paths}
+    stems = sorted((Path(p).name.split(".")[0] for p in paths), key=len)
+    if len(dirs) == 1 and all(s.startswith(stems[0] + "_") for s in stems[1:]):
+        return "VARIANT_IDENTICAL", (f"variants {', '.join(stems[1:])} are byte-identical to "
+                                     f"their parent {stems[0]}")
+    return "OTHER", ""
 
 
 def find_duplicates(rows: list[dict]) -> list[dict]:
@@ -887,17 +987,25 @@ def find_duplicates(rows: list[dict]) -> list[dict]:
     for (mode, sha), rs in groups.items():
         if len(rs) < 2:
             continue
-        out.append({"sha256": sha, "mode": mode,
+        paths = sorted(r["path"] for r in rs)
+        cls, why = classify_duplicate(paths)
+        out.append({"sha256": sha, "mode": mode, "class": cls, "why": why,
                     "certainty": "exact" if mode == "full" else "probable (size + head/tail)",
                     "bytes_each": rs[0]["bytes"], "n": len(rs),
                     "redundant_bytes": rs[0]["bytes"] * (len(rs) - 1),
-                    "paths": sorted(r["path"] for r in rs)})
+                    "paths": paths})
     return sorted(out, key=lambda g: -g["redundant_bytes"])
 
 
 def summarise(rows: list[dict], dups: list[dict], entries: list[FileEntry]) -> dict:
     total = sum(r["bytes"] for r in rows)
-    orphans = [r for r in rows if r["consumers"]["n"] == 0]
+    rt = [r for r in rows if r["consumers"].get("match") == "RUNTIME_BUILT"]
+    orphans = [r for r in rows if r["consumers"]["n"] == 0
+               and r["consumers"].get("match") != "RUNTIME_BUILT"]
+    by_class: dict[str, dict] = defaultdict(lambda: {"groups": 0, "redundant_bytes": 0})
+    for g in dups:
+        by_class[g["class"]]["groups"] += 1
+        by_class[g["class"]]["redundant_bytes"] += g["redundant_bytes"]
     unknown = [r for r in rows if r["provenance"]["source"] == UNKNOWN]
     by_kind: dict[str, dict] = defaultdict(lambda: {"n": 0, "bytes": 0})
     by_root: dict[str, dict] = defaultdict(lambda: {"n": 0, "bytes": 0})
@@ -914,9 +1022,16 @@ def summarise(rows: list[dict], dups: list[dict], entries: list[FileEntry]) -> d
         "duplicate_groups": len(dups),
         "duplicate_exact_groups": sum(1 for g in dups if g["mode"] == "full"),
         "duplicate_redundant_bytes": sum(g["redundant_bytes"] for g in dups),
-        "orphans": len(orphans), "orphan_bytes": sum(r["bytes"] for r in orphans),
-        "orphan_files": sum(1 for r in orphans if r["kind"] != "dir"),
-        "orphan_file_bytes": sum(r["bytes"] for r in orphans if r["kind"] != "dir"),
+        "duplicate_redundant_bytes_exact": sum(g["redundant_bytes"] for g in dups
+                                               if g["mode"] == "full"),
+        "duplicate_redundant_bytes_probable": sum(g["redundant_bytes"] for g in dups
+                                                  if g["mode"] != "full"),
+        "duplicates_by_class": dict(by_class),
+        "replay_groups": sum(1 for g in dups if g["class"] == "REPLAY"),
+        "no_static_reference": len(orphans),
+        "no_static_reference_bytes": sum(r["bytes"] for r in orphans),
+        "no_static_reference_files": sum(1 for r in orphans if r["kind"] != "dir"),
+        "runtime_built": len(rt), "runtime_built_bytes": sum(r["bytes"] for r in rt),
         "unknown_provenance": len(unknown),
         "unknown_provenance_bytes": sum(r["bytes"] for r in unknown),
         "errors": sum(1 for r in rows if r.get("error")),
@@ -977,9 +1092,16 @@ def render_markdown(cat: dict, receipt_rel: str) -> str:
         f"{s['n_dir_rows']:,} directories of small files) |",
         f"| files walked | {s['n_files_walked']:,} |",
         f"| bytes | {_mb(s['total_bytes'])} |",
-        f"| duplicate groups (same content at 2+ paths) | {s['duplicate_groups']:,} "
-        f"({s['duplicate_exact_groups']:,} exact), {_mb(s['duplicate_redundant_bytes'])} redundant |",
-        f"| orphans (no code consumer found) | {s['orphans']:,} ({_mb(s['orphan_bytes'])}) |",
+        f"| duplicate groups (same content at 2+ paths) | {s['duplicate_groups']:,}: "
+        f"{s['duplicate_exact_groups']:,} exact ({_mb(s['duplicate_redundant_bytes_exact'])} "
+        f"redundant) + {s['duplicate_groups'] - s['duplicate_exact_groups']:,} probable by "
+        f"size+head/tail ({_mb(s['duplicate_redundant_bytes_probable'])}) |",
+        f"| REPLAY groups (two runs that should have differed did not) | "
+        f"{s['replay_groups']:,} |",
+        f"| no static reference (no code file names them) | {s['no_static_reference']:,} "
+        f"({_mb(s['no_static_reference_bytes'])}) |",
+        f"| runtime-built (declared `RUNTIME_PATTERNS`) | {s['runtime_built']:,} "
+        f"({_mb(s['runtime_built_bytes'])}) |",
         f"| `UNKNOWN_PROVENANCE` | {s['unknown_provenance']:,} "
         f"({_mb(s['unknown_provenance_bytes'])}) |",
         f"| rows with an inspection error | {s['errors']:,} |",
@@ -1002,19 +1124,39 @@ def render_markdown(cat: dict, receipt_rel: str) -> str:
                  f"{'' if r['rows'] is None else format(r['rows'], ',')} | {_dr(r)} | {r['git']} | "
                  f"{cons} | {prov} |")
 
-    L += ["", "## Duplicates (top 30 by redundant bytes)", "",
-          "Nothing is deleted. A duplicate is reported; reclaiming the disk is the owner's call.",
-          "", "| copies | each | redundant | certainty | paths |", "|---:|---:|---:|---|---|"]
-    for g in cat["duplicates"][:30]:
-        paths = "<br>".join(f"`{p}`" for p in g["paths"][:4]) + (
+    def _paths(g: dict) -> str:
+        return "<br>".join(f"`{p}`" for p in g["paths"][:4]) + (
             f"<br>(+{len(g['paths']) - 4} more)" if len(g["paths"]) > 4 else "")
-        L.append(f"| {g['n']} | {_mb(g['bytes_each'])} | {_mb(g['redundant_bytes'])} | "
-                 f"{g['certainty']} | {paths} |")
 
-    orph = sorted((r for r in rows if r["consumers"]["n"] == 0), key=lambda r: -r["bytes"])
-    L += ["", "## Orphans (top 40 by size): no code file names them", "",
-          "Heuristic: a path built at run time can be missed, and a dataset read only by "
-          "tests counts as an orphan. An orphan is a question, not a deletion order.", "",
+    fnd = cat.get("findings") or {}
+    L += ["", "## Findings in the duplicates: REPLAY / VARIANT_IDENTICAL / DATA_CHECK", "",
+          "A REPLAY is the same run family under different run ids with identical bytes "
+          "(CLAUDE.md protocol 9): two runs that should have differed did not. "
+          "VARIANT_IDENTICAL is a declared variant identical to its parent. DATA_CHECK is two "
+          "differently named source tables with the same bytes. These are findings, not disk.",
+          "", "| class | copies | each | paths |", "|---|---:|---:|---|"]
+    for cls in ("replays", "variant_identical", "data_checks"):
+        for g in fnd.get(cls, [])[:40]:
+            L.append(f"| {g['class']} | {g['n']} | {_mb(g['bytes_each'])} | {_paths(g)} |")
+    byc = s.get("duplicates_by_class") or {}
+    L += ["", "## Duplicates by class", "", "| class | groups | redundant |", "|---|---:|---:|"]
+    L += [f"| {k} | {v['groups']:,} | {_mb(v['redundant_bytes'])} |"
+          for k, v in sorted(byc.items(), key=lambda kv: -kv[1]["redundant_bytes"])]
+    L += ["", "## Duplicates (top 30 by redundant bytes)", "",
+          "Nothing is deleted. Only ALIAS is disk to reclaim, and that is the owner's call.",
+          "", "| class | copies | each | redundant | certainty | paths |",
+          "|---|---:|---:|---:|---|---|"]
+    for g in cat["duplicates"][:30]:
+        L.append(f"| {g['class']} | {g['n']} | {_mb(g['bytes_each'])} | "
+                 f"{_mb(g['redundant_bytes'])} | {g['certainty']} | {_paths(g)} |")
+
+    orph = sorted((r for r in rows if r["consumers"]["n"] == 0
+                   and r["consumers"].get("match") != "RUNTIME_BUILT"), key=lambda r: -r["bytes"])
+    L += ["", "## No static reference (top 40 by size)", "",
+          "No code file names these by basename, stem, family or directory, and no declared "
+          "`RUNTIME_PATTERNS` entry builds them. A path assembled from variables can still be "
+          "missed, and a dataset read only by tests is listed. **This is a question, never a "
+          "deletion list.**", "",
           "| path | kind | size | git | provenance | doc mentions |", "|---|---|---:|---|---|---:|"]
     for r in orph[:40]:
         L.append(f"| `{r['path']}` | {r['kind']} | {_mb(r['bytes'])} | {r['git']} | "
@@ -1046,15 +1188,40 @@ def render_markdown(cat: dict, receipt_rel: str) -> str:
     return "\n".join(L)
 
 
-def write_doc(cat: dict, receipt: Path, path: Path = DOC_PATH) -> Path:
+def write_doc(cat: dict, receipt: Path, path: Optional[Path] = None) -> Path:
+    path = Path(path) if path is not None else _repo_root() / "docs" / "DATA_CATALOG.md"
     try:
-        rel = receipt.resolve().relative_to(REPO).as_posix()
+        rel = receipt.resolve().relative_to(_repo_root()).as_posix()
     except ValueError:
         rel = receipt.name
     tmp = path.with_suffix(".md.tmp")
     tmp.write_text(render_markdown(cat, rel), encoding="utf-8", newline="\n")
     os.replace(tmp, path)
     return path
+
+
+#: Full receipts kept locally (gitignored): the newest N plus the first of each month.
+KEEP_NEWEST = 7
+
+
+def prune_receipts(out_dir: Path = CATALOG_DIR, keep: int = KEEP_NEWEST) -> list[str]:
+    """Remove this job's OWN old full receipts (review F9). Ordered by the run id
+    in the name, never by mtime. Keeps the newest `keep` and the first receipt
+    of every month. Touches nothing but `catalog_<run_id>.json` here."""
+    pat = re.compile(r"^catalog_(\d{8}T\d{6}Z)\.json$")
+    rs = sorted((q for q in Path(out_dir).glob("catalog_*.json") if pat.match(q.name)),
+                key=lambda q: q.name)
+    keepers = set(q.name for q in rs[-keep:]) if keep > 0 else set()
+    first_of_month: dict[str, str] = {}
+    for q in rs:
+        first_of_month.setdefault(pat.match(q.name).group(1)[:6], q.name)
+    keepers |= set(first_of_month.values())
+    removed = []
+    for q in rs:
+        if q.name not in keepers:
+            q.unlink()
+            removed.append(q.name)
+    return removed
 
 
 def latest_receipt(out_dir: Path = CATALOG_DIR) -> Optional[Path]:
@@ -1079,10 +1246,13 @@ def run(*, write_doc_too: bool = True, **kw: Any) -> dict:
     p = write_receipt(cat)
     if write_doc_too:
         write_doc(cat, p)
+    pruned = prune_receipts(p.parent)
     s = cat["summary"]
     return {"job": "data_catalog", "run_id": cat["run_id"], "receipt": _safe_rel(p),
             "datasets": s["n_datasets"], "gb": s["total_gb"],
-            "duplicate_groups": s["duplicate_groups"], "orphans": s["orphans"],
+            "duplicate_groups": s["duplicate_groups"], "replay_groups": s["replay_groups"],
+            "no_static_reference": s["no_static_reference"],
+            "runtime_built": s["runtime_built"], "receipts_pruned": len(pruned),
             "unknown_provenance": s["unknown_provenance"], "errors": s["errors"],
             "cache": cat["cache"]}
 

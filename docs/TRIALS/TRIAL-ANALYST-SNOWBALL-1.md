@@ -198,7 +198,7 @@ Pasted verbatim below. Reading it:
   if the linter returns RESOLVABLE; or (c) reject. The builder recommends (a).
 
 ```
-$ cd "C:/Users/mrthn/Aegis module" && .venv/Scripts/python.exe scripts/lint_prereg.py <this file>
+$ cd "<home>/Aegis module" && .venv/Scripts/python.exe scripts/lint_prereg.py <this file>
 
 TRIAL-ANALYST-SNOWBALL-1.md: UNPOWERED_AT_REGISTRATION  (vs 358 prior experiments)
   R13: resolving a 0.4pp effect at dispersion 12pp needs **7064** independent observations. At 1.5e+03 per year over 26 years the corpus can ever supply **312** (R13b: capped from 39000 — your 1.5e+03 events/yr overlap 125.0x at a 21-day horizon, where only 12.0 independent windows fit in a year). This design cannot resolve this claim, and running it would produce a NOT_DETECTABLE that says nothing about the world. The smallest effect this corpus could resolve is **1.9pp** — either declare an effect at least that large AND defend it from turnover, cost, capacity and drawdown consequence, or change the conditioning unit (R14: events, not regimes).

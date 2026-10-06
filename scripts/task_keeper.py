@@ -3,7 +3,10 @@
     python -m scripts.task_keeper reader      # relaunch the reader supervisor if none is alive
     python -m scripts.task_keeper catchup     # run any daily Aegis task whose trigger was missed
     python -m scripts.task_keeper sim         # start the US-session sim, or write why not
-    python -m scripts.task_keeper catalog     # data catalog receipt + archive closed big ledger months
+    python -m scripts.task_keeper catalog     # data catalog receipt + report unsealed closed ledger months
+    python -m scripts.task_keeper analyst     # weekly analyst-target pull (refuses in US hours)
+    python -m scripts.task_keeper brain       # refresh the Optimus brain (tools/refresh_aegis.py)
+    python -m scripts.task_keeper register-owners [--apply]   # C8: AegisAnalystPull + AegisBrainRefresh
     python -m scripts.task_keeper status      # print every decision, change nothing
     python -m scripts.task_keeper register    # print (never run) the task registrations
 
@@ -71,7 +74,9 @@ READER_ROLL_H = 23.0
 #: computes its own safe-launch window and refuses outside it).
 CATCHUP_TASKS = ("AegisDailyPass", "AegisFleetDailyCheck", "AegisNNLabNightly",
                  "AegisAnalystPanelDaily", "AegisHypLabNightly", "AegisContestRehearsal",
-                 "AegisDataCatalog")
+                 "AegisDataCatalog",
+                 # C8 (2026-10-07): the two owners for jobs that had none
+                 "AegisBrainRefresh", "AegisAnalystPull")
 CATCHUP_MAX_AGE_H = 20.0
 CATCHUP_GRACE_MIN = 15.0
 
@@ -412,18 +417,32 @@ def sim_owner_gate(*, now_utc: datetime, session_day: bool, sim: dict,
             "why": win["why"]}
 
 
-def sim_owner_mode(mandate: dict | None) -> tuple[str, str | None]:
-    """PURE. (mode, trade_refused). Trading only on an OK mandate whose worst
-    case PASSES; anything else starts `observe` and names why."""
+def sim_owner_mode(mandate: dict | None,
+                   broker_read: dict | None = None) -> tuple[str, str | None]:
+    """PURE. (mode, trade_refused). Trading only when ALL hold:
+    * the live broker read just made succeeded (review C2 F5: a failed live
+      read must not trade on a file up to four days old);
+    * the read is from the PC-PAPER account (`account_verified`);
+    * the mandate is OK;
+    * the worst-case gate's TRADING verdict passes (PASS, or PASS with
+      EXPLOIT capped / off -- u_plan enforces the cap every cycle).
+    Anything else starts `observe` and names why."""
+    if broker_read is not None and not broker_read.get("ok"):
+        return "observe", ("LIVE BROKER READ FAILED: " + str(broker_read.get("why") or "?")
+                           + " -- a persisted read is not enough to trade on")
     if not isinstance(mandate, dict) or not mandate.get("status"):
         return "observe", "MANDATE CANNOT DETERMINE: no mandate block was computed"
     gate = (mandate.get("worst_case_gate") or {})
-    if gate.get("verdict") != "PASS":
-        return "observe", ("WORST CASE " + str(gate.get("verdict") or "UNKNOWN") + ": "
+    tv = str(gate.get("trading_verdict") or gate.get("verdict") or "UNKNOWN")
+    if not tv.startswith("PASS"):
+        return "observe", ("WORST CASE " + tv + ": "
                            + str(gate.get("line") or "no worst-case gate on the mandate"))
     if mandate.get("status") != "OK":
         kinds = [str(d).split(":", 1)[0] for d in mandate.get("disagreements") or []]
         return "observe", f"MANDATE {mandate.get('status')}: {', '.join(kinds) or '?'}"
+    if mandate.get("account_verified") is False:
+        return "observe", ("ACCOUNT UNVERIFIED: the broker read carries no account number "
+                           "matching config.PC_PAPER_ACCOUNT_NUMBER")
     return str(_config.SIM_OWNER_MODE), None
 
 
@@ -442,7 +461,8 @@ def _broker_read() -> dict:
     try:
         from backend.services import pc_broker as PB                # noqa: PLC0415
         snap = PB.snapshot(tag="sim_owner")
-        return {"ok": True, "equity": snap.get("equity"), "t": snap.get("t")}
+        return {"ok": True, "equity": snap.get("equity"), "t": snap.get("t"),
+                "account_number": snap.get("account_number")}
     except Exception as exc:                                       # noqa: BLE001
         return {"ok": False, "why": f"{type(exc).__name__}: {str(exc)[:200]}"}
 
@@ -452,6 +472,7 @@ def _mandate() -> dict | None:
     m = DC.account_mandate(None)
     return {k: m.get(k) for k in ("status", "capital_usd", "capital_source",
                                   "broker_equity_usd", "broker_equity_as_of",
+                                  "account_number", "account_verified",
                                   "disagreements", "worst_case_gate", "line")}
 
 
@@ -463,6 +484,7 @@ def ensure_sim(*, now_utc: datetime | None = None,
                mandate: Callable[[], dict | None] = _mandate,
                disk: Callable[[], tuple[bool, str]] = _disk_ok,
                stop_path: Path | None = None, log_path: Path | None = None,
+               stop_running: Callable[..., dict] | None = None,
                dry_run: bool = False) -> dict:
     """The scheduled sim owner. One receipt row per firing, whatever happens."""
     import uuid                                                    # noqa: PLC0415
@@ -477,11 +499,18 @@ def ensure_sim(*, now_utc: datetime | None = None,
                            stop_exists=Path(stop_path or SIM_OWNER_STOP).exists(),
                            disk_ok=disk())
         row.update(d)
+        if d["action"] == "paused" and str(sim.get("state")) in ("RUNNING", "STOPPING")                 and not dry_run:
+            # review C2 F3: the owner's pause also stops a RUNNING session, at its
+            # next unit boundary (sim_session.request_stop), never mid-unit
+            try:
+                row["stop_requested"] = (stop_running or SS.request_stop)(reason="OWNER_STOP")
+            except Exception as exc:                               # noqa: BLE001
+                row["stop_requested"] = {"ok": False, "detail": f"{type(exc).__name__}: {exc}"}
         if d["action"] == "start":
             row["broker_read"] = broker_read()
             m = mandate()
             row["mandate"] = m
-            mode, trade_refused = sim_owner_mode(m)
+            mode, trade_refused = sim_owner_mode(m, row["broker_read"])
             row.update(mode=mode, trade_refused=trade_refused)
             if dry_run:
                 row["action"] = "would_start"
@@ -501,12 +530,14 @@ def ensure_sim(*, now_utc: datetime | None = None,
 
 # ================================================================ catalog
 #
-# WHY (chunk C10, 2026-10-06). "We pull the same data again" and "the long-term
-# archival design for very large monthly ledgers is unresolved". Once a day:
-# archive every CLOSED `<ledger>_<YYYY-MM>.jsonl` over the size floor to Parquet
-# outside git with a committed manifest (`ledger_archive`), THEN walk the data
-# roots into a catalog receipt (`data_catalog`) so the new manifest is in it.
-# A failed step is a REFUSED row with its reason; neither step deletes data.
+# WHY (chunk C10, 2026-10-06; scan-only since review F4, 10-07). "We pull the
+# same data again" and "the long-term archival design for very large monthly
+# ledgers is unresolved". Once a day, UNATTENDED and READ-ONLY for ledgers:
+# report every CLOSED `<ledger>_<YYYY-MM>.jsonl` over the size floor that is
+# not sealed, with the reason and the command (`ledger_archive.scan_report`);
+# sealing is an attended `--apply` plus a commit, never cron. Then walk the data
+# roots into a catalog receipt (`data_catalog`). A failed step is a REFUSED row
+# with its reason; unsealed months are ATTENTION, not a failure of the job.
 # TODO(orchestrator): once C3/C7 land their daily_pass edits, consider a
 # `data_catalog` step there too, so the morning report can print catalog age.
 
@@ -517,10 +548,11 @@ def run_catalog(*, archive: Callable[[], dict] | None = None,
     try:
         if archive is None:
             from backend.services import ledger_archive as LA      # noqa: PLC0415
-            archive = LA.archive_closed
+            archive = LA.scan_report
         a = archive()
-        row["archive"] = {"status": a.get("status"),
-                          "months": [{k: m.get(k) for k in ("path", "action", "manifest", "why")}
+        row["archive"] = {"status": a.get("status"), "apply": a.get("apply", False),
+                          "headline": a.get("headline"),
+                          "months": [{k: m.get(k) for k in ("path", "sealed", "why", "command")}
                                      for m in a.get("months", [])]}
     except Exception as exc:                                       # noqa: BLE001
         row["archive"] = {"status": "REFUSED", "why": f"{type(exc).__name__}: {str(exc)[:300]}"}
@@ -531,10 +563,168 @@ def run_catalog(*, archive: Callable[[], dict] | None = None,
         row["catalog"] = catalog()
     except Exception as exc:                                       # noqa: BLE001
         row["catalog"] = {"status": "REFUSED", "why": f"{type(exc).__name__}: {str(exc)[:300]}"}
-    bad = (row["archive"].get("status") != "OK"
+    bad = (row["archive"].get("status") == "REFUSED"
            or row["catalog"].get("status") == "REFUSED")
+    row["action"] = ("refused" if bad else
+                     "attention" if row["archive"].get("status") == "ATTENTION" else "ok")
+    return log(row, log_path)
+
+
+# ================================================================ regret
+# C11 (2026-10-06): the regret ledger prices the decision stories' frozen
+# alternatives once their 5/21/63-session horizons mature. A failed step is a
+# REFUSED row with its reason. It reads bars and frozen rows; it never orders.
+# Scheduled by `scripts/daily_pass.py` step `regret` (C11 review F4); this job is
+# the attended / catch-up entry for the same grader.
+
+def run_regret(*, grade: Callable[[], dict] | None = None,
+               log_path: Path | None = None) -> dict:
+    row: dict = {"job": "regret"}
+    try:
+        if grade is None:
+            from backend.services import regret_ledger as RL        # noqa: PLC0415
+            grade = RL.grade_due
+        g = grade()
+        row["regret"] = {k: g.get(k) for k in ("status", "run_id", "path", "line",
+                                                 "n_decisions_frozen", "pending_not_matured")}
+        bad = g.get("status") == "REFUSED"
+    except Exception as exc:                                       # noqa: BLE001
+        row["regret"] = {"status": "REFUSED", "why": f"{type(exc).__name__}: {str(exc)[:300]}"}
+        bad = True
     row["action"] = "refused" if bad else "ok"
     return log(row, log_path)
+
+
+# ================================================================ owners (C8)
+#
+# WHY (chunk C8, 2026-10-07). Two jobs had NO scheduled caller:
+#  * the analyst-target pull (`scripts.pull_analyst_targets`, ~60-80 min) last
+#    ran 2026-09-29 by hand; ROT5_DIR refuses its inputs past 14 days;
+#  * `tools/refresh_aegis.py` in the sibling Optimus repo -- the brain page was
+#    23 days old and every session's `brain_query` read a September corpus.
+# Each firing writes ONE row to its own receipt series (`task_keeper/
+# analyst.jsonl`, `task_keeper/brain.jsonl`), which `task_receipts` reads.
+# A step that cannot run is a REFUSED row with its reason, never a silent exit.
+
+TASK_ANALYST = "AegisAnalystPull"
+TASK_BRAIN = "AegisBrainRefresh"
+ANALYST_LOG = KEEPER_DIR / "analyst.jsonl"
+BRAIN_LOG = KEEPER_DIR / "brain.jsonl"
+
+
+def _child_python() -> str:
+    """A console python for a child (pythonw has no stdout to hand down)."""
+    p = REPO / ".venv" / "Scripts" / "python.exe"
+    return str(p) if p.exists() else sys.executable
+
+
+def analyst_gate(now_utc: datetime) -> dict:
+    """Refuse while the US regular session is open: an 80-minute vendor crawl
+    competes with the live loops for the same rate limit."""
+    from backend.services import system_health as SH               # noqa: PLC0415
+    if SH.in_session_hours(now_utc):
+        return {"action": "refused",
+                "why": (f"US session is open ({SH._et(now_utc):%Y-%m-%d %H:%M} ET); the weekly "
+                        f"pull runs outside regular hours")}
+    return {"action": "run"}
+
+
+def run_analyst_pull(*, now_utc: datetime | None = None,
+                     runner: Callable[..., Any] | None = None,
+                     log_path: Path | None = None) -> dict:
+    now_utc = now_utc or _now()
+    row: dict = {"job": "analyst", **analyst_gate(now_utc)}
+    if row["action"] == "run":
+        KEEPER_DIR.mkdir(parents=True, exist_ok=True)
+        out = KEEPER_DIR / f"analyst_pull_{now_utc:%Y%m%dT%H%M%SZ}.log"
+        argv = [_child_python(), "-m", "scripts.pull_analyst_targets", "--universe", "bars"]
+        try:
+            with open(out, "w", encoding="utf-8") as fh:
+                r = (runner or subprocess.run)(
+                    argv, cwd=str(REPO), stdout=fh, stderr=subprocess.STDOUT,
+                    stdin=subprocess.DEVNULL,
+                    timeout=float(_config.ANALYST_PULL_TIMEOUT_MIN) * 60,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            rc = int(getattr(r, "returncode", 1))
+            row.update(action="ok" if rc == 0 else "failed", rc=rc, log=out.name,
+                       why="" if rc == 0 else f"pull_analyst_targets exited {rc}; see {out.name}")
+        except subprocess.TimeoutExpired:
+            row.update(action="failed",
+                       why=f"timed out after {_config.ANALYST_PULL_TIMEOUT_MIN} min")
+        except Exception as exc:                                   # noqa: BLE001
+            row.update(action="refused",
+                       why=f"could not start: {type(exc).__name__}: {str(exc)[:200]}")
+    return log(row, log_path or ANALYST_LOG)
+
+
+def optimus_root() -> Path:
+    return Path(os.getenv("OPTIMUS_ROOT", str(REPO.parent / "optimus")))
+
+
+def run_brain_refresh(*, root: Path | None = None, runner: Callable[..., Any] | None = None,
+                      log_path: Path | None = None) -> dict:
+    root = Path(root or optimus_root())
+    tool = root / "tools" / "refresh_aegis.py"
+    py = root / ".venv" / "Scripts" / "python.exe"
+    row: dict = {"job": "brain"}
+    if not tool.exists():
+        row.update(action="refused", why=("tools/refresh_aegis.py not found in the Optimus repo "
+                                          "(OPTIMUS_ROOT or ../optimus)"))
+        return log(row, log_path or BRAIN_LOG)
+    if not py.exists():
+        row.update(action="refused", why=("the Optimus repo has no .venv python; its ingest "
+                                          "needs that environment"))
+        return log(row, log_path or BRAIN_LOG)
+    try:
+        r = (runner or subprocess.run)(
+            [str(py), str(tool)], cwd=str(root), capture_output=True, text=True,
+            encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL,
+            timeout=float(_config.BRAIN_REFRESH_TIMEOUT_MIN) * 60,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        rc = int(getattr(r, "returncode", 1))
+        lines = [ln for ln in str(getattr(r, "stdout", "") or "").splitlines() if ln.strip()]
+        fails = [ln for ln in lines if ln.startswith("[FAIL]")]
+        row.update(action="ok" if rc == 0 else "failed", rc=rc,
+                   n_ok=sum(1 for ln in lines if ln.startswith("[ok]")), n_fail=len(fails),
+                   summary=(lines[-1] if lines else "no output")[:200],
+                   why="" if rc == 0 else ("; ".join(fails)[:400] or f"exit {rc}"))
+    except subprocess.TimeoutExpired:
+        row.update(action="failed", why=f"timed out after {_config.BRAIN_REFRESH_TIMEOUT_MIN} min")
+    except Exception as exc:                                       # noqa: BLE001
+        row.update(action="refused", why=f"could not start: {type(exc).__name__}: {str(exc)[:200]}")
+    return log(row, log_path or BRAIN_LOG)
+
+
+def owner_registration_ps() -> str:
+    """PowerShell registering the two C8 owners. Printed by `register-owners`,
+    run by `register-owners --apply`. Times are this PC's local (HKT) clock."""
+    pyw = REPO / ".venv" / "Scripts" / "pythonw.exe"
+    return "\n".join([
+        "$S = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries "
+        "-DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 3)",
+        "# weekly analyst-target pull: Sunday 10:00 HKT (Saturday night ET; no session)",
+        f"$a = New-ScheduledTaskAction -Execute '{pyw}' -Argument '-m scripts.task_keeper analyst' "
+        f"-WorkingDirectory '{REPO}'",
+        "Register-ScheduledTask -TaskName '" + TASK_ANALYST + "' -Action $a -Settings $S -Force "
+        "-Trigger @(New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 10:00)",
+        "# daily Optimus brain refresh: 05:45 HKT",
+        f"$a = New-ScheduledTaskAction -Execute '{pyw}' -Argument '-m scripts.task_keeper brain' "
+        f"-WorkingDirectory '{REPO}'",
+        "Register-ScheduledTask -TaskName '" + TASK_BRAIN + "' -Action $a -Settings $S -Force "
+        "-Trigger @(New-ScheduledTaskTrigger -Daily -At 05:45)",
+    ])
+
+
+def register_owners(apply: bool = False) -> int:
+    ps = owner_registration_ps()
+    print(ps)
+    if not apply:
+        return 0
+    r = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True,
+                       text=True, timeout=120,
+                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    print(r.stdout[-2000:], r.stderr[-2000:])
+    return int(r.returncode)
 
 
 # ================================================================ register
@@ -595,8 +785,18 @@ def _ensure_streams() -> None:
 def main(argv: list[str] | None = None) -> int:
     _ensure_streams()
     ap = argparse.ArgumentParser(prog="task_keeper")
-    ap.add_argument("job", choices=("reader", "catchup", "sim", "status", "register", "catalog"))
+    ap.add_argument("job", choices=("reader", "catchup", "sim", "status", "register", "catalog",
+                                   "regret",
+                                   "analyst", "brain", "register-owners"))
+    ap.add_argument("--apply", action="store_true",
+                    help="register-owners: run the registration, not only print it")
     a = ap.parse_args(argv)
+    if a.job == "register-owners":
+        return register_owners(apply=a.apply)
+    if a.job in ("analyst", "brain"):
+        out = run_analyst_pull() if a.job == "analyst" else run_brain_refresh()
+        print(json.dumps(out, default=str))
+        return 0 if out.get("action") == "ok" else 2
     if a.job == "register":
         print(registration_ps())
         return 0
@@ -607,6 +807,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if a.job == "catalog":
         out = run_catalog()
+        print(json.dumps(out, default=str))
+        return 2 if out.get("action") == "refused" else 0
+    if a.job == "regret":
+        out = run_regret()
         print(json.dumps(out, default=str))
         return 2 if out.get("action") == "refused" else 0
     if a.job == "sim":

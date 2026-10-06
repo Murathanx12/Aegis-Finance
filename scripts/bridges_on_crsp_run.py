@@ -269,28 +269,27 @@ DECISION_LINE_AMENDMENT_2026_10_06 = (
     "issues is a re-issue, never a new claim.")
 
 
-def board_columns(fl: pd.DataFrame, cs: pd.DataFrame, rule_tov: float, twin_tov: float) -> pd.DataFrame:
-    """The four `MT.FOUR_COLUMNS` for one bridges rule from its flat and full-CS library series.
+DECISION_LINE_AMENDMENT_2026_10_07 = (
+    "AMENDED 2026-10-07 (CHUNK C1b, review F1/F2 of C1): the four columns are READ from the fair-twin board's "
+    "per-rule series (`hyp_lab/fair_twin_series_<fair run>/<rule>.parquet`), where the rule and its twin are "
+    "the SAME engine (`hyp_investable.run_book`), their turnover the SAME function on the SAME book "
+    "(`matched_twins.trade_cost`: one-way traded weight per month) and their per-name round trip the SAME "
+    "composition (`matched_twins.TWIN_COST_COMPOSITION`). The 2026-10-06 board scaled the twin21 series by "
+    "the basket twin's turnover and the rule by `book_profile`'s names-replaced-per-REBALANCE (annual rules "
+    "charged ~6x: qc761 0.47/mo vs 0.07 measured), with Corwin-Schultz ADDED to the flat cost. "
+    "`bridges_turnover_<run>` is printed beside as a diagnostic and charges nothing.")
 
-    * pure selection = flat rule net - flat twin21 net: in the flat run the twin is charged the
-      RULE's own cost (`calendar_offsets.twin21`), so the cost cancels and this is gross - gross;
-    * fair twin = both legs turnover-scaled by `MT.turnover_scaled_net`, each on its OWN turnover;
-    * net minus market = the turnover-scaled rule net - the costless market;
-    * UPPER BOUND = the turnover-scaled rule net - the full-CS twin (the 09-29 declared variant)."""
+
+def board_columns(S: pd.DataFrame) -> pd.DataFrame:
+    """The four `MT.FOUR_COLUMNS` for one bridges rule, read from its fair-twin board series `S`
+    (`scripts.hyp_twin_board.fair_series`): rule and twin from one `run_book`, one `trade_cost`,
+    one cost composition. Refuses a series without the four columns or without both turnovers."""
     from backend.services import matched_twins as MT                 # noqa: PLC0415
-    common = fl.index.intersection(cs.index)
-    fl, cs = fl.reindex(common), cs.reindex(common)
-    rn = MT.turnover_scaled_net(fl["rule_net"], cs["rule_net"], rule_tov)
-    tn = MT.turnover_scaled_net(fl["twin21_net"], cs["twin21_net"], twin_tov)
-    return pd.DataFrame({MT.FOUR_COLUMNS[0]: fl["rule_net"] - fl["twin21_net"],
-                         MT.FOUR_COLUMNS[1]: rn - tn,
-                         MT.FOUR_COLUMNS[2]: rn - fl["market"],
-                         MT.FOUR_COLUMNS[3]: rn - full_cs_twin_upper_bound(cs)})
-
-
-def full_cs_twin_upper_bound(cs: pd.DataFrame) -> pd.Series:
-    """The 09-29 declared twin (charged the full CS round trip every month). UPPER BOUND only."""
-    return cs["twin21_net"]
+    need = list(MT.FOUR_COLUMNS) + ["turnover", "twin_turnover"]
+    miss = [c for c in need if c not in S.columns]
+    if miss:
+        raise MT.TwinInputMissing(f"fair-twin series lacks {miss}")
+    return S[list(MT.FOUR_COLUMNS)].copy()
 
 
 def _variant_stats(dt: pd.Series, dm: pd.Series, n_total: int) -> dict:
@@ -334,6 +333,7 @@ def part_board(dec_id: str, flat_run: str, cs_run: str, turnover_run: str, fair_
         say(f"REFUSED: {bj.name} exists")
         return 2
     to = json.loads((OUT / f"bridges_turnover_{turnover_run}.json").read_text(encoding="utf-8"))["profiles"]
+    sdir = FAIR_DIR / f"fair_twin_series_{fair_run}"
     fair_rows = {}
     for ln in (FAIR_DIR / f"twin_board_{fair_run}.jsonl").read_text(encoding="utf-8").splitlines():
         if ln.strip():
@@ -351,21 +351,29 @@ def part_board(dec_id: str, flat_run: str, cs_run: str, turnover_run: str, fair_
     n_total = PRIOR_SEARCH + n_cells
     starts = d["source_start"]
     rows = []
-    for rule, (fl, cs) in series.items():
-        tov = (to.get(rule) or {}).get("turnover_per_month")
+    for rule in series:
         fr = fair_rows.get(rule) or {}
-        if tov is None or fr.get("status") != "OK" or fr.get("twin_turnover") is None:
-            refused[rule] = ("no measured turnover for the rule" if tov is None else
-                             f"fair-twin board row not OK: {fr.get('status', 'absent')}")
+        sp = sdir / f"{rule}.parquet"
+        if fr.get("status") != "OK" or not sp.exists():
+            refused[rule] = (f"fair-twin board row not OK: {fr.get('status', 'absent')}"
+                             if fr.get("status") != "OK" else f"fair-twin series {sp.name} absent")
             continue
-        tov, twin_tov = float(tov), float(fr["twin_turnover"])
-        C = board_columns(fl, cs, tov, twin_tov)
+        S = pd.read_parquet(sp)
+        try:
+            C = board_columns(S)
+        except MT.TwinInputMissing as e:
+            refused[rule] = str(e)
+            continue
+        inv = S["invested"].astype(bool) if "invested" in S.columns else S["turnover"].notna()
+        tov, twin_tov = float(S.loc[inv, "turnover"].mean()), float(S.loc[inv, "twin_turnover"].mean())
         srcs = _src_of(req.get(rule, []))
         latest_start = max([pd.Timestamp(starts[s]) for s in srcs] + [pd.Timestamp("1991-01-01")])
         decidable = latest_start <= pd.Timestamp("2006-12-31") and not (set(srcs) & set(DESCRIPTION_ONLY))
         rec = {"rule": rule, "family": fam.get(rule), "requires": req.get(rule), "sources_new": srcs,
                "cost_convention": MT.TWIN_COST_CONVENTION,
                "turnover_per_month": tov, "twin_turnover_per_month_measured": twin_tov,
+               "turnover_unit": "one-way traded weight per month, rule and twin by matched_twins.trade_cost on one book",
+               "names_replaced_per_rebalance_DIAGNOSTIC": (to.get(rule) or {}).get("turnover_per_month"),
                "median_pick_adv_musd_by_decade": (to.get(rule) or {}).get("median_pick_adv_musd_by_decade")}
         # the four columns side by side, every window (t on 3-month blocks, MDE beside)
         rec["four_columns"] = {c: {k: CR.window_stats(C[c].dropna(), *w) for k, w in SPLITS.items()}
@@ -389,11 +397,13 @@ def part_board(dec_id: str, flat_run: str, cs_run: str, turnover_run: str, fair_
             fail_counts[f] = fail_counts.get(f, 0) + 1
     status = "OK" if not refused and rows else (f"REFUSED: no rule scored" if not rows else
                                                  f"PARTIAL: {len(refused)} rules refused (named in `refused`)")
-    doc = {"schema": "crsp_rebuild/bridges_board/2", "job": JOB, "board_id": bid, "declaration": dec_id,
+    doc = {"schema": "crsp_rebuild/bridges_board/3", "job": JOB, "board_id": bid, "declaration": dec_id,
            "declaration_sha16": d["sha16"], "flat_run": flat_run, "cs_run": cs_run, "turnover_run": turnover_run,
            "fair_run": fair_run, "status": status, "refused": refused,
            "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0, "written_utc": _now(),
            "decision_line": DECISION_LINE, "decision_line_amendment": DECISION_LINE_AMENDMENT_2026_10_06,
+           "decision_line_amendment_2026_10_07": DECISION_LINE_AMENDMENT_2026_10_07,
+           "cost_composition": MT.TWIN_COST_COMPOSITION,
            "cost_convention": MT.TWIN_COST_CONVENTION, "four_columns": list(MT.FOUR_COLUMNS),
            "upper_bound_column_never_in_verdicts": MT.UPPER_BOUND_COLUMN,
            "deflation_count": {"prior": PRIOR_SEARCH, "cells_this_run": n_cells, "n_trials_used": n_total},

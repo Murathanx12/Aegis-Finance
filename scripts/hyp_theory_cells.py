@@ -267,17 +267,19 @@ def theory_verdict(design: dict, validate: dict, loo_validate: Optional[float], 
         return {"verdict": "REFUSED", "reason": "validate window has no usable estimate"}
     ok, fails = HI.survives(design, validate)
     if ok and loo_validate is not None and loo_validate > 0:
-        return {"verdict": "CANDIDATE", "reason": f"design {dm:+.5f}, validate {vm:+.5f} t {vt:.2f}, "
+        return {"verdict": "CANDIDATE", "powered": True, "reason": f"design {dm:+.5f}, validate {vm:+.5f} t {vt:.2f}, "
                                                   f"years {validate.get('years_positive')}, LOO worst {loo_validate:+.5f}"}
     if ok:
         fails = fails + [f"leave-one-year-out worst validate mean {loo_validate} <= 0"]
     worth = max(float(dm) if dm is not None else 0.0, float(min_effect))
+    powered = bool(vmde <= worth)       # review 2026-10-06 F6: only a powered negative is evidence
     if vm <= 0:
-        return {"verdict": "FAILED_VARIANT", "reason": f"validate mean {vm:+.5f} <= 0", "fails": fails}
+        return {"verdict": "FAILED_VARIANT", "reason": f"validate mean {vm:+.5f} <= 0", "fails": fails,
+                "powered": powered}
     if vt < 2 and vmde <= worth:
-        return {"verdict": "FAILED_VARIANT", "fails": fails,
+        return {"verdict": "FAILED_VARIANT", "fails": fails, "powered": powered,
                 "reason": f"validate t {vt:.2f} < 2 and MDE {vmde:.5f} <= effect worth having {worth:.5f}"}
-    return {"verdict": "CANNOT_DISTINGUISH", "fails": fails,
+    return {"verdict": "CANNOT_DISTINGUISH", "fails": fails, "powered": powered,
             "reason": f"validate {vm:+.5f} t {vt:.2f}; MDE {vmde:.5f} vs effect worth having {worth:.5f}"}
 
 
@@ -323,14 +325,96 @@ def declaration(cell: str, run: str) -> dict:
     return body
 
 
-def part_declare(cell: str, run: str, *, ledger: bool = True) -> int:
+# ── the declaration gate (review 2026-10-06 F2: a base-rate and power check BEFORE hashing) ──
+
+def declaration_gate(treated: pd.Series, min_effect: float, *, event_sd: float | None = None,
+                     max_share: float | None = None, max_mde_mult: float | None = None,
+                     labels: tuple[str, str] = ("treated", "control")) -> dict:
+    """`treated`: one bool per event (the separating variable, built from LABELS only, no outcome).
+    Prints the class split and the control's labels-only MDE (2.8 x event_sd / sqrt(n_control):
+    i.i.d., unblocked, so a LOWER bound on the real MDE). Refuses when one class holds more than
+    `max_share` of events (the variable does not separate) or the control MDE exceeds
+    `max_mde_mult` x the effect worth having (the comparison can never be read)."""
+    from backend import config as C  # noqa: PLC0415
+    event_sd = C.THEORY_GATE_EVENT_SD if event_sd is None else event_sd
+    max_share = C.THEORY_GATE_MAX_CLASS_SHARE if max_share is None else max_share
+    max_mde_mult = C.THEORY_GATE_MAX_MDE_MULT if max_mde_mult is None else max_mde_mult
+    s = pd.Series(treated).dropna().astype(bool)
+    n, n_t = int(len(s)), int(s.sum())
+    n_c = n - n_t
+    share = (max(n_t, n_c) / n) if n else 1.0
+    mde_c = (2.8 * event_sd / math.sqrt(n_c)) if n_c > 0 else float("inf")
+    reasons = []
+    if share > max_share:
+        reasons.append(f"one class holds {share:.1%} of {n:,} events (> {max_share:.0%}): the separating "
+                       f"variable does not separate")
+    if mde_c > max_mde_mult * min_effect:
+        reasons.append(f"control ({labels[1]}, n={n_c:,}) labels-only MDE {mde_c:.4f} > {max_mde_mult:g} x "
+                       f"effect worth having {min_effect:.4f}: the comparison can never be read")
+    return {"n_events": n, f"n_{labels[0]}": n_t, f"n_{labels[1]}": n_c,
+            "class_split": {labels[0]: round(n_t / n, 4) if n else None, labels[1]: round(n_c / n, 4) if n else None},
+            "control_mde_lower_bound": round(mde_c, 5), "event_sd_preset": event_sd,
+            "max_class_share": max_share, "max_mde_mult": max_mde_mult,
+            "refused": bool(reasons), "reasons": reasons}
+
+
+def gate_labels(cell: str) -> Optional[tuple[pd.Series, tuple[str, str]]]:
+    """The separating variable per cell, from labels only (no returns are read). None = no class
+    split (hi52 is a rule read against its matched twin)."""
+    if cell == "insider_hold":
+        B, S = _insider_frames()
+        E = insider_hold_events(B, S)
+        E = E[(E["gate"] >= "2006-01-01") & (E["gate"] <= "2024-09-30")]
+        return E["hold"], ("HOLD", "SOLD")
+    if cell == "beat_streak":
+        Q = pd.read_parquet(SURP, columns=["ticker", "measure", "fiscalp", "pyear", "pmon", "usfirm", "anndats",
+                                           "actual", "surpmean"],
+                            filters=[("measure", "=", "EPS"), ("fiscalp", "=", "QTR")])
+        Q = Q[Q["usfirm"].astype(float) == 1]
+        Q["anndats"] = pd.to_datetime(Q["anndats"], errors="coerce")
+        Q = beat_streaks(Q)
+        Q = Q[(Q["anndats"] >= "1993-06-01") & (Q["anndats"] <= "2024-09-30")]
+        Q = Q[(Q["streak"] >= 3) | (Q["streak"] == 1)]
+        return Q["streak"] >= 3, ("STREAK3P", "STREAK1")
+    return None
+
+
+def part_declare(cell: str, run: str, *, ledger: bool = True, labels=None) -> int:
+    """Declare (hash) a cell. Before hashing: the row goes through hyp_lab.dedupe() (a rule
+    already run on CRSP is recorded as `reread_of` and counts +0 in the posterior; a duplicate
+    of a ledger row refuses), and the declaration gate prints the class split and the
+    control's MDE and REFUSES a cell whose separating comparison cannot be read."""
     from backend.services import hyp_lab as L  # noqa: PLC0415
     p = decl_path(cell, run)
     body = declaration(cell, run)
     if cell == "hi52" and any(v is None for v in body["input_sha256"].values()):
         say(f"REFUSED: a fair-twin input is missing: {body['input_sha256']}")
         return 2
+    lab = labels if labels is not None else gate_labels(cell)
+    if lab is not None:
+        g = declaration_gate(lab[0], CELLS[cell]["min_effect"], labels=lab[1])
+        say(f"  gate: split {g['class_split']}  control MDE >= {g['control_mde_lower_bound']:.4f}  "
+            f"{'REFUSED' if g['refused'] else 'ok'}")
+        if g["refused"]:
+            gp = OUT / f"theory_{cell}_GATE_REFUSED_{run}.json"
+            if not gp.exists():
+                _write_new(gp, {"schema": "hyp_lab/theory_cell_gate/1", "cell": cell, "run": run,
+                                "written_utc": _now(), "gate": g})
+            say("REFUSED: " + "; ".join(g["reasons"]))
+            return 2
+        body["gate"] = g
+    else:
+        body["gate"] = {"not_applicable": "no class split: the rule is read against its matched twin"}
     row = ledger_row(cell, run)
+    row["declared_reread"] = True
+    row = L.dedupe([row], L.load_state() if ledger else {})[0]
+    if row.get("status") == "DUPLICATE_IN_LEDGER":
+        say(f"REFUSED: duplicate of ledger row {row.get('dedup', {}).get('nearest_ledger')}")
+        return 2
+    if row.get("reread_of"):
+        body["reread_of"] = row["reread_of"]
+        say(f"  RE-READ of {row['reread_of']}: counts +0 in the family posterior")
+    body["dedup"] = row.get("dedup")
     body["hyp_id"] = row["hyp_id"]
     body["sha256"] = sha_of(body)
     body["written_utc"] = _now()
@@ -635,7 +719,8 @@ def run_hi52(decl: dict) -> dict:
             if r == "hi52" and col == "fair_twin_net":
                 prim = rd
         res[r] = cols
-    return {"verdict": prim["verdict"], "reason": prim["reason"], "primary": "hi52.fair_twin_net",
+    return {"verdict": prim["verdict"], "reason": prim["reason"], "powered": prim.get("powered"),
+            "primary": "hi52.fair_twin_net",
             "primary_stats": {k: _slim(v) for k, v in prim["stats"].items()},
             "primary_by_hold_year": prim["stats"]["full"].get("by_year"), "primary_loo_worst": prim["loo_worst"],
             "rules": res}
@@ -661,7 +746,7 @@ def run_insider_hold(decl: dict, run: str) -> dict:
     y["g"] = y["r"] - y["r_band"]
     diff = (monthly(y[y["hold"]], "g") - monthly(y[~y["hold"]], "g")).dropna()
     sep = read_series(diff, splits, "+1", decl["min_effect"])
-    return {"verdict": prim["verdict"], "reason": prim["reason"],
+    return {"verdict": prim["verdict"], "reason": prim["reason"], "powered": prim.get("powered"),
             "primary": "HOLD H63 net vs size band",
             "primary_stats": {k: _slim(v) for k, v in prim["stats"].items()},
             "primary_by_hold_year": prim["stats"]["full"].get("by_year"), "primary_loo_worst": prim["loo_worst"],
@@ -718,7 +803,7 @@ def run_beat_streak(decl: dict, run: str) -> dict:
     prim = read_series(diff, decl["splits"], decl["sign"], decl["min_effect"])
     trade = _cohort_cells(F[F["streak"] >= 3], decl["splits"], decl["horizons"], "STREAK3P")
     first = _cohort_cells(F[F["streak"] == 1], decl["splits"], decl["horizons"], "STREAK1")
-    return {"verdict": prim["verdict"], "reason": prim["reason"],
+    return {"verdict": prim["verdict"], "reason": prim["reason"], "powered": prim.get("powered"),
             "primary": "(streak>=3 - streak==1) H63 gross drift vs size band, sign fixed by design",
             "sign_applied": prim["sign_applied"],
             "primary_stats": {k: _slim(v) for k, v in prim["stats"].items()},
@@ -774,8 +859,12 @@ def _record(L, decl: dict, rp: Path, res: dict) -> None:
     _write_new(rp, doc)
     v = res.get("verdict") if res.get("verdict") in L.VERDICTS else "REFUSED"
     if decl.get("hyp_id") and decl["hyp_id"] in L.load_state():
+        ps = res.get("primary_stats") or {}
         L.update(decl["hyp_id"], status="RUN", verdict=v, receipt=L._rel(rp),
-                 summary={"verdict": v, "reason": res.get("reason"),
+                 fields={"reread_of": decl["reread_of"]} if decl.get("reread_of") else None,
+                 summary={"verdict": v, "reason": res.get("reason"), "powered": bool(res.get("powered")),
+                          "design": {"mean": (ps.get("design") or {}).get("mean_monthly"),
+                                     "t": (ps.get("design") or {}).get("t_blocks")},
                           "confirm": {"mean": ((res.get("primary_stats") or {}).get("validate") or {}).get("mean_monthly"),
                                       "t": ((res.get("primary_stats") or {}).get("validate") or {}).get("t_blocks"),
                                       "mde": ((res.get("primary_stats") or {}).get("validate") or {}).get("mde_monthly")}})

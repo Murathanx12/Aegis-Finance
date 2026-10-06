@@ -1004,6 +1004,66 @@ def bars_gate(ranking_asof: Any, *, bars_paths: list[Path] | None = None,
     return gate
 
 
+#: Disagreements of the LIVE mandate that block every send (review C2 F3).
+ORDER_BLOCKING_DISAGREEMENTS = ("ACCOUNT_MISMATCH", "NO_BROKER_EQUITY_READ",
+                                "BROKER_EQUITY_STALE", "CAPITAL_BASES_DISAGREE",
+                                "SLEEVE_CAP_ABOVE_BROKER_CAP", "GROSS_CAPS_DISAGREE",
+                                "WORST_CASE_ABOVE_LIMIT")
+
+
+def _order_path_gate(targets: list, *, snap: dict, equity: float, probe_syms: list,
+                     ex_syms: list, exploit_acting: bool, probe_acting: bool,
+                     probe_sigma: dict, bars_paths: list | None, sandbox: bool) -> dict:
+    """The mandate and the worst case, re-checked on the plan's own targets
+    before any submit (review C2 F1/F3). Mutates EXPLOIT target weights DOWN
+    when the acting book is over `PC_WORST_CASE_MAX_FRAC_OF_EQUITY`; returns
+    `block` (a reason) when nothing may be sent. Never raises: a gate that
+    cannot compute blocks."""
+    try:
+        from backend.services import pc_risk as PR                 # noqa: PLC0415
+        from backend.services import decision_contract as DC       # noqa: PLC0415
+        if bars_paths:
+            sig = PR.panel_sigmas(Path(bars_paths[0]))
+        else:
+            sig = {} if sandbox else PR.panel_sigmas()
+        stats = PR.universe_stats(sig)
+        fb, fb_src = PR.fallback_sigma(stats)
+        sig = {**sig, **probe_sigma}
+        k = float(_config.PROBE_WORST_CASE_SIGMA)
+        limit = float(_config.PC_WORST_CASE_MAX_FRAC_OF_EQUITY)
+        acting = {t.symbol: float(t.weight) for t in targets
+                  if (t.symbol in probe_syms and probe_acting)
+                  or (t.symbol in ex_syms and exploit_acting)}
+        sleeve_of = {s_: ("EXPLOIT" if s_ in ex_syms and s_ not in probe_syms else "PROBE")
+                     for s_ in acting}
+        cb = PR.cap_book(acting, sleeve_of, sig, k=k, limit=limit, fallback=fb)
+        if cb["scale_exploit"] < 1.0:
+            for t in targets:
+                if sleeve_of.get(t.symbol) == "EXPLOIT":
+                    t.weight = float(t.weight) * cb["scale_exploit"]
+        eq = {"equity_usd": float(equity), "as_of": _now(),
+              "account_number": snap.get("account_number"),
+              "cash_usd": snap.get("cash"),
+              "positions": [{"symbol": p.get("symbol"), "market_value": p.get("market_value"),
+                             "current_price": p.get("current_price")}
+                            for p in snap.get("positions") or []]}
+        m = DC.account_mandate(None, equity=eq,
+                               risk={"sigmas": sig, "exploit": {"symbols": list(ex_syms),
+                                                                "source": "u_plan"}})
+        blocking = [d for d in m.get("disagreements") or []
+                    if str(d).split(":", 1)[0] in ORDER_BLOCKING_DISAGREEMENTS]
+        block = cb["block"] or (("MANDATE: " + "; ".join(blocking)) if blocking else None)
+        return {"block": block, "scale_exploit": cb["scale_exploit"],
+                "before_frac": cb["before_frac"], "after_frac": cb["after_frac"],
+                "limit": limit, "sigma_fallback": f"{fb_src} {fb:.2%}",
+                "mandate_status": m.get("status"), "account_verified": m.get("account_verified"),
+                "largest_admissible": m.get("worst_case_gate"),
+                "line": cb["line"] + (f"; BLOCKED: {block}" if block else "")}
+    except Exception as exc:                                       # noqa: BLE001
+        return {"block": f"risk gate could not compute ({type(exc).__name__}: {str(exc)[:160]})",
+                "line": f"order-path gate CANNOT DETERMINE: {type(exc).__name__}: {exc}"}
+
+
 def _plan_scaled_views(targets: list, prices: dict, equity: float) -> dict:
     """The plan's targets rescaled to `config.IC_CAPITAL_LEVELS` (2026-10-06).
 
@@ -1041,6 +1101,76 @@ def why_zero_orders(*, exploit_acting: bool, probe_acting: bool, n_probe: int,
         parts.append(f"PROBE book already held ({have} of {n_probe} targets in the account; "
                      f"no target moved past the rebalance band)")
     return "; ".join(parts) or "no target differed from the holdings"
+
+
+def _freeze_decision_story(*, out: Path, asof: str, mode: str, sandbox: bool,
+                           contracts_dir: Path | None, funnel_path: Path | None,
+                           pool: list, sl_base: list, er_view: dict | None, src: Any,
+                           pview: dict, probe_weighting: str, sig_by: dict,
+                           ranker_may_trade: bool, blend_may_trade: bool, targets: list,
+                           probe_syms: list, ex_syms: list, exploit_acting: bool,
+                           probe_acting: bool, equity: float, snap: dict, prices: dict,
+                           plans: list, sent: list, prior_probe: Any, r: dict,
+                           contract: dict, pre_gate_w: dict | None = None,
+                           risk_gate: dict | None = None) -> dict:
+    """C11 (2026-10-06): one story per candidate + its frozen alternatives.
+
+    `decision_story.freeze_plan` replays THIS plan's selection from the inputs
+    passed here, so the inputs are the plan's own. A sandbox caller writes
+    under `out/decision_story`, never the live folder. Never raises into the
+    plan and never feeds an order: a failure is a REFUSED line on the receipt."""
+    try:
+        from backend.services import decision_story as DS          # noqa: PLC0415
+        story_dir = ((out / "decision_story") if (sandbox or contracts_dir is not None)
+                     else DS.STORY_DIR)
+        try:
+            fun = json.loads(Path(funnel_path or _config.IC_FUNNEL_PATH).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            fun = {}
+        try:
+            from backend.services import sim_session as SS          # noqa: PLC0415
+            sid = ((SS.status() or {}).get("session") or {}).get("id") if not sandbox else None
+        except Exception:                                          # noqa: BLE001
+            sid = None
+        inp = {
+            "asof": asof, "mode": mode, "session_id": sid,
+            "policy_id": PROBE_POLICY_ID, "policy_version": PROBE_POLICY_VERSION,
+            "equity": equity, "pool": pool, "book_size": BOOK_SIZE,
+            "shortlist": sl_base,
+            "rep_weights": (pview["state"]["values"]["reputation_weights"]
+                            if pview.get("use") else None),
+            "probe_weighting": probe_weighting, "sig_by": sig_by,
+            "probe_max_names": int(_config.PROBE_MAX_NAMES),
+            "probe_max_weight": float(_config.PROBE_MAX_WEIGHT),
+            "probe_gross_cap": float(_config.PROBE_GROSS_CAP),
+            "exploit_max_weight": float(_config.ER_EXPLOIT_MAX_WEIGHT),
+            "gates": {"mode": mode, "ranker_may_trade": bool(ranker_may_trade),
+                      "blend_may_trade": bool(blend_may_trade)},
+            # the replay's target is the PRE-gate book; what was sized is post-gate
+            "actual_weights": (dict(pre_gate_w) if pre_gate_w is not None
+                               else {t.symbol: float(t.weight) for t in targets}),
+            "post_gate_weights": {t.symbol: float(t.weight) for t in targets},
+            "order_gate_scale_exploit": float((risk_gate or {}).get("scale_exploit", 1.0) or 1.0),
+            # sandbox callers do not read this machine's shadow-news ledger
+            "shadow_news_path": ((out / "no_shadow_news.jsonl") if sandbox else None),
+            "probe_syms": list(probe_syms), "ex_syms": list(ex_syms),
+            "probe_acting": bool(probe_acting), "exploit_acting": bool(exploit_acting),
+            "positions": list(snap.get("positions") or []), "prices": dict(prices or {}),
+            "plans": {p.symbol: {"side": p.side, "qty": int(p.qty), "reason": p.reason,
+                                 "refused": p.refused} for p in plans},
+            "sent": list(sent or []), "prior_probe": sorted(prior_probe or []),
+            "funnel_evidence_basis": fun.get("evidence_basis"),
+            "funnel_generated_at": fun.get("generated_at"),
+            "ranking_model_version": r.get("model_version"), "ranking_asof": r.get("asof"),
+            "contract_path": contract.get("path"), "contract_status": contract.get("status"),
+        }
+        return DS.freeze_plan(inp, er_view=er_view,
+                              predictions=getattr(src, "predictions", None),
+                              story_dir=story_dir)
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("u_plan RED: decision story REFUSED: %s", exc)
+        return {"status": "REFUSED", "line": f"decision story REFUSED: {type(exc).__name__}: "
+                                             f"{str(exc)[:200]}", "n_new_stories": 0}
 
 
 def u_plan(out: Path, mode: str, *, asof: str | None = None,
@@ -1213,6 +1343,7 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
 
     # ---- the expected-return layer (chunk 2) ----------------------------------
     er_view, er_red = None, None
+    src = None   # C11: the decision story reads the E[r] sources' own forecast ids
     cand = [str(x.get("symbol")) for x in pool] + [str(x["ticker"]) for x in sl]
     sandbox = ledger_path is not None or er_sources is not None
     try:
@@ -1245,6 +1376,7 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             pview = {"use": False, "ignored": {
                 "reason": f"unparseable: {type(exc).__name__}: {exc}"[:200]}}
     sig_by = {x["ticker"]: _daily_sigma(x) for x in sl}
+    sl_base = list(sl)   # C11: the shortlist BEFORE the policy order, for the replay
     order_meta = None
     probe_weighting = "equal"
     if pview["use"]:
@@ -1309,7 +1441,9 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         w_by = {s: min(float(_config.ER_EXPLOIT_MAX_WEIGHT), room * ex_er[s] / tot) * _scale(s)
                 for s in ex_syms}
     else:
-        w_ex = (room / len(ex_syms)) if ex_syms else 0.0
+        # capped like the E[r] branch (review C2 F1): only the broker's 12% bound it
+        w_ex = (min(room / len(ex_syms), float(_config.ER_EXPLOIT_MAX_WEIGHT))
+                if ex_syms else 0.0)
         w_by = {s: w_ex for s in ex_syms}
     targets = [PB.Target(symbol=x["symbol"], weight=w_by[x["symbol"]], rank=x.get("rank"),
                          expected_relative_return_21d=(ex_er.get(x["symbol"])
@@ -1324,6 +1458,19 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                           median_dollar_vol=x.get("median_dollar_vol"),
                           reason=f"PROBE shortlist score {x.get('score')} ({x['source']})")
                 for x in probe_rows]
+    # ---- the order-path gate, EVERY cycle (review C2 F1/F3) --------------------
+    # Live capital/account check + the per-name worst case of the ACTING book.
+    # Over the line: EXPLOIT is sized down (never a limit widened); PROBE alone
+    # over it, or a capital/account disagreement, blocks every send below.
+    # C11 review F5: the replay reproduces the targets BEFORE this gate; the
+    # gate's own scale travels to the story beside the post-gate weights.
+    pre_gate_w = {t.symbol: float(t.weight) for t in targets}
+    risk_gate = _order_path_gate(
+        targets, snap=snap, equity=equity, probe_syms=[x["ticker"] for x in probe_rows],
+        ex_syms=ex_syms, exploit_acting=exploit_acting, probe_acting=probe_acting,
+        probe_sigma={x["ticker"]: float(x["vol_annual"]) / (252 ** 0.5) for x in sl
+                     if isinstance(x.get("vol_annual"), (int, float)) and x["vol_annual"] > 0},
+        bars_paths=bars_paths, sandbox=sandbox)
     syms = [t.symbol for t in targets] + list(held)
     prices = PB.last_prices(syms) if syms else {}
     plans = PB.plan_orders(targets, equity=equity, held=held, prices=prices) if syms else []
@@ -1447,7 +1594,9 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     to_send = [p for p in plans if _may_send(p)]
     sent: list[dict] = []
     send_block = None
-    if to_send:
+    if to_send and risk_gate.get("block"):
+        send_block = risk_gate["block"]
+    elif to_send:
         try:
             is_open = bool((PB.clock() or {}).get("is_open"))
         except PB.BrokerError as exc:
@@ -1474,6 +1623,16 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                                      "state": _state(p.symbol), "error": str(exc)[:200]})
 
     acting = exploit_acting or probe_acting
+    # ---- C11: the decision story + frozen alternatives (never an order) ------
+    story = _freeze_decision_story(
+        out=out, asof=asof, mode=mode, sandbox=sandbox, contracts_dir=contracts_dir,
+        funnel_path=funnel_path, pool=pool, sl_base=sl_base, er_view=er_view,
+        src=src, pview=pview, probe_weighting=probe_weighting, sig_by=sig_by,
+        ranker_may_trade=may_trade, blend_may_trade=bool(blend_grade["may_trade"]),
+        targets=targets, probe_syms=probe_syms, ex_syms=ex_syms,
+        exploit_acting=exploit_acting, probe_acting=probe_acting, equity=equity,
+        snap=snap, prices=prices, plans=plans, sent=sent, prior_probe=prior_probe,
+        r=r, contract=contract, pre_gate_w=pre_gate_w, risk_gate=risk_gate)
     record = {"t": _now(), "asof": asof, "mode": mode,
               "verdict": verdict, "acting": acting,
               "bars_line": gate["line"], "bars_gate": gate,
@@ -1494,6 +1653,7 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
               "contract_clash_reasons": {t: contract["refused"].get(t.upper())
                                          for t in contract_clash},
               "mandate": mandate, "mandate_line": mandate["line"],
+              "risk_gate": risk_gate, "risk_gate_line": risk_gate.get("line"),
               # the SAME targets at the owner's own capital levels, whole
               # shares; reporting only -- never an order source (2026-10-06)
               "scaled_views": _plan_scaled_views(targets, prices, equity),
@@ -1530,7 +1690,10 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                         "state": _state(t.symbol),
                         "expected_relative_return_21d": t.expected_relative_return_21d}
                        for t in targets],
-              "sent": sent}
+              "sent": sent,
+              "decision_story": {k: v for k, v in story.items()
+                                 if k not in ("stories", "alternatives")},
+              "decision_story_line": story.get("line")}
     if not to_send:
         why = []
         if mode != "paper_profit":
@@ -1577,7 +1740,10 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                                                 n_probe=n_probe, held=held,
                                                 probe_syms=probe_syms,
                                                 mandate_gates=bool(mandate["gates_orders"]),
-                                                blend_verdict=blend_grade["verdict"])),
+                                                blend_verdict=blend_grade["verdict"])
+                                + f"; {story.get('line')}"),
+            "decision_story_line": story.get("line"),
+            "decision_story_new": story.get("n_new_stories", 0),
             "share_class_dropped": [d["ticker"] for d in share_class_dropped],
             "policy_version": PROBE_POLICY_VERSION,
             "policy_change_exits": [x["symbol"] for x in policy_change_exits],
@@ -1855,6 +2021,30 @@ def run(session_id: str) -> int:
         return 4
 
     mode = s.get("mode", "observe")
+    # THE BROKER LEASE (review C2 F7): `sim_session.start` promises "one session
+    # owns ... the broker lease"; until 2026-10-06 only live_market_loop took it.
+    # A trading session that cannot take it does not trade.
+    lease_held = False
+    if mode == "paper_profit":
+        from backend.services import pc_broker as PB                # noqa: PLC0415
+        try:
+            PB.open_lease(owner=f"sim_run {session_id}")
+            lease_held = True
+        except Exception as exc:                                   # noqa: BLE001
+            logger.error("lease refused: %s", exc)
+            SS.finish("STOPPED", f"REFUSED_LEASE: {type(exc).__name__}: {exc}"[:300])
+            return 5
+    try:
+        return _run_loop(session_id, s, mode)
+    finally:
+        if lease_held:
+            try:
+                PB.close_lease()
+            except Exception:                                      # noqa: BLE001
+                logger.warning("could not close the broker lease", exc_info=True)
+
+
+def _run_loop(session_id: str, s: dict, mode: str) -> int:
     day = datetime.now().date().isoformat()
     out = _config.OPTIMUS_LEDGER_DIR / "pc_book" / day
     out.mkdir(parents=True, exist_ok=True)

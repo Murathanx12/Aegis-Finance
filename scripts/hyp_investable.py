@@ -142,10 +142,10 @@ def load(tag: str) -> pd.DataFrame:
 
 def spreads_of(P: pd.DataFrame) -> np.ndarray:
     from backend.services import xs_ranker as XR                     # noqa: PLC0415
-    flat = np.array([XR.COST_BPS_BY_BAND[XR.liquidity_band(v)] / 1e4 if np.isfinite(v) else 0.0035
+    from backend.services import matched_twins as MT                 # noqa: PLC0415
+    flat = np.array([XR.COST_BPS_BY_BAND[XR.liquidity_band(v)] / 1e4 if np.isfinite(v) else MT.DEFAULT_ROUND_TRIP
                      for v in P["median_dollar_vol"].to_numpy(dtype=float)])
-    cs = np.minimum(P["cs_spread"].to_numpy(dtype=float), CS_CAP)
-    return np.where(np.isfinite(cs), np.maximum(cs, flat), flat)
+    return MT.round_trip_spread(P["cs_spread"].to_numpy(dtype=float), flat)  # the ONE composition
 
 
 def market_and_rf(dates) -> tuple[pd.Series, pd.Series]:
@@ -188,7 +188,8 @@ def picks_revision(P: pd.DataFrame) -> tuple[dict, pd.Series]:
 # ── the engine ───────────────────────────────────────────────────────────────
 
 def run_book(P: pd.DataFrame, picks: dict, *, start: str = "1991-01-01") -> pd.DataFrame:
-    """Per decision date: the long book (EW picks, costs on traded weight), the twin basket
+    """Per decision date: the long book (the picks at their target weights -- a list is equal
+    weight, a {symbol: weight} dict is the rule's own weights -- costs on traded weight), the twin basket
     (gross, its own trade cost and borrow as a SHORT), the band-matched VW index, and the
     universe aggregates the decomposition needs."""
     from backend.services import hyp_investable as HI                # noqa: PLC0415
@@ -204,12 +205,12 @@ def run_book(P: pd.DataFrame, picks: dict, *, start: str = "1991-01-01") -> pd.D
         band = pd.Series(MT.size_band(g["median_dollar_vol"].to_numpy(dtype=float)), index=g.index)
         band_of = band.to_dict()
         ok = g["eligible"] & fwd.notna()
-        sel = [s for s in picks.get(pd.Timestamp(d), []) if s in g.index]
+        w = HI.target_weights(HI.book_weights(picks.get(pd.Timestamp(d)) or []), g.index)
+        sel = list(w)
         rec = {"date": d, "n": len(sel)}
         if sel:
             ct = MT.cell_table(g.reset_index())
             cells = ct["band"].astype(str) + "|" + ct["vt"].astype(str) + "|" + ct["mt"].astype(str)
-            w = {s: 1.0 / len(sel) for s in sel}
             c, to = MT.trade_cost(prev_book, w, spread, 0.0035)
             rec.update(gross=HI.book_return(w, fwd), cost=c, turnover=to)
             tw = HI.twin_basket(sel, cells, ok)

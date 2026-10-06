@@ -191,7 +191,8 @@ LAST_STITCH_AUDIT: dict = {}
 
 
 def load_bars(path: Path | Iterable[Path] | None = None, *,
-              split_stitched: bool = True) -> pd.DataFrame:
+              split_stitched: bool = True,
+              symbols: Iterable[str] | None = None) -> pd.DataFrame:
     """The daily panel, sorted and typed. Raises rather than returning empty.
 
     Accepts several parquets and concatenates them, which is how a
@@ -217,7 +218,10 @@ def load_bars(path: Path | Iterable[Path] | None = None, *,
             raise RankerError(
                 f"no bars panel at {p}. Build it with "
                 f"`python -m scripts.pull_deep_bars` / `pull_delisted_bars`.")
-        df = pd.read_parquet(p)
+        # `symbols` (C11, 2026-10-06): a parquet filter, so a grader that needs
+        # forty names does not read seven million rows. Absent = every name.
+        df = (pd.read_parquet(p, filters=[("symbol", "in", sorted({str(x) for x in symbols}))])
+              if symbols is not None else pd.read_parquet(p))
         missing = _BAR_COLUMNS - set(df.columns)
         if missing:
             raise RankerError(f"{p.name} is missing columns {sorted(missing)}")

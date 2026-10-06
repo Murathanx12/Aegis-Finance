@@ -1,6 +1,6 @@
-"""Contest rehearsal, second and third books: ROT5_DIR (direction-filtered rotation) and the
-runbook's fallback MAXTAIL_BH, plus the worst-case block, the 20% cap refusal, the live-desk
-gate and the New York -> Hong Kong deadline arithmetic.
+"""Contest books beside ROT5_TRAIL: ROT5_DIR (direction-filtered rotation), the runbook's fallback
+MAXTAIL_BH and the review's MAXTAIL_EVT, plus the worst-case block, the 20% cap refusal, the
+live-desk gate (WLS MEMB + REGISTERED), the BOOK-file reader and the New York -> Hong Kong times.
 
 Why ROT5_DIR exists (owner, 2026-10-06): ROT5_TRAIL ranks reporters by the size of their past
 earnings moves only. The names on top (NVEC, MAN, RHI, IRDM on the stock list) carried analyst
@@ -10,8 +10,10 @@ entry and exit, and only removes names whose analyst evidence points DOWN, re-or
 1-percentage-point magnitude bucket by revision momentum. Both books are frozen on the same
 schedule and graded by the same grader, so the Oct 11 choice is measured, not argued.
 
-The rule is a frozen contract (`RULES`), hashed into the rehearsal's freeze_log BEFORE its first
-sheet. A changed rule under the same name REFUSES; a new version needs a new name.
+Each rule is a frozen contract: the policy hash is sha256(rule text | the code of this module and
+contest_rehearsal.py), appended to the rehearsal's freeze_log BEFORE its first sheet. A change to
+the rule OR the code under the same (name, version) REFUSES; a new version records what it
+supersedes (v2, 2026-10-07: REVIEW_2026-10-06_C9 F1/F6/F7).
 
 PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. No LLM, no network, no
 order anywhere: the owner types every contest ticket by hand.
@@ -54,18 +56,46 @@ SELL_GRADES = ("underweight", "underperform", "sell", "reduce", "negative", "sec
                "market underperform", "underperformer", "strong sell", "trim", "below average", "trading sell",
                "sector underweight")
 
+_V1 = {"ROT5_DIR": "7d7cb923ec31b5d04e0b04d1e2c3e09492b52b843e19bac276da6e2ba85a2c8b",
+       "MAXTAIL_BH": "1307374645d6d86eb7247d7ca30a9528b0ef85fdf5840299fed4ac0c5822a7f1"}
+JUMP_LOG = float(np.log(2.0))          # a one-day close ratio of x2 (or 1/2) or more is a data defect
+EVT_WINDOW = (date(2026, 10, 13), date(2026, 11, 12))
+EVT_STATUSES = ("VENDOR_ANNOUNCED", "CONFIRMED_EXCHANGE")
+BOOKS_LIVE = ("ROT5_TRAIL", "ROT5_DIR", "MAXTAIL_BH", "MAXTAIL_EVT")
+
+_MAXTAIL_COMMON = {
+    "universe": "panel names with median $ volume >= the desk's liquidity floor, price >= $1, >= 3 past "
+                "earnings reactions (operating company), not defect-flagged or stitched, not NOT_IN_WLS, "
+                "one line per issuer, whose next session opens inside the sheet window (contest: at or after "
+                "the 09:00 NY start)",
+    "rank": "RAW sigma63 (the panel's daily log-return s.d. over 63 own sessions, as of the last bar before "
+            "the sheet day), descending -- the same measure contest_strategy_lab ranks MAXTAIL on",
+    "data_defect_refusal": "a series with any one-day |log close ratio| >= log 2 (x2 up or halved) inside its "
+                           "last 63 own sessions is REFUSED_JUMP_X2 and printed on the sheet: a split, spin-off, "
+                           "stitch or bad print makes its sigma, its sizing and its grade wrong. The same rule is "
+                           "applied in contest_strategy_lab",
+    "sizing": "5 x min(20% NAV, $200k) at a limit 5% above the last close before the sheet day",
+    "buys": "once: on the book's first sheet with a buy session in its window; later sheets carry no BUY",
+    "exit": "rehearsal: the first open after the last buying sheet's window (the wind-down); contest: held to "
+            "the end (no SELL ticket inside the contest)",
+    "stop": "none; the drift line prints the trim if the 20% cap applies at all times (OWNER-ONLY item 4)",
+}
+
 RULES: dict[str, dict] = {
     "ROT5_DIR": {
-        "strategy": "ROT5_DIR", "version": 1, "licence": LICENCE, "llm": "none",
-        "declared_for": "contest rehearsal 2026-10, graded beside ROT5_TRAIL",
+        "strategy": "ROT5_DIR", "version": 2, "supersedes": _V1["ROT5_DIR"], "licence": LICENCE, "llm": "none",
+        "declared_for": "contest rehearsal 2026-10, graded beside ROT5_TRAIL; selectable live via contest/live/BOOK",
         "universe": "identical to ROT5_TRAIL: the desk's ranked reporters after contest_rehearsal.filter_ranked "
                     "(report in the sheet window, liquid, >= 3 past reactions, defect / estimated-date / "
                     "same-issuer refusals)",
         "sizing_and_exits": "identical to ROT5_TRAIL: 5 slots x min(20% NAV, $200k) at a limit 5% above the last "
                             "close; buy at the open before the print, sell at the open after it; no stop",
         "source": "backend/data/optimus/analyst/target_revisions.parquet (dated upgrades/downgrades and "
-                  "target changes; each row carries its own event_date)",
-        "point_in_time": "a row is used only if event_date < the sheet day 00:00 UTC AND event_date <= pulled_at",
+                  "target changes); its sha256 and row count are printed on every sheet",
+        "point_in_time": "a row is used only if event_date < the sheet day 00:00 UTC AND first_seen_utc <= the "
+                         "freeze time. first_seen_utc is the first pull that served the row (min semantics, kept "
+                         "by pull_analyst_targets from 2026-10-07); rows from before the column existed carry "
+                         "their last pulled_at, an UPPER bound on when they were known",
         "consensus": "per firm, its latest to_grade in the 365 days before the sheet day; Buy family +1, "
                      "Hold family 0, Sell family -1, unknown grades ignored; cons = mean over firms",
         "revision_flow": "rows dated in the 90 days before the sheet day: +1 if action is 'up' or the target "
@@ -78,35 +108,43 @@ RULES: dict[str, dict] = {
                  "descending, then cons descending, then trail_abs descending",
         "long_only": True,
         "max_source_age_days": 14,
+        "on_refusal": "shadow sheet: REFUSED with the reason; contest live sheet: falls back to ROT5_TRAIL with a "
+                      "banner and contest/live/REFUSED_<day>.txt (a day is never lost to the filter)",
         "grade_map": {"buy": list(BUY_GRADES), "hold": list(HOLD_GRADES), "sell": list(SELL_GRADES)},
-        "chosen_after_looking": "written 2026-10-07 from the owner's criticism (four names on one stock list) and "
-                                "the task statement, before any ROT5_DIR sheet existed. The builder had seen the "
-                                "ROT5_TRAIL scoreboard (6 closed positions); no parameter was tuned on it. The "
-                                "thresholds (cons < 0, net < 0, 365 / 90 days, 1 pp bucket) are round, not fitted",
+        "chosen_after_looking": "v1 written 2026-10-07 from the owner's criticism and the task statement; v2 "
+                                "changes only the point-in-time guard (first_seen) and the source fingerprint, "
+                                "after the adversarial review. The thresholds are round, not fitted. The "
+                                "reviewer's event-level replay (top-5, 2019+: 28% dropped, dropped names -0.45 "
+                                "pp/event, t -1.33, fatter tails both sides) was read BEFORE v2; v2 does not "
+                                "change any threshold because of it",
     },
     "MAXTAIL_BH": {
-        "strategy": "MAXTAIL_BH", "version": 1, "licence": LICENCE, "llm": "none",
-        "declared_for": "the runbook's fallback, graded beside the two rotations",
-        "definition": "runbook: the 5 highest-volatility names, bought once and held "
-                      "(contest_strategy_lab MAXTAIL_BH: liquid operating companies, highest sigma63 on the "
-                      "window's first day, held to the end)",
-        "universe": "panel names with median $ volume >= the desk's liquidity floor, price >= $1, >= 3 past "
-                    "earnings reactions (operating company), not defect-flagged or stitched, not NOT_IN_WLS, "
-                    "one line per issuer, whose next session opens inside the sheet window",
-        "rank": "sigma63 EXCLUDING the window's single largest |move| (daily log-return s.d. over the last 63 own "
-                "sessions before the sheet day, >= 40 needed), descending",
-        "why_ex_max": "set before the contract was frozen, after the first DRY preview (2026-10-07) ranked three "
-                      "one-jump series on top by raw sigma63 (CTVA x6.2 on 2026-10-01, SION x11 on 2026-08-10, "
-                      "MRNA x2.8 on 2026-08-19: splits / spin-offs / bad prints). A data-validity choice; no "
-                      "outcome was read",
-        "sizing": "5 x min(20% NAV, $200k) at a limit 5% above the last close",
-        "buys": "on its FIRST sheet only; later sheets carry no BUY",
-        "exit": "the first session of each listing after the book's last buying sheet day (rehearsal: the "
-                "wind-down; contest: not traded by this module)",
+        "strategy": "MAXTAIL_BH", "version": 2, "supersedes": _V1["MAXTAIL_BH"], "licence": LICENCE, "llm": "none",
+        "declared_for": "the runbook's fallback; rehearsal shadow book and a contest book via contest/live/BOOK",
+        "definition": "runbook: the 5 highest-volatility names, bought once and held (contest_strategy_lab "
+                      "MAXTAIL_BH: liquid operating companies, highest sigma63 on the window's first day, held)",
+        **_MAXTAIL_COMMON,
+        "v1_to_v2": "v1 ranked on sigma63 excluding the largest move, chosen after reading a preview; the review "
+                    "(F7) called it a prior chosen after looking. v2 reverts to the lab's RAW measure and moves the "
+                    "fix to the data layer (REFUSED_JUMP_X2). No outcome was read for either",
+    },
+    "MAXTAIL_EVT": {
+        "strategy": "MAXTAIL_EVT", "version": 1, "licence": LICENCE, "llm": "none",
+        "declared_for": "the adversarial review's proposal MAXTAIL_EVT_v1 (REVIEW_2026-10-06_C9 'what I would "
+                        "freeze instead'); rehearsal shadow book and a contest book via contest/live/BOOK",
+        **_MAXTAIL_COMMON,
+        "event_filter": "US listings only, whose latest contest calendar (contest/calendar/calendar_*.parquet) "
+                        "carries a VENDOR_ANNOUNCED or CONFIRMED_EXCHANGE date between 2026-10-13 and "
+                        "2026-11-12: every name holds one print inside the contest",
+        "why": "diffusive variance plus one event gap per name, turnover ~1x instead of ~50x (commissions "
+               "item 2 nearly irrelevant), one entry day (the operational risk of daily typing removed)",
+        "lab_gate": "contest_strategy_lab line MAXTAIL_EVT (reporters in the window only, hold) is run beside "
+                    "MAXTAIL_BH and ROT5_TRAIL; read the worst cell and P(>+40%), not the median",
     },
 }
 STRATEGIES = tuple(RULES)
-STOP_REFERENCE = (0.05, 0.10)      # hypothetical stops for the worst-case print; ROT5 has none
+STOP_REFERENCE = (0.05, 0.10)      # hypothetical stops for the worst-case print; no book here has one
+CODE_FILES = (Path(__file__).resolve(), Path(__file__).resolve().with_name("contest_rehearsal.py"))
 
 
 class DirectionRefused(RuntimeError):
@@ -114,7 +152,7 @@ class DirectionRefused(RuntimeError):
 
 
 class ContractChanged(RuntimeError):
-    """A frozen strategy contract was edited under the same name."""
+    """A frozen strategy contract was edited under the same name and version."""
 
 
 class CapRefused(ValueError):
@@ -125,15 +163,32 @@ class LiveGateRefused(RuntimeError):
     """The live order sheet is refused until the owner's two hand-made preconditions exist."""
 
 
-def contract_sha(name: str) -> str:
+def rule_sha(name: str) -> str:
     return hashlib.sha256(json.dumps(RULES[name], sort_keys=True).encode("utf-8")).hexdigest()
 
 
+def code_sha(files: Optional[Iterable[Path]] = None) -> str:
+    """sha256 over the strategy code that runs (line endings normalised, so a CRLF checkout hashes the same)."""
+    h = hashlib.sha256()
+    for f in (CODE_FILES if files is None else files):
+        h.update(Path(f).name.encode("utf-8") + b"\0")
+        h.update(Path(f).read_bytes().replace(b"\r\n", b"\n"))
+    return h.hexdigest()
+
+
+def contract_sha(name: str) -> str:
+    """The policy hash: the rule text AND the code that executes it."""
+    return hashlib.sha256(f"{rule_sha(name)}|{code_sha()}".encode("utf-8")).hexdigest()
+
+
 def ensure_contract(name: str, log: Path, *, now_utc: Optional[str] = None) -> dict:
-    """Append the contract to the freeze log once. Same hash -> no-op; a different hash under the
-    same name -> ContractChanged (a frozen rule is never edited in place)."""
+    """Append the contract to the freeze log once per (strategy, version). The same hash -> no-op; a
+    different hash under the same name AND version -> ContractChanged (a frozen rule or its code is
+    never edited in place: bump the version, which records what it supersedes)."""
     sha = contract_sha(name)
+    ver = RULES[name]["version"]
     log = Path(log)
+    prev = None
     if log.exists():
         for ln in log.read_text(encoding="utf-8").splitlines():
             try:
@@ -141,12 +196,17 @@ def ensure_contract(name: str, log: Path, *, now_utc: Optional[str] = None) -> d
             except ValueError:
                 continue
             if r.get("kind") == "STRATEGY_CONTRACT" and r.get("strategy") == name:
-                if r.get("contract_sha256") != sha:
-                    raise ContractChanged(f"{name}: frozen contract {r.get('contract_sha256', '')[:16]} "
-                                          f"differs from the code's {sha[:16]}; declare a new name/version")
-                return r
-    rec = {"kind": "STRATEGY_CONTRACT", "strategy": name, "version": RULES[name]["version"],
-           "contract_sha256": sha, "declared_utc": now_utc or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
+                if r.get("version", 1) == ver:
+                    if r.get("contract_sha256") != sha:
+                        raise ContractChanged(f"{name} v{ver}: frozen contract {r.get('contract_sha256', '')[:16]} "
+                                              f"differs from the code's {sha[:16]}; bump the version")
+                    return r
+                prev = r
+    rec = {"kind": "STRATEGY_CONTRACT", "strategy": name, "version": ver, "contract_sha256": sha,
+           "rule_sha256": rule_sha(name), "code_sha256": code_sha(),
+           "code_files": [Path(f).name for f in CODE_FILES],
+           "supersedes": (prev or {}).get("contract_sha256"),
+           "declared_utc": now_utc or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
            "licence": LICENCE, "rule": RULES[name]}
     log.parent.mkdir(parents=True, exist_ok=True)
     with log.open("a", encoding="utf-8") as fh:
@@ -168,14 +228,46 @@ def grade_sign(g: Any) -> Optional[int]:
 
 
 def load_revisions(path: Path = ANALYST_REVISIONS) -> pd.DataFrame:
+    """The dated analyst rows plus `first_seen_utc` (the column when the pull wrote it; else the row's
+    pulled_at, an upper bound) and `attrs['fingerprint']` = the file's sha256 and row count."""
     if not Path(path).exists():
         raise DirectionRefused(f"direction source missing: {path}")
     try:
-        d = pd.read_parquet(path, columns=["ticker", "pulled_at", "event_date", "firm", "to_grade",
-                                           "action", "target_action"])
+        cols = pq_columns(path)
+        want = ["ticker", "pulled_at", "event_date", "firm", "to_grade", "action", "target_action"]
+        d = pd.read_parquet(path, columns=want + (["first_seen_utc"] if "first_seen_utc" in cols else []))
     except Exception as exc:                                   # noqa: BLE001
         raise DirectionRefused(f"direction source unreadable: {type(exc).__name__}: {exc}") from exc
+    if "first_seen_utc" not in d.columns:
+        d["first_seen_utc"] = d["pulled_at"]
+        basis = "pulled_at (no first_seen column yet: an upper bound on when each row was known)"
+    else:
+        d["first_seen_utc"] = d["first_seen_utc"].fillna(d["pulled_at"])
+        basis = "first_seen_utc (min over pulls; pulled_at where missing)"
+    d.attrs["fingerprint"] = {"file": Path(path).name, "sha256": file_sha256(path), "rows": int(len(d)),
+                              "first_seen_basis": basis}
     return d
+
+
+def pq_columns(path: Path) -> list[str]:
+    import pyarrow.parquet as pq                               # noqa: PLC0415
+    return list(pq.ParquetFile(path).schema_arrow.names)
+
+
+def file_sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with Path(path).open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def frame_fingerprint(d: pd.DataFrame) -> dict:
+    if d.attrs.get("fingerprint"):
+        return dict(d.attrs["fingerprint"])
+    v = pd.util.hash_pandas_object(d.astype(str), index=False).to_numpy()
+    return {"file": "(in-memory frame)", "sha256": hashlib.sha256(v.tobytes()).hexdigest(), "rows": int(len(d)),
+            "first_seen_basis": "first_seen_utc" if "first_seen_utc" in d.columns else "pulled_at"}
 
 
 def analyst_direction(symbols: Iterable[str], asof: date, rev: pd.DataFrame, *,
@@ -190,21 +282,22 @@ def analyst_direction(symbols: Iterable[str], asof: date, rev: pd.DataFrame, *,
     if pd.isna(last_pull):
         raise DirectionRefused("direction source has no pulled_at stamp")
     age = (now_utc - last_pull).total_seconds() / 86400.0
-    meta = {"source": str(ANALYST_REVISIONS.relative_to(REPO)) if ANALYST_REVISIONS.is_relative_to(REPO) else
-            str(ANALYST_REVISIONS), "last_pulled_utc": str(last_pull), "source_age_days": round(age, 2),
-            "max_source_age_days": rule["max_source_age_days"]}
+    meta = {"source": "backend/data/optimus/analyst/target_revisions.parquet", "last_pulled_utc": str(last_pull),
+            "source_age_days": round(age, 2), "max_source_age_days": rule["max_source_age_days"],
+            "fingerprint": frame_fingerprint(rev)}
     if age > rule["max_source_age_days"]:
         raise DirectionRefused(f"direction source is {age:.1f} days old (> {rule['max_source_age_days']}): "
                                "re-run scripts/pull_analyst_targets before a ROT5_DIR sheet")
     d = rev[rev["ticker"].astype(str).str.upper().isin(set(syms))].copy()
     d["ticker"] = d["ticker"].astype(str).str.upper()
     ev = pd.to_datetime(d["event_date"], errors="coerce", utc=True)
-    pu = pd.to_datetime(d["pulled_at"], errors="coerce", utc=True)
+    fs_col = d["first_seen_utc"] if "first_seen_utc" in d.columns else d["pulled_at"]
+    fs = pd.to_datetime(fs_col, errors="coerce", utc=True)
     day0 = pd.Timestamp(asof, tz="UTC")
-    future = int(((ev > pu) & ev.notna()).sum())
-    keep = ev.notna() & (ev < day0) & (ev <= pu)
+    late = int((ev.notna() & (ev < day0) & ~(fs <= now_utc)).sum())
+    keep = ev.notna() & (ev < day0) & (fs <= now_utc)
     d, ev = d[keep], ev[keep]
-    meta["rows_dated_after_their_pull_excluded"] = future
+    meta["rows_first_seen_after_the_freeze_excluded"] = late
     rows = []
     for s in syms:
         g = d[d.ticker == s]
@@ -263,24 +356,27 @@ def direction_rank(ranked: pd.DataFrame, asof: date, *, rev: Optional[pd.DataFra
     return keep.drop(columns=["_S"]), dropped.drop(columns=["_S"]), meta
 
 
-# ───────────────────────────── MAXTAIL_BH ─────────────────────────────
+# ───────────────────────────── MAXTAIL_BH / MAXTAIL_EVT ─────────────────────────────
 
 def maxtail_ranked(day: date, panel: Any, events: pd.DataFrame, universe: Optional[pd.DataFrame], *,
-                   liq_floor: float = cc.LIQ_FLOOR_USD, top: int = 40) -> pd.DataFrame:
-    """The runbook fallback's candidates on `day`: liquid operating names by sigma63, highest first.
-    Columns: symbol, sig63, dv63, price_usd, name, bbg_ticker, membership, market."""
+                   liq_floor: float = cc.LIQ_FLOOR_USD, top: int = 40,
+                   only: Optional[set] = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """MAXTAIL candidates on `day`: liquid operating names by RAW sigma63, highest first, after the
+    data-defect refusal (a x2 one-day move inside 63 own sessions). `only`: restrict to these symbols
+    (MAXTAIL_EVT). Returns (ranked, refused_jump)."""
+    empty = (pd.DataFrame(), pd.DataFrame())
     i = panel.idx(pd.Timestamp(day) - pd.Timedelta(days=1))
-    if i < 0:
-        return pd.DataFrame()
-    if events is None or not len(events):
-        return pd.DataFrame()
-    nrep = events[events.absr.notna()].groupby("symbol").size() if len(events) and "absr" in events else pd.Series()
+    if i < 0 or events is None or not len(events) or "absr" not in events:
+        return empty
+    nrep = events[events.absr.notna()].groupby("symbol").size()
     oper = set(nrep[nrep >= 3].index)
     last_close = pd.DataFrame(panel.close[max(0, i - 7): i + 1, :]).ffill().iloc[-1].to_numpy()
     df = pd.DataFrame({"symbol": list(panel.syms), "sig63": panel.sig63[i, :], "dv63": panel.dv63[i, :],
                        "price_usd": last_close, "market": panel.market})
     df = df[df.symbol.isin(oper) & np.isfinite(df.sig63) & (df.dv63.fillna(0) >= liq_floor)
             & (df.price_usd.fillna(0) >= 1.0)]
+    if only is not None:
+        df = df[df.symbol.isin(only)]
     cut = cc.stitched_cut_symbols()
     df = df[~df.symbol.isin(cut)]
     if universe is not None and len(universe):
@@ -292,11 +388,13 @@ def maxtail_ranked(day: date, panel: Any, events: pd.DataFrame, universe: Option
     df["bbg_ticker"] = df["bbg_ticker"].fillna(df.symbol.map(cc.bloomberg_ticker))
     df["membership"] = df["membership"].fillna("UNCONFIRMED_MEMBERSHIP")
     df = df[df.membership != "NOT_IN_WLS_EXPORT"]
-    df["sig63_raw"] = df["sig63"]
-    df["sig63"] = [sigma_ex_max(panel, panel.col[s], i) for s in df.symbol]
+    df = df.sort_values("sig63", ascending=False, kind="mergesort").head(top * 3)
     df["max_abs_logret63"] = [max_abs_logret(panel, panel.col[s], i) for s in df.symbol]
-    df = df[np.isfinite(df.sig63)]
-    return df.sort_values("sig63", ascending=False, kind="mergesort").head(top).reset_index(drop=True)
+    jump = df[df.max_abs_logret63 >= JUMP_LOG].copy()
+    jump["refusal"] = [f"REFUSED_JUMP_X2 (one-day move x{np.exp(v):.1f} inside 63 sessions: split / spin / "
+                       f"stitch / bad print)" for v in jump.max_abs_logret63]
+    df = df[df.max_abs_logret63 < JUMP_LOG]
+    return df.head(top).reset_index(drop=True), jump.reset_index(drop=True)
 
 
 def _own_logrets(panel: Any, j: int, i: int, n: int = 63) -> np.ndarray:
@@ -305,19 +403,50 @@ def _own_logrets(panel: Any, j: int, i: int, n: int = 63) -> np.ndarray:
     return np.diff(np.log(c.astype(float))) if len(c) > 1 else np.array([])
 
 
-def sigma_ex_max(panel: Any, j: int, i: int, n: int = 63) -> float:
-    """sigma63 without the window's single largest |move|: one jump (a split, a spin-off, a bad print,
-    or one real event) does not make a volatile name. Needs 40 sessions, like sigma63."""
-    r = _own_logrets(panel, j, i, n)
-    if len(r) < 40:
-        return float("nan")
-    r = np.delete(r, int(np.argmax(np.abs(r))))
-    return float(np.std(r, ddof=1))
-
-
 def max_abs_logret(panel: Any, j: int, i: int, n: int = 63) -> float:
     r = _own_logrets(panel, j, i, n)
     return float(np.max(np.abs(r))) if len(r) else float("nan")
+
+
+def evt_symbols(cal_dir: Optional[Path] = None, *, window: tuple = EVT_WINDOW) -> tuple[set, str]:
+    """MAXTAIL_EVT's event filter: US names with a vendor-announced or exchange-confirmed print in the
+    contest window, from the latest contest calendar file. Returns (symbols, calendar file name)."""
+    cal_dir = Path(cal_dir) if cal_dir is not None else cc.CAL_DIR
+    files = sorted(cal_dir.glob("calendar_*.parquet"))
+    if not files:
+        return set(), "NONE"
+    c = pd.read_parquet(files[-1], columns=["symbol", "date", "status", "market"])
+    dd = pd.to_datetime(c.date)
+    m = (c.market == "US") & c.status.isin(EVT_STATUSES) & (dd >= pd.Timestamp(window[0])) \
+        & (dd <= pd.Timestamp(window[1]))
+    return set(c.loc[m, "symbol"]), files[-1].name
+
+
+# ───────────────────────────── the BOOK file (owner, by hand) ─────────────────────────────
+
+def read_book_file(path: Path) -> tuple[Optional[str], Optional[str]]:
+    """(book, None) or (None, reason). Tolerates a UTF-8 BOM, UTF-16 (PowerShell `echo >`), blank
+    lines and stray whitespace. Absent file -> ('ROT5_TRAIL', None)."""
+    p = Path(path)
+    if not p.exists():
+        return "ROT5_TRAIL", None
+    try:
+        raw = p.read_bytes()
+        if raw.startswith((b"\xff\xfe", b"\xfe\xff")):
+            txt = raw.decode("utf-16")
+        elif len(raw) >= 2 and raw[1:2] == b"\x00":
+            txt = raw.decode("utf-16-le")
+        else:
+            txt = raw.decode("utf-8-sig")
+    except Exception as exc:                                   # noqa: BLE001
+        return None, f"contest/live/BOOK unreadable ({type(exc).__name__}: {exc})"
+    words = txt.replace("﻿", "").replace("\x00", "").split()
+    if not words:
+        return None, "contest/live/BOOK is empty"
+    name = words[0].strip().upper()
+    if name not in BOOKS_LIVE:
+        return None, f"contest/live/BOOK names {name!r}; allowed: {', '.join(BOOKS_LIVE)}"
+    return name, None
 
 
 # ───────────────────────────── worst case and the cap ─────────────────────────────
@@ -383,17 +512,51 @@ def assert_cap(tickets: list, *, nav_usd: float, cap_binding: float, held_notion
 
 # ───────────────────────────── the live gate ─────────────────────────────
 
+WLS_MIN_ROWS = 1000
+
+
+def wls_export_check(folder: Path) -> tuple[bool, str, dict]:
+    """A WLS membership export, not any ticker-like file: the newest CSV/Excel in `folder` must name
+    WLS (file name or its header rows), carry a ticker column the loader finds, and hold >= 1,000
+    member rows (WLS has roughly 10,000). Returns (ok, reason, info)."""
+    folder = Path(folder)
+    files = sorted([p for p in folder.iterdir() if p.suffix.lower() in (".csv", ".xlsx", ".xls")],
+                   key=lambda p: p.stat().st_mtime) if folder.exists() else []
+    if not files:
+        return False, "no WLS membership (MEMB) export in contest/wls/ (owner decision D1)", {}
+    f = files[-1]
+    info: dict = {"file": f.name}
+    try:
+        w = cc.load_wls_export(folder)
+    except Exception as exc:                                   # noqa: BLE001
+        return False, f"WLS export {f.name} is unreadable: {type(exc).__name__}: {exc}", info
+    n = 0 if w is None else int(len(w))
+    info["rows"] = n
+    try:
+        if f.suffix.lower() == ".csv":
+            head = f.read_text(encoding="utf-8-sig", errors="replace")[:4000]
+        else:
+            h = pd.read_excel(f, header=None, nrows=8)
+            head = " ".join(str(x) for x in h.to_numpy().ravel()) + " " + " ".join(str(c) for c in h.columns)
+    except Exception:                                          # noqa: BLE001
+        head = ""
+    names_wls = "WLS" in f.name.upper() or "WLS" in head.upper()
+    info["names_wls"] = names_wls
+    if not names_wls:
+        return False, f"WLS export {f.name}: neither its name nor its header rows say WLS (another index's MEMB?)", info
+    if n < WLS_MIN_ROWS:
+        return False, f"WLS export {f.name}: {n} member rows < {WLS_MIN_ROWS} (partial export?)", info
+    return True, "", info
+
+
 def live_gate(contest_dir: Optional[Path] = None) -> tuple[bool, list[str]]:
-    """The live order sheet needs (D1) a WLS MEMB export in contest/wls/ and (registration) the file
-    contest/REGISTERED, created by hand by the owner after confirming registration."""
+    """The live order sheet needs (D1) a WLS MEMB export in contest/wls/ that passes wls_export_check
+    and (registration) the file contest/REGISTERED, created by hand by the owner."""
     contest_dir = Path(contest_dir) if contest_dir is not None else cc.CONTEST
     reasons = []
-    try:
-        w = cc.load_wls_export(Path(contest_dir) / "wls")
-        if w is None or len(w) == 0:
-            reasons.append("no WLS membership (MEMB) export in contest/wls/ (owner decision D1)")
-    except Exception as exc:                                   # noqa: BLE001
-        reasons.append(f"WLS export in contest/wls/ is unreadable: {type(exc).__name__}: {exc}")
+    ok, why, _ = wls_export_check(Path(contest_dir) / "wls")
+    if not ok:
+        reasons.append(why)
     if not (Path(contest_dir) / "REGISTERED").exists():
         reasons.append("contest/REGISTERED is missing (the owner creates it by hand after confirming the "
                        "team's registration)")

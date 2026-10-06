@@ -76,6 +76,10 @@ SUFFIX_EXCHANGE: dict[str, tuple[str, str]] = {
 }
 
 
+#: the parsed newest receipt, keyed by (path, size): a 5 MB parse per request was F12.
+_CACHE: dict = {}
+
+
 def opportunities_dir(base: Optional[Path] = None) -> Path:
     return Path(base) if base is not None else Path(_config.OPTIMUS_LEDGER_DIR) / "opportunities"
 
@@ -147,6 +151,10 @@ def load_latest(base: Optional[Path] = None) -> Optional[dict]:
     newest file is skipped (and named) rather than served as an empty page."""
     skipped = []
     for p in receipts(base):
+        key = (str(p), p.stat().st_size)
+        hit = _CACHE.get("v")
+        if hit and hit[0] == key:
+            return hit[1]
         try:
             blob = json.loads(p.read_text(encoding="utf-8"))
         except (OSError, ValueError) as e:
@@ -157,6 +165,7 @@ def load_latest(base: Optional[Path] = None) -> Optional[dict]:
             continue
         blob["receipt_file"] = p.name
         blob["skipped_receipts"] = skipped
+        _CACHE["v"] = (key, blob)
         return blob
     return None
 
@@ -200,3 +209,21 @@ def find_list(blob: dict, list_id: str) -> Optional[dict]:
         if lst.get("list_id") == list_id:
             return lst
     return None
+
+
+def staleness(blob: dict, now: Optional[datetime] = None,
+              limit_days: Optional[float] = None) -> dict:
+    """F6: the receipt's age from its OWN `generated_utc` (never the file's mtime) and
+    whether it is past `config.OPPORTUNITIES_STALE_DAYS`. An undateable receipt is
+    UNKNOWN, never fresh (the funnel_night10.json lesson)."""
+    now = now or datetime.now(timezone.utc)
+    limit = float(limit_days if limit_days is not None else getattr(_config, "OPPORTUNITIES_STALE_DAYS", 3))
+    age = _age_days(blob.get("generated_utc"), now)
+    if age is None:
+        return {"age_days": None, "stale_after_days": limit, "status": "UNKNOWN",
+                "line": "receipt has no readable generated_utc: freshness UNKNOWN"}
+    status = "STALE" if age > limit else "FRESH"
+    return {"age_days": age, "stale_after_days": limit, "status": status,
+            "line": (f"receipt is {age:.1f} days old (limit {limit:g}); rebuild with "
+                     f"`python -m scripts.opportunities_build`" if status == "STALE"
+                     else f"receipt is {age:.1f} days old (limit {limit:g})")}

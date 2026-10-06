@@ -41,6 +41,7 @@ Big local artefacts that are deliberately NOT committed are catalogued in
   direction-aware contest sheet → data catalog + ledger archival → Decision Story + regret ledger → theory cells),
   five Sonnet research notes under `research_notes/2026-10-06/`, twelve owner decisions (D1 Bloomberg registration
   first). Every number carries an evidence label; "proven" appears nowhere. §9 defines V1 Beta.
+  **Night 2026-10-06 → 07: `HANDOFF_2026-10-07_V1_BETA_NIGHT_ONE.md`** — START HERE for the next session: twelve chunks built, each attacked by a second Opus (`reviews/REVIEW_2026-10-06_*`); sticky twin says historical alpha on CRSP is not demonstrated; 1 book with >= 21 sessions ahead of SPY; the live loop has a scheduled owner and a per-sleeve worst case; owner decisions D1, D13-D17.
 - `ROADMAP_2026-09-28_MEASURE_BEFORE_YOU_ADD.md` — SUPERSEDED 2026-10-06; its rule (no new book before 10-26 except
   free shadows; measure against a matched control first) survives as §7 of the 10-06 roadmap.
 

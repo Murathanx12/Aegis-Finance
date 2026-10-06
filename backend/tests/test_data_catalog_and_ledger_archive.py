@@ -262,26 +262,111 @@ def test_the_rotation_script_refuses_to_rewrite_an_archived_month(tmp_path: Path
         ROT.rotate(tmp_path, receipt_dir=tmp_path)
 
 
-def test_the_sealed_month_guard_accepts_a_manifest_instead_of_git_add(tmp_path: Path,
-                                                                    dirs: dict, monkeypatch):
+class _NoGit:
+    """`git ls-files <dir>` says nothing is tracked (so the month is a candidate)."""
+    stdout = ""
+
+
+def _guard(tmp_path: Path, monkeypatch, *, parquet_tracked: bool) -> dict:
     import subprocess
 
     from scripts import llm_calls_rotate as ROT
 
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _NoGit())
+    monkeypatch.setattr(LA, "is_tracked", lambda path: parquet_tracked)
+    return ROT.untracked_closed_months(tmp_path)
+
+
+def test_the_guard_seals_a_month_only_with_a_tracked_matching_parquet(tmp_path: Path,
+                                                                      dirs: dict, monkeypatch):
+    """Review F2: the archive replaces `git add -f` ONLY when the bytes reach git.
+    Same archive, parquet untracked -> RED with the reason; tracked -> sealed."""
     p = _ledger(tmp_path, CLOSED)
-
-    class _Nothing:
-        stdout = ""
-
-    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _Nothing())
-    assert [m["month"] for m in ROT.untracked_closed_months(tmp_path)["months"]] == [CLOSED]
-    monkeypatch.undo()
-    monkeypatch.setattr(LA, "MANIFEST_DIR", dirs["man"])
-    monkeypatch.setattr(LA, "ARCHIVE_DIR", dirs["arc"])
     LA.archive_month(p)
-    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _Nothing())
-    rec = ROT.untracked_closed_months(tmp_path)
-    assert rec["months"] == [] and [a["month"] for a in rec["archived"]] == [CLOSED]
+    red = _guard(tmp_path, monkeypatch, parquet_tracked=False)
+    assert [m["month"] for m in red["months"]] == [CLOSED]
+    assert "not tracked by git" in red["months"][0]["archive_not_sealed"]
+    green = _guard(tmp_path, monkeypatch, parquet_tracked=True)
+    assert green["months"] == [] and [x["month"] for x in green["archived"]] == [CLOSED]
+
+
+def test_a_forged_four_field_manifest_does_not_seal(tmp_path: Path, dirs: dict, monkeypatch):
+    p = _ledger(tmp_path, CLOSED)
+    dirs["man"].mkdir(parents=True)
+    (dirs["man"] / f"llm_calls_{CLOSED}.json").write_text(json.dumps(
+        {"archived": True, "jsonl": {"path": p.as_posix(), "bytes": p.stat().st_size}}),
+        encoding="utf-8")
+    rec = _guard(tmp_path, monkeypatch, parquet_tracked=True)
+    assert [m["month"] for m in rec["months"]] == [CLOSED]
+    assert "forged or partial" in rec["months"][0]["archive_not_sealed"]
+
+
+def test_a_same_size_one_byte_edit_of_the_month_does_not_stay_sealed(tmp_path: Path,
+                                                                     dirs: dict, monkeypatch):
+    p = _ledger(tmp_path, CLOSED)
+    LA.archive_month(p)
+    raw = bytearray(p.read_bytes())
+    raw[5] = ord("X") if raw[5] != ord("X") else ord("Y")
+    p.write_bytes(bytes(raw))
+    assert p.stat().st_size == len(raw)
+    rec = _guard(tmp_path, monkeypatch, parquet_tracked=True)
+    assert [m["month"] for m in rec["months"]] == [CLOSED]
+    assert "no longer hashes" in rec["months"][0]["archive_not_sealed"]
+
+
+def test_a_missing_parquet_does_not_seal_and_is_not_identical(tmp_path: Path, dirs: dict,
+                                                              monkeypatch):
+    p = _ledger(tmp_path, CLOSED)
+    LA.archive_month(p)
+    (dirs["arc"] / f"llm_calls_{CLOSED}.parquet").unlink()
+    rec = _guard(tmp_path, monkeypatch, parquet_tracked=True)
+    assert "is missing" in rec["months"][0]["archive_not_sealed"]
+    with pytest.raises(LA.ArchiveRefused, match="MISSING"):
+        LA.archive_month(p)
+
+
+def test_a_tampered_parquet_does_not_seal(tmp_path: Path, dirs: dict, monkeypatch):
+    p = _ledger(tmp_path, CLOSED)
+    LA.archive_month(p)
+    pq_path = dirs["arc"] / f"llm_calls_{CLOSED}.parquet"
+    pq_path.write_bytes(pq_path.read_bytes() + b"x")
+    rec = _guard(tmp_path, monkeypatch, parquet_tracked=True)
+    assert "does not hash" in rec["months"][0]["archive_not_sealed"]
+
+
+def test_an_empty_month_file_refuses_with_the_right_reason(tmp_path: Path, dirs: dict):
+    p = tmp_path / f"llm_calls_{CLOSED}.jsonl"
+    p.write_bytes(b"")
+    with pytest.raises(LA.ArchiveRefused, match="empty"):
+        LA.archive_month(p)
+
+
+def test_is_archived_holds_under_a_relocated_repo_root(tmp_path: Path, monkeypatch):
+    """Review F3: in the frozen exe `__file__` is not under the checkout. With
+    AEGIS_REPO_ROOT pointing at the checkout, a repo-relative manifest path
+    still names the file, so writers still refuse."""
+    root = tmp_path / "checkout"
+    led = root / "backend" / "data" / "optimus"
+    led.mkdir(parents=True)
+    p = _ledger(led, CLOSED)
+    monkeypatch.setattr(LA, "REPO", tmp_path / "_internal")        # the frozen bundle
+    monkeypatch.setenv("AEGIS_REPO_ROOT", str(root))
+    monkeypatch.setattr(LA, "MANIFEST_DIR", led / "ledger_manifests")
+    monkeypatch.setattr(LA, "ARCHIVE_DIR", led / "ledger_archive")
+    m = LA.archive_month(p)
+    assert m["jsonl"]["path"] == f"backend/data/optimus/llm_calls_{CLOSED}.jsonl"
+    assert LA.is_archived(p)
+
+
+def test_the_scheduled_scan_never_seals(tmp_path: Path, dirs: dict, monkeypatch):
+    """Review F4: the unattended job reports; it writes no manifest, no parquet."""
+    p = _ledger(tmp_path, CLOSED)
+    monkeypatch.setattr(LA, "is_tracked", lambda path: False)
+    rep = LA.scan_report(tmp_path, min_bytes=1)
+    assert rep["apply"] is False and rep["status"] == "ATTENTION"
+    assert rep["months"][0]["command"].startswith("python -m backend.services.ledger_archive")
+    assert not dirs["man"].exists() and not dirs["arc"].exists()
+    assert p.exists()
 
 
 def test_find_candidates_marks_closed_and_over_floor(tmp_path: Path, dirs: dict):
@@ -297,6 +382,9 @@ def test_the_keeper_job_logs_both_steps_and_refuses_on_a_failed_step(tmp_path: P
     ok = K.run_catalog(archive=lambda: {"status": "OK", "months": []},
                        catalog=lambda: {"datasets": 1}, log_path=tmp_path / "k.jsonl")
     assert ok["action"] == "ok" and ok["job"] == "catalog"
+    att = K.run_catalog(archive=lambda: {"status": "ATTENTION", "apply": False, "months": []},
+                        catalog=lambda: {"datasets": 1}, log_path=tmp_path / "k.jsonl")
+    assert att["action"] == "attention"
 
     def boom():
         raise OSError("disk")
@@ -320,3 +408,85 @@ def test_a_name_only_tests_mention_falls_through_to_the_family_level():
         "backend/services/llm_telemetry.py": '"llm_calls.jsonl"\n'})
     c = DC.consumers_for(f"backend/data/optimus/llm_calls_{CLOSED}.jsonl", ix)
     assert c["match"] == "family" and c["n"] == 1
+
+
+def test_the_scheduled_keeper_default_is_the_scan_not_the_apply():
+    import inspect
+
+    from scripts import task_keeper as K
+
+    src = inspect.getsource(K.run_catalog)
+    assert "LA.scan_report" in src and "archive_closed" not in src
+
+
+# ------------------------------------------------- review F7: runtime-built paths
+
+def test_a_runtime_built_path_is_not_listed_as_no_static_reference(tmp_path: Path):
+    bars = tmp_path / "bars"
+    bars.mkdir()
+    pq.write_table(pa.table({"date": ["2026-01-02"]}), bars / "bars_EU.parquet")
+    pq.write_table(pa.table({"date": ["2026-01-03"]}), bars / "other_thing.parquet")
+    cat = DC.build_catalog(roots=[DC.Root("t", tmp_path, "backend/data/optimus/contest")],
+                           cache_path=None, manifest_text="",
+                           code_index=DC.TokenIndex.from_texts({}),
+                           doc_index=DC.TokenIndex.from_texts({}), use_git=False, workers=1)
+    rows = _by_path(cat)
+    c = rows["backend/data/optimus/contest/bars/bars_EU.parquet"]["consumers"]
+    assert c["match"] == "RUNTIME_BUILT" and c["files"] == ["scripts/contest_calendar.py:453"]
+    assert rows["backend/data/optimus/contest/bars/other_thing.parquet"]["consumers"]["match"] is None
+    assert cat["summary"]["runtime_built"] == 1 and cat["summary"]["no_static_reference"] == 1
+
+
+def test_every_runtime_pattern_still_names_real_code():
+    """An allowlist entry must not outlive the code that builds the path."""
+    repo = Path(DC.__file__).resolve().parents[2]
+    for pat in DC.RUNTIME_PATTERNS:
+        f = pat["built_by"].split(":")[0]
+        assert pat["snippet"] in (repo / f).read_text(encoding="utf-8"), pat
+
+
+# ------------------------------------------------- review F1: duplicate classes
+
+@pytest.mark.parametrize("paths,cls", [
+    (["a/nn_lab/walkforward/oos_size_20260929T133547Z.parquet",
+      "a/nn_lab/walkforward/oos_size_20260929T133907Z.parquet"], "REPLAY"),
+    (["a/night_factory_2026-09-10/E1_h5_run01_daily.csv",
+      "a/night_factory_2026-09-30/E1_h5_run01_daily.csv"], "REPLAY"),
+    (["a/night_factory_2026-09-13/E1_h5_run02_daily.csv",
+      "a/night_factory_2026-09-13/E1_h5_run03_daily.csv"], "REPLAY"),
+    (["a/fundamentals_sec/sec_facts_history.parquet",
+      "a/fundamentals_sec/sec_facts_history_2026-09-27.parquet"], "SNAPSHOT"),
+    (["a/FT_1/mom_12_1.parquet", "a/FT_1/mom_12_1_ivw.parquet"], "VARIANT_IDENTICAL"),
+    (["a/wrds/bulk/comp__funda.parquet", "a/wrds/bulk/comp_na_daily_all__funda.parquet"],
+     "ALIAS"),
+    (["a/wrds/bulk/ibes__detusecd_sepint.parquet", "a/wrds/bulk/ibes__ndetusecd_sepint.parquet"],
+     "DATA_CHECK"),
+])
+def test_duplicates_are_classified(paths: list, cls: str):
+    assert DC.classify_duplicate(paths)[0] == cls
+
+
+def test_replays_are_listed_on_the_receipt(tmp_path: Path):
+    d = tmp_path / "sizing_lab"
+    d.mkdir()
+    for rid in ("2026-09-29T031017Z", "2026-09-29T031402Z"):
+        (d / f"sizing_crsp_monthly_{rid}.csv").write_text("date,x\n2026-01-01,1\n")
+    cat = _cat(tmp_path)
+    assert [g["class"] for g in cat["findings"]["replays"]] == ["REPLAY"]
+    assert cat["summary"]["replay_groups"] == 1
+
+
+# ------------------------------------------------- review F9: receipt retention
+
+def test_old_receipts_are_pruned_by_run_id_keeping_newest_and_first_of_month(tmp_path: Path):
+    names = [f"catalog_202609{d:02d}T000000Z.json" for d in range(1, 13)] + [
+        "catalog_20261001T000000Z.json", "other.json"]
+    for n in names:
+        (tmp_path / n).write_text("{}")
+    removed = DC.prune_receipts(tmp_path, keep=3)
+    left = sorted(q.name for q in tmp_path.iterdir())
+    assert "catalog_20260901T000000Z.json" in left            # first of September
+    assert "catalog_20261001T000000Z.json" in left            # newest + first of October
+    assert "catalog_20260912T000000Z.json" in left and "catalog_20260911T000000Z.json" in left
+    assert "other.json" in left                               # never touches anything else
+    assert len(removed) == 9

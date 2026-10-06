@@ -98,6 +98,33 @@ def book_return(w: dict, fwd: pd.Series) -> float:
     return float(np.nansum(ww * np.where(np.isfinite(r), r, 0.0)))
 
 
+def book_weights(v) -> dict:
+    """A rule's book on one date -> {symbol: raw target weight}. A list is equal weight; a dict
+    (or {"symbols", "weights"}) carries the rule's own weights (review F4 of C1: inverse-vol,
+    liquidity and risk-parity rules were scored as their EW parent). A non-finite or negative
+    weight REFUSES: it is never defaulted."""
+    if isinstance(v, dict) and "symbols" in v:
+        syms, wts = list(v.get("symbols") or []), v.get("weights")
+        v = dict(zip(syms, wts)) if wts is not None else syms
+    if isinstance(v, dict):
+        out = {}
+        for k, x in v.items():
+            x = float(x)
+            if not np.isfinite(x) or x < 0:
+                raise ValueError(f"weight of {k!r} is {x!r}: refusing to default it")
+            out[k] = out.get(k, 0.0) + x
+        return out
+    syms = list(dict.fromkeys(v or []))
+    return {k: 1.0 / len(syms) for k in syms}
+
+
+def target_weights(bw: dict, present) -> dict:
+    """The names of `bw` on the panel this date, their weights renormalised to sum 1 ({} if none)."""
+    keep = {k: x for k, x in bw.items() if k in present and x > 0}
+    tot = sum(keep.values())
+    return {k: x / tot for k, x in keep.items()} if tot > 0 else {}
+
+
 #: the per-trade model is the matched twin's cost convention, imported, never retyped
 from backend.services.matched_twins import trade_cost  # noqa: E402,F401
 

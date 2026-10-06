@@ -74,7 +74,10 @@ def newest_stock_list() -> tuple[str, Path, Path]:
     raise SystemExit("no stock-list build on disk (stock_lists/<day>/ with a rendered Markdown)")
 
 
-STOCK_LISTS_ASOF, WORK, MD_V3 = newest_stock_list()
+try:
+    STOCK_LISTS_ASOF, WORK, MD_V3 = newest_stock_list()
+except SystemExit:  # importable without a build on disk (tests); build() then has only the books
+    STOCK_LISTS_ASOF, WORK, MD_V3 = None, OPT / "stock_lists" / "_none", REPO / "docs" / "_no_stock_list.md"
 MD_V3_REL = MD_V3.relative_to(REPO).as_posix()
 
 NEWS_LOOKBACK_DAYS = 30
@@ -386,9 +389,10 @@ def load_revisions(tickers: set[str], asof: pd.Timestamp) -> tuple[dict, Optiona
         return {}, f"ERROR {type(e).__name__}: {e}"
 
 
-def load_cards() -> dict[str, tuple[str, dict]]:
-    """Newest card per ticker across every day folder (day, card)."""
-    out: dict[str, tuple[str, dict]] = {}
+def load_cards() -> dict[str, list[tuple[str, dict]]]:
+    """EVERY card per ticker, oldest day first: [(day, card), ...]. F5: "why picked" may
+    only quote a card dated on or before the list's freeze; a later one is commentary."""
+    out: dict[str, list[tuple[str, dict]]] = defaultdict(list)
     for day_dir in sorted(glob.glob(str(OPT / "thesis_cards" / "20*"))):
         day = Path(day_dir).name
         for f in glob.glob(str(Path(day_dir) / "*.json")):
@@ -400,8 +404,89 @@ def load_cards() -> dict[str, tuple[str, dict]]:
                 continue
             if not isinstance(c, dict) or "ticker" not in c or str(c.get("verdict", "")).startswith("REFUSED"):
                 continue
-            out[c["ticker"]] = (day, c)
+            out[c["ticker"]].append((day, c))
     return out
+
+
+def cards_split(cards: list[tuple[str, dict]], freeze: Optional[str]) -> tuple:
+    """(pre_day, pre_card, now_day, now_card): the newest card on or before `freeze`
+    and the newest card overall. No freeze date -> the pre card is None."""
+    pre = [(d, c) for d, c in cards if freeze and d <= str(freeze)[:10]]
+    pre_day, pre_card = pre[-1] if pre else (None, None)
+    now_day, now_card = cards[-1] if cards else (None, None)
+    return pre_day, pre_card, now_day, now_card
+
+
+def dated_firms(tickers: set[str], today: pd.Timestamp) -> tuple[dict[str, int], str]:
+    """F1 coverage: DISTINCT firms with a dated target action in the last
+    COVERAGE_WINDOW_DAYS before `today` (strictly before; PIT rows only)."""
+    try:
+        rv = pd.read_parquet(OPT / "analyst" / "target_revisions.parquet",
+                             columns=["ticker", "event_date", "firm", "pit_safe", "pulled_at"])
+    except Exception as e:  # noqa: BLE001
+        return {}, f"ERROR {type(e).__name__}: {e}"
+    rv = rv[rv["ticker"].isin(tickers) & (rv["pit_safe"] == True)]  # noqa: E712
+    d = pd.to_datetime(rv["event_date"], errors="coerce")
+    lo = today - pd.Timedelta(days=COVERAGE_WINDOW_DAYS)
+    rv = rv[(d >= lo) & (d < today)]
+    through = str(pd.to_datetime(rv["pulled_at"]).max())[:10] if len(rv) else None
+    return rv.groupby("ticker")["firm"].nunique().astype(int).to_dict(), f"target_revisions.parquet, pulled through {through}"
+
+
+def runway_table(tickers: set[str], today: str) -> dict[str, dict]:
+    """F1 runway: cash and equivalents / the latest QUARTERLY operating loss (80-100-day
+    period, filed on or before today) from sec_facts_history.parquet. A LOWER bound:
+    the XBRL tag pulled is CashAndCashEquivalents, which excludes marketable securities."""
+    p = OPT / "fundamentals_sec" / "sec_facts_history.parquet"
+    if not p.exists():
+        return {}
+    h = pd.read_parquet(p, columns=["ticker", "fact", "filed", "end", "period_days", "val"],
+                        filters=[("ticker", "in", sorted(tickers)), ("fact", "in", ["cash", "operating_income"])])
+    h = h[pd.to_datetime(h["filed"]) <= pd.Timestamp(today)]
+    out = {}
+    for t, x in h.groupby("ticker"):
+        cash = x[x["fact"] == "cash"].sort_values("filed").tail(1)
+        oi = x[(x["fact"] == "operating_income") & x["period_days"].between(80, 100)].sort_values("filed").tail(1)
+        if cash.empty or oi.empty:
+            continue
+        c, q = float(cash["val"].iloc[0]), float(oi["val"].iloc[0])
+        out[t] = {"cash_usd": c, "cash_end": str(cash["end"].iloc[0]), "op_income_q_usd": q,
+                  "quarter_end": str(oi["end"].iloc[0]), "filed": str(oi["filed"].iloc[0])[:10],
+                  "quarters": (round(c / -q, 2) if q < 0 else None),
+                  "source": "SEC XBRL (sec_facts_history.parquet): CashAndCashEquivalents / quarterly operating loss; "
+                            "a LOWER bound (marketable securities are not in the tag)"}
+    return out
+
+
+def risk_checks(n_dated: Optional[int], cats: list[dict], runway: Optional[dict], today: str,
+                *, is_etf: bool = False) -> dict:
+    """F1: three SEPARATE checks; each is {on: True/False/None, detail}. None = cannot
+    determine, with the reason in `detail`. The badge needs BADGE_MIN_FLAGS of them on."""
+    if is_etf:
+        return {k: {"on": False, "detail": "ETF"} for k in ("coverage", "binary_event", "runway")}
+    cov = ({"on": n_dated < COVERAGE_MIN_FIRMS,
+            "detail": f"{n_dated} firm(s) with a dated target action in {COVERAGE_WINDOW_DAYS} days "
+                      f"(flag below {COVERAGE_MIN_FIRMS})"}
+           if n_dated is not None else {"on": None, "detail": "no revision data loaded"})
+    hits = []
+    for c in cats:
+        txt = f"{c.get('kind') or ''} {c.get('detail') or ''}"
+        if BINARY_RE.search(txt):
+            n = int(np.busday_count(today, c["date"])) if c["date"] >= today else -1
+            if 0 <= n <= BINARY_WINDOW_SESSIONS:
+                hits.append(f"{c['date']} {c['kind']}: {(c.get('detail') or '')[:80]} ({n} weekdays away)")
+    binary = {"on": bool(hits), "detail": "; ".join(hits) if hits else
+              f"no FDA/trial event within {BINARY_WINDOW_SESSIONS} weekdays among the dated catalysts"}
+    if runway is None:
+        rw = {"on": None, "detail": "no XBRL cash + quarterly operating income on file (foreign filer, ETF or not pulled)"}
+    elif runway["quarters"] is None:
+        rw = {"on": False, "detail": f"operating income positive in the quarter to {runway['quarter_end']}"}
+    else:
+        rw = {"on": runway["quarters"] < RUNWAY_MIN_QUARTERS,
+              "detail": f"cash ${runway['cash_usd']/1e6:,.1f}M / quarterly operating loss "
+                        f"${-runway['op_income_q_usd']/1e6:,.1f}M = {runway['quarters']} quarters "
+                        f"(flag below {RUNWAY_MIN_QUARTERS}; lower bound, cash excludes marketable securities)"}
+    return {"coverage": cov, "binary_event": binary, "runway": rw}
 
 
 def load_facts() -> dict:
@@ -522,7 +607,8 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
     t = e["ticker"]
     miss: dict[str, str] = {}
     foreign = O.is_foreign(t)
-    card_day, card = ctx["cards"].get(t, (None, None))
+    freeze = lst.get("asof")
+    pre_day, pre_card, card_day, card = cards_split(ctx["cards"].get(t, []), freeze)
     facts = ctx["facts"].get(t, {})
     yf = ctx["yf"].get(t) or {}
     mw = ctx["mw"].get(t) or {}
@@ -612,6 +698,15 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
         miss["upside"] = "no analyst target to compare with"
     if analyst and n_an is None:
         miss["analyst.n"] = "no analyst count from yfinance, MarketWatch or the list table"
+    if upside is not None:
+        med = upside.get("median")
+        single = bool(analyst and analyst.get("low") is not None and analyst.get("low") == analyst.get("high")) or n_an == 1
+        upside["n_targets"] = n_an
+        upside["single_target"] = single
+        upside["low_upside"] = (med is not None and med < LOW_UPSIDE)
+        upside["low_upside_threshold"] = LOW_UPSIDE
+        upside["targets_date"] = str((analyst or {}).get("observed_utc") or "")[:10] or None
+        upside["price_date"] = price["date"] if price else None
 
     # revisions
     revision = None
@@ -643,16 +738,19 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
         nr = revision["net_raises_90d"]
         r_sign = 1 if nr > 0 else (-1 if nr < 0 else 0)
     if c_sign is None and r_sign is None:
-        direction = None
-        miss["direction"] = "neither an analyst consensus rating nor a 90-day revision flow exists for this name"
+        stance = None
+        miss["analyst_stance"] = "neither an analyst consensus rating nor a 90-day revision flow exists for this name"
     else:
         tot = (c_sign or 0) + (r_sign or 0)
-        lab = "UP" if tot > 0 else ("DOWN" if tot < 0 else "NEUTRAL")
+        lab = "POSITIVE" if tot > 0 else ("NEGATIVE" if tot < 0 else "NEUTRAL")
         if c_sign and r_sign and c_sign != r_sign:
             lab = "MIXED"   # the rating and the revisions point opposite ways
-        direction = {"label": lab, "consensus": cons_key or None, "consensus_sign": c_sign,
-                     "revision_sign": r_sign, "single_source": (c_sign is None) or (r_sign is None),
-                     "explain": DIRECTION_EXPLAIN}
+        med_up = (upside or {}).get("median")
+        stance = {"label": lab, "consensus": cons_key or None, "consensus_sign": c_sign,
+                  "revision_sign": r_sign, "single_source": (c_sign is None) or (r_sign is None),
+                  "conflicts_with_upside": bool(lab == "POSITIVE" and med_up is not None and med_up < 0),
+                  "revisions_through": ctx.get("revision_through"),
+                  "explain": DIRECTION_EXPLAIN}
 
     # why picked (1-3, each naming its service)
     why: list[dict] = []
@@ -668,17 +766,26 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
                     "service": "analyst target snapshot screen (stock lists v3 section 5; level upside measured perverse)"})
     if e.get("why_list") and lst["list_id"] == "thesis_cards_v3":
         why.append({"reason": e["why_list"], "service": "stock lists v3 shortlist assembly"})
-    if card:
-        vc = f"{card.get('verdict')}/{card.get('confidence')}"
-        bull = str(card.get("bull") or "")[:220]
-        why.append({"reason": f"thesis card {card_day}: {vc}" + (f" -- {bull}" if bull and bull != "None" else ""),
+    if pre_card:
+        vc = f"{pre_card.get('verdict')}/{pre_card.get('confidence')}"
+        bull = str(pre_card.get("bull") or "")[:220]
+        when = (f"same day as the {str(freeze)[:10]} freeze; the card records no run time, so the order is not provable"
+                if pre_day == str(freeze)[:10] else f"before the {str(freeze)[:10]} freeze")
+        why.append({"reason": f"thesis card {pre_day} ({when}): {vc}"
+                              + (f" -- {bull}" if bull and bull != "None" else ""),
                     "service": "thesis_cards (OpenClaw web pass + DeepSeek synthesis)"})
-    if facts.get("fund") is not None and len(why) < 3:
-        why.append({"reason": f"fundamentals proxy percentile {facts['fund']:.2f} ({facts.get('n_legs')} legs)",
-                    "service": "five-ratio fundamentals proxy (stock_lists v3_facts)"})
+    # F5: no fundamentals "filler" reason: no list here was ranked on it except the
+    # core-satellite sleeve, whose own thesis line already says so.
     why = why[:3]
     if not why:
-        miss["why_picked"] = "the list carries no per-name reason and no thesis card exists"
+        miss["why_picked"] = (f"the list carries no per-name reason and no thesis card is dated on or before "
+                              f"its {str(freeze)[:10]} freeze")
+    later = None
+    if card and card_day and (pre_day is None or card_day > pre_day) and freeze and card_day > str(freeze)[:10]:
+        bull = str(card.get("bull") or "")[:300]
+        later = {"day": card_day, "verdict": card.get("verdict"), "confidence": card.get("confidence"),
+                 "text": bull if bull and bull != "None" else None,
+                 "note": f"written {card_day}, AFTER the list froze on {str(freeze)[:10]}: not a reason it was picked"}
 
     # catalysts
     today = ctx["today"]
@@ -767,10 +874,12 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
     off = ctx["official"]
     disc = [r for r in off["insiders"].get(t, []) if r.get("code") in ("P", "S") and not r.get("is_derivative")]
     insiders = None
+    cov_from = str(off["insider_table_first_public_utc"] or "")[:10] or None
+    eff_days = ctx.get("insider_window_days", INSIDER_LOOKBACK_DAYS)
     if disc:
         buys = [r for r in disc if r.get("code") == "P"]
         sells = [r for r in disc if r.get("code") == "S"]
-        insiders = {"window_days": INSIDER_LOOKBACK_DAYS, "n_buys": len(buys), "n_sells": len(sells),
+        insiders = {"window_days": eff_days, "covers_from": cov_from, "n_buys": len(buys), "n_sells": len(sells),
                     "buy_usd": round(sum(_finite(r.get("value_usd")) or 0 for r in buys)),
                     "sell_usd": round(sum(_finite(r.get("value_usd")) or 0 for r in sells)),
                     "n_insiders": len({r.get("owner_name") for r in disc}),
@@ -785,8 +894,8 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
                     "table_covers_from_utc": off["insider_table_first_public_utc"]}
     else:
         miss["insiders"] = ("foreign listing: no SEC Form 4" if foreign else
-                            f"no open-market Form 4 buy or sell in the last {INSIDER_LOOKBACK_DAYS} days in the official "
-                            f"table (it holds filings public since {str(off['insider_table_first_public_utc'])[:10]})")
+                            f"no open-market Form 4 buy or sell since {cov_from} ({eff_days} days): the official "
+                            f"table starts {cov_from}, so this is NOT a {INSIDER_LOOKBACK_DAYS}-day answer")
     si = off["short_interest"].get(t)
     short_interest = ({"settlement_date": si.get("settlement_date"), "short_qty": _finite(si.get("short_qty")),
                        "change_pct": _finite(si.get("change_pct")), "days_to_cover": _finite(si.get("days_to_cover")),
@@ -803,9 +912,9 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
                     "source": "House periodic transaction reports (official_sources)"} if pol else None)
 
     # falsifier / horizon / evidence
-    falsifier = e.get("falsifier") or (card or {}).get("falsifier")
+    falsifier = e.get("falsifier") or (pre_card or {}).get("falsifier")
     if not falsifier:
-        miss["falsifier"] = "the list declares none and no thesis card exists"
+        miss["falsifier"] = "the list declares none and no thesis card is dated on or before its freeze"
     horizon = lst.get("horizon")
     if not horizon:
         miss["horizon"] = "a screen declares no holding horizon"
@@ -817,20 +926,15 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
         evidence = {"label": "OBSERVED", "sessions": None,
                     "note": f"listed on {lst.get('asof')}; not traded, nothing graded"}
 
-    # lane
-    flags: list[str] = []
-    if not is_etf:
-        if n_an is None:
-            flags.append("no analyst count")
-        elif n_an < HRI_MIN_ANALYSTS:
-            flags.append(f"thin coverage: {n_an} analysts")
-        if move and move["expected_abs_move_21s"] >= HRI_MOVE21:
-            flags.append(f"expected 21-session move {move['expected_abs_move_21s']*100:.0f}%")
-        if card and card.get("verdict") == "against":
-            flags.append("thesis card verdict: against")
-        if any(re.search(r"pdufa|fda|topline|phase 3", f"{c['kind']} {c.get('detail') or ''}", re.I) for c in cats):
-            flags.append("binary catalyst (FDA / trial readout)")
-    lane = "HIGH_RISK_INNOVATION" if flags else ("BENCHMARK" if is_etf else "CORE")
+    # lane (F1): three separate checks; the badge needs BADGE_MIN_FLAGS of them
+    checks = risk_checks(ctx["dated_firms"].get(t, 0) if ctx.get("dated_firms_ok") else None,
+                         cats, ctx["runway"].get(t), today, is_etf=is_etf)
+    flags = [k for k, v in checks.items() if v["on"]]
+    lane = ("BENCHMARK" if is_etf else
+            "HIGH_RISK_INNOVATION" if len(flags) >= BADGE_MIN_FLAGS else "CORE")
+    if not is_etf and move and move["expected_abs_move_21s"] >= 0.15:
+        checks["high_volatility_info"] = {"on": None, "detail": f"expected 21-session move "
+                                          f"{move['expected_abs_move_21s']*100:.0f}% (information only; not a flag)"}
 
     stamps = [str(s) for s in ((price or {}).get("date"), (analyst or {}).get("observed_utc"),
                                (card or {}).get("run_utc")) if s]
@@ -846,12 +950,13 @@ def build_row(e: dict, lst: dict, ctx: dict) -> dict:
         "eligibility": e.get("eligibility"),
         "sector": sector, "sector_source": sector_src, "theme": theme,
         "price": price, "analyst": analyst, "upside": upside, "revision": revision,
-        "move_score": move, "direction": direction, "why_picked": why,
-        "card": ({"day": card_day, "verdict": card.get("verdict"), "confidence": card.get("confidence"),
-                  "card_hash": card.get("card_hash")} if card else None),
+        "move_score": move, "analyst_stance": stance, "why_picked": why,
+        "card": ({"day": pre_day, "verdict": pre_card.get("verdict"), "confidence": pre_card.get("confidence"),
+                  "card_hash": pre_card.get("card_hash")} if pre_card else None),
+        "later_commentary": later, "freeze_date": str(freeze)[:10] if freeze else None,
         "catalysts": cats, "news": news, "insiders": insiders, "short_interest": short_interest,
         "politicians": politicians, "falsifier": falsifier, "horizon": horizon, "evidence": evidence,
-        "lane": lane, "risk_flags": flags, "last_update_utc": last_update,
+        "lane": lane, "risk_flags": flags, "risk_checks": checks, "last_update_utc": last_update,
         "links": O.links(t, ctx["ciks"].get(t)), "missing_because": miss,
     }
 
@@ -865,9 +970,21 @@ def build(now: Optional[datetime] = None) -> dict:
     bars = load_bars(tickers)
     spy_dates = sorted(str(d.date()) for d in bars.loc[bars["symbol"] == "SPY", "date"])
     revisions, rv_pulled = load_revisions(tickers, pd.Timestamp(today))
+    firms, firms_src = dated_firms(tickers, pd.Timestamp(today))
+    official = load_official(tickers, now)
+    cov_from = str(official["insider_table_first_public_utc"] or "")[:10]
+    win = INSIDER_LOOKBACK_DAYS
+    if cov_from:
+        win = min(INSIDER_LOOKBACK_DAYS, (now.date() - date.fromisoformat(cov_from)).days)
+    rv_through = None
+    m = re.search(r"pulled (\d{4}-\d{2}-\d{2})", str(rv_pulled))
+    if m:
+        rv_through = m.group(1)
     ctx = {"today": today, "asof": today, "cards": load_cards(), "facts": load_facts(), "yf": load_yf(),
            "mw": load_mw(), "identity": load_identity(), "px": price_and_sigma(bars), "targets": load_targets(),
-           "revisions": revisions, "revisions_pulled": rv_pulled, "official": load_official(tickers, now),
+           "revisions": revisions, "revisions_pulled": rv_pulled, "official": official,
+           "dated_firms": firms, "dated_firms_ok": not firms_src.startswith("ERROR"),
+           "runway": runway_table(tickers, today), "insider_window_days": win, "revision_through": rv_through,
            "news": load_news(tickers, now.date()), "earn_cache": load_earnings_cache(), "ciks": load_ciks(),
            "spy_dates": spy_dates}
     out_lists = []
@@ -876,23 +993,28 @@ def build(now: Optional[datetime] = None) -> dict:
         meta = {k: v for k, v in lst.items() if k != "entries"}
         meta["coverage"] = {f: sum(1 for r in rows if r.get(f)) for f in
                             ("company_name", "exchange", "sector", "price", "analyst", "revision", "move_score",
-                             "direction", "catalysts", "news", "insiders", "falsifier")}
+                             "analyst_stance", "catalysts", "news", "insiders", "falsifier")}
         meta["n_high_risk_innovation"] = sum(1 for r in rows if r["lane"] == "HIGH_RISK_INNOVATION")
         out_lists.append({**meta, "rows": rows})
     return {
         "schema": O.SCHEMA, "generated_utc": now.isoformat(timespec="seconds"), "asof": today,
         "run_id": now.strftime("%Y%m%dT%H%M%SZ"), "builder": "scripts/opportunities_build.py",
         "licence": "PRODUCT_EXPERIMENT: nothing here is a claim of alpha and none of it is an order.",
-        "legend": {"move_score": MOVE_EXPLAIN, "direction": DIRECTION_EXPLAIN,
-                   "high_risk_innovation": (f"A row is in the High-Risk Innovation lane when it has fewer than "
-                                            f"{HRI_MIN_ANALYSTS} analysts (or none), an expected 21-session move >= "
-                                            f"{HRI_MOVE21:.0%}, an 'against' card, or a binary FDA/trial catalyst. "
-                                            "The flags say which."),
+        "legend": {"move_score": MOVE_EXPLAIN, "analyst_stance": DIRECTION_EXPLAIN,
+                   "high_risk_innovation": (f"Three separate flags: COVERAGE (fewer than {COVERAGE_MIN_FIRMS} firms with a "
+                                            f"dated target action in {COVERAGE_WINDOW_DAYS} days), BINARY EVENT (an FDA / "
+                                            f"trial date within {BINARY_WINDOW_SESSIONS} weekdays) and RUNWAY (cash below "
+                                            f"{RUNWAY_MIN_QUARTERS} quarters of operating loss). The badge needs "
+                                            f"{BADGE_MIN_FLAGS} of the 3."),
+                   "low_upside": f"LOW UPSIDE = median-target upside below {LOW_UPSIDE:.0%}; never shown green.",
                    "evidence": "OBSERVED = listed, not traded. EARLY_EVIDENCE = paper-graded for N sessions; not a result."},
         "inputs": {"stock_list_markdown": md_src, "stock_list_work_dir": WORK.relative_to(REPO).as_posix(),
                    "books": "backend/data/optimus/llm_portfolio/books.jsonl",
                    "bars_last_spy": spy_dates[-1] if spy_dates else None,
-                   "revision_flow": rv_pulled},
+                   "revision_flow": rv_pulled, "revision_through": rv_through,
+                   "dated_firms": firms_src,
+                   "insider_coverage_from": cov_from or None, "insider_window_days": win,
+                   "stale_after_days": _config.OPPORTUNITIES_STALE_DAYS},
         "lists": out_lists,
     }
 

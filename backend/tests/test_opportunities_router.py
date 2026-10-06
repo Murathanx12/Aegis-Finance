@@ -28,8 +28,8 @@ def client(tmp_path, monkeypatch):
 def _row(ticker: str, list_id: str, stamp: str) -> dict:
     return {"ticker": ticker, "company_name": None, "list_id": list_id, "weight": None,
             "move_score": {"label": "MAGNITUDE", "expected_abs_move_21s": 0.1},
-            "direction": None, "last_update_utc": stamp,
-            "missing_because": {"company_name": "no receipt", "direction": "no consensus",
+            "analyst_stance": None, "last_update_utc": stamp,
+            "missing_because": {"company_name": "no receipt", "analyst_stance": "no consensus",
                                 "weight": "a ranked list"},
             "links": O.links(ticker)}
 
@@ -90,7 +90,7 @@ def test_latest_shape_and_serve_time_age(client):
     for r in one["rows"]:
         # a null field always carries its reason
         for k, v in r.items():
-            if v is None and k in ("company_name", "direction", "weight"):
+            if v is None and k in ("company_name", "analyst_stance", "weight"):
                 assert k in r["missing_because"]
 
 

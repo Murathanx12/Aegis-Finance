@@ -41,7 +41,7 @@ def _load() -> dict:
 def _envelope(blob: dict) -> dict:
     return {k: blob.get(k) for k in ("schema", "generated_utc", "asof", "run_id", "builder", "licence",
                                      "legend", "inputs", "receipt_file", "skipped_receipts")} | {
-        "lists": OPP.list_index(blob)}
+        "lists": OPP.list_index(blob), "freshness": OPP.staleness(blob)}
 
 
 @router.get("/latest")

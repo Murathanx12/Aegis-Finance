@@ -81,13 +81,17 @@ def test_dedupe_flags_closed_duplicate_and_same_params():
     assert out2[0]["status"] == "DUPLICATE_IN_LEDGER"
 
 
-def test_family_record_learns_and_moves_ranking():
+def test_family_record_learns_and_moves_ranking(monkeypatch):
+    # review 2026-10-06: families come from a fixed taxonomy and only POWERED failures count
+    from backend import config as C
+    monkeypatch.setattr(C, "HYP_LAB_FAMILIES", tuple(C.HYP_LAB_FAMILIES) + ("fam_a", "fam_b"))
     a = {**_h(family="fam_a"), "history": []}
     b = {**_h(family="fam_b", params={"x": 2}), "history": []}
     state = {a["hyp_id"]: a, b["hyp_id"]: b}
     fails = []
     for i in range(4):
-        f = {**_h(family="fam_a", params={"x": 10 + i}), "history": [], "verdict": "FAILED_VARIANT", "status": "RUN"}
+        f = {**_h(family="fam_a", params={"x": 10 + i}), "history": [], "verdict": "FAILED_VARIANT", "status": "RUN",
+             "last_summary": {"powered": True}}
         fails.append(f)
     for f in fails:
         state[f["hyp_id"]] = f

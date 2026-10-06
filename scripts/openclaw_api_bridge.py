@@ -22,8 +22,11 @@ from __future__ import annotations
 import json
 import os
 import re
+import tempfile
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
 
 API_BASE = os.environ.get("AEGIS_API_BASE", "https://aegis-finance-production.up.railway.app").rstrip("/")
 
@@ -37,6 +40,48 @@ READ_ROUTES: tuple[str, ...] = (
 )
 _ROUTE_RE = re.compile(r"^(" + "|".join(READ_ROUTES) + r")$")
 MAX_CHARS = 20000
+
+#: The heartbeat the health probe reads (C8, 2026-10-07): before it, the
+#: `openclaw_api_bridge` row was UNKNOWN every night because the bridge wrote
+#: nothing. One JSON file, rewritten atomically on server start and on EVERY tool
+#: call -- the last call's own stamp, tool, ok/error, and running counts. Stdlib
+#: only (this runs under the Optimus venv); a failed write never fails a call.
+_DATA_DIR = Path(os.environ.get("AEGIS_DATA_DIR") or Path(__file__).resolve().parents[1] / "backend" / "data")
+HEARTBEAT = _DATA_DIR / "optimus" / "openclaw_api_bridge" / "heartbeat.json"
+_STATE: dict = {"n_calls": 0, "n_errors": 0}
+
+
+def _utc() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _beat(**kw) -> None:
+    try:
+        _STATE.update(kw)
+        HEARTBEAT.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=str(HEARTBEAT.parent), suffix=".tmp")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump({"receipt": "openclaw_api_bridge", "pid": os.getpid(), **_STATE}, fh)
+        os.replace(tmp, HEARTBEAT)
+    except Exception:  # noqa: BLE001 -- the heartbeat must never break the tool
+        pass
+
+
+def _record(tool: str, route: str, body: str) -> str:
+    err = refused = None          # a refused route is the bridge WORKING; an error is not
+    try:
+        j = json.loads(body)
+        if isinstance(j, dict):
+            err = str(j["error"])[:200] if "error" in j else None
+            refused = str(j["refused"])[:200] if "refused" in j else None
+    except ValueError:
+        pass
+    _STATE["n_calls"] = int(_STATE.get("n_calls") or 0) + 1
+    if err:
+        _STATE["n_errors"] = int(_STATE.get("n_errors") or 0) + 1
+    _beat(last_call_utc=_utc(), last_tool=tool, last_route=route, last_ok=err is None,
+          last_error=err, last_refused=refused)
+    return body
 
 
 def route_allowed(route: str) -> bool:
@@ -59,21 +104,23 @@ def _get(path: str) -> str:
 
 def aegis_health_full() -> str:
     """GET /api/health/full from the deployed Aegis backend (read-only)."""
-    return _get("/api/health/full")
+    return _record("aegis_health_full", "/api/health/full", _get("/api/health/full"))
 
 
 def aegis_pi_get(route: str) -> str:
     """GET /api/pi/<route> for one allow-listed read route (e.g. 'alerts',
     'track-record', 'lane/<id>/positions'). Refuses anything else."""
     if not route_allowed(route):
-        return json.dumps({"refused": f"route {route!r} is not an allow-listed read route",
-                           "allowed": list(READ_ROUTES)})
-    return _get("/api/pi/" + route.strip().strip("/"))
+        return _record("aegis_pi_get", str(route)[:80],
+                       json.dumps({"refused": f"route {route!r} is not an allow-listed read route",
+                                   "allowed": list(READ_ROUTES)}))
+    return _record("aegis_pi_get", route, _get("/api/pi/" + route.strip().strip("/")))
 
 
 def main() -> None:
     from mcp.server.fastmcp import FastMCP
     server = FastMCP("aegis_api")
+    _beat(started_utc=_utc(), transport="mcp_stdio")
     server.tool()(aegis_health_full)
     server.tool()(aegis_pi_get)
     server.run()

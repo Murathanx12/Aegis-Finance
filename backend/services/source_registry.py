@@ -477,7 +477,9 @@ def write_claims(claims: Iterable[dict], *, path: Path | None = None,
                 "ticker": str(c["ticker"]).upper(), "claim_text": str(c["claim_text"])[:1200],
                 "claim_utc": t.isoformat(), "observed_utc": made,
                 "direction": _norm_direction(c.get("direction")),
-                "post_url": c.get("post_url", "")})
+                "post_url": c.get("post_url", ""),
+                # 2026-10-06 (C7): which reader lane / planner query read it
+                **{k: c[k] for k in ("reader_lane", "query_id") if c.get(k)}})
         rs = claim_records(c["source_id"], c["ticker"], c["claim_text"], t,
                            direction=c.get("direction"),
                            horizon_days=c.get("horizon_days", SCORE_HORIZONS),

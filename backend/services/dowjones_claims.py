@@ -564,9 +564,16 @@ def write_forecasts(article: dict, claims: list[dict], *, ledger_path: Path | No
     if grade == NR.ARCHIVE_GRADE:
         return {"source_id": col, "pit_grade": grade, "n_claims": len(claims),
                 "n_rows_written": 0, "status": "ARCHIVE_NO_FORECAST"}
+    # 2026-10-06 (C7 review F2): the reader lane that fetched the page travels
+    # onto the claim, so a query planner page (`qp:<query_id>`) is attributed
+    # when the claim is WRITTEN, never guessed later by URL
+    rb = article.get("reached_by") or {}
+    lane = str(rb.get("lane") or "")
+    via = ({"reader_lane": lane} if lane else {}) | (
+        {"query_id": rb.get("query_id") or lane[3:]} if lane.startswith("qp:") else {})
     rows = [{"source_id": col, "source_kind": "journalist", "ticker": c["ticker"],
              "claim_text": f"[{col}] {c['paraphrase']}", "claim_utc": seen,
-             "direction": c["direction"], "post_url": str(article.get("url") or "")}
+             "direction": c["direction"], "post_url": str(article.get("url") or ""), **via}
             for c in claims]
     res = SR.write_claims(rows, path=ledger_path, claims_path=claims_path)
     return {"source_id": col, "pit_grade": grade, "n_claims": len(claims), **res,

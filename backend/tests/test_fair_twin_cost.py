@@ -131,22 +131,21 @@ def test_b_fair_series_holds_cash_after_entry_and_refuses_incomplete_frames():
         TB.fair_series(B.drop(columns=["twin_full_rt"]), mkt)
 
 
-def test_b_bridges_board_columns_scale_the_twin_on_its_own_turnover():
+def test_b_bridges_board_columns_are_read_from_the_fair_series_not_interpolated():
+    """Review F1/F2 of C1: the bridges board scaled twin21 by the BASKET's turnover and the rule
+    by names-replaced-per-rebalance. It now reads the four columns from the fair board's series,
+    where rule and twin are one engine, one turnover function, one cost composition."""
     from scripts import bridges_on_crsp_run as BR
-    idx = _idx(24)
-    rng = np.random.default_rng(3)
-    rg, tg = pd.Series(rng.normal(0.01, 0.03, 24), index=idx), pd.Series(rng.normal(0.008, 0.03, 24), index=idx)
-    flat_cost = 0.001
-    fl = pd.DataFrame({"rule_net": rg - flat_cost, "twin21_net": tg - flat_cost, "market": 0.007}, index=idx)
-    cs = pd.DataFrame({"rule_net": fl["rule_net"] - 0.03, "twin21_net": fl["twin21_net"] - 0.03,
-                       "market": 0.007}, index=idx)
-    C = BR.board_columns(fl, cs, rule_tov=0.2, twin_tov=0.2)
+    from scripts import hyp_twin_board as TB
+    B, mkt = _book(24, twin_turnover=0.15)
+    S = TB.fair_series(B, mkt)
+    C = BR.board_columns(S)
     assert tuple(C.columns) == MT.FOUR_COLUMNS
-    np.testing.assert_allclose(C["pure_selection"], rg - tg)
-    np.testing.assert_allclose(C["fair_twin_net"], rg - tg)          # same turnover, same spread: cancels
-    np.testing.assert_allclose(C["twin_full_round_trip_UPPER_BOUND"] - C["fair_twin_net"], 0.03 * (1 - 0.2))
-    C0 = BR.board_columns(fl, cs, rule_tov=0.2, twin_tov=0.0)        # a still twin pays no spread
-    np.testing.assert_allclose(C0["fair_twin_net"], rg - tg - 0.2 * 0.03)
+    pd.testing.assert_frame_equal(C, S[list(MT.FOUR_COLUMNS)])
+    with pytest.raises(MT.TwinInputMissing):
+        BR.board_columns(S.drop(columns=["twin_turnover"]))
+    src = (REPO / "scripts/bridges_on_crsp_run.py").read_text(encoding="utf-8")
+    assert "turnover_scaled_net(" not in src                         # no two-run interpolation left
 
 
 def test_b_library_fair_row_carries_old_and_new_headline_and_four_columns():
@@ -160,7 +159,7 @@ def test_b_library_fair_row_carries_old_and_new_headline_and_four_columns():
     assert set(r["four_columns"]) == set(MT.FOUR_COLUMNS)
     assert r["headline_old"] == "ALPHA_DETECTED" and r["headline_fair"] in {
         "FAILED_VARIANT", "ALPHA_DETECTED", "CANNOT_DISTINGUISH", "BETA_EXPLAINS", "CALENDAR_ARTEFACT",
-        "NOT_COMPUTED"}
+        "NOT_COMPUTED", "NET_EDGE_FROM_TURNOVER"}
     assert "by_hold_year" in r["four_columns"]["fair_twin_net"]
 
 
@@ -248,3 +247,142 @@ def test_c_no_turnover_defaults_to_a_full_round_trip():
 def test_c_every_board_reads_the_shared_convention(rel):
     attrs = {n.attr for n in ast.walk(_tree(rel)) if isinstance(n, ast.Attribute)}
     assert {"TWIN_COST_CONVENTION", "FOUR_COLUMNS"} <= attrs, rel
+
+
+# ── (d) review of C1 (2026-10-07): one turnover function, weights, the alpha word ─
+
+def _assigned_from_trade_cost(fn: ast.FunctionDef) -> set:
+    """Names bound by a tuple-unpack of a `trade_cost(...)` call inside `fn`."""
+    out = set()
+    for n in ast.walk(fn):
+        if isinstance(n, ast.Assign) and isinstance(n.value, ast.Call):
+            f = n.value.func
+            name = f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", "")
+            if name == "trade_cost":
+                for t in n.targets:
+                    out |= {x.id for x in ast.walk(t) if isinstance(x, ast.Name)}
+    return out
+
+
+def _fn(rel: str, name: str) -> ast.FunctionDef:
+    return next(n for n in ast.walk(_tree(rel)) if isinstance(n, ast.FunctionDef) and n.name == name)
+
+
+@pytest.mark.parametrize("rel,name,rule_to,twin_to", [
+    ("scripts/hyp_investable.py", "run_book", "to", "tto"),
+    ("backend/services/matched_twins.py", "twin_series_sticky", "to", "toj")])
+def test_d_rule_and_twin_turnover_come_from_the_same_function_on_the_same_book(rel, name, rule_to, twin_to):
+    bound = _assigned_from_trade_cost(_fn(rel, name))
+    assert {rule_to, twin_to} <= bound, f"{rel}:{name} binds {bound}"
+
+
+def test_d_rule_and_twin_turnover_same_units_on_a_real_book():
+    """The same book measured as the rule and as the twin gives the same turnover and cost."""
+    from scripts import hyp_investable as HIS
+    dates = pd.date_range(BASE, periods=4, freq="BME")
+    rows = []
+    for d in dates:
+        for i in range(30):
+            rows.append({"date": d, "symbol": f"S{i:02d}", "eligible": True, "fwd_ret": 0.01 * (i % 3),
+                         "median_dollar_vol": 3e8, "vol_63": 0.1 + i / 100, "mom_252_21": i / 50,
+                         "_sp": 0.01, "mcap": 1e9})
+    P = pd.DataFrame(rows)
+    picks = {d: [f"S{i:02d}" for i in range(k, k + 5)] for k, d in enumerate(dates)}
+    B = HIS.run_book(P, picks, start=str(dates[0].date()))
+    w_prev = {}
+    from backend.services import hyp_investable as HI
+    for d in dates:
+        g = P[P["date"] == d].set_index("symbol")
+        w = {s: 0.2 for s in picks[d]}
+        c, to = MT.trade_cost(w_prev, w, g["_sp"].to_dict(), MT.DEFAULT_ROUND_TRIP)
+        assert B.loc[d, "turnover"] == pytest.approx(to) and B.loc[d, "cost"] == pytest.approx(c)
+        w_prev = HI.drift(w, g["fwd_ret"])
+
+
+def test_d_weighted_rules_keep_their_weights():
+    """Review F4 of C1: ivw / liqw rules were scored as their EW parent."""
+    from scripts import hyp_investable as HIS
+    from scripts import hyp_twin_board as TB
+    dates = pd.date_range(BASE, periods=3, freq="BME")
+    rows = [{"date": d, "symbol": s, "eligible": True, "fwd_ret": r, "median_dollar_vol": 3e8, "vol_63": 0.3,
+             "mom_252_21": 0.1, "_sp": 0.01, "mcap": 1e9}
+            for d in dates for s, r in (("A", 0.10), ("B", 0.0), ("C", 0.0))]
+    P = pd.DataFrame(rows)
+
+    class R:
+        hold_months, rebalance_months = 1, None
+    hold = [{"date": str(d.date()), "symbols": ["A", "B"], "weights": [0.8, 0.2]} for d in dates]
+    pk = TB.carried_picks(hold, dates, R, None)
+    assert pk[dates[0]] == {"A": 0.8, "B": 0.2}
+    B = HIS.run_book(P, pk, start=str(dates[0].date()))
+    assert B["gross"].iloc[0] == pytest.approx(0.08)                 # EW would read 0.05
+    Bew = HIS.run_book(P, {d: ["A", "B"] for d in dates}, start=str(dates[0].date()))
+    assert Bew["gross"].iloc[0] == pytest.approx(0.05)
+
+
+def test_d_a_missing_weight_refuses_and_is_never_defaulted():
+    from backend.services import hyp_investable as HI
+    with pytest.raises(ValueError):
+        HI.book_weights({"A": float("nan")})
+    assert HI.book_weights(["A", "B", "A"]) == {"A": 0.5, "B": 0.5}
+
+
+def test_d_alpha_needs_pure_selection_too():
+    """Review F3 of C1: fair t >= 2 with selection < 2 is NET_EDGE_FROM_TURNOVER, never alpha."""
+    from scripts import library_on_crsp as L
+    fair = {"mean_monthly": 0.004, "t_blocks": 2.4}
+    hold = {"mean_monthly": 0.003}
+    assert L.fair_headline(fair, {"t_blocks": 0.65}, None, hold, None) == L.NET_EDGE_LABEL
+    assert L.fair_headline(fair, {"t_blocks": 2.1}, None, hold, None) == "ALPHA_DETECTED"
+    assert L.fair_headline(fair, {}, None, hold, None) == L.NET_EDGE_LABEL
+    assert L.fair_headline({"mean_monthly": -0.001, "t_blocks": 2.4}, {"t_blocks": 3}, None, hold, None) \
+        == "FAILED_VARIANT"
+    assert "pure selection" in L.FAIR_HEADLINE_RULE and "twin21" not in L.FAIR_HEADLINE_RULE
+
+
+def test_d_one_cost_composition():
+    cs = np.array([0.05, np.nan, 0.50, 0.001])
+    flat = np.array([0.0035, 0.0035, 0.0035, 0.0035])
+    np.testing.assert_allclose(MT.round_trip_spread(cs, flat), [0.05, 0.0035, MT.CS_CAP, 0.0035])
+    for rel in ("scripts/hyp_investable.py", "scripts/conditionals_on_crsp.py"):
+        assert "round_trip_spread(" in (REPO / rel).read_text(encoding="utf-8"), rel
+
+
+def _is_one_default_on_turnover(n) -> bool:
+    """`x or 1.0`, `.get(k, 1.0)`, `.fillna(1.0)` on a turnover-named expression."""
+    def tov(node) -> bool:
+        names = {x.id for x in ast.walk(node) if isinstance(x, ast.Name)}
+        names |= {x.attr for x in ast.walk(node) if isinstance(x, ast.Attribute)}
+        names |= {x.value for x in ast.walk(node) if isinstance(x, ast.Constant) and isinstance(x.value, str)}
+        return any("tov" in str(s) or "turnover" in str(s) for s in names)
+    one = lambda x: isinstance(x, ast.Constant) and x.value == 1.0 and not isinstance(x.value, bool)  # noqa: E731
+    if isinstance(n, ast.BoolOp) and isinstance(n.op, ast.Or) and one(n.values[-1]):
+        return any(tov(v) for v in n.values[:-1])
+    if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute):
+        if n.func.attr == "get" and len(n.args) == 2 and one(n.args[1]):
+            return tov(n.args[0]) or tov(n.func.value)
+        if n.func.attr == "fillna" and n.args and one(n.args[0]):
+            return tov(n.func.value)
+    return False
+
+
+def test_d_the_default_guard_catches_or_get_and_fillna():
+    bad = ["x = tov or 1.0", "x = row.get('turnover', 1.0)", "x = df['twin_turnover'].fillna(1.0)"]
+    for src in bad:
+        assert any(_is_one_default_on_turnover(n) for n in ast.walk(ast.parse(src))), src
+    assert not any(_is_one_default_on_turnover(n) for n in ast.walk(ast.parse("x = w or 1.0")))
+
+
+@pytest.mark.parametrize("rel", BOARD_MODULES + ("backend/services/matched_twins.py",))
+def test_d_no_board_module_defaults_a_turnover_to_one(rel):
+    assert not _functions_with(_tree(rel), _is_one_default_on_turnover), rel
+
+
+def test_d_every_weight_rule_has_its_column_on_the_board():
+    """`mom_12_1_liqw` / `qc623_mom63_liquidity_weighted` were scored EW: their weight column
+    (`amihud`) is not in `rule.requires`, so the board never selected it."""
+    from backend.services import strategy_library as SL
+    from scripts import hyp_twin_board as TB
+    assert set(SL.WEIGHT_RULES) - {"equal"} <= set(TB.WEIGHT_COLUMNS)
+    src = (REPO / "scripts/hyp_twin_board.py").read_text(encoding="utf-8")
+    assert "WEIGHT_COLUMNS.get(rule.weight_rule)" in src

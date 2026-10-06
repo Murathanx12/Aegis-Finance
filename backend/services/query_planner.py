@@ -25,11 +25,18 @@ THE PIPELINE
    cost nothing: a bounded number per UTC day (`QUERY_PLANNER_MAX_QUERIES_DAY`),
    per seed lane (`QUERY_PLANNER_LANE_QUERIES_DAY`) and per run, least-recently
    searched seed first. Each has a `query_id` (hash of day, lane, tool, text).
-3. ONE OpenClaw agent turn per query (`openclaw_client.agent`, the existing
+3. THE SEARCH (review 2026-10-06 F1). With NO declared provider
+   (`QUERY_PLANNER_SEARCH_PROVIDER = None`, the default and today's truth) not
+   one agent turn is issued: the same templates run against the $0 keyless
+   sources -- Google News RSS (publisher + headline -> that publisher's OWN
+   search page; the Google redirect is never opened) and EDGAR full-text
+   search (the company's own 8-Ks on sec.gov). With a declared provider:
+   ONE OpenClaw agent turn per query (`openclaw_client.agent`, the existing
    path, the read-only tool scope UNCHANGED): "call <tool> once, list the URLs,
    open nothing". The scope is audited BEFORE the run (any config problem or
    any tool call outside the read set in 24 h = REFUSED) and the turn's own
-   transcript is read AFTER it: a call outside the read set stops the run; a
+   transcript is read AFTER it: a call outside the read set, or ANY tool but
+   the query's own (`web_fetch` included, F4), stops the run; a
    reply whose search tool never fired is not a search result, so its URLs are
    REFUSED (`NO_TOOL_CALL`) rather than trusted.
 4. EVERY URL is classified: REFUSED (money / checkout / mail / message hosts
@@ -241,18 +248,46 @@ def query_id(day: str, lane: str, tool: str, text: str) -> str:
     return hashlib.sha256(f"{day}|{lane}|{tool}|{text}".encode()).hexdigest()[:12]
 
 
-def templates(lane: str, seed: Any, i: int) -> tuple[str, str]:
-    """PURE. (tool, text) for the i-th query of a lane. Every third held name
-    is searched on X by cashtag; everything else on the web."""
+def search_provider() -> Optional[str]:
+    """The DECLARED OpenClaw search provider, or None (review 2026-10-06 F1).
+
+    Agent search turns are issued ONLY when this is set. Measured 2026-10-06:
+    `web_search` is allowed by the tool policy and has no provider behind it,
+    and `x_search` is not offered at all. Configuring a provider is an owner
+    decision (the audit's candidate, Brave, is card-gated; "no payments")."""
+    v = _cfg("QUERY_PLANNER_SEARCH_PROVIDER", None)
+    return str(v).strip() if v and str(v).strip() else None
+
+
+def templates(lane: str, seed: Any, i: int, *, mode: str = "free",
+              x_offered: bool = False) -> tuple[str, str]:
+    """PURE. (tool, text) for the i-th query of a lane.
+
+    `mode="agent"` (a provider is declared): `web_search`; every third held name
+    is an `x_search` by cashtag ONLY when `x_offered`. `mode="free"` (no
+    provider, the default): the $0 keyless sources -- `gnews_rss` (Google News
+    RSS search) for every lane, and `edgar_fts` (EDGAR full-text search, the
+    company's own 8-Ks) for every third held name and every second
+    opportunity. Same seeds, same fixed wording, no LLM turn."""
+    title = seed.get("title") if isinstance(seed, dict) else str(seed)
+    kw = " ".join((seed.get("keywords") or [])[:2]) if isinstance(seed, dict) else ""
+    if mode == "agent":
+        if lane == "held_names":
+            if i % 3 == 2 and x_offered:
+                return "x_search", f"${seed}"
+            return "web_search", f"{seed} stock news this week"
+        if lane == "themes":
+            return "web_search", f"{title} {kw} market impact".strip()
+        return "web_search", f"{seed} stock catalyst news"
     if lane == "held_names":
         if i % 3 == 2:
-            return "x_search", f"${seed}"
-        return "web_search", f"{seed} stock news this week"
+            return "edgar_fts", str(seed)
+        return "gnews_rss", f"{seed} stock"
     if lane == "themes":
-        kw = " ".join((seed.get("keywords") or [])[:2]) if isinstance(seed, dict) else ""
-        title = seed.get("title") if isinstance(seed, dict) else str(seed)
-        return "web_search", f"{title} {kw} market impact".strip()
-    return "web_search", f"{seed} stock catalyst news"
+        return "gnews_rss", f"{title} {kw}".strip()
+    if i % 2 == 1:
+        return "edgar_fts", str(seed)
+    return "gnews_rss", f"{seed} stock catalyst"
 
 
 def seed_key(lane: str, seed: Any) -> str:
@@ -267,7 +302,8 @@ def budget() -> dict:
 
 
 def plan_queries(sd: dict, *, day: str, ledger: list[dict], max_run: int | None = None,
-                 bud: dict | None = None) -> list[dict]:
+                 bud: dict | None = None, mode: str = "free",
+                 x_offered: bool = False) -> list[dict]:
     """PURE. The queries to issue now, within every budget.
 
     `ledger` is every earlier query row; today's rows count against the day and
@@ -295,7 +331,8 @@ def plan_queries(sd: dict, *, day: str, ledger: list[dict], max_run: int | None 
         for j in order:
             if len(qs) >= cap:
                 break
-            tool, text = templates(lane, items[j], n_lane + len(qs))
+            tool, text = templates(lane, items[j], n_lane + len(qs), mode=mode,
+                                   x_offered=x_offered)
             text = clean_text(text)
             if not text:
                 continue
@@ -465,9 +502,12 @@ def session_tool_errors(session_id: str, since: datetime) -> Optional[list[dict]
 
 
 def tool_unavailable(errors: Optional[list[dict]]) -> bool:
-    """PURE. Every tool result was the 'disabled / no provider' error."""
-    return bool(errors) and all(("disabled" in str(e.get("error")) or
-                                 "no provider" in str(e.get("error"))) for e in errors)
+    """PURE. Every tool result says the tool is not usable: 'disabled / no
+    provider' (measured on web_search) or 'not offered' (recorded for a turn
+    whose tool never fired and returned nothing -- x_search, measured)."""
+    return bool(errors) and all(any(w in str(e.get("error")) for w in
+                                    ("disabled", "no provider", "not offered"))
+                                for e in errors)
 
 
 def _agent(msg_file: str, *, model: str, timeout: float, purpose: str, session_id: str) -> dict:
@@ -487,7 +527,10 @@ def issue(q: dict, *, agent_fn: Callable[..., dict], tool_calls_fn: Callable[...
     """One query -> one agent turn -> its URLs and its own transcript's tool calls.
 
     The session id is OURS (so `agent` does not archive it before we read the
-    transcript); it is released here afterwards."""
+    transcript); it is released here afterwards. Review 2026-10-06 F4: in a
+    planner turn ANY tool other than the query's own search tool is a
+    violation (`web_fetch` included: it would reach a host `classify_url` never
+    saw), and so is any call outside the read set."""
     from backend.services import openclaw_tool_scope as OTS
     sid = f"aegis-qp-{q['query_id']}-{uuid.uuid4().hex[:6]}"
     t0 = _now()
@@ -515,7 +558,13 @@ def issue(q: dict, *, agent_fn: Callable[..., dict], tool_calls_fn: Callable[...
         except Exception:                                           # noqa: BLE001
             released = False
     by_tool = Counter(c.get("tool") for c in (calls or []))
-    bad = [c for c in (calls or []) if not OTS.is_read_call(c)]
+    bad = [c for c in (calls or []) if not OTS.is_read_call(c) or c.get("tool") != q["tool"]]
+    fired = None if calls is None else bool(by_tool.get(q["tool"]))
+    if fired is False and terrs == []:
+        # the tool never fired AND left no result: it is not offered to the agent
+        # (x_search, measured 2026-10-06). Recorded, so the row is not a silent zero.
+        terrs = [{"tool": q["tool"], "error": "not offered: the agent fired no tool and the "
+                                              "transcript holds no result for it"}]
     cost = res.get("priced_cost_usd")
     cost_known = cost is not None
     if cost is None:
@@ -524,11 +573,193 @@ def issue(q: dict, *, agent_fn: Callable[..., dict], tool_calls_fn: Callable[...
     return {"session_id": sid, "status": res.get("status"), "reply": res.get("reply") or "",
             "stderr": (res.get("stderr") or "")[:300], "call_id": res.get("call_id"),
             "tool_calls": None if calls is None else dict(by_tool),
-            "tool_fired": None if calls is None else bool(by_tool.get(q["tool"])),
+            "tool_fired": fired,
             "violations": [f"{c.get('utc')} {c.get('tool')}" for c in bad],
             "tool_errors": terrs,
             "cost_usd": float(cost), "cost_known": cost_known, "released": released,
             "latency_s": res.get("latency_s")}
+
+
+# ═══════════════════════════ the $0 keyless sources ══════════════════════════
+#
+# Review 2026-10-06 ("three things I would have done instead", 1): the query
+# text is fixed by template, so an LLM turn is only a transport to a search
+# tool that does not exist. These two are plain HTTP, keyless and $0:
+# * Google News RSS search (`news.google.com/rss/search`) -- already an ADOPTED
+#   source here (audit §C). Its item links are Google redirects and are NEVER
+#   opened (google.com stays refused); what is used is the item's PUBLISHER
+#   (`<source url=...>`) and HEADLINE: an allowlisted publisher with its own
+#   search page becomes a navigation to that site's search for the headline
+#   (`reader_scheduler.SEARCH_URLS`, the digest asks' mechanism -- never typing).
+# * EDGAR full-text search (`efts.sec.gov`, the SEC's own API, through the one
+#   SEC choke point `insider_form4._sec_get`): the company's own 8-Ks of the
+#   last 7 days, filtered to filings whose display name carries `(<TICKER>)`;
+#   the document URL is on sec.gov (an official, allowlisted host).
+
+FREE_SOURCES: tuple[str, ...] = ("gnews_rss", "edgar_fts")
+GNEWS_URL = "https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en"
+EDGAR_FTS_URL = ("https://efts.sec.gov/LATEST/search-index?q=%22{t}%22&forms=8-K"
+                 "&startdt={d0}&enddt={d1}")
+
+
+def gnews_url(text: str) -> str:
+    from urllib.parse import quote_plus
+    return GNEWS_URL.format(q=quote_plus(f"{text} when:7d"))
+
+
+def edgar_url(ticker: str, now: datetime) -> str:
+    from urllib.parse import quote
+    return EDGAR_FTS_URL.format(t=quote(ticker), d0=(now - timedelta(days=7)).date().isoformat(),
+                                d1=now.date().isoformat())
+
+
+def parse_gnews(raw: bytes, *, now: datetime, max_age_days: float = 7.0) -> list[dict]:
+    """PURE. Google News RSS -> [{headline, publisher, publisher_url, published}],
+    newest first, items older than `max_age_days` dropped. The redirect link is
+    NOT returned: it is never opened."""
+    import xml.etree.ElementTree as ET
+    from email.utils import parsedate_to_datetime
+    out = []
+    root = ET.fromstring(raw)
+    for it in root.iter("item"):
+        title = (it.findtext("title") or "").strip()
+        src = it.find("source")
+        pub_name = (src.text or "").strip() if src is not None else ""
+        pub_url = (src.get("url") or "").strip() if src is not None else ""
+        try:
+            t = parsedate_to_datetime(it.findtext("pubDate") or "")
+            t = t if t.tzinfo else t.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            t = None
+        if t is not None and (now - t).total_seconds() > max_age_days * 86400:
+            continue
+        if pub_name and title.endswith(" - " + pub_name):
+            title = title[: -len(" - " + pub_name)].strip()
+        if title and pub_url:
+            out.append({"headline": title, "publisher": pub_name, "publisher_url": pub_url,
+                        "published": t.isoformat() if t else None})
+    out.sort(key=lambda r: r["published"] or "", reverse=True)
+    return out
+
+
+_PAREN = re.compile(r"\(([^)]*)\)")
+
+
+def parse_edgar(data: dict, ticker: str) -> list[dict]:
+    """PURE. EDGAR FTS JSON -> [{url, form, file_date, company}] for filings
+    whose display name carries `(<TICKER>)` (the company's OWN filings)."""
+    out = []
+    t = str(ticker).upper()
+    for h in ((data or {}).get("hits") or {}).get("hits") or []:
+        src = h.get("_source") or {}
+        names = [str(n) for n in src.get("display_names") or []]
+        own = any(t in [x.strip().upper() for x in m.split(",")]
+                  for n in names for m in _PAREN.findall(n))
+        if not own:
+            continue
+        adsh = str(src.get("adsh") or "")
+        fname = str(h.get("_id") or "").split(":", 1)[-1]
+        ciks = src.get("ciks") or []
+        if not (adsh and fname and ciks):
+            continue
+        try:
+            cik = int(str(ciks[0]))
+        except ValueError:
+            continue
+        out.append({"url": f"https://www.sec.gov/Archives/edgar/data/{cik}/"
+                           f"{adsh.replace('-', '')}/{fname}",
+                    "form": src.get("form"), "file_date": src.get("file_date"),
+                    "company": names[0] if names else None})
+    return out
+
+
+def _http_get(url: str) -> bytes:
+    from scripts import news_pull as NP
+    return NP._http_get(url)
+
+
+def _sec_json(url: str) -> dict:
+    from backend.services.insider_form4 import _sec_get
+    return _sec_get(url).json()
+
+
+def _site_for_host(host: str) -> Optional[str]:
+    """The reader's own search-page site key for a publisher host, if any."""
+    from backend.services import reader_scheduler as RS
+    h = host.lower().removeprefix("www.")
+    for site, tpl in RS.SEARCH_URLS.items():
+        th = (urlsplit(tpl).hostname or "").lower().removeprefix("www.")
+        if h == th or h.endswith("." + th):
+            return site
+    return None
+
+
+def issue_free(q: dict, *, now: datetime, http_get: Callable[[str], bytes] | None = None,
+               sec_json: Callable[[str], dict] | None = None) -> dict:
+    """One $0 query -> candidate items (no LLM, no gateway)."""
+    items: list[dict] = []
+    status, err = "OK", None
+    # the newest 3 x the per-query URL cap are classified (a Google News search
+    # returns up to 100 items; classifying all of them only fills the quarantine)
+    n_items = 3 * int(_cfg("QUERY_PLANNER_MAX_URLS_PER_QUERY", 6))
+    try:
+        if q["tool"] == "gnews_rss":
+            for g in parse_gnews((http_get or _http_get)(gnews_url(q["text"])), now=now)[:n_items]:
+                items.append({"kind": "headline", **g})
+        elif q["tool"] == "edgar_fts":
+            for e in parse_edgar((sec_json or _sec_json)(edgar_url(q["text"], now)), q["text"]):
+                items.append({"kind": "article", **e})
+        else:
+            status, err = "ERROR", f"not a free source: {q['tool']}"
+    except Exception as exc:                                        # noqa: BLE001
+        status, err = "ERROR", f"{type(exc).__name__}: {exc}"[:300]
+    return {"session_id": None, "status": status, "reply": "", "stderr": err or "",
+            "call_id": None, "tool_calls": None,
+            "tool_fired": status == "OK", "violations": [], "tool_errors": [],
+            "cost_usd": 0.0, "cost_known": True, "released": None, "latency_s": None,
+            "items": items}
+
+
+def candidates(q: dict, r: dict) -> list[dict]:
+    """PURE (reads config). The query's result -> [{url, kind, site?, headline?,
+    verdict, reason}] BEFORE the day / duplicate / already-read checks."""
+    out: list[dict] = []
+    if q["tool"] == "gnews_rss":
+        for g in r.get("items") or []:
+            host = (urlsplit(g["publisher_url"]).hostname or "").lower()
+            v, why = classify_url(f"https://{host}/") if host else ("refused", "no publisher")
+            row = {"url": g["publisher_url"], "kind": "headline", "headline": g["headline"],
+                   "publisher": g.get("publisher"), "published": g.get("published"),
+                   "host": host}
+            if v == "admitted":
+                site = _site_for_host(host)
+                if site is None:
+                    v, why = "no_site_search", (f"publisher {host} is allowed but has no own "
+                                                "search page here; the redirect is never opened")
+                else:
+                    from backend.services import reader_scheduler as RS
+                    su = RS.search_url(site, g["headline"])
+                    v, why = classify_url(su or "")
+                    row.update(url=su, kind="search", site=site)
+            out.append({**row, "verdict": v, "reason": why})
+        return out
+    if q["tool"] == "edgar_fts":
+        for e in r.get("items") or []:
+            v, why = classify_url(e["url"])
+            out.append({"url": e["url"], "kind": "article", "form": e.get("form"),
+                        "file_date": e.get("file_date"), "verdict": v, "reason": why})
+        return out
+    for u in parse_urls(r.get("reply") or ""):
+        if r["tool_fired"] is False:
+            v, why = "refused", "NO_TOOL_CALL: the search tool never fired; not a search result"
+        elif r["tool_fired"] is None:
+            v, why = "quarantined", "tool call unverifiable (transcript unreadable)"
+        else:
+            v, why = classify_url(u)
+        from backend.services import web_reader as WR
+        out.append({"url": u, "kind": "social" if WR.is_social(u) else "article",
+                    "verdict": v, "reason": why})
+    return out
 
 
 def _norm(u: str) -> str:
@@ -536,8 +767,48 @@ def _norm(u: str) -> str:
     return WR.norm_url(u)
 
 
+def _stored_urls() -> set[str]:
+    from backend.services import web_reader as WR
+    return set(WR.stored_urls())
+
+
 def admitted_today(day: str, opt: Path | None = None) -> int:
     return sum(1 for r in _read_jsonl(queue_path(opt)) if str(r.get("t") or "")[:10] == day)
+
+
+def runs_log_path(opt: Path | None = None) -> Path:
+    return dj_dir(opt) / "query_planner_runs.jsonl"
+
+
+def lock_path(opt: Path | None = None) -> Path:
+    return dj_dir(opt) / "query_planner.lock"
+
+
+def acquire_lock(opt: Path | None = None, *, now: datetime | None = None,
+                 max_age_s: float | None = None) -> Optional[dict]:
+    """The single-run lock (review F3: never two planners at once). Returns the
+    HOLDER when another run holds a fresh lock, else None (acquired). A lock
+    older than QUERY_PLANNER_LOCK_MAX_S is stale (a crashed run) and is taken."""
+    import os
+    now = now or _now()
+    lim = float(_cfg("QUERY_PLANNER_LOCK_MAX_S", 3600.0) if max_age_s is None else max_age_s)
+    p = lock_path(opt)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    held = _read_json(p)
+    if isinstance(held, dict):
+        t = _ts(held.get("t"))
+        if t is not None and (now - t).total_seconds() < lim:
+            return held
+    p.write_text(json.dumps({"pid": os.getpid(), "t": now.isoformat(timespec="seconds")}),
+                 encoding="utf-8")
+    return None
+
+
+def release_lock(opt: Path | None = None) -> None:
+    import os
+    held = _read_json(lock_path(opt))
+    if isinstance(held, dict) and held.get("pid") == os.getpid():
+        lock_path(opt).unlink(missing_ok=True)
 
 
 def run(*, max_queries: int | None = None, due_only: bool = False, opt: Path | None = None,
@@ -547,18 +818,39 @@ def run(*, max_queries: int | None = None, due_only: bool = False, opt: Path | N
         tool_errors_fn: Callable[..., Any] | None = None,
         scope_fn: Callable[[], dict] | None = None,
         gateway_fn: Callable[[], bool] | None = None,
-        seeds_fn: Callable[[], dict] | None = None, write: bool = True) -> dict:
-    """Plan, issue, classify, queue; write the receipt. Never raises."""
+        seeds_fn: Callable[[], dict] | None = None,
+        http_get: Callable[[str], bytes] | None = None,
+        sec_json: Callable[[str], dict] | None = None,
+        stored_fn: Callable[[], set] | None = None,
+        provider: Any = "config", write: bool = True) -> dict:
+    """Plan, issue, classify, queue; write the receipt. Never raises.
+
+    A receipt is written only for a run that got past the STOP / enabled / due
+    / lock checks (review F7); those four append ONE line to
+    `dowjones/query_planner_runs.jsonl` instead."""
     now = now or _now()
     day = now.date().isoformat()
     run_id = f"{now:%Y%m%dT%H%M%SZ}-{uuid.uuid4().hex[:6]}"
+    prov = search_provider() if provider == "config" else provider
+    mode = "agent" if prov else "free"
     rec: dict = {"receipt": "query_planner", "run_id": run_id,
                  "generated_utc": now.isoformat(timespec="seconds"), "day": day,
-                 "status": None, "refusal": None, "budget": budget(),
-                 "model": _cfg("QUERY_PLANNER_MODEL", "deepseek/deepseek-flash"),
+                 "status": None, "refusal": None, "budget": budget(), "mode": mode,
+                 "agent_search": ({"status": "ENABLED", "provider": prov} if prov else
+                                  {"status": "REFUSED", "reason": (
+                                      "NO_SEARCH_PROVIDER_DECLARED: no search provider declared;"
+                                      " owner decision (QUERY_PLANNER_SEARCH_PROVIDER)")}),
+                 "model": _cfg("QUERY_PLANNER_MODEL", "deepseek/deepseek-flash") if prov else None,
                  "licence": "PRODUCT_EXPERIMENT (reader input; no order, no claim)",
                  "queries": [], "totals": {}}
     ledger = _read_jsonl(ledger_path(opt))
+
+    def log_only(status: str, why: str) -> dict:
+        rec["status"], rec["refusal"] = status, why
+        if write:
+            _append_jsonl(runs_log_path(opt), [{"t": now.isoformat(timespec="seconds"),
+                                                "status": status, "why": why}])
+        return rec
 
     def done(status: str, refusal: str | None = None) -> dict:
         rec["status"], rec["refusal"] = status, refusal
@@ -569,91 +861,115 @@ def run(*, max_queries: int | None = None, due_only: bool = False, opt: Path | N
             rec["yield"] = {"error": f"{type(exc).__name__}: {exc}"[:200]}
         if write:
             rec["path"] = str(write_receipt(rec, opt))
+            _append_jsonl(runs_log_path(opt), [{"t": now.isoformat(timespec="seconds"),
+                                                "status": status, "why": refusal,
+                                                "run_id": run_id, "mode": mode}])
         return rec
 
     if stop_path(opt).exists():
-        return done("REFUSED", f"STOP file present: {stop_path(opt).name}")
+        return log_only("REFUSED", f"STOP file present: {stop_path(opt).name}")
     if not bool(_cfg("QUERY_PLANNER_ENABLED", True)):
-        return done("REFUSED", "QUERY_PLANNER_ENABLED is False")
+        return log_only("REFUSED", "QUERY_PLANNER_ENABLED is False")
     if due_only:
         last = max((_ts(r.get("t")) for r in ledger if r.get("t")), default=None,
                    key=lambda t: t or datetime.min.replace(tzinfo=timezone.utc))
         every = float(_cfg("QUERY_PLANNER_EVERY_H", 6.0))
         if last is not None and (now - last).total_seconds() < every * 3600:
-            return done("NOT_DUE", f"last query {last.isoformat(timespec='seconds')} "
-                                   f"< {every:g} h ago")
-    # 2026-10-06, measured: the search tool fired and had NO PROVIDER. While the
-    # newest TOOL_UNAVAILABLE_STREAK queries all say so, the planner probes ONCE
-    # per 24 h (one query) instead of spending the day's budget on a known zero.
-    streak = int(_cfg("QUERY_PLANNER_TOOL_UNAVAILABLE_STREAK", 3))
-    recent = [r for r in ledger if r.get("t")][-streak:]
-    if len(recent) >= streak and all(r.get("tool_unavailable") for r in recent):
-        last_t = _ts(recent[-1].get("t"))
-        rec["tool_unavailable_gate"] = (f"newest {streak} queries: search tool fired with "
-                                        f"no provider; one probe per 24 h")
-        if last_t is not None and (now - last_t).total_seconds() < 24 * 3600:
-            return done("REFUSED", "TOOL_UNAVAILABLE: web_search has no provider "
-                                   f"(last probe {last_t.isoformat(timespec='seconds')}); "
-                                   "configure a search provider in OpenClaw (owner) or wait "
-                                   "for the daily probe")
-        max_queries = 1
+            return log_only("NOT_DUE", f"last query {last.isoformat(timespec='seconds')} "
+                                       f"< {every:g} h ago")
+    if write:
+        holder = acquire_lock(opt, now=now)
+        if holder is not None:
+            return log_only("ALREADY_RUNNING", f"another planner holds the lock: {holder}")
+    try:
+        return _run_locked(rec, done, ledger=ledger, mode=mode, now=now, day=day, opt=opt,
+                           run_id=run_id, max_queries=max_queries, agent_fn=agent_fn,
+                           tool_calls_fn=tool_calls_fn, release_fn=release_fn,
+                           tool_errors_fn=tool_errors_fn, scope_fn=scope_fn,
+                           gateway_fn=gateway_fn, seeds_fn=seeds_fn, http_get=http_get,
+                           sec_json=sec_json, stored_fn=stored_fn, write=write)
+    finally:
+        if write:
+            release_lock(opt)
+
+
+def _run_locked(rec: dict, done: Callable[..., dict], *, ledger: list[dict], mode: str,
+                now: datetime, day: str, opt: Path | None, run_id: str,
+                max_queries: int | None, agent_fn, tool_calls_fn, release_fn, tool_errors_fn,
+                scope_fn, gateway_fn, seeds_fn, http_get, sec_json, stored_fn,
+                write: bool) -> dict:
+    if mode == "free" and not bool(_cfg("QUERY_PLANNER_FREE_SOURCES_ENABLED", True)):
+        return done("REFUSED", rec["agent_search"]["reason"]
+                    + "; and the $0 sources are switched off")
     sd = (seeds_fn or seeds)()
     rec["seeds"] = {k: len(v or []) for k, v in sd.items()}
-    plan = plan_queries(sd, day=day, ledger=ledger, max_run=max_queries)
+    plan = plan_queries(sd, day=day, ledger=ledger, max_run=max_queries, mode=mode,
+                        x_offered=bool(_cfg("QUERY_PLANNER_X_SEARCH_OFFERED", False)))
     rec["planned"] = len(plan)
     if not plan:
         return done("NOTHING_TO_DO", "no query left inside today's budget (or no seeds)")
-    try:
-        scope = (scope_fn or scope_preflight)()
-    except Exception as exc:                                        # noqa: BLE001
-        scope = {"verdict": "CANNOT_DETERMINE", "error": f"{type(exc).__name__}: {exc}"[:200]}
-    rec["scope_before"] = scope
-    if scope.get("verdict") != "OK":
-        return done("REFUSED", f"read-only tool scope is {scope.get('verdict')}: "
-                               f"{scope.get('config_problems') or scope.get('error') or ''}"[:300])
-    try:
-        gw = (gateway_fn or gateway_reachable)()
-    except Exception:                                               # noqa: BLE001
-        gw = False
-    if not gw:
-        return done("REFUSED", "OpenClaw gateway not reachable on its loopback port")
-
-    agent_fn = agent_fn or _agent
-    tool_calls_fn = tool_calls_fn or session_tool_calls
-    if release_fn is None and agent_fn is _agent:
-        release_fn = _release
-    if tool_errors_fn is None and agent_fn is _agent:
-        tool_errors_fn = session_tool_errors
+    if mode == "agent":
+        try:
+            scope = (scope_fn or scope_preflight)()
+        except Exception as exc:                                    # noqa: BLE001
+            scope = {"verdict": "CANNOT_DETERMINE",
+                     "error": f"{type(exc).__name__}: {exc}"[:200]}
+        rec["scope_before"] = scope
+        if scope.get("verdict") != "OK":
+            return done("REFUSED", f"read-only tool scope is {scope.get('verdict')}: "
+                                   f"{scope.get('config_problems') or scope.get('error') or ''}"[:300])
+        try:
+            gw = (gateway_fn or gateway_reachable)()
+        except Exception:                                           # noqa: BLE001
+            gw = False
+        if not gw:
+            return done("REFUSED", "OpenClaw gateway not reachable on its loopback port")
+        agent_fn = agent_fn or _agent
+        tool_calls_fn = tool_calls_fn or session_tool_calls
+        if release_fn is None and agent_fn is _agent:
+            release_fn = _release
+        if tool_errors_fn is None and agent_fn is _agent:
+            tool_errors_fn = session_tool_errors
     cap = float(_cfg("QUERY_PLANNER_RUN_USD_CAP", 0.30))
     max_adm = int(_cfg("QUERY_PLANNER_MAX_ADMITTED_DAY", 120))
+    per_q = int(_cfg("QUERY_PLANNER_MAX_URLS_PER_QUERY", 6))
     n_adm_today = admitted_today(day, opt)
     queued_before = {_norm(str(r.get("url") or "")) for r in _read_jsonl(queue_path(opt))}
+    try:
+        stored = (stored_fn or _stored_urls)()
+    except Exception:                                               # noqa: BLE001
+        stored = set()
     spent = 0.0
     stop_reason = None
     for q in plan:
         if spent >= cap:
             stop_reason = f"run USD cap {cap:g} reached ({spent:.4f})"
             break
-        r = issue(q, agent_fn=agent_fn, tool_calls_fn=tool_calls_fn, release_fn=release_fn,
-                  tool_errors_fn=tool_errors_fn)
+        if q["tool"] in FREE_SOURCES:
+            r = issue_free(q, now=now, http_get=http_get, sec_json=sec_json)
+        else:
+            r = issue(q, agent_fn=agent_fn, tool_calls_fn=tool_calls_fn,
+                      release_fn=release_fn, tool_errors_fn=tool_errors_fn)
         spent += r["cost_usd"]
-        urls = parse_urls(r["reply"])
-        rows = []
-        for u in urls:
-            if r["tool_fired"] is False:
-                v, why = "refused", "NO_TOOL_CALL: the search tool never fired; not a search result"
-            elif r["tool_fired"] is None:
-                v, why = "quarantined", "tool call unverifiable (transcript unreadable)"
+        rows = candidates(q, r)
+        n_q = 0
+        for x in rows:
+            if x["verdict"] != "admitted":
+                continue
+            nu = _norm(x["url"])
+            if nu in queued_before:
+                x["verdict"], x["reason"] = "duplicate", "already queued by an earlier query"
+            elif x["kind"] != "search" and nu in stored:
+                # review F2: the fixed reader already read it -- not planner novelty
+                x["verdict"], x["reason"] = "already_read", "the reader already stored this page"
+            elif n_q >= per_q:
+                x["verdict"], x["reason"] = "deferred", f"{per_q} URLs per query"
+            elif n_adm_today >= max_adm:
+                x["verdict"], x["reason"] = "deferred", (f"QUERY_PLANNER_MAX_ADMITTED_DAY "
+                                                         f"{max_adm} reached")
             else:
-                v, why = classify_url(u)
-            nu = _norm(u)
-            if v == "admitted" and nu in queued_before:
-                v, why = "duplicate", "already queued by an earlier query"
-            elif v == "admitted" and n_adm_today >= max_adm:
-                v, why = "deferred", f"QUERY_PLANNER_MAX_ADMITTED_DAY {max_adm} reached"
-            rows.append({"url": u, "verdict": v, "reason": why})
-            if v == "admitted":
                 n_adm_today += 1
+                n_q += 1
                 queued_before.add(nu)
         stamp = _now().isoformat(timespec="seconds")
         qrow = {**q, "t": stamp, "run_id": run_id, "status": r["status"],
@@ -663,7 +979,7 @@ def run(*, max_queries: int | None = None, due_only: bool = False, opt: Path | N
                 "tool_unavailable": tool_unavailable(r["tool_errors"]),
                 "cost_usd": round(r["cost_usd"], 6),
                 "cost_known": r["cost_known"], "released": r["released"],
-                "n_urls": len(urls), "urls": rows,
+                "n_urls": len(rows), "urls": rows,
                 "error": r["stderr"] if r["status"] != "OK" else None}
         rec["queries"].append(qrow)
         if write:
@@ -671,42 +987,46 @@ def run(*, max_queries: int | None = None, due_only: bool = False, opt: Path | N
                                              | {"verdicts": dict(Counter(x["verdict"] for x in rows))}])
             _append_jsonl(queue_path(opt), [
                 {"t": stamp, "first_seen_utc": stamp, "query_id": q["query_id"],
-                 "discovered_via": q["tool"], "url": x["url"], "seed_lane": q["seed_lane"],
-                 "seed": q["seed"], "question": q["text"], "run_id": run_id}
+                 "discovered_via": q["tool"], "url": x["url"], "kind": x["kind"],
+                 "site": x.get("site"), "headline": x.get("headline"),
+                 "seed_lane": q["seed_lane"], "seed": q["seed"], "question": q["text"],
+                 "run_id": run_id}
                 for x in rows if x["verdict"] == "admitted"])
             _append_jsonl(quarantine_path(opt), [
                 {"t": stamp, "first_seen_utc": stamp, "query_id": q["query_id"],
                  "discovered_via": q["tool"], "url": x["url"],
-                 "host": (urlsplit(x["url"]).hostname or "").lower(), "reason": x["reason"],
+                 "host": x.get("host") or (urlsplit(x["url"]).hostname or "").lower(),
+                 "headline": x.get("headline"), "reason": x["reason"],
                  "run_id": run_id, "review": "PENDING: a human allows or refuses this host"}
-                for x in rows if x["verdict"] == "quarantined"])
+                for x in {(x.get("host") or (urlsplit(x["url"]).hostname or "").lower()): x
+                          for x in rows if x["verdict"] == "quarantined"}.values()])
         if r["violations"]:
             stop_reason = f"SCOPE_VIOLATION: {r['violations'][:3]} -- run stopped"
             break
     rec["spent_usd"] = round(spent, 6)
     if stop_reason and stop_reason.startswith("SCOPE_VIOLATION"):
         return done("REFUSED", stop_reason)
-    try:
-        rec["scope_after"] = (scope_fn or scope_preflight)()
-    except Exception as exc:                                        # noqa: BLE001
-        rec["scope_after"] = {"verdict": "CANNOT_DETERMINE", "error": str(exc)[:200]}
+    if mode == "agent":
+        try:
+            rec["scope_after"] = (scope_fn or scope_preflight)()
+        except Exception as exc:                                    # noqa: BLE001
+            rec["scope_after"] = {"verdict": "CANNOT_DETERMINE", "error": str(exc)[:200]}
     return done("OK", stop_reason)
 
 
 def totals(queries: list[dict]) -> dict:
     """PURE. Counts over one run's query rows, overall and per seed lane / tool."""
     def blank() -> dict:
-        return {"queries": 0, "tool_fired": 0, "tool_unverified": 0, "urls": 0,
-                "admitted": 0, "quarantined": 0, "refused": 0, "duplicate": 0,
-                "deferred": 0, "cost_usd": 0.0}
+        return {"queries": 0, "tool_fired": 0, "tool_unverified": 0, "tool_unavailable": 0,
+                "urls": 0, "admitted": 0, "quarantined": 0, "refused": 0, "duplicate": 0,
+                "already_read": 0, "deferred": 0, "no_site_search": 0, "cost_usd": 0.0}
     out, by_lane, by_tool = blank(), defaultdict(blank), defaultdict(blank)
     for q in queries:
         for b in (out, by_lane[q.get("seed_lane")], by_tool[q.get("tool")]):
             b["queries"] += 1
             b["tool_fired"] += int(q.get("tool_fired") is True)
             b["tool_unverified"] += int(q.get("tool_fired") is None)
-            b["tool_unavailable"] = b.get("tool_unavailable", 0) + int(
-                bool(q.get("tool_unavailable")))
+            b["tool_unavailable"] += int(bool(q.get("tool_unavailable")))
             b["urls"] += int(q.get("n_urls") or 0)
             b["cost_usd"] = round(b["cost_usd"] + float(q.get("cost_usd") or 0.0), 6)
             for x in q.get("urls") or []:
@@ -736,10 +1056,10 @@ def zero_kind(*, queries: int, tool_fired: int, urls: int, admitted: int, pages:
     """PURE. WHICH zero (or YIELDING), so '0 claims' never hides 'no query ran'."""
     if queries == 0:
         return "NO_QUERIES_RAN"
+    if urls == 0 and tool_unavailable > 0 and tool_unavailable >= tool_fired:
+        return "TOOL_FIRED_BUT_UNAVAILABLE"
     if tool_fired == 0 and urls == 0:
         return "QUERIES_RAN_NO_TOOL_CALL"
-    if urls == 0 and tool_unavailable >= tool_fired > 0:
-        return "TOOL_FIRED_BUT_UNAVAILABLE"
     if urls == 0:
         return "QUERIES_RAN_NO_URLS"
     if admitted == 0:
@@ -754,32 +1074,76 @@ def zero_kind(*, queries: int, tool_fired: int, urls: int, admitted: int, pages:
 
 
 def _host(u: str) -> str:
+    """The bare host of a URL WITH a scheme (review F6: a scheme-less
+    normalised URL has no hostname, so every claim fell into one '' bucket)."""
+    u = str(u or "")
+    if u and "://" not in u:
+        u = "https://" + u
     try:
         return (urlsplit(u).hostname or "").lower().removeprefix("www.")
     except ValueError:
         return ""
 
 
+def _pred_claim_rows(od: Path) -> list[tuple[str, str]]:
+    """(made_at, claim_hash) for every forecast row that carries a claim hash,
+    cached in `dowjones/query_planner_pred_cache.json` keyed by the ledger's
+    size and mtime (review F7: the 50 MB ledger is read once per change, not
+    once per launch)."""
+    pred = od / "predictions.jsonl"
+    cache = od / "dowjones" / "query_planner_pred_cache.json"
+    try:
+        st = pred.stat()
+    except OSError:
+        return []
+    stamp = f"{st.st_size}:{st.st_mtime_ns}"
+    c = _read_json(cache)
+    if isinstance(c, dict) and c.get("stamp") == stamp:
+        return [tuple(x) for x in c.get("rows") or []]
+    rows: list[tuple[str, str]] = []
+    with pred.open(encoding="utf-8", errors="replace") as fh:
+        for ln in fh:
+            if '"claim_hash"' not in ln:
+                continue
+            try:
+                p = json.loads(ln)
+            except ValueError:
+                continue
+            ch = (p.get("inputs_used") or {}).get("claim_hash")
+            if ch and p.get("made_at"):
+                rows.append((str(p["made_at"]), str(ch)))
+    try:
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        tmp = cache.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps({"stamp": stamp, "rows": rows}), encoding="utf-8")
+        tmp.replace(cache)
+    except OSError:
+        pass
+    return rows
+
+
 def yield_report(*, now: datetime | None = None, window_h: float = 24.0,
                  opt: Path | None = None) -> dict:
     """Queries -> URLs -> pages read -> claims -> forecast rows, for the planner
-    and for every other page the reader read in the same window. Files only.
+    and for the fixed reader in the same window. Files only.
 
-    Pages are the page log's loads whose URL the planner queued (or whose lane
-    is `qp:<id>`); claims are `sources/claims.jsonl` rows whose `post_url` is a
-    planner page; forecast rows are `predictions.jsonl` rows whose
-    `inputs_used.claim_hash` is one of those claims. The rest is the
-    non-planner queue, counted the same way, for comparison."""
+    ATTRIBUTION IS RECORDED, NEVER INFERRED (review 2026-10-06 F2):
+    * a planner page is a page-log row whose lane is `qp:<query_id>` AND whose
+      time is at or after that query's issue time; a page the fixed lanes had
+      already read earlier in the window is counted as `pages_already_read`
+      and NOT as planner yield;
+    * a planner claim is a `sources/claims.jsonl` row carrying `query_id` (or a
+      `reader_lane` of `qp:`), stamped when the claim was WRITTEN from the
+      stored article's `reached_by`;
+    * forecast rows follow the claim hash.
+    The comparison the review asks for is on the receipt: claims per page for
+    planner pages vs fixed-lane pages ON THE SAME HOSTS in the same window."""
     now = now or _now()
     since = now - timedelta(hours=window_h)
     od = opt_dir(opt)
-    led = [r for r in _read_jsonl(ledger_path(opt)) if (_ts(r.get("t")) or since) >= since]
-    q_by_id = {r.get("query_id"): r for r in _read_jsonl(ledger_path(opt))}
-    queued = _read_jsonl(queue_path(opt))
-    url_q: dict[str, dict] = {}
-    for r in queued:
-        if r.get("url"):
-            url_q.setdefault(_norm(str(r["url"])), r)
+    all_led = _read_jsonl(ledger_path(opt))
+    led = [r for r in all_led if (_ts(r.get("t")) or since) >= since]
+    q_by_id = {r.get("query_id"): r for r in all_led}
     vc = Counter()
     for r in led:
         for k, v in (r.get("verdicts") or {}).items():
@@ -788,87 +1152,96 @@ def yield_report(*, now: datetime | None = None, window_h: float = 24.0,
              "tool_fired": sum(1 for r in led if r.get("tool_fired") is True),
              "tool_unavailable": sum(1 for r in led if r.get("tool_unavailable")),
              "urls": sum(int(r.get("n_urls") or 0) for r in led),
-             "admitted": vc.get("admitted", 0), "quarantined": vc.get("quarantined", 0),
-             "refused": vc.get("refused", 0), "duplicate": vc.get("duplicate", 0),
-             "deferred": vc.get("deferred", 0),
+             **{k: vc.get(k, 0) for k in ("admitted", "quarantined", "refused", "duplicate",
+                                          "already_read", "deferred", "no_site_search")},
              "cost_usd": round(sum(float(r.get("cost_usd") or 0) for r in led), 6)}
+    adm_or_read = q_tot["admitted"] + q_tot["already_read"]
+    q_tot["share_already_read"] = (round(q_tot["already_read"] / adm_or_read, 4)
+                                   if adm_or_read else None)
 
     def blank() -> dict:
         return {"pages_read": 0, "pages_ok": 0, "claims": 0, "forecast_rows": 0}
     pl, other = blank(), blank()
     pl_lane, pl_tool, pl_host = defaultdict(blank), defaultdict(blank), defaultdict(blank)
     ot_host = defaultdict(blank)
-    pl_urls: set[str] = set()
-    ot_urls: set[str] = set()
-    pl_meta: dict[str, dict] = {}
+    fixed_first: dict[str, datetime] = {}
+    pages_before_query = pages_already_read = 0
+    rows = []
     for r in _read_jsonl(od / "dowjones" / "page_log.jsonl"):
         t = _ts(r.get("t"))
-        if t is None or t < since:
-            continue
+        if t is not None and t >= since:
+            rows.append((t, r))
+    rows.sort(key=lambda x: x[0])
+    for t, r in rows:
         u = _norm(str(r.get("url") or ""))
         lane = str(r.get("lane") or "")
-        meta = url_q.get(u)
-        if meta is None and lane.startswith("qp:"):
-            meta = {"query_id": lane[3:], **(q_by_id.get(lane[3:]) or {})}
-            meta.setdefault("discovered_via", meta.get("tool"))
+        h = _host(str(r.get("url") or "")) or str(r.get("host") or "").removeprefix("www.")
         ok = int(str(r.get("class") or "") == "OK")
-        h = str(r.get("host") or _host(u))
-        if meta is not None:
-            ql = q_by_id.get(meta.get("query_id")) or meta
-            for b in (pl, pl_lane[ql.get("seed_lane")], pl_tool[meta.get("discovered_via")],
-                      pl_host[h]):
+        if lane.startswith("qp:"):
+            qid = lane[3:]
+            ql = q_by_id.get(qid) or {}
+            issued = _ts(ql.get("t"))
+            if issued is None or t < issued:
+                pages_before_query += 1
+                continue
+            if u in fixed_first and fixed_first[u] <= t:
+                pages_already_read += 1
+                continue
+            for b in (pl, pl_lane[ql.get("seed_lane")], pl_tool[ql.get("tool")], pl_host[h]):
                 b["pages_read"] += 1
                 b["pages_ok"] += ok
-            pl_urls.add(u)
-            pl_meta[u] = {"seed_lane": ql.get("seed_lane"), "tool": meta.get("discovered_via"),
-                          "host": h}
         else:
+            fixed_first.setdefault(u, t)
             for b in (other, ot_host[h]):
                 b["pages_read"] += 1
                 b["pages_ok"] += ok
-            ot_urls.add(u)
     pl_claims: dict[str, dict] = {}
-    ot_claims: set[str] = set()
+    ot_claims: dict[str, str] = {}
     for c in _read_jsonl(od / "sources" / "claims.jsonl"):
         t = _ts(c.get("observed_utc"))
         if t is None or t < since:
             continue
-        u = _norm(str(c.get("post_url") or ""))
-        h = c.get("claim_hash")
-        if u in pl_urls:
-            m = pl_meta[u]
-            for b in (pl, pl_lane[m["seed_lane"]], pl_tool[m["tool"]], pl_host[m["host"]]):
+        h = _host(str(c.get("post_url") or ""))
+        lane = str(c.get("reader_lane") or "")
+        qid = c.get("query_id") or (lane[3:] if lane.startswith("qp:") else None)
+        if qid:
+            ql = q_by_id.get(qid) or {}
+            m = {"seed_lane": ql.get("seed_lane"), "tool": ql.get("tool"), "host": h}
+            for b in (pl, pl_lane[m["seed_lane"]], pl_tool[m["tool"]], pl_host[h]):
                 b["claims"] += 1
-            pl_claims[h] = m
+            pl_claims[str(c.get("claim_hash"))] = m
         else:
             other["claims"] += 1
-            ot_host[_host(u)]["claims"] += 1
-            ot_claims.add(h)
-    pred = od / "predictions.jsonl"
-    try:
-        with pred.open(encoding="utf-8", errors="replace") as fh:
-            for ln in fh:
-                if '"claim_hash"' not in ln:
-                    continue
-                try:
-                    p = json.loads(ln)
-                except ValueError:
-                    continue
-                t = _ts(p.get("made_at"))
-                if t is None or t < since:
-                    continue
-                ch = (p.get("inputs_used") or {}).get("claim_hash")
-                if ch in pl_claims:
-                    m = pl_claims[ch]
-                    for b in (pl, pl_lane[m["seed_lane"]], pl_tool[m["tool"]],
-                              pl_host[m["host"]]):
-                        b["forecast_rows"] += 1
-                elif ch:
-                    other["forecast_rows"] += 1
-    except OSError:
-        pass
+            ot_host[h]["claims"] += 1
+            ot_claims[str(c.get("claim_hash"))] = h
+    for made, ch in _pred_claim_rows(od):
+        t = _ts(made)
+        if t is None or t < since:
+            continue
+        if ch in pl_claims:
+            m = pl_claims[ch]
+            for b in (pl, pl_lane[m["seed_lane"]], pl_tool[m["tool"]], pl_host[m["host"]]):
+                b["forecast_rows"] += 1
+        else:
+            other["forecast_rows"] += 1
+            if ch in ot_claims:
+                ot_host[ot_claims[ch]]["forecast_rows"] += 1
+    # the review's measurement: the planner's marginal claim rate vs what the
+    # fixed reader earns per page on the SAME hosts in the SAME window
+    same = sorted(h for h in pl_host if h and ot_host.get(h, {}).get("pages_read"))
+    pp = sum(pl_host[h]["pages_read"] for h in same)
+    pc = sum(pl_host[h]["claims"] for h in same)
+    fp = sum(ot_host[h]["pages_read"] for h in same)
+    fc = sum(ot_host[h]["claims"] for h in same)
+    rate = {"hosts": same,
+            "planner_pages": pp, "planner_claims": pc,
+            "planner_claims_per_page": round(pc / pp, 4) if pp else None,
+            "fixed_pages": fp, "fixed_claims": fc,
+            "fixed_claims_per_page": round(fc / fp, 4) if fp else None,
+            "pages_before_query_excluded": pages_before_query,
+            "pages_already_read_excluded": pages_already_read}
     zk = zero_kind(queries=q_tot["queries"], tool_fired=q_tot["tool_fired"], urls=q_tot["urls"],
-                   admitted=q_tot["admitted"] + q_tot["duplicate"], pages=pl["pages_read"],
+                   admitted=q_tot["admitted"], pages=pl["pages_read"],
                    claims=pl["claims"], forecasts=pl["forecast_rows"],
                    tool_unavailable=q_tot["tool_unavailable"])
     return {"window_h": window_h, "since_utc": since.isoformat(timespec="seconds"),
@@ -877,17 +1250,23 @@ def yield_report(*, now: datetime | None = None, window_h: float = 24.0,
                         "by_host": dict(pl_host)},
             "non_planner": {**other, "by_host_top": dict(sorted(
                 ot_host.items(), key=lambda kv: -kv[1]["pages_read"])[:12])},
-            "line": yield_line(zk, q_tot, pl, other, window_h)}
+            "claims_per_page_same_hosts": rate,
+            "line": yield_line(zk, q_tot, pl, other, window_h, rate)}
 
 
-def yield_line(zk: str, q: dict, pl: dict, other: dict, window_h: float) -> str:
+def yield_line(zk: str, q: dict, pl: dict, other: dict, window_h: float,
+               rate: dict | None = None) -> str:
+    rate = rate or {}
     return (f"query_planner {window_h:g}h: {zk} -- {q['queries']} queries "
-            f"({q['tool_fired']} tool fired, {q.get('tool_unavailable', 0)} tool "
+            f"({q['tool_fired']} answered, {q.get('tool_unavailable', 0)} tool "
             f"unavailable), {q['urls']} URLs, {q['admitted']} admitted / "
-            f"{q['quarantined']} quarantined / {q['refused']} refused; planner pages "
-            f"{pl['pages_read']} -> claims {pl['claims']} -> forecasts {pl['forecast_rows']}; "
-            f"non-planner pages {other['pages_read']} -> claims {other['claims']} -> "
-            f"forecasts {other['forecast_rows']}; spend ${q['cost_usd']:.4f}")
+            f"{q['quarantined']} quarantined / {q['refused']} refused / "
+            f"{q.get('already_read', 0)} already read (share {q.get('share_already_read')}); "
+            f"planner pages {pl['pages_read']} -> claims {pl['claims']} -> forecasts "
+            f"{pl['forecast_rows']}; non-planner pages {other['pages_read']} -> claims "
+            f"{other['claims']} -> forecasts {other['forecast_rows']}; claims/page same hosts "
+            f"planner {rate.get('planner_claims_per_page')} vs fixed "
+            f"{rate.get('fixed_claims_per_page')}; spend ${q['cost_usd']:.4f}")
 
 
 # ═══════════════════════════════════ CLI ═════════════════════════════════════
@@ -901,15 +1280,23 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max", type=int, default=None, help="queries this run (<= run cap)")
     ap.add_argument("--due", action="store_true", help="only when QUERY_PLANNER_EVERY_H passed")
     ap.add_argument("--window-h", type=float, default=24.0)
+    ap.add_argument("--dry", action="store_true",
+                    help="with --run: issue the $0 queries but write NOTHING (no ledger, "
+                         "queue, quarantine or receipt) and never open an agent turn")
     a = ap.parse_args(argv)
     if a.plan:
         now = _now()
         p = plan_queries(seeds(), day=now.date().isoformat(), ledger=_read_jsonl(ledger_path()),
-                         max_run=a.max)
+                         max_run=a.max, mode="agent" if search_provider() else "free",
+                         x_offered=bool(_cfg("QUERY_PLANNER_X_SEARCH_OFFERED", False)))
         print(json.dumps(p, indent=2))
         return 0
     if a.yld:
         print(json.dumps(yield_report(window_h=a.window_h), indent=2, default=str))
+        return 0
+    if a.dry:
+        rec = run(max_queries=a.max, due_only=a.due, provider=None, write=False)
+        print(json.dumps(rec, indent=2, default=str))
         return 0
     rec = run(max_queries=a.max, due_only=a.due)
     print(json.dumps({k: rec.get(k) for k in ("status", "refusal", "run_id", "path", "planned",

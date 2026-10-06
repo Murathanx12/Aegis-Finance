@@ -328,7 +328,8 @@ def part_run(dec_id: str) -> int:
     cs = P[["date", "permno"]].merge(D, on=["date", "permno"], how="left")["cs_spread"].to_numpy(dtype=float)
     flat = np.array([XR.COST_BPS_BY_BAND[XR.liquidity_band(v)] / 1e4 if np.isfinite(v) else 0.0035
                      for v in P["median_dollar_vol"].to_numpy(dtype=float)])
-    spreads = pd.Series(np.fmax(np.minimum(cs, CS_CAP), flat), index=P.index)
+    from backend.services import matched_twins as MT                 # noqa: PLC0415
+    spreads = pd.Series(MT.round_trip_spread(cs, flat), index=P.index)  # the ONE composition
     del D
     mkt = M.spy_series(P)
     P["b30"] = _insider_buyers_30(P)

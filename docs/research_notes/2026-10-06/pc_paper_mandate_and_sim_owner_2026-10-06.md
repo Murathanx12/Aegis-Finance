@@ -88,3 +88,39 @@ Outside US hours, `sim_session` should read ALIVE, "idle outside US hours: last 
 * The 10-02 handoff's line about AegisIIF1NightLauncher was not edited. Dated handoffs are a diary; this note is the correction.
 * The worst case uses the median-name sigma, not the realised sigma of the names actually held.
 * Tests: `backend/tests/test_pc_mandate_and_sim_owner.py` (23). Two existing tests in `test_contract_mandate_and_candidates.py` were rewritten to the owner decision: nested sleeve caps are not a disagreement, and capital is derived.
+
+---
+
+## 8. After the adversarial review (`docs/reviews/REVIEW_2026-10-06_C2_PC_MANDATE_AND_SIM_OWNER.md`, 61/100)
+
+**§3's table is superseded.** It priced the whole book at the stale median sigma, 2.16%. The worst case is now priced **per name, by sleeve** (`backend/services/pc_risk.py`):
+
+* Sigma is the 63-session close-to-close sigma on the bars panel, the same window the fleet manager uses for its stops.
+* The EXPLOIT sleeve is priced on the ranker's top names (`pc_book/<day>/ranking.json`).
+* The PROBE sleeve is priced on the held names, scaled to the 20% cap.
+* A name with no sigma of its own is priced at the universe p90, never the median.
+
+At equity $1,002,662, 3 sigma per name, assuming every name moves against the book on the same day:
+
+| sleeve | names | gross | avg sigma | 3σ one-day loss |
+|---|---|---:|---:|---:|
+| EXPLOIT (ranker top 8 at 10%: LITE, CDNL, ASPN, BRUN, NBTX, MSFT, AMD, OSS) | 8 | 0.80 | 5.31% | −$127,761 (12.74%) |
+| PROBE (held, scaled to 20%) | 10 | 0.20 | 2.23% | −$13,417 (1.34%) |
+| **TOTAL, sleeve names** | 18 | 1.00 | | **−$141,178 (14.08%): REFUSE** |
+| same gross at the universe median (2.51%) | | 1.00 | | 7.53% |
+| same gross at the universe p90 (4.91%) | | 1.00 | | 14.73% |
+
+* **The line is not widened. EXPLOIT is sized down instead.** It may carry at most **54.4% gross** (about 5 names at 10%) for the book to pass. The trading verdict is `PASS_EXPLOIT_CAPPED`.
+* **The cap is enforced in the order path.** `sim_run.u_plan` prices its own acting targets on every cycle (`pc_risk.cap_book`) and scales EXPLOIT down before orders are sized. If PROBE alone is over the line, or the live read shows an account, capital or worst-case disagreement, every send is blocked (`risk_gate` on the plan receipt). This covers manual and Telegram starts too.
+* **The equal-weight EXPLOIT fallback** is now capped at `ER_EXPLOIT_MAX_WEIGHT` (10%). Before, only the broker's 12% bound it.
+* **Reconciliation is no longer circular.** The contract now carries `positions_reconciliation`, and today it is **UNRECONCILED**:
+  * three agency BUY rows are sized at $40,000 (the IPS basis), not their weight × contract capital (`SLEEVE_BASIS_DISAGREES`);
+  * the contract resolves 99.75% to a benchmark core the account does not hold, while the broker holds **79.85% cash** (`POSITIONS_DISAGREE`).
+  * `capital_resolution.broker_actual` prints the account's real split, and the "same capital" sentence is gone.
+  * The capital check alone reads `CAPITAL_SOURCE broker`, `capital_status OK`.
+* **The owner's start gate** trades only when all four hold: the live broker read succeeded, the read is from account `config.PC_PAPER_ACCOUNT_NUMBER` (reads from any other account are skipped), the capital status is OK, and the trading verdict passes. `sim/OWNER_STOP` now also asks a running session to stop at its next unit boundary.
+* **Concurrency.** `sim_session.start` takes an O_EXCL `sim/start.lock`. A RUNNING session with no pid yet reads `STARTING`, not UNCLEAN. `sim_run` takes the broker lease in `paper_profit`, and a session that cannot take it stops with `REFUSED_LEASE`.
+* **Health** says `ALIVE_OBSERVE_ONLY` for a session that cannot trade. Every running row now also prints the day's plans and orders sent.
+* **Receipts carry no machine paths.** Today's: `pc_mandate/reconcile_2026-10-06_147824639837.json`. The earlier receipt's paths were made ledger-relative in place.
+
+The running session `b7b5981048e5` started on the old code; these fixes apply from the next start.

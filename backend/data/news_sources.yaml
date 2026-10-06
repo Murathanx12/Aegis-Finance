@@ -973,8 +973,8 @@ sources:
     ticker_tags: false
     body_available: false
     label_source: true
-    implemented: true
-    implemented_note: ""
+    implemented: false
+    implemented_note: "FROZEN_UPSTREAM since 2025-07-03 (the feed's own newest item), measured 2026-10-06; feeds.content.dowjones.io and feeds.marketwatch.com serve the same frozen file. Retired from every pull (C7 review F5); set true again only after a live GET shows items newer than 14 days."
     notes: "MarketWatch MarketPulse, ~30 items, the fastest-moving DJ feed. Dedupe by guid (raw_id)."
   - id: mw_realtimeheadlines
     provider: "Dow Jones - MarketWatch"
@@ -994,8 +994,8 @@ sources:
     ticker_tags: false
     body_available: false
     label_source: true
-    implemented: true
-    implemented_note: ""
+    implemented: false
+    implemented_note: "FROZEN_UPSTREAM since 2025-06-11 (the feed's own newest item), measured 2026-10-06; feeds.content.dowjones.io and feeds.marketwatch.com serve the same frozen file. Retired from every pull (C7 review F5); set true again only after a live GET shows items newer than 14 days."
     notes: "MarketWatch real-time headlines, ~10 items. Dedupe by guid (raw_id)."
   - id: mw_bulletins
     provider: "Dow Jones - MarketWatch"

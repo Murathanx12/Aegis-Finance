@@ -321,16 +321,22 @@ backend/data/optimus/llm_calls_[0-9][0-9][0-9][0-9]-[0-9][0-9].jsonl.tmp
 # ledger. Local evidence of local damage.
 backend/data/optimus/llm_calls_unstamped.jsonl
 
-# 2026-10-06 (C10): a CLOSED month over GitHub's 100 MB blob limit cannot be
-# `git add -f`-ed (llm_calls_2026-09.jsonl closed at 178 MB). It is sealed
-# instead by `python -m backend.services.ledger_archive --apply`: a lossless
-# Parquet copy here (OUTSIDE git; also covered by `*.parquet`) plus a COMMITTED
-# manifest in `backend/data/optimus/ledger_manifests/` (schema, rows, first/last
-# stamp, sha256 of the jsonl and of the parquet, the command). The sealed-month
-# guard accepts the manifest; the month writers refuse to append to it.
-backend/data/optimus/ledger_archive/
-# the data catalog's hash cache (size+mtime keyed; a cache, not a receipt)
+# 2026-10-06 (C10, hardened 10-07 after review F2): a CLOSED month over
+# GitHub's 100 MB blob limit cannot be `git add -f`-ed (llm_calls_2026-09.jsonl
+# closed at 178 MB). It is sealed instead by an ATTENDED
+#     python -m backend.services.ledger_archive --ledger <month file> --apply
+# which writes a lossless zstd Parquet (13.2 MB for that month) and a manifest
+# in `backend/data/optimus/ledger_manifests/`. BOTH ARE COMMITTED: the
+# negation below overrides the blanket `*.parquet` rule, because a gitignored
+# archive is "one laptop only" again. The sealed-month guard requires the
+# parquet to be tracked and to hash to its manifest.
+!backend/data/optimus/ledger_archive/*.parquet
+backend/data/optimus/ledger_archive/*.tmp
+# the data catalog (C10): the hash cache and the full ~5 MB daily receipts are
+# local (the job keeps the newest 7 plus the first of each month);
+# `docs/DATA_CATALOG.md` is the tracked summary.
 backend/data/optimus/data_catalog/file_cache.json
+backend/data/optimus/data_catalog/catalog_*.json
 backend/data/optimus/data_catalog/*.tmp
 
 # 2026-09-11 (O1, the thin launcher). `dist/` and `build/` were already ignored;

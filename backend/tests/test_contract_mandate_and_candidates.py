@@ -26,7 +26,9 @@ from backend.services import decision_contract as DC
 
 @pytest.fixture(autouse=True)
 def no_local_equity(monkeypatch):
-    monkeypatch.setattr(DC, "pc_paper_equity", lambda: None)
+    monkeypatch.setattr(DC, "pc_paper_equity", lambda **_: None)
+    monkeypatch.setattr(DC, "risk_inputs",
+                        lambda: {"sigmas": {}, "exploit": {"symbols": [], "source": None}})
 
 
 # ─────────────────────────────── the mandate ────────────────────────────────
@@ -52,7 +54,8 @@ def test_disagreeing_capital_bases_are_unreconciled_by_name():
     assert "PER_NAME_CAPS_DISAGREE" not in kinds
     assert m["capital_usd"] == named and m["broker_equity_usd"] == eq
     assert m["per_name_cap"] == min(m["per_name_caps_seen"].values())
-    assert m["line"].startswith(f"MANDATE UNRECONCILED: capital ${named:,.0f}")
+    assert m["line"].startswith(
+        f"MANDATE UNRECONCILED: CAPITAL_SOURCE other; capital ${named:,.0f}")
     assert "ONE capital base" in m["line"]
     c = m["largest_admissible_book_as_configured"]
     assert c["worst_case_no_stop_usd"] == pytest.approx(-c["gross_over_equity"] * named)

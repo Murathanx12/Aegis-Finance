@@ -1155,7 +1155,12 @@ class Pool:
                                     "published_visible": lk.get("published_visible"),
                                     "question": it.get("question"),
                                     "digest_id": it.get("digest_id"),
-                                    "theme": it.get("theme")})
+                                    "theme": it.get("theme"),
+                                    # 2026-10-06 (C7 F2): a planner search's results
+                                    # keep the query's lane AND id
+                                    "query_id": it.get("query_id"),
+                                    "discovered_via": it.get("discovered_via"),
+                                    "first_seen_utc": it.get("first_seen_utc")})
             self.stats[it["host"]]["links_found"] += len(found)
             self.stats[it["host"]]["links_new"] += n_new
             if it["kind"] == "front":
@@ -1349,7 +1354,22 @@ class Pool:
             taken += 1
             self.planner_done.add(key)
             ok = False
-            if WR.host_ok(u) and not self.stored.get(WR.norm_url(u)):
+            host = WR.host_of(u)
+            if row.get("kind") == "search" and WR.host_ok(u):
+                # a site's OWN search page for a headline the $0 news search
+                # found (the planner never opens the aggregator's redirect)
+                site = str(row.get("site") or site_of(u))
+                if RS.is_news_host(host) and self._robots_rec(host) is None:
+                    self._need_robots(host, site)
+                ok = self._add({"kind": "search", "site": site, "host": host,
+                                "lane": f"qp:{qid}", "section": "query_planner", "url": u,
+                                "query": row.get("headline") or row.get("question"),
+                                "tier": RS.TIER_FRONT, "via": "query_planner",
+                                "key": f"search:{site}:{key}", "query_id": qid,
+                                "discovered_via": row.get("discovered_via"),
+                                "first_seen_utc": row.get("first_seen_utc"),
+                                "question": row.get("question")})
+            elif WR.host_ok(u) and not self.stored.get(WR.norm_url(u)):
                 social = WR.is_social(u)
                 ok = self._add({"kind": "social" if social else "article",
                                 "site": site_of(u), "host": WR.host_of(u),

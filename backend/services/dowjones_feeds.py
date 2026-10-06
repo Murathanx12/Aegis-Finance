@@ -40,15 +40,15 @@ FEED_IDS: tuple[str, ...] = (
     "wsj_markets", "wsj_business", "wsj_world", "wsj_opinion", "wsj_tech",
     "mw_topstories", "mw_bulletins", "barrons_magazine",
 )
-#: 2026-10-06 (C7): FROZEN at the source, measured on the first pull after the
-#: frozen verdict existed -- both answer 200 with well-formed items whose newest
-#: is 2025-02-13 (marketpulse) / 2025-05-06 (realtimeheadlines), ~460-480 days;
-#: no live copy was found under feeds.content.dowjones.io or feeds.marketwatch.com.
-#: Kept out of the receipt's pull (a row that can only ever be red is not a
-#: check) and NAMED on every receipt, so a revival is one line to undo.
+#: 2026-10-06 (C7): FROZEN at the source. Both answer 200 with well-formed items
+#: whose newest (read from the LIVE feed, review F5) is 2025-07-03 (marketpulse)
+#: / 2025-06-11 (realtimeheadlines); feeds.content.dowjones.io and
+#: feeds.marketwatch.com serve the same frozen file. Retired in the REGISTRY
+#: (`implemented: false` in news_sources.yaml, so news_pull / always_on_lab stop
+#: polling them too), kept out of this pull, and NAMED on every receipt.
 RETIRED_FEED_IDS: dict[str, str] = {
-    "mw_marketpulse": "FROZEN_UPSTREAM since 2025-02-13 (measured 2026-10-06)",
-    "mw_realtimeheadlines": "FROZEN_UPSTREAM since 2025-05-06 (measured 2026-10-06)",
+    "mw_marketpulse": "FROZEN_UPSTREAM since 2025-07-03 (live feed, measured 2026-10-06)",
+    "mw_realtimeheadlines": "FROZEN_UPSTREAM since 2025-06-11 (live feed, measured 2026-10-06)",
 }
 
 #: Every other Dow Jones surface the 2026-09-26 research note names, probed by
@@ -131,7 +131,12 @@ def feed_verdict(status: Any, newest_age_h: float | None, *,
     receipt said `status: OK, new: 20` beside `newest_age_h: ~14,600`. The
     RFC 822 parse was right (`-0500` -> UTC); the URLs were retired, and the
     live copies are under `feeds.content.dowjones.io/public/rss/`. Without this
-    verdict a dead feed reads as a healthy one forever."""
+    verdict a dead feed reads as a healthy one forever.
+
+    CAVEAT (review F5): `newest_age_h` is the age of the newest item we STORED
+    for the source (`_newest_published` reads the corpus), not of what the feed
+    serves. A feed serving fresh items that fail to store would also read
+    FROZEN_UPSTREAM -- which is still a real defect, but a different one."""
     if status in ("REFUSED", "RED"):
         return str(status)
     lim = frozen_age_h() if frozen_h is None else float(frozen_h)

@@ -390,6 +390,8 @@ def freeze(day: date, payload: dict, md: str, short: str, extra_files: dict | No
 
 
 LICENCE_SHORT = "PRODUCT_EXPERIMENT"
+MAXTAIL_BOOKS = ("MAXTAIL_BH", "MAXTAIL_EVT")
+DRY_TITLE = "DRY PREVIEW - NOT AN ORDER SHEET - DO NOT ENTER"
 
 
 def strat_dirs(name: str) -> tuple[Path, Path, Path]:
@@ -398,15 +400,31 @@ def strat_dirs(name: str) -> tuple[Path, Path, Path]:
     return r / "sheets", r / "grades", r / "desk_holdings"
 
 
-def live_book() -> str:
-    """CONTEST mode: which declared book the live order sheet trades. The owner writes the name into
-    contest/live/BOOK by hand (absent -> ROT5_TRAIL). Anything else is refused, not guessed."""
-    f = cc.CONTEST / "live" / "BOOK"
-    name = f.read_text(encoding="utf-8").strip().upper() if f.exists() else "ROT5_TRAIL"
-    if name not in ("ROT5_TRAIL", "ROT5_DIR"):
-        raise desk.SheetRefused(f"contest/live/BOOK names {name!r}; the live sheet supports ROT5_TRAIL or ROT5_DIR "
-                                "(MAXTAIL_BH is bought once by hand from its rehearsal sheet)")
-    return name
+def contest_end_utc() -> pd.Timestamp:
+    return pd.Timestamp(cd.contest_times()["contest_ends"]["utc"])
+
+
+def refusal_file(day: date, text: str) -> Optional[Path]:
+    """A visible refusal next to the live sheets (contest/live/REFUSED_<day>.txt), appended per reason."""
+    p = cc.CONTEST / "live" / f"REFUSED_{day}.txt"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("a", encoding="utf-8") as fh:
+        fh.write(f"{cc.utc_stamp()} {text}\n")
+    return p
+
+
+def live_book(day: Optional[date] = None, *, write_refusal: bool = True) -> tuple[str, Optional[str]]:
+    """CONTEST mode: the declared book the live order sheet trades, from contest/live/BOOK (written by
+    hand; absent -> ROT5_TRAIL). A file that cannot be read or names an unknown book never loses the
+    day: the sheet trades ROT5_TRAIL and contest/live/REFUSED_<day>.txt says why. Returns (book, why)."""
+    name, why = cd.read_book_file(cc.CONTEST / "live" / "BOOK")
+    if why is None:
+        return name, None
+    if write_refusal and day is not None:
+        refusal_file(day, f"BOOK FILE REFUSED: {why}. This day's sheet trades the default ROT5_TRAIL. "
+                          "Write the file with: Set-Content -Path backend\\data\\optimus\\contest\\live\\BOOK "
+                          "-Value ROT5_DIR   (or ROT5_TRAIL / MAXTAIL_BH / MAXTAIL_EVT)")
+    return "ROT5_TRAIL", why
 
 
 def _sig63_of(panel: Any, sym: str, day: date) -> float:
@@ -438,15 +456,67 @@ def book_after(tickets: list, held: list[dict], panel: Any, day: date) -> tuple[
     return book, held_n
 
 
+def drift_lines(held: list[dict], tickets: list, nav: float, price_of: Callable) -> tuple[list[str], list[dict]]:
+    """One line per name still held after this sheet: current weight at the last close and the trim
+    if the 20% cap applies AT ALL TIMES -- which the public rules do not settle (OWNER-ONLY item 4)."""
+    sold = {t.extra.get("pos_id") for t in tickets if t.side == "SELL"}
+    rows = []
+    for p in held:
+        if p["pos_id"] in sold:
+            continue
+        try:
+            ref, fx, _ = price_of(p["symbol"])
+            px = float(ref) / float(fx)
+        except Exception:                                      # noqa: BLE001
+            px = float("nan")
+        rows.append({"symbol": p["symbol"], "bbg": p["bbg"], "qty": int(p["qty"]), "price_usd": px})
+    head = ("DRIFT: the 20% cap is enforced AT ENTRY. Whether it also applies at all times is NOT settled by the "
+            "public rules (OWNER-ONLY item 4); if it does, sell the trim below at the next open.")
+    if not rows:
+        return [head + " No position is held through this sheet."], []
+    df = pd.DataFrame(rows)
+    ok = df[np.isfinite(df.price_usd)]
+    d = co.drift_check(ok, nav) if len(ok) else ok
+    out, recs = [head], []
+    for r in d.itertuples():
+        recs.append({"symbol": r.symbol, "qty": r.qty, "price_usd": round(r.price_usd, 4), "mv_usd": round(r.mv_usd, 2),
+                     "pct_nav": round(r.pct_nav, 4), "trim_shares_if_at_all_times": int(r.trim_shares_if_at_all_times)})
+        out.append(f"- {r.bbg}: {r.qty:,} sh x ${r.price_usd:,.2f} = ${r.mv_usd:,.0f} = {r.pct_nav:.1%} of NAV; "
+                   + (f"**trim {int(r.trim_shares_if_at_all_times):,} sh** if the cap applies at all times"
+                      if r.trim_shares_if_at_all_times > 0 else "no trim"))
+    for r in df[~np.isfinite(df.price_usd)].itertuples():
+        out.append(f"- {r.bbg}: no reference price on disk; check its weight on the Terminal")
+    return out, recs
+
+
+def _dry_root() -> Path:
+    """DRY previews never live under contest/live/."""
+    root = (cc.CONTEST / "rehearsal" / "dry") if MODE == "REHEARSAL" else (cc.CONTEST / "dry_preview")
+    live = (cc.CONTEST / "live").resolve()
+    if live == root.resolve() or live in root.resolve().parents:
+        raise RuntimeError("a DRY preview may never be written under contest/live/")
+    return root
+
+
+def _dryify(md: str, short: str, *, name: str, day: date, stamp: str, gate: str) -> tuple[str, str]:
+    body = md.split("\n", 1)[1] if "\n" in md else ""
+    title = (f"# {DRY_TITLE} ({name} {day}; built {stamp} UTC; nothing is frozen)\n\n"
+             f"**{DRY_TITLE}.** This file is a preview. It is not frozen, not hashed, not gated ({gate}), and "
+             "`verify` will not accept it. The order sheet is the frozen `order_sheet.md` written by the "
+             "scheduled task.\n")
+    return title + body, f"{DRY_TITLE}: " + short
+
+
 def _emit(day: date, payload: dict, md: str, short: str, *, name: str, folder: Path,
           extra_files: Optional[dict] = None, dry: bool = False) -> dict:
-    """Freeze (write once + freeze_log) or, with `dry`, write a preview under <root>/dry/<day>/<name>/
-    that nothing reads as a position and no log records."""
+    """Freeze (write once + freeze_log) or, with `dry`, write a preview outside contest/live/ that
+    nothing reads as a position and no log records."""
     if not dry:
         return freeze(day, payload, md, short, extra_files=extra_files, folder=folder)
-    out = REH / "dry" / str(day) / name
+    out = _dry_root() / str(day) / name
     out.mkdir(parents=True, exist_ok=True)
-    (out / "orders_DRY.json").write_text(json.dumps(payload, indent=1, default=str), encoding="utf-8")
+    (out / "orders_DRY.json").write_text(json.dumps({**payload, "DRY": DRY_TITLE}, indent=1, default=str),
+                                         encoding="utf-8")
     (out / "order_sheet_DRY.md").write_text(md, encoding="utf-8")
     (out / "order_sheet_DRY.txt").write_text(short + "\n", encoding="utf-8")
     for fn, text in (extra_files or {}).items():
@@ -460,29 +530,67 @@ def _emit(day: date, payload: dict, md: str, short: str, *, name: str, folder: P
 
 
 def _priced_sheet(day: date, ranked: pd.DataFrame, held: list[dict], *, nav: float, now: pd.Timestamp,
-                  universe: Optional[pd.DataFrame], panel: Any, label: str) -> dict:
-    """Tickets + the cap refusal + the worst case, shared by every book."""
+                  universe: Optional[pd.DataFrame], panel: Any, label: str, dry: bool = False) -> dict:
+    """Tickets + the cap refusal + the worst case + the drift lines, shared by every book."""
     panel_px = dict(zip(ranked.symbol, ranked.price_usd)) if len(ranked) and "price_usd" in ranked else {}
-    tickets, reserves, notes = build_tickets(day, ranked, held, nav_usd=nav, now_utc=now,
-                                             price_of=make_price_of(day, universe, panel_px))
+    price_of = make_price_of(day, universe, panel_px)
+    tickets, reserves, notes = build_tickets(day, ranked, held, nav_usd=nav, now_utc=now, price_of=price_of)
     cap = co.cap_usd(nav)
     book, held_n = book_after(tickets, held, panel, day)
     cd.assert_cap(tickets, nav_usd=nav, cap_binding=cap["binding"], held_notional_usd=held_n,
                   notional_usd=co.NOTIONAL_USD, cap=co.CAP)
     wc = cd.worst_case(nav_usd=nav, cap_binding=cap["binding"], book=book, k=K)
+    dl, drift = drift_lines(held, tickets, nav, price_of)
+    if dry:
+        for t in tickets:
+            t.note = "DRY - DO NOT ENTER; " + t.note
     return {"tickets": tickets, "reserves": reserves, "notes": notes, "cap": cap, "worst_case": wc,
-            "worst_lines": cd.worst_case_lines(wc, label)}
+            "worst_lines": cd.worst_case_lines(wc, label), "drift_lines": dl, "drift": drift}
+
+
+def _book_bought(book: str, folder: Path, *, before: str) -> bool:
+    """Has `book` already placed a (non-void) BUY on a frozen sheet in `folder` before `before`?"""
+    for d in frozen_days(folder):
+        if d >= before:
+            break
+        o = load_orders(d, folder)
+        if o.get("strategy") == book and any(t["side"] == "BUY" and t["status"] != "VOID_LATE"
+                                             for t in o.get("tickets", [])):
+            return True
+    return False
+
+
+def _contest_window_filter(ranked: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """CONTEST mode: no buy session opening before the 09:00 NY start (Asia's and Europe's sessions of
+    the first day open before it) and no print reacting after the 17:00 NY end (a round trip with no
+    event inside the contest)."""
+    if ranked is None or not len(ranked):
+        return ranked, pd.DataFrame()
+    start, end = cd.contest_start_utc(), contest_end_utc()
+    why = []
+    for s, p, rd in zip(ranked.symbol, ranked.pre_date, ranked.get("react_date", pd.Series([pd.NaT] * len(ranked)))):
+        if co.session_open_utc(s, p) < start:
+            why.append("REFUSED_BEFORE_CONTEST_START (the buy session opens before 09:00 NY on the first day)")
+        elif pd.notna(rd) and co.session_open_utc(s, rd) > end:
+            why.append("REFUSED_REACTS_AFTER_CONTEST_END (the exit open is after 17:00 NY on the last day)")
+        else:
+            why.append("")
+    why = pd.Series(why, index=ranked.index)
+    return ranked[why == ""], ranked[why != ""].assign(refusal=why[why != ""])
 
 
 def sheet(day: date, *, refresh: bool = True, now: Optional[pd.Timestamp] = None, buys: bool = True,
           dry: bool = False) -> dict:
     """Build, render and FREEZE the sheet for `day`. `buys=False`: SELL tickets only (the
-    rehearsal's wind-down after its last buying day). `dry=True`: write previews under
-    <root>/dry/ and freeze nothing. In REHEARSAL mode the shadow books (ROT5_DIR, MAXTAIL_BH)
-    are built from the same inputs at the same `now`, after ROT5_TRAIL is frozen."""
-    if MODE == "CONTEST" and not dry:
+    rehearsal's wind-down after its last buying day). `dry=True`: write a DRY PREVIEW outside
+    contest/live/ and freeze nothing. In REHEARSAL mode the shadow books are built from the same
+    inputs at the same `now`, after ROT5_TRAIL is frozen. In CONTEST mode the live sheet trades the
+    book named in contest/live/BOOK, behind the live gate."""
+    gate_txt = "rehearsal: no gate"
+    if MODE == "CONTEST":
         ok, reasons = cd.live_gate(cc.CONTEST)
-        if not ok:
+        gate_txt = "live gate OPEN" if ok else "live gate REFUSES: " + "; ".join(reasons)
+        if not ok and not dry:
             p = cd.gate_receipt(reasons, day, contest_dir=cc.CONTEST)
             raise cd.LiveGateRefused(f"live order sheet refused (receipt {p.name}): " + "; ".join(reasons))
     if not dry and (SHEET_DIR / str(day) / "orders.json").exists():
@@ -499,38 +607,65 @@ def sheet(day: date, *, refresh: bool = True, now: Optional[pd.Timestamp] = None
         L = {"sheet": sh, "cal_file": None, "header": "SELL-only wind-down sheet", "bars_age": []}
     now = now if now is not None else co.now_utc()
     ranked = sh.buys if len(sh.buys) else pd.DataFrame()
+    refused_x = pd.DataFrame()
     if len(ranked) and MODE == "CONTEST":
-        # no buy session that opens before the contest starts (09:00 New York on the first day: the
-        # Asian sessions of that date open the evening before in New York)
-        start = cd.contest_start_utc()
-        ranked = ranked[[co.session_open_utc(s, p) >= start for s, p in zip(ranked.symbol, ranked.pre_date)]]
+        ranked, refused_x = _contest_window_filter(ranked)
     ranked, refused2 = filter_ranked(ranked, day)
+    refused2 = pd.concat([refused_x, refused2], ignore_index=True) if len(refused_x) else refused2
     ranked_trail = ranked
-    book_name, dmeta = "ROT5_TRAIL", None
-    if MODE == "CONTEST":
-        book_name = live_book()
-        if book_name == "ROT5_DIR" and ranked is not None and len(ranked):
-            ranked, dropped, dmeta = cd.direction_rank(ranked, day, now_utc=now)
-            refused2 = pd.concat([refused2, dropped], ignore_index=True)
+    book_name, dmeta, banners = "ROT5_TRAIL", None, []
     universe = cc.latest_universe()
+    if MODE == "CONTEST":
+        book_name, why = live_book(day, write_refusal=not dry)
+        if why:
+            banners.append(f"**BOOK FILE REFUSED** ({why}): this sheet trades the default ROT5_TRAIL "
+                           f"(contest/live/REFUSED_{day}.txt).")
+        if book_name == "ROT5_DIR" and ranked is not None and len(ranked):
+            try:
+                ranked, dropped, dmeta = cd.direction_rank(ranked, day, now_utc=now)
+                refused2 = pd.concat([refused2, dropped], ignore_index=True)
+            except cd.DirectionRefused as exc:
+                if not dry:
+                    refusal_file(day, f"ROT5_DIR REFUSED: {exc}. This day's sheet trades ROT5_TRAIL.")
+                banners.append(f"**ROT5_DIR REFUSED** ({exc}): this sheet trades ROT5_TRAIL instead.")
+                book_name = "ROT5_TRAIL"
+        elif book_name in MAXTAIL_BOOKS:
+            if buys and not _book_bought(book_name, SHEET_DIR, before=str(day)):
+                ranked, jumps, mmeta = _maxtail_as_ranked(day, L, now, universe, name=book_name,
+                                                          not_before=cd.contest_start_utc(),
+                                                          hold_after=contest_end_utc())
+                if len(jumps):
+                    refused2 = pd.concat([refused2, jumps[["symbol", "refusal"]]], ignore_index=True)
+                banners.append(f"{book_name}: buys ONCE on this sheet and holds to the end. {mmeta}")
+            else:
+                ranked = pd.DataFrame()
+                banners.append(f"{book_name}: already bought (or a SELL-only sheet); no BUY on this sheet.")
     held = open_positions(before=str(day))
     nav = nav_now()
     P = _priced_sheet(day, ranked if ranked is not None else pd.DataFrame(), held, nav=nav, now=now,
-                      universe=universe, panel=L.get("panel"), label=book_name)
+                      universe=universe, panel=L.get("panel"), label=book_name, dry=dry)
     tickets, reserves, notes, cap = P["tickets"], P["reserves"], P["notes"], P["cap"]
     stale = [a for a in L.get("bars_age", []) if "STALE" in a]
+    wls_ok, _, wls_info = cd.wls_export_check(cc.CONTEST / "wls")
     header = [(f"REHEARSAL (paper; nothing is entered anywhere). " if MODE == "REHEARSAL" else
                "CONTEST: the owner enters these tickets in TMSG by hand; nothing is sent from here. ")
               + f"Book **{book_name}**. Desk sheet window "
               f"{desk.sheet_window(day)[0]:%a %d %b %H:%M} to {desk.sheet_window(day)[1]:%a %d %b %H:%M} HKT.",
               f"Calendar: {L['cal_file']} (near-dated, {REH.name} folder). Membership: "
-              f"{'WLS export' if cc.load_wls_export() is not None else 'PROXY, UNCONFIRMED (no WLS export yet)'}.",
+              + (f"WLS export {wls_info.get('file')} ({wls_info.get('rows')} rows)" if wls_ok else
+                 f"PROXY, UNCONFIRMED ({wls_info.get('file', 'no WLS export')}"
+                 + (f", {wls_info.get('rows')} rows, not accepted" if wls_info.get('file') else "") + ")") + ".",
               f"Licence: {desk.LICENCE} Zero direction skill is assumed."]
+    header += banners
     header += P["worst_lines"]
+    header += P["drift_lines"]
     if dmeta:
+        fp = dmeta.get("fingerprint", {})
         header.append(f"Direction filter ROT5_DIR (contract {str(dmeta.get('contract_sha256', ''))[:16]}): source "
-                      f"{dmeta.get('last_pulled_utc')} ({dmeta.get('source_age_days')} days old); "
-                      f"{dmeta.get('n_dropped')} dropped, {dmeta.get('n_unrated')} unrated.")
+                      f"{fp.get('file')} sha256 {str(fp.get('sha256', ''))[:16]} ({fp.get('rows')} rows; first-seen "
+                      f"basis: {fp.get('first_seen_basis')}), last pull {dmeta.get('last_pulled_utc')} "
+                      f"({dmeta.get('source_age_days')} days old); {dmeta.get('n_dropped')} dropped, "
+                      f"{dmeta.get('n_unrated')} unrated.")
     if stale:
         header.append(f"**PRICE SOURCE STALE**: {'; '.join(stale)}. Check every price on the Terminal before "
                       "entering (a move beyond 30% of the sheet's reference: see the split/gap rule).")
@@ -545,18 +680,21 @@ def sheet(day: date, *, refresh: bool = True, now: Optional[pd.Timestamp] = None
                       + ", ".join(f"{r.bbg_ticker}" for r in reserves.itertuples()))
     freeze_utc = now.strftime("%Y-%m-%dT%H:%M:%S")
     md, short = co.render(tickets, day=str(day), nav_usd=nav, cap=cap, freeze_utc=freeze_utc, header=header)
+    if dry:
+        md, short = _dryify(md, short, name=book_name, day=day, stamp=cc.utc_stamp(), gate=gate_txt)
     desk_md, _ = desk.render_sheet(sh, header_extra=L["header"])
     refused_all = pd.concat([sh.refused, refused2], ignore_index=True) if len(sh.refused) or len(refused2) else pd.DataFrame()
     payload = {"day": str(day), "mode": MODE, "strategy": book_name, "freeze_utc": freeze_utc,
                "licence": desk.LICENCE,
+               **({"contract_sha256": cd.contract_sha(book_name)} if book_name in cd.RULES else {}),
                "window_hkt": [str(x) for x in desk.sheet_window(day)], "nav_usd": nav, "cap": cap,
                "tickets": co.to_json(tickets), "control": co.control_block(tickets),
                "reserves": reserves.astype(str).to_dict("records") if len(reserves) else [],
                "refused": refused_all[["symbol", "refusal"]].astype(str).to_dict("records") if len(refused_all) else [],
                "n_ranked": int(len(ranked)) if ranked is not None else 0, "calendar_file": L["cal_file"],
-               "bars_age": L.get("bars_age"),
+               "bars_age": L.get("bars_age"), "wls": wls_info, "banners": banners,
                "refresh": {k: v for k, v in receipt.items() if k in ("universe", "calendar", "bars", "implied")},
-               "notes": notes, "worst_case": P["worst_case"], "direction": dmeta}
+               "notes": notes, "worst_case": P["worst_case"], "drift": P["drift"], "direction": dmeta}
     rec = _emit(day, payload, md, short, name=book_name, folder=SHEET_DIR,
                 extra_files={"desk_sheet.md": desk_md}, dry=dry)
     if not dry:
@@ -586,25 +724,36 @@ def alt_sheets(day: date, *, L: dict, ranked: pd.DataFrame, now: pd.Timestamp, b
     return out
 
 
-def _maxtail_as_ranked(day: date, L: dict, now: pd.Timestamp, universe: Optional[pd.DataFrame]) -> pd.DataFrame:
-    """MAXTAIL_BH's candidates shaped for build_tickets: buy session = the listing's first open in the
-    window after `now`; exit = its first open after the last buying sheet's window."""
+def _maxtail_as_ranked(day: date, L: dict, now: pd.Timestamp, universe: Optional[pd.DataFrame], *,
+                       name: str = "MAXTAIL_BH", not_before: Optional[pd.Timestamp] = None,
+                       hold_after: Optional[pd.Timestamp] = None) -> tuple[pd.DataFrame, pd.DataFrame, str]:
+    """MAXTAIL candidates shaped for build_tickets: buy session = the listing's first open in the window
+    after max(now, window start, `not_before`); exit = its first open after `hold_after` (default: the
+    last buying sheet's window end). Returns (ranked, refused_jump, one-line description)."""
     panel, events = L.get("panel"), L.get("events")
     if panel is None or events is None:
-        return pd.DataFrame()
-    cand = cd.maxtail_ranked(day, panel, events, universe)
+        return pd.DataFrame(), pd.DataFrame(), "no panel"
+    only, calf = (None, None)
+    if name == "MAXTAIL_EVT":
+        only, calf = cd.evt_symbols()
+    cand, jumps = cd.maxtail_ranked(day, panel, events, universe, only=only)
+    desc = (f"rank: raw sigma63; {len(jumps)} series refused as x2 one-day jumps"
+            + (f" ({', '.join(jumps.symbol.head(8))})" if len(jumps) else "")
+            + (f"; event filter: {len(only)} US names with a vendor-announced print {cd.EVT_WINDOW[0]}.."
+               f"{cd.EVT_WINDOW[1]} in {calf}" if only is not None else "") + ".")
     if cand.empty:
-        return cand
+        return cand, jumps, desc
     defects = co.latest_defects()
     cand = cand[[co.defect_flag(s, day, defects) is None for s in cand.symbol]]
     cand, _ = co.dedupe_issuers(cand)
     w0, w1 = desk.sheet_window(day)
     w0u, w1u = w0.tz_convert("UTC"), w1.tz_convert("UTC")
-    hold_after = desk.sheet_window(LAST_SHEET_DAY)[1].tz_convert("UTC")
+    after = max([x for x in (now, w0u, not_before) if x is not None])
+    hold_after = hold_after if hold_after is not None else desk.sheet_window(LAST_SHEET_DAY)[1].tz_convert("UTC")
     rows = []
     for r in cand.itertuples():
         try:
-            sd, so = next_session_open(r.symbol, max(now, w0u))
+            sd, so = next_session_open(r.symbol, after)
             if not (w0u <= so < w1u):
                 continue
             xd, _ = next_session_open(r.symbol, max(hold_after, so))
@@ -617,7 +766,7 @@ def _maxtail_as_ranked(day: date, L: dict, now: pd.Timestamp, universe: Optional
     out = pd.DataFrame(rows)
     if len(out):
         out["rank"] = np.arange(1, len(out) + 1)
-    return out
+    return out, jumps, desc
 
 
 def alt_sheet(name: str, day: date, *, L: dict, ranked: pd.DataFrame, now: pd.Timestamp, buys: bool,
@@ -630,28 +779,37 @@ def alt_sheet(name: str, day: date, *, L: dict, ranked: pd.DataFrame, now: pd.Ti
             raise FrozenSheetExists(f"{name} sheet {day} is already frozen")
     held = open_positions(sd, before=str(day))
     nav = nav_now(gd, override=False)
-    extra_notes, dmeta, dropped = [], None, pd.DataFrame()
+    extra_notes, dmeta, dropped, mdesc = [], None, pd.DataFrame(), None
     r = pd.DataFrame()
     if buys and name == "ROT5_DIR" and ranked is not None and len(ranked):
         r, dropped, dmeta = cd.direction_rank(ranked, day, now_utc=now)
-    elif buys and name == "MAXTAIL_BH":
+    elif buys and name in MAXTAIL_BOOKS:
         if positions(sd, before=str(day)):
-            extra_notes.append("MAXTAIL_BH bought once on its first sheet; this sheet carries no BUY.")
+            extra_notes.append(f"{name} bought once on its first sheet; this sheet carries no BUY.")
         else:
-            r = _maxtail_as_ranked(day, L, now, universe)
+            r, jumps, mdesc = _maxtail_as_ranked(day, L, now, universe, name=name)
+            if len(jumps):
+                dropped = jumps[["symbol", "refusal"]].copy()
     P = _priced_sheet(day, r if r is not None else pd.DataFrame(), held, nav=nav, now=now, universe=universe,
-                      panel=L.get("panel"), label=name)
+                      panel=L.get("panel"), label=name, dry=dry)
     tickets, reserves, notes, cap = P["tickets"], P["reserves"], P["notes"] + extra_notes, P["cap"]
     header = [f"SHADOW BOOK **{name}** (REHEARSAL; paper; never entered; graded beside ROT5_TRAIL by the same "
               f"grader). Contract {contract[:16]} ({LICENCE_SHORT}). Window "
               f"{desk.sheet_window(day)[0]:%a %d %b %H:%M} to {desk.sheet_window(day)[1]:%a %d %b %H:%M} HKT."]
     header += P["worst_lines"]
+    header += P["drift_lines"]
+    if mdesc:
+        header.append(f"{name}: {mdesc}")
     if dmeta:
-        header.append(f"Direction source: last pull {dmeta.get('last_pulled_utc')} ({dmeta.get('source_age_days')} "
-                      f"days old); of {dmeta.get('n_in', 0)} ROT5_TRAIL names: {dmeta.get('n_admitted', 0)} admitted, "
+        fp = dmeta.get("fingerprint", {})
+        header.append(f"Direction source: {fp.get('file')} sha256 {str(fp.get('sha256', ''))[:16]} "
+                      f"({fp.get('rows')} rows; first-seen basis: {fp.get('first_seen_basis')}); last pull "
+                      f"{dmeta.get('last_pulled_utc')} ({dmeta.get('source_age_days')} days old); "
+                      f"{dmeta.get('rows_first_seen_after_the_freeze_excluded', 0)} rows first seen after the freeze "
+                      f"excluded; of {dmeta.get('n_in', 0)} ROT5_TRAIL names: {dmeta.get('n_admitted', 0)} admitted, "
                       f"{dmeta.get('n_unrated', 0)} unrated (admitted, no evidence), {dmeta.get('n_dropped', 0)} dropped.")
-        for x in dropped.itertuples():
-            header.append(f"Dropped: {getattr(x, 'bbg_ticker', x.symbol)} -- {x.refusal}")
+    for x in dropped.itertuples():
+        header.append(f"Refused: {getattr(x, 'bbg_ticker', x.symbol)} -- {x.refusal}")
     for nt in notes:
         header.append(f"Note: {nt}")
     if len(reserves):
@@ -660,6 +818,8 @@ def alt_sheet(name: str, day: date, *, L: dict, ranked: pd.DataFrame, now: pd.Ti
     md, short = co.render(tickets, day=str(day), nav_usd=nav, cap=cap, freeze_utc=freeze_utc, header=header)
     md = md.replace(f"# ORDER SHEET {day}", f"# SHADOW SHEET {name} {day}", 1)
     short = f"[{name}] " + short
+    if dry:
+        md, short = _dryify(md, short, name=name, day=day, stamp=cc.utc_stamp(), gate="rehearsal shadow book")
     cols = [c for c in ("symbol", "verdict", "cons", "n_firms", "net_raises90", "rev_mom", "trail_abs", "trail_rank",
                         "rank", "sig63") if len(r) and c in r.columns]
     payload = {"day": str(day), "mode": MODE, "strategy": name, "contract_sha256": contract, "freeze_utc": freeze_utc,
@@ -668,7 +828,8 @@ def alt_sheet(name: str, day: date, *, L: dict, ranked: pd.DataFrame, now: pd.Ti
                "reserves": reserves.astype(str).to_dict("records") if len(reserves) else [],
                "refused": dropped[["symbol", "refusal"]].astype(str).to_dict("records") if len(dropped) else [],
                "ranked": r[cols].astype(str).to_dict("records") if cols else [],
-               "n_ranked": int(len(r)), "notes": notes, "worst_case": P["worst_case"], "direction": dmeta,
+               "n_ranked": int(len(r)), "notes": notes, "worst_case": P["worst_case"], "drift": P["drift"],
+               "direction": dmeta, "maxtail": mdesc,
                "written_utc": cc.utc_stamp()}    # `freeze_utc` is the shared decision time; this is the write
     rec = _emit(day, payload, md, short, name=name, folder=sd, dry=dry)
     print(short)

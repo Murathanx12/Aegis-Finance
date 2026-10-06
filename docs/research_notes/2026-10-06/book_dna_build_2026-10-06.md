@@ -140,3 +140,22 @@ rebalance, as the 08-02 dossier noted.
 * The two ROI receipts this run wrote had an absolute local path in
   `aggregate.book_dna_receipt`. I rewrote that one field to the repo-relative path
   before any commit, and the code now writes it repo-relative.
+
+## After the adversarial review (`docs/reviews/REVIEW_2026-10-06_C3_BOOK_DNA.md`, F1–F8 applied)
+
+The headline "19 independent clusters" above is **superseded**. New receipt:
+`backend/data/optimus/paper_accounts/roi_2026-10-06T163850Z.json` + `book_dna_2026-10-06T163850Z.json`.
+
+Top line of PAPER_ACCOUNTS.md:
+
+> **1 book with >= 21 sessions is ahead of SPY (hack2, +1.14 pp / 26 sessions). The other 146 "ahead" are 108 control twins, 3 controls and 35 5-16-session books ~ 2.6 ex-ante bets (4.6 net of SPY), the most common name MU (17 of 33 books, Semiconductors; its books' ex-ante beta ~ 2.1). Nothing here is evidence yet.**
+
+* F1: `n_independent_clusters_ahead` is renamed `n_holdings_clusters_ahead` (20 at Jaccard 0.30). New: `effective_bets_exante` 2.6 (raw) / 4.6 (SPY-residual). These are participation ratios of the return correlation of 32 books' frozen weights, priced over the 150 sessions before the earliest inception (2026-02-23 → 2026-09-25). Top eigenvalue share 59%; 7 clusters at raw corr ≥ 0.80.
+* F2: clusters sort by size, then total excess, then name. Every cluster of 3 or more books prints with its basket. The largest component at the loosest threshold prints too: Jaccard 0.15 → MU, SNDK, STX, RVMD, INTC, 17 books. MU is in 17 of 33 strategy winners with holdings.
+* F3: P&L rules fire only when the visible P&L covers ≥ 80% of the shortfall. hack4, hack6 and hack1 are now `not_determinable` (open-position P&L covers 1% / 1% / 6%). `selection` requires a covered loss spread across names.
+* F4: timing uses the gross negative sub-window loss. Lanes in an identity group are `decomposed`. For mirror: −12.86 pp common = selection, and −15.40 pp is the treatment/sizing gap to conviction. For balanced-ew-control: −1.76 common, −5.40 differential. The rule order prints as `params.loser_rule_order`.
+* F5: `kind: control` books are their own count (3).
+* F6: `one_name_dependence` is computed only on the excess basis, with |excess| ≥ 1 pp and a reconstruction gap ≤ 0.25 pp. The share is bounded to same-direction contributions, and twins are not flagged. 2 books are flagged (SHADOW_BAYES_v0, reviewer_opus); 35 are computable.
+* F7: `evidence_density_line`: only 1 of 147 books ahead has ≥ 21 sessions. A REPLICATED sibling must now itself be EARLY_EVIDENCE.
+* F8: the collapse factors print separately: twins+controls ×4.08, holdings overlap ×1.8, ex-ante ×13.5.
+* Not done (fix-next): F9, the lane beta lag check. Also cosmetic: the collapse line prints the ex-ante window as a Python list.

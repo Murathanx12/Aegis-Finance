@@ -259,7 +259,8 @@ def generate(provider: str, n: int, cap: float | None, max_tokens: int = 6000,
     state = L.load_state()
     # D6: the families' posteriors decide each family's share of this round, in the prompt AND
     # after parsing (rows over a family's quota are DEFERRED, never dropped)
-    budget = L.family_budget(L.family_record(state), n) if budget is None else budget
+    # review 2026-10-06 F7: the quota is the policy_state preference when the night wrote one
+    budget = L.family_budget(L.family_record(state), n, quotas=L.policy_gen_quotas()) if budget is None else budget
     user = L.generation_prompt(state, L.CELL_CATALOG, n=n, budget=budget)
     r = HL.call(L.GEN_SYSTEM, user, purpose="hyp_lab_generate", arm=f"generate:{provider}", provider=provider,
                 max_tokens=max_tokens, temperature=0.7, cap_usd=cap)
@@ -292,30 +293,38 @@ def cmd_generate(a) -> int:
 
 
 def family_policy(state: dict, n: int = 8, *, apply: bool, generated: list | None = None) -> dict:
-    """D6 (CHUNK C12): the families' posteriors -> generation budget + EV weights. With `apply`
-    the EV weights are written to policy_state (declared key `hyp_family_ev_weight`, bounded
-    below by HYP_LAB_FAMILY_MIN_WEIGHT, journaled with the posteriors as evidence) -- a
-    preference, never a kill. Returns the per-family report the receipt prints."""
+    """D6 (CHUNK C12, amended by review 2026-10-06): the families' posteriors (powered negatives
+    only, decayed) -> two policy_state PREFERENCES, both declared, bounded and journaled with the
+    posteriors as evidence: `hyp_family_ev_weight` (EV multiplier, >= HYP_LAB_FAMILY_MIN_WEIGHT)
+    and `hyp_family_gen_quota` (per-round generation quota, >= 1). Never a kill. Returns the
+    per-family report the receipt prints."""
     fam = L.family_record(state)
     budget = L.family_budget(fam, n)
     weights = L.ev_weights_from_budget(budget)
+    quotas = L.quotas_from_budget(budget)
     out = {"floor": C.HYP_LAB_FAMILY_POSTERIOR_FLOOR, "min_weight": C.HYP_LAB_FAMILY_MIN_WEIGHT,
            "max_share": C.HYP_LAB_FAMILY_MAX_SHARE, "n_per_round": n, "ev_weights": weights,
+           "gen_quotas": quotas, "posterior_rule": "powered negatives only; CANNOT_DISTINGUISH 0; "
+           f"re-reads 0; verdicts older than {C.HYP_LAB_VERDICT_DECAY_DAYS} d count half",
            "policy_state": "NOT_APPLIED (dry)"}
     if apply:
         from backend.services import policy_state as PS
-        old = PS.load().get("hyp_family_ev_weight") or {}
-        if old == weights:
-            out["policy_state"] = "UNCHANGED"
-        else:
-            evidence = {"ledger": L._rel(L.LEDGER), "n_rows": len(state),
-                        "posteriors": {f: b["p_positive"] for f, b in sorted(budget.items())},
-                        "floor": C.HYP_LAB_FAMILY_POSTERIOR_FLOOR}
-            PS.update("hyp_family_ev_weight", weights, actor="hyp_lab",
-                      reason=f"D6: families with posterior P(positive) < {C.HYP_LAB_FAMILY_POSTERIOR_FLOOR} "
-                             f"ranked at weight max({C.HYP_LAB_FAMILY_MIN_WEIGHT}, P/floor)",
-                      evidence=evidence)
-            out["policy_state"] = "WRITTEN"
+        cur = PS.load()
+        evidence = {"ledger": L._rel(L.LEDGER), "n_rows": len(state),
+                    "posteriors": {f: b["p_positive"] for f, b in sorted(budget.items())},
+                    "floor": C.HYP_LAB_FAMILY_POSTERIOR_FLOOR}
+        wrote = []
+        for key, val, why in (
+                ("hyp_family_ev_weight", weights,
+                 f"D6: families with posterior P(positive) < {C.HYP_LAB_FAMILY_POSTERIOR_FLOOR} ranked at "
+                 f"weight max({C.HYP_LAB_FAMILY_MIN_WEIGHT}, P/floor)"),
+                ("hyp_family_gen_quota", quotas,
+                 f"D6: per-round generation quota floor(ceil({n} x {C.HYP_LAB_FAMILY_MAX_SHARE}) x weight), >= 1; "
+                 f"unmapped labels at the median")):
+            if (cur.get(key) or {}) != val:
+                PS.update(key, val, actor="hyp_lab", reason=why, evidence=evidence)
+                wrote.append(key)
+        out["policy_state"] = ("WRITTEN " + ",".join(wrote)) if wrote else "UNCHANGED"
     ranked = L.rank(state, ev_weights=weights)
     out["families"] = L.family_policy_report(budget, generated or [], ranked)
     return out
@@ -429,7 +438,7 @@ def nightly(k: int, cap: float, providers: list[str], time_box_min: float) -> di
     spent0 = HL.spent()["binding_usd"]
     # D6: the posteriors set tonight's generation budget and the EV preference BEFORE generating
     pol = family_policy(L.load_state(), 8, apply=True)
-    budget = L.family_budget(L.family_record(L.load_state()), 8)
+    budget = L.family_budget(L.family_record(L.load_state()), 8, quotas=L.policy_gen_quotas())
     generated_rows: list = []
     gens = []
     for p in providers:
@@ -448,6 +457,13 @@ def nightly(k: int, cap: float, providers: list[str], time_box_min: float) -> di
     rec["generation"] = gens
     state = L.load_state()
     q = L.rank(state, runnable_only=True)[:k]
+    # review 2026-10-06 F6: a shrunk family not RUN in a week gets one guaranteed slot
+    guar = [g for g in L.weekly_guarantee(state, L.policy_ev_weights()) if g["hyp_id"] not in {h["hyp_id"] for h in q}]
+    for g in guar[:max(0, k)]:
+        if len(q) >= k and q:
+            q = q[:-1]
+        q = [g] + q
+    rec["weekly_guarantee"] = [{"hyp_id": g["hyp_id"], "family": g.get("family"), "why": g["guaranteed"]} for g in guar[:k]]
     rec["declared"] = []
     if q and not L.STOP.exists():
         d = L.declare(q, HL.night_id())
