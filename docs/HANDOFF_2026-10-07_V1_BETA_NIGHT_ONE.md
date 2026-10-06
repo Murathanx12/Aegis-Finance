@@ -6,6 +6,19 @@ builder, attacked by a second Opus, and fixed; every review lives in `docs/revie
 and every build note in `docs/research_notes/2026-10-06/`. Read the review beside the note: the reviews
 corrected the notes in several places and the corrections are dated inside the notes.
 
+## 0. READ THIS FIRST: the suite is NOT green-gated, and there was a process leak
+
+- The final full-suite run was **killed at 48% by memory pressure** (the batch-1 run earlier had 13,137 passed, 2 failed;
+  both failures were fixed by C13). Nothing has been merged to `main`. Commits `f4dbd0c0` and `951719f9` on
+  `wip/2026-10-06-v1-beta` are WIP. **First task: rerun the suite, nn_lab/tests and ft_lab/tests, then merge.**
+- **Process leak found at 03:30 HKT:** 590 python processes alive, 294 Optimus MCP servers + 296 `openclaw_api_bridge.py`,
+  292 of them children of the OpenClaw gateway, accumulating one pair every ~2.5 minutes since the gateway started at
+  14:28 on 10-06 (2.5 GB working set). I killed the children older than 10 minutes by recorded PID
+  (`backend/data/optimus/local_pc/leak_killed_pids_2026-10-07.txt`); memory went from ~2 GB to 7.5 GB free. Chunk C14
+  (a builder) is finding the spawner and adding a process-census guard; read
+  `docs/research_notes/2026-10-07/gateway_process_leak_2026-10-07.md` if it exists. Until the root cause is fixed the
+  leak will return: check the census before any long run.
+
 ## 1. RESULTS SCOREBOARD
 
 **RESULT IMPROVEMENT: NONE.** The night produced controls, measurements and a live loop, not an edge.
