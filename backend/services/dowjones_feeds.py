@@ -38,9 +38,18 @@ from backend import config as _config
 
 FEED_IDS: tuple[str, ...] = (
     "wsj_markets", "wsj_business", "wsj_world", "wsj_opinion", "wsj_tech",
-    "mw_topstories", "mw_marketpulse", "mw_realtimeheadlines", "mw_bulletins",
-    "barrons_magazine",
+    "mw_topstories", "mw_bulletins", "barrons_magazine",
 )
+#: 2026-10-06 (C7): FROZEN at the source, measured on the first pull after the
+#: frozen verdict existed -- both answer 200 with well-formed items whose newest
+#: is 2025-02-13 (marketpulse) / 2025-05-06 (realtimeheadlines), ~460-480 days;
+#: no live copy was found under feeds.content.dowjones.io or feeds.marketwatch.com.
+#: Kept out of the receipt's pull (a row that can only ever be red is not a
+#: check) and NAMED on every receipt, so a revival is one line to undo.
+RETIRED_FEED_IDS: dict[str, str] = {
+    "mw_marketpulse": "FROZEN_UPSTREAM since 2025-02-13 (measured 2026-10-06)",
+    "mw_realtimeheadlines": "FROZEN_UPSTREAM since 2025-05-06 (measured 2026-10-06)",
+}
 
 #: Every other Dow Jones surface the 2026-09-26 research note names, probed by
 #: plain HTTP to record which answer without a login. Nothing is stored but the
@@ -108,6 +117,29 @@ def _newest_published(source_id: str) -> str | None:
     return newest
 
 
+def frozen_age_h() -> float:
+    return float(getattr(_config, "DOWJONES_FEED_FROZEN_AGE_H", 14 * 24.0))
+
+
+def feed_verdict(status: Any, newest_age_h: float | None, *,
+                 frozen_h: float | None = None) -> str:
+    """PURE. A feed that answers but whose NEWEST item is older than
+    `DOWJONES_FEED_FROZEN_AGE_H` is FROZEN_UPSTREAM, not OK.
+
+    MEASURED 2026-10-06: the five `feeds.a.dj.com/rss/*` WSJ URLs answered 200
+    with 20 well-formed items on every pull, every item dated 2025-01-27; the
+    receipt said `status: OK, new: 20` beside `newest_age_h: ~14,600`. The
+    RFC 822 parse was right (`-0500` -> UTC); the URLs were retired, and the
+    live copies are under `feeds.content.dowjones.io/public/rss/`. Without this
+    verdict a dead feed reads as a healthy one forever."""
+    if status in ("REFUSED", "RED"):
+        return str(status)
+    lim = frozen_age_h() if frozen_h is None else float(frozen_h)
+    if newest_age_h is not None and newest_age_h > lim:
+        return "FROZEN_UPSTREAM"
+    return str(status) if status else "UNKNOWN"
+
+
 def pull_feeds(ids: tuple[str, ...] = FEED_IDS, *, ctx_factory: Callable[..., Any] | None = None,
                paced: bool = True) -> dict:
     """Pull every feed to completion (no row cap). Returns the receipt."""
@@ -124,7 +156,9 @@ def pull_feeds(ids: tuple[str, ...] = FEED_IDS, *, ctx_factory: Callable[..., An
                 age_h = round((now - datetime.fromisoformat(newest)).total_seconds() / 3600, 2)
             except ValueError:
                 age_h = None
-        per.append({"source": sid, "status": rc.get("status"), "received": rc.get("received"),
+        per.append({"source": sid, "status": rc.get("status"),
+                    "verdict": feed_verdict(rc.get("status"), age_h),
+                    "received": rc.get("received"),
                     "new": rc.get("new"), "dupes": rc.get("dupes"),
                     "failures": (rc.get("failures") or [])[:3],
                     "newest_published_utc": newest, "newest_age_h": age_h,
@@ -136,7 +170,11 @@ def pull_feeds(ids: tuple[str, ...] = FEED_IDS, *, ctx_factory: Callable[..., An
             "licence": "Dow Jones ToU 9.1 personal non-commercial; metadata only in git",
             "n_feeds": len(ids), "items_received": sum(int(p["received"] or 0) for p in per),
             "items_new": sum(int(p["new"] or 0) for p in per),
-            "refused_or_red": [p["source"] for p in per if p["status"] in ("REFUSED", "RED")],
+            "refused_or_red": [p["source"] for p in per
+                               if p["verdict"] in ("REFUSED", "RED", "FROZEN_UPSTREAM")],
+            "frozen_upstream": [p["source"] for p in per if p["verdict"] == "FROZEN_UPSTREAM"],
+            "frozen_age_h": frozen_age_h(),
+            "retired_feeds": dict(RETIRED_FEED_IDS),
             "per_feed": per}
 
 

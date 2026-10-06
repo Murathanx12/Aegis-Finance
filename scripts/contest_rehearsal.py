@@ -7,6 +7,9 @@
     python -m scripts.contest_rehearsal drills                # the failure drills, pass/fail receipt
     python -m scripts.contest_rehearsal vendor-miss           # date / time miss rates from sources on disk
     python -m scripts.contest_rehearsal status
+    python -m scripts.contest_rehearsal contract              # declare the shadow books' frozen rules (once)
+    python -m scripts.contest_rehearsal dry --date <d>        # preview every book's sheet; freezes nothing
+    python -m scripts.contest_rehearsal gate                  # the live desk's MEMB + REGISTERED gate
 
 What a rehearsal day is (identical to a contest day except for the folder):
 1. at ~14:30 Hong Kong time the scheduled task grades every position whose exit bar exists, then
@@ -22,6 +25,14 @@ What a rehearsal day is (identical to a contest day except for the folder):
 4. grading buys at the OPEN of the buy session and sells at the OPEN of the exit session
    (the reaction session; an untimed print is held two sessions), in shares, in USD, against
    ACWI (the WLS proxy) over the same opens.
+
+Three books, one schedule (2026-10-07): ROT5_TRAIL (the order sheet), and two SHADOW books with
+frozen contracts in freeze_log.jsonl -- ROT5_DIR (the same universe and sizing, names with net-Sell
+consensus or net analyst lowerings dropped) and MAXTAIL_BH (the runbook's fallback). All three are
+frozen at the same `now` (a late freeze is VOID_LATE for all) and graded by the same grader; the
+scoreboard prints them side by side. Every sheet prints its worst case in dollars and refuses a
+ticket above the 20% cap. CONTEST mode refuses the live sheet without a WLS MEMB export and the
+owner's hand-made contest/REGISTERED file.
 
 PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. Places no order, sends
 nothing, $0 LLM. Whatever it returns is never evidence of the project's skill.
@@ -52,6 +63,7 @@ if str(REPO) not in sys.path:
 from scripts import contest_calendar as cc     # noqa: E402
 from scripts import contest_desk as desk       # noqa: E402
 from scripts import contest_orders as co       # noqa: E402
+from scripts import contest_direction as cd    # noqa: E402
 
 REH = cc.CONTEST / "rehearsal"
 SHEET_DIR = REH / "sheets"
@@ -123,7 +135,8 @@ def positions(folder: Optional[Path] = None, *, before: Optional[str] = None) ->
                             "planned_exit_session": t["extra"].get("exit_session"),
                             "planned_exit_open_utc": t["extra"].get("exit_open_utc"),
                             "limit_local": t.get("limit_local"), "ref_local": t["extra"].get("ref_local"),
-                            "currency": t["currency"], "sell": None}
+                            "currency": t["currency"], "notional_usd": float(t.get("notional_usd") or 0.0),
+                            "trail_abs": t["extra"].get("trail_abs"), "sell": None}
             elif t["side"] == "SELL" and t["extra"].get("pos_id") in pos:
                 pos[t["extra"]["pos_id"]]["sell"] = {"sheet": d, "session_date": t["session_date"],
                                                      "open_utc": t["open_utc"], "status": t["status"]}
@@ -332,13 +345,14 @@ def make_price_of(day: date, universe: Optional[pd.DataFrame], panel_px: dict) -
 
 # ───────────────────────────── freeze ─────────────────────────────
 
-def nav_now(folder: Optional[Path] = None) -> float:
+def nav_now(folder: Optional[Path] = None, *, override: bool = True) -> float:
     """NAV for sizing: the owner's Terminal NAV when written to <root>/nav_override.json
-    ({"nav_usd": ..., "asof": ...}) and newer than the last grade; else the last grade; else $1M."""
+    ({"nav_usd": ..., "asof": ...}) and newer than the last grade; else the last grade; else $1M.
+    `override=False` (the shadow books): their own last grade, never the Terminal's NAV."""
     folder = folder or GRADE_DIR
     files = sorted(folder.glob("grade_*.json")) if folder.exists() else []
     ov = REH / "nav_override.json"
-    if ov.exists():
+    if override and ov.exists():
         o = json.loads(ov.read_text(encoding="utf-8"))
         if not files or ov.stat().st_mtime >= files[-1].stat().st_mtime:
             return float(o["nav_usd"])
@@ -365,7 +379,8 @@ def freeze(day: date, payload: dict, md: str, short: str, extra_files: dict | No
     for name, text in (extra_files or {}).items():
         (out / name).write_text(text, encoding="utf-8")
     sha = hashlib.sha256(body.encode("utf-8")).hexdigest()
-    rec = {"day": str(day), "freeze_utc": payload["freeze_utc"], "sha256": sha,
+    rec = {"day": str(day), **({"strategy": payload["strategy"]} if payload.get("strategy") else {}),
+           "freeze_utc": payload["freeze_utc"], "sha256": sha,
            "sheet_code": payload["control"]["sheet_code"], "n_live": payload["control"]["n_lines"],
            "n_void_late": sum(1 for t in payload["tickets"] if t["status"] == "VOID_LATE")}
     log.parent.mkdir(parents=True, exist_ok=True)
@@ -374,10 +389,103 @@ def freeze(day: date, payload: dict, md: str, short: str, extra_files: dict | No
     return rec
 
 
-def sheet(day: date, *, refresh: bool = True, now: Optional[pd.Timestamp] = None, buys: bool = True) -> dict:
+LICENCE_SHORT = "PRODUCT_EXPERIMENT"
+
+
+def strat_dirs(name: str) -> tuple[Path, Path, Path]:
+    """A shadow book's own (sheets, grades, desk_holdings) under <root>/strategies/<name>/."""
+    r = REH / "strategies" / name
+    return r / "sheets", r / "grades", r / "desk_holdings"
+
+
+def live_book() -> str:
+    """CONTEST mode: which declared book the live order sheet trades. The owner writes the name into
+    contest/live/BOOK by hand (absent -> ROT5_TRAIL). Anything else is refused, not guessed."""
+    f = cc.CONTEST / "live" / "BOOK"
+    name = f.read_text(encoding="utf-8").strip().upper() if f.exists() else "ROT5_TRAIL"
+    if name not in ("ROT5_TRAIL", "ROT5_DIR"):
+        raise desk.SheetRefused(f"contest/live/BOOK names {name!r}; the live sheet supports ROT5_TRAIL or ROT5_DIR "
+                                "(MAXTAIL_BH is bought once by hand from its rehearsal sheet)")
+    return name
+
+
+def _sig63_of(panel: Any, sym: str, day: date) -> float:
+    if panel is None:
+        return float("nan")
+    j = panel.col.get(sym)
+    i = panel.idx(pd.Timestamp(day) - pd.Timedelta(days=1))
+    if j is None or i < 0:
+        return float("nan")
+    return float(panel.sig63[i, j])
+
+
+def book_after(tickets: list, held: list[dict], panel: Any, day: date) -> tuple[list[dict], float]:
+    """The book once this sheet's tickets fill: held names not sold here + new BUYs. Returns
+    (rows for the worst case, notional of the held names kept)."""
+    sold = {t.extra.get("pos_id") for t in tickets if t.side == "SELL"}
+    book, held_n = [], 0.0
+    for p in held:
+        if p["pos_id"] in sold:
+            continue
+        n = float(p.get("notional_usd") or 0.0)
+        held_n += n
+        book.append({"symbol": p["symbol"], "notional_usd": n, "sig63": _sig63_of(panel, p["symbol"], day),
+                     "trail_abs": p.get("trail_abs")})
+    for t in tickets:
+        if t.side == "BUY" and t.status != "VOID_LATE":
+            book.append({"symbol": t.symbol, "notional_usd": float(t.notional_usd),
+                         "sig63": _sig63_of(panel, t.symbol, day), "trail_abs": t.extra.get("trail_abs")})
+    return book, held_n
+
+
+def _emit(day: date, payload: dict, md: str, short: str, *, name: str, folder: Path,
+          extra_files: Optional[dict] = None, dry: bool = False) -> dict:
+    """Freeze (write once + freeze_log) or, with `dry`, write a preview under <root>/dry/<day>/<name>/
+    that nothing reads as a position and no log records."""
+    if not dry:
+        return freeze(day, payload, md, short, extra_files=extra_files, folder=folder)
+    out = REH / "dry" / str(day) / name
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "orders_DRY.json").write_text(json.dumps(payload, indent=1, default=str), encoding="utf-8")
+    (out / "order_sheet_DRY.md").write_text(md, encoding="utf-8")
+    (out / "order_sheet_DRY.txt").write_text(short + "\n", encoding="utf-8")
+    for fn, text in (extra_files or {}).items():
+        (out / fn).write_text(text, encoding="utf-8")
+    try:
+        where = str(out.relative_to(REPO))
+    except ValueError:
+        where = str(out)
+    return {"day": str(day), "strategy": name, "DRY": where,
+            "n_live": payload["control"]["n_lines"], "sheet_code": payload["control"]["sheet_code"]}
+
+
+def _priced_sheet(day: date, ranked: pd.DataFrame, held: list[dict], *, nav: float, now: pd.Timestamp,
+                  universe: Optional[pd.DataFrame], panel: Any, label: str) -> dict:
+    """Tickets + the cap refusal + the worst case, shared by every book."""
+    panel_px = dict(zip(ranked.symbol, ranked.price_usd)) if len(ranked) and "price_usd" in ranked else {}
+    tickets, reserves, notes = build_tickets(day, ranked, held, nav_usd=nav, now_utc=now,
+                                             price_of=make_price_of(day, universe, panel_px))
+    cap = co.cap_usd(nav)
+    book, held_n = book_after(tickets, held, panel, day)
+    cd.assert_cap(tickets, nav_usd=nav, cap_binding=cap["binding"], held_notional_usd=held_n,
+                  notional_usd=co.NOTIONAL_USD, cap=co.CAP)
+    wc = cd.worst_case(nav_usd=nav, cap_binding=cap["binding"], book=book, k=K)
+    return {"tickets": tickets, "reserves": reserves, "notes": notes, "cap": cap, "worst_case": wc,
+            "worst_lines": cd.worst_case_lines(wc, label)}
+
+
+def sheet(day: date, *, refresh: bool = True, now: Optional[pd.Timestamp] = None, buys: bool = True,
+          dry: bool = False) -> dict:
     """Build, render and FREEZE the sheet for `day`. `buys=False`: SELL tickets only (the
-    rehearsal's wind-down after its last buying day)."""
-    if (SHEET_DIR / str(day) / "orders.json").exists():
+    rehearsal's wind-down after its last buying day). `dry=True`: write previews under
+    <root>/dry/ and freeze nothing. In REHEARSAL mode the shadow books (ROT5_DIR, MAXTAIL_BH)
+    are built from the same inputs at the same `now`, after ROT5_TRAIL is frozen."""
+    if MODE == "CONTEST" and not dry:
+        ok, reasons = cd.live_gate(cc.CONTEST)
+        if not ok:
+            p = cd.gate_receipt(reasons, day, contest_dir=cc.CONTEST)
+            raise cd.LiveGateRefused(f"live order sheet refused (receipt {p.name}): " + "; ".join(reasons))
+    if not dry and (SHEET_DIR / str(day) / "orders.json").exists():
         raise FrozenSheetExists(f"sheet {day} is already frozen")
     receipt: dict = {"day": str(day), "started_utc": cc.utc_stamp(), "mode": MODE}
     if buys:
@@ -389,27 +497,40 @@ def sheet(day: date, *, refresh: bool = True, now: Optional[pd.Timestamp] = None
         sh = desk.Sheet(day, pd.DataFrame(), pd.DataFrame(), pd.DataFrame(columns=["symbol"]),
                         ["SELL-only wind-down sheet: no new positions."])
         L = {"sheet": sh, "cal_file": None, "header": "SELL-only wind-down sheet", "bars_age": []}
+    now = now if now is not None else co.now_utc()
     ranked = sh.buys if len(sh.buys) else pd.DataFrame()
     if len(ranked) and MODE == "CONTEST":
-        # no buy before the contest's first day (Asian sessions of that day included: OWNER-CONFIRM)
-        ranked = ranked[pd.to_datetime(ranked.pre_date) >= pd.Timestamp(cc.CONTEST_START)]
+        # no buy session that opens before the contest starts (09:00 New York on the first day: the
+        # Asian sessions of that date open the evening before in New York)
+        start = cd.contest_start_utc()
+        ranked = ranked[[co.session_open_utc(s, p) >= start for s, p in zip(ranked.symbol, ranked.pre_date)]]
     ranked, refused2 = filter_ranked(ranked, day)
+    ranked_trail = ranked
+    book_name, dmeta = "ROT5_TRAIL", None
+    if MODE == "CONTEST":
+        book_name = live_book()
+        if book_name == "ROT5_DIR" and ranked is not None and len(ranked):
+            ranked, dropped, dmeta = cd.direction_rank(ranked, day, now_utc=now)
+            refused2 = pd.concat([refused2, dropped], ignore_index=True)
     universe = cc.latest_universe()
-    panel_px = dict(zip(ranked.symbol, ranked.price_usd)) if len(ranked) else {}
-    now = now if now is not None else co.now_utc()
     held = open_positions(before=str(day))
     nav = nav_now()
-    tickets, reserves, notes = build_tickets(day, ranked, held, nav_usd=nav, now_utc=now,
-                                             price_of=make_price_of(day, universe, panel_px))
-    cap = co.cap_usd(nav)
+    P = _priced_sheet(day, ranked if ranked is not None else pd.DataFrame(), held, nav=nav, now=now,
+                      universe=universe, panel=L.get("panel"), label=book_name)
+    tickets, reserves, notes, cap = P["tickets"], P["reserves"], P["notes"], P["cap"]
     stale = [a for a in L.get("bars_age", []) if "STALE" in a]
     header = [(f"REHEARSAL (paper; nothing is entered anywhere). " if MODE == "REHEARSAL" else
                "CONTEST: the owner enters these tickets in TMSG by hand; nothing is sent from here. ")
-              + f"Desk sheet window "
+              + f"Book **{book_name}**. Desk sheet window "
               f"{desk.sheet_window(day)[0]:%a %d %b %H:%M} to {desk.sheet_window(day)[1]:%a %d %b %H:%M} HKT.",
               f"Calendar: {L['cal_file']} (near-dated, {REH.name} folder). Membership: "
               f"{'WLS export' if cc.load_wls_export() is not None else 'PROXY, UNCONFIRMED (no WLS export yet)'}.",
               f"Licence: {desk.LICENCE} Zero direction skill is assumed."]
+    header += P["worst_lines"]
+    if dmeta:
+        header.append(f"Direction filter ROT5_DIR (contract {str(dmeta.get('contract_sha256', ''))[:16]}): source "
+                      f"{dmeta.get('last_pulled_utc')} ({dmeta.get('source_age_days')} days old); "
+                      f"{dmeta.get('n_dropped')} dropped, {dmeta.get('n_unrated')} unrated.")
     if stale:
         header.append(f"**PRICE SOURCE STALE**: {'; '.join(stale)}. Check every price on the Terminal before "
                       "entering (a move beyond 30% of the sheet's reference: see the split/gap rule).")
@@ -426,20 +547,130 @@ def sheet(day: date, *, refresh: bool = True, now: Optional[pd.Timestamp] = None
     md, short = co.render(tickets, day=str(day), nav_usd=nav, cap=cap, freeze_utc=freeze_utc, header=header)
     desk_md, _ = desk.render_sheet(sh, header_extra=L["header"])
     refused_all = pd.concat([sh.refused, refused2], ignore_index=True) if len(sh.refused) or len(refused2) else pd.DataFrame()
-    payload = {"day": str(day), "mode": MODE, "freeze_utc": freeze_utc, "licence": desk.LICENCE,
+    payload = {"day": str(day), "mode": MODE, "strategy": book_name, "freeze_utc": freeze_utc,
+               "licence": desk.LICENCE,
                "window_hkt": [str(x) for x in desk.sheet_window(day)], "nav_usd": nav, "cap": cap,
                "tickets": co.to_json(tickets), "control": co.control_block(tickets),
                "reserves": reserves.astype(str).to_dict("records") if len(reserves) else [],
                "refused": refused_all[["symbol", "refusal"]].astype(str).to_dict("records") if len(refused_all) else [],
-               "n_ranked": int(len(ranked)), "calendar_file": L["cal_file"], "bars_age": L.get("bars_age"),
+               "n_ranked": int(len(ranked)) if ranked is not None else 0, "calendar_file": L["cal_file"],
+               "bars_age": L.get("bars_age"),
                "refresh": {k: v for k, v in receipt.items() if k in ("universe", "calendar", "bars", "implied")},
-               "notes": notes}
-    rec = freeze(day, payload, md, short, extra_files={"desk_sheet.md": desk_md})
-    DESK_HOLD.mkdir(parents=True, exist_ok=True)
-    cc.write_json({"day": str(day), "buys": [{"symbol": t.symbol, "bbg_ticker": t.bbg,
-                                              "react_date": t.extra.get("exit_session")}
-                                             for t in tickets if t.side == "BUY" and t.status != "VOID_LATE"]},
-                  DESK_HOLD / f"{day}_holdings.json")
+               "notes": notes, "worst_case": P["worst_case"], "direction": dmeta}
+    rec = _emit(day, payload, md, short, name=book_name, folder=SHEET_DIR,
+                extra_files={"desk_sheet.md": desk_md}, dry=dry)
+    if not dry:
+        DESK_HOLD.mkdir(parents=True, exist_ok=True)
+        cc.write_json({"day": str(day), "buys": [{"symbol": t.symbol, "bbg_ticker": t.bbg,
+                                                  "react_date": t.extra.get("exit_session")}
+                                                 for t in tickets if t.side == "BUY" and t.status != "VOID_LATE"]},
+                      DESK_HOLD / f"{day}_holdings.json")
+    print(short)
+    if MODE == "REHEARSAL":
+        rec["alternates"] = alt_sheets(day, L=L, ranked=ranked_trail, now=now, buys=buys, universe=universe, dry=dry)
+    return rec
+
+
+def alt_sheets(day: date, *, L: dict, ranked: pd.DataFrame, now: pd.Timestamp, buys: bool,
+               universe: Optional[pd.DataFrame], dry: bool = False) -> dict:
+    """The shadow books, each in its own try: one book's failure is that book's REFUSED line."""
+    out: dict = {}
+    for name in cd.STRATEGIES:
+        try:
+            out[name] = alt_sheet(name, day, L=L, ranked=ranked, now=now, buys=buys, universe=universe, dry=dry)
+        except FrozenSheetExists as exc:
+            out[name] = f"ALREADY_FROZEN: {exc}"
+        except Exception as exc:                               # noqa: BLE001
+            out[name] = f"REFUSED {type(exc).__name__}: {exc}"
+            print(f"[{name}] {out[name]}")
+    return out
+
+
+def _maxtail_as_ranked(day: date, L: dict, now: pd.Timestamp, universe: Optional[pd.DataFrame]) -> pd.DataFrame:
+    """MAXTAIL_BH's candidates shaped for build_tickets: buy session = the listing's first open in the
+    window after `now`; exit = its first open after the last buying sheet's window."""
+    panel, events = L.get("panel"), L.get("events")
+    if panel is None or events is None:
+        return pd.DataFrame()
+    cand = cd.maxtail_ranked(day, panel, events, universe)
+    if cand.empty:
+        return cand
+    defects = co.latest_defects()
+    cand = cand[[co.defect_flag(s, day, defects) is None for s in cand.symbol]]
+    cand, _ = co.dedupe_issuers(cand)
+    w0, w1 = desk.sheet_window(day)
+    w0u, w1u = w0.tz_convert("UTC"), w1.tz_convert("UTC")
+    hold_after = desk.sheet_window(LAST_SHEET_DAY)[1].tz_convert("UTC")
+    rows = []
+    for r in cand.itertuples():
+        try:
+            sd, so = next_session_open(r.symbol, max(now, w0u))
+            if not (w0u <= so < w1u):
+                continue
+            xd, _ = next_session_open(r.symbol, max(hold_after, so))
+        except Exception:                                      # noqa: BLE001
+            continue
+        rows.append({"symbol": r.symbol, "bbg_ticker": r.bbg_ticker, "name": r.name, "market": r.market,
+                     "pre_date": pd.Timestamp(sd), "react_date": pd.Timestamp(xd), "timing": "BUY_AND_HOLD",
+                     "trail_abs": float("nan"), "sig63": float(r.sig63), "price_usd": float(r.price_usd),
+                     "date_status": "BUY_AND_HOLD", "date_confirmed": True, "membership": r.membership})
+    out = pd.DataFrame(rows)
+    if len(out):
+        out["rank"] = np.arange(1, len(out) + 1)
+    return out
+
+
+def alt_sheet(name: str, day: date, *, L: dict, ranked: pd.DataFrame, now: pd.Timestamp, buys: bool,
+              universe: Optional[pd.DataFrame], dry: bool = False) -> dict:
+    sd, gd, _ = strat_dirs(name)
+    contract = cd.contract_sha(name)
+    if not dry:
+        cd.ensure_contract(name, FREEZE_LOG)
+        if (sd / str(day) / "orders.json").exists():
+            raise FrozenSheetExists(f"{name} sheet {day} is already frozen")
+    held = open_positions(sd, before=str(day))
+    nav = nav_now(gd, override=False)
+    extra_notes, dmeta, dropped = [], None, pd.DataFrame()
+    r = pd.DataFrame()
+    if buys and name == "ROT5_DIR" and ranked is not None and len(ranked):
+        r, dropped, dmeta = cd.direction_rank(ranked, day, now_utc=now)
+    elif buys and name == "MAXTAIL_BH":
+        if positions(sd, before=str(day)):
+            extra_notes.append("MAXTAIL_BH bought once on its first sheet; this sheet carries no BUY.")
+        else:
+            r = _maxtail_as_ranked(day, L, now, universe)
+    P = _priced_sheet(day, r if r is not None else pd.DataFrame(), held, nav=nav, now=now, universe=universe,
+                      panel=L.get("panel"), label=name)
+    tickets, reserves, notes, cap = P["tickets"], P["reserves"], P["notes"] + extra_notes, P["cap"]
+    header = [f"SHADOW BOOK **{name}** (REHEARSAL; paper; never entered; graded beside ROT5_TRAIL by the same "
+              f"grader). Contract {contract[:16]} ({LICENCE_SHORT}). Window "
+              f"{desk.sheet_window(day)[0]:%a %d %b %H:%M} to {desk.sheet_window(day)[1]:%a %d %b %H:%M} HKT."]
+    header += P["worst_lines"]
+    if dmeta:
+        header.append(f"Direction source: last pull {dmeta.get('last_pulled_utc')} ({dmeta.get('source_age_days')} "
+                      f"days old); of {dmeta.get('n_in', 0)} ROT5_TRAIL names: {dmeta.get('n_admitted', 0)} admitted, "
+                      f"{dmeta.get('n_unrated', 0)} unrated (admitted, no evidence), {dmeta.get('n_dropped', 0)} dropped.")
+        for x in dropped.itertuples():
+            header.append(f"Dropped: {getattr(x, 'bbg_ticker', x.symbol)} -- {x.refusal}")
+    for nt in notes:
+        header.append(f"Note: {nt}")
+    if len(reserves):
+        header.append("Reserves: " + ", ".join(f"{x.bbg_ticker}" for x in reserves.itertuples()))
+    freeze_utc = now.strftime("%Y-%m-%dT%H:%M:%S")
+    md, short = co.render(tickets, day=str(day), nav_usd=nav, cap=cap, freeze_utc=freeze_utc, header=header)
+    md = md.replace(f"# ORDER SHEET {day}", f"# SHADOW SHEET {name} {day}", 1)
+    short = f"[{name}] " + short
+    cols = [c for c in ("symbol", "verdict", "cons", "n_firms", "net_raises90", "rev_mom", "trail_abs", "trail_rank",
+                        "rank", "sig63") if len(r) and c in r.columns]
+    payload = {"day": str(day), "mode": MODE, "strategy": name, "contract_sha256": contract, "freeze_utc": freeze_utc,
+               "licence": desk.LICENCE, "window_hkt": [str(x) for x in desk.sheet_window(day)], "nav_usd": nav,
+               "cap": cap, "tickets": co.to_json(tickets), "control": co.control_block(tickets),
+               "reserves": reserves.astype(str).to_dict("records") if len(reserves) else [],
+               "refused": dropped[["symbol", "refusal"]].astype(str).to_dict("records") if len(dropped) else [],
+               "ranked": r[cols].astype(str).to_dict("records") if cols else [],
+               "n_ranked": int(len(r)), "notes": notes, "worst_case": P["worst_case"], "direction": dmeta,
+               "written_utc": cc.utc_stamp()}    # `freeze_utc` is the shared decision time; this is the write
+    rec = _emit(day, payload, md, short, name=name, folder=sd, dry=dry)
     print(short)
     return rec
 
@@ -588,47 +819,173 @@ def book_summary(rows: list[dict], *, nav0: float = co.NOTIONAL_USD, bench: Opti
     return out
 
 
+def _mark_open(rows: list[dict], pos: list[dict], px: pd.DataFrame, fx: pd.DataFrame) -> None:
+    """Unrealised USD P&L of OPEN rows at the last close on file (a mark, not a fill)."""
+    by = {p["pos_id"]: p for p in pos}
+    for r in rows:
+        if r.get("state") != "OPEN" or r.get("entry_px") is None:
+            continue
+        p = by.get(r["pos_id"], {})
+        e_day = pd.Timestamp(r["entry_session"]).normalize()
+        m = px[(px.symbol == r["symbol"]) & (px.date >= e_day)].dropna(subset=["close"]).sort_values("date")
+        if not len(m):
+            continue
+        mk, md_ = float(m.close.iloc[-1]), m.date.iloc[-1]
+        ccy = p.get("currency", "USD")
+        r["mark_px"], r["mark_date"] = mk, str(pd.Timestamp(md_).date())
+        r["unrealised_usd"] = round(r["qty"] * (mk / _fx_on(fx, ccy, pd.Timestamp(md_))
+                                                - r["entry_px"] / _fx_on(fx, ccy, e_day)), 2)
+
+
+def book_metrics(rows: list[dict], summ: dict, *, nav0: float = co.NOTIONAL_USD) -> dict:
+    """The side-by-side line: hit rates, the TAIL check (share of P&L from the top name, and the
+    relative result without it) and the unrealised mark of open positions."""
+    closed = [r for r in rows if r.get("state") == "CLOSED"]
+    out: dict = {"n_closed": len(closed),
+                 "n_open": sum(1 for r in rows if r.get("state") == "OPEN"),
+                 "unrealised_usd": round(sum(r.get("unrealised_usd") or 0.0 for r in rows if r.get("state") == "OPEN"), 2)}
+    if not closed:
+        return out
+    pnl = np.array([r["pnl_usd"] for r in closed], dtype=float)
+    out["hit_rate_abs"] = round(float((np.array([r["ret_local"] for r in closed]) > 0).mean()), 4)
+    rel = [r["ret_local"] - r["bench_ret"] for r in closed if r.get("bench_ret") is not None]
+    out["hit_rate_vs_bench"] = round(float((np.array(rel) > 0).mean()), 4) if rel else None
+    net = float(pnl.sum())
+    top = closed[int(np.argmax(np.abs(pnl)))]
+    gains = float(pnl[pnl > 0].sum())
+    out["top_name"] = f"{top['bbg']} ({top['sheet']})"
+    out["top_pnl_usd"] = round(float(top["pnl_usd"]), 2)
+    out["top_share_of_net_pnl"] = round(float(top["pnl_usd"]) / net, 4) if abs(net) > 1e-9 else None
+    best = float(pnl.max())
+    out["best_share_of_gross_gains"] = round(best / gains, 4) if gains > 0 else None
+    if summ.get("bench_ret") is not None:
+        out["relative_0bps_without_top"] = round((net - float(top["pnl_usd"])) / nav0 - summ["bench_ret"], 6)
+    return out
+
+
+def latest_worst_case(folder: Path) -> Optional[dict]:
+    days = frozen_days(folder)
+    for d in reversed(days):
+        w = load_orders(d, folder).get("worst_case")
+        if w:
+            return {"sheet": d, **w}
+    return None
+
+
+def books() -> dict[str, tuple[Path, Path]]:
+    """Every book the grader grades: ROT5_TRAIL, then each shadow book with a sheets folder."""
+    b = {"ROT5_TRAIL": (SHEET_DIR, GRADE_DIR)}
+    if MODE == "REHEARSAL":
+        for n in cd.STRATEGIES:
+            sd, gd, _ = strat_dirs(n)
+            if sd.exists():
+                b[n] = (sd, gd)
+    return b
+
+
 def grade(*, today: Optional[date] = None, downloader: Optional[Callable] = None) -> dict:
     today = today or datetime.now(timezone.utc).date()
-    pos = positions()
-    if not pos:
+    bk = books()
+    pos_by = {n: positions(sd) for n, (sd, _) in bk.items()}
+    allpos = [p for v in pos_by.values() for p in v]
+    if not allpos:
         rec = {"graded_utc": cc.utc_stamp(), "n_positions": 0, "note": "no frozen positions yet"}
         print(json.dumps(rec))
         return rec
-    syms = sorted({p["symbol"] for p in pos} | {BENCH})
-    start = min(pd.Timestamp(p["entry_session"]) for p in pos).date() - timedelta(days=5)
+    syms = sorted({p["symbol"] for p in allpos} | {BENCH})
+    start = min(pd.Timestamp(p["entry_session"]) for p in allpos).date() - timedelta(days=5)
     px, src = fetch_opens(syms, start, today, downloader=downloader)
     fxp = cc.bars_path("FX")
     fx = pd.read_parquet(fxp, columns=["symbol", "date", "close"]) if fxp.exists() else pd.DataFrame()
     if len(fx):
         fx["date"] = pd.to_datetime(fx.date).dt.normalize()
-    rows = grade_positions(pos, px, fx, px[px.symbol == BENCH], today=today)
-    summ = book_summary(rows, bench=px[px.symbol == BENCH])
-    rec = {"graded_utc": cc.utc_stamp(), "today_utc": str(today), "price_source": src, **summ, "rows": rows,
-           "licence": desk.LICENCE, "benchmark": f"{BENCH} opens (WLS proxy)"}
-    GRADE_DIR.mkdir(parents=True, exist_ok=True)
-    cc.write_json(rec, GRADE_DIR / f"grade_{rec['graded_utc']}.json")
-    (REH / "SCOREBOARD.md").write_text(scoreboard_md(rec), encoding="utf-8")
-    print(json.dumps({k: v for k, v in rec.items() if k != "rows"}, default=str))
-    return rec
+    bench = px[px.symbol == BENCH]
+    stamp = cc.utc_stamp()
+    recs: dict = {}
+    for n, (sd, gd) in bk.items():
+        rows = grade_positions(pos_by[n], px, fx, bench, today=today)
+        _mark_open(rows, pos_by[n], px, fx)
+        summ = book_summary(rows, bench=bench)
+        recs[n] = {"graded_utc": stamp, "today_utc": str(today), "strategy": n, "price_source": src, **summ,
+                   "metrics": book_metrics(rows, summ), "latest_worst_case": latest_worst_case(sd),
+                   "rows": rows, "licence": desk.LICENCE, "benchmark": f"{BENCH} opens (WLS proxy)",
+                   **({"contract_sha256": cd.contract_sha(n)} if n in cd.RULES else {})}
+    main = recs["ROT5_TRAIL"]
+    # the fair comparison: ROT5_TRAIL on the SAME sheets as the shadow books (they start later)
+    same = {}
+    for n in recs:
+        if n == "ROT5_TRAIL":
+            continue
+        days = frozen_days(bk[n][0])
+        if days:
+            rr = [r for r in main["rows"] if r["sheet"] >= days[0]]
+            s2 = book_summary(rr, bench=bench)
+            same[n] = {"from_sheet": days[0], **{k: v for k, v in s2.items() if k != "states"},
+                       "metrics": book_metrics(rr, s2)}
+    main["alternates"] = {n: {k: v for k, v in r.items() if k != "rows"} for n, r in recs.items() if n != "ROT5_TRAIL"}
+    main["trail_on_same_sheets"] = same
+    for n, (sd, gd) in bk.items():
+        gd.mkdir(parents=True, exist_ok=True)
+        cc.write_json(recs[n], gd / f"grade_{stamp}.json")
+    (REH / "SCOREBOARD.md").write_text(scoreboard_md(main, recs), encoding="utf-8")
+    print(json.dumps({k: v for k, v in main.items() if k not in ("rows", "alternates", "trail_on_same_sheets")},
+                     default=str))
+    return main
 
 
-def scoreboard_md(rec: dict) -> str:
-    L = ["# Contest rehearsal scoreboard (derived view; the receipts are grades/grade_*.json)", "",
-         f"Graded {rec['graded_utc']} UTC; price source: {rec.get('price_source')}; benchmark {BENCH} opens.", "",
-         f"- positions: {rec.get('n_positions')} ({rec.get('states')})",
-         f"- book P&L at 0 bps: ${rec.get('pnl_usd_0bps', 0):,.0f}; NAV ${rec.get('nav_usd_0bps', 0):,.0f}",
-         f"- relative vs {BENCH}: 0 bps {rec.get('relative_0bps', 'n/a')}, 10 bps {rec.get('relative_10bps', 'n/a')}, "
-         f"25 bps {rec.get('relative_25bps', 'n/a')} over {rec.get('bench_window', 'n/a')}", "",
-         "| sheet | ticker | qty | entry | exit | state | ret (local) | P&L USD | bench | note |",
-         "|---|---|---|---|---|---|---|---|---|---|"]
-    def fm(v: Any, spec: str) -> str:
-        return "" if v is None else format(v, spec)
-    for r in rec.get("rows", []):
-        L.append(f"| {r['sheet']} | {r['bbg']} | {r['qty']:,} | {r.get('entry_session')} {r.get('entry_px', '')} "
-                 f"| {r.get('exit_session', '')} {r.get('exit_px', '')} | {r.get('state')} "
-                 f"| {fm(r.get('ret_local'), '+.2%')} | {fm(r.get('pnl_usd'), '+,.0f')} "
-                 f"| {fm(r.get('bench_ret'), '+.2%')} | {r.get('note', '')} |")
+def _side_line(label: str, s: dict) -> str:
+    m = s.get("metrics", {}) or {}
+    def f(v: Any, spec: str) -> str:
+        return "n/a" if v is None else format(v, spec)
+    w = s.get("latest_worst_case") or {}
+    wtxt = ("n/a" if not w else
+            f"{w.get('sheet')}: 5x${w.get('cap_binding_usd', 0):,.0f}; "
+            + ", ".join(f"{k} stop ${-v:,.0f}" for k, v in (w.get("largest_at_stop_usd") or {}).items())
+            + (f"; 2σ63 ${-w['largest_at_2sigma63_usd']:,.0f}" if w.get("largest_at_2sigma63_usd") is not None else ""))
+    return (f"| {label} | {m.get('n_closed', s.get('n_closed', 0))} / {m.get('n_open', 0)} "
+            f"| {f(s.get('pnl_usd_0bps'), '+,.0f')} | {f(m.get('unrealised_usd'), '+,.0f')} "
+            f"| {f(s.get('relative_0bps'), '+.2%')} / {f(s.get('relative_10bps'), '+.2%')} / {f(s.get('relative_25bps'), '+.2%')} "
+            f"| {f(m.get('hit_rate_vs_bench'), '.0%')} ({f(m.get('hit_rate_abs'), '.0%')} abs) "
+            f"| {m.get('top_name', 'n/a')} {f(m.get('top_share_of_net_pnl'), '.0%')} of net; best {f(m.get('best_share_of_gross_gains'), '.0%')} of gains "
+            f"| {f(m.get('relative_0bps_without_top'), '+.2%')} | {wtxt} |")
+
+
+def scoreboard_md(rec: dict, recs: Optional[dict] = None) -> str:
+    recs = recs or {"ROT5_TRAIL": rec}
+    L = ["# Contest rehearsal scoreboard (derived view; the receipts are grades/grade_*.json and "
+         "strategies/<book>/grades/grade_*.json)", "",
+         f"Graded {rec['graded_utc']} UTC; price source: {rec.get('price_source')}; benchmark {BENCH} opens "
+         "(WLS proxy). Every book is frozen at the same time by the same task and graded here by the same code.", "",
+         "## Books side by side", "",
+         "| book | closed / open | realised P&L $ (0 bps) | unrealised $ (mark) | relative 0 / 10 / 25 bps "
+         "| hit rate vs bench | TAIL: top name share | relative without top name | worst case (latest sheet) |",
+         "|---|---|---|---|---|---|---|---|---|"]
+    for n, r in recs.items():
+        L.append(_side_line(n, r))
+    for n, s in (rec.get("trail_on_same_sheets") or {}).items():
+        L.append(_side_line(f"ROT5_TRAIL on {n}'s sheets (from {s['from_sheet']})", s))
+    L += ["", "Read the same-sheets line, not the full ROT5_TRAIL line, when comparing: the shadow books start "
+          "later. A handful of positions decides nothing; the TAIL column says how much one name carries.", ""]
+    for n, r in recs.items():
+        L += [f"## {n}", "",
+              f"- positions: {r.get('n_positions')} ({r.get('states')})",
+              f"- book P&L at 0 bps: ${r.get('pnl_usd_0bps', 0):,.0f}; NAV ${r.get('nav_usd_0bps', 0):,.0f}",
+              f"- relative vs {BENCH}: 0 bps {r.get('relative_0bps', 'n/a')}, 10 bps {r.get('relative_10bps', 'n/a')}, "
+              f"25 bps {r.get('relative_25bps', 'n/a')} over {r.get('bench_window', 'n/a')}", "",
+              "| sheet | ticker | qty | entry | exit | state | ret (local) | P&L USD | bench | note |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
+        def fm(v: Any, spec: str) -> str:
+            return "" if v is None else format(v, spec)
+        for x in r.get("rows", []):
+            pnl = x.get("pnl_usd")
+            note = x.get("note", "")
+            if pnl is None and x.get("unrealised_usd") is not None:
+                note = (note + "; " if note else "") + f"mark {x['mark_date']} {x['unrealised_usd']:+,.0f}"
+            L.append(f"| {x['sheet']} | {x['bbg']} | {x['qty']:,} | {x.get('entry_session')} {x.get('entry_px', '')} "
+                     f"| {x.get('exit_session', '')} {x.get('exit_px', '')} | {x.get('state')} "
+                     f"| {fm(x.get('ret_local'), '+.2%')} | {fm(pnl, '+,.0f')} "
+                     f"| {fm(x.get('bench_ret'), '+.2%')} | {note} |")
+        L.append("")
     return "\n".join(L) + "\n"
 
 
@@ -837,6 +1194,8 @@ def daily(day: Optional[date] = None) -> int:
     try:
         g = grade()
         run["grade"] = {k: g.get(k) for k in ("n_positions", "n_closed", "price_source", "relative_0bps")}
+        run["grade"]["alternates"] = {n: {k: a.get(k) for k in ("n_positions", "n_closed", "relative_0bps")}
+                                      for n, a in (g.get("alternates") or {}).items()}
     except Exception as exc:                                   # noqa: BLE001
         run["grade"] = f"FAILED {type(exc).__name__}: {exc}"
     first = cc.CONTEST_START - timedelta(days=1) if MODE == "CONTEST" else date.min
@@ -847,6 +1206,8 @@ def daily(day: Optional[date] = None) -> int:
             run["sheet"] = rec
         except FrozenSheetExists as exc:
             run["sheet"] = f"ALREADY_FROZEN: {exc}"
+        except cd.LiveGateRefused as exc:
+            run["sheet"] = f"REFUSED_LIVE_GATE: {exc}"
         except Exception as exc:                               # noqa: BLE001
             run["sheet"] = f"FAILED {type(exc).__name__}: {exc}"
     else:
@@ -878,7 +1239,7 @@ def status() -> str:
 def main(argv: Optional[list[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("cmd", choices=["daily", "sheet", "grade", "verify", "drills", "vendor-miss", "status", "task-cmd",
-                                    "nav"])
+                                    "nav", "contract", "dry", "gate"])
     ap.add_argument("--set", type=float, default=None, help="nav: the Terminal's NAV in USD, used to size the next sheet")
     ap.add_argument("--date", default=None)
     ap.add_argument("--no-refresh", action="store_true")
@@ -892,6 +1253,19 @@ def main(argv: Optional[list[str]] = None) -> int:
     if a.cmd == "sheet":
         sheet(day, refresh=not a.no_refresh)
         return 0
+    if a.cmd == "contract":
+        for n in cd.STRATEGIES:
+            r = cd.ensure_contract(n, FREEZE_LOG)
+            print(f"{n}: contract {r['contract_sha256']} declared {r['declared_utc']} in {FREEZE_LOG.name}")
+        return 0
+    if a.cmd == "dry":
+        rec = sheet(day, refresh=not a.no_refresh, dry=True)
+        print(json.dumps(rec, default=str, indent=1))
+        return 0
+    if a.cmd == "gate":
+        ok, reasons = cd.live_gate(cc.CONTEST)
+        print("LIVE GATE OPEN" if ok else "LIVE GATE REFUSES: " + "; ".join(reasons))
+        return 0 if ok else 2
     if a.cmd == "grade":
         grade()
         return 0

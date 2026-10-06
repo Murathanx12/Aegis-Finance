@@ -135,3 +135,46 @@ if SIZE_MEMBERS_NIGHTLY:
 # F1 remedy (nn_lab/raw_prices.py): close_raw from monthly RAW bars; OFF until the nightly has a
 # monthly raw refresh (a live row without close_raw would differ from its training rows).
 USE_CLOSE_RAW = False
+
+# ---- 2026-10-06/07: frozen decision-time membership (nn_lab/membership.py, review C5) ---------
+# Every threshold the merge, the revisions log and the night status read, declared here and
+# printed on every nightly receipt (`membership.thresholds`).
+# A rebuild that cannot reproduce more than this share of the stored tail membership is a
+# broken input (a truncated bars file), not a vendor re-adjustment: REFUSED. Two separate caps:
+# a member the re-adjusted bars call INELIGIBLE (a dividend crossing the floor) and a member
+# whose symbol is ABSENT from the rebuilt bars (the truncated-file signature).
+MEMBERSHIP_REFUSE_SHARE = 0.02
+MEMBERSHIP_REFUSE_FLOOR = 100          # cap = max(FLOOR, int(SHARE x stored tail rows)); > cap refuses
+# Night status: above these counts the night is DEGRADED (with the count in `evidence`), not OK.
+NIGHT_DEGRADED_ABSENT_OVER = 0         # any absent stored member degrades the night
+NIGHT_DEGRADED_WOULD_DROP_OVER = 25    # 2026-10-06 saw 4 dividend crossings in 100,074 rows
+NIGHT_DEGRADED_ETF_REMOVED_OVER = 0    # an exclusion-list change removing frozen members is visible
+# Materiality of a FEATURE revision (logged to revisions.parquet, never applied). The vendor
+# re-rounds adjusted prices to the cent after a rescale: one cent on a $20 stock moves ret_1 by
+# up to ~1e-3, so return-like features need an absolute floor; levels need a relative one.
+FEATURE_REVISION_ABS_TOL = 1e-3                    # any feature: |change| <= this is rounding
+FEATURE_REVISION_LEVEL_REL_TOL = 0.005             # level features: |change| / |stored| <= 0.5% is rounding
+FEATURE_LEVEL_COLUMNS = ("med_dv", "close")
+# A FINAL label is an OUTCOME, not decision-time knowledge (review F10): the best-known value is
+# used for training. A recomputed label replaces the stored one only when it moved by MORE than
+# this (and the change is logged); smaller changes are counted, not applied, so the stored label
+# is always within this of the best-known one and drift cannot accumulate unlogged.
+LABEL_REVISION_MIN_ABS = 1e-4          # 1 bp of excess return; exactly 1.0 bp is NOT a revision
+# Dollar-volume features (med_dv, dv_log, dv_trend_*, amihud_21) and the $3M eligibility floor
+# use the ADJUSTED close x volume. That is split-neutral but carries every dividend paid
+# between the decision date and the bars' pull. Grid dates first stored before this date were
+# built from bars adjusted through a LATER date (the full build of 2026-09-28/29): their
+# look-ahead is the dividend rescale measured on 2026-10-06 (median -0.64%, worst -7.9% of the
+# adjusted close over the following months). From this date each new grid date is stored from
+# the bars of the night it first appears and frozen (lag recorded per date in
+# `membership_vintage.jsonl`); at lag 0 no session after t exists in the bars, so no dividend
+# after t can be in it. No unadjusted DAILY series is on disk (bars_raw_monthly is monthly
+# and not refreshed nightly), so a raw-volume recompute of stored dates is not possible.
+PIT_DOLLAR_VOLUME_FROM = "2026-10-06"
+PRE_FREEZE_DV_NOTE = ("grid dates before 2026-10-06 carry adjusted-close dollar volume (med_dv, dv_log, "
+                      "dv_trend_*, amihud_21, eligibility); look-ahead bounded at median -0.64% / worst "
+                      "-7.9% of the adjusted close (dividend rescale measured 2026-10-06)")
+MEMBERSHIP_VINTAGE = OUT / "membership_vintage.jsonl"   # TRACKED, append-only: one row per grid date first stored
+FROZEN_INPUTS_LEDGER = OUT / "frozen_inputs_ledger.jsonl"   # TRACKED: sha256 of each night's scored feature rows
+# Health contract (nn_lab.health_contract, review F8)
+HEALTH_MAX_AGE_HOURS = 26

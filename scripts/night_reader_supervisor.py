@@ -528,6 +528,42 @@ def launch_official() -> int:
     return p.pid
 
 
+#: 2026-10-06 (C7): the search-led query planner. The supervisor only LAUNCHES
+#: `python -m backend.services.query_planner --run --due` out of process at most
+#: once per PLANNER_CHECK_S; the planner itself decides whether it is due
+#: (`QUERY_PLANNER_EVERY_H` from its own ledger, so a supervisor restart cannot
+#: double a day's queries), audits the read-only tool scope before and after,
+#: and writes `dowjones/query_planner_<run_id>.json` every time, NOT_DUE included.
+PLANNER_CHECK_S = 1800.0
+
+
+def planner_due(last_launch: float, now: float, *, child_alive: bool = False,
+                enabled: bool | None = None, every_s: float | None = None) -> bool:
+    """PURE. Launch the planner's `--due` check now? Only when enabled, no
+    earlier run is still alive, and PLANNER_CHECK_S has passed."""
+    en = bool(getattr(_config, "QUERY_PLANNER_ENABLED", True)) if enabled is None else enabled
+    ev = PLANNER_CHECK_S if every_s is None else every_s
+    return en and not child_alive and (now - last_launch) >= ev
+
+
+def launch_planner() -> int:
+    """The planner, out of process, no window, one log per run under
+    `dowjones/query_planner_logs/`. Returns the PID (never waited on)."""
+    logs = DJ / "query_planner_logs"
+    logs.mkdir(parents=True, exist_ok=True)
+    for old in sorted(logs.glob("run_*.log"))[:-200]:
+        try:
+            old.unlink()
+        except OSError:
+            pass
+    fh = (logs / f"run_{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}_{os.getpid()}.log").open(
+        "a", encoding="utf-8")
+    p = subprocess.Popen([PY, "-m", "backend.services.query_planner", "--run", "--due"],
+                         cwd=str(REPO), creationflags=0x08000000 | 0x00000200,
+                         stdin=subprocess.DEVNULL, stdout=fh, stderr=subprocess.STDOUT)
+    return p.pid
+
+
 def pid_alive(pid: int | None) -> bool:
     """True when `pid` is a live python process running scripts.official_sources
     (checked by its command line, never by image name alone)."""
@@ -1140,6 +1176,7 @@ def main(argv: list[str] | None = None) -> int:
     ticks, state, next_action, last_err = 0, STARTING, "launch the reader", None
     idle_until = 0.0
     last_official, official_pid = 0.0, None
+    last_planner, planner_pid = 0.0, None
     # 2026-09-29: the stall ladder and the scheduled Chrome recycle
     _lad = load_ladder()
     stall_level, last_stall_act, detail = _lad["level"], _lad["last_act"], ""
@@ -1454,6 +1491,15 @@ def main(argv: list[str] | None = None) -> int:
                 last_official = time.time() - float(getattr(
                     _config, "OFFICIAL_SOURCES_EVERY_S", 900.0)) + 120.0
                 log(event="official_sources_launch_failed", error=f"{type(exc).__name__}: {exc}"[:200])
+        # 2026-10-06 (C7): the query planner (it decides itself whether it is due)
+        if planner_due(last_planner, time.time(), child_alive=pid_alive(planner_pid)):
+            try:
+                planner_pid = launch_planner()
+                last_planner = time.time()
+                log(event="query_planner_launched", pid=planner_pid)
+            except Exception as exc:  # noqa: BLE001 -- reading goes on either way
+                last_planner = time.time() - PLANNER_CHECK_S + 300.0
+                log(event="query_planner_launch_failed", error=f"{type(exc).__name__}: {exc}"[:200])
         # 2026-09-30: a pop-up on a bank / payment / checkout / mail address is
         # closed on the next tick (the pool also sweeps after every read)
         if a.pool and pids:

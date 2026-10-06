@@ -3304,6 +3304,13 @@ DAILY_PASS_STEP_BOX_S: dict = {
     "grade_books": 900,
     "paper_accounts": 600,
     "bridge_report": 600,
+    # 2026-10-06 (C7). `dowjones_feeds` had no scheduled caller for nine days
+    # (the health row went STALE while the corpus kept updating): ten plain-HTTP
+    # RSS GETs, paced 2 s, no browser, no LLM. `query_planner_yield` reads the
+    # planner's ledger, queue, page log, claims and forecast ledger -- files only.
+    # Sum of boxes 14,820 s < LAB_DRIVER_BOX_S["daily_pass"] = 21,600 s.
+    "dowjones_feeds": 300,
+    "query_planner_yield": 120,
 }
 
 # ── SYSTEMS FIXES (review 2026-09-26) ────────────────────────────────────────
@@ -4699,6 +4706,51 @@ BACKTEST_LEADERBOARD_STALE_DAYS = 7
 #: covers a Friday mark read on the following Monday night.
 PAPER_ACCOUNT_MARK_STALE_DAYS = 4
 
+# ── book_dna (chunk C3, 2026-10-06): "N ahead of SPY" is never printed alone ──
+#: `backend/services/book_dna.py`, called by `scripts/paper_accounts_roi.py`
+#: (the daily pass's `paper_accounts` step). Every threshold that decides how
+#: many independent bets "N ahead" really is lives here, so a reader can see it.
+#: Two books are LINKED (single linkage) when their ticker sets have Jaccard >=
+#: this. 0.30 = "largely the same book"; the receipt also prints the cluster
+#: count at every value of BOOK_DNA_JACCARD_SENSITIVITY so the choice is visible.
+BOOK_DNA_JACCARD_THRESHOLD = 0.30
+BOOK_DNA_JACCARD_SENSITIVITY: tuple = (0.15, 0.30, 0.50)
+#: ...or when their period-return series correlate >= this over at least
+#: BOOK_DNA_MIN_CORR_OBS common periods (identical series always link).
+BOOK_DNA_CORR_THRESHOLD = 0.80
+BOOK_DNA_MIN_CORR_OBS = 15
+#: A beta vs SPY is fitted only on >= this many period returns; below it the
+#: field says NOT_COMPUTABLE (no slope on 6 points).
+BOOK_DNA_MIN_BETA_OBS = 20
+#: EARLY_EVIDENCE needs >= this many sessions AND excess > 0 in >= 2 of 3
+#: contiguous sub-windows. REPLICATED additionally needs a frozen replication
+#: (same rule, another book) or a positive excess over a FAIR twin (below).
+#: This module never labels anything above REPLICATED.
+BOOK_DNA_EARLY_MIN_SESSIONS = 21
+BOOK_DNA_FAIR_TWIN_KINDS: tuple = ("matched_twin21", "matched_random", "random_same_band")
+#: TAIL check: `one_name_dependence` when the top holding carries more than this
+#: share of the book's excess (or of its open P&L, for broker accounts).
+BOOK_DNA_ONE_NAME_SHARE = 0.50
+#: Loser error_type rules (in order): control_artifact (a twin) -> unmanaged (no
+#: manager run in BOOK_DNA_UNMANAGED_SESSIONS sessions) -> sizing_concentration
+#: (top-1 > BOOK_DNA_LOSER_SIZING_SHARE of the loss) -> timing_exit (the worst
+#: contiguous third carries >= BOOK_DNA_TIMING_SHARE of the loss) -> selection.
+BOOK_DNA_N_LOSERS = 10
+BOOK_DNA_UNMANAGED_SESSIONS = 5
+BOOK_DNA_LOSER_SIZING_SHARE = 0.40
+BOOK_DNA_TIMING_SHARE = 0.70
+#: When the P&L share is NOT computable (lanes: lots reopen at each rebalance),
+#: a loser whose top holding is >= this fraction of the book NOW is still
+#: sizing_concentration -- and its `why` says "by WEIGHT, not by P&L share".
+BOOK_DNA_LOSER_WEIGHT_FALLBACK = 0.20
+#: Website lanes whose daily returns correlate >= this form one risk-dial family;
+#: lanes whose holdings have Jaccard >= BOOK_DNA_LANE_IDENTITY_JACCARD are
+#: printed as one book with different treatment (mirror / conviction).
+BOOK_DNA_LANE_FAMILY_CORR = 0.85
+BOOK_DNA_LANE_IDENTITY_JACCARD = 0.90
+#: How many tickers name a cluster's shared basket on the collapse line.
+BOOK_DNA_BASKET_TOP = 5
+
 # ── Telegram replies (LANE A phase 2, 2026-09-28) ────────────────────────────
 #: `backend/services/alerts_replies.py`, called by the existing poller in
 #: `scripts/telegram_agent.py`. Every reply READS FILES: no LLM, no browser, no
@@ -4727,6 +4779,30 @@ TELEGRAM_APPROVAL_MAX_AGE_MIN = 60
 #: to this many characters (Telegram's own message limit is 4,096); the reply
 #: states how much was stored. Longer articles: paste into DIGEST.md.
 TELEGRAM_DIGEST_MAX_CHARS = 4096
+
+# ── Telegram cockpit (C6, 2026-10-06, `backend/services/telegram_cockpit.py`) ──
+#: Plain-text questions are mapped to the EXISTING receipt handlers by a fixed
+#: keyword table. Only when nothing matches does ONE DeepSeek classification
+#: call run (purpose `telegram_router`, reply validated against the intent
+#: enum); at most this many per UTC day, counted in `telegram/router_llm.jsonl`.
+TELEGRAM_ROUTER_LLM_MAX_PER_DAY = 20
+#: A plain-text message longer than this never reaches the classifier (a paste
+#: is not a question); it gets the deterministic help reply.
+TELEGRAM_ROUTER_LLM_MAX_CHARS = 300
+#: The per-chat conversational context ("and vs spy?") lives this long.
+TELEGRAM_CONTEXT_TTL_MIN = 30
+#: Inline-button ids older than this resolve to nothing (a stale tap is refused).
+TELEGRAM_CALLBACK_TTL_H = 48
+#: (review C6 F3) Every cockpit answer prints its receipt's age, read from the
+#: receipt's OWN stamp, and says STALE past this many hours for its kind. The
+#: ROI and snapshot receipts are written about daily; health a few times a day;
+#: the reader rewrites its status every few minutes, so an hour-old status
+#: means the reader is not reading; bars span a weekend. An unreadable stamp
+#: is never fresh.
+TELEGRAM_RECEIPT_STALE_H: dict = {
+    "roi": 26.0, "snapshot": 26.0, "health": 12.0, "reader": 1.0, "digest": 26.0,
+    "bars": 96.0, "default": 26.0,
+}
 
 # ── Stitched tickers (review 2026-09-29 F4, `backend/services/stitched_tickers.py`) ──
 #: A symbol whose bars stop for MORE than this many market sessions and then
@@ -5018,6 +5094,16 @@ HYP_LAB_PRICE_OUT_PER_M = 1.20
 HYP_LAB_MAX_CELLS_PER_NIGHT = 8
 HYP_LAB_MIN_FREE_RAM_GB = 3.0
 HYP_LAB_NIGHTLY_TIME_BOX_MIN = 60
+#: CHUNK C12 / owner decision D6 (2026-10-06, borrowed from RD-Agent(Q)): each family's Beta
+#: posterior (hyp_lab.family_record) is fed BACKWARD into generation. A family whose posterior
+#: mean is below FLOOR gets weight max(MIN_WEIGHT, p / FLOOR): its generation quota is
+#: floor(ceil(n x MAX_SHARE) x weight) (never below 1: a shrink, never a kill) and its EV in
+#: ranking is multiplied by the weight, written to policy_state as a PREFERENCE
+#: (`hyp_family_ev_weight`). Nothing is deleted or closed; rows over quota are DEFERRED and
+#: re-admitted when the family's posterior returns to >= FLOOR. The $ caps above are untouched.
+HYP_LAB_FAMILY_POSTERIOR_FLOOR = 0.15
+HYP_LAB_FAMILY_MIN_WEIGHT = 0.25
+HYP_LAB_FAMILY_MAX_SHARE = 0.5         # no family may take more than half of one generation round
 
 
 # ── FLEET DAILY MANAGER (2026-09-29 night; `backend/services/fleet_manager.py`) ──
@@ -5094,10 +5180,58 @@ CONTEST_DEFECT_LOOKBACK_DAYS = 730   # a bar-defect flag inside this window refu
 # owner's "read more" is met by the official APIs below, each with its own
 # small daily cap (`official_sources.SOURCES`), which never touch the browser.
 READER_BUDGET_ENABLED = True
+#: 2026-10-06 (C7): `query_planner` (the search-led planner's admitted URLs,
+#: `backend/services/query_planner.py`) gets 0.03 = ~120 loads/day INSIDE the
+#: same 4,000, taken from markets_news (0.20 -> 0.18) and digest_asks (0.06 ->
+#: 0.05). Work-conserving: an idle planner lane's share is borrowed by others.
 READER_BUDGET_SHARES = {
-    "book_names": 0.24, "universe_names": 0.12, "markets_news": 0.20, "macro_world": 0.12,
+    "book_names": 0.24, "universe_names": 0.12, "markets_news": 0.18, "macro_world": 0.12,
     "politics_policy": 0.08, "official_releases": 0.04, "social": 0.11,
-    "digest_asks": 0.06, "overhead": 0.03}
+    "digest_asks": 0.05, "query_planner": 0.03, "overhead": 0.03}
+
+# ── THE QUERY PLANNER (2026-10-06, chunk C7) ─────────────────────────────────
+# The reader revisits; this makes it SEARCH. Seeds (held names across the fleet
+# and PC-PAPER, the newest world digest's themes, the opportunities shortlist)
+# -> templated queries (no LLM writes the query text) -> ONE OpenClaw agent turn
+# per query that may call only `web_search` / `x_search` (the read-only tool
+# scope is unchanged and audited before and after) -> URLs -> the allowed-host
+# classifier (refused stays refused; a NEW host is QUARANTINED, never admitted)
+# -> `dowjones/query_planner_queue.jsonl`, adopted by the reader pool into the
+# `query_planner` budget lane with its `query_id`. `--due` honours this cadence.
+QUERY_PLANNER_ENABLED = True
+QUERY_PLANNER_EVERY_H = 6.0
+QUERY_PLANNER_MAX_QUERIES_DAY = 24
+QUERY_PLANNER_MAX_QUERIES_RUN = 8
+#: per seed lane, per UTC day (their sum may exceed the day cap; the day cap binds)
+QUERY_PLANNER_LANE_QUERIES_DAY = {"held_names": 12, "themes": 8, "opportunities": 4}
+QUERY_PLANNER_MAX_URLS_PER_QUERY = 6
+#: admitted URLs queued per UTC day; equals the lane's share of the 4,000 loads
+QUERY_PLANNER_MAX_ADMITTED_DAY = 120
+QUERY_PLANNER_MODEL = "deepseek/deepseek-flash"
+QUERY_PLANNER_TURN_TIMEOUT_S = 240.0
+#: a run stops issuing queries once its priced spend passes this (an unpriced
+#: turn is charged QUERY_PLANNER_UNKNOWN_COST_USD, never zero)
+QUERY_PLANNER_RUN_USD_CAP = 0.30
+QUERY_PLANNER_UNKNOWN_COST_USD = 0.03
+#: 2026-10-06, measured on the first live run: `web_search` fired and answered
+#: "disabled or no provider is available". After this many consecutive such
+#: queries the planner probes ONCE per 24 h instead of spending its budget.
+QUERY_PLANNER_TOOL_UNAVAILABLE_STREAK = 3
+#: hosts a search may return that are REFUSED on top of the browser's own
+#: money / checkout / mail / message refusals (audit 2026-10-06 §C: ToS or
+#: robots.txt; search-engine result pages; consumer-AI chat UIs; login walls)
+QUERY_PLANNER_REFUSED_HOSTS = (
+    "youtube.com", "youtu.be", "instagram.com", "facebook.com", "tiktok.com",
+    "linkedin.com", "chatgpt.com", "openai.com", "perplexity.ai", "claude.ai",
+    "consensus.app", "gemini.google.com", "duckduckgo.com", "bing.com", "google.com",
+    "efdsearch.senate.gov", "pbc.gov.cn", "api.nasdaq.com")
+
+#: 2026-10-06 (C7): a Dow Jones feed whose NEWEST item is older than this is
+#: FROZEN_UPSTREAM and lands in the receipt's `refused_or_red`. Measured: the
+#: five `feeds.a.dj.com/rss/*` WSJ URLs still answer 200 with 20 items, all
+#: dated 2025-01-27 (~607 days) -- the parser was right, the URLs were retired;
+#: the live copies are under `feeds.content.dowjones.io/public/rss/`.
+DOWJONES_FEED_FROZEN_AGE_H = 14 * 24.0
 #: UTC hours 0-23: Asia 00-07 (1.4), Europe 08-10 (0.8), US pre-open 11-12
 #: (1.3), US session 13-19 (1.6), US evening 20-22 (0.7), Asia pre-open 23 (1.2)
 READER_BUDGET_HOUR_WEIGHTS = (1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 0.8, 0.8, 0.8, 1.3, 1.3,
@@ -5136,3 +5270,74 @@ ALWAYS_ON_LAB_OFF_MARKER = "always_on_lab_OFF"
 #: pass NOTES them and does not degrade on them; any OTHER unreadable broker
 #: account is a DEGRADED line. hack3: key answers HTTP 401 since 2026-09-22.
 PAPER_ACCOUNTS_RETIRED_UNREADABLE: tuple = ("hack3",)
+
+# ── PC-PAPER mandate and the sim owner (2026-10-06, chunk C2) ───────────────
+#: OWNER DECISION 2026-10-06: PC-PAPER is a ~$1,000,000 paper experiment. The
+#: decision contract is sized on the BROKER'S equity read, never on a literal;
+#: the owner's real capital is reported as a scaled view (IC_CAPITAL_LEVELS).
+#: The contract's capital and the broker equity may differ by at most this
+#: fraction of equity before the mandate prints UNRECONCILED.
+PC_MANDATE_CAPITAL_TOLERANCE = 0.05
+#: A broker equity read older than this (days, by the read's own stamp) is
+#: UNRECONCILED (BROKER_EQUITY_STALE). Four days covers a long weekend.
+PC_MANDATE_EQUITY_MAX_AGE_DAYS = 4.0
+#: Session protocol item 4: the largest admissible book's one-day k-sigma loss
+#: may not exceed this fraction of equity. Above it the mandate says REFUSE and
+#: the sim owner will not start a trading session. Never widened to pass.
+PC_WORST_CASE_MAX_FRAC_OF_EQUITY = 0.10
+#: The scheduled sim owner (`python -m scripts.task_keeper sim`). It starts a
+#: session on an XNYS trading day between these US/Eastern times (09:00 ET is
+#: 21:00 HKT in EDT, 22:00 HKT after 2026-11-01) and otherwise writes a receipt
+#: saying why not. The session runs to at least SIM_OWNER_END_AFTER_CLOSE_MIN
+#: past the 16:00 ET close so the after-close grade lands inside it.
+SIM_OWNER_FIRST_START_ET = (9, 0)
+SIM_OWNER_LAST_START_ET = (15, 30)
+SIM_OWNER_END_AFTER_CLOSE_MIN = 60
+#: The mode the owner starts when the mandate is OK and the worst case passes;
+#: otherwise it starts "observe" and names the refusal on its receipt.
+SIM_OWNER_MODE = "paper_profit"
+#: A sim_session health row trusts the owner's last receipt for this long
+#: (the task fires every 30 min, plus logon / unlock / wake).
+SIM_OWNER_RECEIPT_MAX_AGE_MIN = 75
+
+# ── Data catalog + ledger archival (chunk C10, 2026-10-06) ─────────────────
+#: A closed `<ledger>_<YYYY-MM>.jsonl` at or above this size is archived to
+#: Parquet outside git with a committed manifest (`ledger_archive`).
+LEDGER_ARCHIVE_MIN_BYTES = 50 * 1024 * 1024
+#: Files below this get a full content sha256; above it, size + first/last
+#: 1 MB, labelled as such (`data_catalog`). JSONL line counts obey it too.
+DATA_CATALOG_FULL_HASH_MAX_BYTES = 200 * 1024 * 1024
+#: A file of a non-dataset kind (small json receipts, logs, txt) gets its own
+#: catalog row only at or above this size; below it, it is rolled up into its
+#: directory's row.
+DATA_CATALOG_OWN_ROW_MIN_BYTES = 5 * 1024 * 1024
+#: Local GGUF model directory, outside the repo. Env override wins.
+DATA_CATALOG_LLAMA_MODELS_ENV = "AEGIS_LLAMA_MODELS_DIR"
+
+# ── Sticky matched twin (CHUNK C1b, 2026-10-07) ──────────────────────────────
+#: `matched_twins.twin_series_sticky`: a partner is drawn once per rule holding (same
+#: size x vol x 12-1 cell as of the entry date) and held until the rule exits that name,
+#: so the twin's turnover equals the rule's by construction. Declared BEFORE the board was
+#: run: a board row is REFUSED (named, with the gap) when the median over invested months
+#: of |twin one-way turnover - rule one-way turnover| exceeds this. Residual gap is the
+#: EW re-weighting of drifted books (different returns) and partner deaths/collisions.
+STICKY_TWIN_TURNOVER_TOLERANCE = 0.03
+#: independent sticky draws per rule (the registered twin21's count: draw 0 + 20 extra)
+STICKY_TWIN_N_DRAWS = 21
+
+# ── Opportunity Explorer (C4, 2026-10-06; review fixes F1-F6) ──────────────
+#: The receipt is STALE on the page past this many days (scripts.opportunities_build;
+#: the funnel_night10.json lesson: a static file with no age check is green forever).
+OPPORTUNITIES_STALE_DAYS = 3
+#: F1 "coverage" flag: fewer than this many DISTINCT firms with a dated target action
+#: in the last OPPORTUNITIES_COVERAGE_WINDOW_DAYS (a target older than that is not coverage).
+OPPORTUNITIES_COVERAGE_MIN_FIRMS = 3
+OPPORTUNITIES_COVERAGE_WINDOW_DAYS = 180
+#: F1 "binary event" flag: an FDA / trial event dated within this many weekdays.
+OPPORTUNITIES_BINARY_WINDOW_SESSIONS = 63
+#: F1 "runway" flag: cash and equivalents below this many quarters of operating loss.
+OPPORTUNITIES_RUNWAY_MIN_QUARTERS = 4
+#: F1: the High-Risk Innovation badge needs at least this many of the three flags.
+OPPORTUNITIES_BADGE_MIN_FLAGS = 2
+#: F3: a median-target upside below this is LOW UPSIDE (grey, never green).
+OPPORTUNITIES_LOW_UPSIDE = 0.05

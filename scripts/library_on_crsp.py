@@ -4,6 +4,8 @@
     python -m scripts.library_on_crsp --part fundamentals --panel-run <id>   # WRDS ratios, PIT
     python -m scripts.library_on_crsp --part run --panel-run <id> [--run-id <id>]   # every rule
     python -m scripts.library_on_crsp --part board --run-id <id>   # leaderboard + candidates
+    python -m scripts.library_on_crsp --part fair_board --run-id <id> --fair-run <hyp_twin_board run>
+                                      # headlines re-issued on the fair twin (2026-10-06), four columns
 
 Licence `PRODUCT_EXPERIMENT`, $0, no LLM, no network. HINDSIGHT: every rule was
 registered 2026-09-26. 1991-2016 was never seen by the library's development
@@ -683,10 +685,107 @@ def render_md(doc: dict) -> str:
     return "\n".join(L) + "\n"
 
 
+# ── part 5: the board re-issued against the FAIR twin (2026-10-06) ───────────
+
+#: where the fair-twin board (`scripts/hyp_twin_board.py`) writes its per-rule series
+FAIR_DIR = OPT / "hyp_lab"
+FAIR_HEADLINE_NOTE = (
+    "Re-issued 2026-10-06 (CHUNK C1): the SAME headline rule, read on the fair twin "
+    "(`matched_twins.TWIN_COST_CONVENTION`: the twin basket held as a portfolio, charged the rule's per-trade "
+    "model max(CS, flat band) on its OWN traded weight; the rule likewise). Calendar and FF3+UMD verdicts are "
+    "carried from the original row (they were read on rule - twin21 at flat costs, where the twin pays the "
+    "rule's cost and the difference is pure selection). The full-round-trip twin is printed as an UPPER BOUND "
+    "and decides nothing.")
+
+
+def fair_headline_row(old: dict, fair: dict) -> dict:
+    """One re-issued library row: old headline beside the new one, the four columns side by
+    side (full / 1991-2016 holdout / 2009-2016 validate / 2017-2024), by year + LOO for the
+    fair twin and the market line."""
+    from backend.services import matched_twins as MT                 # noqa: PLC0415
+    f = fair[MT.FOUR_COLUMNS[1]]
+    cal = (old.get("calendar") or {}).get("verdict")
+    f4 = (old.get("ff3_umd_net") or {}).get("verdict")
+    new = headline(f.get("full") or {}, cal, f.get("design_validate") or {}, f4)
+    cols = {}
+    for c in MT.FOUR_COLUMNS:
+        w = fair.get(c) or {}
+        cols[c] = {"full": w.get("full"), "holdout_1991_2016": w.get("design_validate"),
+                   "validate_2009_2016": w.get("validate"), "libwin_2017_2024": w.get("late")}
+        for k in ("by_hold_year", "loo_worst"):
+            if k in w:
+                cols[c][k] = w[k]
+    return {"rule": old["rule"], "family": old.get("family"), "k": old.get("k"),
+            "hold_months": old.get("hold_months"), "control": old.get("control"),
+            "headline_old": old.get("headline"), "headline_fair": new,
+            "changed": old.get("headline") != new,
+            "t_old_rule_minus_twin21_full": (old.get("full") or {}).get("t_blocks"),
+            "t_fair_twin_full": (f.get("full") or {}).get("t_blocks"),
+            "t_pure_selection_full": ((fair.get(MT.FOUR_COLUMNS[0]) or {}).get("full") or {}).get("t_blocks"),
+            "t_net_minus_market_validate": ((fair.get(MT.FOUR_COLUMNS[2]) or {}).get("validate") or {})
+            .get("t_blocks"),
+            "t_upper_bound_full": ((fair.get(MT.FOUR_COLUMNS[3]) or {}).get("full") or {}).get("t_blocks"),
+            "calendar_verdict_carried": cal, "ff3_umd_verdict_carried": f4,
+            "turnover": fair.get("turnover"), "twin_turnover": fair.get("twin_turnover"),
+            "rule_cost_bps": fair.get("rule_cost_bps"), "twin_cost_bps": fair.get("twin_cost_bps"),
+            "twin_full_rt_bps_UPPER_BOUND": fair.get("twin_full_rt_bps_UPPER_BOUND"),
+            "four_columns": cols}
+
+
+def part_fair_board(run_id: str, fair_run: str, board_id: Optional[str] = None) -> int:
+    """Re-issue the library board's headlines on the fair twin. REFUSES when the fair run is
+    absent or a run rule has no OK fair row (named), never writing a partial board as OK."""
+    from backend.services import matched_twins as MT                 # noqa: PLC0415
+    from scripts.night_checkpoint import atomic_write_json           # noqa: PLC0415
+    fj = FAIR_DIR / f"twin_board_{fair_run}.jsonl"
+    if not fj.exists():
+        say(f"REFUSED: {fj.name} absent: run `python -m scripts.hyp_twin_board --run-id {fair_run}` first")
+        return 2
+    bid = board_id or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
+    bj = OUT / f"library_fair_board_{run_id}__{fair_run}__{bid}.json"
+    if bj.exists():
+        say(f"REFUSED: {bj.name} exists")
+        return 2
+    fair = {}
+    for ln in fj.read_text(encoding="utf-8").splitlines():
+        if ln.strip():
+            r = json.loads(ln)
+            fair[r["rule"]] = r
+    rows, refused = [], {}
+    for old in read_rows(run_id):
+        if old.get("status") != "RUN":
+            continue
+        fr = fair.get(old["rule"]) or {}
+        if fr.get("status") != "OK":
+            refused[old["rule"]] = f"fair-twin row not OK: {fr.get('status', 'absent')}"
+            continue
+        rows.append(fair_headline_row(old, fr))
+    rows.sort(key=lambda r: -(r["t_fair_twin_full"] or -9))
+    cnt = lambda k: pd.Series([r[k] for r in rows]).value_counts().to_dict() if rows else {}  # noqa: E731
+    beat = sorted(r["rule"] for r in rows if (r["t_fair_twin_full"] or 0) >= 2
+                  and (r["t_net_minus_market_validate"] or 0) >= 2)
+    status = ("REFUSED: no rule scored" if not rows else
+              "OK" if not refused else f"PARTIAL: {len(refused)} rules refused (named in `refused`)")
+    doc = {"schema": "crsp_rebuild/library_fair_board/1", "job": JOB, "run_id": run_id, "fair_run": fair_run,
+           "board_id": bid, "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+           "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "status": status,
+           "headline_rule": HEADLINE_RULE, "reissue_note": FAIR_HEADLINE_NOTE,
+           "cost_convention": MT.TWIN_COST_CONVENTION, "four_columns": list(MT.FOUR_COLUMNS),
+           "upper_bound_column_never_in_verdicts": MT.UPPER_BOUND_COLUMN,
+           "n_rules": len(rows), "headline_counts_old": cnt("headline_old"),
+           "headline_counts_fair": cnt("headline_fair"), "n_changed": sum(r["changed"] for r in rows),
+           "beats_fair_twin_t2_and_market_validate_t2": beat, "refused": refused, "rows": rows}
+    atomic_write_json(bj, doc, indent=1)
+    say(f"-> {bj.name}: {len(rows)} rules; old {doc['headline_counts_old']} -> fair {doc['headline_counts_fair']}; "
+        f"changed {doc['n_changed']}; fair t>=2 AND market V t>=2: {beat}; {status}")
+    return 0 if rows else 2
+
+
 def main(argv=None) -> int:
     from scripts import night_backtest_factory as F                   # noqa: PLC0415
     ap = argparse.ArgumentParser()
-    ap.add_argument("--part", choices=("panel", "fundamentals", "run", "board"), required=True)
+    ap.add_argument("--part", choices=("panel", "fundamentals", "run", "board", "fair_board"), required=True)
+    ap.add_argument("--fair-run", default=None, help="fair_board: the scripts.hyp_twin_board run id")
     ap.add_argument("--panel-run", default=None)
     ap.add_argument("--run-id", default=None, help="resume a run (rules already in its jsonl are skipped)")
     ap.add_argument("--only", nargs="*", default=None)
@@ -700,6 +799,11 @@ def main(argv=None) -> int:
             say("REFUSED: --run-id is required")
             return 2
         return part_board(a.run_id)
+    if a.part == "fair_board":
+        if not (a.run_id and a.fair_run):
+            say("REFUSED: --run-id and --fair-run are required")
+            return 2
+        return part_fair_board(a.run_id, a.fair_run)
     if not a.panel_run:
         say("REFUSED: --panel-run is required")
         return 2

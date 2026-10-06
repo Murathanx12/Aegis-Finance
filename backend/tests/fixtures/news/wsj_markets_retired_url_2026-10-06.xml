@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+		<rss xmlns:wsj="http://dowjones.net/rss/" xmlns:dj="http://dowjones.net/rss/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+<channel>
+<title>WSJ.com: Markets</title>
+<link>http://online.wsj.com</link>
+<atom:link type="application/rss+xml" rel="self" href="http://online.wsj.com"/>
+<description>Markets</description>
+<language>en-us</language>
+<pubDate>Mon, 27 Jan 2025 14:27:15 -0500</pubDate>
+<lastBuildDate>Mon, 27 Jan 2025 14:27:15 -0500</lastBuildDate>
+<generator>http://online.wsj.com</generator>
+<docs>http://cyber.law.harvard.edu/rss/rss.html</docs>
+<image>
+<title>WSJ.com: Markets</title>
+<link>http://online.wsj.com</link>
+<url>http://online.wsj.com/img/wsj_sm_logo.gif</url>
+</image>
+<item>
+<guid isPermaLink="false">WP-WSJ-0002354015</guid>
+<title>[redacted headline 1]</title>
+<description>[redacted summary]</description>
+<link>https://www.wsj.com/articles/redacted-retired-1?mod=rss_markets_main</link>
+<pubDate>Mon, 27 Jan 2025 14:26:00 -0500</pubDate>
+</item>
+<item>
+<guid isPermaLink="false">WP-WSJ-0002354018</guid>
+<title>[redacted headline 2]</title>
+<description>[redacted summary]</description>
+<link>https://www.wsj.com/articles/redacted-retired-2?mod=rss_markets_main</link>
+<pubDate>Mon, 27 Jan 2025 14:01:00 -0500</pubDate>
+</item>
+<item>
+<guid isPermaLink="false">WP-WSJ-0002355367</guid>
+<title>[redacted headline 3]</title>
+<description>[redacted summary]</description>
+<link>https://www.wsj.com/articles/redacted-retired-3?mod=rss_markets_main</link>
+<pubDate>Mon, 27 Jan 2025 13:12:00 -0500</pubDate>
+</item>
+</channel>
+</rss>

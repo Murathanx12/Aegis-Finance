@@ -149,15 +149,29 @@ def untracked_closed_months(directory: Path | None = None, *,
 
     tracked = {line.strip().rsplit("/", 1)[-1] for line in out.splitlines() if line.strip()}
     missing = []
+    archived = []
     for month, q in on_disk:
+        # SEALED BY MANIFEST (2026-10-06, C10). A closed month over GitHub's
+        # 100 MB blob limit cannot be `git add -f`-ed; `ledger_archive` seals
+        # it as Parquet outside git plus a COMMITTED manifest instead. The
+        # manifest counts only while its recorded size matches the file.
         if q.name not in tracked:
+            try:
+                from backend.services import ledger_archive as _LA    # noqa: PLC0415
+                man = _LA.manifest_for(q)
+            except Exception:                                        # noqa: BLE001
+                man = None
+            if man is not None and (man.get("jsonl") or {}).get("bytes") == q.stat().st_size:
+                archived.append({"month": month, "file": _rel(q),
+                                 "manifest": _rel(_LA.manifest_path(q))})
+                continue
             missing.append({
                 "month": month,
                 "file": _rel(q),
                 "rows": sum(1 for _ in q.open(encoding="utf-8", errors="replace")),
                 "command": f"git add -f {_rel(q)}",
             })
-    return {"checked": True, "reason": None, "months": missing}
+    return {"checked": True, "reason": None, "months": missing, "archived": archived}
 
 
 def split(text: str) -> tuple[dict[str, list[str]], list[tuple[int, str]], int]:
@@ -181,6 +195,16 @@ def split(text: str) -> tuple[dict[str, list[str]], list[tuple[int, str]], int]:
             continue
         by_month.setdefault(month, []).append(line)
     return by_month, unstamped, rows_in
+
+
+def _refuse_if_archived(target: Path) -> None:
+    """A month with an archive manifest is immutable; re-writing it from a
+    monolith would make the committed sha256 false."""
+    from backend.services import ledger_archive as _LA            # noqa: PLC0415
+    if _LA.manifest_for(target) is not None:
+        raise RotationRefused(
+            f"{target.name} has an archive manifest ({_rel(_LA.manifest_path(target))}); "
+            f"an archived closed month is never re-written.")
 
 
 def _write_atomic(path: Path, data: str) -> None:
@@ -265,6 +289,7 @@ def rotate(directory: Path | None = None, *, apply: bool = True,
                     f"of one month is worse than one large file. Move it aside "
                     f"and re-run if the existing file is the stale one.")
         elif apply:
+            _refuse_if_archived(target)
             _write_atomic(target, data)
             rec["action"] = "written"
         else:

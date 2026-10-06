@@ -31,23 +31,31 @@ def no_local_equity(monkeypatch):
 
 # ─────────────────────────────── the mandate ────────────────────────────────
 
-def test_disagreeing_capital_bases_and_caps_are_refused_by_name():
-    m = DC.account_mandate(40_000.0, equity={"equity_usd": 999_054.0,
-                                             "as_of": "t", "source": "fixture"})
-    # UNRECONCILED since 2026-09-28 (review F2): it never refused anything
+def _fresh(equity_usd: float) -> dict:
+    """An equity read stamped NOW, so no test encodes a calendar moment."""
+    return {"equity_usd": equity_usd, "source": "fixture",
+            "as_of": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+
+
+def test_disagreeing_capital_bases_are_unreconciled_by_name():
+    """A capital NAMED by a caller that is not the broker's equity (the old
+    $40,000-vs-$1M state) stays UNRECONCILED, by name (owner decision
+    2026-10-06 keeps this path for when the two disagree)."""
+    eq = 999_054.0
+    named = eq * 0.04                       # the owner's capital, ~4% of the account
+    m = DC.account_mandate(named, equity=_fresh(eq))
     assert m["status"] == "UNRECONCILED"
     kinds = {r.split(":", 1)[0] for r in m["disagreements"]}
     assert m["refusals"] == m["disagreements"]            # legacy key kept
-    assert {"CAPITAL_BASES_DISAGREE", "PER_NAME_CAPS_DISAGREE"} <= kinds
-    # ONE base, ONE cap, both printed
-    assert m["capital_usd"] == 40_000.0
+    assert kinds == {"CAPITAL_BASES_DISAGREE"}
+    # nested sleeve caps under the broker's hard cap are NOT a disagreement
+    assert "PER_NAME_CAPS_DISAGREE" not in kinds
+    assert m["capital_usd"] == named and m["broker_equity_usd"] == eq
     assert m["per_name_cap"] == min(m["per_name_caps_seen"].values())
-    assert m["line"].startswith("MANDATE UNRECONCILED: capital $40,000; per-name cap")
-    assert "turns OK when the owner confirms ONE capital base" in m["line"]
-    # the worst case is in dollars, on the one base, and on the largest seen
+    assert m["line"].startswith(f"MANDATE UNRECONCILED: capital ${named:,.0f}")
+    assert "ONE capital base" in m["line"]
     c = m["largest_admissible_book_as_configured"]
-    assert c["worst_case_no_stop_usd"] == pytest.approx(-c["gross_over_equity"] * 40_000.0)
-    assert c["on_largest_base_seen"]["equity_usd"] == pytest.approx(1_000_000.0)
+    assert c["worst_case_no_stop_usd"] == pytest.approx(-c["gross_over_equity"] * named)
     assert "sum|notional|/equity" in m["line"] and "-$" in m["line"]
 
 
@@ -62,11 +70,13 @@ def test_the_limits_themselves_are_not_changed():
 
 
 def test_an_agreeing_mandate_is_ok(monkeypatch):
-    monkeypatch.setattr(DC, "per_name_caps", lambda: {"one cap": 0.10})
+    monkeypatch.setattr(DC, "per_name_caps", lambda: {"one sleeve": 0.10,
+                                                      DC.BROKER_CAP_KEY: 0.12})
     monkeypatch.setattr(DC, "gross_caps", lambda: {"one gross": 1.0})
-    top = max(float(c) for c in config.IC_CAPITAL_LEVELS)
-    m = DC.account_mandate(top, equity={"equity_usd": top, "as_of": "t", "source": "f"})
+    eq = 1_234_567.0
+    m = DC.account_mandate(None, equity=_fresh(eq))
     assert m["status"] == "OK" and m["refusals"] == []
+    assert m["capital_usd"] == eq                          # derived, not named
     assert m["line"].startswith("MANDATE OK")
 
 

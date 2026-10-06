@@ -6,6 +6,7 @@
     .venv/Scripts/python.exe -m scripts.hyp_lab declare --ids H-abc,H-def      # receipt BEFORE running
     .venv/Scripts/python.exe -m scripts.hyp_lab run --receipt <declare receipt>
     .venv/Scripts/python.exe -m scripts.hyp_lab nightly --k 3 --cap 0.40       # the scheduled caller
+    .venv/Scripts/python.exe -m scripts.hyp_lab plan [--apply]                  # D6 family budget, $0
     .venv/Scripts/python.exe -m scripts.hyp_lab t2 --fold F2025                # cache a fold's T2 predictions
     .venv/Scripts/python.exe -m scripts.hyp_lab schtasks [--create]            # AegisHypLabNightly, after nn_lab
 
@@ -253,9 +254,13 @@ def _counts(rows) -> dict:
     return c
 
 
-def generate(provider: str, n: int, cap: float | None, max_tokens: int = 6000) -> dict:
+def generate(provider: str, n: int, cap: float | None, max_tokens: int = 6000,
+             budget: dict | None = None) -> dict:
     state = L.load_state()
-    user = L.generation_prompt(state, L.CELL_CATALOG, n=n)
+    # D6: the families' posteriors decide each family's share of this round, in the prompt AND
+    # after parsing (rows over a family's quota are DEFERRED, never dropped)
+    budget = L.family_budget(L.family_record(state), n) if budget is None else budget
+    user = L.generation_prompt(state, L.CELL_CATALOG, n=n, budget=budget)
     r = HL.call(L.GEN_SYSTEM, user, purpose="hyp_lab_generate", arm=f"generate:{provider}", provider=provider,
                 max_tokens=max_tokens, temperature=0.7, cap_usd=cap)
     items = HL.parse_json(r.get("text"))
@@ -272,14 +277,67 @@ def generate(provider: str, n: int, cap: float | None, max_tokens: int = 6000) -
     rows = L.parse_generated(items, source=f"{provider}_gen", source_ref=str(raw_path.relative_to(L.REPO)),
                              symbols=HC.bar_symbols())
     rows = L.dedupe(rows, state)
+    rows = L.apply_family_budget(rows, budget, n)
     L.append(rows)
     return {"provider": provider, "ok": True, "n_items": len(items) if isinstance(items, list) else 1,
             "n_rows": len(rows), "status": _counts(rows), "receipt": str(raw_path),
-            "served_model": r.get("served_model")}
+            "served_model": r.get("served_model"), "rows": rows}
 
 
 def cmd_generate(a) -> int:
-    print(json.dumps(generate(a.provider, a.n, a.cap), indent=1))
+    out = generate(a.provider, a.n, a.cap)
+    out.pop("rows", None)
+    print(json.dumps(out, indent=1))
+    return 0
+
+
+def family_policy(state: dict, n: int = 8, *, apply: bool, generated: list | None = None) -> dict:
+    """D6 (CHUNK C12): the families' posteriors -> generation budget + EV weights. With `apply`
+    the EV weights are written to policy_state (declared key `hyp_family_ev_weight`, bounded
+    below by HYP_LAB_FAMILY_MIN_WEIGHT, journaled with the posteriors as evidence) -- a
+    preference, never a kill. Returns the per-family report the receipt prints."""
+    fam = L.family_record(state)
+    budget = L.family_budget(fam, n)
+    weights = L.ev_weights_from_budget(budget)
+    out = {"floor": C.HYP_LAB_FAMILY_POSTERIOR_FLOOR, "min_weight": C.HYP_LAB_FAMILY_MIN_WEIGHT,
+           "max_share": C.HYP_LAB_FAMILY_MAX_SHARE, "n_per_round": n, "ev_weights": weights,
+           "policy_state": "NOT_APPLIED (dry)"}
+    if apply:
+        from backend.services import policy_state as PS
+        old = PS.load().get("hyp_family_ev_weight") or {}
+        if old == weights:
+            out["policy_state"] = "UNCHANGED"
+        else:
+            evidence = {"ledger": L._rel(L.LEDGER), "n_rows": len(state),
+                        "posteriors": {f: b["p_positive"] for f, b in sorted(budget.items())},
+                        "floor": C.HYP_LAB_FAMILY_POSTERIOR_FLOOR}
+            PS.update("hyp_family_ev_weight", weights, actor="hyp_lab",
+                      reason=f"D6: families with posterior P(positive) < {C.HYP_LAB_FAMILY_POSTERIOR_FLOOR} "
+                             f"ranked at weight max({C.HYP_LAB_FAMILY_MIN_WEIGHT}, P/floor)",
+                      evidence=evidence)
+            out["policy_state"] = "WRITTEN"
+    ranked = L.rank(state, ev_weights=weights)
+    out["families"] = L.family_policy_report(budget, generated or [], ranked)
+    return out
+
+
+def cmd_plan(a) -> int:
+    """$0: print (and receipt) tonight's family budget; --apply writes the policy_state preference."""
+    state = L.load_state()
+    rep_ = family_policy(state, a.n, apply=a.apply)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    L.RECEIPTS.mkdir(parents=True, exist_ok=True)
+    path = L.RECEIPTS / f"family_budget_{stamp}.json"
+    doc = {"job": "hyp_lab.plan", "written_utc": L.now_utc(), "llm_spend_usd": 0.0,
+           "night_cap_usd_untouched": C.HYP_LAB_NIGHT_CAP_USD, "run_cap_usd_untouched": C.HYP_LAB_NIGHTLY_CAP_USD,
+           **rep_}
+    path.write_text(json.dumps(doc, indent=1, default=str), encoding="utf-8")
+    L.render_markdown(L.load_state(), family_policy=rep_["families"])
+    print(f"{'family':40s} {'posterior':>9s} {'weight':>7s} {'quota':>5s} {'gen':>4s} {'def':>4s} {'shrunk':>6s}")
+    for f, r in sorted(rep_["families"].items(), key=lambda kv: (kv[1]["posterior"] is None, kv[1]["posterior"] or 0)):
+        print(f"{f:40s} {str(r['posterior']):>9s} {r['weight']:>7} {str(r['quota']):>5s} "
+              f"{r['n_generated_tonight']:>4d} {r['n_deferred_tonight']:>4d} {r['n_shrunk']:>6d}")
+    print(json.dumps({"receipt": str(path), "policy_state": rep_["policy_state"], "ev_weights": rep_["ev_weights"]}))
     return 0
 
 
@@ -369,6 +427,10 @@ def nightly(k: int, cap: float, providers: list[str], time_box_min: float) -> di
         return _write_nightly(rec, stamp)
     rec["free_ram_gb_start"] = round(wait_ram("nightly"), 2)
     spent0 = HL.spent()["binding_usd"]
+    # D6: the posteriors set tonight's generation budget and the EV preference BEFORE generating
+    pol = family_policy(L.load_state(), 8, apply=True)
+    budget = L.family_budget(L.family_record(L.load_state()), 8)
+    generated_rows: list = []
     gens = []
     for p in providers:
         if L.STOP.exists() or (time.monotonic() - t0) / 60 > time_box_min:
@@ -380,7 +442,9 @@ def nightly(k: int, cap: float, providers: list[str], time_box_min: float) -> di
                 gens.append({"provider": "local", "ok": False, "status": "SKIPPED_SERVER_NOT_UP"})
                 continue
         # the run's own cap: this run may spend `cap` on top of what the night had already spent
-        gens.append(generate(p, 8, spent0 + cap))
+        g = generate(p, 8, spent0 + cap, budget=budget)
+        generated_rows += g.pop("rows", None) or []
+        gens.append(g)
     rec["generation"] = gens
     state = L.load_state()
     q = L.rank(state, runnable_only=True)[:k]
@@ -393,7 +457,11 @@ def nightly(k: int, cap: float, providers: list[str], time_box_min: float) -> di
         rows = [state[h["hyp_id"]] for h in q]
         rec["results"] = L.run_declared(rows, HL.night_id(),
                                         before_each=lambda r: wait_ram(f"nightly {r['hyp_id']}", max_wait_s=1800))
-    L.render_markdown(L.load_state())
+    st = L.load_state()
+    pol["families"] = L.family_policy_report(budget, generated_rows,
+                                             L.rank(st, ev_weights=pol["ev_weights"]))
+    rec["family_policy"] = pol
+    L.render_markdown(st, family_policy=pol["families"])
     rec["spend_this_run_usd"] = round(HL.spent()["binding_usd"] - spent0, 5)
     rec["wall_min"] = round((time.monotonic() - t0) / 60, 1)
     rec["status"] = "OK"
@@ -466,6 +534,10 @@ def main(argv=None) -> int:
     n.add_argument("--providers", default="deepseek,local")
     n.add_argument("--time-box", dest="time_box", type=float, default=C.HYP_LAB_NIGHTLY_TIME_BOX_MIN)
     n.set_defaults(f=cmd_nightly)
+    pl = sub.add_parser("plan")
+    pl.add_argument("--n", type=int, default=8)
+    pl.add_argument("--apply", action="store_true")
+    pl.set_defaults(f=cmd_plan)
     s = sub.add_parser("schtasks")
     s.add_argument("--create", action="store_true")
     s.set_defaults(f=cmd_schtasks)

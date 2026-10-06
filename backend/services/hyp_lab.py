@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,9 +39,12 @@ CLOSED_DOCS = [REPO / "docs" / "WHAT_WE_ALREADY_KNOW_LLM.md", REPO / "docs" / "N
 REQUIRED = ("title", "mechanism", "precursor", "separation_from_beta", "refutation", "target")
 TARGETS = ("size", "direction", "return", "co_movement", "llm_capability", "data")
 STATUSES = ("PROPOSED", "DISCARDED_NO_REFUTATION", "DUPLICATE_OF_CLOSED", "DUPLICATE_IN_LEDGER",
-            "NEEDS_CELL", "DECLARED", "RUN", "SPENT")
-VERDICTS = ("CONDITIONAL_POSITIVE", "FAILED_VARIANT", "CANNOT_DISTINGUISH", "REFUSED",
+            "NEEDS_CELL", "DECLARED", "RUN", "SPENT", "DEFERRED_FAMILY_BUDGET")
+#: CANDIDATE (2026-10-06, the theory cells' word for a positive) counts as a positive exactly
+#: like CONDITIONAL_POSITIVE in the family posterior.
+VERDICTS = ("CONDITIONAL_POSITIVE", "CANDIDATE", "FAILED_VARIANT", "CANNOT_DISTINGUISH", "REFUSED",
             "MECHANISM_REJECTED", "RETIRED_FROM_CURRENT_SEARCH")
+POSITIVE_VERDICTS = ("CONDITIONAL_POSITIVE", "CANDIDATE")
 
 #: value points of a decisive answer, by what it would change (a return edge changes the most)
 VALUE = {"return": 10.0, "co_movement": 6.0, "size": 4.0, "direction": 3.0, "llm_capability": 3.0, "data": 2.0}
@@ -247,7 +251,9 @@ def family_record(state: dict[str, dict]) -> dict[str, dict]:
                                "REFUSED": 0, "n_rows": 0})
         r["n_rows"] += 1
         v = h.get("verdict")
-        if v in r:
+        if v in POSITIVE_VERDICTS:
+            r["CONDITIONAL_POSITIVE"] += 1
+        elif v in r:
             r[v] += 1
     for f, r in rec.items():
         a = FAMILY_PRIOR[0] + r["CONDITIONAL_POSITIVE"]
@@ -256,7 +262,91 @@ def family_record(state: dict[str, dict]) -> dict[str, dict]:
     return rec
 
 
-def score(h: dict, fam: dict[str, dict]) -> dict:
+# ------------------------------------------------------------------ the posterior fed BACKWARD
+# CHUNK C12 / owner decision D6 (2026-10-06), borrowed from RD-Agent(Q)'s bandit scheduler:
+# the family posterior used to re-rank only what had already been generated; it now also
+# decides how much of the NEXT generation round a family may take. A shrink, never a kill:
+# the weight has a declared floor, every quota is >= 1, nothing is deleted or closed.
+def family_weight(p_positive: float, floor: float | None = None, min_weight: float | None = None) -> float:
+    """1.0 at/above the posterior floor; below it, proportionally less, never under min_weight."""
+    floor = C.HYP_LAB_FAMILY_POSTERIOR_FLOOR if floor is None else float(floor)
+    min_weight = C.HYP_LAB_FAMILY_MIN_WEIGHT if min_weight is None else float(min_weight)
+    p = float(p_positive)
+    if p >= floor:
+        return 1.0
+    return round(max(min_weight, p / floor), 4)
+
+
+def family_budget(fam: dict[str, dict], n: int) -> dict[str, dict]:
+    """Per family with a record: posterior, weight, and its quota of the next `n` generated
+    hypotheses. Base quota = ceil(n x MAX_SHARE); a shrunk family gets floor(base x weight),
+    never below 1. A family with no record (a new one) gets the base quota."""
+    base = max(1, math.ceil(n * C.HYP_LAB_FAMILY_MAX_SHARE))
+    out: dict[str, dict] = {}
+    for f, r in fam.items():
+        w = family_weight(r.get("p_positive", FAMILY_PRIOR[0] / sum(FAMILY_PRIOR)))
+        out[f] = {"p_positive": r.get("p_positive"), "weight": w,
+                  "quota": max(1, int(math.floor(base * w + 1e-9))), "base_quota": base, "shrunk": w < 1.0}
+    return out
+
+
+def ev_weights_from_budget(budget: dict[str, dict]) -> dict[str, float]:
+    """The policy_state preference: only the shrunk families (absent = weight 1.0)."""
+    return {f: b["weight"] for f, b in sorted(budget.items()) if b["weight"] < 1.0}
+
+
+def policy_ev_weights() -> dict[str, float]:
+    """The EV weights the night last wrote to policy_state (empty = no preference = 1.0)."""
+    try:
+        from backend.services import policy_state as PS  # noqa: PLC0415
+        w = PS.load().get("hyp_family_ev_weight") or {}
+        return {str(k): float(v) for k, v in w.items()}
+    except Exception:  # noqa: BLE001 -- an unreadable preference ranks unshrunk (weight 1.0)
+        return {}
+
+
+def apply_family_budget(rows: list[dict], budget: dict[str, dict], n: int) -> list[dict]:
+    """Rows from one generation round, in model order: once a family has used its quota, its
+    further PROPOSED / NEEDS_CELL rows are DEFERRED_FAMILY_BUDGET (kept in the ledger, counted,
+    re-admitted by rank() when the family's weight returns to 1.0). Nothing is dropped."""
+    base = max(1, math.ceil(n * C.HYP_LAB_FAMILY_MAX_SHARE))
+    used: dict[str, int] = {}
+    out = []
+    for h in rows:
+        h = dict(h)
+        f = h.get("family") or "unassigned"
+        if h.get("status") in ("PROPOSED", "NEEDS_CELL"):
+            quota = (budget.get(f) or {}).get("quota", base)
+            if used.get(f, 0) >= quota:
+                h["deferred_from_status"] = h["status"]
+                h["status"] = "DEFERRED_FAMILY_BUDGET"
+                h["deferred_reason"] = (f"family {f} used its quota {quota} of {n} this round "
+                                        f"(posterior {(budget.get(f) or {}).get('p_positive')})")
+            else:
+                used[f] = used.get(f, 0) + 1
+        out.append(h)
+    return out
+
+
+def family_policy_report(budget: dict[str, dict], generated: list[dict], ranked: list[dict]) -> dict[str, dict]:
+    """Per family, what the receipt and LEDGER.md print: posterior, weight, quota,
+    n_generated_tonight (admitted), n_deferred_tonight, n_shrunk (queue rows ranked at weight < 1)."""
+    fams = set(budget) | {h.get("family") or "unassigned" for h in generated} \
+        | {h.get("family") or "unassigned" for h in ranked}
+    out = {}
+    for f in sorted(fams):
+        b = budget.get(f) or {}
+        out[f] = {"posterior": b.get("p_positive"), "weight": b.get("weight", 1.0), "quota": b.get("quota"),
+                  "n_generated_tonight": sum(1 for h in generated if (h.get("family") or "unassigned") == f
+                                             and h.get("status") in ("PROPOSED", "NEEDS_CELL")),
+                  "n_deferred_tonight": sum(1 for h in generated if (h.get("family") or "unassigned") == f
+                                            and h.get("status") == "DEFERRED_FAMILY_BUDGET"),
+                  "n_shrunk": sum(1 for h in ranked if (h.get("family") or "unassigned") == f
+                                  and (h.get("score") or {}).get("ev_weight", 1.0) < 1.0)}
+    return out
+
+
+def score(h: dict, fam: dict[str, dict], ev_weights: dict[str, float] | None = None) -> dict:
     """EV = P(changes the roadmap) x value - cost.
 
     P(changes) = power x [P(positive) + (1 - P(positive)) x w_neg], where w_neg = 0.35 when a clean
@@ -272,19 +362,37 @@ def score(h: dict, fam: dict[str, dict]) -> dict:
     tgt = CELL_TARGET.get(h.get("cell_type") or "", h.get("target"))
     value = VALUE.get(tgt, 2.0) * max(0.1, novelty)
     cost = float(h.get("cost_usd", 0)) + 0.01 * float(h.get("gpu_min", 0)) + 0.002 * float(h.get("cpu_min", 0))
+    # D6: the family's EV weight (a policy_state preference, floor > 0) shrinks the benefit, not the cost
+    w = float((ev_weights or {}).get(h.get("family") or "unassigned", 1.0))
     return {"p_positive_family": round(p_pos, 4), "p_change": round(p_change, 4), "value": round(value, 3),
-            "cost": round(cost, 4), "ev": round(p_change * value - cost, 4)}
+            "cost": round(cost, 4), "ev_weight": round(w, 4), "ev_unshrunk": round(p_change * value - cost, 4),
+            "ev": round(w * p_change * value - cost, 4)}
 
 
-def rank(state: dict[str, dict], runnable_only: bool = False) -> list[dict]:
+def _effective_status(h: dict, fam: dict[str, dict]) -> str | None:
+    """A DEFERRED_FAMILY_BUDGET row is re-admitted (as the status it had) once its family's
+    posterior is back at/above the floor: a deferral, never a close."""
+    s = h.get("status")
+    if s == "DEFERRED_FAMILY_BUDGET":
+        p = (fam.get(h.get("family") or "unassigned") or {}).get("p_positive", FAMILY_PRIOR[0] / sum(FAMILY_PRIOR))
+        if family_weight(p) >= 1.0:
+            return h.get("deferred_from_status") or ("PROPOSED" if h.get("cell_type") else "NEEDS_CELL")
+    return s
+
+
+def rank(state: dict[str, dict], runnable_only: bool = False,
+         ev_weights: dict[str, float] | None = None) -> list[dict]:
+    """The queue by EV. `ev_weights` defaults to the policy_state preference the night wrote."""
     fam = family_record(state)
+    ev_weights = policy_ev_weights() if ev_weights is None else ev_weights
     rows = []
     for h in state.values():
-        if h.get("status") not in ("PROPOSED", "NEEDS_CELL"):
+        st = _effective_status(h, fam)
+        if st not in ("PROPOSED", "NEEDS_CELL"):
             continue
-        if runnable_only and (h.get("status") != "PROPOSED" or not h.get("cell_type")):
+        if runnable_only and (st != "PROPOSED" or not h.get("cell_type")):
             continue
-        rows.append({**h, "score": score(h, fam)})
+        rows.append({**h, "status": st, "score": score(h, fam, ev_weights)})
     return sorted(rows, key=lambda r: r["score"]["ev"], reverse=True)
 
 
@@ -368,8 +476,10 @@ Return ONLY a JSON array (no prose) of objects with exactly these keys:
 Rules: every hypothesis MUST have a concrete refutation; do not repeat any hypothesis in the PAST VERDICTS; prefer mechanisms whose precursor is public before the move; prefer READ-THROUGH and second-order effects; no bare 'the LLM predicts direction' ideas (closed)."""
 
 
-def generation_prompt(state: dict[str, dict], cell_catalog: str, n: int = 8, max_past: int = 40) -> str:
+def generation_prompt(state: dict[str, dict], cell_catalog: str, n: int = 8, max_past: int = 40,
+                      budget: dict[str, dict] | None = None) -> str:
     fam = family_record(state)
+    budget = family_budget(fam, n) if budget is None else budget
     past = []
     for h in list(state.values())[-max_past:]:
         if h.get("verdict") or h.get("status") in ("DUPLICATE_OF_CLOSED",):
@@ -379,8 +489,13 @@ def generation_prompt(state: dict[str, dict], cell_catalog: str, n: int = 8, max
                         + (f" (confirm mean {c.get('mean')}, t {c.get('t')})" if c else ""))
     famline = "; ".join(f"{k}: {v['CONDITIONAL_POSITIVE']}+/{v['FAILED_VARIANT']}-/{v['CANNOT_DISTINGUISH']}?"
                         for k, v in sorted(fam.items()))
+    shrunk = [f"{k}: at most {b['quota']} of {n} (posterior P(positive) {b['p_positive']})"
+              for k, b in sorted(budget.items()) if b.get("shrunk")]
+    budline = ("\n\nFAMILY BUDGET (these families keep dying: propose FEWER of them, at most the number "
+               "given, and prefer new mechanism families): " + "; ".join(shrunk)) if shrunk else ""
     return (f"PAST VERDICTS (do not repeat; learn from them):\n" + ("\n".join(past) or "- none yet")
             + f"\n\nFAMILY TRACK RECORD (+positive/-failed/?cannot-distinguish): {famline or 'none'}"
+            + budline
             + f"\n\nCELL TYPES (the lab can run these tonight without a human):\n{cell_catalog}"
             + f"\n\nPropose {n} NEW hypotheses. At least half must use a cell type with valid params.")
 
@@ -457,10 +572,24 @@ def validate_params(cell_type: str, p: dict, symbols: frozenset | set | None = N
     return False, "cell type"
 
 
-def render_markdown(state: dict[str, dict], path: Path | None = None) -> str:
-    """LEDGER.md: the ranked queue, the verdicts, and the families' track records."""
+def _created_within(h: dict, seconds: float) -> bool:
+    try:
+        ts = datetime.fromisoformat(str(h.get("created_utc"))).timestamp()
+    except ValueError:
+        return False
+    return ts >= datetime.now(timezone.utc).timestamp() - seconds
+
+
+def render_markdown(state: dict[str, dict], path: Path | None = None,
+                    family_policy: dict[str, dict] | None = None) -> str:
+    """LEDGER.md: the ranked queue, the verdicts, and the families' track records (with the
+    D6 generation policy per family: posterior, weight, quota, generated tonight, shrunk)."""
     fam = family_record(state)
     q = rank(state)
+    if family_policy is None:
+        # no nightly in hand: "tonight" = rows created in the last 24 h
+        family_policy = family_policy_report(family_budget(fam, 8),
+                                             [h for h in state.values() if _created_within(h, 86400)], q)
     lines = ["# hyp_lab ledger (generated; the truth is ledger.jsonl)", "",
              f"Rows: {len(state)}. Generated {now_utc()}.", "", "## Verdicts", "",
              "| hyp_id | title | family | verdict | confirm mean | t | MDE |", "|---|---|---|---|---|---|---|"]
@@ -475,9 +604,18 @@ def render_markdown(state: dict[str, dict], path: Path | None = None) -> str:
         s = h["score"]
         lines.append(f"| {i} | {h['hyp_id']} | {h['title']} | {h['target']} | {h.get('cell_type') if h.get('status') == 'PROPOSED' else 'NEEDS_CELL'} | "
                      f"{s['ev']} | {s['p_change']} | {s['value']} | {h['source']} |")
-    lines += ["", "## Family track record", "", "| family | + | - | ? | P(positive) |", "|---|---|---|---|---|"]
+    lines += ["", "## Family track record", "",
+              f"Posterior fed back into generation (D6): below P = {C.HYP_LAB_FAMILY_POSTERIOR_FLOOR} a family's "
+              f"quota and EV are multiplied by max({C.HYP_LAB_FAMILY_MIN_WEIGHT}, P / "
+              f"{C.HYP_LAB_FAMILY_POSTERIOR_FLOOR}); never a kill.", "",
+              "| family | + | - | ? | posterior P(positive) | weight | quota of 8 | n_generated_tonight "
+              "| n_deferred_tonight | n_shrunk |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
     for k, v in sorted(fam.items(), key=lambda kv: -kv[1]["n_rows"]):
-        lines.append(f"| {k} | {v['CONDITIONAL_POSITIVE']} | {v['FAILED_VARIANT']} | {v['CANNOT_DISTINGUISH']} | {v['p_positive']} |")
+        fp = family_policy.get(k) or {}
+        lines.append(f"| {k} | {v['CONDITIONAL_POSITIVE']} | {v['FAILED_VARIANT']} | {v['CANNOT_DISTINGUISH']} | "
+                     f"{v['p_positive']} | {fp.get('weight', 1.0)} | {fp.get('quota')} | "
+                     f"{fp.get('n_generated_tonight', 0)} | {fp.get('n_deferred_tonight', 0)} | {fp.get('n_shrunk', 0)} |")
     counts: dict[str, int] = {}
     for h in state.values():
         counts[h.get("status", "?")] = counts.get(h.get("status", "?"), 0) + 1

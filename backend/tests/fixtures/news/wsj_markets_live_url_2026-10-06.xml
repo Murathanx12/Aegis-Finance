@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:media="http://search.yahoo.com/mrss/" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0"
+>
+<channel>
+<title>WSJ.com: Markets</title>
+<description>Markets</description>
+<link>https://www.wsj.com/finance</link>
+<language>en-us</language>
+<lastBuildDate>Tue, 06 Oct 2026 16:04:48 GMT</lastBuildDate>
+<image>
+<title>WSJ.com: Markets</title>
+<url>http://online.wsj.com/img/wsj_sm_logo.gif</url>
+<link>https://www.wsj.com/finance</link>
+</image>
+<item>
+<guid isPermaLink="false">lc-wsj-stock-market-today-dow-sp-500-nasdaq-10-06-2026</guid>
+<title>[redacted headline 1]</title>
+<description>[redacted summary]</description>
+<link>https://www.wsj.com/articles/redacted-live-1?mod=rss_markets_main</link>
+<pubDate>Tue, 06 Oct 2026 08:45:19 GMT</pubDate>
+</item>
+<item>
+<guid isPermaLink="false">WP-WSJ-0003952702</guid>
+<title>[redacted headline 2]</title>
+<description>[redacted summary]</description>
+<link>https://www.wsj.com/articles/redacted-live-2?mod=rss_markets_main</link>
+<pubDate>Tue, 06 Oct 2026 14:07:00 GMT</pubDate>
+</item>
+<item>
+<guid isPermaLink="false">WP-WSJ-0003951897</guid>
+<title>[redacted headline 3]</title>
+<description>[redacted summary]</description>
+<link>https://www.wsj.com/articles/redacted-live-3?mod=rss_markets_main</link>
+<pubDate>Tue, 06 Oct 2026 10:25:00 GMT</pubDate>
+</item>
+</channel>
+</rss>

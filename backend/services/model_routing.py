@@ -98,6 +98,14 @@ def _pct(x: Any, nd: int = 2) -> str:
 
 # ─────────────────────────────── deterministic ──────────────────────────────
 
+
+def _collapse_line(agg: dict) -> str:
+    """`book_dna`'s collapse line, or a NOT COMPUTED line for an older receipt."""
+    if agg.get("collapse_line"):
+        return str(agg["collapse_line"])
+    from backend.services import book_dna
+    return book_dna.refused_summary(agg.get("n_ahead_of_spy"), "pre-book_dna receipt")["collapse_line"]
+
 def nav_text(root: Path | None = None) -> str:
     """Every paper account from the ROI receipt. No broker call, no model."""
     root = root or ledger_dir()
@@ -111,7 +119,9 @@ def nav_text(root: Path | None = None) -> str:
              f"{allp.get('n', '?')} priced accounts ex-twins: equity "
              f"${float(allp.get('sum_equity') or 0):,.0f}, P&L "
              f"${float(allp.get('pnl') or 0):,.0f} ({_pct(allp.get('roi_pct'), 3)})",
-             f"ahead of SPY {agg.get('n_ahead_of_spy', '?')} · behind {agg.get('n_behind_spy', '?')}"]
+             f"ahead of SPY {agg.get('n_ahead_of_spy', '?')} · behind {agg.get('n_behind_spy', '?')}",
+             # C3 2026-10-06: the count never travels without its collapse factor
+             _collapse_line(agg)]
     rows = [r for r in (d.get("rows") or []) if r.get("roi_pct") is not None
             and "twin" not in str(r.get("family"))]
     rows.sort(key=lambda r: float(r.get("vs_spy_pp") or -1e9), reverse=True)

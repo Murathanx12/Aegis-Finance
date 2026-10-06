@@ -388,6 +388,10 @@ def s_books(day: str, base: Path) -> dict:
         _say(sec, f"paper accounts (own window, to date -- not a one-day number): "
                   f"{agg.get('n_ahead_of_spy')} ahead of SPY, {agg.get('n_behind_spy')} behind, "
                   f"n={ap.get('n')} priced, pooled ROI {_num(ap.get('roi_pct'), 3)}%", rp)
+        # C3 2026-10-06: the count never travels without its collapse factor
+        from backend.services import book_dna as _dna
+        _say(sec, "  " + (agg.get("collapse_line") or _dna.refused_summary(
+            agg.get("n_ahead_of_spy"), "pre-book_dna receipt")["collapse_line"]), rp)
         live = [r for r in (roi.get("rows") or []) if r.get("status") == "LIVE"
                 and "twin" not in str(r.get("family")) and r.get("vs_spy_pp") is not None]
         for r in sorted(live, key=lambda r: -float(r["vs_spy_pp"]))[:3]:

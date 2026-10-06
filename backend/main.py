@@ -566,12 +566,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+#: The public website (README "Live") is ALWAYS an allowed origin. On 2026-10-06
+#: the Railway backend answered the site's origin with no
+#: Access-Control-Allow-Origin at all (only localhost:3000 was echoed), so every
+#: browser call from the public site was blocked even with a correct API URL.
+#: An env list ADDS origins; it can no longer silently remove the site.
+_PUBLIC_SITE_ORIGINS = ["https://aegis-finance-six.vercel.app"]
 _env_origins = os.getenv("ALLOWED_ORIGINS", "")
 _origins = (
     [o.strip() for o in _env_origins.split(",") if o.strip()]
     if _env_origins
     else ["http://localhost:3000", "http://127.0.0.1:3000"]
 )
+_origins += [o for o in _PUBLIC_SITE_ORIGINS if o not in _origins]
 
 app.add_middleware(
     CORSMiddleware,
@@ -810,6 +817,11 @@ from backend.routers import prediction_markets as _prediction_markets  # noqa: E
 
 app.include_router(_optimus_ledger.router)
 app.include_router(_prediction_markets.router)
+
+# C4 (2026-10-06): the Opportunity Explorer reads the newest stock-list receipt.
+from backend.routers import opportunities as _opportunities  # noqa: E402
+
+app.include_router(_opportunities.router)
 
 
 #: Resolved once, at import, and cached: `git rev-parse HEAD` is a subprocess

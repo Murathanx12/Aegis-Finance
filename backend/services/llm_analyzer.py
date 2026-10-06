@@ -199,7 +199,135 @@ def llm_usage() -> dict:
             "language_refusals": dict(_LANGUAGE_REFUSALS),
             "empty_content_refusals": dict(EMPTY_CONTENT_REFUSALS),
             "providers": provider_status(),
+            # 2026-10-06 (C7): the counters above are THIS process's calls
+            # through `call`/`call_named`. OpenClaw agent turns never pass
+            # through here -- they write their own `agent="openclaw"` rows into
+            # the same telemetry ledger -- so their spend was invisible to this
+            # surface ($9.61 over 687 calls on 09-25..29). Read from the ledger.
+            "openclaw": openclaw_usage(),
         }
+
+
+#: path -> (bytes already scanned, the aggregate over them). The ledger is
+#: append-only, so each call reads only what was appended since the last one;
+#: a file that SHRANK is rescanned from the start.
+_OPENCLAW_SCAN: dict[str, tuple[int, dict]] = {}
+_OPENCLAW_LOCK = threading.Lock()
+_OPENCLAW_NEEDLE = b'"agent": "openclaw"'
+
+
+def _openclaw_blank() -> dict:
+    return {"calls": 0, "ok": 0, "usd": 0.0, "usd_repriced": 0.0, "unpriced": 0,
+            "last_call_utc": None, "by_day": {}}
+
+
+def _openclaw_fold(agg: dict, row: dict) -> None:
+    from backend.services import llm_telemetry as _tel
+    if row.get("agent") != "openclaw" or row.get("row_type", "call") != "call":
+        return
+    ts = str(row.get("ts") or "")
+    agg["calls"] += 1
+    agg["ok"] += int(str((row.get("meta") or {}).get("status") or "") == "OK")
+    # `usd` = the cost written on the row at call time (what the provider was
+    # billed at the prices of that day; None = no usage came back, UNKNOWN);
+    # `usd_repriced` = the stored tokens at today's list prices (`row_cost`).
+    c = row.get("cost_usd")
+    if c is None:
+        agg["unpriced"] += 1
+    else:
+        agg["usd"] += float(c)
+    try:
+        agg["usd_repriced"] += float(_tel.row_cost(row) or 0.0)
+    except Exception:                                              # noqa: BLE001
+        pass
+    day = ts[:10]
+    if day:
+        d = agg["by_day"].setdefault(day, {"calls": 0, "usd": 0.0})
+        d["calls"] += 1
+        d["usd"] += float(c or 0.0)
+    if ts and (agg["last_call_utc"] is None or ts > agg["last_call_utc"]):
+        agg["last_call_utc"] = ts
+
+
+def _openclaw_scan_file(p: "os.PathLike[str]") -> dict:
+    import json as _json
+    from pathlib import Path as _P
+    key = str(p)
+    try:
+        size = _P(p).stat().st_size
+    except OSError:
+        return _openclaw_blank()
+    off, agg = _OPENCLAW_SCAN.get(key, (0, None))
+    if agg is None or size < off:
+        off, agg = 0, _openclaw_blank()
+    if size > off:
+        with open(p, "rb") as fh:
+            fh.seek(off)
+            chunk = fh.read(size - off)
+        end = chunk.rfind(b"\n")
+        if end >= 0:
+            for ln in chunk[:end].split(b"\n"):
+                if _OPENCLAW_NEEDLE not in ln:
+                    continue
+                try:
+                    _openclaw_fold(agg, _json.loads(ln))
+                except ValueError:
+                    continue
+            off += end + 1
+    _OPENCLAW_SCAN[key] = (off, agg)
+    return agg
+
+
+def openclaw_usage(path=None, *, months: int = 2, now: Optional[datetime] = None) -> dict:
+    """OpenClaw agent-turn spend from the telemetry ledger (`agent="openclaw"`).
+
+    Reads the newest `months` monthly files (incrementally, see `_OPENCLAW_SCAN`)
+    and never writes. Under pytest with no explicit path it reads NOTHING and
+    says so -- the same rule `llm_telemetry` applies to writes -- so a unit test
+    never scans the real ledger. `usd` is priced from the stored tokens at
+    current list prices; rows with no usage are counted in `unpriced` and make
+    `usd` a declared LOWER BOUND."""
+    from backend.services import llm_telemetry as _tel
+    now = now or datetime.now(timezone.utc)
+    base = _tel._resolve_path(path)
+    if base is None:
+        return {"calls": None, "usd": None, "last_call_utc": None,
+                "status": "NOT_READ: no ledger path in this process (test run)"}
+    try:
+        files = [f for f in _tel.ledger_files(base) if f != base][-max(1, months):] \
+            or _tel.ledger_files(base)[-1:]
+    except Exception as exc:                                       # noqa: BLE001
+        return {"calls": None, "usd": None, "last_call_utc": None,
+                "status": f"CANNOT_DETERMINE: {type(exc).__name__}: {exc}"[:200]}
+    tot = _openclaw_blank()
+    with _OPENCLAW_LOCK:
+        for f in files:
+            a = _openclaw_scan_file(f)
+            tot["calls"] += a["calls"]
+            tot["ok"] += a["ok"]
+            tot["usd"] += a["usd"]
+            tot["usd_repriced"] += a["usd_repriced"]
+            tot["unpriced"] += a["unpriced"]
+            if a["last_call_utc"] and (tot["last_call_utc"] is None
+                                       or a["last_call_utc"] > tot["last_call_utc"]):
+                tot["last_call_utc"] = a["last_call_utc"]
+            for d, v in a["by_day"].items():
+                x = tot["by_day"].setdefault(d, {"calls": 0, "usd": 0.0})
+                x["calls"] += v["calls"]
+                x["usd"] += v["usd"]
+    today = now.date().isoformat()
+    from datetime import timedelta as _td
+    last7 = {(now.date() - _td(days=i)).isoformat() for i in range(7)}
+    td = tot["by_day"].get(today) or {"calls": 0, "usd": 0.0}
+    return {"calls": tot["calls"], "ok": tot["ok"], "usd": round(tot["usd"], 6),
+            "usd_repriced_today_prices": round(tot["usd_repriced"], 6),
+            "usd_is_lower_bound": tot["unpriced"] > 0, "unpriced_calls": tot["unpriced"],
+            "last_call_utc": tot["last_call_utc"],
+            "calls_today": td["calls"], "usd_today": round(td["usd"], 6),
+            "calls_7d": sum(v["calls"] for d, v in tot["by_day"].items() if d in last7),
+            "usd_7d": round(sum(v["usd"] for d, v in tot["by_day"].items() if d in last7), 6),
+            "files": [getattr(f, "name", str(f)) for f in files],
+            "status": "OK" if tot["calls"] else "NO_OPENCLAW_CALLS_IN_WINDOW"}
 
 
 def _get_provider() -> str:

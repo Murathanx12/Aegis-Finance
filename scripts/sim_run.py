@@ -1004,6 +1004,22 @@ def bars_gate(ranking_asof: Any, *, bars_paths: list[Path] | None = None,
     return gate
 
 
+def _plan_scaled_views(targets: list, prices: dict, equity: float) -> dict:
+    """The plan's targets rescaled to `config.IC_CAPITAL_LEVELS` (2026-10-06).
+
+    `decision_contract.scaled_views`: whole shares, the names whose one share
+    exceeds their allocation listed as NOT executable. Never raises into the
+    plan and never feeds an order."""
+    try:
+        from backend.services import decision_contract as DC      # noqa: PLC0415
+        pos = [{"ticker": t.symbol, "weight": t.weight, "price": prices.get(t.symbol)}
+               for t in targets]
+        return DC.scaled_views(pos, source_capital_usd=equity, label="u_plan targets")
+    except Exception as exc:                                       # noqa: BLE001
+        return {"places_orders": False,
+                "line": f"SCALED VIEW CANNOT DETERMINE: {type(exc).__name__}: {exc}"}
+
+
 def why_zero_orders(*, exploit_acting: bool, probe_acting: bool, n_probe: int,
                     held: dict, probe_syms: list, mandate_gates: bool,
                     blend_verdict: Any) -> str:
@@ -1478,6 +1494,9 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
               "contract_clash_reasons": {t: contract["refused"].get(t.upper())
                                          for t in contract_clash},
               "mandate": mandate, "mandate_line": mandate["line"],
+              # the SAME targets at the owner's own capital levels, whole
+              # shares; reporting only -- never an order source (2026-10-06)
+              "scaled_views": _plan_scaled_views(targets, prices, equity),
               "share_class_dropped": share_class_dropped,
               "policy_id": PROBE_POLICY_ID, "policy_version": PROBE_POLICY_VERSION,
               "policy_version_from_asof": PROBE_POLICY_VERSION_FROM,

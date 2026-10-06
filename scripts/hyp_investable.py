@@ -210,11 +210,12 @@ def run_book(P: pd.DataFrame, picks: dict, *, start: str = "1991-01-01") -> pd.D
             ct = MT.cell_table(g.reset_index())
             cells = ct["band"].astype(str) + "|" + ct["vt"].astype(str) + "|" + ct["mt"].astype(str)
             w = {s: 1.0 / len(sel) for s in sel}
-            c, to = HI.trade_cost(prev_book, w, spread, 0.0035)
+            c, to = MT.trade_cost(prev_book, w, spread, 0.0035)
             rec.update(gross=HI.book_return(w, fwd), cost=c, turnover=to)
             tw = HI.twin_basket(sel, cells, ok)
-            tc, tto = HI.trade_cost(prev_twin, tw, spread, 0.0035)
+            tc, tto = MT.trade_cost(prev_twin, tw, spread, 0.0035)
             rec.update(twin_gross=HI.book_return(tw, fwd), twin_cost=tc, twin_turnover=tto,
+                       twin_full_rt=MT.twin_full_round_trip_upper_bound(tw, spread, 0.0035),
                        twin_borrow=HI.borrow_cost_monthly(tw, band_of),
                        twin_spread_mean=float(np.nanmean([spread.get(s, np.nan) for s in tw])) if tw else np.nan,
                        twin_n=len(tw))
@@ -225,9 +226,10 @@ def run_book(P: pd.DataFrame, picks: dict, *, start: str = "1991-01-01") -> pd.D
                        share_small=float((band.reindex(sel) == "small").mean()))
             prev_book, prev_twin = HI.drift(w, fwd), HI.drift(tw, fwd)
         else:
-            c, to = HI.trade_cost(prev_book, {}, spread, 0.0035)
-            tc, _ = HI.trade_cost(prev_twin, {}, spread, 0.0035)
-            rec.update(gross=np.nan, cost=c, turnover=to, twin_gross=np.nan, twin_cost=tc, twin_borrow=0.0,
+            c, to = MT.trade_cost(prev_book, {}, spread, 0.0035)
+            tc, tto = MT.trade_cost(prev_twin, {}, spread, 0.0035)
+            rec.update(gross=np.nan, cost=c, turnover=to, twin_gross=np.nan, twin_cost=tc, twin_turnover=tto,
+                       twin_full_rt=0.0, twin_borrow=0.0,
                        bandidx_gross=np.nan)
             prev_book, prev_twin = {}, {}
         rows.append(rec)

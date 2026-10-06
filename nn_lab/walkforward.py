@@ -155,7 +155,9 @@ def run(folds_filter=None, n_seeds: int = 3, do_lgbm: bool = True, do_nn: bool =
                 "oos_path": str(out_dir / f"oos_{run_id}.parquet"),
                 "elapsed_s": round(time.time() - t0, 1),
                 "survivorship_caveat": "PARTIALLY SURVIVOR-SELECTED (see table receipt): living names chosen "
-                                       "alive 2026-09-01; dead names from the inactive listed list only.",
+                                       "alive 2026-09-01; dead names from the inactive listed list plus, "
+                                       "when USE_CRSP_DEATHS, CRSP-verified 2016-2024 deaths.",
+                "use_crsp_deaths": C.USE_CRSP_DEATHS,
                 "post_review": True,
                 "review_fixes": "F1 no market-cap features without an unadjusted close, no adjusted price floor; "
                                 "F2 no missing-indicator for later-pull groups, analyst unavailable before its "
@@ -197,6 +199,8 @@ def summarise(oos: pd.DataFrame, cal: pd.DatetimeIndex, df_ctrl: pd.DataFrame | 
             res["models"].setdefault(m, {})[f"h{h}"] = {
                 "rank_ic": ic_s, "rank_ic_by_year": views_ic.get("by_hold_year"),
                 "rank_ic_loyo_worst": views_ic.get("loyo_worst"),
+                "rank_ic_leave_one_year_out": views_ic.get("leave_one_year_out"),
+                "top20_by_year": views_sp.get("by_hold_year"),
                 "top20_minus_random_net": sp_s,
                 "top20_gross_mean": round(float(sp["gross_top"].mean()), 5) if len(sp) else None,
                 "top20_views": views_sp, "residual_ic_vs_mom_beta_vol_size": resid,

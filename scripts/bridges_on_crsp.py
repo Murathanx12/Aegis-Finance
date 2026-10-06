@@ -442,8 +442,10 @@ def main(argv=None) -> int:
     ap.add_argument("--flat-run")
     ap.add_argument("--cs-run")
     ap.add_argument("--turnover-run")
+    ap.add_argument("--fair-run", help="board: the fair-twin board run (scripts.hyp_twin_board) with each "
+                                       "twin's own measured turnover; required")
     a = ap.parse_args(argv)
-    if not wait_for_memory():
+    if a.part != "board" and not wait_for_memory():     # the board reads small series only
         say("REFUSED: under 3 GB free memory for 30 minutes")
         return 3
     rid = a.run_id or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%MZ")
@@ -457,7 +459,7 @@ def main(argv=None) -> int:
         return R.part_run(a.declaration, rid, a.cs)
     if a.part == "turnover":
         return R.part_turnover(a.declaration, rid)
-    return R.part_board(a.declaration, a.flat_run, a.cs_run, a.turnover_run)
+    return R.part_board(a.declaration, a.flat_run, a.cs_run, a.turnover_run, a.fair_run)
 
 
 if __name__ == "__main__":

@@ -15,15 +15,16 @@ into TMSG by hand. Evidence, drills and odds are in
 | odds (10 bps a side) | P(> +40% relative) is 2.5-4.9% if the direction is a coin flip (Octobers 2019-25) and about 17% if the season's own drift repeats; P(< -20%) is about 25-30% |
 | drills | 13 of 13 PASS; 4 defects fixed before the contest |
 | rehearsal | live now: one sheet a day through Oct 9, graded daily (`contest/rehearsal/SCOREBOARD.md`) |
-| owner items open | 11 rules to confirm (page 2), the WLS export, registration by Oct 4 23:59 HKT |
+| owner items open | 11 rules to confirm (page 2); the WLS MEMB export into `contest/wls/`; the empty file `contest/REGISTERED` once registration is confirmed (it closed Oct 4 23:59 NY = Oct 5 11:59 HKT). **The live order sheet REFUSES until both exist** (receipt in `contest/live/refusals/`, line in `contest/logs/contest_live_gate.log`; check with `python -m scripts.contest_rehearsal gate`) |
+| shadow books (2026-10-07) | **ROT5_DIR** (ROT5_TRAIL minus names with net-Sell analyst consensus or net lowerings over 90 days; same universe, sizing and exits) and **MAXTAIL_BH**, frozen beside ROT5_TRAIL by the rehearsal task and graded side by side in `rehearsal/SCOREBOARD.md`. To trade ROT5_DIR live, write `ROT5_DIR` into `contest/live/BOOK` (absent = ROT5_TRAIL). Note: `docs/research_notes/2026-10-06/contest_direction_sheet_2026-10-06.md` |
 
 ## PAGE 1: WHAT RUNS WHEN
 
-Hong Kong time (HKT) is UTC+8. New York is **12 h behind until Sun Nov 1** and **13 h behind after**.
+Hong Kong time (HKT) is UTC+8. New York is **12 h behind until Sun Nov 1** and **13 h behind after**. The contest's own times are New York times; every HKT below is derived from them.
 
 | HKT (NY before / after Nov 1) | what | who |
 |---|---|---|
-| **14:30** (02:30 / 01:30) | `AegisContestDesk` runs two jobs. (1) It writes the research sheet `contest/sheets/<date>.md`. (2) It grades, then writes and FREEZES the **ORDER SHEET** `contest/live/sheets/<date>/order_sheet.md`. From Oct 11 on (Oct 11's sheet carries Oct 12's Asian opens). | machine |
+| **14:30** (02:30 / 01:30) | `AegisContestDesk` runs two jobs. (1) It writes the research sheet `contest/sheets/<date>.md`. (2) It grades, then writes and FREEZES the **ORDER SHEET** `contest/live/sheets/<date>/order_sheet.md`. From Oct 11 on. Oct 11's sheet carries only Oct 12's Asian opens, which open before the 09:00 NY start, so the code refuses them: the first tickets are on the Oct 12 sheet. Every sheet prints its worst case in dollars and refuses a ticket above 20% of notional. | machine |
 | 14:45 - 15:00 | Open the ORDER SHEET, not the research sheet. For every BUY, run three checks. If any check fails, SKIP the name and take the next reserve printed on the sheet. | **owner** |
 | | - `EVTS <GO>`: the date and time match. | |
 | | - `MEMB <GO>` of WLS Index: the name is a member. | |
@@ -43,13 +44,13 @@ Hong Kong time (HKT) is UTC+8. New York is **12 h behind until Sun Nov 1** and *
 
 | date | what |
 |---|---|
-| **Oct 4 23:59 HKT** (11:59 NY) | registration closes |
+| **Oct 4 23:59 NY = Oct 5 11:59 HKT** | registration closed (HKU's page reads "Closed" on Oct 6). The owner confirms the team registered, then creates `contest/REGISTERED` |
 | Oct 11 (Sun) 14:30 HKT | the first contest ORDER SHEET |
-| Oct 12 | the contest starts. Japan is CLOSED (Sports Day); the US is open |
-| **Oct 16** | initial positions are due. The 2025 wording was "09:00 ET", which is **21:00 HKT, before that day's US open**: enter the Oct 16 tickets the evening before, or confirm |
+| **Oct 12 09:00 NY = Oct 12 21:00 HKT** | the contest starts. Asian sessions of Oct 12 open before this (the evening of Oct 11 in New York) and are refused by the code. Japan is CLOSED (Sports Day); the US opens at 21:30 HKT |
+| **Oct 16 23:59 NY = Oct 17 11:59 HKT** | initial positions are due (public rules, 2026). The US session of Oct 16 (21:30 HKT that day) is the last US open before the deadline |
 | Nov 1 | US clocks change |
 | Nov 12 | the last buying sheet |
-| Nov 13 16:00 NY (Nov 14 05:00 HKT) | the end |
+| **Nov 13 17:00 NY = Nov 14 06:00 HKT** | the end (NY is UTC-5 after Nov 1, so 13 h behind HKT) |
 
 **To stop everything:** create the empty file `backend/data/optimus/contest/STOP`.
 
@@ -90,7 +91,7 @@ Hong Kong time (HKT) is UTC+8. New York is **12 h behind until Sun Nov 1** and *
 | 11 | corporate actions and dividends | splits are adjusted by TMSG; the benchmark is WLS *price* return | a split handled by hand: use the split rule; dividends are small over 5 weeks | CONFIRM |
 | 12 | **relative P&L definition** | book return minus WLS return on the full notional | If relative P&L is measured on invested capital only, cash days are neutral and nothing changes. If it is time-weighted, the same | **CONFIRM** (TMSG Help) |
 | 13 | minimum positions / trades; ticker re-entry; orders per day | none, and re-entry allowed | a limit on trades or re-entry breaks a daily rotation: **switch to MAXTAIL_BH** | **CONFIRM** |
-| 14 | **deadline time zones** | registration Oct 4 23:59 HKT (owner confirmed); start Oct 12 (zone unknown); initial positions Oct 16 09:00 ET (2025 wording) | If Asian sessions of Oct 12 fall before the start (Oct 11 in NY), the Oct 11 sheet's Asian lines are void | **CONFIRM** |
+| 14 | **deadline time zones** | SETTLED from the public rules (2026-10-06): all times New York. Registration Oct 4 23:59 NY = Oct 5 11:59 HKT; start Oct 12 09:00 NY = Oct 12 21:00 HKT; initial positions Oct 16 23:59 NY = Oct 17 11:59 HKT; end Nov 13 17:00 NY = Nov 14 06:00 HKT. Every HKT here is computed from New York with the DST rule (`contest_direction.contest_times`, pinned by a test) | Asian sessions of Oct 12 open before the start: the code refuses them | known |
 | 15 | order types | LIMIT buys, MARKET-AT-OPEN sells | If only market orders exist, drop the limit and check the gap by eye (the ±30% rule) | CONFIRM |
 | 16 | board lots | JP / CN / ID 100, TW 1000, HK per stock (look it up), US / EU / KR / IN 1: all UNVERIFIED | the sheet rounds down to the lot; wrong lots are refused by TMSG | CONFIRM |
 | 17 | WLS membership | UNCONFIRMED until `MEMB` is exported to `contest/wls/` | a non-member ticket is rejected, or scores outside the universe | **EXPORT** |

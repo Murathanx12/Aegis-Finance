@@ -85,6 +85,12 @@ _all three: rate-limited, counted per day, and under the spend cap_
 `/pending` approvals waiting on you
 `/approve <id>` · `/deny <id>`
 
+*Ask in plain words* (receipts; one capped classifier call only when nothing matches)
+`how is pc paper doing` · `show me the fleet` · `compare hack2 to spy`
+`why did we buy ACN` · `and vs spy?` · `scale to $40k` · `health`
+`is openclaw always on` · `what did the reader read today` · `pending`
+_replies carry buttons; a research button waits for your Approve tap_
+
 *Replies* (plain text works too; read from disk, no model, no orders)
 `stock NVDA` price, moves in sigma, events, alerts, books
 `news NVDA` newest headlines on disk
@@ -416,10 +422,24 @@ def _reply_cmd(cmd: str):
     return _h
 
 
-def text_reply(text: str, msg: dict) -> str | None:
-    """The owner's plain-text messages (the poller has checked the chat)."""
-    from backend.services import alerts_replies as AR
-    return AR.respond(text, msg)
+def text_reply(text: str, msg: dict):
+    """The owner's plain-text messages (the poller has checked the chat).
+
+    C6 (2026-10-06): a plain question ("how is pc paper doing", "why did we
+    buy ACN", "and vs spy?") goes through `telegram_cockpit.route_text` -- a
+    fixed intent table onto the receipt handlers in HANDLERS, one capped
+    DeepSeek classification only when nothing matches, and 2-4 inline buttons.
+    The existing reply grammar (`stock X`, `digest ...`, `ask ...`) keeps its
+    meaning: the router hands those to `alerts_replies.respond` unchanged."""
+    from backend.services import telegram_cockpit as CK
+    return CK.route_text(text, msg, handlers=HANDLERS)
+
+
+def callback_reply(data: str, cq: dict):
+    """An inline-button tap. Owner chat + owner sender + an id minted for that
+    chat, or nothing (`telegram_cockpit.handle_callback`)."""
+    from backend.services import telegram_cockpit as CK
+    return CK.handle_callback(data, cq, handlers=HANDLERS, owner=TG.owner_chat_id())
 
 
 HANDLERS = {
@@ -690,7 +710,7 @@ def main(argv=None) -> int:
         return 2
 
     if a.once:
-        print(json.dumps(TG.poll(HANDLERS, text_handler=text_reply), indent=1))
+        print(json.dumps(TG.poll(HANDLERS, text_handler=text_reply, callback_handler=callback_reply), indent=1))
         return 0
 
     try:
@@ -709,7 +729,7 @@ def main(argv=None) -> int:
             logger.exception("daily jobs failed")
         state, err = "ok", None
         try:
-            TG.poll(HANDLERS, text_handler=text_reply)
+            TG.poll(HANDLERS, text_handler=text_reply, callback_handler=callback_reply)
         except TG.TelegramRefused as exc:
             logger.warning("poll refused: %s", exc)
             state, err = "refused", str(exc)[:200]

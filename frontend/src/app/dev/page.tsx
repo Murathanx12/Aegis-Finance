@@ -4,14 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, Brain, CalendarClock, ExternalLink, FlaskConical } from "lucide-react";
+import { AlertTriangle, Brain, CalendarClock, FlaskConical } from "lucide-react";
 import Link from "next/link";
 import {
   getHealthFull, piGetRegistry, piGetTrackRecord,
 } from "@/lib/api";
 import { LANE_STYLE, LaneEquityChart } from "@/components/pi/lane-equity-chart";
 
-const BRAIN_URL = "https://optimus-brain-alpha.vercel.app";
 
 function uptimeLabel(s: number) {
   if (s < 3600) return `${Math.round(s / 60)}m`;
@@ -268,19 +267,19 @@ export default function DevDashboard() {
 
       {/* Links */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <a href={BRAIN_URL} target="_blank" rel="noreferrer">
+        <Link href="/brain">
           <Card className="hover:border-primary/50 transition-colors h-full">
             <CardContent className="py-4 flex items-center gap-3">
               <Brain className="h-5 w-5" />
               <div>
-                <p className="font-semibold text-sm">Optimus Brain map</p>
+                <p className="font-semibold text-sm">Optimus Brain</p>
                 <p className="text-xs text-muted-foreground">
-                  interactive knowledge map <ExternalLink className="inline h-3 w-3" />
+                  health, decision ledger, learning digest (the map link is on the page)
                 </p>
               </div>
             </CardContent>
           </Card>
-        </a>
+        </Link>
         <Link href="/portfolio-intelligence/track-record">
           <Card className="hover:border-primary/50 transition-colors h-full">
             <CardContent className="py-4">

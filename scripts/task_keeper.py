@@ -2,8 +2,10 @@
 
     python -m scripts.task_keeper reader      # relaunch the reader supervisor if none is alive
     python -m scripts.task_keeper catchup     # run any daily Aegis task whose trigger was missed
-    python -m scripts.task_keeper status      # print both decisions, change nothing
-    python -m scripts.task_keeper register    # print (never run) the two task registrations
+    python -m scripts.task_keeper sim         # start the US-session sim, or write why not
+    python -m scripts.task_keeper catalog     # data catalog receipt + archive closed big ledger months
+    python -m scripts.task_keeper status      # print every decision, change nothing
+    python -m scripts.task_keeper register    # print (never run) the task registrations
 
 WHY (automation audit, 2026-10-02)
 ==================================
@@ -27,8 +29,13 @@ WHY (automation audit, 2026-10-02)
    The fleet-manager OPEN/PRECLOSE passes are deliberately NOT caught up here:
    a live-order pass started at the wrong time of day is not a catch-up.
 
-Every decision is one JSON line in `task_keeper/keeper.jsonl`; no LLM, no
-network, no order.
+3. THE SIM HAD NO OWNER (2026-10-06): no session ran 09-29 -> 10-06. `sim`
+   starts one inside the US/Eastern start window, in trading mode only when
+   the PC-PAPER mandate is OK and the worst case passes, else in `observe`
+   with the refusal named; every firing writes one row to `sim/owner.jsonl`.
+
+Every reader/catch-up decision is one JSON line in `task_keeper/keeper.jsonl`;
+no LLM and no order. The sim owner reads the broker (one GET) before a start.
 """
 
 from __future__ import annotations
@@ -40,7 +47,7 @@ import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
@@ -63,11 +70,14 @@ READER_ROLL_H = 23.0
 #: orders at the wrong time are not a catch-up) and not the IIF1 launcher (it
 #: computes its own safe-launch window and refuses outside it).
 CATCHUP_TASKS = ("AegisDailyPass", "AegisFleetDailyCheck", "AegisNNLabNightly",
-                 "AegisAnalystPanelDaily", "AegisHypLabNightly", "AegisContestRehearsal")
+                 "AegisAnalystPanelDaily", "AegisHypLabNightly", "AegisContestRehearsal",
+                 "AegisDataCatalog")
 CATCHUP_MAX_AGE_H = 20.0
 CATCHUP_GRACE_MIN = 15.0
 
 TASK_READER = "AegisReaderSupervisor"
+#: Daily data catalog + closed-ledger archival (chunk C10, 2026-10-06).
+TASK_CATALOG = "AegisDataCatalog"
 TASK_CATCHUP = "AegisCatchUp"
 
 
@@ -305,10 +315,232 @@ def catch_up(*, tasks: Callable[[], Optional[list[dict]]] = read_tasks,
                 "learning_reports": reports}, log_path)
 
 
+# ================================================================ sim owner
+#
+# WHY (chunk C2, 2026-10-06). No sim session ran from 2026-09-29 to 10-06
+# while the US session opened five times. The 2026-10-02 handoff said
+# "AegisIIF1NightLauncher starts a sim session if a safe window remains"; it
+# does not -- it launches the IIF1 investigator night (`backend.services.
+# iif1_run`) and nothing else. Every session in `sim/sessions.jsonl` was
+# started by a person (the button or Telegram `/sim start`), at irregular
+# times, and `system_health.p_sim_session` already said so in its own words:
+# "no scheduler starts one". `sim` is that scheduler: idempotent, fired every
+# 30 min plus logon/unlock/wake, and on every firing it writes ONE receipt row
+# to `sim/owner.jsonl` saying what it did or exactly why not.
+
+SIM_DIR = OPT / "sim"
+SIM_OWNER_STOP = SIM_DIR / "OWNER_STOP"
+SIM_OWNER_LOG = SIM_DIR / "owner.jsonl"
+TASK_SIM = "AegisSimOwner"
+#: A session the owner stopped on purpose (button / Telegram) is not restarted
+#: the same US/Eastern day; this is the `end_reason` `sim_run` writes for it.
+OPERATOR_STOP_REASONS = ("stop requested", "signal", "KeyboardInterrupt")
+
+
+def _et(now_utc: datetime) -> datetime:
+    from zoneinfo import ZoneInfo                                  # noqa: PLC0415
+    return now_utc.astimezone(ZoneInfo("America/New_York"))
+
+
+def is_session_day(d) -> bool:
+    """XNYS trading day (exchange_calendars; weekdays when it is absent)."""
+    from backend.services import system_health as SH               # noqa: PLC0415
+    days, _ = SH._sessions(d, d)
+    return bool(days)
+
+
+def sim_window(now_utc: datetime, *, session_day: bool,
+               allowed_hours: tuple = (6, 8, 10, 12)) -> dict:
+    """PURE. Is a start due now, and for how long? All times US/Eastern."""
+    from datetime import time as dtime                             # noqa: PLC0415
+    et = _et(now_utc)
+    first = dtime(*_config.SIM_OWNER_FIRST_START_ET)
+    last = dtime(*_config.SIM_OWNER_LAST_START_ET)
+    base = {"now_et": et.isoformat(timespec="minutes"), "et_date": et.date().isoformat(),
+            "session_day": bool(session_day),
+            "window_et": f"{first:%H:%M}-{last:%H:%M}"}
+    if not session_day:
+        return {**base, "in_window": False,
+                "why": f"{et.date()} is not an XNYS session day"}
+    if et.time() < first:
+        return {**base, "in_window": False,
+                "why": f"before the first start ({first:%H:%M} ET); now {et:%H:%M} ET"}
+    if et.time() > last:
+        return {**base, "in_window": False,
+                "why": f"after the last start ({last:%H:%M} ET); now {et:%H:%M} ET"}
+    close = et.replace(hour=16, minute=0, second=0, microsecond=0)
+    target = close + timedelta(minutes=int(_config.SIM_OWNER_END_AFTER_CLOSE_MIN))
+    need_h = (target - et).total_seconds() / 3600.0
+    fit = [h for h in allowed_hours if h >= need_h]
+    hours = min(fit) if fit else max(allowed_hours)
+    return {**base, "in_window": True, "hours": hours,
+            "ends_et": (et + timedelta(hours=hours)).isoformat(timespec="minutes"),
+            "why": f"inside the start window; {hours} h reaches {target:%H:%M} ET"}
+
+
+def sim_owner_gate(*, now_utc: datetime, session_day: bool, sim: dict,
+                   stop_exists: bool, disk_ok: tuple[bool, str] = (True, "")) -> dict:
+    """PURE. What the owner does BEFORE the mandate is read:
+    `paused` / `stopped_by_operator` / `alive` / `outside_window` / `refused` / `start`."""
+    if stop_exists:
+        return {"action": "paused", "verdict": "STOPPED_BY_OPERATOR",
+                "why": f"{SIM_OWNER_STOP.name} exists (the owner's pause); delete it to resume"}
+    state = str(sim.get("state") or "IDLE")
+    s = sim.get("session") or {}
+    if state in ("RUNNING", "STOPPING"):
+        return {"action": "alive", "session": s.get("id"), "mode": s.get("mode"),
+                "pid": s.get("pid"), "why": f"session {s.get('id')} is {state}"}
+    win = sim_window(now_utc, session_day=session_day)
+    if not win["in_window"]:
+        return {"action": "outside_window", "window": win, "why": win["why"]}
+    ended = s.get("ended")
+    if state == "STOPPED" and str(s.get("end_reason")) in OPERATOR_STOP_REASONS and ended:
+        try:
+            ended_et = _et(datetime.fromisoformat(str(ended)))
+        except ValueError:
+            ended_et = None
+        if ended_et is not None and ended_et.date().isoformat() == win["et_date"]:
+            return {"action": "stopped_by_operator", "verdict": "STOPPED_BY_OPERATOR",
+                    "session": s.get("id"), "window": win,
+                    "why": (f"session {s.get('id')} was stopped on purpose today "
+                            f"({s.get('end_reason')}, {ended}); not restarted until the "
+                            f"next session day")}
+    ok, why = disk_ok
+    if not ok:
+        return {"action": "refused", "window": win, "why": f"REFUSED_DISK: {why}"}
+    return {"action": "start", "window": win, "hours": win["hours"],
+            "why": win["why"]}
+
+
+def sim_owner_mode(mandate: dict | None) -> tuple[str, str | None]:
+    """PURE. (mode, trade_refused). Trading only on an OK mandate whose worst
+    case PASSES; anything else starts `observe` and names why."""
+    if not isinstance(mandate, dict) or not mandate.get("status"):
+        return "observe", "MANDATE CANNOT DETERMINE: no mandate block was computed"
+    gate = (mandate.get("worst_case_gate") or {})
+    if gate.get("verdict") != "PASS":
+        return "observe", ("WORST CASE " + str(gate.get("verdict") or "UNKNOWN") + ": "
+                           + str(gate.get("line") or "no worst-case gate on the mandate"))
+    if mandate.get("status") != "OK":
+        kinds = [str(d).split(":", 1)[0] for d in mandate.get("disagreements") or []]
+        return "observe", f"MANDATE {mandate.get('status')}: {', '.join(kinds) or '?'}"
+    return str(_config.SIM_OWNER_MODE), None
+
+
+def _disk_ok() -> tuple[bool, str]:
+    try:
+        from backend.services import disk_guard as DG              # noqa: PLC0415
+        DG.require_free(_config.DISK_FREE_DEAD_GB + 1, "sim owner",
+                        path=_config.OPTIMUS_LEDGER_DIR)
+        return True, ""
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"{type(exc).__name__}: {str(exc)[:200]}"
+
+
+def _broker_read() -> dict:
+    """One live broker read of PC-PAPER, persisted where the mandate reads it."""
+    try:
+        from backend.services import pc_broker as PB                # noqa: PLC0415
+        snap = PB.snapshot(tag="sim_owner")
+        return {"ok": True, "equity": snap.get("equity"), "t": snap.get("t")}
+    except Exception as exc:                                       # noqa: BLE001
+        return {"ok": False, "why": f"{type(exc).__name__}: {str(exc)[:200]}"}
+
+
+def _mandate() -> dict | None:
+    from backend.services import decision_contract as DC           # noqa: PLC0415
+    m = DC.account_mandate(None)
+    return {k: m.get(k) for k in ("status", "capital_usd", "capital_source",
+                                  "broker_equity_usd", "broker_equity_as_of",
+                                  "disagreements", "worst_case_gate", "line")}
+
+
+def ensure_sim(*, now_utc: datetime | None = None,
+               status: Callable[[], dict] | None = None,
+               start: Callable[..., dict] | None = None,
+               session_day: Callable[[Any], bool] = is_session_day,
+               broker_read: Callable[[], dict] = _broker_read,
+               mandate: Callable[[], dict | None] = _mandate,
+               disk: Callable[[], tuple[bool, str]] = _disk_ok,
+               stop_path: Path | None = None, log_path: Path | None = None,
+               dry_run: bool = False) -> dict:
+    """The scheduled sim owner. One receipt row per firing, whatever happens."""
+    import uuid                                                    # noqa: PLC0415
+    from backend.services import sim_session as SS                 # noqa: PLC0415
+    now_utc = now_utc or _now()
+    run_id = uuid.uuid4().hex[:12]
+    row: dict = {"job": "sim", "run_id": run_id}
+    try:
+        sim = (status or SS.status)()
+        et_day = _et(now_utc).date()
+        d = sim_owner_gate(now_utc=now_utc, session_day=session_day(et_day), sim=sim,
+                           stop_exists=Path(stop_path or SIM_OWNER_STOP).exists(),
+                           disk_ok=disk())
+        row.update(d)
+        if d["action"] == "start":
+            row["broker_read"] = broker_read()
+            m = mandate()
+            row["mandate"] = m
+            mode, trade_refused = sim_owner_mode(m)
+            row.update(mode=mode, trade_refused=trade_refused)
+            if dry_run:
+                row["action"] = "would_start"
+            else:
+                try:
+                    sess = (start or SS.start)(hours=d["hours"], mode=mode)
+                    row.update(action="started", session=sess.get("id"),
+                               pid=sess.get("pid"), planned_end=sess.get("planned_end"))
+                except Exception as exc:                           # noqa: BLE001
+                    row.update(action="refused",
+                               why=f"sim_session.start refused: {type(exc).__name__}: "
+                                   f"{str(exc)[:240]}")
+    except Exception as exc:                                       # noqa: BLE001
+        row.update(action="refused", why=f"owner raised {type(exc).__name__}: {str(exc)[:240]}")
+    return log(row, log_path or SIM_OWNER_LOG)
+
+
+# ================================================================ catalog
+#
+# WHY (chunk C10, 2026-10-06). "We pull the same data again" and "the long-term
+# archival design for very large monthly ledgers is unresolved". Once a day:
+# archive every CLOSED `<ledger>_<YYYY-MM>.jsonl` over the size floor to Parquet
+# outside git with a committed manifest (`ledger_archive`), THEN walk the data
+# roots into a catalog receipt (`data_catalog`) so the new manifest is in it.
+# A failed step is a REFUSED row with its reason; neither step deletes data.
+# TODO(orchestrator): once C3/C7 land their daily_pass edits, consider a
+# `data_catalog` step there too, so the morning report can print catalog age.
+
+def run_catalog(*, archive: Callable[[], dict] | None = None,
+                catalog: Callable[[], dict] | None = None,
+                log_path: Path | None = None) -> dict:
+    row: dict = {"job": "catalog"}
+    try:
+        if archive is None:
+            from backend.services import ledger_archive as LA      # noqa: PLC0415
+            archive = LA.archive_closed
+        a = archive()
+        row["archive"] = {"status": a.get("status"),
+                          "months": [{k: m.get(k) for k in ("path", "action", "manifest", "why")}
+                                     for m in a.get("months", [])]}
+    except Exception as exc:                                       # noqa: BLE001
+        row["archive"] = {"status": "REFUSED", "why": f"{type(exc).__name__}: {str(exc)[:300]}"}
+    try:
+        if catalog is None:
+            from backend.services import data_catalog as DC        # noqa: PLC0415
+            catalog = DC.run
+        row["catalog"] = catalog()
+    except Exception as exc:                                       # noqa: BLE001
+        row["catalog"] = {"status": "REFUSED", "why": f"{type(exc).__name__}: {str(exc)[:300]}"}
+    bad = (row["archive"].get("status") != "OK"
+           or row["catalog"].get("status") == "REFUSED")
+    row["action"] = "refused" if bad else "ok"
+    return log(row, log_path)
+
+
 # ================================================================ register
 
 def registration_ps() -> str:
-    """PowerShell that (re)registers the two tasks. Printed by `register`.
+    """PowerShell that (re)registers the three tasks. Printed by `register`.
 
     The logon and unlock triggers are scoped to THIS user: an unscoped unlock
     trigger (any user) needs elevation and fails with 0x80070005 (measured
@@ -333,7 +565,23 @@ def registration_ps() -> str:
         "-Trigger @((New-ScheduledTaskTrigger -AtLogOn -User \"$env:USERDOMAIN\\$env:USERNAME\"), "
         "$unlock, $wake, $daily, $rep)",
         "}",
+        "# the sim owner: same triggers, every 30 minutes (it decides by the US/Eastern clock)",
+        "$daily = New-ScheduledTaskTrigger -Daily -At 07:00",
+        "$rep = New-ScheduledTaskTrigger -Once -At 07:10 -RepetitionInterval (New-TimeSpan -Minutes 30)",
+        f"$a = New-ScheduledTaskAction -Execute '{pyw}' -Argument \"-m scripts.task_keeper sim\" "
+        f"-WorkingDirectory '{REPO}'",
+        "Register-ScheduledTask -TaskName '" + TASK_SIM + "' -Action $a -Settings $S -Force "
+        "-Trigger @((New-ScheduledTaskTrigger -AtLogOn -User \"$env:USERDOMAIN\\$env:USERNAME\"), "
+        "$unlock, $wake, $daily, $rep)",
+        "# the data catalog + ledger archival: once a day; `catchup` starts it if the PC slept",
+        "$SC = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries "
+        "-DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 2)",
+        f"$a = New-ScheduledTaskAction -Execute '{pyw}' -Argument \"-m scripts.task_keeper catalog\" "
+        f"-WorkingDirectory '{REPO}'",
+        "Register-ScheduledTask -TaskName '" + TASK_CATALOG + "' -Action $a -Settings $SC -Force "
+        "-Trigger @(New-ScheduledTaskTrigger -Daily -At 05:30)",
     ])
+
 
 
 def _ensure_streams() -> None:
@@ -347,15 +595,24 @@ def _ensure_streams() -> None:
 def main(argv: list[str] | None = None) -> int:
     _ensure_streams()
     ap = argparse.ArgumentParser(prog="task_keeper")
-    ap.add_argument("job", choices=("reader", "catchup", "status", "register"))
+    ap.add_argument("job", choices=("reader", "catchup", "sim", "status", "register", "catalog"))
     a = ap.parse_args(argv)
     if a.job == "register":
         print(registration_ps())
         return 0
     if a.job == "status":
         print(json.dumps({"reader": ensure_reader(dry_run=True),
-                          "catchup": catch_up(dry_run=True)}, indent=1, default=str))
+                          "catchup": catch_up(dry_run=True),
+                          "sim": ensure_sim(dry_run=True)}, indent=1, default=str))
         return 0
+    if a.job == "catalog":
+        out = run_catalog()
+        print(json.dumps(out, default=str))
+        return 2 if out.get("action") == "refused" else 0
+    if a.job == "sim":
+        out = ensure_sim()
+        print(json.dumps(out, default=str))
+        return 2 if out.get("action") == "refused" else 0
     out = ensure_reader() if a.job == "reader" else catch_up()
     print(json.dumps(out, default=str))
     return 0 if out.get("action") not in ("launch_failed", "cannot_determine") else 2

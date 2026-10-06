@@ -274,11 +274,16 @@ def _labels_block(s: pd.DataFrame, cal: pd.DatetimeIndex, dead: bool) -> pd.Data
 
 
 def price_rows(bars: pd.DataFrame, cal: pd.DatetimeIndex, *, keep_dates: pd.DatetimeIndex | None,
-               keep_last: bool = False, panel_end: pd.Timestamp | None = None) -> pd.DataFrame:
+               keep_last: bool = False, panel_end: pd.Timestamp | None = None,
+               force_keys: pd.DataFrame | None = None) -> pd.DataFrame:
     """Price features + raw forward returns for eligible (symbol, date) rows.
 
     keep_dates: keep only these decision dates (the grid); keep_last also keeps
-    every eligible row on the final calendar session (the 'live' rows)."""
+    every eligible row on the final calendar session (the 'live' rows).
+    force_keys: (date, symbol) rows produced WHATEVER today's eligibility says -- the
+    frozen membership of stored grid dates (nn_lab/membership.py, owner decision
+    2026-10-06). When given, every row carries `_rebuild_eligible` so a stored member the
+    re-adjusted bars would now refuse is a REVISION, not a lost row."""
     panel_end = panel_end or cal[-1]
     mkt = bars.loc[bars["symbol"] == C.MARKET].set_index("date")["close"].astype("float64")
     mret = mkt / mkt.shift(1) - 1.0
@@ -288,6 +293,11 @@ def price_rows(bars: pd.DataFrame, cal: pd.DatetimeIndex, *, keep_dates: pd.Date
     excluded = _etf_excluded()          # ETFs / ETNs / funds (EXCLUDE_ETFS); exact symbol only
     last_session = cal[-1]
     cal_pos_end = len(cal) - 1
+    forced: dict = {}
+    if force_keys is not None and len(force_keys):
+        fk = force_keys[["date", "symbol"]].copy()
+        fk["date"] = pd.to_datetime(fk["date"])
+        forced = {s: set(g.values) for s, g in fk.groupby("symbol")["date"]}
     out = []
     for sym, s in bars.groupby("symbol", sort=False, observed=True):
         if sym in C.INDEX_PROXIES or sym in excluded or len(s) < C.MIN_HISTORY_SESSIONS:
@@ -312,6 +322,11 @@ def price_rows(bars: pd.DataFrame, cal: pd.DatetimeIndex, *, keep_dates: pd.Date
             if keep_last:
                 on |= (f["date"] == last_session).values
             sel &= on
+        if force_keys is not None:
+            f["_rebuild_eligible"] = elig.values
+            fd = forced.get(sym)
+            if fd:
+                sel |= f["date"].isin(fd).values
         if not sel.any():
             continue
         last_pos = int(np.searchsorted(cal, s["date"].values[-1]))

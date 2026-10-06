@@ -163,17 +163,8 @@ def twin_gross(sel: pd.Index, g: pd.DataFrame) -> float:
     return float((vals[ok] * mix[ok]).sum() / mix[ok].sum())
 
 
-def trade_cost(prev_w: dict, w: dict, spread: dict, default: float) -> tuple[float, float]:
-    """(cost, one-way turnover): each |dw| pays half its name's round-trip spread."""
-    names = set(prev_w) | set(w)
-    cost, to = 0.0, 0.0
-    for s in names:
-        dw = abs(w.get(s, 0.0) - prev_w.get(s, 0.0))
-        if dw:
-            sp = spread.get(s, default)
-            cost += dw * (sp if np.isfinite(sp) else default) / 2.0
-            to += dw
-    return cost, to / 2.0
+#: the per-trade model is the matched twin's cost convention, imported, never retyped
+from backend.services.matched_twins import trade_cost  # noqa: E402,F401
 
 
 def run_cell(P: pd.DataFrame, mask: pd.Series, market: pd.Series, spreads: pd.Series,

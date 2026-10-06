@@ -408,6 +408,100 @@ def compare(rule_net: pd.Series, twin_net: pd.Series, random_net: pd.Series,
                                           if np.isfinite(se) and se > 0 else None)}
 
 
+# ── the twin's cost: ONE convention, imported by every board (2026-10-06) ───
+
+#: How a matched twin is charged for trading. Every board that nets a twin imports this
+#: constant and the functions below; none re-types the arithmetic (CHUNK C1 of
+#: `ROADMAP_2026-10-06_V1_BETA`). Read `twin_cost_convention.__doc__` for the full statement.
+TWIN_COST_CONVENTION = "OWN_TURNOVER_SAME_COST_MODEL"
+
+#: The four numbers every rule-vs-twin board row prints, side by side, in this order.
+#: The last is an UPPER BOUND on the twin's cost, kept for comparison with the 09-29/09-30
+#: boards and never read by a verdict.
+FOUR_COLUMNS = ("pure_selection", "fair_twin_net", "net_minus_market",
+                "twin_full_round_trip_UPPER_BOUND")
+#: the column no verdict may read
+UPPER_BOUND_COLUMN = FOUR_COLUMNS[3]
+
+
+def twin_cost_convention() -> str:
+    """The twin pays the SAME cost model as the rule it is matched to, on ITS OWN measured
+    turnover -- never a flat full round trip every month.
+
+    * Per-trade cost model (shared by rule and twin): each traded weight |w_t - w_{t-1}|
+      pays half of that name's round-trip spread; the round trip is the board's per-name
+      spread (on the CRSP boards max(Corwin-Schultz at the decision date, capped, the flat
+      6/10/18/35 bps band) -- the turnover-scaled Corwin-Schultz variant). `trade_cost`.
+    * Turnover: the twin's OWN one-way turnover, measured on the twin held as a portfolio
+      (weights drift between rebalances, a name is traded only when its weight changes).
+      A twin that holds still pays nothing; a twin whose turnover equals its rule's pays
+      what the rule pays on the same spreads. `turnover_cost`, `turnover_scaled_net`.
+    * Why: until 2026-10-06 the bridges board charged the twin the full Corwin-Schultz
+      round trip every month (Corwin-Schultz subtracted from every name's forward return)
+      while the rule paid only its own 10-50% turnover. A low-turnover rule then "beat"
+      its twin by the twin's cost alone: 106 of 161 rules at t >= 2, 18 on gross selection
+      (`hyp_lab/twin_board_SUMMARY_TB_2026-09-30_1.json`).
+    * The old charge survives ONLY as `twin_full_round_trip_upper_bound`, printed in the
+      `UPPER_BOUND_COLUMN` for comparison. No verdict reads it.
+    """
+    return TWIN_COST_CONVENTION
+
+
+def trade_cost(prev_w: dict, w: dict, spread: dict, default: float) -> tuple[float, float]:
+    """(cost, one-way turnover) of moving from `prev_w` to `w`: each |dw| pays half its
+    name's round-trip spread (`default` when the name has none). The ONE per-trade model
+    for a rule and for its twin."""
+    cost, to = 0.0, 0.0
+    for s in set(prev_w) | set(w):
+        dw = abs(w.get(s, 0.0) - prev_w.get(s, 0.0))
+        if dw:
+            sp = spread.get(s, default)
+            cost += dw * (sp if np.isfinite(sp) else default) / 2.0
+            to += dw
+    return cost, to / 2.0
+
+
+def turnover_cost(turnover, round_trip):
+    """Cost of `turnover` (one-way, fraction of the book) at `round_trip` spread:
+    turnover x round_trip (buying and selling `turnover` each pay half the round trip).
+    Scalars or aligned Series. A missing turnover REFUSES: defaulting it to 1.0 is the
+    full-round-trip charge this convention replaced."""
+    if turnover is None:
+        raise TwinInputMissing("turnover is missing: refusing to default it to a full round trip")
+    t = turnover.astype(float) if isinstance(turnover, pd.Series) else float(turnover)
+    if (np.any(np.asarray(t) < 0)) or (not isinstance(t, pd.Series) and not np.isfinite(t)):
+        raise TwinInputMissing(f"turnover must be finite and >= 0, got {turnover!r}")
+    return t * round_trip
+
+
+def turnover_scaled_net(flat_net, full_rt_net, turnover):
+    """Net under the turnover-scaled spread model from two runs of the SAME book: one at
+    flat costs (`flat_net`) and one charged the full spread round trip every month
+    (`full_rt_net`). The full-round-trip charge (flat - full) is scaled to the book's own
+    `turnover`. Applied with the SAME function to a rule and to its twin."""
+    return flat_net - turnover_cost(turnover, flat_net - full_rt_net)
+
+
+def twin_full_round_trip_upper_bound(w: dict, spread: dict, default: float) -> float:
+    """The old charge: one full round trip on every twin name, every month. UPPER BOUND
+    only (printed in `UPPER_BOUND_COLUMN`); no verdict reads it."""
+    return float(sum(v * (spread.get(s, default) if np.isfinite(spread.get(s, default)) else default)
+                     for s, v in w.items()))
+
+
+def four_columns(rule_gross: pd.Series, rule_cost: pd.Series, twin_gross: pd.Series,
+                 twin_cost: pd.Series, twin_full_rt: pd.Series, market: pd.Series) -> pd.DataFrame:
+    """The four monthly series every board row prints (`FOUR_COLUMNS`):
+    pure selection (rule gross - twin gross), the fair twin (rule net - twin net, both
+    under `twin_cost_convention`), rule net - market (market costless), and the UPPER
+    BOUND (rule net - (twin gross - a full round trip every month))."""
+    rn = rule_gross - rule_cost
+    return pd.DataFrame({FOUR_COLUMNS[0]: rule_gross - twin_gross,
+                         FOUR_COLUMNS[1]: rn - (twin_gross - twin_cost),
+                         FOUR_COLUMNS[2]: rn - market,
+                         FOUR_COLUMNS[3]: rn - (twin_gross - twin_full_rt)})
+
+
 # ── the characteristics panel from bars (light: long format, one symbol at a time)
 
 def _month_end_positions(cal: pd.DatetimeIndex) -> np.ndarray:

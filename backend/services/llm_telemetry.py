@@ -401,9 +401,19 @@ def append(records: list[LLMCall], path: Path | None = None) -> None:
     # on the 1st is split, not filed together under whichever month happened to
     # be first in the list.
     by_month: dict[str, list[str]] = {}
+    live = _now()[:7]
     for r in records:
         row = asdict(r)
         month, source = month_of(row)
+        if month < live and _month_is_archived(p, month):
+            # A CLOSED month with an archive manifest is immutable: appending
+            # would make the manifest's sha256 false (`ledger_archive`). The
+            # row is NOT dropped -- spend is the one thing a cost ledger must
+            # never lose -- it goes to the live month and says where it was
+            # refused from.
+            row["meta"] = {**(row.get("meta") or {}),
+                           "month_source": f"redirected_from_archived_{month}"}
+            month, source = live, "row_stamp"
         if source != "row_stamp":
             row["meta"] = {**(row.get("meta") or {}), "month_source": source}
         by_month.setdefault(month, []).append(
@@ -417,6 +427,16 @@ def append(records: list[LLMCall], path: Path | None = None) -> None:
             # machines (the same lesson the evidence memory paid for at E6).
             with month_path(p, month).open("a", encoding="utf-8", newline="\n") as fh:
                 fh.write("".join(lines))
+
+
+def _month_is_archived(base: Path, month: str) -> bool:
+    """True when `<stem>_<month>.jsonl` beside `base` has an archive manifest.
+    A failure to ask is "not archived": telemetry may never take down a call."""
+    try:
+        from backend.services import ledger_archive          # noqa: PLC0415
+        return ledger_archive.is_archived(month_path(base, month))
+    except Exception:                                         # noqa: BLE001
+        return False
 
 
 def record_call(**kwargs: Any) -> None:

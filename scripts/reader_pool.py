@@ -259,7 +259,8 @@ class Pool:
                  reader_sleep: Any = None, front_links_max: int | None = None,
                  read_next_path: Path | None = None, x_handles: list[str] | None = None,
                  keep_window: Any = None, budget: bool | None = None,
-                 target_scan: Any = None, close_target: Any = None) -> None:
+                 target_scan: Any = None, close_target: Any = None,
+                 planner_queue_path: Path | None = None) -> None:
         self.driver, self.thr, self.profile = driver, throttle, profile
         self.names = [n.upper() for n in dict.fromkeys(names)]
         self.universe = set(self.names)
@@ -346,6 +347,13 @@ class Pool:
             RS.read_next_path() if persist else None)
         self.read_next_done: set[str] = read_next_adopted() if persist else set()
         self.read_next_n = len(self.read_next_done)
+        #: 2026-10-06 (C7): the query planner's admitted URLs
+        #: (dowjones/query_planner_queue.jsonl), adopted once each into the
+        #: `query_planner` budget lane, every item carrying its `query_id`
+        self.planner_queue_path = planner_queue_path if planner_queue_path is not None else (
+            DJ / "query_planner_queue.jsonl" if persist else None)
+        self.planner_done: set[str] = (read_next_adopted(DJ / "query_planner_adopted.jsonl")
+                                       if persist else set())
         #: THE READING BUDGET (2026-09-30, `reader_scheduler.budget_verdict`):
         #: lanes with declared shares, an hourly allowance shaped by the
         #: sessions, the rows of every load by lane (`dowjones/budget_lanes.jsonl`)
@@ -489,6 +497,7 @@ class Pool:
                     if last is not None and not RS.front_due(f, last, now):
                         self.early_fronts[host] += 1
             added += self._adopt_read_next(now)
+            added += self._adopt_planner(now)
             self.last_refill = {"t": now.isoformat(timespec="seconds"), "added": added}
             for t in self.ordered_names():
                 for pg in self.stock_pages:
@@ -945,7 +954,8 @@ class Pool:
     def _reached_by(self, it: dict) -> dict:
         return {k: it.get(k) for k in ("lane", "section", "parent_url", "position", "depth",
                                        "ticker", "handle", "link_text", "via", "question",
-                                       "digest_id",
+                                       "digest_id", "query_id", "discovered_via",
+                                       "first_seen_utc",
                                        "theme", "published_visible")
                 if it.get(k) is not None} \
             | {"kind": it["kind"], "via": it.get("via") or "direct"}
@@ -1290,6 +1300,73 @@ class Pool:
                         {"t": now.isoformat(timespec="seconds"), "key": key,
                          "digest_id": row.get("digest_id"), "queued": items}))
                 except Exception:  # noqa: BLE001 -- the items are queued either way
+                    pass
+        return added
+
+    def _adopt_planner(self, now: datetime) -> int:
+        """The query planner's admitted URLs -> pending (called under the lock by
+        `refill`), ranked with the section fronts (tier 0): each is a targeted
+        search result. 2026-10-06 (C7).
+
+        The planner already classified the host; it is checked AGAIN here
+        (`WR.host_ok`), so a URL whose host left the allowlist since -- or any
+        refused address -- is never opened. A social URL is read as a social
+        page; everything else as an article. At most
+        READER_READ_NEXT_PER_REFILL rows per refill, rows older than
+        READER_READ_NEXT_MAX_AGE_H ignored, each adopted once (recorded in
+        `dowjones/query_planner_adopted.jsonl`). The item's lane is
+        `qp:<query_id>`, so the page log attributes every load to its query."""
+        path = self.planner_queue_path
+        if path is None or not Path(path).exists():
+            return 0
+        per = int(getattr(_config, "READER_READ_NEXT_PER_REFILL", 6))
+        max_age_h = float(getattr(_config, "READER_READ_NEXT_MAX_AGE_H", 36.0))
+        added = taken = 0
+        try:
+            lines = Path(path).read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            return 0
+        for ln in lines:
+            if taken >= per:
+                break
+            try:
+                row = json.loads(ln)
+            except ValueError:
+                continue
+            u = str(row.get("url") or "").strip()
+            qid = str(row.get("query_id") or "")
+            if not u or not qid:
+                continue
+            key = f"qp:{qid}:{WR.norm_url(u)}"
+            if key in self.planner_done:
+                continue
+            try:
+                t = datetime.fromisoformat(str(row.get("t")))
+                if (now - t).total_seconds() > max_age_h * 3600:
+                    continue
+            except (TypeError, ValueError):
+                continue
+            taken += 1
+            self.planner_done.add(key)
+            ok = False
+            if WR.host_ok(u) and not self.stored.get(WR.norm_url(u)):
+                social = WR.is_social(u)
+                ok = self._add({"kind": "social" if social else "article",
+                                "site": site_of(u), "host": WR.host_of(u),
+                                "lane": f"qp:{qid}", "section": "query_planner", "url": u,
+                                "tier": RS.TIER_FRONT, "via": "query_planner",
+                                "parent_url": "query_planner", "position": 1, "depth": 0,
+                                "query_id": qid,
+                                "discovered_via": row.get("discovered_via"),
+                                "first_seen_utc": row.get("first_seen_utc"),
+                                "question": row.get("question")})
+            added += int(bool(ok))
+            if self.persist:
+                try:
+                    DG.locked_append_line(DJ / "query_planner_adopted.jsonl", json.dumps(
+                        {"t": now.isoformat(timespec="seconds"), "key": key,
+                         "query_id": qid, "url": u, "queued": bool(ok)}))
+                except Exception:  # noqa: BLE001 -- the item is queued either way
                     pass
         return added
 

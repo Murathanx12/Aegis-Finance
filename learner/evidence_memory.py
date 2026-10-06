@@ -226,6 +226,11 @@ def append(row: dict, *, directory: Path | None = None) -> Path:
     if source != "row_stamp":
         row = dict(row, month_source=source)
     path = d / f"evidence_memory_{month}.jsonl"
+    if month < _now()[:7]:
+        # A CLOSED month with an archive manifest is immutable (its sha256 is
+        # committed in `ledger_manifests/`). Raises ArchivedMonthRefused.
+        from backend.services import ledger_archive          # noqa: PLC0415
+        ledger_archive.refuse_if_archived(path)
     d.mkdir(parents=True, exist_ok=True)
     # `newline` is set EXPLICITLY. Text mode on Windows translates to CRLF,
     # which is why the 65 MB monolith was 102,029 bytes larger than its own

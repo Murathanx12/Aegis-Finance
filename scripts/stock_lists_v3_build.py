@@ -461,6 +461,21 @@ excluded = [r for r in rows_roi if r["why"]]
 rows_roi = [r for r in rows_roi if not r["why"]]
 stats["roi_rows"] = len(rows_roi)
 stats["roi_excluded"] = [(r["t"], round(r["score"] * 100, 1), "; ".join(r["why"])[:80]) for r in excluded]
+# 2026-10-06 (C4): the ranked rows as JSON beside the inputs, so the Opportunity
+# Explorer (`scripts/opportunities_build.py`) reads the ranking instead of
+# re-parsing the rendered Markdown. Written temp -> verify -> replace.
+_roi_out = SCR / "roi_list_v3.json"
+_roi_blob = {"schema": "stock_lists_roi/1", "asof": ASOF, "builder": "scripts/stock_lists_v3_build.py section 3",
+             "formula": "score = clip(U, -B, +B) x K x (0.5 if crowded else 1); U = analyst mean-target upside, "
+                        "B = 2 x sigma63 x sqrt(126), K = card conviction",
+             "ranked": [{"rank": i, "ticker": r["t"], "score": r["score"], "U": r["U"], "B": r["B"], "K": r["k"],
+                         "crowded": r["crowd"], "card": r["verdict"], "n": r["n"]} for i, r in enumerate(rows_roi, 1)],
+             "excluded": [{"ticker": r["t"], "score": r["score"], "U": r["U"], "B": r["B"], "K": r["k"],
+                           "card": r["verdict"], "n": r["n"], "why": " | ".join(r["why"])} for r in excluded]}
+_tmp = _roi_out.with_suffix(".tmp")
+_tmp.write_text(json.dumps(_roi_blob, indent=1, default=str), encoding="utf-8")
+json.loads(_tmp.read_text(encoding="utf-8"))
+_tmp.replace(_roi_out)
 rows = []
 for i, r in enumerate(rows_roi, 1):
     f = r["f"]

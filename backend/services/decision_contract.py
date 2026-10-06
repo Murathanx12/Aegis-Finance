@@ -83,6 +83,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import math
 import os
 import re
 from datetime import date, datetime, timedelta, timezone
@@ -589,35 +590,108 @@ def largest_admissible_book(capital: float | None = None) -> dict:
 # ===========================================================================
 
 
-def pc_paper_equity() -> dict | None:
-    """The PC-PAPER account's last broker-truth equity, from its own NAV rows.
-
-    `pc_book/<YYYY-MM-DD>/nav.jsonl`, newest folder, last row with an
-    `equity`. Read from the rows' own stamps, never a file time. None when no
-    NAV row exists (CI, a fresh checkout). An indirection so a test replaces it.
-    """
-    root = Path(config.OPTIMUS_LEDGER_DIR) / "pc_book"
-    if not root.is_dir():
+def _equity_row_from(path: Path) -> dict | None:
+    """The last row with a positive `equity` in one broker-read file (a
+    `state_latest.json` object or a `nav.jsonl` stream), stamped by its own `t`."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
         return None
-    for d in sorted((p for p in root.iterdir() if p.is_dir()
-                     and len(p.name) == 10 and p.name[4] == "-"), reverse=True):
-        f = d / "nav.jsonl"
-        if not f.is_file():
-            continue
-        try:
-            lines = f.read_text(encoding="utf-8").splitlines()
-        except OSError:
-            continue
-        for ln in reversed(lines):
+    rows: list = []
+    if path.suffix == ".jsonl":
+        for ln in reversed(text.splitlines()):
             try:
-                row = json.loads(ln)
+                rows = [json.loads(ln)]
             except ValueError:
                 continue
-            eq = row.get("equity")
-            if isinstance(eq, (int, float)) and eq > 0:
-                return {"equity_usd": float(eq), "as_of": row.get("t") or row.get("utc")
-                        or d.name, "source": str(f)}
+            if isinstance(rows[0], dict) and isinstance(rows[0].get("equity"), (int, float)) \
+                    and rows[0]["equity"] > 0:
+                break
+            rows = []
+    else:
+        try:
+            rows = [json.loads(text)]
+        except ValueError:
+            return None
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        eq = row.get("equity")
+        stamp = row.get("t") or row.get("utc")
+        if isinstance(eq, (int, float)) and eq > 0 and stamp:
+            return {"row": row, "stamp": str(stamp), "source": str(path)}
     return None
+
+
+def broker_equity_files() -> list[Path]:
+    """Every file `pc_broker.snapshot` writes for PC-PAPER: the default
+    `pc_book/state_latest.json`, the sim's day folders (`pc_book/<date>/`), and
+    the daily pass's read (`paper_accounts/pc_snapshot/`). Newest day folders
+    first; at most five of them are read."""
+    root = Path(config.OPTIMUS_LEDGER_DIR)
+    book = root / "pc_book"
+    out = [book / "state_latest.json",
+           root / "paper_accounts" / "pc_snapshot" / "state_latest.json",
+           root / "paper_accounts" / "pc_snapshot" / "nav.jsonl"]
+    if book.is_dir():
+        days = sorted((p for p in book.iterdir() if p.is_dir() and len(p.name) == 10
+                       and p.name[4] == "-"), reverse=True)[:5]
+        for d in days:
+            out += [d / "state_latest.json", d / "nav.jsonl"]
+    return [p for p in out if p.is_file()]
+
+
+def pc_paper_equity(*, now: datetime | None = None,
+                    files: list[Path] | None = None) -> dict | None:
+    """PC-PAPER's newest broker-truth equity read, from the files
+    `pc_broker.snapshot` wrote (2026-10-06: the contract's capital is derived
+    from THIS, never from a literal).
+
+    The newest read wins BY ITS OWN STAMP (`t`), never by a file time -- a
+    fresh checkout writes every file "today" (CLAUDE.md protocol 7). Returns
+    `{equity_usd, as_of, age_days, source, positions, n_files_read}` or None
+    when no read exists (CI, a fresh checkout). An indirection so a test
+    replaces it.
+    """
+    now = now or datetime.now(timezone.utc)
+    best: dict | None = None
+    best_t: datetime | None = None
+    paths = list(files) if files is not None else broker_equity_files()
+    for p in paths:
+        hit = _equity_row_from(Path(p))
+        if not hit:
+            continue
+        try:
+            t = datetime.fromisoformat(hit["stamp"].replace("Z", "+00:00"))
+            if t.tzinfo is None:
+                t = t.replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+        if best_t is None or t > best_t:
+            best, best_t = hit, t
+    if best is None or best_t is None:
+        return None
+    row = best["row"]
+    try:   # a path relative to the ledger: receipts carry no machine details
+        src = Path(best["source"]).resolve().relative_to(
+            Path(config.OPTIMUS_LEDGER_DIR).resolve()).as_posix()
+    except ValueError:
+        src = Path(best["source"]).name
+    pos = []
+    for p in row.get("positions") or []:
+        if not isinstance(p, dict) or not p.get("symbol"):
+            continue
+        pos.append({"symbol": str(p["symbol"]),
+                    "market_value": p.get("market_value"),
+                    "current_price": p.get("current_price"),
+                    "qty": p.get("qty")})
+    return {"equity_usd": float(row["equity"]),
+            "cash_usd": row.get("cash"),
+            "as_of": best_t.isoformat(timespec="seconds"),
+            "age_days": max(0.0, (now - best_t).total_seconds() / 86400.0),
+            "source": src,
+            "positions": pos,
+            "n_files_read": len(paths)}
 
 
 def per_name_caps() -> dict[str, float]:
@@ -677,45 +751,152 @@ def _exploit_book_size() -> int:
         return int(config.IC_MAX_TILT_NAMES)
 
 
-def account_mandate(capital: float | None, *, equity: Any = "derive") -> dict:
-    """ONE capital base, ONE per-name cap, and the worst case in dollars.
+BROKER_CAP_KEY = "pc_broker.MAX_NAME_FRAC (broker hard limit)"
+#: The stop the owner's earlier books used, quoted in sigma beside the k-sigma
+#: stand-in (memory 2026-09-24: -2% was 0.93 daily sigma on the median name).
+REFERENCE_STOP_PCT = 0.02
 
-    Session protocol item 4 on every receipt: `n x notional% x stop%` and
-    `sum|notional| / equity` for the LARGEST book any path can emit on the
-    account (as configured), beside the book the TIGHTEST caps would allow.
 
-    It is UNRECONCILED -- `status: UNRECONCILED`, a named disagreement each --
-    when the capital bases or the caps disagree, instead of picking one
-    silently. (Written `REFUSED` until 2026-09-28; it never refused anything, so
-    the word was wrong: `mandate_view` reads old receipts that carry it.)
-    That is today's state (the contract sizes on the IPS's $40,000, the account
-    holds ~$1,000,000; per-name caps are 2% / 3% / 10% / 12%), and it stays
-    red until Murat confirms ONE mandate. No limit is changed here.
+def worst_case_table(*, equity: float, ex_n: int, ex_w: float, ex_gross: float,
+                     probe_n: int, probe_w: float, probe_gross: float,
+                     gross: float, k_sigma: float, daily_sigma: float,
+                     limit_frac: float) -> dict:
+    """PURE. Session protocol item 4 for the largest admissible PC-PAPER book.
+
+    `n names x notional% x stop%` and `sum|notional| / equity`, per sleeve and
+    in total, in dollars on `equity`. No stop order is declared anywhere on the
+    PC path, so stop% is the k-sigma session (`k_sigma` daily sigmas of
+    `daily_sigma`), quoted in BOTH percent and sigma, and the no-stop ceiling
+    (the whole gross) is printed beside it. The verdict is REFUSE when the
+    one-day k-sigma loss exceeds `limit_frac` of equity; nothing is widened to
+    make it pass.
     """
+    stop_pct = float(k_sigma) * float(daily_sigma)
+    ex_n_at_cap = int(ex_gross / ex_w + 1e-9) if ex_w > 0 else 0
+
+    def _row(label: str, n: int, w: float, g: float, note: str) -> dict:
+        return {"sleeve": label, "n_names": int(n), "notional_pct": float(w),
+                "gross_over_equity": float(g), "stop_pct": stop_pct,
+                "stop_sigma": float(k_sigma),
+                "worst_case_k_sigma_usd": -g * stop_pct * equity,
+                "worst_case_no_stop_usd": -g * equity,
+                "line": (f"{label}: {n} x {w:.2%} x {stop_pct:.2%} ({k_sigma:g} sigma) "
+                         f"= -${g * stop_pct * equity:,.0f}; sum|notional|/equity "
+                         f"{g:.2f}; no-stop ceiling -${g * equity:,.0f}" + note)}
+
+    rows = [
+        _row("EXPLOIT", ex_n_at_cap, ex_w, ex_gross,
+             f" ({ex_n} ranked names, <= {ex_w:.0%} each, gross <= {ex_gross:.0%})"),
+        _row("PROBE", probe_n, probe_w, probe_gross, ""),
+    ]
+    total_k = gross * stop_pct * equity
+    frac = gross * stop_pct
+    verdict = "PASS" if frac <= float(limit_frac) + 1e-12 else "REFUSE"
+    total = {"sleeve": "TOTAL", "n_names": ex_n_at_cap + probe_n,
+             "gross_over_equity": gross, "stop_pct": stop_pct, "stop_sigma": float(k_sigma),
+             "worst_case_k_sigma_usd": -total_k, "worst_case_no_stop_usd": -gross * equity,
+             "worst_case_k_sigma_frac_of_equity": frac,
+             "line": (f"TOTAL: sum|notional|/equity {gross:.2f} x {stop_pct:.2%} "
+                      f"({k_sigma:g} sigma of {daily_sigma:.2%}/day) = -${total_k:,.0f} "
+                      f"= {frac:.2%} of ${equity:,.0f}; no-stop ceiling "
+                      f"-${gross * equity:,.0f}")}
+    ref_sigma = REFERENCE_STOP_PCT / float(daily_sigma) if daily_sigma else None
+    return {
+        "equity_usd": float(equity),
+        "stop_declared": False,
+        "stop_basis": (f"no stop order is declared on the PC path; the {k_sigma:g}-sigma "
+                       f"session of the median name ({daily_sigma:.2%}/day) stands in: "
+                       f"{stop_pct:.2%} = {k_sigma:g} sigma. For scale, a "
+                       f"-{REFERENCE_STOP_PCT:.0%} stop is "
+                       + (f"{ref_sigma:.2f}" if ref_sigma else "?")
+                       + " sigma (2026-09-24: such stops filled on 89% of trades)"),
+        "rows": rows + [total],
+        "gate": {"limit_frac_of_equity": float(limit_frac),
+                 "worst_case_k_sigma_frac_of_equity": frac,
+                 "verdict": verdict,
+                 # the per-name daily sigma at which this book would hit the
+                 # limit: the reference sigma is the MEDIAN name, and a book of
+                 # small illiquid names can carry more
+                 "daily_sigma_at_limit": (float(limit_frac) / (float(k_sigma) * gross)
+                                          if k_sigma and gross else None),
+                 "line": (f"WORST CASE {verdict}: one-day {k_sigma:g}-sigma loss of the "
+                          f"largest admissible book {frac:.2%} of equity "
+                          f"(-${total_k:,.0f}) vs limit {float(limit_frac):.0%} "
+                          f"(config.PC_WORST_CASE_MAX_FRAC_OF_EQUITY)")},
+    }
+
+
+def account_mandate(capital: float | None, *, equity: Any = "derive",
+                    capital_source: str | None = None,
+                    now: datetime | None = None) -> dict:
+    """ONE capital base -- the broker's equity -- and the worst case in dollars.
+
+    OWNER DECISION 2026-10-06: PC-PAPER is a ~$1,000,000 paper experiment, so
+    the contract is sized on the BROKER's equity read (`pc_paper_equity`),
+    never on a literal; the owner's real capital is reported beside it as a
+    scaled view (`scaled_views`). `capital=None` means "derive it from the
+    broker" -- the normal path.
+
+    UNRECONCILED, with each disagreement named, when:
+      * NO_BROKER_EQUITY_READ -- nothing to derive from (capital falls back to
+        the largest configured level and says so);
+      * BROKER_EQUITY_STALE -- the newest read is older than
+        `PC_MANDATE_EQUITY_MAX_AGE_DAYS` by its own stamp;
+      * CAPITAL_BASES_DISAGREE -- a capital the caller named differs from the
+        broker equity by more than `PC_MANDATE_CAPITAL_TOLERANCE`;
+      * SLEEVE_CAP_ABOVE_BROKER_CAP -- a sleeve's per-name cap is above the
+        broker's hard cap, so the sleeve's own number is not what binds.
+        Sleeve caps that sit UNDER the broker cap are nested, not in conflict
+        (the 2026-09-28 F2 reasoning for gross caps, applied per name);
+      * GROSS_CAPS_DISAGREE -- the largest book any path can emit exceeds the
+        tightest account gross cap;
+      * WORST_CASE_ABOVE_LIMIT -- protocol item 4: the largest admissible
+        book's one-day k-sigma loss is above
+        `PC_WORST_CASE_MAX_FRAC_OF_EQUITY`. Nothing is widened to pass.
+
+    It still gates no order by itself (`MANDATE_GATES_ORDERS`); the scheduled
+    sim owner reads it and starts a TRADING session only when it is OK.
+    """
+    now = now or datetime.now(timezone.utc)
     if equity == "derive":
         try:
             equity = pc_paper_equity()
         except Exception:                                          # noqa: BLE001
             equity = None
-    base = float(capital) if capital is not None else max(
-        float(c) for c in config.IC_CAPITAL_LEVELS)
-    bases = {"contract capital (the rows are sized on it)": base,
-             "max(config.IC_CAPITAL_LEVELS)": max(float(c) for c in config.IC_CAPITAL_LEVELS)}
+    levels = [float(c) for c in config.IC_CAPITAL_LEVELS]
+    eq_usd = float(equity["equity_usd"]) if equity else None
+    eq_age = None
     if equity:
-        bases[f"PC-PAPER broker equity ({equity.get('as_of')})"] = float(equity["equity_usd"])
+        eq_age = equity.get("age_days")
+        if eq_age is None and equity.get("as_of"):
+            try:
+                t = datetime.fromisoformat(str(equity["as_of"]).replace("Z", "+00:00"))
+                t = t if t.tzinfo else t.replace(tzinfo=timezone.utc)
+                eq_age = (now - t).total_seconds() / 86400.0
+            except ValueError:
+                eq_age = None
+    if capital is None:
+        if eq_usd:
+            base, cap_src = eq_usd, "derived: PC-PAPER broker equity read"
+        else:
+            base, cap_src = max(levels), ("NO broker equity read: the largest configured "
+                                          "level (config.IC_CAPITAL_LEVELS), named")
+    else:
+        base, cap_src = float(capital), (capital_source or "named by the caller")
+    bases = {"contract capital (the rows are sized on it)": base}
+    if equity:
+        bases[f"PC-PAPER broker equity ({equity.get('as_of')})"] = eq_usd
     pn = per_name_caps()
     gc = gross_caps()
     tight_name_src, tight_name = min(pn.items(), key=lambda kv: kv[1])
     tight_gross_src, tight_gross = min(gc.items(), key=lambda kv: kv[1])
+    broker_cap = pn.get(BROKER_CAP_KEY)
 
-    # the largest book any path can emit, AS CONFIGURED: EXPLOIT's names at its
-    # own cap (never above the broker's) inside 1 - PROBE gross, plus PROBE's
-    # full cap, all under the broker's invested ceiling.
     probe_w = float(config.PROBE_MAX_WEIGHT)
     probe_gross = float(config.PROBE_GROSS_CAP)
     n_probe = int(config.PROBE_MAX_NAMES)
-    ex_w = min(float(config.ER_EXPLOIT_MAX_WEIGHT), pn.get(
-        "pc_broker.MAX_NAME_FRAC (broker hard limit)", 1.0))
+    ex_w = min(float(config.ER_EXPLOIT_MAX_WEIGHT),
+               broker_cap if broker_cap is not None else 1.0)
     n_ex = _exploit_book_size()
     ex_gross = min(n_ex * ex_w, 1.0 - probe_gross)
     ceiling = gc.get("pc_broker.MAX_INVESTED_FRAC (broker hard limit)", 1.0)
@@ -723,21 +904,25 @@ def account_mandate(capital: float | None, *, equity: Any = "derive") -> dict:
     k = float(config.PROBE_WORST_CASE_SIGMA)
     sig = float(config.PROBE_REF_DAILY_SIGMA)
     stop_pct = k * sig
+    limit = float(config.PC_WORST_CASE_MAX_FRAC_OF_EQUITY)
+    table = worst_case_table(equity=base, ex_n=n_ex, ex_w=ex_w, ex_gross=ex_gross,
+                             probe_n=n_probe, probe_w=probe_w, probe_gross=probe_gross,
+                             gross=gross, k_sigma=k, daily_sigma=sig, limit_frac=limit)
     n_all = n_ex + n_probe
     loosest_w = max(ex_w, probe_w)
     configured = {
         "n_names": n_all, "per_name_pct_max": loosest_w,
         "gross_over_equity": gross, "stop_declared": False,
-        "stop_pct_used": stop_pct,
-        "stop_basis": (f"no stop is declared; the k-sigma session "
-                       f"({k:g} x {sig:.2%}/day) stands in for stop%"),
+        "stop_pct_used": stop_pct, "stop_sigma_used": k,
+        "stop_basis": table["stop_basis"],
         "worst_case_k_sigma_usd": -gross * stop_pct * base,
+        "worst_case_k_sigma_frac_of_equity": gross * stop_pct,
         "worst_case_no_stop_usd": -gross * base,
         "line": (f"as configured: {n_ex} EXPLOIT x {ex_w:.0%} (gross <= {1 - probe_gross:.0%}) "
                  f"+ {n_probe} PROBE x {probe_w:.0%} (<= {probe_gross:.0%}) = "
-                 f"sum|notional|/equity {gross:.2f}; x stop {stop_pct:.2%} = "
-                 f"-${gross * stop_pct * base:,.0f}; no stop, so the ceiling is "
-                 f"-${gross * base:,.0f} on ${base:,.0f}"),
+                 f"sum|notional|/equity {gross:.2f}; x stop {stop_pct:.2%} ({k:g} sigma) = "
+                 f"-${gross * stop_pct * base:,.0f} ({gross * stop_pct:.2%} of equity); "
+                 f"no stop, so the ceiling is -${gross * base:,.0f} on ${base:,.0f}"),
     }
     n_tight = int(tight_gross / tight_name) if tight_name > 0 else 0
     tight = {
@@ -749,50 +934,79 @@ def account_mandate(capital: float | None, *, equity: Any = "derive") -> dict:
                  f"-${tight_gross * stop_pct * base:,.0f}; ceiling "
                  f"-${tight_gross * base:,.0f} on ${base:,.0f}"),
     }
+    tol = float(config.PC_MANDATE_CAPITAL_TOLERANCE)
+    max_age = float(config.PC_MANDATE_EQUITY_MAX_AGE_DAYS)
     refusals: list[str] = []
-    distinct_bases = sorted({round(v, 0) for v in bases.values()})
-    if len(distinct_bases) > 1 and max(distinct_bases) > 1.05 * min(distinct_bases):
-        refusals.append("CAPITAL_BASES_DISAGREE: " + "; ".join(
-            f"{k_} ${v:,.0f}" for k_, v in bases.items()))
-    if len(set(pn.values())) > 1:
-        refusals.append("PER_NAME_CAPS_DISAGREE: " + "; ".join(
-            f"{k_} {v:.0%}" for k_, v in sorted(pn.items(), key=lambda kv: kv[1])))
+    if not equity:
+        refusals.append("NO_BROKER_EQUITY_READ: no pc_broker.snapshot read of PC-PAPER "
+                        "exists, so the capital could not be derived "
+                        f"(fell back to ${base:,.0f}, the largest configured level)")
+    else:
+        if eq_age is None or eq_age > max_age:
+            refusals.append(
+                f"BROKER_EQUITY_STALE: the newest broker read ({equity.get('as_of')}, "
+                f"{equity.get('source')}) is "
+                + (f"{eq_age:.1f} d" if eq_age is not None else "of unknown age")
+                + f" old (limit {max_age:g} d)")
+        gap = abs(base - eq_usd) / eq_usd if eq_usd else float("inf")
+        if gap > tol:
+            refusals.append(
+                f"CAPITAL_BASES_DISAGREE: contract capital ${base:,.0f} ({cap_src}) vs "
+                f"broker equity ${eq_usd:,.0f} -- {gap:.1%} apart, tolerance {tol:.0%}")
+    if broker_cap is None:
+        refusals.append("BROKER_NAME_CAP_UNKNOWN: pc_broker.MAX_NAME_FRAC could not be read, "
+                        "so the sleeve caps cannot be checked against it")
+    else:
+        above = {k_: v for k_, v in pn.items()
+                 if k_ != BROKER_CAP_KEY and v > broker_cap + 1e-12}
+        if above:
+            refusals.append("SLEEVE_CAP_ABOVE_BROKER_CAP: " + "; ".join(
+                f"{k_} {v:.0%} > broker {broker_cap:.0%}" for k_, v in sorted(above.items())))
     if gross > tight_gross + 1e-12:
         refusals.append(f"GROSS_CAPS_DISAGREE: the largest book any path can emit is "
                         f"{gross:.2f}x equity, the tightest gross cap is "
                         f"{tight_gross:.2f} ({tight_gross_src})")
+    if table["gate"]["verdict"] != "PASS":
+        refusals.append("WORST_CASE_ABOVE_LIMIT: " + table["gate"]["line"])
     status = MANDATE_UNRECONCILED if refusals else "OK"
-    big = max(bases.values())
-    configured["on_largest_base_seen"] = {
-        "equity_usd": big, "worst_case_k_sigma_usd": -gross * stop_pct * big,
-        "worst_case_no_stop_usd": -gross * big}
-    line = (f"MANDATE {status}: capital ${base:,.0f}; per-name cap {tight_name:.0%} "
-            f"(tightest: {tight_name_src}); {configured['line']}"
-            + (f" [on the largest base seen, ${big:,.0f}: -${gross * stop_pct * big:,.0f} "
-               f"k-sigma, ceiling -${gross * big:,.0f}]" if big > base * 1.05 else "")
-            + (f" -- {len(refusals)} disagreement(s); gates no order; turns OK when "
-               f"the owner confirms ONE capital base and ONE cap set"
-               if refusals else ""))
+    kinds = ", ".join(r.split(":", 1)[0] for r in refusals)
+    line = (f"MANDATE {status}: capital ${base:,.0f} ({cap_src})"
+            + (f"; broker equity ${eq_usd:,.0f} read {equity.get('as_of')}" if equity
+               else "; broker equity UNREAD")
+            + f"; per-name cap {tight_name:.0%} (tightest: {tight_name_src}); "
+            + f"{configured['line']}; {table['gate']['line']}"
+            + (f" -- {len(refusals)} disagreement(s): {kinds}; gates no order by "
+               f"itself; turns OK when {MANDATE_WHAT_MAKES_IT_GREEN}" if refusals else ""))
     return {
         "status": status,
         "capital_usd": base,
+        "capital_source": cap_src,
         "capital_basis": "the contract's own capital -- every dollar on this file is sized on it",
+        "broker_equity_usd": eq_usd,
+        "broker_equity_as_of": (equity or {}).get("as_of"),
+        "broker_equity_age_days": eq_age,
+        "broker_equity_source": (equity or {}).get("source"),
+        "capital_tolerance": tol,
         "capital_bases_seen": bases,
         "per_name_cap": tight_name, "per_name_cap_source": tight_name_src,
         "per_name_caps_seen": pn,
+        "per_name_caps_note": ("each cap belongs to a sleeve (PROBE, EXPLOIT, committee "
+                               "tilt) nested under the broker's hard per-name cap; they "
+                               "disagree only when a sleeve cap is ABOVE the broker cap"),
         "gross_cap": tight_gross, "gross_cap_source": tight_gross_src,
         "gross_caps_seen": gc,
         "sleeve_caps_seen": sleeve_caps(),
         "largest_admissible_book_as_configured": configured,
         "largest_admissible_book_under_tightest_caps": tight,
+        "worst_case_table": table,
+        "worst_case_gate": table["gate"],
         "disagreements": refusals,
         # legacy key: readers before 2026-09-28 read `refusals`; same list
         "refusals": refusals,
         "line": line,
-        "note": ("surfaces and reconciles the limits; changes none of them. An "
-                 "UNRECONCILED mandate is a finding printed on every contract until one "
-                 "capital base and one cap set are confirmed "
-                 "(docs/RUNBOOK_2026-09-26_SYSTEMS_FIXES.md)."),
+        "note": ("surfaces and reconciles the limits; changes none of them. Capital is "
+                 "the broker's equity (owner decision 2026-10-06); the owner's own "
+                 "capital is the `scaled_views` block, never a second sizing."),
         "gates_orders": MANDATE_GATES_ORDERS,
         "gates_orders_note": MANDATE_GATES_ORDERS_NOTE,
         "what_makes_it_green": MANDATE_WHAT_MAKES_IT_GREEN,
@@ -837,9 +1051,11 @@ MANDATE_GATES_ORDERS_NOTE = (
     "2026-09-28) means: the owner has not confirmed which capital base and "
     "which cap set are THE mandate.")
 MANDATE_WHAT_MAKES_IT_GREEN = (
-    "the owner confirms ONE capital base and ONE per-name/gross cap set for "
-    "PC-PAPER (RUNBOOK_2026-09-26_SYSTEMS_FIXES.md, owner decision 1); the "
-    "config values are then set to agree and this status reads OK")
+    "ONE capital base: the contract's capital is the PC-PAPER broker equity read "
+    "(owner decision 2026-10-06), within config.PC_MANDATE_CAPITAL_TOLERANCE and no "
+    "older than config.PC_MANDATE_EQUITY_MAX_AGE_DAYS; every sleeve per-name cap at "
+    "or under pc_broker.MAX_NAME_FRAC; and the largest admissible book's one-day "
+    "k-sigma loss at or under config.PC_WORST_CASE_MAX_FRAC_OF_EQUITY")
 
 
 def mandate_view(contract_mandate: Any, *, contract_status: str,
@@ -884,6 +1100,168 @@ def mandate_view(contract_mandate: Any, *, contract_status: str,
             "source": ("decision contract (account_mandate), carried verbatim"
                        + ("" if written == status else
                           f"; status word {written!r} from an old receipt read as {status!r}"))}
+
+
+# ===========================================================================
+# THE SCALED VIEW -- the same decisions at the owner's own capital (2026-10-06)
+# ===========================================================================
+#: Never an order source. Printed on every contract (and the sim's plan
+#: receipt) so the $1,000,000 paper book can be read as the owner's $40,000.
+SCALED_VIEW_PLACES_ORDERS = False
+
+
+def scaled_view(positions: list[dict], *, level_usd: float,
+                source_capital_usd: float | None, label: str) -> dict:
+    """PURE. Rescale target weights to `level_usd` in WHOLE shares.
+
+    `positions`: [{ticker|symbol, weight, price}]. Each name gets
+    floor(weight x level / price) shares. A name whose ONE share costs more
+    than its allocation is NOT EXECUTABLE at this level and is listed by name
+    with the arithmetic; a name with no price is CANNOT DETERMINE, never
+    silently executable. The executable weights, the cash the rounding leaves
+    and the tracking gap (sum |target w - executable w|) are printed so the
+    view never reads as the same book when it is not.
+    """
+    level = float(level_usd)
+    rows: list[dict] = []
+    not_exec: list[dict] = []
+    no_price: list[str] = []
+    tgt_gross = 0.0
+    exec_usd = 0.0
+    gap = 0.0
+    for p in positions or []:
+        t = str(p.get("ticker") or p.get("symbol") or "?")
+        try:
+            w = float(p.get("weight") or 0.0)
+        except (TypeError, ValueError):
+            continue
+        if w <= 0:
+            continue
+        tgt_gross += w
+        target = w * level
+        price = p.get("price")
+        if not isinstance(price, (int, float)) or price <= 0:
+            no_price.append(t)
+            gap += w
+            rows.append({"ticker": t, "weight": w, "target_usd": target, "price": None,
+                         "shares": None, "notional_usd": None, "executable": None,
+                         "why": "no price: CANNOT DETERMINE whether one share fits"})
+            continue
+        shares = int(math.floor(target / float(price) + 1e-9))
+        notional = shares * float(price)
+        w_exec = notional / level if level > 0 else 0.0
+        gap += abs(w - w_exec)
+        exec_usd += notional
+        row = {"ticker": t, "weight": w, "target_usd": round(target, 2),
+               "price": float(price), "shares": shares,
+               "notional_usd": round(notional, 2), "weight_executable": w_exec,
+               "executable": shares >= 1}
+        rows.append(row)
+        if shares < 1:
+            not_exec.append({"ticker": t, "weight": w, "target_usd": round(target, 2),
+                             "one_share_usd": float(price),
+                             "why": (f"1 share ${float(price):,.2f} > {w:.2%} x "
+                                     f"${level:,.0f} = ${target:,.2f}")})
+    n = len(rows)
+    n_ok = sum(1 for r in rows if r.get("executable"))
+    line = (f"SCALED VIEW {label} at ${level:,.0f}"
+            + (f" (x{level / float(source_capital_usd):.4f} of ${float(source_capital_usd):,.0f})"
+               if source_capital_usd else "")
+            + f": {n_ok} of {n} names executable in whole shares; target gross "
+            f"{tgt_gross:.2%}, executable {exec_usd / level if level else 0:.2%}; "
+            f"tracking gap {gap:.2%}"
+            + (f"; NOT executable: {', '.join(x['ticker'] for x in not_exec)}"
+               if not_exec else "")
+            + (f"; no price: {', '.join(no_price)}" if no_price else "")
+            + "; places no order")
+    return {"label": label, "level_usd": level,
+            "source_capital_usd": (float(source_capital_usd)
+                                   if source_capital_usd else None),
+            "scale": (level / float(source_capital_usd) if source_capital_usd else None),
+            "n_names": n, "n_executable": n_ok, "n_not_executable": len(not_exec),
+            "not_executable": not_exec, "no_price": no_price,
+            "target_gross_over_level": tgt_gross,
+            "executable_gross_over_level": (exec_usd / level if level else 0.0),
+            "executable_usd": round(exec_usd, 2),
+            "cash_residual_usd": round(level * tgt_gross - exec_usd, 2),
+            "tracking_gap": gap, "rows": rows,
+            "places_orders": SCALED_VIEW_PLACES_ORDERS, "line": line}
+
+
+def scaled_views(positions: list[dict], *, source_capital_usd: float | None,
+                 label: str, levels: Any = None) -> dict:
+    """`scaled_view` at every declared capital level (`config.IC_CAPITAL_LEVELS`)."""
+    lv = [float(x) for x in (levels if levels is not None else config.IC_CAPITAL_LEVELS)]
+    views = {f"{x:.0f}": scaled_view(positions, level_usd=x,
+                                     source_capital_usd=source_capital_usd, label=label)
+             for x in lv}
+    return {"label": label, "source_capital_usd": source_capital_usd, "levels": lv,
+            "views": views, "places_orders": SCALED_VIEW_PLACES_ORDERS,
+            "lines": [v["line"] for v in views.values()]}
+
+
+def _held_positions_as_weights(equity: dict | None) -> list[dict]:
+    """The broker read's held book as {ticker, weight, price} on its own equity."""
+    if not equity or not equity.get("equity_usd"):
+        return []
+    eq = float(equity["equity_usd"])
+    out = []
+    for p in equity.get("positions") or []:
+        mv = p.get("market_value")
+        if not isinstance(mv, (int, float)) or mv <= 0:
+            continue
+        out.append({"ticker": p.get("symbol"), "weight": float(mv) / eq,
+                    "price": p.get("current_price")})
+    return out
+
+
+def _contract_rows_as_weights(rows: list[dict], equity: dict | None) -> list[dict]:
+    """Name-level contract rows that fund a weight, priced from the row or the
+    broker read. Book-level (agency) rows are whole alternative books, not names."""
+    px = {str(p.get("symbol")): p.get("current_price")
+          for p in (equity or {}).get("positions") or []}
+    out = []
+    for r in rows or []:
+        if r.get("instrument_kind") == "book":
+            continue
+        pb = r.get("position_budget") or {}
+        try:
+            w = float(pb.get("weight") or 0.0)
+        except (TypeError, ValueError):
+            continue
+        if w <= 0:
+            continue
+        t = str(r.get("ticker"))
+        out.append({"ticker": t, "weight": w, "price": pb.get("price") or px.get(t)})
+    return out
+
+
+def scaled_views_block(rows: list[dict], *, capital: float | None,
+                       equity: Any = "derive") -> dict:
+    """The contract's `scaled_views`: the PC-PAPER held book and the contract's
+    own funded name rows, each at every declared capital level. Never orders."""
+    if equity == "derive":
+        try:
+            equity = pc_paper_equity()
+        except Exception:                                          # noqa: BLE001
+            equity = None
+    held = _held_positions_as_weights(equity)
+    named = _contract_rows_as_weights(rows, equity)
+    return {
+        "places_orders": SCALED_VIEW_PLACES_ORDERS,
+        "read_me_first": ("the SAME decisions rescaled to each declared capital level in "
+                          "whole shares; a name whose one share exceeds its allocation is "
+                          "listed as NOT executable. Reporting only: nothing is ever "
+                          "ordered from a scaled view."),
+        "pc_paper_held": (scaled_views(held, source_capital_usd=(equity or {}).get("equity_usd"),
+                                       label="PC-PAPER held book")
+                          if held else {"line": "CANNOT DETERMINE: no broker read of the "
+                                                "PC-PAPER held book"}),
+        "contract_rows": (scaled_views(named, source_capital_usd=capital,
+                                       label="contract funded name rows")
+                          if named else {"line": "no name-level row funds a weight today "
+                                                 "(agency rows are whole books)"}),
+    }
 
 
 def candidate_set(state: dict, book: dict | None, *,
@@ -1800,7 +2178,7 @@ def build_daily_contracts(asof: date | str | None = None, *,
 
     options, agency_note = agency_options(day)
     if capital is None:
-        capital, capital_basis = _capital_from(options)
+        capital, capital_basis = _capital_from_broker()
     else:
         capital, capital_basis = float(capital), "named by the caller"
     notes.append(f"capital ${capital:,.0f} — {capital_basis}")
@@ -1848,31 +2226,32 @@ def build_daily_contracts(asof: date | str | None = None, *,
 
     if write:
         write_contracts(rows, asof=day, out_dir=out_dir, notes=notes,
-                        capital=capital, book=book, candidates=cset)
+                        capital=capital, book=book, candidates=cset,
+                        capital_source=capital_basis)
     return rows
 
 
-def _capital_from(options: list) -> tuple[float, str]:
-    """The equity both halves of the contract are sized against.
+def _capital_from_broker() -> tuple[float, str]:
+    """The equity both halves of the contract are sized against: PC-PAPER's
+    BROKER equity read (owner decision 2026-10-06), never a literal.
 
-    The IPS's own `capital_usd` when a policy exists, because that is the
-    number Murat declared and the agency has already sized against it — a
-    committee book quoted at a different capital beside it would put two
-    incomparable dollar columns on one page. With no policy it falls back to
-    the largest CONFIGURED level, and the basis travels onto the receipt so a
-    reader never has to guess which of the two produced the dollars.
+    Until 2026-10-06 this was the IPS's declared `capital_usd` ($40,000, the
+    owner's real capital) while the account held ~$1,000,000, and the mandate
+    printed UNRECONCILED for ten days. The owner's capital is now a SCALED VIEW
+    (`scaled_views`), not a second sizing. With no broker read the largest
+    CONFIGURED level is used, named, and the mandate says NO_BROKER_EQUITY_READ.
     """
-    for opt in options or []:
-        try:
-            notional = float(opt.as_row().get("notional_usd") or 0.0)
-        except Exception:                                          # noqa: BLE001
-            continue
-        if notional > 0:
-            return notional, ("the declared IPS capital (agency "
-                              "Strategy.sizing.notional_usd)")
+    try:
+        eq = pc_paper_equity()
+    except Exception:                                              # noqa: BLE001
+        eq = None
+    if eq and eq.get("equity_usd"):
+        return float(eq["equity_usd"]), (
+            f"derived: PC-PAPER broker equity read {eq.get('as_of')} "
+            f"({Path(str(eq.get('source'))).name})")
     levels = [float(c) for c in config.IC_CAPITAL_LEVELS]
-    return max(levels), ("no IPS document exists, so the largest CONFIGURED "
-                         "level (config.IC_CAPITAL_LEVELS) is used and named")
+    return max(levels), ("NO broker equity read: the largest CONFIGURED level "
+                         "(config.IC_CAPITAL_LEVELS) is used and named")
 
 
 # ===========================================================================
@@ -2156,7 +2535,8 @@ def _as_date(asof: date | str | None) -> date:
 
 def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
             capital: float | None = None, book: dict | None = None,
-            candidates: dict | None = None) -> dict:
+            candidates: dict | None = None,
+            capital_source: str | None = None) -> dict:
     counts = {d: sum(1 for r in rows if r.get("direction") == d)
               for d in DIRECTIONS}
     by_class: dict[str, int] = {}
@@ -2189,10 +2569,20 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
         for k in ("candidates_source", "n_candidates", "candidates_generated_at"):
             roi_block["roi_ranking"][k] = cset.get(k)
     try:
-        mandate = account_mandate(capital)
+        equity_read = pc_paper_equity()
+    except Exception:                                              # noqa: BLE001
+        equity_read = None
+    try:
+        mandate = account_mandate(capital, equity=equity_read,
+                                  capital_source=capital_source)
     except Exception as exc:                                       # noqa: BLE001
         mandate = {"status": "CANNOT DETERMINE",
                    "line": f"MANDATE CANNOT DETERMINE: {type(exc).__name__}: {exc}"}
+    try:
+        scaled = scaled_views_block(rows, capital=capital, equity=equity_read)
+    except Exception as exc:                                       # noqa: BLE001
+        scaled = {"places_orders": False,
+                  "line": f"SCALED VIEW CANNOT DETERMINE: {type(exc).__name__}: {exc}"}
     return {
         "receipt": "decision_contract",
         "roadmap_item": "chunk 18",
@@ -2207,6 +2597,18 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
         "unclassified_owing_a_pattern": sum(
             n for b, n in unclassified_basis.items() if b.startswith("NO PATTERN MATCHED")),
         "capital_usd": capital,
+        "capital_reconciliation": {
+            "capital_usd": capital,
+            "capital_source": mandate.get("capital_source", capital_source),
+            "broker_equity_usd": mandate.get("broker_equity_usd"),
+            "broker_equity_as_of": mandate.get("broker_equity_as_of"),
+            "broker_equity_source": mandate.get("broker_equity_source"),
+            "tolerance": mandate.get("capital_tolerance"),
+            "status": mandate.get("status"),
+            "disagreements": mandate.get("disagreements") or [],
+            "worst_case_gate": mandate.get("worst_case_gate"),
+        },
+        "scaled_views": scaled,
         "directions_not_produced_today": sorted(d for d in DIRECTIONS
                                                 if d not in produced),
         "mandate": mandate,
@@ -2480,13 +2882,15 @@ def _authority_payload_block(rows: list[dict], book: dict | None) -> dict:
 
 def write_contracts(rows: list[dict], *, asof: date, out_dir: Path | None = None,
                     notes: list[str] | None = None, capital: float | None = None,
-                    book: dict | None = None, candidates: dict | None = None) -> Path:
+                    book: dict | None = None, candidates: dict | None = None,
+                    capital_source: str | None = None) -> Path:
     """Atomic write. A half-written receipt is worse than none: a reader cannot
     tell a truncated file from a day on which the engine found two names."""
     path = contracts_path(asof, out_dir)
     path.parent.mkdir(parents=True, exist_ok=True)
     blob = json.dumps(payload(rows, asof=asof, notes=notes, capital=capital,
-                              book=book, candidates=candidates),
+                              book=book, candidates=candidates,
+                              capital_source=capital_source),
                       ensure_ascii=False, indent=1)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(blob, encoding="utf-8")

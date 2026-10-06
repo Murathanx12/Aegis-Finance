@@ -255,19 +255,93 @@ def verdict(rec: dict, decidable: bool) -> tuple[str, list]:
     return "CANNOT_DISTINGUISH", fails
 
 
-def part_board(dec_id: str, flat_run: str, cs_run: str, turnover_run: str) -> int:
+#: where the fair-twin board (`scripts/hyp_twin_board.py`) writes its per-rule series
+FAIR_DIR = OUT.parent / "hyp_lab"
+
+DECISION_LINE_AMENDMENT_2026_10_06 = (
+    "AMENDED 2026-10-06 (CHUNK C1), after the 2026-09-30 decomposition showed the declared variant's twin was "
+    "charged the full Corwin-Schultz round trip every month while the rule paid its own turnover (106 of 161 "
+    "rules beat their twin at t >= 2; 18 on gross selection). The line is unchanged EXCEPT the twin: it is now "
+    "turnover-scaled with the SAME function as the rule (`matched_twins.turnover_scaled_net`) on its OWN measured "
+    "turnover (the matched twin basket held as a portfolio, from the fair-twin board run), per "
+    "`matched_twins.TWIN_COST_CONVENTION`. The old full-CS twin is printed in "
+    "`matched_twins.UPPER_BOUND_COLUMN` and decides nothing. Changed after looking: every verdict this board "
+    "issues is a re-issue, never a new claim.")
+
+
+def board_columns(fl: pd.DataFrame, cs: pd.DataFrame, rule_tov: float, twin_tov: float) -> pd.DataFrame:
+    """The four `MT.FOUR_COLUMNS` for one bridges rule from its flat and full-CS library series.
+
+    * pure selection = flat rule net - flat twin21 net: in the flat run the twin is charged the
+      RULE's own cost (`calendar_offsets.twin21`), so the cost cancels and this is gross - gross;
+    * fair twin = both legs turnover-scaled by `MT.turnover_scaled_net`, each on its OWN turnover;
+    * net minus market = the turnover-scaled rule net - the costless market;
+    * UPPER BOUND = the turnover-scaled rule net - the full-CS twin (the 09-29 declared variant)."""
+    from backend.services import matched_twins as MT                 # noqa: PLC0415
+    common = fl.index.intersection(cs.index)
+    fl, cs = fl.reindex(common), cs.reindex(common)
+    rn = MT.turnover_scaled_net(fl["rule_net"], cs["rule_net"], rule_tov)
+    tn = MT.turnover_scaled_net(fl["twin21_net"], cs["twin21_net"], twin_tov)
+    return pd.DataFrame({MT.FOUR_COLUMNS[0]: fl["rule_net"] - fl["twin21_net"],
+                         MT.FOUR_COLUMNS[1]: rn - tn,
+                         MT.FOUR_COLUMNS[2]: rn - fl["market"],
+                         MT.FOUR_COLUMNS[3]: rn - full_cs_twin_upper_bound(cs)})
+
+
+def full_cs_twin_upper_bound(cs: pd.DataFrame) -> pd.Series:
+    """The 09-29 declared twin (charged the full CS round trip every month). UPPER BOUND only."""
+    return cs["twin21_net"]
+
+
+def _variant_stats(dt: pd.Series, dm: pd.Series, n_total: int) -> dict:
     from backend.services import calendar_offsets as CO              # noqa: PLC0415
     from backend.services import crsp_rebuild as CR                  # noqa: PLC0415
-    from backend.services import strategy_library as SL              # noqa: PLC0415
     from learner.inference import deflated_sharpe                    # noqa: PLC0415
+    dt, dm = dt.dropna(), dm.dropna()
+    hold = pd.DatetimeIndex(dt.index) + pd.offsets.BDay(1)
+    dv = dt[hold <= pd.Timestamp("2016-12-31")]
+    ds = deflated_sharpe(dv.tolist(), n_trials=n_total) if len(dv) > 8 else {}
+    hm = pd.DatetimeIndex(dm.index) + pd.offsets.BDay(1)
+    dmv = dm[(hm >= pd.Timestamp("2009-01-01")) & (hm <= pd.Timestamp("2016-12-31"))]
+    byy = CO.by_hold_year(dmv) if len(dmv) else {}
+    return {"vs_twin": {k: CR.window_stats(dt, *w) for k, w in SPLITS.items()},
+            "vs_market": {k: CR.window_stats(dm, *w) for k, w in SPLITS.items()},
+            "dsr": ds.get("dsr"), "dsr_z": ds.get("z"),
+            "validate_years_positive_vs_market": int(sum(1 for v in byy.values() if v["sum"] > 0)),
+            "validate_years": int(len(byy)),
+            "by_hold_year_vs_twin": {y: round(v["sum"], 4) for y, v in CO.by_hold_year(dt).items()},
+            "by_hold_year_vs_market": {y: round(v["sum"], 4) for y, v in CO.by_hold_year(dm).items()},
+            "loo_worst_vs_twin": {k: v for k, v in CO.loo_worst(dt).items() if k != "all"},
+            "loo_worst_vs_market": {k: v for k, v in CO.loo_worst(dm).items() if k != "all"},
+            "first_month": str(dt.index.min().date()) if len(dt) else None}
+
+
+def part_board(dec_id: str, flat_run: str, cs_run: str, turnover_run: str, fair_run: Optional[str] = None,
+               board_id: Optional[str] = None) -> int:
+    """The bridges board under the fair-twin convention. REFUSES without `fair_run`: the twin's
+    own turnover is measured there, and a missing turnover is never defaulted to 1.0."""
+    from backend.services import crsp_rebuild as CR                  # noqa: PLC0415
+    from backend.services import matched_twins as MT                 # noqa: PLC0415
+    from backend.services import strategy_library as SL              # noqa: PLC0415
     from scripts.night_checkpoint import atomic_write_json           # noqa: PLC0415
+    if not fair_run:
+        say("REFUSED: --fair-run is required (the twin's own turnover comes from the fair-twin board run)")
+        return 2
     d = _declaration(dec_id)
-    bid = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
-    bj = OUT / f"bridges_board_{flat_run}__{bid}.json"
+    bid = board_id or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
+    bj = OUT / f"bridges_board_{flat_run}__{fair_run}__{bid}.json"
+    if bj.exists():
+        say(f"REFUSED: {bj.name} exists")
+        return 2
     to = json.loads((OUT / f"bridges_turnover_{turnover_run}.json").read_text(encoding="utf-8"))["profiles"]
+    fair_rows = {}
+    for ln in (FAIR_DIR / f"twin_board_{fair_run}.jsonl").read_text(encoding="utf-8").splitlines():
+        if ln.strip():
+            r = json.loads(ln)
+            fair_rows[r["rule"]] = r
     req = {r.id: list(r.requires) for r in SL.rules()}
     fam = {r.id: r.family for r in SL.rules()}
-    series = {}
+    series, refused = {}, {}
     for rule in d["rules_runnable"]:
         a = OUT / f"library_series_{flat_run}" / f"{rule}.parquet"
         b = OUT / f"library_series_{cs_run}" / f"{rule}.parquet"
@@ -279,59 +353,54 @@ def part_board(dec_id: str, flat_run: str, cs_run: str, turnover_run: str) -> in
     rows = []
     for rule, (fl, cs) in series.items():
         tov = (to.get(rule) or {}).get("turnover_per_month")
-        tov = float(tov) if tov is not None else 1.0
-        common = fl.index.intersection(cs.index)
-        fl, cs = fl.reindex(common), cs.reindex(common)
-        rn_ts = fl["rule_net"] - tov * (fl["rule_net"] - cs["rule_net"])
-        variants = {"flat": (fl["rule_net"], fl["twin21_net"], fl["market"]),
-                    "cs_full": (cs["rule_net"], cs["twin21_net"], cs["market"]),
-                    "cs_turnover_scaled": (rn_ts, cs["twin21_net"], fl["market"])}
+        fr = fair_rows.get(rule) or {}
+        if tov is None or fr.get("status") != "OK" or fr.get("twin_turnover") is None:
+            refused[rule] = ("no measured turnover for the rule" if tov is None else
+                             f"fair-twin board row not OK: {fr.get('status', 'absent')}")
+            continue
+        tov, twin_tov = float(tov), float(fr["twin_turnover"])
+        C = board_columns(fl, cs, tov, twin_tov)
         srcs = _src_of(req.get(rule, []))
         latest_start = max([pd.Timestamp(starts[s]) for s in srcs] + [pd.Timestamp("1991-01-01")])
         decidable = latest_start <= pd.Timestamp("2006-12-31") and not (set(srcs) & set(DESCRIPTION_ONLY))
         rec = {"rule": rule, "family": fam.get(rule), "requires": req.get(rule), "sources_new": srcs,
-               "turnover_per_month": tov,
+               "cost_convention": MT.TWIN_COST_CONVENTION,
+               "turnover_per_month": tov, "twin_turnover_per_month_measured": twin_tov,
                "median_pick_adv_musd_by_decade": (to.get(rule) or {}).get("median_pick_adv_musd_by_decade")}
-        for tag, (rn, tn, mk) in variants.items():
-            dt, dm = (rn - tn).dropna(), (rn - mk).dropna()
-            hold = pd.DatetimeIndex(dt.index) + pd.offsets.BDay(1)
-            dv = dt[hold <= pd.Timestamp("2016-12-31")]
-            ds = deflated_sharpe(dv.tolist(), n_trials=n_total) if len(dv) > 8 else {}
-            hm = pd.DatetimeIndex(dm.index) + pd.offsets.BDay(1)
-            dmv = dm[(hm >= pd.Timestamp("2009-01-01")) & (hm <= pd.Timestamp("2016-12-31"))]
-            byy = CO.by_hold_year(dmv) if len(dmv) else {}
-            rec[tag] = {"vs_twin": {k: CR.window_stats(dt, *w) for k, w in SPLITS.items()},
-                        "vs_market": {k: CR.window_stats(dm, *w) for k, w in SPLITS.items()},
-                        "dsr": ds.get("dsr"), "dsr_z": ds.get("z"),
-                        "validate_years_positive_vs_market": int(sum(1 for v in byy.values() if v["sum"] > 0)),
-                        "validate_years": int(len(byy)),
-                        "by_hold_year_vs_twin": {y: round(v["sum"], 4) for y, v in CO.by_hold_year(dt).items()},
-                        "by_hold_year_vs_market": {y: round(v["sum"], 4) for y, v in CO.by_hold_year(dm).items()},
-                        "loo_worst_vs_twin": {k: v for k, v in CO.loo_worst(dt).items() if k != "all"},
-                        "sd_monthly_gap_vs_twin": float(dt.std()) if len(dt) > 2 else None,
-                        "sd_monthly_gap_vs_market": float(dm.std()) if len(dm) > 2 else None,
-                        "first_month": str(dt.index.min().date()) if len(dt) else None}
-        v, fails = verdict(rec["cs_turnover_scaled"], decidable)
+        # the four columns side by side, every window (t on 3-month blocks, MDE beside)
+        rec["four_columns"] = {c: {k: CR.window_stats(C[c].dropna(), *w) for k, w in SPLITS.items()}
+                               for c in MT.FOUR_COLUMNS}
+        # the declared line, read on the FAIR twin; the old variant read once more as the upper bound
+        rec["fair"] = _variant_stats(C[MT.FOUR_COLUMNS[1]], C[MT.FOUR_COLUMNS[2]], n_total)
+        rec["upper_bound_old_declared_variant"] = _variant_stats(C[MT.FOUR_COLUMNS[3]], C[MT.FOUR_COLUMNS[2]], n_total)
+        v, fails = verdict(rec["fair"], decidable)
         rec["verdict"], rec["fails"] = v, fails
-        ts = rec["cs_turnover_scaled"]
+        rec["verdict_old_upper_bound_twin"] = verdict(rec["upper_bound_old_declared_variant"], decidable)[0]
+        ts = rec["fair"]
         rec["registration_candidate"] = bool(
             v == "SURVIVES" and (ts["vs_market"]["validate"].get("t_blocks") or 0) >= 2
             and ts["validate_years_positive_vs_market"] >= 5)
         rows.append(rec)
-    rows.sort(key=lambda r: -((r["cs_turnover_scaled"]["vs_twin"]["design_validate"].get("t_blocks")) or -9))
+    rows.sort(key=lambda r: -((r["fair"]["vs_twin"]["design_validate"].get("t_blocks")) or -9))
     counts = pd.Series([r["verdict"] for r in rows]).value_counts().to_dict() if rows else {}
     fail_counts: dict = {}
     for r in rows:
         for f in r["fails"]:
             fail_counts[f] = fail_counts.get(f, 0) + 1
-    doc = {"schema": "crsp_rebuild/bridges_board/1", "job": JOB, "board_id": bid, "declaration": dec_id,
+    status = "OK" if not refused and rows else (f"REFUSED: no rule scored" if not rows else
+                                                 f"PARTIAL: {len(refused)} rules refused (named in `refused`)")
+    doc = {"schema": "crsp_rebuild/bridges_board/2", "job": JOB, "board_id": bid, "declaration": dec_id,
            "declaration_sha16": d["sha16"], "flat_run": flat_run, "cs_run": cs_run, "turnover_run": turnover_run,
+           "fair_run": fair_run, "status": status, "refused": refused,
            "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0, "written_utc": _now(),
-           "decision_line": DECISION_LINE,
+           "decision_line": DECISION_LINE, "decision_line_amendment": DECISION_LINE_AMENDMENT_2026_10_06,
+           "cost_convention": MT.TWIN_COST_CONVENTION, "four_columns": list(MT.FOUR_COLUMNS),
+           "upper_bound_column_never_in_verdicts": MT.UPPER_BOUND_COLUMN,
            "deflation_count": {"prior": PRIOR_SEARCH, "cells_this_run": n_cells, "n_trials_used": n_total},
            "n_rules": len(rows), "verdict_counts": counts, "fail_counts": fail_counts,
            "n_registration_candidates": sum(1 for r in rows if r["registration_candidate"]),
            "rows": rows}
     atomic_write_json(bj, doc, indent=1)
-    say(f"-> {bj.name}: {len(rows)} rules {counts}; candidates {doc['n_registration_candidates']}; n {n_total}")
-    return 0
+    say(f"-> {bj.name}: {len(rows)} rules {counts}; candidates {doc['n_registration_candidates']}; n {n_total}; "
+        f"{status}")
+    return 0 if rows else 2

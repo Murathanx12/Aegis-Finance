@@ -1,0 +1,78 @@
+{
+ "schema_version": "ledger_manifest/1",
+ "ledger": "llm_calls",
+ "month": "2026-09",
+ "archived": true,
+ "archived_at_utc": "2026-10-06T16:23:07+00:00",
+ "dated_by": "each row's own stamp and the run clock; never a file mtime",
+ "jsonl": {
+  "path": "backend/data/optimus/llm_calls_2026-09.jsonl",
+  "bytes": 177881771,
+  "sha256": "d799576a052f0fed4770b3c22cd98da89a46a02ce599b1c8624a77e32e6f9899",
+  "rows": 287041,
+  "rows_unparseable": 5,
+  "trailing_newline": true,
+  "git_status": "ignored",
+  "deleted": false
+ },
+ "parquet": {
+  "path": "backend/data/optimus/ledger_archive/llm_calls_2026-09.parquet",
+  "rows": 287041,
+  "schema": [
+   {
+    "name": "line_no",
+    "type": "int64"
+   },
+   {
+    "name": "stamp",
+    "type": "string"
+   },
+   {
+    "name": "line",
+    "type": "binary"
+   }
+  ],
+  "compression": "zstd",
+  "layout": "one row per jsonl line, verbatim bytes; b'\\n'.join(line) (+ trailing newline) == the jsonl",
+  "bytes": 13183048,
+  "sha256": "a45f9f38178029dbf08164c90f68444c5de5340bb8dc5dd7057b08a4cc78e965"
+ },
+ "row_schema": {
+  "stamp_field": "ts",
+  "top_level_keys": {
+   "call_id": 287036,
+   "ts": 287036,
+   "provider": 287036,
+   "model": 287036,
+   "purpose": 287036,
+   "model_version": 287036,
+   "agent": 287036,
+   "prompt_hash": 287036,
+   "context_hash": 287036,
+   "tokens_in": 287036,
+   "tokens_out": 287036,
+   "cached_tokens": 287036,
+   "latency_ms": 287036,
+   "cost_usd": 287036,
+   "cost_is_estimate": 287036,
+   "pricing_as_of": 287036,
+   "schema_valid": 287036,
+   "retries": 287036,
+   "error": 287036,
+   "prediction_ids": 287036,
+   "hypothesis_ids": 287036,
+   "meta": 287036,
+   "row_type": 287036,
+   "schema_version": 287036
+  }
+ },
+ "first_ts": "2026-09-03T06:29:48.221861+00:00",
+ "last_ts": "2026-09-30T22:32:13.781801+00:00",
+ "min_ts": "2026-09-03T06:29:48.221861+00:00",
+ "max_ts": "2026-09-30T22:32:13.781801+00:00",
+ "rows_stamped_outside_month": 0,
+ "command": "python -m backend.services.ledger_archive --ledger backend/data/optimus/llm_calls_2026-09.jsonl --apply",
+ "writers_refuse_appends": true,
+ "note": "The jsonl is kept. Deleting it is the owner's decision; the parquet reproduces it byte for byte (verified at archive time).",
+ "round_trip_verified": true
+}

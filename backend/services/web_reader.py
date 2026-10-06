@@ -340,6 +340,73 @@ def select_links(snapshot_text: str, link_pattern: str, *, text_pattern: str | N
     return out
 
 
+#: 2026-10-06 (C7, audit 2026-10-06 §D.3): the ONLY texts a consent-dismiss may
+#: click, whole phrase, case-insensitive. Never a substring: "accept" alone is
+#: not on the list, so "Accept offer" / "Accept and subscribe" can never match.
+CONSENT_PHRASES: frozenset[str] = frozenset({
+    "accept all", "accept all cookies", "accept cookies", "i agree", "agree",
+    "agree and continue", "got it", "dismiss", "close", "ok", "i accept",
+    "allow all", "allow all cookies", "continue without accepting", "reject all"})
+#: roles a consent control may have (it IS a button; nothing that takes input)
+CONSENT_ROLES: frozenset[str] = frozenset({"button", "link"})
+#: anything near these words on the SAME control is never clicked
+CONSENT_DENY = re.compile(r"sign|log\s*in|subscri|email|e-mail|password|account|pay|buy|"
+                          r"trial|offer|newsletter|register|marketing|personali[sz]", re.I)
+
+
+def consent_dismiss_ref(snapshot_text: str, *, clicks_this_page: int = 0) -> dict:
+    """PURE. The one consent-banner control that may be clicked on THIS page's
+    snapshot, or why not. `{"ref": str | None, "text": ..., "reason": ...}`.
+
+    The rule (all must hold), from the 2026-10-06 audit §D.3:
+    (a) the ref comes from a snapshot of the CURRENT page -- the caller passes
+        the snapshot it just took, never one from a navigation made to find it;
+    (b) the control's accessible text is EXACTLY one of `CONSENT_PHRASES`
+        (whole phrase), its role is a button or link, and no `CONSENT_DENY`
+        word is on it;
+    (c) a link control must not leave the page (no URL, or a same-page `#`);
+    (d) at most ONE consent click per page load: a second banner after the
+        first click is suspicious, and the answer is STOP, not click again.
+    It never types, never focuses an input, never touches a checkbox or toggle
+    (those roles are not in `CONSENT_ROLES`). Exactly one candidate is
+    required: two different matching controls is ambiguity, and ambiguity is
+    a refusal. NOT WIRED to a live click: `READER_CONSENT_DISMISS_ENABLED`
+    is absent/False and the click guard in `openclaw_client` still refuses any
+    button; turning it on is the owner's decision (standing rule 3 lists the
+    read-only verbs and a button click is not one of them today)."""
+    if clicks_this_page >= 1:
+        return {"ref": None, "text": None, "reason": "STOP: a consent click already happened "
+                                                     "on this page load"}
+    snap = parse_snapshot(snapshot_text or "")
+    hits = []
+    for n in snap.get("nodes") or []:
+        role = str(n.get("role") or "").lower()
+        name = " ".join(str(n.get("name") or "").split()).strip()
+        if role not in CONSENT_ROLES or not n.get("ref"):
+            continue
+        if name.lower().rstrip(".!") not in CONSENT_PHRASES or CONSENT_DENY.search(name):
+            continue
+        url = str(n.get("url") or "")
+        if role == "link" and url and not url.startswith("#"):
+            continue
+        hits.append({"ref": n["ref"], "text": name, "role": role})
+    if not hits:
+        return {"ref": None, "text": None, "reason": "no consent control on this snapshot"}
+    if len({h["text"].lower() for h in hits}) > 1:
+        # several different phrases: prefer a pure dismissal over an accept
+        for pref in ("reject all", "continue without accepting", "dismiss", "close", "got it"):
+            pick = [h for h in hits if h["text"].lower() == pref]
+            if len(pick) == 1:
+                return {**pick[0], "reason": f"one '{pref}' control among {len(hits)} consent "
+                                             f"controls"}
+        return {"ref": None, "text": None,
+                "reason": f"AMBIGUOUS: {len(hits)} different consent controls; not clicking"}
+    if len(hits) > 1:
+        return {"ref": None, "text": None,
+                "reason": f"AMBIGUOUS: {len(hits)} controls named {hits[0]['text']!r}"}
+    return {**hits[0], "reason": "exactly one allowlisted consent control"}
+
+
 def ref_is_clickable(snapshot_text: str, ref: str) -> bool:
     """A ref may be clicked only if the snapshot shows it as a LINK whose text
     is not an account/money action."""

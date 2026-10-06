@@ -47,9 +47,18 @@ def block_stats(by_date: pd.Series, cal: pd.DatetimeIndex, h: int) -> dict:
     n_strict = int(pd.Series(pos // (2 * max(h, 21))).nunique())
     se = float(bm.std(ddof=1) / math.sqrt(len(bm))) if len(bm) > 1 else float("nan")
     mean = float(s.mean())
+    # 2026-10-07 (review C5 F7): a STRICT view on non-overlapping blocks -- every other
+    # max(h,21)-session block, so no two kept blocks share a label window
+    bs = bm[(bm.index.to_numpy() % 2) == 0]
+    se_s = float(bs.std(ddof=1) / math.sqrt(len(bs))) if len(bs) > 1 else float("nan")
+    mean_s = float(bs.mean()) if len(bs) else float("nan")
     return {"mean": round(mean, 5), "se": round(se, 5) if np.isfinite(se) else None,
             "t": round(mean / se, 2) if np.isfinite(se) and se > 0 else None,
-            "n_dates": int(len(s)), "n_blocks": int(len(bm)), "n_blocks_strict": n_strict}
+            "n_dates": int(len(s)), "n_blocks": int(len(bm)), "n_blocks_strict": n_strict,
+            "mean_strict": round(mean_s, 5) if np.isfinite(mean_s) else None,
+            "se_strict": round(se_s, 5) if np.isfinite(se_s) else None,
+            "t_strict": round(mean_s / se_s, 2) if np.isfinite(se_s) and se_s > 0 else None,
+            "n_blocks_nonoverlapping": int(len(bs))}
 
 
 def hold_end(dates, cal: pd.DatetimeIndex, h: int) -> pd.DatetimeIndex:

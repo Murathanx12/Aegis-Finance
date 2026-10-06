@@ -72,6 +72,7 @@ from backend.services import llm_telemetry as TEL            # noqa: E402
 # ONE guard, two families: the sealed-month check is the evidence memory's, with
 # a different prefix. A second copy would be a second place for the rule to rot.
 from scripts.evidence_memory_rotate import (RotationRefused,  # noqa: E402
+                                            _refuse_if_archived,
                                             untracked_closed_months as _untracked)
 
 #: the family name, which is also the file stem
@@ -258,6 +259,7 @@ def rotate(directory: Path | None = None, *, apply: bool = True,
                     f"appends). Refusing to overwrite: two disagreeing copies "
                     f"of one month is worse than one large file.")
         elif apply:
+            _refuse_if_archived(target)
             _write_atomic(target, data)
             rec["action"] = "written"
         else:

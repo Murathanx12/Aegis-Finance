@@ -24,6 +24,8 @@ pins is the **shape** the probe found the hard way:
 | `reddit_algotrading.atom` | Reddit's `.rss` is **Atom**, not RSS 2.0 |
 | `alpaca_news.json` | the `news[]` + `next_page_token` envelope, `created_at`, `symbols[]` — reconstructed from the documented schema, since no key resolved in this environment to probe it |
 | `yfinance_ticker_news.json` | the nested `{id, content:{title, summary, pubDate, canonicalUrl, provider}}` shape |
+| `wsj_markets_retired_url_2026-10-06.xml` | the RETIRED `feeds.a.dj.com/rss/RSSMarketsMain.xml`, captured by a plain GET on 2026-10-06: 200, well-formed, every item dated 27 Jan 2025 with a `-0500` offset (`test_query_planner.py`: the parse is right, the feed is FROZEN_UPSTREAM). Unlike the rows above this IS a capture of `guid` + `pubDate` + channel stamps; headlines, summaries and links are REDACTED (Dow Jones ToU 9.1) |
+| `wsj_markets_live_url_2026-10-06.xml` | the same feed at its live address `feeds.content.dowjones.io/public/rss/RSSMarketsMain`, same capture and redaction, items dated 6 Oct 2026 in GMT |
 
 The Alpaca fixture is the one with no probe behind it at all — the keys are
 absent here — and its row therefore says so rather than implying a capture.

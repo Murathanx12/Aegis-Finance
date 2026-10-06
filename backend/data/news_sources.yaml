@@ -827,7 +827,9 @@ sources:
     licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
     method: rss
     parser: rss2
-    endpoint_or_feed: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml"
+    # 2026-10-06 (C7): feeds.a.dj.com/rss/RSSMarketsMain.xml still answers 200 but
+    # every item is dated 2025-01-27 (retired; measured ~607 days old).
+    endpoint_or_feed: "https://feeds.content.dowjones.io/public/rss/RSSMarketsMain"
     auth: none
     rate_limit: "feed declares ttl 60; polled at most every 15 min"
     min_interval_s: 2.0
@@ -848,7 +850,9 @@ sources:
     licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
     method: rss
     parser: rss2
-    endpoint_or_feed: "https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml"
+    # 2026-10-06 (C7): feeds.a.dj.com/rss/WSJcomUSBusiness.xml still answers 200 but
+    # every item is dated 2025-01-27 (retired; measured ~607 days old).
+    endpoint_or_feed: "https://feeds.content.dowjones.io/public/rss/WSJcomUSBusiness"
     auth: none
     rate_limit: "feed declares ttl 60; polled at most every 15 min"
     min_interval_s: 2.0
@@ -869,7 +873,9 @@ sources:
     licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
     method: rss
     parser: rss2
-    endpoint_or_feed: "https://feeds.a.dj.com/rss/RSSWorldNews.xml"
+    # 2026-10-06 (C7): feeds.a.dj.com/rss/RSSWorldNews.xml still answers 200 but
+    # every item is dated 2025-01-27 (retired; measured ~607 days old).
+    endpoint_or_feed: "https://feeds.content.dowjones.io/public/rss/RSSWorldNews"
     auth: none
     rate_limit: "feed declares ttl 60; polled at most every 15 min"
     min_interval_s: 2.0
@@ -890,7 +896,9 @@ sources:
     licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
     method: rss
     parser: rss2
-    endpoint_or_feed: "https://feeds.a.dj.com/rss/RSSOpinion.xml"
+    # 2026-10-06 (C7): feeds.a.dj.com/rss/RSSOpinion.xml still answers 200 but
+    # every item is dated 2025-01-27 (retired; measured ~607 days old).
+    endpoint_or_feed: "https://feeds.content.dowjones.io/public/rss/RSSOpinion"
     auth: none
     rate_limit: "feed declares ttl 60; polled at most every 15 min"
     min_interval_s: 2.0
@@ -911,7 +919,9 @@ sources:
     licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
     method: rss
     parser: rss2
-    endpoint_or_feed: "https://feeds.a.dj.com/rss/RSSWSJD.xml"
+    # 2026-10-06 (C7): feeds.a.dj.com/rss/RSSWSJD.xml still answers 200 but
+    # every item is dated 2025-01-27 (retired; measured ~607 days old).
+    endpoint_or_feed: "https://feeds.content.dowjones.io/public/rss/RSSWSJD"
     auth: none
     rate_limit: "feed declares ttl 60; polled at most every 15 min"
     min_interval_s: 2.0

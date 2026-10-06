@@ -19,10 +19,37 @@
  */
 import { setComputing } from "./computing";
 
-export const API_BASE =
-  process.env.NEXT_PUBLIC_AEGIS_DESKTOP_BUILD === "1"
-    ? ""
-    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+/**
+ * 2026-10-06 (C4): the deployed website called `<site>/[SENSITIVE]/api/...` on
+ * EVERY request (16 of 16 on the dashboard, 6 of 6 on /dev, all 404): the Vercel
+ * env var held a redaction PLACEHOLDER instead of a URL, Next inlined it, and
+ * `fetch("[SENSITIVE]/api/x")` resolved as a RELATIVE path on the site's own
+ * origin. Nothing went red at build time and every page rendered its empty
+ * state. So the value is VALIDATED: anything that is not an absolute http(s)
+ * URL is refused, said once in the console, and replaced by the documented
+ * public production API (the same URL README.md lists). The Vercel variable
+ * itself still needs correcting; this keeps the site alive and loud meanwhile.
+ */
+export const PUBLIC_API_FALLBACK = "https://aegis-finance-production.up.railway.app";
+
+export function resolveApiBase(raw: string | undefined, desktop: boolean): string {
+  if (desktop) return "";
+  const v = (raw ?? "").trim().replace(/\/+$/, "");
+  if (/^https?:\/\/[^\s/[\]]+/i.test(v)) return v;
+  if (v === "") return "http://localhost:8000"; // unchanged: an unset variable means local development
+  if (typeof console !== "undefined") {
+    console.error(
+      `[aegis] NEXT_PUBLIC_API_URL is not an absolute http(s) URL (got ${v.length} chars ` +
+        `starting "${v.slice(0, 1)}"); using ${PUBLIC_API_FALLBACK}. Fix the build environment.`,
+    );
+  }
+  return PUBLIC_API_FALLBACK;
+}
+
+export const API_BASE = resolveApiBase(
+  process.env.NEXT_PUBLIC_API_URL,
+  process.env.NEXT_PUBLIC_AEGIS_DESKTOP_BUILD === "1",
+);
 
 // Backend serves stale-while-revalidate, so a healthy response is fast; a
 // request stuck this long means a cold recompute and should fail visibly
@@ -4212,4 +4239,155 @@ export function getJournalKnownAnswer() {
 
 export function getJournalTerminalState() {
   return fetchAPI<JournalMirror>("/api/journal/terminal-state");
+}
+
+// ── Opportunity Explorer (C4, 2026-10-06) ──────────────────────────────────
+// Read-only: the newest stock-list receipt written by scripts/opportunities_build.py.
+// A null field always has its reason in `missing_because[field]`.
+export interface OppLink { [k: string]: string | null }
+export interface OppNews { title: string; url: string; published_utc: string | null; first_seen_utc: string | null; source: string }
+export interface OppCatalyst { date: string; kind: string; detail: string | null; url: string | null; source: string }
+export interface OppInsiderTx {
+  public_utc: string | null; transaction_date: string | null; owner: string | null; role: string | null;
+  side: "BUY" | "SELL"; shares: number | null; value_usd: number | null; rule_10b5_1: boolean | null; url: string | null;
+}
+export interface OppRow {
+  ticker: string;
+  company_name: string | null;
+  company_name_source: string | null;
+  exchange: string | null;
+  exchange_source: string | null;
+  currency: string | null;
+  is_foreign: boolean;
+  is_etf: boolean;
+  list_id: string;
+  weight: number | null;
+  rank: number | null;
+  list_score: number | null;
+  eligibility: string | null;
+  sector: string | null;
+  sector_source: string | null;
+  theme: string | null;
+  price: { value: number; date: string; source: string; currency: string | null } | null;
+  analyst: {
+    low: number | null; median: number | null; high: number | null; mean: number | null;
+    n: number | null; n_source: string | null; observed_utc: string | null; snapshot_price: number | null;
+    source: string; consensus: string | null; mix: Record<string, number> | null;
+  } | null;
+  upside: { low: number | null; median: number | null; high: number | null; basis: string } | null;
+  revision: {
+    net_raises_90d: number | null; n_firms_90d: number | null; median_target_change_90d: number | null;
+    n_events_90d: number | null; asof: string; source: string; pulled: string | null;
+  } | null;
+  move_score: { label: "MAGNITUDE"; expected_abs_move_21s: number; sigma63_daily: number; bars_to: string; explain: string } | null;
+  direction: {
+    label: "UP" | "DOWN" | "NEUTRAL" | "MIXED"; consensus: string | null; consensus_sign: number | null;
+    revision_sign: number | null; single_source: boolean; explain: string;
+  } | null;
+  why_picked: { reason: string; service: string }[];
+  card: { day: string; verdict: string; confidence: string; card_hash: string | null } | null;
+  catalysts: OppCatalyst[];
+  news: OppNews[];
+  insiders: {
+    window_days: number; n_buys: number; n_sells: number; buy_usd: number; sell_usd: number;
+    n_insiders: number; n_10b5_1: number; recent: OppInsiderTx[]; source: string; table_covers_from_utc: string | null;
+  } | null;
+  short_interest: {
+    settlement_date: string | null; short_qty: number | null; change_pct: number | null;
+    days_to_cover: number | null; public_utc: string | null; source: string;
+  } | null;
+  politicians: {
+    window_days: number; n: number; source: string;
+    recent: { member: string | null; tx_type: string | null; trade_date: string | null; disclosure_date: string | null;
+      amount_lo: number | null; amount_hi: number | null; url: string | null }[];
+  } | null;
+  falsifier: string | null;
+  horizon: string | null;
+  evidence: { label: "OBSERVED" | "EARLY_EVIDENCE" | string; sessions: number | null; note: string };
+  lane: "HIGH_RISK_INNOVATION" | "CORE" | "BENCHMARK";
+  risk_flags: string[];
+  last_update_utc: string | null;
+  last_update_age_days: number | null;
+  links: OppLink;
+  missing_because: Record<string, string>;
+}
+export interface OppListMeta {
+  list_id: string;
+  title: string;
+  kind: string;
+  label: string | null;
+  asof: string | null;
+  source: string | null;
+  horizon: string | null;
+  magnitude_ranking: boolean;
+  n_rows?: number;
+  n_high_risk_innovation: number;
+  coverage: Record<string, number>;
+  book_id?: string;
+  benchmark?: string;
+  objective?: string;
+  frozen_utc?: string;
+  cash_weight?: number | null;
+}
+export interface OppList extends OppListMeta { rows: OppRow[] }
+export interface OpportunitiesResponse {
+  schema: string;
+  generated_utc: string;
+  asof: string;
+  run_id: string;
+  licence: string;
+  legend: Record<string, string>;
+  inputs: Record<string, string | null>;
+  receipt_file: string;
+  lists: OppListMeta[];
+  list: OppList | null;
+}
+
+export function getOpportunitiesLatest() {
+  return fetchAPI<OpportunitiesResponse>("/api/opportunities/latest");
+}
+
+export function getOpportunitiesList(listId: string) {
+  return fetchAPI<OpportunitiesResponse>(`/api/opportunities/${encodeURIComponent(listId)}`);
+}
+
+// ── Optimus brain page (C4, 2026-10-06): existing endpoints only ───────────
+/** `/api/health/full` -> `subsystems` (services/system_health.api_block). */
+export interface SubsystemRow {
+  name: string;
+  verdict: "ALIVE" | "STALE" | "DEAD" | "UNKNOWN" | "REFUSED" | "STOPPED_BY_OPERATOR" | string;
+  where: string | null;
+  evidence_utc: string | null;
+  age_s: number | null;
+  detail: string | null;
+}
+export interface SubsystemsBlock {
+  generated_utc: string;
+  source: string;
+  counts: Record<string, number>;
+  rows: SubsystemRow[];
+  error?: string;
+}
+export type HealthFullWithSubsystems = HealthFullResponse & {
+  subsystems?: SubsystemsBlock;
+  degraded_reasons?: string[];
+};
+export function getHealthFullWithSubsystems() {
+  return fetchAPI<HealthFullWithSubsystems>("/api/health/full");
+}
+
+/** `/api/optimus/digest`: what the system decided, graded, collected, marked. 404 = none written yet. */
+export interface OptimusDigest {
+  schema_version?: number | string;
+  population: string;
+  day: string;
+  generated_at: string;
+  sections: Record<string, Record<string, unknown> & { status?: string; reason?: string }>;
+  section_statuses: Record<string, string>;
+  n_ok: number;
+  n_ok_empty: number;
+  unavailable: string[];
+}
+export function getOptimusDigest() {
+  return fetchAPI<OptimusDigest>("/api/optimus/digest");
 }

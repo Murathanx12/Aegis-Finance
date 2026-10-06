@@ -30,6 +30,10 @@ Verdicts
                  (nothing runs) and not DEAD (nothing crashed). Read from the
                  record the process wrote on its way out, never inferred from
                  the STOP file's presence alone.
+* ``REFUSED`` -- nothing runs because the process's OWNER decided not to start
+                 it, and its own fresh receipt names why (2026-10-06: the sim
+                 owner's `sim/owner.jsonl`). Not DEAD (nothing crashed, the
+                 owner fired) and not ALIVE (nothing runs). Exit code 2.
 
 A probe that cannot go red is a broken probe: every probe has a test in
 ``test_system_health.py`` where its evidence is missing or old and the verdict
@@ -56,9 +60,9 @@ from datetime import date, datetime, time as dtime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Literal, Optional, Union
 
-Verdict = Literal["ALIVE", "STALE", "DEAD", "UNKNOWN", "STOPPED_BY_OPERATOR"]
-VERDICT_ORDER = {"DEAD": 0, "STALE": 1, "UNKNOWN": 2, "STOPPED_BY_OPERATOR": 3,
-                 "ALIVE": 4}
+Verdict = Literal["ALIVE", "STALE", "DEAD", "UNKNOWN", "STOPPED_BY_OPERATOR", "REFUSED"]
+VERDICT_ORDER = {"DEAD": 0, "STALE": 1, "REFUSED": 2, "UNKNOWN": 3,
+                 "STOPPED_BY_OPERATOR": 4, "ALIVE": 5}
 
 #: ALIVE tolerates this fraction of the cadence beyond it (a 5-minute
 #: heartbeat written at 5m40s is not a stall).
@@ -594,7 +598,31 @@ def p_lab_loops(ctx: ProbeCtx) -> ProbeOut:
     return out or _unknown("lab_status.json has an empty loops block")
 
 
+def _sim_owner_row(ctx: ProbeCtx) -> tuple[Optional[dict], Optional[float]]:
+    """The sim owner's newest receipt row and its age in seconds (by its stamp)."""
+    row = _last_json_row(ctx.optimus_dir / "sim" / "owner.jsonl")
+    if not isinstance(row, dict):
+        return None, None
+    return row, _age(_ts(row.get("utc")), ctx.now)
+
+
+def _owner_max_age_s() -> float:
+    try:
+        from backend import config as C                             # noqa: PLC0415
+        return float(getattr(C, "SIM_OWNER_RECEIPT_MAX_AGE_MIN", 75)) * 60.0
+    except Exception:                                               # noqa: BLE001
+        return 75 * 60.0
+
+
 def p_sim_session(ctx: ProbeCtx) -> ProbeResult:
+    """The sim session, and -- when none runs in US hours -- its OWNER's word.
+
+    Until 2026-10-06 nothing scheduled a session, so "no sim in US hours" was
+    always DEAD. The owner (`task_keeper sim`, task AegisSimOwner) now writes a
+    row on every firing: a fresh refusal is REFUSED with its reason, the
+    owner's pause is STOPPED_BY_OPERATOR, a start whose session is gone and a
+    silent owner are DEAD.
+    """
     s = _read_json(ctx.optimus_dir / "sim" / "session.json")
     if not isinstance(s, dict):
         last = _last_json_row(ctx.optimus_dir / "sim" / "sessions.jsonl")
@@ -604,22 +632,46 @@ def p_sim_session(ctx: ProbeCtx) -> ProbeResult:
     state = str(s.get("state", "?"))
     hb = _ts(s.get("heartbeat"))
     trading_now = in_session_hours(ctx.now)
+    owner, owner_age = _sim_owner_row(ctx)
     if state in ("RUNNING", "STOPPING"):
         r = _process_verdict(ctx, pid=s.get("pid"), module="sim_run", stamp=hb,
                              cadence=timedelta(minutes=10), what=f"sim {s.get('id')} {state}")
         if r.verdict == "DEAD":
             r.detail += " -- UNCLEAN: no stop receipt was written"
+        r.detail += f" (mode {s.get('mode')})"
+        if owner and owner.get("session") == s.get("id") and owner.get("trade_refused"):
+            r.detail += f"; trading refused by the owner: {owner['trade_refused']}"
         return r
     ended = _ts(s.get("ended")) or hb
+    last = f"last session {s.get('id')} {state}, ended {_fmt_age(_age(ended, ctx.now))} ago"
     if trading_now:
+        fresh = owner is not None and owner_age is not None and owner_age <= _owner_max_age_s()
+        if not fresh:
+            return ProbeResult("DEAD", _iso(ended), _age(ended, ctx.now),
+                               f"US session is open and no sim is running ({last}); the sim "
+                               f"owner (task AegisSimOwner) has "
+                               + ("never written a receipt" if owner is None else
+                                  f"not written a receipt for {_fmt_age(owner_age)}"),
+                               proof=f"sim/session.json state={state}; sim/owner.jsonl")
+        act = str(owner.get("action"))
+        why = str(owner.get("why") or "")
+        stamp = _ts(owner.get("utc"))
+        proof = f"sim/owner.jsonl run {owner.get('run_id')} action={act}"
+        if act in ("paused", "stopped_by_operator"):
+            return ProbeResult("STOPPED_BY_OPERATOR", _iso(stamp), owner_age,
+                               f"no sim in US hours, on purpose: {why} ({last})", proof=proof)
+        if act in ("refused", "outside_window"):
+            return ProbeResult("REFUSED", _iso(stamp), owner_age,
+                               f"no sim in US hours: the owner REFUSED {_fmt_age(owner_age)} "
+                               f"ago -- {why} ({last})", proof=proof)
         return ProbeResult("DEAD", _iso(ended), _age(ended, ctx.now),
-                           f"US session is open and no sim is running (last session "
-                           f"{s.get('id')} {state}, ended {_fmt_age(_age(ended, ctx.now))} ago); "
-                           f"no scheduler starts one",
-                           proof=f"sim/session.json state={state}")
+                           f"US session is open and no sim is running ({last}); the owner's "
+                           f"last row ({act}, {_fmt_age(owner_age)} ago, session "
+                           f"{owner.get('session')}) says it should be", proof=proof)
+    nxt = ("the sim owner (AegisSimOwner) starts the next one in its US/Eastern window"
+           if owner is not None else "the sim owner has never fired (register AegisSimOwner)")
     return ProbeResult("ALIVE", _iso(ended), _age(ended, ctx.now),
-                       f"idle outside US hours: last session {s.get('id')} {state} "
-                       f"({s.get('end_reason') or '-'}); nothing schedules the next one",
+                       f"idle outside US hours: {last} ({s.get('end_reason') or '-'}); {nxt}",
                        proof=f"sim/session.json state={state}")
 
 
@@ -1941,11 +1993,11 @@ def counts(rows: list[dict]) -> dict:
 
 
 def exit_code(rows: list[dict]) -> int:
-    """1 any DEAD · 2 any STALE · 3 all UNKNOWN · 0 otherwise."""
+    """1 any DEAD · 2 any STALE or REFUSED · 3 all UNKNOWN · 0 otherwise."""
     c = counts(rows)
     if c["DEAD"]:
         return 1
-    if c["STALE"]:
+    if c["STALE"] or c.get("REFUSED"):
         return 2
     if rows and c["UNKNOWN"] == len(rows):
         return 3

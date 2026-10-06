@@ -890,14 +890,15 @@ def recency_rank(item: dict, now: datetime | None = None) -> float:
 
 BUDGET_LANES: tuple[str, ...] = (
     "book_names", "universe_names", "markets_news", "macro_world", "politics_policy",
-    "official_releases", "social", "digest_asks", "overhead")
+    "official_releases", "social", "digest_asks", "query_planner", "overhead")
 
 #: declared shares of the browser's daily page loads (sum 1.0); `config`
-#: `READER_BUDGET_SHARES` overrides
+#: `READER_BUDGET_SHARES` overrides. `query_planner` (2026-10-06, C7): the
+#: search-led planner's admitted URLs, each carrying its `query_id`.
 DEFAULT_BUDGET_SHARES: dict[str, float] = {
-    "book_names": 0.24, "universe_names": 0.12, "markets_news": 0.20, "macro_world": 0.12,
+    "book_names": 0.24, "universe_names": 0.12, "markets_news": 0.18, "macro_world": 0.12,
     "politics_policy": 0.08, "official_releases": 0.04, "social": 0.11,
-    "digest_asks": 0.06, "overhead": 0.03}
+    "digest_asks": 0.05, "query_planner": 0.03, "overhead": 0.03}
 
 #: relative weight of each UTC hour (index 0-23). Asia session 00-08 UTC (Tokyo,
 #: Hong Kong, Shanghai), its pre-open at 23; Europe 08-11; US pre-open 11-13;
@@ -987,6 +988,10 @@ def budget_lane(item: dict, *, books: set[str] | frozenset[str] = frozenset(),
     lane = str(item.get("lane") or "")
     if kind == "robots" or lane.startswith("robots:"):
         return "overhead"
+    # 2026-10-06 (C7): a URL the query planner found spends from its own lane,
+    # social hosts included (the per-host social caps still bind inside it)
+    if item.get("via") == "query_planner" or lane.startswith("qp:"):
+        return "query_planner"
     if kind == "social" or _on(host, tuple(_cfg("OPENCLAW_SOCIAL_HOSTS",
                                                  ("x.com", "reddit.com", "stocktwits.com")))):
         return "social"

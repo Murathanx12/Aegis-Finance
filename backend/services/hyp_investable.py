@@ -98,16 +98,8 @@ def book_return(w: dict, fwd: pd.Series) -> float:
     return float(np.nansum(ww * np.where(np.isfinite(r), r, 0.0)))
 
 
-def trade_cost(prev_w: dict, w: dict, spread: dict, default: float) -> tuple[float, float]:
-    """(cost, one-way turnover): each |dw| pays half its name's round-trip spread."""
-    cost, to = 0.0, 0.0
-    for s in set(prev_w) | set(w):
-        dw = abs(w.get(s, 0.0) - prev_w.get(s, 0.0))
-        if dw:
-            sp = spread.get(s, default)
-            cost += dw * (sp if np.isfinite(sp) else default) / 2.0
-            to += dw
-    return cost, to / 2.0
+#: the per-trade model is the matched twin's cost convention, imported, never retyped
+from backend.services.matched_twins import trade_cost  # noqa: E402,F401
 
 
 def drift(w: dict, fwd: pd.Series) -> dict:

@@ -28,6 +28,8 @@ import {
   ShieldCheck,
   ClipboardList,
   MonitorCog,
+  Compass,
+  Brain,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -65,6 +67,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/stock", label: "Stock Analysis", icon: BarChart3, code: "GP" },
       { href: "/screener", label: "Screener", icon: ListFilter, code: "EQS" },
+      { href: "/opportunities", label: "Opportunity Explorer", icon: Compass, code: "OPP" },
       { href: "/candidates", label: "Candidates", icon: ClipboardList, code: "CAND" },
       { href: "/journal", label: "Decision Journal", icon: NotebookPen, code: "JRNL" },
       { href: "/watchlist", label: "Watchlist", icon: Star, code: "WATCH" },
@@ -89,6 +92,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/copilot", label: "Copilot", icon: Sparkles, code: "AI" },
       { href: "/workspace", label: "Workspace", icon: LayoutGrid, code: "WORK" },
       { href: "/desktop", label: "Aegis Desktop", icon: MonitorCog, code: "DESK" },
+      { href: "/brain", label: "Optimus Brain", icon: Brain, code: "BRAIN" },
       { href: "/dev", label: "Dev", icon: LayoutGrid, code: "DEV" },
       { href: "/about", label: "About", icon: Info, code: "ABOUT" },
     ],

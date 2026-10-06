@@ -132,6 +132,13 @@ STEPS: tuple[tuple[str, str], ...] = (
     ("bars_refresh", "the daily bar panels, incremental tail pull -- before "
                      "anything ranks or grades on them"),
     ("news_pull", "every registered news source, into the corpus"),
+    # 2026-10-06 (C7). The Dow Jones feeds receipt (`dowjones/feeds_<day>.json`,
+    # the `dowjones_feeds` health row) had NO scheduled caller: written only by
+    # a hand-typed `dowjones_pull --feeds`, 9.1 days STALE while the corpus kept
+    # updating. Ten plain-HTTP RSS GETs, no browser; a feed whose newest item is
+    # older than DOWJONES_FEED_FROZEN_AGE_H is named FROZEN_UPSTREAM.
+    ("dowjones_feeds", "the ten Dow Jones RSS feeds + the receipt the health "
+                       "row reads (newest-item age per feed, frozen feeds named)"),
     ("decision_contract", "what the engine would buy today, at what size, and "
                           "what would make it wrong — plus a REFUSED row per "
                           "candidate that did not clear"),
@@ -165,6 +172,13 @@ STEPS: tuple[tuple[str, str], ...] = (
     ("bridge_report", "the backtest -> forward bridge for the lib_/probe books -> "
                       "bridge/bridge_<day>.json + docs/BRIDGE.md"),
     ("coverage", "the per-source coverage card, derived from disk"),
+    # 2026-10-06 (C7). The search-led query planner's yield over the last 24 h:
+    # queries -> URLs (admitted / quarantined / refused) -> pages read -> claims
+    # -> forecast rows, with the same counts for the non-planner queue and the
+    # NAME of the zero when there is one. Files only; the planner's own agent
+    # turns run from the reader supervisor, never from this pass.
+    ("query_planner_yield", "the query planner's 24 h yield beside the non-planner "
+                            "queue's, with the zero named"),
     # 2026-09-20, chunk 21. It runs LAST and is PRINTED FIRST: it reads the
     # receipts the steps above have just written, and the economics is what the
     # reader came for (Murat's item 12). It is a declared STEP rather than a
@@ -706,6 +720,65 @@ def step_news_pull(ctx: dict) -> dict:
                 headline=summary.get("headline"))
 
 
+def run_dowjones_feeds() -> dict:
+    """The ten Dow Jones feeds, pulled and receipted exactly as
+    `python -m scripts.dowjones_pull --feeds` does (same file name)."""
+    from backend.services import dowjones_feeds as DF
+    r = DF.pull_feeds()
+    p = DF.receipts_dir() / f"feeds_{datetime.now(timezone.utc).date().isoformat()}.json"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(r, indent=2, default=str), encoding="utf-8")
+    tmp.replace(p)
+    return {**r, "receipt_path": str(p)}
+
+
+def step_dowjones_feeds(ctx: dict) -> dict:
+    """The feeds receipt the `dowjones_feeds` health row reads. A refused,
+    red or FROZEN_UPSTREAM feed is a named refusal; the step is still `ok`
+    when the receipt was written."""
+    t0 = time.time()
+    r = run_dowjones_feeds()
+    per = list(r.get("per_feed") or [])
+    bad = [f"{f.get('source')}: {f.get('verdict') or f.get('status')} "
+           f"(newest item {f.get('newest_age_h')} h old)"
+           for f in per if f.get("source") in set(r.get("refused_or_red") or [])]
+    new = int(r.get("items_new") or 0)
+    return _row("dowjones_feeds", ("ok" if per else "nothing_to_do"), rows=new,
+                seconds=round(time.time() - t0, 2), refusals=bad,
+                items_received=r.get("items_received"),
+                frozen_upstream=r.get("frozen_upstream"),
+                receipt_path=r.get("receipt_path"),
+                headline=(f"{len(per)} feeds, {r.get('items_received')} items, {new} new; "
+                          f"{len(bad)} refused/red/frozen"))
+
+
+def read_query_planner_yield() -> dict:
+    """The planner's 24 h yield (files only; `query_planner.yield_report`)."""
+    from backend.services import query_planner as QP
+    return QP.yield_report(window_h=24.0)
+
+
+def step_query_planner_yield(ctx: dict) -> dict:
+    """One line: the planner's yield beside the non-planner queue's. A zero is
+    NAMED (`zero_kind`): 'no query ran' is never printed as '0 claims'."""
+    t0 = time.time()
+    y = read_query_planner_yield()
+    zk = str(y.get("zero_kind") or "UNKNOWN")
+    q = y.get("queries") or {}
+    pl = y.get("planner") or {}
+    return _row("query_planner_yield", ("ok" if zk == "YIELDING" else "nothing_to_do"),
+                rows=int(pl.get("forecast_rows") or 0),
+                seconds=round(time.time() - t0, 2),
+                refusals=([] if zk == "YIELDING" else [f"query_planner: {zk}"]),
+                zero_kind=zk, queries=q,
+                planner={k: pl.get(k) for k in ("pages_read", "pages_ok", "claims",
+                                                "forecast_rows")},
+                non_planner={k: (y.get("non_planner") or {}).get(k)
+                             for k in ("pages_read", "pages_ok", "claims", "forecast_rows")},
+                headline=y.get("line"))
+
+
 def step_analyst_snapshot(ctx: dict) -> dict:
     """Today's consensus rows. The name table is updated by the same sweep."""
     t0 = time.time()
@@ -1011,7 +1084,9 @@ def step_paper_accounts(ctx: dict) -> dict:
                 rows=int(res.get("n_rows") or 0), seconds=round(time.time() - t0, 2),
                 refusals=refusals, receipt_path=res.get("receipt"), doc=res.get("doc"),
                 llm_by_status=llm, rc=res.get("rc"), broker_degraded=degraded,
-                broker_rows=res.get("broker_rows"), doc_refused=res.get("doc_refused"))
+                broker_rows=res.get("broker_rows"), doc_refused=res.get("doc_refused"),
+                collapse_line=res.get("collapse_line"),
+                book_dna_receipt=res.get("book_dna_receipt"))
 
 
 def step_bridge_report(ctx: dict) -> dict:
@@ -1108,6 +1183,8 @@ _HANDLERS: dict[str, Callable[[dict], dict]] = {
     "bars_refresh": step_bars_refresh,
     "grade_promises": step_grade_promises,
     "news_pull": step_news_pull,
+    "dowjones_feeds": step_dowjones_feeds,
+    "query_planner_yield": step_query_planner_yield,
     "analyst_snapshot": step_analyst_snapshot,
     "e1_append": step_e1_append,
     "book_cadence": step_book_cadence,
@@ -1314,6 +1391,9 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
                         "e1_append": "normalized", "book_cadence": "pnl",
                         "decision_contract": "pnl", "grade_forecasts": "pnl",
                         "coverage": "raw", "scoreboard": "pnl",
+                        # 2026-10-06 (C7): a corpus pull, and a read of reader
+                        # receipts that nothing trades on
+                        "dowjones_feeds": "raw", "query_planner_yield": "raw",
                         # a grade written onto a book is an outcome: nothing
                         # upstream may read it
                         "grade_books": "pnl", "paper_accounts": "pnl",

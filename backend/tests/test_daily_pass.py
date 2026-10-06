@@ -246,6 +246,30 @@ def calls(monkeypatch) -> list[str]:
                          {"name": "bars_panel", "verdict": "ALIVE", "detail": "current"}]}
 
     monkeypatch.setattr(DP, "run_health_probes", _health)
+
+    # 2026-10-06 (C7). The real feeds seam makes ten HTTP GETs and writes
+    # `dowjones/feeds_<day>.json` into backend/data; the real yield reader opens
+    # the live page log, claims and forecast ledger. One FROZEN feed and a named
+    # zero, so both steps' refusal branches run.
+    def _feeds():
+        seen.append("dowjones_feeds")
+        return {"receipt": "dowjones_feeds", "items_received": 30, "items_new": 4,
+                "refused_or_red": ["wsj_markets"], "frozen_upstream": ["wsj_markets"],
+                "receipt_path": None,
+                "per_feed": [{"source": "wsj_markets", "status": "OK",
+                              "verdict": "FROZEN_UPSTREAM", "newest_age_h": 14600.0},
+                             {"source": "mw_topstories", "status": "OK", "verdict": "OK",
+                              "newest_age_h": 0.4}]}
+
+    def _yield():
+        seen.append("query_planner_yield")
+        return {"zero_kind": "NO_QUERIES_RAN", "queries": {"queries": 0},
+                "planner": {"pages_read": 0, "claims": 0, "forecast_rows": 0},
+                "non_planner": {"pages_read": 120, "claims": 3, "forecast_rows": 9},
+                "line": "query_planner 24h: NO_QUERIES_RAN (fixture)"}
+
+    monkeypatch.setattr(DP, "run_dowjones_feeds", _feeds)
+    monkeypatch.setattr(DP, "read_query_planner_yield", _yield)
     return seen
 
 
@@ -299,11 +323,12 @@ def test_every_declared_step_runs_in_order(out, calls, rth_open) -> None:
     assert [r["step"] for r in rec["steps"]] == [s for s, _ in DP.STEPS]
     # the cadence step fans out inside itself; the OUTER order is the declared one
     outer = [c.split(":")[0] for c in calls]
-    assert outer == ["bars_refresh", "news_pull", "decision_contract",
+    assert outer == ["bars_refresh", "news_pull", "dowjones_feeds", "decision_contract",
                      "analyst_snapshot", "e1_append", "book_cadence",
                      "book_cadence", "book_cadence", "grade_forecasts",
                      "grade_promises", "grade_books", "paper_accounts",
-                     "bridge_report", "coverage", "scoreboard", "health"]
+                     "bridge_report", "coverage", "query_planner_yield",
+                     "scoreboard", "health"]
 
 
 def test_the_handler_table_covers_the_declared_steps() -> None:

@@ -178,12 +178,15 @@ def redact(text: Any) -> str:
 # ──────────────────────────────── outbound ──────────────────────────────────
 
 def send(text: str, *, chat_id: str | None = None, markdown: bool = True,
-         tag: str = "message") -> list[dict]:
+         tag: str = "message", reply_markup: dict | None = None) -> list[dict]:
     """Send to the OWNER. Refuses when no owner is configured.
 
     `chat_id` exists for `/start`, where the only way to learn the owner's id is
     to answer the message that carried it. It is never used to redirect a brief
     or an alert: those always resolve `owner_chat_id()`.
+
+    `reply_markup` (C6, 2026-10-06) is an `InlineKeyboardMarkup` attached to the
+    LAST chunk; its buttons carry opaque ids minted by `telegram_cockpit`.
     """
     target = chat_id or owner_chat_id()
     if not target:
@@ -196,9 +199,12 @@ def send(text: str, *, chat_id: str | None = None, markdown: bool = True,
         text = _health_head() + text
     text = redact(text)
     out = []
-    for chunk in _split(text):
+    chunks = _split(text)
+    for i, chunk in enumerate(chunks):
         payload = {"chat_id": target, "text": chunk,
                    "disable_web_page_preview": True}
+        if reply_markup and i == len(chunks) - 1:
+            payload["reply_markup"] = reply_markup
         if markdown:
             payload["parse_mode"] = "Markdown"
         try:
@@ -272,7 +278,7 @@ def updates(*, timeout: int = 0) -> list[dict]:
     off = _offset()
     res = _call("getUpdates",
                 {"offset": off + 1 if off else None, "timeout": timeout,
-                 "allowed_updates": ["message"]},
+                 "allowed_updates": ["message", "callback_query"]},
                 timeout=timeout + 25) or []
     if res:
         _set_offset(max(u["update_id"] for u in res))
@@ -357,8 +363,66 @@ def _inbound_allowed(who: str, *, now_s: float | None = None) -> bool:
     return True
 
 
+def _send_reply(reply: Any, *, markdown: bool, tag: str) -> None:
+    """A handler reply is a string, or (C6) a dict {text, markdown?, reply_markup?}."""
+    if isinstance(reply, dict):
+        text = str(reply.get("text") or "")
+        if text:
+            send(text, markdown=bool(reply.get("markdown", markdown)), tag=tag,
+                 reply_markup=reply.get("reply_markup"))
+    elif reply:
+        send(reply, markdown=markdown, tag=tag)
+
+
+#: Button taps from any chat (or any sender) that is not the owner's, dropped.
+CALLBACKS_DROPPED = 0
+
+
+def _poll_callback(cq: dict, owner: str | None,
+                   callback_handler: Callable[[str, dict], Any] | None) -> dict | None:
+    """One inline-button tap (C6). Owner chat AND owner sender, or nothing:
+    a stranger's tap is not answered, not even with `answerCallbackQuery`."""
+    global CALLBACKS_DROPPED
+    cid = str(((cq.get("message") or {}).get("chat") or {}).get("id"))
+    who = str((cq.get("from") or {}).get("id"))
+    data = str(cq.get("data") or "")[:64]
+    row = {"t": _now(), "chat_id": cid, "callback": data,
+           "from": (cq.get("from") or {}).get("username")}
+    if not owner or cid != owner or who != owner:
+        row["refused"] = "not the owner chat" if owner else "no owner configured"
+        if _inbound_allowed("stranger"):
+            _append(INBOX_PATH, row)
+        CALLBACKS_DROPPED += 1
+        return None
+    if not _inbound_allowed("owner"):
+        # (review C6 F6) the OWNER's tap is always answered, so the spinner
+        # stops and the reason shows as a toast; nothing else runs
+        try:
+            _call("answerCallbackQuery", {"callback_query_id": cq.get("id"),
+                                          "text": "rate-limited: too many messages this hour; "
+                                                  "try again later"})
+        except Exception as exc:                                   # noqa: BLE001
+            logger.warning("answerCallbackQuery failed: %s", redact(exc))
+        return {"cmd": "callback", "args": [data], "handled": False, "rate_limited": True}
+    _append(INBOX_PATH, row)
+    try:                                      # stops the button's spinner; not a message
+        _call("answerCallbackQuery", {"callback_query_id": cq.get("id")})
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("answerCallbackQuery failed: %s", redact(exc))
+    if callback_handler is None:
+        return {"cmd": "callback", "args": [data], "handled": False}
+    try:
+        reply = callback_handler(data, cq)
+    except Exception as exc:                                       # noqa: BLE001
+        reply = f"button failed: `{type(exc).__name__}: {redact(exc)}`"
+        logger.exception("telegram callback handler failed")
+    _send_reply(reply, markdown=False, tag="callback")
+    return {"cmd": "callback", "args": [data]}
+
+
 def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
-         text_handler: Callable[[str, dict], str | None] | None = None) -> list[dict]:
+         text_handler: Callable[[str, dict], Any] | None = None,
+         callback_handler: Callable[[str, dict], Any] | None = None) -> list[dict]:
     """Read new messages and run the matching command. Owner only.
 
     A message from any other chat is recorded in `inbox.jsonl`, counted in
@@ -375,6 +439,11 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
     owner = owner_chat_id()
     acted = []
     for u in updates():
+        if u.get("callback_query"):
+            r = _poll_callback(u["callback_query"], owner, callback_handler)
+            if r:
+                acted.append(r)
+            continue
         msg = u.get("message") or {}
         cid = str((msg.get("chat") or {}).get("id"))
         text = (msg.get("text") or "").strip()
@@ -397,8 +466,7 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
                 except Exception as exc:                           # noqa: BLE001
                     reply = f"reply failed: `{type(exc).__name__}: {redact(exc)}`"
                     logger.exception("telegram text handler failed")
-                if reply:
-                    send(reply, markdown=False, tag="reply")
+                _send_reply(reply, markdown=False, tag="reply")
                 acted.append({"cmd": "text", "args": []})
                 continue
             if not text.startswith("/"):
@@ -414,8 +482,7 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
         except Exception as exc:                                   # noqa: BLE001
             reply = f"`/{cmd}` failed: `{type(exc).__name__}: {redact(exc)}`"
             logger.exception("telegram command %s failed", cmd)
-        if reply:
-            send(reply, tag=f"cmd:{cmd}")
+        _send_reply(reply, markdown=True, tag=f"cmd:{cmd}")
         acted.append({"cmd": cmd, "args": parts[1:]})
     return acted
 

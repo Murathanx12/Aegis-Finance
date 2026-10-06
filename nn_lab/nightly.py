@@ -8,7 +8,10 @@ each step checkpointed so a crashed night RESUMES (same UTC day only):
   a. APPEND   rebuild the table's tail from the refreshed bars (+ side groups). The shrink
               guard compares the TABLE: every stored grid row and every stored label must
               still be there (review F6: comparing today's cross-section with yesterday's
-              refused ordinary weekdays).
+              refused ordinary weekdays). Since 2026-10-06 a stored grid date's MEMBERSHIP and
+              features are FROZEN (nn_lab/membership.py): the rebuild adds new dates and
+              matured labels, and every vendor re-adjustment is appended to
+              table/revisions.parquet, never applied. A refusal is status REFUSED, with a receipt.
   b. GRADE    every frozen file whose horizon has elapsed, after its sha256 is checked
               against the ledger (`loop.step_grade`). Delisted names exit at their last close.
   c. TRUST    every model's posterior rank IC from its graded forward blocks (walk-forward
@@ -44,6 +47,7 @@ import pandas as pd
 
 from nn_lab import config as C
 from nn_lab import loop as L
+from nn_lab import membership as MB
 from nn_lab import seeds as S
 
 H = C.HORIZONS
@@ -57,17 +61,25 @@ LEGACY_V0 = {"model": "nn_v0_leaky", "file": "pred_2026-09-25_nightly_20260928T1
                     "honestly forward, never trusted or ensembled"}
 
 
-class TableShrink(RuntimeError):
-    """A rebuild would lose a stored grid row or a stored label."""
+# TableShrink, shrink_check and labelled_dates moved to nn_lab/membership.py (2026-10-06,
+# the frozen-membership merge); re-exported here so every caller and test keeps its name.
+TableShrink = MB.TableShrink
+shrink_check = MB.shrink_check
+labelled_dates = MB.labelled_dates
 
 
 # ─────────────────────────── small pure helpers (tested) ─────────────────────
 
-def night_status(new_rows_since_last_run: int, refused: str | None = None, *, stale: bool = False) -> str:
+def night_status(new_rows_since_last_run: int, refused: str | None = None, *, stale: bool = False,
+                 degraded: list[str] | tuple = ()) -> str:
+    """REFUSED > STALE_BARS > DEGRADED (membership counts above the declared levels, review C5
+    F5, or nothing new) > OK."""
     if refused:
         return "REFUSED"
     if stale:
         return "STALE_BARS"
+    if degraded:
+        return "DEGRADED"
     return "OK" if new_rows_since_last_run > 0 else "DEGRADED"
 
 
@@ -82,37 +94,6 @@ def last_closed_weekday(now_utc: datetime | None = None) -> pd.Timestamp:
     while d.weekday() >= 5:
         d -= pd.Timedelta(days=1)
     return d
-
-
-def shrink_check(old: pd.DataFrame, new: pd.DataFrame, labels=tuple(f"y_{h}" for h in H)) -> dict:
-    """Compare the TABLE, not today's cross-section. RAISE if a stored grid row or a stored
-    label is gone. Yesterday's off-grid live rows may go (today's replace them)."""
-    og = old[old["on_grid"]] if "on_grid" in old else old
-    ng = new[new["on_grid"]] if "on_grid" in new else new
-    ok = pd.MultiIndex.from_frame(og[["date", "symbol"]])
-    nk = pd.MultiIndex.from_frame(ng[["date", "symbol"]])
-    lost = ok.difference(nk)
-    if len(lost):
-        ex = [(str(d.date()), s) for d, s in list(lost)[:3]]
-        raise TableShrink(f"table would LOSE {len(lost):,} stored grid rows, e.g. {ex}; refused, original kept")
-    lost_dates = set(og["date"]) - set(ng["date"])
-    if lost_dates:
-        raise TableShrink(f"table would LOSE {len(lost_dates)} grid dates; refused, original kept")
-    a = og.set_index(["date", "symbol"])[list(labels)].notna()
-    b = ng.set_index(["date", "symbol"])[list(labels)].notna().reindex(a.index, fill_value=False)
-    lost_lab = int((a & ~b).to_numpy().sum())
-    if lost_lab:
-        raise TableShrink(f"table would LOSE {lost_lab:,} stored labels; refused, original kept")
-    return {"grid_rows_kept": int(len(ok)), "grid_rows_new": int(len(nk.difference(ok))),
-            "labels_filled": int((~a & b).to_numpy().sum()) if len(a) else 0}
-
-
-def labelled_dates(dates, cal: pd.DatetimeIndex, h: int) -> pd.DatetimeIndex:
-    """Grid dates whose h-session label window has ELAPSED on the calendar (review F5.5:
-    'y is not null' kept dates whose only labels were a few delisted names)."""
-    d = pd.DatetimeIndex(pd.unique(pd.DatetimeIndex(dates)))
-    pos = np.searchsorted(cal.values, d.values)
-    return pd.DatetimeIndex(np.sort(d[pos + 1 + h < len(cal)]))
 
 
 def free_gb_disk(path: Path) -> float:
@@ -196,20 +177,36 @@ def books_symbols(path: Path | None = None) -> set[str]:
 
 # ─────────────────────────────── steps ───────────────────────────────────────
 
-def step_append() -> dict:
-    """Rebuild the tail (every grid date from the first with a pending label) + the newest session."""
+REVISIONS_PATH = C.TABLE_DIR / "revisions.parquet"
+
+
+def step_append(run_id: str = "manual") -> dict:
+    """Rebuild the tail (every grid date from the first with a pending label) + the newest
+    session, under FROZEN membership (nn_lab/membership.py, owner decision 2026-10-06):
+    a stored grid date keeps exactly its stored members and features; the rebuild may add
+    new dates and missing labels, and everything else the vendor changed is appended to
+    `revisions.parquet`, never applied. TableShrink still refuses a genuine shrink."""
     from nn_lab import table as T
     tab = pd.read_parquet(C.TABLE_PATH)
+    before_raw = MB.table_counts(tab)
+    # review C5 F6: the frozen hashes are taken BEFORE the exclusion list is applied, so a list
+    # change that removes frozen members is counted, reported and degrades the night instead of
+    # vanishing from the frozen check.
+    hashes_before = MB.membership_hashes(tab)
+    tab_raw_keys = tab.loc[tab["on_grid"].astype(bool), ["date", "symbol", "on_grid"]].copy()
     # 2026-09-30: an ETF/ETN/fund leaving the universe is a deliberate universe change, not a
     # shrink: its stored rows are dropped here, counted, and the shrink guard compares the rest.
     from nn_lab.universe_filter import excluded as _etf_excluded
     _ex = tab["symbol"].isin(_etf_excluded())
     dropped_etf_rows = int(_ex.sum())
+    etf_removed = tab.loc[_ex & tab["on_grid"].astype(bool), ["date", "symbol", "on_grid"]].copy()
     tab = tab[~_ex].reset_index(drop=True)
+    before = MB.table_counts(tab)
     old_max = tab["date"].max()
     cal_old = pd.DatetimeIndex(pd.read_parquet(C.TABLE_PATH.parent / "calendar.parquet")["date"])
     bars = T.load_bars([C.BARS_DEEP, C.BARS_RECENT, C.BARS_DELISTED], start="2025-01-01",
                        extend_only=[C.BARS_RECENT])
+    vendor_through = str(pd.Timestamp(bars["date"].max()).date())
     cal_new = T.session_calendar(bars)
     cal = pd.DatetimeIndex(np.union1d(cal_old.values, cal_new.values))
     grid = cal[T.grid_mask(cal)]
@@ -217,27 +214,79 @@ def step_append() -> dict:
     tail_start = pending.min() if len(pending) else old_max
     tail_start = max(tail_start, pd.Timestamp("2026-01-15"))   # recent bars need 252 sessions of lookback
     keep = grid[grid >= tail_start]
-    rows = T.price_rows(bars, cal, keep_dates=keep, keep_last=True)
+    stored_tail = tab[tab["on_grid"] & (tab["date"] >= tail_start)][["date", "symbol"]]
+    rows = T.price_rows(bars, cal, keep_dates=keep, keep_last=True, force_keys=stored_tail)
     del bars
-    rows = T.add_excess_labels(rows)
     rows["on_grid"] = rows["date"].isin(set(grid))
+    # the excess label's median is taken over the FROZEN membership of a stored date
+    rows, _would_add = MB.restrict_to_frozen(rows, tab)
+    rows = T.add_excess_labels(rows)
+    if len(_would_add):   # no labels: merge_frozen records them as revisions and never adds them
+        rows = pd.concat([rows, _would_add], ignore_index=True)
     rows = T.attach_side_groups(rows)
     T.assert_pit(rows)
-    new = pd.concat([tab[tab["date"] < tail_start], rows[tab.columns.intersection(rows.columns)]],
-                    ignore_index=True)
-    chk = shrink_check(tab, new)
+    keep_cols = list(tab.columns.intersection(rows.columns)) + ["_rebuild_eligible"]
+    new, revs, mstats = MB.merge_frozen(tab, rows[[c for c in keep_cols if c in rows.columns]],
+                                        tail_start=tail_start, cal_stored=cal_old, run_id=run_id,
+                                        asof_utc=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                                        vendor_bars_through=vendor_through)
+    chk = shrink_check(tab, new)            # the genuine-shrink guard, on the merged table
+    # every stored date's membership hash unchanged, measured against the table BEFORE the
+    # exclusion list; only the declared exclusion removals may differ (F6)
+    frozen = MB.check_frozen(tab_raw_keys, new, allowed_removed=etf_removed)
+    mstats["etf_removed_from_frozen_dates"] = int(len(etf_removed))
+    if len(etf_removed):
+        revs = pd.concat([revs, pd.DataFrame({
+            "date": etf_removed["date"].to_numpy(), "symbol": etf_removed["symbol"].to_numpy(),
+            "kind": "ETF_EXCLUDED_FROM_FROZEN_DATE",
+            "reason": "the ETF/ETN/fund exclusion list removed this stored member (a declared universe change)",
+            "columns": "membership", "max_rel_change": np.nan, "rebuilt_values_hash": "etf",
+            "asof_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "run_id": run_id,
+            "vendor_bars_through": vendor_through})], ignore_index=True)
+    after = MB.table_counts(new)
+    if after["grid_rows"] < before["grid_rows"] or after["grid_dates"] < before["grid_dates"]:
+        raise TableShrink(f"table would shrink {before} -> {after}; refused, original kept")
     tmp = C.TABLE_PATH.with_suffix(".tmp.parquet")
     new.to_parquet(tmp, index=False)
     if len(pd.read_parquet(tmp, columns=["date"])) != len(new):
         raise RuntimeError("table write verification failed; original kept")
     os.replace(tmp, C.TABLE_PATH)
     pd.DataFrame({"date": cal}).to_parquet(C.TABLE_PATH.parent / "calendar.parquet", index=False)
+    # F6: revisions are appended only AFTER the table write is verified, so a failed write never
+    # leaves the log holding revisions of a table that did not land (and suppresses the retry's)
+    rv = MB.append_revisions(revs, REVISIONS_PATH)
+    stored_grid_dates = set(tab.loc[tab["on_grid"].astype(bool), "date"])
+    new_grid = sorted(set(new.loc[new["on_grid"].astype(bool), "date"]) - stored_grid_dates)
+    vintage = MB.record_vintage(new_grid, vendor_through, cal, run_id)
+    hashes_after = MB.membership_hashes(new)
+    prev_h = ((last_receipt() or {}).get("append") or {}).get("membership_hash_by_date") or {}
+    moved_vs_prev = sorted(d for d, h in prev_h.items() if hashes_after.get(d, "")[:16] != h)
     new_dates = sorted(set(rows["date"]) - set(tab["date"]))
     return {"old_max_date": str(old_max.date()), "new_max_date": str(new["date"].max().date()),
             "tail_start": str(tail_start.date()), "rows_rebuilt": int(len(rows)),
             "rows_added": int((rows["date"] > old_max).sum()), "new_dates": [str(d.date()) for d in new_dates],
             "labels_filled": chk["labels_filled"], "grid_rows_kept": chk["grid_rows_kept"],
             "etf_rows_dropped_from_stored_table": dropped_etf_rows,
+            "table_before_raw": before_raw, "table_before": before, "table_after": after,
+            "membership": {**mstats, **frozen,
+                           "degraded_reasons": MB.degraded_reasons(mstats),
+                           "line": (f"{mstats['rows_re_adjusted']:,} rows re-adjusted (material, config "
+                                    f"tolerances); {mstats['membership_would_drop']:,} members the rebuild "
+                                    f"would drop and {mstats['member_absent_from_rebuild']:,} absent from it, "
+                                    f"kept; 0 dropped; {mstats['membership_would_add']:,} would-add recorded, "
+                                    f"not added; {mstats['labels_final_recomputed_applied_and_logged']:,} final "
+                                    f"labels recomputed; {mstats['etf_removed_from_frozen_dates']:,} removed by "
+                                    f"the exclusion list")},
+            "frozen_means": ("the FIRST-STORED VINTAGE of membership and features: point-in-time only for grid "
+                             f"dates first stored from {C.PIT_DOLLAR_VOLUME_FROM} at lag 0 (membership_vintage)"),
+            "pre_freeze_dollar_volume_note": C.PRE_FREEZE_DV_NOTE,
+            "vintage_of_new_grid_dates": vintage,
+            "revisions": {**rv, "n_this_run_before_dedupe": int(len(revs))},
+            "vendor_bars_through": vendor_through,
+            "membership_hash_digest_before": MB.hashes_digest(hashes_before),
+            "membership_hash_digest_after": MB.hashes_digest(hashes_after),
+            "membership_hash_by_date": {d: h[:16] for d, h in hashes_after.items()},
+            "membership_dates_moved_vs_previous_receipt": moved_vs_prev,
             "table_rows": int(len(new)), "table_sha256": sha256_file(C.TABLE_PATH)}
 
 
@@ -423,19 +472,87 @@ def step_fit(run_id: str, variant: str, force: bool = False) -> dict:
             "train_rows_h5": int(allm.sum()), "nn_fits": fits, "models": models, "versions": versions}
 
 
-def step_freeze(run_id: str, trust: dict, mag: dict, wf: dict) -> dict:
-    """Freeze every roster model, the ensemble and the size forecast for the newest date."""
+def input_columns() -> list[str]:
+    """The raw columns every roster model is scored from (design_matrix ranks them per date)."""
+    from nn_lab.table import GROUPS
+    return [c for g in GROUPS.values() for c in g]
+
+
+def score_live(live: pd.DataFrame, state: dict, *, with_nn: bool = True) -> dict:
+    """Score the live rows with the fitted rivals in `state`. ONE function for the nightly
+    freeze and for a re-score from the saved inputs (review C5 F2), so the two cannot drift.
+    `live` must be sorted by symbol (step_freeze and the saved inputs both are)."""
     import joblib
     from nn_lab import models as M
-    from nn_lab.nn import Trainer, ensemble_predict
-    from nn_lab.table import GROUPS
-    state = json.loads(RIVALS_STATE.read_text())
-    feats_all = [c for g in GROUPS.values() for c in g]
-    tab = pd.read_parquet(C.TABLE_PATH, columns=["date", "symbol"] + feats_all)
-    dd = tab["date"].max()
-    live = tab[tab["date"] == dd].sort_values("symbol").reset_index(drop=True)
     X, xn = M.design_matrix(live, state["groups"])
     X = X[:, [xn.index(n) for n in state["xnames"]]]
+    pn = None
+    if with_nn and (state.get("models", {}).get("nn") or {}).get("paths"):
+        from nn_lab.nn import Trainer, ensemble_predict
+        pn = ensemble_predict([Trainer.load(Path(p)) for p in state["models"]["nn"]["paths"]], X)
+    scores: dict = {}
+    ridge_abs: dict = {}
+    for j, h in enumerate(H):
+        sc = {"lgbm": joblib.load(state["models"]["lgbm"][f"h{h}"]).predict(live[state["feats"]]),
+              "ridge": joblib.load(state["models"]["ridge"][f"h{h}"]).predict(X),
+              "mom_12_1": live["mom_12_1"].to_numpy(dtype="float64"),
+              "zero": np.zeros(len(live))}
+        if pn is not None:
+            sc["nn"] = pn["mean"][:, j].astype("float64")
+        scores[h] = sc
+        if h in C.MAGNITUDE_HORIZONS and "ridge_abs" in state["models"]:
+            ridge_abs[h] = joblib.load(state["models"]["ridge_abs"][f"h{h}"]).predict(X)
+    return {"X": X, "pn": pn, "scores": scores, "ridge_abs": ridge_abs}
+
+
+def frozen_inputs_path(decision_date, run_id: str, frozen_dir: Path | None = None) -> Path:
+    return Path(frozen_dir or C.FROZEN_DIR) / str(pd.Timestamp(decision_date).date()) / f"inputs_{run_id}.parquet"
+
+
+def save_frozen_inputs(live: pd.DataFrame, *, decision_date, run_id: str, state: dict,
+                       frozen_dir: Path | None = None, ledger: Path | None = None, note: str | None = None) -> dict:
+    """The exact rows a night's forecasts were scored on, as ONE immutable parquet beside the
+    frozen forecast files, its sha256 in `frozen_inputs_ledger.jsonl` (review C5 F2: the
+    table replaces yesterday's live rows, so without this the inputs of a frozen forecast
+    were gone within 24 h). Exclusive create: an existing file is verified, never rewritten."""
+    path = frozen_inputs_path(decision_date, run_id, frozen_dir)
+    dd = str(pd.Timestamp(decision_date).date())
+    led = Path(ledger or C.FROZEN_INPUTS_LEDGER)
+    cols = ["date", "symbol"] + [c for c in input_columns() if c in live.columns]
+    df = live[cols].sort_values("symbol", kind="mergesort").reset_index(drop=True)
+    rel = str(path.relative_to(C.REPO)).replace("\\", "/") if str(path).startswith(str(C.REPO)) else path.name
+    if path.exists():
+        return {"status": "ALREADY_SAVED", "file": rel, "sha256": sha256_file(path)}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp.parquet")
+    df.to_parquet(tmp, index=False)
+    with open(tmp, "rb") as src, open(path, "xb") as dst:
+        dst.write(src.read())
+    tmp.unlink(missing_ok=True)
+    sha = sha256_file(path)
+    entry = {"decision_date": dd, "run_id": run_id, "file": rel, "sha256": sha, "rows": int(len(df)),
+             "columns": len(cols), "model_versions": state.get("versions"),
+             "xnames_sha256": hashlib.sha256(json.dumps(state.get("xnames")).encode()).hexdigest()[:16],
+             "written_utc": L._now(), **({"note": note} if note else {})}
+    L._append_jsonl(led, [entry])
+    return {"status": "SAVED", **entry}
+
+
+def rescore_from_inputs(path: Path, state: dict, *, with_nn: bool = True) -> dict:
+    """Re-score a frozen night from its saved inputs (the audit of `save_frozen_inputs`)."""
+    return score_live(pd.read_parquet(path), state, with_nn=with_nn)
+
+
+def step_freeze(run_id: str, trust: dict, mag: dict, wf: dict) -> dict:
+    """Freeze every roster model, the ensemble and the size forecast for the newest date."""
+    state = json.loads(RIVALS_STATE.read_text())
+    feats_all = input_columns()
+    tab = pd.read_parquet(C.TABLE_PATH, columns=["date", "symbol"] + feats_all)
+    dd = tab["date"].max()
+    live = tab[tab["date"] == dd].sort_values("symbol", kind="mergesort").reset_index(drop=True)
+    del tab
+    scored = score_live(live, state)
+    pn = scored["pn"]
     sym = live["symbol"].to_numpy()
     books = books_symbols()
     out: dict = {"decision_date": str(dd.date()), "names": int(len(live)),
@@ -447,18 +564,16 @@ def step_freeze(run_id: str, trust: dict, mag: dict, wf: dict) -> dict:
     def frame(h, **cols):
         return pd.DataFrame({"symbol": sym, "horizon": h, **cols, "in_frozen_book": in_book})
 
-    trs = [Trainer.load(Path(p)) for p in state["models"]["nn"]["paths"]]
-    pn = ensemble_predict(trs, X)
     parts = {m: [] for m in C.DIRECTION_ROSTER}
     mag_parts = {m: [] for m in C.MAGNITUDE_ROSTER}
     for j, h in enumerate(H):
         q = pn["q"][:, j, :]
-        s_nn = pn["mean"][:, j].astype("float64")
+        s_nn = scored["scores"][h]["nn"]
         parts["nn"].append(frame(h, score=s_nn, prob=pn["prob"][:, j], q05=q[:, 0], q25=q[:, 1], q50=q[:, 2],
                                  q75=q[:, 3], q95=q[:, 4]))
-        s_lg = joblib.load(state["models"]["lgbm"][f"h{h}"]).predict(live[state["feats"]])
-        s_rg = joblib.load(state["models"]["ridge"][f"h{h}"]).predict(X)
-        s_mo = live["mom_12_1"].to_numpy(dtype="float64")
+        s_lg = scored["scores"][h]["lgbm"]
+        s_rg = scored["scores"][h]["ridge"]
+        s_mo = scored["scores"][h]["mom_12_1"]
         parts["lgbm"].append(frame(h, score=s_lg))
         parts["ridge"].append(frame(h, score=s_rg))
         parts["mom_12_1"].append(frame(h, score=s_mo))
@@ -466,7 +581,7 @@ def step_freeze(run_id: str, trust: dict, mag: dict, wf: dict) -> dict:
         scores[h] = {"nn": s_nn, "lgbm": s_lg, "ridge": s_rg, "mom_12_1": s_mo, "zero": np.zeros(len(live))}
         if h in C.MAGNITUDE_HORIZONS:
             vol = live["vol_63"].to_numpy(dtype="float64") * np.sqrt(h / 252.0) * L.SQRT_2_PI
-            ra = joblib.load(state["models"]["ridge_abs"][f"h{h}"]).predict(X)
+            ra = scored["ridge_abs"][h]
             nw = (q[:, 4] - q[:, 0]) / 3.29 * L.SQRT_2_PI
             mag_parts["trailing_vol"].append(frame(h, pred_abs=vol))
             mag_parts["ridge_abs"].append(frame(h, pred_abs=np.clip(ra, 1e-4, None)))
@@ -497,6 +612,15 @@ def step_freeze(run_id: str, trust: dict, mag: dict, wf: dict) -> dict:
                                         run_id=run_id, kind="direction", extra={"weights": weights})
     out["ensemble_weights"] = weights
     out["size_forecast"] = write_size_forecast(dd, sym, mag_parts, mag, wf, run_id)
+    # the exact scored rows, beside the frozen files (review C5 F2), with a re-score check
+    inp = save_frozen_inputs(live, decision_date=dd, run_id=run_id, state=state)
+    if inp.get("status") in ("SAVED", "ALREADY_SAVED"):
+        re_ = rescore_from_inputs(frozen_inputs_path(dd, run_id), state)
+        inp["rescore_check"] = {f"{m}_h{h}": bool(np.allclose(re_["scores"][h][m], scored["scores"][h][m],
+                                                              rtol=1e-5, atol=1e-7, equal_nan=True))
+                                for h in H for m in scored["scores"][h] if m in re_["scores"][h]}
+        inp["rescore_reproduces_scores"] = all(inp["rescore_check"].values())
+    out["frozen_inputs"] = inp
     top = pd.DataFrame({"symbol": sym, "ens21": ens[H.index(21)]["score"].to_numpy()})
     out["ensemble_top10_h21"] = top.nlargest(10, "ens21")["symbol"].tolist()
     return out
@@ -643,9 +767,11 @@ def main(time_box_min: float = C.NIGHT_TIME_BOX_MIN, variant: str | None = None)
     rec: dict = {"artefact": "NN_LAB_NIGHTLY", "schema": 2, "run_id": run_id, "licence": "PRODUCT_EXPERIMENT",
                  "broker_authority": "NONE: writes predictions, never orders",
                  "started_utc": now.isoformat(timespec="seconds")}
+    rec["table_before"] = table_size()       # printed BEFORE any rebuild (the 2026-09-26 lesson)
     why = refuse_reason()
     if why:
-        rec.update({"status": "REFUSED", "refused": why})
+        rec.update({"status": "REFUSED", "refused": why,
+                    "evidence": f"NO_NEW_EVIDENCE: refused before any step ({why})"})
         (C.RECEIPT_DIR / f"{run_id}.json").write_text(json.dumps(rec, indent=1, default=str))
         return rec
     LOCK_PATH.write_text(json.dumps({"pid": os.getpid(), "run_id": run_id}))
@@ -659,7 +785,7 @@ def main(time_box_min: float = C.NIGHT_TIME_BOX_MIN, variant: str | None = None)
     ran_now: set[str] = set()
     ctx: dict = {}
     from nn_lab import size_members as _SM
-    steps = (("append", step_append),) + ((("size_members", step_size_members),) if _SM.member_roster() else ()) + (
+    steps = (("append", lambda: step_append(run_id)),) + ((("size_members", step_size_members),) if _SM.member_roster() else ()) + (
              ("grade", step_grade),
              # only a DIRECTION-roster grade is forward evidence for the model in charge (F8):
              # the legacy v0 file and the magnitude models never move it
@@ -687,6 +813,11 @@ def main(time_box_min: float = C.NIGHT_TIME_BOX_MIN, variant: str | None = None)
         else:
             state["complete"] = True
             STATE_PATH.write_text(json.dumps(state, indent=1, default=str))
+    except TableShrink as e:
+        # a genuine shrink (or a moved frozen membership) is a REFUSAL with its reason, and the
+        # stored table is untouched; a vendor re-adjustment no longer lands here (membership.py)
+        rec.update({"status": "REFUSED", "refused": f"TABLE_SHRINK: {e}"})
+        STATE_PATH.write_text(json.dumps(state, indent=1, default=str))
     except Exception as e:
         rec.update({"status": "FAILED", "error": repr(e)})
         STATE_PATH.write_text(json.dumps(state, indent=1, default=str))
@@ -702,12 +833,176 @@ def main(time_box_min: float = C.NIGHT_TIME_BOX_MIN, variant: str | None = None)
                    "note": "weekday calendar: the day after a US holiday can read STALE_BARS falsely"}
     rec["new_rows_since_last_run"] = new_rows
     rec["previous_run"] = prev.get("run_id") if prev else None
-    rec.setdefault("status", night_status(new_rows, stale=table_last < closed))
+    rec["degraded_reasons"] = list(((rec.get("append") or {}).get("membership") or {}).get("degraded_reasons") or [])
+    rec.setdefault("status", night_status(new_rows, stale=table_last < closed, degraded=rec["degraded_reasons"]))
     rec["per_model"] = _per_model_lines(rec)
+    rec["table_after"] = table_size()
+    rec["evidence"] = evidence_line(rec)
+    try:
+        rec["tournament"] = tournament()
+    except Exception as e:                                      # noqa: BLE001
+        rec["tournament"] = {"status": "UNAVAILABLE", "error": repr(e)[:300]}
     rec["elapsed_s"] = round(time.time() - t0, 1)
     rec["written_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     (C.RECEIPT_DIR / f"{run_id}.json").write_text(json.dumps(rec, indent=1, default=str))
     return rec
+
+
+def table_size(path: Path | None = None) -> dict | None:
+    """Rows, grid rows, grid dates, labels per horizon of the STORED table (None if absent)."""
+    p = Path(path or C.TABLE_PATH)
+    if not p.exists():
+        return None
+    try:
+        df = pd.read_parquet(p, columns=["date", "on_grid"] + [f"y_{h}" for h in H])
+        return MB.table_counts(df)
+    except Exception as e:                                      # noqa: BLE001
+        return {"error": repr(e)[:200]}
+
+
+def evidence_line(rec: dict) -> str:
+    """What tonight added to what the lab knows, or an explicit NO_NEW_EVIDENCE reason."""
+    if rec.get("status") in ("REFUSED", "FAILED", "TIMEOUT"):
+        why = rec.get("refused") or rec.get("error") or rec.get("stopped_before")
+        return f"NO_NEW_EVIDENCE: night {rec.get('status')} ({why})"
+    parts = []
+    fit = rec.get("fit") or {}
+    if fit.get("refit"):
+        parts.append(f"REFIT on newest labelled grid date {fit.get('newest_labelled_grid_date')}")
+    g = int((rec.get("grade") or {}).get("graded_now", 0) or 0)
+    if g:
+        parts.append(f"{g} frozen forecasts graded forward")
+    lf = int((rec.get("append") or {}).get("labels_filled", 0) or 0)
+    if lf:
+        parts.append(f"{lf:,} labels matured")
+    deg = rec.get("degraded_reasons") or []
+    tail = ("; DEGRADED: " + "; ".join(deg)) if deg else ""
+    if not parts:
+        return "NO_NEW_EVIDENCE: " + (fit.get("why") or "no refit") + "; 0 forecasts graded; 0 labels matured" + tail
+    return "; ".join(parts) + tail
+
+
+TOURNAMENT_MODELS = {"nndist": "nn", "lgbm": "lgbm", "ridge": "ridge", "mom": "mom_12_1"}
+
+
+def _newest_post_review_wf() -> tuple[str, dict] | None:
+    for f in reversed(sorted(C.RECEIPT_DIR.glob("wf_*.json"))):
+        try:
+            r = json.loads(f.read_text())
+        except Exception:
+            continue
+        if r.get("post_review"):
+            return f.name, r
+    return None
+
+
+def _weight_sentence() -> str:
+    """One plain sentence from the trust ledger: has any model earned forward weight?"""
+    rows = L._read_jsonl(C.TRUST_LEDGER) if C.TRUST_LEDGER.exists() else []
+    last = rows[-1] if rows else {}
+    w = []
+    for hk, ew in (last.get("ensemble_weights") or {}).items():
+        for m, v in (ew.get("models") or {}).items():
+            w.append(float(v.get("weight") or 0.0))
+    if not w or max(w) <= 0:
+        return ("no model has earned forward weight; ensemble weights are zero; the book holds the neutral "
+                "(no-view) sleeve")
+    return f"forward weights are non-zero (max {max(w):.3f}); see trust.ensemble_weights"
+
+
+def _val_gap(r: dict) -> dict:
+    """The NN's in-sample validation IC (best epoch, mean over seeds and folds) beside its
+    walk-forward test IC: the overfit the tournament exists to expose."""
+    vals = []
+    for f in r.get("folds") or []:
+        for fit in f.get("nn_dist") or []:
+            ep = fit.get("val_ic_by_epoch") or []
+            if ep:
+                vals.append(max(ep))
+    wf = {hk: (v.get("rank_ic") or {}).get("mean") for hk, v in ((r.get("models") or {}).get("nndist") or {}).items()}
+    return {"nn_val_ic_best_epoch_mean": round(float(np.mean(vals)), 5) if vals else None,
+            "nn_walk_forward_test_ic": wf,
+            "note": "validation IC is the early-stopping block's mean over horizons (in-sample for the epoch "
+                    "choice); the test IC is out of sample"}
+
+
+def tournament() -> dict:
+    """The NN beside ridge and LightGBM on the SAME folds (owner 2026-10-06: complexity
+    must earn its place). Two sources, neither refit tonight:
+      walk_forward: the newest post-review receipt -- the same purged expanding folds with a
+                    63-session embargo (splits.py / walkforward.py) for every model;
+      forward:      graded frozen forecasts, restricted to decision dates on which EVERY
+                    model in the comparison was graded (the same forward fold set).
+    The verdict per horizon is NN minus the better of ridge / LightGBM."""
+    out: dict = {"rule": "the NN earns its place at h only if its rank IC beats max(ridge, lgbm) by more "
+                         "than one SE of the difference; otherwise the simpler model stays"}
+    wf = _newest_post_review_wf()
+    if wf is None:
+        out["walk_forward"] = {"status": "NO_POST_REVIEW_RECEIPT"}
+    else:
+        name, r = wf
+        rows: dict = {}
+        for wm, rm in TOURNAMENT_MODELS.items():
+            for hk, v in (r.get("models", {}).get(wm) or {}).items():
+                ic = v.get("rank_ic") or {}
+                tp = v.get("top20_minus_random_net") or {}
+                rows.setdefault(hk, {})[rm] = {"rank_ic": ic.get("mean"), "se": ic.get("se"), "t": ic.get("t"),
+                                               "n_blocks": ic.get("n_blocks"),
+                                               "t_nonoverlapping": ic.get("t_strict"),
+                                               "n_blocks_nonoverlapping": ic.get("n_blocks_nonoverlapping"),
+                                               "rank_ic_by_year": v.get("rank_ic_by_year"),
+                                               "rank_ic_loyo_worst": v.get("rank_ic_loyo_worst"),
+                                               "top20_minus_random_net": tp.get("mean"), "top20_t": tp.get("t")}
+        verdict = {}
+        for hk, mv in rows.items():
+            nn = mv.get("nn") or {}
+            # review C5 F7: the single-column 12-1 momentum is in the baseline set
+            base = {m: mv[m] for m in ("ridge", "lgbm", "mom_12_1") if (mv.get(m) or {}).get("rank_ic") is not None}
+            if nn.get("rank_ic") is None or not base:
+                continue
+            best_name = max(base, key=lambda m: base[m]["rank_ic"])
+            best = base[best_name]
+            diff = nn["rank_ic"] - best["rank_ic"]
+            # an upper bound: the two folds' errors are positively correlated, so the true SE is smaller
+            se = float(np.hypot(nn.get("se") or 0.0, best.get("se") or 0.0))
+            verdict[hk] = {"nn_minus_best_baseline": round(diff, 5), "best_baseline": best_name,
+                           "baselines_compared": sorted(base),
+                           "se_of_difference_upper_bound": round(se, 5),
+                           "verdict": ("NN EARNS ITS PLACE" if diff > se else
+                                       "NN DOES NOT BEAT the simpler baseline: complexity has not earned its place")}
+        written = pd.Timestamp(r.get("written_utc")) if r.get("written_utc") else None
+        age = (round((pd.Timestamp.now(tz="UTC") - written).total_seconds() / 86400, 2)
+               if written is not None else None)
+        tonight_sha = sha256_file(C.TABLE_PATH) if C.TABLE_PATH.exists() else None
+        out["walk_forward"] = {"receipt": name, "folds": len(r.get("folds") or []),
+                               "table_sha256_of_that_run": r.get("table_sha256"),
+                               "written_utc": r.get("written_utc"), "age_days": age,
+                               "same_table_as_tonight": bool(tonight_sha and tonight_sha == r.get("table_sha256")),
+                               "use_crsp_deaths_in_that_run": r.get("use_crsp_deaths"),
+                               "note": ("printed from the receipt, not refit tonight; computed on the table "
+                                        "as it stood then" + ("" if r.get("use_crsp_deaths") else
+                                        " -- BEFORE the CRSP-deaths rebuild (a different survivor set)")),
+                               "in_sample_val_ic_vs_walk_forward": _val_gap(r),
+                               "by_horizon": rows, "verdict": verdict}
+    out["forward_weight_sentence"] = _weight_sentence()
+    g = pd.DataFrame(L._read_jsonl(C.FORWARD_GRADES))
+    want = list(TOURNAMENT_MODELS.values())
+    if not len(g) or "rank_ic" not in g.columns:
+        out["forward"] = {"status": "NO_FORWARD_GRADES_YET", "n_rows": int(len(g))}
+        return out
+    fwd: dict = {}
+    for h in H:
+        gh = g[(g["horizon"] == h) & g["model"].isin(want) & g["rank_ic"].notna()]
+        if not len(gh):
+            continue
+        per = gh.pivot_table(index="decision_date", columns="model", values="rank_ic", aggfunc="first")
+        have = [m for m in want if m in per.columns]
+        common = per[have].dropna()
+        fwd[f"h{h}"] = {"common_decision_dates": int(len(common)),
+                        "mean_rank_ic": {m: round(float(common[m].mean()), 5) for m in have} if len(common) else {},
+                        "note": "mean rank IC over decision dates graded for every listed model"}
+    out["forward"] = fwd or {"status": "NO_FORWARD_GRADES_YET", "n_rows": int(len(g))}
+    return out
 
 
 def _per_model_lines(rec: dict) -> list[str]:

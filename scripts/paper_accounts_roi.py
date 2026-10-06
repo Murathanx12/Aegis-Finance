@@ -45,6 +45,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from backend import config as _config                       # noqa: E402
+from backend.services import book_dna as _dna               # noqa: E402
 
 #: DATA paths come from the config, exactly as the grader's do
 #: (`llm_portfolio.ledger_dir()` = `OPTIMUS_LEDGER_DIR/llm_portfolio`), so
@@ -816,7 +817,11 @@ def render_markdown(rc: dict, png_name: Optional[str]) -> str:
     if x:
         L.append(f"- **Excluding control twins ({x['n']}):** ${x['sum_equity']:,.0f} vs "
                  f"${x['sum_start_capital']:,.0f} → **{x['roi_pct']:+.2f}%**.")
-    L += [f"- {ag['honest_sentence']}", "",
+    L += [f"- {ag.get('honest_sentence_counts') or ag['honest_sentence']}",
+          f"- **{collapse_line_of(ag)}** (`book_dna`: twins re-price a parent; books holding "
+          f"the same names are one exposure"
+          + (f"; receipt `{Path(str(ag['book_dna_receipt'])).name}`" if ag.get("book_dna_receipt") else "")
+          + ").", "",
           f"SPY leg: {rc['sources']['spy_leg']}. Website lanes: {rc['sources']['website_lanes']['source']} "
           f"(fresh: {rc['sources']['website_lanes']['fresh']}; deploy expected NAV date "
           f"{rc['sources']['website_lanes']['expected_nav_date']}).", ""]
@@ -914,7 +919,8 @@ def render_chart(rc: dict, path: Path) -> Optional[Path]:
     ax.set_title(f"Every priced paper account vs SPY over its own window — {rc['generated_utc'][:10]}\n"
                  f"{ag['n_ahead_of_spy']} ahead of SPY, {ag['n_behind_spy']} behind, {ag['n_pending']} pending "
                  f"(llm_portfolio books enter 2026-09-28, not shown).  Aggregate "
-                 f"{a.get('roi_pct', 0):+.2f}% on ${a.get('sum_start_capital', 0):,.0f}.  No result here is a claim.",
+                 f"{a.get('roi_pct', 0):+.2f}% on ${a.get('sum_start_capital', 0):,.0f}.  No result here is a claim.\n"
+                 f"{collapse_line_of(ag)[:150]}",
                  loc="left", fontsize=10.5, color=INK)
     if lanes:
         spy = dict((d, v) for d, v in (rc["lane_nav_series"].get("spy_rebased_100k_at_2026_06_08") or []))
@@ -1043,6 +1049,52 @@ def doc_drop_check(new_text: str, old_text: Optional[str]) -> dict:
             "dropped_broker": sorted(a for a in dropped if old[a] in BROKER_FAMILIES)}
 
 
+def run_id_of(generated_utc: str) -> str:
+    """`<day>T<HHMMSS>Z` from a receipt's `generated_utc` -- the ROI run-id
+    receipt and its `book_dna_<run_id>.json` share it."""
+    day = str(generated_utc)[:10]
+    stamp = str(generated_utc).replace("+00:00", "Z").replace(":", "").replace("-", "")
+    return f"{day}T{stamp[9:15]}Z"
+
+
+def attach_book_dna(rc: dict, *, out_dir: Optional[Path] = None,
+                    runner: Optional[Callable] = None) -> dict:
+    """Chunk C3 (2026-10-06): "148 ahead of SPY" was 105 control twins plus a few
+    shared baskets. `book_dna` writes `book_dna_<run_id>.json` beside this receipt
+    and its summary goes INTO `aggregate`; `honest_sentence` ends with the
+    collapse line so every reader of it carries the collapse. A failure is a
+    REFUSED summary with its reason -- the count is then printed as NOT a count
+    of independent bets, never alone."""
+    ag = rc["aggregate"]
+    ag.setdefault("honest_sentence_counts", ag.get("honest_sentence"))
+    run_id = run_id_of(rc["generated_utc"])
+    try:
+        if runner is None:
+            dna, path = _dna.run(rc, out_dir=Path(out_dir) if out_dir is not None else OUT_DIR,
+                                 run_id=run_id)
+        else:
+            dna, path = runner(rc, run_id)
+        summ = dict(dna["summary"])
+        try:                                     # repo-relative: no machine path in a receipt
+            summ["book_dna_receipt"] = Path(path).resolve().relative_to(REPO).as_posix()
+        except ValueError:
+            summ["book_dna_receipt"] = Path(path).name
+    except Exception as e:                       # REFUSE with a reason, never absent
+        summ = _dna.refused_summary(ag.get("n_ahead_of_spy"), f"{type(e).__name__}: {e}")
+    ag.update(summ)
+    ag["honest_sentence"] = f"{ag['honest_sentence_counts']} {summ['collapse_line']}."
+    return summ
+
+
+def collapse_line_of(ag: dict) -> str:
+    """The collapse line for any receipt -- including one written before C3, for
+    which it says NOT COMPUTED rather than letting the count stand alone."""
+    if ag.get("collapse_line"):
+        return str(ag["collapse_line"])
+    return _dna.refused_summary(ag.get("n_ahead_of_spy"),
+                                "book_dna did not run on this receipt")["collapse_line"]
+
+
 def write_outputs(rc: dict, *, chart: bool = True, out_dir: Optional[Path] = None,
                   doc_path: Optional[Path] = None, assets: Optional[Path] = None,
                   allow_drop: bool = False) -> dict:
@@ -1056,8 +1108,7 @@ def write_outputs(rc: dict, *, chart: bool = True, out_dir: Optional[Path] = Non
     # a narrower scope never shares a filename with the broker-included one
     suffix = "" if sc.get("with_broker") else ".nobroker"
     rj = out_dir / f"roi_{day}{suffix}.json"
-    stamp = rc["generated_utc"].replace("+00:00", "Z").replace(":", "").replace("-", "")
-    run_id = f"{day}T{stamp[9:15]}Z"
+    run_id = run_id_of(rc["generated_utc"])
     rr = out_dir / f"roi_{run_id}{suffix}.json"
     n = 2
     while rr.exists():                       # same-second collision: never skip, never overwrite
@@ -1147,6 +1198,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     rc = build(tr=tr, tr_source=tr_source, tr_fresh=fresh,
                fleet_env={} if a.no_broker else read_env_file(TERMINAL_ENV),
                bm=bm, bm_error=bm_err, include_fleet=not a.no_broker, include_pc=not a.no_broker)
+    attach_book_dna(rc)
     dd = Path(a.docs_dir) if a.docs_dir else None
     out = write_outputs(rc, chart=not a.no_chart,
                         doc_path=(dd / "PAPER_ACCOUNTS.md") if dd else None,
@@ -1181,6 +1233,8 @@ def main(argv: Optional[list[str]] = None) -> int:
                                               for t in ("ERROR", "INVALID", "UNREADABLE",
                                                         "FAILED", "STALE"))),
                                   "doc_refused": out.get("doc_refused"),
+                                  "collapse_line": rc["aggregate"].get("collapse_line"),
+                                  "book_dna_receipt": rc["aggregate"].get("book_dna_receipt"),
                                   "website_lanes": rc["sources"]["website_lanes"]["source"],
                                   "spy_leg": rc["sources"]["spy_leg"]}, default=str) + ">>>")
     return 0

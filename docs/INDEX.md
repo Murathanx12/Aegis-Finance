@@ -31,6 +31,19 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 
 ## TIER 1 — CURRENT ROADMAP (one file; supersedes dated execution roadmaps)
 
+- **`ROADMAP_2026-10-06_V1_BETA_THE_LOOP_THAT_LEARNS.md` — ACTIVE (adopted 2026-10-06, Fable 5.1). THE ONE TIER 1 FILE.**
+  Built from the verified machine state (code unchanged since `46d6efa4`; the live decision loop DEAD 6.7 days;
+  funnel 13 days stale again; PC-PAPER 80% cash with an UNRECONCILED $40k contract on ~$1M equity; nn_lab
+  refusing on `TableShrink`; the fair-twin fix still not in shared code), the owner's 10-06 review (59 asks, every
+  one answered in its §3 matrix), and the outside ChatGPT guide (vocabulary adopted, ten-phase order not).
+  Twelve chunks C1-C12 (fair twin → loop alive at $1M with a $40k view → Winner/Loser DNA → Opportunity Explorer
+  web page → nn_lab membership freeze → Telegram cockpit → OpenClaw open web → progress-aware health →
+  direction-aware contest sheet → data catalog + ledger archival → Decision Story + regret ledger → theory cells),
+  five Sonnet research notes under `research_notes/2026-10-06/`, twelve owner decisions (D1 Bloomberg registration
+  first). Every number carries an evidence label; "proven" appears nowhere. §9 defines V1 Beta.
+- `ROADMAP_2026-09-28_MEASURE_BEFORE_YOU_ADD.md` — SUPERSEDED 2026-10-06; its rule (no new book before 10-26 except
+  free shadows; measure against a matched control first) survives as §7 of the 10-06 roadmap.
+
 - **`ROADMAP_2026-09-25_CHUNKS_AND_THE_REVIEW_LOOP.md` — ACTIVE amendment (2026-09-25 evening, Murat's order):** every chunk = Sonnet research → Opus build → a SECOND Opus reviews it as an investor ("you are wrong, I would have done this") → Fable adjudicates; chunks 1-7 (PROBE path · the expected-return layer · the dot on the timeline · future-facing quests · the competition engine · social cues · reviewer ideas); v2 book `5d137b013692a737` frozen beside v1. Reviews live in `docs/reviews/`.
 - **`ROADMAP_2026-09-25_CONNECT_WHAT_EXISTS.md` — ACTIVE (adopted 2026-09-25, Fable 5.1, plan only).**
   Seven Sonnet reads (`research_notes/2026-09-25/`): the decision path is ONE function (`u_plan`) reading

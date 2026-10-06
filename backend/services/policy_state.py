@@ -106,6 +106,14 @@ SCHEMA: dict[str, tuple[Any, float, float, str]] = {
     "probe_weighting": ("equal", 0.0, 0.0,
                         "how PROBE splits its capped gross across names; moved "
                         "only by the three weighting twin books' grades"),
+    # 2026-10-06 (CHUNK C12, owner decision D6): hyp_lab's per-family EV
+    # multiplier, fed by the family's Beta posterior. The LOW bound is the
+    # declared minimum weight, so no value of this key can zero a family: it is
+    # a ranking preference, never a kill. Moved only by `scripts.hyp_lab`.
+    "hyp_family_ev_weight": ({}, _cfg.HYP_LAB_FAMILY_MIN_WEIGHT, 1.0,
+                             "per hyp_lab family, the EV multiplier in ranking; "
+                             "< 1 only while the family's posterior P(positive) "
+                             "is below HYP_LAB_FAMILY_POSTERIOR_FLOOR"),
 }
 
 #: Keys whose value is one of a declared set, not a number in a range.

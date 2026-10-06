@@ -16,12 +16,12 @@
  *    can print an em dash instead of a number nobody measured.
  */
 
-const DESKTOP_BUILD = process.env.NEXT_PUBLIC_AEGIS_DESKTOP_BUILD === "1";
+import { API_BASE } from "./api";
 
-/** Same origin inside the packaged app; the dev backend otherwise. */
-export const CONTROL_BASE = DESKTOP_BUILD
-  ? ""
-  : process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+/** Same origin inside the packaged app; the dev backend otherwise. One
+ *  resolver for both clients (`api.ts`), so a placeholder in the build env is
+ *  refused the same way here (2026-10-06). */
+export const CONTROL_BASE = API_BASE;
 
 export class ControlError extends Error {
   readonly status: number;

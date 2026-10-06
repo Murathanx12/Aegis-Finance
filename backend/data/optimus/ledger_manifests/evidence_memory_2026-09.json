@@ -1,0 +1,77 @@
+{
+ "schema_version": "ledger_manifest/1",
+ "ledger": "evidence_memory",
+ "month": "2026-09",
+ "archived": true,
+ "archived_at_utc": "2026-10-06T16:23:10+00:00",
+ "dated_by": "each row's own stamp and the run clock; never a file mtime",
+ "jsonl": {
+  "path": "backend/data/optimus/learner/evidence_memory_2026-09.jsonl",
+  "bytes": 65060980,
+  "sha256": "a67a293fa1c8aa1c09f332e5dfb4244217d0d37f62aa92e20331515183281728",
+  "rows": 102030,
+  "rows_unparseable": 0,
+  "trailing_newline": true,
+  "git_status": "ignored",
+  "deleted": false
+ },
+ "parquet": {
+  "path": "backend/data/optimus/ledger_archive/evidence_memory_2026-09.parquet",
+  "rows": 102030,
+  "schema": [
+   {
+    "name": "line_no",
+    "type": "int64"
+   },
+   {
+    "name": "stamp",
+    "type": "string"
+   },
+   {
+    "name": "line",
+    "type": "binary"
+   }
+  ],
+  "compression": "zstd",
+  "layout": "one row per jsonl line, verbatim bytes; b'\\n'.join(line) (+ trailing newline) == the jsonl",
+  "bytes": 1104317,
+  "sha256": "9d6539db74e981788e98f6da64cede424c2fa2c3083f2d3a69969be6f1b29d9b"
+ },
+ "row_schema": {
+  "stamp_field": "utc",
+  "top_level_keys": {
+   "screen_cleared": 102030,
+   "controlled_t": 102030,
+   "holm_p": 102030,
+   "utc": 102030,
+   "version": 102030,
+   "family_id": 102030,
+   "cell": 102030,
+   "job": 102030,
+   "run": 102030,
+   "variant": 102030,
+   "n_months": 102030,
+   "sharpe": 102030,
+   "dsr": 102030,
+   "spa_p": 102030,
+   "pbo": 102030,
+   "verdict": 102030,
+   "powered": 102030,
+   "years_needed_for_t2": 102030,
+   "years_observed": 102030,
+   "eras": 102030,
+   "gross_beats_market": 102030,
+   "net_beats_market": 102030,
+   "note": 102030
+  }
+ },
+ "first_ts": "2026-09-05T05:19:48+00:00",
+ "last_ts": "2026-09-11T11:30:10+00:00",
+ "min_ts": "2026-09-05T05:19:48+00:00",
+ "max_ts": "2026-09-11T11:30:10+00:00",
+ "rows_stamped_outside_month": 0,
+ "command": "python -m backend.services.ledger_archive --ledger backend/data/optimus/learner/evidence_memory_2026-09.jsonl --apply",
+ "writers_refuse_appends": true,
+ "note": "The jsonl is kept. Deleting it is the owner's decision; the parquet reproduces it byte for byte (verified at archive time).",
+ "round_trip_verified": true
+}
