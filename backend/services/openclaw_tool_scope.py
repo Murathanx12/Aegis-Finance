@@ -333,14 +333,68 @@ def violations(calls: list[dict]) -> list[dict]:
     return [c for c in calls if not is_read_call(c)]
 
 
+def released_calls(path: Path | None, since: datetime) -> list[dict]:
+    """Tool calls of sessions `openclaw_client.release_session` DELETED (C14,
+    2026-10-07), read back from the snapshot it wrote first: a deleted
+    session's transcript is gone from the agent store this audit reads, and
+    without this the audit would go blind exactly where sessions are released.
+    Calls before `since` are skipped; a missing file is no calls."""
+    if path is None or not Path(path).exists():
+        return []
+    try:
+        lines = Path(path).read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return []
+    out: list[dict] = []
+    for ln in lines:
+        try:
+            row = json.loads(ln)
+        except ValueError:
+            continue
+        for c in (row.get("calls") or []) if isinstance(row, dict) else []:
+            if not isinstance(c, dict):
+                continue
+            try:
+                t = datetime.fromisoformat(str(c.get("utc")).replace("Z", "+00:00"))
+            except ValueError:
+                continue
+            if t.tzinfo is None:
+                t = t.replace(tzinfo=timezone.utc)
+            if t >= since:
+                out.append(c)
+    return out
+
+
+def default_released_path() -> Path | None:
+    """`<OPTIMUS_LEDGER_DIR>/openclaw_sessions/released_tool_calls.jsonl`."""
+    try:
+        from backend import config as C                             # noqa: PLC0415
+        return Path(C.OPTIMUS_LEDGER_DIR) / "openclaw_sessions" / "released_tool_calls.jsonl"
+    except Exception:                                               # noqa: BLE001
+        return None
+
+
 def audit(home: Path | None = None, *, now: datetime | None = None,
-          hours: float = 24.0) -> dict:
+          hours: float = 24.0, released_path: Path | None = None) -> dict:
+    """`released_path`: the released-session snapshot to merge (None = the
+    default ledger path when `home` is the real OpenClaw home, else none)."""
+    real_home = home is None or Path(home) == default_home()
     home = Path(home or default_home())
     now = now or datetime.now(timezone.utc)
     cfg = load_config(home)
     probs = config_problems(cfg)
-    calls, errors = tool_calls(home, now - timedelta(hours=hours)) if cfg is not None \
+    since = now - timedelta(hours=hours)
+    calls, errors = tool_calls(home, since) if cfg is not None \
         else ([], ["no config"])
+    if released_path is None and real_home:
+        released_path = default_released_path()
+    if cfg is not None:
+        seen = {(c.get("session"), c.get("utc"), c.get("tool")) for c in calls}
+        for c in released_calls(released_path, since):
+            k = (c.get("session"), c.get("utc"), c.get("tool"))
+            if k not in seen:
+                seen.add(k)
+                calls.append(c)
     bad = violations(calls)
     by_tool: dict[str, int] = {}
     for c in calls:
@@ -364,9 +418,12 @@ def p_openclaw_tool_scope(ctx: Any):
     home = ctx.path("openclaw_home", default_home())
     if load_config(home) is None:
         return SH._unknown(f"no readable openclaw.json under {home}")
-    r = audit(home, now=ctx.now, hours=24.0)
+    rel = ctx.path("openclaw_released_calls",
+                   Path(ctx.optimus_dir) / "openclaw_sessions" / "released_tool_calls.jsonl")
+    r = audit(home, now=ctx.now, hours=24.0, released_path=rel)
     proof = ("openclaw.json tool policy resolved offline + agents/*/agent/"
-             "openclaw-agent.sqlite transcript_events (read-only), last 24 h")
+             "openclaw-agent.sqlite transcript_events (read-only) + the released-session "
+             "snapshot openclaw_sessions/released_tool_calls.jsonl, last 24 h")
     if r["verdict"] == "UNSAFE":
         heads = [f"{v['utc']} {v['agent']} {v['tool']}" for v in r["violations"][:5]]
         return SH.ProbeResult("DEAD", SH._iso(ctx.now), 0.0,

@@ -1570,6 +1570,20 @@ def _case_ledger_archive():
             ArchiveRefused, "archive_month() on a month file that does not exist")
 
 
+def _case_regret_ledger():
+    """Regret ledger (2026-10-06): a grade with no cost declared refuses.
+
+    The missing input is THE ROUND-TRIP COST. `CostRefused` is the module's
+    only refusal type; absent bars or an absent frozen-alternatives file
+    degrade to pending/refused rows rather than raising, so the cost is the
+    input this contract can hand the guard as "not there". A regret priced at
+    zero cost flatters every high-turnover alternative.
+    """
+    from backend.services.regret_ledger import CostRefused, pnl
+    return (lambda: pnl(0.05, 0.02, w_held=0.0, rt_bps=None), CostRefused,
+            "pnl() on a decision with no round-trip cost declared")
+
+
 def _case_calendar_offsets():
     """Quarterly-offset triplet (lane M1, 2026-09-28): a monthly rule has no
     quarterly calendars.
@@ -1762,6 +1776,7 @@ CASES = {
     "finra_short_volume": _case_finra_short_volume,
     "source_scorecard": _case_source_scorecard,
     "ledger_archive": _case_ledger_archive,
+    "regret_ledger": _case_regret_ledger,
 }
 
 

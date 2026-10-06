@@ -132,8 +132,15 @@ _ENVELOPE = {
 @pytest.fixture
 def tele(monkeypatch, tmp_path):
     from backend import config as C
+    from backend.services import openclaw_client as OC
+    from backend.services import openclaw_tool_scope as OTS
     path = tmp_path / "llm_calls.jsonl"
     monkeypatch.setenv(C.LLM_TELEMETRY_PATH_ENV, str(path))
+    # C14: `agent()` snapshots the released session's tool calls -- never from
+    # the machine's OpenClaw home nor into the real ledger dir in a unit test.
+    monkeypatch.setattr(OTS, "default_home", lambda: tmp_path / "no_openclaw_home")
+    monkeypatch.setattr(OC, "released_tool_calls_path",
+                        lambda: tmp_path / "openclaw_sessions" / "released_tool_calls.jsonl")
     return path
 
 
@@ -266,24 +273,32 @@ def test_health_full_carries_the_accrual_row_and_names_a_quiet_ledger(monkeypatc
                for r in body["degraded_reasons"]), body["degraded_reasons"]
 
 
-def test_a_one_shot_session_is_archived_after_its_turn(monkeypatch, tmp_path, tele):
-    # 2026-09-30, measured: every forecast call failed with "bundle-mcp: live
-    # runtime limit (256) reached" -- 666 finished one-shot sessions each kept
-    # an MCP runtime alive. A session this module named is archived after its
-    # turn; a caller-supplied session is the caller's and is left alone.
+def test_a_one_shot_session_is_deleted_not_archived_after_its_turn(monkeypatch, tmp_path, tele):
+    # 2026-09-30: "bundle-mcp: live runtime limit (256) reached" -- archiving
+    # was added. 2026-10-07 (C14), measured: archiving is `sessions.patch
+    # {archived: true}`, which never retires the gateway's MCP runtime; 146
+    # turns left 146 Optimus MCP + 146 bridge processes alive. The session is
+    # DELETED (which retires the runtime) after its tool calls are snapshotted;
+    # a caller-supplied session is the caller's and is left alone.
     from backend.services import openclaw_client as OC
     calls = []
+    deleted = {"ok": True, "operation": "delete", "dryRun": False,
+               "results": [{"key": "k", "ok": True, "status": "deleted", "archived": []}]}
 
     def run(cmd, **k):
         calls.append(list(cmd))
-        return subprocess.CompletedProcess(cmd, 0, json.dumps(_ENVELOPE), "")
+        is_delete = "sessions" in cmd and "delete" in cmd
+        out = json.dumps(deleted) if is_delete else json.dumps(_ENVELOPE)
+        return subprocess.CompletedProcess(cmd, 0, out, "")
     monkeypatch.setattr(subprocess, "run", run)
     msg = tmp_path / "m.md"
     msg.write_text("hello", encoding="utf-8")
     r = OC.agent(str(msg), purpose="u_forecast")
-    archives = [c for c in calls if "sessions" in c and "archive" in c]
-    assert len(archives) == 1 and f"{OC.SESSION_KEY_PREFIX}{r['session_id']}" in archives[0]
+    deletes = [c for c in calls if "sessions" in c and "delete" in c]
+    assert len(deletes) == 1 and f"{OC.SESSION_KEY_PREFIX}{r['session_id']}" in deletes[0]
+    assert "--yes" in deletes[0]
+    assert not [c for c in calls if "sessions" in c and "archive" in c]
     assert r["session_released"] is True
     calls.clear()
     r2 = OC.agent(str(msg), purpose="u_forecast", session_id="caller-owned")
-    assert not [c for c in calls if "archive" in c] and r2["session_released"] is None
+    assert not [c for c in calls if "sessions" in c] and r2["session_released"] is None

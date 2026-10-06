@@ -4575,6 +4575,34 @@ OPENCLAW_TEMP_DEGRADED_GB = 5.0
 #: The probe's time box: counting always completes, sizing stops at this.
 OPENCLAW_TEMP_PROBE_BUDGET_S = 1.5
 
+# ── Process census (C14, 2026-10-07) ─────────────────────────────────────────
+#: 2026-10-07: 590 python processes were alive -- one Optimus MCP server + one
+#: `openclaw_api_bridge` per OpenClaw agent session (146 sessions, each a
+#: venv shim + interpreter = 4 OS processes), 2.5 GB, never reaped, because
+#: `release_session` ARCHIVED the session and archiving does not retire the
+#: gateway's bundle-MCP runtime. Nothing counted them. `system_health`'s
+#: `process_census` counts LOGICAL instances per command-line family (a venv
+#: shim and its interpreter child count once): above the cap DEGRADED (verdict
+#: STALE), above PROCESS_CENSUS_DEAD_MULT x cap DEAD. It never kills anything.
+#: Family -> (case-insensitive regex on the command line, cap).
+PROCESS_CENSUS_FAMILIES = {
+    # one per Claude Code session + one per LIVE OpenClaw agent turn
+    "optimus_mcp": (r"optimus[\\/]mcp[\\/]server\.py", 8),
+    # only the OpenClaw gateway starts it: one per LIVE agent turn
+    "api_bridge": (r"openclaw_api_bridge", 4),
+    "sim_run": (r"scripts[.\\/]sim_run\b", 2),
+    "reader": (r"scripts[.\\/](reader_pool|night_reader_supervisor|web_reader)\b", 3),
+    "telegram": (r"scripts[.\\/]telegram_agent\b", 2),
+}
+PROCESS_CENSUS_DEAD_MULT = 2.0
+#: the census reader's time box (one Win32_Process query)
+PROCESS_CENSUS_TIMEOUT_S = 45
+#: `openclaw_client.release_session` (C14): how a one-shot agent session is
+#: released after its turn. "delete" retires the gateway's bundle-MCP runtime
+#: (the stdio children) after snapshotting the session's tool calls for the
+#: tool-scope audit; "archive" is the pre-C14 behaviour, which leaks them.
+OPENCLAW_SESSION_RELEASE_MODE = "delete"
+
 # ── Dow Jones reader: worker processes (2026-09-27) ──────────────────────────
 #: `dowjones_pull --plan ... --workers N` splits the plan by SITE into N reader
 #: processes (wsj / barrons / marketwatch), each with its own tab set and its

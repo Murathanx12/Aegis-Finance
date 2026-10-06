@@ -14,10 +14,15 @@ corrected the notes in several places and the corrections are dated inside the n
 - **Process leak found at 03:30 HKT:** 590 python processes alive, 294 Optimus MCP servers + 296 `openclaw_api_bridge.py`,
   292 of them children of the OpenClaw gateway, accumulating one pair every ~2.5 minutes since the gateway started at
   14:28 on 10-06 (2.5 GB working set). I killed the children older than 10 minutes by recorded PID
-  (`backend/data/optimus/local_pc/leak_killed_pids_2026-10-07.txt`); memory went from ~2 GB to 7.5 GB free. Chunk C14
-  (a builder) is finding the spawner and adding a process-census guard; read
-  `docs/research_notes/2026-10-07/gateway_process_leak_2026-10-07.md` if it exists. Until the root cause is fixed the
-  leak will return: check the census before any long run.
+  (`backend/data/optimus/local_pc/leak_killed_pids_2026-10-07.txt`); memory went from ~2 GB to 7.5 GB free. C14 found the cause
+  (`docs/research_notes/2026-10-07/gateway_process_leak_2026-10-07.md`): the gateway starts an Optimus MCP server and
+  an API bridge for EVERY OpenClaw agent session, and our `release_session` only ARCHIVED the session, which never
+  retires those children. It was not a steady 2.5-minute leak but one burst: 146 `u_forecast` + planner turns between
+  00:20 and 01:59 HKT, each leaving four OS processes. Fix: `release_session` now DELETES the session (after snapshotting
+  its tool calls for the read-only audit), inside a `finally`; a `process_census` health row goes DEGRADED/DEAD above
+  declared per-family caps. One owner config change recommended: `"sessionIdleTtlMs": 600000` under `mcp` in
+  `~/.openclaw/openclaw.json`. The gateway may still hold up to 146 stale runtime slots of 256; clear by deleting the
+  archived `aegis-*` sessions after 24 h or restarting the gateway by PID.
 
 ## 1. RESULTS SCOREBOARD
 

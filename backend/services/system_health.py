@@ -119,6 +119,9 @@ class ProbeCtx:
     #: `shutil.disk_usage`-shaped reader for `disk_free`; None = not measured
     #: (UNKNOWN). `make_ctx` supplies the real one; tests inject a fake.
     disk_usage: Optional[Callable[[str], Any]] = None
+    #: process-table reader for `process_census` (C14): `() -> list[dict] | None`;
+    #: None = not counted (UNKNOWN). `make_ctx` supplies the real one.
+    process_rows: Optional[Callable[[], Optional[list]]] = None
 
     def path(self, key: str, default: Path) -> Path:
         return Path(self.paths.get(key, default))
@@ -2018,6 +2021,7 @@ PROBES: tuple[Probe, ...] = (
     Probe("accrual_canary", "pc", D1, "accrual_canary.forecast_accrual + n_considered_row (PC paths)", p_accrual_canary),
     Probe("disk_free", "pc", timedelta(minutes=5), "shutil.disk_usage on the ledger dir's volume vs DISK_FREE_STALE_GB / DISK_FREE_DEAD_GB", p_disk_free),
     Probe("zero_byte_receipts", "pc", D1, "zero-byte *.json*/.md/.csv/.parquet under the ledger dir, dated by the stamp in the name (last 24 h)", p_zero_byte_receipts),
+    Probe("process_census", "pc", timedelta(minutes=10), "Win32_Process: live python instances per command-line family (venv shim + child = 1) vs config.PROCESS_CENSUS_FAMILIES caps; DEGRADED above cap, DEAD above 2x; read-only", lambda ctx: __import__("backend.services.process_census", fromlist=["p_process_census"]).p_process_census(ctx), True),
     Probe("openclaw_temp_builds", "pc", timedelta(minutes=10), "count + time-boxed size of %TEMP%/openclaw-plugin-build-* vs OPENCLAW_TEMP_DEGRADED_COUNT / _GB", lambda ctx: __import__("backend.services.openclaw_temp", fromlist=["p_openclaw_temp_builds"]).p_openclaw_temp_builds(ctx), True),
     Probe("backtest_leaderboard", "pc", timedelta(days=7), "strategy_library/leaderboard_<run id>.json: run id in the name vs BACKTEST_LEADERBOARD_STALE_DAYS", lambda ctx: __import__("backend.services.backtest_staleness", fromlist=["p_backtest_leaderboard"]).p_backtest_leaderboard(ctx)),
 )
@@ -2130,6 +2134,9 @@ def make_ctx(*, optimus_dir: Optional[Path] = None, now: Optional[datetime] = No
         from backend import config as C                             # noqa: PLC0415
         optimus_dir = Path(C.OPTIMUS_LEDGER_DIR)
     kw.setdefault("disk_usage", shutil.disk_usage)
+    if "process_rows" not in kw and allow_proc:
+        from backend.services import process_census as _PC          # noqa: PLC0415
+        kw["process_rows"] = _PC.read_processes
     ctx = ProbeCtx(optimus_dir=Path(optimus_dir), now=now or _utcnow(), allow_proc=allow_proc,
                    railway_url=kw.pop("railway_url", None) or _default_railway_url(), **kw)
     ctx.prev_state = _load_state(health_dir(ctx.optimus_dir))

@@ -113,7 +113,7 @@ import subprocess
 import threading
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -1730,15 +1730,22 @@ def agent(message_file: str, *, model: str = "deepseek/deepseek-v4-pro",
         status = "UNPARSEABLE_ENVELOPE"
     else:
         status = "OK"
-    call_id = _record_telemetry(
-        model=env.get("response_model") or model, purpose=purpose,
-        message_file=message_file, usage=env.get("usage") or {},
-        latency_ms=latency_ms, status=status, rc=rc, session_id=sid,
-        openclaw_cost_usd=env.get("openclaw_cost_usd"),
-        run_id=env.get("run_id"), error=(err[:300] if status != "OK" else None),
-        path=telemetry_path)
+    # The release runs on EVERY path, a telemetry failure included: a session
+    # left open keeps its gateway-side MCP children alive (C14, 2026-10-07).
+    released = None
+    try:
+        call_id = _record_telemetry(
+            model=env.get("response_model") or model, purpose=purpose,
+            message_file=message_file, usage=env.get("usage") or {},
+            latency_ms=latency_ms, status=status, rc=rc, session_id=sid,
+            openclaw_cost_usd=env.get("openclaw_cost_usd"),
+            run_id=env.get("run_id"), error=(err[:300] if status != "OK" else None),
+            path=telemetry_path)
+    finally:
+        if session_id is None:
+            released = release_session(
+                sid, since=datetime.fromtimestamp(t0, timezone.utc) - timedelta(seconds=5))
     served = env.get("response_model") or model
-    released = release_session(sid) if session_id is None else None
     return {"rc": rc, "reply": reply, "stderr": err.strip()[:600],
             "model": model, "status": status, "session_id": sid,
             "session_released": released,
@@ -1757,24 +1764,100 @@ def agent(message_file: str, *, model: str = "deepseek/deepseek-v4-pro",
 SESSION_KEY_PREFIX = "agent:main:explicit:"
 
 
-def release_session(sid: str, *, timeout: float = 60.0) -> bool:
-    """Archive a ONE-SHOT session the moment its turn is over.
+#: Where `release_session` writes a released session's tool calls before the
+#: delete removes its transcript; `openclaw_tool_scope.audit` reads it back.
+RELEASED_TOOL_CALLS_REL = Path("openclaw_sessions") / "released_tool_calls.jsonl"
 
-    2026-09-30, measured: the forecast unit failed 8 of 8 calls with
-    `bundle-mcp: live runtime limit (256) reached; stop or reset unused
-    sessions before connecting another MCP runtime`. Every `agent()` call opens
-    a fresh session (by design, see above) and, since the read-only tool scope
-    of 2026-09-29 allows `bundle-mcp`, each one kept an MCP runtime alive after
-    its turn; 666 finished sessions were stored and the gateway refused the
-    257th live runtime. Archiving releases the live artefacts; the archive stays
-    searchable. Best-effort: a failed release is returned as False and never
-    fails the call whose reply is already in hand. Only sessions this module
-    named itself are released -- a caller-supplied `session_id` is the caller's.
-    """
+
+def released_tool_calls_path() -> Path:
+    return Path(getattr(_config, "OPTIMUS_LEDGER_DIR")) / RELEASED_TOOL_CALLS_REL
+
+
+def _snapshot_tool_calls(sid: str, since: datetime | None,
+                         path: Path | None = None) -> bool:
+    """Copy ONE session's tool calls (read-only from the agents' transcript
+    stores) into the released-calls ledger, so deleting the session does not
+    blind the 24 h tool-scope audit. True when the snapshot was written (an
+    empty list included); False when the stores could not be read."""
+    from backend.services import openclaw_tool_scope as OTS          # noqa: PLC0415
+    lo = since or (datetime.now(timezone.utc) - timedelta(hours=6))
     try:
-        r = _run(["sessions", "archive", f"{SESSION_KEY_PREFIX}{sid}", "--json"],
-                 timeout=timeout)
-        return r.returncode == 0
+        calls, errors = OTS.tool_calls(OTS.default_home(), lo)
+    except Exception:                                               # noqa: BLE001
+        return False
+    if errors and not calls:
+        return False
+    mine = [c for c in calls if sid in str(c.get("session") or "")]
+    p = Path(path) if path is not None else released_tool_calls_path()
+    try:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with p.open("a", encoding="utf-8") as f:
+            f.write(json.dumps({"utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                                "session": f"{SESSION_KEY_PREFIX}{sid}",
+                                "n_calls": len(mine), "calls": mine}) + "\n")
+    except OSError:
+        return False
+    return True
+
+
+def _lifecycle_ok(stdout: str, want: str) -> bool:
+    """`openclaw sessions <op> --json` -> did every key reach status `want`?"""
+    txt = stdout or ""
+    if "{" not in txt:
+        return False
+    try:
+        d = json.loads(txt[txt.index("{"):txt.rindex("}") + 1])
+    except ValueError:
+        return False
+    res = d.get("results") if isinstance(d, dict) else None
+    return bool(res) and all(isinstance(r, dict) and r.get("status") == want for r in res)
+
+
+def release_session(sid: str, *, timeout: float = 60.0, since: datetime | None = None,
+                    mode: str | None = None) -> bool:
+    """Release a ONE-SHOT session the moment its turn is over: DELETE it, which
+    is what retires the gateway's bundle-MCP runtime (its stdio children).
+
+    C14, 2026-10-07, measured: ARCHIVING did not release anything. 146 agent
+    turns between 00:20 and 01:59 HKT left 146 Optimus MCP servers + 146
+    `openclaw_api_bridge` processes alive (x2 for the venv shim: 584 OS
+    processes, ~2.5 GB) until they were killed by hand at 03:23 -- the gateway
+    logged one `server "optimus" closed` + one `server "aegis_api" closed` per
+    session at that minute. In OpenClaw 2026.9.5 `sessions archive` is a
+    `sessions.patch {archived: true}`, which never calls
+    `retireSessionMcpRuntime`; `sessions delete` does
+    (`cleanupSessionBeforeMutation` -> `ensureSessionRuntimeCleanup`), and its
+    transcript is archived, not destroyed. This function returned True for
+    every one of those archives: a remedy that reports success and changes
+    nothing.
+
+    Deleting removes the session's transcript rows from the agent store that
+    `openclaw_tool_scope` audits, so the session's tool calls are SNAPSHOTTED
+    into `released_tool_calls.jsonl` first, and the audit reads them back. If
+    the snapshot cannot be taken the session is ARCHIVED instead (the audit
+    evidence outranks the memory) and False is returned -- the census probe
+    (`system_health.process_census`) is what turns the resulting leak red.
+
+    `mode` (default `config.OPENCLAW_SESSION_RELEASE_MODE`): "delete" | "archive".
+    True only when the gateway confirmed a DELETE. Best-effort: never raises,
+    and never fails the call whose reply is already in hand. Only sessions this
+    module named itself are released -- a caller-supplied `session_id` is the
+    caller's.
+
+    2026-09-30 (the first version): the forecast unit failed 8 of 8 calls with
+    `bundle-mcp: live runtime limit (256) reached`; archiving was added then
+    and the limit stopped firing only because the gateway was restarted.
+    """
+    key = f"{SESSION_KEY_PREFIX}{sid}"
+    mode = (mode or str(getattr(_config, "OPENCLAW_SESSION_RELEASE_MODE", "delete"))).lower()
+    try:
+        if mode == "delete" and _snapshot_tool_calls(sid, since):
+            r = _run(["sessions", "delete", key, "--yes", "--json"], timeout=timeout)
+            if r.returncode == 0 and _lifecycle_ok(r.stdout, "deleted"):
+                return True
+        # archive: the pre-C14 path (keeps the transcript, leaks the runtime)
+        _run(["sessions", "archive", key, "--json"], timeout=timeout)
+        return False
     except Exception:                                   # noqa: BLE001
         return False
 
