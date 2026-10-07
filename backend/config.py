@@ -5701,7 +5701,7 @@ HEALTH_TASK_CADENCE_H = {
     "AegisFleetManagerPreclose": 24.0, "AegisFleetDailyCheck": 24.0,
     "AegisReaderSupervisor": 0.5, "AegisCatchUp": 2.0, "AegisTelegramAgent": 0.05,
     "AegisAnalystPanelDaily": 24.0, "AegisAnalystPull": 168.0, "AegisBrainRefresh": 24.0,
-    "AegisPublicFlow": 24.0,
+    "AegisPublicFlow": 24.0, "AegisResearchLane": 168.0,
 }
 #: "Same output for too long": a receipt series whose SUBSTANCE hash (the receipt
 #: with its stamps/run ids removed) is unchanged across at least this many
