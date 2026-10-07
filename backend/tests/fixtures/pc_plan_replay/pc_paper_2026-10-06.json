@@ -1,0 +1,135 @@
+{
+ "_doc": "Sanitised replay fixture for the PC-PAPER plan (2026-10-07 owner decision: D14/D21/D22 + the revision_flow sleeve). The REAL PC-PAPER broker read of 2026-10-06T17:59Z (pc_book/state_latest.json: equity, cash, the 10 held positions' qty/market value/price; account number dropped), SPY from the same read, revision_flow_v0 names priced at the bars panel's last close (prices_2025_26/bars.parquet), and the panel's 63-session daily sigma for every symbol involved.",
+ "read_utc": "2026-10-06T17:59:35+00:00",
+ "equity": 1002263.9,
+ "cash": 800653.35,
+ "positions": [
+  {
+   "symbol": "AAPL",
+   "qty": 58.0,
+   "market_value": 19290.22,
+   "current_price": 332.59
+  },
+  {
+   "symbol": "AMZN",
+   "qty": 79.0,
+   "market_value": 20180.55,
+   "current_price": 255.45
+  },
+  {
+   "symbol": "AVPT",
+   "qty": 1524.0,
+   "market_value": 22364.7,
+   "current_price": 14.675
+  },
+  {
+   "symbol": "GOOGL",
+   "qty": 58.0,
+   "market_value": 20149.49,
+   "current_price": 347.405
+  },
+  {
+   "symbol": "INCY",
+   "qty": 160.0,
+   "market_value": 18108.8,
+   "current_price": 113.18
+  },
+  {
+   "symbol": "JAZZ",
+   "qty": 84.0,
+   "market_value": 19428.36,
+   "current_price": 231.29
+  },
+  {
+   "symbol": "META",
+   "qty": 26.0,
+   "market_value": 19307.47,
+   "current_price": 742.595
+  },
+  {
+   "symbol": "NVDA",
+   "qty": 88.0,
+   "market_value": 21114.28,
+   "current_price": 239.935
+  },
+  {
+   "symbol": "SNDR",
+   "qty": 642.0,
+   "market_value": 20357.82,
+   "current_price": 31.71
+  },
+  {
+   "symbol": "TSM",
+   "qty": 44.0,
+   "market_value": 21311.3956,
+   "current_price": 484.3499
+  }
+ ],
+ "prices": {
+  "AAPL": 332.59,
+  "AMZN": 255.45,
+  "AVPT": 14.675,
+  "GOOGL": 347.405,
+  "INCY": 113.18,
+  "JAZZ": 231.29,
+  "META": 742.595,
+  "NVDA": 239.935,
+  "SNDR": 31.71,
+  "TSM": 484.3499,
+  "OKTA": 218.67,
+  "SNOW": 335.95,
+  "CRWD": 278.86,
+  "PANW": 419.91,
+  "CRM": 224.99,
+  "ABNB": 160.39,
+  "AFRM": 74.88,
+  "GTLB": 51.63,
+  "AMD": 649.42,
+  "ESTC": 94.6,
+  "AMGN": 402.6,
+  "TGT": 154.33,
+  "NET": 355.01,
+  "DDOG": 278.24,
+  "MDB": 360.71,
+  "ZS": 212.25,
+  "WDAY": 186.55,
+  "S": 25.8,
+  "XYZ": 76.54,
+  "DELL": 574.0,
+  "SPY": 779.705
+ },
+ "sigmas": {
+  "AAPL": 0.016785900541441436,
+  "AMZN": 0.025974230157962273,
+  "AVPT": 0.026164618419970295,
+  "GOOGL": 0.02144136420796684,
+  "INCY": 0.01983886000967762,
+  "JAZZ": 0.017003932439084334,
+  "META": 0.029990256561851628,
+  "NVDA": 0.023955940056419725,
+  "SNDR": 0.020070418259556407,
+  "TSM": 0.020872598508525294,
+  "OKTA": 0.04969184376958055,
+  "SNOW": 0.030362381482478197,
+  "CRWD": 0.045598891462222534,
+  "PANW": 0.03706426836370735,
+  "CRM": 0.03848244531609032,
+  "ABNB": 0.030544305599012358,
+  "AFRM": 0.03182009271408072,
+  "GTLB": 0.03450249888190958,
+  "AMD": 0.040471611161748834,
+  "ESTC": 0.03967850117200066,
+  "AMGN": 0.021250349211356857,
+  "TGT": 0.017286534298280955,
+  "NET": 0.03577841376892686,
+  "DDOG": 0.04129683045073345,
+  "MDB": 0.046479613573816976,
+  "ZS": 0.040167680712973525,
+  "WDAY": 0.03987400474840973,
+  "S": 0.0395297570310374,
+  "XYZ": 0.02300010626499572,
+  "DELL": 0.0504152764011538,
+  "SPY": 0.006966830386706793
+ },
+ "bars_last": "2026-10-06"
+}

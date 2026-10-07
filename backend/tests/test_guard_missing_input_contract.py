@@ -1747,6 +1747,18 @@ def _case_bar_defects_empty_book():
             "assert_book_clean() on a book with no held slot")
 
 
+def _case_pc_sleeves():
+    # Owner 2026-10-07: the revision_flow sleeve on PC-PAPER. The missing input is
+    # THE FROZEN BOOK: mirroring a book that is not in the store would buy nothing
+    # and read as "the sleeve is flat"; `load_revision_flow` refuses instead.
+    from pathlib import Path as _P
+
+    from backend.services.pc_sleeves import SleeveRefused, load_revision_flow
+    return (lambda: load_revision_flow(book_id="0000000000000000",
+                                       books_path=_P("does/not/exist/books.jsonl")),
+            SleeveRefused, "load_revision_flow() with no frozen book")
+
+
 def _case_results_voice():
     # 2026-10-07 "speak with results": the missing input is the receipt pair. A
     # results statement over no ROI rows would print "0 of 0 ahead" as a headline.
@@ -1770,6 +1782,7 @@ def _case_public_flow_common():
 
 
 CASES = {
+    "pc_sleeves": _case_pc_sleeves,
     "results_voice": _case_results_voice,
     "public_flow_common": _case_public_flow_common,
     "fleet_manager": _case_fleet_manager,

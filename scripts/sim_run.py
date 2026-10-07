@@ -1050,10 +1050,71 @@ def _benchmark_core_flag(targets: list) -> tuple[bool, str]:
     return on, sym
 
 
+def _revision_flow_sleeve(*, probe_syms: list, ex_syms: list, exploit_acting: bool,
+                          mode: str) -> dict:
+    """Owner 2026-10-07 17:05 HKT ("dont stay cash on pc. lets do the best
+    decision and profit maximizing strat"): the EXPLOIT sleeve that mirrors the
+    FROZEN book revision_flow_v0 (`config.PC_SLEEVE_REVISION_FLOW*`).
+
+    Flag OFF -> {"enabled": False} and the caller changes nothing. ON: the
+    book's names at `PC_SLEEVE_REVISION_FLOW_GROSS / n` each (never above
+    `pc_broker.MAX_NAME_FRAC`). A name that is already a PROBE target, or an
+    ACTING EXPLOIT target, is skipped and named (its slice stays with the
+    core): one symbol, one sleeve. A load refusal (book missing / voided /
+    ticker sets differ) is a REFUSED line and no sleeve, never a raise."""
+    import backend.config as _cfg_live
+    if not bool(getattr(_cfg_live, "PC_SLEEVE_REVISION_FLOW", False)):
+        return {"enabled": False}
+    from backend.services import pc_broker as PB                   # noqa: PLC0415
+    from backend.services import pc_sleeves as SL                  # noqa: PLC0415
+    gross = float(getattr(_cfg_live, "PC_SLEEVE_REVISION_FLOW_GROSS", 0.0))
+    try:
+        book = SL.load_revision_flow()
+    except Exception as exc:                                       # noqa: BLE001
+        return {"enabled": True, "applied": False, "gross_planned": 0.0, "weights": {},
+                "line": f"revision_flow sleeve: REFUSED {type(exc).__name__}: {exc}"[:300]}
+    names = list(book["tickers"])
+    w_each = min(gross / len(names), float(PB.MAX_NAME_FRAC)) if names else 0.0
+    taken = set(probe_syms) | (set(ex_syms) if exploit_acting else set())
+    skipped = [s_ for s_ in names if s_ in taken]
+    weights = {s_: w_each for s_ in names if s_ not in taken}
+    planned = sum(weights.values())
+    return {"enabled": True, "applied": bool(weights), "state": SL.SLEEVE_STATE,
+            "acting": bool(weights) and mode == "paper_profit",
+            "book": book, "gross_config": gross, "weight_each": w_each,
+            "gross_planned": planned, "weights": weights,
+            "skipped_already_in_a_sleeve": skipped,
+            "grading": {"basis": "excess_over_core", "core_symbol": str(getattr(
+                _cfg_live, "PC_BENCHMARK_CORE_SYMBOL", "SPY")),
+                "rule": "each sleeve name graded r_name - r_core over its own window; "
+                        "orders carry state REVISION_FLOW, separate from PROBE/EXPLOIT"},
+            "line": (f"revision_flow sleeve (EXPLOIT, frozen book {book['name']} "
+                     f"{book['book_id']}, {book['licence']}): {len(weights)} names x "
+                     f"{w_each:.2%} = {planned:.2%} gross (config {gross:.0%})"
+                     + (f"; skipped, already in a sleeve: {skipped}" if skipped else "")
+                     + ("" if mode == "paper_profit" else f"; mode={mode}: not acting"))}
+
+
+def _held_residual(held: dict, prices: dict, equity: float, *, core_sym: str,
+                   will_trade) -> dict:
+    """Held names this cycle will NOT trade (a non-acting sleeve's holdings, an
+    exit that will not be sent): they occupy equity, so the core leaves room."""
+    out = {}
+    for s_, q in held.items():
+        if s_ == core_sym or will_trade(s_):
+            continue
+        px = float(prices.get(s_) or 0.0)
+        if px > 0 and equity > 0 and float(q) > 0:
+            out[s_] = float(q) * px / float(equity)
+    return out
+
+
 def _plan_benchmark_core(targets: list, *, probe_syms: list, ex_syms: list,
                          exploit_acting: bool, probe_acting: bool, equity: float,
                          held: dict, prices: dict, bars_paths: list | None,
-                         sandbox: bool) -> tuple[dict, list]:
+                         sandbox: bool, rf_syms: list | None = None,
+                         rf_acting: bool = False,
+                         held_residual: dict | None = None) -> tuple[dict, list]:
     """C20 / owner decision D14: hold `1 - acting gross` in the benchmark.
 
     Called only when the flag is ON, AFTER the sleeves' `plan_orders` (review
@@ -1072,8 +1133,10 @@ def _plan_benchmark_core(targets: list, *, probe_syms: list, ex_syms: list,
         from backend.services import pc_risk as PR                 # noqa: PLC0415
         acting = {t.symbol: float(t.weight) for t in targets
                   if (t.symbol in probe_syms and probe_acting)
-                  or (t.symbol in ex_syms and exploit_acting)}
-        core = BC.core_plan(acting, enabled=True)
+                  or (t.symbol in ex_syms and exploit_acting)
+                  or (t.symbol in (rf_syms or []) and rf_acting)}
+        core = (BC.core_plan(acting, enabled=True, held_residual=held_residual)
+                if held_residual else BC.core_plan(acting, enabled=True))
         if not core.get("applied"):
             return core, []
         if bars_paths:
@@ -1083,9 +1146,10 @@ def _plan_benchmark_core(targets: list, *, probe_syms: list, ex_syms: list,
         fb, fb_src = PR.fallback_sigma(PR.universe_stats(sig))
         csig = float(sig.get(core["symbol"]) or fb)
         w = float(core["deliver_weight"])
+        resid = dict(core.get("held_residual") or {})
         wc = BC.worst_case(equity=equity, core_frac=w, core_sigma=csig,
-                           sleeve_weights=acting, sleeve_sigmas=sig, fallback_sigma=fb,
-                           label="core + acting sleeves")
+                           sleeve_weights={**acting, **resid}, sleeve_sigmas=sig,
+                           fallback_sigma=fb, label="core + acting sleeves")
         if not wc["passes_limit"]:
             k = float(_config.PROBE_WORST_CASE_SIGMA)
             room = wc["limit_frac"] * equity + wc["sleeves_k_sigma_usd"]   # sleeves are negative
@@ -1093,8 +1157,8 @@ def _plan_benchmark_core(targets: list, *, probe_syms: list, ex_syms: list,
             core["status"] = "CORE_SHRUNK_BY_WORST_CASE"
             core["line"] += f"; CORE_SHRUNK_BY_WORST_CASE to {w:.2%}"
             wc = BC.worst_case(equity=equity, core_frac=w, core_sigma=csig,
-                               sleeve_weights=acting, sleeve_sigmas=sig, fallback_sigma=fb,
-                               label="core + acting sleeves (shrunk)")
+                               sleeve_weights={**acting, **resid}, sleeve_sigmas=sig,
+                               fallback_sigma=fb, label="core + acting sleeves (shrunk)")
         core["core_sigma"] = {"daily": csig, "source": ("panel" if sig.get(core["symbol"])
                                                         else f"{fb_src} (no panel sigma)")}
         core["worst_case"] = wc
@@ -1107,8 +1171,9 @@ def _plan_benchmark_core(targets: list, *, probe_syms: list, ex_syms: list,
         sym = core["symbol"]
         t = PB.Target(symbol=sym, weight=w,
                       reason=f"BENCHMARK CORE (D14): 1 - acting {core['active_gross']:.2%}")
+        core_kw = ({"max_name_frac": 1.0} if core.get("exempt_from_name_cap") else {})
         core_plans = PB.plan_orders([t], equity=equity, held={sym: held.get(sym, 0.0)},
-                                    prices={sym: prices.get(sym, 0.0)})
+                                    prices={sym: prices.get(sym, 0.0)}, **core_kw)
         targets.append(t)          # for the receipt's book; the sleeves are already planned
         return core, core_plans
     except Exception as exc:                                       # noqa: BLE001
@@ -1118,12 +1183,19 @@ def _plan_benchmark_core(targets: list, *, probe_syms: list, ex_syms: list,
 
 def _order_path_gate(targets: list, *, snap: dict, equity: float, probe_syms: list,
                      ex_syms: list, exploit_acting: bool, probe_acting: bool,
-                     probe_sigma: dict, bars_paths: list | None, sandbox: bool) -> dict:
+                     probe_sigma: dict, bars_paths: list | None, sandbox: bool,
+                     rf_syms: list | None = None, rf_acting: bool = False) -> dict:
     """The mandate and the worst case, re-checked on the plan's own targets
     before any submit (review C2 F1/F3). Mutates EXPLOIT target weights DOWN
     when the acting book is over `PC_WORST_CASE_MAX_FRAC_OF_EQUITY`; returns
     `block` (a reason) when nothing may be sent. Never raises: a gate that
-    cannot compute blocks."""
+    cannot compute blocks.
+
+    The revision_flow sleeve (owner 2026-10-07, `rf_syms`) is priced with the
+    book. Order of shrinking: the ranker's EXPLOIT first; only if PROBE +
+    the sleeve are still over the line is the ranker's EXPLOIT set to zero and
+    the sleeve scaled; PROBE alone over the line still blocks. Flag OFF
+    (`rf_syms` empty): byte-identical to the pre-sleeve gate."""
     try:
         from backend.services import pc_risk as PR                 # noqa: PLC0415
         from backend.services import decision_contract as DC       # noqa: PLC0415
@@ -1136,16 +1208,35 @@ def _order_path_gate(targets: list, *, snap: dict, equity: float, probe_syms: li
         sig = {**sig, **probe_sigma}
         k = float(_config.PROBE_WORST_CASE_SIGMA)
         limit = float(_config.PC_WORST_CASE_MAX_FRAC_OF_EQUITY)
+        rf_set = set(rf_syms or [])
         acting = {t.symbol: float(t.weight) for t in targets
                   if (t.symbol in probe_syms and probe_acting)
-                  or (t.symbol in ex_syms and exploit_acting)}
-        sleeve_of = {s_: ("EXPLOIT" if s_ in ex_syms and s_ not in probe_syms else "PROBE")
+                  or (t.symbol in ex_syms and exploit_acting)
+                  or (t.symbol in rf_set and rf_acting)}
+        sleeve_of = {s_: ("REVISION_FLOW" if s_ in rf_set else
+                          "EXPLOIT" if s_ in ex_syms and s_ not in probe_syms else "PROBE")
                      for s_ in acting}
         cb = PR.cap_book(acting, sleeve_of, sig, k=k, limit=limit, fallback=fb)
+        rf_scale = 1.0
+        if rf_set and cb["block"]:
+            # PROBE + the sleeve over the line: the ranker's EXPLOIT goes to zero
+            # and the sleeve is scaled as the shrinkable sleeve
+            no_ex = {s_: w for s_, w in acting.items() if sleeve_of[s_] != "EXPLOIT"}
+            of2 = {s_: ("EXPLOIT" if sleeve_of[s_] == "REVISION_FLOW" else "PROBE")
+                   for s_ in no_ex}
+            cb2 = PR.cap_book(no_ex, of2, sig, k=k, limit=limit, fallback=fb)
+            rf_scale = cb2["scale_exploit"]
+            cb = {**cb2, "scale_exploit": 0.0,
+                  "line": cb2["line"].replace("EXPLOIT scaled", "revision_flow scaled")
+                  + "; the ranker's EXPLOIT set to zero first"}
         if cb["scale_exploit"] < 1.0:
             for t in targets:
                 if sleeve_of.get(t.symbol) == "EXPLOIT":
                     t.weight = float(t.weight) * cb["scale_exploit"]
+        if rf_scale < 1.0:
+            for t in targets:
+                if sleeve_of.get(t.symbol) == "REVISION_FLOW":
+                    t.weight = float(t.weight) * rf_scale
         eq = {"equity_usd": float(equity), "as_of": _now(),
               "account_number": snap.get("account_number"),
               "cash_usd": snap.get("cash"),
@@ -1158,15 +1249,103 @@ def _order_path_gate(targets: list, *, snap: dict, equity: float, probe_syms: li
         blocking = [d for d in m.get("disagreements") or []
                     if str(d).split(":", 1)[0] in ORDER_BLOCKING_DISAGREEMENTS]
         block = cb["block"] or (("MANDATE: " + "; ".join(blocking)) if blocking else None)
-        return {"block": block, "scale_exploit": cb["scale_exploit"],
+        out_g = {"block": block, "scale_exploit": cb["scale_exploit"],
                 "before_frac": cb["before_frac"], "after_frac": cb["after_frac"],
                 "limit": limit, "sigma_fallback": f"{fb_src} {fb:.2%}",
                 "mandate_status": m.get("status"), "account_verified": m.get("account_verified"),
                 "largest_admissible": m.get("worst_case_gate"),
                 "line": cb["line"] + (f"; BLOCKED: {block}" if block else "")}
+        if rf_set:
+            out_g["scale_revision_flow"] = rf_scale
+        return out_g
     except Exception as exc:                                       # noqa: BLE001
         return {"block": f"risk gate could not compute ({type(exc).__name__}: {str(exc)[:160]})",
                 "line": f"order-path gate CANNOT DETERMINE: {type(exc).__name__}: {exc}"}
+
+
+def _owner_d14_worst_case(*, equity: float, targets: list, core: dict, rf: dict,
+                          rf_acting: bool, probe_syms: list, ex_syms: list,
+                          probe_acting: bool, exploit_acting: bool,
+                          bars_paths: list | None, sandbox: bool,
+                          probe_sigma_max: float) -> dict:
+    """Session protocol item 4 for the owner-decision book (2026-10-07), in
+    dollars: the revision_flow sleeve (one-day k-sigma, rho = 1; the basket's
+    worst 21-session return and worst day on the bars panel), the SPY core,
+    the PROBE/EXPLOIT sleeves as planned, and sum|notional|/equity -- at this
+    equity, for the PLANNED book and for the LARGEST ADMISSIBLE one (PROBE at
+    its cap at the shortlist's highest sigma, the sleeve at its config gross,
+    the core on the remainder). Reporting only; never raises into the plan."""
+    try:
+        from backend.services import pc_risk as PR                 # noqa: PLC0415
+        from backend.services import pc_sleeves as SL              # noqa: PLC0415
+        if bars_paths:
+            sig = PR.panel_sigmas(Path(bars_paths[0]))
+        else:
+            sig = {} if sandbox else PR.panel_sigmas()
+        fb, fb_src = PR.fallback_sigma(PR.universe_stats(sig))
+        k = float(_config.PROBE_WORST_CASE_SIGMA)
+        limit = float(_config.PC_WORST_CASE_MAX_FRAC_OF_EQUITY)
+        eq = float(equity)
+        csym = str(core.get("symbol") or _config.PC_BENCHMARK_CORE_SYMBOL)
+        csig = float(sig.get(csym) or fb)
+        w = {t.symbol: float(t.weight) for t in targets}
+        rf_names = list((rf.get("book") or {}).get("tickers") or [])
+        rf_planned = ({s_: w[s_] for s_ in (rf.get("weights") or {}) if s_ in w}
+                      if rf_acting else {})
+        pr_planned = {s_: w[s_] for s_ in probe_syms if s_ in w and probe_acting}
+        ex_planned = {s_: w[s_] for s_ in ex_syms if s_ in w and exploit_acting}
+        core_w = float(core.get("weight_planned") or 0.0) if core.get("applied") else 0.0
+        resid = dict(core.get("held_residual") or {})
+        lines: list = []
+        hist: dict = {}
+        if rf_names and not sandbox:
+            hist = SL.basket_history(rf_names, Path(bars_paths[0]) if bars_paths
+                                     else PR._bars_path())
+        rf_wc = SL.sleeve_worst_case(equity=eq, names=list(rf_planned),
+                                     gross=sum(rf_planned.values()), sigmas=sig, k=k,
+                                     fallback=fb, history=hist,
+                                     label="revision_flow sleeve (planned)")
+        lines.append(rf_wc["line"])
+
+        def _loss(ws: dict) -> float:
+            return sum(max(0.0, v) * k * float(sig.get(s_) or fb) for s_, v in ws.items())
+        planned = {"rf": _loss(rf_planned), "probe": _loss(pr_planned),
+                   "exploit": _loss(ex_planned), "held_not_traded": _loss(resid),
+                   "core": core_w * k * csig}
+        tot = sum(planned.values())
+        gross = (sum(rf_planned.values()) + sum(pr_planned.values())
+                 + sum(ex_planned.values()) + sum(resid.values()) + core_w)
+        verdict = "PASS" if tot <= limit + 1e-12 else "FAIL"
+        lines.append(
+            f"PLANNED BOOK at ${eq:,.0f}: revision_flow -${planned['rf'] * eq:,.0f} + PROBE "
+            f"-${planned['probe'] * eq:,.0f} + EXPLOIT -${planned['exploit'] * eq:,.0f} + held "
+            f"not traded -${planned['held_not_traded'] * eq:,.0f} + {csym} core {core_w:.2%} x "
+            f"{k:g} x {csig:.2%} -${planned['core'] * eq:,.0f} = -${tot * eq:,.0f} "
+            f"({tot:.2%} of equity, limit {limit:.0%}: {verdict}); sum|notional|/equity "
+            f"{gross:.2f}; no stop is declared, so the ceiling is -${gross * eq:,.0f}")
+        g_cfg = float(rf.get("gross_config") or 0.0) if rf.get("enabled") else 0.0
+        pg = float(_config.PROBE_GROSS_CAP)
+        buf = float(core.get("cash_buffer") or 0.0)
+        la = SL.book_loss_frac(rf_names=rf_names, rf_gross=g_cfg, probe_gross=pg,
+                               probe_sigma=float(probe_sigma_max), core_sigma=csig,
+                               sigmas=sig, k=k, fallback=fb, cash_buffer=buf)
+        lines.append(
+            f"LARGEST ADMISSIBLE at ${eq:,.0f}: PROBE {pg:.0%} x {k:g} x "
+            f"{float(probe_sigma_max):.2%} = -${la['probe_frac'] * eq:,.0f}; revision_flow "
+            f"{g_cfg:.0%} = -${la['rf_frac'] * eq:,.0f}; {csym} core {la['core_weight']:.0%} = "
+            f"-${la['core_frac'] * eq:,.0f}; total -${la['total_frac'] * eq:,.0f} "
+            f"({la['total_frac']:.2%}, limit {limit:.0%}); sum|notional|/equity "
+            f"{la['gross']:.2f} (the ranker's EXPLOIT is sized to fit what is left, every cycle)")
+        return {"equity_usd": eq, "k_sigma": k, "limit_frac": limit,
+                "sigma_source": f"panel daily sigma; missing -> {fb_src} {fb:.2%}",
+                "revision_flow": rf_wc, "planned_frac": planned, "planned_total_frac": tot,
+                "planned_total_usd": -tot * eq, "planned_gross_over_equity": gross,
+                "planned_passes": tot <= limit + 1e-12,
+                "largest_admissible": la, "largest_admissible_usd": -la["total_frac"] * eq,
+                "lines": lines}
+    except Exception as exc:                                       # noqa: BLE001
+        return {"lines": [f"owner-d14 worst case CANNOT DETERMINE: {type(exc).__name__}: "
+                          f"{str(exc)[:200]}"]}
 
 
 def _plan_scaled_views(targets: list, prices: dict, equity: float) -> dict:
@@ -1539,7 +1718,17 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
 
     probe_syms = [x["ticker"] for x in probe_rows]
     ex_syms = [s for s in exploit_syms if s not in probe_syms]
-    room = max(0.0, 1.0 - probe_gross)
+    # ---- owner 2026-10-07: the revision_flow EXPLOIT sleeve (flag OFF -> inert) --
+    rf = _revision_flow_sleeve(probe_syms=probe_syms, ex_syms=ex_syms,
+                               exploit_acting=exploit_acting, mode=mode)
+    rf_w: dict = dict(rf.get("weights") or {})
+    rf_syms = list(rf_w)
+    rf_acting = bool(rf.get("acting"))
+    if rf_syms and not exploit_acting:
+        # a planned-but-not-acting EXPLOIT target yields its symbol to the sleeve
+        ex_syms = [s for s in ex_syms if s not in rf_w]
+    room = (max(0.0, 1.0 - probe_gross - float(rf["gross_planned"])) if rf_syms
+            else max(0.0, 1.0 - probe_gross))
     ex_er = {x["symbol"]: e for x, e in ex_pick if x["symbol"] in ex_syms}
     if ex_syms and all(ex_er.get(s) is not None for s in ex_syms):
         tot = sum(ex_er[s] for s in ex_syms)
@@ -1563,6 +1752,12 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                           median_dollar_vol=x.get("median_dollar_vol"),
                           reason=f"PROBE shortlist score {x.get('score')} ({x['source']})")
                 for x in probe_rows]
+    if rf_syms:
+        targets += [PB.Target(symbol=s_, weight=w_,
+                              reason=(f"REVISION_FLOW sleeve (EXPLOIT): frozen book "
+                                      f"{rf['book']['name']} {rf['book']['book_id']} at "
+                                      f"{w_:.2%}; PRODUCT_EXPERIMENT"))
+                    for s_, w_ in rf_w.items()]
     # ---- the order-path gate, EVERY cycle (review C2 F1/F3) --------------------
     # Live capital/account check + the per-name worst case of the ACTING book.
     # Over the line: EXPLOIT is sized down (never a limit widened); PROBE alone
@@ -1582,7 +1777,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         ex_syms=ex_syms, exploit_acting=exploit_acting, probe_acting=probe_acting,
         probe_sigma={x["ticker"]: float(x["vol_annual"]) / (252 ** 0.5) for x in sl
                      if isinstance(x.get("vol_annual"), (int, float)) and x["vol_annual"] > 0},
-        bars_paths=bars_paths, sandbox=sandbox)
+        bars_paths=bars_paths, sandbox=sandbox,
+        **({"rf_syms": rf_syms, "rf_acting": rf_acting} if rf_syms else {}))
     # ---- C20 / D14: the benchmark core (config.PC_BENCHMARK_CORE, default OFF) --
     # Review 2026-10-07 H2: the core is planned in its OWN plan_orders call,
     # AFTER the sleeves' call, on `1 - acting gross` as plan_orders left it. It
@@ -1601,10 +1797,27 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         core = {"enabled": True, "applied": False, "symbol": core_sym,
                 "line": f"benchmark core: REFUSED -- {core_sym} is already a sleeve target"}
     if core_on:
+        _prior = _prior_probe_holdings(folder, asof)
+        _tsyms = {t.symbol for t in targets}
+
+        def _will_trade(sym: str) -> bool:
+            if sym in rf_w:
+                return rf_acting
+            if sym in probe_syms:
+                return probe_acting
+            if sym in ex_syms:
+                return exploit_acting
+            if sym in _tsyms:
+                return False
+            return probe_acting if sym in _prior else exploit_acting
+        core_extra = ({"rf_syms": rf_syms, "rf_acting": rf_acting} if rf_syms else {})
+        resid = _held_residual(held, prices, equity, core_sym=core_sym, will_trade=_will_trade)
+        if resid:
+            core_extra["held_residual"] = resid
         core, core_plans = _plan_benchmark_core(
             targets, probe_syms=[x["ticker"] for x in probe_rows], ex_syms=ex_syms,
             exploit_acting=exploit_acting, probe_acting=probe_acting, equity=equity,
-            held=held, prices=prices, bars_paths=bars_paths, sandbox=sandbox)
+            held=held, prices=prices, bars_paths=bars_paths, sandbox=sandbox, **core_extra)
         plans = plans + core_plans
     core_syms = {core["symbol"]} if core.get("applied") else set()
 
@@ -1632,6 +1845,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     def _state(sym: str) -> str:
         if sym in core_syms:
             return "CORE"
+        if sym in rf_w:
+            return "REVISION_FLOW"
         if sym in probe_syms:
             return "PROBE"
         if sym in ex_syms:
@@ -1642,7 +1857,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         st = _state(p.symbol)
         return p.qty > 0 and ((st in ("PROBE", "PROBE_EXIT") and probe_acting)
                               or (st in ("EXPLOIT", "EXIT") and exploit_acting)
-                              or (st == "CORE" and mode == "paper_profit"))
+                              or (st == "CORE" and mode == "paper_profit")
+                              or (st == "REVISION_FLOW" and rf_acting))
 
     by_state: dict[str, int] = {}
     for p in plans:
@@ -1838,6 +2054,27 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         record["benchmark_core_line"] = core["line"]
         record["sendable_by_state"]["CORE"] = sum(
             1 for p in to_send if _state(p.symbol) == "CORE")
+    if rf.get("enabled"):
+        # owner 2026-10-07: only when the sleeve flag is ON, so the OFF receipt is unchanged
+        record["revision_flow"] = {k: v for k, v in rf.items() if k != "book"} | {
+            "book_id": (rf.get("book") or {}).get("book_id"),
+            "book_name": (rf.get("book") or {}).get("name"),
+            "book_frozen_utc": (rf.get("book") or {}).get("frozen_utc"),
+            "cross_check": (rf.get("book") or {}).get("cross_check"),
+            "weights_after_gate": {t.symbol: float(t.weight) for t in targets
+                                   if t.symbol in rf_w},
+            "scale_after_gate": risk_gate.get("scale_revision_flow", 1.0)}
+        record["revision_flow_line"] = rf["line"]
+        record["sendable_by_state"]["REVISION_FLOW"] = sum(
+            1 for p in to_send if _state(p.symbol) == "REVISION_FLOW")
+    if rf.get("enabled") or core.get("enabled"):
+        record["worst_case_owner_d14"] = _owner_d14_worst_case(
+            equity=equity, targets=targets, core=core, rf=rf, rf_acting=rf_acting,
+            probe_syms=probe_syms, ex_syms=ex_syms, probe_acting=probe_acting,
+            exploit_acting=exploit_acting, bars_paths=bars_paths, sandbox=sandbox,
+            probe_sigma_max=max([_daily_sigma(x) for x in sl] or
+                                [float(_config.PROBE_REF_DAILY_SIGMA)]))
+        record["worst_case_owner_d14_lines"] = record["worst_case_owner_d14"]["lines"]
     if not to_send:
         why = []
         if mode != "paper_profit":

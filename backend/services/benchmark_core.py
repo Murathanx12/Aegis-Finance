@@ -37,16 +37,32 @@ CORE_STATE = "CORE"
 
 def core_plan(acting_weights: dict[str, float], *, enabled: bool,
               symbol: Optional[str] = None,
-              max_name_frac: Optional[float] = None) -> dict:
+              max_name_frac: Optional[float] = None,
+              exempt_from_name_cap: Optional[bool] = None,
+              cash_buffer: Optional[float] = None,
+              held_residual: Optional[dict[str, float]] = None) -> dict:
     """The core target for one plan cycle.
 
     `acting_weights` are the sleeve weights that will actually be held (PROBE /
-    EXPLOIT names whose sleeve is acting), AFTER the order-path gate. The core
-    wants `1 - sum(acting)`; `pc_broker.plan_orders` clips any single target at
-    `max_name_frac`, so `deliver_weight` is what the account will hold."""
+    EXPLOIT / named sleeves whose orders may be sent), AFTER the order-path
+    gate. `held_residual` are names the account holds and this cycle will NOT
+    trade (a non-acting sleeve's holdings): they occupy equity too, so the core
+    wants `1 - sum(acting) - sum(held_residual)`.
+
+    Owner decision D22 (2026-10-07, `PC_BENCHMARK_CORE_EXEMPT_FROM_NAME_CAP`):
+    when exempt, the core is NOT clipped at `max_name_frac`; it delivers the
+    wanted weight less `PC_BENCHMARK_CORE_CASH_BUFFER` (status
+    CORE_EXEMPT_BY_OWNER_D22). Not exempt: `pc_broker.plan_orders` clips it at
+    `max_name_frac` (CORE_CLIPPED_BY_MAX_NAME_FRAC), exactly as built in C20."""
     from backend.services import pc_broker as PB                   # noqa: PLC0415
     sym = str(symbol or _cfg.PC_BENCHMARK_CORE_SYMBOL).upper()
     cap = float(PB.MAX_NAME_FRAC if max_name_frac is None else max_name_frac)
+    exempt = bool(getattr(_cfg, "PC_BENCHMARK_CORE_EXEMPT_FROM_NAME_CAP", False)
+                  if exempt_from_name_cap is None else exempt_from_name_cap)
+    buf = float(getattr(_cfg, "PC_BENCHMARK_CORE_CASH_BUFFER", 0.0)
+                if cash_buffer is None else cash_buffer) if exempt else 0.0
+    residual = {str(s).upper(): max(0.0, float(w)) for s, w in (held_residual or {}).items()
+                if str(s).upper() != sym}
     if not enabled:
         return {"enabled": False, "applied": False, "symbol": sym,
                 "line": "benchmark core: OFF (config.PC_BENCHMARK_CORE=False)"}
@@ -55,9 +71,14 @@ def core_plan(acting_weights: dict[str, float], *, enabled: bool,
                 "refused": f"{sym} is already a sleeve name this cycle",
                 "line": f"benchmark core: REFUSED -- {sym} is already a sleeve name"}
     active = sum(max(0.0, float(w)) for w in acting_weights.values())
-    want = max(0.0, 1.0 - active)
-    deliver = min(want, cap)
-    clipped = deliver < want - 1e-12
+    resid = sum(residual.values())
+    want = max(0.0, 1.0 - active - resid)
+    if exempt:
+        deliver = max(0.0, want - buf)
+        clipped = False
+    else:
+        deliver = min(want, cap)
+        clipped = deliver < want - 1e-12
     bench = str(getattr(_cfg, "DECISION_BENCHMARK_SYMBOL", "SPY")).upper()
     grading = {
         "basis": "excess_over_core",
@@ -69,17 +90,28 @@ def core_plan(acting_weights: dict[str, float], *, enabled: bool,
                  f"contribution = r_account - w_core x r_{sym}; cash earns 0 in this "
                  f"attribution"),
     }
-    line = (f"benchmark core: ON -- active {active:.2%}, core wants {want:.2%} {sym}, "
-            f"delivers {deliver:.2%}"
+    line = (f"benchmark core: ON -- active {active:.2%}"
+            + (f" + held, not traded this cycle {resid:.2%}" if residual else "")
+            + f", core wants {want:.2%} {sym}, delivers {deliver:.2%}"
             + (f" (CORE_CLIPPED_BY_MAX_NAME_FRAC {cap:.0%}: the remaining "
                f"{want - deliver:.2%} stays cash; a full core is a separate owner "
                f"decision about that limit)" if clipped else "")
+            + (f" (CORE_EXEMPT_BY_OWNER_D22: {sym} is exempt from the {cap:.0%} name cap; "
+               f"{buf:.2%} cash buffer; every other name keeps the cap)" if exempt else "")
             + f"; grading: excess over {sym}")
-    return {"enabled": True, "applied": want > 0, "symbol": sym,
-            "active_gross": active, "want_weight": want, "deliver_weight": deliver,
-            "clipped": clipped, "max_name_frac": cap, "grading": grading,
-            "status": "CORE_CLIPPED_BY_MAX_NAME_FRAC" if clipped else "CORE_FULL",
-            "line": line}
+    out = {"enabled": True, "applied": deliver > 0, "symbol": sym,
+           "active_gross": active, "want_weight": want, "deliver_weight": deliver,
+           "clipped": clipped, "max_name_frac": cap, "grading": grading,
+           "status": ("CORE_EXEMPT_BY_OWNER_D22" if exempt else
+                      "CORE_CLIPPED_BY_MAX_NAME_FRAC" if clipped else "CORE_FULL"),
+           "line": line}
+    if exempt:
+        out["exempt_from_name_cap"] = True
+        out["cash_buffer"] = buf
+    if residual:
+        out["held_residual"] = residual
+        out["held_residual_gross"] = resid
+    return out
 
 
 def worst_case(*, equity: float, core_frac: float, core_sigma: float,

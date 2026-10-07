@@ -5898,10 +5898,65 @@ RAILWAY_FLEET_STOPPED_REASON = ("Railway fleet loops stopped on purpose 2026-09-
 #: a 12% core and says so (CORE_CLIPPED_BY_MAX_NAME_FRAC). A full core needs a
 #: second, separate owner decision about that limit; no builder loosens it.
 #: Flag OFF: the plan is byte-identical to the pre-C20 plan (pinned by test).
-PC_BENCHMARK_CORE = False
+#:
+#: RESOLVED ON, OWNER DECISION 2026-10-07 17:05 HKT (D14, with D21 and D22):
+#: "dont stay cash on pc. lets do the best decision and profit maximizing strat".
+#: PC-PAPER had been ~80% cash since 2026-09-22 (equity $1,002,024, cash $800,653,
+#: +0.20% vs SPY +0.72%, receipt paper_accounts/roi_2026-10-06T235345Z.json).
+#: Every OFF path stays pinned byte-identical (test_pc_plan_replay_owner_d14.py).
+PC_BENCHMARK_CORE = True
 #: SPY is an ordinary listed equity order on the Alpaca paper venue (pc_broker
 #: already samples it in BENCHMARKS); no proxy ETF is needed.
 PC_BENCHMARK_CORE_SYMBOL = "SPY"
+#: D22, OWNER DECISION 2026-10-07 17:05 HKT ("dont stay cash on pc. lets do the
+#: best decision and profit maximizing strat"): the benchmark core symbol (an
+#: index ETF, SPY) is EXEMPT from pc_broker.MAX_NAME_FRAC (12%). Every OTHER name
+#: keeps the 12% cap. The core is still `1 - committed gross - cash buffer`,
+#: never more: gross <= 100% of equity, long-only, no leverage, and the core is
+#: shrunk (never a limit widened) when core + sleeves exceed
+#: PC_WORST_CASE_MAX_FRAC_OF_EQUITY. Receipt line: CORE_EXEMPT_BY_OWNER_D22.
+#: False restores CORE_CLIPPED_BY_MAX_NAME_FRAC (the 12% core).
+PC_BENCHMARK_CORE_EXEMPT_FROM_NAME_CAP = True
+#: With the exemption the core fills the account; this fraction of equity is
+#: left in cash so a fill above the planned price cannot go to margin (the paper
+#: account shows ~3.8x buying power: nothing at the venue stops a gross > 1).
+PC_BENCHMARK_CORE_CASH_BUFFER = 0.01
+#: D21, OWNER DECISION 2026-10-07 17:05 HKT (same words). The decision contract's
+#: capital resolution COUNTS the PC-PAPER plan's active sleeves (every held name
+#: that is not the benchmark core, from the broker read) as `plan_sleeves_pct`,
+#: and the benchmark core is the residual after them. Before this the 20% PROBE
+#: sleeve resolved to 0% BY CONSTRUCTION and positions could never reconcile
+#: (C20 review L4 / Decision 1). False restores the old split exactly.
+PC_CONTRACT_COUNTS_PLAN_SLEEVES = True
+
+# ── The revision_flow EXPLOIT sleeve on PC-PAPER (owner, 2026-10-07 17:05 HKT) ──
+#: "dont stay cash on pc. lets do the best decision and profit maximizing strat".
+#: `sim_run.u_plan` holds the FROZEN book revision_flow_v0 (cb8d492bb8bf9ade,
+#: analyst revision flow, backend/services/revision_flow.py) as one named sleeve
+#: (state REVISION_FLOW), equal weight, scaled to PC_SLEEVE_REVISION_FLOW_GROSS.
+#: Licence PRODUCT_EXPERIMENT; evidence OBSERVED(7): +7.14% vs SPY +1.40% over 7
+#: sessions since 09-28 on hack2, random twin -0.01% -- not a claim. The book of
+#: record is llm_portfolio/books.jsonl; the hack2 v2 contract's copy is the cross
+#: check and the sleeve REFUSES (stays core) when the two ticker sets differ.
+#: False: the plan is byte-identical to the pre-sleeve plan (pinned by test).
+PC_SLEEVE_REVISION_FLOW = True
+PC_SLEEVE_REVISION_FLOW_BOOK_ID = "cb8d492bb8bf9ade"
+PC_SLEEVE_REVISION_FLOW_CONTRACT = (OPTIMUS_LEDGER_DIR / "paper_accounts" / "fleet_manager"
+                                    / "contracts" / "hack2_v2.json")
+#: CHOSEN BY THE WORST CASE, NOT BY CONVICTION (session protocol item 4), on
+#: 2026-10-07 from prices_2025_26/bars.parquet (last bar 2026-10-06, 63-session
+#: daily sigma, k = PROBE_WORST_CASE_SIGMA = 3, rho = 1 across names): the largest
+#: gross, rounded DOWN to 5%, keeping the WHOLE book's one-day k-sigma loss --
+#: PROBE at its largest admissible (20% at the universe p90 sigma 4.92%) + this
+#: sleeve (avg sigma 3.67%) + the SPY core on the remainder (sigma 0.70%) --
+#: <= FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC (10%) and gross <= 100%:
+#:   55% -> 9.50%, 60% -> 9.95% (PASS), 65% -> 10.39% (FAIL).  => 60%.
+#: At $1,002,264: sleeve 3-sigma day -$66,146; basket's worst 21-session
+#: return -19.05% (to 2025-03-13) = -$114,532; worst day -8.24% (2025-04-03)
+#: = -$49,527. Sum|notional|/equity after sleeve + core + PROBE = 0.99.
+#: `scripts/sim_run.py` re-prices the acting book on every cycle: over the line,
+#: the ranker's EXPLOIT is scaled first, then this sleeve; nothing is widened.
+PC_SLEEVE_REVISION_FLOW_GROSS = 0.60
 #: The six-role v3 fleet contracts are written HERE, never into
 #: `fleet_manager/contracts/`: no seed path reads this folder, and
 #: `fleet_manager.load_contract`/`freeze_contract` refuse a PREPARED body.
