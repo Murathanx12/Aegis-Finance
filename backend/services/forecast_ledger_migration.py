@@ -8,8 +8,9 @@
 
 WHAT THE SPLIT DOES TO ONE ROW
 ==============================
-An OPEN row (no outcome, not void) goes to the forecast stream byte-for-byte as
-the legacy writer serialised it (key order kept, LF instead of CRLF).
+An OPEN row (no outcome, not void) goes to the forecast stream re-serialised with
+the legacy writer's own call (`json.dumps(row, ensure_ascii=False)`, key order
+kept) and an LF line end; a legacy line that ended in CRLF loses its CR.
 
 A TERMINAL row (graded or void) is split in two:
 
@@ -22,9 +23,11 @@ A TERMINAL row (graded or void) is split in two:
 
 Folding the event onto the forecast reproduces the legacy row: dict-equal, the
 same key order, and the same canonical content hash. `plan()` checks that for
-every row, and also re-parses the serialised stream BYTES through the real
-reader and compares the result to the legacy rows in legacy order -- the
-round trip, not just the split.
+every row, and also re-parses the serialised stream bytes through the reader's
+own parse + fold and compares the result to the legacy rows, in legacy order,
+by canonical content hash and key order. That is a CONTENT round trip, not a
+byte one: line ends become LF, and a graded row's legacy bytes are not what
+the streams hold (the forecast and its event are).
 
 The legacy file's own resolution step overwrote the forecast in place, so for a
 graded row the "as made" bytes are not recoverable from the ledger itself; the
@@ -56,6 +59,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 import subprocess
 from collections import Counter
 from datetime import datetime
@@ -205,9 +209,10 @@ def split_legacy(raw: bytes, *, source: str = FL.LEGACY_NAME) -> dict:
         checks["canonical_hash_equal"] += ok_hash
         checks["key_order_preserved"] += ok_order
         checks["frozen_fields_identical"] += ok_frozen
-        if not (ok_eq and ok_hash and ok_frozen) and len(mismatches) < 20:
+        if not (ok_eq and ok_hash and ok_frozen and ok_order) and len(mismatches) < 20:
             mismatches.append({"line": line_no, "prediction_id": row["prediction_id"],
-                               "equal": ok_eq, "hash": ok_hash, "frozen": ok_frozen})
+                               "equal": ok_eq, "hash": ok_hash, "frozen": ok_frozen,
+                               "key_order": ok_order})
 
     files = ([("forecasts", m, b"".join(v)) for m, v in sorted(forecasts.items())]
              + [("resolutions", m, b"".join(v)) for m, v in sorted(events.items())])
@@ -217,13 +222,14 @@ def split_legacy(raw: bytes, *, source: str = FL.LEGACY_NAME) -> dict:
                       {m: b for s, m, b in files if s == "resolutions"})
     rt_same = (len(back) == len(rows)
                and all(FL.canonical_row_hash(a) == FL.canonical_row_hash(b)
-                       for a, b in zip(back, rows)))
+                       and list(a) == list(b) for a, b in zip(back, rows)))
     rt_order = [r["prediction_id"] for r in back] == [r["prediction_id"] for r in rows]
     verification = {**{k: int(v) for k, v in checks.items()},
                     "round_trip_rows": len(back), "round_trip_equal": rt_same,
                     "round_trip_order_equal": rt_order, "mismatches": mismatches,
                     "ok": (not mismatches and rt_same and rt_order
-                           and checks["fold_equals_legacy"] == len(rows))}
+                           and checks["fold_equals_legacy"] == len(rows)
+                           and checks["key_order_preserved"] == len(rows))}
     return {
         "source": {"name": source, "sha256": FL.sha256_bytes(raw), "bytes": len(raw),
                    "lines": len(lines), "rows": len(rows), "blank_lines": blank,
@@ -482,10 +488,14 @@ def legacy_history_report(legacy_path: Path, *, repo: Optional[Path] = None,
                                "previous_commit": versions[-1]["commit"] if versions else None}
         versions.append(v)
         prev_lines, prev_raw, prev_index, prev_order = lines, raw, index, order
+    unreadable = [v["commit"] for v in versions if "error" in v]
     ok = not first_semantic
     return {
-        "status": "CONTINUOUS" if ok else "DISCONTINUOUS",
+        # A version git could not produce is a hole in the evidence, never a
+        # pass: CONTINUOUS is said only when every committed version was read.
+        "status": ("DISCONTINUOUS" if not ok else "INCOMPLETE" if unreadable else "CONTINUOUS"),
         "path": relp, "shallow_clone": shallow, "versions": len(versions),
+        "unreadable_versions": len(unreadable), "unreadable_sample": unreadable[:5],
         "first_commit": versions[0]["commit"] if versions else None,
         "last_commit": versions[-1]["commit"] if versions else None,
         "chain_fields_seen_in_any_version": dict(chain_seen),
@@ -547,9 +557,14 @@ def plan(legacy_path: Optional[Path] = None, *, now: Optional[datetime] = None,
     seal = [f"{f['stream']}_{f['month']}" for f in order if FL.is_sealable_month(f["month"], run)]
     left_open = [f"{f['stream']}_{f['month']}" for f in order
                  if not FL.is_sealable_month(f["month"], run)]
-    strays = [p.name for s in FL.STREAMS for _, p in FL.stream_files(be, s)]
+    strays = [p.name for p in _strays(be)]
+    foreign = _foreign_marker(legacy)
+    blocking = (([f"this directory's streams already belong to {foreign!r} (a marker exists)"]
+                 if foreign else [])
+                + ([f"stream/manifest files already exist: {strays[:8]}"] if strays else [])
+                + ([] if split["verification"]["ok"] else ["split verification failed"]))
     out.update({
-        "status": "READY" if split["verification"]["ok"] and not strays else "BLOCKED",
+        "status": "READY" if not blocking else "BLOCKED",
         "source": {"path": FL.rel(legacy), **split["source"]},
         "forecast_streams": [f for f in files if f["stream"] == "forecasts"],
         "resolution_streams": [f for f in files if f["stream"] == "resolutions"],
@@ -567,8 +582,7 @@ def plan(legacy_path: Optional[Path] = None, *, now: Optional[datetime] = None,
         },
         "verification": split["verification"],
         "legacy_chain_break": chain,
-        "blocking": ([f"stream files already exist: {strays}"] if strays else [])
-                    + ([] if split["verification"]["ok"] else ["split verification failed"]),
+        "blocking": blocking,
         "next": (f"python -m scripts.ledger_split --apply --expect-sha256 "
                  f"{split['source']['sha256']}"),
     })
@@ -577,11 +591,38 @@ def plan(legacy_path: Optional[Path] = None, *, now: Optional[datetime] = None,
 
 # ─────────────────────────────── apply ───────────────────────────────────────
 
+_MANIFEST_FILE = re.compile(r"^(forecasts|resolutions)_\d{4}-(0[1-9]|1[0-2])\.json$")
+
+
 def _strays(be: FL.Backend) -> list[Path]:
+    """What an interrupted `--apply` can leave: stream files, manifests, the
+    chain head, and the temp files of an atomic write that died. NEVER the
+    migration marker -- its presence means the streams are a live ledger."""
     out = [p for s in FL.STREAMS for _, p in FL.stream_files(be, s)]
+    for s in FL.STREAMS:
+        d = be.stream_dir(s)
+        if d.is_dir():
+            out += sorted(p for p in d.iterdir() if p.is_file() and ".tmp." in p.name
+                          and p.name.startswith(f"{s}_"))
     if be.manifest_dir.is_dir():
-        out += sorted(p for p in be.manifest_dir.glob("*.json"))
+        out += sorted(p for p in be.manifest_dir.iterdir() if p.is_file() and (
+            _MANIFEST_FILE.match(p.name) or p.name == FL.HEAD_NAME
+            or (".tmp." in p.name and not p.name.startswith(FL.MARKER_NAME))))
     return out
+
+
+def _foreign_marker(legacy: Path) -> Optional[str]:
+    """The legacy name a marker in this directory migrated, when it is NOT
+    `legacy`. The streams directories are per ledger DIRECTORY, so a second
+    legacy file beside a migrated one can never be split into them."""
+    mp = FL.marker_path(legacy)
+    if not mp.exists():
+        return None
+    try:
+        name = FL._read_marker(mp).get("legacy_name")
+    except FL.ForecastLedgerError:
+        return "<unreadable marker>"
+    return name if name != legacy.name else None
 
 
 def apply(legacy_path: Optional[Path] = None, *, expect_sha256: Optional[str] = None,
@@ -617,8 +658,20 @@ def apply(legacy_path: Optional[Path] = None, *, expect_sha256: Optional[str] = 
             "`python -m scripts.ledger_split --plan`, then pass --expect-sha256 <sha> "
             "(or --plan-file <the --plan --json output>). Nothing was written.")
     run = now or _now()
+    # The git replay reads COMMITTED versions, not the working file, so it runs
+    # BEFORE the lock: minutes of replay must not hold every writer off.
+    history_report = None
+    if history:
+        history_report = legacy_history_report(legacy)
+        history_report.pop("per_version", None)
     with FL.ledger_lock(legacy.parent, purpose="ledger_split --apply"):
         be = FL.backend_for(legacy)
+        foreign = _foreign_marker(legacy)
+        if foreign:
+            raise MigrationRefused(
+                f"{FL.rel(FL.marker_path(legacy))} already migrated {foreign!r}: the monthly "
+                f"streams in {FL.rel(legacy.parent)} belong to that ledger, and a second legacy "
+                f"file cannot share them. Nothing was written.")
         if be.kind == "streams":
             if (be.marker or {}).get("legacy_sha256") == expect_sha256:
                 return {"status": "ALREADY_APPLIED", "reason": be.reason,
@@ -657,9 +710,8 @@ def apply(legacy_path: Optional[Path] = None, *, expect_sha256: Optional[str] = 
                 raise MigrationRefused("the recomputed split differs from the plan file's "
                                        "(a different splitter version?); nothing written")
         chain = legacy_chain_report(raw, source=FL.rel(legacy), claim=CLAIM_25_AUG)
-        if history:
-            chain["git_history"] = legacy_history_report(legacy)
-            chain["git_history"].pop("per_version", None)
+        if history_report is not None:
+            chain["git_history"] = history_report
         written: list[Path] = []
         switched = False
         try:
@@ -705,12 +757,24 @@ def apply(legacy_path: Optional[Path] = None, *, expect_sha256: Optional[str] = 
                                   .encode("utf-8"))
             switched = True
         except BaseException:
-            if not switched:
+            # "Switched" is whether the marker is ON DISK, not whether the call
+            # that wrote it returned: a failure after the rename (the directory
+            # fsync, an interrupt) must never delete the streams a marker names.
+            if not switched and not FL.marker_path(legacy).exists():
                 for p in written:
                     p.unlink(missing_ok=True)
             raise
-        seal = FL.seal_closed(legacy, now=run, apply=True,
-                              provenance={"apply_command": marker["command"]})
+        # FROM HERE THE MIGRATION HAS HAPPENED. A failure below is reported as a
+        # switched ledger with a problem -- never as REFUSED, which would tell the
+        # operator nothing changed.
+        post_error = None
+        seal: dict = {}
+        try:
+            seal = FL.seal_closed(legacy, now=run, apply=True,
+                                  provenance={"apply_command": marker["command"]})
+        except Exception as exc:                                   # noqa: BLE001
+            post_error = (f"the switch succeeded but sealing failed ({type(exc).__name__}: {exc}); "
+                          f"run `python -m backend.services.forecast_ledger --seal --apply`")
         legacy_rows = [json.loads(s) for s in (ln.strip() for ln in FL._split_raw_lines(raw)) if s]
         now_rows = FL.read_rows(legacy)
         same = (len(now_rows) == len(legacy_rows)
@@ -718,8 +782,9 @@ def apply(legacy_path: Optional[Path] = None, *, expect_sha256: Optional[str] = 
                         for a, b in zip(now_rows, legacy_rows)))
         chain_now = FL.verify_chain(legacy, rehash=True)
         legacy_intact = FL.sha256_file(legacy) == sha
-    return {"status": "APPLIED" if same and chain_now["status"] == "ok" and legacy_intact
-            else "APPLIED_WITH_PROBLEMS",
+    ok = same and chain_now["status"] == "ok" and legacy_intact and post_error is None
+    return {"status": "APPLIED" if ok else "APPLIED_WITH_PROBLEMS",
+            "switched": True, "post_switch_error": post_error,
             "marker": FL.rel(FL.marker_path(legacy)), "source_sha256": sha,
             "streams": files, "sealed": seal.get("sealed", []),
             "reader_rows_equal_legacy": same, "chain": chain_now["status"],
@@ -735,9 +800,14 @@ def discard_partial(legacy_path: Optional[Path] = None) -> dict:
     legacy = Path(legacy_path) if legacy_path is not None else FL.default_legacy_path()
     with FL.ledger_lock(legacy.parent, purpose="ledger_split --discard-partial"):
         be = FL.backend_for(legacy)
-        if be.kind == "streams":
-            raise MigrationRefused("the migration marker exists: the streams are the ledger and "
-                                   "are never discarded by this command")
+        # ANY marker, whichever legacy name it migrated: `--legacy other.jsonl`
+        # in a migrated directory answers "legacy" for that name, and the
+        # streams it would discard are the live ledger of the one that was.
+        if be.kind == "streams" or FL.marker_path(legacy).exists():
+            raise MigrationRefused(
+                f"a migration marker exists at {FL.rel(FL.marker_path(legacy))}: the streams in "
+                f"{FL.rel(legacy.parent)} are a live ledger and are never discarded by this "
+                f"command. Nothing was removed.")
         strays = _strays(be)
         for p in strays:
             p.unlink()

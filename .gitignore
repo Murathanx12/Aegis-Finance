@@ -470,3 +470,12 @@ backend/data/optimus/official/tables/
 # statuses, citations) stay tracked.
 backend/data/optimus/public_flow/tables/
 backend/data/optimus/public_flow/requests.jsonl
+
+# The forecast ledger's atomic writes (backend/services/forecast_ledger.py) stage
+# `<name>.tmp.<pid>.<thread>` beside the target and rename it into place; a
+# process killed between the two leaves one behind. Never a ledger file, never
+# committed (`scripts.ledger_split --discard-partial` removes them).
+backend/data/optimus/*.tmp.*
+backend/data/optimus/forecasts/*.tmp.*
+backend/data/optimus/resolutions/*.tmp.*
+backend/data/optimus/ledger_manifests/forecast_ledger/*.tmp.*

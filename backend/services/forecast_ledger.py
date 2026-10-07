@@ -111,6 +111,11 @@ _STREAM_DIRS = {"forecasts": FORECAST_DIR, "resolutions": RESOLUTION_DIR}
 #: Manifests and the migration marker, relative to the ledger directory.
 MANIFEST_SUBDIR = Path("ledger_manifests") / "forecast_ledger"
 MARKER_NAME = "MIGRATION.json"
+#: The chain head: the newest manifest's hash and the manifest count, rewritten by
+#: every seal. Without it, deleting the newest manifest (and its stream file)
+#: would leave a shorter chain that still verifies.
+HEAD_NAME = "HEAD.json"
+HEAD_SCHEMA = "forecast_ledger_head/1"
 LOCK_NAME = ".forecast_ledger.lock"
 #: Who holds it, for the LedgerBusy message. Ends in `.lock`, so `.gitignore`'s
 #: `*.lock` keeps both out of `git status`.
@@ -198,6 +203,19 @@ def canonical_json(obj: Any) -> str:
                       default=str)
 
 
+def _same(a: Any, b: Any) -> bool:
+    """Value equality that a NaN cannot fool: `nan == nan` is False, so a plain
+    comparison would call an untouched float field "changed"."""
+    if a is b:
+        return True
+    try:
+        if a == b:
+            return True
+    except Exception:                                              # noqa: BLE001
+        pass
+    return canonical_json(a) == canonical_json(b)
+
+
 def canonical_row_hash(row: dict) -> str:
     """Content identity of a row: independent of key order and line endings."""
     return sha256_bytes(canonical_json(row).encode("utf-8"))
@@ -251,6 +269,24 @@ def _fsync_dir(path: Path) -> None:
         os.close(fd)
 
 
+#: Windows refuses `os.replace` onto a file another process has open (a reader,
+#: an indexer, an antivirus scan) with PermissionError; the window is short.
+REPLACE_RETRIES = 12
+
+
+def _replace(tmp: Path, path: Path) -> None:
+    delay = 0.02
+    for attempt in range(REPLACE_RETRIES):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            if os.name != "nt" or attempt == REPLACE_RETRIES - 1:
+                raise
+            time.sleep(delay)
+            delay = min(delay * 2, 0.5)
+
+
 def atomic_write_bytes(path: Path, data: bytes) -> None:
     """temp file -> flush -> fsync -> `os.replace`. The canonical file is never
     partially overwritten: a crash leaves either the old bytes or the new."""
@@ -262,7 +298,7 @@ def atomic_write_bytes(path: Path, data: bytes) -> None:
             fh.write(data)
             fh.flush()
             os.fsync(fh.fileno())
-        os.replace(tmp, path)
+        _replace(tmp, path)
     except BaseException:
         tmp.unlink(missing_ok=True)
         raise
@@ -280,7 +316,7 @@ def atomic_write_text(path: Path, text: str) -> None:
             fh.write(text)
             fh.flush()
             os.fsync(fh.fileno())
-        os.replace(tmp, path)
+        _replace(tmp, path)
     except BaseException:
         tmp.unlink(missing_ok=True)
         raise
@@ -292,7 +328,6 @@ def atomic_write_text(path: Path, text: str) -> None:
 _THREAD_LOCKS: dict[str, threading.RLock] = {}
 _THREAD_LOCKS_GUARD = threading.Lock()
 _HELD = threading.local()            # .depth: {lock key: re-entry depth} for THIS thread
-_LOCK_WARNED = False
 
 
 def _thread_lock(key: str) -> threading.RLock:
@@ -349,8 +384,12 @@ def ledger_lock(directory: Path, *, timeout_s: Optional[float] = None,
     writer re-selects the backend, so the migration's switch is atomic for
     every writer running this code (old code that was not restarted is the one
     thing it cannot see -- `--apply` re-hashes the legacy file for that).
+
+    A lock file that cannot be opened is a REFUSAL, not a downgrade to a
+    thread lock: a write without the cross-process lock is exactly the
+    interleaving this lock exists to prevent, and a warning logged once per
+    process is not a refusal anyone sees.
     """
-    global _LOCK_WARNED
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     key = str(directory.resolve())
@@ -376,10 +415,10 @@ def ledger_lock(directory: Path, *, timeout_s: Optional[float] = None,
         try:
             fh = (directory / LOCK_NAME).open("a+b")
         except OSError as exc:
-            if not _LOCK_WARNED:
-                logger.warning("forecast ledger: no cross-process lock in %s (%s); "
-                               "this process serialises its own threads only", directory, exc)
-                _LOCK_WARNED = True
+            raise ForecastLedgerError(
+                f"cannot open the forecast ledger lock {rel(directory / LOCK_NAME)} "
+                f"({type(exc).__name__}: {exc}); nothing was written. Without the "
+                f"cross-process lock two writers can interleave.") from exc
         if fh is not None:
             deadline = time.monotonic() + timeout
             while not _try_file_lock(fh):
@@ -583,6 +622,7 @@ class FoldStats:
     duplicate_forecast_ids: list = field(default_factory=list)
     duplicate_terminal_events: list = field(default_factory=list)
     orphan_events: list = field(default_factory=list)
+    refused_events: list = field(default_factory=list)
     bad_lines: list = field(default_factory=list)
 
     def as_dict(self, cap: int = 20) -> dict:
@@ -593,6 +633,8 @@ class FoldStats:
                 "duplicate_terminal_events_sample": self.duplicate_terminal_events[:cap],
                 "orphan_events_ignored": len(self.orphan_events),
                 "orphan_events_sample": self.orphan_events[:cap],
+                "refused_events_ignored": len(self.refused_events),
+                "refused_events_sample": self.refused_events[:cap],
                 "bad_lines": len(self.bad_lines), "bad_lines_sample": self.bad_lines[:cap]}
 
 
@@ -649,17 +691,37 @@ def event_problem(ev: Any) -> Optional[str]:
         return "event without a prediction_id"
     if ev.get("event") not in EVENT_KINDS:
         return f"event kind {ev.get('event')!r} not in {EVENT_KINDS}"
-    if not isinstance(ev.get("set"), dict) or not ev["set"]:
+    sets = ev.get("set")
+    if not isinstance(sets, dict) or not sets:
         return "event with no fields to set"
+    # An event records a GRADE. It may never set prediction_id or any field the
+    # forecast was made with: folding such an event would rewrite what was
+    # believed, after the fact, in a file nobody re-reads row by row.
+    foreign = sorted(k for k in sets if k not in RESOLUTION_KEYS)
+    if foreign:
+        return (f"event sets non-resolution field(s) {foreign}; an event may only set "
+                f"{sorted(RESOLUTION_KEYS)}")
+    if ev["event"] == "resolve" and sets.get("outcome") is None:
+        return "a resolve event without an outcome (it would close the record ungraded)"
+    if ev["event"] == "void" and not sets.get("void_reason"):
+        return "a void event without a void_reason"
     return None
 
 
 def fold(rows: dict[str, dict], events: list[dict], stats: Optional[FoldStats] = None) -> FoldStats:
-    """Apply events to rows IN PLACE, in order. The FIRST terminal event per id
-    wins; later ones and events for unknown ids are counted, never applied."""
+    """Apply events to rows IN PLACE, in order. The FIRST valid terminal event
+    per id wins; later ones, events for unknown ids and events that fail
+    `event_problem` are counted, never applied. The check lives HERE as well as
+    in the reader, so every path to a folded row -- the migration's round trip
+    included -- applies the same rule."""
     stats = stats or FoldStats(rows=len(rows), events=len(events))
     done: set[str] = set()
     for ev in events:
+        problem = event_problem(ev)
+        if problem:
+            stats.refused_events.append(
+                f"{ev.get('prediction_id') if isinstance(ev, dict) else '?'}: {problem}")
+            continue
         pid = ev["prediction_id"]
         row = rows.get(pid)
         if row is None:
@@ -689,7 +751,8 @@ def read_rows(path: Optional[Path] = None, *, strict: bool = True,
     by_id = _read_forecasts(be, strict=strict, stats=stats)
     events = _read_events(be, strict=strict, stats=stats)
     fold(by_id, events, stats)
-    if stats.duplicate_forecast_ids or stats.duplicate_terminal_events or stats.orphan_events:
+    if (stats.duplicate_forecast_ids or stats.duplicate_terminal_events or stats.orphan_events
+            or stats.refused_events):
         logger.warning("forecast ledger fold: %s", {k: v for k, v in stats.as_dict(3).items()
                                                    if k.endswith(("ids", "ignored"))})
     return list(by_id.values())
@@ -903,19 +966,23 @@ def make_event(old: dict, new: dict, *, kind: str, writer: str,
         raise ForecastLedgerError(f"{kind} of {pid} would delete field(s) {gone}; events only add")
     changed: dict = {}
     for k, v in new.items():
-        if k in old and old[k] == v:
+        if k in old and _same(old[k], v):
             continue
-        if k in old and k not in RESOLUTION_KEYS:
+        if k not in RESOLUTION_KEYS:
             raise ForecastLedgerError(
-                f"{kind} of {pid} would change the frozen forecast field {k!r}; a grade "
-                f"may set {sorted(RESOLUTION_KEYS)} or add new fields, never rewrite what "
-                f"was forecast")
+                f"{kind} of {pid} would {'change the frozen forecast' if k in old else 'add the'} "
+                f"field {k!r}; a grade may set only {sorted(RESOLUTION_KEYS)}, never rewrite "
+                f"what was forecast")
         changed[k] = v
     if not changed:
         raise ForecastLedgerError(f"{kind} of {pid} changes nothing; no event to record")
-    return {"schema": EVENT_SCHEMA, "prediction_id": pid, "event": kind, "set": changed,
-            "recorded_at": _iso(now or _now()), "writer": writer,
-            "month_basis": "recorded_at"}
+    ev = {"schema": EVENT_SCHEMA, "prediction_id": pid, "event": kind, "set": changed,
+          "recorded_at": _iso(now or _now()), "writer": writer,
+          "month_basis": "recorded_at"}
+    problem = event_problem(ev)
+    if problem:
+        raise ForecastLedgerError(f"{kind} of {pid}: {problem}")
+    return ev
 
 
 # ─────────────────────────────── writing ─────────────────────────────────────
@@ -943,7 +1010,9 @@ def _ids_in(p: Path, *, terminal: bool) -> frozenset:
         except (UnicodeDecodeError, json.JSONDecodeError):
             continue
         if isinstance(obj, dict) and obj.get("prediction_id"):
-            if not terminal or obj.get("event") in EVENT_KINDS:
+            # A malformed event closes nothing (the fold refuses it), so it must
+            # not block the grade that would.
+            if not terminal or event_problem(obj) is None:
                 ids.add(obj["prediction_id"])
     out = frozenset(ids)
     with _ID_CACHE_GUARD:
@@ -970,11 +1039,10 @@ def sealed_months(be: Backend, stream: str) -> set:
     return out
 
 
-def _append_bytes(p: Path, blob: bytes) -> None:
-    """Append one batch with one write, then fsync. Refuses to glue a row onto
-    a torn tail: a crash mid-append leaves a last line without its newline, and
-    the next write must not turn two half-rows into one corrupt one."""
-    p.parent.mkdir(parents=True, exist_ok=True)
+def _check_tail(p: Path) -> None:
+    """Refuse to glue a row onto a torn tail: a crash mid-append leaves a last
+    line without its newline, and the next write must not turn two half-rows
+    into one corrupt one."""
     if p.exists() and p.stat().st_size:
         with p.open("rb") as fh:
             fh.seek(-1, 2)
@@ -983,6 +1051,12 @@ def _append_bytes(p: Path, blob: bytes) -> None:
                     f"{rel(p)} ends without a newline (a torn append, most likely a crash "
                     f"mid-write). Nothing was written. Inspect the last line; if it is a "
                     f"fragment, move it aside by hand and record that you did.")
+
+
+def _append_bytes(p: Path, blob: bytes) -> None:
+    """Append one batch with one write, then fsync (after `_check_tail`)."""
+    p.parent.mkdir(parents=True, exist_ok=True)
+    _check_tail(p)
     fd = os.open(str(p), os.O_WRONLY | os.O_APPEND | os.O_CREAT | getattr(os, "O_BINARY", 0),
                  0o644)
     try:
@@ -993,6 +1067,41 @@ def _append_bytes(p: Path, blob: bytes) -> None:
         os.fsync(fd)
     finally:
         os.close(fd)
+
+
+def _chain_tail(be: Backend) -> Optional[tuple[str, int]]:
+    """The chain key of the newest sealed manifest, or None."""
+    keys = [_chain_key(stream, month) for stream in STREAMS for month in sealed_months(be, stream)]
+    return max(keys) if keys else None
+
+
+def filing_month(made: str, run: datetime, *, sealed: set,
+                 tail: Optional[tuple[str, int]]) -> str:
+    """Where a forecast made in `made` is filed when it is written at `run`.
+
+    Its own month only while that month can still change honestly: the open
+    month, or the month just closed while it is inside its grace period,
+    unsealed and after the chain's tail. Anything else -- a backdated restoration,
+    a month already past grace, a month at or before the tail, a made_at in the
+    future -- is filed in the OPEN month, so no write can ever land in a month a
+    manifest vouches for (or will, without seeing it). `made_at` is not touched."""
+    open_month = month_floor(run)
+    if made == open_month:
+        return made
+    if (made < open_month and made not in sealed and not is_sealable_month(made, run)
+            and (tail is None or _chain_key("forecasts", made) > tail)):
+        return made
+    return open_month
+
+
+def _require_open(be: Backend, stream: str, month: str) -> None:
+    if month in sealed_months(be, stream):
+        raise SealRefused(f"{stream}_{month} is sealed although it is the run clock's month; "
+                          f"the clock or the seal is wrong. Nothing was written.")
+    tail = _chain_tail(be)
+    if tail is not None and _chain_key(stream, month) <= tail:
+        raise SealRefused(f"{stream}_{month} is at or before the chain tail {tail}; the run "
+                          f"clock is behind the seals. Nothing was written.")
 
 
 def _require_streams(be: Backend, what: str) -> None:
@@ -1013,11 +1122,9 @@ def append_forecasts(rows: list[dict], path: Optional[Path] = None, *,
         run = now or _now()
         known = _all_ids(be, "forecasts")
         sealed = sealed_months(be, "forecasts")
+        tail = _chain_tail(be)
         open_month = month_floor(run)
-        if open_month in sealed:
-            raise SealRefused(
-                f"forecasts_{open_month} is sealed although it is the run clock's month; "
-                f"the clock or the seal is wrong. Nothing was written.")
+        _require_open(be, "forecasts", open_month)
         batches: dict[str, list[bytes]] = {}
         written = dup = late = 0
         for row in rows:
@@ -1034,15 +1141,16 @@ def append_forecasts(rows: list[dict], path: Optional[Path] = None, *,
                 raise ForecastLedgerError(
                     f"{pid}: made_at {row.get('made_at')!r} has no YYYY-MM; a forecast is "
                     f"filed by the month it was made and this one cannot be placed")
-            target = made
-            if made in sealed:
-                # A backdated row (a restoration) for a closed month. Filed in the
-                # open month so the seal stays true; `made_at` is not touched.
-                target = open_month
+            target = filing_month(made, run, sealed=sealed, tail=tail)
+            if target != made:
                 late += 1
             batches.setdefault(target, []).append(row_line(row))
             known.add(pid)
             written += 1
+        # Every target first, then any write: a torn tail in the second month
+        # must not leave the first month's half of the batch written.
+        for month in batches:
+            _check_tail(be.stream_path("forecasts", month))
         for month in sorted(batches):
             _append_bytes(be.stream_path("forecasts", month), b"".join(batches[month]))
     return {"backend": "streams", "written": written, "skipped_duplicates": dup,
@@ -1062,9 +1170,7 @@ def append_events(events: list[dict], path: Optional[Path] = None, *,
         _require_streams(be, "append_events")
         run = now or _now()
         month = month_floor(run)
-        if month in sealed_months(be, "resolutions"):
-            raise SealRefused(f"resolutions_{month} is sealed although it is the run clock's "
-                              f"month; nothing was written")
+        _require_open(be, "resolutions", month)
         known = _all_ids(be, "forecasts")
         terminal = _all_ids(be, "resolutions")
         lines: list[bytes] = []
@@ -1121,15 +1227,30 @@ def record_terminal(path: Optional[Path], pairs: list[tuple[dict, dict]], *, kin
     (row as read, row as graded/voided). Returns {backend, written, ...}."""
     path = Path(path) if path is not None else default_legacy_path()
     if not pairs:
-        return {"backend": backend_for(path).kind, "written": 0}
+        return {"backend": backend_for(path).kind, "written": 0, "refused": 0}
     with ledger_lock(path.parent, purpose=f"record_{kind}"):
         be = backend_for(path)
+        # One malformed pair is refused ALONE (counted, logged, named on the
+        # receipt); it must not cost every other grade of the pass.
+        events: list[dict] = []
+        good: list[dict] = []
+        refused: list[dict] = []
+        for old, new in pairs:
+            try:
+                events.append(make_event(old, new, kind=kind, writer=writer, now=now))
+                good.append(new)
+            except ForecastLedgerError as exc:
+                refused.append({"prediction_id": old.get("prediction_id"), "reason": str(exc)})
+                logger.error("forecast ledger: %s refused: %s", kind, exc)
+        tally = {"refused": len(refused), "refused_sample": refused[:5]}
         if be.kind == "legacy":
-            n = legacy_rewrite(path, {new["prediction_id"]: new for _, new in pairs})
-            return {"backend": "legacy", "written": n}
-        events = [make_event(old, new, kind=kind, writer=writer, now=now) for old, new in pairs]
-        out = append_events(events, path, now=now)
-        return out
+            n = legacy_rewrite(path, {new["prediction_id"]: new for new in good}) if good else 0
+            return {"backend": "legacy", "written": n,
+                    "skipped_already_terminal": len(good) - n, **tally}
+        if not events:
+            return {"backend": "streams", "written": 0, "skipped_already_terminal": 0,
+                    "month": month_floor(now or _now()), **tally}
+        return {**append_events(events, path, now=now), **tally}
 
 
 # ─────────────────────────────── sealing ─────────────────────────────────────
@@ -1195,6 +1316,34 @@ def _load_manifests(be: Backend) -> list[dict]:
     return sorted(out, key=lambda x: _chain_key(x["_stream"], x["_month"]))
 
 
+def head_path(be: Backend) -> Path:
+    return be.manifest_dir / HEAD_NAME
+
+
+def _read_head(be: Backend) -> Optional[dict]:
+    hp = head_path(be)
+    if not hp.exists():
+        return None
+    try:
+        head = json.loads(hp.read_bytes().decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        return {"_unreadable": f"{type(exc).__name__}: {exc}"}
+    return head if isinstance(head, dict) else {"_unreadable": "not a JSON object"}
+
+
+def _prefix_sha256(p: Path, n: int) -> str:
+    h = hashlib.sha256()
+    left = n
+    with p.open("rb") as fh:
+        while left > 0:
+            chunk = fh.read(min(left, 8 << 20))
+            if not chunk:
+                break
+            h.update(chunk)
+            left -= len(chunk)
+    return h.hexdigest()
+
+
 def verify_chain(path: Optional[Path] = None, *, rehash: bool = True) -> dict:
     """Is every sealed month still what its manifest says, and is the chain whole?
 
@@ -1203,7 +1352,11 @@ def verify_chain(path: Optional[Path] = None, *, rehash: bool = True) -> dict:
     carries `legacy_chain_break` when the ledger was migrated); its stream file
     exists and (with `rehash`) still has the recorded bytes, sha256 and rows.
     Also: no stream file of a month at or before the chain's tail is unsealed
-    (a gap means a month was skipped, and a later seal would hide it)."""
+    (a gap means a month was skipped, and a later seal would hide it); the
+    chain head (`HEAD.json`) names the newest manifest, so deleting the newest
+    seals is not a shorter chain that still verifies; and every stream file the
+    migration wrote still exists, is no shorter, and (with `rehash`) still
+    starts with the exact bytes it was written with -- streams only grow."""
     be = backend_for(path)
     if be.kind != "streams":
         return {"status": "NOT_APPLICABLE", "backend": be.kind, "reason": be.reason,
@@ -1253,6 +1406,36 @@ def verify_chain(path: Optional[Path] = None, *, rehash: bool = True) -> dict:
                     gaps.append(p.name)
     if gaps:
         problems.append(f"unsealed stream file(s) at or before the chain tail: {gaps}")
+    head = _read_head(be)
+    if mans:
+        if head is None:
+            problems.append(f"{HEAD_NAME} is missing although {len(mans)} manifest(s) exist: "
+                            f"the newest seals cannot be told apart from a truncated chain")
+        elif "_unreadable" in head:
+            problems.append(f"{HEAD_NAME}: unreadable ({head['_unreadable']})")
+        elif (head.get("tail_manifest_sha256") != mans[-1].get("manifest_sha256")
+              or head.get("manifests") != len(mans)):
+            problems.append(f"{HEAD_NAME} names tail {head.get('tail')} ({head.get('manifests')} "
+                            f"manifests) but the chain ends at {mans[-1]['_stream']}_"
+                            f"{mans[-1]['_month']} ({len(mans)}): a sealed month was removed or "
+                            f"added outside seal_closed")
+    elif head is not None:
+        problems.append(f"{HEAD_NAME} exists but no manifest does: the chain was deleted")
+    for f in (be.marker or {}).get("streams_at_apply") or []:
+        sp = be.stream_path(f.get("stream", "?"), f.get("month", "?")) \
+            if f.get("stream") in STREAMS else None
+        if sp is None:
+            continue
+        if not sp.exists():
+            problems.append(f"{sp.name}: written by the migration, now missing")
+            continue
+        size = sp.stat().st_size
+        if size < int(f.get("bytes") or 0):
+            problems.append(f"{sp.name}: {size} bytes, shorter than the {f.get('bytes')} the "
+                            f"migration wrote; a stream lost rows")
+        elif rehash and _prefix_sha256(sp, int(f.get("bytes") or 0)) != f.get("sha256"):
+            problems.append(f"{sp.name}: its first {f.get('bytes')} bytes no longer hash to what "
+                            f"the migration wrote; rows written at the migration changed")
     return {"status": "ok" if not problems else "BROKEN", "backend": "streams",
             "manifests": len(mans), "rehashed": rehash, "problems": problems,
             "tail": (f"{mans[-1]['_stream']}_{mans[-1]['_month']}" if mans else None),
@@ -1315,12 +1498,47 @@ def seal_closed(path: Optional[Path] = None, *, now: Optional[datetime] = None,
                                    (json.dumps(man, indent=1, ensure_ascii=False) + "\n")
                                    .encode("utf-8"))
             prev_hash = man["manifest_sha256"]
+            tail_name = f"{stream}_{month}"
+        if apply and planned:
+            head = {"schema": HEAD_SCHEMA, "tail": tail_name, "tail_manifest_sha256": prev_hash,
+                    "manifests": len(mans) + len(planned), "updated_at_utc": _iso(run)}
+            atomic_write_bytes(head_path(be), (json.dumps(head, indent=1) + "\n").encode("utf-8"))
     return {"apply": apply, "utc": _iso(run), "sealed" if apply else "would_seal": planned,
             "status": "OK", "next": ("git add the manifests and the sealed stream files, then commit"
                                      if apply and planned else None)}
 
 
 # ─────────────────────────────── status ──────────────────────────────────────
+
+def legacy_frozen_check(be: Backend, *, rehash: bool = False) -> dict:
+    """Has anything written to the legacy file since the migration froze it?
+
+    Size on every call (one stat, so health rows can afford it); sha256 too with
+    `rehash`. A write here is a writer that bypassed this module -- old code not
+    restarted, or a script that opens the path itself -- and its rows are in a
+    file no reader reads any more. A deleted legacy file is not a write: it is
+    the cleanup the marker's `legacy_file_policy` leaves to the owner."""
+    marker = be.marker or {}
+    if be.kind != "streams":
+        return {"intact": None, "detail": "not migrated"}
+    if not be.legacy_path.exists():
+        return {"intact": None, "detail": f"{rel(be.legacy_path)} no longer exists (deleted after "
+                                          f"the migration; the streams are the ledger)"}
+    size = be.legacy_path.stat().st_size
+    want = marker.get("legacy_bytes")
+    if want is not None and size != want:
+        return {"intact": False, "bytes": size, "bytes_at_migration": want,
+                "detail": (f"{rel(be.legacy_path)} is {size:,} bytes, not the {want:,} it was "
+                           f"frozen at: a writer that bypassed forecast_ledger wrote to it after "
+                           f"the migration, and no reader sees those rows")}
+    if rehash and sha256_file(be.legacy_path) != marker.get("legacy_sha256"):
+        return {"intact": False, "bytes": size,
+                "detail": (f"{rel(be.legacy_path)} no longer hashes to the migration's sha256 "
+                           f"(same size): it was edited in place after the migration")}
+    return {"intact": True, "bytes": size, "rehashed": rehash,
+            "detail": "the legacy file is byte-for-byte as the migration froze it"
+                      if rehash else "the legacy file has the size it was frozen at"}
+
 
 def status(path: Optional[Path] = None, *, rehash: bool = False,
            now: Optional[datetime] = None) -> dict:
@@ -1360,12 +1578,19 @@ def status(path: Optional[Path] = None, *, rehash: bool = False,
                                                "problems")}
         if chain["status"] != "ok":
             problems.extend(chain["problems"])
-        if be.legacy_path.exists() and rehash:
-            same = sha256_file(be.legacy_path) == (be.marker or {}).get("legacy_sha256")
-            out["legacy_frozen_intact"] = same
-            if not same:
-                problems.append(f"{rel(be.legacy_path)} changed after the migration froze it: "
-                                f"a writer that bypassed this module (or old code) appended to it")
+        frozen = legacy_frozen_check(be, rehash=rehash)
+        out["legacy_frozen"] = frozen
+        out["legacy_frozen_intact"] = frozen["intact"]
+        if frozen["intact"] is False:
+            problems.append(frozen["detail"])
+        if rehash:
+            stats = FoldStats()
+            n = len(read_rows(path, strict=False, stats=stats))
+            want = (be.marker or {}).get("legacy_rows")
+            out["fold"] = stats.as_dict(5)
+            if isinstance(want, int) and n < want:
+                problems.append(f"the streams fold to {n} rows, fewer than the {want} the "
+                                f"legacy file held at the migration: rows were lost")
     out["status"] = "ok" if not problems else "DEGRADED"
     out["problems"] = problems
     return out

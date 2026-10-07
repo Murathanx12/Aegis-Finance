@@ -461,6 +461,7 @@ def void_unresolvable(*, path: Path, today: date, bars=None,
     by_ticker: dict[str, int] = {}
     sample: list[dict] = []
     written = 0
+    refused = 0
     if plan and write:
         from backend.services import forecast_ledger as FL
 
@@ -480,8 +481,10 @@ def void_unresolvable(*, path: Path, today: date, bars=None,
         # from a re-read under the cross-process lock (a row graded or voided
         # meanwhile keeps its first terminal state); streams = one `void`
         # event per record in this month's resolution stream.
-        written = FL.record_terminal(Path(path), pairs, kind="void",
-                                     writer="forecast_grader.void_unresolvable")["written"]
+        rec = FL.record_terminal(Path(path), pairs, kind="void",
+                                 writer="forecast_grader.void_unresolvable")
+        written = rec["written"]
+        refused = int(rec.get("refused") or 0)
     for pid, (code, sentence) in plan.items():
         by_reason[code] = by_reason.get(code, 0) + 1
     for r in rows:
@@ -492,6 +495,7 @@ def void_unresolvable(*, path: Path, today: date, bars=None,
                 sample.append({"prediction_id": pid, "ticker": r.get("ticker"),
                                "void_reason": f"{plan[pid][0]}: {plan[pid][1]}"})
     return {"voided_unresolvable": written if write else 0,
+            "refused_by_ledger": refused if write else 0,
             "would_void": len(plan), "by_reason": by_reason,
             "by_ticker": by_ticker, "sample": sample}
 

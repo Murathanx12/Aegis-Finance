@@ -619,8 +619,28 @@ def ensure_ledger_migrated(dest_dir: Path | None = None,
         src, dst = legacy_dir / name, dest_dir / name
         entry: dict = {"src": str(src), "dst": str(dst)}
         try:
+            if name == _FL.LEGACY_NAME and _FL.backend_for(src).kind == "streams":
+                # The IMAGE's forecast ledger was split into monthly streams
+                # (scripts.ledger_split). Its single file is FROZEN at the
+                # migration: copying it would seed the volume with a ledger that
+                # stopped growing that day, and every later row would be gone.
+                # The streams, manifests and marker move together or not at all,
+                # and that move is attended.
+                entry["status"] = "source_split_not_copied"
+                entry["reason"] = ("the in-image ledger was split into monthly streams; its "
+                                   "frozen single file is never copied to the volume")
+                logger.error("ledger migration: %s was split into monthly streams -- its frozen "
+                             "single file was NOT copied to %s; move the streams, manifests "
+                             "and marker as one unit (attended)", src, dst)
+                statuses.append(entry["status"])
+                report["files"][name] = entry
+                continue
             src_rows = _read_jsonl(src) if src.exists() else []
-            dst_rows = _read_jsonl(dst) if dst.exists() else []
+            if name == _FL.LEGACY_NAME:
+                # The volume's ledger may itself be split: count what it HOLDS.
+                dst_rows = _FL.read_rows(dst, strict=True) if _FL.exists(dst) else []
+            else:
+                dst_rows = _read_jsonl(dst) if dst.exists() else []
             entry["legacy_records"] = len(src_rows)
             entry["dest_records"] = len(dst_rows)
             if dst_rows:
@@ -661,6 +681,8 @@ def ensure_ledger_migrated(dest_dir: Path | None = None,
     _MIGRATION_ATTEMPTED = True
     if "failed" in statuses:
         report["status"] = "failed"
+    elif "source_split_not_copied" in statuses:
+        report["status"] = "source_split_not_copied"
     elif "migrated" in statuses:
         report["status"] = "migrated"
     else:
@@ -928,6 +950,7 @@ def resolve_all(prices, path: Path | None = None, *,
             pairs.append((r, out))
         graded.append(out if out is not None else r)
     backend = _FL.backend_for(path).kind
+    recorded: dict = {}
     if newly:
         # WRITTEN THROUGH THE FORECAST LEDGER (2026-10-07). Legacy: the whole
         # file is still rewritten, but atomically (temp + fsync + replace; the
@@ -937,8 +960,14 @@ def resolve_all(prices, path: Path | None = None, *,
         # meanwhile by another pass keeps its first grade. Streams: one
         # `resolve` event per newly graded record in this month's resolution
         # stream; no forecast row is touched.
-        backend = _FL.record_terminal(path, pairs, kind="resolve",
-                                      writer="belief_state.resolve_all")["backend"]
+        recorded = _FL.record_terminal(path, pairs, kind="resolve",
+                                       writer="belief_state.resolve_all")
+        backend = recorded["backend"]
+        # What was WRITTEN, not what this pass computed: under the lock a row
+        # another pass graded meanwhile keeps its first grade, and a pair the
+        # ledger refused (a grade that would touch a frozen field) is not a
+        # grade. Both are counted below instead of folded into "newly".
+        newly = int(recorded.get("written", newly))
     done = [r for r in graded if r.get("outcome") is not None]
     void = [r for r in graded if r.get("void_reason")]
     overdue = [r for r in graded
@@ -959,6 +988,9 @@ def resolve_all(prices, path: Path | None = None, *,
                            "unresolved — check the price frame covers them", len(overdue))
     return {"total": len(graded), "resolved": len(done), "void": len(void),
             "newly_resolved": newly, "skipped_quarantined": skipped,
+            "skipped_already_terminal": int(recorded.get("skipped_already_terminal") or 0),
+            "refused_by_ledger": int(recorded.get("refused") or 0),
+            "refused_sample": recorded.get("refused_sample") or [],
             "pending_not_yet_due": len(graded) - len(done) - len(void) - len(overdue),
             "OVERDUE_AND_UNRESOLVED": len(overdue),
             "overdue_ids": [r["prediction_id"] for r in overdue][:20],
@@ -1085,7 +1117,9 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
     # Where the ledger lives is part of its health: a ledger on an ephemeral
     # filesystem reads perfectly right up until the deploy that empties it.
     persistence = ledger_persistence(path)
-    rows = read_predictions(path)
+    fold_stats = _FL.FoldStats()
+    rows = _FL.read_rows(path or PREDICTIONS, strict=True, stats=fold_stats)
+    be = _FL.backend_for(path or PREDICTIONS)
     if not rows:
         return {"status": "DEGRADED", "n": 0,
                 "reason": "the ledger is empty — no forecast has ever been "
@@ -1148,11 +1182,26 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
         problems.append(f"{len(actionable)} forecast(s) past due and unresolved")
     if persistence["status"] != "ok":
         problems.append(f"ledger persistence: {persistence['reason']}")
+    # After the split, rows written to the frozen legacy file are rows no
+    # reader sees (a writer that bypassed forecast_ledger). One stat per poll.
+    frozen = _FL.legacy_frozen_check(be)
+    if frozen["intact"] is False:
+        problems.append(f"forecast ledger: {frozen['detail']}")
+    if fold_stats.refused_events:
+        problems.append(f"forecast ledger: {len(fold_stats.refused_events)} resolution event(s) "
+                        f"refused by the fold (e.g. {fold_stats.refused_events[0]})")
 
     # Deliberate and NOT a fault, so it lives OUTSIDE `problems` — prominently
     # counted, never degrading. Phrased so it cannot be mistaken for a resolver
     # that stopped: it names the reason and where the decision sits.
     notices = []
+    if fold_stats.duplicate_terminal_events or fold_stats.orphan_events \
+            or fold_stats.duplicate_forecast_ids:
+        notices.append(
+            f"forecast ledger fold: {len(fold_stats.duplicate_terminal_events)} later terminal "
+            f"event(s) ignored (first grade wins), {len(fold_stats.orphan_events)} event(s) "
+            f"for no forecast, {len(fold_stats.duplicate_forecast_ids)} duplicate forecast "
+            f"id(s) -- counted, never applied")
     if q_overdue:
         notices.append(
             f"{len(q_overdue)} forecast(s) past due but QUARANTINED (campaign "
@@ -1190,5 +1239,7 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
         "distinct_models": len({f"{r['model']}:{r['model_version']}"
                                 for r in rows}),
         # Which store answered: the legacy file or the monthly streams, and why.
-        "ledger_backend": _FL.backend_for(path or PREDICTIONS).describe(),
+        "ledger_backend": be.describe(),
+        "legacy_frozen": frozen,
+        "fold": fold_stats.as_dict(3),
     }

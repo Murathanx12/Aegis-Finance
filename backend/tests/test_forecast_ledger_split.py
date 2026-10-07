@@ -124,6 +124,15 @@ def _write_legacy(path: Path, rows: list[dict], *, crlf: bool = True) -> bytes:
     return data
 
 
+@pytest.fixture(autouse=True)
+def _pin_the_run_clock(monkeypatch):
+    """Every write in this module runs at NOW, including the ones that read the
+    clock themselves (`resolve_all`, `record_terminal`). Without this, a run
+    that straddles a UTC month boundary files an event in the month after the
+    one the assertions computed (protocol item 5)."""
+    monkeypatch.setattr(FL, "_now", lambda: NOW)
+
+
 @pytest.fixture
 def ledger(tmp_path) -> Path:
     p = tmp_path / "optimus" / "predictions.jsonl"
@@ -327,7 +336,7 @@ def test_voids_after_the_switch_are_events_too(ledger):
     voided = _void(row, NOW)
     out = FL.record_terminal(ledger, [(row, voided)], kind="void", writer="test")
     assert out == {"backend": "streams", "written": 1, "skipped_already_terminal": 0,
-                   "month": _m(NOW)}
+                   "month": _m(NOW), "refused": 0, "refused_sample": []}
     again = {r["prediction_id"]: r for r in B.read_predictions(ledger)}[row["prediction_id"]]
     assert again["void_reason"] and again["voided_by"] == "forecast_grader.void_unresolvable"
 
@@ -700,3 +709,356 @@ def test_the_logical_line_cache_and_the_needle_follow_appends_and_grades(ledger)
     assert graded[0]["outcome"] == 1
     full = {json.loads(x)["prediction_id"]: json.loads(x) for x in FL.logical_lines(ledger)}
     assert full[new["prediction_id"]]["outcome"] == 1
+
+
+# ─────────────────────────────── review A2: the findings, pinned ─────────────
+
+def _streams_files(root: Path) -> list[str]:
+    return sorted(p.name for d in ("forecasts", "resolutions") if (root / d).is_dir()
+                  for p in (root / d).iterdir())
+
+
+def test_discard_partial_never_touches_a_migrated_directory_under_any_legacy_name(ledger):
+    """F1: `--discard-partial --legacy other.jsonl` in a migrated directory once
+    answered "legacy" for that name and deleted the live streams AND the marker."""
+    _apply(ledger)
+    before = _streams_files(ledger.parent)
+    other = ledger.parent / "other.jsonl"
+    with pytest.raises(FL.MigrationRefused, match="live ledger"):
+        MIG.discard_partial(other)
+    assert _streams_files(ledger.parent) == before
+    assert FL.marker_path(ledger).exists()
+    assert FL.marker_path(ledger) not in MIG._strays(FL.backend_for(other))
+    assert len(B.read_predictions(ledger)) == 7
+
+
+def test_a_second_legacy_file_cannot_be_split_into_a_migrated_directory(ledger):
+    _apply(ledger)
+    other = ledger.parent / "other.jsonl"
+    _write_legacy(other, [_new14("second", OLD)])
+    sha = hashlib.sha256(other.read_bytes()).hexdigest()
+    plan = MIG.plan(other, now=NOW)
+    assert plan["status"] == "BLOCKED" and any("belong to" in b for b in plan["blocking"])
+    with pytest.raises(FL.MigrationRefused, match="already migrated 'predictions.jsonl'"):
+        MIG.apply(other, expect_sha256=sha, now=NOW, history=False)
+    assert len(B.read_predictions(ledger)) == 7
+
+
+def test_an_event_may_only_set_resolution_fields():
+    """F2: an event that set `probability` (or `prediction_id`) would rewrite what
+    was forecast at fold time."""
+    base = {"prediction_id": "x", "event": "resolve"}
+    assert "non-resolution" in FL.event_problem(dict(base, set={"outcome": 1, "probability": .9}))
+    assert "non-resolution" in FL.event_problem(dict(base, set={"outcome": 1,
+                                                                "prediction_id": "y"}))
+    assert FL.event_problem(dict(base, set={"outcome": 1, "brier": 0.16})) is None
+    row = _new14("adds", OLD)
+    with pytest.raises(FL.ForecastLedgerError, match="add the field 'realised_return'"):
+        FL.make_event(row, dict(row, outcome=1, realised_return=0.1), kind="resolve", writer="t")
+
+
+def test_the_fold_refuses_a_hand_written_event_that_rewrites_a_frozen_field(ledger):
+    _apply(ledger)
+    row = next(r for r in B.read_predictions(ledger) if r["outcome"] is None
+               and not r.get("void_reason"))
+    bad = {"schema": FL.EVENT_SCHEMA, "prediction_id": row["prediction_id"], "event": "resolve",
+           "set": {"outcome": 1, "probability": 0.99, "ticker": "EVIL"},
+           "recorded_at": _iso(NOW), "writer": "a hand edit", "month_basis": "recorded_at"}
+    with (ledger.parent / "resolutions" / f"resolutions_{_m(NOW)}.jsonl").open("ab") as fh:
+        fh.write(FL.row_line(bad))
+    stats = FL.FoldStats()
+    after = {r["prediction_id"]: r for r in FL.read_rows(ledger, strict=False, stats=stats)}
+    assert after[row["prediction_id"]] == row                  # untouched, still open
+    assert len(stats.bad_lines) == 1                          # the reader's own check
+    rows = {k: dict(v) for k, v in FL._read_forecasts(
+        FL.backend_for(ledger), strict=True, stats=FL.FoldStats()).items()}
+    st2 = FL.fold(rows, [bad])                                # and the fold's
+    assert st2.refused_events and rows[row["prediction_id"]]["ticker"] != "EVIL"
+    with pytest.raises(ValueError, match="non-resolution"):
+        FL.read_rows(ledger, strict=True)                     # a strict read is loud
+
+
+def test_a_terminal_event_needs_its_terminal_field():
+    """F3: a `resolve` with no outcome would close a record ungraded."""
+    assert "without an outcome" in FL.event_problem(
+        {"prediction_id": "x", "event": "resolve", "set": {"brier": 0.1}})
+    assert "without a void_reason" in FL.event_problem(
+        {"prediction_id": "x", "event": "void", "set": {"voided_by": "me"}})
+
+
+def test_a_malformed_terminal_event_does_not_block_the_real_grade(ledger):
+    _apply(ledger)
+    row = next(r for r in B.read_predictions(ledger) if r["outcome"] is None
+               and not r.get("void_reason"))
+    junk = {"schema": FL.EVENT_SCHEMA, "prediction_id": row["prediction_id"], "event": "resolve",
+            "set": {"brier": 0.1}, "recorded_at": _iso(NOW), "writer": "junk",
+            "month_basis": "recorded_at"}
+    with (ledger.parent / "resolutions" / f"resolutions_{_m(NOW)}.jsonl").open("ab") as fh:
+        fh.write(FL.row_line(junk))
+    out = FL.record_terminal(ledger, [(row, _resolve_like_the_resolver(row, NOW))],
+                             kind="resolve", writer="t")
+    assert out["written"] == 1
+    graded = {r["prediction_id"]: r for r in FL.read_rows(ledger, strict=False)}
+    assert graded[row["prediction_id"]]["outcome"] == 1
+
+
+def test_resolve_all_reports_what_was_written_not_what_it_computed(tmp_path, monkeypatch):
+    """F3: a row another pass graded between this pass's read and its write keeps
+    its first grade, and the report says so instead of counting it as new."""
+    p = tmp_path / "optimus" / "predictions.jsonl"
+    old = _new14("raced", datetime(2025, 2, 3, tzinfo=timezone.utc), probability=0.9)
+    _write_legacy(p, [old])
+    _apply(p)
+    stale = B.read_predictions(p)                       # what this pass read: open
+    first = B.resolve_all(_prices(), p)                 # another pass grades it first
+    assert first["newly_resolved"] == 1
+    monkeypatch.setattr(B, "read_predictions", lambda path=None: [dict(r) for r in stale])
+    rep = B.resolve_all(_prices(), p)
+    assert rep["newly_resolved"] == 0 and rep["skipped_already_terminal"] == 1
+    assert rep["refused_by_ledger"] == 0
+
+
+def test_filing_month_only_ever_writes_where_no_seal_can_be_made_false():
+    """F4: a backdated forecast for a month before the genesis manifest created a
+    new file BEFORE the chain tail, and the chain read BROKEN from then on."""
+    run = CUR + timedelta(hours=6)                          # inside last month's grace
+    prev = _m(_month_start(1))
+    tail = ("2000-01", 1)
+    assert FL.filing_month(_m(CUR), run, sealed=set(), tail=tail) == _m(CUR)
+    assert FL.filing_month(prev, run, sealed=set(), tail=tail) == prev          # in grace
+    assert FL.filing_month(prev, run, sealed={prev}, tail=tail) == _m(CUR)      # sealed
+    assert FL.filing_month(prev, run, sealed=set(), tail=(prev, 0)) == _m(CUR)  # at the tail
+    late = CUR + timedelta(days=3)                                          # past grace
+    assert FL.filing_month(prev, late, sealed=set(), tail=None) == _m(CUR)
+    assert FL.filing_month(_m(_month_start(6)), run, sealed=set(), tail=None) == _m(CUR)
+    future = f"{CUR.year + 1}-01"
+    assert FL.filing_month(future, run, sealed=set(), tail=None) == _m(CUR)
+
+
+def test_a_forecast_older_than_the_genesis_is_filed_in_the_open_month(ledger):
+    _apply(ledger)
+    ancient = _new14("before-genesis", _month_start(6) + timedelta(days=1))
+    out = FL.append_forecasts([ancient], ledger)
+    assert out["late_filed"] == 1 and out["months"] == [_m(NOW)]
+    assert not (ledger.parent / "forecasts" / f"forecasts_{_m(_month_start(6))}.jsonl").exists()
+    assert FL.verify_chain(ledger)["status"] == "ok"
+
+
+def test_a_write_to_the_frozen_legacy_file_is_seen_without_a_rehash(ledger):
+    """F5: after the switch a bypassing writer's rows land where no reader looks;
+    the size check runs on every status and every ledger_health poll."""
+    _apply(ledger)
+    with ledger.open("ab") as fh:
+        fh.write(json.dumps(_new14("bypass", NOW)).encode() + b"\r\n")
+    st = FL.status(ledger)
+    assert st["status"] == "DEGRADED" and st["legacy_frozen_intact"] is False
+    health = B.ledger_health(ledger)
+    assert health["status"] == "DEGRADED"
+    assert any("bypassed forecast_ledger" in p for p in health["problems"])
+
+
+def test_a_same_size_edit_of_the_frozen_file_needs_the_rehash(ledger):
+    _apply(ledger)
+    data = bytearray(ledger.read_bytes())
+    data[20] = ord("Q") if data[20] != ord("Q") else ord("R")
+    ledger.write_bytes(bytes(data))
+    assert FL.status(ledger)["legacy_frozen_intact"] is True        # size only
+    st = FL.status(ledger, rehash=True)
+    assert st["legacy_frozen_intact"] is False and st["status"] == "DEGRADED"
+
+
+def test_the_chain_head_catches_a_truncated_chain(ledger):
+    """F6: deleting the newest manifest left a shorter chain that verified."""
+    _apply(ledger)
+    assert FL.verify_chain(ledger)["status"] == "ok"
+    head = json.loads((FL.manifest_dir_for(ledger) / FL.HEAD_NAME).read_text())
+    assert head["tail"] == f"resolutions_{_m(MID)}" and head["manifests"] == 4
+    (FL.manifest_dir_for(ledger) / f"resolutions_{_m(MID)}.json").unlink()
+    v = FL.verify_chain(ledger)
+    assert v["status"] == "BROKEN" and any("HEAD.json names tail" in p for p in v["problems"])
+    (FL.manifest_dir_for(ledger) / FL.HEAD_NAME).unlink()
+    assert any("HEAD.json is missing" in p for p in FL.verify_chain(ledger)["problems"])
+
+
+def test_a_stream_the_migration_wrote_may_grow_but_never_shrink_or_change(ledger):
+    _apply(ledger)
+    cur = ledger.parent / "forecasts" / f"forecasts_{_m(CUR)}.jsonl"   # open, unsealed
+    FL.append_forecasts([_new14("grows", NOW)], ledger)
+    assert FL.verify_chain(ledger)["status"] == "ok"                   # growth is fine
+    original = cur.read_bytes()
+    cur.write_bytes(b"")                                              # every row gone
+    v = FL.verify_chain(ledger)
+    assert any("shorter than" in p for p in v["problems"])
+    st = FL.status(ledger, rehash=True)
+    assert any("fewer than" in p for p in st["problems"])             # rows were lost
+    flipped = bytearray(original)
+    flipped[5] = ord("Z") if flipped[5] != ord("Z") else ord("Y")
+    cur.write_bytes(bytes(flipped))
+    assert any("no longer hash to what the migration wrote" in p
+               for p in FL.verify_chain(ledger, rehash=True)["problems"])
+    cur.unlink()
+    assert any("now missing" in p for p in FL.verify_chain(ledger)["problems"])
+
+
+def test_a_failure_after_the_marker_is_on_disk_never_deletes_the_streams(ledger, monkeypatch):
+    """F7: rollback decided by a flag set AFTER the marker write returned; a
+    failure between the rename and that line deleted the streams it names."""
+    real = FL.atomic_write_bytes
+
+    def boom_after_marker(path, data):
+        real(path, data)
+        if Path(path).name == FL.MARKER_NAME:
+            raise OSError("simulated: the directory fsync failed after the rename")
+
+    monkeypatch.setattr(MIG.FL, "atomic_write_bytes", boom_after_marker)
+    sha = hashlib.sha256(ledger.read_bytes()).hexdigest()
+    with pytest.raises(OSError, match="simulated"):
+        MIG.apply(ledger, expect_sha256=sha, now=NOW, history=False)
+    monkeypatch.undo()
+    monkeypatch.setattr(FL, "_now", lambda: NOW)
+    assert FL.marker_path(ledger).exists()
+    assert FL.backend_for(ledger).kind == "streams"
+    assert len(FL.read_rows(ledger)) == 7                  # the streams it names are there
+
+
+def test_a_seal_failure_after_the_switch_is_reported_as_switched(ledger, monkeypatch):
+    def refuse(*a, **k):
+        raise FL.SealRefused("simulated seal refusal")
+
+    monkeypatch.setattr(MIG.FL, "seal_closed", refuse)
+    res = _apply(ledger)
+    assert res["status"] == "APPLIED_WITH_PROBLEMS" and res["switched"] is True
+    assert "sealing failed" in res["post_switch_error"]
+    assert FL.backend_for(ledger).kind == "streams"
+
+
+def test_a_nan_in_a_frozen_field_does_not_block_a_grade(ledger):
+    """F8: `nan == nan` is False, so an untouched NaN read as a frozen-field change
+    and the whole batch raised."""
+    _apply(ledger)
+    nan_row = _new14("nan-threshold", NOW, observable=B.Observable.ABS_MOVE_EXCEEDS,
+                     threshold=float("nan"))
+    ok_row = _new14("plain", NOW)
+    FL.append_forecasts([nan_row, ok_row], ledger)
+    rows = {r["prediction_id"]: r for r in FL.read_rows(ledger)}
+    a, b = rows[nan_row["prediction_id"]], rows[ok_row["prediction_id"]]
+    bad = dict(b, outcome=1, probability=0.01)                      # a real frozen change
+    out = FL.record_terminal(ledger, [(a, _resolve_like_the_resolver(a, NOW)), (b, bad)],
+                             kind="resolve", writer="t")
+    assert out["written"] == 1 and out["refused"] == 1
+    assert out["refused_sample"][0]["prediction_id"] == b["prediction_id"]
+    after = {r["prediction_id"]: r for r in FL.read_rows(ledger)}
+    assert after[a["prediction_id"]]["outcome"] == 1
+    assert after[b["prediction_id"]]["outcome"] is None
+
+
+def test_the_lock_excludes_another_process(tmp_path):
+    """The cross-process half of the lock, with a real second process."""
+    import os
+    import sys
+    import time as _time
+    code = ("import sys, time\n"
+            "from pathlib import Path\n"
+            "from backend.services import forecast_ledger as FL\n"
+            "with FL.ledger_lock(Path(sys.argv[1]), purpose='test holder'):\n"
+            "    print('held', flush=True)\n"
+            "    time.sleep(30)\n")
+    proc = subprocess.Popen([sys.executable, "-c", code, str(tmp_path)], stdout=subprocess.PIPE,
+                            cwd=str(Path(__file__).resolve().parents[2]),
+                            env={**os.environ, "AEGIS_IGNORE_DOTENV": "1"})
+    try:
+        assert proc.stdout.readline().strip() == b"held"
+        t0 = _time.monotonic()
+        with pytest.raises(FL.LedgerBusy, match="test holder"):
+            with FL.ledger_lock(tmp_path, timeout_s=0.3):
+                pass
+        assert _time.monotonic() - t0 < 5
+    finally:
+        proc.kill()                       # our own child, by its handle
+        proc.wait(timeout=10)
+    with FL.ledger_lock(tmp_path, timeout_s=5):                # released with the process
+        pass
+
+
+def test_a_lock_file_that_cannot_be_opened_refuses_the_write(tmp_path):
+    (tmp_path / FL.LOCK_NAME).mkdir()                          # opening it as a file fails
+    with pytest.raises(FL.ForecastLedgerError, match="cannot open the forecast ledger lock"):
+        with FL.ledger_lock(tmp_path):
+            pass
+
+
+def test_strays_include_temp_junk_and_the_head_but_never_the_marker(ledger):
+    (ledger.parent / "forecasts").mkdir(parents=True)
+    junk = ledger.parent / "forecasts" / f"forecasts_{_m(CUR)}.jsonl.tmp.1.2"
+    junk.write_bytes(b"{")
+    mdir = FL.manifest_dir_for(ledger)
+    mdir.mkdir(parents=True)
+    (mdir / FL.HEAD_NAME).write_text("{}")
+    names = {p.name for p in MIG._strays(FL.backend_for(ledger))}
+    assert junk.name in names and FL.HEAD_NAME in names
+    assert MIG.plan(ledger, now=NOW)["status"] == "BLOCKED"      # a stray HEAD blocks the plan
+    assert MIG.discard_partial(ledger)["status"] == "DISCARDED"
+    assert not junk.exists() and not (mdir / FL.HEAD_NAME).exists()
+
+
+def test_an_unreadable_committed_version_makes_the_history_incomplete(tmp_path, monkeypatch):
+    if shutil.which("git") is None:
+        pytest.skip("git is not installed")
+    repo = tmp_path / "repo"
+    led = repo / "predictions.jsonl"
+    repo.mkdir()
+
+    def git(*args):
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t",
+                        "-c", "commit.gpgsign=false", *args], cwd=repo, check=True,
+                       capture_output=True)
+
+    git("init", "-q")
+    for i in range(2):
+        _write_legacy(led, [_new14(f"u{j}", OLD) for j in range(i + 1)], crlf=False)
+        git("add", "-A")
+        git("commit", "-q", "-m", f"v{i}")
+    real_git = MIG._git
+
+    def flaky(args, cwd, **kw):
+        if args[0] == "cat-file":
+            raise RuntimeError("simulated: object missing")
+        return real_git(args, cwd, **kw)
+
+    monkeypatch.setattr(MIG, "_git", flaky)
+    rep = MIG.legacy_history_report(led, repo=repo)
+    assert rep["status"] == "INCOMPLETE" and rep["unreadable_versions"] == 2
+
+
+def test_the_volume_is_never_seeded_from_a_split_image_ledger(tmp_path):
+    """`ensure_ledger_migrated` copies the image ledger to an empty volume. After
+    a split the image's single file is frozen: copying it would start the volume
+    on a ledger that stopped growing at the migration."""
+    image, volume = tmp_path / "image", tmp_path / "volume"
+    src = image / "predictions.jsonl"
+    _write_legacy(src, _legacy_rows())
+    _apply(src)
+    volume.mkdir()
+    rep = B.ensure_ledger_migrated(dest_dir=volume, legacy_dir=image)
+    assert rep["files"]["predictions.jsonl"]["status"] == "source_split_not_copied"
+    assert rep["status"] == "source_split_not_copied"
+    assert not (volume / "predictions.jsonl").exists()
+
+
+def test_the_query_planner_reports_a_refused_ledger_as_unknown(tmp_path):
+    from backend.services import query_planner as QP
+    led = tmp_path / "predictions.jsonl"
+    _write_legacy(led, [_new14("qp", OLD)], crlf=False)
+    _apply(led)
+    FL.marker_path(led).write_text("garbage", encoding="utf-8")
+    assert QP._pred_claim_rows(tmp_path) is None
+
+
+@pytest.mark.parametrize("module", ["campaign_resolution_readiness", "dress_rehearsal_0821"])
+def test_the_one_file_rehearsals_refuse_a_split_ledger(ledger, monkeypatch, module, capsys):
+    import importlib
+    mod = importlib.import_module(f"scripts.{module}")
+    _apply(ledger)
+    monkeypatch.setattr(mod.EP, "ledger_path", lambda population: ledger)
+    assert mod.main(["--as-of", NOW.date().isoformat()]) == 2
+    assert "REFUSED" in capsys.readouterr().out

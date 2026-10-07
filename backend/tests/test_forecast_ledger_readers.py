@@ -26,6 +26,9 @@ LITERAL = "predictions.jsonl"
 PATH_NAMES = {"PREDICTIONS", "PREDICTIONS_PATH", "FORECAST_LEDGER"}
 #: Calls that read or write the bytes of a path (not `.exists()` / `.stat()`).
 BYTE_CALLS = {"open", "read_text", "read_bytes", "write_text", "write_bytes"}
+#: Module-level copies of a path's bytes: `shutil.copy2(PREDICTIONS, ...)` is a
+#: read of the frozen file just as surely as `open(PREDICTIONS)` is.
+COPY_CALLS = {"copy", "copy2", "copyfile", "move"}
 
 #: file -> why it may NAME the ledger file. "via the layer" means its reads were
 #: checked to go through forecast_ledger (read_rows / logical_lines / tail_lines /
@@ -112,6 +115,10 @@ def _scan(repo: Path = REPO):
                 target = None
                 if isinstance(node.func, ast.Name) and node.func.id == "open" and node.args:
                     target = node.args[0]
+                elif (isinstance(node.func, ast.Attribute) and node.func.attr in COPY_CALLS
+                      and isinstance(node.func.value, ast.Name) and node.func.value.id == "shutil"
+                      and node.args):
+                    target = node.args[0]
                 elif isinstance(node.func, ast.Attribute) and node.func.attr in BYTE_CALLS:
                     target = node.func.value
                 tname = (target.id if isinstance(target, ast.Name) else
@@ -165,7 +172,9 @@ def test_the_scanner_sees_a_bypass_when_there_is_one(tmp_path):
         '"""mentions predictions.jsonl in a docstring, which is fine"""\n'
         "from pathlib import Path\n"
         "PREDICTIONS = Path('x') / 'predictions.jsonl'\n"
-        "rows = PREDICTIONS.read_text()\n", encoding="utf-8")
+        "rows = PREDICTIONS.read_text()\n"
+        "import shutil\n"
+        "shutil.copy2(PREDICTIONS, 'elsewhere.jsonl')\n", encoding="utf-8")
     names, opens = _scan(tmp_path)
     assert names == {"scripts/bypass.py": [3]}
-    assert opens == {"scripts/bypass.py": [4]}
+    assert opens == {"scripts/bypass.py": [4, 6]}

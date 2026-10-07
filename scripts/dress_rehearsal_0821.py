@@ -123,6 +123,16 @@ def main(argv: list[str] | None = None) -> int:
 
     today = date.fromisoformat(a.as_of)
     real = EP.ledger_path(POPULATION)
+    # A COPY of one file is only a copy of the ledger while the ledger IS one
+    # file. After `scripts.ledger_split --apply` the single file is frozen and
+    # the rows that matter are in the monthly streams: rehearsing against it
+    # would rehearse against a ledger that stopped on the migration day.
+    from backend.services import forecast_ledger as FL
+    be = FL.backend_for(real)
+    if be.kind != "legacy":
+        print(f"REFUSED: {real} is answered by the monthly streams ({be.reason}); this "
+              f"rehearsal copies ONE file and would read the frozen legacy copy. Nothing ran.")
+        return 2
     work = Path(a.workdir) if a.workdir else Path(
         tempfile.mkdtemp(prefix="aegis_rehearsal_"))
     work.mkdir(parents=True, exist_ok=True)
