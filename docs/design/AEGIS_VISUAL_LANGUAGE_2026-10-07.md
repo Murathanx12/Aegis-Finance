@@ -13,7 +13,7 @@ Read with: [`OPTIMUS_CREATIVE_TOOL_LIBRARY_2026-10-07.md`](OPTIMUS_CREATIVE_TOOL
 
 ---
 
-## 0. What the owner chose, in his words, and what it means
+## 0. What the owner chose, in the owner's words, and what it means
 
 Four styles were shown side by side (scratch prototypes, same content in each):
 
