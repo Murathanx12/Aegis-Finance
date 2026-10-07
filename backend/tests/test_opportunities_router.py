@@ -117,8 +117,19 @@ def test_links_and_exchange_for_foreign_tickers():
 
 
 def test_router_is_registered_on_the_app():
+    # Read the OpenAPI schema, not `app.routes`: FastAPI >= 0.141 (CI resolves
+    # 0.142.2 today; the dev venv had pinned-loose to 0.135) wraps an included
+    # router in an `_IncludedRouter` with no `.path`, so walking `app.routes`
+    # found ZERO opportunities routes on CI's fresh install while every route
+    # added directly on `app` (not through include_router) still showed up --
+    # a green-locally, red-on-CI split that looked like a dropped registration
+    # but was a test-helper bug (same defect already fixed in
+    # test_journal_router.py::TestWriteAuthority on 2026-09-08; arena_v1 and
+    # legibility_v1 share the unguarded include_router pattern and are
+    # similarly fine -- verified via this same schema). The schema is the
+    # version-independent statement of which paths exist.
     from backend.main import app
-    paths = {getattr(r, "path", "") for r in app.routes}
+    paths = app.openapi()["paths"]
     assert "/api/opportunities/latest" in paths
     assert "/api/opportunities/{list_id}" in paths
 
