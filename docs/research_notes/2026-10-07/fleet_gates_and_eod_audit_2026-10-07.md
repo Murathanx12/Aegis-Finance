@@ -38,12 +38,12 @@ row and is not walked.
 | 8 | `stop_never_loosened` | shape | a stop that replaces a resting stop below the old price is RAISED to the old price (recorded as SHRINK, quantity unchanged). The planners already take `max(old, new)`, so in practice this is an assertion |
 | 9 | `min_order` | risk | an entry or trim below `min_order_usd` ($250) → KILL |
 | 10 | `cooldown` | risk | **NEW.** No buy of a name a sell-stop filled on within N sessions. Unreadable stop history → KILL buys |
-| 11 | `turnover_budget` | risk | an entry or trim beyond the day's turnover budget → SHRINK to what is left (KILL below the minimum). **Change:** this used to KILL |
-| 12 | `cash` | risk | a buy beyond cash → SHRINK (no leverage) |
-| 13 | `gross_cap` | risk | a buy beyond `max_gross_frac` × equity → SHRINK |
-| 14 | `name_cap` | risk | a buy beyond the name cap → SHRINK. The cap is the contract's `max_name_frac`: **10%** on every hack contract today, with SPY at 95% on hack5 v2. The brief's "12%" is the v2 contracts' maximum stop distance, not a name cap |
+| 11 | `turnover_budget` | risk | **REFUSE** (frozen terms, `c26-p2`): every non-protective order except a cancel or a declared `exit` spends the budget in plan order the moment it passes this gate; beyond it → KILL. A rebalance sell, full or partial, spends it (the v2 contract grants exits no exemption) |
+| 12 | `cash` | risk | a buy beyond cash → **KILL** (frozen terms, as `check_limits`) |
+| 13 | `gross_cap` | risk | a buy beyond `max_gross_frac` × equity → **KILL** (frozen terms) |
+| 14 | `name_cap` | risk | a buy beyond the name cap → **KILL** (frozen terms). The cap is the contract's `max_name_frac`: **10%** on every hack contract today, with SPY at 95% on hack5 v2. The brief's "12%" is the v2 contracts' maximum stop distance, not a name cap |
 | 15 | `sector_concentration` | risk | **NEW.** A buy that would take its sector above X of the account's gross → SHRINK (KILL if no room). A contract's declared name-cap override (the SPY control) is exempt |
-| 16 | `order_count` | risk | an entry or trim beyond the per-run order cap (60) → KILL |
+| 16 | `order_count` | risk | **every** non-cancel order counts, exits and stops included, and is KILLED beyond the per-run cap (60) -- the pre-C26 circuit breaker, restored |
 
 **What is pinned by tests** (`backend/tests/test_fleet_gates.py`):
 
@@ -52,19 +52,15 @@ row and is not walked.
   verdict. Each of these is a `GATE_DEFECT` that kills the order. A gate that
   raises an exception is a `GATE_ERROR` and kills the order too. A test runs
   400 random proposals and checks that no row has `qty_out > qty_in`.
-- **Exits are never blocked outside the lease class.** An exit is any of:
-  `exit`, `cancel`, `stop_new`, `stop_renew`, anything protective, or a sell of
-  the whole long position. In the test, an exit passes every risk gate with
-  negative cash, gross at 5× equity, the turnover budget at 0, the order cap
-  used up, unreadable stop history, a 1% sector cap and a 99-session cooldown.
-  Only the four lease gates can refuse it.
-- **Two shape gates can also refuse an exit**, and this is deliberate. An
-  option or a malformed order is never built, and a sell with nothing held has
-  nothing to exit.
-- **Old refusals that are now passes.** Exits no longer spend the turnover
-  budget and are not counted against the order cap. A full exit that the old
-  path refused for budget or count now goes through. A trim (a partial sell)
-  still pays the budget.
+- **Exits (superseded by c26-p2, see §6).** Protective stops, cancels and
+  declared `exit` orders pass every risk gate except `order_count`, which counts
+  and caps every non-cancel order as it did before C26. A rebalance sell (full
+  or partial) spends the turnover budget and can be refused by it, exactly as
+  before. Lease gates can refuse anything; `instrument`, `order_shape` and
+  `long_only` can refuse a malformed order or a sell with nothing held.
+- **Behaviour vs the pre-C26 path.** Identical on the replayed 10-06 plans
+  (§6.6). The one deliberate change: an oversized sell is cut to the shares
+  held instead of refused.
 
 ## 2. Config constants (`backend/config.py`, after `FLEET_MANAGER_CONTROL_STOP_FRAC`)
 
@@ -220,11 +216,20 @@ The next scheduled Open pass runs this code. Then:
    - `sector_map` names the source file. If it starts with `REFUSED`, every
      name was in UNKNOWN.
 2. For each account:
-   - `gate_summary` gives `{gate: {PASS, SHRINK, KILL}}` counts. Look first at
-     `cooldown`, `sector_concentration` and `turnover_budget`.
+   - **The first line to read is `c26_delta.line`** (also printed under the
+     account header in `fleet_manager.log`):
+     `C26: N shadow-would-kill, M shadow-would-shrink, K shrinks applied, J refusals→shrink`.
+     K and J can only be non-zero through `long_only` (an oversized sell cut to
+     the shares held) or `stop_never_loosened`; everything else REFUSES as before.
+   - `gate_summary` gives `{gate: {PASS, SHRINK, KILL, SHADOW_WOULD_KILL,
+     SHADOW_WOULD_SHRINK}}`. A shadowed verdict is counted under its SHADOW_ key,
+     never as PASS.
    - `stopped_out_recent` gives `{symbol: date}`. `null` means the stop history
-     was unreadable, and `stop_history_error` says why. In that case every buy
-     was killed.
+     was unreadable (any exception: timeout, malformed 200), `stop_history_error`
+     says why, the account still ran its stop maintenance, and health reads the
+     pass DEGRADED. In shadow no buy was killed for it; in enforce every buy would be.
+   - `new_gates_mode` gives the configured and effective mode per new gate, the
+     sector map's age, the UNKNOWN share of gross, and why enforce would be refused.
    - `sector_gross` gives the sector notional before the run.
 3. Each entry in `actions[]` has a `story_id` (`fs-…`) and `gates[]`: one row
    per gate evaluated, `{gate, class, verdict, reason, qty_in, qty_out}`.
@@ -250,6 +255,53 @@ The next scheduled Open pass runs this code. Then:
 - **Any `GATE_DEFECT` or `GATE_ERROR`** (there should be none).
 - **Whether any exit shows a KILL from a non-lease gate.** That would be a bug:
   the invariant test says it cannot happen.
+
+## 6. Review fixes applied before the 2026-10-07 open pass (`gate_policy_version = c26-p2-frozen-terms`)
+
+Review: `docs/reviews/REVIEW_2026-10-07_C26_FLEET_GATES_EOD_AUDIT.md` (74/100).
+
+1. **Stop-history read** catches every exception, sets `stopped_out = None`,
+   records `stop_history_error`; the account is never aborted (its stop
+   maintenance always runs) and `task_receipts` reads it DEGRADED.
+2. **The C26 line** is on every account (`res["c26_delta"]`) and printed.
+3. **Frozen terms restored.** cash / gross_cap / name_cap / turnover_budget
+   REFUSE exactly as `check_limits` / `apply_turnover_budget` did (the budget is
+   spent in plan order even by an order a later gate refuses, as before).
+   Exits count toward, and are capped by, the per-run order cap again.
+   "Exits do not spend the turnover budget" is NOT kept beyond what the old code
+   did (protective, cancel, kind `exit`): the v2 contract text reads "enter with
+   DAY limits near the quote inside the daily turnover budget" and grants
+   rebalance sells no exemption. The one behaviour change kept is `long_only`
+   (an oversized sell is cut to the shares held instead of refused). Every
+   choice is on the receipt (`gate_policy_version`, `gates.gate_policy_choices`).
+4. **Re-protect after the gates.** A sell is gated first; only a sell that
+   passes releases its resting stops, and the stop for what remains is sized
+   from the post-gate quantity and gated itself. If that stop is refused, the
+   sell is refused too (`re_protect`) and the resting stops stay. A refused trim
+   no longer leaves shares unprotected until the pre-close pass.
+5. **Sector map guard.** In enforce, `sector_concentration` stays shadow (named
+   on the account) when the map is older than 14 days
+   (`FLEET_GATE_SECTOR_MAP_MAX_AGE_DAYS`) or UNKNOWN exceeds 20% of the
+   account's gross (`FLEET_GATE_SECTOR_MAX_UNKNOWN_FRAC`). Today's map is 35
+   days old, so enforce would be refused for every account. Shadow stays the default.
+6. **Replay test.** `backend/tests/fixtures/c26/replay_2026-10-06.json` holds the
+   sanitised 10-06 open + preclose plans (58 actions). In shadow every quantity
+   and LIVE/REFUSED outcome is identical; the only would-kills are hack2's
+   MDB, NET and SNOW (sector). In enforce the only differences are those three.
+   The never-enlarge property test now builds stops (some replacing a resting
+   stop), cancels and exits, in both modes.
+7. **Holidays.** The audit's previous session skips `config.US_MARKET_HOLIDAYS`
+   (2026-11-27 now expects the 11-25 grade).
+
+**Expected C26 lines on a replay of the 10-06 open plan** (tonight's plan will differ):
+hack2 `C26: 3 shadow-would-kill, 0 shadow-would-shrink, 0 shrinks applied, 0 refusals→shrink`;
+hack1, hack4, hack5, hack6 `C26: 0 shadow-would-kill, 0 shadow-would-shrink, 0 shrinks applied, 0 refusals→shrink`.
+A recent stop fill on a name the plan re-buys adds a cooldown would-kill.
+
+**KNOWN, NOT FIXED TONIGHT** (on every run receipt as `known_defect_not_fixed`):
+since 2026-10-01, **49 of 75 LIVE buys came back HTTP 403 "potential wash trade"**
+-- top-ups of names holding a resting GTC sell stop. This is the fleet's
+dominant execution failure and C26 does not address it; queued as its own chunk.
 
 ## Files
 

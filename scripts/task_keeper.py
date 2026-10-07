@@ -718,6 +718,29 @@ def run_opportunities(*, runner: Callable[..., Any] | None = None,
     return log(row, log_path or OPPORTUNITIES_LOG)
 
 
+RESULTS_LOG = KEEPER_DIR / "results_voice.jsonl"
+
+
+def run_results_voice(*, job: Callable[[], dict] | None = None,
+                      log_path: Path | None = None) -> dict:
+    """The results-first statement (`backend.services.results_voice`, 2026-10-07) over
+    the newest roi + book_dna pair. `scripts/daily_pass.py` step `paper_accounts` runs
+    it right after it writes those receipts; the catalog firing runs it again BEFORE
+    the public receipts so /arena carries it. A failure is a SKIP row, never a raise."""
+    row: dict = {"job": "results_voice"}
+    try:
+        if job is None:
+            from backend.services import results_voice as RV          # noqa: PLC0415
+            job = RV.safe_run
+        out = job()
+        row.update(status=out.get("status"), run_id=out.get("run_id"), md=out.get("md"),
+                   line=out.get("line"))
+        row["action"] = "ok" if out.get("status") == "ok" else "skip"
+    except Exception as exc:                                       # noqa: BLE001
+        row.update(action="skip", line=f"SKIP results_voice: {type(exc).__name__}: {str(exc)[:300]}")
+    return log(row, log_path or RESULTS_LOG)
+
+
 def run_publish_receipts(*, job: Callable[[], dict] | None = None,
                          log_path: Path | None = None) -> dict:
     row: dict = {"job": "publish_receipts"}
@@ -874,6 +897,60 @@ def run_public_flow(*, now_utc: datetime | None = None, steps: dict | None = Non
     return log(row, log_path or PUBLIC_FLOW_LOG)
 
 
+# ================================================================ research lane (Q12, 2026-10-07)
+#
+# WEEKLY, ADDITIVE: research-intake cards gain literature evidence through the
+# academic lane (`backend/services/research_instruments.py`,
+# `scripts/research_lane.py --due`), never more than
+# `QUERY_PLANNER_ACADEMIC_QUERIES_DAY` queries/day, $0, keyless. This is its
+# OWN owner, same shape as `analyst`/`public_flow` above -- `daily_pass.py` is
+# not touched.
+
+TASK_RESEARCH = "AegisResearchLane"
+RESEARCH_LANE_LOG = KEEPER_DIR / "research_lane.jsonl"
+
+
+def research_lane_due(now_utc: datetime, last_utc: Optional[str]) -> bool:
+    """PURE. No prior probe, or the newest one is RESEARCH_LANE_EVERY_DAYS old."""
+    if not last_utc:
+        return True
+    try:
+        t = datetime.fromisoformat(str(last_utc))
+    except (TypeError, ValueError):
+        return True
+    t = t if t.tzinfo else t.replace(tzinfo=timezone.utc)
+    return (now_utc - t).total_seconds() >= float(_config.RESEARCH_LANE_EVERY_DAYS) * 86400
+
+
+def run_research_lane(*, now_utc: datetime | None = None, runner: Callable[..., Any] | None = None,
+                      log_path: Path | None = None, last_utc: str | None = "unset") -> dict:
+    now_utc = now_utc or _now()
+    from backend.services import research_instruments as RI       # noqa: PLC0415
+    last = RI.last_probe_utc() if last_utc == "unset" else last_utc
+    row: dict = {"job": "research_lane"}
+    if not research_lane_due(now_utc, last):
+        row.update(action="not_due", why=f"last probe {last} < "
+                                         f"{_config.RESEARCH_LANE_EVERY_DAYS:g} days ago")
+        return log(row, log_path or RESEARCH_LANE_LOG)
+    KEEPER_DIR.mkdir(parents=True, exist_ok=True)
+    out = KEEPER_DIR / f"research_lane_{now_utc:%Y%m%dT%H%M%SZ}.log"
+    argv = [_child_python(), "-m", "scripts.research_lane", "--due"]
+    try:
+        with open(out, "w", encoding="utf-8") as fh:
+            r = (runner or subprocess.run)(
+                argv, cwd=str(REPO), stdout=fh, stderr=subprocess.STDOUT,
+                stdin=subprocess.DEVNULL, timeout=float(_config.RESEARCH_LANE_TIMEOUT_MIN) * 60,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        rc = int(getattr(r, "returncode", 1))
+        row.update(action="ok" if rc == 0 else "failed", rc=rc, log=out.name,
+                   why="" if rc == 0 else f"research_lane exited {rc}; see {out.name}")
+    except subprocess.TimeoutExpired:
+        row.update(action="failed", why=f"timed out after {_config.RESEARCH_LANE_TIMEOUT_MIN} min")
+    except Exception as exc:                                       # noqa: BLE001
+        row.update(action="refused", why=f"could not start: {type(exc).__name__}: {str(exc)[:200]}")
+    return log(row, log_path or RESEARCH_LANE_LOG)
+
+
 def optimus_root() -> Path:
     return Path(os.getenv("OPTIMUS_ROOT", str(REPO.parent / "optimus")))
 
@@ -934,6 +1011,12 @@ def owner_registration_ps() -> str:
         f"-WorkingDirectory '{REPO}'",
         "Register-ScheduledTask -TaskName '" + TASK_PUBLIC_FLOW + "' -Action $a -Settings $S -Force "
         "-Trigger @(New-ScheduledTaskTrigger -Daily -At 06:15)",
+        "# Q12 academic lane: weekly, Sunday 11:00 HKT ($0, keyless; the job itself re-checks "
+        "RESEARCH_LANE_EVERY_DAYS and is a no-op most weeks)",
+        f"$a = New-ScheduledTaskAction -Execute '{pyw}' -Argument '-m scripts.task_keeper research' "
+        f"-WorkingDirectory '{REPO}'",
+        "Register-ScheduledTask -TaskName '" + TASK_RESEARCH + "' -Action $a -Settings $S -Force "
+        "-Trigger @(New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 11:00)",
     ])
 
 
@@ -1011,7 +1094,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="task_keeper")
     ap.add_argument("job", choices=("reader", "catchup", "sim", "status", "register", "catalog",
                                    "regret", "snowball", "opportunities", "publish", "publish_commit",
-                                   "analyst", "brain", "register-owners", "public_flow"))
+                                   "analyst", "brain", "register-owners", "public_flow", "research",
+                                   "results"))
     ap.add_argument("--apply", action="store_true",
                     help="register-owners: run the registration, not only print it")
     a = ap.parse_args(argv)
@@ -1021,6 +1105,10 @@ def main(argv: list[str] | None = None) -> int:
         out = run_public_flow()
         print(json.dumps(out, default=str))
         return 2 if out.get("action") == "refused" else 0
+    if a.job == "research":
+        out = run_research_lane()
+        print(json.dumps(out, default=str))
+        return 0 if out.get("action") in ("ok", "not_due") else 2
     if a.job in ("analyst", "brain"):
         out = run_analyst_pull() if a.job == "analyst" else run_brain_refresh()
         print(json.dumps(out, default=str))
@@ -1042,6 +1130,8 @@ def main(argv: list[str] | None = None) -> int:
         # C15: the Opportunity Explorer rebuild, then the public receipts LAST (they copy what
         # the steps before them wrote). Own keeper rows; never the catalog's exit code.
         print(json.dumps(run_opportunities(), default=str))
+        # 2026-10-07: the results voice BEFORE the public receipts, so /arena carries it
+        print(json.dumps(run_results_voice(), default=str))
         print(json.dumps(run_publish_receipts(), default=str))
         # C15 H1: LAST, the step that makes the pages public (it refuses off `main`)
         print(json.dumps(run_publish_commit(), default=str))
@@ -1051,6 +1141,10 @@ def main(argv: list[str] | None = None) -> int:
                "publish_commit": run_publish_commit}[a.job]()
         print(json.dumps(out, default=str))
         return 2 if out.get("action") == "refused" else 0
+    if a.job == "results":
+        out = run_results_voice()
+        print(json.dumps(out, default=str))
+        return 0 if out.get("action") == "ok" else 2
     if a.job == "snowball":
         out = run_snowball()
         print(json.dumps(out, default=str))

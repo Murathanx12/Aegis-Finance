@@ -241,6 +241,21 @@ def block_money(day: str) -> list[str]:
     return lines
 
 
+def block_results() -> list[str]:
+    """RESULTS FIRST (2026-10-07, the owner: "we should say that we have this amount
+    of success"). The six headline lines of the newest `results_voice_<run>.md`:
+    ahead/behind SPY, the leader with its window and label, what raises it, and the
+    claim line last. Absent -> a CANNOT DETERMINE line, never a silent gap."""
+    from backend.services import results_voice as RV
+    try:
+        p, lines = RV.headline_block(RV.PA_DIR)
+    except Exception as exc:  # noqa: BLE001 -- a line, never a raise
+        return ["- " + cannot(f"results_voice unreadable ({type(exc).__name__})", RV.PA_DIR)]
+    if p is None or not lines:
+        return ["- " + cannot("no results_voice_<run>.md (python -m scripts.results_voice)", RV.PA_DIR)]
+    return [f"- {ln}" for ln in lines] + [f"- (receipt `{RV.rel(p)}`)"]
+
+
 def block_ranking(day: str, top_n: int = 20) -> list[str]:
     """The twenty best next-month names, with the number that sized them.
 
@@ -662,6 +677,16 @@ def render(day: str, folder: Path, receipts: dict, contract: dict | None,
     L.append(f"Night folder `{folder}` — {len(receipts)} receipt(s). "
              f"Written {_now()}. Licence PRODUCT_EXPERIMENT; no model was called.")
     L.append("")
+    L.append("## RESULTS (what is ahead of SPY, which label, what raises it)")
+    L += block_results()
+    L.append("")
+    # The STOP confirmation sits ABOVE the line cap (2026-10-07): on a fresh CI
+    # checkout every subsystem reads DEAD/STALE, section 0 runs long, and the cap
+    # trimmed section 14 off the bottom -- a report that cannot say whether the
+    # night was stopped is the one safety line a reader needs first.
+    L.append("## 0a. STOP confirmation")
+    L += block_stop(folder)
+    L.append("")
     L.append("## 0. Subsystems not ALIVE (DEAD/STALE first)")
     L += _subsystem_lines()
     L.append("")
@@ -707,9 +732,6 @@ def render(day: str, folder: Path, receipts: dict, contract: dict | None,
     L.append("")
     L.append("## 13. Jobs that did not finish")
     L += block_jobs(receipts)
-    L.append("")
-    L.append("## 14. STOP confirmation")
-    L += block_stop(folder)
     L.append("")
     Q: list[str] = []
     Q.append("## THE FIVE QUESTIONS")

@@ -117,6 +117,8 @@ this pass" — never silently assume novelty>
 - <1 to 3 bullet questions: the evidence that would move this card's verdict>
 ```
 
+**Optional section, not part of the checker's required order:** a card may add `## Needs evidence` immediately before `## hyp_lab family` — 1-3 open literature questions the card could not close by hand. It is the seed the research-intake academic lane (`backend/services/research_instruments.py`, Q12 2026-10-07) reads; the lane writes per-card evidence files under `docs/research_intake/evidence/`, never into the card. A card with nothing open omits the section.
+
 ## The checker and the index
 
 `python -m scripts.research_intake_check` validates every card in `cards/` against the template

@@ -5,7 +5,17 @@
 
 One JSON per run: `<OPTIMUS_LEDGER_DIR>/opportunities/opportunities_<asof>_<runid>.json`
 (run id in the name, so a second run can never overwrite the first). The router
-`backend/routers/opportunities.py` serves the newest one.
+`backend/routers/opportunities.py` serves the newest one -- or, on a server with no raw
+receipts at all (a fresh image checkout), the published copy (next paragraph).
+
+Q17 (2026-10-07): a raw receipt is 5-8 MB and SUBSTRATE, never git-tracked
+(`.gitignore`); `prune_raw_receipts` keeps only the newest `config.OPPORTUNITIES_KEEP_RAW`
+locally, by the run id in the FILENAME, never by mtime. What IS committed is the sanitised,
+size-capped copy this script writes through `publish_receipts` after every build
+(`publish_public_copy`) -- `backend/data/public_receipts/opportunities/latest.json`, <= 2.4
+MB -- which is what the public site actually reads and what `docs/DATA_CATALOG.md`
+catalogues as the durable record; the raw folder is local scratch, kept only so the newest
+few runs stay inspectable without re-fetching every input.
 
 WHERE EACH LIST COMES FROM (no list is re-ranked here)
 ------------------------------------------------------
@@ -60,6 +70,7 @@ if str(REPO) not in sys.path:
 
 from backend import config as _config  # noqa: E402
 from backend.services import opportunities as O  # noqa: E402
+from backend.services import publish_receipts as PR  # noqa: E402
 
 OPT = Path(_config.OPTIMUS_LEDGER_DIR)
 
@@ -1097,6 +1108,34 @@ def write(blob: dict, base: Optional[Path] = None) -> Path:
     return p
 
 
+def prune_raw_receipts(base: Optional[Path] = None, keep: Optional[int] = None) -> list[Path]:
+    """Q17 (2026-10-07): delete raw receipts beyond the newest `keep` (default
+    `config.OPPORTUNITIES_KEEP_RAW`). Ordered by the (asof, run id) in the FILENAME via
+    `opportunities.receipts` -- never by mtime: a fresh checkout's files are all "written
+    today", and this repo already lost that distinction once (CLAUDE.md protocol item 7).
+    The raw file is scratch once the published copy exists; this never touches that copy.
+    Returns the paths actually removed, oldest-kept-cutoff first."""
+    keep_n = _config.OPPORTUNITIES_KEEP_RAW if keep is None else keep
+    removed = []
+    for p in O.receipts(base)[max(keep_n, 0):]:
+        try:
+            p.unlink()
+            removed.append(p)
+        except OSError:
+            continue
+    return removed
+
+
+def publish_public_copy() -> dict:
+    """Q17: push the just-written receipt through the SAME sanitiser the public site reads
+    (`publish_receipts`), scoped to the `opportunities` kind only, so the tracked
+    `backend/data/public_receipts/opportunities/latest.json` is current without a separate
+    `python -m scripts.publish_receipts` run. A failed or refused publish is printed and
+    never fails the build: the raw receipt this run wrote is already safely on disk, and the
+    previous published copy (if any) is kept, named, by `publish_receipts.publish` itself."""
+    return PR.publish(kinds=(PR.KIND_BY_NAME["opportunities"],))
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     ap = argparse.ArgumentParser(description="Build the Opportunity Explorer receipt.")
     ap.add_argument("--dry-run", action="store_true")
@@ -1108,6 +1147,16 @@ def main(argv: Optional[list[str]] = None) -> int:
         return 0
     p = write(blob)
     print(f"wrote {p.relative_to(REPO).as_posix()} ({p.stat().st_size/1e6:.2f} MB)")
+    removed = prune_raw_receipts()
+    if removed:
+        print(f"pruned {len(removed)} raw receipt(s) beyond the newest {_config.OPPORTUNITIES_KEEP_RAW} "
+              f"(by run id): {', '.join(r.name for r in removed)}")
+    pub = publish_public_copy()
+    opp_entry = (pub.get("kinds") or {}).get("opportunities") or {}
+    opp_bytes = opp_entry.get("bytes") or 0
+    print(f"published public copy: {opp_bytes:,} B / {PR.MAX_BYTES:,} B budget "
+          f"({opp_entry.get('status')}; folder {pub.get('status')}"
+          + (f": {pub['why']}" if pub.get("why") else "") + ")")
     return 0
 
 

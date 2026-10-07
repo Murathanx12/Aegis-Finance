@@ -1,0 +1,1167 @@
+{
+ "schema": "book_dna/1",
+ "receipt": "book_dna",
+ "licence": "PRODUCT_EXPERIMENT",
+ "generated_utc": "2026-10-06T23:53:54+00:00",
+ "params": {
+  "jaccard_threshold": 0.3,
+  "jaccard_sensitivity": [
+   0.15,
+   0.3,
+   0.5
+  ],
+  "corr_threshold": 0.8,
+  "min_corr_obs": 15,
+  "min_beta_obs": 20,
+  "early_min_sessions": 21,
+  "fair_twin_kinds": [
+   "matched_twin21",
+   "matched_random",
+   "random_same_band"
+  ],
+  "one_name_share": 0.5,
+  "one_name_min_excess_pp": 1.0,
+  "one_name_max_recon_gap_pp": 0.25,
+  "loss_coverage_min": 0.8,
+  "exante_sessions": 150,
+  "loser_rule_order": [
+   "control_artifact: a twin or a kind=control book",
+   "decomposed: a lane in an identity group (same names): the group's best excess is the common shortfall (selection), the member's gap to it is treatment/sizing",
+   "unmanaged: no manager run in BOOK_DNA_UNMANAGED_SESSIONS sessions",
+   "coverage gate: the P&L this module can see must explain >= BOOK_DNA_LOSS_COVERAGE_MIN of the shortfall, else no P&L rule may fire",
+   "sizing_concentration: top-1 > BOOK_DNA_LOSER_SIZING_SHARE of the same-direction loss",
+   "timing_exit: the worst third >= BOOK_DNA_TIMING_SHARE of the GROSS negative sub-window loss",
+   "selection: a covered loss spread across names (a positive finding, never the fall-through)",
+   "sizing_concentration by WEIGHT: no P&L share computable and top-1 weight >= BOOK_DNA_LOSER_WEIGHT_FALLBACK",
+   "not_determinable: none of the above has evidence; the coverage ratio is printed"
+  ],
+  "n_losers": 10,
+  "unmanaged_sessions": 5,
+  "loser_sizing_share": 0.4,
+  "timing_share": 0.7,
+  "loser_weight_fallback": 0.2,
+  "lane_family_corr": 0.85,
+  "lane_identity_jaccard": 0.9,
+  "basket_top": 5
+ },
+ "label_ceiling": "REPLICATED",
+ "summary": {
+  "jaccard_threshold": 0.3,
+  "n_holdings_clusters_ahead": 16,
+  "effective_bets_exante": 2.61,
+  "clusters_ge3": [
+   {
+    "n": 5,
+    "basket": [
+     "TGT",
+     "AMGN",
+     "SNOW",
+     "OKTA",
+     "ABNB"
+    ],
+    "excess_pp_total": 22.26,
+    "members": [
+     "hack2",
+     "revision_flow_v0",
+     "pers_revision_flow_leaders_2026-09-25",
+     "lib_net_raises_2026-09-26",
+     "lib_net_raises_ivw_lead_2026-09-27"
+    ]
+   },
+   {
+    "n": 3,
+    "basket": [
+     "TSM",
+     "MRK",
+     "ASML",
+     "MU",
+     "GEV"
+    ],
+    "excess_pp_total": 3.166,
+    "members": [
+     "pers_ai_power_global_2026-09-25",
+     "pers_quality_momentum_2026-09-25",
+     "pers_ensemble_2026-09-25"
+    ]
+   }
+  ]
+ },
+ "books": [
+  {
+   "account": "tsmom-overlay",
+   "family": "website_lane",
+   "status": "LIVE",
+   "return_pct": 4.081,
+   "spy_leg_pct": 5.674,
+   "excess_pp": -1.593,
+   "inception": "2026-07-27",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 50,
+   "tickers": [
+    "GLD",
+    "SPY",
+    "TLT",
+    "USO"
+   ],
+   "subwindows": {
+    "status": "NOT_COMPUTABLE",
+    "why": "series covers 39 of 50 sessions (< 80%)"
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(50)",
+    "why": "excess <= 0"
+   }
+  },
+  {
+   "account": "balanced-ew-control",
+   "family": "website_lane",
+   "status": "LIVE",
+   "return_pct": 0.696,
+   "spy_leg_pct": 7.941,
+   "excess_pp": -7.245,
+   "inception": "2026-06-10",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 81,
+   "tickers": [
+    "AAPL",
+    "ABBV",
+    "ADBE",
+    "AGG",
+    "AMD",
+    "AMZN",
+    "AVGO",
+    "BA",
+    "CAT",
+    "COIN",
+    "COST",
+    "CRM",
+    "CVX",
+    "DHR",
+    "DKNG",
+    "FSLR",
+    "GE",
+    "GLD",
+    "GOOGL",
+    "GS",
+    "HON",
+    "HYG",
+    "IAU",
+    "IEF",
+    "INTC",
+    "IONQ",
+    "IWM",
+    "JNJ",
+    "JPM",
+    "KO",
+    "LLY",
+    "LMT",
+    "LQD",
+    "MA",
+    "META",
+    "MRVL",
+    "MSFT",
+    "MSTR",
+    "MU",
+    "NEE",
+    "NFLX",
+    "NVDA",
+    "ORCL",
+    "PFE",
+    "PG",
+    "PLTR",
+    "QQQ",
+    "RGTI",
+    "RKLB",
+    "SHY",
+    "SLDP",
+    "SPY",
+    "TIP",
+    "TLT",
+    "TSM",
+    "TTWO",
+    "UNH",
+    "USO",
+    "V",
+    "VEA",
+    "VNQ",
+    "VTI",
+    "VWO",
+    "WMT",
+    "XLB",
+    "XLC",
+    "XLE",
+    "XLF",
+    "XLI",
+    "XLK",
+    "XLP",
+    "XLRE",
+    "XLU",
+    "XLV",
+    "XLY",
+    "XOM"
+   ],
+   "subwindows": {
+    "status": "OK",
+    "windows": [
+     {
+      "from": "2026-06-11",
+      "to": "2026-07-16",
+      "excess_pp": -4.858
+     },
+     {
+      "from": "2026-07-17",
+      "to": "2026-08-21",
+      "excess_pp": 0.152
+     },
+     {
+      "from": "2026-08-24",
+      "to": "2026-10-06",
+      "excess_pp": -2.321
+     }
+    ],
+    "n_positive": 1
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(81)",
+    "why": "excess <= 0"
+   }
+  },
+  {
+   "account": "conviction",
+   "family": "website_lane",
+   "status": "LIVE",
+   "return_pct": -12.078,
+   "spy_leg_pct": 4.359,
+   "excess_pp": -16.437,
+   "inception": "2026-06-16",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 77,
+   "tickers": [
+    "AARD",
+    "ABSI",
+    "AMSC",
+    "BHVN",
+    "DKNG",
+    "HUBS",
+    "KYTX",
+    "NTLA",
+    "PRCH",
+    "QUBT",
+    "SLDP",
+    "SOC"
+   ],
+   "subwindows": {
+    "status": "OK",
+    "windows": [
+     {
+      "from": "2026-06-17",
+      "to": "2026-07-20",
+      "excess_pp": -7.718
+     },
+     {
+      "from": "2026-07-21",
+      "to": "2026-08-24",
+      "excess_pp": 4.173
+     },
+     {
+      "from": "2026-08-26",
+      "to": "2026-10-06",
+      "excess_pp": -12.518
+     }
+    ],
+    "n_positive": 1
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(77)",
+    "why": "excess <= 0"
+   }
+  },
+  {
+   "account": "mirror",
+   "family": "website_lane",
+   "status": "LIVE",
+   "return_pct": -25.141,
+   "spy_leg_pct": 4.359,
+   "excess_pp": -29.5,
+   "inception": "2026-06-16",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 77,
+   "tickers": [
+    "AARD",
+    "ABSI",
+    "AMSC",
+    "BHVN",
+    "DKNG",
+    "HUBS",
+    "KYTX",
+    "NTLA",
+    "PRCH",
+    "QUBT",
+    "SLDP",
+    "SOC"
+   ],
+   "subwindows": {
+    "status": "OK",
+    "windows": [
+     {
+      "from": "2026-06-17",
+      "to": "2026-07-20",
+      "excess_pp": -14.988
+     },
+     {
+      "from": "2026-07-21",
+      "to": "2026-08-24",
+      "excess_pp": -4.589
+     },
+     {
+      "from": "2026-08-26",
+      "to": "2026-10-06",
+      "excess_pp": -11.852
+     }
+    ],
+    "n_positive": 0
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(77)",
+    "why": "excess <= 0"
+   }
+  },
+  {
+   "account": "hack2",
+   "family": "alpaca_fleet",
+   "status": "LIVE",
+   "return_pct": 2.307,
+   "spy_leg_pct": 1.287,
+   "excess_pp": 1.02,
+   "inception": "2026-08-28",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 27,
+   "tickers": [
+    "ABNB",
+    "AFRM",
+    "AMD",
+    "AMGN",
+    "CRM",
+    "CRWD",
+    "DDOG",
+    "DELL",
+    "ESTC",
+    "GTLB",
+    "MDB",
+    "NET",
+    "OKTA",
+    "PANW",
+    "S",
+    "SNOW",
+    "TGT",
+    "WDAY",
+    "XYZ",
+    "ZS"
+   ],
+   "subwindows": {
+    "status": "NOT_COMPUTABLE",
+    "why": "series covers 6 of 27 sessions (< 80%)"
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(27)",
+    "why": "sub-windows: series covers 6 of 27 sessions (< 80%)"
+   }
+  },
+  {
+   "account": "hack6",
+   "family": "alpaca_fleet",
+   "status": "LIVE",
+   "return_pct": -18.402,
+   "spy_leg_pct": 1.287,
+   "excess_pp": -19.689,
+   "inception": "2026-08-28",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 27,
+   "tickers": [
+    "ABEO",
+    "ADBE",
+    "AMD",
+    "ARDX",
+    "ATR",
+    "AVGO",
+    "BAM",
+    "BE",
+    "BHP",
+    "BYD",
+    "CALX",
+    "CEG",
+    "FCEL",
+    "FRO",
+    "GOOGL",
+    "HPE",
+    "INVA",
+    "LMT",
+    "MAZE",
+    "MP",
+    "MSFT",
+    "NVDA",
+    "ORCL",
+    "PLTR",
+    "PPLI",
+    "PRVA",
+    "QQQ",
+    "RTX",
+    "SMCI",
+    "STRO",
+    "TGT",
+    "TSM",
+    "TXN",
+    "UPS",
+    "VALE",
+    "WDC",
+    "XOM",
+    "XPEV"
+   ],
+   "subwindows": {
+    "status": "NOT_COMPUTABLE",
+    "why": "series covers 6 of 27 sessions (< 80%)"
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(27)",
+    "why": "excess <= 0"
+   }
+  },
+  {
+   "account": "hack4",
+   "family": "alpaca_fleet",
+   "status": "LIVE",
+   "return_pct": -20.439,
+   "spy_leg_pct": 1.287,
+   "excess_pp": -21.726,
+   "inception": "2026-08-28",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 27,
+   "tickers": [
+    "AAPL",
+    "ALLE",
+    "AMZN",
+    "AVPT",
+    "GOOG",
+    "INCY",
+    "JAZZ",
+    "META",
+    "NVDA",
+    "RZLV",
+    "SNDR"
+   ],
+   "subwindows": {
+    "status": "NOT_COMPUTABLE",
+    "why": "series covers 6 of 27 sessions (< 80%)"
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(27)",
+    "why": "excess <= 0"
+   }
+  },
+  {
+   "account": "PC-PAPER",
+   "family": "pc_paper",
+   "status": "LIVE",
+   "return_pct": 0.202,
+   "spy_leg_pct": 0.723,
+   "excess_pp": -0.521,
+   "inception": "2026-09-22",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 11,
+   "tickers": [
+    "AAPL",
+    "AMZN",
+    "AVPT",
+    "GOOGL",
+    "INCY",
+    "JAZZ",
+    "META",
+    "NVDA",
+    "SNDR",
+    "TSM"
+   ],
+   "subwindows": {
+    "status": "NOT_COMPUTABLE",
+    "why": "fewer than 3 period returns"
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(11)",
+    "why": "11 sessions < 21"
+   }
+  },
+  {
+   "account": "Cash/index by default; deviate only above a  [b109c886]",
+   "family": "night_books",
+   "status": "LIVE",
+   "return_pct": 6.085,
+   "spy_leg_pct": 2.19,
+   "excess_pp": 3.895,
+   "inception": "2026-09-11",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 17,
+   "tickers": [],
+   "subwindows": {
+    "status": "NOT_COMPUTABLE",
+    "why": "series covers 7 of 17 sessions (< 80%)"
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(17)",
+    "why": "17 sessions < 21"
+   }
+  },
+  {
+   "account": "Always invested - Book D's primary comparato [3b3e7049]",
+   "family": "night_books",
+   "status": "LIVE",
+   "return_pct": 6.085,
+   "spy_leg_pct": 2.19,
+   "excess_pp": 3.895,
+   "inception": "2026-09-11",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 17,
+   "tickers": [],
+   "subwindows": {
+    "status": "NOT_COMPUTABLE",
+    "why": "series covers 7 of 17 sessions (< 80%)"
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(17)",
+    "why": "17 sessions < 21"
+   }
+  },
+  {
+   "account": "revision_flow_v0",
+   "family": "llm_portfolio:personal",
+   "status": "LIVE",
+   "return_pct": 7.139,
+   "spy_leg_pct": 1.398,
+   "excess_pp": 5.741,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 7,
+   "tickers": [
+    "ABNB",
+    "AFRM",
+    "AMD",
+    "AMGN",
+    "CRM",
+    "CRWD",
+    "DDOG",
+    "DELL",
+    "ESTC",
+    "GTLB",
+    "MDB",
+    "NET",
+    "OKTA",
+    "PANW",
+    "S",
+    "SNOW",
+    "TGT",
+    "WDAY",
+    "XYZ",
+    "ZS"
+   ],
+   "subwindows": {
+    "status": "OK",
+    "windows": [
+     {
+      "from": "2026-09-28",
+      "to": "2026-09-29",
+      "excess_pp": 3.198
+     },
+     {
+      "from": "2026-09-30",
+      "to": "2026-10-01",
+      "excess_pp": 2.001
+     },
+     {
+      "from": "2026-10-02",
+      "to": "2026-10-06",
+      "excess_pp": 0.368
+     }
+    ],
+    "n_positive": 3
+   },
+   "fair_twin": null,
+   "rule": "revision_flow_v0",
+   "evidence": {
+    "label": "OBSERVED(7)",
+    "why": "7 sessions < 21"
+   }
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "status": "LIVE",
+   "return_pct": 6.705,
+   "spy_leg_pct": 1.398,
+   "excess_pp": 5.307,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 7,
+   "tickers": [
+    "ABNB",
+    "AFRM",
+    "AMGN",
+    "CRM",
+    "CRWD",
+    "DELL",
+    "DT",
+    "FTNT",
+    "NET",
+    "OKTA",
+    "PANW",
+    "S",
+    "SNOW",
+    "TGT"
+   ],
+   "subwindows": {
+    "status": "OK",
+    "windows": [
+     {
+      "from": "2026-09-28",
+      "to": "2026-09-29",
+      "excess_pp": 3.127
+     },
+     {
+      "from": "2026-09-30",
+      "to": "2026-10-01",
+      "excess_pp": 1.906
+     },
+     {
+      "from": "2026-10-02",
+      "to": "2026-10-06",
+      "excess_pp": 0.121
+     }
+    ],
+    "n_positive": 3
+   },
+   "fair_twin": {
+    "kind": "random_same_band",
+    "excess_over_twin_pp": 6.098
+   },
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(7)",
+    "why": "7 sessions < 21"
+   }
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "status": "LIVE",
+   "return_pct": 4.605,
+   "spy_leg_pct": 1.398,
+   "excess_pp": 3.207,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 7,
+   "tickers": [
+    "000660.KS",
+    "005930.KS",
+    "2308.TW",
+    "2317.TW",
+    "2330.TW",
+    "2382.TW",
+    "6146.T",
+    "6857.T",
+    "8035.T",
+    "AMKR",
+    "ASML",
+    "MU",
+    "TER"
+   ],
+   "subwindows": {
+    "status": "OK",
+    "windows": [
+     {
+      "from": "2026-09-28",
+      "to": "2026-09-29",
+      "excess_pp": 0.122
+     },
+     {
+      "from": "2026-09-30",
+      "to": "2026-10-01",
+      "excess_pp": 2.903
+     },
+     {
+      "from": "2026-10-02",
+      "to": "2026-10-06",
+      "excess_pp": 0.132
+     }
+    ],
+    "n_positive": 3
+   },
+   "fair_twin": {
+    "kind": "random_same_band",
+    "excess_over_twin_pp": 4.221
+   },
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(7)",
+    "why": "7 sessions < 21"
+   }
+  },
+  {
+   "account": "lib_net_raises_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "status": "LIVE",
+   "return_pct": 6.785,
+   "spy_leg_pct": 1.398,
+   "excess_pp": 5.387,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 7,
+   "tickers": [
+    "ABNB",
+    "AFRM",
+    "AMD",
+    "AMGN",
+    "CHYM",
+    "CRM",
+    "CRWD",
+    "DDOG",
+    "DELL",
+    "DT",
+    "ESTC",
+    "FTNT",
+    "GTLB",
+    "NET",
+    "OKTA",
+    "PANW",
+    "RVMD",
+    "S",
+    "SNOW",
+    "TGT"
+   ],
+   "subwindows": {
+    "status": "OK",
+    "windows": [
+     {
+      "from": "2026-09-28",
+      "to": "2026-09-29",
+      "excess_pp": 2.834
+     },
+     {
+      "from": "2026-09-30",
+      "to": "2026-10-01",
+      "excess_pp": 2.145
+     },
+     {
+      "from": "2026-10-02",
+      "to": "2026-10-06",
+      "excess_pp": 0.249
+     }
+    ],
+    "n_positive": 3
+   },
+   "fair_twin": {
+    "kind": "random_same_band",
+    "excess_over_twin_pp": 5.179
+   },
+   "rule": "strategy_library:net_raises",
+   "evidence": {
+    "label": "OBSERVED(7)",
+    "why": "7 sessions < 21"
+   }
+  },
+  {
+   "account": "lib_net_raises_ivw_lead_2026-09-27",
+   "family": "llm_portfolio:lib",
+   "status": "LIVE",
+   "return_pct": 6.203,
+   "spy_leg_pct": 1.398,
+   "excess_pp": 4.805,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "strategy",
+   "sessions_graded": 7,
+   "tickers": [
+    "ABNB",
+    "AFRM",
+    "AMD",
+    "AMGN",
+    "CHYM",
+    "CRM",
+    "CRWD",
+    "DELL",
+    "DT",
+    "ESTC",
+    "FTNT",
+    "GTLB",
+    "NET",
+    "OKTA",
+    "P",
+    "PANW",
+    "RVMD",
+    "S",
+    "SNOW",
+    "TGT"
+   ],
+   "subwindows": {
+    "status": "OK",
+    "windows": [
+     {
+      "from": "2026-09-28",
+      "to": "2026-09-29",
+      "excess_pp": 2.612
+     },
+     {
+      "from": "2026-09-30",
+      "to": "2026-10-01",
+      "excess_pp": 1.889
+     },
+     {
+      "from": "2026-10-02",
+      "to": "2026-10-06",
+      "excess_pp": 0.169
+     }
+    ],
+    "n_positive": 3
+   },
+   "fair_twin": null,
+   "rule": "strategy_library:net_raises_ivw",
+   "evidence": {
+    "label": "OBSERVED(7)",
+    "why": "7 sessions < 21"
+   }
+  },
+  {
+   "account": "lib_skill_raises_2026-09-30__control",
+   "family": "llm_portfolio:lib",
+   "status": "LIVE",
+   "return_pct": 1.54,
+   "spy_leg_pct": 1.927,
+   "excess_pp": -0.387,
+   "inception": "2026-10-01",
+   "last_mark": "2026-10-06",
+   "twin_of": null,
+   "category": "control",
+   "sessions_graded": 4,
+   "tickers": [
+    "ABBV",
+    "ABNB",
+    "AMD",
+    "CRM",
+    "CRWD",
+    "DDOG",
+    "DT",
+    "ESTC",
+    "EXPE",
+    "FROG",
+    "FTNT",
+    "GH",
+    "GTLB",
+    "IMAX",
+    "MRK",
+    "OKTA",
+    "P",
+    "PANW",
+    "RVMD",
+    "SNOW"
+   ],
+   "subwindows": {
+    "status": "NOT_COMPUTABLE",
+    "why": "series covers 3 of 4 sessions (< 80%)"
+   },
+   "fair_twin": {
+    "kind": "random_same_band",
+    "excess_over_twin_pp": 0.191
+   },
+   "rule": "strategy_library:skill_raises",
+   "evidence": {
+    "label": "OBSERVED(4)",
+    "why": "4 sessions < 21"
+   }
+  },
+  {
+   "account": "lib_net_raises_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "status": "LIVE",
+   "return_pct": 6.785,
+   "spy_leg_pct": 1.398,
+   "excess_pp": 5.387,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "twin_of": "lib_net_raises_2026-09-26",
+   "twin_kind": "ew",
+   "category": "twin",
+   "sessions_graded": 7,
+   "tickers": [
+    "ABNB",
+    "AFRM",
+    "AMD",
+    "AMGN",
+    "CHYM",
+    "CRM",
+    "CRWD",
+    "DDOG",
+    "DELL",
+    "DT",
+    "ESTC",
+    "FTNT",
+    "GTLB",
+    "NET",
+    "OKTA",
+    "PANW",
+    "RVMD",
+    "S",
+    "SNOW",
+    "TGT"
+   ],
+   "subwindows": {
+    "status": "OK",
+    "windows": [
+     {
+      "from": "2026-09-28",
+      "to": "2026-09-29",
+      "excess_pp": 2.834
+     },
+     {
+      "from": "2026-09-30",
+      "to": "2026-10-01",
+      "excess_pp": 2.145
+     },
+     {
+      "from": "2026-10-02",
+      "to": "2026-10-06",
+      "excess_pp": 0.249
+     }
+    ],
+    "n_positive": 3
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(7)",
+    "why": "7 sessions < 21"
+   }
+  },
+  {
+   "account": "lib_net_raises_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "status": "LIVE",
+   "return_pct": 1.606,
+   "spy_leg_pct": 1.398,
+   "excess_pp": 0.208,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "twin_of": "lib_net_raises_2026-09-26",
+   "twin_kind": "random_same_band",
+   "category": "twin",
+   "sessions_graded": 7,
+   "tickers": [
+    "ADI",
+    "C",
+    "CBOE",
+    "CHTR",
+    "CHWY",
+    "CTSH",
+    "DBX",
+    "EOG",
+    "FANG",
+    "FDX",
+    "GEV",
+    "GFS",
+    "GOOGL",
+    "LIN",
+    "M",
+    "MA",
+    "NVT",
+    "QRVO",
+    "UBER",
+    "UNP"
+   ],
+   "subwindows": {
+    "status": "OK",
+    "windows": [
+     {
+      "from": "2026-09-28",
+      "to": "2026-09-29",
+      "excess_pp": 0.486
+     },
+     {
+      "from": "2026-09-30",
+      "to": "2026-10-01",
+      "excess_pp": 0.526
+     },
+     {
+      "from": "2026-10-02",
+      "to": "2026-10-06",
+      "excess_pp": -0.82
+     }
+    ],
+    "n_positive": 2
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(7)",
+    "why": "7 sessions < 21"
+   }
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "status": "LIVE",
+   "return_pct": 0.608,
+   "spy_leg_pct": 1.398,
+   "excess_pp": -0.79,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "twin_of": "pers_revision_flow_leaders_2026-09-25",
+   "twin_kind": "random_same_band",
+   "category": "twin",
+   "sessions_graded": 7,
+   "tickers": [
+    "AMAT",
+    "BABA",
+    "BAC",
+    "CBRE",
+    "CFG",
+    "DY",
+    "ETR",
+    "GOOG",
+    "HAL",
+    "IQV",
+    "JPM",
+    "KHC",
+    "NI",
+    "RL"
+   ],
+   "subwindows": {
+    "status": "OK",
+    "windows": [
+     {
+      "from": "2026-09-28",
+      "to": "2026-09-29",
+      "excess_pp": 0.121
+     },
+     {
+      "from": "2026-09-30",
+      "to": "2026-10-01",
+      "excess_pp": -0.291
+     },
+     {
+      "from": "2026-10-02",
+      "to": "2026-10-06",
+      "excess_pp": -0.623
+     }
+    ],
+    "n_positive": 1
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(7)",
+    "why": "7 sessions < 21"
+   }
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "status": "LIVE",
+   "return_pct": 0.384,
+   "spy_leg_pct": 1.398,
+   "excess_pp": -1.014,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "twin_of": "pers_asia_supply_chain_2026-09-25",
+   "twin_kind": "random_same_band",
+   "category": "twin",
+   "sessions_graded": 7,
+   "tickers": [
+    "AMD",
+    "BE",
+    "CACI",
+    "CL",
+    "CVX",
+    "ECL",
+    "G",
+    "HMY",
+    "ISTR",
+    "JBS",
+    "KKR",
+    "NIC",
+    "RNW"
+   ],
+   "subwindows": {
+    "status": "OK",
+    "windows": [
+     {
+      "from": "2026-09-28",
+      "to": "2026-09-29",
+      "excess_pp": -0.019
+     },
+     {
+      "from": "2026-09-30",
+      "to": "2026-10-01",
+      "excess_pp": -0.0
+     },
+     {
+      "from": "2026-10-02",
+      "to": "2026-10-06",
+      "excess_pp": -1.001
+     }
+    ],
+    "n_positive": 0
+   },
+   "fair_twin": null,
+   "rule": null,
+   "evidence": {
+    "label": "OBSERVED(7)",
+    "why": "7 sessions < 21"
+   }
+  }
+ ],
+ "_fixture_note": "TRIMMED slice of book_dna_2026-10-06T235345Z.json; test input only"
+}

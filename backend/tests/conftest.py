@@ -488,3 +488,31 @@ def _frozen_iif1_night_receipts(monkeypatch, request):
         return
     if frozen.is_dir():
         monkeypatch.setattr(_N, "RECEIPTS_DIR", frozen, raising=False)
+
+
+# ── Owner decision 2026-10-07 (D14/D21/D22 + the revision_flow sleeve) ─────────
+#: The values config SHIPS with, captured before any test patches them, so a
+#: test can pin what the owner decided (test_pc_plan_replay_owner_d14.py).
+OWNER_D14_FLAGS = ("PC_BENCHMARK_CORE", "PC_BENCHMARK_CORE_EXEMPT_FROM_NAME_CAP",
+                   "PC_SLEEVE_REVISION_FLOW", "PC_CONTRACT_COUNTS_PLAN_SLEEVES")
+
+
+def _shipped_owner_flags() -> dict:
+    from backend import config as _c
+    return {f: getattr(_c, f, None) for f in OWNER_D14_FLAGS}
+
+
+SHIPPED_OWNER_D14_FLAGS = _shipped_owner_flags()
+
+
+@pytest.fixture(autouse=True)
+def _owner_d14_flags_off(monkeypatch):
+    """Every test that predates the 2026-10-07 owner decision runs on the plan
+    it was written against: the four flags OFF (each OFF path is byte-identical
+    to the pre-decision code, pinned by test_pc_plan_replay_owner_d14.py). A
+    test of the new paths sets the flags it needs explicitly; the shipped
+    values are pinned from SHIPPED_OWNER_D14_FLAGS. Without this, every u_plan
+    test would read this machine's llm_portfolio store for the sleeve."""
+    from backend import config as _c
+    for f in OWNER_D14_FLAGS:
+        monkeypatch.setattr(_c, f, False, raising=False)

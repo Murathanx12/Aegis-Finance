@@ -328,12 +328,25 @@ co-coverage, not financial graphs. REVISION-FORECASTER closed the
 revision-mediated route, not management text. RELATIVE-VALUE-v1 closed seven
 features and a small MLP, not relative substitution.
 
-**Every handoff opens with a RESULTS SCOREBOARD**, before code or test counts:
-best historical net strategy vs the market · best forward paper strategy ·
-independent selector count · farm candidates tested/promoted · new actionable
-finding · external execution drag · LLM spend and cost per gradeable output. A
-session that ships thirty engineering changes and moves none of them says
-**RESULT IMPROVEMENT: NONE** in its first paragraph.
+**Every handoff opens with the RESULTS block** (amended 2026-10-07 at Murat's
+request: *"rather than saying we have 100% proof, we should say that we have this
+amount of success"*). Generate it, do not hand-write it:
+`python -m scripts.results_voice` reads the newest `roi_<run>` + `book_dna_<run>`
+pair and writes `paper_accounts/results_voice_<run>.md`, whose six headline lines
+go first, verbatim: how many strategy accounts are ahead of SPY and how many
+distinct bets that is (twins/controls excluded, same-name books collapsed) · the
+leaders with return, SPY over the same window, excess, inception → mark, sessions
+and evidence label · **what would raise each label** (sessions to EARLY_EVIDENCE
+and the conditions, from `book_dna.evidence_label`; the random-twin gap) · the
+worst books named with the same honesty. The claim boundary comes LAST and on
+its own line: **`CLAIMS PROMOTED: none`** (or the accounts whose label rose). The
+phrase "RESULT IMPROVEMENT: NONE" is retired — it buried a book up +7% in a week
+under a sentence about what could not yet be claimed. The methodology does not
+change: labels stay OBSERVED/EARLY_EVIDENCE/REPLICATED/VALIDATED_EDGE, leaders
+are said to be chosen after the fact, no "proof" and no skill claim. After that
+block, the rest of the scoreboard as before: best historical net strategy vs the
+market · independent selector count · farm candidates tested/promoted · external
+execution drag · LLM spend and cost per gradeable output.
 
 **New guards are no longer roadmap work by default.** Add one when an actual
 failure shows it is necessary.

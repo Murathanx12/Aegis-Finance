@@ -702,12 +702,17 @@ def check_limits(a: Action, *, equity: float, cash: float, held: dict[str, float
 # `check_limits` above is kept verbatim for its callers and tests; the runner
 # now walks GATES instead, and every verdict lands on the decision row.
 #
-# THE TWO INVARIANTS, pinned by `test_fleet_gates.py`:
+# THE INVARIANTS, pinned by `test_fleet_gates.py`:
 #   1. A gate can never INCREASE a proposed size. A SHRINK whose `to` is not
 #      below the current quantity is a GATE DEFECT and kills the order.
-#   2. An EXIT is never blocked by any gate outside the LEASE class (kill
-#      switch, credential, reconciliation = single-writer lease, venue window).
-#      RISK gates answer PASS to every exit by construction.
+#   2. A protective order (stop, cancel) and a declared `exit` are blocked by
+#      no RISK gate except `order_count` -- the frozen per-run circuit breaker
+#      counts and caps every non-cancel order, as it did before C26.
+#   3. GATE_POLICY_VERSION "c26-p2-frozen-terms" (review 2026-10-07 F2): cash,
+#      gross_cap, name_cap and turnover_budget REFUSE (never shrink) exactly as
+#      `check_limits` / `apply_turnover_budget` did when the contracts were
+#      frozen; the one behaviour change kept is `long_only` cutting an
+#      oversized sell to the shares held (the old refusal left the name held).
 
 GATE_PASS, GATE_SHRINK, GATE_KILL = "PASS", "SHRINK", "KILL"
 GATE_LEASE, GATE_SHAPE, GATE_RISK = "lease", "shape", "risk"
@@ -727,6 +732,30 @@ UNKNOWN_SECTOR = "UNKNOWN"
 #: other gate and `shadow_verdict` is never set.
 NEW_GATES: frozenset = frozenset({"cooldown", "sector_concentration"})
 SHADOW_MODE, ENFORCE_MODE = "shadow", "enforce"
+
+#: Every semantic choice the gates make relative to the pre-C26 hard gate,
+#: hashed into `gates_config()` and printed on every run receipt.
+#: c27 (2026-10-07): the c26-p2 frozen terms unchanged, plus the wash-trade
+#: SEQUENCE for top-ups -- an order-sequencing correctness fix, not a gate.
+GATE_POLICY_VERSION = "c27-wash-trade-sequence"
+GATE_POLICY_CHOICES = {
+    "cash": "REFUSE (restored: pre-C26 check_limits)",
+    "gross_cap": "REFUSE (restored: pre-C26 check_limits)",
+    "name_cap": "REFUSE (restored: pre-C26 check_limits)",
+    "turnover_budget": ("REFUSE, and spent in plan order as soon as an order passes this gate (restored: "
+                        "pre-C26 apply_turnover_budget). Exempt: protective orders, cancels and kind 'exit' only "
+                        "-- a rebalance sell, full or partial, spends the budget: the v2 contract text says "
+                        "'enter ... inside the daily turnover budget' and grants exits no exemption"),
+    "order_count": "every non-cancel order counts and is refused beyond the cap, exits included (restored)",
+    "long_only": "SHRINK an oversized sell to the long quantity (C26 bug fix; was a refusal)",
+    "stop_never_loosened": "raise a replacing stop to the stop it replaces (assertion; planners already max())",
+    "re_protect": "the stop for the shares left after a sell is sized AFTER the gates from the executed quantity",
+    "wash_trade_sequence": ("C27, NOT a gate and NOT shadowed (binds from the first pass): a top-up of a name "
+                            "with a resting sell stop is sent as cancel stop -> buy -> wait terminal -> ONE stop "
+                            "for the shares held, at max(prior stop, contract level); rollback re-places the "
+                            "original stop on any failure; a sequence that cannot be made safe is "
+                            "REFUSED_WASH_TRADE_RULE on the trace, never silently skipped"),
+}
 
 
 @dataclass
@@ -900,32 +929,47 @@ def g_cooldown(a: Action, ctx: GateCtx):
 
 
 def g_turnover_budget(a: Action, ctx: GateCtx):
-    if a.kind == "cancel" or a.protective or is_exit(a, ctx.held):
-        return GATE_PASS, None, "exit or protection: spends no turnover budget"
-    if a.notional <= ctx.turnover_left + 1e-6:
-        return GATE_PASS, None, f"${a.notional:,.0f} within ${ctx.turnover_left:,.0f} left"
-    return _shrink(a, ctx.turnover_left, "daily turnover budget", ctx)
+    """Frozen terms (pre-C26 `apply_turnover_budget`): every non-protective
+    order except a cancel or a declared `exit` spends the session's budget in
+    plan order, the moment it passes HERE (so a later refusal still spent it,
+    exactly as before); beyond the budget it is REFUSED, never shrunk."""
+    if a.kind in ("cancel", "exit") or a.protective:
+        return GATE_PASS, None, "protective, cancel or declared exit: spends no turnover budget"
+    if a.notional > ctx.turnover_left + 1e-6:
+        return GATE_KILL, None, (f"daily turnover budget: ${a.notional:,.0f} would exceed "
+                                 f"${max(0.0, ctx.turnover_left):,.0f} left")
+    ctx.turnover_left -= a.notional
+    return GATE_PASS, None, f"${a.notional:,.0f} spent; ${ctx.turnover_left:,.0f} left"
 
 
 def g_cash(a: Action, ctx: GateCtx):
     if a.side != "buy":
         return GATE_PASS, None, "not a buy"
-    return _shrink(a, ctx.cash, "cash (no leverage)", ctx)
+    n = a.qty * float(a.limit_price or 0)
+    if ctx.cash - n < -1e-6:
+        return GATE_KILL, None, f"cash ${ctx.cash:,.0f} - ${n:,.0f} < 0: would borrow (no leverage)"
+    return GATE_PASS, None, f"${n:,.0f} within cash ${ctx.cash:,.0f}"
 
 
 def g_gross_cap(a: Action, ctx: GateCtx):
     if a.side != "buy":
         return GATE_PASS, None, "not a buy"
     cap = float(ctx.contract["caps"]["max_gross_frac"])
-    return _shrink(a, cap * ctx.equity - ctx.gross, f"gross <= {cap:.0%} of equity", ctx)
+    n = a.qty * float(a.limit_price or 0)
+    if ctx.gross + n > cap * ctx.equity + 1e-6:
+        return GATE_KILL, None, f"gross ${ctx.gross + n:,.0f} > {cap:.0%} of equity ${ctx.equity:,.0f}"
+    return GATE_PASS, None, f"gross ${ctx.gross + n:,.0f} <= {cap:.0%} of equity"
 
 
 def g_name_cap(a: Action, ctx: GateCtx):
     if a.side != "buy":
         return GATE_PASS, None, "not a buy"
     cap = name_cap(ctx.contract["caps"], a.symbol)
-    return _shrink(a, cap * ctx.equity * 1.005 - ctx.mv.get(a.symbol, 0.0),
-                   f"{a.symbol} <= {cap:.0%} of equity", ctx)
+    n = a.qty * float(a.limit_price or 0)
+    after = ctx.mv.get(a.symbol, 0.0) + n
+    if after > cap * ctx.equity * 1.005:
+        return GATE_KILL, None, f"{a.symbol} would be ${after:,.0f} > {cap:.0%} of equity"
+    return GATE_PASS, None, f"{a.symbol} ${after:,.0f} <= {cap:.0%} of equity"
 
 
 def sector_room_usd(sector_mv: float, gross: float, equity: float, x: float) -> float:
@@ -952,8 +996,10 @@ def g_sector_concentration(a: Action, ctx: GateCtx):
 
 
 def g_order_count(a: Action, ctx: GateCtx):
-    if a.kind == "cancel" or is_exit(a, ctx.held):
-        return GATE_PASS, None, "exit or cancel: never blocked by the order count"
+    """Frozen terms: the per-run circuit breaker counts every non-cancel order,
+    exits and stops included, and refuses beyond the cap (pre-C26 behaviour)."""
+    if a.kind == "cancel":
+        return GATE_PASS, None, "cancel: not counted"
     cap = int(ctx.contract["caps"]["max_orders_per_run"])
     if ctx.orders_used >= cap:
         return GATE_KILL, None, f"per-run order cap {cap}"
@@ -992,7 +1038,10 @@ def gates_config() -> dict:
             "sector_denominator": "max(gross after the order, equity)",
             "unknown_sector": f"one bucket named {UNKNOWN_SECTOR}",
             "name_cap_tolerance": 1.005,
-            "new_gates": sorted(NEW_GATES), "new_gates_mode": str(_cfg.FLEET_NEW_GATES_MODE)}
+            "new_gates": sorted(NEW_GATES), "new_gates_mode": str(_cfg.FLEET_NEW_GATES_MODE),
+            "gate_policy_version": GATE_POLICY_VERSION, "gate_policy_choices": GATE_POLICY_CHOICES,
+            "sector_map_max_age_days": int(_cfg.FLEET_GATE_SECTOR_MAP_MAX_AGE_DAYS),
+            "sector_max_unknown_frac": float(_cfg.FLEET_GATE_SECTOR_MAX_UNKNOWN_FRAC)}
     body["hash"] = _sha(json.dumps(body, sort_keys=True))
     return body
 
@@ -1015,7 +1064,11 @@ def run_gates(a: Action, ctx: GateCtx, *, mode: str = "DRY", gates: Optional[tup
     order is untouched) and the real verdict is kept on the row as
     `shadow_verdict`; every other gate enforces regardless."""
     gates = GATES if gates is None else gates
-    ngm = new_gates_mode if new_gates_mode is not None else _cfg.FLEET_NEW_GATES_MODE
+    ngm_raw = new_gates_mode if new_gates_mode is not None else _cfg.FLEET_NEW_GATES_MODE
+    default_mode = _cfg.FLEET_NEW_GATES_MODE if isinstance(ngm_raw, dict) else ngm_raw
+
+    def mode_of(gate: str) -> str:
+        return ngm_raw.get(gate, default_mode) if isinstance(ngm_raw, dict) else ngm_raw
     trace: list[dict] = []
     if a.refused:
         trace.append({"gate": "planner", "class": "plan", "verdict": GATE_KILL, "reason": a.refused,
@@ -1028,7 +1081,7 @@ def run_gates(a: Action, ctx: GateCtx, *, mode: str = "DRY", gates: Optional[tup
         except Exception as exc:                                  # noqa: BLE001 -- a broken gate refuses
             verdict, to, why = GATE_KILL, None, f"GATE_ERROR {type(exc).__name__}: {exc}"[:200]
         row = {"gate": name, "class": cls, "verdict": verdict, "reason": why, "qty_in": q_in}
-        if name in NEW_GATES and ngm != ENFORCE_MODE and verdict in (GATE_KILL, GATE_SHRINK):
+        if name in NEW_GATES and mode_of(name) != ENFORCE_MODE and verdict in (GATE_KILL, GATE_SHRINK):
             shadow = (f"SHADOW_WOULD_KILL: {why}" if verdict == GATE_KILL
                       else f"SHADOW_WOULD_SHRINK(to={to}): {why}")
             row.update(verdict=GATE_PASS, reason=f"{why} [shadow -- would have bound]",
@@ -1052,12 +1105,10 @@ def run_gates(a: Action, ctx: GateCtx, *, mode: str = "DRY", gates: Optional[tup
             return trace
         row["qty_out"] = a.qty
         trace.append(row)
-    # every gate passed: commit the order to the running totals
-    exit_ = is_exit(a, ctx.held)
+    # every gate passed: commit the order to the running totals (the turnover
+    # budget was already spent at its own gate, as the pre-C26 code spent it)
     if a.kind != "cancel":
         ctx.orders_used += 1
-    if not (a.kind == "cancel" or a.protective or exit_):
-        ctx.turnover_left -= a.notional
     if a.side == "buy":
         n = a.qty * float(a.limit_price or 0)
         ctx.cash -= n
@@ -1069,13 +1120,465 @@ def run_gates(a: Action, ctx: GateCtx, *, mode: str = "DRY", gates: Optional[tup
 
 
 def gate_summary(traces: Iterable[list[dict]]) -> dict:
-    """{gate: {PASS: n, SHRINK: n, KILL: n}} over a run, for the receipt."""
+    """{gate: {PASS: n, SHRINK: n, KILL: n, SHADOW_WOULD_KILL: n, SHADOW_WOULD_SHRINK: n}}
+    over a run. A shadowed verdict is counted under its SHADOW_ key, never as PASS
+    (review 2026-10-07 F12: in shadow the cells used to read PASS forever)."""
     out: dict[str, dict[str, int]] = {}
     for tr in traces:
         for r in tr:
             d = out.setdefault(r["gate"], {})
-            d[r["verdict"]] = d.get(r["verdict"], 0) + 1
+            sv = str(r.get("shadow_verdict") or "")
+            k = ("SHADOW_WOULD_KILL" if sv.startswith("SHADOW_WOULD_KILL") else
+                 "SHADOW_WOULD_SHRINK" if sv.startswith("SHADOW_WOULD_SHRINK") else r["verdict"])
+            d[k] = d.get(k, 0) + 1
     return out
+
+
+#: Gates whose SHRINK replaced what the pre-C26 hard gate did as a REFUSAL.
+_WAS_REFUSAL = frozenset({"long_only"})
+
+
+def c26_delta(traces: Iterable[list[dict]]) -> dict:
+    """Did C26 change anything on this account tonight? The one line the owner reads."""
+    n_sk = n_ss = n_shr = n_r2s = 0
+    for tr in traces:
+        for r in tr:
+            sv = str(r.get("shadow_verdict") or "")
+            if sv.startswith("SHADOW_WOULD_KILL"):
+                n_sk += 1
+            elif sv.startswith("SHADOW_WOULD_SHRINK"):
+                n_ss += 1
+            if r.get("verdict") == GATE_SHRINK:
+                n_shr += 1
+                if r.get("gate") in _WAS_REFUSAL:
+                    n_r2s += 1
+    line = (f"C26: {n_sk} shadow-would-kill, {n_ss} shadow-would-shrink, {n_shr} shrinks applied, "
+            f"{n_r2s} refusals\u2192shrink")
+    return {"shadow_would_kill": n_sk, "shadow_would_shrink": n_ss, "shrinks_applied": n_shr,
+            "refusals_to_shrink": n_r2s, "gate_policy_version": GATE_POLICY_VERSION, "line": line}
+
+
+
+# ─────────────────────────────── C27: the wash-trade sequence ───────────────
+#
+# THE DEFECT (measured 2026-10-07): since 2026-10-01, 49 of 75 LIVE buys came
+# back HTTP 403 "potential wash trade detected. use complex orders". Every one
+# was a TOP-UP of a name already holding our resting GTC sell stop. The broker's
+# own table (WASH_RULE_URL, fetched 2026-10-07) says why, in two rows:
+#
+#     | stop sell  | limit buy  | always rejected |
+#     | limit buy  | stop sell  | always rejected |
+#
+# So a buy cannot be placed while the stop rests, AND the stop for the combined
+# quantity cannot be placed while any part of the buy is still open. The only
+# lawful order of operations with plain orders is:
+#
+#     cancel the resting stop(s) -> confirm CANCELED -> buy -> wait until the buy
+#     is TERMINAL (cancel any unfilled remainder) -> ONE stop for the shares
+#     actually held, at max(prior stop, the contract's stop level)
+#
+# with a rollback at every step (`execute_topup_sequence`). This is NOT a gate
+# and is NOT shadowed: it changes no quantity, no cap and no stop distance
+# (the combined stop is never looser than the stop it replaces); it changes
+# only the ORDER in which the frozen contract's own orders reach the broker.
+
+WASH_RULE_URL = "https://docs.alpaca.markets/us/docs/user-protection"
+WASH_RULE_QUOTE = ("If we detect a possible wash trade, we reject the order and send back an error message "
+                   "with the HTTP status code 403 (Forbidden). [...] | stop sell | limit buy | always rejected | "
+                   "[...] | limit buy | stop sell | always rejected | [...] These complex orders and trailing "
+                   "stop orders are exceptions to our wash trade protection.")
+REFUSED_WASH_TRADE_RULE = "REFUSED_WASH_TRADE_RULE"
+REFUSED_WORST_CASE_LINE = "REFUSED_WORST_CASE_LINE"
+REJ_WASH, REJ_422, REJ_OTHER = "wash_trade_403", "http_422", "other"
+_TERMINAL = ("canceled", "filled", "expired", "rejected", "done_for_day")
+#: Order classes the broker exempts ("complex orders"); we place none, and a leg
+#: of one is never cancelled by this sequence.
+_WASH_EXEMPT_CLASSES = ("bracket", "oco", "oto")
+
+
+def classify_rejection(outcome: Any) -> Optional[str]:
+    """`wash_trade_403` | `http_422` | `other` for a broker rejection; None when
+    the outcome is not a rejection. Reads the outcome text `submit_once` writes
+    ("REJECTED http 403: {... 'potential wash trade detected ...'}") or a buy's
+    terminal status `rejected`."""
+    s = str(outcome or "")
+    if not s.startswith("REJECTED") and s != "rejected":
+        return None
+    if "wash trade" in s or "40310000" in s:
+        return REJ_WASH
+    if "http 422" in s:
+        return REJ_422
+    return REJ_OTHER
+
+
+def rejection_summary(actions: Iterable[dict], *, threshold: Optional[float] = None) -> dict:
+    """The day's LIVE buys that reached the broker, and how many it rejected, by
+    reason. A buy REFUSED by us (a gate, REFUSED_WASH_TRADE_RULE) never reached
+    the broker and is counted under `refused_before_broker`, not here."""
+    thr = float(_cfg.FLEET_REJECTED_BUY_DEGRADED_FRAC if threshold is None else threshold)
+    n_sent = 0
+    by = {REJ_WASH: 0, REJ_422: 0, REJ_OTHER: 0}
+    refused_c27 = 0
+    for a in actions:
+        if a.get("side") != "buy" or a.get("kind") != "buy":
+            continue
+        ref = str(a.get("refused") or "")
+        if ref.startswith(REFUSED_WASH_TRADE_RULE) or ref.startswith(REFUSED_WORST_CASE_LINE):
+            refused_c27 += 1
+            continue
+        if a.get("mode") != "LIVE":
+            continue
+        oc = str(a.get("outcome") or "")
+        if not oc or oc.startswith("STOP file"):
+            continue
+        n_sent += 1
+        k = classify_rejection(oc) or classify_rejection(a.get("entry_status"))
+        if k:
+            by[k] += 1
+    n_rej = sum(by.values())
+    frac = (n_rej / n_sent) if n_sent else 0.0
+    degraded = bool(n_sent and frac > thr)
+    line = (f"C27 rejections: {n_rej} of {n_sent} LIVE buys rejected by the broker ({frac:.0%}) -- "
+            f"{by[REJ_WASH]} wash-trade 403, {by[REJ_422]} 422, {by[REJ_OTHER]} other; "
+            f"{refused_c27} refused before the broker ({REFUSED_WASH_TRADE_RULE}/{REFUSED_WORST_CASE_LINE})"
+            + (f" -> DEGRADED (> {thr:.0%})" if degraded else ""))
+    return {"n_live_buys_sent": n_sent, "n_rejected": n_rej, "by_reason": by, "rejected_frac": round(frac, 4),
+            "refused_before_broker": refused_c27, "threshold": thr, "degraded": degraded, "line": line}
+
+
+def wash_conflicts(symbol: str, buy_limit: Optional[float], open_orders: Iterable[dict]) -> list[tuple[dict, str]]:
+    """Resting orders on `symbol` the broker's table rejects a new LIMIT BUY
+    against: [(order, "stop" | "blocking")]. "stop" = a sell stop / stop_limit
+    this sequence may cancel and re-place; "blocking" = a resting sell limit or
+    market order (an exit in flight), which a top-up never cancels."""
+    out: list[tuple[dict, str]] = []
+    bl = float(buy_limit or 0.0)
+    for o in open_orders:
+        if o.get("symbol") != symbol or o.get("side") != "sell":
+            continue
+        if str(o.get("order_class") or "simple") in _WASH_EXEMPT_CLASSES:
+            continue
+        t = o.get("type")
+        if t == "trailing_stop":
+            continue                                  # exempt in the broker's own words
+        if t == "stop":
+            out.append((o, "stop"))
+        elif t == "stop_limit":
+            if bl >= float(o.get("limit_price") or 0.0):
+                out.append((o, "stop"))
+        elif t == "market":
+            out.append((o, "blocking"))
+        elif t == "limit":
+            if bl >= float(o.get("limit_price") or float("inf")):
+                out.append((o, "blocking"))
+    return out
+
+
+def plan_topup_sequence(a: Action, open_orders: list[dict], *, held_qty: float, stop_frac: float,
+                        stop_how: str, contract_hash: str, day: str
+                        ) -> tuple[list[Action], Optional[Action], Optional[str]]:
+    """For a buy: (cancels of the conflicting resting stops, the ONE combined
+    stop, refusal). ([], None, None) when nothing conflicts (a new name, or only
+    a trailing stop rests): the buy goes out exactly as before.
+
+    The combined stop: quantity = held + this buy (re-read from the broker after
+    the buy is terminal, so it is never above what is held), price =
+    max(every replaced stop, the contract's stop level at the reference price)
+    -- `stop_never_loosened` re-checks it at the gate."""
+    if a.side != "buy" or a.refused:
+        return [], None, None
+    conf = wash_conflicts(a.symbol, a.limit_price, open_orders)
+    if not conf:
+        return [], None, None
+    blocking = [o for o, k in conf if k != "stop"]
+    if blocking:
+        o = blocking[0]
+        return [], None, (f"{REFUSED_WASH_TRADE_RULE}: a resting {o.get('type')} sell {o.get('id')} on {a.symbol} "
+                          "would make the broker reject this buy, and it is an exit in flight, not a stop this "
+                          "pass may cancel")
+    stops = [o for o, _ in conf]
+    px = float(a.price_ref or a.limit_price or 0.0)
+    old = max(float(o.get("stop_price") or 0.0) for o in stops)
+    sp = max(old, stop_price_for(px, stop_frac)) if px > 0 else old
+    if px <= 0 or sp >= px:
+        return [], None, (f"{REFUSED_WASH_TRADE_RULE}: the combined stop {sp} would be at/above the reference "
+                          f"price {px}; the resting stop is left alone")
+    held_i = int(math.floor(max(0.0, float(held_qty)) + 1e-9))
+    seq = "ws-" + _sha(a.coid, *sorted(str(o.get("id")) for o in stops), n=12)
+    resting = [{"id": o.get("id"), "type": o.get("type"), "stop_price": float(o.get("stop_price") or 0.0),
+                "limit_price": o.get("limit_price"), "qty": float(o.get("qty") or 0.0),
+                "client_order_id": o.get("client_order_id")} for o in stops]
+    cancels = [Action(a.role, "cancel", a.symbol, 0, "", "cancel", protective=True, cancel_order_id=r["id"],
+                      price_ref=px, coid=f"cancel:{r['id']}",
+                      reason=(f"C27 wash-trade sequence {seq}: release the resting stop {r['client_order_id']} "
+                              f"({r['qty']:g} @ {r['stop_price']}) so the top-up buy is lawful"),
+                      inputs={"wash_seq": seq, "seq_step": "cancel_resting_stop", "resting": r})
+               for r in resting]
+    combined = held_i + int(a.qty)
+    stop = Action(a.role, "stop_combined", a.symbol, combined, "sell", "stop", "gtc", stop_price=sp,
+                  price_ref=px, protective=True,
+                  coid=client_order_id(a.role, day, "stopcmb", a.symbol, contract_hash, f"{combined}"),
+                  reason=(f"C27 wash-trade sequence {seq}: ONE stop for held {held_i} + top-up {a.qty}, at "
+                          f"max(prior stop {old}, contract level {stop_how}); placed only after the buy is "
+                          "terminal, for the shares the broker then reports"),
+                  inputs={"wash_seq": seq, "seq_step": "combined_stop", "replaces_stop": old,
+                          "stop_frac": stop_frac, "held_before": held_i, "topup_qty": int(a.qty)})
+    a.inputs.update(wash_seq=seq, seq_step="buy", resting_stops=resting)
+    return cancels, stop, None
+
+
+def topup_worst_case(*, held: float, px: float, resting: list[dict], add_qty: int, add_px: float,
+                     combined_sp: float, planned_frac: float) -> dict:
+    """One top-up name, in dollars at the stops (gaps can be worse):
+    now      = held shares at their resting stops (whole position if not fully covered),
+    old_plan = now + the added shares at the contract stop fraction (what the
+               pre-C27 path printed: buy and a separate stop),
+    sequence = held + added shares at the ONE combined stop."""
+    cov = sum(float(r.get("qty") or 0.0) for r in resting)
+    if held > 0 and resting and cov + 1e-9 >= held:
+        now = max(0.0, (px - min(float(r["stop_price"]) for r in resting)) * held)
+    else:
+        now = abs(held * px)
+    old_plan = now + add_qty * add_px * planned_frac
+    seq = max(0.0, (px - combined_sp) * held) + max(0.0, (add_px - combined_sp) * add_qty)
+    return {"now": round(now, 2), "old_plan": round(old_plan, 2), "sequence": round(seq, 2),
+            "delta_vs_now": round(seq - now, 2), "delta_vs_old_plan": round(seq - old_plan, 2)}
+
+
+def topup_line_walk(worst_now: float, line: float, deltas: list[tuple[str, float]]) -> dict[str, str]:
+    """C27 worst-case rule, in plan order: a top-up sequence may not take the
+    account's worst case (at the stops) above its contract's line, nor raise it
+    further when it already sits above. A sequence that LOWERS the worst case
+    (the combined stop re-based the held shares upward) always passes.
+    -> {key: "OK" | REFUSED_WORST_CASE_LINE}."""
+    out: dict[str, str] = {}
+    cum = 0.0
+    for k, d in deltas:
+        if d > 1e-6 and worst_now + cum + d > line:
+            out[k] = REFUSED_WORST_CASE_LINE
+            continue
+        out[k] = "OK"
+        cum += d
+    return out
+
+
+def _now_ms(now: Callable[[], float]) -> str:
+    return datetime.fromtimestamp(now(), timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def execute_topup_sequence(v: "Venue", buy: Action, cancels: list[Action], stop: Action, *,
+                           wait_buy_s: Optional[float] = None, wait_cancel_s: Optional[float] = None,
+                           sleep: Callable = time.sleep, now: Callable[[], float] = time.time,
+                           refresh: bool = True) -> dict:
+    """cancel resting stop(s) -> buy -> wait terminal -> ONE combined stop, as one
+    unit, every step timestamped. Rollback:
+
+    * a resting stop that will not confirm CANCELED: re-place every stop already
+      cancelled, send no buy (REFUSED_WASH_TRADE_RULE; ABORTED_STOP_FILLED when
+      it had filled -- the position changed under us);
+    * the buy is rejected: re-place the original stop(s) immediately
+      (BUY_REJECTED_ROLLED_BACK);
+    * the combined stop is rejected: place a plain protective `stop` (market on
+      trigger) at the same price under a new id and mark the sequence REFUSED;
+      if that is rejected too, re-place the original stop(s) and mark it
+      UNPROTECTED with the uncovered quantity.
+
+    The stop-less window runs from the first CONFIRMED cancel to the first
+    accepted stop (combined, protective or restored) and is on the result."""
+    wb = float(_cfg.FLEET_WASH_SEQ_BUY_WAIT_S if wait_buy_s is None else wait_buy_s)
+    wc = float(_cfg.FLEET_WASH_SEQ_CANCEL_WAIT_S if wait_cancel_s is None else wait_cancel_s)
+    ev: list[dict] = []
+    out: dict[str, Any] = {"wash_seq": buy.inputs.get("wash_seq"), "symbol": buy.symbol, "events": ev,
+                           "outcomes": {}, "order_ids": {}, "buy_filled_qty": 0, "combined_qty": None,
+                           "stop_price": stop.stop_price, "status": None, "refused": None,
+                           "stopless_window_s": None, "unprotected_qty": 0}
+    t_open: list[float] = []
+    t_close: list[float] = []
+
+    def log(e: str, **k: Any) -> None:
+        ev.append({"t": _now_ms(now), "e": e, **k})
+
+    def protect_ok() -> None:
+        if not t_close:
+            t_close.append(now())
+
+    def held_now(default: float) -> float:
+        try:
+            for p in v.positions():
+                if p.get("symbol") == buy.symbol:
+                    return float(p.get("qty") or 0.0)
+            return 0.0
+        except Exception:                                   # noqa: BLE001 -- fall back to the arithmetic
+            return default
+
+    def restore(cancelled: list[Action], cap_qty: float) -> int:
+        """Re-place the original stops (plain `stop`, same price), capped at what is held."""
+        left = int(math.floor(max(0.0, cap_qty) + 1e-9))
+        placed = 0
+        for i, c in enumerate(cancelled, 1):
+            r = c.inputs.get("resting") or {}
+            q = min(int(float(r.get("qty") or 0)), left - placed)
+            if q <= 0:
+                continue
+            ra = Action(buy.role, "stop_restore", buy.symbol, q, "sell", "stop", "gtc",
+                        stop_price=float(r.get("stop_price") or 0.0), price_ref=stop.price_ref, protective=True,
+                        coid=f"{stop.coid[:112]}-rb{i}",
+                        reason=f"C27 rollback: re-place the original stop {r.get('client_order_id')}")
+            so = submit_once(v, ra)
+            log("restore_sent", coid=ra.coid, qty=q, stop_price=ra.stop_price, outcome=so["outcome"])
+            out["outcomes"][ra.coid] = so["outcome"]
+            if so.get("order_id"):
+                out["order_ids"][ra.coid] = so["order_id"]
+                placed += q
+                protect_ok()
+        return placed
+
+    def finish(status: str, refused: Optional[str] = None) -> dict:
+        out["status"], out["refused"] = status, refused
+        if t_open:
+            out["stopless_window_s"] = round((t_close[0] if t_close else now()) - t_open[0], 3)
+        log("done", status=status)
+        return out
+
+    held0 = float(stop.inputs.get("held_before") or 0)
+    # Re-read what rests NOW: a stop renewed or placed earlier in this same run
+    # (maintenance) has an id the plan never saw, and it conflicts just the same.
+    if refresh:
+        try:
+            live = wash_conflicts(buy.symbol, buy.limit_price, v.open_orders())
+        except Exception as exc:                            # noqa: BLE001 -- the plan's list is the fallback
+            live = None
+            log("open_orders_unreadable", error=f"{type(exc).__name__}: {exc}"[:120])
+        if live is not None:
+            blocking = [o for o, k in live if k != "stop"]
+            if blocking:
+                why = (f"a resting {blocking[0].get('type')} sell {blocking[0].get('id')} conflicts and is not a "
+                       "stop; nothing cancelled, buy not sent")
+                out["outcomes"][buy.coid] = f"{REFUSED_WASH_TRADE_RULE}: {why}"
+                out["outcomes"][stop.coid] = "not sent: sequence refused before any step"
+                for c in cancels:
+                    out["outcomes"][c.coid] = "not sent: sequence refused before any step"
+                return finish(REFUSED_WASH_TRADE_RULE, f"{REFUSED_WASH_TRADE_RULE}: {why}")
+            plan_ids = {c.cancel_order_id for c in cancels}
+            for o, _ in live:
+                if o.get("id") not in plan_ids:
+                    r = {"id": o.get("id"), "type": o.get("type"), "stop_price": float(o.get("stop_price") or 0.0),
+                         "limit_price": o.get("limit_price"), "qty": float(o.get("qty") or 0.0),
+                         "client_order_id": o.get("client_order_id")}
+                    cancels = cancels + [Action(buy.role, "cancel", buy.symbol, 0, "", "cancel", protective=True,
+                                                cancel_order_id=r["id"], price_ref=stop.price_ref,
+                                                coid=f"cancel:{r['id']}", inputs={"resting": r},
+                                                reason="C27: a stop resting at execution the plan did not see")]
+                    log("extra_resting_stop", order_id=r["id"], stop_price=r["stop_price"], qty=r["qty"])
+            live_ids = {o.get("id") for o, _ in live}
+            for c in cancels:
+                if c.cancel_order_id not in live_ids:
+                    out["outcomes"][c.coid] = "not sent: the planned stop no longer rests"
+            cancels = [c for c in cancels if c.cancel_order_id in live_ids]
+            hi = max([float((c.inputs.get("resting") or {}).get("stop_price") or 0.0) for c in cancels] or [0.0])
+            if stop.stop_price is not None and hi > float(stop.stop_price):
+                log("combined_stop_raised", old=stop.stop_price, new=hi)   # never looser than anything resting
+                stop.stop_price = hi
+                out["stop_price"] = hi
+    cancelled: list[Action] = []
+    for c in cancels:
+        stc = v.cancel(c.cancel_order_id)
+        log("cancel_sent", order_id=c.cancel_order_id, http=stc)
+        term = (wait_terminal(v, c.cancel_order_id, timeout_s=wc, sleep=sleep) if stc in (200, 204)
+                else f"http {stc}")
+        out["outcomes"][c.coid] = f"cancel http {stc}, {term}"
+        log("cancel_terminal", order_id=c.cancel_order_id, status=term)
+        if term == "canceled":
+            cancelled.append(c)
+            if not t_open:
+                t_open.append(now())
+            continue
+        # not cancelled: it FILLED (the position changed under us) or the venue would not confirm
+        still_resting = sum(float((x.inputs.get("resting") or {}).get("qty") or 0)
+                            for x in cancels if x not in cancelled and x is not c)
+        if term != "filled":
+            still_resting += float((c.inputs.get("resting") or {}).get("qty") or 0)
+        restore(cancelled, held_now(held0) - still_resting)
+        why = (f"resting stop {c.cancel_order_id} {'FILLED' if term == 'filled' else 'not confirmed canceled'} "
+               f"({term}); buy not sent, cancelled stop(s) re-placed")
+        out["outcomes"][buy.coid] = f"{REFUSED_WASH_TRADE_RULE}: {why}"
+        out["outcomes"][stop.coid] = "not sent: sequence aborted before the buy"
+        return finish("ABORTED_STOP_FILLED" if term == "filled" else REFUSED_WASH_TRADE_RULE,
+                      f"{REFUSED_WASH_TRADE_RULE}: {why}")
+
+    so = submit_once(v, buy)
+    log("buy_sent", coid=buy.coid, outcome=so["outcome"])
+    out["outcomes"][buy.coid] = so["outcome"]
+    if not so.get("order_id"):
+        h = held_now(held0)
+        placed = restore(cancelled, h)
+        out["outcomes"][stop.coid] = "not sent: the buy was rejected; the original stop(s) re-placed"
+        want = min(int(math.floor(h + 1e-9)),
+                   int(sum(float((c.inputs.get("resting") or {}).get("qty") or 0) for c in cancelled)))
+        out["unprotected_qty"] = max(0, want - placed)
+        if out["unprotected_qty"]:
+            return finish("UNPROTECTED", f"REFUSED: the buy was rejected and the original stop could not be "
+                                         f"re-placed for {out['unprotected_qty']} share(s)")
+        return finish("BUY_REJECTED_ROLLED_BACK")
+    boid = so["order_id"]
+    out["order_ids"][buy.coid] = boid
+    term = wait_terminal(v, boid, timeout_s=wb, sleep=sleep)
+    log("buy_terminal" if term in _TERMINAL else "buy_open", status=term)
+    if term not in _TERMINAL:
+        # any open part of the buy makes the stop unlawful ("limit buy | stop sell | always rejected")
+        stc = v.cancel(boid)
+        term = wait_terminal(v, boid, timeout_s=wc, sleep=sleep) if stc in (200, 204) else f"http {stc}"
+        log("buy_remainder_cancel", http=stc, status=term)
+    try:
+        od = v.order(boid)
+        out["buy_filled_qty"] = int(float(od.get("filled_qty") or 0))
+        out["buy_filled_avg_price"] = od.get("filled_avg_price")
+    except Exception:                                       # noqa: BLE001
+        pass
+    out["buy_status"] = term
+    q = int(math.floor(held_now(held0 + out["buy_filled_qty"]) + 1e-9))
+    out["combined_qty"] = q
+    if q <= 0:
+        out["outcomes"][stop.coid] = "not sent: nothing held after the buy"
+        return finish("OK_NOTHING_HELD")
+    stop.qty = q
+    so = submit_once(v, stop)
+    log("combined_stop_sent", coid=stop.coid, qty=q, stop_price=stop.stop_price, outcome=so["outcome"])
+    out["outcomes"][stop.coid] = so["outcome"]
+    if so.get("order_id"):
+        out["order_ids"][stop.coid] = so["order_id"]
+        protect_ok()
+        return finish("OK")
+    # the combined stop was rejected: a plain protective stop at the same price, new id
+    pa = Action(buy.role, "stop_protective", buy.symbol, q, "sell", "stop", "gtc", stop_price=stop.stop_price,
+                price_ref=stop.price_ref, protective=True, coid=f"{stop.coid[:114]}-p",
+                reason="C27: the combined stop was rejected; plain protective stop at the same price")
+    so2 = submit_once(v, pa)
+    log("protective_stop_sent", coid=pa.coid, qty=q, stop_price=pa.stop_price, outcome=so2["outcome"])
+    out["outcomes"][pa.coid] = so2["outcome"]
+    if so2.get("order_id"):
+        out["order_ids"][pa.coid] = so2["order_id"]
+        protect_ok()
+        return finish("REFUSED", f"REFUSED: the combined stop was rejected ({so['outcome'][:80]}); a protective "
+                                 f"stop for {q} at {pa.stop_price} was placed instead")
+    placed = restore(cancelled, q)
+    out["unprotected_qty"] = max(0, q - placed)
+    return finish("UNPROTECTED" if out["unprotected_qty"] else "REFUSED",
+                  f"REFUSED: combined and protective stops rejected; original stop(s) re-placed for {placed} of "
+                  f"{q}; {out['unprotected_qty']} share(s) UNPROTECTED")
+
+
+def wash_sequence_summary(results: Iterable[dict]) -> dict:
+    """Per account: how many top-up sequences ran, how they ended, and the
+    longest stop-less window (seconds)."""
+    rs = list(results)
+    by: dict[str, int] = {}
+    for r in rs:
+        by[str(r.get("status"))] = by.get(str(r.get("status")), 0) + 1
+    win = [float(r["stopless_window_s"]) for r in rs if r.get("stopless_window_s") is not None]
+    return {"n": len(rs), "by_status": by, "max_stopless_window_s": max(win) if win else None,
+            "stopless_events": len(win),
+            "unprotected_qty": sum(int(r.get("unprotected_qty") or 0) for r in rs)}
 
 
 # ─────────────────────────────── pricing ────────────────────────────────────

@@ -98,6 +98,43 @@ def test_latest_shape_and_serve_time_age(client):
                 assert k in r["missing_because"]
 
 
+def _write_published(base, *, generated_utc: str, ticker: str = "PUBZZZ") -> None:
+    d = base / "public_receipts" / "opportunities"
+    d.mkdir(parents=True, exist_ok=True)
+    blob = {"schema": O.SCHEMA, "generated_utc": generated_utc, "asof": generated_utc[:10], "run_id": "pub",
+            "legend": {}, "lists": [{"list_id": "roi_v3", "title": "ROI",
+                                     "rows": [{"ticker": ticker, "list_id": "roi_v3"}]}]}
+    (d / "latest.json").write_text(json.dumps(blob), encoding="utf-8")
+
+
+def test_published_copy_wins_when_it_is_fresher_than_the_live_receipt(client):
+    """Q17: the C15 rule compares the two blobs' OWN `generated_utc`, not just "does a live
+    receipt exist" -- a stale live folder must not win over a freshly republished public
+    copy just because something happens to be on disk locally."""
+    c, base = client
+    now = datetime.now(timezone.utc)
+    old_run = now - timedelta(days=2)
+    _write(base, asof=old_run.date().isoformat(), run_id=old_run.strftime("%Y%m%dT%H%M%SZ"),
+           lists=[{"list_id": "roi_v3", "title": "ROI", "rows": [_row("LIVEOLD", "roi_v3", old_run.isoformat())]}])
+    _write_published(base, generated_utc=now.isoformat(), ticker="PUBNEW")
+    body = c.get("/api/opportunities/latest").json()
+    assert body["served_from"] and "public_receipts" in body["served_from"]
+    assert body["list"]["rows"][0]["ticker"] == "PUBNEW"
+    assert body["list"]["rows"][0]["links"]["yahoo"].endswith("/quote/PUBNEW")   # rebuilt from the ticker
+
+
+def test_live_copy_wins_when_it_is_fresher_than_the_published_copy(client):
+    c, base = client
+    now = datetime.now(timezone.utc)
+    _write(base, asof=now.date().isoformat(), run_id=now.strftime("%Y%m%dT%H%M%SZ"),
+           lists=[{"list_id": "roi_v3", "title": "ROI", "rows": [_row("LIVENEW", "roi_v3", now.isoformat())]}])
+    old = now - timedelta(days=5)
+    _write_published(base, generated_utc=old.isoformat(), ticker="PUBOLD")
+    body = c.get("/api/opportunities/latest").json()
+    assert body.get("served_from") is None
+    assert body["list"]["rows"][0]["ticker"] == "LIVENEW"
+
+
 def test_newest_receipt_wins_by_name_and_unreadable_is_skipped(client):
     c, base = client
     _write(base, asof="2026-01-01", run_id="20260101T000000Z",

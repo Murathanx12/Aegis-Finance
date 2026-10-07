@@ -578,6 +578,25 @@ def _eod_audit_status(ctx, d: dict, fm_root: Path, name: str) -> tuple[str, str]
     return ("OK", "") if st == "OK" else ("DEGRADED", f"eod audit: {why}")
 
 
+def _fleet_rejections_status(d: dict) -> tuple[str, str]:
+    """(status, reason) from a fleet run receipt's LIVE buys: DEGRADED when the
+    broker rejected more than `FLEET_REJECTED_BUY_DEGRADED_FRAC` of them."""
+    from backend.services import fleet_manager as _FM     # lazy: the reader module stays import-light
+    accs = [a for a in d.get("accounts") or [] if isinstance(a, dict)]
+    summ = _FM.rejection_summary([x for a in accs for x in (a.get("actions") or [])])
+    if not summ["degraded"]:
+        return "OK", ""
+    per = []
+    for a in accs:
+        s_ = _FM.rejection_summary(a.get("actions") or [])
+        if s_["n_rejected"]:
+            per.append(f"{a.get('role')} {s_['n_rejected']}/{s_['n_live_buys_sent']}")
+    return "DEGRADED", (f"broker rejected {summ['n_rejected']} of {summ['n_live_buys_sent']} LIVE buys "
+                        f"({summ['rejected_frac']:.0%} > {summ['threshold']:.0%}): "
+                        f"{summ['by_reason']['wash_trade_403']} wash-trade 403, {summ['by_reason']['http_422']} 422, "
+                        f"{summ['by_reason']['other']} other [{', '.join(per)}]")
+
+
 def _fleet_pass(which: str):
     def reader(ctx, task) -> Reading:
         folder = ctx.optimus_dir / "paper_accounts" / "fleet_manager" / "runs"
@@ -592,6 +611,17 @@ def _fleet_pass(which: str):
                 st, why, excused = accounts_status(d.get("accounts"))
                 st_a, why_a = (_eod_audit_status(ctx, d, folder.parent, p.name) if which == "preclose"
                                else ("OK", ""))
+                blind = [f"{a.get('role')} ({str(a.get('stop_history_error'))[:80]})"
+                         for a in d.get("accounts") or [] if isinstance(a, dict) and a.get("stop_history_error")]
+                if blind:
+                    st_a = worst(st_a, "DEGRADED")
+                    why_a = "; ".join(x for x in (why_a, f"stop history unreadable (cooldown blind): {blind}") if x)
+                # C27: a pass where the broker rejected more than FLEET_REJECTED_BUY_DEGRADED_FRAC of the
+                # LIVE buys it was sent is DEGRADED, with the counts by reason (derived from the actions,
+                # so receipts written before C27 are read the same way)
+                st_r, why_r = _fleet_rejections_status(d)
+                st_a = worst(st_a, st_r)
+                why_a = "; ".join(x for x in (why_a, why_r) if x)
                 return Reading(stamp=parse_stamp(d.get("finished_utc") or d.get("started_utc")),
                                status=worst(st0, st, st_a),
                                reason="; ".join(x for x in (why0, why, why_a) if x),
@@ -734,6 +764,48 @@ def r_public_flow(ctx, task) -> Reading:
                    detail=f"public flow {a}" + (f": {'; '.join(bad)[:140]}" if bad else ""))
 
 
+def r_research_lane(ctx, task) -> Reading:
+    """Q12 (2026-10-07): the weekly academic lane
+    (`backend/services/research_instruments.py`, `scripts/task_keeper.py`'s
+    `research` job / `scripts/research_lane.py --due`). Judged by the newest
+    `research_instruments/probe_<run_id>.json` receipt's OWN stamp
+    (`generated_utc`), never by the scheduler firing: the lane decides most
+    weeks are a no-op (`research_lane_due`) and `HEALTH_TASK_CADENCE_H`
+    declares the week, so a probe that is a few days old is still
+    ALIVE_IDLE_EXPECTED, not STALE. `task_keeper/research_lane.jsonl`'s own
+    row is read only when it is NEWER than the newest probe -- a `not_due`
+    skip, or a `failed`/`refused` attempt that never reached `probe_card`."""
+    p, d = _newest(ctx.optimus_dir / "research_instruments", "probe_*.json")
+    k = _last_row(ctx.optimus_dir / "task_keeper" / "research_lane.jsonl")
+    t_probe = parse_stamp((d or {}).get("generated_utc")) if isinstance(d, dict) else None
+    t_k = parse_stamp((k or {}).get("utc"))
+    if k is not None and (t_probe is None or (t_k is not None and t_k > t_probe)):
+        action = str(k.get("action"))
+        if action == "not_due":
+            return Reading(stamp=t_probe, status="OK", idle_reason=f"not due yet: {k.get('why')}",
+                           proof="task_keeper/research_lane.jsonl[-1]",
+                           detail=f"research lane not due: {k.get('why')}")
+        if action in ("failed", "refused"):
+            return Reading(stamp=t_k, status="REFUSED" if action == "refused" else "DEGRADED",
+                           reason=str(k.get("why") or ""),
+                           proof="task_keeper/research_lane.jsonl[-1]",
+                           detail=f"research lane {action}: {k.get('why')}")
+    if not isinstance(d, dict):
+        if k is not None:
+            return Reading(stamp=None, status="OK",
+                           idle_reason=(f"no probe has run yet; the weekly job's newest row is "
+                                        f"{k.get('action')}: {k.get('why')}"),
+                           proof="task_keeper/research_lane.jsonl[-1]",
+                           detail="academic lane: no probe receipt yet")
+        return _none("research_instruments/probe_<run_id>.json")
+    st, why = receipt_status(d)
+    return Reading(stamp=t_probe, status=st, reason=why,
+                   substance=substance(pick(d, ("zero_kind", "card_slug"))),
+                   proof=f"research_instruments/{p.name} generated_utc",
+                   detail=f"academic lane probe {d.get('card_slug')}: {d.get('zero_kind')}, "
+                          f"{d.get('queries_issued')} queries issued")
+
+
 def r_no_receipt(why: str):
     def reader(ctx, task) -> Reading:
         return Reading(unknown_reason=why)
@@ -789,6 +861,12 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
     "AegisPublicFlow": TaskSpec(r_public_flow, "task_keeper/public_flow.jsonl (+ public_flow/receipts/)",
                                 hash_off="each step's own receipt carries rows_added; the job row is a summary",
                                 unregistered_ok="C16 public-flow sensors: registration waits for its review"),
+    "AegisResearchLane": TaskSpec(r_research_lane, "research_instruments/probe_<run_id>.json "
+                                                   "(+ task_keeper/research_lane.jsonl)",
+                                 hash_off="weekly; most weeks are a declared not_due no-op, judged idle "
+                                          "not stale",
+                                 unregistered_ok="Q12 academic lane: registration waits for owner review "
+                                                 "(python -m scripts.task_keeper register-owners --apply)"),
     "AegisWRDSPullNight": TaskSpec(r_retired, "none (retired one-shot, 2026-08-21)", retired=True),
     "AegisAlwaysOnLab": TaskSpec(_delegate("p_always_on_lab", "always_on_lab"),
                                  "lab_status.json (judged by the always_on_lab probe)",

@@ -1261,6 +1261,22 @@ def scaled_views_block(rows: list[dict], *, capital: float | None,
     }
 
 
+BENCHMARK_ETF_SYMBOLS = frozenset({"SPY", "VOO", "IVV", "VTI"})
+
+
+def plan_sleeves_from_broker(equity: dict | None) -> dict | None:
+    """D21 (owner, 2026-10-07): the PC-PAPER plan's active sleeves as the broker
+    holds them -- every held non-benchmark-ETF name, weight = market value /
+    equity. None when `config.PC_CONTRACT_COUNTS_PLAN_SLEEVES` is off or there is
+    no broker read (the resolution is then the pre-D21 split, unchanged)."""
+    if not bool(getattr(config, "PC_CONTRACT_COUNTS_PLAN_SLEEVES", False)):
+        return None
+    held = _held_weights(equity)
+    if not held:
+        return None
+    return {s: w for s, w in held.items() if s not in BENCHMARK_ETF_SYMBOLS}
+
+
 def positions_reconciliation(rows: list[dict], *, capital: float | None,
                              equity: dict | None, resolution: dict | None) -> dict:
     """The contract's book against the broker's book (review C2 F2).
@@ -2660,7 +2676,8 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
     except Exception as exc:                                       # noqa: BLE001
         mandate = {"status": "CANNOT DETERMINE",
                    "line": f"MANDATE CANNOT DETERMINE: {type(exc).__name__}: {exc}"}
-    cres = capital_resolution(rows, capital=capital)
+    cres = capital_resolution(rows, capital=capital,
+                              plan_sleeves=plan_sleeves_from_broker(equity_read))
     try:
         prec = positions_reconciliation(rows, capital=capital, equity=equity_read,
                                         resolution=cres)
@@ -2831,8 +2848,8 @@ def _roi_payload_block(rows: list[dict], book: dict | None) -> dict:
     return {"roi_ranking": census}
 
 
-def capital_resolution(rows: list[dict], *, capital: float | None = None
-                       ) -> dict:
+def capital_resolution(rows: list[dict], *, capital: float | None = None,
+                       plan_sleeves: dict | None = None) -> dict:
     """Where EVERY dollar went today: benchmark / exploit / explore / cash.
 
     Murat's item 11, 2026-09-20: *"force a daily portfolio decision — every
@@ -2882,8 +2899,16 @@ def capital_resolution(rows: list[dict], *, capital: float | None = None
     probe_hypotheses = sorted({str(r.get("hypothesis_id")) for r in probe_rows
                                if r.get("hypothesis_id")})
     cash = float(config.IC_CASH_FLOOR_PCT)
-    benchmark = 1.0 - exploit - explore - cash
-    total = benchmark + exploit + explore + cash
+    # D21, OWNER DECISION 2026-10-07 17:05 HKT ("dont stay cash on pc. lets do
+    # the best decision and profit maximizing strat"): the PC-PAPER plan's
+    # active sleeves (PROBE / EXPLOIT / revision_flow, as the broker holds
+    # them) are COUNTED; the benchmark core is the residual after them. None
+    # (flag off, or no broker read): the old split, byte-identical.
+    sleeves = {str(k): float(v) for k, v in (plan_sleeves or {}).items()
+               if isinstance(v, (int, float)) and v > 0}
+    plan_pct = sum(sleeves.values())
+    benchmark = 1.0 - exploit - explore - cash - plan_pct
+    total = benchmark + exploit + explore + cash + plan_pct
     out = {
         "benchmark_pct": round(benchmark, 8),
         "active_exploit_pct": round(exploit, 8),
@@ -2923,6 +2948,18 @@ def capital_resolution(rows: list[dict], *, capital: float | None = None
             f"'nothing happened' is not, and this line is the proof it did "
             f"not happen."),
     }
+    if plan_sleeves is not None:
+        out["plan_sleeves_pct"] = round(plan_pct, 8)
+        out["plan_sleeves_n_names"] = len(sleeves)
+        out["plan_sleeves_basis"] = (
+            "D21 (owner, 2026-10-07): every name the PC-PAPER broker read holds that is "
+            "not a benchmark ETF, at market value / equity -- the sleeves sim_run.u_plan "
+            "placed (PROBE / EXPLOIT / REVISION_FLOW). Counted beside the four buckets; the "
+            "benchmark core is 1 - exploit - explore - cash - plan_sleeves.")
+        out["nothing_happened_is_not_allowed"] = out["nothing_happened_is_not_allowed"].replace(
+            f"{cash:.2%} cash.", f"{cash:.2%} cash, {plan_pct:.2%} in the plan's active "
+                                 f"sleeves across {len(sleeves)} name(s).", 1)
+        out["sums_to"] = round(total, 8)
     if abs(total - 1.0) > 1e-8 or benchmark < 0:
         out["refused"] = (
             f"CANNOT DETERMINE: the resolution does not add to one "
@@ -2932,6 +2969,8 @@ def capital_resolution(rows: list[dict], *, capital: float | None = None
             f"anyone should hold")
     if capital is not None:
         out["dollars"] = {
+            **({"plan_sleeves_usd": round(plan_pct * float(capital), 2)}
+               if plan_sleeves is not None else {}),
             "benchmark_usd": round(benchmark * float(capital), 2),
             "active_exploit_usd": round(exploit * float(capital), 2),
             "active_explore_usd": round(explore * float(capital), 2),

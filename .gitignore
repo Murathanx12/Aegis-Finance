@@ -471,6 +471,17 @@ backend/data/optimus/official/tables/
 backend/data/optimus/public_flow/tables/
 backend/data/optimus/public_flow/requests.jsonl
 
+# Q17 (2026-10-07): raw Opportunity Explorer receipts (5-8 MB each; four were TRACKED,
+# ~28 MB total) are SUBSTRATE for the published, sanitised copy that the site actually
+# reads -- `backend/data/public_receipts/opportunities/latest.json` (<= 2.4 MB, committed
+# via publish_receipts, which is unaffected by this rule: that whole directory is tracked
+# on purpose). scripts/opportunities_build.py now keeps only the newest
+# config.OPPORTUNITIES_KEEP_RAW (7) locally, pruned by the RUN ID IN THE FILENAME, never by
+# mtime, and republishes the public copy after every build. No history rewrite (D10) --
+# the files already committed stay in history; to drop them from the INDEX only, so new
+# runs stop re-adding them, the orchestrator runs:
+#   git rm --cached backend/data/optimus/opportunities/opportunities_*.json
+backend/data/optimus/opportunities/*.json
 # The forecast ledger's atomic writes (backend/services/forecast_ledger.py) stage
 # `<name>.tmp.<pid>.<thread>` beside the target and rename it into place; a
 # process killed between the two leaves one behind. Never a ledger file, never
