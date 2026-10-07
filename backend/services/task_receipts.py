@@ -592,6 +592,11 @@ def _fleet_pass(which: str):
                 st, why, excused = accounts_status(d.get("accounts"))
                 st_a, why_a = (_eod_audit_status(ctx, d, folder.parent, p.name) if which == "preclose"
                                else ("OK", ""))
+                blind = [f"{a.get('role')} ({str(a.get('stop_history_error'))[:80]})"
+                         for a in d.get("accounts") or [] if isinstance(a, dict) and a.get("stop_history_error")]
+                if blind:
+                    st_a = worst(st_a, "DEGRADED")
+                    why_a = "; ".join(x for x in (why_a, f"stop history unreadable (cooldown blind): {blind}") if x)
                 return Reading(stamp=parse_stamp(d.get("finished_utc") or d.get("started_utc")),
                                status=worst(st0, st, st_a),
                                reason="; ".join(x for x in (why0, why, why_a) if x),

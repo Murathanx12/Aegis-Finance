@@ -90,25 +90,41 @@ def test_a_planner_refusal_is_traced_not_regated(tmp_path):
 # ─────────────────────────────── never enlarge ──────────────────────────────
 
 def test_no_gate_ever_increases_a_proposed_size(tmp_path):
+    """Buys, sells, protective stops (some replacing a resting stop) and cancels,
+    in BOTH new-gate modes: no row ever has qty_out > qty_in, and a stop's price
+    only ever moves up (tighter)."""
     c = _contract(tmp_path)
     rng = random.Random(26)
-    for _ in range(400):
-        side = rng.choice(["buy", "sell"])
-        qty = rng.randint(1, 400)
-        px = rng.uniform(5, 300)
-        sym = rng.choice(["AAA", "BBB", "CCC", "DDD"])
-        a = (FM.Action("hackG", "buy", sym, qty, "buy", "limit", limit_price=px, price_ref=px) if side == "buy"
-             else FM.Action("hackG", "sell", sym, qty, "sell", "limit", limit_price=px, price_ref=px))
-        held = {s: float(rng.randint(0, 300)) for s in ("AAA", "BBB", "CCC", "DDD")}
-        mv = {s: q * px for s, q in held.items()}
-        ctx = _ctx(c, cash=rng.uniform(-1000, 60_000), held=held, mv=dict(mv), gross=sum(mv.values()),
-                   turnover_left=rng.uniform(0, 50_000), orders_used=rng.randint(0, 70),
-                   sector_of={"AAA": "Tech", "BBB": "Tech", "CCC": "Energy"},
-                   stopped_out={"DDD": date.today().isoformat()})
-        tr = FM.run_gates(a, ctx, mode="DRY")
-        assert a.qty <= qty
-        for r in tr:
-            assert r["qty_out"] <= r["qty_in"]
+    for mode_ in ("enforce", "shadow"):
+        for _ in range(400):
+            kind = rng.choice(["buy", "sell", "stop_new", "stop_renew", "cancel", "exit"])
+            qty = rng.randint(1, 400)
+            px = rng.uniform(5, 300)
+            sym = rng.choice(["AAA", "BBB", "CCC", "DDD"])
+            if kind == "buy":
+                a = FM.Action("hackG", "buy", sym, qty, "buy", "limit", limit_price=px, price_ref=px)
+            elif kind in ("sell", "exit"):
+                a = FM.Action("hackG", kind, sym, qty, "sell", "limit", limit_price=px, price_ref=px)
+            elif kind == "cancel":
+                a = FM.Action("hackG", "cancel", sym, 0, "", "cancel", protective=True, cancel_order_id="x")
+            else:
+                sp = px * rng.uniform(0.80, 0.98)
+                inp = {"replaces_stop": round(px * rng.uniform(0.80, 0.98), 2)} if rng.random() < 0.6 else {}
+                a = FM.Action("hackG", kind, sym, qty, "sell", "stop", "gtc", stop_price=sp, price_ref=px,
+                              protective=True, inputs=inp)
+            sp0 = a.stop_price
+            held = {s_: float(rng.randint(0, 300)) for s_ in ("AAA", "BBB", "CCC", "DDD")}
+            mv = {s_: q * px for s_, q in held.items()}
+            ctx = _ctx(c, cash=rng.uniform(-1000, 60_000), held=held, mv=dict(mv), gross=sum(mv.values()),
+                       turnover_left=rng.uniform(0, 50_000), orders_used=rng.randint(0, 70),
+                       sector_of={"AAA": "Tech", "BBB": "Tech", "CCC": "Energy"},
+                       stopped_out={"DDD": date.today().isoformat()})
+            tr = FM.run_gates(a, ctx, mode="DRY", new_gates_mode=mode_)
+            assert a.qty <= qty
+            for r in tr:
+                assert r["qty_out"] <= r["qty_in"]
+            if sp0 is not None:
+                assert a.stop_price >= sp0
 
 
 def test_a_gate_that_tries_to_enlarge_is_a_defect_and_kills(tmp_path):
@@ -139,15 +155,44 @@ def _exits(held_qty=100):
 
 
 def test_exits_pass_every_risk_gate_however_bad_the_book(tmp_path):
+    """Frozen terms (c26-p2): protective orders, cancels and declared exits pass
+    every RISK gate except the per-run order count, which counts them as it did
+    before C26. A rebalance sell to zero spends the turnover budget (the v2
+    contract grants exits no exemption), so it is tested with budget left."""
     c = _contract(tmp_path)
     for a in _exits():
         ctx = _ctx(c, cash=-50_000.0, held={"AAA": 100.0}, mv={"AAA": 500_000.0}, gross=500_000.0,
-                   turnover_left=0.0, orders_used=10_000, sector_of={"AAA": "Tech"},
+                   turnover_left=(0.0 if a.kind != "sell" else 1e9), orders_used=0, sector_of={"AAA": "Tech"},
                    stopped_out=None, cooldown_sessions=99, sector_max_frac=0.01)
         q0 = a.qty
-        tr = FM.run_gates(a, ctx, mode="LIVE")
+        tr = FM.run_gates(a, ctx, mode="LIVE", new_gates_mode="enforce")
         assert a.refused is None, (a.kind, tr)
         assert a.qty == q0
+
+
+def test_the_order_cap_counts_and_caps_exits_again_but_never_a_cancel(tmp_path):
+    c = _contract(tmp_path)
+    cap = int(c["caps"]["max_orders_per_run"])
+    for a in _exits():
+        FM.run_gates(a, _ctx(c, held={"AAA": 100.0}, orders_used=cap, turnover_left=1e9), mode="LIVE")
+        if a.kind == "cancel":
+            assert a.refused is None
+        else:
+            assert a.refused and a.refused.startswith("order_count:")
+    ctx = _ctx(c, held={"AAA": 100.0}, turnover_left=1e9)
+    FM.run_gates(_exits()[2], ctx)
+    assert ctx.orders_used == 1
+
+
+def test_a_full_rebalance_sell_spends_and_can_exhaust_the_turnover_budget(tmp_path):
+    c = _contract(tmp_path)
+    ctx = _ctx(c, held={"AAA": 100.0}, turnover_left=1_000.0)
+    sell = FM.Action("hackG", "sell", "AAA", 100, "sell", "limit", limit_price=50.0, price_ref=50.0)
+    FM.run_gates(sell, ctx)
+    assert sell.refused and sell.refused.startswith("turnover_budget:")
+    ext = FM.Action("hackG", "exit", "AAA", 100, "sell", "limit", limit_price=50.0, price_ref=50.0)
+    FM.run_gates(ext, ctx)
+    assert ext.refused is None                # a declared horizon exit never spent it (pre-C26 too)
 
 
 @pytest.mark.parametrize("lease", ["kill_switch", "credential", "reconciliation", "venue_window"])
@@ -344,12 +389,12 @@ def test_enforce_mode_binds_both_new_gates_like_any_other_gate(tmp_path):
 
 def test_every_other_gate_still_enforces_while_the_new_two_are_shadowed(tmp_path):
     """Shadow mode names only `cooldown` and `sector_concentration`: a gate
-    outside that set keeps killing/shrinking even on the default call."""
+    outside that set keeps refusing even on the default call."""
     c = _contract(tmp_path)
     oversized = _buy("AAA", 200, 100.0)       # $20k vs a 10% name cap on 100k
     tr = FM.run_gates(oversized, _ctx(c))
-    assert [r for r in tr if r["gate"] == "name_cap"][0]["verdict"] == "SHRINK"
-    assert oversized.qty == 100 and "shadow_verdict" not in tr[-1]
+    assert tr[-1]["gate"] == "name_cap" and tr[-1]["verdict"] == "KILL"
+    assert oversized.qty == 200 and "shadow_verdict" not in tr[-1]
 
 
 def test_sector_room_formula_is_continuous_at_the_equity_floor():
@@ -362,32 +407,44 @@ def test_sector_room_formula_is_continuous_at_the_equity_floor():
 
 # ─────────────────────────────── the other caps as gates ────────────────────
 
-def test_name_and_gross_caps_shrink_not_enlarge(tmp_path):
+def test_cash_gross_name_and_turnover_refuse_as_the_frozen_terms_did(tmp_path):
+    """c26-p2: these four REFUSE exactly like pre-C26 `check_limits` /
+    `apply_turnover_budget` -- never shrink -- and agree with check_limits."""
     c = _contract(tmp_path)
-    a = _buy("AAA", 200, 100.0)               # $20k vs a 10% name cap on 100k
-    tr = FM.run_gates(a, _ctx(c))
-    assert a.qty == 100 and [r for r in tr if r["gate"] == "name_cap"][0]["verdict"] == "SHRINK"
-    b = _buy("BBB", 80, 100.0)
-    FM.run_gates(b, _ctx(c, gross=95_000.0, cash=50_000.0))
-    assert b.qty == 50
-    k = _buy("CCC", 80, 100.0)
-    FM.run_gates(k, _ctx(c, gross=99_900.0, cash=50_000.0))
-    assert k.refused.startswith("gross_cap:")
+    cases = [("name_cap", _buy("AAA", 200, 100.0), {}),
+             ("gross_cap", _buy("BBB", 80, 100.0), {"gross": 95_000.0, "cash": 50_000.0}),
+             ("cash", _buy("CCC", 80, 100.0), {"cash": 5_000.0})]
+    for gate, a, kw in cases:
+        ctx = _ctx(c, **kw)
+        old = FM.check_limits(a, equity=ctx.equity, cash=ctx.cash, held=ctx.held, mv=ctx.mv,
+                              gross=ctx.gross, contract=c)
+        q0 = a.qty
+        tr = FM.run_gates(a, ctx)
+        assert old is not None
+        assert a.refused.startswith(gate + ":") and a.qty == q0 and tr[-1]["verdict"] == "KILL"
+    t = _buy("DDD", 50, 100.0)
+    ctx = _ctx(c, turnover_left=3_000.0)
+    FM.run_gates(t, ctx)
+    assert t.refused.startswith("turnover_budget:") and t.qty == 50
+    assert ctx.turnover_left == pytest.approx(3_000.0)
 
 
-def test_turnover_and_order_count_spare_exits_but_bind_entries(tmp_path):
+def test_turnover_is_spent_in_plan_order_even_when_a_later_gate_refuses(tmp_path):
+    """Pre-C26 `apply_turnover_budget` ran over the whole plan BEFORE check_limits,
+    so an order later refused for cash still spent the budget. Kept verbatim."""
     c = _contract(tmp_path)
-    ctx = _ctx(c, turnover_left=3_000.0, held={"AAA": 10.0})
-    a = _buy("BBB", 50, 100.0)
+    ctx = _ctx(c, turnover_left=6_000.0, cash=1_000.0)
+    a = _buy("AAA", 50, 100.0)                # $5,000 spends the budget, then dies at cash
     FM.run_gates(a, ctx)
-    assert a.qty == 30 and ctx.turnover_left == pytest.approx(0.0)
+    assert a.refused.startswith("cash:") and ctx.turnover_left == pytest.approx(1_000.0)
+
+
+def test_order_count_binds_entries(tmp_path):
+    c = _contract(tmp_path)
     ctx2 = _ctx(c, orders_used=int(c["caps"]["max_orders_per_run"]), held={"AAA": 10.0})
     b = _buy("BBB", 5, 100.0)
     FM.run_gates(b, ctx2)
     assert b.refused.startswith("order_count:")
-    ex = FM.Action("hackG", "sell", "AAA", 10, "sell", "limit", limit_price=100.0, price_ref=100.0)
-    FM.run_gates(ex, ctx2)
-    assert ex.refused is None
 
 
 # ─────────────────────────────── the run receipt ────────────────────────────

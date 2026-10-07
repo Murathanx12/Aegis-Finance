@@ -5354,6 +5354,19 @@ FLEET_GATE_COOLDOWN_LOOKBACK_DAYS = 21
 #: Murat's decision; the flip is hashed onto `gates_config()["hash"]` so it is
 #: visible on every receipt.
 FLEET_NEW_GATES_MODE = "shadow"
+#: Enforce mode is REFUSED for `sector_concentration` (it stays shadow, printed
+#: on the receipt) when the sector map is older than this many days, or when
+#: the UNKNOWN bucket exceeds this share of the account's gross: a stale or
+#: blind taxonomy measures itself, not concentration (review 2026-10-07 F5).
+FLEET_GATE_SECTOR_MAP_MAX_AGE_DAYS = 14
+FLEET_GATE_SECTOR_MAX_UNKNOWN_FRAC = 0.20
+#: The broker's 403 "potential wash trade" rejections (49 of 75 LIVE buys since
+#: 2026-10-01: top-ups of names holding a resting GTC sell stop) are a KNOWN,
+#: UNFIXED execution defect queued as its own chunk; every run receipt carries
+#: this line so nobody reads C26 as having addressed it.
+FLEET_KNOWN_DEFECT_WASH_TRADE = ("since 2026-10-01, 49 of 75 LIVE buys came back HTTP 403 'potential wash "
+                                 "trade' (top-ups of names with a resting sell stop); NOT fixed by C26, "
+                                 "queued as its own chunk")
 #: C26 END-OF-DAY AUDIT (`backend/services/fleet_eod_audit.py`): the Preclose
 #: pass runs it last; `python -m scripts.fleet_eod_audit` runs it alone. It
 #: never places or cancels anything (its transport refuses every non-GET).

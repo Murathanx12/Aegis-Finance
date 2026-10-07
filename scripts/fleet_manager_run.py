@@ -281,6 +281,16 @@ def sector_map_safe() -> tuple[dict[str, str], str]:
         return {}, f"REFUSED: sector map unreadable ({type(exc).__name__}: {exc})"[:200]
 
 
+def sector_map_age_days(src: str, today: Optional[date] = None) -> Optional[int]:
+    """Age of the sector map from the date in its file name (`.../2026-09-02.jsonl`);
+    None when undateable -- and an undateable map is never fresh enough to enforce."""
+    import re as _re
+    m = _re.search(r"(\d{4}-\d{2}-\d{2})\.jsonl", str(src or ""))
+    if not m:
+        return None
+    return ((today or datetime.now(timezone.utc).date()) - date.fromisoformat(m.group(1))).days
+
+
 def newest_digest() -> tuple[Optional[dict], Optional[str]]:
     files = sorted(DIGEST_DIR.glob("world_digest_*.json"))
     files = [f for f in files if not f.name.endswith(".short.txt")]
@@ -417,7 +427,7 @@ def seal_status(role: str) -> str:
 def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, run_id: str,
              books: dict, issuer_of: dict, stitched: set, digest: Optional[dict], digest_name: Optional[str],
              baseline: tuple[Optional[str], dict], pool: dict, rebaseline: bool,
-             sector_of: Optional[dict] = None) -> dict:
+             sector_of: Optional[dict] = None, sector_age_days: Optional[int] = None) -> dict:
     res: dict[str, Any] = {"role": role, "pass": pass_}
     sector_of = sector_of or {}
     m = modes.get(role) or {}
@@ -658,32 +668,6 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
                 a.inputs["limit_basis"] = how
                 a.inputs["quote"] = quotes.get(a.symbol)
 
-    # a sell must first release shares its resting stops hold, then re-protect the remainder
-    expanded: list[tuple[FM.Action, str]] = []
-    for a, mode in acts:
-        if a.side == "sell" and a.order_type == "limit" and not a.refused:
-            st = FM.stops_for(a.symbol, open_orders)
-            for o in st:
-                expanded.append((FM.Action(role, "cancel", a.symbol, 0, "", "cancel", protective=True,
-                                           cancel_order_id=o.get("id"), price_ref=a.price_ref,
-                                           reason=f"release shares for the {a.kind} of {a.symbol}",
-                                           coid=f"cancel:{o.get('id')}"), mode))
-            expanded.append((a, mode))
-            rem = int(broker.get(a.symbol, 0.0)) - a.qty
-            if rem > 0:
-                frac, how = FM.contract_stop_frac(contract, sig.get(a.symbol))
-                old = max([float(o.get("stop_price") or 0) for o in st] or [0.0])
-                sp_ = max(old, FM.stop_price_for(a.price_ref, frac))
-                expanded.append((FM.Action(role, "stop_new", a.symbol, rem, "sell", "stop", "gtc",
-                                           stop_price=sp_, price_ref=a.price_ref, protective=True,
-                                           reason=f"re-protect the {rem} left after the sell ({how})",
-                                           coid=FM.client_order_id(role, day, "stoprem", a.symbol,
-                                                                   contract["policy_hash"], f"{rem}"),
-                                           inputs={"replaces_stop": old} if old > 0 else {}), mode))
-        else:
-            expanded.append((a, mode))
-    acts = expanded
-
     # ── the named gates, in order (C26): lease -> shape -> risk; every verdict is traced ──
     order_rank = {"cancel": 0, "exit": 1, "sell": 1, "stop_new": 2, "stop_renew": 2, "buy": 3}
     acts.sort(key=lambda am: order_rank.get(am[0].kind, 9))
@@ -697,9 +681,13 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
         for o in v.stop_fills_since(since):
             d_ = str(o.get("filled_at"))[:10]
             stopped_out[o["symbol"]] = max(stopped_out.get(o["symbol"], d_), d_)
-    except FM.FleetRefusal as exc:
+    except Exception as exc:                                    # noqa: BLE001 -- review F4: never abort the account
+        # A timeout, a URLError or a malformed 200 must not turn the account into
+        # ERROR and skip its stop maintenance. The history is UNKNOWN: the cooldown
+        # gate refuses entries in enforce (shadow-logs them in shadow), and the
+        # health reader reads `stop_history_error` as DEGRADED for this account.
         stopped_out = None
-        res["stop_history_error"] = str(exc)[:160]
+        res["stop_history_error"] = f"{type(exc).__name__}: {exc}"[:200]
     res["stopped_out_recent"] = stopped_out
     gctx = FM.GateCtx(equity=equity, cash=cash, held=broker,
                       mv={p["symbol"]: abs(float(p.get("market_value") or 0)) for p in positions},
@@ -709,10 +697,74 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
                       reconciliation_status=str(rec.get("status")), market_ok=market_ok,
                       turnover_left=contract["caps"]["daily_turnover_frac"] * equity - used,
                       stopped_out=stopped_out, sector_of=sector_of)
+
+    # ── the new gates' mode for THIS account (review F5): enforce is refused for the
+    # sector gate on a stale map or a blind (UNKNOWN-heavy) book; it stays shadow ──
+    ngm = str(_cfg.FLEET_NEW_GATES_MODE)
+    unknown_frac = (gctx.sector_mv.get(FM.UNKNOWN_SECTOR, 0.0) / gctx.gross) if gctx.gross > 0 else 0.0
+    sector_refusals = []
+    if sector_age_days is None or sector_age_days > int(_cfg.FLEET_GATE_SECTOR_MAP_MAX_AGE_DAYS):
+        sector_refusals.append(f"sector map age {sector_age_days} days > {_cfg.FLEET_GATE_SECTOR_MAP_MAX_AGE_DAYS}")
+    if unknown_frac > float(_cfg.FLEET_GATE_SECTOR_MAX_UNKNOWN_FRAC):
+        sector_refusals.append(f"UNKNOWN sector {unknown_frac:.1%} of gross > "
+                               f"{float(_cfg.FLEET_GATE_SECTOR_MAX_UNKNOWN_FRAC):.0%}")
+    gate_modes = {"cooldown": ngm,
+                  "sector_concentration": (FM.SHADOW_MODE if (ngm == FM.ENFORCE_MODE and sector_refusals)
+                                           else ngm)}
+    res["new_gates_mode"] = {"configured": ngm, "effective": gate_modes,
+                             "sector_enforce_refused": (sector_refusals if ngm == FM.ENFORCE_MODE else []),
+                             "sector_map_age_days": sector_age_days, "unknown_frac_of_gross": round(unknown_frac, 4),
+                             "would_refuse_enforce_because": sector_refusals}
+
+    # ── gate every action; a passing SELL then releases its resting stops and re-protects
+    # what will ACTUALLY remain, sized from the post-gate quantity (review F3: the old
+    # path cancelled the stops before the gates, so a refused or shrunk sell left shares
+    # without a stop until the pre-close pass) ──
     traces: dict[int, list[dict]] = {}
+    final: list[tuple[FM.Action, str]] = []
     for a, mode in acts:
-        traces[id(a)] = FM.run_gates(a, gctx, mode=mode)
+        was_refused = bool(a.refused)
+        traces[id(a)] = FM.run_gates(a, gctx, mode=mode, new_gates_mode=gate_modes)
+        if not (a.side == "sell" and a.order_type == "limit") or was_refused:
+            final.append((a, mode))
+            continue
+        if a.refused:                     # the sell died at a gate: its resting stops are left alone
+            final.append((a, mode))
+            continue
+        st = FM.stops_for(a.symbol, open_orders)
+        rem = int(broker.get(a.symbol, 0.0)) - a.qty
+        prot = None
+        if rem > 0:
+            frac, how = FM.contract_stop_frac(contract, sig.get(a.symbol))
+            old = max([float(o.get("stop_price") or 0) for o in st] or [0.0])
+            sp_ = max(old, FM.stop_price_for(a.price_ref, frac))
+            prot = FM.Action(role, "stop_new", a.symbol, rem, "sell", "stop", "gtc",
+                             stop_price=sp_, price_ref=a.price_ref, protective=True,
+                             reason=f"re-protect the {rem} left after the sell of {a.qty} ({how})",
+                             coid=FM.client_order_id(role, day, "stoprem", a.symbol,
+                                                     contract["policy_hash"], f"{rem}"),
+                             inputs={"replaces_stop": old} if old > 0 else {})
+            traces[id(prot)] = FM.run_gates(prot, gctx, mode=mode, new_gates_mode=gate_modes)
+            if prot.refused:
+                a.refused = f"re_protect: the stop for the {rem} shares left was refused ({prot.refused})"
+                traces[id(a)].append({"gate": "re_protect", "class": "plan", "verdict": FM.GATE_KILL,
+                                      "reason": a.refused, "qty_in": a.qty, "qty_out": 0})
+                final.append((a, mode))
+                final.append((prot, mode))
+                continue
+        for o in st:
+            c = FM.Action(role, "cancel", a.symbol, 0, "", "cancel", protective=True,
+                          cancel_order_id=o.get("id"), price_ref=a.price_ref,
+                          reason=f"release shares for the {a.kind} of {a.symbol}",
+                          coid=f"cancel:{o.get('id')}")
+            traces[id(c)] = FM.run_gates(c, gctx, mode=mode, new_gates_mode=gate_modes)
+            final.append((c, mode))
+        final.append((a, mode))
+        if prot is not None:
+            final.append((prot, mode))
+    acts = final
     res["gate_summary"] = FM.gate_summary(traces.values())
+    res["c26_delta"] = FM.c26_delta(traces.values())
     res["sector_gross"] = {k: round(v_, 2) for k, v_ in sorted(gctx.sector_mv.items(), key=lambda kv: -kv[1])}
 
     # ── worst case ──
@@ -809,7 +861,7 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
             if a.kind != "stop_new":
                 continue
             want = "LIVE" if (entries_live or maint_live) else "DRY"
-            ptrace = FM.run_gates(a, pctx, mode=want)
+            ptrace = FM.run_gates(a, pctx, mode=want, new_gates_mode=gate_modes)
             ok_live = want == "LIVE" and not a.refused
             mode = "LIVE" if ok_live else "REFUSED"
             a.refused = a.refused or (None if ok_live else "not live: this account's modes are DRY")
@@ -1045,6 +1097,14 @@ def print_role(r: dict) -> None:
         return
     print(f"\n=== {role} {r.get('account_number')}  equity ${r['equity']:,.0f}  cash ${r['cash']:,.0f}  "
           f"positions {r['n_positions']}  open orders {r['n_open_orders']}")
+    if r.get("c26_delta"):
+        print(f"  {r['c26_delta']['line']}")
+    if r.get("stop_history_error"):
+        print(f"  FLAG STOP_HISTORY_UNREADABLE {r['stop_history_error']}")
+    nm = r.get("new_gates_mode") or {}
+    if nm.get("would_refuse_enforce_because"):
+        print(f"  new gates {nm.get('effective')}; sector enforce would be refused: "
+              f"{'; '.join(nm['would_refuse_enforce_because'])}")
     ca = r["contract_active"]
     print(f"  contract ACTIVE {ca['version']} {ca['policy_hash']}: {ca['alpha_source'][:110]}")
     if r.get("contract_proposed"):
@@ -1128,11 +1188,18 @@ def main(argv: Optional[list[str]] = None) -> int:
     baseline = baseline_from_fleet_daily()
     reb = {r.strip() for r in a.rebaseline.split(",") if r.strip()}
     sector_of, sector_src = sector_map_safe()
+    sector_age = sector_map_age_days(sector_src)
     receipt: dict[str, Any] = {"schema": "fleet_manager_run/1", "run_id": run_id, "pass": a.pass_,
                                "live_flag": a.live, "started_utc": FM._now_iso(), "licence": FM.LICENCE,
                                "modes": modes, "issuer_map": iss_status, "n_stitched": len(stitched),
                                "digest": digest_name, "baseline": baseline[0], "gates": GATES_CFG,
-                               "sector_map": sector_src, "accounts": []}
+                               "sector_map": sector_src, "sector_map_age_days": sector_age,
+                               "gate_policy_version": FM.GATE_POLICY_VERSION,
+                               "known_defect_not_fixed": _cfg.FLEET_KNOWN_DEFECT_WASH_TRADE,
+                               "accounts": []}
+    print(f"gates {GATES_CFG['hash']} policy {FM.GATE_POLICY_VERSION} new gates {_cfg.FLEET_NEW_GATES_MODE}; "
+          f"sector map {sector_src} ({sector_age} days old)")
+    print(f"KNOWN DEFECT (not fixed by C26): {_cfg.FLEET_KNOWN_DEFECT_WASH_TRADE}")
     rc = 0
     for role in roles:
         if FM.stop_file().exists():
@@ -1143,7 +1210,7 @@ def main(argv: Optional[list[str]] = None) -> int:
             r = run_role(role, env=env, modes=modes, pass_=a.pass_, live_flag=a.live, run_id=run_id,
                          books=books, issuer_of=issuer_of, stitched=stitched, digest=digest,
                          digest_name=digest_name, baseline=baseline, pool={}, rebaseline=role in reb,
-                         sector_of=sector_of)
+                         sector_of=sector_of, sector_age_days=sector_age)
         except Exception as exc:                                # noqa: BLE001 -- one account never stops the rest
             r = {"role": role, "status": "ERROR", "why": f"{type(exc).__name__}: {exc}"[:300],
                  "trace": traceback.format_exc()[-1500:]}

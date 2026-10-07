@@ -1,0 +1,1989 @@
+{
+ "_doc": "Sanitised replay fixture (C26 review item 6): the REAL 2026-10-06 open and preclose fleet run receipts, reduced to what the gates read -- equity, cash, positions' qty and market value, the venue clock, reconciliation status, the active contract's caps, and every action the old (pre-C26) path decided, in receipt order, with its qty and LIVE/REFUSED outcome. Account numbers, client order ids, broker order ids and outcomes text are dropped. sector_of is the map the gates read (potential_universe/2026-09-02.jsonl identity.sector (3052 symbols)), restricted to the symbols involved.",
+ "passes": [
+  {
+   "pass": "open",
+   "live_flag": true,
+   "accounts": [
+    {
+     "role": "hack1",
+     "equity": 92674.23,
+     "cash": 5290.8,
+     "positions": [
+      {
+       "symbol": "AGIO",
+       "qty": 41.0,
+       "market_value": 1277.97
+      },
+      {
+       "symbol": "AVGO",
+       "qty": 11.0,
+       "market_value": 4150.74
+      },
+      {
+       "symbol": "BBIO",
+       "qty": 10.0,
+       "market_value": 659.6
+      },
+      {
+       "symbol": "BE",
+       "qty": 9.0,
+       "market_value": 2639.16
+      },
+      {
+       "symbol": "CCJ",
+       "qty": 15.0,
+       "market_value": 1384.8
+      },
+      {
+       "symbol": "CLS",
+       "qty": 9.0,
+       "market_value": 3428.595
+      },
+      {
+       "symbol": "COGT",
+       "qty": 64.0,
+       "market_value": 1923.2576
+      },
+      {
+       "symbol": "DKNG",
+       "qty": 107.0,
+       "market_value": 2160.865
+      },
+      {
+       "symbol": "GEV",
+       "qty": 6.0,
+       "market_value": 6206.634
+      },
+      {
+       "symbol": "HOOD",
+       "qty": 42.0,
+       "market_value": 4795.56
+      },
+      {
+       "symbol": "IONQ",
+       "qty": 15.0,
+       "market_value": 657.9
+      },
+      {
+       "symbol": "LEU",
+       "qty": 9.0,
+       "market_value": 1381.275
+      },
+      {
+       "symbol": "MP",
+       "qty": 61.0,
+       "market_value": 2926.17
+      },
+      {
+       "symbol": "MU",
+       "qty": 5.0,
+       "market_value": 5332.925
+      },
+      {
+       "symbol": "NOVT",
+       "qty": 14.0,
+       "market_value": 2130.24
+      },
+      {
+       "symbol": "NVT",
+       "qty": 25.0,
+       "market_value": 4307.375
+      },
+      {
+       "symbol": "PRAX",
+       "qty": 2.0,
+       "market_value": 553.66
+      },
+      {
+       "symbol": "RGEN",
+       "qty": 3.0,
+       "market_value": 537.885
+      },
+      {
+       "symbol": "SYM",
+       "qty": 574.0,
+       "market_value": 24991.96
+      },
+      {
+       "symbol": "TSM",
+       "qty": 10.0,
+       "market_value": 4839.3
+      },
+      {
+       "symbol": "VRT",
+       "qty": 27.0,
+       "market_value": 6768.9027
+      },
+      {
+       "symbol": "VRTX",
+       "qty": 5.0,
+       "market_value": 2487.05
+      },
+      {
+       "symbol": "WST",
+       "qty": 5.0,
+       "market_value": 1842.85
+      }
+     ],
+     "clock": {
+      "session_day_et": "2026-10-06",
+      "is_open": true,
+      "minutes_to_close": 314.9
+     },
+     "reconcile": {
+      "ok": true,
+      "status": "OK"
+     },
+     "caps": {
+      "max_gross_frac": 1.0,
+      "max_name_frac": 0.1,
+      "daily_turnover_frac": 0.5,
+      "max_orders_per_run": 60,
+      "min_order_usd": 250.0,
+      "shorting": false,
+      "new_options": false,
+      "leverage": false
+     },
+     "policy_hash": "bdae86290ea38481",
+     "actions": [
+      {
+       "kind": "sell",
+       "symbol": "NVT",
+       "side": "sell",
+       "qty": 1,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$172 < min order $250"
+      },
+      {
+       "kind": "sell",
+       "symbol": "NOVT",
+       "side": "sell",
+       "qty": 1,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$152 < min order $250"
+      },
+      {
+       "kind": "sell",
+       "symbol": "MP",
+       "side": "sell",
+       "qty": 3,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$144 < min order $250"
+      },
+      {
+       "kind": "sell",
+       "symbol": "DKNG",
+       "side": "sell",
+       "qty": 3,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$61 < min order $250"
+      },
+      {
+       "kind": "buy",
+       "symbol": "VKTX",
+       "side": "buy",
+       "qty": 74,
+       "type": "limit",
+       "limit": 28.49,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "VRT",
+       "side": "buy",
+       "qty": 1,
+       "type": "limit",
+       "limit": 251.8,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "COGT",
+       "side": "buy",
+       "qty": 6,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$180 < min order $250"
+      },
+      {
+       "kind": "buy",
+       "symbol": "AGIO",
+       "side": "buy",
+       "qty": 4,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$125 < min order $250"
+      },
+      {
+       "kind": "buy",
+       "symbol": "HOOD",
+       "side": "buy",
+       "qty": 1,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$114 < min order $250"
+      },
+      {
+       "kind": "buy",
+       "symbol": "IONQ",
+       "side": "buy",
+       "qty": 1,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$44 < min order $250"
+      }
+     ]
+    },
+    {
+     "role": "hack2",
+     "equity": 102865.59,
+     "cash": 3743.86,
+     "positions": [
+      {
+       "symbol": "ABNB",
+       "qty": 30.0,
+       "market_value": 4864.5
+      },
+      {
+       "symbol": "AFRM",
+       "qty": 72.0,
+       "market_value": 5434.56
+      },
+      {
+       "symbol": "AMD",
+       "qty": 7.0,
+       "market_value": 4546.15
+      },
+      {
+       "symbol": "AMGN",
+       "qty": 11.0,
+       "market_value": 4371.84
+      },
+      {
+       "symbol": "CRM",
+       "qty": 21.0,
+       "market_value": 4801.02
+      },
+      {
+       "symbol": "CRWD",
+       "qty": 18.0,
+       "market_value": 5060.88
+      },
+      {
+       "symbol": "DDOG",
+       "qty": 18.0,
+       "market_value": 5022.72
+      },
+      {
+       "symbol": "DELL",
+       "qty": 9.0,
+       "market_value": 5197.5
+      },
+      {
+       "symbol": "ESTC",
+       "qty": 54.0,
+       "market_value": 5213.16
+      },
+      {
+       "symbol": "GTLB",
+       "qty": 99.0,
+       "market_value": 5153.445
+      },
+      {
+       "symbol": "MDB",
+       "qty": 13.0,
+       "market_value": 4688.32
+      },
+      {
+       "symbol": "NET",
+       "qty": 13.0,
+       "market_value": 4670.3813
+      },
+      {
+       "symbol": "OKTA",
+       "qty": 23.0,
+       "market_value": 5032.055
+      },
+      {
+       "symbol": "PANW",
+       "qty": 12.0,
+       "market_value": 5064.72
+      },
+      {
+       "symbol": "S",
+       "qty": 199.0,
+       "market_value": 5125.245
+      },
+      {
+       "symbol": "SNOW",
+       "qty": 14.0,
+       "market_value": 4750.06
+      },
+      {
+       "symbol": "TGT",
+       "qty": 31.0,
+       "market_value": 4776.17
+      },
+      {
+       "symbol": "WDAY",
+       "qty": 26.0,
+       "market_value": 4935.32
+      },
+      {
+       "symbol": "XYZ",
+       "qty": 67.0,
+       "market_value": 5127.51
+      },
+      {
+       "symbol": "ZS",
+       "qty": 25.0,
+       "market_value": 5276.375
+      }
+     ],
+     "clock": {
+      "session_day_et": "2026-10-06",
+      "is_open": true,
+      "minutes_to_close": 314.3
+     },
+     "reconcile": {
+      "ok": true,
+      "status": "OK"
+     },
+     "caps": {
+      "max_gross_frac": 1.0,
+      "max_name_frac": 0.1,
+      "daily_turnover_frac": 0.5,
+      "max_orders_per_run": 60,
+      "min_order_usd": 250.0,
+      "shorting": false,
+      "new_options": false,
+      "leverage": false
+     },
+     "policy_hash": "2301fa30c7b851df",
+     "actions": [
+      {
+       "kind": "cancel",
+       "symbol": "DELL",
+       "side": "",
+       "qty": 0,
+       "type": "cancel",
+       "limit": null,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "cancel",
+       "symbol": "AFRM",
+       "side": "",
+       "qty": 0,
+       "type": "cancel",
+       "limit": null,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "sell",
+       "symbol": "DELL",
+       "side": "sell",
+       "qty": 1,
+       "type": "limit",
+       "limit": 577.79,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "sell",
+       "symbol": "AFRM",
+       "side": "sell",
+       "qty": 4,
+       "type": "limit",
+       "limit": 75.44,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "sell",
+       "symbol": "ZS",
+       "side": "sell",
+       "qty": 1,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$211 < min order $250"
+      },
+      {
+       "kind": "sell",
+       "symbol": "ESTC",
+       "side": "sell",
+       "qty": 1,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$97 < min order $250"
+      },
+      {
+       "kind": "sell",
+       "symbol": "GTLB",
+       "side": "sell",
+       "qty": 1,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$52 < min order $250"
+      },
+      {
+       "kind": "stop_new",
+       "symbol": "DELL",
+       "side": "sell",
+       "qty": 8,
+       "type": "stop",
+       "limit": null,
+       "stop": 508.2,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "stop_new",
+       "symbol": "AFRM",
+       "side": "sell",
+       "qty": 68,
+       "type": "stop",
+       "limit": null,
+       "stop": 68.23,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "AMGN",
+       "side": "buy",
+       "qty": 1,
+       "type": "limit",
+       "limit": 397.9,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "MDB",
+       "side": "buy",
+       "qty": 1,
+       "type": "limit",
+       "limit": 362.06,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "NET",
+       "side": "buy",
+       "qty": 1,
+       "type": "limit",
+       "limit": 361.56,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "SNOW",
+       "side": "buy",
+       "qty": 1,
+       "type": "limit",
+       "limit": 339.73,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "TGT",
+       "side": "buy",
+       "qty": 2,
+       "type": "limit",
+       "limit": 154.21,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "CRM",
+       "side": "buy",
+       "qty": 1,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$229 < min order $250"
+      },
+      {
+       "kind": "buy",
+       "symbol": "WDAY",
+       "side": "buy",
+       "qty": 1,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$190 < min order $250"
+      },
+      {
+       "kind": "buy",
+       "symbol": "ABNB",
+       "side": "buy",
+       "qty": 1,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$162 < min order $250"
+      }
+     ]
+    },
+    {
+     "role": "hack4",
+     "equity": 80564.37,
+     "cash": 15145.96,
+     "positions": [
+      {
+       "symbol": "AAPL",
+       "qty": 15.0,
+       "market_value": 5005.5015
+      },
+      {
+       "symbol": "ALLE",
+       "qty": 32.0,
+       "market_value": 4955.2
+      },
+      {
+       "symbol": "AMZN",
+       "qty": 15.0,
+       "market_value": 3829.875
+      },
+      {
+       "symbol": "AVPT",
+       "qty": 288.0,
+       "market_value": 4350.24
+      },
+      {
+       "symbol": "GOOG",
+       "qty": 13.0,
+       "market_value": 4482.14
+      },
+      {
+       "symbol": "INCY",
+       "qty": 56.0,
+       "market_value": 6307.56
+      },
+      {
+       "symbol": "JAZZ",
+       "qty": 21.0,
+       "market_value": 4854.675
+      },
+      {
+       "symbol": "META",
+       "qty": 4.0,
+       "market_value": 2967.6
+      },
+      {
+       "symbol": "NVDA",
+       "qty": 17.0,
+       "market_value": 4122.67
+      },
+      {
+       "symbol": "RZLV",
+       "qty": 8650.0,
+       "market_value": 19462.5
+      },
+      {
+       "symbol": "SNDR",
+       "qty": 159.0,
+       "market_value": 5079.255
+      }
+     ],
+     "clock": {
+      "session_day_et": "2026-10-06",
+      "is_open": true,
+      "minutes_to_close": 313.7
+     },
+     "reconcile": {
+      "ok": true,
+      "status": "OK"
+     },
+     "caps": {
+      "max_gross_frac": 1.0,
+      "max_name_frac": 0.1,
+      "daily_turnover_frac": 0.5,
+      "max_orders_per_run": 60,
+      "min_order_usd": 250.0,
+      "shorting": false,
+      "new_options": false,
+      "leverage": false
+     },
+     "policy_hash": "a0c5313766c52c9a",
+     "actions": [
+      {
+       "kind": "buy",
+       "symbol": "ALLE",
+       "side": "buy",
+       "qty": 12,
+       "type": "limit",
+       "limit": 155.13,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "JAZZ",
+       "side": "buy",
+       "qty": 8,
+       "type": "limit",
+       "limit": 230.82,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "SNDR",
+       "side": "buy",
+       "qty": 56,
+       "type": "limit",
+       "limit": 32.23,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "GOOG",
+       "side": "buy",
+       "qty": 5,
+       "type": "limit",
+       "limit": 345.55,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "AAPL",
+       "side": "buy",
+       "qty": 5,
+       "type": "limit",
+       "limit": 334.15,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "AMZN",
+       "side": "buy",
+       "qty": 5,
+       "type": "limit",
+       "limit": 255.63,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "NVDA",
+       "side": "buy",
+       "qty": 5,
+       "type": "limit",
+       "limit": 242.73,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "AVPT",
+       "side": "buy",
+       "qty": 58,
+       "type": "limit",
+       "limit": 15.13,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "META",
+       "side": "buy",
+       "qty": 1,
+       "type": "limit",
+       "limit": 743.74,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "INCY",
+       "side": "buy",
+       "qty": 2,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$225 < min order $250"
+      }
+     ]
+    },
+    {
+     "role": "hack5",
+     "equity": 96368.32,
+     "cash": 5104.22,
+     "positions": [
+      {
+       "symbol": "SPY",
+       "qty": 117.0,
+       "market_value": 91263.51
+      }
+     ],
+     "clock": {
+      "session_day_et": "2026-10-06",
+      "is_open": true,
+      "minutes_to_close": 312.9
+     },
+     "reconcile": {
+      "ok": true,
+      "status": "OK"
+     },
+     "caps": {
+      "max_gross_frac": 1.0,
+      "max_name_frac": 0.1,
+      "daily_turnover_frac": 1.0,
+      "max_orders_per_run": 60,
+      "min_order_usd": 250.0,
+      "shorting": false,
+      "new_options": false,
+      "leverage": false,
+      "name_cap_overrides": {
+       "SPY": 0.95
+      }
+     },
+     "policy_hash": "98f677b18293c710",
+     "actions": []
+    },
+    {
+     "role": "hack6",
+     "equity": 81218.86,
+     "cash": 13120.22,
+     "positions": [
+      {
+       "symbol": "ABEO",
+       "qty": 1079.0,
+       "market_value": 5346.445
+      },
+      {
+       "symbol": "ADBE",
+       "qty": 3.0,
+       "market_value": 717.705
+      },
+      {
+       "symbol": "AKAM",
+       "qty": 7.0,
+       "market_value": 762.405
+      },
+      {
+       "symbol": "AMD",
+       "qty": 1.0,
+       "market_value": 650.08
+      },
+      {
+       "symbol": "ARDX",
+       "qty": 1693.0,
+       "market_value": 5553.04
+      },
+      {
+       "symbol": "ATR",
+       "qty": 43.0,
+       "market_value": 5138.93
+      },
+      {
+       "symbol": "AVGO",
+       "qty": 2.0,
+       "market_value": 754.26
+      },
+      {
+       "symbol": "BABA",
+       "qty": 7.0,
+       "market_value": 758.45
+      },
+      {
+       "symbol": "BAM",
+       "qty": 18.0,
+       "market_value": 810.54
+      },
+      {
+       "symbol": "BE",
+       "qty": 2.0,
+       "market_value": 586.86
+      },
+      {
+       "symbol": "BHP",
+       "qty": 9.0,
+       "market_value": 777.51
+      },
+      {
+       "symbol": "BYD",
+       "qty": 11.0,
+       "market_value": 777.48
+      },
+      {
+       "symbol": "CALX",
+       "qty": 169.0,
+       "market_value": 5850.78
+      },
+      {
+       "symbol": "CEG",
+       "qty": 3.0,
+       "market_value": 908.505
+      },
+      {
+       "symbol": "FCEL",
+       "qty": 49.0,
+       "market_value": 923.16
+      },
+      {
+       "symbol": "FRO",
+       "qty": 16.0,
+       "market_value": 833.36
+      },
+      {
+       "symbol": "GOOGL",
+       "qty": 2.0,
+       "market_value": 696.12
+      },
+      {
+       "symbol": "HPE",
+       "qty": 11.0,
+       "market_value": 772.2
+      },
+      {
+       "symbol": "INVA",
+       "qty": 258.0,
+       "market_value": 5353.5
+      },
+      {
+       "symbol": "KKR",
+       "qty": 8.0,
+       "market_value": 729.84
+      },
+      {
+       "symbol": "LMT",
+       "qty": 1.0,
+       "market_value": 506.61
+      },
+      {
+       "symbol": "MAZE",
+       "qty": 242.0,
+       "market_value": 6294.42
+      },
+      {
+       "symbol": "MP",
+       "qty": 16.0,
+       "market_value": 768.16
+      },
+      {
+       "symbol": "MRVL",
+       "qty": 2.0,
+       "market_value": 582.54
+      },
+      {
+       "symbol": "MSFT",
+       "qty": 1.0,
+       "market_value": 534.065
+      },
+      {
+       "symbol": "NBIS",
+       "qty": 3.0,
+       "market_value": 740.55
+      },
+      {
+       "symbol": "NVDA",
+       "qty": 3.0,
+       "market_value": 726.84
+      },
+      {
+       "symbol": "ORCL",
+       "qty": 5.0,
+       "market_value": 726.091
+      },
+      {
+       "symbol": "PLTR",
+       "qty": 4.0,
+       "market_value": 769.14
+      },
+      {
+       "symbol": "PRVA",
+       "qty": 263.0,
+       "market_value": 5396.76
+      },
+      {
+       "symbol": "QQQ",
+       "qty": 1.0,
+       "market_value": 761.59
+      },
+      {
+       "symbol": "RTX",
+       "qty": 4.0,
+       "market_value": 734.66
+      },
+      {
+       "symbol": "SMCI",
+       "qty": 18.0,
+       "market_value": 783.0
+      },
+      {
+       "symbol": "SPCX",
+       "qty": 5.0,
+       "market_value": 874.8
+      },
+      {
+       "symbol": "STRO",
+       "qty": 374.0,
+       "market_value": 5475.36
+      },
+      {
+       "symbol": "TGT",
+       "qty": 5.0,
+       "market_value": 770.35
+      },
+      {
+       "symbol": "TSM",
+       "qty": 1.0,
+       "market_value": 483.72
+      },
+      {
+       "symbol": "TXN",
+       "qty": 2.0,
+       "market_value": 592.44
+      },
+      {
+       "symbol": "WDC",
+       "qty": 1.0,
+       "market_value": 412.605
+      },
+      {
+       "symbol": "XOM",
+       "qty": 4.0,
+       "market_value": 657.8
+      },
+      {
+       "symbol": "XPEV",
+       "qty": 85.0,
+       "market_value": 805.375
+      }
+     ],
+     "clock": {
+      "session_day_et": "2026-10-06",
+      "is_open": true,
+      "minutes_to_close": 312.7
+     },
+     "reconcile": {
+      "ok": true,
+      "status": "OK"
+     },
+     "caps": {
+      "max_gross_frac": 1.0,
+      "max_name_frac": 0.1,
+      "daily_turnover_frac": 0.5,
+      "max_orders_per_run": 60,
+      "min_order_usd": 250.0,
+      "shorting": false,
+      "new_options": false,
+      "leverage": false
+     },
+     "policy_hash": "12fa05317df05ce1",
+     "actions": [
+      {
+       "kind": "cancel",
+       "symbol": "SPCX",
+       "side": "",
+       "qty": 0,
+       "type": "cancel",
+       "limit": null,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "cancel",
+       "symbol": "AKAM",
+       "side": "",
+       "qty": 0,
+       "type": "cancel",
+       "limit": null,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "cancel",
+       "symbol": "BABA",
+       "side": "",
+       "qty": 0,
+       "type": "cancel",
+       "limit": null,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "cancel",
+       "symbol": "NBIS",
+       "side": "",
+       "qty": 0,
+       "type": "cancel",
+       "limit": null,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "cancel",
+       "symbol": "KKR",
+       "side": "",
+       "qty": 0,
+       "type": "cancel",
+       "limit": null,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "cancel",
+       "symbol": "MRVL",
+       "side": "",
+       "qty": 0,
+       "type": "cancel",
+       "limit": null,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "cancel",
+       "symbol": "CEG",
+       "side": "",
+       "qty": 0,
+       "type": "cancel",
+       "limit": null,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "sell",
+       "symbol": "SPCX",
+       "side": "sell",
+       "qty": 5,
+       "type": "limit",
+       "limit": 174.8,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "sell",
+       "symbol": "AKAM",
+       "side": "sell",
+       "qty": 7,
+       "type": "limit",
+       "limit": 108.8,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "sell",
+       "symbol": "BABA",
+       "side": "sell",
+       "qty": 7,
+       "type": "limit",
+       "limit": 108.21,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "sell",
+       "symbol": "NBIS",
+       "side": "sell",
+       "qty": 3,
+       "type": "limit",
+       "limit": 247.02,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "sell",
+       "symbol": "KKR",
+       "side": "sell",
+       "qty": 8,
+       "type": "limit",
+       "limit": 91.07,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "sell",
+       "symbol": "MRVL",
+       "side": "sell",
+       "qty": 2,
+       "type": "limit",
+       "limit": 290.75,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "sell",
+       "symbol": "CEG",
+       "side": "sell",
+       "qty": 1,
+       "type": "limit",
+       "limit": 301.85,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "sell",
+       "symbol": "FCEL",
+       "side": "sell",
+       "qty": 6,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$113 < min order $250"
+      },
+      {
+       "kind": "sell",
+       "symbol": "FRO",
+       "side": "sell",
+       "qty": 1,
+       "type": "limit",
+       "limit": null,
+       "stop": null,
+       "mode": "REFUSED",
+       "refused": "$52 < min order $250"
+      },
+      {
+       "kind": "stop_new",
+       "symbol": "CEG",
+       "side": "sell",
+       "qty": 2,
+       "type": "stop",
+       "limit": null,
+       "stop": 281.94,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "VALE",
+       "side": "buy",
+       "qty": 57,
+       "type": "limit",
+       "limit": 14.08,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "PPLI",
+       "side": "buy",
+       "qty": 19,
+       "type": "limit",
+       "limit": 41.5,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      },
+      {
+       "kind": "buy",
+       "symbol": "UPS",
+       "side": "buy",
+       "qty": 8,
+       "type": "limit",
+       "limit": 94.96,
+       "stop": null,
+       "mode": "LIVE",
+       "refused": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "pass": "preclose",
+   "live_flag": true,
+   "accounts": [
+    {
+     "role": "hack1",
+     "equity": 92926.62,
+     "cash": 3184.76,
+     "positions": [
+      {
+       "symbol": "AGIO",
+       "qty": 41.0,
+       "market_value": 1308.72
+      },
+      {
+       "symbol": "AVGO",
+       "qty": 11.0,
+       "market_value": 4156.9
+      },
+      {
+       "symbol": "BBIO",
+       "qty": 10.0,
+       "market_value": 667.8
+      },
+      {
+       "symbol": "BE",
+       "qty": 9.0,
+       "market_value": 2684.16
+      },
+      {
+       "symbol": "CCJ",
+       "qty": 15.0,
+       "market_value": 1397.4
+      },
+      {
+       "symbol": "CLS",
+       "qty": 9.0,
+       "market_value": 3470.49
+      },
+      {
+       "symbol": "COGT",
+       "qty": 64.0,
+       "market_value": 1925.664
+      },
+      {
+       "symbol": "DKNG",
+       "qty": 107.0,
+       "market_value": 2106.9477
+      },
+      {
+       "symbol": "GEV",
+       "qty": 6.0,
+       "market_value": 6179.31
+      },
+      {
+       "symbol": "HOOD",
+       "qty": 42.0,
+       "market_value": 4711.14
+      },
+      {
+       "symbol": "IONQ",
+       "qty": 15.0,
+       "market_value": 650.25
+      },
+      {
+       "symbol": "LEU",
+       "qty": 9.0,
+       "market_value": 1379.25
+      },
+      {
+       "symbol": "MP",
+       "qty": 61.0,
+       "market_value": 2941.115
+      },
+      {
+       "symbol": "MU",
+       "qty": 5.0,
+       "market_value": 5259.15
+      },
+      {
+       "symbol": "NOVT",
+       "qty": 14.0,
+       "market_value": 2100.7
+      },
+      {
+       "symbol": "NVT",
+       "qty": 25.0,
+       "market_value": 4341.5
+      },
+      {
+       "symbol": "PRAX",
+       "qty": 2.0,
+       "market_value": 549.82
+      },
+      {
+       "symbol": "RGEN",
+       "qty": 3.0,
+       "market_value": 528.63
+      },
+      {
+       "symbol": "SYM",
+       "qty": 574.0,
+       "market_value": 25258.87
+      },
+      {
+       "symbol": "TSM",
+       "qty": 10.0,
+       "market_value": 4832.1
+      },
+      {
+       "symbol": "VKTX",
+       "qty": 74.0,
+       "market_value": 2102.303
+      },
+      {
+       "symbol": "VRT",
+       "qty": 27.0,
+       "market_value": 6813.72
+      },
+      {
+       "symbol": "VRTX",
+       "qty": 5.0,
+       "market_value": 2508.6
+      },
+      {
+       "symbol": "WST",
+       "qty": 5.0,
+       "market_value": 1867.175
+      }
+     ],
+     "clock": {
+      "session_day_et": "2026-10-06",
+      "is_open": true,
+      "minutes_to_close": 29.7
+     },
+     "reconcile": {
+      "ok": true,
+      "status": "OK"
+     },
+     "caps": {
+      "max_gross_frac": 1.0,
+      "max_name_frac": 0.1,
+      "daily_turnover_frac": 0.5,
+      "max_orders_per_run": 60,
+      "min_order_usd": 250.0,
+      "shorting": false,
+      "new_options": false,
+      "leverage": false
+     },
+     "policy_hash": "bdae86290ea38481",
+     "actions": []
+    },
+    {
+     "role": "hack2",
+     "equity": 102234.77,
+     "cash": 4623.57,
+     "positions": [
+      {
+       "symbol": "ABNB",
+       "qty": 30.0,
+       "market_value": 4815.3
+      },
+      {
+       "symbol": "AFRM",
+       "qty": 68.0,
+       "market_value": 5092.18
+      },
+      {
+       "symbol": "AMD",
+       "qty": 7.0,
+       "market_value": 4578.2975
+      },
+      {
+       "symbol": "AMGN",
+       "qty": 11.0,
+       "market_value": 4424.75
+      },
+      {
+       "symbol": "CRM",
+       "qty": 21.0,
+       "market_value": 4687.095
+      },
+      {
+       "symbol": "CRWD",
+       "qty": 18.0,
+       "market_value": 5014.764
+      },
+      {
+       "symbol": "DDOG",
+       "qty": 18.0,
+       "market_value": 5010.84
+      },
+      {
+       "symbol": "DELL",
+       "qty": 8.0,
+       "market_value": 4605.04
+      },
+      {
+       "symbol": "ESTC",
+       "qty": 54.0,
+       "market_value": 5129.46
+      },
+      {
+       "symbol": "GTLB",
+       "qty": 99.0,
+       "market_value": 5068.8
+      },
+      {
+       "symbol": "MDB",
+       "qty": 13.0,
+       "market_value": 4698.85
+      },
+      {
+       "symbol": "NET",
+       "qty": 13.0,
+       "market_value": 4628.26
+      },
+      {
+       "symbol": "OKTA",
+       "qty": 23.0,
+       "market_value": 5024.005
+      },
+      {
+       "symbol": "PANW",
+       "qty": 12.0,
+       "market_value": 5034.84
+      },
+      {
+       "symbol": "S",
+       "qty": 199.0,
+       "market_value": 5107.335
+      },
+      {
+       "symbol": "SNOW",
+       "qty": 14.0,
+       "market_value": 4700.78
+      },
+      {
+       "symbol": "TGT",
+       "qty": 31.0,
+       "market_value": 4782.37
+      },
+      {
+       "symbol": "WDAY",
+       "qty": 26.0,
+       "market_value": 4853.81
+      },
+      {
+       "symbol": "XYZ",
+       "qty": 67.0,
+       "market_value": 5124.495
+      },
+      {
+       "symbol": "ZS",
+       "qty": 25.0,
+       "market_value": 5229.625
+      }
+     ],
+     "clock": {
+      "session_day_et": "2026-10-06",
+      "is_open": true,
+      "minutes_to_close": 29.5
+     },
+     "reconcile": {
+      "ok": true,
+      "status": "OK"
+     },
+     "caps": {
+      "max_gross_frac": 1.0,
+      "max_name_frac": 0.1,
+      "daily_turnover_frac": 0.5,
+      "max_orders_per_run": 60,
+      "min_order_usd": 250.0,
+      "shorting": false,
+      "new_options": false,
+      "leverage": false
+     },
+     "policy_hash": "2301fa30c7b851df",
+     "actions": []
+    },
+    {
+     "role": "hack4",
+     "equity": 79590.95,
+     "cash": 15145.96,
+     "positions": [
+      {
+       "symbol": "AAPL",
+       "qty": 15.0,
+       "market_value": 5007.6
+      },
+      {
+       "symbol": "ALLE",
+       "qty": 32.0,
+       "market_value": 4956.48
+      },
+      {
+       "symbol": "AMZN",
+       "qty": 15.0,
+       "market_value": 3848.3985
+      },
+      {
+       "symbol": "AVPT",
+       "qty": 288.0,
+       "market_value": 4197.6
+      },
+      {
+       "symbol": "GOOG",
+       "qty": 13.0,
+       "market_value": 4486.82
+      },
+      {
+       "symbol": "INCY",
+       "qty": 56.0,
+       "market_value": 6318.76
+      },
+      {
+       "symbol": "JAZZ",
+       "qty": 21.0,
+       "market_value": 4855.2
+      },
+      {
+       "symbol": "META",
+       "qty": 4.0,
+       "market_value": 2975.728
+      },
+      {
+       "symbol": "NVDA",
+       "qty": 17.0,
+       "market_value": 4072.01
+      },
+      {
+       "symbol": "RZLV",
+       "qty": 8650.0,
+       "market_value": 18684.0
+      },
+      {
+       "symbol": "SNDR",
+       "qty": 159.0,
+       "market_value": 5041.89
+      }
+     ],
+     "clock": {
+      "session_day_et": "2026-10-06",
+      "is_open": true,
+      "minutes_to_close": 29.2
+     },
+     "reconcile": {
+      "ok": true,
+      "status": "OK"
+     },
+     "caps": {
+      "max_gross_frac": 1.0,
+      "max_name_frac": 0.1,
+      "daily_turnover_frac": 0.5,
+      "max_orders_per_run": 60,
+      "min_order_usd": 250.0,
+      "shorting": false,
+      "new_options": false,
+      "leverage": false
+     },
+     "policy_hash": "a0c5313766c52c9a",
+     "actions": []
+    },
+    {
+     "role": "hack5",
+     "equity": 96326.78,
+     "cash": 5104.22,
+     "positions": [
+      {
+       "symbol": "SPY",
+       "qty": 117.0,
+       "market_value": 91223.73
+      }
+     ],
+     "clock": {
+      "session_day_et": "2026-10-06",
+      "is_open": true,
+      "minutes_to_close": 29.0
+     },
+     "reconcile": {
+      "ok": true,
+      "status": "OK"
+     },
+     "caps": {
+      "max_gross_frac": 1.0,
+      "max_name_frac": 0.1,
+      "daily_turnover_frac": 1.0,
+      "max_orders_per_run": 60,
+      "min_order_usd": 250.0,
+      "shorting": false,
+      "new_options": false,
+      "leverage": false,
+      "name_cap_overrides": {
+       "SPY": 0.95
+      }
+     },
+     "policy_hash": "98f677b18293c710",
+     "actions": []
+    },
+    {
+     "role": "hack6",
+     "equity": 81516.55,
+     "cash": 15534.18,
+     "positions": [
+      {
+       "symbol": "ABEO",
+       "qty": 1079.0,
+       "market_value": 5400.395
+      },
+      {
+       "symbol": "ADBE",
+       "qty": 3.0,
+       "market_value": 712.755
+      },
+      {
+       "symbol": "AMD",
+       "qty": 1.0,
+       "market_value": 653.5646
+      },
+      {
+       "symbol": "ARDX",
+       "qty": 1693.0,
+       "market_value": 5561.505
+      },
+      {
+       "symbol": "ATR",
+       "qty": 43.0,
+       "market_value": 5185.585
+      },
+      {
+       "symbol": "AVGO",
+       "qty": 2.0,
+       "market_value": 755.27
+      },
+      {
+       "symbol": "BAM",
+       "qty": 18.0,
+       "market_value": 813.06
+      },
+      {
+       "symbol": "BE",
+       "qty": 2.0,
+       "market_value": 597.157
+      },
+      {
+       "symbol": "BHP",
+       "qty": 9.0,
+       "market_value": 783.27
+      },
+      {
+       "symbol": "BYD",
+       "qty": 11.0,
+       "market_value": 773.355
+      },
+      {
+       "symbol": "CALX",
+       "qty": 169.0,
+       "market_value": 5887.96
+      },
+      {
+       "symbol": "CEG",
+       "qty": 2.0,
+       "market_value": 595.96
+      },
+      {
+       "symbol": "FCEL",
+       "qty": 49.0,
+       "market_value": 1009.89
+      },
+      {
+       "symbol": "FRO",
+       "qty": 16.0,
+       "market_value": 847.68
+      },
+      {
+       "symbol": "GOOGL",
+       "qty": 2.0,
+       "market_value": 696.98
+      },
+      {
+       "symbol": "HPE",
+       "qty": 11.0,
+       "market_value": 779.9
+      },
+      {
+       "symbol": "INVA",
+       "qty": 258.0,
+       "market_value": 5380.59
+      },
+      {
+       "symbol": "LMT",
+       "qty": 1.0,
+       "market_value": 507.8
+      },
+      {
+       "symbol": "MAZE",
+       "qty": 242.0,
+       "market_value": 6398.48
+      },
+      {
+       "symbol": "MP",
+       "qty": 16.0,
+       "market_value": 772.32
+      },
+      {
+       "symbol": "MSFT",
+       "qty": 1.0,
+       "market_value": 531.6174
+      },
+      {
+       "symbol": "NVDA",
+       "qty": 3.0,
+       "market_value": 718.6752
+      },
+      {
+       "symbol": "ORCL",
+       "qty": 5.0,
+       "market_value": 726.5545
+      },
+      {
+       "symbol": "PLTR",
+       "qty": 4.0,
+       "market_value": 772.2
+      },
+      {
+       "symbol": "PPLI",
+       "qty": 19.0,
+       "market_value": 788.215
+      },
+      {
+       "symbol": "PRVA",
+       "qty": 263.0,
+       "market_value": 5362.57
+      },
+      {
+       "symbol": "QQQ",
+       "qty": 1.0,
+       "market_value": 760.6
+      },
+      {
+       "symbol": "RTX",
+       "qty": 4.0,
+       "market_value": 731.7804
+      },
+      {
+       "symbol": "SMCI",
+       "qty": 18.0,
+       "market_value": 783.9
+      },
+      {
+       "symbol": "STRO",
+       "qty": 374.0,
+       "market_value": 5415.52
+      },
+      {
+       "symbol": "TGT",
+       "qty": 5.0,
+       "market_value": 771.45
+      },
+      {
+       "symbol": "TSM",
+       "qty": 1.0,
+       "market_value": 483.42
+      },
+      {
+       "symbol": "TXN",
+       "qty": 2.0,
+       "market_value": 594.27
+      },
+      {
+       "symbol": "UPS",
+       "qty": 8.0,
+       "market_value": 743.56
+      },
+      {
+       "symbol": "VALE",
+       "qty": 57.0,
+       "market_value": 804.555
+      },
+      {
+       "symbol": "WDC",
+       "qty": 1.0,
+       "market_value": 410.35
+      },
+      {
+       "symbol": "XOM",
+       "qty": 4.0,
+       "market_value": 659.24
+      },
+      {
+       "symbol": "XPEV",
+       "qty": 85.0,
+       "market_value": 811.325
+      }
+     ],
+     "clock": {
+      "session_day_et": "2026-10-06",
+      "is_open": true,
+      "minutes_to_close": 28.9
+     },
+     "reconcile": {
+      "ok": true,
+      "status": "OK"
+     },
+     "caps": {
+      "max_gross_frac": 1.0,
+      "max_name_frac": 0.1,
+      "daily_turnover_frac": 0.5,
+      "max_orders_per_run": 60,
+      "min_order_usd": 250.0,
+      "shorting": false,
+      "new_options": false,
+      "leverage": false
+     },
+     "policy_hash": "12fa05317df05ce1",
+     "actions": [
+      {
+       "kind": "stop_new",
+       "symbol": "PPLI",
+       "side": "sell",
+       "qty": 19,
+       "type": "stop",
+       "limit": null,
+       "stop": 38.23,
+       "mode": "LIVE",
+       "refused": null
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "sector_of": {
+  "AAPL": "Technology",
+  "ABEO": "Biotechnology",
+  "ABNB": "Hotels, Restaurants & Leisure",
+  "ADBE": "Technology",
+  "AFRM": "Financial Services",
+  "AGIO": "Biotechnology",
+  "AKAM": "Technology",
+  "ALLE": "Building",
+  "AMD": "Semiconductors",
+  "AMGN": "Biotechnology",
+  "AMZN": "Retail",
+  "ARDX": "Biotechnology",
+  "ATR": "Packaging",
+  "AVGO": "Semiconductors",
+  "AVPT": "Technology",
+  "BABA": "Retail",
+  "BAM": "Financial Services",
+  "BBIO": "Biotechnology",
+  "BE": "Electrical Equipment",
+  "BHP": "Metals & Mining",
+  "BYD": "Hotels, Restaurants & Leisure",
+  "CALX": "Communications",
+  "CCJ": "Energy",
+  "CEG": "Utilities",
+  "CLS": "Electrical Equipment",
+  "COGT": "Biotechnology",
+  "CRM": "Technology",
+  "CRWD": "Technology",
+  "DDOG": "Technology",
+  "DELL": "Technology",
+  "DKNG": "Hotels, Restaurants & Leisure",
+  "ESTC": "Technology",
+  "FCEL": "Electrical Equipment",
+  "FRO": "Energy",
+  "GEV": "Electrical Equipment",
+  "GOOG": "Media",
+  "GOOGL": "Media",
+  "GTLB": "Technology",
+  "HOOD": "Financial Services",
+  "HPE": "Technology",
+  "INCY": "Biotechnology",
+  "INVA": "Pharmaceuticals",
+  "IONQ": "Technology",
+  "JAZZ": "Pharmaceuticals",
+  "KKR": "Financial Services",
+  "LEU": "Energy",
+  "LMT": "Aerospace & Defense",
+  "MAZE": "Pharmaceuticals",
+  "MDB": "Technology",
+  "META": "Media",
+  "MP": "Metals & Mining",
+  "MRVL": "Semiconductors",
+  "MSFT": "Technology",
+  "MU": "Semiconductors",
+  "NBIS": "Technology",
+  "NET": "Technology",
+  "NOVT": "Electrical Equipment",
+  "NVDA": "Semiconductors",
+  "NVT": "Electrical Equipment",
+  "OKTA": "Technology",
+  "ORCL": "Technology",
+  "PANW": "Technology",
+  "PLTR": "Technology",
+  "PPLI": "Media",
+  "PRAX": "Biotechnology",
+  "PRVA": "Health Care",
+  "RGEN": "Life Sciences Tools & Services",
+  "RTX": "Aerospace & Defense",
+  "RZLV": "Technology",
+  "S": "Technology",
+  "SMCI": "Technology",
+  "SNDR": "Road & Rail",
+  "SNOW": "Technology",
+  "SPCX": "Telecommunication",
+  "STRO": "Biotechnology",
+  "SYM": "Machinery",
+  "TGT": "Retail",
+  "TSM": "Semiconductors",
+  "TXN": "Semiconductors",
+  "UPS": "Logistics & Transportation",
+  "VALE": "Metals & Mining",
+  "VKTX": "Biotechnology",
+  "VRT": "Electrical Equipment",
+  "VRTX": "Biotechnology",
+  "WDAY": "Technology",
+  "WDC": "Technology",
+  "WST": "Life Sciences Tools & Services",
+  "XOM": "Energy",
+  "XPEV": "Automobiles",
+  "XYZ": "Financial Services",
+  "ZS": "Technology"
+ }
+}

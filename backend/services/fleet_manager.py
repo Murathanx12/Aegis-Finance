@@ -702,12 +702,17 @@ def check_limits(a: Action, *, equity: float, cash: float, held: dict[str, float
 # `check_limits` above is kept verbatim for its callers and tests; the runner
 # now walks GATES instead, and every verdict lands on the decision row.
 #
-# THE TWO INVARIANTS, pinned by `test_fleet_gates.py`:
+# THE INVARIANTS, pinned by `test_fleet_gates.py`:
 #   1. A gate can never INCREASE a proposed size. A SHRINK whose `to` is not
 #      below the current quantity is a GATE DEFECT and kills the order.
-#   2. An EXIT is never blocked by any gate outside the LEASE class (kill
-#      switch, credential, reconciliation = single-writer lease, venue window).
-#      RISK gates answer PASS to every exit by construction.
+#   2. A protective order (stop, cancel) and a declared `exit` are blocked by
+#      no RISK gate except `order_count` -- the frozen per-run circuit breaker
+#      counts and caps every non-cancel order, as it did before C26.
+#   3. GATE_POLICY_VERSION "c26-p2-frozen-terms" (review 2026-10-07 F2): cash,
+#      gross_cap, name_cap and turnover_budget REFUSE (never shrink) exactly as
+#      `check_limits` / `apply_turnover_budget` did when the contracts were
+#      frozen; the one behaviour change kept is `long_only` cutting an
+#      oversized sell to the shares held (the old refusal left the name held).
 
 GATE_PASS, GATE_SHRINK, GATE_KILL = "PASS", "SHRINK", "KILL"
 GATE_LEASE, GATE_SHAPE, GATE_RISK = "lease", "shape", "risk"
@@ -727,6 +732,23 @@ UNKNOWN_SECTOR = "UNKNOWN"
 #: other gate and `shadow_verdict` is never set.
 NEW_GATES: frozenset = frozenset({"cooldown", "sector_concentration"})
 SHADOW_MODE, ENFORCE_MODE = "shadow", "enforce"
+
+#: Every semantic choice the gates make relative to the pre-C26 hard gate,
+#: hashed into `gates_config()` and printed on every run receipt.
+GATE_POLICY_VERSION = "c26-p2-frozen-terms"
+GATE_POLICY_CHOICES = {
+    "cash": "REFUSE (restored: pre-C26 check_limits)",
+    "gross_cap": "REFUSE (restored: pre-C26 check_limits)",
+    "name_cap": "REFUSE (restored: pre-C26 check_limits)",
+    "turnover_budget": ("REFUSE, and spent in plan order as soon as an order passes this gate (restored: "
+                        "pre-C26 apply_turnover_budget). Exempt: protective orders, cancels and kind 'exit' only "
+                        "-- a rebalance sell, full or partial, spends the budget: the v2 contract text says "
+                        "'enter ... inside the daily turnover budget' and grants exits no exemption"),
+    "order_count": "every non-cancel order counts and is refused beyond the cap, exits included (restored)",
+    "long_only": "SHRINK an oversized sell to the long quantity (C26 bug fix; was a refusal)",
+    "stop_never_loosened": "raise a replacing stop to the stop it replaces (assertion; planners already max())",
+    "re_protect": "the stop for the shares left after a sell is sized AFTER the gates from the executed quantity",
+}
 
 
 @dataclass
@@ -900,32 +922,47 @@ def g_cooldown(a: Action, ctx: GateCtx):
 
 
 def g_turnover_budget(a: Action, ctx: GateCtx):
-    if a.kind == "cancel" or a.protective or is_exit(a, ctx.held):
-        return GATE_PASS, None, "exit or protection: spends no turnover budget"
-    if a.notional <= ctx.turnover_left + 1e-6:
-        return GATE_PASS, None, f"${a.notional:,.0f} within ${ctx.turnover_left:,.0f} left"
-    return _shrink(a, ctx.turnover_left, "daily turnover budget", ctx)
+    """Frozen terms (pre-C26 `apply_turnover_budget`): every non-protective
+    order except a cancel or a declared `exit` spends the session's budget in
+    plan order, the moment it passes HERE (so a later refusal still spent it,
+    exactly as before); beyond the budget it is REFUSED, never shrunk."""
+    if a.kind in ("cancel", "exit") or a.protective:
+        return GATE_PASS, None, "protective, cancel or declared exit: spends no turnover budget"
+    if a.notional > ctx.turnover_left + 1e-6:
+        return GATE_KILL, None, (f"daily turnover budget: ${a.notional:,.0f} would exceed "
+                                 f"${max(0.0, ctx.turnover_left):,.0f} left")
+    ctx.turnover_left -= a.notional
+    return GATE_PASS, None, f"${a.notional:,.0f} spent; ${ctx.turnover_left:,.0f} left"
 
 
 def g_cash(a: Action, ctx: GateCtx):
     if a.side != "buy":
         return GATE_PASS, None, "not a buy"
-    return _shrink(a, ctx.cash, "cash (no leverage)", ctx)
+    n = a.qty * float(a.limit_price or 0)
+    if ctx.cash - n < -1e-6:
+        return GATE_KILL, None, f"cash ${ctx.cash:,.0f} - ${n:,.0f} < 0: would borrow (no leverage)"
+    return GATE_PASS, None, f"${n:,.0f} within cash ${ctx.cash:,.0f}"
 
 
 def g_gross_cap(a: Action, ctx: GateCtx):
     if a.side != "buy":
         return GATE_PASS, None, "not a buy"
     cap = float(ctx.contract["caps"]["max_gross_frac"])
-    return _shrink(a, cap * ctx.equity - ctx.gross, f"gross <= {cap:.0%} of equity", ctx)
+    n = a.qty * float(a.limit_price or 0)
+    if ctx.gross + n > cap * ctx.equity + 1e-6:
+        return GATE_KILL, None, f"gross ${ctx.gross + n:,.0f} > {cap:.0%} of equity ${ctx.equity:,.0f}"
+    return GATE_PASS, None, f"gross ${ctx.gross + n:,.0f} <= {cap:.0%} of equity"
 
 
 def g_name_cap(a: Action, ctx: GateCtx):
     if a.side != "buy":
         return GATE_PASS, None, "not a buy"
     cap = name_cap(ctx.contract["caps"], a.symbol)
-    return _shrink(a, cap * ctx.equity * 1.005 - ctx.mv.get(a.symbol, 0.0),
-                   f"{a.symbol} <= {cap:.0%} of equity", ctx)
+    n = a.qty * float(a.limit_price or 0)
+    after = ctx.mv.get(a.symbol, 0.0) + n
+    if after > cap * ctx.equity * 1.005:
+        return GATE_KILL, None, f"{a.symbol} would be ${after:,.0f} > {cap:.0%} of equity"
+    return GATE_PASS, None, f"{a.symbol} ${after:,.0f} <= {cap:.0%} of equity"
 
 
 def sector_room_usd(sector_mv: float, gross: float, equity: float, x: float) -> float:
@@ -952,8 +989,10 @@ def g_sector_concentration(a: Action, ctx: GateCtx):
 
 
 def g_order_count(a: Action, ctx: GateCtx):
-    if a.kind == "cancel" or is_exit(a, ctx.held):
-        return GATE_PASS, None, "exit or cancel: never blocked by the order count"
+    """Frozen terms: the per-run circuit breaker counts every non-cancel order,
+    exits and stops included, and refuses beyond the cap (pre-C26 behaviour)."""
+    if a.kind == "cancel":
+        return GATE_PASS, None, "cancel: not counted"
     cap = int(ctx.contract["caps"]["max_orders_per_run"])
     if ctx.orders_used >= cap:
         return GATE_KILL, None, f"per-run order cap {cap}"
@@ -992,7 +1031,10 @@ def gates_config() -> dict:
             "sector_denominator": "max(gross after the order, equity)",
             "unknown_sector": f"one bucket named {UNKNOWN_SECTOR}",
             "name_cap_tolerance": 1.005,
-            "new_gates": sorted(NEW_GATES), "new_gates_mode": str(_cfg.FLEET_NEW_GATES_MODE)}
+            "new_gates": sorted(NEW_GATES), "new_gates_mode": str(_cfg.FLEET_NEW_GATES_MODE),
+            "gate_policy_version": GATE_POLICY_VERSION, "gate_policy_choices": GATE_POLICY_CHOICES,
+            "sector_map_max_age_days": int(_cfg.FLEET_GATE_SECTOR_MAP_MAX_AGE_DAYS),
+            "sector_max_unknown_frac": float(_cfg.FLEET_GATE_SECTOR_MAX_UNKNOWN_FRAC)}
     body["hash"] = _sha(json.dumps(body, sort_keys=True))
     return body
 
@@ -1015,7 +1057,11 @@ def run_gates(a: Action, ctx: GateCtx, *, mode: str = "DRY", gates: Optional[tup
     order is untouched) and the real verdict is kept on the row as
     `shadow_verdict`; every other gate enforces regardless."""
     gates = GATES if gates is None else gates
-    ngm = new_gates_mode if new_gates_mode is not None else _cfg.FLEET_NEW_GATES_MODE
+    ngm_raw = new_gates_mode if new_gates_mode is not None else _cfg.FLEET_NEW_GATES_MODE
+    default_mode = _cfg.FLEET_NEW_GATES_MODE if isinstance(ngm_raw, dict) else ngm_raw
+
+    def mode_of(gate: str) -> str:
+        return ngm_raw.get(gate, default_mode) if isinstance(ngm_raw, dict) else ngm_raw
     trace: list[dict] = []
     if a.refused:
         trace.append({"gate": "planner", "class": "plan", "verdict": GATE_KILL, "reason": a.refused,
@@ -1028,7 +1074,7 @@ def run_gates(a: Action, ctx: GateCtx, *, mode: str = "DRY", gates: Optional[tup
         except Exception as exc:                                  # noqa: BLE001 -- a broken gate refuses
             verdict, to, why = GATE_KILL, None, f"GATE_ERROR {type(exc).__name__}: {exc}"[:200]
         row = {"gate": name, "class": cls, "verdict": verdict, "reason": why, "qty_in": q_in}
-        if name in NEW_GATES and ngm != ENFORCE_MODE and verdict in (GATE_KILL, GATE_SHRINK):
+        if name in NEW_GATES and mode_of(name) != ENFORCE_MODE and verdict in (GATE_KILL, GATE_SHRINK):
             shadow = (f"SHADOW_WOULD_KILL: {why}" if verdict == GATE_KILL
                       else f"SHADOW_WOULD_SHRINK(to={to}): {why}")
             row.update(verdict=GATE_PASS, reason=f"{why} [shadow -- would have bound]",
@@ -1052,12 +1098,10 @@ def run_gates(a: Action, ctx: GateCtx, *, mode: str = "DRY", gates: Optional[tup
             return trace
         row["qty_out"] = a.qty
         trace.append(row)
-    # every gate passed: commit the order to the running totals
-    exit_ = is_exit(a, ctx.held)
+    # every gate passed: commit the order to the running totals (the turnover
+    # budget was already spent at its own gate, as the pre-C26 code spent it)
     if a.kind != "cancel":
         ctx.orders_used += 1
-    if not (a.kind == "cancel" or a.protective or exit_):
-        ctx.turnover_left -= a.notional
     if a.side == "buy":
         n = a.qty * float(a.limit_price or 0)
         ctx.cash -= n
@@ -1069,13 +1113,42 @@ def run_gates(a: Action, ctx: GateCtx, *, mode: str = "DRY", gates: Optional[tup
 
 
 def gate_summary(traces: Iterable[list[dict]]) -> dict:
-    """{gate: {PASS: n, SHRINK: n, KILL: n}} over a run, for the receipt."""
+    """{gate: {PASS: n, SHRINK: n, KILL: n, SHADOW_WOULD_KILL: n, SHADOW_WOULD_SHRINK: n}}
+    over a run. A shadowed verdict is counted under its SHADOW_ key, never as PASS
+    (review 2026-10-07 F12: in shadow the cells used to read PASS forever)."""
     out: dict[str, dict[str, int]] = {}
     for tr in traces:
         for r in tr:
             d = out.setdefault(r["gate"], {})
-            d[r["verdict"]] = d.get(r["verdict"], 0) + 1
+            sv = str(r.get("shadow_verdict") or "")
+            k = ("SHADOW_WOULD_KILL" if sv.startswith("SHADOW_WOULD_KILL") else
+                 "SHADOW_WOULD_SHRINK" if sv.startswith("SHADOW_WOULD_SHRINK") else r["verdict"])
+            d[k] = d.get(k, 0) + 1
     return out
+
+
+#: Gates whose SHRINK replaced what the pre-C26 hard gate did as a REFUSAL.
+_WAS_REFUSAL = frozenset({"long_only"})
+
+
+def c26_delta(traces: Iterable[list[dict]]) -> dict:
+    """Did C26 change anything on this account tonight? The one line the owner reads."""
+    n_sk = n_ss = n_shr = n_r2s = 0
+    for tr in traces:
+        for r in tr:
+            sv = str(r.get("shadow_verdict") or "")
+            if sv.startswith("SHADOW_WOULD_KILL"):
+                n_sk += 1
+            elif sv.startswith("SHADOW_WOULD_SHRINK"):
+                n_ss += 1
+            if r.get("verdict") == GATE_SHRINK:
+                n_shr += 1
+                if r.get("gate") in _WAS_REFUSAL:
+                    n_r2s += 1
+    line = (f"C26: {n_sk} shadow-would-kill, {n_ss} shadow-would-shrink, {n_shr} shrinks applied, "
+            f"{n_r2s} refusals\u2192shrink")
+    return {"shadow_would_kill": n_sk, "shadow_would_shrink": n_ss, "shrinks_applied": n_shr,
+            "refusals_to_shrink": n_r2s, "gate_policy_version": GATE_POLICY_VERSION, "line": line}
 
 
 # ─────────────────────────────── pricing ────────────────────────────────────

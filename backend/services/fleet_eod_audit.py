@@ -146,8 +146,11 @@ def reconcile_grades(role: str, grades: Iterable[dict], last_equity: Optional[fl
 
 
 def prev_weekday(d: date) -> date:
+    """The previous NYSE session: weekends AND `config.US_MARKET_HOLIDAYS` are
+    skipped (review F7: 2026-11-27 would otherwise expect a 11-26 grade)."""
+    hol = set(getattr(_cfg, "US_MARKET_HOLIDAYS", ()) or ())
     d -= timedelta(days=1)
-    while d.weekday() >= 5:
+    while d.weekday() >= 5 or d.isoformat() in hol:
         d -= timedelta(days=1)
     return d
 
