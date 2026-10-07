@@ -48,12 +48,19 @@ def test_k1_is_the_unchanged_prereg_constant_and_k_sub_is_declared_in_config():
 
 
 def test_firm_reliability_is_byte_identical_to_the_pinned_fixture():
+    """2026-10-07: `.to_csv()` with no explicit `lineterminator` defaults to
+    `os.linesep`, so the pinned fixture (generated on Windows) baked in CRLF
+    while CI (Ubuntu) produces LF for the identical numeric content -- a
+    platform artefact, not a reproduction mismatch. Force LF on both sides and
+    normalise the pinned fixture's own newlines before comparing, so neither
+    the git checkout's line endings nor the generating OS can flip this test."""
     blob = json.loads((FIX / "firm_reliability_pinned.json").read_text(encoding="utf-8"))
     df = pd.DataFrame(blob["corpus"])
     df["public_at"] = pd.to_datetime(df["public_at"])
     out = PF.firm_reliability(df, pd.Timestamp(blob["asof"]))
-    csv = out.to_csv(float_format="%.17g")
-    assert csv == blob["expected_csv"]
+    csv = out.to_csv(float_format="%.17g", lineterminator="\n")
+    expected_csv = blob["expected_csv"].replace("\r\n", "\n")
+    assert csv == expected_csv
     assert hashlib.sha256(csv.encode()).hexdigest() == blob["expected_sha256"]
 
 

@@ -5,3 +5,15 @@
 backend/data/optimus/**/*.json -text
 backend/data/optimus/**/*.jsonl -text
 backend/data/optimus/**/*.csv -text
+
+# 2026-10-07: a fixture under backend/tests/fixtures/ pinned a byte-identical CSV
+# string that baked in Windows' os.linesep (CRLF) at generation time; CI (Ubuntu)
+# produced LF and the pinned-fixture test failed there while passing on every
+# Windows laptop (test_analyst_reputation.py::test_firm_reliability_is_byte_identical_to_the_pinned_fixture).
+# Test fixtures are TEXT and must check out as LF on every platform -- same family
+# as shell scripts, which get the same rule here (no prior *.sh rule was actually
+# found committed, despite a memory note that one existed).
+backend/tests/fixtures/**/*.json text eol=lf
+backend/tests/fixtures/**/*.jsonl text eol=lf
+backend/tests/fixtures/**/*.csv text eol=lf
+*.sh text eol=lf
