@@ -1,33 +1,41 @@
-"""Render the two public SVG assets: the V1 Beta pipeline diagram and the social-preview card.
+"""Render the public visual assets in the owner's chosen language (2026-10-07).
 
-    python -m scripts.render_public_assets            # (re)write both SVGs
-    python -m scripts.render_public_assets --check    # exit 1 if a committed SVG differs
+    python -m scripts.render_public_assets            # (re)write every asset
+    python -m scripts.render_public_assets --check    # exit 1 if a committed asset differs
 
 Writes
-    docs/assets/architecture_pipeline.svg   1200 x 860   the README hero
-    docs/assets/og_preview.svg              1200 x 630   the social-preview card (PNG export:
-                                                         docs/assets/README.md)
+    docs/assets/aegis_loop.svg              1200 x 1000  the front-page hero (style C, the orbit)
+    docs/assets/paper_results_live.svg      1200 x 480   best paper accounts, live (style C)
+    docs/assets/architecture_pipeline.svg   1200 x 1060  how it works, module by module (style A)
+    docs/assets/og_preview.svg              1200 x 630   the social-preview card (style C, static)
+    docs/design/aegis_front_page.html       the HTML motion page: the hero, counting results
+
+THE STYLE
+=========
+`docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md` is the design record: four styles were shown,
+the owner chose C (the orbit) for front pages and A (the blackline HUD) for explanation pages,
+and gave the motion notes implemented here -- a dotted orbit whose dots swell and turn blue as a
+wave passes, a wave that DWELLS at each stage while that stage's bubble grows, the learning loop
+as faint orange inner orbits that spiral into the next cycle, gains in bright blue, no PNGs.
 
 WHY A GENERATOR AND NOT A DRAWING
 =================================
-The diagram prints module paths. A hand-drawn picture of the code goes stale silently the
-first time a module is renamed; here every path lives in one table (`STAGES`), and
-`backend/tests/test_public_assets.py` fails when a printed path stops existing, a printed
-function stops being defined, or a committed SVG no longer matches what this file renders.
+The pictures print module paths and live numbers. A hand-drawn picture goes stale silently; here
+every path lives in one table (`STAGES`) and every number is read from a PINNED receipt run id
+(`RESULTS_RUN_ID`). `backend/tests/test_public_assets.py` fails when a printed path stops
+existing, a printed function stops being defined, a printed number differs from its receipt, or
+a committed asset is not what this file renders. Refreshing the results is: bump the pin,
+re-render, commit.
 
-The pipeline is `docs/AEGIS_V1_BETA_2026-10-07.md` §2 (its Mermaid diagram and stage table),
-with that diagram's EVIDENCE box split into EVIDENCE and WORLD STATE / THEORY. The footer's
-state line is §9 of the same document, dated. Nothing here is a performance claim: both assets
-print RESULT IMPROVEMENT: NONE.
-
-Stdlib only and deterministic -- no clock, no randomness, integer coordinates, LF line ends --
-so the same bytes come out on every run. The social card embeds `docs/assets/logo.png` as a
-data URI (an SVG shown through <img> on GitHub cannot load a second file).
+Stdlib only and deterministic -- no clock, no randomness, LF line ends -- so the same bytes
+come out on every run. Everything GitHub shows through <img> is self-contained: CSS keyframes and
+SMIL, system font stacks, no script, no external file, no image.
 """
 from __future__ import annotations
 
 import argparse
-import base64
+import json
+import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,33 +43,33 @@ from xml.sax.saxutils import escape
 
 REPO = Path(__file__).resolve().parent.parent
 ASSETS = REPO / "docs" / "assets"
+DESIGN = REPO / "docs" / "design"
+HERO_SVG = ASSETS / "aegis_loop.svg"
+RESULTS_SVG = ASSETS / "paper_results_live.svg"
 PIPELINE_SVG = ASSETS / "architecture_pipeline.svg"
 OG_SVG = ASSETS / "og_preview.svg"
-LOGO_PNG = ASSETS / "logo.png"
+FRONT_HTML = DESIGN / "aegis_front_page.html"
+PAPER_DIR = REPO / "backend" / "data" / "optimus" / "paper_accounts"
 
 SOURCE_DOC = "docs/AEGIS_V1_BETA_2026-10-07.md"
-STATE_DATE = "2026-10-07"
-#: §9 of SOURCE_DOC, "Tally: 1 clause met, 7 partially, 3 not yet." (pinned by the test)
-V1_TALLY = (1, 7, 3)
 LIVE_URL = "https://aegis-finance-six.vercel.app"
 REPO_URL = "github.com/Murathanx12/Aegis-Finance"
-
 #: SOURCE_DOC §1, first sentence, verbatim (the test checks it is still there).
 PRODUCT_SENTENCE = ("Aegis is an open-source investment research system that writes down what it "
                     "believes before an outcome exists, grades every belief against what then "
                     "happens, and lets only graded beliefs change how paper capital is sized.")
 #: docs/FUNDING_EVIDENCE_PACK_2026-10-07.md §1, the positioning line.
 TAGLINE = "Auditable AI investment intelligence"
-HONEST_HEAD = "RESULT IMPROVEMENT: NONE"
-HONEST_TAIL = "the loop runs, grades itself, and freezes its alternatives"
 
 #: Layout budgets. SVG text does not wrap and a viewer's font is unknown, so every string is
 #: kept inside a width measured for the widest common fallback (DejaVu Sans / Sans Mono).
+MAX_TITLE_CHARS = 22
+MAX_ABOUT_CHARS = 40
 MAX_MODULE_CHARS = 40
-MAX_ABOUT_CHARS = 44
-MAX_TITLE_CHARS = 26
+MAX_MODULES = 4
 
 
+# ================================================================== the stage table
 @dataclass(frozen=True)
 class Module:
     """A repo-relative file that must exist, and names that must be defined in it."""
@@ -72,140 +80,636 @@ class Module:
     def label(self) -> str:
         return self.path + "".join(f" · {s}" for s in self.symbols)
 
+    @property
+    def stem(self) -> str:
+        return self.path.rsplit("/", 1)[-1].removesuffix(".py")
+
 
 @dataclass(frozen=True)
 class Stage:
     n: int
-    title: str
+    title: str                    # what both pictures print
+    doc_name: str                 # the stage's name in SOURCE_DOC §2 (carried in <desc>)
     about: tuple[str, str]
-    modules: tuple[Module, ...]
+    modules: tuple[Module, ...]   # the first two are the orbit's one-line module caption
+
+    @property
+    def caption(self) -> str:
+        return " · ".join(m.stem for m in self.modules[:2])
 
 
 M = Module
 STAGES: tuple[Stage, ...] = (
-    Stage(1, "WORLD SENSORS",
-          ("Whole-market news, analyst revisions and",
-           "public flows (USAspending, lobbying, crypto)"),
+    Stage(1, "WORLD SENSORS", "Sensors",
+          ("Whole-market news, analyst revisions,", "public flows: spending, lobbying, crypto"),
           (M("scripts/news_pull.py"), M("backend/services/web_reader.py"),
            M("scripts/pull_analyst_targets.py"), M("backend/services/public_flow_common.py"))),
-    Stage(2, "EVIDENCE",
-          ("A language model reads what was stored and",
-           "proposes; deterministic code weighs it"),
-          (M("backend/services/world_digest.py"), M("backend/services/analyst_reputation.py"),
-           M("backend/services/data_catalog.py"))),
-    Stage(3, "WORLD STATE / THEORY",
-          ("Persistent beliefs, scenarios, regime rows;",
-           "a theory: mechanism, precursor, falsifier"),
+    Stage(2, "EVIDENCE", "Evidence",
+          ("An LLM reads what was stored and", "proposes; deterministic code weighs it"),
+          (M("backend/services/world_digest.py"), M("backend/services/data_catalog.py"),
+           M("backend/services/analyst_reputation.py"))),
+    Stage(3, "WORLD STATE / THEORY", "Evidence (world state beliefs) and the theory cells",
+          ("Beliefs, scenarios, regimes; every", "theory: mechanism, precursor, falsifier"),
           (M("backend/services/world_state.py"), M("scripts/hyp_theory_cells.py"))),
-    Stage(4, "FORECASTS",
-          ("Frozen before the outcome exists; graded",
-           "at h = 1 / 5 / 21 / 63 sessions"),
-          (M("scripts/sim_run.py", ("u_forecast",)), M("backend/services/belief_state.py"),
-           M("nn_lab/nightly.py"))),
-    Stage(5, "OPPORTUNITY / DECISION",
-          ("Direction and magnitude kept apart; risk",
-           "priced on the names it would actually buy"),
-          (M("backend/services/opportunity_funnel.py"), M("scripts/sim_run.py", ("u_rank", "u_plan")),
-           M("backend/services/decision_contract.py"), M("backend/services/opportunities.py"))),
-    Stage(6, "PAPER ACTION OR ABSTENTION",
-          ("Paper only, and a HOLD is a decision too;",
-           "no LLM has authority over real capital"),
-          (M("scripts/task_keeper.py", ("AegisSimOwner",)), M("backend/services/sim_session.py"),
+    Stage(4, "FORECASTS", "Forecasts",
+          ("Frozen before the outcome exists,", "graded at 1 / 5 / 21 / 63 sessions"),
+          (M("backend/services/belief_state.py"), M("backend/services/forecast_ledger.py"),
+           M("scripts/sim_run.py", ("u_forecast",)), M("nn_lab/nightly.py"))),
+    Stage(5, "DECISION", "Decision",
+          ("Direction and magnitude kept apart;", "risk priced on what it would buy"),
+          (M("backend/services/opportunity_funnel.py"), M("backend/services/decision_contract.py"),
+           M("scripts/sim_run.py", ("u_rank", "u_plan")), M("backend/services/opportunities.py"))),
+    Stage(6, "PAPER ACTION", "Paper execution (a HOLD is an action too)",
+          ("Paper only, and a HOLD is a decision.", "No LLM has authority over real capital"),
+          (M("backend/services/sim_session.py"), M("scripts/task_keeper.py", ("AegisSimOwner",)),
            M("backend/services/pc_broker.py"))),
-    Stage(7, "OUTCOME",
-          ("A daily pass grades what came due and",
-           "reports refusals instead of hiding them"),
+    Stage(7, "OUTCOME", "Outcomes",
+          ("A daily pass grades what came due", "and reports refusals, never hides them"),
           (M("scripts/daily_pass.py"), M("backend/services/forecast_grader.py"),
            M("scripts/sim_run.py", ("u_grade",)))),
-    Stage(8, "REGRET / ATTRIBUTION",
-          ("Which input did it, and when did we know?",
-           "Regret as signed differences, null-tested"),
-          (M("backend/services/book_dna.py"), M("backend/services/decision_story.py"),
-           M("backend/services/regret_ledger.py"))),
-    Stage(9, "LEARNING",
-          ("Only graded outcomes change weights and",
-           "preferences; gates only shrink"),
-          (M("backend/services/expected_return.py"), M("backend/services/policy_state.py"),
-           M("backend/services/hyp_lab.py"))),
+    Stage(8, "ATTRIBUTION", "Attribution (regret)",
+          ("Which input did it, and when did we", "know? Regret as signed differences"),
+          (M("backend/services/book_dna.py"), M("backend/services/regret_ledger.py"),
+           M("backend/services/decision_story.py"))),
+    Stage(9, "LEARNING", "Learning",
+          ("Only graded outcomes change weights", "and preferences; gates only shrink"),
+          (M("backend/services/policy_state.py"), M("backend/services/hyp_lab.py"),
+           M("backend/services/expected_return.py"))),
 )
 
-#: The two feedback arrows. The first is SOURCE_DOC's own dotted edge (LEARNING -> DECISION);
+#: The two feedback paths. The first is SOURCE_DOC's own dotted edge (LEARNING -> DECISION);
 #: the second is `hyp_lab.family_budget`: the family posterior sets each family's share of the
 #: next generation round of hypotheses ("a shrink, never a kill").
-LOOP_TO_DECISION = "weights + preferences, next cycle · gates only shrink"
-LOOP_TO_THEORY = "family posterior → next round's hypothesis quota · never a kill"
+LOOP_TO_DECISION = "weights + preferences → next cycle"
+LOOP_TO_THEORY = "family posterior → next hypothesis round"
 
-FOOTER = (
-    f"State on {STATE_DATE} ({SOURCE_DOC} §9): V1 Beta not reached; "
-    f"{V1_TALLY[0]} of {sum(V1_TALLY)} acceptance clauses met, {V1_TALLY[1]} partially, "
-    f"{V1_TALLY[2]} not yet.",
-    "Not yet closed: no live decision story exists (dry run only), and policy_state is written "
-    "but not yet read by a plan (§2).",
-    "Solid arrows: one cycle. Dashed: what the next cycle inherits. Every path is repo-relative "
-    "and checked by backend/tests/test_public_assets.py.",
-)
-
-# ------------------------------------------------------------------ palette (dark panel)
-# An explicit panel instead of prefers-color-scheme: it reads the same on GitHub's light and
-# dark themes. Text contrast against CARD: TITLE 15.5, TEXT 9.5, DIR 5.3, ARROW 4.6 (WCAG).
-BG = "#0b1220"
-PANEL_STROKE = "#2b3b57"
-CARD = "#111b2c"
-CARD_STROKE = "#2a3a55"
-TITLE = "#eef3f9"
-TEXT = "#b4c2d4"
-MUTED = "#8a9bb2"
-DIR = "#7d90a8"
-FILE = "#93dcff"
-SYM = "#c4b5fd"
-CYAN = "#38bdf8"
-AMBER = "#f5b942"
-AMBER_BG = "#2a2111"
-ARROW = "#6b86a8"
-
-SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
+# ================================================================== the design tokens
+BG = "#000000"
+BLUE, BLUE_HI, ORANGE, ORANGE_HI = "#4a8dff", "#6fb0ff", "#ff8a1f", "#ffb36b"
+INK2, INK3 = "rgba(255,255,255,.66)", "rgba(255,255,255,.45)"
+SANS = "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
 MONO = "ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace"
-
-# ------------------------------------------------------------------ pipeline geometry
-W, H = 1200, 860
-CW, CH = 344, 176                      # card
-COL_X = (36, 420, 804)                 # 40 px between columns, 52 px right margin for a loop
-ROW_Y = (128, 360, 592)                # 56 px between rows
-#: serpentine: row 1 left to right, row 2 right to left, row 3 left to right
-GRID = {1: (0, 0), 2: (0, 1), 3: (0, 2), 4: (1, 2), 5: (1, 1), 6: (1, 0),
-        7: (2, 0), 8: (2, 1), 9: (2, 2)}
+REDUCED = "@media (prefers-reduced-motion: reduce){*{animation:none!important}}"
 
 
 def _t(s: str) -> str:
     return escape(s)
 
 
-def _xml_head(w: int, h: int, title: str, desc: str, *, xlink: bool = False) -> list[str]:
-    ns = ' xmlns:xlink="http://www.w3.org/1999/xlink"' if xlink else ""
+def _num(v: float) -> str:
+    """Signed, two decimals, with a true minus sign."""
+    return f"{v:+.2f}".replace("-", "−")
+
+
+def _head(w: int, h: int, title: str, desc: str, css: str, defs: str = "") -> list[str]:
     return [
-        '<?xml version="1.0" encoding="UTF-8"?>',
-        f'<svg xmlns="http://www.w3.org/2000/svg"{ns} width="{w}" height="{h}" '
-        f'viewBox="0 0 {w} {h}" role="img" aria-labelledby="title desc">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
+        f'role="img" aria-labelledby="title desc">',
         f'<title id="title">{_t(title)}</title>',
         f'<desc id="desc">{_t(desc)}</desc>',
+        f"<style>{css}{REDUCED}</style>",
+        f"<defs>{defs}</defs>",
     ]
 
 
-def _style(rules: list[str]) -> list[str]:
-    return ["<style>", f".s{{font-family:{SANS}}}", f".m{{font-family:{MONO}}}", *rules, "</style>"]
+def _chips(right: int, y: int, labels: tuple[tuple[str, bool], ...], *, round_: bool) -> list[str]:
+    out, x = [], right
+    for label, live in reversed(labels):
+        w = 26 + len(label) * 8 + (14 if live else 0)
+        x -= w
+        rx = ' rx="13"' if round_ else ""
+        out.append(f'<rect x="{x}" y="{y}" width="{w}" height="26"{rx} fill="none" '
+                   f'stroke="rgba(255,255,255,.3)"/>')
+        tx = x + 13
+        if live:
+            out.append(f'<circle cx="{x + 15}" cy="{y + 13}" r="4" class="live"/>')
+            tx += 14
+        out.append(f'<text x="{tx}" y="{y + 17}" class="chip">{label}</text>')
+        x -= 10
+    return out
 
 
-def _markers() -> list[str]:
-    def one(mid: str, fill: str) -> str:
-        return (f'<marker id="{mid}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" '
-                f'markerHeight="9" markerUnits="userSpaceOnUse" orient="auto">'
-                f'<path d="M0 0L10 5L0 10z" fill="{fill}"/></marker>')
-    return ["<defs>", one("ah", ARROW), one("al", AMBER), "</defs>"]
+# ================================================================== style C: the orbit hero
+HERO_W, HERO_H = 1200, 1000
+CX, CY, R = 600, 560, 232
+TH1 = -50.0                 # stage 1's angle; LEARNING (9) sits at the crown, -90
+P, TRAVEL = 2.0, 0.8        # seconds per stage, of which moving (the rest is the dwell)
+CYCLE = 9 * P
+N_DOTS = 120
+
+
+def theta(n: int) -> float:
+    return TH1 + (n - 1) * 40.0
+
+
+def _ease(x: float) -> float:                      # easeInOutCubic
+    return 4 * x ** 3 if x < .5 else 1 - (-2 * x + 2) ** 3 / 2
+
+
+def _inv_ease(y: float) -> float:
+    lo, hi = 0.0, 1.0
+    for _ in range(40):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if _ease(mid) < y else (lo, mid)
+    return (lo + hi) / 2
+
+
+def arrival(n: int) -> float:
+    """Seconds into the cycle at which the wave reaches stage n (it leaves LEARNING at 0)."""
+    return round(((n - 1) * P + TRAVEL) % CYCLE, 3)
+
+
+def wave_time(angle: float) -> float:
+    """When the wave front passes `angle`: it eases from stage to stage, then dwells."""
+    a = (angle - theta(9)) % 360.0
+    k = int(a // 40.0)
+    return round((k * P + TRAVEL * _inv_ease((a - k * 40.0) / 40.0)) % CYCLE, 3)
+
+
+def _pos(n: int, r: float = R) -> tuple[float, float]:
+    t = math.radians(theta(n))
+    return CX + r * math.cos(t), CY + r * math.sin(t)
+
+
+def _pct(t: float) -> str:
+    return f"{100.0 * t / CYCLE:.2f}%"
+
+
+def _arc(r: float, a0: float, a1: float) -> str:
+    """Clockwise arc from angle a0 to a1 (degrees) at radius r."""
+    x0, y0 = CX + r * math.cos(math.radians(a0)), CY + r * math.sin(math.radians(a0))
+    x1, y1 = CX + r * math.cos(math.radians(a1)), CY + r * math.sin(math.radians(a1))
+    large = 1 if ((a1 - a0) % 360) > 180 else 0
+    return f"M{x0:.1f},{y0:.1f} A{r},{r} 0 {large} 1 {x1:.1f},{y1:.1f}"
+
+
+def _hero_css() -> str:
+    hold, rel = P - TRAVEL, P - TRAVEL + 0.55
+    w = "rgba(255,255,255,.30)"
+    return (
+        f".bg{{fill:{BG}}}"
+        f".kicker{{font:400 12px {MONO};letter-spacing:3.5px;fill:rgba(255,255,255,.55)}}"
+        f".lede{{font:400 17px {SANS};fill:rgba(255,255,255,.72)}}"
+        f".brand{{font:200 50px {SANS};letter-spacing:16px;fill:#fff}}"
+        f".sub{{font:500 11px {MONO};letter-spacing:2px;fill:rgba(255,255,255,.5)}}"
+        f".chip{{font:500 11px {MONO};letter-spacing:2px;fill:#fff}}"
+        f".live{{fill:{BLUE};animation:live 1.8s ease-out infinite}}"
+        "@keyframes live{0%{opacity:1}100%{opacity:.15}}"
+        f".sec{{font:700 12px {MONO};letter-spacing:3px;fill:#fff}}"
+        ".rule{stroke:rgba(255,255,255,.14)}"
+        ".ring0{fill:none;stroke:rgba(255,255,255,.06)}"
+        f".dot{{fill:{w};transform-box:fill-box;transform-origin:center;"
+        f"animation:swell {CYCLE:g}s linear infinite}}"
+        f"@keyframes swell{{0%{{transform:scale(1);fill:{w}}}1.2%{{transform:scale(2.7);fill:{BLUE_HI}}}"
+        f"5.5%{{transform:scale(1.25);fill:rgba(74,141,255,.55)}}11%{{transform:scale(1);fill:{w}}}"
+        f"100%{{transform:scale(1);fill:{w}}}}}"
+        ".node{fill:#000;stroke:rgba(255,255,255,.75);stroke-width:1.5;transform-box:fill-box;"
+        f"transform-origin:center;animation:grow {CYCLE:g}s infinite}}"
+        ".node.o{animation-name:growo}"
+        + "".join(
+            f"@keyframes {name}{{0%{{transform:scale(1);fill:#000;stroke:rgba(255,255,255,.75)}}"
+            f"2.4%{{transform:scale(1.5);fill:{fill};stroke:{hi}}}"
+            f"{_pct(hold - 0.11)}{{transform:scale(1.42);fill:{fill};stroke:{hi}}}"
+            f"{_pct(rel)}{{transform:scale(1);fill:#000;stroke:rgba(255,255,255,.75)}}"
+            f"100%{{transform:scale(1);fill:#000;stroke:rgba(255,255,255,.75)}}}}"
+            for name, fill, hi in (("grow", BLUE, BLUE_HI), ("growo", ORANGE, ORANGE_HI)))
+        + f".halo{{fill:none;stroke:{BLUE};stroke-width:1.2;opacity:0;transform-box:fill-box;"
+        f"transform-origin:center;animation:halo {CYCLE:g}s ease-out infinite}}"
+        f".halo.o{{stroke:{ORANGE}}}"
+        "@keyframes halo{0%{opacity:.9;transform:scale(1)}6%{opacity:0;transform:scale(2.6)}"
+        "100%{opacity:0;transform:scale(2.6)}}"
+        f".nn{{font:600 11px {MONO};fill:#fff}}"
+        f".stt{{font:600 14px {SANS};letter-spacing:1.6px;fill:rgba(255,255,255,.88);"
+        f"animation:lit {CYCLE:g}s infinite}}"
+        ".stt.o{animation-name:lito}"
+        + "".join(
+            f"@keyframes {name}{{0%{{fill:rgba(255,255,255,.88)}}2.4%{{fill:{hi}}}"
+            f"{_pct(hold + 0.18)}{{fill:{hi}}}{_pct(hold + 0.72)}{{fill:rgba(255,255,255,.88)}}"
+            f"100%{{fill:rgba(255,255,255,.88)}}}}"
+            for name, hi in (("lit", BLUE_HI), ("lito", ORANGE_HI)))
+        + f".sd{{font:400 13px {SANS};fill:rgba(255,255,255,.62)}}"
+        f".mod{{font:400 11px {MONO};fill:{BLUE}}}"
+        f".bar{{fill:{BLUE};transform-box:fill-box;transform-origin:left center;transform:scaleX(0);"
+        f"animation:bar {CYCLE:g}s infinite}}"
+        ".bar.end{transform-origin:right center}.bar.mid{transform-origin:center}"
+        f".bar.o{{fill:{ORANGE}}}"
+        f"@keyframes bar{{0%{{transform:scaleX(0)}}3%{{transform:scaleX(1)}}{_pct(hold + 0.18)}"
+        f"{{transform:scaleX(1)}}{_pct(hold + 0.72)}{{transform:scaleX(0)}}100%{{transform:scaleX(0)}}}}"
+        f".orbit{{fill:none;stroke:{ORANGE};stroke-width:1.3;stroke-dasharray:2 6;opacity:.38}}"
+        f".spoke{{fill:none;stroke:{ORANGE};stroke-width:1.3;opacity:.38}}"
+        f".olab{{font:500 10.5px {MONO};letter-spacing:1.5px;fill:{ORANGE};opacity:.75}}"
+        f".readout{{font:600 12px {MONO};letter-spacing:2.5px;opacity:0;animation:ro {CYCLE:g}s infinite}}"
+        f"@keyframes ro{{0%{{opacity:0}}1.5%{{opacity:1}}{_pct(P - 0.18)}{{opacity:1}}{_pct(P)}{{opacity:0}}"
+        "100%{opacity:0}}"
+        f".foot{{font:400 11px {MONO};letter-spacing:1.5px;fill:rgba(255,255,255,.4)}}"
+        "@media (prefers-reduced-motion: reduce){.readout.r1{opacity:1}}"
+    )
+
+
+def _orbit_layers(*, animated: bool, r: float = R) -> list[str]:
+    """The inner orbits (learning), the dotted ring, the comets. Shared by the hero and the card."""
+    out = []
+    r3, r5 = r - 46, r - 76
+    t9 = theta(9)
+    for rr, n, pid in ((r3, 3, "orb3"), (r5, 5, "orb5")):
+        out.append(f'<path id="{pid}" d="{_arc(rr, t9, theta(n) + 360)}" class="orbit"/>')
+        x9a, y9a = _pos(9, r - 16)
+        x9b, y9b = _pos(9, rr)
+        out.append(f'<path d="M{x9a:.1f},{y9a:.1f} L{x9b:.1f},{y9b:.1f}" class="spoke"/>')
+        xa, ya = _pos(n, rr)
+        xb, yb = _pos(n, r - 17)
+        out.append(f'<path d="M{xa:.1f},{ya:.1f} L{xb:.1f},{yb:.1f}" class="spoke" marker-end="url(#ao)"/>')
+    out.append('<text class="olab"><textPath href="#orb3" startOffset="9%">NEXT HYPOTHESIS ROUND'
+               '</textPath></text>')
+    out.append('<text class="olab" dy="-6"><textPath href="#orb5" startOffset="12%">'
+               'WEIGHTS + PREFERENCES → NEXT CYCLE</textPath></text>')
+    if animated:
+        a9 = arrival(9)
+        for rr, n, dur in ((r3, 3, 2.2), (r5, 5, 3.0)):
+            x9a, y9a = _pos(9, r - 16)
+            x9b, y9b = _pos(9, rr)
+            xb, yb = _pos(n, r - 17)
+            arc = _arc(rr, t9, theta(n) + 360)
+            path = f"M{x9a:.1f},{y9a:.1f} L{x9b:.1f},{y9b:.1f} {arc[arc.index('A'):]} L{xb:.1f},{yb:.1f}"
+            k1 = dur / CYCLE
+            out.append(
+                f'<circle r="3.6" fill="{ORANGE}" opacity="0"><animateMotion dur="{CYCLE:g}s" '
+                f'begin="{a9:g}s" repeatCount="indefinite" calcMode="linear" keyPoints="0;1;1" '
+                f'keyTimes="0;{k1:.4f};1" path="{path}"/><animate attributeName="opacity" '
+                f'dur="{CYCLE:g}s" begin="{a9:g}s" repeatCount="indefinite" values="1;1;0;0" '
+                f'keyTimes="0;{k1 * .92:.4f};{k1:.4f};1"/></circle>')
+    for i in range(N_DOTS):
+        a = theta(9) + i * 360.0 / N_DOTS
+        if any(abs(((a - theta(n) + 180) % 360) - 180) < 4.5 for n in range(1, 10)):
+            continue                                   # room for the stage bubbles
+        x, y = CX + r * math.cos(math.radians(a)), CY + r * math.sin(math.radians(a))
+        delay = f' style="animation-delay:{wave_time(a):g}s"' if animated else ""
+        out.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="1.7" class="dot"{delay}/>')
+    return out
+
+
+def render_hero() -> str:
+    desc = ("The Aegis loop, nine stages on a ring: "
+            + "; ".join(f"{s.n} {s.title.lower()} ({s.caption})" for s in STAGES)
+            + ". A wave travels the ring and dwells at each stage while it lights; learning feeds "
+              "the next cycle's theory and decision through two inner orbits.")
+    defs = (f'<radialGradient id="core" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#0d1a33" '
+            f'stop-opacity=".95"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>'
+            f'<marker id="ao" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" '
+            f'orient="auto"><path d="M0,1 L9,5 L0,9 z" fill="{ORANGE}" opacity=".8"/></marker>')
+    o = _head(HERO_W, HERO_H, "Aegis: one loop, every belief graded", desc, _hero_css(), defs)
+    o.append(f'<rect width="{HERO_W}" height="{HERO_H}" class="bg"/>')
+    o.append(f'<text x="40" y="62" class="kicker">{_t(TAGLINE.upper())}</text>')
+    o.append('<text x="40" y="100" class="lede">Writes down what it believes before the outcome exists, '
+             'grades every belief,</text>')
+    o.append('<text x="40" y="124" class="lede">and lets only graded beliefs change how paper capital '
+             'is sized.</text>')
+    o += _chips(1160, 48, (("LOOP RUNNING", True), ("PAPER ONLY", False), ("OPEN SOURCE", False)),
+                round_=True)
+    o.append('<text x="40" y="180" class="sec">HOW IT WORKS</text>')
+    o.append('<line x1="170" y1="176" x2="1160" y2="176" class="rule"/>')
+    o.append(f'<circle cx="{CX}" cy="{CY}" r="{R - 18}" fill="url(#core)"/>')
+    o.append(f'<circle cx="{CX}" cy="{CY}" r="{R + 30}" class="ring0"/>')
+    o += _orbit_layers(animated=True)
+    o.append(f'<text x="{CX + 8}" y="{CY - 6}" class="brand" text-anchor="middle">AEGIS</text>')
+    o.append(f'<text x="{CX}" y="{CY + 22}" class="sub" text-anchor="middle">ONE LOOP · EVERY BELIEF '
+             f'GRADED</text>')
+    for st in STAGES:
+        col = ORANGE if st.n == 9 else BLUE_HI
+        cls = "readout r1" if st.n == 1 else "readout"
+        o.append(f'<text x="{CX}" y="{CY + 58}" class="{cls}" text-anchor="middle" fill="{col}" '
+                 f'style="animation-delay:{arrival(st.n):g}s">▸ {st.n:02d}  {_t(st.title)}</text>')
+    for st in STAGES:
+        x, y = _pos(st.n)
+        oc = " o" if st.n == 9 else ""
+        dl = f"animation-delay:{arrival(st.n):g}s"
+        o.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="13" class="halo{oc}" style="{dl}"/>')
+        o.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="13" class="node{oc}" style="{dl}"/>')
+        o.append(f'<text x="{x:.1f}" y="{y + 4:.1f}" class="nn" text-anchor="middle">{st.n:02d}</text>')
+        c = math.cos(math.radians(theta(st.n)))
+        if st.n == 9:
+            tx, ty, anc = x, y - 96, "middle"
+        elif abs(c) < 0.5:
+            tx, ty, anc = x + (24 if c > 0 else -24), y + 44, ("start" if c > 0 else "end")
+        else:
+            tx, ty, anc = x + (32 if c > 0 else -32), y - 26, ("start" if c > 0 else "end")
+        o.append(f'<text x="{tx:.1f}" y="{ty:.1f}" class="stt{oc}" text-anchor="{anc}" style="{dl}">'
+                 f'{_t(st.title)}</text>')
+        tw = len(st.title) * 9.6
+        bx = tx if anc == "start" else tx - tw if anc == "end" else tx - tw / 2
+        bcls = "bar" + ("" if anc == "start" else " end" if anc == "end" else " mid") + oc
+        o.append(f'<rect x="{bx:.1f}" y="{ty + 6:.1f}" width="{tw:.0f}" height="1.6" class="{bcls}" '
+                 f'style="{dl}"/>')
+        o.append(f'<text x="{tx:.1f}" y="{ty + 25:.1f}" class="sd" text-anchor="{anc}">{_t(st.about[0])}</text>')
+        o.append(f'<text x="{tx:.1f}" y="{ty + 42:.1f}" class="sd" text-anchor="{anc}">{_t(st.about[1])}</text>')
+        o.append(f'<text x="{tx:.1f}" y="{ty + 61:.1f}" class="mod" text-anchor="{anc}">{_t(st.caption)}</text>')
+    o.append(f'<text x="40" y="{HERO_H - 28}" class="foot">{_t(REPO_URL.upper())}</text>')
+    o.append(f'<text x="1160" y="{HERO_H - 28}" class="foot" text-anchor="end">EVERY STAGE NAMES THE CODE '
+             f'THAT RUNS IT</text>')
+    o.append("</svg>")
+    return "\n".join(o) + "\n"
+
+
+# ================================================================== the live results
+#: The receipt every number on the results panel comes from. Refresh = bump, re-render, commit.
+RESULTS_RUN_ID = "2026-10-06T235345Z"
+#: (family in the receipt, what the panel calls it). The panel shows the BEST STRATEGY account of
+#: each, by excess over SPY over its own window; the denominator is printed under it.
+FEATURED_FAMILIES: tuple[tuple[str, str], ...] = (
+    ("llm_portfolio:personal", "frozen LLM book"),
+    ("night_books", "night book"),
+    ("alpaca_fleet", "Alpaca paper broker"),
+)
+#: A name carrying one of these is a control, never a featured result: the random twin of a book,
+#: a declared comparator, an equal-weight or sector twin (`__ew`, `__sector_etf`, ...).
+CONTROL_MARKERS = ("_random_twin", "comparato", "__")
+
+
+def _receipt(name: str) -> dict:
+    p = PAPER_DIR / name
+    if not p.is_file():
+        raise SystemExit(f"REFUSED: {_rel(p)} is missing; the results panel "
+                         "prints only numbers a committed receipt holds.")
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+def _money(v: float) -> str:
+    return f"${v / 1e6:g}M" if v >= 1e6 else f"${v / 1e3:g}k"
+
+
+def _series(account: str, upto_utc: str) -> dict[str, tuple[float, float]]:
+    """{mark date: (account return %, SPY same-window %)} from every dated roi receipt up to the
+    pinned one; when two receipts mark the same date, the later-generated one stands."""
+    best: dict[str, tuple[str, float, float]] = {}
+    for p in sorted(PAPER_DIR.glob("roi_2026-*.json")):
+        r = json.loads(p.read_text(encoding="utf-8"))
+        gen = str(r.get("generated_utc") or "")
+        if not gen or gen > upto_utc:
+            continue
+        for row in r.get("rows") or []:
+            if row.get("account") != account or row.get("roi_pct") is None:
+                continue
+            d = str(row.get("last_mark"))
+            if d not in best or gen > best[d][0]:
+                best[d] = (gen, float(row["roi_pct"]), float(row["spy_same_window_pct"]))
+    return {d: (v[1], v[2]) for d, v in sorted(best.items())}
+
+
+def results_data() -> dict:
+    roi = _receipt(f"roi_{RESULTS_RUN_ID}.json")
+    dna = _receipt(f"book_dna_{RESULTS_RUN_ID}.json")
+    dna_by = {b["account"]: b for b in dna.get("books") or []}
+    rows = roi["rows"]
+
+    def control(r: dict) -> bool:
+        b = dna_by.get(r["account"], {})
+        return bool(b.get("twin_of")) or any(m in r["account"] for m in CONTROL_MARKERS)
+
+    featured = []
+    for fam, kind in FEATURED_FAMILIES:
+        cands = [r for r in rows if r.get("family") == fam and r.get("status") == "LIVE"
+                 and r.get("vs_spy_pp") is not None and not control(r)]
+        if not cands:
+            raise SystemExit(f"REFUSED: no live strategy account in family {fam!r} in roi_{RESULTS_RUN_ID}")
+        best = max(cands, key=lambda r: (r["vs_spy_pp"], r["account"]))
+        b = dna_by.get(best["account"], {})
+        name = (f"night book {str(best.get('book_id', ''))[5:13]}" if fam == "night_books"
+                else best["account"])
+        featured.append({
+            "family": fam, "account": best["account"], "name": name, "kind": kind,
+            "capital": _money(float(best["start_capital"])), "since": best["inception"],
+            "roi": float(best["roi_pct"]), "spy": float(best["spy_same_window_pct"]),
+            "excess": float(best["vs_spy_pp"]),
+            "sessions": int(b.get("sessions_graded") or 0),
+            "label": str((b.get("evidence") or {}).get("label") or "NOT LABELLED"),
+            "tickers": sorted(b.get("tickers") or []),
+        })
+    # the same names held twice is one bet, not two: say so on the second one
+    for i, f in enumerate(featured):
+        f["shares_names_with"] = next((g["name"] for g in featured[:i]
+                                       if f["tickers"] and g["tickers"] == f["tickers"]), None)
+    lead = featured[0]
+    twin_name = f"{lead['account']}_random_twin"
+    twin_row = next((r for r in rows if r["account"] == twin_name), None)
+    chart = None
+    if twin_row is not None:
+        a = _series(lead["account"], roi["generated_utc"])
+        t = _series(twin_name, roi["generated_utc"])
+        dates = [d for d in a if d in t]
+        chart = {"account": lead["account"], "twin": twin_name, "dates": dates,
+                 "acct": [a[d][0] for d in dates], "spy": [a[d][1] for d in dates],
+                 "twin_vals": [t[d][0] for d in dates]}
+    priced = sum(1 for r in rows if r.get("vs_spy_pp") is not None)
+    return {"run_id": RESULTS_RUN_ID, "as_of": str(roi["generated_utc"])[:10],
+            "receipt": f"backend/data/optimus/paper_accounts/roi_{RESULTS_RUN_ID}.json",
+            "featured": featured, "chart": chart, "priced": priced}
+
+
+def selection_line(d: dict) -> str:
+    return (f"Best strategy account in each of {len(d['featured'])} families (control twins excluded), "
+            f"picked after the fact from {d['priced']} priced paper accounts. Paper only; each return "
+            f"is over the account's own window, SPY compounded over the same days.")
+
+
+def _selection_lines(d: dict) -> tuple[str, str]:
+    """The selection sentence in two lines of at most ~110 characters (SVG text does not wrap)."""
+    head, _, tail = selection_line(d).partition(" Paper only; ")
+    return head, "Paper only; " + tail
+
+
+def _meta(f: dict) -> str:
+    return f"{f['kind']} · {f['capital']} paper"
+
+
+def _meta2(f: dict) -> str:
+    return f"since {f['since'][5:]} · {f['sessions']} sessions"
+
+
+def _shared(f: dict) -> str:
+    """The same holdings shown twice are one bet: the second card says whose names it holds."""
+    return f"holds the same {len(f['tickers'])} names as {f['shares_names_with']}" if f["shares_names_with"] else ""
+
+
+RES_W, RES_H = 1200, 470
+
+
+def _results_css() -> str:
+    return (
+        f".bg{{fill:{BG}}}"
+        f".sec{{font:700 12px {MONO};letter-spacing:3px;fill:#fff}}"
+        f".secr{{font:400 11px {MONO};letter-spacing:1.5px;fill:{INK3}}}"
+        ".rule{stroke:rgba(255,255,255,.14)}"
+        f".live{{fill:{BLUE};animation:live 1.8s ease-out infinite}}"
+        "@keyframes live{0%{opacity:1}100%{opacity:.15}}"
+        f".excess{{font:300 34px {SANS};fill:{BLUE_HI}}}"
+        f".exlab{{font:500 10px {MONO};letter-spacing:1.5px;fill:{BLUE}}}"
+        f".acct{{font:600 15px {MONO};fill:#fff}}"
+        f".meta{{font:400 12px {SANS};fill:rgba(255,255,255,.58)}}"
+        f".badge{{font:500 10px {MONO};letter-spacing:1.5px;fill:{INK3}}}"
+        ".track{fill:rgba(255,255,255,.06)}"
+        f".bar-acct{{fill:{BLUE}}}.bar-spy{{fill:rgba(255,255,255,.55)}}"
+        f".val{{font:600 12px {MONO};fill:#fff}}"
+        f".valspy{{font:400 11px {MONO};fill:rgba(255,255,255,.58)}}"
+        ".grid{stroke:rgba(255,255,255,.08)}"
+        f".zero{{stroke:{INK3};stroke-dasharray:2 3}}"
+        f".tick{{font:400 10px {MONO};fill:{INK3}}}"
+        f".ln-acct{{fill:none;stroke:{BLUE};stroke-width:2.4;stroke-linejoin:round}}"
+        ".ln-spy{fill:none;stroke:#fff;stroke-width:1.4;stroke-dasharray:5 4}"
+        f".ln-twin{{fill:none;stroke:{INK3};stroke-width:1.4}}"
+        f".pt{{fill:{BG};stroke:{BLUE};stroke-width:1.6}}"
+        f".pulse{{fill:none;stroke:{BLUE_HI};stroke-width:1.5}}.pulse-core{{fill:{BLUE_HI}}}"
+        f".lab-acct{{font:600 13px {MONO};fill:{BLUE_HI}}}"
+        f".lab-spy{{font:400 11px {MONO};fill:#fff}}"
+        f".lab-twin{{font:400 11px {MONO};fill:{INK3}}}"
+        f".ctitle{{font:600 14px {MONO};fill:#fff}}"
+        f".fine{{font:400 11px {SANS};fill:{INK3}}}"
+    )
+
+
+def _chart(d: dict, cx0: float, top: float, cw: float) -> list[str]:
+    """The lead account against its matched random twin and SPY, revealed left to right."""
+    o: list[str] = []
+    c = d["chart"]
+    if not c or len(c["dates"]) < 2:
+        return o
+    lead = d["featured"][0]
+    ch, cy0 = 200, top + 22
+    o.append(f'<text x="{cx0}" y="{top + 2}" class="ctitle">{_t(lead["name"])} vs its matched random '
+             f'twin</text>')
+    vals = c["acct"] + c["spy"] + c["twin_vals"]
+    ymin = math.floor(min(vals) / 2) * 2
+    ymax = math.ceil(max(vals) / 2) * 2
+    n = len(c["dates"])
+
+    def X(i: int) -> float:
+        return cx0 + 8 + i * (cw - 110) / (n - 1)
+
+    def Y(v: float) -> float:
+        return cy0 + 16 + (ymax - v) / (ymax - ymin) * (ch - 16)
+
+    for g in range(ymin, ymax + 1, 2):
+        o.append(f'<line x1="{cx0}" y1="{Y(g):.1f}" x2="{cx0 + cw - 96}" y2="{Y(g):.1f}" '
+                 f'class="{"zero" if g == 0 else "grid"}"/>')
+        lab = "0%" if g == 0 else f"{g:+d}%".replace("-", "−")
+        o.append(f'<text x="{cx0 - 8}" y="{Y(g) + 4:.1f}" class="tick" text-anchor="end">{lab}</text>')
+    for i, dt in enumerate(c["dates"]):
+        o.append(f'<text x="{X(i):.1f}" y="{cy0 + ch + 20}" class="tick" text-anchor="middle">'
+                 f'{dt[5:]}</text>')
+    o.append(f'<clipPath id="reveal"><rect x="{cx0 - 4}" y="{cy0 - 10}" width="{cw}" height="{ch + 30}">'
+             f'<animate attributeName="width" from="0" to="{cw}" dur="2.6s" begin="0s" fill="freeze" '
+             f'calcMode="spline" keyTimes="0;1" keySplines="0.25 0.6 0.2 1"/></rect></clipPath>')
+    o.append('<g clip-path="url(#reveal)">')
+    for cls, vs in (("ln-spy", c["spy"]), ("ln-twin", c["twin_vals"]), ("ln-acct", c["acct"])):
+        pts = " ".join(f"{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(vs))
+        o.append(f'<polyline points="{pts}" class="{cls}"/>')
+    for i, v in enumerate(c["acct"]):
+        o.append(f'<circle cx="{X(i):.1f}" cy="{Y(v):.1f}" r="3" class="pt"/>')
+    o.append("</g>")
+    lx = X(n - 1)
+    a_last, s_last, t_last = c["acct"][-1], c["spy"][-1], c["twin_vals"][-1]
+    o.append(f'<circle cx="{lx:.1f}" cy="{Y(a_last):.1f}" r="4" class="pulse">'
+             f'<animate attributeName="r" values="4;16" dur="2s" begin="2.6s" repeatCount="indefinite"/>'
+             f'<animate attributeName="opacity" values="0.9;0" dur="2s" begin="2.6s" '
+             f'repeatCount="indefinite"/></circle>')
+    o.append(f'<circle cx="{lx:.1f}" cy="{Y(a_last):.1f}" r="4" class="pulse-core"/>')
+    o.append(f'<text x="{lx + 12:.1f}" y="{Y(a_last) + 5:.1f}" class="lab-acct">{_num(a_last)}%</text>')
+    o.append(f'<text x="{lx + 12:.1f}" y="{Y(s_last) + 5:.1f}" class="lab-spy">SPY {_num(s_last)}%</text>')
+    o.append(f'<text x="{lx + 12:.1f}" y="{Y(t_last) + 9:.1f}" class="lab-twin">twin {_num(t_last)}%</text>')
+    ly, lxx = cy0 + ch + 44, cx0
+    for cls, lab in (("ln-acct", "account"), ("ln-twin", "matched random twin"),
+                     ("ln-spy", "SPY, same window")):
+        o.append(f'<line x1="{lxx}" y1="{ly - 4}" x2="{lxx + 22}" y2="{ly - 4}" class="{cls}"/>')
+        o.append(f'<text x="{lxx + 30}" y="{ly}" class="meta">{_t(lab)}</text>')
+        lxx += 44 + len(lab) * 7
+    return o
+
+
+def render_results() -> str:
+    d = results_data()
+    desc = (f"Best paper accounts as of {d['as_of']} (receipt {d['receipt']}): "
+            + "; ".join(f"{f['name']} {_num(f['roi'])}% vs SPY {_num(f['spy'])}% over its own window, "
+                        f"{_num(f['excess'])} pp, {f['label']}" for f in d["featured"])
+            + f". {selection_line(d)}")
+    o = _head(RES_W, RES_H, "Aegis: best paper accounts, live", desc, _results_css())
+    o.append(f'<rect width="{RES_W}" height="{RES_H}" class="bg"/>')
+    x, w = 40, 1120
+    o.append(f'<circle cx="{x + 5}" cy="40" r="4" class="live"/>')
+    o.append(f'<text x="{x + 18}" y="44" class="sec">BEST PAPER ACCOUNTS · LIVE</text>')
+    o.append(f'<text x="{x + w}" y="44" class="secr" text-anchor="end">AS OF {d["as_of"]} CLOSE · RECEIPT '
+             f'roi_{d["run_id"]}</text>')
+    o.append(f'<line x1="{x}" y1="58" x2="{x + w}" y2="58" class="rule"/>')
+    top, lw, scale, bx = 88, 600, 200 / 8.0, x + 400
+    for i, f in enumerate(d["featured"]):
+        ry = top + i * 108
+        o.append(f'<text x="{x}" y="{ry + 30}" class="excess">{_num(f["excess"])}</text>')
+        o.append(f'<text x="{x + 2}" y="{ry + 50}" class="exlab">PP VS SPY</text>')
+        o.append(f'<text x="{x + 120}" y="{ry + 16}" class="acct">{_t(f["name"])}</text>')
+        o.append(f'<text x="{x + 120}" y="{ry + 36}" class="meta">{_t(_meta(f))}</text>')
+        o.append(f'<text x="{x + 120}" y="{ry + 54}" class="meta">{_t(_meta2(f))}</text>')
+        o.append(f'<text x="{x + 120}" y="{ry + 72}" class="badge">{_t(f["label"])}</text>')
+        if _shared(f):
+            o.append(f'<text x="{x + 120}" y="{ry + 90}" class="meta">{_t(_shared(f))}</text>')
+        wa, ws = max(2, round(f["roi"] * scale)), max(2, round(f["spy"] * scale))
+        for yy, ww, cls in ((ry + 8, wa, "bar-acct"), (ry + 34, ws, "bar-spy")):
+            o.append(f'<rect x="{bx}" y="{yy}" width="{round(8 * scale)}" height="8" class="track" rx="4"/>')
+            o.append(f'<rect x="{bx}" y="{yy}" width="{ww}" height="8" class="{cls}" rx="4">'
+                     f'<animate attributeName="width" from="0" to="{ww}" dur="1.4s" '
+                     f'begin="{0.2 + i * 0.25:.2f}s" fill="freeze" calcMode="spline" keyTimes="0;1" '
+                     f'keySplines="0.2 0.8 0.2 1"/></rect>')
+        o.append(f'<text x="{bx + wa + 8}" y="{ry + 16}" class="val">{_num(f["roi"])}%</text>')
+        o.append(f'<text x="{bx + ws + 8}" y="{ry + 42}" class="valspy">SPY {_num(f["spy"])}%</text>')
+    o += _chart(d, x + lw + 50, top, w - lw - 50)
+    l1, l2 = _selection_lines(d)
+    o.append(f'<text x="{x}" y="{RES_H - 44}" class="fine">{_t(l1)}</text>')
+    o.append(f'<text x="{x}" y="{RES_H - 26}" class="fine">{_t(l2)}</text>')
+    o.append("</svg>")
+    return "\n".join(o) + "\n"
+
+
+# ================================================================== style A: the blackline pipeline
+PIPE_W, PIPE_H = 1200, 1060
+CW, CH = 350, 216
+COLS, ROWS = (40, 425, 810), (214, 480, 746)
+GRID = {1: (0, 0), 2: (0, 1), 3: (0, 2), 4: (1, 2), 5: (1, 1), 6: (1, 0), 7: (2, 0), 8: (2, 1), 9: (2, 2)}
+A_CYCLE = 9.0
 
 
 def _card_xy(n: int) -> tuple[int, int]:
     r, c = GRID[n]
-    return COL_X[c], ROW_Y[r]
+    return COLS[c], ROWS[r]
+
+
+def _pipeline_css() -> str:
+    return (
+        f".bg{{fill:{BG}}}"
+        f".kicker{{font:400 12px {MONO};letter-spacing:3.5px;fill:rgba(255,255,255,.55)}}"
+        f".h1{{font:200 38px {SANS};letter-spacing:6px;fill:#fff}}"
+        f".lede{{font:400 15px {SANS};fill:rgba(255,255,255,.7)}}"
+        f".chip{{font:500 11px {MONO};letter-spacing:2px;fill:#fff}}"
+        f".live{{fill:{BLUE};animation:live 1.8s ease-out infinite}}"
+        "@keyframes live{0%{opacity:1}100%{opacity:.15}}"
+        f".num{{font:200 34px {SANS};fill:rgba(255,255,255,.28)}}"
+        f".stt{{font:600 15px {SANS};letter-spacing:1.8px;fill:#fff}}"
+        f".sd{{font:400 14px {SANS};fill:rgba(255,255,255,.7)}}"
+        f".mod{{font:400 12px {MONO}}}"
+        f".dir{{fill:rgba(255,255,255,.38)}}.file{{fill:{BLUE}}}.sym{{fill:rgba(255,255,255,.72)}}"
+        ".frame{fill:rgba(255,255,255,.015);stroke:rgba(255,255,255,.16);stroke-width:1}"
+        ".brk{fill:none;stroke:rgba(255,255,255,.75);stroke-width:1.5}"
+        f".hl{{fill:none;stroke-width:1.5;opacity:0;animation:hl {A_CYCLE:g}s linear infinite}}"
+        f".hl.b{{stroke:{BLUE}}}.hl.o{{stroke:{ORANGE}}}"
+        "@keyframes hl{0%{opacity:0}2%{opacity:1}10%{opacity:1}15%{opacity:0}100%{opacity:0}}"
+        ".wire{fill:none;stroke:rgba(255,255,255,.22);stroke-width:1}"
+        f".flow{{fill:none;stroke:{BLUE};stroke-width:1.6;stroke-dasharray:3 9;"
+        "animation:flow 1s linear infinite}"
+        "@keyframes flow{to{stroke-dashoffset:-12}}"
+        f".loop{{fill:none;stroke:{ORANGE};stroke-width:1.6;stroke-dasharray:6 6;"
+        "animation:flow2 1.4s linear infinite}"
+        "@keyframes flow2{to{stroke-dashoffset:-24}}"
+        f".looplab{{font:500 11px {MONO};letter-spacing:1px;fill:{ORANGE}}}"
+        ".rule{stroke:rgba(255,255,255,.18)}"
+        f".sec{{font:600 12px {MONO};letter-spacing:3px;fill:#fff}}"
+        f".foot{{font:400 11px {MONO};letter-spacing:1.2px;fill:rgba(255,255,255,.45)}}"
+    )
 
 
 def _module_text(m: Module) -> str:
@@ -214,126 +718,87 @@ def _module_text(m: Module) -> str:
     return out + "".join(f'<tspan class="sym"> · {_t(s)}</tspan>' for s in m.symbols)
 
 
-def _card(st: Stage) -> list[str]:
-    x, y = _card_xy(st.n)
-    out = [
-        f'<g id="stage-{st.n}">',
-        f'<rect x="{x}" y="{y}" width="{CW}" height="{CH}" rx="12" fill="{CARD}" '
-        f'stroke="{CARD_STROKE}" stroke-width="1.2"/>',
-        f'<circle cx="{x}" cy="{y + 27}" r="13" fill="{BG}" stroke="{CYAN}" stroke-width="1.5"/>',
-        f'<text class="s num" x="{x}" y="{y + 32}" text-anchor="middle">{st.n}</text>',
-        f'<text class="s st" x="{x + 24}" y="{y + 33}">{_t(st.title)}</text>',
-        f'<text class="s ab" x="{x + 16}" y="{y + 57}">{_t(st.about[0])}</text>',
-        f'<text class="s ab" x="{x + 16}" y="{y + 74}">{_t(st.about[1])}</text>',
-        f'<path d="M{x + 16} {y + 87}H{x + CW - 16}" stroke="{CARD_STROKE}" stroke-width="1"/>',
-    ]
-    for i, m in enumerate(st.modules):
-        out.append(f'<text class="m mod" x="{x + 16}" y="{y + 107 + 19 * i}">{_module_text(m)}</text>')
-    out.append("</g>")
-    return out
-
-
-def _flow_arrows() -> list[str]:
-    """The forward pipeline, 1 -> 9, as straight arrows between neighbouring cards."""
-    out = []
+def render_pipeline() -> str:
+    desc = ("How Aegis works, module by module: "
+            + "; ".join(f"{s.n} {s.title.lower()} ({s.doc_name} in {SOURCE_DOC} §2): "
+                        + ", ".join(m.label for m in s.modules) for s in STAGES)
+            + f". Learning feeds the next cycle: {LOOP_TO_DECISION}; {LOOP_TO_THEORY}.")
+    defs = ('<pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">'
+            '<circle cx="1" cy="1" r="1" fill="rgba(255,255,255,.07)"/></pattern>'
+            + "".join(f'<marker id="{mid}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" '
+                      f'markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9" fill="none" '
+                      f'stroke="{col}" stroke-width="1.6"/></marker>'
+                      for mid, col in (("ab", BLUE), ("ao", ORANGE))))
+    o = _head(PIPE_W, PIPE_H, "How Aegis works, module by module", desc, _pipeline_css(), defs)
+    o.append(f'<rect width="{PIPE_W}" height="{PIPE_H}" class="bg"/>'
+             f'<rect width="{PIPE_W}" height="{PIPE_H}" fill="url(#dots)"/>')
+    for cx_, cy_, dx, dy in ((16, 16, 1, 1), (PIPE_W - 16, 16, -1, 1), (16, PIPE_H - 16, 1, -1),
+                             (PIPE_W - 16, PIPE_H - 16, -1, -1)):
+        o.append(f'<path d="M{cx_},{cy_ + 14 * dy} L{cx_},{cy_} L{cx_ + 14 * dx},{cy_}" class="brk" '
+                 f'style="stroke:rgba(255,255,255,.35)"/>')
+    o.append('<text x="40" y="60" class="kicker">AEGIS FINANCE · THE LOOP, MODULE BY MODULE</text>')
+    o.append('<text x="36" y="108" class="h1">HOW IT WORKS</text>')
+    o.append('<text x="40" y="142" class="lede">Language models read the world and propose; deterministic '
+             'code ranks, sizes, stops and exits. Paper only.</text>')
+    o += _chips(1160, 40, (("ONE CYCLE PER SESSION", True), ("9 STAGES", False)), round_=False)
+    o.append('<line x1="40" y1="176" x2="1160" y2="176" class="rule"/>')
+    # wires first (under the cards)
     for a in range(1, 9):
-        (ra, ca), (rb, cb) = GRID[a], GRID[a + 1]
-        xa, ya = _card_xy(a)
-        if ra == rb:                                   # same row: horizontal
-            ym = ya + CH // 2
-            if cb > ca:
-                x0, x1 = xa + CW + 4, COL_X[cb] - 3
-            else:
-                x0, x1 = xa - 4, COL_X[cb] + CW + 3
-            d = f"M{x0} {ym}H{x1}"
-        else:                                          # same column: down
-            xm = xa + CW // 2
-            d = f"M{xm} {ya + CH + 4}V{ROW_Y[rb] - 3}"
-        out.append(f'<path d="{d}" stroke="{ARROW}" stroke-width="2" fill="none" marker-end="url(#ah)"/>')
-    return out
-
-
-def _loops() -> list[str]:
-    """LEARNING feeds the next cycle: into DECISION (weights and preferences) and, through the
-    right margin, into THEORY (the hyp_lab family posterior)."""
+        (ax, ay), (bx, by) = _card_xy(a), _card_xy(a + 1)
+        if ay == by:
+            x1, x2 = (ax + CW, bx) if bx > ax else (ax, bx + CW)
+            y1 = y2 = ay + CH // 2
+        else:
+            x1 = x2 = ax + CW // 2
+            y1, y2 = ay + CH, by
+        o.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" class="wire"/>')
+        ex = x2 - (6 if x2 > x1 else -6 if x2 < x1 else 0)
+        ey = y2 - (6 if y2 > y1 else 0)
+        o.append(f'<line x1="{x1}" y1="{y1}" x2="{ex}" y2="{ey}" class="flow" marker-end="url(#ab)"/>')
+    for st in STAGES:
+        x, y = _card_xy(st.n)
+        o.append(f'<g id="stage-{st.n}">')
+        o.append(f'<rect x="{x}" y="{y}" width="{CW}" height="{CH}" class="frame"/>')
+        for bx_, by_, dx, dy in ((x, y, 1, 1), (x + CW, y, -1, 1), (x, y + CH, 1, -1), (x + CW, y + CH, -1, -1)):
+            o.append(f'<path d="M{bx_},{by_ + 12 * dy} L{bx_},{by_} L{bx_ + 12 * dx},{by_}" class="brk"/>')
+        o.append(f'<rect x="{x}" y="{y}" width="{CW}" height="{CH}" class="hl {"o" if st.n == 9 else "b"}" '
+                 f'style="animation-delay:{st.n - 1}s"/>')
+        o.append(f'<text x="{x + 20}" y="{y + 46}" class="num">{st.n:02d}</text>')
+        o.append(f'<text x="{x + 76}" y="{y + 41}" class="stt">{_t(st.title)}</text>')
+        o.append(f'<text x="{x + 20}" y="{y + 78}" class="sd">{_t(st.about[0])}</text>')
+        o.append(f'<text x="{x + 20}" y="{y + 99}" class="sd">{_t(st.about[1])}</text>')
+        o.append(f'<line x1="{x + 20}" y1="{y + 117}" x2="{x + CW - 20}" y2="{y + 117}" '
+                 f'stroke="rgba(255,255,255,.08)"/>')
+        for i, m in enumerate(st.modules):
+            o.append(f'<text x="{x + 20}" y="{y + 140 + 19 * i}" class="mod">{_module_text(m)}</text>')
+        o.append("</g>")
     x9, y9 = _card_xy(9)
     x5, y5 = _card_xy(5)
     x3, y3 = _card_xy(3)
-    dash = f'stroke="{AMBER}" stroke-width="2" stroke-dasharray="7 5" fill="none" marker-end="url(#al)"'
-    # 9 -> 5 through the gap between rows 2 and 3
-    xa, xb, yl = x9 + CW - 48, x5 + 56, y5 + CH + 30
-    to_decision = (f"M{xa} {y9 - 3}V{yl + 12}Q{xa} {yl} {xa - 12} {yl}"
-                   f"H{xb + 12}Q{xb} {yl} {xb} {yl - 12}V{y5 + CH + 3}")
-    # 9 -> 3 through the right margin
-    xr, ym9, ym3 = x3 + CW + 28, y9 + CH // 2, y3 + CH // 2
-    to_theory = (f"M{x9 + CW + 3} {ym9}H{xr - 12}Q{xr} {ym9} {xr} {ym9 - 12}"
-                 f"V{ym3 + 12}Q{xr} {ym3} {xr - 12} {ym3}H{x3 + CW + 4}")
-    return [
-        f'<path d="{to_decision}" {dash}/>',
-        f'<text class="s loop" x="{(xa + xb) // 2}" y="{yl - 9}" text-anchor="middle">{_t(LOOP_TO_DECISION)}</text>',
-        f'<path d="{to_theory}" {dash}/>',
-        f'<text class="s loop" transform="translate({xr + 15} {(ym9 + ym3) // 2}) rotate(-90)" '
-        f'text-anchor="middle">{_t(LOOP_TO_THEORY)}</text>',
-    ]
+    gy = y5 + CH + 25
+    to5 = f"M{x9 + 60},{y9} L{x9 + 60},{gy} L{x5 + CW - 60},{gy} L{x5 + CW - 60},{y5 + CH + 4}"
+    o.append(f'<path d="{to5}" class="loop" marker-end="url(#ao)"/>')
+    o.append(f'<text x="{x5 + CW - 48}" y="{gy - 6}" class="looplab">{_t(LOOP_TO_DECISION)}</text>')
+    o.append(f'<path d="M{x9 + CW},{y9 + 40} L{x9 + CW + 22},{y9 + 40} L{x9 + CW + 22},{y3 + 40} '
+             f'L{x3 + CW + 4},{y3 + 40}" class="loop" marker-end="url(#ao)"/>')
+    o.append(f'<text x="{x3 + CW - 8}" y="{y3 - 10}" class="looplab" text-anchor="end">↺ '
+             f'{_t(LOOP_TO_THEORY)}</text>')
+    o.append(f'<circle r="3.5" fill="{ORANGE}"><animateMotion dur="3s" repeatCount="indefinite" '
+             f'path="M{x9 + 60},{y9} L{x9 + 60},{gy} L{x5 + CW - 60},{gy} L{x5 + CW - 60},{y5 + CH}"/></circle>')
+    fy = ROWS[2] + CH + 40
+    o.append(f'<line x1="40" y1="{fy - 18}" x2="1160" y2="{fy - 18}" class="rule"/>')
+    o.append(f'<text x="40" y="{fy + 4}" class="foot">BLUE: ONE CYCLE, STAGE TO STAGE · ORANGE: WHAT THE '
+             f'NEXT CYCLE INHERITS · EVERY PATH IS CHECKED BY backend/tests/test_public_assets.py</text>')
+    o.append(f'<text x="40" y="{fy + 26}" class="foot">STAGE NAMES AND MODULES: {SOURCE_DOC} §2 · '
+             f'{_t(REPO_URL.upper())}</text>')
+    o.append("</svg>")
+    return "\n".join(o) + "\n"
 
 
-def render_pipeline() -> str:
-    lines = _xml_head(
-        W, H, "The Aegis V1 Beta pipeline",
-        "Nine stages in one loop: world sensors, evidence, world state and theory, forecasts, "
-        "opportunity and decision, paper action or abstention, outcome, regret and attribution, "
-        "learning; learning feeds the next cycle's decisions and theory. Each stage names the "
-        f"repository modules that run it. State on {STATE_DATE}: V1 Beta not reached; "
-        f"{HONEST_HEAD}. Source: {SOURCE_DOC}.")
-    lines += _style([
-        f".eb{{font-size:12.5px;font-weight:700;letter-spacing:2px;fill:{CYAN}}}",
-        f".h1{{font-size:25px;font-weight:700;fill:{TITLE}}}",
-        f".sub{{font-size:14px;fill:{TEXT}}}",
-        f".chip{{font-size:13px;font-weight:700;letter-spacing:1.2px;fill:{AMBER}}}",
-        f".tail{{font-size:13px;fill:{TEXT}}}",
-        f".num{{font-size:13px;font-weight:700;fill:{TITLE}}}",
-        f".st{{font-size:15.5px;font-weight:700;letter-spacing:.5px;fill:{TITLE}}}",
-        f".ab{{font-size:13px;fill:{TEXT}}}",
-        ".mod{font-size:12.5px}",
-        f".dir{{fill:{DIR}}}",
-        f".file{{fill:{FILE}}}",
-        f".sym{{fill:{SYM}}}",
-        f".loop{{font-size:12px;font-style:italic;fill:{AMBER}}}",
-        f".ft{{font-size:12.5px;fill:{TEXT}}}",
-        f".ft2{{font-size:12px;fill:{MUTED}}}",
-    ])
-    lines += _markers()
-    lines += [
-        f'<rect x="1" y="1" width="{W - 2}" height="{H - 2}" rx="20" fill="{BG}" '
-        f'stroke="{PANEL_STROKE}" stroke-width="2"/>',
-        '<text class="s eb" x="36" y="46">AEGIS FINANCE · THE V1 BETA LOOP</text>',
-        '<text class="s h1" x="36" y="79">Every box names the module that runs it</text>',
-        '<text class="s sub" x="36" y="106">Language models read the world and propose; deterministic '
-        'code ranks, sizes, stops and exits. Paper only.</text>',
-        f'<rect x="856" y="30" width="292" height="30" rx="15" fill="{AMBER_BG}" stroke="{AMBER}" '
-        'stroke-width="1.2"/>',
-        f'<text class="s chip" x="1002" y="50" text-anchor="middle">{_t(HONEST_HEAD)}</text>',
-        f'<text class="s tail" x="1148" y="82" text-anchor="end">{_t(HONEST_TAIL)}</text>',
-    ]
-    lines += _flow_arrows()
-    lines += _loops()
-    for st in STAGES:
-        lines += _card(st)
-    y0 = ROW_Y[2] + CH
-    lines += [
-        f'<path d="M36 {y0 + 16}H1148" stroke="{CARD_STROKE}" stroke-width="1"/>',
-        f'<text class="s ft" x="36" y="{y0 + 36}">{_t(FOOTER[0])}</text>',
-        f'<text class="s ft" x="36" y="{y0 + 55}">{_t(FOOTER[1])}</text>',
-        f'<text class="s ft2" x="36" y="{y0 + 74}">{_t(FOOTER[2])}</text>',
-        "</svg>",
-    ]
-    return "\n".join(lines) + "\n"
-
-
-# ------------------------------------------------------------------ social-preview card
+# ================================================================== the social card (static)
 OG_W, OG_H = 1200, 630
 OG_DESC_LINES = 5
-OG_DESC_CHARS = 47
+OG_DESC_CHARS = 48
 
 
 def wrap(text: str, width: int) -> list[str]:
@@ -351,81 +816,184 @@ def wrap(text: str, width: int) -> list[str]:
     return lines
 
 
-def _rel(path: Path) -> str:
-    return path.relative_to(REPO).as_posix() if path.is_relative_to(REPO) else str(path)
-
-
-def _logo_href() -> str:
-    if not LOGO_PNG.is_file():
-        raise SystemExit(f"REFUSED: {_rel(LOGO_PNG)} is missing; the card embeds the project's "
-                         "own logo and will not draw a substitute.")
-    return "data:image/png;base64," + base64.b64encode(LOGO_PNG.read_bytes()).decode("ascii")
-
-
 def render_og() -> str:
     desc = wrap(PRODUCT_SENTENCE, OG_DESC_CHARS)
     if len(desc) > OG_DESC_LINES:
         raise ValueError(f"the product sentence wraps to {len(desc)} lines; the card holds {OG_DESC_LINES}")
-    lines = _xml_head(
-        OG_W, OG_H, "AEGIS Finance",
-        f"AEGIS Finance. {PRODUCT_SENTENCE} {HONEST_HEAD} - {HONEST_TAIL}. {LIVE_URL}",
-        xlink=True)
-    lines += _style([
-        f".t{{font-size:58px;font-weight:700;fill:{TITLE}}}",
-        f".tag{{font-size:22px;font-weight:600;fill:{CYAN}}}",
-        ".d{font-size:26px;fill:#d5deea}",
-        f".hh{{font-size:26px;font-weight:700;letter-spacing:1px;fill:{AMBER}}}",
-        f".ht{{font-size:20px;fill:{TEXT}}}",
-        f".url{{font-size:24px;fill:{CYAN}}}",
-        f".meta{{font-size:16px;fill:{MUTED}}}",
-        f".eb{{font-size:12.5px;font-weight:700;letter-spacing:2px;fill:{CYAN}}}",
-        f".num{{font-size:12px;font-weight:700;fill:{TITLE}}}",
-        f".sn{{font-size:13px;font-weight:700;letter-spacing:.4px;fill:{TITLE}}}",
-    ])
-    lines += _markers()
-    lines += [
-        f'<rect width="{OG_W}" height="{OG_H}" fill="{BG}"/>',
-        f'<rect width="{OG_W}" height="5" fill="{CYAN}"/>',
-        f'<image x="72" y="64" width="96" height="96" xlink:href="{_logo_href()}"/>',
-        '<text class="s t" x="192" y="126">AEGIS Finance</text>',
-        f'<text class="s tag" x="194" y="160">{_t(TAGLINE)}</text>',
-    ]
+    css = (f".bg{{fill:{BG}}}"
+           f".kicker{{font:400 13px {MONO};letter-spacing:3.5px;fill:rgba(255,255,255,.6)}}"
+           f".brand{{font:200 84px {SANS};letter-spacing:24px;fill:#fff}}"
+           f".fin{{font:500 15px {MONO};letter-spacing:9px;fill:{BLUE_HI}}}"
+           f".d{{font:400 22px {SANS};fill:rgba(255,255,255,.78)}}"
+           f".url{{font:500 19px {MONO};fill:{BLUE_HI}}}"
+           f".meta{{font:400 13px {MONO};letter-spacing:2px;fill:rgba(255,255,255,.5)}}"
+           ".dot{fill:rgba(255,255,255,.34)}"
+           ".node{fill:#000;stroke:rgba(255,255,255,.8);stroke-width:1.5}"
+           f".node.o{{stroke:{ORANGE}}}.node.a{{fill:{BLUE};stroke:{BLUE_HI}}}"
+           f".nn{{font:600 10px {MONO};fill:#fff}}"
+           f".orbit{{fill:none;stroke:{ORANGE};stroke-width:1.2;stroke-dasharray:2 5;opacity:.45}}"
+           f".core{{font:200 22px {SANS};letter-spacing:7px;fill:#fff}}"
+           f".csub{{font:500 9px {MONO};letter-spacing:2px;fill:rgba(255,255,255,.55)}}")
+    o = _head(OG_W, OG_H, "AEGIS Finance",
+              f"AEGIS Finance. {TAGLINE}. {PRODUCT_SENTENCE} {LIVE_URL}", css)
+    o.append(f'<rect width="{OG_W}" height="{OG_H}" class="bg"/>')
+    o.append(f'<text x="72" y="96" class="kicker">{_t(TAGLINE.upper())}</text>')
+    o.append('<text x="64" y="196" class="brand">AEGIS</text>')
+    o.append('<text x="74" y="232" class="fin">FINANCE</text>')
     for i, ln in enumerate(desc):
-        lines.append(f'<text class="s d" x="72" y="{236 + 37 * i}">{_t(ln)}</text>')
-    lines += [
-        f'<rect x="72" y="418" width="5" height="76" fill="{AMBER}"/>',
-        f'<text class="s hh" x="96" y="448">{_t(HONEST_HEAD)}</text>',
-        f'<text class="s ht" x="96" y="482">— {_t(HONEST_TAIL)}</text>',
-        f'<text class="m url" x="72" y="562">{_t(LIVE_URL)}</text>',
-        f'<text class="s meta" x="72" y="596">open source (MIT) · paper only · {_t(REPO_URL)}</text>',
-    ]
-    # the loop, in miniature: the nine stage names, and LEARNING's edge back to DECISION
-    px, py, pw, ph = 820, 48, 332, 534
-    cx = px + 42
-    lines += [
-        f'<rect x="{px}" y="{py}" width="{pw}" height="{ph}" rx="16" fill="{CARD}" '
-        f'stroke="{CARD_STROKE}" stroke-width="1.2"/>',
-        f'<text class="s eb" x="{px + 26}" y="{py + 36}">THE V1 BETA LOOP</text>',
-    ]
-    ys = [py + 76 + 50 * i for i in range(len(STAGES))]
-    for i in range(len(STAGES) - 1):
-        lines.append(f'<path d="M{cx} {ys[i] + 12}V{ys[i + 1] - 13}" stroke="{ARROW}" '
-                     'stroke-width="1.5" marker-end="url(#ah)"/>')
-    y9, y5 = ys[8], ys[4]
-    lines.append(f'<path d="M{cx - 12} {y9}H{cx - 24}Q{cx - 30} {y9} {cx - 30} {y9 - 6}'
-                 f'V{y5 + 6}Q{cx - 30} {y5} {cx - 24} {y5}H{cx - 14}" stroke="{AMBER}" '
-                 'stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#al)"/>')
-    for st, y in zip(STAGES, ys):
-        lines += [
-            f'<circle cx="{cx}" cy="{y}" r="12" fill="{BG}" stroke="{CYAN}" stroke-width="1.5"/>',
-            f'<text class="s num" x="{cx}" y="{y + 4}" text-anchor="middle">{st.n}</text>',
-            f'<text class="s sn" x="{cx + 24}" y="{y + 5}">{_t(st.title)}</text>',
-        ]
-    lines.append("</svg>")
-    return "\n".join(lines) + "\n"
+        lines_y = 296 + 34 * i
+        o.append(f'<text x="72" y="{lines_y}" class="d">{_t(ln)}</text>')
+    o.append(f'<text x="72" y="{OG_H - 70}" class="url">{_t(LIVE_URL)}</text>')
+    o.append(f'<text x="72" y="{OG_H - 40}" class="meta">OPEN SOURCE (MIT) · PAPER ONLY · '
+             f'{_t(REPO_URL.upper())}</text>')
+    # the orbit, in miniature and still: nine stages, LEARNING at the crown, its inner orbits
+    ox, oy, orr = 930, 320, 180
+
+    def p(n: int, r: float) -> tuple[float, float]:
+        t = math.radians(theta(n))
+        return ox + r * math.cos(t), oy + r * math.sin(t)
+
+    for rr, n in ((orr - 38, 3), (orr - 62, 5)):
+        a0, a1 = theta(9), theta(n) + 360
+        x0, y0 = ox + rr * math.cos(math.radians(a0)), oy + rr * math.sin(math.radians(a0))
+        x1, y1 = ox + rr * math.cos(math.radians(a1)), oy + rr * math.sin(math.radians(a1))
+        large = 1 if ((a1 - a0) % 360) > 180 else 0
+        o.append(f'<path d="M{x0:.1f},{y0:.1f} A{rr},{rr} 0 {large} 1 {x1:.1f},{y1:.1f}" class="orbit"/>')
+    for i in range(96):
+        a = theta(9) + i * 3.75
+        if any(abs(((a - theta(n) + 180) % 360) - 180) < 5.5 for n in range(1, 10)):
+            continue
+        x, y = ox + orr * math.cos(math.radians(a)), oy + orr * math.sin(math.radians(a))
+        o.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="1.6" class="dot"/>')
+    for st in STAGES:
+        x, y = p(st.n, orr)
+        cls = "node o" if st.n == 9 else "node a" if st.n == 5 else "node"
+        o.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="11" class="{cls}"/>')
+        o.append(f'<text x="{x:.1f}" y="{y + 3.5:.1f}" class="nn" text-anchor="middle">{st.n:02d}</text>')
+    o.append(f'<text x="{ox + 4}" y="{oy + 4}" class="core" text-anchor="middle">LOOP</text>')
+    o.append(f'<text x="{ox}" y="{oy + 24}" class="csub" text-anchor="middle">EVERY BELIEF GRADED</text>')
+    o.append("</svg>")
+    return "\n".join(o) + "\n"
 
 
-# ------------------------------------------------------------------ cli
+# ================================================================== the HTML motion page
+CHART_W, CHART_H = 640, 300
+
+
+def render_chart() -> str:
+    """The results chart alone (the HTML page draws its cards natively)."""
+    d = results_data()
+    o = _head(CHART_W, CHART_H, f"{d['featured'][0]['name']} vs its matched random twin",
+              f"Daily marks from the dated receipts up to roi_{d['run_id']}.", _results_css())
+    o.append(f'<rect width="{CHART_W}" height="{CHART_H}" class="bg"/>')
+    o += _chart(d, 48, 24, CHART_W - 48)
+    o.append("</svg>")
+    return "\n".join(o) + "\n"
+
+
+def _inline(svg: str, prefix: str) -> str:
+    """An SVG for inline use in a page that holds two: its fixed size dropped (CSS sizes it to
+    the column) and every id prefixed, with every reference to one, so no two collide."""
+    import re
+    svg = re.sub(r'<svg ([^>]*?)width="\d+" height="\d+" ', r"<svg \1", svg, count=1)
+    ids = re.findall(r'\sid="([^"]+)"', svg)
+    for i in sorted(set(ids), key=len, reverse=True):
+        svg = (svg.replace(f'id="{i}"', f'id="{prefix}{i}"').replace(f"url(#{i})", f"url(#{prefix}{i})")
+               .replace(f'href="#{i}"', f'href="#{prefix}{i}"'))
+    return svg.replace('aria-labelledby="title desc"', f'aria-labelledby="{prefix}title {prefix}desc"', 1)
+
+
+def render_front_html() -> str:
+    d = results_data()
+    hero = _inline(render_hero(), "h-")
+    cards = []
+    for f in d["featured"]:
+        width_a = min(100.0, max(1.0, f["roi"] / 8.0 * 100))
+        width_s = min(100.0, max(1.0, f["spy"] / 8.0 * 100))
+        cards.append(
+            f'<article class="fp-card"><div class="fp-ex" data-to="{f["excess"]:.2f}">{_num(f["excess"])}</div>'
+            f'<div class="fp-exl">pp vs SPY</div><h3>{_t(f["name"])}</h3>'
+            f'<p class="fp-meta">{_t(_meta(f))}<br>{_t(_meta2(f))}'
+            + (f'<br>{_t(_shared(f))}' if _shared(f) else "") + '</p>'
+            f'<div class="fp-bars"><div class="fp-bar"><span class="a" style="--w:{width_a:.1f}%"></span>'
+            f'<b>{_num(f["roi"])}%</b></div><div class="fp-bar"><span class="s" style="--w:{width_s:.1f}%">'
+            f'</span><b>SPY {_num(f["spy"])}%</b></div></div><p class="fp-badge">{_t(f["label"])}</p></article>')
+    chart_svg = _inline(render_chart(), "c-")
+    css = f"""
+:root{{--bg:#000;--ink:#fff;--ink2:rgba(255,255,255,.7);--ink3:rgba(255,255,255,.45);
+--line:rgba(255,255,255,.14);--blue:{BLUE};--blue-hi:{BLUE_HI};--orange:{ORANGE}}}
+*{{box-sizing:border-box;margin:0}}
+html,body{{background:var(--bg);color:var(--ink)}}
+body{{font:16px/1.55 {SANS};padding:0 16px 80px}}
+main{{max-width:1200px;margin:0 auto}}
+.fp-hero svg,.fp-chart svg{{display:block;width:100%;height:auto}}
+.fp-k{{font:600 12px {MONO};letter-spacing:3px;text-transform:uppercase;color:var(--ink);
+display:flex;align-items:center;gap:10px;margin:48px 0 18px}}
+.fp-k i{{width:8px;height:8px;border-radius:50%;background:var(--blue);animation:fp-live 1.8s ease-out infinite}}
+.fp-k span{{flex:1;height:1px;background:var(--line)}}
+.fp-k em{{font:400 11px {MONO};letter-spacing:1.5px;color:var(--ink3);font-style:normal;text-transform:none}}
+@keyframes fp-live{{0%{{opacity:1}}100%{{opacity:.15}}}}
+.fp-grid{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}}
+@media (max-width:820px){{.fp-grid{{grid-template-columns:1fr}}}}
+.fp-card{{position:relative;border:1px solid var(--line);padding:22px 22px 18px;
+background:rgba(255,255,255,.015)}}
+.fp-card::before,.fp-card::after{{content:"";position:absolute;width:12px;height:12px;
+border-color:rgba(255,255,255,.75);border-style:solid}}
+.fp-card::before{{left:-1px;top:-1px;border-width:1.5px 0 0 1.5px}}
+.fp-card::after{{right:-1px;bottom:-1px;border-width:0 1.5px 1.5px 0}}
+.fp-ex{{font:300 44px/1 {SANS};color:var(--blue-hi);font-variant-numeric:tabular-nums}}
+.fp-exl{{font:500 10px {MONO};letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);margin:6px 0 14px}}
+.fp-card h3{{font:600 15px {MONO};margin-bottom:4px}}
+.fp-meta{{font-size:13px;color:var(--ink2)}}
+.fp-bars{{margin:14px 0 10px;display:grid;gap:8px}}
+.fp-bar{{display:flex;align-items:center;gap:10px;font:12px {MONO};color:var(--ink2)}}
+.fp-bar span{{height:8px;border-radius:4px;width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}}
+.fp-bar span.a{{background:var(--blue)}}.fp-bar span.s{{background:rgba(255,255,255,.55)}}
+.fp-on .fp-bar span{{width:calc(var(--w) * .6)}}
+.fp-badge{{font:500 10px {MONO};letter-spacing:1.5px;color:var(--ink3)}}
+.fp-fine{{font-size:12px;color:var(--ink3);margin-top:14px}}
+.fp-chart{{margin-top:22px;max-width:760px}}
+@media (prefers-reduced-motion: reduce){{*{{animation:none!important;transition:none!important}}}}
+"""
+    js = """
+(function(){
+  var root=document.documentElement;
+  var still=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fmt(v){return (v<0?'\\u2212':'+')+Math.abs(v).toFixed(2);}
+  function run(){
+    root.classList.add('fp-on');
+    if(still){return;}
+    var els=document.querySelectorAll('[data-to]');
+    var t0=null,D=1400;
+    function step(t){
+      if(t0===null){t0=t;}
+      var k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,3);
+      for(var i=0;i<els.length;i++){els[i].textContent=fmt(parseFloat(els[i].getAttribute('data-to'))*e);}
+      if(k<1){requestAnimationFrame(step);}
+    }
+    requestAnimationFrame(step);
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',run);}else{run();}
+})();
+"""
+    return (
+        "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n"
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+        "<title>Aegis — one loop, every belief graded</title>\n"
+        f"<meta name=\"description\" content=\"{_t(PRODUCT_SENTENCE)}\">\n"
+        f"<style>{css}</style>\n</head>\n<body>\n<main>\n"
+        f"<section class=\"fp-hero\" aria-label=\"How it works\">\n{hero}</section>\n"
+        f"<section aria-label=\"Best paper accounts, live\">\n"
+        f"<h2 class=\"fp-k\"><i></i>Best paper accounts · live<span></span>"
+        f"<em>as of {d['as_of']} close · receipt roi_{d['run_id']}</em></h2>\n"
+        f"<div class=\"fp-grid\">{''.join(cards)}</div>\n"
+        f"<p class=\"fp-fine\">{_t(selection_line(d))}</p>\n"
+        f"<div class=\"fp-chart\">{chart_svg}</div>\n</section>\n"
+        f"</main>\n<script>{js}</script>\n</body>\n</html>\n"
+    )
+
+
+# ================================================================== cli
 def check_budgets() -> list[str]:
     """Strings that would overflow their box in the widest common fallback font."""
     bad = []
@@ -434,19 +1002,24 @@ def check_budgets() -> list[str]:
             bad.append(f"stage {st.n} title: {st.title!r}")
         bad += [f"stage {st.n} about: {a!r}" for a in st.about if len(a) > MAX_ABOUT_CHARS]
         bad += [f"stage {st.n} module: {m.label!r}" for m in st.modules if len(m.label) > MAX_MODULE_CHARS]
-        if len(st.modules) > 4:
-            bad.append(f"stage {st.n}: {len(st.modules)} modules; a card holds 4")
+        if len(st.modules) > MAX_MODULES:
+            bad.append(f"stage {st.n}: {len(st.modules)} modules; a card holds {MAX_MODULES}")
     return bad
 
 
+def _rel(path: Path) -> str:
+    return path.relative_to(REPO).as_posix() if path.is_relative_to(REPO) else str(path)
+
+
 def outputs() -> dict[Path, str]:
-    return {PIPELINE_SVG: render_pipeline(), OG_SVG: render_og()}
+    return {HERO_SVG: render_hero(), RESULTS_SVG: render_results(), PIPELINE_SVG: render_pipeline(),
+            OG_SVG: render_og(), FRONT_HTML: render_front_html()}
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     ap.add_argument("--check", action="store_true",
-                    help="write nothing; exit 1 when a committed SVG differs from a fresh render")
+                    help="write nothing; exit 1 when a committed asset differs from a fresh render")
     a = ap.parse_args(argv)
     bad = check_budgets()
     if bad:

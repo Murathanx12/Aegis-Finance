@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://aegis-finance-six.vercel.app"><img src="docs/assets/logo.png" alt="Aegis Finance logo" width="88" height="88"></a>
+  <a href="https://aegis-finance-six.vercel.app"><img src="docs/assets/aegis_loop.svg" width="100%" alt="Aegis, one loop with every belief graded: nine stages on a ring (world sensors, evidence, world state and theory, forecasts, decision, paper action, outcome, attribution, learning). A wave of blue dots travels the ring and each stage lights as it is reached; learning feeds the next cycle's theory and decision through two orange inner orbits. Each stage names the modules that run it."></a>
 </p>
 
 <h1 align="center">Aegis Finance</h1>
@@ -22,9 +22,9 @@
 </p>
 
 <p align="center">
-  <a href="docs/assets/architecture_pipeline.svg"><img src="docs/assets/architecture_pipeline.svg" width="100%" alt="The Aegis V1 Beta pipeline: world sensors, evidence, world state and theory, forecasts, opportunity and decision, paper action or abstention, outcome, regret and attribution, learning, and the dashed loops that feed the next cycle. Each stage names the repository modules that run it."></a>
+  <img src="docs/assets/paper_results_live.svg" width="100%" alt="Best paper accounts, live, as of the 2026-10-06 close: revision_flow_v0 (frozen LLM book, $1M paper) +7.14% vs SPY +1.40% since 2026-09-28, +5.74 pp, its matched random twin -0.01%; night book b109c886 +6.08% vs SPY +2.19% since 2026-09-11, +3.90 pp; hack2 (Alpaca paper broker, holding the same 20 names as revision_flow_v0) +2.31% vs SPY +1.29% since 2026-08-28, +1.02 pp. Labels OBSERVED(7), OBSERVED(17), OBSERVED(27).">
 </p>
-<p align="center"><sub>The V1 Beta loop: every box names the modules that run it, and <code>backend/tests/test_public_assets.py</code> fails if a printed path stops existing. The state of each stage, with its receipt, is §2 of <a href="docs/AEGIS_V1_BETA_2026-10-07.md"><code>docs/AEGIS_V1_BETA_2026-10-07.md</code></a>.</sub></p>
+<p align="center"><sub>Every number on both pictures is read from a committed receipt (<code>backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json</code>) and every stage names the code that runs it; <code>backend/tests/test_public_assets.py</code> fails if either stops being true. The motion version is <a href="docs/design/aegis_front_page.html"><code>docs/design/aegis_front_page.html</code></a>; the design record is <a href="docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md"><code>docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md</code></a>.</sub></p>
 
 Aegis Finance is a free, open-source **self-improving investment intelligence
 system** that measures itself in public and tells you when it is wrong. Its
@@ -91,17 +91,20 @@ receipt holds says `NOT MEASURED`.
 
 ## V1 Beta scoreboard (2026-10-07)
 
-**RESULT IMPROVEMENT: NONE.** That line is the house convention: every handoff opens with it until a
-result moves. Nothing in this repository beats the market after costs on a declared read, historically
-or forward. What exists is a loop that runs, grades itself, freezes the alternatives it did not take, and
-reads every result against a control built to be fair. Every number below names its receipt (paths under
-`backend/data/optimus/`) and carries an evidence label; the ladder is
+**The live result first.** The best strategy account in each of three families is ahead of SPY over its
+own window: `revision_flow_v0` +5.74 pp over 7 sessions (its matched random twin: −1.41 pp), night book
+`b109c886` +3.90 pp over 17, and `hack2`, a real Alpaca paper account holding the same 20 names, +1.02 pp
+over 27, the one book with 21 or more sessions that is ahead. That is a few weeks of paper, picked after
+the fact from 307 priced accounts, so each number carries its label. On the survivorship-free historical
+panel, alpha is not demonstrated yet. What exists is a loop that runs, grades itself, freezes the
+alternatives it did not take, and reads every result against a control built to be fair. Every number
+below names its receipt (paths under `backend/data/optimus/`) and carries an evidence label; the ladder is
 `OBSERVED(n)` → `EARLY_EVIDENCE` → `REPLICATED` → `VALIDATED_EDGE`, and nothing here is above `OBSERVED(n)`.
 
 | line | value | label | receipt |
 |---|---|---|---|
 | Historical, CRSP 1991-2024 (survivorship-free) | On the sticky twin (cost-fair by construction): 44 of 277 rules reach fair-twin t >= 2, 40 also pass pure selection, **1** also beats the market in validation and fails pure selection there (t 1.16). **Historical alpha: not demonstrated.** | `BACKTEST-ONLY` | `hyp_lab/twin_board_SUMMARY_STK_2026-10-07_2.json` |
-| Paper estate | 362 priced books; 147 ahead of SPY over their own window, 160 behind. The 147 are 108 control twins, 3 controls and 36 strategy books worth about **2.6 independent ex-ante bets**. **One** book with >= 21 sessions is ahead: hack2, +1.14 pp over 26 sessions. | `OBSERVED(n)` | `paper_accounts/roi_2026-10-06T163850Z.json`; `paper_accounts/book_dna_2026-10-06T163850Z.json` |
+| Paper estate | 362 priced books; 101 ahead of SPY over their own window, 206 behind. The 101 are 76 control twins, 0 controls and 25 strategy books worth about **2.6 independent ex-ante bets** (the largest holdings cluster, 5 books including revision_flow_v0 and hack2, is one basket). **One** book with >= 21 sessions is ahead: hack2, +1.02 pp over 27 sessions. | `OBSERVED(n)` | `paper_accounts/roi_2026-10-06T235345Z.json`; `paper_accounts/book_dna_2026-10-06T235345Z.json` |
 | Website lanes (since June) | all 10 behind SPY over their own windows (−1.39 pp to −28.26 pp) | `OBSERVED(n)` | `paper_accounts/roi_2026-10-06T163850Z.json` |
 | $1M paper account (PC-PAPER) | +0.27% vs SPY +0.86% since 2026-09-22, holding 79.85% cash; a worst-case gate priced on the names it would buy (14.08% of equity vs a 10% limit) caps the active sleeve at 54% gross | `OBSERVED(n)` | `pc_mandate/reconcile_2026-10-06_147824639837.json` |
 | Live loop | a scheduled owner starts a paper session on US trading days; candidate set refreshed 2026-10-06 (25 names, 2 eligible); positions still UNRECONCILED with the contract | `OBSERVED` | `health/health_20261006T175305Z.json` |
@@ -294,40 +297,12 @@ flowchart LR
 
 The system is converging on a specific architecture: **the LLM perceives, the
 engine computes, learned models forecast, Aegis referees, and reality grades
-everyone** — in a loop.
+everyone** — in a loop. Every card names the modules that run its stage; the
+blue current is one cycle, the orange path is what the next cycle inherits.
 
-```mermaid
-flowchart TB
-    subgraph WORLD["🌍 The world"]
-        NEWS[News · SEC filings ·<br/>public disclosures]
-        MKT[Prices · options ·<br/>fundamentals · revisions]
-        MACRO[FRED macro ·<br/>net liquidity]
-    end
-    subgraph PERCEIVE["🧠 Perception (LLM)"]
-        EV[Event extraction<br/><i>what changed?</i>]
-        REL[Relation graph<br/><i>who affects whom?</i>]
-        IIF[Autonomous investigator<br/><i>IIF-1 — armed, 0/40 valid nights</i>]
-    end
-    subgraph ENGINE["⚙️ Engine (numbers)"]
-        PIT[Point-in-time store<br/><i>nothing peeks at the future</i>]
-        TEACH[Teacher Library<br/><i>insiders · funds · politicians</i>]
-        MODELS[ML: crash · Monte Carlo ·<br/>factors · regimes]
-    end
-    subgraph REFEREE["⚖️ Aegis (the referee)"]
-        DISC[Pre-registration · MDE ·<br/>placebos · read gates]
-    end
-    LANES[📈 Paper lanes — daily NAV,<br/>hash-pinned configs,<br/>since 2026-06-08]
-    REALITY([Reality grades everything])
-    WORLD --> PERCEIVE
-    WORLD --> ENGINE
-    PERCEIVE --> ENGINE
-    ENGINE --> DISC
-    PERCEIVE --> DISC
-    DISC --> LANES
-    LANES --> REALITY
-    REALITY -->|resolved outcomes<br/>feed back| PERCEIVE
-    REALITY -->|calibration| ENGINE
-```
+<p align="center">
+  <a href="docs/assets/architecture_pipeline.svg"><img src="docs/assets/architecture_pipeline.svg" width="100%" alt="How Aegis works, module by module: nine stages in a serpentine grid (world sensors, evidence, world state and theory, forecasts, decision, paper action, outcome, attribution, learning), each card listing the repository modules that run it; blue dashed current flows stage to stage and orange paths carry learning back into the next cycle's decision and theory."></a>
+</p>
 
 ## How to read the evidence here
 
