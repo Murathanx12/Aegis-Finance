@@ -5646,6 +5646,12 @@ OPPORTUNITIES_RUNWAY_MIN_QUARTERS = 4
 OPPORTUNITIES_BADGE_MIN_FLAGS = 2
 #: F3: a median-target upside below this is LOW UPSIDE (grey, never green).
 OPPORTUNITIES_LOW_UPSIDE = 0.05
+#: Q17 (2026-10-07): raw receipts (~5-8 MB each) are SUBSTRATE for the published, sanitised
+#: copy (`backend/data/public_receipts/opportunities/latest.json`, <= 2.4 MB, committed) --
+#: never git-tracked themselves (.gitignore). `opportunities_build.prune_raw_receipts` keeps
+#: only the newest this many locally, ordered by the RUN ID IN THE FILENAME, never by mtime
+#: (a fresh checkout's files are all "written today").
+OPPORTUNITIES_KEEP_RAW = 7
 
 # ── Analyst reputation + snowball shadow (CHUNK C18, 2026-10-07) ─────────────
 # Declared and FROZEN here before any read of the weights or the snowball rows
