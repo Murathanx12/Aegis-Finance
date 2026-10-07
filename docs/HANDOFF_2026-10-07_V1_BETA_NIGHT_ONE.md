@@ -74,6 +74,13 @@ GitHub warned `predictions.jsonl` is 52 MB (recommended max 50, hard limit 100):
 (Q6), research instruments (Q8: OpenAlex + CrossRef + NBER RSS at $0 to wire into the planner's academic lane), the four
 social-media ideas as theory objects (all NOT_A_HYPOTHESIS_YET; no intraday data on disk), fleet new gates in SHADOW.
 
+**CI went RED on `92f147f6` and was fixed by `e041ec14` on `main` (13:50 HKT).** Two CI-only shapes: (1) FastAPI
+resolved to 0.142 in CI's fresh install (requirements pin no ceiling) and ≥ 0.141 wraps included routers in objects
+without `.path`, so a test walking `app.routes` saw no router at all — the test now reads `app.openapi()["paths"]`
+(the precedent in `test_journal_router` from 09-08 already did this); (2) a pinned CSV fixture generated on Windows
+carried CRLF inside the string; compared on LF now, `lineterminator` pinned, fixtures `eol=lf` in `.gitattributes`.
+The local venv was upgraded to CI's fastapi/starlette/pydantic versions during the reproduction and left there.
+
 ## 1. RESULTS SCOREBOARD
 
 **RESULT IMPROVEMENT: NONE.** The night produced controls, measurements and a live loop, not an edge.
