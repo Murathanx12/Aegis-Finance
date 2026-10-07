@@ -339,6 +339,16 @@ public-flow sensors and the analyst weights are all wired to WRITE rows; none ha
 | Q9 | heavy deferred items, one at a time: sticky-twin per-draw check v2, ROT5_DIR replay receipt, contest horizon worst case, extraction cascade (GPU), desktop export check | Opus for the twin/contest measurement; deterministic for exports | measurement | after Q2, memory ≥ 4 GB |
 | Q10 | token-budget view: a small receipt per session (Opus/Sonnet calls, tasks, EV) read by the handoff | Sonnet | plumbing | with Q2's handoff |
 
+**Queue amendments 2026-10-07 12:40 HKT (after the merge of `92f147f6`):**
+
+| id | task | worker | why | gate |
+|---|---|---|---|---|
+| C26-fix | the C26 review's fixes before 22:45 HKT: catch any exception on the fill read; print the `C26:` delta line; RESTORE refuse (not shrink) on cash/gross/name/turnover; exits count toward the order cap; replacement stop sized after the gates; enforce mode refused on a stale/unknown sector map; replay test of the 10-06 receipt | Opus 5.5 | live paper orders | now |
+| C27 | **wash-trade rejections**: since 10-01, 49 of 75 live fleet buys came back HTTP 403 "potential wash trade" (a top-up of a name with a resting stop). The executed books drift from their frozen contracts more from this than from anything C26 changed. Fix in the manager: cancel/replace the resting stop atomically with the top-up, or skip the top-up and record `REFUSED_WASH_TRADE_RULE`; count rejections in the EOD audit (today it does not) | Opus 5.5 | execution correctness, priority 1 | after C26-fix |
+| Q11 | `predictions.jsonl` is 52 MB tracked (GitHub warns at 50, refuses at 100): monthly append-only streams (forecasts by month made, resolutions by month graded), LF only, sealed months with a manifest chained to each other, and an explicit CHAIN-BREAK record for the hash chain broken since 25 Aug (never a silent repair) | Opus 5.5 design + deterministic | data integrity, priority 2 | after Q9a (memory) |
+| Q12 | academic lane in the query planner: OpenAlex + CrossRef + NBER RSS at $0 behind the declared-provider gate; the research-intake card's NEEDS_EVIDENCE verdict is the trigger; yield receipt (citations found / novel / verified) | Sonnet | research plumbing | after C26-fix |
+| Q13 | the sibling `optimus` repo's brain showcase (`showcase/build.py`): static state-board layout from the `/api/legibility/v1/brain` payload, legend never overlaps, data refreshed by the publish job | Sonnet | low-risk UI | after Q5 is live |
+
 ## 6. OWNER DECISIONS (what I did by default, and what only Murat can do)
 
 | # | decision | default applied tonight | what Murat does |
