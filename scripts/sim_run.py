@@ -929,6 +929,99 @@ def _write_probe_decisions(rows: list[dict], *, asof: str, folder: Path,
             "ledger_refused": refused}
 
 
+#: Review 2026-10-07 fix 6: the revision_flow sleeve and the SPY core write
+#: their own decision rows (one per name per `config.PC_SLEEVE_GRADE_HORIZONS`
+#: per day) so the nightly grade scores each name's excess over the core. Their
+#: own policy ids and hypothesis ids keep them out of the PROBE grade and the
+#: E[r] blend grade.
+SLEEVE_POLICY_ID = {"REVISION_FLOW": "sim_run.u_plan.revision_flow",
+                    "CORE": "sim_run.u_plan.benchmark_core"}
+SLEEVE_POLICY_VERSION = "owner-d14-2026-10-07"
+
+
+def _sleeve_decision_rows(*, asof: str, mode: str, equity: float, prices: dict,
+                          weights: dict, label: str, acting: bool, by_sym: dict,
+                          extra: dict) -> list[dict]:
+    """Contract-shaped rows for one named sleeve (REVISION_FLOW or CORE).
+
+    `source` is SLEEVE_SOURCE, which `decision_ledger.score_due` prices like a
+    committee row; `direction` BUY so `_open_contract_rows` reads them; the
+    label travels as `sleeve`. Entry price and the core's price are on the row."""
+    from backend.services import decision_contract as DC          # noqa: PLC0415
+    from backend.services import decision_ledger as DL            # noqa: PLC0415
+    core_sym = str(_config.PC_BENCHMARK_CORE_SYMBOL)
+    pid = SLEEVE_POLICY_ID[label]
+    rows: list[dict] = []
+    for sym, w in sorted(weights.items()):
+        p = by_sym.get(sym)
+        for h in _config.PC_SLEEVE_GRADE_HORIZONS:
+            expiry, basis = DC.sessions_expiry(date.fromisoformat(asof), int(h))
+            row = {"decision_id": DC.decision_id(policy_id=pid,
+                                                 policy_version=SLEEVE_POLICY_VERSION,
+                                                 ticker=sym, asof=asof, horizon_sessions=int(h)),
+                   "asof": asof, "policy_id": pid, "policy_version": SLEEVE_POLICY_VERSION,
+                   "licence": "PRODUCT_EXPERIMENT", "ticker": sym,
+                   "source": DL.SLEEVE_SOURCE, "sleeve": label,
+                   "direction": "BUY", "authority": label,
+                   "hypothesis_id": f"PC_SLEEVE_{label}",
+                   "horizon_sessions": int(h),
+                   "horizon": {"sessions": int(h), "basis": "config.PC_SLEEVE_GRADE_HORIZONS"},
+                   "expiry_utc": expiry, "expiry_basis": basis,
+                   "mode": mode, "acting": bool(acting), "virtual": not acting,
+                   "grading": f"excess over {core_sym} (the core); the grader's benchmark",
+                   "entry_price": prices.get(sym), "core_symbol": core_sym,
+                   "core_price": prices.get(core_sym),
+                   "position_budget": {"weight": float(w), "dollars": float(w) * equity,
+                                       "shares": int(p.target_qty) if p else 0,
+                                       "price": prices.get(sym), "capital_usd": equity,
+                                       "virtual": not acting},
+                   **extra, "built_utc": _now()}
+            row["artifact_sha256"] = DC.seal(row)
+            rows.append(row)
+    return rows
+
+
+def _write_sleeve_decisions(rows: list[dict], *, asof: str, folder: Path,
+                            ledger_path: Path | None) -> dict:
+    """Same file and idempotence as `_write_probe_decisions` (first decision of
+    the day is the graded one); the DECIDED row carries the sleeve label."""
+    from backend.services import decision_ledger as DL
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"{asof}.json"
+    try:
+        blob = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        blob = {"date": asof, "source": "sim_run.u_plan", "rows": []}
+    have = {str(r.get("decision_id")) for r in blob.get("rows") or []}
+    new = [r for r in rows if str(r["decision_id"]) not in have]
+    if new:
+        blob.setdefault("rows", []).extend(new)
+        tmp = path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(blob, indent=1, default=str), encoding="utf-8")
+        os.replace(tmp, path)
+    recorded, refused = 0, []
+    for r in new:
+        try:
+            DL.record(r["decision_id"], "DECIDED", by="sim_run.u_plan", asof=asof,
+                      path=ledger_path,
+                      detail={"state": r["sleeve"], "sleeve": r["sleeve"],
+                              "ticker": r["ticker"], "horizon_sessions": r["horizon_sessions"],
+                              "weight": r["position_budget"]["weight"],
+                              "dollars": r["position_budget"]["dollars"],
+                              "entry_price": r.get("entry_price"),
+                              "core_symbol": r.get("core_symbol"),
+                              "core_price": r.get("core_price"),
+                              "hypothesis_id": r["hypothesis_id"],
+                              "book_id": r.get("book_id"),
+                              "acting": r["acting"], "virtual": r["virtual"],
+                              "contract_file": str(path)})
+            recorded += 1
+        except DL.DecisionLedgerError as exc:
+            refused.append({"decision_id": r["decision_id"], "reason": str(exc)[:200]})
+    return {"file": str(path), "new_rows": len(new), "ledger_decided": recorded,
+            "ledger_refused": refused}
+
+
 def _er_summary(view: dict | None, red: str | None) -> dict:
     """The plan receipt's E[r] block: which components woke, whose weights."""
     if not view:
@@ -2015,6 +2108,24 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     ledger = (_write_probe_decisions(rows, asof=asof, folder=folder,
                                      ledger_path=ledger_path)
               if rows else {"new_rows": 0, "ledger_decided": 0})
+    # review 2026-10-07 fix 6: the sleeve and the core write their own rows
+    sleeve_rows: list[dict] = []
+    if rf_w:
+        sleeve_rows += _sleeve_decision_rows(
+            asof=asof, mode=mode, equity=equity, prices=prices,
+            weights={t.symbol: float(t.weight) for t in targets if t.symbol in rf_w},
+            label="REVISION_FLOW", acting=rf_acting, by_sym=by_sym,
+            extra={"book_id": (rf.get("book") or {}).get("book_id"),
+                   "book_name": (rf.get("book") or {}).get("name")})
+    if core.get("applied") and core_syms:
+        sleeve_rows += _sleeve_decision_rows(
+            asof=asof, mode=mode, equity=equity, prices=prices,
+            weights={core["symbol"]: float(core.get("weight_planned") or 0.0)},
+            label="CORE", acting=(mode == "paper_profit"), by_sym=by_sym,
+            extra={"core_status": core.get("status")})
+    sleeve_ledger = (_write_sleeve_decisions(sleeve_rows, asof=asof, folder=folder,
+                                             ledger_path=ledger_path)
+                     if sleeve_rows else None)
 
     # ---- send ------------------------------------------------------------------
     to_send = [p for p in plans if _may_send(p)]
@@ -2055,10 +2166,19 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         funnel_path=funnel_path, pool=pool, sl_base=sl_base, er_view=er_view,
         src=src, pview=pview, probe_weighting=probe_weighting, sig_by=sig_by,
         ranker_may_trade=may_trade, blend_may_trade=bool(blend_grade["may_trade"]),
-        targets=targets, probe_syms=probe_syms, ex_syms=ex_syms,
+        targets=[t for t in targets if t.symbol not in rf_w and t.symbol not in core_syms],
+        probe_syms=probe_syms, ex_syms=ex_syms,
         exploit_acting=exploit_acting, probe_acting=probe_acting, equity=equity,
-        snap=snap, prices=prices, plans=plans, sent=sent, prior_probe=prior_probe,
-        r=r, contract=contract, pre_gate_w=pre_gate_w, risk_gate=risk_gate)
+        snap=(snap if not (rf_w or rf_hold or core_syms) else
+              {**snap, "positions": [p_ for p_ in snap.get("positions") or []
+                                     if str(p_.get("symbol")) not in set(rf_w) | set(rf_hold)
+                                     | core_syms]}),
+        prices=prices,
+        plans=[p_ for p_ in plans if p_.symbol not in rf_w and p_.symbol not in core_syms],
+        sent=[x_ for x_ in sent if x_.get("state") not in ("REVISION_FLOW", "CORE")],
+        prior_probe=prior_probe, r=r, contract=contract,
+        pre_gate_w=({k_: v_ for k_, v_ in pre_gate_w.items() if k_ not in rf_w}
+                    if rf_w else pre_gate_w), risk_gate=risk_gate)
     record = {"t": _now(), "asof": asof, "mode": mode,
               "verdict": verdict, "acting": acting,
               "bars_line": gate["line"], "bars_gate": gate,
@@ -2139,8 +2259,11 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                                    if t.symbol in rf_w},
             "scale_after_gate": risk_gate.get("scale_revision_flow", 1.0)}
         record["revision_flow_line"] = rf["line"]
+        record["revision_flow"]["decisions"] = sleeve_ledger
         record["sendable_by_state"]["REVISION_FLOW"] = sum(
             1 for p in to_send if _state(p.symbol) == "REVISION_FLOW")
+    if core.get("applied") and sleeve_ledger is not None:
+        record["benchmark_core"]["decisions"] = sleeve_ledger
     if rf_hold:
         hold_w = {s_: float(held[s_]) * float(prices.get(s_) or 0.0) / float(equity)
                   for s_ in rf_hold if equity}

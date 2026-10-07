@@ -5973,6 +5973,10 @@ PC_SLEEVE_REVISION_FLOW_GROSS = 0.30
 #: return, all names priced, longest panel on disk| may not exceed this fraction
 #: of equity. Same 0.10 as bound (1).
 PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC = 0.10
+#: Review 2026-10-07 fix 6: the sleeve's and the core's decision rows are graded
+#: at these horizons (sessions), each name's excess over the core (SPY). 1 so a
+#: night's result is readable the next day; 5 and 21 match the book's horizon.
+PC_SLEEVE_GRADE_HORIZONS: tuple = (1, 5, 21)
 #: The six-role v3 fleet contracts are written HERE, never into
 #: `fleet_manager/contracts/`: no seed path reads this folder, and
 #: `fleet_manager.load_contract`/`freeze_contract` refuse a PREPARED body.

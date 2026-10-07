@@ -529,3 +529,64 @@ def test_a_refused_or_disabled_sleeve_holds_its_names_never_exits(tmp_path, monk
     fw = _final_weights(rec, rb)
     assert all(fw[s_] > 0 for s_ in RF_NAMES)
     assert sum(fw.values()) <= 1.0 + 1e-9
+
+
+# ─────────────────────────────── review fix 6: sleeve rows, graded ───────────
+
+def test_sleeve_and_core_write_labelled_decided_rows(tmp_path, monkeypatch):
+    from backend.services import decision_ledger as DL
+    _rf_stub(monkeypatch)
+    rec, _ = _replay(tmp_path, monkeypatch, on=True)
+    led = DL.read(tmp_path / "ledger.jsonl")
+    dec = [r for r in led if r["state"] == "DECIDED"]
+    rf_rows = [r for r in dec if (r.get("detail") or {}).get("sleeve") == "REVISION_FLOW"]
+    core_rows = [r for r in dec if (r.get("detail") or {}).get("sleeve") == "CORE"]
+    n_h = len(config.PC_SLEEVE_GRADE_HORIZONS)
+    assert len(rf_rows) == 20 * n_h and len(core_rows) == n_h
+    d = rf_rows[0]["detail"]
+    assert d["hypothesis_id"] == "PC_SLEEVE_REVISION_FLOW" and d["book_id"] == "cb8d492bb8bf9ade"
+    assert d["entry_price"] and d["core_symbol"] == "SPY" and d["core_price"]
+    assert rec["revision_flow"]["decisions"]["ledger_decided"] == 20 * n_h + n_h  # sleeve + core
+    # idempotent: a second cycle adds nothing
+    (tmp_path / "out" / "intended_book.json").unlink()
+    _replay(tmp_path, monkeypatch, on=True)
+    assert len([r for r in DL.read(tmp_path / "ledger.jsonl") if r["state"] == "DECIDED"]) \
+        == len(dec)
+    # the grader prices them like committee rows and keeps the label; the PROBE
+    # grade does not see them
+    rows = DL._open_contract_rows(day=TODAY_PLUS(40), out_dir=tmp_path / "decisions",
+                                  path=tmp_path / "ledger.jsonl")
+    mine = [r for r in rows if r.get("sleeve") == "REVISION_FLOW"]
+    assert len(mine) == 20 * n_h
+    import pandas as pd
+
+    def _fetch(tickers, start, end):
+        idx = pd.bdate_range(start, periods=60)
+        return pd.DataFrame({t: [100.0 * (1.01 if t != "SPY" else 1.0) ** i
+                                 for i in range(60)] for t in tickers}, index=idx)
+    res = DL.score_due(today=TODAY_PLUS(40), contracts=mine, price_fetch=_fetch,
+                       path=tmp_path / "ledger.jsonl")
+    assert res["newly_scored"] == 20 * n_h, res.get("unpriceable")
+    sc = [r for r in DL.read(tmp_path / "ledger.jsonl") if r["state"] == "SCORED"]
+    assert all(r["detail"]["sleeve"] == "REVISION_FLOW" for r in sc)
+    assert all(r["detail"]["excess_return"] > 0 for r in sc), "excess over the core"
+    g = S._probe_grade(tmp_path / "ledger.jsonl")
+    assert g["n_days_scored"] == 0, "sleeve rows must not enter the PROBE grade"
+
+
+def TODAY_PLUS(days: int):
+    from datetime import date, timedelta
+    return date.fromisoformat(ASOF) + timedelta(days=days)
+
+
+def test_the_decision_story_replay_still_matches_with_the_sleeve_on(tmp_path, monkeypatch):
+    """Review fix 6: with the sleeve + core ON the C11 replay must match the
+    PROBE/EXPLOIT book exactly as it does with them OFF."""
+    _rf_stub(monkeypatch)
+    (tmp_path / "off").mkdir()
+    (tmp_path / "on").mkdir()
+    off, _ = _replay(tmp_path / "off", monkeypatch, on=False)
+    on, _ = _replay(tmp_path / "on", monkeypatch, on=True)
+    assert on["decision_story"].get("replay_matches_actual") == \
+        off["decision_story"].get("replay_matches_actual")
+    assert on["decision_story"].get("replay_diff") == off["decision_story"].get("replay_diff")

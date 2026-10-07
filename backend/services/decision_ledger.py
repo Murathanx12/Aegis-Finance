@@ -378,6 +378,13 @@ def _close_to_close(frame, ticker: str, start: str, end: str) -> tuple[float | N
         f"({len(series)} sessions)")
 
 
+#: Review 2026-10-07 fix 6: PC-PAPER's named sleeves (revision_flow, the SPY
+#: core) write rows with this source; they are priced exactly like a committee
+#: row (ticker close-to-close, excess over DECISION_BENCHMARK_SYMBOL = the core).
+SLEEVE_SOURCE = "sim_run.u_plan.sleeve"
+PRICED_SOURCES = ("investment_committee", SLEEVE_SOURCE)
+
+
 def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
               price_fetch: Callable[..., Any] | None = None,
               path: Path | None = None, out_dir: Path | None = None) -> dict:
@@ -418,7 +425,7 @@ def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
                 "reason": "no decision's own expiry had passed by today"}
 
     tickers = sorted({str(r.get("ticker")) for r, _ in due
-                      if r.get("source") == "investment_committee"})
+                      if r.get("source") in PRICED_SOURCES})
     # The benchmark is REQUESTED with the names (chunk 23a, §16.5 item 37: an
     # internal figure is quoted beside the external one when one exists). A raw
     # close-to-close return is mostly the market; a panel built on raw returns
@@ -440,7 +447,7 @@ def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
 
     for r, when in due:
         ticker = str(r.get("ticker"))
-        if frame is None or r.get("source") != "investment_committee":
+        if frame is None or r.get("source") not in PRICED_SOURCES:
             unpriceable.append({"decision_id": r.get("decision_id"),
                                 "reason": ("CANNOT DETERMINE: an agency BOOK row "
                                            "is priced by its own NAV, not by a "
@@ -470,7 +477,7 @@ def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
         # and a join that needed both files would break the day a contract file
         # is rotated out of the year the grader scans.
         for key in ("hypothesis_id", "shortlist_hypothesis_id", "horizon_sessions", "virtual",
-                    "selection_probability", "action_set_sha256"):
+                    "selection_probability", "action_set_sha256", "sleeve", "book_id"):
             if r.get(key) is not None:
                 detail[key] = r.get(key)
         for key in ER_ROW_FIELDS:
