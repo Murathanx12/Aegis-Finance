@@ -1104,7 +1104,7 @@ def _pred_claim_rows(od: Path) -> list[tuple[str, str]]:
     if isinstance(c, dict) and c.get("stamp") == stamp:
         return [tuple(x) for x in c.get("rows") or []]
     rows: list[tuple[str, str]] = []
-    for ln in FL.logical_lines(pred):
+    for ln in FL.logical_lines(pred, contains='"claim_hash"'):
         if '"claim_hash"' not in ln:
             continue
         try:

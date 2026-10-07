@@ -441,7 +441,7 @@ def _forecast(t: str, predictions_path: Path | None) -> str:
     needle = f'"ticker": "{t}"'
     best = None
     try:
-        for line in FL.logical_lines(path):       # legacy file or monthly streams
+        for line in FL.logical_lines(path, contains=needle):   # legacy file or streams
             if needle not in line:
                 continue
             try:

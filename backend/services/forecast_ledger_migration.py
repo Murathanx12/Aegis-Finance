@@ -243,13 +243,13 @@ def fold_bytes(forecast_files: dict[str, bytes], resolution_files: dict[str, byt
     by_id: dict[str, dict] = {}
     for month in sorted(forecast_files):
         for i, line in enumerate(FL._split_raw_lines(forecast_files[month]), 1):
-            row = FL._parse_line(line, f"forecasts_{month}:{i}", True, stats.bad_lines)
+            row = FL._parse_line(line, f"forecasts_{month}", i, True, stats.bad_lines)
             if row is not None and row.get("prediction_id") not in by_id:
                 by_id[row["prediction_id"]] = row
     evs = []
     for month in sorted(resolution_files):
         for i, line in enumerate(FL._split_raw_lines(resolution_files[month]), 1):
-            ev = FL._parse_line(line, f"resolutions_{month}:{i}", True, stats.bad_lines)
+            ev = FL._parse_line(line, f"resolutions_{month}", i, True, stats.bad_lines)
             if ev is not None:
                 evs.append(ev)
     FL.fold(by_id, evs, stats)

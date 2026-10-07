@@ -683,3 +683,20 @@ def test_the_lock_is_reentrant_for_the_holding_thread(tmp_path):
             pass
     with FL.ledger_lock(tmp_path, timeout_s=1):
         pass
+
+
+def test_the_logical_line_cache_and_the_needle_follow_appends_and_grades(ledger):
+    _apply(ledger)
+    first = list(FL.logical_lines(ledger))
+    assert list(FL.logical_lines(ledger)) == first                  # served from the cache
+    new = _new14("needle-me", NOW, ticker="ZZZZ")
+    FL.append_forecasts([new], ledger)
+    assert len(list(FL.logical_lines(ledger))) == len(first) + 1     # the append moved the key
+    hits = [json.loads(x) for x in FL.logical_lines(ledger, contains='"ticker": "ZZZZ"')]
+    assert [h["prediction_id"] for h in hits] == [new["prediction_id"]]
+    FL.record_terminal(ledger, [(hits[0], _resolve_like_the_resolver(hits[0], NOW))],
+                       kind="resolve", writer="t")
+    graded = [json.loads(x) for x in FL.logical_lines(ledger, contains='"ticker": "ZZZZ"')]
+    assert graded[0]["outcome"] == 1
+    full = {json.loads(x)["prediction_id"]: json.loads(x) for x in FL.logical_lines(ledger)}
+    assert full[new["prediction_id"]]["outcome"] == 1

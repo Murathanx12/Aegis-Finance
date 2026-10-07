@@ -526,27 +526,31 @@ def _split_raw_lines(raw: bytes) -> list[bytes]:
     return lines
 
 
-def _parse_line(line: bytes, where: str, strict: bool, bad: list) -> Optional[dict]:
+def _parse_line(line: bytes, where: str, lineno: int, strict: bool,
+                bad: list) -> Optional[dict]:
+    """One stream line -> dict. `where` is the file's label; the `file:line`
+    string is only built on a failure (it was once built per line, and the
+    path resolution behind it made a read ten times slower than the legacy one)."""
     s = line.strip()
     if not s:
         return None
     try:
-        row = json.loads(s.decode("utf-8"))
+        row = json.loads(s)
     except json.JSONDecodeError as exc:
         if strict:
             # The legacy read raised JSONDecodeError; callers catch that type.
-            raise json.JSONDecodeError(f"{where}: {exc.msg}", exc.doc, exc.pos) from exc
-        bad.append(where)
+            raise json.JSONDecodeError(f"{where}:{lineno}: {exc.msg}", exc.doc, exc.pos) from exc
+        bad.append(f"{where}:{lineno}")
         return None
     except UnicodeDecodeError as exc:
         if strict:
-            raise ValueError(f"{where} is not UTF-8: {exc}") from exc
-        bad.append(where)
+            raise ValueError(f"{where}:{lineno} is not UTF-8: {exc}") from exc
+        bad.append(f"{where}:{lineno}")
         return None
     if not isinstance(row, dict):
         if strict:
-            raise ValueError(f"{where} is not a JSON object")
-        bad.append(where)
+            raise ValueError(f"{where}:{lineno} is not a JSON object")
+        bad.append(f"{where}:{lineno}")
         return None
     return row
 
@@ -595,15 +599,16 @@ class FoldStats:
 def _read_forecasts(be: Backend, *, strict: bool, stats: FoldStats) -> dict[str, dict]:
     rows: dict[str, dict] = {}
     for month, p in stream_files(be, "forecasts"):
+        where = rel(p)
         for i, line in enumerate(_split_raw_lines(p.read_bytes()), 1):
-            row = _parse_line(line, f"{rel(p)}:{i}", strict, stats.bad_lines)
+            row = _parse_line(line, where, i, strict, stats.bad_lines)
             if row is None:
                 continue
             pid = row.get("prediction_id")
             if not isinstance(pid, str) or not pid:
                 if strict:
-                    raise ValueError(f"{rel(p)}:{i} has no prediction_id")
-                stats.bad_lines.append(f"{rel(p)}:{i}")
+                    raise ValueError(f"{where}:{i} has no prediction_id")
+                stats.bad_lines.append(f"{where}:{i}")
                 continue
             if pid in rows:
                 # Never applied twice and never silently dropped: the first row
@@ -620,15 +625,16 @@ def _read_forecasts(be: Backend, *, strict: bool, stats: FoldStats) -> dict[str,
 def _read_events(be: Backend, *, strict: bool, stats: FoldStats) -> list[dict]:
     events: list[dict] = []
     for month, p in stream_files(be, "resolutions"):
+        where = rel(p)
         for i, line in enumerate(_split_raw_lines(p.read_bytes()), 1):
-            ev = _parse_line(line, f"{rel(p)}:{i}", strict, stats.bad_lines)
+            ev = _parse_line(line, where, i, strict, stats.bad_lines)
             if ev is None:
                 continue
             problem = event_problem(ev)
             if problem:
                 if strict:
-                    raise ValueError(f"{rel(p)}:{i}: {problem}")
-                stats.bad_lines.append(f"{rel(p)}:{i}")
+                    raise ValueError(f"{where}:{i}: {problem}")
+                stats.bad_lines.append(f"{where}:{i}")
                 continue
             events.append(ev)
     stats.events = len(events)
@@ -689,47 +695,100 @@ def read_rows(path: Optional[Path] = None, *, strict: bool = True,
     return list(by_id.values())
 
 
+_TERMINAL_CACHE: dict[str, tuple[tuple, dict]] = {}
+
+
 def _terminal_sets(be: Backend) -> dict[str, dict]:
-    """`{prediction_id: set}` of the first terminal event per id (lenient)."""
+    """`{prediction_id: set}` of the first terminal event per id (lenient).
+
+    Cached on the resolution files' (name, size, mtime_ns): an append moves the
+    key. Callers only read the sets (they are folded into copies)."""
+    key = str(be.root.resolve())
+    fp = tuple((p.name, p.stat().st_size, p.stat().st_mtime_ns)
+               for _, p in stream_files(be, "resolutions"))
+    hit = _TERMINAL_CACHE.get(key)
+    if hit and hit[0] == fp:
+        return hit[1]
     stats = FoldStats()
     out: dict[str, dict] = {}
     for ev in _read_events(be, strict=False, stats=stats):
         out.setdefault(ev["prediction_id"], ev["set"])
+    _TERMINAL_CACHE[key] = (fp, out)
     return out
 
 
-def logical_lines(path: Optional[Path] = None) -> Iterator[str]:
+#: One folded copy of the streams' logical lines, keyed on `fingerprint()`: a
+#: full scan (the health probes) re-serialises ~20k graded rows, about a second
+#: each time. Any append moves a file's size and so the key. Not kept above
+#: LOGICAL_CACHE_MAX_BYTES of text.
+LOGICAL_CACHE_MAX_BYTES = 256 * 1024 * 1024
+_LOGICAL_CACHE: dict[str, tuple[tuple, tuple]] = {}
+_LOGICAL_CACHE_GUARD = threading.Lock()
+
+
+def _fold_line(line: bytes, terminal: dict) -> str:
+    m = _FIRST_ID.match(line)
+    pid = m.group(1).decode("utf-8", "replace") if m else None
+    if pid is None:
+        try:
+            pid = json.loads(line).get("prediction_id")
+        except (UnicodeDecodeError, json.JSONDecodeError, AttributeError):
+            pid = None
+    if pid is not None and pid in terminal:
+        row = json.loads(line)
+        row.update(terminal[pid])
+        return json.dumps(row, ensure_ascii=False) + "\n"
+    return line.decode("utf-8", "replace") + "\n"
+
+
+def logical_lines(path: Optional[Path] = None, *, contains: Optional[str] = None) -> Iterator[str]:
     """Each logical row as one JSON text line (with its newline).
 
     For readers that scan text with a regex or a substring before parsing (the
     health probes, the per-ticker lookups). Legacy: the file's own lines. Streams:
     the forecast line verbatim when the record is open, and re-serialised with
-    its terminal event folded in when it is graded or void."""
+    its terminal event folded in when it is graded or void.
+
+    `contains` keeps only rows whose FORECAST text holds that substring, tested
+    before any parsing -- so it must name a frozen field (a ticker, a specialist,
+    an observable), never a resolution field, which lives in the events."""
     be = backend_for(path)
     if be.kind == "legacy":
         if not be.legacy_path.exists():
             return
         with be.legacy_path.open("r", encoding="utf-8", errors="replace") as fh:
-            yield from fh
+            for line in fh:
+                if contains is None or contains in line:
+                    yield line
         return
+    if contains is None:
+        key = str(be.legacy_path.resolve())
+        fp = fingerprint(path)
+        with _LOGICAL_CACHE_GUARD:
+            hit = _LOGICAL_CACHE.get(key)
+        if hit and hit[0] == fp:
+            yield from hit[1]
+            return
+        terminal = _terminal_sets(be)
+        out: list[str] = []
+        size = 0
+        for _, p in stream_files(be, "forecasts"):
+            for line in _split_raw_lines(p.read_bytes()):
+                if line.strip():
+                    text = _fold_line(line, terminal)
+                    size += len(text)
+                    out.append(text)
+        if size <= LOGICAL_CACHE_MAX_BYTES:
+            with _LOGICAL_CACHE_GUARD:
+                _LOGICAL_CACHE[key] = (fp, tuple(out))
+        yield from out
+        return
+    needle = contains.encode("utf-8")
     terminal = _terminal_sets(be)
     for _, p in stream_files(be, "forecasts"):
         for line in _split_raw_lines(p.read_bytes()):
-            if not line.strip():
-                continue
-            m = _FIRST_ID.match(line)
-            pid = m.group(1).decode("utf-8", "replace") if m else None
-            if pid is None:
-                try:
-                    pid = json.loads(line.decode("utf-8")).get("prediction_id")
-                except (UnicodeDecodeError, json.JSONDecodeError, AttributeError):
-                    pid = None
-            if pid is not None and pid in terminal:
-                row = json.loads(line.decode("utf-8"))
-                row.update(terminal[pid])
-                yield json.dumps(row, ensure_ascii=False) + "\n"
-            else:
-                yield line.decode("utf-8", "replace") + "\n"
+            if needle in line and line.strip():
+                yield _fold_line(line, terminal)
 
 
 def tail_lines(path: Optional[Path] = None, *, tail_bytes: int) -> list[str]:

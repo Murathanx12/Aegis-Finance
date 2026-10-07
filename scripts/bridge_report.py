@@ -1714,7 +1714,7 @@ def magnitude_rows(names: list[str], cutoff_utc: str, h: int = 5) -> dict:
     out: dict = {}
     if not FL.exists(p):
         return out
-    for line in FL.logical_lines(p):
+    for line in FL.logical_lines(p, contains='"abs_move_exceeds"'):
         if '"abs_move_exceeds"' not in line or "investigator" not in line:
             continue
         try:
