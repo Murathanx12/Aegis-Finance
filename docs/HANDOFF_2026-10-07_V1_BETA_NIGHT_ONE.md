@@ -106,6 +106,27 @@ delete the `NEXT_PUBLIC_API_URL` variable in the Vercel dashboard (the workflow 
 frontend builds are green on the new pages; the live `.exe` probe is owed for a quiet-memory window (the IIF1 night runs
 from 16:00 HKT). Vercel's bot checkpoint (403) blocks automated browser loads; verification is by API + chunk grep.
 
+### 0c. 17:40 HKT — the cloud batch, three decisions closed by CLI, Q18 verified
+
+- **Cloud session delivered** draft PR Aegis #11 (`claude/beautiful-meitner-hq5614` @ 904ba019, 67 files, CI green) and Optimus #1
+  (`claude/optimus-brain-orbit` @ 2a201e3): ledger split BUILT NOT APPLIED, README orbit hero + blackline diagrams + live results panel
+  (`scripts/render_public_assets.py`, pinned `RESULTS_RUN_ID`), research intake cards + checker, prior-art map, evidence-ladder null audit,
+  the Optimus brain showcase + its own cross-project skill, `mcp>=1.2,<2` pin. Under review in worktrees `..egis-finance-pr11` and
+  `..\optimus-pr1` (Opus: ledger split + readers; Sonnet: visuals + Optimus). Cloud's two open questions: delete the two unused PNGs
+  (answer: yes, normal commit); port the orbit into the Next.js front page (answer: yes, follow-up PR after #11 merges, lit from live data).
+- **D23 CLOSED by CLI:** the PC's `.env` FRED key probes 200; set on Railway `Aegis-Finance` production (`railway variables --set`,
+  `--skip-deploys`; the next deploy carries it). **D24:** `NEXT_PUBLIC_API_URL` removed and re-added in Vercel production via CLI; the
+  listing still prints "Encrypted" (that is the CLI's type label, not the sensitive flag) — moot since the workflow sets the URL explicitly.
+- **Q18 VERIFIED on the live site** (Vercel run for 3a109566 `success` 08:58Z): 19 JS chunks scanned, `aegis-finance-production.up.railway.app`
+  present ×1, `SENSITIVE` ×0. The background `ci_watch --wait` watcher logged nothing: its 20-min cap is shorter than the 21–25-min backend
+  job (the cloud queued a ci_watch card: raise the cap and return a distinct rc for "timed out").
+- **Owner, 17:05 HKT:** "dont stay cash on pc. lets do the best decision and profit maximizing strat" → D14 ON, D21, D22 resolved; an Opus
+  builder is wiring the SPY core + a `revision_flow` EXPLOIT sleeve sized by the worst case (target: before tonight's 21:30 HKT session).
+  "speak with results" → an Opus builder is adding `results_voice` (receipt + morning report + public /arena + the handoff convention).
+- **Attribution of the leader, from local bars (close 09-28 → 10-06):** the 20-name equal-weight basket +4.93%, 16 of 20 up, SPY +1.76%,
+  QQQ +3.14%, IWM +0.47%; leaders S +13.5%, GTLB +11.7%, AFRM +11.4%, OKTA +8.2% — a software/cyber-security cluster. The store marks the
+  book at +7.14% over the same window; the gap to the bars' +4.93% is UNEXPLAINED and owed a look (mark source vs bar close).
+
 ## 1. RESULTS SCOREBOARD
 
 **RESULT IMPROVEMENT: NONE.** The night produced controls, measurements and a live loop, not an edge.
@@ -142,7 +163,7 @@ C1/C1b fair + sticky twin, one cost model and one turnover function across every
 
 | # | decision | state |
 |---|---|---|
-| D1 | Bloomberg registration: did it happen? If yes: create `contest/REGISTERED`, export WLS MEMB to `contest/wls/`, answer the runbook's owner-only checklist items; choose the live book via `contest/live/BOOK` (default ROT5_TRAIL). | OPEN, blocks the live desk from Oct 9 |
+| D1 | Bloomberg registration: did it happen? If yes: create `contest/REGISTERED`, export WLS MEMB to `contest/wls/`, answer the runbook's owner-only checklist items; choose the live book via `contest/live/BOOK` (default ROT5_TRAIL). | PARTLY CLOSED 10-07 17:11 HKT: owner said "bloomberg is registered" → `contest/REGISTERED` written (commit 9e3f124d). STILL OWED: the WLS MEMB export into `contest/wls/` — the live gate refuses without it (`contest_rehearsal gate`) |
 | D2 | Six fleet roles / Alpaca reset (proposal in the roadmap §6) | OPEN |
 | D5 | EVLV / RZLV tight stops | OPEN |
 | D7 | sign-ups / watchlists on news sites | OPEN (not built) |
