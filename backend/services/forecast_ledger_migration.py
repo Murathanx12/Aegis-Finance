@@ -790,8 +790,24 @@ def apply(legacy_path: Optional[Path] = None, *, expect_sha256: Optional[str] = 
             "reader_rows_equal_legacy": same, "chain": chain_now["status"],
             "chain_problems": chain_now["problems"], "legacy_untouched": legacy_intact,
             "legacy_chain_break_status": chain.get("status"),
-            "next": ("git add backend/data/optimus/forecasts backend/data/optimus/resolutions "
-                     "backend/data/optimus/ledger_manifests/forecast_ledger && git commit")}
+            "next": commit_command(legacy)}
+
+
+def commit_command(legacy: Path) -> str:
+    """The one commit the attended apply ends with.
+
+    It carries the FROZEN legacy file too (review F4, 2026-10-07): the marker's
+    `legacy_sha256`/`legacy_bytes` vouch for its last bytes, and `predictions.jsonl`
+    is normally ` M` on the PC, so leaving it out leaves those bytes in no commit.
+    One `git checkout -- .` (the 09-24 incident) would then roll it back to an
+    older version, `legacy_frozen_check` would read DEGRADED for ever, and the
+    rollback (delete the marker) would read an older ledger than the one migrated."""
+    root = Path(legacy).parent
+    parts = [FL.rel(root / FL.FORECAST_DIR), FL.rel(root / FL.RESOLUTION_DIR),
+             FL.rel(FL.manifest_dir_for(legacy)), FL.rel(legacy)]
+    return ("git add " + " ".join(parts)
+            + " && git commit -m \"forecast ledger: split applied (streams, manifests, marker, "
+              "and the frozen legacy file the marker vouches for)\"")
 
 
 def discard_partial(legacy_path: Optional[Path] = None) -> dict:

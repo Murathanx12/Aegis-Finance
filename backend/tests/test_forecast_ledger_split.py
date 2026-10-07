@@ -592,8 +592,13 @@ def test_the_git_history_replay_finds_the_first_byte_and_semantic_breaks(tmp_pat
     rows = [_new14(f"h{i}", OLD + timedelta(days=i)) for i in range(4)]
 
     def git(*args):
+        # core.autocrlf/safecrlf pinned: Git for Windows ships autocrlf=true in
+        # the SYSTEM gitconfig, which normalises the CRLF rewrite (v3) to "no
+        # change" and makes `commit -am v3` exit 1 (review F1). The test is about
+        # the bytes the ledger held, so git must store them verbatim.
         subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t",
-                        "-c", "commit.gpgsign=false", *args], cwd=repo, check=True,
+                        "-c", "commit.gpgsign=false", "-c", "core.autocrlf=false",
+                        "-c", "core.safecrlf=false", *args], cwd=repo, check=True,
                        capture_output=True)
 
     repo.mkdir()
@@ -769,13 +774,45 @@ def test_the_fold_refuses_a_hand_written_event_that_rewrites_a_frozen_field(ledg
     stats = FL.FoldStats()
     after = {r["prediction_id"]: r for r in FL.read_rows(ledger, strict=False, stats=stats)}
     assert after[row["prediction_id"]] == row                  # untouched, still open
-    assert len(stats.bad_lines) == 1                          # the reader's own check
+    assert len(stats.refused_events) == 1 and not stats.bad_lines   # the reader's own check
     rows = {k: dict(v) for k, v in FL._read_forecasts(
         FL.backend_for(ledger), strict=True, stats=FL.FoldStats()).items()}
     st2 = FL.fold(rows, [bad])                                # and the fold's
     assert st2.refused_events and rows[row["prediction_id"]]["ticker"] != "EVIL"
-    with pytest.raises(ValueError, match="non-resolution"):
-        FL.read_rows(ledger, strict=True)                     # a strict read is loud
+    # Review F3: a strict read COUNTS a malformed event and keeps going -- it is
+    # not unparseable bytes, so it must not halt resolve_all / ledger_health.
+    st3 = FL.FoldStats()
+    strict_rows = {r["prediction_id"]: r for r in FL.read_rows(ledger, strict=True, stats=st3)}
+    assert strict_rows[row["prediction_id"]] == row
+    assert len(st3.refused_events) == 1 and "non-resolution" in st3.refused_events[0]
+
+
+def test_a_malformed_event_leaves_read_predictions_working_and_health_degraded(ledger):
+    """Review F3: the design says a malformed event 'is counted and never applied'
+    and 'never blocks the real grade'. Before the fix a strict read raised, so
+    read_predictions, resolve_all and ledger_health all halted, and the
+    ledger_health 'refused by the fold' line could never fire."""
+    _apply(ledger)
+    before = B.read_predictions(ledger)
+    row = next(r for r in before if r["outcome"] is None and not r.get("void_reason"))
+    bad = {"schema": FL.EVENT_SCHEMA, "prediction_id": row["prediction_id"], "event": "resolve",
+           "set": {"outcome": 1, "ticker": "EVIL"}, "recorded_at": _iso(NOW),
+           "writer": "a hand edit", "month_basis": "recorded_at"}
+    with (ledger.parent / "resolutions" / f"resolutions_{_m(NOW)}.jsonl").open("ab") as fh:
+        fh.write(FL.row_line(bad))
+    assert B.read_predictions(ledger) == before
+    h = B.ledger_health(ledger)
+    assert h["status"] == "DEGRADED"
+    assert any("refused by the fold" in p for p in h["problems"])
+
+
+def test_a_strict_read_still_raises_on_a_torn_last_event_line(ledger):
+    """Review F3, the other defect class: bytes that do not parse still raise."""
+    _apply(ledger)
+    with (ledger.parent / "resolutions" / f"resolutions_{_m(NOW)}.jsonl").open("ab") as fh:
+        fh.write(b'{"prediction_id": "torn", "eve')
+    with pytest.raises(json.JSONDecodeError):
+        B.read_predictions(ledger)
 
 
 def test_a_terminal_event_needs_its_terminal_field():
@@ -1009,8 +1046,13 @@ def test_an_unreadable_committed_version_makes_the_history_incomplete(tmp_path, 
     repo.mkdir()
 
     def git(*args):
+        # core.autocrlf/safecrlf pinned: Git for Windows ships autocrlf=true in
+        # the SYSTEM gitconfig, which normalises the CRLF rewrite (v3) to "no
+        # change" and makes `commit -am v3` exit 1 (review F1). The test is about
+        # the bytes the ledger held, so git must store them verbatim.
         subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t",
-                        "-c", "commit.gpgsign=false", *args], cwd=repo, check=True,
+                        "-c", "commit.gpgsign=false", "-c", "core.autocrlf=false",
+                        "-c", "core.safecrlf=false", *args], cwd=repo, check=True,
                        capture_output=True)
 
     git("init", "-q")
@@ -1045,6 +1087,23 @@ def test_the_volume_is_never_seeded_from_a_split_image_ledger(tmp_path):
     assert not (volume / "predictions.jsonl").exists()
 
 
+def test_a_split_image_over_a_populated_volume_is_not_an_error(tmp_path, caplog):
+    """Review F5: once a split image is deployed, every Railway boot finds a
+    volume ledger that has held rows for months. Nothing needs copying, so the
+    boot must report `not_needed` and log no ERROR."""
+    import logging
+    image, volume = tmp_path / "image", tmp_path / "volume"
+    src = image / "predictions.jsonl"
+    _write_legacy(src, _legacy_rows())
+    _apply(src)
+    _write_legacy(volume / "predictions.jsonl", _legacy_rows())
+    with caplog.at_level(logging.INFO):
+        rep = B.ensure_ledger_migrated(dest_dir=volume, legacy_dir=image)
+    assert rep["files"]["predictions.jsonl"]["status"] == "destination_not_empty"
+    assert rep["status"] == "not_needed"
+    assert not [r for r in caplog.records if r.levelno >= logging.ERROR]
+
+
 def test_the_query_planner_reports_a_refused_ledger_as_unknown(tmp_path):
     from backend.services import query_planner as QP
     led = tmp_path / "predictions.jsonl"
@@ -1062,3 +1121,83 @@ def test_the_one_file_rehearsals_refuse_a_split_ledger(ledger, monkeypatch, modu
     monkeypatch.setattr(mod.EP, "ledger_path", lambda population: ledger)
     assert mod.main(["--as-of", NOW.date().isoformat()]) == 2
     assert "REFUSED" in capsys.readouterr().out
+
+
+# ─────────────────────────────── review 2026-10-07 (F2, F4, F6) ──────────────
+
+def _open_resolution_file(ledger: Path) -> Path:
+    return ledger.parent / "resolutions" / f"resolutions_{_m(NOW)}.jsonl"
+
+
+def test_status_reports_a_torn_tail_in_an_open_month_and_the_cli_moves_it_aside(ledger, capsys):
+    """Review F2: a torn tail halts every writer to the stream and every strict
+    reader, while `status` said ok. Now it is a problem, and the attended
+    `--quarantine-torn-tail` moves the fragment to a dated .fragment file."""
+    from scripts import ledger_split as CLI
+    _apply(ledger)
+    assert FL.status(ledger, rehash=True)["status"] == "ok"
+    p = _open_resolution_file(ledger)
+    good = p.read_bytes()
+    with p.open("ab") as fh:
+        fh.write(b'{"prediction_id": "torn", "ev')
+    st = FL.status(ledger, rehash=True)
+    assert st["status"] == "DEGRADED"
+    assert any("fragment" in x and p.name in x for x in st["problems"])
+    assert st["tail_problems"] and st["tail_problems"][0]["kind"] == "torn"
+    with pytest.raises(json.JSONDecodeError):
+        B.read_predictions(ledger)
+    capsys.readouterr()
+    assert CLI.main(["--quarantine-torn-tail", "--legacy", str(ledger)]) == 0
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["status"] == "MOVED" and len(receipt["moved"]) == 1
+    assert p.read_bytes() == good
+    side = list(p.parent.glob(f"{p.name}.*.fragment"))
+    assert len(side) == 1 and side[0].read_bytes() == b'{"prediction_id": "torn", "ev'
+    assert FL.status(ledger, rehash=True)["status"] == "ok"
+    B.read_predictions(ledger)                                 # readable again
+
+
+def test_quarantine_refuses_a_fragment_that_is_a_complete_row(ledger, capsys):
+    from scripts import ledger_split as CLI
+    _apply(ledger)
+    p = _open_resolution_file(ledger)
+    before = p.read_bytes()
+    with p.open("ab") as fh:
+        fh.write(b'{"prediction_id": "whole", "event": "void"}')     # no newline
+    capsys.readouterr()
+    assert CLI.main(["--quarantine-torn-tail", "--legacy", str(ledger)]) == 2
+    assert "COMPLETE JSON" in capsys.readouterr().out
+    assert p.read_bytes() == before + b'{"prediction_id": "whole", "event": "void"}'
+    assert not list(p.parent.glob("*.fragment"))
+
+
+def test_status_reports_an_unparseable_last_line_even_with_its_newline(ledger):
+    _apply(ledger)
+    p = _open_resolution_file(ledger)
+    with p.open("ab") as fh:
+        fh.write(b"\x00\x00\x00\x00\n")
+    st = FL.status(ledger, rehash=True)
+    assert st["status"] == "DEGRADED"
+    assert any(t["kind"] == "unparseable_last_line" for t in st["tail_problems"])
+
+
+def test_the_apply_commit_step_includes_the_frozen_legacy_file(ledger):
+    """Review F4: the bytes the marker vouches for must be in the commit it prints."""
+    res = _apply(ledger)
+    nxt = res["next"]
+    assert nxt.startswith("git add ") and "git commit" in nxt
+    assert FL.rel(ledger) in nxt
+    assert FL.rel(FL.manifest_dir_for(ledger)) in nxt
+
+
+def test_the_logical_line_cache_is_bounded(ledger, monkeypatch):
+    """Review F6: above the cap a full scan retains nothing; under it, at most
+    one ledger is cached."""
+    _apply(ledger)
+    monkeypatch.setattr(FL, "_LOGICAL_CACHE", {})
+    monkeypatch.setattr(FL, "LOGICAL_CACHE_MAX_BYTES", 10)
+    first = list(FL.logical_lines(ledger))
+    assert first and FL._LOGICAL_CACHE == {}
+    monkeypatch.setattr(FL, "LOGICAL_CACHE_MAX_BYTES", 10 ** 6)
+    assert list(FL.logical_lines(ledger)) == first
+    assert len(FL._LOGICAL_CACHE) == 1

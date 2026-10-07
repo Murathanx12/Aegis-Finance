@@ -271,7 +271,7 @@ def _fsync_dir(path: Path) -> None:
 
 #: Windows refuses `os.replace` onto a file another process has open (a reader,
 #: an indexer, an antivirus scan) with PermissionError; the window is short.
-REPLACE_RETRIES = 12
+REPLACE_RETRIES = int(getattr(_config, "FORECAST_LEDGER_REPLACE_RETRIES", 12))
 
 
 def _replace(tmp: Path, path: Path) -> None:
@@ -665,6 +665,17 @@ def _read_forecasts(be: Backend, *, strict: bool, stats: FoldStats) -> dict[str,
 
 
 def _read_events(be: Backend, *, strict: bool, stats: FoldStats) -> list[dict]:
+    """Every well-formed resolution event, in file order.
+
+    Two defect classes, kept apart (review F3, 2026-10-07):
+    - bytes that do not parse (a torn tail, a NUL-filled crash) RAISE in strict
+      mode, as the legacy `read_predictions` always did: nothing can be said
+      about what the line meant;
+    - a line that parses but is not a valid event (`event_problem`: a hand edit
+      that sets `ticker`, a resolve without an outcome) is COUNTED on
+      `stats.refused_events` and skipped in BOTH modes. It never applied and it
+      never closes a record, so it must not halt the grader either; the
+      `ledger_health` problem line surfaces it as DEGRADED."""
     events: list[dict] = []
     for month, p in stream_files(be, "resolutions"):
         where = rel(p)
@@ -674,9 +685,7 @@ def _read_events(be: Backend, *, strict: bool, stats: FoldStats) -> list[dict]:
                 continue
             problem = event_problem(ev)
             if problem:
-                if strict:
-                    raise ValueError(f"{where}:{i}: {problem}")
-                stats.bad_lines.append(f"{where}:{i}")
+                stats.refused_events.append(f"{where}:{i} ({ev.get('prediction_id')}): {problem}")
                 continue
             events.append(ev)
     stats.events = len(events)
@@ -765,7 +774,10 @@ def _terminal_sets(be: Backend) -> dict[str, dict]:
     """`{prediction_id: set}` of the first terminal event per id (lenient).
 
     Cached on the resolution files' (name, size, mtime_ns): an append moves the
-    key. Callers only read the sets (they are folded into copies)."""
+    key. Callers only read the sets (they are folded into copies). Bounded like
+    the logical-line cache (review F6): one ledger at a time, and only while the
+    resolution files total at most LOGICAL_CACHE_MAX_BYTES; above that the sets
+    are rebuilt per call and not retained."""
     key = str(be.root.resolve())
     fp = tuple((p.name, p.stat().st_size, p.stat().st_mtime_ns)
                for _, p in stream_files(be, "resolutions"))
@@ -776,16 +788,23 @@ def _terminal_sets(be: Backend) -> dict[str, dict]:
     out: dict[str, dict] = {}
     for ev in _read_events(be, strict=False, stats=stats):
         out.setdefault(ev["prediction_id"], ev["set"])
-    _TERMINAL_CACHE[key] = (fp, out)
+    _TERMINAL_CACHE.clear()
+    if sum(f[1] for f in fp) <= LOGICAL_CACHE_MAX_BYTES:
+        _TERMINAL_CACHE[key] = (fp, out)
     return out
 
 
-#: One folded copy of the streams' logical lines, keyed on `fingerprint()`: a
-#: full scan (the health probes) re-serialises ~20k graded rows, about a second
-#: each time. Any append moves a file's size and so the key. Not kept above
-#: LOGICAL_CACHE_MAX_BYTES of text.
-LOGICAL_CACHE_MAX_BYTES = 256 * 1024 * 1024
-_LOGICAL_CACHE: dict[str, tuple[tuple, tuple]] = {}
+#: At most ONE folded copy of one ledger's logical lines, keyed on
+#: (ledger path, `fingerprint()`), and only when its text is at most
+#: LOGICAL_CACHE_MAX_BYTES (`config.FORECAST_LEDGER_LOGICAL_CACHE_MAX_BYTES`,
+#: 4 MB). That is the whole resident bound: a larger ledger -- the live one is
+#: ~80 MB folded -- is streamed and re-folded on every full scan (about a second)
+#: and nothing is retained between scans (review F6, 2026-10-07: the old 256 MB
+#: per-path cache kept ~82 MB alive for the life of every process). Any append
+#: moves a file's size and so the key.
+LOGICAL_CACHE_MAX_BYTES = int(getattr(_config, "FORECAST_LEDGER_LOGICAL_CACHE_MAX_BYTES",
+                                      4 * 1024 * 1024))
+_LOGICAL_CACHE: dict[str, tuple[tuple, tuple]] = {}      # never more than one entry
 _LOGICAL_CACHE_GUARD = threading.Lock()
 
 
@@ -833,18 +852,26 @@ def logical_lines(path: Optional[Path] = None, *, contains: Optional[str] = None
             yield from hit[1]
             return
         terminal = _terminal_sets(be)
-        out: list[str] = []
+        # Streamed: lines are yielded as each file is folded, and kept only
+        # while the running total stays under the cap; past it the copy is
+        # dropped and nothing of this scan outlives it.
+        keep: Optional[list[str]] = []
         size = 0
         for _, p in stream_files(be, "forecasts"):
             for line in _split_raw_lines(p.read_bytes()):
                 if line.strip():
                     text = _fold_line(line, terminal)
-                    size += len(text)
-                    out.append(text)
-        if size <= LOGICAL_CACHE_MAX_BYTES:
-            with _LOGICAL_CACHE_GUARD:
-                _LOGICAL_CACHE[key] = (fp, tuple(out))
-        yield from out
+                    if keep is not None:
+                        size += len(text)
+                        if size <= LOGICAL_CACHE_MAX_BYTES:
+                            keep.append(text)
+                        else:
+                            keep = None
+                    yield text
+        with _LOGICAL_CACHE_GUARD:
+            _LOGICAL_CACHE.clear()
+            if keep is not None:
+                _LOGICAL_CACHE[key] = (fp, tuple(keep))
         return
     needle = contains.encode("utf-8")
     terminal = _terminal_sets(be)
@@ -1050,7 +1077,124 @@ def _check_tail(p: Path) -> None:
                 raise ForecastLedgerError(
                     f"{rel(p)} ends without a newline (a torn append, most likely a crash "
                     f"mid-write). Nothing was written. Inspect the last line; if it is a "
-                    f"fragment, move it aside by hand and record that you did.")
+                    f"fragment, `python -m scripts.ledger_split --quarantine-torn-tail` moves "
+                    f"it aside to a dated .fragment file under the lock, with a receipt.")
+
+
+def tail_problem(p: Path, *, max_scan: int = 1 << 20) -> Optional[dict]:
+    """What is wrong with the END of one stream file, or None.
+
+    `torn`: the file does not end with a newline, so the bytes after the last
+    newline are a fragment every writer refuses to append after (`_check_tail`)
+    and every strict reader raises on. `unparseable_last_line`: it ends with a
+    newline but its last line does not parse (a NUL-filled crash tail can).
+    Reads at most `max_scan` bytes from the end."""
+    if not p.exists():
+        return None
+    size = p.stat().st_size
+    if not size:
+        return None
+    start = max(0, size - max_scan)
+    with p.open("rb") as fh:
+        fh.seek(start)
+        buf = fh.read()
+    if not buf.endswith(b"\n"):
+        cut = buf.rfind(b"\n")
+        if cut < 0 and start > 0:
+            return {"kind": "torn", "file": rel(p), "fragment_bytes": None,
+                    "detail": f"{rel(p)} ends without a newline and its last line is longer "
+                              f"than {max_scan:,} bytes"}
+        frag = buf[cut + 1:]
+        return {"kind": "torn", "file": rel(p), "fragment_bytes": len(frag),
+                "fragment_offset": size - len(frag),
+                "detail": f"{rel(p)} ends with a {len(frag):,}-byte fragment and no newline "
+                          f"(a torn append): every writer to this stream refuses and every "
+                          f"strict reader raises until it is moved aside "
+                          f"(python -m scripts.ledger_split --quarantine-torn-tail)"}
+    body = buf[:-1]
+    cut = body.rfind(b"\n")
+    if cut < 0 and start > 0:
+        return None                      # the last line is longer than the scan; not judged
+    last = body[cut + 1:]
+    if last.strip():
+        try:
+            ok = isinstance(json.loads(last.decode("utf-8")), dict)
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            ok = False
+        if not ok:
+            return {"kind": "unparseable_last_line", "file": rel(p),
+                    "detail": f"{rel(p)}: the last line ends with a newline but does not "
+                              f"parse as a JSON object; every strict reader raises on it. "
+                              f"Not moved automatically (it is a complete line): inspect it"}
+    return None
+
+
+def quarantine_torn_tail(path: Optional[Path] = None, *,
+                         now: Optional[datetime] = None) -> dict:
+    """Move a torn tail aside, ATTENDED (review F2, 2026-10-07).
+
+    For every UNSEALED stream file that ends without a newline, under the ledger
+    lock: copy the bytes after the last newline to
+    `<file>.<YYYYmmddTHHMMSSZ>.fragment` beside it (fsynced), then truncate the
+    stream to that newline. REFUSES -- and moves nothing -- when a fragment
+    parses as a complete JSON object: that is a whole row missing only its
+    newline, and dropping it would lose a forecast or a grade. A sealed file is
+    never touched (its manifest vouches for its bytes). Returns a receipt."""
+    be = backend_for(path)
+    if be.kind != "streams":
+        raise ForecastLedgerError("quarantine_torn_tail applies to a migrated (streams) ledger; "
+                                  "the legacy file is not touched here")
+    run = now or _now()
+    stamp = run.strftime("%Y%m%dT%H%M%SZ")
+    moved: list[dict] = []
+    with ledger_lock(be.root, purpose="quarantine_torn_tail"):
+        be = backend_for(path)
+        todo: list[tuple[Path, int, bytes]] = []
+        for stream in STREAMS:
+            sealed = sealed_months(be, stream)
+            for month, p in stream_files(be, stream):
+                tp = tail_problem(p)
+                if not tp or tp["kind"] != "torn":
+                    continue
+                if month in sealed:
+                    raise ForecastLedgerError(
+                        f"{rel(p)} is SEALED and ends torn; its manifest vouches for its "
+                        f"bytes, so it is not edited here. Nothing was moved.")
+                if tp.get("fragment_bytes") is None:
+                    raise ForecastLedgerError(f"{tp['detail']}. Nothing was moved.")
+                off = tp["fragment_offset"]
+                with p.open("rb") as fh:
+                    fh.seek(off)
+                    frag = fh.read()
+                try:
+                    obj = json.loads(frag.decode("utf-8"))
+                except (UnicodeDecodeError, json.JSONDecodeError):
+                    obj = None
+                if isinstance(obj, dict):
+                    raise ForecastLedgerError(
+                        f"{rel(p)}: the bytes after the last newline parse as a COMPLETE JSON "
+                        f"row ({str(obj.get('prediction_id'))!r}); it is missing only its "
+                        f"newline, not torn. Refusing to move a whole row aside. Nothing "
+                        f"was moved.")
+                todo.append((p, off, frag))
+        for p, off, frag in todo:
+            side = p.with_name(f"{p.name}.{stamp}.fragment")
+            n = 1
+            while side.exists():
+                side = p.with_name(f"{p.name}.{stamp}-{n}.fragment")
+                n += 1
+            atomic_write_bytes(side, frag)
+            with p.open("r+b") as fh:
+                fh.truncate(off)
+                fh.flush()
+                os.fsync(fh.fileno())
+            moved.append({"file": rel(p), "fragment_file": rel(side),
+                          "fragment_bytes": len(frag), "fragment_sha256": sha256_bytes(frag),
+                          "truncated_to_bytes": off})
+    return {"status": "MOVED" if moved else "NOTHING_TORN", "at_utc": _iso(run),
+            "moved": moved,
+            "note": ("each fragment was copied verbatim to its .fragment file before the "
+                     "stream was truncated to its last newline; record this receipt")}
 
 
 def _append_bytes(p: Path, blob: bytes) -> None:
@@ -1563,6 +1707,7 @@ def status(path: Optional[Path] = None, *, rehash: bool = False,
                        "the legacy file stays the ledger until --apply)")
     else:
         files = []
+        tails: list[dict] = []
         for stream in STREAMS:
             sealed = sealed_months(be, stream)
             for month, p in stream_files(be, stream):
@@ -1572,7 +1717,15 @@ def status(path: Optional[Path] = None, *, rehash: bool = False,
                 if month not in sealed and is_sealable_month(month, run):
                     problems.append(f"{p.name} is closed and past its grace but not sealed "
                                     f"(python -m backend.services.forecast_ledger --seal --apply)")
+                if month not in sealed:
+                    # Review F2: a torn tail in an open month halts every writer
+                    # to that stream and every strict reader; never "ok" over it.
+                    tp = tail_problem(p)
+                    if tp:
+                        tails.append(tp)
+                        problems.append(tp["detail"])
         out["files"] = files
+        out["tail_problems"] = tails
         chain = verify_chain(path, rehash=rehash)
         out["chain"] = {k: chain[k] for k in ("status", "manifests", "rehashed", "tail",
                                                "problems")}
@@ -1588,6 +1741,12 @@ def status(path: Optional[Path] = None, *, rehash: bool = False,
             n = len(read_rows(path, strict=False, stats=stats))
             want = (be.marker or {}).get("legacy_rows")
             out["fold"] = stats.as_dict(5)
+            if stats.bad_lines:
+                problems.append(f"{len(stats.bad_lines)} stream line(s) do not parse "
+                                f"(e.g. {stats.bad_lines[0]}); a strict reader raises on them")
+            if stats.refused_events:
+                problems.append(f"{len(stats.refused_events)} resolution event(s) refused by "
+                                f"the fold (e.g. {stats.refused_events[0]})")
             if isinstance(want, int) and n < want:
                 problems.append(f"the streams fold to {n} rows, fewer than the {want} the "
                                 f"legacy file held at the migration: rows were lost")

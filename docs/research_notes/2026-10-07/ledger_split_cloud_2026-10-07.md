@@ -196,7 +196,11 @@ line. Fixed before commit; the label is now built only on a failure.)
    genesis manifest carries `legacy_chain_break` and the legacy sha256); and re-reads every row through
    the real reader and compares it to the legacy rows.
 4. `git add backend/data/optimus/forecasts backend/data/optimus/resolutions
-   backend/data/optimus/ledger_manifests/forecast_ledger` and commit. Restart the writers.
+   backend/data/optimus/ledger_manifests/forecast_ledger backend/data/optimus/predictions.jsonl`
+   and commit (the `next` line `--apply` prints is this command). The frozen `predictions.jsonl`
+   belongs in the same commit as the marker: the marker's `legacy_sha256`/`legacy_bytes` vouch for
+   its last bytes, and the file is normally ` M` on the PC, so without it those bytes are in no
+   commit and one `git checkout -- .` rolls it back (review F4). Restart the writers.
 5. `python -m scripts.ledger_split --status` (backend `streams`, chain `ok`, legacy frozen intact).
    On the 2nd of each month (one day of grace): `python -m backend.services.forecast_ledger --seal`
    to see what closes, then `--seal --apply` and commit.

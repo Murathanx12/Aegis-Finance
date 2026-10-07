@@ -7,6 +7,7 @@
     python -m scripts.ledger_split --apply --plan-file plan.json  # ... or against the saved plan
     python -m scripts.ledger_split --status                       # which backend answers, and its seals
     python -m scripts.ledger_split --discard-partial              # clean up an interrupted --apply
+    python -m scripts.ledger_split --quarantine-torn-tail         # move a crash's torn tail aside (attended)
 
 THE ONE ATTENDED LOCAL OPERATION
 ================================
@@ -55,6 +56,9 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--status", action="store_true", help="backend, files, chain")
     mode.add_argument("--discard-partial", action="store_true",
                       help="remove an interrupted apply's files (refused after the switch)")
+    mode.add_argument("--quarantine-torn-tail", action="store_true",
+                      help="move a torn tail in an open stream file to a dated .fragment file "
+                           "(attended; refused when the fragment is a complete JSON row)")
     ap.add_argument("--legacy", default=None, help="legacy ledger path (default: config)")
     ap.add_argument("--expect-sha256", default=None, help="the source sha256 --plan printed")
     ap.add_argument("--plan-file", default=None, help="a saved `--plan --json` output")
@@ -77,6 +81,9 @@ def main(argv: list[str] | None = None) -> int:
                           history=not a.no_history)
             print(json.dumps(r, indent=1, ensure_ascii=False, default=str))
             return 0 if r["status"] in ("APPLIED", "ALREADY_APPLIED") else 1
+        if a.quarantine_torn_tail:
+            print(json.dumps(FL.quarantine_torn_tail(legacy), indent=1, ensure_ascii=False))
+            return 0
         if a.discard_partial:
             print(json.dumps(MIG.discard_partial(legacy), indent=1))
             return 0

@@ -619,6 +619,21 @@ def ensure_ledger_migrated(dest_dir: Path | None = None,
         src, dst = legacy_dir / name, dest_dir / name
         entry: dict = {"src": str(src), "dst": str(dst)}
         try:
+            if (name == _FL.LEGACY_NAME and _FL.backend_for(src).kind == "streams"
+                    and _FL.exists(dst) and _FL.row_count(dst) > 0):
+                # Review F5: the steady state on Railway once a split image is
+                # deployed -- the volume ledger has held rows for months and
+                # nothing needs copying. Checked BEFORE the split refusal, so
+                # every boot does not log an ERROR that trains readers to skim.
+                entry["status"] = "destination_not_empty"
+                entry["dest_records"] = _FL.row_count(dst)
+                entry["reason"] = ("the in-image ledger is split, and the volume already holds "
+                                   "its own ledger (authoritative); nothing to copy")
+                logger.info("ledger migration: %s is split and %s already holds %d row(s) -- "
+                            "nothing to copy", src, dst, entry["dest_records"])
+                statuses.append(entry["status"])
+                report["files"][name] = entry
+                continue
             if name == _FL.LEGACY_NAME and _FL.backend_for(src).kind == "streams":
                 # The IMAGE's forecast ledger was split into monthly streams
                 # (scripts.ledger_split). Its single file is FROZEN at the

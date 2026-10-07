@@ -5548,6 +5548,16 @@ FORECAST_LEDGER_SEAL_GRACE_DAYS = 1
 #: (`LedgerBusy`). A batch append holds it for well under a second; the
 #: migration's `--apply` holds it for its whole run, which is the point.
 FORECAST_LEDGER_LOCK_TIMEOUT_S = 120.0
+#: Upper bound on the text `forecast_ledger.logical_lines` keeps resident between
+#: full scans (ONE cached ledger per process). Review F6 (2026-10-07): the old
+#: 256 MB cap kept the whole folded ledger (~82 MB on 37,651 rows, growing
+#: ~25 MB/month) alive in every process -- API, probes, sim -- on a machine whose
+#: suite has been reaped for memory. A larger ledger is re-folded per full scan
+#: (about a second) and nothing is retained.
+FORECAST_LEDGER_LOGICAL_CACHE_MAX_BYTES = 4 * 1024 * 1024
+#: Windows refuses `os.replace` onto a file another process holds open (a
+#: reader, an indexer, AV); retries with backoff (0.02 s doubling, capped 0.5 s).
+FORECAST_LEDGER_REPLACE_RETRIES = 12
 
 # ── Sticky matched twin (CHUNK C1b, 2026-10-07) ──────────────────────────────
 #: `matched_twins.twin_series_sticky`: a partner is drawn once per rule holding (same
