@@ -136,6 +136,15 @@ monthly-book) construction with the coverage-start exclusion is the one genuinel
 `docs/TRIALS/TRIAL-ANALYST-SNOWBALL-1.md`, status **UNSIGNED DRAFT**, not yet in `rule_experiments`,
 no outcome read on the CRSP/IBES instrument.
 
+## Needs evidence
+- Independent literature on the 90-day-quiet-gap "first mover" snowball construction
+  specifically (as opposed to revision momentum in general, already three times closed here) --
+  whether anyone outside this programme has tested a quiet-gap-conditioned first revision as an
+  event-study signal, or whether `TRIAL-ANALYST-SNOWBALL-1.md`'s construction is genuinely novel.
+- Post-2010 replication/decay evidence for Jegadeesh-Kim-Krische-Lee (2004) specifically (McLean
+  & Pontiff 2016 is cited here as the standing decay reference, not independently re-verified for
+  THIS mechanism).
+
 ## hyp_lab family
 `family_unmapped` — no `HYP_LAB_FAMILIES` entry covers analyst-revision mechanisms specifically
 (the closest by surface similarity, `insider_event`, is about insider Form-4 transactions, a

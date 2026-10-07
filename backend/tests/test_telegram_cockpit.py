@@ -370,7 +370,9 @@ def test_f2_how_are_we_doing_answers_the_mandate_not_the_census(root, monkeypatc
     for q in ("how are we doing", "how much did we make"):
         rep = CK.route_text(q, {"chat": {"id": 111}}, handlers=_handlers(calls), root=root,
                             call_fn=_no_model, now=NOW)
-        lines = rep["text"].split("\n")
+        # 2026-10-07: the RESULTS block leads; the mandate answer follows it unchanged
+        assert rep["text"].startswith("RESULTS")
+        lines = rep["text"].split("\n\n", 1)[1].split("\n")
         assert lines[1].startswith("PC-PAPER +1.00% vs SPY +0.50% over its own window")
         assert "live broker equity now $1,012,000 (+1.20% since inception" in lines[2]
         assert "hack2: +2.00% (+1.00 pp vs SPY" in rep["text"]

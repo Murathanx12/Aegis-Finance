@@ -1700,6 +1700,15 @@ def _case_fleet_eod_audit():
             "an end-of-day audit handed no fleet roles")
 
 
+def _case_research_instruments():
+    # Q12 (2026-10-07): Semantic Scholar/arXiv are $0 but measured unreliable
+    # keyless (HTTP 429 on 2 of 2 tries, two independent fetch paths). The
+    # missing input is the declared key/opt-in; calling either keyless by
+    # default would be noise reported as evidence, so it must refuse instead.
+    from backend.services.research_instruments import (InstrumentKeyRequired,
+                                                       fetch_semantic_scholar)
+    return (lambda: fetch_semantic_scholar("a tug of war overnight intraday"),
+            InstrumentKeyRequired, "semantic_scholar call with no declared API key")
 def _case_forecast_ledger():
     """Forecast ledger split (2026-10-07): an apply with no source fingerprint refuses.
 
@@ -1755,6 +1764,26 @@ def _case_bar_defects_empty_book():
             "assert_book_clean() on a book with no held slot")
 
 
+def _case_pc_sleeves():
+    # Owner 2026-10-07: the revision_flow sleeve on PC-PAPER. The missing input is
+    # THE FROZEN BOOK: mirroring a book that is not in the store would buy nothing
+    # and read as "the sleeve is flat"; `load_revision_flow` refuses instead.
+    from pathlib import Path as _P
+
+    from backend.services.pc_sleeves import SleeveRefused, load_revision_flow
+    return (lambda: load_revision_flow(book_id="0000000000000000",
+                                       books_path=_P("does/not/exist/books.jsonl")),
+            SleeveRefused, "load_revision_flow() with no frozen book")
+
+
+def _case_results_voice():
+    # 2026-10-07 "speak with results": the missing input is the receipt pair. A
+    # results statement over no ROI rows would print "0 of 0 ahead" as a headline.
+    from backend.services.results_voice import ResultsVoiceRefused, build
+    return (lambda: build(None, None, roi_path="", dna_path=""), ResultsVoiceRefused,
+            "a results statement with no ROI or book_dna receipt")
+
+
 def _case_public_flow_common():
     """Public-flow sensors (C16, 2026-10-07): no crosswalk refuses.
 
@@ -1770,6 +1799,8 @@ def _case_public_flow_common():
 
 
 CASES = {
+    "pc_sleeves": _case_pc_sleeves,
+    "results_voice": _case_results_voice,
     "public_flow_common": _case_public_flow_common,
     "fleet_manager": _case_fleet_manager,
     "world_digest": _case_world_digest,
@@ -1890,6 +1921,7 @@ CASES = {
     "analyst_reputation": _case_analyst_reputation,
     "snowball_shadow": _case_snowball_shadow,
     "fleet_eod_audit": _case_fleet_eod_audit,
+    "research_instruments": _case_research_instruments,
     "forecast_ledger": _case_forecast_ledger,
 }
 

@@ -80,7 +80,9 @@ def test_one_row_per_account_names_the_401_and_the_missing_stop(tmp_path):
     assert any(f.startswith("MISSING_STOP") for f in a["flags"])
     assert a["n_mismatches"] == 0 and a["reconciliation"]["state"]["status"] == "OK"
     assert a["reconciliation"]["grades"]["status"] == "OK"
-    assert a["orders_today"] == {"n": 1, "ours": 1, "foreign": 0}
+    # C27: broker-side `rejected` buys are counted (review 2026-10-07 F7)
+    assert a["orders_today"] == {"n": 1, "ours": 1, "foreign": 0, "rejected": 0}
+    assert a["rejections"]["n_live_buys_sent"] == 0 and not a["rejections"]["degraded"]
     assert {m for m, _ in fake.calls} == {"GET"}
 
 

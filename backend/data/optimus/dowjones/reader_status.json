@@ -1,194 +1,193 @@
 {
- "t": "2026-10-07T12:36:27+08:00",
+ "t": "2026-10-07T13:19:50+08:00",
  "state": "READING",
  "current_url_by_worker": {
-  "pool2": "https://www.wsj.com/us-news/cornell-rape-allegations-case-fraternity-c00a8741?mod=article_inline",
+  "pool2": "https://www.wsj.com/finance",
   "pool5": "https://www.reddit.com/r/stocks+investing+wallstreetbets+StockMarket+options+SecurityAnalysis+ValueInvesting/search/?q=GOOGL&restrict_sr=1&sort=new",
-  "pool1": "https://stocktwits.com/symbol/AGIO?experiment=bundle",
-  "pool0": "https://x.com/search?q=%24LEU&f=live",
+  "pool": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac147d084c53f38e-0&displayMode=inline&pianoIdUrl=https%3A%2F%2Fauth.asia.nikkei.com%2Fid%2F&widget=temp",
+  "pool0": "https://apnews.com/",
+  "pool1": "https://asia.nikkei.com/economy",
   "pool3": "https://www.marketwatch.com/investing/stock/alle",
-  "pool4": "https://stocktwits.com/symbol/GOOGL?experiment=bundle",
-  "pool": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac147d084c53f38e-0&displayMode=inline&pianoIdUrl=https%3A%2F%2Fauth.asia.nikkei.com%2Fid%2F&widget=temp"
+  "pool4": "https://stocktwits.com/symbol/GOOGL?experiment=bundle"
  },
- "pages_ok_10m": 38,
- "pages_ok_60m": 177,
+ "pages_ok_10m": 33,
+ "pages_ok_60m": 89,
  "classes_60m": {
-  "x.com": {
-   "OK": 8
-  },
-  "home.treasury.gov": {
-   "OK": 3
-  },
-  "sec.gov": {
-   "OK": 3
-  },
-  "reddit.com": {
-   "OK": 6
-  },
-  "marketwatch.com": {
-   "OK": 30
-  },
   "barrons.com": {
-   "OK": 24
+   "OK": 10
   },
   "wsj.com": {
-   "OK": 33,
-   "NOT_FOUND": 2
+   "OK": 14,
+   "NOT_FOUND": 1
   },
-  "cnbc.com": {
-   "OK": 18,
-   "PAYWALL_CHECKOUT_FRAME": 2
+  "marketwatch.com": {
+   "OK": 16
   },
-  "asia.nikkei.com": {
-   "OK": 10,
-   "PAYWALL_CHECKOUT_FRAME": 4
+  "x.com": {
+   "OK": 6
   },
-  "auth.asia.nikkei.com": {
-   "PAYWALL_CHECKOUT_FRAME": 16
+  "stocktwits.com": {
+   "OK": 6
   },
-  "ft.com": {
-   "OK": 8,
-   "PAYWALL_STUB": 3
+  "apnews.com": {
+   "OK": 9
+  },
+  "reddit.com": {
+   "OK": 5
   },
   "scmp.com": {
-   "OK": 7
+   "OK": 1
   },
   "finance.yahoo.com": {
-   "OK": 11
+   "OK": 4
   },
-  "reuters.com": {
-   "ROBOTS_DISALLOWED": 6
+  "cnbc.com": {
+   "OK": 4,
+   "PAYWALL_CHECKOUT_FRAME": 1
   },
   "bls.gov": {
    "OK": 2
   },
-  "bbc.com": {
-   "PAYWALL_CHECKOUT_FRAME": 1,
+  "sec.gov": {
+   "OK": 2
+  },
+  "ft.com": {
+   "OK": 4
+  },
+  "home.treasury.gov": {
+   "OK": 2
+  },
+  "auth.asia.nikkei.com": {
+   "PAYWALL_CHECKOUT_FRAME": 3
+  },
+  "asia.nikkei.com": {
    "OK": 3
   },
-  "apnews.com": {
-   "OK": 5
+  "reuters.com": {
+   "ROBOTS_DISALLOWED": 1
   },
-  "stocktwits.com": {
-   "OK": 6
+  "bbc.com": {
+   "OK": 1
   }
  },
  "last_not_ok_page": {
-  "t": "2026-10-07T04:29:54+00:00",
+  "t": "2026-10-07T05:18:49+00:00",
   "class": "PAYWALL_CHECKOUT_FRAME",
   "url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac147d084c53f38e-0&displayMode=inline&pianoIdUrl=https%3A%2F%2Fauth.asia.nikkei.com%2Fid%2F&widget=temp"
  },
  "last_error": null,
  "next_action": "keep reading",
  "restarts": 1,
- "free_disk_gb": 258.5,
- "free_ram_gb": 6.7,
+ "free_disk_gb": 257.3,
+ "free_ram_gb": 1.73,
  "detail": "",
  "stall_level": 0,
  "stall_restarts": 0,
  "mode": "pool",
  "queue": "",
  "pool": {
-  "t": "2026-10-07T04:36:14+00:00",
+  "t": "2026-10-07T05:19:36+00:00",
   "pid": 213484,
   "state": "reading",
   "queue_state": "READING",
   "throughput": {
-   "ok_last_60m": 111,
-   "run_hours": 0.72,
-   "sustained_ok_per_hour": 154.9
+   "ok_last_60m": 157,
+   "run_hours": 1.44,
+   "sustained_ok_per_hour": 148.7
   },
   "next_front_due_s": 0.0,
   "last_refill": {
-   "t": "2026-10-07T04:36:11+00:00",
+   "t": "2026-10-07T05:19:30+00:00",
    "added": 0
   },
   "carried_in": 391,
   "early_front_revisits": {
-   "cnbc.com": 9,
-   "bls.gov": 2,
-   "sec.gov": 2,
-   "home.treasury.gov": 2,
-   "asia.nikkei.com": 5,
+   "cnbc.com": 15,
+   "bls.gov": 4,
+   "sec.gov": 3,
+   "home.treasury.gov": 3,
+   "asia.nikkei.com": 11,
    "scmp.com": 1,
-   "bbc.com": 2,
-   "ft.com": 4
+   "bbc.com": 6,
+   "ft.com": 9
   },
   "robots_disallowed": {
-   "reuters.com": 6
+   "reuters.com": 11,
+   "cnbc.com": 5,
+   "ft.com": 5
   },
   "stop_reason": null,
   "tabs": {
-   "target": 6,
+   "target": 2,
    "max": 6,
-   "open_now": 0,
+   "open_now": 1,
    "in_flight": 1,
-   "why": "free memory 8.1 GB: holding at 6 of 6 (max 6)",
-   "free_gb": 8.08,
+   "why": "free memory 3.2 GB >= 2.6 GB: grew to 2 of 3 (max 6)",
+   "free_gb": 3.19,
    "floor_gb": 2.0
   },
   "caps": {
    "hour_all": 480,
    "day_all": 4000,
-   "loads_60m_all": 181,
-   "loads_24h_all": 3449
+   "loads_60m_all": 161,
+   "loads_24h_all": 3470
   },
   "hosts": {
    "apnews.com": {
     "open_tabs": 0,
     "tab_limit": 1,
-    "loads_60m": 5,
+    "loads_60m": 14,
     "cap_hour": 30,
-    "loads_24h": 151,
+    "loads_24h": 154,
     "cap_day": 300,
-    "pending": 60,
+    "pending": 62,
     "classes": {
-     "OK": 5
+     "OK": 16
     },
     "cooling": null,
     "blocked_until": null,
-    "use_60m": "5/30",
-    "use_24h": "151/300",
-    "next_front_due_s": 1868.9,
+    "use_60m": "14/30",
+    "use_24h": "154/300",
+    "next_front_due_s": 0.0,
     "fronts_only_until": null,
     "queue_state": "READING"
    },
    "asia.nikkei.com": {
-    "open_tabs": 0,
+    "open_tabs": 1,
     "tab_limit": 1,
-    "loads_60m": 10,
+    "loads_60m": 6,
     "cap_hour": 30,
     "loads_24h": 164,
     "cap_day": 300,
-    "pending": 0,
+    "pending": 1,
     "classes": {
-     "OK": 6,
+     "OK": 10,
      "PAYWALL_CHECKOUT_FRAME": 4
     },
     "cooling": null,
     "blocked_until": null,
-    "use_60m": "10/30",
+    "use_60m": "6/30",
     "use_24h": "164/300",
-    "next_front_due_s": 43.6,
+    "next_front_due_s": 0.0,
     "fronts_only_until": "2026-10-07T10:09:36+00:00",
-    "queue_state": "QUEUE_EMPTY"
+    "queue_state": "READING"
    },
    "barrons.com": {
     "open_tabs": 0,
     "tab_limit": 2,
-    "loads_60m": 24,
+    "loads_60m": 25,
     "cap_hour": 120,
-    "loads_24h": 484,
+    "loads_24h": 489,
     "cap_day": 1200,
-    "pending": 43,
+    "pending": 46,
     "classes": {
-     "OK": 11
+     "OK": 32
     },
     "cooling": null,
     "blocked_until": null,
-    "use_60m": "24/120",
-    "use_24h": "484/1200",
-    "next_front_due_s": 1839.9,
+    "use_60m": "25/120",
+    "use_24h": "489/1200",
+    "next_front_due_s": 0.0,
     "fronts_only_until": null,
     "queue_state": "READING"
    },
@@ -197,96 +196,98 @@
     "tab_limit": 1,
     "loads_60m": 3,
     "cap_hour": 30,
-    "loads_24h": 136,
+    "loads_24h": 130,
     "cap_day": 300,
-    "pending": 0,
+    "pending": 1,
     "classes": {
      "PAYWALL_CHECKOUT_FRAME": 1,
-     "OK": 3
+     "OK": 6
     },
     "cooling": null,
     "blocked_until": null,
     "use_60m": "3/30",
-    "use_24h": "136/300",
-    "next_front_due_s": 39.7,
+    "use_24h": "130/300",
+    "next_front_due_s": 0.0,
     "fronts_only_until": "2026-10-07T10:09:52+00:00",
-    "queue_state": "QUEUE_EMPTY"
+    "queue_state": "READING"
    },
    "bls.gov": {
     "open_tabs": 0,
     "tab_limit": 1,
-    "loads_60m": 2,
+    "loads_60m": 3,
     "cap_hour": 30,
-    "loads_24h": 50,
+    "loads_24h": 51,
     "cap_day": 300,
     "pending": 0,
     "classes": {
-     "OK": 2
+     "OK": 4
     },
     "cooling": null,
     "blocked_until": null,
-    "use_60m": "2/30",
-    "use_24h": "50/300",
-    "next_front_due_s": 714.6,
+    "use_60m": "3/30",
+    "use_24h": "51/300",
+    "next_front_due_s": 783.3,
     "fronts_only_until": null,
     "queue_state": "QUEUE_EMPTY"
    },
    "cnbc.com": {
     "open_tabs": 0,
     "tab_limit": 1,
-    "loads_60m": 18,
+    "loads_60m": 5,
     "cap_hour": 30,
-    "loads_24h": 233,
+    "loads_24h": 231,
     "cap_day": 300,
-    "pending": 7,
+    "pending": 4,
     "classes": {
-     "OK": 12,
-     "PAYWALL_CHECKOUT_FRAME": 1
+     "OK": 16,
+     "PAYWALL_CHECKOUT_FRAME": 2,
+     "ROBOTS_DISALLOWED": 5
     },
     "cooling": null,
     "blocked_until": null,
-    "use_60m": "18/30",
-    "use_24h": "233/300",
-    "next_front_due_s": 5702.8,
-    "fronts_only_until": "2026-10-07T10:16:53+00:00",
+    "use_60m": "5/30",
+    "use_24h": "231/300",
+    "next_front_due_s": 3557.2,
+    "fronts_only_until": "2026-10-07T11:17:46+00:00",
     "queue_state": "READING"
    },
    "finance.yahoo.com": {
     "open_tabs": 0,
     "tab_limit": 1,
-    "loads_60m": 11,
+    "loads_60m": 4,
     "cap_hour": 30,
-    "loads_24h": 128,
+    "loads_24h": 124,
     "cap_day": 300,
-    "pending": 59,
+    "pending": 62,
     "classes": {
      "OK": 9
     },
     "cooling": null,
     "blocked_until": null,
-    "use_60m": "11/30",
-    "use_24h": "128/300",
-    "next_front_due_s": 1894.9,
+    "use_60m": "4/30",
+    "use_24h": "124/300",
+    "next_front_due_s": 0.0,
     "fronts_only_until": null,
     "queue_state": "READING"
    },
    "ft.com": {
     "open_tabs": 0,
     "tab_limit": 1,
-    "loads_60m": 11,
+    "loads_60m": 5,
     "cap_hour": 30,
-    "loads_24h": 160,
+    "loads_24h": 161,
     "cap_day": 300,
-    "pending": 5,
+    "pending": 1,
     "classes": {
-     "OK": 5,
-     "PAYWALL_STUB": 3
+     "OK": 9,
+     "PAYWALL_STUB": 3,
+     "ROBOTS_DISALLOWED": 5
     },
     "cooling": null,
     "blocked_until": null,
-    "use_60m": "11/30",
-    "use_24h": "160/300",
-    "next_front_due_s": 6043.7,
+    "use_60m": "5/30",
+    "use_24h": "161/300",
+    "next_front_due_s": 0.0,
     "fronts_only_until": "2026-10-07T10:09:45+00:00",
     "queue_state": "READING"
    },
@@ -299,32 +300,33 @@
     "cap_day": 300,
     "pending": 0,
     "classes": {
-     "OK": 2
+     "OK": 3
     },
     "cooling": null,
     "blocked_until": null,
     "use_60m": "2/30",
     "use_24h": "50/300",
-    "next_front_due_s": 785.6,
+    "next_front_due_s": 551.7,
     "fronts_only_until": null,
     "queue_state": "QUEUE_EMPTY"
    },
    "marketwatch.com": {
     "open_tabs": 0,
     "tab_limit": 2,
-    "loads_60m": 30,
+    "loads_60m": 33,
     "cap_hour": 120,
-    "loads_24h": 605,
+    "loads_24h": 620,
     "cap_day": 1200,
     "pending": 31,
     "classes": {
-     "OK": 13
+     "OK": 36,
+     "BLANK": 1
     },
     "cooling": null,
     "blocked_until": null,
-    "use_60m": "30/120",
-    "use_24h": "605/1200",
-    "next_front_due_s": 1848.9,
+    "use_60m": "33/120",
+    "use_24h": "620/1200",
+    "next_front_due_s": 0.0,
     "fronts_only_until": null,
     "queue_state": "READING"
    },
@@ -333,16 +335,16 @@
     "tab_limit": 1,
     "loads_60m": 6,
     "cap_hour": 40,
-    "loads_24h": 119,
+    "loads_24h": 120,
     "cap_day": 150,
-    "pending": 78,
+    "pending": 84,
     "classes": {
-     "OK": 5
+     "OK": 6
     },
     "cooling": null,
     "blocked_until": null,
     "use_60m": "6/40",
-    "use_24h": "119/150",
+    "use_24h": "120/150",
     "next_front_due_s": null,
     "fronts_only_until": null,
     "queue_state": "READING"
@@ -354,9 +356,9 @@
     "cap_hour": 30,
     "loads_24h": 1,
     "cap_day": 300,
-    "pending": 5,
+    "pending": 0,
     "classes": {
-     "ROBOTS_DISALLOWED": 6
+     "ROBOTS_DISALLOWED": 11
     },
     "cooling": null,
     "blocked_until": null,
@@ -364,24 +366,24 @@
     "use_24h": "1/300",
     "next_front_due_s": 0.0,
     "fronts_only_until": null,
-    "queue_state": "READING"
+    "queue_state": "REFILLING"
    },
    "scmp.com": {
-    "open_tabs": 1,
+    "open_tabs": 0,
     "tab_limit": 1,
-    "loads_60m": 8,
+    "loads_60m": 6,
     "cap_hour": 30,
-    "loads_24h": 178,
+    "loads_24h": 175,
     "cap_day": 300,
-    "pending": 8,
+    "pending": 16,
     "classes": {
-     "OK": 3
+     "OK": 8
     },
     "cooling": null,
     "blocked_until": null,
-    "use_60m": "8/30",
-    "use_24h": "178/300",
-    "next_front_due_s": 4367.9,
+    "use_60m": "6/30",
+    "use_24h": "175/300",
+    "next_front_due_s": 1765.8,
     "fronts_only_until": null,
     "queue_state": "READING"
    },
@@ -390,35 +392,35 @@
     "tab_limit": 1,
     "loads_60m": 2,
     "cap_hour": 30,
-    "loads_24h": 51,
+    "loads_24h": 50,
     "cap_day": 300,
     "pending": 0,
     "classes": {
-     "OK": 2
+     "OK": 3
     },
     "cooling": null,
     "blocked_until": null,
     "use_60m": "2/30",
-    "use_24h": "51/300",
-    "next_front_due_s": 766.4,
+    "use_24h": "50/300",
+    "next_front_due_s": 533.0,
     "fronts_only_until": null,
     "queue_state": "QUEUE_EMPTY"
    },
    "stocktwits.com": {
     "open_tabs": 0,
     "tab_limit": 1,
-    "loads_60m": 6,
+    "loads_60m": 7,
     "cap_hour": 40,
-    "loads_24h": 117,
+    "loads_24h": 118,
     "cap_day": 150,
-    "pending": 77,
+    "pending": 84,
     "classes": {
-     "OK": 6
+     "OK": 7
     },
     "cooling": null,
     "blocked_until": null,
-    "use_60m": "6/40",
-    "use_24h": "117/150",
+    "use_60m": "7/40",
+    "use_24h": "118/150",
     "next_front_due_s": null,
     "fronts_only_until": null,
     "queue_state": "READING"
@@ -443,59 +445,61 @@
    "wsj.com": {
     "open_tabs": 0,
     "tab_limit": 2,
-    "loads_60m": 35,
+    "loads_60m": 33,
     "cap_hour": 120,
-    "loads_24h": 676,
+    "loads_24h": 685,
     "cap_day": 1200,
-    "pending": 159,
+    "pending": 161,
     "classes": {
-     "OK": 21
+     "OK": 42,
+     "NOT_FOUND": 3,
+     "BLANK": 1
     },
     "cooling": null,
     "blocked_until": null,
-    "use_60m": "35/120",
-    "use_24h": "676/1200",
-    "next_front_due_s": 1839.9,
+    "use_60m": "33/120",
+    "use_24h": "685/1200",
+    "next_front_due_s": 0.0,
     "fronts_only_until": null,
     "queue_state": "READING"
    },
    "x.com": {
     "open_tabs": 0,
     "tab_limit": 1,
-    "loads_60m": 8,
+    "loads_60m": 7,
     "cap_hour": 40,
-    "loads_24h": 146,
+    "loads_24h": 147,
     "cap_day": 150,
-    "pending": 87,
+    "pending": 94,
     "classes": {
-     "OK": 6
+     "OK": 7
     },
     "cooling": null,
     "blocked_until": null,
-    "use_60m": "8/40",
-    "use_24h": "146/150",
+    "use_60m": "7/40",
+    "use_24h": "147/150",
     "next_front_due_s": null,
     "fronts_only_until": null,
     "queue_state": "READING"
    }
   },
   "pending_by_tier": {
-   "news a front showed": 298,
-   "book / contest name": 28,
-   "rest of the universe": 243,
-   "section front due": 50
+   "news a front showed": 327,
+   "book / contest name": 50,
+   "rest of the universe": 235,
+   "section front due": 35
   },
   "budget": {
    "enabled": true,
-   "state": "WAITING_FOR_BUDGET",
+   "state": "READING",
    "why": null,
    "hour_allowance_now": 182,
    "ten_min_allowance_now": 38,
-   "loads_60m_all_readers": 182,
-   "loads_24h_all_readers": 3449,
+   "loads_60m_all_readers": 160,
+   "loads_24h_all_readers": 3469,
    "grants_this_run": {
-    "OWN_SHARE": 38,
-    "BORROW": 77
+    "OWN_SHARE": 120,
+    "BORROW": 118
    },
    "lanes": {
     "book_names": {
@@ -503,12 +507,12 @@
      "day_target": 960,
      "hour_quota": 44,
      "loads_60m": 26,
-     "ok_60m": 25,
-     "loads_24h": 457,
-     "ok_24h": 422,
+     "ok_60m": 22,
+     "loads_24h": 474,
+     "ok_24h": 435,
      "in_flight": 0,
-     "pending": 0,
-     "verdict": null
+     "pending": 4,
+     "verdict": "OWN_SHARE"
     },
     "universe_names": {
      "share": 0.12,
@@ -516,56 +520,56 @@
      "hour_quota": 22,
      "loads_60m": 22,
      "ok_60m": 21,
-     "loads_24h": 331,
-     "ok_24h": 303,
+     "loads_24h": 351,
+     "ok_24h": 322,
      "in_flight": 0,
-     "pending": 29,
-     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
+     "pending": 19,
+     "verdict": "LEAVE_FOR:book_names"
     },
     "markets_news": {
      "share": 0.18,
      "day_target": 720,
      "hour_quota": 33,
-     "loads_60m": 61,
-     "ok_60m": 58,
-     "loads_24h": 1016,
-     "ok_24h": 981,
+     "loads_60m": 26,
+     "ok_60m": 26,
+     "loads_24h": 993,
+     "ok_24h": 959,
      "in_flight": 0,
-     "pending": 197,
-     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
+     "pending": 223,
+     "verdict": "OWN_SHARE"
     },
     "macro_world": {
      "share": 0.12,
      "day_target": 480,
      "hour_quota": 22,
-     "loads_60m": 38,
-     "ok_60m": 38,
-     "loads_24h": 635,
-     "ok_24h": 618,
-     "in_flight": 0,
-     "pending": 102,
-     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
+     "loads_60m": 18,
+     "ok_60m": 18,
+     "loads_24h": 622,
+     "ok_24h": 605,
+     "in_flight": 1,
+     "pending": 108,
+     "verdict": "OWN_SHARE"
     },
     "politics_policy": {
      "share": 0.08,
      "day_target": 320,
      "hour_quota": 15,
-     "loads_60m": 7,
-     "ok_60m": 7,
-     "loads_24h": 265,
-     "ok_24h": 261,
+     "loads_60m": 11,
+     "ok_60m": 11,
+     "loads_24h": 263,
+     "ok_24h": 259,
      "in_flight": 0,
-     "pending": 0,
-     "verdict": null
+     "pending": 2,
+     "verdict": "OWN_SHARE"
     },
     "official_releases": {
      "share": 0.04,
      "day_target": 160,
      "hour_quota": 7,
-     "loads_60m": 8,
-     "ok_60m": 8,
+     "loads_60m": 7,
+     "ok_60m": 7,
      "loads_24h": 148,
-     "ok_24h": 145,
+     "ok_24h": 146,
      "in_flight": 0,
      "pending": 0,
      "verdict": null
@@ -576,23 +580,23 @@
      "hour_quota": 20,
      "loads_60m": 20,
      "ok_60m": 20,
-     "loads_24h": 382,
-     "ok_24h": 381,
+     "loads_24h": 385,
+     "ok_24h": 384,
      "in_flight": 0,
-     "pending": 242,
-     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
+     "pending": 262,
+     "verdict": "LEAVE_FOR:book_names"
     },
     "digest_asks": {
      "share": 0.05,
      "day_target": 200,
      "hour_quota": 9,
-     "loads_60m": 0,
-     "ok_60m": 0,
-     "loads_24h": 199,
-     "ok_24h": 193,
-     "in_flight": 1,
-     "pending": 49,
-     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
+     "loads_60m": 32,
+     "ok_60m": 32,
+     "loads_24h": 220,
+     "ok_24h": 215,
+     "in_flight": 0,
+     "pending": 29,
+     "verdict": "LEAVE_FOR:book_names"
     },
     "query_planner": {
      "share": 0.03,
@@ -620,40 +624,40 @@
     }
    },
    "ok_by_host_60m": {
-    "x.com": 8,
-    "home.treasury.gov": 3,
-    "sec.gov": 3,
+    "barrons.com": 26,
+    "finance.yahoo.com": 5,
+    "wsj.com": 29,
+    "marketwatch.com": 32,
+    "x.com": 7,
+    "stocktwits.com": 7,
+    "apnews.com": 14,
     "reddit.com": 6,
-    "marketwatch.com": 30,
-    "barrons.com": 24,
-    "wsj.com": 33,
-    "asia.nikkei.com": 10,
-    "cnbc.com": 18,
-    "ft.com": 8,
-    "scmp.com": 7,
-    "finance.yahoo.com": 11,
-    "bls.gov": 2,
-    "bbc.com": 3,
-    "apnews.com": 5,
-    "stocktwits.com": 6
+    "scmp.com": 6,
+    "cnbc.com": 5,
+    "bls.gov": 3,
+    "sec.gov": 2,
+    "ft.com": 5,
+    "home.treasury.gov": 2,
+    "asia.nikkei.com": 5,
+    "bbc.com": 3
    },
    "ok_by_host_24h": {
-    "barrons.com": 479,
-    "marketwatch.com": 602,
-    "scmp.com": 174,
-    "ft.com": 128,
-    "cnbc.com": 226,
-    "wsj.com": 611,
-    "finance.yahoo.com": 125,
-    "bbc.com": 135,
-    "asia.nikkei.com": 162,
-    "bls.gov": 49,
-    "apnews.com": 147,
+    "barrons.com": 485,
+    "wsj.com": 617,
+    "x.com": 147,
+    "marketwatch.com": 616,
+    "reddit.com": 119,
+    "stocktwits.com": 118,
+    "bls.gov": 50,
     "sec.gov": 49,
     "home.treasury.gov": 50,
-    "x.com": 146,
-    "reddit.com": 118,
-    "stocktwits.com": 117,
+    "scmp.com": 172,
+    "apnews.com": 151,
+    "cnbc.com": 224,
+    "ft.com": 129,
+    "asia.nikkei.com": 161,
+    "bbc.com": 129,
+    "finance.yahoo.com": 122,
     "reuters.com": 1
    },
    "hourly_allowance_utc": {
@@ -683,7 +687,7 @@
     "23": 156
    }
   },
-  "pages_this_run": 114,
+  "pages_this_run": 223,
   "media": {
    "wsj.com": {
     "items": 4,
@@ -702,7 +706,7 @@
     "with_transcript": 0
    },
    "apnews.com": {
-    "items": 6,
+    "items": 9,
     "with_transcript": 0
    },
    "finance.yahoo.com": {
@@ -710,7 +714,7 @@
     "with_transcript": 0
    },
    "marketwatch.com": {
-    "items": 3,
+    "items": 10,
     "with_transcript": 0
    }
   },
@@ -721,86 +725,6 @@
    "front:ft:markets: ReaderRefused: PAGE_PAYWALL_STUB: 'https://www.ft.com/content/d3f5928d-f38c-4666-8f7a-8737f9c45f51?syn-25a6b1a6=1' (2204 chars) not stored"
   ],
   "money_frames": [
-   {
-    "t": "2026-10-07T04:09:36+00:00",
-    "host": "asia.nikkei.com",
-    "page_read": "https://www.scmp.com/business/companies/article/3369908/chinas-transsion-africas-top-phone-maker-targets-us500-million-hong-kong-listing?module=top_story&pgtype=section",
-    "carrier_page": "https://asia.nikkei.com/spotlight/environment/climate-change/tokyo-s-37-straight-days-of-rain-drive-up-fresh-vegetable-prices",
-    "target_type": "iframe",
-    "target_url": "https://buy-ap.piano.io/checkout/offer/show?displayMode=modal&templateId=OT7SEEGDWZPI&templateVariantId=OTVPJGBSB0AQB&offerId=OF76WDB9YK5D&formNameByTermId=%7B%22TMNTYIAD87OQ%22%3A%22CreditRegistratio",
-    "closed": null,
-    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/offer/show?displayMode=mo"
-   },
-   {
-    "t": "2026-10-07T04:09:52+00:00",
-    "host": "bbc.com",
-    "page_read": "https://www.cnbc.com/2026/10/07/flop-ai-boom-arthur-hayes-bitcoin-bitmex-coinferencex-.html",
-    "carrier_page": "https://www.bbc.com/news/articles/c6wyz223j19po",
-    "target_type": "iframe",
-    "target_url": "https://buy-eu.piano.io/checkout/offer/show?displayMode=modal&templateId=OTVNGUND324P&offerId=OFCPZFU4G6UN&formNameByTermId=%7B%7D&hideCompletedFields=true&showCloseButton=false&experienceActionId=sho",
-    "closed": null,
-    "why": "REFUSED_PAYMENT_URL: 'https://buy-eu.piano.io/checkout/offer/show?displayMode=mo"
-   },
-   {
-    "t": "2026-10-07T04:16:53+00:00",
-    "host": "auth.asia.nikkei.com",
-    "page_read": "https://www.bbc.com/business",
-    "carrier_page": "https://asia.nikkei.com/",
-    "target_type": "iframe",
-    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac1",
-    "closed": null,
-    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
-   },
-   {
-    "t": "2026-10-07T04:16:53+00:00",
-    "host": "auth.asia.nikkei.com",
-    "page_read": "https://www.bbc.com/business",
-    "carrier_page": "https://asia.nikkei.com/",
-    "target_type": "iframe",
-    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OTEGBMEK6MOB&templateVariantId=OTVGS98WGMWH8&offerId=fakeOfferId&experienceId=EX71UESHWIAO&iframeId=offer_e6196cd",
-    "closed": null,
-    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
-   },
-   {
-    "t": "2026-10-07T04:16:53+00:00",
-    "host": "auth.asia.nikkei.com",
-    "page_read": "https://www.bbc.com/business",
-    "carrier_page": "https://asia.nikkei.com/",
-    "target_type": "iframe",
-    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OTOZ9VS2BZVM&templateVariantId=OTVZ6I75ME01N&offerId=fakeOfferId&experienceId=EX71UESHWIAO&iframeId=offer_124759e",
-    "closed": null,
-    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
-   },
-   {
-    "t": "2026-10-07T04:16:53+00:00",
-    "host": "auth.asia.nikkei.com",
-    "page_read": "https://www.bbc.com/business",
-    "carrier_page": "https://asia.nikkei.com/",
-    "target_type": "iframe",
-    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OTEGBMEK6MOB&templateVariantId=OTVGS98WGMWH8&offerId=fakeOfferId&experienceId=EX71UESHWIAO&iframeId=offer_e6196cd",
-    "closed": null,
-    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
-   },
-   {
-    "t": "2026-10-07T04:16:53+00:00",
-    "host": "cnbc.com",
-    "page_read": "https://www.bbc.com/business",
-    "carrier_page": "https://www.cnbc.com/world/",
-    "target_type": "iframe",
-    "target_url": "https://buy.tinypass.com/checkout/offer/show?displayMode=inline&containerSelector=.videoBreakerGate&templateId=OTPQ4EBDV9BZ&templateVariantId=OTV26KG1EIINA&offerId=OF09AX2A31G2&formNameByTermId=%7B%7D",
-    "closed": null,
-    "why": "REFUSED_PAYMENT_URL: 'https://buy.tinypass.com/checkout/offer/show?displayMode=i"
-   },
-   {
-    "t": "2026-10-07T04:17:29+00:00",
-    "host": "auth.asia.nikkei.com",
-    "page_read": "https://www.cnbc.com/markets/",
-    "carrier_page": "https://asia.nikkei.com/business",
-    "target_type": "iframe",
-    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac1",
-    "closed": null,
-    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
-   },
    {
     "t": "2026-10-07T04:18:25+00:00",
     "host": "auth.asia.nikkei.com",
@@ -815,6 +739,86 @@
     "t": "2026-10-07T04:29:54+00:00",
     "host": "auth.asia.nikkei.com",
     "page_read": "https://x.com/search?q=%24PRAX&f=live",
+    "carrier_page": "https://asia.nikkei.com/economy",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac1",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T04:41:24+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.wsj.com/market-data/quotes/SERV",
+    "carrier_page": "https://asia.nikkei.com/",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac1",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T04:41:24+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.wsj.com/market-data/quotes/SERV",
+    "carrier_page": "https://asia.nikkei.com/",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OTEGBMEK6MOB&templateVariantId=OTVGS98WGMWH8&offerId=fakeOfferId&experienceId=EX71UESHWIAO&iframeId=offer_e6196cd",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T04:41:24+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.wsj.com/market-data/quotes/SERV",
+    "carrier_page": "https://asia.nikkei.com/",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OTOZ9VS2BZVM&templateVariantId=OTVZ6I75ME01N&offerId=fakeOfferId&experienceId=EX71UESHWIAO&iframeId=offer_124759e",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T04:41:24+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.wsj.com/market-data/quotes/SERV",
+    "carrier_page": "https://asia.nikkei.com/",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OTEGBMEK6MOB&templateVariantId=OTVGS98WGMWH8&offerId=fakeOfferId&experienceId=EX71UESHWIAO&iframeId=offer_e6196cd",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T04:50:05+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.wsj.com/search?query=C.H.+Robinson+RXO+acquisition+terms+regulatory+approval",
+    "carrier_page": "https://asia.nikkei.com/business",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac1",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T05:17:21+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.barrons.com/topics/markets",
+    "carrier_page": "https://asia.nikkei.com/business/markets",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac1",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T05:17:46+00:00",
+    "host": "cnbc.com",
+    "page_read": "https://www.marketwatch.com/",
+    "carrier_page": "https://www.cnbc.com/world/",
+    "target_type": "iframe",
+    "target_url": "https://buy.tinypass.com/checkout/offer/show?displayMode=inline&containerSelector=.videoBreakerGate&templateId=OTPQ4EBDV9BZ&templateVariantId=OTV26KG1EIINA&offerId=OF09AX2A31G2&formNameByTermId=%7B%7D",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy.tinypass.com/checkout/offer/show?displayMode=i"
+   },
+   {
+    "t": "2026-10-07T05:18:49+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.ft.com/world",
     "carrier_page": "https://asia.nikkei.com/economy",
     "target_type": "iframe",
     "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac1",
@@ -837,7 +841,7 @@
     "landed": "https://www.ft.com/markets",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:29:00+00:00",
+    "at": "2026-10-07T05:11:28+00:00",
     "links": 0,
     "new": 0
    },
@@ -846,7 +850,7 @@
     "landed": "https://www.sec.gov/newsroom/press-releases",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:29:00+00:00",
+    "at": "2026-10-07T05:08:29+00:00",
     "links": 12,
     "new": 0
    },
@@ -855,7 +859,7 @@
     "landed": "https://home.treasury.gov/news/press-releases",
     "title": "Press Releases | U.S. Department of the Treasury",
     "class": "OK",
-    "at": "2026-10-07T04:29:19+00:00",
+    "at": "2026-10-07T05:08:47+00:00",
     "links": 6,
     "new": 0
    },
@@ -864,7 +868,7 @@
     "landed": "https://www.bls.gov/bls/newsrels.htm",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:28:08+00:00",
+    "at": "2026-10-07T05:12:39+00:00",
     "links": 12,
     "new": 0
    },
@@ -873,7 +877,7 @@
     "landed": "https://asia.nikkei.com/economy",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:30:28+00:00",
+    "at": "2026-10-07T05:19:19+00:00",
     "links": 0,
     "new": 0
    },
@@ -891,8 +895,8 @@
     "landed": "https://www.cnbc.com/world-markets/",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:11:16+00:00",
-    "links": 12,
+    "at": "2026-10-07T04:38:42+00:00",
+    "links": 0,
     "new": 0
    },
    "bbc:business": {
@@ -900,7 +904,7 @@
     "landed": "https://www.bbc.com/business",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:16:53+00:00",
+    "at": "2026-10-07T05:10:58+00:00",
     "links": 1,
     "new": 0
    },
@@ -909,8 +913,8 @@
     "landed": "https://www.cnbc.com/world/",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:16:53+00:00",
-    "links": 1,
+    "at": "2026-10-07T05:17:57+00:00",
+    "links": 2,
     "new": 0
    },
    "nikkei:home": {
@@ -918,7 +922,7 @@
     "landed": "https://asia.nikkei.com/",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:16:57+00:00",
+    "at": "2026-10-07T04:41:37+00:00",
     "links": 0,
     "new": 0
    },
@@ -927,7 +931,7 @@
     "landed": "https://www.ft.com/",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:16:57+00:00",
+    "at": "2026-10-07T04:51:01+00:00",
     "links": 0,
     "new": 0
    },
@@ -936,7 +940,7 @@
     "landed": "https://www.bbc.com/news/world",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:17:23+00:00",
+    "at": "2026-10-07T04:50:22+00:00",
     "links": 3,
     "new": 0
    },
@@ -945,7 +949,7 @@
     "landed": "https://www.cnbc.com/markets/",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:17:29+00:00",
+    "at": "2026-10-07T05:10:58+00:00",
     "links": 3,
     "new": 0
    },
@@ -954,7 +958,7 @@
     "landed": "https://asia.nikkei.com/business",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:18:05+00:00",
+    "at": "2026-10-07T04:50:25+00:00",
     "links": 0,
     "new": 0
    },
@@ -963,7 +967,7 @@
     "landed": "https://www.ft.com/world",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:18:05+00:00",
+    "at": "2026-10-07T05:18:49+00:00",
     "links": 0,
     "new": 0
    },
@@ -972,7 +976,7 @@
     "landed": "https://www.cnbc.com/economy/",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:18:10+00:00",
+    "at": "2026-10-07T05:18:40+00:00",
     "links": 0,
     "new": 0
    },
@@ -981,7 +985,7 @@
     "landed": "https://www.ft.com/companies",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:18:43+00:00",
+    "at": "2026-10-07T05:10:57+00:00",
     "links": 0,
     "new": 0
    },
@@ -999,7 +1003,7 @@
     "landed": "https://asia.nikkei.com/business/markets",
     "title": "",
     "class": "OK",
-    "at": "2026-10-07T04:18:53+00:00",
+    "at": "2026-10-07T05:17:32+00:00",
     "links": 0,
     "new": 0
    },
@@ -1011,10 +1015,120 @@
     "at": "2026-10-07T04:19:26+00:00",
     "links": 3,
     "new": 0
+   },
+   "apnews:politics": {
+    "url": "https://apnews.com/politics",
+    "landed": "https://apnews.com/politics",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T05:09:45+00:00",
+    "links": 12,
+    "new": 2
+   },
+   "wsj:home": {
+    "url": "https://www.wsj.com/",
+    "landed": "https://www.wsj.com/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T05:11:50+00:00",
+    "links": 12,
+    "new": 0
+   },
+   "barrons:home": {
+    "url": "https://www.barrons.com/",
+    "landed": "https://www.barrons.com/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T05:11:57+00:00",
+    "links": 12,
+    "new": 0
+   },
+   "marketwatch:economy_and_politics": {
+    "url": "https://www.marketwatch.com/economy-politics",
+    "landed": "https://www.marketwatch.com/economy-politics",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T05:12:01+00:00",
+    "links": 14,
+    "new": 0
+   },
+   "barrons:economy_and_policy": {
+    "url": "https://www.barrons.com/topics/economy-and-policy",
+    "landed": "https://www.barrons.com/topics/economy-and-policy",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T05:12:35+00:00",
+    "links": 12,
+    "new": 0
+   },
+   "wsj:politics": {
+    "url": "https://www.wsj.com/politics",
+    "landed": "https://www.wsj.com/politics",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T05:12:55+00:00",
+    "links": 12,
+    "new": 0
+   },
+   "wsj:opinion": {
+    "url": "https://www.wsj.com/opinion",
+    "landed": "https://www.wsj.com/opinion",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T05:13:26+00:00",
+    "links": 15,
+    "new": 0
+   },
+   "barrons:markets": {
+    "url": "https://www.barrons.com/topics/markets",
+    "landed": "https://www.barrons.com/topics/markets",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T05:17:21+00:00",
+    "links": 12,
+    "new": 0
+   },
+   "marketwatch:home": {
+    "url": "https://www.marketwatch.com/",
+    "landed": "https://www.marketwatch.com/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T05:17:46+00:00",
+    "links": 15,
+    "new": 0
+   },
+   "marketwatch:latest_news": {
+    "url": "https://www.marketwatch.com/latest-news",
+    "landed": "https://www.marketwatch.com/latest-news",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T05:18:23+00:00",
+    "links": 10,
+    "new": 0
+   },
+   "apnews:home": {
+    "url": "https://apnews.com/",
+    "landed": "https://apnews.com/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T05:19:28+00:00",
+    "links": 12,
+    "new": 3
+   },
+   "wsj:markets": {
+    "url": "https://www.wsj.com/finance",
+    "landed": "https://www.wsj.com/finance",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T05:19:29+00:00",
+    "links": 12,
+    "new": 0
    }
   },
   "orphaned_tabs": [],
-  "open_tab_ids": [],
+  "open_tab_ids": [
+   "53E996378DD0635CAB20B41B3E9D99B8"
+  ],
   "reader_tab_ids": [
    "75C1A3AE3153332E9C44845D2D8A7541",
    "E4739B370B5A848A99B7B2A6191D55F6",
@@ -1129,59 +1243,168 @@
    "B255306114DDBF385323B1939E2800F6",
    "B0DA2D3856181CB207FF24E7F71A8E42",
    "3DC04F5C5EB6A0C666D2FC5212D35B90",
-   "764878CA50118E550148E4A797E6DD09"
+   "764878CA50118E550148E4A797E6DD09",
+   "90C4D93A2555896C37D37667BFC60CCB",
+   "C0E629C9019DFCA93ED8BABE5F43B332",
+   "A733F5D068CD7D74D29FF3A9319E8103",
+   "4A12709F30EADDA2004372666A8CBAC7",
+   "2E3200B2A25479A9DE07F5ACB9899F5D",
+   "3B1B54C17F96E08D0A4FFBC96DCB11C8",
+   "9F0722FCA286AB4F6C47BA2BF8B22070",
+   "196114EA9E76D32DEBA7E82D99AC8AD4",
+   "B1051D8C2EB02CF8DB83B2949AD659E4",
+   "5993E30AABE754839D1E039473A84CE3",
+   "44F24C42EAFACE83FCBAFC6BF3365E8E",
+   "F38F2ABC357A210D1E1BD3C131BAF7D4",
+   "BE406B5E23BE6C31EC9A339A752D4368",
+   "37F7C4EE710542728655A04AFC291EBD",
+   "10EEC805ED2E15951FC00E6D6E6BA714",
+   "4BAAD45C0E6FAC999D4976ACB37E7779",
+   "4A448549BA52C628BD252B741A6F4DC2",
+   "18A19647CF141D51F3CF82E590F4FD23",
+   "B6DE75664CA6892AB51B07F8BFF0A252",
+   "31A17BE6647A92B0A8D2EBF706983A44",
+   "25777E54516B2ABF98106AA70E277645",
+   "44CBE408B82CC7C8C31AA984C03898FD",
+   "712772CFE1FBA12B4FC5465FE1F74B52",
+   "6B75AE9EC24DBC2E68D74C127953BCB0",
+   "90134B8FA52E9DACC4FBBA725F613FCC",
+   "86F5E7BBEE73C88455E6552DD372CDB7",
+   "25743F4AAC273B587F7B74679A9364DE",
+   "1B3A9D98868131732CABC188DCAD4485",
+   "3F0A0D37EDB350AB166CF10709079769",
+   "90CAF944B245EEB8184BF5E7B9F79B94",
+   "C4B25AEB5DF5FE9B3D127624467AF880",
+   "7D7D5C5FC5335E405B7769E8770865BF",
+   "A802040696C75E50CA42FBD6ACECC869",
+   "548A1EED3C2777B73D858E4A7108652B",
+   "045013C09CF8F9626B4DC2D655CEACE9",
+   "A8012D9C2BA2D9B32B0478EA371546C4",
+   "4A43A182941A974AAE5115B9E463E98D",
+   "0A2A4130083E04084DB308CAFA556D44",
+   "6B38664C7DD5F1DF4C752624340235A7",
+   "E500769EFAC26E7F8A99DBF4628A9841",
+   "E42B5F20F59FA3143258032028BA454A",
+   "3210D1B41ED583881421F7AD00B05C10",
+   "09B7001B3C1F26D6B0AEF76AB6B00DEA",
+   "BC1611B0D61221BA68AECAF8016C9A2D",
+   "8407816D9623C40235E5F8E7D7D3EA90",
+   "1D50B5B16F340A4F6BB1967B6E62C1B3",
+   "B6FECA7536B708FC7566D9C3CD2F4F79",
+   "C025B3F8023349B3F27BAEA6F922257A",
+   "27EB61D5F1961005512840C20DF4597F",
+   "584BE395D957869DCA2C94032292CD02",
+   "6DB385AFAC43FE81E4D394386A332E72",
+   "2CCB5A5C2B4A95A54A635B9D8CA72C4D",
+   "E0D6C03E11A88FFAB403A97D6E7B5F6D",
+   "58601AD527FBE8F60104C683015B3546",
+   "465A55B3FFC338852207803917FF2ABD",
+   "1285E056F5E3F7F217069E9A72D49F6E",
+   "EACA2B9E6AE0D96C0D26CA9B6CCC753C",
+   "0B550767ABB2F3F15BB4BDFE0490C6F1",
+   "C987EA3ED23758F1656B32D120E77F80",
+   "7074AF0255F8793E4296E261AB5D5F60",
+   "79625A2694E46B29CF77BD4FB42A3438",
+   "48A8C61BAFB5E6603350357951F1EE6C",
+   "DDAF19F262C86DFFF2C1437DE9DBC9FB",
+   "39406B2893D6B48F371A0BC8C1539D13",
+   "38CEDB725C74FB92B7BDDC191F8482C1",
+   "1953B16FCEB3ECD6CB39D49A88A68BE0",
+   "0F080F633F49D9082CF8CF9495420D81",
+   "C0818B6C5F70BF3D4C844DD7D6B40799",
+   "B2B1554662A716939E3A1C0FE0A357A7",
+   "BF5251A5B3DC4786F254C14C2EE04E31",
+   "F4A2C10903DBFF59AC8E22865C6297A0",
+   "39FDB76163270B9478452A4C022CD8A5",
+   "0021090A6DA68BE5ED3269185037B0DB",
+   "EC6547D2D34408EAC06813B6BD8982D2",
+   "838F7F76EE6ED57FDFDBBC499A6977A1",
+   "208083549A7645D69746435D2796FF8B",
+   "D2E678093595510584EB891CD35E491E",
+   "3F156783FE5DABC2262921460091EB2F",
+   "63F88FF19A47821E851A1D90C1F99ACD",
+   "20FD234E6FE41DAF2F1457143A420E43",
+   "3A845D1990BEC80D4CA3C4C6D073DC4A",
+   "86D09C84C365DE6F0D1ACF11838CBC59",
+   "09E4D41B3180188C2BE3B548FF94DAFB",
+   "D7E8DF4AC33499465608EC507798B3BB",
+   "9849FD72F5EC78A36CCBC28487B123F2",
+   "7F20F61A10E66E41FAEC7E4FC0899191",
+   "3462CBE19277F1C61680025D531924F1",
+   "6051600763354A00BCCBE784D611C2C7",
+   "0E139BB8159A2BC14DCA43153DD22008",
+   "F7782AB0A9254F4799A49F0EA71E0841",
+   "322F747383BEFA0D1F8ADBB1D063F814",
+   "2DD6AB3AA4432DB60A7B1657841CB778",
+   "70E89E2716E35553A1CACEDA9977726C",
+   "D48CE05C7E0FF3CD3EF94603922B9BF9",
+   "CFC27D2A68D4CFA48DE6EFE748B294D5",
+   "8A1756F2BDB3B467C4A7E18680AAFFB2",
+   "FB8FFE44F717AF8731092EE7F11B9163",
+   "77F8B2EDBF45383A4D2E71BD9B697DAA",
+   "317A6A68F187DDFF41CE3AFD0CBFFCF9",
+   "801B48CE6AA5595FAF5230585427A023",
+   "484CBA65D7457FDEDC5E3833B9A84150",
+   "10741337F4C8C7157FFB52BFBBB7E2A0",
+   "B6B27AD9D55D82C1BD22E80F87FDE106",
+   "826432C21B419C4235A0BE2B8A4EF696",
+   "A4245CFFAAA59B95045184979FC52F3F",
+   "C8B5F12BB6035EECD635D3347E848858",
+   "30C620FE5E4132273D7DEB60C408E2C0",
+   "C7ECC68F956CDDE8E43BEA2588C52E76",
+   "53E996378DD0635CAB20B41B3E9D99B8"
   ],
   "next_slot_in_s": null
  },
  "by_lane": {
   "lanes": {
    "book_names": {
-    "loads_60m": 26,
-    "ok_60m": 25,
-    "loads_24h": 457,
-    "ok_24h": 422
+    "loads_60m": 20,
+    "ok_60m": 17,
+    "loads_24h": 468,
+    "ok_24h": 430
    },
    "universe_names": {
-    "loads_60m": 22,
-    "ok_60m": 21,
+    "loads_60m": 2,
+    "ok_60m": 2,
     "loads_24h": 331,
     "ok_24h": 303
    },
    "markets_news": {
-    "loads_60m": 61,
-    "ok_60m": 58,
-    "loads_24h": 1016,
-    "ok_24h": 981
+    "loads_60m": 23,
+    "ok_60m": 23,
+    "loads_24h": 991,
+    "ok_24h": 957
    },
    "macro_world": {
-    "loads_60m": 38,
-    "ok_60m": 38,
-    "loads_24h": 635,
-    "ok_24h": 618
+    "loads_60m": 13,
+    "ok_60m": 13,
+    "loads_24h": 618,
+    "ok_24h": 601
    },
    "politics_policy": {
-    "loads_60m": 7,
-    "ok_60m": 7,
-    "loads_24h": 265,
-    "ok_24h": 261
+    "loads_60m": 11,
+    "ok_60m": 11,
+    "loads_24h": 261,
+    "ok_24h": 257
    },
    "official_releases": {
-    "loads_60m": 8,
-    "ok_60m": 8,
-    "loads_24h": 148,
+    "loads_60m": 6,
+    "ok_60m": 6,
+    "loads_24h": 147,
     "ok_24h": 145
    },
    "social": {
-    "loads_60m": 20,
-    "ok_60m": 20,
+    "loads_60m": 17,
+    "ok_60m": 17,
     "loads_24h": 382,
     "ok_24h": 381
    },
    "digest_asks": {
     "loads_60m": 0,
     "ok_60m": 0,
-    "loads_24h": 199,
-    "ok_24h": 193
+    "loads_24h": 188,
+    "ok_24h": 183
    },
    "query_planner": {
     "loads_60m": 0,
@@ -1197,60 +1420,60 @@
    }
   },
   "ok_by_host_60m": {
-   "x.com": 8,
-   "home.treasury.gov": 3,
-   "sec.gov": 3,
-   "reddit.com": 6,
-   "marketwatch.com": 30,
-   "barrons.com": 24,
-   "wsj.com": 33,
-   "asia.nikkei.com": 10,
-   "cnbc.com": 18,
-   "ft.com": 8,
-   "scmp.com": 7,
-   "finance.yahoo.com": 11,
+   "barrons.com": 10,
+   "wsj.com": 14,
+   "marketwatch.com": 16,
+   "x.com": 6,
+   "stocktwits.com": 6,
+   "apnews.com": 9,
+   "reddit.com": 5,
+   "scmp.com": 1,
+   "finance.yahoo.com": 4,
+   "cnbc.com": 4,
    "bls.gov": 2,
-   "bbc.com": 3,
-   "apnews.com": 5,
-   "stocktwits.com": 6
+   "sec.gov": 2,
+   "ft.com": 4,
+   "home.treasury.gov": 2,
+   "asia.nikkei.com": 3,
+   "bbc.com": 1
   },
   "ok_by_host_24h": {
-   "barrons.com": 479,
-   "marketwatch.com": 602,
-   "scmp.com": 174,
-   "ft.com": 128,
-   "cnbc.com": 226,
-   "wsj.com": 611,
-   "finance.yahoo.com": 125,
-   "bbc.com": 135,
-   "asia.nikkei.com": 162,
-   "bls.gov": 49,
-   "apnews.com": 147,
-   "sec.gov": 49,
-   "home.treasury.gov": 50,
+   "wsj.com": 601,
    "x.com": 146,
+   "marketwatch.com": 600,
+   "barrons.com": 469,
    "reddit.com": 118,
    "stocktwits.com": 117,
+   "bls.gov": 49,
+   "sec.gov": 49,
+   "home.treasury.gov": 50,
+   "scmp.com": 167,
+   "apnews.com": 146,
+   "cnbc.com": 223,
+   "ft.com": 128,
+   "asia.nikkei.com": 159,
+   "bbc.com": 127,
+   "finance.yahoo.com": 122,
    "reuters.com": 1
   },
   "hour_allowance_now": 182,
   "official_sources": {
    "sec_form4": {
     "lane": "insiders_filings",
-    "req_60m": 4,
+    "req_60m": 2,
     "req_24h": 934,
-    "ok_24h": 931
+    "ok_24h": 932
    },
    "sec_8k": {
     "lane": "insiders_filings",
-    "req_60m": 12,
-    "req_24h": 236,
-    "ok_24h": 234
+    "req_60m": 6,
+    "req_24h": 238,
+    "ok_24h": 237
    },
    "sec_13dg": {
     "lane": "insiders_filings",
-    "req_60m": 6,
-    "req_24h": 153,
+    "req_60m": 3,
+    "req_24h": 152,
     "ok_24h": 151
    },
    "sec_13f": {
@@ -1285,7 +1508,7 @@
    },
    "whitehouse_rss": {
     "lane": "politics_policy",
-    "req_60m": 0,
+    "req_60m": 2,
     "req_24h": 40,
     "ok_24h": 39
    },
@@ -1297,15 +1520,15 @@
    },
    "hkma_api": {
     "lane": "official_releases",
-    "req_60m": 0,
+    "req_60m": 1,
     "req_24h": 40,
     "ok_24h": 21
    },
    "fedreg": {
     "lane": "politics_policy",
-    "req_60m": 0,
-    "req_24h": 23,
-    "ok_24h": 22
+    "req_60m": 3,
+    "req_24h": 24,
+    "ok_24h": 23
    },
    "house_ptr": {
     "lane": "politics_policy",

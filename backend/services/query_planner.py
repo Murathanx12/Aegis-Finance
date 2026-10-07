@@ -1281,6 +1281,24 @@ def yield_line(zk: str, q: dict, pl: dict, other: dict, window_h: float,
             f"{rate.get('fixed_claims_per_page')}; spend ${q['cost_usd']:.4f}")
 
 
+# ═══════════════════════ the academic lane (Q12, 2026-10-07) ═════════════════
+#
+# A SEPARATE subsystem (`backend/services/research_instruments.py`): keyless
+# citation fetchers (OpenAlex, CrossRef, NBER RSS) over research-intake cards'
+# own `## Needs evidence` questions, with its own day cap
+# (`QUERY_PLANNER_ACADEMIC_QUERIES_DAY`) and its own ledger/evidence/receipt
+# files. It is NOT folded into SEED_LANES / classify_url / candidates() above:
+# a citation is not a URL for the reader to admit, so the admission pipeline
+# (quarantine, duplicate, already_read) does not apply to it. This export is
+# the integration point: `--academic --card <slug>` here is a thin alias for
+# `python -m scripts.research_lane --card <slug>` (the real caller), kept
+# beside the web-search lane's own budget() so one receipt family can report
+# both lanes' caps together.
+
+def academic_budget() -> dict:
+    return {"day": int(_cfg("QUERY_PLANNER_ACADEMIC_QUERIES_DAY", 12)), "cost_usd": 0.0}
+
+
 # ═══════════════════════════════════ CLI ═════════════════════════════════════
 
 def main(argv: list[str] | None = None) -> int:
@@ -1289,13 +1307,26 @@ def main(argv: list[str] | None = None) -> int:
     g.add_argument("--plan", action="store_true", help="print the queries, run nothing")
     g.add_argument("--run", action="store_true", help="issue the queries now")
     g.add_argument("--yield", dest="yld", action="store_true", help="the yield, files only")
+    g.add_argument("--academic", action="store_true",
+                   help="run the academic lane for one card (see scripts.research_lane)")
     ap.add_argument("--max", type=int, default=None, help="queries this run (<= run cap)")
     ap.add_argument("--due", action="store_true", help="only when QUERY_PLANNER_EVERY_H passed")
     ap.add_argument("--window-h", type=float, default=24.0)
+    ap.add_argument("--card", default=None, help="with --academic: the research-intake card slug")
     ap.add_argument("--dry", action="store_true",
                     help="with --run: issue the $0 queries but write NOTHING (no ledger, "
                          "queue, quarantine or receipt) and never open an agent turn")
     a = ap.parse_args(argv)
+    if a.academic:
+        if not a.card:
+            print(json.dumps({"status": "REFUSED", "refusal": "--academic requires --card <slug>"}))
+            return 2
+        from backend.services import research_instruments as RI
+        rec = RI.probe_card(a.card)
+        print(json.dumps({k: rec.get(k) for k in
+                          ("status", "refusal", "run_id", "path", "evidence_path",
+                           "queries_issued", "zero_kind")}, indent=2, default=str))
+        return 0 if rec.get("status") == "OK" else 2
     if a.plan:
         now = _now()
         p = plan_queries(seeds(), day=now.date().isoformat(), ledger=_read_jsonl(ledger_path()),

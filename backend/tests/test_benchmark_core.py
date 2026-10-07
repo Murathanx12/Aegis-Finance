@@ -27,7 +27,12 @@ from scripts import sim_run as S
 def test_the_pc_broker_limits_are_unchanged():
     assert PB.MAX_NAME_FRAC == pytest.approx(0.12)
     assert PB.MAX_INVESTED_FRAC == pytest.approx(1.0)
-    assert config.PC_BENCHMARK_CORE is False, "the core is the owner's flag; it ships OFF"
+    from backend.tests.conftest import SHIPPED_OWNER_D14_FLAGS
+    # OWNER DECISION 2026-10-07 17:05 HKT (D14): "dont stay cash on pc. lets do the
+    # best decision and profit maximizing strat" -- the core ships ON; the suite
+    # runs every pre-decision test with it OFF (conftest._owner_d14_flags_off).
+    assert SHIPPED_OWNER_D14_FLAGS["PC_BENCHMARK_CORE"] is True
+    assert config.PC_BENCHMARK_CORE is False, "conftest pins the pre-decision plan"
     assert config.PC_BENCHMARK_CORE_SYMBOL == config.DECISION_BENCHMARK_SYMBOL == "SPY"
 
 

@@ -614,6 +614,27 @@ def mandate_answer(root: Path | None = None, *, broker_fn: Callable[[], dict] | 
     return Answer("\n".join(out), d.get("generated_utc"), "roi", p.name)
 
 
+def results_block(root: Path | None = None, *, markdown: bool = False) -> str:
+    """The RESULTS block (2026-10-07, "speak with results"): the six headline lines of
+    the newest `paper_accounts/results_voice_<run>.md`, put at the TOP of the brief and
+    of 'how are we doing'. Absent file -> one CANNOT DETERMINE line, never silence.
+    `markdown=True` escapes the legacy-Markdown specials (account names carry `_`)."""
+    try:
+        from backend.services import results_voice as RV           # noqa: PLC0415
+        p, lines = RV.headline_block(_optimus(root) / "paper_accounts")
+    except Exception as exc:                                        # noqa: BLE001 -- a line, never a raise
+        p, lines = None, [f"RESULTS: {CANNOT} ({type(exc).__name__})"]
+    if p is None and not lines:
+        lines = [f"RESULTS: {CANNOT}: no paper_accounts/results_voice_*.md (python -m scripts.results_voice)"]
+    elif p is not None:
+        lines = lines + [f"(receipt {p.name})"]
+    text = "\n".join(lines)
+    if markdown:
+        for ch in ("_", "*", "`", "["):
+            text = text.replace(ch, "\\" + ch)
+    return text
+
+
 def fleet_answer(root: Path | None = None, *, now: datetime | None = None) -> Answer:
     p, d = latest_roi(root)
     if not d:
@@ -1054,7 +1075,7 @@ def run_intent(intent: str, c: dict, *, handlers: dict, msg: dict | None = None,
     if c.get("ask"):
         return c["ask"], False
     if intent == "nav":
-        return r("nav"), False
+        return results_block(root) + "\n\n" + r("nav"), False
     if intent == "account":
         return (r("account", acc) if acc else
                 "Which account? e.g. pc paper, hack2, balanced lane"), False

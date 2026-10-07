@@ -1,0 +1,1595 @@
+{
+ "schema": "results_voice/1",
+ "receipt": "results_voice",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run_id": "2026-10-06T235345Z",
+ "roi_generated_utc": "2026-10-06T23:53:45+00:00",
+ "book_dna_generated_utc": "2026-10-06T23:53:54+00:00",
+ "receipts": [
+  "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+  "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+ ],
+ "params": {
+  "control_name_markers": [
+   "_random_twin",
+   "comparato",
+   "__",
+   "-control"
+  ],
+  "bet_jaccard": 0.8,
+  "n_leaders": 5,
+  "n_losers": 5,
+  "random_twin_kinds": [
+   "matched_twin21",
+   "matched_random",
+   "random_same_band",
+   "random_sleeve"
+  ],
+  "label_ladder": [
+   "OBSERVED",
+   "EARLY_EVIDENCE",
+   "REPLICATED",
+   "VALIDATED_EDGE"
+  ],
+  "label_ceiling_of_book_dna": "REPLICATED"
+ },
+ "headline": {
+  "n_strategy_accounts": 71,
+  "n_ahead": 24,
+  "n_behind": 47,
+  "as_of_mark": "2026-10-06",
+  "older_marks": [
+   "2026-10-01"
+  ],
+  "n_excluded_controls": 236,
+  "n_distinct_bets": 59,
+  "n_distinct_bets_ahead": 22,
+  "receipts": [
+   "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+   "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+  ]
+ },
+ "families": [
+  {
+   "family": "llm_portfolio:personal",
+   "accounts": 22,
+   "ahead": 11,
+   "median_vs_spy_pp": 0.023
+  },
+  {
+   "family": "pc_paper",
+   "accounts": 1,
+   "ahead": 0,
+   "median_vs_spy_pp": -0.521
+  },
+  {
+   "family": "llm_portfolio:lib",
+   "accounts": 26,
+   "ahead": 10,
+   "median_vs_spy_pp": -0.974
+  },
+  {
+   "family": "night_books",
+   "accounts": 8,
+   "ahead": 2,
+   "median_vs_spy_pp": -2.19
+  },
+  {
+   "family": "website_lane",
+   "accounts": 8,
+   "ahead": 0,
+   "median_vs_spy_pp": -5.179
+  },
+  {
+   "family": "alpaca_fleet",
+   "accounts": 5,
+   "ahead": 1,
+   "median_vs_spy_pp": -8.157
+  },
+  {
+   "family": "murat_book",
+   "accounts": 1,
+   "ahead": 0,
+   "median_vs_spy_pp": -8.32
+  }
+ ],
+ "clusters": {
+  "bet_jaccard": 0.8,
+  "n_distinct_bets": 59,
+  "n_holdings_unknown": 9,
+  "exact_same_names": [
+   [
+    "balanced",
+    "conservative"
+   ],
+   [
+    "conviction",
+    "mirror"
+   ],
+   [
+    "hack2",
+    "revision_flow_v0"
+   ],
+   [
+    "lib_mom_12_1_2026-09-26",
+    "lib_mom_12_1_q_2026-09-26"
+   ],
+   [
+    "probe_bigmove_tilt_2026-09-26",
+    "probe_equal_2026-09-26",
+    "probe_inverse_vol_2026-09-26"
+   ]
+  ],
+  "jaccard_bets": [
+   [
+    "aggressive",
+    "balanced",
+    "conservative",
+    "conservative-atr"
+   ],
+   [
+    "conviction",
+    "mirror"
+   ],
+   [
+    "hack1",
+    "human_ai_thematic_v2"
+   ],
+   [
+    "hack2",
+    "revision_flow_v0"
+   ],
+   [
+    "hack4",
+    "probe_bigmove_tilt_2026-09-26",
+    "probe_equal_2026-09-26",
+    "probe_inverse_vol_2026-09-26"
+   ],
+   [
+    "lib_mom_12_1_2026-09-26",
+    "lib_mom_12_1_q_2026-09-26",
+    "lib_mom_no_downgrades_2026-09-26"
+   ],
+   [
+    "lib_net_raises_2026-09-26",
+    "lib_net_raises_ivw_lead_2026-09-27"
+   ]
+  ],
+  "jaccard_edges": [
+   {
+    "a": "revision_flow_v0",
+    "b": "hack2",
+    "jaccard": 1.0
+   },
+   {
+    "a": "lib_net_raises_2026-09-26",
+    "b": "lib_net_raises_ivw_lead_2026-09-27",
+    "jaccard": 0.905
+   },
+   {
+    "a": "probe_bigmove_tilt_2026-09-26",
+    "b": "probe_equal_2026-09-26",
+    "jaccard": 1.0
+   },
+   {
+    "a": "probe_bigmove_tilt_2026-09-26",
+    "b": "probe_inverse_vol_2026-09-26",
+    "jaccard": 1.0
+   },
+   {
+    "a": "probe_bigmove_tilt_2026-09-26",
+    "b": "hack4",
+    "jaccard": 0.833
+   },
+   {
+    "a": "probe_equal_2026-09-26",
+    "b": "probe_inverse_vol_2026-09-26",
+    "jaccard": 1.0
+   },
+   {
+    "a": "probe_equal_2026-09-26",
+    "b": "hack4",
+    "jaccard": 0.833
+   },
+   {
+    "a": "human_ai_thematic_v2",
+    "b": "hack1",
+    "jaccard": 0.958
+   },
+   {
+    "a": "probe_inverse_vol_2026-09-26",
+    "b": "hack4",
+    "jaccard": 0.833
+   },
+   {
+    "a": "conservative-atr",
+    "b": "aggressive",
+    "jaccard": 0.933
+   },
+   {
+    "a": "conservative-atr",
+    "b": "balanced",
+    "jaccard": 0.987
+   },
+   {
+    "a": "conservative-atr",
+    "b": "conservative",
+    "jaccard": 0.987
+   },
+   {
+    "a": "aggressive",
+    "b": "balanced",
+    "jaccard": 0.947
+   },
+   {
+    "a": "aggressive",
+    "b": "conservative",
+    "jaccard": 0.947
+   },
+   {
+    "a": "lib_mom_12_1_2026-09-26",
+    "b": "lib_mom_12_1_q_2026-09-26",
+    "jaccard": 1.0
+   },
+   {
+    "a": "lib_mom_12_1_2026-09-26",
+    "b": "lib_mom_no_downgrades_2026-09-26",
+    "jaccard": 0.905
+   },
+   {
+    "a": "lib_mom_12_1_q_2026-09-26",
+    "b": "lib_mom_no_downgrades_2026-09-26",
+    "jaccard": 0.905
+   },
+   {
+    "a": "balanced",
+    "b": "conservative",
+    "jaccard": 1.0
+   },
+   {
+    "a": "conviction",
+    "b": "mirror",
+    "jaccard": 1.0
+   }
+  ],
+  "book_dna_context": {
+   "jaccard_threshold": 0.3,
+   "n_holdings_clusters_ahead": 16,
+   "effective_bets_exante": 2.61,
+   "clusters_ge3": [
+    {
+     "n": 5,
+     "members": [
+      "hack2",
+      "revision_flow_v0",
+      "pers_revision_flow_leaders_2026-09-25",
+      "lib_net_raises_2026-09-26",
+      "lib_net_raises_ivw_lead_2026-09-27"
+     ]
+    },
+    {
+     "n": 3,
+     "members": [
+      "pers_ai_power_global_2026-09-25",
+      "pers_quality_momentum_2026-09-25",
+      "pers_ensemble_2026-09-25"
+     ]
+    }
+   ]
+  },
+  "receipts": [
+   "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+   "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+  ]
+ },
+ "leaders": [
+  {
+   "account": "revision_flow_v0",
+   "family": "llm_portfolio:personal",
+   "roi_pct": 7.139,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": 5.741,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "sessions_graded": 7,
+   "evidence_label": "OBSERVED(7)",
+   "evidence_why": "7 sessions < 21",
+   "rank": 1,
+   "bet_members": [
+    "hack2",
+    "revision_flow_v0"
+   ],
+   "same_names_as": [
+    "hack2"
+   ],
+   "mechanism": "analyst revision flow: net target raises x distinct firms, 90 days",
+   "mechanism_source": "config.RESULTS_VOICE_MECHANISMS['revision_flow']",
+   "random_twin": null,
+   "twin_line": "no random twin seeded for this bet: the twin gap is NOT_COMPUTABLE",
+   "raise": {
+    "label": "OBSERVED(7)",
+    "rung": "OBSERVED",
+    "label_why": "7 sessions < 21",
+    "next_label": "EARLY_EVIDENCE",
+    "sessions_needed": 14,
+    "early_min_sessions": 21,
+    "must_hold": [
+     "excess stays > 0 (now +5.74 pp)",
+     ">= 2 of 3 sub-windows stay positive (now 3 of 3)"
+    ],
+    "subwindows_positive": 3,
+    "blockers": [
+     "14 more session(s) (7 of 21)"
+    ],
+    "line": "14 more session(s) (7 of 21), if excess stays > 0 (now +5.74 pp) and >= 2 of 3 sub-windows stay positive (now 3 of 3)"
+   },
+   "receipts": [
+    "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+    "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+   ]
+  },
+  {
+   "account": "lib_net_raises_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "roi_pct": 6.785,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": 5.387,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "sessions_graded": 7,
+   "evidence_label": "OBSERVED(7)",
+   "evidence_why": "7 sessions < 21",
+   "rank": 2,
+   "bet_members": [
+    "lib_net_raises_2026-09-26",
+    "lib_net_raises_ivw_lead_2026-09-27"
+   ],
+   "same_names_as": [],
+   "mechanism": "rule strategy_library:net_raises (no one-line description recorded)",
+   "mechanism_source": "book_dna.rule",
+   "random_twin": {
+    "account": "lib_net_raises_2026-09-26__random_same_band",
+    "kind": "random_same_band",
+    "twin_of": "lib_net_raises_2026-09-26",
+    "return_pct": 1.606,
+    "vs_spy_pp": 0.208,
+    "gap_pp": 5.179,
+    "book_dna_excess_over_fair_twin_pp": 5.179
+   },
+   "twin_line": "random twin lib_net_raises_2026-09-26__random_same_band (random_same_band) +1.61%: leader ahead of it by +5.18 pp",
+   "raise": {
+    "label": "OBSERVED(7)",
+    "rung": "OBSERVED",
+    "label_why": "7 sessions < 21",
+    "next_label": "EARLY_EVIDENCE",
+    "sessions_needed": 14,
+    "early_min_sessions": 21,
+    "must_hold": [
+     "excess stays > 0 (now +5.39 pp)",
+     ">= 2 of 3 sub-windows stay positive (now 3 of 3)"
+    ],
+    "subwindows_positive": 3,
+    "blockers": [
+     "14 more session(s) (7 of 21)"
+    ],
+    "line": "14 more session(s) (7 of 21), if excess stays > 0 (now +5.39 pp) and >= 2 of 3 sub-windows stay positive (now 3 of 3)"
+   },
+   "receipts": [
+    "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+    "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+   ]
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "roi_pct": 6.705,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": 5.307,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "sessions_graded": 7,
+   "evidence_label": "OBSERVED(7)",
+   "evidence_why": "7 sessions < 21",
+   "rank": 3,
+   "bet_members": [
+    "pers_revision_flow_leaders_2026-09-25"
+   ],
+   "same_names_as": [],
+   "mechanism": "mechanism not recorded in book_dna or config",
+   "mechanism_source": "none",
+   "random_twin": {
+    "account": "pers_revision_flow_leaders_2026-09-25__random_same_band",
+    "kind": "random_same_band",
+    "twin_of": "pers_revision_flow_leaders_2026-09-25",
+    "return_pct": 0.608,
+    "vs_spy_pp": -0.79,
+    "gap_pp": 6.097,
+    "book_dna_excess_over_fair_twin_pp": 6.098
+   },
+   "twin_line": "random twin pers_revision_flow_leaders_2026-09-25__random_same_band (random_same_band) +0.61%: leader ahead of it by +6.10 pp",
+   "raise": {
+    "label": "OBSERVED(7)",
+    "rung": "OBSERVED",
+    "label_why": "7 sessions < 21",
+    "next_label": "EARLY_EVIDENCE",
+    "sessions_needed": 14,
+    "early_min_sessions": 21,
+    "must_hold": [
+     "excess stays > 0 (now +5.31 pp)",
+     ">= 2 of 3 sub-windows stay positive (now 3 of 3)"
+    ],
+    "subwindows_positive": 3,
+    "blockers": [
+     "14 more session(s) (7 of 21)"
+    ],
+    "line": "14 more session(s) (7 of 21), if excess stays > 0 (now +5.31 pp) and >= 2 of 3 sub-windows stay positive (now 3 of 3)"
+   },
+   "receipts": [
+    "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+    "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+   ]
+  },
+  {
+   "account": "Cash/index by default; deviate only above a  [b109c886]",
+   "family": "night_books",
+   "roi_pct": 6.085,
+   "spy_same_window_pct": 2.19,
+   "vs_spy_pp": 3.895,
+   "inception": "2026-09-11",
+   "last_mark": "2026-10-06",
+   "sessions_graded": 17,
+   "evidence_label": "OBSERVED(17)",
+   "evidence_why": "17 sessions < 21",
+   "rank": 4,
+   "bet_members": [
+    "Cash/index by default; deviate only above a  [b109c886]"
+   ],
+   "same_names_as": [],
+   "mechanism": "SPY by default, deviates into names whose 12-1 momentum z clears a frozen threshold, monthly",
+   "mechanism_source": "config.RESULTS_VOICE_MECHANISMS['b109c886']",
+   "random_twin": null,
+   "twin_line": "no random twin seeded for this bet: the twin gap is NOT_COMPUTABLE",
+   "raise": {
+    "label": "OBSERVED(17)",
+    "rung": "OBSERVED",
+    "label_why": "17 sessions < 21",
+    "next_label": "EARLY_EVIDENCE",
+    "sessions_needed": 4,
+    "early_min_sessions": 21,
+    "must_hold": [
+     "excess stays > 0 (now +3.90 pp)"
+    ],
+    "subwindows_positive": null,
+    "blockers": [
+     "4 more session(s) (17 of 21)",
+     "sub-windows not computable: series covers 7 of 17 sessions (< 80%)"
+    ],
+    "line": "4 more session(s) (17 of 21); sub-windows not computable: series covers 7 of 17 sessions (< 80%), if excess stays > 0 (now +3.90 pp)"
+   },
+   "receipts": [
+    "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+    "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+   ]
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "roi_pct": 4.605,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": 3.207,
+   "inception": "2026-09-28",
+   "last_mark": "2026-10-06",
+   "sessions_graded": 7,
+   "evidence_label": "OBSERVED(7)",
+   "evidence_why": "7 sessions < 21",
+   "rank": 5,
+   "bet_members": [
+    "pers_asia_supply_chain_2026-09-25"
+   ],
+   "same_names_as": [],
+   "mechanism": "mechanism not recorded in book_dna or config",
+   "mechanism_source": "none",
+   "random_twin": {
+    "account": "pers_asia_supply_chain_2026-09-25__random_same_band",
+    "kind": "random_same_band",
+    "twin_of": "pers_asia_supply_chain_2026-09-25",
+    "return_pct": 0.384,
+    "vs_spy_pp": -1.014,
+    "gap_pp": 4.221,
+    "book_dna_excess_over_fair_twin_pp": 4.221
+   },
+   "twin_line": "random twin pers_asia_supply_chain_2026-09-25__random_same_band (random_same_band) +0.38%: leader ahead of it by +4.22 pp",
+   "raise": {
+    "label": "OBSERVED(7)",
+    "rung": "OBSERVED",
+    "label_why": "7 sessions < 21",
+    "next_label": "EARLY_EVIDENCE",
+    "sessions_needed": 14,
+    "early_min_sessions": 21,
+    "must_hold": [
+     "excess stays > 0 (now +3.21 pp)",
+     ">= 2 of 3 sub-windows stay positive (now 3 of 3)"
+    ],
+    "subwindows_positive": 3,
+    "blockers": [
+     "14 more session(s) (7 of 21)"
+    ],
+    "line": "14 more session(s) (7 of 21), if excess stays > 0 (now +3.21 pp) and >= 2 of 3 sub-windows stay positive (now 3 of 3)"
+   },
+   "receipts": [
+    "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+    "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+   ]
+  }
+ ],
+ "losers": [
+  {
+   "account": "mirror",
+   "family": "website_lane",
+   "roi_pct": -25.141,
+   "spy_same_window_pct": 4.359,
+   "vs_spy_pp": -29.5,
+   "inception": "2026-06-16",
+   "last_mark": "2026-10-06",
+   "sessions_graded": 77,
+   "evidence_label": "OBSERVED(77)",
+   "evidence_why": "excess <= 0",
+   "bet_members": [
+    "conviction",
+    "mirror"
+   ],
+   "receipts": [
+    "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+    "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+   ]
+  },
+  {
+   "account": "hack4",
+   "family": "alpaca_fleet",
+   "roi_pct": -20.439,
+   "spy_same_window_pct": 1.287,
+   "vs_spy_pp": -21.726,
+   "inception": "2026-08-28",
+   "last_mark": "2026-10-06",
+   "sessions_graded": 27,
+   "evidence_label": "OBSERVED(27)",
+   "evidence_why": "excess <= 0",
+   "bet_members": [
+    "hack4",
+    "probe_bigmove_tilt_2026-09-26",
+    "probe_equal_2026-09-26",
+    "probe_inverse_vol_2026-09-26"
+   ],
+   "receipts": [
+    "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+    "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+   ]
+  },
+  {
+   "account": "hack6",
+   "family": "alpaca_fleet",
+   "roi_pct": -18.402,
+   "spy_same_window_pct": 1.287,
+   "vs_spy_pp": -19.689,
+   "inception": "2026-08-28",
+   "last_mark": "2026-10-06",
+   "sessions_graded": 27,
+   "evidence_label": "OBSERVED(27)",
+   "evidence_why": "excess <= 0",
+   "bet_members": [
+    "hack6"
+   ],
+   "receipts": [
+    "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+    "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+   ]
+  },
+  {
+   "account": "conviction",
+   "family": "website_lane",
+   "roi_pct": -12.078,
+   "spy_same_window_pct": 4.359,
+   "vs_spy_pp": -16.437,
+   "inception": "2026-06-16",
+   "last_mark": "2026-10-06",
+   "sessions_graded": 77,
+   "evidence_label": "OBSERVED(77)",
+   "evidence_why": "excess <= 0",
+   "bet_members": [
+    "conviction",
+    "mirror"
+   ],
+   "receipts": [
+    "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+    "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+   ]
+  },
+  {
+   "account": "murat_live",
+   "family": "murat_book",
+   "roi_pct": -6.962,
+   "spy_same_window_pct": 1.358,
+   "vs_spy_pp": -8.32,
+   "inception": "2026-08-11",
+   "last_mark": "2026-10-06",
+   "sessions_graded": 39,
+   "evidence_label": "OBSERVED(39)",
+   "evidence_why": "excess <= 0",
+   "bet_members": [
+    "murat_live"
+   ],
+   "receipts": [
+    "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+    "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+   ]
+  }
+ ],
+ "claims": {
+  "labels_held": {
+   "OBSERVED": 71
+  },
+  "claimable_above_observed": [],
+  "top_rung": "OBSERVED",
+  "promoted": [],
+  "line": "CLAIMS PROMOTED: none -- the highest label any strategy account holds is OBSERVED; leaders are chosen after the fact from 71 accounts, so the top of the table is biased upward",
+  "ceiling_note": "book_dna awards at most REPLICATED; VALIDATED_EDGE needs a validator on data the idea never saw",
+  "receipts": [
+   "backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json",
+   "backend/data/optimus/paper_accounts/book_dna_2026-10-06T235345Z.json"
+  ]
+ },
+ "excluded_controls": [
+  {
+   "account": "balanced-ew-control",
+   "why": "name contains '-control'"
+  },
+  {
+   "account": "tsmom-6040-control",
+   "why": "name contains '-control'"
+  },
+  {
+   "account": "Always invested - Book D's primary comparato [3b3e7049]",
+   "why": "name contains 'comparato'"
+  },
+  {
+   "account": "12-1 momentum, k=12, equal weight, monthly - [57c7af9f]",
+   "why": "twin_of 12-1 momentum, k=12, equal weight, monthly [8dbbb73b]"
+  },
+  {
+   "account": "Always invested - Book D's primary comparato [0b403924]",
+   "why": "twin_of Always invested - Book D's primary comparato [3b3e7049]"
+  },
+  {
+   "account": "Cash/index by default; deviate only above a  [2c0eb59f]",
+   "why": "twin_of Cash/index by default; deviate only above a  [b109c886]"
+  },
+  {
+   "account": "Cash/index by default; deviate only above a  [364486e1]",
+   "why": "twin_of Cash/index by default; deviate only above a  [b109c886]"
+  },
+  {
+   "account": "Always invested - Book D's primary comparato [1ece648f]",
+   "why": "twin_of Always invested - Book D's primary comparato [3b3e7049]"
+  },
+  {
+   "account": "First hour after a natively-stamped headline [e3d1553b]",
+   "why": "twin_of First hour after a natively-stamped headline [f64e8d99]"
+  },
+  {
+   "account": "First hour after a natively-stamped headline [02a03ee6]",
+   "why": "twin_of First hour after a natively-stamped headline [f64e8d99]"
+  },
+  {
+   "account": "First hour after a natively-stamped headline [d122db71]",
+   "why": "twin_of First hour after a natively-stamped headline [f64e8d99]"
+  },
+  {
+   "account": "Low short interest, high turnover, long-only [9d62cc74]",
+   "why": "twin_of Low short interest, high turnover, long-only [1934ec97]"
+  },
+  {
+   "account": "12-1 momentum, k=12, equal weight, monthly - [f46aaaa4]",
+   "why": "twin_of 12-1 momentum, k=12, equal weight, monthly [8dbbb73b]"
+  },
+  {
+   "account": "Low short interest, high turnover, long-only [33418f0e]",
+   "why": "twin_of Low short interest, high turnover, long-only [1934ec97]"
+  },
+  {
+   "account": "Good-news names in the top overhang tercile, [6310ca12]",
+   "why": "twin_of Good-news names in the top overhang tercile, [a82e6e45]"
+  },
+  {
+   "account": "The UNCONDITIONED reaction book - Book C's p [668a4e27]",
+   "why": "twin_of The UNCONDITIONED reaction book - Book C's p [c3adfbc0]"
+  },
+  {
+   "account": "Insider SAME-DAY clusters - the falsifier ar [32adc8a0]",
+   "why": "twin_of Insider SAME-DAY clusters - the falsifier ar [4359eba8]"
+  },
+  {
+   "account": "The UNCONDITIONED reaction book - Book C's p [60c4658f]",
+   "why": "twin_of The UNCONDITIONED reaction book - Book C's p [c3adfbc0]"
+  },
+  {
+   "account": "Good-news names in the top overhang tercile, [000b263c]",
+   "why": "twin_of Good-news names in the top overhang tercile, [a82e6e45]"
+  },
+  {
+   "account": "Insider cluster buys, 4-5 day clusters, long [1dc24480]",
+   "why": "twin_of Insider cluster buys, 4-5 day clusters, long [625c3919]"
+  },
+  {
+   "account": "revision_flow_v0_random_twin",
+   "why": "name contains '_random_twin'"
+  },
+  {
+   "account": "lib_skill_raises_2026-09-30__control",
+   "why": "book_dna category control"
+  },
+  {
+   "account": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+   "why": "book_dna category control"
+  },
+  {
+   "account": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+   "why": "book_dna category control"
+  },
+  {
+   "account": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+   "why": "book_dna category control"
+  },
+  {
+   "account": "lib_mom_no_downgrades_small_2026-09-27__control",
+   "why": "book_dna category control"
+  },
+  {
+   "account": "lib_net_raises_ivw_lead_2026-09-27__ew",
+   "why": "twin_of lib_net_raises_ivw_lead_2026-09-27"
+  },
+  {
+   "account": "lib_qc395_sharpe252_above_trend_large_2026-09-27__random_same_band",
+   "why": "twin_of lib_qc395_sharpe252_above_trend_large_2026-09-27"
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25__ew",
+   "why": "twin_of pers_revision_flow_leaders_2026-09-25"
+  },
+  {
+   "account": "lib_net_raises_2026-09-26__ew",
+   "why": "twin_of lib_net_raises_2026-09-26"
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25__sector_etf",
+   "why": "twin_of pers_revision_flow_leaders_2026-09-25"
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25__ew",
+   "why": "twin_of pers_asia_supply_chain_2026-09-25"
+  },
+  {
+   "account": "lib_mom_12_1_liqw_sealed_2026-09-26__random_same_band",
+   "why": "twin_of lib_mom_12_1_liqw_sealed_2026-09-26"
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25__sector_etf",
+   "why": "twin_of pers_asia_supply_chain_2026-09-25"
+  },
+  {
+   "account": "human_ai_thematic_v2__random_same_band",
+   "why": "twin_of human_ai_thematic_v2"
+  },
+  {
+   "account": "lib_net_raises_ivw_lead_2026-09-27__matched_random",
+   "why": "twin_of lib_net_raises_ivw_lead_2026-09-27"
+  },
+  {
+   "account": "lib_inflection_flow_2026-09-26__ew",
+   "why": "twin_of lib_inflection_flow_2026-09-26"
+  },
+  {
+   "account": "lib_low_dtc_mom_sealed_2026-09-26__ew",
+   "why": "twin_of lib_low_dtc_mom_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_q_trend_lead_2026-09-27__matched_random",
+   "why": "twin_of lib_mom_12_1_q_trend_lead_2026-09-27"
+  },
+  {
+   "account": "lib_margin_mom_sealed_2026-09-26__random_same_band",
+   "why": "twin_of lib_margin_mom_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_liqw_sealed_2026-09-26__sector_etf",
+   "why": "twin_of lib_mom_12_1_liqw_sealed_2026-09-26"
+  },
+  {
+   "account": "pers_quality_momentum_2026-09-25__ew",
+   "why": "twin_of pers_quality_momentum_2026-09-25"
+  },
+  {
+   "account": "reviewer_opus_2026-09-25__ew",
+   "why": "twin_of reviewer_opus_2026-09-25"
+  },
+  {
+   "account": "pers_ai_power_global_2026-09-25__ew",
+   "why": "twin_of pers_ai_power_global_2026-09-25"
+  },
+  {
+   "account": "pers_quality_momentum_2026-09-25__random_same_band",
+   "why": "twin_of pers_quality_momentum_2026-09-25"
+  },
+  {
+   "account": "lib_skill_mom_sealed_2026-09-26__random_same_band",
+   "why": "twin_of lib_skill_mom_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_resid_mom_12_1_large_sealed_2026-09-26__random_same_band",
+   "why": "twin_of lib_resid_mom_12_1_large_sealed_2026-09-26"
+  },
+  {
+   "account": "cards_supports_2026-09-25__ew",
+   "why": "twin_of cards_supports_2026-09-25"
+  },
+  {
+   "account": "SHADOW_BAYES_v0 sleeve 2026-09-28__random_same_band",
+   "why": "twin_of SHADOW_BAYES_v0 sleeve 2026-09-28"
+  },
+  {
+   "account": "pers_ensemble_2026-09-25__ew",
+   "why": "twin_of pers_ensemble_2026-09-25"
+  },
+  {
+   "account": "lib_resid_mom_12_1_large_sealed_2026-09-26__ew",
+   "why": "twin_of lib_resid_mom_12_1_large_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_low_dtc_mom_sealed_2026-09-26__random_same_band",
+   "why": "twin_of lib_low_dtc_mom_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_trend_quality_2026-09-26__ew",
+   "why": "twin_of lib_trend_quality_2026-09-26"
+  },
+  {
+   "account": "cards_supports_2026-09-25__sector_etf",
+   "why": "twin_of cards_supports_2026-09-25"
+  },
+  {
+   "account": "lib_big_dv_2026-09-26__ew",
+   "why": "twin_of lib_big_dv_2026-09-26"
+  },
+  {
+   "account": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control__matched_random",
+   "why": "twin_of lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control"
+  },
+  {
+   "account": "lib_net_raises_ivw_lead_2026-09-27__ranks_k1_2k",
+   "why": "twin_of lib_net_raises_ivw_lead_2026-09-27"
+  },
+  {
+   "account": "human_ai_thematic_v1__random_same_band",
+   "why": "twin_of human_ai_thematic_v1"
+  },
+  {
+   "account": "pers_ai_power_global_2026-09-25__sector_etf",
+   "why": "twin_of pers_ai_power_global_2026-09-25"
+  },
+  {
+   "account": "lib_mom_12_1_ivw_lead_2026-09-27__control__matched_random",
+   "why": "twin_of lib_mom_12_1_ivw_lead_2026-09-27__control"
+  },
+  {
+   "account": "lib_qc395_sharpe252_above_trend_large_2026-09-27__ew",
+   "why": "twin_of lib_qc395_sharpe252_above_trend_large_2026-09-27"
+  },
+  {
+   "account": "lib_skill_mom_2026-09-27__random_same_band",
+   "why": "twin_of lib_skill_mom_2026-09-27"
+  },
+  {
+   "account": "lib_big_dv_2026-09-26__sector_etf",
+   "why": "twin_of lib_big_dv_2026-09-26"
+  },
+  {
+   "account": "lib_mom_flow_ivw_2026-09-27__random_same_band",
+   "why": "twin_of lib_mom_flow_ivw_2026-09-27"
+  },
+  {
+   "account": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__random_same_band",
+   "why": "twin_of lib_qc470_mom252_quarterly_riskparity_2026-09-27__control"
+  },
+  {
+   "account": "lib_disp_short_avoid_2026-09-27__ranks_k1_2k",
+   "why": "twin_of lib_disp_short_avoid_2026-09-27"
+  },
+  {
+   "account": "lib_skill_raises_2026-09-30__control__sector_etf",
+   "why": "twin_of lib_skill_raises_2026-09-30__control"
+  },
+  {
+   "account": "SHADOW_BAYES_v0 sleeve 2026-09-28__ew",
+   "why": "twin_of SHADOW_BAYES_v0 sleeve 2026-09-28"
+  },
+  {
+   "account": "pers_ai_power_global_2026-09-25__random_same_band",
+   "why": "twin_of pers_ai_power_global_2026-09-25"
+  },
+  {
+   "account": "lib_skill_raises_2026-09-30__control__spy",
+   "why": "twin_of lib_skill_raises_2026-09-30__control"
+  },
+  {
+   "account": "pers_catalyst_calendar_2026-09-25__ew",
+   "why": "twin_of pers_catalyst_calendar_2026-09-25"
+  },
+  {
+   "account": "human_ai_thematic_v2__sector_etf",
+   "why": "twin_of human_ai_thematic_v2"
+  },
+  {
+   "account": "lib_inflection_flow_2026-09-26__random_same_band",
+   "why": "twin_of lib_inflection_flow_2026-09-26"
+  },
+  {
+   "account": "probe_bigmove_tilt_2026-09-26__sector_etf",
+   "why": "twin_of probe_bigmove_tilt_2026-09-26"
+  },
+  {
+   "account": "lib_mom_flow_2026-09-26__sector_etf",
+   "why": "twin_of lib_mom_flow_2026-09-26"
+  },
+  {
+   "account": "lib_inflection_flow_2026-09-26__sector_etf",
+   "why": "twin_of lib_inflection_flow_2026-09-26"
+  },
+  {
+   "account": "lib_skill_mom_sealed_2026-09-26__sector_etf",
+   "why": "twin_of lib_skill_mom_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_low_dtc_mom_sealed_2026-09-26__sector_etf",
+   "why": "twin_of lib_low_dtc_mom_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_qc395_sharpe252_above_trend_large_2026-09-27__sector_etf",
+   "why": "twin_of lib_qc395_sharpe252_above_trend_large_2026-09-27"
+  },
+  {
+   "account": "probe_equal_2026-09-26__sector_etf",
+   "why": "twin_of probe_equal_2026-09-26"
+  },
+  {
+   "account": "reviewer_opus_2026-09-25__sector_etf",
+   "why": "twin_of reviewer_opus_2026-09-25"
+  },
+  {
+   "account": "probe_inverse_vol_2026-09-26__sector_etf",
+   "why": "twin_of probe_inverse_vol_2026-09-26"
+  },
+  {
+   "account": "lib_net_raises_2026-09-26__random_same_band",
+   "why": "twin_of lib_net_raises_2026-09-26"
+  },
+  {
+   "account": "lib_disp_short_avoid_2026-09-27__random_same_band",
+   "why": "twin_of lib_disp_short_avoid_2026-09-27"
+  },
+  {
+   "account": "SHADOW_BAYES_v0 sleeve 2026-09-28__spy",
+   "why": "twin_of SHADOW_BAYES_v0 sleeve 2026-09-28"
+  },
+  {
+   "account": "murat_core_satellite_2026-09-27__random_sleeve",
+   "why": "twin_of murat_core_satellite_2026-09-27"
+  },
+  {
+   "account": "lib_skill_raises_2026-09-30__control__ew",
+   "why": "twin_of lib_skill_raises_2026-09-30__control"
+  },
+  {
+   "account": "lib_frog_in_pan_2026-09-26__ew",
+   "why": "twin_of lib_frog_in_pan_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_q_2026-09-26__sector_etf",
+   "why": "twin_of lib_mom_12_1_q_2026-09-26"
+  },
+  {
+   "account": "lib_mom_no_downgrades_2026-09-26__sector_etf",
+   "why": "twin_of lib_mom_no_downgrades_2026-09-26"
+  },
+  {
+   "account": "lib_net_raises_2026-09-26__sector_etf",
+   "why": "twin_of lib_net_raises_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_2026-09-26__sector_etf",
+   "why": "twin_of lib_mom_12_1_2026-09-26"
+  },
+  {
+   "account": "lib_margin_mom_sealed_2026-09-26__sector_etf",
+   "why": "twin_of lib_margin_mom_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_resid_mom_12_1_large_sealed_2026-09-26__sector_etf",
+   "why": "twin_of lib_resid_mom_12_1_large_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_secrel_sealed_2026-09-26__sector_etf",
+   "why": "twin_of lib_mom_12_1_secrel_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_disp_short_avoid_2026-09-27__sector_etf",
+   "why": "twin_of lib_disp_short_avoid_2026-09-27"
+  },
+  {
+   "account": "lib_skill_mom_2026-09-27__sector_etf",
+   "why": "twin_of lib_skill_mom_2026-09-27"
+  },
+  {
+   "account": "lib_mom_flow_ivw_2026-09-27__sector_etf",
+   "why": "twin_of lib_mom_flow_ivw_2026-09-27"
+  },
+  {
+   "account": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__sector_etf",
+   "why": "twin_of lib_qc470_mom252_quarterly_riskparity_2026-09-27__control"
+  },
+  {
+   "account": "human_ai_thematic_v1__sector_etf",
+   "why": "twin_of human_ai_thematic_v1"
+  },
+  {
+   "account": "SHADOW_BAYES_v1 live-size 2026-09-28__matched_twin21",
+   "why": "twin_of SHADOW_BAYES_v1 live-size 2026-09-28"
+  },
+  {
+   "account": "lib_low_asset_growth_sealed_2026-09-26__random_same_band",
+   "why": "twin_of lib_low_asset_growth_sealed_2026-09-26"
+  },
+  {
+   "account": "CRSP_BLEND_v0 2026-09-28__matched_twin21",
+   "why": "twin_of CRSP_BLEND_v0 2026-09-28"
+  },
+  {
+   "account": "lib_mom_12_1_q_2026-09-26__random_same_band",
+   "why": "twin_of lib_mom_12_1_q_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_secrel_sealed_2026-09-26__ew",
+   "why": "twin_of lib_mom_12_1_secrel_sealed_2026-09-26"
+  },
+  {
+   "account": "human_ai_thematic_v1__spy",
+   "why": "twin_of human_ai_thematic_v1"
+  },
+  {
+   "account": "pers_policy_geopolitics_2026-09-25__spy",
+   "why": "twin_of pers_policy_geopolitics_2026-09-25"
+  },
+  {
+   "account": "pers_retail_attention_contrarian_2026-09-25__spy",
+   "why": "twin_of pers_retail_attention_contrarian_2026-09-25"
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25__spy",
+   "why": "twin_of pers_asia_supply_chain_2026-09-25"
+  },
+  {
+   "account": "pers_ai_power_global_2026-09-25__spy",
+   "why": "twin_of pers_ai_power_global_2026-09-25"
+  },
+  {
+   "account": "pers_catalyst_calendar_2026-09-25__spy",
+   "why": "twin_of pers_catalyst_calendar_2026-09-25"
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25__spy",
+   "why": "twin_of pers_revision_flow_leaders_2026-09-25"
+  },
+  {
+   "account": "pers_pharma_binary_basket_2026-09-25__spy",
+   "why": "twin_of pers_pharma_binary_basket_2026-09-25"
+  },
+  {
+   "account": "pers_quality_momentum_2026-09-25__spy",
+   "why": "twin_of pers_quality_momentum_2026-09-25"
+  },
+  {
+   "account": "pers_small_cap_catalyst_2026-09-25__spy",
+   "why": "twin_of pers_small_cap_catalyst_2026-09-25"
+  },
+  {
+   "account": "pers_ensemble_2026-09-25__spy",
+   "why": "twin_of pers_ensemble_2026-09-25"
+  },
+  {
+   "account": "human_ai_thematic_v2__spy",
+   "why": "twin_of human_ai_thematic_v2"
+  },
+  {
+   "account": "cards_supports_2026-09-25__spy",
+   "why": "twin_of cards_supports_2026-09-25"
+  },
+  {
+   "account": "reviewer_opus_2026-09-25__spy",
+   "why": "twin_of reviewer_opus_2026-09-25"
+  },
+  {
+   "account": "lib_mom_12_1_q_2026-09-26__spy",
+   "why": "twin_of lib_mom_12_1_q_2026-09-26"
+  },
+  {
+   "account": "lib_mom_no_downgrades_2026-09-26__spy",
+   "why": "twin_of lib_mom_no_downgrades_2026-09-26"
+  },
+  {
+   "account": "lib_net_raises_2026-09-26__spy",
+   "why": "twin_of lib_net_raises_2026-09-26"
+  },
+  {
+   "account": "lib_big_dv_2026-09-26__spy",
+   "why": "twin_of lib_big_dv_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_2026-09-26__spy",
+   "why": "twin_of lib_mom_12_1_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_small_2026-09-26__sector_etf",
+   "why": "twin_of lib_mom_12_1_small_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_small_2026-09-26__spy",
+   "why": "twin_of lib_mom_12_1_small_2026-09-26"
+  },
+  {
+   "account": "lib_mom_flow_2026-09-26__spy",
+   "why": "twin_of lib_mom_flow_2026-09-26"
+  },
+  {
+   "account": "lib_trend_quality_2026-09-26__sector_etf",
+   "why": "twin_of lib_trend_quality_2026-09-26"
+  },
+  {
+   "account": "lib_trend_quality_2026-09-26__spy",
+   "why": "twin_of lib_trend_quality_2026-09-26"
+  },
+  {
+   "account": "lib_frog_in_pan_2026-09-26__sector_etf",
+   "why": "twin_of lib_frog_in_pan_2026-09-26"
+  },
+  {
+   "account": "lib_frog_in_pan_2026-09-26__spy",
+   "why": "twin_of lib_frog_in_pan_2026-09-26"
+  },
+  {
+   "account": "lib_inflection_flow_2026-09-26__spy",
+   "why": "twin_of lib_inflection_flow_2026-09-26"
+  },
+  {
+   "account": "lib_forecast_dispersion_v1_2026-09-26__sector_etf",
+   "why": "twin_of lib_forecast_dispersion_v1_2026-09-26"
+  },
+  {
+   "account": "lib_forecast_dispersion_v1_2026-09-26__spy",
+   "why": "twin_of lib_forecast_dispersion_v1_2026-09-26"
+  },
+  {
+   "account": "lib_book_f_seasonality_11_20_v0_2026-09-26__sector_etf",
+   "why": "twin_of lib_book_f_seasonality_11_20_v0_2026-09-26"
+  },
+  {
+   "account": "lib_book_f_seasonality_11_20_v0_2026-09-26__spy",
+   "why": "twin_of lib_book_f_seasonality_11_20_v0_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_liqw_sealed_2026-09-26__spy",
+   "why": "twin_of lib_mom_12_1_liqw_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_rev_5d_sealed_2026-09-26__sector_etf",
+   "why": "twin_of lib_rev_5d_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_rev_5d_sealed_2026-09-26__spy",
+   "why": "twin_of lib_rev_5d_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_skill_mom_sealed_2026-09-26__spy",
+   "why": "twin_of lib_skill_mom_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_margin_mom_sealed_2026-09-26__spy",
+   "why": "twin_of lib_margin_mom_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_illiquid_sealed_2026-09-26__sector_etf",
+   "why": "twin_of lib_illiquid_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_illiquid_sealed_2026-09-26__spy",
+   "why": "twin_of lib_illiquid_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_low_dtc_mom_sealed_2026-09-26__spy",
+   "why": "twin_of lib_low_dtc_mom_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_low_asset_growth_sealed_2026-09-26__sector_etf",
+   "why": "twin_of lib_low_asset_growth_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_low_asset_growth_sealed_2026-09-26__spy",
+   "why": "twin_of lib_low_asset_growth_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_resid_mom_12_1_large_sealed_2026-09-26__spy",
+   "why": "twin_of lib_resid_mom_12_1_large_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_secrel_sealed_2026-09-26__spy",
+   "why": "twin_of lib_mom_12_1_secrel_sealed_2026-09-26"
+  },
+  {
+   "account": "probe_equal_2026-09-26__spy",
+   "why": "twin_of probe_equal_2026-09-26"
+  },
+  {
+   "account": "probe_inverse_vol_2026-09-26__spy",
+   "why": "twin_of probe_inverse_vol_2026-09-26"
+  },
+  {
+   "account": "probe_bigmove_tilt_2026-09-26__spy",
+   "why": "twin_of probe_bigmove_tilt_2026-09-26"
+  },
+  {
+   "account": "lib_disp_short_avoid_2026-09-27__spy",
+   "why": "twin_of lib_disp_short_avoid_2026-09-27"
+  },
+  {
+   "account": "lib_qc395_sharpe252_above_trend_large_2026-09-27__spy",
+   "why": "twin_of lib_qc395_sharpe252_above_trend_large_2026-09-27"
+  },
+  {
+   "account": "lib_skill_mom_2026-09-27__spy",
+   "why": "twin_of lib_skill_mom_2026-09-27"
+  },
+  {
+   "account": "lib_mom_flow_ivw_2026-09-27__spy",
+   "why": "twin_of lib_mom_flow_ivw_2026-09-27"
+  },
+  {
+   "account": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__spy",
+   "why": "twin_of lib_qc470_mom252_quarterly_riskparity_2026-09-27__control"
+  },
+  {
+   "account": "lib_mom_no_downgrades_small_2026-09-27__control__sector_etf",
+   "why": "twin_of lib_mom_no_downgrades_small_2026-09-27__control"
+  },
+  {
+   "account": "lib_mom_no_downgrades_small_2026-09-27__control__spy",
+   "why": "twin_of lib_mom_no_downgrades_small_2026-09-27__control"
+  },
+  {
+   "account": "murat_core_satellite_2026-09-27__spy",
+   "why": "twin_of murat_core_satellite_2026-09-27"
+  },
+  {
+   "account": "lib_net_raises_ivw_lead_2026-09-27__spy",
+   "why": "twin_of lib_net_raises_ivw_lead_2026-09-27"
+  },
+  {
+   "account": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control__spy",
+   "why": "twin_of lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control"
+  },
+  {
+   "account": "lib_mom_12_1_ivw_lead_2026-09-27__control__spy",
+   "why": "twin_of lib_mom_12_1_ivw_lead_2026-09-27__control"
+  },
+  {
+   "account": "lib_mom_12_1_q_trend_lead_2026-09-27__spy",
+   "why": "twin_of lib_mom_12_1_q_trend_lead_2026-09-27"
+  },
+  {
+   "account": "pers_ensemble_2026-09-25__sector_etf",
+   "why": "twin_of pers_ensemble_2026-09-25"
+  },
+  {
+   "account": "pers_small_cap_catalyst_2026-09-25__random_same_band",
+   "why": "twin_of pers_small_cap_catalyst_2026-09-25"
+  },
+  {
+   "account": "lib_skill_raises_2026-09-30__control__random_same_band",
+   "why": "twin_of lib_skill_raises_2026-09-30__control"
+  },
+  {
+   "account": "probe_equal_2026-09-26__ew",
+   "why": "twin_of probe_equal_2026-09-26"
+  },
+  {
+   "account": "probe_inverse_vol_2026-09-26__ew",
+   "why": "twin_of probe_inverse_vol_2026-09-26"
+  },
+  {
+   "account": "probe_bigmove_tilt_2026-09-26__ew",
+   "why": "twin_of probe_bigmove_tilt_2026-09-26"
+  },
+  {
+   "account": "pers_quality_momentum_2026-09-25__sector_etf",
+   "why": "twin_of pers_quality_momentum_2026-09-25"
+  },
+  {
+   "account": "pers_policy_geopolitics_2026-09-25__ew",
+   "why": "twin_of pers_policy_geopolitics_2026-09-25"
+  },
+  {
+   "account": "pers_pharma_binary_basket_2026-09-25__random_same_band",
+   "why": "twin_of pers_pharma_binary_basket_2026-09-25"
+  },
+  {
+   "account": "lib_big_dv_2026-09-26__random_same_band",
+   "why": "twin_of lib_big_dv_2026-09-26"
+  },
+  {
+   "account": "pers_policy_geopolitics_2026-09-25__random_same_band",
+   "why": "twin_of pers_policy_geopolitics_2026-09-25"
+  },
+  {
+   "account": "cards_supports_2026-09-25__random_same_band",
+   "why": "twin_of cards_supports_2026-09-25"
+  },
+  {
+   "account": "lib_skill_mom_sealed_2026-09-26__ew",
+   "why": "twin_of lib_skill_mom_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_secrel_sealed_2026-09-26__random_same_band",
+   "why": "twin_of lib_mom_12_1_secrel_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_margin_mom_sealed_2026-09-26__ew",
+   "why": "twin_of lib_margin_mom_sealed_2026-09-26"
+  },
+  {
+   "account": "pers_ensemble_2026-09-25__random_same_band",
+   "why": "twin_of pers_ensemble_2026-09-25"
+  },
+  {
+   "account": "lib_rev_5d_sealed_2026-09-26__random_same_band",
+   "why": "twin_of lib_rev_5d_sealed_2026-09-26"
+  },
+  {
+   "account": "pers_retail_attention_contrarian_2026-09-25__ew",
+   "why": "twin_of pers_retail_attention_contrarian_2026-09-25"
+  },
+  {
+   "account": "lib_disp_short_avoid_2026-09-27__matched_random",
+   "why": "twin_of lib_disp_short_avoid_2026-09-27"
+  },
+  {
+   "account": "pers_catalyst_calendar_2026-09-25__random_same_band",
+   "why": "twin_of pers_catalyst_calendar_2026-09-25"
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25__random_same_band",
+   "why": "twin_of pers_revision_flow_leaders_2026-09-25"
+  },
+  {
+   "account": "pers_retail_attention_contrarian_2026-09-25__random_same_band",
+   "why": "twin_of pers_retail_attention_contrarian_2026-09-25"
+  },
+  {
+   "account": "lib_skill_mom_2026-09-27__ew",
+   "why": "twin_of lib_skill_mom_2026-09-27"
+  },
+  {
+   "account": "lib_forecast_dispersion_v1_2026-09-26__ew",
+   "why": "twin_of lib_forecast_dispersion_v1_2026-09-26"
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25__random_same_band",
+   "why": "twin_of pers_asia_supply_chain_2026-09-25"
+  },
+  {
+   "account": "lib_illiquid_sealed_2026-09-26__random_same_band",
+   "why": "twin_of lib_illiquid_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_net_raises_ivw_lead_2026-09-27__iwm",
+   "why": "twin_of lib_net_raises_ivw_lead_2026-09-27"
+  },
+  {
+   "account": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control__iwm",
+   "why": "twin_of lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control"
+  },
+  {
+   "account": "lib_mom_12_1_ivw_lead_2026-09-27__control__iwm",
+   "why": "twin_of lib_mom_12_1_ivw_lead_2026-09-27__control"
+  },
+  {
+   "account": "lib_disp_short_avoid_2026-09-27__iwm",
+   "why": "twin_of lib_disp_short_avoid_2026-09-27"
+  },
+  {
+   "account": "lib_mom_12_1_q_trend_lead_2026-09-27__iwm",
+   "why": "twin_of lib_mom_12_1_q_trend_lead_2026-09-27"
+  },
+  {
+   "account": "pers_retail_attention_contrarian_2026-09-25__sector_etf",
+   "why": "twin_of pers_retail_attention_contrarian_2026-09-25"
+  },
+  {
+   "account": "pers_policy_geopolitics_2026-09-25__sector_etf",
+   "why": "twin_of pers_policy_geopolitics_2026-09-25"
+  },
+  {
+   "account": "human_ai_thematic_v2__ew",
+   "why": "twin_of human_ai_thematic_v2"
+  },
+  {
+   "account": "lib_frog_in_pan_2026-09-26__random_same_band",
+   "why": "twin_of lib_frog_in_pan_2026-09-26"
+  },
+  {
+   "account": "lib_trend_quality_2026-09-26__random_same_band",
+   "why": "twin_of lib_trend_quality_2026-09-26"
+  },
+  {
+   "account": "lib_book_f_seasonality_11_20_v0_2026-09-26__ew",
+   "why": "twin_of lib_book_f_seasonality_11_20_v0_2026-09-26"
+  },
+  {
+   "account": "lib_mom_flow_2026-09-26__ew",
+   "why": "twin_of lib_mom_flow_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_2026-09-26__random_same_band",
+   "why": "twin_of lib_mom_12_1_2026-09-26"
+  },
+  {
+   "account": "lib_book_f_seasonality_11_20_v0_2026-09-26__random_same_band",
+   "why": "twin_of lib_book_f_seasonality_11_20_v0_2026-09-26"
+  },
+  {
+   "account": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control__ranks_k1_2k",
+   "why": "twin_of lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control"
+  },
+  {
+   "account": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control__ew",
+   "why": "twin_of lib_qc470_mom252_quarterly_riskparity_2026-09-27__control"
+  },
+  {
+   "account": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control__ew",
+   "why": "twin_of lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control"
+  },
+  {
+   "account": "lib_mom_flow_ivw_2026-09-27__ew",
+   "why": "twin_of lib_mom_flow_ivw_2026-09-27"
+  },
+  {
+   "account": "lib_mom_12_1_ivw_lead_2026-09-27__control__ranks_k1_2k",
+   "why": "twin_of lib_mom_12_1_ivw_lead_2026-09-27__control"
+  },
+  {
+   "account": "lib_illiquid_sealed_2026-09-26__ew",
+   "why": "twin_of lib_illiquid_sealed_2026-09-26"
+  },
+  {
+   "account": "pers_catalyst_calendar_2026-09-25__sector_etf",
+   "why": "twin_of pers_catalyst_calendar_2026-09-25"
+  },
+  {
+   "account": "lib_mom_12_1_q_trend_lead_2026-09-27__ranks_k1_2k",
+   "why": "twin_of lib_mom_12_1_q_trend_lead_2026-09-27"
+  },
+  {
+   "account": "reviewer_opus_2026-09-25__random_same_band",
+   "why": "twin_of reviewer_opus_2026-09-25"
+  },
+  {
+   "account": "probe_inverse_vol_2026-09-26__random_same_band",
+   "why": "twin_of probe_inverse_vol_2026-09-26"
+  },
+  {
+   "account": "lib_forecast_dispersion_v1_2026-09-26__random_same_band",
+   "why": "twin_of lib_forecast_dispersion_v1_2026-09-26"
+  },
+  {
+   "account": "human_ai_thematic_v1__ew",
+   "why": "twin_of human_ai_thematic_v1"
+  },
+  {
+   "account": "lib_mom_12_1_small_2026-09-26__random_same_band",
+   "why": "twin_of lib_mom_12_1_small_2026-09-26"
+  },
+  {
+   "account": "probe_equal_2026-09-26__random_same_band",
+   "why": "twin_of probe_equal_2026-09-26"
+  },
+  {
+   "account": "lib_mom_flow_2026-09-26__random_same_band",
+   "why": "twin_of lib_mom_flow_2026-09-26"
+  },
+  {
+   "account": "probe_bigmove_tilt_2026-09-26__random_same_band",
+   "why": "twin_of probe_bigmove_tilt_2026-09-26"
+  },
+  {
+   "account": "lib_mom_no_downgrades_2026-09-26__random_same_band",
+   "why": "twin_of lib_mom_no_downgrades_2026-09-26"
+  },
+  {
+   "account": "lib_rev_5d_sealed_2026-09-26__ew",
+   "why": "twin_of lib_rev_5d_sealed_2026-09-26"
+  },
+  {
+   "account": "lib_disp_short_avoid_2026-09-27__ew",
+   "why": "twin_of lib_disp_short_avoid_2026-09-27"
+  },
+  {
+   "account": "lib_mom_no_downgrades_small_2026-09-27__control__random_same_band",
+   "why": "twin_of lib_mom_no_downgrades_small_2026-09-27__control"
+  },
+  {
+   "account": "lib_mom_12_1_ivw_lead_2026-09-27__control__ew",
+   "why": "twin_of lib_mom_12_1_ivw_lead_2026-09-27__control"
+  },
+  {
+   "account": "lib_mom_12_1_q_trend_lead_2026-09-27__ew",
+   "why": "twin_of lib_mom_12_1_q_trend_lead_2026-09-27"
+  },
+  {
+   "account": "lib_low_asset_growth_sealed_2026-09-26__ew",
+   "why": "twin_of lib_low_asset_growth_sealed_2026-09-26"
+  },
+  {
+   "account": "pers_pharma_binary_basket_2026-09-25__sector_etf",
+   "why": "twin_of pers_pharma_binary_basket_2026-09-25"
+  },
+  {
+   "account": "pers_small_cap_catalyst_2026-09-25__sector_etf",
+   "why": "twin_of pers_small_cap_catalyst_2026-09-25"
+  },
+  {
+   "account": "pers_small_cap_catalyst_2026-09-25__ew",
+   "why": "twin_of pers_small_cap_catalyst_2026-09-25"
+  },
+  {
+   "account": "lib_mom_12_1_q_2026-09-26__ew",
+   "why": "twin_of lib_mom_12_1_q_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_2026-09-26__ew",
+   "why": "twin_of lib_mom_12_1_2026-09-26"
+  },
+  {
+   "account": "lib_mom_12_1_liqw_sealed_2026-09-26__ew",
+   "why": "twin_of lib_mom_12_1_liqw_sealed_2026-09-26"
+  },
+  {
+   "account": "pers_pharma_binary_basket_2026-09-25__ew",
+   "why": "twin_of pers_pharma_binary_basket_2026-09-25"
+  },
+  {
+   "account": "lib_mom_no_downgrades_2026-09-26__ew",
+   "why": "twin_of lib_mom_no_downgrades_2026-09-26"
+  },
+  {
+   "account": "lib_mom_no_downgrades_small_2026-09-27__control__ew",
+   "why": "twin_of lib_mom_no_downgrades_small_2026-09-27__control"
+  },
+  {
+   "account": "lib_mom_12_1_small_2026-09-26__ew",
+   "why": "twin_of lib_mom_12_1_small_2026-09-26"
+  }
+ ],
+ "headline_lines": [
+  "RESULTS as of the 2026-10-06 marks (run 2026-10-06T235345Z): 24 of 71 strategy accounts are ahead of SPY, each over its own window; they are 22 distinct bets ahead of 59 (holdings Jaccard >= 0.8; 236 controls/twins excluded).",
+  "LEADER revision_flow_v0 (with hack2: same names): +7.14% vs SPY +1.40% = +5.74 pp, 2026-09-28 -> 2026-10-06, 7 sessions, OBSERVED(7). analyst revision flow: net target raises x distinct firms, 90 days.",
+  "NEXT: lib_net_raises_2026-09-26 +5.39 pp (7 s, OBSERVED(7)); pers_revision_flow_leaders_2026-09-25 +5.31 pp (7 s, OBSERVED(7)); Cash/index by default; deviate only... [b109c886] +3.90 pp (17 s, OBSERVED(17))",
+  "WHAT RAISES IT: revision_flow_v0 -> EARLY_EVIDENCE: 14 more session(s) (7 of 21), if excess stays > 0 (now +5.74 pp) and >= 2 of 3 sub-windows stay positive (now 3 of 3). No random twin seeded for this bet: the twin gap is NOT_COMPUTABLE.",
+  "BEHIND: 47 of 71; worst mirror -29.50 pp (website_lane, 2026-06-16 -> 2026-10-06, 77 s).",
+  "CLAIMS PROMOTED: none -- the highest label any strategy account holds is OBSERVED; leaders are chosen after the fact from 71 accounts, so the top of the table is biased upward."
+ ]
+}

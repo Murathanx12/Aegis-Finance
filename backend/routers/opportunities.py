@@ -4,9 +4,12 @@ GET /api/opportunities/latest      the list switcher + legend + the first list's
 GET /api/opportunities/{list_id}   one list's rows
 
 Both read the NEWEST receipt written by `scripts/opportunities_build.py`
-(`backend/services/opportunities.py` picks it by the run stamp in its name). This
-router builds nothing: a request can never create a ranking at a time nobody
-declared.
+(`backend/services/opportunities.py` picks it by the run stamp in its name) -- or, by the
+C15 rule, the published copy when it is the fresher of the two (Q17, 2026-10-07: raw
+receipts are no longer git-tracked, so a Railway checkout usually has none at all, but a
+stale live folder next to a freshly republished public copy is also possible and must not
+win just because *something* is on disk locally). This router builds nothing: a request
+can never create a ranking at a time nobody declared.
 
 404 when no receipt exists (or the list id is not in it): an absence, never an
 empty table that would read like "every name was refused". 422 on a list id
@@ -27,11 +30,34 @@ _NO_RECEIPT = ("no Opportunity Explorer receipt on disk. It is written by "
                "`python -m scripts.opportunities_build`; this endpoint reads one and never builds one.")
 
 
+def _stamp(blob: dict | None):
+    from backend.services import legibility as L               # noqa: PLC0415
+    return L.parse_utc((blob or {}).get("generated_utc"))
+
+
+def _prefer_published(live: dict | None, pub: dict | None) -> bool:
+    """C15's rule, applied to the opportunities blob's own `generated_utc` (it carries no
+    `receipts` list for `publish_receipts.prefer_published` to read): the NEWER of the two
+    wins; an undateable live receipt loses to a dateable published one; live wins a tie or
+    when neither is dateable (it is the one this request's own server built)."""
+    if pub is None:
+        return False
+    if live is None:
+        return True
+    tl, tp = _stamp(live), _stamp(pub)
+    if tl is None and tp is not None:
+        return True
+    if tp is None:
+        return False
+    return tp > tl
+
+
 def _load() -> dict:
     try:
-        blob = OPP.load_latest()
-        if blob is None:
-            blob = _published()
+        from backend.services import publish_receipts as PR      # noqa: PLC0415
+        live = OPP.load_latest()
+        pub = PR.load_published("opportunities")
+        blob = _published(pub) if _prefer_published(live, pub) else live
     except Exception as e:                                    # noqa: BLE001
         logger.exception("opportunities receipt read failed")
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}") from e
@@ -40,20 +66,22 @@ def _load() -> dict:
     return blob
 
 
-def _published() -> dict | None:
-    """C15 (2026-10-07; review C4 F6): no live receipt on this server (Railway builds from
-    git, and the receipt is untracked) -> the SANITISED copy in the tracked
-    `public_receipts/opportunities/latest.json`. Its click-through links are rebuilt from
-    the ticker (the copy carries no URLs); its age is the receipt's own `generated_utc`."""
+def _published(pub: dict | None = None) -> dict | None:
+    """C15 (2026-10-07; review C4 F6), extended Q17: the SANITISED copy in the tracked
+    `public_receipts/opportunities/latest.json`, served when no live receipt exists on this
+    server OR when the published copy is the fresher of the two (`_prefer_published`). Its
+    click-through links are rebuilt from the ticker (the copy carries no URLs); its age is
+    the receipt's own `generated_utc`. `pub` lets `_load` pass the copy it already read
+    (and already timestamped) instead of reading it twice."""
     from backend.services import publish_receipts as PR      # noqa: PLC0415
-    blob = PR.load_published("opportunities")
+    blob = pub if pub is not None else PR.load_published("opportunities")
     if blob is None:
         return None
     for lst in blob.get("lists") or []:
         for r in lst.get("rows") or []:
             r["links"] = OPP.links(r.get("ticker"))
     blob["served_from"] = ("public_receipts/opportunities/latest.json (the sanitised public copy; no live "
-                           "receipt on this server)")
+                           "receipt on this server, or it is the fresher of the two)")
     return blob
 
 

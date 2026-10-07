@@ -902,7 +902,12 @@ async def get_fixed_income():
     try:
         from backend.services.fixed_income import get_fixed_income_dashboard
         result = await asyncio.to_thread(get_fixed_income_dashboard)
-        if "error" not in result:
+        # Q15 (2026-10-07): a degraded read (FRED series missing) must not be
+        # cached for 30 minutes as if it were a healthy one — the next caller
+        # would otherwise inherit a stale "nothing loaded" reading well past
+        # the point a retry could have recovered it. The response still ships
+        # with `degraded: true/false` either way: a 200 is not a claim of health.
+        if "error" not in result and not result.get("degraded"):
             cache_set("fixed_income", result)
         return result
     except Exception as e:

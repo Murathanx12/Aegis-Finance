@@ -1,0 +1,220 @@
+{
+ "schema": "paper_accounts_roi/1",
+ "receipt": "paper_accounts_roi",
+ "licence": "PRODUCT_EXPERIMENT",
+ "generated_utc": "2026-10-06T23:53:45+00:00",
+ "run_id": "2026-10-06T235345Z",
+ "rows": [
+  {
+   "account": "tsmom-overlay",
+   "family": "website_lane",
+   "inception": "2026-07-27",
+   "roi_pct": 4.081,
+   "spy_same_window_pct": 5.674,
+   "vs_spy_pp": -1.593,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "balanced-ew-control",
+   "family": "website_lane",
+   "inception": "2026-06-10",
+   "roi_pct": 0.696,
+   "spy_same_window_pct": 7.941,
+   "vs_spy_pp": -7.245,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "conviction",
+   "family": "website_lane",
+   "inception": "2026-06-16",
+   "roi_pct": -12.078,
+   "spy_same_window_pct": 4.359,
+   "vs_spy_pp": -16.437,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "mirror",
+   "family": "website_lane",
+   "inception": "2026-06-16",
+   "roi_pct": -25.141,
+   "spy_same_window_pct": 4.359,
+   "vs_spy_pp": -29.5,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "hack2",
+   "family": "alpaca_fleet",
+   "inception": "2026-08-28",
+   "roi_pct": 2.307,
+   "spy_same_window_pct": 1.287,
+   "vs_spy_pp": 1.02,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "hack6",
+   "family": "alpaca_fleet",
+   "inception": "2026-08-28",
+   "roi_pct": -18.402,
+   "spy_same_window_pct": 1.287,
+   "vs_spy_pp": -19.689,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "hack4",
+   "family": "alpaca_fleet",
+   "inception": "2026-08-28",
+   "roi_pct": -20.439,
+   "spy_same_window_pct": 1.287,
+   "vs_spy_pp": -21.726,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "hack3",
+   "family": "alpaca_fleet",
+   "inception": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "last_mark": null,
+   "status": "CREDENTIAL_INVALID"
+  },
+  {
+   "account": "PC-PAPER",
+   "family": "pc_paper",
+   "inception": "2026-09-22",
+   "roi_pct": 0.202,
+   "spy_same_window_pct": 0.723,
+   "vs_spy_pp": -0.521,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "Cash/index by default; deviate only above a  [b109c886]",
+   "family": "night_books",
+   "inception": "2026-09-11",
+   "roi_pct": 6.085,
+   "spy_same_window_pct": 2.19,
+   "vs_spy_pp": 3.895,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "Always invested - Book D's primary comparato [3b3e7049]",
+   "family": "night_books",
+   "inception": "2026-09-11",
+   "roi_pct": 6.085,
+   "spy_same_window_pct": 2.19,
+   "vs_spy_pp": 3.895,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "revision_flow_v0",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "roi_pct": 7.139,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": 5.741,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "roi_pct": 6.705,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": 5.307,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "roi_pct": 4.605,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": 3.207,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "lib_net_raises_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-28",
+   "roi_pct": 6.785,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": 5.387,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "lib_net_raises_ivw_lead_2026-09-27",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-28",
+   "roi_pct": 6.203,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": 4.805,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "lib_skill_raises_2026-09-30__control",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-10-01",
+   "roi_pct": 1.54,
+   "spy_same_window_pct": 1.927,
+   "vs_spy_pp": -0.387,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "lib_net_raises_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "roi_pct": 6.785,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": 5.387,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "lib_net_raises_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "roi_pct": 1.606,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": 0.208,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "roi_pct": 0.608,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": -0.79,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "roi_pct": 0.384,
+   "spy_same_window_pct": 1.398,
+   "vs_spy_pp": -1.014,
+   "last_mark": "2026-10-06",
+   "status": "LIVE"
+  }
+ ],
+ "_fixture_note": "TRIMMED slice of roi_2026-10-06T235345Z.json (21 of 367 rows, 8 fields); test input only"
+}

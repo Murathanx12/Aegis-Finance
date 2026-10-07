@@ -135,6 +135,12 @@ def calls(monkeypatch) -> list[str]:
         return {"status": "ok", "rc": 0, "receipt": "roi_fixture.json", "n_rows": 9,
                 "llm_by_status": {"LIVE": 3, "PENDING": 1}}
 
+    def _results_voice(**kw):
+        seen.append("results_voice")
+        return {"status": "skip", "line": "SKIP results_voice: fixture"}
+
+    monkeypatch.setattr(DP, "run_results_voice", _results_voice)
+
     def _bridge(**kw):
         seen.append("bridge_report")
         return {"status": "ok", "rc": 0, "receipt": "bridge_fixture.json", "n_rows": 2,
@@ -335,7 +341,7 @@ def test_every_declared_step_runs_in_order(out, calls, rth_open) -> None:
                      "analyst_snapshot", "e1_append", "book_cadence",
                      "book_cadence", "book_cadence", "grade_forecasts",
                      "regret", "grade_promises", "grade_books", "paper_accounts",
-                     "bridge_report", "coverage", "query_planner_yield",
+                     "results_voice", "bridge_report", "coverage", "query_planner_yield",
                      "scoreboard", "health"]
 
 

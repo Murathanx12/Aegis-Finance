@@ -4796,6 +4796,36 @@ BOOK_DNA_LANE_IDENTITY_JACCARD = 0.90
 #: How many tickers name a cluster's shared basket on the collapse line.
 BOOK_DNA_BASKET_TOP = 5
 
+# ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
+#: `backend/services/results_voice.py` reads the newest roi_<run>.json +
+#: book_dna_<run>.json pair and LEADS with what is ahead of SPY, by how much,
+#: over which window, with which label and what would raise it -- then says
+#: what is not yet claimable. The methodology is unchanged; the voice is not.
+#: An account is a CONTROL (excluded from the strategy count) when book_dna
+#: gives it a `twin_of`, its book_dna category is twin/control, or its name
+#: contains one of these markers.
+RESULTS_VOICE_CONTROL_NAME_MARKERS: tuple = ("_random_twin", "comparato", "__", "-control")
+#: Holdings overlap at or above this Jaccard is ONE bet (exact set equality is
+#: reported beside it). Deliberately stricter than BOOK_DNA_JACCARD_THRESHOLD
+#: (0.30), whose looser clusters are quoted as context.
+RESULTS_VOICE_BET_JACCARD = 0.80
+RESULTS_VOICE_N_LEADERS = 5
+RESULTS_VOICE_N_LOSERS = 5
+#: Twin kinds that count as a RANDOM twin for a leader's twin gap, in order of
+#: preference (book_dna's own `fair_twin.kind` is preferred when present).
+RESULTS_VOICE_RANDOM_TWIN_KINDS: tuple = ("matched_twin21", "matched_random", "random_same_band",
+                                          "random_sleeve")
+#: The one-line mechanism per account, used only when book_dna carries no
+#: description field. Key = account prefix, or an 8-hex book hash in brackets.
+RESULTS_VOICE_MECHANISMS: dict = {
+    "revision_flow": "analyst revision flow: net target raises x distinct firms, 90 days",
+    "abstention": ("SPY by default, deviates into names whose 12-1 momentum z clears a frozen "
+                   "threshold, monthly"),
+    "b109c886": ("SPY by default, deviates into names whose 12-1 momentum z clears a frozen "
+                 "threshold, monthly"),
+    "hack2": "Alpaca paper broker mirroring the frozen revision_flow_v0 book (v2)",
+}
+
 # ── Telegram replies (LANE A phase 2, 2026-09-28) ────────────────────────────
 #: `backend/services/alerts_replies.py`, called by the existing poller in
 #: `scripts/telegram_agent.py`. Every reply READS FILES: no LLM, no browser, no
@@ -5354,6 +5384,42 @@ FLEET_GATE_COOLDOWN_LOOKBACK_DAYS = 21
 #: Murat's decision; the flip is hashed onto `gates_config()["hash"]` so it is
 #: visible on every receipt.
 FLEET_NEW_GATES_MODE = "shadow"
+#: Enforce mode is REFUSED for `sector_concentration` (it stays shadow, printed
+#: on the receipt) when the sector map is older than this many days, or when
+#: the UNKNOWN bucket exceeds this share of the account's gross: a stale or
+#: blind taxonomy measures itself, not concentration (review 2026-10-07 F5).
+FLEET_GATE_SECTOR_MAP_MAX_AGE_DAYS = 14
+FLEET_GATE_SECTOR_MAX_UNKNOWN_FRAC = 0.20
+#: The broker's 403 "potential wash trade" rejections (49 of 75 LIVE buys since
+#: 2026-10-01: top-ups of names holding a resting GTC sell stop) are a KNOWN,
+#: UNFIXED execution defect queued as its own chunk; every run receipt carries
+#: this line so nobody reads C26 as having addressed it.
+FLEET_KNOWN_DEFECT_WASH_TRADE = ("since 2026-10-01, 49 of 75 LIVE buys came back HTTP 403 'potential wash "
+                                 "trade' (top-ups of names with a resting sell stop); NOT fixed by C26; "
+                                 "C27 (gate_policy_version c27-wash-trade-sequence) sequences every top-up "
+                                 "as cancel stop -> buy -> one combined stop, with rollback")
+#: C27 WASH-TRADE SEQUENCE (2026-10-07, `fleet_manager.execute_topup_sequence`).
+#: Alpaca rejects a LIMIT BUY while a SELL STOP rests on the same symbol in the
+#: same account ("stop sell | limit buy | always rejected", and the reverse
+#: "limit buy | stop sell | always rejected"), so a top-up cancels the resting
+#: stop, buys, waits for the buy to be TERMINAL, then places ONE stop for the
+#: combined quantity. Not a gate and not shadowed: a correctness fix to order
+#: sequencing that binds from the first pass that runs it.
+#: How long the buy may stay open before its remainder is cancelled (the
+#: combined stop cannot be placed while any part of the buy is open).
+FLEET_WASH_SEQ_BUY_WAIT_S = 8.0
+#: How long to wait for a cancel (of the resting stop, or of a buy remainder)
+#: to be confirmed terminal by the venue.
+FLEET_WASH_SEQ_CANCEL_WAIT_S = 6.0
+#: A sequence whose stop-less window exceeded this many seconds, or that ended
+#: REFUSED / UNPROTECTED, makes every LATER top-up on the same account in the
+#: same run REFUSED_WASH_TRADE_RULE (the venue is not answering fast enough to
+#: open another window safely).
+FLEET_WASH_SEQ_MAX_WINDOW_S = 45.0
+#: Health: a fleet pass (or an EOD audit row) where more than this share of the
+#: LIVE buys sent to the broker came back rejected is DEGRADED, with the counts
+#: by reason (403 wash trade, 422, other) in the reason.
+FLEET_REJECTED_BUY_DEGRADED_FRAC = 0.20
 #: C26 END-OF-DAY AUDIT (`backend/services/fleet_eod_audit.py`): the Preclose
 #: pass runs it last; `python -m scripts.fleet_eod_audit` runs it alone. It
 #: never places or cancels anything (its transport refuses every non-GET).
@@ -5475,6 +5541,50 @@ OFFICIAL_SOURCES_ENABLED = True
 OFFICIAL_SOURCES_EVERY_S = 900.0
 OFFICIAL_COOL_S = 86400.0
 
+# ── THE ACADEMIC LANE (Q12, 2026-10-07) ──────────────────────────────────────
+# `docs/research_notes/2026-10-07/research_instruments_2026-10-07.md`: a
+# research-intake card (verdict NEEDS_DATA / READY_TO_CELL / NOT_A_HYPOTHESIS_
+# YET) names open literature questions in its own `## Needs evidence` list;
+# `backend/services/research_instruments.py` answers them with keyless, $0
+# academic-citation fetchers (OpenAlex, CrossRef, NBER new-working-papers RSS)
+# and writes a per-card evidence file -- never into the card itself. Own cap,
+# own day, same "own per-day cap in config" shape as QUERY_PLANNER_LANE_
+# QUERIES_DAY, but a SEPARATE budget: this lane never shares the web-search
+# lane's queue/ledger, because a citation is not a URL for the reader to admit.
+RESEARCH_INSTRUMENTS_ENABLED = True
+#: per UTC day, across every card; $0 (OpenAlex + CrossRef + NBER RSS)
+QUERY_PLANNER_ACADEMIC_QUERIES_DAY = 12
+#: default tier queries per NEEDS-EVIDENCE question before escalating
+RESEARCH_INSTRUMENTS_DEFAULT_BUDGET = 2
+#: extra queries into the extended tier (Semantic Scholar / arXiv / NBER RSS),
+#: only when the default tier's coverage of the card's own seed citations is
+#: below this (note §3.3)
+RESEARCH_INSTRUMENTS_EXTENDED_CAP = 3
+RESEARCH_INSTRUMENTS_STOP_COVERAGE = 0.8
+#: a question stops escalating once it holds this many citations with a
+#: verified (resolvable) DOI, or the budget above is exhausted
+RESEARCH_INSTRUMENTS_MIN_VERIFIED = 1
+#: CrossRef/OpenAlex "polite pool" contact param -- an OWNER decision (never
+#: defaulted to a personal address): None sends no `mailto`, which both
+#: instruments measured working anyway on 2026-10-07 (no 429, no key).
+RESEARCH_INSTRUMENTS_MAILTO = None
+#: Semantic Scholar: $0 but measured unreliable keyless (HTTP 429 on 2 of 2
+#: tries, twice over, 2026-10-07) -- a free API key is a cheap owner upgrade,
+#: never required to start. None = the fetcher REFUSES (KEY_REQUIRED_OR_
+#: RATE_LIMITED), the same declared-provider shape as QUERY_PLANNER_SEARCH_
+#: PROVIDER.
+RESEARCH_INSTRUMENTS_SEMANTIC_SCHOLAR_KEY = None
+#: arXiv: $0, keyless by design, but real coverage is the quant/ML preprint
+#: class only (classical asset-pricing journal mechanisms are not on arXiv) and
+#: it was measured 429 on 2 of 2 tries the same day. An explicit owner opt-in
+#: is required before this lane calls it automatically.
+RESEARCH_INSTRUMENTS_ARXIV_ENABLED = False
+RESEARCH_INSTRUMENTS_HTTP_TIMEOUT_S = 20.0
+#: the weekly task_keeper owner (`AegisResearchLane`, additive -- daily_pass.py
+#: is untouched): due when no probe has ever run, or the newest one is this old
+RESEARCH_LANE_EVERY_DAYS = 7.0
+RESEARCH_LANE_TIMEOUT_MIN = 10.0
+
 # ── automation fixes 2026-10-02 ─────────────────────────────────────────────
 #: The daily pass's `paper_accounts` step reads the brokers (READ-ONLY GETs:
 #: /v2/account + /v2/positions per account, PC-PAPER via pc_broker.snapshot).
@@ -5586,6 +5696,12 @@ OPPORTUNITIES_RUNWAY_MIN_QUARTERS = 4
 OPPORTUNITIES_BADGE_MIN_FLAGS = 2
 #: F3: a median-target upside below this is LOW UPSIDE (grey, never green).
 OPPORTUNITIES_LOW_UPSIDE = 0.05
+#: Q17 (2026-10-07): raw receipts (~5-8 MB each) are SUBSTRATE for the published, sanitised
+#: copy (`backend/data/public_receipts/opportunities/latest.json`, <= 2.4 MB, committed) --
+#: never git-tracked themselves (.gitignore). `opportunities_build.prune_raw_receipts` keeps
+#: only the newest this many locally, ordered by the RUN ID IN THE FILENAME, never by mtime
+#: (a fresh checkout's files are all "written today").
+OPPORTUNITIES_KEEP_RAW = 7
 
 # ── Analyst reputation + snowball shadow (CHUNK C18, 2026-10-07) ─────────────
 # Declared and FROZEN here before any read of the weights or the snowball rows
@@ -5641,7 +5757,7 @@ HEALTH_TASK_CADENCE_H = {
     "AegisFleetManagerPreclose": 24.0, "AegisFleetDailyCheck": 24.0,
     "AegisReaderSupervisor": 0.5, "AegisCatchUp": 2.0, "AegisTelegramAgent": 0.05,
     "AegisAnalystPanelDaily": 24.0, "AegisAnalystPull": 168.0, "AegisBrainRefresh": 24.0,
-    "AegisPublicFlow": 24.0,
+    "AegisPublicFlow": 24.0, "AegisResearchLane": 168.0, "AegisPublicAssetsWeekly": 168.0,
 }
 #: "Same output for too long": a receipt series whose SUBSTANCE hash (the receipt
 #: with its stamps/run ids removed) is unchanged across at least this many
@@ -5816,10 +5932,85 @@ RAILWAY_FLEET_STOPPED_REASON = ("Railway fleet loops stopped on purpose 2026-09-
 #: a 12% core and says so (CORE_CLIPPED_BY_MAX_NAME_FRAC). A full core needs a
 #: second, separate owner decision about that limit; no builder loosens it.
 #: Flag OFF: the plan is byte-identical to the pre-C20 plan (pinned by test).
-PC_BENCHMARK_CORE = False
+#:
+#: RESOLVED ON, OWNER DECISION 2026-10-07 17:05 HKT (D14, with D21 and D22):
+#: "dont stay cash on pc. lets do the best decision and profit maximizing strat".
+#: PC-PAPER had been ~80% cash since 2026-09-22 (equity $1,002,024, cash $800,653,
+#: +0.20% vs SPY +0.72%, receipt paper_accounts/roi_2026-10-06T235345Z.json).
+#: Every OFF path stays pinned byte-identical (test_pc_plan_replay_owner_d14.py).
+PC_BENCHMARK_CORE = True
 #: SPY is an ordinary listed equity order on the Alpaca paper venue (pc_broker
 #: already samples it in BENCHMARKS); no proxy ETF is needed.
 PC_BENCHMARK_CORE_SYMBOL = "SPY"
+#: D22, OWNER DECISION 2026-10-07 17:05 HKT ("dont stay cash on pc. lets do the
+#: best decision and profit maximizing strat"): the benchmark core symbol (an
+#: index ETF, SPY) is EXEMPT from pc_broker.MAX_NAME_FRAC (12%). Every OTHER name
+#: keeps the 12% cap. The core is still `1 - committed gross - cash buffer`,
+#: never more: gross <= 100% of equity, long-only, no leverage, and the core is
+#: shrunk (never a limit widened) when core + sleeves exceed
+#: PC_WORST_CASE_MAX_FRAC_OF_EQUITY. Receipt line: CORE_EXEMPT_BY_OWNER_D22.
+#: False restores CORE_CLIPPED_BY_MAX_NAME_FRAC (the 12% core).
+PC_BENCHMARK_CORE_EXEMPT_FROM_NAME_CAP = True
+#: With the exemption the core fills the account; this fraction of equity is
+#: left in cash so a fill above the planned price cannot go to margin (the paper
+#: account shows ~3.8x buying power: nothing at the venue stops a gross > 1).
+PC_BENCHMARK_CORE_CASH_BUFFER = 0.01
+#: D21, OWNER DECISION 2026-10-07 17:05 HKT (same words). The decision contract's
+#: capital resolution COUNTS the PC-PAPER plan's active sleeves (every held name
+#: that is not the benchmark core, from the broker read) as `plan_sleeves_pct`,
+#: and the benchmark core is the residual after them. Before this the 20% PROBE
+#: sleeve resolved to 0% BY CONSTRUCTION and positions could never reconcile
+#: (C20 review L4 / Decision 1). False restores the old split exactly.
+PC_CONTRACT_COUNTS_PLAN_SLEEVES = True
+
+# ── The revision_flow EXPLOIT sleeve on PC-PAPER (owner, 2026-10-07 17:05 HKT) ──
+#: "dont stay cash on pc. lets do the best decision and profit maximizing strat".
+#: `sim_run.u_plan` holds the FROZEN book revision_flow_v0 (cb8d492bb8bf9ade,
+#: analyst revision flow, backend/services/revision_flow.py) as one named sleeve
+#: (state REVISION_FLOW), equal weight, scaled to PC_SLEEVE_REVISION_FLOW_GROSS.
+#: Licence PRODUCT_EXPERIMENT; evidence OBSERVED(7): +7.14% vs SPY +1.40% over 7
+#: sessions since 09-28 on hack2, random twin -0.01% -- not a claim. The book of
+#: record is llm_portfolio/books.jsonl; the hack2 v2 contract's copy is the cross
+#: check and the sleeve REFUSES (stays core) when the two ticker sets differ.
+#: False: the plan is byte-identical to the pre-sleeve plan (pinned by test).
+PC_SLEEVE_REVISION_FLOW = True
+PC_SLEEVE_REVISION_FLOW_BOOK_ID = "cb8d492bb8bf9ade"
+PC_SLEEVE_REVISION_FLOW_CONTRACT = (OPTIMUS_LEDGER_DIR / "paper_accounts" / "fleet_manager"
+                                    / "contracts" / "hack2_v2.json")
+#: CHOSEN BY THE WORST CASE, NOT BY CONVICTION (session protocol item 4), on
+#: 2026-10-07 from prices_2025_26/bars.parquet (last bar 2026-10-06, 63-session
+#: daily sigma, k = PROBE_WORST_CASE_SIGMA = 3), rounded DOWN to 5%, as the
+#: largest gross passing BOTH bounds (`pc_sleeves.choose_gross`):
+#:  (1) ONE DAY, rho = 1 across names: the WHOLE book's k-sigma loss -- PROBE at
+#:      its largest admissible (20% at the universe p90 sigma 4.92%) + this
+#:      sleeve (avg sigma 3.67%) + the SPY core on the remainder (sigma 0.70%) --
+#:      <= FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC (10%), gross <= 100%:
+#:      55% -> 9.50%, 60% -> 9.95% (PASS), 65% -> 10.39% (FAIL)  => 60% alone;
+#:  (2) 21 SESSIONS (coordinator, 2026-10-07; review fix 1 same evening):
+#:      gross x |the equal-weight basket's worst historical 21-session return|
+#:      <= PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC (10%), read on the 10-YEAR
+#:      panel prices_deep/bars.parquet (2016-01-05..2026-10-06) over windows with
+#:      all 20 names priced: worst -32.03% (to 2022-05-18):
+#:      25% -> 8.01%, 30% -> 9.61% (PASS), 35% -> 11.21% (FAIL)  => 30%.
+#:      Noted, NOT binding: -34.18% to 2020-03-16 with only 15 of 20 names
+#:      priced (SNOW, ABNB, AFRM, S, GTLB listed later) -> 30% x 34.18% = 10.25%.
+#:      The 21-month panel (prices_2025_26) shows only -19.05% (2025-03-13) and
+#:      would have allowed 50%: it holds neither 2020 nor 2022. When prices_deep
+#:      is absent the bound falls back to it and the receipt says WARN_SHORT_HISTORY.
+#: BOTH => 30% (bound 2 binds). At $1,002,264: sleeve 3-sigma day -$33,073;
+#: worst 21 sessions (2022) -$96,307; worst day -12.68% (2020-03-16, 15 names)
+#: = -$38,124.
+#: `scripts/sim_run.py` re-prices the acting book on every cycle: over the line,
+#: the ranker's EXPLOIT is scaled first, then this sleeve; nothing is widened.
+PC_SLEEVE_REVISION_FLOW_GROSS = 0.30
+#: Bound (2) above: the sleeve's gross x |worst historical 21-session basket
+#: return, all names priced, longest panel on disk| may not exceed this fraction
+#: of equity. Same 0.10 as bound (1).
+PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC = 0.10
+#: Review 2026-10-07 fix 6: the sleeve's and the core's decision rows are graded
+#: at these horizons (sessions), each name's excess over the core (SPY). 1 so a
+#: night's result is readable the next day; 5 and 21 match the book's horizon.
+PC_SLEEVE_GRADE_HORIZONS: tuple = (1, 5, 21)
 #: The six-role v3 fleet contracts are written HERE, never into
 #: `fleet_manager/contracts/`: no seed path reads this folder, and
 #: `fleet_manager.load_contract`/`freeze_contract` refuse a PREPARED body.

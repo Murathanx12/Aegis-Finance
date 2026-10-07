@@ -542,43 +542,18 @@ class DataFetcher:
         return {"series": results, "fetched_at": fetched_at,
                 "substituted": substituted}
 
-    def get_recession_probability(self, fred_data: dict) -> float:
-        """Compute blended recession probability from FRED indicators.
-
-        Uses three signals:
-            1. Yield curve spread (T10Y3M) - inverted = recession warning
-            2. Sahm Rule - triggers at +0.50 percentage points
-            3. Chauvet-Piger smoothed probability - direct model output
-
-        Returns:
-            float between 0 and 1
-        """
-        signals: list[tuple[str, float, float]] = []
-
-        if "yield_spread" in fred_data:
-            spread = float(fred_data["yield_spread"].iloc[-1])
-            yield_prob = 1 / (1 + _exp_safe(2.0 * spread))
-            signals.append(("yield_curve", yield_prob, 0.35))
-
-        if "sahm_rule" in fred_data:
-            sahm = float(fred_data["sahm_rule"].iloc[-1])
-            if sahm >= 0.50:
-                sahm_prob = 0.90
-            else:
-                sahm_prob = sahm / 0.50 * 0.50
-            signals.append(("sahm_rule", sahm_prob, 0.30))
-
-        if "recession_prob" in fred_data:
-            cp = float(fred_data["recession_prob"].iloc[-1])
-            signals.append(("chauvet_piger", cp / 100.0, 0.35))
-
-        if not signals:
-            return 0.15  # Default base rate
-
-        total_weight = sum(w for _, _, w in signals)
-        blended = sum(prob * w for _, prob, w in signals) / total_weight
-
-        return float(min(0.95, max(0.02, blended)))
+    # `get_recession_probability` was removed here 2026-10-07 (Q15): it
+    # silently returned a bare `0.15` ("# Default base rate") with no marker
+    # that the value was a fallback rather than a model output, and grep +
+    # `signal_reachability` confirmed zero live callers (only its own
+    # docstring, `config.py`'s comment, and `fred_health.py`'s docstring
+    # referenced the name). Dead code carrying a silent-imputation trap is
+    # worse than no code — the next caller to wire it up would inherit the
+    # exact failure mode this audit exists to catch, with no test or health
+    # row in the way. If this signal is wanted again, build it to return a
+    # `{"probability": ..., "signals_used": [...], "missing_because": ...}`
+    # shape so an all-signals-missing read cannot be confused with a real
+    # 0.15 base-rate reading.
 
     def get_macro_features(self, fred_data: dict) -> dict:
         """Extract current macro features for scenario weighting."""

@@ -1,0 +1,193 @@
+{
+ "acting": true,
+ "book": [
+  {
+   "expected_relative_return_21d": null,
+   "rank": null,
+   "state": "PROBE",
+   "symbol": "AAPL",
+   "weight": 0.02
+  },
+  {
+   "expected_relative_return_21d": null,
+   "rank": null,
+   "state": "PROBE",
+   "symbol": "AMZN",
+   "weight": 0.02
+  },
+  {
+   "expected_relative_return_21d": null,
+   "rank": null,
+   "state": "PROBE",
+   "symbol": "AVPT",
+   "weight": 0.02
+  },
+  {
+   "expected_relative_return_21d": null,
+   "rank": null,
+   "state": "PROBE",
+   "symbol": "GOOGL",
+   "weight": 0.02
+  },
+  {
+   "expected_relative_return_21d": null,
+   "rank": null,
+   "state": "PROBE",
+   "symbol": "INCY",
+   "weight": 0.02
+  },
+  {
+   "expected_relative_return_21d": null,
+   "rank": null,
+   "state": "PROBE",
+   "symbol": "JAZZ",
+   "weight": 0.02
+  },
+  {
+   "expected_relative_return_21d": null,
+   "rank": null,
+   "state": "PROBE",
+   "symbol": "META",
+   "weight": 0.02
+  },
+  {
+   "expected_relative_return_21d": null,
+   "rank": null,
+   "state": "PROBE",
+   "symbol": "NVDA",
+   "weight": 0.02
+  },
+  {
+   "expected_relative_return_21d": null,
+   "rank": null,
+   "state": "PROBE",
+   "symbol": "SNDR",
+   "weight": 0.02
+  },
+  {
+   "expected_relative_return_21d": null,
+   "rank": null,
+   "state": "PROBE",
+   "symbol": "TSM",
+   "weight": 0.02
+  }
+ ],
+ "equity": 1002263.9,
+ "exploit_acting": false,
+ "n_orders": 1,
+ "n_targets": 10,
+ "n_to_send": 1,
+ "new_keys_absent": [],
+ "orders_by_state": {
+  "PROBE": 1
+ },
+ "probe_acting": true,
+ "probe_weights": {
+  "AAPL": 0.02,
+  "AMZN": 0.02,
+  "AVPT": 0.02,
+  "GOOGL": 0.02,
+  "INCY": 0.02,
+  "JAZZ": 0.02,
+  "META": 0.02,
+  "NVDA": 0.02,
+  "SNDR": 0.02,
+  "TSM": 0.02
+ },
+ "refusals": [
+  {
+   "refused": "drift $1,453 < band $2,005 (10% of the target): rounding churn, not a decision",
+   "symbol": "TSM"
+  },
+  {
+   "refused": "drift $1,200 < band $2,005 (10% of the target): rounding churn, not a decision",
+   "symbol": "NVDA"
+  },
+  {
+   "refused": "drift $347 < band $2,005 (10% of the target): rounding churn, not a decision",
+   "symbol": "GOOGL"
+  },
+  {
+   "refused": "drift $317 < band $2,005 (10% of the target): rounding churn, not a decision",
+   "symbol": "SNDR"
+  },
+  {
+   "refused": "drift $255 < band $2,005 (10% of the target): rounding churn, not a decision",
+   "symbol": "AMZN"
+  },
+  {
+   "refused": "drift $1,924 < band $2,005 (10% of the target): rounding churn, not a decision",
+   "symbol": "INCY"
+  },
+  {
+   "refused": "drift $665 < band $2,005 (10% of the target): rounding churn, not a decision",
+   "symbol": "AAPL"
+  },
+  {
+   "refused": "drift $463 < band $2,005 (10% of the target): rounding churn, not a decision",
+   "symbol": "JAZZ"
+  }
+ ],
+ "risk_gate_line": "order-path worst case 1.33% -> 1.33% of equity (limit 10%, 3 sigma per name)",
+ "send_block": null,
+ "sendable_by_state": {
+  "EXIT": 0,
+  "EXPLOIT": 0,
+  "PROBE": 1,
+  "PROBE_EXIT": 0
+ },
+ "submitted": [
+  [
+   "AVPT",
+   "sell",
+   159
+  ]
+ ],
+ "turnover_usd": 2333.3250000000003,
+ "verdict": "MEASURED_NEGATIVE",
+ "worst_case": {
+  "acting_book_gross_over_equity": 0.2,
+  "largest_admissible": {
+   "adverse_sigma": 3.0,
+   "daily_sigma": 0.029990256561851628,
+   "equity_usd": 1002263.9,
+   "gross_over_equity": 0.2,
+   "label": "largest admissible PROBE book",
+   "line": "largest admissible PROBE book: 10 x 2.00% x 9.00% (3 sigma of 3.00%/day) = -$18,035 on $1,002,264; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$200,453",
+   "n_names": 10,
+   "notional_pct": 0.02,
+   "stop_declared": false,
+   "stop_sigma_pct": 0.08997076968555488,
+   "worst_case_k_sigma_usd": -18034.890902209205,
+   "worst_case_no_stop_usd": -200452.78000000003
+  },
+  "largest_admissible_exploit": {
+   "adverse_sigma": 3.0,
+   "daily_sigma": 0.0216,
+   "equity_usd": 1002263.9,
+   "gross_over_equity": 1.0,
+   "label": "largest admissible EXPLOIT book (gross <= 1 - PROBE gross, <= 10%/name)",
+   "line": "largest admissible EXPLOIT book (gross <= 1 - PROBE gross, <= 10%/name): 18 x 5.56% x 6.48% (3 sigma of 2.16%/day) = -$64,947 on $1,002,264; sum|notional|/equity = 1.00; no stop is declared, so the ceiling is -$1,002,264",
+   "n_names": 18,
+   "notional_pct": 0.05555555555555555,
+   "stop_declared": false,
+   "stop_sigma_pct": 0.0648,
+   "worst_case_k_sigma_usd": -64946.70072,
+   "worst_case_no_stop_usd": -1002263.9
+  },
+  "planned_probe": {
+   "adverse_sigma": 3.0,
+   "daily_sigma": 0.029990256561851628,
+   "equity_usd": 1002263.9,
+   "gross_over_equity": 0.2,
+   "label": "planned PROBE book",
+   "line": "planned PROBE book: 10 x 2.00% x 9.00% (3 sigma of 3.00%/day) = -$18,035 on $1,002,264; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$200,453",
+   "n_names": 10,
+   "notional_pct": 0.02,
+   "stop_declared": false,
+   "stop_sigma_pct": 0.08997076968555488,
+   "worst_case_k_sigma_usd": -18034.890902209205,
+   "worst_case_no_stop_usd": -200452.78000000003
+  }
+ }
+}

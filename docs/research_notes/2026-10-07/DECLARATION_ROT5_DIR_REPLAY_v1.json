@@ -1,0 +1,48 @@
+{
+ "code": {
+  "functions": "event_table, verdicts_by_day, mom63_of, cluster_diff, group_stats, momentum_control, by_year_and_loo, subset_report",
+  "source_sha256": "da20e58f0ad9b4de77fbe91d4ba7bcddd9394fb14cb3656aec4384817a4cb1bc"
+ },
+ "declaration": "ROT5_DIR_EVENT_REPLAY_v1",
+ "declared_utc": "2026-10-07T04:47:55+00:00",
+ "direction": {
+  "asof": "each event's pre_date: rows with event_date before it, 00:00 UTC",
+  "function": "scripts.contest_direction.analyst_direction (frozen module, imported read-only)",
+  "pit_caveat": "no first_seen_utc exists before 2026-10-06, so the first-seen guard is non-binding and point in time rests on the vendor's event_date (REVIEW C9 F1)",
+  "source": "backend/data/optimus/analyst/target_revisions.parquet (sha256 and row count printed on the receipt)"
+ },
+ "licence": "PRODUCT_EXPERIMENT (an exploration receipt for the Oct 11 book choice; not a claim; $0, no network, no order)",
+ "momentum_control": "mom63 = close(t-1)/close(t-64) - 1 (forward-filled close, known before the buy open); dropped vs kept inside terciles of mom63 (cut points: the subset's pooled tercile quantiles, stated as a description); the drop coefficient with tercile fixed effects + linear mom63, day-clustered; the split must sum to the total",
+ "primary": {
+  "cost_note": "both groups pay the same round trip, so the difference is identical gross and net; group means are printed net at both costs",
+  "costs_bps_a_side": [
+   10.0,
+   25.0
+  ],
+  "metric": "mean per-event r_o2o (open before the print -> open after it) of DROPPED (DROP_NET_SELL or DROP_NET_LOWERING) minus KEPT (ADMIT + UNRATED), per subset",
+  "t": "cluster-robust on buy days (daily blocks); month-clustered printed beside for comparison with the review",
+  "tails": "P(> +20%), P(< -20%), p01, p05, p95, p99 per group"
+ },
+ "question": "Among the names ROT5_TRAIL buys, does the ROT5_DIR filter drop names that do worse through the print, and is it more than 63-day price momentum?",
+ "ranking_key": "trail_abs descending per buy day (stable; symbol breaks ties) -- the key the rehearsal and the lab rank ROT5_TRAIL on",
+ "reading_rule": "No threshold decides a book here (the runbook's recommendation is frozen). The receipt CHANGES THE PICTURE if either (a) the momentum-controlled drop coefficient keeps the sign of the raw one with |t| >= 2 at top 20 (the filter is more than momentum), or (b) the controlled coefficient falls to |t| < 1 while the raw one had |t| >= 2 (the filter is momentum). Either is written into the runbook as a DATED NOTE beside the ROT5_DIR line, never as an edit to the frozen recommendation.",
+ "robustness": "by buy year and leave-one-year-out on the primary difference; dropped vs ADMIT-only beside",
+ "run": {
+  "command": "python -m scripts.contest_direction_replay --run-id DRR_2026-10-07_1",
+  "memory": "refuses below 3 GB free (C15 deferred floor); run alone, after the sticky v2 board",
+  "receipt": "backend/data/optimus/contest/strategy_lab/direction_replay_DRR_2026-10-07_1.json",
+  "run_id": "DRR_2026-10-07_1"
+ },
+ "sha256_of_body_without_this_field": "c02cd933a7e5cded0ac593aa74275de366bffe84e2f7d8615e3bca005beb608f",
+ "survivorship": "the pool is the contest bars universe alive today (survivor-selected); the receipt counts event symbols whose last bar is > 30 days before the panel end and states it",
+ "tops": [
+  5,
+  20
+ ],
+ "universe": {
+  "eligibility": "the lab's ROT5_TRAIL: on cadence, trail_abs known, liquid at the buy open (contest_book_compare.market liq), finite r_o2o; one event per (day, name)",
+  "events": "contest_desk.build_events over the contest bars panel from 2016-01-01 (trail_abs needs prior reactions); buy day (pre_date) from 2019-01-01",
+  "stamps": "contest_desk.raw_event_stamps() restricted to US: SEC 8-K item 2.02 (primary) plus contest/earnings_history_us_recent.parquet for stamps after the SEC file ends (that file alone holds 2,429 stamps: it is the tail, not the history)"
+ },
+ "what_was_seen_before_this_declaration": "The C9 reviewer's replay (REVIEW_2026-10-06_C9 F2: 66,338 US events since 2019 on the SEC8K pool; top 5: drop share 28.1%, dropped minus kept -0.45 pp, month-clustered t -1.33 over 93 months, P(>+20%) 4.8% vs 4.0%, P(<-20%) 4.4% vs 2.9%; top 20: -0.43 pp, t -2.69). The momentum control is new here; no momentum-split number was computed before this declaration."
+}

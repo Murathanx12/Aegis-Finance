@@ -109,6 +109,13 @@ result, so a RESURRECTION of this exact mechanism would need to name that constr
 new instrument, not merely "try again." The adjacent, opposite-signed, already-closed siblings are
 `ear_drift`/`ear_mom` (continuation-shaped PEAD, DEPRIORITIZED, decaying post-2009).
 
+## Needs evidence
+- Whether any paper runs a band-neutral consecutive-beat-streak construction specifically
+  (the review's own flagged construction defect) rather than the non-band-neutral version this
+  card's corpse already closed -- this is the one thread a RESURRECTION would need, and this
+  card's verdict is ALREADY_CLOSED, so the academic lane does not run on it unattended; this list
+  is kept for whoever opens a RESURRECTION later.
+
 ## hyp_lab family
 `earnings_streak` — this is the one card in this batch with an exact match in the fixed
 `HYP_LAB_FAMILIES` taxonomy; the family exists specifically because this mechanism was already

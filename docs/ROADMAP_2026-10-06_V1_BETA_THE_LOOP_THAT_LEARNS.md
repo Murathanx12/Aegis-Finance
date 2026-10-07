@@ -329,7 +329,7 @@ public-flow sensors and the analyst weights are all wired to WRITE rows; none ha
 | id | task | worker | why | gate |
 |---|---|---|---|---|
 | Q1 | restore the README's generated bridge block (6 tests) + put C26's two new gates in SHADOW mode | Sonnet | mechanical, test-pinned | now |
-| Q2 | final frozen-tree suite → merge to main → push → `ci_watch` → `verify-prod-after-deploy` on the five pages → first `publish_receipts --commit` | deterministic + Fable | the gate | after Q1 |
+| Q2 DONE 15:10 | merged `92f147f6` → CI hotfix `e041ec14` → prod receipts fix `ad7ddbf6`; CI green; Railway live; six endpoints 200 from published copies; pages render | deterministic + Fable | the gate | — |
 | Q3 | design reference library (p5.js, p5.brush, reasoning orbs, motion for data; GitHub identity plan) → `docs/design/` | Sonnet | research/docs | now |
 | Q4 | the four social-media ideas as theory objects (exact rule, mechanism, literature, data gaps, falsifiable question) + the intake template | Sonnet | research | now |
 | Q5 | Brain page v2: state-driven layout (no force simulation), motion only on state change, every orb traces to a receipt field | Sonnet (frontend) | low-risk UI; deterministic tests review | after Q3 + Q2 |
@@ -338,6 +338,28 @@ public-flow sensors and the analyst weights are all wired to WRITE rows; none ha
 | Q8 | external AI as research instruments (Perplexity/Consensus/Semantic Scholar/arXiv APIs): coverage, latency, cost, novelty vs our stack; OpenClaw "I am missing academic evidence" tool selection | Sonnet | research first | after Q6 |
 | Q9 | heavy deferred items, one at a time: sticky-twin per-draw check v2, ROT5_DIR replay receipt, contest horizon worst case, extraction cascade (GPU), desktop export check | Opus for the twin/contest measurement; deterministic for exports | measurement | after Q2, memory ≥ 4 GB |
 | Q10 | token-budget view: a small receipt per session (Opus/Sonnet calls, tasks, EV) read by the handoff | Sonnet | plumbing | with Q2's handoff |
+
+**Status 2026-10-07 17:35 HKT:** DONE — Q1, Q2, Q3, Q4, Q5 (`/brain` v2), Q6, Q7 (C26 review), Q8, Q9a (sticky v2 + ROT5_DIR
+replay), Q10, Q12 (academic lane), Q14 (diagnosis; D23 owner), Q15 (two NAV-adjacent spots owed), Q16, Q17, Q18 (D24 owner),
+C26-fix, C27 (live at 22:45 HKT tonight), C24 (builds green; live `.exe` probe owed). IN THE CLOUD SESSION'S BRANCH
+(`claude/beautiful-meitner-hq5614`, PR pending): Q11 ledger split, Q13 brain showcase (optimus repo), GitHub identity,
+research cards + validator, prior-art map, Optimus connection map / MCP tools / author profile, provenance audit.
+WAITING ON TIME: first decision stories and regime grades (10-10), digest 5-session grades (10-09), news trust rule,
+forward reads 10-26/27, contest 10-12. WAITING ON OWNER: D1, D2, D5, D7, D13, D14 (+D21/D22), D15, D18, D19, D20, D23, D24.
+
+**Queue amendments 2026-10-07 12:40 HKT (after the merge of `92f147f6`):**
+
+| id | task | worker | why | gate |
+|---|---|---|---|---|
+| C26-fix | the C26 review's fixes before 22:45 HKT: catch any exception on the fill read; print the `C26:` delta line; RESTORE refuse (not shrink) on cash/gross/name/turnover; exits count toward the order cap; replacement stop sized after the gates; enforce mode refused on a stale/unknown sector map; replay test of the 10-06 receipt | Opus 5.5 | live paper orders | now |
+| C27 | **wash-trade rejections**: since 10-01, 49 of 75 live fleet buys came back HTTP 403 "potential wash trade" (a top-up of a name with a resting stop). The executed books drift from their frozen contracts more from this than from anything C26 changed. Fix in the manager: cancel/replace the resting stop atomically with the top-up, or skip the top-up and record `REFUSED_WASH_TRADE_RULE`; count rejections in the EOD audit (today it does not) | Opus 5.5 | execution correctness, priority 1 | after C26-fix |
+| Q11 | `predictions.jsonl` is 52 MB tracked (GitHub warns at 50, refuses at 100): monthly append-only streams (forecasts by month made, resolutions by month graded), LF only, sealed months with a manifest chained to each other, and an explicit CHAIN-BREAK record for the hash chain broken since 25 Aug (never a silent repair) | Opus 5.5 design + deterministic | data integrity, priority 2 | after Q9a (memory) |
+| Q12 | academic lane in the query planner: OpenAlex + CrossRef + NBER RSS at $0 behind the declared-provider gate; the research-intake card's NEEDS_EVIDENCE verdict is the trigger; yield receipt (citations found / novel / verified) | Sonnet | research plumbing | after C26-fix |
+| Q13 | the sibling `optimus` repo's brain showcase (`showcase/build.py`): static state-board layout from the `/api/legibility/v1/brain` payload, legend never overlaps, data refreshed by the publish job | Sonnet | low-risk UI | after Q5 is live |
+| Q14 DONE (diagnosis) | the Railway `FRED_API_KEY` is present but FRED answers "api_key is not registered" (reproduced locally: wrong-key shape matches production exactly). **D23 (owner): set a valid key on Railway** — `railway link --project selfless-courage --service Aegis-Finance --environment production` then `railway variables --set FRED_API_KEY=<key> --service Aegis-Finance`; verify `n_loaded` → 23. New health row `fred_macro_inputs` reads DEAD on today's production body. Second finding → Q15: three consumers impute silently (`fixed_income` reports stress "normal" on empty spreads and bypasses fred_health; `fx_curves.fetch_short_rate` substitutes 0.04 while claiming FRED; `data_fetcher.get_recession_probability` returns a bare 0.15, dead code) | Sonnet (silent-fragility-audit) | priority 3 | after the hotfix |
+| Q16 | `scripts/ci_watch --wait` reported "no run found for that sha within the wait window" for `e041ec14` while the GitHub API showed `CI completed success` for the same SHA 20 minutes earlier — a watcher that misses a finished run is a gate that cannot go green; fix the lookup (full SHA, `event=push`, pagination) and add a test on a saved API fixture | Sonnet | priority 3 (the push gate) | now |
+| Q17 | three Opportunity Explorer receipts (5-8 MB each) are TRACKED under `backend/data/optimus/opportunities/` — the published copy in `public_receipts/opportunities/latest.json` (≤ 2.4 MB, sanitised) is what the site needs; gitignore the raw receipts going forward (no history rewrite; D10), keep the newest in the catalog, and make `opportunities_build` write only the run-id file + the published copy | Sonnet | priority 6 (repo size) | after the prod-404 fix |
+| Q18 | the live site still inlines the `[SENSITIVE]` placeholder as `NEXT_PUBLIC_API_URL` (Vercel's CLI redacts pulled values; `vercel build` in the workflow consumed the pulled file) — the code fallback keeps the site working but every page logs "Fix the build environment"; set the public URL explicitly in the workflow's build env and add a post-build guard that fails on the placeholder; Vercel's bot checkpoint (403) blocks automated browser verification, so verification is by chunk grep + console | Sonnet | priority 6 | now |
 
 ## 6. OWNER DECISIONS (what I did by default, and what only Murat can do)
 

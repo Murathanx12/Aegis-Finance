@@ -1,0 +1,1236 @@
+{
+ "_doc": "Sanitised C27 replay fixture: from the REAL 2026-10-06 open run receipt (run_20261006T144500Z-604e5b.json), every held name's resting sell stops at that pass (stop price, qty; ids are synthetic), its price and the contract stop fraction, and the broker's ACTUAL answer to each LIVE buy (403 wash trade or accepted). Pairs with fixtures/c26/replay_2026-10-06.json, which carries the plans. worst_case_now_usd and contract_line_usd are the receipt's worst_case_now and worst_case_formula_v2 (the active v2 contract's protocol-4 line).",
+ "source_receipt": "run_20261006T144500Z-604e5b.json",
+ "accounts": {
+  "hack1": {
+   "resting": {
+    "AGIO": [
+     {
+      "id": "r-hack1-AGIO-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "AGIO",
+      "stop_price": 30.21,
+      "qty": 41.0
+     }
+    ],
+    "AVGO": [
+     {
+      "id": "r-hack1-AVGO-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "AVGO",
+      "stop_price": 331.08,
+      "qty": 11.0
+     }
+    ],
+    "BBIO": [
+     {
+      "id": "r-hack1-BBIO-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "BBIO",
+      "stop_price": 61.04,
+      "qty": 10.0
+     }
+    ],
+    "BE": [
+     {
+      "id": "r-hack1-BE-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "BE",
+      "stop_price": 260.87,
+      "qty": 9.0
+     }
+    ],
+    "CCJ": [
+     {
+      "id": "r-hack1-CCJ-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "CCJ",
+      "stop_price": 81.46,
+      "qty": 15.0
+     }
+    ],
+    "CLS": [
+     {
+      "id": "r-hack1-CLS-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "CLS",
+      "stop_price": 321.38,
+      "qty": 9.0
+     }
+    ],
+    "COGT": [
+     {
+      "id": "r-hack1-COGT-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "COGT",
+      "stop_price": 29.68,
+      "qty": 64.0
+     }
+    ],
+    "DKNG": [
+     {
+      "id": "r-hack1-DKNG-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "DKNG",
+      "stop_price": 17.6,
+      "qty": 107.0
+     }
+    ],
+    "GEV": [
+     {
+      "id": "r-hack1-GEV-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "GEV",
+      "stop_price": 862.19,
+      "qty": 6.0
+     }
+    ],
+    "HOOD": [
+     {
+      "id": "r-hack1-HOOD-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "HOOD",
+      "stop_price": 101.66,
+      "qty": 42.0
+     }
+    ],
+    "IONQ": [
+     {
+      "id": "r-hack1-IONQ-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "IONQ",
+      "stop_price": 39.97,
+      "qty": 15.0
+     }
+    ],
+    "LEU": [
+     {
+      "id": "r-hack1-LEU-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "LEU",
+      "stop_price": 125.13,
+      "qty": 9.0
+     }
+    ],
+    "MP": [
+     {
+      "id": "r-hack1-MP-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "MP",
+      "stop_price": 39.67,
+      "qty": 61.0
+     }
+    ],
+    "MU": [
+     {
+      "id": "r-hack1-MU-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "MU",
+      "stop_price": 942.01,
+      "qty": 5.0
+     }
+    ],
+    "NOVT": [
+     {
+      "id": "r-hack1-NOVT-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "NOVT",
+      "stop_price": 129.37,
+      "qty": 14.0
+     }
+    ],
+    "NVT": [
+     {
+      "id": "r-hack1-NVT-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "NVT",
+      "stop_price": 144.49,
+      "qty": 25.0
+     }
+    ],
+    "PRAX": [
+     {
+      "id": "r-hack1-PRAX-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "PRAX",
+      "stop_price": 255.49,
+      "qty": 2.0
+     }
+    ],
+    "RGEN": [
+     {
+      "id": "r-hack1-RGEN-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "RGEN",
+      "stop_price": 169.42,
+      "qty": 3.0
+     }
+    ],
+    "SYM": [
+     {
+      "id": "r-hack1-SYM-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "SYM",
+      "stop_price": 38.73,
+      "qty": 574.0
+     }
+    ],
+    "TSM": [
+     {
+      "id": "r-hack1-TSM-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "TSM",
+      "stop_price": 423.62,
+      "qty": 10.0
+     }
+    ],
+    "VRT": [
+     {
+      "id": "r-hack1-VRT-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "VRT",
+      "stop_price": 219.03,
+      "qty": 27.0
+     }
+    ],
+    "VRTX": [
+     {
+      "id": "r-hack1-VRTX-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "VRTX",
+      "stop_price": 474.56,
+      "qty": 5.0
+     }
+    ],
+    "WST": [
+     {
+      "id": "r-hack1-WST-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "WST",
+      "stop_price": 355.8,
+      "qty": 5.0
+     }
+    ]
+   },
+   "price": {
+    "AGIO": 31.17,
+    "AVGO": 377.34,
+    "BBIO": 65.96,
+    "BE": 293.24,
+    "CCJ": 92.32,
+    "CLS": 380.955,
+    "COGT": 30.0509,
+    "DKNG": 20.195,
+    "GEV": 1034.439,
+    "HOOD": 114.18,
+    "IONQ": 43.86,
+    "LEU": 153.475,
+    "MP": 47.97,
+    "MU": 1066.585,
+    "NOVT": 152.16,
+    "NVT": 172.295,
+    "PRAX": 276.83,
+    "RGEN": 179.295,
+    "SYM": 43.54,
+    "TSM": 483.93,
+    "VRT": 250.7001,
+    "VRTX": 497.41,
+    "WST": 368.57
+   },
+   "stop_frac": {
+    "AGIO": 0.0771,
+    "AVGO": 0.074,
+    "BBIO": 0.0825,
+    "BE": 0.12,
+    "CCJ": 0.0773,
+    "CLS": 0.12,
+    "COGT": 0.0852,
+    "DKNG": 0.0979,
+    "GEV": 0.0901,
+    "HOOD": 0.12,
+    "IONQ": 0.12,
+    "LEU": 0.12,
+    "MP": 0.12,
+    "MU": 0.12,
+    "NOVT": 0.0848,
+    "NVT": 0.0942,
+    "PRAX": 0.1065,
+    "RGEN": 0.0885,
+    "SYM": 0.1043,
+    "TSM": 0.0626,
+    "VRT": 0.12,
+    "VRTX": 0.0509,
+    "WST": 0.0479
+   },
+   "broker_answer": {
+    "VKTX": "accepted",
+    "VRT": "403_wash"
+   },
+   "worst_case_now_usd": 10374.91,
+   "contract_line_usd": 10676.07
+  },
+  "hack2": {
+   "resting": {
+    "ABNB": [
+     {
+      "id": "r-hack2-ABNB-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "ABNB",
+      "stop_price": 146.7,
+      "qty": 30.0
+     }
+    ],
+    "AFRM": [
+     {
+      "id": "r-hack2-AFRM-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "AFRM",
+      "stop_price": 61.96,
+      "qty": 72.0
+     }
+    ],
+    "AMD": [
+     {
+      "id": "r-hack2-AMD-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "AMD",
+      "stop_price": 562.5,
+      "qty": 7.0
+     }
+    ],
+    "AMGN": [
+     {
+      "id": "r-hack2-AMGN-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "AMGN",
+      "stop_price": 395.68,
+      "qty": 11.0
+     }
+    ],
+    "CRM": [
+     {
+      "id": "r-hack2-CRM-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "CRM",
+      "stop_price": 206.05,
+      "qty": 21.0
+     }
+    ],
+    "CRWD": [
+     {
+      "id": "r-hack2-CRWD-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "CRWD",
+      "stop_price": 233.6,
+      "qty": 18.0
+     }
+    ],
+    "DDOG": [
+     {
+      "id": "r-hack2-DDOG-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "DDOG",
+      "stop_price": 240.89,
+      "qty": 18.0
+     }
+    ],
+    "DELL": [
+     {
+      "id": "r-hack2-DELL-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "DELL",
+      "stop_price": 477.92,
+      "qty": 9.0
+     }
+    ],
+    "ESTC": [
+     {
+      "id": "r-hack2-ESTC-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "ESTC",
+      "stop_price": 81.15,
+      "qty": 54.0
+     }
+    ],
+    "GTLB": [
+     {
+      "id": "r-hack2-GTLB-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "GTLB",
+      "stop_price": 45.57,
+      "qty": 99.0
+     }
+    ],
+    "MDB": [
+     {
+      "id": "r-hack2-MDB-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "MDB",
+      "stop_price": 315.59,
+      "qty": 13.0
+     }
+    ],
+    "NET": [
+     {
+      "id": "r-hack2-NET-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "NET",
+      "stop_price": 322.56,
+      "qty": 13.0
+     }
+    ],
+    "OKTA": [
+     {
+      "id": "r-hack2-OKTA-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "OKTA",
+      "stop_price": 184.96,
+      "qty": 23.0
+     }
+    ],
+    "PANW": [
+     {
+      "id": "r-hack2-PANW-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "PANW",
+      "stop_price": 350.66,
+      "qty": 12.0
+     }
+    ],
+    "S": [
+     {
+      "id": "r-hack2-S-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "S",
+      "stop_price": 22.35,
+      "qty": 199.0
+     }
+    ],
+    "SNOW": [
+     {
+      "id": "r-hack2-SNOW-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "SNOW",
+      "stop_price": 313.3,
+      "qty": 14.0
+     }
+    ],
+    "TGT": [
+     {
+      "id": "r-hack2-TGT-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "TGT",
+      "stop_price": 149.69,
+      "qty": 31.0
+     }
+    ],
+    "WDAY": [
+     {
+      "id": "r-hack2-WDAY-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "WDAY",
+      "stop_price": 167.66,
+      "qty": 26.0
+     }
+    ],
+    "XYZ": [
+     {
+      "id": "r-hack2-XYZ-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "XYZ",
+      "stop_price": 67.96,
+      "qty": 67.0
+     }
+    ],
+    "ZS": [
+     {
+      "id": "r-hack2-ZS-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "ZS",
+      "stop_price": 173.01,
+      "qty": 25.0
+     }
+    ]
+   },
+   "price": {
+    "ABNB": 162.15,
+    "AFRM": 75.48,
+    "AMD": 649.45,
+    "AMGN": 397.44,
+    "CRM": 228.62,
+    "CRWD": 281.16,
+    "DDOG": 279.04,
+    "DELL": 577.5,
+    "ESTC": 96.54,
+    "GTLB": 52.055,
+    "MDB": 360.64,
+    "NET": 359.2601,
+    "OKTA": 218.785,
+    "PANW": 422.06,
+    "S": 25.755,
+    "SNOW": 339.29,
+    "TGT": 154.07,
+    "WDAY": 189.82,
+    "XYZ": 76.53,
+    "ZS": 211.055
+   },
+   "stop_frac": {
+    "ABNB": 0.0925,
+    "AFRM": 0.096,
+    "AMD": 0.12,
+    "AMGN": 0.0637,
+    "CRM": 0.1153,
+    "CRWD": 0.12,
+    "DDOG": 0.12,
+    "DELL": 0.12,
+    "ESTC": 0.119,
+    "GTLB": 0.1043,
+    "MDB": 0.12,
+    "NET": 0.1072,
+    "OKTA": 0.12,
+    "PANW": 0.1125,
+    "S": 0.119,
+    "SNOW": 0.091,
+    "TGT": 0.0535,
+    "WDAY": 0.12,
+    "XYZ": 0.0692,
+    "ZS": 0.12
+   },
+   "broker_answer": {
+    "AMGN": "403_wash",
+    "MDB": "403_wash",
+    "NET": "403_wash",
+    "SNOW": "403_wash",
+    "TGT": "403_wash"
+   },
+   "worst_case_now_usd": 12427.23,
+   "contract_line_usd": 12343.87
+  },
+  "hack4": {
+   "resting": {
+    "AAPL": [
+     {
+      "id": "r-hack4-AAPL-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "AAPL",
+      "stop_price": 313.24,
+      "qty": 15.0
+     }
+    ],
+    "ALLE": [
+     {
+      "id": "r-hack4-ALLE-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "ALLE",
+      "stop_price": 146.26,
+      "qty": 32.0
+     }
+    ],
+    "AMZN": [
+     {
+      "id": "r-hack4-AMZN-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "AMZN",
+      "stop_price": 231.7,
+      "qty": 15.0
+     }
+    ],
+    "AVPT": [
+     {
+      "id": "r-hack4-AVPT-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "AVPT",
+      "stop_price": 12.33,
+      "qty": 288.0
+     }
+    ],
+    "GOOG": [
+     {
+      "id": "r-hack4-GOOG-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "GOOG",
+      "stop_price": 323.39,
+      "qty": 13.0
+     }
+    ],
+    "INCY": [
+     {
+      "id": "r-hack4-INCY-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "INCY",
+      "stop_price": 109.34,
+      "qty": 56.0
+     }
+    ],
+    "JAZZ": [
+     {
+      "id": "r-hack4-JAZZ-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "JAZZ",
+      "stop_price": 218.47,
+      "qty": 21.0
+     }
+    ],
+    "META": [
+     {
+      "id": "r-hack4-META-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "META",
+      "stop_price": 658.77,
+      "qty": 4.0
+     }
+    ],
+    "NVDA": [
+     {
+      "id": "r-hack4-NVDA-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "NVDA",
+      "stop_price": 213.45,
+      "qty": 17.0
+     }
+    ],
+    "RZLV": [
+     {
+      "id": "r-hack4-RZLV-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "RZLV",
+      "stop_price": 2.02,
+      "qty": 8650.0
+     }
+    ],
+    "SNDR": [
+     {
+      "id": "r-hack4-SNDR-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "SNDR",
+      "stop_price": 29.91,
+      "qty": 159.0
+     }
+    ]
+   },
+   "price": {
+    "AAPL": 333.7001,
+    "ALLE": 154.85,
+    "AMZN": 255.325,
+    "AVPT": 15.105,
+    "GOOG": 344.78,
+    "INCY": 112.635,
+    "JAZZ": 231.175,
+    "META": 741.9,
+    "NVDA": 242.51,
+    "RZLV": 2.25,
+    "SNDR": 31.945
+   },
+   "stop_frac": {
+    "AAPL": 0.0504,
+    "ALLE": 0.0571,
+    "AMZN": 0.0777,
+    "AVPT": 0.0785,
+    "GOOG": 0.0629,
+    "INCY": 0.0594,
+    "JAZZ": 0.0505,
+    "META": 0.0904,
+    "NVDA": 0.073,
+    "RZLV": 0.12,
+    "SNDR": 0.0597
+   },
+   "broker_answer": {
+    "ALLE": "403_wash",
+    "JAZZ": "403_wash",
+    "SNDR": "403_wash",
+    "GOOG": "403_wash",
+    "AAPL": "403_wash",
+    "AMZN": "403_wash",
+    "NVDA": "403_wash",
+    "AVPT": "403_wash",
+    "META": "403_wash"
+   },
+   "worst_case_now_usd": 5604.36,
+   "contract_line_usd": 9476.44
+  },
+  "hack5": {
+   "resting": {
+    "SPY": [
+     {
+      "id": "r-hack5-SPY-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "SPY",
+      "stop_price": 686.54,
+      "qty": 117.0
+     }
+    ]
+   },
+   "price": {
+    "SPY": 780.03
+   },
+   "stop_frac": {
+    "SPY": 0.1
+   },
+   "broker_answer": {},
+   "worst_case_now_usd": 10938.33,
+   "contract_line_usd": 9154.99
+  },
+  "hack6": {
+   "resting": {
+    "ABEO": [
+     {
+      "id": "r-hack6-ABEO-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "ABEO",
+      "stop_price": 4.83,
+      "qty": 1079.0
+     }
+    ],
+    "ADBE": [
+     {
+      "id": "r-hack6-ADBE-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "ADBE",
+      "stop_price": 218.19,
+      "qty": 3.0
+     }
+    ],
+    "AKAM": [
+     {
+      "id": "r-hack6-AKAM-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "AKAM",
+      "stop_price": 95.64,
+      "qty": 7.0
+     }
+    ],
+    "AMD": [
+     {
+      "id": "r-hack6-AMD-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "AMD",
+      "stop_price": 574.38,
+      "qty": 1.0
+     }
+    ],
+    "ARDX": [
+     {
+      "id": "r-hack6-ARDX-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "ARDX",
+      "stop_price": 3.05,
+      "qty": 1693.0
+     }
+    ],
+    "ATR": [
+     {
+      "id": "r-hack6-ATR-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "ATR",
+      "stop_price": 113.62,
+      "qty": 43.0
+     }
+    ],
+    "AVGO": [
+     {
+      "id": "r-hack6-AVGO-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "AVGO",
+      "stop_price": 327.73,
+      "qty": 2.0
+     }
+    ],
+    "BABA": [
+     {
+      "id": "r-hack6-BABA-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "BABA",
+      "stop_price": 98.75,
+      "qty": 7.0
+     }
+    ],
+    "BAM": [
+     {
+      "id": "r-hack6-BAM-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "BAM",
+      "stop_price": 42.87,
+      "qty": 18.0
+     }
+    ],
+    "BE": [
+     {
+      "id": "r-hack6-BE-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "BE",
+      "stop_price": 249.8,
+      "qty": 2.0
+     }
+    ],
+    "BHP": [
+     {
+      "id": "r-hack6-BHP-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "BHP",
+      "stop_price": 80.43,
+      "qty": 9.0
+     }
+    ],
+    "BYD": [
+     {
+      "id": "r-hack6-BYD-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "BYD",
+      "stop_price": 65.44,
+      "qty": 11.0
+     }
+    ],
+    "CALX": [
+     {
+      "id": "r-hack6-CALX-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "CALX",
+      "stop_price": 31.15,
+      "qty": 169.0
+     }
+    ],
+    "CEG": [
+     {
+      "id": "r-hack6-CEG-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "CEG",
+      "stop_price": 240.04,
+      "qty": 3.0
+     }
+    ],
+    "FCEL": [
+     {
+      "id": "r-hack6-FCEL-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "FCEL",
+      "stop_price": 15.07,
+      "qty": 49.0
+     }
+    ],
+    "FRO": [
+     {
+      "id": "r-hack6-FRO-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "FRO",
+      "stop_price": 46.93,
+      "qty": 16.0
+     }
+    ],
+    "GOOGL": [
+     {
+      "id": "r-hack6-GOOGL-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "GOOGL",
+      "stop_price": 319.28,
+      "qty": 2.0
+     }
+    ],
+    "HPE": [
+     {
+      "id": "r-hack6-HPE-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "HPE",
+      "stop_price": 62.04,
+      "qty": 11.0
+     }
+    ],
+    "INVA": [
+     {
+      "id": "r-hack6-INVA-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "INVA",
+      "stop_price": 19.07,
+      "qty": 258.0
+     }
+    ],
+    "KKR": [
+     {
+      "id": "r-hack6-KKR-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "KKR",
+      "stop_price": 86.2,
+      "qty": 8.0
+     }
+    ],
+    "LMT": [
+     {
+      "id": "r-hack6-LMT-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "LMT",
+      "stop_price": 475.48,
+      "qty": 1.0
+     }
+    ],
+    "MAZE": [
+     {
+      "id": "r-hack6-MAZE-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "MAZE",
+      "stop_price": 21.24,
+      "qty": 242.0
+     }
+    ],
+    "MP": [
+     {
+      "id": "r-hack6-MP-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "MP",
+      "stop_price": 43.52,
+      "qty": 16.0
+     }
+    ],
+    "MRVL": [
+     {
+      "id": "r-hack6-MRVL-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "MRVL",
+      "stop_price": 248.53,
+      "qty": 2.0
+     }
+    ],
+    "MSFT": [
+     {
+      "id": "r-hack6-MSFT-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "MSFT",
+      "stop_price": 479.22,
+      "qty": 1.0
+     }
+    ],
+    "NBIS": [
+     {
+      "id": "r-hack6-NBIS-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "NBIS",
+      "stop_price": 217.72,
+      "qty": 3.0
+     }
+    ],
+    "NVDA": [
+     {
+      "id": "r-hack6-NVDA-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "NVDA",
+      "stop_price": 213.42,
+      "qty": 3.0
+     }
+    ],
+    "ORCL": [
+     {
+      "id": "r-hack6-ORCL-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "ORCL",
+      "stop_price": 123.29,
+      "qty": 5.0
+     }
+    ],
+    "PLTR": [
+     {
+      "id": "r-hack6-PLTR-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "PLTR",
+      "stop_price": 170.75,
+      "qty": 4.0
+     }
+    ],
+    "PRVA": [
+     {
+      "id": "r-hack6-PRVA-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "PRVA",
+      "stop_price": 18.68,
+      "qty": 263.0
+     }
+    ],
+    "QQQ": [
+     {
+      "id": "r-hack6-QQQ-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "QQQ",
+      "stop_price": 723.71,
+      "qty": 1.0
+     }
+    ],
+    "RTX": [
+     {
+      "id": "r-hack6-RTX-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "RTX",
+      "stop_price": 176.31,
+      "qty": 4.0
+     }
+    ],
+    "SMCI": [
+     {
+      "id": "r-hack6-SMCI-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "SMCI",
+      "stop_price": 39.21,
+      "qty": 18.0
+     }
+    ],
+    "SPCX": [
+     {
+      "id": "r-hack6-SPCX-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "SPCX",
+      "stop_price": 133.81,
+      "qty": 5.0
+     }
+    ],
+    "STRO": [
+     {
+      "id": "r-hack6-STRO-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "STRO",
+      "stop_price": 13.82,
+      "qty": 374.0
+     }
+    ],
+    "TGT": [
+     {
+      "id": "r-hack6-TGT-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "TGT",
+      "stop_price": 149.11,
+      "qty": 5.0
+     }
+    ],
+    "TSM": [
+     {
+      "id": "r-hack6-TSM-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "TSM",
+      "stop_price": 423.78,
+      "qty": 1.0
+     }
+    ],
+    "TXN": [
+     {
+      "id": "r-hack6-TXN-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "TXN",
+      "stop_price": 272.78,
+      "qty": 2.0
+     }
+    ],
+    "WDC": [
+     {
+      "id": "r-hack6-WDC-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "WDC",
+      "stop_price": 399.87,
+      "qty": 1.0
+     }
+    ],
+    "XOM": [
+     {
+      "id": "r-hack6-XOM-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "XOM",
+      "stop_price": 155.67,
+      "qty": 4.0
+     }
+    ],
+    "XPEV": [
+     {
+      "id": "r-hack6-XPEV-0",
+      "type": "stop",
+      "side": "sell",
+      "symbol": "XPEV",
+      "stop_price": 8.72,
+      "qty": 85.0
+     }
+    ]
+   },
+   "price": {
+    "ABEO": 4.955,
+    "ADBE": 239.235,
+    "AKAM": 108.915,
+    "AMD": 650.08,
+    "ARDX": 3.28,
+    "ATR": 119.51,
+    "AVGO": 377.13,
+    "BABA": 108.35,
+    "BAM": 45.03,
+    "BE": 293.43,
+    "BHP": 86.39,
+    "BYD": 70.68,
+    "CALX": 34.62,
+    "CEG": 302.835,
+    "FCEL": 18.84,
+    "FRO": 52.085,
+    "GOOGL": 348.06,
+    "HPE": 70.2,
+    "INVA": 20.75,
+    "KKR": 91.23,
+    "LMT": 506.61,
+    "MAZE": 26.01,
+    "MP": 48.01,
+    "MRVL": 291.27,
+    "MSFT": 534.065,
+    "NBIS": 246.85,
+    "NVDA": 242.28,
+    "ORCL": 145.2182,
+    "PLTR": 192.285,
+    "PRVA": 20.52,
+    "QQQ": 761.59,
+    "RTX": 183.665,
+    "SMCI": 43.5,
+    "SPCX": 174.96,
+    "STRO": 14.64,
+    "TGT": 154.07,
+    "TSM": 483.72,
+    "TXN": 296.22,
+    "WDC": 412.605,
+    "XOM": 164.45,
+    "XPEV": 9.475
+   },
+   "stop_frac": {
+    "ABEO": 0.1,
+    "ADBE": 0.0895,
+    "AKAM": 0.1,
+    "AMD": 0.1,
+    "ARDX": 0.0855,
+    "ATR": 0.04,
+    "AVGO": 0.074,
+    "BABA": 0.0836,
+    "BAM": 0.0544,
+    "BE": 0.1,
+    "BHP": 0.0607,
+    "BYD": 0.0434,
+    "CALX": 0.0633,
+    "CEG": 0.069,
+    "FCEL": 0.1,
+    "FRO": 0.0718,
+    "GOOGL": 0.0645,
+    "HPE": 0.1,
+    "INVA": 0.0421,
+    "KKR": 0.069,
+    "LMT": 0.0577,
+    "MAZE": 0.1,
+    "MP": 0.1,
+    "MRVL": 0.1,
+    "MSFT": 0.0745,
+    "NBIS": 0.1,
+    "NVDA": 0.073,
+    "ORCL": 0.1,
+    "PLTR": 0.1,
+    "PRVA": 0.0516,
+    "QQQ": 0.04,
+    "RTX": 0.0448,
+    "SMCI": 0.1,
+    "SPCX": 0.1,
+    "STRO": 0.1,
+    "TGT": 0.0535,
+    "TSM": 0.0626,
+    "TXN": 0.0621,
+    "WDC": 0.1,
+    "XOM": 0.0468,
+    "XPEV": 0.0742
+   },
+   "broker_answer": {
+    "VALE": "accepted",
+    "PPLI": "accepted",
+    "UPS": "accepted"
+   },
+   "worst_case_now_usd": 6227.65,
+   "contract_line_usd": 812.19
+  }
+ }
+}

@@ -9,10 +9,14 @@ passed in, never from the calendar.
 """
 from __future__ import annotations
 
+import os
+import subprocess
+import time
 from datetime import datetime, timezone
 
 import pytest
 
+from backend import config as _config
 from backend.services import opportunities as O
 from scripts import opportunities_build as B
 
@@ -161,3 +165,96 @@ def test_staleness_reads_the_receipt_stamp_and_goes_red():
     assert O.staleness({"generated_utc": "2026-10-06T16:00:00+00:00"}, now, 3)["status"] == "STALE"
     assert O.staleness({"generated_utc": "2026-10-09T16:00:00+00:00"}, now, 3)["status"] == "FRESH"
     assert O.staleness({}, now, 3)["status"] == "UNKNOWN"     # undateable is never fresh
+
+
+# ── Q17 (2026-10-07): raw receipts are local scratch, pruned by run id, published after every build ──
+
+def _touch_raw(d, asof: str, run: str) -> "Path":                                     # noqa: F821
+    p = d / f"opportunities_{asof}_{run}.json"
+    p.write_text("{}", encoding="utf-8")
+    return p
+
+
+def test_prune_raw_receipts_keeps_newest_n_by_run_id_never_by_mtime(tmp_path):
+    d = tmp_path / "opportunities"
+    d.mkdir()
+    # 9 receipts, run id strictly increasing with the index; mtimes set in the OPPOSITE
+    # order (the oldest-by-name gets the newest mtime) so an mtime-based prune would keep
+    # exactly the wrong set.
+    paths = [_touch_raw(d, f"2026-10-0{i + 1}", f"2026100{i + 1}T000000Z") for i in range(9)]
+    base_t = time.time()
+    for i, p in enumerate(paths):
+        os.utime(p, (base_t - i * 10, base_t - i * 10))   # paths[0] (oldest run id) -> newest mtime
+    removed = B.prune_raw_receipts(d, keep=7)
+    assert len(removed) == 2
+    assert {p.name for p in removed} == {paths[0].name, paths[1].name}   # the two OLDEST BY NAME
+    assert {p.name for p in d.glob("*.json")} == {p.name for p in paths[2:]}
+
+
+def test_prune_raw_receipts_defaults_to_the_config_constant(tmp_path, monkeypatch):
+    d = tmp_path / "opportunities"
+    d.mkdir()
+    paths = [_touch_raw(d, f"2026-10-0{i + 1}", f"2026100{i + 1}T000000Z") for i in range(5)]
+    monkeypatch.setattr(_config, "OPPORTUNITIES_KEEP_RAW", 3)
+    removed = B.prune_raw_receipts(d)
+    assert len(removed) == 2 and len(list(d.glob("*.json"))) == 3
+    assert {p.name for p in d.glob("*.json")} == {p.name for p in paths[2:]}
+
+
+def test_main_prunes_and_publishes_the_public_copy_after_a_build(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", tmp_path)
+    monkeypatch.setattr(_config, "OPPORTUNITIES_KEEP_RAW", 2)
+    monkeypatch.setattr(B, "REPO", tmp_path)   # `main`'s print does `p.relative_to(REPO)`
+    d = tmp_path / "opportunities"
+    d.mkdir()
+    pre = [_touch_raw(d, f"2026-10-0{i + 1}", f"2026100{i + 1}T000000Z") for i in range(3)]  # 3 pre-existing
+    fixed = {"schema": O.SCHEMA, "asof": "2026-10-07", "run_id": "20261007T120000Z",
+             "generated_utc": "2026-10-07T12:00:00+00:00",
+             "lists": [{"list_id": "x", "title": "x", "rows": [], "coverage": {}, "n_high_risk_innovation": 0}]}
+    monkeypatch.setattr(B, "build", lambda write_receipts=True: fixed)
+    calls = {}
+
+    def fake_publish(*, kinds):
+        calls["kinds"] = kinds
+        return {"status": "OK", "kinds": {"opportunities": {"status": "OK", "bytes": 1234}}}
+    monkeypatch.setattr(B.PR, "publish", fake_publish)
+
+    rc = B.main([])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "wrote opportunities" in out
+    assert "pruned 2 raw receipt(s)" in out                        # 3 pre-existing + 1 new - keep 2 = 2 removed
+    assert "published public copy: 1,234 B" in out
+    assert calls["kinds"] == (B.PR.KIND_BY_NAME["opportunities"],)  # scoped to this kind only
+    kept = {p.name for p in d.glob("*.json")}
+    assert kept == {pre[-1].name, f"opportunities_{fixed['asof']}_{fixed['run_id']}.json"}
+
+
+def test_main_dry_run_never_prunes_or_publishes(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", tmp_path)
+    fixed = {"schema": O.SCHEMA, "asof": "2026-10-07", "run_id": "20261007T120000Z",
+             "generated_utc": "2026-10-07T12:00:00+00:00",
+             "lists": [{"list_id": "x", "title": "x", "rows": [], "coverage": {}, "n_high_risk_innovation": 0}]}
+    monkeypatch.setattr(B, "build", lambda write_receipts=True: fixed)
+
+    def _boom(*a, **k):
+        raise AssertionError("publish must not run on a dry run")
+    monkeypatch.setattr(B.PR, "publish", _boom)
+    assert B.main(["--dry-run"]) == 0
+    assert not (tmp_path / "opportunities").exists()
+
+
+def test_gitignore_matches_raw_receipts_but_not_the_published_copy():
+    """A path `git` already has in its index is reported as not-ignored by `check-ignore`
+    regardless of any pattern (that is what makes `git rm --cached` + this rule the right
+    pair: the rule only bites the NEXT run's filename). So this reads the rule against
+    filenames that are not (yet) tracked -- a future run id and a never-existing one --
+    rather than one of the four runs this session already committed."""
+    def ignored(rel: str) -> bool:
+        r = subprocess.run(["git", "check-ignore", "-q", rel], cwd=str(B.REPO))
+        return r.returncode == 0
+
+    assert ignored("backend/data/optimus/opportunities/opportunities_2026-10-07_20261007T120000Z.json")
+    assert ignored("backend/data/optimus/opportunities/opportunities_2099-01-01_20990101T000000Z.json")
+    assert not ignored("backend/data/public_receipts/opportunities/latest.json")
+    assert not ignored("backend/data/optimus/opportunities/README.md")  # a non-.json file in the dir is untouched

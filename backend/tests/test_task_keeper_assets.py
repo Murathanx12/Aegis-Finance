@@ -169,12 +169,24 @@ def test_results_voice_is_named_only_when_the_file_exists(tmp_path):
 
 
 def test_no_results_voice_key_when_the_file_is_absent(tmp_path):
+    """A fake run id that provably has no `results_voice_<id>.md` -- never relies on
+    whatever happens to be committed for the real pin, which a later chunk may add."""
     from scripts import render_public_assets as RPA
-    voice_p = RPA.PAPER_DIR / f"results_voice_{RPA.RESULTS_RUN_ID}.md"
-    assert not voice_p.is_file(), "fixture assumption: no results_voice file for the live pin"
-    out = TK.run_assets(bump=lambda: 0, pytest_runner=lambda *a, **kw: _Rc(0, "ok"),
-                        commit=lambda **kw: {"status": "COMMITTED", "pushed": True},
-                        log_path=tmp_path / "assets.jsonl")
+    fake_id = "1999-01-01T000000Z"
+    voice_p = RPA.PAPER_DIR / f"results_voice_{fake_id}.md"
+    assert not voice_p.is_file()
+
+    def bump():
+        RPA.RESULTS_RUN_ID = fake_id
+        return 0
+
+    old_id = RPA.RESULTS_RUN_ID
+    try:
+        out = TK.run_assets(bump=bump, pytest_runner=lambda *a, **kw: _Rc(0, "ok"),
+                            commit=lambda **kw: {"status": "COMMITTED", "pushed": True},
+                            log_path=tmp_path / "assets.jsonl")
+    finally:
+        RPA.RESULTS_RUN_ID = old_id
     assert "results_voice" not in out
 
 

@@ -1,0 +1,32 @@
+{
+ "code": {
+  "function": "matched_twins.twin_series_sticky + _sticky_pick + sticky_turnover_check + _draw_id + twin_series_sticky_draws + sticky_turnover_check_per_draw + scripts.hyp_twin_board.sticky_book_v2",
+  "source_sha256": "67a6c2fe9f6495fa6e80b98fe8e46f21b18bbfaec9d7cd47583b40ff8e5c90dc"
+ },
+ "construction": {
+  "how_draws_are_read": "draw j of matched_twins.twin_series_sticky is re-run alone (n_draws=1) under matched_twins._draw_id(rule, j), whose draw-0 seed equals seed_for(rule, j); draws never interact, so every partner, weight and trade is v1's. The aggregate (mean over draws of twin gross / cost / turnover / full_rt; counts summed) is the v1 21-draw frame (pinned by backend/tests/test_sticky_twin_v2.py).",
+  "name": "TWIN_STICKY_v1 (UNCHANGED)",
+  "source_sha256": "a4b29e5136c49510de66f4a8067d1a06ffa5cad54b638ade541fb24b87814e31",
+  "v1_declaration_sha256": "7333553e17ea6471c772cab934944fa2b223324fe29d430d90ac10f8a835e988"
+ },
+ "declaration": "TWIN_STICKY_v2",
+ "declared_utc": "2026-10-07T04:43:40+00:00",
+ "licence": "PRODUCT_EXPERIMENT (a control construction check for historical boards; no book, no order, $0 LLM)",
+ "reads": "headline: rules at sticky fair-twin t >= 2 under v2; of those, pure selection t >= 2; of those, net-minus-market t >= 2 in validation; by_year and leave-one-year-out for any positive. Per rule: v1 vs v2 gap and verdict change.",
+ "receipt_check": {
+  "name": "TWIN_STICKY_CHECK_v2_per_draw",
+  "rule": "for each draw j and each invested month m: if draw j had a died or collision redraw in month m, the pair (j, m) is excluded (for that draw only); otherwise gap(j, m) = |draw j's twin one-way turnover - rule one-way turnover|. The row's gap is the MEDIAN over all retained (draw, month) pairs. median <= tolerance -> OK; else the board row is REFUSED with the gap. No retained pair -> REFUSED.",
+  "tolerance": 0.03,
+  "tolerance_note": "unchanged from TWIN_STICKY_v1 and config.STICKY_TWIN_TURNOVER_TOLERANCE; not re-tuned",
+  "v1_beside": "the v1 month-level check is computed on the aggregate frame and printed beside every row (sticky_turnover_check_v1); it does not refuse under v2"
+ },
+ "run": {
+  "command": "python -m scripts.hyp_twin_board --run-id STK_2026-10-07_v2_1 --twin sticky --sticky-check v2",
+  "memory": "refuses below 4 GB free (hyp_twin_board waits up to 60 min)",
+  "rules": "all 301 RUN rules of the three CRSP library runs (scripts.hyp_twin_board RUNS)",
+  "run_id": "STK_2026-10-07_v2_1"
+ },
+ "sha256_of_body_without_this_field": "e09fcaaae7f2260074575a59ab9f5ab944dcc42a545690d2805fbd7e3a69f486",
+ "status": "a CHECK version, not a new twin. TRIAL-LIB-FWD-TWIN-1 and CRSP_BLEND_v0 are untouched; the registered matched_twins.twin_series is untouched.",
+ "what_was_seen_before_this_declaration": "The v1 sticky board STK_2026-10-07_2 (277 OK, 24 refused by the v1 check at medians 0.0305-0.0777; 44 at fair t >= 2; 40 with selection t >= 2; 1 (qc761) with validation market t >= 2), its supplement STK_2026-10-07_3, and the note's statement that the median rule had 83% of its months excluded under v1. No per-draw gap was computed for any rule before this declaration. Changing the check after the v1 run is a check chosen after seeing a result; the tolerance and refusal rule are therefore carried over unchanged and the construction is byte-identical."
+}
