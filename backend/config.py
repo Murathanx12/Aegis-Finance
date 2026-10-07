@@ -4796,6 +4796,36 @@ BOOK_DNA_LANE_IDENTITY_JACCARD = 0.90
 #: How many tickers name a cluster's shared basket on the collapse line.
 BOOK_DNA_BASKET_TOP = 5
 
+# ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
+#: `backend/services/results_voice.py` reads the newest roi_<run>.json +
+#: book_dna_<run>.json pair and LEADS with what is ahead of SPY, by how much,
+#: over which window, with which label and what would raise it -- then says
+#: what is not yet claimable. The methodology is unchanged; the voice is not.
+#: An account is a CONTROL (excluded from the strategy count) when book_dna
+#: gives it a `twin_of`, its book_dna category is twin/control, or its name
+#: contains one of these markers.
+RESULTS_VOICE_CONTROL_NAME_MARKERS: tuple = ("_random_twin", "comparato", "__", "-control")
+#: Holdings overlap at or above this Jaccard is ONE bet (exact set equality is
+#: reported beside it). Deliberately stricter than BOOK_DNA_JACCARD_THRESHOLD
+#: (0.30), whose looser clusters are quoted as context.
+RESULTS_VOICE_BET_JACCARD = 0.80
+RESULTS_VOICE_N_LEADERS = 5
+RESULTS_VOICE_N_LOSERS = 5
+#: Twin kinds that count as a RANDOM twin for a leader's twin gap, in order of
+#: preference (book_dna's own `fair_twin.kind` is preferred when present).
+RESULTS_VOICE_RANDOM_TWIN_KINDS: tuple = ("matched_twin21", "matched_random", "random_same_band",
+                                          "random_sleeve")
+#: The one-line mechanism per account, used only when book_dna carries no
+#: description field. Key = account prefix, or an 8-hex book hash in brackets.
+RESULTS_VOICE_MECHANISMS: dict = {
+    "revision_flow": "analyst revision flow: net target raises x distinct firms, 90 days",
+    "abstention": ("SPY by default, deviates into names whose 12-1 momentum z clears a frozen "
+                   "threshold, monthly"),
+    "b109c886": ("SPY by default, deviates into names whose 12-1 momentum z clears a frozen "
+                 "threshold, monthly"),
+    "hack2": "Alpaca paper broker mirroring the frozen revision_flow_v0 book (v2)",
+}
+
 # ── Telegram replies (LANE A phase 2, 2026-09-28) ────────────────────────────
 #: `backend/services/alerts_replies.py`, called by the existing poller in
 #: `scripts/telegram_agent.py`. Every reply READS FILES: no LLM, no browser, no

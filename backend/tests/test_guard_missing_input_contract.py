@@ -1747,6 +1747,14 @@ def _case_bar_defects_empty_book():
             "assert_book_clean() on a book with no held slot")
 
 
+def _case_results_voice():
+    # 2026-10-07 "speak with results": the missing input is the receipt pair. A
+    # results statement over no ROI rows would print "0 of 0 ahead" as a headline.
+    from backend.services.results_voice import ResultsVoiceRefused, build
+    return (lambda: build(None, None, roi_path="", dna_path=""), ResultsVoiceRefused,
+            "a results statement with no ROI or book_dna receipt")
+
+
 def _case_public_flow_common():
     """Public-flow sensors (C16, 2026-10-07): no crosswalk refuses.
 
@@ -1762,6 +1770,7 @@ def _case_public_flow_common():
 
 
 CASES = {
+    "results_voice": _case_results_voice,
     "public_flow_common": _case_public_flow_common,
     "fleet_manager": _case_fleet_manager,
     "world_digest": _case_world_digest,

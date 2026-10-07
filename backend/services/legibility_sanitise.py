@@ -164,7 +164,23 @@ BOOK = {**keys("account", "family", "category", "twin_kind", "twin_of", "strateg
         "decomposition": MapOf(LEAF),
         "missing_because": MapOf(LEAF)}
 
+#: 2026-10-07 "speak with results": `results_voice.public_view`, field by field.
+RESULTS_VOICE = {
+    **keys("run_id", "as_of_mark", "n_strategy_accounts", "n_ahead", "n_behind", "n_distinct_bets",
+           "n_distinct_bets_ahead", "n_excluded_controls", "bet_jaccard", "headline_lines",
+           "n_headline_lines_dropped_owner_personal", "same_names_groups", "one_bet_groups", "claims_line",
+           "claimable_above_observed", "top_rung", "ceiling_note", "receipt_files"),
+    "families": ListOf(keys("family", "accounts", "ahead", "median_vs_spy_pp")),
+    "leaders": ListOf(keys("rank", "account", "family", "roi_pct", "spy_same_window_pct", "vs_spy_pp",
+                           "inception", "last_mark", "sessions_graded", "evidence_label", "mechanism",
+                           "twin_line", "bet_members", "twin_kind", "twin_return_pct", "twin_gap_pp",
+                           "next_label", "sessions_needed", "raise_line")),
+    "losers": ListOf(keys("account", "family", "roi_pct", "spy_same_window_pct", "vs_spy_pp", "inception",
+                          "last_mark", "sessions_graded", "evidence_label")),
+}
+
 ARENA = {**BASE,
+         "results_voice": RESULTS_VOICE,
          "evidence_ladder": LEAF,
          "top": keys("top_line", "collapse_line", "evidence_density_line", "honest_sentence", "read_me_first",
                      "book_dna_read_me_first", "label_ceiling", "licence"),

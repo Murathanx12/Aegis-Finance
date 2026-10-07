@@ -485,6 +485,14 @@ def run_paper_accounts(timeout_s: float = 540.0, *, broker: Optional[bool] = Non
     return res
 
 
+def run_results_voice() -> dict:
+    """`backend.services.results_voice.safe_run` (2026-10-07, "speak with results"):
+    the results-first statement over the roi + book_dna pair the step above has
+    just written. Never raises: a failure is a SKIP line on the step row."""
+    from backend.services import results_voice as RV
+    return RV.safe_run()
+
+
 def _broker_read_degraded(res: dict) -> Optional[str]:
     """The DEGRADED line for a paper-accounts run that did not read the brokers,
     or None. Pure: reads only the child's summary."""
@@ -1110,7 +1118,11 @@ def step_paper_accounts(ctx: dict) -> dict:
         refusals.append(str(res["doc_refused"])[:300])
     if llm.get("UNGRADED"):
         refusals.append(f"UNGRADED llm books: {llm['UNGRADED']}")
+    # results first (2026-10-07): written right after the receipts; a failure is a SKIP line
+    voice = run_results_voice() if ok else {"status": "skip",
+                                            "line": "SKIP results_voice: the ROI run refused"}
     return _row("paper_accounts", "ok" if ok else "refused",
+                results_voice=voice.get("line"), results_voice_md=voice.get("md"),
                 rows=int(res.get("n_rows") or 0), seconds=round(time.time() - t0, 2),
                 refusals=refusals, receipt_path=res.get("receipt"), doc=res.get("doc"),
                 llm_by_status=llm, rc=res.get("rc"), broker_degraded=degraded,

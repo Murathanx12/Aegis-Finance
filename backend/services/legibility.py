@@ -368,6 +368,25 @@ def _book_row(b: Optional[dict], r: Optional[dict], loser: Optional[dict]) -> di
     }
 
 
+def _results_voice_section(folder: Path, roi_p: Path, missing: dict) -> Optional[dict]:
+    """The results-first block (`results_voice_<run>.json`, 2026-10-07) for the SAME run
+    id as the served ROI receipt; owner-personal books dropped. None + a missing line
+    when the file is absent or unreadable."""
+    m = ROI_RE.match(roi_p.name)
+    rid = f"{m.group(1)}T{m.group(2)}Z" if m else None
+    p = folder / f"results_voice_{rid}.json" if rid else None
+    if p is None or not p.is_file():
+        missing["results_voice"] = (f"no results_voice_{rid}.json beside the served ROI receipt "
+                                    f"(python -m scripts.results_voice --run-id {rid})")
+        return None
+    try:
+        from backend.services import results_voice as RV          # noqa: PLC0415
+        return RV.public_view(read_json(p), is_personal)
+    except Exception as exc:                                        # noqa: BLE001 -- named, never raised
+        missing["results_voice"] = f"results_voice_{rid}.json unreadable: {type(exc).__name__}"
+        return None
+
+
 def arena_payload(now: Optional[datetime] = None) -> Optional[dict]:
     """The Paper Arena. None when no ROI receipt exists (the router turns it into a 404)."""
     now = _now(now)
@@ -467,6 +486,7 @@ def arena_payload(now: Optional[datetime] = None) -> Optional[dict]:
         missing["owner_personal_books"] = (f"{n_personal} owner-personal book(s) are not served on this page; "
                                            f"the receipt's own counts (top line, collapse line) include them")
     br = roi.get("broker_read") or {}
+    results = _results_voice_section(folder, roi_p, missing)
     return {
         "schema": SCHEMA, "page": "arena", "served_utc": now.isoformat(timespec="seconds"),
         "receipts": receipts, "status": overall_status(receipts),
@@ -502,6 +522,7 @@ def arena_payload(now: Optional[datetime] = None) -> Optional[dict]:
         "by_family": by_family,
         "broker_read": {"performed": br.get("performed"), "n_accounts": br.get("n_accounts"),
                         "n_priced": br.get("n_priced"), "errors": br.get("errors"), "read_utc": br.get("read_utc")},
+        "results_voice": results,
         "clusters": clusters,
         "winners": winners, "short_lived": short, "losers": loser_rows, "books": rows,
         "filters": {"families": dict(sorted(Counter(x["family"] for x in rows).items())),

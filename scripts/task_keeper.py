@@ -718,6 +718,29 @@ def run_opportunities(*, runner: Callable[..., Any] | None = None,
     return log(row, log_path or OPPORTUNITIES_LOG)
 
 
+RESULTS_LOG = KEEPER_DIR / "results_voice.jsonl"
+
+
+def run_results_voice(*, job: Callable[[], dict] | None = None,
+                      log_path: Path | None = None) -> dict:
+    """The results-first statement (`backend.services.results_voice`, 2026-10-07) over
+    the newest roi + book_dna pair. `scripts/daily_pass.py` step `paper_accounts` runs
+    it right after it writes those receipts; the catalog firing runs it again BEFORE
+    the public receipts so /arena carries it. A failure is a SKIP row, never a raise."""
+    row: dict = {"job": "results_voice"}
+    try:
+        if job is None:
+            from backend.services import results_voice as RV          # noqa: PLC0415
+            job = RV.safe_run
+        out = job()
+        row.update(status=out.get("status"), run_id=out.get("run_id"), md=out.get("md"),
+                   line=out.get("line"))
+        row["action"] = "ok" if out.get("status") == "ok" else "skip"
+    except Exception as exc:                                       # noqa: BLE001
+        row.update(action="skip", line=f"SKIP results_voice: {type(exc).__name__}: {str(exc)[:300]}")
+    return log(row, log_path or RESULTS_LOG)
+
+
 def run_publish_receipts(*, job: Callable[[], dict] | None = None,
                          log_path: Path | None = None) -> dict:
     row: dict = {"job": "publish_receipts"}
@@ -1071,7 +1094,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="task_keeper")
     ap.add_argument("job", choices=("reader", "catchup", "sim", "status", "register", "catalog",
                                    "regret", "snowball", "opportunities", "publish", "publish_commit",
-                                   "analyst", "brain", "register-owners", "public_flow", "research"))
+                                   "analyst", "brain", "register-owners", "public_flow", "research",
+                                   "results"))
     ap.add_argument("--apply", action="store_true",
                     help="register-owners: run the registration, not only print it")
     a = ap.parse_args(argv)
@@ -1106,6 +1130,8 @@ def main(argv: list[str] | None = None) -> int:
         # C15: the Opportunity Explorer rebuild, then the public receipts LAST (they copy what
         # the steps before them wrote). Own keeper rows; never the catalog's exit code.
         print(json.dumps(run_opportunities(), default=str))
+        # 2026-10-07: the results voice BEFORE the public receipts, so /arena carries it
+        print(json.dumps(run_results_voice(), default=str))
         print(json.dumps(run_publish_receipts(), default=str))
         # C15 H1: LAST, the step that makes the pages public (it refuses off `main`)
         print(json.dumps(run_publish_commit(), default=str))
@@ -1115,6 +1141,10 @@ def main(argv: list[str] | None = None) -> int:
                "publish_commit": run_publish_commit}[a.job]()
         print(json.dumps(out, default=str))
         return 2 if out.get("action") == "refused" else 0
+    if a.job == "results":
+        out = run_results_voice()
+        print(json.dumps(out, default=str))
+        return 0 if out.get("action") == "ok" else 2
     if a.job == "snowball":
         out = run_snowball()
         print(json.dumps(out, default=str))

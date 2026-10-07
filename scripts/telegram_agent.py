@@ -183,6 +183,12 @@ def cmd_book(args, msg) -> str:
 def cmd_brief(args, msg) -> str:
     """Money first, then the book, then what is broken. The phone's front page."""
     parts = [f"*AEGIS brief* {datetime.now().strftime('%Y-%m-%d %H:%M')}", ""]
+    # RESULTS first (2026-10-07): what is ahead, by how much, which label, what raises it
+    try:
+        from backend.services import telegram_cockpit as _TC
+        parts += [_TC.results_block(markdown=True), ""]
+    except Exception as exc:  # noqa: BLE001 -- the brief must still go out
+        parts += [f"RESULTS: CANNOT DETERMINE ({type(exc).__name__})", ""]
     parts.append(cmd_nav(args, msg))
     parts += ["", cmd_book(args, msg)]
     st = SS.status()
