@@ -469,9 +469,15 @@ def calibration_curve(graded: pd.DataFrame, *, arm_prefix: str = "investigator:"
     base rate and a `return_sign` base rate are different questions.
     `rel_ret_mean` is the realised return vs benchmark where the outcome row
     carries one (beats_benchmark), else NaN.
+
+    `n_dates` / `date_blocks` (C15, 2026-10-07; C19 review F7): the bin's distinct
+    decision days and its non-overlapping `horizon`-business-day blocks. Rows in a
+    bin share dates and (at h5) overlapping windows, so `n` overstates the evidence;
+    the writer emits the date counts so no reader has to re-bin the ledger.
     """
     cols = ["arm_prefix", "horizon", "year", "observable", "bin", "n", "p_mean",
-            "p_lo", "p_hi", "base_rate", "ret_mean", "rel_ret_mean", "n_rel"]
+            "p_lo", "p_hi", "base_rate", "ret_mean", "rel_ret_mean", "n_rel",
+            "n_dates", "date_blocks"]
     g = graded[graded["arm"].astype(str).str.startswith(arm_prefix)
                & (pd.to_numeric(graded["horizon_days"], errors="coerce") == horizon)]
     if g.empty:
@@ -492,8 +498,38 @@ def calibration_curve(graded: pd.DataFrame, *, arm_prefix: str = "investigator:"
                         "base_rate": float(bb["y"].mean()),
                         "ret_mean": float(bb["ret"].mean()),
                         "rel_ret_mean": float(bb["rel_ret"].mean()),
-                        "n_rel": int(bb["rel_ret"].notna().sum())})
+                        "n_rel": int(bb["rel_ret"].notna().sum()),
+                        "n_dates": len(set(_days_of(bb))),
+                        "date_blocks": date_blocks(_days_of(bb), horizon)})
     return pd.DataFrame(out, columns=cols)
+
+
+def _days_of(rows: pd.DataFrame) -> list[str]:
+    """Decision days of graded rows: `made_day` when the frame carries it, else the
+    UTC date of `made_at`. Undateable rows are left out (never counted as a date)."""
+    if "made_day" in rows.columns:
+        days = rows["made_day"]
+    else:
+        days = pd.to_datetime(rows["made_at"], utc=True, errors="coerce",
+                              format="ISO8601").dt.strftime("%Y-%m-%d")
+    return [str(d) for d in days if isinstance(d, str) and d and d != "NaT"]
+
+
+def date_blocks(days: Iterable[str], h: int) -> int:
+    """Non-overlapping blocks of `h` business days covering the distinct decision
+    days: a new block opens at the first day >= h business days after the current
+    block's start. h <= 1 counts distinct days."""
+    ds = sorted({str(d) for d in days if d})
+    if not ds:
+        return 0
+    if h <= 1:
+        return len(ds)
+    n, start = 1, ds[0]
+    for d in ds[1:]:
+        if int(np.busday_count(start, d)) >= h:
+            n += 1
+            start = d
+    return n
 
 
 # ── Profit-Mirage restricted check ───────────────────────────────────────────

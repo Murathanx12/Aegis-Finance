@@ -1,0 +1,116 @@
+{
+ "schema": "fleet_manager_contract/3-prepared",
+ "role": "thematic",
+ "version": "v3",
+ "account": "hack1",
+ "licence": "PRODUCT_EXPERIMENT",
+ "status": "PREPARED_NOT_SEEDED",
+ "earliest_seed": "2026-10-26",
+ "lineage": {
+  "account": "hack1",
+  "v2_policy_hash": "bdae86290ea38481",
+  "v2_alpha_source": "human + AI thematic curation (the owner's themes: AI power, memory/foundry, prediction markets, nuclear/resources, biotech catalysts)",
+  "v2_frozen_utc": "2026-09-29T13:37:42+00:00"
+ },
+ "personality": "aggressive",
+ "objective": "terminal wealth under the declared personality (docs/OPTIMUS_OBJECTIVE.md \u00a70), graded daily vs SPY and vs the frozen twin; the question is whether this alpha source's errors differ from the other five accounts'; no claim of skill",
+ "costs": {
+  "assumed_bps_per_side": 10.0,
+  "fill_convention": "DAY limit at ask x (1+10bps) for buys and bid x (1-10bps) for sells; an unfilled limit is not traded; last trade when the IEX quote is one-sided or wider than 2%"
+ },
+ "reference_asof": "2026-10-06",
+ "llm_authority": "none: an LLM proposes; deterministic code sizes, stops and exits",
+ "owner_action_required": [
+  "not before 2026-10-26 (roadmap \u00a77: no new paper book before then)",
+  "archive first: python -m scripts.fleet_v3_prepare --archive (copies fleet_manager state/, decisions.jsonl, grades.jsonl, modes.json, contracts/ with a sha256 manifest; copies, never moves)",
+  "write a last broker-truth read: python -m scripts.fleet_manager_run --pass open --roles hack1 (no --live: DRY, reads and records only)",
+  "reset hack1 in the broker UI if wanted (paper reset = the owner's act)",
+  "teach scripts/fleet_manager_run.py a v3 path FIRST (today it resolves only v1/v2 and would silently fall back to v1 terms for 'v3')",
+  "activate = re-freeze this body into fleet_manager/contracts/ with status changed and the seed block filled; check fleet_v3_contracts.activation_diff(...)['same_rule']",
+  "set modes.json hack1 contract=v3, maintenance/entries DRY first, LIVE after one clean DRY pass"
+ ],
+ "alpha_source": "human + AI thematic curation: the owner's themes, candidates from the Opportunity Explorer's curated lists",
+ "inputs": [
+  {
+   "name": "Opportunity Explorer receipt",
+   "path": "backend/data/optimus/opportunities/opportunities_<asof>_<runid>.json",
+   "read": "services.opportunities.load_latest (newest by the stamp in the NAME)",
+   "lists": [
+    "human_ai_thematic_v2",
+    "roi_v3"
+   ],
+   "max_age_days": 7
+  }
+ ],
+ "selection": {
+  "kind": "explorer_thematic_book",
+  "rule": "at seed, the owner names ONE Explorer list (default human_ai_thematic_v2) and its receipt; its weights are frozen as the v3 book, each clipped at max_name_frac and never renormalised (what is clipped stays cash); bar-defect / stitched names and a second share class of one issuer are dropped; a later list is a new version",
+  "horizon_sessions": 21
+ },
+ "caps": {
+  "max_gross_frac": 1.0,
+  "max_name_frac": 0.1,
+  "daily_turnover_frac": 0.5,
+  "max_orders_per_run": 60,
+  "min_order_usd": 250.0,
+  "shorting": false,
+  "new_options": false,
+  "leverage": false,
+  "max_names": 20
+ },
+ "exits": "horizon (21 sessions from the first v3 fill) -> cash; resting sigma stops",
+ "stop_rule": {
+  "quoted_in": "daily sigma",
+  "sigma": "63-session sd of close-to-close returns on the bar-defect-screened panel (Alpaca daily bars when a name is not in the panel)",
+  "k_sigma": 3.0,
+  "min_frac": 0.04,
+  "max_frac": 0.12,
+  "distance": "clip(k_sigma x sigma, min_frac, max_frac) of the reference price",
+  "never_loosen": "a replaced stop is never below the stop it replaces",
+  "order": "GTC sell stop for the full long quantity; renewed within 7 days of its expiry",
+  "examples": [
+   {
+    "at": "universe p50",
+    "daily_sigma": 0.02501845394667117,
+    "stop_pct": 0.07505536184001352,
+    "stop_in_sigma": 3.0,
+    "how": "3 x sigma 0.0250 = 0.0751"
+   },
+   {
+    "at": "universe p90",
+    "daily_sigma": 0.049209219472656204,
+    "stop_pct": 0.12,
+    "stop_in_sigma": 2.4385674328096116,
+    "how": "3 x sigma 0.0492 = 0.1476, clipped to [0.040, 0.120] -> 0.1200"
+   }
+  ],
+  "why": "the v2 rule carried forward: noise-scaled, inside 12%"
+ },
+ "twin": {
+  "kind": "sticky_matched_twin",
+  "construction": "TWIN_STICKY_v1",
+  "declaration": "docs/research_notes/2026-10-06/DECLARATION_TWIN_STICKY_v1.json",
+  "rule": "for each name entered, one partner drawn from that name's size x vol x 12-1 cell as of the entry date, held until the role exits the name; redrawn on death or collision; partner carries the name's weight; 21 draws seeded seed_for(role, j); both legs pay the same cost; graded daily as a virtual book (not executed)"
+ },
+ "worst_case": {
+  "equity_usd": 100000.0,
+  "n_names": 10,
+  "notional_pct": 0.1,
+  "gross_over_equity": 1.0,
+  "k_sigma": 3.0,
+  "sigma_ref": 0.06708566277010515,
+  "sigma_ref_source": "max(universe p90, the v2 book's highest sigma)",
+  "k_sigma_day_usd_uncapped": -20125.698831031546,
+  "k_sigma_day_limit_frac": 0.1,
+  "entry_gross_scale_at_sigma_ref": 0.49687715611550015,
+  "k_sigma_day_usd_after_cap": -10000.0,
+  "all_stops_hit_usd": -12000.0,
+  "no_stop_ceiling_usd": -100000.0,
+  "gap_note": "a stop is not a floor: an overnight gap fills below it",
+  "line": "10 x 10.00% x 12% stop = -$12,000 if every stop fills at its distance; 3-sigma day at 6.71% = -$20,126 (capped at 10% -> -$10,000 by scaling gross x0.50); sum|notional|/equity 1.00; no-stop ceiling -$100,000"
+ },
+ "kill_rule": "account drawdown >= 20% from its v3 high-water -> flatten to cash, DEPRIORITIZED; at 63 sessions, excess <= 0 vs BOTH the twin and SPY -> DEPRIORITIZED (no new entries; held names run to horizon). MECHANISM_REJECTED is never issued by this rule",
+ "rule_hash": "610fb02743fb17be",
+ "policy_hash": "8134a10a21a23ad5",
+ "frozen_utc": "2026-10-06T23:55:36+00:00"
+}

@@ -308,3 +308,30 @@ def test_markdown_never_prints_the_count_alone(world, tmp_path):
     lines = md.splitlines()
     i = next(k for k, l in enumerate(lines) if "are ahead of SPY" in l)
     assert "NOT a count of independent bets" in lines[i + 1]
+
+
+# ── C15 (2026-10-07; review C3 F9): lane beta carries a lag check ───────────────
+def _series_lagged(lag: int, n: int = 120, seed: int = 3) -> list:
+    import numpy as _np
+    rng = _np.random.default_rng(seed)
+    spy = rng.normal(0.0004, 0.01, n + 1)
+    noise = rng.normal(0.0, 0.004, n + 1)
+    book = [(0.9 * spy[i - lag] if i - lag >= 0 else 0.0) + noise[i] for i in range(n + 1)]
+    return [(f"d{i:04d}", float(book[i]), float(spy[i])) for i in range(1, n + 1)]
+
+
+def test_beta_of_same_day_series_prints_a_beta_and_both_correlations():
+    from backend.services import book_dna as BD
+    out = BD.beta_of(_series_lagged(0), 20)
+    assert isinstance(out["value"], float) and 0.7 < out["value"] < 1.1
+    assert out["corr_vs_spy"] > out["corr_vs_spy_lag_minus_1"]
+
+
+def test_beta_of_a_date_stamp_lagged_series_is_not_credible_with_both_numbers():
+    from backend.services import book_dna as BD
+    out = BD.beta_of(_series_lagged(1), 20)
+    assert out["value"] == BD.NOT_CREDIBLE
+    assert out["corr_vs_spy_lag_minus_1"] > out["corr_vs_spy"]
+    assert out["why"].startswith("beta: NOT_CREDIBLE (date stamp lag)")
+    assert f"{out['corr_vs_spy_lag_minus_1']:+.2f}" in out["why"] and f"{out['corr_vs_spy']:+.2f}" in out["why"]
+    assert "beta_same_day" in out           # the uncredible number is kept, labelled, never served as the beta

@@ -24,6 +24,34 @@ corrected the notes in several places and the corrections are dated inside the n
   `~/.openclaw/openclaw.json`. The gateway may still hold up to 146 stale runtime slots of 256; clear by deleting the
   archived `aegis-*` sessions after 24 h or restarting the gateway by PID.
 
+## 0b. THE MORNING WAVE (10-07 05:15 → 08:00 HKT; owner: "lets build ... address everything")
+
+Commit `e4238782` (WIP 4, work branch). Gate suite before the wave: 13,410 passed, 3 transient failures that pass on the
+settled tree; the FINAL frozen-tree run was memory-killed at 52% (second time), so **the merge to `main` still waits for one
+clean full run** (`AEGIS_PERSONAL_MODE=0 AEGIS_IGNORE_DOTENV=1 python -m pytest backend/tests/ -m "not slow"` + `nn_lab/tests`
++ `ft_lab/tests`), ideally after the reader's Chrome stops at 09:50 HKT when memory is free.
+
+Built, each attacked by a second Opus and fixed (`docs/reviews/REVIEW_2026-10-07_*.md`):
+
+| chunk | what stands | the review's main catch |
+|---|---|---|
+| C16 sensors | USAspending awards by last-modified date with a count check, Senate LDA (REFUSED: edge 403 from this network; needs a US-hosted run), crypto risk-appetite sensor; Kalshi storage default `none` (D18); fiscal-year cell `UNPOWERED_AT_DECLARATION` at the fiscal-year unit | the 14-day window could never see DoD; two rows still dropped silently; "latency" was row age |
+| C17 world state | belief table with story dedup and elapsed-time decay (stability 0.125 across two digests), `regime_v1` rows with one fixed graded event per variable (v0's 14 rows excluded by rule), scenarios with versioned priors as labels only, news tilt before the gate behind `NEWS_TILT_IN_PLAN=False`; key 1 prints NOT MET (n 3 of ~505) | prompt and grader disagreed on the event in 5 of 14 rows; beliefs flipped in 45 minutes; trust key met at t 0.13 |
+| C18 analyst reputation | three-level shrinkage computed and labelled `NOT_PERSISTENT_OOS (rho −0.32)`; weighted upside removed from display; snowball follow-through shadow (8 forward rows, first grades 2027-01); return leg `NOT_RELINTABLE_ON_THIS_CORPUS` | the weight does not persist out of sample; n_effective measured dispersion not quality |
+| C19 pages | `/arena`, `/forecast-lab`, `/theory-lab`, `/health` behind one deny-by-default sanitiser tested on real-shaped payloads; theory state `UNINFORMATIVE` for unpowered negatives; Arena leads with the twin-collapsed count | dollar equity reached the browser through family totals; superseded board rows served |
+| C23 docs | `docs/AEGIS_V1_BETA_2026-10-07.md` (acceptance: 1 of 11 met, 7 partly, 3 not yet), README honest scoreboard (five return claims removed), `docs/FUNDING_EVIDENCE_PACK_2026-10-07.md` | PC-PAPER is BEHIND SPY (−0.60 pp) on the run-stamped receipt; all ten lanes behind |
+| C25 / C8 fixes | three gate failures fixed at the root; every health reader maps REFUSED/ERROR/STOPPED → never ALIVE (the 09-30 daily pass now reads DEGRADED); probe 0 UNKNOWN | "UNKNOWN by omission" had become "ALIVE by omission" |
+
+Telegram serve child restarted by PID at 07:41 HKT: the cockpit (plain questions, buttons) is LIVE on the new code.
+In flight at 08:00: C15 (publish sanitised receipts to a tracked folder so the pages work on Railway; writer-owned board
+supersession; book_dna lag check; nn_lab revisions rotation; scheduler housekeeping) and C20 (six-role v3 contracts
+PREPARED_NOT_SEEDED; PC-PAPER benchmark core behind a flag OFF with its worst case; the mirror cap fix as a proposal).
+Deferred for memory: sticky-twin per-draw check v2, ROT5_DIR replay receipt, contest horizon worst case, extraction
+cascade (C21, needs the GPU), OpenBB probe (C22), desktop export check (C24).
+
+New owner decisions: **D18** Kalshi storage (none / derived / Polymarket only); **D19** FEC key (its policy bans ML use);
+**D20** LDA needs a US-hosted runner or a key.
+
 ## 1. RESULTS SCOREBOARD
 
 **RESULT IMPROVEMENT: NONE.** The night produced controls, measurements and a live loop, not an edge.

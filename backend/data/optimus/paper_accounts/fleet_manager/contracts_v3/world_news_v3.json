@@ -1,0 +1,114 @@
+{
+ "schema": "fleet_manager_contract/3-prepared",
+ "role": "world_news",
+ "version": "v3",
+ "account": "hack6",
+ "licence": "PRODUCT_EXPERIMENT",
+ "status": "PREPARED_NOT_SEEDED",
+ "earliest_seed": "2026-10-26",
+ "lineage": {
+  "account": "hack6",
+  "v2_policy_hash": "12fa05317df05ce1",
+  "v2_alpha_source": "world-digest typed implications through SHADOW_NEWS_v0's frozen news_signal (d > 0 only), fixed 1% of equity per name, <= 10 names, 5 sessions",
+  "v2_frozen_utc": "2026-09-29T13:37:49+00:00"
+ },
+ "personality": "balanced",
+ "objective": "terminal wealth under the declared personality (docs/OPTIMUS_OBJECTIVE.md \u00a70), graded daily vs SPY and vs the frozen twin; the question is whether this alpha source's errors differ from the other five accounts'; no claim of skill",
+ "costs": {
+  "assumed_bps_per_side": 10.0,
+  "fill_convention": "DAY limit at ask x (1+10bps) for buys and bid x (1-10bps) for sells; an unfilled limit is not traded; last trade when the IEX quote is one-sided or wider than 2%"
+ },
+ "reference_asof": "2026-10-06",
+ "llm_authority": "none: only typed, validated fields reach this rule; social-only never originates",
+ "owner_action_required": [
+  "not before 2026-10-26 (roadmap \u00a77: no new paper book before then)",
+  "archive first: python -m scripts.fleet_v3_prepare --archive (copies fleet_manager state/, decisions.jsonl, grades.jsonl, modes.json, contracts/ with a sha256 manifest; copies, never moves)",
+  "write a last broker-truth read: python -m scripts.fleet_manager_run --pass open --roles hack6 (no --live: DRY, reads and records only)",
+  "reset hack6 in the broker UI if wanted (paper reset = the owner's act)",
+  "teach scripts/fleet_manager_run.py a v3 path FIRST (today it resolves only v1/v2 and would silently fall back to v1 terms for 'v3')",
+  "activate = re-freeze this body into fleet_manager/contracts/ with status changed and the seed block filled; check fleet_v3_contracts.activation_diff(...)['same_rule']",
+  "set modes.json hack6 contract=v3, maintenance/entries DRY first, LIVE after one clean DRY pass"
+ ],
+ "alpha_source": "world-digest typed implications through SHADOW_NEWS_v0's frozen news_signal (d > 0 only), sized by the TRUST RULE",
+ "inputs": [
+  {
+   "name": "world digest",
+   "read": "services.world_digest.news_signal over the newest digest's typed implications",
+   "max_age_h": 36
+  },
+  {
+   "name": "trust",
+   "read": "services.world_digest.trust_from",
+   "rule": "trust = world_digest.trust_from(): exactly 0 while graded news_digest dates < WORLD_DIGEST_TRUST_MIN_DATES (3); after that clip(posterior / WORLD_DIGEST_TRUST_FULL, 0, WORLD_DIGEST_TRUST_MAX) of the per-date Brier improvement over the row's own control, prior N(0, WORLD_DIGEST_TRUST_TAU^2). KEY 1 (per arm): n dates >= N_MDE, lower bound > 0, trust >= 0.05. KEY 2: the PC plan's own regret rows (decision_story plan_plus_shadow_news_full vs plan_full, net of round-trip cost): mean - 1.64 x se > 0 over >= NEWS_TILT_MIN_MDC_SESSIONS graded sessions. KEY 1 per arm: see NEWS_TILT_KEY1_*. Both, or the flag stays False."
+  }
+ ],
+ "selection": {
+  "kind": "news_sleeve_trust_sized",
+  "rule": "long only: names with d_i > 0, strongest first, excluding bar-defect names and names that already moved > 2 five-session sigma; weight = 1% x (1 + 2 x usable_trust), usable_trust = 0 unless KEY 1 holds for the arm (n dates >= N_MDE, posterior lower bound > 0); at most 3%/name, 10 names, 30% gross; held 5 sessions then exited unless re-signalled. Trust is read, never edited; today usable_trust = 0 on both arms, so every name is 1%",
+  "horizon_sessions": 5
+ },
+ "caps": {
+  "max_gross_frac": 0.3,
+  "max_name_frac": 0.03,
+  "daily_turnover_frac": 0.5,
+  "max_orders_per_run": 60,
+  "min_order_usd": 250.0,
+  "shorting": false,
+  "new_options": false,
+  "leverage": false,
+  "max_names": 10
+ },
+ "exits": "5 sessions -> cash unless re-signalled; resting sigma stops",
+ "stop_rule": {
+  "quoted_in": "daily sigma",
+  "sigma": "63-session sd of close-to-close returns on the bar-defect-screened panel (Alpaca daily bars when a name is not in the panel)",
+  "k_sigma": 3.0,
+  "min_frac": 0.04,
+  "max_frac": 0.1,
+  "distance": "clip(k_sigma x sigma, min_frac, max_frac) of the reference price",
+  "never_loosen": "a replaced stop is never below the stop it replaces",
+  "order": "GTC sell stop for the full long quantity; renewed within 7 days of its expiry",
+  "examples": [
+   {
+    "at": "universe p50",
+    "daily_sigma": 0.02501845394667117,
+    "stop_pct": 0.07505536184001352,
+    "stop_in_sigma": 3.0,
+    "how": "3 x sigma 0.0250 = 0.0751"
+   },
+   {
+    "at": "universe p90",
+    "daily_sigma": 0.049209219472656204,
+    "stop_pct": 0.1,
+    "stop_in_sigma": 2.0321395273413434,
+    "how": "3 x sigma 0.0492 = 0.1476, clipped to [0.040, 0.100] -> 0.1000"
+   }
+  ],
+  "why": "a 5-session news hold; the v2 rule"
+ },
+ "twin": {
+  "kind": "v1_matched_random_twin_plus_cash",
+  "rule": "the sleeve's own random twin from the same size x vol cell, drawn at entry with seed = hash(role, day); the rest of the account is cash in both"
+ },
+ "worst_case": {
+  "equity_usd": 100000.0,
+  "n_names": 10,
+  "notional_pct": 0.03,
+  "gross_over_equity": 0.3,
+  "k_sigma": 3.0,
+  "sigma_ref": 0.049209219472656204,
+  "sigma_ref_source": "universe p90",
+  "k_sigma_day_usd_uncapped": -4428.829752539058,
+  "k_sigma_day_limit_frac": 0.1,
+  "entry_gross_scale_at_sigma_ref": 1.0,
+  "k_sigma_day_usd_after_cap": -4428.829752539058,
+  "all_stops_hit_usd": -3000.0,
+  "no_stop_ceiling_usd": -30000.0,
+  "gap_note": "a stop is not a floor: an overnight gap fills below it",
+  "line": "10 x 3.00% x 10% stop = -$3,000 if every stop fills at its distance; 3-sigma day at 4.92% = -$4,429 (capped at 10% -> -$4,429 by scaling gross x1.00); sum|notional|/equity 0.30; no-stop ceiling -$30,000"
+ },
+ "kill_rule": "account drawdown >= 10% -> flatten, DEPRIORITIZED; digest older than 36 h -> no entries that day; at 63 sessions excess <= 0 vs both twin and SPY -> DEPRIORITIZED",
+ "rule_hash": "dc49d391f4a120a4",
+ "policy_hash": "15fcfd17d80f1f4b",
+ "frozen_utc": "2026-10-06T23:55:36+00:00"
+}

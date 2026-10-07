@@ -6,6 +6,8 @@
     python -m scripts.task_keeper catalog     # data catalog receipt + report unsealed closed ledger months
                                               # (then the snowball shadow grade, C18)
     python -m scripts.task_keeper snowball    # C18: snowball follow-through shadow rows + grades
+    python -m scripts.task_keeper opportunities  # C15: rebuild the Opportunity Explorer receipt
+    python -m scripts.task_keeper publish     # C15: sanitised public copies -> backend/data/public_receipts/
     python -m scripts.task_keeper analyst     # weekly analyst-target pull (refuses in US hours)
     python -m scripts.task_keeper brain       # refresh the Optimus brain (tools/refresh_aegis.py)
     python -m scripts.task_keeper public_flow # C16 sensors: USAspending daily, LDA weekly, crypto daily
@@ -625,6 +627,73 @@ def run_snowball(*, job: Callable[[], dict] | None = None,
     return log(row, log_path)
 
 
+# ================================================================ opportunities + publish (C15)
+#
+# WHY (chunk C15, 2026-10-07). Two follow-ups owed by reviews:
+#  * C4 F6: `scripts.opportunities_build` had NO scheduled caller -- the
+#    funnel_night10.json pattern rebuilt (a static file, an age check, nobody
+#    running the remedy). It now runs daily inside the AegisDataCatalog firing,
+#    which is registered AFTER the daily pass (bars refresh 06:30 + analyst
+#    snapshot) and the analyst panel (05:30), as a CHILD process (a crash or a
+#    memory spike cannot take the keeper down), with a time limit.
+#  * C19 F12: the public pages 404 on Railway because their receipts are not in
+#    git. `publish_receipts` runs LAST in the same firing and writes sanitised
+#    copies into the TRACKED `backend/data/public_receipts/`; the daily commit of
+#    that folder is what makes the pages public.
+# Each step writes ONE row to its own series (`task_keeper/opportunities.jsonl`,
+# `task_keeper/publish_receipts.jsonl`), which `task_receipts.r_catalog` folds
+# into the AegisDataCatalog health row. A failed step is a REFUSED row with its
+# reason; it never changes the catalog's own exit code.
+
+OPPORTUNITIES_LOG = KEEPER_DIR / "opportunities.jsonl"
+PUBLISH_LOG = KEEPER_DIR / "publish_receipts.jsonl"
+OPPORTUNITIES_TIMEOUT_S = 45 * 60
+
+
+def run_opportunities(*, runner: Callable[..., Any] | None = None,
+                      log_path: Path | None = None) -> dict:
+    row: dict = {"job": "opportunities"}
+    cmd = [_child_python(), "-m", "scripts.opportunities_build"]
+    try:
+        runner = runner or subprocess.run
+        r = runner(cmd, cwd=str(REPO), capture_output=True, text=True, timeout=OPPORTUNITIES_TIMEOUT_S,
+                   creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        tail = [ln for ln in (r.stdout or "").splitlines() if ln.strip()][-1:]
+        row["rc"] = r.returncode
+        row["line"] = tail[0][:300] if tail else None
+        if r.returncode != 0:
+            row["action"] = "refused"
+            row["why"] = (f"opportunities_build exited {r.returncode}: "
+                          f"{((r.stderr or '').strip().splitlines() or ['no stderr'])[-1][:300]}")
+        elif not (tail and tail[0].startswith("wrote ")):
+            row["action"] = "refused"
+            row["why"] = "opportunities_build exited 0 but printed no `wrote <receipt>` line (nothing written)"
+        else:
+            row["action"] = "ok"
+    except subprocess.TimeoutExpired:
+        row.update(action="refused", why=f"opportunities_build ran past {OPPORTUNITIES_TIMEOUT_S // 60} min")
+    except Exception as exc:                                       # noqa: BLE001
+        row.update(action="refused", why=f"{type(exc).__name__}: {str(exc)[:300]}")
+    return log(row, log_path or OPPORTUNITIES_LOG)
+
+
+def run_publish_receipts(*, job: Callable[[], dict] | None = None,
+                         log_path: Path | None = None) -> dict:
+    row: dict = {"job": "publish_receipts"}
+    try:
+        if job is None:
+            from backend.services import publish_receipts as PR     # noqa: PLC0415
+            job = PR.publish
+        out = job()
+        row.update(status=out.get("status"), why=out.get("why"), written=out.get("written"),
+                   total_bytes=out.get("total_bytes"), max_bytes=out.get("max_bytes"),
+                   published=out.get("published"), refused=out.get("refused"), missing=out.get("missing"))
+        row["action"] = {"OK": "ok", "DEGRADED": "degraded"}.get(str(out.get("status")), "refused")
+    except Exception as exc:                                       # noqa: BLE001
+        row.update(action="refused", why=f"{type(exc).__name__}: {str(exc)[:300]}")
+    return log(row, log_path or PUBLISH_LOG)
+
+
 # ================================================================ owners (C8)
 #
 # WHY (chunk C8, 2026-10-07). Two jobs had NO scheduled caller:
@@ -854,13 +923,15 @@ def registration_ps() -> str:
         "Register-ScheduledTask -TaskName '" + TASK_SIM + "' -Action $a -Settings $S -Force "
         "-Trigger @((New-ScheduledTaskTrigger -AtLogOn -User \"$env:USERDOMAIN\\$env:USERNAME\"), "
         "$unlock, $wake, $daily, $rep)",
-        "# the data catalog + ledger archival: once a day; `catchup` starts it if the PC slept",
+        "# the data catalog + ledger archival, then (C15) the Opportunity Explorer rebuild and the",
+        "# sanitised public receipts: once a day AFTER the daily pass (06:30, bars + analyst",
+        "# snapshot); `catchup` starts it if the PC slept",
         "$SC = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries "
         "-DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 2)",
         f"$a = New-ScheduledTaskAction -Execute '{pyw}' -Argument \"-m scripts.task_keeper catalog\" "
         f"-WorkingDirectory '{REPO}'",
         "Register-ScheduledTask -TaskName '" + TASK_CATALOG + "' -Action $a -Settings $SC -Force "
-        "-Trigger @(New-ScheduledTaskTrigger -Daily -At 05:30)",
+        "-Trigger @(New-ScheduledTaskTrigger -Daily -At 09:00)",
     ])
 
 
@@ -877,7 +948,7 @@ def main(argv: list[str] | None = None) -> int:
     _ensure_streams()
     ap = argparse.ArgumentParser(prog="task_keeper")
     ap.add_argument("job", choices=("reader", "catchup", "sim", "status", "register", "catalog",
-                                   "regret", "snowball",
+                                   "regret", "snowball", "opportunities", "publish",
                                    "analyst", "brain", "register-owners", "public_flow"))
     ap.add_argument("--apply", action="store_true",
                     help="register-owners: run the registration, not only print it")
@@ -906,6 +977,14 @@ def main(argv: list[str] | None = None) -> int:
         # C18: the daily snowball grade rides the catalog's daily firing; its own
         # keeper row; it never changes the catalog's exit code.
         print(json.dumps(run_snowball(), default=str))
+        # C15: the Opportunity Explorer rebuild, then the public receipts LAST (they copy what
+        # the steps before them wrote). Own keeper rows; never the catalog's exit code.
+        print(json.dumps(run_opportunities(), default=str))
+        print(json.dumps(run_publish_receipts(), default=str))
+        return 2 if out.get("action") == "refused" else 0
+    if a.job in ("opportunities", "publish"):
+        out = run_opportunities() if a.job == "opportunities" else run_publish_receipts()
+        print(json.dumps(out, default=str))
         return 2 if out.get("action") == "refused" else 0
     if a.job == "snowball":
         out = run_snowball()

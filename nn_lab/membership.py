@@ -44,6 +44,7 @@ when declared, counted and reported).
 from __future__ import annotations
 
 import hashlib
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 
@@ -464,25 +465,99 @@ def _rel(path: Path) -> str:
         return Path(path).name
 
 
-def append_revisions(revs: pd.DataFrame, path: Path) -> dict:
-    """Append-only, de-duplicated on (date, symbol, kind, rebuilt_values_hash): the same
-    vendor value seen again tomorrow is not a new revision; a further adjustment is.
-    Written temp -> verify -> replace; a stored revision is never removed."""
+#: Kinds the nightly tail rebuild RE-DIFFS every night against a stored value that never
+#: changes (features and membership are frozen, never applied). For these, "no row tonight"
+#: on a checked date means the vendor value is back at the stored one: a REVERSION, logged.
+#: LABEL_RECOMPUTED is excluded: an applied label moves the stored value, so its silence the
+#: next night is agreement, not a reversion.
+REVERTIBLE_KINDS = ("FEATURES_REVISED", "MEMBERSHIP_WOULD_DROP", "MEMBERSHIP_WOULD_ADD",
+                    "MEMBER_ABSENT_FROM_REBUILD")
+REVERTED_HASH = "REVERTED_TO_STORED"
+#: label revisions are per horizon (`columns` = y_h); everything else is one timeline per name-date
+_LABEL_KINDS = ("LABEL_RECOMPUTED", "LABEL_REVISED")
+_TL_KEY = ["date", "symbol", "kind", "_ck"]
+
+
+def _timeline_key(df: pd.DataFrame) -> pd.DataFrame:
+    out = df.copy()
+    out["date"] = pd.to_datetime(out["date"])
+    out["symbol"] = out["symbol"].astype(str)
+    out["kind"] = out["kind"].astype(str)
+    out["_ck"] = [str(c) if k in _LABEL_KINDS else "" for k, c in zip(out["kind"], out["columns"])]
+    return out
+
+
+def revisions_history(path: Path, archive_dir: Path | None = None) -> pd.DataFrame:
+    """The live log plus every rotated month (the timeline spans the rotation)."""
+    path = Path(path)
+    parts = [pd.read_parquet(f) for f in sorted(Path(archive_dir or revisions_archive_dir(path))
+                                               .glob("revisions_????-??.parquet"))]
+    if path.exists():
+        parts.append(pd.read_parquet(path))
+    parts = [x for x in parts if len(x)]
+    return pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(columns=REV_COLS)
+
+
+def append_revisions(revs: pd.DataFrame, path: Path, *, checked_from: pd.Timestamp | None = None,
+                     run_id: str | None = None, asof_utc: str | None = None,
+                     archive_dir: Path | None = None) -> dict:
+    """Append-only TIMELINE per (date, symbol, kind[, label column]) (C15, review C5 F9).
+
+    A row is appended when its rebuilt-values hash differs from the LATEST logged state of
+    its key (or the key is new), so the same vendor value seen again tomorrow is not a new
+    revision while a flip-flop is: A(stored) -> B -> C -> B logs B, C, B.
+
+    `checked_from` (the night's tail start): a key of a `REVERTIBLE_KINDS` kind on a date the
+    rebuild checked tonight, whose latest state is a revision but which produced NO row
+    tonight, has gone back to the frozen stored value; a `REVERTED_TO_STORED` row records it.
+    So A -> B -> A logs TWO revisions (B, then the reversion), not one.
+
+    The latest state is read over the live file AND the rotated months. Written
+    temp -> verify -> replace; a stored revision is never removed."""
     path = Path(path)
     old = pd.read_parquet(path) if path.exists() else pd.DataFrame(columns=REV_COLS)
-    if not len(revs):
-        return {"n_appended": 0, "n_total": int(len(old)), "path": _rel(path)}
-    r = revs.reindex(columns=REV_COLS).copy()
+    hist = revisions_history(path, archive_dir)
+    r = revs.reindex(columns=REV_COLS).copy() if len(revs) else pd.DataFrame(columns=REV_COLS)
     r["date"] = pd.to_datetime(r["date"])
-    k = ["date", "symbol", "kind", "rebuilt_values_hash"]
+    latest = None
+    if len(hist):
+        h = _timeline_key(hist)
+        h["_ord"] = range(len(h))
+        latest = h.sort_values("_ord").groupby(_TL_KEY, sort=False).tail(1).set_index(_TL_KEY)
+    n_revert = 0
+    if len(r):
+        rk = _timeline_key(r)
+        rk = rk.drop_duplicates(_TL_KEY, keep="last")
+        if latest is not None:
+            prev = latest["rebuilt_values_hash"].astype(str).reindex(pd.MultiIndex.from_frame(rk[_TL_KEY]))
+            same = prev.to_numpy(dtype=object) == rk["rebuilt_values_hash"].astype(str).to_numpy(dtype=object)
+            rk = rk[~same]
+        r = rk.drop(columns=["_ck"])
+    if checked_from is not None and latest is not None and len(latest):
+        lat = latest.reset_index()
+        tonight = set(map(tuple, _timeline_key(revs.reindex(columns=REV_COLS))[_TL_KEY].astype(str).to_numpy())) \
+            if len(revs) else set()
+        cand = lat[lat["kind"].isin(REVERTIBLE_KINDS)
+                   & (lat["date"] >= pd.Timestamp(checked_from))
+                   & (lat["rebuilt_values_hash"].astype(str) != REVERTED_HASH)]
+        if len(cand):
+            keys = cand[_TL_KEY].astype(str).to_numpy()
+            cand = cand[[tuple(k) not in tonight for k in keys]]
+        if len(cand):
+            n_revert = int(len(cand))
+            rv = pd.DataFrame({
+                "date": cand["date"].to_numpy(), "symbol": cand["symbol"].to_numpy(), "kind": cand["kind"].to_numpy(),
+                "reason": "the vendor value returned to the frozen stored value (a reversion of the logged revision)",
+                "columns": cand["columns"].astype(str).to_numpy(), "max_rel_change": np.nan,
+                "rebuilt_values_hash": REVERTED_HASH,
+                "asof_utc": asof_utc or "", "run_id": run_id or "", "vendor_bars_through": ""})
+            r = pd.concat([r, rv], ignore_index=True) if len(r) else rv
+    if not len(r):
+        return {"n_appended": 0, "n_reverted": 0, "n_total": int(len(old)), "path": _rel(path)}
     if len(old):
         old["date"] = pd.to_datetime(old["date"])
-        seen = pd.MultiIndex.from_frame(old[k].astype({"rebuilt_values_hash": str}))
-        r = r[~pd.MultiIndex.from_frame(r[k].astype({"rebuilt_values_hash": str})).isin(seen)]
-    r = r.drop_duplicates(k)
-    if not len(r):
-        return {"n_appended": 0, "n_total": int(len(old)), "path": _rel(path)}
     new = pd.concat([old, r], ignore_index=True) if len(old) else r.reset_index(drop=True)
+    new = new.reindex(columns=REV_COLS)
     for c in ("kind", "reason", "columns", "rebuilt_values_hash", "asof_utc", "run_id", "vendor_bars_through", "symbol"):
         new[c] = new[c].astype(str)
     new["max_rel_change"] = pd.to_numeric(new["max_rel_change"], errors="coerce")
@@ -492,7 +567,96 @@ def append_revisions(revs: pd.DataFrame, path: Path) -> dict:
     if len(pd.read_parquet(tmp, columns=["date"])) != len(new) or len(new) < len(old):
         raise RuntimeError("revisions write verification failed; original kept")
     tmp.replace(path)
-    return {"n_appended": int(len(r)), "n_total": int(len(new)), "path": _rel(path)}
+    return {"n_appended": int(len(r)), "n_reverted": n_revert, "n_total": int(len(new)), "path": _rel(path)}
+
+
+# ─────────────────────────────── monthly rotation (C15) ──────────────────────
+#
+# Review C5 F9: `table/` is gitignored, so the "never removed" record of vendor changes
+# was an untracked local file, read whole and rewritten every night. Closed months
+# (by each row's own `asof_utc`, never the file mtime) move to
+# `nn_lab/revisions_archive/revisions_<YYYY-MM>.parquet`, TRACKED (un-ignored in
+# .gitignore), with a committed JSON manifest beside it: rows, kinds, first/last asof,
+# the sha256 of the parquet bytes and the command. A sealed month is written once.
+
+REVISIONS_MANIFEST_SCHEMA = "nn_lab/revisions_manifest/1"
+
+
+def revisions_archive_dir(path: Path | None = None) -> Path:
+    """`<nn_lab out>/revisions_archive`, derived from the live log's path
+    (`<out>/table/revisions.parquet`), so a test's tmp log never writes the real archive."""
+    return (Path(path).parent.parent if path is not None else Path(C.OUT)) / "revisions_archive"
+
+
+def _sha256_file(p: Path) -> str:
+    import hashlib
+    h = hashlib.sha256()
+    with open(p, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def rotate_revisions(path: Path, *, now: datetime | None = None, archive_dir: Path | None = None) -> dict:
+    """Move every CLOSED month's rows (asof_utc month < the current UTC month) out of the
+    live log into a sealed monthly parquet + manifest. Refuses a month already sealed
+    (the rows stay in the live file, named); verifies archive + remaining == before."""
+    path = Path(path)
+    now = now or datetime.now(timezone.utc)
+    adir = Path(archive_dir or revisions_archive_dir(path))
+    cur = now.strftime("%Y-%m")
+    if not path.exists():
+        return {"status": "OK", "sealed": [], "refused": [], "why": "no live revisions file"}
+    live = pd.read_parquet(path)
+    if not len(live):
+        return {"status": "OK", "sealed": [], "refused": []}
+    month = live["asof_utc"].astype(str).str[:7]
+    undated = ~month.str.match(r"^\d{4}-\d{2}$")
+    closed = sorted(set(month[~undated & (month < cur)]))
+    sealed, refused = [], []
+    keep = pd.Series(True, index=live.index)
+    for m in closed:
+        out = adir / f"revisions_{m}.parquet"
+        man = adir / f"revisions_{m}.json"
+        if out.exists() or man.exists():
+            refused.append({"month": m, "why": f"{out.name} is already sealed (a month is written once); "
+                                               f"{int((month == m).sum())} rows stay in the live file"})
+            continue
+        rows = live[month == m]
+        adir.mkdir(parents=True, exist_ok=True)
+        tmp = out.with_suffix(".tmp.parquet")
+        rows.to_parquet(tmp, index=False)
+        if len(pd.read_parquet(tmp, columns=["date"])) != len(rows):
+            tmp.unlink(missing_ok=True)
+            refused.append({"month": m, "why": "archive write verification failed; rows kept live"})
+            continue
+        tmp.replace(out)
+        body = {"schema": REVISIONS_MANIFEST_SCHEMA, "month": m, "rows": int(len(rows)),
+                "kinds": {str(k): int(v) for k, v in rows["kind"].astype(str).value_counts().items()},
+                "first_asof_utc": str(rows["asof_utc"].astype(str).min()),
+                "last_asof_utc": str(rows["asof_utc"].astype(str).max()),
+                "parquet": _rel(out), "parquet_sha256": _sha256_file(out),
+                "sealed_utc": now.isoformat(timespec="seconds"),
+                "command": "nn_lab.membership.rotate_revisions (called by nn_lab.nightly.step_append)"}
+        mt = man.with_suffix(".tmp")
+        mt.write_text(json.dumps(body, indent=1), encoding="utf-8")
+        json.loads(mt.read_text(encoding="utf-8"))
+        mt.replace(man)
+        keep &= month != m
+        sealed.append({"month": m, "rows": body["rows"], "parquet_sha256": body["parquet_sha256"],
+                       "manifest": _rel(man)})
+    if sealed:
+        rest = live[keep]
+        tmp = path.with_suffix(".tmp.parquet")
+        rest.to_parquet(tmp, index=False)
+        n_arch = sum(x["rows"] for x in sealed)
+        if len(pd.read_parquet(tmp, columns=["date"])) + n_arch != len(live):
+            tmp.unlink(missing_ok=True)
+            raise RuntimeError("rotation verification failed (archive + live != before); live file kept")
+        tmp.replace(path)
+    return {"status": "REFUSED" if refused and not sealed else "OK", "sealed": sealed, "refused": refused,
+            "n_undated_rows_kept_live": int(undated.sum()), "live_rows_after": int(len(live) - sum(
+                x["rows"] for x in sealed))}
 
 
 # ─────────────────────────────── the audit ───────────────────────────────────

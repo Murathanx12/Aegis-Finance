@@ -310,3 +310,28 @@ def test_vol_prior_refuses_direction_and_a_missing_sigma_source():
     # short history -> no sigma -> refused, never scored on a guess
     r = fr.vol_prior_skill(g, horizon=1, bars=bars[bars["date"] > bars["date"].max() - pd.Timedelta(days=20)])
     assert r["status"] == "REFUSED"
+
+
+# ── C15 (2026-10-07): the writer emits per-bin dates (C19 review F7) ─────────
+def test_calibration_bins_carry_n_dates_and_date_blocks_from_the_writer():
+    g = fr.graded_frame_from_rows(_synthetic_ledger(n_days=60))
+    for h in (1, 5):
+        g5 = g.assign(horizon_days=h)
+        cal = fr.calibration_curve(g5, horizon=h)
+        assert not cal.empty and {"n_dates", "date_blocks"} <= set(cal.columns)
+        for r in cal.itertuples():
+            assert 1 <= r.n_dates <= r.n                       # a date is never counted twice
+            assert 1 <= r.date_blocks <= r.n_dates             # blocks never outnumber dates
+        if h == 1:
+            assert (cal["date_blocks"] == cal["n_dates"]).all()
+        else:
+            assert (cal["date_blocks"] < cal["n_dates"]).any()   # overlapping h5 windows collapse
+
+
+def test_date_blocks_counts_non_overlapping_business_day_blocks():
+    days = ["2026-01-05", "2026-01-06", "2026-01-07", "2026-01-12", "2026-01-13", "2026-01-20"]
+    assert fr.date_blocks(days, 1) == 6
+    # h=5: block 1 opens 01-05; 01-12 is 5 business days later -> block 2; 01-20 is 6 after 01-12 -> 3
+    assert fr.date_blocks(days, 5) == 3
+    assert fr.date_blocks([], 5) == 0
+    assert fr.date_blocks(["2026-01-05", "2026-01-05"], 5) == 1

@@ -55,6 +55,8 @@ from backend import config as _config
 
 SCHEMA = "book_dna/1"
 NOT_COMPUTABLE = "NOT_COMPUTABLE"
+#: a number that computes but is not believed (C15: beta on a date-stamp-lagged series)
+NOT_CREDIBLE = "NOT_CREDIBLE"
 #: The ladder from roadmap section 7. This module may award only the first three.
 LABEL_LADDER = ("OBSERVED", "EARLY_EVIDENCE", "REPLICATED", "VALIDATED_EDGE")
 LABEL_CEILING = "REPLICATED"
@@ -405,8 +407,21 @@ def beta_of(series: Optional[list], min_obs: int) -> Any:
         return {"value": NOT_COMPUTABLE, "why": "SPY returns have zero variance", "n_obs": len(pts)}
     beta = float(np.cov(x, y, ddof=0)[0, 1] / vx)
     corr = float(np.corrcoef(x, y)[0, 1]) if np.std(y) > 0 else None
-    return {"value": round(beta, 3), "corr_vs_spy": None if corr is None else round(corr, 3),
-            "n_obs": len(pts)}
+    # C15 (2026-10-07; review C3 F9): a lane whose NAV is stamped a session late correlates
+    # with YESTERDAY's SPY better than today's, and its same-day beta (0.03-0.07 for equity
+    # lanes) is then an artefact of the date stamp, not a property of the book. Lag -1 = the
+    # book's period return against the PREVIOUS period's SPY return.
+    lag = None
+    if len(pts) >= max(min_obs, 3) + 1 and np.std(y[1:]) > 0 and np.std(x[:-1]) > 0:
+        lag = float(np.corrcoef(x[:-1], y[1:])[0, 1])
+    out = {"value": round(beta, 3), "corr_vs_spy": None if corr is None else round(corr, 3),
+           "corr_vs_spy_lag_minus_1": None if lag is None else round(lag, 3), "n_obs": len(pts)}
+    if lag is not None and (corr is None or lag > corr):
+        out.update(value=NOT_CREDIBLE, beta_same_day=round(beta, 3),
+                   why=(f"beta: NOT_CREDIBLE (date stamp lag): corr vs SPY lag -1 "
+                        f"{lag:+.2f} beats same-day {(corr if corr is not None else float('nan')):+.2f} "
+                        f"over {len(pts)} periods; the series looks stamped a period late"))
+    return out
 
 
 def subwindows(series: Optional[list], sessions: Optional[int], min_cover: float = 0.8) -> dict:

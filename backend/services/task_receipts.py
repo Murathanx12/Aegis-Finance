@@ -374,10 +374,32 @@ def r_catalog(ctx, task) -> Reading:
     if not isinstance(d, dict):
         return _none("data_catalog/catalog_*.json")
     st, why = receipt_status(d)
-    return Reading(stamp=parse_stamp(d.get("utc") or d.get("run_id")), status=st, reason=why,
+    t = parse_stamp(d.get("utc") or d.get("run_id"))
+    # C15 (2026-10-07): the same daily firing rebuilds the Opportunity Explorer receipt and
+    # publishes the sanitised public receipts; each writes its own keeper row. A step row of
+    # this firing (within CATALOG_STEP_WINDOW_H of the catalog receipt) that is not ok
+    # degrades the task row, named; a step that never wrote a row is named too.
+    steps = []
+    for step, fname in CATALOG_STEPS:
+        k = _last_row(ctx.optimus_dir / "task_keeper" / fname)
+        tk = parse_stamp((k or {}).get("utc"))
+        if k is None or tk is None or (t is not None and tk < t - timedelta(hours=CATALOG_STEP_WINDOW_H)):
+            steps.append(f"{step}: no row from this firing")
+            continue
+        ms = map_status(k.get("action"))
+        if ms != "OK":
+            st = worst(st, "DEGRADED" if ms in ("REFUSED", "DEAD") else ms)
+            why = (why + f"; {step} {k.get('action')}: {str(k.get('why') or '')[:160]}").strip("; ")
+        steps.append(f"{step}: {k.get('action')}")
+    return Reading(stamp=t, status=st, reason=why,
                    substance=substance(d.get("summary")), idle_reason=_declared_idle(d),
-                   proof=f"data_catalog/{p.name} utc",
-                   detail=f"catalog {p.name}: {str(d.get('summary'))[:120]}")
+                   proof=f"data_catalog/{p.name} utc + task_keeper/{{opportunities,publish_receipts}}.jsonl",
+                   detail=f"catalog {p.name}: {str(d.get('summary'))[:120]}; " + "; ".join(steps))
+
+
+#: C15: the steps that ride the AegisDataCatalog firing, each with its own keeper series
+CATALOG_STEPS = (("opportunities_build", "opportunities.jsonl"), ("publish_receipts", "publish_receipts.jsonl"))
+CATALOG_STEP_WINDOW_H = 6.0
 
 
 #: the rehearsal's declared progress: the grade, not the day or the sheet hash (F6)
@@ -700,7 +722,9 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
     "AegisSimOwner": TaskSpec(r_sim_owner, "sim/owner.jsonl",
                               hash_off="the owner's row is legitimately constant while one session runs; "
                                        "the session itself is the sim_session row"),
-    "AegisDataCatalog": TaskSpec(r_catalog, "data_catalog/catalog_*.json"),
+    "AegisDataCatalog": TaskSpec(r_catalog, "data_catalog/catalog_*.json + task_keeper/opportunities.jsonl "
+                                            "(opportunities_build, C15) + task_keeper/publish_receipts.jsonl "
+                                            "(public_receipts, C15)"),
     "AegisContestRehearsal": TaskSpec(r_rehearsal, "contest/rehearsal/runs.jsonl"),
     "AegisContestDesk": TaskSpec(r_contest_desk, "contest/live/runs.jsonl | contest/live/refusals/live_gate_*.json",
                                  session_only=True),

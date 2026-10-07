@@ -420,6 +420,11 @@ backend/data/optimus/nn_lab/models/
 backend/data/optimus/nn_lab/walkforward/
 backend/data/optimus/nn_lab/predictions/
 backend/data/optimus/nn_lab/night.lock
+# C15 (2026-10-07; review C5 F9): CLOSED months of the vendor-revisions log are rotated out of
+# table/ by nn_lab.membership.rotate_revisions into revisions_archive/ with a JSON manifest
+# (rows, kinds, sha256). The month parquet is small and TRACKED, overriding `*.parquet`.
+!backend/data/optimus/nn_lab/revisions_archive/*.parquet
+backend/data/optimus/nn_lab/revisions_archive/*.tmp*
 backend/data/optimus/nn_lab/night_state.json
 
 # 2026-09-28 fiction backtest (AMNESIA-2): case text derived from licensed articles stays LOCAL.

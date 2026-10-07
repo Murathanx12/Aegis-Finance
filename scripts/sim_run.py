@@ -1033,6 +1033,71 @@ def _plan_news_tilt(targets: list, *, sandbox: bool) -> dict:
                 "line": f"news tilt: REFUSED {type(exc).__name__}: {exc}"[:200] + ", applied=False"}
 
 
+def _plan_benchmark_core(targets: list, *, probe_syms: list, ex_syms: list,
+                         exploit_acting: bool, probe_acting: bool, equity: float,
+                         bars_paths: list | None, sandbox: bool) -> dict:
+    """C20 / owner decision D14: hold `1 - active_gross` in the benchmark.
+
+    Flag OFF (`config.PC_BENCHMARK_CORE`, the default): returns enabled=False and
+    touches nothing. Flag ON: appends ONE `pc_broker.Target` for the core at its
+    WANTED weight; `plan_orders` then applies MAX_NAME_FRAC unchanged (the core
+    is clipped at 12% and the receipt says so). The core's own worst case is
+    priced on the panel sigma of the core symbol; over
+    `PC_WORST_CASE_MAX_FRAC_OF_EQUITY` with the sleeves, the core is shrunk
+    (gates only shrink). Never raises into the plan: a failure is a REFUSED line
+    and no core target."""
+    import backend.config as _cfg_live
+    from backend.services import benchmark_core as BC              # noqa: PLC0415
+    on = bool(getattr(_cfg_live, "PC_BENCHMARK_CORE", False))
+    if not on:
+        return BC.core_plan({}, enabled=False)
+    try:
+        from backend.services import pc_broker as PB               # noqa: PLC0415
+        from backend.services import pc_risk as PR                 # noqa: PLC0415
+        acting = {t.symbol: float(t.weight) for t in targets
+                  if (t.symbol in probe_syms and probe_acting)
+                  or (t.symbol in ex_syms and exploit_acting)}
+        core = BC.core_plan(acting, enabled=True)
+        if not core.get("applied"):
+            return core
+        if bars_paths:
+            sig = PR.panel_sigmas(Path(bars_paths[0]))
+        else:
+            sig = {} if sandbox else PR.panel_sigmas()
+        fb, fb_src = PR.fallback_sigma(PR.universe_stats(sig))
+        csig = float(sig.get(core["symbol"]) or fb)
+        wc = BC.worst_case(equity=equity, core_frac=core["deliver_weight"], core_sigma=csig,
+                           sleeve_weights=acting, sleeve_sigmas=sig, fallback_sigma=fb,
+                           label="core + acting sleeves")
+        want = core["want_weight"]
+        if not wc["passes_limit"]:
+            k = float(_config.PROBE_WORST_CASE_SIGMA)
+            room = wc["limit_frac"] * equity + wc["sleeves_k_sigma_usd"]   # sleeves are negative
+            core_max = max(0.0, room / (k * csig * equity)) if csig > 0 else 0.0
+            want = min(want, core_max)
+            core["status"] = "CORE_SHRUNK_BY_WORST_CASE"
+            core["line"] += f"; CORE_SHRUNK_BY_WORST_CASE to {want:.2%}"
+            wc = BC.worst_case(equity=equity, core_frac=min(want, core["max_name_frac"]),
+                               core_sigma=csig, sleeve_weights=acting, sleeve_sigmas=sig,
+                               fallback_sigma=fb, label="core + acting sleeves (shrunk)")
+        core["core_sigma"] = {"daily": csig, "source": ("panel" if sig.get(core["symbol"])
+                                                        else f"{fb_src} (no panel sigma)")}
+        core["worst_case"] = wc
+        core["worst_case_line"] = wc["line"]
+        core["target_weight_sent_to_plan_orders"] = want
+        if want <= 0:
+            core["applied"] = False
+            return core
+        targets.append(PB.Target(symbol=core["symbol"], weight=want,
+                                 reason=(f"BENCHMARK CORE (D14): 1 - active "
+                                         f"{core['active_gross']:.2%}")))
+        return core
+    except Exception as exc:                                       # noqa: BLE001
+        return {"enabled": True, "applied": False,
+                "symbol": str(getattr(_cfg_live, "PC_BENCHMARK_CORE_SYMBOL", "SPY")),
+                "line": f"benchmark core: REFUSED {type(exc).__name__}: {exc}"[:200]}
+
+
 def _order_path_gate(targets: list, *, snap: dict, equity: float, probe_syms: list,
                      ex_syms: list, exploit_acting: bool, probe_acting: bool,
                      probe_sigma: dict, bars_paths: list | None, sandbox: bool) -> dict:
@@ -1500,6 +1565,15 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         probe_sigma={x["ticker"]: float(x["vol_annual"]) / (252 ** 0.5) for x in sl
                      if isinstance(x.get("vol_annual"), (int, float)) and x["vol_annual"] > 0},
         bars_paths=bars_paths, sandbox=sandbox)
+    # ---- C20 / D14: the benchmark core (config.PC_BENCHMARK_CORE, default OFF) --
+    # AFTER the order-path gate, so the core is sized on the sleeves that will
+    # actually be held. Flag OFF: returns enabled=False, touches nothing, and the
+    # plan below is byte-identical (pinned by test_benchmark_core.py).
+    core = _plan_benchmark_core(
+        targets, probe_syms=[x["ticker"] for x in probe_rows], ex_syms=ex_syms,
+        exploit_acting=exploit_acting, probe_acting=probe_acting, equity=equity,
+        bars_paths=bars_paths, sandbox=sandbox)
+    core_syms = {core["symbol"]} if core.get("applied") else set()
     syms = [t.symbol for t in targets] + list(held)
     prices = PB.last_prices(syms) if syms else {}
     plans = PB.plan_orders(targets, equity=equity, held=held, prices=prices) if syms else []
@@ -1526,6 +1600,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     prior_probe = _prior_probe_holdings(folder, asof)
 
     def _state(sym: str) -> str:
+        if sym in core_syms:
+            return "CORE"
         if sym in probe_syms:
             return "PROBE"
         if sym in ex_syms:
@@ -1535,7 +1611,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     def _may_send(p) -> bool:
         st = _state(p.symbol)
         return p.qty > 0 and ((st in ("PROBE", "PROBE_EXIT") and probe_acting)
-                              or (st in ("EXPLOIT", "EXIT") and exploit_acting))
+                              or (st in ("EXPLOIT", "EXIT") and exploit_acting)
+                              or (st == "CORE" and mode == "paper_profit"))
 
     by_state: dict[str, int] = {}
     for p in plans:
@@ -1725,6 +1802,12 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
               "decision_story_line": story.get("line"),
               "news_tilt": {k: v for k, v in news_tilt.items() if k != "weights"},
               "news_tilt_line": news_tilt["line"]}
+    if core.get("enabled"):
+        # C20: only when the owner's flag is ON, so the OFF receipt is unchanged.
+        record["benchmark_core"] = core
+        record["benchmark_core_line"] = core["line"]
+        record["sendable_by_state"]["CORE"] = sum(
+            1 for p in to_send if _state(p.symbol) == "CORE")
     if not to_send:
         why = []
         if mode != "paper_profit":

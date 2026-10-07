@@ -30,6 +30,8 @@ _NO_RECEIPT = ("no Opportunity Explorer receipt on disk. It is written by "
 def _load() -> dict:
     try:
         blob = OPP.load_latest()
+        if blob is None:
+            blob = _published()
     except Exception as e:                                    # noqa: BLE001
         logger.exception("opportunities receipt read failed")
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}") from e
@@ -38,9 +40,26 @@ def _load() -> dict:
     return blob
 
 
+def _published() -> dict | None:
+    """C15 (2026-10-07; review C4 F6): no live receipt on this server (Railway builds from
+    git, and the receipt is untracked) -> the SANITISED copy in the tracked
+    `public_receipts/opportunities/latest.json`. Its click-through links are rebuilt from
+    the ticker (the copy carries no URLs); its age is the receipt's own `generated_utc`."""
+    from backend.services import publish_receipts as PR      # noqa: PLC0415
+    blob = PR.load_published("opportunities")
+    if blob is None:
+        return None
+    for lst in blob.get("lists") or []:
+        for r in lst.get("rows") or []:
+            r["links"] = OPP.links(r.get("ticker"))
+    blob["served_from"] = ("public_receipts/opportunities/latest.json (the sanitised public copy; no live "
+                           "receipt on this server)")
+    return blob
+
+
 def _envelope(blob: dict) -> dict:
     return {k: blob.get(k) for k in ("schema", "generated_utc", "asof", "run_id", "builder", "licence",
-                                     "legend", "inputs", "receipt_file", "skipped_receipts")} | {
+                                     "legend", "inputs", "receipt_file", "skipped_receipts", "served_from")} | {
         "lists": OPP.list_index(blob), "freshness": OPP.staleness(blob)}
 
 

@@ -22,6 +22,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from backend.services import legibility as L
 from backend.services import legibility_sanitise as S
+from backend.services import publish_receipts as PR
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/arena/v1", tags=["arena-v1"])
@@ -29,10 +30,17 @@ router = APIRouter(prefix="/api/arena/v1", tags=["arena-v1"])
 _TICKER_RE = re.compile(r"^[A-Za-z0-9.\-]{1,15}$")
 
 
-def serve(fn, kind: str, what: str, absent: str, **kw) -> dict:
-    """Build, 404 on absence, generic 500 on failure, sanitise by the kind's allow-list."""
+def serve(fn, kind: str, what: str, absent: str, published: Optional[str] = None, **kw) -> dict:
+    """Build, 404 on absence, generic 500 on failure, sanitise by the kind's allow-list.
+
+    C15 (2026-10-07): `published` names the page's copy in the TRACKED
+    `public_receipts/<published>/latest.json` (`publish_receipts`). It is served when the
+    live build finds nothing or fewer of the page's receipts (a Railway checkout), with ages
+    recomputed from each receipt's own stamp; the live receipts win otherwise."""
     try:
         out = fn(**kw)
+        if published:
+            out = PR.choose(published, out)
     except Exception as e:                                    # noqa: BLE001
         logger.exception("%s read failed", what)
         raise HTTPException(status_code=500, detail=f"{what}: internal error ({type(e).__name__})") from e
@@ -46,7 +54,7 @@ def get_latest() -> dict:
     return serve(L.arena_payload, "arena", "paper arena", (
         "no run-stamped ROI receipt (paper_accounts/roi_<date>T<hhmmss>Z.json) on disk. It is written by "
         "`python -m scripts.paper_accounts_roi` (the daily pass's paper_accounts step); this endpoint "
-        "reads one and never builds one."))
+        "reads one and never builds one."), published="arena")
 
 
 @router.get("/stories")
@@ -56,4 +64,4 @@ def get_stories(ticker: Optional[str] = Query(default=None), limit: int = Query(
     return serve(L.stories_payload, "arena_stories", "decision stories", (
         "no decision_story/stories_<YYYY-MM>.jsonl on disk. Stories are frozen by the PC-PAPER plan "
         "(`decision_story.freeze_plan`, C11) once per session; none has been written here yet."),
-        limit=limit, ticker=ticker)
+        published="arena_stories" if (ticker is None and limit == 200) else None, limit=limit, ticker=ticker)

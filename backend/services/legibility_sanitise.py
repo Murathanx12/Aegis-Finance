@@ -149,7 +149,8 @@ def keys(*names: str) -> dict:
 
 RECEIPT = keys("kind", "file", "stamp_utc", "age_hours", "stale_after_hours", "status", "line",
                "missing_because", "sha256", "role", "note")
-BASE = {**keys("schema", "page", "served_utc", "status"), "receipts": ListOf(RECEIPT),
+BASE = {**keys("schema", "page", "served_utc", "status", "served_from", "published_utc"),
+        "receipts": ListOf(RECEIPT),
         "missing_because": MapOf(LEAF)}
 
 BOOK = {**keys("account", "family", "category", "twin_kind", "twin_of", "strategy", "book_id", "status",
@@ -284,7 +285,44 @@ HEALTH = {**BASE, **keys("generated_utc", "health_line", "exit_code", "read_me_f
           "task_owners": ListOf(keys("task", "receipt", "cadence_h", "session_only", "retired", "registered_only",
                                      "hash_rule_off", "state", "verdict", "detail", "missing_because"))}
 
+# C15 (2026-10-07): the Opportunity Explorer receipt, for its PUBLISHED copy
+# (`publish_receipts`). Its router serves the live receipt as before; the tracked copy in
+# `public_receipts/opportunities/` passes this allow-list first. URLs are dropped (the
+# scrubber would strip their host); the page's click-through links are rebuilt from the
+# ticker at serve time (`opportunities.links`). `analyst_reputation` is not rendered by the
+# page (C18 labelled it plumbing, NOT_PERSISTENT_OOS) and is not published.
+OPP_ROW = {**keys("ticker", "company_name", "company_name_source", "exchange", "exchange_source", "currency",
+                  "is_foreign", "is_etf", "list_id", "weight", "rank", "list_score", "eligibility", "sector",
+                  "sector_source", "theme", "freeze_date", "falsifier", "horizon", "lane", "risk_flags",
+                  "last_update_utc"),
+           "price": keys("value", "date", "source", "currency"),
+           "analyst": MapOf(LEAF), "upside": MapOf(LEAF), "revision": MapOf(LEAF), "move_score": MapOf(LEAF),
+           "analyst_stance": MapOf(LEAF),
+           "why_picked": ListOf(keys("reason", "service")),
+           "card": keys("day", "verdict", "confidence"),
+           "later_commentary": keys("day", "verdict", "confidence", "text", "note"),
+           "catalysts": ListOf(keys("date", "kind", "detail", "source")),
+           "news": ListOf(keys("title", "published_utc", "first_seen_utc", "source")),
+           "insiders": {**keys("window_days", "covers_from", "n_buys", "n_sells", "buy_usd", "sell_usd",
+                               "n_insiders", "n_10b5_1", "source", "table_covers_from_utc"),
+                        "recent": ListOf(keys("public_utc", "transaction_date", "owner", "role", "side", "shares",
+                                              "value_usd", "rule_10b5_1"))},
+           "short_interest": MapOf(LEAF),
+           "politicians": {**keys("window_days", "n", "source"),
+                           "recent": ListOf(keys("member", "tx_type", "trade_date", "disclosure_date",
+                                                 "amount_lo", "amount_hi"))},
+           "evidence": keys("label", "sessions", "note"),
+           "risk_checks": MapOf(keys("on", "detail")),
+           "missing_because": MapOf(LEAF)}
+OPPORTUNITIES = {**keys("schema", "generated_utc", "asof", "run_id", "builder", "licence", "receipt_file",
+                        "served_from", "published_utc", "n_lists_dropped_owner_personal"),
+                 "legend": MapOf(LEAF), "inputs": MapOf(LEAF),
+                 "lists": ListOf({**keys("list_id", "title", "kind", "label", "asof", "source", "horizon",
+                                         "evidence_default", "magnitude_ranking", "n_high_risk_innovation",
+                                         "n_rows_in_receipt", "rows_trimmed_note"),
+                                  "coverage": MapOf(LEAF), "rows": ListOf(OPP_ROW)})}
+
 SPEC = {"arena": ARENA, "arena_stories": STORIES, "forecast_lab": FORECAST, "theory_lab": THEORY,
-        "system_health": HEALTH}
+        "system_health": HEALTH, "opportunities": OPPORTUNITIES}
 
 __all__ = ["DENY_KEYS", "LEAF", "ListOf", "MapOf", "SPEC", "sanitise", "scrub_str"]

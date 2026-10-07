@@ -829,14 +829,19 @@ def forecast_lab_payload(now: Optional[datetime] = None) -> Optional[dict]:
     calib_note = None
     skill = None
     if rep:
-        counts, why = calibration_date_counts(rep)
+        # C15 (2026-10-07): the reputation WRITER now emits `n_dates` / `date_blocks` per bin;
+        # the reader re-bins the ledger only for an older receipt that lacks them.
+        writer_counts = all(c.get("n_dates") is not None for rows in (rep.get("calibration") or {}).values()
+                            for c in rows)
+        counts, why = ({}, None) if writer_counts else calibration_date_counts(rep)
         calibration = {}
         for hk, rows in (rep.get("calibration") or {}).items():
             out = []
             for c in rows:
                 n = int(c.get("n") or 0)
                 lo, hi = wilson(n, _f(c.get("base_rate")))
-                dc = counts.get((hk, c.get("observable"), int(c.get("bin") or 0)))
+                dc = ({"n_dates": int(c["n_dates"]), "n_date_blocks": c.get("date_blocks")} if writer_counts
+                      else counts.get((hk, c.get("observable"), int(c.get("bin") or 0))))
                 out.append({**{k: c.get(k) for k in ("arm_prefix", "horizon", "observable", "bin", "n", "p_mean",
                                                        "p_lo", "p_hi", "base_rate")},
                             "wilson_lo": lo, "wilson_hi": hi,

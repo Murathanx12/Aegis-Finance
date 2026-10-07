@@ -254,7 +254,15 @@ def step_append(run_id: str = "manual") -> dict:
     pd.DataFrame({"date": cal}).to_parquet(C.TABLE_PATH.parent / "calendar.parquet", index=False)
     # F6: revisions are appended only AFTER the table write is verified, so a failed write never
     # leaves the log holding revisions of a table that did not land (and suppresses the retry's)
-    rv = MB.append_revisions(revs, REVISIONS_PATH)
+    # C15 (review C5 F9): a TIMELINE per key (a flip-flop A->B->A is two revisions, the second a
+    # REVERTED_TO_STORED row for a checked tail date), then closed months rotate to a tracked
+    # monthly parquet + committed manifest. A rotation failure never fails the night.
+    rv = MB.append_revisions(revs, REVISIONS_PATH, checked_from=tail_start, run_id=run_id,
+                             asof_utc=datetime.now(timezone.utc).isoformat(timespec="seconds"))
+    try:
+        rv["rotation"] = MB.rotate_revisions(REVISIONS_PATH)
+    except Exception as exc:                                   # noqa: BLE001 -- named on the receipt
+        rv["rotation"] = {"status": "REFUSED", "why": f"{type(exc).__name__}: {str(exc)[:200]}"}
     stored_grid_dates = set(tab.loc[tab["on_grid"].astype(bool), "date"])
     new_grid = sorted(set(new.loc[new["on_grid"].astype(bool), "date"]) - stored_grid_dates)
     vintage = MB.record_vintage(new_grid, vendor_through, cal, run_id)

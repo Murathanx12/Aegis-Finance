@@ -1,0 +1,109 @@
+{
+ "schema": "fleet_manager_contract/3-prepared",
+ "role": "spy_control",
+ "version": "v3",
+ "account": "hack5",
+ "licence": "PRODUCT_EXPERIMENT",
+ "status": "PREPARED_NOT_SEEDED",
+ "earliest_seed": "2026-10-26",
+ "lineage": {
+  "account": "hack5",
+  "v2_policy_hash": "98f677b18293c710",
+  "v2_alpha_source": "market-like CONTROL: ~95% SPY, the rest cash (no selection, no view)",
+  "v2_frozen_utc": "2026-09-29T16:01:42+00:00"
+ },
+ "personality": "market control (no personality: the benchmark itself)",
+ "objective": "terminal wealth under the declared personality (docs/OPTIMUS_OBJECTIVE.md \u00a70), graded daily vs SPY and vs the frozen twin; the question is whether this alpha source's errors differ from the other five accounts'; no claim of skill",
+ "costs": {
+  "assumed_bps_per_side": 10.0,
+  "fill_convention": "DAY limit at ask x (1+10bps) for buys and bid x (1-10bps) for sells; an unfilled limit is not traded; last trade when the IEX quote is one-sided or wider than 2%"
+ },
+ "reference_asof": "2026-10-06",
+ "llm_authority": "none: an LLM proposes; deterministic code sizes, stops and exits",
+ "owner_action_required": [
+  "not before 2026-10-26 (roadmap \u00a77: no new paper book before then)",
+  "archive first: python -m scripts.fleet_v3_prepare --archive (copies fleet_manager state/, decisions.jsonl, grades.jsonl, modes.json, contracts/ with a sha256 manifest; copies, never moves)",
+  "write a last broker-truth read: python -m scripts.fleet_manager_run --pass open --roles hack5 (no --live: DRY, reads and records only)",
+  "reset hack5 in the broker UI if wanted (paper reset = the owner's act)",
+  "teach scripts/fleet_manager_run.py a v3 path FIRST (today it resolves only v1/v2 and would silently fall back to v1 terms for 'v3')",
+  "activate = re-freeze this body into fleet_manager/contracts/ with status changed and the seed block filled; check fleet_v3_contracts.activation_diff(...)['same_rule']",
+  "set modes.json hack5 contract=v3, maintenance/entries DRY first, LIVE after one clean DRY pass"
+ ],
+ "alpha_source": "market-like CONTROL: 95% SPY, the rest cash (no selection, no view)",
+ "inputs": [
+  {
+   "name": "SPY quote",
+   "read": "broker"
+  }
+ ],
+ "selection": {
+  "kind": "market_control",
+  "symbol": "SPY",
+  "weight": 0.95,
+  "rule": "hold 95% of equity in SPY, the rest cash; no view; no drift trades below the minimum order",
+  "horizon_sessions": null
+ },
+ "caps": {
+  "max_gross_frac": 1.0,
+  "max_name_frac": 0.1,
+  "daily_turnover_frac": 1.0,
+  "max_orders_per_run": 60,
+  "min_order_usd": 250.0,
+  "shorting": false,
+  "new_options": false,
+  "leverage": false,
+  "name_cap_overrides": {
+   "SPY": 0.95
+  }
+ },
+ "exits": "none (the control holds); the disaster stop only",
+ "stop_rule": {
+  "quoted_in": "daily sigma",
+  "sigma": "63-session sd of close-to-close returns on the bar-defect-screened panel (Alpaca daily bars when a name is not in the panel)",
+  "k_sigma": 3.0,
+  "min_frac": 0.1,
+  "max_frac": 0.1,
+  "distance": "clip(k_sigma x sigma, min_frac, max_frac) of the reference price",
+  "never_loosen": "a replaced stop is never below the stop it replaces",
+  "order": "GTC sell stop for the full long quantity; renewed within 7 days of its expiry",
+  "examples": [
+   {
+    "at": "SPY",
+    "daily_sigma": 0.006966830386706793,
+    "stop_pct": 0.1,
+    "stop_in_sigma": 14.353729666048295,
+    "how": "3 x sigma 0.0070 = 0.0209, clipped to [0.100, 0.100] -> 0.1000"
+   }
+  ],
+  "why": "a DISASTER stop far outside noise: a control stopped by a wiggle stops being the market"
+ },
+ "twin": {
+  "kind": "ideal_control",
+  "weights": {
+   "SPY": 0.95
+  }
+ },
+ "worst_case": {
+  "equity_usd": 100000.0,
+  "n_names": 1,
+  "notional_pct": 0.95,
+  "gross_over_equity": 0.95,
+  "k_sigma": 3.0,
+  "sigma_ref": 0.006966830386706793,
+  "sigma_ref_source": "SPY 63-session panel sigma",
+  "k_sigma_day_usd_uncapped": -1985.5466602114357,
+  "k_sigma_day_limit_frac": 0.1,
+  "entry_gross_scale_at_sigma_ref": 1.0,
+  "k_sigma_day_usd_after_cap": -1985.5466602114357,
+  "all_stops_hit_usd": -9500.0,
+  "no_stop_ceiling_usd": -95000.0,
+  "gap_note": "a stop is not a floor: an overnight gap fills below it",
+  "spy_worst_panel_day": -0.05855053796029697,
+  "spy_worst_panel_day_usd": -5562.301106228212,
+  "line": "1 x 95.00% x 10% stop = -$9,500 if every stop fills at its distance; 3-sigma day at 0.70% = -$1,986 (capped at 10% -> -$1,986 by scaling gross x1.00); sum|notional|/equity 0.95; no-stop ceiling -$95,000"
+ },
+ "kill_rule": "never killed: the control is the yardstick; only the disaster stop acts",
+ "rule_hash": "e3b390ba10d481f5",
+ "policy_hash": "430c485cd5e8df7f",
+ "frozen_utc": "2026-10-06T23:55:36+00:00"
+}

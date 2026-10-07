@@ -1584,6 +1584,22 @@ def _case_regret_ledger():
             "pnl() on a decision with no round-trip cost declared")
 
 
+def _case_fleet_v3_contracts():
+    """Fleet v3 contracts (2026-10-06): a role with no prepared contract refuses.
+
+    The missing input is THE FROZEN CONTRACT FILE. Loading a role from a folder
+    that holds no prepared contract must refuse by type; returning an empty body
+    would let a seed proceed with no frozen policy hash behind it.
+    """
+    import tempfile
+    from pathlib import Path
+
+    from backend.services.fleet_v3_contracts import PreparedRefusal, load_prepared
+    empty = Path(tempfile.mkdtemp())
+    return (lambda: load_prepared("hack1", base=empty), PreparedRefusal,
+            "load_prepared() for a role whose contract file does not exist")
+
+
 def _case_analyst_reputation():
     """Analyst reputation (C18, 2026-10-07): no revisions file, no weights.
 
@@ -1840,6 +1856,7 @@ CASES = {
     "source_scorecard": _case_source_scorecard,
     "ledger_archive": _case_ledger_archive,
     "regret_ledger": _case_regret_ledger,
+    "fleet_v3_contracts": _case_fleet_v3_contracts,
     "analyst_reputation": _case_analyst_reputation,
     "snowball_shadow": _case_snowball_shadow,
 }

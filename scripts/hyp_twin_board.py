@@ -2,6 +2,9 @@
 convention (2026-09-30; shared-code fix 2026-10-06, CHUNK C1 of ROADMAP_2026-10-06_V1_BETA).
 
     python -m scripts.hyp_twin_board --run-id <R>        # ~30 min, resumable (jsonl), $0
+    python -m scripts.hyp_twin_board --run-id <S> --only r1,r2 --supersedes <R> --supersedes-why "..."
+                                                          # a SUPPLEMENT that replaces rows of board <R>
+    python -m scripts.hyp_twin_board --regenerate-supersessions   # board_supersessions.json from summaries
 
 The 09-29/09-30 bridges board charged the matched twin a full Corwin-Schultz round trip
 every month while the rule paid only its own measured turnover; that asymmetry WAS the twin
@@ -238,11 +241,29 @@ def summarise(ok: list) -> dict:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--run-id", required=True)
+    ap.add_argument("--run-id")
     ap.add_argument("--only", default="")
+    ap.add_argument("--supersedes", action="append", default=[],
+                    help="a SUPPLEMENT run (with --only): the full board run id whose rows for the scored "
+                         "rules this run replaces (repeatable). Stamped as `supersedes_rows` in the summary.")
+    ap.add_argument("--supersedes-why", default="",
+                    help="why the supplement replaces those rows (required with --supersedes)")
+    ap.add_argument("--regenerate-supersessions", action="store_true",
+                    help="rewrite hyp_lab/board_supersessions.json from the summaries and exit (no scoring)")
     ap.add_argument("--twin", choices=TWIN_KINDS, default="basket",
                     help="basket = the C1 fair board's monthly-rebuilt twin; sticky = C1b")
     a = ap.parse_args(argv)
+    if a.regenerate_supersessions:
+        out = write_supersessions()
+        say(f"-> {SUPERSESSIONS_FILE}: {len(out['supersessions'])} supersession(s) from "
+            f"{len(out['from_summaries'])} stamped summar(ies) + {len(out['from_backfill'])} backfilled")
+        return 0
+    if not a.run_id:
+        say("REFUSED: --run-id is required to score a board")
+        return 2
+    if a.supersedes and not (a.only and a.supersedes_why.strip()):
+        say("REFUSED: --supersedes marks a SUPPLEMENT: it needs --only <rules> and --supersedes-why")
+        return 2
     from backend.services import matched_twins as MT                 # noqa: PLC0415
     from backend.services import strategy_library as SL              # noqa: PLC0415
     from backend import config as C                                  # noqa: PLC0415
@@ -369,9 +390,109 @@ def main(argv=None) -> int:
                                                   if a.twin == "basket" else
                                                   "nothing: a sticky-twin board BESIDE the basket board"),
                     "sticky_tolerance": (C.STICKY_TWIN_TURNOVER_TOLERANCE if a.twin == "sticky" else None),
+                    # C15: row-level supersession is OWNED by the writer. Only rows scored OK here
+                    # supersede anything; a refused supplement row leaves the full board's row standing.
+                    "supersedes_rows": [{"run_id": sr, "rule": r["rule"]} for sr in a.supersedes for r in ok],
+                    "supersedes_why": a.supersedes_why.strip() or None,
                     "summary": summ, "seconds": round(time.time() - t0, 1)})
     say(f"-> summary {summ}")
+    if a.supersedes:
+        sup = write_supersessions()
+        say(f"-> {SUPERSESSIONS_FILE} regenerated: {len(sup['supersessions'])} supersession(s)")
     return 0
+
+
+# =========================================== row supersession (C15, 2026-10-07)
+#
+# The C19 Theory Lab overlays supplement rows onto a full board from
+# `hyp_lab/board_supersessions.json`. On 10-07 that file was written BY HAND by the
+# reader fix (C19 review F2); the writer now owns it: a supplement run stamps
+# `supersedes_rows: [{run_id, rule}]` into its summary and `write_supersessions`
+# regenerates the file from every summary. The reader's schema is unchanged.
+
+SUPERSESSIONS_FILE = "board_supersessions.json"
+SUPERSESSIONS_SCHEMA = "hyp_lab/board_supersessions/2"
+_SUMMARY_GLOB = "twin_board_SUMMARY_*.json"
+
+#: Supplements written BEFORE the writer stamped `supersedes_rows` (a run id is written
+#: once, so their summaries are never edited). Source: docs/research_notes/2026-10-06/
+#: sticky_twin_2026-10-06.md F4 -- `amihud` was not in rule.requires, so the two
+#: liquidity-weighted rules were still EW in the full boards; the supplements re-score them.
+_F4_WHY = "rule weights (inv_amihud) were silently dropped in the full board; the supplement carries them"
+_F4_SRC = "docs/research_notes/2026-10-06/sticky_twin_2026-10-06.md F4"
+BACKFILL_SUPERSEDES: dict = {
+    "STK_2026-10-07_3": {"runs": ["STK_2026-10-07_2"], "why": _F4_WHY, "source": _F4_SRC},
+    "FT_2026-10-07_2": {"runs": ["FT_2026-10-07_1"], "why": _F4_WHY, "source": _F4_SRC},
+}
+
+
+def _ok_rules(folder: Path, run_id: str) -> list:
+    p = folder / f"twin_board_{run_id}.jsonl"
+    if not p.exists():
+        return []
+    out = []
+    for ln in p.read_text(encoding="utf-8").splitlines():
+        try:
+            r = json.loads(ln)
+        except ValueError:
+            continue
+        if r.get("status") == "OK" and r.get("rule") not in out:
+            out.append(r["rule"])
+    return out
+
+
+def supersessions_from_summaries(folder: Path | None = None) -> dict:
+    """PURE over the folder: one supersession per (supplement run, superseded run), from
+    each summary's `supersedes_rows` -- or, for a pre-stamp supplement, from
+    `BACKFILL_SUPERSEDES` with the supplement's OK rows. Same shape the reader reads."""
+    folder = Path(folder or OUT)
+    sups, stamped, backfilled = [], [], []
+    for p in sorted(folder.glob(_SUMMARY_GLOB)):
+        try:
+            s = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        run = str(s.get("run_id") or p.stem.replace("twin_board_SUMMARY_", ""))
+        by_run: dict = {}
+        why = s.get("supersedes_why")
+        stamp = "summary.supersedes_rows"
+        if s.get("supersedes_rows"):
+            for r in s["supersedes_rows"]:
+                lst = by_run.setdefault(str(r["run_id"]), [])
+                if r["rule"] not in lst:
+                    lst.append(r["rule"])
+            stamped.append(p.name)
+        elif run in BACKFILL_SUPERSEDES:
+            bf = BACKFILL_SUPERSEDES[run]
+            rules = _ok_rules(folder, run)
+            for sr in bf["runs"]:
+                by_run[sr] = list(rules)
+            why, stamp = bf["why"], f"hyp_twin_board.BACKFILL_SUPERSEDES ({bf['source']})"
+            backfilled.append(p.name)
+        for sr, rules in by_run.items():
+            if rules:
+                sups.append({"supplement_run": run, "twin_kind": s.get("twin_kind"), "supersedes_runs": [sr],
+                             "rules": rules, "why": why, "stamp": stamp})
+    return {"supersessions": sups, "from_summaries": stamped, "from_backfill": backfilled}
+
+
+def write_supersessions(folder: Path | None = None) -> dict:
+    """Regenerate `board_supersessions.json` from the summaries (temp -> verify -> replace)."""
+    import hashlib                                                   # noqa: PLC0415
+    folder = Path(folder or OUT)
+    got = supersessions_from_summaries(folder)
+    body = {"schema": SUPERSESSIONS_SCHEMA, "written_utc": _now(),
+            "written_by": "scripts/hyp_twin_board.write_supersessions (the board WRITER owns row supersession)",
+            "source": "every twin_board_SUMMARY_*.json's supersedes_rows; pre-stamp supplements from "
+                      "hyp_twin_board.BACKFILL_SUPERSEDES",
+            **got}
+    body["sha256"] = hashlib.sha256(json.dumps(got["supersessions"], sort_keys=True).encode("utf-8")).hexdigest()
+    p = folder / SUPERSESSIONS_FILE
+    tmp = p.with_suffix(".tmp")
+    tmp.write_text(json.dumps(body, indent=1), encoding="utf-8")
+    json.loads(tmp.read_text(encoding="utf-8"))
+    tmp.replace(p)
+    return body
 
 
 def _r(x) -> str:

@@ -1,0 +1,124 @@
+{
+ "schema": "fleet_manager_contract/3-prepared",
+ "role": "innovation",
+ "version": "v3",
+ "account": "UNASSIGNED",
+ "licence": "PRODUCT_EXPERIMENT",
+ "status": "PREPARED_NOT_SEEDED",
+ "earliest_seed": "2026-10-26",
+ "lineage": null,
+ "personality": "extreme growth",
+ "objective": "terminal wealth under the declared personality (docs/OPTIMUS_OBJECTIVE.md \u00a70), graded daily vs SPY and vs the frozen twin; the question is whether this alpha source's errors differ from the other five accounts'; no claim of skill",
+ "costs": {
+  "assumed_bps_per_side": 30.0,
+  "fill_convention": "DAY limit at ask x (1+10bps) for buys and bid x (1-10bps) for sells; an unfilled limit is not traded; last trade when the IEX quote is one-sided or wider than 2%"
+ },
+ "reference_asof": "2026-10-06",
+ "llm_authority": "none: an LLM proposes; deterministic code sizes, stops and exits",
+ "owner_action_required": [
+  "not before 2026-10-26 (roadmap \u00a77: no new paper book before then)",
+  "archive first: python -m scripts.fleet_v3_prepare --archive (copies fleet_manager state/, decisions.jsonl, grades.jsonl, modes.json, contracts/ with a sha256 manifest; copies, never moves)",
+  "write a last broker-truth read: python -m scripts.fleet_manager_run --pass open --roles UNASSIGNED (no --live: DRY, reads and records only)",
+  "assign an account: regenerate hack3's keys in the broker UI (hack3 is retired, 401) or open a new paper account; name it here by a new version",
+  "teach scripts/fleet_manager_run.py a v3 path FIRST (today it resolves only v1/v2 and would silently fall back to v1 terms for 'v3')",
+  "activate = re-freeze this body into fleet_manager/contracts/ with status changed and the seed block filled; check fleet_v3_contracts.activation_diff(...)['same_rule']",
+  "set modes.json UNASSIGNED contract=v3, maintenance/entries DRY first, LIVE after one clean DRY pass"
+ ],
+ "alpha_source": "the Opportunity Explorer's HIGH_RISK_INNOVATION names (>= 2 of 3 flags: COVERAGE, BINARY_EVENT, RUNWAY), deliberately small",
+ "inputs": [
+  {
+   "name": "Opportunity Explorer receipt",
+   "read": "services.opportunities.load_latest",
+   "filter": "row.lane == 'HIGH_RISK_INNOVATION' (config.OPPORTUNITIES_* thresholds)",
+   "max_age_days": 7
+  }
+ ],
+ "selection": {
+  "kind": "innovation_flags",
+  "rule": "all HIGH_RISK_INNOVATION names from the newest receipt, one line per issuer, ranked by the Explorer's list_score; base weight 2%; THIN-COVERAGE PENALTY: x0.5 when the COVERAGE flag fires; BINARY-EVENT SIZING: a name with a binary event inside the horizon is sized so a 70% gap costs <= 0.7% of equity, i.e. <= 1%; HARD 2% per name; at most 15 names, 30% gross",
+  "horizon_sessions": 63
+ },
+ "caps": {
+  "max_gross_frac": 0.3,
+  "max_name_frac": 0.02,
+  "daily_turnover_frac": 0.5,
+  "max_orders_per_run": 60,
+  "min_order_usd": 250.0,
+  "shorting": false,
+  "new_options": false,
+  "leverage": false,
+  "max_names": 15,
+  "binary_event_max_name_frac": 0.01,
+  "thin_coverage_multiplier": 0.5
+ },
+ "exits": "63 sessions -> cash; resting sigma stops; a binary event is NOT stopped through by design",
+ "stop_rule": {
+  "quoted_in": "daily sigma",
+  "sigma": "63-session sd of close-to-close returns on the bar-defect-screened panel (Alpaca daily bars when a name is not in the panel)",
+  "k_sigma": 3.0,
+  "min_frac": 0.06,
+  "max_frac": 0.2,
+  "distance": "clip(k_sigma x sigma, min_frac, max_frac) of the reference price",
+  "never_loosen": "a replaced stop is never below the stop it replaces",
+  "order": "GTC sell stop for the full long quantity; renewed within 7 days of its expiry",
+  "examples": [
+   {
+    "at": "universe p50",
+    "daily_sigma": 0.02501845394667117,
+    "stop_pct": 0.07505536184001352,
+    "stop_in_sigma": 3.0,
+    "how": "3 x sigma 0.0250 = 0.0751"
+   },
+   {
+    "at": "universe p90",
+    "daily_sigma": 0.049209219472656204,
+    "stop_pct": 0.1476276584179686,
+    "stop_in_sigma": 2.9999999999999996,
+    "how": "3 x sigma 0.0492 = 0.1476"
+   },
+   {
+    "at": "pool max",
+    "daily_sigma": 0.13531040089384547,
+    "stop_pct": 0.2,
+    "stop_in_sigma": 1.4780829757270857,
+    "how": "3 x sigma 0.1353 = 0.4059, clipped to [0.060, 0.200] -> 0.2000"
+   }
+  ],
+  "why": "small names need room; a stop cannot protect a binary gap, so the binary-event cap is the protection, not the stop"
+ },
+ "twin": {
+  "kind": "sticky_matched_twin",
+  "construction": "TWIN_STICKY_v1",
+  "declaration": "docs/research_notes/2026-10-06/DECLARATION_TWIN_STICKY_v1.json",
+  "rule": "for each name entered, one partner drawn from that name's size x vol x 12-1 cell as of the entry date, held until the role exits the name; redrawn on death or collision; partner carries the name's weight; 21 draws seeded seed_for(role, j); both legs pay the same cost; graded daily as a virtual book (not executed)",
+  "second_twin": "a random draw from the SAME flagged pool at the same weights (separates 'picking among flagged names' from 'holding flagged names')"
+ },
+ "worst_case": {
+  "equity_usd": 100000.0,
+  "n_names": 15,
+  "notional_pct": 0.02,
+  "gross_over_equity": 0.3,
+  "k_sigma": 3.0,
+  "sigma_ref": 0.13531040089384547,
+  "sigma_ref_source": "max(universe p90, the flagged pool's highest sigma)",
+  "k_sigma_day_usd_uncapped": -12177.93608044609,
+  "k_sigma_day_limit_frac": 0.1,
+  "entry_gross_scale_at_sigma_ref": 0.8211572087372699,
+  "k_sigma_day_usd_after_cap": -10000.0,
+  "all_stops_hit_usd": -6000.0,
+  "no_stop_ceiling_usd": -30000.0,
+  "gap_note": "a stop is not a floor: an overnight gap fills below it",
+  "binary_gap_usd": -10500.0,
+  "binary_gap_case": {
+   "n": 15,
+   "weight": 0.01,
+   "gap": 0.7,
+   "case": "every name binary at its 1% cap, all gap -70% on one day"
+  },
+  "line": "15 x 2.00% x 20% stop = -$6,000 if every stop fills at its distance; 3-sigma day at 13.53% = -$12,178 (capped at 10% -> -$10,000 by scaling gross x0.82); sum|notional|/equity 0.30; no-stop ceiling -$30,000; binary gap -$10,500"
+ },
+ "kill_rule": "account drawdown >= 15% -> flatten, DEPRIORITIZED; at 63 sessions excess <= 0 vs both twins and SPY -> DEPRIORITIZED; Explorer receipt older than 7 days -> no entries",
+ "rule_hash": "cd05695fc5c6ec9f",
+ "policy_hash": "1d9146ee44a98dc6",
+ "frozen_utc": "2026-10-06T23:55:36+00:00"
+}

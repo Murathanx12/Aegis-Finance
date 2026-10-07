@@ -1,0 +1,378 @@
+{
+ "schema": "fleet_v3_prepare/1",
+ "run_id": "20261006T235536Z",
+ "chunk": "C20",
+ "status": "PREPARED_NOT_SEEDED",
+ "seeded": false,
+ "orders": 0,
+ "reference": {
+  "asof": "2026-10-06",
+  "universe_sigma": {
+   "p50": 0.02501845394667117,
+   "p75": 0.036564440658452234,
+   "p90": 0.049209219472656204,
+   "n": 3057
+  },
+  "spy_sigma": 0.006966830386706793,
+  "spy_worst_day": -0.05855053796029697,
+  "spy_worst_day_date": "2025-04-04",
+  "spy_n_returns": 440,
+  "candidate_sigma": {
+   "thematic": 0.06708566277010515,
+   "revision_snowball": 0.0504152764011538,
+   "innovation": 0.13531040089384547
+  },
+  "innovation_pool": {
+   "n": 47,
+   "receipt": "opportunities_2026-10-06_20261006T225957Z.json"
+  },
+  "quant": {
+   "rule": "eligible = status OK on BOTH boards AND pure_selection t >= 2 (full sample) on the basket fair twin AND on the sticky twin (TWIN_STICKY_v1) AND net_minus_market t >= 2 in the validation window (2009-2016, the 'validate' block). The book holds the eligible rules' current picks equally across rules; no eligible rule -> HOLD CASH, by rule, until a re-run board makes one eligible (a new board is read only at the monthly rebalance and its id is recorded on the decision)",
+   "boards": {
+    "fair": [
+     "twin_board_FT_2026-10-07_1.jsonl",
+     "twin_board_FT_2026-10-07_2.jsonl"
+    ],
+    "sticky": [
+     "twin_board_STK_2026-10-07_2.jsonl",
+     "twin_board_STK_2026-10-07_3.jsonl"
+    ]
+   },
+   "n_rules_both_ok": 277,
+   "n_pure_selection_t2_both_twins": 27,
+   "pure_selection_t2_both_twins": [
+    "cascade_entry_timing",
+    "cash_lowvol",
+    "co03_reversal_in_high_margin",
+    "div_lead_earn_mom",
+    "ear_flow",
+    "flow_acceleration",
+    "flow_in_winners",
+    "flow_rule",
+    "frog_in_pan",
+    "frog_in_pan_trend",
+    "frog_secrel",
+    "gh02_five_price_factors_ivw",
+    "ibes_skill_net_raises",
+    "mom_12_1_large",
+    "mom_flow_trend",
+    "mom_in_calm",
+    "net_raises",
+    "net_raises_trend",
+    "px_vs_ma200_large",
+    "qc623_mom63_liquidity_weighted",
+    "qc629_multimom_above_trend_gated",
+    "quality_composite_secrel",
+    "rd_intensity",
+    "target_change",
+    "trend_quality_trend",
+    "unskilled_mom",
+    "upgrades_net_90"
+   ],
+   "eligible": [],
+   "n_eligible": 0,
+   "today": "HOLD_CASH"
+  },
+  "lineage": {
+   "thematic": {
+    "account": "hack1",
+    "v2_policy_hash": "bdae86290ea38481",
+    "v2_alpha_source": "human + AI thematic curation (the owner's themes: AI power, memory/foundry, prediction markets, nuclear/resources, biotech catalysts)",
+    "v2_frozen_utc": "2026-09-29T13:37:42+00:00"
+   },
+   "revision_snowball": {
+    "account": "hack2",
+    "v2_policy_hash": "2301fa30c7b851df",
+    "v2_alpha_source": "analyst revision flow (net raises x firms, 90 days, >= 3 firms)",
+    "v2_frozen_utc": "2026-09-29T13:37:43+00:00"
+   },
+   "world_news": {
+    "account": "hack6",
+    "v2_policy_hash": "12fa05317df05ce1",
+    "v2_alpha_source": "world-digest typed implications through SHADOW_NEWS_v0's frozen news_signal (d > 0 only), fixed 1% of equity per name, <= 10 names, 5 sessions",
+    "v2_frozen_utc": "2026-09-29T13:37:49+00:00"
+   },
+   "quant_ensemble": {
+    "account": "hack4",
+    "v2_policy_hash": "a0c5313766c52c9a",
+    "v2_alpha_source": "the engine's candidate funnel (PROBE shortlist) sized by 1/sigma_63 (size-of-move / risk-parity weighting)",
+    "v2_frozen_utc": "2026-09-29T13:37:46+00:00"
+   },
+   "innovation": null,
+   "spy_control": {
+    "account": "hack5",
+    "v2_policy_hash": "98f677b18293c710",
+    "v2_alpha_source": "market-like CONTROL: ~95% SPY, the rest cash (no selection, no view)",
+    "v2_frozen_utc": "2026-09-29T16:01:42+00:00"
+   }
+  }
+ },
+ "contracts": [
+  {
+   "role": "thematic",
+   "account": "hack1",
+   "policy_hash": "8134a10a21a23ad5",
+   "rule_hash": "610fb02743fb17be",
+   "source": "human + AI thematic curation: the owner's themes, candidates from the Opportunity Explorer's curated lists",
+   "gross_cap": 1.0,
+   "name_cap": 0.1,
+   "stop": "3 sigma, clip [4%, 12%]",
+   "worst_case_line": "10 x 10.00% x 12% stop = -$12,000 if every stop fills at its distance; 3-sigma day at 6.71% = -$20,126 (capped at 10% -> -$10,000 by scaling gross x0.50); sum|notional|/equity 1.00; no-stop ceiling -$100,000",
+   "twin": "sticky_matched_twin",
+   "kill_rule": "account drawdown >= 20% from its v3 high-water -> flatten to cash, DEPRIORITIZED; at 63 sessions, excess <= 0 vs BOTH the twin and SPY -> DEPRIORITIZED (no new entries; held names run to horizon). MECHANISM_REJECTED is never issued by this rule"
+  },
+  {
+   "role": "revision_snowball",
+   "account": "hack2",
+   "policy_hash": "228de1efcb1027ff",
+   "rule_hash": "53939865c9d8602d",
+   "source": "analyst revision flow (net raises x firms, 90 days, >= 3 firms) with the snowball follow-through as an ORDER only, never a weight",
+   "gross_cap": 1.0,
+   "name_cap": 0.05,
+   "stop": "3 sigma, clip [4%, 12%]",
+   "worst_case_line": "20 x 5.00% x 12% stop = -$12,000 if every stop fills at its distance; 3-sigma day at 5.04% = -$15,125 (capped at 10% -> -$10,000 by scaling gross x0.66); sum|notional|/equity 1.00; no-stop ceiling -$100,000",
+   "twin": "sticky_matched_twin",
+   "kill_rule": "account drawdown >= 20% -> flatten, DEPRIORITIZED; at 63 sessions excess <= 0 vs both twin and SPY -> DEPRIORITIZED; revision file older than 7 days -> no rebalance that day (REFUSE, not kill)"
+  },
+  {
+   "role": "world_news",
+   "account": "hack6",
+   "policy_hash": "15fcfd17d80f1f4b",
+   "rule_hash": "dc49d391f4a120a4",
+   "source": "world-digest typed implications through SHADOW_NEWS_v0's frozen news_signal (d > 0 only), sized by the TRUST RULE",
+   "gross_cap": 0.3,
+   "name_cap": 0.03,
+   "stop": "3 sigma, clip [4%, 10%]",
+   "worst_case_line": "10 x 3.00% x 10% stop = -$3,000 if every stop fills at its distance; 3-sigma day at 4.92% = -$4,429 (capped at 10% -> -$4,429 by scaling gross x1.00); sum|notional|/equity 0.30; no-stop ceiling -$30,000",
+   "twin": "v1_matched_random_twin_plus_cash",
+   "kill_rule": "account drawdown >= 10% -> flatten, DEPRIORITIZED; digest older than 36 h -> no entries that day; at 63 sessions excess <= 0 vs both twin and SPY -> DEPRIORITIZED"
+  },
+  {
+   "role": "quant_ensemble",
+   "account": "hack4",
+   "policy_hash": "0bb99e6adf242bb5",
+   "rule_hash": "d4aedab5957f9245",
+   "source": "strategy-library rules that survive BOTH twins and the validation market line",
+   "gross_cap": 1.0,
+   "name_cap": 0.1,
+   "stop": "3 sigma, clip [4%, 12%]",
+   "worst_case_line": "10 x 10.00% x 12% stop = -$12,000 if every stop fills at its distance; 3-sigma day at 4.92% = -$14,763 (capped at 10% -> -$10,000 by scaling gross x0.68); sum|notional|/equity 1.00; no-stop ceiling -$100,000",
+   "twin": "the rule's own boards",
+   "kill_rule": "account drawdown >= 20% -> flatten, DEPRIORITIZED; a rule whose re-run board drops it below the eligibility rule is sold at the next rebalance"
+  },
+  {
+   "role": "innovation",
+   "account": "UNASSIGNED",
+   "policy_hash": "1d9146ee44a98dc6",
+   "rule_hash": "cd05695fc5c6ec9f",
+   "source": "the Opportunity Explorer's HIGH_RISK_INNOVATION names (>= 2 of 3 flags: COVERAGE, BINARY_EVENT, RUNWAY), deliberately small",
+   "gross_cap": 0.3,
+   "name_cap": 0.02,
+   "stop": "3 sigma, clip [6%, 20%]",
+   "worst_case_line": "15 x 2.00% x 20% stop = -$6,000 if every stop fills at its distance; 3-sigma day at 13.53% = -$12,178 (capped at 10% -> -$10,000 by scaling gross x0.82); sum|notional|/equity 0.30; no-stop ceiling -$30,000; binary gap -$10,500",
+   "twin": "sticky_matched_twin",
+   "kill_rule": "account drawdown >= 15% -> flatten, DEPRIORITIZED; at 63 sessions excess <= 0 vs both twins and SPY -> DEPRIORITIZED; Explorer receipt older than 7 days -> no entries"
+  },
+  {
+   "role": "spy_control",
+   "account": "hack5",
+   "policy_hash": "430c485cd5e8df7f",
+   "rule_hash": "e3b390ba10d481f5",
+   "source": "market-like CONTROL: 95% SPY, the rest cash (no selection, no view)",
+   "gross_cap": 1.0,
+   "name_cap": 0.95,
+   "stop": "3 sigma, clip [10%, 10%]",
+   "worst_case_line": "1 x 95.00% x 10% stop = -$9,500 if every stop fills at its distance; 3-sigma day at 0.70% = -$1,986 (capped at 10% -> -$1,986 by scaling gross x1.00); sum|notional|/equity 0.95; no-stop ceiling -$95,000",
+   "twin": "ideal_control",
+   "kill_rule": "never killed: the control is the yardstick; only the disaster stop acts"
+  }
+ ],
+ "d14": {
+  "equity_usd": 1002024.08,
+  "equity_source": "pc_snapshot/state_latest.json t=2026-10-06T23:53:42+00:00",
+  "spy_daily_sigma": 0.006966830386706793,
+  "sleeve_sigma": "universe p90 0.0492 (review C2 F1: never the median)",
+  "spy_worst_day": -0.05855053796029697,
+  "spy_worst_day_date": "2025-04-04",
+  "core_plan_today_if_on": {
+   "enabled": true,
+   "applied": true,
+   "symbol": "SPY",
+   "active_gross": 0.2,
+   "want_weight": 0.8,
+   "deliver_weight": 0.12,
+   "clipped": true,
+   "max_name_frac": 0.12,
+   "grading": {
+    "basis": "excess_over_core",
+    "core_symbol": "SPY",
+    "decision_benchmark": "SPY",
+    "consistent": true,
+    "rule": "each sleeve name is graded r_name - r_SPY over its own window (decision_ledger already grades vs SPY); the account's sleeve contribution = r_account - w_core x r_SPY; cash earns 0 in this attribution"
+   },
+   "status": "CORE_CLIPPED_BY_MAX_NAME_FRAC",
+   "line": "benchmark core: ON -- active 20.00%, core wants 80.00% SPY, delivers 12.00% (CORE_CLIPPED_BY_MAX_NAME_FRAC 12%: the remaining 68.00% stays cash; a full core is a separate owner decision about that limit); grading: excess over SPY"
+  },
+  "rows": [
+   {
+    "label": "today: PROBE 20%, 80% cash (flag OFF)",
+    "equity_usd": 1002024.08,
+    "k_sigma": 3.0,
+    "core_frac": 0.0,
+    "core_daily_sigma": 0.006966830386706793,
+    "sleeve_gross": 0.2,
+    "gross_over_equity": 0.2,
+    "core_k_sigma_usd": -0.0,
+    "sleeves_k_sigma_usd": -29585.293721763846,
+    "total_k_sigma_usd": -29585.293721763846,
+    "total_k_sigma_frac": -0.02952553168359372,
+    "no_stop_ceiling_usd": -200404.816,
+    "limit_frac": 0.1,
+    "core_worst_day_return": -0.05855053796029697,
+    "core_worst_day_usd": -0.0,
+    "passes_limit": true,
+    "line": "today: PROBE 20%, 80% cash (flag OFF): core 0% x 3 x 0.70% = -$0; sleeves 20% gross = -$29,585; total -$29,585 (2.95% of $1,002,024, limit 10%); sum|notional|/equity 0.20; the panel's worst SPY day (-5.86%) on the core = -$0"
+   },
+   {
+    "label": "flag ON as built: core clipped at MAX_NAME_FRAC",
+    "equity_usd": 1002024.08,
+    "k_sigma": 3.0,
+    "core_frac": 0.12,
+    "core_daily_sigma": 0.006966830386706793,
+    "sleeve_gross": 0.2,
+    "gross_over_equity": 0.32,
+    "core_k_sigma_usd": -2513.1354511521304,
+    "sleeves_k_sigma_usd": -29585.293721763846,
+    "total_k_sigma_usd": -32098.429172915978,
+    "total_k_sigma_frac": -0.03203359062280817,
+    "no_stop_ceiling_usd": -320647.7056,
+    "limit_frac": 0.1,
+    "core_worst_day_return": -0.05855053796029697,
+    "core_worst_day_usd": -7040.285871980596,
+    "passes_limit": true,
+    "line": "flag ON as built: core clipped at MAX_NAME_FRAC: core 12% x 3 x 0.70% = -$2,513; sleeves 20% gross = -$29,585; total -$32,098 (3.20% of $1,002,024, limit 10%); sum|notional|/equity 0.32; the panel's worst SPY day (-5.86%) on the core = -$7,040"
+   },
+   {
+    "label": "full core (needs a second owner decision on MAX_NAME_FRAC)",
+    "equity_usd": 1002024.08,
+    "k_sigma": 3.0,
+    "core_frac": 0.8,
+    "core_daily_sigma": 0.006966830386706793,
+    "sleeve_gross": 0.2,
+    "gross_over_equity": 1.0,
+    "core_k_sigma_usd": -16754.236341014206,
+    "sleeves_k_sigma_usd": -29585.293721763846,
+    "total_k_sigma_usd": -46339.53006277805,
+    "total_k_sigma_frac": -0.046245924611690026,
+    "no_stop_ceiling_usd": -1002024.08,
+    "limit_frac": 0.1,
+    "core_worst_day_return": -0.05855053796029697,
+    "core_worst_day_usd": -46935.239146537315,
+    "passes_limit": true,
+    "line": "full core (needs a second owner decision on MAX_NAME_FRAC): core 80% x 3 x 0.70% = -$16,754; sleeves 20% gross = -$29,585; total -$46,340 (4.62% of $1,002,024, limit 10%); sum|notional|/equity 1.00; the panel's worst SPY day (-5.86%) on the core = -$46,935"
+   },
+   {
+    "label": "full core, SPY at the review's stressed 1.2%",
+    "equity_usd": 1002024.08,
+    "k_sigma": 3.0,
+    "core_frac": 0.8,
+    "core_daily_sigma": 0.012,
+    "sleeve_gross": 0.2,
+    "gross_over_equity": 1.0,
+    "core_k_sigma_usd": -28858.293504000005,
+    "sleeves_k_sigma_usd": -29585.293721763846,
+    "total_k_sigma_usd": -58443.587225763855,
+    "total_k_sigma_frac": -0.05832553168359373,
+    "no_stop_ceiling_usd": -1002024.08,
+    "limit_frac": 0.1,
+    "core_worst_day_return": -0.05855053796029697,
+    "core_worst_day_usd": -46935.239146537315,
+    "passes_limit": true,
+    "line": "full core, SPY at the review's stressed 1.2%: core 80% x 3 x 1.20% = -$28,858; sleeves 20% gross = -$29,585; total -$58,444 (5.83% of $1,002,024, limit 10%); sum|notional|/equity 1.00; the panel's worst SPY day (-5.86%) on the core = -$46,935"
+   },
+   {
+    "label": "no sleeve acting: 100% core (full)",
+    "equity_usd": 1002024.08,
+    "k_sigma": 3.0,
+    "core_frac": 1.0,
+    "core_daily_sigma": 0.006966830386706793,
+    "sleeve_gross": 0,
+    "gross_over_equity": 1.0,
+    "core_k_sigma_usd": -20942.795426267756,
+    "sleeves_k_sigma_usd": -0.0,
+    "total_k_sigma_usd": -20942.795426267756,
+    "total_k_sigma_frac": -0.02090049116012038,
+    "no_stop_ceiling_usd": -1002024.08,
+    "limit_frac": 0.1,
+    "core_worst_day_return": -0.05855053796029697,
+    "core_worst_day_usd": -58669.048933171645,
+    "passes_limit": true,
+    "line": "no sleeve acting: 100% core (full): core 100% x 3 x 0.70% = -$20,943; sleeves 0% gross = -$0; total -$20,943 (2.09% of $1,002,024, limit 10%); sum|notional|/equity 1.00; the panel's worst SPY day (-5.86%) on the core = -$58,669"
+   },
+   {
+    "label": "EXPLOIT + PROBE acting: active 100%, core 0",
+    "equity_usd": 1002024.08,
+    "k_sigma": 3.0,
+    "core_frac": 0.0,
+    "core_daily_sigma": 0.006966830386706793,
+    "sleeve_gross": 1.0,
+    "gross_over_equity": 1.0,
+    "core_k_sigma_usd": -0.0,
+    "sleeves_k_sigma_usd": -147926.46860881924,
+    "total_k_sigma_usd": -147926.46860881924,
+    "total_k_sigma_frac": -0.1476276584179686,
+    "no_stop_ceiling_usd": -1002024.08,
+    "limit_frac": 0.1,
+    "core_worst_day_return": -0.05855053796029697,
+    "core_worst_day_usd": -0.0,
+    "passes_limit": false,
+    "line": "EXPLOIT + PROBE acting: active 100%, core 0: core 0% x 3 x 0.70% = -$0; sleeves 100% gross = -$147,926; total -$147,926 (14.76% of $1,002,024, limit 10%); sum|notional|/equity 1.00; the panel's worst SPY day (-5.86%) on the core = -$0"
+   }
+  ]
+ },
+ "d13": {
+  "mirror_nav_usd": 75525.03,
+  "nav_source": "roi_2026-10-06T160824Z.json",
+  "declared_cap": 0.25,
+  "hole": {
+   "n_names": 2,
+   "cap": 0.25,
+   "n_x_cap": 0.5,
+   "in_hole": true,
+   "cash_if_fixed": 0.5
+  },
+  "fixed_weights": {
+   "DKNG": 0.25,
+   "SLDP": 0.25,
+   "CASH": 0.5
+  },
+  "rows": [
+   {
+    "book": "mirror, 2 priced names (06-16 / 07-14)",
+    "case": "without fix",
+    "largest_name": "DKNG",
+    "largest_weight": 0.5,
+    "one_name_to_zero_usd": -37762.515,
+    "one_name_minus_50pct_usd": -18881.2575,
+    "k_sigma_day_usd": -7459.493574753806,
+    "k_sigma": 3.0,
+    "gross_over_equity": 1.0,
+    "cash": 0.0
+   },
+   {
+    "book": "mirror, 2 priced names (06-16 / 07-14)",
+    "case": "with fix",
+    "largest_name": "DKNG",
+    "largest_weight": 0.25,
+    "one_name_to_zero_usd": -18881.2575,
+    "one_name_minus_50pct_usd": -9440.62875,
+    "k_sigma_day_usd": -3729.746787376903,
+    "k_sigma": 3.0,
+    "gross_over_equity": 0.5,
+    "cash": 0.5
+   }
+  ],
+  "today": "12 names priced since 2026-08-02: n x cap = 3.0 >= 1, the fix defers to rules.enforce_position_limits unchanged (no-op); the largest name at a rebalance is <= 25%: one name to zero = -$18,881",
+  "wired": false
+ }
+}

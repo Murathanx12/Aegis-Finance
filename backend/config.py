@@ -5686,10 +5686,41 @@ LEGIBILITY_STALE_HOURS: dict = {
     "decision_story": 48.0,         # the PC-PAPER plan writes per session
     "regret": 48.0,                 # daily pass `regret` step
     "handoff_doc": 24.0 * 14,       # the handoff the CRSP sentence is quoted from (dated by its name)
+    "opportunities": 24.0 * 3,      # C15: the published Opportunity Explorer copy (OPPORTUNITIES_STALE_DAYS)
 }
+#: C15 (2026-10-07): `backend/services/publish_receipts.py` copies each public page's
+#: sanitised payload into the TRACKED `backend/data/public_receipts/`. The whole folder
+#: is refused (nothing written) when the new set would exceed this many bytes.
+PUBLIC_RECEIPTS_MAX_BYTES = 5_000_000
 #: (C8 review F8) The Railway fleet loops (aat-loop-hack*) were stopped ON PURPOSE on
 #: 2026-09-29 (session S60, to hold the bill at $20). While this is non-empty the
 #: `railway_fleet` probe reads STOPPED_BY_OPERATOR with this reason instead of a
 #: permanent UNKNOWN; empty it when the loops are restarted.
 RAILWAY_FLEET_STOPPED_REASON = ("Railway fleet loops stopped on purpose 2026-09-29 (S60: bill held at "
                                 "$20; the PC runs the fleet manager instead)")
+
+# ── C20 (2026-10-07): six-role fleet v3 PREPARED + the PC-PAPER benchmark core ──
+#: D14, OWNER DECISION, default OFF. When True, `sim_run.u_plan` adds ONE target:
+#: `PC_BENCHMARK_CORE_SYMBOL` at `1 - active_gross` (the acting PROBE/EXPLOIT
+#: weights after the order-path gate), and the receipt grades every sleeve as
+#: EXCESS over that core. It goes through `pc_broker.plan_orders` like any other
+#: target, so MAX_NAME_FRAC (12%) still clips it: the flag ALONE delivers at most
+#: a 12% core and says so (CORE_CLIPPED_BY_MAX_NAME_FRAC). A full core needs a
+#: second, separate owner decision about that limit; no builder loosens it.
+#: Flag OFF: the plan is byte-identical to the pre-C20 plan (pinned by test).
+PC_BENCHMARK_CORE = False
+#: SPY is an ordinary listed equity order on the Alpaca paper venue (pc_broker
+#: already samples it in BENCHMARKS); no proxy ETF is needed.
+PC_BENCHMARK_CORE_SYMBOL = "SPY"
+#: The six-role v3 fleet contracts are written HERE, never into
+#: `fleet_manager/contracts/`: no seed path reads this folder, and
+#: `fleet_manager.load_contract`/`freeze_contract` refuse a PREPARED body.
+FLEET_V3_CONTRACTS_DIR = OPTIMUS_LEDGER_DIR / "paper_accounts" / "fleet_manager" / "contracts_v3"
+FLEET_V3_STATUS_PREPARED = "PREPARED_NOT_SEEDED"
+#: The equity every v3 worst case is printed at (session protocol item 4).
+FLEET_V3_WORST_CASE_EQUITY = 100_000.0
+#: A v3 book's one-day k-sigma loss (rho = 1 across names) may not exceed this
+#: fraction of equity: over it, gross is scaled DOWN at entry (never a cap raised).
+FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC = 0.10
+#: No new paper book before this date (roadmap 2026-10-06 §7 "measure before you add").
+FLEET_V3_EARLIEST_SEED = "2026-10-26"

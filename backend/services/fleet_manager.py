@@ -156,6 +156,7 @@ def contract_file(role: str, version: str, base: Optional[Path] = None) -> Path:
 def freeze_contract(body: dict, base: Optional[Path] = None) -> dict:
     """Write once. An existing file with a DIFFERENT hash refuses: a changed
     rule is a new version, never an edit of a frozen one."""
+    _refuse_prepared(body, "freeze")
     h = policy_hash(body)
     p = contract_file(body["role"], body["version"], base)
     if p.exists():
@@ -178,7 +179,20 @@ def load_contract(role: str, version: str, base: Optional[Path] = None) -> dict:
     c = json.loads(p.read_text(encoding="utf-8"))
     if policy_hash(c) != c.get("policy_hash"):
         raise FleetRefusal(f"REFUSED: {p.name} content does not match its policy hash (edited after freeze)")
+    _refuse_prepared(c, f"load {p.name}")
     return c
+
+
+def _refuse_prepared(body: dict, what: str) -> None:
+    """C20 (2026-10-07): a v3 contract is written `PREPARED_NOT_SEEDED` under
+    `contracts_v3/`, and NO seed path may act on it. Activation is the owner's
+    act (D2): a re-freeze whose only difference is the status. A prepared body
+    that reaches the live folder -- copied by hand, or passed to freeze -- is
+    refused here, before any decision is made on it."""
+    if str(body.get("status") or "").startswith(str(_cfg.FLEET_V3_STATUS_PREPARED)):
+        raise FleetRefusal(f"REFUSED: {what}: contract {body.get('role')} {body.get('version')} "
+                           f"is {_cfg.FLEET_V3_STATUS_PREPARED}; seeding it is the owner's act "
+                           f"(roadmap 2026-10-06 §6 D2), not a fleet-manager path")
 
 
 def name_cap(caps: dict, symbol: str) -> float:

@@ -1,21 +1,9 @@
 {
- "schema": "hyp_lab/board_supersessions/1",
- "written_utc": "2026-10-06T23:13:31+00:00",
- "written_by": "C19 reader fix (interim, 2026-10-07): the twin-board WRITER should own row-level supersession (stamp `supersedes_rows` on a supplement); until then this file records it by hand",
- "source": "docs/research_notes/2026-10-06/sticky_twin_2026-10-06.md F4: `amihud` is not in rule.requires, so mom_12_1_liqw and qc623_mom63_liquidity_weighted were still EW in FT_2026-10-07_1 and STK_2026-10-07_2; the supplements FT_2026-10-07_2 and STK_2026-10-07_3 re-score them and supersede those two rows",
+ "schema": "hyp_lab/board_supersessions/2",
+ "written_utc": "2026-10-06T23:50:32+00:00",
+ "written_by": "scripts/hyp_twin_board.write_supersessions (the board WRITER owns row supersession)",
+ "source": "every twin_board_SUMMARY_*.json's supersedes_rows; pre-stamp supplements from hyp_twin_board.BACKFILL_SUPERSEDES",
  "supersessions": [
-  {
-   "supplement_run": "STK_2026-10-07_3",
-   "twin_kind": "sticky",
-   "supersedes_runs": [
-    "STK_2026-10-07_2"
-   ],
-   "rules": [
-    "mom_12_1_liqw",
-    "qc623_mom63_liquidity_weighted"
-   ],
-   "why": "rule weights (inv_amihud) were silently dropped in the full board; the supplement carries them"
-  },
   {
    "supplement_run": "FT_2026-10-07_2",
    "twin_kind": "basket",
@@ -26,8 +14,27 @@
     "mom_12_1_liqw",
     "qc623_mom63_liquidity_weighted"
    ],
-   "why": "rule weights (inv_amihud) were silently dropped in the full board; the supplement carries them"
+   "why": "rule weights (inv_amihud) were silently dropped in the full board; the supplement carries them",
+   "stamp": "hyp_twin_board.BACKFILL_SUPERSEDES (docs/research_notes/2026-10-06/sticky_twin_2026-10-06.md F4)"
+  },
+  {
+   "supplement_run": "STK_2026-10-07_3",
+   "twin_kind": "sticky",
+   "supersedes_runs": [
+    "STK_2026-10-07_2"
+   ],
+   "rules": [
+    "mom_12_1_liqw",
+    "qc623_mom63_liquidity_weighted"
+   ],
+   "why": "rule weights (inv_amihud) were silently dropped in the full board; the supplement carries them",
+   "stamp": "hyp_twin_board.BACKFILL_SUPERSEDES (docs/research_notes/2026-10-06/sticky_twin_2026-10-06.md F4)"
   }
  ],
- "sha256": "74c763bae737102984e6740a2e31b108233710b87fc79aa67fabeed3b8e76738"
+ "from_summaries": [],
+ "from_backfill": [
+  "twin_board_SUMMARY_FT_2026-10-07_2.json",
+  "twin_board_SUMMARY_STK_2026-10-07_3.json"
+ ],
+ "sha256": "687985496288b7ec7571cf54dc0e1c9e7e6a35969fa00c065a01872094dd2c67"
 }
