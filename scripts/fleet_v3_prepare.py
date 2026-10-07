@@ -61,6 +61,22 @@ def _innovation_pool() -> tuple[list[str], str | None]:
     return names, d.get("receipt_file")
 
 
+def kill_prior() -> dict:
+    """The pooled measured book-minus-twin daily sd over every fleet grade row
+    (review 2026-10-07 M6: size the kill line from the measured gap). Refuses
+    below 20 rows: a line sized on nothing is not a line."""
+    import statistics as st                                        # noqa: PLC0415
+    rows = FM.read_jsonl(FM.grades_path())
+    v = [float(r["vs_twin"]) for r in rows if isinstance(r.get("vs_twin"), (int, float))]
+    if len(v) < 20:
+        raise V3.PreparedRefusal(f"REFUSED: only {len(v)} fleet book-minus-twin rows; "
+                                 "no measured gap to size a kill line on")
+    return {"sd_daily": st.stdev(v), "n_rows": len(v),
+            "roles": sorted({r["role"] for r in rows if r.get("vs_twin") is not None}),
+            "last_session": max(str(r.get("session")) for r in rows),
+            "source": "paper_accounts/fleet_manager/grades.jsonl vs_twin (pooled across roles)"}
+
+
 def reference() -> dict:
     sig = PR.panel_sigmas()
     if not sig:
@@ -70,6 +86,7 @@ def reference() -> dict:
     if not sig.get("SPY"):
         raise V3.PreparedRefusal("REFUSED: SPY has no panel sigma")
     pool, receipt = _innovation_pool()
+    n_sig_ok = sum(1 for s_ in pool if sig.get(s_) and sig[s_] <= 0.20 / 3.0)
 
     def _max(names: list[str]) -> float | None:
         v = [sig[s] for s in names if sig.get(s)]
@@ -86,46 +103,65 @@ def reference() -> dict:
         "spy_sigma": sig["SPY"], "spy_worst_day": worst, "spy_worst_day_date": worst_d,
         "spy_n_returns": n,
         "candidate_sigma": {k: v for k, v in cand.items() if v},
-        "innovation_pool": {"n": len(pool), "receipt": receipt},
+        "innovation_pool": {"n": len(pool), "receipt": receipt, "n_sigma_eligible": n_sig_ok},
+        "kill_prior": kill_prior(),
         "quant": V3.quant_eligibility(FAIR, STICKY),
         "lineage": {r: V3.v2_lineage(V3.ACCOUNT[r]) for r in V3.ROLES},
         "_sigmas": sig,
     }
 
 
-def pc_equity() -> tuple[float, str]:
+def pc_state() -> dict:
     p = LEDGER / "paper_accounts" / "pc_snapshot" / "state_latest.json"
     try:
         d = json.loads(p.read_text(encoding="utf-8"))
-        return float(d["equity"]), f"pc_snapshot/state_latest.json t={d.get('t')}"
+        eq = float(d["equity"])
+        held = {str(x["symbol"]): float(x["market_value"]) / eq for x in d.get("positions") or []
+                if isinstance(x.get("market_value"), (int, float)) and x["market_value"] > 0}
+        return {"equity": eq, "held": held, "cash_frac": float(d.get("cash") or 0.0) / eq,
+                "source": f"pc_snapshot/state_latest.json t={d.get('t')}"}
     except (OSError, ValueError, KeyError, TypeError) as exc:
-        raise V3.PreparedRefusal(f"REFUSED: PC-PAPER equity unreadable: {exc}")
+        raise V3.PreparedRefusal(f"REFUSED: PC-PAPER state unreadable: {exc}")
 
 
 def d14_table(ref: dict) -> dict:
-    """The core + sleeves worst case at the PC-PAPER equity, five books."""
-    eq, src = pc_equity()
+    """Core + sleeves worst case for TODAY's PC-PAPER state (review 2026-10-07
+    H2: the core is min(1 - acting, MAX_NAME_FRAC) planned AFTER the sleeves,
+    which keep their share counts). Today's sleeves are priced on their OWN
+    panel sigmas; the hypothetical books on the universe p90."""
+    st = pc_state()
+    eq = st["equity"]
+    sig = ref["_sigmas"]
     spy, p90 = float(ref["spy_sigma"]), float(ref["universe_sigma"]["p90"])
-    n, w = int(_cfg.PROBE_MAX_NAMES), float(_cfg.PROBE_MAX_WEIGHT)
-    probe = {f"PROBE{i}": w for i in range(n)}                     # 10 x 2% = 20%
-    exploit = {f"EXPL{i}": float(_cfg.ER_EXPLOIT_MAX_WEIGHT) for i in range(8)}  # 80%
+    held = {k: v for k, v in st["held"].items() if k != "SPY"}
+    acting = sum(held.values())
     cap = float(PB.MAX_NAME_FRAC)
+    n, w = int(_cfg.PROBE_MAX_NAMES), float(_cfg.PROBE_MAX_WEIGHT)
+    probe = {f"PROBE{i}": w for i in range(n)}
+    exploit = {f"EXPL{i}": float(_cfg.ER_EXPLOIT_MAX_WEIGHT) for i in range(8)}
     rows = []
-    for label, core, sleeves, s in (
-            ("today: PROBE 20%, 80% cash (flag OFF)", 0.0, probe, spy),
-            ("flag ON as built: core clipped at MAX_NAME_FRAC", min(cap, 0.80), probe, spy),
-            ("full core (needs a second owner decision on MAX_NAME_FRAC)", 0.80, probe, spy),
-            ("full core, SPY at the review's stressed 1.2%", 0.80, probe, SPY_STRESSED_SIGMA),
-            ("no sleeve acting: 100% core (full)", 1.00, {}, spy),
-            ("EXPLOIT + PROBE acting: active 100%, core 0", 0.0, {**probe, **exploit}, spy)):
+    for label, core, sleeves, s, sg in (
+            (f"TODAY, flag OFF: {len(held)} held names ({acting:.1%}), {st['cash_frac']:.1%} cash",
+             0.0, held, spy, sig),
+            ("TODAY, flag ON (H2-fixed): core min(1 - acting, 12%), sleeves' shares untouched",
+             min(max(0.0, 1 - acting), cap), held, spy, sig),
+            ("today's sleeves + a full core (needs the D22 exemption)", max(0.0, 1 - acting),
+             held, spy, sig),
+            ("same, SPY at the review's stressed 1.2%", max(0.0, 1 - acting), held,
+             SPY_STRESSED_SIGMA, sig),
+            ("largest admissible PROBE (10 x 2% at p90) + full core", 0.80, probe, spy, {}),
+            ("no sleeve acting: 100% core (full)", 1.00, {}, spy, {}),
+            ("EXPLOIT + PROBE acting at caps (before the gate), core 0", 0.0,
+             {**probe, **exploit}, spy, {})):
         rows.append(BC.worst_case(equity=eq, core_frac=core, core_sigma=s,
-                                  sleeve_weights=sleeves, sleeve_sigmas={}, fallback_sigma=p90,
+                                  sleeve_weights=sleeves, sleeve_sigmas=sg, fallback_sigma=p90,
                                   core_worst_day=ref["spy_worst_day"], label=label))
-    plan = BC.core_plan(probe, enabled=True)
-    return {"equity_usd": eq, "equity_source": src, "spy_daily_sigma": spy,
-            "sleeve_sigma": f"universe p90 {p90:.4f} (review C2 F1: never the median)",
+    return {"equity_usd": eq, "equity_source": st["source"], "spy_daily_sigma": spy,
+            "acting_gross_today": acting, "held_today": held,
+            "sleeve_sigma": "today's names: own 63-session panel sigma (p90 if absent); "
+                            f"hypothetical books: universe p90 {p90:.4f}",
             "spy_worst_day": ref["spy_worst_day"], "spy_worst_day_date": ref["spy_worst_day_date"],
-            "core_plan_today_if_on": plan, "rows": rows}
+            "core_plan_today_if_on": BC.core_plan(held, enabled=True), "rows": rows}
 
 
 def d13_table(ref: dict) -> dict:
@@ -158,7 +194,9 @@ def summary(bodies: dict) -> list[dict]:
                         "SPY", b["caps"]["max_name_frac"]),
                     "stop": f"{sr['k_sigma']:g} sigma, clip [{sr['min_frac']:.0%}, {sr['max_frac']:.0%}]",
                     "worst_case_line": wc["line"], "twin": b["twin"]["kind"],
-                    "kill_rule": b["kill_rule"]})
+                    "supersedes": b.get("supersedes"),
+                    "kill_rule": (b["kill_rule"]["kill_if"] if isinstance(b["kill_rule"], dict)
+                                  else b["kill_rule"])})
     return out
 
 
@@ -176,7 +214,9 @@ def main(argv: list[str] | None = None) -> int:
         ref = reference()
         bodies = V3.build_bodies(ref)
         if not a.dry:
-            bodies = {r: V3.freeze_prepared(b) for r, b in bodies.items()}
+            # supersede: a PREPARED contract was never seeded; the old file is kept
+            # under contracts_v3/superseded/ and its hash goes into `supersedes`
+            bodies = {r: V3.freeze_prepared(b, supersede=True) for r, b in bodies.items()}
         d14, d13 = d14_table(ref), d13_table(ref)
     except V3.PreparedRefusal as exc:
         print(str(exc))

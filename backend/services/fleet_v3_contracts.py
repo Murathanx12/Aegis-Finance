@@ -54,7 +54,7 @@ ROLES: tuple[str, ...] = tuple(ACCOUNT)
 #: Fields that may differ between the PREPARED body and the owner's activated
 #: body. Everything else is the rule.
 ACTIVATION_FIELDS: tuple[str, ...] = ("status", "owner_action_required", "seed",
-                                      "policy_hash", "frozen_utc", "rule_hash")
+                                      "policy_hash", "frozen_utc", "rule_hash", "supersedes")
 
 PERSONALITY = {
     "thematic": "aggressive",
@@ -89,23 +89,43 @@ def contract_path(role: str, base: Optional[Path] = None) -> Path:
     return contracts_dir(base) / f"{role}_{VERSION}.json"
 
 
-def freeze_prepared(body: dict, base: Optional[Path] = None) -> dict:
+def freeze_prepared(body: dict, base: Optional[Path] = None, *,
+                    supersede: bool = False) -> dict:
     """Write once into the PREPARED folder. A different rule under the same
-    name refuses (a changed rule is a new version, never an edit)."""
+    name refuses (a changed rule is a new version, never an edit) -- unless
+    `supersede=True`, which is allowed ONLY because a PREPARED contract was
+    never seeded: the old file is kept at `superseded/<role>_v3_<hash>.json`
+    (never deleted) and the new body carries the chain in `supersedes`, inside
+    its own hash (review 2026-10-07: "keep the old hash in supersedes")."""
     if body.get("status") != _cfg.FLEET_V3_STATUS_PREPARED:
         raise PreparedRefusal(f"REFUSED: {body.get('role')}: only a "
                               f"{_cfg.FLEET_V3_STATUS_PREPARED} body is written here")
     out = dict(body)
+    out.pop("supersedes", None)
     out["rule_hash"] = rule_hash(out)
     h = FM.policy_hash(out)
     p = contract_path(out["role"], base)
     if p.exists():
         old = json.loads(p.read_text(encoding="utf-8"))
-        if old.get("policy_hash") != h:
+        old_core = {k: v for k, v in old.items()
+                    if k not in ("policy_hash", "frozen_utc", "rule_hash", "supersedes")}
+        new_core = {k: v for k, v in out.items() if k != "rule_hash"}
+        if FM.policy_hash(old_core) == FM.policy_hash(new_core):
+            return old
+        if not supersede:
             raise PreparedRefusal(
                 f"REFUSED: {p.name} is frozen as {old.get('policy_hash')}; the body now hashes "
-                f"to {h}. A changed rule is a new version (v3b), not an edit.")
-        return old
+                f"to {h}. A changed rule is a new version, not an edit (supersede=True "
+                f"replaces a PREPARED, never-seeded contract and keeps the old one).")
+        if old.get("status") != _cfg.FLEET_V3_STATUS_PREPARED:
+            raise PreparedRefusal(f"REFUSED: {p.name} is not PREPARED; it cannot be superseded")
+        keep = (contracts_dir(base) / "superseded"
+                / f"{out['role']}_{VERSION}_{old.get('policy_hash')}.json")
+        keep.parent.mkdir(parents=True, exist_ok=True)
+        keep.write_text(p.read_text(encoding="utf-8"), encoding="utf-8")
+        out["supersedes"] = list(old.get("supersedes") or []) + [old.get("policy_hash")]
+        out["rule_hash"] = rule_hash(out)
+        h = FM.policy_hash(out)
     out["policy_hash"] = h
     out["frozen_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     FM.atomic_write_json(p, out)
@@ -165,12 +185,20 @@ def _t(row: dict, col: str, window: str) -> Optional[float]:
         return None
 
 
-QUANT_RULE = ("eligible = status OK on BOTH boards AND pure_selection t >= 2 (full sample) on "
-              "the basket fair twin AND on the sticky twin (TWIN_STICKY_v1) AND net_minus_market "
-              "t >= 2 in the validation window (2009-2016, the 'validate' block). The book holds "
-              "the eligible rules' current picks equally across rules; no eligible rule -> HOLD "
-              "CASH, by rule, until a re-run board makes one eligible (a new board is read only "
-              "at the monthly rebalance and its id is recorded on the decision)")
+QUANT_RULE = ("PRODUCT_EXPERIMENT entry: eligible = status OK on BOTH boards AND pure_selection "
+              "t >= 2 (full sample) on the basket fair twin AND on the sticky twin "
+              "(TWIN_STICKY_v1). The book holds the eligible rules' current picks, equal weight "
+              "ACROSS RULES (a name picked by several rules sums their shares, clipped at "
+              "max_name_frac, never renormalised), graded against SPY and each rule's fair and "
+              "sticky twins, labelled CANNOT_DISTINGUISH vs the market. A re-run board is read "
+              "only at the monthly rebalance and its id is recorded on the decision. No eligible "
+              "rule -> cash")
+#: Review 2026-10-07 H3 / THREE LICENCES: research rigour decides what may be
+#: CLAIMED, not what may be TESTED in paper. The market line is a promotion gate.
+QUANT_CAPITAL_CANDIDATE_GATE = (
+    "CAPITAL_CANDIDATE (promotion, never entry): net_minus_market t >= 2 in the validation "
+    "window (2009-2016) AND matured forward evidence vs SPY and the twins, realistic costs, "
+    "drawdown bounds; promotion stays attended")
 
 
 def quant_eligibility(fair_paths: Iterable[Path], sticky_paths: Iterable[Path]) -> dict:
@@ -189,13 +217,53 @@ def quant_eligibility(fair_paths: Iterable[Path], sticky_paths: Iterable[Path]) 
     pure2 = [k for k in both_ok
              if (_t(st[k], "pure_selection", "full") or -9) >= 2
              and (_t(ft[k], "pure_selection", "full") or -9) >= 2]
-    eligible = [k for k in pure2 if (_t(st[k], "net_minus_market", "validate") or -9) >= 2]
-    return {"rule": QUANT_RULE,
+    market = [k for k in pure2 if (_t(st[k], "net_minus_market", "validate") or -9) >= 2]
+    eligible = pure2
+    return {"rule": QUANT_RULE, "capital_candidate_gate": QUANT_CAPITAL_CANDIDATE_GATE,
+            "capital_candidate_eligible": sorted(market),
+            "n_capital_candidate_eligible": len(market),
             "boards": {"fair": [p.name for p in fair_paths], "sticky": [p.name for p in sticky_paths]},
             "n_rules_both_ok": len(both_ok), "n_pure_selection_t2_both_twins": len(pure2),
             "pure_selection_t2_both_twins": sorted(pure2),
             "eligible": sorted(eligible), "n_eligible": len(eligible),
             "today": ("HOLD_CASH" if not eligible else "HOLD_ELIGIBLE")}
+
+
+# ─────────────────────────────── kill rule ──────────────────────────────────
+
+#: P(z <= -2) for a standard normal: the false-kill rate per check under zero edge.
+_P_Z_LE_MINUS_2 = 0.02275
+
+
+def kill_block(*, drawdown_frac: Optional[float], prior: dict, extra: str = "") -> dict:
+    """Review 2026-10-07 M6: the kill line is SIZED FROM THE MEASURED GAP (the
+    pattern of AMENDMENT_CRSP_BLEND_v0_KILL_RULE_2026-09-29), never the sign of
+    a point estimate (the old '63 sessions, excess <= 0 vs both' rule false-
+    kills ~21% under zero edge)."""
+    sd = float(prior["sd_daily"])
+    line = -2.0 * sd * math.sqrt(21)
+    per = _P_Z_LE_MINUS_2
+    return {
+        "statistic": ("D_21 = cumulative book-minus-twin return over each non-overlapping "
+                      "21-session window counted from the first fill"),
+        "sd": ("sd_21 = the role's OWN measured daily sd of book-minus-twin x sqrt(21), once its "
+               ">= 21 forward sessions exist; before that there is NO performance kill"),
+        "kill_if": ("z_21 = D_21 / sd_21 <= -2 -> DEPRIORITIZED (no new entries; held names "
+                    "run to horizon)"),
+        "evidence_for": "z_21 >= +2 is evidence FOR, still CANNOT_DISTINGUISH as a claim",
+        "P_kill_if_zero_edge_per_check": per,
+        "P_kill_if_zero_edge_63_sessions_3_checks": 1 - (1 - per) ** 3,
+        "replaces": ("'at 63 sessions excess <= 0 vs both twin and SPY' (a sign test, ~21% false "
+                     "kill; review 2026-10-07 M6)"),
+        "prior_for_scale": {**prior, "illustrative_line_21": line,
+                            "note": ("the pooled fleet gap shows the scale of the line; the "
+                                     "role's own measured sd replaces it")},
+        "drawdown": (f"account drawdown >= {drawdown_frac:.0%} from its v3 high-water -> flatten "
+                     f"to cash, DEPRIORITIZED (a risk stop, not a verdict)"
+                     if drawdown_frac else "none"),
+        "never": "MECHANISM_REJECTED is never issued by this rule",
+        **({"also": extra} if extra else {}),
+    }
 
 
 # ─────────────────────────────── worst case ─────────────────────────────────
@@ -343,10 +411,7 @@ def build_bodies(ref: dict) -> dict[str, dict]:
                                        sigma_ref=max(u["p90"], sig1),
                                        sigma_ref_source="max(universe p90, the v2 book's highest sigma)",
                                        k=3.0, stop_max=0.12),
-        "kill_rule": ("account drawdown >= 20% from its v3 high-water -> flatten to cash, "
-                      "DEPRIORITIZED; at 63 sessions, excess <= 0 vs BOTH the twin and SPY -> "
-                      "DEPRIORITIZED (no new entries; held names run to horizon). MECHANISM_REJECTED "
-                      "is never issued by this rule"),
+        "kill_rule": kill_block(drawdown_frac=0.20, prior=ref["kill_prior"]),
     }
 
     # (2) analyst revision flow + snowball follow-through -- hack2 lineage
@@ -377,9 +442,8 @@ def build_bodies(ref: dict) -> dict[str, dict]:
                                        sigma_ref=max(u["p90"], sig2),
                                        sigma_ref_source="max(universe p90, the v2 book's highest sigma)",
                                        k=3.0, stop_max=0.12),
-        "kill_rule": ("account drawdown >= 20% -> flatten, DEPRIORITIZED; at 63 sessions excess <= 0 "
-                      "vs both twin and SPY -> DEPRIORITIZED; revision file older than 7 days -> no "
-                      "rebalance that day (REFUSE, not kill)"),
+        "kill_rule": kill_block(drawdown_frac=0.20, prior=ref["kill_prior"],
+                                extra="revision file older than 7 days -> no rebalance that day (REFUSE, not kill)"),
     }
 
     # (3) world / news causal -- hack6 lineage, SHADOW_NEWS tilt with the trust rule
@@ -405,40 +469,48 @@ def build_bodies(ref: dict) -> dict[str, dict]:
                                 why="a 5-session news hold; the v2 rule"),
         "twin": {"kind": "v1_matched_random_twin_plus_cash",
                  "rule": "the sleeve's own random twin from the same size x vol cell, drawn at entry "
-                         "with seed = hash(role, day); the rest of the account is cash in both"},
+                         "with seed = hash(role, day); the rest of the account is cash in both",
+                 "why_not_sticky": ("a 5-session hold re-enters every week, so a partner held "
+                                    "across entries (TWIN_STICKY_v1) would outlive its name; each "
+                                    "entry draws its own partner and holds it exactly as long")},
         "worst_case": worst_case_block(equity=eq, n_names=10, name_cap=0.03, gross_cap=0.30,
                                        sigma_ref=u["p90"], sigma_ref_source="universe p90",
                                        k=3.0, stop_max=0.10),
-        "kill_rule": ("account drawdown >= 10% -> flatten, DEPRIORITIZED; digest older than 36 h -> "
-                      "no entries that day; at 63 sessions excess <= 0 vs both twin and SPY -> "
-                      "DEPRIORITIZED"),
+        "kill_rule": kill_block(drawdown_frac=0.10, prior=ref["kill_prior"],
+                                extra="digest older than 36 h -> no entries that day"),
     }
 
     # (4) quant ensemble -- hack4 re-purposed; fair/sticky-twin library winners only
     qe = ref["quant"]
     b["quant_ensemble"] = {**_common("quant_ensemble", ref),
-        "alpha_source": "strategy-library rules that survive BOTH twins and the validation market line",
+        "alpha_source": ("strategy-library rules whose pure selection survives BOTH twins (t >= 2 "
+                         "on the basket fair twin and the sticky twin); CANNOT_DISTINGUISH vs the "
+                         "market"),
         "inputs": [{"name": "twin boards", "fair": qe["boards"]["fair"], "sticky": qe["boards"]["sticky"],
                     "read": "services.fleet_v3_contracts.quant_eligibility"}],
-        "selection": {"kind": "quant_ensemble_or_cash", "rule": QUANT_RULE,
+        "selection": {"kind": "quant_two_twin_survivors", "rule": QUANT_RULE,
                       "eligible_at_prepare": qe["eligible"], "n_eligible_at_prepare": qe["n_eligible"],
-                      "n_pure_selection_t2_both_twins_at_prepare": qe["n_pure_selection_t2_both_twins"],
-                      "today": qe["today"],
-                      "rebalance_sessions": 21},
+                      "today": qe["today"], "rebalance_sessions": 21,
+                      "horizon_sessions": 21},
+        "capital_candidate_gate": {"rule": QUANT_CAPITAL_CANDIDATE_GATE,
+                                   "eligible_at_prepare": qe.get("capital_candidate_eligible", []),
+                                   "licence": "CAPITAL_CANDIDATE",
+                                   "note": "a promotion gate, never an entry gate (THREE LICENCES)"},
         "caps": {**FM.caps_block(), "max_gross_frac": 1.0, "max_name_frac": 0.10, "max_names": 30},
-        "exits": "monthly rebalance to the eligible rules' picks; no eligible rule -> cash",
+        "exits": "monthly rebalance to the eligible rules' picks; a name no eligible rule picks is sold",
         "stop_rule": stop_block(k=k, min_frac=0.04, max_frac=0.12, sigmas=ex,
                                 why="library rules are monthly; the stop is a disaster stop for them"),
-        "twin": {"kind": "the rule's own boards",
-                 "rule": "each held rule is graded against its basket fair twin and its sticky twin "
-                         "(TWIN_STICKY_v1); while the book is cash, the twin is cash"},
+        "twin": {"kind": "the rules' own twins",
+                 "rule": "the book is graded against the weighted sum of each held rule's sticky "
+                         "twin (TWIN_STICKY_v1) and, separately, its basket fair twin, and against SPY"},
         "worst_case": worst_case_block(equity=eq, n_names=10, name_cap=0.10, gross_cap=1.0,
                                        sigma_ref=u["p90"], sigma_ref_source="universe p90",
                                        k=3.0, stop_max=0.12),
-        "worst_case_today": {"usd": 0.0, "why": "HOLD_CASH: no rule is eligible"
-                             if qe["today"] == "HOLD_CASH" else "eligible rules exist"},
-        "kill_rule": ("account drawdown >= 20% -> flatten, DEPRIORITIZED; a rule whose re-run board "
-                      "drops it below the eligibility rule is sold at the next rebalance"),
+        "worst_case_today": {"why": (f"{qe['n_eligible']} rules eligible at prepare: the "
+                                     "largest admissible book above is the number"
+                                     if qe["n_eligible"] else "no eligible rule: cash, $0")},
+        "kill_rule": kill_block(drawdown_frac=0.20, prior=ref["kill_prior"],
+                                extra="a rule whose re-run board drops it below the two-twin rule is sold at the next rebalance"),
     }
 
     # (5) high-risk innovation lane -- Explorer's three-flag names
@@ -450,29 +522,38 @@ def build_bodies(ref: dict) -> dict[str, dict]:
                     "filter": "row.lane == 'HIGH_RISK_INNOVATION' (config.OPPORTUNITIES_* thresholds)",
                     "max_age_days": 7}],
         "selection": {"kind": "innovation_flags",
-                      "rule": ("all HIGH_RISK_INNOVATION names from the newest receipt, one line per issuer, "
-                               "ranked by the Explorer's list_score; base weight 2%; THIN-COVERAGE PENALTY: "
-                               "x0.5 when the COVERAGE flag fires; BINARY-EVENT SIZING: a name with a "
-                               "binary event inside the horizon is sized so a 70% gap costs <= 0.7% of "
-                               "equity, i.e. <= 1%; HARD 2% per name; at most 15 names, 30% gross"),
+                      "rule": ("HIGH_RISK_INNOVATION names from the newest receipt, one line per issuer, "
+                               "ranked by the Explorer's list_score. ELIGIBLE only if 3 x sigma_63 <= "
+                               "the 20% stop cap (sigma <= 6.67%/day), so the 3-sigma stop always holds "
+                               "and is never clipped into a sub-3-sigma stop; names above are EXCLUDED, "
+                               "not clipped. Every flagged name is GAP-EXPOSED (2 of 3 flags always "
+                               "include BINARY_EVENT or RUNWAY), so each is sized for a -70% gap: 1% "
+                               "of equity; THIN-COVERAGE PENALTY x0.5 when COVERAGE fires; HARD 2% per "
+                               "name ceiling; at most 14 names and 14% gross, so a -70% gap on the "
+                               "WHOLE book costs <= 9.8% of equity"),
+                      "eligible_at_prepare": ref.get("innovation_pool", {}).get("n_sigma_eligible"),
+                      "pool_at_prepare": ref.get("innovation_pool", {}).get("n"),
                       "horizon_sessions": 63},
-        "caps": {**FM.caps_block(), "max_gross_frac": 0.30, "max_name_frac": 0.02, "max_names": 15,
-                 "binary_event_max_name_frac": 0.01, "thin_coverage_multiplier": 0.5},
+        "caps": {**FM.caps_block(), "max_gross_frac": 0.14, "max_name_frac": 0.02, "max_names": 14,
+                 "gap_exposed_name_frac": 0.01, "thin_coverage_multiplier": 0.5,
+                 "max_daily_sigma": 0.20 / 3.0},
         "exits": "63 sessions -> cash; resting sigma stops; a binary event is NOT stopped through by design",
-        "stop_rule": stop_block(k=k, min_frac=0.06, max_frac=0.20, sigmas={**ex, "pool max": sig5},
-                                why=("small names need room; a stop cannot protect a binary gap, so "
-                                     "the binary-event cap is the protection, not the stop")),
+        "stop_rule": stop_block(k=k, min_frac=0.06, max_frac=0.20,
+                                sigmas={**ex, "eligibility max (6.67%)": 0.20 / 3.0},
+                                why=("small names need room: eligibility keeps 3 sigma inside the "
+                                     "20% cap; a stop cannot protect a gap, so gap sizing is the "
+                                     "protection and the gap number is the headline")),
         "twin": {**sticky_twin, "second_twin": (
             "a random draw from the SAME flagged pool at the same weights (separates 'picking among "
             "flagged names' from 'holding flagged names')")},
-        "worst_case": worst_case_block(
-            equity=eq, n_names=15, name_cap=0.02, gross_cap=0.30, sigma_ref=max(u["p90"], sig5),
-            sigma_ref_source="max(universe p90, the flagged pool's highest sigma)", k=3.0,
-            stop_max=0.20, binary={"n": 15, "weight": 0.01, "gap": 0.70,
-                                   "case": "every name binary at its 1% cap, all gap -70% on one day"}),
-        "kill_rule": ("account drawdown >= 15% -> flatten, DEPRIORITIZED; at 63 sessions excess <= 0 vs "
-                      "both twins and SPY -> DEPRIORITIZED; Explorer receipt older than 7 days -> no "
-                      "entries"),
+        "worst_case": {**worst_case_block(
+            equity=eq, n_names=14, name_cap=0.01, gross_cap=0.14, sigma_ref=min(sig5, 0.20 / 3.0),
+            sigma_ref_source="the eligibility ceiling (sigma <= 6.67%/day)", k=3.0,
+            stop_max=0.20, binary={"n": 14, "weight": 0.01, "gap": 0.70,
+                                   "case": "every name gap-exposed at 1%, all gap -70% on one day"}),
+            "headline": "binary_gap_usd: the lane's own worst case is the gap, not the 3-sigma day"},
+        "kill_rule": kill_block(drawdown_frac=0.15, prior=ref["kill_prior"],
+                                extra="Explorer receipt older than 7 days -> no entries"),
     }
 
     # (6) SPY control -- hack5 lineage

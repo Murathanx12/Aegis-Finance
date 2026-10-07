@@ -43,9 +43,15 @@ Built, each attacked by a second Opus and fixed (`docs/reviews/REVIEW_2026-10-07
 | C25 / C8 fixes | three gate failures fixed at the root; every health reader maps REFUSED/ERROR/STOPPED → never ALIVE (the 09-30 daily pass now reads DEGRADED); probe 0 UNKNOWN | "UNKNOWN by omission" had become "ALIVE by omission" |
 
 Telegram serve child restarted by PID at 07:41 HKT: the cockpit (plain questions, buttons) is LIVE on the new code.
-In flight at 08:00: C15 (publish sanitised receipts to a tracked folder so the pages work on Railway; writer-owned board
-supersession; book_dna lag check; nn_lab revisions rotation; scheduler housekeeping) and C20 (six-role v3 contracts
-PREPARED_NOT_SEEDED; PC-PAPER benchmark core behind a flag OFF with its worst case; the mirror cap fix as a proposal).
+Landed by 08:40 (commit `0d6fa492`): C15 (sanitised page payloads published to the tracked `backend/data/public_receipts/`
+folder, 4.3 MB, with a manifest; routers fall back to it on Railway; writer-owned board supersession; book_dna lag check;
+nn_lab revisions timeline + monthly rotation; `opportunities_build` scheduled inside the AegisDataCatalog firing at 09:00;
+AegisDataCatalog registered; AegisWRDSPullNight deleted) and C20 (six v3 contracts `PREPARED_NOT_SEEDED`, seeding refused
+three ways; `PC_BENCHMARK_CORE=False` built with its worst case: −$32k as built because pc_broker clips SPY at 12%, −$46k at
+a full 80% core; finding: the contract counts the 20% PROBE sleeve as 0%, so positions never reconcile with or without the
+core → **D21** count the active sleeve in the contract, **D22** exempt an index ETF from the 12% cap or not; the mirror cap
+fix exists as `rules_capfix_proposal.py`, not wired). `scripts/fleet_manager_run.py` knows only v1/v2: setting modes to v3
+today would silently run v1 terms (pinned by test; fix before any activation).
 Deferred for memory: sticky-twin per-draw check v2, ROT5_DIR replay receipt, contest horizon worst case, extraction
 cascade (C21, needs the GPU), OpenBB probe (C22), desktop export check (C24).
 

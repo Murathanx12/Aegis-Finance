@@ -88,8 +88,7 @@
  },
  "twin": {
   "kind": "v1_matched_random_twin_plus_cash",
-  "rule": "the sleeve's own random twin from the same size x vol cell, drawn at entry with seed = hash(role, day); the rest of the account is cash in both",
-  "why_not_sticky": "a 5-session hold re-enters every week, so a partner held across entries (TWIN_STICKY_v1) would outlive its name; each entry draws its own partner and holds it exactly as long"
+  "rule": "the sleeve's own random twin from the same size x vol cell, drawn at entry with seed = hash(role, day); the rest of the account is cash in both"
  },
  "worst_case": {
   "equity_usd": 100000.0,
@@ -108,37 +107,8 @@
   "gap_note": "a stop is not a floor: an overnight gap fills below it",
   "line": "10 x 3.00% x 10% stop = -$3,000 if every stop fills at its distance; 3-sigma day at 4.92% = -$4,429 (capped at 10% -> -$4,429 by scaling gross x1.00); sum|notional|/equity 0.30; no-stop ceiling -$30,000"
  },
- "kill_rule": {
-  "statistic": "D_21 = cumulative book-minus-twin return over each non-overlapping 21-session window counted from the first fill",
-  "sd": "sd_21 = the role's OWN measured daily sd of book-minus-twin x sqrt(21), once its >= 21 forward sessions exist; before that there is NO performance kill",
-  "kill_if": "z_21 = D_21 / sd_21 <= -2 -> DEPRIORITIZED (no new entries; held names run to horizon)",
-  "evidence_for": "z_21 >= +2 is evidence FOR, still CANNOT_DISTINGUISH as a claim",
-  "P_kill_if_zero_edge_per_check": 0.02275,
-  "P_kill_if_zero_edge_63_sessions_3_checks": 0.06670908704687517,
-  "replaces": "'at 63 sessions excess <= 0 vs both twin and SPY' (a sign test, ~21% false kill; review 2026-10-07 M6)",
-  "prior_for_scale": {
-   "sd_daily": 0.011912773901140927,
-   "n_rows": 29,
-   "roles": [
-    "hack1",
-    "hack2",
-    "hack4",
-    "hack5",
-    "hack6"
-   ],
-   "last_session": "2026-10-05",
-   "source": "paper_accounts/fleet_manager/grades.jsonl vs_twin (pooled across roles)",
-   "illustrative_line_21": -0.10918237627774535,
-   "note": "the pooled fleet gap shows the scale of the line; the role's own measured sd replaces it"
-  },
-  "drawdown": "account drawdown >= 10% from its v3 high-water -> flatten to cash, DEPRIORITIZED (a risk stop, not a verdict)",
-  "never": "MECHANISM_REJECTED is never issued by this rule",
-  "also": "digest older than 36 h -> no entries that day"
- },
- "rule_hash": "92fadaede9b598fa",
- "supersedes": [
-  "15fcfd17d80f1f4b"
- ],
- "policy_hash": "d8dc2cf92765ede3",
- "frozen_utc": "2026-10-07T00:20:05+00:00"
+ "kill_rule": "account drawdown >= 10% -> flatten, DEPRIORITIZED; digest older than 36 h -> no entries that day; at 63 sessions excess <= 0 vs both twin and SPY -> DEPRIORITIZED",
+ "rule_hash": "dc49d391f4a120a4",
+ "policy_hash": "15fcfd17d80f1f4b",
+ "frozen_utc": "2026-10-06T23:55:36+00:00"
 }

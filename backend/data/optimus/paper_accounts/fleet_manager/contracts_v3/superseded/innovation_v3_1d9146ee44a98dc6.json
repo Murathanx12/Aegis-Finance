@@ -35,13 +35,11 @@
  ],
  "selection": {
   "kind": "innovation_flags",
-  "rule": "HIGH_RISK_INNOVATION names from the newest receipt, one line per issuer, ranked by the Explorer's list_score. ELIGIBLE only if 3 x sigma_63 <= the 20% stop cap (sigma <= 6.67%/day), so the 3-sigma stop always holds and is never clipped into a sub-3-sigma stop; names above are EXCLUDED, not clipped. Every flagged name is GAP-EXPOSED (2 of 3 flags always include BINARY_EVENT or RUNWAY), so each is sized for a -70% gap: 1% of equity; THIN-COVERAGE PENALTY x0.5 when COVERAGE fires; HARD 2% per name ceiling; at most 14 names and 14% gross, so a -70% gap on the WHOLE book costs <= 9.8% of equity",
-  "eligible_at_prepare": 42,
-  "pool_at_prepare": 47,
+  "rule": "all HIGH_RISK_INNOVATION names from the newest receipt, one line per issuer, ranked by the Explorer's list_score; base weight 2%; THIN-COVERAGE PENALTY: x0.5 when the COVERAGE flag fires; BINARY-EVENT SIZING: a name with a binary event inside the horizon is sized so a 70% gap costs <= 0.7% of equity, i.e. <= 1%; HARD 2% per name; at most 15 names, 30% gross",
   "horizon_sessions": 63
  },
  "caps": {
-  "max_gross_frac": 0.14,
+  "max_gross_frac": 0.3,
   "max_name_frac": 0.02,
   "daily_turnover_frac": 0.5,
   "max_orders_per_run": 60,
@@ -49,10 +47,9 @@
   "shorting": false,
   "new_options": false,
   "leverage": false,
-  "max_names": 14,
-  "gap_exposed_name_frac": 0.01,
-  "thin_coverage_multiplier": 0.5,
-  "max_daily_sigma": 0.06666666666666667
+  "max_names": 15,
+  "binary_event_max_name_frac": 0.01,
+  "thin_coverage_multiplier": 0.5
  },
  "exits": "63 sessions -> cash; resting sigma stops; a binary event is NOT stopped through by design",
  "stop_rule": {
@@ -80,14 +77,14 @@
     "how": "3 x sigma 0.0492 = 0.1476"
    },
    {
-    "at": "eligibility max (6.67%)",
-    "daily_sigma": 0.06666666666666667,
+    "at": "pool max",
+    "daily_sigma": 0.13531040089384547,
     "stop_pct": 0.2,
-    "stop_in_sigma": 3.0,
-    "how": "3 x sigma 0.0667 = 0.2000"
+    "stop_in_sigma": 1.4780829757270857,
+    "how": "3 x sigma 0.1353 = 0.4059, clipped to [0.060, 0.200] -> 0.2000"
    }
   ],
-  "why": "small names need room: eligibility keeps 3 sigma inside the 20% cap; a stop cannot protect a gap, so gap sizing is the protection and the gap number is the headline"
+  "why": "small names need room; a stop cannot protect a binary gap, so the binary-event cap is the protection, not the stop"
  },
  "twin": {
   "kind": "sticky_matched_twin",
@@ -98,60 +95,30 @@
  },
  "worst_case": {
   "equity_usd": 100000.0,
-  "n_names": 14,
-  "notional_pct": 0.01,
-  "gross_over_equity": 0.14,
+  "n_names": 15,
+  "notional_pct": 0.02,
+  "gross_over_equity": 0.3,
   "k_sigma": 3.0,
-  "sigma_ref": 0.06666666666666667,
-  "sigma_ref_source": "the eligibility ceiling (sigma <= 6.67%/day)",
-  "k_sigma_day_usd_uncapped": -2800.0,
+  "sigma_ref": 0.13531040089384547,
+  "sigma_ref_source": "max(universe p90, the flagged pool's highest sigma)",
+  "k_sigma_day_usd_uncapped": -12177.93608044609,
   "k_sigma_day_limit_frac": 0.1,
-  "entry_gross_scale_at_sigma_ref": 1.0,
-  "k_sigma_day_usd_after_cap": -2800.0,
-  "all_stops_hit_usd": -2800.0000000000005,
-  "no_stop_ceiling_usd": -14000.000000000002,
+  "entry_gross_scale_at_sigma_ref": 0.8211572087372699,
+  "k_sigma_day_usd_after_cap": -10000.0,
+  "all_stops_hit_usd": -6000.0,
+  "no_stop_ceiling_usd": -30000.0,
   "gap_note": "a stop is not a floor: an overnight gap fills below it",
-  "binary_gap_usd": -9800.0,
+  "binary_gap_usd": -10500.0,
   "binary_gap_case": {
-   "n": 14,
+   "n": 15,
    "weight": 0.01,
    "gap": 0.7,
-   "case": "every name gap-exposed at 1%, all gap -70% on one day"
+   "case": "every name binary at its 1% cap, all gap -70% on one day"
   },
-  "line": "14 x 1.00% x 20% stop = -$2,800 if every stop fills at its distance; 3-sigma day at 6.67% = -$2,800 (capped at 10% -> -$2,800 by scaling gross x1.00); sum|notional|/equity 0.14; no-stop ceiling -$14,000; binary gap -$9,800",
-  "headline": "binary_gap_usd: the lane's own worst case is the gap, not the 3-sigma day"
+  "line": "15 x 2.00% x 20% stop = -$6,000 if every stop fills at its distance; 3-sigma day at 13.53% = -$12,178 (capped at 10% -> -$10,000 by scaling gross x0.82); sum|notional|/equity 0.30; no-stop ceiling -$30,000; binary gap -$10,500"
  },
- "kill_rule": {
-  "statistic": "D_21 = cumulative book-minus-twin return over each non-overlapping 21-session window counted from the first fill",
-  "sd": "sd_21 = the role's OWN measured daily sd of book-minus-twin x sqrt(21), once its >= 21 forward sessions exist; before that there is NO performance kill",
-  "kill_if": "z_21 = D_21 / sd_21 <= -2 -> DEPRIORITIZED (no new entries; held names run to horizon)",
-  "evidence_for": "z_21 >= +2 is evidence FOR, still CANNOT_DISTINGUISH as a claim",
-  "P_kill_if_zero_edge_per_check": 0.02275,
-  "P_kill_if_zero_edge_63_sessions_3_checks": 0.06670908704687517,
-  "replaces": "'at 63 sessions excess <= 0 vs both twin and SPY' (a sign test, ~21% false kill; review 2026-10-07 M6)",
-  "prior_for_scale": {
-   "sd_daily": 0.011912773901140927,
-   "n_rows": 29,
-   "roles": [
-    "hack1",
-    "hack2",
-    "hack4",
-    "hack5",
-    "hack6"
-   ],
-   "last_session": "2026-10-05",
-   "source": "paper_accounts/fleet_manager/grades.jsonl vs_twin (pooled across roles)",
-   "illustrative_line_21": -0.10918237627774535,
-   "note": "the pooled fleet gap shows the scale of the line; the role's own measured sd replaces it"
-  },
-  "drawdown": "account drawdown >= 15% from its v3 high-water -> flatten to cash, DEPRIORITIZED (a risk stop, not a verdict)",
-  "never": "MECHANISM_REJECTED is never issued by this rule",
-  "also": "Explorer receipt older than 7 days -> no entries"
- },
- "rule_hash": "f1028b304f7eef6e",
- "supersedes": [
-  "1d9146ee44a98dc6"
- ],
- "policy_hash": "f3267abb8d068bbb",
- "frozen_utc": "2026-10-07T00:20:05+00:00"
+ "kill_rule": "account drawdown >= 15% -> flatten, DEPRIORITIZED; at 63 sessions excess <= 0 vs both twins and SPY -> DEPRIORITIZED; Explorer receipt older than 7 days -> no entries",
+ "rule_hash": "cd05695fc5c6ec9f",
+ "policy_hash": "1d9146ee44a98dc6",
+ "frozen_utc": "2026-10-06T23:55:36+00:00"
 }

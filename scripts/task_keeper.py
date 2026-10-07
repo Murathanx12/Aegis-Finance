@@ -8,6 +8,7 @@
     python -m scripts.task_keeper snowball    # C18: snowball follow-through shadow rows + grades
     python -m scripts.task_keeper opportunities  # C15: rebuild the Opportunity Explorer receipt
     python -m scripts.task_keeper publish     # C15: sanitised public copies -> backend/data/public_receipts/
+    python -m scripts.task_keeper publish_commit  # C15 H1: commit ONLY that folder on main + push
     python -m scripts.task_keeper analyst     # weekly analyst-target pull (refuses in US hours)
     python -m scripts.task_keeper brain       # refresh the Optimus brain (tools/refresh_aegis.py)
     python -m scripts.task_keeper public_flow # C16 sensors: USAspending daily, LDA weekly, crypto daily
@@ -650,10 +651,50 @@ PUBLISH_LOG = KEEPER_DIR / "publish_receipts.jsonl"
 OPPORTUNITIES_TIMEOUT_S = 45 * 60
 
 
+#: review C15 M5: the Explorer build loads bars while the sim owner fires every 30 min; below
+#: this much free RAM the build is REFUSED (logged), never started -- otherwise the OOM killer
+#: chooses between it and the sim.
+OPPORTUNITIES_MIN_FREE_GB = 4.0
+
+
+def _free_gb() -> Optional[float]:
+    """Available physical RAM (GlobalMemoryStatusEx, the reading `bridges_on_crsp._mem_gb`
+    uses; psutil is not installed here). None = cannot read -- never a made-up number."""
+    if sys.platform != "win32":
+        return None
+    try:
+        import ctypes                                              # noqa: PLC0415
+
+        class _MS(ctypes.Structure):
+            _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                        ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                        ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                        ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                        ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+        m = _MS()
+        m.dwLength = ctypes.sizeof(_MS)
+        if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m)):
+            return None
+        return round(m.ullAvailPhys / 1e9, 2)
+    except Exception:                                              # noqa: BLE001
+        return None
+
+
 def run_opportunities(*, runner: Callable[..., Any] | None = None,
-                      log_path: Path | None = None) -> dict:
+                      log_path: Path | None = None,
+                      free_gb: Callable[[], Optional[float]] | None = None) -> dict:
     row: dict = {"job": "opportunities"}
     cmd = [_child_python(), "-m", "scripts.opportunities_build"]
+    gb = (free_gb or _free_gb)()
+    row["free_gb"] = gb
+    row["min_free_gb"] = OPPORTUNITIES_MIN_FREE_GB
+    if gb is None:
+        row.update(action="refused", why="free memory could not be read; the build was not started")
+        return log(row, log_path or OPPORTUNITIES_LOG)
+    if gb < OPPORTUNITIES_MIN_FREE_GB:
+        row.update(action="refused", why=(f"{gb:.1f} GB free < {OPPORTUNITIES_MIN_FREE_GB:.1f} GB floor; the "
+                                          f"build was not started (the sim owner shares this window)"))
+        return log(row, log_path or OPPORTUNITIES_LOG)
     try:
         runner = runner or subprocess.run
         r = runner(cmd, cwd=str(REPO), capture_output=True, text=True, timeout=OPPORTUNITIES_TIMEOUT_S,
@@ -692,6 +733,27 @@ def run_publish_receipts(*, job: Callable[[], dict] | None = None,
     except Exception as exc:                                       # noqa: BLE001
         row.update(action="refused", why=f"{type(exc).__name__}: {str(exc)[:300]}")
     return log(row, log_path or PUBLISH_LOG)
+
+
+PUBLISH_COMMIT_LOG = KEEPER_DIR / "publish_commit.jsonl"
+
+
+def run_publish_commit(*, job: Callable[[], dict] | None = None,
+                       log_path: Path | None = None) -> dict:
+    """Review C15 H1: the step that actually PUBLISHES -- commit ONLY public_receipts/ on
+    `main` and push. Its own receipt row (COMMITTED / REFUSED with reasons) is written by
+    `publish_receipts.commit_public_receipts`; this wrapper maps it to an action."""
+    try:
+        if job is None:
+            from backend.services import publish_receipts as PR     # noqa: PLC0415
+            out = PR.commit_public_receipts(log_path=log_path or PUBLISH_COMMIT_LOG)
+        else:
+            out = job()
+    except Exception as exc:                                       # noqa: BLE001
+        out = log({"job": "publish_commit", "status": "REFUSED",
+                   "reasons": [f"{type(exc).__name__}: {str(exc)[:300]}"]}, log_path or PUBLISH_COMMIT_LOG)
+    out["action"] = "ok" if out.get("status") == "COMMITTED" and out.get("pushed") is not False else "refused"
+    return out
 
 
 # ================================================================ owners (C8)
@@ -948,7 +1010,7 @@ def main(argv: list[str] | None = None) -> int:
     _ensure_streams()
     ap = argparse.ArgumentParser(prog="task_keeper")
     ap.add_argument("job", choices=("reader", "catchup", "sim", "status", "register", "catalog",
-                                   "regret", "snowball", "opportunities", "publish",
+                                   "regret", "snowball", "opportunities", "publish", "publish_commit",
                                    "analyst", "brain", "register-owners", "public_flow"))
     ap.add_argument("--apply", action="store_true",
                     help="register-owners: run the registration, not only print it")
@@ -981,9 +1043,12 @@ def main(argv: list[str] | None = None) -> int:
         # the steps before them wrote). Own keeper rows; never the catalog's exit code.
         print(json.dumps(run_opportunities(), default=str))
         print(json.dumps(run_publish_receipts(), default=str))
+        # C15 H1: LAST, the step that makes the pages public (it refuses off `main`)
+        print(json.dumps(run_publish_commit(), default=str))
         return 2 if out.get("action") == "refused" else 0
-    if a.job in ("opportunities", "publish"):
-        out = run_opportunities() if a.job == "opportunities" else run_publish_receipts()
+    if a.job in ("opportunities", "publish", "publish_commit"):
+        out = {"opportunities": run_opportunities, "publish": run_publish_receipts,
+               "publish_commit": run_publish_commit}[a.job]()
         print(json.dumps(out, default=str))
         return 2 if out.get("action") == "refused" else 0
     if a.job == "snowball":

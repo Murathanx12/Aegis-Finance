@@ -1,11 +1,11 @@
 {
  "schema": "public_receipts/1",
- "published_utc": "2026-10-07T00:00:02+00:00",
+ "published_utc": "2026-10-07T00:22:45+00:00",
  "status": "OK",
  "why": null,
- "total_bytes": 4281951,
+ "total_bytes": 4282418,
  "max_bytes": 5000000,
- "how_public": "this folder is TRACKED; the daily commit of backend/data/public_receipts/ is what makes the pages public. Routers serve live receipts first and this copy when the live directory lacks the page's receipts (Railway).",
+ "how_public": "this folder is TRACKED; a commit of backend/data/public_receipts/ to main and its push make the pages public (publish_receipts.commit_public_receipts, the last step of the AegisDataCatalog firing; it refuses off main). Routers serve whichever of the live receipts and this copy is newer by the receipts' own stamps.",
  "sanitiser": "backend/services/legibility_sanitise.py (deny-by-default, per-page allow-list) + publish_receipts.leak_scan; each copy is a fixed point of the sanitiser",
  "kinds": {
   "arena": {
@@ -31,10 +31,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "624f845e12e5f56cad0789fb02b47297a4ae1a211f04503fabb05ed33f367c3d",
-   "bytes": 627157,
+   "sha256": "fdb9c055bbabd7a405b952f5fd43df0b27812d8ee611d873d9917c3b26af67be",
+   "bytes": 627161,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-07T00:00:02+00:00"
+   "published_utc": "2026-10-07T00:22:45+00:00"
   },
   "arena_stories": {
    "page": "/arena (decision stories)",
@@ -122,10 +122,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "ba6483590bd09966c8d05274f28106089d6abe0206a3e3704ac31e91bef1bdfd",
-   "bytes": 84513,
+   "sha256": "0b40cad967cf3baa50dded016c443b4cede35819d656347d0e0216ee63a91259",
+   "bytes": 84516,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-07T00:00:02+00:00"
+   "published_utc": "2026-10-07T00:22:45+00:00"
   },
   "theory_lab_sticky": {
    "page": "/theory-lab?board=sticky",
@@ -208,16 +208,16 @@
     {
      "kind": "handoff_doc",
      "file": "docs/HANDOFF_2026-10-07_V1_BETA_NIGHT_ONE.md",
-     "sha256": "48a170b29135a5a6bfcdd213f272ea53a817e08005e04ebe95fd662eae99e847",
+     "sha256": "7cffcc9f62470875098494c6e144857052b4df4646342b29107025fc7751be09",
      "stamp_utc": "2026-10-07T00:00:00+00:00",
      "role": "CRSP sentence (dated by the handoff's name)",
      "status": "FRESH"
     }
    ],
-   "sha256": "2549f3ce96289f6f19a6529d1cf4aaebc8e9063a0278849d2852053d0407041f",
+   "sha256": "a6b47c47e9962253c5d6dae33f399cee22bfacc924637cb17d050a92a6eede8d",
    "bytes": 555791,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-07T00:00:02+00:00"
+   "published_utc": "2026-10-07T00:22:45+00:00"
   },
   "theory_lab_basket": {
    "page": "/theory-lab?board=basket",
@@ -300,16 +300,16 @@
     {
      "kind": "handoff_doc",
      "file": "docs/HANDOFF_2026-10-07_V1_BETA_NIGHT_ONE.md",
-     "sha256": "48a170b29135a5a6bfcdd213f272ea53a817e08005e04ebe95fd662eae99e847",
+     "sha256": "7cffcc9f62470875098494c6e144857052b4df4646342b29107025fc7751be09",
      "stamp_utc": "2026-10-07T00:00:00+00:00",
      "role": "CRSP sentence (dated by the handoff's name)",
      "status": "FRESH"
     }
    ],
-   "sha256": "fd7cafe277e1ee31fc451d3bb9a76a96a8ff3fbf0de31f44532c38b6ca3b9b0d",
+   "sha256": "43bb6718b5938c998a6329bdd42d0bc5cfacb2bfac94497ce227b9b9b8e86a7c",
    "bytes": 557321,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-07T00:00:02+00:00"
+   "published_utc": "2026-10-07T00:22:45+00:00"
   },
   "system_health": {
    "page": "/health",
@@ -326,10 +326,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "20cecd9fa83f5b19a7b0d3ad9dffdbebb0c74320b1bdeebeb331293ad0716b65",
-   "bytes": 57350,
+   "sha256": "eddae0b43add3d4fee5cda9a5e24df9945185c01f0f11cdc0d1d95eb3ccc038e",
+   "bytes": 57810,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-07T00:00:02+00:00"
+   "published_utc": "2026-10-07T00:22:45+00:00"
   },
   "opportunities": {
    "page": "/opportunities",
@@ -349,7 +349,7 @@
    "sha256": "3feb02293c8df27d7095ac9bf4e71550c5d5f36effa7d14d78cdb4fd5b7a0731",
    "bytes": 2399819,
    "payload_status": null,
-   "published_utc": "2026-10-07T00:00:02+00:00"
+   "published_utc": "2026-10-07T00:22:45+00:00"
   }
  },
  "published": [

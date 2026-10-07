@@ -1033,24 +1033,40 @@ def _plan_news_tilt(targets: list, *, sandbox: bool) -> dict:
                 "line": f"news tilt: REFUSED {type(exc).__name__}: {exc}"[:200] + ", applied=False"}
 
 
+def _benchmark_core_requested() -> bool:
+    import backend.config as _cfg_live
+    return bool(getattr(_cfg_live, "PC_BENCHMARK_CORE", False))
+
+
+def _benchmark_core_flag(targets: list) -> tuple[bool, str]:
+    """(on, symbol). ON only when `config.PC_BENCHMARK_CORE` is True AND the core
+    symbol is not itself a sleeve target this cycle (then the core is refused
+    by `_plan_benchmark_core` and SPY stays in the sleeves' plan)."""
+    import backend.config as _cfg_live
+    on = bool(getattr(_cfg_live, "PC_BENCHMARK_CORE", False))
+    sym = str(getattr(_cfg_live, "PC_BENCHMARK_CORE_SYMBOL", "SPY")).upper()
+    if on and any(str(t.symbol).upper() == sym for t in targets):
+        return False, sym
+    return on, sym
+
+
 def _plan_benchmark_core(targets: list, *, probe_syms: list, ex_syms: list,
                          exploit_acting: bool, probe_acting: bool, equity: float,
-                         bars_paths: list | None, sandbox: bool) -> dict:
-    """C20 / owner decision D14: hold `1 - active_gross` in the benchmark.
+                         held: dict, prices: dict, bars_paths: list | None,
+                         sandbox: bool) -> tuple[dict, list]:
+    """C20 / owner decision D14: hold `1 - acting gross` in the benchmark.
 
-    Flag OFF (`config.PC_BENCHMARK_CORE`, the default): returns enabled=False and
-    touches nothing. Flag ON: appends ONE `pc_broker.Target` for the core at its
-    WANTED weight; `plan_orders` then applies MAX_NAME_FRAC unchanged (the core
-    is clipped at 12% and the receipt says so). The core's own worst case is
-    priced on the panel sigma of the core symbol; over
-    `PC_WORST_CASE_MAX_FRAC_OF_EQUITY` with the sleeves, the core is shrunk
-    (gates only shrink). Never raises into the plan: a failure is a REFUSED line
-    and no core target."""
-    import backend.config as _cfg_live
+    Called only when the flag is ON, AFTER the sleeves' `plan_orders` (review
+    2026-10-07 H2: appended before it, an 80% wanted core made plan_orders
+    rescale every target by 1/total_w and cut the acting PROBE orders ~42%).
+    `targets` carry the weights plan_orders left them at. The core is
+    `min(1 - acting, MAX_NAME_FRAC)`, shrunk further if core + acting sleeves
+    exceed `PC_WORST_CASE_MAX_FRAC_OF_EQUITY` (gates only shrink), and is
+    planned in its own `plan_orders` call so it can never move a sleeve's share
+    count. Its orders go through the same send path (risk-gate block, venue
+    clock, open orders, the session's broker lease). Never raises into the
+    plan: a failure is a REFUSED line and no core order."""
     from backend.services import benchmark_core as BC              # noqa: PLC0415
-    on = bool(getattr(_cfg_live, "PC_BENCHMARK_CORE", False))
-    if not on:
-        return BC.core_plan({}, enabled=False)
     try:
         from backend.services import pc_broker as PB               # noqa: PLC0415
         from backend.services import pc_risk as PR                 # noqa: PLC0415
@@ -1059,43 +1075,45 @@ def _plan_benchmark_core(targets: list, *, probe_syms: list, ex_syms: list,
                   or (t.symbol in ex_syms and exploit_acting)}
         core = BC.core_plan(acting, enabled=True)
         if not core.get("applied"):
-            return core
+            return core, []
         if bars_paths:
             sig = PR.panel_sigmas(Path(bars_paths[0]))
         else:
             sig = {} if sandbox else PR.panel_sigmas()
         fb, fb_src = PR.fallback_sigma(PR.universe_stats(sig))
         csig = float(sig.get(core["symbol"]) or fb)
-        wc = BC.worst_case(equity=equity, core_frac=core["deliver_weight"], core_sigma=csig,
+        w = float(core["deliver_weight"])
+        wc = BC.worst_case(equity=equity, core_frac=w, core_sigma=csig,
                            sleeve_weights=acting, sleeve_sigmas=sig, fallback_sigma=fb,
                            label="core + acting sleeves")
-        want = core["want_weight"]
         if not wc["passes_limit"]:
             k = float(_config.PROBE_WORST_CASE_SIGMA)
             room = wc["limit_frac"] * equity + wc["sleeves_k_sigma_usd"]   # sleeves are negative
-            core_max = max(0.0, room / (k * csig * equity)) if csig > 0 else 0.0
-            want = min(want, core_max)
+            w = min(w, max(0.0, room / (k * csig * equity)) if csig > 0 else 0.0)
             core["status"] = "CORE_SHRUNK_BY_WORST_CASE"
-            core["line"] += f"; CORE_SHRUNK_BY_WORST_CASE to {want:.2%}"
-            wc = BC.worst_case(equity=equity, core_frac=min(want, core["max_name_frac"]),
-                               core_sigma=csig, sleeve_weights=acting, sleeve_sigmas=sig,
-                               fallback_sigma=fb, label="core + acting sleeves (shrunk)")
+            core["line"] += f"; CORE_SHRUNK_BY_WORST_CASE to {w:.2%}"
+            wc = BC.worst_case(equity=equity, core_frac=w, core_sigma=csig,
+                               sleeve_weights=acting, sleeve_sigmas=sig, fallback_sigma=fb,
+                               label="core + acting sleeves (shrunk)")
         core["core_sigma"] = {"daily": csig, "source": ("panel" if sig.get(core["symbol"])
                                                         else f"{fb_src} (no panel sigma)")}
         core["worst_case"] = wc
         core["worst_case_line"] = wc["line"]
-        core["target_weight_sent_to_plan_orders"] = want
-        if want <= 0:
+        core["weight_planned"] = w
+        core["sleeves_untouched"] = "planned in its own plan_orders call after the sleeves'"
+        if w <= 0:
             core["applied"] = False
-            return core
-        targets.append(PB.Target(symbol=core["symbol"], weight=want,
-                                 reason=(f"BENCHMARK CORE (D14): 1 - active "
-                                         f"{core['active_gross']:.2%}")))
-        return core
+            return core, []
+        sym = core["symbol"]
+        t = PB.Target(symbol=sym, weight=w,
+                      reason=f"BENCHMARK CORE (D14): 1 - acting {core['active_gross']:.2%}")
+        core_plans = PB.plan_orders([t], equity=equity, held={sym: held.get(sym, 0.0)},
+                                    prices={sym: prices.get(sym, 0.0)})
+        targets.append(t)          # for the receipt's book; the sleeves are already planned
+        return core, core_plans
     except Exception as exc:                                       # noqa: BLE001
-        return {"enabled": True, "applied": False,
-                "symbol": str(getattr(_cfg_live, "PC_BENCHMARK_CORE_SYMBOL", "SPY")),
-                "line": f"benchmark core: REFUSED {type(exc).__name__}: {exc}"[:200]}
+        return ({"enabled": True, "applied": False, "symbol": "SPY",
+                 "line": f"benchmark core: REFUSED {type(exc).__name__}: {exc}"[:200]}, [])
 
 
 def _order_path_gate(targets: list, *, snap: dict, equity: float, probe_syms: list,
@@ -1566,17 +1584,29 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                      if isinstance(x.get("vol_annual"), (int, float)) and x["vol_annual"] > 0},
         bars_paths=bars_paths, sandbox=sandbox)
     # ---- C20 / D14: the benchmark core (config.PC_BENCHMARK_CORE, default OFF) --
-    # AFTER the order-path gate, so the core is sized on the sleeves that will
-    # actually be held. Flag OFF: returns enabled=False, touches nothing, and the
-    # plan below is byte-identical (pinned by test_benchmark_core.py).
-    core = _plan_benchmark_core(
-        targets, probe_syms=[x["ticker"] for x in probe_rows], ex_syms=ex_syms,
-        exploit_acting=exploit_acting, probe_acting=probe_acting, equity=equity,
-        bars_paths=bars_paths, sandbox=sandbox)
-    core_syms = {core["symbol"]} if core.get("applied") else set()
+    # Review 2026-10-07 H2: the core is planned in its OWN plan_orders call,
+    # AFTER the sleeves' call, on `1 - acting gross` as plan_orders left it. It
+    # never enters the sleeves' normalisation, so their share counts are the
+    # same with the flag on or off. Flag OFF: `core_on` is False, `plan_held`
+    # is `held`, and the plan below is byte-identical (test_benchmark_core.py).
+    core_on, core_sym = _benchmark_core_flag(targets)
+    plan_held = ({s_: q for s_, q in held.items() if s_ != core_sym} if core_on else held)
     syms = [t.symbol for t in targets] + list(held)
+    if core_on and core_sym not in syms:
+        syms.append(core_sym)
     prices = PB.last_prices(syms) if syms else {}
-    plans = PB.plan_orders(targets, equity=equity, held=held, prices=prices) if syms else []
+    plans = PB.plan_orders(targets, equity=equity, held=plan_held, prices=prices) if syms else []
+    core: dict = {"enabled": False}
+    if not core_on and _benchmark_core_requested():
+        core = {"enabled": True, "applied": False, "symbol": core_sym,
+                "line": f"benchmark core: REFUSED -- {core_sym} is already a sleeve target"}
+    if core_on:
+        core, core_plans = _plan_benchmark_core(
+            targets, probe_syms=[x["ticker"] for x in probe_rows], ex_syms=ex_syms,
+            exploit_acting=exploit_acting, probe_acting=probe_acting, equity=equity,
+            held=held, prices=prices, bars_paths=bars_paths, sandbox=sandbox)
+        plans = plans + core_plans
+    core_syms = {core["symbol"]} if core.get("applied") else set()
 
     # An EXIT the share-class collapse caused is a POLICY CHANGE, not a view
     # (review 2026-09-28 F5): pc_broker would stamp it "not in the ranked book:

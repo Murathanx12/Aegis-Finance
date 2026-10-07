@@ -5692,6 +5692,16 @@ LEGIBILITY_STALE_HOURS: dict = {
 #: sanitised payload into the TRACKED `backend/data/public_receipts/`. The whole folder
 #: is refused (nothing written) when the new set would exceed this many bytes.
 PUBLIC_RECEIPTS_MAX_BYTES = 5_000_000
+#: C15 review M2: the owner's identity, scrubbed (case-insensitive) from EVERY published
+#: copy and refused by the leak scan if a form survives. The name and the public GitHub
+#: handle only; the e-mail local part and the home-folder name are derived at runtime
+#: (`publish_receipts._runtime_owner_tokens`) so they are never written into the repo.
+#: Extras: env `AEGIS_OWNER_PATTERNS` (comma-separated regexes).
+OWNER_NAME_PATTERNS: tuple = (r"(?<![a-z])murat(?:han)?(?:x12)?",)
+#: C15 review H1: `scripts.publish_receipts --commit` commits ONLY the public_receipts
+#: folder and pushes this branch to this remote; it refuses on any other branch.
+PUBLIC_RECEIPTS_BRANCH = "main"
+PUBLIC_RECEIPTS_REMOTE = "origin"
 #: (C8 review F8) The Railway fleet loops (aat-loop-hack*) were stopped ON PURPOSE on
 #: 2026-09-29 (session S60, to hold the bill at $20). While this is non-empty the
 #: `railway_fleet` probe reads STOPPED_BY_OPERATOR with this reason instead of a

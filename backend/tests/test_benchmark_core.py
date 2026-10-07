@@ -114,36 +114,94 @@ def _stable(rec: dict) -> dict:
     return {k: rec.get(k) for k in _STABLE}
 
 
-def test_flag_off_plan_is_byte_identical_to_a_plan_without_the_core_seam(tmp_path, monkeypatch):
+def _capture_plans(monkeypatch) -> list:
+    """Record every PlannedOrder plan_orders returns (sleeves AND core calls)."""
+    seen: list = []
+    real = PB.plan_orders
+
+    def _spy(targets, **kw):
+        out = real(targets, **kw)
+        seen.extend(out)
+        return out
+    monkeypatch.setattr(PB, "plan_orders", _spy)
+    return seen
+
+
+def _sleeve_qty(plans: list) -> dict:
+    return {(p.symbol, p.side): (p.qty, p.target_qty) for p in plans if p.symbol != "SPY"}
+
+
+def test_flag_off_never_calls_the_core_and_plans_no_spy(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "PC_BENCHMARK_CORE", False)
-    a, b = tmp_path / "a", tmp_path / "b"
-    for d in (a, b):
-        d.mkdir()
-        _funnel(d, n=25)
-        _ranking(d / "out", net=-0.2)
-    fa = FakeBroker().install(monkeypatch)
-    _run(a)
-    rec_a = _receipt(a)
-    calls = []
 
-    def _no_seam(targets, **kw):
-        calls.append(1)
-        return {"enabled": False, "applied": False, "symbol": "SPY", "line": "stub"}
-    monkeypatch.setattr(S, "_plan_benchmark_core", _no_seam)
+    def _boom(*a, **k):
+        raise AssertionError("the core seam must not run with the flag OFF")
+    monkeypatch.setattr(S, "_plan_benchmark_core", _boom)
     fb = FakeBroker().install(monkeypatch)
-    _run(b)
-    rec_b = _receipt(b)
-    assert calls, "the stub must have been the seam u_plan called"
-    assert json.dumps(_stable(rec_a), sort_keys=True, default=str) == \
-        json.dumps(_stable(rec_b), sort_keys=True, default=str)
-    assert set(rec_a) == set(rec_b)
-    assert "benchmark_core" not in rec_a and "CORE" not in rec_a["sendable_by_state"]
-    assert [(p.symbol, p.side, p.qty) for p in fa.submitted] == \
-        [(p.symbol, p.side, p.qty) for p in fb.submitted]
-    assert all(p.symbol != "SPY" for p in fa.submitted)
+    seen = _capture_plans(monkeypatch)
+    _funnel(tmp_path, n=25)
+    _ranking(tmp_path / "out", net=-0.2)
+    _run(tmp_path)
+    rec = _receipt(tmp_path)
+    assert "benchmark_core" not in rec and "CORE" not in rec["sendable_by_state"]
+    assert all(p.symbol != "SPY" for p in seen) and all(p.symbol != "SPY" for p in fb.submitted)
 
 
-def test_flag_on_adds_one_spy_target_clipped_by_max_name_frac(tmp_path, monkeypatch):
+def _exploit_fixture(monkeypatch, *, acting: bool) -> None:
+    """EXPLOIT targets in the plan: the E[r] layer is unavailable, so EXPLOIT
+    takes the ranker's order at min(room/n, ER_EXPLOIT_MAX_WEIGHT); `acting`
+    forces the blend grade so EXPLOIT also sends (the reviewer's case is the
+    planned-but-not-acting one)."""
+    from backend.services import expected_return as ER
+
+    def _no_er(*a, **k):
+        raise RuntimeError("test: no E[r] view")
+    monkeypatch.setattr(ER, "build", _no_er)
+    if acting:
+        monkeypatch.setattr(S, "_blend_grade", lambda *a, **k: {
+            "verdict": "MEASURED_POSITIVE", "may_trade": True, "why": "test"})
+
+
+@pytest.mark.parametrize("net,acting", [(-0.2, False), (+0.05, True)])
+def test_flag_on_leaves_every_sleeve_share_count_byte_identical(tmp_path, monkeypatch, net,
+                                                                 acting):
+    """Review 2026-10-07 H2: with EXPLOIT targets planned (acting or not) and
+    PROBE acting, the flag must not move one PROBE/EXPLOIT share."""
+    _exploit_fixture(monkeypatch, acting=acting)
+    runs = {}
+    for flag in (False, True):
+        d = tmp_path / f"flag_{flag}"
+        d.mkdir()
+        monkeypatch.setattr(config, "PC_BENCHMARK_CORE", flag)
+        fb = FakeBroker().install(monkeypatch)
+        seen = _capture_plans(monkeypatch)
+        _funnel(d, n=25)
+        _ranking(d / "out", net=net)
+        _run(d)
+        runs[flag] = (_receipt(d), seen, fb)
+    off, on = runs[False], runs[True]
+    states = {x["state"] for x in off[0]["book"]}
+    assert "EXPLOIT" in states and "PROBE" in states, f"the fixture must plan both sleeves: {states}"
+    assert off[0]["exploit_acting"] is acting
+    assert _sleeve_qty(off[1]) == _sleeve_qty(on[1])
+    assert [(p.symbol, p.side, p.qty) for p in off[2].submitted] ==         [(p.symbol, p.side, p.qty) for p in on[2].submitted if p.symbol != "SPY"]
+    off_book = {x["symbol"]: x["weight"] for x in off[0]["book"]}
+    on_book = {x["symbol"]: x["weight"] for x in on[0]["book"] if x["symbol"] != "SPY"}
+    assert off_book == on_book
+    core = on[0]["benchmark_core"]
+    gross = core["active_gross"]
+    spy = [p for p in on[2].submitted if p.symbol == "SPY"]
+    if gross >= 1.0 - 1e-9 or core.get("status") == "CORE_SHRUNK_BY_WORST_CASE":
+        # fully invested, or the sleeves alone already use the 10% worst-case
+        # budget (sandbox prices every name at the p90 fallback): no core
+        assert core.get("weight_planned", 0.0) <= max(0.0, 1 - gross) + 1e-9
+        assert len(spy) == (1 if core.get("applied") else 0)
+    else:
+        assert core["weight_planned"] == pytest.approx(min(1 - gross, PB.MAX_NAME_FRAC))
+        assert len(spy) == 1 and spy[0].qty == int((core["weight_planned"] * EQUITY) // PRICE)
+
+
+def test_flag_on_adds_one_spy_target_at_the_broker_cap(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "PC_BENCHMARK_CORE", True)
     fb = FakeBroker().install(monkeypatch)
     _funnel(tmp_path, n=25)
@@ -153,18 +211,26 @@ def test_flag_on_adds_one_spy_target_clipped_by_max_name_frac(tmp_path, monkeypa
     core = rec["benchmark_core"]
     assert core["enabled"] and core["applied"]
     assert core["status"] == "CORE_CLIPPED_BY_MAX_NAME_FRAC"
-    assert core["want_weight"] == pytest.approx(1.0 - config.PROBE_GROSS_CAP)
+    assert core["want_weight"] == pytest.approx(1.0 - core["active_gross"])
     spy_book = [x for x in rec["book"] if x["symbol"] == "SPY"]
     assert len(spy_book) == 1 and spy_book[0]["state"] == "CORE"
     spy = [p for p in fb.submitted if p.symbol == "SPY"]
     assert len(spy) == 1 and spy[0].side == "buy"
-    assert spy[0].qty == int((PB.MAX_NAME_FRAC * EQUITY) // PRICE), "the broker cap clipped it"
-    assert any(r["symbol"] == "SPY" and "MAX_NAME_FRAC" in (r["refused"] or "")
-               for r in rec["refusals"])
+    assert spy[0].qty == int((PB.MAX_NAME_FRAC * EQUITY) // PRICE)
     assert rec["sendable_by_state"]["CORE"] == 1
     assert core["worst_case"]["gross_over_equity"] == pytest.approx(
-        PB.MAX_NAME_FRAC + config.PROBE_GROSS_CAP)
+        PB.MAX_NAME_FRAC + core["active_gross"])
     assert "-$" in core["worst_case_line"]
+
+
+def test_the_reviewers_reproduction_no_longer_shrinks_probe():
+    """H2 at the plan_orders level: the sleeves' call never sees the core."""
+    tg = [PB.Target(f"EX{i}", 0.12) for i in range(6)] + [PB.Target("AAA", 0.10),
+                                                         PB.Target("BBB", 0.10)]
+    prices = {t.symbol: 100.0 for t in tg} | {"SPY": 100.0}
+    off = PB.plan_orders([PB.Target(t.symbol, t.weight) for t in tg], equity=1e6, held={},
+                         prices=prices)
+    assert {p.symbol: p.qty for p in off}["AAA"] == 1000
 
 
 def test_flag_on_in_observe_sends_no_core(tmp_path, monkeypatch):

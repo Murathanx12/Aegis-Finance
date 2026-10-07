@@ -255,6 +255,9 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     if a.regenerate_supersessions:
         out = write_supersessions()
+        if out["status"] != "OK":
+            say(f"REFUSED: {SUPERSESSIONS_FILE} not rewritten: {out['refused']}")
+            return 2
         say(f"-> {SUPERSESSIONS_FILE}: {len(out['supersessions'])} supersession(s) from "
             f"{len(out['from_summaries'])} stamped summar(ies) + {len(out['from_backfill'])} backfilled")
         return 0
@@ -264,6 +267,11 @@ def main(argv=None) -> int:
     if a.supersedes and not (a.only and a.supersedes_why.strip()):
         say("REFUSED: --supersedes marks a SUPPLEMENT: it needs --only <rules> and --supersedes-why")
         return 2
+    if a.supersedes:
+        bad = check_supersedes_target(OUT, a.supersedes, a.twin, a.only.split(","), a.run_id)
+        if bad:
+            say("REFUSED before scoring: " + "; ".join(bad))
+            return 2
     from backend.services import matched_twins as MT                 # noqa: PLC0415
     from backend.services import strategy_library as SL              # noqa: PLC0415
     from backend import config as C                                  # noqa: PLC0415
@@ -398,7 +406,8 @@ def main(argv=None) -> int:
     say(f"-> summary {summ}")
     if a.supersedes:
         sup = write_supersessions()
-        say(f"-> {SUPERSESSIONS_FILE} regenerated: {len(sup['supersessions'])} supersession(s)")
+        say(f"-> {SUPERSESSIONS_FILE} " + (f"regenerated: {len(sup['supersessions'])} supersession(s)"
+                                            if sup["status"] == "OK" else f"REFUSED: {sup['refused']}"))
     return 0
 
 
@@ -441,7 +450,63 @@ def _ok_rules(folder: Path, run_id: str) -> list:
     return out
 
 
-def supersessions_from_summaries(folder: Path | None = None) -> dict:
+def _summary_of(folder: Path, run_id: str) -> dict | None:
+    p = folder / f"twin_board_SUMMARY_{run_id}.json"
+    try:
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+    except (OSError, ValueError):
+        return None
+
+
+def _rules_scored(folder: Path, run_id: str) -> set:
+    p = folder / f"twin_board_{run_id}.jsonl"
+    out = set()
+    if p.exists():
+        for ln in p.read_text(encoding="utf-8").splitlines():
+            try:
+                out.add(json.loads(ln).get("rule"))
+            except ValueError:
+                continue
+    return out
+
+
+def check_supersedes_target(folder: Path, targets: list, twin_kind: str, rules: list,
+                            run_id: str | None = None, written_utc: str | None = None,
+                            claimed: dict | None = None) -> list:
+    """Review C15 M3: a supplement may supersede board R only when R's summary EXISTS, R has the
+    SAME twin kind, R is OLDER (its own written_utc), R actually SCORED each rule, and no other
+    supplement already claims (R, rule). Returns the reasons it may not (empty = valid)."""
+    folder = Path(folder)
+    bad = []
+    if claimed is None:
+        claimed = {}
+        for sup in supersessions_from_summaries(folder, validate=False)["supersessions"]:
+            for r in sup["rules"]:
+                for sr in sup["supersedes_runs"]:
+                    claimed[(sr, r)] = sup["supplement_run"]
+    for r_id in targets:
+        if r_id == run_id:
+            bad.append(f"{r_id}: a run cannot supersede itself")
+            continue
+        summ = _summary_of(folder, r_id)
+        if summ is None:
+            bad.append(f"{r_id}: no twin_board_SUMMARY_{r_id}.json (the superseded board does not exist)")
+            continue
+        if (summ.get("twin_kind") or "basket") != twin_kind:
+            bad.append(f"{r_id}: twin kind {summ.get('twin_kind') or 'basket'!r} != the supplement's {twin_kind!r}")
+        if written_utc and str(summ.get("written_utc") or "") >= str(written_utc):
+            bad.append(f"{r_id}: written {summ.get('written_utc')}, not older than the supplement ({written_utc})")
+        scored = _rules_scored(folder, r_id)
+        for rule in rules:
+            if rule not in scored:
+                bad.append(f"{r_id}: never scored {rule!r}")
+            other = claimed.get((r_id, rule))
+            if other and other != run_id:
+                bad.append(f"({r_id}, {rule}) is already superseded by {other}")
+    return bad
+
+
+def supersessions_from_summaries(folder: Path | None = None, *, validate: bool = True) -> dict:
     """PURE over the folder: one supersession per (supplement run, superseded run), from
     each summary's `supersedes_rows` -- or, for a pre-stamp supplement, from
     `BACKFILL_SUPERSEDES` with the supplement's OK rows. Same shape the reader reads."""
@@ -472,8 +537,21 @@ def supersessions_from_summaries(folder: Path | None = None) -> dict:
         for sr, rules in by_run.items():
             if rules:
                 sups.append({"supplement_run": run, "twin_kind": s.get("twin_kind"), "supersedes_runs": [sr],
-                             "rules": rules, "why": why, "stamp": stamp})
-    return {"supersessions": sups, "from_summaries": stamped, "from_backfill": backfilled}
+                             "rules": rules, "why": why, "stamp": stamp, "_written": s.get("written_utc")})
+    refused = []
+    if validate:
+        claimed: dict = {}
+        for sup in sups:                                   # first claim (by summary name order) wins
+            for r in sup["rules"]:
+                claimed.setdefault((sup["supersedes_runs"][0], r), sup["supplement_run"])
+        for sup in sups:
+            bad = check_supersedes_target(folder, sup["supersedes_runs"], sup["twin_kind"] or "basket",
+                                          sup["rules"], sup["supplement_run"], sup["_written"], claimed)
+            if bad:
+                refused.append({"supplement_run": sup["supplement_run"], "why": bad})
+    for sup in sups:
+        sup.pop("_written", None)
+    return {"supersessions": sups, "from_summaries": stamped, "from_backfill": backfilled, "refused": refused}
 
 
 def write_supersessions(folder: Path | None = None) -> dict:
@@ -481,6 +559,10 @@ def write_supersessions(folder: Path | None = None) -> dict:
     import hashlib                                                   # noqa: PLC0415
     folder = Path(folder or OUT)
     got = supersessions_from_summaries(folder)
+    if got["refused"]:
+        # a claim that targets a missing / other-kind / newer board, or a row two supplements
+        # claim, would overlay the WRONG numbers: the previous file stays, nothing is written
+        return {"status": "REFUSED", **got}
     body = {"schema": SUPERSESSIONS_SCHEMA, "written_utc": _now(),
             "written_by": "scripts/hyp_twin_board.write_supersessions (the board WRITER owns row supersession)",
             "source": "every twin_board_SUMMARY_*.json's supersedes_rows; pre-stamp supplements from "
@@ -492,7 +574,7 @@ def write_supersessions(folder: Path | None = None) -> dict:
     tmp.write_text(json.dumps(body, indent=1), encoding="utf-8")
     json.loads(tmp.read_text(encoding="utf-8"))
     tmp.replace(p)
-    return body
+    return {"status": "OK", **body}
 
 
 def _r(x) -> str:

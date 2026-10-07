@@ -487,11 +487,27 @@ def _timeline_key(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+class RevisionsArchiveCorrupt(RuntimeError):
+    """A rotated month no longer hashes to its manifest: the timeline cannot be trusted."""
+
+
 def revisions_history(path: Path, archive_dir: Path | None = None) -> pd.DataFrame:
-    """The live log plus every rotated month (the timeline spans the rotation)."""
+    """The live log plus every rotated month (the timeline spans the rotation). Each archived
+    month is re-hashed against its manifest before it is read (review C15 M4); a mismatch
+    RAISES -- a tampered or truncated month must be loud, not silently skipped."""
     path = Path(path)
-    parts = [pd.read_parquet(f) for f in sorted(Path(archive_dir or revisions_archive_dir(path))
-                                               .glob("revisions_????-??.parquet"))]
+    adir = Path(archive_dir or revisions_archive_dir(path))
+    parts = []
+    for f in sorted(adir.glob("revisions_????-??.parquet")):
+        man = f.with_suffix(".json")
+        try:
+            want = json.loads(man.read_text(encoding="utf-8")).get("parquet_sha256")
+        except (OSError, ValueError):
+            want = None
+        if want != _sha256_file(f):
+            raise RevisionsArchiveCorrupt(f"{f.name} does not hash to its manifest {man.name} "
+                                          f"({'no manifest' if want is None else 'sha256 mismatch'})")
+        parts.append(pd.read_parquet(f))
     if path.exists():
         parts.append(pd.read_parquet(path))
     parts = [x for x in parts if len(x)]
@@ -597,66 +613,129 @@ def _sha256_file(p: Path) -> str:
     return h.hexdigest()
 
 
-def rotate_revisions(path: Path, *, now: datetime | None = None, archive_dir: Path | None = None) -> dict:
-    """Move every CLOSED month's rows (asof_utc month < the current UTC month) out of the
-    live log into a sealed monthly parquet + manifest. Refuses a month already sealed
-    (the rows stay in the live file, named); verifies archive + remaining == before."""
+def _is_tracked(p: Path) -> bool:
+    """C10's tracked-by-git rule (`ledger_archive.is_tracked`). nn_lab's own venv cannot
+    import backend.config (no dotenv), so the same `git ls-files --error-unmatch` question is
+    asked directly there. Any failure to ask is False (not sealed)."""
+    try:
+        from backend.services import ledger_archive as LA          # noqa: PLC0415
+        return bool(LA.is_tracked(p))
+    except ImportError:
+        pass
+    import subprocess                                               # noqa: PLC0415
+    try:
+        r = subprocess.run(["git", "ls-files", "--error-unmatch", "--", _rel(p)], cwd=str(C.REPO),
+                           capture_output=True, text=True, timeout=30)
+        return r.returncode == 0
+    except Exception:                                               # noqa: BLE001
+        return False
+
+
+def verify_month_seal(month: str, live_rows: pd.DataFrame, archive_dir: Path, *, tracked=None) -> dict:
+    """C10's `ledger_archive.verify_seal` rule for a revisions month (review C15 M4). SEALED only
+    when, checked fresh: (1) the manifest names the month with a parquet sha256; (2) the parquet
+    exists and hashes to it; (3) git TRACKS the parquet (a gitignored parquet is one laptop only);
+    (4) the live rows of that month are exactly the archived rows (count and content hash)."""
+    tracked = tracked or _is_tracked
+    path = Path(archive_dir) / f"revisions_{month}.parquet"
+    man = path.with_suffix(".json")
+    out = {"month": month, "sealed": False, "parquet": _rel(path), "manifest": _rel(man)}
+    try:
+        m = json.loads(man.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {**out, "reason": "no manifest for this month"}
+    if m.get("month") != month or not m.get("parquet_sha256"):
+        return {**out, "reason": "manifest does not name this month with a parquet sha256"}
+    if not path.exists():
+        return {**out, "reason": f"{path.name} is missing"}
+    if _sha256_file(path) != m["parquet_sha256"]:
+        return {**out, "reason": f"{path.name} does not hash to the manifest's sha256"}
+    if not tracked(path):
+        return {**out, "reason": (f"{path.name} is not tracked by git; rows stay live until it is. "
+                                  f"Run: git add {_rel(path)} {_rel(man)}")}
+    arch = pd.read_parquet(path)
+    if len(arch) != len(live_rows) or _frame_sha(arch) != _frame_sha(live_rows):
+        return {**out, "reason": (f"the live file's {len(live_rows)} rows of {month} differ from the "
+                                  f"{len(arch)} archived rows; nothing removed")}
+    return {**out, "sealed": True, "reason": None}
+
+
+def _frame_sha(df: pd.DataFrame) -> str:
+    d = df.reindex(columns=REV_COLS).copy()
+    d["date"] = pd.to_datetime(d["date"]).astype("int64")
+    d = d.astype(str).sort_values(REV_COLS, kind="mergesort")
+    return hashlib.sha256("\n".join("\t".join(r) for r in d.itertuples(index=False)).encode()).hexdigest()
+
+
+def rotate_revisions(path: Path, *, now: datetime | None = None, archive_dir: Path | None = None,
+                     tracked=None) -> dict:
+    """TWO PHASES per CLOSED month (asof_utc month < the current UTC month), never by mtime:
+    (a) SEAL: write `revisions_<YYYY-MM>.parquet` + its JSON manifest once (rows stay live);
+    (b) REMOVE the month's rows from the live file only when `verify_month_seal` holds --
+        including that git TRACKS the parquet. Until the owner commits it, the month reads
+        SEALED_PENDING_COMMIT and every row stays live. Verifies archive + live == before."""
     path = Path(path)
     now = now or datetime.now(timezone.utc)
     adir = Path(archive_dir or revisions_archive_dir(path))
     cur = now.strftime("%Y-%m")
     if not path.exists():
-        return {"status": "OK", "sealed": [], "refused": [], "why": "no live revisions file"}
+        return {"status": "OK", "sealed": [], "removed": [], "pending": [], "why": "no live revisions file"}
     live = pd.read_parquet(path)
     if not len(live):
-        return {"status": "OK", "sealed": [], "refused": []}
+        return {"status": "OK", "sealed": [], "removed": [], "pending": []}
     month = live["asof_utc"].astype(str).str[:7]
     undated = ~month.str.match(r"^\d{4}-\d{2}$")
     closed = sorted(set(month[~undated & (month < cur)]))
-    sealed, refused = [], []
+    sealed, removed, pending, refused = [], [], [], []
     keep = pd.Series(True, index=live.index)
     for m in closed:
-        out = adir / f"revisions_{m}.parquet"
-        man = adir / f"revisions_{m}.json"
-        if out.exists() or man.exists():
-            refused.append({"month": m, "why": f"{out.name} is already sealed (a month is written once); "
-                                               f"{int((month == m).sum())} rows stay in the live file"})
-            continue
         rows = live[month == m]
-        adir.mkdir(parents=True, exist_ok=True)
-        tmp = out.with_suffix(".tmp.parquet")
-        rows.to_parquet(tmp, index=False)
-        if len(pd.read_parquet(tmp, columns=["date"])) != len(rows):
-            tmp.unlink(missing_ok=True)
-            refused.append({"month": m, "why": "archive write verification failed; rows kept live"})
-            continue
-        tmp.replace(out)
-        body = {"schema": REVISIONS_MANIFEST_SCHEMA, "month": m, "rows": int(len(rows)),
-                "kinds": {str(k): int(v) for k, v in rows["kind"].astype(str).value_counts().items()},
-                "first_asof_utc": str(rows["asof_utc"].astype(str).min()),
-                "last_asof_utc": str(rows["asof_utc"].astype(str).max()),
-                "parquet": _rel(out), "parquet_sha256": _sha256_file(out),
-                "sealed_utc": now.isoformat(timespec="seconds"),
-                "command": "nn_lab.membership.rotate_revisions (called by nn_lab.nightly.step_append)"}
-        mt = man.with_suffix(".tmp")
-        mt.write_text(json.dumps(body, indent=1), encoding="utf-8")
-        json.loads(mt.read_text(encoding="utf-8"))
-        mt.replace(man)
-        keep &= month != m
-        sealed.append({"month": m, "rows": body["rows"], "parquet_sha256": body["parquet_sha256"],
-                       "manifest": _rel(man)})
-    if sealed:
+        out = adir / f"revisions_{m}.parquet"
+        man = out.with_suffix(".json")
+        if not out.exists() and not man.exists():
+            adir.mkdir(parents=True, exist_ok=True)
+            tmp = out.with_suffix(".tmp.parquet")
+            rows.to_parquet(tmp, index=False)
+            if len(pd.read_parquet(tmp, columns=["date"])) != len(rows):
+                tmp.unlink(missing_ok=True)
+                refused.append({"month": m, "why": "archive write verification failed; rows kept live"})
+                continue
+            tmp.replace(out)
+            body = {"schema": REVISIONS_MANIFEST_SCHEMA, "month": m, "rows": int(len(rows)),
+                    "kinds": {str(k): int(v) for k, v in rows["kind"].astype(str).value_counts().items()},
+                    "first_asof_utc": str(rows["asof_utc"].astype(str).min()),
+                    "last_asof_utc": str(rows["asof_utc"].astype(str).max()),
+                    "parquet": _rel(out), "parquet_sha256": _sha256_file(out),
+                    "sealed_utc": now.isoformat(timespec="seconds"),
+                    "command": "nn_lab.membership.rotate_revisions (called by nn_lab.nightly.step_append)",
+                    "removal_rule": "rows leave the live file only when verify_month_seal holds (C10 rule: "
+                                    "parquet hashes to this manifest AND is tracked by git)"}
+            mt = man.with_suffix(".tmp")
+            mt.write_text(json.dumps(body, indent=1), encoding="utf-8")
+            json.loads(mt.read_text(encoding="utf-8"))
+            mt.replace(man)
+            sealed.append({"month": m, "rows": body["rows"], "parquet_sha256": body["parquet_sha256"],
+                           "manifest": _rel(man)})
+        v = verify_month_seal(m, rows, adir, tracked=tracked)
+        if v["sealed"]:
+            keep &= month != m
+            removed.append({"month": m, "rows": int(len(rows))})
+        elif "not tracked by git" in str(v["reason"]):
+            pending.append({"month": m, "state": "SEALED_PENDING_COMMIT", "why": v["reason"]})
+        else:
+            refused.append({"month": m, "why": v["reason"]})
+    if removed:
         rest = live[keep]
         tmp = path.with_suffix(".tmp.parquet")
         rest.to_parquet(tmp, index=False)
-        n_arch = sum(x["rows"] for x in sealed)
-        if len(pd.read_parquet(tmp, columns=["date"])) + n_arch != len(live):
+        n_rm = sum(x["rows"] for x in removed)
+        if len(pd.read_parquet(tmp, columns=["date"])) + n_rm != len(live):
             tmp.unlink(missing_ok=True)
             raise RuntimeError("rotation verification failed (archive + live != before); live file kept")
         tmp.replace(path)
-    return {"status": "REFUSED" if refused and not sealed else "OK", "sealed": sealed, "refused": refused,
-            "n_undated_rows_kept_live": int(undated.sum()), "live_rows_after": int(len(live) - sum(
-                x["rows"] for x in sealed))}
+    return {"status": "REFUSED" if refused else "OK", "sealed": sealed, "removed": removed, "pending": pending,
+            "refused": refused, "n_undated_rows_kept_live": int(undated.sum()),
+            "live_rows_after": int(len(live) - sum(x["rows"] for x in removed))}
 
 
 # ─────────────────────────────── the audit ───────────────────────────────────

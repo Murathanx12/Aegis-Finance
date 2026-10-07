@@ -168,7 +168,8 @@ def test_publish_has_a_caller_in_the_daily_catalog_job():
     from scripts import task_keeper as K
     import inspect
     src = inspect.getsource(K.main)
-    assert "run_publish_receipts" in src and "run_opportunities" in src
+    assert "run_publish_receipts" in src and "run_opportunities" in src and "run_publish_commit" in src
+    assert src.index("run_publish_commit()") > src.index("run_publish_receipts()")  # commit is LAST
 
 
 # ───────────────────── the caller: the AegisDataCatalog firing (C15 item 6) ─────────────
@@ -181,11 +182,13 @@ class _R:
 def test_run_opportunities_refuses_a_silent_exit_and_logs_one_row(tmp_path):
     from scripts import task_keeper as K
     lp = tmp_path / "opp.jsonl"
-    ok = K.run_opportunities(runner=lambda *a, **k: _R(0, "roi_v3 n=65\nwrote backend/x.json (2.0 MB)"), log_path=lp)
+    mem = {"free_gb": lambda: 8.0}
+    ok = K.run_opportunities(runner=lambda *a, **k: _R(0, "roi_v3 n=65\nwrote backend/x.json (2.0 MB)"), log_path=lp,
+                             **mem)
     assert ok["action"] == "ok" and ok["line"].startswith("wrote ")
-    silent = K.run_opportunities(runner=lambda *a, **k: _R(0, "roi_v3 n=65"), log_path=lp)
+    silent = K.run_opportunities(runner=lambda *a, **k: _R(0, "roi_v3 n=65"), log_path=lp, **mem)
     assert silent["action"] == "refused" and "nothing written" in silent["why"]
-    bad = K.run_opportunities(runner=lambda *a, **k: _R(1, "", "Traceback\nMemoryError"), log_path=lp)
+    bad = K.run_opportunities(runner=lambda *a, **k: _R(1, "", "Traceback\nMemoryError"), log_path=lp, **mem)
     assert bad["action"] == "refused" and "MemoryError" in bad["why"]
     assert len(lp.read_text(encoding="utf-8").splitlines()) == 3
 
@@ -216,3 +219,177 @@ def test_catalog_health_row_is_degraded_by_a_refused_step_of_the_same_firing(tmp
     rd = TR.r_catalog(Ctx(), None)
     assert rd.status == "DEGRADED" and "opportunities_build refused" in rd.reason
     assert "publish_receipts: ok" in rd.detail
+
+
+def test_run_opportunities_refuses_below_the_memory_floor_and_never_starts(tmp_path):
+    """Review C15 M5: the 09:00 firing shares its window with the sim owner."""
+    from scripts import task_keeper as K
+    started = []
+    out = K.run_opportunities(runner=lambda *a, **k: started.append(1), log_path=tmp_path / "o.jsonl",
+                              free_gb=lambda: 2.5)
+    assert out["action"] == "refused" and "2.5 GB free < 4.0 GB" in out["why"] and not started
+    unk = K.run_opportunities(runner=lambda *a, **k: started.append(1), log_path=tmp_path / "o.jsonl",
+                              free_gb=lambda: None)
+    assert unk["action"] == "refused" and "could not be read" in unk["why"] and not started
+
+
+# ───────────────────── review C15 M1: precedence by AGE, rows re-aged ─────────────────────
+
+def _pl(*stamps, missing: int = 0) -> dict:
+    recs = [{"kind": "k", "status": "FRESH", "stamp_utc": t.isoformat()} for t in stamps]
+    recs += [{"kind": "k", "status": "MISSING", "stamp_utc": None}] * missing
+    return {"receipts": recs}
+
+
+def test_the_newer_copy_wins_by_its_own_stamps_and_ties_go_to_completeness():
+    old, new = NOW - timedelta(days=3), NOW - timedelta(hours=1)
+    assert PR.prefer_published(_pl(old, old), _pl(new, new)) is True       # same count, pub newer
+    assert PR.prefer_published(_pl(new, new), _pl(old, old, old)) is False  # live newer wins
+    assert PR.prefer_published(_pl(new, missing=1), _pl(new, new)) is True  # tie -> more complete
+    assert PR.prefer_published(_pl(new, new), _pl(new, new)) is False       # full tie -> live
+    assert PR.prefer_published(None, _pl(old)) is True and PR.prefer_published(_pl(old), None) is False
+
+
+def test_a_published_arena_rows_are_re_aged_from_serve_time(world):
+    tmp, live = world
+    PR.publish()
+    pub = PR.load_published("arena")
+    rows = [r for r in pub["books"] if r.get("mark_status") == "LIVE"]
+    assert rows, "fixture has a LIVE row"
+    later = NOW + timedelta(days=6)
+    out = PR.refresh(pub, "arena", now=later)
+    by = {r["account"]: r for r in out["books"]}
+    for r in rows:
+        got = by[r["account"]]
+        assert got["mark_status"] == "STALE" and got["mark_age_days"] >= (r["mark_age_days"] or 0) + 6
+    assert out["numbers"]["mark_status_counts"].get("LIVE", 0) == 0
+
+
+def test_published_health_rows_carry_age_now_from_their_own_evidence(world):
+    PR.publish()
+    later = NOW + timedelta(days=2)
+    out = PR.refresh(PR.load_published("system_health"), "system_health", now=later)
+    ages = [r["age_s_now"] for g in out["groups"] for r in g["rows"] if r.get("age_s_now") is not None]
+    assert ages and min(ages) > 2 * 86400 - 60
+
+
+# ───────────────────── review C15 M2: the owner's identity on EVERY kind ──────────────────
+
+def test_owner_identity_is_scrubbed_on_every_kind_and_is_in_the_leak_scan(world, monkeypatch):
+    tmp, live = world
+    hp = next((live / "health").glob("health_*.json"))
+    rec = json.loads(hp.read_text(encoding="utf-8"))
+    rec["rows"][0]["detail"] = "MURAT asked; see github.com/murathanx12 and Murathan's notes"
+    hp.write_text(json.dumps(rec), encoding="utf-8")
+    L._CACHE.clear()
+    assert PR.leak_scan({"x": "by Murathanx12"}) == ["$.x: owner identity"]
+    assert PR.leak_scan({"x": "murat_book"}) == ["$.x: owner identity"]
+    out = PR.publish()
+    assert out["kinds"]["system_health"]["status"] == "OK"
+    raw = (PR.public_dir() / "system_health" / "latest.json").read_text(encoding="utf-8")
+    assert "the owner asked" in raw and not PR.owner_pattern().search(raw)
+    monkeypatch.setattr(PR, "_owner_scrub", lambda v: v)                    # a scrub regression
+    again = PR.publish()
+    assert again["kinds"]["system_health"]["status"] == "REFUSED"
+    assert "owner identity" in again["kinds"]["system_health"]["why"]
+
+
+# ───────────────────── review C15 H1: commit ONLY the folder, on main, then push ────────────
+
+import subprocess  # noqa: E402
+
+
+def _g(repo: Path, *args: str) -> str:
+    r = subprocess.run(["git", *args], cwd=str(repo), capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, (args, r.stderr)
+    return r.stdout.strip()
+
+
+@pytest.fixture
+def gitrepo(tmp_path):
+    """A throwaway repo + bare remote (never the real repository). Local config isolates it
+    from the machine's hooks and signing settings."""
+    remote = tmp_path / "remote.git"
+    _g(tmp_path, "init", "--bare", "-b", "main", str(remote))
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _g(repo, "init", "-b", "main")
+    hooks = tmp_path / "nohooks"
+    hooks.mkdir()
+    for k, v in (("user.name", "fixture"), ("user.email", "fixture@example.invalid"),
+                 ("commit.gpgsign", "false"), ("core.hooksPath", str(hooks)), ("core.autocrlf", "false")):
+        _g(repo, "config", k, v)
+    (repo / "code.py").write_text("x = 1\n", encoding="utf-8")
+    _g(repo, "add", "code.py")
+    _g(repo, "commit", "-m", "init")
+    _g(repo, "remote", "add", "origin", str(remote))
+    _g(repo, "push", "-q", "origin", "main")
+    folder = repo / "backend" / "data" / "public_receipts"
+    return repo, folder, remote
+
+
+def _publish_into(folder: Path, payload: str = "1") -> None:
+    (folder / "arena").mkdir(parents=True, exist_ok=True)
+    b = json.dumps({"x": payload}).encode()
+    (folder / "arena" / "latest.json").write_bytes(b)
+    (folder / "MANIFEST.json").write_text(json.dumps({
+        "status": "OK", "published_utc": NOW.isoformat(),
+        "kinds": {"arena": {"status": "OK", "sha256": hashlib.sha256(b).hexdigest()}}}), encoding="utf-8")
+
+
+def _commit(repo, folder, tmp_path, **kw):
+    return PR.commit_public_receipts(repo=repo, folder=folder, log_path=tmp_path / "commit.jsonl", **kw)
+
+
+def test_commit_refuses_off_main_and_changes_nothing(gitrepo, tmp_path):
+    repo, folder, _ = gitrepo
+    _publish_into(folder)
+    _g(repo, "checkout", "-q", "-b", "wip/x")
+    out = _commit(repo, folder, tmp_path)
+    assert out["status"] == "REFUSED" and "not 'main'" in out["reasons"][0]
+    assert _g(repo, "diff", "--cached", "--name-only") == ""                  # nothing staged
+    row = json.loads((tmp_path / "commit.jsonl").read_text(encoding="utf-8").splitlines()[-1])
+    assert row["status"] == "REFUSED" and row["branch"] == "wip/x"
+
+
+def test_commit_refuses_with_staged_changes_outside_the_folder(gitrepo, tmp_path):
+    repo, folder, _ = gitrepo
+    _publish_into(folder)
+    (repo / "code.py").write_text("x = 2\n", encoding="utf-8")
+    _g(repo, "add", "code.py")
+    out = _commit(repo, folder, tmp_path)
+    assert out["status"] == "REFUSED" and "outside backend/data/public_receipts/" in out["reasons"][0]
+    assert _g(repo, "diff", "--cached", "--name-only") == "code.py"           # the owner's stage untouched
+
+
+def test_commit_refuses_a_manifest_that_does_not_hash(gitrepo, tmp_path):
+    repo, folder, _ = gitrepo
+    _publish_into(folder)
+    (folder / "arena" / "latest.json").write_text('{"x": "tampered"}', encoding="utf-8")
+    out = _commit(repo, folder, tmp_path)
+    assert out["status"] == "REFUSED" and "does not hash" in " ".join(out["reasons"])
+
+
+def test_commit_publishes_only_the_folder_then_refuses_an_empty_diff(gitrepo, tmp_path):
+    repo, folder, remote = gitrepo
+    _publish_into(folder)
+    (repo / "code.py").write_text("x = 3\n", encoding="utf-8")              # unstaged code change
+    out = _commit(repo, folder, tmp_path)
+    assert out["status"] == "COMMITTED" and out["pushed"] is True, out
+    assert out["message"] == f"public receipts {NOW.isoformat()} (data-only, sanitised; no code)"
+    files = _g(repo, "show", "--name-only", "--format=", "HEAD").splitlines()
+    assert files and all(f.startswith("backend/data/public_receipts/") for f in files)
+    assert _g(remote, "log", "-1", "--format=%s", "main") == out["message"]
+    assert "code.py" in _g(repo, "status", "--porcelain")                    # never committed
+    again = _commit(repo, folder, tmp_path)
+    assert again["status"] == "REFUSED" and "staged diff" in again["reasons"][0]
+
+
+def test_commit_never_pushes_unpushed_code_on_main(gitrepo, tmp_path):
+    repo, folder, remote = gitrepo
+    (repo / "code.py").write_text("x = 4\n", encoding="utf-8")
+    _g(repo, "commit", "-qam", "somebody's local code commit")
+    _publish_into(folder)
+    out = _commit(repo, folder, tmp_path)
+    assert out["status"] == "COMMITTED" and out["pushed"] is False and "never pushes code" in out["push_refused"]
+    assert _g(remote, "log", "-1", "--format=%s", "main") == "init"

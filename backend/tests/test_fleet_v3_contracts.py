@@ -26,8 +26,10 @@ REF = {
     "spy_sigma": 0.007, "spy_worst_day": -0.0586,
     "candidate_sigma": {"thematic": 0.0671, "revision_snowball": 0.0504, "innovation": 0.1353},
     "quant": {"rule": V3.QUANT_RULE, "boards": {"fair": ["f.jsonl"], "sticky": ["s.jsonl"]},
-              "eligible": [], "n_eligible": 0, "n_pure_selection_t2_both_twins": 27,
-              "today": "HOLD_CASH"},
+              "eligible": ["r1", "r2"], "n_eligible": 2, "n_pure_selection_t2_both_twins": 2,
+              "capital_candidate_eligible": [], "today": "HOLD_ELIGIBLE"},
+    "kill_prior": {"sd_daily": 0.0119, "n_rows": 29, "source": "test"},
+    "innovation_pool": {"n": 47, "n_sigma_eligible": 30},
     "lineage": {r: {"account": V3.ACCOUNT[r], "v2_policy_hash": "x"} for r in V3.ROLES},
 }
 
@@ -66,17 +68,42 @@ def test_six_roles_each_frozen_with_every_declared_field(frozen):
 
 def test_role_specific_rules(frozen):
     inn = frozen["innovation"]
-    assert inn["caps"]["max_name_frac"] == 0.02, "a HARD 2% per name"
-    assert inn["caps"]["binary_event_max_name_frac"] <= 0.01
+    assert inn["caps"]["max_name_frac"] == 0.02, "a HARD 2% per name ceiling"
+    assert inn["caps"]["gap_exposed_name_frac"] <= 0.01
     assert inn["caps"]["thin_coverage_multiplier"] == 0.5
-    assert inn["worst_case"]["binary_gap_usd"] == pytest.approx(-15 * 0.01 * 0.70 * 1e5)
+    # review M7: the gap is the headline and stays inside the lane's own 10% line
+    wc = inn["worst_case"]
+    assert wc["binary_gap_usd"] == pytest.approx(-14 * 0.01 * 0.70 * 1e5)
+    assert -wc["binary_gap_usd"] <= config.FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC * 1e5
+    assert wc["no_stop_ceiling_usd"] >= -0.10 / 0.70 * 1e5 - 1e-6
+    assert "binary_gap" in wc["headline"]
+    # review M7: the 3-sigma stop is never clipped into a sub-3-sigma stop
+    smax = inn["caps"]["max_daily_sigma"]
+    assert 3 * smax <= inn["stop_rule"]["max_frac"] + 1e-12
+    ex = {e["at"]: e for e in inn["stop_rule"]["examples"]}
+    assert all(e["stop_in_sigma"] >= 3 - 1e-9 for e in ex.values())
     assert inn["account"] == "UNASSIGNED"
     rev = frozen["revision_snowball"]
     assert not any("reputation" in json.dumps(i).lower() for i in rev["inputs"]), \
         "reputation weights are NOT_PERSISTENT_OOS and are not an input"
     assert "NOT_PERSISTENT_OOS" in json.dumps(rev["excluded_inputs"])
     q = frozen["quant_ensemble"]
-    assert q["selection"]["today"] == "HOLD_CASH" and q["worst_case_today"]["usd"] == 0.0
+    # review H3: the PRODUCT_EXPERIMENT trades the two-twin survivors; the market line
+    # is the CAPITAL_CANDIDATE promotion gate, never the entry gate
+    assert q["selection"]["today"] == "HOLD_ELIGIBLE"
+    assert q["selection"]["eligible_at_prepare"] == ["r1", "r2"]
+    assert "net_minus_market" not in q["selection"]["rule"]
+    assert q["capital_candidate_gate"]["licence"] == "CAPITAL_CANDIDATE"
+    assert "net_minus_market" in q["capital_candidate_gate"]["rule"]
+    for role in ("thematic", "revision_snowball", "world_news", "quant_ensemble", "innovation"):
+        k = frozen[role]["kill_rule"]
+        assert "z_21" in k["kill_if"] and "<= -2" in k["kill_if"], role
+        assert k["P_kill_if_zero_edge_per_check"] == pytest.approx(0.02275)
+        assert k["P_kill_if_zero_edge_63_sessions_3_checks"] < 0.07
+        assert "MECHANISM_REJECTED" in k["never"]
+        assert k["prior_for_scale"]["illustrative_line_21"] == pytest.approx(
+            -2 * 0.0119 * 21 ** 0.5)
+    assert "why_not_sticky" in frozen["world_news"]["twin"]
     ctl = frozen["spy_control"]
     assert ctl["selection"]["symbol"] == "SPY" and ctl["kill_rule"].startswith("never killed")
     assert "trust" in frozen["world_news"]["selection"]["rule"]
@@ -96,6 +123,18 @@ def test_write_once_and_tamper_evident(tmp_path, frozen):
         V3.load_prepared("thematic", tmp_path)
     with pytest.raises(V3.PreparedRefusal, match="only a"):
         V3.freeze_prepared(dict(body, status="LIVE"), tmp_path / "x")
+
+
+def test_a_prepared_contract_can_be_superseded_and_the_old_one_is_kept(tmp_path, frozen):
+    body = V3.build_bodies(REF)["innovation"]
+    old_hash = frozen["innovation"]["policy_hash"]
+    changed = dict(body, caps={**body["caps"], "max_names": 13})
+    new = V3.freeze_prepared(changed, tmp_path, supersede=True)
+    assert new["supersedes"] == [old_hash] and new["policy_hash"] != old_hash
+    assert (tmp_path / "superseded" / f"innovation_v3_{old_hash}.json").exists()
+    assert V3.load_prepared("innovation", tmp_path)["policy_hash"] == new["policy_hash"]
+    # idempotent: the same body again returns the superseding contract unchanged
+    assert V3.freeze_prepared(changed, tmp_path, supersede=True)["policy_hash"] == new["policy_hash"]
 
 
 def test_activation_may_change_only_the_status_fields(frozen):
@@ -170,13 +209,14 @@ def _row(rule: str, ps: float, nmm: float) -> dict:
             "net_minus_market": {"validate": {"t_blocks": nmm}}}
 
 
-def test_quant_eligibility_needs_both_twins_and_the_validation_market_line(tmp_path):
+def test_quant_entry_needs_both_twins_and_the_market_line_only_promotes(tmp_path):
     ft = _board(tmp_path / "f.jsonl", [_row("a", 2.5, 0), _row("b", 2.5, 0), _row("c", 1.0, 0)])
     st = _board(tmp_path / "s.jsonl", [_row("a", 2.1, 2.4), _row("b", 2.2, 1.0), _row("c", 3.0, 3.0)])
     q = V3.quant_eligibility([ft], [st])
     assert q["pure_selection_t2_both_twins"] == ["a", "b"]
-    assert q["eligible"] == ["a"] and q["today"] == "HOLD_ELIGIBLE"
-    st2 = _board(tmp_path / "s2.jsonl", [_row("a", 2.1, 1.9)])
+    assert q["eligible"] == ["a", "b"] and q["today"] == "HOLD_ELIGIBLE"
+    assert q["capital_candidate_eligible"] == ["a"], "the market line is the promotion gate"
+    st2 = _board(tmp_path / "s2.jsonl", [_row("a", 1.9, 3.0)])
     assert V3.quant_eligibility([ft], [st2])["today"] == "HOLD_CASH"
     with pytest.raises(V3.PreparedRefusal):
         V3.quant_eligibility([tmp_path / "missing.jsonl"], [st])

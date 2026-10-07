@@ -29,7 +29,7 @@
   "activate = re-freeze this body into fleet_manager/contracts/ with status changed and the seed block filled; check fleet_v3_contracts.activation_diff(...)['same_rule']",
   "set modes.json hack4 contract=v3, maintenance/entries DRY first, LIVE after one clean DRY pass"
  ],
- "alpha_source": "strategy-library rules whose pure selection survives BOTH twins (t >= 2 on the basket fair twin and the sticky twin); CANNOT_DISTINGUISH vs the market",
+ "alpha_source": "strategy-library rules that survive BOTH twins and the validation market line",
  "inputs": [
   {
    "name": "twin boards",
@@ -45,47 +45,13 @@
   }
  ],
  "selection": {
-  "kind": "quant_two_twin_survivors",
-  "rule": "PRODUCT_EXPERIMENT entry: eligible = status OK on BOTH boards AND pure_selection t >= 2 (full sample) on the basket fair twin AND on the sticky twin (TWIN_STICKY_v1). The book holds the eligible rules' current picks, equal weight ACROSS RULES (a name picked by several rules sums their shares, clipped at max_name_frac, never renormalised), graded against SPY and each rule's fair and sticky twins, labelled CANNOT_DISTINGUISH vs the market. A re-run board is read only at the monthly rebalance and its id is recorded on the decision. No eligible rule -> cash",
-  "eligible_at_prepare": [
-   "cascade_entry_timing",
-   "cash_lowvol",
-   "co03_reversal_in_high_margin",
-   "div_lead_earn_mom",
-   "ear_flow",
-   "flow_acceleration",
-   "flow_in_winners",
-   "flow_rule",
-   "frog_in_pan",
-   "frog_in_pan_trend",
-   "frog_secrel",
-   "gh02_five_price_factors_ivw",
-   "ibes_skill_net_raises",
-   "mom_12_1_large",
-   "mom_flow_trend",
-   "mom_in_calm",
-   "net_raises",
-   "net_raises_trend",
-   "px_vs_ma200_large",
-   "qc623_mom63_liquidity_weighted",
-   "qc629_multimom_above_trend_gated",
-   "quality_composite_secrel",
-   "rd_intensity",
-   "target_change",
-   "trend_quality_trend",
-   "unskilled_mom",
-   "upgrades_net_90"
-  ],
-  "n_eligible_at_prepare": 27,
-  "today": "HOLD_ELIGIBLE",
-  "rebalance_sessions": 21,
-  "horizon_sessions": 21
- },
- "capital_candidate_gate": {
-  "rule": "CAPITAL_CANDIDATE (promotion, never entry): net_minus_market t >= 2 in the validation window (2009-2016) AND matured forward evidence vs SPY and the twins, realistic costs, drawdown bounds; promotion stays attended",
+  "kind": "quant_ensemble_or_cash",
+  "rule": "eligible = status OK on BOTH boards AND pure_selection t >= 2 (full sample) on the basket fair twin AND on the sticky twin (TWIN_STICKY_v1) AND net_minus_market t >= 2 in the validation window (2009-2016, the 'validate' block). The book holds the eligible rules' current picks equally across rules; no eligible rule -> HOLD CASH, by rule, until a re-run board makes one eligible (a new board is read only at the monthly rebalance and its id is recorded on the decision)",
   "eligible_at_prepare": [],
-  "licence": "CAPITAL_CANDIDATE",
-  "note": "a promotion gate, never an entry gate (THREE LICENCES)"
+  "n_eligible_at_prepare": 0,
+  "n_pure_selection_t2_both_twins_at_prepare": 27,
+  "today": "HOLD_CASH",
+  "rebalance_sessions": 21
  },
  "caps": {
   "max_gross_frac": 1.0,
@@ -98,7 +64,7 @@
   "leverage": false,
   "max_names": 30
  },
- "exits": "monthly rebalance to the eligible rules' picks; a name no eligible rule picks is sold",
+ "exits": "monthly rebalance to the eligible rules' picks; no eligible rule -> cash",
  "stop_rule": {
   "quoted_in": "daily sigma",
   "sigma": "63-session sd of close-to-close returns on the bar-defect-screened panel (Alpaca daily bars when a name is not in the panel)",
@@ -127,8 +93,8 @@
   "why": "library rules are monthly; the stop is a disaster stop for them"
  },
  "twin": {
-  "kind": "the rules' own twins",
-  "rule": "the book is graded against the weighted sum of each held rule's sticky twin (TWIN_STICKY_v1) and, separately, its basket fair twin, and against SPY"
+  "kind": "the rule's own boards",
+  "rule": "each held rule is graded against its basket fair twin and its sticky twin (TWIN_STICKY_v1); while the book is cash, the twin is cash"
  },
  "worst_case": {
   "equity_usd": 100000.0,
@@ -148,39 +114,11 @@
   "line": "10 x 10.00% x 12% stop = -$12,000 if every stop fills at its distance; 3-sigma day at 4.92% = -$14,763 (capped at 10% -> -$10,000 by scaling gross x0.68); sum|notional|/equity 1.00; no-stop ceiling -$100,000"
  },
  "worst_case_today": {
-  "why": "27 rules eligible at prepare: the largest admissible book above is the number"
+  "usd": 0.0,
+  "why": "HOLD_CASH: no rule is eligible"
  },
- "kill_rule": {
-  "statistic": "D_21 = cumulative book-minus-twin return over each non-overlapping 21-session window counted from the first fill",
-  "sd": "sd_21 = the role's OWN measured daily sd of book-minus-twin x sqrt(21), once its >= 21 forward sessions exist; before that there is NO performance kill",
-  "kill_if": "z_21 = D_21 / sd_21 <= -2 -> DEPRIORITIZED (no new entries; held names run to horizon)",
-  "evidence_for": "z_21 >= +2 is evidence FOR, still CANNOT_DISTINGUISH as a claim",
-  "P_kill_if_zero_edge_per_check": 0.02275,
-  "P_kill_if_zero_edge_63_sessions_3_checks": 0.06670908704687517,
-  "replaces": "'at 63 sessions excess <= 0 vs both twin and SPY' (a sign test, ~21% false kill; review 2026-10-07 M6)",
-  "prior_for_scale": {
-   "sd_daily": 0.011912773901140927,
-   "n_rows": 29,
-   "roles": [
-    "hack1",
-    "hack2",
-    "hack4",
-    "hack5",
-    "hack6"
-   ],
-   "last_session": "2026-10-05",
-   "source": "paper_accounts/fleet_manager/grades.jsonl vs_twin (pooled across roles)",
-   "illustrative_line_21": -0.10918237627774535,
-   "note": "the pooled fleet gap shows the scale of the line; the role's own measured sd replaces it"
-  },
-  "drawdown": "account drawdown >= 20% from its v3 high-water -> flatten to cash, DEPRIORITIZED (a risk stop, not a verdict)",
-  "never": "MECHANISM_REJECTED is never issued by this rule",
-  "also": "a rule whose re-run board drops it below the two-twin rule is sold at the next rebalance"
- },
- "rule_hash": "ec5370398e2ff6bd",
- "supersedes": [
-  "0bb99e6adf242bb5"
- ],
- "policy_hash": "d775b9d85dd04ec3",
- "frozen_utc": "2026-10-07T00:20:05+00:00"
+ "kill_rule": "account drawdown >= 20% -> flatten, DEPRIORITIZED; a rule whose re-run board drops it below the eligibility rule is sold at the next rebalance",
+ "rule_hash": "d4aedab5957f9245",
+ "policy_hash": "0bb99e6adf242bb5",
+ "frozen_utc": "2026-10-06T23:55:36+00:00"
 }

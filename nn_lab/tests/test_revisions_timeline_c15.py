@@ -13,6 +13,7 @@ import json
 from datetime import date, datetime, timezone
 
 import pandas as pd
+import pytest
 
 from nn_lab import membership as MB
 from nn_lab.tests.test_membership_freeze import _cal, _merge, _rebuilt_from, _stored
@@ -78,30 +79,55 @@ def test_reversion_is_only_for_checked_dates_and_frozen_kinds(tmp_path):
     assert MB.append_revisions(_empty(), p, checked_from=pd.Timestamp("2026-02-01"))["n_reverted"] == 0
 
 
-def test_closed_months_rotate_to_a_sealed_parquet_with_a_manifest(tmp_path):
+def _two_months(tmp_path):
     p = _log(tmp_path)
     today = datetime.now(timezone.utc)
     prev = (pd.Timestamp(today.date()).replace(day=1) - pd.Timedelta(days=1))
-    pm = prev.strftime("%Y-%m")
     MB.append_revisions(pd.concat([_rev(prev, "X", "B", asof=prev.isoformat()),
                                    _rev(prev, "Y", "B", asof=prev.isoformat()),
                                    _rev(today.date(), "Z", "B", asof=today.isoformat())]), p)
-    out = MB.rotate_revisions(p, now=today)
-    assert out["status"] == "OK" and [s["month"] for s in out["sealed"]] == [pm]
+    return p, today, prev, prev.strftime("%Y-%m")
+
+
+def test_a_sealed_but_untracked_month_keeps_every_row_live(tmp_path):
+    """Review C15 M4: C10's rule -- rows leave the live file only once git TRACKS the parquet."""
+    p, today, prev, pm = _two_months(tmp_path)
+    out = MB.rotate_revisions(p, now=today, tracked=lambda _p: False)
+    assert [s["month"] for s in out["sealed"]] == [pm] and out["removed"] == []
+    assert out["pending"][0]["state"] == "SEALED_PENDING_COMMIT" and "git add" in out["pending"][0]["why"]
+    assert sorted(pd.read_parquet(p)["symbol"]) == ["X", "Y", "Z"]      # nothing removed
     adir = MB.revisions_archive_dir(p)
     assert adir == tmp_path / "nn" / "revisions_archive"
     arch = adir / f"revisions_{pm}.parquet"
     man = json.loads((adir / f"revisions_{pm}.json").read_text(encoding="utf-8"))
     assert man["rows"] == 2 and man["kinds"] == {"FEATURES_REVISED": 2}
     assert man["parquet_sha256"] == hashlib.sha256(arch.read_bytes()).hexdigest()
-    assert list(pd.read_parquet(p)["symbol"]) == ["Z"]                 # only the open month stays live
-    # the timeline spans the rotation: X's B seen again is not new; a sealed month is written once
+    # the history counts the duplicated month once in effect: B seen again is still not new
     assert MB.append_revisions(_rev(prev, "X", "B", asof=today.isoformat()), p)["n_appended"] == 0
-    p2 = pd.read_parquet(p)
-    pd.concat([p2, _rev(prev, "Q", "B", asof=prev.isoformat())]).to_parquet(p, index=False)
-    again = MB.rotate_revisions(p, now=today)
-    assert again["status"] == "REFUSED" and "already sealed" in again["refused"][0]["why"]
-    assert "Q" in set(pd.read_parquet(p)["symbol"])                    # refused rows stay live, never lost
+
+
+def test_once_tracked_the_month_leaves_the_live_file_and_the_timeline_spans_it(tmp_path):
+    p, today, prev, pm = _two_months(tmp_path)
+    MB.rotate_revisions(p, now=today, tracked=lambda _p: False)          # night N: sealed, pending
+    out = MB.rotate_revisions(p, now=today, tracked=lambda _p: True)     # night N+1: committed
+    assert out["status"] == "OK" and out["removed"] == [{"month": pm, "rows": 2}] and out["sealed"] == []
+    assert list(pd.read_parquet(p)["symbol"]) == ["Z"]
+    assert MB.append_revisions(_rev(prev, "X", "B", asof=today.isoformat()), p)["n_appended"] == 0
+
+
+def test_a_tampered_or_mismatched_month_is_refused_never_removed(tmp_path):
+    p, today, prev, pm = _two_months(tmp_path)
+    MB.rotate_revisions(p, now=today, tracked=lambda _p: False)
+    live = pd.read_parquet(p)
+    pd.concat([live, _rev(prev, "Q", "B", asof=prev.isoformat())]).to_parquet(p, index=False)
+    out = MB.rotate_revisions(p, now=today, tracked=lambda _p: True)
+    assert out["status"] == "REFUSED" and "differ from" in out["refused"][0]["why"]
+    assert "Q" in set(pd.read_parquet(p)["symbol"])                     # never lost
+    arch = MB.revisions_archive_dir(p) / f"revisions_{pm}.parquet"
+    pd.read_parquet(arch).head(1).to_parquet(arch, index=False)          # truncate the sealed month
+    with pytest.raises(MB.RevisionsArchiveCorrupt):
+        MB.revisions_history(p)
+    assert "hash" in MB.rotate_revisions(p, now=today, tracked=lambda _p: True)["refused"][0]["why"]
 
 
 def test_gitignore_tracks_the_rotated_months():

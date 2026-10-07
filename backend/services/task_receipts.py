@@ -386,19 +386,21 @@ def r_catalog(ctx, task) -> Reading:
         if k is None or tk is None or (t is not None and tk < t - timedelta(hours=CATALOG_STEP_WINDOW_H)):
             steps.append(f"{step}: no row from this firing")
             continue
-        ms = map_status(k.get("action"))
+        act = k.get("action") or {"COMMITTED": "ok"}.get(str(k.get("status")), k.get("status"))
+        ms = map_status(act)
         if ms != "OK":
             st = worst(st, "DEGRADED" if ms in ("REFUSED", "DEAD") else ms)
-            why = (why + f"; {step} {k.get('action')}: {str(k.get('why') or '')[:160]}").strip("; ")
-        steps.append(f"{step}: {k.get('action')}")
+            why = (why + f"; {step} {act}: {str(k.get('why') or k.get('reasons') or '')[:160]}").strip("; ")
+        steps.append(f"{step}: {act}")
     return Reading(stamp=t, status=st, reason=why,
                    substance=substance(d.get("summary")), idle_reason=_declared_idle(d),
-                   proof=f"data_catalog/{p.name} utc + task_keeper/{{opportunities,publish_receipts}}.jsonl",
+                   proof=f"data_catalog/{p.name} utc + task_keeper/{{opportunities,publish_receipts,publish_commit}}.jsonl",
                    detail=f"catalog {p.name}: {str(d.get('summary'))[:120]}; " + "; ".join(steps))
 
 
 #: C15: the steps that ride the AegisDataCatalog firing, each with its own keeper series
-CATALOG_STEPS = (("opportunities_build", "opportunities.jsonl"), ("publish_receipts", "publish_receipts.jsonl"))
+CATALOG_STEPS = (("opportunities_build", "opportunities.jsonl"), ("publish_receipts", "publish_receipts.jsonl"),
+                 ("publish_commit", "publish_commit.jsonl"))
 CATALOG_STEP_WINDOW_H = 6.0
 
 
