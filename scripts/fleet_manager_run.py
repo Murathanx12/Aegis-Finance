@@ -722,9 +722,45 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
     # without a stop until the pre-close pass) ──
     traces: dict[int, list[dict]] = {}
     final: list[tuple[FM.Action, str]] = []
+    seqs: dict[str, dict] = {}                     # C27: wash_seq id -> {buy, cancels, stop, mode}
     for a, mode in acts:
         was_refused = bool(a.refused)
         traces[id(a)] = FM.run_gates(a, gctx, mode=mode, new_gates_mode=gate_modes)
+        # ── C27: a top-up of a name with a resting sell stop is sent as ONE sequence
+        # (cancel stop -> buy -> wait terminal -> combined stop). The broker rejects the
+        # bare buy ("stop sell | limit buy | always rejected"). Not a gate, not shadowed. ──
+        if a.side == "buy" and a.order_type == "limit" and not a.refused:
+            frac_, how_ = FM.contract_stop_frac(contract, sig.get(a.symbol))
+            cancels_, cstop, why_ = FM.plan_topup_sequence(
+                a, open_orders, held_qty=broker.get(a.symbol, 0.0), stop_frac=frac_, stop_how=how_,
+                contract_hash=contract["policy_hash"], day=day)
+            if why_:
+                a.refused = why_
+                traces[id(a)].append({"gate": "wash_trade_sequence", "class": "plan", "verdict": FM.GATE_KILL,
+                                      "reason": why_, "qty_in": a.qty, "qty_out": 0})
+            elif cstop is not None:
+                # the combined stop is gated as the order it will be: protective, for the shares
+                # held AFTER the buy (the executor re-reads that quantity from the broker)
+                h0 = gctx.held.get(a.symbol, 0.0)
+                gctx.held[a.symbol] = float(h0) + a.qty
+                try:
+                    traces[id(cstop)] = FM.run_gates(cstop, gctx, mode=mode, new_gates_mode=gate_modes)
+                finally:
+                    gctx.held[a.symbol] = h0
+                if cstop.refused:
+                    a.refused = (f"{FM.REFUSED_WASH_TRADE_RULE}: the combined stop was refused at the gates "
+                                 f"({cstop.refused}); the resting stop is left alone")
+                    traces[id(a)].append({"gate": "wash_trade_sequence", "class": "plan", "verdict": FM.GATE_KILL,
+                                          "reason": a.refused, "qty_in": a.qty, "qty_out": 0})
+                    final.append((a, mode))
+                    continue
+                for c in cancels_:
+                    traces[id(c)] = FM.run_gates(c, gctx, mode=mode, new_gates_mode=gate_modes)
+                    final.append((c, mode))
+                final.append((a, mode))
+                final.append((cstop, mode))
+                seqs[a.inputs["wash_seq"]] = {"buy": a, "cancels": cancels_, "stop": cstop, "mode": mode}
+                continue
         if not (a.side == "sell" and a.order_type == "limit") or was_refused:
             final.append((a, mode))
             continue
@@ -788,6 +824,50 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
             n2, avg = FM._cfg.FLEET_MANAGER_NEWS_MAX_NAMES, FM._cfg.FLEET_MANAGER_NEWS_UNIT_FRAC
         res["worst_case_formula_v2"] = FM.formula_worst_case(n2, avg, c2["stop_rule"]["max_frac"], equity)
 
+    # ── C27: the worst case of every top-up sequence, before vs after, against the contract line.
+    # A sequence may not take the account's worst case above its contract's line, nor raise it
+    # further when it is already above (then the top-up is REFUSED_WORST_CASE_LINE, by name). ──
+    fv = res.get("worst_case_formula_v2") if active_v2 else res.get("worst_case_formula_v1")
+    line_usd = float((fv or {}).get("worst_usd") or 0.0)
+    w_now = float(res["worst_case_now"]["worst_usd"])
+    px_of = {p["symbol"]: float(p.get("current_price") or 0) for p in positions}
+    cum, rows_wc = 0.0, []
+    ws_ = {}
+    for sid, sq in seqs.items():
+        b_, st_ = sq["buy"], sq["stop"]
+        if not b_.refused:
+            ws_[sid] = FM.topup_worst_case(held=broker.get(b_.symbol, 0.0), px=px_of.get(b_.symbol) or b_.price_ref,
+                                           resting=b_.inputs.get("resting_stops") or [], add_qty=b_.qty,
+                                           add_px=float(b_.limit_price or b_.price_ref),
+                                           combined_sp=float(st_.stop_price),
+                                           planned_frac=float(st_.inputs.get("stop_frac") or 0.0))
+    verdicts = FM.topup_line_walk(w_now, line_usd, [(k, w["delta_vs_now"]) for k, w in ws_.items()])
+    for sid, w in ws_.items():
+        sq = seqs[sid]
+        b_, st_ = sq["buy"], sq["stop"]
+        if verdicts[sid] != "OK":
+            why = (f"{FM.REFUSED_WORST_CASE_LINE}: the sequence would take the worst case from "
+                   f"${w_now + cum:,.0f} to ${w_now + cum + w['delta_vs_now']:,.0f}, above the contract line "
+                   f"${line_usd:,.0f}")
+            for x in [b_, st_] + sq["cancels"]:
+                x.refused = why
+                traces.setdefault(id(x), []).append({"gate": "worst_case_line", "class": "plan",
+                                                     "verdict": FM.GATE_KILL, "reason": why,
+                                                     "qty_in": x.qty, "qty_out": 0})
+        else:
+            cum += w["delta_vs_now"]
+        rows_wc.append({"symbol": b_.symbol, "wash_seq": sid, **w, "verdict": verdicts[sid]})
+    if seqs:
+        res["c27_worst_case"] = {"contract_line_usd": round(line_usd, 2), "worst_now_usd": round(w_now, 2),
+                                 "worst_after_sequences_usd": round(w_now + cum, 2),
+                                 "old_plan_topups_usd": round(sum(r["old_plan"] - r["now"] for r in rows_wc
+                                                                  if r["verdict"] == "OK"), 2),
+                                 "already_above_line": w_now > line_usd, "per_topup": rows_wc}
+        print(f"[{role}] C27 WORST CASE: now ${w_now:,.0f}; after {sum(1 for r in rows_wc if r['verdict'] == 'OK')} "
+              f"top-up sequence(s) ${w_now + cum:,.0f} (combined stops; old path would have added "
+              f"${res['c27_worst_case']['old_plan_topups_usd']:,.0f}); contract line ${line_usd:,.0f}"
+              + (" [ALREADY ABOVE THE LINE before this run]" if w_now > line_usd else ""))
+
     # ── the worst case in dollars is PRINTED before the first order (CLAUDE.md protocol 4) ──
     n_live = sum(1 for a, m_ in acts if m_ == "LIVE" and not a.refused)
     wn_, wa_ = res["worst_case_now"], res["worst_case_after_plan"]
@@ -796,8 +876,14 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
           f"${wa_['worst_usd']:,.0f} ({wa_['worst_pct_equity']}%), gross/equity {wa_['gross_over_equity']}")
     res["worst_case_printed_before_orders_utc"] = FM._now_iso()
 
+    if seqs:
+        res["gate_summary"] = FM.gate_summary(traces.values())
+
     # ── decisions BEFORE orders, then orders ──
     out_rows = []
+    seq_results: dict[str, dict] = {}
+    seq_unsafe: Optional[str] = None               # C27 circuit breaker for the rest of this account's run
+    planned_out: list[tuple[FM.Action, str, dict]] = []
     for a, mode in acts:
         row = {"row": "decision", "run_id": run_id, "t": FM._now_iso(), "session": day, "pass": pass_,
                "role": role,
@@ -815,9 +901,38 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
         out = {"kind": a.kind, "symbol": a.symbol, "side": a.side, "qty": a.qty, "type": a.order_type,
                "limit": a.limit_price, "stop": a.stop_price, "mode": row["mode"], "refused": a.refused,
                "reason": a.reason, "coid": a.coid, "story_id": row["story_id"], "gates": row["gates"]}
+        planned_out.append((a, mode, out))
+    # every decision row is on disk before the first order (C27: a wash-trade sequence sends
+    # its cancel, buy and combined stop as one unit, so all three must be decided first)
+    for a, mode, out in planned_out:
         if mode == "LIVE" and not a.refused:
+            sid = a.inputs.get("wash_seq")
             if FM.stop_file().exists():
                 out["outcome"] = "STOP file present: not sent"
+            elif sid and sid in seqs:
+                if sid not in seq_results:
+                    sq = seqs[sid]
+                    if seq_unsafe:
+                        r_ = {"wash_seq": sid, "symbol": a.symbol, "status": FM.REFUSED_WASH_TRADE_RULE,
+                              "refused": f"{FM.REFUSED_WASH_TRADE_RULE}: {seq_unsafe}", "outcomes": {},
+                              "order_ids": {}, "events": [], "stopless_window_s": None, "unprotected_qty": 0}
+                    else:
+                        r_ = FM.execute_topup_sequence(v, sq["buy"], sq["cancels"], sq["stop"])
+                    seq_results[sid] = r_
+                    FM.append_jsonl(FM.decisions_path(), {"row": "wash_sequence", "run_id": run_id,
+                                                          "t": FM._now_iso(), "session": day, "pass": pass_,
+                                                          "role": role, **r_})
+                    w_ = r_.get("stopless_window_s")
+                    if r_["status"] in ("REFUSED", "UNPROTECTED") or (
+                            w_ is not None and w_ > float(_cfg.FLEET_WASH_SEQ_MAX_WINDOW_S)):
+                        seq_unsafe = (f"an earlier sequence on this account ({r_['symbol']}) ended {r_['status']} "
+                                      f"with a stop-less window of {w_}s: no further window is opened this run")
+                r_ = seq_results[sid]
+                out["outcome"] = r_["outcomes"].get(a.coid) or (r_.get("refused") or f"not sent: sequence {r_['status']}")
+                out["order_id"] = r_["order_ids"].get(a.coid)
+                out["wash_seq"], out["wash_seq_status"] = sid, r_["status"]
+                if a.side == "buy" and str(out["outcome"]).startswith(FM.REFUSED_WASH_TRADE_RULE):
+                    out["refused"] = out["outcome"]
             elif a.kind == "cancel":
                 stc = v.cancel(a.cancel_order_id)
                 term = FM.wait_terminal(v, a.cancel_order_id) if stc in (200, 204) else f"http {stc}"
@@ -835,6 +950,10 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
                     news_names.setdefault(a.symbol, day)
         out_rows.append(out)
     res["actions"] = out_rows
+    res["wash_sequences"] = {"summary": FM.wash_sequence_summary(seq_results.values()),
+                             "planned": sorted(seqs), "results": list(seq_results.values())}
+    res["rejections"] = FM.rejection_summary(out_rows)
+    print(f"[{role}] {res['rejections']['line']}")
 
     # ── a stop for the full quantity with each entry: wait for the entry limits, then
     # protect whatever filled in THIS run (the pre-close pass protects later fills and
@@ -1099,6 +1218,12 @@ def print_role(r: dict) -> None:
           f"positions {r['n_positions']}  open orders {r['n_open_orders']}")
     if r.get("c26_delta"):
         print(f"  {r['c26_delta']['line']}")
+    if r.get("rejections"):
+        print(f"  {r['rejections']['line']}")
+    ws = (r.get("wash_sequences") or {}).get("summary") or {}
+    if ws.get("n"):
+        print(f"  C27 sequences: {ws['n']} {ws['by_status']}; longest stop-less window {ws['max_stopless_window_s']}s; "
+              f"unprotected shares {ws['unprotected_qty']}")
     if r.get("stop_history_error"):
         print(f"  FLAG STOP_HISTORY_UNREADABLE {r['stop_history_error']}")
     nm = r.get("new_gates_mode") or {}
@@ -1196,10 +1321,12 @@ def main(argv: Optional[list[str]] = None) -> int:
                                "sector_map": sector_src, "sector_map_age_days": sector_age,
                                "gate_policy_version": FM.GATE_POLICY_VERSION,
                                "known_defect_not_fixed": _cfg.FLEET_KNOWN_DEFECT_WASH_TRADE,
+                               "wash_trade_rule": {"url": FM.WASH_RULE_URL, "quote": FM.WASH_RULE_QUOTE,
+                                                   "fix": "C27 sequence (not a gate, not shadowed)"},
                                "accounts": []}
     print(f"gates {GATES_CFG['hash']} policy {FM.GATE_POLICY_VERSION} new gates {_cfg.FLEET_NEW_GATES_MODE}; "
           f"sector map {sector_src} ({sector_age} days old)")
-    print(f"KNOWN DEFECT (not fixed by C26): {_cfg.FLEET_KNOWN_DEFECT_WASH_TRADE}")
+    print(f"KNOWN DEFECT (C27 sequences top-ups from this run): {_cfg.FLEET_KNOWN_DEFECT_WASH_TRADE}")
     rc = 0
     for role in roles:
         if FM.stop_file().exists():
@@ -1217,6 +1344,10 @@ def main(argv: Optional[list[str]] = None) -> int:
             rc = 1
         receipt["accounts"].append(r)
         print_role(r)
+    receipt["rejections"] = FM.rejection_summary(
+        [x for acc in receipt["accounts"] if isinstance(acc, dict) for x in (acc.get("actions") or [])])
+    print()
+    print(f"FLEET {receipt['rejections']['line']}")
     # ── C26: the end-of-day audit is the Preclose pass's LAST step (read-only) ──
     if a.pass_ == "preclose":
         receipt["eod_audit"] = eod_audit_step(env, run_id)

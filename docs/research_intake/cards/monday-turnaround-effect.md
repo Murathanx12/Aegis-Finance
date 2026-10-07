@@ -127,6 +127,15 @@ card adds the un-conditioned, literature-only version of the question (does a mo
 exist on AEGIS's own data at all, independent of any specific reel's rule) as the open, testable
 remainder.
 
+## Needs evidence
+- Post-2010 evidence for the Monday effect in US large caps specifically -- Smith & Robins'
+  "No More Weekend Effect" is cited here without an independently re-verified year or sample, and
+  this card's own citation list has not located a post-2010, large-cap-specific replication.
+- Whether the Monday effect's modern-era literature (if any exists past Smith & Robins) finds a
+  REGIME split (e.g. present pre-2008, absent after) rather than a flat null across the whole
+  post-1987 sample, which would change the falsifiable question from "does it exist" to "when did
+  it stop."
+
 ## hyp_lab family
 `family_unmapped` — no calendar/seasonality family exists in the fixed `HYP_LAB_FAMILIES` tuple.
 `TRIAL-DRAFT-F-calendar-seasonality-v0.md` exists in `docs/TRIALS/` as a draft trial, which is the

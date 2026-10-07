@@ -109,6 +109,19 @@ signal, distinct from the timing question) was **not found** in `NEGATIVE_RESULT
 `docs/TRIALS/`, or the research notes grepped this pass — it is the specific "what remains
 testable" gap this card's own task brief names.
 
+## Needs evidence
+- Post-2019 citing literature that extends the tug-of-war framing to a cross-sectional (not
+  universe-wide timing) construction, specifically on US common stocks -- the 2026-10-07 probe
+  (`docs/research_notes/2026-10-07/research_instruments_2026-10-07.md` §2.4) found two 2025 SSRN
+  working papers on the mechanism via CrossRef that neither this card nor OpenAlex's result set
+  named; whether either proposes the SAME cross-sectional ranking this card's falsifiable
+  question asks, or a different (e.g. intraday-only) cut, was not read this pass.
+- Whether any post-2019 paper tests overnight-return continuation as a RANKING signal (decile
+  spread) rather than Lou-Polk-Skouras's own long-overnight/flat-intraday TIMING construction --
+  the specific gap this card's falsifiable question names as untested.
+- Independent (non-AEGIS) replication of the "dominance, not decay" finding (overnight premium
+  rising 2013-2024 in liquid names) outside this programme's own CRSP pull.
+
 ## hyp_lab family
 `family_unmapped` — closest existing family is `price_location` (day-range/52-week price-location
 features), but overnight-return continuation is a return-based momentum construction, not a

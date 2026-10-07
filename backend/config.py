@@ -5365,8 +5365,31 @@ FLEET_GATE_SECTOR_MAX_UNKNOWN_FRAC = 0.20
 #: UNFIXED execution defect queued as its own chunk; every run receipt carries
 #: this line so nobody reads C26 as having addressed it.
 FLEET_KNOWN_DEFECT_WASH_TRADE = ("since 2026-10-01, 49 of 75 LIVE buys came back HTTP 403 'potential wash "
-                                 "trade' (top-ups of names with a resting sell stop); NOT fixed by C26, "
-                                 "queued as its own chunk")
+                                 "trade' (top-ups of names with a resting sell stop); NOT fixed by C26; "
+                                 "C27 (gate_policy_version c27-wash-trade-sequence) sequences every top-up "
+                                 "as cancel stop -> buy -> one combined stop, with rollback")
+#: C27 WASH-TRADE SEQUENCE (2026-10-07, `fleet_manager.execute_topup_sequence`).
+#: Alpaca rejects a LIMIT BUY while a SELL STOP rests on the same symbol in the
+#: same account ("stop sell | limit buy | always rejected", and the reverse
+#: "limit buy | stop sell | always rejected"), so a top-up cancels the resting
+#: stop, buys, waits for the buy to be TERMINAL, then places ONE stop for the
+#: combined quantity. Not a gate and not shadowed: a correctness fix to order
+#: sequencing that binds from the first pass that runs it.
+#: How long the buy may stay open before its remainder is cancelled (the
+#: combined stop cannot be placed while any part of the buy is open).
+FLEET_WASH_SEQ_BUY_WAIT_S = 8.0
+#: How long to wait for a cancel (of the resting stop, or of a buy remainder)
+#: to be confirmed terminal by the venue.
+FLEET_WASH_SEQ_CANCEL_WAIT_S = 6.0
+#: A sequence whose stop-less window exceeded this many seconds, or that ended
+#: REFUSED / UNPROTECTED, makes every LATER top-up on the same account in the
+#: same run REFUSED_WASH_TRADE_RULE (the venue is not answering fast enough to
+#: open another window safely).
+FLEET_WASH_SEQ_MAX_WINDOW_S = 45.0
+#: Health: a fleet pass (or an EOD audit row) where more than this share of the
+#: LIVE buys sent to the broker came back rejected is DEGRADED, with the counts
+#: by reason (403 wash trade, 422, other) in the reason.
+FLEET_REJECTED_BUY_DEGRADED_FRAC = 0.20
 #: C26 END-OF-DAY AUDIT (`backend/services/fleet_eod_audit.py`): the Preclose
 #: pass runs it last; `python -m scripts.fleet_eod_audit` runs it alone. It
 #: never places or cancels anything (its transport refuses every non-GET).
@@ -5487,6 +5510,50 @@ READER_BUDGET_LANE_DAY_MULT = 1.6
 OFFICIAL_SOURCES_ENABLED = True
 OFFICIAL_SOURCES_EVERY_S = 900.0
 OFFICIAL_COOL_S = 86400.0
+
+# ── THE ACADEMIC LANE (Q12, 2026-10-07) ──────────────────────────────────────
+# `docs/research_notes/2026-10-07/research_instruments_2026-10-07.md`: a
+# research-intake card (verdict NEEDS_DATA / READY_TO_CELL / NOT_A_HYPOTHESIS_
+# YET) names open literature questions in its own `## Needs evidence` list;
+# `backend/services/research_instruments.py` answers them with keyless, $0
+# academic-citation fetchers (OpenAlex, CrossRef, NBER new-working-papers RSS)
+# and writes a per-card evidence file -- never into the card itself. Own cap,
+# own day, same "own per-day cap in config" shape as QUERY_PLANNER_LANE_
+# QUERIES_DAY, but a SEPARATE budget: this lane never shares the web-search
+# lane's queue/ledger, because a citation is not a URL for the reader to admit.
+RESEARCH_INSTRUMENTS_ENABLED = True
+#: per UTC day, across every card; $0 (OpenAlex + CrossRef + NBER RSS)
+QUERY_PLANNER_ACADEMIC_QUERIES_DAY = 12
+#: default tier queries per NEEDS-EVIDENCE question before escalating
+RESEARCH_INSTRUMENTS_DEFAULT_BUDGET = 2
+#: extra queries into the extended tier (Semantic Scholar / arXiv / NBER RSS),
+#: only when the default tier's coverage of the card's own seed citations is
+#: below this (note §3.3)
+RESEARCH_INSTRUMENTS_EXTENDED_CAP = 3
+RESEARCH_INSTRUMENTS_STOP_COVERAGE = 0.8
+#: a question stops escalating once it holds this many citations with a
+#: verified (resolvable) DOI, or the budget above is exhausted
+RESEARCH_INSTRUMENTS_MIN_VERIFIED = 1
+#: CrossRef/OpenAlex "polite pool" contact param -- an OWNER decision (never
+#: defaulted to a personal address): None sends no `mailto`, which both
+#: instruments measured working anyway on 2026-10-07 (no 429, no key).
+RESEARCH_INSTRUMENTS_MAILTO = None
+#: Semantic Scholar: $0 but measured unreliable keyless (HTTP 429 on 2 of 2
+#: tries, twice over, 2026-10-07) -- a free API key is a cheap owner upgrade,
+#: never required to start. None = the fetcher REFUSES (KEY_REQUIRED_OR_
+#: RATE_LIMITED), the same declared-provider shape as QUERY_PLANNER_SEARCH_
+#: PROVIDER.
+RESEARCH_INSTRUMENTS_SEMANTIC_SCHOLAR_KEY = None
+#: arXiv: $0, keyless by design, but real coverage is the quant/ML preprint
+#: class only (classical asset-pricing journal mechanisms are not on arXiv) and
+#: it was measured 429 on 2 of 2 tries the same day. An explicit owner opt-in
+#: is required before this lane calls it automatically.
+RESEARCH_INSTRUMENTS_ARXIV_ENABLED = False
+RESEARCH_INSTRUMENTS_HTTP_TIMEOUT_S = 20.0
+#: the weekly task_keeper owner (`AegisResearchLane`, additive -- daily_pass.py
+#: is untouched): due when no probe has ever run, or the newest one is this old
+RESEARCH_LANE_EVERY_DAYS = 7.0
+RESEARCH_LANE_TIMEOUT_MIN = 10.0
 
 # ── automation fixes 2026-10-02 ─────────────────────────────────────────────
 #: The daily pass's `paper_accounts` step reads the brokers (READ-ONLY GETs:

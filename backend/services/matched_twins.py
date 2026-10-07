@@ -500,6 +500,117 @@ def sticky_turnover_check(frame: pd.DataFrame, tolerance: Optional[float] = None
                      f"REFUSED: median |twin turnover - rule turnover| {med:.4f} > tolerance {tol:.4f}")
     return out
 
+# ── the sticky twin's PER-DRAW turnover check (TWIN_STICKY_CHECK_v2, 2026-10-07) ──
+#
+# v1 (`sticky_turnover_check`) drops a MONTH when ANY of the 21 draws redrew a partner (death or
+# collision): the median rule then had 83% of its months excluded, so the tolerance check was
+# weaker than it read (`docs/research_notes/2026-10-06/sticky_twin_2026-10-06.md`). v2 excludes a
+# month for THAT draw only and takes the median over draws x months. The construction is
+# untouched: draw j of `twin_series_sticky` is re-run alone (n_draws=1) under an id whose draw-0
+# seed IS `seed_for(rule_id, j)` (`_draw_id`), so every partner, weight and trade is the one v1
+# drew; the three v1-hashed functions above are not edited (their source hash is pinned by
+# DECLARATION_TWIN_STICKY_v1 and re-pinned by DECLARATION_TWIN_STICKY_v2).
+
+STICKY_CHECK_V2 = "TWIN_STICKY_CHECK_v2_per_draw"
+
+
+def _draw_id(rule_id: str, j: int) -> str:
+    """The id whose draw-0 seed equals `seed_for(rule_id, j)` (draw j > 0 is keyed '<id>#<j>')."""
+    return str(rule_id) if j == 0 else f"{rule_id}#{j}"
+
+
+def twin_series_sticky_draws(rule: dict, *, n_draws: Optional[int] = None, by_date: Optional[dict] = None,
+                             cell_cache: Optional[dict] = None, dates: Optional[Iterable] = None,
+                             spread_col: str = "_sp", default_spread: float = 0.0035) -> tuple[list, pd.DataFrame]:
+    """(per-draw frames, the aggregate frame) for the sticky twin.
+
+    Draw j is `twin_series_sticky` with n_draws=1 under `_draw_id(id, j)`: draws never interact (each
+    has its own rng, partners and `taken` set; the cell cache depends on the date only), so draw j
+    alone is draw j of the 21-draw call. The aggregate frame rebuilds the 21-draw call's columns:
+    twin gross / cost / turnover / full_rt as the per-date np.mean over draws, the draw sd of
+    turnover, and the (re)draw counts summed; the rule's own columns are draw 0's (asserted equal
+    across draws). Tests pin the aggregate equal to `twin_series_sticky` on a fixture."""
+    from backend import config as C                                 # noqa: PLC0415
+    nd = int(n_draws if n_draws is not None else C.STICKY_TWIN_N_DRAWS)
+    rid = str(rule.get("id"))
+    cache = cell_cache if cell_cache is not None else {}
+    frames = []
+    for j in range(nd):
+        f = twin_series_sticky({**rule, "id": _draw_id(rid, j)}, by_date=by_date, cell_cache=cache,
+                               dates=dates, n_draws=1, spread_col=spread_col, default_spread=default_spread)
+        f.attrs.update(draw=j)
+        frames.append(f)
+    base = frames[0]
+    for f in frames[1:]:
+        if not f.index.equals(base.index):
+            raise TwinInputMissing(f"{rid}: draws disagree on the decision dates")
+        for c in ("n", "gross", "cost", "turnover"):
+            a, b = base[c].to_numpy(dtype=float), f[c].to_numpy(dtype=float)
+            if not np.array_equal(a, b, equal_nan=True):
+                raise TwinInputMissing(f"{rid}: draws disagree on the rule's {c!r}")
+    agg = base[["n", "gross", "cost", "turnover"]].copy()
+
+    def stack(c):
+        return np.column_stack([f[c].to_numpy(dtype=float) for f in frames])
+
+    for c in ("twin_gross", "twin_cost", "twin_turnover"):
+        A = stack(c)
+        agg[c] = [float(np.mean(row)) if np.isfinite(row).all() else np.nan for row in A]
+    TO = stack("twin_turnover")
+    agg["twin_turnover_draw_sd"] = [float(np.std(row)) for row in TO]
+    agg["twin_full_rt"] = [float(np.mean(row)) for row in stack("twin_full_rt")]
+    for c in [f"twin_{r}" for r in STICKY_REASONS] + ["twin_fallback", "twin_cash_slots"]:
+        agg[c] = np.sum(stack(c), axis=1).astype(int)
+    agg.attrs.update(twin_kind=STICKY_TWIN_KIND, n_draws=nd, cost_convention=TWIN_COST_CONVENTION)
+    return frames, agg
+
+
+def sticky_turnover_check_per_draw(frames: list, tolerance: Optional[float] = None) -> dict:
+    """TWIN_STICKY_CHECK_v2: for each draw j, the invested months where draw j did NOT redraw (no
+    `twin_died`, no `twin_collision` in that draw) give |draw j's twin turnover - rule turnover|;
+    the gap is the median over all (draw, month) pairs. Same tolerance and refusal as v1
+    (`STICKY_TWIN_TURNOVER_TOLERANCE`, median > tolerance -> REFUSED; no pair -> REFUSED).
+
+    `frames`: the per-draw frames of `twin_series_sticky_draws` (each with n, turnover,
+    twin_turnover, twin_died, twin_collision)."""
+    from backend import config as C                                 # noqa: PLC0415
+    tol = float(tolerance if tolerance is not None else C.STICKY_TWIN_TURNOVER_TOLERANCE)
+    if not frames:
+        raise TwinInputMissing("per-draw check: no draw frames")
+    gaps, excl, n_inv, per_draw = [], 0, 0, []
+    for f in frames:
+        for c in ("turnover", "twin_turnover", "n"):
+            if c not in f.columns:
+                raise TwinInputMissing(f"sticky draw frame lacks {c!r}")
+        inv = f["n"] > 0
+        red = pd.Series(False, index=f.index)
+        for c in ("twin_died", "twin_collision"):
+            if c in f.columns:
+                red |= f[c] > 0
+        n_inv += int(inv.sum())
+        excl += int((inv & red).sum())
+        keep = inv & ~red
+        g = (f.loc[keep, "twin_turnover"] - f.loc[keep, "turnover"]).abs().to_numpy(dtype=float)
+        gaps.append(g)
+        per_draw.append(float(np.median(g)) if len(g) else None)
+    allg = np.concatenate(gaps) if gaps else np.array([])
+    if not len(allg):
+        return {"ok": False, "check": STICKY_CHECK_V2, "tolerance": tol, "median_abs_gap": None, "n_pairs": 0,
+                "reason": "REFUSED: no invested (draw, month) pair without a redraw to compare turnover on"}
+    med = float(np.median(allg))
+    pdm = [x for x in per_draw if x is not None]
+    out = {"ok": bool(med <= tol), "check": STICKY_CHECK_V2, "tolerance": tol, "median_abs_gap": med,
+           "n_draws": len(frames), "n_pairs": int(len(allg)), "n_pairs_invested": n_inv,
+           "n_pairs_excluded_death_or_collision": excl,
+           "share_pairs_excluded": round(excl / n_inv, 4) if n_inv else None,
+           "p90_abs_gap": float(np.quantile(allg, 0.9)),
+           "per_draw_median_min": min(pdm) if pdm else None, "per_draw_median_max": max(pdm) if pdm else None}
+    out["reason"] = ("OK" if out["ok"] else
+                     f"REFUSED: median over draws x months of |twin turnover - rule turnover| {med:.4f} > "
+                     f"tolerance {tol:.4f}")
+    return out
+
+
 # ── holdings for every cell (the factory's sidecar) ─────────────────────────
 #
 # The factory stores, per (rule, k) cell, the held symbols and weights at every

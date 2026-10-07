@@ -26,7 +26,10 @@ status  OK | DEGRADED | CREDENTIAL_INVALID | NO_CREDENTIAL | UNREADABLE | ERROR
         DEGRADED when: a held long equity name lacks a stop for its full
         quantity, the broker disagrees with `state/<role>.json` + fills since,
         the grades ledger disagrees with the broker's previous-close equity,
-        cash is negative, or shares are short.
+        cash is negative, or shares are short; (C27) more than
+        FLEET_REJECTED_BUY_DEGRADED_FRAC of today's LIVE buys came back rejected
+        (`rejections.by_reason`: wash_trade_403 / http_422 / other), or a
+        wash-trade sequence left shares unprotected.
 """
 from __future__ import annotations
 
@@ -145,6 +148,47 @@ def reconcile_grades(role: str, grades: Iterable[dict], last_equity: Optional[fl
     return out
 
 
+def rejections_today(role: str, day: str, decisions: Iterable[dict], orders_today: Iterable[dict]) -> dict:
+    """C27: the LIVE buys our passes sent today and how the broker answered, by
+    reason, plus the wash-trade sequences and their stop-less windows.
+
+    Read from OUR decision ledger, not the broker: a 403 "potential wash trade"
+    is refused at submission, so it never becomes a broker order and the
+    broker's order list cannot show it (review 2026-10-07 F7: 49 of 75 buys
+    rejected while this audit read OK). Broker-side `rejected` orders from the
+    order list are added under `other`."""
+    ymd = day.replace("-", "")
+    acts, seqs, seen = [], [], set()
+    for r in decisions:
+        if r.get("role") != role:
+            continue
+        if r.get("row") == "wash_sequence" and str(r.get("session")) == day:
+            seqs.append(r)
+            continue
+        if r.get("row") != "outcome":
+            continue
+        parts = str(r.get("coid") or "").split("-")
+        if len(parts) < 5 or parts[0] != FM.COID_PREFIX or parts[2] != ymd or parts[3] != "buy":
+            continue
+        oc = str(r.get("outcome") or "")
+        if oc.startswith("ALREADY SUBMITTED") or (r.get("coid"), oc) in seen:
+            continue
+        seen.add((r.get("coid"), oc))
+        acts.append({"side": "buy", "kind": "buy", "mode": "LIVE", "outcome": oc})
+    summ = FM.rejection_summary(acts)
+    broker_rej = [o for o in orders_today if str(o.get("status")) == "rejected" and o.get("side") == "buy"
+                  and str(o.get("client_order_id") or "").startswith(FM.COID_PREFIX)]
+    if broker_rej:
+        summ["by_reason"][FM.REJ_OTHER] += len(broker_rej)
+        summ["n_rejected"] += len(broker_rej)
+        n = max(summ["n_live_buys_sent"], summ["n_rejected"])
+        summ["rejected_frac"] = round(summ["n_rejected"] / n, 4) if n else 0.0
+        summ["degraded"] = bool(n and summ["rejected_frac"] > summ["threshold"])
+    summ["broker_rejected_orders"] = len(broker_rej)
+    summ["wash_sequences"] = FM.wash_sequence_summary(seqs)
+    return summ
+
+
 def prev_weekday(d: date) -> date:
     """The previous NYSE session: weekends AND `config.US_MARKET_HOLIDAYS` are
     skipped (review F7: 2026-11-27 would otherwise expect a 11-26 grade)."""
@@ -158,7 +202,8 @@ def prev_weekday(d: date) -> date:
 # ─────────────────────────────── one account ────────────────────────────────
 
 def audit_account(role: str, venue: Optional[FM.Venue], *, state: Optional[dict], grades: list[dict],
-                  run_id: str, trigger: str, credential_present: bool = True) -> dict:
+                  run_id: str, trigger: str, credential_present: bool = True,
+                  decisions: Optional[list[dict]] = None) -> dict:
     row: dict[str, Any] = {"schema": SCHEMA, "run_id": run_id, "trigger": trigger, "t": FM._now_iso(),
                            "role": role, "places_orders": False}
     if not credential_present or venue is None:
@@ -204,9 +249,19 @@ def audit_account(role: str, venue: Optional[FM.Venue], *, state: Optional[dict]
     shorts = [p["symbol"] for p in positions if float(p.get("qty") or 0) < 0 and p.get("asset_class") != "us_option"]
     if shorts:
         flags.append(f"SHORT_SHARES {shorts}")
+    rej = rejections_today(role, day, decisions or [], orders_today)
+    if rej["degraded"]:
+        flags.append(f"REJECTED_BUYS {rej['n_rejected']}/{rej['n_live_buys_sent']} ({rej['rejected_frac']:.0%} > "
+                     f"{rej['threshold']:.0%}: {rej['by_reason'][FM.REJ_WASH]} wash-trade 403, "
+                     f"{rej['by_reason'][FM.REJ_422]} 422, {rej['by_reason'][FM.REJ_OTHER]} other)")
+    ws = rej["wash_sequences"]
+    if ws.get("unprotected_qty"):
+        flags.append(f"TOPUP_UNPROTECTED {ws['unprotected_qty']} share(s) after a wash-trade sequence")
     row.update(session_day_et=day, equity=equity, cash=cash, last_equity=last_eq,
                n_positions=len(positions), n_open_orders=len(open_orders),
-               orders_today={"n": len(orders_today), "ours": ours, "foreign": len(orders_today) - ours},
+               orders_today={"n": len(orders_today), "ours": ours, "foreign": len(orders_today) - ours,
+                             "rejected": rej["broker_rejected_orders"]},
+               rejections=rej,
                stops=stops,
                reconciliation={"state": rs, "grades": rg},
                n_mismatches=rs["n_mismatch"] + rg["n_mismatch"],
@@ -226,6 +281,7 @@ def run_audit(roles: list[str], env: dict, *, run_id: str, trigger: str, base: O
     if not roles:
         raise EodAuditRefusal("REFUSED: no fleet roles to audit (an audit of nothing would read green)")
     grades = FM.read_jsonl(FM.grades_path(base))
+    decisions = FM.read_jsonl(FM.decisions_path(base))
     inner = transport or FM._urllib_transport
     rows = []
     for role in roles:
@@ -235,7 +291,7 @@ def run_audit(roles: list[str], env: dict, *, run_id: str, trigger: str, base: O
             state = json.loads(sp.read_text(encoding="utf-8")) if sp.exists() else None
             v = FM.Venue(kid, sec, transport=readonly_transport(inner)) if (kid and sec) else None
             row = audit_account(role, v, state=state, grades=grades, run_id=run_id, trigger=trigger,
-                                credential_present=bool(kid and sec))
+                                credential_present=bool(kid and sec), decisions=decisions)
         except Exception as exc:                                # noqa: BLE001 -- one account never stops the rest
             row = {"schema": SCHEMA, "run_id": run_id, "trigger": trigger, "t": FM._now_iso(), "role": role,
                    "places_orders": False, "status": "ERROR", "why": f"{type(exc).__name__}: {exc}"[:300]}

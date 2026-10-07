@@ -1700,6 +1700,17 @@ def _case_fleet_eod_audit():
             "an end-of-day audit handed no fleet roles")
 
 
+def _case_research_instruments():
+    # Q12 (2026-10-07): Semantic Scholar/arXiv are $0 but measured unreliable
+    # keyless (HTTP 429 on 2 of 2 tries, two independent fetch paths). The
+    # missing input is the declared key/opt-in; calling either keyless by
+    # default would be noise reported as evidence, so it must refuse instead.
+    from backend.services.research_instruments import (InstrumentKeyRequired,
+                                                       fetch_semantic_scholar)
+    return (lambda: fetch_semantic_scholar("a tug of war overnight intraday"),
+            InstrumentKeyRequired, "semantic_scholar call with no declared API key")
+
+
 def _case_world_digest():
     # BudgetExceeded is also the spend CEILING (tested in test_world_digest);
     # the missing input is the budget itself: a meter with none declared (or a
@@ -1871,6 +1882,7 @@ CASES = {
     "analyst_reputation": _case_analyst_reputation,
     "snowball_shadow": _case_snowball_shadow,
     "fleet_eod_audit": _case_fleet_eod_audit,
+    "research_instruments": _case_research_instruments,
 }
 
 

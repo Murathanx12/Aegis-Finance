@@ -126,6 +126,16 @@ specifically vs equal-weight on AEGIS's own data — this is a genuinely open, a
 TRIAL-001, not a duplicate of it (HRP is a correlation-clustering heuristic, not a mean-variance
 optimization, so a "does shrinkage-MV beat EW" trial would be a third arm, not a resurrection).
 
+## Needs evidence
+- Post-DeMiguel-Garlappi-Uppal (2009) literature specifically on shrinkage-MV vs equal-weight
+  (not HRP vs EW, already TRIAL-001's question) -- whether a more recent paper has already run
+  the comparison this card proposes, on a comparable universe/cost model, before AEGIS re-derives
+  it from zero.
+- Whether any paper quantifies the TURNOVER cost crossover at which shrinkage-MV's lower
+  variance stops paying for its higher turnover vs EW, which is the specific "net of costs"
+  question this card's falsifiable question asks and DeMiguel et al.'s own abstract does not
+  settle on its own.
+
 ## hyp_lab family
 `family_unmapped` — none of the fixed `HYP_LAB_FAMILIES` (macro_readthrough_*, event_readthrough_*,
 size_*, llm_*, investable_spread, risk_timing, data_vintage, insider_event, digest_forward,

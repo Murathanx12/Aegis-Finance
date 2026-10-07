@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import argparse
 import gc
+import hashlib
 import json
 import sys
 import time
@@ -153,6 +154,57 @@ def sticky_declaration() -> dict:
         raise MT.TwinInputMissing(f"sticky code hash {have[:16]} != declared {d['code']['source_sha256'][:16]}")
     return {"path": str(STICKY_DECLARATION.relative_to(REPO)).replace("\\", "/"),
             "sha256": d["sha256_of_body_without_this_field"], "code_sha256": have}
+#: the per-DRAW turnover check (2026-10-07): v1's month-level exclusion dropped a median 83% of months
+STICKY_DECLARATION_V2 = REPO / "docs" / "research_notes" / "2026-10-07" / "DECLARATION_TWIN_STICKY_v2.json"
+STICKY_CHECKS = ("v1", "v2")
+
+
+def sticky_v2_code_source() -> str:
+    """The source the v2 declaration hashes: the v1 construction (unchanged) + the per-draw driver,
+    the per-draw check and this board's v2 row builder."""
+    import inspect                                                   # noqa: PLC0415
+    from backend.services import matched_twins as MT                 # noqa: PLC0415
+    return (inspect.getsource(MT.twin_series_sticky) + inspect.getsource(MT._sticky_pick)
+            + inspect.getsource(MT.sticky_turnover_check) + inspect.getsource(MT._draw_id)
+            + inspect.getsource(MT.twin_series_sticky_draws) + inspect.getsource(MT.sticky_turnover_check_per_draw)
+            + inspect.getsource(sticky_book_v2))
+
+
+def declaration_body_sha(d: dict) -> str:
+    body = {k: v for k, v in d.items() if k != "sha256_of_body_without_this_field"}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, indent=1).encode("utf-8")).hexdigest()
+
+
+def sticky_declaration_v2(path: Path | None = None) -> dict:
+    """The TWIN_STICKY_v2 declaration, checked: refuses (TwinInputMissing) when absent, when its body
+    no longer hashes to its own stamp, when it names a construction other than TWIN_STICKY_v1's
+    code, when the v2 code no longer hashes to the declared value, or when the declared tolerance
+    is not `config.STICKY_TWIN_TURNOVER_TOLERANCE`."""
+    from backend import config as C                                  # noqa: PLC0415
+    from backend.services import matched_twins as MT                 # noqa: PLC0415
+    path = Path(path) if path else STICKY_DECLARATION_V2
+    if not path.exists():
+        raise MT.TwinInputMissing(f"{path.name} absent: the per-draw check is undeclared")
+    d = json.loads(path.read_text(encoding="utf-8"))
+    bh = declaration_body_sha(d)
+    if bh != d.get("sha256_of_body_without_this_field"):
+        raise MT.TwinInputMissing(f"{path.name} body hash {bh[:16]} != its stamp: the declaration was edited")
+    v1 = sticky_declaration()                                        # the construction itself is v1's
+    if d["construction"]["source_sha256"] != v1["code_sha256"]:
+        raise MT.TwinInputMissing("the v2 declaration names a different construction than TWIN_STICKY_v1")
+    have = hashlib.sha256(sticky_v2_code_source().encode("utf-8")).hexdigest()
+    if have != d["code"]["source_sha256"]:
+        raise MT.TwinInputMissing(f"sticky v2 code hash {have[:16]} != declared {d['code']['source_sha256'][:16]}")
+    if float(d["receipt_check"]["tolerance"]) != float(C.STICKY_TWIN_TURNOVER_TOLERANCE):
+        raise MT.TwinInputMissing("the v2 tolerance differs from config.STICKY_TWIN_TURNOVER_TOLERANCE")
+    try:
+        shown = str(path.relative_to(REPO)).replace("\\", "/")
+    except ValueError:
+        shown = path.name
+    return {"path": shown, "sha256": d["sha256_of_body_without_this_field"], "code_sha256": have,
+            "construction_sha256": v1["code_sha256"], "v1_declaration_sha256": v1["sha256"]}
+
+
 #: the rule's own columns from `run_book` and from `twin_series_sticky` must agree to this
 RULE_RECON_ATOL = 1e-9
 
@@ -185,6 +237,40 @@ def sticky_book(B: pd.DataFrame, rid: str, pk: dict, by_date: dict, cell_cache: 
     return B, {"twin_kind": MT.STICKY_TWIN_KIND, "construction": MT.STICKY_TWIN_CONSTRUCTION,
                "n_draws": K.attrs.get("n_draws"),
                "sticky_turnover_check": chk, "sticky_counts_summed_over_draws": counts}
+
+
+def sticky_book_v2(B: pd.DataFrame, rid: str, pk: dict, by_date: dict, cell_cache: dict) -> tuple[pd.DataFrame, dict]:
+    """`sticky_book` under TWIN_STICKY_v2: the SAME construction (each draw re-run alone with its v1
+    seed, `MT.twin_series_sticky_draws`), the rule reconciled to `run_book` as in v1, and the row
+    REFUSED by the per-draw check (`MT.sticky_turnover_check_per_draw`). The v1 check is computed
+    on the aggregate frame and printed beside (`sticky_turnover_check_v1`), never used to refuse.
+    A refusal carries both checks on the exception (`sticky_checks`) so the refused row keeps them."""
+    from backend.services import matched_twins as MT                 # noqa: PLC0415
+    frames, K = MT.twin_series_sticky_draws({"id": rid, "held_symbols_by_date": pk}, by_date=by_date,
+                                            cell_cache=cell_cache, dates=list(B.index))
+    K = K.reindex(B.index)
+    for c in ("gross", "cost", "turnover"):
+        a, b = B[c].to_numpy(dtype=float), K[c].to_numpy(dtype=float)
+        bad = ~((np.isnan(a) & np.isnan(b)) | (np.abs(a - b) <= RULE_RECON_ATOL))
+        if bad.any():
+            raise MT.TwinInputMissing(f"sticky twin rebuilt the rule's {c!r} differently from run_book on "
+                                      f"{int(bad.sum())} month(s) (first {B.index[bad][0].date()})")
+    v1 = MT.sticky_turnover_check(K)
+    v2 = MT.sticky_turnover_check_per_draw(frames)
+    extra = {"twin_kind": MT.STICKY_TWIN_KIND, "construction": MT.STICKY_TWIN_CONSTRUCTION,
+             "sticky_check": MT.STICKY_CHECK_V2, "n_draws": K.attrs.get("n_draws"),
+             "sticky_turnover_check": v2, "sticky_turnover_check_v1": v1}
+    if not v2["ok"]:
+        err = MT.TwinInputMissing(v2["reason"])
+        err.sticky_checks = {"sticky_turnover_check": v2, "sticky_turnover_check_v1": v1}
+        raise err
+    B = B.copy()
+    for c in ("twin_gross", "twin_cost", "twin_turnover", "twin_full_rt"):
+        B[c] = K[c]
+    counts = {f"twin_{r}": int(K[f"twin_{r}"].sum()) for r in MT.STICKY_REASONS}
+    counts.update(twin_fallback=int(K["twin_fallback"].sum()), twin_cash_slots=int(K["twin_cash_slots"].sum()))
+    extra["sticky_counts_summed_over_draws"] = counts
+    return B, extra
 
 
 def fair_row(S: pd.DataFrame, board: pd.Series | None = None) -> dict:
@@ -252,6 +338,9 @@ def main(argv=None) -> int:
                     help="rewrite hyp_lab/board_supersessions.json from the summaries and exit (no scoring)")
     ap.add_argument("--twin", choices=TWIN_KINDS, default="basket",
                     help="basket = the C1 fair board's monthly-rebuilt twin; sticky = C1b")
+    ap.add_argument("--sticky-check", choices=STICKY_CHECKS, default="v1",
+                    help="sticky only: v1 = month-level exclusion (TWIN_STICKY_v1); v2 = per-draw "
+                         "(DECLARATION_TWIN_STICKY_v2, 2026-10-07)")
     a = ap.parse_args(argv)
     if a.regenerate_supersessions:
         out = write_supersessions()
@@ -283,7 +372,7 @@ def main(argv=None) -> int:
     decl = None
     if a.twin == "sticky":
         try:
-            decl = sticky_declaration()
+            decl = sticky_declaration_v2() if a.sticky_check == "v2" else sticky_declaration()
         except MT.TwinInputMissing as e:
             say(f"REFUSED: {e}")
             return 2
@@ -347,6 +436,8 @@ def main(argv=None) -> int:
         tr = time.time()
         rule = rules.get(rid)
         rec = {"rule": rid, "run": run, "twin_kind": a.twin}
+        if a.twin == "sticky":
+            rec["sticky_check"] = a.sticky_check
         if decl:
             rec["sticky_declaration_sha256"] = decl["sha256"]
         try:
@@ -361,7 +452,14 @@ def main(argv=None) -> int:
             gate = Q.groupby("date")[rule.regime_gate].first() if rule.regime_gate else None
             pk = carried_picks(hold, dates, rule, gate)
             B = run_book(Q, pk)
-            if a.twin == "sticky":
+            if a.twin == "sticky" and a.sticky_check == "v2":
+                try:
+                    B, extra = sticky_book_v2(B, rid, pk, by_date, cell_cache)
+                except MT.TwinInputMissing as e:      # a refused row keeps both checks
+                    rec.update(getattr(e, "sticky_checks", {}))
+                    raise
+                rec.update(extra)
+            elif a.twin == "sticky":
                 B, extra = sticky_book(B, rid, pk, by_date, cell_cache)
                 rec.update(extra)
             S = fair_series(B, mkt)
@@ -398,6 +496,7 @@ def main(argv=None) -> int:
                                                   if a.twin == "basket" else
                                                   "nothing: a sticky-twin board BESIDE the basket board"),
                     "sticky_tolerance": (C.STICKY_TWIN_TURNOVER_TOLERANCE if a.twin == "sticky" else None),
+                    "sticky_check": (a.sticky_check if a.twin == "sticky" else None),
                     # C15: row-level supersession is OWNED by the writer. Only rows scored OK here
                     # supersede anything; a refused supplement row leaves the full board's row standing.
                     "supersedes_rows": [{"run_id": sr, "rule": r["rule"]} for sr in a.supersedes for r in ok],

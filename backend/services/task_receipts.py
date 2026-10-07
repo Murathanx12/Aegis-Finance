@@ -578,6 +578,25 @@ def _eod_audit_status(ctx, d: dict, fm_root: Path, name: str) -> tuple[str, str]
     return ("OK", "") if st == "OK" else ("DEGRADED", f"eod audit: {why}")
 
 
+def _fleet_rejections_status(d: dict) -> tuple[str, str]:
+    """(status, reason) from a fleet run receipt's LIVE buys: DEGRADED when the
+    broker rejected more than `FLEET_REJECTED_BUY_DEGRADED_FRAC` of them."""
+    from backend.services import fleet_manager as _FM     # lazy: the reader module stays import-light
+    accs = [a for a in d.get("accounts") or [] if isinstance(a, dict)]
+    summ = _FM.rejection_summary([x for a in accs for x in (a.get("actions") or [])])
+    if not summ["degraded"]:
+        return "OK", ""
+    per = []
+    for a in accs:
+        s_ = _FM.rejection_summary(a.get("actions") or [])
+        if s_["n_rejected"]:
+            per.append(f"{a.get('role')} {s_['n_rejected']}/{s_['n_live_buys_sent']}")
+    return "DEGRADED", (f"broker rejected {summ['n_rejected']} of {summ['n_live_buys_sent']} LIVE buys "
+                        f"({summ['rejected_frac']:.0%} > {summ['threshold']:.0%}): "
+                        f"{summ['by_reason']['wash_trade_403']} wash-trade 403, {summ['by_reason']['http_422']} 422, "
+                        f"{summ['by_reason']['other']} other [{', '.join(per)}]")
+
+
 def _fleet_pass(which: str):
     def reader(ctx, task) -> Reading:
         folder = ctx.optimus_dir / "paper_accounts" / "fleet_manager" / "runs"
@@ -597,6 +616,12 @@ def _fleet_pass(which: str):
                 if blind:
                     st_a = worst(st_a, "DEGRADED")
                     why_a = "; ".join(x for x in (why_a, f"stop history unreadable (cooldown blind): {blind}") if x)
+                # C27: a pass where the broker rejected more than FLEET_REJECTED_BUY_DEGRADED_FRAC of the
+                # LIVE buys it was sent is DEGRADED, with the counts by reason (derived from the actions,
+                # so receipts written before C27 are read the same way)
+                st_r, why_r = _fleet_rejections_status(d)
+                st_a = worst(st_a, st_r)
+                why_a = "; ".join(x for x in (why_a, why_r) if x)
                 return Reading(stamp=parse_stamp(d.get("finished_utc") or d.get("started_utc")),
                                status=worst(st0, st, st_a),
                                reason="; ".join(x for x in (why0, why, why_a) if x),

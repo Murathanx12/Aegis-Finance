@@ -257,4 +257,6 @@ def test_the_previous_session_skips_exchange_holidays():
 def test_the_receipt_names_the_known_wash_trade_defect():
     assert "403" in _cfg.FLEET_KNOWN_DEFECT_WASH_TRADE and "49 of 75" in _cfg.FLEET_KNOWN_DEFECT_WASH_TRADE
     gc = FM.gates_config()
-    assert gc["gate_policy_version"] == "c26-p2-frozen-terms" and "cash" in gc["gate_policy_choices"]
+    # C27 (2026-10-07) adds the wash-trade SEQUENCE on top of the c26-p2 frozen terms, which are unchanged
+    assert gc["gate_policy_version"] == "c27-wash-trade-sequence" and "cash" in gc["gate_policy_choices"]
+    assert gc["gate_policy_choices"]["cash"].startswith("REFUSE") and "wash_trade_sequence" in gc["gate_policy_choices"]
