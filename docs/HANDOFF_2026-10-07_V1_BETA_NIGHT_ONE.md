@@ -58,6 +58,14 @@ cascade (C21, needs the GPU), OpenBB probe (C22), desktop export check (C24).
 New owner decisions: **D18** Kalshi storage (none / derived / Polymarket only); **D19** FEC key (its policy bans ML use);
 **D20** LDA needs a US-hosted runner or a key.
 
+**08:25 HKT, commit `758880b3` (WIP 6):** C15 and C20 reviewed and fixed. `python -m scripts.publish_receipts --commit` is the
+caller that makes the evidence pages public (data-only commit of `backend/data/public_receipts/`, refused off `main`; it
+runs as the last step of the 09:00 AegisDataCatalog firing, so the pages go public the first morning after the merge).
+The benchmark core now sizes itself from the ACTING gross in a second plan pass (sleeve share counts byte-identical with
+the flag on or off, tested with EXPLOIT targets); it stays OFF pending D21/D22. Kill lines are sized from the measured gap
+(false-kill ~2.3% per check vs ~21% for a sign rule). The quant-ensemble contract trades the 27 two-twin survivors as a
+PRODUCT_EXPERIMENT; the market t ≥ 2 line is the CAPITAL_CANDIDATE gate (0 rules pass it). No agents running at 08:25.
+
 ## 1. RESULTS SCOREBOARD
 
 **RESULT IMPROVEMENT: NONE.** The night produced controls, measurements and a live loop, not an edge.
