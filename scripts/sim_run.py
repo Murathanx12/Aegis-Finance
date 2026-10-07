@@ -1281,7 +1281,10 @@ def _owner_d14_worst_case(*, equity: float, targets: list, core: dict, rf: dict,
     (1) the whole book's one-day rho=1 k-sigma loss <= FLEET_V3_MAX_K_SIGMA_
     DAY_LOSS_FRAC (10%); (2) gross x |the basket's worst historical 21-session
     return| <= PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC (10%). On 2026-10-07
-    bound 1 allowed 60% and bound 2 (-19.05%) allowed 50%: the sleeve is 50%.
+    bound 1 allowed 60%; bound 2 on prices_deep (2016..; review fix 1), worst
+    21 sessions -32.03% to 2022-05-18 with all 20 names priced, allowed 30%:
+    the sleeve is 30%. Bound 2 reads the 21-month panel only when prices_deep
+    is absent, and then says WARN_SHORT_HISTORY.
     Reporting only; never raises into the plan."""
     try:
         from backend.services import pc_risk as PR                 # noqa: PLC0415
@@ -1307,8 +1310,10 @@ def _owner_d14_worst_case(*, equity: float, targets: list, core: dict, rf: dict,
         lines: list = []
         hist: dict = {}
         if rf_names and (bars_paths or not sandbox):
-            hist = SL.basket_history(rf_names, Path(bars_paths[0]) if bars_paths
-                                     else PR._bars_path())
+            # review 2026-10-07 fix 1: the 10-year panel when present, else the
+            # plan's panel with WARN_SHORT_HISTORY on the line
+            hist = SL.bound_history(rf_names, Path(bars_paths[0]) if bars_paths
+                                    else PR._bars_path())
         rf_wc = SL.sleeve_worst_case(equity=eq, names=list(rf_planned),
                                      gross=sum(rf_planned.values()), sigmas=sig, k=k,
                                      fallback=fb, history=hist,
@@ -1348,11 +1353,16 @@ def _owner_d14_worst_case(*, equity: float, targets: list, core: dict, rf: dict,
         wwr = (hist or {}).get("worst_window_return")
         if wwr is not None:
             w21 = g_cfg * abs(float(wwr))
-            lines[-1] += (f"; 21-SESSION BOUND: revision_flow {g_cfg:.0%} x worst 21 sessions "
-                          f"{float(wwr):.2%} = -${w21 * eq:,.0f} ({w21:.2%}, limit {wlim:.0%}: "
-                          f"{'PASS' if w21 <= wlim + 1e-12 else 'FAIL'})")
+            lines[-1] += (f"; 21-SESSION BOUND ({hist.get('panel')} {hist.get('first')}.."
+                          f"{hist.get('last')}): revision_flow {g_cfg:.0%} x worst 21 sessions "
+                          f"{float(wwr):.2%} (to {hist.get('worst_window_end')}, all names "
+                          f"priced) = -${w21 * eq:,.0f} ({w21:.2%}, limit {wlim:.0%}: "
+                          f"{'PASS' if w21 <= wlim + 1e-12 else 'FAIL'})"
+                          + (f"; {hist['warning']}" if hist.get("warning") else ""))
         else:
-            lines[-1] += "; 21-SESSION BOUND: UNREAD (no basket history on this run)"
+            lines[-1] += ("; 21-SESSION BOUND: UNREAD ("
+                          + str((hist or {}).get("error") or "no basket history on this run")
+                          + ")")
         return {"equity_usd": eq, "k_sigma": k, "limit_frac": limit,
                 "sigma_source": f"panel daily sigma; missing -> {fb_src} {fb:.2%}",
                 "revision_flow": rf_wc, "planned_frac": planned, "planned_total_frac": tot,

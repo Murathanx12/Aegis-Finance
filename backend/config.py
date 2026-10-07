@@ -5952,17 +5952,26 @@ PC_SLEEVE_REVISION_FLOW_CONTRACT = (OPTIMUS_LEDGER_DIR / "paper_accounts" / "fle
 #:      sleeve (avg sigma 3.67%) + the SPY core on the remainder (sigma 0.70%) --
 #:      <= FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC (10%), gross <= 100%:
 #:      55% -> 9.50%, 60% -> 9.95% (PASS), 65% -> 10.39% (FAIL)  => 60% alone;
-#:  (2) 21 SESSIONS (coordinator, 2026-10-07): gross x |the equal-weight basket's
-#:      worst historical 21-session return| <= PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC
-#:      (10%). Worst 21 sessions -19.05% (to 2025-03-13):
-#:      50% -> 9.53% (PASS), 55% -> 10.48% (FAIL)                => 50%.
-#: BOTH => 50% (bound 2 binds). At $1,002,264: sleeve 3-sigma day -$55,122;
-#: worst 21 sessions -$95,443; worst day -8.24% (2025-04-03) = -$41,272.
+#:  (2) 21 SESSIONS (coordinator, 2026-10-07; review fix 1 same evening):
+#:      gross x |the equal-weight basket's worst historical 21-session return|
+#:      <= PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC (10%), read on the 10-YEAR
+#:      panel prices_deep/bars.parquet (2016-01-05..2026-10-06) over windows with
+#:      all 20 names priced: worst -32.03% (to 2022-05-18):
+#:      25% -> 8.01%, 30% -> 9.61% (PASS), 35% -> 11.21% (FAIL)  => 30%.
+#:      Noted, NOT binding: -34.18% to 2020-03-16 with only 15 of 20 names
+#:      priced (SNOW, ABNB, AFRM, S, GTLB listed later) -> 30% x 34.18% = 10.25%.
+#:      The 21-month panel (prices_2025_26) shows only -19.05% (2025-03-13) and
+#:      would have allowed 50%: it holds neither 2020 nor 2022. When prices_deep
+#:      is absent the bound falls back to it and the receipt says WARN_SHORT_HISTORY.
+#: BOTH => 30% (bound 2 binds). At $1,002,264: sleeve 3-sigma day -$33,073;
+#: worst 21 sessions (2022) -$96,307; worst day -12.68% (2020-03-16, 15 names)
+#: = -$38,124.
 #: `scripts/sim_run.py` re-prices the acting book on every cycle: over the line,
 #: the ranker's EXPLOIT is scaled first, then this sleeve; nothing is widened.
-PC_SLEEVE_REVISION_FLOW_GROSS = 0.50
+PC_SLEEVE_REVISION_FLOW_GROSS = 0.30
 #: Bound (2) above: the sleeve's gross x |worst historical 21-session basket
-#: return| may not exceed this fraction of equity. Same 0.10 as bound (1).
+#: return, all names priced, longest panel on disk| may not exceed this fraction
+#: of equity. Same 0.10 as bound (1).
 PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC = 0.10
 #: The six-role v3 fleet contracts are written HERE, never into
 #: `fleet_manager/contracts/`: no seed path reads this folder, and

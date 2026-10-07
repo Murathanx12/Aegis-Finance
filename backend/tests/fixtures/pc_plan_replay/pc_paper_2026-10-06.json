@@ -132,6 +132,7 @@
   "SPY": 0.006966830386706793
  },
  "bars_last": "2026-10-06",
- "worst_21_session_return": -0.19045409472620722,
- "worst_21_session_basis": "revision_flow_v0 equal-weight basket, daily-rebalanced, worst rolling 21-session return on prices_2025_26/bars.parquet 2025-01-02..2026-10-06 (ends 2025-03-13)"
+ "worst_21_session_return": -0.3202976960531735,
+ "worst_21_session_basis": "revision_flow_v0 equal-weight basket, daily-rebalanced, worst rolling 21-session return with all 20 names priced, on prices_deep/bars.parquet 2016-01-05..2026-10-06 (ends 2022-05-18). Not binding: -0.34183547 to 2020-03-16 with 15 priced. The 21-month prices_2025_26 panel gives -0.19045409 (2025-03-13).",
+ "worst_21_session_return_short_panel": -0.19045409472620722
 }

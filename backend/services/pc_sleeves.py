@@ -23,8 +23,12 @@ OBSERVED(7), a PRODUCT_EXPERIMENT, never a claim). This module lets
        (FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC, 0.10) and total gross <= 100%;
     2. gross x |the basket's worst historical 21-session return| <=
        `window_limit` (PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC, 0.10).
-  On 2026-10-07: bound 1 alone allows 60% (9.95%); bound 2 with the worst
-  21 sessions -19.05% allows 50% (9.53%; 55% = 10.48% fails) => 50%.
+  Bound 2 reads the 10-year panel (prices_deep, 2016..) when present
+  (`bound_history`), else the 21-month panel with WARN_SHORT_HISTORY (review
+  2026-10-07 fix 1). On 2026-10-07: bound 1 alone allows 60% (9.95%); bound 2
+  on prices_deep, worst 21 sessions with all 20 names priced -32.03% (to
+  2022-05-18), allows 30% (9.61%; 35% = 11.2% fails) => 30%. The 21-month
+  panel's -19.05% (2025-03-13) would have allowed 50%.
 
 PURE except the two loaders, which only READ files. Never an order.
 """
@@ -111,27 +115,78 @@ def sleeve_loss_frac(names: list[str], gross: float, sigmas: dict, *, k: float,
     return tot, n_fb
 
 
+def deep_bars_path() -> Path:
+    """The 10-year panel (2016..) the 21-session bound reads first (review
+    2026-10-07 fix 1: the 21-month panel holds neither 2020 nor 2022)."""
+    return Path(_cfg.OPTIMUS_LEDGER_DIR) / "prices_deep" / "bars.parquet"
+
+
+def history_panel(short_path: Optional[Path] = None) -> tuple[Optional[Path], Optional[str]]:
+    """(path, warning). The deep panel when present; else the short one with
+    WARN_SHORT_HISTORY; (None, reason) when neither exists."""
+    deep = deep_bars_path()
+    if deep.is_file():
+        return deep, None
+    if short_path is not None and Path(short_path).is_file():
+        return Path(short_path), (f"WARN_SHORT_HISTORY: {deep} is absent; the 21-session bound "
+                                  f"reads {Path(short_path).name} ({Path(short_path).parent.name}), "
+                                  f"which may hold no 2020 / 2022 drawdown")
+    return None, "NO_HISTORY_PANEL: neither the deep nor the short bars panel is on disk"
+
+
 def basket_history(names: list[str], bars_path: Path, *, window: int = 21) -> dict:
     """The equal-weight (daily-rebalanced) basket's worst `window`-session return
-    and worst day on the bars panel. {} fields when unreadable."""
+    and worst day on the bars panel.
+
+    `worst_window_return` (BINDING) is the worst window in which EVERY name was
+    priced on every day; `worst_window_return_any` is the worst over all windows
+    (fewer names priced, e.g. 2020 before the young listings) and is reported,
+    not binding. {"error": ...} when unreadable."""
     try:
         import pandas as pd                                        # noqa: PLC0415
-        df = pd.read_parquet(bars_path, columns=["symbol", "date", "close"])
-        df = df[df["symbol"].isin(list(names))]
+        df = pd.read_parquet(bars_path, columns=["symbol", "date", "close"],
+                             filters=[("symbol", "in", list(names))])
         wide = df.pivot_table(index="date", columns="symbol", values="close").sort_index()
         r = wide.pct_change(fill_method=None)
         bk = r.mean(axis=1, skipna=True).dropna()
+        n_priced = r.count(axis=1).reindex(bk.index)
         cum = (1.0 + bk).cumprod()
-        roll = (cum / cum.shift(window) - 1.0).dropna()
-        return {"window_sessions": window, "first": str(bk.index.min().date()),
-                "last": str(bk.index.max().date()), "n_days": int(len(bk)),
-                "n_names_priced": int(r.count().gt(0).sum()),
-                "worst_window_return": float(roll.min()),
-                "worst_window_end": str(roll.idxmin().date()),
-                "worst_day_return": float(bk.min()), "worst_day": str(bk.idxmin().date()),
-                "daily_sd": float(bk.std())}
+        roll = (cum / cum.shift(window) - 1.0)
+        full = n_priced.rolling(window).min() >= len(names)
+        roll_full = roll[full].dropna()
+        roll_any = roll.dropna()
+        out = {"panel": f"{Path(bars_path).parent.name}/{Path(bars_path).name}",
+               "window_sessions": window, "first": str(bk.index.min().date()),
+               "last": str(bk.index.max().date()), "n_days": int(len(bk)),
+               "n_names": len(names), "n_names_priced": int(r.count().gt(0).sum()),
+               "worst_day_return": float(bk.min()), "worst_day": str(bk.idxmin().date()),
+               "daily_sd": float(bk.std())}
+        if len(roll_any):
+            i_any = roll_any.idxmin()
+            out["worst_window_return_any"] = float(roll_any.min())
+            out["worst_window_end_any"] = str(i_any.date())
+            out["worst_window_n_priced_any"] = int(n_priced.loc[:i_any].iloc[-window:].min())
+        if len(roll_full):
+            out["worst_window_return"] = float(roll_full.min())
+            out["worst_window_end"] = str(roll_full.idxmin().date())
+            out["worst_window_basis"] = f"all {len(names)} names priced every day of the window"
+        else:
+            out["error"] = "no window with every name priced"
+        return out
     except Exception as exc:                                       # noqa: BLE001
         return {"error": f"{type(exc).__name__}: {exc}"[:200]}
+
+
+def bound_history(names: list[str], short_path: Optional[Path] = None, *,
+                  window: int = 21) -> dict:
+    """`basket_history` on the longest panel on disk, with its warning."""
+    path, warn = history_panel(short_path)
+    if path is None:
+        return {"error": warn, "warning": warn}
+    h = basket_history(names, path, window=window)
+    if warn:
+        h["warning"] = warn
+    return h
 
 
 def book_loss_frac(*, rf_names: list[str], rf_gross: float, probe_gross: float,
@@ -208,11 +263,20 @@ def sleeve_worst_case(*, equity: float, names: list[str], gross: float, sigmas: 
     if history and "worst_window_return" in history:
         out["worst_21_session_usd"] = gross * history["worst_window_return"] * eq
         out["worst_day_usd"] = gross * history["worst_day_return"] * eq
-        line += (f"; basket's worst {history['window_sessions']}-session return "
-                 f"{history['worst_window_return']:.2%} (to {history['worst_window_end']}) = "
-                 f"-${abs(out['worst_21_session_usd']):,.0f}; worst day "
-                 f"{history['worst_day_return']:.2%} ({history['worst_day']}) = "
+        line += (f"; on {history.get('panel')} ({history.get('first')}..{history.get('last')}) "
+                 f"the basket's worst {history['window_sessions']}-session return "
+                 f"{history['worst_window_return']:.2%} (to {history['worst_window_end']}, all "
+                 f"{history.get('n_names')} priced) = -${abs(out['worst_21_session_usd']):,.0f}")
+        if "worst_window_return_any" in history and \
+                history["worst_window_return_any"] < history["worst_window_return"] - 1e-12:
+            line += (f" [not binding: {history['worst_window_return_any']:.2%} to "
+                     f"{history['worst_window_end_any']} with "
+                     f"{history['worst_window_n_priced_any']} names priced = "
+                     f"-${abs(gross * history['worst_window_return_any'] * eq):,.0f}]")
+        line += (f"; worst day {history['worst_day_return']:.2%} ({history['worst_day']}) = "
                  f"-${abs(out['worst_day_usd']):,.0f}")
+    if history and history.get("warning"):
+        line += f"; {history['warning']}"
     out["history"] = history
     out["line"] = line
     return out

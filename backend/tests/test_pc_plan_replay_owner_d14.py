@@ -163,7 +163,7 @@ def test_the_shipped_owner_decision():
                                        "PC_BENCHMARK_CORE_EXEMPT_FROM_NAME_CAP": True,
                                        "PC_SLEEVE_REVISION_FLOW": True,
                                        "PC_CONTRACT_COUNTS_PLAN_SLEEVES": True}
-    assert config.PC_SLEEVE_REVISION_FLOW_GROSS == pytest.approx(0.50)
+    assert config.PC_SLEEVE_REVISION_FLOW_GROSS == pytest.approx(0.30)
     assert config.PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC == pytest.approx(0.10)
     assert config.PC_SLEEVE_REVISION_FLOW_BOOK_ID == "cb8d492bb8bf9ade"
     assert PB.MAX_NAME_FRAC == pytest.approx(0.12) and PB.MAX_INVESTED_FRAC == pytest.approx(1.0)
@@ -330,8 +330,10 @@ def test_the_gross_rule_reproduces_the_config_from_both_bounds():
     """The config value is the rule's answer on BOTH bounds (coordinator
     2026-10-07): bound 1, the whole book's one-day rho=1 3-sigma loss <= 10%
     with PROBE at its largest admissible (20% at the universe p90, 4.92% on
-    2026-10-06) -> 60%; bound 2, gross x |worst 21-session basket return
-    -19.05%| <= 10% -> 50%. Expected today: 50%, bound 2 binding."""
+    2026-10-06) -> 60%; bound 2, gross x |worst 21-session basket return on
+    prices_deep, all 20 priced, -32.03% to 2022-05-18| <= 10% -> 30% (review
+    2026-10-07 fix 1; the 21-month panel's -19.05% would give 50%). Expected
+    today: 30%, bound 2 binding."""
     from backend.services import pc_sleeves as SL
     sig = STATE["sigmas"]
     w21 = STATE["worst_21_session_return"]
@@ -349,8 +351,11 @@ def test_the_gross_rule_reproduces_the_config_from_both_bounds():
                                   sigmas=sig, k=3.0, fallback=0.0492,
                                   cash_buffer=0.01)["total_frac"] <= 0.10 + 1e-12)
     x2 = max(g * step for g in range(0, 17) if g * step * abs(w21) <= 0.10 + 1e-12)
-    assert x1 == pytest.approx(0.60) and x2 == pytest.approx(0.50)
-    assert ch["gross"] == pytest.approx(min(x1, x2)) == pytest.approx(0.50)
+    assert x1 == pytest.approx(0.60) and x2 == pytest.approx(0.30)
+    assert ch["gross"] == pytest.approx(min(x1, x2)) == pytest.approx(0.30)
+    short = STATE["worst_21_session_return_short_panel"]
+    assert max(g * step for g in range(0, 17)
+               if g * step * abs(short) <= 0.10 + 1e-12) == pytest.approx(0.50),         "the short panel would have allowed 50%: the reason fix 1 exists"
     assert ch["binding"] == "worst_21_session"
     assert ch["gross"] == pytest.approx(config.PC_SLEEVE_REVISION_FLOW_GROSS)
 
@@ -416,3 +421,52 @@ def test_d21_counts_the_active_sleeve_and_reconciles_both_sides_of_tonight(monke
         assert DC.positions_reconciliation([], capital=er["equity_usd"], equity=er,
                                            resolution=old)["status"] != "OK"
         monkeypatch.setattr(config, "PC_CONTRACT_COUNTS_PLAN_SLEEVES", True)
+
+
+# ─────────────────────────────── review fix 1: the panel the bound reads ─────
+
+def _panel(path: Path, names: list, n_days: int, *, crash_start: int | None = None,
+           late: dict | None = None) -> Path:
+    """Synthetic closes: flat drift, a -2%/day 21-day crash at `crash_start`, and
+    names in `late` that start trading only on that day index."""
+    import pandas as pd
+    dates = pd.bdate_range("2019-01-01", periods=n_days)
+    rows = []
+    for s_ in names:
+        px = 100.0
+        for i, d in enumerate(dates):
+            if late and i < late.get(s_, 0):
+                continue
+            px *= 0.98 if crash_start is not None and crash_start <= i < crash_start + 21                 else 1.0005
+            rows.append({"symbol": s_, "date": d, "close": px})
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(rows).to_parquet(path)
+    return path
+
+
+def test_bound_two_reads_the_deep_panel_and_warns_on_the_short_one(tmp_path, monkeypatch):
+    from backend.services import pc_sleeves as SL
+    names = ["AAA", "BBB"]
+    short = _panel(tmp_path / "short" / "bars.parquet", names, 80)
+    deep = tmp_path / "led" / "prices_deep" / "bars.parquet"
+    monkeypatch.setattr(config, "OPTIMUS_LEDGER_DIR", tmp_path / "led")
+    h = SL.bound_history(names, short)
+    assert "WARN_SHORT_HISTORY" in h["warning"] and h["panel"] == "short/bars.parquet"
+    _panel(deep, names, 300, crash_start=100)
+    h = SL.bound_history(names, short)
+    assert "warning" not in h and h["panel"] == "prices_deep/bars.parquet"
+    assert h["worst_window_return"] == pytest.approx(0.98 ** 21 - 1, rel=1e-6)
+    line = SL.sleeve_worst_case(equity=1e6, names=names, gross=0.3, sigmas={}, k=3.0,
+                                fallback=0.03, history=SL.bound_history(names, short))["line"]
+    assert "prices_deep/bars.parquet" in line
+
+
+def test_bound_two_binds_on_windows_with_every_name_priced(tmp_path):
+    """A crash while one name had not listed yet is reported, never binding."""
+    from backend.services import pc_sleeves as SL
+    names = ["AAA", "BBB", "CCC"]
+    p = _panel(tmp_path / "bars.parquet", names, 300, crash_start=40, late={"CCC": 150})
+    h = SL.basket_history(names, p)
+    assert h["worst_window_return_any"] == pytest.approx(0.98 ** 21 - 1, rel=1e-6)
+    assert h["worst_window_n_priced_any"] == 2
+    assert h["worst_window_return"] > -0.05, "the full-coverage windows saw no crash"
