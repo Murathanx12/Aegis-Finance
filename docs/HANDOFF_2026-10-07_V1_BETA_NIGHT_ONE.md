@@ -154,6 +154,24 @@ from 16:00 HKT). Vercel's bot checkpoint (403) blocks automated browser loads; v
   2020/2022 (deep panel: −32.0% in 2022 → **gross 30%**, not 50%); a sleeve refusal would EXIT held names; sleeve orders write no DECIDED rows
   (tonight readable by hand only); gross can reach 1.057 on a later cycle. Builder applying fixes 1–3 before 20:15 HKT; 4 next session.
 
+### 0e. 18:20 HKT — PR #11 merged, PC sleeve final (30%), work branch is PR #12
+
+- **PR #11 MERGED to main `2454b941`** (merge commit; fixes F1–F6 + PNG deletion `00bcb808`, CI green). Railway redeploys with the new FRED key;
+  a watcher probes the six evidence endpoints + `/api/health/full` after the deploy (`local_pc/suite/deploy_watch_2026-10-07_2454b941.log`).
+- **PC final** `9cc5d7ae` → `7b8ebaab`: sleeve **30%** (one-day 3σ alone would allow 60%; the 21-session bound on `prices_deep` −32.03% to
+  2022-05-18 binds at 30% × 32.03% = 9.61%); planned book worst case **−$60,852 = 6.07%** of $1,001,847; SPY core ≈ 39–49%; sells before buys;
+  SPY clipped so post-fill gross ≤ 99%; a refused sleeve HOLDs its names; sleeve + core write DECIDED rows (REVISION_FLOW / CORE) graded as
+  excess over SPY; story replay MATCHES. Not done: sleeve expiry/stop (review fix 5), fill race (8), wording (9), D21 double count (10).
+  Tests 1,287 passed on the touched families; lane-integrity 804 = 804.
+- **Tonight:** `AegisSimOwner` fires every 30 min; the session starts inside 09:00–15:30 ET (21:00 HKT) in `paper_profit` mode and sends
+  the first sleeve/core orders at the 21:30 open. Last night every plan cycle died on a missing config attribute from a half-edited tree;
+  the tree is now committed and importable (210 targeted tests green after the merge of main).
+- **Work branch → PR #12** (`wip/2026-10-07-day` @ 36756cf6, merge of main with two keep-both conflicts). The local full suite was NOT run:
+  free memory 2.0 GB (the owner's own Chrome holds 8.7 GB, the reader 1.9 GB, IIF1 night, a builder). CI is the gate; merge when green.
+- **D7** half done via MuratClaw: Google already signed in (muratclaw1@gmail.com), Yahoo account created through it, watchlist UI
+  out-raced the agent; receipt `local_pc/d7_watchlists_2026-10-07.md`. Low value; parked.
+- **Weekly public-asset refresh** being built on `feat/2026-10-07-assets-refresh` (pin bump → render → test → commit main; Sat 09:00 HKT).
+
 ## 1. RESULTS SCOREBOARD
 
 **RESULT IMPROVEMENT: NONE.** The night produced controls, measurements and a live loop, not an edge.
