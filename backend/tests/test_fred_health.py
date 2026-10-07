@@ -235,3 +235,46 @@ def test_health_full_names_the_missing_series_in_degraded_reasons():
     joined = " ".join(body["degraded_reasons"])
     assert "initial_claims" in joined and "ICSA" in joined
     assert body["status"] == "DEGRADED"
+
+
+# ── Q15 (2026-10-07): dead silent-imputation code removed, not instrumented ─
+def test_get_recession_probability_was_removed_as_dead_code():
+    """`DataFetcher.get_recession_probability` silently returned a bare 0.15
+    ("# Default base rate") with zero marker that it was a fallback, and grep
+    + `signal_reachability` confirmed zero live callers outside its own
+    module/docstrings. Dead code carrying a silent-imputation trap is worse
+    than no code, so it was deleted rather than instrumented. This test pins
+    the removal so a reviver does not quietly bring back the bare float."""
+    from backend.services import data_fetcher as DF
+
+    assert not hasattr(DF.DataFetcher, "get_recession_probability")
+
+
+def test_get_macro_features_still_has_no_live_caller():
+    """Same shape, still dead, deliberately NOT touched this session (Q15
+    note, item 4) — `get_macro_features` silently SKIPS an absent key rather
+    than inventing a value, which is a materially smaller failure mode than
+    `get_recession_probability`'s bare float, and it is dormant. A plain
+    offline text grep over the repo's own `.py` files (no subprocess, no
+    network) pins that it is still dead; if this starts failing, the reviver
+    must wire it through a status/`missing_because` contract before this
+    test is updated, not after."""
+    import re
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[2]
+    call_re = re.compile(r"\.get_macro_features\s*\(")
+    hits = []
+    for p in (repo / "backend").rglob("*.py"):
+        if p.name.startswith("test_") or p.name == "data_fetcher.py":
+            continue
+        try:
+            text = p.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        if call_re.search(text):
+            hits.append(str(p))
+    assert hits == [], (
+        f"get_macro_features grew a caller ({hits}) — it must now either be "
+        "wired through a status/`missing_because` contract or this test "
+        "updated with that review's reasoning, not silently left as-is")

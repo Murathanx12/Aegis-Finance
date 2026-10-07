@@ -165,7 +165,25 @@ def compute_credit_spread_analysis(fred_data: dict) -> dict:
     if "breakeven_10y" in spreads:
         breakeven = spreads["breakeven_10y"]["current"]
 
-    # Credit stress assessment
+    # Credit stress assessment. Q15 (2026-10-07): an EMPTY `spreads` dict
+    # (FRED unavailable) used to fall straight through to `stress_level =
+    # "normal"` with no signals — a complete absence of HY/IG reads reported
+    # as a calm credit market, indistinguishable from a real "nothing is
+    # stressed" reading. Missing data is not zero, and it is not calm either.
+    if "hy_oas" not in spreads and "ig_oas" not in spreads:
+        return {
+            "spreads": spreads,
+            "real_yield_10y": real_yield,
+            "breakeven_inflation_10y": breakeven,
+            "stress": {
+                "level": "UNKNOWN",
+                "signals": [],
+                "missing_because": "no credit-spread FRED series (hy_oas/ig_oas) "
+                                    "loaded this pass — stress level cannot be read, "
+                                    "and is not assumed calm",
+            },
+        }
+
     stress_level = "normal"
     stress_signals = []
 
@@ -199,39 +217,46 @@ def compute_credit_spread_analysis(fred_data: dict) -> dict:
 def get_fixed_income_dashboard() -> dict:
     """Full fixed income dashboard: yield curve + credit spreads + interpretation.
 
-    Fetches fresh FRED data and computes all fixed income analytics.
+    Q15 (2026-10-07): this used to open its own raw `fredapi.Fred(os.getenv(...))`
+    client, keyed off the env var directly. That made it a SECOND, unaccounted
+    FRED path: its failures never reached `fred_health`, `observability.
+    source_health()`, or the `fred_macro_inputs` probe, so the 2026-10-07
+    "api_key is not registered" production outage would have stayed invisible
+    on this dashboard even after the shared-loader health fix. It now goes
+    through `providers.registry` (the same FRED abstraction `fx_curves.py`
+    uses) and records every per-series outcome into `fred_health` explicitly,
+    so a failure here shows up in `fred_health.series_status()` / `by_status`
+    like any other FRED consumer's.
     """
-    try:
-        from fredapi import Fred
-        import os
+    from backend.services.providers import registry
+    from backend.services import fred_health
 
-        api_key = os.getenv("FRED_API_KEY", "")
-        if not api_key:
-            return {"error": "FRED API key not configured"}
+    all_series = {**_YIELD_SERIES, **_CREDIT_SERIES}
+    fred_data: dict = {}
+    failed: list[str] = []
+    for name, series_id in all_series.items():
+        try:
+            data = registry.get_macro_series(series_id)
+        except Exception as e:
+            logger.warning("FRED fetch failed for %s (%s): %s", name, series_id, e)
+            data = None
+        if data is not None and len(data.dropna()) > 0:
+            fred_data[series_id] = data
+            fred_health.record_success(series_id, data)
+        else:
+            fred_health.record_miss(series_id)
+            failed.append(name)
 
-        fred = Fred(api_key=api_key)
-        fred_data = {}
+    yield_curve = compute_yield_curve_analysis(fred_data)
+    credit = compute_credit_spread_analysis(fred_data)
 
-        # Fetch yield curve data
-        all_series = {**_YIELD_SERIES, **_CREDIT_SERIES}
-        for name, series_id in all_series.items():
-            try:
-                data = fred.get_series(series_id, observation_start="2020-01-01")
-                if data is not None and len(data) > 0:
-                    fred_data[series_id] = data
-            except Exception as e:
-                logger.debug("FRED fetch failed for %s: %s", series_id, e)
-
-        yield_curve = compute_yield_curve_analysis(fred_data)
-        credit = compute_credit_spread_analysis(fred_data)
-
-        return {
-            "yield_curve": yield_curve,
-            "credit": credit,
-        }
-
-    except ImportError:
-        return {"error": "fredapi not installed"}
-    except Exception as e:
-        logger.error("Fixed income dashboard failed: %s", e)
-        return {"error": str(e)}
+    # `degraded` names the state explicitly rather than letting a caller infer
+    # health from the shape of `yield_curve`/`credit` — a 200 with every series
+    # missing must not read like a 200 with all 15 present.
+    degraded = bool(failed)
+    return {
+        "yield_curve": yield_curve,
+        "credit": credit,
+        "degraded": degraded,
+        "missing_series": sorted(failed) if degraded else [],
+    }

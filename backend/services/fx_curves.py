@@ -102,37 +102,52 @@ def fetch_spot(pair: str) -> Optional[float]:
         return None
 
 
-def fetch_short_rate(currency: str) -> Optional[float]:
+def fetch_short_rate(currency: str) -> dict:
     """Short rate (decimal, e.g. 0.045) for a currency from FRED.
 
-    Falls back to ``DEFAULT_USD_RATE`` for USD and ``None`` for other
-    currencies if FRED is unkeyed.
+    Q15 (2026-10-07): used to return a bare float and silently substitute
+    ``DEFAULT_USD_RATE`` on ANY failure (unkeyed FRED, empty series,
+    exception) while `forward_curve()`'s output still claimed "using FRED
+    short rates" — a hardcoded constant reported as a live read. Now returns
+    a dict naming where the rate actually came from, so a caller cannot
+    mistake a fallback for a fetch:
+
+        {"rate": float | None,
+         "source": "FRED" | "DEFAULT_CONSTANT" | "UNAVAILABLE",
+         "missing_because": str | None}
     """
     currency = currency.upper().strip()
     series_id = SHORT_RATE_SERIES.get(currency)
     if not series_id:
-        return None
+        return {"rate": None, "source": "UNAVAILABLE",
+                "missing_because": f"no FRED short-rate proxy configured for {currency}"}
 
     cache_key = f"fx_rate:{currency}"
     cached = cache_get(cache_key, 24 * 3600)
     if cached is not None:
-        return float(cached)
+        return {"rate": float(cached), "source": "FRED", "missing_because": None}
+
+    def _fallback(reason: str) -> dict:
+        if currency == "USD":
+            return {"rate": DEFAULT_USD_RATE, "source": "DEFAULT_CONSTANT",
+                    "missing_because": reason}
+        return {"rate": None, "source": "UNAVAILABLE", "missing_because": reason}
 
     try:
         from backend.services.providers import registry
         s = registry.get_macro_series(series_id)
         if s is None or len(s) == 0:
-            return DEFAULT_USD_RATE if currency == "USD" else None
+            return _fallback(f"FRED series {series_id} returned no data for {currency}")
         s = s.dropna() if hasattr(s, "dropna") else s
         if len(s) == 0:
-            return DEFAULT_USD_RATE if currency == "USD" else None
+            return _fallback(f"FRED series {series_id} was empty after dropna for {currency}")
         # FRED rates are in percent; convert to decimal
         rate = float(s.iloc[-1]) / 100.0
         cache_set(cache_key, rate)
-        return rate
+        return {"rate": rate, "source": "FRED", "missing_because": None}
     except Exception as e:
         logger.debug("short rate fetch failed for %s: %s", currency, e)
-        return DEFAULT_USD_RATE if currency == "USD" else None
+        return _fallback(f"FRED fetch raised for {currency} ({series_id}): {e}")
 
 
 def cip_forward(spot: float, base_rate: float, quote_rate: float, days: int) -> float:
@@ -161,8 +176,17 @@ def forward_curve(
     if spot is None:
         return {"pair": pair, "error": "spot unavailable"}
 
-    r_base = fetch_short_rate(base)
-    r_quote = fetch_short_rate(quote)
+    base_info = fetch_short_rate(base)
+    quote_info = fetch_short_rate(quote)
+    r_base = base_info.get("rate")
+    r_quote = quote_info.get("rate")
+    # Q15 (2026-10-07): "using FRED short rates" is only true when BOTH legs
+    # actually came from FRED. A DEFAULT_CONSTANT/UNAVAILABLE leg must flip
+    # this and travel with the payload — the router returns this dict as-is,
+    # so this is also the receipt any future sizing/pricing caller would read.
+    degraded = base_info.get("source") != "FRED" or quote_info.get("source") != "FRED"
+    missing_because = [m for m in (base_info.get("missing_because"),
+                                   quote_info.get("missing_because")) if m]
 
     points: list[dict] = []
     for m in tenors_months:
@@ -195,9 +219,17 @@ def forward_curve(
             "quote": quote,
             "base_rate_pct": round(r_base * 100, 4) if r_base is not None else None,
             "quote_rate_pct": round(r_quote * 100, 4) if r_quote is not None else None,
+            "base_rate_source": base_info.get("source"),
+            "quote_rate_source": quote_info.get("source"),
         },
         "forwards": points,
-        "method": "Covered interest parity (act/360) using FRED short rates",
+        "method": ("Covered interest parity (act/360) using FRED short rates"
+                   if not degraded else
+                   "Covered interest parity (act/360) — one or both legs used a "
+                   "DEFAULT_CONSTANT/UNAVAILABLE rate, NOT a FRED read; see "
+                   "rates.base_rate_source / rates.quote_rate_source"),
+        "degraded": degraded,
+        "missing_because": missing_because or None,
     }
 
 
@@ -226,6 +258,9 @@ def fx_dashboard(pairs: list[str] = DEFAULT_PAIRS) -> dict:
                 "carry_3m_bp": m3.get("annualised_carry_bp"),
                 "base_rate_pct": curve["rates"].get("base_rate_pct"),
                 "quote_rate_pct": curve["rates"].get("quote_rate_pct"),
+                # Q15: a row carrying a DEFAULT_CONSTANT/UNAVAILABLE rate leg
+                # must say so inline, not just in the single-pair endpoint.
+                "degraded": curve.get("degraded", False),
             }
         )
     return {"pairs": rows, "n": len(rows)}
