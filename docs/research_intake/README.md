@@ -105,16 +105,6 @@ future pre-registration, not a registration itself>
 <cite NEGATIVE_RESULTS.md / docs/TRIALS/ / a dated research note by path, or state "none found
 this pass" — never silently assume novelty>
 
-## Needs evidence
-<OPTIONAL. 1-3 open literature questions this card could not close by hand -- e.g. "post-2010
-evidence for the Monday effect in US large caps." Only present when a question remains; a card
-with nothing open here omits the section rather than leaving it empty. This is the field the
-research-intake "academic" lane (`backend/services/research_instruments.py`, Q12 2026-10-07)
-reads as its seed: it runs OpenAlex/CrossRef (and, on escalation, Semantic Scholar/arXiv/NBER
-RSS) against each bullet and writes a per-card evidence file at
-`docs/research_intake/evidence/<slug>_<run_id>.json` -- never into the card. A human/Sonnet
-promotes a citation from that file into this card's own sections by hand.>
-
 ## hyp_lab family
 <the FIRST backticked token is the family: one of HYP_LAB_FAMILIES from backend/config.py, or
 `family_unmapped` with a one-line note on the nearest existing family and why it doesn't fit>
@@ -126,6 +116,8 @@ promotes a citation from that file into this card's own sections by hand.>
 ## needs_evidence
 - <1 to 3 bullet questions: the evidence that would move this card's verdict>
 ```
+
+**Optional section, not part of the checker's required order:** a card may add `## Needs evidence` immediately before `## hyp_lab family` — 1-3 open literature questions the card could not close by hand. It is the seed the research-intake academic lane (`backend/services/research_instruments.py`, Q12 2026-10-07) reads; the lane writes per-card evidence files under `docs/research_intake/evidence/`, never into the card. A card with nothing open omits the section.
 
 ## The checker and the index
 

@@ -680,6 +680,13 @@ def render(day: str, folder: Path, receipts: dict, contract: dict | None,
     L.append("## RESULTS (what is ahead of SPY, which label, what raises it)")
     L += block_results()
     L.append("")
+    # The STOP confirmation sits ABOVE the line cap (2026-10-07): on a fresh CI
+    # checkout every subsystem reads DEAD/STALE, section 0 runs long, and the cap
+    # trimmed section 14 off the bottom -- a report that cannot say whether the
+    # night was stopped is the one safety line a reader needs first.
+    L.append("## 0a. STOP confirmation")
+    L += block_stop(folder)
+    L.append("")
     L.append("## 0. Subsystems not ALIVE (DEAD/STALE first)")
     L += _subsystem_lines()
     L.append("")
@@ -725,9 +732,6 @@ def render(day: str, folder: Path, receipts: dict, contract: dict | None,
     L.append("")
     L.append("## 13. Jobs that did not finish")
     L += block_jobs(receipts)
-    L.append("")
-    L.append("## 14. STOP confirmation")
-    L += block_stop(folder)
     L.append("")
     Q: list[str] = []
     Q.append("## THE FIVE QUESTIONS")
