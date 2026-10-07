@@ -61,7 +61,7 @@ def test_every_probe_with_its_evidence_absent_is_not_alive(tmp_path, probe):
     out = probe.fn(ctx)
     for name, r in _rows(out).items():
         assert r.verdict != "ALIVE", f"{probe.name}/{name} ALIVE on no evidence: {r.detail}"
-        if probe.name != "railway_backend":           # an unanswering endpoint is DEAD
+        if probe.name not in ("railway_backend", "fred_macro_inputs"):  # an unanswering endpoint is DEAD
             assert r.verdict == "UNKNOWN", f"{probe.name}/{name}: {r.verdict} {r.detail}"
         assert r.detail, "UNKNOWN must say why"
 
@@ -228,6 +228,54 @@ def test_railway_fresh_and_up_for_days_is_alive(tmp_path):
             "scheduler": {"nav": {"all_fresh": True, "lanes": {}}}}
     r = SH.p_railway_backend(_ctx(tmp_path, http=lambda u, t: (body, 0.3, None)))
     assert r.verdict == "ALIVE"
+
+
+# ────────────────────────────────────── 5b. FRED macro inputs (Q14, 2026-10-07)
+
+_FRED_CRIT = ["initial_claims", "initial_claims_4wk", "nfci", "yield_spread", "hy_oas"]
+
+
+def _fred_body(*, uptime, loaded_crit, passes=5, extra_warnings=None, no_fetch_reason=None):
+    bad = [s for s in _FRED_CRIT if s not in loaded_crit]
+    return {"deploy": {"uptime_seconds": uptime},
+            "fred_health": {"critical_series": _FRED_CRIT, "fetch_passes": passes,
+                            "last_no_fetch_reason": no_fetch_reason,
+                            "by_status": {"UNAVAILABLE": bad}},
+            "recent_warnings": extra_warnings or []}
+
+
+def test_fred_zero_loaded_past_24h_is_dead_and_names_the_api_key_cause(tmp_path):
+    body = _fred_body(uptime=5 * 86400, loaded_crit=[], extra_warnings=[
+        {"message": "Failed to fetch unemployment (UNRATE): Bad Request. The value for "
+                    "variable api_key is not registered."}])
+    r = SH.p_fred_macro_inputs(_ctx(tmp_path, http=lambda u, t: (body, 0.3, None)))
+    assert r.verdict == "DEAD"
+    assert "0/5" in r.detail and "api_key is not registered" in r.detail
+
+
+def test_fred_zero_loaded_under_24h_uptime_is_stale_not_dead(tmp_path):
+    body = _fred_body(uptime=3600, loaded_crit=[])
+    r = SH.p_fred_macro_inputs(_ctx(tmp_path, http=lambda u, t: (body, 0.3, None)))
+    assert r.verdict == "STALE"
+
+
+def test_fred_no_fetch_pass_yet_is_unknown_not_dead(tmp_path):
+    body = _fred_body(uptime=5 * 86400, loaded_crit=[], passes=0,
+                      no_fetch_reason="FRED_API_KEY not set")
+    r = SH.p_fred_macro_inputs(_ctx(tmp_path, http=lambda u, t: (body, 0.3, None)))
+    assert r.verdict == "UNKNOWN" and "FRED_API_KEY not set" in r.detail
+
+
+def test_fred_all_critical_loaded_is_alive(tmp_path):
+    body = _fred_body(uptime=5 * 86400, loaded_crit=list(_FRED_CRIT))
+    r = SH.p_fred_macro_inputs(_ctx(tmp_path, http=lambda u, t: (body, 0.3, None)))
+    assert r.verdict == "ALIVE" and "5/5" in r.detail
+
+
+def test_fred_some_critical_loaded_is_stale_not_dead(tmp_path):
+    body = _fred_body(uptime=5 * 86400, loaded_crit=["yield_spread", "hy_oas"])
+    r = SH.p_fred_macro_inputs(_ctx(tmp_path, http=lambda u, t: (body, 0.3, None)))
+    assert r.verdict == "STALE" and "2/5" in r.detail
 
 
 # ───────────────────────────────────────── old evidence => not ALIVE, per probe

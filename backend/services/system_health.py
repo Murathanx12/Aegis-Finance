@@ -1825,6 +1825,43 @@ def p_railway_backend(ctx: ProbeCtx) -> ProbeResult:
                        proof="GET /api/health/full deploy+scheduler.nav")
 
 
+def p_fred_macro_inputs(ctx: ProbeCtx) -> ProbeResult:
+    """config.CRITICAL_FRED_SERIES: DEAD when NONE has ever loaded and the
+    deploy has been up >24h. Q14 (2026-10-07): production reported
+    `degraded_reasons: ["critical FRED series never loaded: ..."] x5` for
+    five days straight with no row anyone had to watch go red -- the C8
+    pattern. Cause: the Railway FRED_API_KEY is present but unregistered
+    with FRED ("Bad Request ... api_key is not registered"), not absent --
+    `fred_health.last_no_fetch_reason` only names an absent/unimportable key,
+    so a registered-but-invalid one is read from `recent_warnings`."""
+    url = (ctx.railway_url or "").rstrip("/") + "/api/health/full"
+    body, _, err = (ctx.http_json or _default_http_json)(url, 45)
+    if body is None:
+        return ProbeResult("DEAD", None, None, f"GET {url} failed: {err}", proof="no HTTP body")
+    fh = body.get("fred_health") or {}
+    crit = fh.get("critical_series") or []
+    by_status = fh.get("by_status") or {}
+    bad = set(by_status.get("UNAVAILABLE", []) + by_status.get("DEGRADED_MISSING", []))
+    loaded = [s for s in crit if s not in bad]
+    passes, up = fh.get("fetch_passes"), (body.get("deploy") or {}).get("uptime_seconds")
+    if not crit or passes is None:
+        return _unknown("body lacks fred_health.critical_series/fetch_passes")
+    if passes == 0:
+        return _unknown(fh.get("last_no_fetch_reason") or "no FRED fetch pass has run yet")
+    if loaded:
+        v: Verdict = "ALIVE" if len(loaded) == len(crit) else "STALE"
+        return ProbeResult(v, None, None, f"{len(loaded)}/{len(crit)} critical FRED series loaded",
+                           proof="GET /api/health/full fred_health.by_status")
+    cause = fh.get("last_no_fetch_reason") or next(
+        (str(w.get("message", ""))[:140] for w in reversed(body.get("recent_warnings") or [])
+         if "api_key" in str(w.get("message", "")).lower()), "unknown -- see recent_warnings")
+    old = isinstance(up, (int, float)) and up > 86400
+    return ProbeResult("DEAD" if old else "STALE", None, None,
+                       f"0/{len(crit)} critical FRED series loaded in {passes} pass(es), "
+                       f"uptime {up}s; likely cause: {cause}",
+                       proof="fred_health.by_status + deploy.uptime_seconds + recent_warnings")
+
+
 def p_railway_fleet(ctx: ProbeCtx) -> ProbeResult:
     rc, txt = _run(ctx, ["railway", "status"], 30)
     if rc is None or rc != 0:
@@ -2052,6 +2089,7 @@ PROBES: tuple[Probe, ...] = (
     Probe("optimus_brain", "pc", timedelta(hours=24), "optimus aegis-health-latest.md: `generated` stamp", p_optimus_brain),
     Probe("task", "pc", D1, "each task's own receipt (task_receipts.TASK_RECEIPT); schtasks only says which tasks exist", p_scheduled_tasks, True),
     Probe("railway_backend", "external", D1, "GET /api/health/full: deploy.uptime_seconds, scheduler.nav.all_fresh", p_railway_backend, True),
+    Probe("fred_macro_inputs", "external", D1, "GET /api/health/full: fred_health.by_status vs config.CRITICAL_FRED_SERIES + deploy.uptime_seconds", p_fred_macro_inputs, True),
     Probe("railway_fleet", "external", D1, "`railway status` linked service (+ logs)", p_railway_fleet, True),
     Probe("ci", "external", D1, "gh run list --commit origin/main: conclusion", p_ci, True),
     Probe("git", "pc", D1, "git rev-list --count origin/main..HEAD", p_git, True),
