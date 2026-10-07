@@ -136,6 +136,24 @@ from 16:00 HKT). Vercel's bot checkpoint (403) blocks automated browser loads; v
   QQQ +3.14%, IWM +0.47%; leaders S +13.5%, GTLB +11.7%, AFRM +11.4%, OKTA +8.2% — a software/cyber-security cluster. The store marks the
   book at +7.14% over the same window; the gap to the bars' +4.93% is UNEXPLAINED and owed a look (mark source vs bar close).
 
+### 0d. 18:15 HKT — reviews in, Optimus #1 merged, PC off cash tonight (with fixes)
+
+- **PR #11 backend review** (`docs/reviews/REVIEW_2026-10-07_PR11_CLOUD_LEDGER_SPLIT.md`): MERGE AFTER FIXES. With the split NOT applied every reader and
+  writer matches main on a copy of today's ledger (37,651 rows, 38 checks equal). Findings are post-split: F1 autocrlf-dependent git test (the only
+  local red), F2 a torn last line in the current month blocks every write while `--status` says ok, F3 strict mode raises on one malformed event,
+  F4 the migration's commit step never commits the frozen predictions.jsonl, F5 Railway boot logs ERROR with nothing to copy, F6 ~82 MB resident
+  per process. Of the cloud's 12 claimed fixes, 8 confirmed, 1 partial, 3 unrun. An Opus fixer pushed F1–F6 + the two PNG deletions to the PR
+  branch; CI watch pending.
+- **PR #11 visuals + Optimus #1 review** (`docs/reviews/REVIEW_2026-10-07_PR11_VISUALS_AND_OPTIMUS_PR1.md`, 11 screenshots): visuals MERGE AFTER
+  FIXES (only the PNG contradiction), nothing force-simulated, numbers match the pinned receipts, 7 of 7 citations spot-checked real; Optimus #1
+  MERGE → **merged `e3286b7`**, local Optimus checkout fast-forwarded; `aegis_skills('optimus:orbit-blackline-visuals')` serves on the next MCP start.
+- **results_voice** landed `b3f23c55`: 24 of 71 strategy accounts ahead of SPY = 22 distinct bets of 59 (Jaccard ≥ 0.8); leader revision_flow_v0
+  +5.74 pp / 7 sessions OBSERVED(7), 14 sessions to EARLY_EVIDENCE; CLAUDE.md convention rewritten ("CLAIMS PROMOTED: none" is the second line).
+- **PC off cash** `d8283f29` → `f98bf0ea`: D14/D21/D22 ON, `revision_flow` sleeve mirroring the frozen book, SPY core on the rest. Adversarial review
+  (`docs/reviews/REVIEW_2026-10-07_PC_CORE_AND_REVISION_FLOW_SLEEVE.md`): SHIP WITH FIXES — the 21-session bound was computed on a panel with no
+  2020/2022 (deep panel: −32.0% in 2022 → **gross 30%**, not 50%); a sleeve refusal would EXIT held names; sleeve orders write no DECIDED rows
+  (tonight readable by hand only); gross can reach 1.057 on a later cycle. Builder applying fixes 1–3 before 20:15 HKT; 4 next session.
+
 ## 1. RESULTS SCOREBOARD
 
 **RESULT IMPROVEMENT: NONE.** The night produced controls, measurements and a live loop, not an edge.
