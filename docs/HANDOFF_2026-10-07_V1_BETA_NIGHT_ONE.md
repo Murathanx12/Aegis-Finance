@@ -66,6 +66,14 @@ the flag on or off, tested with EXPLOIT targets); it stays OFF pending D21/D22. 
 (false-kill ~2.3% per check vs ~21% for a sign rule). The quant-ensemble contract trades the 27 two-twin survivors as a
 PRODUCT_EXPERIMENT; the market t ≥ 2 line is the CAPITAL_CANDIDATE gate (0 rules pass it). No agents running at 08:25.
 
+**MERGED 2026-10-07 12:05 HKT: `main` = `92f147f6`** (fast-forward of the work branch after the gate went green on the frozen
+tree: 13,693 backend + 106 lab tests, frontend tsc/site/desktop 0/0/0). Pushed; `ci_watch --wait` running; the frontend
+workflow redeploys the site (frontend/** changed) and Railway picks up the backend. Next work branch: `wip/2026-10-07-day`.
+GitHub warned `predictions.jsonl` is 52 MB (recommended max 50, hard limit 100): the monthly split with a chain-break record
+(C10 review Q8) is now queue item Q11. New since the manager update: `/brain` v2 state board (Q5), research intake cards
+(Q6), research instruments (Q8: OpenAlex + CrossRef + NBER RSS at $0 to wire into the planner's academic lane), the four
+social-media ideas as theory objects (all NOT_A_HYPOTHESIS_YET; no intraday data on disk), fleet new gates in SHADOW.
+
 ## 1. RESULTS SCOREBOARD
 
 **RESULT IMPROVEMENT: NONE.** The night produced controls, measurements and a live loop, not an edge.

@@ -89,12 +89,12 @@
   "ZS"
  ],
  "stop_reason": null,
- "pages": 114,
+ "pages": 131,
  "stats": {
   "cnbc.com": {
    "links_found": 37,
    "links_new": 2,
-   "front": 8,
+   "front": 9,
    "browse_followed": 2,
    "article": 4,
    "archive_read": 1
@@ -124,9 +124,10 @@
    "browse_followed": 11,
    "article": 19,
    "archive_read": 11,
-   "links_found": 1,
-   "links_new": 0,
-   "stock_links": 2
+   "links_found": 7,
+   "links_new": 3,
+   "stock_links": 2,
+   "search": 2
   },
   "marketwatch.com": {
    "browse_followed": 0,
@@ -135,7 +136,8 @@
    "links_found": 12,
    "links_new": 2,
    "stock_links": 3,
-   "archive_read": 2
+   "archive_read": 2,
+   "search": 2
   },
   "finance.yahoo.com": {
    "browse_followed": 0,
@@ -145,9 +147,10 @@
    "browse_followed": 7,
    "article": 10,
    "archive_read": 2,
-   "links_found": 0,
+   "links_found": 9,
    "links_new": 0,
-   "stock_links": 1
+   "stock_links": 1,
+   "search": 3
   },
   "asia.nikkei.com": {
    "links_found": 12,
@@ -157,11 +160,12 @@
    "article": 1
   },
   "scmp.com": {
-   "links_found": 12,
-   "links_new": 6,
+   "links_found": 18,
+   "links_new": 10,
    "front": 1,
    "browse_followed": 0,
-   "article": 2
+   "article": 2,
+   "search": 2
   },
   "bbc.com": {
    "article": 1,
@@ -172,31 +176,34 @@
   "apnews.com": {
    "archive_read": 3,
    "article": 5,
-   "browse_followed": 3
+   "browse_followed": 3,
+   "links_found": 3,
+   "links_new": 0,
+   "search": 1
   },
   "x.com": {
-   "social": 6
+   "social": 7
   },
   "stocktwits.com": {
-   "social": 6
+   "social": 7
   },
   "reddit.com": {
-   "social": 5
+   "social": 6
   }
  },
  "classes": {
   "reuters.com": {
-   "ROBOTS_DISALLOWED": 6
+   "ROBOTS_DISALLOWED": 8
   },
   "apnews.com": {
-   "OK": 5
+   "OK": 6
   },
   "asia.nikkei.com": {
    "OK": 6,
    "PAYWALL_CHECKOUT_FRAME": 4
   },
   "barrons.com": {
-   "OK": 11
+   "OK": 14
   },
   "bbc.com": {
    "PAYWALL_CHECKOUT_FRAME": 1,
@@ -206,40 +213,42 @@
    "OK": 2
   },
   "cnbc.com": {
-   "OK": 12,
-   "PAYWALL_CHECKOUT_FRAME": 1
+   "OK": 13,
+   "PAYWALL_CHECKOUT_FRAME": 1,
+   "ROBOTS_DISALLOWED": 1
   },
   "finance.yahoo.com": {
    "OK": 9
   },
   "ft.com": {
    "OK": 5,
-   "PAYWALL_STUB": 3
+   "PAYWALL_STUB": 3,
+   "ROBOTS_DISALLOWED": 2
   },
   "home.treasury.gov": {
    "OK": 2
   },
   "marketwatch.com": {
-   "OK": 13
+   "OK": 15
   },
   "reddit.com": {
-   "OK": 5
+   "OK": 6
   },
   "scmp.com": {
-   "OK": 3
+   "OK": 5
   },
   "sec.gov": {
    "OK": 2
   },
   "stocktwits.com": {
-   "OK": 6
+   "OK": 7
   },
   "treasury.gov": {},
   "wsj.com": {
-   "OK": 21
+   "OK": 23
   },
   "x.com": {
-   "OK": 6
+   "OK": 7
   },
   "auth.asia.nikkei.com": {
    "PAYWALL_CHECKOUT_FRAME": 9
@@ -247,10 +256,10 @@
  },
  "timing_medians": {
   "cnbc.com|front": {
-   "n": 8,
-   "median_wait_s": 2.0,
-   "median_open_s": 1.35,
-   "median_work_s": 29.43
+   "n": 9,
+   "median_wait_s": 0.0,
+   "median_open_s": 1.32,
+   "median_work_s": 32.01
   },
   "ft.com|front": {
    "n": 5,
@@ -355,22 +364,22 @@
    "median_work_s": 29.47
   },
   "x.com|social": {
-   "n": 6,
-   "median_wait_s": 1.54,
-   "median_open_s": 0.55,
-   "median_work_s": 10.57
+   "n": 7,
+   "median_wait_s": 1.36,
+   "median_open_s": 0.6,
+   "median_work_s": 10.82
   },
   "stocktwits.com|social": {
-   "n": 6,
-   "median_wait_s": 6.01,
-   "median_open_s": 1.35,
-   "median_work_s": 9.35
+   "n": 7,
+   "median_wait_s": 0.0,
+   "median_open_s": 1.36,
+   "median_work_s": 9.55
   },
   "reddit.com|social": {
-   "n": 5,
-   "median_wait_s": 0.0,
-   "median_open_s": 0.87,
-   "median_work_s": 10.73
+   "n": 6,
+   "median_wait_s": 0.21,
+   "median_open_s": 0.89,
+   "median_work_s": 10.11
   },
   "marketwatch.com|stock_text": {
    "n": 3,
@@ -395,149 +404,39 @@
    "median_wait_s": 0.0,
    "median_open_s": 1.25,
    "median_work_s": 24.38
+  },
+  "barrons.com|search": {
+   "n": 3,
+   "median_wait_s": 0.0,
+   "median_open_s": 2.16,
+   "median_work_s": 23.72
+  },
+  "scmp.com|search": {
+   "n": 2,
+   "median_wait_s": 0.0,
+   "median_open_s": 4.54,
+   "median_work_s": 24.6
+  },
+  "apnews.com|search": {
+   "n": 1,
+   "median_wait_s": 2.25,
+   "median_open_s": 1.59,
+   "median_work_s": 18.03
+  },
+  "wsj.com|search": {
+   "n": 2,
+   "median_wait_s": 0.0,
+   "median_open_s": 1.74,
+   "median_work_s": 24.59
+  },
+  "marketwatch.com|search": {
+   "n": 2,
+   "median_wait_s": 0.0,
+   "median_open_s": 1.14,
+   "median_work_s": 15.61
   }
  },
  "timings_tail": [
-  {
-   "host": "marketwatch.com",
-   "kind": "article",
-   "wait_s": 9.1,
-   "open_s": 1.03,
-   "work_s": 18.7,
-   "total_s": 28.85,
-   "outcome": "OK",
-   "at": "2026-10-07T04:20:03+00:00"
-  },
-  {
-   "host": "x.com",
-   "kind": "social",
-   "wait_s": 0.0,
-   "open_s": 0.6,
-   "work_s": 10.31,
-   "total_s": 10.93,
-   "outcome": "OK",
-   "at": "2026-10-07T04:20:06+00:00"
-  },
-  {
-   "host": "stocktwits.com",
-   "kind": "social",
-   "wait_s": 0.0,
-   "open_s": 1.35,
-   "work_s": 10.58,
-   "total_s": 11.96,
-   "outcome": "OK",
-   "at": "2026-10-07T04:20:09+00:00"
-  },
-  {
-   "host": "apnews.com",
-   "kind": "article",
-   "wait_s": 16.46,
-   "open_s": 0.65,
-   "work_s": 22.59,
-   "total_s": 39.72,
-   "outcome": "OK",
-   "at": "2026-10-07T04:20:12+00:00"
-  },
-  {
-   "host": "reddit.com",
-   "kind": "social",
-   "wait_s": 1.53,
-   "open_s": 1.0,
-   "work_s": 9.14,
-   "total_s": 11.7,
-   "outcome": "OK",
-   "at": "2026-10-07T04:20:15+00:00"
-  },
-  {
-   "host": "barrons.com",
-   "kind": "article",
-   "wait_s": 3.55,
-   "open_s": 1.01,
-   "work_s": 8.84,
-   "total_s": 13.43,
-   "outcome": "OK",
-   "at": "2026-10-07T04:20:19+00:00"
-  },
-  {
-   "host": "scmp.com",
-   "kind": "article",
-   "wait_s": 1.48,
-   "open_s": 0.77,
-   "work_s": 12.62,
-   "total_s": 14.92,
-   "outcome": "OK",
-   "at": "2026-10-07T04:20:32+00:00"
-  },
-  {
-   "host": "finance.yahoo.com",
-   "kind": "article",
-   "wait_s": 22.48,
-   "open_s": 1.68,
-   "work_s": 41.31,
-   "total_s": 65.49,
-   "outcome": "OK",
-   "at": "2026-10-07T04:20:46+00:00"
-  },
-  {
-   "host": "apnews.com",
-   "kind": "article",
-   "wait_s": 5.41,
-   "open_s": 0.64,
-   "work_s": 30.25,
-   "total_s": 36.33,
-   "outcome": "OK",
-   "at": "2026-10-07T04:20:48+00:00"
-  },
-  {
-   "host": "wsj.com",
-   "kind": "article",
-   "wait_s": 3.22,
-   "open_s": 0.63,
-   "work_s": 40.17,
-   "total_s": 44.05,
-   "outcome": "OK",
-   "at": "2026-10-07T04:20:53+00:00"
-  },
-  {
-   "host": "wsj.com",
-   "kind": "article",
-   "wait_s": 0.0,
-   "open_s": 0.67,
-   "work_s": 17.43,
-   "total_s": 18.11,
-   "outcome": "OK",
-   "at": "2026-10-07T04:21:11+00:00"
-  },
-  {
-   "host": "finance.yahoo.com",
-   "kind": "article",
-   "wait_s": 0.0,
-   "open_s": 1.54,
-   "work_s": 20.77,
-   "total_s": 22.32,
-   "outcome": "OK",
-   "at": "2026-10-07T04:21:12+00:00"
-  },
-  {
-   "host": "marketwatch.com",
-   "kind": "stock_text",
-   "wait_s": 0.0,
-   "open_s": 8.57,
-   "work_s": 12.93,
-   "total_s": 21.55,
-   "outcome": "OK",
-   "at": "2026-10-07T04:26:32+00:00"
-  },
-  {
-   "host": "barrons.com",
-   "kind": "stock_links",
-   "wait_s": 2.01,
-   "open_s": 7.57,
-   "work_s": 25.16,
-   "total_s": 34.82,
-   "outcome": "OK",
-   "at": "2026-10-07T04:26:45+00:00"
-  },
   {
    "host": "wsj.com",
    "kind": "stock_links",
@@ -897,6 +796,146 @@
    "total_s": 40.1,
    "outcome": "OK",
    "at": "2026-10-07T04:31:32+00:00"
+  },
+  {
+   "host": "barrons.com",
+   "kind": "search",
+   "wait_s": 0.76,
+   "open_s": 7.26,
+   "work_s": 16.6,
+   "total_s": 24.64,
+   "outcome": "OK",
+   "at": "2026-10-07T04:36:39+00:00"
+  },
+  {
+   "host": "scmp.com",
+   "kind": "search",
+   "wait_s": 0.0,
+   "open_s": 8.16,
+   "work_s": 24.91,
+   "total_s": 33.08,
+   "outcome": "OK",
+   "at": "2026-10-07T04:36:45+00:00"
+  },
+  {
+   "host": "apnews.com",
+   "kind": "search",
+   "wait_s": 2.25,
+   "open_s": 1.59,
+   "work_s": 18.03,
+   "total_s": 21.91,
+   "outcome": "OK",
+   "at": "2026-10-07T04:36:49+00:00"
+  },
+  {
+   "host": "wsj.com",
+   "kind": "search",
+   "wait_s": 0.0,
+   "open_s": 1.7,
+   "work_s": 23.53,
+   "total_s": 25.3,
+   "outcome": "OK",
+   "at": "2026-10-07T04:36:52+00:00"
+  },
+  {
+   "host": "marketwatch.com",
+   "kind": "search",
+   "wait_s": 0.0,
+   "open_s": 1.03,
+   "work_s": 15.42,
+   "total_s": 16.46,
+   "outcome": "OK",
+   "at": "2026-10-07T04:37:16+00:00"
+  },
+  {
+   "host": "barrons.com",
+   "kind": "search",
+   "wait_s": 0.0,
+   "open_s": 2.15,
+   "work_s": 23.72,
+   "total_s": 25.88,
+   "outcome": "OK",
+   "at": "2026-10-07T04:37:36+00:00"
+  },
+  {
+   "host": "wsj.com",
+   "kind": "search",
+   "wait_s": 0.0,
+   "open_s": 1.78,
+   "work_s": 25.66,
+   "total_s": 27.45,
+   "outcome": "OK",
+   "at": "2026-10-07T04:37:53+00:00"
+  },
+  {
+   "host": "scmp.com",
+   "kind": "search",
+   "wait_s": 0.0,
+   "open_s": 0.93,
+   "work_s": 24.29,
+   "total_s": 25.23,
+   "outcome": "OK",
+   "at": "2026-10-07T04:37:54+00:00"
+  },
+  {
+   "host": "reddit.com",
+   "kind": "social",
+   "wait_s": 0.43,
+   "open_s": 1.1,
+   "work_s": 8.02,
+   "total_s": 9.57,
+   "outcome": "OK",
+   "at": "2026-10-07T04:37:55+00:00"
+  },
+  {
+   "host": "x.com",
+   "kind": "social",
+   "wait_s": 0.0,
+   "open_s": 0.61,
+   "work_s": 12.93,
+   "total_s": 13.58,
+   "outcome": "OK",
+   "at": "2026-10-07T04:37:57+00:00"
+  },
+  {
+   "host": "marketwatch.com",
+   "kind": "search",
+   "wait_s": 0.0,
+   "open_s": 1.24,
+   "work_s": 15.8,
+   "total_s": 17.06,
+   "outcome": "OK",
+   "at": "2026-10-07T04:37:57+00:00"
+  },
+  {
+   "host": "stocktwits.com",
+   "kind": "social",
+   "wait_s": 0.0,
+   "open_s": 1.41,
+   "work_s": 9.55,
+   "total_s": 10.97,
+   "outcome": "OK",
+   "at": "2026-10-07T04:38:13+00:00"
+  },
+  {
+   "host": "cnbc.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.03,
+   "work_s": 33.49,
+   "total_s": 34.54,
+   "outcome": "OK",
+   "at": "2026-10-07T04:38:42+00:00"
+  },
+  {
+   "host": "barrons.com",
+   "kind": "search",
+   "wait_s": 0.0,
+   "open_s": 2.16,
+   "work_s": 25.11,
+   "total_s": 27.28,
+   "outcome": "OK",
+   "at": "2026-10-07T04:38:43+00:00"
   }
  ],
  "governor_history": [
@@ -1127,8 +1166,8 @@
    "landed": "https://www.cnbc.com/world-markets/",
    "title": "",
    "class": "OK",
-   "at": "2026-10-07T04:11:16+00:00",
-   "links": 12,
+   "at": "2026-10-07T04:38:42+00:00",
+   "links": 0,
    "new": 0
   },
   "bbc:business": {
@@ -1249,7 +1288,11 @@
    "new": 0
   }
  },
- "open_tabs_now": [],
+ "open_tabs_now": [
+  "10EEC805ED2E15951FC00E6D6E6BA714",
+  "4A448549BA52C628BD252B741A6F4DC2",
+  "4BAAD45C0E6FAC999D4976ACB37E7779"
+ ],
  "orphaned_tabs": [],
  "reader_tab_ids": [
   "75C1A3AE3153332E9C44845D2D8A7541",
@@ -1365,7 +1408,24 @@
   "B255306114DDBF385323B1939E2800F6",
   "B0DA2D3856181CB207FF24E7F71A8E42",
   "3DC04F5C5EB6A0C666D2FC5212D35B90",
-  "764878CA50118E550148E4A797E6DD09"
+  "764878CA50118E550148E4A797E6DD09",
+  "90C4D93A2555896C37D37667BFC60CCB",
+  "C0E629C9019DFCA93ED8BABE5F43B332",
+  "A733F5D068CD7D74D29FF3A9319E8103",
+  "4A12709F30EADDA2004372666A8CBAC7",
+  "2E3200B2A25479A9DE07F5ACB9899F5D",
+  "3B1B54C17F96E08D0A4FFBC96DCB11C8",
+  "9F0722FCA286AB4F6C47BA2BF8B22070",
+  "196114EA9E76D32DEBA7E82D99AC8AD4",
+  "B1051D8C2EB02CF8DB83B2949AD659E4",
+  "5993E30AABE754839D1E039473A84CE3",
+  "44F24C42EAFACE83FCBAFC6BF3365E8E",
+  "F38F2ABC357A210D1E1BD3C131BAF7D4",
+  "BE406B5E23BE6C31EC9A339A752D4368",
+  "37F7C4EE710542728655A04AFC291EBD",
+  "10EEC805ED2E15951FC00E6D6E6BA714",
+  "4BAAD45C0E6FAC999D4976ACB37E7779",
+  "4A448549BA52C628BD252B741A6F4DC2"
  ],
  "throttle_targets_s": [
   44.87,
@@ -1482,7 +1542,23 @@
   26.31,
   56.98,
   10.67,
-  59.7
+  59.7,
+  29.03,
+  39.59,
+  35.29,
+  19.96,
+  21.76,
+  18.64,
+  26.28,
+  32.27,
+  39.16,
+  53.92,
+  39.24,
+  59.51,
+  25.79,
+  24.05,
+  21.97,
+  20.32
  ],
  "budget": {
   "enabled": true,
@@ -1491,18 +1567,18 @@
   "hour_allowance_now": 182,
   "ten_min_allowance_now": 38,
   "loads_60m_all_readers": 182,
-  "loads_24h_all_readers": 3449,
+  "loads_24h_all_readers": 3465,
   "grants_this_run": {
-   "OWN_SHARE": 38,
-   "BORROW": 77
+   "OWN_SHARE": 53,
+   "BORROW": 83
   },
   "lanes": {
    "book_names": {
     "share": 0.24,
     "day_target": 960,
     "hour_quota": 44,
-    "loads_60m": 26,
-    "ok_60m": 25,
+    "loads_60m": 17,
+    "ok_60m": 17,
     "loads_24h": 457,
     "ok_24h": 422,
     "in_flight": 0,
@@ -1513,12 +1589,12 @@
     "share": 0.12,
     "day_target": 480,
     "hour_quota": 22,
-    "loads_60m": 22,
-    "ok_60m": 21,
+    "loads_60m": 21,
+    "ok_60m": 20,
     "loads_24h": 331,
     "ok_24h": 303,
-    "in_flight": 0,
-    "pending": 29,
+    "in_flight": 1,
+    "pending": 28,
     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
    },
    "markets_news": {
@@ -1530,19 +1606,19 @@
     "loads_24h": 1016,
     "ok_24h": 981,
     "in_flight": 0,
-    "pending": 197,
+    "pending": 198,
     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
    },
    "macro_world": {
     "share": 0.12,
     "day_target": 480,
     "hour_quota": 22,
-    "loads_60m": 38,
-    "ok_60m": 38,
-    "loads_24h": 635,
-    "ok_24h": 618,
+    "loads_60m": 39,
+    "ok_60m": 39,
+    "loads_24h": 636,
+    "ok_24h": 619,
     "in_flight": 0,
-    "pending": 102,
+    "pending": 104,
     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
    },
    "politics_policy": {
@@ -1561,8 +1637,8 @@
     "share": 0.04,
     "day_target": 160,
     "hour_quota": 7,
-    "loads_60m": 8,
-    "ok_60m": 8,
+    "loads_60m": 6,
+    "ok_60m": 6,
     "loads_24h": 148,
     "ok_24h": 145,
     "in_flight": 0,
@@ -1575,22 +1651,22 @@
     "hour_quota": 20,
     "loads_60m": 20,
     "ok_60m": 20,
-    "loads_24h": 382,
-    "ok_24h": 381,
+    "loads_24h": 385,
+    "ok_24h": 384,
     "in_flight": 0,
-    "pending": 242,
+    "pending": 240,
     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
    },
    "digest_asks": {
     "share": 0.05,
     "day_target": 200,
     "hour_quota": 9,
-    "loads_60m": 0,
-    "ok_60m": 0,
-    "loads_24h": 199,
-    "ok_24h": 193,
-    "in_flight": 1,
-    "pending": 49,
+    "loads_60m": 10,
+    "ok_60m": 10,
+    "loads_24h": 209,
+    "ok_24h": 203,
+    "in_flight": 2,
+    "pending": 40,
     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
    },
    "query_planner": {
@@ -1619,40 +1695,40 @@
    }
   },
   "ok_by_host_60m": {
-   "x.com": 8,
-   "home.treasury.gov": 3,
-   "sec.gov": 3,
-   "reddit.com": 6,
-   "marketwatch.com": 30,
-   "barrons.com": 24,
+   "barrons.com": 25,
    "wsj.com": 33,
+   "marketwatch.com": 27,
    "asia.nikkei.com": 10,
-   "cnbc.com": 18,
+   "cnbc.com": 19,
    "ft.com": 8,
-   "scmp.com": 7,
+   "scmp.com": 9,
    "finance.yahoo.com": 11,
+   "sec.gov": 2,
+   "home.treasury.gov": 2,
    "bls.gov": 2,
    "bbc.com": 3,
-   "apnews.com": 5,
-   "stocktwits.com": 6
+   "apnews.com": 6,
+   "x.com": 7,
+   "stocktwits.com": 7,
+   "reddit.com": 6
   },
   "ok_by_host_24h": {
-   "barrons.com": 479,
-   "marketwatch.com": 602,
-   "scmp.com": 174,
+   "barrons.com": 482,
+   "marketwatch.com": 604,
+   "scmp.com": 176,
    "ft.com": 128,
-   "cnbc.com": 226,
-   "wsj.com": 611,
+   "cnbc.com": 227,
+   "wsj.com": 613,
    "finance.yahoo.com": 125,
    "bbc.com": 135,
    "asia.nikkei.com": 162,
    "bls.gov": 49,
-   "apnews.com": 147,
+   "apnews.com": 148,
    "sec.gov": 49,
    "home.treasury.gov": 50,
-   "x.com": 146,
-   "reddit.com": 118,
-   "stocktwits.com": 117,
+   "x.com": 147,
+   "reddit.com": 119,
+   "stocktwits.com": 118,
    "reuters.com": 1
   },
   "hourly_allowance_utc": {

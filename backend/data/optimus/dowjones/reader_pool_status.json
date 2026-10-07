@@ -1,17 +1,17 @@
 {
- "t": "2026-10-07T04:36:14+00:00",
+ "t": "2026-10-07T04:38:45+00:00",
  "pid": 213484,
  "state": "reading",
  "queue_state": "READING",
  "throughput": {
-  "ok_last_60m": 111,
-  "run_hours": 0.72,
-  "sustained_ok_per_hour": 154.9
+  "ok_last_60m": 125,
+  "run_hours": 0.76,
+  "sustained_ok_per_hour": 164.7
  },
  "next_front_due_s": 0.0,
  "last_refill": {
-  "t": "2026-10-07T04:36:11+00:00",
-  "added": 0
+  "t": "2026-10-07T04:38:30+00:00",
+  "added": 1
  },
  "carried_in": 391,
  "early_front_revisits": {
@@ -19,47 +19,49 @@
   "bls.gov": 2,
   "sec.gov": 2,
   "home.treasury.gov": 2,
-  "asia.nikkei.com": 5,
+  "asia.nikkei.com": 7,
   "scmp.com": 1,
-  "bbc.com": 2,
+  "bbc.com": 4,
   "ft.com": 4
  },
  "robots_disallowed": {
-  "reuters.com": 6
+  "reuters.com": 8,
+  "cnbc.com": 1,
+  "ft.com": 2
  },
  "stop_reason": null,
  "tabs": {
   "target": 6,
   "max": 6,
-  "open_now": 0,
-  "in_flight": 1,
-  "why": "free memory 8.1 GB: holding at 6 of 6 (max 6)",
-  "free_gb": 8.08,
+  "open_now": 3,
+  "in_flight": 3,
+  "why": "free memory 5.1 GB: holding at 6 of 6 (max 6)",
+  "free_gb": 5.09,
   "floor_gb": 2.0
  },
  "caps": {
   "hour_all": 480,
   "day_all": 4000,
-  "loads_60m_all": 181,
-  "loads_24h_all": 3449
+  "loads_60m_all": 182,
+  "loads_24h_all": 3465
  },
  "hosts": {
   "apnews.com": {
-   "open_tabs": 0,
+   "open_tabs": 1,
    "tab_limit": 1,
-   "loads_60m": 5,
+   "loads_60m": 7,
    "cap_hour": 30,
-   "loads_24h": 151,
+   "loads_24h": 153,
    "cap_day": 300,
-   "pending": 60,
+   "pending": 58,
    "classes": {
-    "OK": 5
+    "OK": 6
    },
    "cooling": null,
    "blocked_until": null,
-   "use_60m": "5/30",
-   "use_24h": "151/300",
-   "next_front_due_s": 1868.9,
+   "use_60m": "7/30",
+   "use_24h": "153/300",
+   "next_front_due_s": 1717.9,
    "fronts_only_until": null,
    "queue_state": "READING"
   },
@@ -70,7 +72,7 @@
    "cap_hour": 30,
    "loads_24h": 164,
    "cap_day": 300,
-   "pending": 0,
+   "pending": 2,
    "classes": {
     "OK": 6,
     "PAYWALL_CHECKOUT_FRAME": 4
@@ -79,26 +81,26 @@
    "blocked_until": null,
    "use_60m": "10/30",
    "use_24h": "164/300",
-   "next_front_due_s": 43.6,
+   "next_front_due_s": 0.0,
    "fronts_only_until": "2026-10-07T10:09:36+00:00",
-   "queue_state": "QUEUE_EMPTY"
+   "queue_state": "READING"
   },
   "barrons.com": {
    "open_tabs": 0,
    "tab_limit": 2,
    "loads_60m": 24,
    "cap_hour": 120,
-   "loads_24h": 484,
+   "loads_24h": 487,
    "cap_day": 1200,
-   "pending": 43,
+   "pending": 40,
    "classes": {
-    "OK": 11
+    "OK": 14
    },
    "cooling": null,
    "blocked_until": null,
    "use_60m": "24/120",
-   "use_24h": "484/1200",
-   "next_front_due_s": 1839.9,
+   "use_24h": "487/1200",
+   "next_front_due_s": 1688.9,
    "fronts_only_until": null,
    "queue_state": "READING"
   },
@@ -109,7 +111,7 @@
    "cap_hour": 30,
    "loads_24h": 136,
    "cap_day": 300,
-   "pending": 0,
+   "pending": 2,
    "classes": {
     "PAYWALL_CHECKOUT_FRAME": 1,
     "OK": 3
@@ -118,9 +120,9 @@
    "blocked_until": null,
    "use_60m": "3/30",
    "use_24h": "136/300",
-   "next_front_due_s": 39.7,
+   "next_front_due_s": 0.0,
    "fronts_only_until": "2026-10-07T10:09:52+00:00",
-   "queue_state": "QUEUE_EMPTY"
+   "queue_state": "READING"
   },
   "bls.gov": {
    "open_tabs": 0,
@@ -137,27 +139,28 @@
    "blocked_until": null,
    "use_60m": "2/30",
    "use_24h": "50/300",
-   "next_front_due_s": 714.6,
+   "next_front_due_s": 563.5,
    "fronts_only_until": null,
    "queue_state": "QUEUE_EMPTY"
   },
   "cnbc.com": {
    "open_tabs": 0,
    "tab_limit": 1,
-   "loads_60m": 18,
+   "loads_60m": 19,
    "cap_hour": 30,
-   "loads_24h": 233,
+   "loads_24h": 234,
    "cap_day": 300,
-   "pending": 7,
+   "pending": 5,
    "classes": {
-    "OK": 12,
-    "PAYWALL_CHECKOUT_FRAME": 1
+    "OK": 13,
+    "PAYWALL_CHECKOUT_FRAME": 1,
+    "ROBOTS_DISALLOWED": 1
    },
    "cooling": null,
    "blocked_until": null,
-   "use_60m": "18/30",
-   "use_24h": "233/300",
-   "next_front_due_s": 5702.8,
+   "use_60m": "19/30",
+   "use_24h": "234/300",
+   "next_front_due_s": 5888.7,
    "fronts_only_until": "2026-10-07T10:16:53+00:00",
    "queue_state": "READING"
   },
@@ -176,7 +179,7 @@
    "blocked_until": null,
    "use_60m": "11/30",
    "use_24h": "128/300",
-   "next_front_due_s": 1894.9,
+   "next_front_due_s": 1743.9,
    "fronts_only_until": null,
    "queue_state": "READING"
   },
@@ -187,16 +190,17 @@
    "cap_hour": 30,
    "loads_24h": 160,
    "cap_day": 300,
-   "pending": 5,
+   "pending": 3,
    "classes": {
     "OK": 5,
-    "PAYWALL_STUB": 3
+    "PAYWALL_STUB": 3,
+    "ROBOTS_DISALLOWED": 2
    },
    "cooling": null,
    "blocked_until": null,
    "use_60m": "11/30",
    "use_24h": "160/300",
-   "next_front_due_s": 6043.7,
+   "next_front_due_s": 0.0,
    "fronts_only_until": "2026-10-07T10:09:45+00:00",
    "queue_state": "READING"
   },
@@ -215,26 +219,26 @@
    "blocked_until": null,
    "use_60m": "2/30",
    "use_24h": "50/300",
-   "next_front_due_s": 785.6,
+   "next_front_due_s": 634.5,
    "fronts_only_until": null,
    "queue_state": "QUEUE_EMPTY"
   },
   "marketwatch.com": {
-   "open_tabs": 0,
+   "open_tabs": 1,
    "tab_limit": 2,
-   "loads_60m": 30,
+   "loads_60m": 28,
    "cap_hour": 120,
-   "loads_24h": 605,
+   "loads_24h": 608,
    "cap_day": 1200,
-   "pending": 31,
+   "pending": 28,
    "classes": {
-    "OK": 13
+    "OK": 15
    },
    "cooling": null,
    "blocked_until": null,
-   "use_60m": "30/120",
-   "use_24h": "605/1200",
-   "next_front_due_s": 1848.9,
+   "use_60m": "28/120",
+   "use_24h": "608/1200",
+   "next_front_due_s": 1697.9,
    "fronts_only_until": null,
    "queue_state": "READING"
   },
@@ -243,16 +247,16 @@
    "tab_limit": 1,
    "loads_60m": 6,
    "cap_hour": 40,
-   "loads_24h": 119,
+   "loads_24h": 120,
    "cap_day": 150,
-   "pending": 78,
+   "pending": 77,
    "classes": {
-    "OK": 5
+    "OK": 6
    },
    "cooling": null,
    "blocked_until": null,
    "use_60m": "6/40",
-   "use_24h": "119/150",
+   "use_24h": "120/150",
    "next_front_due_s": null,
    "fronts_only_until": null,
    "queue_state": "READING"
@@ -264,9 +268,9 @@
    "cap_hour": 30,
    "loads_24h": 1,
    "cap_day": 300,
-   "pending": 5,
+   "pending": 3,
    "classes": {
-    "ROBOTS_DISALLOWED": 6
+    "ROBOTS_DISALLOWED": 8
    },
    "cooling": null,
    "blocked_until": null,
@@ -277,21 +281,21 @@
    "queue_state": "READING"
   },
   "scmp.com": {
-   "open_tabs": 1,
+   "open_tabs": 0,
    "tab_limit": 1,
-   "loads_60m": 8,
+   "loads_60m": 9,
    "cap_hour": 30,
-   "loads_24h": 178,
+   "loads_24h": 179,
    "cap_day": 300,
-   "pending": 8,
+   "pending": 11,
    "classes": {
-    "OK": 3
+    "OK": 5
    },
    "cooling": null,
    "blocked_until": null,
-   "use_60m": "8/30",
-   "use_24h": "178/300",
-   "next_front_due_s": 4367.9,
+   "use_60m": "9/30",
+   "use_24h": "179/300",
+   "next_front_due_s": 4216.9,
    "fronts_only_until": null,
    "queue_state": "READING"
   },
@@ -310,25 +314,25 @@
    "blocked_until": null,
    "use_60m": "2/30",
    "use_24h": "51/300",
-   "next_front_due_s": 766.4,
+   "next_front_due_s": 615.3,
    "fronts_only_until": null,
    "queue_state": "QUEUE_EMPTY"
   },
   "stocktwits.com": {
    "open_tabs": 0,
    "tab_limit": 1,
-   "loads_60m": 6,
+   "loads_60m": 7,
    "cap_hour": 40,
-   "loads_24h": 117,
+   "loads_24h": 118,
    "cap_day": 150,
    "pending": 77,
    "classes": {
-    "OK": 6
+    "OK": 7
    },
    "cooling": null,
    "blocked_until": null,
-   "use_60m": "6/40",
-   "use_24h": "117/150",
+   "use_60m": "7/40",
+   "use_24h": "118/150",
    "next_front_due_s": null,
    "fronts_only_until": null,
    "queue_state": "READING"
@@ -351,49 +355,49 @@
    "queue_state": "QUEUE_EMPTY"
   },
   "wsj.com": {
-   "open_tabs": 0,
+   "open_tabs": 1,
    "tab_limit": 2,
-   "loads_60m": 35,
+   "loads_60m": 34,
    "cap_hour": 120,
-   "loads_24h": 676,
+   "loads_24h": 679,
    "cap_day": 1200,
    "pending": 159,
    "classes": {
-    "OK": 21
+    "OK": 23
    },
    "cooling": null,
    "blocked_until": null,
-   "use_60m": "35/120",
-   "use_24h": "676/1200",
-   "next_front_due_s": 1839.9,
+   "use_60m": "34/120",
+   "use_24h": "679/1200",
+   "next_front_due_s": 1688.9,
    "fronts_only_until": null,
    "queue_state": "READING"
   },
   "x.com": {
    "open_tabs": 0,
    "tab_limit": 1,
-   "loads_60m": 8,
+   "loads_60m": 7,
    "cap_hour": 40,
-   "loads_24h": 146,
+   "loads_24h": 147,
    "cap_day": 150,
-   "pending": 87,
+   "pending": 86,
    "classes": {
-    "OK": 6
+    "OK": 7
    },
    "cooling": null,
    "blocked_until": null,
-   "use_60m": "8/40",
-   "use_24h": "146/150",
+   "use_60m": "7/40",
+   "use_24h": "147/150",
    "next_front_due_s": null,
    "fronts_only_until": null,
    "queue_state": "READING"
   }
  },
  "pending_by_tier": {
-  "news a front showed": 298,
-  "book / contest name": 28,
-  "rest of the universe": 243,
-  "section front due": 50
+  "news a front showed": 305,
+  "book / contest name": 26,
+  "rest of the universe": 242,
+  "section front due": 37
  },
  "budget": {
   "enabled": true,
@@ -402,18 +406,18 @@
   "hour_allowance_now": 182,
   "ten_min_allowance_now": 38,
   "loads_60m_all_readers": 182,
-  "loads_24h_all_readers": 3449,
+  "loads_24h_all_readers": 3465,
   "grants_this_run": {
-   "OWN_SHARE": 38,
-   "BORROW": 77
+   "OWN_SHARE": 53,
+   "BORROW": 83
   },
   "lanes": {
    "book_names": {
     "share": 0.24,
     "day_target": 960,
     "hour_quota": 44,
-    "loads_60m": 26,
-    "ok_60m": 25,
+    "loads_60m": 17,
+    "ok_60m": 17,
     "loads_24h": 457,
     "ok_24h": 422,
     "in_flight": 0,
@@ -424,12 +428,12 @@
     "share": 0.12,
     "day_target": 480,
     "hour_quota": 22,
-    "loads_60m": 22,
-    "ok_60m": 21,
+    "loads_60m": 21,
+    "ok_60m": 20,
     "loads_24h": 331,
     "ok_24h": 303,
-    "in_flight": 0,
-    "pending": 29,
+    "in_flight": 1,
+    "pending": 28,
     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
    },
    "markets_news": {
@@ -441,19 +445,19 @@
     "loads_24h": 1016,
     "ok_24h": 981,
     "in_flight": 0,
-    "pending": 197,
+    "pending": 198,
     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
    },
    "macro_world": {
     "share": 0.12,
     "day_target": 480,
     "hour_quota": 22,
-    "loads_60m": 38,
-    "ok_60m": 38,
-    "loads_24h": 635,
-    "ok_24h": 618,
+    "loads_60m": 39,
+    "ok_60m": 39,
+    "loads_24h": 636,
+    "ok_24h": 619,
     "in_flight": 0,
-    "pending": 102,
+    "pending": 104,
     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
    },
    "politics_policy": {
@@ -472,8 +476,8 @@
     "share": 0.04,
     "day_target": 160,
     "hour_quota": 7,
-    "loads_60m": 8,
-    "ok_60m": 8,
+    "loads_60m": 6,
+    "ok_60m": 6,
     "loads_24h": 148,
     "ok_24h": 145,
     "in_flight": 0,
@@ -486,22 +490,22 @@
     "hour_quota": 20,
     "loads_60m": 20,
     "ok_60m": 20,
-    "loads_24h": 382,
-    "ok_24h": 381,
+    "loads_24h": 385,
+    "ok_24h": 384,
     "in_flight": 0,
-    "pending": 242,
+    "pending": 240,
     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
    },
    "digest_asks": {
     "share": 0.05,
     "day_target": 200,
     "hour_quota": 9,
-    "loads_60m": 0,
-    "ok_60m": 0,
-    "loads_24h": 199,
-    "ok_24h": 193,
-    "in_flight": 1,
-    "pending": 49,
+    "loads_60m": 10,
+    "ok_60m": 10,
+    "loads_24h": 209,
+    "ok_24h": 203,
+    "in_flight": 2,
+    "pending": 40,
     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
    },
    "query_planner": {
@@ -530,40 +534,40 @@
    }
   },
   "ok_by_host_60m": {
-   "x.com": 8,
-   "home.treasury.gov": 3,
-   "sec.gov": 3,
-   "reddit.com": 6,
-   "marketwatch.com": 30,
-   "barrons.com": 24,
+   "barrons.com": 25,
    "wsj.com": 33,
+   "marketwatch.com": 27,
    "asia.nikkei.com": 10,
-   "cnbc.com": 18,
+   "cnbc.com": 19,
    "ft.com": 8,
-   "scmp.com": 7,
+   "scmp.com": 9,
    "finance.yahoo.com": 11,
+   "sec.gov": 2,
+   "home.treasury.gov": 2,
    "bls.gov": 2,
    "bbc.com": 3,
-   "apnews.com": 5,
-   "stocktwits.com": 6
+   "apnews.com": 6,
+   "x.com": 7,
+   "stocktwits.com": 7,
+   "reddit.com": 6
   },
   "ok_by_host_24h": {
-   "barrons.com": 479,
-   "marketwatch.com": 602,
-   "scmp.com": 174,
+   "barrons.com": 482,
+   "marketwatch.com": 604,
+   "scmp.com": 176,
    "ft.com": 128,
-   "cnbc.com": 226,
-   "wsj.com": 611,
+   "cnbc.com": 227,
+   "wsj.com": 613,
    "finance.yahoo.com": 125,
    "bbc.com": 135,
    "asia.nikkei.com": 162,
    "bls.gov": 49,
-   "apnews.com": 147,
+   "apnews.com": 148,
    "sec.gov": 49,
    "home.treasury.gov": 50,
-   "x.com": 146,
-   "reddit.com": 118,
-   "stocktwits.com": 117,
+   "x.com": 147,
+   "reddit.com": 119,
+   "stocktwits.com": 118,
    "reuters.com": 1
   },
   "hourly_allowance_utc": {
@@ -593,7 +597,7 @@
    "23": 156
   }
  },
- "pages_this_run": 114,
+ "pages_this_run": 131,
  "media": {
   "wsj.com": {
    "items": 4,
@@ -801,8 +805,8 @@
    "landed": "https://www.cnbc.com/world-markets/",
    "title": "",
    "class": "OK",
-   "at": "2026-10-07T04:11:16+00:00",
-   "links": 12,
+   "at": "2026-10-07T04:38:42+00:00",
+   "links": 0,
    "new": 0
   },
   "bbc:business": {
@@ -924,7 +928,11 @@
   }
  },
  "orphaned_tabs": [],
- "open_tab_ids": [],
+ "open_tab_ids": [
+  "10EEC805ED2E15951FC00E6D6E6BA714",
+  "4A448549BA52C628BD252B741A6F4DC2",
+  "4BAAD45C0E6FAC999D4976ACB37E7779"
+ ],
  "reader_tab_ids": [
   "75C1A3AE3153332E9C44845D2D8A7541",
   "E4739B370B5A848A99B7B2A6191D55F6",
@@ -1039,7 +1047,24 @@
   "B255306114DDBF385323B1939E2800F6",
   "B0DA2D3856181CB207FF24E7F71A8E42",
   "3DC04F5C5EB6A0C666D2FC5212D35B90",
-  "764878CA50118E550148E4A797E6DD09"
+  "764878CA50118E550148E4A797E6DD09",
+  "90C4D93A2555896C37D37667BFC60CCB",
+  "C0E629C9019DFCA93ED8BABE5F43B332",
+  "A733F5D068CD7D74D29FF3A9319E8103",
+  "4A12709F30EADDA2004372666A8CBAC7",
+  "2E3200B2A25479A9DE07F5ACB9899F5D",
+  "3B1B54C17F96E08D0A4FFBC96DCB11C8",
+  "9F0722FCA286AB4F6C47BA2BF8B22070",
+  "196114EA9E76D32DEBA7E82D99AC8AD4",
+  "B1051D8C2EB02CF8DB83B2949AD659E4",
+  "5993E30AABE754839D1E039473A84CE3",
+  "44F24C42EAFACE83FCBAFC6BF3365E8E",
+  "F38F2ABC357A210D1E1BD3C131BAF7D4",
+  "BE406B5E23BE6C31EC9A339A752D4368",
+  "37F7C4EE710542728655A04AFC291EBD",
+  "10EEC805ED2E15951FC00E6D6E6BA714",
+  "4BAAD45C0E6FAC999D4976ACB37E7779",
+  "4A448549BA52C628BD252B741A6F4DC2"
  ],
  "next_slot_in_s": null
 }
