@@ -29,7 +29,31 @@ the local session, and its exact acceptance.
   vectorised copy used for daily re-looks agrees with them on every sampled pair or the audit refuses;
   a seeded receipt under `backend/data/optimus/audits/`; tests pin the measured band to the rule.
 
-## Task F2
+## Task F2: the live evidence pages served nothing (chosen 2026-10-07 ~15:00 HKT)
 
-Not taken. Q8 (external research instruments) was the candidate; the research cards' own fetch logs
-(which publishers 403, which open APIs resolve a DOI) answer most of it, and they are in the PR.
+Recorded honestly: the diagnosis came first (the owner asked "check the websites too"), and this
+entry was written together with the fix rather than before it.
+
+- **Why high EV:** headless screenshots of the live site showed `/arena`, `/forecast-lab`,
+  `/theory-lab` and `/health` answering "no receipt written yet", although sanitised copies of
+  every one are committed in `backend/data/public_receipts/` and ship in the Railway image. Cause:
+  `publish_receipts.public_dir()` is the sibling of `OPTIMUS_LEDGER_DIR`, which on Railway
+  (`AEGIS_DATA_DIR=/data`) is the empty volume. Four public pages the README links to were blank.
+- **Why no local conflict:** one read path in `publish_receipts` (`read_dirs` / `serving_dir`,
+  used by `load_published` and `read_manifest`); writes, the commit job and the routers are
+  unchanged. Locally and in tests the data dir is the image's, so nothing changes there.
+- **Acceptance:** a test that models the volume layout serves every page from the baked copy;
+  the newer manifest wins when both folders hold one; with no volume, serving never leaves the
+  data dir (test isolation kept). Live verification needs the merge and a Railway redeploy
+  (`verify-prod-after-deploy`), which this session cannot do.
+
+## Owner-directed work added mid-session (not Task F)
+
+- **Visual language.** The owner rejected the morning's PNG/navy identity pass, chose style C (the
+  orbit) for the front page and style A (the blackline) for explanation diagrams from a four-style
+  gallery, and gave motion notes; all built as animated SVG + an HTML page, recorded in
+  `docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md` and the `aegis-motion-visuals` skill.
+- **Optimus showcase.** The same language applied to the Optimus brain page, in the optimus repo
+  (its own branch and PR).
+- **Ledger review fixes.** A second review of Task A found twelve defects; every one reproduced,
+  fixed and pinned by a test before this PR was finalised.

@@ -81,8 +81,49 @@ OPP_MAX_ROWS_PER_LIST = 250
 
 def public_dir() -> Path:
     """`<data>/public_receipts`, the SIBLING of the optimus ledger dir (so a test that points
-    the ledger dir at a tmp folder never reads the real published copies)."""
+    the ledger dir at a tmp folder never reads the real published copies). Where `publish`
+    WRITES; serving reads `serving_dir()`."""
     return Path(_config.OPTIMUS_LEDGER_DIR).parent / "public_receipts"
+
+
+def read_dirs() -> list[Path]:
+    """Every folder a SERVED copy may be in, `public_dir()` first.
+
+    On a volume deployment (Railway: `AEGIS_DATA_DIR=/data`, so the data dir is not the
+    image's `backend/data`) the published copies are not on the volume at all: they are
+    committed to git in `backend/data/public_receipts/` (`commit_public_receipts`) and ship
+    in the IMAGE. Reading only the volume found nothing, and /arena, /forecast-lab,
+    /theory-lab and /health answered "no receipt written yet" while the copies sat one
+    directory over (2026-10-07). Locally and in tests the data dir IS the image's, so this
+    adds nothing -- a test that points the ledger dir at a tmp folder still reads only tmp."""
+    dirs = [public_dir()]
+    data = Path(getattr(_config, "DATA_DIR", "") or ".")
+    image_data = Path(_config.BACKEND_DIR) / "data"
+    try:
+        on_volume = data.resolve() != image_data.resolve()
+    except OSError:
+        on_volume = False
+    if on_volume:
+        baked = Path(_config.OPTIMUS_LEDGER_LEGACY_DIR).parent / "public_receipts"
+        if baked.resolve() != dirs[0].resolve():
+            dirs.append(baked)
+    return dirs
+
+
+def serving_dir() -> Path:
+    """The `read_dirs()` folder whose manifest is NEWEST by its own `published_utc`; the
+    first one when no manifest says. A volume copy never shadows a newer image copy (a
+    redeploy ships newer receipts than a copy written on the volume last week)."""
+    best: Optional[Path] = None
+    best_stamp = ""
+    for d in read_dirs():
+        man = read_manifest(d)
+        if man is None:
+            continue
+        stamp = str(man.get("published_utc") or "")
+        if best is None or stamp > best_stamp:
+            best, best_stamp = d, stamp
+    return best or public_dir()
 
 
 def _now() -> datetime:
@@ -330,7 +371,7 @@ def publish(*, out_dir: Optional[Path] = None, kinds: tuple[Kind, ...] = KINDS, 
 
 
 def read_manifest(out_dir: Optional[Path] = None) -> Optional[dict]:
-    p = Path(out_dir or public_dir()) / MANIFEST
+    p = Path(out_dir or serving_dir()) / MANIFEST
     try:
         return json.loads(p.read_text(encoding="utf-8")) if p.is_file() else None
     except (OSError, ValueError):
@@ -349,7 +390,7 @@ _CACHE: dict = {}
 
 def load_published(kind: str, out_dir: Optional[Path] = None, *, copy: bool = True) -> Optional[dict]:
     """The published copy of `kind`, or None. Never raises on a bad file (None = absent)."""
-    p = Path(out_dir or public_dir()) / kind / "latest.json"
+    p = Path(out_dir or serving_dir()) / kind / "latest.json"
     try:
         if not p.is_file():
             return None
