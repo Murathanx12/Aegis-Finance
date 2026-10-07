@@ -1,0 +1,392 @@
+{
+ "audit": "evidence_ladder_null_audit",
+ "licence": "RESEARCH_NOTE",
+ "rule": {
+  "early_min_sessions": 21,
+  "early": "excess > 0 and >= 2 of 3 sub-windows > 0 (book_dna.evidence_label)",
+  "replicated": "early and excess over the fair twin > 0"
+ },
+ "model": {
+  "paths": 20000,
+  "seed": 20261007,
+  "spy_mu_daily": 0.0003968253968253968,
+  "spy_sigma_daily": 0.010079052613579392,
+  "tracking_error_daily": 0.010079052613579392,
+  "note": "the ladder's rule is sign-based, so its no-edge rates depend on these scales only through compounding drag (small at this tracking error); the edge rows depend on edge / tracking error"
+ },
+ "vectorised_copy_check": {
+  "checked_pairs": 3200,
+  "mismatches": 0
+ },
+ "single_look": [
+  {
+   "edge_per_year": 0.0,
+   "look_session": 21,
+   "p_early_or_better": 0.4072,
+   "p_replicated": 0.3178
+  },
+  {
+   "edge_per_year": 0.0,
+   "look_session": 42,
+   "p_early_or_better": 0.4071,
+   "p_replicated": 0.3176
+  },
+  {
+   "edge_per_year": 0.0,
+   "look_session": 63,
+   "p_early_or_better": 0.401,
+   "p_replicated": 0.3131
+  },
+  {
+   "edge_per_year": 0.0,
+   "look_session": 126,
+   "p_early_or_better": 0.40035,
+   "p_replicated": 0.3147
+  },
+  {
+   "edge_per_year": 0.0,
+   "look_session": 252,
+   "p_early_or_better": 0.39145,
+   "p_replicated": 0.3088
+  },
+  {
+   "edge_per_year": 0.05,
+   "look_session": 21,
+   "p_early_or_better": 0.44655,
+   "p_replicated": 0.34745
+  },
+  {
+   "edge_per_year": 0.05,
+   "look_session": 42,
+   "p_early_or_better": 0.45565,
+   "p_replicated": 0.35645
+  },
+  {
+   "edge_per_year": 0.05,
+   "look_session": 63,
+   "p_early_or_better": 0.4612,
+   "p_replicated": 0.3667
+  },
+  {
+   "edge_per_year": 0.05,
+   "look_session": 126,
+   "p_early_or_better": 0.48415,
+   "p_replicated": 0.3856
+  },
+  {
+   "edge_per_year": 0.05,
+   "look_session": 252,
+   "p_early_or_better": 0.51025,
+   "p_replicated": 0.4148
+  },
+  {
+   "edge_per_year": 0.1,
+   "look_session": 21,
+   "p_early_or_better": 0.4811,
+   "p_replicated": 0.3796
+  },
+  {
+   "edge_per_year": 0.1,
+   "look_session": 42,
+   "p_early_or_better": 0.5094,
+   "p_replicated": 0.40515
+  },
+  {
+   "edge_per_year": 0.1,
+   "look_session": 63,
+   "p_early_or_better": 0.5258,
+   "p_replicated": 0.42295
+  },
+  {
+   "edge_per_year": 0.1,
+   "look_session": 126,
+   "p_early_or_better": 0.5736,
+   "p_replicated": 0.47275
+  },
+  {
+   "edge_per_year": 0.1,
+   "look_session": 252,
+   "p_early_or_better": 0.62895,
+   "p_replicated": 0.53
+  },
+  {
+   "edge_per_year": 0.2,
+   "look_session": 21,
+   "p_early_or_better": 0.55185,
+   "p_replicated": 0.44635
+  },
+  {
+   "edge_per_year": 0.2,
+   "look_session": 42,
+   "p_early_or_better": 0.60025,
+   "p_replicated": 0.49385
+  },
+  {
+   "edge_per_year": 0.2,
+   "look_session": 63,
+   "p_early_or_better": 0.6325,
+   "p_replicated": 0.5281
+  },
+  {
+   "edge_per_year": 0.2,
+   "look_session": 126,
+   "p_early_or_better": 0.7158,
+   "p_replicated": 0.61295
+  },
+  {
+   "edge_per_year": 0.2,
+   "look_session": 252,
+   "p_early_or_better": 0.816,
+   "p_replicated": 0.72655
+  }
+ ],
+ "daily_reevaluation": [
+  {
+   "edge_per_year": 0.0,
+   "daily_looks_through": 63,
+   "p_ever_early_evidence": 0.728,
+   "p_ever_robbins_boundary": 0.00015
+  },
+  {
+   "edge_per_year": 0.0,
+   "daily_looks_through": 126,
+   "p_ever_early_evidence": 0.80565,
+   "p_ever_robbins_boundary": 0.00215
+  },
+  {
+   "edge_per_year": 0.0,
+   "daily_looks_through": 252,
+   "p_ever_early_evidence": 0.8594,
+   "p_ever_robbins_boundary": 0.00495
+  },
+  {
+   "edge_per_year": 0.05,
+   "daily_looks_through": 63,
+   "p_ever_early_evidence": 0.76945,
+   "p_ever_robbins_boundary": 0.00075
+  },
+  {
+   "edge_per_year": 0.05,
+   "daily_looks_through": 126,
+   "p_ever_early_evidence": 0.84975,
+   "p_ever_robbins_boundary": 0.00335
+  },
+  {
+   "edge_per_year": 0.05,
+   "daily_looks_through": 252,
+   "p_ever_early_evidence": 0.90455,
+   "p_ever_robbins_boundary": 0.0106
+  },
+  {
+   "edge_per_year": 0.1,
+   "daily_looks_through": 63,
+   "p_ever_early_evidence": 0.80975,
+   "p_ever_robbins_boundary": 0.0012
+  },
+  {
+   "edge_per_year": 0.1,
+   "daily_looks_through": 126,
+   "p_ever_early_evidence": 0.88805,
+   "p_ever_robbins_boundary": 0.00615
+  },
+  {
+   "edge_per_year": 0.1,
+   "daily_looks_through": 252,
+   "p_ever_early_evidence": 0.93765,
+   "p_ever_robbins_boundary": 0.0212
+  },
+  {
+   "edge_per_year": 0.2,
+   "daily_looks_through": 63,
+   "p_ever_early_evidence": 0.87015,
+   "p_ever_robbins_boundary": 0.003
+  },
+  {
+   "edge_per_year": 0.2,
+   "daily_looks_through": 126,
+   "p_ever_early_evidence": 0.93705,
+   "p_ever_robbins_boundary": 0.01745
+  },
+  {
+   "edge_per_year": 0.2,
+   "daily_looks_through": 252,
+   "p_ever_early_evidence": 0.97675,
+   "p_ever_robbins_boundary": 0.06865
+  }
+ ],
+ "replicated_vs_twin": [
+  {
+   "twin_noise_corr": 0.0,
+   "look_session": 21,
+   "p_replicated_no_edge": 0.3166
+  },
+  {
+   "twin_noise_corr": 0.0,
+   "look_session": 63,
+   "p_replicated_no_edge": 0.31635
+  },
+  {
+   "twin_noise_corr": 0.0,
+   "look_session": 252,
+   "p_replicated_no_edge": 0.31095
+  },
+  {
+   "twin_noise_corr": 0.5,
+   "look_session": 21,
+   "p_replicated_no_edge": 0.28225
+  },
+  {
+   "twin_noise_corr": 0.5,
+   "look_session": 63,
+   "p_replicated_no_edge": 0.28165
+  },
+  {
+   "twin_noise_corr": 0.5,
+   "look_session": 252,
+   "p_replicated_no_edge": 0.27365
+  },
+  {
+   "twin_noise_corr": 0.8,
+   "look_session": 21,
+   "p_replicated_no_edge": 0.2447
+  },
+  {
+   "twin_noise_corr": 0.8,
+   "look_session": 63,
+   "p_replicated_no_edge": 0.2427
+  },
+  {
+   "twin_noise_corr": 0.8,
+   "look_session": 252,
+   "p_replicated_no_edge": 0.2419
+  }
+ ],
+ "fat_tails_t4": [
+  {
+   "look_session": 21,
+   "p_early_or_better_t4": 0.41075
+  },
+  {
+   "look_session": 63,
+   "p_early_or_better_t4": 0.4034
+  },
+  {
+   "look_session": 252,
+   "p_early_or_better_t4": 0.38845
+  }
+ ],
+ "edge_likelihood_ratios": [
+  {
+   "edge_per_year": 0.05,
+   "look_session": 21,
+   "p_early_or_better": 0.44655,
+   "p_replicated": 0.34745,
+   "likelihood_ratio_vs_no_edge": 1.097
+  },
+  {
+   "edge_per_year": 0.05,
+   "look_session": 42,
+   "p_early_or_better": 0.45565,
+   "p_replicated": 0.35645,
+   "likelihood_ratio_vs_no_edge": 1.119
+  },
+  {
+   "edge_per_year": 0.05,
+   "look_session": 63,
+   "p_early_or_better": 0.4612,
+   "p_replicated": 0.3667,
+   "likelihood_ratio_vs_no_edge": 1.15
+  },
+  {
+   "edge_per_year": 0.05,
+   "look_session": 126,
+   "p_early_or_better": 0.48415,
+   "p_replicated": 0.3856,
+   "likelihood_ratio_vs_no_edge": 1.209
+  },
+  {
+   "edge_per_year": 0.05,
+   "look_session": 252,
+   "p_early_or_better": 0.51025,
+   "p_replicated": 0.4148,
+   "likelihood_ratio_vs_no_edge": 1.303
+  },
+  {
+   "edge_per_year": 0.1,
+   "look_session": 21,
+   "p_early_or_better": 0.4811,
+   "p_replicated": 0.3796,
+   "likelihood_ratio_vs_no_edge": 1.181
+  },
+  {
+   "edge_per_year": 0.1,
+   "look_session": 42,
+   "p_early_or_better": 0.5094,
+   "p_replicated": 0.40515,
+   "likelihood_ratio_vs_no_edge": 1.251
+  },
+  {
+   "edge_per_year": 0.1,
+   "look_session": 63,
+   "p_early_or_better": 0.5258,
+   "p_replicated": 0.42295,
+   "likelihood_ratio_vs_no_edge": 1.311
+  },
+  {
+   "edge_per_year": 0.1,
+   "look_session": 126,
+   "p_early_or_better": 0.5736,
+   "p_replicated": 0.47275,
+   "likelihood_ratio_vs_no_edge": 1.433
+  },
+  {
+   "edge_per_year": 0.1,
+   "look_session": 252,
+   "p_early_or_better": 0.62895,
+   "p_replicated": 0.53,
+   "likelihood_ratio_vs_no_edge": 1.607
+  },
+  {
+   "edge_per_year": 0.2,
+   "look_session": 21,
+   "p_early_or_better": 0.55185,
+   "p_replicated": 0.44635,
+   "likelihood_ratio_vs_no_edge": 1.355
+  },
+  {
+   "edge_per_year": 0.2,
+   "look_session": 42,
+   "p_early_or_better": 0.60025,
+   "p_replicated": 0.49385,
+   "likelihood_ratio_vs_no_edge": 1.474
+  },
+  {
+   "edge_per_year": 0.2,
+   "look_session": 63,
+   "p_early_or_better": 0.6325,
+   "p_replicated": 0.5281,
+   "likelihood_ratio_vs_no_edge": 1.577
+  },
+  {
+   "edge_per_year": 0.2,
+   "look_session": 126,
+   "p_early_or_better": 0.7158,
+   "p_replicated": 0.61295,
+   "likelihood_ratio_vs_no_edge": 1.788
+  },
+  {
+   "edge_per_year": 0.2,
+   "look_session": 252,
+   "p_early_or_better": 0.816,
+   "p_replicated": 0.72655,
+   "likelihood_ratio_vs_no_edge": 2.085
+  }
+ ],
+ "boundary": {
+  "kind": "Robbins normal mixture, two-sided, upper crossings counted",
+  "alpha": 0.05,
+  "rho_sessions": 63.0,
+  "reference": "Howard, Ramdas, McAuliffe & Sekhon (2021), Annals of Statistics 49(2)"
+ },
+ "run_id": "20261007T062317Z"
+}

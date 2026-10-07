@@ -65,6 +65,13 @@ number sits.
 | `REPLICATED` | `EARLY_EVIDENCE` plus a positive excess over the fair twin, or a frozen replication that also qualifies | `book_dna` (its ceiling) |
 | `VALIDATED_EDGE` | a validator run once on data the idea never saw | no module awards it today |
 
+**Read `EARLY_EVIDENCE` with its null rate.** The rule is a sign test, and a book with *no* edge meets
+it about 4 times in 10 at any single look (7 in 10 at some point within a quarter of daily re-looks);
+`REPLICATED` through the fair-twin clause is met by about 3 no-edge books in 10. Measured with
+`book_dna`'s own functions:
+[`docs/research_notes/2026-10-07/evidence_ladder_null_rate_cloud_2026-10-07.md`](docs/research_notes/2026-10-07/evidence_ladder_null_rate_cloud_2026-10-07.md);
+whether the rung should change is an open owner decision.
+
 ### Live evidence pages
 
 Base URL: **https://aegis-finance-six.vercel.app**
