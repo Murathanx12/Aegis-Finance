@@ -1,0 +1,103 @@
+{
+ "cycle": 5,
+ "at": "2026-10-06T18:22:01+00:00",
+ "mode": "paper_profit",
+ "elapsed_s": 361.4,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 3.6,
+   "result": {
+    "equity": 1002271.51,
+    "cash": 800653.35,
+    "n_positions": 10,
+    "invested_frac": 0.20116122027652966
+   }
+  },
+  "funnel": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "candidate set is fresh",
+    "generated_at": "2026-10-06T15:51:08+00:00",
+    "age_days": 0.1,
+    "n_candidates": 25
+   }
+  },
+  "analyst": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "already pulled today (2026-10-06)",
+    "n_snapshots": 3091,
+    "n_revision_rows": 394848
+   }
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "bars unchanged since the last rank",
+    "bars_line": "BARS_FRESH: newest=2026-10-05 sessions_old=0 (limit 2, last closed session 2026-10-05)",
+    "asof": "2026-10-05",
+    "n_eligible": 2884,
+    "top1": "LITE"
+   }
+  },
+  "forecast": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "state": "DONE",
+    "n_rows_written": 270,
+    "skipped": "already ran today (2026-10-06)",
+    "status": "ok"
+   }
+  },
+  "review": {
+   "ok": true,
+   "elapsed_s": 25.7,
+   "result": {
+    "intraday": "1416",
+    "asof": "2026-10-06",
+    "n_rows": 1284,
+    "n_minted": 0,
+    "review": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\review\\review_2026-10-06_intraday_1416.json",
+    "morning": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\review\\morning_2026-10-06_intraday_1416.md"
+   }
+  },
+  "plan": {
+   "ok": false,
+   "elapsed_s": 4.2,
+   "error": "AttributeError: module 'backend.config' has no attribute 'HYP_LAB_FAMILY_MIN_WEIGHT'"
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 8.4,
+   "result": {
+    "forecasts": "0 newly resolved; 20,106 of 36,616 records now carry an outcome; 0 voided as unresolvable this run; 77 wait on a bar, 16,297 are not yet due",
+    "decisions": "nothing_to_do"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 319.4,
+   "result": {
+    "unit": "backtest_factory",
+    "day": "2026-10-06",
+    "rc": 0,
+    "status": "ok",
+    "tail": "GAP mom_12_1_q_mjsd_minus_mom_12_1: by year {'2017': -0.015304, '2018': -0.076459, '2019': 0.026509, '2020': -0.40025, '2021': -0.109359, '2022': 0.038199, '2023': -0.150744, '2024': 0.187932, '2025': 0.031588, '2026': -0.043848}; excluding []: sum -0.511736\n  holdings: 919 cells, 2,552,633 rows; 919/919 OK cells with holdings, 919 with n_months rows\n  replication file: C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\top10_for_replication_2026-10-06T181643Z.json\n-> C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\leaderboard_2026-10-06T181643Z.json  (318s)\n",
+    "ran_utc": "2026-10-06T18:22:01+00:00"
+   }
+  }
+ },
+ "errors": [
+  {
+   "unit": "plan",
+   "error": "AttributeError: module 'backend.config' has no attribute 'HYP_LAB_FAMILY_MIN_WEIGHT'",
+   "elapsed_s": 4.2,
+   "where": "Traceback (most recent call last):\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\sim_run.py\", line 164, in unit\n    res = fn()\n          ^^^^\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\sim_run.py\", line 1922, in <lambda>\n    import subprocess\n                      \n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\sim_run.py\", line 1237, in u_plan\n    missing or unparseable -> the old shortlist order, equal weights, and\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: module 'backend.config' has no attribute 'HYP_LAB_FAMILY_MIN_WEIGHT'\n"
+  }
+ ]
+}

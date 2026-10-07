@@ -1,0 +1,1706 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "user",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-27T17:32:51+00:00",
+ "plan": [
+  {
+   "lane": "wsj:search",
+   "max": 464,
+   "tickers": [
+    "VKTX",
+    "NTLA",
+    "HWM",
+    "IONQ",
+    "AGYS",
+    "NVT",
+    "AMZN",
+    "NVDA",
+    "TSM",
+    "GEV",
+    "CLS",
+    "PRAX",
+    "SNOW",
+    "JAZZ",
+    "LEU",
+    "COGT",
+    "BHVN",
+    "BBIO",
+    "CRM",
+    "MP",
+    "AVGO",
+    "ABSI",
+    "LNG",
+    "CCJ",
+    "BSP",
+    "AGIO",
+    "ENS",
+    "PRGS",
+    "BA",
+    "GOOGL",
+    "TER",
+    "VRT",
+    "VG",
+    "BN",
+    "WDAY",
+    "WST",
+    "DKNG",
+    "AVPT",
+    "PRCH",
+    "VRTX",
+    "NOW",
+    "MU",
+    "SNDR",
+    "NVO",
+    "HUBS",
+    "INCY",
+    "HOOD",
+    "META",
+    "RHI",
+    "ACI",
+    "PEGA",
+    "SMPL",
+    "RGEN",
+    "MAN",
+    "BE",
+    "AAPL",
+    "AMGN",
+    "IRDM",
+    "HELE",
+    "KYTX",
+    "NOVT",
+    "NVEC",
+    "PSNL",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "SON",
+    "ALLE",
+    "GOOG",
+    "GMAB",
+    "ADUS",
+    "TS",
+    "PDS",
+    "PAGS",
+    "MSFT",
+    "CHD",
+    "BR",
+    "ALG",
+    "STNG",
+    "CHH",
+    "ARCO",
+    "MCD",
+    "SERV",
+    "SMMT",
+    "CYTK",
+    "PDD",
+    "FIZZ",
+    "MANH",
+    "BZ",
+    "CMG",
+    "EXPO",
+    "EXEL",
+    "LZ",
+    "REAL",
+    "BBW",
+    "TE",
+    "BW",
+    "CDNL",
+    "AGX",
+    "PLTR",
+    "ACVA",
+    "DBVT",
+    "LITE",
+    "MWH",
+    "Q",
+    "XRX",
+    "STX",
+    "FRMI",
+    "WDS",
+    "MEC",
+    "DUOL",
+    "FLNC",
+    "CSTM",
+    "LAR",
+    "KEX",
+    "LGN"
+   ]
+  },
+  {
+   "lane": "wsj:heard_on_the_street",
+   "max": 40,
+   "tickers": []
+  }
+ ],
+ "parent_tabs": {
+  "wsj": {
+   "tab": "chrome-mcp:fe9a0faf6f97:8",
+   "label": "t8",
+   "url": "https://www.wsj.com/?aegis=muratclaw",
+   "how": "by_host:wsj.com"
+  }
+ },
+ "max_pages": 401,
+ "budget_explicit": true,
+ "fresh_since": "2026-09-27",
+ "cost_usd": 0.0,
+ "lanes": {
+  "wsj:search": {
+   "source": "wsj",
+   "section": "search",
+   "column": "",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:76",
+   "links_found": 14,
+   "skipped_already_stored": 1,
+   "articles": [
+    {
+     "url": "https://www.wsj.com/articles/viking-therapeutics-share-drop-after-upsized-stock-notes-offerings-65e961cd",
+     "title": "Viking Therapeutics Share Drop After Upsized Stock, Notes Offerings - WSJ",
+     "byline": "By Chris Wack",
+     "published_utc": "2026-09-24T04:00:00+00:00",
+     "first_seen_utc": "2026-09-27T17:37:25+00:00",
+     "chars": 1636,
+     "raw_chars": 4097,
+     "column": "wsj_other",
+     "sha": "e6a821c01fc58256fc3e",
+     "paywall_suspected": false,
+     "read_s": 37.86,
+     "ticker": "VKTX",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\e6a821c01fc58256fc3e.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/articles/viking-therapeutics-shares-fall-on-200m-offerings-of-stock-notes-49ffab68",
+     "title": "Viking Therapeutics Shares Fall on $200M Offerings of Stock, Notes - WSJ",
+     "byline": "By Elias Schisgall",
+     "published_utc": "2026-09-23T04:00:00+00:00",
+     "first_seen_utc": "2026-09-27T17:38:54+00:00",
+     "chars": 966,
+     "raw_chars": 3930,
+     "column": "wsj_other",
+     "sha": "54de847943217a13ce91",
+     "paywall_suspected": false,
+     "read_s": 54.26,
+     "ticker": "VKTX",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\54de847943217a13ce91.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/articles/health-care-up-as-viking-surges-health-care-roundup-c9ba0f37",
+     "title": "Health Care Up as Viking Surges - Health Care Roundup - WSJ",
+     "byline": null,
+     "published_utc": "2026-09-22T04:00:00+00:00",
+     "first_seen_utc": "2026-09-27T17:40:51+00:00",
+     "chars": 1081,
+     "raw_chars": 3604,
+     "column": "wsj_other",
+     "sha": "5cab90bb84e0eaca85b7",
+     "paywall_suspected": false,
+     "read_s": 63.96,
+     "ticker": "VKTX",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\5cab90bb84e0eaca85b7.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/articles/intellia-therapeutics-2q-loss-shr-80c-ntla-aec376e7",
+     "title": "Intellia Therapeutics 2Q Loss/Shr 80c >NTLA",
+     "byline": null,
+     "published_utc": null,
+     "first_seen_utc": "2026-09-27T17:44:29+00:00",
+     "chars": 1961,
+     "raw_chars": 2433,
+     "column": "wsj_other",
+     "sha": "11b57aa973c71c61d71a",
+     "paywall_suspected": false,
+     "read_s": 50.31,
+     "ticker": "NTLA",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\11b57aa973c71c61d71a.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/articles/technology-shares-fall-as-ai-bubble-worries-resurface-technology-roundup-68a23c78",
+     "title": "Technology Shares Fall as AI Bubble Worries Resurface -- Technology Roundup - WSJ",
+     "byline": null,
+     "published_utc": "2026-09-23T04:00:00+00:00",
+     "first_seen_utc": "2026-09-27T17:50:01+00:00",
+     "chars": 1564,
+     "raw_chars": 3586,
+     "column": "wsj_other",
+     "sha": "ad2e2ff62d6c757709ea",
+     "paywall_suspected": false,
+     "read_s": 47.21,
+     "ticker": "IONQ",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\ad2e2ff62d6c757709ea.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/articles/agilysys-1q-adj-eps-49c-agys-eaf108b3",
+     "title": "Agilysys 1Q Adj EPS 49c >AGYS",
+     "byline": null,
+     "published_utc": null,
+     "first_seen_utc": "2026-09-27T17:54:41+00:00",
+     "chars": 2019,
+     "raw_chars": 2624,
+     "column": "wsj_other",
+     "sha": "60bd6020d5102bdbe840",
+     "paywall_suspected": false,
+     "read_s": 54.97,
+     "ticker": "AGYS",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\60bd6020d5102bdbe840.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/articles/nvent-electric-bolsters-data-center-offerings-with-up-to-2-3-billion-acquisition-cb59b5c9",
+     "title": "NVent Electric Bolsters Data-Center Offerings With Up to $2.3 Billion Acquisition - WSJ",
+     "byline": "By Connor Hart",
+     "published_utc": "2026-08-24T04:00:00+00:00",
+     "first_seen_utc": "2026-09-27T17:58:22+00:00",
+     "chars": 1511,
+     "raw_chars": 2571,
+     "column": "wsj_other",
+     "sha": "502890fc4450b4c4e9fc",
+     "paywall_suspected": false,
+     "read_s": 59.85,
+     "ticker": "NVT",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\502890fc4450b4c4e9fc.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/articles/nvent-electric-2q-sales-1-5b-nvt-e742f27a",
+     "title": "NVent Electric 2Q Sales $1.5B >NVT",
+     "byline": null,
+     "published_utc": null,
+     "first_seen_utc": "2026-09-27T17:59:28+00:00",
+     "chars": 1961,
+     "raw_chars": 2433,
+     "column": "wsj_other",
+     "sha": "11b57aa973c71c61d71a",
+     "paywall_suspected": false,
+     "read_s": 39.84,
+     "ticker": "NVT",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\11b57aa973c71c61d71a.json",
+     "duplicate": true
+    },
+    {
+     "url": "https://www.wsj.com/business/a-kill-switch-for-ai-microsofts-brad-smith-says-yes-8be7866e",
+     "title": "An AI Kill Switch? Microsoft’s Brad Smith Says Yes - WSJ",
+     "byline": null,
+     "published_utc": "2026-09-24T09:58:00+00:00",
+     "first_seen_utc": "2026-09-27T18:12:35+00:00",
+     "chars": 8954,
+     "raw_chars": 10576,
+     "column": "wsj_other",
+     "sha": "1172059f1811d1602bf2",
+     "paywall_suspected": false,
+     "read_s": 70.03,
+     "ticker": "GEV",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\1172059f1811d1602bf2.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/articles/ge-vernova-to-service-gas-turbines-at-egyptian-power-plants-af69650f",
+     "title": "GE Vernova to Service Gas Turbines at Egyptian Power Plants - WSJ",
+     "byline": "By Kelly Cloonan",
+     "published_utc": "2026-09-23T04:00:00+00:00",
+     "first_seen_utc": "2026-09-27T18:14:01+00:00",
+     "chars": 798,
+     "raw_chars": 2948,
+     "column": "wsj_other",
+     "sha": "788903ad7eced9fcd03b",
+     "paywall_suspected": false,
+     "read_s": 58.04,
+     "ticker": "GEV",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\788903ad7eced9fcd03b.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [
+    {
+     "item": "https://www.wsj.com/articles/celestica-appoints-todd-ankenmann-as-cfo-succeeds-mandeep-chawla-1e351fc1",
+     "why": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified."
+    }
+   ],
+   "dropped": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified.",
+   "searches": {
+    "VKTX": {
+     "links_on_page": 3,
+     "taken": 3,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "NTLA": {
+     "links_on_page": 1,
+     "taken": 1,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "HWM": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "IONQ": {
+     "links_on_page": 1,
+     "taken": 1,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "AGYS": {
+     "links_on_page": 1,
+     "taken": 1,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "NVT": {
+     "links_on_page": 2,
+     "taken": 2,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "AMZN": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "NVDA": {
+     "links_on_page": 1,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 1
+    },
+    "TSM": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "GEV": {
+     "links_on_page": 2,
+     "taken": 2,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "CLS": {
+     "links_on_page": 3,
+     "taken": 3,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    }
+   },
+   "opened": {
+    "label": "t63",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/account/login"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t41",
+      "chrome-mcp:fe9a0faf6f97:41",
+      "about:blank"
+     ],
+     [
+      "t42",
+      "chrome-mcp:fe9a0faf6f97:42",
+      "about:blank"
+     ],
+     [
+      "t43",
+      "chrome-mcp:fe9a0faf6f97:43",
+      "about:blank"
+     ],
+     [
+      "t45",
+      "chrome-mcp:fe9a0faf6f97:45",
+      "chrome://new-tab-page/"
+     ],
+     [
+      "t46",
+      "chrome-mcp:fe9a0faf6f97:46",
+      "about:blank"
+     ],
+     [
+      "t47",
+      "chrome-mcp:fe9a0faf6f97:47",
+      "about:blank"
+     ],
+     [
+      "t48",
+      "chrome-mcp:fe9a0faf6f97:48",
+      "about:blank"
+     ],
+     [
+      "t49",
+      "chrome-mcp:fe9a0faf6f97:49",
+      "about:blank"
+     ],
+     [
+      "t57",
+      "chrome-mcp:fe9a0faf6f97:57",
+      "https://www.barrons.com/market-data/stocks/nvda"
+     ],
+     [
+      "t59",
+      "chrome-mcp:fe9a0faf6f97:59",
+      "https://www.wsj.com/market-data/stock/nvda"
+     ],
+     [
+      "t60",
+      "chrome-mcp:fe9a0faf6f97:60",
+      "https://www.barrons.com/market-data/stocks/hubs"
+     ],
+     [
+      "t61",
+      "chrome-mcp:fe9a0faf6f97:61",
+      "about:blank"
+     ],
+     [
+      "t62",
+      "chrome-mcp:fe9a0faf6f97:62",
+      "https://www.marketwatch.com/investing/stock/irdm/analystestimates"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/account/login"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t41",
+      "chrome-mcp:fe9a0faf6f97:41",
+      "about:blank"
+     ],
+     [
+      "t42",
+      "chrome-mcp:fe9a0faf6f97:42",
+      "about:blank"
+     ],
+     [
+      "t43",
+      "chrome-mcp:fe9a0faf6f97:43",
+      "about:blank"
+     ],
+     [
+      "t45",
+      "chrome-mcp:fe9a0faf6f97:45",
+      "chrome://new-tab-page/"
+     ],
+     [
+      "t46",
+      "chrome-mcp:fe9a0faf6f97:46",
+      "about:blank"
+     ],
+     [
+      "t47",
+      "chrome-mcp:fe9a0faf6f97:47",
+      "about:blank"
+     ],
+     [
+      "t48",
+      "chrome-mcp:fe9a0faf6f97:48",
+      "about:blank"
+     ],
+     [
+      "t49",
+      "chrome-mcp:fe9a0faf6f97:49",
+      "about:blank"
+     ],
+     [
+      "t57",
+      "chrome-mcp:fe9a0faf6f97:57",
+      "https://www.barrons.com/market-data/stocks/nvda"
+     ],
+     [
+      "t59",
+      "chrome-mcp:fe9a0faf6f97:59",
+      "https://www.wsj.com/market-data/stock/nvda"
+     ],
+     [
+      "t60",
+      "chrome-mcp:fe9a0faf6f97:60",
+      "https://www.barrons.com/market-data/stocks/hubs"
+     ],
+     [
+      "t61",
+      "chrome-mcp:fe9a0faf6f97:61",
+      "about:blank"
+     ],
+     [
+      "t62",
+      "chrome-mcp:fe9a0faf6f97:62",
+      "https://www.marketwatch.com/investing/stock/irdm/analystestimates"
+     ],
+     [
+      "t63",
+      "chrome-mcp:fe9a0faf6f97:63",
+      "https://www.wsj.com/market-data/stock/vktx"
+     ]
+    ]
+   }
+  },
+  "wsj:heard_on_the_street": {
+   "source": "wsj",
+   "section": "heard_on_the_street",
+   "column": "wsj_heard_on_the_street",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:65",
+   "links_found": 20,
+   "skipped_already_stored": 20,
+   "articles": [],
+   "refusals": [],
+   "dropped": "EXHAUSTED",
+   "opened": {
+    "label": "t65",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/account/login"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t41",
+      "chrome-mcp:fe9a0faf6f97:41",
+      "about:blank"
+     ],
+     [
+      "t42",
+      "chrome-mcp:fe9a0faf6f97:42",
+      "about:blank"
+     ],
+     [
+      "t43",
+      "chrome-mcp:fe9a0faf6f97:43",
+      "about:blank"
+     ],
+     [
+      "t45",
+      "chrome-mcp:fe9a0faf6f97:45",
+      "chrome://new-tab-page/"
+     ],
+     [
+      "t46",
+      "chrome-mcp:fe9a0faf6f97:46",
+      "about:blank"
+     ],
+     [
+      "t47",
+      "chrome-mcp:fe9a0faf6f97:47",
+      "about:blank"
+     ],
+     [
+      "t48",
+      "chrome-mcp:fe9a0faf6f97:48",
+      "about:blank"
+     ],
+     [
+      "t49",
+      "chrome-mcp:fe9a0faf6f97:49",
+      "about:blank"
+     ],
+     [
+      "t57",
+      "chrome-mcp:fe9a0faf6f97:57",
+      "https://www.barrons.com/market-data/stocks/nvda"
+     ],
+     [
+      "t59",
+      "chrome-mcp:fe9a0faf6f97:59",
+      "https://www.wsj.com/market-data/stock/nvda"
+     ],
+     [
+      "t60",
+      "chrome-mcp:fe9a0faf6f97:60",
+      "https://www.barrons.com/market-data/stocks/hubs"
+     ],
+     [
+      "t61",
+      "chrome-mcp:fe9a0faf6f97:61",
+      "about:blank"
+     ],
+     [
+      "t62",
+      "chrome-mcp:fe9a0faf6f97:62",
+      "https://www.marketwatch.com/investing/stock/irdm/analystestimates"
+     ],
+     [
+      "t63",
+      "chrome-mcp:fe9a0faf6f97:63",
+      "https://www.wsj.com/market-data/stock/vktx"
+     ],
+     [
+      "t64",
+      "chrome-mcp:fe9a0faf6f97:64",
+      "https://www.marketwatch.com/investing/stock/irdm/analystestimates"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/account/login"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t41",
+      "chrome-mcp:fe9a0faf6f97:41",
+      "about:blank"
+     ],
+     [
+      "t42",
+      "chrome-mcp:fe9a0faf6f97:42",
+      "about:blank"
+     ],
+     [
+      "t43",
+      "chrome-mcp:fe9a0faf6f97:43",
+      "about:blank"
+     ],
+     [
+      "t45",
+      "chrome-mcp:fe9a0faf6f97:45",
+      "chrome://new-tab-page/"
+     ],
+     [
+      "t46",
+      "chrome-mcp:fe9a0faf6f97:46",
+      "about:blank"
+     ],
+     [
+      "t47",
+      "chrome-mcp:fe9a0faf6f97:47",
+      "about:blank"
+     ],
+     [
+      "t48",
+      "chrome-mcp:fe9a0faf6f97:48",
+      "about:blank"
+     ],
+     [
+      "t49",
+      "chrome-mcp:fe9a0faf6f97:49",
+      "about:blank"
+     ],
+     [
+      "t57",
+      "chrome-mcp:fe9a0faf6f97:57",
+      "https://www.barrons.com/market-data/stocks/nvda"
+     ],
+     [
+      "t59",
+      "chrome-mcp:fe9a0faf6f97:59",
+      "https://www.wsj.com/market-data/stock/nvda"
+     ],
+     [
+      "t60",
+      "chrome-mcp:fe9a0faf6f97:60",
+      "https://www.barrons.com/market-data/stocks/hubs"
+     ],
+     [
+      "t61",
+      "chrome-mcp:fe9a0faf6f97:61",
+      "about:blank"
+     ],
+     [
+      "t62",
+      "chrome-mcp:fe9a0faf6f97:62",
+      "https://www.marketwatch.com/investing/stock/irdm/analystestimates"
+     ],
+     [
+      "t63",
+      "chrome-mcp:fe9a0faf6f97:63",
+      "https://www.wsj.com/market-data/stock/vktx"
+     ],
+     [
+      "t64",
+      "chrome-mcp:fe9a0faf6f97:64",
+      "https://www.marketwatch.com/investing/stock/irdm/analystestimates"
+     ],
+     [
+      "t65",
+      "chrome-mcp:fe9a0faf6f97:65",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ]
+    ]
+   }
+  }
+ },
+ "order": [
+  {
+   "turn": 0,
+   "lane": "wsj:search",
+   "what": "listing",
+   "url": "https://www.wsj.com/market-data/quotes/VKTX",
+   "at": "2026-09-27T17:33:31+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "wsj:heard_on_the_street",
+   "what": "listing",
+   "url": "https://www.wsj.com/news/heard-on-the-street",
+   "at": "2026-09-27T17:34:29+00:00",
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "VKTX",
+   "url": "https://www.wsj.com/market-data/quotes/VKTX",
+   "at": "2026-09-27T17:33:31+00:00",
+   "ok": true,
+   "links_on_page": 3,
+   "taken": 3,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 2,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/articles/viking-therapeutics-share-drop-after-upsized-stock-notes-offerings-65e961cd",
+   "ticker": "VKTX",
+   "at": "2026-09-27T17:36:27+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 1636,
+   "ok": true
+  },
+  {
+   "turn": 3,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/articles/viking-therapeutics-shares-fall-on-200m-offerings-of-stock-notes-49ffab68",
+   "ticker": "VKTX",
+   "at": "2026-09-27T17:37:32+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 966,
+   "ok": true
+  },
+  {
+   "turn": 4,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/articles/health-care-up-as-viking-surges-health-care-roundup-c9ba0f37",
+   "ticker": "VKTX",
+   "at": "2026-09-27T17:39:07+00:00",
+   "page_load": true,
+   "waited_s": 7.155972,
+   "chars": 1081,
+   "ok": true
+  },
+  {
+   "turn": 5,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "NTLA",
+   "url": "https://www.wsj.com/market-data/quotes/NTLA",
+   "at": "2026-09-27T17:40:59+00:00",
+   "ok": true,
+   "links_on_page": 1,
+   "taken": 1,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 6,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/articles/intellia-therapeutics-2q-loss-shr-80c-ntla-aec376e7",
+   "ticker": "NTLA",
+   "at": "2026-09-27T17:43:17+00:00",
+   "page_load": true,
+   "waited_s": 6.389859999999999,
+   "chars": 1961,
+   "ok": true
+  },
+  {
+   "turn": 7,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "HWM",
+   "url": "https://www.wsj.com/market-data/quotes/HWM",
+   "at": "2026-09-27T17:44:47+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 8,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "IONQ",
+   "url": "https://www.wsj.com/market-data/quotes/IONQ",
+   "at": "2026-09-27T17:46:39+00:00",
+   "ok": true,
+   "links_on_page": 1,
+   "taken": 1,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 9,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/articles/technology-shares-fall-as-ai-bubble-worries-resurface-technology-roundup-68a23c78",
+   "ticker": "IONQ",
+   "at": "2026-09-27T17:48:45+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 1564,
+   "ok": true
+  },
+  {
+   "turn": 10,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "AGYS",
+   "url": "https://www.wsj.com/market-data/quotes/AGYS",
+   "at": "2026-09-27T17:50:07+00:00",
+   "ok": true,
+   "links_on_page": 1,
+   "taken": 1,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 12,
+   "lane": "wsj:search",
+   "item": "https://www.wsj.com/articles/agilysys-1q-adj-eps-49c-agys-eaf108b3",
+   "at": "2026-09-27T17:53:17+00:00",
+   "ok": false,
+   "why": "DETACHED: OpenClawRefused: REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile 'user' is 'stopped', not runn"
+  },
+  {
+   "turn": 12,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/articles/agilysys-1q-adj-eps-49c-agys-eaf108b3",
+   "ticker": "AGYS",
+   "at": "2026-09-27T17:53:32+00:00",
+   "page_load": true,
+   "waited_s": 1.9733540000000005,
+   "chars": 2019,
+   "ok": true
+  },
+  {
+   "turn": 13,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "NVT",
+   "url": "https://www.wsj.com/market-data/quotes/NVT",
+   "at": "2026-09-27T17:54:59+00:00",
+   "ok": true,
+   "links_on_page": 2,
+   "taken": 2,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 14,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/articles/nvent-electric-bolsters-data-center-offerings-with-up-to-2-3-billion-acquisition-cb59b5c9",
+   "ticker": "NVT",
+   "at": "2026-09-27T17:57:01+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 1511,
+   "ok": true
+  },
+  {
+   "turn": 15,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/articles/nvent-electric-2q-sales-1-5b-nvt-e742f27a",
+   "ticker": "NVT",
+   "at": "2026-09-27T17:58:28+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 1961,
+   "ok": true
+  },
+  {
+   "turn": 16,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "AMZN",
+   "url": "https://www.wsj.com/market-data/quotes/AMZN",
+   "at": "2026-09-27T17:59:35+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 17,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "NVDA",
+   "url": "https://www.wsj.com/market-data/quotes/NVDA",
+   "at": "2026-09-27T18:01:38+00:00",
+   "ok": true,
+   "links_on_page": 1,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 1
+  },
+  {
+   "turn": 18,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "TSM",
+   "url": "https://www.wsj.com/market-data/quotes/TSM",
+   "at": "2026-09-27T18:04:18+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 20,
+   "lane": "wsj:search",
+   "item": "GEV",
+   "at": "2026-09-27T18:07:06+00:00",
+   "ok": false,
+   "why": "DETACHED: OpenClawRefused: REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile 'user' is 'stopped', not runn"
+  },
+  {
+   "turn": 20,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "GEV",
+   "url": "https://www.wsj.com/market-data/quotes/GEV",
+   "at": "2026-09-27T18:08:15+00:00",
+   "ok": true,
+   "links_on_page": 2,
+   "taken": 2,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 21,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/business/a-kill-switch-for-ai-microsofts-brad-smith-says-yes-8be7866e",
+   "ticker": "GEV",
+   "at": "2026-09-27T18:10:34+00:00",
+   "page_load": true,
+   "waited_s": 19.553228,
+   "chars": 8954,
+   "ok": true
+  },
+  {
+   "turn": 22,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/articles/ge-vernova-to-service-gas-turbines-at-egyptian-power-plants-af69650f",
+   "ticker": "GEV",
+   "at": "2026-09-27T18:12:42+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 798,
+   "ok": true
+  },
+  {
+   "turn": 23,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "CLS",
+   "url": "https://www.wsj.com/market-data/quotes/CLS",
+   "at": "2026-09-27T18:14:08+00:00",
+   "ok": true,
+   "links_on_page": 3,
+   "taken": 3,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 24,
+   "lane": "wsj:search",
+   "item": "https://www.wsj.com/articles/celestica-appoints-todd-ankenmann-as-cfo-succeeds-mandeep-chawla-1e351fc1",
+   "at": "2026-09-27T18:16:37+00:00",
+   "ok": false,
+   "why": "DETACHED: ReaderRefused: REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile 'user' is 'stopped', not runnin"
+  },
+  {
+   "turn": 26,
+   "lane": "wsj:search",
+   "item": "https://www.wsj.com/articles/celestica-appoints-todd-ankenmann-as-cfo-succeeds-mandeep-chawla-1e351fc1",
+   "at": "2026-09-27T18:18:03+00:00",
+   "ok": false,
+   "why": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup cou"
+  }
+ ],
+ "stopped": null,
+ "budget_spent": null,
+ "opened": [
+  "chrome-mcp:fe9a0faf6f97:63",
+  "chrome-mcp:fe9a0faf6f97:70",
+  "chrome-mcp:fe9a0faf6f97:73",
+  "chrome-mcp:fe9a0faf6f97:76",
+  "chrome-mcp:fe9a0faf6f97:65"
+ ],
+ "orphaned_tabs": [
+  "chrome-mcp:fe9a0faf6f97:70",
+  "chrome-mcp:fe9a0faf6f97:73",
+  "chrome-mcp:fe9a0faf6f97:76",
+  "chrome-mcp:fe9a0faf6f97:65"
+ ],
+ "worker": "wsj",
+ "pid": 78512,
+ "reattaches": 2,
+ "reattach_log": [
+  {
+   "at": "2026-09-27T18:07:19+00:00",
+   "profile": "user",
+   "attempt": 1,
+   "from_state": "stopped",
+   "start_rc": 0,
+   "start_out": "🦞 browser [user] running: true",
+   "ok": true,
+   "tabs": 35,
+   "seconds": 19.3
+  },
+  {
+   "at": "2026-09-27T18:16:50+00:00",
+   "profile": "user",
+   "attempt": 1,
+   "from_state": "stopped",
+   "start_rc": 0,
+   "start_out": "🦞 browser [user] running: true",
+   "ok": true,
+   "tabs": 37,
+   "seconds": 19.6
+  },
+  {
+   "at": "2026-09-27T18:18:26+00:00",
+   "profile": "user",
+   "attempt": 1,
+   "from_state": "stopped",
+   "start_rc": 1,
+   "start_out": "GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified.",
+   "ok": false,
+   "why": "GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified."
+  }
+ ],
+ "tab_remaps": [
+  {
+   "at": "2026-09-27T17:53:30+00:00",
+   "reattached": false,
+   "remap": {
+    "chrome-mcp:fe9a0faf6f97:70": "chrome-mcp:fe9a0faf6f97:70",
+    "chrome-mcp:fe9a0faf6f97:65": null
+   },
+   "parents": {
+    "wsj": "chrome-mcp:fe9a0faf6f97:8"
+   }
+  },
+  {
+   "at": "2026-09-27T18:08:07+00:00",
+   "reattached": true,
+   "remap": {
+    "chrome-mcp:fe9a0faf6f97:70": null,
+    "wsj:search:reopened": "chrome-mcp:fe9a0faf6f97:73"
+   },
+   "parents": {
+    "wsj": "chrome-mcp:fe9a0faf6f97:8"
+   }
+  },
+  {
+   "at": "2026-09-27T18:17:04+00:00",
+   "reattached": true,
+   "remap": {
+    "chrome-mcp:fe9a0faf6f97:73": null
+   },
+   "parents": {
+    "wsj": "chrome-mcp:fe9a0faf6f97:8"
+   }
+  }
+ ],
+ "tabs_lost_on_reattach": [
+  "chrome-mcp:fe9a0faf6f97:65",
+  "chrome-mcp:fe9a0faf6f97:70",
+  "chrome-mcp:fe9a0faf6f97:73"
+ ],
+ "startup_cleanup": {
+  "candidates": [
+   "chrome-mcp:fe9a0faf6f97:47",
+   "chrome-mcp:fe9a0faf6f97:61"
+  ],
+  "closed": [],
+  "skipped": {
+   "chrome-mcp:fe9a0faf6f97:47": "not on a Dow Jones host ('about:blank')",
+   "chrome-mcp:fe9a0faf6f97:61": "not on a Dow Jones host ('about:blank')"
+  }
+ },
+ "in_progress": false,
+ "tabs_closed": {
+  "chrome-mcp:fe9a0faf6f97:63": true,
+  "chrome-mcp:fe9a0faf6f97:70": false,
+  "chrome-mcp:fe9a0faf6f97:73": false,
+  "chrome-mcp:fe9a0faf6f97:76": false,
+  "chrome-mcp:fe9a0faf6f97:65": false
+ },
+ "blanks": 22,
+ "blank_failures": [],
+ "tab_rotations": [
+  {
+   "at": "2026-09-27T17:52:18+00:00",
+   "old": "chrome-mcp:fe9a0faf6f97:63",
+   "old_closed": true,
+   "new": "chrome-mcp:fe9a0faf6f97:70",
+   "why": "served 10 pages >= 10",
+   "url": "https://www.wsj.com/articles/agilysys-1q-adj-eps-49c-agys-eaf108b3"
+  },
+  {
+   "at": "2026-09-27T18:17:04+00:00",
+   "old": "chrome-mcp:fe9a0faf6f97:73",
+   "old_closed": false,
+   "new": "chrome-mcp:fe9a0faf6f97:76",
+   "why": "lost_on_reattach",
+   "url": "https://www.wsj.com/articles/celestica-appoints-todd-ankenmann-as-cfo-succeeds-mandeep-chawla-1e351fc1"
+  }
+ ],
+ "close_errors": {
+  "chrome-mcp:fe9a0faf6f97:70": "LOST: handle reissued by a re-attach",
+  "chrome-mcp:fe9a0faf6f97:73": "LOST: blank tab, handle reissued by a re-attach",
+  "chrome-mcp:fe9a0faf6f97:76": "OpenClawRefused: REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile 'user' is 'stopped', not running. It attaches to Murat's own open Chrome (chrome://inspect/#remote-debugging toggle on); Aegis never launches a br",
+  "chrome-mcp:fe9a0faf6f97:65": "LOST: blank tab, handle reissued by a re-attach"
+ },
+ "close_recovery_error": "REFUSED_GATEWAY_DOWN: GATEWAY_NEEDS_RESTART: `start` answered 'GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified.'; the reader does not restart the gateway",
+ "parent_tabs_final": {
+  "wsj": "chrome-mcp:fe9a0faf6f97:8"
+ },
+ "footprint": {
+  "verdict": "HUMAN_PACE_OK",
+  "cv_of_gaps": 0.346,
+  "gaps_s": [
+   58.0,
+   118.0,
+   65.0,
+   95.0,
+   112.0,
+   138.0,
+   90.0,
+   112.0,
+   126.0,
+   82.0,
+   131.0,
+   74.0,
+   87.0,
+   122.0,
+   87.0,
+   67.0,
+   123.0,
+   160.0,
+   111.0,
+   118.0,
+   8.0,
+   139.0,
+   128.0,
+   86.0,
+   142.0,
+   34.0
+  ],
+  "gap_min_s": 8.0,
+  "pages_per_hour": 37.2,
+  "scroll_share": 1.0,
+  "pages": 27,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_reader\\footprint_20260927T181826Z.json",
+  "cli_scope": "process",
+  "cli_calls": 313,
+  "cli_seconds": 2449.454,
+  "cli_seconds_per_page": 90.721,
+  "cli_calls_per_page": 11.59,
+  "cli_breakdown": {
+   "profile_check": {
+    "calls": 31,
+    "seconds": 206.314
+   },
+   "tabs_listing": {
+    "calls": 114,
+    "seconds": 862.099
+   },
+   "other": {
+    "calls": 168,
+    "seconds": 1381.041
+   }
+  },
+  "cli_cache": {
+   "profile_hits": 117,
+   "profile_misses": 24,
+   "tabs_hits": 60,
+   "tabs_misses": 114,
+   "tabs_nonce_changes": 0,
+   "url_rereads": 0,
+   "url_from_reply": 21
+  },
+  "cli_by_verb": {
+   "browser close": {
+    "calls": 1,
+    "seconds": 6.657,
+    "s_per_call": 6.66
+   },
+   "browser evaluate": {
+    "calls": 15,
+    "seconds": 123.09,
+    "s_per_call": 8.21
+   },
+   "browser navigate": {
+    "calls": 43,
+    "seconds": 361.331,
+    "s_per_call": 8.4
+   },
+   "browser press": {
+    "calls": 75,
+    "seconds": 650.497,
+    "s_per_call": 8.67
+   },
+   "browser profiles": {
+    "calls": 31,
+    "seconds": 206.314,
+    "s_per_call": 6.66
+   },
+   "browser snapshot": {
+    "calls": 23,
+    "seconds": 153.264,
+    "s_per_call": 6.66
+   },
+   "browser start": {
+    "calls": 3,
+    "seconds": 20.89,
+    "s_per_call": 6.96
+   },
+   "browser status": {
+    "calls": 6,
+    "seconds": 41.186,
+    "s_per_call": 6.86
+   },
+   "browser tabs": {
+    "calls": 114,
+    "seconds": 862.099,
+    "s_per_call": 7.56
+   },
+   "browser wait": {
+    "calls": 2,
+    "seconds": 24.126,
+    "s_per_call": 12.06
+   }
+  },
+  "reattaches": 2,
+  "tab_remaps": 3
+ },
+ "hour_cap_waits_s": [],
+ "same_host_waits": [],
+ "throttle_targets_s": [
+  20.0,
+  14.8,
+  11.25,
+  20.0,
+  13.74,
+  20.0,
+  11.79,
+  12.88,
+  20.0,
+  16.68,
+  20.0,
+  11.12,
+  20.0,
+  18.04,
+  11.28,
+  20.0,
+  18.13,
+  20.0,
+  12.85,
+  20.0,
+  17.02,
+  10.72,
+  20.0,
+  12.5,
+  20.0,
+  16.9,
+  9.95
+ ],
+ "per_source": {
+  "wsj": {
+   "articles": 10,
+   "refusals": 1,
+   "chars": 22451
+  }
+ },
+ "n_articles": 10,
+ "pages_loaded": 27,
+ "seconds_between_page_loads": [
+  58.0,
+  118.0,
+  65.0,
+  95.0,
+  112.0,
+  138.0,
+  90.0,
+  112.0,
+  126.0,
+  82.0,
+  131.0,
+  74.0,
+  87.0,
+  122.0,
+  87.0,
+  67.0,
+  123.0,
+  160.0,
+  111.0,
+  118.0,
+  8.0,
+  139.0,
+  128.0,
+  86.0,
+  142.0,
+  34.0
+ ],
+ "finished_utc": "2026-09-27T18:18:26+00:00"
+}

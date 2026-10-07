@@ -1,0 +1,156 @@
+{
+ "hyp_id": "H-8f7028970b",
+ "title": "Clinical trial failure read-through to platform partners",
+ "night": "2026-10-07",
+ "run_utc": "2026-10-07T01:30:26+00:00",
+ "result": {
+  "cell_type": "event_readthrough",
+  "params": {
+   "link": "comention",
+   "event_type": "clinical_trial_result",
+   "min_ratio": 2.5,
+   "k": 6,
+   "min_source_dv_pct": 0.5
+  },
+  "outcome_units": "size: log(|x_oc|/vol21) linked minus vol-matched unlinked, same date; signed: sign(source move) x (x_oc linked - x_oc controls)",
+  "n_events_candidate": 11,
+  "design": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.199523,
+    "se": 0.541476,
+    "t": 0.37,
+    "mde": 1.516134,
+    "n": 5,
+    "n_blocks": 4
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": 0.003939,
+    "se": 0.00986,
+    "t": 0.4,
+    "mde": 0.027608,
+    "n": 5,
+    "n_blocks": 4
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.802875,
+    "se": 0.04697,
+    "t": 17.09,
+    "mde": 0.131516,
+    "n": 5,
+    "n_blocks": 4
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.014859,
+    "se": 0.007568,
+    "t": 1.96,
+    "mde": 0.021189,
+    "n": 5,
+    "n_blocks": 4
+   },
+   "n_events": 5,
+   "mean_links": 1.4,
+   "by_month_size_t1": {
+    "2025-07": {
+     "mean": -0.772698,
+     "n": 2
+    },
+    "2025-08": {
+     "mean": 1.169526,
+     "n": 2
+    },
+    "2025-10": {
+     "mean": 0.203961,
+     "n": 1
+    }
+   },
+   "loo_month_worst_size_t1": -0.447145
+  },
+  "confirm": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.763586,
+    "se": 0.086411,
+    "t": 8.84,
+    "mde": 0.24195,
+    "n": 3,
+    "n_blocks": 2
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -0.036656,
+    "se": 0.014953,
+    "t": -2.45,
+    "mde": 0.041869,
+    "n": 3,
+    "n_blocks": 2
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 1.601274,
+    "se": 0.852991,
+    "t": 1.88,
+    "mde": 2.388376,
+    "n": 3,
+    "n_blocks": 2
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.194019,
+    "se": 0.141778,
+    "t": 1.37,
+    "mde": 0.396979,
+    "n": 3,
+    "n_blocks": 2
+   },
+   "n_events": 3,
+   "mean_links": 1.0,
+   "by_month_size_t1": {
+    "2026-01": {
+     "mean": 0.648372,
+     "n": 1
+    },
+    "2026-08": {
+     "mean": 0.821193,
+     "n": 2
+    }
+   },
+   "loo_month_worst_size_t1": 0.648372
+  },
+  "verdict": "CONDITIONAL_POSITIVE",
+  "reason": "confirm +0.76359 t 8.84 and design +0.19952 > 0",
+  "powered": false,
+  "direction_verdict_reported": {
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.03666 <= 0",
+   "powered": false
+  },
+  "examples": [
+   {
+    "t": "2025-08-01",
+    "source": "LLY",
+    "links": "LMAT",
+    "size_t1": "1.8505617893074682"
+   },
+   {
+    "t": "2026-08-19",
+    "source": "MRK",
+    "links": "MRNA",
+    "size_t1": "1.7313569901887726"
+   },
+   {
+    "t": "2026-01-21",
+    "source": "MRNA",
+    "links": "MRK",
+    "size_t1": "0.6483716364600621"
+   },
+   {
+    "t": "2025-08-08",
+    "source": "LLY",
+    "links": "LMAT",
+    "size_t1": "0.48849042580612934"
+   },
+   {
+    "t": "2025-07-01",
+    "source": "AMGN",
+    "links": "AMD,AME,AMCR",
+    "size_t1": "0.39533536598527264"
+   }
+  ]
+ }
+}

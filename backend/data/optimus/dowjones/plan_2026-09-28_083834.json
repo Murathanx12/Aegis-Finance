@@ -1,0 +1,325 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "muratclaw",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-28T08:38:42+00:00",
+ "plan": [
+  {
+   "lane": "marketwatch:analyst_estimates",
+   "max": 2,
+   "tickers": [
+    "MANH",
+    "CMG"
+   ]
+  }
+ ],
+ "parent_tabs": {
+  "marketwatch": {
+   "tab": null,
+   "label": null,
+   "url": "",
+   "how": "direct_open: dedicated instance, no parent tab used"
+  }
+ },
+ "max_pages": 5,
+ "budget_explicit": false,
+ "fresh_since": "2026-09-28",
+ "cost_usd": 0.0,
+ "lanes": {
+  "marketwatch:analyst_estimates": {
+   "source": "marketwatch",
+   "section": "analyst_estimates",
+   "column": "mw_analyst_estimates",
+   "parent_tab": null,
+   "tab": "71A18383B171F826B684339A2563C1C2",
+   "links_found": 0,
+   "skipped_already_stored": 0,
+   "articles": [
+    {
+     "url": "https://www.marketwatch.com/investing/stock/manh/analystestimates",
+     "title": "MANH | Manhattan Associates Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": null,
+     "first_seen_utc": "2026-09-28T08:39:03+00:00",
+     "chars": 2268,
+     "raw_chars": 5007,
+     "column": "mw_analyst_estimates",
+     "sha": "488d26b74880d70f34d3",
+     "paywall_suspected": false,
+     "read_s": 0.0,
+     "ticker": "MANH",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-28\\488d26b74880d70f34d3.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/cmg/analystestimates",
+     "title": "CMG | Chipotle Mexican Grill Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-28T08:30:00+00:00",
+     "first_seen_utc": "2026-09-28T08:40:00+00:00",
+     "chars": 2284,
+     "raw_chars": 5021,
+     "column": "mw_analyst_estimates",
+     "sha": "957b348954f0944f4761",
+     "paywall_suspected": false,
+     "read_s": 9.72,
+     "ticker": "CMG",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-28\\957b348954f0944f4761.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [],
+   "dropped": "EXHAUSTED",
+   "opened": {
+    "label": "71A18383B171F826B684339A2563C1C2",
+    "how": "direct_open",
+    "tabs_before": null,
+    "tabs_after": null
+   }
+  }
+ },
+ "order": [
+  {
+   "turn": 0,
+   "lane": "marketwatch:analyst_estimates",
+   "what": "listing",
+   "url": "https://www.marketwatch.com/investing/stock/manh/analystestimates",
+   "at": "2026-09-28T08:38:51+00:00",
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/manh/analystestimates",
+   "ticker": "MANH",
+   "at": "2026-09-28T08:39:04+00:00",
+   "page_load": false,
+   "waited_s": 0.0,
+   "chars": 2268,
+   "ok": true
+  },
+  {
+   "turn": 2,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/cmg/analystestimates",
+   "ticker": "CMG",
+   "at": "2026-09-28T08:39:38+00:00",
+   "page_load": true,
+   "waited_s": 34.317249000000004,
+   "chars": 2284,
+   "ok": true
+  }
+ ],
+ "stopped": null,
+ "budget_spent": null,
+ "opened": [
+  "71A18383B171F826B684339A2563C1C2"
+ ],
+ "orphaned_tabs": [],
+ "worker": null,
+ "pid": 98620,
+ "reattaches": 0,
+ "reattach_log": [],
+ "tab_remaps": [],
+ "tabs_lost_on_reattach": [],
+ "yield": [
+  {
+   "when": "end",
+   "pages": 2,
+   "lanes": {
+    "marketwatch:analyst_estimates": {
+     "pages": 2,
+     "links_per_page": null,
+     "zero_link_pages": 0,
+     "chars_per_page": 2276,
+     "zero_char_pages": 0
+    }
+   },
+   "zero_lanes": []
+  }
+ ],
+ "startup_cleanup": {
+  "candidates": [
+   "chrome-mcp:8ab5bfd86096:23",
+   "chrome-mcp:8ab5bfd86096:24",
+   "chrome-mcp:8ab5bfd86096:25",
+   "chrome-mcp:8ab5bfd86096:26",
+   "chrome-mcp:8ab5bfd86096:27",
+   "chrome-mcp:8ab5bfd86096:28",
+   "chrome-mcp:8ab5bfd86096:29",
+   "chrome-mcp:8ab5bfd86096:30",
+   "chrome-mcp:94f9d7f8e757:5",
+   "chrome-mcp:94f9d7f8e757:6",
+   "chrome-mcp:94f9d7f8e757:7",
+   "chrome-mcp:94f9d7f8e757:8",
+   "chrome-mcp:94f9d7f8e757:9",
+   "chrome-mcp:fe9a0faf6f97:28",
+   "chrome-mcp:fe9a0faf6f97:29",
+   "chrome-mcp:fe9a0faf6f97:30",
+   "chrome-mcp:fe9a0faf6f97:31",
+   "chrome-mcp:fe9a0faf6f97:32",
+   "chrome-mcp:fe9a0faf6f97:33",
+   "chrome-mcp:fe9a0faf6f97:34",
+   "chrome-mcp:fe9a0faf6f97:39",
+   "chrome-mcp:fe9a0faf6f97:40",
+   "chrome-mcp:fe9a0faf6f97:41",
+   "chrome-mcp:fe9a0faf6f97:42",
+   "t37",
+   "t39",
+   "t62"
+  ],
+  "closed": [],
+  "skipped": {
+   "chrome-mcp:8ab5bfd86096:23": "not present",
+   "chrome-mcp:8ab5bfd86096:24": "not present",
+   "chrome-mcp:8ab5bfd86096:25": "not present",
+   "chrome-mcp:8ab5bfd86096:26": "not present",
+   "chrome-mcp:8ab5bfd86096:27": "not present",
+   "chrome-mcp:8ab5bfd86096:28": "not present",
+   "chrome-mcp:8ab5bfd86096:29": "not present",
+   "chrome-mcp:8ab5bfd86096:30": "not present",
+   "chrome-mcp:94f9d7f8e757:5": "not present",
+   "chrome-mcp:94f9d7f8e757:6": "not present",
+   "chrome-mcp:94f9d7f8e757:7": "not present",
+   "chrome-mcp:94f9d7f8e757:8": "not present",
+   "chrome-mcp:94f9d7f8e757:9": "not present",
+   "chrome-mcp:fe9a0faf6f97:28": "not present",
+   "chrome-mcp:fe9a0faf6f97:29": "not present",
+   "chrome-mcp:fe9a0faf6f97:30": "not present",
+   "chrome-mcp:fe9a0faf6f97:31": "not present",
+   "chrome-mcp:fe9a0faf6f97:32": "not present",
+   "chrome-mcp:fe9a0faf6f97:33": "not present",
+   "chrome-mcp:fe9a0faf6f97:34": "not present",
+   "chrome-mcp:fe9a0faf6f97:39": "not present",
+   "chrome-mcp:fe9a0faf6f97:40": "not present",
+   "chrome-mcp:fe9a0faf6f97:41": "not present",
+   "chrome-mcp:fe9a0faf6f97:42": "not present",
+   "t37": "not session-qualified (a tN alias is reissued)",
+   "t39": "not session-qualified (a tN alias is reissued)",
+   "t62": "not session-qualified (a tN alias is reissued)"
+  }
+ },
+ "in_progress": false,
+ "tabs_closed": {
+  "71A18383B171F826B684339A2563C1C2": true
+ },
+ "blanks": 2,
+ "blank_failures": [],
+ "tab_rotations": [],
+ "parent_tabs_final": {
+  "marketwatch": null
+ },
+ "footprint": {
+  "verdict": "CANNOT DETERMINE: 1 gap(s), need >= 3",
+  "cv_of_gaps": null,
+  "gaps_s": [
+   47.0
+  ],
+  "gap_min_s": 47.0,
+  "pages_per_hour": 153.19,
+  "scroll_share": 1.0,
+  "pages": 2,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_reader\\footprint_20260928T084001Z.json",
+  "cli_scope": "process",
+  "cli_calls": 23,
+  "cli_seconds": 35.577,
+  "cli_seconds_per_page": 17.788,
+  "cli_calls_per_page": 11.5,
+  "cli_breakdown": {
+   "profile_check": {
+    "calls": 2,
+    "seconds": 12.547
+   },
+   "tabs_listing": {
+    "calls": 7,
+    "seconds": 0.828
+   },
+   "other": {
+    "calls": 14,
+    "seconds": 22.202
+   }
+  },
+  "cli_cache": {
+   "profile_hits": 10,
+   "profile_misses": 1,
+   "tabs_hits": 7,
+   "tabs_misses": 7,
+   "tabs_nonce_changes": 0,
+   "url_rereads": 0,
+   "url_from_reply": 1
+  },
+  "cli_by_verb": {
+   "browser close": {
+    "calls": 1,
+    "seconds": 0.047,
+    "s_per_call": 0.05
+   },
+   "browser evaluate": {
+    "calls": 2,
+    "seconds": 0.656,
+    "s_per_call": 0.33
+   },
+   "browser navigate": {
+    "calls": 3,
+    "seconds": 13.062,
+    "s_per_call": 4.35
+   },
+   "browser open": {
+    "calls": 1,
+    "seconds": 1.812,
+    "s_per_call": 1.81
+   },
+   "browser press": {
+    "calls": 5,
+    "seconds": 2.531,
+    "s_per_call": 0.51
+   },
+   "browser profiles": {
+    "calls": 2,
+    "seconds": 12.547,
+    "s_per_call": 6.27
+   },
+   "browser status": {
+    "calls": 1,
+    "seconds": 0.031,
+    "s_per_call": 0.03
+   },
+   "browser tabs": {
+    "calls": 7,
+    "seconds": 0.828,
+    "s_per_call": 0.12
+   },
+   "browser wait": {
+    "calls": 1,
+    "seconds": 4.063,
+    "s_per_call": 4.06
+   }
+  },
+  "reattaches": 0,
+  "tab_remaps": 0
+ },
+ "hour_cap_waits_s": [],
+ "same_host_waits": [
+  {
+   "host": "marketwatch.com",
+   "extra_s": 34.32
+  }
+ ],
+ "throttle_targets_s": [
+  10.83,
+  18.41
+ ],
+ "per_source": {
+  "marketwatch": {
+   "articles": 2,
+   "refusals": 0,
+   "chars": 4552
+  }
+ },
+ "n_articles": 2,
+ "pages_loaded": 2,
+ "seconds_between_page_loads": [
+  47.0
+ ],
+ "finished_utc": "2026-09-28T08:40:01+00:00"
+}

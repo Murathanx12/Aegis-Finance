@@ -1,0 +1,150 @@
+{
+ "hyp_id": "H-ba83bf6c68",
+ "title": "Equity issuance dilution read-through to cash-poor peers",
+ "night": "2026-10-06",
+ "run_utc": "2026-10-06T03:14:03+00:00",
+ "result": {
+  "cell_type": "event_readthrough",
+  "params": {
+   "link": "comention",
+   "event_type": "equity_issuance_dilution",
+   "min_ratio": 2.0,
+   "k": 5,
+   "min_source_dv_pct": 0.5
+  },
+  "outcome_units": "size: log(|x_oc|/vol21) linked minus vol-matched unlinked, same date; signed: sign(source move) x (x_oc linked - x_oc controls)",
+  "n_events_candidate": 11,
+  "design": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": -0.085418,
+    "se": 0.593493,
+    "t": -0.14,
+    "mde": 1.661782,
+    "n": 5,
+    "n_blocks": 4
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -0.019147,
+    "se": 0.022574,
+    "t": -0.85,
+    "mde": 0.063207,
+    "n": 5,
+    "n_blocks": 4
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.279674,
+    "se": 0.360659,
+    "t": 0.78,
+    "mde": 1.009844,
+    "n": 5,
+    "n_blocks": 4
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": -0.017015,
+    "se": 0.018719,
+    "t": -0.91,
+    "mde": 0.052413,
+    "n": 5,
+    "n_blocks": 4
+   },
+   "n_events": 5,
+   "mean_links": 1.8,
+   "by_month_size_t1": {
+    "2025-05": {
+     "mean": -1.940184,
+     "n": 1
+    },
+    "2025-10": {
+     "mean": 0.378273,
+     "n": 4
+    }
+   },
+   "loo_month_worst_size_t1": -1.940184
+  },
+  "confirm": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": -0.031248,
+    "se": 0.512269,
+    "t": -0.06,
+    "mde": 1.434355,
+    "n": 3,
+    "n_blocks": 3
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": 0.008391,
+    "se": 0.008008,
+    "t": 1.05,
+    "mde": 0.022423,
+    "n": 3,
+    "n_blocks": 3
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.702736,
+    "se": 0.663703,
+    "t": 1.06,
+    "mde": 1.858368,
+    "n": 3,
+    "n_blocks": 3
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.002478,
+    "se": 0.017391,
+    "t": 0.14,
+    "mde": 0.048695,
+    "n": 3,
+    "n_blocks": 3
+   },
+   "n_events": 3,
+   "mean_links": 1.0,
+   "by_month_size_t1": {
+    "2026-03": {
+     "mean": 0.799622,
+     "n": 1
+    },
+    "2026-06": {
+     "mean": -0.446683,
+     "n": 2
+    }
+   },
+   "loo_month_worst_size_t1": -0.446683
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.03125 <= 0",
+  "direction_verdict_reported": {
+   "verdict": "CANNOT_DISTINGUISH",
+   "reason": "confirm +0.00839 t 1.05; MDE 0.02242 > effect worth having 0.00200"
+  },
+  "examples": [
+   {
+    "t": "2026-03-12",
+    "source": "RIVN",
+    "links": "RIGL",
+    "size_t1": "0.7996220725719575"
+   },
+   {
+    "t": "2025-10-07",
+    "source": "ASTS",
+    "links": "ASST",
+    "size_t1": "0.7899777767836986"
+   },
+   {
+    "t": "2025-10-03",
+    "source": "QUBT",
+    "links": "QBTS,RGTI,QQQ,MU,SRRK",
+    "size_t1": "0.6907802564277857"
+   },
+   {
+    "t": "2026-06-04",
+    "source": "GOOG",
+    "links": "GOOGL",
+    "size_t1": "0.072451440793451"
+   },
+   {
+    "t": "2025-10-13",
+    "source": "IONQ",
+    "links": "HUBS",
+    "size_t1": "0.06450329684754723"
+   }
+  ]
+ }
+}

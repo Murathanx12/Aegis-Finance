@@ -1,0 +1,1513 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "user",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-27T17:05:03+00:00",
+ "plan": [
+  {
+   "lane": "barrons:search",
+   "max": 464,
+   "tickers": [
+    "VKTX",
+    "NTLA",
+    "HWM",
+    "IONQ",
+    "AGYS",
+    "NVT",
+    "AMZN",
+    "NVDA",
+    "TSM",
+    "GEV",
+    "CLS",
+    "PRAX",
+    "SNOW",
+    "JAZZ",
+    "LEU",
+    "COGT",
+    "BHVN",
+    "BBIO",
+    "CRM",
+    "MP",
+    "AVGO",
+    "ABSI",
+    "LNG",
+    "CCJ",
+    "BSP",
+    "AGIO",
+    "ENS",
+    "PRGS",
+    "BA",
+    "GOOGL",
+    "TER",
+    "VRT",
+    "VG",
+    "BN",
+    "WDAY",
+    "WST",
+    "DKNG",
+    "AVPT",
+    "PRCH",
+    "VRTX",
+    "NOW",
+    "MU",
+    "SNDR",
+    "NVO",
+    "HUBS",
+    "INCY",
+    "HOOD",
+    "META",
+    "RHI",
+    "ACI",
+    "PEGA",
+    "SMPL",
+    "RGEN",
+    "MAN",
+    "BE",
+    "AAPL",
+    "AMGN",
+    "IRDM",
+    "HELE",
+    "KYTX",
+    "NOVT",
+    "NVEC",
+    "PSNL",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "SON",
+    "ALLE",
+    "GOOG",
+    "GMAB",
+    "ADUS",
+    "TS",
+    "PDS",
+    "PAGS",
+    "MSFT",
+    "CHD",
+    "BR",
+    "ALG",
+    "STNG",
+    "CHH",
+    "ARCO",
+    "MCD",
+    "SERV",
+    "SMMT",
+    "CYTK",
+    "PDD",
+    "FIZZ",
+    "MANH",
+    "BZ",
+    "CMG",
+    "EXPO",
+    "EXEL",
+    "LZ",
+    "REAL",
+    "BBW",
+    "TE",
+    "BW",
+    "CDNL",
+    "AGX",
+    "PLTR",
+    "ACVA",
+    "DBVT",
+    "LITE",
+    "MWH",
+    "Q",
+    "XRX",
+    "STX",
+    "FRMI",
+    "WDS",
+    "MEC",
+    "DUOL",
+    "FLNC",
+    "CSTM",
+    "LAR",
+    "KEX",
+    "LGN"
+   ]
+  },
+  {
+   "lane": "barrons:stock_picks",
+   "max": 40,
+   "tickers": []
+  },
+  {
+   "lane": "barrons:big_money_poll",
+   "max": 5,
+   "tickers": []
+  }
+ ],
+ "parent_tabs": {
+  "barrons": {
+   "tab": "chrome-mcp:fe9a0faf6f97:8",
+   "label": "t8",
+   "url": "https://www.wsj.com/?aegis=muratclaw",
+   "how": "borrowed:no barrons.com tab open"
+  }
+ },
+ "max_pages": 406,
+ "budget_explicit": true,
+ "fresh_since": "2026-09-27",
+ "cost_usd": 0.0,
+ "lanes": {
+  "barrons:search": {
+   "source": "barrons",
+   "section": "search",
+   "column": "",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:46",
+   "links_found": 0,
+   "skipped_already_stored": 22,
+   "articles": [],
+   "refusals": [],
+   "dropped": null,
+   "searches": {
+    "LNG": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "CCJ": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "BSP": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "AGIO": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "ENS": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "PRGS": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "BA": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "GOOGL": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "TER": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "VRT": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "VG": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "BN": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "WDAY": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "WST": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "DKNG": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "AVPT": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "PRCH": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "VRTX": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "NOW": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "MU": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "SNDR": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "NVO": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    }
+   },
+   "opened": {
+    "label": "t46",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/account/login"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t41",
+      "chrome-mcp:fe9a0faf6f97:41",
+      "about:blank"
+     ],
+     [
+      "t42",
+      "chrome-mcp:fe9a0faf6f97:42",
+      "about:blank"
+     ],
+     [
+      "t43",
+      "chrome-mcp:fe9a0faf6f97:43",
+      "https://www.marketwatch.com/investing/stock/nvo/analystestimates"
+     ],
+     [
+      "t44",
+      "chrome-mcp:fe9a0faf6f97:44",
+      "https://www.wsj.com/market-data/stock/mp"
+     ],
+     [
+      "t45",
+      "chrome-mcp:fe9a0faf6f97:45",
+      "chrome://new-tab-page/"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/account/login"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t41",
+      "chrome-mcp:fe9a0faf6f97:41",
+      "about:blank"
+     ],
+     [
+      "t42",
+      "chrome-mcp:fe9a0faf6f97:42",
+      "about:blank"
+     ],
+     [
+      "t43",
+      "chrome-mcp:fe9a0faf6f97:43",
+      "about:blank"
+     ],
+     [
+      "t44",
+      "chrome-mcp:fe9a0faf6f97:44",
+      "https://www.wsj.com/market-data/stock/mp"
+     ],
+     [
+      "t45",
+      "chrome-mcp:fe9a0faf6f97:45",
+      "chrome://new-tab-page/"
+     ],
+     [
+      "t46",
+      "chrome-mcp:fe9a0faf6f97:46",
+      "https://www.barrons.com/market-data/stocks/lng"
+     ]
+    ]
+   }
+  },
+  "barrons:stock_picks": {
+   "source": "barrons",
+   "section": "stock_picks",
+   "column": "barrons_stock_picks",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:48",
+   "links_found": 1,
+   "skipped_already_stored": 1,
+   "articles": [],
+   "refusals": [],
+   "dropped": "EXHAUSTED",
+   "opened": {
+    "label": "t48",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/account/login"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t41",
+      "chrome-mcp:fe9a0faf6f97:41",
+      "about:blank"
+     ],
+     [
+      "t42",
+      "chrome-mcp:fe9a0faf6f97:42",
+      "about:blank"
+     ],
+     [
+      "t43",
+      "chrome-mcp:fe9a0faf6f97:43",
+      "https://www.marketwatch.com/investing/stock/hubs/analystestimates"
+     ],
+     [
+      "t44",
+      "chrome-mcp:fe9a0faf6f97:44",
+      "https://www.wsj.com/market-data/stock/mp"
+     ],
+     [
+      "t45",
+      "chrome-mcp:fe9a0faf6f97:45",
+      "chrome://new-tab-page/"
+     ],
+     [
+      "t46",
+      "chrome-mcp:fe9a0faf6f97:46",
+      "https://www.barrons.com/market-data/stocks/lng"
+     ],
+     [
+      "t47",
+      "chrome-mcp:fe9a0faf6f97:47",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/account/login"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t41",
+      "chrome-mcp:fe9a0faf6f97:41",
+      "about:blank"
+     ],
+     [
+      "t42",
+      "chrome-mcp:fe9a0faf6f97:42",
+      "about:blank"
+     ],
+     [
+      "t43",
+      "chrome-mcp:fe9a0faf6f97:43",
+      "https://www.marketwatch.com/investing/stock/hubs/analystestimates"
+     ],
+     [
+      "t44",
+      "chrome-mcp:fe9a0faf6f97:44",
+      "https://www.wsj.com/market-data/stock/mp"
+     ],
+     [
+      "t45",
+      "chrome-mcp:fe9a0faf6f97:45",
+      "chrome://new-tab-page/"
+     ],
+     [
+      "t46",
+      "chrome-mcp:fe9a0faf6f97:46",
+      "https://www.barrons.com/market-data/stocks/lng"
+     ],
+     [
+      "t47",
+      "chrome-mcp:fe9a0faf6f97:47",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t48",
+      "chrome-mcp:fe9a0faf6f97:48",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ]
+    ]
+   }
+  },
+  "barrons:big_money_poll": {
+   "source": "barrons",
+   "section": "big_money_poll",
+   "column": "barrons_big_money_poll",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:49",
+   "links_found": 2,
+   "skipped_already_stored": 2,
+   "articles": [],
+   "refusals": [],
+   "dropped": "EXHAUSTED",
+   "opened": {
+    "label": "t49",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/account/login"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t41",
+      "chrome-mcp:fe9a0faf6f97:41",
+      "about:blank"
+     ],
+     [
+      "t42",
+      "chrome-mcp:fe9a0faf6f97:42",
+      "about:blank"
+     ],
+     [
+      "t43",
+      "chrome-mcp:fe9a0faf6f97:43",
+      "about:blank"
+     ],
+     [
+      "t44",
+      "chrome-mcp:fe9a0faf6f97:44",
+      "about:blank"
+     ],
+     [
+      "t45",
+      "chrome-mcp:fe9a0faf6f97:45",
+      "chrome://new-tab-page/"
+     ],
+     [
+      "t46",
+      "chrome-mcp:fe9a0faf6f97:46",
+      "https://www.barrons.com/market-data/stocks/lng"
+     ],
+     [
+      "t47",
+      "chrome-mcp:fe9a0faf6f97:47",
+      "about:blank"
+     ],
+     [
+      "t48",
+      "chrome-mcp:fe9a0faf6f97:48",
+      "about:blank"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/account/login"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t41",
+      "chrome-mcp:fe9a0faf6f97:41",
+      "about:blank"
+     ],
+     [
+      "t42",
+      "chrome-mcp:fe9a0faf6f97:42",
+      "about:blank"
+     ],
+     [
+      "t43",
+      "chrome-mcp:fe9a0faf6f97:43",
+      "about:blank"
+     ],
+     [
+      "t44",
+      "chrome-mcp:fe9a0faf6f97:44",
+      "about:blank"
+     ],
+     [
+      "t45",
+      "chrome-mcp:fe9a0faf6f97:45",
+      "chrome://new-tab-page/"
+     ],
+     [
+      "t46",
+      "chrome-mcp:fe9a0faf6f97:46",
+      "https://www.barrons.com/market-data/stocks/lng"
+     ],
+     [
+      "t47",
+      "chrome-mcp:fe9a0faf6f97:47",
+      "https://www.wsj.com/world/uk/u-k-arrests-five-in-suspected-terrorist-plot-near-air-base-us"
+     ],
+     [
+      "t48",
+      "chrome-mcp:fe9a0faf6f97:48",
+      "about:blank"
+     ],
+     [
+      "t49",
+      "chrome-mcp:fe9a0faf6f97:49",
+      "https://www.barrons.com/topics/big-money-poll"
+     ]
+    ]
+   }
+  }
+ },
+ "order": [
+  {
+   "turn": 0,
+   "lane": "barrons:search",
+   "what": "listing",
+   "url": "https://www.barrons.com/market-data/stocks/lng",
+   "at": "2026-09-27T17:06:50+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "barrons:stock_picks",
+   "what": "listing",
+   "url": "https://www.barrons.com/market-data/stocks/stock-picks",
+   "at": "2026-09-27T17:07:37+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "barrons:big_money_poll",
+   "what": "listing",
+   "url": "https://www.barrons.com/topics/big-money-poll",
+   "at": "2026-09-27T17:08:36+00:00",
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "LNG",
+   "url": "https://www.barrons.com/market-data/stocks/lng",
+   "at": "2026-09-27T17:06:50+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 2,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "CCJ",
+   "url": "https://www.barrons.com/market-data/stocks/ccj",
+   "at": "2026-09-27T17:09:42+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 3,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "BSP",
+   "url": "https://www.barrons.com/market-data/stocks/bsp",
+   "at": "2026-09-27T17:10:35+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 4,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "AGIO",
+   "url": "https://www.barrons.com/market-data/stocks/agio",
+   "at": "2026-09-27T17:11:35+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 5,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "ENS",
+   "url": "https://www.barrons.com/market-data/stocks/ens",
+   "at": "2026-09-27T17:12:32+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 6,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "PRGS",
+   "url": "https://www.barrons.com/market-data/stocks/prgs",
+   "at": "2026-09-27T17:13:32+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 7,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "BA",
+   "url": "https://www.barrons.com/market-data/stocks/ba",
+   "at": "2026-09-27T17:14:45+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 8,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "GOOGL",
+   "url": "https://www.barrons.com/market-data/stocks/googl",
+   "at": "2026-09-27T17:15:45+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 9,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "TER",
+   "url": "https://www.barrons.com/market-data/stocks/ter",
+   "at": "2026-09-27T17:16:33+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 10,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "VRT",
+   "url": "https://www.barrons.com/market-data/stocks/vrt",
+   "at": "2026-09-27T17:17:20+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 11,
+   "lane": "barrons:search",
+   "item": "VG",
+   "at": "2026-09-27T17:18:23+00:00",
+   "ok": false,
+   "why": "DETACHED: OpenClawRefused: REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile 'user' is 'stopped', not runn"
+  },
+  {
+   "turn": 12,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "VG",
+   "url": "https://www.barrons.com/market-data/stocks/vg",
+   "at": "2026-09-27T17:19:16+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 13,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "BN",
+   "url": "https://www.barrons.com/market-data/stocks/bn",
+   "at": "2026-09-27T17:20:13+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 14,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "WDAY",
+   "url": "https://www.barrons.com/market-data/stocks/wday",
+   "at": "2026-09-27T17:21:04+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 15,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "WST",
+   "url": "https://www.barrons.com/market-data/stocks/wst",
+   "at": "2026-09-27T17:22:09+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 16,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "DKNG",
+   "url": "https://www.barrons.com/market-data/stocks/dkng",
+   "at": "2026-09-27T17:23:15+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 17,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "AVPT",
+   "url": "https://www.barrons.com/market-data/stocks/avpt",
+   "at": "2026-09-27T17:23:58+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 18,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "PRCH",
+   "url": "https://www.barrons.com/market-data/stocks/prch",
+   "at": "2026-09-27T17:24:59+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 19,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "VRTX",
+   "url": "https://www.barrons.com/market-data/stocks/vrtx",
+   "at": "2026-09-27T17:25:51+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 20,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "NOW",
+   "url": "https://www.barrons.com/market-data/stocks/now",
+   "at": "2026-09-27T17:26:54+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 21,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "MU",
+   "url": "https://www.barrons.com/market-data/stocks/mu",
+   "at": "2026-09-27T17:28:01+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 22,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "SNDR",
+   "url": "https://www.barrons.com/market-data/stocks/sndr",
+   "at": "2026-09-27T17:29:50+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 23,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "NVO",
+   "url": "https://www.barrons.com/market-data/stocks/nvo",
+   "at": "2026-09-27T17:30:41+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  }
+ ],
+ "stopped": null,
+ "budget_spent": null,
+ "opened": [
+  "chrome-mcp:fe9a0faf6f97:46",
+  "chrome-mcp:fe9a0faf6f97:53",
+  "chrome-mcp:fe9a0faf6f97:60",
+  "chrome-mcp:fe9a0faf6f97:48",
+  "chrome-mcp:fe9a0faf6f97:49"
+ ],
+ "orphaned_tabs": [
+  "chrome-mcp:fe9a0faf6f97:46",
+  "chrome-mcp:fe9a0faf6f97:60",
+  "chrome-mcp:fe9a0faf6f97:48",
+  "chrome-mcp:fe9a0faf6f97:49"
+ ],
+ "worker": "barrons",
+ "pid": 130668,
+ "reattaches": 0,
+ "reattach_log": [],
+ "tab_remaps": [
+  {
+   "at": "2026-09-27T17:18:36+00:00",
+   "reattached": false,
+   "remap": {
+    "chrome-mcp:fe9a0faf6f97:46": null,
+    "chrome-mcp:fe9a0faf6f97:48": null,
+    "chrome-mcp:fe9a0faf6f97:49": null
+   },
+   "parents": {
+    "barrons": "chrome-mcp:fe9a0faf6f97:8"
+   }
+  }
+ ],
+ "tabs_lost_on_reattach": [
+  "chrome-mcp:fe9a0faf6f97:46",
+  "chrome-mcp:fe9a0faf6f97:48",
+  "chrome-mcp:fe9a0faf6f97:49"
+ ],
+ "startup_cleanup": {
+  "candidates": [],
+  "closed": [],
+  "skipped": {}
+ },
+ "in_progress": true,
+ "tabs_closed": {
+  "chrome-mcp:fe9a0faf6f97:46": false,
+  "chrome-mcp:fe9a0faf6f97:53": true,
+  "chrome-mcp:fe9a0faf6f97:60": false,
+  "chrome-mcp:fe9a0faf6f97:48": false,
+  "chrome-mcp:fe9a0faf6f97:49": false
+ },
+ "blanks": 24,
+ "blank_failures": [],
+ "tab_rotations": [
+  {
+   "at": "2026-09-27T17:19:16+00:00",
+   "old": "chrome-mcp:fe9a0faf6f97:46",
+   "old_closed": false,
+   "new": "chrome-mcp:fe9a0faf6f97:53",
+   "why": "lost_on_reattach",
+   "url": "https://www.barrons.com/market-data/stocks/vg"
+  },
+  {
+   "at": "2026-09-27T17:29:50+00:00",
+   "old": "chrome-mcp:fe9a0faf6f97:53",
+   "old_closed": true,
+   "new": "chrome-mcp:fe9a0faf6f97:60",
+   "why": "served 10 pages >= 10",
+   "url": "https://www.barrons.com/market-data/stocks/sndr"
+  }
+ ],
+ "close_errors": {
+  "chrome-mcp:fe9a0faf6f97:46": "ReaderRefused: REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile 'user' is 'stopped', not running. It attaches to Murat's own open Chrome (chrome://inspect/#remote-debugging toggle on); Aegis never launches a br",
+  "chrome-mcp:fe9a0faf6f97:48": "LOST: blank tab, handle reissued by a re-attach",
+  "chrome-mcp:fe9a0faf6f97:49": "LOST: blank tab, handle reissued by a re-attach"
+ }
+}

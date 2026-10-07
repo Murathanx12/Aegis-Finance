@@ -1,0 +1,74 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-10-06",
+ "declared_utc": "2026-10-06T02:51:07+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [],
+ "cells": [
+  {
+   "hyp_id": "H-767931b19b",
+   "title": "Crude spike lifts tanker rates over refiners",
+   "family": "macro_readthrough_commodity",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "CL=F",
+    "targets": [
+     "FRO",
+     "DHT",
+     "INSW",
+     "TNK",
+     "STNG"
+    ],
+    "expected_sign": 1,
+    "h": 5,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "If the tanker basket does not outperform the refiner basket from open t+1 to close t+5, or if the effect appears equally in integrated majors, the hypothesis is refuted.",
+   "separation_from_beta": "Tanker basket should outperform refiner basket; effect should be concentrated in tanker names with high spot exposure, not integrated majors."
+  },
+  {
+   "hyp_id": "H-b5e5f954c6",
+   "title": "Treasury yield shock lifts rate-sensitive insurers",
+   "family": "macro_readthrough_rates",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "^TNX",
+    "targets": [
+     "MET",
+     "PRU",
+     "AFL",
+     "LNC",
+     "PFG"
+    ],
+    "expected_sign": 1,
+    "h": 5,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "If the insurer basket does not outperform vol-matched sector controls from open t+1 to close t+5, or if the effect appears equally in non-rate-sensitive financials, the hypothesis is refuted.",
+   "separation_from_beta": "Insurer basket should outperform sector-matched controls; effect should be concentrated in life insurers with long-duration liabilities, not broad financials."
+  },
+  {
+   "hyp_id": "H-9a956b347c",
+   "title": "Co-mentioned peers react to clinical trial failure",
+   "family": "event_readthrough_text_link",
+   "target": "direction",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "comention",
+    "event_type": "clinical_trial_result",
+    "min_ratio": 3.0,
+    "k": 4,
+    "min_source_dv_pct": 0.5
+   },
+   "split": {},
+   "refutation": "If linked peers' residual return is not more negative than unlinked vol-matched peers (t < 1), the read-through is refuted.",
+   "separation_from_beta": "Linked peers' next-session residual return should be more negative than vol-matched unlinked biotech peers."
+  }
+ ],
+ "sha256": "3a9789be26d91c3df7214a4a9946102bda51d6007233cd7081ff674bd6c8a84a"
+}

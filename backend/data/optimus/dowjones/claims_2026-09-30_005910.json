@@ -1,0 +1,698 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-09-30",
+ "days": [
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05",
+  "2026-07-06",
+  "2026-07-07",
+  "2026-07-08",
+  "2026-07-09",
+  "2026-07-10",
+  "2026-07-11",
+  "2026-07-12",
+  "2026-07-13",
+  "2026-07-14",
+  "2026-07-15",
+  "2026-07-16",
+  "2026-07-17",
+  "2026-07-18",
+  "2026-07-19",
+  "2026-07-20",
+  "2026-07-21",
+  "2026-07-22",
+  "2026-07-23",
+  "2026-07-24",
+  "2026-07-25",
+  "2026-07-26",
+  "2026-07-27",
+  "2026-07-28",
+  "2026-07-29",
+  "2026-07-30",
+  "2026-07-31",
+  "2026-08-01",
+  "2026-08-02",
+  "2026-08-03",
+  "2026-08-04",
+  "2026-08-05",
+  "2026-08-06",
+  "2026-08-07",
+  "2026-08-08",
+  "2026-08-09",
+  "2026-08-10",
+  "2026-08-11",
+  "2026-08-12",
+  "2026-08-13",
+  "2026-08-14",
+  "2026-08-15",
+  "2026-08-16",
+  "2026-08-17",
+  "2026-08-18",
+  "2026-08-19",
+  "2026-08-20",
+  "2026-08-21",
+  "2026-08-22",
+  "2026-08-23",
+  "2026-08-24",
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27",
+  "2026-08-28",
+  "2026-08-29",
+  "2026-08-30",
+  "2026-08-31",
+  "2026-09-01",
+  "2026-09-02",
+  "2026-09-03",
+  "2026-09-04",
+  "2026-09-05",
+  "2026-09-06",
+  "2026-09-07",
+  "2026-09-08",
+  "2026-09-09",
+  "2026-09-10",
+  "2026-09-11",
+  "2026-09-12",
+  "2026-09-13",
+  "2026-09-14",
+  "2026-09-15",
+  "2026-09-16",
+  "2026-09-17",
+  "2026-09-18",
+  "2026-09-19",
+  "2026-09-20",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23",
+  "2026-09-24",
+  "2026-09-25",
+  "2026-09-26",
+  "2026-09-27",
+  "2026-09-28",
+  "2026-09-29",
+  "2026-09-30"
+ ],
+ "started_utc": "2026-09-30T00:58:20+00:00",
+ "mw_analyst_snapshot": {
+  "n_pages": 5,
+  "n_rows_written": 5,
+  "thin": [],
+  "tickers": [
+   "REAL",
+   "AGX",
+   "BW",
+   "CDNL",
+   "LZ"
+  ]
+ },
+ "barrons_big_money_poll_index_rows": {
+  "n_articles": 0,
+  "n_rows_written": 0,
+  "per_article": []
+ },
+ "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
+ "purpose": "dowjones_claims",
+ "cap_usd": 3.0,
+ "spent_usd": 0.012243,
+ "n_llm_calls": 38,
+ "stopped": null,
+ "n_articles": 38,
+ "n_claims": 15,
+ "forecast_rows_by_source_id": {
+  "marketwatch_other": 0,
+  "wsj_other": 3,
+  "barrons_stock_picks": 9,
+  "barrons_other": 3,
+  "wsj_heard_on_the_street": 0
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "66668c0a53248b23ffdd",
+   "url": "https://www.marketwatch.com/story/utilities-shares-among-top-winners-utilities-roundup-8cc02e7c?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "8984757bc7a189bb0cc8",
+   "url": "https://www.wsj.com/arts-culture/music/the-stills-young-bands-long-may-you-run-turns-50-23caf42e",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a416001fa2baf4df344d",
+   "url": "https://www.wsj.com/arts-culture/film/america-250-the-nation-on-the-big-screen-f97a80de?mod=arts-in-review-ribbon",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "04d720119a40bde2602d",
+   "url": "https://www.barrons.com/articles/jersey-mikes-stock-ipo-should-i-buy-f70af684?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "JMKE",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'JMKE'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "176c9edfce71687c725f",
+   "url": "https://www.barrons.com/articles/ai-warning-anthropic-openai-b3c3aa5f?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "57062a07dd40481d1306",
+   "url": "https://www.barrons.com/articles/six-retail-stocks-for-investors-to-consider-a9687510?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "616bd631f2abc9096cdf",
+   "url": "https://www.barrons.com/articles/ge-vernova-stock-hitachi-nuclear-energy-10815e0a",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "6501",
+     "why": "REFUSED_TICKER: '6501'"
+    }
+   ],
+   "tickers": [
+    "GEV"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "7a82173ff6b564a9205a",
+   "url": "https://www.barrons.com/articles/stock-market-ai-blouwup-protection-d17c05e6?mod=RTA",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 4,
+   "refused": [],
+   "tickers": [
+    "MSFT",
+    "AAPL",
+    "BA",
+    "NVDA"
+   ],
+   "directions": [
+    "up",
+    "up",
+    "none",
+    "none"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 6,
+   "write_status": "OK"
+  },
+  {
+   "sha": "874163d34eee191a83a2",
+   "url": "https://www.barrons.com/articles/holtec-ipo-nuclear-energy-87f1b830?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "9931daf9e0218bfa1a95",
+   "url": "https://www.barrons.com/articles/nuclear-energy-stocks-aa86ca8f?mod=article_inline",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 4,
+   "refused": [],
+   "tickers": [
+    "GEV",
+    "SMR",
+    "OKLO",
+    "NNE"
+   ],
+   "directions": [
+    "up",
+    "down",
+    "none",
+    "none"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "99cfd6ef0550a7e89dd2",
+   "url": "https://www.barrons.com/articles/tesla-stock-full-self-driving-croatia-eu-f1aebdb5?mod=RTA",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "TSLA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "09bfccb007d41d979536",
+   "url": "https://www.marketwatch.com/story/boeing-awarded-20b-u-s-navy-contract-for-sixth-generation-f-a-xx-strike-fighter-54370df6?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "60d64e2e8bea86385d3e",
+   "url": "https://www.marketwatch.com/story/sec-settles-with-space-development-corp-over-misrepresentation-claims-23ded4b9?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "6831a2ce0fdcb809056f",
+   "url": "https://www.marketwatch.com/story/bell-canada-cisco-plan-to-jointly-develop-canadian-sovereign-ai-infrastructure-23e8029a?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "69b7942d1895dc2f3ce7",
+   "url": "https://www.marketwatch.com/story/the-murky-ai-milestone-that-has-some-of-the-industrys-leading-voices-increasingly-on-edge-6ffeacc7",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "6d4d0cf5ec3dfa5903e2",
+   "url": "https://www.marketwatch.com/story/six-flags-shares-fall-after-company-retires-x2-coaster-at-magic-mountain-park-34b846a8?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a2579fdab531eb0fd592",
+   "url": "https://www.marketwatch.com/story/communications-services-rise-communications-services-roundup-5cc0ff02?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "b1e95e34786bc4c804fe",
+   "url": "https://www.marketwatch.com/story/tesla-enters-into-deals-for-30b-of-credit-and-loan-facilities-12a4bbdf?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "00706e7828426e147b2c",
+   "url": "https://www.wsj.com/arts-culture/books/10-books-to-read-the-best-reviews-of-august-9cc43f6c?mod=bookshelf-ribbon-new",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "1bca53fc264a2af2957e",
+   "url": "https://www.wsj.com/finance/investing/youre-not-tough-enough-to-earn-these-huge-returns-3feaad7b?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "34af17e70c665f0a1752",
+   "url": "https://www.wsj.com/finance/banking/goldman-sachs-gives-80-million-in-retention-awards-to-ceo-operations-chief-d3305f41?mod=article_inline",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "GS"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "35544c9d34b503a8a24f",
+   "url": "https://www.wsj.com/arts-culture/fine-art/america-250-the-essential-paintings-of-our-nation-585f1dc0?mod=arts-in-review-ribbon",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "3790620175018c8681cf",
+   "url": "https://www.wsj.com/finance/investing/robinhoods-next-big-bet-ai-bots-that-trade-while-you-sleep-f9d40f62",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4b98222876677a0f7cd8",
+   "url": "https://www.wsj.com/finance/investing/perella-weinberg-strikes-deal-for-advisory-firm-specializing-in-red-hot-market-81fe2c29?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "65319216e837ea42e6a9",
+   "url": "https://www.wsj.com/tech/ai/anthropic-boss-warns-ai-industry-must-slow-the-pace-a4267b56?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "6aa6fd5693d4d4edfdb7",
+   "url": "https://www.wsj.com/arts-culture/music/america-250-a-mixtape-for-the-nation-e28df29f?mod=arts-in-review-ribbon",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "7af0a5e210a88a70061f",
+   "url": "https://www.wsj.com/finance/robinhood-ceo-vlad-tenev-04e3ab28?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "810bae96e66f499ae348",
+   "url": "https://www.wsj.com/opinion/samuel-alito-recuses-suncor-v-boulder-climate-case-3a469697",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "848944c5eacb3ff5a5ef",
+   "url": "https://www.wsj.com/opinion/ukraine-f-16-maintenance-delays-russia-sabena-engineering-85ca626a",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a05d56487427c1df819e",
+   "url": "https://www.wsj.com/tech/ai/openai-agents-hacked-u-s-government-websites-d999df5f?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a279d64cbbf6d99c4b15",
+   "url": "https://www.wsj.com/economy/housing/evicting-wall-street-from-the-housing-market-will-be-messy-1c40a119?mod=article_inline",
+   "column": "wsj_heard_on_the_street",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [],
+   "tickers": [
+    "AMH",
+    "INVH"
+   ],
+   "directions": [
+    "up",
+    "up"
+   ],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "a2adf99a627d5d44e6fe",
+   "url": "https://www.wsj.com/us-news/climate-environment/how-el-nino-made-the-atlantic-hurricane-season-disappear-142b9ac9",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a8c7782e9f7884aed7b7",
+   "url": "https://www.wsj.com/business/airlines/navy-chooses-boeing-to-build-next-generation-jet-fighter-c3e36e1e?mod=tech_lead_story",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "NOC",
+     "why": "REFUSED_BACKWARD_LOOKING: 'NOC'"
+    },
+    {
+     "ticker": "LMT",
+     "why": "REFUSED_BACKWARD_LOOKING: 'LMT'"
+    }
+   ],
+   "tickers": [
+    "BA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "bc24ad40e88af62abe6d",
+   "url": "https://www.wsj.com/opinion/clarence-thomas-stalwart-for-the-constitution-fa1f3db5",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "cf63f27021d3218f941c",
+   "url": "https://www.wsj.com/tech/ai/trump-defends-white-houses-light-touch-on-ai-regulation-c4ed2488?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "d5cf6183af3a3543040b",
+   "url": "https://www.wsj.com/arts-culture/books/august-in-fiction-7-books-to-read-now-bc5293bf?mod=bookshelf-ribbon-new",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e4f3b42cc52d6fa5a348",
+   "url": "https://www.wsj.com/tech/ai/the-ai-shift-turning-everyday-investors-into-mini-quant-funds-ebe4d45f?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "fe8e08d65d6bda00dada",
+   "url": "https://www.wsj.com/politics/national-security/trump-to-announce-multibillion-dollar-jet-fighter-676c08cc?mod=article_inline",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "LMT",
+     "why": "REFUSED_BACKWARD_LOOKING: 'LMT'"
+    }
+   ],
+   "tickers": [
+    "BA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  }
+ ]
+}

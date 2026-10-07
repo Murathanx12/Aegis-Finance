@@ -1,0 +1,14 @@
+{
+ "stocktwits.com": {
+  "until": "2026-09-28T20:03:37+00:00",
+  "why": "REDIRECTED_OFF_HOST: the host showed a redirected_off_host page; its lanes stop for the cooling period, nothing is done to pass it",
+  "url": "chrome-error://chromewebdata/",
+  "since": "2026-09-28T19:03:37+00:00"
+ },
+ "x.com": {
+  "until": "2026-10-03T08:16:38+00:00",
+  "why": "INTERSTITIAL: the host showed a interstitial page; its lanes stop for the cooling period, nothing is done to pass it",
+  "url": "https://x.com/search?q=%24ICHR&f=live",
+  "since": "2026-10-03T07:16:38+00:00"
+ }
+}

@@ -1,112 +1,112 @@
 {
- "t": "2026-09-25T13:48:58+00:00",
- "tag": "tick",
+ "t": "2026-10-06T17:59:35+00:00",
+ "tag": "sim_owner",
  "account_number": "PA37CSAUFCQR",
- "equity": 999142.66,
- "last_equity": 1000000.0,
- "cash": 800208.22,
- "long_market_value": 198934.44,
+ "equity": 1002263.9,
+ "last_equity": 1002784.07,
+ "cash": 800653.35,
+ "long_market_value": 201610.55,
  "short_market_value": 0.0,
- "buying_power": 3757849.3,
+ "buying_power": 3767122.93,
  "n_positions": 10,
  "positions": [
   {
    "symbol": "AAPL",
-   "qty": 59.0,
+   "qty": 58.0,
    "avg_entry_price": 335.18,
-   "market_value": 19813.97,
-   "unrealized_pl": 38.35,
-   "unrealized_plpc": 0.00194,
-   "current_price": 335.83
-  },
-  {
-   "symbol": "ALLE",
-   "qty": 131.0,
-   "avg_entry_price": 153.56,
-   "market_value": 20070.51,
-   "unrealized_pl": -45.85,
-   "unrealized_plpc": -0.00228,
-   "current_price": 153.21
+   "market_value": 19290.22,
+   "unrealized_pl": -150.22,
+   "unrealized_plpc": -0.00773,
+   "current_price": 332.59
   },
   {
    "symbol": "AMZN",
-   "qty": 80.0,
+   "qty": 79.0,
    "avg_entry_price": 248.46,
-   "market_value": 19870.4,
-   "unrealized_pl": -6.4,
-   "unrealized_plpc": -0.00032,
-   "current_price": 248.38
+   "market_value": 20180.55,
+   "unrealized_pl": 552.21,
+   "unrealized_plpc": 0.02813,
+   "current_price": 255.45
   },
   {
    "symbol": "AVPT",
    "qty": 1524.0,
    "avg_entry_price": 13.19,
-   "market_value": 20116.8,
-   "unrealized_pl": 15.24,
-   "unrealized_plpc": 0.00076,
-   "current_price": 13.2
-  },
-  {
-   "symbol": "GOOG",
-   "qty": 58.0,
-   "avg_entry_price": 342.135862,
-   "market_value": 19754.22,
-   "unrealized_pl": -89.659996,
-   "unrealized_plpc": -0.00452,
-   "current_price": 340.59
+   "market_value": 22364.7,
+   "unrealized_pl": 2263.14,
+   "unrealized_plpc": 0.11259,
+   "current_price": 14.675
   },
   {
    "symbol": "GOOGL",
    "qty": 58.0,
-   "avg_entry_price": 345.58601,
-   "market_value": 19949.97,
-   "unrealized_pl": -94.01858,
-   "unrealized_plpc": -0.00469,
-   "current_price": 343.965
+   "avg_entry_price": 345.541897,
+   "market_value": 20149.49,
+   "unrealized_pl": 108.059974,
+   "unrealized_plpc": 0.00539,
+   "current_price": 347.405
   },
   {
    "symbol": "INCY",
    "qty": 160.0,
    "avg_entry_price": 125.99,
-   "market_value": 19768.8,
-   "unrealized_pl": -389.6,
-   "unrealized_plpc": -0.01933,
-   "current_price": 123.555
+   "market_value": 18108.8,
+   "unrealized_pl": -2049.6,
+   "unrealized_plpc": -0.10167,
+   "current_price": 113.18
+  },
+  {
+   "symbol": "JAZZ",
+   "qty": 84.0,
+   "avg_entry_price": 237.35,
+   "market_value": 19428.36,
+   "unrealized_pl": -509.04,
+   "unrealized_plpc": -0.02553,
+   "current_price": 231.29
   },
   {
    "symbol": "META",
    "qty": 26.0,
    "avg_entry_price": 757.100769,
-   "market_value": 19699.68,
-   "unrealized_pl": 15.060006,
-   "unrealized_plpc": 0.00077,
-   "current_price": 757.68
+   "market_value": 19307.47,
+   "unrealized_pl": -377.149994,
+   "unrealized_plpc": -0.01916,
+   "current_price": 742.595
   },
   {
    "symbol": "NVDA",
    "qty": 88.0,
    "avg_entry_price": 226.599432,
-   "market_value": 19795.8288,
-   "unrealized_pl": -144.921216,
-   "unrealized_plpc": -0.00727,
-   "current_price": 224.9526
+   "market_value": 21114.28,
+   "unrealized_pl": 1173.529984,
+   "unrealized_plpc": 0.05885,
+   "current_price": 239.935
   },
   {
    "symbol": "SNDR",
-   "qty": 632.0,
-   "avg_entry_price": 32.04,
-   "market_value": 20078.64,
-   "unrealized_pl": -170.64,
-   "unrealized_plpc": -0.00843,
-   "current_price": 31.77
+   "qty": 642.0,
+   "avg_entry_price": 32.026293,
+   "market_value": 20357.82,
+   "unrealized_pl": -203.060106,
+   "unrealized_plpc": -0.00988,
+   "current_price": 31.71
+  },
+  {
+   "symbol": "TSM",
+   "qty": 44.0,
+   "avg_entry_price": 446.71,
+   "market_value": 21311.3956,
+   "unrealized_pl": 1656.1556,
+   "unrealized_plpc": 0.08426,
+   "current_price": 484.3499
   }
  ],
  "benchmarks": {
-  "SPY": 769.11,
-  "QQQ": 743.665,
-  "IWM": 281.53
+  "SPY": 779.705,
+  "QQQ": 760.78,
+  "IWM": 281.61
  },
  "benchmark_error": null,
- "invested_frac": 0.19910514080141467,
- "intraday_return": -0.0008573399999999287
+ "invested_frac": 0.2011551548449465,
+ "intraday_return": -0.0005187258309756748
 }

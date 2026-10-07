@@ -1,0 +1,48 @@
+{
+ "enabled": false,
+ "trust_dir": 0.0069,
+ "trust_size": 0.0,
+ "trust_dir_usable": 0.0,
+ "trust_size_usable": 0.0,
+ "digest_file": "world_digest_20261006T223002Z.json",
+ "two_key": {
+  "key1_direction": {
+   "arm": "direction",
+   "met": false,
+   "n_dates": 3,
+   "n_mde": 505,
+   "lower_bound": -0.016166259752989128,
+   "trust": 0.0069,
+   "line": "direction NOT MET (n 3 of ~505)"
+  },
+  "key1_size": {
+   "arm": "size",
+   "met": false,
+   "n_dates": 4,
+   "n_mde": 78,
+   "lower_bound": -0.018799048093577516,
+   "trust": 0.0,
+   "line": "size NOT MET (n 4 of ~78)"
+  },
+  "key2_met": false,
+  "key2_lower_bound_bps": null,
+  "ready_for_owner": false,
+  "missing": [
+   "KEY1: key 1: NOT MET (direction NOT MET (n 3 of ~505); size NOT MET (n 4 of ~78))",
+   "KEY2: key 2: NOT MET (0/20 PC-plan regret sessions)"
+  ],
+  "line1": "key 1: NOT MET (direction NOT MET (n 3 of ~505); size NOT MET (n 4 of ~78))",
+  "line2": "key 2: NOT MET (0/20 PC-plan regret sessions)",
+  "rule": "trust = world_digest.trust_from(): exactly 0 while graded news_digest dates < WORLD_DIGEST_TRUST_MIN_DATES (3); after that clip(posterior / WORLD_DIGEST_TRUST_FULL, 0, WORLD_DIGEST_TRUST_MAX) of the per-date Brier improvement over the row's own control, prior N(0, WORLD_DIGEST_TRUST_TAU^2). KEY 1 (per arm): n dates >= N_MDE, lower bound > 0, trust >= 0.05. KEY 2: the PC plan's own regret rows (decision_story plan_plus_shadow_news_full vs plan_full, net of round-trip cost): mean - 1.64 x se > 0 over >= NEWS_TILT_MIN_MDC_SESSIONS graded sessions. KEY 1 per arm: see NEWS_TILT_KEY1_*. Both, or the flag stays False."
+ },
+ "mdc_news_tilt": {
+  "n_sessions": 0,
+  "file": "regret_20261006T235209Z_319676.json",
+  "note": "no mdc_news_tilt_full cell yet"
+ },
+ "applied": false,
+ "n_changed": 0,
+ "error": null,
+ "line": "news tilt: trust dir 0.0069 / size 0.0000 (usable 0.0000 / 0.0000), applied=False (flag NEWS_TILT_IN_PLAN=False); key 1: NOT MET (direction NOT MET (n 3 of ~505); size NOT MET (n 4 of ~78)); key 2: NOT MET (0/20 PC-plan regret sessions)",
+ "written_utc": "2026-10-07T04:32:04+00:00"
+}

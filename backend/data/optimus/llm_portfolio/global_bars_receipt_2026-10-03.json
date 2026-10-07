@@ -1,0 +1,19 @@
+{
+ "receipt": "global_prices_ensure",
+ "written_utc": "2026-10-03T23:51:17+00:00",
+ "utc_day": "2026-10-03",
+ "n_requested": 1689,
+ "n_pulled_now": 0,
+ "n_skipped_pulled_today": 1689,
+ "n_new_rows": 0,
+ "n_ok": 1689,
+ "n_failed": 0,
+ "failed": [],
+ "errors": [],
+ "cache": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_portfolio\\global_bars.parquet",
+ "caveats": [
+  "local currency, no FX leg",
+  "unadjusted closes (auto_adjust=False), no dividends",
+  "only sessions dated before the UTC day are cached"
+ ]
+}

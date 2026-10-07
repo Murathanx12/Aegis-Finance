@@ -1,0 +1,1956 @@
+{
+ "artefact": "NN_LAB_NIGHTLY",
+ "schema": 2,
+ "run_id": "nightly_20261006T155130Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "broker_authority": "NONE: writes predictions, never orders",
+ "started_utc": "2026-10-06T15:51:30+00:00",
+ "table_before": {
+  "rows": 1198474,
+  "grid_rows": 1195525,
+  "grid_dates": 515,
+  "last_date": "2026-09-28",
+  "labels": {
+   "y_5": 1192394,
+   "y_21": 1183457,
+   "y_63": 1157019
+  }
+ },
+ "resumed_from": "nightly_20261006T025040Z",
+ "variant": "dist",
+ "append": {
+  "old_max_date": "2026-09-28",
+  "new_max_date": "2026-10-05",
+  "tail_start": "2026-01-15",
+  "rows_rebuilt": 105957,
+  "rows_added": 5883,
+  "new_dates": [
+   "2026-09-30",
+   "2026-10-05"
+  ],
+  "labels_filled": 8852,
+  "grid_rows_kept": 1195525,
+  "etf_rows_dropped_from_stored_table": 0,
+  "table_before_raw": {
+   "rows": 1198474,
+   "grid_rows": 1195525,
+   "grid_dates": 515,
+   "last_date": "2026-09-28",
+   "labels": {
+    "y_5": 1192394,
+    "y_21": 1183457,
+    "y_63": 1157019
+   }
+  },
+  "table_before": {
+   "rows": 1198474,
+   "grid_rows": 1195525,
+   "grid_dates": 515,
+   "last_date": "2026-09-28",
+   "labels": {
+    "y_5": 1192394,
+    "y_21": 1183457,
+    "y_63": 1157019
+   }
+  },
+  "table_after": {
+   "rows": 1201408,
+   "grid_rows": 1198469,
+   "grid_dates": 516,
+   "last_date": "2026-10-05",
+   "labels": {
+    "y_5": 1195350,
+    "y_21": 1186443,
+    "y_63": 1159929
+   }
+  },
+  "membership": {
+   "stored_tail_grid_rows": 100074,
+   "membership_would_drop": 4,
+   "member_absent_from_rebuild": 0,
+   "membership_would_add": 0,
+   "rows_re_adjusted": 5885,
+   "rows_dropped": 0,
+   "drop_cap": 2001,
+   "labels_filled": 8852,
+   "labels_provisional_replaced": 42,
+   "labels_final_revised_not_applied": 4505,
+   "labels_final_changed_under_1bp_not_logged": 43389,
+   "rows_appended": 5883,
+   "revisions_by_kind": {
+    "FEATURES_REVISED": 5885,
+    "LABEL_REVISED": 4505,
+    "MEMBERSHIP_WOULD_DROP": 4
+   },
+   "frozen_dates_checked": 515,
+   "frozen_dates_moved": 0,
+   "new_dates": [
+    "2026-09-30"
+   ],
+   "line": "5,885 rows re-adjusted; 4 members the rebuild would have dropped kept; 0 dropped; 0 would-add recorded, not added"
+  },
+  "revisions": {
+   "n_appended": 10394,
+   "n_total": 10394,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\table\\revisions.parquet",
+   "n_this_run_before_dedupe": 10394
+  },
+  "vendor_bars_through": "2026-10-05",
+  "membership_hash_digest_before": "8599b2d9e894a38339ea2c38ef217494c30c3bf2fb4b46248f67e553e137f76f",
+  "membership_hash_digest_after": "3dcf0473c45a68a81c197b9cfcf93a34b1d732dd851539bf23f622ea4a9bd6ed",
+  "membership_hash_by_date": {
+   "2016-07-01": "161ca7c4d5621a01",
+   "2016-07-11": "8d6350a89906e5f5",
+   "2016-07-18": "67e381f3368d565f",
+   "2016-07-25": "c010807314409414",
+   "2016-08-01": "223f01794c0296fb",
+   "2016-08-08": "f14ec5278ebf7c66",
+   "2016-08-15": "ecfd142e1af05fa7",
+   "2016-08-22": "326526f7db50cf18",
+   "2016-08-29": "30dca24b57fc886d",
+   "2016-09-06": "156a1e26ee3d1833",
+   "2016-09-13": "7d873452fe80d24c",
+   "2016-09-20": "edb59bdd64c9e356",
+   "2016-09-27": "8d4eea952afde32d",
+   "2016-10-04": "eb6c6e757b85ab2d",
+   "2016-10-11": "e0b10f93142ea3c0",
+   "2016-10-18": "8abece22cb52b4e6",
+   "2016-10-25": "0ffcc03029969eb3",
+   "2016-11-01": "d4968414c64bac70",
+   "2016-11-08": "b2bda932a75f7e38",
+   "2016-11-15": "69996c80b74e6e3f",
+   "2016-11-22": "a0adafaaef9454ac",
+   "2016-11-30": "e30946c81d3fffa5",
+   "2016-12-07": "476d5050691da304",
+   "2016-12-14": "a10293ab7b826dba",
+   "2016-12-21": "bd44d4659f079830",
+   "2016-12-29": "432863623105c576",
+   "2017-01-06": "c52539a0518915ca",
+   "2017-01-13": "18957009884d04d9",
+   "2017-01-23": "1437e80f8327396b",
+   "2017-01-30": "032f8e4e42ec697c",
+   "2017-02-06": "d775c89a9ce81dbb",
+   "2017-02-13": "6011ecc98e26f2ec",
+   "2017-02-21": "a4467dd3ffd2cfdd",
+   "2017-02-28": "4292ae4be8068a29",
+   "2017-03-07": "b1e46f305bce7371",
+   "2017-03-14": "082bb473246a61c3",
+   "2017-03-21": "ebedd779f5b72e85",
+   "2017-03-28": "725ae19a933607f1",
+   "2017-04-04": "e8770f65d28f6e6e",
+   "2017-04-11": "203dea9b57bab994",
+   "2017-04-19": "6340041d13e0799d",
+   "2017-04-26": "569aad33880bec08",
+   "2017-05-03": "1d9f76c4d0fa34cb",
+   "2017-05-10": "764132ccd0eb1a1a",
+   "2017-05-17": "22230c337266d2d5",
+   "2017-05-24": "0ea38998ca9cc832",
+   "2017-06-01": "d52d7a19faae883e",
+   "2017-06-08": "aad3f9dd2099eb76",
+   "2017-06-15": "f2f1aba28a52a2ff",
+   "2017-06-22": "3e7284c3e8e28ba5",
+   "2017-06-29": "b94fec1ac8dff506",
+   "2017-07-07": "d5e490ed557be780",
+   "2017-07-14": "3555df28c856e0c9",
+   "2017-07-21": "a7176ecc8621d4c5",
+   "2017-07-28": "628c52f2b981273b",
+   "2017-08-04": "94656680653493f6",
+   "2017-08-11": "fcdf3308d52a90a8",
+   "2017-08-18": "a426ca6102973e8b",
+   "2017-08-25": "b6cd5aff9750b76b",
+   "2017-09-01": "f829170dbed7eb3a",
+   "2017-09-11": "1d791e598f55b111",
+   "2017-09-18": "4cffd6f0edbee09a",
+   "2017-09-25": "e28cea2b4f65eac1",
+   "2017-10-02": "eef3ae97f71f4800",
+   "2017-10-09": "09c1a5881bfcc430",
+   "2017-10-16": "db5cc7612de074d5",
+   "2017-10-23": "c8cb1b077ca63860",
+   "2017-10-30": "ebb7fd40a17a5cf1",
+   "2017-11-06": "133badf3e4ffa1f5",
+   "2017-11-13": "43b07b7cf627f36c",
+   "2017-11-20": "bb67509a45f41bb3",
+   "2017-11-28": "1e3128871275a511",
+   "2017-12-05": "1eeacb42909511d2",
+   "2017-12-12": "7507cd30de3a4588",
+   "2017-12-19": "b02dc87509d4eec5",
+   "2017-12-27": "63a9c243cdd3f57b",
+   "2018-01-04": "b358396f779c84ae",
+   "2018-01-11": "ff4d2758a27598d6",
+   "2018-01-19": "59c94a9e7e9f9394",
+   "2018-01-26": "cab72d0764ee2bbd",
+   "2018-02-02": "5a9203e7d9ea405d",
+   "2018-02-09": "303543ee7ba4cefe",
+   "2018-02-16": "daaa85102d3b2c10",
+   "2018-02-26": "71c20ae85a992fc1",
+   "2018-03-05": "b472f9f53ba855f8",
+   "2018-03-12": "9c73ed86f5061732",
+   "2018-03-19": "034cad000ad6bcf5",
+   "2018-03-26": "3b79baa854ef1109",
+   "2018-04-03": "51917ae3929f6b51",
+   "2018-04-10": "b973282f31f1bc10",
+   "2018-04-17": "dab6f4fe1b9733b1",
+   "2018-04-24": "16947df420cd2cd4",
+   "2018-05-01": "2dc885c5b8af13a4",
+   "2018-05-08": "ce0c2bfd877dd071",
+   "2018-05-15": "1cebba3d8e3a86a2",
+   "2018-05-22": "af9e49f485334ee7",
+   "2018-05-30": "d9057ae690fe4fdb",
+   "2018-06-06": "c5379b6cc78cb119",
+   "2018-06-13": "99c629d855604d20",
+   "2018-06-20": "261a1292fa4d9cfb",
+   "2018-06-27": "d05385396bee3850",
+   "2018-07-05": "e50d300f76476f84",
+   "2018-07-12": "4d19a9189f80ed58",
+   "2018-07-19": "30a440e58ecdb1bc",
+   "2018-07-26": "563b3dfeb8fe4fcd",
+   "2018-08-02": "694cfbe4dbd74f75",
+   "2018-08-09": "3b32ea601420623d",
+   "2018-08-16": "7cd86bfb7dc31359",
+   "2018-08-23": "694389abdfd38251",
+   "2018-08-30": "0acdce71d31ca318",
+   "2018-09-07": "39a87105df2c48fa",
+   "2018-09-14": "db10170a44a3c12a",
+   "2018-09-21": "48fb6b8377fdd6f9",
+   "2018-09-28": "fdb4865e59446fc6",
+   "2018-10-05": "c1314675b2035efb",
+   "2018-10-12": "6a5ddc6343f06744",
+   "2018-10-19": "728d998e6302d6e5",
+   "2018-10-26": "ef3a76a1a0580908",
+   "2018-11-02": "e30b31eaa7061d81",
+   "2018-11-09": "fc4a4b48f39be141",
+   "2018-11-16": "3cf392d917258085",
+   "2018-11-26": "8cee87a6c56361d2",
+   "2018-12-03": "c8c186a45b563f4f",
+   "2018-12-11": "64a5af12236f9729",
+   "2018-12-18": "888a6e968fa8c1ae",
+   "2018-12-26": "78965c8878685f45",
+   "2019-01-03": "d4992ee26c80e052",
+   "2019-01-10": "57acc7d422a5bfe9",
+   "2019-01-17": "b25af143d69e69a7",
+   "2019-01-25": "1dce98914b257096",
+   "2019-02-01": "d499cddfb4bcac02",
+   "2019-02-08": "eb5590b557e038da",
+   "2019-02-15": "db2f46f91df4926f",
+   "2019-02-25": "faf9a8913a0fdbc3",
+   "2019-03-04": "5ee30f2fb1435faa",
+   "2019-03-11": "d0b0554a7cdc36ea",
+   "2019-03-18": "3d3cad9daf7b7595",
+   "2019-03-25": "745466e856234db7",
+   "2019-04-01": "8c2ccafdef98eebe",
+   "2019-04-08": "26b6b232047ff7a9",
+   "2019-04-15": "c8e644690de45990",
+   "2019-04-23": "48c6f7c7a353de38",
+   "2019-04-30": "418250bb1a4caf16",
+   "2019-05-07": "23f940568ccbc977",
+   "2019-05-14": "6b6d34e2b3f533d7",
+   "2019-05-21": "9560b75e3aa90c71",
+   "2019-05-29": "adde6999b233aba0",
+   "2019-06-05": "02afed5b8edd7378",
+   "2019-06-12": "ca6dec998de6ac5c",
+   "2019-06-19": "32c8a316c88adbe7",
+   "2019-06-26": "6950aa1a5823a30c",
+   "2019-07-03": "ea11ab5aeca43707",
+   "2019-07-11": "198372434d16b096",
+   "2019-07-18": "617b05829981700c",
+   "2019-07-25": "6aadc96960cda7e2",
+   "2019-08-01": "aa6d6b0d8dc23584",
+   "2019-08-08": "44f4a289c2404449",
+   "2019-08-15": "afa2fcf035213767",
+   "2019-08-22": "cb4a28974600dd8b",
+   "2019-08-29": "a65c39f7f77e0d05",
+   "2019-09-06": "1bed085a6fb21bb8",
+   "2019-09-13": "4c1ac0c549132f30",
+   "2019-09-20": "0226058c3c452f1c",
+   "2019-09-27": "07f0d2955bf3fc3c",
+   "2019-10-04": "d3a084f5ca32e745",
+   "2019-10-11": "c1b16ca8fd178b4e",
+   "2019-10-18": "3e73dbc1cdadcb52",
+   "2019-10-25": "c05f0bfb2dfd7485",
+   "2019-11-01": "08df25aacefe0919",
+   "2019-11-08": "f4f178e2c78612ef",
+   "2019-11-15": "45fb3227789ba1f2",
+   "2019-11-22": "d560618bb1722301",
+   "2019-12-02": "c7e7a78659255730",
+   "2019-12-09": "e5cd88066266c5ff",
+   "2019-12-16": "cf9d71f9c9773305",
+   "2019-12-23": "b53064650a8e6ddf",
+   "2019-12-31": "6518239ee75933fa",
+   "2020-01-08": "1f8b9842c99386e2",
+   "2020-01-15": "e5c00511f0fa0c4b",
+   "2020-01-23": "93e2aa55ef37bac6",
+   "2020-01-30": "570738c2c00e34fc",
+   "2020-02-06": "341517bff3a56355",
+   "2020-02-13": "5e45438738a8bee6",
+   "2020-02-21": "57c15ff94eb0ca25",
+   "2020-02-28": "4a6ec2fad1322d95",
+   "2020-03-06": "d62347e441307967",
+   "2020-03-13": "175e4940daee77da",
+   "2020-03-20": "65a712f12f1d944a",
+   "2020-03-27": "aba955c99fdbb409",
+   "2020-04-03": "17f2a2d2b5a8e8a3",
+   "2020-04-13": "af22b01c846cedcb",
+   "2020-04-20": "9fcf7e12ec291a5d",
+   "2020-04-27": "1b1bf9d7ff4d32f8",
+   "2020-05-04": "5786af9b647f1b9b",
+   "2020-05-11": "71f7e3be1d81907d",
+   "2020-05-18": "78546908837cb6c1",
+   "2020-05-26": "07f328b2aee5fd19",
+   "2020-06-02": "e2e924612cbc142b",
+   "2020-06-09": "d28a512c44cc434f",
+   "2020-06-16": "1070c940b2b8560a",
+   "2020-06-23": "534ce04bc4df2d65",
+   "2020-06-30": "86c77d13132d8207",
+   "2020-07-08": "7b2c3f8165afe0ef",
+   "2020-07-15": "d9fbb1e6e59fcab7",
+   "2020-07-22": "f5db1622ce5e131f",
+   "2020-07-29": "8b8a877b1b277c24",
+   "2020-08-05": "30b448dcc0decd7e",
+   "2020-08-12": "081bffc04ec98369",
+   "2020-08-19": "f746234c4f9eb481",
+   "2020-08-26": "5a8d2c62e20d6019",
+   "2020-09-02": "9dc94cda0ca00c90",
+   "2020-09-10": "1c2d20ed13dbb92e",
+   "2020-09-17": "e6a8f918328e6374",
+   "2020-09-24": "a95d0fb27f8521c2",
+   "2020-10-01": "1707942e6833276b",
+   "2020-10-08": "670bd1672cfc1646",
+   "2020-10-15": "3d8d3c0a0a2e95c0",
+   "2020-10-22": "4664330df327d67f",
+   "2020-10-29": "dd337f462f62c95b",
+   "2020-11-05": "490bd962e686e756",
+   "2020-11-12": "1687f23dd5a1738c",
+   "2020-11-19": "a7c85b62378bc331",
+   "2020-11-27": "8a5f76a0c0aef57d",
+   "2020-12-04": "dbd42713fce03e14",
+   "2020-12-11": "b892067bf67a44b4",
+   "2020-12-18": "d3c90868285d41cf",
+   "2020-12-28": "f3cd63414b10c476",
+   "2021-01-05": "53433792b2ae62ec",
+   "2021-01-12": "8c30a5de2cc18698",
+   "2021-01-20": "e180368153be45b8",
+   "2021-01-27": "f4159f194f0b5dd7",
+   "2021-02-03": "596d90f63036a582",
+   "2021-02-10": "5448833bfa604903",
+   "2021-02-18": "dfbf8c6b63a877e1",
+   "2021-02-25": "95333475cf6e7231",
+   "2021-03-04": "f083f35589ea736e",
+   "2021-03-11": "d9b7d92f27d29b0a",
+   "2021-03-18": "d80a9773d22643c4",
+   "2021-03-25": "45a086e7e342f591",
+   "2021-04-01": "f15685e85bd9660d",
+   "2021-04-09": "a7267f0e08efe5c0",
+   "2021-04-16": "7ee85cf7918876f9",
+   "2021-04-23": "880e910f20d01f57",
+   "2021-04-30": "2f43274362f7dbe7",
+   "2021-05-07": "883fd25fcad62d86",
+   "2021-05-14": "81b536bf2e811ae7",
+   "2021-05-21": "e24d06b7fae2c2be",
+   "2021-05-28": "b382b55af7a2b722",
+   "2021-06-07": "2a531eeb498ac9f3",
+   "2021-06-14": "a3d4afdd18b50c18",
+   "2021-06-21": "e410ac3f15bcb4cb",
+   "2021-06-28": "557f8080b1c86598",
+   "2021-07-06": "356e80bc48e2c4c4",
+   "2021-07-13": "fafdb305170e5a8c",
+   "2021-07-20": "b49b2a04063f2ad1",
+   "2021-07-27": "69c2760457e9f9d7",
+   "2021-08-03": "a6d9a9774c114d91",
+   "2021-08-10": "bbbc2b0b86453dd0",
+   "2021-08-17": "dbe485561af562aa",
+   "2021-08-24": "190964e27db0ba3c",
+   "2021-08-31": "d4d4b4fc3da7df6f",
+   "2021-09-08": "ca16319402e8b728",
+   "2021-09-15": "a90e1c313a28ec7b",
+   "2021-09-22": "106fc092a9ac0078",
+   "2021-09-29": "a156217ff799795b",
+   "2021-10-06": "4851a65280fa14a9",
+   "2021-10-13": "a185fbbe6e54a57d",
+   "2021-10-20": "f2751d7bcb5d1e35",
+   "2021-10-27": "bd7d76f4a9f75abd",
+   "2021-11-03": "5ae55470d8ebd9d9",
+   "2021-11-10": "109cf797561f0a64",
+   "2021-11-17": "c2a9f4f9951f3bf1",
+   "2021-11-24": "1ca9cb8898820cf8",
+   "2021-12-02": "14bc0ed3867c7665",
+   "2021-12-09": "b9dcac8a5071989f",
+   "2021-12-16": "cbff7ee97a615a13",
+   "2021-12-23": "ddba47abdef160ab",
+   "2021-12-31": "a6c827917093541a",
+   "2022-01-07": "5c7ff9f092b125a3",
+   "2022-01-14": "83a63281f3a6c4ec",
+   "2022-01-24": "b2ca68c607d7fc94",
+   "2022-01-31": "523f4b48b8487ab7",
+   "2022-02-07": "e40dfe227d4dcde4",
+   "2022-02-14": "3ec777f41fdcb0aa",
+   "2022-02-22": "c5bb96f7ad418f5f",
+   "2022-03-01": "9cf424feb9d5600d",
+   "2022-03-08": "ba07c597dbd08220",
+   "2022-03-15": "f10b61263845bfb9",
+   "2022-03-22": "604ae1e8a6a07c0a",
+   "2022-03-29": "340f32cfde095a9f",
+   "2022-04-05": "0706ce3cc90f1995",
+   "2022-04-12": "c5ec6c90a606557b",
+   "2022-04-20": "6196a13c5fd0d890",
+   "2022-04-27": "f2e7ab1e33cb2fab",
+   "2022-05-04": "852bb2578f97e125",
+   "2022-05-11": "961360a2846ed7fb",
+   "2022-05-18": "19859910dde4dc8b",
+   "2022-05-25": "da5804d96cbbb58b",
+   "2022-06-02": "d424f434c46426e8",
+   "2022-06-09": "c9048bd029bc87c1",
+   "2022-06-16": "826a48359b0a5d30",
+   "2022-06-24": "b2b7169f570b62e9",
+   "2022-07-01": "7522a688a7ec6ed2",
+   "2022-07-11": "9cca4077fc8e3dcd",
+   "2022-07-18": "af14534719175ea9",
+   "2022-07-25": "d7944ea1df7f5fa9",
+   "2022-08-01": "894fcf819f73f150",
+   "2022-08-08": "43ac449bcb3e79d0",
+   "2022-08-15": "b526a5f53cfa567a",
+   "2022-08-22": "6255edc2d2de890b",
+   "2022-08-29": "87aa4e65e6d870f8",
+   "2022-09-06": "ded44313150eb524",
+   "2022-09-13": "7d15518480199f90",
+   "2022-09-20": "a9bf2467e9b053be",
+   "2022-09-27": "cd64b8ed29232b31",
+   "2022-10-04": "3b8b895ed704d050",
+   "2022-10-11": "fd4cd7304938a450",
+   "2022-10-18": "d0dcff273e6ca532",
+   "2022-10-25": "1f3e5be006728707",
+   "2022-11-01": "064a1aac9dc9a4c2",
+   "2022-11-08": "88182190a376239b",
+   "2022-11-15": "b9350b1b84fa9af2",
+   "2022-11-22": "d4f8cfaef4a7997e",
+   "2022-11-30": "097411b7cde17ad8",
+   "2022-12-07": "a3daf0e8fd0349ae",
+   "2022-12-14": "3ba652b5cf667dae",
+   "2022-12-21": "1f8af5e9175750bb",
+   "2022-12-29": "b2ce43680a579421",
+   "2023-01-06": "c5328f4a9d3ba0d8",
+   "2023-01-13": "22c86f55ea640055",
+   "2023-01-23": "571d5781e8cb4a5c",
+   "2023-01-30": "46122026241f731d",
+   "2023-02-06": "b703450153fed36a",
+   "2023-02-13": "ce6f50007f00c382",
+   "2023-02-21": "a1450e94ffcb16e9",
+   "2023-02-28": "841f5b965f34fd81",
+   "2023-03-07": "7db9b4bd33e09939",
+   "2023-03-14": "075d3c63eb213cd6",
+   "2023-03-21": "5de80ba79bf556ca",
+   "2023-03-28": "4e5a57da8f7a2551",
+   "2023-04-04": "ec9b01760ae29dcf",
+   "2023-04-12": "cb0eaaab6193fc57",
+   "2023-04-19": "af13d26805e5a54a",
+   "2023-04-26": "0d6481efcd6aef41",
+   "2023-05-03": "17f628530bb9fb49",
+   "2023-05-10": "1450789f405f9db6",
+   "2023-05-17": "56d2698efe6c10a5",
+   "2023-05-24": "0c3da342066f5a0b",
+   "2023-06-01": "d4b8b81d0c2aedbf",
+   "2023-06-08": "8fae66f01530894e",
+   "2023-06-15": "d3844419f369faed",
+   "2023-06-23": "b13530b97e755ab7",
+   "2023-06-30": "296ba2d6c22fe7bf",
+   "2023-07-10": "8b60df4ca0e943b6",
+   "2023-07-17": "133c86eddeb9888a",
+   "2023-07-24": "c17c879b30974726",
+   "2023-07-31": "78759f32ff2b372e",
+   "2023-08-07": "501d16d0d978d453",
+   "2023-08-14": "69ddad6e3b91f139",
+   "2023-08-21": "9431787a3fabdab5",
+   "2023-08-28": "631a5cf45b1862a1",
+   "2023-09-05": "6245c5522ae23d00",
+   "2023-09-12": "87f96e709c2cf172",
+   "2023-09-19": "b871da2f7598168f",
+   "2023-09-26": "b908f59e2fc40b5e",
+   "2023-10-03": "35c5132d42c1b86c",
+   "2023-10-10": "91c4ec6711cb316f",
+   "2023-10-17": "cc6d3e344fa7f7e2",
+   "2023-10-24": "fc5c67e3eb660b49",
+   "2023-10-31": "2655967caacaf925",
+   "2023-11-07": "82b7432edd599610",
+   "2023-11-14": "5278b8660899b221",
+   "2023-11-21": "6feaa53fdd3c46f9",
+   "2023-11-29": "a58deecd350c2f6d",
+   "2023-12-06": "08e5a02e56a0c309",
+   "2023-12-13": "fe489535b0dafa03",
+   "2023-12-20": "4cc6b19e7b88043d",
+   "2023-12-28": "a225b30013c2d593",
+   "2024-01-05": "35dd920bfa50395f",
+   "2024-01-12": "fd364990ca6c9453",
+   "2024-01-22": "ee240285f66d23f8",
+   "2024-01-29": "f4fa28b799948a27",
+   "2024-02-05": "385d9cab430c4d76",
+   "2024-02-12": "32d0699ed9b7df71",
+   "2024-02-20": "a7e6d3be4fb0267b",
+   "2024-02-27": "e9a6518a41bd8116",
+   "2024-03-05": "25b798a75170e3c9",
+   "2024-03-12": "b756be2c91e94363",
+   "2024-03-19": "d50c910389a07e5c",
+   "2024-03-26": "ba1be28c05f7636e",
+   "2024-04-03": "2a03ab097f64fd1e",
+   "2024-04-10": "6df3388abe1f73f1",
+   "2024-04-17": "7fcf754cc5ff7e77",
+   "2024-04-24": "730481d7869abe81",
+   "2024-05-01": "49844573c0da8279",
+   "2024-05-08": "6ff5cb0a40634941",
+   "2024-05-15": "e701e19f3f372ef3",
+   "2024-05-22": "d8b49ee5a6c90280",
+   "2024-05-30": "a3d033fbd14dfcc1",
+   "2024-06-06": "3a6faf9cdcda6261",
+   "2024-06-13": "1b5ce5c4ab72d1ea",
+   "2024-06-21": "5ecd6b0e1aab259c",
+   "2024-06-28": "758d5682a0121478",
+   "2024-07-08": "1e608d30cbd265bd",
+   "2024-07-15": "cad632960cf5710f",
+   "2024-07-22": "dc3097342935058d",
+   "2024-07-29": "59eb493822daf758",
+   "2024-08-05": "6b5f765b38a22d72",
+   "2024-08-12": "9ae1308a94236d49",
+   "2024-08-19": "29c90fdfc8133fc9",
+   "2024-08-26": "35c72ec46e2b70f8",
+   "2024-09-03": "ec3e711f0fcdb3eb",
+   "2024-09-10": "928f219dc0753b52",
+   "2024-09-17": "047addb229181bd3",
+   "2024-09-24": "17be801008338c9f",
+   "2024-10-01": "f302cc702d5cf752",
+   "2024-10-08": "6507f31beac4aedb",
+   "2024-10-15": "3d0d46bcc1d57b5b",
+   "2024-10-22": "1e3852185d7c5423",
+   "2024-10-29": "a0933193b54ac6d4",
+   "2024-11-05": "60e70e38533beb38",
+   "2024-11-12": "88b776ae0e01afbe",
+   "2024-11-19": "d6b0642a253e601c",
+   "2024-11-26": "045d75a34366bf13",
+   "2024-12-04": "5ebe87c7d3fabff8",
+   "2024-12-11": "089d8b1882d82fac",
+   "2024-12-18": "bfaa8d896cdbb056",
+   "2024-12-26": "8e5ef16c51d8d79d",
+   "2025-01-03": "204fe662c9e089d0",
+   "2025-01-13": "a9eab618dfb6120b",
+   "2025-01-21": "851fd87500e2c9d6",
+   "2025-01-28": "46d3c36f8878953a",
+   "2025-02-04": "97f8e9ab85a3cbbc",
+   "2025-02-11": "bcae7315fd4a4111",
+   "2025-02-19": "5f8ca7da6b90f260",
+   "2025-02-26": "b3de61f8f3aad7e9",
+   "2025-03-05": "1893555c2acaeb1f",
+   "2025-03-12": "e2036d7aa307a9f8",
+   "2025-03-19": "2f530367760533e8",
+   "2025-03-26": "b6f88702456b4c44",
+   "2025-04-02": "a5b79fd9c9e62972",
+   "2025-04-09": "5c4069f81166e858",
+   "2025-04-16": "f497b0ec5d964552",
+   "2025-04-24": "c594a2d0ef771aa5",
+   "2025-05-01": "d9700f9844984f6d",
+   "2025-05-08": "4bed68e993fad32a",
+   "2025-05-15": "2c1c5a6aa07827eb",
+   "2025-05-22": "9a5793873f3a9ece",
+   "2025-05-30": "a5a8748cabe806a7",
+   "2025-06-06": "8779e65ae5eed282",
+   "2025-06-13": "b3337a469512c843",
+   "2025-06-23": "53efae6564d74d56",
+   "2025-06-30": "00cf998b15463b21",
+   "2025-07-08": "da1f3f977e963ff4",
+   "2025-07-15": "8e9cfacd87fecfaf",
+   "2025-07-22": "ba52311ef2277c64",
+   "2025-07-29": "ae366c203f4ab2d9",
+   "2025-08-05": "7bf48d1f668f6800",
+   "2025-08-12": "2a1b5845143af991",
+   "2025-08-19": "5af1fba8b4ad3362",
+   "2025-08-26": "2d11cf8739e78594",
+   "2025-09-03": "2f9ca0719ee5edd8",
+   "2025-09-10": "899202285859a28d",
+   "2025-09-17": "9d5abf8479681a20",
+   "2025-09-24": "c78e656e1e277c46",
+   "2025-10-01": "d692316f4e4c24ba",
+   "2025-10-08": "80ce241fc251ec1a",
+   "2025-10-15": "cd48473c198edace",
+   "2025-10-22": "f1abfc989ab808a8",
+   "2025-10-29": "1e153baab6d4d76b",
+   "2025-11-05": "072f9f014c9e6da0",
+   "2025-11-12": "9b9ac8f3219d9b56",
+   "2025-11-19": "5e4394928b8836f2",
+   "2025-11-26": "a3bd2fddb0e019bd",
+   "2025-12-04": "1ed4094506c08b27",
+   "2025-12-11": "a0062e16ff5f39be",
+   "2025-12-18": "81420a33ffad1b09",
+   "2025-12-26": "9a86618b44f7b87f",
+   "2026-01-05": "f37ba4f0fe3ec64b",
+   "2026-01-12": "585acca24e162679",
+   "2026-01-20": "1cec21225b80afb0",
+   "2026-01-27": "b606e6815290adc6",
+   "2026-02-03": "105824bffa7a5447",
+   "2026-02-10": "6eeb53967ce16441",
+   "2026-02-18": "00cd64c0a9ef1d86",
+   "2026-02-25": "c0e5259ee846343d",
+   "2026-03-04": "3d30b6de0d648c16",
+   "2026-03-11": "8e11e6bd2d289235",
+   "2026-03-18": "207c19a06e05d586",
+   "2026-03-25": "1c0feed56f79c855",
+   "2026-04-01": "bd5b91e966b86109",
+   "2026-04-09": "626846ac6483677e",
+   "2026-04-16": "fa0a52fadd3aafe0",
+   "2026-04-23": "354b1f9f11b8568c",
+   "2026-04-30": "8c1ed31acfb8e4cf",
+   "2026-05-07": "1baf68279782409a",
+   "2026-05-14": "c02733de0106ccd4",
+   "2026-05-21": "850da1e8313c7496",
+   "2026-05-29": "514d24f253f4583e",
+   "2026-06-05": "fc9b65181380140c",
+   "2026-06-12": "7f822d317b876255",
+   "2026-06-22": "48334b313398a03d",
+   "2026-06-29": "006674dd1e5e56e8",
+   "2026-07-07": "dcafb50200870096",
+   "2026-07-14": "b38950419959c1fd",
+   "2026-07-21": "95a18760ad942a47",
+   "2026-07-28": "49db1d9298bdfc46",
+   "2026-08-04": "a68003321be19211",
+   "2026-08-11": "62dbaa1bee7c362c",
+   "2026-08-18": "9295fa9ff17ec907",
+   "2026-08-25": "3d65e9b06f44273b",
+   "2026-09-01": "504e9eb750e83d23",
+   "2026-09-09": "292d361a327d086e",
+   "2026-09-16": "d09e96f32a3073a4",
+   "2026-09-23": "5ddd52bfc42b9066",
+   "2026-09-30": "eec06c6c2a6bb818"
+  },
+  "membership_dates_moved_vs_previous_receipt": [],
+  "table_rows": 1201408,
+  "table_sha256": "0a4450e1c31c580b93738a0d7bc533e2b15a320816335054fd91096b2af74cfa"
+ },
+ "size_members": {
+  "earnings_releases": 97545,
+  "earnings_tickers": 2567,
+  "text_folds": [
+   {
+    "cutoff": "2025-06-01",
+    "fit_rows": 26786,
+    "alpha": 100.0,
+    "inner_val_corr": 0.0943,
+    "scored": 43222
+   },
+   {
+    "cutoff": "2025-12-01",
+    "fit_rows": 69504,
+    "alpha": 100.0,
+    "inner_val_corr": 0.1193,
+    "scored": 43886
+   },
+   {
+    "cutoff": "2026-06-01",
+    "fit_rows": 113767,
+    "alpha": 100.0,
+    "inner_val_corr": 0.1361,
+    "scored": 22252
+   }
+  ],
+  "rows": 1201408,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\table\\size_members.parquet",
+  "elapsed_s": 33.3,
+  "earn_exp_share": {
+   "earn_exp_5": 0.1309,
+   "earn_exp_21": 0.3131
+  },
+  "text_coverage": 0.0453
+ },
+ "grade": {
+  "legacy_v0": {
+   "status": "ALREADY_REGISTERED"
+  },
+  "graded_now": 0,
+  "graded_now_direction_roster": 0,
+  "pending_horizons": 53,
+  "refused_unverified": [],
+  "graded_total": 0
+ },
+ "trust": {
+  "trust": {
+   "nn": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.00889,
+     "walk_forward_used": false
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.00084,
+     "walk_forward_used": false
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.01124,
+     "walk_forward_used": false
+    }
+   },
+   "lgbm": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.01015,
+     "walk_forward_used": false
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.0178,
+     "walk_forward_used": false
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.01316,
+     "walk_forward_used": false
+    }
+   },
+   "ridge": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.00745,
+     "walk_forward_used": false
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.01426,
+     "walk_forward_used": false
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.02412,
+     "walk_forward_used": false
+    }
+   },
+   "mom_12_1": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.01517,
+     "walk_forward_used": false
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.0126,
+     "walk_forward_used": false
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.01418,
+     "walk_forward_used": false
+    }
+   },
+   "zero": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "definition: the zero",
+     "walk_forward_mean_ic_reported": null,
+     "walk_forward_used": false
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "definition: the zero",
+     "walk_forward_mean_ic_reported": null,
+     "walk_forward_used": false
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "definition: the zero",
+     "walk_forward_mean_ic_reported": null,
+     "walk_forward_used": false
+    }
+   },
+   "ensemble": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": null,
+     "walk_forward_used": false
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": null,
+     "walk_forward_used": false
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": null,
+     "walk_forward_used": false
+    }
+   }
+  },
+  "trust_yesterday": {
+   "nn": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.00889,
+     "walk_forward_used": false
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.00084,
+     "walk_forward_used": false
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.01124,
+     "walk_forward_used": false
+    }
+   },
+   "lgbm": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.01015,
+     "walk_forward_used": false
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.0178,
+     "walk_forward_used": false
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.01316,
+     "walk_forward_used": false
+    }
+   },
+   "ridge": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.00745,
+     "walk_forward_used": false
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.01426,
+     "walk_forward_used": false
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.02412,
+     "walk_forward_used": false
+    }
+   },
+   "mom_12_1": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.01517,
+     "walk_forward_used": false
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.0126,
+     "walk_forward_used": false
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": 0.01418,
+     "walk_forward_used": false
+    }
+   },
+   "zero": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "definition: the zero",
+     "walk_forward_mean_ic_reported": null,
+     "walk_forward_used": false
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "definition: the zero",
+     "walk_forward_mean_ic_reported": null,
+     "walk_forward_used": false
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "definition: the zero",
+     "walk_forward_mean_ic_reported": null,
+     "walk_forward_used": false
+    }
+   },
+   "ensemble": {
+    "h5": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": null,
+     "walk_forward_used": false
+    },
+    "h21": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": null,
+     "walk_forward_used": false
+    },
+    "h63": {
+     "graded_dates": 0,
+     "trust": 0.0,
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 11.11,
+     "source": "prior_only",
+     "walk_forward_mean_ic_reported": null,
+     "walk_forward_used": false
+    }
+   }
+  },
+  "magnitude": {
+   "trailing_vol": {
+    "h5": {
+     "improvement_over_vol": 0.0,
+     "source": "definition: the baseline"
+    },
+    "h21": {
+     "improvement_over_vol": 0.0,
+     "source": "definition: the baseline"
+    }
+   },
+   "ridge_abs": {
+    "h5": {
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.1,
+     "walk_forward_mean_ic": 0.01641,
+     "shrink": 0.7826,
+     "prior_strength_blocks": 2.25,
+     "source": "walk_forward_only",
+     "improvement_over_vol": 0.012843
+    },
+    "h21": {
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.0,
+     "walk_forward_mean_ic": 0.01629,
+     "shrink": 0.7805,
+     "prior_strength_blocks": 2.25,
+     "source": "walk_forward_only",
+     "improvement_over_vol": 0.012714
+    }
+   },
+   "nn_width": {
+    "h5": {
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.1,
+     "walk_forward_mean_ic": 0.01612,
+     "shrink": 0.7826,
+     "prior_strength_blocks": 2.25,
+     "source": "walk_forward_only",
+     "improvement_over_vol": 0.012616
+    },
+    "h21": {
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 8.0,
+     "walk_forward_mean_ic": 0.01676,
+     "shrink": 0.7805,
+     "prior_strength_blocks": 2.25,
+     "source": "walk_forward_only",
+     "improvement_over_vol": 0.013081
+    }
+   },
+   "vol_earn": {
+    "h5": {
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 2.25,
+     "source": "prior_only",
+     "improvement_over_vol": 0.0
+    },
+    "h21": {
+     "n_forward_blocks": 0,
+     "forward_mean_ic": null,
+     "n_walk_forward_blocks_effective": 0.0,
+     "walk_forward_mean_ic": null,
+     "shrink": 0.0,
+     "prior_strength_blocks": 2.25,
+     "source": "prior_only",
+     "improvement_over_vol": 0.0
+    }
+   }
+  },
+  "ensemble_weights": {
+   "h5": {
+    "models": {
+     "nn": {
+      "forward_blocks": 0,
+      "graded_dates": 0,
+      "trust": 0.0,
+      "weight": 0.0,
+      "weight_yesterday": 0.0,
+      "moved_by": "unchanged",
+      "walk_forward_mean_ic_reported_not_used": 0.00889
+     },
+     "lgbm": {
+      "forward_blocks": 0,
+      "graded_dates": 0,
+      "trust": 0.0,
+      "weight": 0.0,
+      "weight_yesterday": 0.0,
+      "moved_by": "unchanged",
+      "walk_forward_mean_ic_reported_not_used": 0.01015
+     },
+     "ridge": {
+      "forward_blocks": 0,
+      "graded_dates": 0,
+      "trust": 0.0,
+      "weight": 0.0,
+      "weight_yesterday": 0.0,
+      "moved_by": "unchanged",
+      "walk_forward_mean_ic_reported_not_used": 0.00745
+     },
+     "mom_12_1": {
+      "forward_blocks": 0,
+      "graded_dates": 0,
+      "trust": 0.0,
+      "weight": 0.0,
+      "weight_yesterday": 0.0,
+      "moved_by": "unchanged",
+      "walk_forward_mean_ic_reported_not_used": 0.01517
+     }
+    },
+    "neutral": 1.0,
+    "scaled_down_to_1": false
+   },
+   "h21": {
+    "models": {
+     "nn": {
+      "forward_blocks": 0,
+      "graded_dates": 0,
+      "trust": 0.0,
+      "weight": 0.0,
+      "weight_yesterday": 0.0,
+      "moved_by": "unchanged",
+      "walk_forward_mean_ic_reported_not_used": 0.00084
+     },
+     "lgbm": {
+      "forward_blocks": 0,
+      "graded_dates": 0,
+      "trust": 0.0,
+      "weight": 0.0,
+      "weight_yesterday": 0.0,
+      "moved_by": "unchanged",
+      "walk_forward_mean_ic_reported_not_used": 0.0178
+     },
+     "ridge": {
+      "forward_blocks": 0,
+      "graded_dates": 0,
+      "trust": 0.0,
+      "weight": 0.0,
+      "weight_yesterday": 0.0,
+      "moved_by": "unchanged",
+      "walk_forward_mean_ic_reported_not_used": 0.01426
+     },
+     "mom_12_1": {
+      "forward_blocks": 0,
+      "graded_dates": 0,
+      "trust": 0.0,
+      "weight": 0.0,
+      "weight_yesterday": 0.0,
+      "moved_by": "unchanged",
+      "walk_forward_mean_ic_reported_not_used": 0.0126
+     }
+    },
+    "neutral": 1.0,
+    "scaled_down_to_1": false
+   },
+   "h63": {
+    "models": {
+     "nn": {
+      "forward_blocks": 0,
+      "graded_dates": 0,
+      "trust": 0.0,
+      "weight": 0.0,
+      "weight_yesterday": 0.0,
+      "moved_by": "unchanged",
+      "walk_forward_mean_ic_reported_not_used": 0.01124
+     },
+     "lgbm": {
+      "forward_blocks": 0,
+      "graded_dates": 0,
+      "trust": 0.0,
+      "weight": 0.0,
+      "weight_yesterday": 0.0,
+      "moved_by": "unchanged",
+      "walk_forward_mean_ic_reported_not_used": 0.01316
+     },
+     "ridge": {
+      "forward_blocks": 0,
+      "graded_dates": 0,
+      "trust": 0.0,
+      "weight": 0.0,
+      "weight_yesterday": 0.0,
+      "moved_by": "unchanged",
+      "walk_forward_mean_ic_reported_not_used": 0.02412
+     },
+     "mom_12_1": {
+      "forward_blocks": 0,
+      "graded_dates": 0,
+      "trust": 0.0,
+      "weight": 0.0,
+      "weight_yesterday": 0.0,
+      "moved_by": "unchanged",
+      "walk_forward_mean_ic_reported_not_used": 0.01418
+     }
+    },
+    "neutral": 1.0,
+    "scaled_down_to_1": false
+   }
+  },
+  "in_charge": {
+   "model": "zero",
+   "since": "2026-09-30T00:31:20+00:00",
+   "history": [
+    {
+     "from": "lgbm",
+     "to": "zero",
+     "at": "2026-09-30T00:31:20+00:00",
+     "trust_from": 0.0,
+     "trust_to": 0.0
+    }
+   ],
+   "why": "lgbm has no positive FORWARD trust: the zero is in charge",
+   "why_kept": "no forward grade was added tonight: in-charge cannot change"
+  },
+  "changes": [
+   "no change"
+  ],
+  "walk_forward_receipt": "wf_20260929_post_review.json"
+ },
+ "fit": {
+  "refit": true,
+  "newest_labelled_grid_date": "2026-09-23",
+  "groups_used": [
+   "price",
+   "fund",
+   "news"
+  ],
+  "train_rows_h5": 1195525,
+  "nn_fits": [
+   {
+    "seed": 2129167646,
+    "best_epoch": 14,
+    "val_ic_by_epoch": [
+     0.01379,
+     0.01678,
+     -0.00258,
+     0.01652,
+     0.01751,
+     0.02795,
+     0.02387,
+     0.03621,
+     0.03067,
+     0.02913,
+     0.03831,
+     0.03084,
+     0.02802,
+     0.04462,
+     0.0396
+    ]
+   },
+   {
+    "seed": 198789063,
+    "best_epoch": 6,
+    "val_ic_by_epoch": [
+     0.00044,
+     0.01742,
+     0.01695,
+     0.0104,
+     0.02087,
+     0.03375,
+     0.02222,
+     0.02137,
+     0.03034
+    ]
+   },
+   {
+    "seed": 2055705116,
+    "best_epoch": 15,
+    "val_ic_by_epoch": [
+     -0.00204,
+     0.01643,
+     0.01106,
+     0.0209,
+     0.01851,
+     0.01675,
+     0.02776,
+     0.02418,
+     0.02668,
+     0.03129,
+     0.02902,
+     0.03541,
+     0.04026,
+     0.0333,
+     0.0447
+    ]
+   }
+  ],
+  "models": {
+   "lgbm": {
+    "h5": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\lgbm_h5_2026-09-23_20261006T155130Z.joblib",
+    "h21": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\lgbm_h21_2026-09-23_20261006T155130Z.joblib",
+    "h63": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\lgbm_h63_2026-09-23_20261006T155130Z.joblib"
+   },
+   "ridge": {
+    "h5": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\ridge_h5_2026-09-23_20261006T155130Z.joblib",
+    "h21": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\ridge_h21_2026-09-23_20261006T155130Z.joblib",
+    "h63": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\ridge_h63_2026-09-23_20261006T155130Z.joblib"
+   },
+   "ridge_abs": {
+    "h5": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\ridge_abs_h5_2026-09-23_20261006T155130Z.joblib",
+    "h21": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\ridge_abs_h21_2026-09-23_20261006T155130Z.joblib"
+   },
+   "nn": {
+    "paths": [
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\nn_2026-09-23_20261006T155130Z_seed2129167646.pt",
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\nn_2026-09-23_20261006T155130Z_seed198789063.pt",
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\models\\rivals\\nn_2026-09-23_20261006T155130Z_seed2055705116.pt"
+    ]
+   }
+  },
+  "versions": {
+   "lgbm": "lgbm-b3b782c9cd12",
+   "ridge": "ridge-0994db65798b",
+   "ridge_abs": "ridge_abs-3172dff3b38d",
+   "nn": "nn-6a35f740ae63"
+  }
+ },
+ "freeze": {
+  "decision_date": "2026-10-05",
+  "names": 2939,
+  "in_frozen_book": 1593,
+  "files": {
+   "nn": {
+    "status": "FROZEN",
+    "decision_date": "2026-10-05",
+    "model": "nn",
+    "model_version": "nn-6a35f740ae63",
+    "kind": "direction",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-10-05\\nn.parquet",
+    "sha256": "5614a7dbae4355a0ded3c2830c8dc275288d93d18d6745c88ec613606538d2d7",
+    "rows": 8817,
+    "names": 2939,
+    "horizons": [
+     5,
+     21,
+     63
+    ],
+    "written_utc": "2026-10-06T15:54:17+00:00",
+    "run_id": "nightly_20261006T155130Z"
+   },
+   "lgbm": {
+    "status": "FROZEN",
+    "decision_date": "2026-10-05",
+    "model": "lgbm",
+    "model_version": "lgbm-b3b782c9cd12",
+    "kind": "direction",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-10-05\\lgbm.parquet",
+    "sha256": "9090a54fd6c854b8d370c659746b251ac8dd49209accb3bb2cc363bf701e0542",
+    "rows": 8817,
+    "names": 2939,
+    "horizons": [
+     5,
+     21,
+     63
+    ],
+    "written_utc": "2026-10-06T15:54:17+00:00",
+    "run_id": "nightly_20261006T155130Z"
+   },
+   "ridge": {
+    "status": "FROZEN",
+    "decision_date": "2026-10-05",
+    "model": "ridge",
+    "model_version": "ridge-0994db65798b",
+    "kind": "direction",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-10-05\\ridge.parquet",
+    "sha256": "41f5a8b68e61757e7ab348471197d8669ec94f34cf0460a407243faaf7cd302d",
+    "rows": 8817,
+    "names": 2939,
+    "horizons": [
+     5,
+     21,
+     63
+    ],
+    "written_utc": "2026-10-06T15:54:17+00:00",
+    "run_id": "nightly_20261006T155130Z"
+   },
+   "mom_12_1": {
+    "status": "FROZEN",
+    "decision_date": "2026-10-05",
+    "model": "mom_12_1",
+    "model_version": "mom_12_1",
+    "kind": "direction",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-10-05\\mom_12_1.parquet",
+    "sha256": "24cddf81c3cc52e5c3325217ba6f2a15f9acdb34e9201b5d1ea9d73a0c78ead7",
+    "rows": 8817,
+    "names": 2939,
+    "horizons": [
+     5,
+     21,
+     63
+    ],
+    "written_utc": "2026-10-06T15:54:17+00:00",
+    "run_id": "nightly_20261006T155130Z"
+   },
+   "zero": {
+    "status": "FROZEN",
+    "decision_date": "2026-10-05",
+    "model": "zero",
+    "model_version": "zero",
+    "kind": "direction",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-10-05\\zero.parquet",
+    "sha256": "b1980ba3d564b2aab83d823c14855f2c6a20c17a7bcf53b881d2c2e557506351",
+    "rows": 8817,
+    "names": 2939,
+    "horizons": [
+     5,
+     21,
+     63
+    ],
+    "written_utc": "2026-10-06T15:54:17+00:00",
+    "run_id": "nightly_20261006T155130Z"
+   },
+   "trailing_vol": {
+    "status": "FROZEN",
+    "decision_date": "2026-10-05",
+    "model": "trailing_vol",
+    "model_version": "trailing_vol",
+    "kind": "magnitude",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-10-05\\trailing_vol.parquet",
+    "sha256": "3541ffa8a753f76670df58432052e96ed78e399e9f64ad979515ee54164b78a2",
+    "rows": 5878,
+    "names": 2939,
+    "horizons": [
+     5,
+     21
+    ],
+    "written_utc": "2026-10-06T15:54:17+00:00",
+    "run_id": "nightly_20261006T155130Z"
+   },
+   "ridge_abs": {
+    "status": "FROZEN",
+    "decision_date": "2026-10-05",
+    "model": "ridge_abs",
+    "model_version": "ridge_abs-3172dff3b38d",
+    "kind": "magnitude",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-10-05\\ridge_abs.parquet",
+    "sha256": "26b93e1a7bcda79ded7c3607e7beef306c4c719b11bd88acb9b7be2d38cb3422",
+    "rows": 5878,
+    "names": 2939,
+    "horizons": [
+     5,
+     21
+    ],
+    "written_utc": "2026-10-06T15:54:18+00:00",
+    "run_id": "nightly_20261006T155130Z"
+   },
+   "nn_width": {
+    "status": "FROZEN",
+    "decision_date": "2026-10-05",
+    "model": "nn_width",
+    "model_version": "nn_width",
+    "kind": "magnitude",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-10-05\\nn_width.parquet",
+    "sha256": "80ae9f65cd5246fb9e0d9f2cf5c61da4594ff48fdba216fbf5430e6a1cded9c2",
+    "rows": 5878,
+    "names": 2939,
+    "horizons": [
+     5,
+     21
+    ],
+    "written_utc": "2026-10-06T15:54:18+00:00",
+    "run_id": "nightly_20261006T155130Z"
+   },
+   "vol_earn": {
+    "status": "FROZEN",
+    "decision_date": "2026-10-05",
+    "model": "vol_earn",
+    "model_version": "vol_earn-19751f24bb3f",
+    "kind": "magnitude",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-10-05\\vol_earn.parquet",
+    "sha256": "e0df79be52ac9ffa1b700e83e3324d65b65192ff176f1a9171096651b328d118",
+    "rows": 5878,
+    "names": 2939,
+    "horizons": [
+     5,
+     21
+    ],
+    "written_utc": "2026-10-06T15:54:18+00:00",
+    "run_id": "nightly_20261006T155130Z"
+   },
+   "ensemble": {
+    "status": "FROZEN",
+    "decision_date": "2026-10-05",
+    "model": "ensemble",
+    "model_version": "ens-14adcd8c4ff7",
+    "kind": "direction",
+    "file": "backend\\data\\optimus\\nn_lab\\frozen\\2026-10-05\\ensemble.parquet",
+    "sha256": "9465256ead593549b502227ad63fb058229f6c729dd94c9b77a630c64ff69b05",
+    "rows": 8817,
+    "names": 2939,
+    "horizons": [
+     5,
+     21,
+     63
+    ],
+    "written_utc": "2026-10-06T15:54:18+00:00",
+    "run_id": "nightly_20261006T155130Z",
+    "weights": {
+     "h5": {
+      "nn": 0.0,
+      "lgbm": 0.0,
+      "ridge": 0.0,
+      "mom_12_1": 0.0,
+      "neutral": 1.0,
+      "_scaled_down_to_1": false
+     },
+     "h21": {
+      "nn": 0.0,
+      "lgbm": 0.0,
+      "ridge": 0.0,
+      "mom_12_1": 0.0,
+      "neutral": 1.0,
+      "_scaled_down_to_1": false
+     },
+     "h63": {
+      "nn": 0.0,
+      "lgbm": 0.0,
+      "ridge": 0.0,
+      "mom_12_1": 0.0,
+      "neutral": 1.0,
+      "_scaled_down_to_1": false
+     }
+    }
+   }
+  },
+  "size_members": {
+   "roster": [
+    "vol_earn"
+   ],
+   "coef": {
+    "vol_earn_h5": [
+     -3.15878,
+     0.72158,
+     0.27275
+    ],
+    "vol_earn_h21": [
+     -2.41895,
+     0.69125,
+     0.18257
+    ]
+   }
+  },
+  "ensemble_weights": {
+   "h5": {
+    "nn": 0.0,
+    "lgbm": 0.0,
+    "ridge": 0.0,
+    "mom_12_1": 0.0,
+    "neutral": 1.0,
+    "_scaled_down_to_1": false
+   },
+   "h21": {
+    "nn": 0.0,
+    "lgbm": 0.0,
+    "ridge": 0.0,
+    "mom_12_1": 0.0,
+    "neutral": 1.0,
+    "_scaled_down_to_1": false
+   },
+   "h63": {
+    "nn": 0.0,
+    "lgbm": 0.0,
+    "ridge": 0.0,
+    "mom_12_1": 0.0,
+    "neutral": 1.0,
+    "_scaled_down_to_1": false
+   }
+  },
+  "size_forecast": {
+   "decision_date": "2026-10-05",
+   "run_id": "nightly_20261006T155130Z",
+   "written_utc": "2026-10-06T15:54:18+00:00",
+   "what": "expected ABSOLUTE excess move (vs the cross-sectional median) and a symmetric interval; it says NOTHING about direction",
+   "by_horizon": {
+    "h5": {
+     "model": "ridge_abs",
+     "why": "simplest with >= half the best posterior improvement over vol (+0.0128 vs best +0.0128)",
+     "conformal": {
+      "c50": 0.925,
+      "c90": 2.7821,
+      "n": 781613,
+      "source": "walk_forward",
+      "forward_rows_so_far": 0
+     }
+    },
+    "h21": {
+     "model": "ridge_abs",
+     "why": "simplest with >= half the best posterior improvement over vol (+0.0127 vs best +0.0131)",
+     "conformal": {
+      "c50": 0.9551,
+      "c90": 2.6998,
+      "n": 772766,
+      "source": "walk_forward",
+      "forward_rows_so_far": 0
+     }
+    }
+   },
+   "status": "FROZEN",
+   "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\size_forecast\\size_2026-10-05.parquet",
+   "sha256": "9885d8d96b1198d3b83932d087b577c70cb5284b31bbc79c8734938babe36ffc",
+   "rows": 2939
+  },
+  "ensemble_top10_h21": [
+   "A",
+   "AA",
+   "AAL",
+   "AAMI",
+   "AAOI",
+   "AAON",
+   "AAP",
+   "AAPL",
+   "AAUC",
+   "AB"
+  ]
+ },
+ "bars": {
+  "table_last_session": "2026-10-05",
+  "last_closed_weekday": "2026-10-05",
+  "note": "weekday calendar: the day after a US holiday can read STALE_BARS falsely"
+ },
+ "new_rows_since_last_run": 14735,
+ "previous_run": "nightly_20261006T025551Z",
+ "status": "OK",
+ "per_model": [
+  "nn         h21 forward graded blocks 0 (0 dates) | trust today 0.0 yesterday 0.0 | weight 0.0 (was 0.0) | moved by: unchanged | source prior_only",
+  "lgbm       h21 forward graded blocks 0 (0 dates) | trust today 0.0 yesterday 0.0 | weight 0.0 (was 0.0) | moved by: unchanged | source prior_only",
+  "ridge      h21 forward graded blocks 0 (0 dates) | trust today 0.0 yesterday 0.0 | weight 0.0 (was 0.0) | moved by: unchanged | source prior_only",
+  "mom_12_1   h21 forward graded blocks 0 (0 dates) | trust today 0.0 yesterday 0.0 | weight 0.0 (was 0.0) | moved by: unchanged | source prior_only",
+  "zero       h21 forward graded blocks 0 (0 dates) | trust today 0.0 yesterday 0.0 | weight n/a (was n/a) | moved by: n/a | source definition: the zero",
+  "ensemble   h21 forward graded blocks 0 (0 dates) | trust today 0.0 yesterday 0.0 | weight n/a (was n/a) | moved by: n/a | source prior_only",
+  "neutral (no-view) sleeve h21 1.0; scaled down to 1: False"
+ ],
+ "table_after": {
+  "rows": 1201408,
+  "grid_rows": 1198469,
+  "grid_dates": 516,
+  "last_date": "2026-10-05",
+  "labels": {
+   "y_5": 1195350,
+   "y_21": 1186443,
+   "y_63": 1159929
+  }
+ },
+ "evidence": "REFIT on newest labelled grid date 2026-09-23; 8,852 labels matured",
+ "tournament": {
+  "rule": "the NN earns its place at h only if its rank IC beats max(ridge, lgbm) by more than one SE of the difference; otherwise the simpler model stays",
+  "walk_forward": {
+   "receipt": "wf_20260929_post_review.json",
+   "folds": 7,
+   "table_sha256_of_that_run": "ac8f70c41e2cf4220c81387cd956b6dca9f156df21ba4716035ba0c9b50205d6",
+   "written_utc": "2026-09-28T15:34:25+00:00",
+   "note": "printed from the receipt, not refit tonight (an ~8 min GPU run); computed on the table as it stood then",
+   "by_horizon": {
+    "h5": {
+     "nn": {
+      "rank_ic": 0.00889,
+      "se": 0.01037,
+      "t": 0.86,
+      "n_blocks": 81,
+      "top20_minus_random_net": 0.00015,
+      "top20_t": 0.07
+     },
+     "lgbm": {
+      "rank_ic": 0.01015,
+      "se": 0.00468,
+      "t": 2.17,
+      "n_blocks": 81,
+      "top20_minus_random_net": 0.00415,
+      "top20_t": 1.51
+     },
+     "ridge": {
+      "rank_ic": 0.00745,
+      "se": 0.00793,
+      "t": 0.94,
+      "n_blocks": 81,
+      "top20_minus_random_net": 0.00261,
+      "top20_t": 1.06
+     },
+     "mom_12_1": {
+      "rank_ic": 0.01517,
+      "se": 0.01051,
+      "t": 1.44,
+      "n_blocks": 81,
+      "top20_minus_random_net": 0.00485,
+      "top20_t": 1.65
+     }
+    },
+    "h21": {
+     "nn": {
+      "rank_ic": 0.00084,
+      "se": 0.01311,
+      "t": 0.06,
+      "n_blocks": 80,
+      "top20_minus_random_net": -0.0044,
+      "top20_t": -1.2
+     },
+     "lgbm": {
+      "rank_ic": 0.0178,
+      "se": 0.00872,
+      "t": 2.04,
+      "n_blocks": 80,
+      "top20_minus_random_net": 0.02066,
+      "top20_t": 2.36
+     },
+     "ridge": {
+      "rank_ic": 0.01426,
+      "se": 0.01166,
+      "t": 1.22,
+      "n_blocks": 80,
+      "top20_minus_random_net": 0.01852,
+      "top20_t": 2.24
+     },
+     "mom_12_1": {
+      "rank_ic": 0.0126,
+      "se": 0.01385,
+      "t": 0.91,
+      "n_blocks": 80,
+      "top20_minus_random_net": 0.01941,
+      "top20_t": 2.21
+     }
+    },
+    "h63": {
+     "nn": {
+      "rank_ic": 0.01124,
+      "se": 0.02103,
+      "t": 0.53,
+      "n_blocks": 26,
+      "top20_minus_random_net": -0.00573,
+      "top20_t": -0.48
+     },
+     "lgbm": {
+      "rank_ic": 0.01316,
+      "se": 0.01695,
+      "t": 0.78,
+      "n_blocks": 26,
+      "top20_minus_random_net": 0.07366,
+      "top20_t": 2.42
+     },
+     "ridge": {
+      "rank_ic": 0.02412,
+      "se": 0.02206,
+      "t": 1.09,
+      "n_blocks": 26,
+      "top20_minus_random_net": 0.03873,
+      "top20_t": 1.64
+     },
+     "mom_12_1": {
+      "rank_ic": 0.01418,
+      "se": 0.02406,
+      "t": 0.59,
+      "n_blocks": 26,
+      "top20_minus_random_net": 0.06212,
+      "top20_t": 2.59
+     }
+    }
+   },
+   "verdict": {
+    "h5": {
+     "nn_minus_best_baseline": -0.00126,
+     "best_baseline": "lgbm",
+     "se_of_difference_upper_bound": 0.01138,
+     "verdict": "NN DOES NOT BEAT the simpler baseline: complexity has not earned its place"
+    },
+    "h21": {
+     "nn_minus_best_baseline": -0.01696,
+     "best_baseline": "lgbm",
+     "se_of_difference_upper_bound": 0.01575,
+     "verdict": "NN DOES NOT BEAT the simpler baseline: complexity has not earned its place"
+    },
+    "h63": {
+     "nn_minus_best_baseline": -0.01288,
+     "best_baseline": "ridge",
+     "se_of_difference_upper_bound": 0.03048,
+     "verdict": "NN DOES NOT BEAT the simpler baseline: complexity has not earned its place"
+    }
+   }
+  },
+  "forward": {
+   "status": "NO_FORWARD_GRADES_YET",
+   "n_rows": 0
+  }
+ },
+ "elapsed_s": 168.7,
+ "written_utc": "2026-10-06T15:54:18+00:00"
+}

@@ -1,0 +1,176 @@
+{
+ "hyp_id": "H-7b0d6b3b19",
+ "title": "Co-mention read-through after regulatory approval events",
+ "night": "2026-10-07",
+ "run_utc": "2026-10-07T01:30:26+00:00",
+ "result": {
+  "cell_type": "event_readthrough",
+  "params": {
+   "link": "comention",
+   "event_type": "regulatory_approval",
+   "min_ratio": 2.0,
+   "k": 5,
+   "min_source_dv_pct": 0.5
+  },
+  "outcome_units": "size: log(|x_oc|/vol21) linked minus vol-matched unlinked, same date; signed: sign(source move) x (x_oc linked - x_oc controls)",
+  "n_events_candidate": 34,
+  "design": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": -0.068064,
+    "se": 0.279156,
+    "t": -0.24,
+    "mde": 0.781636,
+    "n": 9,
+    "n_blocks": 8
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -0.004462,
+    "se": 0.006473,
+    "t": -0.69,
+    "mde": 0.018126,
+    "n": 9,
+    "n_blocks": 8
+   },
+   "size_t0_same_session (reported)": {
+    "mean": -0.226978,
+    "se": 0.392065,
+    "t": -0.58,
+    "mde": 1.097782,
+    "n": 9,
+    "n_blocks": 8
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.003264,
+    "se": 0.004906,
+    "t": 0.67,
+    "mde": 0.013738,
+    "n": 9,
+    "n_blocks": 8
+   },
+   "n_events": 9,
+   "mean_links": 1.78,
+   "by_month_size_t1": {
+    "2025-02": {
+     "mean": 0.9465,
+     "n": 1
+    },
+    "2025-06": {
+     "mean": 0.053835,
+     "n": 2
+    },
+    "2025-07": {
+     "mean": -0.006628,
+     "n": 3
+    },
+    "2025-09": {
+     "mean": 1.725445,
+     "n": 1
+    },
+    "2025-10": {
+     "mean": -2.572606,
+     "n": 1
+    },
+    "2025-11": {
+     "mean": -0.799701,
+     "n": 1
+    }
+   },
+   "loo_month_worst_size_t1": -0.292253
+  },
+  "confirm": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.150405,
+    "se": 0.215481,
+    "t": 0.7,
+    "mde": 0.603347,
+    "n": 11,
+    "n_blocks": 9
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": 0.002949,
+    "se": 0.005237,
+    "t": 0.56,
+    "mde": 0.014663,
+    "n": 11,
+    "n_blocks": 9
+   },
+   "size_t0_same_session (reported)": {
+    "mean": -0.168729,
+    "se": 0.264783,
+    "t": -0.64,
+    "mde": 0.741392,
+    "n": 11,
+    "n_blocks": 9
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": -0.002492,
+    "se": 0.005868,
+    "t": -0.42,
+    "mde": 0.016431,
+    "n": 11,
+    "n_blocks": 9
+   },
+   "n_events": 11,
+   "mean_links": 2.64,
+   "by_month_size_t1": {
+    "2026-02": {
+     "mean": -0.636714,
+     "n": 2
+    },
+    "2026-04": {
+     "mean": 0.782004,
+     "n": 1
+    },
+    "2026-07": {
+     "mean": 0.350756,
+     "n": 5
+    },
+    "2026-08": {
+     "mean": 0.1307,
+     "n": 3
+    }
+   },
+   "loo_month_worst_size_t1": -0.016554
+  },
+  "verdict": "CANNOT_DISTINGUISH",
+  "powered": false,
+  "reason": "confirm +0.15041 t 0.7; MDE 0.60335 > effect worth having 0.05000",
+  "direction_verdict_reported": {
+   "verdict": "CANNOT_DISTINGUISH",
+   "powered": false,
+   "reason": "confirm +0.00295 t 0.56; MDE 0.01466 > effect worth having 0.00200"
+  },
+  "examples": [
+   {
+    "t": "2025-09-29",
+    "source": "BA",
+    "links": "BABA,BAC",
+    "size_t1": "1.725445101274896"
+   },
+   {
+    "t": "2025-07-07",
+    "source": "CDNS",
+    "links": "CE",
+    "size_t1": "1.1324613510568513"
+   },
+   {
+    "t": "2025-02-19",
+    "source": "MRK",
+    "links": "MRNA,MRCY",
+    "size_t1": "0.9464997311084955"
+   },
+   {
+    "t": "2026-08-07",
+    "source": "MRNA",
+    "links": "MRK",
+    "size_t1": "0.8044962740119261"
+   },
+   {
+    "t": "2026-04-08",
+    "source": "COIN",
+    "links": "COHU,COLB,COLM",
+    "size_t1": "0.7820035378653168"
+   }
+  ]
+ }
+}

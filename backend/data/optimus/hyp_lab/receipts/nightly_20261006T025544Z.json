@@ -1,0 +1,102 @@
+{
+ "job": "hyp_lab.nightly",
+ "started_utc": "2026-10-06T02:55:44+00:00",
+ "night": "2026-10-06",
+ "k": 3,
+ "cap_usd": 0.4,
+ "free_ram_gb_start": 3.24,
+ "generation": [
+  {
+   "provider": "deepseek",
+   "ok": true,
+   "n_items": 8,
+   "n_rows": 8,
+   "status": {
+    "PROPOSED": 5,
+    "DUPLICATE_IN_LEDGER": 2,
+    "NEEDS_CELL": 1
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\generate_deepseek_20261006T030717Z.json",
+   "served_model": "deepseek-flash"
+  },
+  {
+   "provider": "local",
+   "ok": false,
+   "status": "SKIPPED_SERVER_NOT_UP"
+  }
+ ],
+ "declared": [
+  "H-bd054b8248",
+  "H-ba83bf6c68",
+  "H-f954946c67"
+ ],
+ "declare_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\declare_20261006T030728Z.json",
+ "results": [
+  {
+   "hyp_id": "H-bd054b8248",
+   "title": "10Y yield spike lifts money-center banks over regionals",
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00088 <= 0",
+   "design": {
+    "mean": 0.001532,
+    "t": 1.09,
+    "mde": 0.00392,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "confirm": {
+    "mean": -0.000882,
+    "t": -0.49,
+    "mde": 0.005044,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-bd054b8248_20261006T031035Z.json"
+  },
+  {
+   "hyp_id": "H-ba83bf6c68",
+   "title": "Equity issuance dilution read-through to cash-poor peers",
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.03125 <= 0",
+   "design": {
+    "mean": -0.085418,
+    "t": -0.14,
+    "mde": 1.661782,
+    "n": 5,
+    "n_blocks": 4
+   },
+   "confirm": {
+    "mean": -0.031248,
+    "t": -0.06,
+    "mde": 1.434355,
+    "n": 3,
+    "n_blocks": 3
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-ba83bf6c68_20261006T031403Z.json"
+  },
+  {
+   "hyp_id": "H-f954946c67",
+   "title": "Clinical trial failure of one firm drags peers with similar pipeline",
+   "verdict": "CONDITIONAL_POSITIVE",
+   "reason": "confirm +0.76359 t 8.84 and design +0.19952 > 0",
+   "design": {
+    "mean": 0.199523,
+    "t": 0.37,
+    "mde": 1.516134,
+    "n": 5,
+    "n_blocks": 4
+   },
+   "confirm": {
+    "mean": 0.763586,
+    "t": 8.84,
+    "mde": 0.24195,
+    "n": 3,
+    "n_blocks": 2
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-f954946c67_20261006T031924Z.json"
+  }
+ ],
+ "spend_this_run_usd": 0.00272,
+ "wall_min": 23.7,
+ "status": "OK"
+}

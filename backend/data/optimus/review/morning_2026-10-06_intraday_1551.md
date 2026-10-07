@@ -1,0 +1,15 @@
+# Morning review 2026-10-06 (intraday)
+1284 holdings; labels {'UNPRICED': 88, 'hold': 1173, 'WATCH': 23}
+| src | ticker | close | 1d σ | 5d σ | p5/p1 | label | why |
+|---|---|---|---|---|---|---|---|
+| llm:SHADOW_BAYES_v0 sleeve 2026-09-28 | TS | 58.46 | 2.71 | 1.15 | - | WATCH | moved +2.7σ today; decide next session (the label would have been hold |
+| llm:SHADOW_BAYES_v1 live-size 2026-09-28 | TS | 58.46 | 2.71 | 1.15 | - | WATCH | moved +2.7σ today; decide next session (the label would have been hold |
+| llm:lib_mom_flow_2026-09-26 | ILMN | 293.69 | 2.57 | 1.22 | 0.5 | WATCH | moved +2.6σ today; decide next session (the label would have been hold |
+| llm:lib_skill_mom_2026-09-27 | ILMN | 293.69 | 2.57 | 1.22 | 0.5 | WATCH | moved +2.6σ today; decide next session (the label would have been hold |
+| llm:lib_mom_flow_ivw_2026-09-27 | ILMN | 293.69 | 2.57 | 1.22 | 0.5 | WATCH | moved +2.6σ today; decide next session (the label would have been hold |
+| llm:CRSP_BLEND_v0 2026-09-28 | ILMN | 293.69 | 2.57 | 1.22 | 0.5 | WATCH | moved +2.6σ today; decide next session (the label would have been hold |
+| llm:lib_low_asset_growth_sealed_2026-09-26 | FUTU | 109.7 | 2.42 | -0.34 | - | WATCH | moved +2.4σ today; decide next session (the label would have been hold |
+| llm:lib_book_f_seasonality_11_20_v0_2026-09-26 | WLFC | 42.84 | -2.18 | -2.85 | - | WATCH | moved -2.2σ today; decide next session (the label would have been hold |
+| llm:lib_mom_12_1_small_2026-09-26 | VELO | 9.57 | -2.14 | -0.84 | 0.46 | WATCH | moved -2.1σ today; decide next session (the label would have been hold |
+| llm:lib_mom_12_1_secrel_sealed_2026-09-26 | VELO | 9.57 | -2.14 | -0.84 | 0.46 | WATCH | moved -2.1σ today; decide next session (the label would have been hold |
+1274 more row(s) in review_2026-10-06.json

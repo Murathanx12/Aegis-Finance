@@ -1,0 +1,715 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "muratclaw",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-28T14:08:29+00:00",
+ "plan": [
+  {
+   "lane": "wsj:search",
+   "max": 472,
+   "tickers": [
+    "LITE",
+    "MWH",
+    "Q",
+    "XRX",
+    "STX",
+    "FRMI",
+    "WDS",
+    "MEC",
+    "DUOL",
+    "FLNC",
+    "CSTM",
+    "LAR",
+    "KEX",
+    "LGN",
+    "AMSC",
+    "VKTX",
+    "NTLA",
+    "HWM",
+    "IONQ",
+    "AGYS",
+    "NVT",
+    "TSM",
+    "GEV",
+    "CLS",
+    "SNOW",
+    "JAZZ",
+    "LEU",
+    "COGT",
+    "BHVN",
+    "BBIO",
+    "CRM",
+    "MP",
+    "AVGO",
+    "ABSI",
+    "LNG",
+    "CCJ",
+    "BSP",
+    "AGIO",
+    "ENS",
+    "PRGS",
+    "BA",
+    "GOOGL",
+    "TER",
+    "VRT",
+    "VG",
+    "BN",
+    "WDAY",
+    "WST",
+    "DKNG",
+    "AVPT",
+    "PRCH",
+    "VRTX",
+    "NOW",
+    "MU",
+    "SNDR",
+    "NVO",
+    "HUBS",
+    "INCY",
+    "HOOD",
+    "META",
+    "RHI",
+    "ACI",
+    "PEGA",
+    "SMPL",
+    "RGEN",
+    "MAN",
+    "BE",
+    "AAPL",
+    "AMGN",
+    "IRDM",
+    "HELE",
+    "KYTX",
+    "NOVT",
+    "NVEC",
+    "PSNL",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "SON",
+    "ALLE",
+    "GOOG",
+    "GMAB",
+    "ADUS",
+    "TS",
+    "PDS",
+    "PAGS",
+    "MSFT",
+    "CHD",
+    "BR",
+    "ALG",
+    "STNG",
+    "CHH",
+    "ARCO",
+    "MCD",
+    "SERV",
+    "SMMT",
+    "CYTK",
+    "PDD",
+    "FIZZ",
+    "AARD",
+    "AMZN",
+    "NVDA",
+    "PRAX",
+    "MANH",
+    "BZ",
+    "CMG",
+    "EXPO",
+    "EXEL",
+    "LZ",
+    "REAL",
+    "BBW",
+    "TE",
+    "BW",
+    "CDNL",
+    "AGX",
+    "PLTR",
+    "ACVA",
+    "DBVT"
+   ]
+  }
+ ],
+ "parent_tabs": {
+  "wsj": {
+   "tab": null,
+   "label": null,
+   "url": "",
+   "how": "direct_open: dedicated instance, no parent tab used"
+  }
+ },
+ "max_pages": 475,
+ "budget_explicit": false,
+ "fresh_since": "2026-09-28",
+ "cost_usd": 0.0,
+ "lanes": {
+  "wsj:search": {
+   "source": "wsj",
+   "section": "search",
+   "column": "",
+   "parent_tab": null,
+   "tab": "4EAB0CAA018CCC4725698D1F24350544",
+   "links_found": 9,
+   "skipped_already_stored": 34,
+   "articles": [
+    {
+     "url": "https://www.wsj.com/health/pharma/trump-administration-reaches-drug-pricing-deals-with-9-companies-4705d926",
+     "title": "Trump Administration Reaches Drug Pricing Deals With Teva and Eight Other Firms - WSJ",
+     "byline": null,
+     "published_utc": "2026-08-31T20:53:00+00:00",
+     "first_seen_utc": "2026-09-28T14:09:50+00:00",
+     "chars": 2813,
+     "raw_chars": 4891,
+     "column": "wsj_other",
+     "sha": "70b81fe141cbddb365a8",
+     "paywall_suspected": false,
+     "read_s": 10.45,
+     "ticker": "BBIO",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-28\\70b81fe141cbddb365a8.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.barrons.com/articles/exelixis-valaris-and-3-more-stocks-see-action-from-activist-investors-c381de7d",
+     "title": "Exelixis, Valaris, and 3 More Stocks See Action From Activist Investors - Barron's",
+     "byline": null,
+     "published_utc": "2026-08-21T23:14:00+00:00",
+     "first_seen_utc": "2026-09-28T14:11:07+00:00",
+     "chars": 3767,
+     "raw_chars": 6504,
+     "column": "barrons_other",
+     "sha": "d8a45c8235a7a92b0c81",
+     "paywall_suspected": false,
+     "read_s": 21.06,
+     "ticker": "BBIO",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\barrons\\2026-09-28\\d8a45c8235a7a92b0c81.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.barrons.com/articles/can-trumps-deals-survive-the-next-congress-2686a380",
+     "title": "Can Trump’s Deals Survive the Next Congress? - Barron's",
+     "byline": null,
+     "published_utc": "2026-09-18T09:30:00+00:00",
+     "first_seen_utc": "2026-09-28T14:14:08+00:00",
+     "chars": 6320,
+     "raw_chars": 9109,
+     "column": "barrons_other",
+     "sha": "b2db71f1df08195df60f",
+     "paywall_suspected": false,
+     "read_s": 8.09,
+     "ticker": "MP",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\barrons\\2026-09-28\\b2db71f1df08195df60f.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.barrons.com/articles/elmet-stock-pentagon-tungsten-deal-5c0ce250",
+     "title": "This Strategic Metals Stock Surges on $450 Million Pentagon Deal - Barron's",
+     "byline": null,
+     "published_utc": "2026-09-14T20:31:00+00:00",
+     "first_seen_utc": "2026-09-28T14:15:09+00:00",
+     "chars": 4920,
+     "raw_chars": 8081,
+     "column": "barrons_other",
+     "sha": "fc04e307db41b5658e9a",
+     "paywall_suspected": false,
+     "read_s": 8.34,
+     "ticker": "MP",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\barrons\\2026-09-28\\fc04e307db41b5658e9a.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.barrons.com/articles/us-china-tarrifs-trump-xi-99495039",
+     "title": "Why the Fragile Trump-Xi Truce Could Break Before the U.S.-China D.C. Summit - Barron's",
+     "byline": null,
+     "published_utc": "2026-09-09T17:24:00+00:00",
+     "first_seen_utc": "2026-09-28T14:15:53+00:00",
+     "chars": 7880,
+     "raw_chars": 10939,
+     "column": "barrons_other",
+     "sha": "aa43bd7fa871451dc097",
+     "paywall_suspected": false,
+     "read_s": 8.01,
+     "ticker": "MP",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\barrons\\2026-09-28\\aa43bd7fa871451dc097.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [
+    {
+     "item": "https://www.wsj.com/articles/bridgebio-pharma-2q-loss-shr-78c-bbio-3fb9c9c2",
+     "why": "ReaderRefused: PAGE_NOT_FOUND: 'https://www.wsj.com/articles/bridgebio-pharma-2q-loss-shr-78c-bbio-3fb9c9c2' (2362 chars) not stored"
+    },
+    {
+     "item": "https://www.barrons.com/articles/nvidia-stock-price-ai-chips-google-2c231d8d",
+     "why": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: gateway unreachable: ECONNREFUSED (ConnectionError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remot"
+    }
+   ],
+   "dropped": null,
+   "skipped_not_found": [],
+   "searches": {
+    "BBIO": {
+     "links_on_page": 5,
+     "taken": 3,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "MP": {
+     "links_on_page": 5,
+     "taken": 3,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "AVGO": {
+     "links_on_page": 5,
+     "taken": 2,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 1
+    }
+   },
+   "opened": {
+    "label": "9C34988CD781ED658B4FEF1951A249C0",
+    "how": "direct_open",
+    "tabs_before": null,
+    "tabs_after": null
+   }
+  }
+ },
+ "order": [
+  {
+   "turn": 0,
+   "lane": "wsj:search",
+   "what": "listing",
+   "url": "https://www.wsj.com/market-data/quotes/BBIO",
+   "at": "2026-09-28T14:08:59+00:00",
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "BBIO",
+   "url": "https://www.wsj.com/market-data/quotes/BBIO",
+   "at": "2026-09-28T14:08:59+00:00",
+   "ok": true,
+   "links_on_page": 5,
+   "taken": 3,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 2,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/health/pharma/trump-administration-reaches-drug-pricing-deals-with-9-companies-4705d926",
+   "ticker": "BBIO",
+   "at": "2026-09-28T14:09:38+00:00",
+   "page_load": true,
+   "waited_s": 13.598593,
+   "chars": 2813,
+   "ok": true
+  },
+  {
+   "turn": 3,
+   "lane": "wsj:search",
+   "url": "https://www.barrons.com/articles/exelixis-valaris-and-3-more-stocks-see-action-from-activist-investors-c381de7d",
+   "ticker": "BBIO",
+   "at": "2026-09-28T14:10:45+00:00",
+   "page_load": true,
+   "waited_s": 19.953905,
+   "chars": 3767,
+   "ok": true
+  },
+  {
+   "turn": 5,
+   "lane": "wsj:search",
+   "item": "https://www.wsj.com/articles/bridgebio-pharma-2q-loss-shr-78c-bbio-3fb9c9c2",
+   "at": "2026-09-28T14:11:32+00:00",
+   "ok": false,
+   "why": "ReaderRefused: PAGE_NOT_FOUND: 'https://www.wsj.com/articles/bridgebio-pharma-2q-loss-shr-78c-bbio-3fb9c9c2' (2362 chars"
+  },
+  {
+   "turn": 5,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "MP",
+   "url": "https://www.wsj.com/market-data/quotes/MP",
+   "at": "2026-09-28T14:12:32+00:00",
+   "ok": true,
+   "links_on_page": 5,
+   "taken": 3,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 6,
+   "lane": "wsj:search",
+   "url": "https://www.barrons.com/articles/can-trumps-deals-survive-the-next-congress-2686a380",
+   "ticker": "MP",
+   "at": "2026-09-28T14:13:59+00:00",
+   "page_load": true,
+   "waited_s": 4.290708000000002,
+   "chars": 6320,
+   "ok": true
+  },
+  {
+   "turn": 7,
+   "lane": "wsj:search",
+   "url": "https://www.barrons.com/articles/elmet-stock-pentagon-tungsten-deal-5c0ce250",
+   "ticker": "MP",
+   "at": "2026-09-28T14:14:59+00:00",
+   "page_load": true,
+   "waited_s": 50.468893,
+   "chars": 4920,
+   "ok": true
+  },
+  {
+   "turn": 8,
+   "lane": "wsj:search",
+   "url": "https://www.barrons.com/articles/us-china-tarrifs-trump-xi-99495039",
+   "ticker": "MP",
+   "at": "2026-09-28T14:15:36+00:00",
+   "page_load": true,
+   "waited_s": 27.119636,
+   "chars": 7880,
+   "ok": true
+  },
+  {
+   "turn": 9,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "AVGO",
+   "url": "https://www.wsj.com/market-data/quotes/AVGO",
+   "at": "2026-09-28T14:15:56+00:00",
+   "ok": true,
+   "links_on_page": 5,
+   "taken": 2,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 1
+  },
+  {
+   "turn": 11,
+   "lane": "wsj:search",
+   "item": "https://www.barrons.com/articles/nvidia-stock-price-ai-chips-google-2c231d8d",
+   "at": "2026-09-28T14:17:06+00:00",
+   "ok": false,
+   "why": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: gateway unreachable: ECONNREFUSED (ConnectionError: ('Connection aborted"
+  }
+ ],
+ "stopped": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: gateway unreachable: ECONNREFUSED (ConnectionError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remot",
+ "budget_spent": null,
+ "opened": [
+  "9C34988CD781ED658B4FEF1951A249C0",
+  "82BDFEB480FBCBC7E2036BAEA28D2070",
+  "77AD28AC1733713AEB5163269BA78631",
+  "94F7B0A99746AAB09FDE8405C6A02CA5",
+  "CBF8F93769EB0B38E3CB7D07612B878A",
+  "9E7007AF80EE355D9A5D967F31078D17",
+  "0BE5BC9A8767DFF2231786563840CA80",
+  "6D722AE5DE3B00DB60DA81088630B004",
+  "D895A4B74F9E3CDC0B689871BA9BF9DF",
+  "4EAB0CAA018CCC4725698D1F24350544"
+ ],
+ "orphaned_tabs": [],
+ "worker": "wsj",
+ "pid": 168708,
+ "reattaches": 0,
+ "reattach_log": [],
+ "tab_remaps": [],
+ "tabs_lost_on_reattach": [],
+ "yield": [
+  {
+   "when": "end",
+   "pages": 8,
+   "lanes": {
+    "wsj:search": {
+     "pages": 8,
+     "links_per_page": 5.0,
+     "zero_link_pages": 0,
+     "chars_per_page": 5140,
+     "zero_char_pages": 0
+    }
+   },
+   "zero_lanes": []
+  }
+ ],
+ "startup_cleanup": {
+  "candidates": [
+   "440A0E1916B10005FC45750836766E31",
+   "7915B04978FE45A49465A65790C1F4E5",
+   "7EAB9A390AF5721363607E291281D700",
+   "chrome-mcp:fe9a0faf6f97:47",
+   "chrome-mcp:fe9a0faf6f97:61",
+   "chrome-mcp:fe9a0faf6f97:65",
+   "chrome-mcp:fe9a0faf6f97:70",
+   "chrome-mcp:fe9a0faf6f97:73",
+   "chrome-mcp:fe9a0faf6f97:76"
+  ],
+  "closed": [],
+  "skipped": {
+   "440A0E1916B10005FC45750836766E31": "not present",
+   "7915B04978FE45A49465A65790C1F4E5": "not present",
+   "7EAB9A390AF5721363607E291281D700": "not present",
+   "chrome-mcp:fe9a0faf6f97:47": "not present",
+   "chrome-mcp:fe9a0faf6f97:61": "not present",
+   "chrome-mcp:fe9a0faf6f97:65": "not present",
+   "chrome-mcp:fe9a0faf6f97:70": "not present",
+   "chrome-mcp:fe9a0faf6f97:73": "not present",
+   "chrome-mcp:fe9a0faf6f97:76": "not present"
+  }
+ },
+ "in_progress": false,
+ "tabs_closed": {
+  "9C34988CD781ED658B4FEF1951A249C0": true,
+  "82BDFEB480FBCBC7E2036BAEA28D2070": true,
+  "77AD28AC1733713AEB5163269BA78631": true,
+  "94F7B0A99746AAB09FDE8405C6A02CA5": true,
+  "CBF8F93769EB0B38E3CB7D07612B878A": true,
+  "9E7007AF80EE355D9A5D967F31078D17": true,
+  "0BE5BC9A8767DFF2231786563840CA80": true,
+  "6D722AE5DE3B00DB60DA81088630B004": true,
+  "D895A4B74F9E3CDC0B689871BA9BF9DF": true,
+  "4EAB0CAA018CCC4725698D1F24350544": true
+ },
+ "blanks": 0,
+ "closes_after_read": 9,
+ "blank_slot_refunds": [],
+ "page_classes": {
+  "wsj.com": {
+   "OK": 4,
+   "NOT_FOUND": 1
+  },
+  "barrons.com": {
+   "OK": 4
+  }
+ },
+ "blank_failures": [],
+ "tab_rotations": [
+  {
+   "at": "2026-09-28T14:09:38+00:00",
+   "old": "9C34988CD781ED658B4FEF1951A249C0",
+   "old_closed": true,
+   "new": "82BDFEB480FBCBC7E2036BAEA28D2070",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.wsj.com/health/pharma/trump-administration-reaches-drug-pricing-deals-with-9-companies-4705d926"
+  },
+  {
+   "at": "2026-09-28T14:10:45+00:00",
+   "old": "82BDFEB480FBCBC7E2036BAEA28D2070",
+   "old_closed": true,
+   "new": "77AD28AC1733713AEB5163269BA78631",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.barrons.com/articles/exelixis-valaris-and-3-more-stocks-see-action-from-activist-investors-c381de7d"
+  },
+  {
+   "at": "2026-09-28T14:11:22+00:00",
+   "old": "77AD28AC1733713AEB5163269BA78631",
+   "old_closed": true,
+   "new": "94F7B0A99746AAB09FDE8405C6A02CA5",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.wsj.com/articles/bridgebio-pharma-2q-loss-shr-78c-bbio-3fb9c9c2"
+  },
+  {
+   "at": "2026-09-28T14:12:32+00:00",
+   "old": "94F7B0A99746AAB09FDE8405C6A02CA5",
+   "old_closed": true,
+   "new": "CBF8F93769EB0B38E3CB7D07612B878A",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.wsj.com/market-data/quotes/MP"
+  },
+  {
+   "at": "2026-09-28T14:13:59+00:00",
+   "old": "CBF8F93769EB0B38E3CB7D07612B878A",
+   "old_closed": true,
+   "new": "9E7007AF80EE355D9A5D967F31078D17",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.barrons.com/articles/can-trumps-deals-survive-the-next-congress-2686a380"
+  },
+  {
+   "at": "2026-09-28T14:14:59+00:00",
+   "old": "9E7007AF80EE355D9A5D967F31078D17",
+   "old_closed": true,
+   "new": "0BE5BC9A8767DFF2231786563840CA80",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.barrons.com/articles/elmet-stock-pentagon-tungsten-deal-5c0ce250"
+  },
+  {
+   "at": "2026-09-28T14:15:36+00:00",
+   "old": "0BE5BC9A8767DFF2231786563840CA80",
+   "old_closed": true,
+   "new": "6D722AE5DE3B00DB60DA81088630B004",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.barrons.com/articles/us-china-tarrifs-trump-xi-99495039"
+  },
+  {
+   "at": "2026-09-28T14:15:56+00:00",
+   "old": "6D722AE5DE3B00DB60DA81088630B004",
+   "old_closed": true,
+   "new": "D895A4B74F9E3CDC0B689871BA9BF9DF",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.wsj.com/market-data/quotes/AVGO"
+  },
+  {
+   "at": "2026-09-28T14:16:42+00:00",
+   "old": "D895A4B74F9E3CDC0B689871BA9BF9DF",
+   "old_closed": true,
+   "new": "4EAB0CAA018CCC4725698D1F24350544",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.barrons.com/articles/nvidia-stock-price-ai-chips-google-2c231d8d"
+  }
+ ],
+ "parent_tabs_final": {
+  "wsj": null
+ },
+ "footprint": {
+  "verdict": "HUMAN_PACE_OK",
+  "cv_of_gaps": 0.384,
+  "gaps_s": [
+   39.0,
+   67.0,
+   37.0,
+   70.0,
+   87.0,
+   60.0,
+   37.0,
+   20.0,
+   46.0
+  ],
+  "gap_min_s": 20.0,
+  "pages_per_hour": 77.75,
+  "scroll_share": 1.0,
+  "pages": 10,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_reader\\footprint_20260928T141713Z.json",
+  "cli_scope": "process",
+  "cli_calls": 88,
+  "cli_seconds": 182.208,
+  "cli_seconds_per_page": 18.221,
+  "cli_calls_per_page": 8.8,
+  "cli_breakdown": {
+   "profile_check": {
+    "calls": 6,
+    "seconds": 56.36
+   },
+   "tabs_listing": {
+    "calls": 17,
+    "seconds": 4.017
+   },
+   "other": {
+    "calls": 65,
+    "seconds": 121.831
+   }
+  },
+  "cli_cache": {
+   "profile_hits": 54,
+   "profile_misses": 5,
+   "tabs_hits": 43,
+   "tabs_misses": 17,
+   "tabs_nonce_changes": 0,
+   "url_rereads": 0,
+   "url_from_reply": 0
+  },
+  "cli_by_verb": {
+   "browser close": {
+    "calls": 10,
+    "seconds": 0.641,
+    "s_per_call": 0.06
+   },
+   "browser evaluate": {
+    "calls": 6,
+    "seconds": 2.687,
+    "s_per_call": 0.45
+   },
+   "browser open": {
+    "calls": 10,
+    "seconds": 14.814,
+    "s_per_call": 1.48
+   },
+   "browser press": {
+    "calls": 26,
+    "seconds": 49.391,
+    "s_per_call": 1.9
+   },
+   "browser profiles": {
+    "calls": 6,
+    "seconds": 56.36,
+    "s_per_call": 9.39
+   },
+   "browser snapshot": {
+    "calls": 9,
+    "seconds": 42.125,
+    "s_per_call": 4.68
+   },
+   "browser status": {
+    "calls": 3,
+    "seconds": 8.063,
+    "s_per_call": 2.69
+   },
+   "browser tabs": {
+    "calls": 17,
+    "seconds": 4.017,
+    "s_per_call": 0.24
+   },
+   "browser wait": {
+    "calls": 1,
+    "seconds": 4.11,
+    "s_per_call": 4.11
+   }
+  },
+  "reattaches": 0,
+  "tab_remaps": 0
+ },
+ "hour_cap_waits_s": [],
+ "same_host_waits": [
+  {
+   "host": "barrons.com",
+   "extra_s": 4.29
+  },
+  {
+   "host": "barrons.com",
+   "extra_s": 40.0
+  },
+  {
+   "host": "barrons.com",
+   "extra_s": 24.46
+  },
+  {
+   "host": "barrons.com",
+   "extra_s": 19.48
+  }
+ ],
+ "throttle_targets_s": [
+  20.0,
+  13.61,
+  20.0,
+  9.88,
+  20.0,
+  17.17,
+  20.0,
+  12.23,
+  20.0,
+  9.74
+ ],
+ "per_source": {
+  "wsj": {
+   "articles": 5,
+   "refusals": 2,
+   "chars": 25700
+  }
+ },
+ "n_articles": 5,
+ "pages_loaded": 10,
+ "seconds_between_page_loads": [
+  39.0,
+  67.0,
+  37.0,
+  70.0,
+  87.0,
+  60.0,
+  37.0,
+  20.0,
+  46.0
+ ],
+ "finished_utc": "2026-09-28T14:17:13+00:00"
+}

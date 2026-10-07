@@ -1,0 +1,147 @@
+{
+ "hyp_id": "H-790a2bac86",
+ "title": "Oil spike pressures airline stocks next session",
+ "night": "2026-10-03",
+ "run_utc": "2026-10-03T03:42:00+00:00",
+ "result": {
+  "cell_type": "macro_lead_lag",
+  "params": {
+   "driver": "CL=F",
+   "targets": [
+    "DAL",
+    "UAL",
+    "AAL",
+    "LUV",
+    "JBLU"
+   ],
+   "expected_sign": -1,
+   "h": 1,
+   "shock_z": 2.0
+  },
+  "targets_used": [
+   "DAL",
+   "UAL",
+   "AAL",
+   "LUV",
+   "JBLU"
+  ],
+  "beta_to_spy_design": 1.333,
+  "window": "open(t+1) -> close(t+1), residual of beta x SPY; etf: targets use close t -> close t+1",
+  "design": {
+   "primary_signed_next_resid": {
+    "mean": -0.002471,
+    "se": 0.002525,
+    "t": -0.98,
+    "mde": 0.00707,
+    "n": 97,
+    "n_blocks": 44
+   },
+   "net_of_cost": -0.004471,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.005676,
+    "se": 0.004433,
+    "t": 1.28,
+    "mde": 0.012414,
+    "n": 97,
+    "n_blocks": 44
+   },
+   "placebo_all_days_signed_next": {
+    "mean": -0.000264,
+    "se": 0.00047,
+    "t": -0.56,
+    "mde": 0.001317,
+    "n": 1720,
+    "n_blocks": 82
+   },
+   "n_shocks": 97,
+   "by_year": {
+    "2016": {
+     "mean": -0.006323,
+     "n": 6
+    },
+    "2017": {
+     "mean": 0.004605,
+     "n": 10
+    },
+    "2018": {
+     "mean": -0.000411,
+     "n": 20
+    },
+    "2019": {
+     "mean": 0.001435,
+     "n": 13
+    },
+    "2020": {
+     "mean": -0.014533,
+     "n": 20
+    },
+    "2021": {
+     "mean": -0.005906,
+     "n": 17
+    },
+    "2022": {
+     "mean": 0.012078,
+     "n": 11
+    }
+   },
+   "loo_year_worst": -0.004331,
+   "span": [
+    "2016-06-24",
+    "2022-07-12"
+   ]
+  },
+  "confirm": {
+   "primary_signed_next_resid": {
+    "mean": 0.003462,
+    "se": 0.003253,
+    "t": 1.06,
+    "mde": 0.009108,
+    "n": 57,
+    "n_blocks": 26
+   },
+   "net_of_cost": 0.001462,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.010714,
+    "se": 0.004517,
+    "t": 2.37,
+    "mde": 0.012647,
+    "n": 57,
+    "n_blocks": 26
+   },
+   "placebo_all_days_signed_next": {
+    "mean": 0.000603,
+    "se": 0.000639,
+    "t": 0.94,
+    "mde": 0.001788,
+    "n": 938,
+    "n_blocks": 45
+   },
+   "n_shocks": 57,
+   "by_year": {
+    "2023": {
+     "mean": -0.00237,
+     "n": 13
+    },
+    "2024": {
+     "mean": 0.001333,
+     "n": 15
+    },
+    "2025": {
+     "mean": 0.004898,
+     "n": 12
+    },
+    "2026": {
+     "mean": 0.008788,
+     "n": 17
+    }
+   },
+   "loo_year_worst": 0.001199,
+   "span": [
+    "2023-01-04",
+    "2026-09-10"
+   ]
+  },
+  "verdict": "CANNOT_DISTINGUISH",
+  "reason": "confirm +0.00346 t 1.06; MDE 0.00911 > effect worth having 0.00200"
+ }
+}

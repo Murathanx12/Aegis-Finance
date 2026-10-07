@@ -1,0 +1,567 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-10-06",
+ "days": [
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05",
+  "2026-07-06",
+  "2026-07-07",
+  "2026-07-08",
+  "2026-07-09",
+  "2026-07-10",
+  "2026-07-11",
+  "2026-07-12",
+  "2026-07-13",
+  "2026-07-14",
+  "2026-07-15",
+  "2026-07-16",
+  "2026-07-17",
+  "2026-07-18",
+  "2026-07-19",
+  "2026-07-20",
+  "2026-07-21",
+  "2026-07-22",
+  "2026-07-23",
+  "2026-07-24",
+  "2026-07-25",
+  "2026-07-26",
+  "2026-07-27",
+  "2026-07-28",
+  "2026-07-29",
+  "2026-07-30",
+  "2026-07-31",
+  "2026-08-01",
+  "2026-08-02",
+  "2026-08-03",
+  "2026-08-04",
+  "2026-08-05",
+  "2026-08-06",
+  "2026-08-07",
+  "2026-08-08",
+  "2026-08-09",
+  "2026-08-10",
+  "2026-08-11",
+  "2026-08-12",
+  "2026-08-13",
+  "2026-08-14",
+  "2026-08-15",
+  "2026-08-16",
+  "2026-08-17",
+  "2026-08-18",
+  "2026-08-19",
+  "2026-08-20",
+  "2026-08-21",
+  "2026-08-22",
+  "2026-08-23",
+  "2026-08-24",
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27",
+  "2026-08-28",
+  "2026-08-29",
+  "2026-08-30",
+  "2026-08-31",
+  "2026-09-01",
+  "2026-09-02",
+  "2026-09-03",
+  "2026-09-04",
+  "2026-09-05",
+  "2026-09-06",
+  "2026-09-07",
+  "2026-09-08",
+  "2026-09-09",
+  "2026-09-10",
+  "2026-09-11",
+  "2026-09-12",
+  "2026-09-13",
+  "2026-09-14",
+  "2026-09-15",
+  "2026-09-16",
+  "2026-09-17",
+  "2026-09-18",
+  "2026-09-19",
+  "2026-09-20",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23",
+  "2026-09-24",
+  "2026-09-25",
+  "2026-09-26",
+  "2026-09-27",
+  "2026-09-28",
+  "2026-09-29",
+  "2026-09-30",
+  "2026-10-01",
+  "2026-10-02",
+  "2026-10-03",
+  "2026-10-04",
+  "2026-10-05",
+  "2026-10-06"
+ ],
+ "started_utc": "2026-10-06T20:21:34+00:00",
+ "mw_analyst_snapshot": {
+  "n_pages": 2,
+  "n_rows_written": 2,
+  "thin": [],
+  "tickers": [
+   "CSTM",
+   "FLNC"
+  ]
+ },
+ "barrons_big_money_poll_index_rows": {
+  "n_articles": 0,
+  "n_rows_written": 0,
+  "per_article": []
+ },
+ "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
+ "purpose": "dowjones_claims",
+ "cap_usd": 3.0,
+ "spent_usd": 0.009366,
+ "n_llm_calls": 28,
+ "stopped": null,
+ "n_articles": 28,
+ "n_claims": 12,
+ "forecast_rows_by_source_id": {
+  "barrons_stock_picks": 15,
+  "barrons_other": 9,
+  "marketwatch_other": 3,
+  "marketwatch_upgrades_downgrades": 0,
+  "wsj_other": 3
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "3d2d029e295070e313c9",
+   "url": "https://www.barrons.com/articles/applied-materials-qualcomm-chip-stocks-earnings-78b79bfc?mod=hp_LEDE_C_1_B_3",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 4,
+   "refused": [
+    {
+     "ticker": "KLAC",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'KLAC'"
+    }
+   ],
+   "tickers": [
+    "AMAT",
+    "CDNS",
+    "MCHP",
+    "QCOM"
+   ],
+   "directions": [
+    "up",
+    "up",
+    "up",
+    "down"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 12,
+   "write_status": "OK"
+  },
+  {
+   "sha": "3dc871418a6d76318622",
+   "url": "https://www.barrons.com/articles/nvidia-stock-price-record-6-trillion-497d719e?mod=hp_LEDE_C_3",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "NVDA",
+     "why": "REFUSED_DUPLICATE_VIEW: 'NVDA' up"
+    }
+   ],
+   "tickers": [
+    "NVDA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "56be6a9df692b1283d55",
+   "url": "https://www.barrons.com/articles/option-care-health-stock-mckesson-takeover-report-41c8dffc?mod=RTA",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [],
+   "tickers": [
+    "OPCH",
+    "MCK"
+   ],
+   "directions": [
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 6,
+   "write_status": "OK"
+  },
+  {
+   "sha": "cb1391f19eacc69b50b4",
+   "url": "https://www.barrons.com/articles/wall-st-bonuses-record-bank-earnings-02340715?mod=WTRN_pos1",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "eb94cc132e9660b8e9b1",
+   "url": "https://www.barrons.com/articles/qualcomm-stock-amazon-deal-ai-438de808?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "QCOM"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "06eb0d544e2c9164acd2",
+   "url": "https://www.marketwatch.com/story/hubspot-to-cut-7-of-workforce-amid-focus-on-ai-driven-offerings-07e9f100?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "3a721b393a47bef58321",
+   "url": "https://www.marketwatch.com/story/u-s-pays-highest-borrowing-costs-for-three-year-notes-since-2006-02b5ce2c?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "8d0b0b8b1fbb5a2ca639",
+   "url": "https://www.marketwatch.com/story/microsofts-blazing-stock-comeback-isnt-even-close-to-being-over-analyst-says-265f7b6d?mod=home_ln",
+   "column": "marketwatch_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "MSFT"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "a3089eaa999a22d6144c",
+   "url": "https://www.marketwatch.com/story/oil-futures-little-changed-as-market-weighs-export-recovery-shipping-risks-2nd-update-77fd1117?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ae4dfb38fe54265d49c9",
+   "url": "https://www.marketwatch.com/tools/upgrades-downgrades",
+   "column": "marketwatch_upgrades_downgrades",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_upgrades_downgrades",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "cc5b32f120fd38a97a0c",
+   "url": "https://www.marketwatch.com/story/conexeu-sciences-shares-rise-on-advancement-of-tissue-restoration-platform-45cb7395?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e3e5f003fa28f55dc345",
+   "url": "https://www.marketwatch.com/story/multiply-labs-raises-75m-in-series-b-funding-round-b31c49cf?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ee1dc0b1c463e586c249",
+   "url": "https://www.marketwatch.com/story/arrivent-biopharma-s-lung-cancer-drug-fails-to-meet-primary-endpoint-in-phase-3-trial-c0df6807?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "017cfd0f2ce336042af8",
+   "url": "https://www.wsj.com/business/deals/electronic-arts-to-go-private-in-55-billion-deal-a4a4479c?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "031f75ef84426ff0007f",
+   "url": "https://www.wsj.com/tech/ai/gemini-hacked-three-companies-in-first-known-breakout-by-googles-ai-5c0baba2?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "078517536bdf23335716",
+   "url": "https://www.wsj.com/health/russia-plague-lab-death-risk-76f6de11?mod=world_lead_pos3",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "09209251844a6473a51e",
+   "url": "https://www.wsj.com/tech/robotics-startup-robco-hits-1-billion-valuation-784bd6a5?mod=tech_lead_pos4",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "1ae15cda7d5b446ba868",
+   "url": "https://www.wsj.com/pro/bankruptcy/electronic-arts-bondholders-allege-default-following-largest-lbo-f296ee6b?mod=finance_lead_pos4",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "1f991c4943dd52dfc13a",
+   "url": "https://www.wsj.com/tech/ai/china-hackers-ai-cyberattacks-anthropic-41d7ce76?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "31e3d343253d29f5c77b",
+   "url": "https://www.wsj.com/business/deals/alphabet-back-in-deal-talks-for-cybersecurity-startup-wiz-41cd3090?&mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "52c88752fcf30580ec23",
+   "url": "https://www.wsj.com/tech/ai/humanoid-robot-hype-use-timeline-1aa89c66?&mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "76d5576e1576fb5c0b78",
+   "url": "https://www.wsj.com/cfo-journal/plaids-cfo-on-her-first-year-and-moving-past-onesie-twosie-ai-experiments-a561f2a8",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "bd4192b4392dd619d1c9",
+   "url": "https://www.wsj.com/business/tech-media-telecom-roundup-market-talk-ac617391",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "CGI",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'CGI'"
+    },
+    {
+     "ticker": "INF",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'INF'"
+    },
+    {
+     "ticker": "SU",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'SU'"
+    }
+   ],
+   "tickers": [
+    "ASML"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "be290b46f60451eebf0f",
+   "url": "https://www.wsj.com/business/energy-oil/u-s-gas-exporters-stand-to-be-the-big-winners-of-the-energy-crisis-c31f73a6?mod=article_inline",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [
+    {
+     "ticker": "SRE",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'SRE'"
+    }
+   ],
+   "tickers": [
+    "VG",
+    "LNG"
+   ],
+   "directions": [
+    "up",
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "ce8b92b53367bda7a9f1",
+   "url": "https://www.wsj.com/business/energy-oil/oil-ceos-get-their-revenge-on-bidens-antitrust-enforcers-b6c033f2?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "deefe2c9cd6de45e8b7c",
+   "url": "https://www.wsj.com/cfo-journal/plaid-cfo-says-fintech-company-has-earned-the-right-to-pick-our-time-for-ipo-7b17c363?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e7480ed687b815ee43b5",
+   "url": "https://www.wsj.com/lifestyle/careers/first-job-lessons-career-1756e13a?mod=series_smallbusinessnav",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "fec88d537877b748a773",
+   "url": "https://www.wsj.com/business/media/abc-news-to-pay-15-million-to-settle-donald-trump-defamation-lawsuit-f1b8812d?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  }
+ ]
+}

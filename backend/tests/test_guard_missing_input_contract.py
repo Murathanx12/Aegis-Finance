@@ -1689,6 +1689,17 @@ def _case_fleet_manager():
             "a fleet role with no frozen contract")
 
 
+def _case_fleet_eod_audit():
+    # C26 (2026-10-07): the missing input is the list of accounts. An audit of
+    # nothing writes no row and would read green; it must refuse instead
+    import tempfile
+    from pathlib import Path
+    from backend.services.fleet_eod_audit import EodAuditRefusal, run_audit
+    base = Path(tempfile.mkdtemp())
+    return (lambda: run_audit([], {}, run_id="r", trigger="manual", base=base), EodAuditRefusal,
+            "an end-of-day audit handed no fleet roles")
+
+
 def _case_world_digest():
     # BudgetExceeded is also the spend CEILING (tested in test_world_digest);
     # the missing input is the budget itself: a meter with none declared (or a
@@ -1859,6 +1870,7 @@ CASES = {
     "fleet_v3_contracts": _case_fleet_v3_contracts,
     "analyst_reputation": _case_analyst_reputation,
     "snowball_shadow": _case_snowball_shadow,
+    "fleet_eod_audit": _case_fleet_eod_audit,
 }
 
 

@@ -1,0 +1,465 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "muratclaw",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-28T08:45:13+00:00",
+ "plan": [
+  {
+   "lane": "wsj:search",
+   "max": 4,
+   "tickers": [
+    "PLTR"
+   ]
+  },
+  {
+   "lane": "barrons:search",
+   "max": 4,
+   "tickers": [
+    "PLTR"
+   ]
+  }
+ ],
+ "parent_tabs": {
+  "wsj": {
+   "tab": null,
+   "label": null,
+   "url": "",
+   "how": "direct_open: dedicated instance, no parent tab used"
+  },
+  "barrons": {
+   "tab": null,
+   "label": null,
+   "url": "",
+   "how": "direct_open: dedicated instance, no parent tab used"
+  }
+ },
+ "max_pages": 8,
+ "budget_explicit": true,
+ "fresh_since": "2026-09-29",
+ "cost_usd": 0.0,
+ "lanes": {
+  "wsj:search": {
+   "source": "wsj",
+   "section": "search",
+   "column": "",
+   "parent_tab": null,
+   "tab": "7AAD1E385009932F859820E6C552B21A",
+   "links_found": 0,
+   "skipped_already_stored": 0,
+   "articles": [],
+   "refusals": [],
+   "dropped": "EXHAUSTED",
+   "searches": {
+    "PLTR": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    }
+   },
+   "opened": {
+    "label": "7AAD1E385009932F859820E6C552B21A",
+    "how": "direct_open",
+    "tabs_before": null,
+    "tabs_after": null
+   }
+  },
+  "barrons:search": {
+   "source": "barrons",
+   "section": "search",
+   "column": "",
+   "parent_tab": null,
+   "tab": "4351F072FD8747228BD0BC6EBAA7147A",
+   "links_found": 3,
+   "skipped_already_stored": 0,
+   "articles": [
+    {
+     "url": "https://www.barrons.com/articles/stock-movers-91bb194a?mod=stockoverview",
+     "title": "Palantir, IonQ, Royal Caribbean, Paychex, McDonald’s, and More Stocks That Explain Today’s Market - Barron's",
+     "byline": null,
+     "published_utc": "2026-09-23T20:33:00+00:00",
+     "first_seen_utc": "2026-09-28T08:47:35+00:00",
+     "chars": 3761,
+     "raw_chars": 6820,
+     "column": "barrons_other",
+     "sha": "81ad64fee6892320d756",
+     "paywall_suspected": false,
+     "read_s": 16.53,
+     "ticker": "PLTR",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\barrons\\2026-09-28\\81ad64fee6892320d756.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.barrons.com/articles/palantir-stock-ai-faa-air-traffic-control-373cce03?mod=stockoverview",
+     "title": "Palantir Could Be Big Winner as Air Traffic Control Goes AI. The Stock Is Rising. - Barron's",
+     "byline": null,
+     "published_utc": "2026-09-23T19:31:00+00:00",
+     "first_seen_utc": "2026-09-28T08:48:42+00:00",
+     "chars": 4030,
+     "raw_chars": 7081,
+     "column": "barrons_other",
+     "sha": "09c1649ef449cb366d46",
+     "paywall_suspected": false,
+     "read_s": 10.74,
+     "ticker": "PLTR",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\barrons\\2026-09-28\\09c1649ef449cb366d46.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.barrons.com/articles/palantir-at-t-spotify-stocks-ubs-b8b42890?mod=stockoverview",
+     "title": "Palantir Stock and These Other Tech Laggards Are Top Picks, UBS Says - Barron's",
+     "byline": null,
+     "published_utc": "2026-09-18T18:49:00+00:00",
+     "first_seen_utc": "2026-09-28T08:49:09+00:00",
+     "chars": 4621,
+     "raw_chars": 7698,
+     "column": "barrons_stock_picks",
+     "sha": "b20ca8002e3fbfd4e036",
+     "paywall_suspected": false,
+     "read_s": 12.01,
+     "ticker": "PLTR",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\barrons\\2026-09-28\\b20ca8002e3fbfd4e036.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [],
+   "dropped": "EXHAUSTED",
+   "searches": {
+    "PLTR": {
+     "links_on_page": 37,
+     "taken": 3,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    }
+   },
+   "opened": {
+    "label": "4351F072FD8747228BD0BC6EBAA7147A",
+    "how": "direct_open",
+    "tabs_before": null,
+    "tabs_after": null
+   }
+  }
+ },
+ "order": [
+  {
+   "turn": 0,
+   "lane": "wsj:search",
+   "what": "listing",
+   "url": "https://www.wsj.com/market-data/quotes/PLTR",
+   "at": "2026-09-28T08:45:23+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "barrons:search",
+   "what": "listing",
+   "url": "https://www.barrons.com/market-data/stocks/pltr",
+   "at": "2026-09-28T08:45:35+00:00",
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "PLTR",
+   "url": "https://www.wsj.com/market-data/quotes/PLTR",
+   "at": "2026-09-28T08:45:23+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 1,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "PLTR",
+   "url": "https://www.barrons.com/market-data/stocks/pltr",
+   "at": "2026-09-28T08:45:35+00:00",
+   "ok": true,
+   "links_on_page": 37,
+   "taken": 3,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 2,
+   "lane": "barrons:search",
+   "url": "https://www.barrons.com/articles/stock-movers-91bb194a?mod=stockoverview",
+   "ticker": "PLTR",
+   "at": "2026-09-28T08:46:22+00:00",
+   "page_load": true,
+   "waited_s": 4.322977999999999,
+   "chars": 3761,
+   "ok": true
+  },
+  {
+   "turn": 3,
+   "lane": "barrons:search",
+   "url": "https://www.barrons.com/articles/palantir-stock-ai-faa-air-traffic-control-373cce03?mod=stockoverview",
+   "ticker": "PLTR",
+   "at": "2026-09-28T08:47:35+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 4030,
+   "ok": true
+  },
+  {
+   "turn": 4,
+   "lane": "barrons:search",
+   "url": "https://www.barrons.com/articles/palantir-at-t-spotify-stocks-ubs-b8b42890?mod=stockoverview",
+   "ticker": "PLTR",
+   "at": "2026-09-28T08:48:42+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 4621,
+   "ok": true
+  }
+ ],
+ "stopped": null,
+ "budget_spent": null,
+ "opened": [
+  "7AAD1E385009932F859820E6C552B21A",
+  "4351F072FD8747228BD0BC6EBAA7147A"
+ ],
+ "orphaned_tabs": [],
+ "worker": null,
+ "pid": 111732,
+ "reattaches": 0,
+ "reattach_log": [],
+ "tab_remaps": [],
+ "tabs_lost_on_reattach": [],
+ "yield": [
+  {
+   "when": "end",
+   "pages": 5,
+   "lanes": {
+    "wsj:search": {
+     "pages": 1,
+     "links_per_page": 0.0,
+     "zero_link_pages": 1,
+     "chars_per_page": null,
+     "zero_char_pages": 0
+    },
+    "barrons:search": {
+     "pages": 4,
+     "links_per_page": 37.0,
+     "zero_link_pages": 0,
+     "chars_per_page": 4137,
+     "zero_char_pages": 0
+    }
+   },
+   "zero_lanes": []
+  }
+ ],
+ "startup_cleanup": {
+  "candidates": [
+   "chrome-mcp:8ab5bfd86096:23",
+   "chrome-mcp:8ab5bfd86096:24",
+   "chrome-mcp:8ab5bfd86096:25",
+   "chrome-mcp:8ab5bfd86096:26",
+   "chrome-mcp:8ab5bfd86096:27",
+   "chrome-mcp:8ab5bfd86096:28",
+   "chrome-mcp:8ab5bfd86096:29",
+   "chrome-mcp:8ab5bfd86096:30",
+   "chrome-mcp:94f9d7f8e757:5",
+   "chrome-mcp:94f9d7f8e757:6",
+   "chrome-mcp:94f9d7f8e757:7",
+   "chrome-mcp:94f9d7f8e757:8",
+   "chrome-mcp:94f9d7f8e757:9",
+   "chrome-mcp:fe9a0faf6f97:28",
+   "chrome-mcp:fe9a0faf6f97:29",
+   "chrome-mcp:fe9a0faf6f97:30",
+   "chrome-mcp:fe9a0faf6f97:31",
+   "chrome-mcp:fe9a0faf6f97:32",
+   "chrome-mcp:fe9a0faf6f97:33",
+   "chrome-mcp:fe9a0faf6f97:34",
+   "chrome-mcp:fe9a0faf6f97:39",
+   "chrome-mcp:fe9a0faf6f97:40",
+   "chrome-mcp:fe9a0faf6f97:41",
+   "chrome-mcp:fe9a0faf6f97:42",
+   "t37",
+   "t39",
+   "t62"
+  ],
+  "closed": [],
+  "skipped": {
+   "chrome-mcp:8ab5bfd86096:23": "not present",
+   "chrome-mcp:8ab5bfd86096:24": "not present",
+   "chrome-mcp:8ab5bfd86096:25": "not present",
+   "chrome-mcp:8ab5bfd86096:26": "not present",
+   "chrome-mcp:8ab5bfd86096:27": "not present",
+   "chrome-mcp:8ab5bfd86096:28": "not present",
+   "chrome-mcp:8ab5bfd86096:29": "not present",
+   "chrome-mcp:8ab5bfd86096:30": "not present",
+   "chrome-mcp:94f9d7f8e757:5": "not present",
+   "chrome-mcp:94f9d7f8e757:6": "not present",
+   "chrome-mcp:94f9d7f8e757:7": "not present",
+   "chrome-mcp:94f9d7f8e757:8": "not present",
+   "chrome-mcp:94f9d7f8e757:9": "not present",
+   "chrome-mcp:fe9a0faf6f97:28": "not present",
+   "chrome-mcp:fe9a0faf6f97:29": "not present",
+   "chrome-mcp:fe9a0faf6f97:30": "not present",
+   "chrome-mcp:fe9a0faf6f97:31": "not present",
+   "chrome-mcp:fe9a0faf6f97:32": "not present",
+   "chrome-mcp:fe9a0faf6f97:33": "not present",
+   "chrome-mcp:fe9a0faf6f97:34": "not present",
+   "chrome-mcp:fe9a0faf6f97:39": "not present",
+   "chrome-mcp:fe9a0faf6f97:40": "not present",
+   "chrome-mcp:fe9a0faf6f97:41": "not present",
+   "chrome-mcp:fe9a0faf6f97:42": "not present",
+   "t37": "not session-qualified (a tN alias is reissued)",
+   "t39": "not session-qualified (a tN alias is reissued)",
+   "t62": "not session-qualified (a tN alias is reissued)"
+  }
+ },
+ "in_progress": false,
+ "tabs_closed": {
+  "7AAD1E385009932F859820E6C552B21A": true,
+  "4351F072FD8747228BD0BC6EBAA7147A": true
+ },
+ "blanks": 5,
+ "blank_failures": [],
+ "tab_rotations": [],
+ "parent_tabs_final": {
+  "wsj": null,
+  "barrons": null
+ },
+ "footprint": {
+  "verdict": "HUMAN_PACE_OK",
+  "cv_of_gaps": 0.479,
+  "gaps_s": [
+   12.0,
+   47.0,
+   73.0,
+   67.0
+  ],
+  "gap_min_s": 12.0,
+  "pages_per_hour": 90.45,
+  "scroll_share": 1.0,
+  "pages": 5,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_reader\\footprint_20260928T084909Z.json",
+  "cli_scope": "process",
+  "cli_calls": 62,
+  "cli_seconds": 194.858,
+  "cli_seconds_per_page": 38.972,
+  "cli_calls_per_page": 12.4,
+  "cli_breakdown": {
+   "profile_check": {
+    "calls": 3,
+    "seconds": 21.267
+   },
+   "tabs_listing": {
+    "calls": 17,
+    "seconds": 0.969
+   },
+   "other": {
+    "calls": 42,
+    "seconds": 172.622
+   }
+  },
+  "cli_cache": {
+   "profile_hits": 31,
+   "profile_misses": 2,
+   "tabs_hits": 22,
+   "tabs_misses": 17,
+   "tabs_nonce_changes": 0,
+   "url_rereads": 0,
+   "url_from_reply": 3
+  },
+  "cli_by_verb": {
+   "browser close": {
+    "calls": 2,
+    "seconds": 0.078,
+    "s_per_call": 0.04
+   },
+   "browser evaluate": {
+    "calls": 3,
+    "seconds": 1.047,
+    "s_per_call": 0.35
+   },
+   "browser navigate": {
+    "calls": 8,
+    "seconds": 128.015,
+    "s_per_call": 16.0
+   },
+   "browser open": {
+    "calls": 2,
+    "seconds": 3.515,
+    "s_per_call": 1.76
+   },
+   "browser press": {
+    "calls": 17,
+    "seconds": 6.141,
+    "s_per_call": 0.36
+   },
+   "browser profiles": {
+    "calls": 3,
+    "seconds": 21.267,
+    "s_per_call": 7.09
+   },
+   "browser snapshot": {
+    "calls": 7,
+    "seconds": 25.249,
+    "s_per_call": 3.61
+   },
+   "browser status": {
+    "calls": 1,
+    "seconds": 0.031,
+    "s_per_call": 0.03
+   },
+   "browser tabs": {
+    "calls": 17,
+    "seconds": 0.969,
+    "s_per_call": 0.06
+   },
+   "browser wait": {
+    "calls": 2,
+    "seconds": 8.546,
+    "s_per_call": 4.27
+   }
+  },
+  "reattaches": 0,
+  "tab_remaps": 0
+ },
+ "hour_cap_waits_s": [],
+ "same_host_waits": [
+  {
+   "host": "barrons.com",
+   "extra_s": 4.32
+  }
+ ],
+ "throttle_targets_s": [
+  15.17,
+  20.0,
+  16.13,
+  14.16,
+  20.0
+ ],
+ "per_source": {
+  "wsj": {
+   "articles": 0,
+   "refusals": 0,
+   "chars": 0
+  },
+  "barrons": {
+   "articles": 3,
+   "refusals": 0,
+   "chars": 12412
+  }
+ },
+ "n_articles": 3,
+ "pages_loaded": 5,
+ "seconds_between_page_loads": [
+  12.0,
+  47.0,
+  73.0,
+  67.0
+ ],
+ "finished_utc": "2026-09-28T08:49:09+00:00"
+}

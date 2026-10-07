@@ -1,0 +1,101 @@
+{
+ "job": "hyp_lab.nightly",
+ "started_utc": "2026-10-03T03:40:27+00:00",
+ "night": "2026-10-03",
+ "k": 3,
+ "cap_usd": 0.4,
+ "free_ram_gb_start": 6.96,
+ "generation": [
+  {
+   "provider": "deepseek",
+   "ok": true,
+   "n_items": 8,
+   "n_rows": 8,
+   "status": {
+    "DUPLICATE_IN_LEDGER": 2,
+    "PROPOSED": 6
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\generate_deepseek_20261003T034102Z.json",
+   "served_model": "deepseek-flash"
+  },
+  {
+   "provider": "local",
+   "ok": false,
+   "status": "SKIPPED_SERVER_NOT_UP"
+  }
+ ],
+ "declared": [
+  "H-2488e7a9d8",
+  "H-65079244f4",
+  "H-790a2bac86"
+ ],
+ "declare_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\declare_20261003T034130Z.json",
+ "results": [
+  {
+   "hyp_id": "H-2488e7a9d8",
+   "title": "Rate shock lifts regional bank net interest margin",
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00191 <= 0",
+   "design": {
+    "mean": 0.002765,
+    "t": 1.26,
+    "mde": 0.006146,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "confirm": {
+    "mean": -0.001908,
+    "t": -0.85,
+    "mde": 0.006322,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-2488e7a9d8_20261003T034140Z.json"
+  },
+  {
+   "hyp_id": "H-65079244f4",
+   "title": "Yield spike lifts money-center banks next session",
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00122 <= 0",
+   "design": {
+    "mean": 0.001086,
+    "t": 0.81,
+    "mde": 0.00375,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "confirm": {
+    "mean": -0.001221,
+    "t": -0.7,
+    "mde": 0.004864,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-65079244f4_20261003T034200Z.json"
+  },
+  {
+   "hyp_id": "H-790a2bac86",
+   "title": "Oil spike pressures airline stocks next session",
+   "verdict": "CANNOT_DISTINGUISH",
+   "reason": "confirm +0.00346 t 1.06; MDE 0.00911 > effect worth having 0.00200",
+   "design": {
+    "mean": -0.002471,
+    "t": -0.98,
+    "mde": 0.00707,
+    "n": 97,
+    "n_blocks": 44
+   },
+   "confirm": {
+    "mean": 0.003462,
+    "t": 1.06,
+    "mde": 0.009108,
+    "n": 57,
+    "n_blocks": 26
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-790a2bac86_20261003T034200Z.json"
+  }
+ ],
+ "spend_this_run_usd": 0.00223,
+ "wall_min": 1.5,
+ "status": "OK"
+}

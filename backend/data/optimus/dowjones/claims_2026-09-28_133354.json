@@ -1,0 +1,834 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-09-28",
+ "days": [
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05",
+  "2026-07-06",
+  "2026-07-07",
+  "2026-07-08",
+  "2026-07-09",
+  "2026-07-10",
+  "2026-07-11",
+  "2026-07-12",
+  "2026-07-13",
+  "2026-07-14",
+  "2026-07-15",
+  "2026-07-16",
+  "2026-07-17",
+  "2026-07-18",
+  "2026-07-19",
+  "2026-07-20",
+  "2026-07-21",
+  "2026-07-22",
+  "2026-07-23",
+  "2026-07-24",
+  "2026-07-25",
+  "2026-07-26",
+  "2026-07-27",
+  "2026-07-28",
+  "2026-07-29",
+  "2026-07-30",
+  "2026-07-31",
+  "2026-08-01",
+  "2026-08-02",
+  "2026-08-03",
+  "2026-08-04",
+  "2026-08-05",
+  "2026-08-06",
+  "2026-08-07",
+  "2026-08-08",
+  "2026-08-09",
+  "2026-08-10",
+  "2026-08-11",
+  "2026-08-12",
+  "2026-08-13",
+  "2026-08-14",
+  "2026-08-15",
+  "2026-08-16",
+  "2026-08-17",
+  "2026-08-18",
+  "2026-08-19",
+  "2026-08-20",
+  "2026-08-21",
+  "2026-08-22",
+  "2026-08-23",
+  "2026-08-24",
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27",
+  "2026-08-28",
+  "2026-08-29",
+  "2026-08-30",
+  "2026-08-31",
+  "2026-09-01",
+  "2026-09-02",
+  "2026-09-03",
+  "2026-09-04",
+  "2026-09-05",
+  "2026-09-06",
+  "2026-09-07",
+  "2026-09-08",
+  "2026-09-09",
+  "2026-09-10",
+  "2026-09-11",
+  "2026-09-12",
+  "2026-09-13",
+  "2026-09-14",
+  "2026-09-15",
+  "2026-09-16",
+  "2026-09-17",
+  "2026-09-18",
+  "2026-09-19",
+  "2026-09-20",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23",
+  "2026-09-24",
+  "2026-09-25",
+  "2026-09-26",
+  "2026-09-27",
+  "2026-09-28"
+ ],
+ "started_utc": "2026-09-28T13:32:38+00:00",
+ "mw_analyst_snapshot": {
+  "n_pages": 51,
+  "n_rows_written": 51,
+  "thin": [],
+  "tickers": [
+   "KEX",
+   "CDNL",
+   "BSP",
+   "NVT",
+   "PRGS",
+   "LITE",
+   "BBIO",
+   "XRX",
+   "HWM",
+   "NTLA",
+   "CRM",
+   "ACVA",
+   "GOOGL",
+   "LAR",
+   "FRMI",
+   "SNOW",
+   "DUOL",
+   "IONQ",
+   "AMSC",
+   "GEV",
+   "TE",
+   "AGIO",
+   "DBVT",
+   "BBW",
+   "AVGO",
+   "VKTX",
+   "MEC",
+   "LGN",
+   "LNG",
+   "TER",
+   "MWH",
+   "TSM",
+   "FLNC",
+   "AGX",
+   "CSTM",
+   "CCJ",
+   "LEU",
+   "BHVN",
+   "COGT",
+   "JAZZ",
+   "STX",
+   "AGYS",
+   "BA",
+   "CLS",
+   "NVDA",
+   "WDS",
+   "Q",
+   "BW",
+   "MP",
+   "ABSI",
+   "ENS"
+  ]
+ },
+ "barrons_big_money_poll_index_rows": {
+  "n_articles": 0,
+  "n_rows_written": 0,
+  "per_article": []
+ },
+ "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
+ "purpose": "dowjones_claims",
+ "cap_usd": 3.0,
+ "spent_usd": 0.017038,
+ "n_llm_calls": 40,
+ "stopped": null,
+ "n_articles": 40,
+ "n_claims": 33,
+ "forecast_rows_by_source_id": {
+  "barrons_other": 12,
+  "barrons_stock_picks": 3,
+  "marketwatch_other": 0,
+  "wsj_other": 9
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "0306c644641b598cf887",
+   "url": "https://www.barrons.com/articles/qnity-electronics-earnings-stock-price-20249cef",
+   "column": "barrons_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "QNTY",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'QNTY'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "0433f01bd751b42b410e",
+   "url": "https://www.barrons.com/articles/ai-regulation-coreweave-stock-a940ab5e",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 3,
+   "refused": [],
+   "tickers": [
+    "CRWV",
+    "PLTR",
+    "DUOL"
+   ],
+   "directions": [
+    "up",
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "07b475d77e82aa41ecdb",
+   "url": "https://www.barrons.com/articles/qnity-electronics-stock-technical-analysis-ab1cd2eb?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "Q"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "10d889355b304f4200a3",
+   "url": "https://www.barrons.com/articles/ai-data-centers-ford-fluence-stock-d8d090b1?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [
+    {
+     "ticker": "SOLV",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'SOLV'"
+    }
+   ],
+   "tickers": [
+    "FLNC",
+    "F"
+   ],
+   "directions": [
+    "down",
+    "down"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "176e51b109a64a929792",
+   "url": "https://www.barrons.com/articles/duolingo-stock-buy-upgrade-7ed07e49",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "DUOL"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "21c1b4e1757cf2acc302",
+   "url": "https://www.barrons.com/articles/ai-spending-capex-vertiv-western-digital-coreweave-arista-8c3cf5b3",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "416ff2c12d1f6f16e969",
+   "url": "https://www.barrons.com/articles/stocks-today-review-preview-newsletter-0c6880ad",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "51813de81fe097d4dc21",
+   "url": "https://www.barrons.com/articles/fermi-stock-ai-special-meeting-945667ad?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "539dc9376349dc598e3e",
+   "url": "https://www.barrons.com/articles/solar-stocks-trump-tariffs-first-solar-t1-energy-1077472d?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 3,
+   "refused": [],
+   "tickers": [
+    "FSLR",
+    "TE",
+    "GLW"
+   ],
+   "directions": [
+    "up",
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "5a56da608aacb2c52549",
+   "url": "https://www.barrons.com/articles/kirby-benefits-from-strong-demand-says-analyst-plus-liberty-formula-one-and-4-more-stocks-37a2beb8?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "775264b851def46c5e18",
+   "url": "https://www.barrons.com/articles/openai-marvell-ai-stocks-72846657?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "79a10d7895fdf1a0ad31",
+   "url": "https://www.barrons.com/articles/what-ai-slowdown-would-mean-for-energy-stocks-c30bd1e7",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "89c217adfdcfa427a7b2",
+   "url": "https://www.barrons.com/articles/trump-iran-war-energy-shock-things-to-know-today-1d77b363?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 3,
+   "refused": [],
+   "tickers": [
+    "CENX",
+    "AA",
+    "AXP"
+   ],
+   "directions": [
+    "up",
+    "down",
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "8b07b35bc13a310172fe",
+   "url": "https://www.barrons.com/articles/activist-investing-satellogic-qorvo-constellium-f3bb073a?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "8e6b88078b930471c7f3",
+   "url": "https://www.barrons.com/articles/xerox-and-4-more-stocks-see-action-from-activist-investors-d9214bb2",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "9bdf88b28fc9a141e299",
+   "url": "https://www.barrons.com/articles/xerox-stock-dividend-buy-aa7d59ad?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "XRX",
+     "why": "REFUSED_DUPLICATE_VIEW: 'XRX' up"
+    },
+    {
+     "ticker": "XRX",
+     "why": "REFUSED_DUPLICATE_VIEW: 'XRX' up"
+    }
+   ],
+   "tickers": [
+    "XRX"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "a1d60b1ac756511c9ecb",
+   "url": "https://www.barrons.com/articles/lithium-mining-stocks-upgrade-analyst-5c655103",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [
+    {
+     "ticker": "SQM",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'SQM'"
+    }
+   ],
+   "tickers": [
+    "ALB",
+    "LAR"
+   ],
+   "directions": [
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "a30807cd199fc7cb1e37",
+   "url": "https://www.barrons.com/articles/qnity-electronics-stock-phlx-semiconductor-index-sox-48d25ca4",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "Q"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "b35377cb56069a4c78ac",
+   "url": "https://www.barrons.com/articles/bp-price-earnings-stock-cd4ff47a?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "b3a82408570b695583df",
+   "url": "https://www.barrons.com/articles/lumentum-corning-stock-networking-112f9a13?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "b429a1e4a69299c71dd1",
+   "url": "https://www.barrons.com/articles/convertible-bonds-ai-risk-return-ffcee519?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c04b0781029845e7c2f9",
+   "url": "https://www.barrons.com/articles/arconic-apollo-stock-price-rally-buy-ad80b0c0?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [],
+   "tickers": [
+    "ARNC",
+    "APO"
+   ],
+   "directions": [
+    "up",
+    "none"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "c51d94443de95d9a6d95",
+   "url": "https://www.barrons.com/articles/fermi-earnings-stock-price-0c23ec24?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "cc354e5ecd9398b0aac2",
+   "url": "https://www.barrons.com/articles/ciena-stock-price-upgrade-ai-154d10aa?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 4,
+   "refused": [],
+   "tickers": [
+    "CIEN",
+    "GLW",
+    "COHR",
+    "LITE"
+   ],
+   "directions": [
+    "up",
+    "none",
+    "none",
+    "none"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "d5dc2f4891fdfeac3b0e",
+   "url": "https://www.barrons.com/articles/xerox-dynatrace-and-2-more-stocks-see-action-from-activist-investors-79befe39",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "XRX"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "daea36a242290a809b65",
+   "url": "https://www.barrons.com/articles/apa-woodside-energy-stocks-technical-analysis-2cdc555e?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "WDS",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'WDS'"
+    }
+   ],
+   "tickers": [
+    "APA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "e06dd35d8e4161adaa05",
+   "url": "https://www.barrons.com/articles/fermi-stock-ai-data-center-tensorwave-3da14830?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "FRMI"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "e41a25d9e81815c3913b",
+   "url": "https://www.barrons.com/articles/bp-stock-ceo-steps-down-3edbdd20?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e42a4dd64a827af31c19",
+   "url": "https://www.barrons.com/articles/duolingo-stock-upgrade-9a11aa76",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "DUOL"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "f1169303090ca48d1880",
+   "url": "https://www.barrons.com/articles/buy-nvidia-stock-price-pick-c12a8a9a",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "NVDA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "64293cd5cf056931329d",
+   "url": "https://www.marketwatch.com/story/6-ai-hardware-stocks-to-own-for-the-remainder-of-the-year-according-to-an-analyst-ec0bad4e",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a07bf955629f502f2b5a",
+   "url": "https://www.marketwatch.com/story/the-dow-jones-transportation-average-is-on-a-historic-tear-here-are-6-charts-you-need-to-see-ec2b91aa",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "b9713b3f788b41c7ce37",
+   "url": "https://www.marketwatch.com/story/the-old-new-thing-cisco-and-retro-tech-are-back-and-forming-the-ai-buildouts-backbone-cdffc0b7",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "3d396e1073132ffb005a",
+   "url": "https://www.wsj.com/articles/fluence-energy-stock-slides-on-lower-outlook-due-to-production-delays-c91c28aa",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "FLNC"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "590dd192744518cee9a5",
+   "url": "https://www.wsj.com/tech/ai/rick-perrys-fermi-finally-finds-a-customer-for-its-giant-texas-ai-power-bet-1f992ffa",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "FRMI"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "6d73d2190b207f31c82f",
+   "url": "https://www.wsj.com/articles/xerox-stockholder-calls-for-exploration-of-potential-sale-of-financial-services-unit-a314da9a",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "XRX"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "bd04a3e23d13396515d4",
+   "url": "https://www.wsj.com/articles/t1-energy-shares-rise-after-giga-arctic-campus-approved-for-data-center-39cbb18f",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "TE"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "df02d6c27dee5068a287",
+   "url": "https://www.wsj.com/business/energy-oil/woodside-puts-everything-on-the-table-in-review-of-beaumont-facility-7abc603b",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e7bae1b9e40445e7863c",
+   "url": "https://www.wsj.com/articles/materials-flat-as-copper-hits-record-high-materials-roundup-4b98223f",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "efcf3904f110608e2aff",
+   "url": "https://www.wsj.com/tech/ai/nvidia-adds-record-150-billion-to-stock-buyback-910f96a8",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "NVDA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  }
+ ]
+}

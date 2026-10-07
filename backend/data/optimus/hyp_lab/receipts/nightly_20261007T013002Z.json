@@ -1,0 +1,318 @@
+{
+ "job": "hyp_lab.nightly",
+ "started_utc": "2026-10-07T01:30:02+00:00",
+ "night": "2026-10-07",
+ "k": 3,
+ "cap_usd": 0.4,
+ "free_ram_gb_start": 7.14,
+ "generation": [
+  {
+   "provider": "deepseek",
+   "ok": true,
+   "n_items": 8,
+   "n_rows": 8,
+   "status": {
+    "DUPLICATE_IN_LEDGER": 2,
+    "PROPOSED": 3,
+    "DUPLICATE_OF_CLOSED": 1,
+    "NEEDS_CELL": 2
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\generate_deepseek_20261007T013013Z.json",
+   "served_model": "deepseek-flash"
+  },
+  {
+   "provider": "local",
+   "ok": false,
+   "status": "SKIPPED_SERVER_NOT_UP"
+  }
+ ],
+ "weekly_guarantee": [],
+ "declared": [
+  "H-ba24e67c41",
+  "H-7b0d6b3b19",
+  "H-8f7028970b"
+ ],
+ "declare_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\declare_20261007T013016Z.json",
+ "results": [
+  {
+   "hyp_id": "H-ba24e67c41",
+   "title": "10Y yield spike lifts life insurers over P&C",
+   "verdict": "CANNOT_DISTINGUISH",
+   "reason": "confirm +0.00726 t 1.84; MDE 0.01102 > effect worth having 0.00200",
+   "powered": false,
+   "design": {
+    "mean": 0.000587,
+    "t": 0.23,
+    "mde": 0.007263,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "confirm": {
+    "mean": 0.007258,
+    "t": 1.84,
+    "mde": 0.011018,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-ba24e67c41_20261007T013021Z.json"
+  },
+  {
+   "hyp_id": "H-7b0d6b3b19",
+   "title": "Co-mention read-through after regulatory approval events",
+   "verdict": "CANNOT_DISTINGUISH",
+   "reason": "confirm +0.15041 t 0.7; MDE 0.60335 > effect worth having 0.05000",
+   "powered": false,
+   "design": {
+    "mean": -0.068064,
+    "t": -0.24,
+    "mde": 0.781636,
+    "n": 9,
+    "n_blocks": 8
+   },
+   "confirm": {
+    "mean": 0.150405,
+    "t": 0.7,
+    "mde": 0.603347,
+    "n": 11,
+    "n_blocks": 9
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-7b0d6b3b19_20261007T013026Z.json"
+  },
+  {
+   "hyp_id": "H-8f7028970b",
+   "title": "Clinical trial failure read-through to platform partners",
+   "verdict": "CONDITIONAL_POSITIVE",
+   "reason": "confirm +0.76359 t 8.84 and design +0.19952 > 0",
+   "powered": false,
+   "design": {
+    "mean": 0.199523,
+    "t": 0.37,
+    "mde": 1.516134,
+    "n": 5,
+    "n_blocks": 4
+   },
+   "confirm": {
+    "mean": 0.763586,
+    "t": 8.84,
+    "mde": 0.24195,
+    "n": 3,
+    "n_blocks": 2
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-8f7028970b_20261007T013026Z.json"
+  }
+ ],
+ "family_policy": {
+  "floor": 0.15,
+  "min_weight": 0.25,
+  "max_share": 0.5,
+  "n_per_round": 8,
+  "ev_weights": {},
+  "gen_quotas": {
+   "data_vintage": 4,
+   "digest_forward": 4,
+   "earnings_streak": 4,
+   "equity_readthrough_supply_chain": 4,
+   "event_readthrough_corr_peer": 4,
+   "event_readthrough_supply_chain": 4,
+   "event_readthrough_text_link": 4,
+   "family_unmapped": 4,
+   "insider_event": 4,
+   "investable_spread": 4,
+   "llm_belief_elasticity": 4,
+   "llm_leakage": 4,
+   "llm_size_reading": 4,
+   "macro_readthrough_commodity": 4,
+   "macro_readthrough_rates": 4,
+   "official_disclosure": 4,
+   "price_location": 4,
+   "risk_timing": 4,
+   "size_attention": 4,
+   "size_disagreement": 4,
+   "size_event_prior": 4,
+   "vol_compression": 4
+  },
+  "posterior_rule": "powered negatives only; CANNOT_DISTINGUISH 0; re-reads 0; verdicts older than 180 d count half",
+  "policy_state": "WRITTEN hyp_family_ev_weight,hyp_family_gen_quota",
+  "families": {
+   "data_vintage": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "digest_forward": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "earnings_streak": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "equity_readthrough_supply_chain": {
+    "posterior": 0.1667,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "event_readthrough_corr_peer": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "event_readthrough_supply_chain": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 2,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "event_readthrough_text_link": {
+    "posterior": 0.4286,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "family_unmapped": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "insider_event": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "investable_spread": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "llm_belief_elasticity": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "llm_leakage": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "llm_size_reading": {
+    "posterior": 0.1667,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "macro_readthrough_commodity": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 2,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "macro_readthrough_rates": {
+    "posterior": 0.3333,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 1,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "official_disclosure": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "price_location": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "risk_timing": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "size_attention": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "size_disagreement": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "size_event_prior": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "vol_compression": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   }
+  }
+ },
+ "spend_this_run_usd": 0.00272,
+ "wall_min": 0.4,
+ "status": "OK"
+}

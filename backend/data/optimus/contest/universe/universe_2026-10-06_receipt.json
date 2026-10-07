@@ -1,0 +1,30 @@
+{
+ "written_utc": "20261006T063409Z",
+ "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\contest\\universe\\universe_2026-10-06.parquet",
+ "rows_before": null,
+ "rows_after": 11892,
+ "by_market": {
+  "n": {
+   "CN": 5054,
+   "EU": 871,
+   "HK": 914,
+   "ID": 213,
+   "IN": 2072,
+   "JP": 1403,
+   "KR": 624,
+   "TW": 741
+  },
+  "liquid": {
+   "CN": 3810,
+   "EU": 163,
+   "HK": 282,
+   "ID": 16,
+   "IN": 299,
+   "JP": 511,
+   "KR": 220,
+   "TW": 319
+  }
+ },
+ "membership": "UNCONFIRMED_MEMBERSHIP unless a WLS export is in contest/wls/",
+ "proxy_rule": "market cap >= $300M (Yahoo screener)"
+}

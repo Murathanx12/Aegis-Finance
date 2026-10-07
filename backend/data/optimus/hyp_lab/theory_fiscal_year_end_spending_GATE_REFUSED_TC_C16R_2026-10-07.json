@@ -1,0 +1,21 @@
+{
+ "schema": "hyp_lab/theory_cell_gate/1",
+ "cell": "fiscal_year_end_spending",
+ "run": "TC_C16R_2026-10-07",
+ "written_utc": "2026-10-06T23:04:12+00:00",
+ "verdict": "UNPOWERED_AT_DECLARATION",
+ "fy_gate": {
+  "unit": "fiscal year",
+  "n_design_fy": 8,
+  "n_validate_fy": 8,
+  "design_sd": 0.01488,
+  "mde": 0.01473,
+  "max_mde_mult": 2.0,
+  "min_effect": 0.005,
+  "refused": true,
+  "reasons": [
+   "FY-unit MDE 0.0147 (design sd 0.0149 over 8 FYs, 8 validate FYs) > 2 x effect worth having 0.0050: the comparison can never be read"
+  ],
+  "note": "sd from the DESIGN fold only (power, not a result); validate untouched"
+ }
+}

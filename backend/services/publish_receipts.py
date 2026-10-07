@@ -196,6 +196,7 @@ KINDS: tuple[Kind, ...] = (
     Kind("theory_lab_basket", "theory_lab", lambda: L.theory_lab_payload(board="basket"), "/theory-lab?board=basket"),
     Kind("system_health", "system_health", lambda: L.system_health_payload(), "/health"),
     Kind("opportunities", "opportunities", _opportunities, "/opportunities"),
+    Kind("brain", "brain", lambda: L.brain_payload(), "/brain"),
 )
 KIND_BY_NAME = {k.name: k for k in KINDS}
 

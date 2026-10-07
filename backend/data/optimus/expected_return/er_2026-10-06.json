@@ -1,0 +1,6592 @@
+{
+ "receipt": "expected_return",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "asof": "2026-10-06",
+ "written_utc": "2026-10-06T21:56:53+00:00",
+ "sources": "production",
+ "unavailable": {},
+ "calibration_vintage": {
+  "sweep": "revision_flow_sweep_2026-09-25.json",
+  "cards": "2026-09-29",
+  "fit_asof": "2026-10-06"
+ },
+ "regime": {
+  "regime": "risk_on",
+  "cell": "TREND_UP x VIX_LOW",
+  "trend": "TREND_UP",
+  "vix": 15.52,
+  "trend_return": 0.004642,
+  "trend_observed_at": "2026-10-05",
+  "reason": null,
+  "vix_refusal": null,
+  "scale": 1.0
+ },
+ "weights_source": {
+  "h5": "equal",
+  "h21": "equal",
+  "h63": "equal"
+ },
+ "formula": "E[r_h] = regime_scale * sum_c w_c x_c over awake c; phi_c = regime_scale * w_c (x_c - mean_c); sum phi + baseline = E[r]",
+ "components": [
+  "ranker",
+  "revision_flow",
+  "investigator_dir",
+  "thesis_card",
+  "catalyst",
+  "source_reliability"
+ ],
+ "sizing_only": [
+  "investigator_mag"
+ ],
+ "n_names": 47,
+ "fit": {
+  "tables": {
+   "h5": {
+    "ranker": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "revision_flow": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "investigator_dir": {
+     "n_dates": 2,
+     "n_rows": 193,
+     "n": 2.0,
+     "skill": 0.2887301567202307,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "thesis_card": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "catalyst": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "source_reliability": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    }
+   },
+   "h21": {
+    "ranker": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "revision_flow": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "investigator_dir": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "thesis_card": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "catalyst": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "source_reliability": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    }
+   },
+   "h63": {
+    "ranker": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "revision_flow": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "investigator_dir": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "thesis_card": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "catalyst": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    },
+    "source_reliability": {
+     "n_dates": 0,
+     "n_rows": 0,
+     "n": 0.0,
+     "skill": null,
+     "graded": false,
+     "rep_weight": 0.0
+    }
+   }
+  },
+  "oos": {
+   "h5": {
+    "horizon": 5,
+    "n_dates": 0,
+    "oos_advantage_reputation_vs_equal": null,
+    "by_year": {},
+    "loo_worst": null,
+    "licensed": false,
+    "why": "no date with >= 3 graded names and both blends defined"
+   },
+   "h21": {
+    "horizon": 21,
+    "n_dates": 0,
+    "oos_advantage_reputation_vs_equal": null,
+    "by_year": {},
+    "loo_worst": null,
+    "licensed": false,
+    "why": "no graded decision rows carry an E[r] decomposition yet"
+   },
+   "h63": {
+    "horizon": 63,
+    "n_dates": 0,
+    "oos_advantage_reputation_vs_equal": null,
+    "by_year": {},
+    "loo_worst": null,
+    "licensed": false,
+    "why": "no graded decision rows carry an E[r] decomposition yet"
+   }
+  },
+  "calibration": {
+   "investigator_dir": {
+    "h5": {
+     "n_total": 193,
+     "n_dates": 2,
+     "bins": [
+      {
+       "p_lo": 0.43,
+       "p_hi": 0.47,
+       "p_mean": 0.4599615384615384,
+       "n": 26,
+       "rel_mean": -0.03343064748152833
+      },
+      {
+       "p_lo": 0.47400000000000003,
+       "p_hi": 0.48,
+       "p_mean": 0.47812499999999997,
+       "n": 16,
+       "rel_mean": 0.0032597036404466775
+      },
+      {
+       "p_lo": 0.4805,
+       "p_hi": 0.49,
+       "p_mean": 0.48706249999999995,
+       "n": 16,
+       "rel_mean": -0.04999621135424349
+      },
+      {
+       "p_lo": 0.4935,
+       "p_hi": 0.5065,
+       "p_mean": 0.49969047619047624,
+       "n": 21,
+       "rel_mean": 0.012739409696202549
+      },
+      {
+       "p_lo": 0.51,
+       "p_hi": 0.513,
+       "p_mean": 0.5113448275862068,
+       "n": 29,
+       "rel_mean": 0.00038464418591698207
+      },
+      {
+       "p_lo": 0.5195000000000001,
+       "p_hi": 0.5195000000000001,
+       "p_mean": 0.5195,
+       "n": 11,
+       "rel_mean": 0.017889518640572945
+      },
+      {
+       "p_lo": 0.52,
+       "p_hi": 0.52,
+       "p_mean": 0.5199999999999999,
+       "n": 22,
+       "rel_mean": -0.0116289653407667
+      },
+      {
+       "p_lo": 0.53,
+       "p_hi": 0.53,
+       "p_mean": 0.5299999999999998,
+       "n": 22,
+       "rel_mean": 0.018589490251015618
+      },
+      {
+       "p_lo": 0.5325,
+       "p_hi": 0.54,
+       "p_mean": 0.5379166666666665,
+       "n": 18,
+       "rel_mean": 0.03381917452127773
+      },
+      {
+       "p_lo": 0.5455,
+       "p_hi": 0.57,
+       "p_mean": 0.5554583333333334,
+       "n": 12,
+       "rel_mean": 0.02069220171945464
+      }
+     ]
+    }
+   }
+  },
+  "magnitude": {
+   "lambda": 0.0,
+   "skill": -0.010009840765805134,
+   "n": 9,
+   "bins": [
+    {
+     "p_lo": 0.01,
+     "p_hi": 0.08,
+     "p_mean": 0.056650769230769234,
+     "n": 195,
+     "abs_move": 0.020572501200751096
+    },
+    {
+     "p_lo": 0.085,
+     "p_hi": 0.12,
+     "p_mean": 0.10765357142857142,
+     "n": 168,
+     "abs_move": 0.024328396229789773
+    },
+    {
+     "p_lo": 0.121,
+     "p_hi": 0.15,
+     "p_mean": 0.14468072289156628,
+     "n": 166,
+     "abs_move": 0.023324355301567453
+    },
+    {
+     "p_lo": 0.156,
+     "p_hi": 0.22,
+     "p_mean": 0.19406060606060604,
+     "n": 198,
+     "abs_move": 0.033614130936899765
+    },
+    {
+     "p_lo": 0.23,
+     "p_hi": 0.25,
+     "p_mean": 0.24660875,
+     "n": 160,
+     "abs_move": 0.03211619570117563
+    },
+    {
+     "p_lo": 0.254,
+     "p_hi": 0.32,
+     "p_mean": 0.29361717171717167,
+     "n": 198,
+     "abs_move": 0.03570041696590242
+    },
+    {
+     "p_lo": 0.33,
+     "p_hi": 0.38,
+     "p_mean": 0.35593419354838707,
+     "n": 155,
+     "abs_move": 0.040860493532529026
+    },
+    {
+     "p_lo": 0.39,
+     "p_hi": 0.45,
+     "p_mean": 0.42301618497109833,
+     "n": 173,
+     "abs_move": 0.03946827233668268
+    },
+    {
+     "p_lo": 0.456,
+     "p_hi": 0.58,
+     "p_mean": 0.5167790697674418,
+     "n": 172,
+     "abs_move": 0.04637981949133643
+    },
+    {
+     "p_lo": 0.59,
+     "p_hi": 0.95,
+     "p_mean": 0.6841771428571428,
+     "n": 175,
+     "abs_move": 0.06253031883740127
+    }
+   ],
+   "ref_abs_move": 0.03574718490829402,
+   "horizon": 5,
+   "why": "lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)"
+  },
+  "n_graded_forecasts": 20106,
+  "n_graded_decisions": 41
+ },
+ "forecast_writers": [
+  {
+   "prefix": "accounting_forensics",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 1709,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "analyst_revisions",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 1705,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "base_rate",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 6,
+   "newest_made_at": "2026-10-01T21:00:00+00:00"
+  },
+  {
+   "prefix": "behavioral_narrative",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 1706,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "biotech",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 14,
+   "newest_made_at": "2026-08-11T07:55:29+00:00"
+  },
+  {
+   "prefix": "biotech_pharma",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 429,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "book:",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 6,
+   "newest_made_at": "2026-10-01T21:00:00+00:00"
+  },
+  {
+   "prefix": "company_fundamental",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 1712,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "energy_materials",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 296,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "event_news",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 1686,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "execution_momentum",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 1650,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "geopolitical",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 1733,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "headline_arena",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 5,
+   "newest_made_at": "2026-09-11T21:00:00+00:00"
+  },
+  {
+   "prefix": "investigator:",
+   "writer": "u_forecast",
+   "status": "READ",
+   "why": "component investigator_dir",
+   "n_rows": 8933,
+   "newest_made_at": "2026-10-06T17:59:02+00:00"
+  },
+  {
+   "prefix": "macro_rates",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 1687,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "news_digest:",
+   "writer": "news_digest",
+   "status": "NOT READ BY DESIGN",
+   "why": "world-digest implications (2026-09-29): graded, and read ONLY by the SHADOW_NEWS_v0 shadow contract with trust starting at 0; wiring them into the plan is the owner's decision, after graded rows exist",
+   "n_rows": 2063,
+   "newest_made_at": "2026-10-06T21:46:18+00:00"
+  },
+  {
+   "prefix": "options_volatility",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 1657,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "ownership_flow",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 1698,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "promise:",
+   "writer": "promise",
+   "status": "NOT READ BY DESIGN",
+   "why": "promise rows track commitments, not return forecasts; not a component of E[r]",
+   "n_rows": 5,
+   "newest_made_at": "2026-09-26T08:40:17+00:00"
+  },
+  {
+   "prefix": "review:",
+   "writer": "review",
+   "status": "NOT READ BY DESIGN",
+   "why": "the daily review grades books; its rows are not a forecast component of E[r]",
+   "n_rows": 3799,
+   "newest_made_at": "2026-10-06T17:59:58+00:00"
+  },
+  {
+   "prefix": "semis_compute",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 21,
+   "newest_made_at": "2026-08-11T07:55:51+00:00"
+  },
+  {
+   "prefix": "semis_technology",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 594,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "skeptic",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 1741,
+   "newest_made_at": "2026-08-12T09:49:39+00:00"
+  },
+  {
+   "prefix": "software_consumer",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 10,
+   "newest_made_at": "2026-08-11T07:56:32+00:00"
+  },
+  {
+   "prefix": "source:",
+   "writer": "source_claims",
+   "status": "NOT READ BY DESIGN",
+   "why": "news-reader claims: NO code path into the plan. Wiring them in would change what decides paper orders and the owner has not decided it (2026-09-29); news is collected and NOT read here",
+   "n_rows": 1515,
+   "newest_made_at": "2026-10-06T21:22:41+00:00"
+  },
+  {
+   "prefix": "thesis_card:",
+   "writer": "thesis_card",
+   "status": "READ",
+   "why": "component thesis_card",
+   "n_rows": 332,
+   "newest_made_at": "2026-09-29T03:22:16+00:00"
+  },
+  {
+   "prefix": "why_moved:",
+   "writer": null,
+   "status": "NOT READ (no reason registered)",
+   "why": "no component of E[r] consumes this prefix and no reason is on record",
+   "n_rows": 25,
+   "newest_made_at": "2026-08-12T06:10:52+00:00"
+  }
+ ],
+ "names": {
+  "LITE": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0008466848096834111,
+    "er_reputation": -0.0008466848096834111,
+    "er_equal": -0.0008466848096834111,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": 0.00039866666666666696,
+     "revision_flow": -0.00013992423597204495,
+     "source_reliability": 5.160298861384399e-07
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.0025400544290502336,
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 1
+     },
+     "revision_flow": {
+      "rule_rank": 310,
+      "of": 1686,
+      "net_raises": 4.0,
+      "n_firms": 12.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9930660402357327,
+      "n_mapped_firms": 6
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 310,
+      "of": 1686,
+      "net_raises": 4.0,
+      "n_firms": 12.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9930660402357327,
+      "n_mapped_firms": 6
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "CDNL": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.001246684809683411,
+    "er_reputation": -0.001246684809683411,
+    "er_equal": -0.001246684809683411,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": -1.3333333333330766e-06,
+     "revision_flow": -0.00013992423597204495,
+     "source_reliability": 5.160298861384399e-07
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.0037400544290502337,
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 2
+     },
+     "revision_flow": {
+      "rule_rank": 1238,
+      "of": 1686,
+      "net_raises": -2.0,
+      "n_firms": 3.0
+     },
+     "source_reliability": {
+      "multiplier": 0.984397345437234,
+      "n_mapped_firms": 1
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 1238,
+      "of": 1686,
+      "net_raises": -2.0,
+      "n_firms": 3.0
+     },
+     "source_reliability": {
+      "multiplier": 0.984397345437234,
+      "n_mapped_firms": 1
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "ASPN": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.005440054429050234,
+    "er_reputation": -0.005440054429050234,
+    "er_equal": -0.005440054429050234,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 1.0
+    },
+    "weights_reputation": {
+     "ranker": 1.0
+    },
+    "weights_equal": {
+     "ranker": 1.0
+    },
+    "phi": {
+     "ranker": -0.0017039999999999998
+    },
+    "baseline": -0.0037360544290502345,
+    "x": {
+     "ranker": -0.005440054429050234
+    },
+    "components_awake": [
+     "ranker"
+    ],
+    "asleep": {
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 3
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "BRUN": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0037400544290502337,
+    "er_reputation": -0.0037400544290502337,
+    "er_equal": -0.0037400544290502337,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 1.0
+    },
+    "weights_reputation": {
+     "ranker": 1.0
+    },
+    "weights_equal": {
+     "ranker": 1.0
+    },
+    "phi": {
+     "ranker": -3.99999999999923e-06
+    },
+    "baseline": -0.0037360544290502345,
+    "x": {
+     "ranker": -0.0037400544290502337
+    },
+    "components_awake": [
+     "ranker"
+    ],
+    "asleep": {
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 4
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "NBTX": {
+   "h5": {
+    "er": -0.015521372044995298,
+    "er_reputation": -0.015521372044995298,
+    "er_equal": -0.015521372044995298,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": -0.017834102074355616
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": -0.015521372044995298
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.42,
+      "bin_n": 26
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.005440054429050234,
+    "er_reputation": -0.005440054429050234,
+    "er_equal": -0.005440054429050234,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 1.0
+    },
+    "weights_reputation": {
+     "ranker": 1.0
+    },
+    "weights_equal": {
+     "ranker": 1.0
+    },
+    "phi": {
+     "ranker": -0.0017039999999999998
+    },
+    "baseline": -0.0037360544290502345,
+    "x": {
+     "ranker": -0.005440054429050234
+    },
+    "components_awake": [
+     "ranker"
+    ],
+    "asleep": {
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 5
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "MSFT": {
+   "h5": {
+    "er": 0.00018906239646766917,
+    "er_reputation": 0.00018906239646766917,
+    "er_equal": 0.00018906239646766917,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": -0.0021236676328926494
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": 0.00018906239646766917
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.51,
+      "bin_n": 29
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0005368422252517578,
+    "er_reputation": -0.0005368422252517578,
+    "er_equal": -0.0005368422252517578,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": 0.00039866666666666696,
+     "revision_flow": 0.00017283995682910872,
+     "source_reliability": -2.405578483361965e-06
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.0025400544290502336,
+     "revision_flow": 0.000938292578403461,
+     "source_reliability": -8.764825108501215e-06
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "0 graded of 30: asleep (p=0.560 carried)",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 6
+     },
+     "revision_flow": {
+      "rule_rank": 40,
+      "of": 1686,
+      "net_raises": 12.0,
+      "n_firms": 22.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9906587504684148,
+      "n_mapped_firms": 7
+     },
+     "thesis_card": {
+      "p": 0.56
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0024091853789965914,
+    "er_reputation": 0.0024091853789965914,
+    "er_equal": 0.0024091853789965914,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": 0.0017518126310710309,
+     "source_reliability": -2.0106797691235694e-05
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.00486380477204174,
+     "source_reliability": -4.543401404855684e-05
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 40,
+      "of": 1686,
+      "net_raises": 12.0,
+      "n_firms": 22.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9906587504684148,
+      "n_mapped_firms": 7
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "magnitude skill not positive: lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)",
+   "size_scale": 1.0
+  },
+  "AMD": {
+   "h5": {
+    "er": 0.01268219044547915,
+    "er_reputation": 0.01268219044547915,
+    "er_equal": 0.01268219044547915,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": 0.01036946041611883
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": 0.01268219044547915
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.54,
+      "bin_n": 18
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.0004108533222703853,
+    "er_reputation": 0.0004108533222703853,
+    "er_equal": 0.0004108533222703853,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": 0.00039866666666666696,
+     "revision_flow": 0.0011235245640482546,
+     "source_reliability": -5.394638180364785e-06
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.0025400544290502336,
+     "revision_flow": 0.0037903464000608993,
+     "source_reliability": -1.7732004199509676e-05
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 7
+     },
+     "revision_flow": {
+      "rule_rank": 13,
+      "of": 1686,
+      "net_raises": 21.0,
+      "n_firms": 27.0
+     },
+     "source_reliability": {
+      "multiplier": 0.995321798503898,
+      "n_mapped_firms": 10
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.004297209220269686,
+    "er_reputation": 0.004297209220269686,
+    "er_equal": 0.004297209220269686,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": 0.0036373171648312478,
+     "source_reliability": -1.758749017835822e-05
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.008634813839562173,
+     "source_reliability": -4.039539902280189e-05
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 13,
+      "of": 1686,
+      "net_raises": 21.0,
+      "n_firms": 27.0
+     },
+     "source_reliability": {
+      "multiplier": 0.995321798503898,
+      "n_mapped_firms": 10
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "magnitude skill not positive: lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)",
+   "size_scale": 1.0
+  },
+  "OSS": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.005440054429050234,
+    "er_reputation": -0.005440054429050234,
+    "er_equal": -0.005440054429050234,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 1.0
+    },
+    "weights_reputation": {
+     "ranker": 1.0
+    },
+    "weights_equal": {
+     "ranker": 1.0
+    },
+    "phi": {
+     "ranker": -0.0017039999999999998
+    },
+    "baseline": -0.0037360544290502345,
+    "x": {
+     "ranker": -0.005440054429050234
+    },
+    "components_awake": [
+     "ranker"
+    ],
+    "asleep": {
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 8
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "PLTR": {
+   "h5": {
+    "er": -0.0049199468749397575,
+    "er_reputation": -0.0049199468749397575,
+    "er_equal": -0.0049199468749397575,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": -0.007232676904300076
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": -0.0049199468749397575
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.52,
+      "bin_n": 22
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0008466848096834111,
+    "er_reputation": -0.0008466848096834111,
+    "er_equal": -0.0008466848096834111,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": 0.00039866666666666696,
+     "revision_flow": -0.00013992423597204495,
+     "source_reliability": 5.160298861384399e-07
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.0025400544290502336,
+     "revision_flow": 0.0,
+     "source_reliability": 0.0
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 9
+     },
+     "revision_flow": {
+      "rule_rank": 312,
+      "of": 1686,
+      "net_raises": 6.0,
+      "n_firms": 8.0
+     },
+     "source_reliability": {
+      "multiplier": 1.0027157426826632,
+      "n_mapped_firms": 3
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": 0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 312,
+      "of": 1686,
+      "net_raises": 6.0,
+      "n_firms": 8.0
+     },
+     "source_reliability": {
+      "multiplier": 1.0027157426826632,
+      "n_mapped_firms": 3
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "AGX": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0009800181430167445,
+    "er_reputation": -0.0009800181430167445,
+    "er_equal": -0.0009800181430167445,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": 0.00026533333333333357,
+     "revision_flow": -0.00013992423597204495,
+     "source_reliability": 5.160298861384399e-07
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.002940054429050234,
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 10
+     },
+     "revision_flow": {
+      "rule_rank": 1164,
+      "of": 1686,
+      "net_raises": -1.0,
+      "n_firms": 3.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9825440262902602,
+      "n_mapped_firms": 2
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 1164,
+      "of": 1686,
+      "net_raises": -1.0,
+      "n_firms": 3.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9825440262902602,
+      "n_mapped_firms": 2
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "RZLT": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.001813351476350078,
+    "er_reputation": -0.001813351476350078,
+    "er_equal": -0.001813351476350078,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": -0.0005679999999999999,
+     "revision_flow": -0.00013992423597204495,
+     "source_reliability": 5.160298861384399e-07
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.005440054429050234,
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 11
+     },
+     "revision_flow": {
+      "rule_rank": 923,
+      "of": 1686,
+      "net_raises": 2.0,
+      "n_firms": 3.0
+     },
+     "source_reliability": {
+      "multiplier": 0.7715556016994165,
+      "n_mapped_firms": 1
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 923,
+      "of": 1686,
+      "net_raises": 2.0,
+      "n_firms": 3.0
+     },
+     "source_reliability": {
+      "multiplier": 0.7715556016994165,
+      "n_mapped_firms": 1
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "LASR": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0037400544290502337,
+    "er_reputation": -0.0037400544290502337,
+    "er_equal": -0.0037400544290502337,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 1.0
+    },
+    "weights_reputation": {
+     "ranker": 1.0
+    },
+    "weights_equal": {
+     "ranker": 1.0
+    },
+    "phi": {
+     "ranker": -3.99999999999923e-06
+    },
+    "baseline": -0.0037360544290502345,
+    "x": {
+     "ranker": -0.0037400544290502337
+    },
+    "components_awake": [
+     "ranker"
+    ],
+    "asleep": {
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 12
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "EGY": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.005440054429050234,
+    "er_reputation": -0.005440054429050234,
+    "er_equal": -0.005440054429050234,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 1.0
+    },
+    "weights_reputation": {
+     "ranker": 1.0
+    },
+    "weights_equal": {
+     "ranker": 1.0
+    },
+    "phi": {
+     "ranker": -0.0017039999999999998
+    },
+    "baseline": -0.0037360544290502345,
+    "x": {
+     "ranker": -0.005440054429050234
+    },
+    "components_awake": [
+     "ranker"
+    ],
+    "asleep": {
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 13
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "RPD": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.001246684809683411,
+    "er_reputation": -0.001246684809683411,
+    "er_equal": -0.001246684809683411,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": -1.3333333333330766e-06,
+     "revision_flow": -0.00013992423597204495,
+     "source_reliability": 5.160298861384399e-07
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.0037400544290502337,
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 14
+     },
+     "revision_flow": {
+      "rule_rank": 63,
+      "of": 1686,
+      "net_raises": 14.0,
+      "n_firms": 15.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9890859120254155,
+      "n_mapped_firms": 8
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 63,
+      "of": 1686,
+      "net_raises": 14.0,
+      "n_firms": 15.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9890859120254155,
+      "n_mapped_firms": 8
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "SNDK": {
+   "h5": {
+    "er": 0.005245639286671638,
+    "er_reputation": 0.005245639286671638,
+    "er_equal": 0.005245639286671638,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": 0.002932909257311319
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": 0.005245639286671638
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.5,
+      "bin_n": 21
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0008466848096834111,
+    "er_reputation": -0.0008466848096834111,
+    "er_equal": -0.0008466848096834111,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": 0.00039866666666666696,
+     "revision_flow": -0.00013992423597204495,
+     "source_reliability": 5.160298861384399e-07
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.0025400544290502336,
+     "revision_flow": 0.0,
+     "source_reliability": 0.0
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 15
+     },
+     "revision_flow": {
+      "rule_rank": 1325,
+      "of": 1686,
+      "net_raises": -1.0,
+      "n_firms": 10.0
+     },
+     "source_reliability": {
+      "multiplier": 1.014735378973822,
+      "n_mapped_firms": 3
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": 0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 1325,
+      "of": 1686,
+      "net_raises": -1.0,
+      "n_firms": 10.0
+     },
+     "source_reliability": {
+      "multiplier": 1.014735378973822,
+      "n_mapped_firms": 3
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "WDS": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.005440054429050234,
+    "er_reputation": -0.005440054429050234,
+    "er_equal": -0.005440054429050234,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 1.0
+    },
+    "weights_reputation": {
+     "ranker": 1.0
+    },
+    "weights_equal": {
+     "ranker": 1.0
+    },
+    "phi": {
+     "ranker": -0.0017039999999999998
+    },
+    "baseline": -0.0037360544290502345,
+    "x": {
+     "ranker": -0.005440054429050234
+    },
+    "components_awake": [
+     "ranker"
+    ],
+    "asleep": {
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 16
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "HYMC": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0037400544290502337,
+    "er_reputation": -0.0037400544290502337,
+    "er_equal": -0.0037400544290502337,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 1.0
+    },
+    "weights_reputation": {
+     "ranker": 1.0
+    },
+    "weights_equal": {
+     "ranker": 1.0
+    },
+    "phi": {
+     "ranker": -3.99999999999923e-06
+    },
+    "baseline": -0.0037360544290502345,
+    "x": {
+     "ranker": -0.0037400544290502337
+    },
+    "components_awake": [
+     "ranker"
+    ],
+    "asleep": {
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 17
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "MRVL": {
+   "h5": {
+    "er": 0.007864784336968146,
+    "er_reputation": 0.007864784336968146,
+    "er_equal": 0.007864784336968146,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": 0.005552054307607827
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": 0.007864784336968146
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.53,
+      "bin_n": 22
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0008466848096834111,
+    "er_reputation": -0.0008466848096834111,
+    "er_equal": -0.0008466848096834111,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": 0.00039866666666666696,
+     "revision_flow": -0.00013992423597204495,
+     "source_reliability": 5.160298861384399e-07
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.0025400544290502336,
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 18
+     },
+     "revision_flow": {
+      "rule_rank": 61,
+      "of": 1686,
+      "net_raises": 13.0,
+      "n_firms": 17.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9875308600197528,
+      "n_mapped_firms": 4
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 61,
+      "of": 1686,
+      "net_raises": 13.0,
+      "n_firms": 17.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9875308600197528,
+      "n_mapped_firms": 4
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "MU": {
+   "h5": {
+    "er": 0.007864784336968146,
+    "er_reputation": 0.007864784336968146,
+    "er_equal": 0.007864784336968146,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": 0.005552054307607827
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": 0.007864784336968146
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.53,
+      "bin_n": 22
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0008466848096834111,
+    "er_reputation": -0.0008466848096834111,
+    "er_equal": -0.0008466848096834111,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": 0.00039866666666666696,
+     "revision_flow": -0.00013992423597204495,
+     "source_reliability": 5.160298861384399e-07
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.0025400544290502336,
+     "revision_flow": 0.0,
+     "source_reliability": 0.0
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "0 graded of 30: asleep (p=0.560 carried)",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 19
+     },
+     "revision_flow": {
+      "rule_rank": 358,
+      "of": 1686,
+      "net_raises": 3.0,
+      "n_firms": 14.0
+     },
+     "source_reliability": {
+      "multiplier": 1.00026001374456,
+      "n_mapped_firms": 5
+     },
+     "thesis_card": {
+      "p": 0.56
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": 0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 358,
+      "of": 1686,
+      "net_raises": 3.0,
+      "n_firms": 14.0
+     },
+     "source_reliability": {
+      "multiplier": 1.00026001374456,
+      "n_mapped_firms": 5
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "magnitude skill not positive: lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)",
+   "size_scale": 1.0
+  },
+  "OVV": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0009800181430167445,
+    "er_reputation": -0.0009800181430167445,
+    "er_equal": -0.0009800181430167445,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": 0.00026533333333333357,
+     "revision_flow": -0.00013992423597204495,
+     "source_reliability": 5.160298861384399e-07
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.002940054429050234,
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 20
+     },
+     "revision_flow": {
+      "rule_rank": 867,
+      "of": 1686,
+      "net_raises": 1.0,
+      "n_firms": 8.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9773876236132156,
+      "n_mapped_firms": 1
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 867,
+      "of": 1686,
+      "net_raises": 1.0,
+      "n_firms": 8.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9773876236132156,
+      "n_mapped_firms": 1
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "LI": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0037400544290502337,
+    "er_reputation": -0.0037400544290502337,
+    "er_equal": -0.0037400544290502337,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 1.0
+    },
+    "weights_reputation": {
+     "ranker": 1.0
+    },
+    "weights_equal": {
+     "ranker": 1.0
+    },
+    "phi": {
+     "ranker": -3.99999999999923e-06
+    },
+    "baseline": -0.0037360544290502345,
+    "x": {
+     "ranker": -0.0037400544290502337
+    },
+    "components_awake": [
+     "ranker"
+    ],
+    "asleep": {
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 21
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "GILT": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.005440054429050234,
+    "er_reputation": -0.005440054429050234,
+    "er_equal": -0.005440054429050234,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 1.0
+    },
+    "weights_reputation": {
+     "ranker": 1.0
+    },
+    "weights_equal": {
+     "ranker": 1.0
+    },
+    "phi": {
+     "ranker": -0.0017039999999999998
+    },
+    "baseline": -0.0037360544290502345,
+    "x": {
+     "ranker": -0.005440054429050234
+    },
+    "components_awake": [
+     "ranker"
+    ],
+    "asleep": {
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 22
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "OUT": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0037400544290502337,
+    "er_reputation": -0.0037400544290502337,
+    "er_equal": -0.0037400544290502337,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 1.0
+    },
+    "weights_reputation": {
+     "ranker": 1.0
+    },
+    "weights_equal": {
+     "ranker": 1.0
+    },
+    "phi": {
+     "ranker": -3.99999999999923e-06
+    },
+    "baseline": -0.0037360544290502345,
+    "x": {
+     "ranker": -0.0037400544290502337
+    },
+    "components_awake": [
+     "ranker"
+    ],
+    "asleep": {
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 23
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "TE": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": -0.0009800181430167445,
+    "er_reputation": -0.0009800181430167445,
+    "er_equal": -0.0009800181430167445,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": 0.00026533333333333357,
+     "revision_flow": -0.00013992423597204495,
+     "source_reliability": 5.160298861384399e-07
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.002940054429050234,
+     "revision_flow": 0.0,
+     "source_reliability": 0.0
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 24
+     },
+     "revision_flow": {
+      "rule_rank": 1134,
+      "of": 1686,
+      "net_raises": 0.0,
+      "n_firms": 3.0
+     },
+     "source_reliability": {
+      "multiplier": 1.0079302073811862,
+      "n_mapped_firms": 2
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": 0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 1134,
+      "of": 1686,
+      "net_raises": 0.0,
+      "n_firms": 3.0
+     },
+     "source_reliability": {
+      "multiplier": 1.0079302073811862,
+      "n_mapped_firms": 2
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "CRWD": {
+   "h5": {
+    "er": 0.007864784336968146,
+    "er_reputation": 0.007864784336968146,
+    "er_equal": 0.007864784336968146,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": 0.005552054307607827
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": 0.007864784336968146
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.53,
+      "bin_n": 22
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.00041398810259389666,
+    "er_reputation": 0.00041398810259389666,
+    "er_equal": 0.00041398810259389666,
+    "weights_source": "equal",
+    "weights": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_reputation": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "weights_equal": {
+     "ranker": 0.3333333333333333,
+     "revision_flow": 0.3333333333333333,
+     "source_reliability": 0.3333333333333333
+    },
+    "phi": {
+     "ranker": 0.00039866666666666696,
+     "revision_flow": 0.0011235245640482546,
+     "source_reliability": -2.2598578568534896e-06
+    },
+    "baseline": -0.0011059432702641716,
+    "x": {
+     "ranker": -0.0025400544290502336,
+     "revision_flow": 0.0037903464000608993,
+     "source_reliability": -8.32766322897579e-06
+    },
+    "components_awake": [
+     "ranker",
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "ranker": {
+      "decile": 9,
+      "rank": 25
+     },
+     "revision_flow": {
+      "rule_rank": 2,
+      "of": 1686,
+      "net_raises": 45.0,
+      "n_firms": 35.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9978029281891381,
+      "n_mapped_firms": 12
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.004307921266741615,
+    "er_reputation": 0.004307921266741615,
+    "er_equal": 0.004307921266741615,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": 0.0036373171648312478,
+     "source_reliability": -6.875443706428525e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.008634813839562173,
+     "source_reliability": -1.89713060789425e-05
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 2,
+      "of": 1686,
+      "net_raises": 45.0,
+      "n_firms": 35.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9978029281891381,
+      "n_mapped_firms": 12
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "magnitude skill not positive: lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)",
+   "size_scale": 1.0
+  },
+  "NVDA": {
+   "h5": {
+    "er": 0.01268219044547915,
+    "er_reputation": 0.01268219044547915,
+    "er_equal": 0.01268219044547915,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": 0.01036946041611883
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": 0.01268219044547915
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.54,
+      "bin_n": 18
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.00047136136479147866,
+    "er_reputation": 0.00047136136479147866,
+    "er_equal": 0.00047136136479147866,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": 0.0002592599352436631,
+     "source_reliability": 2.989120418955795e-06
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.000938292578403461,
+     "source_reliability": 4.43015117949627e-06
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "0 graded of 30: asleep (p=0.600 carried)",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 29,
+      "of": 1686,
+      "net_raises": 16.0,
+      "n_firms": 21.0
+     },
+     "source_reliability": {
+      "multiplier": 1.0047215029527723,
+      "n_mapped_firms": 9
+     },
+     "thesis_card": {
+      "p": 0.6
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.002443384620317321,
+    "er_reputation": 0.002443384620317321,
+    "er_equal": 0.002443384620317321,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": 0.0017518126310710309,
+     "source_reliability": 1.409244362949425e-05
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.00486380477204174,
+     "source_reliability": 2.296446859290305e-05
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 29,
+      "of": 1686,
+      "net_raises": 16.0,
+      "n_firms": 21.0
+     },
+     "source_reliability": {
+      "multiplier": 1.0047215029527723,
+      "n_mapped_firms": 9
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "magnitude skill not positive: lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)",
+   "size_scale": 1.0
+  },
+  "NBIX": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.00046333515214769065,
+    "er_reputation": 0.00046333515214769065,
+    "er_equal": 0.00046333515214769065,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": 0.0002592599352436631,
+     "source_reliability": -5.037092224832208e-06
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.000938292578403461,
+     "source_reliability": -1.1622274108079736e-05
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 50,
+      "of": 1686,
+      "net_raises": 16.0,
+      "n_firms": 15.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9876133794771611,
+      "n_mapped_firms": 6
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.002401779334016643,
+    "er_reputation": 0.002401779334016643,
+    "er_equal": 0.002401779334016643,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": 0.0017518126310710309,
+     "source_reliability": -2.7512842671184266e-05
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.00486380477204174,
+     "source_reliability": -6.024610400845398e-05
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 50,
+      "of": 1686,
+      "net_raises": 16.0,
+      "n_firms": 15.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9876133794771611,
+      "n_mapped_firms": 6
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "AAPL": {
+   "h5": {
+    "er": -0.017389986557997734,
+    "er_reputation": -0.017389986557997734,
+    "er_equal": -0.017389986557997734,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": -0.019702716587358053
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": -0.017389986557997734
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.49,
+      "bin_n": 16
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.00020988635395806745,
+     "source_reliability": 7.740448292076599e-07
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "0 graded of 30: asleep (p=0.500 carried)",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 377,
+      "of": 1686,
+      "net_raises": 2.0,
+      "n_firms": 20.0
+     },
+     "source_reliability": {
+      "multiplier": 0.988257653932152,
+      "n_mapped_firms": 7
+     },
+     "thesis_card": {
+      "p": 0.5
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 377,
+      "of": 1686,
+      "net_raises": 2.0,
+      "n_firms": 20.0
+     },
+     "source_reliability": {
+      "multiplier": 0.988257653932152,
+      "n_mapped_firms": 7
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "magnitude skill not positive: lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)",
+   "size_scale": 1.0
+  },
+  "HALO": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.00020988635395806745,
+     "source_reliability": 7.740448292076599e-07
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 486,
+      "of": 1686,
+      "net_raises": 5.0,
+      "n_firms": 5.0
+     },
+     "source_reliability": {
+      "multiplier": 0.7715556016994165,
+      "n_mapped_firms": 1
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 486,
+      "of": 1686,
+      "net_raises": 5.0,
+      "n_firms": 5.0
+     },
+     "source_reliability": {
+      "multiplier": 0.7715556016994165,
+      "n_mapped_firms": 1
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "IMKTA": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "META": {
+   "h5": {
+    "er": -0.0049199468749397575,
+    "er_reputation": -0.0049199468749397575,
+    "er_equal": -0.0049199468749397575,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": -0.007232676904300076
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": -0.0049199468749397575
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.52,
+      "bin_n": 22
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "0 graded of 30: asleep (p=0.500 carried)",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "thesis_card": {
+      "p": 0.5
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "magnitude skill not positive: lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)",
+   "size_scale": 1.0
+  },
+  "AMZN": {
+   "h5": {
+    "er": 0.007864784336968146,
+    "er_reputation": 0.007864784336968146,
+    "er_equal": 0.007864784336968146,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": 0.005552054307607827
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": 0.007864784336968146
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.53,
+      "bin_n": 22
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.0004692553865459088,
+    "er_reputation": 0.0004692553865459088,
+    "er_equal": 0.0004692553865459088,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": 0.0002592599352436631,
+     "source_reliability": 8.831421733859183e-07
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.000938292578403461,
+     "source_reliability": 2.1819468835651686e-07
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "0 graded of 30: asleep (p=0.560 carried)",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 26,
+      "of": 1686,
+      "net_raises": 17.0,
+      "n_firms": 21.0
+     },
+     "source_reliability": {
+      "multiplier": 1.0002325444039297,
+      "n_mapped_firms": 6
+     },
+     "thesis_card": {
+      "p": 0.56
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0024324679113116423,
+    "er_reputation": 0.0024324679113116423,
+    "er_equal": 0.0024324679113116423,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": 0.0017518126310710309,
+     "source_reliability": 3.1757346238152225e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.00486380477204174,
+     "source_reliability": 1.1310505815449944e-06
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 26,
+      "of": 1686,
+      "net_raises": 17.0,
+      "n_firms": 21.0
+     },
+     "source_reliability": {
+      "multiplier": 1.0002325444039297,
+      "n_mapped_firms": 6
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "magnitude skill not positive: lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)",
+   "size_scale": 1.0
+  },
+  "HNI": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "GOOGL": {
+   "h5": {
+    "er": 0.00018906239646766917,
+    "er_reputation": 0.00018906239646766917,
+    "er_equal": 0.00018906239646766917,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": -0.0021236676328926494
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": 0.00018906239646766917
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.51,
+      "bin_n": 29
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.00020988635395806745,
+     "source_reliability": 7.740448292076599e-07
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "0 graded of 30: asleep (p=0.560 carried)",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 396,
+      "of": 1686,
+      "net_raises": 2.0,
+      "n_firms": 18.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9803795511544257,
+      "n_mapped_firms": 5
+     },
+     "thesis_card": {
+      "p": 0.56
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 396,
+      "of": 1686,
+      "net_raises": 2.0,
+      "n_firms": 18.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9803795511544257,
+      "n_mapped_firms": 5
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "magnitude skill not positive: lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)",
+   "size_scale": 1.0
+  },
+  "AWI": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "TSM": {
+   "h5": {
+    "er": 0.01268219044547915,
+    "er_reputation": 0.01268219044547915,
+    "er_equal": 0.01268219044547915,
+    "weights_source": "equal",
+    "weights": {
+     "investigator_dir": 1.0
+    },
+    "weights_reputation": {
+     "investigator_dir": 1.0
+    },
+    "weights_equal": {
+     "investigator_dir": 1.0
+    },
+    "phi": {
+     "investigator_dir": 0.01036946041611883
+    },
+    "baseline": 0.0023127300293603187,
+    "x": {
+     "investigator_dir": 0.01268219044547915
+    },
+    "components_awake": [
+     "investigator_dir"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "investigator_dir": {
+      "p": 0.54,
+      "bin_n": 18
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.00020988635395806745,
+     "source_reliability": 7.740448292076599e-07
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "0 graded of 30: asleep (p=0.600 carried)",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 341,
+      "of": 1686,
+      "net_raises": 6.0,
+      "n_firms": 7.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9951975678761803,
+      "n_mapped_firms": 3
+     },
+     "thesis_card": {
+      "p": 0.6
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": [
+       "2026-10-15 earnings"
+      ]
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 341,
+      "of": 1686,
+      "net_raises": 6.0,
+      "n_firms": 7.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9951975678761803,
+      "n_mapped_firms": 3
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": [
+       "2026-10-15 earnings"
+      ]
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "CHD": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.00020988635395806745,
+     "source_reliability": 7.740448292076599e-07
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 307,
+      "of": 1686,
+      "net_raises": 7.0,
+      "n_firms": 7.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9819951882458177,
+      "n_mapped_firms": 2
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 307,
+      "of": 1686,
+      "net_raises": 7.0,
+      "n_firms": 7.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9819951882458177,
+      "n_mapped_firms": 2
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "OMAB": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "ASTE": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "MMSI": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.00020988635395806745,
+     "source_reliability": 7.740448292076599e-07
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 305,
+      "of": 1686,
+      "net_raises": 7.0,
+      "n_firms": 7.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9882179961443888,
+      "n_mapped_firms": 5
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 305,
+      "of": 1686,
+      "net_raises": 7.0,
+      "n_firms": 7.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9882179961443888,
+      "n_mapped_firms": 5
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "KN": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "fewer than 3 firms acted",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "ALG": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "0 graded of 30: asleep (p=0.500 carried)",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "thesis_card": {
+      "p": 0.5
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "STNG": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.00020988635395806745,
+     "source_reliability": 7.740448292076599e-07
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "0 graded of 30: asleep (p=0.500 carried)",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 1196,
+      "of": 1686,
+      "net_raises": -1.0,
+      "n_firms": 4.0
+     },
+     "source_reliability": {
+      "multiplier": 0.987043568074729,
+      "n_mapped_firms": 2
+     },
+     "thesis_card": {
+      "p": 0.5
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 1196,
+      "of": 1686,
+      "net_raises": -1.0,
+      "n_firms": 4.0
+     },
+     "source_reliability": {
+      "multiplier": 0.987043568074729,
+      "n_mapped_firms": 2
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "PDS": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "0 graded of 30: asleep (p=0.500 carried)",
+     "catalyst": "no dated PDUFA inside 21 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "thesis_card": {
+      "p": 0.5
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no revision event in the 90-day window",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "KEX": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.00020988635395806745,
+     "source_reliability": 7.740448292076599e-07
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 825,
+      "of": 1686,
+      "net_raises": 3.0,
+      "n_firms": 3.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9555847749107499,
+      "n_mapped_firms": 1
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 825,
+      "of": 1686,
+      "net_raises": 3.0,
+      "n_firms": 3.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9555847749107499,
+      "n_mapped_firms": 1
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "TDY": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.00020988635395806745,
+     "source_reliability": 7.740448292076599e-07
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 570,
+      "of": 1686,
+      "net_raises": 5.0,
+      "n_firms": 4.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9928826207336429,
+      "n_mapped_firms": 3
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 570,
+      "of": 1686,
+      "net_raises": 5.0,
+      "n_firms": 4.0
+     },
+     "source_reliability": {
+      "multiplier": 0.9928826207336429,
+      "n_mapped_firms": 3
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  },
+  "GXO": {
+   "h5": {
+    "er": null,
+    "er_reputation": null,
+    "er_equal": null,
+    "weights_source": "equal",
+    "weights": {},
+    "weights_reputation": {},
+    "weights_equal": {},
+    "phi": {},
+    "baseline": 0.0,
+    "x": {},
+    "components_awake": [],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "revision_flow": "no measured rule table at h=5",
+     "investigator_dir": "no investigator beats_benchmark row at h=5",
+     "thesis_card": "no thesis_card row at h=5",
+     "catalyst": "no dated PDUFA inside 5 sessions",
+     "source_reliability": "revision_flow is asleep"
+    },
+    "detail": {
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 5 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h21": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.00020988635395806745,
+     "source_reliability": 7.740448292076599e-07
+    },
+    "baseline": 0.00020911230912885978,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "not in ranking.json's top list",
+     "investigator_dir": "no investigator beats_benchmark row at h=21",
+     "thesis_card": "no thesis_card row at h=21",
+     "catalyst": "no dated PDUFA inside 21 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 1479,
+      "of": 1686,
+      "net_raises": -5.0,
+      "n_firms": 5.0
+     },
+     "source_reliability": {
+      "multiplier": 0.984397345437234,
+      "n_mapped_firms": 1
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 21 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "h63": {
+    "er": 0.0,
+    "er_reputation": 0.0,
+    "er_equal": 0.0,
+    "weights_source": "equal",
+    "weights": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_reputation": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "weights_equal": {
+     "revision_flow": 0.5,
+     "source_reliability": 0.5
+    },
+    "phi": {
+     "revision_flow": -0.000680089754949839,
+     "source_reliability": 2.6102093330427255e-06
+    },
+    "baseline": 0.0006774795456167962,
+    "x": {
+     "revision_flow": 0.0,
+     "source_reliability": -0.0
+    },
+    "components_awake": [
+     "revision_flow",
+     "source_reliability"
+    ],
+    "asleep": {
+     "ranker": "the ranker is calibrated at 21 sessions only",
+     "investigator_dir": "no investigator beats_benchmark row at h=63",
+     "thesis_card": "no thesis_card row at h=63",
+     "catalyst": "no dated PDUFA inside 63 sessions"
+    },
+    "detail": {
+     "revision_flow": {
+      "rule_rank": 1479,
+      "of": 1686,
+      "net_raises": -5.0,
+      "n_firms": 5.0
+     },
+     "source_reliability": {
+      "multiplier": 0.984397345437234,
+      "n_mapped_firms": 1
+     },
+     "catalyst": {
+      "asleep_reason": "no dated PDUFA inside 63 sessions",
+      "unsigned_events": []
+     }
+    }
+   },
+   "size_scale_mag": 1.0,
+   "size_scale_mag_why": "no abs_move_exceeds forecast for this name",
+   "size_scale": 1.0
+  }
+ }
+}

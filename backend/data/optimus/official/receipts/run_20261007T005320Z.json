@@ -1,0 +1,166 @@
+{
+ "t": "2026-10-07T00:53:20+00:00",
+ "sources": {
+  "sec_form4": {
+   "source": "sec_form4",
+   "entries": 100,
+   "filings_new": 5,
+   "parsed": 5,
+   "rows": 17,
+   "errors": {},
+   "refused": null,
+   "seconds": 6.4
+  },
+  "sec_8k": {
+   "source": "sec_8k",
+   "entries": 400,
+   "rows": 0,
+   "refused": null,
+   "seconds": 3.4
+  },
+  "sec_13f": {
+   "source": "sec_13f",
+   "entries": 100,
+   "rows": 0,
+   "refused": null,
+   "seconds": 1.0
+  },
+  "fed_rss": {
+   "source": "fed_rss",
+   "items": 50,
+   "rows": 0,
+   "refused": null,
+   "texts": {
+    "due": 0,
+    "fetched": 0,
+    "rows": 0,
+    "refused": null
+   },
+   "seconds": 4.8
+  },
+  "ecb_rss": {
+   "source": "ecb_rss",
+   "items": 0,
+   "rows": 0,
+   "refused": "NETWORK: ConnectionError: HTTPSConnectionPool(host='www.ecb.europa.eu', port=443): Max retries exceeded with url: /rss/press.html (Caused by NameResolutionError(\"HTTPSConnection(host='ww",
+   "seconds": 11.2
+  },
+  "boj_rss": {
+   "source": "boj_rss",
+   "items": 51,
+   "rows": 0,
+   "refused": null,
+   "seconds": 0.7
+  },
+  "boe_rss": {
+   "source": "boe_rss",
+   "items": 50,
+   "rows": 0,
+   "refused": null,
+   "seconds": 1.1
+  },
+  "whitehouse_rss": {
+   "source": "whitehouse_rss",
+   "items": 30,
+   "rows": 0,
+   "refused": "DAY_CAP: whitehouse_rss spent 40 requests in 24 h",
+   "seconds": 0.8
+  },
+  "treasury_rss": {
+   "source": "treasury_rss",
+   "items": 10,
+   "rows": 0,
+   "refused": null,
+   "seconds": 1.4
+  }
+ },
+ "refused_sources": {
+  "senate_efd": {
+   "url": "https://efdsearch.senate.gov/search/",
+   "why": "BOT_CHECK_OR_FORM: 403 Access Denied to a plain request, and the search sits behind an agreement form; not submitted, not worked around"
+  },
+  "senate_hearings": {
+   "url": "https://www.senate.gov/general/committee_schedules/hearings.xml",
+   "why": "ACCESS_DENIED: 403 on the XML and on robots.txt"
+  },
+  "pboc": {
+   "url": "http://www.pbc.gov.cn/en/3688110/3688172/index.html",
+   "why": "ROBOTS_DISALLOWED: pbc.gov.cn robots.txt disallows the English news path"
+  },
+  "nasdaq_earnings": {
+   "url": "https://api.nasdaq.com/api/calendar/earnings",
+   "why": "ROBOTS_DISALLOWED: api.nasdaq.com robots.txt disallows it"
+  },
+  "house_hearings": {
+   "url": "https://docs.house.gov/Committee/Calendar/ByWeek.aspx",
+   "why": "JS_RENDERED: the calendar is built by script in the page; no machine-readable feed was found. A candidate for the browser lane"
+  },
+  "etf_flows": {
+   "url": null,
+   "why": "NO_OFFICIAL_FREE_SOURCE: issuer pages publish shares outstanding per fund, but no official free flow feed across funds was found"
+  }
+ },
+ "requests_this_run": {
+  "sec_form4": 11,
+  "sec_8k": 4,
+  "sec_13f": 1,
+  "fed_rss": 3,
+  "ecb_rss": 1,
+  "boj_rss": 1,
+  "boe_rss": 1,
+  "whitehouse_rss": 1,
+  "treasury_rss": 1
+ },
+ "tables": {
+  "insider_tx": {
+   "rows": 10153,
+   "public_last_24h": 1035,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\insider_tx.jsonl"
+  },
+  "filing_events": {
+   "rows": 2410,
+   "public_last_24h": 413,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\filing_events.jsonl"
+  },
+  "politician_filings": {
+   "rows": 411,
+   "public_last_24h": 2,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_filings.jsonl"
+  },
+  "politician_trades": {
+   "rows": 3365,
+   "public_last_24h": 5,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_trades.jsonl"
+  },
+  "positioning_cot": {
+   "rows": 15322,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\positioning_cot.jsonl"
+  },
+  "short_interest": {
+   "rows": 45164,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\short_interest.jsonl"
+  },
+  "policy_events": {
+   "rows": 2371,
+   "public_last_24h": 187,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\policy_events.jsonl"
+  },
+  "policy_texts": {
+   "rows": 27,
+   "public_last_24h": 1,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\policy_texts.jsonl"
+  }
+ },
+ "panel": {
+  "rows": 49831,
+  "rows_by_block": {
+   "insiders": 1099,
+   "politicians": 2098,
+   "short_interest": 45164,
+   "positioning": 1661
+  },
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\panel\\official_daily_panel.parquet"
+ }
+}

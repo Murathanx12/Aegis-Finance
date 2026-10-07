@@ -1,0 +1,112 @@
+{
+ "cycle": 1,
+ "at": "2026-10-06T18:01:01+00:00",
+ "mode": "paper_profit",
+ "elapsed_s": 7421.3,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 3.6,
+   "result": {
+    "equity": 1003372.53,
+    "cash": 800653.35,
+    "n_positions": 10,
+    "invested_frac": 0.20203780145346414
+   }
+  },
+  "funnel": {
+   "ok": true,
+   "elapsed_s": 0.1,
+   "result": {
+    "skipped": "candidate set is fresh",
+    "generated_at": "2026-10-06T15:51:08+00:00",
+    "age_days": 0.0,
+    "n_candidates": 25
+   }
+  },
+  "analyst": {
+   "ok": true,
+   "elapsed_s": 4334.2,
+   "result": {
+    "pulled": true,
+    "rc": 0
+   },
+   "slow": "4334s exceeds SLOW_UNIT_S 1800s; reported, not killed \u2014 the loop stops at boundaries by design"
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 128.0,
+   "result": {
+    "n_eligible": 2884,
+    "ic_mean": 0.018420084910232885,
+    "top20_net_rel_21d": -0.009250601144537768,
+    "top1": "LITE"
+   }
+  },
+  "forecast": {
+   "ok": true,
+   "elapsed_s": 2854.7,
+   "result": {
+    "state": "DONE",
+    "n_rows_written": 270,
+    "n_done": 135,
+    "n_unpriced": 25,
+    "n_refused": 0,
+    "spent_usd": 0.174997,
+    "dependency_calls": 135,
+    "dependency_failed_calls": 0,
+    "dependency_retries": 0,
+    "dependency_runs_ended_down": 0,
+    "receipt_write_failures": 0,
+    "why": null,
+    "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\forecasts\\day_2026-10-06.json",
+    "status": "ok"
+   },
+   "slow": "2855s exceeds SLOW_UNIT_S 1800s; reported, not killed \u2014 the loop stops at boundaries by design"
+  },
+  "review": {
+   "ok": true,
+   "elapsed_s": 38.5,
+   "result": {
+    "morning": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\review\\morning_2026-10-06.md",
+    "asof": "2026-10-06",
+    "n_rows": 1284,
+    "n_minted": 1172,
+    "review": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\review\\review_2026-10-06.json"
+   }
+  },
+  "plan": {
+   "ok": false,
+   "elapsed_s": 7.1,
+   "error": "AttributeError: module 'backend.config' has no attribute 'HYP_LAB_FAMILY_MIN_WEIGHT'"
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 21.9,
+   "result": {
+    "forecasts": "11 newly resolved; 20,106 of 36,616 records now carry an outcome; 0 voided as unresolvable this run; 77 wait on a bar, 16,297 are not yet due",
+    "decisions": "ok"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 33.3,
+   "result": {
+    "unit": "distil",
+    "day": "2026-10-06",
+    "rc": 0,
+    "status": "ok",
+    "tail": "\",\n   \"persona_weights\"\n  ],\n  \"path\": \"C:\\\\Users\\\\mrthn\\\\aegis-finance\\\\backend\\\\data\\\\optimus\\\\pc_book\\\\policy_state.json\"\n }\n}\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\n | policy_state refresh FAILED AttributeError: module 'backend.config' has no attribute 'HYP_LAB_FAMILY_MIN_WEIGHT'",
+    "ran_utc": "2026-10-06T18:01:01+00:00"
+   }
+  }
+ },
+ "errors": [
+  {
+   "unit": "plan",
+   "error": "AttributeError: module 'backend.config' has no attribute 'HYP_LAB_FAMILY_MIN_WEIGHT'",
+   "elapsed_s": 7.1,
+   "where": "hn\\aegis-finance\\scripts\\sim_run.py\", line 164, in unit\n    res = fn()\n          ^^^^\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\sim_run.py\", line 1922, in <lambda>\n    return {\"failed\": f\"rc {r.returncode}\", \"stderr\": (r.stderr or \"\")[-300:]}\n                                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\sim_run.py\", line 1237, in u_plan\n    `mandate` block verbatim (`decision_contract.mandate_view`), so the plan and\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: module 'backend.config' has no attribute 'HYP_LAB_FAMILY_MIN_WEIGHT'\n"
+  }
+ ]
+}

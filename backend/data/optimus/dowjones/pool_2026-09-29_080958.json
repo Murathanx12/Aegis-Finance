@@ -1,0 +1,448 @@
+{
+ "receipt": "reader_pool",
+ "started_utc": "2026-09-29T08:10:12+00:00",
+ "pid": 178064,
+ "profile": "muratclaw",
+ "names": 132,
+ "books": [
+  "AAOI",
+  "AAPL",
+  "AARD",
+  "ABSI",
+  "ADUS",
+  "AGIO",
+  "ALG",
+  "AMSC",
+  "AMZN",
+  "APPS",
+  "ARCO",
+  "AVGO",
+  "AVPT",
+  "AXTI",
+  "BAND",
+  "BBIO",
+  "BE",
+  "BHVN",
+  "BLZE",
+  "BR",
+  "CCJ",
+  "CHD",
+  "CHH",
+  "CIFR",
+  "CLS",
+  "COGT",
+  "DKNG",
+  "FORM",
+  "FSLY",
+  "GEV",
+  "GMAB",
+  "GOOG",
+  "GOOGL",
+  "HOOD",
+  "HUBS",
+  "HUT",
+  "ICHR",
+  "INCY",
+  "IONQ",
+  "IOVA",
+  "JAZZ",
+  "KYTX",
+  "LEU",
+  "META",
+  "MP",
+  "MSFT",
+  "MU",
+  "MXL",
+  "NOVT",
+  "NTLA",
+  "NVDA",
+  "NVT",
+  "PAGS",
+  "PDS",
+  "PRAX",
+  "PRCH",
+  "QUBT",
+  "RGEN",
+  "SLDP",
+  "SNDK",
+  "SNDR",
+  "SOC",
+  "STNG",
+  "TS",
+  "TSM",
+  "VELO",
+  "VKTX",
+  "VRT",
+  "VRTX",
+  "WST"
+ ],
+ "fresh": [
+  "AB",
+  "AMD",
+  "BTGO",
+  "DKNG",
+  "DT",
+  "ENVA",
+  "ETON",
+  "HUT",
+  "IDT",
+  "MARA",
+  "MDB",
+  "MRVL",
+  "QMCO",
+  "SDOT",
+  "VKTX",
+  "VSTS"
+ ],
+ "stop_reason": "STOP file SUPERVISOR_STOP",
+ "pages": 11,
+ "stats": {
+  "marketwatch.com": {
+   "links_found": 62,
+   "links_new": 2,
+   "front": 5
+  },
+  "barrons.com": {
+   "links_found": 37,
+   "links_new": 5,
+   "front": 4
+  },
+  "finance.yahoo.com": {
+   "links_found": 21,
+   "links_new": 0,
+   "front": 2
+  }
+ },
+ "classes": {
+  "reuters.com": {
+   "ROBOTS_DISALLOWED": 6
+  },
+  "apnews.com": {},
+  "asia.nikkei.com": {},
+  "barrons.com": {
+   "OK": 4
+  },
+  "bbc.com": {},
+  "bls.gov": {},
+  "cnbc.com": {},
+  "federalreserve.gov": {},
+  "finance.yahoo.com": {
+   "OK": 2
+  },
+  "ft.com": {},
+  "home.treasury.gov": {},
+  "marketwatch.com": {
+   "OK": 5
+  },
+  "reddit.com": {},
+  "scmp.com": {},
+  "sec.gov": {},
+  "stocktwits.com": {},
+  "treasury.gov": {},
+  "wsj.com": {},
+  "x.com": {}
+ },
+ "timing_medians": {
+  "marketwatch.com|front": {
+   "n": 5,
+   "median_wait_s": 0.0,
+   "median_open_s": 1.06,
+   "median_work_s": 29.79
+  },
+  "barrons.com|front": {
+   "n": 4,
+   "median_wait_s": 0.0,
+   "median_open_s": 1.37,
+   "median_work_s": 33.64
+  },
+  "finance.yahoo.com|front": {
+   "n": 2,
+   "median_wait_s": 0.0,
+   "median_open_s": 1.56,
+   "median_work_s": 31.98
+  }
+ },
+ "timings_tail": [
+  {
+   "host": "marketwatch.com",
+   "kind": "front",
+   "wait_s": 0.06,
+   "open_s": 9.46,
+   "work_s": 35.06,
+   "total_s": 44.59,
+   "outcome": "OK",
+   "at": "2026-09-29T08:10:59+00:00"
+  },
+  {
+   "host": "barrons.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 10.39,
+   "work_s": 38.54,
+   "total_s": 48.96,
+   "outcome": "OK",
+   "at": "2026-09-29T08:11:01+00:00"
+  },
+  {
+   "host": "finance.yahoo.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.9,
+   "work_s": 34.93,
+   "total_s": 36.85,
+   "outcome": "OK",
+   "at": "2026-09-29T08:11:05+00:00"
+  },
+  {
+   "host": "marketwatch.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.51,
+   "work_s": 29.79,
+   "total_s": 31.3,
+   "outcome": "OK",
+   "at": "2026-09-29T08:11:30+00:00"
+  },
+  {
+   "host": "barrons.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 0.97,
+   "work_s": 28.74,
+   "total_s": 29.72,
+   "outcome": "OK",
+   "at": "2026-09-29T08:11:31+00:00"
+  },
+  {
+   "host": "barrons.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.62,
+   "work_s": 18.44,
+   "total_s": 20.06,
+   "outcome": "OK",
+   "at": "2026-09-29T08:11:51+00:00"
+  },
+  {
+   "host": "marketwatch.com",
+   "kind": "front",
+   "wait_s": 7.64,
+   "open_s": 0.83,
+   "work_s": 29.33,
+   "total_s": 37.83,
+   "outcome": "OK",
+   "at": "2026-09-29T08:12:08+00:00"
+  },
+  {
+   "host": "barrons.com",
+   "kind": "front",
+   "wait_s": 11.55,
+   "open_s": 1.12,
+   "work_s": 39.54,
+   "total_s": 52.24,
+   "outcome": "OK",
+   "at": "2026-09-29T08:12:43+00:00"
+  },
+  {
+   "host": "marketwatch.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.04,
+   "work_s": 39.85,
+   "total_s": 40.9,
+   "outcome": "OK",
+   "at": "2026-09-29T08:12:49+00:00"
+  },
+  {
+   "host": "finance.yahoo.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.23,
+   "work_s": 29.03,
+   "total_s": 30.27,
+   "outcome": "OK",
+   "at": "2026-09-29T08:13:13+00:00"
+  },
+  {
+   "host": "marketwatch.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.06,
+   "work_s": 28.81,
+   "total_s": 29.88,
+   "outcome": "OK",
+   "at": "2026-09-29T08:13:19+00:00"
+  }
+ ],
+ "governor_history": [
+  {
+   "t": "2026-09-29T08:10:12+00:00",
+   "from": 1,
+   "to": 2,
+   "free_gb": 8.73
+  },
+  {
+   "t": "2026-09-29T08:10:27+00:00",
+   "from": 2,
+   "to": 3,
+   "free_gb": 8.04
+  },
+  {
+   "t": "2026-09-29T08:10:42+00:00",
+   "from": 3,
+   "to": 4,
+   "free_gb": 5.69
+  },
+  {
+   "t": "2026-09-29T08:10:57+00:00",
+   "from": 4,
+   "to": 5,
+   "free_gb": 5.64
+  },
+  {
+   "t": "2026-09-29T08:11:12+00:00",
+   "from": 5,
+   "to": 6,
+   "free_gb": 6.18
+  }
+ ],
+ "cooling_events": [],
+ "media": {},
+ "sections_dropped": [
+  "https://finance.yahoo.com/topic/economic-news/",
+  "https://www.cnbc.com/asia-markets/",
+  "https://www.cnbc.com/video/",
+  "https://www.federalreserve.gov/newsevents/speeches.htm",
+  "https://www.wsj.com/podcasts"
+ ],
+ "errors": [],
+ "fronts": {
+  "marketwatch:latest_news": {
+   "url": "https://www.marketwatch.com/latest-news",
+   "landed": "https://www.marketwatch.com/latest-news",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T08:10:58+00:00",
+   "links": 14,
+   "new": 0
+  },
+  "barrons:home": {
+   "url": "https://www.barrons.com/",
+   "landed": "https://www.barrons.com/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T08:11:01+00:00",
+   "links": 12,
+   "new": 4
+  },
+  "yahoo:home": {
+   "url": "https://finance.yahoo.com/",
+   "landed": "https://finance.yahoo.com/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T08:11:05+00:00",
+   "links": 15,
+   "new": 0
+  },
+  "marketwatch:markets": {
+   "url": "https://www.marketwatch.com/markets",
+   "landed": "https://www.marketwatch.com/markets",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T08:11:30+00:00",
+   "links": 12,
+   "new": 2
+  },
+  "barrons:markets": {
+   "url": "https://www.barrons.com/topics/markets",
+   "landed": "https://www.barrons.com/topics/markets",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T08:11:30+00:00",
+   "links": 12,
+   "new": 0
+  },
+  "barrons:stock_picks": {
+   "url": "https://www.barrons.com/topics/stock-picks",
+   "landed": "https://www.barrons.com/topics/stock-picks",
+   "title": "Not Found",
+   "class": "OK",
+   "at": "2026-09-29T08:11:51+00:00",
+   "links": 1,
+   "new": 1
+  },
+  "marketwatch:investing": {
+   "url": "https://www.marketwatch.com/investing",
+   "landed": "https://www.marketwatch.com/investing",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T08:12:08+00:00",
+   "links": 12,
+   "new": 0
+  },
+  "barrons:technology": {
+   "url": "https://www.barrons.com/topics/technology",
+   "landed": "https://www.barrons.com/topics/technology",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T08:12:43+00:00",
+   "links": 12,
+   "new": 0
+  },
+  "marketwatch:stocks": {
+   "url": "https://www.marketwatch.com/investing/stocks",
+   "landed": "https://www.marketwatch.com/investing/stocks",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T08:12:49+00:00",
+   "links": 12,
+   "new": 0
+  },
+  "yahoo:latest_news": {
+   "url": "https://finance.yahoo.com/topic/latest-news/",
+   "landed": "https://finance.yahoo.com/topic/latest-news/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T08:13:13+00:00",
+   "links": 6,
+   "new": 0
+  },
+  "marketwatch:economy_and_politics": {
+   "url": "https://www.marketwatch.com/economy-politics",
+   "landed": "https://www.marketwatch.com/economy-politics",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T08:13:18+00:00",
+   "links": 12,
+   "new": 0
+  }
+ },
+ "open_tabs_now": [],
+ "orphaned_tabs": [],
+ "reader_tab_ids": [
+  "5E5E2D3C1DD856E793837E5EDB37047E",
+  "31274233DB286746C85D7FBAD21E16F0",
+  "02BA3173C63DFD8BFC46E36865400E2C",
+  "F5030BC369662508A8314C48EA9280B9",
+  "31AC1CD92420055785722156C138C7C5",
+  "161A638A7E2CADFB20AA72348DAC10FF",
+  "72CF57531E44948EC28B2696CB37BD11",
+  "35DBEFC1FCCDC7E89EAD09B0308923F9",
+  "327426317242036BD5B4CF301E28A8DE",
+  "B5040EAE0700A2D2322A35F4FEDE306B",
+  "E42C79BD7DDE2FA17633606369F5DAFD"
+ ],
+ "throttle_targets_s": [
+  28.09,
+  29.43,
+  49.84,
+  39.79,
+  27.15,
+  34.07,
+  37.26,
+  31.85,
+  45.23,
+  38.96,
+  19.37
+ ]
+}

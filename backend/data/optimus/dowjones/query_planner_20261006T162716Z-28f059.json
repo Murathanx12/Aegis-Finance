@@ -1,0 +1,230 @@
+{
+  "receipt": "query_planner",
+  "run_id": "20261006T162716Z-28f059",
+  "generated_utc": "2026-10-06T16:27:16+00:00",
+  "day": "2026-10-06",
+  "status": "OK",
+  "refusal": null,
+  "budget": {
+    "day": 24,
+    "run": 8,
+    "lanes": {
+      "held_names": 12,
+      "themes": 8,
+      "opportunities": 4
+    }
+  },
+  "model": "deepseek/deepseek-flash",
+  "licence": "PRODUCT_EXPERIMENT (reader input; no order, no claim)",
+  "queries": [
+    {
+      "query_id": "53889a57cbe4",
+      "day": "2026-10-06",
+      "seed_lane": "held_names",
+      "seed": "INCY",
+      "seed_key": "held_names:INCY",
+      "tool": "web_search",
+      "text": "INCY stock news this week",
+      "t": "2026-10-06T16:27:28+00:00",
+      "run_id": "20261006T162716Z-28f059",
+      "status": "OK",
+      "session_id": "aegis-qp-53889a57cbe4-8eb175",
+      "call_id": "c5f630253fdd3b2b",
+      "tool_calls": {
+        "web_search": 1
+      },
+      "tool_fired": true,
+      "violations": [],
+      "tool_errors": [
+        {
+          "tool": "web_search",
+          "error": "web_search is disabled or no provider is available."
+        }
+      ],
+      "tool_unavailable": true,
+      "cost_usd": 0.000231,
+      "cost_known": true,
+      "released": true,
+      "n_urls": 0,
+      "urls": [],
+      "error": null
+    }
+  ],
+  "totals": {
+    "queries": 1,
+    "tool_fired": 1,
+    "tool_unverified": 0,
+    "urls": 0,
+    "admitted": 0,
+    "quarantined": 0,
+    "refused": 0,
+    "duplicate": 0,
+    "deferred": 0,
+    "cost_usd": 0.000231,
+    "tool_unavailable": 1,
+    "tool_calls_web_search": 1,
+    "tool_calls_x_search": 0,
+    "by_seed_lane": {
+      "held_names": {
+        "queries": 1,
+        "tool_fired": 1,
+        "tool_unverified": 0,
+        "urls": 0,
+        "admitted": 0,
+        "quarantined": 0,
+        "refused": 0,
+        "duplicate": 0,
+        "deferred": 0,
+        "cost_usd": 0.000231,
+        "tool_unavailable": 1
+      }
+    },
+    "by_tool": {
+      "web_search": {
+        "queries": 1,
+        "tool_fired": 1,
+        "tool_unverified": 0,
+        "urls": 0,
+        "admitted": 0,
+        "quarantined": 0,
+        "refused": 0,
+        "duplicate": 0,
+        "deferred": 0,
+        "cost_usd": 0.000231,
+        "tool_unavailable": 1
+      }
+    }
+  },
+  "seeds": {
+    "held_names": 87,
+    "themes": 8,
+    "opportunities": 30
+  },
+  "planned": 1,
+  "scope_before": {
+    "verdict": "OK",
+    "config_problems": [],
+    "n_calls_24h": 9,
+    "n_violations_24h": 0,
+    "calls_by_tool_24h": {
+      "web_search": 9
+    }
+  },
+  "spent_usd": 0.000231,
+  "scope_after": {
+    "verdict": "OK",
+    "config_problems": [],
+    "n_calls_24h": 10,
+    "n_violations_24h": 0,
+    "calls_by_tool_24h": {
+      "web_search": 10
+    }
+  },
+  "yield": {
+    "window_h": 24.0,
+    "since_utc": "2026-10-05T16:27:16+00:00",
+    "zero_kind": "QUERIES_RAN_NO_URLS",
+    "queries": {
+      "queries": 11,
+      "tool_fired": 10,
+      "tool_unavailable": 1,
+      "urls": 0,
+      "admitted": 0,
+      "quarantined": 0,
+      "refused": 0,
+      "duplicate": 0,
+      "deferred": 0,
+      "cost_usd": 0.003547
+    },
+    "planner": {
+      "pages_read": 0,
+      "pages_ok": 0,
+      "claims": 0,
+      "forecast_rows": 0,
+      "by_seed_lane": {},
+      "by_tool": {},
+      "by_host": {}
+    },
+    "non_planner": {
+      "pages_read": 2145,
+      "pages_ok": 1799,
+      "claims": 45,
+      "forecast_rows": 132,
+      "by_host_top": {
+        "wsj.com": {
+          "pages_read": 386,
+          "pages_ok": 343,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "marketwatch.com": {
+          "pages_read": 341,
+          "pages_ok": 341,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "barrons.com": {
+          "pages_read": 292,
+          "pages_ok": 292,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "cnbc.com": {
+          "pages_read": 137,
+          "pages_ok": 105,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "auth.asia.nikkei.com": {
+          "pages_read": 133,
+          "pages_ok": 0,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "asia.nikkei.com": {
+          "pages_read": 105,
+          "pages_ok": 76,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "scmp.com": {
+          "pages_read": 94,
+          "pages_ok": 89,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "x.com": {
+          "pages_read": 93,
+          "pages_ok": 93,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "ft.com": {
+          "pages_read": 88,
+          "pages_ok": 54,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "apnews.com": {
+          "pages_read": 78,
+          "pages_ok": 77,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "bbc.com": {
+          "pages_read": 78,
+          "pages_ok": 76,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "reuters.com": {
+          "pages_read": 64,
+          "pages_ok": 1,
+          "claims": 0,
+          "forecast_rows": 0
+        }
+      }
+    },
+    "line": "query_planner 24h: QUERIES_RAN_NO_URLS -- 11 queries (10 tool fired, 1 tool unavailable), 0 URLs, 0 admitted / 0 quarantined / 0 refused; planner pages 0 -> claims 0 -> forecasts 0; non-planner pages 2145 -> claims 45 -> forecasts 132; spend $0.0035"
+  }
+}

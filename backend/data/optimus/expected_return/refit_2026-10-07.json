@@ -1,0 +1,390 @@
+{
+ "receipt": "expected_return_refit",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "date": "2026-10-07",
+ "written_utc": "2026-10-06T21:57:01+00:00",
+ "sources": "production",
+ "unavailable": {
+  "regime": "not requested"
+ },
+ "constants": {
+  "ER_BLEND_GRADE_HORIZON": 21,
+  "ER_BLEND_GRADE_MIN_SESSIONS": 21,
+  "ER_CALIB_K": 30.0,
+  "ER_EXPLOIT_MAX_WEIGHT": 0.1,
+  "ER_FLOOR": 0.0,
+  "ER_GAMMA": 1.0,
+  "ER_HORIZONS": [
+   5,
+   21,
+   63
+  ],
+  "ER_HORIZON_ALIASES": {
+   "5": 5,
+   "20": 21,
+   "21": 21,
+   "60": 63,
+   "63": 63
+  },
+  "ER_K_PRIOR": 30.0,
+  "ER_MIN_GRADED": 30,
+  "ER_OOS_MIN_DATES": 20,
+  "ER_PDUFA_BREAKEVEN_P": 0.87,
+  "ER_PDUFA_PRIOR_P_APPROVAL": 0.7,
+  "ER_PDUFA_UP_RETURN": 0.05,
+  "ER_PRIOR_SHARE": 0.5,
+  "ER_REGIME_SCALE": {
+   "risk_on": 1.0,
+   "risk_off": 0.5,
+   "unknown": 1.0
+  },
+  "ER_REVISION_MIN_FIRMS": 3,
+  "ER_SIZE_SCALE_MIN": 0.25,
+  "ER_SR_MULT_MAX": 1.5,
+  "ER_SR_MULT_MIN": 0.5
+ },
+ "tables": {
+  "h5": {
+   "ranker": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "revision_flow": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "investigator_dir": {
+    "n_dates": 2,
+    "n_rows": 193,
+    "n": 2.0,
+    "skill": 0.2887301567202307,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "thesis_card": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "catalyst": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "source_reliability": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   }
+  },
+  "h21": {
+   "ranker": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "revision_flow": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "investigator_dir": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "thesis_card": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "catalyst": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "source_reliability": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   }
+  },
+  "h63": {
+   "ranker": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "revision_flow": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "investigator_dir": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "thesis_card": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "catalyst": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   },
+   "source_reliability": {
+    "n_dates": 0,
+    "n_rows": 0,
+    "n": 0.0,
+    "skill": null,
+    "graded": false,
+    "rep_weight": 0.0
+   }
+  }
+ },
+ "oos": {
+  "h5": {
+   "horizon": 5,
+   "n_dates": 0,
+   "oos_advantage_reputation_vs_equal": null,
+   "by_year": {},
+   "loo_worst": null,
+   "licensed": false,
+   "why": "no date with >= 3 graded names and both blends defined"
+  },
+  "h21": {
+   "horizon": 21,
+   "n_dates": 0,
+   "oos_advantage_reputation_vs_equal": null,
+   "by_year": {},
+   "loo_worst": null,
+   "licensed": false,
+   "why": "no graded decision rows carry an E[r] decomposition yet"
+  },
+  "h63": {
+   "horizon": 63,
+   "n_dates": 0,
+   "oos_advantage_reputation_vs_equal": null,
+   "by_year": {},
+   "loo_worst": null,
+   "licensed": false,
+   "why": "no graded decision rows carry an E[r] decomposition yet"
+  }
+ },
+ "calibration": {
+  "investigator_dir": {
+   "h5": {
+    "n_total": 193,
+    "n_dates": 2,
+    "bins": [
+     {
+      "p_lo": 0.43,
+      "p_hi": 0.47,
+      "p_mean": 0.4599615384615384,
+      "n": 26,
+      "rel_mean": -0.03343064748152833
+     },
+     {
+      "p_lo": 0.47400000000000003,
+      "p_hi": 0.48,
+      "p_mean": 0.47812499999999997,
+      "n": 16,
+      "rel_mean": 0.0032597036404466775
+     },
+     {
+      "p_lo": 0.4805,
+      "p_hi": 0.49,
+      "p_mean": 0.48706249999999995,
+      "n": 16,
+      "rel_mean": -0.04999621135424349
+     },
+     {
+      "p_lo": 0.4935,
+      "p_hi": 0.5065,
+      "p_mean": 0.49969047619047624,
+      "n": 21,
+      "rel_mean": 0.012739409696202549
+     },
+     {
+      "p_lo": 0.51,
+      "p_hi": 0.513,
+      "p_mean": 0.5113448275862068,
+      "n": 29,
+      "rel_mean": 0.00038464418591698207
+     },
+     {
+      "p_lo": 0.5195000000000001,
+      "p_hi": 0.5195000000000001,
+      "p_mean": 0.5195,
+      "n": 11,
+      "rel_mean": 0.017889518640572945
+     },
+     {
+      "p_lo": 0.52,
+      "p_hi": 0.52,
+      "p_mean": 0.5199999999999999,
+      "n": 22,
+      "rel_mean": -0.0116289653407667
+     },
+     {
+      "p_lo": 0.53,
+      "p_hi": 0.53,
+      "p_mean": 0.5299999999999998,
+      "n": 22,
+      "rel_mean": 0.018589490251015618
+     },
+     {
+      "p_lo": 0.5325,
+      "p_hi": 0.54,
+      "p_mean": 0.5379166666666665,
+      "n": 18,
+      "rel_mean": 0.03381917452127773
+     },
+     {
+      "p_lo": 0.5455,
+      "p_hi": 0.57,
+      "p_mean": 0.5554583333333334,
+      "n": 12,
+      "rel_mean": 0.02069220171945464
+     }
+    ]
+   }
+  }
+ },
+ "magnitude": {
+  "lambda": 0.0,
+  "skill": -0.010009840765805134,
+  "n": 9,
+  "bins": [
+   {
+    "p_lo": 0.01,
+    "p_hi": 0.08,
+    "p_mean": 0.056650769230769234,
+    "n": 195,
+    "abs_move": 0.020572501200751096
+   },
+   {
+    "p_lo": 0.085,
+    "p_hi": 0.12,
+    "p_mean": 0.10765357142857142,
+    "n": 168,
+    "abs_move": 0.024328396229789773
+   },
+   {
+    "p_lo": 0.121,
+    "p_hi": 0.15,
+    "p_mean": 0.14468072289156628,
+    "n": 166,
+    "abs_move": 0.023324355301567453
+   },
+   {
+    "p_lo": 0.156,
+    "p_hi": 0.22,
+    "p_mean": 0.19406060606060604,
+    "n": 198,
+    "abs_move": 0.033614130936899765
+   },
+   {
+    "p_lo": 0.23,
+    "p_hi": 0.25,
+    "p_mean": 0.24660875,
+    "n": 160,
+    "abs_move": 0.03211619570117563
+   },
+   {
+    "p_lo": 0.254,
+    "p_hi": 0.32,
+    "p_mean": 0.29361717171717167,
+    "n": 198,
+    "abs_move": 0.03570041696590242
+   },
+   {
+    "p_lo": 0.33,
+    "p_hi": 0.38,
+    "p_mean": 0.35593419354838707,
+    "n": 155,
+    "abs_move": 0.040860493532529026
+   },
+   {
+    "p_lo": 0.39,
+    "p_hi": 0.45,
+    "p_mean": 0.42301618497109833,
+    "n": 173,
+    "abs_move": 0.03946827233668268
+   },
+   {
+    "p_lo": 0.456,
+    "p_hi": 0.58,
+    "p_mean": 0.5167790697674418,
+    "n": 172,
+    "abs_move": 0.04637981949133643
+   },
+   {
+    "p_lo": 0.59,
+    "p_hi": 0.95,
+    "p_mean": 0.6841771428571428,
+    "n": 175,
+    "abs_move": 0.06253031883740127
+   }
+  ],
+  "ref_abs_move": 0.03574718490829402,
+  "horizon": 5,
+  "why": "lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)"
+ },
+ "n_graded_forecasts": 20106,
+ "n_graded_decisions": 41
+}

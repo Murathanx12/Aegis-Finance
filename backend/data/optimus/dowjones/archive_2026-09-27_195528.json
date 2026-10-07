@@ -1,0 +1,18 @@
+{
+ "receipt": "dowjones_pull.archive",
+ "n_articles": 0,
+ "days": "2026-09-14..2026-09-25",
+ "reattach_log": [
+  {
+   "at": "2026-09-27T19:55:43+00:00",
+   "profile": "user",
+   "attempt": 1,
+   "from_state": "stopped",
+   "start_rc": 1,
+   "start_out": "GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified.",
+   "ok": false,
+   "why": "GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified."
+  }
+ ],
+ "refused": "ReaderRefused: REFUSED_GATEWAY_DOWN: GATEWAY_NEEDS_RESTART: `start` answered 'GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified.'; the reader does not restart the gateway"
+}

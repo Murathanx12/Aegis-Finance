@@ -1,9 +1,9 @@
 {
  "schema": "public_receipts/1",
- "published_utc": "2026-10-07T00:22:45+00:00",
+ "published_utc": "2026-10-07T01:01:14+00:00",
  "status": "OK",
  "why": null,
- "total_bytes": 4282418,
+ "total_bytes": 4278253,
  "max_bytes": 5000000,
  "how_public": "this folder is TRACKED; a commit of backend/data/public_receipts/ to main and its push make the pages public (publish_receipts.commit_public_receipts, the last step of the AegisDataCatalog firing; it refuses off main). Routers serve whichever of the live receipts and this copy is newer by the receipts' own stamps.",
  "sanitiser": "backend/services/legibility_sanitise.py (deny-by-default, per-page allow-list) + publish_receipts.leak_scan; each copy is a fixed point of the sanitiser",
@@ -31,10 +31,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "fdb9c055bbabd7a405b952f5fd43df0b27812d8ee611d873d9917c3b26af67be",
-   "bytes": 627161,
+   "sha256": "06006e496e94ada3166be6e7730e19f28ea3159e8613b12a479e7dee2adf71e0",
+   "bytes": 627159,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-07T00:22:45+00:00"
+   "published_utc": "2026-10-07T01:01:14+00:00"
   },
   "arena_stories": {
    "page": "/arena (decision stories)",
@@ -75,18 +75,10 @@
     },
     {
      "kind": "nn_lab_nightly",
-     "file": "backend/data/optimus/nn_lab/receipts/nightly_20261006T155130Z.json",
-     "sha256": "1dcd16a23b859ac0e7e0face79f28834971acb914f9a474e53d32c08a4945d7f",
-     "stamp_utc": "2026-10-06T15:54:18+00:00",
+     "file": "backend/data/optimus/nn_lab/receipts/nightly_20261007T003003Z.json",
+     "sha256": "7ffe8b622d80323dbff9eb14fae00b237bb1a8c37b2d7fd7665cf7455f4117d6",
+     "stamp_utc": "2026-10-07T00:31:35+00:00",
      "role": "tournament rule, trust",
-     "status": "FRESH"
-    },
-    {
-     "kind": "nn_lab_walkforward",
-     "file": "backend/data/optimus/nn_lab/receipts/wf_20260929_post_review.json",
-     "sha256": "d5d3342f6fafa1304aa7622a90639baee700f7b6fef54ba8c321419570043e3d",
-     "stamp_utc": "2026-09-28T15:34:25+00:00",
-     "role": "tournament table (the run the nightly cites)",
      "status": "FRESH"
     },
     {
@@ -94,7 +86,7 @@
      "file": "backend/data/optimus/nn_lab/receipts/wf_20261007T_c5_review.json",
      "sha256": "239e776c9d2434e9847541d9357de903912a34982b6efe1cfffa1117f0775778",
      "stamp_utc": "2026-10-06T16:14:44+00:00",
-     "role": "review rerun (not the tournament's run)",
+     "role": "tournament table (the run the nightly cites)",
      "status": "FRESH"
     },
     {
@@ -122,10 +114,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "0b40cad967cf3baa50dded016c443b4cede35819d656347d0e0216ee63a91259",
-   "bytes": 84516,
+   "sha256": "ccbdcede51cd47bd72f7befe7f06a689a7d87bc3d86b26fe756ac2139881c98f",
+   "bytes": 81565,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-07T00:22:45+00:00"
+   "published_utc": "2026-10-07T01:01:14+00:00"
   },
   "theory_lab_sticky": {
    "page": "/theory-lab?board=sticky",
@@ -208,16 +200,16 @@
     {
      "kind": "handoff_doc",
      "file": "docs/HANDOFF_2026-10-07_V1_BETA_NIGHT_ONE.md",
-     "sha256": "7cffcc9f62470875098494c6e144857052b4df4646342b29107025fc7751be09",
+     "sha256": "d948b75dc32a194d3b890c60ab7d05f3184a0042bb625cc84acad54214aa3099",
      "stamp_utc": "2026-10-07T00:00:00+00:00",
      "role": "CRSP sentence (dated by the handoff's name)",
      "status": "FRESH"
     }
    ],
-   "sha256": "a6b47c47e9962253c5d6dae33f399cee22bfacc924637cb17d050a92a6eede8d",
-   "bytes": 555791,
+   "sha256": "1a38554ffd2502a3a81ff3e190695d845454730720d096e1df7d7d60a24970a4",
+   "bytes": 555789,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-07T00:22:45+00:00"
+   "published_utc": "2026-10-07T01:01:14+00:00"
   },
   "theory_lab_basket": {
    "page": "/theory-lab?board=basket",
@@ -300,16 +292,16 @@
     {
      "kind": "handoff_doc",
      "file": "docs/HANDOFF_2026-10-07_V1_BETA_NIGHT_ONE.md",
-     "sha256": "7cffcc9f62470875098494c6e144857052b4df4646342b29107025fc7751be09",
+     "sha256": "d948b75dc32a194d3b890c60ab7d05f3184a0042bb625cc84acad54214aa3099",
      "stamp_utc": "2026-10-07T00:00:00+00:00",
      "role": "CRSP sentence (dated by the handoff's name)",
      "status": "FRESH"
     }
    ],
-   "sha256": "43bb6718b5938c998a6329bdd42d0bc5cfacb2bfac94497ce227b9b9b8e86a7c",
-   "bytes": 557321,
+   "sha256": "db7311ee015b98ebf7a3bd1169b5dbdcb622fc311b87fa3d4e1167e2ae34bc20",
+   "bytes": 557319,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-07T00:22:45+00:00"
+   "published_utc": "2026-10-07T01:01:14+00:00"
   },
   "system_health": {
    "page": "/health",
@@ -326,10 +318,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "eddae0b43add3d4fee5cda9a5e24df9945185c01f0f11cdc0d1d95eb3ccc038e",
-   "bytes": 57810,
+   "sha256": "9f561da2f84095113db6c0a14a38793f2bdc68651b67c96c8db39c611a3eea26",
+   "bytes": 57812,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-07T00:22:45+00:00"
+   "published_utc": "2026-10-07T01:01:14+00:00"
   },
   "opportunities": {
    "page": "/opportunities",
@@ -339,17 +331,17 @@
    "sources": [
     {
      "kind": "opportunities",
-     "file": "backend/data/optimus/opportunities/opportunities_2026-10-06_20261006T225957Z.json",
-     "sha256": "53ce8e62adbf7ced3f6c0ac3ab5ce5eb40ca402b3b5a9c09a403a75501a7180b",
-     "stamp_utc": "2026-10-06T22:59:57+00:00",
+     "file": "backend/data/optimus/opportunities/opportunities_2026-10-07_20261007T010046Z.json",
+     "sha256": "af4905bd189e586a5624a87a44700ee33a2da61a84a161c907089060dfc35e59",
+     "stamp_utc": "2026-10-07T01:00:46+00:00",
      "role": "every row",
      "status": null
     }
    ],
-   "sha256": "3feb02293c8df27d7095ac9bf4e71550c5d5f36effa7d14d78cdb4fd5b7a0731",
-   "bytes": 2399819,
+   "sha256": "1137dcd2b8f6fc92783972581662757ca6c2618c2c6ac1493a18a088425d58bb",
+   "bytes": 2398609,
    "payload_status": null,
-   "published_utc": "2026-10-07T00:22:45+00:00"
+   "published_utc": "2026-10-07T01:01:14+00:00"
   }
  },
  "published": [

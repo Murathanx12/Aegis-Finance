@@ -1,0 +1,509 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "user",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-27T08:16:15+00:00",
+ "plan": [
+  {
+   "lane": "barrons:stock_picks",
+   "max": 10,
+   "tickers": []
+  },
+  {
+   "lane": "wsj:heard_on_the_street",
+   "max": 10,
+   "tickers": []
+  },
+  {
+   "lane": "barrons:big_money_poll",
+   "max": 3,
+   "tickers": []
+  },
+  {
+   "lane": "marketwatch:analyst_estimates",
+   "max": 40,
+   "tickers": [
+    "AARD",
+    "ABSI",
+    "AMSC",
+    "BHVN",
+    "DKNG",
+    "HUBS",
+    "KYTX",
+    "NTLA",
+    "PRCH",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "VRT",
+    "GEV",
+    "MU",
+    "TSM",
+    "HOOD",
+    "NVT",
+    "AVGO",
+    "CLS",
+    "BE",
+    "MP",
+    "LEU",
+    "CCJ",
+    "NOVT",
+    "IONQ",
+    "VRTX",
+    "WST",
+    "COGT",
+    "VKTX",
+    "AGIO",
+    "RGEN",
+    "BBIO",
+    "PRAX",
+    "AAPL",
+    "ADUS",
+    "ALG",
+    "AMZN",
+    "ARCO",
+    "AVPT"
+   ]
+  }
+ ],
+ "parent_tabs": {
+  "barrons": {
+   "tab": "chrome-mcp:94f9d7f8e757:1",
+   "label": "t5",
+   "url": "https://www.barrons.com/market-data/stocks/stock-picks?mod=BOL_TOPNAV",
+   "how": "by_host:barrons.com"
+  },
+  "wsj": {
+   "tab": "chrome-mcp:94f9d7f8e757:2",
+   "label": "t6",
+   "url": "https://www.wsj.com/news/heard-on-the-street",
+   "how": "by_host:wsj.com"
+  },
+  "marketwatch": {
+   "tab": "chrome-mcp:94f9d7f8e757:3",
+   "label": "t7",
+   "url": "https://www.marketwatch.com/investing/stock/mu/analystestimates",
+   "how": "by_host:marketwatch.com"
+  }
+ },
+ "max_pages": 69,
+ "cost_usd": 0.0,
+ "lanes": {
+  "barrons:stock_picks": {
+   "source": "barrons",
+   "section": "stock_picks",
+   "column": "barrons_stock_picks",
+   "parent_tab": "chrome-mcp:94f9d7f8e757:1",
+   "tab": "chrome-mcp:94f9d7f8e757:5",
+   "links_found": 1,
+   "skipped_already_stored": 1,
+   "articles": [],
+   "refusals": [],
+   "dropped": "EXHAUSTED",
+   "opened": {
+    "label": "t9",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t5",
+      "chrome-mcp:94f9d7f8e757:1",
+      "https://www.barrons.com/market-data/stocks/stock-picks?mod=BOL_TOPNAV"
+     ],
+     [
+      "t6",
+      "chrome-mcp:94f9d7f8e757:2",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t7",
+      "chrome-mcp:94f9d7f8e757:3",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t8",
+      "chrome-mcp:94f9d7f8e757:4",
+      "chrome://inspect/#remote-debugging"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t5",
+      "chrome-mcp:94f9d7f8e757:1",
+      "https://www.barrons.com/market-data/stocks/stock-picks?mod=BOL_TOPNAV"
+     ],
+     [
+      "t6",
+      "chrome-mcp:94f9d7f8e757:2",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t7",
+      "chrome-mcp:94f9d7f8e757:3",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t8",
+      "chrome-mcp:94f9d7f8e757:4",
+      "chrome://inspect/#remote-debugging"
+     ],
+     [
+      "t9",
+      "chrome-mcp:94f9d7f8e757:5",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ]
+    ]
+   }
+  },
+  "wsj:heard_on_the_street": {
+   "source": "wsj",
+   "section": "heard_on_the_street",
+   "column": "wsj_heard_on_the_street",
+   "parent_tab": "chrome-mcp:94f9d7f8e757:2",
+   "tab": "chrome-mcp:94f9d7f8e757:6",
+   "links_found": 20,
+   "skipped_already_stored": 16,
+   "articles": [
+    {
+     "url": "https://www.wsj.com/tech/ai/ai-safety-effective-altruism-anthropic-164b9d05?mod=_whatsnews_pos1",
+     "title": "‘Things Will Never Be Chill Again’: The Doomers Who Shaped the AI Safety Freakout - WSJ",
+     "byline": null,
+     "published_utc": "2026-09-27T01:00:00+00:00",
+     "first_seen_utc": "2026-09-27T08:32:21+00:00",
+     "chars": 19584,
+     "raw_chars": 22137,
+     "column": "wsj_heard_on_the_street",
+     "sha": "a291890d7b2bd3efb742",
+     "paywall_suspected": false,
+     "read_s": 429.41,
+     "ticker": null,
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\a291890d7b2bd3efb742.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [],
+   "dropped": null,
+   "opened": {
+    "label": "t10",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t5",
+      "chrome-mcp:94f9d7f8e757:1",
+      "https://www.barrons.com/market-data/stocks/stock-picks?mod=BOL_TOPNAV"
+     ],
+     [
+      "t6",
+      "chrome-mcp:94f9d7f8e757:2",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t7",
+      "chrome-mcp:94f9d7f8e757:3",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t8",
+      "chrome-mcp:94f9d7f8e757:4",
+      "chrome://inspect/#remote-debugging"
+     ],
+     [
+      "t9",
+      "chrome-mcp:94f9d7f8e757:5",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t5",
+      "chrome-mcp:94f9d7f8e757:1",
+      "https://www.barrons.com/market-data/stocks/stock-picks?mod=BOL_TOPNAV"
+     ],
+     [
+      "t6",
+      "chrome-mcp:94f9d7f8e757:2",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t7",
+      "chrome-mcp:94f9d7f8e757:3",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t8",
+      "chrome-mcp:94f9d7f8e757:4",
+      "chrome://inspect/#remote-debugging"
+     ],
+     [
+      "t9",
+      "chrome-mcp:94f9d7f8e757:5",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t10",
+      "chrome-mcp:94f9d7f8e757:6",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ]
+    ]
+   }
+  },
+  "barrons:big_money_poll": {
+   "source": "barrons",
+   "section": "big_money_poll",
+   "column": "barrons_big_money_poll",
+   "parent_tab": "chrome-mcp:94f9d7f8e757:1",
+   "tab": "chrome-mcp:94f9d7f8e757:7",
+   "links_found": 2,
+   "skipped_already_stored": 2,
+   "articles": [],
+   "refusals": [],
+   "dropped": "EXHAUSTED",
+   "opened": {
+    "label": "t11",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t5",
+      "chrome-mcp:94f9d7f8e757:1",
+      "https://www.barrons.com/market-data/stocks/stock-picks?mod=BOL_TOPNAV"
+     ],
+     [
+      "t6",
+      "chrome-mcp:94f9d7f8e757:2",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t7",
+      "chrome-mcp:94f9d7f8e757:3",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t8",
+      "chrome-mcp:94f9d7f8e757:4",
+      "chrome://inspect/#remote-debugging"
+     ],
+     [
+      "t9",
+      "chrome-mcp:94f9d7f8e757:5",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t10",
+      "chrome-mcp:94f9d7f8e757:6",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t5",
+      "chrome-mcp:94f9d7f8e757:1",
+      "https://www.barrons.com/market-data/stocks/stock-picks?mod=BOL_TOPNAV"
+     ],
+     [
+      "t6",
+      "chrome-mcp:94f9d7f8e757:2",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t7",
+      "chrome-mcp:94f9d7f8e757:3",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t8",
+      "chrome-mcp:94f9d7f8e757:4",
+      "chrome://inspect/#remote-debugging"
+     ],
+     [
+      "t9",
+      "chrome-mcp:94f9d7f8e757:5",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t10",
+      "chrome-mcp:94f9d7f8e757:6",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t11",
+      "chrome-mcp:94f9d7f8e757:7",
+      "https://www.barrons.com/topics/big-money-poll"
+     ]
+    ]
+   }
+  },
+  "marketwatch:analyst_estimates": {
+   "source": "marketwatch",
+   "section": "analyst_estimates",
+   "column": "mw_analyst_estimates",
+   "parent_tab": "chrome-mcp:94f9d7f8e757:3",
+   "tab": "chrome-mcp:94f9d7f8e757:8",
+   "links_found": 0,
+   "skipped_already_stored": 0,
+   "articles": [
+    {
+     "url": "https://www.marketwatch.com/investing/stock/aard/analystestimates",
+     "title": "AARD | Aardvark Therapeutics Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": null,
+     "first_seen_utc": "2026-09-27T08:35:37+00:00",
+     "chars": 2295,
+     "raw_chars": 5125,
+     "column": "mw_analyst_estimates",
+     "sha": "1e940ac356889af5f48c",
+     "paywall_suspected": false,
+     "read_s": 0.0,
+     "ticker": "AARD",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\1e940ac356889af5f48c.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [],
+   "dropped": null,
+   "opened": {
+    "label": "t12",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t5",
+      "chrome-mcp:94f9d7f8e757:1",
+      "https://www.barrons.com/market-data/stocks/stock-picks?mod=BOL_TOPNAV"
+     ],
+     [
+      "t6",
+      "chrome-mcp:94f9d7f8e757:2",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t7",
+      "chrome-mcp:94f9d7f8e757:3",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t8",
+      "chrome-mcp:94f9d7f8e757:4",
+      "chrome://inspect/#remote-debugging"
+     ],
+     [
+      "t9",
+      "chrome-mcp:94f9d7f8e757:5",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t10",
+      "chrome-mcp:94f9d7f8e757:6",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t11",
+      "chrome-mcp:94f9d7f8e757:7",
+      "https://www.barrons.com/topics/big-money-poll"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t5",
+      "chrome-mcp:94f9d7f8e757:1",
+      "https://www.barrons.com/market-data/stocks/stock-picks?mod=BOL_TOPNAV"
+     ],
+     [
+      "t6",
+      "chrome-mcp:94f9d7f8e757:2",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t7",
+      "chrome-mcp:94f9d7f8e757:3",
+      "https://www.marketwatch.com/investing/stock/mu/analystestimates"
+     ],
+     [
+      "t8",
+      "chrome-mcp:94f9d7f8e757:4",
+      "chrome://inspect/#remote-debugging"
+     ],
+     [
+      "t9",
+      "chrome-mcp:94f9d7f8e757:5",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ],
+     [
+      "t10",
+      "chrome-mcp:94f9d7f8e757:6",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ],
+     [
+      "t11",
+      "chrome-mcp:94f9d7f8e757:7",
+      "https://www.barrons.com/topics/big-money-poll"
+     ],
+     [
+      "t12",
+      "chrome-mcp:94f9d7f8e757:8",
+      "https://www.marketwatch.com/investing/stock/aard/analystestimates"
+     ]
+    ]
+   }
+  }
+ },
+ "order": [
+  {
+   "turn": 0,
+   "lane": "barrons:stock_picks",
+   "what": "listing",
+   "url": "https://www.barrons.com/market-data/stocks/stock-picks",
+   "at": "2026-09-27T08:17:38+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "wsj:heard_on_the_street",
+   "what": "listing",
+   "url": "https://www.wsj.com/news/heard-on-the-street",
+   "at": "2026-09-27T08:20:04+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "barrons:big_money_poll",
+   "what": "listing",
+   "url": "https://www.barrons.com/topics/big-money-poll",
+   "at": "2026-09-27T08:22:29+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "marketwatch:analyst_estimates",
+   "what": "listing",
+   "url": "https://www.marketwatch.com/investing/stock/aard/analystestimates",
+   "at": "2026-09-27T08:24:50+00:00",
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "wsj:heard_on_the_street",
+   "url": "https://www.wsj.com/tech/ai/ai-safety-effective-altruism-anthropic-164b9d05?mod=_whatsnews_pos1",
+   "ticker": null,
+   "at": "2026-09-27T08:25:12+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 19584,
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/aard/analystestimates",
+   "ticker": "AARD",
+   "at": "2026-09-27T08:35:37+00:00",
+   "page_load": false,
+   "waited_s": 0.0,
+   "chars": 2295,
+   "ok": true
+  }
+ ],
+ "stopped": null,
+ "reattaches": 0,
+ "reattach_log": [],
+ "tab_remaps": [],
+ "orphaned_tabs": [],
+ "in_progress": true
+}

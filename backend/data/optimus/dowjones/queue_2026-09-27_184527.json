@@ -1,0 +1,61 @@
+{
+ "receipt": "dowjones_pull.queue",
+ "queue": "backend\\data\\optimus\\dowjones\\QUEUE_2026-09-27_wide.txt",
+ "started_utc": "2026-09-27T18:44:40+00:00",
+ "lines": [
+  {
+   "line": 5,
+   "args": "--plan \"marketwatch:analyst_estimates:VKTX|NTLA|HWM|IONQ|AGYS|NVT|AMZN|NVDA|TSM|GEV|CLS|PRAX|SNOW|JAZZ|LEU|COGT|BHVN|BBIO|CRM|MP|AVGO|ABSI|LNG|CCJ|BSP|AGIO|ENS|PRGS|BA|GOOGL|TER|VRT|VG|BN|WDAY|WST|DKNG|AVPT|PRCH|VRTX|NOW|MU|SNDR|NVO|HUBS|INCY|HOOD|META|RHI|ACI|PEGA|SMPL|RGEN|MAN|BE|AAPL|AMGN|IRDM|HELE|KYTX|NOVT|NVEC|PSNL|QUBT|SLDP|SOC|SON|ALLE|GOOG|GMAB|ADUS|TS|PDS|PAGS|MSFT|CHD|BR|ALG|STNG|CHH|ARCO|MCD|SERV|SMMT|CYTK|PDD|FIZZ|MANH|BZ|CMG|EXPO|EXEL|LZ|REAL|BBW|TE|BW|CDNL|AGX|PLTR|ACVA|DBVT|LITE|MWH|Q|XRX|STX|FRMI|WDS|MEC|DUOL|FLNC|CSTM|LAR|KEX|LGN,wsj_search:VKTX|NTLA|HWM|IONQ|AGYS|NVT|AMZN|NVDA|TSM|GEV|CLS|PRAX|SNOW|JAZZ|LEU|COGT|BHVN|BBIO|CRM|MP|AVGO|ABSI|LNG|CCJ|BSP|AGIO|ENS|PRGS|BA|GOOGL|TER|VRT|VG|BN|WDAY|WST|DKNG|AVPT|PRCH|VRTX|NOW|MU|SNDR|NVO|HUBS|INCY|HOOD|META|RHI|ACI|PEGA|SMPL|RGEN|MAN|BE|AAPL|AMGN|IRDM|HELE|KYTX|NOVT|NVEC|PSNL|QUBT|SLDP|SOC|SON|ALLE|GOOG|GMAB|ADUS|TS|PDS|PAGS|MSFT|CHD|BR|ALG|STNG|CHH|ARCO|MCD|SERV|SMMT|CYTK|PDD|FIZZ|MANH|BZ|CMG|EXPO|EXEL|LZ|REAL|BBW|TE|BW|CDNL|AGX|PLTR|ACVA|DBVT|LITE|MWH|Q|XRX|STX|FRMI|WDS|MEC|DUOL|FLNC|CSTM|LAR|KEX|LGN,barrons_search:VKTX|NTLA|HWM|IONQ|AGYS|NVT|AMZN|NVDA|TSM|GEV|CLS|PRAX|SNOW|JAZZ|LEU|COGT|BHVN|BBIO|CRM|MP|AVGO|ABSI|LNG|CCJ|BSP|AGIO|ENS|PRGS|BA|GOOGL|TER|VRT|VG|BN|WDAY|WST|DKNG|AVPT|PRCH|VRTX|NOW|MU|SNDR|NVO|HUBS|INCY|HOOD|META|RHI|ACI|PEGA|SMPL|RGEN|MAN|BE|AAPL|AMGN|IRDM|HELE|KYTX|NOVT|NVEC|PSNL|QUBT|SLDP|SOC|SON|ALLE|GOOG|GMAB|ADUS|TS|PDS|PAGS|MSFT|CHD|BR|ALG|STNG|CHH|ARCO|MCD|SERV|SMMT|CYTK|PDD|FIZZ|MANH|BZ|CMG|EXPO|EXEL|LZ|REAL|BBW|TE|BW|CDNL|AGX|PLTR|ACVA|DBVT|LITE|MWH|Q|XRX|STX|FRMI|WDS|MEC|DUOL|FLNC|CSTM|LAR|KEX|LGN,barrons:stock_picks:40,wsj:heard_on_the_street:40,barrons:big_money_poll:5\" --max-pages 900 --fresh-since 2026-09-27",
+   "rc": 2,
+   "seconds": 14.7,
+   "status": "FAILED_WILL_RETRY",
+   "outcome": {
+    "kind": "plan",
+    "n_articles": 0,
+    "refused": "ReaderRefused: REFUSED_GATEWAY_DOWN: GATEWAY_NEEDS_RESTART: `start` answered 'GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified.'; the reader does not restart the gateway"
+   }
+  },
+  {
+   "line": 6,
+   "args": "--archive 2026-09-14..2026-09-25",
+   "rc": 2,
+   "seconds": 14.4,
+   "status": "FAILED_WILL_RETRY",
+   "outcome": {
+    "kind": "archive",
+    "n_articles": 0,
+    "refused": "ReaderRefused: REFUSED_GATEWAY_DOWN: GATEWAY_NEEDS_RESTART: `start` answered 'GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified.'; the reader does not restart the gateway"
+   }
+  },
+  {
+   "line": 7,
+   "args": "--claims --claims-since 2026-09-14",
+   "status": "SKIPPED_DONE"
+  },
+  {
+   "line": 9,
+   "args": "--archive 2026-07-01..2026-09-11 --max-per-day 15",
+   "rc": 2,
+   "seconds": 14.5,
+   "status": "FAILED_WILL_RETRY",
+   "outcome": {
+    "kind": "archive",
+    "n_articles": 0,
+    "refused": "ReaderRefused: REFUSED_GATEWAY_DOWN: GATEWAY_NEEDS_RESTART: `start` answered 'GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified.'; the reader does not restart the gateway"
+   }
+  },
+  {
+   "line": 10,
+   "args": "--claims --claims-since 2026-07-01",
+   "rc": 0,
+   "seconds": 3.4,
+   "status": "SKIPPED_NOTHING_TO_DO",
+   "outcome": {
+    "kind": "claims",
+    "n_articles": 0,
+    "refused": null
+   }
+  }
+ ],
+ "finished_utc": "2026-09-27T18:45:27+00:00"
+}

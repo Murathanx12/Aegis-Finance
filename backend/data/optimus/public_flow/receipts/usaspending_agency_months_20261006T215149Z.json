@@ -1,0 +1,143 @@
+{
+ "source": "usaspending_agency_months",
+ "written_utc": "2026-10-06T21:51:49+00:00",
+ "banner": "SENSOR -- federal contract dollars with provenance and latency; never a trade signal on its own; no scoring path reads it before a declared cell passes",
+ "snapshot_date": "2026-10-06",
+ "fiscal_years": 3,
+ "agencies": [
+  "Department of Defense",
+  "Department of Health and Human Services",
+  "Department of Energy",
+  "National Aeronautics and Space Administration",
+  "Department of Homeland Security",
+  "Department of Veterans Affairs",
+  "General Services Administration"
+ ],
+ "requests": 7,
+ "rows_read": 175,
+ "rows_added": 175,
+ "duplicates": 0,
+ "fy_q4_share": {
+  "Department of Defense": {
+   "2025": {
+    "q4_share": 0.3627,
+    "months": 12,
+    "complete": true
+   },
+   "2026": {
+    "q4_share": 0.0096,
+    "months": 12,
+    "complete": true
+   },
+   "2027": {
+    "q4_share": null,
+    "months": 1,
+    "complete": false
+   }
+  },
+  "Department of Energy": {
+   "2025": {
+    "q4_share": 0.2051,
+    "months": 12,
+    "complete": true
+   },
+   "2026": {
+    "q4_share": 0.1921,
+    "months": 12,
+    "complete": true
+   },
+   "2027": {
+    "q4_share": null,
+    "months": 1,
+    "complete": false
+   }
+  },
+  "Department of Health and Human Services": {
+   "2025": {
+    "q4_share": 0.4944,
+    "months": 12,
+    "complete": true
+   },
+   "2026": {
+    "q4_share": 0.4716,
+    "months": 12,
+    "complete": true
+   },
+   "2027": {
+    "q4_share": null,
+    "months": 1,
+    "complete": false
+   }
+  },
+  "Department of Homeland Security": {
+   "2025": {
+    "q4_share": 0.5618,
+    "months": 12,
+    "complete": true
+   },
+   "2026": {
+    "q4_share": 0.3042,
+    "months": 12,
+    "complete": true
+   },
+   "2027": {
+    "q4_share": null,
+    "months": 1,
+    "complete": false
+   }
+  },
+  "Department of Veterans Affairs": {
+   "2025": {
+    "q4_share": 0.3867,
+    "months": 12,
+    "complete": true
+   },
+   "2026": {
+    "q4_share": 0.3565,
+    "months": 12,
+    "complete": true
+   },
+   "2027": {
+    "q4_share": 0.0,
+    "months": 1,
+    "complete": false
+   }
+  },
+  "General Services Administration": {
+   "2025": {
+    "q4_share": 0.373,
+    "months": 12,
+    "complete": true
+   },
+   "2026": {
+    "q4_share": 0.3897,
+    "months": 12,
+    "complete": true
+   },
+   "2027": {
+    "q4_share": 0.0,
+    "months": 1,
+    "complete": false
+   }
+  },
+  "National Aeronautics and Space Administration": {
+   "2025": {
+    "q4_share": 0.4167,
+    "months": 12,
+    "complete": true
+   },
+   "2026": {
+    "q4_share": 0.4109,
+    "months": 12,
+    "complete": true
+   },
+   "2027": {
+    "q4_share": 0.0,
+    "months": 1,
+    "complete": false
+   }
+  }
+ },
+ "refusals": [],
+ "status": "OK"
+}

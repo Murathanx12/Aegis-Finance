@@ -1,0 +1,127 @@
+{
+ "job": "S0_social_pull",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "dry_run": false,
+ "sources": [
+  "reddit",
+  "youtube"
+ ],
+ "rows_new": 3,
+ "refusals": {
+  "reddit": "REDDIT_KEYS_ABSENT"
+ },
+ "refusal_names_declared": [
+  "REDDIT_KEYS_ABSENT",
+  "YOUTUBE_KEY_ABSENT",
+  "PRAW_NOT_INSTALLED",
+  "YOUTUBE_QUOTA_SPENT",
+  "TRANSCRIPT_SOURCE_NOT_LAWFUL_HERE",
+  "UNKNOWN_SOURCE"
+ ],
+ "key_names_looked_for": {
+  "reddit": [
+   "REDDIT_CLIENT_ID",
+   "REDDIT_CLIENT_SECRET",
+   "REDDIT_USER_AGENT"
+  ],
+  "youtube": [
+   "YOUTUBE_API_KEY"
+  ]
+ },
+ "keys_present": {
+  "reddit": {
+   "REDDIT_CLIENT_ID": false,
+   "REDDIT_CLIENT_SECRET": false,
+   "REDDIT_USER_AGENT": false
+  },
+  "youtube": {
+   "YOUTUBE_API_KEY": true
+  }
+ },
+ "per_source": [
+  {
+   "source": "reddit",
+   "status": "REFUSED",
+   "refused": "REDDIT_KEYS_ABSENT",
+   "rows": 0,
+   "posts": 0,
+   "comments": 0,
+   "dupes": 0,
+   "calls": 0,
+   "failures": [
+    "REDDIT_KEYS_ABSENT: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT not set. Create a SCRIPT app at www.reddit.com/prefs/apps and put the client id and secret in .env under those NAMES; REDDIT_USER_AGENT must be a descriptive string per Reddit's app policy or the API 429s."
+   ],
+   "subreddits": [
+    "wallstreetbets",
+    "stocks",
+    "investing",
+    "options",
+    "ValueInvesting",
+    "SecurityAnalysis",
+    "algotrading"
+   ],
+   "posts_per_sub": 50,
+   "comments_per_post": 200,
+   "key_names": [
+    "REDDIT_CLIENT_ID",
+    "REDDIT_CLIENT_SECRET",
+    "REDDIT_USER_AGENT"
+   ],
+   "headline": "REDDIT_KEYS_ABSENT: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT not set. Create a SCRIPT app at www.reddit.com/prefs/apps and put the client id and secret in .env under those NAMES; REDD"
+  },
+  {
+   "source": "youtube",
+   "status": "OK",
+   "refused": "",
+   "rows": 3,
+   "searches": 5,
+   "dupes": 111,
+   "calls": 5,
+   "failures": [],
+   "queries": [
+    "earnings call analysis",
+    "stock earnings breakdown this week",
+    "supply constraint chips shortage stock",
+    "guidance cut stock reaction",
+    "semiconductor capacity outlook"
+   ],
+   "key_names": [
+    "YOUTUBE_API_KEY"
+   ],
+   "quota": {
+    "day_pacific": "2026-09-27",
+    "unit_cost_per_search": 100,
+    "daily_cap_units": 10000,
+    "units_spent_before": 500,
+    "searches_left_before": 95,
+    "reset": "midnight America/Los_Angeles, NOT UTC",
+    "units_spent_after": 1000,
+    "searches_left_after": 90
+   },
+   "transcripts": {
+    "refused": "TRANSCRIPT_SOURCE_NOT_LAWFUL_HERE",
+    "why": "`youtube-transcript-api` has no ToS grant (it works because YouTube's caption endpoint is unauthenticated), and per the spec's own source table cloud-provider IPs are actively blocked in 2026 \u2014 the configuration that works is a rotating residential proxy at $20-50/mo. Neither the permission nor the proxy exists, so the step is refused BY NAME rather than attempted and silently failing, which would look exactly like a dead feed.",
+    "what_would_change_it": "a lawful transcript source (the spec's \u00a71 candidates: SEC 8-K Ex.99 \u2014 already built in chunk 20 T1 \u2014 company IR pages one domain at a time, or a paid vendor after its ToS is read), or a decision to buy a residential proxy with that decision written down"
+   },
+   "written": {
+    "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\social\\youtube_2026-09.jsonl": 3
+   },
+   "rows_with_a_ticker": 3,
+   "wall_s": 8.8,
+   "headline": "5 search(es), 3 new video(s), 1000/10000 units spent on 2026-09-27 (Pacific)"
+  }
+ ],
+ "not_built": {
+  "x_twitter": "pay-per-read ($0.005/read, capped 2M/mo); OFF the lab's automatic cadence by spec \u00a74.3 and absent from this file on purpose",
+  "instagram": "no lawful path for this use case (spec \u00a71) \u2014 do not build a collector",
+  "stocktwits": "terms UNVERIFIED; needs a live probe before a parser",
+  "transcripts": "TRANSCRIPT_SOURCE_NOT_LAWFUL_HERE"
+ },
+ "pit_rule": "first_seen_utc is THIS collector's clock. Every row is pit_grade index_state and may NEVER label a return: a platform can edit or delete a post or comment after the fact and we cannot detect the backfill (invariant 20).",
+ "engagement_rule": "engagement is AS-OF FIRST SEEN and is never re-fetched. A later-fetched upvote count is itself a look-ahead.",
+ "dir": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\social",
+ "wall_s": 8.8,
+ "written_utc": "2026-09-27T13:22:18+00:00",
+ "headline": "3 new social row(s) over 2 source(s); 1 refused (REDDIT_KEYS_ABSENT)"
+}

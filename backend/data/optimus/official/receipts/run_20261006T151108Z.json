@@ -1,0 +1,143 @@
+{
+ "t": "2026-10-06T15:11:08+00:00",
+ "sources": {
+  "sec_form4": {
+   "source": "sec_form4",
+   "entries": 46,
+   "filings_new": 6,
+   "parsed": 6,
+   "rows": 15,
+   "errors": {},
+   "refused": null,
+   "seconds": 7.8
+  },
+  "sec_8k": {
+   "source": "sec_8k",
+   "entries": 300,
+   "rows": 3,
+   "refused": null,
+   "seconds": 3.6
+  },
+  "house_ptr": {
+   "source": "house_ptr",
+   "filings": 409,
+   "filings_new": 0,
+   "pdfs_read": 0,
+   "scanned": 0,
+   "trades": 0,
+   "refused": null,
+   "seconds": 0.8
+  },
+  "cftc_cot": {
+   "source": "cftc_cot",
+   "records": {
+    "tff": 11666,
+    "disagg": 3516
+   },
+   "rows": 0,
+   "refused": null,
+   "seconds": 8.5
+  },
+  "finra_si": {
+   "source": "finra_si",
+   "settlements": [],
+   "rows": 0,
+   "refused": null,
+   "seconds": 1.3
+  },
+  "finra_sv": {
+   "source": "finra_sv",
+   "refused": null,
+   "result": {
+    "schema": "finra_short_volume/pull/1",
+    "url_template": "https://cdn.finra.org/equity/regsho/daily/CNMSshvol{d}.txt",
+    "pit_rule": "a day's FINRA file is public after that day's close (~17:20 ET, CDN last-modified); a decision on day D reads only files dated STRICTLY BEFORE D (usable from the NEXT session)",
+    "start": "2026-09-30",
+    "end": "2026-10-06",
+    "already_on_disk": 2055,
+    "known_not_published": 79,
+    "to_fetch": 1,
+    "fetched_ok": 0,
+    "rows_fetched": 0,
+    "stopped": null
+   },
+   "seconds": 2.0
+  }
+ },
+ "refused_sources": {
+  "senate_efd": {
+   "url": "https://efdsearch.senate.gov/search/",
+   "why": "BOT_CHECK_OR_FORM: 403 Access Denied to a plain request, and the search sits behind an agreement form; not submitted, not worked around"
+  },
+  "senate_hearings": {
+   "url": "https://www.senate.gov/general/committee_schedules/hearings.xml",
+   "why": "ACCESS_DENIED: 403 on the XML and on robots.txt"
+  },
+  "pboc": {
+   "url": "http://www.pbc.gov.cn/en/3688110/3688172/index.html",
+   "why": "ROBOTS_DISALLOWED: pbc.gov.cn robots.txt disallows the English news path"
+  },
+  "nasdaq_earnings": {
+   "url": "https://api.nasdaq.com/api/calendar/earnings",
+   "why": "ROBOTS_DISALLOWED: api.nasdaq.com robots.txt disallows it"
+  },
+  "house_hearings": {
+   "url": "https://docs.house.gov/Committee/Calendar/ByWeek.aspx",
+   "why": "JS_RENDERED: the calendar is built by script in the page; no machine-readable feed was found. A candidate for the browser lane"
+  },
+  "etf_flows": {
+   "url": null,
+   "why": "NO_OFFICIAL_FREE_SOURCE: issuer pages publish shares outstanding per fund, but no official free flow feed across funds was found"
+  }
+ },
+ "requests_this_run": {
+  "sec_form4": 14,
+  "sec_8k": 3,
+  "house_ptr": 1,
+  "cftc_cot": 2,
+  "finra_si": 1,
+  "finra_sv": 1
+ },
+ "tables": {
+  "insider_tx": {
+   "rows": 9319,
+   "public_last_24h": 1108,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\insider_tx.jsonl"
+  },
+  "filing_events": {
+   "rows": 2100,
+   "public_last_24h": 450,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\filing_events.jsonl"
+  },
+  "politician_filings": {
+   "rows": 409,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_filings.jsonl"
+  },
+  "politician_trades": {
+   "rows": 3360,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_trades.jsonl"
+  },
+  "positioning_cot": {
+   "rows": 15322,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\positioning_cot.jsonl"
+  },
+  "short_interest": {
+   "rows": 45164,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\short_interest.jsonl"
+  },
+  "policy_events": {
+   "rows": 2359,
+   "public_last_24h": 179,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\policy_events.jsonl"
+  },
+  "policy_texts": {
+   "rows": 26,
+   "public_last_24h": 1,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\policy_texts.jsonl"
+  }
+ }
+}

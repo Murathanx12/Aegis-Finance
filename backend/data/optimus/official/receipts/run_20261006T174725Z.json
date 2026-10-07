@@ -1,0 +1,103 @@
+{
+ "t": "2026-10-06T17:47:25+00:00",
+ "sources": {
+  "sec_form4": {
+   "source": "sec_form4",
+   "entries": 31,
+   "filings_new": 7,
+   "parsed": 7,
+   "rows": 7,
+   "errors": {},
+   "refused": null,
+   "seconds": 15.2
+  },
+  "sec_8k": {
+   "source": "sec_8k",
+   "entries": 300,
+   "rows": 4,
+   "refused": null,
+   "seconds": 2.8
+  },
+  "fedreg": {
+   "source": "fedreg",
+   "published": 200,
+   "public_inspection": 73,
+   "rows": 0,
+   "refused": null,
+   "seconds": 3.0
+  }
+ },
+ "refused_sources": {
+  "senate_efd": {
+   "url": "https://efdsearch.senate.gov/search/",
+   "why": "BOT_CHECK_OR_FORM: 403 Access Denied to a plain request, and the search sits behind an agreement form; not submitted, not worked around"
+  },
+  "senate_hearings": {
+   "url": "https://www.senate.gov/general/committee_schedules/hearings.xml",
+   "why": "ACCESS_DENIED: 403 on the XML and on robots.txt"
+  },
+  "pboc": {
+   "url": "http://www.pbc.gov.cn/en/3688110/3688172/index.html",
+   "why": "ROBOTS_DISALLOWED: pbc.gov.cn robots.txt disallows the English news path"
+  },
+  "nasdaq_earnings": {
+   "url": "https://api.nasdaq.com/api/calendar/earnings",
+   "why": "ROBOTS_DISALLOWED: api.nasdaq.com robots.txt disallows it"
+  },
+  "house_hearings": {
+   "url": "https://docs.house.gov/Committee/Calendar/ByWeek.aspx",
+   "why": "JS_RENDERED: the calendar is built by script in the page; no machine-readable feed was found. A candidate for the browser lane"
+  },
+  "etf_flows": {
+   "url": null,
+   "why": "NO_OFFICIAL_FREE_SOURCE: issuer pages publish shares outstanding per fund, but no official free flow feed across funds was found"
+  }
+ },
+ "requests_this_run": {
+  "sec_form4": 15,
+  "sec_8k": 3,
+  "fedreg": 2
+ },
+ "tables": {
+  "insider_tx": {
+   "rows": 9353,
+   "public_last_24h": 1067,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\insider_tx.jsonl"
+  },
+  "filing_events": {
+   "rows": 2171,
+   "public_last_24h": 375,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\filing_events.jsonl"
+  },
+  "politician_filings": {
+   "rows": 409,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_filings.jsonl"
+  },
+  "politician_trades": {
+   "rows": 3360,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_trades.jsonl"
+  },
+  "positioning_cot": {
+   "rows": 15322,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\positioning_cot.jsonl"
+  },
+  "short_interest": {
+   "rows": 45164,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\short_interest.jsonl"
+  },
+  "policy_events": {
+   "rows": 2363,
+   "public_last_24h": 182,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\policy_events.jsonl"
+  },
+  "policy_texts": {
+   "rows": 27,
+   "public_last_24h": 2,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\policy_texts.jsonl"
+  }
+ }
+}

@@ -1,0 +1,6 @@
+{
+ "host": "www.federalregister.gov",
+ "fetched_utc": "2026-10-07T03:05:15+00:00",
+ "status": 200,
+ "text": "  Sitemap: https://www.federalregister.gov/sitemaps/sitemap.xml.gz\n\n  User-Agent: *\n  Disallow: /documents/current\n  Disallow: /documents/email-a-friend\n\n  Disallow: /articles/search\n  Disallow: /documents/search\n  Disallow: /public-inspection/search\n  Disallow: /regulations/search\n\n  Disallow: /my/\n  Disallow: /auth/\n"
+}

@@ -1,0 +1,102 @@
+{
+ "day": "2026-10-03",
+ "mode": "REHEARSAL",
+ "freeze_utc": "2026-10-03T06:33:18",
+ "licence": "PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. Never evidence of skill.",
+ "window_hkt": [
+  "2026-10-03 14:00:00+08:00",
+  "2026-10-04 14:00:00+08:00"
+ ],
+ "nav_usd": 1024666.64,
+ "cap": {
+  "of_notional": 200000.0,
+  "of_nav": 204933.328,
+  "binding": 200000.0,
+  "binding_reading": "20% of notional"
+ },
+ "tickets": [],
+ "control": {
+  "n_lines": 0,
+  "n_buy": 0,
+  "n_sell": 0,
+  "buy_shares": 0,
+  "sell_shares": 0,
+  "buy_notional_usd": 0.0,
+  "sheet_code": "E3B0C442"
+ },
+ "reserves": [],
+ "refused": [],
+ "n_ranked": 0,
+ "calendar_file": "calendar_2026-10-03.parquet",
+ "bars_age": [
+  "CN: last bar 2026-09-30 (3 days)",
+  "EU: last bar 2026-10-02 (1 days)",
+  "HK: last bar 2026-10-02 (1 days)",
+  "ID: last bar 2026-10-01 (2 days)",
+  "IN: last bar 2026-10-01 (2 days)",
+  "JP: last bar 2026-10-02 (1 days)",
+  "KR: last bar 2026-09-23 (10 days) STALE",
+  "TW: last bar 2026-10-02 (1 days)",
+  "US: last bar 2026-10-02 (1 days)"
+ ],
+ "refresh": {
+  "calendar": "refreshed",
+  "bars": {
+   "FX": {
+    "n_symbols": 16,
+    "rows_after": 30364,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   },
+   "TW": {
+    "n_symbols": 410,
+    "rows_after": 691890,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   },
+   "EU": {
+    "n_symbols": 752,
+    "rows_after": 1220819,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   },
+   "US": {
+    "n_symbols": 155,
+    "rows_after": 119492,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   },
+   "JP": {
+    "n_symbols": 769,
+    "rows_after": 1230924,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   },
+   "IN": {
+    "n_symbols": 497,
+    "rows_after": 697773,
+    "n_failed": 0,
+    "last_date": "2026-10-01"
+   },
+   "HK": {
+    "n_symbols": 400,
+    "rows_after": 535527,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   },
+   "CN": {
+    "n_symbols": 600,
+    "rows_after": 940906,
+    "n_failed": 0,
+    "last_date": "2026-09-30"
+   }
+  },
+  "implied": {
+   "n": 20,
+   "n_with_value": 18
+  }
+ },
+ "notes": [
+  "No name reports in this window: every slot stays in cash (the rule holds cash; filling slots measured -1.0 pp, t -1.2)."
+ ]
+}

@@ -1,0 +1,52 @@
+{
+ "stamp_utc": "20261005T015627Z",
+ "read_only": true,
+ "accounts": [
+  {
+   "role": "hack1",
+   "status": "HTTP_0",
+   "flags": [
+    "ACCOUNT_READ_FAILED 0"
+   ]
+  },
+  {
+   "role": "hack2",
+   "status": "HTTP_0",
+   "flags": [
+    "ACCOUNT_READ_FAILED 0"
+   ]
+  },
+  {
+   "role": "hack3",
+   "status": "HTTP_0",
+   "flags": [
+    "ACCOUNT_READ_FAILED 0"
+   ]
+  },
+  {
+   "role": "hack4",
+   "status": "HTTP_0",
+   "flags": [
+    "ACCOUNT_READ_FAILED 0"
+   ]
+  },
+  {
+   "role": "hack5",
+   "status": "HTTP_0",
+   "flags": [
+    "ACCOUNT_READ_FAILED 0"
+   ]
+  },
+  {
+   "role": "hack6",
+   "status": "HTTP_0",
+   "flags": [
+    "ACCOUNT_READ_FAILED 0"
+   ]
+  }
+ ],
+ "website": {
+  "error": "URLError: <urlopen error [Errno 11001] getaddrinfo failed>"
+ },
+ "n_flags": 1
+}

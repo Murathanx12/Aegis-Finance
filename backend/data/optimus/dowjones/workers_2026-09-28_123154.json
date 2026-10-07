@@ -1,0 +1,149 @@
+{
+ "receipt": "dowjones_pull.workers",
+ "plan": "marketwatch:analyst_estimates:LITE|MWH|Q|XRX|STX|FRMI|WDS|MEC|DUOL|FLNC|CSTM|LAR|KEX|LGN|AMSC|VKTX|NTLA|HWM|IONQ|AGYS|NVT|TSM|GEV|CLS|SNOW|JAZZ|LEU|COGT|BHVN|BBIO|CRM|MP|AVGO|ABSI|LNG|CCJ|BSP|AGIO|ENS|PRGS|BA|GOOGL|TER|VRT|VG|BN|WDAY|WST|DKNG|AVPT|PRCH|VRTX|NOW|MU|SNDR|NVO|HUBS|INCY|HOOD|META|RHI|ACI|PEGA|SMPL|RGEN|MAN|BE|AAPL|AMGN|IRDM|HELE|KYTX|NOVT|NVEC|PSNL|QUBT|SLDP|SOC|SON|ALLE|GOOG|GMAB|ADUS|TS|PDS|PAGS|MSFT|CHD|BR|ALG|STNG|CHH|ARCO|MCD|SERV|SMMT|CYTK|PDD|FIZZ|AARD|AMZN|NVDA|PRAX|MANH|BZ|CMG|EXPO|EXEL|LZ|REAL|BBW|TE|BW|CDNL|AGX|PLTR|ACVA|DBVT,wsj:search:LITE|MWH|Q|XRX|STX|FRMI|WDS|MEC|DUOL|FLNC|CSTM|LAR|KEX|LGN|AMSC|VKTX|NTLA|HWM|IONQ|AGYS|NVT|TSM|GEV|CLS|SNOW|JAZZ|LEU|COGT|BHVN|BBIO|CRM|MP|AVGO|ABSI|LNG|CCJ|BSP|AGIO|ENS|PRGS|BA|GOOGL|TER|VRT|VG|BN|WDAY|WST|DKNG|AVPT|PRCH|VRTX|NOW|MU|SNDR|NVO|HUBS|INCY|HOOD|META|RHI|ACI|PEGA|SMPL|RGEN|MAN|BE|AAPL|AMGN|IRDM|HELE|KYTX|NOVT|NVEC|PSNL|QUBT|SLDP|SOC|SON|ALLE|GOOG|GMAB|ADUS|TS|PDS|PAGS|MSFT|CHD|BR|ALG|STNG|CHH|ARCO|MCD|SERV|SMMT|CYTK|PDD|FIZZ|AARD|AMZN|NVDA|PRAX|MANH|BZ|CMG|EXPO|EXEL|LZ|REAL|BBW|TE|BW|CDNL|AGX|PLTR|ACVA|DBVT,barrons:search:LITE|MWH|Q|XRX|STX|FRMI|WDS|MEC|DUOL|FLNC|CSTM|LAR|KEX|LGN|AMSC|VKTX|NTLA|HWM|IONQ|AGYS|NVT|TSM|GEV|CLS|SNOW|JAZZ|LEU|COGT|BHVN|BBIO|CRM|MP|AVGO|ABSI|LNG|CCJ|BSP|AGIO|ENS|PRGS|BA|GOOGL|TER|VRT|VG|BN|WDAY|WST|DKNG|AVPT|PRCH|VRTX|NOW|MU|SNDR|NVO|HUBS|INCY|HOOD|META|RHI|ACI|PEGA|SMPL|RGEN|MAN|BE|AAPL|AMGN|IRDM|HELE|KYTX|NOVT|NVEC|PSNL|QUBT|SLDP|SOC|SON|ALLE|GOOG|GMAB|ADUS|TS|PDS|PAGS|MSFT|CHD|BR|ALG|STNG|CHH|ARCO|MCD|SERV|SMMT|CYTK|PDD|FIZZ|AARD|AMZN|NVDA|PRAX|MANH|BZ|CMG|EXPO|EXEL|LZ|REAL|BBW|TE|BW|CDNL|AGX|PLTR|ACVA|DBVT",
+ "stamp": "2026-09-28_123154",
+ "instance": {
+  "ok": true,
+  "endpoint": "http://127.0.0.1:18802",
+  "guid": "405658e7-cc17-472a-a64a-38e90a055a5b",
+  "pid": 148368,
+  "created": "2026-09-28T20:28:05+08:00",
+  "user_data_dir": "C:\\Users\\mrthn\\ChromeMuratClaw",
+  "pid_proof": "checked",
+  "target_id": null,
+  "seconds": 2.203
+ },
+ "parent_tabs": {
+  "marketwatch": {
+   "tab": null,
+   "label": null,
+   "url": "",
+   "how": "direct_open: dedicated instance, no parent tab used"
+  },
+  "wsj": {
+   "tab": null,
+   "label": null,
+   "url": "",
+   "how": "direct_open: dedicated instance, no parent tab used"
+  },
+  "barrons": {
+   "tab": null,
+   "label": null,
+   "url": "",
+   "how": "direct_open: dedicated instance, no parent tab used"
+  }
+ },
+ "startup_cleanup": {
+  "candidates": [
+   "chrome-mcp:8ab5bfd86096:23",
+   "chrome-mcp:8ab5bfd86096:24",
+   "chrome-mcp:8ab5bfd86096:25",
+   "chrome-mcp:8ab5bfd86096:26",
+   "chrome-mcp:8ab5bfd86096:27",
+   "chrome-mcp:8ab5bfd86096:28",
+   "chrome-mcp:8ab5bfd86096:29",
+   "chrome-mcp:8ab5bfd86096:30",
+   "chrome-mcp:94f9d7f8e757:5",
+   "chrome-mcp:94f9d7f8e757:6",
+   "chrome-mcp:94f9d7f8e757:7",
+   "chrome-mcp:94f9d7f8e757:8",
+   "chrome-mcp:94f9d7f8e757:9",
+   "chrome-mcp:fe9a0faf6f97:28",
+   "chrome-mcp:fe9a0faf6f97:29",
+   "chrome-mcp:fe9a0faf6f97:30",
+   "chrome-mcp:fe9a0faf6f97:31",
+   "chrome-mcp:fe9a0faf6f97:32",
+   "chrome-mcp:fe9a0faf6f97:33",
+   "chrome-mcp:fe9a0faf6f97:34",
+   "chrome-mcp:fe9a0faf6f97:39",
+   "chrome-mcp:fe9a0faf6f97:40",
+   "chrome-mcp:fe9a0faf6f97:41",
+   "chrome-mcp:fe9a0faf6f97:42",
+   "t37",
+   "t39",
+   "t62"
+  ],
+  "closed": [],
+  "skipped": {
+   "chrome-mcp:8ab5bfd86096:23": "not present",
+   "chrome-mcp:8ab5bfd86096:24": "not present",
+   "chrome-mcp:8ab5bfd86096:25": "not present",
+   "chrome-mcp:8ab5bfd86096:26": "not present",
+   "chrome-mcp:8ab5bfd86096:27": "not present",
+   "chrome-mcp:8ab5bfd86096:28": "not present",
+   "chrome-mcp:8ab5bfd86096:29": "not present",
+   "chrome-mcp:8ab5bfd86096:30": "not present",
+   "chrome-mcp:94f9d7f8e757:5": "not present",
+   "chrome-mcp:94f9d7f8e757:6": "not present",
+   "chrome-mcp:94f9d7f8e757:7": "not present",
+   "chrome-mcp:94f9d7f8e757:8": "not present",
+   "chrome-mcp:94f9d7f8e757:9": "not present",
+   "chrome-mcp:fe9a0faf6f97:28": "not present",
+   "chrome-mcp:fe9a0faf6f97:29": "not present",
+   "chrome-mcp:fe9a0faf6f97:30": "not present",
+   "chrome-mcp:fe9a0faf6f97:31": "not present",
+   "chrome-mcp:fe9a0faf6f97:32": "not present",
+   "chrome-mcp:fe9a0faf6f97:33": "not present",
+   "chrome-mcp:fe9a0faf6f97:34": "not present",
+   "chrome-mcp:fe9a0faf6f97:39": "not present",
+   "chrome-mcp:fe9a0faf6f97:40": "not present",
+   "chrome-mcp:fe9a0faf6f97:41": "not present",
+   "chrome-mcp:fe9a0faf6f97:42": "not present",
+   "t37": "not session-qualified (a tN alias is reissued)",
+   "t39": "not session-qualified (a tN alias is reissued)",
+   "t62": "not session-qualified (a tN alias is reissued)"
+  }
+ },
+ "launcher_pid": 142000,
+ "workers": {
+  "marketwatch": {
+   "pid": 85328,
+   "lanes": [
+    "marketwatch:analyst_estimates"
+   ],
+   "max_pages": null,
+   "bound": {
+    "bound": true,
+    "note": "the OS will terminate the model server when this process exits, including on a hard kill -- no user code has to run"
+   },
+   "rc": 2,
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\dowjones\\plan_2026-09-28_123154_marketwatch.json",
+   "n_articles": 43,
+   "refused": "marketwatch:analyst_estimates: ReaderRefused: REFUSED_VERB_FAILED: press rc 1: tool execution failed"
+  },
+  "wsj": {
+   "pid": 120824,
+   "lanes": [
+    "wsj:search"
+   ],
+   "max_pages": null,
+   "bound": {
+    "bound": true,
+    "note": "the OS will terminate the model server when this process exits, including on a hard kill -- no user code has to run"
+   },
+   "rc": 2,
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\dowjones\\plan_2026-09-28_123154_wsj.json",
+   "n_articles": 41,
+   "refused": "wsj:search: ReaderRefused: REFUSED_VERB_FAILED: press rc 1: tool execution failed"
+  },
+  "barrons": {
+   "pid": 133044,
+   "lanes": [
+    "barrons:search"
+   ],
+   "max_pages": null,
+   "bound": {
+    "bound": true,
+    "note": "the OS will terminate the model server when this process exits, including on a hard kill -- no user code has to run"
+   },
+   "rc": 2,
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\dowjones\\plan_2026-09-28_123154_barrons.json",
+   "n_articles": 45,
+   "refused": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: gateway unreachable: ECONNREFUSED (ConnectionError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remot"
+  }
+ },
+ "n_articles": 129,
+ "refused": "marketwatch: rc 2: marketwatch:analyst_estimates: ReaderRefused: REFUSED_VERB_FAILED: press rc 1: tool execution failed; wsj: rc 2: wsj:search: ReaderRefused: REFUSED_VERB_FAILED: press rc 1: tool execution failed; barrons: rc 2: ReaderRefused: REFUSED_VERB_FAILED: press rc 1: gateway unreachable: E",
+ "rc": 2,
+ "reattach_log": []
+}

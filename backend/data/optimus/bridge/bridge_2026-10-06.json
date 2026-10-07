@@ -1,0 +1,6410 @@
+{
+ "schema": "bridge/1",
+ "date": "2026-10-06",
+ "licence": "PRODUCT_EXPERIMENT",
+ "generated_utc": "2026-10-06T04:59:48+00:00",
+ "git_head": "46d6efa4",
+ "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-29T160819Z.json",
+ "receipt_json": "backend/data/optimus/bridge/bridge_2026-10-06.json",
+ "replication": "backend/data/optimus/strategy_library/replication_vectorbt_2026-09-26T164302Z.json",
+ "library_facts": {
+  "n_rules": 291,
+  "n_beat": 107,
+  "median_sealed_vs_spy": -0.039908,
+  "best_dsr": 0.1345,
+  "best_dsr_id": "mom_12_1_q",
+  "n_cells": 877,
+  "n_families": 36,
+  "n_sealed": 32,
+  "ctrl_lo": -0.120677,
+  "ctrl_hi": -0.018467,
+  "both": [
+   "skill_mom",
+   "qc395_sharpe252_above_trend_large"
+  ]
+ },
+ "dev_selected": {
+  "label": "2024-26 selection window (split declared, data seen)",
+  "n_rules": 291,
+  "selection": "top-n by dev_vs_spy (dev net CAGR - SPY CAGR, entry <= 2023-12-31); evaluated on sealed_vs_spy (entry >= 2024-01-01)",
+  "top_10": {
+   "n": 10,
+   "ids": [
+    "insider_mom",
+    "mom_no_downgrades",
+    "mom_no_rating_downgrade",
+    "mom_12_1_small",
+    "px_vs_ma200_large",
+    "mom_no_downgrades_small",
+    "mom_12_1_q",
+    "mom_6_1_large",
+    "px_vs_ma200",
+    "div_mom_insider_flow"
+   ],
+   "mean_selection_window_vs_spy": 0.008085,
+   "median_selection_window_vs_spy": -0.05344,
+   "n_beat_spy": 3,
+   "mean_dev_vs_spy": 0.227058
+  },
+  "top_20": {
+   "n": 20,
+   "ids": [
+    "insider_mom",
+    "mom_no_downgrades",
+    "mom_no_rating_downgrade",
+    "mom_12_1_small",
+    "px_vs_ma200_large",
+    "mom_no_downgrades_small",
+    "mom_12_1_q",
+    "mom_6_1_large",
+    "px_vs_ma200",
+    "div_mom_insider_flow",
+    "qc536_secneutral_multimom_large",
+    "mom_resid_to_sector",
+    "disp_short_avoid",
+    "mom_12_1",
+    "resid_mom_12_1",
+    "trend_quality_large",
+    "mom_gp",
+    "qc597_secneutral_multimom_calm",
+    "low_asset_growth_large",
+    "eap_avoid_mom"
+   ],
+   "mean_selection_window_vs_spy": 0.005815,
+   "median_selection_window_vs_spy": -0.046147,
+   "n_beat_spy": 8,
+   "mean_dev_vs_spy": 0.200698
+  },
+  "top_50": {
+   "n": 50,
+   "ids": [
+    "insider_mom",
+    "mom_no_downgrades",
+    "mom_no_rating_downgrade",
+    "mom_12_1_small",
+    "px_vs_ma200_large",
+    "mom_no_downgrades_small",
+    "mom_12_1_q",
+    "mom_6_1_large",
+    "px_vs_ma200",
+    "div_mom_insider_flow",
+    "qc536_secneutral_multimom_large",
+    "mom_resid_to_sector",
+    "disp_short_avoid",
+    "mom_12_1",
+    "resid_mom_12_1",
+    "trend_quality_large",
+    "mom_gp",
+    "qc597_secneutral_multimom_calm",
+    "low_asset_growth_large",
+    "eap_avoid_mom",
+    "trend_ma50_200",
+    "gp_low_ag",
+    "eap_mom",
+    "qc395_sharpe252_above_trend_large",
+    "mom_no_exec_change",
+    "mom_low_ag",
+    "mom_in_top_sectors",
+    "gp_at_large",
+    "small_gp_mom",
+    "qc629_multimom_above_trend_gated",
+    "frog_in_pan",
+    "trend_quality",
+    "mom_6m",
+    "mom_no_downgrades_trend",
+    "mom_12m",
+    "qc470_mom252_quarterly_riskparity",
+    "mom_12_1_q_trend",
+    "net_raises",
+    "mom_12_1_small_trend",
+    "mom_12_1_ivw",
+    "div_mom_shorts_quality",
+    "inflection_flow",
+    "low_dtc_gp",
+    "mom_in_raised",
+    "net_raises_180d",
+    "ibes_skill_net_raises",
+    "qc241_value_composite_small_annual",
+    "mom_6_1",
+    "gh11_skip_month_composite_q",
+    "net_raises_ivw"
+   ],
+   "mean_selection_window_vs_spy": -0.006379,
+   "median_selection_window_vs_spy": -0.029076,
+   "n_beat_spy": 21,
+   "mean_dev_vs_spy": 0.144057
+  },
+  "spearman_dev_vs_selection_window": {
+   "rho": 0.157099,
+   "p_value": 0.007252,
+   "n": 291
+  },
+  "n_beat_spy_in_both_windows": 65,
+  "n_beat_spy_in_both_windows_top5_lt_0_6_dd_gt_m40": 35,
+  "n_beat_iwm_in_both_windows": 115,
+  "n_rules_with_iwm": 291,
+  "iwm_status": "ON_ROWS (n_rules=291)",
+  "n_beat_random_panel_in_both_windows": 139,
+  "n_rules_with_random_panel": 291,
+  "random_panel_status": "ON_ROWS (n_controls=3)",
+  "mde": {
+   "active_sigma_monthly_median": 0.054082,
+   "n_blocks": 32,
+   "se_monthly": 0.00956,
+   "mde_monthly_80pct_power": 0.026769,
+   "mde_annualised_simple": 0.321231,
+   "basis": "median across rules of |mean_active_monthly * sqrt(12) / IR_annual| (the full-window monthly active sigma); SE = sigma / sqrt(blocks); MDE = 2.8 SE (two-sided 5%, 80% power)"
+  },
+  "sentence": "Choosing the top 10 rules by dev (pre-2024) results alone gave +0.8 pp/yr mean vs SPY in the 2024-26 selection window (split declared, data seen) (median -5.3 pp; 3 of 10 beat SPY); dev-to-2024-26 rank Spearman 0.16 over 291 rules; 65 rules beat SPY in both windows, 115 beat IWM, 139 beat the random panel; the MDE of a 32-block window at 80% power is 2.7%/month."
+ },
+ "n_forward_graded": 32,
+ "identical_holdings": [
+  [
+   "lib_mom_12_1_2026-09-26",
+   "lib_mom_12_1_q_2026-09-26"
+  ]
+ ],
+ "voided_before_entry": [
+  {
+   "book_id": "76ea751d6ef35ab5",
+   "name": "lib_mom_12_1_liqw_sealed_2026-09-26",
+   "reason": "VOID_BEFORE_ENTRY: concentration (effN 2.0, MU 60.3% + SNDK 37.2% = 97.5%, rho 0.90, MU prints 09-30 inside the first 5 sessions)",
+   "voided_utc": "2026-09-26T09:27:03+00:00",
+   "who": "opus-builder (D+E post-review fixes, adjudicated by Fable 2026-09-26)"
+  }
+ ],
+ "gate_summary": {
+  "n_books": 31,
+  "n_pass": 13,
+  "pass_but_timing": [
+   "lib_skill_raises_2026-09-30__control"
+  ],
+  "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+  "log": "backend/data/optimus/bridge/freeze_gate_2026-10-06.json",
+  "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket."
+ },
+ "semis_umd_regression": {
+  "status": "OK",
+  "rows": [
+   {
+    "id": "qc372_oversold_snapback_mega",
+    "n": 31,
+    "alpha": 0.01413462199613483,
+    "t_alpha": 0.8456196915615697,
+    "beta_spy": 0.8527893598267341,
+    "beta_smh": 0.6382012884462805,
+    "beta_mom": 0.07634951840808463,
+    "r2": 0.584078234559955
+   },
+   {
+    "id": "rd_intensity",
+    "n": 31,
+    "alpha": 0.014246185806331062,
+    "t_alpha": 0.4232443096679048,
+    "beta_spy": 0.4475596912011859,
+    "beta_smh": 0.8504966064504698,
+    "beta_mom": 0.012892725028673835,
+    "r2": 0.2671889235301905
+   },
+   {
+    "id": "mom_12_1_liqw",
+    "n": 31,
+    "alpha": 0.015610156687213399,
+    "t_alpha": 0.7616415481889405,
+    "beta_spy": -0.25950980677665614,
+    "beta_smh": 0.8910274232270072,
+    "beta_mom": 1.025675753641616,
+    "r2": 0.8086114082532682
+   },
+   {
+    "id": "rev_5d",
+    "n": 31,
+    "alpha": 0.023265384040560003,
+    "t_alpha": 1.5372742546423623,
+    "beta_spy": 0.37705273352344104,
+    "beta_smh": 0.35675927945219377,
+    "beta_mom": 0.15584511653082891,
+    "r2": 0.4216154363134259
+   },
+   {
+    "id": "qc623_mom63_liquidity_weighted",
+    "n": 31,
+    "alpha": 0.015308964170510907,
+    "t_alpha": 0.6594991020332706,
+    "beta_spy": -0.020023543711012337,
+    "beta_smh": 0.8037092242925226,
+    "beta_mom": 0.7592971371210956,
+    "r2": 0.6892929474142965
+   },
+   {
+    "id": "margin_mom",
+    "n": 31,
+    "alpha": 0.015390799645203205,
+    "t_alpha": 0.8726005465157933,
+    "beta_spy": 0.8438197302938601,
+    "beta_smh": 0.27637663906652277,
+    "beta_mom": 0.42921566443150394,
+    "r2": 0.5903945224001614
+   },
+   {
+    "id": "illiquid",
+    "n": 31,
+    "alpha": -0.00407220554397391,
+    "t_alpha": -0.21525819225045875,
+    "beta_spy": 2.293624227661107,
+    "beta_smh": 0.42050604078293374,
+    "beta_mom": -0.002069939868774573,
+    "r2": 0.6221669217514381
+   },
+   {
+    "id": "skill_mom",
+    "n": 31,
+    "alpha": 0.016252762727809962,
+    "t_alpha": 1.8671231107188353,
+    "beta_spy": 0.4446211687578292,
+    "beta_smh": 0.3682722695538404,
+    "beta_mom": 0.4299163539015546,
+    "r2": 0.8470060590583575
+   },
+   {
+    "id": "qc395_sharpe252_above_trend_large",
+    "n": 31,
+    "alpha": 0.004962328144749519,
+    "t_alpha": 0.3348426485172758,
+    "beta_spy": 0.7949315554109166,
+    "beta_smh": 0.5021509020745389,
+    "beta_mom": 0.5980289622116216,
+    "r2": 0.7965089418353223
+   },
+   {
+    "id": "co03_reversal_in_high_margin",
+    "n": 31,
+    "alpha": 0.02264051756286795,
+    "t_alpha": 1.8481820860703841,
+    "beta_spy": 1.4946559884926915,
+    "beta_smh": -0.19743711059596492,
+    "beta_mom": 0.03986999416865872,
+    "r2": 0.36249741755565656
+   }
+  ],
+  "etf": "SMH",
+  "note": "net monthly return ~ a + b1 SPY + b2 SMH + b3 mom_12_1 (library, k=20 ew), over the 2024-26 selection-window blocks. An intercept that dies after SMH and momentum means the window rewarded a sector, not a mechanism."
+ },
+ "regime": {
+  "status": "OK",
+  "asof": "2026-10-05",
+  "spy_vs_200d": "above_200d",
+  "spy_close": 774.83,
+  "spy_ma200": 717.55,
+  "vol_tercile": "mid",
+  "vol_21_annual": 0.1037,
+  "label": "SPY above 200d, vol mid"
+ },
+ "structure": {
+  "status": "OK",
+  "receipt": "backend/data/optimus/signal_structure/signal_structure_2026-09-26T182110Z.json",
+  "rho_cut": 0.8,
+  "series_source": "working tree backend/data/optimus/strategy_library/checkpoint_2026-09-27.json",
+  "label": "HINDSIGHT: every rule was registered 2026-09-26, after every month here",
+  "monthly_returns": "backend/data/optimus/signal_structure/monthly_returns_2026-09-26T182110Z.parquet",
+  "etf_monthly": "backend/data/optimus/signal_structure/etf_monthly.parquet",
+  "decomposition_status": "OK",
+  "within_cluster": [
+   {
+    "cluster": 170,
+    "n": 17,
+    "anchor": "mom_no_downgrades@k20",
+    "family_mix": {
+     "momentum": 5,
+     "sector_relative": 3,
+     "weighted": 2,
+     "revision_flow": 1,
+     "analyst_rating": 1,
+     "insider": 1,
+     "earnings_event": 1,
+     "filing_event": 1,
+     "flow_momentum": 1,
+     "analyst_dispersion": 1
+    },
+    "mean_inner_rho": 0.8466135490602317,
+    "sealed_vs_spy_min": -0.18563213469127549,
+    "sealed_vs_spy_max": 0.3786977783844925,
+    "sealed_vs_spy_sd": 0.1783825663473756,
+    "median_te_vs_cluster_mean_annual": 0.1258155271159902,
+    "rank_corr_dev_vs_2024_26": 0.06127450980392158,
+    "axes": {
+     "signal/filter": 12,
+     "signal/filter+hold/offset": 2,
+     "signal/filter+weighting": 1,
+     "signal/filter+hold/offset+weighting": 1
+    },
+    "dominant_axis": "signal/filter",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 130,
+      "share_order_persists": 0.5076923076923077
+     },
+     "construction only": {
+      "n": 6,
+      "share_order_persists": 0.3333333333333333
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.008509319852941176,
+     "alpha_in_window": -0.00038881044450310713,
+     "t_in_window": -0.024176085417732616,
+     "mde_in_window": 0.04503083215491063,
+     "alpha_after_pre2024_hedge": -0.01825458846470357,
+     "se_hedged": 0.017931248224282898,
+     "t_hedged": -1.0180322215373048,
+     "mde_hedged": 0.05020749502799211,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "disp_short_avoid@k20",
+      "dev_vs_spy": 0.2211516810234928,
+      "sealed_vs_spy": 0.2900391382800649,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "eap_avoid_mom@k20",
+      "dev_vs_spy": 0.18682670665569678,
+      "sealed_vs_spy": -0.18455039164909892,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_12_1@k20",
+      "dev_vs_spy": 0.22658637883132182,
+      "sealed_vs_spy": 0.04840692792097245,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_12_1_ivw@k20",
+      "dev_vs_spy": 0.15315329559705138,
+      "sealed_vs_spy": 0.24075728018205833,
+      "axis": "signal/filter+weighting"
+     },
+     {
+      "cell": "mom_12_1_q@k20",
+      "dev_vs_spy": 0.21050988407069804,
+      "sealed_vs_spy": 0.3786977783844925,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "mom_12_1_secrel@k20",
+      "dev_vs_spy": 0.03967732123279344,
+      "sealed_vs_spy": 0.2413768114874264,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_12_7@k20",
+      "dev_vs_spy": 0.04277499289224207,
+      "sealed_vs_spy": -0.11666889768419098,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_12m@k20",
+      "dev_vs_spy": 0.1308552123126956,
+      "sealed_vs_spy": -0.010310055418623953,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_in_raised@k20",
+      "dev_vs_spy": 0.09404903948861931,
+      "sealed_vs_spy": 0.0562503771979046,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_in_top_sectors@k20",
+      "dev_vs_spy": 0.17047198879371672,
+      "sealed_vs_spy": -0.034978191148934634,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_no_downgrades@k20",
+      "dev_vs_spy": 0.28561536656996234,
+      "sealed_vs_spy": 0.0038451718640530874,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_no_exec_change@k20",
+      "dev_vs_spy": 0.12746763910299852,
+      "sealed_vs_spy": -0.01920424522872355,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_no_insider_selling@k20",
+      "dev_vs_spy": 0.08620847679650945,
+      "sealed_vs_spy": -0.18563213469127549,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_no_rating_downgrade@k20",
+      "dev_vs_spy": 0.2389681559911594,
+      "sealed_vs_spy": -0.09224729236299889,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_resid_to_sector@k20",
+      "dev_vs_spy": 0.1657923167908455,
+      "sealed_vs_spy": -0.042101476387518044,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "qc470_mom252_quarterly_riskparity@k20",
+      "dev_vs_spy": 0.1273271929053672,
+      "sealed_vs_spy": 0.31090483205452446,
+      "axis": "signal/filter+hold/offset+weighting"
+     },
+     {
+      "cell": "resid_mom_12_1@k20",
+      "dev_vs_spy": 0.18794135955159108,
+      "sealed_vs_spy": -0.08291147937299215,
+      "axis": "signal/filter"
+     }
+    ]
+   },
+   {
+    "cluster": 112,
+    "n": 10,
+    "anchor": "insider_mom@k20",
+    "family_mix": {
+     "combination": 4,
+     "regime_gated": 2,
+     "quality": 1,
+     "insider": 1,
+     "diversified_combo": 1,
+     "sector_relative": 1
+    },
+    "mean_inner_rho": 0.8365328845796468,
+    "sealed_vs_spy_min": -0.09267109091889969,
+    "sealed_vs_spy_max": 0.22242369116847338,
+    "sealed_vs_spy_sd": 0.10170606263722579,
+    "median_te_vs_cluster_mean_annual": 0.1946725982353935,
+    "rank_corr_dev_vs_2024_26": 0.43030303030303024,
+    "axes": {
+     "signal/filter": 3,
+     "signal/filter+universe": 3,
+     "signal/filter+universe+k": 3
+    },
+    "dominant_axis": "signal/filter",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 44,
+      "share_order_persists": 0.5909090909090909
+     },
+     "construction only": {
+      "n": 1,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.006375340624999998,
+     "alpha_in_window": 0.005845689953173265,
+     "t_in_window": 0.5588345004211205,
+     "mde_in_window": 0.0292894083249169,
+     "alpha_after_pre2024_hedge": -0.032160842783893716,
+     "se_hedged": 0.020879221232615458,
+     "t_hedged": -1.5403276983173693,
+     "mde_hedged": 0.058461819451323276,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "div_mom_insider_flow@k20",
+      "dev_vs_spy": 0.18634123818921222,
+      "sealed_vs_spy": 0.005470184935560951,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "gp_at_large@k20",
+      "dev_vs_spy": 0.12329811054171347,
+      "sealed_vs_spy": -0.048643131899947845,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "insider_mom@k20",
+      "dev_vs_spy": 0.35180607723686386,
+      "sealed_vs_spy": -0.03621605574230857,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_gp@k20",
+      "dev_vs_spy": 0.16146055041422924,
+      "sealed_vs_spy": -0.014359840173491234,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "mom_gp_large@k20",
+      "dev_vs_spy": 0.07599318188611415,
+      "sealed_vs_spy": -0.04775429229963879,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "mom_low_ag@k20",
+      "dev_vs_spy": 0.15476811286756398,
+      "sealed_vs_spy": 0.22242369116847338,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "qc536_secneutral_multimom_large@k10",
+      "dev_vs_spy": 0.18905904806933704,
+      "sealed_vs_spy": 0.12602781488672465,
+      "axis": "signal/filter+universe+k"
+     },
+     {
+      "cell": "qc597_secneutral_multimom_calm@k10",
+      "dev_vs_spy": 0.16363555757831327,
+      "sealed_vs_spy": 0.13998538980833275,
+      "axis": "signal/filter+universe+k"
+     },
+     {
+      "cell": "qc629_multimom_above_trend_gated@k10",
+      "dev_vs_spy": 0.13119757293760448,
+      "sealed_vs_spy": -0.09267109091889969,
+      "axis": "signal/filter+universe+k"
+     },
+     {
+      "cell": "trend_quality_large@k20",
+      "dev_vs_spy": 0.16145195601863893,
+      "sealed_vs_spy": 0.05290186736849445,
+      "axis": "signal/filter+universe"
+     }
+    ]
+   },
+   {
+    "cluster": 103,
+    "n": 10,
+    "anchor": "net_raises@k20",
+    "family_mix": {
+     "revision_flow": 5,
+     "analyst_skill": 2,
+     "flow_momentum": 1,
+     "weighted": 1,
+     "ibes_skill_weighted": 1
+    },
+    "mean_inner_rho": 0.8893817337128108,
+    "sealed_vs_spy_min": -0.03850379672212645,
+    "sealed_vs_spy_max": 0.17365784315224397,
+    "sealed_vs_spy_sd": 0.0630787219070185,
+    "median_te_vs_cluster_mean_annual": 0.0375048302304954,
+    "rank_corr_dev_vs_2024_26": -0.006060606060606061,
+    "axes": {
+     "signal/filter": 4,
+     "signal/filter+universe": 2,
+     "signal/filter+hold/offset": 1,
+     "weighting": 1,
+     "universe": 1
+    },
+    "dominant_axis": "signal/filter",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 38,
+      "share_order_persists": 0.4473684210526316
+     },
+     "construction only": {
+      "n": 7,
+      "share_order_persists": 0.8571428571428571
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.005631981249999999,
+     "alpha_in_window": -0.004468282246031867,
+     "t_in_window": -0.5479373124944624,
+     "mde_in_window": 0.0228332511833015,
+     "alpha_after_pre2024_hedge": -0.002900863790493069,
+     "se_hedged": 0.007224234847002502,
+     "t_hedged": -0.4015461639784181,
+     "mde_hedged": 0.020227857571607007,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "flow_in_winners@k20",
+      "dev_vs_spy": 0.057520688313043467,
+      "sealed_vs_spy": 0.03324283305287046,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "flow_rule@k20",
+      "dev_vs_spy": 0.0678473297730251,
+      "sealed_vs_spy": 0.036113116326418115,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "flow_rule_large@k20",
+      "dev_vs_spy": 0.06100241510455073,
+      "sealed_vs_spy": 0.031466513453796585,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "flow_rule_q@k20",
+      "dev_vs_spy": 0.04113407193825602,
+      "sealed_vs_spy": -0.03850379672212645,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "ibes_skill_net_raises@k20",
+      "dev_vs_spy": 0.08361237083003337,
+      "sealed_vs_spy": 0.0314197034939685,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "net_raises@k20",
+      "dev_vs_spy": 0.09663959243158171,
+      "sealed_vs_spy": 0.05850483494738268,
+      "axis": "anchor"
+     },
+     {
+      "cell": "net_raises_ivw@k20",
+      "dev_vs_spy": 0.0774567447209229,
+      "sealed_vs_spy": 0.005237788768372997,
+      "axis": "weighting"
+     },
+     {
+      "cell": "net_raises_large@k20",
+      "dev_vs_spy": 0.07266170765625701,
+      "sealed_vs_spy": 0.05066590396670012,
+      "axis": "universe"
+     },
+     {
+      "cell": "skill_raises@k20",
+      "dev_vs_spy": 0.060681753994332954,
+      "sealed_vs_spy": 0.17365784315224397,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "skill_raises_large@k20",
+      "dev_vs_spy": 0.05448793411837527,
+      "sealed_vs_spy": 0.14764250779439325,
+      "axis": "signal/filter+universe"
+     }
+    ]
+   },
+   {
+    "cluster": 114,
+    "n": 7,
+    "anchor": "gh11_skip_month_composite_q@k50",
+    "family_mix": {
+     "momentum": 4,
+     "trend": 3
+    },
+    "mean_inner_rho": 0.8676044397444351,
+    "sealed_vs_spy_min": -0.2810755457701951,
+    "sealed_vs_spy_max": 0.19926178294772723,
+    "sealed_vs_spy_sd": 0.1971403826953337,
+    "median_te_vs_cluster_mean_annual": 0.15289183150132807,
+    "rank_corr_dev_vs_2024_26": 0.8571428571428573,
+    "axes": {
+     "signal/filter+k": 4,
+     "signal/filter+universe+k": 2
+    },
+    "dominant_axis": "signal/filter+k",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 19,
+      "share_order_persists": 0.8421052631578947
+     },
+     "construction only": {
+      "n": 2,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 2.913839285714412e-05,
+     "alpha_in_window": -0.01334662375655329,
+     "t_in_window": -1.0397465906347485,
+     "mde_in_window": 0.03594197553034061,
+     "alpha_after_pre2024_hedge": -0.0390285995717605,
+     "se_hedged": 0.01847606005713682,
+     "t_hedged": -2.112387568078118,
+     "mde_hedged": 0.051732968159983087,
+     "verdict": "ALPHA_DETECTED",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "gh11_skip_month_composite_q@k50",
+      "dev_vs_spy": 0.08324133492179642,
+      "sealed_vs_spy": -0.18625260301403657,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_6_1@k20",
+      "dev_vs_spy": 0.10509255239709758,
+      "sealed_vs_spy": -0.2810755457701951,
+      "axis": "signal/filter+k"
+     },
+     {
+      "cell": "mom_6_1_large@k20",
+      "dev_vs_spy": 0.21728770246716644,
+      "sealed_vs_spy": 0.19580195031642855,
+      "axis": "signal/filter+universe+k"
+     },
+     {
+      "cell": "mom_6m@k20",
+      "dev_vs_spy": 0.1067995369383159,
+      "sealed_vs_spy": -0.22764345197693436,
+      "axis": "signal/filter+k"
+     },
+     {
+      "cell": "px_vs_ma200@k20",
+      "dev_vs_spy": 0.19863150690946885,
+      "sealed_vs_spy": -0.14161886570170723,
+      "axis": "signal/filter+k"
+     },
+     {
+      "cell": "px_vs_ma200_large@k20",
+      "dev_vs_spy": 0.22242120961859269,
+      "sealed_vs_spy": 0.19926178294772723,
+      "axis": "signal/filter+universe+k"
+     },
+     {
+      "cell": "trend_ma50_200@k20",
+      "dev_vs_spy": 0.16158038720489332,
+      "sealed_vs_spy": -0.12263964423435447,
+      "axis": "signal/filter+k"
+     }
+    ]
+   },
+   {
+    "cluster": 26,
+    "n": 5,
+    "anchor": "lowvol_63_q@k20",
+    "family_mix": {
+     "low_risk": 5
+    },
+    "mean_inner_rho": 0.8835253706979541,
+    "sealed_vs_spy_min": -0.18630837510525233,
+    "sealed_vs_spy_max": -0.07717364009307226,
+    "sealed_vs_spy_sd": 0.040209870377673894,
+    "median_te_vs_cluster_mean_annual": 0.051712634414920855,
+    "rank_corr_dev_vs_2024_26": 0.6,
+    "axes": {
+     "signal/filter+hold/offset": 3,
+     "hold/offset": 1
+    },
+    "dominant_axis": "signal/filter+hold/offset",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 9,
+      "share_order_persists": 0.6666666666666666
+     },
+     "construction only": {
+      "n": 1,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.01085108125,
+     "alpha_in_window": -0.004430500902702849,
+     "t_in_window": -1.359767975047665,
+     "mde_in_window": 0.009123175979440993,
+     "alpha_after_pre2024_hedge": -0.009730124635211676,
+     "se_hedged": 0.00520577603777607,
+     "t_hedged": -1.8691016602720443,
+     "mde_hedged": 0.014576172905772995,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "low_idio_63@k20",
+      "dev_vs_spy": -0.31271610254331816,
+      "sealed_vs_spy": -0.07717364009307226,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "low_max@k20",
+      "dev_vs_spy": -0.42424175821721477,
+      "sealed_vs_spy": -0.18630837510525233,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "lowvol_21@k20",
+      "dev_vs_spy": -0.4622818813552886,
+      "sealed_vs_spy": -0.14762589605618603,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "lowvol_63@k20",
+      "dev_vs_spy": -0.35509854992377776,
+      "sealed_vs_spy": -0.1581665451248382,
+      "axis": "hold/offset"
+     },
+     {
+      "cell": "lowvol_63_q@k20",
+      "dev_vs_spy": -0.29915436987162336,
+      "sealed_vs_spy": -0.13895635444462617,
+      "axis": "anchor"
+     }
+    ]
+   },
+   {
+    "cluster": 10,
+    "n": 4,
+    "anchor": "gp_lowvol_large@k20",
+    "family_mix": {
+     "combination": 3,
+     "diversified_combo": 1
+    },
+    "mean_inner_rho": 0.8700877954918328,
+    "sealed_vs_spy_min": -0.1686922173795926,
+    "sealed_vs_spy_max": -0.12866342202583114,
+    "sealed_vs_spy_sd": 0.01863589357947709,
+    "median_te_vs_cluster_mean_annual": 0.030097278246167824,
+    "rank_corr_dev_vs_2024_26": -0.19999999999999998,
+    "axes": {
+     "signal/filter+universe": 2,
+     "universe": 1
+    },
+    "dominant_axis": "signal/filter+universe",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 5,
+      "share_order_persists": 0.4
+     },
+     "construction only": {
+      "n": 1,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.010472265625000001,
+     "alpha_in_window": 0.0005859502899866744,
+     "t_in_window": 0.1352111529126476,
+     "mde_in_window": 0.012134064214529906,
+     "alpha_after_pre2024_hedge": -0.0063065848178973285,
+     "se_hedged": 0.005074892888285908,
+     "t_hedged": -1.2427030395960605,
+     "mde_hedged": 0.01420970008720054,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "div_agree_quality_lowvol@k20",
+      "dev_vs_spy": -0.016503121335209148,
+      "sealed_vs_spy": -0.1686922173795926,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "gp_lowvol@k20",
+      "dev_vs_spy": 0.0011406943972720462,
+      "sealed_vs_spy": -0.14461558202125224,
+      "axis": "universe"
+     },
+     {
+      "cell": "gp_lowvol_large@k20",
+      "dev_vs_spy": 0.006213315917101392,
+      "sealed_vs_spy": -0.12982188623247226,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_gp_lowvol@k20",
+      "dev_vs_spy": -0.029138456168015248,
+      "sealed_vs_spy": -0.12866342202583114,
+      "axis": "signal/filter+universe"
+     }
+    ]
+   },
+   {
+    "cluster": 151,
+    "n": 4,
+    "anchor": "inflection_large@k20",
+    "family_mix": {
+     "inflection": 3,
+     "quality": 1
+    },
+    "mean_inner_rho": 0.8377545956937816,
+    "sealed_vs_spy_min": -0.09070236602308768,
+    "sealed_vs_spy_max": 0.03751231015389367,
+    "sealed_vs_spy_sd": 0.05715666811968502,
+    "median_te_vs_cluster_mean_annual": 0.07645861488187586,
+    "rank_corr_dev_vs_2024_26": 0.7999999999999999,
+    "axes": {
+     "universe": 2,
+     "signal/filter+universe": 1
+    },
+    "dominant_axis": "universe",
+    "pairs_by_class": {
+     "construction only": {
+      "n": 3,
+      "share_order_persists": 0.6666666666666666
+     },
+     "signal/filter": {
+      "n": 3,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.001426234375,
+     "alpha_in_window": -0.010035537126561045,
+     "t_in_window": -1.0905255245739596,
+     "mde_in_window": 0.02576693834410587,
+     "alpha_after_pre2024_hedge": -0.0074693617809639,
+     "se_hedged": 0.010390043092699535,
+     "t_hedged": -0.7188961310672692,
+     "mde_hedged": 0.0290921206595587,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "inflection@k20",
+      "dev_vs_spy": -0.1033540602540024,
+      "sealed_vs_spy": -0.053730250811965696,
+      "axis": "universe"
+     },
+     {
+      "cell": "inflection_large@k20",
+      "dev_vs_spy": -0.016219267001169824,
+      "sealed_vs_spy": 0.03751231015389367,
+      "axis": "anchor"
+     },
+     {
+      "cell": "inflection_mid_plus@k20",
+      "dev_vs_spy": -0.0763924528509774,
+      "sealed_vs_spy": -0.09070236602308768,
+      "axis": "universe"
+     },
+     {
+      "cell": "margin_expansion@k20",
+      "dev_vs_spy": -0.06412746083899967,
+      "sealed_vs_spy": 0.002487268943992982,
+      "axis": "signal/filter+universe"
+     }
+    ]
+   },
+   {
+    "cluster": 179,
+    "n": 4,
+    "anchor": "mom_flow_ivw@k20",
+    "family_mix": {
+     "combination": 1,
+     "analyst_skill": 1,
+     "sector_relative": 1,
+     "weighted": 1
+    },
+    "mean_inner_rho": 0.8725996673190579,
+    "sealed_vs_spy_min": 0.0889739036478725,
+    "sealed_vs_spy_max": 0.36962805581369285,
+    "sealed_vs_spy_sd": 0.1145772935456896,
+    "median_te_vs_cluster_mean_annual": 0.058037393645912864,
+    "rank_corr_dev_vs_2024_26": 0.39999999999999997,
+    "axes": {
+     "weighting": 2,
+     "signal/filter+weighting": 1
+    },
+    "dominant_axis": "weighting",
+    "pairs_by_class": {
+     "construction only": {
+      "n": 3,
+      "share_order_persists": 1.0
+     },
+     "signal/filter": {
+      "n": 3,
+      "share_order_persists": 0.3333333333333333
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.017952203125,
+     "alpha_in_window": 0.009552123583004583,
+     "t_in_window": 1.0273041909730367,
+     "mde_in_window": 0.026035079256397992,
+     "alpha_after_pre2024_hedge": 0.005648466289734948,
+     "se_hedged": 0.009043070359334528,
+     "t_hedged": 0.6246181955119294,
+     "mde_hedged": 0.025320597006136675,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "+"
+    },
+    "members": [
+     {
+      "cell": "mom_flow@k20",
+      "dev_vs_spy": 0.06766503580678318,
+      "sealed_vs_spy": 0.22900508199173508,
+      "axis": "weighting"
+     },
+     {
+      "cell": "mom_flow_ivw@k20",
+      "dev_vs_spy": 0.07366405153630629,
+      "sealed_vs_spy": 0.2299627457246589,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_flow_secrel@k20",
+      "dev_vs_spy": 0.014557109886623731,
+      "sealed_vs_spy": 0.0889739036478725,
+      "axis": "weighting"
+     },
+     {
+      "cell": "skill_mom@k20",
+      "dev_vs_spy": 0.04714805055594917,
+      "sealed_vs_spy": 0.36962805581369285,
+      "axis": "signal/filter+weighting"
+     }
+    ]
+   },
+   {
+    "cluster": 167,
+    "n": 4,
+    "anchor": "qc395_sharpe252_above_trend_large@k10",
+    "family_mix": {
+     "momentum": 3,
+     "revision_flow": 1
+    },
+    "mean_inner_rho": 0.9214130379224438,
+    "sealed_vs_spy_min": 0.1790127912713253,
+    "sealed_vs_spy_max": 0.3523835679474907,
+    "sealed_vs_spy_sd": 0.07471276085419909,
+    "median_te_vs_cluster_mean_annual": 0.07201698546595983,
+    "rank_corr_dev_vs_2024_26": 0.39999999999999997,
+    "axes": {
+     "signal/filter+k": 3
+    },
+    "dominant_axis": "signal/filter+k",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 6,
+      "share_order_persists": 0.6666666666666666
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.025641687499999996,
+     "alpha_in_window": 0.0017887054830571117,
+     "t_in_window": 0.10131294780191309,
+     "mde_in_window": 0.049434701696295325,
+     "alpha_after_pre2024_hedge": 0.0019251849911175664,
+     "se_hedged": 0.01567893768505293,
+     "t_hedged": 0.12278797389142548,
+     "mde_hedged": 0.04390102551814821,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "+"
+    },
+    "members": [
+     {
+      "cell": "mom_12_1_large@k20",
+      "dev_vs_spy": 0.013352855116190776,
+      "sealed_vs_spy": 0.21513009564740093,
+      "axis": "signal/filter+k"
+     },
+     {
+      "cell": "mom_no_downgrades_large@k20",
+      "dev_vs_spy": 0.04814478089028795,
+      "sealed_vs_spy": 0.1790127912713253,
+      "axis": "signal/filter+k"
+     },
+     {
+      "cell": "qc395_sharpe252_above_trend_large@k10",
+      "dev_vs_spy": 0.13572224770030128,
+      "sealed_vs_spy": 0.3523835679474907,
+      "axis": "anchor"
+     },
+     {
+      "cell": "resid_mom_12_1_large@k20",
+      "dev_vs_spy": 0.04088047422548624,
+      "sealed_vs_spy": 0.24475595964375407,
+      "axis": "signal/filter+k"
+     }
+    ]
+   },
+   {
+    "cluster": 131,
+    "n": 4,
+    "anchor": "rev_1m@k20",
+    "family_mix": {
+     "reversal": 3,
+     "filing_event": 1
+    },
+    "mean_inner_rho": 0.8573648714012881,
+    "sealed_vs_spy_min": -0.13089785803982212,
+    "sealed_vs_spy_max": 0.05831313775332503,
+    "sealed_vs_spy_sd": 0.08733537488868137,
+    "median_te_vs_cluster_mean_annual": 0.12132773487620264,
+    "rank_corr_dev_vs_2024_26": 0.0,
+    "axes": {
+     "signal/filter": 2,
+     "universe": 1
+    },
+    "dominant_axis": "signal/filter",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 5,
+      "share_order_persists": 0.6
+     },
+     "construction only": {
+      "n": 1,
+      "share_order_persists": 0.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.0006077265625000017,
+     "alpha_in_window": -0.009091207808149806,
+     "t_in_window": -0.7931360492303677,
+     "mde_in_window": 0.03209459699571151,
+     "alpha_after_pre2024_hedge": -0.010302110541104317,
+     "se_hedged": 0.012309862023803594,
+     "t_hedged": -0.8368989450233573,
+     "mde_hedged": 0.03446761366665006,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "distress_free_reversal@k20",
+      "dev_vs_spy": -0.0039845782378082895,
+      "sealed_vs_spy": -0.1037345388305051,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "rev_1m@k20",
+      "dev_vs_spy": 0.08967877358907339,
+      "sealed_vs_spy": -0.007786756889490487,
+      "axis": "anchor"
+     },
+     {
+      "cell": "rev_1m_small@k20",
+      "dev_vs_spy": 0.024259583389824035,
+      "sealed_vs_spy": 0.05831313775332503,
+      "axis": "universe"
+     },
+     {
+      "cell": "rev_in_winners@k20",
+      "dev_vs_spy": 0.0507488982020845,
+      "sealed_vs_spy": -0.13089785803982212,
+      "axis": "signal/filter"
+     }
+    ]
+   },
+   {
+    "cluster": 95,
+    "n": 3,
+    "anchor": "big_dv@k20",
+    "family_mix": {
+     "momentum": 1,
+     "size_liquidity": 1,
+     "trend": 1
+    },
+    "mean_inner_rho": 0.8619825436430868,
+    "sealed_vs_spy_min": 0.11504431648936952,
+    "sealed_vs_spy_max": 0.13534271928029207,
+    "sealed_vs_spy_sd": 0.010478553105661315,
+    "median_te_vs_cluster_mean_annual": 0.05749610005767464,
+    "rank_corr_dev_vs_2024_26": 0.5,
+    "axes": {
+     "signal/filter+universe": 1,
+     "signal/filter+universe+k": 1
+    },
+    "dominant_axis": "signal/filter+universe",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 3,
+      "share_order_persists": 0.6666666666666666
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.012358739583333335,
+     "alpha_in_window": -0.0071413823935930695,
+     "t_in_window": -0.9916438172629128,
+     "mde_in_window": 0.020164367844547476,
+     "alpha_after_pre2024_hedge": 0.0010067985355053525,
+     "se_hedged": 0.007823502726058525,
+     "t_hedged": 0.12868897356575432,
+     "mde_hedged": 0.021905807632963868,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "+"
+    },
+    "members": [
+     {
+      "cell": "big_dv@k20",
+      "dev_vs_spy": 0.060401898169856194,
+      "sealed_vs_spy": 0.13534271928029207,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_12_1_mega@k20",
+      "dev_vs_spy": 0.0325062337293196,
+      "sealed_vs_spy": 0.11504431648936952,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "qc768_golden_cross_mega@k30",
+      "dev_vs_spy": -0.00798612634527096,
+      "sealed_vs_spy": 0.12970808969925507,
+      "axis": "signal/filter+universe+k"
+     }
+    ]
+   },
+   {
+    "cluster": 60,
+    "n": 3,
+    "anchor": "gp_at_q@k20",
+    "family_mix": {
+     "quality": 2,
+     "weighted": 1
+    },
+    "mean_inner_rho": 0.9307063317974769,
+    "sealed_vs_spy_min": -0.12143495971169393,
+    "sealed_vs_spy_max": -0.05693978322475646,
+    "sealed_vs_spy_sd": 0.03301399244561547,
+    "median_te_vs_cluster_mean_annual": 0.03060014302247094,
+    "rank_corr_dev_vs_2024_26": -0.5,
+    "axes": {
+     "hold/offset": 1,
+     "hold/offset+weighting": 1
+    },
+    "dominant_axis": "hold/offset",
+    "pairs_by_class": {
+     "construction only": {
+      "n": 3,
+      "share_order_persists": 0.3333333333333333
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.005167520833333334,
+     "alpha_in_window": 0.0036770333188311643,
+     "t_in_window": 0.45299603192076143,
+     "mde_in_window": 0.022727998850392124,
+     "alpha_after_pre2024_hedge": -0.002768713473880792,
+     "se_hedged": 0.007638278546798157,
+     "t_hedged": -0.36247872566016753,
+     "mde_hedged": 0.02138717993103484,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "gp_at@k20",
+      "dev_vs_spy": 0.027933058176320635,
+      "sealed_vs_spy": -0.05693978322475646,
+      "axis": "hold/offset"
+     },
+     {
+      "cell": "gp_at_ivw@k20",
+      "dev_vs_spy": 0.028375915727192336,
+      "sealed_vs_spy": -0.12143495971169393,
+      "axis": "hold/offset+weighting"
+     },
+     {
+      "cell": "gp_at_q@k20",
+      "dev_vs_spy": 0.044040236229722085,
+      "sealed_vs_spy": -0.07693787151775555,
+      "axis": "anchor"
+     }
+    ]
+   },
+   {
+    "cluster": 111,
+    "n": 3,
+    "anchor": "gp_low_ag@k20",
+    "family_mix": {
+     "investment": 1,
+     "combination": 1,
+     "insider": 1
+    },
+    "mean_inner_rho": 0.8567853184028934,
+    "sealed_vs_spy_min": -0.09305731509659054,
+    "sealed_vs_spy_max": 0.04805439230218855,
+    "sealed_vs_spy_sd": 0.07592621374831957,
+    "median_te_vs_cluster_mean_annual": 0.1026934746163328,
+    "rank_corr_dev_vs_2024_26": 0.5,
+    "axes": {
+     "signal/filter+universe": 2
+    },
+    "dominant_axis": "signal/filter+universe",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 3,
+      "share_order_persists": 0.6666666666666666
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.000220260416666667,
+     "alpha_in_window": 0.00280477148405153,
+     "t_in_window": 0.7202236520388595,
+     "mde_in_window": 0.010904057556444365,
+     "alpha_after_pre2024_hedge": -0.02440063643301915,
+     "se_hedged": 0.01567477592958834,
+     "t_hedged": -1.5566816739599785,
+     "mde_hedged": 0.043889372602847344,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "gp_low_ag@k20",
+      "dev_vs_spy": 0.14262368527982794,
+      "sealed_vs_spy": 0.04805439230218855,
+      "axis": "anchor"
+     },
+     {
+      "cell": "insider_buyers_large@k20",
+      "dev_vs_spy": 0.04919550222477165,
+      "sealed_vs_spy": -0.09305731509659054,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "low_asset_growth_large@k20",
+      "dev_vs_spy": 0.15675674450166488,
+      "sealed_vs_spy": 0.02607820851437359,
+      "axis": "signal/filter+universe"
+     }
+    ]
+   },
+   {
+    "cluster": 77,
+    "n": 3,
+    "anchor": "insider_before_print@k20",
+    "family_mix": {
+     "insider": 2,
+     "earnings_event": 1
+    },
+    "mean_inner_rho": 0.8418656192871624,
+    "sealed_vs_spy_min": -0.1251397399890004,
+    "sealed_vs_spy_max": -0.060134704907141234,
+    "sealed_vs_spy_sd": 0.036427882806139955,
+    "median_te_vs_cluster_mean_annual": 0.058126511545174356,
+    "rank_corr_dev_vs_2024_26": -1.0,
+    "axes": {
+     "signal/filter": 2
+    },
+    "dominant_axis": "signal/filter",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 3,
+      "share_order_persists": 0.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.004651239583333334,
+     "alpha_in_window": 0.007498648306142682,
+     "t_in_window": 1.1610398318540935,
+     "mde_in_window": 0.018083974968946696,
+     "alpha_after_pre2024_hedge": 0.0006573781064411026,
+     "se_hedged": 0.006844363877899489,
+     "t_hedged": 0.0960466331376364,
+     "mde_hedged": 0.01916421885811857,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "+"
+    },
+    "members": [
+     {
+      "cell": "insider_before_print@k20",
+      "dev_vs_spy": 0.021594962571938714,
+      "sealed_vs_spy": -0.1251397399890004,
+      "axis": "anchor"
+     },
+     {
+      "cell": "insider_buyers@k20",
+      "dev_vs_spy": -0.01918362984460642,
+      "sealed_vs_spy": -0.06414632920622432,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "insider_unconfirmed@k20",
+      "dev_vs_spy": -0.04267425093187538,
+      "sealed_vs_spy": -0.060134704907141234,
+      "axis": "signal/filter"
+     }
+    ]
+   },
+   {
+    "cluster": 50,
+    "n": 3,
+    "anchor": "lead_raises_large@k20",
+    "family_mix": {
+     "lead_chase": 3
+    },
+    "mean_inner_rho": 0.9123170449375161,
+    "sealed_vs_spy_min": -0.13760968439981336,
+    "sealed_vs_spy_max": -0.06336576007808903,
+    "sealed_vs_spy_sd": 0.03806573808814424,
+    "median_te_vs_cluster_mean_annual": 0.030584415067709213,
+    "rank_corr_dev_vs_2024_26": 1.0,
+    "axes": {
+     "signal/filter+universe": 1,
+     "universe": 1
+    },
+    "dominant_axis": "signal/filter+universe",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 2,
+      "share_order_persists": 1.0
+     },
+     "construction only": {
+      "n": 1,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.006721302083333334,
+     "alpha_in_window": -0.004558883268401735,
+     "t_in_window": -0.716712414384405,
+     "mde_in_window": 0.017810314005079427,
+     "alpha_after_pre2024_hedge": -0.00880246089868891,
+     "se_hedged": 0.0069630326771482915,
+     "t_hedged": -1.264170557116207,
+     "mde_hedged": 0.019496491496015216,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "lead_minus_chase@k20",
+      "dev_vs_spy": -0.00395892889041316,
+      "sealed_vs_spy": -0.13760968439981336,
+      "axis": "signal/filter+universe"
+     },
+     {
+      "cell": "lead_raises@k20",
+      "dev_vs_spy": 0.017196680914487672,
+      "sealed_vs_spy": -0.11507816515779834,
+      "axis": "universe"
+     },
+     {
+      "cell": "lead_raises_large@k20",
+      "dev_vs_spy": 0.027424713348276786,
+      "sealed_vs_spy": -0.06336576007808903,
+      "axis": "anchor"
+     }
+    ]
+   },
+   {
+    "cluster": 84,
+    "n": 3,
+    "anchor": "mom_12_1_q_trend@k20",
+    "family_mix": {
+     "regime_gated": 3
+    },
+    "mean_inner_rho": 0.9512274854515425,
+    "sealed_vs_spy_min": -0.12532916679390804,
+    "sealed_vs_spy_max": 0.20830175316783195,
+    "sealed_vs_spy_sd": 0.1806438750722294,
+    "median_te_vs_cluster_mean_annual": 0.05952311021702716,
+    "rank_corr_dev_vs_2024_26": 0.5,
+    "axes": {
+     "signal/filter+hold/offset": 2
+    },
+    "dominant_axis": "signal/filter+hold/offset",
+    "pairs_by_class": {
+     "signal/filter": {
+      "n": 3,
+      "share_order_persists": 0.6666666666666666
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": 0.005869937500000005,
+     "alpha_in_window": 0.00016285706671527786,
+     "t_in_window": 0.008109018039049577,
+     "mde_in_window": 0.056233662893198325,
+     "alpha_after_pre2024_hedge": -0.015006631066370107,
+     "se_hedged": 0.021077526277414996,
+     "t_hedged": -0.7119730687965039,
+     "mde_hedged": 0.05901707357676199,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "mom_12_1_q_trend@k20",
+      "dev_vs_spy": 0.10388290055093496,
+      "sealed_vs_spy": 0.20830175316783195,
+      "axis": "anchor"
+     },
+     {
+      "cell": "mom_12_1_trend@k20",
+      "dev_vs_spy": 0.0924243896287491,
+      "sealed_vs_spy": -0.07857384065206863,
+      "axis": "signal/filter+hold/offset"
+     },
+     {
+      "cell": "mom_no_downgrades_trend@k20",
+      "dev_vs_spy": 0.10322649458252253,
+      "sealed_vs_spy": -0.12532916679390804,
+      "axis": "signal/filter+hold/offset"
+     }
+    ]
+   },
+   {
+    "cluster": 11,
+    "n": 3,
+    "anchor": "quality_composite_secrel@k20",
+    "family_mix": {
+     "quality": 1,
+     "sector_relative": 1,
+     "weighted": 1
+    },
+    "mean_inner_rho": 0.8645751799729752,
+    "sealed_vs_spy_min": -0.13032258326557788,
+    "sealed_vs_spy_max": -0.09576711580942887,
+    "sealed_vs_spy_sd": 0.019733247634321487,
+    "median_te_vs_cluster_mean_annual": 0.02169300926528117,
+    "rank_corr_dev_vs_2024_26": 1.0,
+    "axes": {
+     "same construction": 1,
+     "weighting": 1
+    },
+    "dominant_axis": "same construction",
+    "pairs_by_class": {
+     "construction only": {
+      "n": 3,
+      "share_order_persists": 1.0
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.007806854166666666,
+     "alpha_in_window": 0.0041470298430457565,
+     "t_in_window": 1.026457410334235,
+     "mde_in_window": 0.011312387093339921,
+     "alpha_after_pre2024_hedge": -0.005524623780360045,
+     "se_hedged": 0.005560381121481191,
+     "t_hedged": -0.9935692643471854,
+     "mde_hedged": 0.015569067140147334,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "quality_composite@k20",
+      "dev_vs_spy": 0.03717147450561731,
+      "sealed_vs_spy": -0.09653294661089817,
+      "axis": "same construction"
+     },
+     {
+      "cell": "quality_composite_ivw@k20",
+      "dev_vs_spy": 0.04092360633956149,
+      "sealed_vs_spy": -0.09576711580942887,
+      "axis": "weighting"
+     },
+     {
+      "cell": "quality_composite_secrel@k20",
+      "dev_vs_spy": 0.03346757306979886,
+      "sealed_vs_spy": -0.13032258326557788,
+      "axis": "anchor"
+     }
+    ]
+   },
+   {
+    "cluster": 20,
+    "n": 3,
+    "anchor": "recovery_anchoring@k20",
+    "family_mix": {
+     "momentum": 1,
+     "sector_relative": 1,
+     "disposition": 1
+    },
+    "mean_inner_rho": 0.8449510988012413,
+    "sealed_vs_spy_min": -0.05562558338549195,
+    "sealed_vs_spy_max": 0.007337506854180775,
+    "sealed_vs_spy_sd": 0.03195414232227157,
+    "median_te_vs_cluster_mean_annual": 0.04569168491924569,
+    "rank_corr_dev_vs_2024_26": -0.5,
+    "axes": {
+     "signal/filter": 2
+    },
+    "dominant_axis": "signal/filter",
+    "pairs_by_class": {
+     "construction only": {
+      "n": 1,
+      "share_order_persists": 0.0
+     },
+     "signal/filter": {
+      "n": 2,
+      "share_order_persists": 0.5
+     }
+    },
+    "level1_cluster_mean": {
+     "mean_active_2024_26": -0.0015771770833333332,
+     "alpha_in_window": 0.00223641831777449,
+     "t_in_window": 0.42249187659412285,
+     "mde_in_window": 0.014821518795222392,
+     "alpha_after_pre2024_hedge": -0.0010734006660222141,
+     "se_hedged": 0.0054049557851945824,
+     "t_hedged": -0.19859564234780708,
+     "mde_hedged": 0.015133876198544829,
+     "verdict": "CANNOT_DISTINGUISH",
+     "alpha_sign": "-"
+    },
+    "members": [
+     {
+      "cell": "hi52@k20",
+      "dev_vs_spy": -0.24882105720250658,
+      "sealed_vs_spy": -0.03362763385272505,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "hi52_secrel@k20",
+      "dev_vs_spy": -0.20622779937496627,
+      "sealed_vs_spy": -0.05562558338549195,
+      "axis": "signal/filter"
+     },
+     {
+      "cell": "recovery_anchoring@k20",
+      "dev_vs_spy": -0.24240424072425426,
+      "sealed_vs_spy": 0.007337506854180775,
+      "axis": "anchor"
+     }
+    ]
+   }
+  ],
+  "within_cluster_persistence": {
+   "pairs": {
+    "construction only": {
+     "n_pairs": 33,
+     "share_order_persists": 0.696969696969697
+    },
+    "signal/filter": {
+     "n_pairs": 278,
+     "share_order_persists": 0.5503597122302158
+    }
+   },
+   "construction_pairs_by_axis": {
+    "hold/offset": {
+     "n_pairs": 5,
+     "share_order_persists": 0.6
+    },
+    "hold/offset+universe": {
+     "n_pairs": 1,
+     "share_order_persists": 1.0
+    },
+    "hold/offset+weighting": {
+     "n_pairs": 2,
+     "share_order_persists": 1.0
+    },
+    "same construction": {
+     "n_pairs": 4,
+     "share_order_persists": 0.5
+    },
+    "universe": {
+     "n_pairs": 12,
+     "share_order_persists": 0.8333333333333334
+    },
+    "universe+weighting": {
+     "n_pairs": 1,
+     "share_order_persists": 0.0
+    },
+    "weighting": {
+     "n_pairs": 8,
+     "share_order_persists": 0.625
+    }
+   },
+   "note": "a pair's order persists when (dev_a - dev_b) and (2024-26_a - 2024-26_b) have the same sign; 50% is a coin"
+  },
+  "bet_count_curve": {
+   "raw_net": {
+    "n_series": 288,
+    "clusters_by_rho": {
+     "0.5": 8,
+     "0.6": 16,
+     "0.7": 30,
+     "0.8": 86,
+     "0.9": 202
+    },
+    "median_pair_rho": 0.6322061117042476,
+    "share_pairs_ge_cut": 0.07142857142857142,
+    "n_pairs": 41328
+   },
+   "active": {
+    "n_series": 288,
+    "clusters_by_rho": {
+     "0.5": 36,
+     "0.6": 78,
+     "0.7": 133,
+     "0.8": 192,
+     "0.9": 244
+    },
+    "median_pair_rho": 0.29867563505403105,
+    "share_pairs_ge_cut": 0.009364111498257839,
+    "n_pairs": 41328
+   },
+   "residual_smh_iwm_mtum": {
+    "n_series": 288,
+    "clusters_by_rho": {
+     "0.5": 96,
+     "0.6": 140,
+     "0.7": 176,
+     "0.8": 219,
+     "0.9": 254
+    },
+    "median_pair_rho": 0.1413684941497771,
+    "share_pairs_ge_cut": 0.004815137437088657,
+    "n_pairs": 41328
+   },
+   "residual_6_etf": {
+    "n_series": 288,
+    "clusters_by_rho": {
+     "0.5": 99,
+     "0.6": 152,
+     "0.7": 188,
+     "0.8": 222,
+     "0.9": 256
+    },
+    "median_pair_rho": 0.14564843501825694,
+    "share_pairs_ge_cut": 0.004911924119241192,
+    "n_pairs": 41328
+   }
+  }
+ },
+ "distinct_bets": {
+  "full": {
+   "window": "cluster_full",
+   "n_books": 32,
+   "n_distinct": 18,
+   "n_clustered_books": 30,
+   "n_clusters": 16,
+   "n_unclustered": 2,
+   "multi_book_clusters": {
+    "170": [
+     "lib_mom_12_1_q_2026-09-26",
+     "lib_mom_no_downgrades_2026-09-26",
+     "lib_mom_12_1_2026-09-26",
+     "lib_mom_12_1_secrel_sealed_2026-09-26",
+     "lib_disp_short_avoid_2026-09-27",
+     "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+     "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+     "lib_mom_12_1_ivw_lead_2026-09-27__control"
+    ],
+    "103": [
+     "lib_net_raises_2026-09-26",
+     "lib_net_raises_ivw_lead_2026-09-27",
+     "lib_skill_raises_2026-09-30__control"
+    ],
+    "186": [
+     "lib_mom_12_1_small_2026-09-26",
+     "lib_mom_no_downgrades_small_2026-09-27__control"
+    ],
+    "179": [
+     "lib_mom_flow_2026-09-26",
+     "lib_skill_mom_sealed_2026-09-26",
+     "lib_skill_mom_2026-09-27",
+     "lib_mom_flow_ivw_2026-09-27"
+    ],
+    "167": [
+     "lib_resid_mom_12_1_large_sealed_2026-09-26",
+     "lib_qc395_sharpe252_above_trend_large_2026-09-27"
+    ]
+   },
+   "unclustered": [
+    "lib_forecast_dispersion_v1_2026-09-26",
+    "lib_book_f_seasonality_11_20_v0_2026-09-26"
+   ]
+  },
+  "sealed": {
+   "window": "cluster_sealed",
+   "n_books": 32,
+   "n_distinct": 16,
+   "n_clustered_books": 30,
+   "n_clusters": 14,
+   "n_unclustered": 2,
+   "multi_book_clusters": {
+    "94": [
+     "lib_mom_12_1_q_2026-09-26",
+     "lib_mom_no_downgrades_2026-09-26",
+     "lib_mom_12_1_2026-09-26",
+     "lib_mom_12_1_secrel_sealed_2026-09-26",
+     "lib_disp_short_avoid_2026-09-27",
+     "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+     "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+     "lib_mom_12_1_ivw_lead_2026-09-27__control",
+     "lib_mom_12_1_q_trend_lead_2026-09-27"
+    ],
+    "54": [
+     "lib_net_raises_2026-09-26",
+     "lib_net_raises_ivw_lead_2026-09-27",
+     "lib_skill_raises_2026-09-30__control"
+    ],
+    "41": [
+     "lib_mom_12_1_small_2026-09-26",
+     "lib_mom_no_downgrades_small_2026-09-27__control"
+    ],
+    "53": [
+     "lib_mom_flow_2026-09-26",
+     "lib_mom_flow_ivw_2026-09-27"
+    ],
+    "96": [
+     "lib_mom_12_1_liqw_sealed_2026-09-26__ew",
+     "lib_skill_mom_sealed_2026-09-26",
+     "lib_resid_mom_12_1_large_sealed_2026-09-26",
+     "lib_qc395_sharpe252_above_trend_large_2026-09-27",
+     "lib_skill_mom_2026-09-27"
+    ]
+   },
+   "unclustered": [
+    "lib_forecast_dispersion_v1_2026-09-26",
+    "lib_book_f_seasonality_11_20_v0_2026-09-26"
+   ]
+  }
+ },
+ "cluster_observations": [
+  {
+   "cluster": "170",
+   "books": [
+    "lib_mom_12_1_q_2026-09-26",
+    "lib_mom_no_downgrades_2026-09-26",
+    "lib_mom_12_1_2026-09-26",
+    "lib_mom_12_1_secrel_sealed_2026-09-26",
+    "lib_disp_short_avoid_2026-09-27",
+    "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+    "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+    "lib_mom_12_1_ivw_lead_2026-09-27__control"
+   ],
+   "n_books": 8,
+   "forward_relative_one_observation": 0.0036901900746597396,
+   "forward_minus_random_twin_one_observation": "NO_RANDOM_SAME_BAND_TWIN",
+   "forward_vs_factor_etf_one_observation": 0.0012438123660407435
+  },
+  {
+   "cluster": "103",
+   "books": [
+    "lib_net_raises_2026-09-26",
+    "lib_net_raises_ivw_lead_2026-09-27",
+    "lib_skill_raises_2026-09-30__control"
+   ],
+   "n_books": 3,
+   "forward_relative_one_observation": 0.03591393421468001,
+   "forward_minus_random_twin_one_observation": "NO_RANDOM_SAME_BAND_TWIN",
+   "forward_vs_factor_etf_one_observation": 0.02572397205596501
+  },
+  {
+   "cluster": "186",
+   "books": [
+    "lib_mom_12_1_small_2026-09-26",
+    "lib_mom_no_downgrades_small_2026-09-27__control"
+   ],
+   "n_books": 2,
+   "forward_relative_one_observation": -0.04216614005716629,
+   "forward_minus_random_twin_one_observation": -0.017178932985562473,
+   "forward_vs_factor_etf_one_observation": -0.04461251776578529
+  },
+  {
+   "cluster": "179",
+   "books": [
+    "lib_mom_flow_2026-09-26",
+    "lib_skill_mom_sealed_2026-09-26",
+    "lib_skill_mom_2026-09-27",
+    "lib_mom_flow_ivw_2026-09-27"
+   ],
+   "n_books": 4,
+   "forward_relative_one_observation": 0.023745556248993896,
+   "forward_minus_random_twin_one_observation": 0.025650980303244777,
+   "forward_vs_factor_etf_one_observation": 0.011231992545452499
+  },
+  {
+   "cluster": "167",
+   "books": [
+    "lib_resid_mom_12_1_large_sealed_2026-09-26",
+    "lib_qc395_sharpe252_above_trend_large_2026-09-27"
+   ],
+   "n_books": 2,
+   "forward_relative_one_observation": 0.06592053145378693,
+   "forward_minus_random_twin_one_observation": 0.04133308629296762,
+   "forward_vs_factor_etf_one_observation": 0.02734701658147596
+  }
+ ],
+ "level2_pairs": [
+  {
+   "cluster": "170",
+   "book": "lib_mom_12_1_q_2026-09-26",
+   "rule": "mom_12_1_q",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "anchor",
+   "forward_minus_cluster_mean": -0.010841462379818317,
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_mom_no_downgrades_2026-09-26",
+   "rule": "mom_no_downgrades",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "signal/filter+hold/offset",
+   "forward_minus_cluster_mean": -0.01958863254514312,
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_mom_12_1_2026-09-26",
+   "rule": "mom_12_1",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "hold/offset",
+   "forward_minus_cluster_mean": -0.010841462379818317,
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_mom_12_1_secrel_sealed_2026-09-26",
+   "rule": "mom_12_1_secrel",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "hold/offset",
+   "forward_minus_cluster_mean": 0.022130748965833065,
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_disp_short_avoid_2026-09-27",
+   "rule": "disp_short_avoid",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "signal/filter",
+   "forward_minus_cluster_mean": -0.0034155248653655393,
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+   "rule": "qc470_mom252_quarterly_riskparity",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "signal/filter+weighting",
+   "forward_minus_cluster_mean": 0.025137488113710554,
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+   "rule": "qc470_mom252_quarterly_riskparity",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "signal/filter+weighting",
+   "forward_minus_cluster_mean": 0.008111742302011872,
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "170",
+   "book": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+   "rule": "mom_12_1_ivw",
+   "anchor_rule": "mom_12_1_q",
+   "axis": "hold/offset+weighting",
+   "forward_minus_cluster_mean": -0.010692897211410195,
+   "hist_te_annual": 0.1258155271159902,
+   "mde_after_12_months": 0.35228347592477255
+  },
+  {
+   "cluster": "103",
+   "book": "lib_net_raises_2026-09-26",
+   "rule": "net_raises",
+   "anchor_rule": "net_raises",
+   "axis": "anchor",
+   "forward_minus_cluster_mean": 0.01904401126891659,
+   "hist_te_annual": 0.0375048302304954,
+   "mde_after_12_months": 0.10501352464538713
+  },
+  {
+   "cluster": "103",
+   "book": "lib_net_raises_ivw_lead_2026-09-27",
+   "rule": "net_raises_ivw",
+   "anchor_rule": "net_raises",
+   "axis": "weighting",
+   "forward_minus_cluster_mean": 0.014096002531468685,
+   "hist_te_annual": 0.0375048302304954,
+   "mde_after_12_months": 0.10501352464538713
+  },
+  {
+   "cluster": "103",
+   "book": "lib_skill_raises_2026-09-30__control",
+   "rule": "skill_raises",
+   "anchor_rule": "net_raises",
+   "axis": "signal/filter",
+   "forward_minus_cluster_mean": -0.033140013800385254,
+   "hist_te_annual": 0.0375048302304954,
+   "mde_after_12_months": 0.10501352464538713
+  },
+  {
+   "cluster": "186",
+   "book": "lib_mom_12_1_small_2026-09-26",
+   "rule": "mom_12_1_small",
+   "anchor_rule": "mom_12_1_small",
+   "axis": "anchor",
+   "forward_minus_cluster_mean": -0.004678904187757821,
+   "hist_te_annual": null,
+   "mde_after_12_months": null
+  },
+  {
+   "cluster": "186",
+   "book": "lib_mom_no_downgrades_small_2026-09-27__control",
+   "rule": "mom_no_downgrades_small",
+   "anchor_rule": "mom_12_1_small",
+   "axis": "signal/filter",
+   "forward_minus_cluster_mean": 0.004678904187757821,
+   "hist_te_annual": null,
+   "mde_after_12_months": null
+  },
+  {
+   "cluster": "179",
+   "book": "lib_mom_flow_2026-09-26",
+   "rule": "mom_flow",
+   "anchor_rule": "mom_flow",
+   "axis": "anchor",
+   "forward_minus_cluster_mean": -0.0017426779428024002,
+   "hist_te_annual": 0.058037393645912864,
+   "mde_after_12_months": 0.162504702208556
+  },
+  {
+   "cluster": "179",
+   "book": "lib_skill_mom_sealed_2026-09-26",
+   "rule": "skill_mom",
+   "anchor_rule": "mom_flow",
+   "axis": "signal/filter",
+   "forward_minus_cluster_mean": 0.006872519669231018,
+   "hist_te_annual": 0.058037393645912864,
+   "mde_after_12_months": 0.162504702208556
+  },
+  {
+   "cluster": "179",
+   "book": "lib_skill_mom_2026-09-27",
+   "rule": "skill_mom",
+   "anchor_rule": "mom_flow",
+   "axis": "signal/filter",
+   "forward_minus_cluster_mean": 0.0011590950118651328,
+   "hist_te_annual": 0.058037393645912864,
+   "mde_after_12_months": 0.162504702208556
+  },
+  {
+   "cluster": "179",
+   "book": "lib_mom_flow_ivw_2026-09-27",
+   "rule": "mom_flow_ivw",
+   "anchor_rule": "mom_flow",
+   "axis": "weighting",
+   "forward_minus_cluster_mean": -0.0062889367382937544,
+   "hist_te_annual": 0.058037393645912864,
+   "mde_after_12_months": 0.162504702208556
+  },
+  {
+   "cluster": "167",
+   "book": "lib_resid_mom_12_1_large_sealed_2026-09-26",
+   "rule": "resid_mom_12_1_large",
+   "anchor_rule": "resid_mom_12_1_large",
+   "axis": "anchor",
+   "forward_minus_cluster_mean": 0.004961933580711966,
+   "hist_te_annual": 0.07201698546595983,
+   "mde_after_12_months": 0.20164755930468753
+  },
+  {
+   "cluster": "167",
+   "book": "lib_qc395_sharpe252_above_trend_large_2026-09-27",
+   "rule": "qc395_sharpe252_above_trend_large",
+   "anchor_rule": "resid_mom_12_1_large",
+   "axis": "signal/filter+k",
+   "forward_minus_cluster_mean": -0.0049619335807119525,
+   "hist_te_annual": 0.07201698546595983,
+   "mde_after_12_months": 0.20164755930468753
+  }
+ ],
+ "rule": {
+  "trail_sessions": 21,
+  "trail_sigmas": 1.0,
+  "order": [
+   "IMPLEMENTATION",
+   "UNIVERSE_CHANGE",
+   "COST",
+   "FACTOR_BETA",
+   "RANDOMNESS",
+   "REGIME_SHIFT",
+   "CROWDING",
+   "FACTOR_DECAY",
+   "DATA_LEAK",
+   "UNKNOWN"
+  ],
+  "taxonomy": [
+   "REGIME_SHIFT",
+   "CROWDING",
+   "FACTOR_DECAY",
+   "DATA_LEAK",
+   "IMPLEMENTATION",
+   "COST",
+   "UNIVERSE_CHANGE",
+   "FACTOR_BETA",
+   "RANDOMNESS",
+   "UNKNOWN"
+  ]
+ },
+ "rows": [
+  {
+   "book": "lib_mom_12_1_q_2026-09-26",
+   "book_id": "e41dbb1e06a12088",
+   "rule": "mom_12_1_q",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.32992,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.479439,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.269446,
+   "sealed_dsr": 0.0239,
+   "max_dd": -0.359042,
+   "turnover_annual": 2.509565,
+   "sigma_active_monthly": 0.09734654132881974,
+   "forward_return": 0.0012823842315760907,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": -0.007151272305158577,
+   "expected_relative_to_date": 0.004798341714362664,
+   "twins_relative": {
+    "ew": -0.007151272305158577,
+    "sector_etf": -0.0007066828268368552,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.006195055967203867
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.01952657489243023,
+    "t_alpha": 1.09487716936366,
+    "se_alpha": 0.017834489053944767,
+    "mde_alpha_80": 0.049936569351045346,
+    "r2": 0.19082215537015979,
+    "mean_active_monthly": 0.028698468750000004,
+    "betas": {
+     "SMH": 0.4640552079778444,
+     "MTUM": -0.041327638002566405,
+     "IWM": 0.8233124936838374
+    },
+    "t_betas": {
+     "SMH": 1.4401681947895075,
+     "MTUM": -0.06892019628986301,
+     "IWM": 1.5641674396154277
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.014036775310770057,
+     "se": 0.01886654916804107,
+     "t": 0.7440033249189845,
+     "mde_80": 0.05282633767051499,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.481997701056123,
+   "dominant_t": 5.983628185600615,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.005540543002389597,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": -0.009597650013777574,
+   "factor_twin_why": null,
+   "identical_holdings_with": [
+    "lib_mom_12_1_2026-09-26"
+   ]
+  },
+  {
+   "book": "lib_mom_no_downgrades_2026-09-26",
+   "book_id": "f0517a9aa6ab0bce",
+   "rule": "mom_no_downgrades",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.415311,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.093119,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": -0.116874,
+   "sealed_dsr": 0.0005,
+   "max_dd": -0.408651,
+   "turnover_annual": 4.257391,
+   "sigma_active_monthly": 0.10401779910494498,
+   "forward_return": -0.00746478593374871,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": -0.01589844247048338,
+   "expected_relative_to_date": -0.0024156370830559215,
+   "twins_relative": {
+    "ew": -0.01589844247048338,
+    "sector_etf": -0.0007066828268368552,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.02247559680947837
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(2024_26_NOT_ABOVE_SPY, MAX_DD)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": -0.006126921161694346,
+    "t_alpha": -0.34296161577852863,
+    "se_alpha": 0.017864743107726885,
+    "mde_alpha_80": 0.05002128070163528,
+    "r2": 0.3615491302656457,
+    "mean_active_monthly": 0.00788221875,
+    "betas": {
+     "SMH": 0.7325781083090415,
+     "MTUM": -0.13406330218324444,
+     "IWM": 1.3155795869458322
+    },
+    "t_betas": {
+     "SMH": 2.2696631007689043,
+     "MTUM": -0.2231925682266243,
+     "IWM": 2.4951666532349215
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.010044944579921927,
+     "se": 0.01833579989111166,
+     "t": -0.5478323628952368,
+     "mde_80": 0.051340239695112644,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.5905481901900103,
+   "dominant_t": 6.370329024357701,
+   "dominant_why": null,
+   "expected_alpha_to_date": -0.0017543928972312273,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": -0.018344820179102377,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_net_raises_2026-09-26",
+   "book_id": "a92c21d829544aa7",
+   "rule": "net_raises",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.228549,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.268498,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.058505,
+   "sealed_dsr": 0.0051,
+   "max_dd": -0.239801,
+   "turnover_annual": 5.363478,
+   "sigma_active_monthly": 0.03846844997074132,
+   "forward_return": 0.06339160202033127,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.0549579454835966,
+   "expected_relative_to_date": 0.00112489290658635,
+   "twins_relative": {
+    "ew": 0.0549579454835966,
+    "sector_etf": -0.0007066828268368552,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.003863529047480437
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 103,
+   "cluster_sealed": 54,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": -0.004047704156540799,
+    "t_alpha": -0.5237587940579853,
+    "se_alpha": 0.007728183664812466,
+    "mde_alpha_80": 0.021638914261474903,
+    "r2": 0.4083574049640897,
+    "mean_active_monthly": 0.005888687499999999,
+    "betas": {
+     "SMH": 0.35512345750121105,
+     "MTUM": 0.21055586062939807,
+     "IWM": 0.058350219842437136
+    },
+    "t_betas": {
+     "SMH": 2.5433501905079874,
+     "MTUM": 0.8103198763248547,
+     "IWM": 0.25582575753899855
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.004944257813894869,
+     "se": 0.007558855877923116,
+     "t": -0.6541013473130753,
+     "mde_80": 0.021164796458184722,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.5213846543329241,
+   "dominant_t": 4.888693929557073,
+   "dominant_why": null,
+   "expected_alpha_to_date": -0.0011581626068576378,
+   "forward_factor_etf": 0.020947220240276065,
+   "forward_vs_factor_etf": 0.042444381780055204,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_big_dv_2026-09-26",
+   "book_id": "5c21859739b26b6f",
+   "rule": "big_dv",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.192217,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.345336,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.135343,
+   "sealed_dsr": 0.016,
+   "max_dd": -0.407504,
+   "turnover_annual": 0.845217,
+   "sigma_active_monthly": 0.041939067058138976,
+   "forward_return": 0.019981530659936655,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.011547874123201986,
+   "expected_relative_to_date": 0.0025276945207719503,
+   "twins_relative": {
+    "ew": 0.011547874123201986,
+    "sector_etf": -0.00233341413418339,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.003552480835468101
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(MAX_DD)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 95,
+   "cluster_sealed": 58,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": -0.001696602468897312,
+    "t_alpha": -0.2111560994291792,
+    "se_alpha": 0.008034825768631631,
+    "mde_alpha_80": 0.022497512152168567,
+    "r2": 0.496446979527146,
+    "mean_active_monthly": 0.01143309375,
+    "betas": {
+     "SMH": 0.4833037778658885,
+     "MTUM": 0.1764473246929162,
+     "IWM": -0.04170079535143577
+    },
+    "t_betas": {
+     "SMH": 3.3292619123271745,
+     "MTUM": 0.65313838303602,
+     "IWM": -0.1758519066655632
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.00030486552111112157,
+     "se": 0.007260156312798399,
+     "t": -0.041991591912931184,
+     "mde_80": 0.020328437675835517,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "SMH",
+   "dominant_beta": 0.41909173706119485,
+   "dominant_t": 7.7141121186806565,
+   "dominant_why": null,
+   "expected_alpha_to_date": -0.00048503756803031095,
+   "forward_factor_etf": 0.047007171409045645,
+   "forward_vs_factor_etf": -0.02702564074910899,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_mom_12_1_2026-09-26",
+   "book_id": "5d01fa2898e2cb72",
+   "rule": "mom_12_1",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.314779,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.108192,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": -0.101801,
+   "sealed_dsr": 0.0007,
+   "max_dd": -0.394531,
+   "turnover_annual": 4.126957,
+   "sigma_active_monthly": 0.10563078691330655,
+   "forward_return": 0.0012823842315760907,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": -0.007151272305158577,
+   "expected_relative_to_date": -0.0020903054992928993,
+   "twins_relative": {
+    "ew": -0.007151272305158577,
+    "sector_etf": -0.0007066828268368552,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.009709045273409314
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(2024_26_NOT_ABOVE_SPY, TOP5_MONTH_SHARE)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": -0.002847164061933273,
+    "t_alpha": -0.15487876307895102,
+    "se_alpha": 0.01838317923860163,
+    "mde_alpha_80": 0.051472901868084564,
+    "r2": 0.31167827151460725,
+    "mean_active_monthly": 0.010364562500000004,
+    "betas": {
+     "SMH": 0.7246617461065659,
+     "MTUM": -0.2696528227429711,
+     "IWM": 1.2145941626851906
+    },
+    "t_betas": {
+     "SMH": 2.1818201615821535,
+     "MTUM": -0.43626557185019943,
+     "IWM": 2.2386684303058044
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.005067841598815396,
+     "se": 0.01854295711235804,
+     "t": -0.27330277302091743,
+     "mde_80": 0.051920279914602505,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.5827324688905688,
+   "dominant_t": 6.122699350813633,
+   "dominant_why": null,
+   "expected_alpha_to_date": -0.0008143039725271306,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": -0.009597650013777574,
+   "factor_twin_why": null,
+   "identical_holdings_with": [
+    "lib_mom_12_1_q_2026-09-26"
+   ]
+  },
+  {
+   "book": "lib_mom_12_1_small_2026-09-26",
+   "book_id": "eb6fa721a4c5f995",
+   "rule": "mom_12_1_small",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.351582,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.132513,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": -0.07748,
+   "sealed_dsr": 0.0006,
+   "max_dd": -0.314912,
+   "turnover_annual": 4.805217,
+   "sigma_active_monthly": 0.08095407264765356,
+   "forward_return": -0.03841138770818944,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": -0.04684504424492411,
+   "expected_relative_to_date": -0.0015743669328005527,
+   "twins_relative": {
+    "ew": -0.04684504424492411,
+    "sector_etf": -0.0002999999999999999,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.02059187116199543
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(2024_26_NOT_ABOVE_SPY)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 186,
+   "cluster_sealed": 41,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.004106224235187687,
+    "t_alpha": 0.30780569855156237,
+    "se_alpha": 0.013340312588461805,
+    "mde_alpha_80": 0.037352875247693054,
+    "r2": 0.4597146318050326,
+    "mean_active_monthly": 0.0010484687499999995,
+    "betas": {
+     "SMH": -0.15696726480615952,
+     "MTUM": 0.7837186556256063,
+     "IWM": 1.6722381241010613
+    },
+    "t_betas": {
+     "SMH": -0.6512493768936196,
+     "MTUM": 1.7472730215503423,
+     "IWM": 4.247284192465669
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.005215526276017379,
+     "se": 0.01278079495603905,
+     "t": -0.4080752640157952,
+     "mde_80": 0.035786225876909335,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.4883691471899672,
+   "dominant_t": 7.7157511149778975,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0011714904320632158,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": -0.04929142195354311,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_mom_flow_2026-09-26",
+   "book_id": "40c6ffdf6c238d60",
+   "rule": "mom_flow",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.204447,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.450502,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.240509,
+   "sealed_dsr": 0.0452,
+   "max_dd": -0.271737,
+   "turnover_annual": 5.123478,
+   "sigma_active_monthly": 0.0638066744237338,
+   "forward_return": 0.030436534842926164,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.022002878306191496,
+   "expected_relative_to_date": 0.004325880413345695,
+   "twins_relative": {
+    "ew": 0.022002878306191496,
+    "sector_etf": -0.0011133656536734893,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.025899394548292067
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 179,
+   "cluster_sealed": 53,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.006858679975323886,
+    "t_alpha": 0.6984420993622182,
+    "se_alpha": 0.009819969302518968,
+    "mde_alpha_80": 0.027495914047053108,
+    "r2": 0.5557534877180393,
+    "mean_active_monthly": 0.018319218749999998,
+    "betas": {
+     "SMH": 0.3419813772395586,
+     "MTUM": 0.7301663462443485,
+     "IWM": 0.6328279452713068
+    },
+    "t_betas": {
+     "SMH": 1.9275096587380975,
+     "MTUM": 2.2114558556960406,
+     "IWM": 2.183507690388075
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.006110906332441391,
+     "se": 0.00909187697090955,
+     "t": 0.6721281372365576,
+     "mde_80": 0.02545725551854674,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.9867380943045782,
+   "dominant_t": 6.057113112729538,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0019548414238110823,
+   "forward_factor_etf": 0.020947220240276065,
+   "forward_vs_factor_etf": 0.009489314602650099,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_trend_quality_2026-09-26",
+   "book_id": "46762e2bf28c238c",
+   "rule": "trend_quality",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.245321,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.193154,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": -0.016839,
+   "sealed_dsr": 0.0005,
+   "max_dd": -0.245203,
+   "turnover_annual": 3.751304,
+   "sigma_active_monthly": 0.04363312894921112,
+   "forward_return": 0.05193766429360739,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.04350400775687272,
+   "expected_relative_to_date": -0.00033361941633169856,
+   "twins_relative": {
+    "ew": 0.04350400775687272,
+    "sector_etf": -0.0002999999999999999,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.0037631037026523905
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(2024_26_NOT_ABOVE_SPY)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 190,
+   "cluster_sealed": 165,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.004240979354884234,
+    "t_alpha": 0.6625913789136618,
+    "se_alpha": 0.006400595434606235,
+    "mde_alpha_80": 0.017921667216897457,
+    "r2": 0.331919063781694,
+    "mean_active_monthly": -2.003124999999938e-05,
+    "betas": {
+     "SMH": -0.1883159873409736,
+     "MTUM": 0.301157668644131,
+     "IWM": 0.6134149921941343
+    },
+    "t_betas": {
+     "SMH": -1.628437333163278,
+     "MTUM": 1.3993944320010332,
+     "IWM": 3.2472312344185363
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.0062391236545827,
+     "se": 0.008460480487783742,
+     "t": -0.7374431822863367,
+     "mde_80": 0.023689345365794475,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 0.7845147813275344,
+   "dominant_t": 7.21472824528781,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0012098775255195982,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": 0.041057630048253725,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_frog_in_pan_2026-09-26",
+   "book_id": "50e6cb3b0657464d",
+   "rule": "frog_in_pan",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.245614,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.362169,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.152176,
+   "sealed_dsr": 0.0081,
+   "max_dd": -0.28533,
+   "turnover_annual": 4.972174,
+   "sigma_active_monthly": 0.06680831117605414,
+   "forward_return": 0.021255649319369033,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.012821992782634364,
+   "expected_relative_to_date": 0.002824546005761208,
+   "twins_relative": {
+    "ew": 0.012821992782634364,
+    "sector_etf": -0.0002999999999999999,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.005865246600341865
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 138,
+   "cluster_sealed": 8,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.00900597444208288,
+    "t_alpha": 0.608913146204149,
+    "se_alpha": 0.01479024471424939,
+    "mde_alpha_80": 0.04141268519989829,
+    "r2": 0.2617980969986534,
+    "mean_active_monthly": 0.013664406249999997,
+    "betas": {
+     "SMH": 0.025482877733230214,
+     "MTUM": 0.8984134536556951,
+     "IWM": 0.6527545262481879
+    },
+    "t_betas": {
+     "SMH": 0.09536243829926015,
+     "MTUM": 1.8066227699269082,
+     "IWM": 1.495387476272971
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.0015143733095157198,
+     "se": 0.014016725154245591,
+     "t": 0.10804045116465912,
+     "mde_80": 0.039246830431887654,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 0.8026913941760873,
+   "dominant_t": 4.78538283846685,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.002564901605089487,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": 0.010375615074015368,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_inflection_flow_2026-09-26",
+   "book_id": "bec77d696dfa91e0",
+   "rule": "inflection_flow",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.221422,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.274049,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.064056,
+   "sealed_dsr": 0.0059,
+   "max_dd": -0.259791,
+   "turnover_annual": 4.413913,
+   "sigma_active_monthly": 0.046829632284378184,
+   "forward_return": 0.035497554211775355,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.027063897675040686,
+   "expected_relative_to_date": 0.0012289794218154348,
+   "twins_relative": {
+    "ew": 0.027063897675040686,
+    "sector_etf": -0.0011133656536734893,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.009826418172577223
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 148,
+   "cluster_sealed": 71,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": -0.0007837035045793966,
+    "t_alpha": -0.09608592900018485,
+    "se_alpha": 0.008156277539637347,
+    "mde_alpha_80": 0.02283757711098457,
+    "r2": 0.3710712625796596,
+    "mean_active_monthly": 0.0061488125,
+    "betas": {
+     "SMH": 0.21183790699852295,
+     "MTUM": 0.4005249871185622,
+     "IWM": 0.32760692240078365
+    },
+    "t_betas": {
+     "SMH": 1.437526692643424,
+     "MTUM": 1.4605089148786758,
+     "IWM": 1.3609440820963885
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 6.41524091569087e-05,
+     "se": 0.007661704375270851,
+     "t": 0.008373125092631994,
+     "mde_80": 0.02145277225075838,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 0.6103859930018447,
+   "dominant_t": 5.268392764652452,
+   "dominant_why": null,
+   "expected_alpha_to_date": -0.00022397798767403998,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": 0.02461751996642169,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_forecast_dispersion_v1_2026-09-26",
+   "book_id": "5ab343d6b1bc62a4",
+   "rule": "forecast_dispersion_v1",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": false,
+   "dev_cagr": null,
+   "dev_spy_cagr": null,
+   "sealed_cagr": null,
+   "sealed_spy_cagr": null,
+   "sealed_vs_spy": null,
+   "sealed_dsr": null,
+   "max_dd": null,
+   "turnover_annual": null,
+   "sigma_active_monthly": null,
+   "forward_return": 0.002845285924587642,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": -0.005588370612147026,
+   "expected_relative_to_date": null,
+   "twins_relative": {
+    "ew": -0.005588370612147026,
+    "sector_etf": -0.0002999999999999999,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.019733707795141865
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD-ONLY (no backtest row); FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(NO_BACKTEST_ROW)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": null,
+   "cluster_sealed": null,
+   "structure_status": "NO_CELL (no backtest row)",
+   "decomposition": null,
+   "dominant_etf": null,
+   "dominant_beta": null,
+   "dominant_t": null,
+   "dominant_why": null,
+   "expected_alpha_to_date": null,
+   "forward_factor_etf": "NO_DOMINANT_FACTOR",
+   "forward_vs_factor_etf": "NO_DOMINANT_FACTOR",
+   "factor_twin_why": "NO_CELL (no backtest row)",
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_book_f_seasonality_11_20_v0_2026-09-26",
+   "book_id": "974d5067e835c006",
+   "rule": "book_f_seasonality_11_20_v0",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 31,
+   "receipt_row": false,
+   "dev_cagr": null,
+   "dev_spy_cagr": null,
+   "sealed_cagr": null,
+   "sealed_spy_cagr": null,
+   "sealed_vs_spy": null,
+   "sealed_dsr": null,
+   "max_dd": null,
+   "turnover_annual": null,
+   "sigma_active_monthly": null,
+   "forward_return": -0.0019269014212591287,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": -0.010360557957993797,
+   "expected_relative_to_date": null,
+   "twins_relative": {
+    "ew": -0.010360557957993797,
+    "sector_etf": -0.0002999999999999999,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.013252283438367506
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD-ONLY (no backtest row); FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(NO_BACKTEST_ROW)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": null,
+   "cluster_sealed": null,
+   "structure_status": "NO_CELL (no backtest row)",
+   "decomposition": null,
+   "dominant_etf": null,
+   "dominant_beta": null,
+   "dominant_t": null,
+   "dominant_why": null,
+   "expected_alpha_to_date": null,
+   "forward_factor_etf": "NO_DOMINANT_FACTOR",
+   "forward_vs_factor_etf": "NO_DOMINANT_FACTOR",
+   "factor_twin_why": "NO_CELL (no backtest row)",
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_mom_12_1_liqw_sealed_2026-09-26__ew",
+   "book_id": "2cc265ad037fae46",
+   "rule": "mom_12_1_liqw",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 20,
+   "receipt_row": true,
+   "dev_cagr": 0.08265,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.739992,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.529999,
+   "sealed_dsr": 0.0408,
+   "max_dd": -0.655056,
+   "turnover_annual": 5.875177,
+   "sigma_active_monthly": 0.15531078739788542,
+   "forward_return": 0.0012823842315760907,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": -0.007151272305158577,
+   "expected_relative_to_date": 0.008686701380701045,
+   "twins_relative": {},
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "STRATEGY TEST (ew twin of the voided parent); FORWARD",
+   "investigation": null,
+   "kind": "twin",
+   "strategy_test_for_voided": true,
+   "gate": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 169,
+   "cluster_sealed": 96,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.01922385224385529,
+    "t_alpha": 0.7499369334392016,
+    "se_alpha": 0.02563395851927833,
+    "mde_alpha_80": 0.07177508385397932,
+    "r2": 0.5623023512380316,
+    "mean_active_monthly": 0.059585343750000005,
+    "betas": {
+     "SMH": 1.695700118481745,
+     "MTUM": 0.36523574691039384,
+     "IWM": 1.5336131533996231
+    },
+    "t_betas": {
+     "SMH": 3.6613193383339286,
+     "MTUM": 0.4237641296201874,
+     "IWM": 2.0271195143723952
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.02541958973594632,
+     "se": 0.024503152736174778,
+     "t": 1.0374007789788853,
+     "mde_80": 0.06860882766128937,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "SMH",
+   "dominant_beta": 1.0608691397780445,
+   "dominant_t": 5.180237105961473,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.005455228283255398,
+   "forward_factor_etf": 0.047007171409045645,
+   "forward_vs_factor_etf": -0.045724787177469556,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_rev_5d_sealed_2026-09-26",
+   "book_id": "f94720b48278bf55",
+   "rule": "rev_5d",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.018103,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.700172,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.490179,
+   "sealed_dsr": 0.1652,
+   "max_dd": -0.663233,
+   "turnover_annual": 11.64,
+   "sigma_active_monthly": 0.11886068226602667,
+   "forward_return": -0.018405345035834887,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": -0.026839001572569555,
+   "expected_relative_to_date": 0.00813084983651513,
+   "twins_relative": {
+    "ew": -0.026839001572569555,
+    "sector_etf": -0.0002999999999999999,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.0017593792790052097
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 129,
+   "cluster_sealed": 110,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.02356843532664154,
+    "t_alpha": 1.8921164575300988,
+    "se_alpha": 0.012456123000698874,
+    "mde_alpha_80": 0.03487714440195685,
+    "r2": 0.3871297368466081,
+    "mean_active_monthly": 0.032238468750000006,
+    "betas": {
+     "SMH": 0.5844276972521769,
+     "MTUM": -0.47387771088007385,
+     "IWM": 1.1341341499366573
+    },
+    "t_betas": {
+     "SMH": 2.596881532384007,
+     "MTUM": -1.1314880882715894,
+     "IWM": 3.0850396245770293
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.022617377000136205,
+     "se": 0.01415616172707892,
+     "t": 1.5977054682041436,
+     "mde_80": 0.03963725283582097,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.9542817834977768,
+   "dominant_t": 6.622305729886489,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.00667790929514922,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": -0.029285379281188552,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_skill_mom_sealed_2026-09-26",
+   "book_id": "775b9951e0b67e4b",
+   "rule": "skill_mom",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.178639,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.574804,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.364811,
+   "sealed_dsr": 0.0987,
+   "max_dd": -0.2727,
+   "turnover_annual": 5.222609,
+   "sigma_active_monthly": 0.06627742512963508,
+   "forward_return": 0.03905173245495958,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.030618075918224914,
+   "expected_relative_to_date": 0.0062939203232461605,
+   "twins_relative": {
+    "ew": 0.030618075918224914,
+    "sector_etf": -0.0011133656536734893,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.00898323126071984
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 179,
+   "cluster_sealed": 96,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.012373897845294739,
+    "t_alpha": 1.098817479224284,
+    "se_alpha": 0.011261103940601817,
+    "mde_alpha_80": 0.03153109103368509,
+    "r2": 0.5396163051258838,
+    "mean_active_monthly": 0.027372218750000003,
+    "betas": {
+     "SMH": 0.5615775523759389,
+     "MTUM": 0.45903103173533016,
+     "IWM": 0.706541717698635
+    },
+    "t_betas": {
+     "SMH": 2.7601520616236064,
+     "MTUM": 1.2123490360179119,
+     "IWM": 2.1258668009282147
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.012518205627715755,
+     "se": 0.010734598936058042,
+     "t": 1.1661549446124617,
+     "mde_80": 0.030056877020962516,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.9630885793045083,
+   "dominant_t": 5.947678116913122,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0035198851270359377,
+   "forward_factor_etf": 0.020947220240276065,
+   "forward_vs_factor_etf": 0.018104512214683517,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_margin_mom_sealed_2026-09-26",
+   "book_id": "139145a5269b8fd9",
+   "rule": "margin_mom",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.126719,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.587284,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.377291,
+   "sealed_dsr": 0.0536,
+   "max_dd": -0.51214,
+   "turnover_annual": 5.076522,
+   "sigma_active_monthly": 0.08338191298814904,
+   "forward_return": 0.018559464714421686,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.010125808177687018,
+   "expected_relative_to_date": 0.0064830628794536604,
+   "twins_relative": {
+    "ew": 0.010125808177687018,
+    "sector_etf": -0.0007066828268368552,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.012981818610721146
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD, FAMILY_CAP)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 149,
+   "cluster_sealed": 99,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.019649644494029145,
+    "t_alpha": 1.184891254018799,
+    "se_alpha": 0.016583500323243495,
+    "mde_alpha_80": 0.046433800905081785,
+    "r2": 0.3794488223907665,
+    "mean_active_monthly": 0.03006675,
+    "betas": {
+     "SMH": 0.46026282512755906,
+     "MTUM": 0.3739123498668825,
+     "IWM": 1.3388702409145905
+    },
+    "t_betas": {
+     "SMH": 1.536151083290926,
+     "MTUM": 0.6705948264049878,
+     "IWM": 2.735530063136098
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.01967114328594429,
+     "se": 0.015069350932931054,
+     "t": 1.3053742907371637,
+     "mde_80": 0.04219418261220695,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.3678272781403005,
+   "dominant_t": 7.249431064397763,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.005575221882430315,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": 0.0076794304690680215,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_illiquid_sealed_2026-09-26",
+   "book_id": "8f989a4bf3f759cf",
+   "rule": "illiquid",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": -0.01879,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.57881,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.368817,
+   "sealed_dsr": 0.013,
+   "max_dd": -0.807039,
+   "turnover_annual": 7.966957,
+   "sigma_active_monthly": 0.10155676796644178,
+   "forward_return": -0.021451222550928763,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": -0.02988487908766343,
+   "expected_relative_to_date": 0.006354792850533197,
+   "twins_relative": {
+    "ew": -0.02988487908766343,
+    "sector_etf": -0.0002999999999999999,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.007426156786358799
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD, LOO_WORST)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 120,
+   "cluster_sealed": 158,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.012519062302625414,
+    "t_alpha": 0.6900315542548804,
+    "se_alpha": 0.01814273887249102,
+    "mde_alpha_80": 0.05079966884297485,
+    "r2": 0.40063845296987766,
+    "mean_active_monthly": 0.02892040625,
+    "betas": {
+     "SMH": 0.7054152221821344,
+     "MTUM": 0.3111840134897406,
+     "IWM": 1.2042063688353148
+    },
+    "t_betas": {
+     "SMH": 2.1520195552545154,
+     "MTUM": 0.5101301832201223,
+     "IWM": 2.248936934195173
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.031979909886824004,
+     "se": 0.0193191535906364,
+     "t": 1.6553473596443695,
+     "mde_80": 0.05409363005378191,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.7708567315758663,
+   "dominant_t": 7.512092981252197,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.003560995844363868,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": -0.03233125679628243,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_low_dtc_mom_sealed_2026-09-26",
+   "book_id": "58440bc63a0cbcb1",
+   "rule": "low_dtc_mom",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.051163,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.468792,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.258799,
+   "sealed_dsr": 0.0681,
+   "max_dd": -0.381295,
+   "turnover_annual": 6.292174,
+   "sigma_active_monthly": 0.05821490033268534,
+   "forward_return": 0.030963063468528555,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.022529406931793887,
+   "expected_relative_to_date": 0.004625563131863686,
+   "twins_relative": {
+    "ew": 0.022529406931793887,
+    "sector_etf": -0.0011133656536734893,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.008594666883945216
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, LOO_WORST)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 181,
+   "cluster_sealed": 88,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.011941150946788333,
+    "t_alpha": 1.0471367956402122,
+    "se_alpha": 0.011403620803419095,
+    "mde_alpha_80": 0.03193013824957346,
+    "r2": 0.395520627980539,
+    "mean_active_monthly": 0.020127781249999997,
+    "betas": {
+     "SMH": 0.2382107880833449,
+     "MTUM": 0.6304887595545836,
+     "IWM": 0.669418611133446
+    },
+    "t_betas": {
+     "SMH": 1.1561731899837933,
+     "MTUM": 1.6443761654843958,
+     "IWM": 1.9889974291604908
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.01366165728862681,
+     "se": 0.010240725303670413,
+     "t": 1.3340517281261601,
+     "mde_80": 0.028674030850277154,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.8395969950353895,
+   "dominant_t": 5.353587063535217,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0033973057880434254,
+   "forward_factor_etf": 0.020947220240276065,
+   "forward_vs_factor_etf": 0.01001584322825249,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_low_asset_growth_sealed_2026-09-26",
+   "book_id": "6d36d70c4ae56556",
+   "rule": "low_asset_growth",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.19061,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.46657,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.256577,
+   "sealed_dsr": 0.0175,
+   "max_dd": -0.354039,
+   "turnover_annual": 2.582609,
+   "sigma_active_monthly": 0.07493300410237592,
+   "forward_return": -0.019344469713279383,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": -0.02777812625001405,
+   "expected_relative_to_date": 0.004589350543121595,
+   "twins_relative": {
+    "ew": -0.02777812625001405,
+    "sector_etf": -0.0002999999999999999,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.003801195066665106
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 153,
+   "cluster_sealed": 84,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.015870929226095464,
+    "t_alpha": 0.9502242294294381,
+    "se_alpha": 0.01670229903064581,
+    "mde_alpha_80": 0.04676643728580826,
+    "r2": 0.17301805797566405,
+    "mean_active_monthly": 0.020801499999999994,
+    "betas": {
+     "SMH": 0.37967662400407554,
+     "MTUM": -0.32555654709497167,
+     "IWM": 0.9781280904258839
+    },
+    "t_betas": {
+     "SMH": 1.2581772860406573,
+     "MTUM": -0.5797179814185013,
+     "IWM": 1.984260483557546
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.02127728853406074,
+     "se": 0.015337858571148381,
+     "t": 1.3872398441647424,
+     "mde_80": 0.042946003999215464,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.312333927908916,
+   "dominant_t": 6.990323421711004,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0045090791333421976,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": -0.030224503958633048,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_resid_mom_12_1_large_sealed_2026-09-26",
+   "book_id": "485a857d5b45847c",
+   "rule": "resid_mom_12_1_large",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.163994,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.462318,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.252325,
+   "sealed_dsr": 0.0183,
+   "max_dd": -0.478197,
+   "turnover_annual": 3.688696,
+   "sigma_active_monthly": 0.10318803698392019,
+   "forward_return": 0.07931612157123356,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.0708824650344989,
+   "expected_relative_to_date": 0.004519904891066462,
+   "twins_relative": {
+    "ew": 0.0708824650344989,
+    "sector_etf": -0.0007066828268368552,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.01652138893476402
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(TOP5_MONTH_SHARE, MAX_DD, FAMILY_CAP)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 167,
+   "cluster_sealed": 96,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.001175484539226026,
+    "t_alpha": 0.05902012936353705,
+    "se_alpha": 0.019916671683072363,
+    "mde_alpha_80": 0.055766680712602615,
+    "r2": 0.42829763596045267,
+    "mean_active_monthly": 0.02648225,
+    "betas": {
+     "SMH": 0.9681488370990592,
+     "MTUM": 0.44333867809157335,
+     "IWM": 0.5524223828012209
+    },
+    "t_betas": {
+     "SMH": 2.690478959222244,
+     "MTUM": 0.6620418601286477,
+     "IWM": 0.9397962537343236
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.0018356424241344135,
+     "se": 0.01901903330631711,
+     "t": 0.09651607390185865,
+     "mde_80": 0.05325329325768791,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "SMH",
+   "dominant_beta": 0.7416197553131639,
+   "dominant_t": 5.632738873309246,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.00033571182380920384,
+   "forward_factor_etf": 0.047007171409045645,
+   "forward_vs_factor_etf": 0.03230895016218792,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_mom_12_1_secrel_sealed_2026-09-26",
+   "book_id": "132c0abc5b9f366f",
+   "rule": "mom_12_1_secrel",
+   "asof": "2026-09-26",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.191884,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.361968,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.151975,
+   "sealed_dsr": 0.0086,
+   "max_dd": -0.438717,
+   "turnover_annual": 4.893913,
+   "sigma_active_monthly": 0.08499867678723219,
+   "forward_return": 0.03425459557722747,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.025820939040492805,
+   "expected_relative_to_date": 0.002821022524134964,
+   "twins_relative": {
+    "ew": 0.025820939040492805,
+    "sector_etf": -0.0007066828268368552,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.003228996169520372
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-21",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 773.5,
+    "spy_ma200": 712.97,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1042,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 10,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(TOP5_MONTH_SHARE, MAX_DD)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.01368315819786249,
+    "t_alpha": 0.8153300602219928,
+    "se_alpha": 0.016782354613709357,
+    "mde_alpha_80": 0.0469905929183862,
+    "r2": 0.2954950721087869,
+    "mean_active_monthly": 0.021313718750000005,
+    "betas": {
+     "SMH": 0.2835929318622224,
+     "MTUM": 0.529798343083079,
+     "IWM": 1.0959721753974352
+    },
+    "t_betas": {
+     "SMH": 0.9352909780424944,
+     "MTUM": 0.9389107136235004,
+     "IWM": 2.2127168435915294
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.00980161146790308,
+     "se": 0.015531159892704033,
+     "t": 0.6310933333773426,
+     "mde_80": 0.04348724769957129,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.3431900794936662,
+   "dominant_t": 6.3267917083379395,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0038905167971570176,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": 0.023374561331873808,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_disp_short_avoid_2026-09-27",
+   "book_id": "d93fbf2c301248ca",
+   "rule": "disp_short_avoid",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.315331,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.431263,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.22127,
+   "sealed_dsr": 0.0201,
+   "max_dd": -0.363187,
+   "turnover_annual": 2.718261,
+   "sigma_active_monthly": 0.09382623109759397,
+   "forward_return": 0.008708321746028869,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.00027466520929420035,
+   "expected_relative_to_date": 0.004006640847531884,
+   "twins_relative": {
+    "ew": 0.00027466520929420035,
+    "sector_etf": -0.0007066828268368552,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.0008079572640793398,
+    "ranks_k1_2k": 0.03132648977878703,
+    "iwm": 0.0021463777086189965,
+    "matched_random": 0.01445222351037434
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 9,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.014052369513903958,
+    "t_alpha": 0.9039555163681531,
+    "se_alpha": 0.015545421494148904,
+    "mde_alpha_80": 0.04352718018361693,
+    "r2": 0.17719830410738413,
+    "mean_active_monthly": 0.022625937500000002,
+    "betas": {
+     "SMH": 0.4113079714614518,
+     "MTUM": -0.01843088321061842,
+     "IWM": 0.5949173925158275
+    },
+    "t_betas": {
+     "SMH": 1.4644308216518216,
+     "MTUM": -0.03526226767401583,
+     "IWM": 1.2966816676197481
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.009090572026280023,
+     "se": 0.017385339808327193,
+     "t": 0.522887221446534,
+     "mde_80": 0.04867895146331614,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.4197093758690311,
+   "dominant_t": 5.921311966428685,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.00399497308653185,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": -0.002171712499324796,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_qc395_sharpe252_above_trend_large_2026-09-27",
+   "book_id": "69dc804d44b74f12",
+   "rule": "qc395_sharpe252_above_trend_large",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 11,
+   "receipt_row": true,
+   "dev_cagr": 0.267616,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.562375,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.352383,
+   "sealed_dsr": 0.0354,
+   "max_dd": -0.325876,
+   "turnover_annual": 5.01913,
+   "sigma_active_monthly": 0.09634287835525764,
+   "forward_return": 0.06939225440980964,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.06095859787307498,
+   "expected_relative_to_date": 0.006104090803582762,
+   "twins_relative": {
+    "ew": 0.06095859787307498,
+    "sector_etf": -0.0011133656536734893,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.032653501386874596
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 9,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 167,
+   "cluster_sealed": 96,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.0071297974686254425,
+    "t_alpha": 0.36646083334369317,
+    "se_alpha": 0.01945582397870773,
+    "mde_alpha_80": 0.05447630714038164,
+    "r2": 0.4225025560365907,
+    "mean_active_monthly": 0.0318441875,
+    "betas": {
+     "SMH": 0.9207655894212815,
+     "MTUM": 0.48800984851363827,
+     "IWM": 0.4313201822402369
+    },
+    "t_betas": {
+     "SMH": 2.6194112493926833,
+     "MTUM": 0.746011548679288,
+     "IWM": 0.7511546473481655
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.014501283285765212,
+     "se": 0.017901235503382747,
+     "t": 0.8100716446652492,
+     "mde_80": 0.05012345940947169,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "SMH",
+   "dominant_beta": 0.6007432490621344,
+   "dominant_t": 4.491429885646206,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.00203191887856069,
+   "forward_factor_etf": 0.047007171409045645,
+   "forward_vs_factor_etf": 0.022385083000764,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_skill_mom_2026-09-27",
+   "book_id": "2f3dd36e85505710",
+   "rule": "skill_mom",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.178639,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.574804,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.364811,
+   "sealed_dsr": 0.0987,
+   "max_dd": -0.2727,
+   "turnover_annual": 5.222609,
+   "sigma_active_monthly": 0.06627742512963508,
+   "forward_return": 0.0333383077975937,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.02490465126085903,
+   "expected_relative_to_date": 0.0062939203232461605,
+   "twins_relative": {
+    "ew": 0.02490465126085903,
+    "sector_etf": -0.0007066828268368552,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.002747956155392221
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 9,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 179,
+   "cluster_sealed": 96,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.012373897845294739,
+    "t_alpha": 1.098817479224284,
+    "se_alpha": 0.011261103940601817,
+    "mde_alpha_80": 0.03153109103368509,
+    "r2": 0.5396163051258838,
+    "mean_active_monthly": 0.027372218750000003,
+    "betas": {
+     "SMH": 0.5615775523759389,
+     "MTUM": 0.45903103173533016,
+     "IWM": 0.706541717698635
+    },
+    "t_betas": {
+     "SMH": 2.7601520616236064,
+     "MTUM": 1.2123490360179119,
+     "IWM": 2.1258668009282147
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.012518205627715755,
+     "se": 0.010734598936058042,
+     "t": 1.1661549446124617,
+     "mde_80": 0.030056877020962516,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.9630885793045083,
+   "dominant_t": 5.947678116913122,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0035198851270359377,
+   "forward_factor_etf": 0.020947220240276065,
+   "forward_vs_factor_etf": 0.012391087557317632,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_mom_flow_ivw_2026-09-27",
+   "book_id": "68ba5c780776be27",
+   "rule": "mom_flow_ivw",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.208924,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.444195,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.234202,
+   "sealed_dsr": 0.0504,
+   "max_dd": -0.254505,
+   "turnover_annual": 5.709099,
+   "sigma_active_monthly": 0.058820252671771565,
+   "forward_return": 0.02589027604743481,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.01745661951070014,
+   "expected_relative_to_date": 0.004221683887911665,
+   "twins_relative": {
+    "ew": 0.01745661951070014,
+    "sector_etf": -0.0007066828268368552,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.006546510915176482
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 9,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 179,
+   "cluster_sealed": 53,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.00726033049799316,
+    "t_alpha": 0.7807461929634572,
+    "se_alpha": 0.009299219853298702,
+    "mde_alpha_80": 0.026037815589236363,
+    "r2": 0.5431620425086616,
+    "mean_active_monthly": 0.017877375,
+    "betas": {
+     "SMH": 0.28612864390078246,
+     "MTUM": 0.7617957107889654,
+     "IWM": 0.495592886126246
+    },
+    "t_betas": {
+     "SMH": 1.7030172901368374,
+     "MTUM": 2.4364561529850035,
+     "IWM": 1.8057505476672246
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.007661451200005535,
+     "se": 0.008473333783307184,
+     "t": 0.9041838072163413,
+     "mde_80": 0.023725334593260115,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.9627723429074009,
+   "dominant_t": 6.3039692060136066,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0020690235321336736,
+   "forward_factor_etf": 0.020947220240276065,
+   "forward_vs_factor_etf": 0.004943055807158744,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+   "book_id": "7a65d45f09962ead",
+   "rule": "qc470_mom252_quarterly_riskparity",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.231911,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.465742,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.255749,
+   "sealed_dsr": 0.0252,
+   "max_dd": -0.452513,
+   "turnover_annual": 2.715897,
+   "sigma_active_monthly": 0.09395648392651137,
+   "forward_return": 0.03726133472510496,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.028827678188370294,
+   "expected_relative_to_date": 0.004575842683890219,
+   "twins_relative": {
+    "ew": 0.028827678188370294,
+    "sector_etf": -0.0007066828268368552,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.0036411083691856375
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 9,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "control",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(MAX_DD)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.01052851615226085,
+    "t_alpha": 0.7047933358355797,
+    "se_alpha": 0.014938444529669947,
+    "mde_alpha_80": 0.04182764468307585,
+    "r2": 0.3046120359076723,
+    "mean_active_monthly": 0.024232156250000005,
+    "betas": {
+     "SMH": 0.5442236573632256,
+     "MTUM": 0.22635511420792162,
+     "IWM": 0.46519211547407446
+    },
+    "t_betas": {
+     "SMH": 2.0163980742047993,
+     "MTUM": 0.45066260734466973,
+     "IWM": 1.055130491142171
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.012491058396251635,
+     "se": 0.015899996462754504,
+     "t": 0.7856013317683275,
+     "mde_80": 0.04451999009571261,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.3511976995509112,
+   "dominant_t": 5.796156615305982,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0029969038520945013,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": 0.026381300479751298,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_mom_no_downgrades_small_2026-09-27__control",
+   "book_id": "36d2c89bd8f45b59",
+   "rule": "mom_no_downgrades_small",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.342195,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.139778,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": -0.070215,
+   "sealed_dsr": 0.0007,
+   "max_dd": -0.335287,
+   "turnover_annual": 4.810435,
+   "sigma_active_monthly": 0.08163507558428242,
+   "forward_return": -0.029053579332673798,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": -0.03748723586940847,
+   "expected_relative_to_date": -0.001422346264105978,
+   "twins_relative": {
+    "ew": -0.03748723586940847,
+    "sector_etf": -0.0002999999999999999,
+    "spy": -0.0002999999999999999,
+    "random_same_band": -0.029382542981212203
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 9,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "control",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(2024_26_NOT_ABOVE_SPY)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 186,
+   "cluster_sealed": 41,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.0022228363491729216,
+    "t_alpha": 0.16270677141568987,
+    "se_alpha": 0.013661609346877943,
+    "mde_alpha_80": 0.038252506171258235,
+    "r2": 0.45773367406376164,
+    "mean_active_monthly": 0.0006638125000000003,
+    "betas": {
+     "SMH": -0.07221681286284456,
+     "MTUM": 0.7044999719588828,
+     "IWM": 1.7112639367434184
+    },
+    "t_betas": {
+     "SMH": -0.29257734289954357,
+     "MTUM": 1.5337186906564684,
+     "IWM": 4.244185355628422
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.006305104480810371,
+     "se": 0.013079319800059653,
+     "t": -0.482066695913469,
+     "mde_80": 0.03662209544016703,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.4693742710866382,
+   "dominant_t": 8.093045532128698,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0006345925553896681,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": -0.039933613578027466,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_net_raises_ivw_lead_2026-09-27",
+   "book_id": "40b3584ea3d6a2ae",
+   "rule": "net_raises_ivw",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.209384,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.215231,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.005238,
+   "sealed_dsr": 0.0012,
+   "max_dd": -0.198652,
+   "turnover_annual": 5.776752,
+   "sigma_active_monthly": 0.032210780826912554,
+   "forward_return": 0.058443593282883365,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.050009936746148696,
+   "expected_relative_to_date": 0.0001028530916398207,
+   "twins_relative": {
+    "ew": 0.058917465753909035,
+    "ranks_k1_2k": 0.015220922809660906,
+    "spy": -0.0002999999999999999,
+    "iwm": 0.0021463777086189965,
+    "matched_random": 0.016916611867994497
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 9,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 103,
+   "cluster_sealed": 54,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": -0.0048809551744042265,
+    "t_alpha": -0.6844917615180244,
+    "se_alpha": 0.007130772711682518,
+    "mde_alpha_80": 0.01996616359271105,
+    "r2": 0.23674663462555978,
+    "mean_active_monthly": 0.0014754687500000009,
+    "betas": {
+     "SMH": 0.21797081538531735,
+     "MTUM": 0.1405941721659013,
+     "IWM": -0.04030052435905945
+    },
+    "t_betas": {
+     "SMH": 1.6918661101330574,
+     "MTUM": 0.5864045313586856,
+     "IWM": -0.19149317944788719
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": -0.0064367748503398,
+     "se": 0.007245410707576662,
+     "t": -0.8883933720429048,
+     "mde_80": 0.020287149981214652,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.4441108120806166,
+   "dominant_t": 4.596145460344778,
+   "dominant_why": null,
+   "expected_alpha_to_date": -0.001396996416304419,
+   "forward_factor_etf": 0.020947220240276065,
+   "forward_vs_factor_etf": 0.0374963730426073,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+   "book_id": "4ffbfd2e83d06daa",
+   "rule": "qc470_mom252_quarterly_riskparity",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.231911,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.465742,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.255749,
+   "sealed_dsr": 0.0252,
+   "max_dd": -0.452513,
+   "turnover_annual": 2.715897,
+   "sigma_active_monthly": 0.09395648392651137,
+   "forward_return": 0.02023558891340628,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.011801932376671612,
+   "expected_relative_to_date": 0.004575842683890219,
+   "twins_relative": {
+    "ew": 0.028827678188370294,
+    "ranks_k1_2k": 0.020140963015872128,
+    "spy": -0.0002999999999999999,
+    "iwm": 0.0021463777086189965,
+    "matched_random": 0.015895402435386133
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 9,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "control",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(NAME_WEIGHT)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.01052851615226085,
+    "t_alpha": 0.7047933358355797,
+    "se_alpha": 0.014938444529669947,
+    "mde_alpha_80": 0.04182764468307585,
+    "r2": 0.3046120359076723,
+    "mean_active_monthly": 0.024232156250000005,
+    "betas": {
+     "SMH": 0.5442236573632256,
+     "MTUM": 0.22635511420792162,
+     "IWM": 0.46519211547407446
+    },
+    "t_betas": {
+     "SMH": 2.0163980742047993,
+     "MTUM": 0.45066260734466973,
+     "IWM": 1.055130491142171
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.012491058396251635,
+     "se": 0.015899996462754504,
+     "t": 0.7856013317683275,
+     "mde_80": 0.04451999009571261,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.3511976995509112,
+   "dominant_t": 5.796156615305982,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0029969038520945013,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": 0.009355554668052615,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+   "book_id": "3fd38f0d7a4dcb03",
+   "rule": "mom_12_1_ivw",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.225818,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.212457,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.002464,
+   "sealed_dsr": 0.0021,
+   "max_dd": -0.568972,
+   "turnover_annual": 5.002381,
+   "sigma_active_monthly": 0.10169207893107658,
+   "forward_return": 0.001430949399984214,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": -0.007002707136750454,
+   "expected_relative_to_date": 4.843700196621725e-05,
+   "twins_relative": {
+    "ew": 0.006058014214584975,
+    "ranks_k1_2k": 0.01215603626292637,
+    "spy": -0.0002999999999999999,
+    "iwm": 0.0021463777086189965,
+    "matched_random": 0.015238898291134215
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 9,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "control",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(NAME_WEIGHT)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.009077215751458971,
+    "t_alpha": 0.5494491463126994,
+    "se_alpha": 0.0165205748564272,
+    "mde_alpha_80": 0.04625760959799616,
+    "r2": 0.2642011146390624,
+    "mean_active_monthly": 0.020570750000000006,
+    "betas": {
+     "SMH": 0.600256678652082,
+     "MTUM": -0.18295058206209214,
+     "IWM": 0.8849248220554157
+    },
+    "t_betas": {
+     "SMH": 2.011018574385666,
+     "MTUM": -0.3293633209194223,
+     "IWM": 1.8149322968807193
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.004902408171873881,
+     "se": 0.01750074167225572,
+     "t": 0.2801257377363479,
+     "mde_80": 0.049002076682316015,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.4131432602829677,
+   "dominant_t": 5.70251689802297,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0025851258192910453,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": -0.009449084845369451,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_mom_12_1_q_trend_lead_2026-09-27",
+   "book_id": "1144c07902e67552",
+   "rule": "mom_12_1_q_trend",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.231786,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.301305,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.091312,
+   "sealed_dsr": 0.004,
+   "max_dd": -0.426402,
+   "turnover_annual": 2.843478,
+   "sigma_active_monthly": 0.09816588998840364,
+   "forward_return": 0.014491670751319644,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.006058014214584975,
+   "expected_relative_to_date": 0.0017337162139394735,
+   "twins_relative": {
+    "ew": 0.006058014214584975,
+    "ranks_k1_2k": 0.010833013134297315,
+    "spy": -0.0002999999999999999,
+    "iwm": 0.0021463777086189965,
+    "matched_random": 0.022860642996140004
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 9,
+   "sessions_since_entry": 6,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 84,
+   "cluster_sealed": 94,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.013437164572008721,
+    "t_alpha": 0.701811086309722,
+    "se_alpha": 0.0191464125234389,
+    "mde_alpha_80": 0.05360995506562892,
+    "r2": 0.1297575603846235,
+    "mean_active_monthly": 0.018802468750000002,
+    "betas": {
+     "SMH": 0.3472855447857637,
+     "MTUM": -0.15781256799415438,
+     "IWM": 0.9034770164650996
+    },
+    "t_betas": {
+     "SMH": 1.003930228617441,
+     "MTUM": -0.24514371742363678,
+     "IWM": 1.5988543546597016
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.003891250307905285,
+     "se": 0.020383774278670844,
+     "t": 0.1908994013918712,
+     "mde_80": 0.05707456798027836,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.1102287014345564,
+   "dominant_t": 4.020505129819806,
+   "dominant_why": null,
+   "expected_alpha_to_date": 0.0038209058450799915,
+   "forward_factor_etf": 0.010880034245353665,
+   "forward_vs_factor_etf": 0.003611636505965979,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  },
+  {
+   "book": "lib_skill_raises_2026-09-30__control",
+   "book_id": "a6a9bad0c8445162",
+   "rule": "skill_raises",
+   "asof": "2026-09-30",
+   "entry": "2026-10-01",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.199187,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.389823,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.17983,
+   "sealed_dsr": 0.0185,
+   "max_dd": -0.282026,
+   "turnover_annual": 5.666087,
+   "sigma_active_monthly": 0.04798807072088634,
+   "forward_return": 0.01647165446631222,
+   "forward_spy": 0.013697734052017463,
+   "forward_relative": 0.0027739204142947574,
+   "expected_relative_to_date": 0.0016509068014640693,
+   "twins_relative": {
+    "ew": 0.0027739204142947574,
+    "sector_etf": -0.0009698867026008071,
+    "spy": -0.0002999999999999999,
+    "random_same_band": 0.008012409993292086
+   },
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-28",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 765.61,
+    "spy_ma200": 715.28,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1085,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 6,
+   "sessions_since_entry": 3,
+   "status": "FORWARD",
+   "investigation": null,
+   "kind": "control",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(STALE_BARS)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 103,
+   "cluster_sealed": 54,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.00050154807827105,
+    "t_alpha": 0.047740139942092336,
+    "se_alpha": 0.01050579405253977,
+    "mde_alpha_80": 0.029416223347111355,
+    "r2": 0.4597277889758392,
+    "mean_active_monthly": 0.014956218749999996,
+    "betas": {
+     "SMH": 0.5757869291895503,
+     "MTUM": 0.16944235501563698,
+     "IWM": 0.33086913237663373
+    },
+    "t_betas": {
+     "SMH": 3.0334521939447994,
+     "MTUM": 0.4796889214668588,
+     "IWM": 1.0671035792148211
+    },
+    "hedged": {
+     "status": "OK",
+     "alpha_monthly": 0.004226252506479917,
+     "se": 0.009940300027044536,
+     "t": 0.42516347544657285,
+     "mde_80": 0.0278328400757247,
+     "verdict": "CANNOT_DISTINGUISH"
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.6447967152835253,
+   "dominant_t": 5.014734618396801,
+   "dominant_why": null,
+   "expected_alpha_to_date": 7.163432919776724e-05,
+   "forward_factor_etf": 0.01924049312107967,
+   "forward_vs_factor_etf": -0.0027688386547674512,
+   "factor_twin_why": null,
+   "identical_holdings_with": []
+  }
+ ],
+ "carried_investigations": [],
+ "leads": {
+  "schema": "bridge/leads/1",
+  "date": "2026-09-27",
+  "run_id": "2026-09-27T082553Z",
+  "licence": "PRODUCT_EXPERIMENT",
+  "llm_spend_usd": 0.0,
+  "label": "HINDSIGHT leads: every rule was registered 2026-09-26; nothing here is a claim",
+  "entry_session": "2026-09-28",
+  "bars_asof": "2026-09-25",
+  "receipts": {
+   "family_pool": "backend/data/optimus/signal_structure/family_pool_2026-09-27T082553Z.json",
+   "matched_twins": "backend/data/optimus/signal_structure/matched_twins_2026-09-27T082553Z.json",
+   "matched_twins_monthly": "backend/data/optimus/signal_structure/matched_twins_monthly_2026-09-27T082553Z.parquet",
+   "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-27T082553Z.json",
+   "cell_monthly": "backend/data/optimus/strategy_library/cell_monthly_2026-09-27T082553Z.parquet"
+  },
+  "selection": {
+   "a_rule": "`weighted` members whose mean monthly rule - twin21 is > 0 in BOTH windows, highest dev DSR (rule - twin21, dev window, n_trials = 288 cells) first, at most 3",
+   "a_members": {
+    "gp_at_ivw@k20": {
+     "cell": "gp_at_ivw@k20",
+     "dev_mean": 0.004004736907049462,
+     "dev_t": 1.379014827878198,
+     "dev_n": 83,
+     "sealed_mean": -0.006225261662651468,
+     "sealed_t": -0.8772291533258703,
+     "sealed_n": 32,
+     "dev_dsr": 0.0638,
+     "dev_dsr_z": -1.5236,
+     "beats_twin_both": false
+    },
+    "mom_12_1_ivw@k20": {
+     "cell": "mom_12_1_ivw@k20",
+     "dev_mean": 0.012738424987548734,
+     "dev_t": 1.6141999509542706,
+     "dev_n": 83,
+     "sealed_mean": 0.015810037524798273,
+     "sealed_t": 1.2785540485805174,
+     "sealed_n": 32,
+     "dev_dsr": 0.0796,
+     "dev_dsr_z": -1.4079,
+     "beats_twin_both": true
+    },
+    "mom_12_1_liqw@k20": {
+     "cell": "mom_12_1_liqw@k20",
+     "dev_mean": 0.0035150579093414023,
+     "dev_t": 0.2544081709624655,
+     "dev_n": 83,
+     "sealed_mean": 0.047764361123970096,
+     "sealed_t": 1.985658760659275,
+     "sealed_n": 32,
+     "dev_dsr": 0.004,
+     "dev_dsr_z": -2.6513,
+     "beats_twin_both": true
+    },
+    "mom_flow_ivw@k20": {
+     "cell": "mom_flow_ivw@k20",
+     "dev_mean": 0.003663933566541219,
+     "dev_t": 0.6753666489684358,
+     "dev_n": 83,
+     "sealed_mean": 0.014728732916821061,
+     "sealed_t": 1.7258392339140638,
+     "sealed_n": 32,
+     "dev_dsr": 0.0183,
+     "dev_dsr_z": -2.0903,
+     "beats_twin_both": true
+    },
+    "net_raises_ivw@k20": {
+     "cell": "net_raises_ivw@k20",
+     "dev_mean": 0.006582179629485679,
+     "dev_t": 2.4274285016643575,
+     "dev_n": 83,
+     "sealed_mean": 0.0034499529782056233,
+     "sealed_t": 0.5861776863428115,
+     "sealed_n": 32,
+     "dev_dsr": 0.3235,
+     "dev_dsr_z": -0.4579,
+     "beats_twin_both": true
+    },
+    "qc470_mom252_quarterly_riskparity@k20": {
+     "cell": "qc470_mom252_quarterly_riskparity@k20",
+     "dev_mean": 0.012448424714848609,
+     "dev_t": 1.6654547039536758,
+     "dev_n": 83,
+     "sealed_mean": 0.017999636767222688,
+     "sealed_t": 1.5957110683258189,
+     "sealed_n": 32,
+     "dev_dsr": 0.0841,
+     "dev_dsr_z": -1.3777,
+     "beats_twin_both": true
+    },
+    "quality_composite_ivw@k20": {
+     "cell": "quality_composite_ivw@k20",
+     "dev_mean": 0.005383709257578191,
+     "dev_t": 2.5398917700490165,
+     "dev_n": 83,
+     "sealed_mean": -0.0021670447298043254,
+     "sealed_t": -0.48240071710913374,
+     "sealed_n": 32,
+     "dev_dsr": 0.3548,
+     "dev_dsr_z": -0.3725,
+     "beats_twin_both": false
+    }
+   },
+   "a_picks": [
+    "net_raises_ivw@k20",
+    "qc470_mom252_quarterly_riskparity@k20",
+    "mom_12_1_ivw@k20"
+   ],
+   "b_rule": "matched_twins.cells_t_twin21_ge_2_both_windows",
+   "b_picks": [
+    "disp_short_avoid@k20",
+    "mom_12_1_q_trend@k20"
+   ]
+  },
+  "gate_scope": "construction + timing (`lead_gate`); the factory's full-rule verdict is kept beside it",
+  "chance": {
+   "expected_cells_by_chance": 0.8190047501344513,
+   "basis": "36 cells at t >= 2 vs the 21-draw twin in dev x P(t >= 2 | null) 0.023 in 2024-26",
+   "n_cells": 288,
+   "observed": 2
+  },
+  "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+  "twins": [
+   "ew",
+   "ranks_k1_2k",
+   "spy",
+   "iwm",
+   "matched_random"
+  ],
+  "books": [
+   {
+    "cell": "net_raises_ivw@k20",
+    "source": "a",
+    "rule": "net_raises_ivw",
+    "k": 20,
+    "family": "weighted",
+    "weights": {
+     "OKTA": 0.033210834574493565,
+     "SNOW": 0.05557357550568276,
+     "CRWD": 0.036076713994388,
+     "PANW": 0.04205014596984346,
+     "CRM": 0.0437827108068764,
+     "TGT": 0.08619858301240813,
+     "GTLB": 0.04875831417276998,
+     "ABNB": 0.05372678677829494,
+     "ESTC": 0.042227354594412306,
+     "AFRM": 0.054713910018343706,
+     "NET": 0.04506505578797405,
+     "AMGN": 0.07872837016231031,
+     "P": 0.03608584769985291,
+     "RVMD": 0.06982372085189559,
+     "DELL": 0.03251790685534426,
+     "DT": 0.06272512028907344,
+     "FTNT": 0.05800979331494851,
+     "S": 0.04170754087347053,
+     "AMD": 0.03787378015418335,
+     "CHYM": 0.04114393458343375
+    },
+    "worst_case": "WORST CASE lib_net_raises_ivw_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (TGT 8.6%) to zero = -$86,199; whole book to zero = -$1,000,000",
+    "declared": {
+     "expected_sigma_21_sessions": 0.0757170594495496,
+     "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+     "factor_betas": {
+      "status": "OK",
+      "n_months": 115,
+      "betas": {
+       "SPY": 1.0099186781543543,
+       "IWM-SPY": 0.046578017512827,
+       "SMH-SPY": 0.10329845498525414,
+       "MTUM-SPY": 0.44533421792975325
+      },
+      "t_betas": {
+       "SPY": 15.296225779223365,
+       "IWM-SPY": 0.5210323599526787,
+       "SMH-SPY": 1.994681352639755,
+       "MTUM-SPY": 4.572427217045885
+      },
+      "alpha_monthly": 0.002718986569120071,
+      "r2": 0.7588400242782856,
+      "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+     },
+     "stop": {
+      "sigma_units": 2.0,
+      "level_21_sessions": -0.1514341188990992,
+      "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+     },
+     "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+     "sigma_rule_minus_matched_twin": {
+      "21_sessions": 0.03285403773554396,
+      "63_sessions": 0.056904862591747284,
+      "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+      "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+     }
+    },
+    "matched_twin_fallbacks": {
+     "cell": 20,
+     "band_vol": 0,
+     "band": 0,
+     "any": 0,
+     "none": 0
+    },
+    "matched_twin_seed": 159174771439939,
+    "ranks_k1_2k": {
+     "DDOG": 0.030979452726230962,
+     "MRK": 0.05909591406643081,
+     "RBRK": 0.02807261187323599,
+     "MDB": 0.031243648042363428,
+     "TRV": 0.07492960279150862,
+     "ZS": 0.032233271035407934,
+     "ABBV": 0.08996549328838091,
+     "ALL": 0.06869817271521127,
+     "ELF": 0.03882624508995615,
+     "EXPE": 0.04582004518890398,
+     "FROG": 0.033198948407672735,
+     "GH": 0.03886452249969098,
+     "PSX": 0.06570699170742582,
+     "WDAY": 0.031589705667321076,
+     "XYZ": 0.057265817046555874,
+     "JAZZ": 0.07420129610522976,
+     "NBIX": 0.06085429604887713,
+     "RYAN": 0.049830973480052256,
+     "VEEV": 0.04406999335571729,
+     "EAT": 0.04455299886382722
+    },
+    "matched_twin_pairs": [
+     {
+      "held": "OKTA",
+      "twin": "PRAX",
+      "level": "cell"
+     },
+     {
+      "held": "SNOW",
+      "twin": "CSCO",
+      "level": "cell"
+     },
+     {
+      "held": "CRWD",
+      "twin": "GEV",
+      "level": "cell"
+     },
+     {
+      "held": "PANW",
+      "twin": "VRT",
+      "level": "cell"
+     },
+     {
+      "held": "CRM",
+      "twin": "APP",
+      "level": "cell"
+     },
+     {
+      "held": "TGT",
+      "twin": "WBD",
+      "level": "cell"
+     },
+     {
+      "held": "GTLB",
+      "twin": "CELH",
+      "level": "cell"
+     },
+     {
+      "held": "ABNB",
+      "twin": "EXEL",
+      "level": "cell"
+     },
+     {
+      "held": "ESTC",
+      "twin": "HUBS",
+      "level": "cell"
+     },
+     {
+      "held": "AFRM",
+      "twin": "CLX",
+      "level": "cell"
+     },
+     {
+      "held": "NET",
+      "twin": "RBRK",
+      "level": "cell"
+     },
+     {
+      "held": "AMGN",
+      "twin": "ADI",
+      "level": "cell"
+     },
+     {
+      "held": "P",
+      "twin": "DY",
+      "level": "cell"
+     },
+     {
+      "held": "RVMD",
+      "twin": "JHX",
+      "level": "cell"
+     },
+     {
+      "held": "DELL",
+      "twin": "MRVL",
+      "level": "cell"
+     },
+     {
+      "held": "DT",
+      "twin": "GEN",
+      "level": "cell"
+     },
+     {
+      "held": "FTNT",
+      "twin": "WCC",
+      "level": "cell"
+     },
+     {
+      "held": "S",
+      "twin": "ZBRA",
+      "level": "cell"
+     },
+     {
+      "held": "AMD",
+      "twin": "WDC",
+      "level": "cell"
+     },
+     {
+      "held": "CHYM",
+      "twin": "STM",
+      "level": "cell"
+     }
+    ],
+    "status": "NEW",
+    "gate": "PASS",
+    "gate_detail": {
+     "verdict": "PASS",
+     "reasons": [],
+     "label": "PASS",
+     "selection": {
+      "dev_vs_spy_gt_0": true,
+      "selection_window_vs_spy_gt_0": true,
+      "top5_month_share_lt_0_6": true,
+      "max_dd_gt_m40": true,
+      "loo_worst_mean_active_gt_0": true,
+      "family_books_le_2": true
+     },
+     "construction": {
+      "max_name_weight_le_0.10": true,
+      "effective_n_ge_8": true,
+      "no_rho_0_8_cluster_above_40pct": true,
+      "no_name_gt_10pct_printing_in_first_5_sessions": true,
+      "largest_name_to_zero_le_150k": true
+     },
+     "timing": {
+      "bars_le_1_session_old": true
+     },
+     "detail": {
+      "k": 20,
+      "max_name": "TGT",
+      "max_weight": 0.08619858301240813,
+      "weight_cap": 0.1,
+      "effective_n": 18.423,
+      "max_cluster": [
+       "CRWD",
+       "FTNT",
+       "OKTA",
+       "PANW",
+       "S"
+      ],
+      "max_cluster_share": 0.2111,
+      "pairs_above_rho": [
+       [
+        "CRWD",
+        "FTNT",
+        0.851
+       ],
+       [
+        "CRWD",
+        "OKTA",
+        0.903
+       ],
+       [
+        "CRWD",
+        "PANW",
+        0.9
+       ],
+       [
+        "CRWD",
+        "S",
+        0.851
+       ],
+       [
+        "FTNT",
+        "OKTA",
+        0.807
+       ],
+       [
+        "FTNT",
+        "PANW",
+        0.852
+       ],
+       [
+        "FTNT",
+        "S",
+        0.879
+       ],
+       [
+        "PANW",
+        "S",
+        0.844
+       ]
+      ],
+      "earnings_names_over_10pct": {},
+      "largest_name_to_zero_usd": 86199.0,
+      "decision_date": "2026-09-27",
+      "bar_date": "2026-09-25",
+      "staleness_sessions": 0,
+      "family": "weighted",
+      "family_books_before": 1
+     },
+     "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+     "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+     "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+     "verdict_full_rule": "PASS",
+     "reasons_full_rule": []
+    },
+    "book": "lib_net_raises_ivw_lead_2026-09-27",
+    "book_id": "40b3584ea3d6a2ae",
+    "twin_ids": {
+     "ew": "bc59d47a14e8c3c4",
+     "ranks_k1_2k": "0dc6584091230ad8",
+     "spy": "a0155f20d1f3d421",
+     "iwm": "a834f30ec8d0538d",
+     "matched_random": "363b1e75a9e9991f"
+    },
+    "twin_ids_already": {}
+   },
+   {
+    "cell": "qc470_mom252_quarterly_riskparity@k20",
+    "source": "a",
+    "rule": "qc470_mom252_quarterly_riskparity",
+    "k": 20,
+    "family": "weighted",
+    "weights": {
+     "AKTS": 0.06288570775558307,
+     "LIFE": 0.0522718380219673,
+     "SNDK": 0.032440645383501845,
+     "AXTI": 0.024722972695233558,
+     "JAN": 0.14957261551912382,
+     "WOLF": 0.035559543022195786,
+     "MRNA": 0.010825732070967637,
+     "NUAI": 0.028578918754540435,
+     "ERAS": 0.059926440428911966,
+     "SLS": 0.03675110086558317,
+     "TXG": 0.052903185213309264,
+     "ANRO": 0.06730639108531997,
+     "TWST": 0.04254753668839638,
+     "MU": 0.05006019488407462,
+     "LITE": 0.040583443771697696,
+     "MXL": 0.03018300935139042,
+     "PRAX": 0.06779245176021796,
+     "ORKA": 0.07089757004059752,
+     "IMMX": 0.04778686848345424,
+     "VICR": 0.03640383420393338
+    },
+    "worst_case": "WORST CASE lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (JAN 15.0%) to zero = -$149,573; whole book to zero = -$1,000,000",
+    "declared": {
+     "expected_sigma_21_sessions": 0.11948968431449865,
+     "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+     "factor_betas": {
+      "status": "OK",
+      "n_months": 115,
+      "betas": {
+       "SPY": 1.1292017105991723,
+       "IWM-SPY": 1.3160722338468172,
+       "SMH-SPY": 0.3471832019187201,
+       "MTUM-SPY": 0.6513226543008014
+      },
+      "t_betas": {
+       "SPY": 6.411576100885564,
+       "IWM-SPY": 5.518979957062868,
+       "SMH-SPY": 2.5132390497336345,
+       "MTUM-SPY": 2.506988329605771
+      },
+      "alpha_monthly": 0.013671154322987813,
+      "r2": 0.5567952803932124,
+      "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+     },
+     "stop": {
+      "sigma_units": 2.0,
+      "level_21_sessions": -0.2389793686289973,
+      "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+     },
+     "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+     "sigma_rule_minus_matched_twin": {
+      "21_sessions": 0.07615281344181342,
+      "63_sessions": 0.13190054202053497,
+      "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+      "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+     }
+    },
+    "matched_twin_fallbacks": {
+     "cell": 20,
+     "band_vol": 0,
+     "band": 0,
+     "any": 0,
+     "none": 0
+    },
+    "matched_twin_seed": 178737001608072,
+    "ranks_k1_2k": {
+     "CLYM": 0.04188275936086561,
+     "IOVA": 0.026201161935425932,
+     "MLPI": 0.23399960664022704,
+     "SYRE": 0.05723061506361453,
+     "DMRA": 0.04136889757910106,
+     "OMER": 0.03497544661676194,
+     "RVMD": 0.08197640658345616,
+     "QTTB": 0.015680398697766773,
+     "BFLY": 0.03201241493433149,
+     "DELL": 0.038177586658134796,
+     "CHRN": 0.0241711405556628,
+     "CDNA": 0.03440753614444883,
+     "BE": 0.02836463835645907,
+     "WDC": 0.03626602967218695,
+     "STX": 0.040162944284129184,
+     "INTC": 0.04103288230260437,
+     "AMD": 0.04446563951178317,
+     "ABSI": 0.03666837466559737,
+     "ASX": 0.04634899615827415,
+     "RLAY": 0.06460652427916859
+    },
+    "matched_twin_pairs": [
+     {
+      "held": "AKTS",
+      "twin": "PDEX",
+      "level": "cell"
+     },
+     {
+      "held": "LIFE",
+      "twin": "BW",
+      "level": "cell"
+     },
+     {
+      "held": "SNDK",
+      "twin": "CRWD",
+      "level": "cell"
+     },
+     {
+      "held": "AXTI",
+      "twin": "ONTO",
+      "level": "cell"
+     },
+     {
+      "held": "JAN",
+      "twin": "NTCT",
+      "level": "cell"
+     },
+     {
+      "held": "WOLF",
+      "twin": "APPS",
+      "level": "cell"
+     },
+     {
+      "held": "MRNA",
+      "twin": "FIX",
+      "level": "cell"
+     },
+     {
+      "held": "NUAI",
+      "twin": "XENE",
+      "level": "cell"
+     },
+     {
+      "held": "ERAS",
+      "twin": "ADEA",
+      "level": "cell"
+     },
+     {
+      "held": "SLS",
+      "twin": "VISN",
+      "level": "cell"
+     },
+     {
+      "held": "TXG",
+      "twin": "SITM",
+      "level": "cell"
+     },
+     {
+      "held": "ANRO",
+      "twin": "ACRS",
+      "level": "cell"
+     },
+     {
+      "held": "TWST",
+      "twin": "TWLO",
+      "level": "cell"
+     },
+     {
+      "held": "MU",
+      "twin": "AMD",
+      "level": "cell"
+     },
+     {
+      "held": "LITE",
+      "twin": "VRT",
+      "level": "cell"
+     },
+     {
+      "held": "MXL",
+      "twin": "FLEX",
+      "level": "cell"
+     },
+     {
+      "held": "PRAX",
+      "twin": "FCEL",
+      "level": "cell"
+     },
+     {
+      "held": "ORKA",
+      "twin": "VPG",
+      "level": "cell"
+     },
+     {
+      "held": "IMMX",
+      "twin": "MRAM",
+      "level": "cell"
+     },
+     {
+      "held": "VICR",
+      "twin": "PL",
+      "level": "cell"
+     }
+    ],
+    "status": "NEW",
+    "gate": "CONTROL(NAME_WEIGHT)",
+    "gate_detail": {
+     "verdict": "CONTROL",
+     "reasons": [
+      "NAME_WEIGHT"
+     ],
+     "label": "CONTROL(NAME_WEIGHT)",
+     "selection": {
+      "dev_vs_spy_gt_0": true,
+      "selection_window_vs_spy_gt_0": true,
+      "top5_month_share_lt_0_6": true,
+      "max_dd_gt_m40": false,
+      "loo_worst_mean_active_gt_0": true,
+      "family_books_le_2": false
+     },
+     "construction": {
+      "max_name_weight_le_0.10": false,
+      "effective_n_ge_8": true,
+      "no_rho_0_8_cluster_above_40pct": true,
+      "no_name_gt_10pct_printing_in_first_5_sessions": true,
+      "largest_name_to_zero_le_150k": true
+     },
+     "timing": {
+      "bars_le_1_session_old": true
+     },
+     "detail": {
+      "k": 20,
+      "max_name": "JAN",
+      "max_weight": 0.14957261551912382,
+      "weight_cap": 0.1,
+      "effective_n": 15.315,
+      "max_cluster": [
+       "MU",
+       "SNDK"
+      ],
+      "max_cluster_share": 0.0825,
+      "pairs_above_rho": [
+       [
+        "MU",
+        "SNDK",
+        0.877
+       ]
+      ],
+      "earnings_names_over_10pct": {
+       "JAN": {
+        "status": "NOT_DUE",
+        "last_202": "2026-08-04",
+        "due_from": "2026-10-18",
+        "window_end": "2026-10-02",
+        "file_ends": "2026-09-03"
+       }
+      },
+      "largest_name_to_zero_usd": 149573.0,
+      "decision_date": "2026-09-27",
+      "bar_date": "2026-09-25",
+      "staleness_sessions": 0,
+      "family": "weighted",
+      "family_books_before": 2
+     },
+     "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+     "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+     "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+     "verdict_full_rule": "CONTROL",
+     "reasons_full_rule": [
+      "MAX_DD",
+      "FAMILY_CAP",
+      "NAME_WEIGHT"
+     ]
+    },
+    "book": "lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control",
+    "book_id": "4ffbfd2e83d06daa",
+    "twin_ids": {
+     "ew": "2fb54ddd9dde0b04",
+     "ranks_k1_2k": "380be9ef9d5ff617",
+     "spy": "e3bc8022d4614ea7",
+     "iwm": "8f490967515aa87b",
+     "matched_random": "fd7efadd8fae58dc"
+    },
+    "twin_ids_already": {}
+   },
+   {
+    "cell": "mom_12_1_ivw@k20",
+    "source": "a",
+    "rule": "mom_12_1_ivw",
+    "k": 20,
+    "family": "weighted",
+    "weights": {
+     "AKTS": 0.06243767969361776,
+     "LIFE": 0.05189942827863787,
+     "SNDK": 0.03220952260538883,
+     "JAN": 0.1485069881858898,
+     "AXTI": 0.024546834333465925,
+     "WOLF": 0.03530619971553336,
+     "ERAS": 0.059499495612290086,
+     "ANRO": 0.06682686794672323,
+     "QTTB": 0.01974344339734025,
+     "SLS": 0.03648926832710089,
+     "PRAX": 0.06730946569133159,
+     "CLYM": 0.05273525914130247,
+     "DMRA": 0.05208824746781934,
+     "IMMX": 0.04744641182266183,
+     "ORKA": 0.07039246161394523,
+     "LITE": 0.04029430777705196,
+     "MU": 0.0497035419513814,
+     "MRNA": 0.01074860434302725,
+     "ALMS": 0.029571564545403686,
+     "TWST": 0.042244407550087404
+    },
+    "worst_case": "WORST CASE lib_mom_12_1_ivw_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (JAN 14.9%) to zero = -$148,507; whole book to zero = -$1,000,000",
+    "declared": {
+     "expected_sigma_21_sessions": 0.10767125809172104,
+     "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+     "factor_betas": {
+      "status": "OK",
+      "n_months": 115,
+      "betas": {
+       "SPY": 1.0367631538002875,
+       "IWM-SPY": 1.4031464698167329,
+       "SMH-SPY": 0.3989723285279452,
+       "MTUM-SPY": 0.46753347893586567
+      },
+      "t_betas": {
+       "SPY": 5.525202421161056,
+       "IWM-SPY": 5.522776440494936,
+       "SMH-SPY": 2.7107735259677113,
+       "MTUM-SPY": 1.6890566219162337
+      },
+      "alpha_monthly": 0.014965031903655836,
+      "r2": 0.5185981272094622,
+      "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+     },
+     "stop": {
+      "sigma_units": 2.0,
+      "level_21_sessions": -0.21534251618344208,
+      "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+     },
+     "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+     "sigma_rule_minus_matched_twin": {
+      "21_sessions": 0.0769107571982357,
+      "63_sessions": 0.133213339115938,
+      "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+      "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+     }
+    },
+    "matched_twin_fallbacks": {
+     "cell": 20,
+     "band_vol": 0,
+     "band": 0,
+     "any": 0,
+     "none": 0
+    },
+    "matched_twin_seed": 76948860154064,
+    "ranks_k1_2k": {
+     "SYRE": 0.056032538321429924,
+     "MLPI": 0.2291010137090768,
+     "NUAI": 0.022064123601678812,
+     "TXG": 0.04084347723209491,
+     "RVMD": 0.08026029666525349,
+     "CHRN": 0.023665137233845876,
+     "DFTX": 0.05301922066607342,
+     "OMER": 0.034243263866454536,
+     "RLAY": 0.0632540388297947,
+     "WDC": 0.03550682960709368,
+     "AAOI": 0.024467171525645565,
+     "INBX": 0.04550464261925737,
+     "NVCT": 0.03070153744921528,
+     "BFLY": 0.031342260861177564,
+     "HYMC": 0.035630771366279596,
+     "ATEX": 0.04656806874383818,
+     "ARTV": 0.04660365190009515,
+     "ANAB": 0.05026430417709787,
+     "VELO": 0.027625102822120162,
+     "MXL": 0.02330254880247707
+    },
+    "matched_twin_pairs": [
+     {
+      "held": "AKTS",
+      "twin": "ZURA",
+      "level": "cell"
+     },
+     {
+      "held": "LIFE",
+      "twin": "IOVA",
+      "level": "cell"
+     },
+     {
+      "held": "SNDK",
+      "twin": "GEV",
+      "level": "cell"
+     },
+     {
+      "held": "JAN",
+      "twin": "NDSN",
+      "level": "cell"
+     },
+     {
+      "held": "AXTI",
+      "twin": "ONTO",
+      "level": "cell"
+     },
+     {
+      "held": "WOLF",
+      "twin": "SPHR",
+      "level": "cell"
+     },
+     {
+      "held": "ERAS",
+      "twin": "RXT",
+      "level": "cell"
+     },
+     {
+      "held": "ANRO",
+      "twin": "LB",
+      "level": "cell"
+     },
+     {
+      "held": "QTTB",
+      "twin": "NVCR",
+      "level": "cell"
+     },
+     {
+      "held": "SLS",
+      "twin": "EZPW",
+      "level": "cell"
+     },
+     {
+      "held": "PRAX",
+      "twin": "EIX",
+      "level": "cell"
+     },
+     {
+      "held": "CLYM",
+      "twin": "ENLT",
+      "level": "cell"
+     },
+     {
+      "held": "DMRA",
+      "twin": "CGEM",
+      "level": "cell"
+     },
+     {
+      "held": "IMMX",
+      "twin": "NGNE",
+      "level": "cell"
+     },
+     {
+      "held": "ORKA",
+      "twin": "BELFB",
+      "level": "cell"
+     },
+     {
+      "held": "LITE",
+      "twin": "MRVL",
+      "level": "cell"
+     },
+     {
+      "held": "MU",
+      "twin": "ANET",
+      "level": "cell"
+     },
+     {
+      "held": "MRNA",
+      "twin": "DOCN",
+      "level": "cell"
+     },
+     {
+      "held": "ALMS",
+      "twin": "BHE",
+      "level": "cell"
+     },
+     {
+      "held": "TWST",
+      "twin": "GH",
+      "level": "cell"
+     }
+    ],
+    "status": "NEW",
+    "gate": "CONTROL(NAME_WEIGHT)",
+    "gate_detail": {
+     "verdict": "CONTROL",
+     "reasons": [
+      "NAME_WEIGHT"
+     ],
+     "label": "CONTROL(NAME_WEIGHT)",
+     "selection": {
+      "dev_vs_spy_gt_0": true,
+      "selection_window_vs_spy_gt_0": true,
+      "top5_month_share_lt_0_6": true,
+      "max_dd_gt_m40": false,
+      "loo_worst_mean_active_gt_0": true,
+      "family_books_le_2": false
+     },
+     "construction": {
+      "max_name_weight_le_0.10": false,
+      "effective_n_ge_8": true,
+      "no_rho_0_8_cluster_above_40pct": true,
+      "no_name_gt_10pct_printing_in_first_5_sessions": true,
+      "largest_name_to_zero_le_150k": true
+     },
+     "timing": {
+      "bars_le_1_session_old": true
+     },
+     "detail": {
+      "k": 20,
+      "max_name": "JAN",
+      "max_weight": 0.1485069881858898,
+      "weight_cap": 0.1,
+      "effective_n": 15.3,
+      "max_cluster": [
+       "MU",
+       "SNDK"
+      ],
+      "max_cluster_share": 0.0819,
+      "pairs_above_rho": [
+       [
+        "MU",
+        "SNDK",
+        0.877
+       ]
+      ],
+      "earnings_names_over_10pct": {
+       "JAN": {
+        "status": "NOT_DUE",
+        "last_202": "2026-08-04",
+        "due_from": "2026-10-18",
+        "window_end": "2026-10-02",
+        "file_ends": "2026-09-03"
+       }
+      },
+      "largest_name_to_zero_usd": 148507.0,
+      "decision_date": "2026-09-27",
+      "bar_date": "2026-09-25",
+      "staleness_sessions": 0,
+      "family": "weighted",
+      "family_books_before": 2
+     },
+     "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+     "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+     "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+     "verdict_full_rule": "CONTROL",
+     "reasons_full_rule": [
+      "MAX_DD",
+      "FAMILY_CAP",
+      "NAME_WEIGHT"
+     ]
+    },
+    "book": "lib_mom_12_1_ivw_lead_2026-09-27__control",
+    "book_id": "3fd38f0d7a4dcb03",
+    "twin_ids": {
+     "ew": "5d2ce60804a20d37",
+     "ranks_k1_2k": "20b02566f94cbb04",
+     "spy": "10a06bf6b2b66c7d",
+     "iwm": "3bdf3698ed0f0761",
+     "matched_random": "ba7cda26cb2cec30"
+    },
+    "twin_ids_already": {}
+   },
+   {
+    "cell": "disp_short_avoid@k20",
+    "source": "b",
+    "rule": "disp_short_avoid",
+    "k": 20,
+    "family": "analyst_dispersion",
+    "weights": {
+     "AKTS": 0.05,
+     "LIFE": 0.05,
+     "SNDK": 0.05,
+     "JAN": 0.05,
+     "AXTI": 0.05,
+     "WOLF": 0.05,
+     "ERAS": 0.05,
+     "ANRO": 0.05,
+     "SLS": 0.05,
+     "CLYM": 0.05,
+     "DMRA": 0.05,
+     "IMMX": 0.05,
+     "ORKA": 0.05,
+     "LITE": 0.05,
+     "MU": 0.05,
+     "SYRE": 0.05,
+     "MLPI": 0.05,
+     "NUAI": 0.05,
+     "RVMD": 0.05,
+     "CHRN": 0.05
+    },
+    "worst_case": "WORST CASE lib_disp_short_avoid_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (AKTS 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+    "declared": {
+     "expected_sigma_21_sessions": 0.13256607550233765,
+     "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+     "factor_betas": {
+      "status": "OK",
+      "n_months": 115,
+      "betas": {
+       "SPY": 1.1128939742521449,
+       "IWM-SPY": 1.389015929004591,
+       "SMH-SPY": 0.30435920795212845,
+       "MTUM-SPY": 0.4255071968858283
+      },
+      "t_betas": {
+       "SPY": 6.139726327158372,
+       "IWM-SPY": 5.6596329294959435,
+       "SMH-SPY": 2.1407378529523124,
+       "MTUM-SPY": 1.5913473545829417
+      },
+      "alpha_monthly": 0.019040064065232374,
+      "r2": 0.5304891553389227,
+      "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+     },
+     "stop": {
+      "sigma_units": 2.0,
+      "level_21_sessions": -0.2651321510046753,
+      "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+     },
+     "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+     "sigma_rule_minus_matched_twin": {
+      "21_sessions": 0.08208185272055254,
+      "63_sessions": 0.14216993929138266,
+      "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+      "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+     }
+    },
+    "matched_twin_fallbacks": {
+     "cell": 20,
+     "band_vol": 0,
+     "band": 0,
+     "any": 0,
+     "none": 0
+    },
+    "matched_twin_seed": 247824388598716,
+    "ranks_k1_2k": {
+     "DFTX": 0.05,
+     "OMER": 0.05,
+     "RLAY": 0.05,
+     "WDC": 0.05,
+     "AAOI": 0.05,
+     "INBX": 0.05,
+     "NVCT": 0.05,
+     "BFLY": 0.05,
+     "HYMC": 0.05,
+     "ATEX": 0.05,
+     "ARTV": 0.05,
+     "ANAB": 0.05,
+     "MXL": 0.05,
+     "STX": 0.05,
+     "CGEM": 0.05,
+     "ALTO": 0.05,
+     "VICR": 0.05,
+     "ABSI": 0.05,
+     "FTH": 0.05,
+     "DELL": 0.05
+    },
+    "matched_twin_pairs": [
+     {
+      "held": "AKTS",
+      "twin": "PAYS",
+      "level": "cell"
+     },
+     {
+      "held": "LIFE",
+      "twin": "BELFB",
+      "level": "cell"
+     },
+     {
+      "held": "SNDK",
+      "twin": "STX",
+      "level": "cell"
+     },
+     {
+      "held": "JAN",
+      "twin": "SLF",
+      "level": "cell"
+     },
+     {
+      "held": "AXTI",
+      "twin": "TXG",
+      "level": "cell"
+     },
+     {
+      "held": "WOLF",
+      "twin": "ACMR",
+      "level": "cell"
+     },
+     {
+      "held": "ERAS",
+      "twin": "KALU",
+      "level": "cell"
+     },
+     {
+      "held": "ANRO",
+      "twin": "FNKO",
+      "level": "cell"
+     },
+     {
+      "held": "SLS",
+      "twin": "PUMP",
+      "level": "cell"
+     },
+     {
+      "held": "CLYM",
+      "twin": "SUPV",
+      "level": "cell"
+     },
+     {
+      "held": "DMRA",
+      "twin": "HLF",
+      "level": "cell"
+     },
+     {
+      "held": "IMMX",
+      "twin": "GHM",
+      "level": "cell"
+     },
+     {
+      "held": "ORKA",
+      "twin": "URGN",
+      "level": "cell"
+     },
+     {
+      "held": "LITE",
+      "twin": "DELL",
+      "level": "cell"
+     },
+     {
+      "held": "MU",
+      "twin": "GEV",
+      "level": "cell"
+     },
+     {
+      "held": "SYRE",
+      "twin": "TNGX",
+      "level": "cell"
+     },
+     {
+      "held": "MLPI",
+      "twin": "PFIS",
+      "level": "cell"
+     },
+     {
+      "held": "NUAI",
+      "twin": "INBX",
+      "level": "cell"
+     },
+     {
+      "held": "RVMD",
+      "twin": "JHX",
+      "level": "cell"
+     },
+     {
+      "held": "CHRN",
+      "twin": "LB",
+      "level": "cell"
+     }
+    ],
+    "status": "ALREADY_FROZEN_SAME_HOLDINGS",
+    "gate": "PASS",
+    "twins_already": [
+     "ew",
+     "random_same_band",
+     "sector_etf",
+     "spy"
+    ],
+    "book": "lib_disp_short_avoid_2026-09-27",
+    "book_id": "d93fbf2c301248ca",
+    "twin_ids": {
+     "ranks_k1_2k": "1201ed4bc42439f9",
+     "iwm": "7f74a0198ddd1eb1",
+     "matched_random": "67903b85cf3c0b8c"
+    },
+    "twin_ids_already": {
+     "ew": "9400f79fada66555",
+     "sector_etf": "aa5b879f546b7cad",
+     "spy": "75919a39db978691",
+     "random_same_band": "a46f8fec8b098b8e"
+    }
+   },
+   {
+    "cell": "mom_12_1_q_trend@k20",
+    "source": "b",
+    "rule": "mom_12_1_q_trend",
+    "k": 20,
+    "family": "regime_gated",
+    "weights": {
+     "AKTS": 0.05,
+     "LIFE": 0.05,
+     "SNDK": 0.05,
+     "JAN": 0.05,
+     "AXTI": 0.05,
+     "WOLF": 0.05,
+     "ERAS": 0.05,
+     "ANRO": 0.05,
+     "QTTB": 0.05,
+     "SLS": 0.05,
+     "PRAX": 0.05,
+     "CLYM": 0.05,
+     "DMRA": 0.05,
+     "IMMX": 0.05,
+     "ORKA": 0.05,
+     "LITE": 0.05,
+     "MU": 0.05,
+     "MRNA": 0.05,
+     "ALMS": 0.05,
+     "TWST": 0.05
+    },
+    "worst_case": "WORST CASE lib_mom_12_1_q_trend_lead_2026-09-27: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (AKTS 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+    "declared": {
+     "expected_sigma_21_sessions": 0.13976235644168547,
+     "sigma_basis": "book weights x the 63-session daily covariance of the held names, x sqrt(21)",
+     "factor_betas": {
+      "status": "OK",
+      "n_months": 115,
+      "betas": {
+       "SPY": 0.43184162794870296,
+       "IWM-SPY": 1.2646978415688872,
+       "SMH-SPY": 0.33367459401693234,
+       "MTUM-SPY": 0.5476241576705749
+      },
+      "t_betas": {
+       "SPY": 2.1378985698134123,
+       "IWM-SPY": 4.624184844008514,
+       "SMH-SPY": 2.1060445506909895,
+       "MTUM-SPY": 1.8378414604257387
+      },
+      "alpha_monthly": 0.018968480328585165,
+      "r2": 0.3218809309127445,
+      "basis": "full-window monthly net return (cell_monthly) on etf_monthly.parquet"
+     },
+     "stop": {
+      "sigma_units": 2.0,
+      "level_21_sessions": -0.27952471288337094,
+      "action": "declared, not traded: a frozen paper book is never re-weighted; a book at or below it on its 21-session return is flagged for review"
+     },
+     "forward_test": "rule - matched twin over 21 and 63 sessions; the lead survives if the sign is positive in both and the 63-session z >= 1",
+     "sigma_rule_minus_matched_twin": {
+      "21_sessions": 0.07423018924562295,
+      "63_sessions": 0.1285704592288718,
+      "basis": "sd of the monthly rule - single-draw matched twin (draw 0), full window",
+      "z_63": "(rule - matched twin over 63 sessions) / 63_sessions"
+     }
+    },
+    "matched_twin_fallbacks": {
+     "cell": 20,
+     "band_vol": 0,
+     "band": 0,
+     "any": 0,
+     "none": 0
+    },
+    "matched_twin_seed": 210241658120454,
+    "ranks_k1_2k": {
+     "SYRE": 0.05,
+     "MLPI": 0.05,
+     "NUAI": 0.05,
+     "TXG": 0.05,
+     "RVMD": 0.05,
+     "CHRN": 0.05,
+     "DFTX": 0.05,
+     "OMER": 0.05,
+     "RLAY": 0.05,
+     "WDC": 0.05,
+     "AAOI": 0.05,
+     "INBX": 0.05,
+     "NVCT": 0.05,
+     "BFLY": 0.05,
+     "HYMC": 0.05,
+     "ATEX": 0.05,
+     "ARTV": 0.05,
+     "ANAB": 0.05,
+     "VELO": 0.05,
+     "MXL": 0.05
+    },
+    "matched_twin_pairs": [
+     {
+      "held": "AKTS",
+      "twin": "PUBM",
+      "level": "cell"
+     },
+     {
+      "held": "LIFE",
+      "twin": "AGL",
+      "level": "cell"
+     },
+     {
+      "held": "SNDK",
+      "twin": "CRWD",
+      "level": "cell"
+     },
+     {
+      "held": "JAN",
+      "twin": "BBT",
+      "level": "cell"
+     },
+     {
+      "held": "AXTI",
+      "twin": "ASX",
+      "level": "cell"
+     },
+     {
+      "held": "WOLF",
+      "twin": "KALU",
+      "level": "cell"
+     },
+     {
+      "held": "ERAS",
+      "twin": "MAN",
+      "level": "cell"
+     },
+     {
+      "held": "ANRO",
+      "twin": "GSIT",
+      "level": "cell"
+     },
+     {
+      "held": "QTTB",
+      "twin": "CHRN",
+      "level": "cell"
+     },
+     {
+      "held": "SLS",
+      "twin": "CELC",
+      "level": "cell"
+     },
+     {
+      "held": "PRAX",
+      "twin": "SIMO",
+      "level": "cell"
+     },
+     {
+      "held": "CLYM",
+      "twin": "OILU",
+      "level": "cell"
+     },
+     {
+      "held": "DMRA",
+      "twin": "QMCO",
+      "level": "cell"
+     },
+     {
+      "held": "IMMX",
+      "twin": "JBIO",
+      "level": "cell"
+     },
+     {
+      "held": "ORKA",
+      "twin": "PRM",
+      "level": "cell"
+     },
+     {
+      "held": "LITE",
+      "twin": "DELL",
+      "level": "cell"
+     },
+     {
+      "held": "MU",
+      "twin": "PANW",
+      "level": "cell"
+     },
+     {
+      "held": "MRNA",
+      "twin": "LSCC",
+      "level": "cell"
+     },
+     {
+      "held": "ALMS",
+      "twin": "MTRN",
+      "level": "cell"
+     },
+     {
+      "held": "TWST",
+      "twin": "AGX",
+      "level": "cell"
+     }
+    ],
+    "status": "NEW",
+    "gate": "PASS",
+    "gate_detail": {
+     "verdict": "PASS",
+     "reasons": [],
+     "label": "PASS",
+     "selection": {
+      "dev_vs_spy_gt_0": true,
+      "selection_window_vs_spy_gt_0": true,
+      "top5_month_share_lt_0_6": false,
+      "max_dd_gt_m40": false,
+      "loo_worst_mean_active_gt_0": true,
+      "family_books_le_2": true
+     },
+     "construction": {
+      "max_name_weight_le_0.10": true,
+      "effective_n_ge_8": true,
+      "no_rho_0_8_cluster_above_40pct": true,
+      "no_name_gt_10pct_printing_in_first_5_sessions": true,
+      "largest_name_to_zero_le_150k": true
+     },
+     "timing": {
+      "bars_le_1_session_old": true
+     },
+     "detail": {
+      "k": 20,
+      "max_name": "AKTS",
+      "max_weight": 0.05,
+      "weight_cap": 0.1,
+      "effective_n": 20.0,
+      "max_cluster": [
+       "MU",
+       "SNDK"
+      ],
+      "max_cluster_share": 0.1,
+      "pairs_above_rho": [
+       [
+        "MU",
+        "SNDK",
+        0.877
+       ]
+      ],
+      "earnings_names_over_10pct": {},
+      "largest_name_to_zero_usd": 50000.0,
+      "decision_date": "2026-09-27",
+      "bar_date": "2026-09-25",
+      "staleness_sessions": 0,
+      "family": "regime_gated",
+      "family_books_before": 0
+     },
+     "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+     "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+     "scope": "construction + timing (the lead was selected by the matched-twin read, so the selection booleans are printed, not applied)",
+     "verdict_full_rule": "CONTROL",
+     "reasons_full_rule": [
+      "TOP5_MONTH_SHARE",
+      "MAX_DD"
+     ]
+    },
+    "book": "lib_mom_12_1_q_trend_lead_2026-09-27",
+    "book_id": "1144c07902e67552",
+    "twin_ids": {
+     "ew": "8e78209f77acf36b",
+     "ranks_k1_2k": "b67086822d079f24",
+     "spy": "ffa304a9e3982015",
+     "iwm": "75e9ca596005c4f6",
+     "matched_random": "4f4b04f2d61cefcd"
+    },
+    "twin_ids_already": {}
+   }
+  ],
+  "notes": [
+   "mom_12_1_q_trend@k20: regime gate mkt_trend_up = 1.0 at 2026-09-25: invested"
+  ]
+ },
+ "leads_log": "backend/data/optimus/bridge/leads_2026-09-27.json",
+ "probe_rows": [
+  {
+   "book": "probe_equal_2026-09-26",
+   "book_id": "132d0d6c0d445bbb",
+   "asof": "2026-09-26",
+   "weights": {
+    "NVDA": 0.0909,
+    "INCY": 0.0909,
+    "AAPL": 0.0909,
+    "SNDR": 0.0909,
+    "META": 0.0909,
+    "AVPT": 0.0909,
+    "AMZN": 0.0909,
+    "GOOGL": 0.0909,
+    "GOOG": 0.0909,
+    "ALLE": 0.0909,
+    "JAZZ": 0.0909
+   },
+   "forward_return": 0.01566193518716316,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.00722827865042849
+  },
+  {
+   "book": "probe_inverse_vol_2026-09-26",
+   "book_id": "61fa183ee45aa10a",
+   "asof": "2026-09-26",
+   "weights": {
+    "NVDA": 0.0803,
+    "INCY": 0.0962,
+    "AAPL": 0.1021,
+    "SNDR": 0.1011,
+    "META": 0.0643,
+    "AVPT": 0.0761,
+    "AMZN": 0.0767,
+    "GOOGL": 0.0927,
+    "GOOG": 0.0939,
+    "ALLE": 0.102,
+    "JAZZ": 0.1147
+   },
+   "forward_return": 0.012933207880104106,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.004499551343369438
+  },
+  {
+   "book": "probe_bigmove_tilt_2026-09-26",
+   "book_id": "23ac8d562416f388",
+   "asof": "2026-09-26",
+   "weights": {
+    "NVDA": 0.1002,
+    "INCY": 0.0837,
+    "AAPL": 0.0789,
+    "SNDR": 0.0797,
+    "META": 0.1251,
+    "AVPT": 0.1058,
+    "AMZN": 0.105,
+    "GOOGL": 0.0868,
+    "GOOG": 0.0857,
+    "ALLE": 0.0789,
+    "JAZZ": 0.0702
+   },
+   "forward_return": 0.018310910896818,
+   "forward_spy": 0.008433656536734668,
+   "forward_relative": 0.009877254360083333
+  }
+ ],
+ "probe_note": "Reviewer H+I's highest-EV experiment (adjudication 2026-09-26 row 5): the PROBE names of `decisions/pc_plan/2026-09-25.json` weighted equal / inverse 63-session vol / big-move tilt, each $1M long-only with twins. Read the arm DIFFERENCES regressed on USMV before calling any of them skill: inverse-vol is partly low-vol beta."
+}

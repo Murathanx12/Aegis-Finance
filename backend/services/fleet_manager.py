@@ -470,7 +470,8 @@ def plan_maintenance(role: str, positions: list[dict], open_orders: list[dict],
                 acts.append(Action(role, "stop_renew", sym, q, "sell", "stop", "gtc", stop_price=sp,
                                    price_ref=px, protective=True,
                                    reason=f"renewal of an expiring stop, never below it ({old})",
-                                   coid=client_order_id(role, day, "stoprenew", sym, h, f"{q}")))
+                                   coid=client_order_id(role, day, "stoprenew", sym, h, f"{q}"),
+                                   inputs={"replaces_stop": old}))
     # a short option leg must be covered by a long leg of the same root
     roots: dict[str, float] = {}
     for p in positions:
@@ -693,6 +694,390 @@ def check_limits(a: Action, *, equity: float, cash: float, held: dict[str, float
     return None
 
 
+# ─────────────────────────────── named gates (C26) ──────────────────────────
+#
+# THE DECISION STORY OF ONE ORDER: proposal -> ordered named gates -> outcome
+# (2026-10-07, borrowed from the Alpaca hackathon winners: Killswitch's fifteen
+# deterministic gates that only shrink or kill, Autobelay's logged gate layer).
+# `check_limits` above is kept verbatim for its callers and tests; the runner
+# now walks GATES instead, and every verdict lands on the decision row.
+#
+# THE TWO INVARIANTS, pinned by `test_fleet_gates.py`:
+#   1. A gate can never INCREASE a proposed size. A SHRINK whose `to` is not
+#      below the current quantity is a GATE DEFECT and kills the order.
+#   2. An EXIT is never blocked by any gate outside the LEASE class (kill
+#      switch, credential, reconciliation = single-writer lease, venue window).
+#      RISK gates answer PASS to every exit by construction.
+
+GATE_PASS, GATE_SHRINK, GATE_KILL = "PASS", "SHRINK", "KILL"
+GATE_LEASE, GATE_SHAPE, GATE_RISK = "lease", "shape", "risk"
+UNKNOWN_SECTOR = "UNKNOWN"
+
+#: `cooldown` and `sector_concentration` (C26, 2026-10-07) are the two gates
+#: that can change a LIVE book's executed positions tonight (hack2's Technology
+#: buys would be KILLED -- Technology is already 67% of hack2 -- before the
+#: owner has decided whether that gate should bind; see
+#: `docs/research_notes/2026-10-07/fleet_gates_and_eod_audit_2026-10-07.md`).
+#: `config.FLEET_NEW_GATES_MODE` ("shadow" | "enforce") decides whether they
+#: bind. In "shadow" (the default) each still evaluates against the real
+#: order and ctx, but `run_gates` overrides its verdict to PASS before it can
+#: shrink or kill anything, and the real verdict/reason it computed is kept on
+#: the trace row as `shadow_verdict` (`SHADOW_WOULD_KILL: ...` or
+#: `SHADOW_WOULD_SHRINK(to=<q>): ...`). In "enforce" they bind like every
+#: other gate and `shadow_verdict` is never set.
+NEW_GATES: frozenset = frozenset({"cooldown", "sector_concentration"})
+SHADOW_MODE, ENFORCE_MODE = "shadow", "enforce"
+
+
+@dataclass
+class GateCtx:
+    """What the gates read, and the running totals they commit to after a pass.
+    `stopped_out` None means the stop history could not be read: the cooldown
+    gate then KILLS buys (cannot determine is a refusal, never a pass)."""
+    equity: float
+    cash: float
+    held: dict
+    mv: dict
+    gross: float
+    contract: dict
+    today: date
+    stop_file_present: bool = False
+    credential_ok: bool = True
+    reconciliation_ok: bool = True
+    reconciliation_status: str = "OK"
+    market_ok: bool = True
+    turnover_left: float = float("inf")
+    orders_used: int = 0
+    stopped_out: Optional[dict] = field(default_factory=dict)   # symbol -> ISO date of the stop fill
+    sector_of: dict = field(default_factory=dict)
+    sector_mv: dict = field(default_factory=dict)
+    cooldown_sessions: Optional[int] = None
+    sector_max_frac: Optional[float] = None
+
+    def __post_init__(self) -> None:
+        if not self.sector_mv:
+            for s, v in self.mv.items():
+                k = self.sector_of.get(s) or UNKNOWN_SECTOR
+                self.sector_mv[k] = self.sector_mv.get(k, 0.0) + abs(float(v))
+        if self.cooldown_sessions is None:
+            self.cooldown_sessions = int(_cfg.FLEET_GATE_COOLDOWN_SESSIONS)
+        if self.sector_max_frac is None:
+            self.sector_max_frac = float(_cfg.FLEET_GATE_SECTOR_MAX_FRAC)
+
+
+def is_exit(a: Action, held: dict) -> bool:
+    """An order that only removes exposure: a protective stop, a cancel, a
+    declared exit, or a sell of the WHOLE long position. A trim (a sell of part
+    of it) reduces risk but is a rebalance, and pays the turnover budget."""
+    if a.kind in ("exit", "cancel", "stop_new", "stop_renew") or a.protective:
+        return True
+    return a.side == "sell" and a.qty > 0 and a.qty + 1e-9 >= max(0.0, float(held.get(a.symbol, 0.0)))
+
+
+def _px(a: Action) -> float:
+    return float(a.limit_price or a.stop_price or a.price_ref or 0.0)
+
+
+def _shrink(a: Action, cap_usd: float, why: str, ctx: GateCtx) -> tuple[str, Optional[int], str]:
+    """SHRINK to the largest whole quantity whose notional fits `cap_usd`, or
+    KILL when nothing (or less than the minimum order) fits."""
+    px = _px(a)
+    if px <= 0:
+        return GATE_KILL, None, f"{why}: no price to size against"
+    q = int(math.floor(max(0.0, cap_usd) / px + 1e-9))
+    if q >= a.qty:
+        return GATE_PASS, None, why + ": fits"
+    mn = float(ctx.contract["caps"].get("min_order_usd") or 0.0)
+    if q <= 0 or q * px < mn:
+        return GATE_KILL, None, (f"{why}: room ${max(0.0, cap_usd):,.0f} leaves less than the "
+                                 f"${mn:,.0f} minimum order")
+    return GATE_SHRINK, q, f"{why}: {a.qty} -> {q} (room ${cap_usd:,.0f})"
+
+
+# -- lease class: may block anything, exits included --
+
+def g_kill_switch(a: Action, ctx: GateCtx):
+    if ctx.stop_file_present:
+        return GATE_KILL, None, "fleet_manager/STOP is present: the owner's kill switch"
+    return GATE_PASS, None, "no STOP file"
+
+
+def g_credential(a: Action, ctx: GateCtx):
+    if not ctx.credential_ok:
+        return GATE_KILL, None, "the account's credential was not accepted"
+    return GATE_PASS, None, "account read with its own key"
+
+
+def g_reconciliation(a: Action, ctx: GateCtx):
+    if not ctx.reconciliation_ok:
+        return GATE_KILL, None, (f"RECONCILIATION {ctx.reconciliation_status}: every order on this account "
+                                 "refused (the single-writer lease is not proven)")
+    return GATE_PASS, None, "broker = record + fills, no foreign executor"
+
+
+def g_venue_window(a: Action, ctx: GateCtx, mode: str = "DRY"):
+    if mode == "LIVE" and not ctx.market_ok:
+        return GATE_KILL, None, "venue closed or within minutes of the close: orders only while open"
+    return GATE_PASS, None, "venue open" if mode == "LIVE" else "dry: nothing is sent"
+
+
+# -- shape class: a malformed order is not an order --
+
+def g_instrument(a: Action, ctx: GateCtx):
+    if a.kind == "cancel":
+        return GATE_PASS, None, "cancel"
+    if not _EQUITY_TICKER.match(a.symbol):
+        return GATE_KILL, None, (f"{a.symbol} is not a plain equity ticker: no option or other order "
+                                 "is ever built here")
+    return GATE_PASS, None, "plain equity"
+
+
+def g_order_shape(a: Action, ctx: GateCtx):
+    if a.kind == "cancel":
+        return GATE_PASS, None, "cancel"
+    if a.qty <= 0:
+        return GATE_KILL, None, "quantity is not positive"
+    if a.order_type not in ("limit", "stop"):
+        return GATE_KILL, None, f"order type {a.order_type!r} refused: limit or stop only, never market"
+    if a.side not in ("buy", "sell"):
+        return GATE_KILL, None, f"side {a.side!r} refused"
+    if a.side == "buy" and (a.limit_price is None or a.limit_price <= 0):
+        return GATE_KILL, None, "a buy needs a limit price near the quote"
+    if a.order_type == "stop" and not a.protective:
+        return GATE_KILL, None, "a stop order must be protective"
+    return GATE_PASS, None, f"{a.order_type} {a.side}"
+
+
+def g_long_only(a: Action, ctx: GateCtx):
+    if a.side != "sell":
+        return GATE_PASS, None, "not a sell"
+    long_q = int(math.floor(max(0.0, float(ctx.held.get(a.symbol, 0.0))) + 1e-9))
+    if a.qty <= long_q:
+        return GATE_PASS, None, f"sell {a.qty} <= long {long_q}"
+    if long_q <= 0:
+        return GATE_KILL, None, f"sell {a.qty} with nothing long held: would open a short (shorting refused)"
+    return GATE_SHRINK, long_q, f"sell {a.qty} > long {long_q}: shrunk to the long quantity (no short)"
+
+
+def g_stop_never_loosened(a: Action, ctx: GateCtx):
+    if a.order_type != "stop":
+        return GATE_PASS, None, "not a stop"
+    old = (a.inputs or {}).get("replaces_stop")
+    if old is None or a.stop_price is None:
+        return GATE_PASS, None, "replaces no resting stop"
+    if float(a.stop_price) + 1e-9 >= float(old):
+        return GATE_PASS, None, f"stop {a.stop_price} >= the stop it replaces {old}"
+    a.inputs["stop_before_gate"] = a.stop_price
+    a.stop_price = float(old)
+    return GATE_SHRINK, a.qty, (f"stop raised to the stop it replaces ({old}): a replaced stop is never "
+                                "loosened (the loss distance shrank; quantity unchanged)")
+
+
+# -- risk class: PASS for every exit; may only shrink or kill an entry or a trim --
+
+def g_min_order(a: Action, ctx: GateCtx):
+    if is_exit(a, ctx.held):
+        return GATE_PASS, None, "exit: never blocked by a risk gate"
+    mn = float(ctx.contract["caps"].get("min_order_usd") or 0.0)
+    if a.notional < mn:
+        return GATE_KILL, None, f"${a.notional:,.0f} < min order ${mn:,.0f}"
+    return GATE_PASS, None, f"${a.notional:,.0f} >= ${mn:,.0f}"
+
+
+def g_cooldown(a: Action, ctx: GateCtx):
+    if a.side != "buy" or is_exit(a, ctx.held):
+        return GATE_PASS, None, "not an entry"
+    n = int(ctx.cooldown_sessions or 0)
+    if ctx.stopped_out is None:
+        return GATE_KILL, None, "stop history unreadable: cannot show the name was not stopped out recently"
+    d0 = ctx.stopped_out.get(a.symbol)
+    if not d0:
+        return GATE_PASS, None, f"no stop fill on {a.symbol} in the lookback"
+    k = sessions_between(date.fromisoformat(str(d0)[:10]), ctx.today)
+    if k < n:
+        return GATE_KILL, None, f"{a.symbol} was stopped out {d0} ({k} session(s) ago) < cooldown {n}"
+    return GATE_PASS, None, f"{a.symbol} stopped out {d0}, {k} session(s) ago >= cooldown {n}"
+
+
+def g_turnover_budget(a: Action, ctx: GateCtx):
+    if a.kind == "cancel" or a.protective or is_exit(a, ctx.held):
+        return GATE_PASS, None, "exit or protection: spends no turnover budget"
+    if a.notional <= ctx.turnover_left + 1e-6:
+        return GATE_PASS, None, f"${a.notional:,.0f} within ${ctx.turnover_left:,.0f} left"
+    return _shrink(a, ctx.turnover_left, "daily turnover budget", ctx)
+
+
+def g_cash(a: Action, ctx: GateCtx):
+    if a.side != "buy":
+        return GATE_PASS, None, "not a buy"
+    return _shrink(a, ctx.cash, "cash (no leverage)", ctx)
+
+
+def g_gross_cap(a: Action, ctx: GateCtx):
+    if a.side != "buy":
+        return GATE_PASS, None, "not a buy"
+    cap = float(ctx.contract["caps"]["max_gross_frac"])
+    return _shrink(a, cap * ctx.equity - ctx.gross, f"gross <= {cap:.0%} of equity", ctx)
+
+
+def g_name_cap(a: Action, ctx: GateCtx):
+    if a.side != "buy":
+        return GATE_PASS, None, "not a buy"
+    cap = name_cap(ctx.contract["caps"], a.symbol)
+    return _shrink(a, cap * ctx.equity * 1.005 - ctx.mv.get(a.symbol, 0.0),
+                   f"{a.symbol} <= {cap:.0%} of equity", ctx)
+
+
+def sector_room_usd(sector_mv: float, gross: float, equity: float, x: float) -> float:
+    """Largest added notional n with (sector + n) <= x * max(gross + n, equity).
+    The denominator is the account's gross, floored at equity so an account
+    that is mostly cash can still buy its first names."""
+    n1 = x * equity - sector_mv
+    if gross + n1 <= equity + 1e-9:
+        return n1
+    return (x * gross - sector_mv) / (1.0 - x) if x < 1.0 else float("inf")
+
+
+def g_sector_concentration(a: Action, ctx: GateCtx):
+    if a.side != "buy":
+        return GATE_PASS, None, "not a buy"
+    ov = ctx.contract["caps"].get("name_cap_overrides") or {}
+    if a.symbol in ov:
+        return GATE_PASS, None, (f"{a.symbol} carries the contract's own declared cap {float(ov[a.symbol]):.0%} "
+                                 "(the broad-market control)")
+    sec = ctx.sector_of.get(a.symbol) or UNKNOWN_SECTOR
+    x = float(ctx.sector_max_frac)
+    room = sector_room_usd(ctx.sector_mv.get(sec, 0.0), ctx.gross, ctx.equity, x)
+    return _shrink(a, room, f"sector {sec} <= {x:.0%} of gross", ctx)
+
+
+def g_order_count(a: Action, ctx: GateCtx):
+    if a.kind == "cancel" or is_exit(a, ctx.held):
+        return GATE_PASS, None, "exit or cancel: never blocked by the order count"
+    cap = int(ctx.contract["caps"]["max_orders_per_run"])
+    if ctx.orders_used >= cap:
+        return GATE_KILL, None, f"per-run order cap {cap}"
+    return GATE_PASS, None, f"order {ctx.orders_used + 1} of {cap}"
+
+
+#: THE ORDER IS THE CONTRACT: lease, then shape, then risk. The tuple is pinned
+#: against `config.FLEET_GATE_ORDER` by a test, so the doc and the code cannot drift.
+GATES: tuple = (
+    ("kill_switch", GATE_LEASE, g_kill_switch),
+    ("credential", GATE_LEASE, g_credential),
+    ("reconciliation", GATE_LEASE, g_reconciliation),
+    ("venue_window", GATE_LEASE, g_venue_window),
+    ("instrument", GATE_SHAPE, g_instrument),
+    ("order_shape", GATE_SHAPE, g_order_shape),
+    ("long_only", GATE_SHAPE, g_long_only),
+    ("stop_never_loosened", GATE_SHAPE, g_stop_never_loosened),
+    ("min_order", GATE_RISK, g_min_order),
+    ("cooldown", GATE_RISK, g_cooldown),
+    ("turnover_budget", GATE_RISK, g_turnover_budget),
+    ("cash", GATE_RISK, g_cash),
+    ("gross_cap", GATE_RISK, g_gross_cap),
+    ("name_cap", GATE_RISK, g_name_cap),
+    ("sector_concentration", GATE_RISK, g_sector_concentration),
+    ("order_count", GATE_RISK, g_order_count),
+)
+
+
+def gates_config() -> dict:
+    """The operator overlay the gates read, hashed onto every receipt: gates are
+    NOT part of a frozen contract (they may only shrink), so their version
+    travels beside the contract hash instead of inside it."""
+    body = {"order": [g[0] for g in GATES], "classes": {g[0]: g[1] for g in GATES},
+            "cooldown_sessions": int(_cfg.FLEET_GATE_COOLDOWN_SESSIONS),
+            "sector_max_frac": float(_cfg.FLEET_GATE_SECTOR_MAX_FRAC),
+            "sector_denominator": "max(gross after the order, equity)",
+            "unknown_sector": f"one bucket named {UNKNOWN_SECTOR}",
+            "name_cap_tolerance": 1.005,
+            "new_gates": sorted(NEW_GATES), "new_gates_mode": str(_cfg.FLEET_NEW_GATES_MODE)}
+    body["hash"] = _sha(json.dumps(body, sort_keys=True))
+    return body
+
+
+def story_id(role: str, day: str, pass_: str, coid: str) -> str:
+    """The fleet's own Decision Story id (PC-PAPER's `decision_story` ids are
+    not reused here: a fleet order is not a PC-PAPER decision)."""
+    return "fs-" + _sha(role, day, pass_, coid)
+
+
+def run_gates(a: Action, ctx: GateCtx, *, mode: str = "DRY", gates: Optional[tuple] = None,
+             new_gates_mode: Optional[str] = None) -> list[dict]:
+    """Walk the gates in order. Mutates `a.qty` (shrink only), `a.refused`
+    (on a KILL) and, after a full pass, the running totals in `ctx`. Returns
+    the trace: one row per gate evaluated, ending at the first KILL.
+
+    `new_gates_mode` ("shadow" | "enforce", default `config.FLEET_NEW_GATES_MODE`)
+    governs `NEW_GATES` only: in "shadow" each still runs against the real
+    order, but a verdict that would KILL or SHRINK is overridden to PASS (the
+    order is untouched) and the real verdict is kept on the row as
+    `shadow_verdict`; every other gate enforces regardless."""
+    gates = GATES if gates is None else gates
+    ngm = new_gates_mode if new_gates_mode is not None else _cfg.FLEET_NEW_GATES_MODE
+    trace: list[dict] = []
+    if a.refused:
+        trace.append({"gate": "planner", "class": "plan", "verdict": GATE_KILL, "reason": a.refused,
+                      "qty_in": a.qty, "qty_out": 0})
+        return trace
+    for name, cls, fn in gates:
+        q_in = a.qty
+        try:
+            verdict, to, why = fn(a, ctx, mode) if fn is g_venue_window else fn(a, ctx)
+        except Exception as exc:                                  # noqa: BLE001 -- a broken gate refuses
+            verdict, to, why = GATE_KILL, None, f"GATE_ERROR {type(exc).__name__}: {exc}"[:200]
+        row = {"gate": name, "class": cls, "verdict": verdict, "reason": why, "qty_in": q_in}
+        if name in NEW_GATES and ngm != ENFORCE_MODE and verdict in (GATE_KILL, GATE_SHRINK):
+            shadow = (f"SHADOW_WOULD_KILL: {why}" if verdict == GATE_KILL
+                      else f"SHADOW_WOULD_SHRINK(to={to}): {why}")
+            row.update(verdict=GATE_PASS, reason=f"{why} [shadow -- would have bound]",
+                      shadow_verdict=shadow)
+            trace.append(dict(row, qty_out=a.qty))
+            continue
+        if verdict == GATE_SHRINK:
+            if to is None or int(to) > q_in or (int(to) == q_in and a.order_type != "stop"):
+                verdict, why = GATE_KILL, (f"GATE_DEFECT: {name} returned SHRINK to {to} from {q_in}; "
+                                           "a gate may never enlarge (or fake-shrink) an order")
+                row.update(verdict=verdict, reason=why)
+            else:
+                a.qty = int(to)
+        elif verdict not in (GATE_PASS, GATE_KILL):
+            verdict, why = GATE_KILL, f"GATE_DEFECT: unknown verdict {verdict!r}"
+            row.update(verdict=verdict, reason=why)
+        if verdict == GATE_KILL:
+            a.refused = f"{name}: {why}"
+            row["qty_out"] = 0
+            trace.append(row)
+            return trace
+        row["qty_out"] = a.qty
+        trace.append(row)
+    # every gate passed: commit the order to the running totals
+    exit_ = is_exit(a, ctx.held)
+    if a.kind != "cancel":
+        ctx.orders_used += 1
+    if not (a.kind == "cancel" or a.protective or exit_):
+        ctx.turnover_left -= a.notional
+    if a.side == "buy":
+        n = a.qty * float(a.limit_price or 0)
+        ctx.cash -= n
+        ctx.mv[a.symbol] = ctx.mv.get(a.symbol, 0.0) + n
+        ctx.gross += n
+        sec = ctx.sector_of.get(a.symbol) or UNKNOWN_SECTOR
+        ctx.sector_mv[sec] = ctx.sector_mv.get(sec, 0.0) + n
+    return trace
+
+
+def gate_summary(traces: Iterable[list[dict]]) -> dict:
+    """{gate: {PASS: n, SHRINK: n, KILL: n}} over a run, for the receipt."""
+    out: dict[str, dict[str, int]] = {}
+    for tr in traces:
+        for r in tr:
+            d = out.setdefault(r["gate"], {})
+            d[r["verdict"]] = d.get(r["verdict"], 0) + 1
+    return out
+
+
 # ─────────────────────────────── pricing ────────────────────────────────────
 
 def limit_for(side: str, quote: Optional[dict], last: Optional[float]) -> tuple[Optional[float], str]:
@@ -900,6 +1285,31 @@ class Venue:
             if len(page) < 100:
                 break
             token = page[-1].get("id")
+        return out
+
+    def stop_fills_since(self, iso: str) -> list[dict]:
+        """Sell fills since `iso` whose order was a STOP (C26 cooldown gate),
+        newest first: [{symbol, filled_at, order_id, type}].
+
+        Read from FILL activities, not from the order list: Alpaca's `after`
+        filters orders by SUBMISSION time, and the stops that matter are GTC
+        orders submitted weeks before they fill. An order's type comes from the
+        closed orders submitted in the window, else from one GET per order id.
+        Any read failure raises -- the gate then refuses entries, never passes them."""
+        fills = [f for f in self.fills(after=iso) if f.get("side") == "sell" and f.get("order_id")]
+        if not fills:
+            return []
+        closed = self.get("/v2/orders", params={"status": "closed", "after": iso, "limit": 500,
+                                                "direction": "desc"}) or []
+        type_of = {o.get("id"): o.get("type") for o in closed if o.get("id")}
+        out = []
+        for f in fills:
+            oid = f["order_id"]
+            if oid not in type_of:
+                type_of[oid] = (self.order(oid) or {}).get("type")
+            if type_of[oid] in STOP_TYPES:
+                out.append({"symbol": f.get("symbol"), "filled_at": f.get("transaction_time"),
+                            "order_id": oid, "type": type_of[oid]})
         return out
 
     def order_by_coid(self, coid: str) -> Optional[dict]:

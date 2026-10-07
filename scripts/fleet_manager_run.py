@@ -42,6 +42,8 @@ BOOKS = Path(_cfg.OPTIMUS_LEDGER_DIR) / "llm_portfolio" / "books.jsonl"
 DIGEST_DIR = Path(_cfg.OPTIMUS_LEDGER_DIR) / "digest"
 PANEL = Path(_cfg.OPTIMUS_LEDGER_DIR) / "prices_2025_26" / "bars.parquet"
 SEAL_URL = "https://seal-authority-production.up.railway.app"
+#: C26: the named-gate overlay (order, config, hash) stamped on every decision row.
+GATES_CFG = FM.gates_config()
 
 #: The execution repo's frozen terms (`aegis-alpha-terminal/alpha/contract.py`
 #: HORIZON_REMAP + BOOK_SIZING, read 2026-09-29), copied as DATA into each v1
@@ -267,6 +269,18 @@ def stitched_safe() -> set[str]:
         return set()
 
 
+def sector_map_safe() -> tuple[dict[str, str], str]:
+    """The sector map book_dna / opportunities read (newest potential_universe
+    identity.sector). A failure is NAMED on the receipt; the sector gate then
+    puts every name in the UNKNOWN bucket, which can only shrink more."""
+    try:
+        from backend.services.book_dna import load_sector_map
+        m, src = load_sector_map()
+        return m, src
+    except Exception as exc:                                    # noqa: BLE001 -- named in the receipt
+        return {}, f"REFUSED: sector map unreadable ({type(exc).__name__}: {exc})"[:200]
+
+
 def newest_digest() -> tuple[Optional[dict], Optional[str]]:
     files = sorted(DIGEST_DIR.glob("world_digest_*.json"))
     files = [f for f in files if not f.name.endswith(".short.txt")]
@@ -402,8 +416,10 @@ def seal_status(role: str) -> str:
 
 def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, run_id: str,
              books: dict, issuer_of: dict, stitched: set, digest: Optional[dict], digest_name: Optional[str],
-             baseline: tuple[Optional[str], dict], pool: dict, rebaseline: bool) -> dict:
+             baseline: tuple[Optional[str], dict], pool: dict, rebaseline: bool,
+             sector_of: Optional[dict] = None) -> dict:
     res: dict[str, Any] = {"role": role, "pass": pass_}
+    sector_of = sector_of or {}
     m = modes.get(role) or {}
     if m.get("skip"):
         res.update(status="SKIPPED", why=m["skip"])
@@ -662,47 +678,42 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
                                            stop_price=sp_, price_ref=a.price_ref, protective=True,
                                            reason=f"re-protect the {rem} left after the sell ({how})",
                                            coid=FM.client_order_id(role, day, "stoprem", a.symbol,
-                                                                   contract["policy_hash"], f"{rem}")), mode))
+                                                                   contract["policy_hash"], f"{rem}"),
+                                           inputs={"replaces_stop": old} if old > 0 else {}), mode))
         else:
             expanded.append((a, mode))
     acts = expanded
 
-    # ── hard gate, in order: cancels, sells, protective stops, buys ──
+    # ── the named gates, in order (C26): lease -> shape -> risk; every verdict is traced ──
     order_rank = {"cancel": 0, "exit": 1, "sell": 1, "stop_new": 2, "stop_renew": 2, "buy": 3}
     acts.sort(key=lambda am: order_rank.get(am[0].kind, 9))
     used = sum(float(r.get("notional") or 0) for r in FM.read_jsonl(FM.decisions_path())
                if r.get("role") == role and r.get("session") == day and r.get("mode") == "LIVE"
                and r.get("row") == "decision" and not r.get("protective") and not r.get("refused")
                and r.get("kind") in ("buy", "sell"))
-    FM.apply_turnover_budget([a for a, _ in acts], equity=equity, used_today=used,
-                             frac=contract["caps"]["daily_turnover_frac"])
-    mv = {p["symbol"]: abs(float(p.get("market_value") or 0)) for p in positions}
-    gross = sum(mv.values())
-    run_cash = cash
-    n_orders = 0
+    stopped_out: Optional[dict] = {}
+    try:
+        since = (today - timedelta(days=int(_cfg.FLEET_GATE_COOLDOWN_LOOKBACK_DAYS))).isoformat() + "T00:00:00Z"
+        for o in v.stop_fills_since(since):
+            d_ = str(o.get("filled_at"))[:10]
+            stopped_out[o["symbol"]] = max(stopped_out.get(o["symbol"], d_), d_)
+    except FM.FleetRefusal as exc:
+        stopped_out = None
+        res["stop_history_error"] = str(exc)[:160]
+    res["stopped_out_recent"] = stopped_out
+    gctx = FM.GateCtx(equity=equity, cash=cash, held=broker,
+                      mv={p["symbol"]: abs(float(p.get("market_value") or 0)) for p in positions},
+                      gross=sum(abs(float(p.get("market_value") or 0)) for p in positions),
+                      contract=contract, today=today, stop_file_present=FM.stop_file().exists(),
+                      credential_ok=True, reconciliation_ok=bool(rec.get("ok")),
+                      reconciliation_status=str(rec.get("status")), market_ok=market_ok,
+                      turnover_left=contract["caps"]["daily_turnover_frac"] * equity - used,
+                      stopped_out=stopped_out, sector_of=sector_of)
+    traces: dict[int, list[dict]] = {}
     for a, mode in acts:
-        if a.refused:
-            continue
-        why = FM.check_limits(a, equity=equity, cash=run_cash, held=broker, mv=mv, gross=gross, contract=contract)
-        if why:
-            a.refused = why
-            continue
-        if a.kind != "cancel":
-            n_orders += 1
-            if n_orders > contract["caps"]["max_orders_per_run"]:
-                a.refused = f"per-run order cap {contract['caps']['max_orders_per_run']}"
-                continue
-        if a.side == "buy":
-            run_cash -= a.qty * float(a.limit_price or 0)
-            mv[a.symbol] = mv.get(a.symbol, 0.0) + a.qty * float(a.limit_price or 0)
-            gross += a.qty * float(a.limit_price or 0)
-    if not rec.get("ok"):
-        for a, _ in acts:
-            a.refused = a.refused or f"RECONCILIATION {rec.get('status')}: every order on this account refused"
-    if not market_ok:
-        for a, mode in acts:
-            if mode == "LIVE" and not a.refused:
-                a.refused = "venue closed or within minutes of the close: orders only while open"
+        traces[id(a)] = FM.run_gates(a, gctx, mode=mode)
+    res["gate_summary"] = FM.gate_summary(traces.values())
+    res["sector_gross"] = {k: round(v_, 2) for k, v_ in sorted(gctx.sector_mv.items(), key=lambda kv: -kv[1])}
 
     # ── worst case ──
     new_frac = {}
@@ -746,11 +757,12 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
                "price_at_decision": a.price_ref, "notional": round(a.notional, 2), "protective": a.protective,
                "reason": a.reason, "inputs": a.inputs, "coid": a.coid, "cancel_order_id": a.cancel_order_id,
                "mode": mode if not a.refused else "REFUSED", "refused": a.refused,
-               "licence": FM.LICENCE}
+               "licence": FM.LICENCE, "story_id": FM.story_id(role, day, pass_, a.coid),
+               "gates": traces.get(id(a), []), "gates_hash": GATES_CFG["hash"]}
         FM.append_jsonl(FM.decisions_path(), row)
         out = {"kind": a.kind, "symbol": a.symbol, "side": a.side, "qty": a.qty, "type": a.order_type,
                "limit": a.limit_price, "stop": a.stop_price, "mode": row["mode"], "refused": a.refused,
-               "reason": a.reason, "coid": a.coid}
+               "reason": a.reason, "coid": a.coid, "story_id": row["story_id"], "gates": row["gates"]}
         if mode == "LIVE" and not a.refused:
             if FM.stop_file().exists():
                 out["outcome"] = "STOP file present: not sent"
@@ -789,14 +801,18 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
         prot, pflags, _ = FM.plan_maintenance(role, pos_after, oo_after, sig, contract, day, today)
         res["entry_protection"] = []
         held_after = FM.signed_positions(pos_after)
+        pctx = FM.GateCtx(equity=equity, cash=cash, held=held_after, mv={}, gross=0.0, contract=contract,
+                          today=today, stop_file_present=FM.stop_file().exists(),
+                          reconciliation_ok=bool(rec.get("ok")), reconciliation_status=str(rec.get("status")),
+                          market_ok=market_ok, stopped_out=stopped_out, sector_of=sector_of)
         for a in prot:
             if a.kind != "stop_new":
                 continue
-            why = FM.check_limits(a, equity=equity, cash=cash, held=held_after, mv={}, gross=0.0,
-                                  contract=contract)
-            ok_live = (entries_live or maint_live) and market_ok and rec.get("ok") and not why
+            want = "LIVE" if (entries_live or maint_live) else "DRY"
+            ptrace = FM.run_gates(a, pctx, mode=want)
+            ok_live = want == "LIVE" and not a.refused
             mode = "LIVE" if ok_live else "REFUSED"
-            a.refused = why if why else (None if ok_live else "not live: market, mode or reconciliation")
+            a.refused = a.refused or (None if ok_live else "not live: this account's modes are DRY")
             FM.append_jsonl(FM.decisions_path(), {
                 "row": "decision", "run_id": run_id, "t": FM._now_iso(), "session": day, "pass": pass_,
                 "role": role, "contract_version": contract["version"], "policy_hash": contract["policy_hash"],
@@ -804,10 +820,13 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
                 "tif": a.tif, "limit_price": None, "stop_price": a.stop_price, "price_at_decision": a.price_ref,
                 "notional": round(a.notional, 2), "protective": True,
                 "reason": "ENTRY PROTECTION: " + a.reason, "inputs": a.inputs, "coid": a.coid,
-                "cancel_order_id": None, "mode": mode, "refused": a.refused, "licence": FM.LICENCE})
+                "cancel_order_id": None, "mode": mode, "refused": a.refused, "licence": FM.LICENCE,
+                "story_id": FM.story_id(role, day, pass_, a.coid), "gates": ptrace,
+                "gates_hash": GATES_CFG["hash"]})
             outp = {"kind": a.kind, "symbol": a.symbol, "side": "sell", "qty": a.qty, "type": "stop",
                     "stop": a.stop_price, "mode": mode, "refused": a.refused, "coid": a.coid,
-                    "reason": "entry protection"}
+                    "reason": "entry protection", "story_id": FM.story_id(role, day, pass_, a.coid),
+                    "gates": ptrace}
             if mode == "LIVE" and not FM.stop_file().exists():
                 so = FM.submit_once(v, a)
                 outp["outcome"], outp["order_id"], outp["coid"] = so["outcome"], so.get("order_id"), a.coid
@@ -1062,6 +1081,19 @@ def print_role(r: dict) -> None:
         print(f"  grade: {json.dumps({k: g.get(k) for k in ('session', 'account_return', 'spy_return', 'twin_return', 'vs_spy', 'vs_twin', 'status', 'error')})}")
 
 
+def eod_audit_step(env: dict, run_id: str) -> dict:
+    """Run the read-only end-of-day audit over EVERY fleet role (hack3 too, so a
+    dead credential is named daily). A failure is a REFUSED block on the
+    receipt, which the health reader turns DEGRADED -- never a silent skip."""
+    try:
+        from backend.services import fleet_eod_audit as EOD
+        rows = EOD.run_audit(list(_cfg.FLEET_MANAGER_ROLES), env, run_id=run_id, trigger="preclose_pass")
+        return {"status": "ok", "rows_written": len(rows), "file": str(EOD.audit_path().relative_to(FM.root())),
+                "accounts": {r["role"]: r["status"] for r in rows}}
+    except Exception as exc:                                    # noqa: BLE001 -- named on the receipt
+        return {"status": f"REFUSED: {type(exc).__name__}: {exc}"[:300], "rows_written": 0}
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--pass", dest="pass_", choices=("open", "preclose"), default="open")
@@ -1095,10 +1127,12 @@ def main(argv: Optional[list[str]] = None) -> int:
     digest, digest_name = newest_digest()
     baseline = baseline_from_fleet_daily()
     reb = {r.strip() for r in a.rebaseline.split(",") if r.strip()}
+    sector_of, sector_src = sector_map_safe()
     receipt: dict[str, Any] = {"schema": "fleet_manager_run/1", "run_id": run_id, "pass": a.pass_,
                                "live_flag": a.live, "started_utc": FM._now_iso(), "licence": FM.LICENCE,
                                "modes": modes, "issuer_map": iss_status, "n_stitched": len(stitched),
-                               "digest": digest_name, "baseline": baseline[0], "accounts": []}
+                               "digest": digest_name, "baseline": baseline[0], "gates": GATES_CFG,
+                               "sector_map": sector_src, "accounts": []}
     rc = 0
     for role in roles:
         if FM.stop_file().exists():
@@ -1108,13 +1142,17 @@ def main(argv: Optional[list[str]] = None) -> int:
         try:
             r = run_role(role, env=env, modes=modes, pass_=a.pass_, live_flag=a.live, run_id=run_id,
                          books=books, issuer_of=issuer_of, stitched=stitched, digest=digest,
-                         digest_name=digest_name, baseline=baseline, pool={}, rebaseline=role in reb)
+                         digest_name=digest_name, baseline=baseline, pool={}, rebaseline=role in reb,
+                         sector_of=sector_of)
         except Exception as exc:                                # noqa: BLE001 -- one account never stops the rest
             r = {"role": role, "status": "ERROR", "why": f"{type(exc).__name__}: {exc}"[:300],
                  "trace": traceback.format_exc()[-1500:]}
             rc = 1
         receipt["accounts"].append(r)
         print_role(r)
+    # ── C26: the end-of-day audit is the Preclose pass's LAST step (read-only) ──
+    if a.pass_ == "preclose":
+        receipt["eod_audit"] = eod_audit_step(env, run_id)
     receipt["finished_utc"] = FM._now_iso()
     p = FM.root() / "runs" / f"run_{run_id}.json"
     FM.atomic_write_json(p, receipt)

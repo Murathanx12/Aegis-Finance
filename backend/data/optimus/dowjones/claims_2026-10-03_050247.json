@@ -1,0 +1,755 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-10-03",
+ "days": [
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05",
+  "2026-07-06",
+  "2026-07-07",
+  "2026-07-08",
+  "2026-07-09",
+  "2026-07-10",
+  "2026-07-11",
+  "2026-07-12",
+  "2026-07-13",
+  "2026-07-14",
+  "2026-07-15",
+  "2026-07-16",
+  "2026-07-17",
+  "2026-07-18",
+  "2026-07-19",
+  "2026-07-20",
+  "2026-07-21",
+  "2026-07-22",
+  "2026-07-23",
+  "2026-07-24",
+  "2026-07-25",
+  "2026-07-26",
+  "2026-07-27",
+  "2026-07-28",
+  "2026-07-29",
+  "2026-07-30",
+  "2026-07-31",
+  "2026-08-01",
+  "2026-08-02",
+  "2026-08-03",
+  "2026-08-04",
+  "2026-08-05",
+  "2026-08-06",
+  "2026-08-07",
+  "2026-08-08",
+  "2026-08-09",
+  "2026-08-10",
+  "2026-08-11",
+  "2026-08-12",
+  "2026-08-13",
+  "2026-08-14",
+  "2026-08-15",
+  "2026-08-16",
+  "2026-08-17",
+  "2026-08-18",
+  "2026-08-19",
+  "2026-08-20",
+  "2026-08-21",
+  "2026-08-22",
+  "2026-08-23",
+  "2026-08-24",
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27",
+  "2026-08-28",
+  "2026-08-29",
+  "2026-08-30",
+  "2026-08-31",
+  "2026-09-01",
+  "2026-09-02",
+  "2026-09-03",
+  "2026-09-04",
+  "2026-09-05",
+  "2026-09-06",
+  "2026-09-07",
+  "2026-09-08",
+  "2026-09-09",
+  "2026-09-10",
+  "2026-09-11",
+  "2026-09-12",
+  "2026-09-13",
+  "2026-09-14",
+  "2026-09-15",
+  "2026-09-16",
+  "2026-09-17",
+  "2026-09-18",
+  "2026-09-19",
+  "2026-09-20",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23",
+  "2026-09-24",
+  "2026-09-25",
+  "2026-09-26",
+  "2026-09-27",
+  "2026-09-28",
+  "2026-09-29",
+  "2026-09-30",
+  "2026-10-01",
+  "2026-10-02",
+  "2026-10-03"
+ ],
+ "started_utc": "2026-10-03T05:01:24+00:00",
+ "mw_analyst_snapshot": {
+  "n_pages": 12,
+  "n_rows_written": 12,
+  "thin": [],
+  "tickers": [
+   "MWH",
+   "QUBT",
+   "BE",
+   "KYTX",
+   "NOVT",
+   "LITE",
+   "Q",
+   "SLDP",
+   "SOC",
+   "AAPL",
+   "GOOG",
+   "XRX"
+  ]
+ },
+ "barrons_big_money_poll_index_rows": {
+  "n_articles": 0,
+  "n_rows_written": 0,
+  "per_article": []
+ },
+ "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
+ "purpose": "dowjones_claims",
+ "cap_usd": 3.0,
+ "spent_usd": 0.010166,
+ "n_llm_calls": 36,
+ "stopped": null,
+ "n_articles": 41,
+ "n_claims": 7,
+ "forecast_rows_by_source_id": {
+  "barrons_other": 9,
+  "barrons_stock_picks": 3,
+  "search_barrons_read_next": 0,
+  "marketwatch_other": 0,
+  "search_marketwatch_read_next": 0,
+  "wsj_other": 6,
+  "search_wsj_read_next": 0
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "02443c7419e36b9bd188",
+   "url": "https://www.barrons.com/articles/ignore-the-netflix-funk-c3a0bfa1",
+   "column": "barrons_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "NFLX",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'NFLX'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "0cfc5ca29ccfb90e932e",
+   "url": "https://www.barrons.com/articles/ai-debt-big-tech-bonds-da5291dc?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "16d5dd88255b6f88a635",
+   "url": "https://www.barrons.com/search?query=GLOBE+Model+Medicare+drug+pricing+litigation+implementation+timeline",
+   "column": "search_barrons_read_next",
+   "status": "SKIPPED_TOO_SHORT",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "search_barrons_read_next",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "255f5a0933f6d8f948ce",
+   "url": "https://www.barrons.com/articles/xerox-stock-price-lexmark-deal-d383e55d?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "XRX"
+   ],
+   "directions": [
+    "none"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "31fdc829cafc19678951",
+   "url": "https://www.barrons.com/articles/amazon-stock-price-ai-spending-spv-2dfa2c7d?mod=RTA",
+   "column": "barrons_stock_picks",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "AMZN",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'AMZN'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "353b75d346736a2bcb91",
+   "url": "https://www.barrons.com/articles/rivian-stock-sales-deliveries-ba8d114e?mod=WTRN_pos1",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "3866d835f295542b488b",
+   "url": "https://www.barrons.com/search?query=Iran+response+US+carrier+deployment",
+   "column": "search_barrons_read_next",
+   "status": "SKIPPED_TOO_SHORT",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "search_barrons_read_next",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4d50f0f3a8ce816a5265",
+   "url": "https://www.barrons.com/articles/fed-inflation-cost-of-living-hammack-3a67c0fb",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "7db4630aea41adcc0f11",
+   "url": "https://www.barrons.com/articles/netflix-stock-downgrade-streaming-disney-78fe3ca9?mod=article_inline",
+   "column": "barrons_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "NFLX",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'NFLX'"
+    },
+    {
+     "ticker": "DIS",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'DIS'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "8188be0e6b9a5b879498",
+   "url": "https://www.barrons.com/articles/data-center-laws-congress-ai-election-2a3e5322?mod=article_inline",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "921ed795572e0c304e1f",
+   "url": "https://www.barrons.com/articles/apple-stock-ai-agents-siri-iphone-a9ae2667",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [],
+   "tickers": [
+    "AAPL",
+    "META"
+   ],
+   "directions": [
+    "down",
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 6,
+   "write_status": "OK"
+  },
+  {
+   "sha": "994257c4c9ab78a27617",
+   "url": "https://www.barrons.com/articles/hsa-retirement-savings-taxes-def7caa9?mod=article_inline",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "9baf627b90a2b784739d",
+   "url": "https://www.barrons.com/articles/corning-stock-ai-selloff-anthropic-openai-5da5fd40?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "INTC",
+     "why": "REFUSED_BACKWARD_LOOKING: 'INTC'"
+    },
+    {
+     "ticker": "AMD",
+     "why": "REFUSED_BACKWARD_LOOKING: 'AMD'"
+    },
+    {
+     "ticker": "MRVL",
+     "why": "REFUSED_BACKWARD_LOOKING: 'MRVL'"
+    },
+    {
+     "ticker": "MU",
+     "why": "REFUSED_BACKWARD_LOOKING: 'MU'"
+    },
+    {
+     "ticker": "LRCX",
+     "why": "REFUSED_BACKWARD_LOOKING: 'LRCX'"
+    }
+   ],
+   "tickers": [
+    "GLW"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "9e4ea9587f9c7a037f1b",
+   "url": "https://www.barrons.com/articles/apples-watch-health-heart-siri-stock-1296956c",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "AAPL",
+     "why": "REFUSED_QUOTE_NOT_IN_ARTICLE"
+    }
+   ],
+   "tickers": [
+    "DGX"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "ab3e75da4365d7213d0e",
+   "url": "https://www.barrons.com/search?query=KKR+AI+credit+risk+report+details",
+   "column": "search_barrons_read_next",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "search_barrons_read_next",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "dcf5928f056fbd77b9cd",
+   "url": "https://www.barrons.com/articles/rtx-stock-missiles-defense-department-2826f339?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "RTX",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'RTX'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "059370f19911e9b2937a",
+   "url": "https://www.marketwatch.com/story/exodus-movement-shares-gain-on-launch-of-stablecoin-payments-solution-a593acf3?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "2e09853dba45bb31d56e",
+   "url": "https://www.marketwatch.com/search?q=Micron%202027%20memory%20supply%20agreements%20pricing&ts=0&tab=All%20News",
+   "column": "search_marketwatch_read_next",
+   "status": "SKIPPED_TOO_SHORT",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "search_marketwatch_read_next",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "412835a125f17e76b384",
+   "url": "https://www.marketwatch.com/search?q=US%20diesel%20export%20ban%20proposal&ts=0&tab=All%20News",
+   "column": "search_marketwatch_read_next",
+   "status": "SKIPPED_TOO_SHORT",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "search_marketwatch_read_next",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "50eae6fe2a086c5e9471",
+   "url": "https://www.marketwatch.com/search?q=MBA+mortgage+applications+survey+latest",
+   "column": "search_marketwatch_read_next",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "search_marketwatch_read_next",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "576d77227a67d629eabc",
+   "url": "https://www.marketwatch.com/search?q=GLOBE+Model+CMS+final+rule+covered+drugs+list+2026",
+   "column": "search_marketwatch_read_next",
+   "status": "SKIPPED_TOO_SHORT",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "search_marketwatch_read_next",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "6b6ccdc2d90f701ba8cd",
+   "url": "https://www.marketwatch.com/story/irhythm-says-patient-information-accessed-in-june-cybersecurity-incident-9acf8bd7?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "94788e8585854bf5c356",
+   "url": "https://www.marketwatch.com/story/meta-servicenow-and-these-7-other-tech-stocks-could-lead-the-next-leg-of-the-ai-trade-b8b68c93",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a4f78f23fe8bab97a875",
+   "url": "https://www.marketwatch.com/story/why-mixing-politics-with-your-stock-portfolio-might-be-costing-you-money-5b4aabfb?mod=home_ln",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ee884a6df15bb340ba06",
+   "url": "https://www.marketwatch.com/story/novo-nordisk-says-fda-review-of-hemophilia-drug-is-hitting-delays-ceb8e72f?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "1432f2e29dd134388622",
+   "url": "https://www.wsj.com/finance/regulation/community-banks-swing-back-at-trump-regulators-over-crypto-charters-7007902f?mod=finance_lead_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "160d1a0d13a2c29b5674",
+   "url": "https://www.wsj.com/finance/investing/private-equity-assets-stuck-in-zombie-funds-are-at-a-record-high-4dbd01be?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "19eb896619ea93475d13",
+   "url": "https://www.wsj.com/articles/industrial-shares-buck-markets-and-rise-industrials-roundup-7405fa7f",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "BE"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "1d3a7efbd3feb8bf4ce4",
+   "url": "https://www.wsj.com/business/media/david-ellison-won-warner-bros-now-he-has-to-make-the-81-billion-deal-work-2724e9e0?mod=business_lead_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "33f59a4b0955e1a39919",
+   "url": "https://www.wsj.com/tech/ai/ai-monitoring-chain-of-thought-research-b46a05fd?mod=tech_lead_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "45d9dd224d9aad1dde81",
+   "url": "https://www.wsj.com/video/series/journal-editorial-report/wsj-opinion-trump-speaks-did-iran-listen/57557A95-ABD6-4359-95D9-810E3E4B75F7?mod=trending_now_video_4",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4a6ee7c3351ecd5b811f",
+   "url": "https://www.wsj.com/finance/regulation/trump-administration-approves-first-round-of-crypto-focused-banks-52a803fd?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4f3af142381247b77f4e",
+   "url": "https://www.wsj.com/politics/elections/deep-pocketed-gop-group-exits-north-carolina-senate-race-7d1cd8f3?mod=politics_lead_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4f90cf828eda337e990b",
+   "url": "https://www.wsj.com/business/earnings/volvo-car-pulls-guidance-as-chinese-auto-market-worsen-e72ca14f",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "6f16a290e2a9cde20469",
+   "url": "https://www.wsj.com/search?query=Federal+Reserve+final+rule+Regulations+Y+LL+YY+stress+capital+buffer+requirement+2026",
+   "column": "search_wsj_read_next",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "search_wsj_read_next",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "7a253b59a393695d739a",
+   "url": "https://www.wsj.com/opinion/jobs-report-labor-department-labor-force-37fc91cc?mod=opinion_lead_pos2",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "96d905ee216f918b82a6",
+   "url": "https://www.wsj.com/finance/investing/ai-is-squeezing-out-the-rest-of-the-stock-market-60928dd3?mod=finance_lead_story",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "d2680aeff2624daa2799",
+   "url": "https://www.wsj.com/us-news/seattles-mayor-ran-as-a-socialist-then-she-ran-into-reality-132dd80d",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e8801ef0cbea2765df06",
+   "url": "https://www.wsj.com/tech/ai/alexandr-wang-muse-meta-efae7659?mod=tech_lead_story",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "META"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "eab86a493012ea551ff0",
+   "url": "https://www.wsj.com/search?query=Fed+funds+futures+pricing+for+2026+rate+hikes",
+   "column": "search_wsj_read_next",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "search_wsj_read_next",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "fdf32af0f54624e46570",
+   "url": "https://www.wsj.com/opinion/suncor-energy-v-boulder-county-supreme-court-climate-case-federalism-201279e6?mod=opinion_lead_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  }
+ ]
+}

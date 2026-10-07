@@ -1,0 +1,125 @@
+{
+ "t": "2026-10-04T03:48:18+00:00",
+ "sources": {
+  "sec_form4": {
+   "source": "sec_form4",
+   "entries": 100,
+   "filings_new": 0,
+   "parsed": 0,
+   "rows": 0,
+   "errors": {},
+   "refused": null,
+   "seconds": 0.8
+  },
+  "sec_8k": {
+   "source": "sec_8k",
+   "entries": 98,
+   "rows": 0,
+   "refused": null,
+   "seconds": 0.7
+  },
+  "sec_13dg": {
+   "source": "sec_13dg",
+   "entries": 100,
+   "rows": 0,
+   "refused": null,
+   "seconds": 1.4
+  },
+  "hkma_api": {
+   "source": "hkma_api",
+   "items": 0,
+   "rows": 0,
+   "refused": "DAY_CAP: hkma_api spent 40 requests in 24 h",
+   "attempts": 1,
+   "via": null,
+   "api_errors": [
+    "DAY_CAP: hkma_api spent 40 requests in 24 h"
+   ],
+   "api_down_since": "2026-10-04T01:14:20+00:00",
+   "seconds": 0.1
+  }
+ },
+ "refused_sources": {
+  "senate_efd": {
+   "url": "https://efdsearch.senate.gov/search/",
+   "why": "BOT_CHECK_OR_FORM: 403 Access Denied to a plain request, and the search sits behind an agreement form; not submitted, not worked around"
+  },
+  "senate_hearings": {
+   "url": "https://www.senate.gov/general/committee_schedules/hearings.xml",
+   "why": "ACCESS_DENIED: 403 on the XML and on robots.txt"
+  },
+  "pboc": {
+   "url": "http://www.pbc.gov.cn/en/3688110/3688172/index.html",
+   "why": "ROBOTS_DISALLOWED: pbc.gov.cn robots.txt disallows the English news path"
+  },
+  "nasdaq_earnings": {
+   "url": "https://api.nasdaq.com/api/calendar/earnings",
+   "why": "ROBOTS_DISALLOWED: api.nasdaq.com robots.txt disallows it"
+  },
+  "house_hearings": {
+   "url": "https://docs.house.gov/Committee/Calendar/ByWeek.aspx",
+   "why": "JS_RENDERED: the calendar is built by script in the page; no machine-readable feed was found. A candidate for the browser lane"
+  },
+  "etf_flows": {
+   "url": null,
+   "why": "NO_OFFICIAL_FREE_SOURCE: issuer pages publish shares outstanding per fund, but no official free flow feed across funds was found"
+  }
+ },
+ "requests_this_run": {
+  "sec_form4": 1,
+  "sec_8k": 1,
+  "sec_13dg": 2
+ },
+ "tables": {
+  "insider_tx": {
+   "rows": 8020,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\insider_tx.jsonl"
+  },
+  "filing_events": {
+   "rows": 1515,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\filing_events.jsonl"
+  },
+  "politician_filings": {
+   "rows": 407,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_filings.jsonl"
+  },
+  "politician_trades": {
+   "rows": 2150,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_trades.jsonl"
+  },
+  "positioning_cot": {
+   "rows": 15322,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\positioning_cot.jsonl"
+  },
+  "short_interest": {
+   "rows": 45164,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\short_interest.jsonl"
+  },
+  "policy_events": {
+   "rows": 2029,
+   "public_last_24h": 106,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\policy_events.jsonl"
+  },
+  "policy_texts": {
+   "rows": 25,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\policy_texts.jsonl"
+  }
+ },
+ "panel": {
+  "rows": 48843,
+  "rows_by_block": {
+   "insiders": 925,
+   "politicians": 1284,
+   "short_interest": 45164,
+   "positioning": 1661
+  },
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\panel\\official_daily_panel.parquet"
+ }
+}

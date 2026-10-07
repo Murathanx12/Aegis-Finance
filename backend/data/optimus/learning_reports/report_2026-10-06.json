@@ -1,0 +1,827 @@
+{
+ "schema": "daily_learning_report/1",
+ "receipt": "daily_learning_report",
+ "date": "2026-10-06",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "generated_utc": "2026-10-06T22:02:03+00:00",
+ "base": "backend/data/optimus",
+ "read_me_first": "Every sentence is templated from receipt numbers; no LLM wrote any of it. A section with no input for this date says `no data today` or `not yet built`; nothing is borrowed from another day. Dates are UTC.",
+ "sections": {
+  "resolved": {
+   "id": "resolved",
+   "question": "What resolved today?",
+   "status": "OK",
+   "lines": [
+    "grader: 194 newly resolved; 20,095 of 34,261 records graded; 14,027 not yet due; 3 wait on a bar (`backend/data/optimus/night_factory_2026-10-06/grade_forecasts_2026-10-06.json`)",
+    "ledger rows with resolved_at=2026-10-06: n=194 (`backend/data/optimus/predictions.jsonl`)",
+    "  investigator: n=134, mean Brier 0.2434, outcome=1 share +48.5% (`backend/data/optimus/predictions.jsonl`)",
+    "  source_claim_v1: n=57, mean Brier 0.2758, outcome=1 share +54.4% (`backend/data/optimus/predictions.jsonl`)",
+    "  news_digest_v0: n=3, mean Brier 0.3117, outcome=1 share +66.7% (`backend/data/optimus/predictions.jsonl`)"
+   ],
+   "n_resolved_today": 194
+  },
+  "credibility": {
+   "id": "credibility",
+   "question": "Which sources gained or lost credibility?",
+   "status": "NO_DATA",
+   "lines": [
+    "source registry: no data today (no file dated 2026-10-06) (`backend/data/optimus/sources`)",
+    "no data today: no reputation receipt for 2026-10-06",
+    "latest receipt of this kind (not read as today's) (`backend/data/optimus/reputation/reputation_2026-09-30.json`)"
+   ]
+  },
+  "books_vs_spy": {
+   "id": "books_vs_spy",
+   "question": "Which books beat SPY?",
+   "status": "OK",
+   "lines": [
+    "frozen books: 60 of 60 graded; 40 beat their benchmark (bars through 2026-10-05) (`backend/data/optimus/llm_portfolio/leaderboard_2026-10-06.json`)",
+    "  `lib_resid_mom_12_1_large_sealed_2026-09-26`: +7.09% vs SPY over 6 session(s), net +7.93% (`backend/data/optimus/llm_portfolio/leaderboard_2026-10-06.json`)",
+    "  `lib_qc395_sharpe252_above_trend_large_2026-09-27`: +6.10% vs SPY over 6 session(s), net +6.94% (`backend/data/optimus/llm_portfolio/leaderboard_2026-10-06.json`)",
+    "  `revision_flow_v0`: +5.56% vs SPY over 6 session(s), net +6.41% (`backend/data/optimus/llm_portfolio/leaderboard_2026-10-06.json`)",
+    "paper accounts (own window, to date -- not a one-day number): 147 ahead of SPY, 160 behind, n=362 priced, pooled ROI 1.263% (`backend/data/optimus/paper_accounts/roi_2026-10-06.json`)",
+    "  147 ahead of SPY = 108 twins + 3 controls + 36 strategy books; the strategy books = 20 holdings clusters at Jaccard 0.30, ~ 2.6 ex-ante bets (4.6 net of SPY; 32 books priced over ['2026-02-23', '2026-09-25']); largest holdings cluster = TGT, AMGN, SNOW, OKTA, ABNB (5 books, 14%); at Jaccard 0.15 the largest is MU, SNDK, STX, RVMD, INTC (17 books) [collapse: twins+controls x4.08, holdings overlap x1.8, ex-ante x13.46] (`backend/data/optimus/paper_accounts/roi_2026-10-06.json`)",
+    "  `12-1 momentum, k=12, equal weight, monthly [8dbbb73b]` (night_books): 8.14 pp vs SPY since 2026-09-11, last mark 2026-10-05 (`backend/data/optimus/paper_accounts/roi_2026-10-06.json`)",
+    "  `Cash/index by default; deviate only above a  [b109c886]` (night_books): 7.14 pp vs SPY since 2026-09-11, last mark 2026-10-05 (`backend/data/optimus/paper_accounts/roi_2026-10-06.json`)",
+    "  `Always invested - Book D's primary comparato [3b3e7049]` (night_books): 7.14 pp vs SPY since 2026-09-11, last mark 2026-10-05 (`backend/data/optimus/paper_accounts/roi_2026-10-06.json`)"
+   ],
+   "accounts_agg": {
+    "n_ahead": 147,
+    "n_behind": 160,
+    "n": 362,
+    "roi_pct": 1.263
+   }
+  },
+  "fleet_sources": {
+   "id": "fleet_sources",
+   "question": "Which alpha source is ahead in the paper fleet (and how likely is that by luck)?",
+   "status": "OK",
+   "lines": [
+    "30 graded account-sessions through 2026-10-06; control = hack5 v2 (market-like, ~95% SPY) (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "hack2 (hack2 v1: DRIFT (post_event_drift, window universe)) is ahead: +0.76% summed daily excess vs SPY over 1 session(s). By chance alone the best of 5 beats its benchmark with p = 0.9688 and is at least this far ahead with p = 0.933. Weights move only on COMPLETED blocks of 5 sessions (shrink n/(n+20.25)). (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "luck table: best of 5 beats its benchmark by chance p = 0.9688; shows t >= 2 by chance p = 0.1087; at least this far ahead by chance p = 0.933 (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "  `hack1` v2 (hack1 v2: human + AI thematic curation (the owner's themes: ): 5 session(s) 2026-09-29..2026-10-05, return +1.06%, vs SPY -0.18%, vs twin -2.45%, vs control -3.60%; completed blocks 1, trust -0.034%/day, weight 0.000 (shrink 0.047) (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "  `hack1` v1 (hack1 v1: THEME BASKET (theme_basket brain, 39-name themes u): 1 session(s) 2026-09-28..2026-09-28, return -0.92%, vs SPY -0.16%, vs twin -0.71%, vs control n/a; completed blocks 0, trust +0.000%/day, weight 0.000 (shrink 0.000) (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "  `hack2` v2 (hack2 v2: analyst revision flow (net raises x firms, 90 days): 5 session(s) 2026-09-29..2026-10-05, return +2.88%, vs SPY +1.61%, vs twin +2.01%, vs control -1.81%; completed blocks 1, trust -0.017%/day, weight 0.000 (shrink 0.047) (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "  `hack2` v1 (hack2 v1: DRIFT (post_event_drift, window universe)): 1 session(s) 2026-09-28..2026-09-28, return +0.00%, vs SPY +0.76%, vs twin n/a, vs control n/a; completed blocks 0, trust +0.000%/day, weight 0.000 (shrink 0.000) (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "  `hack4` v1 (hack4 v1: TRACKER PROFIT-MAX (sealed upside x consensus, k=5): 1 session(s) 2026-09-28..2026-09-28, return -0.28%, vs SPY +0.48%, vs twin +1.09%, vs control n/a; completed blocks 0, trust +0.000%/day, weight 0.000 (shrink 0.000) (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "  `hack4` v2 (hack4 v2: the engine's candidate funnel (PROBE shortlist) si): 5 session(s) 2026-09-29..2026-10-05, return +0.91%, vs SPY -0.30%, vs twin +0.00%, vs control -3.72%; completed blocks 1, trust -0.035%/day, weight 0.000 (shrink 0.047) (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "  `hack5` v1 (hack5 v1: CONVEXITY (options only: long_call, bull_call_spre): 1 session(s) 2026-09-28..2026-09-28, return -4.18%, vs SPY -3.42%, vs twin -3.46%, vs control n/a; completed blocks 0, trust +0.000%/day, weight 0.000 (shrink 0.000) (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "  `hack5` v2 (hack5 v2: market-like CONTROL: ~95% SPY, the rest cash (no s): 5 session(s) 2026-09-29..2026-10-05, return +4.71%, vs SPY +3.42%, vs twin +3.48%, vs control n/a; completed blocks 1, trust +0.032%/day, weight 0.644 (shrink 0.047) (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "  `hack6` v1 (hack6 v1: TRACKER DIVERSIFIED (sealed upside x consensus, k=): 1 session(s) 2026-09-28..2026-09-28, return -0.51%, vs SPY +0.25%, vs twin +0.42%, vs control n/a; completed blocks 0, trust +0.000%/day, weight 0.000 (shrink 0.000) (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "  `hack6` v2 (hack6 v2: world-digest typed implications through SHADOW_NEW): 5 session(s) 2026-09-29..2026-10-05, return -0.55%, vs SPY -1.79%, vs twin -1.41%, vs control -5.21%; completed blocks 1, trust -0.049%/day, weight 0.000 (shrink 0.047) (`backend/data/optimus/paper_accounts/fleet_manager/grades.jsonl`)",
+    "  tight-stop counterfactual `hack1` AGIO (stop 0.77 sigma) through 2026-10-05: tight $8, 3-sigma $8, hold $8 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack1` BE (stop 1.21 sigma) through 2026-10-05: tight $17, 3-sigma $17, hold $17 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack1` COGT (stop 0.86 sigma) through 2026-10-05: tight $29, 3-sigma $29, hold $29 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack1` VKTX (stop 1.25 sigma) through 2026-10-05: tight $-96, 3-sigma $-96, hold $-96 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack1` VRTX (stop 0.91 sigma) through 2026-10-05: tight $-42, 3-sigma $-14, hold $-14 (tight - hold $-28) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack2` AMGN (stop 0.96 sigma) through 2026-10-05: tight $-11, 3-sigma $-11, hold $-11 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack2` TGT (stop 0.39 sigma) through 2026-10-05: tight $70, 3-sigma $70, hold $70 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack4` BIOA (stop 0.27 sigma) through 2026-10-05: tight $-396, 3-sigma $-1,696, hold $-1,696 (tight - hold $1,300) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack4` INCY (stop 0.74 sigma) through 2026-10-05: tight $-66, 3-sigma $-135, hold $-135 (tight - hold $69) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack4` RZLV (stop 0.94 sigma) through 2026-10-05: tight $952, 3-sigma $952, hold $952 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack6` ABEO (stop 1.25 sigma) through 2026-10-05: tight $59, 3-sigma $59, hold $59 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack6` EVLV (stop 0.92 sigma) through 2026-10-05: tight $-136, 3-sigma $-190, hold $-190 (tight - hold $54) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack6` FCEL (stop 1.04 sigma) through 2026-10-05: tight $74, 3-sigma $74, hold $74 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack6` KTOS (stop 0.73 sigma) through 2026-10-05: tight $-143, 3-sigma $-211, hold $-211 (tight - hold $68) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack6` MP (stop 0.8 sigma) through 2026-10-05: tight $30, 3-sigma $30, hold $30 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack6` NBIS (stop 1.01 sigma) through 2026-10-05: tight $-18, 3-sigma $-18, hold $-18 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack6` STRO (stop 1.24 sigma) through 2026-10-05: tight $247, 3-sigma $247, hold $247 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)",
+    "  tight-stop counterfactual `hack6` TGT (stop 0.62 sigma) through 2026-10-05: tight $11, 3-sigma $11, hold $11 (tight - hold $0) (`backend/data/optimus/paper_accounts/fleet_manager/stop_counterfactual/daily.jsonl`)"
+   ],
+   "scoreboard": {
+    "schema": "fleet_source_scoreboard/1",
+    "control_role": "hack5",
+    "n_grade_rows": 30,
+    "table": [
+     {
+      "role": "hack1",
+      "policy_hash": "bdae86290ea38481",
+      "alpha_source": "hack1 v2: human + AI thematic curation (the owner's themes: AI power, memory/foundry, prediction markets, nuclear/resources, biotech catalysts)",
+      "contract_version": "v2",
+      "n_sessions": 5,
+      "first": "2026-09-29",
+      "last": "2026-10-05",
+      "cum_return": 0.010552,
+      "cum_spy": 0.012384,
+      "sum_vs_spy": -0.001773,
+      "sum_vs_twin": -0.024512,
+      "sum_vs_control": -0.035989,
+      "excess_basis": "vs control account",
+      "daily_excess_sd": 0.017301,
+      "completed_blocks": 1,
+      "trust": {
+       "trust_daily_excess": -0.0003387,
+       "n_blocks": 1,
+       "forward_mean_daily_excess": -0.0071978,
+       "shrink": 0.0471,
+       "prior_strength_blocks": 20.25,
+       "weight": 0.0
+      }
+     },
+     {
+      "role": "hack1",
+      "policy_hash": "bde68d4af4b40dc4",
+      "alpha_source": "hack1 v1: THEME BASKET (theme_basket brain, 39-name themes universe, shares only)",
+      "contract_version": "v1",
+      "n_sessions": 1,
+      "first": "2026-09-28",
+      "last": "2026-09-28",
+      "cum_return": -0.009219,
+      "cum_spy": -0.007597,
+      "sum_vs_spy": -0.001622,
+      "sum_vs_twin": -0.007068,
+      "sum_vs_control": null,
+      "excess_basis": "vs SPY",
+      "daily_excess_sd": null,
+      "completed_blocks": 0,
+      "trust": {
+       "trust_daily_excess": 0.0,
+       "n_blocks": 0,
+       "forward_mean_daily_excess": null,
+       "shrink": 0.0,
+       "prior_strength_blocks": 20.25,
+       "weight": 0.0
+      }
+     },
+     {
+      "role": "hack2",
+      "policy_hash": "2301fa30c7b851df",
+      "alpha_source": "hack2 v2: analyst revision flow (net raises x firms, 90 days, >= 3 firms)",
+      "contract_version": "v2",
+      "n_sessions": 5,
+      "first": "2026-09-29",
+      "last": "2026-10-05",
+      "cum_return": 0.028795,
+      "cum_spy": 0.012384,
+      "sum_vs_spy": 0.016138,
+      "sum_vs_twin": 0.020059,
+      "sum_vs_control": -0.018078,
+      "excess_basis": "vs control account",
+      "daily_excess_sd": 0.014572,
+      "completed_blocks": 1,
+      "trust": {
+       "trust_daily_excess": -0.0001701,
+       "n_blocks": 1,
+       "forward_mean_daily_excess": -0.0036156,
+       "shrink": 0.0471,
+       "prior_strength_blocks": 20.25,
+       "weight": 0.0
+      }
+     },
+     {
+      "role": "hack2",
+      "policy_hash": "56d8443e7bf58f8d",
+      "alpha_source": "hack2 v1: DRIFT (post_event_drift, window universe)",
+      "contract_version": "v1",
+      "n_sessions": 1,
+      "first": "2026-09-28",
+      "last": "2026-09-28",
+      "cum_return": 0.0,
+      "cum_spy": -0.007597,
+      "sum_vs_spy": 0.007597,
+      "sum_vs_twin": null,
+      "sum_vs_control": null,
+      "excess_basis": "vs SPY",
+      "daily_excess_sd": null,
+      "completed_blocks": 0,
+      "trust": {
+       "trust_daily_excess": 0.0,
+       "n_blocks": 0,
+       "forward_mean_daily_excess": null,
+       "shrink": 0.0,
+       "prior_strength_blocks": 20.25,
+       "weight": 0.0
+      }
+     },
+     {
+      "role": "hack4",
+      "policy_hash": "617d923978288fcf",
+      "alpha_source": "hack4 v1: TRACKER PROFIT-MAX (sealed upside x consensus, k=5 x 20%)",
+      "contract_version": "v1",
+      "n_sessions": 1,
+      "first": "2026-09-28",
+      "last": "2026-09-28",
+      "cum_return": -0.002819,
+      "cum_spy": -0.007597,
+      "sum_vs_spy": 0.004778,
+      "sum_vs_twin": 0.010882,
+      "sum_vs_control": null,
+      "excess_basis": "vs SPY",
+      "daily_excess_sd": null,
+      "completed_blocks": 0,
+      "trust": {
+       "trust_daily_excess": 0.0,
+       "n_blocks": 0,
+       "forward_mean_daily_excess": null,
+       "shrink": 0.0,
+       "prior_strength_blocks": 20.25,
+       "weight": 0.0
+      }
+     },
+     {
+      "role": "hack4",
+      "policy_hash": "a0c5313766c52c9a",
+      "alpha_source": "hack4 v2: the engine's candidate funnel (PROBE shortlist) sized by 1/sigma_63 (size-of-move / risk-parity weighting)",
+      "contract_version": "v2",
+      "n_sessions": 5,
+      "first": "2026-09-29",
+      "last": "2026-10-05",
+      "cum_return": 0.009065,
+      "cum_spy": 0.012384,
+      "sum_vs_spy": -0.003031,
+      "sum_vs_twin": 9e-06,
+      "sum_vs_control": -0.037246,
+      "excess_basis": "vs control account",
+      "daily_excess_sd": 0.018717,
+      "completed_blocks": 1,
+      "trust": {
+       "trust_daily_excess": -0.0003506,
+       "n_blocks": 1,
+       "forward_mean_daily_excess": -0.0074492,
+       "shrink": 0.0471,
+       "prior_strength_blocks": 20.25,
+       "weight": 0.0
+      }
+     },
+     {
+      "role": "hack5",
+      "policy_hash": "209926945b582f66",
+      "alpha_source": "hack5 v1: CONVEXITY (options only: long_call, bull_call_spread)",
+      "contract_version": "v1",
+      "n_sessions": 1,
+      "first": "2026-09-28",
+      "last": "2026-09-28",
+      "cum_return": -0.041804,
+      "cum_spy": -0.007597,
+      "sum_vs_spy": -0.034207,
+      "sum_vs_twin": -0.034587,
+      "sum_vs_control": null,
+      "excess_basis": "vs SPY",
+      "daily_excess_sd": null,
+      "completed_blocks": 0,
+      "trust": {
+       "trust_daily_excess": 0.0,
+       "n_blocks": 0,
+       "forward_mean_daily_excess": null,
+       "shrink": 0.0,
+       "prior_strength_blocks": 20.25,
+       "weight": 0.0
+      }
+     },
+     {
+      "role": "hack5",
+      "policy_hash": "98f677b18293c710",
+      "alpha_source": "hack5 v2: market-like CONTROL: ~95% SPY, the rest cash (no selection, no view)",
+      "contract_version": "v2",
+      "n_sessions": 5,
+      "first": "2026-09-29",
+      "last": "2026-10-05",
+      "cum_return": 0.04706,
+      "cum_spy": 0.012384,
+      "sum_vs_spy": 0.034215,
+      "sum_vs_twin": 0.034835,
+      "sum_vs_control": null,
+      "excess_basis": "vs SPY",
+      "daily_excess_sd": 0.0157,
+      "completed_blocks": 1,
+      "trust": {
+       "trust_daily_excess": 0.000322,
+       "n_blocks": 1,
+       "forward_mean_daily_excess": 0.006843,
+       "shrink": 0.0471,
+       "prior_strength_blocks": 20.25,
+       "weight": 0.644
+      }
+     },
+     {
+      "role": "hack6",
+      "policy_hash": "018b228ba879e2e0",
+      "alpha_source": "hack6 v1: TRACKER DIVERSIFIED (sealed upside x consensus, k=15 x 6.67%)",
+      "contract_version": "v1",
+      "n_sessions": 1,
+      "first": "2026-09-28",
+      "last": "2026-09-28",
+      "cum_return": -0.005103,
+      "cum_spy": -0.007597,
+      "sum_vs_spy": 0.002494,
+      "sum_vs_twin": 0.004196,
+      "sum_vs_control": null,
+      "excess_basis": "vs SPY",
+      "daily_excess_sd": null,
+      "completed_blocks": 0,
+      "trust": {
+       "trust_daily_excess": 0.0,
+       "n_blocks": 0,
+       "forward_mean_daily_excess": null,
+       "shrink": 0.0,
+       "prior_strength_blocks": 20.25,
+       "weight": 0.0
+      }
+     },
+     {
+      "role": "hack6",
+      "policy_hash": "12fa05317df05ce1",
+      "alpha_source": "hack6 v2: world-digest typed implications through SHADOW_NEWS_v0's frozen news_signal (d > 0 only), fixed 1% of equity per name, <= 10 names, 5 sessions",
+      "contract_version": "v2",
+      "n_sessions": 5,
+      "first": "2026-09-29",
+      "last": "2026-10-05",
+      "cum_return": -0.005516,
+      "cum_spy": 0.012384,
+      "sum_vs_spy": -0.017869,
+      "sum_vs_twin": -0.01407,
+      "sum_vs_control": -0.052084,
+      "excess_basis": "vs control account",
+      "daily_excess_sd": 0.01529,
+      "completed_blocks": 1,
+      "trust": {
+       "trust_daily_excess": -0.0004902,
+       "n_blocks": 1,
+       "forward_mean_daily_excess": -0.0104168,
+       "shrink": 0.0471,
+       "prior_strength_blocks": 20.25,
+       "weight": 0.0
+      }
+     }
+    ],
+    "ranked_ex_control": [
+     "hack2",
+     "hack4",
+     "hack6",
+     "hack1",
+     "hack2",
+     "hack1",
+     "hack4",
+     "hack6"
+    ],
+    "ahead": "hack2 (hack2 v1: DRIFT (post_event_drift, window universe)) is ahead: +0.76% summed daily excess vs SPY over 1 session(s). By chance alone the best of 5 beats its benchmark with p = 0.9688 and is at least this far ahead with p = 0.933. Weights move only on COMPLETED blocks of 5 sessions (shrink n/(n+20.25)).",
+    "luck": {
+     "k_accounts": 5,
+     "n_sessions": 5,
+     "p_best_of_k_beats_benchmark_by_chance": 0.9688,
+     "p_best_of_k_shows_t_ge_2_by_chance": 0.1087,
+     "best_cum_excess": 0.007597,
+     "z_of_best": 0.208,
+     "p_best_of_k_at_least_this_by_chance": 0.933
+    }
+   }
+  },
+  "fast_movers": {
+   "id": "fast_movers",
+   "question": "Fast movers: which did we predict, which did we miss, and why did they move?",
+   "status": "NO_DATA",
+   "lines": [
+    "no data today: no forensics/fast_movers_2026-10-06.json"
+   ]
+  },
+  "mechanism": {
+   "id": "mechanism",
+   "question": "Did AEGIS predict the mechanism?",
+   "status": "NO_DATA",
+   "lines": [
+    "no data today: no forensics/fast_movers_2026-10-06.json"
+   ]
+  },
+  "capture": {
+   "id": "capture",
+   "question": "Which strategy would have captured them?",
+   "status": "NO_DATA",
+   "lines": [
+    "no data today: no forensics/fast_movers_2026-10-06.json"
+   ]
+  },
+  "best_strategy": {
+   "id": "best_strategy",
+   "question": "Best historical / sealed / forward strategy",
+   "status": "OK",
+   "lines": [
+    "historical / sealed: no data today (no strategy_library/leaderboard_2026-10-06.json)",
+    "forward (best graded, own window): `12-1 momentum, k=12, equal weight, monthly [8dbbb73b]` 8.14 pp vs SPY since 2026-09-11 (last mark 2026-10-05) (`backend/data/optimus/paper_accounts/roi_2026-10-06.json`)"
+   ],
+   "library": {}
+  },
+  "unconsumed": {
+   "id": "unconsumed",
+   "question": "Data nobody consumed",
+   "status": "OK",
+   "lines": [
+    "UNREAD: `iif1_features` got 1 file(s) dated 2026-10-06; non-test source files naming `iif1_features`: 1 (backend/services/iif1_features.py) -- a writer at most, no reader (`backend/data/optimus/iif1_features`)",
+    "UNREAD: `job_receipts` got 21 file(s) dated 2026-10-06; non-test source files naming `job_receipts`: 1 (backend/services/job_receipts.py) -- a writer at most, no reader (`backend/data/optimus/job_receipts`)",
+    "UNREAD: `pc_mandate` got 2 file(s) dated 2026-10-06; non-test source files naming `pc_mandate`: 0 (none) -- a writer at most, no reader (`backend/data/optimus/pc_mandate`)",
+    "UNREAD: collector `quality` wrote 12 PIT row(s) today; non-test source files naming `quality_score:`: 1 (`backend/data/aegis_pi.db`)",
+    "UNREAD: collector `smartgrowth` wrote 10 PIT row(s) today; non-test source files naming `smartgrowth_pick:`: 1 (`backend/data/aegis_pi.db`)",
+    "code that computes for nobody (signal_reachability orphans, `backend/tests` excluded): 24 of 517 non-test modules; 0 with no recorded reason (green); 705 test modules excluded (a test is not an orphan) (`backend/services/signal_reachability.py`)",
+    "  `backend.services.brain_queries`: OK -- the READ-ONLY query surface the Optimus MCP wraps (roadmap 11b, chunk 8, 2026-09-12). Its caller lives in the `optimus` repo: the DATA and the query layer...",
+    "  `backend.services.execution_boundary`: GAP — a precursor can be observable, correct, and unreachable, and this is what decides which. Only its own test calls it, so no live signal is currently checke...",
+    "  `backend.services.expectation_store`: AWAITS — EXPECTATION-BACKFILL-1, the first rows G4 holds. Consumer is EVENT_RESPONSE_v1 (ROADMAP_2026-08-24 §3.1).",
+    "  `backend.services.portfolio_intelligence.comparator`: OK — offline lane comparison, run attended.",
+    "  `backend.services.portfolio_intelligence.cross_asset_rotation`: OK — research module; no lane declares a cross-asset rotation arm.",
+    "  `backend.services.portfolio_intelligence.forward_ic`: OK — forward-IC analysis, run attended over collected snapshots.",
+    "  `backend.services.portfolio_intelligence.rule_evolution`: OK — offline rule-evolution research; deliberately not wired to a live decision path, since a rule that rewrites itself in production is exactly what the immuta...",
+    "  `backend.services.relative_value_labels`: AWAITS — NEURAL-RELATIVE-VALUE-1's pairwise labels. Its consumer is RELATIVE_VALUE_NN_v1 (ROADMAP_2026-08-24 §3.2), which does not exist yet. 72,495 labels over...",
+    "  `backend.services.return_model`: OK — offline quantile-return training tool; says so in line 2.",
+    "  `backend.services.scenario_forecasts`: AWAITS -- X3's contract, shipped BEFORE its two inputs exist (chunk 7, 2026-09-12). Grading needs L2's typed-event extraction over the daily corpus and pricing ...",
+    "  `backend.services.shadow_portfolios`: OK — forward shadow portfolios for finalists; attended, and the arena is the live successor to the idea.",
+    "  `backend.services.signal_optimizer`: OK — offline weight-optimisation tool, superseded by the config- driven signal engine. Kept for reference.",
+    "  `backend.services.teacher_library.adapters`: OK — offline teacher-library adapters, driven by attended research.",
+    "  `backend.services.teacher_library.adapters_13dg`: OK — 13D/G adapter; MANAGER-* is BLOCKED (13F `fdate` is a vintage stamp), so it has no live consumer by decision, not by accident.",
+    "  `backend.services.teacher_library.matched_controls`: OK — offline matched-control construction for the teacher library.",
+    "  `backend.services.thematic_momentum`: AWAITS — thematic entry logic with no book declaring it. Would be a candidate selector under the §3 programme, not a composite factor.",
+    "  `backend.services.theme_baskets`: AWAITS — point-in-time secular theme baskets; the narrative work that would consume them is LOGGED, not queued (roadmap §5).",
+    "  `backend.services.verdict_battery`: GAP — measures whether the referee kills good ideas. It has never been run against the referee it was built to check.",
+    "  `backend.services.winner_loser_factory`: GAP — matched controls are CANON rule 4 ('study losers as hard as winners'). The factory exists; no analysis path calls it.",
+    "  `backend.vendor`: OK -- VERBATIM cross-repo source, never statically imported. `backend/vendor/aat/alpha/` is a byte-identical mirror of the execution repo's `alpha/human.py` (th...",
+    "  `backend.vendor.aat.alpha`: OK -- VERBATIM cross-repo source, never statically imported. `backend/vendor/aat/alpha/` is a byte-identical mirror of the execution repo's `alpha/human.py` (th...",
+    "  `backend.vendor.aat.alpha.brains`: OK -- VERBATIM cross-repo source, never statically imported. `backend/vendor/aat/alpha/` is a byte-identical mirror of the execution repo's `alpha/human.py` (th...",
+    "  `backend.vendor.aat.alpha.brains.base`: OK -- VERBATIM cross-repo source, never statically imported. `backend/vendor/aat/alpha/` is a byte-identical mirror of the execution repo's `alpha/human.py` (th...",
+    "  `backend.vendor.aat.alpha.human`: OK -- VERBATIM cross-repo source, never statically imported. `backend/vendor/aat/alpha/` is a byte-identical mirror of the execution repo's `alpha/human.py` (th..."
+   ],
+   "unconsumed": [
+    {
+     "what": "iif1_features",
+     "kind": "receipt",
+     "n_files_today": 1,
+     "n_source_files_naming_it": 1
+    },
+    {
+     "what": "job_receipts",
+     "kind": "receipt",
+     "n_files_today": 21,
+     "n_source_files_naming_it": 1
+    },
+    {
+     "what": "pc_mandate",
+     "kind": "receipt",
+     "n_files_today": 2,
+     "n_source_files_naming_it": 0
+    },
+    {
+     "what": "quality_score:",
+     "kind": "pit_collector",
+     "n_rows_today": 12,
+     "n_source_files_naming_it": 1
+    },
+    {
+     "what": "smartgrowth_pick:",
+     "kind": "pit_collector",
+     "n_rows_today": 10,
+     "n_source_files_naming_it": 1
+    }
+   ],
+   "orphans": [
+    "backend.services.brain_queries",
+    "backend.services.execution_boundary",
+    "backend.services.expectation_store",
+    "backend.services.portfolio_intelligence.comparator",
+    "backend.services.portfolio_intelligence.cross_asset_rotation",
+    "backend.services.portfolio_intelligence.forward_ic",
+    "backend.services.portfolio_intelligence.rule_evolution",
+    "backend.services.relative_value_labels",
+    "backend.services.return_model",
+    "backend.services.scenario_forecasts",
+    "backend.services.shadow_portfolios",
+    "backend.services.signal_optimizer",
+    "backend.services.teacher_library.adapters",
+    "backend.services.teacher_library.adapters_13dg",
+    "backend.services.teacher_library.matched_controls",
+    "backend.services.thematic_momentum",
+    "backend.services.theme_baskets",
+    "backend.services.verdict_battery",
+    "backend.services.winner_loser_factory",
+    "backend.vendor",
+    "backend.vendor.aat.alpha",
+    "backend.vendor.aat.alpha.brains",
+    "backend.vendor.aat.alpha.brains.base",
+    "backend.vendor.aat.alpha.human"
+   ],
+   "orphans_unreasoned": []
+  },
+  "compute": {
+   "id": "compute",
+   "question": "More or less compute tomorrow?",
+   "status": "OK",
+   "lines": [
+    "HOLD: `INTERNET-INVESTIGATOR-FWD-1` spent $2.4543 on 1405 call(s) [deepseek $2.4543] -- 5880 graded row(s); dominant cell `investigator:B_tools` abs_move_exceeds h=1: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x472: `investigator:D_all` abs_move_exceeds h=1: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x472: `investigator:B_anon` abs_move_exceeds h=1: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x472: `investigator:C_tools_only` abs_move_exceeds h=1: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x472: `investigator:A_snapshot` abs_move_exceeds h=1: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x352: `investigator:C_tools_only` return_sign h=5: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x352: `investigator:B_tools` return_sign h=5: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x352: `investigator:D_all` abs_move_exceeds h=5: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x352: `investigator:B_anon` abs_move_exceeds h=5: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x352: `investigator:A_snapshot` abs_move_exceeds h=5: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x352: `investigator:D_all` return_sign h=5: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x352: `investigator:A_snapshot` return_sign h=5: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x352: `investigator:B_anon` return_sign h=5: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x352: `investigator:C_tools_only` abs_move_exceeds h=5: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x352: `investigator:B_tools` abs_move_exceeds h=5: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `world_digest_extract` spent $0.4604 on 863 call(s) [deepseek $0.4604] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `world_digest_synth` spent $0.1769 on 67 call(s) [deepseek $0.1769] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "HOLD: `u_forecast` spent $0.1750 on 135 call(s) [deepseek $0.1750] -- 625 graded row(s); dominant cell `investigator:evidence_v3` beats_benchmark h=1: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "  HOLD x193: `investigator:evidence_v3` beats_benchmark h=5: held-out skill unmeasured (n=0) (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `dowjones_claims` spent $0.1263 on 427 call(s) [deepseek $0.1263] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `world_digest_policy` spent $0.0184 on 5 call(s) [deepseek $0.0184] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `hyp_lab_generate` spent $0.0054 on 2 call(s) [deepseek $0.0054] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `learn_distill` spent $0.0020 on 4 call(s) [deepseek $0.0020] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `query_planner:held_names:115d1443c8ff` spent $0.0008 on 1 call(s) [deepseek $0.0008] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `world_digest_regime` spent $0.0007 on 1 call(s) [deepseek $0.0007] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `query_planner:held_names:e369788fe9b8` spent $0.0004 on 1 call(s) [deepseek $0.0004] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `query_planner:held_names:4e61be851a13` spent $0.0004 on 1 call(s) [deepseek $0.0004] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `query_planner:held_names:200ff9d52ce8` spent $0.0003 on 1 call(s) [deepseek $0.0003] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `query_planner:themes:b521c9030305` spent $0.0002 on 1 call(s) [deepseek $0.0002] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `query_planner:opportunities:1a808e9ca73e` spent $0.0002 on 1 call(s) [deepseek $0.0002] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `query_planner:held_names:53889a57cbe4` spent $0.0002 on 1 call(s) [deepseek $0.0002] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `query_planner:themes:930fd8e8e0f0` spent $0.0002 on 1 call(s) [deepseek $0.0002] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `query_planner:opportunities:3fb94a422c90` spent $0.0002 on 1 call(s) [deepseek $0.0002] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `query_planner:opportunities:6e47062b40bb` spent $0.0002 on 1 call(s) [deepseek $0.0002] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "LESS: `query_planner:themes:9da55d1c90eb` spent $0.0002 on 1 call(s) [deepseek $0.0002] -- spent and produced no forecast row the grader can ever grade (`backend/data/optimus/llm_calls_2026-10.jsonl`)",
+    "total LLM spend stamped 2026-10-06 (UTC): $3.4229 (`backend/data/optimus/llm_calls_2026-10.jsonl`)"
+   ],
+   "decisions": {
+    "INTERNET-INVESTIGATOR-FWD-1": {
+     "verdict": "HOLD",
+     "usd": 2.454268029999997,
+     "why": "5880 graded row(s); dominant cell `investigator:B_tools` abs_move_exceeds h=1: held-out skill unmeasured (n=0)",
+     "n_calls": 1405
+    },
+    "world_digest_extract": {
+     "verdict": "LESS",
+     "usd": 0.4604441,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 863
+    },
+    "world_digest_synth": {
+     "verdict": "LESS",
+     "usd": 0.17687137999999997,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 67
+    },
+    "u_forecast": {
+     "verdict": "HOLD",
+     "usd": 0.17499698000000005,
+     "why": "625 graded row(s); dominant cell `investigator:evidence_v3` beats_benchmark h=1: held-out skill unmeasured (n=0)",
+     "n_calls": 135
+    },
+    "dowjones_claims": {
+     "verdict": "LESS",
+     "usd": 0.12627823999999993,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 427
+    },
+    "world_digest_policy": {
+     "verdict": "LESS",
+     "usd": 0.01836439,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 5
+    },
+    "hyp_lab_generate": {
+     "verdict": "LESS",
+     "usd": 0.005448440000000001,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 2
+    },
+    "learn_distill": {
+     "verdict": "LESS",
+     "usd": 0.00200245,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 4
+    },
+    "query_planner:held_names:115d1443c8ff": {
+     "verdict": "LESS",
+     "usd": 0.00078742,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 1
+    },
+    "world_digest_regime": {
+     "verdict": "LESS",
+     "usd": 0.00070414,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 1
+    },
+    "query_planner:held_names:e369788fe9b8": {
+     "verdict": "LESS",
+     "usd": 0.00044645,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 1
+    },
+    "query_planner:held_names:4e61be851a13": {
+     "verdict": "LESS",
+     "usd": 0.00042623,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 1
+    },
+    "query_planner:held_names:200ff9d52ce8": {
+     "verdict": "LESS",
+     "usd": 0.00032264,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 1
+    },
+    "query_planner:themes:b521c9030305": {
+     "verdict": "LESS",
+     "usd": 0.00024749,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 1
+    },
+    "query_planner:opportunities:1a808e9ca73e": {
+     "verdict": "LESS",
+     "usd": 0.00024648,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 1
+    },
+    "query_planner:held_names:53889a57cbe4": {
+     "verdict": "LESS",
+     "usd": 0.00023092,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 1
+    },
+    "query_planner:themes:930fd8e8e0f0": {
+     "verdict": "LESS",
+     "usd": 0.00022149,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 1
+    },
+    "query_planner:opportunities:3fb94a422c90": {
+     "verdict": "LESS",
+     "usd": 0.00020981,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 1
+    },
+    "query_planner:opportunities:6e47062b40bb": {
+     "verdict": "LESS",
+     "usd": 0.00020902,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 1
+    },
+    "query_planner:themes:9da55d1c90eb": {
+     "verdict": "LESS",
+     "usd": 0.00020076,
+     "why": "spent and produced no forecast row the grader can ever grade",
+     "n_calls": 1
+    }
+   },
+   "total_usd": 3.422926859999997
+  },
+  "decisions": {
+   "id": "decisions",
+   "question": "Decisions, plan and review today (supporting)",
+   "status": "OK",
+   "lines": [
+    "autopsy: no data today (no decisions/autopsy_2026-10-06.json)",
+    "plan: no data today (no decisions/pc_plan/2026-10-06.json)",
+    "review labels: UNPRICED 88, hold 1172, WATCH 24 (`backend/data/optimus/review/review_2026-10-06.json`)"
+   ]
+  },
+  "learned": {
+   "id": "learned",
+   "question": "What the night learned: rules, learn runs, policy (supporting)",
+   "status": "OK",
+   "lines": [
+    "learned rules dated today: n=17 (NO_DISCRIMINATION 9, NO_SKILL 6, SKILL 1, NOT_A_RESULT 1) (`backend/data/optimus/brain/learned_rules.jsonl`)",
+    "  positive: `class:investigator|abs_move_exceeds|h1` held-out skill +13.44% (n=1180) (`backend/data/optimus/brain/learned_rules.jsonl`)",
+    "policy keys changed today: hyp_family_ev_weight x1, reputation_weights x1, persona_weights x1 (`backend/data/optimus/pc_book/policy_journal.jsonl`)"
+   ]
+  },
+  "health": {
+   "id": "health",
+   "question": "Accrual canary (supporting)",
+   "status": "OK",
+   "lines": [
+    "forecast accrual: ok -- 3140 new row(s) in the last 3 day(s) (`backend/data/optimus/predictions.jsonl`)",
+    "collector `congress`: DEGRADED -- has NEVER written a row (`backend/data/aegis_pi.db`)",
+    "collector `ark`: DEGRADED -- has NEVER written a row (`backend/data/aegis_pi.db`)",
+    "collector `13f`: DEGRADED -- 0 rows in 7d; last 2026-08-14 (`backend/data/aegis_pi.db`)",
+    "n_considered: DEGRADED -- n_considered has not moved for >= 5 contracts -- a static candidate input. n_considered [2, 2, 2, 2, 2, 2] over 2026-10-01..2026-10-06 | funnel n_candidates 25 (`backend/data/optimus/decisions`)"
+   ]
+  }
+ },
+ "closing": {
+  "works": "WHAT CURRENTLY WORKS: forward book `lib_resid_mom_12_1_large_sealed_2026-09-26` +7.09% vs SPY (n=6 sessions; 40 of 60 graded books ahead, `backend/data/optimus/llm_portfolio/leaderboard_2026-10-06.json`).",
+  "does_not": "WHAT DOES NOT: LLM direction: the live arms' `return_sign` h=5 held out -9.43% (n=880 rows, pooled later half vs the training-half base rate) (`backend/data/optimus/reputation/reputation_2026-10-06.json`); the LLM's evidence step on magnitude h=5: posterior +0.91% vs its own stated prior +6.92% on n=875 held-out rows (reading the dossier lowered skill); 20 of 60 graded forward books trail their benchmark (n=60 books, `backend/data/optimus/llm_portfolio/leaderboard_2026-10-06.json`); the paper accounts: 160 of 362 behind SPY over their own windows, pooled ROI 1.263% (n=362 accounts, `backend/data/optimus/paper_accounts/roi_2026-10-06.json`).",
+  "next_experiment": "THE SINGLE HIGHEST-EV NEXT EXPERIMENT: `FORMULA_VS_LLM_RESIDUAL` -- write the sigma_63 prior as its own `formula:vol63` arm and grade the LLM on Brier improvement OVER it on the next 6 date blocks; EV = P 0.07 x C $64 x Delta 1.0000 x T 1y - cost $0.00 = $4 (P = power 0.14 (t_max 0.86) x prior 0.5 (positive); C: u_forecast spend $0.1750/day x 365).",
+  "experiments": [
+   {
+    "id": "PROBE_WEIGHTING_3WAYS",
+    "what": "the same PROBE names weighted three ways (equal / inverse-sigma_63 / big-predicted-|move| tilt), frozen as $1M twins; arm differences regressed on SPY, IWM, MTUM, USMV",
+    "eligible": false,
+    "p_used": 0.5,
+    "capital_usd": 1000000.0,
+    "delta": 0.03375,
+    "years": 1.0,
+    "value_usd": 33750.0,
+    "cost_usd": 0.0,
+    "ev_usd": 16875.0,
+    "power": {
+     "sd_p": 0.1482113987836374,
+     "base_rate": 0.13305084745762713,
+     "n_eff": 4112.5,
+     "ceiling": 0.19043726717858606,
+     "t_max": 13.992616457188548,
+     "power": 1.0
+    },
+    "why": "already running: frozen book(s) probe_bigmove_tilt_2026-09-26, probe_bigmove_tilt_2026-09-26__ew, probe_bigmove_tilt_2026-09-26__random_same_band",
+    "delta_source": "0.5 x gamma 3 x (0.25^2 - 0.20^2): inverse-sigma cuts book vol 25% -> 20% at the same mean (reviewer H+I §5; USMV regression tests it)",
+    "measured": "positive",
+    "capital_source": "PC-PAPER capital $1,000,000 (`backend/data/optimus/paper_accounts/roi_2026-10-06.json`)"
+   },
+   {
+    "id": "FORMULA_VS_LLM_RESIDUAL",
+    "what": "write the sigma_63 prior as its own `formula:vol63` arm and grade the LLM on Brier improvement OVER it on the next 6 date blocks",
+    "eligible": true,
+    "p_used": 0.06832976426009171,
+    "capital_usd": 63.87389770000002,
+    "delta": 1.0,
+    "years": 1.0,
+    "value_usd": 63.87389770000002,
+    "cost_usd": 0.0,
+    "ev_usd": 4.364488372214216,
+    "power": {
+     "t_max": 0.8645488988504199,
+     "power": 0.13665952852018343,
+     "ceiling": null,
+     "sd_p": null,
+     "n_eff": 6,
+     "note": "per-day Brier(LLM) - Brier(prior): mean +0.0040, sd 0.0113, 12 days"
+    },
+    "why": "P = power 0.14 (t_max 0.86) x prior 0.5 (positive); C: u_forecast spend $0.1750/day x 365",
+    "delta_source": "the whole magnitude budget is freed if the prior wins",
+    "measured": "positive",
+    "capital_source": "u_forecast spend $0.1750/day x 365"
+   },
+   {
+    "id": "INVESTIGATOR_DIRECTION_CALIBRATION",
+    "what": "calibrate the investigator's DIRECTION rows over 21 sessions",
+    "eligible": false,
+    "p_used": 0.0728370642414595,
+    "capital_usd": 1000000.0,
+    "delta": 0.01,
+    "years": 1.0,
+    "value_usd": 10000.0,
+    "cost_usd": 3.674936580000001,
+    "ev_usd": 724.695705834595,
+    "power": {
+     "sd_p": 0.027533145008772148,
+     "base_rate": 0.5,
+     "n_eff": 1080.0,
+     "ceiling": 0.0030322962962962986,
+     "t_max": 0.9048314760219168,
+     "power": 0.145674128482919
+    },
+    "why": "already running: 270 investigator `beats_benchmark` rows made since 2026-10-03 (u_forecast writes them daily whatever this report says)",
+    "delta_source": "upper bound: a direction signal this flat is worth <= 1%/yr (reviewer H+I §2.2)",
+    "measured": "positive",
+    "capital_source": "PC-PAPER capital $1,000,000 (`backend/data/optimus/paper_accounts/roi_2026-10-06.json`)"
+   }
+  ],
+  "vol_prior": {
+   "1": {
+    "observable": "abs_move_exceeds",
+    "horizon": 1,
+    "arm": "*",
+    "window": 63,
+    "formula": "p = 2(1 - Phi(thr / (sigma_63 * sqrt(h))))",
+    "split": "pooled rows, later half by made_at held out; climatology = training-half base rate",
+    "status": "OK",
+    "n_rows": 2360,
+    "n_heldout": 1175,
+    "n_heldout_no_sigma": 5,
+    "heldout_from": "2026-08-26",
+    "heldout_to": "2026-10-01",
+    "climatology_base_rate": 0.13305084745762713,
+    "skill_llm": 0.1349353435295041,
+    "skill_prior": 0.09143229592736046,
+    "skill_llm_own_prior": 0.08814538546175998,
+    "winner": "llm",
+    "days_prior_wins": 8,
+    "n_days": 12,
+    "p_spread_llm": 0.1690752648825689,
+    "p_spread_prior": 0.1482113987836374
+   },
+   "5": {
+    "observable": "abs_move_exceeds",
+    "horizon": 5,
+    "arm": "*",
+    "window": 63,
+    "formula": "p = 2(1 - Phi(thr / (sigma_63 * sqrt(h))))",
+    "split": "pooled rows, later half by made_at held out; climatology = training-half base rate",
+    "status": "OK",
+    "n_rows": 1760,
+    "n_heldout": 875,
+    "n_heldout_no_sigma": 5,
+    "heldout_from": "2026-08-24",
+    "heldout_to": "2026-09-25",
+    "climatology_base_rate": 0.23522727272727273,
+    "skill_llm": 0.009055758428982097,
+    "skill_prior": 0.04897643467716728,
+    "skill_llm_own_prior": 0.06915817937959245,
+    "winner": "prior",
+    "days_prior_wins": 7,
+    "n_days": 9,
+    "p_spread_llm": 0.20133645790407245,
+    "p_spread_prior": 0.16956564221362458
+   }
+  }
+ }
+}

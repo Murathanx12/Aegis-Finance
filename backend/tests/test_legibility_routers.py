@@ -203,12 +203,81 @@ def _theory(base: Path) -> str:
     return day
 
 
+def _beliefs(base: Path, gen: datetime) -> dict:
+    """Poisoned world_state/beliefs.json + scenarios.json + belief_updates_<month>.jsonl +
+    digest/world_state_<stamp>.json, in the real schema (world_state/v2, macro_scenario/v2)."""
+    table = {
+        "schema": "world_state/v2", "as_of": gen.isoformat(), "digest_id": _stamp(gen),
+        "beliefs": {
+            "ai_demand": {
+                "topic": "ai_demand", "meaning": "up = AI compute demand strengthening",
+                "direction": "up", "prior_direction": "up", "confidence": 0.41,
+                "mass_up": 2.56, "mass_down": 0.2, "half_life_days": 21.0, "last_updated": gen.isoformat(),
+                "evidence_this_cycle": True, "n_root_events_this_cycle": 250, "n_new_root_events_this_cycle": 34,
+                "evidence_basis": f"3 new vote(s) read via pid 4242 at {HOME}", "contradictions": [],
+                "belief_change": 0.02, "affected_entities": {"sectors": ["hardware", "semiconductors"],
+                                                              "tickers": ["AMD"]},
+                "co_mention_edges": [{"to": "grid_power_demand", "sign": "+", "lag_sessions": 5, "support": 2,
+                                      "example_theme": f"AI data-center deal, see {HOME}"}],
+            },
+            "defense_procurement": {
+                "topic": "defense_procurement", "meaning": "no signal yet", "direction": "none",
+                "prior_direction": "none", "confidence": 0.0, "mass_up": 0.0, "mass_down": 0.0,
+                "half_life_days": 21.0, "last_updated": (gen - timedelta(days=2)).isoformat(),
+                "evidence_this_cycle": False, "contradictions": ["energy_security"], "co_mention_edges": [],
+                "affected_entities": {},
+            },
+        },
+        "licence": "PRODUCT_EXPERIMENT",
+    }
+    _w(base / "world_state" / "beliefs.json", table)
+
+    scenarios = {"schema": "macro_scenario/v2", "as_of": gen.isoformat(), "scenarios": [
+        {"scenario_id": "ai_capex_supercycle_2027", "name": "AI buildout continues through 2027",
+         "horizon_year": 2027, "drivers": ["capex guidance"], "falsifiers": ["two quarters of capex cuts"],
+         "beneficiary_sectors": ["semiconductors"], "loser_sectors": [],
+         "prior_record": {"prior": 0.4, "version": 1, "declared_by": "C17 builder (Opus), not the owner",
+                          "declared_at": "2026-10-07"},
+         "probability_source": "DECLARED_PRIOR",
+         "probability_sealed": {"value": 0.52, "read_with": "world_state.scenario_probability(s, 'display')"},
+         "use": "LABEL_ONLY: never a weight, rank or size input"},
+    ]}
+    _w(base / "world_state" / "scenarios.json", scenarios)
+
+    month = gen.strftime("%Y-%m")
+    _w(base / "world_state" / f"belief_updates_{month}.jsonl", [
+        {"t": (gen - timedelta(hours=1)).isoformat(), "topic": "ai_demand", "direction": "up",
+         "prior_direction": "down", "confidence": 0.41, "belief_change": 0.02, "hours_since_prior": 6.0,
+         "contradiction": False, "n_new_root_events": 34},
+        {"t": gen.isoformat(), "topic": "energy_security", "direction": "mixed", "prior_direction": "up",
+         "confidence": 0.19, "belief_change": -0.05, "hours_since_prior": 0.75, "contradiction": True,
+         "n_new_root_events": 31},
+    ])
+
+    ws = {"schema": "world_state_cycle/v2", "digest_id": _stamp(gen), "as_of": gen.isoformat(),
+          "beliefs": {"state": "UPDATED", "stability": {"belief_stability": 0.1875, "n_compared": 16,
+                                                        "changed": ["energy_security: up -> mixed"],
+                                                        "max": 0.5, "status": "OK",
+                                                        "definition": f"share of beliefs changed, see {HOME}"}},
+          "regime_grade": {"pooled": {"vs_persistence": {"trust": 0.0, "mean_improvement": None},
+                                      "vs_base_rate": {"trust": 0.0, "mean_improvement": None},
+                                      "trust": 0.0, "note": "no graded dates: the prior (0) stands"},
+                           "n_fields": 14, "note": f"see pid 185016 at {HOME}",
+                           "fields": {"ai_demand:h5": {
+                               "n_entry_sessions": 4, "brier_model_raw": 0.21, "trust": 0.1, "n_open": 2,
+                               "nulls": {"persistence": {"brier_null": 0.24, "verdict": "BEATS"},
+                                        "base_rate": {"brier_null": 0.26, "verdict": "BEATS"}}}}}}
+    _w(base / "digest" / f"world_state_{_stamp(gen)}.json", ws)
+    return table
+
+
 # ───────────────────────────────────────── 404 / 422 / 500
 
 def test_every_endpoint_404s_without_receipts(client):
     c, _ = client
     for path in ("/api/arena/v1/latest", "/api/arena/v1/stories", "/api/legibility/v1/forecast-lab",
-                 "/api/legibility/v1/theory-lab", "/api/legibility/v1/system-health"):
+                 "/api/legibility/v1/theory-lab", "/api/legibility/v1/system-health",
+                 "/api/legibility/v1/brain"):
         r = c.get(path)
         assert r.status_code == 404, path
         assert r.json()["detail"], path
@@ -473,3 +542,66 @@ def test_freshness_unknown_when_undateable(tmp_path):
     assert f["status"] == "UNKNOWN" and f["age_hours"] is None
     f = L.freshness("system_health", _stamp(NOW - timedelta(hours=2)), NOW)
     assert f["status"] == "FRESH" and f["age_hours"] == pytest.approx(2.0)
+
+
+# ───────────────────────────────────────── Brain (belief state)
+
+def test_brain_shape_sanitiser_and_scenario_display(client):
+    c, base = client
+    gen = NOW - timedelta(hours=1)
+    _beliefs(base, gen)
+    r = c.get("/api/legibility/v1/brain")
+    assert r.status_code == 200
+    d = r.json()
+    assert_clean(d)
+    assert S.sanitise(d, S.SPEC["brain"]) == d                       # already a fixed point
+    assert d["status"] == "FRESH"
+
+    by_topic = {b["topic"]: b for b in d["beliefs"]}
+    ai = by_topic["ai_demand"]
+    assert ai["confidence"] == pytest.approx(0.41)
+    assert ai["has_evidence"] is True and ai["recent_change"] is True        # updated 1h ago < pulse window
+    assert ai["co_mention_edges"] == [{"to": "grid_power_demand", "sign": "+", "lag_sessions": 5,
+                                       "support": 2,
+                                       "example_theme": "AI data-center deal, see backend/data/optimus/x.json"}]
+    none_belief = by_topic["defense_procurement"]
+    assert none_belief["has_evidence"] is False and none_belief["contradicted"] is True
+    assert none_belief["n_contradictions"] == 1
+    assert none_belief["recent_change"] is False                            # 2 days old, no flip
+
+    sc = d["scenarios"][0]
+    assert sc["probability_display"] == pytest.approx(0.52)                 # read via scenario_probability(display)
+    assert sc["prior_version"] == 1 and sc["prior_declared_at"] == "2026-10-07"
+    assert sc["probability_display"] != 0.4                                 # not the raw prior_record.prior
+
+    assert d["belief_stability"]["belief_stability"] == pytest.approx(0.1875)
+    assert d["belief_stability"]["status"] == "OK"
+    assert d["regime"]["trust"] == 0.0 and d["regime"]["baselines"]
+    fr = d["regime"]["fields"][0]
+    assert fr["variable"] == "ai_demand" and fr["horizon"] == "5"
+    assert fr["brier_model_raw"] == pytest.approx(0.21) and fr["brier_persistence"] == pytest.approx(0.24)
+
+    assert len(d["belief_updates"]) == 2
+    assert d["belief_updates"][0]["topic"] == "energy_security"             # newest (t == gen) first
+    assert d["belief_updates"][0]["flipped"] is True                        # up -> mixed
+    assert d["belief_updates"][1]["topic"] == "ai_demand" and d["belief_updates"][1]["flipped"] is True
+
+    roles = {x["role"] for x in d["receipts"]}
+    assert {"belief table", "scenario strip", "what changed since the last cycle",
+            "regime rows, belief_stability"} <= roles
+
+
+def test_brain_missing_scenarios_and_updates_are_named_not_zeroed(client):
+    c, base = client
+    gen = NOW - timedelta(hours=1)
+    _w(base / "world_state" / "beliefs.json", {"schema": "world_state/v2", "as_of": gen.isoformat(),
+                                               "digest_id": _stamp(gen),
+                                               "beliefs": {"rates": {"topic": "rates", "direction": "mixed",
+                                                                     "confidence": 0.05}}})
+    r = c.get("/api/legibility/v1/brain")
+    assert r.status_code == 200
+    d = r.json()
+    assert d["scenarios"] == [] and d["belief_updates"] == []
+    assert d["missing_because"]["scenarios"] and d["missing_because"]["belief_updates"]
+    assert d["missing_because"]["regime"] and d["missing_because"]["belief_stability"]
+    assert d["belief_stability"] is None and d["regime"] is None

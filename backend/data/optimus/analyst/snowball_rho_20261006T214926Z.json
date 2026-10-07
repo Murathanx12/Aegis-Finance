@@ -1,0 +1,32 @@
+{
+ "schema": "snowball_rho/1",
+ "asof": "2026-10-06T21:49",
+ "surrogate": "every dated target RAISE on the yfinance file, one per (ticker, month), entry at the close of the first session strictly after the event day, 21-session return minus SPY, winsorised 1/99; grouped by event month",
+ "bars": "prices_2025_26/bars.parquet (2025-01 onward): ~20 months, so the CI is wide",
+ "n_events": 18963,
+ "n_months": 21,
+ "events_per_month_mean": 903.0,
+ "rho": 0.01991,
+ "rho_ci95_month_bootstrap": [
+  0.01076,
+  0.02742
+ ],
+ "n_boot": 1000,
+ "seed": 7100018,
+ "lint_inputs_reused": {
+  "event_frequency_per_year": 1500,
+  "corpus_years": 26,
+  "n_required": 7064,
+  "n_available_at_cap": 312
+ },
+ "n_available_at_rho": 11241.4,
+ "n_available_at_rho_ci": [
+  8864.2,
+  16705.4
+ ],
+ "caveats": [
+  "21-session windows that start late in one month overlap the next month's: the month grouping understates dependence across adjacent months",
+  "the surrogate is all raises, not t0 events; t0 events may cluster differently",
+  "rho is measured on 2025-26 only; the linter's 26 corpus-years are assumed to share it"
+ ]
+}

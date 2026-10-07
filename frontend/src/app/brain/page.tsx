@@ -18,6 +18,12 @@
  *    lifecycle counts (404 = the engine has not said what it would buy today).
  *  - /api/optimus/digest: the newest learning digest (404 = none written yet).
  * A 404 is printed as the fact it is, never as zeros.
+ *
+ * v2 (2026-10-07, spec docs/design/OPTIMUS_CREATIVE_TOOL_LIBRARY_2026-10-07.md §2):
+ *  - /api/legibility/v1/brain -> the belief state board (StateBoard.tsx) replaces the old
+ *    link out to the force-directed "optimus-brain-alpha" showcase (a SEPARATE repo, not
+ *    touched here) for the belief/scenario/regime content; everything below the board
+ *    (health, decisions, learning digest) is unchanged, just moved down.
  */
 
 import React from "react";
@@ -31,9 +37,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  getDecisionContract, getHealthFullWithSubsystems, getOptimusDigest,
+  getBrainState, getDecisionContract, getHealthFullWithSubsystems, getOptimusDigest,
   type SubsystemRow,
 } from "@/lib/api";
+import StateBoard from "./StateBoard";
+import { RegimeStrip, ScenarioStrip, WhatChanged } from "./BrainStrips";
 
 const BRAIN_MAP_URL = "https://optimus-brain-alpha.vercel.app";
 
@@ -113,6 +121,7 @@ function StatusError({ what, err }: { what: string; err: unknown }) {
 }
 
 export default function BrainPage() {
+  const brain = useQuery({ queryKey: ["brain", "state"], queryFn: getBrainState, refetchInterval: 5 * 60_000, retry: false });
   const health = useQuery({ queryKey: ["brain", "health"], queryFn: getHealthFullWithSubsystems, refetchInterval: 5 * 60_000, retry: 1 });
   const decisions = useQuery({ queryKey: ["brain", "decisions"], queryFn: () => getDecisionContract(), retry: false });
   const digest = useQuery({ queryKey: ["brain", "digest"], queryFn: getOptimusDigest, retry: false });
@@ -154,8 +163,9 @@ export default function BrainPage() {
             </p>
           </div>
           <a href={BRAIN_MAP_URL} target="_blank" rel="noopener noreferrer"
+            title="A separate, older showcase (optimus-brain-alpha, different repo): a force-directed graph, not this page's state board"
             className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/70 px-3 py-2 text-sm hover:bg-muted">
-            <Network className="h-4 w-4" /> Interactive brain map <ExternalLink className="h-3 w-3" />
+            <Network className="h-4 w-4" /> Older force-graph showcase <ExternalLink className="h-3 w-3" />
           </a>
         </div>
         {/* verdict strip */}
@@ -186,6 +196,42 @@ export default function BrainPage() {
           {sub?.error && <p className="text-sm text-red-700 dark:text-red-400">Health block error: {sub.error}</p>}
         </div>
       </div>
+
+      {/* belief state board (v2, 2026-10-07): fixed rings, state-driven motion, every pixel
+          traces to a field in /api/legibility/v1/brain. See StateBoard.tsx's header comment
+          for why this replaces a force graph. */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2"><Brain className="h-4 w-4" /> Belief state board</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Fixed rings (macro / sector-theme / geopolitical), one orb per belief. Motion fires once, only on a
+            real state change -- never a continuous loop.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {brain.isLoading && <Skeleton className="h-72" />}
+          {brain.error && <StatusError what="Belief state" err={brain.error} />}
+          {brain.data && <StateBoard data={brain.data} />}
+          {brain.data && (
+            <div className="grid gap-4 lg:grid-cols-3">
+              <div>
+                <p className="text-xs font-semibold mb-1.5">Scenarios (display probability only)</p>
+                <ScenarioStrip data={brain.data} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-1.5">Regime rows vs their two baselines</p>
+                <RegimeStrip data={brain.data} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-1.5">
+                  What changed since the last cycle ({brain.data.belief_updates.length} of up to 40)
+                </p>
+                <WhatChanged data={brain.data} />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* health by part of the brain */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

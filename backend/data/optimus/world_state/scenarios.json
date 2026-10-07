@@ -1,0 +1,616 @@
+{
+ "schema": "macro_scenarios/v2",
+ "as_of": "2026-10-07T04:32:00+00:00",
+ "belief_table_as_of": "2026-10-07T04:32:00+00:00",
+ "rule": "slow: indicator smoothing time constant 30 d, max move 0.01/day, logit shift cap 0.5; restatements logged PRIOR_RESTATED",
+ "scenarios": [
+  {
+   "scenario_id": "ai_capex_supercycle_2027",
+   "horizon_year": 2027,
+   "name": "AI infrastructure buildout continues through 2027",
+   "assumptions": [
+    "hyperscaler capex grows >= 20%/yr through 2027",
+    "no major demand air-pocket"
+   ],
+   "drivers": [
+    "hyperscaler capex guidance",
+    "HBM / advanced-packaging supply",
+    "grid interconnect queues"
+   ],
+   "leading_indicators": [
+    {
+     "topic": "ai_demand",
+     "direction": "up",
+     "weight": 1.0
+    },
+    {
+     "topic": "semiconductor_capex",
+     "direction": "up",
+     "weight": 1.0
+    },
+    {
+     "topic": "grid_power_demand",
+     "direction": "up",
+     "weight": 0.5
+    }
+   ],
+   "falsifiers": [
+    "two consecutive quarters of hyperscaler capex guidance cuts >= 15%",
+    "a grid-interconnect moratorium in >= 2 major US regions"
+   ],
+   "beneficiary_sectors": [
+    "semiconductors",
+    "hardware",
+    "utilities_power",
+    "industrials"
+   ],
+   "loser_sectors": [],
+   "causal_chain": "AI demand -> hyperscaler capex -> semiconductor + power + cooling orders",
+   "schema": "macro_scenario/v2",
+   "prior_record": {
+    "prior": 0.4,
+    "version": 1,
+    "declared_by": "C17 builder (Opus), not the owner",
+    "declared_at": "2026-10-07",
+    "prior_hash": "e6291b2f15dc"
+   },
+   "prior_probability": 0.4,
+   "probability_source": "DECLARED_PRIOR",
+   "market": null,
+   "probability_sealed": {
+    "value": 0.4004,
+    "read_with": "world_state.scenario_probability(s, 'display')"
+   },
+   "indicator_smooth": {
+    "ai_demand": 0.002418,
+    "semiconductor_capex": 0.000305,
+    "grid_power_demand": 0.000315
+   },
+   "last_updated": "2026-10-07T04:32:00+00:00",
+   "update_log": [
+    {
+     "at": "2026-10-06T23:06:02+00:00",
+     "from": null,
+     "to": 0.4,
+     "kind": "INITIAL",
+     "why": "INITIAL_PRIOR"
+    }
+   ],
+   "use": "LABEL_ONLY: never a weight, rank or size input"
+  },
+  {
+   "scenario_id": "ai_capex_digestion_2027",
+   "horizon_year": 2027,
+   "name": "AI capex digestion: spending pauses in 2027",
+   "assumptions": [
+    "AI revenue lags capex",
+    "hyperscalers cut or flatten 2027 budgets"
+   ],
+   "drivers": [
+    "AI monetisation",
+    "GPU utilisation",
+    "data-centre lease cancellations"
+   ],
+   "leading_indicators": [
+    {
+     "topic": "ai_demand",
+     "direction": "down",
+     "weight": 1.0
+    },
+    {
+     "topic": "semiconductor_capex",
+     "direction": "down",
+     "weight": 1.0
+    }
+   ],
+   "falsifiers": [
+    "hyperscaler 2027 capex guided up >= 15%",
+    "GPU lead times lengthen again"
+   ],
+   "beneficiary_sectors": [
+    "consumer_staples",
+    "medtech_health"
+   ],
+   "loser_sectors": [
+    "semiconductors",
+    "hardware",
+    "utilities_power"
+   ],
+   "causal_chain": "capex ahead of revenue -> budget cuts -> semiconductor and power orders fall",
+   "schema": "macro_scenario/v2",
+   "prior_record": {
+    "prior": 0.25,
+    "version": 1,
+    "declared_by": "C17 builder (Opus), not the owner",
+    "declared_at": "2026-10-07",
+    "prior_hash": "1719b8bc240a"
+   },
+   "prior_probability": 0.25,
+   "probability_source": "DECLARED_PRIOR",
+   "market": null,
+   "probability_sealed": {
+    "value": 0.2497,
+    "read_with": "world_state.scenario_probability(s, 'display')"
+   },
+   "indicator_smooth": {
+    "ai_demand": 0.002418,
+    "semiconductor_capex": 0.000305
+   },
+   "last_updated": "2026-10-07T04:32:00+00:00",
+   "update_log": [
+    {
+     "at": "2026-10-06T23:06:02+00:00",
+     "from": null,
+     "to": 0.25,
+     "kind": "INITIAL",
+     "why": "INITIAL_PRIOR"
+    }
+   ],
+   "use": "LABEL_ONLY: never a weight, rank or size input"
+  },
+  {
+   "scenario_id": "higher_for_longer_2027",
+   "horizon_year": 2027,
+   "name": "Higher for longer: policy rates stay restrictive through 2027",
+   "assumptions": [
+    "core inflation stays above target",
+    "the Fed cuts <= 2 times by end-2027"
+   ],
+   "drivers": [
+    "core inflation prints",
+    "labour market",
+    "fiscal deficits / term premium"
+   ],
+   "leading_indicators": [
+    {
+     "topic": "rates",
+     "direction": "up",
+     "weight": 1.0
+    },
+    {
+     "topic": "inflation",
+     "direction": "up",
+     "weight": 1.0
+    },
+    {
+     "topic": "liquidity",
+     "direction": "down",
+     "weight": 0.5
+    }
+   ],
+   "falsifiers": [
+    "core PCE below 2.5% for 6 months",
+    ">= 4 Fed cuts within 12 months"
+   ],
+   "beneficiary_sectors": [
+    "banks",
+    "insurance",
+    "energy_oil_gas"
+   ],
+   "loser_sectors": [
+    "real_estate",
+    "utilities_power",
+    "biotech_pharma"
+   ],
+   "causal_chain": "sticky inflation -> restrictive policy -> higher discount rates and funding costs",
+   "schema": "macro_scenario/v2",
+   "prior_record": {
+    "prior": 0.3,
+    "version": 1,
+    "declared_by": "C17 builder (Opus), not the owner",
+    "declared_at": "2026-10-07",
+    "prior_hash": "1f256e5897cf"
+   },
+   "prior_probability": 0.3,
+   "probability_source": "DECLARED_PRIOR",
+   "market": null,
+   "probability_sealed": {
+    "value": 0.3001,
+    "read_with": "world_state.scenario_probability(s, 'display')"
+   },
+   "indicator_smooth": {
+    "rates": 0.000503,
+    "inflation": 0.0,
+    "liquidity": -0.000609
+   },
+   "last_updated": "2026-10-07T04:32:00+00:00",
+   "update_log": [
+    {
+     "at": "2026-10-06T23:06:02+00:00",
+     "from": null,
+     "to": 0.3,
+     "kind": "INITIAL",
+     "why": "INITIAL_PRIOR"
+    }
+   ],
+   "use": "LABEL_ONLY: never a weight, rank or size input"
+  },
+  {
+   "scenario_id": "us_recession_2027",
+   "horizon_year": 2027,
+   "name": "A US recession begins by end-2027",
+   "assumptions": [
+    "two negative GDP quarters or an NBER-dated peak by end-2027"
+   ],
+   "drivers": [
+    "unemployment claims",
+    "credit spreads",
+    "consumer spending"
+   ],
+   "leading_indicators": [
+    {
+     "topic": "consumer_conditions",
+     "direction": "down",
+     "weight": 1.0
+    },
+    {
+     "topic": "credit",
+     "direction": "down",
+     "weight": 1.0
+    },
+    {
+     "topic": "liquidity",
+     "direction": "down",
+     "weight": 0.5
+    }
+   ],
+   "falsifiers": [
+    "unemployment rate falls for 6 straight months",
+    "high-yield spreads at cycle tights"
+   ],
+   "beneficiary_sectors": [
+    "consumer_staples",
+    "utilities_power",
+    "medtech_health"
+   ],
+   "loser_sectors": [
+    "retail",
+    "autos",
+    "banks",
+    "restaurants_travel",
+    "industrials"
+   ],
+   "causal_chain": "credit tightening -> consumer retrenchment -> earnings recession",
+   "schema": "macro_scenario/v2",
+   "prior_record": {
+    "prior": 0.25,
+    "version": 1,
+    "declared_by": "C17 builder (Opus), not the owner",
+    "declared_at": "2026-10-07",
+    "prior_hash": "1719b8bc240a"
+   },
+   "prior_probability": 0.25,
+   "probability_source": "DECLARED_PRIOR",
+   "market": null,
+   "probability_sealed": {
+    "value": 0.2502,
+    "read_with": "world_state.scenario_probability(s, 'display')"
+   },
+   "indicator_smooth": {
+    "consumer_conditions": -0.001133,
+    "credit": 0.0,
+    "liquidity": -0.000609
+   },
+   "last_updated": "2026-10-07T04:32:00+00:00",
+   "update_log": [
+    {
+     "at": "2026-10-06T23:06:02+00:00",
+     "from": null,
+     "to": 0.25,
+     "kind": "INITIAL",
+     "why": "INITIAL_PRIOR"
+    }
+   ],
+   "use": "LABEL_ONLY: never a weight, rank or size input"
+  },
+  {
+   "scenario_id": "taiwan_strait_crisis_2027",
+   "horizon_year": 2027,
+   "name": "A Taiwan Strait military crisis by end-2027",
+   "assumptions": [
+    "a blockade, quarantine or clash involving Taiwan"
+   ],
+   "drivers": [
+    "PLA exercises",
+    "US-China diplomacy",
+    "export controls"
+   ],
+   "leading_indicators": [
+    {
+     "topic": "geopolitical_risk",
+     "direction": "up",
+     "weight": 1.0
+    },
+    {
+     "topic": "china_policy",
+     "direction": "down",
+     "weight": 0.5
+    },
+    {
+     "topic": "defense_procurement",
+     "direction": "up",
+     "weight": 0.5
+    }
+   ],
+   "falsifiers": [
+    "a durable US-China framework agreement",
+    "two years without a major PLA exercise"
+   ],
+   "beneficiary_sectors": [
+    "aerospace_defense"
+   ],
+   "loser_sectors": [
+    "semiconductors",
+    "hardware"
+   ],
+   "causal_chain": "military escalation -> foundry supply disruption -> semiconductor shortage",
+   "schema": "macro_scenario/v2",
+   "prior_record": {
+    "prior": 0.08,
+    "version": 1,
+    "declared_by": "C17 builder (Opus), not the owner",
+    "declared_at": "2026-10-07",
+    "prior_hash": "9b689405cf42"
+   },
+   "prior_probability": 0.08,
+   "probability_source": "DECLARED_PRIOR",
+   "market": {
+    "matched": true,
+    "used": false,
+    "snapshot_date": "2026-08-21",
+    "age_days": 47,
+    "source": "polymarket",
+    "ticker": "will-china-invade-taiwan-by-june-30-2027",
+    "title": "Will China invade Taiwan by June 30, 2027?",
+    "mid": 0.075,
+    "why": "snapshot 47 days old > 7: NOT used; the declared prior stands"
+   },
+   "probability_sealed": {
+    "value": 0.08,
+    "read_with": "world_state.scenario_probability(s, 'display')"
+   },
+   "indicator_smooth": {
+    "geopolitical_risk": 0.000387,
+    "china_policy": 0.0,
+    "defense_procurement": 0.000377
+   },
+   "last_updated": "2026-10-07T04:32:00+00:00",
+   "update_log": [
+    {
+     "at": "2026-10-06T23:06:02+00:00",
+     "from": null,
+     "to": 0.08,
+     "kind": "INITIAL",
+     "why": "INITIAL_PRIOR"
+    }
+   ],
+   "use": "LABEL_ONLY: never a weight, rank or size input"
+  },
+  {
+   "scenario_id": "energy_supply_shock_2027",
+   "horizon_year": 2027,
+   "name": "An energy supply shock lifts oil above its 2022 high by 2027",
+   "assumptions": [
+    "a supply disruption in a major producing region",
+    "spare capacity exhausted"
+   ],
+   "drivers": [
+    "OPEC+ policy",
+    "Middle East / Russia supply",
+    "US shale output"
+   ],
+   "leading_indicators": [
+    {
+     "topic": "energy_security",
+     "direction": "up",
+     "weight": 1.0
+    },
+    {
+     "topic": "commodity_shortages",
+     "direction": "up",
+     "weight": 1.0
+    },
+    {
+     "topic": "geopolitical_risk",
+     "direction": "up",
+     "weight": 0.5
+    }
+   ],
+   "falsifiers": [
+    "Brent below $60 for a quarter",
+    "OPEC+ restores > 2 mb/d of cuts"
+   ],
+   "beneficiary_sectors": [
+    "energy_oil_gas",
+    "materials_mining"
+   ],
+   "loser_sectors": [
+    "restaurants_travel",
+    "autos",
+    "chemicals"
+   ],
+   "causal_chain": "supply disruption -> oil price spike -> input-cost squeeze downstream",
+   "schema": "macro_scenario/v2",
+   "prior_record": {
+    "prior": 0.15,
+    "version": 1,
+    "declared_by": "C17 builder (Opus), not the owner",
+    "declared_at": "2026-10-07",
+    "prior_hash": "da1d5ad58ae3"
+   },
+   "prior_probability": 0.15,
+   "probability_source": "DECLARED_PRIOR",
+   "market": {
+    "matched": true,
+    "used": false,
+    "snapshot_date": "2026-08-21",
+    "age_days": 47,
+    "source": "polymarket",
+    "ticker": "will-crude-oil-reach-a-new-all-time-high-by-december-31",
+    "title": "Will Crude Oil reach a new all-time high by December 31?",
+    "mid": 0.145,
+    "why": "snapshot 47 days old > 7: NOT used; the declared prior stands"
+   },
+   "probability_sealed": {
+    "value": 0.15,
+    "read_with": "world_state.scenario_probability(s, 'display')"
+   },
+   "indicator_smooth": {
+    "energy_security": 0.000826,
+    "commodity_shortages": -0.000481,
+    "geopolitical_risk": 0.000387
+   },
+   "last_updated": "2026-10-07T04:32:00+00:00",
+   "update_log": [
+    {
+     "at": "2026-10-06T23:06:02+00:00",
+     "from": null,
+     "to": 0.15,
+     "kind": "INITIAL",
+     "why": "INITIAL_PRIOR"
+    }
+   ],
+   "use": "LABEL_ONLY: never a weight, rank or size input"
+  },
+  {
+   "scenario_id": "grid_electrification_2030",
+   "horizon_year": 2030,
+   "name": "US electricity demand grows >= 2.5%/yr through 2030",
+   "assumptions": [
+    "data centres + reshoring + electrification add load",
+    "the grid builds out to meet it"
+   ],
+   "drivers": [
+    "utility capex plans",
+    "data-centre interconnect requests",
+    "transformer supply"
+   ],
+   "leading_indicators": [
+    {
+     "topic": "grid_power_demand",
+     "direction": "up",
+     "weight": 1.0
+    },
+    {
+     "topic": "ai_demand",
+     "direction": "up",
+     "weight": 0.5
+    },
+    {
+     "topic": "energy_security",
+     "direction": "up",
+     "weight": 0.3
+    }
+   ],
+   "falsifiers": [
+    "utility load forecasts cut two years running",
+    "data-centre power efficiency halves demand"
+   ],
+   "beneficiary_sectors": [
+    "utilities_power",
+    "industrials",
+    "materials_mining"
+   ],
+   "loser_sectors": [],
+   "causal_chain": "electrification + AI load -> utility capex -> grid equipment orders",
+   "schema": "macro_scenario/v2",
+   "prior_record": {
+    "prior": 0.5,
+    "version": 1,
+    "declared_by": "C17 builder (Opus), not the owner",
+    "declared_at": "2026-10-07",
+    "prior_hash": "e839ff07d87b"
+   },
+   "prior_probability": 0.5,
+   "probability_source": "DECLARED_PRIOR",
+   "market": null,
+   "probability_sealed": {
+    "value": 0.5003,
+    "read_with": "world_state.scenario_probability(s, 'display')"
+   },
+   "indicator_smooth": {
+    "grid_power_demand": 0.000315,
+    "ai_demand": 0.002418,
+    "energy_security": 0.000826
+   },
+   "last_updated": "2026-10-07T04:32:00+00:00",
+   "update_log": [
+    {
+     "at": "2026-10-06T23:06:02+00:00",
+     "from": null,
+     "to": 0.5,
+     "kind": "INITIAL",
+     "why": "INITIAL_PRIOR"
+    }
+   ],
+   "use": "LABEL_ONLY: never a weight, rank or size input"
+  },
+  {
+   "scenario_id": "biotech_regulatory_tailwind_2030",
+   "horizon_year": 2030,
+   "name": "A favourable biotech regulatory and funding cycle through 2030",
+   "assumptions": [
+    "FDA approval pace holds",
+    "rates fall enough to reopen biotech funding"
+   ],
+   "drivers": [
+    "FDA approvals",
+    "drug-pricing policy",
+    "biotech IPO / follow-on window"
+   ],
+   "leading_indicators": [
+    {
+     "topic": "biotech_regulatory",
+     "direction": "up",
+     "weight": 1.0
+    },
+    {
+     "topic": "rates",
+     "direction": "down",
+     "weight": 0.5
+    }
+   ],
+   "falsifiers": [
+    "a broad drug-price negotiation expansion",
+    "FDA review delays > 6 months on average"
+   ],
+   "beneficiary_sectors": [
+    "biotech_pharma",
+    "medtech_health"
+   ],
+   "loser_sectors": [],
+   "causal_chain": "approvals + cheaper capital -> funding window -> biotech re-rating",
+   "schema": "macro_scenario/v2",
+   "prior_record": {
+    "prior": 0.35,
+    "version": 1,
+    "declared_by": "C17 builder (Opus), not the owner",
+    "declared_at": "2026-10-07",
+    "prior_hash": "506c7e98d58c"
+   },
+   "prior_probability": 0.35,
+   "probability_source": "DECLARED_PRIOR",
+   "market": null,
+   "probability_sealed": {
+    "value": 0.35,
+    "read_with": "world_state.scenario_probability(s, 'display')"
+   },
+   "indicator_smooth": {
+    "biotech_regulatory": 0.0,
+    "rates": 0.000503
+   },
+   "last_updated": "2026-10-07T04:32:00+00:00",
+   "update_log": [
+    {
+     "at": "2026-10-06T23:06:02+00:00",
+     "from": null,
+     "to": 0.35,
+     "kind": "INITIAL",
+     "why": "INITIAL_PRIOR"
+    }
+   ],
+   "use": "LABEL_ONLY: never a weight, rank or size input"
+  }
+ ],
+ "licence": "PRODUCT_EXPERIMENT"
+}

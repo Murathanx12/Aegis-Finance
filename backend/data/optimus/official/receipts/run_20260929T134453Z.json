@@ -1,0 +1,131 @@
+{
+ "t": "2026-09-29T13:44:53+00:00",
+ "sources": {
+  "fed_rss": {
+   "source": "fed_rss",
+   "items": 35,
+   "rows": 35,
+   "refused": null,
+   "seconds": 4.5
+  },
+  "ecb_rss": {
+   "source": "ecb_rss",
+   "items": 15,
+   "rows": 15,
+   "refused": null,
+   "seconds": 9.4
+  },
+  "boj_rss": {
+   "source": "boj_rss",
+   "items": 46,
+   "rows": 46,
+   "refused": null,
+   "seconds": 2.9
+  },
+  "boe_rss": {
+   "source": "boe_rss",
+   "items": 50,
+   "rows": 50,
+   "refused": null,
+   "seconds": 2.6
+  },
+  "hkma_api": {
+   "source": "hkma_api",
+   "items": 0,
+   "rows": 0,
+   "refused": null,
+   "seconds": 21.7
+  },
+  "whitehouse_rss": {
+   "source": "whitehouse_rss",
+   "items": 60,
+   "rows": 60,
+   "refused": null,
+   "seconds": 8.9
+  },
+  "treasury_rss": {
+   "source": "treasury_rss",
+   "items": 10,
+   "rows": 10,
+   "refused": null,
+   "seconds": 4.1
+  },
+  "fedreg": {
+   "source": "fedreg",
+   "published": 217,
+   "public_inspection": 127,
+   "rows": 344,
+   "refused": null,
+   "seconds": 6.9
+  }
+ },
+ "refused_sources": {
+  "senate_efd": {
+   "url": "https://efdsearch.senate.gov/search/",
+   "why": "BOT_CHECK_OR_FORM: 403 Access Denied to a plain request, and the search sits behind an agreement form; not submitted, not worked around"
+  },
+  "senate_hearings": {
+   "url": "https://www.senate.gov/general/committee_schedules/hearings.xml",
+   "why": "ACCESS_DENIED: 403 on the XML and on robots.txt"
+  },
+  "pboc": {
+   "url": "http://www.pbc.gov.cn/en/3688110/3688172/index.html",
+   "why": "ROBOTS_DISALLOWED: pbc.gov.cn robots.txt disallows the English news path"
+  },
+  "nasdaq_earnings": {
+   "url": "https://api.nasdaq.com/api/calendar/earnings",
+   "why": "ROBOTS_DISALLOWED: api.nasdaq.com robots.txt disallows it"
+  },
+  "etf_flows": {
+   "url": null,
+   "why": "NO_OFFICIAL_FREE_SOURCE: issuer pages publish shares outstanding per fund, but no official free flow feed across funds was found"
+  }
+ },
+ "requests_this_run": {
+  "fed_rss": 3,
+  "ecb_rss": 2,
+  "boj_rss": 2,
+  "boe_rss": 2,
+  "hkma_api": 2,
+  "whitehouse_rss": 3,
+  "treasury_rss": 2,
+  "fedreg": 4
+ },
+ "tables": {
+  "insider_tx": {
+   "rows": 0,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\insider_tx.jsonl"
+  },
+  "filing_events": {
+   "rows": 0,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\filing_events.jsonl"
+  },
+  "politician_filings": {
+   "rows": 0,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_filings.jsonl"
+  },
+  "politician_trades": {
+   "rows": 0,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_trades.jsonl"
+  },
+  "positioning_cot": {
+   "rows": 0,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\positioning_cot.jsonl"
+  },
+  "short_interest": {
+   "rows": 0,
+   "public_last_24h": 0,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\short_interest.jsonl"
+  },
+  "policy_events": {
+   "rows": 560,
+   "public_last_24h": 249,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\policy_events.jsonl"
+  }
+ }
+}

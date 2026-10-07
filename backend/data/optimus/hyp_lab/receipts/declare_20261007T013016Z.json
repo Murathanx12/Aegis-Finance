@@ -1,0 +1,69 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-10-07",
+ "declared_utc": "2026-10-07T01:30:16+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [],
+ "cells": [
+  {
+   "hyp_id": "H-ba24e67c41",
+   "title": "10Y yield spike lifts life insurers over P&C",
+   "family": "macro_readthrough_rates",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "^TNX",
+    "targets": [
+     "MET",
+     "PRU",
+     "AFL",
+     "ALL",
+     "TRV",
+     "CB"
+    ],
+    "expected_sign": 1,
+    "h": 5,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "Life-minus-P&C spread is zero or negative in the t+1 to t+5 window after the yield shock.",
+   "separation_from_beta": "Compare life insurer basket to P&C basket and to XLF; the life-minus-P&C spread should be positive and not explained by broad financials beta."
+  },
+  {
+   "hyp_id": "H-7b0d6b3b19",
+   "title": "Co-mention read-through after regulatory approval events",
+   "family": "event_readthrough_text_link",
+   "target": "return",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "comention",
+    "event_type": "regulatory_approval",
+    "min_ratio": 2.0,
+    "k": 5,
+    "min_source_dv_pct": 0.5
+   },
+   "split": {},
+   "refutation": "If co-mentioned peers' next-session residual is not more positive than vol-matched unlinked peers (spread <= 0, t < 1), refuted.",
+   "separation_from_beta": "Compare co-mentioned peers to vol-matched unlinked names in the same sub-industry; the linked-minus-unlinked residual spread should be positive."
+  },
+  {
+   "hyp_id": "H-8f7028970b",
+   "title": "Clinical trial failure read-through to platform partners",
+   "family": "event_readthrough_text_link",
+   "target": "direction",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "comention",
+    "event_type": "clinical_trial_result",
+    "min_ratio": 2.5,
+    "k": 6,
+    "min_source_dv_pct": 0.5
+   },
+   "split": {},
+   "refutation": "If partner names do not underperform their vol-matched sector controls the next session, or if the effect appears equally in non-partners, the hypothesis is refuted.",
+   "separation_from_beta": "Partner basket should underperform XBI-matched controls with similar size and volatility; effect should be absent for non-partner biotechs."
+  }
+ ],
+ "sha256": "02ee7bc23f7c83031f38956c1d57814648c0a0ebc05cdc6c8607d2468fe81fac"
+}

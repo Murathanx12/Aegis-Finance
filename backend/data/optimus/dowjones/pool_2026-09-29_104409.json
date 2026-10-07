@@ -1,0 +1,232 @@
+{
+ "receipt": "reader_pool",
+ "started_utc": "2026-09-29T10:44:22+00:00",
+ "pid": 173464,
+ "profile": "muratclaw",
+ "names": 132,
+ "books": [
+  "AAOI",
+  "AAPL",
+  "AARD",
+  "ABSI",
+  "ADUS",
+  "AGIO",
+  "ALG",
+  "AMSC",
+  "AMZN",
+  "APPS",
+  "ARCO",
+  "AVGO",
+  "AVPT",
+  "AXTI",
+  "BAND",
+  "BBIO",
+  "BE",
+  "BHVN",
+  "BLZE",
+  "BR",
+  "CCJ",
+  "CHD",
+  "CHH",
+  "CIFR",
+  "CLS",
+  "COGT",
+  "DKNG",
+  "FORM",
+  "FSLY",
+  "GEV",
+  "GMAB",
+  "GOOG",
+  "GOOGL",
+  "HOOD",
+  "HUBS",
+  "HUT",
+  "ICHR",
+  "INCY",
+  "IONQ",
+  "IOVA",
+  "JAZZ",
+  "KYTX",
+  "LEU",
+  "META",
+  "MP",
+  "MSFT",
+  "MU",
+  "MXL",
+  "NOVT",
+  "NTLA",
+  "NVDA",
+  "NVT",
+  "PAGS",
+  "PDS",
+  "PRAX",
+  "PRCH",
+  "QUBT",
+  "RGEN",
+  "SLDP",
+  "SNDK",
+  "SNDR",
+  "SOC",
+  "STNG",
+  "TS",
+  "TSM",
+  "VELO",
+  "VKTX",
+  "VRT",
+  "VRTX",
+  "WST"
+ ],
+ "fresh": [
+  "AB",
+  "AMD",
+  "BTGO",
+  "BZH",
+  "DKNG",
+  "DT",
+  "ENVA",
+  "ETON",
+  "GEN",
+  "HUT",
+  "IDT",
+  "MARA",
+  "MDB",
+  "MRVL",
+  "QMCO",
+  "RNG",
+  "SATA",
+  "SDOT",
+  "VKTX",
+  "VSTS"
+ ],
+ "stop_reason": "REFUSED_THROTTLE_DAY: 4000 page loads in 24 h >= 4000",
+ "pages": 2,
+ "stats": {
+  "barrons.com": {
+   "links_found": 12,
+   "links_new": 0,
+   "front": 1
+  },
+  "wsj.com": {
+   "links_found": 12,
+   "links_new": 2,
+   "front": 1
+  }
+ },
+ "classes": {
+  "reuters.com": {
+   "ROBOTS_DISALLOWED": 6
+  },
+  "apnews.com": {},
+  "asia.nikkei.com": {},
+  "barrons.com": {
+   "OK": 1
+  },
+  "bbc.com": {},
+  "bls.gov": {},
+  "cnbc.com": {},
+  "federalreserve.gov": {},
+  "finance.yahoo.com": {},
+  "ft.com": {},
+  "home.treasury.gov": {},
+  "marketwatch.com": {},
+  "reddit.com": {},
+  "scmp.com": {},
+  "sec.gov": {},
+  "stocktwits.com": {},
+  "treasury.gov": {},
+  "wsj.com": {
+   "OK": 1
+  },
+  "x.com": {}
+ },
+ "timing_medians": {
+  "barrons.com|front": {
+   "n": 1,
+   "median_wait_s": 0.0,
+   "median_open_s": 9.31,
+   "median_work_s": 24.69
+  },
+  "wsj.com|front": {
+   "n": 1,
+   "median_wait_s": 0.0,
+   "median_open_s": 10.35,
+   "median_work_s": 26.74
+  }
+ },
+ "timings_tail": [
+  {
+   "host": "barrons.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 9.31,
+   "work_s": 24.69,
+   "total_s": 34.01,
+   "outcome": "OK",
+   "at": "2026-09-29T10:44:58+00:00"
+  },
+  {
+   "host": "wsj.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 10.35,
+   "work_s": 26.74,
+   "total_s": 37.12,
+   "outcome": "OK",
+   "at": "2026-09-29T10:44:59+00:00"
+  }
+ ],
+ "governor_history": [
+  {
+   "t": "2026-09-29T10:44:22+00:00",
+   "from": 1,
+   "to": 2,
+   "free_gb": 4.88
+  },
+  {
+   "t": "2026-09-29T10:44:37+00:00",
+   "from": 2,
+   "to": 3,
+   "free_gb": 3.97
+  }
+ ],
+ "cooling_events": [],
+ "media": {},
+ "sections_dropped": [
+  "https://finance.yahoo.com/topic/economic-news/",
+  "https://www.cnbc.com/asia-markets/",
+  "https://www.cnbc.com/video/",
+  "https://www.federalreserve.gov/newsevents/speeches.htm",
+  "https://www.wsj.com/podcasts"
+ ],
+ "errors": [],
+ "fronts": {
+  "barrons:technology": {
+   "url": "https://www.barrons.com/topics/technology",
+   "landed": "https://www.barrons.com/topics/technology",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T10:44:58+00:00",
+   "links": 12,
+   "new": 0
+  },
+  "wsj:economy": {
+   "url": "https://www.wsj.com/economy",
+   "landed": "https://www.wsj.com/economy",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T10:44:59+00:00",
+   "links": 12,
+   "new": 2
+  }
+ },
+ "open_tabs_now": [],
+ "orphaned_tabs": [],
+ "reader_tab_ids": [
+  "C171DE776D761A56D42BB6D5CBF9C867",
+  "34A90781281F6203188AB8A46DFF65B8"
+ ],
+ "throttle_targets_s": [
+  23.13,
+  23.57
+ ]
+}

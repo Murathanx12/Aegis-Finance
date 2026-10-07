@@ -322,7 +322,33 @@ OPPORTUNITIES = {**keys("schema", "generated_utc", "asof", "run_id", "builder", 
                                          "n_rows_in_receipt", "rows_trimmed_note"),
                                   "coverage": MapOf(LEAF), "rows": ListOf(OPP_ROW)})}
 
+# Brain belief-state board (chunk C-brain, 2026-10-07): beliefs.json / scenarios.json /
+# belief_updates_<month>.jsonl, through this same deny-by-default allow-list. Scenario
+# probability is served only as the already-computed DISPLAY number
+# (`world_state.scenario_probability(s, 'display')`); no raw internal field is listed.
+BELIEF_EDGE = keys("to", "sign", "lag_sessions", "support", "example_theme")
+BELIEF_ROW = {**keys("topic", "meaning", "direction", "prior_direction", "confidence", "mass_up", "mass_down",
+                     "half_life_days", "hours_since_update", "recent_change", "flipped_this_cycle",
+                     "evidence_this_cycle", "n_root_events_this_cycle", "n_new_root_events_this_cycle",
+                     "evidence_basis", "belief_change", "n_contradictions", "contradicted", "has_evidence"),
+             "sectors": ListOf(LEAF), "co_mention_edges": ListOf(BELIEF_EDGE)}
+SCENARIO_ROW = {**keys("scenario_id", "name", "horizon_year", "probability_display", "probability_source",
+                       "prior_version", "prior_author", "prior_declared_at", "use"),
+                "drivers": ListOf(LEAF), "falsifiers": ListOf(LEAF),
+                "beneficiary_sectors": ListOf(LEAF), "loser_sectors": ListOf(LEAF)}
+BELIEF_UPDATE_ROW = keys("t", "topic", "direction", "prior_direction", "confidence", "belief_change",
+                        "hours_since_prior", "contradiction", "n_new_root_events", "flipped")
+REGIME_FIELD_ROW = keys("field", "variable", "horizon", "n_entry_sessions", "trust", "n_open", "brier_model_raw",
+                        "brier_persistence", "verdict_persistence", "brier_base_rate", "verdict_base_rate")
+BRAIN = {**BASE, **keys("as_of", "digest_id", "pulse_window_hours", "co_mention_label"),
+         "beliefs": ListOf(BELIEF_ROW), "scenarios": ListOf(SCENARIO_ROW),
+         "regime": {**keys("trust", "note", "n_fields"), "vs_persistence": MapOf(LEAF), "vs_base_rate": MapOf(LEAF),
+                    "baselines": ListOf(LEAF), "fields": ListOf(REGIME_FIELD_ROW)},
+         "belief_stability": keys("belief_stability", "status", "max", "n_compared", "definition"),
+         "belief_updates": ListOf(BELIEF_UPDATE_ROW),
+         "links": MapOf(LEAF)}
+
 SPEC = {"arena": ARENA, "arena_stories": STORIES, "forecast_lab": FORECAST, "theory_lab": THEORY,
-        "system_health": HEALTH, "opportunities": OPPORTUNITIES}
+        "system_health": HEALTH, "opportunities": OPPORTUNITIES, "brain": BRAIN}
 
 __all__ = ["DENY_KEYS", "LEAF", "ListOf", "MapOf", "SPEC", "sanitise", "scrub_str"]

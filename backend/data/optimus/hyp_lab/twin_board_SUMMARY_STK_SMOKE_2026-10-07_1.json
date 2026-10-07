@@ -1,0 +1,63 @@
+{
+ "schema": "hyp_lab/twin_board/2",
+ "run_id": "STK_SMOKE_2026-10-07_1",
+ "written_utc": "2026-10-06T16:37:15+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "status": "OK",
+ "twin_kind": "sticky",
+ "cost_convention": "OWN_TURNOVER_SAME_COST_MODEL",
+ "cost_convention_doc": "The twin pays the SAME cost model as the rule it is matched to, on ITS OWN measured\n    turnover -- never a flat full round trip every month.\n\n    * Per-trade cost model (shared by rule and twin): each traded weight |w_t - w_{t-1}|\n      pays half of that name's round-trip spread; the round trip is the board's per-name\n      spread (on the CRSP boards max(Corwin-Schultz at the decision date, capped, the flat\n      6/10/18/35 bps band) -- the turnover-scaled Corwin-Schultz variant). `trade_cost`.\n    * Turnover: the twin's OWN one-way turnover, measured on the twin held as a portfolio\n      (weights drift between rebalances, a name is traded only when its weight changes).\n      A twin that holds still pays nothing; a twin whose turnover equals its rule's pays\n      what the rule pays on the same spreads. `turnover_cost`, `turnover_scaled_net`.\n    * Why: until 2026-10-06 the bridges board charged the twin the full Corwin-Schultz\n      round trip every month (Corwin-Schultz subtracted from every name's forward return)\n      while the rule paid only its own 10-50% turnover. A low-turnover rule then \"beat\"\n      its twin by the twin's cost alone: 106 of 161 rules at t >= 2, 18 on gross selection\n      (`hyp_lab/twin_board_SUMMARY_TB_2026-09-30_1.json`).\n    * The old charge survives ONLY as `twin_full_round_trip_upper_bound`, printed in the\n      `UPPER_BOUND_COLUMN` for comparison. No verdict reads it.\n    ",
+ "four_columns": [
+  "pure_selection",
+  "fair_twin_net",
+  "net_minus_market",
+  "twin_full_round_trip_UPPER_BOUND"
+ ],
+ "windows": {
+  "full": [
+   null,
+   null
+  ],
+  "design": [
+   "1991-01-01",
+   "2008-12-31"
+  ],
+  "validate": [
+   "2009-01-01",
+   "2016-12-31"
+  ],
+  "late": [
+   "2017-01-01",
+   "2024-12-31"
+  ],
+  "design_validate": [
+   "1991-01-01",
+   "2016-12-31"
+  ]
+ },
+ "llm_spend_usd": 0.0,
+ "supersedes_for_twin_reads": "nothing: a sticky-twin board BESIDE the basket board",
+ "sticky_tolerance": 0.03,
+ "summary": {
+  "n_rules": 4,
+  "n_refused": 0,
+  "refused": [],
+  "n_ok": 4,
+  "pure_selection_t_ge_2": 1,
+  "fair_twin_t_ge_2": 1,
+  "upper_bound_twin_t_ge_2": 4,
+  "board_flat_rule_minus_twin21_t_ge_2": 1,
+  "net_minus_market_validate_t_ge_2": 0,
+  "beats_fair_twin_and_market_validate": [],
+  "fair_twin_and_pure_selection_t_ge_2": [
+   "cash_lowvol"
+  ],
+  "beats_fair_twin_and_selection_and_market_validate": [],
+  "median_twin_turnover_minus_rule_turnover": 0.005509472420948958,
+  "beats_fair_twin_1991_2016_and_market_validate": [],
+  "median_upper_bound_minus_fair_mean_monthly": 0.006358369017258444,
+  "sticky_median_of_median_abs_turnover_gap": 0.007677226941708651,
+  "refused_reasons": {}
+ },
+ "seconds": 61.5
+}

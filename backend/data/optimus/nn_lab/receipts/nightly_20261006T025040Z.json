@@ -1,0 +1,21 @@
+{
+ "artefact": "NN_LAB_NIGHTLY",
+ "schema": 2,
+ "run_id": "nightly_20261006T025040Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "broker_authority": "NONE: writes predictions, never orders",
+ "started_utc": "2026-10-06T02:50:40+00:00",
+ "variant": "dist",
+ "status": "FAILED",
+ "error": "TableShrink(\"table would LOSE 4 stored grid rows, e.g. [('2026-01-20', 'EQBK'), ('2026-01-20', 'THFF'), ('2026-01-27', 'THFF')]; refused, original kept\")",
+ "bars": {
+  "table_last_session": "1970-01-01",
+  "last_closed_weekday": "2026-10-05",
+  "note": "weekday calendar: the day after a US holiday can read STALE_BARS falsely"
+ },
+ "new_rows_since_last_run": 0,
+ "previous_run": "nightly_20261005T015651Z",
+ "per_model": [],
+ "elapsed_s": 32.4,
+ "written_utc": "2026-10-06T02:51:12+00:00"
+}

@@ -1,0 +1,62 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-10-05",
+ "declared_utc": "2026-10-05T01:57:13+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [],
+ "cells": [
+  {
+   "hyp_id": "H-f7adb864b0",
+   "title": "Guidance-cut read-through to correlation peers",
+   "family": "event_readthrough_corr_peer",
+   "target": "co_movement",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "corr_peer",
+    "event_type": "guidance_change",
+    "min_ratio": 2.5,
+    "k": 5,
+    "min_source_dv_pct": 0.5
+   },
+   "split": {},
+   "refutation": "If correlation peers' next-session residual is not more negative than vol-matched uncorrelated peers (spread >= 0, t < 1), refuted.",
+   "separation_from_beta": "Compare correlation peers to vol-matched uncorrelated names in the same sector; the peer-minus-control residual spread should be negative."
+  },
+  {
+   "hyp_id": "H-54e0f8e467",
+   "title": "Regulatory approval for one firm lifts co-mentioned peers",
+   "family": "event_readthrough_corr_peer",
+   "target": "direction",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "comention",
+    "event_type": "regulatory_approval",
+    "min_ratio": 2.5,
+    "k": 5,
+    "min_source_dv_pct": 0.5
+   },
+   "split": {},
+   "refutation": "If co-mentioned peers show no significant next-session abnormal return relative to vol-matched unlinked peers, the hypothesis is refuted.",
+   "separation_from_beta": "Compare peers' next-session return to their own market-beta-adjusted return and to vol-matched non-linked peers; effect should be present only for co-mentioned peers."
+  },
+  {
+   "hyp_id": "H-67ea028ef9",
+   "title": "Equity issuance dilution hits correlated peers",
+   "family": "event_readthrough_corr_peer",
+   "target": "direction",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "corr_peer",
+    "event_type": "equity_issuance_dilution",
+    "min_ratio": 2.5,
+    "k": 4,
+    "min_source_dv_pct": 0.0
+   },
+   "split": {},
+   "refutation": "No significant peer underperformance versus vol-matched unlinked controls in the confirm sample.",
+   "separation_from_beta": "Peer underperformance exceeds its beta-implied move and is larger than vol-matched unlinked names."
+  }
+ ],
+ "sha256": "3654c64a946521647ffcde294cc6ed64a4de85eba58170afbbf036b17ecc3eef"
+}

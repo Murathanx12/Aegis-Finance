@@ -1,0 +1,101 @@
+{
+ "job": "hyp_lab.nightly",
+ "started_utc": "2026-10-04T01:30:01+00:00",
+ "night": "2026-10-04",
+ "k": 3,
+ "cap_usd": 0.4,
+ "free_ram_gb_start": 14.83,
+ "generation": [
+  {
+   "provider": "deepseek",
+   "ok": true,
+   "n_items": 8,
+   "n_rows": 8,
+   "status": {
+    "PROPOSED": 5,
+    "DUPLICATE_IN_LEDGER": 3
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\generate_deepseek_20261004T013010Z.json",
+   "served_model": "deepseek-flash"
+  },
+  {
+   "provider": "local",
+   "ok": false,
+   "status": "SKIPPED_SERVER_NOT_UP"
+  }
+ ],
+ "declared": [
+  "H-b957131a36",
+  "H-6a49a0b542",
+  "H-039df299c0"
+ ],
+ "declare_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\declare_20261004T013018Z.json",
+ "results": [
+  {
+   "hyp_id": "H-b957131a36",
+   "title": "Oil spike lifts oilfield services over integrated majors",
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00610 <= 0",
+   "design": {
+    "mean": 0.008874,
+    "t": 1.66,
+    "mde": 0.014943,
+    "n": 97,
+    "n_blocks": 44
+   },
+   "confirm": {
+    "mean": -0.006099,
+    "t": -0.91,
+    "mde": 0.018782,
+    "n": 57,
+    "n_blocks": 26
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-b957131a36_20261004T013023Z.json"
+  },
+  {
+   "hyp_id": "H-6a49a0b542",
+   "title": "Treasury yield shock lifts rate-sensitive homebuilders next session",
+   "verdict": "CANNOT_DISTINGUISH",
+   "reason": "confirm +0.00260 t 1.01; MDE 0.00718 > effect worth having 0.00200",
+   "design": {
+    "mean": -0.00545,
+    "t": -3.04,
+    "mde": 0.005019,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "confirm": {
+    "mean": 0.002597,
+    "t": 1.01,
+    "mde": 0.007184,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-6a49a0b542_20261004T013023Z.json"
+  },
+  {
+   "hyp_id": "H-039df299c0",
+   "title": "Oil shock -> refiners and chemicals (input cost) lag",
+   "verdict": "CANNOT_DISTINGUISH",
+   "reason": "confirm +0.00491 t 0.74; MDE 0.01859 > effect worth having 0.00200",
+   "design": {
+    "mean": -0.001747,
+    "t": -0.48,
+    "mde": 0.010157,
+    "n": 97,
+    "n_blocks": 44
+   },
+   "confirm": {
+    "mean": 0.004914,
+    "t": 0.74,
+    "mde": 0.018587,
+    "n": 57,
+    "n_blocks": 26
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-039df299c0_20261004T013023Z.json"
+  }
+ ],
+ "spend_this_run_usd": 0.00258,
+ "wall_min": 0.4,
+ "status": "OK"
+}

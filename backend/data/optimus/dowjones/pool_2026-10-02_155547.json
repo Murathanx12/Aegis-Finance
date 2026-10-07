@@ -1,0 +1,472 @@
+{
+ "receipt": "reader_pool",
+ "started_utc": "2026-10-02T15:55:58+00:00",
+ "pid": 159888,
+ "profile": "muratclaw",
+ "names": 132,
+ "books": [
+  "AAOI",
+  "AAPL",
+  "AARD",
+  "ABSI",
+  "ADUS",
+  "AGIO",
+  "ALG",
+  "AMSC",
+  "AMZN",
+  "APPS",
+  "ARCO",
+  "AVGO",
+  "AVPT",
+  "AXTI",
+  "BAND",
+  "BBIO",
+  "BE",
+  "BHVN",
+  "BLZE",
+  "BR",
+  "CCJ",
+  "CHD",
+  "CHH",
+  "CIFR",
+  "CLS",
+  "COGT",
+  "DKNG",
+  "FORM",
+  "FSLY",
+  "GEV",
+  "GMAB",
+  "GOOG",
+  "GOOGL",
+  "HOOD",
+  "HUBS",
+  "HUT",
+  "ICHR",
+  "INCY",
+  "IONQ",
+  "IOVA",
+  "JAZZ",
+  "KYTX",
+  "LEU",
+  "META",
+  "MP",
+  "MSFT",
+  "MU",
+  "MXL",
+  "NOVT",
+  "NTLA",
+  "NVDA",
+  "NVT",
+  "PAGS",
+  "PDS",
+  "PRAX",
+  "PRCH",
+  "QUBT",
+  "RGEN",
+  "SLDP",
+  "SNDK",
+  "SNDR",
+  "SOC",
+  "STNG",
+  "TS",
+  "TSM",
+  "VELO",
+  "VKTX",
+  "VRT",
+  "VRTX",
+  "WST"
+ ],
+ "fresh": [
+  "APPS",
+  "AYI",
+  "CABO",
+  "CGEM",
+  "CHH",
+  "MTX",
+  "NVCR",
+  "SDOT",
+  "TMQ",
+  "TSLA",
+  "WDAY"
+ ],
+ "stop_reason": "STOP file READER_POOL_STOP",
+ "pages": 4,
+ "stats": {
+  "ft.com": {
+   "links_found": 12,
+   "links_new": 12,
+   "front": 1
+  },
+  "cnbc.com": {
+   "links_found": 1,
+   "links_new": 1,
+   "front": 1
+  },
+  "barrons.com": {
+   "links_found": 12,
+   "links_new": 4,
+   "front": 1
+  },
+  "wsj.com": {
+   "links_found": 12,
+   "links_new": 8,
+   "front": 1
+  }
+ },
+ "classes": {
+  "reuters.com": {
+   "ROBOTS_DISALLOWED": 6
+  },
+  "apnews.com": {},
+  "asia.nikkei.com": {},
+  "barrons.com": {
+   "OK": 1
+  },
+  "bbc.com": {},
+  "bls.gov": {},
+  "cnbc.com": {
+   "PAYWALL_CHECKOUT_FRAME": 1,
+   "OK": 1
+  },
+  "finance.yahoo.com": {},
+  "ft.com": {
+   "OK": 1
+  },
+  "home.treasury.gov": {},
+  "marketwatch.com": {},
+  "reddit.com": {},
+  "scmp.com": {},
+  "sec.gov": {},
+  "stocktwits.com": {},
+  "treasury.gov": {},
+  "wsj.com": {
+   "OK": 1
+  },
+  "x.com": {}
+ },
+ "timing_medians": {
+  "ft.com|front": {
+   "n": 1,
+   "median_wait_s": 0.0,
+   "median_open_s": 21.44,
+   "median_work_s": 59.31
+  },
+  "cnbc.com|front": {
+   "n": 1,
+   "median_wait_s": 0.0,
+   "median_open_s": 36.35,
+   "median_work_s": 61.3
+  },
+  "barrons.com|front": {
+   "n": 1,
+   "median_wait_s": 0.0,
+   "median_open_s": 48.39,
+   "median_work_s": 63.65
+  },
+  "wsj.com|front": {
+   "n": 1,
+   "median_wait_s": 0.0,
+   "median_open_s": 19.2,
+   "median_work_s": 59.21
+  }
+ },
+ "timings_tail": [
+  {
+   "host": "ft.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 21.44,
+   "work_s": 59.31,
+   "total_s": 80.76,
+   "outcome": "OK",
+   "at": "2026-10-03T03:42:09+00:00"
+  },
+  {
+   "host": "cnbc.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 36.35,
+   "work_s": 61.3,
+   "total_s": 97.66,
+   "outcome": "OK",
+   "at": "2026-10-03T03:42:10+00:00"
+  },
+  {
+   "host": "barrons.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 48.39,
+   "work_s": 63.65,
+   "total_s": 112.21,
+   "outcome": "OK",
+   "at": "2026-10-03T03:42:11+00:00"
+  },
+  {
+   "host": "wsj.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 19.2,
+   "work_s": 59.21,
+   "total_s": 78.42,
+   "outcome": "OK",
+   "at": "2026-10-03T03:42:11+00:00"
+  }
+ ],
+ "governor_history": [
+  {
+   "t": "2026-10-02T15:55:58+00:00",
+   "from": 1,
+   "to": 2,
+   "free_gb": 10.11
+  },
+  {
+   "t": "2026-10-03T03:40:31+00:00",
+   "from": 2,
+   "to": 3,
+   "free_gb": 6.92
+  },
+  {
+   "t": "2026-10-03T03:40:47+00:00",
+   "from": 3,
+   "to": 4,
+   "free_gb": 5.64
+  }
+ ],
+ "cooling_events": [],
+ "media": {},
+ "sections_dropped": [
+  "https://finance.yahoo.com/topic/economic-news/",
+  "https://www.cnbc.com/asia-markets/",
+  "https://www.cnbc.com/video/",
+  "https://www.federalreserve.gov/newsevents/speeches.htm",
+  "https://www.wsj.com/podcasts"
+ ],
+ "errors": [
+  "front:wsj:home: TimeoutExpired: Command '['C:\\\\Program Files\\\\nodejs\\\\node.EXE', 'C:\\\\Users\\\\mrthn\\\\AppData\\\\Roaming\\\\npm\\\\node_modules\\\\openclaw\\\\openclaw.mjs', 'browser', 'profiles']' timed out after -42114.06300000008 seconds"
+ ],
+ "fronts": {
+  "ft:markets": {
+   "url": "https://www.ft.com/markets",
+   "landed": "https://www.ft.com/markets",
+   "title": "",
+   "class": "OK",
+   "at": "2026-10-03T03:42:09+00:00",
+   "links": 12,
+   "new": 12
+  },
+  "cnbc:home": {
+   "url": "https://www.cnbc.com/world/",
+   "landed": "https://www.cnbc.com/world/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-10-03T03:42:10+00:00",
+   "links": 1,
+   "new": 1
+  },
+  "barrons:home": {
+   "url": "https://www.barrons.com/",
+   "landed": "https://www.barrons.com/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-10-03T03:42:10+00:00",
+   "links": 12,
+   "new": 4
+  },
+  "wsj:markets": {
+   "url": "https://www.wsj.com/finance",
+   "landed": "https://www.wsj.com/finance",
+   "title": "",
+   "class": "OK",
+   "at": "2026-10-03T03:42:10+00:00",
+   "links": 12,
+   "new": 8
+  }
+ },
+ "open_tabs_now": [],
+ "orphaned_tabs": [],
+ "reader_tab_ids": [
+  "1C29787F672514BEEE2F3F70E95810DB",
+  "A63B18E0F039093936F901F8C22043C4",
+  "8EABEFE71A3F7A0D7DBEBAA8DEFF9D90",
+  "06DC54F5AC6CBAAAFB5068310B2A425F"
+ ],
+ "throttle_targets_s": [
+  18.89,
+  30.45,
+  64.42,
+  25.24
+ ],
+ "budget": {
+  "enabled": true,
+  "state": "READING",
+  "why": null,
+  "hour_allowance_now": 182,
+  "ten_min_allowance_now": 38,
+  "loads_60m_all_readers": 3,
+  "loads_24h_all_readers": 744,
+  "grants_this_run": {
+   "OWN_SHARE": 5
+  },
+  "lanes": {
+   "book_names": {
+    "share": 0.24,
+    "day_target": 960,
+    "hour_quota": 44,
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 156,
+    "ok_24h": 149,
+    "in_flight": 0,
+    "pending": 161,
+    "verdict": "OWN_SHARE"
+   },
+   "universe_names": {
+    "share": 0.12,
+    "day_target": 480,
+    "hour_quota": 22,
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 75,
+    "ok_24h": 65,
+    "in_flight": 0,
+    "pending": 180,
+    "verdict": "OWN_SHARE"
+   },
+   "markets_news": {
+    "share": 0.2,
+    "day_target": 800,
+    "hour_quota": 36,
+    "loads_60m": 3,
+    "ok_60m": 3,
+    "loads_24h": 168,
+    "ok_24h": 164,
+    "in_flight": 0,
+    "pending": 280,
+    "verdict": "OWN_SHARE"
+   },
+   "macro_world": {
+    "share": 0.12,
+    "day_target": 480,
+    "hour_quota": 22,
+    "loads_60m": 1,
+    "ok_60m": 1,
+    "loads_24h": 96,
+    "ok_24h": 93,
+    "in_flight": 0,
+    "pending": 95,
+    "verdict": "OWN_SHARE"
+   },
+   "politics_policy": {
+    "share": 0.08,
+    "day_target": 320,
+    "hour_quota": 15,
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 65,
+    "ok_24h": 64,
+    "in_flight": 0,
+    "pending": 48,
+    "verdict": "OWN_SHARE"
+   },
+   "official_releases": {
+    "share": 0.04,
+    "day_target": 160,
+    "hour_quota": 7,
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 31,
+    "ok_24h": 31,
+    "in_flight": 0,
+    "pending": 7,
+    "verdict": "OWN_SHARE"
+   },
+   "social": {
+    "share": 0.11,
+    "day_target": 440,
+    "hour_quota": 20,
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 79,
+    "ok_24h": 79,
+    "in_flight": 0,
+    "pending": 386,
+    "verdict": "OWN_SHARE"
+   },
+   "digest_asks": {
+    "share": 0.06,
+    "day_target": 240,
+    "hour_quota": 11,
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 64,
+    "ok_24h": 64,
+    "in_flight": 0,
+    "pending": 27,
+    "verdict": "OWN_SHARE"
+   },
+   "overhead": {
+    "share": 0.03,
+    "day_target": 120,
+    "hour_quota": 5,
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 11,
+    "ok_24h": 11,
+    "in_flight": 0,
+    "pending": 0,
+    "verdict": null
+   }
+  },
+  "ok_by_host_60m": {
+   "ft.com": 1,
+   "cnbc.com": 1,
+   "barrons.com": 1,
+   "wsj.com": 1
+  },
+  "ok_by_host_24h": {
+   "reuters.com": 1,
+   "apnews.com": 28,
+   "cnbc.com": 30,
+   "finance.yahoo.com": 20,
+   "bbc.com": 25,
+   "barrons.com": 130,
+   "wsj.com": 136,
+   "marketwatch.com": 154,
+   "ft.com": 12,
+   "asia.nikkei.com": 29,
+   "scmp.com": 42,
+   "bls.gov": 7,
+   "home.treasury.gov": 14,
+   "sec.gov": 13,
+   "x.com": 46,
+   "reddit.com": 17,
+   "stocktwits.com": 16
+  },
+  "hourly_allowance_utc": {
+   "00": 182,
+   "01": 182,
+   "02": 182,
+   "03": 182,
+   "04": 182,
+   "05": 182,
+   "06": 182,
+   "07": 182,
+   "08": 104,
+   "09": 104,
+   "10": 104,
+   "11": 169,
+   "12": 169,
+   "13": 208,
+   "14": 208,
+   "15": 208,
+   "16": 208,
+   "17": 208,
+   "18": 208,
+   "19": 208,
+   "20": 91,
+   "21": 91,
+   "22": 91,
+   "23": 156
+  }
+ }
+}

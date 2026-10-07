@@ -1,10 +1,10 @@
 # Contest rehearsal scoreboard (derived view; the receipts are grades/grade_*.json)
 
-Graded 20261002T063006Z UTC; price source: yfinance; benchmark ACWI opens.
+Graded 20261006T063014Z UTC; price source: yfinance; benchmark ACWI opens.
 
-- positions: 6 ({'CLOSED': 4, 'OPEN': 2})
-- book P&L at 0 bps: $40,269; NAV $1,040,269
-- relative vs ACWI: 0 bps 0.046646, 10 bps 0.045103, 25 bps 0.042788 over ['2026-09-30', '2026-10-01']
+- positions: 10 ({'CLOSED': 6, 'OPEN': 4})
+- book P&L at 0 bps: $23,073; NAV $1,023,073
+- relative vs ACWI: 0 bps 0.02201, 10 bps 0.019697, 25 bps 0.016229 over ['2026-09-30', '2026-10-05']
 
 | sheet | ticker | qty | entry | exit | state | ret (local) | P&L USD | bench | note |
 |---|---|---|---|---|---|---|---|---|---|
@@ -12,5 +12,9 @@ Graded 20261002T063006Z UTC; price source: yfinance; benchmark ACWI opens.
 | 2026-09-30 | MU US Equity | 180 | 2026-09-30 1076.760009765625 | 2026-10-01 1054.0799560546875 | CLOSED | -2.11% | -4,082 | -0.64% |  |
 | 2026-09-30 | AYI US Equity | 622 | 2026-09-30 309.9700012207031 | 2026-10-01 306.44000244140625 | CLOSED | -1.14% | -2,196 | -0.64% |  |
 | 2026-09-30 | ACN US Equity | 1,091 | 2026-09-30 178.10000610351562 | 2026-10-01 215.97999572753906 | CLOSED | +21.27% | +41,327 | -0.64% |  |
-| 2026-09-30 | 4088 JT Equity | 10,600 | 2026-10-01 2882.0 |   | OPEN |  |  |  |  |
-| 2026-10-01 | NKE US Equity | 5,380 | 2026-10-01 35.45000076293945 |   | OPEN |  |  |  |  |
+| 2026-09-30 | 4088 JT Equity | 10,600 | 2026-10-01 2882.0 | 2026-10-05 2865.0 | CLOSED | -0.59% | -1,594 | +0.75% |  |
+| 2026-10-01 | NKE US Equity | 5,380 | 2026-10-01 35.45000076293945 | 2026-10-02 32.54999923706055 | CLOSED | -8.18% | -15,602 | +0.77% |  |
+| 2026-10-04 | 3186 JT Equity | 10,600 | 2026-10-05 2838.0 |   | OPEN |  |  |  |  |
+| 2026-10-05 | AEHR US Equity | 1,776 | 2026-10-05 107.31999969482422 |   | OPEN |  |  |  |  |
+| 2026-10-05 | LW US Equity | 4,368 | 2026-10-05 43.900001525878906 |   | OPEN |  |  |  |  |
+| 2026-10-05 | RPM US Equity | 1,920 | 2026-10-05 99.13999938964844 |   | OPEN |  |  |  |  |

@@ -1,0 +1,386 @@
+{
+ "source": "usaspending",
+ "written_utc": "2026-10-06T21:50:32+00:00",
+ "banner": "SENSOR -- federal contract dollars with provenance and latency; never a trade signal on its own; no scoring path reads it before a declared cell passes",
+ "window": {
+  "start": "2026-07-08",
+  "end": "2026-10-06",
+  "days": 90
+ },
+ "recipients_requested": 10,
+ "requests": 27,
+ "request_classes": {
+  "OK": 27
+ },
+ "rows_read": 2061,
+ "rows_added": 2059,
+ "duplicates": 2,
+ "pit_refused": 0,
+ "action_date_range": [
+  "2026-07-08",
+  "2026-10-02"
+ ],
+ "mapped_by_confidence": {
+  "high": 1949
+ },
+ "obligation_usd_mapped": 6591346587.55,
+ "latency_first_seen_minus_action": {
+  "n": 1947,
+  "median_days": 41.0,
+  "p10_days": 11.0,
+  "p90_days": 81.0,
+  "min_days": 4.0,
+  "max_days": 90.0,
+  "basis": "first_seen_utc date minus action_date"
+ },
+ "latency_by_agency_median_days": {
+  "Corporation for National and Community Service": {
+   "n": 4,
+   "median_days": 26.0
+  },
+  "Department of Agriculture": {
+   "n": 6,
+   "median_days": 19.5
+  },
+  "Department of Commerce": {
+   "n": 76,
+   "median_days": 39.0
+  },
+  "Department of Defense": {
+   "n": 9,
+   "median_days": 75.0
+  },
+  "Department of Education": {
+   "n": 7,
+   "median_days": 40.0
+  },
+  "Department of Energy": {
+   "n": 44,
+   "median_days": 27.0
+  },
+  "Department of Health and Human Services": {
+   "n": 236,
+   "median_days": 34.5
+  },
+  "Department of Homeland Security": {
+   "n": 306,
+   "median_days": 42.0
+  },
+  "Department of Housing and Urban Development": {
+   "n": 7,
+   "median_days": 36.0
+  },
+  "Department of Justice": {
+   "n": 98,
+   "median_days": 33.0
+  },
+  "Department of Labor": {
+   "n": 18,
+   "median_days": 28.5
+  },
+  "Department of State": {
+   "n": 40,
+   "median_days": 37.5
+  },
+  "Department of Transportation": {
+   "n": 352,
+   "median_days": 49.5
+  },
+  "Department of Veterans Affairs": {
+   "n": 42,
+   "median_days": 43.5
+  },
+  "Department of the Interior": {
+   "n": 61,
+   "median_days": 40.0
+  },
+  "Department of the Treasury": {
+   "n": 29,
+   "median_days": 14.0
+  },
+  "Environmental Protection Agency": {
+   "n": 51,
+   "median_days": 63.0
+  },
+  "Executive Office of the President": {
+   "n": 1,
+   "median_days": 50.0
+  },
+  "Federal Trade Commission": {
+   "n": 5,
+   "median_days": 33.0
+  },
+  "General Services Administration": {
+   "n": 329,
+   "median_days": 36.0
+  },
+  "National Aeronautics and Space Administration": {
+   "n": 193,
+   "median_days": 43.0
+  },
+  "National Science Foundation": {
+   "n": 7,
+   "median_days": 26.0
+  },
+  "National Transportation Safety Board": {
+   "n": 1,
+   "median_days": 70.0
+  },
+  "Nuclear Regulatory Commission": {
+   "n": 17,
+   "median_days": 55.0
+  },
+  "Office of Personnel Management": {
+   "n": 1,
+   "median_days": 13.0
+  },
+  "Securities and Exchange Commission": {
+   "n": 3,
+   "median_days": 20.0
+  },
+  "Social Security Administration": {
+   "n": 3,
+   "median_days": 27.0
+  },
+  "U.S. International Development Finance Corporation": {
+   "n": 1,
+   "median_days": 88.0
+  }
+ },
+ "not_mapped_top": {
+  "NOT_MAPPED:QTC MEDICAL SERVICES INC": 30,
+  "NOT_MAPPED:JEPPESEN FOREFLIGHT, INC.": 12,
+  "NOT_MAPPED:THUNDERYARD LIBERTY JV LLC": 10,
+  "NOT_MAPPED:MAGELLAN FEDERAL, INC.": 8,
+  "NOT_MAPPED:NORTH WIND PORTAGE, INC.": 5,
+  "NOT_MAPPED:DYNETICS, INC.": 5,
+  "NOT_MAPPED:AQUILENT, INC.": 5,
+  "NOT_MAPPED:METRO MACHINE CORP.": 4,
+  "NOT_MAPPED:MILLENNIUM SPACE SYSTEMS, INC.": 4,
+  "NOT_MAPPED:THUNDERYARD SOLUTIONS LLC": 4,
+  "NOT_MAPPED:ZETA ASSOCIATES INC": 3,
+  "NOT_MAPPED:DYNPORT VACCINE COMPANY LLC": 3,
+  "NOT_MAPPED:KAHU, A LEIDOS AND PUEO JV, LLC": 3,
+  "NOT_MAPPED:FOUNDATION CARE LLC": 3,
+  "NOT_MAPPED:CSRA LLC": 2,
+  "NOT_MAPPED:VEROCEL, INC": 2,
+  "NOT_MAPPED:ASTROTECH SPACE OPERATIONS, LLC": 1,
+  "NOT_MAPPED:GPS SOURCE INC": 1,
+  "NOT_MAPPED:JET AVIATION FLIGHT SERVICES INC": 1,
+  "NOT_MAPPED:DIGITAL RECEIVER TECHNOLOGY, INC.": 1,
+  "NOT_MAPPED:HRL LABORATORIES, LLC": 1,
+  "NOT_MAPPED:BELL BOEING JOINT PROJECT OFFICE": 1,
+  "NOT_MAPPED:LIQUID ROBOTICS, INC.": 1,
+  "NOT_MAPPED:REMOTEC, INC.": 1,
+  "NOT_MAPPED:SCALED COMPOSITES, LLC": 1
+ },
+ "per_recipient": {
+  "LOCKHEED MARTIN": {
+   "ticker": "LMT",
+   "rows_read": 129,
+   "pages": 2,
+   "pages_truncated": false,
+   "complete_from": "2026-07-08",
+   "match": {
+    "MAPPED": 125,
+    "NOT_MAPPED": 4
+   },
+   "uei_seen": [
+    "FYHNA5WC8XD7",
+    "G4KDGE4JFFK7",
+    "G9CZJMSCRR28",
+    "H11HD5VHGHN3",
+    "H7PNSVNN5827",
+    "HDHVQ4EF8A89",
+    "KDT2YLB34NT6",
+    "LTKKCY4XML96",
+    "LXKGXB75YKY6",
+    "MLZQLK2GQDW7",
+    "NMHFLDYJJ4C5",
+    "QBUFVVJCH8J4",
+    "SJDEB3MKJEW5",
+    "UTJWTSLMFNG4",
+    "VXHLJL9WVYE7",
+    "WUVWJLHRU5A5"
+   ]
+  },
+  "RAYTHEON": {
+   "ticker": "RTX",
+   "rows_read": 92,
+   "pages": 1,
+   "pages_truncated": false,
+   "complete_from": "2026-07-08",
+   "match": {
+    "MAPPED": 92
+   },
+   "uei_seen": [
+    "F1ZBMFDJMGL3",
+    "FBTTZQ8ZLK26",
+    "KLW3ZYL15493",
+    "LWF3QUSCDNG1",
+    "NBSLHP77ZJQ1",
+    "NM28F17E1ZY7",
+    "S7NEKPHEMP26",
+    "Y5ZZFR2AQC63",
+    "YD6LTFVUZNG1"
+   ]
+  },
+  "GENERAL DYNAMICS": {
+   "ticker": "GD",
+   "rows_read": 637,
+   "pages": 7,
+   "pages_truncated": false,
+   "complete_from": "2026-07-08",
+   "match": {
+    "MAPPED": 626,
+    "NOT_MAPPED": 11
+   },
+   "uei_seen": [
+    "D93YKLC3MK67",
+    "LDUJLC79HNK5",
+    "MU3CM1145E44",
+    "MWDRZJ2ZVPV7",
+    "NGABP44KQF33",
+    "NYM8TAUFLXP3",
+    "S4ZAF64LJ1G3",
+    "SMNWM6HN79X5",
+    "Z2L7LVNEAPC3",
+    "ZT1MXQNNJ4A5"
+   ]
+  },
+  "BOEING": {
+   "ticker": "BA",
+   "rows_read": 105,
+   "pages": 2,
+   "pages_truncated": false,
+   "complete_from": "2026-07-08",
+   "match": {
+    "MAPPED": 83,
+    "NOT_MAPPED": 22
+   },
+   "uei_seen": [
+    "D27FSZD2L2U9",
+    "DLEKTJFY1UX7",
+    "FBRTAX7SGND3",
+    "HLWWEH2CCXW5",
+    "JJM4FRDZJDX1",
+    "LAJJQWA1PF31",
+    "NU2UC8MX6NK1",
+    "QL4CHNKHQQF4",
+    "RMYAXLTM5S24",
+    "SML4NN2CT556",
+    "TXT3HAAZREF1",
+    "VH1ZJJ9CW9B4",
+    "WDW1NAE5MCL5",
+    "WZWRLY4G3PL8"
+   ]
+  },
+  "NORTHROP GRUMMAN": {
+   "ticker": "NOC",
+   "rows_read": 58,
+   "pages": 1,
+   "pages_truncated": false,
+   "complete_from": "2026-07-08",
+   "match": {
+    "MAPPED": 56,
+    "NOT_MAPPED": 2
+   },
+   "uei_seen": [
+    "DCA4UMKB63Q9",
+    "DJUCEANK2KP4",
+    "GV68LKRDAV26",
+    "KV8YDNS7VMT9",
+    "LALWKM623MU7",
+    "LRVQERN7YNH9",
+    "PQGNEEY9W5M3",
+    "Q11ZHUFBW741",
+    "REBFXSNFXAL4",
+    "T9XKQSKMW4J1",
+    "VSBAFMDKTWL4",
+    "X1MRDHSQMJ58",
+    "ZGQ3ANLXB2N4"
+   ]
+  },
+  "LEIDOS": {
+   "ticker": "LDOS",
+   "rows_read": 449,
+   "pages": 5,
+   "pages_truncated": false,
+   "complete_from": "2026-07-08",
+   "match": {
+    "NOT_MAPPED": 43,
+    "MAPPED": 406
+   },
+   "uei_seen": [
+    "E9BSACNAJ7G1",
+    "FG7CGCHSNML9",
+    "GKGQZ967KUA8",
+    "HV8BH9BPG8Y9",
+    "JSTDGZNFP4A3",
+    "KTMAJCY6JXM3",
+    "LK5RJU5V68X6",
+    "MDSWM6MB1BH7",
+    "MYKLJHTX3MM7",
+    "QLNMVC12KWY3",
+    "R8DWHMDFAFF1",
+    "UE9QJD4KK1L6",
+    "WEFTSLL9UN87",
+    "X1NCU18Q19T9",
+    "X38JVP4R72E1"
+   ]
+  },
+  "HUMANA": {
+   "ticker": "HUM",
+   "rows_read": 0,
+   "pages": 1,
+   "pages_truncated": false,
+   "complete_from": "2026-07-08",
+   "match": {},
+   "uei_seen": []
+  },
+  "CENTENE": {
+   "ticker": "CNC",
+   "rows_read": 11,
+   "pages": 1,
+   "pages_truncated": false,
+   "complete_from": "2026-07-08",
+   "match": {
+    "NOT_MAPPED": 11
+   },
+   "uei_seen": []
+  },
+  "BOOZ ALLEN HAMILTON": {
+   "ticker": "BAH",
+   "rows_read": 533,
+   "pages": 6,
+   "pages_truncated": false,
+   "complete_from": "2026-07-08",
+   "match": {
+    "MAPPED": 514,
+    "NOT_MAPPED": 19
+   },
+   "uei_seen": [
+    "JCBMLGPE6Z71",
+    "KHK6E1JW9C15",
+    "VZHBEXPGE6G3"
+   ]
+  },
+  "PALANTIR": {
+   "ticker": "PLTR",
+   "rows_read": 47,
+   "pages": 1,
+   "pages_truncated": false,
+   "complete_from": "2026-07-08",
+   "match": {
+    "MAPPED": 47
+   },
+   "uei_seen": [
+    "FSY4LVSBGWB7",
+    "HNN4F9JZWDY8"
+   ]
+  }
+ },
+ "refusals": [],
+ "rate_limit": "1,000 requests / 300 s documented; paced at 0.5s per request",
+ "status": "OK"
+}

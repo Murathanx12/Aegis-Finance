@@ -1,0 +1,5379 @@
+{
+ "stamp": "20261006T214443Z",
+ "window": {
+  "since": "2026-10-05T09:44:43+00:00",
+  "until": "2026-10-06T21:44:43+00:00"
+ },
+ "n_items": 1483,
+ "counts": {
+  "article": 538,
+  "archive_dropped": 353,
+  "undated_kept": 980,
+  "duplicate_url": 724,
+  "too_short": 46,
+  "stock_page": 145,
+  "transcript": 57,
+  "social": 60,
+  "social_available": 343,
+  "headline": 683,
+  "duplicate_headline": 186
+ },
+ "n_rows": 1279,
+ "extraction": {
+  "cache_hits": 1279,
+  "dry_run": true
+ },
+ "themes": [],
+ "spend": {
+  "budget_usd": 0.0,
+  "spent_usd": 0.0,
+  "calls": 0,
+  "failed": 0,
+  "unpriced_calls": 0,
+  "served_models": {},
+  "statuses": {},
+  "by_stage_usd": {}
+ },
+ "balance": {
+  "before": null,
+  "after": null,
+  "delta_all_processes": null
+ },
+ "writes": {
+  "n_rows": 2,
+  "n_size": 0,
+  "n_direction": 2,
+  "written": false,
+  "not_written": {},
+  "prediction_ids": [
+   "7deb7900d845e47c",
+   "88b629098e04cb65"
+  ],
+  "first_5d": "2026-10-16",
+  "first_20d": "2026-11-07"
+ },
+ "shadow": {
+  "contract_hash": "f3b149ea42311760",
+  "base_book_id": "439fd84f869744e0",
+  "base_found": true,
+  "base_weights": {
+   "JAZZ": 0.32849435335870486,
+   "TS": 0.3105861117316742,
+   "SNDR": 0.19239366537902164,
+   "TSM": 0.16852586953059928
+  },
+  "trust_dir": 0.0069,
+  "trust_size": 0.0,
+  "grade": {
+   "n_open": 2010,
+   "size": {
+    "n_rows": 16,
+    "n_dates": 4,
+    "mean_improvement": -0.0345,
+    "se": 0.03143,
+    "posterior_mean": -0.003171,
+    "trust": 0.0,
+    "note": "posterior of the per-date Brier improvement, prior N(0, tau^2)"
+   },
+   "direction": {
+    "n_rows": 3,
+    "n_dates": 3,
+    "mean_improvement": 0.01203,
+    "se": 0.09263,
+    "posterior_mean": 0.000139,
+    "trust": 0.0069,
+    "note": "posterior of the per-date Brier improvement, prior N(0, tau^2)"
+   },
+   "regime": {
+    "vs_persistence": {
+     "n_rows": 0,
+     "n_dates": 0,
+     "mean_improvement": null,
+     "se": null,
+     "posterior_mean": 0.0,
+     "trust": 0.0,
+     "note": "no graded dates: the prior (0) stands"
+    },
+    "vs_base_rate": {
+     "n_rows": 0,
+     "n_dates": 0,
+     "mean_improvement": null,
+     "se": null,
+     "posterior_mean": 0.0,
+     "trust": 0.0,
+     "note": "no graded dates: the prior (0) stands"
+    },
+    "trust": 0.0,
+    "note": "regime rows vs persistence AND base rate; trust = the smaller"
+   }
+  },
+  "grade_note": "direction: posterior of the per-date Brier improvement, prior N(0, tau^2); size: posterior of the per-date Brier improvement, prior N(0, tau^2); 2010 news_digest rows open",
+  "signal_names": 48,
+  "base_names_with_news": [],
+  "actual_diff": [
+   {
+    "ticker": "BBD",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.25,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "BORR",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.25,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "CVNA",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.25,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "DKS",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.35,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "DMRA",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.35,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "GME",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.35,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "GS",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "HD",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "IBM",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "INBX",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.35,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "INR",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.35,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "IWM",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.25,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "JAZZ",
+    "base": 0.3285,
+    "news": 0.3279,
+    "signal": null
+   },
+   {
+    "ticker": "MSFT",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "NFLX",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "ORCL",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.25,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "PAM",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.35,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "PG",
+    "base": 0.0,
+    "news": 0.0001,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "SNDR",
+    "base": 0.1924,
+    "news": 0.1921,
+    "signal": null
+   },
+   {
+    "ticker": "TS",
+    "base": 0.3106,
+    "news": 0.31,
+    "signal": null
+   },
+   {
+    "ticker": "TSM",
+    "base": 0.1685,
+    "news": 0.1682,
+    "signal": null
+   }
+  ],
+  "actual_diff_text": "BBD 0.000 -> 0.000; BORR 0.000 -> 0.000; CVNA 0.000 -> 0.000; DKS 0.000 -> 0.000; DMRA 0.000 -> 0.000; GME 0.000 -> 0.000; GS 0.000 -> 0.000; HD 0.000 -> 0.000; IBM 0.000 -> 0.000; INBX 0.000 -> 0.000",
+  "illustrative_trust": 0.5,
+  "illustrative_diff": [
+   {
+    "ticker": "BBD",
+    "base": 0.0,
+    "news": 0.0055,
+    "signal": {
+     "d": 0.25,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "BORR",
+    "base": 0.0,
+    "news": 0.0055,
+    "signal": {
+     "d": 0.25,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "CVNA",
+    "base": 0.0,
+    "news": 0.0055,
+    "signal": {
+     "d": 0.25,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "DKS",
+    "base": 0.0,
+    "news": 0.0078,
+    "signal": {
+     "d": 0.35,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "DMRA",
+    "base": 0.0,
+    "news": 0.0078,
+    "signal": {
+     "d": 0.35,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "GME",
+    "base": 0.0,
+    "news": 0.0078,
+    "signal": {
+     "d": 0.35,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "GS",
+    "base": 0.0,
+    "news": 0.0066,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "HD",
+    "base": 0.0,
+    "news": 0.0066,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "IBM",
+    "base": 0.0,
+    "news": 0.0066,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "INBX",
+    "base": 0.0,
+    "news": 0.0078,
+    "signal": {
+     "d": 0.35,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "INR",
+    "base": 0.0,
+    "news": 0.0078,
+    "signal": {
+     "d": 0.35,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "IWM",
+    "base": 0.0,
+    "news": 0.0055,
+    "signal": {
+     "d": 0.25,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "JAZZ",
+    "base": 0.3285,
+    "news": 0.291,
+    "signal": null
+   },
+   {
+    "ticker": "MSFT",
+    "base": 0.0,
+    "news": 0.0066,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "NFLX",
+    "base": 0.0,
+    "news": 0.0066,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "ORCL",
+    "base": 0.0,
+    "news": 0.0055,
+    "signal": {
+     "d": 0.25,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "PAM",
+    "base": 0.0,
+    "news": 0.0078,
+    "signal": {
+     "d": 0.35,
+     "s": 1.0,
+     "n": 2
+    }
+   },
+   {
+    "ticker": "PG",
+    "base": 0.0,
+    "news": 0.0066,
+    "signal": {
+     "d": 0.3,
+     "s": 1.0,
+     "n": 1
+    }
+   },
+   {
+    "ticker": "SNDR",
+    "base": 0.1924,
+    "news": 0.1704,
+    "signal": null
+   },
+   {
+    "ticker": "TS",
+    "base": 0.3106,
+    "news": 0.2752,
+    "signal": null
+   },
+   {
+    "ticker": "TSM",
+    "base": 0.1685,
+    "news": 0.1493,
+    "signal": null
+   }
+  ],
+  "illustrative_diff_text": "BBD 0.000 -> 0.005; BORR 0.000 -> 0.005; CVNA 0.000 -> 0.005; DKS 0.000 -> 0.008; DMRA 0.000 -> 0.008; GME 0.000 -> 0.008; GS 0.000 -> 0.007; HD 0.000 -> 0.007; IBM 0.000 -> 0.007; INBX 0.000 -> 0.008"
+ },
+ "weak": [
+  "Direction: the model's calls are recorded shrunk to 0.5; nothing here shows direction skill, and the record says LLM direction is at or below a coin.",
+  "Size buckets are relative to the name's own trailing sigma; the frozen map (below_normal 0.18 / normal 0.317 / above_normal 0.50 / extreme 0.70) is a declared guess, graded against the 252-session frequency on the same row.",
+  "Sector and macro implications are typed but NOT graded: no sector ETF is in the price panel.",
+  "Independent-source counts count columns/hosts; two columns of one newsroom count twice.",
+  "One run's rows share one decision date: the effective sample is date blocks, not rows.",
+  "Balance delta includes every process on the DeepSeek key during the run; the per-call price sum ($0.000) is this run's own figure."
+ ],
+ "licence": "PRODUCT_EXPERIMENT",
+ "sections": {
+  "insiders": {
+   "findings": {
+    "window_days": 10.0,
+    "n_rows_in_window": 4977,
+    "n_open_market_buys": 324,
+    "n_open_market_sales": 245,
+    "n_under_10b5_1_skipped": 908,
+    "cluster_buys": [
+     {
+      "ticker": "NONE",
+      "issuer": "Fundrise Real Estate Interval Fund, LLC",
+      "n_insiders": 7,
+      "n_trades": 7,
+      "value_usd": 379740,
+      "roles": {
+       "officer": 3,
+       "director": 2,
+       "CFO": 1,
+       "CEO": 1
+      },
+      "last_public_utc": "2026-10-02T15:00:08+00:00",
+      "names": [
+       "Huskinson W. Todd",
+       "James Christopher J.",
+       "Ladd Robert T.",
+       "Morrison Thomas M",
+       "Solotar Joan",
+       "Staloch Alison"
+      ]
+     },
+     {
+      "ticker": "ACCV",
+      "issuer": "Accelevation Holdings Corp.",
+      "n_insiders": 5,
+      "n_trades": 6,
+      "value_usd": 4098600,
+      "roles": {
+       "officer": 1,
+       "director": 3,
+       "CEO": 2
+      },
+      "last_public_utc": "2026-10-06T01:45:03+00:00",
+      "names": [
+       "Donahue Paul D",
+       "HECKES HOWARD C",
+       "JONES GINGER M",
+       "Jewell Brent C",
+       "Rubiera Michael"
+      ]
+     },
+     {
+      "ticker": "PRHI",
+      "issuer": "Presurance Holdings, Inc.",
+      "n_insiders": 5,
+      "n_trades": 5,
+      "value_usd": 248878,
+      "roles": {
+       "CFO": 1,
+       "CEO": 1,
+       "director": 3
+      },
+      "last_public_utc": "2026-10-01T21:50:10+00:00",
+      "names": [
+       "MELOCHE HAROLD J",
+       "O'Hanlon Isolde",
+       "RONEY BRIAN J",
+       "SARAFA JOSEPH D",
+       "Smith James Grant"
+      ]
+     },
+     {
+      "ticker": "ATCH",
+      "issuer": "AtlasClear Holdings, Inc.",
+      "n_insiders": 5,
+      "n_trades": 9,
+      "value_usd": 162524,
+      "roles": {
+       "director": 3,
+       "CFO": 2,
+       "officer": 4
+      },
+      "last_public_utc": "2026-09-28T21:01:30+00:00",
+      "names": [
+       "Carlson Steven J.",
+       "Hammond Thomas Jon",
+       "Patel Sandip I",
+       "Ridenhour David Craig",
+       "Schaible John Martin"
+      ]
+     },
+     {
+      "ticker": "GME",
+      "issuer": "GameStop Corp.",
+      "n_insiders": 2,
+      "n_trades": 3,
+      "value_usd": 10818337,
+      "roles": {
+       "CEO": 2,
+       "director": 1
+      },
+      "last_public_utc": "2026-10-02T00:55:48+00:00",
+      "names": [
+       "Cohen Ryan",
+       "Turner Nat"
+      ]
+     },
+     {
+      "ticker": "BPRE",
+      "issuer": "Bluerock Private Real Estate Fund",
+      "n_insiders": 2,
+      "n_trades": 10,
+      "value_usd": 9394835,
+      "roles": {
+       "director": 10
+      },
+      "last_public_utc": "2026-10-05T22:06:50+00:00",
+      "names": [
+       "KAMFAR RAMIN",
+       "MacDonald Ryan S"
+      ]
+     },
+     {
+      "ticker": "NYAX",
+      "issuer": "Nayax Ltd.",
+      "n_insiders": 2,
+      "n_trades": 7,
+      "value_usd": 2235562,
+      "roles": {
+       "officer": 4,
+       "CEO": 3
+      },
+      "last_public_utc": "2026-10-02T12:36:48+00:00",
+      "names": [
+       "Ben-Avi David",
+       "Nechmad Yair"
+      ]
+     },
+     {
+      "ticker": "GPUS",
+      "issuer": "Hyperscale Data, Inc.",
+      "n_insiders": 2,
+      "n_trades": 5,
+      "value_usd": 134259,
+      "roles": {
+       "officer": 4,
+       "CEO": 1
+      },
+      "last_public_utc": "2026-09-29T20:42:03+00:00",
+      "names": [
+       "AULT MILTON C III",
+       "Horne William B."
+      ]
+     }
+    ],
+    "large_buys": [
+     {
+      "ticker": "SLBT",
+      "issuer": "SL Science Holding Ltd",
+      "n_insiders": 1,
+      "n_trades": 1,
+      "value_usd": 10329903316818,
+      "roles": {
+       "CEO": 1
+      },
+      "last_public_utc": "2026-10-01T20:30:19+00:00",
+      "names": [
+       "Wang Ching-Dong"
+      ],
+      "top_role": "CEO",
+      "top_value_usd": 10329903316818,
+      "top_owner": "Wang Ching-Dong"
+     },
+     {
+      "ticker": "UUU",
+      "issuer": "UNIVERSAL SAFETY PRODUCTS, INC.",
+      "n_insiders": 1,
+      "n_trades": 1,
+      "value_usd": 92412000,
+      "roles": {
+       "director": 1
+      },
+      "last_public_utc": "2026-10-01T21:30:06+00:00",
+      "names": [
+       "AULT MILTON C III"
+      ],
+      "top_role": "director",
+      "top_value_usd": 92412000,
+      "top_owner": "AULT MILTON C III"
+     },
+     {
+      "ticker": "GME",
+      "issuer": "GameStop Corp.",
+      "n_insiders": 2,
+      "n_trades": 3,
+      "value_usd": 10818337,
+      "roles": {
+       "CEO": 2,
+       "director": 1
+      },
+      "last_public_utc": "2026-10-02T00:55:48+00:00",
+      "names": [
+       "Cohen Ryan",
+       "Turner Nat"
+      ],
+      "top_role": "CEO",
+      "top_value_usd": 10481721,
+      "top_owner": "Cohen Ryan"
+     },
+     {
+      "ticker": "ADRX",
+      "issuer": "ADARx Pharmaceuticals, Inc.",
+      "n_insiders": 1,
+      "n_trades": 3,
+      "value_usd": 27200000,
+      "roles": {
+       "director": 3
+      },
+      "last_public_utc": "2026-09-30T01:43:23+00:00",
+      "names": [
+       "George Simeon"
+      ],
+      "top_role": "director",
+      "top_value_usd": 10074081,
+      "top_owner": "George Simeon"
+     },
+     {
+      "ticker": "BORR",
+      "issuer": "Borr Drilling Ltd",
+      "n_insiders": 1,
+      "n_trades": 1,
+      "value_usd": 6197100,
+      "roles": {
+       "director": 1
+      },
+      "last_public_utc": "2026-10-06T11:29:54+00:00",
+      "names": [
+       "Troim Tor Olav"
+      ],
+      "top_role": "director",
+      "top_value_usd": 6197100,
+      "top_owner": "Troim Tor Olav"
+     },
+     {
+      "ticker": "BBD",
+      "issuer": "BANK BRADESCO",
+      "n_insiders": 1,
+      "n_trades": 23,
+      "value_usd": 39338578,
+      "roles": {
+       "director": 23
+      },
+      "last_public_utc": "2026-10-05T16:12:58+00:00",
+      "names": [
+       "Alvarez Denise Aguiar"
+      ],
+      "top_role": "director",
+      "top_value_usd": 5813402,
+      "top_owner": "Alvarez Denise Aguiar"
+     },
+     {
+      "ticker": "ACCV",
+      "issuer": "Accelevation Holdings Corp.",
+      "n_insiders": 5,
+      "n_trades": 6,
+      "value_usd": 4098600,
+      "roles": {
+       "officer": 1,
+       "director": 3,
+       "CEO": 2
+      },
+      "last_public_utc": "2026-10-06T01:45:03+00:00",
+      "names": [
+       "Donahue Paul D",
+       "HECKES HOWARD C",
+       "JONES GINGER M",
+       "Jewell Brent C",
+       "Rubiera Michael"
+      ],
+      "top_role": "CEO",
+      "top_value_usd": 3600000,
+      "top_owner": "Rubiera Michael"
+     },
+     {
+      "ticker": "ORCL",
+      "issuer": "ORACLE CORP",
+      "n_insiders": 1,
+      "n_trades": 1,
+      "value_usd": 3483800,
+      "roles": {
+       "director": 1
+      },
+      "last_public_utc": "2026-10-01T21:42:53+00:00",
+      "names": [
+       "RUSCKOWSKI STEPHEN H"
+      ],
+      "top_role": "director",
+      "top_value_usd": 3483800,
+      "top_owner": "RUSCKOWSKI STEPHEN H"
+     },
+     {
+      "ticker": "PAM",
+      "issuer": "Pampa Energy Inc.",
+      "n_insiders": 1,
+      "n_trades": 1,
+      "value_usd": 1956500,
+      "roles": {
+       "officer": 1
+      },
+      "last_public_utc": "2026-09-29T19:37:58+00:00",
+      "names": [
+       "Mariani Gustavo"
+      ],
+      "top_role": "officer",
+      "top_value_usd": 1956500,
+      "top_owner": "Mariani Gustavo"
+     },
+     {
+      "ticker": "BPRE",
+      "issuer": "Bluerock Private Real Estate Fund",
+      "n_insiders": 2,
+      "n_trades": 10,
+      "value_usd": 9394835,
+      "roles": {
+       "director": 10
+      },
+      "last_public_utc": "2026-10-05T22:06:50+00:00",
+      "names": [
+       "KAMFAR RAMIN",
+       "MacDonald Ryan S"
+      ],
+      "top_role": "director",
+      "top_value_usd": 1871280,
+      "top_owner": "KAMFAR RAMIN"
+     },
+     {
+      "ticker": "CVNA",
+      "issuer": "CARVANA CO.",
+      "n_insiders": 1,
+      "n_trades": 2,
+      "value_usd": 1544981,
+      "roles": {
+       "director": 2
+      },
+      "last_public_utc": "2026-10-05T22:01:49+00:00",
+      "names": [
+       "MAROONE MICHAEL E"
+      ],
+      "top_role": "director",
+      "top_value_usd": 1304929,
+      "top_owner": "MAROONE MICHAEL E"
+     },
+     {
+      "ticker": "NXH",
+      "issuer": "NEIGHBORHOOD INTELLIGENCE, INC.",
+      "n_insiders": 1,
+      "n_trades": 1,
+      "value_usd": 1000000,
+      "roles": {
+       "CEO": 1
+      },
+      "last_public_utc": "2026-10-06T20:02:40+00:00",
+      "names": [
+       "LEMONIS MARCUS"
+      ],
+      "top_role": "CEO",
+      "top_value_usd": 1000000,
+      "top_owner": "LEMONIS MARCUS"
+     },
+     {
+      "ticker": "NYAX",
+      "issuer": "Nayax Ltd.",
+      "n_insiders": 2,
+      "n_trades": 7,
+      "value_usd": 2235562,
+      "roles": {
+       "officer": 4,
+       "CEO": 3
+      },
+      "last_public_utc": "2026-10-02T12:36:48+00:00",
+      "names": [
+       "Ben-Avi David",
+       "Nechmad Yair"
+      ],
+      "top_role": "CEO",
+      "top_value_usd": 888935,
+      "top_owner": "Nechmad Yair"
+     },
+     {
+      "ticker": "FUND",
+      "issuer": "SPROTT FOCUS TRUST INC.",
+      "n_insiders": 1,
+      "n_trades": 7,
+      "value_usd": 1827221,
+      "roles": {
+       "director": 7
+      },
+      "last_public_utc": "2026-10-01T21:55:51+00:00",
+      "names": [
+       "GEORGE W WHITNEY"
+      ],
+      "top_role": "director",
+      "top_value_usd": 600005,
+      "top_owner": "GEORGE W WHITNEY"
+     },
+     {
+      "ticker": "DKS",
+      "issuer": "DICK'S SPORTING GOODS, INC.",
+      "n_insiders": 1,
+      "n_trades": 1,
+      "value_usd": 499869,
+      "roles": {
+       "officer": 1
+      },
+      "last_public_utc": "2026-10-01T20:58:22+00:00",
+      "names": [
+       "Barnes Matthew"
+      ],
+      "top_role": "officer",
+      "top_value_usd": 499869,
+      "top_owner": "Barnes Matthew"
+     },
+     {
+      "ticker": "INBX",
+      "issuer": "Inhibrx Biosciences, Inc.",
+      "n_insiders": 1,
+      "n_trades": 4,
+      "value_usd": 998784,
+      "roles": {
+       "CEO": 4
+      },
+      "last_public_utc": "2026-09-28T21:47:30+00:00",
+      "names": [
+       "Lappe Mark"
+      ],
+      "top_role": "CEO",
+      "top_value_usd": 328630,
+      "top_owner": "Lappe Mark"
+     },
+     {
+      "ticker": "VCIG",
+      "issuer": "VCI Global Ltd",
+      "n_insiders": 1,
+      "n_trades": 1,
+      "value_usd": 313225,
+      "roles": {
+       "CEO": 1
+      },
+      "last_public_utc": "2026-10-05T10:10:29+00:00",
+      "names": [
+       "HOO VOON HIM"
+      ],
+      "top_role": "CEO",
+      "top_value_usd": 313225,
+      "top_owner": "HOO VOON HIM"
+     },
+     {
+      "ticker": "INR",
+      "issuer": "INFINITY NATURAL RESOURCES, INC.",
+      "n_insiders": 1,
+      "n_trades": 2,
+      "value_usd": 299993,
+      "roles": {
+       "CFO": 2
+      },
+      "last_public_utc": "2026-09-28T22:01:09+00:00",
+      "names": [
+       "Baetz Cary D"
+      ],
+      "top_role": "CFO",
+      "top_value_usd": 295702,
+      "top_owner": "Baetz Cary D"
+     },
+     {
+      "ticker": "DMRA",
+      "issuer": "Damora Therapeutics, Inc.",
+      "n_insiders": 1,
+      "n_trades": 1,
+      "value_usd": 252875,
+      "roles": {
+       "CEO": 1
+      },
+      "last_public_utc": "2026-09-28T11:00:04+00:00",
+      "names": [
+       "Jarrett Jennifer"
+      ],
+      "top_role": "CEO",
+      "top_value_usd": 252875,
+      "top_owner": "Jarrett Jennifer"
+     }
+    ],
+    "large_exec_sales": [
+     {
+      "ticker": "BEKE",
+      "issuer": "KE Holdings Inc.",
+      "role": "CEO",
+      "owner": "Peng Yongdong",
+      "value_usd": 84552003,
+      "last_public_utc": "2026-09-29T10:01:30+00:00"
+     },
+     {
+      "ticker": "MEDP",
+      "issuer": "Medpace Holdings, Inc.",
+      "role": "CEO",
+      "owner": "Troendle August J.",
+      "value_usd": 30320929,
+      "last_public_utc": "2026-10-01T21:43:13+00:00"
+     },
+     {
+      "ticker": "NBIS",
+      "issuer": "Nebius Group N.V.",
+      "role": "CEO",
+      "owner": "Volozh Arkadiy",
+      "value_usd": 8846096,
+      "last_public_utc": "2026-10-05T14:54:53+00:00"
+     },
+     {
+      "ticker": "CRWV",
+      "issuer": "CoreWeave, Inc.",
+      "role": "CEO",
+      "owner": "Intrator Michael N",
+      "value_usd": 6888225,
+      "last_public_utc": "2026-10-03T00:15:40+00:00"
+     }
+    ],
+    "holder_buys": [
+     {
+      "ticker": "LEN",
+      "issuer": "LENNAR CORP /NEW/",
+      "holders": [
+       "BERKSHIRE HATHAWAY INC"
+      ],
+      "value_usd": 192634433
+     },
+     {
+      "ticker": "NONE",
+      "issuer": "CNL Strategic Residential Credit, Inc.",
+      "holders": [
+       "GOLDENTREE ASSET MANAGEMENT LP",
+       "SELTER ERIC JAY",
+       "SENEFF JAMES M JR"
+      ],
+      "value_usd": 47633000
+     },
+     {
+      "ticker": "GPI",
+      "issuer": "GROUP 1 AUTOMOTIVE INC",
+      "holders": [
+       "Conifer Management, L.L.C."
+      ],
+      "value_usd": 31524452
+     },
+     {
+      "ticker": "ADRX",
+      "issuer": "ADARx Pharmaceuticals, Inc.",
+      "holders": [
+       "SR ONE CAPITAL MANAGEMENT, LLC"
+      ],
+      "value_usd": 27200000
+     },
+     {
+      "ticker": "N/A",
+      "issuer": "Fortress Net Lease REIT",
+      "holders": [
+       "TIEDEMANN ADVISORS, LLC"
+      ],
+      "value_usd": 20000000
+     },
+     {
+      "ticker": "COUR",
+      "issuer": "Coursera, Inc.",
+      "holders": [
+       "Pale Fire Capital SE"
+      ],
+      "value_usd": 11355072
+     },
+     {
+      "ticker": "AVR",
+      "issuer": "Anteris Technologies Global Corp.",
+      "holders": [
+       "L1 Capital Pty Ltd"
+      ],
+      "value_usd": 9736563
+     },
+     {
+      "ticker": "QVCG",
+      "issuer": "QVC Group, Inc.",
+      "holders": [
+       "GOLDENTREE ASSET MANAGEMENT LP"
+      ],
+      "value_usd": 4610500
+     },
+     {
+      "ticker": "LLYVK",
+      "issuer": "Liberty Live Holdings, Inc.",
+      "holders": [
+       "MALONE JOHN C"
+      ],
+      "value_usd": 2904982
+     },
+     {
+      "ticker": "PRTA",
+      "issuer": "PROTHENA CORP PUBLIC LTD CO",
+      "holders": [
+       "SCULLY WILLIAM P"
+      ],
+      "value_usd": 1747112
+     },
+     {
+      "ticker": "SAH",
+      "issuer": "SONIC AUTOMOTIVE INC",
+      "holders": [
+       "Rusnak Paul P."
+      ],
+      "value_usd": 1287878
+     },
+     {
+      "ticker": "OM",
+      "issuer": "Outset Medical, Inc.",
+      "holders": [
+       "Leonard Braden Michael"
+      ],
+      "value_usd": 870260
+     },
+     {
+      "ticker": "DLHC",
+      "issuer": "DLH Holdings Corp.",
+      "holders": [
+       "Mink Brook Asset Management LLC"
+      ],
+      "value_usd": 736874
+     },
+     {
+      "ticker": "HDSN",
+      "issuer": "HUDSON TECHNOLOGIES INC /NY",
+      "holders": [
+       "Hartree Partners, LP"
+      ],
+      "value_usd": 604446
+     },
+     {
+      "ticker": "MXF",
+      "issuer": "MEXICO FUND INC",
+      "holders": [
+       "Saba Capital Management, L.P."
+      ],
+      "value_usd": 514190
+     },
+     {
+      "ticker": "LILA",
+      "issuer": "Liberty Latin America Ltd.",
+      "holders": [
+       "MALONE JOHN C"
+      ],
+      "value_usd": 458654
+     },
+     {
+      "ticker": "ACOG",
+      "issuer": "Alpha Cognition Inc.",
+      "holders": [
+       "Opaleye Management Inc."
+      ],
+      "value_usd": 270800
+     },
+     {
+      "ticker": "TRCK",
+      "issuer": "Track Group, Inc.",
+      "holders": [
+       "JCP Investment Management, LLC"
+      ],
+      "value_usd": 230413
+     },
+     {
+      "ticker": "GRCE",
+      "issuer": "Grace Therapeutics, Inc.",
+      "holders": [
+       "Opaleye Management Inc."
+      ],
+      "value_usd": 140224
+     },
+     {
+      "ticker": "BBASX",
+      "issuer": "AMG BBH Asset-Backed Credit Fund, LLC",
+      "holders": [
+       "Hohmann Neil Martin"
+      ],
+      "value_usd": 90000
+     }
+    ]
+   },
+   "implications": [
+    {
+     "subject": "NONE",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.5,
+     "order": 1,
+     "chain": "7 insiders bought NONE in the open market ($379,740, roles {'officer': 3, 'director': 2, 'CFO': 1, 'CEO': 1}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_3plus",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "NONE",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.5,
+     "order": 1,
+     "chain": "7 insiders bought NONE in the open market ($379,740, roles {'officer': 3, 'director': 2, 'CFO': 1, 'CEO': 1}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_3plus",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "ACCV",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.5,
+     "order": 1,
+     "chain": "5 insiders bought ACCV in the open market ($4,098,600, roles {'officer': 1, 'director': 3, 'CEO': 2}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_3plus",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "ACCV",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.5,
+     "order": 1,
+     "chain": "5 insiders bought ACCV in the open market ($4,098,600, roles {'officer': 1, 'director': 3, 'CEO': 2}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_3plus",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "PRHI",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.5,
+     "order": 1,
+     "chain": "5 insiders bought PRHI in the open market ($248,878, roles {'CFO': 1, 'CEO': 1, 'director': 3}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_3plus",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "PRHI",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.5,
+     "order": 1,
+     "chain": "5 insiders bought PRHI in the open market ($248,878, roles {'CFO': 1, 'CEO': 1, 'director': 3}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_3plus",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "ATCH",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.5,
+     "order": 1,
+     "chain": "5 insiders bought ATCH in the open market ($162,524, roles {'director': 3, 'CFO': 2, 'officer': 4}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_3plus",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "ATCH",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.5,
+     "order": 1,
+     "chain": "5 insiders bought ATCH in the open market ($162,524, roles {'director': 3, 'CFO': 2, 'officer': 4}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_3plus",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "GME",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "2 insiders bought GME in the open market ($10,818,337, roles {'CEO': 2, 'director': 1}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_2",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "GME",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "2 insiders bought GME in the open market ($10,818,337, roles {'CEO': 2, 'director': 1}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_2",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "BPRE",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "2 insiders bought BPRE in the open market ($9,394,835, roles {'director': 10}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_2",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "BPRE",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "2 insiders bought BPRE in the open market ($9,394,835, roles {'director': 10}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_2",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "NYAX",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "2 insiders bought NYAX in the open market ($2,235,562, roles {'officer': 4, 'CEO': 3}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_2",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "NYAX",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "2 insiders bought NYAX in the open market ($2,235,562, roles {'officer': 4, 'CEO': 3}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_2",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "GPUS",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "2 insiders bought GPUS in the open market ($134,259, roles {'officer': 4, 'CEO': 1}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_2",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "GPUS",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "2 insiders bought GPUS in the open market ($134,259, roles {'officer': 4, 'CEO': 1}), outside 10b5-1 plans; cluster purchases are the insider trade with the strongest documented drift",
+     "contradiction": "the stock underperforms SPY over the horizon, or the buys turn out to be plan / compensation related",
+     "mentioned": null,
+     "rule": "cluster_buy_2",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "SLBT",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "CEO Wang Ching-Dong bought $10,329,903,316,818 of SLBT in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "SLBT",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "CEO Wang Ching-Dong bought $10,329,903,316,818 of SLBT in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "UUU",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director AULT MILTON C III bought $92,412,000 of UUU in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "UUU",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director AULT MILTON C III bought $92,412,000 of UUU in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "ADRX",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director George Simeon bought $10,074,081 of ADRX in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "ADRX",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director George Simeon bought $10,074,081 of ADRX in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "BORR",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director Troim Tor Olav bought $6,197,100 of BORR in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "BORR",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director Troim Tor Olav bought $6,197,100 of BORR in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "BBD",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director Alvarez Denise Aguiar bought $5,813,402 of BBD in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "BBD",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director Alvarez Denise Aguiar bought $5,813,402 of BBD in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "ORCL",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director RUSCKOWSKI STEPHEN H bought $3,483,800 of ORCL in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "ORCL",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director RUSCKOWSKI STEPHEN H bought $3,483,800 of ORCL in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "PAM",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "officer Mariani Gustavo bought $1,956,500 of PAM in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "PAM",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "officer Mariani Gustavo bought $1,956,500 of PAM in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "CVNA",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director MAROONE MICHAEL E bought $1,304,929 of CVNA in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "CVNA",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director MAROONE MICHAEL E bought $1,304,929 of CVNA in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "NXH",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "CEO LEMONIS MARCUS bought $1,000,000 of NXH in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "NXH",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "CEO LEMONIS MARCUS bought $1,000,000 of NXH in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "FUND",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director GEORGE W WHITNEY bought $600,005 of FUND in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "FUND",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "director GEORGE W WHITNEY bought $600,005 of FUND in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_director_buy",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "DKS",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "officer Barnes Matthew bought $499,869 of DKS in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "DKS",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "officer Barnes Matthew bought $499,869 of DKS in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "INBX",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "CEO Lappe Mark bought $328,630 of INBX in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "INBX",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "CEO Lappe Mark bought $328,630 of INBX in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "VCIG",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "CEO HOO VOON HIM bought $313,225 of VCIG in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "VCIG",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "CEO HOO VOON HIM bought $313,225 of VCIG in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "INR",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "CFO Baetz Cary D bought $295,702 of INR in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "INR",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "CFO Baetz Cary D bought $295,702 of INR in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "DMRA",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "CEO Jarrett Jennifer bought $252,875 of DMRA in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "DMRA",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.35,
+     "order": 1,
+     "chain": "CEO Jarrett Jennifer bought $252,875 of DMRA in the open market, not under a 10b5-1 plan",
+     "contradiction": "the stock underperforms SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "BEKE",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.2,
+     "order": 1,
+     "chain": "CEO Peng Yongdong sold $84,552,003 of BEKE at discretion (the filing marks no 10b5-1 plan); sales are weakly informative, recorded so losers are studied too",
+     "contradiction": "the stock beats SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_sale",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "MEDP",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.2,
+     "order": 1,
+     "chain": "CEO Troendle August J. sold $30,320,929 of MEDP at discretion (the filing marks no 10b5-1 plan); sales are weakly informative, recorded so losers are studied too",
+     "contradiction": "the stock beats SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_sale",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "NBIS",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.2,
+     "order": 1,
+     "chain": "CEO Volozh Arkadiy sold $8,846,096 of NBIS at discretion (the filing marks no 10b5-1 plan); sales are weakly informative, recorded so losers are studied too",
+     "contradiction": "the stock beats SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_sale",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "CRWV",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.2,
+     "order": 1,
+     "chain": "CEO Intrator Michael N sold $6,888,225 of CRWV at discretion (the filing marks no 10b5-1 plan); sales are weakly informative, recorded so losers are studied too",
+     "contradiction": "the stock beats SPY over the horizon",
+     "mentioned": null,
+     "rule": "large_exec_sale",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    }
+   ],
+   "specialist": "news_digest:insider_v0"
+  },
+  "congress": {
+   "findings": {
+    "window_days": 30.0,
+    "n_trades": 338,
+    "n_members": 25,
+    "median_lag_days": 23,
+    "buys": [
+     {
+      "ticker": "MSFT",
+      "n_members": 3,
+      "n_trades": 5,
+      "amount_lo_sum": 767005,
+      "members": [
+       "Cleo Fields",
+       "Gilbert Cisneros",
+       "Josh Gottheimer"
+      ],
+      "last_disclosure": "2026-10-01",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "HD",
+      "n_members": 2,
+      "n_trades": 3,
+      "amount_lo_sum": 3003,
+      "members": [
+       "David J. Taylor",
+       "Lloyd Doggett"
+      ],
+      "last_disclosure": "2026-10-05",
+      "median_lag_days": 9
+     },
+     {
+      "ticker": "NFLX",
+      "n_members": 2,
+      "n_trades": 3,
+      "amount_lo_sum": 3003,
+      "members": [
+       "Byron Donalds",
+       "Cleo Fields"
+      ],
+      "last_disclosure": "2026-10-01",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "PG",
+      "n_members": 2,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "David J. Taylor",
+       "Lloyd Doggett"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "GS",
+      "n_members": 2,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Gilbert Cisneros",
+       "Michael Rulli"
+      ],
+      "last_disclosure": "2026-10-02",
+      "median_lag_days": 29
+     },
+     {
+      "ticker": "IBM",
+      "n_members": 2,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Gilbert Cisneros",
+       "Lloyd Doggett"
+      ],
+      "last_disclosure": "2026-10-05",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "FWONK",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 31003,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 33
+     },
+     {
+      "ticker": "MRK",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 30002,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "HUBB",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 18004,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 26
+     },
+     {
+      "ticker": "LTH",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 18004,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "CHRW",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 17003,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 28
+     },
+     {
+      "ticker": "ETN",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 14
+     },
+     {
+      "ticker": "GMED",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "MOG.A",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "PWR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 14
+     },
+     {
+      "ticker": "ESE",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 3003,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 20
+     },
+     {
+      "ticker": "ACN",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "PEP",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "SPCX",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 28
+     },
+     {
+      "ticker": "AAPL",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Cleo Fields"
+      ],
+      "last_disclosure": "2026-10-01",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "BSX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "CB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "KO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "LIN",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Thomas H. Kean Jr"
+      ],
+      "last_disclosure": "2026-09-12",
+      "median_lag_days": 33
+     },
+     {
+      "ticker": "NVO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "WMT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "AVGO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Richard W. Allen"
+      ],
+      "last_disclosure": "2026-09-22",
+      "median_lag_days": 41
+     },
+     {
+      "ticker": "TSM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Richard W. Allen"
+      ],
+      "last_disclosure": "2026-09-22",
+      "median_lag_days": 41
+     },
+     {
+      "ticker": "IBP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "David J. Taylor"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 9
+     },
+     {
+      "ticker": "GOOG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Cleo Fields"
+      ],
+      "last_disclosure": "2026-10-01",
+      "median_lag_days": 17
+     },
+     {
+      "ticker": "MCD",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "AMAT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Josh Gottheimer"
+      ],
+      "last_disclosure": "2026-09-14",
+      "median_lag_days": 39
+     },
+     {
+      "ticker": "QSR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Josh Gottheimer"
+      ],
+      "last_disclosure": "2026-09-14",
+      "median_lag_days": 39
+     },
+     {
+      "ticker": "JNJ",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Lloyd Doggett"
+      ],
+      "last_disclosure": "2026-10-05",
+      "median_lag_days": 27
+     },
+     {
+      "ticker": "MTZ",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Thomas H. Kean Jr"
+      ],
+      "last_disclosure": "2026-09-12",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "AGIO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "APH",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "APG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 37
+     },
+     {
+      "ticker": "AORT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "ATRC",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "KMX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "CDW",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "CECO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "CSGP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "FSV",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "HMN",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "HLI",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "PODD",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "INTU",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "NEO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "SHAK",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 30
+     },
+     {
+      "ticker": "SKHY",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "SNOW",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "TTD",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "TYL",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "WPM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "WDAY",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "BRK.B",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 33
+     },
+     {
+      "ticker": "MRNA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "BWXT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 37
+     },
+     {
+      "ticker": "MLM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "AMGN",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "David J. Taylor"
+      ],
+      "last_disclosure": "2026-10-01",
+      "median_lag_days": 9
+     },
+     {
+      "ticker": "PPG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Lloyd Doggett"
+      ],
+      "last_disclosure": "2026-10-05",
+      "median_lag_days": 24
+     }
+    ],
+    "sells": [
+     {
+      "ticker": "MSFT",
+      "n_members": 3,
+      "n_trades": 4,
+      "amount_lo_sum": 766004,
+      "members": [
+       "Josh Gottheimer",
+       "Michael Rulli",
+       "Thomas H. Kean Jr"
+      ],
+      "last_disclosure": "2026-10-02",
+      "median_lag_days": 31
+     },
+     {
+      "ticker": "GOOGL",
+      "n_members": 3,
+      "n_trades": 3,
+      "amount_lo_sum": 266003,
+      "members": [
+       "John W. Rose",
+       "Pete Sessions",
+       "Thomas H. Kean Jr"
+      ],
+      "last_disclosure": "2026-09-18",
+      "median_lag_days": 16
+     },
+     {
+      "ticker": "AAPL",
+      "n_members": 3,
+      "n_trades": 4,
+      "amount_lo_sum": 103004,
+      "members": [
+       "Kevin Hern",
+       "Pete Sessions",
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 17
+     },
+     {
+      "ticker": "STE",
+      "n_members": 2,
+      "n_trades": 2,
+      "amount_lo_sum": 115002,
+      "members": [
+       "April McClain Delaney",
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "ROL",
+      "n_members": 2,
+      "n_trades": 2,
+      "amount_lo_sum": 65002,
+      "members": [
+       "April McClain Delaney",
+       "Richard W. Allen"
+      ],
+      "last_disclosure": "2026-09-22",
+      "median_lag_days": 41
+     },
+     {
+      "ticker": "ITT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 250001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "MLM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 250001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "DVN",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 230004,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "VIK",
+      "n_members": 1,
+      "n_trades": 6,
+      "amount_lo_sum": 119006,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 35
+     },
+     {
+      "ticker": "BSX",
+      "n_members": 1,
+      "n_trades": 6,
+      "amount_lo_sum": 118006,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "WAB",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 115002,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 37
+     },
+     {
+      "ticker": "LH",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 103004,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "MRSH",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 102003,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 16
+     },
+     {
+      "ticker": "LYV",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 102003,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "PTC",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 100002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "XOM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "BRO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "BWXT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "CHRW",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "CNM",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "EME",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "ENTG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "HUBB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "FWONK",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "LTH",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "MKL",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "NDAQ",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "PAYX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "SIG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "SGI",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "TDG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "TRMB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 100001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "ITW",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 95004,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "OKE",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 65002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "HD",
+      "n_members": 1,
+      "n_trades": 6,
+      "amount_lo_sum": 62006,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "SCI",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 51002,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 36
+     },
+     {
+      "ticker": "CR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 50001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "CLH",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 50001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "PKG",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 50001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "ROK",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 45003,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "LAMR",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 45003,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 17
+     },
+     {
+      "ticker": "TJX",
+      "n_members": 1,
+      "n_trades": 4,
+      "amount_lo_sum": 32004,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "CPAY",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 31003,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "CDNS",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 30002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "LIN",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 30002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "LMT",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 30002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "ORLY",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 30002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "MIDD",
+      "n_members": 1,
+      "n_trades": 6,
+      "amount_lo_sum": 20006,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "TDY",
+      "n_members": 1,
+      "n_trades": 5,
+      "amount_lo_sum": 19005,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 19
+     },
+     {
+      "ticker": "IQV",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 17003,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 17
+     },
+     {
+      "ticker": "DHR",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "EMR",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 11
+     },
+     {
+      "ticker": "NEE",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "AIO",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "TSCO",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 16002,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 28
+     },
+     {
+      "ticker": "RA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "CNP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 10
+     },
+     {
+      "ticker": "CB",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "CXT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "HON",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "NVS",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 29
+     },
+     {
+      "ticker": "PBA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 29
+     },
+     {
+      "ticker": "PRGS",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "UNH",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "ABBV",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Pete Sessions"
+      ],
+      "last_disclosure": "2026-09-18",
+      "median_lag_days": 4
+     },
+     {
+      "ticker": "DLTR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "NKE",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 14
+     },
+     {
+      "ticker": "STRL",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "ESE",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "MFP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 15001,
+      "members": [
+       "April McClain Delaney"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 37
+     },
+     {
+      "ticker": "CL",
+      "n_members": 1,
+      "n_trades": 3,
+      "amount_lo_sum": 3003,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "CSX",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 29
+     },
+     {
+      "ticker": "NVO",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "VUZI",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 22
+     },
+     {
+      "ticker": "GOOG",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 28
+     },
+     {
+      "ticker": "JPM",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Scott Scott Franklin"
+      ],
+      "last_disclosure": "2026-09-17",
+      "median_lag_days": 28
+     },
+     {
+      "ticker": "HWM",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Byron Donalds"
+      ],
+      "last_disclosure": "2026-09-15",
+      "median_lag_days": 35
+     },
+     {
+      "ticker": "PH",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Byron Donalds"
+      ],
+      "last_disclosure": "2026-09-15",
+      "median_lag_days": 35
+     },
+     {
+      "ticker": "IBM",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 16
+     },
+     {
+      "ticker": "PHR",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 16
+     },
+     {
+      "ticker": "QCOM",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 28
+     },
+     {
+      "ticker": "MPC",
+      "n_members": 1,
+      "n_trades": 2,
+      "amount_lo_sum": 2002,
+      "members": [
+       "David J. Taylor"
+      ],
+      "last_disclosure": "2026-10-01",
+      "median_lag_days": 9
+     },
+     {
+      "ticker": "ETN",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 15
+     },
+     {
+      "ticker": "ETV",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 17
+     },
+     {
+      "ticker": "F",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 25
+     },
+     {
+      "ticker": "LOW",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "STX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 10
+     },
+     {
+      "ticker": "SBUX",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "WMT",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Kevin Hern"
+      ],
+      "last_disclosure": "2026-09-25",
+      "median_lag_days": 29
+     },
+     {
+      "ticker": "AMCR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Thomas H. Kean Jr"
+      ],
+      "last_disclosure": "2026-09-12",
+      "median_lag_days": 33
+     },
+     {
+      "ticker": "JNJ",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Thomas H. Kean Jr"
+      ],
+      "last_disclosure": "2026-09-12",
+      "median_lag_days": 16
+     },
+     {
+      "ticker": "AMD",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "APP",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "NET",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "COHR",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "COIN",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "CCI",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "DASH",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 13
+     },
+     {
+      "ticker": "DCO",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 34
+     },
+     {
+      "ticker": "EA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 36
+     },
+     {
+      "ticker": "META",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "NVDA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "NXPI",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 36
+     },
+     {
+      "ticker": "TSLA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "TXRH",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 30
+     },
+     {
+      "ticker": "VRSK",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Gilbert Cisneros"
+      ],
+      "last_disclosure": "2026-09-10",
+      "median_lag_days": 23
+     },
+     {
+      "ticker": "MRNA",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Maria Elvira Salazar"
+      ],
+      "last_disclosure": "2026-09-09",
+      "median_lag_days": 21
+     },
+     {
+      "ticker": "WFC",
+      "n_members": 1,
+      "n_trades": 1,
+      "amount_lo_sum": 1001,
+      "members": [
+       "Michael Rulli"
+      ],
+      "last_disclosure": "2026-10-02",
+      "median_lag_days": 29
+     }
+    ]
+   },
+   "implications": [
+    {
+     "subject": "MSFT",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "3 House member(s) disclosed purchases of MSFT (>= $767,005); disclosed a median 23 days after the trade, so only the disclosure date is tradable and much of any edge may be spent",
+     "contradiction": "the stock underperforms SPY over 20 sessions from the disclosure",
+     "mentioned": null,
+     "rule": "congress_cluster_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "HD",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "2 House member(s) disclosed purchases of HD (>= $3,003); disclosed a median 9 days after the trade, so only the disclosure date is tradable and much of any edge may be spent",
+     "contradiction": "the stock underperforms SPY over 20 sessions from the disclosure",
+     "mentioned": null,
+     "rule": "congress_cluster_buy",
+     "write_size": false,
+     "written": "OK"
+    },
+    {
+     "subject": "NFLX",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "2 House member(s) disclosed purchases of NFLX (>= $3,003); disclosed a median 34 days after the trade, so only the disclosure date is tradable and much of any edge may be spent",
+     "contradiction": "the stock underperforms SPY over 20 sessions from the disclosure",
+     "mentioned": null,
+     "rule": "congress_cluster_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "PG",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "2 House member(s) disclosed purchases of PG (>= $2,002); disclosed a median 22 days after the trade, so only the disclosure date is tradable and much of any edge may be spent",
+     "contradiction": "the stock underperforms SPY over 20 sessions from the disclosure",
+     "mentioned": null,
+     "rule": "congress_cluster_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "GS",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "2 House member(s) disclosed purchases of GS (>= $2,002); disclosed a median 29 days after the trade, so only the disclosure date is tradable and much of any edge may be spent",
+     "contradiction": "the stock underperforms SPY over 20 sessions from the disclosure",
+     "mentioned": null,
+     "rule": "congress_cluster_buy",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "IBM",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "2 House member(s) disclosed purchases of IBM (>= $2,002); disclosed a median 25 days after the trade, so only the disclosure date is tradable and much of any edge may be spent",
+     "contradiction": "the stock underperforms SPY over 20 sessions from the disclosure",
+     "mentioned": null,
+     "rule": "congress_cluster_buy",
+     "write_size": false,
+     "written": "OK"
+    }
+   ],
+   "specialist": "news_digest:congress_v0"
+  },
+  "policy": {
+   "findings": {
+    "n_rows_read": 74,
+    "changes": [],
+    "unknowns": [],
+    "refused": {
+     "LLM_OFF": 1
+    }
+   },
+   "implications": [],
+   "specialist": "news_digest:policy_v0",
+   "rows": [
+    {
+     "public_utc": "2026-10-06T16:22:32+00:00",
+     "source": "wh_news",
+     "title": "WHAT THEY ARE SAYING: President Trump Delivers Immediate Diesel Relief, Saving Americans Up to $100 Per Fill",
+     "url": "https://www.whitehouse.gov/releases/2026/10/what-they-are-saying-president-trump-delivers-immediate-diesel-relief-saving-americans-up-to-100-per-fill/"
+    },
+    {
+     "public_utc": "2026-10-06T15:15:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Special Observances: National Manufacturing Day (Proc. 11071)",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20629/special-observances-national-manufacturing-day-proc-11071"
+    },
+    {
+     "public_utc": "2026-10-06T14:45:00+00:00",
+     "source": "fed_speech",
+     "title": "Bowman, Modernizing the Regulatory and Supervisory Landscape",
+     "url": "https://www.federalreserve.gov/newsevents/speech/bowman20261006a.htm"
+    },
+    {
+     "public_utc": "2026-10-06T13:07:03+00:00",
+     "source": "boe_news",
+     "title": "Minutes of the UK Money Markets Code Sub-Committee – September 2026",
+     "url": "https://www.bankofengland.co.uk/minutes/2026/september/uk-money-markets-committee-minutes-september-2026"
+    },
+    {
+     "public_utc": "2026-10-06T13:00:00+00:00",
+     "source": "ecb_press",
+     "title": "Frank Elderson: Effective supervision through timely remediation",
+     "url": "https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp261006_1~0df91e4e44.en.html"
+    },
+    {
+     "public_utc": "2026-10-06T13:00:00+00:00",
+     "source": "ecb_press",
+     "title": "Piero Cipollone: Money in the digital age: digital euro, tokenisation and the role of central banks",
+     "url": "https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp261006~0da978f159.en.html"
+    },
+    {
+     "public_utc": "2026-10-06T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Loans to Executive Officers, Directors, and Principal Shareholders of Member Banks: Bank Holding Companies",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20509/loans-to-executive-officers-directors-and-principal-shareholders-of-member-banks-bank-holding"
+    },
+    {
+     "public_utc": "2026-10-06T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Energy Conservation Program: Test Procedures for Commercial Warm Air Furnaces",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20517/energy-conservation-program-test-procedures-for-commercial-warm-air-furnaces"
+    },
+    {
+     "public_utc": "2026-10-06T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Privacy Act; Implementation",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20532/privacy-act-implementation"
+    },
+    {
+     "public_utc": "2026-10-06T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "State Plans for Designated Facilities and Pollutants; Approvals and Promulgations: West Virginia; Negative Declarations for Existing Large Municipal Waste Combustors and Other Solid Waste Incinerators",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20611/state-plans-for-designated-facilities-and-pollutants-approvals-and-promulgations-west-virginia"
+    },
+    {
+     "public_utc": "2026-10-06T11:16:54+00:00",
+     "source": "hkma_press",
+     "title": "Hong Kong Monetary Authority and Bank Negara Malaysia Strengthen Bilateral Cooperation",
+     "url": "https://www.hkma.gov.hk/eng/news-and-media/press-releases/2026/10/20261006-4/"
+    },
+    {
+     "public_utc": "2026-10-06T11:16:54+00:00",
+     "source": "hkma_press",
+     "title": "Exchange Fund Bills Tender Results",
+     "url": "https://www.hkma.gov.hk/eng/news-and-media/press-releases/2026/10/20261006-3/"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Eliminating Obsolete Regulations Related to the 911 Grant Program",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20493/eliminating-obsolete-regulations-related-to-the-911-grant-program"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Establishment of Class E Airspace; Peoria, IL",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20479/establishment-of-class-e-airspace-peoria-il"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Investment Adviser Performance-Based Compensation Modernization",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20474/investment-adviser-performance-based-compensation-modernization"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Modification of Class E Airspace; Gunnison-Crested Butte Regional Airport, Gunnison, CO",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20473/modification-of-class-e-airspace-gunnison-crested-butte-regional-airport-gunnison-co"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Privacy Act Exemptions",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20469/privacy-act-exemptions"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Initial Air Quality Designations for the 2024 Revised Primary Annual Fine Particle (PM2.5) National Ambient Air Quality Standards (NAAQS)",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20468/initial-air-quality-designations-for-the-2024-revised-primary-annual-fine-particle-pm25-national"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Adviser and Regulated Fund Custody Rules; Crypto Custody Rules",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20466/adviser-and-regulated-fund-custody-rules-crypto-custody-rules"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Radio Broadcasting Services; Selmer, Tennessee",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20464/radio-broadcasting-services-selmer-tennessee"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Radio Broadcasting Services; Whitehall, Michigan",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20463/radio-broadcasting-services-whitehall-michigan"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Adoption of Updated EDGAR Filer Manual",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20461/adoption-of-updated-edgar-filer-manual"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Medical Devices; Exemptions From Premarket Notification: Class II Devices; Certain Clinical Toxicology Test Systems",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20448/medical-devices-exemptions-from-premarket-notification-class-ii-devices-certain-clinical-toxicology"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Transparency in Coverage",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20447/transparency-in-coverage"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Medical Devices; Immunology and Microbiology Devices; Classification of the High Throughput DNA Sequencing for Hereditary Cancer Predisposition Assessment Test System",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20443/medical-devices-immunology-and-microbiology-devices-classification-of-the-high-throughput-dna"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Medical Devices; Cardiovascular Devices; Classification of the Hyperoxia Monitoring Device Adjunct to Pulse Oximetry",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20441/medical-devices-cardiovascular-devices-classification-of-the-hyperoxia-monitoring-device-adjunct-to"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Medical Devices; General and Plastic Surgery Devices; Classification of the Focused Ultrasound System for Non-Thermal, Mechanical Tissue Ablation",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20440/medical-devices-general-and-plastic-surgery-devices-classification-of-the-focused-ultrasound-system"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Reef Fish Fishery of the Gulf of America; Amendment 62",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20435/reef-fish-fishery-of-the-gulf-of-america-amendment-62"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Requirements for Certain Transactions Involving Convertible Virtual Currency or Digital Assets; Withdrawal",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20430/requirements-for-certain-transactions-involving-convertible-virtual-currency-or-digital-assets"
+    },
+    {
+     "public_utc": "2026-10-06T10:00:00+00:00",
+     "source": "fedreg",
+     "title": "Proposal of Special Measure Regarding Convertible Virtual Currency Mixing, as a Class of Transactions of Primary Money Laundering Concern; Withdrawal",
+     "url": "https://www.federalregister.gov/documents/2026/10/06/2026-20429/proposal-of-special-measure-regarding-convertible-virtual-currency-mixing-as-a-class-of-transactions"
+    },
+    {
+     "public_utc": "2026-10-06T07:00:00+00:00",
+     "source": "ecb_press",
+     "title": "Philip R. Lane: Interview with Ansa",
+     "url": "https://www.ecb.europa.eu//press/inter/date/2026/html/ecb.in261006~bc94400297.en.html"
+    },
+    {
+     "public_utc": "2026-10-06T01:13:53+00:00",
+     "source": "wh_actions",
+     "title": "Emergency Tax Relief on Diesel Fuel",
+     "url": "https://www.whitehouse.gov/presidential-actions/2026/10/emergency-tax-relief-on-diesel-fuel/"
+    },
+    {
+     "public_utc": "2026-10-06T01:13:53+00:00",
+     "source": "wh_news",
+     "title": "Emergency Tax Relief on Diesel Fuel",
+     "url": "https://www.whitehouse.gov/presidential-actions/2026/10/emergency-tax-relief-on-diesel-fuel/"
+    },
+    {
+     "public_utc": "2026-10-06T01:04:09+00:00",
+     "source": "wh_news",
+     "title": "Presidential Message on Child Health Day",
+     "url": "https://www.whitehouse.gov/briefings-statements/2026/10/presidential-message-on-child-health-day-c67c/"
+    },
+    {
+     "public_utc": "2026-10-06T01:02:35+00:00",
+     "source": "wh_news",
+     "title": "Presidential Message on Fire Prevention Week",
+     "url": "https://www.whitehouse.gov/briefings-statements/2026/10/presidential-message-on-fire-prevention-week/"
+    },
+    {
+     "public_utc": "2026-10-06T00:20:07+00:00",
+     "source": "wh_news",
+     "title": "President Trump Takes Decisive Action to Lower Diesel Costs for American Truckers, Farmers",
+     "url": "https://www.whitehouse.gov/releases/2026/10/president-trump-takes-decisive-action-to-lower-diesel-costs-for-american-truckers-farmers/"
+    },
+    {
+     "public_utc": "2026-10-06T00:07:38+00:00",
+     "source": "wh_news",
+     "title": "Fact Sheet: President Donald J. Trump Promotes Diesel Affordability",
+     "url": "https://www.whitehouse.gov/fact-sheets/2026/10/fact-sheet-president-donald-j-trump-promotes-diesel-affordability/"
+    },
+    {
+     "public_utc": "2026-10-05T20:30:00+00:00",
+     "source": "fed_press",
+     "title": "Federal Reserve Board announces approval of application by Isabella Bank Corporation",
+     "url": "https://www.federalreserve.gov/newsevents/pressreleases/orders20261005a.htm"
+    },
+    {
+     "public_utc": "2026-10-05T17:02:29+00:00",
+     "source": "wh_news",
+     "title": "President Trump and Republicans Are Delivering Real Results for Nebraska",
+     "url": "https://www.whitehouse.gov/releases/2026/10/president-trump-and-republicans-are-delivering-real-results-for-nebraska/"
+    },
+    {
+     "public_utc": "2026-10-05T12:45:00+00:00",
+     "source": "fedreg_pi",
+     "title": "Medical Devices: Cardiovascular Devices; Classification of the Hyperoxia Monitoring Device Adjunct to Pulse Oximetry",
+     "url": "https://www.federalregister.gov/public-inspection/2026-20441/medical-devices-cardiovascular-devices-classification-of-the-hyperoxia-monitoring-device-adjunct-to"
+    }
+   ]
+  },
+  "positioning": {
+   "findings": {
+    "cot_latest_report": "2026-09-29",
+    "cot_contracts": 121,
+    "cot_extremes": [
+     {
+      "market": "UST 2Y NOTE - CHICAGO BOARD OF TRADE",
+      "code": "042601",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 4530145.0,
+      "group": "lev_money",
+      "net_pct_oi": -25.738,
+      "pctile_3y": 1.0,
+      "chg_z": 2.2,
+      "proxy": null,
+      "side": "net_at_3y_high"
+     },
+     {
+      "market": "5 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE",
+      "code": "344605",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 196681.0,
+      "group": "lev_money",
+      "net_pct_oi": 9.769,
+      "pctile_3y": 1.0,
+      "chg_z": 1.754,
+      "proxy": null,
+      "side": "net_at_3y_high"
+     },
+     {
+      "market": "LEAN HOGS - CHICAGO MERCANTILE EXCHANGE",
+      "code": "054642",
+      "report": "disagg",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 289843.0,
+      "group": "managed_money",
+      "net_pct_oi": -17.47,
+      "pctile_3y": 0.0,
+      "chg_z": -0.759,
+      "proxy": null,
+      "side": "net_at_3y_low"
+     },
+     {
+      "market": "CRUDE OIL, LIGHT SWEET-WTI - ICE FUTURES EUROPE",
+      "code": "067411",
+      "report": "disagg",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 742626.0,
+      "group": "managed_money",
+      "net_pct_oi": -0.363,
+      "pctile_3y": 1.0,
+      "chg_z": 0.372,
+      "proxy": "USO",
+      "side": "net_at_3y_high"
+     },
+     {
+      "market": "GASOLINE RBOB - NEW YORK MERCANTILE EXCHANGE",
+      "code": "111659",
+      "report": "disagg",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 342854.0,
+      "group": "managed_money",
+      "net_pct_oi": 27.471,
+      "pctile_3y": 1.0,
+      "chg_z": -0.273,
+      "proxy": null,
+      "side": "net_at_3y_high"
+     },
+     {
+      "market": "RUSSELL E-MINI - CHICAGO MERCANTILE EXCHANGE",
+      "code": "239742",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 428048.0,
+      "group": "lev_money",
+      "net_pct_oi": -26.762,
+      "pctile_3y": 0.0128,
+      "chg_z": -0.492,
+      "proxy": "IWM",
+      "side": "net_at_3y_low"
+     },
+     {
+      "market": "UST 5Y NOTE - CHICAGO BOARD OF TRADE",
+      "code": "044601",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 6789241.0,
+      "group": "lev_money",
+      "net_pct_oi": -29.249,
+      "pctile_3y": 0.9808,
+      "chg_z": -1.251,
+      "proxy": null,
+      "side": "net_at_3y_high"
+     },
+     {
+      "market": "2 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE",
+      "code": "342603",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 223800.0,
+      "group": "lev_money",
+      "net_pct_oi": 41.22,
+      "pctile_3y": 0.9756,
+      "chg_z": -5.197,
+      "proxy": null,
+      "side": "net_at_3y_high"
+     },
+     {
+      "market": "CORN - CHICAGO BOARD OF TRADE",
+      "code": "002602",
+      "report": "disagg",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 1857317.0,
+      "group": "managed_money",
+      "net_pct_oi": 20.525,
+      "pctile_3y": 0.9744,
+      "chg_z": -0.582,
+      "proxy": null,
+      "side": "net_at_3y_high"
+     },
+     {
+      "market": "Nano Bitcoin  - COINBASE DERIVATIVES, LLC",
+      "code": "133LM1",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 114348.0,
+      "group": "lev_money",
+      "net_pct_oi": 8.428,
+      "pctile_3y": 0.9735,
+      "chg_z": 0.72,
+      "proxy": null,
+      "side": "net_at_3y_high"
+     },
+     {
+      "market": "SOYBEANS - CHICAGO BOARD OF TRADE",
+      "code": "005602",
+      "report": "disagg",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 1090227.0,
+      "group": "managed_money",
+      "net_pct_oi": 22.615,
+      "pctile_3y": 0.9615,
+      "chg_z": -0.72,
+      "proxy": null,
+      "side": "net_at_3y_high"
+     },
+     {
+      "market": "UST BOND - CHICAGO BOARD OF TRADE",
+      "code": "020601",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 1879173.0,
+      "group": "lev_money",
+      "net_pct_oi": -13.378,
+      "pctile_3y": 0.9551,
+      "chg_z": -3.111,
+      "proxy": "TLT",
+      "side": "net_at_3y_high"
+     }
+    ],
+    "cot_big_moves": [
+     {
+      "market": "10 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE",
+      "code": "343603",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 201727.0,
+      "group": "lev_money",
+      "net_pct_oi": -35.704,
+      "pctile_3y": 0.8077,
+      "chg_z": 7.145,
+      "proxy": null
+     },
+     {
+      "market": "2 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE",
+      "code": "342603",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 223800.0,
+      "group": "lev_money",
+      "net_pct_oi": 41.22,
+      "pctile_3y": 0.9756,
+      "chg_z": -5.197,
+      "proxy": null
+     },
+     {
+      "market": "UST BOND - CHICAGO BOARD OF TRADE",
+      "code": "020601",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 1879173.0,
+      "group": "lev_money",
+      "net_pct_oi": -13.378,
+      "pctile_3y": 0.9551,
+      "chg_z": -3.111,
+      "proxy": "TLT"
+     },
+     {
+      "market": "CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE",
+      "code": "090741",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 347274.0,
+      "group": "lev_money",
+      "net_pct_oi": -20.054,
+      "pctile_3y": 0.4808,
+      "chg_z": -2.951,
+      "proxy": null
+     },
+     {
+      "market": "NANO BITCOIN PERP STYLE - COINBASE DERIVATIVES, LLC",
+      "code": "133LM4",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 158766.0,
+      "group": "lev_money",
+      "net_pct_oi": -25.226,
+      "pctile_3y": 0.1935,
+      "chg_z": -2.422,
+      "proxy": null
+     },
+     {
+      "market": "MSCI EAFE  - ICE FUTURES U.S.",
+      "code": "244041",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 490633.0,
+      "group": "lev_money",
+      "net_pct_oi": 2.296,
+      "pctile_3y": 0.8462,
+      "chg_z": -2.311,
+      "proxy": null
+     },
+     {
+      "market": "UST 2Y NOTE - CHICAGO BOARD OF TRADE",
+      "code": "042601",
+      "report": "tff",
+      "report_date": "2026-09-29",
+      "public_utc": "2026-10-02T19:30:00+00:00",
+      "open_interest": 4530145.0,
+      "group": "lev_money",
+      "net_pct_oi": -25.738,
+      "pctile_3y": 1.0,
+      "chg_z": 2.2,
+      "proxy": null
+     }
+    ],
+    "si_settlement": "2026-09-15",
+    "si_crowded_shorts": [
+     {
+      "symbol": "SVRA",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 43343616.0,
+      "change_pct": 4.63,
+      "days_to_cover": 36.25,
+      "avg_daily_volume": 1195686.0
+     },
+     {
+      "symbol": "LXEO",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 20627916.0,
+      "change_pct": 0.7,
+      "days_to_cover": 33.44,
+      "avg_daily_volume": 616778.0
+     },
+     {
+      "symbol": "OGG",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 24604363.0,
+      "change_pct": -0.4,
+      "days_to_cover": 29.75,
+      "avg_daily_volume": 827017.0
+     },
+     {
+      "symbol": "TEVA",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 31478314.0,
+      "change_pct": 11467.47,
+      "days_to_cover": 27.35,
+      "avg_daily_volume": 1150992.0
+     },
+     {
+      "symbol": "PRTA",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 8544664.0,
+      "change_pct": 0.58,
+      "days_to_cover": 26.53,
+      "avg_daily_volume": 322027.0
+     },
+     {
+      "symbol": "IMO",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 19004666.0,
+      "change_pct": -3.17,
+      "days_to_cover": 26.2,
+      "avg_daily_volume": 725296.0
+     },
+     {
+      "symbol": "IEP",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 17398935.0,
+      "change_pct": -4.48,
+      "days_to_cover": 24.68,
+      "avg_daily_volume": 704949.0
+     },
+     {
+      "symbol": "OTTR",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 4790407.0,
+      "change_pct": -0.31,
+      "days_to_cover": 22.99,
+      "avg_daily_volume": 208378.0
+     },
+     {
+      "symbol": "CCCC",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 40189287.0,
+      "change_pct": 7.42,
+      "days_to_cover": 22.68,
+      "avg_daily_volume": 1771956.0
+     },
+     {
+      "symbol": "BCAX",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 11191724.0,
+      "change_pct": 3.19,
+      "days_to_cover": 22.56,
+      "avg_daily_volume": 496027.0
+     },
+     {
+      "symbol": "ZBIO",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 11871346.0,
+      "change_pct": 1.44,
+      "days_to_cover": 22.43,
+      "avg_daily_volume": 529251.0
+     },
+     {
+      "symbol": "CNQ",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 182920552.0,
+      "change_pct": 61.63,
+      "days_to_cover": 22.08,
+      "avg_daily_volume": 8283071.0
+     },
+     {
+      "symbol": "LBRX",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 5617182.0,
+      "change_pct": 6.42,
+      "days_to_cover": 21.45,
+      "avg_daily_volume": 261863.0
+     },
+     {
+      "symbol": "DDD",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 43937708.0,
+      "change_pct": 0.49,
+      "days_to_cover": 21.31,
+      "avg_daily_volume": 2062066.0
+     },
+     {
+      "symbol": "FTS",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 14307807.0,
+      "change_pct": -4.96,
+      "days_to_cover": 21.28,
+      "avg_daily_volume": 672440.0
+     }
+    ],
+    "si_rising_shorts": [
+     {
+      "symbol": "TEVA",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 31478314.0,
+      "change_pct": 11467.47,
+      "days_to_cover": 27.35,
+      "avg_daily_volume": 1150992.0
+     },
+     {
+      "symbol": "UUP",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 7456289.0,
+      "change_pct": 414.9,
+      "days_to_cover": 4.83,
+      "avg_daily_volume": 1545127.0
+     },
+     {
+      "symbol": "TRLV",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 5117058.0,
+      "change_pct": 254.22,
+      "days_to_cover": 2.84,
+      "avg_daily_volume": 1803727.0
+     },
+     {
+      "symbol": "BWLP",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 1595030.0,
+      "change_pct": 143.07,
+      "days_to_cover": 2.74,
+      "avg_daily_volume": 582113.0
+     },
+     {
+      "symbol": "APH",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 31544237.0,
+      "change_pct": 132.61,
+      "days_to_cover": 2.75,
+      "avg_daily_volume": 11480110.0
+     },
+     {
+      "symbol": "LYG",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 9213756.0,
+      "change_pct": 120.62,
+      "days_to_cover": 1.0,
+      "avg_daily_volume": 14519336.0
+     },
+     {
+      "symbol": "CHA",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 1865003.0,
+      "change_pct": 95.14,
+      "days_to_cover": 1.25,
+      "avg_daily_volume": 1491608.0
+     },
+     {
+      "symbol": "TECK",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 13955380.0,
+      "change_pct": 85.31,
+      "days_to_cover": 4.46,
+      "avg_daily_volume": 3130326.0
+     },
+     {
+      "symbol": "SKM",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 3283903.0,
+      "change_pct": 83.05,
+      "days_to_cover": 2.08,
+      "avg_daily_volume": 1577633.0
+     },
+     {
+      "symbol": "BSBR",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 7921853.0,
+      "change_pct": 79.35,
+      "days_to_cover": 1.56,
+      "avg_daily_volume": 5068939.0
+     },
+     {
+      "symbol": "LTM",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 3204337.0,
+      "change_pct": 73.17,
+      "days_to_cover": 4.19,
+      "avg_daily_volume": 764673.0
+     },
+     {
+      "symbol": "MMED",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 13594922.0,
+      "change_pct": 68.66,
+      "days_to_cover": 4.85,
+      "avg_daily_volume": 2805245.0
+     },
+     {
+      "symbol": "BKV",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 10035138.0,
+      "change_pct": 64.43,
+      "days_to_cover": 2.89,
+      "avg_daily_volume": 3476246.0
+     },
+     {
+      "symbol": "UROY",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 5218128.0,
+      "change_pct": 63.67,
+      "days_to_cover": 1.58,
+      "avg_daily_volume": 3295989.0
+     },
+     {
+      "symbol": "CNQ",
+      "settlement_date": "2026-09-15",
+      "public_utc": "2026-09-25T23:00:00+00:00",
+      "short_qty": 182920552.0,
+      "change_pct": 61.63,
+      "days_to_cover": 22.08,
+      "avg_daily_volume": 8283071.0
+     }
+    ],
+    "short_volume_spikes": [
+     {
+      "symbol": "MDT",
+      "date": "2026-10-05",
+      "ratio": 0.8488,
+      "z": 4.53,
+      "total_volume": 17903022.606387
+     },
+     {
+      "symbol": "NVDA",
+      "date": "2026-10-05",
+      "ratio": 0.5737,
+      "z": 3.97,
+      "total_volume": 51767953.809031
+     },
+     {
+      "symbol": "WBD",
+      "date": "2026-10-05",
+      "ratio": 0.4869,
+      "z": 3.06,
+      "total_volume": 29698864.127899
+     },
+     {
+      "symbol": "P",
+      "date": "2026-10-05",
+      "ratio": 0.7774,
+      "z": 3.01,
+      "total_volume": 2047403.35018
+     }
+    ]
+   },
+   "implications": [
+    {
+     "subject": "USO",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "CFTC DISAGG CRUDE OIL, LIGHT SWEET-WTI - ICE FUTURES EUROPE: managed_money net -0.363% of open interest, 100% percentile of 3 years (net_at_3y_high); speculative positioning at a multi-year extreme tends to unwind against itself",
+     "contradiction": "the proxy keeps moving with the crowd over 20 sessions",
+     "mentioned": null,
+     "rule": "cot_crowded",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "IWM",
+     "subject_type": "ticker",
+     "direction": "up",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "CFTC TFF RUSSELL E-MINI - CHICAGO MERCANTILE EXCHANGE: lev_money net -26.762% of open interest, 1% percentile of 3 years (net_at_3y_low); speculative positioning at a multi-year extreme tends to unwind against itself",
+     "contradiction": "the proxy keeps moving with the crowd over 20 sessions",
+     "mentioned": null,
+     "rule": "cot_crowded",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "TLT",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 20,
+     "confidence": 0.25,
+     "order": 1,
+     "chain": "CFTC TFF UST BOND - CHICAGO BOARD OF TRADE: lev_money net -13.378% of open interest, 96% percentile of 3 years (net_at_3y_high); speculative positioning at a multi-year extreme tends to unwind against itself",
+     "contradiction": "the proxy keeps moving with the crowd over 20 sessions",
+     "mentioned": null,
+     "rule": "cot_crowded",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "SVRA",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 36.2 days to cover, 4.63% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "LXEO",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 33.4 days to cover, 0.7% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "OGG",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 29.8 days to cover, -0.4% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "TEVA",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 27.4 days to cover, 11467.47% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "NO_BARS"
+    },
+    {
+     "subject": "PRTA",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 26.5 days to cover, 0.58% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "IMO",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 26.2 days to cover, -3.17% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "IEP",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 24.7 days to cover, -4.48% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "OTTR",
+     "subject_type": "ticker",
+     "direction": "none",
+     "size_bucket": "above_normal",
+     "horizon_sessions": 5,
+     "confidence": 0.3,
+     "order": 1,
+     "chain": "FINRA short interest 2026-09-15: 23.0 days to cover, -0.31% change; a crowded short moves more than its normal range when news forces covering or confirms the thesis",
+     "contradiction": "the 5-session move stays inside one trailing sigma",
+     "mentioned": null,
+     "rule": "si_crowded_short",
+     "write_size": true,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "MDT",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.2,
+     "order": 1,
+     "chain": "off-exchange short-sale share 0.85 on 2026-10-05, 4.5 sd above the name's own 60-day level",
+     "contradiction": "the stock beats SPY over 5 sessions",
+     "mentioned": null,
+     "rule": "short_volume_spike",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "NVDA",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.2,
+     "order": 1,
+     "chain": "off-exchange short-sale share 0.57 on 2026-10-05, 4.0 sd above the name's own 60-day level",
+     "contradiction": "the stock beats SPY over 5 sessions",
+     "mentioned": null,
+     "rule": "short_volume_spike",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "WBD",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.2,
+     "order": 1,
+     "chain": "off-exchange short-sale share 0.49 on 2026-10-05, 3.1 sd above the name's own 60-day level",
+     "contradiction": "the stock beats SPY over 5 sessions",
+     "mentioned": null,
+     "rule": "short_volume_spike",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    },
+    {
+     "subject": "P",
+     "subject_type": "ticker",
+     "direction": "down",
+     "size_bucket": "normal",
+     "horizon_sessions": 5,
+     "confidence": 0.2,
+     "order": 1,
+     "chain": "off-exchange short-sale share 0.78 on 2026-10-05, 3.0 sd above the name's own 60-day level",
+     "contradiction": "the stock beats SPY over 5 sessions",
+     "mentioned": null,
+     "rule": "short_volume_spike",
+     "write_size": false,
+     "written": "ALREADY_WRITTEN_TODAY"
+    }
+   ],
+   "specialist": "news_digest:positioning_v0"
+  },
+  "tables": {
+   "insider_tx": {
+    "rows": 9884,
+    "public_last_24h": 1324,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\insider_tx.jsonl"
+   },
+   "filing_events": {
+    "rows": 2357,
+    "public_last_24h": 382,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\filing_events.jsonl"
+   },
+   "politician_filings": {
+    "rows": 411,
+    "public_last_24h": 2,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_filings.jsonl"
+   },
+   "politician_trades": {
+    "rows": 3365,
+    "public_last_24h": 5,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\politician_trades.jsonl"
+   },
+   "positioning_cot": {
+    "rows": 15322,
+    "public_last_24h": 0,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\positioning_cot.jsonl"
+   },
+   "short_interest": {
+    "rows": 45164,
+    "public_last_24h": 0,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\short_interest.jsonl"
+   },
+   "policy_events": {
+    "rows": 2363,
+    "public_last_24h": 181,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\policy_events.jsonl"
+   },
+   "policy_texts": {
+    "rows": 27,
+    "public_last_24h": 1,
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\official\\tables\\policy_texts.jsonl"
+   }
+  },
+  "written": {
+   "congress": 2
+  },
+  "not_written": {
+   "insiders:NO_BARS": 26,
+   "insiders:ALREADY_WRITTEN_TODAY": 24,
+   "congress:ALREADY_WRITTEN_TODAY": 4,
+   "positioning:ALREADY_WRITTEN_TODAY": 14,
+   "positioning:NO_BARS": 1
+  }
+ },
+ "sections_error": null,
+ "runtime_s": 3.2,
+ "dry_run": true,
+ "theme_merges": [],
+ "world_state": {
+  "schema": "world_state_cycle/v1",
+  "digest_id": "20261006T214443Z",
+  "as_of": "2026-10-06T21:44:46+00:00",
+  "licence": "PRODUCT_EXPERIMENT",
+  "provenance_rows": {
+   "COMPANY_CLAIM": 131,
+   "FORECAST": 321,
+   "FACT": 697,
+   "INTERPRETATION": 130
+  },
+  "beliefs": {
+   "state": "UPDATED",
+   "digest_id": "20261006T214443Z",
+   "as_of": "2026-10-06T21:44:46+00:00",
+   "touched": [
+    "ai_demand",
+    "semiconductor_capex",
+    "grid_power_demand",
+    "commodity_shortages",
+    "rates",
+    "inflation",
+    "credit",
+    "dollar",
+    "liquidity",
+    "consumer_conditions",
+    "china_policy",
+    "geopolitical_risk",
+    "defense_procurement",
+    "energy_security",
+    "biotech_regulatory",
+    "prediction_market_state"
+   ],
+   "decayed": [],
+   "contradicted": [],
+   "new_edges": [],
+   "expired": [],
+   "unresolved": [],
+   "n_beliefs": 16,
+   "n_rows_in": 1279,
+   "n_implications_in": 71,
+   "spend_usd": 0.0,
+   "spend_note": "derived in code from typed rows and implications: no model call"
+  },
+  "top_beliefs": [
+   {
+    "topic": "consumer_conditions",
+    "direction": "up",
+    "confidence": 0.3,
+    "belief_change": 0.3,
+    "meaning": "up = consumer demand / household conditions improving",
+    "evidence_basis": "1 implication vote(s)",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "commodity_shortages",
+    "direction": "down",
+    "confidence": 0.25,
+    "belief_change": -0.25,
+    "meaning": "up = commodities tighter (prices up)",
+    "evidence_basis": "1 implication vote(s)",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "rates",
+    "direction": "up",
+    "confidence": 0.25,
+    "belief_change": 0.25,
+    "meaning": "up = yields rising",
+    "evidence_basis": "1 implication vote(s)",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "liquidity",
+    "direction": "down",
+    "confidence": 0.25,
+    "belief_change": -0.25,
+    "meaning": "up = financial conditions loosening",
+    "evidence_basis": "1 implication vote(s)",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "energy_security",
+    "direction": "down",
+    "confidence": 0.25,
+    "belief_change": -0.25,
+    "meaning": "up = energy supply tighter (energy prices up)",
+    "evidence_basis": "1 implication vote(s)",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "ai_demand",
+    "direction": "up",
+    "confidence": 0.15,
+    "belief_change": 0.15,
+    "meaning": "up = demand for AI compute / software strengthening",
+    "evidence_basis": "4 implication vote(s)",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "geopolitical_risk",
+    "direction": "up",
+    "confidence": 0.1107,
+    "belief_change": 0.1107,
+    "meaning": "up = geopolitical risk rising (read from news tone: negative coverage = up)",
+    "evidence_basis": "news tone of 145 row(s) x -1, halved",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "semiconductor_capex",
+    "direction": "none",
+    "confidence": 0.0,
+    "belief_change": 0.0,
+    "meaning": "up = semiconductor investment / orders rising",
+    "evidence_basis": "no directional evidence",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "grid_power_demand",
+    "direction": "none",
+    "confidence": 0.0,
+    "belief_change": 0.0,
+    "meaning": "up = electricity / grid demand and investment rising",
+    "evidence_basis": "no directional evidence",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "inflation",
+    "direction": "none",
+    "confidence": 0.0,
+    "belief_change": 0.0,
+    "meaning": "up = inflation pressure rising",
+    "evidence_basis": "no directional evidence",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "credit",
+    "direction": "none",
+    "confidence": 0.0,
+    "belief_change": 0.0,
+    "meaning": "up = credit healthier (spreads tightening)",
+    "evidence_basis": "no directional evidence",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "dollar",
+    "direction": "none",
+    "confidence": 0.0,
+    "belief_change": 0.0,
+    "meaning": "up = US dollar strengthening",
+    "evidence_basis": "no directional evidence",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "china_policy",
+    "direction": "none",
+    "confidence": 0.0,
+    "belief_change": 0.0,
+    "meaning": "up = China policy supportive for markets",
+    "evidence_basis": "no directional evidence",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "defense_procurement",
+    "direction": "none",
+    "confidence": 0.0,
+    "belief_change": 0.0,
+    "meaning": "up = defense spending / orders rising",
+    "evidence_basis": "no directional evidence",
+    "n_contradictions": 0,
+    "edges": []
+   },
+   {
+    "topic": "biotech_regulatory",
+    "direction": "none",
+    "confidence": 0.0,
+    "belief_change": 0.0,
+    "meaning": "up = regulatory / funding backdrop favourable for biotech and pharma",
+    "evidence_basis": "no directional evidence",
+    "n_contradictions": 0,
+    "edges": []
+   }
+  ],
+  "regime": {
+   "state": "NOT_RUN"
+  },
+  "regime_grade": {
+   "pooled": {
+    "vs_persistence": {
+     "n_rows": 0,
+     "n_dates": 0,
+     "mean_improvement": null,
+     "se": null,
+     "posterior_mean": 0.0,
+     "trust": 0.0,
+     "note": "no graded dates: the prior (0) stands"
+    },
+    "vs_base_rate": {
+     "n_rows": 0,
+     "n_dates": 0,
+     "mean_improvement": null,
+     "se": null,
+     "posterior_mean": 0.0,
+     "trust": 0.0,
+     "note": "no graded dates: the prior (0) stands"
+    },
+    "trust": 0.0,
+    "note": "regime rows vs persistence AND base rate; trust = the smaller"
+   },
+   "n_fields": 0,
+   "note": "not a finding before the first h5 grades (2026-10-09) and >= 3 graded dates; trust is 0 until then"
+  },
+  "scenarios": [
+   {
+    "scenario_id": "ai_capex_supercycle_2027",
+    "prior": 0.4,
+    "current": 0.4218,
+    "source": "DECLARED_PRIOR",
+    "market": null
+   },
+   {
+    "scenario_id": "ai_capex_digestion_2027",
+    "prior": 0.25,
+    "current": 0.2335,
+    "source": "DECLARED_PRIOR",
+    "market": null
+   },
+   {
+    "scenario_id": "higher_for_longer_2027",
+    "prior": 0.3,
+    "current": 0.3493,
+    "source": "DECLARED_PRIOR",
+    "market": null
+   },
+   {
+    "scenario_id": "us_recession_2027",
+    "prior": 0.25,
+    "current": 0.2308,
+    "source": "DECLARED_PRIOR",
+    "market": null
+   },
+   {
+    "scenario_id": "taiwan_strait_crisis_2027",
+    "prior": 0.08,
+    "current": 0.085,
+    "source": "DECLARED_PRIOR",
+    "market": "snapshot 46 days old > 7: NOT used; the declared prior stands"
+   },
+   {
+    "scenario_id": "energy_supply_shock_2027",
+    "prior": 0.15,
+    "current": 0.1191,
+    "source": "DECLARED_PRIOR",
+    "market": "snapshot 46 days old > 7: NOT used; the declared prior stands"
+   },
+   {
+    "scenario_id": "grid_electrification_2030",
+    "prior": 0.5,
+    "current": 0.5,
+    "source": "DECLARED_PRIOR",
+    "market": null
+   },
+   {
+    "scenario_id": "biotech_regulatory_tailwind_2030",
+    "prior": 0.35,
+    "current": 0.3331,
+    "source": "DECLARED_PRIOR",
+    "market": null
+   }
+  ],
+  "news_tilt_line": "news tilt: trust 0.0069 (dir 0.0069, size 0.0000), applied=False (flag NEWS_TILT_IN_PLAN=False; two-key ready=False)",
+  "cost_line": "world state $0.0000 (derived in code) + regime $0.0000 = $0.0000 this cycle"
+ },
+ "changes": {
+  "previous": "20261006T163002Z",
+  "new": [],
+  "continuing": [],
+  "dropped": [
+   "Global bond selloff drives yields to multi-decade highs",
+   "AI trade drives record highs in chips and megacaps",
+   "AI data-center buildout fuels nuclear deals and debt boom",
+   "Oil falls on Iran deal hopes; Houthi attacks raise Red Sea risk",
+   "France political turmoil and euro slide on fiscal strain",
+   "Crypto ETF filings surge; SEC custody rules tighten",
+   "AI scrutiny grows across government, security, and business",
+   "Corporate earnings season kicks off with major reports",
+   "Paramount completes $110B Warner Bros Discovery acquisition",
+   "Semiconductor M&A and partnerships reshape chip sector"
+  ]
+ }
+}

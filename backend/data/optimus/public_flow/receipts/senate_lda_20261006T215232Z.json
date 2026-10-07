@@ -1,0 +1,43 @@
+{
+ "source": "senate_lda",
+ "written_utc": "2026-10-06T21:52:32+00:00",
+ "banner": "SENSOR -- quarterly lobbying dollars by client with filing date and covered period kept apart; never a trade signal on its own",
+ "citation": "Lobbying Disclosure Act data from the Senate Office of Public Records (lda.senate.gov). The Senate Office of Public Records cannot vouch for the data or analyses derived from these data after the data have been retrieved from LDA.gov.",
+ "periods": [
+  "2026 third_quarter",
+  "2026 second_quarter"
+ ],
+ "clients_requested": 10,
+ "requests": 1,
+ "request_classes": {
+  "BOT_CHECK": 1
+ },
+ "rows_read": 0,
+ "rows_added": 0,
+ "duplicates": 0,
+ "pit_refused": 0,
+ "amount_usd_mapped": 0,
+ "latency_posted_minus_period_end": {
+  "n": 0
+ },
+ "latency_first_seen_minus_posted": {
+  "n": 0
+ },
+ "not_mapped_top": {},
+ "per_client": {
+  "LOCKHEED MARTIN": {
+   "ticker": "LMT",
+   "filings_read": 0,
+   "mapped": 0
+  }
+ },
+ "refusals": [
+  {
+   "step": "LOCKHEED MARTIN 2026 third_quarter",
+   "why": "BOT_CHECK: senate_lda HTTP 403 at https://lda.gov/api/v1/filings/?client_name=LOCKHEED+MARTIN&filing_year=2026&filing_period=third_quarter&page=1; nothing is done to get around it",
+   "fatal": true
+  }
+ ],
+ "rate_limit": "15 requests / minute anonymous; paced at 4.2s",
+ "status": "REFUSED"
+}

@@ -1,0 +1,577 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "muratclaw",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-28T14:08:29+00:00",
+ "plan": [
+  {
+   "lane": "marketwatch:analyst_estimates",
+   "max": 118,
+   "tickers": [
+    "LITE",
+    "MWH",
+    "Q",
+    "XRX",
+    "STX",
+    "FRMI",
+    "WDS",
+    "MEC",
+    "DUOL",
+    "FLNC",
+    "CSTM",
+    "LAR",
+    "KEX",
+    "LGN",
+    "AMSC",
+    "VKTX",
+    "NTLA",
+    "HWM",
+    "IONQ",
+    "AGYS",
+    "NVT",
+    "TSM",
+    "GEV",
+    "CLS",
+    "SNOW",
+    "JAZZ",
+    "LEU",
+    "COGT",
+    "BHVN",
+    "BBIO",
+    "CRM",
+    "MP",
+    "AVGO",
+    "ABSI",
+    "LNG",
+    "CCJ",
+    "BSP",
+    "AGIO",
+    "ENS",
+    "PRGS",
+    "BA",
+    "GOOGL",
+    "TER",
+    "VRT",
+    "VG",
+    "BN",
+    "WDAY",
+    "WST",
+    "DKNG",
+    "AVPT",
+    "PRCH",
+    "VRTX",
+    "NOW",
+    "MU",
+    "SNDR",
+    "NVO",
+    "HUBS",
+    "INCY",
+    "HOOD",
+    "META",
+    "RHI",
+    "ACI",
+    "PEGA",
+    "SMPL",
+    "RGEN",
+    "MAN",
+    "BE",
+    "AAPL",
+    "AMGN",
+    "IRDM",
+    "HELE",
+    "KYTX",
+    "NOVT",
+    "NVEC",
+    "PSNL",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "SON",
+    "ALLE",
+    "GOOG",
+    "GMAB",
+    "ADUS",
+    "TS",
+    "PDS",
+    "PAGS",
+    "MSFT",
+    "CHD",
+    "BR",
+    "ALG",
+    "STNG",
+    "CHH",
+    "ARCO",
+    "MCD",
+    "SERV",
+    "SMMT",
+    "CYTK",
+    "PDD",
+    "FIZZ",
+    "AARD",
+    "AMZN",
+    "NVDA",
+    "PRAX",
+    "MANH",
+    "BZ",
+    "CMG",
+    "EXPO",
+    "EXEL",
+    "LZ",
+    "REAL",
+    "BBW",
+    "TE",
+    "BW",
+    "CDNL",
+    "AGX",
+    "PLTR",
+    "ACVA",
+    "DBVT"
+   ]
+  }
+ ],
+ "parent_tabs": {
+  "marketwatch": {
+   "tab": null,
+   "label": null,
+   "url": "",
+   "how": "direct_open: dedicated instance, no parent tab used"
+  }
+ },
+ "max_pages": 121,
+ "budget_explicit": false,
+ "fresh_since": "2026-09-28",
+ "cost_usd": 0.0,
+ "lanes": {
+  "marketwatch:analyst_estimates": {
+   "source": "marketwatch",
+   "section": "analyst_estimates",
+   "column": "mw_analyst_estimates",
+   "parent_tab": null,
+   "tab": "94ACD7F40DE6EA4878E6FF3E898C02AE",
+   "links_found": 0,
+   "skipped_already_stored": 58,
+   "articles": [
+    {
+     "url": "https://www.marketwatch.com/investing/stock/vrt/analystestimates",
+     "title": "VRT | Vertiv Holdings Co. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": null,
+     "first_seen_utc": "2026-09-28T14:08:47+00:00",
+     "chars": 2321,
+     "raw_chars": 4920,
+     "column": "mw_analyst_estimates",
+     "sha": "a0cb37d7e1c180e223f3",
+     "paywall_suspected": false,
+     "read_s": 0.0,
+     "ticker": "VRT",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-28\\a0cb37d7e1c180e223f3.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/vg/analystestimates",
+     "title": "VG | Venture Global Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-28T14:09:00+00:00",
+     "first_seen_utc": "2026-09-28T14:09:36+00:00",
+     "chars": 3744,
+     "raw_chars": 4927,
+     "column": "mw_analyst_estimates",
+     "sha": "2b14816c6b3b6907c96c",
+     "paywall_suspected": false,
+     "read_s": 9.58,
+     "ticker": "VG",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-28\\2b14816c6b3b6907c96c.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/bn/analystestimates",
+     "title": "BN | Brookfield Corp. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-28T14:10:00+00:00",
+     "first_seen_utc": "2026-09-28T14:10:34+00:00",
+     "chars": 3699,
+     "raw_chars": 4890,
+     "column": "mw_analyst_estimates",
+     "sha": "75316d28aaa73fb11c7f",
+     "paywall_suspected": false,
+     "read_s": 8.64,
+     "ticker": "BN",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-28\\75316d28aaa73fb11c7f.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/wday/analystestimates",
+     "title": "WDAY | Workday Inc. Cl A Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-28T14:11:00+00:00",
+     "first_seen_utc": "2026-09-28T14:11:30+00:00",
+     "chars": 2357,
+     "raw_chars": 4965,
+     "column": "mw_analyst_estimates",
+     "sha": "db5286283e1484fc4228",
+     "paywall_suspected": false,
+     "read_s": 8.93,
+     "ticker": "WDAY",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-28\\db5286283e1484fc4228.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/wst/analystestimates",
+     "title": "WST | West Pharmaceutical Services Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-28T14:12:00+00:00",
+     "first_seen_utc": "2026-09-28T14:12:30+00:00",
+     "chars": 2358,
+     "raw_chars": 5036,
+     "column": "mw_analyst_estimates",
+     "sha": "663151ddb1094be659bb",
+     "paywall_suspected": false,
+     "read_s": 16.5,
+     "ticker": "WST",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-28\\663151ddb1094be659bb.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [
+    {
+     "item": "DKNG",
+     "why": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: gateway unreachable: ECONNREFUSED (ConnectionError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remot"
+    }
+   ],
+   "dropped": null,
+   "skipped_not_found": [],
+   "opened": {
+    "label": "FDF52E59F3681FDB5E876E0D6F82C4CC",
+    "how": "direct_open",
+    "tabs_before": null,
+    "tabs_after": null
+   }
+  }
+ },
+ "order": [
+  {
+   "turn": 0,
+   "lane": "marketwatch:analyst_estimates",
+   "what": "listing",
+   "url": "https://www.marketwatch.com/investing/stock/vrt/analystestimates",
+   "at": "2026-09-28T14:08:38+00:00",
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/vrt/analystestimates",
+   "ticker": "VRT",
+   "at": "2026-09-28T14:08:47+00:00",
+   "page_load": false,
+   "waited_s": 0.0,
+   "chars": 2321,
+   "ok": true
+  },
+  {
+   "turn": 2,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/vg/analystestimates",
+   "ticker": "VG",
+   "at": "2026-09-28T14:09:25+00:00",
+   "page_load": true,
+   "waited_s": 35.911295,
+   "chars": 3744,
+   "ok": true
+  },
+  {
+   "turn": 3,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/bn/analystestimates",
+   "ticker": "BN",
+   "at": "2026-09-28T14:10:25+00:00",
+   "page_load": true,
+   "waited_s": 46.368916999999996,
+   "chars": 3699,
+   "ok": true
+  },
+  {
+   "turn": 4,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/wday/analystestimates",
+   "ticker": "WDAY",
+   "at": "2026-09-28T14:11:12+00:00",
+   "page_load": true,
+   "waited_s": 27.267379000000002,
+   "chars": 2357,
+   "ok": true
+  },
+  {
+   "turn": 5,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/wst/analystestimates",
+   "ticker": "WST",
+   "at": "2026-09-28T14:12:12+00:00",
+   "page_load": true,
+   "waited_s": 27.260644,
+   "chars": 2358,
+   "ok": true
+  },
+  {
+   "turn": 7,
+   "lane": "marketwatch:analyst_estimates",
+   "item": "DKNG",
+   "at": "2026-09-28T14:13:11+00:00",
+   "ok": false,
+   "why": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: gateway unreachable: ECONNREFUSED (ConnectionError: ('Connection aborted"
+  }
+ ],
+ "stopped": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: gateway unreachable: ECONNREFUSED (ConnectionError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remot",
+ "budget_spent": null,
+ "opened": [
+  "FDF52E59F3681FDB5E876E0D6F82C4CC",
+  "46CEA2E400979B6CB79A662C1612A347",
+  "BCA54975886F09465873AD27D1C2B2A6",
+  "3927C1721B8F0D63A8B2B3F523FE5D54",
+  "63BE94B070563C5AECF2DE9495E2476B",
+  "94ACD7F40DE6EA4878E6FF3E898C02AE"
+ ],
+ "orphaned_tabs": [],
+ "worker": "marketwatch",
+ "pid": 166156,
+ "reattaches": 0,
+ "reattach_log": [],
+ "tab_remaps": [],
+ "tabs_lost_on_reattach": [],
+ "yield": [
+  {
+   "when": "end",
+   "pages": 5,
+   "lanes": {
+    "marketwatch:analyst_estimates": {
+     "pages": 5,
+     "links_per_page": null,
+     "zero_link_pages": 0,
+     "chars_per_page": 2896,
+     "zero_char_pages": 0
+    }
+   },
+   "zero_lanes": []
+  }
+ ],
+ "startup_cleanup": {
+  "candidates": [
+   "0ADC0116C893CB1F4CF9474E76B43035",
+   "587A11A0463DB90F058BDEAC8E6A22FE",
+   "C3BF76ABA99113A5215DB25F1BE37992",
+   "chrome-mcp:fe9a0faf6f97:43",
+   "chrome-mcp:fe9a0faf6f97:50",
+   "chrome-mcp:fe9a0faf6f97:72",
+   "chrome-mcp:fe9a0faf6f97:75"
+  ],
+  "closed": [],
+  "skipped": {
+   "0ADC0116C893CB1F4CF9474E76B43035": "not present",
+   "587A11A0463DB90F058BDEAC8E6A22FE": "not present",
+   "C3BF76ABA99113A5215DB25F1BE37992": "not present",
+   "chrome-mcp:fe9a0faf6f97:43": "not present",
+   "chrome-mcp:fe9a0faf6f97:50": "not present",
+   "chrome-mcp:fe9a0faf6f97:72": "not present",
+   "chrome-mcp:fe9a0faf6f97:75": "not present"
+  }
+ },
+ "in_progress": false,
+ "tabs_closed": {
+  "FDF52E59F3681FDB5E876E0D6F82C4CC": true,
+  "46CEA2E400979B6CB79A662C1612A347": true,
+  "BCA54975886F09465873AD27D1C2B2A6": true,
+  "3927C1721B8F0D63A8B2B3F523FE5D54": true,
+  "63BE94B070563C5AECF2DE9495E2476B": true,
+  "94ACD7F40DE6EA4878E6FF3E898C02AE": true
+ },
+ "blanks": 0,
+ "closes_after_read": 5,
+ "blank_slot_refunds": [],
+ "page_classes": {
+  "marketwatch.com": {
+   "OK": 5
+  }
+ },
+ "blank_failures": [],
+ "tab_rotations": [
+  {
+   "at": "2026-09-28T14:09:25+00:00",
+   "old": "FDF52E59F3681FDB5E876E0D6F82C4CC",
+   "old_closed": true,
+   "new": "46CEA2E400979B6CB79A662C1612A347",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.marketwatch.com/investing/stock/vg/analystestimates"
+  },
+  {
+   "at": "2026-09-28T14:10:25+00:00",
+   "old": "46CEA2E400979B6CB79A662C1612A347",
+   "old_closed": true,
+   "new": "BCA54975886F09465873AD27D1C2B2A6",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.marketwatch.com/investing/stock/bn/analystestimates"
+  },
+  {
+   "at": "2026-09-28T14:11:12+00:00",
+   "old": "BCA54975886F09465873AD27D1C2B2A6",
+   "old_closed": true,
+   "new": "3927C1721B8F0D63A8B2B3F523FE5D54",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.marketwatch.com/investing/stock/wday/analystestimates"
+  },
+  {
+   "at": "2026-09-28T14:12:12+00:00",
+   "old": "3927C1721B8F0D63A8B2B3F523FE5D54",
+   "old_closed": true,
+   "new": "63BE94B070563C5AECF2DE9495E2476B",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.marketwatch.com/investing/stock/wst/analystestimates"
+  },
+  {
+   "at": "2026-09-28T14:12:53+00:00",
+   "old": "63BE94B070563C5AECF2DE9495E2476B",
+   "old_closed": true,
+   "new": "94ACD7F40DE6EA4878E6FF3E898C02AE",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.marketwatch.com/investing/stock/dkng/analystestimates"
+  }
+ ],
+ "parent_tabs_final": {
+  "marketwatch": null
+ },
+ "footprint": {
+  "verdict": "HUMAN_PACE_OK",
+  "cv_of_gaps": 0.15,
+  "gaps_s": [
+   47.0,
+   60.0,
+   47.0,
+   60.0,
+   41.0
+  ],
+  "gap_min_s": 41.0,
+  "pages_per_hour": 84.71,
+  "scroll_share": 1.0,
+  "pages": 6,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_reader\\footprint_20260928T141332Z.json",
+  "cli_scope": "process",
+  "cli_calls": 44,
+  "cli_seconds": 81.09,
+  "cli_seconds_per_page": 13.515,
+  "cli_calls_per_page": 7.33,
+  "cli_breakdown": {
+   "profile_check": {
+    "calls": 4,
+    "seconds": 42.267
+   },
+   "tabs_listing": {
+    "calls": 8,
+    "seconds": 3.344
+   },
+   "other": {
+    "calls": 32,
+    "seconds": 35.479
+   }
+  },
+  "cli_cache": {
+   "profile_hits": 27,
+   "profile_misses": 3,
+   "tabs_hits": 23,
+   "tabs_misses": 8,
+   "tabs_nonce_changes": 0,
+   "url_rereads": 0,
+   "url_from_reply": 0
+  },
+  "cli_by_verb": {
+   "browser close": {
+    "calls": 6,
+    "seconds": 0.813,
+    "s_per_call": 0.14
+   },
+   "browser evaluate": {
+    "calls": 5,
+    "seconds": 2.764,
+    "s_per_call": 0.55
+   },
+   "browser open": {
+    "calls": 6,
+    "seconds": 7.812,
+    "s_per_call": 1.3
+   },
+   "browser press": {
+    "calls": 12,
+    "seconds": 19.09,
+    "s_per_call": 1.59
+   },
+   "browser profiles": {
+    "calls": 4,
+    "seconds": 42.267,
+    "s_per_call": 10.57
+   },
+   "browser status": {
+    "calls": 2,
+    "seconds": 0.906,
+    "s_per_call": 0.45
+   },
+   "browser tabs": {
+    "calls": 8,
+    "seconds": 3.344,
+    "s_per_call": 0.42
+   },
+   "browser wait": {
+    "calls": 1,
+    "seconds": 4.094,
+    "s_per_call": 4.09
+   }
+  },
+  "reattaches": 0,
+  "tab_remaps": 0
+ },
+ "hour_cap_waits_s": [],
+ "same_host_waits": [
+  {
+   "host": "marketwatch.com",
+   "extra_s": 17.27
+  },
+  {
+   "host": "marketwatch.com",
+   "extra_s": 26.38
+  },
+  {
+   "host": "marketwatch.com",
+   "extra_s": 11.51
+  },
+  {
+   "host": "marketwatch.com",
+   "extra_s": 7.27
+  },
+  {
+   "host": "marketwatch.com",
+   "extra_s": 6.89
+  }
+ ],
+ "throttle_targets_s": [
+  14.76,
+  18.64,
+  20.0,
+  15.76,
+  20.0,
+  13.45
+ ],
+ "per_source": {
+  "marketwatch": {
+   "articles": 5,
+   "refusals": 1,
+   "chars": 14479
+  }
+ },
+ "n_articles": 5,
+ "pages_loaded": 6,
+ "seconds_between_page_loads": [
+  47.0,
+  60.0,
+  47.0,
+  60.0,
+  41.0
+ ],
+ "finished_utc": "2026-09-28T14:13:32+00:00"
+}

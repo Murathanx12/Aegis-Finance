@@ -27,7 +27,7 @@ from backend.services import legibility as L
 from backend.services import legibility_sanitise as S
 from backend.services import opportunities as OPP
 from backend.services import publish_receipts as PR
-from backend.tests.test_legibility_routers import (HOME, NOW, _dna, _health, _roi, _theory, _w,
+from backend.tests.test_legibility_routers import (HOME, NOW, _beliefs, _dna, _health, _roi, _theory, _w,
                                                    assert_clean)
 
 
@@ -64,6 +64,7 @@ def world(tmp_path, monkeypatch):
     _health(live, gen)
     _theory(live)
     _opps(live)
+    _beliefs(live, gen)
     return tmp_path, live
 
 
@@ -82,8 +83,10 @@ def test_every_published_file_passed_the_sanitiser_and_the_manifest_hashes_it(wo
     assert pub == live.parent / "public_receipts"
     man = json.loads((pub / "MANIFEST.json").read_text(encoding="utf-8"))
     assert set(man["published"]) >= {"arena", "theory_lab_sticky", "theory_lab_basket", "system_health",
-                                      "opportunities"}
-    assert man["missing"] == ["arena_stories", "forecast_lab"]
+                                      "opportunities", "brain", "forecast_lab"}
+    # forecast_lab now finds a receipt too: the brain fixture's digest/world_state_<stamp>.json is the
+    # SAME file forecast_lab's "regime rows" ingredient reads (both pages share it in production).
+    assert man["missing"] == ["arena_stories"]
     for name in man["published"]:
         e = man["kinds"][name]
         b = (pub / name / "latest.json").read_bytes()
@@ -130,7 +133,8 @@ def test_routers_serve_the_published_copy_where_no_live_receipt_exists(world, mo
     OPP._CACHE.clear()
     c = _client()
     for path in ("/api/arena/v1/latest", "/api/legibility/v1/theory-lab?board=sticky",
-                 "/api/legibility/v1/theory-lab?board=basket", "/api/legibility/v1/system-health"):
+                 "/api/legibility/v1/theory-lab?board=basket", "/api/legibility/v1/system-health",
+                 "/api/legibility/v1/brain", "/api/legibility/v1/forecast-lab"):
         r = c.get(path)
         assert r.status_code == 200, (path, r.text[:200])
         body = r.json()
@@ -139,7 +143,6 @@ def test_routers_serve_the_published_copy_where_no_live_receipt_exists(world, mo
         assert_clean(body)
         ages = [x["age_hours"] for x in body["receipts"] if x.get("age_hours") is not None]
         assert ages and all(x["status"] in ("FRESH", "STALE", "UNKNOWN", "MISSING") for x in body["receipts"])
-    assert c.get("/api/legibility/v1/forecast-lab").status_code == 404   # nothing published, nothing invented
     r = c.get("/api/opportunities/latest")
     assert r.status_code == 200 and "public_receipts" in r.json()["served_from"]
     row = r.json()["list"]["rows"][0]

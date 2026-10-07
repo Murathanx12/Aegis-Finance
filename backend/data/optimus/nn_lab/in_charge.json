@@ -11,5 +11,5 @@
   }
  ],
  "why": "lgbm has no positive FORWARD trust: the zero is in charge",
- "why_kept": "no forward grade was added tonight: in-charge cannot change"
+ "why_kept": "zero kept: no rival exceeds it by the margin 0.002"
 }

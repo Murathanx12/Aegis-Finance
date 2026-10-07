@@ -1,0 +1,171 @@
+{
+ "job": "hyp_lab.plan",
+ "written_utc": "2026-10-06T16:06:25+00:00",
+ "llm_spend_usd": 0.0,
+ "night_cap_usd_untouched": 3.0,
+ "run_cap_usd_untouched": 0.4,
+ "floor": 0.15,
+ "min_weight": 0.25,
+ "max_share": 0.5,
+ "n_per_round": 8,
+ "ev_weights": {
+  "event_readthrough_corr_peer": 0.8887,
+  "llm_size_reading": 0.9527,
+  "macro_readthrough_commodity": 0.58
+ },
+ "policy_state": "WRITTEN",
+ "families": {
+  "data_vintage": {
+   "posterior": 0.1667,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "digest_forward": {
+   "posterior": 0.2,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "equity_readthrough_supply_chain": {
+   "posterior": 0.1667,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "event_readthrough_corr_peer": {
+   "posterior": 0.1333,
+   "weight": 0.8887,
+   "quota": 3,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 10
+  },
+  "event_readthrough_supply_chain": {
+   "posterior": 0.2,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "event_readthrough_text_link": {
+   "posterior": 0.3529,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "insider_event": {
+   "posterior": 0.1818,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "investable_spread": {
+   "posterior": 0.1667,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "llm_belief_elasticity": {
+   "posterior": 0.2,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "llm_leakage": {
+   "posterior": 0.2,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "llm_size_reading": {
+   "posterior": 0.1429,
+   "weight": 0.9527,
+   "quota": 3,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "macro_readthrough_commodity": {
+   "posterior": 0.087,
+   "weight": 0.58,
+   "quota": 2,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 6
+  },
+  "macro_readthrough_rates": {
+   "posterior": 0.16,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "official_disclosure": {
+   "posterior": 0.2,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "risk_timing": {
+   "posterior": 0.1667,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "size_attention": {
+   "posterior": 0.1667,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "size_disagreement": {
+   "posterior": 0.1667,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "size_event_prior": {
+   "posterior": 0.1667,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  },
+  "vol_compression": {
+   "posterior": 0.2,
+   "weight": 1.0,
+   "quota": 4,
+   "n_generated_tonight": 0,
+   "n_deferred_tonight": 0,
+   "n_shrunk": 0
+  }
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "source": "crypto_risk_sensor",
+ "written_utc": "2026-10-06T21:52:33+00:00",
+ "status": "OK",
+ "rows_added": 1,
+ "components": {
+  "stablecoins": "OK",
+  "funding": "OK",
+  "spot": "OK"
+ },
+ "banner": "SENSOR -- crypto risk appetite as market state (stablecoin supply, funding, spot); never traded, never a signal on its own",
+ "citation": "DefiLlama (stablecoins); Binance, OKX public market data; CoinGecko"
+}

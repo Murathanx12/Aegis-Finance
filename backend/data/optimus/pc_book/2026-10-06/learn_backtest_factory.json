@@ -1,0 +1,8 @@
+{
+ "unit": "backtest_factory",
+ "day": "2026-10-06",
+ "rc": 0,
+ "status": "ok",
+ "tail": "GAP mom_12_1_q_mjsd_minus_mom_12_1: by year {'2017': -0.015304, '2018': -0.076459, '2019': 0.026509, '2020': -0.40025, '2021': -0.109359, '2022': 0.038199, '2023': -0.150744, '2024': 0.187932, '2025': 0.031588, '2026': -0.043848}; excluding []: sum -0.511736\n  holdings: 919 cells, 2,552,633 rows; 919/919 OK cells with holdings, 919 with n_months rows\n  replication file: C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\top10_for_replication_2026-10-06T181643Z.json\n-> C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\leaderboard_2026-10-06T181643Z.json  (318s)\n",
+ "ran_utc": "2026-10-06T18:22:01+00:00"
+}

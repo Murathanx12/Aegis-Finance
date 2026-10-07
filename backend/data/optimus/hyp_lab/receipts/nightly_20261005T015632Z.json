@@ -1,0 +1,95 @@
+{
+ "job": "hyp_lab.nightly",
+ "started_utc": "2026-10-05T01:56:32+00:00",
+ "night": "2026-10-05",
+ "k": 3,
+ "cap_usd": 0.4,
+ "free_ram_gb_start": 8.79,
+ "generation": [
+  {
+   "provider": "deepseek",
+   "ok": false,
+   "status": "ERROR",
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\generate_deepseek_20261005T015710Z.json"
+  },
+  {
+   "provider": "local",
+   "ok": false,
+   "status": "SKIPPED_SERVER_NOT_UP"
+  }
+ ],
+ "declared": [
+  "H-f7adb864b0",
+  "H-54e0f8e467",
+  "H-67ea028ef9"
+ ],
+ "declare_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\declare_20261005T015713Z.json",
+ "results": [
+  {
+   "hyp_id": "H-f7adb864b0",
+   "title": "Guidance-cut read-through to correlation peers",
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.07640 <= 0",
+   "design": {
+    "mean": -0.030494,
+    "t": -0.46,
+    "mde": 0.187648,
+    "n": 26,
+    "n_blocks": 19
+   },
+   "confirm": {
+    "mean": -0.076396,
+    "t": -0.39,
+    "mde": 0.541997,
+    "n": 17,
+    "n_blocks": 14
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-f7adb864b0_20261005T015738Z.json"
+  },
+  {
+   "hyp_id": "H-54e0f8e467",
+   "title": "Regulatory approval for one firm lifts co-mentioned peers",
+   "verdict": "CANNOT_DISTINGUISH",
+   "reason": "confirm +0.29306 t 1.0; MDE 0.82425 > effect worth having 0.05000",
+   "design": {
+    "mean": -0.176387,
+    "t": -1.8,
+    "mde": 0.273757,
+    "n": 5,
+    "n_blocks": 5
+   },
+   "confirm": {
+    "mean": 0.293056,
+    "t": 1.0,
+    "mde": 0.824251,
+    "n": 5,
+    "n_blocks": 5
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-54e0f8e467_20261005T015920Z.json"
+  },
+  {
+   "hyp_id": "H-67ea028ef9",
+   "title": "Equity issuance dilution hits correlated peers",
+   "verdict": "CANNOT_DISTINGUISH",
+   "reason": "confirm +0.15509 t 0.69; MDE 0.63258 > effect worth having 0.21231",
+   "design": {
+    "mean": 0.212308,
+    "t": 1.34,
+    "mde": 0.443509,
+    "n": 10,
+    "n_blocks": 9
+   },
+   "confirm": {
+    "mean": 0.155091,
+    "t": 0.69,
+    "mde": 0.632584,
+    "n": 12,
+    "n_blocks": 11
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-67ea028ef9_20261005T015922Z.json"
+  }
+ ],
+ "spend_this_run_usd": 0.0,
+ "wall_min": 2.8,
+ "status": "OK"
+}

@@ -1,0 +1,592 @@
+{
+ "schema": "hyp_lab/theory_cell_results/1",
+ "cell": "insider_hold",
+ "run": "TC_2026-10-06_1",
+ "declaration_sha256": "32984679f7ccc6868dcfde591a475f9d9f8ae7b6eabb63c116a8ff31505c0131",
+ "hyp_id": "H-aca81f5b8f",
+ "written_utc": "2026-10-06T16:07:11+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "decision": "Primary series = monthly mean of the declared quantity, indexed by the month the position is held (hyp_investable.spread_stats: t on non-overlapping 3-month blocks, MDE = 2.8 SE). CANDIDATE iff design mean > 0 AND validate mean > 0 with t >= 2 AND a strict majority of validate years > 0 AND the leave-one-year-out worst validate mean > 0. FAILED_VARIANT iff validate mean <= 0, or validate t < 2 with validate MDE <= the effect worth having (max(design mean, min_effect)). Otherwise CANNOT_DISTINGUISH. Late (2017-2024) is read last and never decides. A cell whose sign is 'design' multiplies the series by the sign of its design mean first (the design fold fixes the direction; validate decides).",
+ "result": {
+  "verdict": "FAILED_VARIANT",
+  "reason": "validate mean -0.01824 <= 0",
+  "primary": "HOLD H63 net vs size band",
+  "primary_stats": {
+   "design": {
+    "n_months": 33,
+    "mean_monthly": -0.033021,
+    "t_blocks": -3.113479,
+    "mde_monthly": 0.029697,
+    "years_positive": "0 of 3"
+   },
+   "validate": {
+    "n_months": 96,
+    "mean_monthly": -0.018244,
+    "t_blocks": -5.752673,
+    "mde_monthly": 0.00888,
+    "years_positive": "0 of 8"
+   },
+   "late": {
+    "n_months": 94,
+    "mean_monthly": -0.025938,
+    "t_blocks": -4.907679,
+    "mde_monthly": 0.014799,
+    "years_positive": "0 of 8"
+   },
+   "full": {
+    "n_months": 223,
+    "mean_monthly": -0.023674,
+    "t_blocks": -7.746755,
+    "mde_monthly": 0.008557,
+    "years_positive": "0 of 19"
+   }
+  },
+  "primary_by_hold_year": {
+   "2006": -0.03126,
+   "2007": -0.30098,
+   "2008": -0.75747,
+   "2009": -0.54984,
+   "2010": -0.20279,
+   "2011": -0.25181,
+   "2012": -0.0768,
+   "2013": -0.1126,
+   "2014": -0.25099,
+   "2015": -0.19571,
+   "2016": -0.11089,
+   "2017": -0.1567,
+   "2018": -0.23332,
+   "2019": -0.00711,
+   "2020": -0.61679,
+   "2021": -0.52953,
+   "2022": -0.30868,
+   "2023": -0.16556,
+   "2024": -0.42052
+  },
+  "primary_loo_worst": {
+   "design": -0.044102054435097036,
+   "validate": -0.019935976810194392,
+   "late": -0.029647546581972713
+  },
+  "hold_minus_sold_gross_H63": {
+   "verdict_if_primary": "FAILED_VARIANT",
+   "reason": "validate mean -0.01760 <= 0",
+   "stats": {
+    "design": {
+     "n_months": 32,
+     "mean_monthly": 0.002942,
+     "t_blocks": 0.177896,
+     "mde_monthly": 0.046311,
+     "years_positive": "2 of 3"
+    },
+    "validate": {
+     "n_months": 95,
+     "mean_monthly": -0.017601,
+     "t_blocks": -0.824476,
+     "mde_monthly": 0.059776,
+     "years_positive": "1 of 8"
+    },
+    "late": {
+     "n_months": 78,
+     "mean_monthly": -0.008193,
+     "t_blocks": -0.349761,
+     "mde_monthly": 0.065588,
+     "years_positive": "5 of 8"
+    },
+    "full": {
+     "n_months": 205,
+     "mean_monthly": -0.010815,
+     "t_blocks": -0.678006,
+     "mde_monthly": 0.044662,
+     "years_positive": "8 of 19"
+    }
+   },
+   "by_hold_year": {
+    "2006": 0.16646,
+    "2007": -0.13532,
+    "2008": 0.06301,
+    "2009": 2.12072,
+    "2010": -0.11351,
+    "2011": -0.97977,
+    "2012": -0.13901,
+    "2013": -0.6115,
+    "2014": -0.16253,
+    "2015": -1.10034,
+    "2016": -0.6862,
+    "2017": 0.3849,
+    "2018": -0.29905,
+    "2019": -0.94613,
+    "2020": 0.03116,
+    "2021": 0.44769,
+    "2022": 0.02438,
+    "2023": -0.63121,
+    "2024": 0.34922
+   }
+  },
+  "n_events": 44129,
+  "n_hold": 43339,
+  "events_by_year": {
+   "2006": 2592,
+   "2007": 2920,
+   "2008": 3402,
+   "2009": 3011,
+   "2010": 2408,
+   "2011": 2507,
+   "2012": 2174,
+   "2013": 2031,
+   "2014": 2028,
+   "2015": 2433,
+   "2016": 2199,
+   "2017": 1940,
+   "2018": 1956,
+   "2019": 2269,
+   "2020": 2313,
+   "2021": 1950,
+   "2022": 2462,
+   "2023": 2149,
+   "2024": 1385
+  },
+  "hold_share_by_year": {
+   "2006": 0.972,
+   "2007": 0.975,
+   "2008": 0.983,
+   "2009": 0.98,
+   "2010": 0.979,
+   "2011": 0.982,
+   "2012": 0.977,
+   "2013": 0.982,
+   "2014": 0.98,
+   "2015": 0.985,
+   "2016": 0.985,
+   "2017": 0.99,
+   "2018": 0.982,
+   "2019": 0.99,
+   "2020": 0.987,
+   "2021": 0.981,
+   "2022": 0.986,
+   "2023": 0.984,
+   "2024": 0.986
+  },
+  "cells": {
+   "HOLD_H21_market": {
+    "n_events": 41966,
+    "mean_round_trip_bps": 130.3,
+    "event_mean_gross": -0.00352,
+    "event_mean_net": -0.01654,
+    "gross": {
+     "design": {
+      "n_months": 33,
+      "mean_monthly": -0.01141,
+      "t_blocks": -4.864674,
+      "mde_monthly": 0.006567,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 96,
+      "mean_monthly": 0.004576,
+      "t_blocks": 1.557269,
+      "mde_monthly": 0.008227,
+      "years_positive": "5 of 8"
+     },
+     "late": {
+      "n_months": 94,
+      "mean_monthly": -0.007998,
+      "t_blocks": -1.964373,
+      "mde_monthly": 0.0114,
+      "years_positive": "4 of 8"
+     }
+    },
+    "net": {
+     "design": {
+      "n_months": 33,
+      "mean_monthly": -0.024123,
+      "t_blocks": -7.118361,
+      "mde_monthly": 0.009489,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 96,
+      "mean_monthly": -0.007542,
+      "t_blocks": -2.746631,
+      "mde_monthly": 0.007689,
+      "years_positive": "2 of 8"
+     },
+     "late": {
+      "n_months": 94,
+      "mean_monthly": -0.021853,
+      "t_blocks": -5.364834,
+      "mde_monthly": 0.011406,
+      "years_positive": "0 of 8"
+     }
+    }
+   },
+   "HOLD_H21_band": {
+    "n_events": 41966,
+    "mean_round_trip_bps": 130.3,
+    "event_mean_gross": -0.00503,
+    "event_mean_net": -0.01805,
+    "gross": {
+     "design": {
+      "n_months": 33,
+      "mean_monthly": -0.009182,
+      "t_blocks": -2.812041,
+      "mde_monthly": 0.009143,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 96,
+      "mean_monthly": -0.002316,
+      "t_blocks": -1.455081,
+      "mde_monthly": 0.004457,
+      "years_positive": "2 of 8"
+     },
+     "late": {
+      "n_months": 94,
+      "mean_monthly": -0.006032,
+      "t_blocks": -2.656458,
+      "mde_monthly": 0.006357,
+      "years_positive": "1 of 8"
+     }
+    },
+    "net": {
+     "design": {
+      "n_months": 33,
+      "mean_monthly": -0.021895,
+      "t_blocks": -4.500535,
+      "mde_monthly": 0.013622,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 96,
+      "mean_monthly": -0.014435,
+      "t_blocks": -7.177917,
+      "mde_monthly": 0.005631,
+      "years_positive": "0 of 8"
+     },
+     "late": {
+      "n_months": 94,
+      "mean_monthly": -0.019887,
+      "t_blocks": -7.983275,
+      "mde_monthly": 0.006975,
+      "years_positive": "0 of 8"
+     }
+    }
+   },
+   "HOLD_H63_market": {
+    "n_events": 41760,
+    "mean_round_trip_bps": 129.8,
+    "event_mean_gross": -0.00263,
+    "event_mean_net": -0.01561,
+    "gross": {
+     "design": {
+      "n_months": 33,
+      "mean_monthly": -0.025231,
+      "t_blocks": -2.728117,
+      "mde_monthly": 0.025896,
+      "years_positive": "1 of 3"
+     },
+     "validate": {
+      "n_months": 96,
+      "mean_monthly": 0.015043,
+      "t_blocks": 1.402157,
+      "mde_monthly": 0.03004,
+      "years_positive": "5 of 8"
+     },
+     "late": {
+      "n_months": 94,
+      "mean_monthly": -0.017072,
+      "t_blocks": -1.471005,
+      "mde_monthly": 0.032496,
+      "years_positive": "1 of 8"
+     }
+    },
+    "net": {
+     "design": {
+      "n_months": 33,
+      "mean_monthly": -0.037893,
+      "t_blocks": -3.9809,
+      "mde_monthly": 0.026652,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 96,
+      "mean_monthly": 0.002961,
+      "t_blocks": 0.28586,
+      "mde_monthly": 0.029002,
+      "years_positive": "5 of 8"
+     },
+     "late": {
+      "n_months": 94,
+      "mean_monthly": -0.030894,
+      "t_blocks": -2.675404,
+      "mde_monthly": 0.032333,
+      "years_positive": "1 of 8"
+     }
+    }
+   },
+   "HOLD_H63_band": {
+    "n_events": 41760,
+    "mean_round_trip_bps": 129.8,
+    "event_mean_gross": -0.01097,
+    "event_mean_net": -0.02395,
+    "gross": {
+     "design": {
+      "n_months": 33,
+      "mean_monthly": -0.02036,
+      "t_blocks": -2.24725,
+      "mde_monthly": 0.025368,
+      "years_positive": "1 of 3"
+     },
+     "validate": {
+      "n_months": 96,
+      "mean_monthly": -0.006162,
+      "t_blocks": -2.18146,
+      "mde_monthly": 0.007909,
+      "years_positive": "3 of 8"
+     },
+     "late": {
+      "n_months": 94,
+      "mean_monthly": -0.012116,
+      "t_blocks": -2.324446,
+      "mde_monthly": 0.014595,
+      "years_positive": "2 of 8"
+     }
+    },
+    "net": {
+     "design": {
+      "n_months": 33,
+      "mean_monthly": -0.033021,
+      "t_blocks": -3.113479,
+      "mde_monthly": 0.029697,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 96,
+      "mean_monthly": -0.018244,
+      "t_blocks": -5.752673,
+      "mde_monthly": 0.00888,
+      "years_positive": "0 of 8"
+     },
+     "late": {
+      "n_months": 94,
+      "mean_monthly": -0.025938,
+      "t_blocks": -4.907679,
+      "mde_monthly": 0.014799,
+      "years_positive": "0 of 8"
+     }
+    }
+   },
+   "SOLD_H21_market": {
+    "n_events": 771,
+    "mean_round_trip_bps": 116.9,
+    "event_mean_gross": 0.00456,
+    "event_mean_net": -0.00712,
+    "gross": {
+     "design": {
+      "n_months": 32,
+      "mean_monthly": -0.016404,
+      "t_blocks": -2.518358,
+      "mde_monthly": 0.018238,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 95,
+      "mean_monthly": 0.009506,
+      "t_blocks": 1.10463,
+      "mde_monthly": 0.024095,
+      "years_positive": "6 of 8"
+     },
+     "late": {
+      "n_months": 78,
+      "mean_monthly": 0.011246,
+      "t_blocks": 0.815616,
+      "mde_monthly": 0.038606,
+      "years_positive": "5 of 8"
+     }
+    },
+    "net": {
+     "design": {
+      "n_months": 32,
+      "mean_monthly": -0.027844,
+      "t_blocks": -4.055455,
+      "mde_monthly": 0.019224,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 95,
+      "mean_monthly": -0.001668,
+      "t_blocks": -0.1943,
+      "mde_monthly": 0.024039,
+      "years_positive": "4 of 8"
+     },
+     "late": {
+      "n_months": 78,
+      "mean_monthly": -0.00156,
+      "t_blocks": -0.115969,
+      "mde_monthly": 0.037668,
+      "years_positive": "4 of 8"
+     }
+    }
+   },
+   "SOLD_H21_band": {
+    "n_events": 771,
+    "mean_round_trip_bps": 116.9,
+    "event_mean_gross": 0.00152,
+    "event_mean_net": -0.01017,
+    "gross": {
+     "design": {
+      "n_months": 32,
+      "mean_monthly": -0.013695,
+      "t_blocks": -1.495911,
+      "mde_monthly": 0.025634,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 95,
+      "mean_monthly": 0.002909,
+      "t_blocks": 0.340965,
+      "mde_monthly": 0.023886,
+      "years_positive": "5 of 8"
+     },
+     "late": {
+      "n_months": 78,
+      "mean_monthly": 0.010389,
+      "t_blocks": 0.713193,
+      "mde_monthly": 0.040787,
+      "years_positive": "4 of 8"
+     }
+    },
+    "net": {
+     "design": {
+      "n_months": 32,
+      "mean_monthly": -0.025135,
+      "t_blocks": -2.664448,
+      "mde_monthly": 0.026414,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 95,
+      "mean_monthly": -0.008265,
+      "t_blocks": -0.960515,
+      "mde_monthly": 0.024093,
+      "years_positive": "4 of 8"
+     },
+     "late": {
+      "n_months": 78,
+      "mean_monthly": -0.002417,
+      "t_blocks": -0.170091,
+      "mde_monthly": 0.039786,
+      "years_positive": "4 of 8"
+     }
+    }
+   },
+   "SOLD_H63_market": {
+    "n_events": 766,
+    "mean_round_trip_bps": 116.5,
+    "event_mean_gross": -0.00062,
+    "event_mean_net": -0.01227,
+    "gross": {
+     "design": {
+      "n_months": 32,
+      "mean_monthly": -0.027457,
+      "t_blocks": -2.199226,
+      "mde_monthly": 0.034958,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 95,
+      "mean_monthly": 0.032302,
+      "t_blocks": 1.628976,
+      "mde_monthly": 0.055523,
+      "years_positive": "6 of 8"
+     },
+     "late": {
+      "n_months": 78,
+      "mean_monthly": -0.012241,
+      "t_blocks": -0.509329,
+      "mde_monthly": 0.067293,
+      "years_positive": "4 of 8"
+     }
+    },
+    "net": {
+     "design": {
+      "n_months": 32,
+      "mean_monthly": -0.038918,
+      "t_blocks": -3.136755,
+      "mde_monthly": 0.03474,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 95,
+      "mean_monthly": 0.021219,
+      "t_blocks": 1.073377,
+      "mde_monthly": 0.055351,
+      "years_positive": "6 of 8"
+     },
+     "late": {
+      "n_months": 78,
+      "mean_monthly": -0.025092,
+      "t_blocks": -1.040724,
+      "mde_monthly": 0.067508,
+      "years_positive": "3 of 8"
+     }
+    }
+   },
+   "SOLD_H63_band": {
+    "n_events": 766,
+    "mean_round_trip_bps": 116.5,
+    "event_mean_gross": -0.0089,
+    "event_mean_net": -0.02055,
+    "gross": {
+     "design": {
+      "n_months": 32,
+      "mean_monthly": -0.022437,
+      "t_blocks": -1.394608,
+      "mde_monthly": 0.045048,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 95,
+      "mean_monthly": 0.011119,
+      "t_blocks": 0.492576,
+      "mde_monthly": 0.063206,
+      "years_positive": "7 of 8"
+     },
+     "late": {
+      "n_months": 78,
+      "mean_monthly": -0.003615,
+      "t_blocks": -0.150505,
+      "mde_monthly": 0.067261,
+      "years_positive": "3 of 8"
+     }
+    },
+    "net": {
+     "design": {
+      "n_months": 32,
+      "mean_monthly": -0.033898,
+      "t_blocks": -2.08095,
+      "mde_monthly": 0.045611,
+      "years_positive": "0 of 3"
+     },
+     "validate": {
+      "n_months": 95,
+      "mean_monthly": 3.6e-05,
+      "t_blocks": 0.001588,
+      "mde_monthly": 0.063419,
+      "years_positive": "5 of 8"
+     },
+     "late": {
+      "n_months": 78,
+      "mean_monthly": -0.016466,
+      "t_blocks": -0.682888,
+      "mde_monthly": 0.067516,
+      "years_positive": "3 of 8"
+     }
+    }
+   }
+  },
+  "seconds": 25.3,
+  "free_ram_gb_at_start": 5.1,
+  "wall_s": 25.3
+ }
+}

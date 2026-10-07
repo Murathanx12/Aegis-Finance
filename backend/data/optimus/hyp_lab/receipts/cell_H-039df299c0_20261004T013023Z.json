@@ -1,0 +1,149 @@
+{
+ "hyp_id": "H-039df299c0",
+ "title": "Oil shock -> refiners and chemicals (input cost) lag",
+ "night": "2026-10-04",
+ "run_utc": "2026-10-04T01:30:23+00:00",
+ "result": {
+  "cell_type": "macro_lead_lag",
+  "params": {
+   "driver": "CL=F",
+   "targets": [
+    "DOW",
+    "LYB",
+    "WLK",
+    "OLN",
+    "HUN",
+    "CE"
+   ],
+   "expected_sign": -1,
+   "h": 5,
+   "shock_z": 2.0
+  },
+  "targets_used": [
+   "DOW",
+   "LYB",
+   "WLK",
+   "OLN",
+   "HUN",
+   "CE"
+  ],
+  "beta_to_spy_design": 1.251,
+  "window": "open(t+1) -> close(t+5), residual of beta x SPY; etf: targets use close t -> close t+5",
+  "design": {
+   "primary_signed_next_resid": {
+    "mean": -0.001747,
+    "se": 0.003628,
+    "t": -0.48,
+    "mde": 0.010157,
+    "n": 97,
+    "n_blocks": 44
+   },
+   "net_of_cost": -0.003747,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": -0.007776,
+    "se": 0.001745,
+    "t": -4.45,
+    "mde": 0.004887,
+    "n": 97,
+    "n_blocks": 44
+   },
+   "placebo_all_days_signed_next": {
+    "mean": 2e-06,
+    "se": 0.000713,
+    "t": 0.0,
+    "mde": 0.001996,
+    "n": 1720,
+    "n_blocks": 82
+   },
+   "n_shocks": 97,
+   "by_year": {
+    "2016": {
+     "mean": 0.008041,
+     "n": 6
+    },
+    "2017": {
+     "mean": 0.006299,
+     "n": 10
+    },
+    "2018": {
+     "mean": -0.00364,
+     "n": 20
+    },
+    "2019": {
+     "mean": -0.011995,
+     "n": 13
+    },
+    "2020": {
+     "mean": 0.00624,
+     "n": 20
+    },
+    "2021": {
+     "mean": -0.003754,
+     "n": 17
+    },
+    "2022": {
+     "mean": -0.010266,
+     "n": 11
+    }
+   },
+   "loo_year_worst": -0.003821,
+   "span": [
+    "2016-06-24",
+    "2022-07-12"
+   ]
+  },
+  "confirm": {
+   "primary_signed_next_resid": {
+    "mean": 0.004914,
+    "se": 0.006638,
+    "t": 0.74,
+    "mde": 0.018587,
+    "n": 57,
+    "n_blocks": 26
+   },
+   "net_of_cost": 0.002914,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": -0.012602,
+    "se": 0.003474,
+    "t": -3.63,
+    "mde": 0.009726,
+    "n": 57,
+    "n_blocks": 26
+   },
+   "placebo_all_days_signed_next": {
+    "mean": 0.000748,
+    "se": 0.00128,
+    "t": 0.58,
+    "mde": 0.003584,
+    "n": 936,
+    "n_blocks": 45
+   },
+   "n_shocks": 57,
+   "by_year": {
+    "2023": {
+     "mean": 0.00423,
+     "n": 13
+    },
+    "2024": {
+     "mean": 0.003667,
+     "n": 15
+    },
+    "2025": {
+     "mean": 0.016499,
+     "n": 12
+    },
+    "2026": {
+     "mean": -0.001639,
+     "n": 17
+    }
+   },
+   "loo_year_worst": 0.001825,
+   "span": [
+    "2023-01-04",
+    "2026-09-10"
+   ]
+  },
+  "verdict": "CANNOT_DISTINGUISH",
+  "reason": "confirm +0.00491 t 0.74; MDE 0.01859 > effect worth having 0.00200"
+ }
+}

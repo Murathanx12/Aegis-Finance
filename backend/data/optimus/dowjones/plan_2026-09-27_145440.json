@@ -1,0 +1,3655 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "user",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-27T14:54:54+00:00",
+ "plan": [
+  {
+   "lane": "marketwatch:analyst_estimates",
+   "max": 116,
+   "tickers": [
+    "VKTX",
+    "NTLA",
+    "HWM",
+    "IONQ",
+    "AGYS",
+    "NVT",
+    "AMZN",
+    "NVDA",
+    "TSM",
+    "GEV",
+    "CLS",
+    "PRAX",
+    "SNOW",
+    "JAZZ",
+    "LEU",
+    "COGT",
+    "BHVN",
+    "BBIO",
+    "CRM",
+    "MP",
+    "AVGO",
+    "ABSI",
+    "LNG",
+    "CCJ",
+    "BSP",
+    "AGIO",
+    "ENS",
+    "PRGS",
+    "BA",
+    "GOOGL",
+    "TER",
+    "VRT",
+    "VG",
+    "BN",
+    "WDAY",
+    "WST",
+    "DKNG",
+    "AVPT",
+    "PRCH",
+    "VRTX",
+    "NOW",
+    "MU",
+    "SNDR",
+    "NVO",
+    "HUBS",
+    "INCY",
+    "HOOD",
+    "META",
+    "RHI",
+    "ACI",
+    "PEGA",
+    "SMPL",
+    "RGEN",
+    "MAN",
+    "BE",
+    "AAPL",
+    "AMGN",
+    "IRDM",
+    "HELE",
+    "KYTX",
+    "NOVT",
+    "NVEC",
+    "PSNL",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "SON",
+    "ALLE",
+    "GOOG",
+    "GMAB",
+    "ADUS",
+    "TS",
+    "PDS",
+    "PAGS",
+    "MSFT",
+    "CHD",
+    "BR",
+    "ALG",
+    "STNG",
+    "CHH",
+    "ARCO",
+    "MCD",
+    "SERV",
+    "SMMT",
+    "CYTK",
+    "PDD",
+    "FIZZ",
+    "MANH",
+    "BZ",
+    "CMG",
+    "EXPO",
+    "EXEL",
+    "LZ",
+    "REAL",
+    "BBW",
+    "TE",
+    "BW",
+    "CDNL",
+    "AGX",
+    "PLTR",
+    "ACVA",
+    "DBVT",
+    "LITE",
+    "MWH",
+    "Q",
+    "XRX",
+    "STX",
+    "FRMI",
+    "WDS",
+    "MEC",
+    "DUOL",
+    "FLNC",
+    "CSTM",
+    "LAR",
+    "KEX",
+    "LGN"
+   ]
+  },
+  {
+   "lane": "wsj:search",
+   "max": 464,
+   "tickers": [
+    "VKTX",
+    "NTLA",
+    "HWM",
+    "IONQ",
+    "AGYS",
+    "NVT",
+    "AMZN",
+    "NVDA",
+    "TSM",
+    "GEV",
+    "CLS",
+    "PRAX",
+    "SNOW",
+    "JAZZ",
+    "LEU",
+    "COGT",
+    "BHVN",
+    "BBIO",
+    "CRM",
+    "MP",
+    "AVGO",
+    "ABSI",
+    "LNG",
+    "CCJ",
+    "BSP",
+    "AGIO",
+    "ENS",
+    "PRGS",
+    "BA",
+    "GOOGL",
+    "TER",
+    "VRT",
+    "VG",
+    "BN",
+    "WDAY",
+    "WST",
+    "DKNG",
+    "AVPT",
+    "PRCH",
+    "VRTX",
+    "NOW",
+    "MU",
+    "SNDR",
+    "NVO",
+    "HUBS",
+    "INCY",
+    "HOOD",
+    "META",
+    "RHI",
+    "ACI",
+    "PEGA",
+    "SMPL",
+    "RGEN",
+    "MAN",
+    "BE",
+    "AAPL",
+    "AMGN",
+    "IRDM",
+    "HELE",
+    "KYTX",
+    "NOVT",
+    "NVEC",
+    "PSNL",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "SON",
+    "ALLE",
+    "GOOG",
+    "GMAB",
+    "ADUS",
+    "TS",
+    "PDS",
+    "PAGS",
+    "MSFT",
+    "CHD",
+    "BR",
+    "ALG",
+    "STNG",
+    "CHH",
+    "ARCO",
+    "MCD",
+    "SERV",
+    "SMMT",
+    "CYTK",
+    "PDD",
+    "FIZZ",
+    "MANH",
+    "BZ",
+    "CMG",
+    "EXPO",
+    "EXEL",
+    "LZ",
+    "REAL",
+    "BBW",
+    "TE",
+    "BW",
+    "CDNL",
+    "AGX",
+    "PLTR",
+    "ACVA",
+    "DBVT",
+    "LITE",
+    "MWH",
+    "Q",
+    "XRX",
+    "STX",
+    "FRMI",
+    "WDS",
+    "MEC",
+    "DUOL",
+    "FLNC",
+    "CSTM",
+    "LAR",
+    "KEX",
+    "LGN"
+   ]
+  },
+  {
+   "lane": "barrons:search",
+   "max": 464,
+   "tickers": [
+    "VKTX",
+    "NTLA",
+    "HWM",
+    "IONQ",
+    "AGYS",
+    "NVT",
+    "AMZN",
+    "NVDA",
+    "TSM",
+    "GEV",
+    "CLS",
+    "PRAX",
+    "SNOW",
+    "JAZZ",
+    "LEU",
+    "COGT",
+    "BHVN",
+    "BBIO",
+    "CRM",
+    "MP",
+    "AVGO",
+    "ABSI",
+    "LNG",
+    "CCJ",
+    "BSP",
+    "AGIO",
+    "ENS",
+    "PRGS",
+    "BA",
+    "GOOGL",
+    "TER",
+    "VRT",
+    "VG",
+    "BN",
+    "WDAY",
+    "WST",
+    "DKNG",
+    "AVPT",
+    "PRCH",
+    "VRTX",
+    "NOW",
+    "MU",
+    "SNDR",
+    "NVO",
+    "HUBS",
+    "INCY",
+    "HOOD",
+    "META",
+    "RHI",
+    "ACI",
+    "PEGA",
+    "SMPL",
+    "RGEN",
+    "MAN",
+    "BE",
+    "AAPL",
+    "AMGN",
+    "IRDM",
+    "HELE",
+    "KYTX",
+    "NOVT",
+    "NVEC",
+    "PSNL",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "SON",
+    "ALLE",
+    "GOOG",
+    "GMAB",
+    "ADUS",
+    "TS",
+    "PDS",
+    "PAGS",
+    "MSFT",
+    "CHD",
+    "BR",
+    "ALG",
+    "STNG",
+    "CHH",
+    "ARCO",
+    "MCD",
+    "SERV",
+    "SMMT",
+    "CYTK",
+    "PDD",
+    "FIZZ",
+    "MANH",
+    "BZ",
+    "CMG",
+    "EXPO",
+    "EXEL",
+    "LZ",
+    "REAL",
+    "BBW",
+    "TE",
+    "BW",
+    "CDNL",
+    "AGX",
+    "PLTR",
+    "ACVA",
+    "DBVT",
+    "LITE",
+    "MWH",
+    "Q",
+    "XRX",
+    "STX",
+    "FRMI",
+    "WDS",
+    "MEC",
+    "DUOL",
+    "FLNC",
+    "CSTM",
+    "LAR",
+    "KEX",
+    "LGN"
+   ]
+  },
+  {
+   "lane": "barrons:stock_picks",
+   "max": 40,
+   "tickers": []
+  },
+  {
+   "lane": "wsj:heard_on_the_street",
+   "max": 40,
+   "tickers": []
+  },
+  {
+   "lane": "barrons:big_money_poll",
+   "max": 5,
+   "tickers": []
+  }
+ ],
+ "parent_tabs": {
+  "marketwatch": {
+   "tab": "chrome-mcp:fe9a0faf6f97:8",
+   "label": "t8",
+   "url": "https://www.wsj.com/?aegis=muratclaw",
+   "how": "borrowed:no marketwatch.com tab open"
+  },
+  "wsj": {
+   "tab": "chrome-mcp:fe9a0faf6f97:8",
+   "label": "t8",
+   "url": "https://www.wsj.com/?aegis=muratclaw",
+   "how": "by_host:wsj.com"
+  },
+  "barrons": {
+   "tab": "chrome-mcp:fe9a0faf6f97:8",
+   "label": "t8",
+   "url": "https://www.wsj.com/?aegis=muratclaw",
+   "how": "borrowed:no barrons.com tab open"
+  }
+ },
+ "max_pages": 900,
+ "budget_explicit": true,
+ "fresh_since": "2026-09-27",
+ "cost_usd": 0.0,
+ "lanes": {
+  "marketwatch:analyst_estimates": {
+   "source": "marketwatch",
+   "section": "analyst_estimates",
+   "column": "mw_analyst_estimates",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:29",
+   "links_found": 0,
+   "skipped_already_stored": 22,
+   "articles": [
+    {
+     "url": "https://www.marketwatch.com/investing/stock/avgo/analystestimates",
+     "title": "AVGO | Broadcom Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": null,
+     "first_seen_utc": "2026-09-27T15:02:17+00:00",
+     "chars": 2407,
+     "raw_chars": 5180,
+     "column": "mw_analyst_estimates",
+     "sha": "aa9b33866e9b368e1dd7",
+     "paywall_suspected": false,
+     "read_s": 0.0,
+     "ticker": "AVGO",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\aa9b33866e9b368e1dd7.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/absi/analystestimates",
+     "title": "ABSI | Absci Corp. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T15:08:43+00:00",
+     "chars": 2455,
+     "raw_chars": 5134,
+     "column": "mw_analyst_estimates",
+     "sha": "0465a3cfd72631b279d0",
+     "paywall_suspected": false,
+     "read_s": 150.2,
+     "ticker": "ABSI",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\0465a3cfd72631b279d0.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/lng/analystestimates",
+     "title": "LNG | Cheniere Energy Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:54:00+00:00",
+     "first_seen_utc": "2026-09-27T15:15:44+00:00",
+     "chars": 2355,
+     "raw_chars": 5052,
+     "column": "mw_analyst_estimates",
+     "sha": "e6f294266f05b86b7eed",
+     "paywall_suspected": false,
+     "read_s": 116.72,
+     "ticker": "LNG",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\e6f294266f05b86b7eed.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/ccj/analystestimates",
+     "title": "CCJ | Cameco Corp. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:53:00+00:00",
+     "first_seen_utc": "2026-09-27T15:22:16+00:00",
+     "chars": 2367,
+     "raw_chars": 5077,
+     "column": "mw_analyst_estimates",
+     "sha": "23dd31d7556b1477bb29",
+     "paywall_suspected": false,
+     "read_s": 131.53,
+     "ticker": "CCJ",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\23dd31d7556b1477bb29.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/bsp/analystestimates",
+     "title": "BSP | Bending Spoons S.p.A. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:34:00+00:00",
+     "first_seen_utc": "2026-09-27T15:26:30+00:00",
+     "chars": 2402,
+     "raw_chars": 5089,
+     "column": "mw_analyst_estimates",
+     "sha": "e09975f965089a6c1fd3",
+     "paywall_suspected": false,
+     "read_s": 151.91,
+     "ticker": "BSP",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\e09975f965089a6c1fd3.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/agio/analystestimates",
+     "title": "AGIO | Agios Pharmaceuticals Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:30:00+00:00",
+     "first_seen_utc": "2026-09-27T15:33:28+00:00",
+     "chars": 2464,
+     "raw_chars": 5151,
+     "column": "mw_analyst_estimates",
+     "sha": "06197dfab9afc5c7a5d8",
+     "paywall_suspected": false,
+     "read_s": 116.89,
+     "ticker": "AGIO",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\06197dfab9afc5c7a5d8.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/ens/analystestimates",
+     "title": "ENS | EnerSys Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:53:00+00:00",
+     "first_seen_utc": "2026-09-27T15:39:20+00:00",
+     "chars": 2359,
+     "raw_chars": 5050,
+     "column": "mw_analyst_estimates",
+     "sha": "5a95c037446cd0908f8b",
+     "paywall_suspected": false,
+     "read_s": 192.63,
+     "ticker": "ENS",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\5a95c037446cd0908f8b.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/prgs/analystestimates",
+     "title": "PRGS | Progress Software Corp. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:39:00+00:00",
+     "first_seen_utc": "2026-09-27T15:45:07+00:00",
+     "chars": 2432,
+     "raw_chars": 5109,
+     "column": "mw_analyst_estimates",
+     "sha": "333e4faf1ef7eff8b523",
+     "paywall_suspected": false,
+     "read_s": 148.71,
+     "ticker": "PRGS",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\333e4faf1ef7eff8b523.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/ba/analystestimates",
+     "title": "BA | Boeing Co. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T15:50:26+00:00",
+     "chars": 3882,
+     "raw_chars": 5084,
+     "column": "mw_analyst_estimates",
+     "sha": "33346737b24ae610a507",
+     "paywall_suspected": false,
+     "read_s": 155.14,
+     "ticker": "BA",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\33346737b24ae610a507.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/googl/analystestimates",
+     "title": "GOOGL | Alphabet Inc. Cl A Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T15:55:55+00:00",
+     "chars": 2412,
+     "raw_chars": 5119,
+     "column": "mw_analyst_estimates",
+     "sha": "1e20062017fa9ff8da06",
+     "paywall_suspected": false,
+     "read_s": 148.24,
+     "ticker": "GOOGL",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\1e20062017fa9ff8da06.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/ter/analystestimates",
+     "title": "TER | Teradyne Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:57:00+00:00",
+     "first_seen_utc": "2026-09-27T16:00:32+00:00",
+     "chars": 2420,
+     "raw_chars": 5122,
+     "column": "mw_analyst_estimates",
+     "sha": "d6788f6847e2fd2a6355",
+     "paywall_suspected": false,
+     "read_s": 128.14,
+     "ticker": "TER",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\d6788f6847e2fd2a6355.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/vrt/analystestimates",
+     "title": "VRT | Vertiv Holdings Co. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T16:05:26+00:00",
+     "chars": 2402,
+     "raw_chars": 5199,
+     "column": "mw_analyst_estimates",
+     "sha": "55151db0796e3bff8a3e",
+     "paywall_suspected": false,
+     "read_s": 159.32,
+     "ticker": "VRT",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\55151db0796e3bff8a3e.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/vg/analystestimates",
+     "title": "VG | Venture Global Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T16:10:43+00:00",
+     "chars": 4018,
+     "raw_chars": 5211,
+     "column": "mw_analyst_estimates",
+     "sha": "fb05858e86648a63eba5",
+     "paywall_suspected": false,
+     "read_s": 153.7,
+     "ticker": "VG",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\fb05858e86648a63eba5.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/bn/analystestimates",
+     "title": "BN | Brookfield Corp. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:55:00+00:00",
+     "first_seen_utc": "2026-09-27T16:15:53+00:00",
+     "chars": 4002,
+     "raw_chars": 5197,
+     "column": "mw_analyst_estimates",
+     "sha": "4cdb6dac1c096236101d",
+     "paywall_suspected": false,
+     "read_s": 155.95,
+     "ticker": "BN",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\4cdb6dac1c096236101d.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/wday/analystestimates",
+     "title": "WDAY | Workday Inc. Cl A Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:30:00+00:00",
+     "first_seen_utc": "2026-09-27T16:22:40+00:00",
+     "chars": 2136,
+     "raw_chars": 4687,
+     "column": "mw_analyst_estimates",
+     "sha": "0ca493abd773898b2803",
+     "paywall_suspected": false,
+     "read_s": 244.81,
+     "ticker": "WDAY",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\0ca493abd773898b2803.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/wst/analystestimates",
+     "title": "WST | West Pharmaceutical Services Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:46:00+00:00",
+     "first_seen_utc": "2026-09-27T16:27:15+00:00",
+     "chars": 2164,
+     "raw_chars": 4699,
+     "column": "mw_analyst_estimates",
+     "sha": "d511435ffc19f35cade3",
+     "paywall_suspected": false,
+     "read_s": 117.48,
+     "ticker": "WST",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\d511435ffc19f35cade3.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/dkng/analystestimates",
+     "title": "DKNG | DraftKings Inc. Cl A Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T16:33:43+00:00",
+     "chars": 2392,
+     "raw_chars": 5203,
+     "column": "mw_analyst_estimates",
+     "sha": "06b4a6307cd87a029b0a",
+     "paywall_suspected": false,
+     "read_s": 159.93,
+     "ticker": "DKNG",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\06b4a6307cd87a029b0a.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/avpt/analystestimates",
+     "title": "AVPT | AvePoint Inc. Cl A Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:30:00+00:00",
+     "first_seen_utc": "2026-09-27T16:38:51+00:00",
+     "chars": 2405,
+     "raw_chars": 5181,
+     "column": "mw_analyst_estimates",
+     "sha": "3777e1d29d332b74fc14",
+     "paywall_suspected": false,
+     "read_s": 134.11,
+     "ticker": "AVPT",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\3777e1d29d332b74fc14.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/prch/analystestimates",
+     "title": "PRCH | Porch Group Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:30:00+00:00",
+     "first_seen_utc": "2026-09-27T16:43:51+00:00",
+     "chars": 2454,
+     "raw_chars": 5233,
+     "column": "mw_analyst_estimates",
+     "sha": "2f06995b32d93ce99e54",
+     "paywall_suspected": false,
+     "read_s": 99.99,
+     "ticker": "PRCH",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\2f06995b32d93ce99e54.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/vrtx/analystestimates",
+     "title": "VRTX | Vertex Pharmaceuticals Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T16:48:14+00:00",
+     "chars": 2441,
+     "raw_chars": 5246,
+     "column": "mw_analyst_estimates",
+     "sha": "c2bfee00fa8b6a145404",
+     "paywall_suspected": false,
+     "read_s": 129.89,
+     "ticker": "VRTX",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\c2bfee00fa8b6a145404.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/now/analystestimates",
+     "title": "NOW | ServiceNow Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T16:52:38+00:00",
+     "chars": 2343,
+     "raw_chars": 5144,
+     "column": "mw_analyst_estimates",
+     "sha": "494fc0ac61588ebba30d",
+     "paywall_suspected": false,
+     "read_s": 138.48,
+     "ticker": "NOW",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\494fc0ac61588ebba30d.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/mu/analystestimates",
+     "title": "MU | Micron Technology Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T16:56:46+00:00",
+     "chars": 4045,
+     "raw_chars": 5251,
+     "column": "mw_analyst_estimates",
+     "sha": "d6f4001023cfde36b1fc",
+     "paywall_suspected": false,
+     "read_s": 109.07,
+     "ticker": "MU",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\d6f4001023cfde36b1fc.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/sndr/analystestimates",
+     "title": "SNDR | Schneider National Inc. Cl B Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:30:00+00:00",
+     "first_seen_utc": "2026-09-27T17:01:37+00:00",
+     "chars": 2438,
+     "raw_chars": 5212,
+     "column": "mw_analyst_estimates",
+     "sha": "1551c11861867e908ecd",
+     "paywall_suspected": false,
+     "read_s": 138.16,
+     "ticker": "SNDR",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\1551c11861867e908ecd.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [],
+   "dropped": null,
+   "opened": {
+    "label": "t29",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t29",
+      "chrome-mcp:fe9a0faf6f97:29",
+      "https://www.marketwatch.com/investing/stock/avgo/analystestimates"
+     ]
+    ]
+   }
+  },
+  "wsj:search": {
+   "source": "wsj",
+   "section": "search",
+   "column": "",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:30",
+   "links_found": 3,
+   "skipped_already_stored": 0,
+   "articles": [
+    {
+     "url": "https://www.wsj.com/articles/jazz-pharmaceuticals-announces-pricing-of-upsized-private-offering-of-1-1-billion-of-1-875-exchangeable-senior-notes-due-2032-and-concurrent-ordinary-share-repurchases-jazz-230858f3",
+     "title": "Jazz Pharmaceuticals Announces Pricing Of Upsized Private Offering Of $1.1 Billion Of 1.875% Exchangeable Senior Notes D",
+     "byline": null,
+     "published_utc": null,
+     "first_seen_utc": "2026-09-27T16:29:36+00:00",
+     "chars": 609,
+     "raw_chars": 634,
+     "column": "wsj_other",
+     "sha": "35d682113c5389c235a1",
+     "paywall_suspected": false,
+     "read_s": 133.25,
+     "ticker": "JAZZ",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\35d682113c5389c235a1.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/articles/jazz-pharmaceuticals-announces-private-offering-of-1-0-billion-of-exchangeable-senior-notes-due-2032-and-concurrent-ordinary-share-repurchases-jazz-09867380",
+     "title": "Jazz Pharmaceuticals Announces Private Offering Of $1.0 Billion Of Exchangeable Senior Notes Due 2032 And Concurrent Ord",
+     "byline": null,
+     "published_utc": null,
+     "first_seen_utc": "2026-09-27T16:35:44+00:00",
+     "chars": 2019,
+     "raw_chars": 2624,
+     "column": "wsj_other",
+     "sha": "b9978ff1b6a2ae6e5e8d",
+     "paywall_suspected": false,
+     "read_s": 113.76,
+     "ticker": "JAZZ",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\b9978ff1b6a2ae6e5e8d.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/articles/health-care-up-as-biotech-momentum-persists-health-care-roundup-46487cb0",
+     "title": "Health Care Up as Biotech Momentum Persists -- Health Care Roundup - WSJ",
+     "byline": null,
+     "published_utc": "2026-08-25T04:00:00+00:00",
+     "first_seen_utc": "2026-09-27T16:40:53+00:00",
+     "chars": 588,
+     "raw_chars": 3029,
+     "column": "wsj_other",
+     "sha": "b45e1cca7d43daa81cf0",
+     "paywall_suspected": false,
+     "read_s": 114.86,
+     "ticker": "JAZZ",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\b45e1cca7d43daa81cf0.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [],
+   "dropped": null,
+   "searches": {
+    "VKTX": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "NTLA": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "HWM": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "IONQ": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "AGYS": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "NVT": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "AMZN": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "NVDA": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "TSM": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "GEV": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "CLS": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "PRAX": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "SNOW": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "JAZZ": {
+     "links_on_page": 5,
+     "taken": 3,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "LEU": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "COGT": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "BHVN": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "BBIO": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "CRM": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    }
+   },
+   "opened": {
+    "label": "t30",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t29",
+      "chrome-mcp:fe9a0faf6f97:29",
+      "https://www.marketwatch.com/investing/stock/avgo/analystestimates"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t29",
+      "chrome-mcp:fe9a0faf6f97:29",
+      "https://www.marketwatch.com/investing/stock/avgo/analystestimates"
+     ],
+     [
+      "t30",
+      "chrome-mcp:fe9a0faf6f97:30",
+      "https://www.wsj.com/market-data/stock/vktx"
+     ]
+    ]
+   }
+  },
+  "barrons:search": {
+   "source": "barrons",
+   "section": "search",
+   "column": "",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:31",
+   "links_found": 0,
+   "skipped_already_stored": 0,
+   "articles": [],
+   "refusals": [],
+   "dropped": null,
+   "searches": {
+    "VKTX": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "NTLA": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "HWM": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "IONQ": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "AGYS": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "NVT": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "AMZN": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "NVDA": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "TSM": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "GEV": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "CLS": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "PRAX": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "SNOW": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "JAZZ": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "LEU": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "COGT": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "BHVN": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "BBIO": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "CRM": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "MP": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "AVGO": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    },
+    "ABSI": {
+     "links_on_page": 0,
+     "taken": 0,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 0
+    }
+   },
+   "opened": {
+    "label": "t31",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t29",
+      "chrome-mcp:fe9a0faf6f97:29",
+      "https://www.marketwatch.com/investing/stock/avgo/analystestimates"
+     ],
+     [
+      "t30",
+      "chrome-mcp:fe9a0faf6f97:30",
+      "https://www.wsj.com/market-data/stock/vktx"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t29",
+      "chrome-mcp:fe9a0faf6f97:29",
+      "https://www.marketwatch.com/investing/stock/avgo/analystestimates"
+     ],
+     [
+      "t30",
+      "chrome-mcp:fe9a0faf6f97:30",
+      "https://www.wsj.com/market-data/stock/vktx"
+     ],
+     [
+      "t31",
+      "chrome-mcp:fe9a0faf6f97:31",
+      "https://www.barrons.com/market-data/stocks/vktx"
+     ]
+    ]
+   }
+  },
+  "barrons:stock_picks": {
+   "source": "barrons",
+   "section": "stock_picks",
+   "column": "barrons_stock_picks",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:32",
+   "links_found": 1,
+   "skipped_already_stored": 1,
+   "articles": [],
+   "refusals": [],
+   "dropped": "EXHAUSTED",
+   "opened": {
+    "label": "t32",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t29",
+      "chrome-mcp:fe9a0faf6f97:29",
+      "https://www.marketwatch.com/investing/stock/avgo/analystestimates"
+     ],
+     [
+      "t30",
+      "chrome-mcp:fe9a0faf6f97:30",
+      "https://www.wsj.com/market-data/stock/vktx"
+     ],
+     [
+      "t31",
+      "chrome-mcp:fe9a0faf6f97:31",
+      "https://www.barrons.com/market-data/stocks/vktx"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t29",
+      "chrome-mcp:fe9a0faf6f97:29",
+      "https://www.marketwatch.com/investing/stock/avgo/analystestimates"
+     ],
+     [
+      "t30",
+      "chrome-mcp:fe9a0faf6f97:30",
+      "https://www.wsj.com/market-data/stock/vktx"
+     ],
+     [
+      "t31",
+      "chrome-mcp:fe9a0faf6f97:31",
+      "https://www.barrons.com/market-data/stocks/vktx"
+     ],
+     [
+      "t32",
+      "chrome-mcp:fe9a0faf6f97:32",
+      "https://www.barrons.com/market-data/stocks/stock-picks"
+     ]
+    ]
+   }
+  },
+  "wsj:heard_on_the_street": {
+   "source": "wsj",
+   "section": "heard_on_the_street",
+   "column": "wsj_heard_on_the_street",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:33",
+   "links_found": 20,
+   "skipped_already_stored": 16,
+   "articles": [
+    {
+     "url": "https://www.wsj.com/finance/stocks/how-to-know-when-the-ai-boom-is-about-to-go-bust-61af3d26",
+     "title": "How to Know When the AI Boom Is About to Go Bust - WSJ",
+     "byline": null,
+     "published_utc": "2026-09-27T09:30:00+00:00",
+     "first_seen_utc": "2026-09-27T15:06:05+00:00",
+     "chars": 5499,
+     "raw_chars": 7843,
+     "column": "wsj_heard_on_the_street",
+     "sha": "4f9b21e105de4b676357",
+     "paywall_suspected": false,
+     "read_s": 170.85,
+     "ticker": null,
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\4f9b21e105de4b676357.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/finance/investing/bond-yields-could-come-down-as-fast-as-theyve-climbed-d64ea9cd",
+     "title": "Bond Yields Could Come Down as Fast as They’ve Climbed - WSJ",
+     "byline": null,
+     "published_utc": "2026-09-15T09:30:00+00:00",
+     "first_seen_utc": "2026-09-27T15:13:41+00:00",
+     "chars": 5044,
+     "raw_chars": 8509,
+     "column": "wsj_heard_on_the_street",
+     "sha": "7c113fabcc71e8e50932",
+     "paywall_suspected": false,
+     "read_s": 147.34,
+     "ticker": null,
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\7c113fabcc71e8e50932.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/politics/policy/vance-woos-skeptical-conservatives-with-his-own-take-on-trumps-messaging-aa1ac28f?mod=_whatsnews_pos2",
+     "title": "Vance Woos Skeptical Conservatives With His Own Take on Trump’s Messaging - WSJ",
+     "byline": null,
+     "published_utc": "2026-09-27T01:00:00+00:00",
+     "first_seen_utc": "2026-09-27T15:19:58+00:00",
+     "chars": 7667,
+     "raw_chars": 10208,
+     "column": "wsj_heard_on_the_street",
+     "sha": "3db949ee45862750bd77",
+     "paywall_suspected": false,
+     "read_s": 114.5,
+     "ticker": null,
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\3db949ee45862750bd77.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.wsj.com/world/a-storied-indian-business-empire-is-being-torn-apart-by-infighting-2c5c843c?mod=_whatsnews_pos5",
+     "title": "A Storied Indian Business Empire Is Being Torn Apart by Infighting - WSJ",
+     "byline": null,
+     "published_utc": "2026-09-27T02:00:00+00:00",
+     "first_seen_utc": "2026-09-27T15:31:24+00:00",
+     "chars": 7587,
+     "raw_chars": 9560,
+     "column": "wsj_heard_on_the_street",
+     "sha": "8271b9eaf2f0dfd1360a",
+     "paywall_suspected": false,
+     "read_s": 147.04,
+     "ticker": null,
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-27\\8271b9eaf2f0dfd1360a.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [],
+   "dropped": "EXHAUSTED",
+   "opened": {
+    "label": "t33",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t29",
+      "chrome-mcp:fe9a0faf6f97:29",
+      "https://www.marketwatch.com/investing/stock/avgo/analystestimates"
+     ],
+     [
+      "t30",
+      "chrome-mcp:fe9a0faf6f97:30",
+      "https://www.wsj.com/market-data/stock/vktx"
+     ],
+     [
+      "t31",
+      "chrome-mcp:fe9a0faf6f97:31",
+      "https://www.barrons.com/market-data/stocks/vktx"
+     ],
+     [
+      "t32",
+      "chrome-mcp:fe9a0faf6f97:32",
+      "about:blank"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t29",
+      "chrome-mcp:fe9a0faf6f97:29",
+      "https://www.marketwatch.com/investing/stock/avgo/analystestimates"
+     ],
+     [
+      "t30",
+      "chrome-mcp:fe9a0faf6f97:30",
+      "https://www.wsj.com/market-data/stock/vktx"
+     ],
+     [
+      "t31",
+      "chrome-mcp:fe9a0faf6f97:31",
+      "https://www.barrons.com/market-data/stocks/vktx"
+     ],
+     [
+      "t32",
+      "chrome-mcp:fe9a0faf6f97:32",
+      "about:blank"
+     ],
+     [
+      "t33",
+      "chrome-mcp:fe9a0faf6f97:33",
+      "https://www.wsj.com/news/heard-on-the-street"
+     ]
+    ]
+   }
+  },
+  "barrons:big_money_poll": {
+   "source": "barrons",
+   "section": "big_money_poll",
+   "column": "barrons_big_money_poll",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:34",
+   "links_found": 2,
+   "skipped_already_stored": 2,
+   "articles": [],
+   "refusals": [],
+   "dropped": "EXHAUSTED",
+   "opened": {
+    "label": "t34",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t29",
+      "chrome-mcp:fe9a0faf6f97:29",
+      "https://www.marketwatch.com/investing/stock/avgo/analystestimates"
+     ],
+     [
+      "t30",
+      "chrome-mcp:fe9a0faf6f97:30",
+      "https://www.wsj.com/market-data/stock/vktx"
+     ],
+     [
+      "t31",
+      "chrome-mcp:fe9a0faf6f97:31",
+      "https://www.barrons.com/market-data/stocks/vktx"
+     ],
+     [
+      "t32",
+      "chrome-mcp:fe9a0faf6f97:32",
+      "about:blank"
+     ],
+     [
+      "t33",
+      "chrome-mcp:fe9a0faf6f97:33",
+      "about:blank"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t29",
+      "chrome-mcp:fe9a0faf6f97:29",
+      "https://www.marketwatch.com/investing/stock/avgo/analystestimates"
+     ],
+     [
+      "t30",
+      "chrome-mcp:fe9a0faf6f97:30",
+      "https://www.wsj.com/market-data/stock/vktx"
+     ],
+     [
+      "t31",
+      "chrome-mcp:fe9a0faf6f97:31",
+      "https://www.barrons.com/market-data/stocks/vktx"
+     ],
+     [
+      "t32",
+      "chrome-mcp:fe9a0faf6f97:32",
+      "about:blank"
+     ],
+     [
+      "t33",
+      "chrome-mcp:fe9a0faf6f97:33",
+      "about:blank"
+     ],
+     [
+      "t34",
+      "chrome-mcp:fe9a0faf6f97:34",
+      "https://www.barrons.com/topics/big-money-poll"
+     ]
+    ]
+   }
+  }
+ },
+ "order": [
+  {
+   "turn": 0,
+   "lane": "marketwatch:analyst_estimates",
+   "what": "listing",
+   "url": "https://www.marketwatch.com/investing/stock/avgo/analystestimates",
+   "at": "2026-09-27T14:55:46+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "wsj:search",
+   "what": "listing",
+   "url": "https://www.wsj.com/market-data/quotes/VKTX",
+   "at": "2026-09-27T14:56:28+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "barrons:search",
+   "what": "listing",
+   "url": "https://www.barrons.com/market-data/stocks/vktx",
+   "at": "2026-09-27T14:57:05+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "barrons:stock_picks",
+   "what": "listing",
+   "url": "https://www.barrons.com/market-data/stocks/stock-picks",
+   "at": "2026-09-27T14:57:59+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "wsj:heard_on_the_street",
+   "what": "listing",
+   "url": "https://www.wsj.com/news/heard-on-the-street",
+   "at": "2026-09-27T14:58:50+00:00",
+   "ok": true
+  },
+  {
+   "turn": 0,
+   "lane": "barrons:big_money_poll",
+   "what": "listing",
+   "url": "https://www.barrons.com/topics/big-money-poll",
+   "at": "2026-09-27T14:59:48+00:00",
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/avgo/analystestimates",
+   "ticker": "AVGO",
+   "at": "2026-09-27T15:02:24+00:00",
+   "page_load": false,
+   "waited_s": 0.0,
+   "chars": 2407,
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "VKTX",
+   "url": "https://www.wsj.com/market-data/quotes/VKTX",
+   "at": "2026-09-27T14:56:28+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 1,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "VKTX",
+   "url": "https://www.barrons.com/market-data/stocks/vktx",
+   "at": "2026-09-27T14:57:05+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 1,
+   "lane": "wsj:heard_on_the_street",
+   "url": "https://www.wsj.com/finance/stocks/how-to-know-when-the-ai-boom-is-about-to-go-bust-61af3d26",
+   "ticker": null,
+   "at": "2026-09-27T15:03:15+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 5499,
+   "ok": true
+  },
+  {
+   "turn": 2,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/absi/analystestimates",
+   "ticker": "ABSI",
+   "at": "2026-09-27T15:06:13+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2455,
+   "ok": true
+  },
+  {
+   "turn": 2,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "NTLA",
+   "url": "https://www.wsj.com/market-data/quotes/NTLA",
+   "at": "2026-09-27T15:08:50+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 2,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "NTLA",
+   "url": "https://www.barrons.com/market-data/stocks/ntla",
+   "at": "2026-09-27T15:10:10+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 2,
+   "lane": "wsj:heard_on_the_street",
+   "url": "https://www.wsj.com/finance/investing/bond-yields-could-come-down-as-fast-as-theyve-climbed-d64ea9cd",
+   "ticker": null,
+   "at": "2026-09-27T15:11:14+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 5044,
+   "ok": true
+  },
+  {
+   "turn": 3,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/lng/analystestimates",
+   "ticker": "LNG",
+   "at": "2026-09-27T15:13:48+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2355,
+   "ok": true
+  },
+  {
+   "turn": 3,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "HWM",
+   "url": "https://www.wsj.com/market-data/quotes/HWM",
+   "at": "2026-09-27T15:15:51+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 3,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "HWM",
+   "url": "https://www.barrons.com/market-data/stocks/hwm",
+   "at": "2026-09-27T15:17:02+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 3,
+   "lane": "wsj:heard_on_the_street",
+   "url": "https://www.wsj.com/politics/policy/vance-woos-skeptical-conservatives-with-his-own-take-on-trumps-messaging-aa1ac28f?mod=_whatsnews_pos2",
+   "ticker": null,
+   "at": "2026-09-27T15:18:04+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 7667,
+   "ok": true
+  },
+  {
+   "turn": 4,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/ccj/analystestimates",
+   "ticker": "CCJ",
+   "at": "2026-09-27T15:20:05+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2367,
+   "ok": true
+  },
+  {
+   "turn": 4,
+   "lane": "wsj:search",
+   "item": "IONQ",
+   "at": "2026-09-27T15:22:37+00:00",
+   "ok": false,
+   "why": "DETACHED: ReaderRefused: REFUSED_OPERATOR_TAB_MISSING: no tab 'chrome-mcp:fe9a0faf6f97:30' on 'user'."
+  },
+  {
+   "turn": 4,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "IONQ",
+   "url": "https://www.barrons.com/market-data/stocks/ionq",
+   "at": "2026-09-27T15:22:52+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 5,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/bsp/analystestimates",
+   "ticker": "BSP",
+   "at": "2026-09-27T15:23:58+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2402,
+   "ok": true
+  },
+  {
+   "turn": 5,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "IONQ",
+   "url": "https://www.wsj.com/market-data/quotes/IONQ",
+   "at": "2026-09-27T15:26:37+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 5,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "AGYS",
+   "url": "https://www.barrons.com/market-data/stocks/agys",
+   "at": "2026-09-27T15:27:51+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 5,
+   "lane": "wsj:heard_on_the_street",
+   "url": "https://www.wsj.com/world/a-storied-indian-business-empire-is-being-torn-apart-by-infighting-2c5c843c?mod=_whatsnews_pos5",
+   "ticker": null,
+   "at": "2026-09-27T15:28:57+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 7587,
+   "ok": true
+  },
+  {
+   "turn": 6,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/agio/analystestimates",
+   "ticker": "AGIO",
+   "at": "2026-09-27T15:31:31+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2464,
+   "ok": true
+  },
+  {
+   "turn": 6,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "AGYS",
+   "url": "https://www.wsj.com/market-data/quotes/AGYS",
+   "at": "2026-09-27T15:33:35+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 6,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "NVT",
+   "url": "https://www.barrons.com/market-data/stocks/nvt",
+   "at": "2026-09-27T15:34:47+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 7,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/ens/analystestimates",
+   "ticker": "ENS",
+   "at": "2026-09-27T15:36:07+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2359,
+   "ok": true
+  },
+  {
+   "turn": 7,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "NVT",
+   "url": "https://www.wsj.com/market-data/quotes/NVT",
+   "at": "2026-09-27T15:39:32+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 7,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "AMZN",
+   "url": "https://www.barrons.com/market-data/stocks/amzn",
+   "at": "2026-09-27T15:41:08+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 8,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/prgs/analystestimates",
+   "ticker": "PRGS",
+   "at": "2026-09-27T15:42:38+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2432,
+   "ok": true
+  },
+  {
+   "turn": 8,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "AMZN",
+   "url": "https://www.wsj.com/market-data/quotes/AMZN",
+   "at": "2026-09-27T15:45:14+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 8,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "NVDA",
+   "url": "https://www.barrons.com/market-data/stocks/nvda",
+   "at": "2026-09-27T15:46:16+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 9,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/ba/analystestimates",
+   "ticker": "BA",
+   "at": "2026-09-27T15:47:51+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 3882,
+   "ok": true
+  },
+  {
+   "turn": 9,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "NVDA",
+   "url": "https://www.wsj.com/market-data/quotes/NVDA",
+   "at": "2026-09-27T15:50:34+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 9,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "TSM",
+   "url": "https://www.barrons.com/market-data/stocks/tsm",
+   "at": "2026-09-27T15:52:15+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 10,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/googl/analystestimates",
+   "ticker": "GOOGL",
+   "at": "2026-09-27T15:53:26+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2412,
+   "ok": true
+  },
+  {
+   "turn": 10,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "TSM",
+   "url": "https://www.wsj.com/market-data/quotes/TSM",
+   "at": "2026-09-27T15:56:02+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 10,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "GEV",
+   "url": "https://www.barrons.com/market-data/stocks/gev",
+   "at": "2026-09-27T15:57:15+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 11,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/ter/analystestimates",
+   "ticker": "TER",
+   "at": "2026-09-27T15:58:24+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2420,
+   "ok": true
+  },
+  {
+   "turn": 11,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "GEV",
+   "url": "https://www.wsj.com/market-data/quotes/GEV",
+   "at": "2026-09-27T16:00:39+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 11,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "CLS",
+   "url": "https://www.barrons.com/market-data/stocks/cls",
+   "at": "2026-09-27T16:01:50+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 12,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/vrt/analystestimates",
+   "ticker": "VRT",
+   "at": "2026-09-27T16:02:47+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2402,
+   "ok": true
+  },
+  {
+   "turn": 12,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "CLS",
+   "url": "https://www.wsj.com/market-data/quotes/CLS",
+   "at": "2026-09-27T16:05:34+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 12,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "PRAX",
+   "url": "https://www.barrons.com/market-data/stocks/prax",
+   "at": "2026-09-27T16:06:50+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 13,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/vg/analystestimates",
+   "ticker": "VG",
+   "at": "2026-09-27T16:08:09+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 4018,
+   "ok": true
+  },
+  {
+   "turn": 13,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "PRAX",
+   "url": "https://www.wsj.com/market-data/quotes/PRAX",
+   "at": "2026-09-27T16:10:50+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 13,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "SNOW",
+   "url": "https://www.barrons.com/market-data/stocks/snow",
+   "at": "2026-09-27T16:11:56+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 14,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/bn/analystestimates",
+   "ticker": "BN",
+   "at": "2026-09-27T16:13:17+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 4002,
+   "ok": true
+  },
+  {
+   "turn": 14,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "SNOW",
+   "url": "https://www.wsj.com/market-data/quotes/SNOW",
+   "at": "2026-09-27T16:16:00+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 14,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "JAZZ",
+   "url": "https://www.barrons.com/market-data/stocks/jazz",
+   "at": "2026-09-27T16:17:44+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 15,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/wday/analystestimates",
+   "ticker": "WDAY",
+   "at": "2026-09-27T16:19:04+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2136,
+   "ok": true
+  },
+  {
+   "turn": 15,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "JAZZ",
+   "url": "https://www.wsj.com/market-data/quotes/JAZZ",
+   "at": "2026-09-27T16:23:04+00:00",
+   "ok": true,
+   "links_on_page": 5,
+   "taken": 3,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 15,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "LEU",
+   "url": "https://www.barrons.com/market-data/stocks/leu",
+   "at": "2026-09-27T16:24:18+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 16,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/wst/analystestimates",
+   "ticker": "WST",
+   "at": "2026-09-27T16:25:18+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2164,
+   "ok": true
+  },
+  {
+   "turn": 16,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/articles/jazz-pharmaceuticals-announces-pricing-of-upsized-private-offering-of-1-1-billion-of-1-875-exchangeable-senior-notes-due-2032-and-concurrent-ordinary-share-repurchases-jazz-230858f3",
+   "ticker": "JAZZ",
+   "at": "2026-09-27T16:27:23+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 609,
+   "ok": true
+  },
+  {
+   "turn": 16,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "COGT",
+   "url": "https://www.barrons.com/market-data/stocks/cogt",
+   "at": "2026-09-27T16:29:43+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 17,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/dkng/analystestimates",
+   "ticker": "DKNG",
+   "at": "2026-09-27T16:31:03+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2392,
+   "ok": true
+  },
+  {
+   "turn": 17,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/articles/jazz-pharmaceuticals-announces-private-offering-of-1-0-billion-of-exchangeable-senior-notes-due-2032-and-concurrent-ordinary-share-repurchases-jazz-09867380",
+   "ticker": "JAZZ",
+   "at": "2026-09-27T16:33:50+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2019,
+   "ok": true
+  },
+  {
+   "turn": 17,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "BHVN",
+   "url": "https://www.barrons.com/market-data/stocks/bhvn",
+   "at": "2026-09-27T16:35:50+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 18,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/avpt/analystestimates",
+   "ticker": "AVPT",
+   "at": "2026-09-27T16:36:37+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2405,
+   "ok": true
+  },
+  {
+   "turn": 18,
+   "lane": "wsj:search",
+   "url": "https://www.wsj.com/articles/health-care-up-as-biotech-momentum-persists-health-care-roundup-46487cb0",
+   "ticker": "JAZZ",
+   "at": "2026-09-27T16:38:58+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 588,
+   "ok": true
+  },
+  {
+   "turn": 18,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "BBIO",
+   "url": "https://www.barrons.com/market-data/stocks/bbio",
+   "at": "2026-09-27T16:40:59+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 19,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/prch/analystestimates",
+   "ticker": "PRCH",
+   "at": "2026-09-27T16:42:11+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2454,
+   "ok": true
+  },
+  {
+   "turn": 19,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "LEU",
+   "url": "https://www.wsj.com/market-data/quotes/LEU",
+   "at": "2026-09-27T16:43:58+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 19,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "CRM",
+   "url": "https://www.barrons.com/market-data/stocks/crm",
+   "at": "2026-09-27T16:45:05+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 20,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/vrtx/analystestimates",
+   "ticker": "VRTX",
+   "at": "2026-09-27T16:46:04+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2441,
+   "ok": true
+  },
+  {
+   "turn": 20,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "COGT",
+   "url": "https://www.wsj.com/market-data/quotes/COGT",
+   "at": "2026-09-27T16:48:21+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 20,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "MP",
+   "url": "https://www.barrons.com/market-data/stocks/mp",
+   "at": "2026-09-27T16:49:20+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 21,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/now/analystestimates",
+   "ticker": "NOW",
+   "at": "2026-09-27T16:50:19+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2343,
+   "ok": true
+  },
+  {
+   "turn": 21,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "BHVN",
+   "url": "https://www.wsj.com/market-data/quotes/BHVN",
+   "at": "2026-09-27T16:52:44+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 21,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "AVGO",
+   "url": "https://www.barrons.com/market-data/stocks/avgo",
+   "at": "2026-09-27T16:53:58+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 22,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/mu/analystestimates",
+   "ticker": "MU",
+   "at": "2026-09-27T16:54:57+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 4045,
+   "ok": true
+  },
+  {
+   "turn": 22,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "BBIO",
+   "url": "https://www.wsj.com/market-data/quotes/BBIO",
+   "at": "2026-09-27T16:56:52+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 22,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "ABSI",
+   "url": "https://www.barrons.com/market-data/stocks/absi",
+   "at": "2026-09-27T16:58:18+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  },
+  {
+   "turn": 23,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/sndr/analystestimates",
+   "ticker": "SNDR",
+   "at": "2026-09-27T16:59:19+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2438,
+   "ok": true
+  },
+  {
+   "turn": 23,
+   "lane": "wsj:search",
+   "what": "search",
+   "ticker": "CRM",
+   "url": "https://www.wsj.com/market-data/quotes/CRM",
+   "at": "2026-09-27T17:01:43+00:00",
+   "ok": true,
+   "links_on_page": 0,
+   "taken": 0,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 0
+  }
+ ],
+ "stopped": null,
+ "budget_spent": null,
+ "opened": [
+  "chrome-mcp:fe9a0faf6f97:29",
+  "chrome-mcp:fe9a0faf6f97:36",
+  "chrome-mcp:fe9a0faf6f97:41",
+  "chrome-mcp:fe9a0faf6f97:30",
+  "chrome-mcp:fe9a0faf6f97:38",
+  "chrome-mcp:fe9a0faf6f97:42",
+  "chrome-mcp:fe9a0faf6f97:31",
+  "chrome-mcp:fe9a0faf6f97:35",
+  "chrome-mcp:fe9a0faf6f97:40",
+  "chrome-mcp:fe9a0faf6f97:32",
+  "chrome-mcp:fe9a0faf6f97:33",
+  "chrome-mcp:fe9a0faf6f97:39",
+  "chrome-mcp:fe9a0faf6f97:34"
+ ],
+ "orphaned_tabs": [
+  "chrome-mcp:fe9a0faf6f97:29",
+  "chrome-mcp:fe9a0faf6f97:41",
+  "chrome-mcp:fe9a0faf6f97:30",
+  "chrome-mcp:fe9a0faf6f97:42",
+  "chrome-mcp:fe9a0faf6f97:31",
+  "chrome-mcp:fe9a0faf6f97:40",
+  "chrome-mcp:fe9a0faf6f97:32",
+  "chrome-mcp:fe9a0faf6f97:33",
+  "chrome-mcp:fe9a0faf6f97:39",
+  "chrome-mcp:fe9a0faf6f97:34"
+ ],
+ "reattaches": 0,
+ "reattach_log": [],
+ "tab_remaps": [
+  {
+   "at": "2026-09-27T15:22:52+00:00",
+   "reattached": false,
+   "remap": {
+    "chrome-mcp:fe9a0faf6f97:29": null,
+    "chrome-mcp:fe9a0faf6f97:30": null,
+    "chrome-mcp:fe9a0faf6f97:31": null,
+    "chrome-mcp:fe9a0faf6f97:32": null,
+    "chrome-mcp:fe9a0faf6f97:33": null,
+    "chrome-mcp:fe9a0faf6f97:34": null
+   },
+   "parents": {
+    "marketwatch": "chrome-mcp:fe9a0faf6f97:8",
+    "wsj": "chrome-mcp:fe9a0faf6f97:8",
+    "barrons": "chrome-mcp:fe9a0faf6f97:8"
+   }
+  }
+ ],
+ "tabs_lost_on_reattach": [
+  "chrome-mcp:fe9a0faf6f97:29",
+  "chrome-mcp:fe9a0faf6f97:30",
+  "chrome-mcp:fe9a0faf6f97:31",
+  "chrome-mcp:fe9a0faf6f97:32",
+  "chrome-mcp:fe9a0faf6f97:33",
+  "chrome-mcp:fe9a0faf6f97:34"
+ ],
+ "startup_cleanup": {
+  "candidates": [
+   "chrome-mcp:8ab5bfd86096:23",
+   "chrome-mcp:8ab5bfd86096:24",
+   "chrome-mcp:8ab5bfd86096:25",
+   "chrome-mcp:8ab5bfd86096:26",
+   "chrome-mcp:8ab5bfd86096:27",
+   "chrome-mcp:8ab5bfd86096:28",
+   "chrome-mcp:8ab5bfd86096:29",
+   "chrome-mcp:8ab5bfd86096:30",
+   "chrome-mcp:94f9d7f8e757:5",
+   "chrome-mcp:94f9d7f8e757:6",
+   "chrome-mcp:94f9d7f8e757:7",
+   "chrome-mcp:94f9d7f8e757:8",
+   "chrome-mcp:94f9d7f8e757:9",
+   "chrome-mcp:fe9a0faf6f97:28",
+   "t37",
+   "t39",
+   "t62"
+  ],
+  "closed": [
+   "chrome-mcp:fe9a0faf6f97:28"
+  ],
+  "skipped": {
+   "chrome-mcp:8ab5bfd86096:23": "not present",
+   "chrome-mcp:8ab5bfd86096:24": "not present",
+   "chrome-mcp:8ab5bfd86096:25": "not present",
+   "chrome-mcp:8ab5bfd86096:26": "not present",
+   "chrome-mcp:8ab5bfd86096:27": "not present",
+   "chrome-mcp:8ab5bfd86096:28": "not present",
+   "chrome-mcp:8ab5bfd86096:29": "not present",
+   "chrome-mcp:8ab5bfd86096:30": "not present",
+   "chrome-mcp:94f9d7f8e757:5": "not present",
+   "chrome-mcp:94f9d7f8e757:6": "not present",
+   "chrome-mcp:94f9d7f8e757:7": "not present",
+   "chrome-mcp:94f9d7f8e757:8": "not present",
+   "chrome-mcp:94f9d7f8e757:9": "not present",
+   "t37": "not session-qualified (a tN alias is reissued)",
+   "t39": "not session-qualified (a tN alias is reissued)",
+   "t62": "not session-qualified (a tN alias is reissued)"
+  }
+ },
+ "in_progress": true,
+ "tabs_closed": {
+  "chrome-mcp:fe9a0faf6f97:29": false,
+  "chrome-mcp:fe9a0faf6f97:36": true,
+  "chrome-mcp:fe9a0faf6f97:41": false,
+  "chrome-mcp:fe9a0faf6f97:30": false,
+  "chrome-mcp:fe9a0faf6f97:38": true,
+  "chrome-mcp:fe9a0faf6f97:42": false,
+  "chrome-mcp:fe9a0faf6f97:31": false,
+  "chrome-mcp:fe9a0faf6f97:35": true,
+  "chrome-mcp:fe9a0faf6f97:40": false,
+  "chrome-mcp:fe9a0faf6f97:32": false,
+  "chrome-mcp:fe9a0faf6f97:33": false,
+  "chrome-mcp:fe9a0faf6f97:39": false,
+  "chrome-mcp:fe9a0faf6f97:34": false
+ },
+ "blanks": 74,
+ "blank_failures": [],
+ "tab_rotations": [
+  {
+   "at": "2026-09-27T15:23:58+00:00",
+   "old": "chrome-mcp:fe9a0faf6f97:29",
+   "old_closed": false,
+   "new": "chrome-mcp:fe9a0faf6f97:36",
+   "why": "lost_on_reattach",
+   "url": "https://www.marketwatch.com/investing/stock/bsp/analystestimates"
+  },
+  {
+   "at": "2026-09-27T16:19:04+00:00",
+   "old": "chrome-mcp:fe9a0faf6f97:36",
+   "old_closed": true,
+   "new": "chrome-mcp:fe9a0faf6f97:41",
+   "why": "served 10 pages >= 10",
+   "url": "https://www.marketwatch.com/investing/stock/wday/analystestimates"
+  },
+  {
+   "at": "2026-09-27T15:26:37+00:00",
+   "old": "chrome-mcp:fe9a0faf6f97:30",
+   "old_closed": false,
+   "new": "chrome-mcp:fe9a0faf6f97:38",
+   "why": "lost_on_reattach",
+   "url": "https://www.wsj.com/market-data/quotes/IONQ"
+  },
+  {
+   "at": "2026-09-27T16:23:04+00:00",
+   "old": "chrome-mcp:fe9a0faf6f97:38",
+   "old_closed": true,
+   "new": "chrome-mcp:fe9a0faf6f97:42",
+   "why": "served 10 pages >= 10",
+   "url": "https://www.wsj.com/market-data/quotes/JAZZ"
+  },
+  {
+   "at": "2026-09-27T15:22:52+00:00",
+   "old": "chrome-mcp:fe9a0faf6f97:31",
+   "old_closed": false,
+   "new": "chrome-mcp:fe9a0faf6f97:35",
+   "why": "lost_on_reattach",
+   "url": "https://www.barrons.com/market-data/stocks/ionq"
+  },
+  {
+   "at": "2026-09-27T16:17:44+00:00",
+   "old": "chrome-mcp:fe9a0faf6f97:35",
+   "old_closed": true,
+   "new": "chrome-mcp:fe9a0faf6f97:40",
+   "why": "served 10 pages >= 10",
+   "url": "https://www.barrons.com/market-data/stocks/jazz"
+  },
+  {
+   "at": "2026-09-27T15:28:57+00:00",
+   "old": "chrome-mcp:fe9a0faf6f97:33",
+   "old_closed": false,
+   "new": "chrome-mcp:fe9a0faf6f97:39",
+   "why": "lost_on_reattach",
+   "url": "https://www.wsj.com/world/a-storied-indian-business-empire-is-being-torn-apart-by-infighting-2c5c843c?mod=_whatsnews_pos5"
+  }
+ ],
+ "close_errors": {
+  "chrome-mcp:fe9a0faf6f97:29": "LOST: blank tab, handle reissued by a re-attach",
+  "chrome-mcp:fe9a0faf6f97:30": "LOST: blank tab, handle reissued by a re-attach",
+  "chrome-mcp:fe9a0faf6f97:31": "LOST: blank tab, handle reissued by a re-attach",
+  "chrome-mcp:fe9a0faf6f97:32": "LOST: blank tab, handle reissued by a re-attach",
+  "chrome-mcp:fe9a0faf6f97:33": "LOST: blank tab, handle reissued by a re-attach",
+  "chrome-mcp:fe9a0faf6f97:34": "LOST: blank tab, handle reissued by a re-attach"
+ }
+}

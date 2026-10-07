@@ -1,0 +1,210 @@
+{
+ "hyp_id": "H-f7adb864b0",
+ "title": "Guidance-cut read-through to correlation peers",
+ "night": "2026-10-05",
+ "run_utc": "2026-10-05T01:57:38+00:00",
+ "result": {
+  "cell_type": "event_readthrough",
+  "params": {
+   "link": "corr_peer",
+   "event_type": "guidance_change",
+   "min_ratio": 2.5,
+   "k": 5,
+   "min_source_dv_pct": 0.5
+  },
+  "outcome_units": "size: log(|x_oc|/vol21) linked minus vol-matched unlinked, same date; signed: sign(source move) x (x_oc linked - x_oc controls)",
+  "n_events_candidate": 43,
+  "design": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": -0.030494,
+    "se": 0.067017,
+    "t": -0.46,
+    "mde": 0.187648,
+    "n": 26,
+    "n_blocks": 19
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": 0.003583,
+    "se": 0.00209,
+    "t": 1.71,
+    "mde": 0.005852,
+    "n": 26,
+    "n_blocks": 19
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.420752,
+    "se": 0.13576,
+    "t": 3.1,
+    "mde": 0.380129,
+    "n": 26,
+    "n_blocks": 19
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.00839,
+    "se": 0.003992,
+    "t": 2.1,
+    "mde": 0.011177,
+    "n": 26,
+    "n_blocks": 19
+   },
+   "n_events": 26,
+   "mean_links": 5.0,
+   "by_month_size_t1": {
+    "2025-01": {
+     "mean": -0.294917,
+     "n": 3
+    },
+    "2025-02": {
+     "mean": 0.060584,
+     "n": 2
+    },
+    "2025-04": {
+     "mean": 0.042989,
+     "n": 1
+    },
+    "2025-05": {
+     "mean": -0.57641,
+     "n": 2
+    },
+    "2025-06": {
+     "mean": 0.174323,
+     "n": 1
+    },
+    "2025-07": {
+     "mean": 0.13482,
+     "n": 5
+    },
+    "2025-08": {
+     "mean": -0.150639,
+     "n": 2
+    },
+    "2025-09": {
+     "mean": 0.254819,
+     "n": 1
+    },
+    "2025-10": {
+     "mean": 0.199584,
+     "n": 4
+    },
+    "2025-11": {
+     "mean": 0.009604,
+     "n": 4
+    },
+    "2025-12": {
+     "mean": -0.558147,
+     "n": 1
+    }
+   },
+   "loo_month_worst_size_t1": -0.072326
+  },
+  "confirm": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": -0.076396,
+    "se": 0.19357,
+    "t": -0.39,
+    "mde": 0.541997,
+    "n": 17,
+    "n_blocks": 14
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -0.003886,
+    "se": 0.004108,
+    "t": -0.95,
+    "mde": 0.011502,
+    "n": 17,
+    "n_blocks": 14
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.331347,
+    "se": 0.191022,
+    "t": 1.73,
+    "mde": 0.534862,
+    "n": 17,
+    "n_blocks": 14
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.017777,
+    "se": 0.004078,
+    "t": 4.36,
+    "mde": 0.01142,
+    "n": 17,
+    "n_blocks": 14
+   },
+   "n_events": 17,
+   "mean_links": 5.0,
+   "by_month_size_t1": {
+    "2026-02": {
+     "mean": -0.085117,
+     "n": 2
+    },
+    "2026-03": {
+     "mean": 0.701048,
+     "n": 1
+    },
+    "2026-04": {
+     "mean": -1.671405,
+     "n": 1
+    },
+    "2026-05": {
+     "mean": 0.664081,
+     "n": 3
+    },
+    "2026-06": {
+     "mean": -1.218635,
+     "n": 1
+    },
+    "2026-07": {
+     "mean": 0.036264,
+     "n": 3
+    },
+    "2026-08": {
+     "mean": -0.326706,
+     "n": 3
+    },
+    "2026-09": {
+     "mean": -0.020144,
+     "n": 3
+    }
+   },
+   "loo_month_worst_size_t1": -0.23507
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.07640 <= 0",
+  "direction_verdict_reported": {
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00389 <= 0"
+  },
+  "examples": [
+   {
+    "t": "2026-05-18",
+    "source": "RBLX",
+    "links": "APP,META,TTWO,BTQ,FLR",
+    "size_t1": "0.9787863738706728"
+   },
+   {
+    "t": "2026-05-18",
+    "source": "DXCM",
+    "links": "OSPN,SPSC,NWL,ALGN,BAX",
+    "size_t1": "0.8827394373024083"
+   },
+   {
+    "t": "2026-03-12",
+    "source": "SLB",
+    "links": "HAL,NOV,WFRD,PTEN,HP",
+    "size_t1": "0.7010477759448276"
+   },
+   {
+    "t": "2025-07-31",
+    "source": "TT",
+    "links": "ETN,ITT,PWR,MTZ,EME",
+    "size_t1": "0.6536584944131918"
+   },
+   {
+    "t": "2025-07-22",
+    "source": "ROP",
+    "links": "LIN,RSP,MCO,SPGI,MA",
+    "size_t1": "0.6257009426123958"
+   }
+  ]
+ }
+}

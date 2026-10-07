@@ -1,0 +1,150 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "user",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-27T14:30:09+00:00",
+ "plan": [
+  {
+   "lane": "marketwatch:analyst_estimates",
+   "max": 1,
+   "tickers": [
+    "VKTX"
+   ]
+  }
+ ],
+ "parent_tabs": {
+  "marketwatch": {
+   "tab": "chrome-mcp:fe9a0faf6f97:8",
+   "label": "t8",
+   "url": "https://www.wsj.com/?aegis=muratclaw",
+   "how": "explicit"
+  }
+ },
+ "max_pages": 4,
+ "budget_explicit": false,
+ "fresh_since": "2026-09-27",
+ "cost_usd": 0.0,
+ "lanes": {
+  "marketwatch:analyst_estimates": {
+   "source": "marketwatch",
+   "section": "analyst_estimates",
+   "column": "mw_analyst_estimates",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": null,
+   "links_found": 0,
+   "skipped_already_stored": 1,
+   "articles": [],
+   "refusals": [],
+   "dropped": "EXHAUSTED: every ticker already done since 2026-09-27"
+  }
+ },
+ "order": [],
+ "stopped": null,
+ "budget_spent": null,
+ "opened": [],
+ "orphaned_tabs": [],
+ "reattaches": 0,
+ "reattach_log": [],
+ "tab_remaps": [],
+ "tabs_lost_on_reattach": [],
+ "startup_cleanup": {
+  "candidates": [
+   "chrome-mcp:8ab5bfd86096:23",
+   "chrome-mcp:8ab5bfd86096:24",
+   "chrome-mcp:8ab5bfd86096:25",
+   "chrome-mcp:8ab5bfd86096:26",
+   "chrome-mcp:8ab5bfd86096:27",
+   "chrome-mcp:8ab5bfd86096:28",
+   "chrome-mcp:8ab5bfd86096:29",
+   "chrome-mcp:8ab5bfd86096:30",
+   "chrome-mcp:94f9d7f8e757:5",
+   "chrome-mcp:94f9d7f8e757:6",
+   "chrome-mcp:94f9d7f8e757:7",
+   "chrome-mcp:94f9d7f8e757:8",
+   "chrome-mcp:94f9d7f8e757:9",
+   "t37",
+   "t39",
+   "t62"
+  ],
+  "closed": [],
+  "skipped": {
+   "chrome-mcp:8ab5bfd86096:23": "not present",
+   "chrome-mcp:8ab5bfd86096:24": "not present",
+   "chrome-mcp:8ab5bfd86096:25": "not present",
+   "chrome-mcp:8ab5bfd86096:26": "not present",
+   "chrome-mcp:8ab5bfd86096:27": "not present",
+   "chrome-mcp:8ab5bfd86096:28": "not present",
+   "chrome-mcp:8ab5bfd86096:29": "not present",
+   "chrome-mcp:8ab5bfd86096:30": "not present",
+   "chrome-mcp:94f9d7f8e757:5": "not present",
+   "chrome-mcp:94f9d7f8e757:6": "not present",
+   "chrome-mcp:94f9d7f8e757:7": "not present",
+   "chrome-mcp:94f9d7f8e757:8": "not present",
+   "chrome-mcp:94f9d7f8e757:9": "not present",
+   "t37": "not session-qualified (a tN alias is reissued)",
+   "t39": "not session-qualified (a tN alias is reissued)",
+   "t62": "not session-qualified (a tN alias is reissued)"
+  }
+ },
+ "tabs_closed": {},
+ "blanks": 0,
+ "blank_failures": [],
+ "tab_rotations": [],
+ "parent_tabs_final": {
+  "marketwatch": "chrome-mcp:fe9a0faf6f97:8"
+ },
+ "footprint": {
+  "verdict": "CANNOT DETERMINE: 0 gap(s), need >= 3",
+  "cv_of_gaps": null,
+  "gaps_s": [],
+  "gap_min_s": null,
+  "pages_per_hour": null,
+  "scroll_share": null,
+  "pages": 0,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_reader\\footprint_20260927T143018Z.json",
+  "cli_scope": "process",
+  "cli_calls": 3,
+  "cli_seconds": 28.141,
+  "cli_seconds_per_page": null,
+  "cli_calls_per_page": null,
+  "cli_breakdown": {
+   "profile_check": {
+    "calls": 1,
+    "seconds": 11.312
+   },
+   "tabs_listing": {
+    "calls": 2,
+    "seconds": 16.829
+   },
+   "other": {
+    "calls": 0,
+    "seconds": 0.0
+   }
+  },
+  "cli_cache": {
+   "profile_hits": 0,
+   "profile_misses": 0,
+   "tabs_hits": 0,
+   "tabs_misses": 2,
+   "tabs_nonce_changes": 0,
+   "url_rereads": 0
+  },
+  "reattaches": 0,
+  "tab_remaps": 0
+ },
+ "hour_cap_waits_s": [],
+ "same_host_waits": [],
+ "throttle_targets_s": [],
+ "per_source": {
+  "marketwatch": {
+   "articles": 0,
+   "refusals": 0,
+   "chars": 0
+  }
+ },
+ "n_articles": 0,
+ "pages_loaded": 0,
+ "seconds_between_page_loads": [],
+ "finished_utc": "2026-09-27T14:30:18+00:00",
+ "in_progress": false
+}

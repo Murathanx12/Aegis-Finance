@@ -1,0 +1,194 @@
+{
+ "day": "2026-10-04",
+ "mode": "REHEARSAL",
+ "freeze_utc": "2026-10-04T06:33:39",
+ "licence": "PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. Never evidence of skill.",
+ "window_hkt": [
+  "2026-10-04 14:00:00+08:00",
+  "2026-10-05 14:00:00+08:00"
+ ],
+ "nav_usd": 1024666.64,
+ "cap": {
+  "of_notional": 200000.0,
+  "of_nav": 204933.328,
+  "binding": 200000.0,
+  "binding_reading": "20% of notional"
+ },
+ "tickets": [
+  {
+   "n": 1,
+   "side": "SELL",
+   "bbg": "4088 JT Equity",
+   "symbol": "4088.T",
+   "market": "JP",
+   "qty": 10600,
+   "order_type": "MARKET AT OPEN",
+   "limit_local": null,
+   "currency": "JPY",
+   "session_date": "2026-10-05",
+   "open_utc": "2026-10-05 00:00:00+00:00",
+   "open_hkt": "Mon 05 Oct 08:00",
+   "open_ny": "Sun 20:00",
+   "notional_usd": 0.0,
+   "status": "LIVE",
+   "note": "report has happened by this open",
+   "report": "",
+   "code": "EU",
+   "extra": {
+    "pos_id": "2026-09-30:4088 JT"
+   }
+  },
+  {
+   "n": 2,
+   "side": "BUY",
+   "bbg": "3186 JT Equity",
+   "symbol": "3186.T",
+   "market": "JP",
+   "qty": 10600,
+   "order_type": "LIMIT",
+   "limit_local": 2960.0,
+   "currency": "JPY",
+   "session_date": "2026-10-05",
+   "open_utc": "2026-10-05 00:00:00+00:00",
+   "open_hkt": "Mon 05 Oct 08:00",
+   "open_ny": "Sun 20:00",
+   "notional_usd": 198674.07,
+   "status": "LIVE",
+   "note": "report 2026-10-05 AMC, sell at the 2026-10-06 open; CONFIRMED; lot 100 (UNVERIFIED)",
+   "report": "AMC CONFIRMED",
+   "code": "HK",
+   "extra": {
+    "exit_session": "2026-10-06",
+    "exit_open_utc": "2026-10-06 00:00:00+00:00",
+    "ref_local": 2819.0,
+    "fx_local_per_usd": 157.927001953125,
+    "rank": 1,
+    "trail_abs": 0.056843101978302,
+    "date_status": "CONFIRMED_EXCHANGE",
+    "timing": "AMC",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 10600,
+     "limit_local": 2960.0,
+     "notional_usd_at_limit": 198674.07,
+     "notional_usd_at_ref": 189210.2,
+     "lot": 100,
+     "lot_status": "100 (UNVERIFIED)"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 204933.328,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  }
+ ],
+ "control": {
+  "n_lines": 2,
+  "n_buy": 1,
+  "n_sell": 1,
+  "buy_shares": 10600,
+  "sell_shares": 10600,
+  "buy_notional_usd": 198674.07,
+  "sheet_code": "BE79BA12"
+ },
+ "reserves": [],
+ "refused": [
+  {
+   "symbol": "2734.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "5243.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "7630.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "9793.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  }
+ ],
+ "n_ranked": 1,
+ "calendar_file": "calendar_2026-10-04.parquet",
+ "bars_age": [
+  "CN: last bar 2026-09-30 (4 days)",
+  "EU: last bar 2026-10-02 (2 days)",
+  "HK: last bar 2026-10-02 (2 days)",
+  "ID: last bar 2026-10-01 (3 days)",
+  "IN: last bar 2026-10-01 (3 days)",
+  "JP: last bar 2026-10-02 (2 days)",
+  "KR: last bar 2026-10-02 (2 days)",
+  "TW: last bar 2026-10-02 (2 days)",
+  "US: last bar 2026-10-02 (2 days)"
+ ],
+ "refresh": {
+  "calendar": "refreshed",
+  "bars": {
+   "FX": {
+    "n_symbols": 16,
+    "rows_after": 30364,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   },
+   "IN": {
+    "n_symbols": 503,
+    "rows_after": 697995,
+    "n_failed": 0,
+    "last_date": "2026-10-01"
+   },
+   "EU": {
+    "n_symbols": 773,
+    "rows_after": 1222349,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   },
+   "JP": {
+    "n_symbols": 776,
+    "rows_after": 1231529,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   },
+   "US": {
+    "n_symbols": 181,
+    "rows_after": 121624,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   },
+   "KR": {
+    "n_symbols": 292,
+    "rows_after": 479722,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   },
+   "CN": {
+    "n_symbols": 600,
+    "rows_after": 940921,
+    "n_failed": 0,
+    "last_date": "2026-09-30"
+   },
+   "TW": {
+    "n_symbols": 410,
+    "rows_after": 691890,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   },
+   "HK": {
+    "n_symbols": 400,
+    "rows_after": 535531,
+    "n_failed": 0,
+    "last_date": "2026-10-02"
+   }
+  },
+  "implied": {
+   "n": 20,
+   "n_with_value": 18
+  }
+ },
+ "notes": [
+  "1 of 5 slots filled: 80% of the book stays in cash by rule (fewer names report in this window)."
+ ]
+}

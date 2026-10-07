@@ -1,0 +1,7 @@
+{
+ "source": "youtube",
+ "quota_day": "2026-10-02",
+ "units_spent": 500,
+ "last_run_utc": "2026-10-02T10:03:44+00:00",
+ "note": "units are charged BEFORE the call. A request that times out still spent its quota at the provider."
+}

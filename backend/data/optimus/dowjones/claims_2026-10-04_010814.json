@@ -1,0 +1,667 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-10-04",
+ "days": [
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05",
+  "2026-07-06",
+  "2026-07-07",
+  "2026-07-08",
+  "2026-07-09",
+  "2026-07-10",
+  "2026-07-11",
+  "2026-07-12",
+  "2026-07-13",
+  "2026-07-14",
+  "2026-07-15",
+  "2026-07-16",
+  "2026-07-17",
+  "2026-07-18",
+  "2026-07-19",
+  "2026-07-20",
+  "2026-07-21",
+  "2026-07-22",
+  "2026-07-23",
+  "2026-07-24",
+  "2026-07-25",
+  "2026-07-26",
+  "2026-07-27",
+  "2026-07-28",
+  "2026-07-29",
+  "2026-07-30",
+  "2026-07-31",
+  "2026-08-01",
+  "2026-08-02",
+  "2026-08-03",
+  "2026-08-04",
+  "2026-08-05",
+  "2026-08-06",
+  "2026-08-07",
+  "2026-08-08",
+  "2026-08-09",
+  "2026-08-10",
+  "2026-08-11",
+  "2026-08-12",
+  "2026-08-13",
+  "2026-08-14",
+  "2026-08-15",
+  "2026-08-16",
+  "2026-08-17",
+  "2026-08-18",
+  "2026-08-19",
+  "2026-08-20",
+  "2026-08-21",
+  "2026-08-22",
+  "2026-08-23",
+  "2026-08-24",
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27",
+  "2026-08-28",
+  "2026-08-29",
+  "2026-08-30",
+  "2026-08-31",
+  "2026-09-01",
+  "2026-09-02",
+  "2026-09-03",
+  "2026-09-04",
+  "2026-09-05",
+  "2026-09-06",
+  "2026-09-07",
+  "2026-09-08",
+  "2026-09-09",
+  "2026-09-10",
+  "2026-09-11",
+  "2026-09-12",
+  "2026-09-13",
+  "2026-09-14",
+  "2026-09-15",
+  "2026-09-16",
+  "2026-09-17",
+  "2026-09-18",
+  "2026-09-19",
+  "2026-09-20",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23",
+  "2026-09-24",
+  "2026-09-25",
+  "2026-09-26",
+  "2026-09-27",
+  "2026-09-28",
+  "2026-09-29",
+  "2026-09-30",
+  "2026-10-01",
+  "2026-10-02",
+  "2026-10-03",
+  "2026-10-04"
+ ],
+ "started_utc": "2026-10-04T01:07:02+00:00",
+ "mw_analyst_snapshot": {
+  "n_pages": 13,
+  "n_rows_written": 13,
+  "thin": [],
+  "tickers": [
+   "AAPL",
+   "KYTX",
+   "EXPO",
+   "SLDP",
+   "FIZZ",
+   "NOVT",
+   "BE",
+   "QUBT",
+   "EXEL",
+   "MANH",
+   "SOC",
+   "CMG",
+   "GOOG"
+  ]
+ },
+ "barrons_big_money_poll_index_rows": {
+  "n_articles": 0,
+  "n_rows_written": 0,
+  "per_article": []
+ },
+ "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
+ "purpose": "dowjones_claims",
+ "cap_usd": 3.0,
+ "spent_usd": 0.012054,
+ "n_llm_calls": 36,
+ "stopped": null,
+ "n_articles": 36,
+ "n_claims": 8,
+ "forecast_rows_by_source_id": {
+  "barrons_other": 6,
+  "barrons_stock_picks": 3,
+  "marketwatch_other": 3,
+  "wsj_other": 6
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "169a43c8be6bef38f37f",
+   "url": "https://www.barrons.com/articles/tesla-delivery-results-d05dff64?mod=WTRN_pos8",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "GM",
+     "why": "REFUSED_BACKWARD_LOOKING: 'GM'"
+    }
+   ],
+   "tickers": [
+    "TSLA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "202d6aa4517cd4dd1814",
+   "url": "https://www.barrons.com/articles/twilio-vylor-sp500-stock-additions-64da8508?mod=WTRN_pos5",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "37347de4e9738f1828d5",
+   "url": "https://www.barrons.com/articles/memory-chip-stock-etf-sandisk-micron-a7f40b97?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "MU"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "766d4acf6abe15f25ce3",
+   "url": "https://www.barrons.com/articles/stock-movers-5e76284f?refsec=markets&mod=topics_markets",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "92e624d74dd314449505",
+   "url": "https://www.barrons.com/articles/iqm-stock-quantum-computing-ai-51afed63?refsec=technology&mod=topics_technology",
+   "column": "barrons_stock_picks",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "IQMX",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'IQMX'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a39f6ec330ff03e74b5b",
+   "url": "https://www.barrons.com/articles/fed-lisa-cook-ai-buildout-inflation-2027-71bb3a0f?refsec=economy-and-policy&mod=topics_economy-and-policy",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c3b304aabf9463973a27",
+   "url": "https://www.barrons.com/articles/intuitive-surgical-quantitative-stock-of-the-week-94769369?mod=bic_right_rail",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c548951598db9e8e6389",
+   "url": "https://www.barrons.com/articles/inflation-according-to-the-inventory-sales-ratio-e4e5a360?mod=WTRN_pos5",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "da607a32d451869b4ce2",
+   "url": "https://www.barrons.com/articles/tesla-stock-price-roadster-event-delay-deliveries-a8073977?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "TSLA"
+   ],
+   "directions": [
+    "none"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "OK"
+  },
+  {
+   "sha": "e8e1c62b23390b74b998",
+   "url": "https://www.barrons.com/articles/nike-stock-charts-say-wait-for-bullish-reversal-before-buying-dip-4930a9cf?mod=WTRN_BIC",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "NKE"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "ece4fc7cf856b4249be8",
+   "url": "https://www.barrons.com/articles/micron-technology-ai-stock-earnings-dram-etf-cfd52805?refsec=the-trader&mod=topics_the-trader",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "MU"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "253e74c83ef08d981782",
+   "url": "https://www.marketwatch.com/story/the-stock-markets-brutal-summer-reset-is-finally-over-here-is-why-citadel-securities-says-it-is-time-to-buy-again-f6a8d101?mod=search_headline",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "28be57ff3fe0ae160535",
+   "url": "https://www.marketwatch.com/story/falling-wages-soaring-energy-prices-and-inflation-its-beginning-to-look-a-lot-like-the-1970s-d645cbca?mod=investing",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "459fef5a5b7d8f1dfdb8",
+   "url": "https://www.marketwatch.com/story/if-social-securitys-funding-crisis-is-the-elephant-in-the-room-this-is-the-mouse-everyone-has-overlooked-you-have-been-warned-b95c450d?mod=article_inline",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4a118fcebf89a6186e1d",
+   "url": "https://www.marketwatch.com/story/metas-mark-zuckerberg-is-coming-for-apples-empire-f34d1f92",
+   "column": "marketwatch_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "META",
+     "why": "REFUSED_QUOTE_NOT_IN_ARTICLE"
+    }
+   ],
+   "tickers": [
+    "AAPL"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "735b240aa3f4c14dd4bb",
+   "url": "https://www.marketwatch.com/story/why-the-fed-may-need-to-inject-cash-into-markets-through-the-crucial-year-end-period-9a05b362?mod=search_headline",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "acfe4f73ebb7e7b1e498",
+   "url": "https://www.marketwatch.com/story/the-government-can-take-15-of-social-security-benefits-to-repay-student-loans-these-proposals-seek-to-stop-it-102622fa?mod=mw_latestnews",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "106e4b32e4b18c8574cd",
+   "url": "https://www.wsj.com/tech/ai/ai-is-a-regulators-nightmare-39d7fa7a?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "1a609f8a18139ec80c5f",
+   "url": "https://www.wsj.com/us-news/law/supreme-court-revives-challenge-to-colorados-conversion-therapy-ban-68e48596?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "29662382f895d6e7b04b",
+   "url": "https://www.wsj.com/us-news/law/how-colorado-became-a-springboard-for-culture-war-clashes-at-the-supreme-court-75161c86",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "2b5bdc399859e442a330",
+   "url": "https://www.wsj.com/world/middle-east/the-cockpit-stabbing-and-terrifying-nosedive-that-brought-chaos-to-flight-1073-2b5e9157?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "2b60386ec2916c4c0725",
+   "url": "https://www.wsj.com/us-news/law/supreme-court-rules-web-designer-can-refuse-work-on-same-sex-wedding-announcements-f1e55d02?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "2cf6c883cf9aa46a5b44",
+   "url": "https://www.wsj.com/personal-finance/taxes/what-is-irmaa-medicare-social-security-c7e2860a?mod=Searchresults&pos=3&page=1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "3eaf0a678320a7ed505d",
+   "url": "https://www.wsj.com/politics/policy/trump-defends-handling-of-economy-announces-military-dividend-cfa8f07a?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4d393311595b4b8b6c61",
+   "url": "https://www.wsj.com/politics/policy/trump-sending-500-checks-with-letter-touting-healthcare-record-aa6923b6?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "9212bd59b0064f8cf5d0",
+   "url": "https://www.wsj.com/economy/week-ahead-for-fx-bonds-u-s-pmi-data-various-central-bank-decisions-in-focus-1be5eb5a?mod=Searchresults&pos=3&page=1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "9b33d286f9bef77f7646",
+   "url": "https://www.wsj.com/business/tech-media-telecom-roundup-market-talk-33735ba5?mod=Searchresults&pos=3&page=1",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [
+    {
+     "ticker": "MP1",
+     "why": "REFUSED_TICKER: 'MP1'"
+    },
+    {
+     "ticker": "NFLX",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'NFLX'"
+    }
+   ],
+   "tickers": [
+    "NOK",
+    "XNDU"
+   ],
+   "directions": [
+    "up",
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 6,
+   "write_status": "OK"
+  },
+  {
+   "sha": "a074af736f12d8bc0798",
+   "url": "https://www.wsj.com/politics/policy/senate-republicans-fall-short-on-last-ditch-affordability-push-e6c15c2e?mod=Searchresults&pos=3&page=1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a0e85f8f5bbb01ab895f",
+   "url": "https://www.wsj.com/articles/americans-cant-stop-watching-videos-of-people-paying-down-their-debt-acda4b22",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a2dc8899e2123559eb91",
+   "url": "https://www.wsj.com/business/energy-oil/major-wall-street-banks-lift-oil-price-forecast-survey-shows-34ae1ab8?mod=Searchresults&pos=3&page=1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a4f5dcef2228ce9b214e",
+   "url": "https://www.wsj.com/lifestyle/careers/passive-income-dreams-2e67ee5c?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "afaa2480fd2f8a23459d",
+   "url": "https://www.wsj.com/politics/elections/these-double-haters-have-lost-faith-in-both-partiesand-could-decide-the-midterms-7efa284e?mod=hp_lead_pos5",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c3f31f38ba6c0c4f2c7b",
+   "url": "https://www.wsj.com/personal-finance/retirement/young-people-are-obsessed-with-this-simple-retirement-savings-formula-d54f80b6?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "d819bf78f66899c6f0c7",
+   "url": "https://www.wsj.com/us-news/law/supreme-court-ruling-trump-ballot-colorado-092852fe?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "eb91298e0f0d53e52f4f",
+   "url": "https://www.wsj.com/tech/ai/will-america-spend-9-of-its-gdp-on-ai-the-industry-is-counting-on-it-3501bb4f?mod=economy_lead_pos2",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ec496a89cf7c7e4995d0",
+   "url": "https://www.wsj.com/arts-culture/music/gianandrea-nosedas-diplomatic-musical-leadership-04492d4c?mod=wsj_furtherreading_pos_1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  }
+ ]
+}

@@ -1,0 +1,364 @@
+{
+ "source": "usaspending",
+ "written_utc": "2026-10-06T23:07:13+00:00",
+ "banner": "SENSOR -- federal contract dollars with provenance and latency; never a trade signal on its own; no scoring path reads it before a declared cell passes",
+ "mode": "modified",
+ "window": {
+  "start": "2026-10-03",
+  "end": "2026-10-06",
+  "days": 3,
+  "date_type": "last_modified_date",
+  "action_window_from": "2026-06-08"
+ },
+ "recipients_requested": 16,
+ "requests": 32,
+ "request_classes": {
+  "OK": 32
+ },
+ "rows_stored_candidates": 2,
+ "outside_action_window": 137,
+ "cross_target_overlap": 1,
+ "rows_added": 2,
+ "revisions": 0,
+ "unchanged": 0,
+ "in_call_repeats": 0,
+ "pit_refused": 0,
+ "action_date_range": [
+  "2026-06-11",
+  "2026-06-23"
+ ],
+ "mapped_by_confidence": {
+  "high": 2
+ },
+ "obligation_usd_mapped_this_pull": 3021.6,
+ "obligation_basis": "latest version per identity in the table, identities read this pull",
+ "latency_first_seen_minus_action": {
+  "n": 2,
+  "median_days": 111.0,
+  "p10_days": 105.0,
+  "p90_days": 117.0,
+  "min_days": 105.0,
+  "max_days": 117.0,
+  "n_backfill_not_measurable": 0,
+  "basis": "first_seen_utc date minus action_date (non-backfill rows only)"
+ },
+ "not_mapped_top": {},
+ "per_recipient": {
+  "LOCKHEED MARTIN": {
+   "ticker": "LMT",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 32,
+   "distinct_read": 32,
+   "api_count": 32,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 1,
+   "backfill": false,
+   "match": {
+    "MAPPED": 1,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": [
+    "UTJWTSLMFNG4"
+   ]
+  },
+  "SIKORSKY AIRCRAFT": {
+   "ticker": "LMT",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 13,
+   "distinct_read": 13,
+   "api_count": 13,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 1,
+   "backfill": true,
+   "match": {
+    "MAPPED": 1,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": [
+    "UTJWTSLMFNG4"
+   ]
+  },
+  "RTX CORP": {
+   "ticker": "RTX",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 15,
+   "distinct_read": 15,
+   "api_count": 15,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": true,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  },
+  "RAYTHEON": {
+   "ticker": "RTX",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 0,
+   "distinct_read": 0,
+   "api_count": 0,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": false,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  },
+  "PRATT AND WHITNEY": {
+   "ticker": "RTX",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 0,
+   "distinct_read": 0,
+   "api_count": 0,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": true,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  },
+  "COLLINS AEROSPACE": {
+   "ticker": "RTX",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 0,
+   "distinct_read": 0,
+   "api_count": 0,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": true,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  },
+  "GENERAL DYNAMICS": {
+   "ticker": "GD",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 3,
+   "distinct_read": 3,
+   "api_count": 3,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": false,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  },
+  "BOEING": {
+   "ticker": "BA",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 71,
+   "distinct_read": 71,
+   "api_count": 71,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 1,
+   "backfill": false,
+   "match": {
+    "MAPPED": 1,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": [
+    "X3K6MA9ZLTW6"
+   ]
+  },
+  "NORTHROP GRUMMAN": {
+   "ticker": "NOC",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 5,
+   "distinct_read": 5,
+   "api_count": 5,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": false,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  },
+  "LEIDOS": {
+   "ticker": "LDOS",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 1,
+   "distinct_read": 1,
+   "api_count": 1,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": false,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  },
+  "DYNETICS": {
+   "ticker": "LDOS",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 0,
+   "distinct_read": 0,
+   "api_count": 0,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": true,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  },
+  "HUMANA": {
+   "ticker": "HUM",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 0,
+   "distinct_read": 0,
+   "api_count": 0,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": true,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  },
+  "CENTENE": {
+   "ticker": "CNC",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 0,
+   "distinct_read": 0,
+   "api_count": 0,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": false,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  },
+  "HEALTH NET FEDERAL SERVICES": {
+   "ticker": "CNC",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 0,
+   "distinct_read": 0,
+   "api_count": 0,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": true,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  },
+  "BOOZ ALLEN HAMILTON": {
+   "ticker": "BAH",
+   "status": "DEGRADED_ZERO_ROWS",
+   "why": "0 rows vs ~18 expected from the prior 90 days",
+   "rows_read_raw": 0,
+   "distinct_read": 0,
+   "api_count": 0,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": false,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  },
+  "PALANTIR": {
+   "ticker": "PLTR",
+   "status": "OK",
+   "why": "",
+   "rows_read_raw": 0,
+   "distinct_read": 0,
+   "api_count": 0,
+   "repeats_in_first_read": 0,
+   "retried_opposite_order": false,
+   "pages": 1,
+   "stored": 0,
+   "backfill": false,
+   "match": {
+    "MAPPED": 0,
+    "NOT_MAPPED": 0,
+    "AMBIGUOUS": 0
+   },
+   "uei_seen": []
+  }
+ },
+ "refusals": [],
+ "rate_limit": "1,000 requests / 300 s documented; paced at 0.5s per request",
+ "degraded_targets": {
+  "BOOZ ALLEN HAMILTON": "DEGRADED_ZERO_ROWS"
+ },
+ "status": "DEGRADED"
+}

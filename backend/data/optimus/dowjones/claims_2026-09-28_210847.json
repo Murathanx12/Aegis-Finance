@@ -1,0 +1,1829 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-09-28",
+ "days": [
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05",
+  "2026-07-06",
+  "2026-07-07",
+  "2026-07-08",
+  "2026-07-09",
+  "2026-07-10",
+  "2026-07-11",
+  "2026-07-12",
+  "2026-07-13",
+  "2026-07-14",
+  "2026-07-15",
+  "2026-07-16",
+  "2026-07-17",
+  "2026-07-18",
+  "2026-07-19",
+  "2026-07-20",
+  "2026-07-21",
+  "2026-07-22",
+  "2026-07-23",
+  "2026-07-24",
+  "2026-07-25",
+  "2026-07-26",
+  "2026-07-27",
+  "2026-07-28",
+  "2026-07-29",
+  "2026-07-30",
+  "2026-07-31",
+  "2026-08-01",
+  "2026-08-02",
+  "2026-08-03",
+  "2026-08-04",
+  "2026-08-05",
+  "2026-08-06",
+  "2026-08-07",
+  "2026-08-08",
+  "2026-08-09",
+  "2026-08-10",
+  "2026-08-11",
+  "2026-08-12",
+  "2026-08-13",
+  "2026-08-14",
+  "2026-08-15",
+  "2026-08-16",
+  "2026-08-17",
+  "2026-08-18",
+  "2026-08-19",
+  "2026-08-20",
+  "2026-08-21",
+  "2026-08-22",
+  "2026-08-23",
+  "2026-08-24",
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27",
+  "2026-08-28",
+  "2026-08-29",
+  "2026-08-30",
+  "2026-08-31",
+  "2026-09-01",
+  "2026-09-02",
+  "2026-09-03",
+  "2026-09-04",
+  "2026-09-05",
+  "2026-09-06",
+  "2026-09-07",
+  "2026-09-08",
+  "2026-09-09",
+  "2026-09-10",
+  "2026-09-11",
+  "2026-09-12",
+  "2026-09-13",
+  "2026-09-14",
+  "2026-09-15",
+  "2026-09-16",
+  "2026-09-17",
+  "2026-09-18",
+  "2026-09-19",
+  "2026-09-20",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23",
+  "2026-09-24",
+  "2026-09-25",
+  "2026-09-26",
+  "2026-09-27",
+  "2026-09-28"
+ ],
+ "started_utc": "2026-09-28T21:06:33+00:00",
+ "mw_analyst_snapshot": {
+  "n_pages": 50,
+  "n_rows_written": 50,
+  "thin": [],
+  "tickers": [
+   "MWH",
+   "AMSC",
+   "GOOGL",
+   "AGIO",
+   "CSTM",
+   "STX",
+   "REAL",
+   "XRX",
+   "BZ",
+   "FRMI",
+   "LNG",
+   "HWM",
+   "EXEL",
+   "VRT",
+   "BN",
+   "WST",
+   "KEX",
+   "CCJ",
+   "BA",
+   "AGYS",
+   "LITE",
+   "MANH",
+   "EXPO",
+   "CMG",
+   "WDAY",
+   "VG",
+   "CRM",
+   "LAR",
+   "CDNL",
+   "PRGS",
+   "AGX",
+   "WDS",
+   "SNOW",
+   "ENS",
+   "BBW",
+   "AVGO",
+   "LZ",
+   "DBVT",
+   "ABSI",
+   "BSP",
+   "FLNC",
+   "MEC",
+   "TE",
+   "TER",
+   "Q",
+   "LGN",
+   "MP",
+   "ACVA",
+   "BW",
+   "DUOL"
+  ]
+ },
+ "barrons_big_money_poll_index_rows": {
+  "n_articles": 0,
+  "n_rows_written": 0,
+  "per_article": []
+ },
+ "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
+ "purpose": "dowjones_claims",
+ "cap_usd": 3.0,
+ "spent_usd": 0.039597,
+ "n_llm_calls": 106,
+ "stopped": null,
+ "n_articles": 106,
+ "n_claims": 50,
+ "forecast_rows_by_source_id": {
+  "barrons_stock_picks": 27,
+  "barrons_other": 18,
+  "marketwatch_upgrades_downgrades": 0,
+  "marketwatch_other": 3,
+  "marketwatch_economic_calendar": 0,
+  "marketwatch_earnings_calendar": 0,
+  "wsj_other": 6,
+  "wsj_heard_on_the_street": 0
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "0222324993ec659bbf57",
+   "url": "https://www.barrons.com/articles/international-paper-stock-nears-monthly-support-zone-opportunity-bounce-97b6df06?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "IP"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "0f44e6424e5e0bde7af1",
+   "url": "https://www.barrons.com/articles/serve-robotics-ai-stock-earnings-ecbab8c9?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "SERV"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "18196bc416b3254b1360",
+   "url": "https://www.barrons.com/articles/stocks-perpetual-futures-31b38a79?refsec=streetwise&mod=topics_streetwise",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 4,
+   "refused": [],
+   "tickers": [
+    "ICE",
+    "HOOD",
+    "VIRT",
+    "COIN"
+   ],
+   "directions": [
+    "up",
+    "up",
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "196b4b090bb4d941b1d6",
+   "url": "https://www.barrons.com/articles/stocks-bear-market-s-p-500-tech-c40e9348?refsec=markets&mod=topics_markets",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "MSFT"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "1fc67615b56b6f231b1b",
+   "url": "https://www.barrons.com/articles/earnings-season-is-impressive-but-investors-are-skittish-2e9bf4d5?refsec=streetwise&mod=topics_streetwise",
+   "column": "barrons_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "GOOGL",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'GOOGL'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "2381a7ecf67d6e7423e3",
+   "url": "https://www.barrons.com/articles/mcdonalds-stock-ai-growth-restaurants-19e4906c?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "MCD",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'MCD'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "2d9ab26deac88be3070f",
+   "url": "https://www.barrons.com/articles/stock-market-ai-fears-nvidia-anthropic-things-to-know-today-15e16024?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 4,
+   "refused": [],
+   "tickers": [
+    "AMD",
+    "WDAY",
+    "AA",
+    "PSKY"
+   ],
+   "directions": [
+    "up",
+    "down",
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "3811fbbfd6b2d8f8c50d",
+   "url": "https://www.barrons.com/articles/stock-movers-16d6bf38?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "40b15e0ada3fef054e98",
+   "url": "https://www.barrons.com/articles/tariffs-trump-manufacturing-stocks-risk-2c5f2930?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "42ef5dcbc546f108cf75",
+   "url": "https://www.barrons.com/articles/jefferies-earnings-stock-price-d2522cd1?mod=RTA",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "43b1a4a63c2a6ae00588",
+   "url": "https://www.barrons.com/articles/stock-market-fed-interest-rates-9dd5e961?refsec=the-trader&mod=topics_the-trader",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "48a51528bd5fec4daf31",
+   "url": "https://www.barrons.com/articles/signet-jewelers-natural-gas-services-and-more-stocks-see-action-from-activist-investors-6ee72e0d?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "53cbe938b044ca78927a",
+   "url": "https://www.barrons.com/articles/amd-acquire-ai-company-world-labs-8382f763?mod=RTA",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "561148dc1784b4714b54",
+   "url": "https://www.barrons.com/articles/pfizer-cancer-drug-3sbio-19c80655?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "PFE"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "603507cc07de59c90433",
+   "url": "https://www.barrons.com/articles/figs-realreal-and-more-stocks-see-action-from-activist-investors-cdb60ad6?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "60cafc9cc0a66ffafcfc",
+   "url": "https://www.barrons.com/articles/retail-secondhand-stocks-tariffs-trump-ab1844c6?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "658179c5e4b78934dbb9",
+   "url": "https://www.barrons.com/articles/cheesecake-factory-stock-uptrend-resume-chart-of-day-1652d3ae?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "CAKE",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'CAKE'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "6b1587e1c5c4180a93a0",
+   "url": "https://www.barrons.com/articles/bristol-myers-stock-biontech-cancer-f327b0ee?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [],
+   "tickers": [
+    "BNTX",
+    "SMMT"
+   ],
+   "directions": [
+    "up",
+    "down"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "6d695c6f2bb4016f32aa",
+   "url": "https://www.barrons.com/articles/stock-movers-a1a71920?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "6e71a06dc4acf82c3d72",
+   "url": "https://www.barrons.com/articles/warren-buffett-worst-ever-deal-berkshire-stock-e1550a09?refsec=up-and-down-wall-street&mod=topics_up-and-down-wall-street",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "70f7f1c46ebbd8d8aa24",
+   "url": "https://www.barrons.com/articles/banks-ai-deposits-muse-slok-stock-c37f671a?mod=RTA",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "JPM",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'JPM'"
+    }
+   ],
+   "tickers": [
+    "WFC"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "80c32dab9c8715ace75a",
+   "url": "https://www.barrons.com/articles/temu-parent-pdd-earnings-stock-price-dfc8fd87?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "82a00f5fd05f102d5e03",
+   "url": "https://www.barrons.com/articles/tesla-stock-price-deliveries-roadster-spacex-merger-4bb9ce44?refsec=markets&mod=topics_markets",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "SPCX",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'SPCX'"
+    }
+   ],
+   "tickers": [
+    "TSLA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "837489c4edbb5e224d66",
+   "url": "https://www.barrons.com/articles/coke-pepsi-stocks-195c8f2b?refsec=streetwise&mod=topics_streetwise",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "KO",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'KO'"
+    }
+   ],
+   "tickers": [
+    "PEP"
+   ],
+   "directions": [
+    "none"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "9cb5c3a3e06301dc1462",
+   "url": "https://www.barrons.com/articles/why-buy-the-dip-is-bad-advice-2bee86a8?refsec=the-trader&mod=topics_the-trader",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "9d70e98c7df2e99ea9a6",
+   "url": "https://www.barrons.com/articles/stock-market-september-effect-ai-e3921649?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "9e21d4be0106e975e3cb",
+   "url": "https://www.barrons.com/articles/investing-strategy-high-profit-margins-23-stocks-074ffae5?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "SYK"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "a66462d30a0d29128c74",
+   "url": "https://www.barrons.com/articles/stock-market-things-to-know-today-6d51a2b7?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a82ab8282ebc80981837",
+   "url": "https://www.barrons.com/articles/china-instant-delivery-retail-e814ddbe?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [
+    {
+     "ticker": "MPNGY",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'MPNGY'"
+    }
+   ],
+   "tickers": [
+    "BABA",
+    "JD"
+   ],
+   "directions": [
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "ac596f884a4c2d61cadc",
+   "url": "https://www.barrons.com/articles/summit-therapeutics-cancer-biopharma-china-0a3bc966?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "SMMT"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "b7e9ce93cdbc79732569",
+   "url": "https://www.barrons.com/articles/bjs-costco-stocks-3adaae82?refsec=streetwise&mod=topics_streetwise",
+   "column": "barrons_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "BJ",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'BJ'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "b9261c658b83899e6a8c",
+   "url": "https://www.barrons.com/articles/sonoco-selloff-pringles-cans-stock-e2ef1e86?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "SON"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "bab37aa49ece23ed52d4",
+   "url": "https://www.barrons.com/articles/sp-500-world-stock-market-6f1988cf?refsec=streetwise&mod=topics_streetwise",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "bb94acb118048c2d1666",
+   "url": "https://www.barrons.com/articles/food-delivery-doordash-serve-robotics-4bfab9eb?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "bd5cc2d6959254adf98b",
+   "url": "https://www.barrons.com/articles/frontline-oil-stock-up-146-still-buy-40943486?refsec=the-trader&mod=topics_the-trader",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "FRO"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "c1288e34b9efe0ba77f0",
+   "url": "https://www.barrons.com/articles/nvidia-buyback-ai-stock-b4000b02?mod=RTA",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 3,
+   "refused": [],
+   "tickers": [
+    "NVDA",
+    "AAPL",
+    "AMZN"
+   ],
+   "directions": [
+    "up",
+    "none",
+    "none"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "c2140bc5d73654bf5d10",
+   "url": "https://www.barrons.com/articles/anthropic-ai-claude-event-today-e3e982c5?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [
+    {
+     "ticker": "LZ",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'LZ'"
+    },
+    {
+     "ticker": "CRM",
+     "why": "REFUSED_BACKWARD_LOOKING: 'CRM'"
+    },
+    {
+     "ticker": "GOOGL",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'GOOGL'"
+    }
+   ],
+   "tickers": [
+    "FDS",
+    "MSFT"
+   ],
+   "directions": [
+    "up",
+    "none"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "c22b632c7dd473f0b40e",
+   "url": "https://www.barrons.com/articles/u-s-markets-decreased-monday-mongodb-posted-biggest-loss-8b75c929?mod=RTA",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ca5756f12960cf2519a4",
+   "url": "https://www.barrons.com/articles/summit-therapeutics-merck-cancer-drug-keytruda-68e087d3?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "SMMT"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "cb9971e8792f0a3944b0",
+   "url": "https://www.barrons.com/articles/inside-the-war-between-real-estates-compass-and-zillow-d3aaca33?refsec=economy-and-policy&mod=topics_economy-and-policy",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "cd90871b52fdd7124081",
+   "url": "https://www.barrons.com/articles/carnival-stock-buy-c26a9bb0?refsec=the-trader&mod=topics_the-trader",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "CCL"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "d1e81275ea697e2c1e9d",
+   "url": "https://www.barrons.com/articles/alibaba-stock-price-pentagon-china-list-6bde38db?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "BABA"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "d41939762ff5f9bc3565",
+   "url": "https://www.barrons.com/articles/allegion-earnings-stock-price-e99a14a6?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "ALLE"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "d43c6d427d98fa8295d1",
+   "url": "https://www.barrons.com/articles/the-stock-market-survived-a-strong-jobs-report-can-it-survive-inflation-6b3a3f60?refsec=the-trader&mod=topics_the-trader",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "LULU"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "d79eda06c5a801cbd772",
+   "url": "https://www.barrons.com/articles/nucor-stock-steel-mesabi-metallics-trump-d5a95d9f?mod=RTA",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 3,
+   "refused": [],
+   "tickers": [
+    "NUE",
+    "STLD",
+    "CLF"
+   ],
+   "directions": [
+    "down",
+    "down",
+    "down"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 9,
+   "write_status": "OK"
+  },
+  {
+   "sha": "d7c6a9c70703e42476a1",
+   "url": "https://www.barrons.com/articles/rising-interest-rates-danger-markets-tips-215b867d?refsec=up-and-down-wall-street&mod=topics_up-and-down-wall-street",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "dca180289e2a267cfa22",
+   "url": "https://www.barrons.com/articles/new-chip-rally-warning-c35195a2?refsec=the-trader&mod=topics_the-trader",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [],
+   "tickers": [
+    "NVDA",
+    "MU"
+   ],
+   "directions": [
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 6,
+   "write_status": "OK"
+  },
+  {
+   "sha": "df05a5aa8460f28d8fdd",
+   "url": "https://www.barrons.com/articles/temu-shein-dupes-gucci-hermes-ade62889?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e0010c5f730c563c26a8",
+   "url": "https://www.barrons.com/articles/michael-moritz-ai-venture-capital-90ebcc26?refsec=up-and-down-wall-street&mod=topics_up-and-down-wall-street",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e1523fa096f2beb0984b",
+   "url": "https://www.barrons.com/articles/dht-evolve-technologies-and-more-stocks-see-action-from-activist-investors-fd594f7c?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e18afa119f575008fd9b",
+   "url": "https://www.barrons.com/articles/claude-ai-legalzoon-stock-ceo-3eabacb3?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [],
+   "tickers": [
+    "LZ",
+    "TRI"
+   ],
+   "directions": [
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "e61326a13b6ed1844dea",
+   "url": "https://www.barrons.com/articles/stock-market-movers-4a20fbeb?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e97d79d920384e099eec",
+   "url": "https://www.barrons.com/articles/lululemon-stock-08bb07d8?refsec=streetwise&mod=topics_streetwise",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [
+    {
+     "ticker": "ONON",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'ONON'"
+    },
+    {
+     "ticker": "DKS",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'DKS'"
+    }
+   ],
+   "tickers": [
+    "LULU",
+    "YETI"
+   ],
+   "directions": [
+    "none",
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "f15ae7ac20fe2092699e",
+   "url": "https://www.barrons.com/articles/stock-market-treasury-yields-db1bc50f?refsec=streetwise&mod=topics_streetwise",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "f98af0c90a550edc5fec",
+   "url": "https://www.barrons.com/articles/former-stock-picks-sonoco-products-oracle-tpg-improving-technicals-5766c387?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [
+    {
+     "ticker": "TPG",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'TPG'"
+    }
+   ],
+   "tickers": [
+    "ORCL",
+    "SON"
+   ],
+   "directions": [
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "fb9a55bf98f44e6d733d",
+   "url": "https://www.barrons.com/articles/cracker-barrel-stock-doubled-dont-buy-b9ac1dd3?refsec=the-trader&mod=topics_the-trader",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "CBRL"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "fd37266371c15621fe63",
+   "url": "https://www.barrons.com/articles/shein-stock-ipo-trump-87e38b40?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "fe616ff90f19534b77f4",
+   "url": "https://www.barrons.com/articles/merck-johnson-jnj-biotech-eee38d47?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ff2c6993c7e7e406696f",
+   "url": "https://www.barrons.com/articles/cytokinetics-stock-heart-drug-bristol-myers-squibb-e6e6af83?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "BMY",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'BMY'"
+    }
+   ],
+   "tickers": [
+    "CYTK"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "ffd61a45214b8545dce3",
+   "url": "https://www.barrons.com/articles/dexcom-stock-oura-ipo-smart-tech-d2cb8064?mod=RTA",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "LLY",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'LLY'"
+    }
+   ],
+   "tickers": [
+    "DXCM"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "00bf8a9ed008935f36b4",
+   "url": "https://www.marketwatch.com/tools/upgrades-downgrades",
+   "column": "marketwatch_upgrades_downgrades",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_upgrades_downgrades",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "0365c4abeb1fc5933c6e",
+   "url": "https://www.marketwatch.com/story/is-gridlock-in-washington-actually-good-for-stocks-heres-what-historical-market-data-says-ea20746d?mod=investing",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "0815a3b8a1dd8e15922e",
+   "url": "https://www.marketwatch.com/story/8-mortgage-rates-are-not-an-impossibility-as-the-30-year-fixed-rate-surges-aa202464?mod=economy-politics",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "0cc7a69c762a2baf1682",
+   "url": "https://www.marketwatch.com/story/before-you-invest-in-the-oura-ipo-understand-what-youre-buying-1d88d868?mod=mw_latestnews",
+   "column": "marketwatch_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "OURA",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'OURA'"
+    },
+    {
+     "ticker": "GOOGL",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'GOOGL'"
+    },
+    {
+     "ticker": "LLY",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'LLY'"
+    }
+   ],
+   "tickers": [
+    "AAPL"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "2d88ca51cbb24c170806",
+   "url": "https://www.marketwatch.com/story/ai-companies-say-they-want-to-slow-down-heres-how-washington-might-help-apply-the-brakes-7db9dabb?mod=economy-politics",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "346e34fba1ad98e4f091",
+   "url": "https://www.marketwatch.com/story/want-to-bet-on-risky-high-beta-stocks-why-you-should-wait-for-this-week-in-october-d9094820?mod=stocks",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "3ec5098a7e01f037e033",
+   "url": "https://www.marketwatch.com/story/warshs-fed-shows-its-serious-about-taming-inflation-why-wall-street-now-believes-it-55dc5af5?mod=economy-politics",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4163cef8e1a6b4be7593",
+   "url": "https://www.marketwatch.com/story/u-s-stocks-slide-as-treasury-selloff-deepens-2b9f12d2?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "7521476d0f94149a77d2",
+   "url": "https://www.marketwatch.com/story/navitas-gets-army-grant-to-develop-semiconductor-technology-62130ee8?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "76510885352a775a5d11",
+   "url": "https://www.marketwatch.com/economy-politics/calendar",
+   "column": "marketwatch_economic_calendar",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_economic_calendar",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "79fdefa2b6ebdd5b284f",
+   "url": "https://www.marketwatch.com/story/adeia-names-vachani-ceo-succeeding-davis-0c0f0f3f?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "7ce7ee0f3cb0b44e6f75",
+   "url": "https://www.marketwatch.com/story/bond-yields-move-relentlessly-higher-as-wall-street-wonders-how-much-more-tech-stocks-can-take-dd050c39?mod=bulletin_ribbon",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "90b91fb3358fdd5fa1ea",
+   "url": "https://www.marketwatch.com/story/october-is-historically-the-most-volatile-month-for-stocks-but-why-these-4-popular-theories-fail-to-hold-up-a47a1830?mod=mw_latestnews",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "b84988790ad18a3b0e83",
+   "url": "https://www.marketwatch.com/story/how-a-u-s-diesel-export-ban-would-play-out-according-to-goldman-sachs-8142525d?mod=home_lead",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "be4f2f0ad7621db10aff",
+   "url": "https://www.marketwatch.com/story/stop-trying-to-beat-the-market-even-the-richest-americans-cant-do-it-consistently-4560e275?mod=investing",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e8655e9e63f1fce6a930",
+   "url": "https://www.marketwatch.com/story/u-s-stocks-slide-as-treasury-selloff-deepens-update-f5c1d760?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e9e4c53554e0fcd8b099",
+   "url": "https://www.marketwatch.com/story/jefferies-3q-profit-rises-driven-by-investment-banking-growth-c8c867b4?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ecfc16b083272f82ad58",
+   "url": "https://www.marketwatch.com/tools/earnings-calendar",
+   "column": "marketwatch_earnings_calendar",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_earnings_calendar",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "0e5e059c74e8195bf100",
+   "url": "https://www.wsj.com/business/deals/warburg-pincus-makes-improved-1-5-billion-offer-for-australias-ingenia-03f3b2af?mod=business_feat1_deals_pos2",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "14903a5f57108d5fe814",
+   "url": "https://www.wsj.com/finance/investing/treasury-yields-climb-to-fresh-highs-while-oil-rises-8749516c?mod=finance_lead_story",
+   "column": "wsj_heard_on_the_street",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "187380e45d6c9a4e03d6",
+   "url": "https://www.wsj.com/world/middle-east/iran-pressed-to-make-nuclear-concessions-to-revive-peace-talks-with-u-s-80016aff?mod=world_feat1_middle-east_pos4",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "22755eb9870c4a6e1ae7",
+   "url": "https://www.wsj.com/logistics-report/white-house-considers-ban-on-diesel-exports-as-prices-keep-rising-fd3eec84?mod=economy_feat2_trade_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "24e6e7a4f13164fb220c",
+   "url": "https://www.wsj.com/health/this-startup-is-using-ai-to-fight-off-a-future-ai-pandemic-aceedf1b?mod=tech_feat1_ai_pos3",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "37bcab2b5ed823ea966b",
+   "url": "https://www.wsj.com/finance/commodities-futures/european-gas-prices-rise-on-prospects-of-prolonged-lng-disruptions-82000fff",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "425d8492d9f8baa54671",
+   "url": "https://www.wsj.com/tech/anthropic-to-pay-akamai-technologies-11-6-billion-over-seven-years-for-cloud-services-7a55360b?mod=business_feat1_deals_pos5",
+   "column": "wsj_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "AKAM",
+     "why": "REFUSED_BACKWARD_LOOKING: 'AKAM'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "451fab705fdef595a4c6",
+   "url": "https://www.wsj.com/economy/looking-at-europes-glass-as-half-full-cd419938?mod=economy_feat1_global_pos2",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "49547ab4d6bc049f43c1",
+   "url": "https://www.wsj.com/business/deals/aar-to-pay-1-8-billion-for-stake-in-aircraft-maintenance-company-37875803",
+   "column": "wsj_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "AIR",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'AIR'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4b75c0c57a253419664f",
+   "url": "https://www.wsj.com/tech/ai/amd-to-acquire-world-labs-for-8-2-billion-a8d03d11?mod=tech_feat1_ai_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "532f8fa58930f8eb7028",
+   "url": "https://www.wsj.com/tech/ai/trump-and-anthropic-ceo-dario-amodei-set-for-white-house-dinner-32c2d0ab?mod=tech_feat1_ai_pos5",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "609808df275e8a5ca0f0",
+   "url": "https://www.wsj.com/business/earnings/vail-resorts-loss-widens-after-a-year-of-tough-weather-b6032cf2?mod=business_feat2_retail_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "6cb6bde410b83c2c2f97",
+   "url": "https://www.wsj.com/business/energy-oil/utilities-large-batteries-crowded-neighborhoods-095ada99",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "6d50a3896f9d7395b144",
+   "url": "https://www.wsj.com/finance/commodities-futures/oil-prices-rise-as-u-s-iran-talks-face-fresh-hurdles-7ea7f176?mod=world_feat1_middle-east_pos2",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "88a67cc3017f06427530",
+   "url": "https://www.wsj.com/world/asia/china-wants-more-babies-so-it-is-glamming-up-the-city-hall-wedding-84816f21?mod=world_feat2_asia_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "8ea927120e6c4463fc94",
+   "url": "https://www.wsj.com/arts-culture/books/one-man-in-review-he-who-dares-to-save-the-day-04639687",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "8f50d52c689c8223248f",
+   "url": "https://www.wsj.com/world/europe/the-u-k-village-rattled-by-an-alleged-terror-plot-near-a-u-s-air-base-7362428b?mod=world_lead_story",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "9581bd3937113d2cbc3f",
+   "url": "https://www.wsj.com/real-estate/every-household-in-this-rural-town-receives-10-000-if-a-data-center-gets-built-86554cb7?mod=tech_feat1_ai_pos4",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "95d8d4c32666e1c9962b",
+   "url": "https://www.wsj.com/pro/central-banking/boes-ramsden-sees-case-for-raising-key-rate-if-inflationary-pressures-build-6297ba77?mod=economy_feat1_global_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "9945fc857c83e238c653",
+   "url": "https://www.wsj.com/business/airlines/faa-to-delay-737-max-10-approval-over-new-software-glitch-9e52602d",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "BA"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "9eba722116eca221d66c",
+   "url": "https://www.wsj.com/business/hospitality/mgm-resorts-eyeing-bid-for-barry-dillers-people-incorporated-b506c037?mod=business_feat1_deals_pos4",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "MGM",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'MGM'"
+    }
+   ],
+   "tickers": [
+    "PPLI"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "b2d05531aaa3f03e1109",
+   "url": "https://www.wsj.com/finance/jgb-yields-rise-amid-concerns-about-iran-conflict-inflation-b79fa6d5",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c4ad46747c741636de6e",
+   "url": "https://www.wsj.com/finance/investing/blackstones-top-private-equity-executive-is-preparing-to-leave-firm-6d7057db?mod=business_feat1_deals_pos3",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "d777fc339f2a9b0d002a",
+   "url": "https://www.wsj.com/economy/central-banking/why-the-bank-of-england-didnt-follow-the-fed-in-raising-interest-rates-007dc4a4?mod=economy_feat1_global_pos5",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ee4a13be8ad88818b765",
+   "url": "https://www.wsj.com/finance/banking/bank-lending-to-eurozone-businesses-halved-in-august-11b0ec4b?mod=economy_feat1_global_pos3",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "f45318d35bc497393714",
+   "url": "https://www.wsj.com/tech/ai/dirty-work-goes-driverless-at-the-dump-c2e9516e?mod=tech_feat2_personal-tech_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "f90abc145c330202ead6",
+   "url": "https://www.wsj.com/economy/global/global-economy-stronger-than-expected-but-threats-mount-oecd-says-7472619b?mod=economy_feat1_global_pos4",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "fd57e7fb0f0f4b654741",
+   "url": "https://www.wsj.com/finance/commodities-futures/oil-rises-on-geopolitical-risks-stockpile-decline-1e019399",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  }
+ ]
+}

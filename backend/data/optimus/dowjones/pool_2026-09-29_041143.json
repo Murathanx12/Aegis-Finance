@@ -1,0 +1,878 @@
+{
+ "receipt": "reader_pool",
+ "started_utc": "2026-09-29T04:11:59+00:00",
+ "pid": 155016,
+ "profile": "muratclaw",
+ "names": 132,
+ "books": [
+  "AAOI",
+  "AAPL",
+  "AARD",
+  "ABSI",
+  "ADUS",
+  "AGIO",
+  "ALG",
+  "AMSC",
+  "AMZN",
+  "APPS",
+  "ARCO",
+  "AVGO",
+  "AVPT",
+  "AXTI",
+  "BAND",
+  "BBIO",
+  "BE",
+  "BHVN",
+  "BLZE",
+  "BR",
+  "CCJ",
+  "CHD",
+  "CHH",
+  "CIFR",
+  "CLS",
+  "COGT",
+  "DKNG",
+  "FORM",
+  "FSLY",
+  "GEV",
+  "GMAB",
+  "GOOG",
+  "GOOGL",
+  "HOOD",
+  "HUBS",
+  "HUT",
+  "ICHR",
+  "INCY",
+  "IONQ",
+  "IOVA",
+  "JAZZ",
+  "KYTX",
+  "LEU",
+  "META",
+  "MP",
+  "MSFT",
+  "MU",
+  "MXL",
+  "NOVT",
+  "NTLA",
+  "NVDA",
+  "NVT",
+  "PAGS",
+  "PDS",
+  "PRAX",
+  "PRCH",
+  "QUBT",
+  "RGEN",
+  "SLDP",
+  "SNDK",
+  "SNDR",
+  "SOC",
+  "STNG",
+  "TS",
+  "TSM",
+  "VELO",
+  "VKTX",
+  "VRT",
+  "VRTX",
+  "WST"
+ ],
+ "fresh": [
+  "AB",
+  "AMD",
+  "BTGO",
+  "DKNG",
+  "DT",
+  "ENVA",
+  "ETON",
+  "HUT",
+  "IDT",
+  "MARA",
+  "MDB",
+  "MRVL",
+  "QMCO",
+  "SDOT",
+  "VKTX",
+  "VSTS"
+ ],
+ "stop_reason": "STOP file READER_POOL_STOP",
+ "pages": 27,
+ "stats": {
+  "barrons.com": {
+   "links_found": 26,
+   "links_new": 0,
+   "front": 4
+  },
+  "marketwatch.com": {
+   "links_found": 55,
+   "links_new": 2,
+   "front": 4
+  },
+  "wsj.com": {
+   "links_found": 48,
+   "links_new": 0,
+   "front": 4
+  },
+  "finance.yahoo.com": {
+   "links_found": 19,
+   "links_new": 5,
+   "front": 2
+  },
+  "cnbc.com": {
+   "links_found": 42,
+   "links_new": 26,
+   "front": 3
+  },
+  "apnews.com": {
+   "links_found": 24,
+   "links_new": 10,
+   "front": 3
+  },
+  "bbc.com": {
+   "links_found": 27,
+   "links_new": 13,
+   "front": 2
+  },
+  "ft.com": {
+   "links_found": 24,
+   "links_new": 23,
+   "front": 2
+  },
+  "asia.nikkei.com": {
+   "links_found": 24,
+   "links_new": 10,
+   "front": 2
+  },
+  "scmp.com": {
+   "front": 1
+  }
+ },
+ "classes": {
+  "reuters.com": {
+   "ROBOTS_DISALLOWED": 6
+  },
+  "apnews.com": {
+   "OK": 2,
+   "BLANK": 1
+  },
+  "asia.nikkei.com": {
+   "OK": 2
+  },
+  "barrons.com": {
+   "OK": 4
+  },
+  "bbc.com": {
+   "OK": 2
+  },
+  "bls.gov": {},
+  "cnbc.com": {
+   "OK": 3
+  },
+  "federalreserve.gov": {},
+  "finance.yahoo.com": {
+   "OK": 2
+  },
+  "ft.com": {
+   "OK": 2
+  },
+  "home.treasury.gov": {},
+  "marketwatch.com": {
+   "OK": 4
+  },
+  "reddit.com": {},
+  "scmp.com": {},
+  "sec.gov": {},
+  "stocktwits.com": {},
+  "treasury.gov": {},
+  "wsj.com": {
+   "OK": 4
+  },
+  "x.com": {}
+ },
+ "timing_medians": {
+  "barrons.com|front": {
+   "n": 4,
+   "median_wait_s": 0.0,
+   "median_open_s": 1.35,
+   "median_work_s": 42.11
+  },
+  "marketwatch.com|front": {
+   "n": 4,
+   "median_wait_s": 0.28,
+   "median_open_s": 1.17,
+   "median_work_s": 55.68
+  },
+  "wsj.com|front": {
+   "n": 4,
+   "median_wait_s": 0.0,
+   "median_open_s": 0.98,
+   "median_work_s": 57.95
+  },
+  "finance.yahoo.com|front": {
+   "n": 2,
+   "median_wait_s": 0.0,
+   "median_open_s": 1.88,
+   "median_work_s": 49.99
+  },
+  "cnbc.com|front": {
+   "n": 3,
+   "median_wait_s": 1.85,
+   "median_open_s": 1.04,
+   "median_work_s": 63.15
+  },
+  "apnews.com|front": {
+   "n": 3,
+   "median_wait_s": 0.0,
+   "median_open_s": 1.32,
+   "median_work_s": 75.2
+  },
+  "bbc.com|front": {
+   "n": 2,
+   "median_wait_s": 0.0,
+   "median_open_s": 1.98,
+   "median_work_s": 62.35
+  },
+  "ft.com|front": {
+   "n": 2,
+   "median_wait_s": 0.76,
+   "median_open_s": 21.14,
+   "median_work_s": 77.58
+  },
+  "asia.nikkei.com|front": {
+   "n": 2,
+   "median_wait_s": 0.0,
+   "median_open_s": 16.93,
+   "median_work_s": 76.5
+  },
+  "scmp.com|front": {
+   "n": 1,
+   "median_wait_s": 0.0,
+   "median_open_s": 2.49,
+   "median_work_s": 136.96
+  }
+ },
+ "timings_tail": [
+  {
+   "host": "barrons.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 10.97,
+   "work_s": 56.97,
+   "total_s": 67.95,
+   "outcome": "OK",
+   "at": "2026-09-29T04:13:09+00:00"
+  },
+  {
+   "host": "marketwatch.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.22,
+   "work_s": 52.88,
+   "total_s": 54.11,
+   "outcome": "OK",
+   "at": "2026-09-29T04:13:09+00:00"
+  },
+  {
+   "host": "wsj.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 12.15,
+   "work_s": 58.28,
+   "total_s": 70.45,
+   "outcome": "OK",
+   "at": "2026-09-29T04:13:09+00:00"
+  },
+  {
+   "host": "barrons.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.15,
+   "work_s": 36.17,
+   "total_s": 37.33,
+   "outcome": "OK",
+   "at": "2026-09-29T04:13:46+00:00"
+  },
+  {
+   "host": "marketwatch.com",
+   "kind": "front",
+   "wait_s": 1.66,
+   "open_s": 0.81,
+   "work_s": 35.84,
+   "total_s": 38.33,
+   "outcome": "OK",
+   "at": "2026-09-29T04:13:47+00:00"
+  },
+  {
+   "host": "wsj.com",
+   "kind": "front",
+   "wait_s": 4.06,
+   "open_s": 0.69,
+   "work_s": 37.12,
+   "total_s": 41.89,
+   "outcome": "OK",
+   "at": "2026-09-29T04:13:51+00:00"
+  },
+  {
+   "host": "finance.yahoo.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 2.45,
+   "work_s": 41.17,
+   "total_s": 43.63,
+   "outcome": "OK",
+   "at": "2026-09-29T04:13:59+00:00"
+  },
+  {
+   "host": "barrons.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.12,
+   "work_s": 39.57,
+   "total_s": 40.7,
+   "outcome": "OK",
+   "at": "2026-09-29T04:14:27+00:00"
+  },
+  {
+   "host": "marketwatch.com",
+   "kind": "front",
+   "wait_s": 0.57,
+   "open_s": 1.13,
+   "work_s": 58.48,
+   "total_s": 60.2,
+   "outcome": "OK",
+   "at": "2026-09-29T04:14:47+00:00"
+  },
+  {
+   "host": "wsj.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 0.81,
+   "work_s": 57.63,
+   "total_s": 58.45,
+   "outcome": "OK",
+   "at": "2026-09-29T04:14:49+00:00"
+  },
+  {
+   "host": "cnbc.com",
+   "kind": "front",
+   "wait_s": 71.46,
+   "open_s": 1.79,
+   "work_s": 60.44,
+   "total_s": 133.71,
+   "outcome": "OK",
+   "at": "2026-09-29T04:14:59+00:00"
+  },
+  {
+   "host": "finance.yahoo.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.31,
+   "work_s": 58.81,
+   "total_s": 60.14,
+   "outcome": "OK",
+   "at": "2026-09-29T04:14:59+00:00"
+  },
+  {
+   "host": "barrons.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.56,
+   "work_s": 44.66,
+   "total_s": 46.23,
+   "outcome": "OK",
+   "at": "2026-09-29T04:15:13+00:00"
+  },
+  {
+   "host": "apnews.com",
+   "kind": "front",
+   "wait_s": 119.31,
+   "open_s": 0.75,
+   "work_s": 45.61,
+   "total_s": 165.69,
+   "outcome": "OK",
+   "at": "2026-09-29T04:15:16+00:00"
+  },
+  {
+   "host": "wsj.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.15,
+   "work_s": 59.02,
+   "total_s": 60.18,
+   "outcome": "OK",
+   "at": "2026-09-29T04:15:50+00:00"
+  },
+  {
+   "host": "marketwatch.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.6,
+   "work_s": 74.36,
+   "total_s": 75.97,
+   "outcome": "OK",
+   "at": "2026-09-29T04:16:15+00:00"
+  },
+  {
+   "host": "bbc.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.96,
+   "work_s": 60.08,
+   "total_s": 62.06,
+   "outcome": "OK",
+   "at": "2026-09-29T04:16:15+00:00"
+  },
+  {
+   "host": "cnbc.com",
+   "kind": "front",
+   "wait_s": 1.85,
+   "open_s": 1.04,
+   "work_s": 74.76,
+   "total_s": 77.66,
+   "outcome": "OK",
+   "at": "2026-09-29T04:16:17+00:00"
+  },
+  {
+   "host": "apnews.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.32,
+   "work_s": 81.51,
+   "total_s": 82.84,
+   "outcome": "OK",
+   "at": "2026-09-29T04:16:39+00:00"
+  },
+  {
+   "host": "bbc.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 2.01,
+   "work_s": 64.62,
+   "total_s": 66.63,
+   "outcome": "OK",
+   "at": "2026-09-29T04:17:22+00:00"
+  },
+  {
+   "host": "cnbc.com",
+   "kind": "front",
+   "wait_s": 0.59,
+   "open_s": 1.03,
+   "work_s": 63.15,
+   "total_s": 64.78,
+   "outcome": "OK",
+   "at": "2026-09-29T04:17:22+00:00"
+  },
+  {
+   "host": "ft.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 5.8,
+   "work_s": 91.51,
+   "total_s": 97.32,
+   "outcome": "OK",
+   "at": "2026-09-29T04:17:22+00:00"
+  },
+  {
+   "host": "asia.nikkei.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 2.92,
+   "work_s": 91.2,
+   "total_s": 94.13,
+   "outcome": "OK",
+   "at": "2026-09-29T04:17:24+00:00"
+  },
+  {
+   "host": "apnews.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 8.91,
+   "work_s": 75.2,
+   "total_s": 84.12,
+   "outcome": "BLANK",
+   "at": "2026-09-29T04:18:04+00:00"
+  },
+  {
+   "host": "scmp.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 2.49,
+   "work_s": 136.96,
+   "total_s": 139.46,
+   "outcome": "REFUSED_TABS_UNREADABLE",
+   "at": "2026-09-29T04:18:50+00:00"
+  },
+  {
+   "host": "asia.nikkei.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 30.93,
+   "work_s": 61.8,
+   "total_s": 92.73,
+   "outcome": "OK",
+   "at": "2026-09-29T04:19:05+00:00"
+  },
+  {
+   "host": "ft.com",
+   "kind": "front",
+   "wait_s": 1.51,
+   "open_s": 36.49,
+   "work_s": 63.64,
+   "total_s": 101.66,
+   "outcome": "OK",
+   "at": "2026-09-29T04:19:05+00:00"
+  }
+ ],
+ "governor_history": [
+  {
+   "t": "2026-09-29T04:11:59+00:00",
+   "from": 1,
+   "to": 2,
+   "free_gb": 6.19
+  },
+  {
+   "t": "2026-09-29T04:12:14+00:00",
+   "from": 2,
+   "to": 3,
+   "free_gb": 5.76
+  },
+  {
+   "t": "2026-09-29T04:12:29+00:00",
+   "from": 3,
+   "to": 4,
+   "free_gb": 3.32
+  },
+  {
+   "t": "2026-09-29T04:12:44+00:00",
+   "from": 4,
+   "to": 5,
+   "free_gb": 4.45
+  },
+  {
+   "t": "2026-09-29T04:13:14+00:00",
+   "from": 5,
+   "to": 6,
+   "free_gb": 4.47
+  },
+  {
+   "t": "2026-09-29T04:14:44+00:00",
+   "from": 6,
+   "to": 5,
+   "free_gb": 1.99
+  },
+  {
+   "t": "2026-09-29T04:15:45+00:00",
+   "from": 5,
+   "to": 6,
+   "free_gb": 3.22
+  },
+  {
+   "t": "2026-09-29T04:16:00+00:00",
+   "from": 6,
+   "to": 4,
+   "free_gb": 0.54
+  },
+  {
+   "t": "2026-09-29T04:16:15+00:00",
+   "from": 4,
+   "to": 5,
+   "free_gb": 3.59
+  },
+  {
+   "t": "2026-09-29T04:16:30+00:00",
+   "from": 5,
+   "to": 6,
+   "free_gb": 2.7
+  },
+  {
+   "t": "2026-09-29T04:17:15+00:00",
+   "from": 6,
+   "to": 4,
+   "free_gb": 0.84
+  },
+  {
+   "t": "2026-09-29T04:17:30+00:00",
+   "from": 4,
+   "to": 5,
+   "free_gb": 3.56
+  }
+ ],
+ "cooling_events": [],
+ "media": {},
+ "sections_dropped": [
+  "https://finance.yahoo.com/topic/economic-news/",
+  "https://www.cnbc.com/asia-markets/",
+  "https://www.cnbc.com/video/",
+  "https://www.federalreserve.gov/newsevents/speeches.htm",
+  "https://www.wsj.com/podcasts"
+ ],
+ "errors": [
+  "front:scmp:business: OpenClawRefused: REFUSED_TABS_UNREADABLE: `browser --json tabs` on 'muratclaw' returned no JSON (rc 1): 'tool execution failed'",
+  "front:cnbc:technology: OpenClawRefused: REFUSED_TABS_UNREADABLE: `browser --json tabs` on 'muratclaw' returned no JSON (rc 1): 'tool execution failed'"
+ ],
+ "fronts": {
+  "barrons:home": {
+   "url": "https://www.barrons.com/",
+   "landed": "https://www.barrons.com/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:13:08+00:00",
+   "links": 0,
+   "new": 0
+  },
+  "marketwatch:home": {
+   "url": "https://www.marketwatch.com/",
+   "landed": "https://www.marketwatch.com/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:13:08+00:00",
+   "links": 15,
+   "new": 0
+  },
+  "wsj:home": {
+   "url": "https://www.wsj.com/",
+   "landed": "https://www.wsj.com/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:13:08+00:00",
+   "links": 12,
+   "new": 0
+  },
+  "barrons:markets": {
+   "url": "https://www.barrons.com/topics/markets",
+   "landed": "https://www.barrons.com/topics/markets",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:13:46+00:00",
+   "links": 12,
+   "new": 0
+  },
+  "marketwatch:latest_news": {
+   "url": "https://www.marketwatch.com/latest-news",
+   "landed": "https://www.marketwatch.com/latest-news",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:13:47+00:00",
+   "links": 14,
+   "new": 0
+  },
+  "wsj:markets": {
+   "url": "https://www.wsj.com/finance",
+   "landed": "https://www.wsj.com/finance",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:13:51+00:00",
+   "links": 12,
+   "new": 0
+  },
+  "yahoo:home": {
+   "url": "https://finance.yahoo.com/",
+   "landed": "https://finance.yahoo.com/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:13:58+00:00",
+   "links": 13,
+   "new": 5
+  },
+  "barrons:stock_picks": {
+   "url": "https://www.barrons.com/topics/stock-picks",
+   "landed": "https://www.barrons.com/topics/stock-picks",
+   "title": "Not Found",
+   "class": "OK",
+   "at": "2026-09-29T04:14:12+00:00",
+   "links": 2,
+   "new": 0
+  },
+  "marketwatch:markets": {
+   "url": "https://www.marketwatch.com/markets",
+   "landed": "https://www.marketwatch.com/markets",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:14:47+00:00",
+   "links": 13,
+   "new": 2
+  },
+  "wsj:business": {
+   "url": "https://www.wsj.com/business",
+   "landed": "https://www.wsj.com/business",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:14:49+00:00",
+   "links": 12,
+   "new": 0
+  },
+  "cnbc:home": {
+   "url": "https://www.cnbc.com/world/",
+   "landed": "https://www.cnbc.com/world/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:14:58+00:00",
+   "links": 15,
+   "new": 10
+  },
+  "yahoo:latest_news": {
+   "url": "https://finance.yahoo.com/topic/latest-news/",
+   "landed": "https://finance.yahoo.com/topic/latest-news/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:14:58+00:00",
+   "links": 6,
+   "new": 0
+  },
+  "barrons:technology": {
+   "url": "https://www.barrons.com/topics/technology",
+   "landed": "https://www.barrons.com/topics/technology",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:15:13+00:00",
+   "links": 12,
+   "new": 0
+  },
+  "apnews:home": {
+   "url": "https://apnews.com/",
+   "landed": "https://apnews.com/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:15:16+00:00",
+   "links": 12,
+   "new": 3
+  },
+  "wsj:tech": {
+   "url": "https://www.wsj.com/tech",
+   "landed": "https://www.wsj.com/tech",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:15:33+00:00",
+   "links": 12,
+   "new": 0
+  },
+  "marketwatch:investing": {
+   "url": "https://www.marketwatch.com/investing",
+   "landed": "https://www.marketwatch.com/investing",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:16:14+00:00",
+   "links": 13,
+   "new": 0
+  },
+  "bbc:business": {
+   "url": "https://www.bbc.com/business",
+   "landed": "https://www.bbc.com/business",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:16:15+00:00",
+   "links": 12,
+   "new": 7
+  },
+  "cnbc:markets": {
+   "url": "https://www.cnbc.com/markets/",
+   "landed": "https://www.cnbc.com/markets/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:16:15+00:00",
+   "links": 15,
+   "new": 6
+  },
+  "apnews:business": {
+   "url": "https://apnews.com/business",
+   "landed": "https://apnews.com/business",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:16:39+00:00",
+   "links": 12,
+   "new": 7
+  },
+  "bbc:world": {
+   "url": "https://www.bbc.com/news/world",
+   "landed": "https://www.bbc.com/news/world",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:17:21+00:00",
+   "links": 15,
+   "new": 6
+  },
+  "cnbc:economy": {
+   "url": "https://www.cnbc.com/economy/",
+   "landed": "https://www.cnbc.com/economy/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:17:21+00:00",
+   "links": 12,
+   "new": 10
+  },
+  "ft:markets": {
+   "url": "https://www.ft.com/markets",
+   "landed": "https://www.ft.com/markets",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:17:22+00:00",
+   "links": 12,
+   "new": 11
+  },
+  "nikkei:home": {
+   "url": "https://asia.nikkei.com/",
+   "landed": "https://asia.nikkei.com/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:17:22+00:00",
+   "links": 12,
+   "new": 6
+  },
+  "apnews:markets": {
+   "url": "https://apnews.com/hub/financial-markets",
+   "landed": "https://apnews.com/hub/financial-markets",
+   "title": "",
+   "class": "BLANK",
+   "at": "2026-09-29T04:18:00+00:00"
+  },
+  "nikkei:business": {
+   "url": "https://asia.nikkei.com/business",
+   "landed": "https://asia.nikkei.com/business",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:19:05+00:00",
+   "links": 12,
+   "new": 4
+  },
+  "ft:world": {
+   "url": "https://www.ft.com/world",
+   "landed": "https://www.ft.com/world",
+   "title": "",
+   "class": "OK",
+   "at": "2026-09-29T04:19:05+00:00",
+   "links": 12,
+   "new": 12
+  }
+ },
+ "open_tabs_now": [],
+ "orphaned_tabs": [],
+ "throttle_targets_s": [
+  14.02,
+  24.43,
+  21.85,
+  59.53,
+  43.55,
+  12.87,
+  28.34,
+  20.91,
+  26.36,
+  30.44,
+  15.92,
+  23.91,
+  25.33,
+  35.97,
+  16.71,
+  29.34,
+  29.91,
+  44.66,
+  38.66,
+  49.06,
+  31.92,
+  37.38,
+  34.25,
+  35.07,
+  22.55,
+  39.42,
+  51.32,
+  41.99
+ ]
+}

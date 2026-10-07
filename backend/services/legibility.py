@@ -1363,6 +1363,167 @@ def system_health_payload(now: Optional[datetime] = None) -> Optional[dict]:
     }
 
 
-__all__ = ["EVIDENCE_LADDER", "THEORY_STATES", "THEORY_STATE_MAP", "arena_payload", "forecast_lab_payload",
-           "freshness", "health_line", "newest_roi", "parse_utc", "stories_payload", "system_health_payload",
-           "theory_lab_payload", "theory_state", "wilson"]
+# ───────────────────────────────────────────────────────────── 5. Brain (belief state)
+
+BELIEF_UPDATES_RE = re.compile(r"^belief_updates_(\d{4}-\d{2})\.jsonl$")
+#: Pulse window for the state-board's one-shot animation (owner brief 2026-10-07 §2.3):
+#: a belief carries `recent_change: true` when updated within this many hours, OR when
+#: this cycle's direction differs from `prior_direction` -- a flip pulses regardless of age.
+BRAIN_PULSE_HOURS = 6.0
+#: The honest label for `co_mention_edges[].support` (spec §2.3): no belief-level marginal
+#: contribution number exists yet (the nearest is a BOOK-level attribution, TRUST_AT_63 in
+#: regret_ledger.py / MCTR in attribution.py -- neither is a belief-co-mention number).
+CO_MENTION_LABEL = "co-mention support (corroborating observations behind this edge); NOT marginal contribution"
+
+
+def _belief_row(topic: str, b: dict, now: datetime) -> dict:
+    lu = parse_utc(b.get("last_updated"))
+    hrs = round((now - lu).total_seconds() / 3600.0, 2) if lu else None
+    direction = b.get("direction")
+    prior_direction = b.get("prior_direction")
+    flipped = bool(prior_direction) and direction != prior_direction
+    contras = b.get("contradictions") or []
+    edges = [{k: e.get(k) for k in ("to", "sign", "lag_sessions", "support", "example_theme")}
+             for e in (b.get("co_mention_edges") or [])]
+    return {
+        "topic": topic, "meaning": b.get("meaning"), "direction": direction, "prior_direction": prior_direction,
+        "confidence": _f(b.get("confidence")), "mass_up": _f(b.get("mass_up")), "mass_down": _f(b.get("mass_down")),
+        "half_life_days": _f(b.get("half_life_days")), "hours_since_update": hrs,
+        "recent_change": bool((hrs is not None and hrs <= BRAIN_PULSE_HOURS) or flipped),
+        "flipped_this_cycle": flipped,
+        "evidence_this_cycle": b.get("evidence_this_cycle"),
+        "n_root_events_this_cycle": b.get("n_root_events_this_cycle"),
+        "n_new_root_events_this_cycle": b.get("n_new_root_events_this_cycle"),
+        "evidence_basis": b.get("evidence_basis"), "belief_change": _f(b.get("belief_change")),
+        "n_contradictions": len(contras), "contradicted": bool(contras),
+        "has_evidence": bool((b.get("mass_up") or 0) or (b.get("mass_down") or 0)),
+        "sectors": list((b.get("affected_entities") or {}).get("sectors") or []),
+        "co_mention_edges": edges,
+    }
+
+
+def _scenario_row(s: dict) -> dict:
+    from backend.services import world_state as WS                   # noqa: PLC0415
+    try:
+        disp = round(WS.scenario_probability(s, "display"), 4)
+    except WS.ScenarioNotForSizing:
+        disp = None
+    pr = s.get("prior_record") or {}
+    return {
+        "scenario_id": s.get("scenario_id"), "name": s.get("name"), "horizon_year": s.get("horizon_year"),
+        "probability_display": disp, "probability_source": s.get("probability_source"),
+        "prior_version": pr.get("version"), "prior_author": pr.get("declared_by"),
+        "prior_declared_at": pr.get("declared_at"), "use": s.get("use"),
+        "drivers": list(s.get("drivers") or []), "falsifiers": list(s.get("falsifiers") or []),
+        "beneficiary_sectors": list(s.get("beneficiary_sectors") or []),
+        "loser_sectors": list(s.get("loser_sectors") or []),
+    }
+
+
+def _regime_field_row(field: str, v: dict) -> dict:
+    """One (regime variable, horizon) cell of `regime_grade.fields`, flattened: the model's
+    own Brier beside its two null Briers (persistence, base rate) -- THREE marks per
+    variable. Note (research doc §"what is null today"): this is the GRADE (model vs. null
+    Briers on resolved rows), not the raw P(event) of today's unresolved regime_v1 row --
+    that number lives only in `predictions.jsonl` and is not yet threaded through a served
+    receipt; the grade is the honest, already-public substitute."""
+    variable, _, h = field.rpartition(":h")
+    nulls = v.get("nulls") or {}
+    row = {"field": field, "variable": variable or field, "horizon": h or None,
+           "n_entry_sessions": v.get("n_entry_sessions"), "trust": _f(v.get("trust")), "n_open": v.get("n_open"),
+           "brier_model_raw": _f(v.get("brier_model_raw"))}
+    for nk, label in (("persistence", "persistence"), ("base_rate", "base_rate")):
+        n = nulls.get(nk) or {}
+        row[f"brier_{label}"] = _f(n.get("brier_null"))
+        row[f"verdict_{label}"] = n.get("verdict")
+    return row
+
+
+def _belief_update_row(r: dict) -> dict:
+    direction, prior = r.get("direction"), r.get("prior_direction")
+    return {"t": r.get("t"), "topic": r.get("topic"), "direction": direction, "prior_direction": prior,
+            "confidence": _f(r.get("confidence")), "belief_change": _f(r.get("belief_change")),
+            "hours_since_prior": _f(r.get("hours_since_prior")), "contradiction": bool(r.get("contradiction")),
+            "n_new_root_events": r.get("n_new_root_events"), "flipped": bool(prior) and direction != prior}
+
+
+def brain_payload(now: Optional[datetime] = None, limit_updates: int = 40) -> Optional[dict]:
+    """The belief state board (brain page v2, 2026-10-07; spec
+    docs/design/OPTIMUS_CREATIVE_TOOL_LIBRARY_2026-10-07.md §2): every belief's confidence,
+    direction, evidence mass and co-mention edges, the scenario strip (probability read ONLY
+    through `world_state.scenario_probability(s, 'display')`), the newest regime-grade
+    reading against its two baselines, `belief_stability`, and the newest `belief_updates`
+    rows ("what changed since the last cycle"). None when no `world_state/beliefs.json`
+    exists on disk -- the router turns that into a 404, never a page of zeros."""
+    now = _now(now)
+    folder = base_dir() / "world_state"
+    bp = folder / "beliefs.json"
+    if not bp.is_file():
+        return None
+    table = read_json(bp)
+    receipts = [receipt_ref("world_state_beliefs", bp, table.get("as_of"), now, role="belief table")]
+    missing: dict[str, str] = {}
+
+    beliefs = [_belief_row(t, b, now) for t, b in sorted((table.get("beliefs") or {}).items())]
+
+    sp = folder / "scenarios.json"
+    scenarios: list[dict] = []
+    if sp.is_file():
+        sc = read_json(sp)
+        receipts.append(receipt_ref("world_state_scenarios", sp, sc.get("as_of"), now, role="scenario strip"))
+        scenarios = [_scenario_row(s) for s in sc.get("scenarios") or []]
+    else:
+        missing["scenarios"] = "no world_state/scenarios.json on disk"
+        receipts.append(receipt_ref("world_state_scenarios", None, None, now, role="scenario strip",
+                                    missing_because=missing["scenarios"]))
+
+    up_hit = newest_by_name(folder, BELIEF_UPDATES_RE, key=lambda m: m.group(1))
+    updates: list[dict] = []
+    if up_hit:
+        up_p = up_hit[0]
+        rows = read_jsonl(up_p)
+        updates = [_belief_update_row(r) for r in rows[-max(1, int(limit_updates)):]]
+        updates.reverse()                      # newest first
+        receipts.append(receipt_ref("belief_updates", up_p, (rows[-1].get("t") if rows else None), now,
+                                    role="what changed since the last cycle"))
+    else:
+        missing["belief_updates"] = "no world_state/belief_updates_<month>.jsonl on disk"
+        receipts.append(receipt_ref("belief_updates", None, None, now, role="what changed since the last cycle",
+                                    missing_because=missing["belief_updates"]))
+
+    ws_hit = newest_by_name(base_dir() / "digest", WORLD_STATE_RE)
+    ws = read_json(ws_hit[0]) if ws_hit else None
+    receipts.append(receipt_ref("world_state", ws_hit[0] if ws_hit else None, (ws or {}).get("as_of"), now,
+                                missing_because="no digest/world_state_<stamp>.json on disk",
+                                role="regime rows, belief_stability"))
+    regime = stability = None
+    if ws:
+        rg = ws.get("regime_grade") or {}
+        pooled = rg.get("pooled") or {}
+        regime = {"vs_persistence": pooled.get("vs_persistence"), "vs_base_rate": pooled.get("vs_base_rate"),
+                  "trust": pooled.get("trust"), "note": rg.get("note"), "n_fields": rg.get("n_fields"),
+                  "baselines": ["persistence (yesterday's regime carries)", "base rate (the field's own history)"],
+                  "fields": [_regime_field_row(f, v) for f, v in sorted((rg.get("fields") or {}).items())]}
+        st = (ws.get("beliefs") or {}).get("stability") or {}
+        stability = {k: st.get(k) for k in ("belief_stability", "status", "max", "n_compared", "definition")}
+        if stability.get("belief_stability") is None:
+            missing["belief_stability"] = (st.get("status") or "no stability block on the newest world_state "
+                                           "digest (needs a previous table to compare against)")
+    else:
+        missing["regime"] = missing["belief_stability"] = "no digest/world_state_<stamp>.json on disk"
+
+    return {
+        "schema": SCHEMA, "page": "brain", "served_utc": now.isoformat(timespec="seconds"),
+        "receipts": receipts, "status": overall_status(receipts),
+        "as_of": table.get("as_of"), "digest_id": table.get("digest_id"),
+        "pulse_window_hours": BRAIN_PULSE_HOURS, "co_mention_label": CO_MENTION_LABEL,
+        "beliefs": beliefs, "scenarios": scenarios, "regime": regime, "belief_stability": stability,
+        "belief_updates": updates,
+        "links": {"brain": "/brain", "arena": "/arena", "theory_lab": "/theory-lab", "forecast_lab": "/forecast-lab"},
+        "missing_because": missing,
+    }
+
+
+__all__ = ["EVIDENCE_LADDER", "THEORY_STATES", "THEORY_STATE_MAP", "arena_payload", "brain_payload",
+           "forecast_lab_payload", "freshness", "health_line", "newest_roi", "parse_utc", "stories_payload",
+           "system_health_payload", "theory_lab_payload", "theory_state", "wilson"]

@@ -1,0 +1,828 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "user",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-27T17:05:03+00:00",
+ "plan": [
+  {
+   "lane": "marketwatch:analyst_estimates",
+   "max": 116,
+   "tickers": [
+    "VKTX",
+    "NTLA",
+    "HWM",
+    "IONQ",
+    "AGYS",
+    "NVT",
+    "AMZN",
+    "NVDA",
+    "TSM",
+    "GEV",
+    "CLS",
+    "PRAX",
+    "SNOW",
+    "JAZZ",
+    "LEU",
+    "COGT",
+    "BHVN",
+    "BBIO",
+    "CRM",
+    "MP",
+    "AVGO",
+    "ABSI",
+    "LNG",
+    "CCJ",
+    "BSP",
+    "AGIO",
+    "ENS",
+    "PRGS",
+    "BA",
+    "GOOGL",
+    "TER",
+    "VRT",
+    "VG",
+    "BN",
+    "WDAY",
+    "WST",
+    "DKNG",
+    "AVPT",
+    "PRCH",
+    "VRTX",
+    "NOW",
+    "MU",
+    "SNDR",
+    "NVO",
+    "HUBS",
+    "INCY",
+    "HOOD",
+    "META",
+    "RHI",
+    "ACI",
+    "PEGA",
+    "SMPL",
+    "RGEN",
+    "MAN",
+    "BE",
+    "AAPL",
+    "AMGN",
+    "IRDM",
+    "HELE",
+    "KYTX",
+    "NOVT",
+    "NVEC",
+    "PSNL",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "SON",
+    "ALLE",
+    "GOOG",
+    "GMAB",
+    "ADUS",
+    "TS",
+    "PDS",
+    "PAGS",
+    "MSFT",
+    "CHD",
+    "BR",
+    "ALG",
+    "STNG",
+    "CHH",
+    "ARCO",
+    "MCD",
+    "SERV",
+    "SMMT",
+    "CYTK",
+    "PDD",
+    "FIZZ",
+    "MANH",
+    "BZ",
+    "CMG",
+    "EXPO",
+    "EXEL",
+    "LZ",
+    "REAL",
+    "BBW",
+    "TE",
+    "BW",
+    "CDNL",
+    "AGX",
+    "PLTR",
+    "ACVA",
+    "DBVT",
+    "LITE",
+    "MWH",
+    "Q",
+    "XRX",
+    "STX",
+    "FRMI",
+    "WDS",
+    "MEC",
+    "DUOL",
+    "FLNC",
+    "CSTM",
+    "LAR",
+    "KEX",
+    "LGN"
+   ]
+  }
+ ],
+ "parent_tabs": {
+  "marketwatch": {
+   "tab": "chrome-mcp:fe9a0faf6f97:8",
+   "label": "t8",
+   "url": "https://www.wsj.com/?aegis=muratclaw",
+   "how": "borrowed:no marketwatch.com tab open"
+  }
+ },
+ "max_pages": 94,
+ "budget_explicit": true,
+ "fresh_since": "2026-09-27",
+ "cost_usd": 0.0,
+ "lanes": {
+  "marketwatch:analyst_estimates": {
+   "source": "marketwatch",
+   "section": "analyst_estimates",
+   "column": "mw_analyst_estimates",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:43",
+   "links_found": 0,
+   "skipped_already_stored": 45,
+   "articles": [
+    {
+     "url": "https://www.marketwatch.com/investing/stock/nvo/analystestimates",
+     "title": "NVO | Novo Nordisk A/S ADR Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": null,
+     "first_seen_utc": "2026-09-27T17:06:31+00:00",
+     "chars": 2348,
+     "raw_chars": 5131,
+     "column": "mw_analyst_estimates",
+     "sha": "d638d9ace8de3b639de8",
+     "paywall_suspected": false,
+     "read_s": 0.0,
+     "ticker": "NVO",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\d638d9ace8de3b639de8.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/hubs/analystestimates",
+     "title": "HUBS | HubSpot Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:55:00+00:00",
+     "first_seen_utc": "2026-09-27T17:07:58+00:00",
+     "chars": 2422,
+     "raw_chars": 5232,
+     "column": "mw_analyst_estimates",
+     "sha": "e5dbbfb582e83fc96634",
+     "paywall_suspected": false,
+     "read_s": 53.74,
+     "ticker": "HUBS",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\e5dbbfb582e83fc96634.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/incy/analystestimates",
+     "title": "INCY | Incyte Corp. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:47:00+00:00",
+     "first_seen_utc": "2026-09-27T17:10:09+00:00",
+     "chars": 2440,
+     "raw_chars": 5248,
+     "column": "mw_analyst_estimates",
+     "sha": "8d17351ec138123b947e",
+     "paywall_suspected": false,
+     "read_s": 73.29,
+     "ticker": "INCY",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\8d17351ec138123b947e.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/hood/analystestimates",
+     "title": "HOOD | Robinhood Markets Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T17:11:54+00:00",
+     "chars": 2447,
+     "raw_chars": 5242,
+     "column": "mw_analyst_estimates",
+     "sha": "ad793d697e60ae636f04",
+     "paywall_suspected": false,
+     "read_s": 75.4,
+     "ticker": "HOOD",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\ad793d697e60ae636f04.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/meta/analystestimates",
+     "title": "META | Meta Platforms Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T17:13:19+00:00",
+     "chars": 2394,
+     "raw_chars": 5208,
+     "column": "mw_analyst_estimates",
+     "sha": "09fa4cd92244601ce5b6",
+     "paywall_suspected": false,
+     "read_s": 56.1,
+     "ticker": "META",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\09fa4cd92244601ce5b6.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/rhi/analystestimates",
+     "title": "RHI | Robert Half Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:30:00+00:00",
+     "first_seen_utc": "2026-09-27T17:16:05+00:00",
+     "chars": 2382,
+     "raw_chars": 5169,
+     "column": "mw_analyst_estimates",
+     "sha": "2ceb9133a6a7763a9bd1",
+     "paywall_suspected": false,
+     "read_s": 57.07,
+     "ticker": "RHI",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\2ceb9133a6a7763a9bd1.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/aci/analystestimates",
+     "title": "ACI | Albertsons Cos. Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:54:00+00:00",
+     "first_seen_utc": "2026-09-27T17:17:51+00:00",
+     "chars": 2380,
+     "raw_chars": 5163,
+     "column": "mw_analyst_estimates",
+     "sha": "439d14347f20476d7cd3",
+     "paywall_suspected": false,
+     "read_s": 76.19,
+     "ticker": "ACI",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\439d14347f20476d7cd3.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/pega/analystestimates",
+     "title": "PEGA | Pegasystems Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:30:00+00:00",
+     "first_seen_utc": "2026-09-27T17:19:24+00:00",
+     "chars": 2428,
+     "raw_chars": 5213,
+     "column": "mw_analyst_estimates",
+     "sha": "0ddebe93d866b723288b",
+     "paywall_suspected": false,
+     "read_s": 59.38,
+     "ticker": "PEGA",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\0ddebe93d866b723288b.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/smpl/analystestimates",
+     "title": "SMPL | Simply Good Foods Co. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:30:00+00:00",
+     "first_seen_utc": "2026-09-27T17:21:03+00:00",
+     "chars": 2376,
+     "raw_chars": 5169,
+     "column": "mw_analyst_estimates",
+     "sha": "a0194af12f5aad7fa381",
+     "paywall_suspected": false,
+     "read_s": 49.04,
+     "ticker": "SMPL",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\a0194af12f5aad7fa381.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/rgen/analystestimates",
+     "title": "RGEN | Repligen Corp. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:30:00+00:00",
+     "first_seen_utc": "2026-09-27T17:22:40+00:00",
+     "chars": 2411,
+     "raw_chars": 5202,
+     "column": "mw_analyst_estimates",
+     "sha": "b4b4d509fe990a19fcb8",
+     "paywall_suspected": false,
+     "read_s": 46.88,
+     "ticker": "RGEN",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\b4b4d509fe990a19fcb8.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/man/analystestimates",
+     "title": "MAN | ManpowerGroup Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:30:00+00:00",
+     "first_seen_utc": "2026-09-27T17:25:36+00:00",
+     "chars": 2421,
+     "raw_chars": 5196,
+     "column": "mw_analyst_estimates",
+     "sha": "4f34948d3100cf444dcb",
+     "paywall_suspected": false,
+     "read_s": 46.69,
+     "ticker": "MAN",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\4f34948d3100cf444dcb.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/be/analystestimates",
+     "title": "BE | Bloom Energy Corp. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T17:27:27+00:00",
+     "chars": 3943,
+     "raw_chars": 5158,
+     "column": "mw_analyst_estimates",
+     "sha": "f5cc5d575a5cc19ed360",
+     "paywall_suspected": false,
+     "read_s": 55.71,
+     "ticker": "BE",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\f5cc5d575a5cc19ed360.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/aapl/analystestimates",
+     "title": "AAPL | Apple Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T17:29:09+00:00",
+     "chars": 2394,
+     "raw_chars": 5207,
+     "column": "mw_analyst_estimates",
+     "sha": "314d3108467bd0ccaf18",
+     "paywall_suspected": false,
+     "read_s": 63.16,
+     "ticker": "AAPL",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\314d3108467bd0ccaf18.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/amgn/analystestimates",
+     "title": "AMGN | Amgen Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:53:00+00:00",
+     "first_seen_utc": "2026-09-27T17:30:16+00:00",
+     "chars": 2415,
+     "raw_chars": 5221,
+     "column": "mw_analyst_estimates",
+     "sha": "e7e3ebfac86c26c2f732",
+     "paywall_suspected": false,
+     "read_s": 40.54,
+     "ticker": "AMGN",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\e7e3ebfac86c26c2f732.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [],
+   "dropped": null,
+   "opened": {
+    "label": "t43",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/account/login"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t41",
+      "chrome-mcp:fe9a0faf6f97:41",
+      "about:blank"
+     ],
+     [
+      "t42",
+      "chrome-mcp:fe9a0faf6f97:42",
+      "about:blank"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/account/login"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t41",
+      "chrome-mcp:fe9a0faf6f97:41",
+      "about:blank"
+     ],
+     [
+      "t42",
+      "chrome-mcp:fe9a0faf6f97:42",
+      "about:blank"
+     ],
+     [
+      "t43",
+      "chrome-mcp:fe9a0faf6f97:43",
+      "https://www.marketwatch.com/investing/stock/nvo/analystestimates"
+     ]
+    ]
+   }
+  }
+ },
+ "order": [
+  {
+   "turn": 0,
+   "lane": "marketwatch:analyst_estimates",
+   "what": "listing",
+   "url": "https://www.marketwatch.com/investing/stock/nvo/analystestimates",
+   "at": "2026-09-27T17:05:37+00:00",
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/nvo/analystestimates",
+   "ticker": "NVO",
+   "at": "2026-09-27T17:06:38+00:00",
+   "page_load": false,
+   "waited_s": 0.0,
+   "chars": 2348,
+   "ok": true
+  },
+  {
+   "turn": 2,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/hubs/analystestimates",
+   "ticker": "HUBS",
+   "at": "2026-09-27T17:06:41+00:00",
+   "page_load": true,
+   "waited_s": 3.6549850000000017,
+   "chars": 2422,
+   "ok": true
+  },
+  {
+   "turn": 3,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/incy/analystestimates",
+   "ticker": "INCY",
+   "at": "2026-09-27T17:08:33+00:00",
+   "page_load": true,
+   "waited_s": 19.957612,
+   "chars": 2440,
+   "ok": true
+  },
+  {
+   "turn": 4,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/hood/analystestimates",
+   "ticker": "HOOD",
+   "at": "2026-09-27T17:10:16+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2447,
+   "ok": true
+  },
+  {
+   "turn": 5,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/meta/analystestimates",
+   "ticker": "META",
+   "at": "2026-09-27T17:12:02+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2394,
+   "ok": true
+  },
+  {
+   "turn": 6,
+   "lane": "marketwatch:analyst_estimates",
+   "item": "RHI",
+   "at": "2026-09-27T17:13:58+00:00",
+   "ok": false,
+   "why": "DETACHED: ReaderRefused: REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile 'user' is 'stopped', not runnin"
+  },
+  {
+   "turn": 7,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/rhi/analystestimates",
+   "ticker": "RHI",
+   "at": "2026-09-27T17:14:33+00:00",
+   "page_load": true,
+   "waited_s": 22.245883,
+   "chars": 2382,
+   "ok": true
+  },
+  {
+   "turn": 8,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/aci/analystestimates",
+   "ticker": "ACI",
+   "at": "2026-09-27T17:16:13+00:00",
+   "page_load": true,
+   "waited_s": 0.28587700000000105,
+   "chars": 2380,
+   "ok": true
+  },
+  {
+   "turn": 9,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/pega/analystestimates",
+   "ticker": "PEGA",
+   "at": "2026-09-27T17:18:02+00:00",
+   "page_load": true,
+   "waited_s": 4.909780999999999,
+   "chars": 2428,
+   "ok": true
+  },
+  {
+   "turn": 10,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/smpl/analystestimates",
+   "ticker": "SMPL",
+   "at": "2026-09-27T17:19:48+00:00",
+   "page_load": true,
+   "waited_s": 13.878962000000001,
+   "chars": 2376,
+   "ok": true
+  },
+  {
+   "turn": 11,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/rgen/analystestimates",
+   "ticker": "RGEN",
+   "at": "2026-09-27T17:21:24+00:00",
+   "page_load": true,
+   "waited_s": 14.10168,
+   "chars": 2411,
+   "ok": true
+  },
+  {
+   "turn": 13,
+   "lane": "marketwatch:analyst_estimates",
+   "item": "MAN",
+   "at": "2026-09-27T17:23:49+00:00",
+   "ok": false,
+   "why": "DETACHED: OpenClawRefused: REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile 'user' is 'stopped', not runn"
+  },
+  {
+   "turn": 13,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/man/analystestimates",
+   "ticker": "MAN",
+   "at": "2026-09-27T17:24:17+00:00",
+   "page_load": true,
+   "waited_s": 13.477633999999998,
+   "chars": 2421,
+   "ok": true
+  },
+  {
+   "turn": 14,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/be/analystestimates",
+   "ticker": "BE",
+   "at": "2026-09-27T17:26:07+00:00",
+   "page_load": true,
+   "waited_s": 16.320462,
+   "chars": 3943,
+   "ok": true
+  },
+  {
+   "turn": 15,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/aapl/analystestimates",
+   "ticker": "AAPL",
+   "at": "2026-09-27T17:27:42+00:00",
+   "page_load": true,
+   "waited_s": 8.710293,
+   "chars": 2394,
+   "ok": true
+  },
+  {
+   "turn": 16,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/amgn/analystestimates",
+   "ticker": "AMGN",
+   "at": "2026-09-27T17:29:16+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2415,
+   "ok": true
+  }
+ ],
+ "stopped": null,
+ "budget_spent": null,
+ "opened": [
+  "chrome-mcp:fe9a0faf6f97:43",
+  "chrome-mcp:fe9a0faf6f97:50"
+ ],
+ "orphaned_tabs": [
+  "chrome-mcp:fe9a0faf6f97:43",
+  "chrome-mcp:fe9a0faf6f97:50"
+ ],
+ "worker": "marketwatch",
+ "pid": 13244,
+ "reattaches": 0,
+ "reattach_log": [],
+ "tab_remaps": [
+  {
+   "at": "2026-09-27T17:14:11+00:00",
+   "reattached": false,
+   "remap": {
+    "chrome-mcp:fe9a0faf6f97:43": null
+   },
+   "parents": {
+    "marketwatch": "chrome-mcp:fe9a0faf6f97:8"
+   }
+  },
+  {
+   "at": "2026-09-27T17:24:03+00:00",
+   "reattached": false,
+   "remap": {
+    "chrome-mcp:fe9a0faf6f97:50": "chrome-mcp:fe9a0faf6f97:50"
+   },
+   "parents": {
+    "marketwatch": "chrome-mcp:fe9a0faf6f97:8"
+   }
+  }
+ ],
+ "tabs_lost_on_reattach": [
+  "chrome-mcp:fe9a0faf6f97:43"
+ ],
+ "startup_cleanup": {
+  "candidates": [],
+  "closed": [],
+  "skipped": {}
+ },
+ "in_progress": true,
+ "tabs_closed": {
+  "chrome-mcp:fe9a0faf6f97:43": false,
+  "chrome-mcp:fe9a0faf6f97:50": false
+ },
+ "blanks": 14,
+ "blank_failures": [],
+ "tab_rotations": [
+  {
+   "at": "2026-09-27T17:14:33+00:00",
+   "old": "chrome-mcp:fe9a0faf6f97:43",
+   "old_closed": false,
+   "new": "chrome-mcp:fe9a0faf6f97:50",
+   "why": "lost_on_reattach",
+   "url": "https://www.marketwatch.com/investing/stock/rhi/analystestimates"
+  }
+ ],
+ "close_errors": {
+  "chrome-mcp:fe9a0faf6f97:43": "LOST: blank tab, handle reissued by a re-attach"
+ }
+}

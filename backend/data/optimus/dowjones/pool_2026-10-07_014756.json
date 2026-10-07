@@ -1,0 +1,561 @@
+{
+ "receipt": "reader_pool",
+ "started_utc": "2026-10-07T01:48:07+00:00",
+ "pid": 217364,
+ "profile": "muratclaw",
+ "names": 142,
+ "books": [
+  "AAOI",
+  "AAPL",
+  "AARD",
+  "ABSI",
+  "AGIO",
+  "ALG",
+  "AMSC",
+  "AMZN",
+  "APPS",
+  "ASTE",
+  "AVGO",
+  "AWI",
+  "AXTI",
+  "BAND",
+  "BBIO",
+  "BE",
+  "BHVN",
+  "BLZE",
+  "CCJ",
+  "CHD",
+  "CIFR",
+  "CLS",
+  "COGT",
+  "DKNG",
+  "FORM",
+  "FSLY",
+  "GEV",
+  "GOOG",
+  "GOOGL",
+  "GXO",
+  "HALO",
+  "HNI",
+  "HOOD",
+  "HUBS",
+  "HUT",
+  "ICHR",
+  "IONQ",
+  "IOVA",
+  "KEX",
+  "KN",
+  "KYTX",
+  "LEU",
+  "META",
+  "MMSI",
+  "MP",
+  "MSFT",
+  "MU",
+  "MXL",
+  "NBIX",
+  "NOVT",
+  "NTLA",
+  "NVDA",
+  "NVT",
+  "OMAB",
+  "PDS",
+  "PRAX",
+  "PRCH",
+  "QUBT",
+  "RGEN",
+  "SLDP",
+  "SNDK",
+  "SOC",
+  "STNG",
+  "TDY",
+  "TSM",
+  "VELO",
+  "VKTX",
+  "VRT",
+  "VRTX",
+  "WST"
+ ],
+ "fresh": [
+  "ABBV",
+  "ADV",
+  "CHRN",
+  "DSGR",
+  "EVC",
+  "INSM",
+  "REGN",
+  "RGEN",
+  "SATA",
+  "ZS"
+ ],
+ "stop_reason": "END_TIME",
+ "pages": 7,
+ "stats": {
+  "wsj.com": {
+   "browse_followed": 0,
+   "article": 1
+  },
+  "cnbc.com": {
+   "links_found": 27,
+   "links_new": 2,
+   "front": 2
+  },
+  "ft.com": {
+   "links_found": 24,
+   "links_new": 22,
+   "front": 2
+  },
+  "asia.nikkei.com": {
+   "links_found": 24,
+   "links_new": 16,
+   "front": 2
+  }
+ },
+ "classes": {
+  "reuters.com": {
+   "ROBOTS_DISALLOWED": 6
+  },
+  "apnews.com": {},
+  "asia.nikkei.com": {
+   "OK": 2
+  },
+  "barrons.com": {},
+  "bbc.com": {},
+  "bls.gov": {},
+  "cnbc.com": {
+   "OK": 2
+  },
+  "finance.yahoo.com": {},
+  "ft.com": {
+   "OK": 2
+  },
+  "home.treasury.gov": {},
+  "marketwatch.com": {},
+  "reddit.com": {},
+  "scmp.com": {},
+  "sec.gov": {},
+  "stocktwits.com": {},
+  "treasury.gov": {},
+  "wsj.com": {
+   "OK": 1
+  },
+  "x.com": {},
+  "auth.asia.nikkei.com": {
+   "PAYWALL_CHECKOUT_FRAME": 2
+  }
+ },
+ "timing_medians": {
+  "wsj.com|article": {
+   "n": 1,
+   "median_wait_s": 0.0,
+   "median_open_s": 8.23,
+   "median_work_s": 21.31
+  },
+  "cnbc.com|front": {
+   "n": 2,
+   "median_wait_s": 0.92,
+   "median_open_s": 4.1,
+   "median_work_s": 24.02
+  },
+  "ft.com|front": {
+   "n": 2,
+   "median_wait_s": 0.0,
+   "median_open_s": 1.21,
+   "median_work_s": 24.0
+  },
+  "asia.nikkei.com|front": {
+   "n": 2,
+   "median_wait_s": 0.69,
+   "median_open_s": 0.89,
+   "median_work_s": 23.17
+  }
+ },
+ "timings_tail": [
+  {
+   "host": "wsj.com",
+   "kind": "article",
+   "wait_s": 0.0,
+   "open_s": 8.23,
+   "work_s": 21.31,
+   "total_s": 29.61,
+   "outcome": "OK",
+   "at": "2026-10-07T01:48:41+00:00"
+  },
+  {
+   "host": "cnbc.com",
+   "kind": "front",
+   "wait_s": 1.84,
+   "open_s": 7.33,
+   "work_s": 24.81,
+   "total_s": 34.02,
+   "outcome": "OK",
+   "at": "2026-10-07T01:48:46+00:00"
+  },
+  {
+   "host": "ft.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.37,
+   "work_s": 24.52,
+   "total_s": 25.91,
+   "outcome": "OK",
+   "at": "2026-10-07T01:48:50+00:00"
+  },
+  {
+   "host": "asia.nikkei.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.23,
+   "work_s": 23.27,
+   "total_s": 24.52,
+   "outcome": "OK",
+   "at": "2026-10-07T01:49:04+00:00"
+  },
+  {
+   "host": "cnbc.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 0.87,
+   "work_s": 23.24,
+   "total_s": 24.12,
+   "outcome": "OK",
+   "at": "2026-10-07T01:50:12+00:00"
+  },
+  {
+   "host": "ft.com",
+   "kind": "front",
+   "wait_s": 0.0,
+   "open_s": 1.05,
+   "work_s": 23.49,
+   "total_s": 24.63,
+   "outcome": "OK",
+   "at": "2026-10-07T01:50:15+00:00"
+  },
+  {
+   "host": "asia.nikkei.com",
+   "kind": "front",
+   "wait_s": 1.39,
+   "open_s": 0.55,
+   "work_s": 23.08,
+   "total_s": 25.13,
+   "outcome": "OK",
+   "at": "2026-10-07T01:50:16+00:00"
+  }
+ ],
+ "governor_history": [
+  {
+   "t": "2026-10-07T01:48:08+00:00",
+   "from": 1,
+   "to": 2,
+   "free_gb": 9.75
+  },
+  {
+   "t": "2026-10-07T01:48:23+00:00",
+   "from": 2,
+   "to": 3,
+   "free_gb": 9.14
+  },
+  {
+   "t": "2026-10-07T01:48:38+00:00",
+   "from": 3,
+   "to": 4,
+   "free_gb": 7.54
+  },
+  {
+   "t": "2026-10-07T01:48:53+00:00",
+   "from": 4,
+   "to": 5,
+   "free_gb": 8.33
+  },
+  {
+   "t": "2026-10-07T01:49:08+00:00",
+   "from": 5,
+   "to": 6,
+   "free_gb": 9.2
+  }
+ ],
+ "cooling_events": [],
+ "media": {},
+ "sections_dropped": [
+  "https://finance.yahoo.com/topic/economic-news/",
+  "https://www.cnbc.com/asia-markets/",
+  "https://www.cnbc.com/video/",
+  "https://www.federalreserve.gov/newsevents/speeches.htm",
+  "https://www.wsj.com/podcasts"
+ ],
+ "errors": [],
+ "fronts": {
+  "cnbc:markets": {
+   "url": "https://www.cnbc.com/markets/",
+   "landed": "https://www.cnbc.com/markets/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-10-07T01:48:46+00:00",
+   "links": 15,
+   "new": 2
+  },
+  "ft:home": {
+   "url": "https://www.ft.com/",
+   "landed": "https://www.ft.com/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-10-07T01:48:50+00:00",
+   "links": 12,
+   "new": 12
+  },
+  "nikkei:business": {
+   "url": "https://asia.nikkei.com/business",
+   "landed": "https://asia.nikkei.com/business",
+   "title": "",
+   "class": "OK",
+   "at": "2026-10-07T01:49:04+00:00",
+   "links": 12,
+   "new": 10
+  },
+  "cnbc:economy": {
+   "url": "https://www.cnbc.com/economy/",
+   "landed": "https://www.cnbc.com/economy/",
+   "title": "",
+   "class": "OK",
+   "at": "2026-10-07T01:50:12+00:00",
+   "links": 12,
+   "new": 0
+  },
+  "ft:markets": {
+   "url": "https://www.ft.com/markets",
+   "landed": "https://www.ft.com/markets",
+   "title": "",
+   "class": "OK",
+   "at": "2026-10-07T01:50:15+00:00",
+   "links": 12,
+   "new": 10
+  },
+  "nikkei:economy": {
+   "url": "https://asia.nikkei.com/economy",
+   "landed": "https://asia.nikkei.com/economy",
+   "title": "",
+   "class": "OK",
+   "at": "2026-10-07T01:50:16+00:00",
+   "links": 12,
+   "new": 6
+  }
+ },
+ "open_tabs_now": [],
+ "orphaned_tabs": [],
+ "reader_tab_ids": [
+  "2A5C7887170E8AC598A227744CE44E0D",
+  "B9E2A32C13E33E59E7AB87EEDF769F9C",
+  "E8313B8B2760556CC1EA857992EF6B33",
+  "4995EBA733DC40AF3D0AD13BB3574323",
+  "540E8C7677B4A5F566451D98A18DF0BF",
+  "E386F06C54CAFB377D46DA75FB746560",
+  "21022C5010625DB0DDB2BCF4D9D41DC8"
+ ],
+ "throttle_targets_s": [
+  19.12,
+  24.88,
+  29.15,
+  45.51,
+  50.3,
+  49.7,
+  32.59
+ ],
+ "budget": {
+  "enabled": true,
+  "state": "WAITING_FOR_BUDGET",
+  "why": null,
+  "hour_allowance_now": 182,
+  "ten_min_allowance_now": 38,
+  "loads_60m_all_readers": 183,
+  "loads_24h_all_readers": 3334,
+  "grants_this_run": {
+   "OWN_SHARE": 1,
+   "BORROW": 6
+  },
+  "lanes": {
+   "book_names": {
+    "share": 0.24,
+    "day_target": 960,
+    "hour_quota": 44,
+    "loads_60m": 26,
+    "ok_60m": 23,
+    "loads_24h": 460,
+    "ok_24h": 426,
+    "in_flight": 0,
+    "pending": 0,
+    "verdict": null
+   },
+   "universe_names": {
+    "share": 0.12,
+    "day_target": 480,
+    "hour_quota": 22,
+    "loads_60m": 22,
+    "ok_60m": 19,
+    "loads_24h": 329,
+    "ok_24h": 302,
+    "in_flight": 0,
+    "pending": 23,
+    "verdict": "HOUR_BUDGET_SPENT: 183 >= 182 this hour"
+   },
+   "markets_news": {
+    "share": 0.18,
+    "day_target": 720,
+    "hour_quota": 33,
+    "loads_60m": 58,
+    "ok_60m": 57,
+    "loads_24h": 958,
+    "ok_24h": 924,
+    "in_flight": 0,
+    "pending": 240,
+    "verdict": "HOUR_BUDGET_SPENT: 183 >= 182 this hour"
+   },
+   "macro_world": {
+    "share": 0.12,
+    "day_target": 480,
+    "hour_quota": 22,
+    "loads_60m": 36,
+    "ok_60m": 35,
+    "loads_24h": 597,
+    "ok_24h": 577,
+    "in_flight": 0,
+    "pending": 138,
+    "verdict": "HOUR_BUDGET_SPENT: 183 >= 182 this hour"
+   },
+   "politics_policy": {
+    "share": 0.08,
+    "day_target": 320,
+    "hour_quota": 15,
+    "loads_60m": 15,
+    "ok_60m": 15,
+    "loads_24h": 261,
+    "ok_24h": 257,
+    "in_flight": 0,
+    "pending": 4,
+    "verdict": "HOUR_BUDGET_SPENT: 183 >= 182 this hour"
+   },
+   "official_releases": {
+    "share": 0.04,
+    "day_target": 160,
+    "hour_quota": 7,
+    "loads_60m": 6,
+    "ok_60m": 6,
+    "loads_24h": 143,
+    "ok_24h": 140,
+    "in_flight": 0,
+    "pending": 0,
+    "verdict": null
+   },
+   "social": {
+    "share": 0.11,
+    "day_target": 440,
+    "hour_quota": 20,
+    "loads_60m": 20,
+    "ok_60m": 20,
+    "loads_24h": 365,
+    "ok_24h": 364,
+    "in_flight": 0,
+    "pending": 221,
+    "verdict": "HOUR_BUDGET_SPENT: 183 >= 182 this hour"
+   },
+   "digest_asks": {
+    "share": 0.05,
+    "day_target": 200,
+    "hour_quota": 9,
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 210,
+    "ok_24h": 204,
+    "in_flight": 0,
+    "pending": 0,
+    "verdict": null
+   },
+   "query_planner": {
+    "share": 0.03,
+    "day_target": 120,
+    "hour_quota": 5,
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 0,
+    "ok_24h": 0,
+    "in_flight": 0,
+    "pending": 0,
+    "verdict": null
+   },
+   "overhead": {
+    "share": 0.03,
+    "day_target": 120,
+    "hour_quota": 5,
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 11,
+    "ok_24h": 11,
+    "in_flight": 0,
+    "pending": 0,
+    "verdict": null
+   }
+  },
+  "ok_by_host_60m": {
+   "bbc.com": 11,
+   "marketwatch.com": 25,
+   "wsj.com": 35,
+   "finance.yahoo.com": 9,
+   "reddit.com": 8,
+   "stocktwits.com": 8,
+   "ft.com": 11,
+   "x.com": 4,
+   "barrons.com": 23,
+   "asia.nikkei.com": 10,
+   "scmp.com": 8,
+   "apnews.com": 8,
+   "bls.gov": 2,
+   "sec.gov": 2,
+   "home.treasury.gov": 2,
+   "cnbc.com": 9
+  },
+  "ok_by_host_24h": {
+   "wsj.com": 596,
+   "barrons.com": 470,
+   "marketwatch.com": 599,
+   "apnews.com": 140,
+   "bbc.com": 131,
+   "cnbc.com": 207,
+   "asia.nikkei.com": 153,
+   "ft.com": 122,
+   "scmp.com": 170,
+   "bls.gov": 47,
+   "home.treasury.gov": 49,
+   "sec.gov": 47,
+   "x.com": 144,
+   "reddit.com": 111,
+   "stocktwits.com": 109,
+   "finance.yahoo.com": 109,
+   "reuters.com": 1
+  },
+  "hourly_allowance_utc": {
+   "00": 182,
+   "01": 182,
+   "02": 182,
+   "03": 182,
+   "04": 182,
+   "05": 182,
+   "06": 182,
+   "07": 182,
+   "08": 104,
+   "09": 104,
+   "10": 104,
+   "11": 169,
+   "12": 169,
+   "13": 208,
+   "14": 208,
+   "15": 208,
+   "16": 208,
+   "17": 208,
+   "18": 208,
+   "19": 208,
+   "20": 91,
+   "21": 91,
+   "22": 91,
+   "23": 156
+  }
+ }
+}

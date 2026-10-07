@@ -1,6 +1,6 @@
 # hyp_lab ledger (generated; the truth is ledger.jsonl)
 
-Rows: 67. Generated 2026-10-02T12:53:47+00:00.
+Rows: 111. Generated 2026-10-07T01:30:26+00:00.
 
 ## Verdicts
 
@@ -11,89 +11,117 @@ Rows: 67. Generated 2026-10-02T12:53:47+00:00.
 | H-9ac0049bfe | Yield spike -> utilities lag | macro_readthrough_rates | FAILED_VARIANT | -0.00083 | -0.39 | 0.005888 |
 | H-ae6502fd26 | Yield spike -> homebuilders lag | macro_readthrough_rates | CANNOT_DISTINGUISH | 0.002689 | 0.99 | 0.007595 |
 | H-3c9e80c849 | AI leader shock -> semi equipment lag | equity_readthrough_supply_chain | FAILED_VARIANT | -0.005201 | -2.33 | 0.006256 |
+| H-039df299c0 | Oil shock -> refiners and chemicals (input cost) lag | macro_readthrough_commodity | CANNOT_DISTINGUISH | 0.004914 | 0.74 | 0.018587 |
 | H-4d7c66c90d | Earnings shock read-through to text-linked names (next-session size) | event_readthrough_text_link | CANNOT_DISTINGUISH | 0.028808 | 0.39 | 0.20796 |
 | H-242b74a461 | Earnings shock read-through to correlation peers (factor-beta control) | event_readthrough_corr_peer | CANNOT_DISTINGUISH | 0.043783 | 1.29 | 0.0951 |
 | H-0508c8b2b4 | Abnormal attention predicts move size beyond priors and TF-IDF | size_attention | FAILED_VARIANT | -0.001074 | -1.72 | 0.001747 |
 | H-d90a84da8c | Cross-source disagreement predicts move size beyond TF-IDF | size_disagreement | FAILED_VARIANT | -0.000128 | -0.4 | 0.000902 |
 | H-57ab67541e | Event-type size prior, 2025 as a second fold | size_event_prior | FAILED_VARIANT | 9.6e-05 | 0.31 | 0.000871 |
 | H-f4c998e55b | Rate spike compresses REIT dividend yield spread | macro_readthrough_rates | FAILED_VARIANT | -3.7e-05 | -0.01 | 0.009808 |
+| H-f954946c67 | Clinical trial failure of one firm drags peers with similar pipeline | event_readthrough_text_link | CONDITIONAL_POSITIVE | 0.763586 | 8.84 | 0.24195 |
+| H-54e0f8e467 | Regulatory approval for one firm lifts co-mentioned peers | event_readthrough_corr_peer | CANNOT_DISTINGUISH | 0.293056 | 1.0 | 0.824251 |
 | H-70ee91a160 | Oil shock lifts tanker stocks next session | macro_readthrough_commodity | FAILED_VARIANT | -0.000884 | -0.33 | 0.007484 |
+| H-65079244f4 | Yield spike lifts money-center banks next session | macro_readthrough_rates | FAILED_VARIANT | -0.001221 | -0.7 | 0.004864 |
 | H-d7e3faf5cb | LLM within-date size-surprise ranking adds to numbers + TF-IDF | llm_size_reading | FAILED_VARIANT | 0.004 | 0.22 | 0.049 |
 | H-a37261d4a8 | DeepSeek reads earnings-surprise size from the text | llm_size_reading | FAILED_VARIANT | -0.068 | -2.41 | None |
+| H-7b0d6b3b19 | Co-mention read-through after regulatory approval events | event_readthrough_text_link | CANNOT_DISTINGUISH | 0.150405 | 0.7 | 0.603347 |
+| H-f7adb864b0 | Guidance-cut read-through to correlation peers | event_readthrough_corr_peer | FAILED_VARIANT | -0.076396 | -0.39 | 0.541997 |
+| H-ba83bf6c68 | Equity issuance dilution read-through to cash-poor peers | event_readthrough_text_link | FAILED_VARIANT | -0.031248 | -0.06 | 1.434355 |
 | H-fe59c56bfe | Quality / cash-lowvol / ope_be / revision flow as investable spreads (hedged, short-twin, size-hedged, top-500 overlay) | investable_spread | FAILED_VARIANT | None | None | None |
 | H-e1b7ce3a8e | Volatility-managed market exposure driven by the size forecast (rv, HAR, HAR + earnings-season intensity) | risk_timing | FAILED_VARIANT | None | None | None |
 | H-ca95f10775 | Insider cluster buys (>=3 officer/director buyers in 30 days) entered at the next open after the filing | insider_event | CANNOT_DISTINGUISH | None | None | None |
 | H-3b254e9abc | Part of quality_composite / cash_lowvol's twin t is restated (current-vintage) data | data_vintage | FAILED_VARIANT | None | None | None |
 | H-baefacbdf9 | Tanker rates read through to refiners' crude sourcing cost | macro_readthrough_commodity | FAILED_VARIANT | -0.001873 | -0.53 | 0.009811 |
 | H-3c5504c060 | Crude spike lifts integrated majors over E&Ps | macro_readthrough_commodity | FAILED_VARIANT | -0.001865 | -0.96 | 0.005417 |
+| H-2488e7a9d8 | Rate shock lifts regional bank net interest margin | macro_readthrough_rates | FAILED_VARIANT | -0.001908 | -0.85 | 0.006322 |
+| H-790a2bac86 | Oil spike pressures airline stocks next session | macro_readthrough_commodity | CANNOT_DISTINGUISH | 0.003462 | 1.06 | 0.009108 |
+| H-67ea028ef9 | Equity issuance dilution hits correlated peers | event_readthrough_corr_peer | CANNOT_DISTINGUISH | 0.155091 | 0.69 | 0.632584 |
+| H-6a49a0b542 | Treasury yield shock lifts rate-sensitive homebuilders next session | macro_readthrough_rates | CANNOT_DISTINGUISH | 0.002597 | 1.01 | 0.007184 |
+| H-b957131a36 | Oil spike lifts oilfield services over integrated majors | macro_readthrough_commodity | FAILED_VARIANT | -0.006099 | -0.91 | 0.018782 |
+| H-9a956b347c | Co-mentioned peers react to clinical trial failure | event_readthrough_text_link | CONDITIONAL_POSITIVE | 0.61745 | 4.74 | 0.36487 |
+| H-8f7028970b | Clinical trial failure read-through to platform partners | event_readthrough_text_link | CONDITIONAL_POSITIVE | 0.763586 | 8.84 | 0.24195 |
+| H-b5e5f954c6 | Treasury yield shock lifts rate-sensitive insurers | macro_readthrough_rates | CONDITIONAL_POSITIVE | 0.008848 | 2.11 | 0.011754 |
+| H-767931b19b | Crude spike lifts tanker rates over refiners | macro_readthrough_commodity | FAILED_VARIANT | -0.004113 | -0.66 | 0.017579 |
+| H-bd054b8248 | 10Y yield spike lifts money-center banks over regionals | macro_readthrough_rates | FAILED_VARIANT | -0.000882 | -0.49 | 0.005044 |
+| H-25702b3bfd | Standalone 52-week-high nearness on CRSP, fair twin | price_location | FAILED_VARIANT | -0.003118 | -1.002033 | 0.008712 |
+| H-aca81f5b8f | Insider buy with no sale by the buyers within 90 days | insider_hold | FAILED_VARIANT | -0.018244 | -5.752673 | 0.00888 |
+| H-3471279117 | Consecutive EPS beats: does post-announcement drift shrink as the streak grows | earnings_streak | FAILED_VARIANT | -0.004775 | -1.111867 | 0.012025 |
+| H-ba24e67c41 | 10Y yield spike lifts life insurers over P&C | macro_readthrough_rates | CANNOT_DISTINGUISH | 0.007258 | 1.84 | 0.011018 |
 
 ## Queue (ranked by EV)
 
 | rank | hyp_id | title | target | cell | EV | P(change) | value | source |
 |---|---|---|---|---|---|---|---|---|
-| 1 | H-1270b5a351 | Vol-managed market exposure for the preservation personality: drawdown-constrained utility, not log utility | return | NEEDS_CELL | 1.8234 | 0.1833 | 10.0 | hyp_lab_night_2026-09-30 |
-| 2 | H-81f3e3c259 | Volatility compression breakout with frictions | return | NEEDS_CELL | 1.2756 | 0.14 | 9.54 | day_notes |
-| 3 | H-65079244f4 | Yield spike lifts money-center banks next session | direction | macro_lead_lag | 1.0185 | 0.1063 | 9.68 | deepseek_gen |
-| 4 | H-7cd2a074c9 | Macro lead-lag effect on interest rates | return | NEEDS_CELL | 1.0121 | 0.1063 | 9.62 | local_gen |
-| 5 | H-4e1d453114 | Oil price shock lifts energy sector but drags transports | co_movement | NEEDS_CELL | 0.9996 | 0.1029 | 9.81 | deepseek_gen |
-| 6 | H-811fe2c09c | Macro lead-lag effect on commodity prices | return | NEEDS_CELL | 0.9791 | 0.1029 | 9.61 | local_gen |
-| 7 | H-575b8c97c1 | Post-2023 regime: yield spike -> regional banks fall next session (forward log) | return | NEEDS_CELL | 0.8338 | 0.0862 | 9.69 | hyp_lab_verdict |
-| 8 | H-039df299c0 | Oil shock -> refiners and chemicals (input cost) lag | return | macro_lead_lag | 0.7967 | 0.0823 | 9.7 | world_digest |
-| 9 | H-3aac7667ef | Insider cluster drift captured by passive execution (limit orders inside the spread) | return | NEEDS_CELL | 0.7809 | 0.0791 | 10.0 | hyp_lab_night_2026-09-30 |
-| 10 | H-f7adb864b0 | Guidance-cut read-through to correlation peers | co_movement | event_readthrough | 0.765 | 0.1318 | 5.88 | deepseek_gen |
-| 11 | H-54e0f8e467 | Regulatory approval for one firm lifts co-mentioned peers | direction | event_readthrough | 0.7643 | 0.1318 | 5.874 | deepseek_gen |
-| 12 | H-ba83bf6c68 | Equity issuance dilution read-through to cash-poor peers | return | event_readthrough | 0.7619 | 0.1318 | 5.856 | deepseek_gen |
-| 13 | H-f954946c67 | Clinical trial failure of one firm drags peers with similar pipeline | direction | event_readthrough | 0.7611 | 0.1318 | 5.85 | deepseek_gen |
-| 14 | H-a6243b7de4 | Peer analyst downgrade spills over to thinly covered rivals | return | event_readthrough | 0.7603 | 0.1318 | 5.844 | deepseek_gen |
-| 15 | H-4c3cedbde3 | Clinical trial success lifts correlation peers next session | direction | event_readthrough | 0.7603 | 0.1318 | 5.844 | deepseek_gen |
-| 16 | H-ea5c9d656a | Equity issuance dilution signals overvaluation, peers follow | direction | event_readthrough | 0.7587 | 0.1318 | 5.832 | deepseek_gen |
-| 17 | H-14a2b25709 | Event readthrough via peer correlations | return | event_readthrough | 0.7587 | 0.1318 | 5.832 | local_gen |
-| 18 | H-7b0d6b3b19 | Co-mention read-through after regulatory approval events | return | event_readthrough | 0.7571 | 0.1318 | 5.82 | deepseek_gen |
-| 19 | H-0e85ce079f | Equity issuance dilution readthrough to correlated peers | co_movement | event_readthrough | 0.7571 | 0.1318 | 5.82 | deepseek_gen |
-| 20 | H-71c0a4d5c5 | Correlation-peer spillover after a clinical trial miss | co_movement | event_readthrough | 0.7556 | 0.1318 | 5.808 | deepseek_gen |
-| 21 | H-10260cfe4e | Event readthrough via news co-mentions | return | event_readthrough | 0.7516 | 0.1318 | 5.778 | local_gen |
-| 22 | H-08c1c21b68 | Customer guidance cut drags suppliers next session | direction | event_readthrough | 0.7296 | 0.125 | 5.916 | deepseek_gen |
-| 23 | H-ae33cf8a3a | Equity issuance by peer predicts dilution fears next session | direction | event_readthrough | 0.7266 | 0.125 | 5.892 | deepseek_gen |
-| 24 | H-67c554cd0c | Guidance cut by bellwether triggers supplier sell-off | direction | event_readthrough | 0.7183 | 0.125 | 5.826 | deepseek_gen |
-| 25 | H-196f010209 | Supplier shock passes through to customer margin expectations | direction | event_readthrough | 0.7131 | 0.125 | 5.784 | deepseek_gen |
-| 26 | H-5825bf5c78 | Digest second-order, unmentioned implications beat the vol prior | size | NEEDS_CELL | 0.523 | 0.144 | 3.66 | world_digest |
-| 27 | H-9f4e8de708 | Volatility compression post-earnings | return | NEEDS_CELL | 0.5035 | 0.056 | 9.17 | local_gen |
-| 28 | H-0defa565ca | Supplier shock transmits to customer via input concentration | return | NEEDS_CELL | 0.4786 | 0.05 | 9.77 | deepseek_gen |
-| 29 | H-318b9f77c9 | Customer demand shock read-through to supplier basket | return | NEEDS_CELL | 0.4736 | 0.05 | 9.67 | deepseek_gen |
-| 30 | H-5b816c9c97 | Size effect on analyst downgrades | return | NEEDS_CELL | 0.4696 | 0.05 | 9.59 | local_gen |
-| 31 | H-ab4e3e874a | Event-prior feature increment on next-session size | size | size_feature_increment | 0.4666 | 0.125 | 3.812 | deepseek_gen |
-| 32 | H-ab5ceb6f48 | Belief elasticity (X2) graded against returns | llm_capability | NEEDS_CELL | 0.4575 | 0.24 | 2.073 | closed_list_open_item |
-| 33 | H-5c87bc3618 | Rate shock hits high-duration small caps asymmetrically | return | NEEDS_CELL | 0.4023 | 0.0425 | 9.7 | deepseek_gen |
-| 34 | H-38ff307f01 | Commodity input shock hits downstream specialty chemical margins | return | NEEDS_CELL | 0.391 | 0.0412 | 9.74 | deepseek_gen |
-| 35 | H-a23adb4c06 | Oil spike transmits to airline basket with one-day lag | return | NEEDS_CELL | 0.3811 | 0.0412 | 9.5 | deepseek_gen |
-| 36 | H-3a7509ea7a | TRIAL-LEAK-1 difference-in-differences never computed | llm_capability | NEEDS_CELL | 0.3107 | 0.14 | 2.505 | closed_list_open_item |
-| 37 | H-3336ff8cdd | Earnings and guidance cells as a straddle-sizing multiplier | size | NEEDS_CELL | 0.2735 | 0.075 | 3.78 | hyp_lab_verdict |
-| 38 | H-92ccb2d9f9 | House PTR purchases entered after disclosure (TRIAL-CONGRESS-PTR-FWD-1) | return | NEEDS_CELL | 0.27 | 0.028 | 10.0 | hyp_lab_night_2026-09-30 |
-| 39 | H-15e49ac24c | 10Y yield shock hits unprofitable small caps next open | direction | NEEDS_CELL | 0.1144 | 0.0425 | 2.928 | deepseek_gen |
+| 1 | H-7cd2a074c9 | Macro lead-lag effect on interest rates | return | NEEDS_CELL | 1.9139 | 0.2 | 9.62 | local_gen |
+| 2 | H-1270b5a351 | Vol-managed market exposure for the preservation personality: drawdown-constrained utility, not log utility | return | NEEDS_CELL | 1.91 | 0.192 | 10.0 | hyp_lab_night_2026-09-30 |
+| 3 | H-10260cfe4e | Event readthrough via news co-mentions | return | event_readthrough | 1.579 | 0.275 | 5.778 | local_gen |
+| 4 | H-79816372f0 | Analyst target hike spills to co-mentioned peers | co_movement | event_readthrough | 1.5328 | 0.275 | 5.61 | deepseek_gen |
+| 5 | H-4e1d453114 | Oil price shock lifts energy sector but drags transports | co_movement | NEEDS_CELL | 1.3634 | 0.14 | 9.81 | deepseek_gen |
+| 6 | H-f73a8435aa | Tanker rate spike lifts product tanker equities next session | return | macro_lead_lag | 1.3368 | 0.14 | 9.62 | deepseek_gen |
+| 7 | H-811fe2c09c | Macro lead-lag effect on commodity prices | return | NEEDS_CELL | 1.3354 | 0.14 | 9.61 | local_gen |
+| 8 | H-81f3e3c259 | Volatility compression breakout with frictions | return | NEEDS_CELL | 1.2756 | 0.14 | 9.54 | day_notes |
+| 9 | H-575b8c97c1 | Post-2023 regime: yield spike -> regional banks fall next session (forward log) | return | NEEDS_CELL | 1.0962 | 0.1133 | 9.69 | hyp_lab_verdict |
+| 10 | H-3aac7667ef | Insider cluster drift captured by passive execution (limit orders inside the spread) | return | NEEDS_CELL | 0.83 | 0.084 | 10.0 | hyp_lab_night_2026-09-30 |
+| 11 | H-cbade4867c | Refiner outage lifts rival refiners' crack spreads | return | event_readthrough | 0.8149 | 0.14 | 5.892 | deepseek_gen |
+| 12 | H-669afc966a | Equity issuance dilution read-through to co-owned peers | direction | event_readthrough | 0.8098 | 0.14 | 5.856 | deepseek_gen |
+| 13 | H-a6243b7de4 | Peer analyst downgrade spills over to thinly covered rivals | return | event_readthrough | 0.8082 | 0.14 | 5.844 | deepseek_gen |
+| 14 | H-4c3cedbde3 | Clinical trial success lifts correlation peers next session | direction | event_readthrough | 0.8082 | 0.14 | 5.844 | deepseek_gen |
+| 15 | H-08e3b255f4 | Co-mentioned peers react to clinical trial failure | co_movement | event_readthrough | 0.8073 | 0.14 | 5.838 | deepseek_gen |
+| 16 | H-ea5c9d656a | Equity issuance dilution signals overvaluation, peers follow | direction | event_readthrough | 0.8065 | 0.14 | 5.832 | deepseek_gen |
+| 17 | H-14a2b25709 | Event readthrough via peer correlations | return | event_readthrough | 0.8065 | 0.14 | 5.832 | local_gen |
+| 18 | H-b9aa2bb7ad | Correlation-peer spillover after regulatory approval | co_movement | event_readthrough | 0.8065 | 0.14 | 5.832 | deepseek_gen |
+| 19 | H-0e85ce079f | Equity issuance dilution readthrough to correlated peers | co_movement | event_readthrough | 0.8048 | 0.14 | 5.82 | deepseek_gen |
+| 20 | H-fc03074d29 | Airline capacity cut lifts legacy hotel REITs | return | event_readthrough | 0.804 | 0.14 | 5.814 | deepseek_gen |
+| 21 | H-71c0a4d5c5 | Correlation-peer spillover after a clinical trial miss | co_movement | event_readthrough | 0.8031 | 0.14 | 5.808 | deepseek_gen |
+| 22 | H-257b7c7964 | Airline capacity cuts lift legacy carriers over low-cost | return | event_readthrough | 0.8023 | 0.14 | 5.802 | deepseek_gen |
+| 23 | H-479825bcfd | Earnings miss by a retailer hits suppliers with high customer concentration | return | event_readthrough | 0.8006 | 0.14 | 5.79 | deepseek_gen |
+| 24 | H-20a96fd3c5 | Chip fab capex raise lifts deposition tool suppliers | return | event_readthrough | 0.7804 | 0.14 | 5.646 | deepseek_gen |
+| 25 | H-5c87bc3618 | Rate shock hits high-duration small caps asymmetrically | return | NEEDS_CELL | 0.7659 | 0.08 | 9.7 | deepseek_gen |
+| 26 | H-08c1c21b68 | Customer guidance cut drags suppliers next session | direction | event_readthrough | 0.7296 | 0.125 | 5.916 | deepseek_gen |
+| 27 | H-65460288e4 | Regulatory approval read-through to contract manufacturers | return | event_readthrough | 0.7273 | 0.125 | 5.898 | deepseek_gen |
+| 28 | H-ae33cf8a3a | Equity issuance by peer predicts dilution fears next session | direction | event_readthrough | 0.7266 | 0.125 | 5.892 | deepseek_gen |
+| 29 | H-2f2c03419b | Supplier co-mention read-through after customer guidance cut | direction | event_readthrough | 0.7258 | 0.125 | 5.886 | deepseek_gen |
+| 30 | H-fab3f43c63 | Guidance cut read-through to supplier-heavy peers | co_movement | event_readthrough | 0.7236 | 0.125 | 5.868 | deepseek_gen |
+| 31 | H-37bcee9172 | New contract read-through to component suppliers | return | event_readthrough | 0.7213 | 0.125 | 5.85 | deepseek_gen |
+| 32 | H-67c554cd0c | Guidance cut by bellwether triggers supplier sell-off | direction | event_readthrough | 0.7183 | 0.125 | 5.826 | deepseek_gen |
+| 33 | H-196f010209 | Supplier shock passes through to customer margin expectations | direction | event_readthrough | 0.7131 | 0.125 | 5.784 | deepseek_gen |
+| 34 | H-ed3e045bc3 | Copper price spike lifts copper miners over diversified miners | return | NEEDS_CELL | 0.5371 | 0.056 | 9.77 | deepseek_gen |
+| 35 | H-38ff307f01 | Commodity input shock hits downstream specialty chemical margins | return | NEEDS_CELL | 0.5354 | 0.056 | 9.74 | deepseek_gen |
+| 36 | H-5b816c9c97 | Size effect on analyst downgrades | return | NEEDS_CELL | 0.527 | 0.056 | 9.59 | local_gen |
+| 37 | H-9ecc257007 | Natural gas spike lifts fertilizer over chemical peers | return | NEEDS_CELL | 0.5265 | 0.056 | 9.58 | deepseek_gen |
+| 38 | H-70be853b7e | Tone agreement increment for next-session size | size | size_feature_increment | 0.5254 | 0.14 | 3.824 | deepseek_gen |
+| 39 | H-ab4e3e874a | Event-prior feature increment on next-session size | size | size_feature_increment | 0.5237 | 0.14 | 3.812 | deepseek_gen |
+| 40 | H-5825bf5c78 | Digest second-order, unmentioned implications beat the vol prior | size | NEEDS_CELL | 0.523 | 0.144 | 3.66 | world_digest |
 
 ## Family track record
 
-| family | + | - | ? | P(positive) |
-|---|---|---|---|---|
-| macro_readthrough_commodity | 0 | 3 | 1 | 0.1176 |
-| macro_readthrough_rates | 0 | 2 | 2 | 0.125 |
-| event_readthrough_corr_peer | 0 | 0 | 1 | 0.1818 |
-| equity_readthrough_supply_chain | 0 | 1 | 0 | 0.1667 |
-| event_readthrough_text_link | 0 | 0 | 1 | 0.1818 |
-| size_disagreement | 0 | 1 | 0 | 0.1667 |
-| size_attention | 0 | 1 | 0 | 0.1667 |
-| size_event_prior | 0 | 1 | 0 | 0.1667 |
-| vol_compression | 0 | 0 | 0 | 0.2 |
-| llm_size_reading | 0 | 2 | 0 | 0.1429 |
-| risk_timing | 0 | 1 | 0 | 0.1667 |
-| insider_event | 0 | 0 | 1 | 0.1818 |
-| digest_forward | 0 | 0 | 0 | 0.2 |
-| llm_belief_elasticity | 0 | 0 | 0 | 0.2 |
-| llm_leakage | 0 | 0 | 0 | 0.2 |
-| investable_spread | 0 | 1 | 0 | 0.1667 |
-| data_vintage | 0 | 1 | 0 | 0.1667 |
-| official_disclosure | 0 | 0 | 0 | 0.2 |
+Posterior fed back into generation (D6): below P = 0.15 a family's quota and EV are multiplied by max(0.25, P / 0.15); never a kill.
+
+| family | + | - | ? | posterior P(positive) | weight | quota of 8 | n_generated_tonight | n_deferred_tonight | n_shrunk |
+|---|---|---|---|---|---|---|---|---|---|
+| macro_readthrough_commodity | 0 | 5 | 3 | 0.2 | 1.0 | 4 | 2 | 0 | 0 |
+| event_readthrough_corr_peer | 0 | 1 | 3 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| macro_readthrough_rates | 1 | 5 | 4 | 0.3333 | 1.0 | 4 | 1 | 0 | 0 |
+| equity_readthrough_supply_chain | 0 | 1 | 0 | 0.1667 | 1.0 | 4 | 0 | 0 | 0 |
+| event_readthrough_text_link | 3 | 1 | 2 | 0.5 | 1.0 | 4 | 0 | 0 | 0 |
+| size_disagreement | 0 | 1 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| event_readthrough_supply_chain | 0 | 0 | 0 | 0.2 | 1.0 | 4 | 2 | 0 | 0 |
+| size_attention | 0 | 1 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| size_event_prior | 0 | 1 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| insider_event | 0 | 1 | 1 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| vol_compression | 0 | 0 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| llm_size_reading | 0 | 2 | 0 | 0.1667 | 1.0 | 4 | 0 | 0 | 0 |
+| risk_timing | 0 | 1 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| digest_forward | 0 | 0 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| llm_belief_elasticity | 0 | 0 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| llm_leakage | 0 | 0 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| investable_spread | 0 | 1 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| data_vintage | 0 | 1 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| official_disclosure | 0 | 0 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| price_location | 0 | 1 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| earnings_streak | 0 | 1 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
+| family_unmapped | 0 | 0 | 0 | 0.2 | 1.0 | 4 | 0 | 0 | 0 |
 
 ## Status counts
 
-DUPLICATE_IN_LEDGER: 7, DUPLICATE_OF_CLOSED: 1, NEEDS_CELL: 20, PROPOSED: 19, RUN: 20
+DECLARED: 1, DUPLICATE_IN_LEDGER: 17, DUPLICATE_OF_CLOSED: 2, NEEDS_CELL: 23, PROPOSED: 27, RUN: 41

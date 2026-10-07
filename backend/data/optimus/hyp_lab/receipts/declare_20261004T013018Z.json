@@ -1,0 +1,84 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-10-04",
+ "declared_utc": "2026-10-04T01:30:18+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [],
+ "cells": [
+  {
+   "hyp_id": "H-b957131a36",
+   "title": "Oil spike lifts oilfield services over integrated majors",
+   "family": "macro_readthrough_commodity",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "CL=F",
+    "targets": [
+     "SLB",
+     "HAL",
+     "BKR",
+     "FTI",
+     "NOV"
+    ],
+    "expected_sign": 1,
+    "h": 5,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "If the beta-adjusted spread is not significantly positive (t < 1), the differential read-through is refuted.",
+   "separation_from_beta": "The spread between oilfield services basket and integrated majors basket, beta-adjusted, should be positive after oil shock."
+  },
+  {
+   "hyp_id": "H-6a49a0b542",
+   "title": "Treasury yield shock lifts rate-sensitive homebuilders next session",
+   "family": "macro_readthrough_rates",
+   "target": "direction",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "^TNX",
+    "targets": [
+     "DHI",
+     "LEN",
+     "PHM",
+     "NVR",
+     "TOL"
+    ],
+    "expected_sign": -1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "If the homebuilder basket's beta-adjusted return after yield shock is not significantly negative (t < 1), the read-through is refuted.",
+   "separation_from_beta": "Homebuilder basket's open-to-close return from t+1 to t+1 (or t+5) after removing market beta should be negative and significant."
+  },
+  {
+   "hyp_id": "H-039df299c0",
+   "title": "Oil shock -> refiners and chemicals (input cost) lag",
+   "family": "macro_readthrough_commodity",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "CL=F",
+    "targets": [
+     "DOW",
+     "LYB",
+     "WLK",
+     "OLN",
+     "HUN",
+     "CE"
+    ],
+    "expected_sign": -1,
+    "h": 5,
+    "shock_z": 2.0
+   },
+   "split": {
+    "design": "2016-2022",
+    "confirm": "2023-2026"
+   },
+   "refutation": "confirm-fold mean signed residual <= 0, or t < 2 with MDE below the design effect",
+   "separation_from_beta": "same-day beta printed apart; lag residual after SPY beta"
+  }
+ ],
+ "sha256": "1fd11ea5d44a4fc0a854593b1590caa5ebd7228db1fe71adfa573e2d5a90ac4c"
+}

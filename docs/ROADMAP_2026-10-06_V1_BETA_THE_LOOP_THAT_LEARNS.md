@@ -303,6 +303,42 @@ address everything my prompt said and the GPT report offered"). At most five bui
 Still gated on time, not on work: contextual bandit over source/policy weights (63 regret sessions); regime trust (10-09
 grades); forward reads 10-26/10-27; the contest (10-12). Still the owner's: D1, D2, D5, D7, D13, D14, D15, D16, D17.
 
+### 5b. OPERATING MODEL RESET AND THE THIRD QUEUE (owner brief 2026-10-07 10:20 HKT)
+
+Owner's order: Fable manages, strategises and orchestrates only; Sonnet for research, reading, specs, docs, simple
+debugging, low-risk frontend; Opus 5.5 only for financial decision architecture, measurement/backtest correctness,
+portfolio/execution logic, concurrency/data-integrity bugs, major architecture, and adversarial review of changes that can
+move research conclusions or paper capital; DeepSeek/local for bulk extraction; deterministic tests review UI/docs/plumbing.
+Concurrency modest (the ten-builder wave caused the memory pressure and the MCP leak). Commit checkpoints on the WIP branch.
+Weekly strong-model allowance is a budget: ~half used by 10-07.
+
+**Status after the morning wave (chunk → state):** COMPLETE & reviewed: C1/C1b, C2, C3, C4, C5, C6, C7, C8, C9, C10,
+C11, C12, C13, C14, C16, C17, C18, C19, C23, C25. PREPARED, INACTIVE: C20 (v3 contracts, benchmark core flag OFF).
+PLUMBING ONLY until forward evidence: C11 regret (first grades 10-13 at the earliest; 0 live stories until tonight's
+session), C17 regime rows (10-10/10-16), C18 snowball (2027-01), C12 cells (all unpowered). WAITING ON OWNER: D1, D2,
+D13-D22. UNVERIFIED: the frozen-tree suite (two memory kills; the 10-07 10:05 run: 13,649 passed, 6 README-block
+failures from the docs pass, being restored by Sonnet). BROKEN: none known. New, unreviewed: C26 fleet gates + EOD audit
+(Opus; the two new gates default to SHADOW until the owner decides the 40% sector cap: hack2 is 67% Technology).
+
+**Connection to the learning loop (honest):** Decision Story + regret, world state, regime rows, snowball shadow,
+public-flow sensors and the analyst weights are all wired to WRITE rows; none has changed a decision yet, by design
+(trust rules), and the sensors have no consumer cell yet. The pages make that visible rather than hide it.
+
+**Third queue (small batches; worker chosen as the cheapest sufficient):**
+
+| id | task | worker | why | gate |
+|---|---|---|---|---|
+| Q1 | restore the README's generated bridge block (6 tests) + put C26's two new gates in SHADOW mode | Sonnet | mechanical, test-pinned | now |
+| Q2 | final frozen-tree suite → merge to main → push → `ci_watch` → `verify-prod-after-deploy` on the five pages → first `publish_receipts --commit` | deterministic + Fable | the gate | after Q1 |
+| Q3 | design reference library (p5.js, p5.brush, reasoning orbs, motion for data; GitHub identity plan) → `docs/design/` | Sonnet | research/docs | now |
+| Q4 | the four social-media ideas as theory objects (exact rule, mechanism, literature, data gaps, falsifiable question) + the intake template | Sonnet | research | now |
+| Q5 | Brain page v2: state-driven layout (no force simulation), motion only on state change, every orb traces to a receipt field | Sonnet (frontend) | low-risk UI; deterministic tests review | after Q3 + Q2 |
+| Q6 | finance-research intake for Theory Lab: a Sonnet routine that, for a named topic, returns mechanism / assumptions / variables / failure modes / period / our-data test; first topics: Markowitz 1952, overnight-vs-intraday (Lou-Polk-Skouras), Monday/turnaround effect, PEAD, analyst revisions | Sonnet | research; DeepSeek for bulk | after Q4 |
+| Q7 | review of C26 (fleet gates touch live paper orders) | Opus 5.5 | execution logic; capital-adjacent | after Q2 |
+| Q8 | external AI as research instruments (Perplexity/Consensus/Semantic Scholar/arXiv APIs): coverage, latency, cost, novelty vs our stack; OpenClaw "I am missing academic evidence" tool selection | Sonnet | research first | after Q6 |
+| Q9 | heavy deferred items, one at a time: sticky-twin per-draw check v2, ROT5_DIR replay receipt, contest horizon worst case, extraction cascade (GPU), desktop export check | Opus for the twin/contest measurement; deterministic for exports | measurement | after Q2, memory ≥ 4 GB |
+| Q10 | token-budget view: a small receipt per session (Opus/Sonnet calls, tasks, EV) read by the handoff | Sonnet | plumbing | with Q2's handoff |
+
 ## 6. OWNER DECISIONS (what I did by default, and what only Murat can do)
 
 | # | decision | default applied tonight | what Murat does |

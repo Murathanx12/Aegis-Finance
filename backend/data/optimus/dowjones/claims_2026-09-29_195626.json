@@ -1,0 +1,831 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-09-29",
+ "days": [
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05",
+  "2026-07-06",
+  "2026-07-07",
+  "2026-07-08",
+  "2026-07-09",
+  "2026-07-10",
+  "2026-07-11",
+  "2026-07-12",
+  "2026-07-13",
+  "2026-07-14",
+  "2026-07-15",
+  "2026-07-16",
+  "2026-07-17",
+  "2026-07-18",
+  "2026-07-19",
+  "2026-07-20",
+  "2026-07-21",
+  "2026-07-22",
+  "2026-07-23",
+  "2026-07-24",
+  "2026-07-25",
+  "2026-07-26",
+  "2026-07-27",
+  "2026-07-28",
+  "2026-07-29",
+  "2026-07-30",
+  "2026-07-31",
+  "2026-08-01",
+  "2026-08-02",
+  "2026-08-03",
+  "2026-08-04",
+  "2026-08-05",
+  "2026-08-06",
+  "2026-08-07",
+  "2026-08-08",
+  "2026-08-09",
+  "2026-08-10",
+  "2026-08-11",
+  "2026-08-12",
+  "2026-08-13",
+  "2026-08-14",
+  "2026-08-15",
+  "2026-08-16",
+  "2026-08-17",
+  "2026-08-18",
+  "2026-08-19",
+  "2026-08-20",
+  "2026-08-21",
+  "2026-08-22",
+  "2026-08-23",
+  "2026-08-24",
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27",
+  "2026-08-28",
+  "2026-08-29",
+  "2026-08-30",
+  "2026-08-31",
+  "2026-09-01",
+  "2026-09-02",
+  "2026-09-03",
+  "2026-09-04",
+  "2026-09-05",
+  "2026-09-06",
+  "2026-09-07",
+  "2026-09-08",
+  "2026-09-09",
+  "2026-09-10",
+  "2026-09-11",
+  "2026-09-12",
+  "2026-09-13",
+  "2026-09-14",
+  "2026-09-15",
+  "2026-09-16",
+  "2026-09-17",
+  "2026-09-18",
+  "2026-09-19",
+  "2026-09-20",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23",
+  "2026-09-24",
+  "2026-09-25",
+  "2026-09-26",
+  "2026-09-27",
+  "2026-09-28",
+  "2026-09-29"
+ ],
+ "started_utc": "2026-09-29T19:54:37+00:00",
+ "mw_analyst_snapshot": {
+  "n_pages": 11,
+  "n_rows_written": 11,
+  "thin": [],
+  "tickers": [
+   "VKTX",
+   "ICHR",
+   "MAN",
+   "MXL",
+   "VELO",
+   "AMZN",
+   "SNDK",
+   "NVT",
+   "IOVA",
+   "NTLA",
+   "IONQ"
+  ]
+ },
+ "barrons_big_money_poll_index_rows": {
+  "n_articles": 0,
+  "n_rows_written": 0,
+  "per_article": []
+ },
+ "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
+ "purpose": "dowjones_claims",
+ "cap_usd": 3.0,
+ "spent_usd": 0.017487,
+ "n_llm_calls": 47,
+ "stopped": null,
+ "n_articles": 47,
+ "n_claims": 19,
+ "forecast_rows_by_source_id": {
+  "barrons_stock_picks": 12,
+  "barrons_other": 0,
+  "marketwatch_other": 3,
+  "wsj_other": 12
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "17fb99a4fcc7702e80d6",
+   "url": "https://www.barrons.com/articles/amd-stock-price-earnings-nvidia-bfee4198?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "AMD"
+   ],
+   "directions": [
+    "none"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "20cdd488e52108ea510e",
+   "url": "https://www.barrons.com/articles/china-stocks-economy-tech-80ac0799?mod=article_inline",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "SBUX"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "4b6cf2f7356e5ffba25a",
+   "url": "https://www.barrons.com/articles/bessent-treasury-bonds-yields-buybacks-bf9fa1c4?mod=article_inline",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "54ebd7dd0f7e8a0bcd5a",
+   "url": "https://www.barrons.com/articles/boeing-stock-737-max-delay-analyst-buy-ratings-91a8bc2e?mod=WTRN_pos5",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "BA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "71815d2916c51641a66b",
+   "url": "https://www.barrons.com/articles/fuelcell-energy-stock-buy-rating-d13e5970?mod=WTRN_pos5",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "FCEL"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "97b1b1f95c75ceb90751",
+   "url": "https://www.barrons.com/articles/the-real-question-about-the-big-ipos-ed0ba002?mod=article_inline",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ced427d9ba6ffc9469ed",
+   "url": "https://www.barrons.com/articles/pfizer-johnson-johnson-jazz-pharmaceuticals-stocks-to-rally-into-year-end-25678097?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 3,
+   "refused": [],
+   "tickers": [
+    "PFE",
+    "JNJ",
+    "JAZZ"
+   ],
+   "directions": [
+    "up",
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "e8c8dd9a1cf2565d3316",
+   "url": "https://www.barrons.com/articles/fed-inflation-cost-of-living-hammack-6cac4f57?mod=article_inline",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "f4daa930bc423a20f613",
+   "url": "https://www.barrons.com/articles/cogent-biosciences-stock-2025-executives-sell-shares-1b8a0e29",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "f78bdd5a1e3ac1f54ece",
+   "url": "https://www.barrons.com/articles/ai-data-centers-9-trillion-projects-never-built-883f4065",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [
+    {
+     "ticker": "GOOGL",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'GOOGL'"
+    }
+   ],
+   "tickers": [
+    "ORCL",
+    "AMZN"
+   ],
+   "directions": [
+    "down",
+    "down"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 6,
+   "write_status": "OK"
+  },
+  {
+   "sha": "0069b88125d49bad03a9",
+   "url": "https://www.marketwatch.com/story/autocanada-mulls-sale-of-collision-operations-as-part-of-strategic-review-6ead7692?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "00ff9a079744168d2094",
+   "url": "https://www.marketwatch.com/story/why-brat-summer-and-chappell-roan-are-boosting-hydro-flask-parent-companys-stock-425dad5a",
+   "column": "marketwatch_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "HELE"
+   ],
+   "directions": [
+    "none"
+   ],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "0311ef5d3e162d233413",
+   "url": "https://www.marketwatch.com/story/neogen-gets-fda-warning-after-probe-links-vet-product-to-horse-deaths-7a5fd69d?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "0e4e445edaa8d0417e24",
+   "url": "https://www.marketwatch.com/story/inflation-from-tariffs-should-hit-this-year-consumer-brands-company-says-33fd9d1e",
+   "column": "marketwatch_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "HELE"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "2bda1d4392aebd6716bc",
+   "url": "https://www.marketwatch.com/story/medicare-advantage-plans-will-be-cheaper-next-year-heres-the-new-cost-2f7ab55b?mod=home_ln",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "32572a2cc4037fd4e279",
+   "url": "https://www.marketwatch.com/story/how-to-use-options-to-trade-stocks-around-an-earnings-announcement-e1ba7920",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "3d552a028804627328fa",
+   "url": "https://www.marketwatch.com/story/the-s-p-500-is-nearing-an-especially-positive-price-and-the-options-market-suggests-a-surge-is-likely-a54d866d",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "51a36a26e7b4f091b353",
+   "url": "https://www.marketwatch.com/story/these-16-stocks-are-a-short-sellers-dream-likely-losers-no-matter-what-the-market-does-feead011",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "51b2f8a3190929e4a4ae",
+   "url": "https://www.marketwatch.com/story/the-real-prize-in-amds-8-billion-world-labs-acquisition-isnt-what-youd-think-6f609d0f?mod=mw_latestnews",
+   "column": "marketwatch_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "AMD"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "745957f9518de08bba3d",
+   "url": "https://www.marketwatch.com/story/el-pollo-loco-names-damon-thomas-coo-plans-new-york-city-debut-61663540?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c5d5faa1ddc51991143e",
+   "url": "https://www.marketwatch.com/story/analysts-anticipate-lower-u-s-crude-oil-stockpiles-0cfee0f9?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "da8373fbee19a0b428e6",
+   "url": "https://www.marketwatch.com/story/equipmentshare-cummins-partner-on-1-gw-mobile-natural-gas-power-deal-58f8817b?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "db84d048726c3fb8cc75",
+   "url": "https://www.marketwatch.com/story/why-a-harris-victory-and-gop-senate-takeover-is-best-outcome-for-consumer-stocks-7ac30f62",
+   "column": "marketwatch_other",
+   "status": "OK",
+   "n_claims": 3,
+   "refused": [
+    {
+     "ticker": "LULU",
+     "why": "REFUSED_QUOTE_NOT_IN_ARTICLE"
+    },
+    {
+     "ticker": "ULTA",
+     "why": "REFUSED_QUOTE_NOT_IN_ARTICLE"
+    },
+    {
+     "ticker": "AZO",
+     "why": "REFUSED_QUOTE_NOT_IN_ARTICLE"
+    }
+   ],
+   "tickers": [
+    "COST",
+    "WMT",
+    "TSCO"
+   ],
+   "directions": [
+    "down",
+    "down",
+    "up"
+   ],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "e9866a00cbad961a6302",
+   "url": "https://www.marketwatch.com/story/netapp-to-launch-storage-service-platform-with-oracle-24b0df79?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "fe325746b07f173413e0",
+   "url": "https://www.marketwatch.com/story/im-in-my-50s-my-mother-died-from-alzheimers-do-i-need-long-term-insurance-14d58069?mod=mw_latestnews",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "0197cab9d69c5970d954",
+   "url": "https://www.wsj.com/finance/banking/lazy-customers-are-great-for-banks-could-ai-change-that-220b4dc9?mod=finance_lead_story",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "META"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "01cd3ca281c8dd4614d0",
+   "url": "https://www.wsj.com/world/china/deep-divides-and-missed-deals-cloud-trump-xi-visit-630122b0?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "0b85c8dc246b3ee04dc7",
+   "url": "https://www.wsj.com/lifestyle/travel/the-highs-and-lows-of-my-2-500-flight-in-alaskas-new-long-haul-business-class-fac876b7?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "1492d33e585085cef8fd",
+   "url": "https://www.wsj.com/articles/iovance-biotherapeutics-stock-gains-after-raising-fy-revenue-guidance-on-demand-for-melanoma-treatments-54ee8ded",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "17429c0c5aa106ddfc23",
+   "url": "https://www.wsj.com/finance/investing/cracks-in-oracles-ai-data-center-build-out-appear-in-massive-new-mexico-project-effb51c2?mod=article_inline",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [],
+   "tickers": [
+    "ORCL",
+    "OWL"
+   ],
+   "directions": [
+    "down",
+    "down"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 6,
+   "write_status": "OK"
+  },
+  {
+   "sha": "25e80dae4f6361197353",
+   "url": "https://www.wsj.com/business/telecom/at-t-corning-enter-3-billion-deal-for-fiber-920284ce",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "2a72bd3176ad1f03696d",
+   "url": "https://www.wsj.com/world/middle-east/yemens-houthis-threatening-global-oil-are-increasingly-supplied-by-china-6bfcfeec?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "48d5fc1e8ae6135f8385",
+   "url": "https://www.wsj.com/cmo-today/nike-overhauls-its-china-strategy-to-halt-discounting-and-rebuild-premium-cachet-235f92a9",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "5140cd98bacbfe3996d3",
+   "url": "https://www.wsj.com/articles/micron-expected-to-log-surging-growth-as-investors-debate-timeline-of-memory-crunch-earnings-preview-bd975085",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "MU"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "5d2075e85fe257fb93dc",
+   "url": "https://www.wsj.com/personal-finance/trump-accounts-kids-explained-4b75b803?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "643eaa83d4fb83117d84",
+   "url": "https://www.wsj.com/economy/central-banking/feds-barr-surge-of-investment-and-related-demand-from-ai-buildout-is-having-measurable-effect-on-prices-27626b1f",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "678647f13b91d08cd254",
+   "url": "https://www.wsj.com/world/middle-east/netanyahu-returns-to-familiar-u-n-stage-more-isolated-than-ever-e61426f0?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "7437a99afe36ec4cc36e",
+   "url": "https://www.wsj.com/finance/investing/leverage-or-luck-c0641149?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "75fe2b137ac440a63db4",
+   "url": "https://www.wsj.com/business/airlines/the-airline-industrys-biggest-winners-are-betting-youll-pay-to-fly-in-style-733a2031?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "7a1f9ae4cc401b375f46",
+   "url": "https://www.wsj.com/us-news/michael-dell-donates-6-25-billion-to-trump-accounts-for-children-5bbddf33?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "7d0b3df625d2b796b203",
+   "url": "https://www.wsj.com/articles/centrus-energy-shares-fall-after-pricing-of-500-million-public-offering-6f483e62",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a0e8672542df40c2fe77",
+   "url": "https://www.wsj.com/finance/currencies/maduros-crypto-backed-oil-deals-put-tether-at-center-of-venezuela-money-drama-3fc53b29?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c4ad48ec0a1b9cefd697",
+   "url": "https://www.wsj.com/tech/ai/openai-anthropic-crisis-money-safety-847bc1d6?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "cbcb913f7e24b8260adc",
+   "url": "https://www.wsj.com/business/deals/blackrock-strikes-12-billion-deal-for-hps-doubling-down-on-wall-streets-hottest-market-b5d758cd?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e0c455aa934154c286a0",
+   "url": "https://www.wsj.com/tech/ai/yann-lecuns-ai-startup-raises-over-1-billion-14928928?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "eb3f41ab3d87a830d908",
+   "url": "https://www.wsj.com/business/retail/nike-broke-up-with-retailers-now-its-trying-to-win-them-back-6c0b475c?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "fe4ccf8c59e294710d45",
+   "url": "https://www.wsj.com/politics/national-security/pete-hegseth-military-officer-cuts-e4acab48?mod=hp_lead_pos3",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  }
+ ]
+}

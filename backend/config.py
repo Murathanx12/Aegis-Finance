@@ -5321,6 +5321,48 @@ FLEET_MANAGER_NEWS_MAX_ALREADY_MOVED_SIGMA = 2.0
 FLEET_MANAGER_CONTROL_SYMBOL = "SPY"
 FLEET_MANAGER_CONTROL_WEIGHT = 0.95
 FLEET_MANAGER_CONTROL_STOP_FRAC = 0.10
+#: C26 (2026-10-07): NAMED GATES in `fleet_manager.GATES`, walked in this order
+#: for every order proposal; each returns PASS / SHRINK(to) / KILL with a reason,
+#: and the trace lands on the decision row and the run receipt. A gate may only
+#: shrink or kill (pinned by test); an EXIT is blocked only by a LEASE gate.
+#: `test_fleet_gates.py` fails if this tuple and the code's order differ.
+FLEET_GATE_ORDER: tuple = ("kill_switch", "credential", "reconciliation", "venue_window",
+                           "instrument", "order_shape", "long_only", "stop_never_loosened",
+                           "min_order", "cooldown", "turnover_budget", "cash", "gross_cap",
+                           "name_cap", "sector_concentration", "order_count")
+#: No re-entry into a name a sell-STOP filled on within this many sessions
+#: (weekday count, `fleet_manager.sessions_between`): blocked at N-1, allowed at N.
+FLEET_GATE_COOLDOWN_SESSIONS = 5
+#: No sector above this fraction of the account's gross, the denominator floored
+#: at equity (so an account in cash can buy its first names). Sector from the
+#: newest potential_universe identity.sector (the map book_dna reads); a name
+#: with no sector joins ONE bucket named UNKNOWN. A contract's declared
+#: name-cap override (the SPY control) is exempt: it is not a sector bet.
+FLEET_GATE_SECTOR_MAX_FRAC = 0.40
+#: The stop-fill lookback the cooldown gate reads, in calendar days (covers N
+#: sessions with room for holidays).
+FLEET_GATE_COOLDOWN_LOOKBACK_DAYS = 21
+#: `cooldown` and `sector_concentration` are new (C26, 2026-10-07) and would
+#: change a LIVE book's executed positions before the owner has decided --
+#: hack2's Technology buys would be KILLED tonight at the 22:45 HKT open pass
+#: because Technology is already 67% of hack2
+#: (`docs/research_notes/2026-10-07/fleet_gates_and_eod_audit_2026-10-07.md`).
+#: "shadow": both gates evaluate and the trace carries what they WOULD have
+#: done (`shadow_verdict`: `SHADOW_WOULD_KILL` / `SHADOW_WOULD_SHRINK(to=...)`),
+#: but `fleet_manager.run_gates` always returns PASS for them -- no size or
+#: kill changes. "enforce": they bind like every other gate. Flip only on
+#: Murat's decision; the flip is hashed onto `gates_config()["hash"]` so it is
+#: visible on every receipt.
+FLEET_NEW_GATES_MODE = "shadow"
+#: C26 END-OF-DAY AUDIT (`backend/services/fleet_eod_audit.py`): the Preclose
+#: pass runs it last; `python -m scripts.fleet_eod_audit` runs it alone. It
+#: never places or cancels anything (its transport refuses every non-GET).
+#: A grade-ledger equity that differs from the broker's previous-close equity
+#: by more than this fraction is a reconciliation mismatch.
+FLEET_EOD_AUDIT_GRADE_TOL_FRAC = 0.005
+#: Preclose receipts started before this instant predate the audit; the health
+#: reader excuses their missing audit row (named), and requires it after.
+FLEET_EOD_AUDIT_SINCE_UTC = "2026-10-07T12:00:00Z"
 #: Source trust from fleet grades (forward only, nn_lab/loop.py style): trust is
 #: the posterior mean of a source's mean DAILY excess over the control, prior
 #: N(0, PRIOR_SD^2), from COMPLETED blocks of BLOCK_SESSIONS graded sessions only
@@ -5687,6 +5729,9 @@ LEGIBILITY_STALE_HOURS: dict = {
     "regret": 48.0,                 # daily pass `regret` step
     "handoff_doc": 24.0 * 14,       # the handoff the CRSP sentence is quoted from (dated by its name)
     "opportunities": 24.0 * 3,      # C15: the published Opportunity Explorer copy (OPPORTUNITIES_STALE_DAYS)
+    "world_state_beliefs": 24.0,    # brain page v2: AegisWorldDigest refreshes beliefs.json every ~6h
+    "world_state_scenarios": 24.0,  # written the same cycle as beliefs.json
+    "belief_updates": 24.0,         # the append log for "what changed since the last cycle"
 }
 #: C15 (2026-10-07): `backend/services/publish_receipts.py` copies each public page's
 #: sanitised payload into the TRACKED `backend/data/public_receipts/`. The whole folder

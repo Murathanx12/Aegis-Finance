@@ -4653,3 +4653,55 @@ export interface SystemHealthResponse extends LegBase {
 export function getSystemHealth() {
   return fetchAPI<SystemHealthResponse>("/api/legibility/v1/system-health");
 }
+
+// ── Brain belief state (brain page v2, 2026-10-07) ─────────────────────────
+// Every number traces to a field named on `receipts`; `missing_because` names why a
+// block is null (e.g. `contradictions` is empty on every live belief today — the state
+// is real, just unobserved). See docs/design/OPTIMUS_CREATIVE_TOOL_LIBRARY_2026-10-07.md §2.
+export interface CoMentionEdge {
+  to: string; sign: "+" | "-" | string; lag_sessions: number | null; support: number | null;
+  example_theme: string | null;
+}
+export type BeliefDirection = "up" | "down" | "mixed" | "none" | string;
+export interface BeliefRow {
+  topic: string; meaning: string | null; direction: BeliefDirection; prior_direction: BeliefDirection | null;
+  confidence: number | null; mass_up: number | null; mass_down: number | null; half_life_days: number | null;
+  hours_since_update: number | null; recent_change: boolean; flipped_this_cycle: boolean;
+  evidence_this_cycle: boolean | null; n_root_events_this_cycle: number | null;
+  n_new_root_events_this_cycle: number | null; evidence_basis: string | null; belief_change: number | null;
+  n_contradictions: number; contradicted: boolean; has_evidence: boolean;
+  sectors: string[]; co_mention_edges: CoMentionEdge[];
+}
+export interface ScenarioRow {
+  scenario_id: string; name: string | null; horizon_year: number | null;
+  probability_display: number | null; probability_source: string | null;
+  prior_version: number | null; prior_author: string | null; prior_declared_at: string | null; use: string | null;
+  drivers: string[]; falsifiers: string[]; beneficiary_sectors: string[]; loser_sectors: string[];
+}
+export interface BeliefUpdateRow {
+  t: string | null; topic: string; direction: BeliefDirection; prior_direction: BeliefDirection | null;
+  confidence: number | null; belief_change: number | null; hours_since_prior: number | null;
+  contradiction: boolean; n_new_root_events: number | null; flipped: boolean;
+}
+export interface RegimeFieldRow {
+  field: string; variable: string; horizon: string | null; n_entry_sessions: number | null;
+  trust: number | null; n_open: number | null; brier_model_raw: number | null;
+  brier_persistence: number | null; verdict_persistence: string | null;
+  brier_base_rate: number | null; verdict_base_rate: string | null;
+}
+export interface BrainResponse extends LegBase {
+  as_of: string | null; digest_id: string | null; pulse_window_hours: number; co_mention_label: string;
+  beliefs: BeliefRow[];
+  scenarios: ScenarioRow[];
+  regime: { trust: number | null; note: string | null; n_fields: number | null;
+    vs_persistence: Record<string, number | string | null> | null;
+    vs_base_rate: Record<string, number | string | null> | null; baselines: string[];
+    fields: RegimeFieldRow[] } | null;
+  belief_stability: { belief_stability: number | null; status: string | null; max: number | null;
+    n_compared: number | null; definition: string | null } | null;
+  belief_updates: BeliefUpdateRow[];
+  links: Record<string, string>;
+}
+export function getBrainState() {
+  return fetchAPI<BrainResponse>("/api/legibility/v1/brain");
+}

@@ -1,0 +1,584 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "user",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-27T14:40:17+00:00",
+ "plan": [
+  {
+   "lane": "marketwatch:analyst_estimates",
+   "max": 67,
+   "tickers": [
+    "VKTX",
+    "NTLA",
+    "HWM",
+    "IONQ",
+    "AGYS",
+    "NVT",
+    "AMZN",
+    "NVDA",
+    "TSM",
+    "GEV",
+    "CLS",
+    "PRAX",
+    "SNOW",
+    "JAZZ",
+    "LEU",
+    "COGT",
+    "BHVN",
+    "BBIO",
+    "CRM",
+    "MP",
+    "AVGO",
+    "ABSI",
+    "LNG",
+    "CCJ",
+    "BSP",
+    "AGIO",
+    "ENS",
+    "PRGS",
+    "BA",
+    "GOOGL",
+    "TER",
+    "VRT",
+    "VG",
+    "BN",
+    "WDAY",
+    "WST",
+    "DKNG",
+    "AVPT",
+    "PRCH",
+    "VRTX",
+    "NOW",
+    "MU",
+    "SNDR",
+    "NVO",
+    "HUBS",
+    "INCY",
+    "HOOD",
+    "META",
+    "RHI",
+    "ACI",
+    "PEGA",
+    "SMPL",
+    "RGEN",
+    "MAN",
+    "BE",
+    "AAPL",
+    "AMGN",
+    "IRDM",
+    "AARD",
+    "HELE",
+    "KYTX",
+    "NOVT",
+    "NVEC",
+    "PSNL",
+    "QUBT",
+    "SLDP",
+    "SOC"
+   ]
+  }
+ ],
+ "parent_tabs": {
+  "marketwatch": {
+   "tab": "chrome-mcp:fe9a0faf6f97:8",
+   "label": "t8",
+   "url": "https://www.wsj.com/?aegis=muratclaw",
+   "how": "borrowed:no marketwatch.com tab open"
+  }
+ },
+ "max_pages": 70,
+ "budget_explicit": false,
+ "fresh_since": "2026-09-27",
+ "cost_usd": 0.0,
+ "lanes": {
+  "marketwatch:analyst_estimates": {
+   "source": "marketwatch",
+   "section": "analyst_estimates",
+   "column": "mw_analyst_estimates",
+   "parent_tab": "chrome-mcp:fe9a0faf6f97:8",
+   "tab": "chrome-mcp:fe9a0faf6f97:28",
+   "links_found": 0,
+   "skipped_already_stored": 18,
+   "articles": [
+    {
+     "url": "https://www.marketwatch.com/investing/stock/cogt/analystestimates",
+     "title": "COGT | Cogent Biosciences Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": null,
+     "first_seen_utc": "2026-09-27T14:42:48+00:00",
+     "chars": 2466,
+     "raw_chars": 5092,
+     "column": "mw_analyst_estimates",
+     "sha": "57d86fdb889dd5b8792f",
+     "paywall_suspected": false,
+     "read_s": 0.0,
+     "ticker": "COGT",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\57d86fdb889dd5b8792f.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/bhvn/analystestimates",
+     "title": "BHVN | Biohaven Ltd. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:30:00+00:00",
+     "first_seen_utc": "2026-09-27T14:45:11+00:00",
+     "chars": 2414,
+     "raw_chars": 5074,
+     "column": "mw_analyst_estimates",
+     "sha": "8d8c422fc218c507c4b6",
+     "paywall_suspected": false,
+     "read_s": 135.91,
+     "ticker": "BHVN",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\8d8c422fc218c507c4b6.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/bbio/analystestimates",
+     "title": "BBIO | BridgeBio Pharma Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:30:00+00:00",
+     "first_seen_utc": "2026-09-27T14:47:57+00:00",
+     "chars": 2421,
+     "raw_chars": 5197,
+     "column": "mw_analyst_estimates",
+     "sha": "fddba45db16e284d6929",
+     "paywall_suspected": false,
+     "read_s": 158.34,
+     "ticker": "BBIO",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\fddba45db16e284d6929.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/crm/analystestimates",
+     "title": "CRM | Salesforce Inc. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T14:50:21+00:00",
+     "chars": 2399,
+     "raw_chars": 5055,
+     "column": "mw_analyst_estimates",
+     "sha": "732a7c279198f3499b64",
+     "paywall_suspected": false,
+     "read_s": 136.51,
+     "ticker": "CRM",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\732a7c279198f3499b64.json",
+     "duplicate": false
+    },
+    {
+     "url": "https://www.marketwatch.com/investing/stock/mp/analystestimates",
+     "title": "MP | MP Materials Corp. Analyst Estimates | MarketWatch",
+     "byline": null,
+     "published_utc": "2026-09-25T23:59:00+00:00",
+     "first_seen_utc": "2026-09-27T14:52:41+00:00",
+     "chars": 3863,
+     "raw_chars": 5064,
+     "column": "mw_analyst_estimates",
+     "sha": "1f64de586e6359441451",
+     "paywall_suspected": false,
+     "read_s": 133.46,
+     "ticker": "MP",
+     "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\marketwatch\\2026-09-27\\1f64de586e6359441451.json",
+     "duplicate": false
+    }
+   ],
+   "refusals": [],
+   "dropped": null,
+   "opened": {
+    "label": "t28",
+    "how": "handle",
+    "tabs_before": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t7",
+      "chrome-mcp:fe9a0faf6f97:7",
+      "https://moodle.hku.hk/mod/assign/view.php?id=4300458"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t9",
+      "chrome-mcp:fe9a0faf6f97:9",
+      "file:///C:/Users/mrthn/Downloads/INTC2001_Patent_Worklab%20(1).pdf"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t13",
+      "chrome-mcp:fe9a0faf6f97:13",
+      "https://studentportal.hku.hk/en-US/search/?query=e%20planner"
+     ],
+     [
+      "t14",
+      "chrome-mcp:fe9a0faf6f97:14",
+      "https://outlook.cloud.microsoft/host/377c982d-9686-450e-9a7c-22aeaf1bc162/7211f19f-262a-42"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t17",
+      "chrome-mcp:fe9a0faf6f97:17",
+      "https://padlet.com/cleekw/intc-2401-board-65nw7ttcgybsvxkq"
+     ],
+     [
+      "t18",
+      "chrome-mcp:fe9a0faf6f97:18",
+      "https://edstem.org/au/courses/41444/discussion/3604309"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t23",
+      "chrome-mcp:fe9a0faf6f97:23",
+      "https://outlook.cloud.microsoft/mail/inbox/id/AAQkADkxNTE3NzQ1LTk2ZDQtNDgwZS1iMjZjLTAwZjUw"
+     ],
+     [
+      "t24",
+      "chrome-mcp:fe9a0faf6f97:24",
+      "https://moodle.hku.hk/course/view.php?id=142872"
+     ],
+     [
+      "t25",
+      "chrome-mcp:fe9a0faf6f97:25",
+      "https://www.youtube.com/watch?v=heUSEDLf4ic&list=RDA6L-cTnZei8&index=2"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ]
+    ],
+    "tabs_after": [
+     [
+      "t1",
+      "chrome-mcp:fe9a0faf6f97:1",
+      "https://base44-sops.vercel.app/p8x2m"
+     ],
+     [
+      "t2",
+      "chrome-mcp:fe9a0faf6f97:2",
+      "https://www.aiadvertiser.co/login?error=server_error"
+     ],
+     [
+      "t3",
+      "chrome-mcp:fe9a0faf6f97:3",
+      "https://claude.ai/chat/f36b0daf-8a1a-445d-8a89-44245e44d08d"
+     ],
+     [
+      "t4",
+      "chrome-mcp:fe9a0faf6f97:4",
+      "https://web.whatsapp.com/#"
+     ],
+     [
+      "t5",
+      "chrome-mcp:fe9a0faf6f97:5",
+      "https://www.youtube.com/watch?v=9RUVcP0bwRE"
+     ],
+     [
+      "t6",
+      "chrome-mcp:fe9a0faf6f97:6",
+      "https://app.alpaca.markets/user/profile#manage-accounts"
+     ],
+     [
+      "t7",
+      "chrome-mcp:fe9a0faf6f97:7",
+      "https://moodle.hku.hk/mod/assign/view.php?id=4300458"
+     ],
+     [
+      "t8",
+      "chrome-mcp:fe9a0faf6f97:8",
+      "https://www.wsj.com/?aegis=muratclaw"
+     ],
+     [
+      "t9",
+      "chrome-mcp:fe9a0faf6f97:9",
+      "file:///C:/Users/mrthn/Downloads/INTC2001_Patent_Worklab%20(1).pdf"
+     ],
+     [
+      "t10",
+      "chrome-mcp:fe9a0faf6f97:10",
+      "https://chatgpt.com/g/g-p-6a7d3708c0dc8191b85092eeff2d2f24-aegis/c/6aae02c1-3e8c-83ec-9a52"
+     ],
+     [
+      "t11",
+      "chrome-mcp:fe9a0faf6f97:11",
+      "https://platform.deepseek.com/usage"
+     ],
+     [
+      "t12",
+      "chrome-mcp:fe9a0faf6f97:12",
+      "https://web.telegram.org/a/#8882631718"
+     ],
+     [
+      "t13",
+      "chrome-mcp:fe9a0faf6f97:13",
+      "https://studentportal.hku.hk/en-US/search/?query=e%20planner"
+     ],
+     [
+      "t14",
+      "chrome-mcp:fe9a0faf6f97:14",
+      "https://outlook.cloud.microsoft/host/377c982d-9686-450e-9a7c-22aeaf1bc162/7211f19f-262a-42"
+     ],
+     [
+      "t15",
+      "chrome-mcp:fe9a0faf6f97:15",
+      "https://calendar.google.com/calendar/u/0/r/week"
+     ],
+     [
+      "t16",
+      "chrome-mcp:fe9a0faf6f97:16",
+      "https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon"
+     ],
+     [
+      "t17",
+      "chrome-mcp:fe9a0faf6f97:17",
+      "https://padlet.com/cleekw/intc-2401-board-65nw7ttcgybsvxkq"
+     ],
+     [
+      "t18",
+      "chrome-mcp:fe9a0faf6f97:18",
+      "https://edstem.org/au/courses/41444/discussion/3604309"
+     ],
+     [
+      "t19",
+      "chrome-mcp:fe9a0faf6f97:19",
+      "https://base44-sops.vercel.app/wfbln"
+     ],
+     [
+      "t20",
+      "chrome-mcp:fe9a0faf6f97:20",
+      "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+     ],
+     [
+      "t21",
+      "chrome-mcp:fe9a0faf6f97:21",
+      "https://wescha-acquisition.base44.app/"
+     ],
+     [
+      "t22",
+      "chrome-mcp:fe9a0faf6f97:22",
+      "https://wescha-scraper.base44.app/"
+     ],
+     [
+      "t23",
+      "chrome-mcp:fe9a0faf6f97:23",
+      "https://outlook.cloud.microsoft/mail/inbox/id/AAQkADkxNTE3NzQ1LTk2ZDQtNDgwZS1iMjZjLTAwZjUw"
+     ],
+     [
+      "t24",
+      "chrome-mcp:fe9a0faf6f97:24",
+      "https://moodle.hku.hk/course/view.php?id=142872"
+     ],
+     [
+      "t25",
+      "chrome-mcp:fe9a0faf6f97:25",
+      "https://www.youtube.com/watch?v=heUSEDLf4ic&list=RDA6L-cTnZei8&index=2"
+     ],
+     [
+      "t26",
+      "chrome-mcp:fe9a0faf6f97:26",
+      "https://railway.com/dashboard"
+     ],
+     [
+      "t28",
+      "chrome-mcp:fe9a0faf6f97:28",
+      "https://www.marketwatch.com/investing/stock/cogt/analystestimates"
+     ]
+    ]
+   }
+  }
+ },
+ "order": [
+  {
+   "turn": 0,
+   "lane": "marketwatch:analyst_estimates",
+   "what": "listing",
+   "url": "https://www.marketwatch.com/investing/stock/cogt/analystestimates",
+   "at": "2026-09-27T14:41:09+00:00",
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/cogt/analystestimates",
+   "ticker": "COGT",
+   "at": "2026-09-27T14:42:55+00:00",
+   "page_load": false,
+   "waited_s": 0.0,
+   "chars": 2466,
+   "ok": true
+  },
+  {
+   "turn": 2,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/bhvn/analystestimates",
+   "ticker": "BHVN",
+   "at": "2026-09-27T14:42:57+00:00",
+   "page_load": true,
+   "waited_s": 1.8579560000000015,
+   "chars": 2414,
+   "ok": true
+  },
+  {
+   "turn": 3,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/bbio/analystestimates",
+   "ticker": "BBIO",
+   "at": "2026-09-27T14:45:19+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2421,
+   "ok": true
+  },
+  {
+   "turn": 4,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/crm/analystestimates",
+   "ticker": "CRM",
+   "at": "2026-09-27T14:48:04+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 2399,
+   "ok": true
+  },
+  {
+   "turn": 5,
+   "lane": "marketwatch:analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/mp/analystestimates",
+   "ticker": "MP",
+   "at": "2026-09-27T14:50:28+00:00",
+   "page_load": true,
+   "waited_s": 0.0,
+   "chars": 3863,
+   "ok": true
+  }
+ ],
+ "stopped": null,
+ "budget_spent": null,
+ "opened": [
+  "chrome-mcp:fe9a0faf6f97:28"
+ ],
+ "orphaned_tabs": [
+  "chrome-mcp:fe9a0faf6f97:28"
+ ],
+ "reattaches": 0,
+ "reattach_log": [],
+ "tab_remaps": [],
+ "tabs_lost_on_reattach": [],
+ "startup_cleanup": {
+  "candidates": [
+   "chrome-mcp:8ab5bfd86096:23",
+   "chrome-mcp:8ab5bfd86096:24",
+   "chrome-mcp:8ab5bfd86096:25",
+   "chrome-mcp:8ab5bfd86096:26",
+   "chrome-mcp:8ab5bfd86096:27",
+   "chrome-mcp:8ab5bfd86096:28",
+   "chrome-mcp:8ab5bfd86096:29",
+   "chrome-mcp:8ab5bfd86096:30",
+   "chrome-mcp:94f9d7f8e757:5",
+   "chrome-mcp:94f9d7f8e757:6",
+   "chrome-mcp:94f9d7f8e757:7",
+   "chrome-mcp:94f9d7f8e757:8",
+   "chrome-mcp:94f9d7f8e757:9",
+   "t37",
+   "t39",
+   "t62"
+  ],
+  "closed": [],
+  "skipped": {
+   "chrome-mcp:8ab5bfd86096:23": "not present",
+   "chrome-mcp:8ab5bfd86096:24": "not present",
+   "chrome-mcp:8ab5bfd86096:25": "not present",
+   "chrome-mcp:8ab5bfd86096:26": "not present",
+   "chrome-mcp:8ab5bfd86096:27": "not present",
+   "chrome-mcp:8ab5bfd86096:28": "not present",
+   "chrome-mcp:8ab5bfd86096:29": "not present",
+   "chrome-mcp:8ab5bfd86096:30": "not present",
+   "chrome-mcp:94f9d7f8e757:5": "not present",
+   "chrome-mcp:94f9d7f8e757:6": "not present",
+   "chrome-mcp:94f9d7f8e757:7": "not present",
+   "chrome-mcp:94f9d7f8e757:8": "not present",
+   "chrome-mcp:94f9d7f8e757:9": "not present",
+   "t37": "not session-qualified (a tN alias is reissued)",
+   "t39": "not session-qualified (a tN alias is reissued)",
+   "t62": "not session-qualified (a tN alias is reissued)"
+  }
+ },
+ "in_progress": true,
+ "tabs_closed": {
+  "chrome-mcp:fe9a0faf6f97:28": false
+ },
+ "blanks": 5,
+ "blank_failures": [],
+ "tab_rotations": []
+}

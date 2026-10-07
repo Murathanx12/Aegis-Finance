@@ -1,0 +1,396 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "profile": "muratclaw",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "started_utc": "2026-09-28T14:08:29+00:00",
+ "plan": [
+  {
+   "lane": "barrons:search",
+   "max": 472,
+   "tickers": [
+    "LITE",
+    "MWH",
+    "Q",
+    "XRX",
+    "STX",
+    "FRMI",
+    "WDS",
+    "MEC",
+    "DUOL",
+    "FLNC",
+    "CSTM",
+    "LAR",
+    "KEX",
+    "LGN",
+    "AMSC",
+    "VKTX",
+    "NTLA",
+    "HWM",
+    "IONQ",
+    "AGYS",
+    "NVT",
+    "TSM",
+    "GEV",
+    "CLS",
+    "SNOW",
+    "JAZZ",
+    "LEU",
+    "COGT",
+    "BHVN",
+    "BBIO",
+    "CRM",
+    "MP",
+    "AVGO",
+    "ABSI",
+    "LNG",
+    "CCJ",
+    "BSP",
+    "AGIO",
+    "ENS",
+    "PRGS",
+    "BA",
+    "GOOGL",
+    "TER",
+    "VRT",
+    "VG",
+    "BN",
+    "WDAY",
+    "WST",
+    "DKNG",
+    "AVPT",
+    "PRCH",
+    "VRTX",
+    "NOW",
+    "MU",
+    "SNDR",
+    "NVO",
+    "HUBS",
+    "INCY",
+    "HOOD",
+    "META",
+    "RHI",
+    "ACI",
+    "PEGA",
+    "SMPL",
+    "RGEN",
+    "MAN",
+    "BE",
+    "AAPL",
+    "AMGN",
+    "IRDM",
+    "HELE",
+    "KYTX",
+    "NOVT",
+    "NVEC",
+    "PSNL",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "SON",
+    "ALLE",
+    "GOOG",
+    "GMAB",
+    "ADUS",
+    "TS",
+    "PDS",
+    "PAGS",
+    "MSFT",
+    "CHD",
+    "BR",
+    "ALG",
+    "STNG",
+    "CHH",
+    "ARCO",
+    "MCD",
+    "SERV",
+    "SMMT",
+    "CYTK",
+    "PDD",
+    "FIZZ",
+    "AARD",
+    "AMZN",
+    "NVDA",
+    "PRAX",
+    "MANH",
+    "BZ",
+    "CMG",
+    "EXPO",
+    "EXEL",
+    "LZ",
+    "REAL",
+    "BBW",
+    "TE",
+    "BW",
+    "CDNL",
+    "AGX",
+    "PLTR",
+    "ACVA",
+    "DBVT"
+   ]
+  }
+ ],
+ "parent_tabs": {
+  "barrons": {
+   "tab": null,
+   "label": null,
+   "url": "",
+   "how": "direct_open: dedicated instance, no parent tab used"
+  }
+ },
+ "max_pages": 475,
+ "budget_explicit": false,
+ "fresh_since": "2026-09-28",
+ "cost_usd": 0.0,
+ "lanes": {
+  "barrons:search": {
+   "source": "barrons",
+   "section": "search",
+   "column": "",
+   "parent_tab": null,
+   "tab": "8224A55FA06EC4821901E4CB2622FE8D",
+   "links_found": 3,
+   "skipped_already_stored": 31,
+   "articles": [],
+   "refusals": [
+    {
+     "item": "https://www.barrons.com/articles/moderna-cancer-vaccine-breakthrough-growth-potential-biotech-investing-0d59f78b?mod=stockoverview",
+     "why": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: gateway unreachable: ECONNREFUSED (ConnectionError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remot"
+    }
+   ],
+   "dropped": null,
+   "skipped_not_found": [],
+   "searches": {
+    "COGT": {
+     "links_on_page": 8,
+     "taken": 2,
+     "skipped_old": 0,
+     "skipped_ad": 0,
+     "already_stored": 1
+    }
+   },
+   "opened": {
+    "label": "4967E7922DC113305A495FE9ECC5009B",
+    "how": "direct_open",
+    "tabs_before": null,
+    "tabs_after": null
+   }
+  }
+ },
+ "order": [
+  {
+   "turn": 0,
+   "lane": "barrons:search",
+   "what": "listing",
+   "url": "https://www.barrons.com/market-data/stocks/cogt",
+   "at": "2026-09-28T14:11:55+00:00",
+   "ok": true
+  },
+  {
+   "turn": 1,
+   "lane": "barrons:search",
+   "what": "search",
+   "ticker": "COGT",
+   "url": "https://www.barrons.com/market-data/stocks/cogt",
+   "at": "2026-09-28T14:11:55+00:00",
+   "ok": true,
+   "links_on_page": 8,
+   "taken": 2,
+   "skipped_old": 0,
+   "skipped_ad": 0,
+   "already_stored": 1
+  },
+  {
+   "turn": 3,
+   "lane": "barrons:search",
+   "item": "https://www.barrons.com/articles/moderna-cancer-vaccine-breakthrough-growth-potential-biotech-investing-0d59f78b?mod=stockoverview",
+   "at": "2026-09-28T14:13:21+00:00",
+   "ok": false,
+   "why": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: gateway unreachable: ECONNREFUSED (ConnectionError: ('Connection aborted"
+  }
+ ],
+ "stopped": "ReaderRefused: REFUSED_VERB_FAILED: press rc 1: gateway unreachable: ECONNREFUSED (ConnectionError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remot",
+ "budget_spent": null,
+ "opened": [
+  "4967E7922DC113305A495FE9ECC5009B",
+  "8224A55FA06EC4821901E4CB2622FE8D"
+ ],
+ "orphaned_tabs": [],
+ "worker": "barrons",
+ "pid": 134972,
+ "reattaches": 0,
+ "reattach_log": [],
+ "tab_remaps": [],
+ "tabs_lost_on_reattach": [],
+ "yield": [
+  {
+   "when": "end",
+   "pages": 1,
+   "lanes": {
+    "barrons:search": {
+     "pages": 1,
+     "links_per_page": 8.0,
+     "zero_link_pages": 0,
+     "chars_per_page": null,
+     "zero_char_pages": 0
+    }
+   },
+   "zero_lanes": []
+  }
+ ],
+ "startup_cleanup": {
+  "candidates": [
+   "3CA36B69D4DC6268671BB9BAF8946DBC",
+   "42634C5B077A1B8DC70B22281316B196",
+   "C41B4DDE4390CCF400355A2EF56B8856",
+   "C71CBD4882F4DEDA00387E6A6D451BAF",
+   "chrome-mcp:fe9a0faf6f97:67",
+   "chrome-mcp:fe9a0faf6f97:68",
+   "chrome-mcp:fe9a0faf6f97:74"
+  ],
+  "closed": [],
+  "skipped": {
+   "3CA36B69D4DC6268671BB9BAF8946DBC": "not present",
+   "42634C5B077A1B8DC70B22281316B196": "not present",
+   "C41B4DDE4390CCF400355A2EF56B8856": "not present",
+   "C71CBD4882F4DEDA00387E6A6D451BAF": "not present",
+   "chrome-mcp:fe9a0faf6f97:67": "not present",
+   "chrome-mcp:fe9a0faf6f97:68": "not present",
+   "chrome-mcp:fe9a0faf6f97:74": "not present"
+  }
+ },
+ "in_progress": false,
+ "tabs_closed": {
+  "4967E7922DC113305A495FE9ECC5009B": true,
+  "8224A55FA06EC4821901E4CB2622FE8D": true
+ },
+ "blanks": 0,
+ "closes_after_read": 1,
+ "blank_slot_refunds": [],
+ "page_classes": {
+  "barrons.com": {
+   "OK": 1
+  }
+ },
+ "blank_failures": [],
+ "tab_rotations": [
+  {
+   "at": "2026-09-28T14:13:08+00:00",
+   "old": "4967E7922DC113305A495FE9ECC5009B",
+   "old_closed": true,
+   "new": "8224A55FA06EC4821901E4CB2622FE8D",
+   "why": "fresh_tab_per_page",
+   "url": "https://www.barrons.com/articles/moderna-cancer-vaccine-breakthrough-growth-potential-biotech-investing-0d59f78b?mod=stockoverview"
+  }
+ ],
+ "parent_tabs_final": {
+  "barrons": null
+ },
+ "footprint": {
+  "verdict": "CANNOT DETERMINE: 1 gap(s), need >= 3",
+  "cv_of_gaps": null,
+  "gaps_s": [
+   73.0
+  ],
+  "gap_min_s": 73.0,
+  "pages_per_hour": 98.63,
+  "scroll_share": null,
+  "pages": 2,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\web_reader\\footprint_20260928T141344Z.json",
+  "cli_scope": "process",
+  "cli_calls": 25,
+  "cli_seconds": 88.28,
+  "cli_seconds_per_page": 44.14,
+  "cli_calls_per_page": 12.5,
+  "cli_breakdown": {
+   "profile_check": {
+    "calls": 3,
+    "seconds": 30.531
+   },
+   "tabs_listing": {
+    "calls": 6,
+    "seconds": 1.342
+   },
+   "other": {
+    "calls": 16,
+    "seconds": 56.407
+   }
+  },
+  "cli_cache": {
+   "profile_hits": 10,
+   "profile_misses": 2,
+   "tabs_hits": 7,
+   "tabs_misses": 6,
+   "tabs_nonce_changes": 0,
+   "url_rereads": 0,
+   "url_from_reply": 0
+  },
+  "cli_by_verb": {
+   "browser close": {
+    "calls": 2,
+    "seconds": 0.235,
+    "s_per_call": 0.12
+   },
+   "browser open": {
+    "calls": 2,
+    "seconds": 6.188,
+    "s_per_call": 3.09
+   },
+   "browser press": {
+    "calls": 5,
+    "seconds": 5.609,
+    "s_per_call": 1.12
+   },
+   "browser profiles": {
+    "calls": 3,
+    "seconds": 30.531,
+    "s_per_call": 10.18
+   },
+   "browser snapshot": {
+    "calls": 4,
+    "seconds": 38.36,
+    "s_per_call": 9.59
+   },
+   "browser status": {
+    "calls": 2,
+    "seconds": 1.625,
+    "s_per_call": 0.81
+   },
+   "browser tabs": {
+    "calls": 6,
+    "seconds": 1.342,
+    "s_per_call": 0.22
+   },
+   "browser wait": {
+    "calls": 1,
+    "seconds": 4.39,
+    "s_per_call": 4.39
+   }
+  },
+  "reattaches": 0,
+  "tab_remaps": 0
+ },
+ "hour_cap_waits_s": [],
+ "same_host_waits": [
+  {
+   "host": "barrons.com",
+   "extra_s": 2.83
+  }
+ ],
+ "throttle_targets_s": [
+  20.0,
+  15.0
+ ],
+ "per_source": {
+  "barrons": {
+   "articles": 0,
+   "refusals": 1,
+   "chars": 0
+  }
+ },
+ "n_articles": 0,
+ "pages_loaded": 2,
+ "seconds_between_page_loads": [
+  73.0
+ ],
+ "finished_utc": "2026-09-28T14:13:44+00:00"
+}

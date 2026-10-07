@@ -1,0 +1,10 @@
+{
+ "artefact": "NN_LAB_NIGHTLY",
+ "schema": 2,
+ "run_id": "nightly_20261006T025551Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "broker_authority": "NONE: writes predictions, never orders",
+ "started_utc": "2026-10-06T02:55:51+00:00",
+ "status": "REFUSED",
+ "refused": "LOW_MEMORY: 1.0 GB free < 1.5"
+}

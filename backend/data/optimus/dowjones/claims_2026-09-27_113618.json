@@ -1,0 +1,56 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-09-27",
+ "days": [
+  "2026-09-27"
+ ],
+ "started_utc": "2026-09-27T11:36:09+00:00",
+ "mw_analyst_snapshot": {
+  "n_pages": 9,
+  "n_rows_written": 9,
+  "thin": [],
+  "tickers": [
+   "PRAX",
+   "GEV",
+   "NTLA",
+   "NVT",
+   "NVDA",
+   "SNOW",
+   "LEU",
+   "IONQ",
+   "AMZN"
+  ]
+ },
+ "barrons_big_money_poll_index_rows": {
+  "n_articles": 0,
+  "n_rows_written": 0,
+  "per_article": []
+ },
+ "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
+ "purpose": "dowjones_claims",
+ "cap_usd": 1.0,
+ "spent_usd": 0.00049,
+ "n_llm_calls": 1,
+ "stopped": null,
+ "n_articles": 1,
+ "n_claims": 0,
+ "forecast_rows_by_source_id": {
+  "wsj_heard_on_the_street": 0
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "a291890d7b2bd3efb742",
+   "url": "https://www.wsj.com/tech/ai/ai-safety-effective-altruism-anthropic-164b9d05?mod=_whatsnews_pos1",
+   "column": "wsj_heard_on_the_street",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 0,
+   "write_status": null
+  }
+ ]
+}

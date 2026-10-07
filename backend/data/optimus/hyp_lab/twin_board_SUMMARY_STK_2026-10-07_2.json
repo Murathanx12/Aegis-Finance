@@ -1,0 +1,163 @@
+{
+ "schema": "hyp_lab/twin_board/3",
+ "run_id": "STK_2026-10-07_2",
+ "written_utc": "2026-10-06T19:05:33+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "status": "PARTIAL: 24 rules refused (named)",
+ "twin_kind": "sticky",
+ "cost_convention": "OWN_TURNOVER_SAME_COST_MODEL",
+ "cost_convention_doc": "The twin pays the SAME cost model as the rule it is matched to, on ITS OWN measured\n    turnover -- never a flat full round trip every month.\n\n    * Per-trade cost model (shared by rule and twin): each traded weight |w_t - w_{t-1}|\n      pays half of that name's round-trip spread; the round trip is the board's per-name\n      spread (on the CRSP boards max(Corwin-Schultz at the decision date, capped, the flat\n      6/10/18/35 bps band) -- the turnover-scaled Corwin-Schultz variant). `trade_cost`.\n    * Turnover: the twin's OWN one-way turnover, measured on the twin held as a portfolio\n      (weights drift between rebalances, a name is traded only when its weight changes).\n      A twin that holds still pays nothing; a twin whose turnover equals its rule's pays\n      what the rule pays on the same spreads. `turnover_cost`, `turnover_scaled_net`.\n    * Why: until 2026-10-06 the bridges board charged the twin the full Corwin-Schultz\n      round trip every month (Corwin-Schultz subtracted from every name's forward return)\n      while the rule paid only its own 10-50% turnover. A low-turnover rule then \"beat\"\n      its twin by the twin's cost alone: 106 of 161 rules at t >= 2, 18 on gross selection\n      (`hyp_lab/twin_board_SUMMARY_TB_2026-09-30_1.json`).\n    * The old charge survives ONLY as `twin_full_round_trip_upper_bound`, printed in the\n      `UPPER_BOUND_COLUMN` for comparison. No verdict reads it.\n    ",
+ "cost_composition": "MAX_CS_CAPPED_OR_FLAT_BAND_ON_TRADED_WEIGHT",
+ "rule_weights": "carried (schema 3)",
+ "four_columns": [
+  "pure_selection",
+  "fair_twin_net",
+  "net_minus_market",
+  "twin_full_round_trip_UPPER_BOUND"
+ ],
+ "windows": {
+  "full": [
+   null,
+   null
+  ],
+  "design": [
+   "1991-01-01",
+   "2008-12-31"
+  ],
+  "validate": [
+   "2009-01-01",
+   "2016-12-31"
+  ],
+  "late": [
+   "2017-01-01",
+   "2024-12-31"
+  ],
+  "design_validate": [
+   "1991-01-01",
+   "2016-12-31"
+  ]
+ },
+ "llm_spend_usd": 0.0,
+ "sticky_declaration": {
+  "path": "docs/research_notes/2026-10-06/DECLARATION_TWIN_STICKY_v1.json",
+  "sha256": "7333553e17ea6471c772cab934944fa2b223324fe29d430d90ac10f8a835e988",
+  "code_sha256": "a4b29e5136c49510de66f4a8067d1a06ffa5cad54b638ade541fb24b87814e31"
+ },
+ "supersedes_for_twin_reads": "nothing: a sticky-twin board BESIDE the basket board",
+ "sticky_tolerance": 0.03,
+ "summary": {
+  "n_rules": 301,
+  "n_refused": 24,
+  "refused": [
+   "hi52_large",
+   "rev_1m",
+   "rev_1m_large",
+   "rev_1m_small",
+   "rev_5d_large",
+   "buy_the_dip",
+   "rev_in_winners",
+   "low_max_large",
+   "illiquid",
+   "illiquid_mid_plus",
+   "seasonality_hs_large",
+   "seas_mom",
+   "mom_rev",
+   "rev5_lowvol_large",
+   "mom_in_laggard_sectors",
+   "qc372_oversold_snapback_mega",
+   "random_large",
+   "flow_accel_mom",
+   "attention_reversal",
+   "eap_mom",
+   "eap_avoid_mom",
+   "eap_lowvol",
+   "runup_exit_before_large",
+   "cluster_unconfirmed"
+  ],
+  "n_ok": 277,
+  "pure_selection_t_ge_2": 45,
+  "fair_twin_t_ge_2": 44,
+  "upper_bound_twin_t_ge_2": 180,
+  "board_flat_rule_minus_twin21_t_ge_2": 31,
+  "net_minus_market_validate_t_ge_2": 1,
+  "beats_fair_twin_and_market_validate": [
+   "qc761_ebit_ev_ebit_ic_large_annual"
+  ],
+  "fair_twin_and_pure_selection_t_ge_2": [
+   "cascade_entry_timing",
+   "cash_lowvol",
+   "co03_reversal_in_high_margin",
+   "div_lead_earn_mom",
+   "ear_flow",
+   "ear_mom",
+   "flow_acceleration",
+   "flow_in_winners",
+   "flow_rule",
+   "flow_rule_large",
+   "frog_in_pan",
+   "frog_in_pan_trend",
+   "gh02_five_price_factors_ivw",
+   "ibes_skill_net_raises",
+   "low_dtc_gp",
+   "mom_12_1_large",
+   "mom_6_1_large",
+   "mom_flow",
+   "mom_flow_ivw",
+   "mom_flow_small",
+   "mom_flow_trend",
+   "mom_in_calm",
+   "mom_in_high_margin",
+   "mom_no_downgrades_large",
+   "net_raises",
+   "net_raises_180d",
+   "net_raises_trend",
+   "px_vs_ma200_large",
+   "qc623_mom63_liquidity_weighted",
+   "qc629_multimom_above_trend_gated",
+   "qc761_ebit_ev_ebit_ic_large_annual",
+   "quality_composite_secrel",
+   "quality_momentum_gate",
+   "rd_intensity",
+   "resid_mom_12_1_large",
+   "roe_mom_large",
+   "trend_quality",
+   "trend_quality_trend",
+   "unskilled_mom",
+   "upgrades_net_90"
+  ],
+  "beats_fair_twin_and_selection_and_market_validate": [
+   "qc761_ebit_ev_ebit_ic_large_annual"
+  ],
+  "median_twin_turnover_minus_rule_turnover": 0.002003305477305206,
+  "beats_fair_twin_1991_2016_and_market_validate": [],
+  "median_upper_bound_minus_fair_mean_monthly": 0.005033038509799689,
+  "sticky_median_of_median_abs_turnover_gap": 0.00811951850125571,
+  "refused_reasons": {
+   "hi52_large": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0544 > tolerance 0.0300",
+   "rev_1m": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0330 > tolerance 0.0300",
+   "rev_1m_large": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0734 > tolerance 0.0300",
+   "rev_1m_small": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0406 > tolerance 0.0300",
+   "rev_5d_large": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0582 > tolerance 0.0300",
+   "buy_the_dip": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0480 > tolerance 0.0300",
+   "rev_in_winners": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0406 > tolerance 0.0300",
+   "low_max_large": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0541 > tolerance 0.0300",
+   "illiquid": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0326 > tolerance 0.0300",
+   "illiquid_mid_plus": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0670 > tolerance 0.0300",
+   "seasonality_hs_large": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0592 > tolerance 0.0300",
+   "seas_mom": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0350 > tolerance 0.0300",
+   "mom_rev": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0525 > tolerance 0.0300",
+   "rev5_lowvol_large": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0645 > tolerance 0.0300",
+   "mom_in_laggard_sectors": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0357 > tolerance 0.0300",
+   "qc372_oversold_snapback_mega": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0777 > tolerance 0.0300",
+   "random_large": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0487 > tolerance 0.0300",
+   "flow_accel_mom": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0324 > tolerance 0.0300",
+   "attention_reversal": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0305 > tolerance 0.0300",
+   "eap_mom": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0337 > tolerance 0.0300",
+   "eap_avoid_mom": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0401 > tolerance 0.0300",
+   "eap_lowvol": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0326 > tolerance 0.0300",
+   "runup_exit_before_large": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0325 > tolerance 0.0300",
+   "cluster_unconfirmed": "REFUSED: TwinInputMissing: REFUSED: median |twin turnover - rule turnover| 0.0353 > tolerance 0.0300"
+  }
+ },
+ "seconds": 2257.4
+}

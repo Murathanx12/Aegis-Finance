@@ -1,0 +1,41 @@
+{
+ "schema": "snowball_rho/1",
+ "asof": "2026-10-06T23:01",
+ "surrogate": "every dated target RAISE on the yfinance file, one per (ticker, month), entry at the close of the first session strictly after the event day, 21-session return minus SPY, winsorised 1/99; grouped by event month",
+ "bars": "prices_2025_26/bars.parquet (2025-01 onward): ~20 months, so the CI is wide",
+ "n_events": 19005,
+ "n_months": 21,
+ "events_per_month_mean": 905.0,
+ "rho": 0.01956,
+ "rho_ci95_month_bootstrap": [
+  0.01021,
+  0.02668
+ ],
+ "n_boot": 1000,
+ "seed": 7100018,
+ "lint_inputs_reused": {
+  "event_frequency_per_year": 1500,
+  "corpus_years": 26,
+  "n_required": 7064,
+  "n_available_at_cap": 312
+ },
+ "n_available_at_rho_26y_IBES_ASSUMED": 11384.7,
+ "n_available_at_rho_ci_26y_IBES_ASSUMED": [
+  9053.2,
+  17213.8
+ ],
+ "measured_sd_21s_excess": 0.12121,
+ "n_required_at_measured_sd": 7207.0,
+ "yfinance_corpus_years": 14.83,
+ "n_available_on_yfinance_corpus": 6492.9,
+ "n_available_on_yfinance_corpus_at_rho_ci_hi": 5163.2,
+ "power_line": "On this corpus (14.8 y of yfinance raises) only ~6,493 usable observations (~5,163 at the upper rho) vs ~7,207 required -> NOT RE-LINTABLE ON THIS CORPUS. 26 years (and the 11k figure) hold only if the IBES t0 count supports >= 1,500/yr, which the draft says is owed before signing. The declared 0.4pp per 21 sessions is about the size of the ~35 bps 21-day toll (section 59): economically marginal even if resolvable. The surrogate's own mean is -0.67% per 21 sessions vs SPY.",
+ "verdict": "NOT_RELINTABLE_ON_THIS_CORPUS",
+ "caveats": [
+  "21-session windows that start late in one month overlap the next month's: the month grouping understates dependence across adjacent months",
+  "the surrogate is all raises, not t0 events; t0 events may cluster differently",
+  "rho is measured on 2025-26 only; the linter's 26 corpus-years are assumed to share it",
+  "rho is biased LOW: month ICC on overlapping 21-session windows, winsorised 1/99, ignoring same-sector clustering within a month"
+ ],
+ "supersedes": "snowball_rho_20261006T214926Z.json (its 11,241 used 26 IBES years; this corpus has fewer)"
+}

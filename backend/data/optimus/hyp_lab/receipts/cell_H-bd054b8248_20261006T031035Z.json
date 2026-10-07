@@ -1,0 +1,146 @@
+{
+ "hyp_id": "H-bd054b8248",
+ "title": "10Y yield spike lifts money-center banks over regionals",
+ "night": "2026-10-06",
+ "run_utc": "2026-10-06T03:10:35+00:00",
+ "result": {
+  "cell_type": "macro_lead_lag",
+  "params": {
+   "driver": "^TNX",
+   "targets": [
+    "JPM",
+    "BAC",
+    "C",
+    "WFC",
+    "KRE"
+   ],
+   "expected_sign": 1,
+   "h": 1,
+   "shock_z": 2.0
+  },
+  "targets_used": [
+   "JPM",
+   "BAC",
+   "C",
+   "WFC"
+  ],
+  "beta_to_spy_design": 1.249,
+  "window": "open(t+1) -> close(t+1), residual of beta x SPY; etf: targets use close t -> close t+1",
+  "design": {
+   "primary_signed_next_resid": {
+    "mean": 0.001532,
+    "se": 0.0014,
+    "t": 1.09,
+    "mde": 0.00392,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "net_of_cost": -0.000468,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.014273,
+    "se": 0.001857,
+    "t": 7.68,
+    "mde": 0.005201,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "placebo_all_days_signed_next": {
+    "mean": -0.000104,
+    "se": 0.000234,
+    "t": -0.44,
+    "mde": 0.000656,
+    "n": 1721,
+    "n_blocks": 82
+   },
+   "n_shocks": 93,
+   "by_year": {
+    "2016": {
+     "mean": 0.008392,
+     "n": 6
+    },
+    "2017": {
+     "mean": -0.002496,
+     "n": 9
+    },
+    "2018": {
+     "mean": 0.004266,
+     "n": 14
+    },
+    "2019": {
+     "mean": 0.001099,
+     "n": 18
+    },
+    "2020": {
+     "mean": 0.003754,
+     "n": 16
+    },
+    "2021": {
+     "mean": -0.000806,
+     "n": 13
+    },
+    "2022": {
+     "mean": -0.000853,
+     "n": 17
+    }
+   },
+   "loo_year_worst": 0.001048,
+   "span": [
+    "2016-05-18",
+    "2022-11-10"
+   ]
+  },
+  "confirm": {
+   "primary_signed_next_resid": {
+    "mean": -0.000882,
+    "se": 0.001801,
+    "t": -0.49,
+    "mde": 0.005044,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "net_of_cost": -0.002882,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.005103,
+    "se": 0.001919,
+    "t": 2.66,
+    "mde": 0.005373,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "placebo_all_days_signed_next": {
+    "mean": 0.000207,
+    "se": 0.000299,
+    "t": 0.69,
+    "mde": 0.000838,
+    "n": 938,
+    "n_blocks": 45
+   },
+   "n_shocks": 47,
+   "by_year": {
+    "2023": {
+     "mean": 0.001812,
+     "n": 11
+    },
+    "2024": {
+     "mean": -0.001691,
+     "n": 14
+    },
+    "2025": {
+     "mean": -9.5e-05,
+     "n": 9
+    },
+    "2026": {
+     "mean": -0.002834,
+     "n": 13
+    }
+   },
+   "loo_year_worst": -0.001705,
+   "span": [
+    "2023-03-10",
+    "2026-09-23"
+   ]
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.00088 <= 0"
+ }
+}

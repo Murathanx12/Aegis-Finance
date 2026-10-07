@@ -1,0 +1,22 @@
+{
+ "stamp": "20261005T161630Z",
+ "now_utc": "2026-10-05T16:16:30.989844+00:00",
+ "grade": {},
+ "window": {
+  "now_et": "2026-10-05T12:16:30.989844-04:00",
+  "session_date": "2026-10-05",
+  "is_session": true,
+  "window_et": [
+   "10:45",
+   "15:30"
+  ],
+  "in_window": true,
+  "reason": "IN_WINDOW"
+ },
+ "state": "OBSERVE_ONLY: no standard monthly in the DTE window",
+ "summary": {
+  "n_usable": 241,
+  "median_straddle_spread_usable": 0.08080808080808087,
+  "expiry": "2026-10-16"
+ }
+}

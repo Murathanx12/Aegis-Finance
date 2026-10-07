@@ -1,0 +1,154 @@
+{
+ "hyp_id": "H-9a956b347c",
+ "title": "Co-mentioned peers react to clinical trial failure",
+ "night": "2026-10-06",
+ "run_utc": "2026-10-06T02:51:23+00:00",
+ "result": {
+  "cell_type": "event_readthrough",
+  "params": {
+   "link": "comention",
+   "event_type": "clinical_trial_result",
+   "min_ratio": 3.0,
+   "k": 4,
+   "min_source_dv_pct": 0.5
+  },
+  "outcome_units": "size: log(|x_oc|/vol21) linked minus vol-matched unlinked, same date; signed: sign(source move) x (x_oc linked - x_oc controls)",
+  "n_events_candidate": 10,
+  "design": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.050887,
+    "se": 0.267699,
+    "t": 0.19,
+    "mde": 0.749558,
+    "n": 4,
+    "n_blocks": 3
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": 0.002401,
+    "se": 0.009243,
+    "t": 0.26,
+    "mde": 0.025882,
+    "n": 4,
+    "n_blocks": 3
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 1.150957,
+    "se": 0.224312,
+    "t": 5.13,
+    "mde": 0.628075,
+    "n": 4,
+    "n_blocks": 3
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.019825,
+    "se": 0.011362,
+    "t": 1.74,
+    "mde": 0.031815,
+    "n": 4,
+    "n_blocks": 3
+   },
+   "n_events": 4,
+   "mean_links": 1.5,
+   "by_month_size_t1": {
+    "2025-07": {
+     "mean": -0.339425,
+     "n": 2
+    },
+    "2025-08": {
+     "mean": 0.550122,
+     "n": 1
+    },
+    "2025-10": {
+     "mean": 0.332276,
+     "n": 1
+    }
+   },
+   "loo_month_worst_size_t1": -0.115525
+  },
+  "confirm": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.61745,
+    "se": 0.130311,
+    "t": 4.74,
+    "mde": 0.36487,
+    "n": 3,
+    "n_blocks": 2
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -0.042564,
+    "se": 0.02177,
+    "t": -1.96,
+    "mde": 0.060957,
+    "n": 3,
+    "n_blocks": 2
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 1.915639,
+    "se": 1.344327,
+    "t": 1.42,
+    "mde": 3.764115,
+    "n": 3,
+    "n_blocks": 2
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.185484,
+    "se": 0.135527,
+    "t": 1.37,
+    "mde": 0.379475,
+    "n": 3,
+    "n_blocks": 2
+   },
+   "n_events": 3,
+   "mean_links": 1.0,
+   "by_month_size_t1": {
+    "2026-01": {
+     "mean": 0.443703,
+     "n": 1
+    },
+    "2026-08": {
+     "mean": 0.704324,
+     "n": 2
+    }
+   },
+   "loo_month_worst_size_t1": 0.443703
+  },
+  "verdict": "CONDITIONAL_POSITIVE",
+  "reason": "confirm +0.61745 t 4.74 and design +0.05089 > 0",
+  "direction_verdict_reported": {
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.04256 <= 0"
+  },
+  "examples": [
+   {
+    "t": "2026-08-19",
+    "source": "MRK",
+    "links": "MRNA",
+    "size_t1": "1.3180230060407523"
+   },
+   {
+    "t": "2025-08-08",
+    "source": "LLY",
+    "links": "LMAT",
+    "size_t1": "0.5501222698469317"
+   },
+   {
+    "t": "2026-01-21",
+    "source": "MRNA",
+    "links": "MRK",
+    "size_t1": "0.44370264067493376"
+   },
+   {
+    "t": "2025-07-01",
+    "source": "AMGN",
+    "links": "AMD,AME,AMCR",
+    "size_t1": "0.39533536598527264"
+   },
+   {
+    "t": "2025-10-01",
+    "source": "MRK",
+    "links": "MRNA",
+    "size_t1": "0.33227586239140916"
+   }
+  ]
+ }
+}

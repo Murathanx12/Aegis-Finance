@@ -1,0 +1,1342 @@
+{
+ "t": "2026-10-07T12:36:27+08:00",
+ "state": "READING",
+ "current_url_by_worker": {
+  "pool2": "https://www.wsj.com/us-news/cornell-rape-allegations-case-fraternity-c00a8741?mod=article_inline",
+  "pool5": "https://www.reddit.com/r/stocks+investing+wallstreetbets+StockMarket+options+SecurityAnalysis+ValueInvesting/search/?q=GOOGL&restrict_sr=1&sort=new",
+  "pool1": "https://stocktwits.com/symbol/AGIO?experiment=bundle",
+  "pool0": "https://x.com/search?q=%24LEU&f=live",
+  "pool3": "https://www.marketwatch.com/investing/stock/alle",
+  "pool4": "https://stocktwits.com/symbol/GOOGL?experiment=bundle",
+  "pool": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac147d084c53f38e-0&displayMode=inline&pianoIdUrl=https%3A%2F%2Fauth.asia.nikkei.com%2Fid%2F&widget=temp"
+ },
+ "pages_ok_10m": 38,
+ "pages_ok_60m": 177,
+ "classes_60m": {
+  "x.com": {
+   "OK": 8
+  },
+  "home.treasury.gov": {
+   "OK": 3
+  },
+  "sec.gov": {
+   "OK": 3
+  },
+  "reddit.com": {
+   "OK": 6
+  },
+  "marketwatch.com": {
+   "OK": 30
+  },
+  "barrons.com": {
+   "OK": 24
+  },
+  "wsj.com": {
+   "OK": 33,
+   "NOT_FOUND": 2
+  },
+  "cnbc.com": {
+   "OK": 18,
+   "PAYWALL_CHECKOUT_FRAME": 2
+  },
+  "asia.nikkei.com": {
+   "OK": 10,
+   "PAYWALL_CHECKOUT_FRAME": 4
+  },
+  "auth.asia.nikkei.com": {
+   "PAYWALL_CHECKOUT_FRAME": 16
+  },
+  "ft.com": {
+   "OK": 8,
+   "PAYWALL_STUB": 3
+  },
+  "scmp.com": {
+   "OK": 7
+  },
+  "finance.yahoo.com": {
+   "OK": 11
+  },
+  "reuters.com": {
+   "ROBOTS_DISALLOWED": 6
+  },
+  "bls.gov": {
+   "OK": 2
+  },
+  "bbc.com": {
+   "PAYWALL_CHECKOUT_FRAME": 1,
+   "OK": 3
+  },
+  "apnews.com": {
+   "OK": 5
+  },
+  "stocktwits.com": {
+   "OK": 6
+  }
+ },
+ "last_not_ok_page": {
+  "t": "2026-10-07T04:29:54+00:00",
+  "class": "PAYWALL_CHECKOUT_FRAME",
+  "url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac147d084c53f38e-0&displayMode=inline&pianoIdUrl=https%3A%2F%2Fauth.asia.nikkei.com%2Fid%2F&widget=temp"
+ },
+ "last_error": null,
+ "next_action": "keep reading",
+ "restarts": 1,
+ "free_disk_gb": 258.5,
+ "free_ram_gb": 6.7,
+ "detail": "",
+ "stall_level": 0,
+ "stall_restarts": 0,
+ "mode": "pool",
+ "queue": "",
+ "pool": {
+  "t": "2026-10-07T04:36:14+00:00",
+  "pid": 213484,
+  "state": "reading",
+  "queue_state": "READING",
+  "throughput": {
+   "ok_last_60m": 111,
+   "run_hours": 0.72,
+   "sustained_ok_per_hour": 154.9
+  },
+  "next_front_due_s": 0.0,
+  "last_refill": {
+   "t": "2026-10-07T04:36:11+00:00",
+   "added": 0
+  },
+  "carried_in": 391,
+  "early_front_revisits": {
+   "cnbc.com": 9,
+   "bls.gov": 2,
+   "sec.gov": 2,
+   "home.treasury.gov": 2,
+   "asia.nikkei.com": 5,
+   "scmp.com": 1,
+   "bbc.com": 2,
+   "ft.com": 4
+  },
+  "robots_disallowed": {
+   "reuters.com": 6
+  },
+  "stop_reason": null,
+  "tabs": {
+   "target": 6,
+   "max": 6,
+   "open_now": 0,
+   "in_flight": 1,
+   "why": "free memory 8.1 GB: holding at 6 of 6 (max 6)",
+   "free_gb": 8.08,
+   "floor_gb": 2.0
+  },
+  "caps": {
+   "hour_all": 480,
+   "day_all": 4000,
+   "loads_60m_all": 181,
+   "loads_24h_all": 3449
+  },
+  "hosts": {
+   "apnews.com": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 5,
+    "cap_hour": 30,
+    "loads_24h": 151,
+    "cap_day": 300,
+    "pending": 60,
+    "classes": {
+     "OK": 5
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "5/30",
+    "use_24h": "151/300",
+    "next_front_due_s": 1868.9,
+    "fronts_only_until": null,
+    "queue_state": "READING"
+   },
+   "asia.nikkei.com": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 10,
+    "cap_hour": 30,
+    "loads_24h": 164,
+    "cap_day": 300,
+    "pending": 0,
+    "classes": {
+     "OK": 6,
+     "PAYWALL_CHECKOUT_FRAME": 4
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "10/30",
+    "use_24h": "164/300",
+    "next_front_due_s": 43.6,
+    "fronts_only_until": "2026-10-07T10:09:36+00:00",
+    "queue_state": "QUEUE_EMPTY"
+   },
+   "barrons.com": {
+    "open_tabs": 0,
+    "tab_limit": 2,
+    "loads_60m": 24,
+    "cap_hour": 120,
+    "loads_24h": 484,
+    "cap_day": 1200,
+    "pending": 43,
+    "classes": {
+     "OK": 11
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "24/120",
+    "use_24h": "484/1200",
+    "next_front_due_s": 1839.9,
+    "fronts_only_until": null,
+    "queue_state": "READING"
+   },
+   "bbc.com": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 3,
+    "cap_hour": 30,
+    "loads_24h": 136,
+    "cap_day": 300,
+    "pending": 0,
+    "classes": {
+     "PAYWALL_CHECKOUT_FRAME": 1,
+     "OK": 3
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "3/30",
+    "use_24h": "136/300",
+    "next_front_due_s": 39.7,
+    "fronts_only_until": "2026-10-07T10:09:52+00:00",
+    "queue_state": "QUEUE_EMPTY"
+   },
+   "bls.gov": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 2,
+    "cap_hour": 30,
+    "loads_24h": 50,
+    "cap_day": 300,
+    "pending": 0,
+    "classes": {
+     "OK": 2
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "2/30",
+    "use_24h": "50/300",
+    "next_front_due_s": 714.6,
+    "fronts_only_until": null,
+    "queue_state": "QUEUE_EMPTY"
+   },
+   "cnbc.com": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 18,
+    "cap_hour": 30,
+    "loads_24h": 233,
+    "cap_day": 300,
+    "pending": 7,
+    "classes": {
+     "OK": 12,
+     "PAYWALL_CHECKOUT_FRAME": 1
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "18/30",
+    "use_24h": "233/300",
+    "next_front_due_s": 5702.8,
+    "fronts_only_until": "2026-10-07T10:16:53+00:00",
+    "queue_state": "READING"
+   },
+   "finance.yahoo.com": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 11,
+    "cap_hour": 30,
+    "loads_24h": 128,
+    "cap_day": 300,
+    "pending": 59,
+    "classes": {
+     "OK": 9
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "11/30",
+    "use_24h": "128/300",
+    "next_front_due_s": 1894.9,
+    "fronts_only_until": null,
+    "queue_state": "READING"
+   },
+   "ft.com": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 11,
+    "cap_hour": 30,
+    "loads_24h": 160,
+    "cap_day": 300,
+    "pending": 5,
+    "classes": {
+     "OK": 5,
+     "PAYWALL_STUB": 3
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "11/30",
+    "use_24h": "160/300",
+    "next_front_due_s": 6043.7,
+    "fronts_only_until": "2026-10-07T10:09:45+00:00",
+    "queue_state": "READING"
+   },
+   "home.treasury.gov": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 2,
+    "cap_hour": 30,
+    "loads_24h": 50,
+    "cap_day": 300,
+    "pending": 0,
+    "classes": {
+     "OK": 2
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "2/30",
+    "use_24h": "50/300",
+    "next_front_due_s": 785.6,
+    "fronts_only_until": null,
+    "queue_state": "QUEUE_EMPTY"
+   },
+   "marketwatch.com": {
+    "open_tabs": 0,
+    "tab_limit": 2,
+    "loads_60m": 30,
+    "cap_hour": 120,
+    "loads_24h": 605,
+    "cap_day": 1200,
+    "pending": 31,
+    "classes": {
+     "OK": 13
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "30/120",
+    "use_24h": "605/1200",
+    "next_front_due_s": 1848.9,
+    "fronts_only_until": null,
+    "queue_state": "READING"
+   },
+   "reddit.com": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 6,
+    "cap_hour": 40,
+    "loads_24h": 119,
+    "cap_day": 150,
+    "pending": 78,
+    "classes": {
+     "OK": 5
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "6/40",
+    "use_24h": "119/150",
+    "next_front_due_s": null,
+    "fronts_only_until": null,
+    "queue_state": "READING"
+   },
+   "reuters.com": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 0,
+    "cap_hour": 30,
+    "loads_24h": 1,
+    "cap_day": 300,
+    "pending": 5,
+    "classes": {
+     "ROBOTS_DISALLOWED": 6
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "0/30",
+    "use_24h": "1/300",
+    "next_front_due_s": 0.0,
+    "fronts_only_until": null,
+    "queue_state": "READING"
+   },
+   "scmp.com": {
+    "open_tabs": 1,
+    "tab_limit": 1,
+    "loads_60m": 8,
+    "cap_hour": 30,
+    "loads_24h": 178,
+    "cap_day": 300,
+    "pending": 8,
+    "classes": {
+     "OK": 3
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "8/30",
+    "use_24h": "178/300",
+    "next_front_due_s": 4367.9,
+    "fronts_only_until": null,
+    "queue_state": "READING"
+   },
+   "sec.gov": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 2,
+    "cap_hour": 30,
+    "loads_24h": 51,
+    "cap_day": 300,
+    "pending": 0,
+    "classes": {
+     "OK": 2
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "2/30",
+    "use_24h": "51/300",
+    "next_front_due_s": 766.4,
+    "fronts_only_until": null,
+    "queue_state": "QUEUE_EMPTY"
+   },
+   "stocktwits.com": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 6,
+    "cap_hour": 40,
+    "loads_24h": 117,
+    "cap_day": 150,
+    "pending": 77,
+    "classes": {
+     "OK": 6
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "6/40",
+    "use_24h": "117/150",
+    "next_front_due_s": null,
+    "fronts_only_until": null,
+    "queue_state": "READING"
+   },
+   "treasury.gov": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 0,
+    "cap_hour": 30,
+    "loads_24h": 0,
+    "cap_day": 300,
+    "pending": 0,
+    "classes": {},
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "0/30",
+    "use_24h": "0/300",
+    "next_front_due_s": null,
+    "fronts_only_until": null,
+    "queue_state": "QUEUE_EMPTY"
+   },
+   "wsj.com": {
+    "open_tabs": 0,
+    "tab_limit": 2,
+    "loads_60m": 35,
+    "cap_hour": 120,
+    "loads_24h": 676,
+    "cap_day": 1200,
+    "pending": 159,
+    "classes": {
+     "OK": 21
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "35/120",
+    "use_24h": "676/1200",
+    "next_front_due_s": 1839.9,
+    "fronts_only_until": null,
+    "queue_state": "READING"
+   },
+   "x.com": {
+    "open_tabs": 0,
+    "tab_limit": 1,
+    "loads_60m": 8,
+    "cap_hour": 40,
+    "loads_24h": 146,
+    "cap_day": 150,
+    "pending": 87,
+    "classes": {
+     "OK": 6
+    },
+    "cooling": null,
+    "blocked_until": null,
+    "use_60m": "8/40",
+    "use_24h": "146/150",
+    "next_front_due_s": null,
+    "fronts_only_until": null,
+    "queue_state": "READING"
+   }
+  },
+  "pending_by_tier": {
+   "news a front showed": 298,
+   "book / contest name": 28,
+   "rest of the universe": 243,
+   "section front due": 50
+  },
+  "budget": {
+   "enabled": true,
+   "state": "WAITING_FOR_BUDGET",
+   "why": null,
+   "hour_allowance_now": 182,
+   "ten_min_allowance_now": 38,
+   "loads_60m_all_readers": 182,
+   "loads_24h_all_readers": 3449,
+   "grants_this_run": {
+    "OWN_SHARE": 38,
+    "BORROW": 77
+   },
+   "lanes": {
+    "book_names": {
+     "share": 0.24,
+     "day_target": 960,
+     "hour_quota": 44,
+     "loads_60m": 26,
+     "ok_60m": 25,
+     "loads_24h": 457,
+     "ok_24h": 422,
+     "in_flight": 0,
+     "pending": 0,
+     "verdict": null
+    },
+    "universe_names": {
+     "share": 0.12,
+     "day_target": 480,
+     "hour_quota": 22,
+     "loads_60m": 22,
+     "ok_60m": 21,
+     "loads_24h": 331,
+     "ok_24h": 303,
+     "in_flight": 0,
+     "pending": 29,
+     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
+    },
+    "markets_news": {
+     "share": 0.18,
+     "day_target": 720,
+     "hour_quota": 33,
+     "loads_60m": 61,
+     "ok_60m": 58,
+     "loads_24h": 1016,
+     "ok_24h": 981,
+     "in_flight": 0,
+     "pending": 197,
+     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
+    },
+    "macro_world": {
+     "share": 0.12,
+     "day_target": 480,
+     "hour_quota": 22,
+     "loads_60m": 38,
+     "ok_60m": 38,
+     "loads_24h": 635,
+     "ok_24h": 618,
+     "in_flight": 0,
+     "pending": 102,
+     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
+    },
+    "politics_policy": {
+     "share": 0.08,
+     "day_target": 320,
+     "hour_quota": 15,
+     "loads_60m": 7,
+     "ok_60m": 7,
+     "loads_24h": 265,
+     "ok_24h": 261,
+     "in_flight": 0,
+     "pending": 0,
+     "verdict": null
+    },
+    "official_releases": {
+     "share": 0.04,
+     "day_target": 160,
+     "hour_quota": 7,
+     "loads_60m": 8,
+     "ok_60m": 8,
+     "loads_24h": 148,
+     "ok_24h": 145,
+     "in_flight": 0,
+     "pending": 0,
+     "verdict": null
+    },
+    "social": {
+     "share": 0.11,
+     "day_target": 440,
+     "hour_quota": 20,
+     "loads_60m": 20,
+     "ok_60m": 20,
+     "loads_24h": 382,
+     "ok_24h": 381,
+     "in_flight": 0,
+     "pending": 242,
+     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
+    },
+    "digest_asks": {
+     "share": 0.05,
+     "day_target": 200,
+     "hour_quota": 9,
+     "loads_60m": 0,
+     "ok_60m": 0,
+     "loads_24h": 199,
+     "ok_24h": 193,
+     "in_flight": 1,
+     "pending": 49,
+     "verdict": "HOUR_BUDGET_SPENT: 182 >= 182 this hour"
+    },
+    "query_planner": {
+     "share": 0.03,
+     "day_target": 120,
+     "hour_quota": 5,
+     "loads_60m": 0,
+     "ok_60m": 0,
+     "loads_24h": 4,
+     "ok_24h": 4,
+     "in_flight": 0,
+     "pending": 0,
+     "verdict": null
+    },
+    "overhead": {
+     "share": 0.03,
+     "day_target": 120,
+     "hour_quota": 5,
+     "loads_60m": 0,
+     "ok_60m": 0,
+     "loads_24h": 11,
+     "ok_24h": 11,
+     "in_flight": 0,
+     "pending": 0,
+     "verdict": null
+    }
+   },
+   "ok_by_host_60m": {
+    "x.com": 8,
+    "home.treasury.gov": 3,
+    "sec.gov": 3,
+    "reddit.com": 6,
+    "marketwatch.com": 30,
+    "barrons.com": 24,
+    "wsj.com": 33,
+    "asia.nikkei.com": 10,
+    "cnbc.com": 18,
+    "ft.com": 8,
+    "scmp.com": 7,
+    "finance.yahoo.com": 11,
+    "bls.gov": 2,
+    "bbc.com": 3,
+    "apnews.com": 5,
+    "stocktwits.com": 6
+   },
+   "ok_by_host_24h": {
+    "barrons.com": 479,
+    "marketwatch.com": 602,
+    "scmp.com": 174,
+    "ft.com": 128,
+    "cnbc.com": 226,
+    "wsj.com": 611,
+    "finance.yahoo.com": 125,
+    "bbc.com": 135,
+    "asia.nikkei.com": 162,
+    "bls.gov": 49,
+    "apnews.com": 147,
+    "sec.gov": 49,
+    "home.treasury.gov": 50,
+    "x.com": 146,
+    "reddit.com": 118,
+    "stocktwits.com": 117,
+    "reuters.com": 1
+   },
+   "hourly_allowance_utc": {
+    "00": 182,
+    "01": 182,
+    "02": 182,
+    "03": 182,
+    "04": 182,
+    "05": 182,
+    "06": 182,
+    "07": 182,
+    "08": 104,
+    "09": 104,
+    "10": 104,
+    "11": 169,
+    "12": 169,
+    "13": 208,
+    "14": 208,
+    "15": 208,
+    "16": 208,
+    "17": 208,
+    "18": 208,
+    "19": 208,
+    "20": 91,
+    "21": 91,
+    "22": 91,
+    "23": 156
+   }
+  },
+  "pages_this_run": 114,
+  "media": {
+   "wsj.com": {
+    "items": 4,
+    "with_transcript": 2
+   },
+   "cnbc.com": {
+    "items": 1,
+    "with_transcript": 0
+   },
+   "scmp.com": {
+    "items": 1,
+    "with_transcript": 0
+   },
+   "barrons.com": {
+    "items": 2,
+    "with_transcript": 0
+   },
+   "apnews.com": {
+    "items": 6,
+    "with_transcript": 0
+   },
+   "finance.yahoo.com": {
+    "items": 1,
+    "with_transcript": 0
+   },
+   "marketwatch.com": {
+    "items": 3,
+    "with_transcript": 0
+   }
+  },
+  "cooling_events": [],
+  "last_errors": [
+   "front:ft:home: ReaderRefused: PAGE_PAYWALL_STUB: 'https://www.ft.com/content/1c1ee003-f041-4c66-a971-f08d488d11f7?syn-25a6b1a6=1' (2195 chars) not stored",
+   "front:ft:companies: ReaderRefused: PAGE_PAYWALL_STUB: 'https://www.ft.com/content/a6339e0c-4114-413a-a23c-916ed4392ce0?syn-25a6b1a6=1' (2202 chars) not stored",
+   "front:ft:markets: ReaderRefused: PAGE_PAYWALL_STUB: 'https://www.ft.com/content/d3f5928d-f38c-4666-8f7a-8737f9c45f51?syn-25a6b1a6=1' (2204 chars) not stored"
+  ],
+  "money_frames": [
+   {
+    "t": "2026-10-07T04:09:36+00:00",
+    "host": "asia.nikkei.com",
+    "page_read": "https://www.scmp.com/business/companies/article/3369908/chinas-transsion-africas-top-phone-maker-targets-us500-million-hong-kong-listing?module=top_story&pgtype=section",
+    "carrier_page": "https://asia.nikkei.com/spotlight/environment/climate-change/tokyo-s-37-straight-days-of-rain-drive-up-fresh-vegetable-prices",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/offer/show?displayMode=modal&templateId=OT7SEEGDWZPI&templateVariantId=OTVPJGBSB0AQB&offerId=OF76WDB9YK5D&formNameByTermId=%7B%22TMNTYIAD87OQ%22%3A%22CreditRegistratio",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/offer/show?displayMode=mo"
+   },
+   {
+    "t": "2026-10-07T04:09:52+00:00",
+    "host": "bbc.com",
+    "page_read": "https://www.cnbc.com/2026/10/07/flop-ai-boom-arthur-hayes-bitcoin-bitmex-coinferencex-.html",
+    "carrier_page": "https://www.bbc.com/news/articles/c6wyz223j19po",
+    "target_type": "iframe",
+    "target_url": "https://buy-eu.piano.io/checkout/offer/show?displayMode=modal&templateId=OTVNGUND324P&offerId=OFCPZFU4G6UN&formNameByTermId=%7B%7D&hideCompletedFields=true&showCloseButton=false&experienceActionId=sho",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-eu.piano.io/checkout/offer/show?displayMode=mo"
+   },
+   {
+    "t": "2026-10-07T04:16:53+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.bbc.com/business",
+    "carrier_page": "https://asia.nikkei.com/",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac1",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T04:16:53+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.bbc.com/business",
+    "carrier_page": "https://asia.nikkei.com/",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OTEGBMEK6MOB&templateVariantId=OTVGS98WGMWH8&offerId=fakeOfferId&experienceId=EX71UESHWIAO&iframeId=offer_e6196cd",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T04:16:53+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.bbc.com/business",
+    "carrier_page": "https://asia.nikkei.com/",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OTOZ9VS2BZVM&templateVariantId=OTVZ6I75ME01N&offerId=fakeOfferId&experienceId=EX71UESHWIAO&iframeId=offer_124759e",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T04:16:53+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.bbc.com/business",
+    "carrier_page": "https://asia.nikkei.com/",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OTEGBMEK6MOB&templateVariantId=OTVGS98WGMWH8&offerId=fakeOfferId&experienceId=EX71UESHWIAO&iframeId=offer_e6196cd",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T04:16:53+00:00",
+    "host": "cnbc.com",
+    "page_read": "https://www.bbc.com/business",
+    "carrier_page": "https://www.cnbc.com/world/",
+    "target_type": "iframe",
+    "target_url": "https://buy.tinypass.com/checkout/offer/show?displayMode=inline&containerSelector=.videoBreakerGate&templateId=OTPQ4EBDV9BZ&templateVariantId=OTV26KG1EIINA&offerId=OF09AX2A31G2&formNameByTermId=%7B%7D",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy.tinypass.com/checkout/offer/show?displayMode=i"
+   },
+   {
+    "t": "2026-10-07T04:17:29+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.cnbc.com/markets/",
+    "carrier_page": "https://asia.nikkei.com/business",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac1",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T04:18:25+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://www.barrons.com/articles/3-things-investors-need-to-know-before-buying-skydance-228b8277?mod=hp_LEDE_C_3_B_1",
+    "carrier_page": "https://asia.nikkei.com/business/markets",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac1",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   },
+   {
+    "t": "2026-10-07T04:29:54+00:00",
+    "host": "auth.asia.nikkei.com",
+    "page_read": "https://x.com/search?q=%24PRAX&f=live",
+    "carrier_page": "https://asia.nikkei.com/economy",
+    "target_type": "iframe",
+    "target_url": "https://buy-ap.piano.io/checkout/template/cacheableShow.html?aid=3keAb0xYpj&templateId=OT041L9KE98Q&templateVariantId=OTV4J65H5IEG4&offerId=fakeOfferId&experienceId=EXZFGMP5LYJ6&iframeId=offer_706cac1",
+    "closed": null,
+    "why": "REFUSED_PAYMENT_URL: 'https://buy-ap.piano.io/checkout/template/cacheableShow.ht"
+   }
+  ],
+  "fronts": {
+   "cnbc:politics": {
+    "url": "https://www.cnbc.com/politics/",
+    "landed": "https://www.cnbc.com/politics/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:27:53+00:00",
+    "links": 3,
+    "new": 0
+   },
+   "ft:markets": {
+    "url": "https://www.ft.com/markets",
+    "landed": "https://www.ft.com/markets",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:29:00+00:00",
+    "links": 0,
+    "new": 0
+   },
+   "sec:press_releases": {
+    "url": "https://www.sec.gov/newsroom/press-releases",
+    "landed": "https://www.sec.gov/newsroom/press-releases",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:29:00+00:00",
+    "links": 12,
+    "new": 0
+   },
+   "treasury:press_releases": {
+    "url": "https://home.treasury.gov/news/press-releases",
+    "landed": "https://home.treasury.gov/news/press-releases",
+    "title": "Press Releases | U.S. Department of the Treasury",
+    "class": "OK",
+    "at": "2026-10-07T04:29:19+00:00",
+    "links": 6,
+    "new": 0
+   },
+   "bls:news_releases": {
+    "url": "https://www.bls.gov/bls/newsrels.htm",
+    "landed": "https://www.bls.gov/bls/newsrels.htm",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:28:08+00:00",
+    "links": 12,
+    "new": 0
+   },
+   "nikkei:economy": {
+    "url": "https://asia.nikkei.com/economy",
+    "landed": "https://asia.nikkei.com/economy",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:30:28+00:00",
+    "links": 0,
+    "new": 0
+   },
+   "scmp:business": {
+    "url": "https://www.scmp.com/business",
+    "landed": "https://www.scmp.com/business",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:09:06+00:00",
+    "links": 12,
+    "new": 6
+   },
+   "cnbc:asia": {
+    "url": "https://www.cnbc.com/world-markets/",
+    "landed": "https://www.cnbc.com/world-markets/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:11:16+00:00",
+    "links": 12,
+    "new": 0
+   },
+   "bbc:business": {
+    "url": "https://www.bbc.com/business",
+    "landed": "https://www.bbc.com/business",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:16:53+00:00",
+    "links": 1,
+    "new": 0
+   },
+   "cnbc:home": {
+    "url": "https://www.cnbc.com/world/",
+    "landed": "https://www.cnbc.com/world/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:16:53+00:00",
+    "links": 1,
+    "new": 0
+   },
+   "nikkei:home": {
+    "url": "https://asia.nikkei.com/",
+    "landed": "https://asia.nikkei.com/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:16:57+00:00",
+    "links": 0,
+    "new": 0
+   },
+   "ft:home": {
+    "url": "https://www.ft.com/",
+    "landed": "https://www.ft.com/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:16:57+00:00",
+    "links": 0,
+    "new": 0
+   },
+   "bbc:world": {
+    "url": "https://www.bbc.com/news/world",
+    "landed": "https://www.bbc.com/news/world",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:17:23+00:00",
+    "links": 3,
+    "new": 0
+   },
+   "cnbc:markets": {
+    "url": "https://www.cnbc.com/markets/",
+    "landed": "https://www.cnbc.com/markets/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:17:29+00:00",
+    "links": 3,
+    "new": 0
+   },
+   "nikkei:business": {
+    "url": "https://asia.nikkei.com/business",
+    "landed": "https://asia.nikkei.com/business",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:18:05+00:00",
+    "links": 0,
+    "new": 0
+   },
+   "ft:world": {
+    "url": "https://www.ft.com/world",
+    "landed": "https://www.ft.com/world",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:18:05+00:00",
+    "links": 0,
+    "new": 0
+   },
+   "cnbc:economy": {
+    "url": "https://www.cnbc.com/economy/",
+    "landed": "https://www.cnbc.com/economy/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:18:10+00:00",
+    "links": 0,
+    "new": 0
+   },
+   "ft:companies": {
+    "url": "https://www.ft.com/companies",
+    "landed": "https://www.ft.com/companies",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:18:43+00:00",
+    "links": 0,
+    "new": 0
+   },
+   "cnbc:technology": {
+    "url": "https://www.cnbc.com/technology/",
+    "landed": "https://www.cnbc.com/technology/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:18:53+00:00",
+    "links": 0,
+    "new": 0
+   },
+   "nikkei:markets": {
+    "url": "https://asia.nikkei.com/business/markets",
+    "landed": "https://asia.nikkei.com/business/markets",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:18:53+00:00",
+    "links": 0,
+    "new": 0
+   },
+   "cnbc:video": {
+    "url": "https://www.cnbc.com/latest-video/",
+    "landed": "https://www.cnbc.com/latest-video/",
+    "title": "",
+    "class": "OK",
+    "at": "2026-10-07T04:19:26+00:00",
+    "links": 3,
+    "new": 0
+   }
+  },
+  "orphaned_tabs": [],
+  "open_tab_ids": [],
+  "reader_tab_ids": [
+   "75C1A3AE3153332E9C44845D2D8A7541",
+   "E4739B370B5A848A99B7B2A6191D55F6",
+   "EDBA683697EE5175F9D00706764B8AAA",
+   "778D38835C56EA9A79C8D52FEF2CB2D6",
+   "02ECF49AE20430BCAECA03B7BE400883",
+   "478F9606D2B748BE2DA6C1B09DC303A0",
+   "5ED9E9FF725905C330040E4C64BD1E62",
+   "70EBF6C781637FA02910E4C195B59924",
+   "4179C980298BF757587FDB8BF466EC8D",
+   "B61837CADDE251720AD436FFC06199F2",
+   "3A692F5F7AB306F49AE57BA61C32FE2D",
+   "A6DDF7886690E5FE565BC26A054A210B",
+   "39F2EA225A03B3DD81C43F239B7FDD05",
+   "3590EAE10734583BA509D5132AE83A4D",
+   "F3910FDAC437629CBE244FD533CE3CCD",
+   "24A052E8D3AD77ECAAC1C5FC90957D41",
+   "86E83911A33AD1F8430D2B98471A1692",
+   "F98C1EA6B50E245D510CD0E14108C792",
+   "389A388D3C705283CBB3647BDACF50A3",
+   "1B604DD1BB19CE015DDBDE785D40DE80",
+   "BC7E0DB26FED36DF23A04BA916ED3858",
+   "3350A1973AE0D3CF1AB7A2A67C2070B0",
+   "2348F344605D2E9DF14944C8495D98D7",
+   "6F0E3F33D6FB8F2C18D847CD3B554CFF",
+   "FEC99558009F4EF592E895BEB0C1313B",
+   "091D488A66C339C6AD92C8D8C5A32F6E",
+   "7321C80FBACDEB100D719B18A84B64D3",
+   "B05E8E3130EFF94BAB90FE26098560FE",
+   "CE90AF36345A5E60719DE6E17F836566",
+   "B80C6E6CA14FEB76F521FEE356777326",
+   "8EE401886BBD7D9FE097F9F02AAE970D",
+   "3524F8087240D54AF580DA8E8D026B53",
+   "F4F1F1274D511C335F6E945D45F5052D",
+   "4607E0EB6E0EF9B212668FD03FC7ECDB",
+   "2FD1126CCB15D09ED74140641C114152",
+   "5EE40BAEBAD2D8C7F00637CF622B45B2",
+   "F0E37A64A304CA50FC511E5096A40E80",
+   "445FF1F18791DDFA2E183FAC30800803",
+   "07C56EB9DB3A620CDDD8B9FD5D3C72F2",
+   "5E98BD4EE67B7A629506480687D344ED",
+   "725F73B4652C847D48934B23C5C9A446",
+   "B4DD85F3612A5EC4DEB37E9C59AA9B05",
+   "C67D11411C1B1C20FC81E0E5A5E35EB7",
+   "071C21ACA14593424D366B2CB9AF8389",
+   "8018BCB10E7E05DFC6C2CED6B62CF164",
+   "363F33C80F1FFABEB32C8A4548E75659",
+   "1D7207DBABE35CEFBAD9512376008CBA",
+   "63271B0D5E9F874B7719219BA93DEE1C",
+   "3F7AA15801E94C93FC8305247C6582DB",
+   "88ECA6870861CC6E6FDCA8FD97B6D3EA",
+   "265B6A28A048774DAF7108AC0FC06542",
+   "202A0E213ED1E52ECC76DD9FB1DC0D5B",
+   "6E2D44FEED4157D8543DB97F0080DF50",
+   "ADCA6CA9F48173802F20F9EE0D390094",
+   "91D501E1F5F0D087316C931321D49BDB",
+   "4ABE6F39A16BCBFBE71A9EFF2586A167",
+   "34EA4994A1B434027BC7984F74E6A8F7",
+   "0C3D92DD0B03F398233D49F64CAFF7C6",
+   "74DFAC0C4866A2A07C1A5470D5728F1B",
+   "794689E03D107C6CCA72A5305A913359",
+   "EE22BA55BA05459690DDFFEEF223D632",
+   "5453B1D6DB097CEE9D3B497D1370CE79",
+   "8D3326E17C09C46EADCCDB0FAF5BABEF",
+   "C14AB1002161DF44929C9DEA88820B1E",
+   "9ACD8CE24BCC28C5E0282966AF4109ED",
+   "91D62B25800E21A5D8529A31BE4CBC5B",
+   "AA730B626726124529BE9B63C8074ECB",
+   "91E7B259C47EC51B4DEF1ED52C99546D",
+   "1577649E5FC8AAD1EAC1A899DE7258EE",
+   "5A88EA041621D979BF59683A223683C5",
+   "F2207469E8D1B2A4B356E5FEBCF8D0E0",
+   "434D6BDD56CAC919E06740C3BF198816",
+   "E1B641D9ECA80F248D62A5D3E617566E",
+   "05DBBA271C82C00B49E187DA09EE6BDA",
+   "9464504C42C26C8FBF07EA3D4F9731E9",
+   "5976DBCA0F1270A7399034BAC3D3A034",
+   "556D052907A71016B319BB4E8F14F816",
+   "2EB3D513CCC3E7FD927F85C4FE9F7F45",
+   "CB451B48B5449A4CBD95E9E9608660C7",
+   "1B83078FE82451003AE753B523194B57",
+   "3DCAC741E9557E5F3AA76C261835EEEC",
+   "DFA39CEBF0BF2916F4A84A31DC43F3D1",
+   "52C9E891A95099F179CDAA7B75DF5CCD",
+   "FE52B62C6512917B5526D8826EA4859C",
+   "4CBDA7CC2C991E8EED52CF0879FCCBA3",
+   "591FC118DDCD21D70AD3EEFF31EB2A28",
+   "70EAA36814A28D63D2FE65270AEAB2AB",
+   "FB53F43E1DE8BAADAF4BFC55F82492BF",
+   "7470BB363895E60638947C6608F3D5FF",
+   "7B74F2BCFCC4E31B02095D3830B0EE32",
+   "73AE80D5B43A60ECB812F13887381D15",
+   "B4C69B90C7A155809F2411124D03E508",
+   "59B5D4A6B159E772C0E283EFD27BD70D",
+   "0AFB9876A7DF19BDFD7CE0F7DA3F1A02",
+   "7AB5E97D02F1020F97C120C09D0968C3",
+   "0CB8DF84E0AB207D317A6A34451C487B",
+   "6E6D17EDBB5C6D7058AEC541C4275DF9",
+   "7FC8006DE60FF6F65033221BE97FAD45",
+   "05C79970953B016EF87E3CEBCA9B9DD4",
+   "580AF011A826C4CCA791D221E038D7CE",
+   "686B790FFB961202BD1ABEF703EC6B03",
+   "18FC21F6B2916117548B6902DDA1D4BB",
+   "40F3C37C1857091EE8AFF8AE6ED40DB2",
+   "47152B81931BC000CB9D9136DBD73859",
+   "9CD97A4683183E17CD6FFCB494BCE78C",
+   "7DBA0E65813BF623486FF8BB13065C4B",
+   "76F5995B44FB85A28C18C93B14735974",
+   "AE4BF83063C35928587D005FBF34D205",
+   "E933503407720D70CB031C102C4D0A74",
+   "18E44FA91B05DBAAD769ED335D074C4B",
+   "B255306114DDBF385323B1939E2800F6",
+   "B0DA2D3856181CB207FF24E7F71A8E42",
+   "3DC04F5C5EB6A0C666D2FC5212D35B90",
+   "764878CA50118E550148E4A797E6DD09"
+  ],
+  "next_slot_in_s": null
+ },
+ "by_lane": {
+  "lanes": {
+   "book_names": {
+    "loads_60m": 26,
+    "ok_60m": 25,
+    "loads_24h": 457,
+    "ok_24h": 422
+   },
+   "universe_names": {
+    "loads_60m": 22,
+    "ok_60m": 21,
+    "loads_24h": 331,
+    "ok_24h": 303
+   },
+   "markets_news": {
+    "loads_60m": 61,
+    "ok_60m": 58,
+    "loads_24h": 1016,
+    "ok_24h": 981
+   },
+   "macro_world": {
+    "loads_60m": 38,
+    "ok_60m": 38,
+    "loads_24h": 635,
+    "ok_24h": 618
+   },
+   "politics_policy": {
+    "loads_60m": 7,
+    "ok_60m": 7,
+    "loads_24h": 265,
+    "ok_24h": 261
+   },
+   "official_releases": {
+    "loads_60m": 8,
+    "ok_60m": 8,
+    "loads_24h": 148,
+    "ok_24h": 145
+   },
+   "social": {
+    "loads_60m": 20,
+    "ok_60m": 20,
+    "loads_24h": 382,
+    "ok_24h": 381
+   },
+   "digest_asks": {
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 199,
+    "ok_24h": 193
+   },
+   "query_planner": {
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 4,
+    "ok_24h": 4
+   },
+   "overhead": {
+    "loads_60m": 0,
+    "ok_60m": 0,
+    "loads_24h": 11,
+    "ok_24h": 11
+   }
+  },
+  "ok_by_host_60m": {
+   "x.com": 8,
+   "home.treasury.gov": 3,
+   "sec.gov": 3,
+   "reddit.com": 6,
+   "marketwatch.com": 30,
+   "barrons.com": 24,
+   "wsj.com": 33,
+   "asia.nikkei.com": 10,
+   "cnbc.com": 18,
+   "ft.com": 8,
+   "scmp.com": 7,
+   "finance.yahoo.com": 11,
+   "bls.gov": 2,
+   "bbc.com": 3,
+   "apnews.com": 5,
+   "stocktwits.com": 6
+  },
+  "ok_by_host_24h": {
+   "barrons.com": 479,
+   "marketwatch.com": 602,
+   "scmp.com": 174,
+   "ft.com": 128,
+   "cnbc.com": 226,
+   "wsj.com": 611,
+   "finance.yahoo.com": 125,
+   "bbc.com": 135,
+   "asia.nikkei.com": 162,
+   "bls.gov": 49,
+   "apnews.com": 147,
+   "sec.gov": 49,
+   "home.treasury.gov": 50,
+   "x.com": 146,
+   "reddit.com": 118,
+   "stocktwits.com": 117,
+   "reuters.com": 1
+  },
+  "hour_allowance_now": 182,
+  "official_sources": {
+   "sec_form4": {
+    "lane": "insiders_filings",
+    "req_60m": 4,
+    "req_24h": 934,
+    "ok_24h": 931
+   },
+   "sec_8k": {
+    "lane": "insiders_filings",
+    "req_60m": 12,
+    "req_24h": 236,
+    "ok_24h": 234
+   },
+   "sec_13dg": {
+    "lane": "insiders_filings",
+    "req_60m": 6,
+    "req_24h": 153,
+    "ok_24h": 151
+   },
+   "sec_13f": {
+    "lane": "positioning",
+    "req_60m": 1,
+    "req_24h": 21,
+    "ok_24h": 21
+   },
+   "fed_rss": {
+    "lane": "official_releases",
+    "req_60m": 3,
+    "req_24h": 65,
+    "ok_24h": 64
+   },
+   "ecb_rss": {
+    "lane": "official_releases",
+    "req_60m": 1,
+    "req_24h": 22,
+    "ok_24h": 20
+   },
+   "boj_rss": {
+    "lane": "official_releases",
+    "req_60m": 1,
+    "req_24h": 22,
+    "ok_24h": 21
+   },
+   "boe_rss": {
+    "lane": "official_releases",
+    "req_60m": 1,
+    "req_24h": 22,
+    "ok_24h": 14
+   },
+   "whitehouse_rss": {
+    "lane": "politics_policy",
+    "req_60m": 0,
+    "req_24h": 40,
+    "ok_24h": 39
+   },
+   "treasury_rss": {
+    "lane": "politics_policy",
+    "req_60m": 1,
+    "req_24h": 22,
+    "ok_24h": 21
+   },
+   "hkma_api": {
+    "lane": "official_releases",
+    "req_60m": 0,
+    "req_24h": 40,
+    "ok_24h": 21
+   },
+   "fedreg": {
+    "lane": "politics_policy",
+    "req_60m": 0,
+    "req_24h": 23,
+    "ok_24h": 22
+   },
+   "house_ptr": {
+    "lane": "politics_policy",
+    "req_60m": 0,
+    "req_24h": 7,
+    "ok_24h": 6
+   },
+   "cftc_cot": {
+    "lane": "positioning",
+    "req_60m": 0,
+    "req_24h": 9,
+    "ok_24h": 8
+   },
+   "finra_sv": {
+    "lane": "positioning",
+    "req_60m": 0,
+    "req_24h": 4,
+    "ok_24h": 0
+   },
+   "sec_tickers": {
+    "lane": "overhead",
+    "req_60m": 0,
+    "req_24h": 1,
+    "ok_24h": 1
+   },
+   "finra_si": {
+    "lane": "positioning",
+    "req_60m": 0,
+    "req_24h": 3,
+    "ok_24h": 2
+   }
+  }
+ }
+}

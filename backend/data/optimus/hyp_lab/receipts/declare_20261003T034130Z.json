@@ -1,0 +1,80 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-10-03",
+ "declared_utc": "2026-10-03T03:41:30+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [],
+ "cells": [
+  {
+   "hyp_id": "H-2488e7a9d8",
+   "title": "Rate shock lifts regional bank net interest margin",
+   "family": "macro_readthrough_rates",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "^TNX",
+    "targets": [
+     "KRE",
+     "RF",
+     "CFG",
+     "HBAN",
+     "KEY"
+    ],
+    "expected_sign": 1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "No positive open-to-close drift for the regional bank basket versus market beta in confirm.",
+   "separation_from_beta": "Regional bank basket outperforms the broad market and large-cap banks after the shock."
+  },
+  {
+   "hyp_id": "H-65079244f4",
+   "title": "Yield spike lifts money-center banks next session",
+   "family": "macro_readthrough_rates",
+   "target": "direction",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "^TNX",
+    "targets": [
+     "JPM",
+     "BAC",
+     "C",
+     "WFC",
+     "GS"
+    ],
+    "expected_sign": 1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "If money-center bank basket shows no significant next-session abnormal return relative to vol-matched utilities, the hypothesis is refuted.",
+   "separation_from_beta": "Compare money-center bank basket's next-session return to its market-beta-adjusted return and to a vol-matched basket of utilities; effect should be present only for banks."
+  },
+  {
+   "hyp_id": "H-790a2bac86",
+   "title": "Oil spike pressures airline stocks next session",
+   "family": "macro_readthrough_commodity",
+   "target": "direction",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "CL=F",
+    "targets": [
+     "DAL",
+     "UAL",
+     "AAL",
+     "LUV",
+     "JBLU"
+    ],
+    "expected_sign": -1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "No negative open-to-close drift for airlines versus market beta in the confirm window.",
+   "separation_from_beta": "Airlines underperform the broad market and transport peers after the shock."
+  }
+ ],
+ "sha256": "057dd4bc5d607a6d0b987070fc53316683d211809a5e06afdc1707d5835b4175"
+}

@@ -1,0 +1,1 @@
+ORDERS 2026-10-03 [E3B0C442]: no tickets. Control: 0 lines, BUY shares 0, SELL shares 0.

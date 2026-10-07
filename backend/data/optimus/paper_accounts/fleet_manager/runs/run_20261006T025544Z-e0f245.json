@@ -1,0 +1,4991 @@
+{
+ "schema": "fleet_manager_run/1",
+ "run_id": "20261006T025544Z-e0f245",
+ "pass": "preclose",
+ "live_flag": true,
+ "started_utc": "2026-10-06T02:55:47+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "modes": {
+  "_doc": "Owner-controlled. contract: v1 (hold what the loop left, loop's own terms) or v2 (the proposal). maintenance/entries: LIVE or DRY. The script never edits this file after creating it. `--live` on the command line is also required for anything LIVE.",
+  "hack1": {
+   "contract": "v2",
+   "maintenance": "LIVE",
+   "entries": "LIVE",
+   "set_utc": "2026-09-29T16:06Z",
+   "why": "owner 2026-09-29: v2 bdae86290ea38481 entries LIVE only in the cash already held; legacy names keep v1 terms (horizon, stop), never sold to make room"
+  },
+  "hack2": {
+   "contract": "v2",
+   "maintenance": "LIVE",
+   "entries": "LIVE",
+   "set_utc": "2026-09-29T16:04Z",
+   "why": "owner 2026-09-29 'update the hacks daily... full freedom': analyst revision flow v2 2301fa30c7b851df"
+  },
+  "hack3": {
+   "skip": "key answers HTTP 401 (retired 2026-09-22); credentials are the owner's"
+  },
+  "hack4": {
+   "contract": "v2",
+   "maintenance": "LIVE",
+   "entries": "LIVE",
+   "set_utc": "2026-09-29T16:06Z",
+   "why": "owner 2026-09-29: v2 a0c5313766c52c9a entries LIVE only in the cash already held; legacy names keep v1 terms (horizon, stop), never sold to make room"
+  },
+  "hack5": {
+   "contract": "v2",
+   "maintenance": "LIVE",
+   "entries": "LIVE",
+   "set_utc": "2026-09-29T16:02Z",
+   "why": "owner 2026-09-29 'update the hacks daily... full freedom': hack5 is the market-like CONTROL (v2 98f677b18293c710)"
+  },
+  "hack6": {
+   "contract": "v2",
+   "maintenance": "LIVE",
+   "entries": "LIVE",
+   "set_utc": "2026-09-29T16:06Z",
+   "why": "owner 2026-09-29: v2 12fa05317df05ce1 entries LIVE only in the cash already held; legacy names keep v1 terms (horizon, stop), never sold to make room"
+  },
+  "_history": [
+   {
+    "t": "2026-09-29T16:02Z",
+    "change": "hack5 -> v2 LIVE/LIVE (control)",
+    "by": "operator on the owner's instruction"
+   },
+   {
+    "t": "2026-09-29T16:04Z",
+    "change": "hack2 -> v2 LIVE/LIVE",
+    "by": "operator on the owner's instruction"
+   },
+   {
+    "t": "2026-09-29T16:06Z",
+    "change": "hack1/hack4/hack6 -> v2 LIVE/LIVE (legacy kept)",
+    "by": "operator on the owner's instruction"
+   }
+  ]
+ },
+ "issuer_map": "ok",
+ "n_stitched": 62,
+ "digest": "world_digest_20261005T171732Z.json",
+ "baseline": "2026-10-06T02:50:36Z",
+ "accounts": [
+  {
+   "role": "hack1",
+   "pass": "preclose",
+   "account_number": "PA3WXDS3MJ53",
+   "equity": 91567.54,
+   "cash": 3461.77,
+   "last_equity": 91627.86,
+   "n_positions": 24,
+   "n_open_orders": 24,
+   "positions": [
+    {
+     "symbol": "AGIO",
+     "qty": 41.0,
+     "price": 31.25,
+     "market_value": 1281.25,
+     "unrealized_plpc": -0.07132,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "AVGO",
+     "qty": 11.0,
+     "price": 362.95,
+     "market_value": 3992.45,
+     "unrealized_plpc": 0.01515,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "BBIO",
+     "qty": 10.0,
+     "price": 66.5,
+     "market_value": 665.0,
+     "unrealized_plpc": -0.00285,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "BE",
+     "qty": 9.0,
+     "price": 286.79,
+     "market_value": 2581.11,
+     "unrealized_plpc": -0.0321,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "CCJ",
+     "qty": 15.0,
+     "price": 88.03,
+     "market_value": 1320.45,
+     "unrealized_plpc": -0.00722,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "CLS",
+     "qty": 9.0,
+     "price": 382.0,
+     "market_value": 3438.0,
+     "unrealized_plpc": 0.04606,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "COGT",
+     "qty": 64.0,
+     "price": 31.2,
+     "market_value": 1996.8,
+     "unrealized_plpc": -0.03223,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "DKNG",
+     "qty": 107.0,
+     "price": 19.68,
+     "market_value": 2105.76,
+     "unrealized_plpc": 0.016,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "GEV",
+     "qty": 6.0,
+     "price": 991.94,
+     "market_value": 5951.64,
+     "unrealized_plpc": 0.03706,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "HOOD",
+     "qty": 42.0,
+     "price": 113.95,
+     "market_value": 4785.9,
+     "unrealized_plpc": -0.01299,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "IONQ",
+     "qty": 15.0,
+     "price": 42.95,
+     "market_value": 644.25,
+     "unrealized_plpc": -0.05542,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "LEU",
+     "qty": 9.0,
+     "price": 142.5,
+     "market_value": 1282.5,
+     "unrealized_plpc": 3e-05,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "MP",
+     "qty": 61.0,
+     "price": 46.91,
+     "market_value": 2861.51,
+     "unrealized_plpc": 0.03967,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "MU",
+     "qty": 5.0,
+     "price": 1057.6,
+     "market_value": 5288.0,
+     "unrealized_plpc": -0.01215,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "NOVT",
+     "qty": 14.0,
+     "price": 150.61,
+     "market_value": 2108.54,
+     "unrealized_plpc": 0.06386,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "NVT",
+     "qty": 25.0,
+     "price": 167.17,
+     "market_value": 4179.25,
+     "unrealized_plpc": 0.04091,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "PRAX",
+     "qty": 2.0,
+     "price": 282.9999,
+     "market_value": 565.9998,
+     "unrealized_plpc": -0.00959,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "RGEN",
+     "qty": 3.0,
+     "price": 189.5,
+     "market_value": 568.5,
+     "unrealized_plpc": 0.01893,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "SYM",
+     "qty": 574.0,
+     "price": 42.73,
+     "market_value": 24527.02,
+     "unrealized_plpc": -0.00697,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "TSM",
+     "qty": 10.0,
+     "price": 482.92,
+     "market_value": 4829.2,
+     "unrealized_plpc": 0.05672,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "VKTX",
+     "qty": 64.0,
+     "price": 29.31,
+     "market_value": 1875.84,
+     "unrealized_plpc": -0.09229,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "VRT",
+     "qty": 27.0,
+     "price": 254.0,
+     "market_value": 6858.0,
+     "unrealized_plpc": 0.01857,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "VRTX",
+     "qty": 5.0,
+     "price": 503.0,
+     "market_value": 2515.0,
+     "unrealized_plpc": 0.00482,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "WST",
+     "qty": 5.0,
+     "price": 376.76,
+     "market_value": 1883.8,
+     "unrealized_plpc": 0.00741,
+     "asset_class": "us_equity"
+    }
+   ],
+   "clock": {
+    "session_day_et": "2026-10-05",
+    "is_open": false,
+    "minutes_to_close": 1024.1
+   },
+   "reconcile": {
+    "status": "OK",
+    "ok": true,
+    "mismatches": [],
+    "foreign_orders": [],
+    "source": "state",
+    "since": "2026-10-05T14:57:37+00:00",
+    "n_fills_since": 0
+   },
+   "contract_active": {
+    "version": "v2",
+    "policy_hash": "bdae86290ea38481",
+    "alpha_source": "human + AI thematic curation (the owner's themes: AI power, memory/foundry, prediction markets, nuclear/resources, biotech catalysts)",
+    "frozen_utc": "2026-09-29T13:37:42+00:00"
+   },
+   "contract_proposed": {
+    "version": "v2",
+    "policy_hash": "bdae86290ea38481",
+    "alpha_source": "human + AI thematic curation (the owner's themes: AI power, memory/foundry, prediction markets, nuclear/resources, biotech catalysts)"
+   },
+   "sigma": {
+    "AGIO": 0.0257,
+    "AVGO": 0.02467,
+    "BBIO": 0.02751,
+    "BE": 0.06743,
+    "CCJ": 0.02578,
+    "CLS": 0.04952,
+    "COGT": 0.02841,
+    "DKNG": 0.03263,
+    "GEV": 0.03003,
+    "HOOD": 0.04412,
+    "IONQ": 0.04728,
+    "LEU": 0.04699,
+    "MP": 0.0404,
+    "MU": 0.04726,
+    "NOVT": 0.02826,
+    "NVT": 0.0314,
+    "PRAX": 0.0355,
+    "RGEN": 0.02951,
+    "SYM": 0.03478,
+    "TSM": 0.02087,
+    "VKTX": 0.05613,
+    "VRT": 0.04077,
+    "VRTX": 0.01696,
+    "WST": 0.01595
+   },
+   "panel": {
+    "panel": "bars.parquet",
+    "last_bar": "2026-10-05",
+    "symbols_asked": 25,
+    "symbols_found": 25,
+    "screen": {
+     "enabled": true,
+     "rules": {
+      "dark_run_min_sessions": 5,
+      "nontrade_print_tol": 0.01,
+      "spike_ratio": 4.0,
+      "spike_residual": 0.25,
+      "spike_window_sessions": 3,
+      "break_ratio": 3.0,
+      "quiet_volume_mult": 2.0
+     },
+     "volume_available": true,
+     "rows_in": 6875,
+     "rows_removed": 0,
+     "rows_removed_by_reason": {},
+     "rows_removed_by_year": {},
+     "symbols_with_rows_removed": 0,
+     "n_dark_runs": 0,
+     "nontrade_prints": 0,
+     "n_spikes": 0,
+     "n_cuts": 0,
+     "n_suspects": 0,
+     "cuts_by_reason": {}
+    },
+    "moved_5d_sigma": {
+     "AGIO": -1.13,
+     "AVGO": 0.671,
+     "BBIO": -0.115,
+     "BE": 0.6,
+     "CCJ": 0.086,
+     "CLS": 0.663,
+     "COGT": -0.489,
+     "DKNG": -1.01,
+     "GEV": 0.631,
+     "HOOD": -0.205,
+     "IONQ": -0.342,
+     "LEU": 0.073,
+     "MP": 0.093,
+     "MU": 0.09,
+     "NOVT": 0.95,
+     "NVT": 0.592,
+     "PRAX": -0.092,
+     "RGEN": -0.358,
+     "SPY": 0.774,
+     "SYM": 0.266,
+     "TSM": 1.558,
+     "VKTX": -0.905,
+     "VRT": 0.431,
+     "VRTX": -1.208,
+     "WST": 0.083
+    }
+   },
+   "stop_table": [
+    {
+     "symbol": "AGIO",
+     "qty": 41.0,
+     "price": 31.25,
+     "sigma_d": 0.025701436416741927,
+     "target_stop_frac": 0.0771,
+     "target_stop_how": "3 x sigma 0.0257 = 0.0771",
+     "resting": [
+      {
+       "stop_price": "30.21",
+       "qty": "41",
+       "client_order_id": "aegisfm-hack1-20260930-stop-AGIO-702c7fc5b2",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0333,
+       "distance_sigma": 1.29
+      }
+     ]
+    },
+    {
+     "symbol": "AVGO",
+     "qty": 11.0,
+     "price": 362.95,
+     "sigma_d": 0.02466986191865242,
+     "target_stop_frac": 0.074,
+     "target_stop_how": "3 x sigma 0.0247 = 0.0740",
+     "resting": [
+      {
+       "stop_price": "331.08",
+       "qty": "11",
+       "client_order_id": "aegisfm-hack1-20260929-stop-AVGO-6179662c4c",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.0878,
+       "distance_sigma": 3.56
+      }
+     ]
+    },
+    {
+     "symbol": "BBIO",
+     "qty": 10.0,
+     "price": 66.5,
+     "sigma_d": 0.027507596790571968,
+     "target_stop_frac": 0.0825,
+     "target_stop_how": "3 x sigma 0.0275 = 0.0825",
+     "resting": [
+      {
+       "stop_price": "61.04",
+       "qty": "10",
+       "client_order_id": "aegisfm-hack1-20260929-stop-BBIO-afe5e68499",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.0821,
+       "distance_sigma": 2.98
+      }
+     ]
+    },
+    {
+     "symbol": "BE",
+     "qty": 9.0,
+     "price": 286.79,
+     "sigma_d": 0.06743105047231346,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0674 = 0.2023, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "260.87",
+       "qty": "9",
+       "client_order_id": "aegisfm-hack1-20260929-stop-BE-b9f7a2a8e6",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.0904,
+       "distance_sigma": 1.34
+      }
+     ]
+    },
+    {
+     "symbol": "CCJ",
+     "qty": 15.0,
+     "price": 88.03,
+     "sigma_d": 0.025782903734539266,
+     "target_stop_frac": 0.0773,
+     "target_stop_how": "3 x sigma 0.0258 = 0.0773",
+     "resting": [
+      {
+       "stop_price": "81.46",
+       "qty": "15",
+       "client_order_id": "aegisfm-hack1-20260930-stop-CCJ-2ac623110a",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0746,
+       "distance_sigma": 2.89
+      }
+     ]
+    },
+    {
+     "symbol": "CLS",
+     "qty": 9.0,
+     "price": 382.0,
+     "sigma_d": 0.0495158156784701,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0495 = 0.1485, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "321.38",
+       "qty": "9",
+       "client_order_id": "aegisfm-hack1-20260929-stop-CLS-18077293d2",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1587,
+       "distance_sigma": 3.2
+      }
+     ]
+    },
+    {
+     "symbol": "COGT",
+     "qty": 64.0,
+     "price": 31.2,
+     "sigma_d": 0.02840704970637544,
+     "target_stop_frac": 0.0852,
+     "target_stop_how": "3 x sigma 0.0284 = 0.0852",
+     "resting": [
+      {
+       "stop_price": "29.68",
+       "qty": "64",
+       "client_order_id": "aegisfm-hack1-20260930-stop-COGT-89b95ca2f3",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0487,
+       "distance_sigma": 1.71
+      }
+     ]
+    },
+    {
+     "symbol": "DKNG",
+     "qty": 107.0,
+     "price": 19.68,
+     "sigma_d": 0.032630011596372625,
+     "target_stop_frac": 0.0979,
+     "target_stop_how": "3 x sigma 0.0326 = 0.0979",
+     "resting": [
+      {
+       "stop_price": "17.6",
+       "qty": "107",
+       "client_order_id": "aegisfm-hack1-20260930-stop-DKNG-19c1e77ce6",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.1057,
+       "distance_sigma": 3.24
+      }
+     ]
+    },
+    {
+     "symbol": "GEV",
+     "qty": 6.0,
+     "price": 991.94,
+     "sigma_d": 0.03003175226739768,
+     "target_stop_frac": 0.0901,
+     "target_stop_how": "3 x sigma 0.0300 = 0.0901",
+     "resting": [
+      {
+       "stop_price": "862.19",
+       "qty": "6",
+       "client_order_id": "aegisfm-hack1-20260929-stop-GEV-eb55a738c6",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1308,
+       "distance_sigma": 4.36
+      }
+     ]
+    },
+    {
+     "symbol": "HOOD",
+     "qty": 42.0,
+     "price": 113.95,
+     "sigma_d": 0.044118388487591455,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0441 = 0.1324, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "101.66",
+       "qty": "42",
+       "client_order_id": "aegisfm-hack1-20260929-stop-HOOD-053b1878ba",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1079,
+       "distance_sigma": 2.44
+      }
+     ]
+    },
+    {
+     "symbol": "IONQ",
+     "qty": 15.0,
+     "price": 42.95,
+     "sigma_d": 0.0472771618831684,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0473 = 0.1418, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "39.97",
+       "qty": "15",
+       "client_order_id": "aegisfm-hack1-20260930-stop-IONQ-1783cf0b59",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0694,
+       "distance_sigma": 1.47
+      }
+     ]
+    },
+    {
+     "symbol": "LEU",
+     "qty": 9.0,
+     "price": 142.5,
+     "sigma_d": 0.04699247501084784,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0470 = 0.1410, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "125.13",
+       "qty": "9",
+       "client_order_id": "aegisfm-hack1-20260930-stop-LEU-a7415eacbd",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.1219,
+       "distance_sigma": 2.59
+      }
+     ]
+    },
+    {
+     "symbol": "MP",
+     "qty": 61.0,
+     "price": 46.91,
+     "sigma_d": 0.04040177933612212,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0404 = 0.1212, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "39.67",
+       "qty": "61",
+       "client_order_id": "aegisfm-hack1-20260929-stop-MP-4f2d344b57",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1543,
+       "distance_sigma": 3.82
+      }
+     ]
+    },
+    {
+     "symbol": "MU",
+     "qty": 5.0,
+     "price": 1057.6,
+     "sigma_d": 0.047258772155111255,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0473 = 0.1418, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "942.01",
+       "qty": "5",
+       "client_order_id": "aegisfm-hack1-20260929-stop-MU-a1a8bdf1a1",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1093,
+       "distance_sigma": 2.31
+      }
+     ]
+    },
+    {
+     "symbol": "NOVT",
+     "qty": 14.0,
+     "price": 150.61,
+     "sigma_d": 0.028260878047317226,
+     "target_stop_frac": 0.0848,
+     "target_stop_how": "3 x sigma 0.0283 = 0.0848",
+     "resting": [
+      {
+       "stop_price": "129.37",
+       "qty": "14",
+       "client_order_id": "aegisfm-hack1-20260930-stop-NOVT-088476f945",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.141,
+       "distance_sigma": 4.99
+      }
+     ]
+    },
+    {
+     "symbol": "NVT",
+     "qty": 25.0,
+     "price": 167.17,
+     "sigma_d": 0.0313994004513788,
+     "target_stop_frac": 0.0942,
+     "target_stop_how": "3 x sigma 0.0314 = 0.0942",
+     "resting": [
+      {
+       "stop_price": "144.49",
+       "qty": "25",
+       "client_order_id": "aegisfm-hack1-20260929-stop-NVT-48db56f14a",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1357,
+       "distance_sigma": 4.32
+      }
+     ]
+    },
+    {
+     "symbol": "PRAX",
+     "qty": 2.0,
+     "price": 282.9999,
+     "sigma_d": 0.035499526717717673,
+     "target_stop_frac": 0.1065,
+     "target_stop_how": "3 x sigma 0.0355 = 0.1065",
+     "resting": [
+      {
+       "stop_price": "255.49",
+       "qty": "2",
+       "client_order_id": "aegisfm-hack1-20260930-stop-PRAX-5acbc30987",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0972,
+       "distance_sigma": 2.74
+      }
+     ]
+    },
+    {
+     "symbol": "RGEN",
+     "qty": 3.0,
+     "price": 189.5,
+     "sigma_d": 0.029514927059434228,
+     "target_stop_frac": 0.0885,
+     "target_stop_how": "3 x sigma 0.0295 = 0.0885",
+     "resting": [
+      {
+       "stop_price": "169.42",
+       "qty": "3",
+       "client_order_id": "aegisfm-hack1-20261002-stop-RGEN-3eb5721cff",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.106,
+       "distance_sigma": 3.59
+      }
+     ]
+    },
+    {
+     "symbol": "SYM",
+     "qty": 574.0,
+     "price": 42.73,
+     "sigma_d": 0.0347751558126267,
+     "target_stop_frac": 0.1043,
+     "target_stop_how": "3 x sigma 0.0348 = 0.1043",
+     "resting": [
+      {
+       "stop_price": "38.73",
+       "qty": "574",
+       "client_order_id": "aat-stop-fe65ed7ff3f7262abc48d8c5",
+       "expires_at": "2026-12-08T21:00:00Z",
+       "distance_frac": 0.0936,
+       "distance_sigma": 2.69
+      }
+     ]
+    },
+    {
+     "symbol": "TSM",
+     "qty": 10.0,
+     "price": 482.92,
+     "sigma_d": 0.020866449629467557,
+     "target_stop_frac": 0.0626,
+     "target_stop_how": "3 x sigma 0.0209 = 0.0626",
+     "resting": [
+      {
+       "stop_price": "423.62",
+       "qty": "10",
+       "client_order_id": "aegisfm-hack1-20260929-stop-TSM-14b8bb030c",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1228,
+       "distance_sigma": 5.88
+      }
+     ]
+    },
+    {
+     "symbol": "VKTX",
+     "qty": 64.0,
+     "price": 29.31,
+     "sigma_d": 0.05613130611331813,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0561 = 0.1684, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "28.6",
+       "qty": "64",
+       "client_order_id": "aegisfm-hack1-20260930-stop-VKTX-dbeeb09d85",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0242,
+       "distance_sigma": 0.43
+      }
+     ]
+    },
+    {
+     "symbol": "VRT",
+     "qty": 27.0,
+     "price": 254.0,
+     "sigma_d": 0.040770480434083954,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0408 = 0.1223, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "219.03",
+       "qty": "27",
+       "client_order_id": "aegisfm-hack1-20260929-stop-VRT-b34d02fd59",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1377,
+       "distance_sigma": 3.38
+      }
+     ]
+    },
+    {
+     "symbol": "VRTX",
+     "qty": 5.0,
+     "price": 503.0,
+     "sigma_d": 0.01696106402157074,
+     "target_stop_frac": 0.0509,
+     "target_stop_how": "3 x sigma 0.0170 = 0.0509",
+     "resting": [
+      {
+       "stop_price": "474.56",
+       "qty": "5",
+       "client_order_id": "aegisfm-hack1-20261005-stop-VRTX-c5739d2324",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.0565,
+       "distance_sigma": 3.33
+      }
+     ]
+    },
+    {
+     "symbol": "WST",
+     "qty": 5.0,
+     "price": 376.76,
+     "sigma_d": 0.015952557580483154,
+     "target_stop_frac": 0.0479,
+     "target_stop_how": "3 x sigma 0.0160 = 0.0479",
+     "resting": [
+      {
+       "stop_price": "355.8",
+       "qty": "5",
+       "client_order_id": "aegisfm-hack1-20260930-stop-WST-ac6a266867",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0556,
+       "distance_sigma": 3.49
+      }
+     ]
+    }
+   ],
+   "flags": [],
+   "lot_entry": {
+    "AGIO": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "AVGO": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "BBIO": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "BE": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "CCJ": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "CLS": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "COGT": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "DKNG": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "GEV": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "HOOD": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "IONQ": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "LEU": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "MP": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "MU": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "NOVT": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "NVT": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "PRAX": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "RGEN": {
+     "date": "2026-10-02",
+     "how": "exact",
+     "sessions_held": 1
+    },
+    "SYM": {
+     "date": "2026-09-09",
+     "how": "exact",
+     "sessions_held": 18
+    },
+    "TSM": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "VKTX": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "VRT": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "VRTX": {
+     "date": "2026-10-05",
+     "how": "exact",
+     "sessions_held": 0
+    },
+    "WST": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    }
+   },
+   "v2_targets": {
+    "n": 23,
+    "gross_frac": 0.96,
+    "legacy_names": [
+     "SYM"
+    ],
+    "drops": [
+     {
+      "symbol": "VRT",
+      "why": "weight 0.120 clipped to 0.100",
+      "clipped": true
+     }
+    ]
+   },
+   "v2_plan_note": "pre-close pass: no new entries (maintenance and exits only)",
+   "worst_case_now": {
+    "worst_usd": 9265.61,
+    "worst_pct_equity": 10.12,
+    "gross_usd": 88105.77,
+    "gross_over_equity": 0.9622,
+    "n_names": 24,
+    "per_name": [
+     {
+      "symbol": "AGIO",
+      "worst_usd": 42.639999999999965,
+      "basis": "resting stop 30.21"
+     },
+     {
+      "symbol": "AVGO",
+      "worst_usd": 350.57000000000005,
+      "basis": "resting stop 331.08"
+     },
+     {
+      "symbol": "BBIO",
+      "worst_usd": 54.60000000000001,
+      "basis": "resting stop 61.04"
+     },
+     {
+      "symbol": "BE",
+      "worst_usd": 233.28000000000014,
+      "basis": "resting stop 260.87"
+     },
+     {
+      "symbol": "CCJ",
+      "worst_usd": 98.55000000000011,
+      "basis": "resting stop 81.46"
+     },
+     {
+      "symbol": "CLS",
+      "worst_usd": 545.58,
+      "basis": "resting stop 321.38"
+     },
+     {
+      "symbol": "COGT",
+      "worst_usd": 97.27999999999997,
+      "basis": "resting stop 29.68"
+     },
+     {
+      "symbol": "DKNG",
+      "worst_usd": 222.55999999999983,
+      "basis": "resting stop 17.6"
+     },
+     {
+      "symbol": "GEV",
+      "worst_usd": 778.5,
+      "basis": "resting stop 862.19"
+     },
+     {
+      "symbol": "HOOD",
+      "worst_usd": 516.1800000000003,
+      "basis": "resting stop 101.66"
+     },
+     {
+      "symbol": "IONQ",
+      "worst_usd": 44.70000000000006,
+      "basis": "resting stop 39.97"
+     },
+     {
+      "symbol": "LEU",
+      "worst_usd": 156.33000000000004,
+      "basis": "resting stop 125.13"
+     },
+     {
+      "symbol": "MP",
+      "worst_usd": 441.6399999999997,
+      "basis": "resting stop 39.67"
+     },
+     {
+      "symbol": "MU",
+      "worst_usd": 577.9499999999996,
+      "basis": "resting stop 942.01"
+     },
+     {
+      "symbol": "NOVT",
+      "worst_usd": 297.3600000000001,
+      "basis": "resting stop 129.37"
+     },
+     {
+      "symbol": "NVT",
+      "worst_usd": 566.9999999999994,
+      "basis": "resting stop 144.49"
+     },
+     {
+      "symbol": "PRAX",
+      "worst_usd": 55.01980000000003,
+      "basis": "resting stop 255.49"
+     },
+     {
+      "symbol": "RGEN",
+      "worst_usd": 60.24000000000004,
+      "basis": "resting stop 169.42"
+     },
+     {
+      "symbol": "SYM",
+      "worst_usd": 2296.0,
+      "basis": "resting stop 38.73"
+     },
+     {
+      "symbol": "TSM",
+      "worst_usd": 593.0000000000001,
+      "basis": "resting stop 423.62"
+     },
+     {
+      "symbol": "VKTX",
+      "worst_usd": 45.43999999999983,
+      "basis": "resting stop 28.6"
+     },
+     {
+      "symbol": "VRT",
+      "worst_usd": 944.1899999999999,
+      "basis": "resting stop 219.03"
+     },
+     {
+      "symbol": "VRTX",
+      "worst_usd": 142.2,
+      "basis": "resting stop 474.56"
+     },
+     {
+      "symbol": "WST",
+      "worst_usd": 104.7999999999999,
+      "basis": "resting stop 355.8"
+     }
+    ]
+   },
+   "worst_case_after_plan": {
+    "worst_usd": 9265.61,
+    "worst_pct_equity": 10.12,
+    "gross_usd": 88105.77,
+    "gross_over_equity": 0.9622,
+    "n_names": 24,
+    "per_name": [
+     {
+      "symbol": "AGIO",
+      "worst_usd": 42.639999999999965,
+      "basis": "resting stop 30.21"
+     },
+     {
+      "symbol": "AVGO",
+      "worst_usd": 350.57000000000005,
+      "basis": "resting stop 331.08"
+     },
+     {
+      "symbol": "BBIO",
+      "worst_usd": 54.60000000000001,
+      "basis": "resting stop 61.04"
+     },
+     {
+      "symbol": "BE",
+      "worst_usd": 233.28000000000014,
+      "basis": "resting stop 260.87"
+     },
+     {
+      "symbol": "CCJ",
+      "worst_usd": 98.55000000000011,
+      "basis": "resting stop 81.46"
+     },
+     {
+      "symbol": "CLS",
+      "worst_usd": 545.58,
+      "basis": "resting stop 321.38"
+     },
+     {
+      "symbol": "COGT",
+      "worst_usd": 97.27999999999997,
+      "basis": "resting stop 29.68"
+     },
+     {
+      "symbol": "DKNG",
+      "worst_usd": 222.55999999999983,
+      "basis": "resting stop 17.6"
+     },
+     {
+      "symbol": "GEV",
+      "worst_usd": 778.5,
+      "basis": "resting stop 862.19"
+     },
+     {
+      "symbol": "HOOD",
+      "worst_usd": 516.1800000000003,
+      "basis": "resting stop 101.66"
+     },
+     {
+      "symbol": "IONQ",
+      "worst_usd": 44.70000000000006,
+      "basis": "resting stop 39.97"
+     },
+     {
+      "symbol": "LEU",
+      "worst_usd": 156.33000000000004,
+      "basis": "resting stop 125.13"
+     },
+     {
+      "symbol": "MP",
+      "worst_usd": 441.6399999999997,
+      "basis": "resting stop 39.67"
+     },
+     {
+      "symbol": "MU",
+      "worst_usd": 577.9499999999996,
+      "basis": "resting stop 942.01"
+     },
+     {
+      "symbol": "NOVT",
+      "worst_usd": 297.3600000000001,
+      "basis": "resting stop 129.37"
+     },
+     {
+      "symbol": "NVT",
+      "worst_usd": 566.9999999999994,
+      "basis": "resting stop 144.49"
+     },
+     {
+      "symbol": "PRAX",
+      "worst_usd": 55.01980000000003,
+      "basis": "resting stop 255.49"
+     },
+     {
+      "symbol": "RGEN",
+      "worst_usd": 60.24000000000004,
+      "basis": "resting stop 169.42"
+     },
+     {
+      "symbol": "SYM",
+      "worst_usd": 2296.0,
+      "basis": "resting stop 38.73"
+     },
+     {
+      "symbol": "TSM",
+      "worst_usd": 593.0000000000001,
+      "basis": "resting stop 423.62"
+     },
+     {
+      "symbol": "VKTX",
+      "worst_usd": 45.43999999999983,
+      "basis": "resting stop 28.6"
+     },
+     {
+      "symbol": "VRT",
+      "worst_usd": 944.1899999999999,
+      "basis": "resting stop 219.03"
+     },
+     {
+      "symbol": "VRTX",
+      "worst_usd": 142.2,
+      "basis": "resting stop 474.56"
+     },
+     {
+      "symbol": "WST",
+      "worst_usd": 104.7999999999999,
+      "basis": "resting stop 355.8"
+     }
+    ]
+   },
+   "worst_case_formula_v1": {
+    "n": 8,
+    "notional_frac": 0.125,
+    "stop_frac": 0.1,
+    "worst_frac": 0.1,
+    "worst_usd": 9156.75,
+    "gross_over_equity": 1.0
+   },
+   "worst_case_formula_v2": {
+    "n": 23,
+    "notional_frac": 0.0417,
+    "stop_frac": 0.12,
+    "worst_frac": 0.1152,
+    "worst_usd": 10548.58,
+    "gross_over_equity": 0.96
+   },
+   "worst_case_printed_before_orders_utc": "2026-10-06T02:55:56+00:00",
+   "actions": [],
+   "stop_counterfactual": {
+    "registered_now": [],
+    "registered_total": [
+     "BE",
+     "VKTX",
+     "VRTX",
+     "AGIO",
+     "COGT"
+    ],
+    "rows_written": []
+   },
+   "state_written": "2026-10-06T02:56:00+00:00",
+   "status": "ok"
+  },
+  {
+   "role": "hack2",
+   "pass": "preclose",
+   "account_number": "PA33ON4NRJAX",
+   "equity": 101733.63,
+   "cash": 3743.89,
+   "last_equity": 100631.58,
+   "n_positions": 20,
+   "n_open_orders": 20,
+   "positions": [
+    {
+     "symbol": "ABNB",
+     "qty": 30.0,
+     "price": 164.07,
+     "market_value": 4922.1,
+     "unrealized_plpc": 0.01278,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "AFRM",
+     "qty": 72.0,
+     "price": 74.76,
+     "market_value": 5382.72,
+     "unrealized_plpc": 0.0933,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "AMD",
+     "qty": 7.0,
+     "price": 631.45,
+     "market_value": 4420.15,
+     "unrealized_plpc": 0.02999,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "AMGN",
+     "qty": 11.0,
+     "price": 403.99,
+     "market_value": 4443.89,
+     "unrealized_plpc": -0.04536,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "CRM",
+     "qty": 21.0,
+     "price": 230.65,
+     "market_value": 4843.65,
+     "unrealized_plpc": -0.01119,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "CRWD",
+     "qty": 18.0,
+     "price": 273.03,
+     "market_value": 4914.54,
+     "unrealized_plpc": 0.05429,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "DDOG",
+     "qty": 18.0,
+     "price": 276.3875,
+     "market_value": 4974.975,
+     "unrealized_plpc": 0.00893,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "DELL",
+     "qty": 9.0,
+     "price": 553.0,
+     "market_value": 4977.0,
+     "unrealized_plpc": 0.01737,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "ESTC",
+     "qty": 54.0,
+     "price": 94.91,
+     "market_value": 5125.14,
+     "unrealized_plpc": 0.02716,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "GTLB",
+     "qty": 99.0,
+     "price": 51.47,
+     "market_value": 5095.53,
+     "unrealized_plpc": 0.10451,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "MDB",
+     "qty": 13.0,
+     "price": 358.5,
+     "market_value": 4660.5,
+     "unrealized_plpc": 0.09176,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "NET",
+     "qty": 13.0,
+     "price": 359.49,
+     "market_value": 4673.37,
+     "unrealized_plpc": 0.02131,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "OKTA",
+     "qty": 23.0,
+     "price": 219.0,
+     "market_value": 5037.0,
+     "unrealized_plpc": 0.04186,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "PANW",
+     "qty": 12.0,
+     "price": 406.2423,
+     "market_value": 4874.9076,
+     "unrealized_plpc": 0.01641,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "S",
+     "qty": 199.0,
+     "price": 25.4576,
+     "market_value": 5066.0624,
+     "unrealized_plpc": 0.11656,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "SNOW",
+     "qty": 14.0,
+     "price": 339.01,
+     "market_value": 4746.14,
+     "unrealized_plpc": -0.01793,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "TGT",
+     "qty": 31.0,
+     "price": 152.99,
+     "market_value": 4742.69,
+     "unrealized_plpc": -0.03531,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "WDAY",
+     "qty": 26.0,
+     "price": 188.4,
+     "market_value": 4898.4,
+     "unrealized_plpc": -0.01268,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "XYZ",
+     "qty": 67.0,
+     "price": 76.4,
+     "market_value": 5118.8,
+     "unrealized_plpc": 0.04557,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "ZS",
+     "qty": 25.0,
+     "price": 202.8868,
+     "market_value": 5072.17,
+     "unrealized_plpc": 0.03177,
+     "asset_class": "us_equity"
+    }
+   ],
+   "clock": {
+    "session_day_et": "2026-10-05",
+    "is_open": false,
+    "minutes_to_close": 1023.9
+   },
+   "reconcile": {
+    "status": "OK",
+    "ok": true,
+    "mismatches": [],
+    "foreign_orders": [],
+    "source": "state",
+    "since": "2026-10-05T14:58:11+00:00",
+    "n_fills_since": 2
+   },
+   "contract_active": {
+    "version": "v2",
+    "policy_hash": "2301fa30c7b851df",
+    "alpha_source": "analyst revision flow (net raises x firms, 90 days, >= 3 firms)",
+    "frozen_utc": "2026-09-29T13:37:43+00:00"
+   },
+   "contract_proposed": {
+    "version": "v2",
+    "policy_hash": "2301fa30c7b851df",
+    "alpha_source": "analyst revision flow (net raises x firms, 90 days, >= 3 firms)"
+   },
+   "sigma": {
+    "ABNB": 0.03084,
+    "AFRM": 0.032,
+    "AMD": 0.04036,
+    "AMGN": 0.02125,
+    "CRM": 0.03845,
+    "CRWD": 0.04566,
+    "DDOG": 0.04133,
+    "DELL": 0.05037,
+    "ESTC": 0.03965,
+    "GTLB": 0.03477,
+    "MDB": 0.04649,
+    "NET": 0.03574,
+    "OKTA": 0.04974,
+    "PANW": 0.0375,
+    "S": 0.03965,
+    "SNOW": 0.03034,
+    "TGT": 0.01784,
+    "WDAY": 0.04023,
+    "XYZ": 0.02306,
+    "ZS": 0.04018
+   },
+   "panel": {
+    "panel": "bars.parquet",
+    "last_bar": "2026-10-05",
+    "symbols_asked": 21,
+    "symbols_found": 21,
+    "screen": {
+     "enabled": true,
+     "rules": {
+      "dark_run_min_sessions": 5,
+      "nontrade_print_tol": 0.01,
+      "spike_ratio": 4.0,
+      "spike_residual": 0.25,
+      "spike_window_sessions": 3,
+      "break_ratio": 3.0,
+      "quiet_volume_mult": 2.0
+     },
+     "volume_available": true,
+     "rows_in": 5775,
+     "rows_removed": 0,
+     "rows_removed_by_reason": {},
+     "rows_removed_by_year": {},
+     "symbols_with_rows_removed": 0,
+     "n_dark_runs": 0,
+     "nontrade_prints": 0,
+     "n_spikes": 0,
+     "n_cuts": 0,
+     "n_suspects": 0,
+     "cuts_by_reason": {}
+    },
+    "moved_5d_sigma": {
+     "ABNB": 0.742,
+     "AFRM": 1.568,
+     "AMD": 0.435,
+     "AMGN": -0.763,
+     "CRM": 0.129,
+     "CRWD": 0.507,
+     "DDOG": 0.311,
+     "DELL": 0.145,
+     "ESTC": 0.894,
+     "GTLB": 1.473,
+     "MDB": 0.706,
+     "NET": 0.194,
+     "OKTA": 0.716,
+     "PANW": 0.446,
+     "S": 1.334,
+     "SNOW": 0.488,
+     "SPY": 0.774,
+     "TGT": -0.861,
+     "WDAY": 0.021,
+     "XYZ": 0.773,
+     "ZS": 0.135
+    }
+   },
+   "stop_table": [
+    {
+     "symbol": "ABNB",
+     "qty": 30.0,
+     "price": 164.07,
+     "sigma_d": 0.030837170606523,
+     "target_stop_frac": 0.0925,
+     "target_stop_how": "3 x sigma 0.0308 = 0.0925",
+     "resting": [
+      {
+       "stop_price": "146.7",
+       "qty": "30",
+       "client_order_id": "aegisfm-hack2-20260930-stop-ABNB-b67bfef83a",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.1059,
+       "distance_sigma": 3.43
+      }
+     ]
+    },
+    {
+     "symbol": "AFRM",
+     "qty": 72.0,
+     "price": 74.76,
+     "sigma_d": 0.03200160805058454,
+     "target_stop_frac": 0.096,
+     "target_stop_how": "3 x sigma 0.0320 = 0.0960",
+     "resting": [
+      {
+       "stop_price": "61.96",
+       "qty": "72",
+       "client_order_id": "aegisfm-hack2-20260929-stop-AFRM-8794468532",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1712,
+       "distance_sigma": 5.35
+      }
+     ]
+    },
+    {
+     "symbol": "AMD",
+     "qty": 7.0,
+     "price": 631.45,
+     "sigma_d": 0.04035948892604595,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0404 = 0.1211, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "562.5",
+       "qty": "7",
+       "client_order_id": "aegisfm-hack2-20261002-stoprem-AMD-77546f2fb3",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.1092,
+       "distance_sigma": 2.71
+      }
+     ]
+    },
+    {
+     "symbol": "AMGN",
+     "qty": 11.0,
+     "price": 403.99,
+     "sigma_d": 0.021249191712433193,
+     "target_stop_frac": 0.0637,
+     "target_stop_how": "3 x sigma 0.0212 = 0.0637",
+     "resting": [
+      {
+       "stop_price": "395.68",
+       "qty": "11",
+       "client_order_id": "aegisfm-hack2-20260930-stop-AMGN-bc2dd5d21d",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0206,
+       "distance_sigma": 0.97
+      }
+     ]
+    },
+    {
+     "symbol": "CRM",
+     "qty": 21.0,
+     "price": 230.65,
+     "sigma_d": 0.038445552831029184,
+     "target_stop_frac": 0.1153,
+     "target_stop_how": "3 x sigma 0.0384 = 0.1153",
+     "resting": [
+      {
+       "stop_price": "206.05",
+       "qty": "21",
+       "client_order_id": "aegisfm-hack2-20260930-stop-CRM-00cb1baec8",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.1067,
+       "distance_sigma": 2.77
+      }
+     ]
+    },
+    {
+     "symbol": "CRWD",
+     "qty": 18.0,
+     "price": 273.03,
+     "sigma_d": 0.0456607652368226,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0457 = 0.1370, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "233.6",
+       "qty": "18",
+       "client_order_id": "aegisfm-hack2-20260930-stoprem-CRWD-aa6245bb5a",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.1444,
+       "distance_sigma": 3.16
+      }
+     ]
+    },
+    {
+     "symbol": "DDOG",
+     "qty": 18.0,
+     "price": 276.3875,
+     "sigma_d": 0.041334825009184464,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0413 = 0.1240, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "240.89",
+       "qty": "18",
+       "client_order_id": "aegisfm-hack2-20261001-stop-DDOG-0067c8deca",
+       "expires_at": "2026-12-30T21:00:00Z",
+       "distance_frac": 0.1284,
+       "distance_sigma": 3.11
+      }
+     ]
+    },
+    {
+     "symbol": "DELL",
+     "qty": 9.0,
+     "price": 553.0,
+     "sigma_d": 0.05037396828852005,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0504 = 0.1511, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "477.92",
+       "qty": "9",
+       "client_order_id": "aegisfm-hack2-20260929-stop-DELL-20ad28bff4",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1358,
+       "distance_sigma": 2.7
+      }
+     ]
+    },
+    {
+     "symbol": "ESTC",
+     "qty": 54.0,
+     "price": 94.91,
+     "sigma_d": 0.03965346880958302,
+     "target_stop_frac": 0.119,
+     "target_stop_how": "3 x sigma 0.0397 = 0.1190",
+     "resting": [
+      {
+       "stop_price": "81.15",
+       "qty": "54",
+       "client_order_id": "aegisfm-hack2-20260930-stop-ESTC-db83989ae3",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.145,
+       "distance_sigma": 3.66
+      }
+     ]
+    },
+    {
+     "symbol": "GTLB",
+     "qty": 99.0,
+     "price": 51.47,
+     "sigma_d": 0.034767315029630194,
+     "target_stop_frac": 0.1043,
+     "target_stop_how": "3 x sigma 0.0348 = 0.1043",
+     "resting": [
+      {
+       "stop_price": "45.57",
+       "qty": "99",
+       "client_order_id": "aegisfm-hack2-20261005-stoprem-GTLB-8ca7add251",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.1146,
+       "distance_sigma": 3.3
+      }
+     ]
+    },
+    {
+     "symbol": "MDB",
+     "qty": 13.0,
+     "price": 358.5,
+     "sigma_d": 0.04648513647562553,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0465 = 0.1395, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "315.59",
+       "qty": "13",
+       "client_order_id": "aegisfm-hack2-20260930-stoprem-MDB-b9896d2c7a",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.1197,
+       "distance_sigma": 2.57
+      }
+     ]
+    },
+    {
+     "symbol": "NET",
+     "qty": 13.0,
+     "price": 359.49,
+     "sigma_d": 0.03574204536042389,
+     "target_stop_frac": 0.1072,
+     "target_stop_how": "3 x sigma 0.0357 = 0.1072",
+     "resting": [
+      {
+       "stop_price": "322.56",
+       "qty": "13",
+       "client_order_id": "aegisfm-hack2-20261005-stoprem-NET-9733cb933d",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.1027,
+       "distance_sigma": 2.87
+      }
+     ]
+    },
+    {
+     "symbol": "OKTA",
+     "qty": 23.0,
+     "price": 219.0,
+     "sigma_d": 0.04974407885130893,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0497 = 0.1492, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "184.96",
+       "qty": "23",
+       "client_order_id": "aegisfm-hack2-20260930-stop-OKTA-803714d193",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.1554,
+       "distance_sigma": 3.12
+      }
+     ]
+    },
+    {
+     "symbol": "PANW",
+     "qty": 12.0,
+     "price": 406.2423,
+     "sigma_d": 0.037504653858690506,
+     "target_stop_frac": 0.1125,
+     "target_stop_how": "3 x sigma 0.0375 = 0.1125",
+     "resting": [
+      {
+       "stop_price": "350.66",
+       "qty": "12",
+       "client_order_id": "aegisfm-hack2-20260930-stop-PANW-cb5790bfa8",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.1368,
+       "distance_sigma": 3.65
+      }
+     ]
+    },
+    {
+     "symbol": "S",
+     "qty": 199.0,
+     "price": 25.4576,
+     "sigma_d": 0.039650267877980545,
+     "target_stop_frac": 0.119,
+     "target_stop_how": "3 x sigma 0.0397 = 0.1190",
+     "resting": [
+      {
+       "stop_price": "22.35",
+       "qty": "199",
+       "client_order_id": "aegisfm-hack2-20261002-stoprem-S-bb9925340a",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.1221,
+       "distance_sigma": 3.08
+      }
+     ]
+    },
+    {
+     "symbol": "SNOW",
+     "qty": 14.0,
+     "price": 339.01,
+     "sigma_d": 0.030340535041976587,
+     "target_stop_frac": 0.091,
+     "target_stop_how": "3 x sigma 0.0303 = 0.0910",
+     "resting": [
+      {
+       "stop_price": "313.3",
+       "qty": "14",
+       "client_order_id": "aegisfm-hack2-20260930-stop-SNOW-96de0b8cf9",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0758,
+       "distance_sigma": 2.5
+      }
+     ]
+    },
+    {
+     "symbol": "TGT",
+     "qty": 31.0,
+     "price": 152.99,
+     "sigma_d": 0.017840619882555312,
+     "target_stop_frac": 0.0535,
+     "target_stop_how": "3 x sigma 0.0178 = 0.0535",
+     "resting": [
+      {
+       "stop_price": "149.69",
+       "qty": "31",
+       "client_order_id": "aegisfm-hack2-20260930-stop-TGT-2b29990233",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0216,
+       "distance_sigma": 1.21
+      }
+     ]
+    },
+    {
+     "symbol": "WDAY",
+     "qty": 26.0,
+     "price": 188.4,
+     "sigma_d": 0.04022514341899191,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0402 = 0.1207, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "167.66",
+       "qty": "26",
+       "client_order_id": "aegisfm-hack2-20260930-stop-WDAY-d4f3aa7931",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.1101,
+       "distance_sigma": 2.74
+      }
+     ]
+    },
+    {
+     "symbol": "XYZ",
+     "qty": 67.0,
+     "price": 76.4,
+     "sigma_d": 0.023055166728269648,
+     "target_stop_frac": 0.0692,
+     "target_stop_how": "3 x sigma 0.0231 = 0.0692",
+     "resting": [
+      {
+       "stop_price": "67.96",
+       "qty": "67",
+       "client_order_id": "aegisfm-hack2-20260929-stop-XYZ-fde0ea5b7d",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1105,
+       "distance_sigma": 4.79
+      }
+     ]
+    },
+    {
+     "symbol": "ZS",
+     "qty": 25.0,
+     "price": 202.8868,
+     "sigma_d": 0.040178120589295215,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0402 = 0.1205, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "173.01",
+       "qty": "25",
+       "client_order_id": "aegisfm-hack2-20260929-stop-ZS-2cf82784c2",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1473,
+       "distance_sigma": 3.67
+      }
+     ]
+    }
+   ],
+   "flags": [],
+   "lot_entry": {
+    "ABNB": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "AFRM": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "AMD": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "AMGN": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "CRM": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "CRWD": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "DDOG": {
+     "date": "2026-10-01",
+     "how": "exact",
+     "sessions_held": 2
+    },
+    "DELL": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "ESTC": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "GTLB": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "MDB": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "NET": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "OKTA": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "PANW": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "S": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "SNOW": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "TGT": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "WDAY": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "XYZ": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "ZS": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    }
+   },
+   "v2_targets": {
+    "n": 20,
+    "gross_frac": 1.0,
+    "legacy_names": [],
+    "drops": []
+   },
+   "v2_plan_note": "pre-close pass: no new entries (maintenance and exits only)",
+   "worst_case_now": {
+    "worst_usd": 11305.03,
+    "worst_pct_equity": 11.11,
+    "gross_usd": 97989.74,
+    "gross_over_equity": 0.9632,
+    "n_names": 20,
+    "per_name": [
+     {
+      "symbol": "ABNB",
+      "worst_usd": 521.1000000000001,
+      "basis": "resting stop 146.7"
+     },
+     {
+      "symbol": "AFRM",
+      "worst_usd": 921.6000000000004,
+      "basis": "resting stop 61.96"
+     },
+     {
+      "symbol": "AMD",
+      "worst_usd": 482.6500000000003,
+      "basis": "resting stop 562.5"
+     },
+     {
+      "symbol": "AMGN",
+      "worst_usd": 91.41000000000003,
+      "basis": "resting stop 395.68"
+     },
+     {
+      "symbol": "CRM",
+      "worst_usd": 516.5999999999999,
+      "basis": "resting stop 206.05"
+     },
+     {
+      "symbol": "CRWD",
+      "worst_usd": 709.7399999999996,
+      "basis": "resting stop 233.6"
+     },
+     {
+      "symbol": "DDOG",
+      "worst_usd": 638.955,
+      "basis": "resting stop 240.89"
+     },
+     {
+      "symbol": "DELL",
+      "worst_usd": 675.7199999999998,
+      "basis": "resting stop 477.92"
+     },
+     {
+      "symbol": "ESTC",
+      "worst_usd": 743.0399999999995,
+      "basis": "resting stop 81.15"
+     },
+     {
+      "symbol": "GTLB",
+      "worst_usd": 584.0999999999999,
+      "basis": "resting stop 45.57"
+     },
+     {
+      "symbol": "MDB",
+      "worst_usd": 557.8300000000004,
+      "basis": "resting stop 315.59"
+     },
+     {
+      "symbol": "NET",
+      "worst_usd": 480.0900000000001,
+      "basis": "resting stop 322.56"
+     },
+     {
+      "symbol": "OKTA",
+      "worst_usd": 782.9199999999998,
+      "basis": "resting stop 184.96"
+     },
+     {
+      "symbol": "PANW",
+      "worst_usd": 666.9875999999997,
+      "basis": "resting stop 350.66"
+     },
+     {
+      "symbol": "S",
+      "worst_usd": 618.4123999999996,
+      "basis": "resting stop 22.35"
+     },
+     {
+      "symbol": "SNOW",
+      "worst_usd": 359.9399999999997,
+      "basis": "resting stop 313.3"
+     },
+     {
+      "symbol": "TGT",
+      "worst_usd": 102.30000000000035,
+      "basis": "resting stop 149.69"
+     },
+     {
+      "symbol": "WDAY",
+      "worst_usd": 539.2400000000002,
+      "basis": "resting stop 167.66"
+     },
+     {
+      "symbol": "XYZ",
+      "worst_usd": 565.4800000000008,
+      "basis": "resting stop 67.96"
+     },
+     {
+      "symbol": "ZS",
+      "worst_usd": 746.9200000000001,
+      "basis": "resting stop 173.01"
+     }
+    ]
+   },
+   "worst_case_after_plan": {
+    "worst_usd": 11305.03,
+    "worst_pct_equity": 11.11,
+    "gross_usd": 97989.74,
+    "gross_over_equity": 0.9632,
+    "n_names": 20,
+    "per_name": [
+     {
+      "symbol": "ABNB",
+      "worst_usd": 521.1000000000001,
+      "basis": "resting stop 146.7"
+     },
+     {
+      "symbol": "AFRM",
+      "worst_usd": 921.6000000000004,
+      "basis": "resting stop 61.96"
+     },
+     {
+      "symbol": "AMD",
+      "worst_usd": 482.6500000000003,
+      "basis": "resting stop 562.5"
+     },
+     {
+      "symbol": "AMGN",
+      "worst_usd": 91.41000000000003,
+      "basis": "resting stop 395.68"
+     },
+     {
+      "symbol": "CRM",
+      "worst_usd": 516.5999999999999,
+      "basis": "resting stop 206.05"
+     },
+     {
+      "symbol": "CRWD",
+      "worst_usd": 709.7399999999996,
+      "basis": "resting stop 233.6"
+     },
+     {
+      "symbol": "DDOG",
+      "worst_usd": 638.955,
+      "basis": "resting stop 240.89"
+     },
+     {
+      "symbol": "DELL",
+      "worst_usd": 675.7199999999998,
+      "basis": "resting stop 477.92"
+     },
+     {
+      "symbol": "ESTC",
+      "worst_usd": 743.0399999999995,
+      "basis": "resting stop 81.15"
+     },
+     {
+      "symbol": "GTLB",
+      "worst_usd": 584.0999999999999,
+      "basis": "resting stop 45.57"
+     },
+     {
+      "symbol": "MDB",
+      "worst_usd": 557.8300000000004,
+      "basis": "resting stop 315.59"
+     },
+     {
+      "symbol": "NET",
+      "worst_usd": 480.0900000000001,
+      "basis": "resting stop 322.56"
+     },
+     {
+      "symbol": "OKTA",
+      "worst_usd": 782.9199999999998,
+      "basis": "resting stop 184.96"
+     },
+     {
+      "symbol": "PANW",
+      "worst_usd": 666.9875999999997,
+      "basis": "resting stop 350.66"
+     },
+     {
+      "symbol": "S",
+      "worst_usd": 618.4123999999996,
+      "basis": "resting stop 22.35"
+     },
+     {
+      "symbol": "SNOW",
+      "worst_usd": 359.9399999999997,
+      "basis": "resting stop 313.3"
+     },
+     {
+      "symbol": "TGT",
+      "worst_usd": 102.30000000000035,
+      "basis": "resting stop 149.69"
+     },
+     {
+      "symbol": "WDAY",
+      "worst_usd": 539.2400000000002,
+      "basis": "resting stop 167.66"
+     },
+     {
+      "symbol": "XYZ",
+      "worst_usd": 565.4800000000008,
+      "basis": "resting stop 67.96"
+     },
+     {
+      "symbol": "ZS",
+      "worst_usd": 746.9200000000001,
+      "basis": "resting stop 173.01"
+     }
+    ]
+   },
+   "worst_case_formula_v1": {
+    "n": 8,
+    "notional_frac": 0.125,
+    "stop_frac": 0.08,
+    "worst_frac": 0.08,
+    "worst_usd": 8138.69,
+    "gross_over_equity": 1.0
+   },
+   "worst_case_formula_v2": {
+    "n": 20,
+    "notional_frac": 0.05,
+    "stop_frac": 0.12,
+    "worst_frac": 0.12,
+    "worst_usd": 12208.04,
+    "gross_over_equity": 1.0
+   },
+   "worst_case_printed_before_orders_utc": "2026-10-06T02:56:08+00:00",
+   "actions": [],
+   "stop_counterfactual": {
+    "registered_now": [],
+    "registered_total": [
+     "AMGN",
+     "TGT"
+    ],
+    "rows_written": []
+   },
+   "state_written": "2026-10-06T02:56:11+00:00",
+   "status": "ok"
+  },
+  {
+   "role": "hack3",
+   "pass": "preclose",
+   "status": "SKIPPED",
+   "why": "key answers HTTP 401 (retired 2026-09-22); credentials are the owner's"
+  },
+  {
+   "role": "hack4",
+   "pass": "preclose",
+   "account_number": "PA3R9XHMCVDA",
+   "equity": 80034.71,
+   "cash": 15145.96,
+   "last_equity": 78679.39,
+   "n_positions": 11,
+   "n_open_orders": 11,
+   "positions": [
+    {
+     "symbol": "AAPL",
+     "qty": 15.0,
+     "price": 332.87,
+     "market_value": 4993.05,
+     "unrealized_plpc": 0.00632,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "ALLE",
+     "qty": 32.0,
+     "price": 153.67,
+     "market_value": 4917.44,
+     "unrealized_plpc": -0.0089,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "AMZN",
+     "qty": 15.0,
+     "price": 252.0,
+     "market_value": 3780.0,
+     "unrealized_plpc": 0.00287,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "AVPT",
+     "qty": 288.0,
+     "price": 14.58,
+     "market_value": 4199.04,
+     "unrealized_plpc": 0.08806,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "GOOG",
+     "qty": 13.0,
+     "price": 344.1,
+     "market_value": 4473.3,
+     "unrealized_plpc": 0.02502,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "INCY",
+     "qty": 56.0,
+     "price": 112.0022,
+     "market_value": 6272.1232,
+     "unrealized_plpc": -0.03811,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "JAZZ",
+     "qty": 21.0,
+     "price": 236.04,
+     "market_value": 4956.84,
+     "unrealized_plpc": 0.02341,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "META",
+     "qty": 4.0,
+     "price": 743.01,
+     "market_value": 2972.04,
+     "unrealized_plpc": 0.0176,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "NVDA",
+     "qty": 17.0,
+     "price": 239.34,
+     "market_value": 4068.78,
+     "unrealized_plpc": 0.0388,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "RZLV",
+     "qty": 8650.0,
+     "price": 2.23,
+     "market_value": 19289.5,
+     "unrealized_plpc": -0.03043,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "SNDR",
+     "qty": 159.0,
+     "price": 31.2367,
+     "market_value": 4966.6353,
+     "unrealized_plpc": -0.01802,
+     "asset_class": "us_equity"
+    }
+   ],
+   "clock": {
+    "session_day_et": "2026-10-05",
+    "is_open": false,
+    "minutes_to_close": 1023.7
+   },
+   "reconcile": {
+    "status": "OK",
+    "ok": true,
+    "mismatches": [],
+    "foreign_orders": [],
+    "source": "state",
+    "since": "2026-10-05T14:58:46+00:00",
+    "n_fills_since": 0
+   },
+   "contract_active": {
+    "version": "v2",
+    "policy_hash": "a0c5313766c52c9a",
+    "alpha_source": "the engine's candidate funnel (PROBE shortlist) sized by 1/sigma_63 (size-of-move / risk-parity weighting)",
+    "frozen_utc": "2026-09-29T13:37:46+00:00"
+   },
+   "contract_proposed": {
+    "version": "v2",
+    "policy_hash": "a0c5313766c52c9a",
+    "alpha_source": "the engine's candidate funnel (PROBE shortlist) sized by 1/sigma_63 (size-of-move / risk-parity weighting)"
+   },
+   "sigma": {
+    "AAPL": 0.01681,
+    "ALLE": 0.01902,
+    "AMZN": 0.0259,
+    "AVPT": 0.02616,
+    "GOOG": 0.02096,
+    "GOOGL": 0.0215,
+    "INCY": 0.0198,
+    "JAZZ": 0.01684,
+    "META": 0.03013,
+    "NVDA": 0.02433,
+    "RZLV": 0.04522,
+    "SNDR": 0.01992
+   },
+   "panel": {
+    "panel": "bars.parquet",
+    "last_bar": "2026-10-05",
+    "symbols_asked": 13,
+    "symbols_found": 13,
+    "screen": {
+     "enabled": true,
+     "rules": {
+      "dark_run_min_sessions": 5,
+      "nontrade_print_tol": 0.01,
+      "spike_ratio": 4.0,
+      "spike_residual": 0.25,
+      "spike_window_sessions": 3,
+      "break_ratio": 3.0,
+      "quiet_volume_mult": 2.0
+     },
+     "volume_available": true,
+     "rows_in": 3575,
+     "rows_removed": 0,
+     "rows_removed_by_reason": {},
+     "rows_removed_by_year": {},
+     "symbols_with_rows_removed": 0,
+     "n_dark_runs": 0,
+     "nontrade_prints": 0,
+     "n_spikes": 0,
+     "n_cuts": 0,
+     "n_suspects": 0,
+     "cuts_by_reason": {}
+    },
+    "moved_5d_sigma": {
+     "AAPL": -0.433,
+     "ALLE": -0.259,
+     "AMZN": 0.368,
+     "AVPT": 1.238,
+     "GOOG": 0.294,
+     "GOOGL": 0.226,
+     "INCY": -1.935,
+     "JAZZ": -0.25,
+     "META": 0.545,
+     "NVDA": 0.806,
+     "RZLV": 0.513,
+     "SNDR": 0.526,
+     "SPY": 0.774
+    }
+   },
+   "stop_table": [
+    {
+     "symbol": "AAPL",
+     "qty": 15.0,
+     "price": 332.87,
+     "sigma_d": 0.016813091970445317,
+     "target_stop_frac": 0.0504,
+     "target_stop_how": "3 x sigma 0.0168 = 0.0504",
+     "resting": [
+      {
+       "stop_price": "313.24",
+       "qty": "15",
+       "client_order_id": "aegisfm-hack4-20260929-stop-AAPL-7248407aec",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.059,
+       "distance_sigma": 3.51
+      }
+     ]
+    },
+    {
+     "symbol": "ALLE",
+     "qty": 32.0,
+     "price": 153.67,
+     "sigma_d": 0.01902352222919955,
+     "target_stop_frac": 0.0571,
+     "target_stop_how": "3 x sigma 0.0190 = 0.0571",
+     "resting": [
+      {
+       "stop_price": "146.26",
+       "qty": "32",
+       "client_order_id": "aegisfm-hack4-20260929-stop-ALLE-cc8659a3ab",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.0482,
+       "distance_sigma": 2.53
+      }
+     ]
+    },
+    {
+     "symbol": "AMZN",
+     "qty": 15.0,
+     "price": 252.0,
+     "sigma_d": 0.02590127918711513,
+     "target_stop_frac": 0.0777,
+     "target_stop_how": "3 x sigma 0.0259 = 0.0777",
+     "resting": [
+      {
+       "stop_price": "231.7",
+       "qty": "15",
+       "client_order_id": "aegisfm-hack4-20260930-stop-AMZN-0cdb75fe59",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0806,
+       "distance_sigma": 3.11
+      }
+     ]
+    },
+    {
+     "symbol": "AVPT",
+     "qty": 288.0,
+     "price": 14.58,
+     "sigma_d": 0.026155208221484604,
+     "target_stop_frac": 0.0785,
+     "target_stop_how": "3 x sigma 0.0262 = 0.0785",
+     "resting": [
+      {
+       "stop_price": "12.33",
+       "qty": "288",
+       "client_order_id": "aegisfm-hack4-20260929-stop-AVPT-c43ec46a3c",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1543,
+       "distance_sigma": 5.9
+      }
+     ]
+    },
+    {
+     "symbol": "GOOG",
+     "qty": 13.0,
+     "price": 344.1,
+     "sigma_d": 0.02095895162315216,
+     "target_stop_frac": 0.0629,
+     "target_stop_how": "3 x sigma 0.0210 = 0.0629",
+     "resting": [
+      {
+       "stop_price": "323.39",
+       "qty": "13",
+       "client_order_id": "aegisfm-hack4-20260930-stoprem-GOOG-af59ab4f86",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0602,
+       "distance_sigma": 2.87
+      }
+     ]
+    },
+    {
+     "symbol": "INCY",
+     "qty": 56.0,
+     "price": 112.0022,
+     "sigma_d": 0.019797627843936044,
+     "target_stop_frac": 0.0594,
+     "target_stop_how": "3 x sigma 0.0198 = 0.0594",
+     "resting": [
+      {
+       "stop_price": "109.34",
+       "qty": "56",
+       "client_order_id": "aegisfm-hack4-20261002-stop-INCY-c0ac41bcf4",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.0238,
+       "distance_sigma": 1.2
+      }
+     ]
+    },
+    {
+     "symbol": "JAZZ",
+     "qty": 21.0,
+     "price": 236.04,
+     "sigma_d": 0.01683780355779026,
+     "target_stop_frac": 0.0505,
+     "target_stop_how": "3 x sigma 0.0168 = 0.0505",
+     "resting": [
+      {
+       "stop_price": "218.47",
+       "qty": "21",
+       "client_order_id": "aegisfm-hack4-20260929-stop-JAZZ-c9dc8950c1",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.0744,
+       "distance_sigma": 4.42
+      }
+     ]
+    },
+    {
+     "symbol": "META",
+     "qty": 4.0,
+     "price": 743.01,
+     "sigma_d": 0.030126519711312902,
+     "target_stop_frac": 0.0904,
+     "target_stop_how": "3 x sigma 0.0301 = 0.0904",
+     "resting": [
+      {
+       "stop_price": "658.77",
+       "qty": "4",
+       "client_order_id": "aegisfm-hack4-20260930-stop-META-a223e20acb",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.1134,
+       "distance_sigma": 3.76
+      }
+     ]
+    },
+    {
+     "symbol": "NVDA",
+     "qty": 17.0,
+     "price": 239.34,
+     "sigma_d": 0.02432766755194289,
+     "target_stop_frac": 0.073,
+     "target_stop_how": "3 x sigma 0.0243 = 0.0730",
+     "resting": [
+      {
+       "stop_price": "213.45",
+       "qty": "17",
+       "client_order_id": "aegisfm-hack4-20260929-stop-NVDA-d17db78d72",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1082,
+       "distance_sigma": 4.45
+      }
+     ]
+    },
+    {
+     "symbol": "RZLV",
+     "qty": 8650.0,
+     "price": 2.23,
+     "sigma_d": 0.045221248991411174,
+     "target_stop_frac": 0.12,
+     "target_stop_how": "3 x sigma 0.0452 = 0.1357, clipped to [0.040, 0.120] -> 0.1200",
+     "resting": [
+      {
+       "stop_price": "2.02",
+       "qty": "8650",
+       "client_order_id": "aat-stop-3f7b53d248b1f4829cf04172",
+       "expires_at": "2026-12-21T21:00:00Z",
+       "distance_frac": 0.0942,
+       "distance_sigma": 2.08
+      }
+     ]
+    },
+    {
+     "symbol": "SNDR",
+     "qty": 159.0,
+     "price": 31.2367,
+     "sigma_d": 0.019915393550595642,
+     "target_stop_frac": 0.0597,
+     "target_stop_how": "3 x sigma 0.0199 = 0.0597",
+     "resting": [
+      {
+       "stop_price": "29.91",
+       "qty": "159",
+       "client_order_id": "aegisfm-hack4-20260929-stop-SNDR-3a210b9420",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.0425,
+       "distance_sigma": 2.13
+      }
+     ]
+    }
+   ],
+   "flags": [],
+   "lot_entry": {
+    "AAPL": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "ALLE": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "AMZN": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "AVPT": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "GOOG": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "INCY": {
+     "date": "2026-10-02",
+     "how": "exact",
+     "sessions_held": 1
+    },
+    "JAZZ": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "META": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "NVDA": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "RZLV": {
+     "date": "2026-09-09",
+     "how": "exact",
+     "sessions_held": 18
+    },
+    "SNDR": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    }
+   },
+   "v2_targets": {
+    "n": 10,
+    "gross_frac": 0.8875,
+    "legacy_names": [
+     "RZLV"
+    ],
+    "drops": [
+     {
+      "symbol": "JAZZ",
+      "why": "weight 0.115 clipped to 0.100",
+      "clipped": true
+     },
+     {
+      "symbol": "AAPL",
+      "why": "weight 0.102 clipped to 0.100",
+      "clipped": true
+     },
+     {
+      "symbol": "ALLE",
+      "why": "weight 0.102 clipped to 0.100",
+      "clipped": true
+     },
+     {
+      "symbol": "SNDR",
+      "why": "weight 0.101 clipped to 0.100",
+      "clipped": true
+     },
+     {
+      "symbol": "GOOGL",
+      "why": "issuer Alphabet Inc. (CIK 1652044) already held as GOOG"
+     }
+    ]
+   },
+   "v2_plan_note": "pre-close pass: no new entries (maintenance and exits only)",
+   "worst_case_now": {
+    "worst_usd": 5075.89,
+    "worst_pct_equity": 6.34,
+    "gross_usd": 64888.75,
+    "gross_over_equity": 0.8108,
+    "n_names": 11,
+    "per_name": [
+     {
+      "symbol": "AAPL",
+      "worst_usd": 294.44999999999993,
+      "basis": "resting stop 313.24"
+     },
+     {
+      "symbol": "ALLE",
+      "worst_usd": 237.1199999999999,
+      "basis": "resting stop 146.26"
+     },
+     {
+      "symbol": "AMZN",
+      "worst_usd": 304.50000000000017,
+      "basis": "resting stop 231.7"
+     },
+     {
+      "symbol": "AVPT",
+      "worst_usd": 648.0,
+      "basis": "resting stop 12.33"
+     },
+     {
+      "symbol": "GOOG",
+      "worst_usd": 269.2300000000005,
+      "basis": "resting stop 323.39"
+     },
+     {
+      "symbol": "INCY",
+      "worst_usd": 149.08319999999992,
+      "basis": "resting stop 109.34"
+     },
+     {
+      "symbol": "JAZZ",
+      "worst_usd": 368.96999999999986,
+      "basis": "resting stop 218.47"
+     },
+     {
+      "symbol": "META",
+      "worst_usd": 336.96000000000004,
+      "basis": "resting stop 658.77"
+     },
+     {
+      "symbol": "NVDA",
+      "worst_usd": 440.1300000000002,
+      "basis": "resting stop 213.45"
+     },
+     {
+      "symbol": "RZLV",
+      "worst_usd": 1816.4999999999998,
+      "basis": "resting stop 2.02"
+     },
+     {
+      "symbol": "SNDR",
+      "worst_usd": 210.94529999999983,
+      "basis": "resting stop 29.91"
+     }
+    ]
+   },
+   "worst_case_after_plan": {
+    "worst_usd": 5075.89,
+    "worst_pct_equity": 6.34,
+    "gross_usd": 64888.75,
+    "gross_over_equity": 0.8108,
+    "n_names": 11,
+    "per_name": [
+     {
+      "symbol": "AAPL",
+      "worst_usd": 294.44999999999993,
+      "basis": "resting stop 313.24"
+     },
+     {
+      "symbol": "ALLE",
+      "worst_usd": 237.1199999999999,
+      "basis": "resting stop 146.26"
+     },
+     {
+      "symbol": "AMZN",
+      "worst_usd": 304.50000000000017,
+      "basis": "resting stop 231.7"
+     },
+     {
+      "symbol": "AVPT",
+      "worst_usd": 648.0,
+      "basis": "resting stop 12.33"
+     },
+     {
+      "symbol": "GOOG",
+      "worst_usd": 269.2300000000005,
+      "basis": "resting stop 323.39"
+     },
+     {
+      "symbol": "INCY",
+      "worst_usd": 149.08319999999992,
+      "basis": "resting stop 109.34"
+     },
+     {
+      "symbol": "JAZZ",
+      "worst_usd": 368.96999999999986,
+      "basis": "resting stop 218.47"
+     },
+     {
+      "symbol": "META",
+      "worst_usd": 336.96000000000004,
+      "basis": "resting stop 658.77"
+     },
+     {
+      "symbol": "NVDA",
+      "worst_usd": 440.1300000000002,
+      "basis": "resting stop 213.45"
+     },
+     {
+      "symbol": "RZLV",
+      "worst_usd": 1816.4999999999998,
+      "basis": "resting stop 2.02"
+     },
+     {
+      "symbol": "SNDR",
+      "worst_usd": 210.94529999999983,
+      "basis": "resting stop 29.91"
+     }
+    ]
+   },
+   "worst_case_formula_v1": {
+    "n": 5,
+    "notional_frac": 0.2,
+    "stop_frac": 0.12,
+    "worst_frac": 0.12,
+    "worst_usd": 9604.17,
+    "gross_over_equity": 1.0
+   },
+   "worst_case_formula_v2": {
+    "n": 11,
+    "notional_frac": 0.0891,
+    "stop_frac": 0.12,
+    "worst_frac": 0.1176,
+    "worst_usd": 9414.14,
+    "gross_over_equity": 0.9802
+   },
+   "worst_case_printed_before_orders_utc": "2026-10-06T02:56:20+00:00",
+   "actions": [],
+   "stop_counterfactual": {
+    "registered_now": [],
+    "registered_total": [
+     "BIOA",
+     "RZLV",
+     "INCY"
+    ],
+    "rows_written": []
+   },
+   "state_written": "2026-10-06T02:56:23+00:00",
+   "status": "ok"
+  },
+  {
+   "role": "hack5",
+   "pass": "preclose",
+   "account_number": "PA3T8OTGULCD",
+   "equity": 95801.45,
+   "cash": 5104.22,
+   "last_equity": 95152.1,
+   "n_positions": 1,
+   "n_open_orders": 1,
+   "positions": [
+    {
+     "symbol": "SPY",
+     "qty": 117.0,
+     "price": 775.19,
+     "market_value": 90697.23,
+     "unrealized_plpc": 0.01623,
+     "asset_class": "us_equity"
+    }
+   ],
+   "clock": {
+    "session_day_et": "2026-10-05",
+    "is_open": false,
+    "minutes_to_close": 1023.5
+   },
+   "reconcile": {
+    "status": "OK",
+    "ok": true,
+    "mismatches": [],
+    "foreign_orders": [],
+    "source": "state",
+    "since": "2026-10-05T14:58:56+00:00",
+    "n_fills_since": 0
+   },
+   "contract_active": {
+    "version": "v2",
+    "policy_hash": "98f677b18293c710",
+    "alpha_source": "market-like CONTROL: ~95% SPY, the rest cash (no selection, no view)",
+    "frozen_utc": "2026-09-29T16:01:42+00:00"
+   },
+   "contract_proposed": {
+    "version": "v2",
+    "policy_hash": "98f677b18293c710",
+    "alpha_source": "market-like CONTROL: ~95% SPY, the rest cash (no selection, no view)"
+   },
+   "sigma": {
+    "SPY": 0.00696
+   },
+   "panel": {
+    "panel": "bars.parquet",
+    "last_bar": "2026-10-05",
+    "symbols_asked": 1,
+    "symbols_found": 1,
+    "screen": {
+     "enabled": true,
+     "rules": {
+      "dark_run_min_sessions": 5,
+      "nontrade_print_tol": 0.01,
+      "spike_ratio": 4.0,
+      "spike_residual": 0.25,
+      "spike_window_sessions": 3,
+      "break_ratio": 3.0,
+      "quiet_volume_mult": 2.0
+     },
+     "volume_available": true,
+     "rows_in": 275,
+     "rows_removed": 0,
+     "rows_removed_by_reason": {},
+     "rows_removed_by_year": {},
+     "symbols_with_rows_removed": 0,
+     "n_dark_runs": 0,
+     "nontrade_prints": 0,
+     "n_spikes": 0,
+     "n_cuts": 0,
+     "n_suspects": 0,
+     "cuts_by_reason": {}
+    },
+    "moved_5d_sigma": {
+     "SPY": 0.774
+    }
+   },
+   "stop_table": [
+    {
+     "symbol": "SPY",
+     "qty": 117.0,
+     "price": 775.19,
+     "sigma_d": 0.0069568055369169,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0070 = 0.0209, clipped to [0.100, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "686.54",
+       "qty": "117",
+       "client_order_id": "aegisfm-hack5-20260929-stop-SPY-ac51144c5f",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1144,
+       "distance_sigma": 16.44
+      }
+     ]
+    }
+   ],
+   "flags": [],
+   "lot_entry": {
+    "SPY": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    }
+   },
+   "v2_targets": {
+    "n": 1,
+    "gross_frac": 0.95,
+    "legacy_names": [],
+    "drops": []
+   },
+   "worst_case_now": {
+    "worst_usd": 10372.05,
+    "worst_pct_equity": 10.83,
+    "gross_usd": 90697.23,
+    "gross_over_equity": 0.9467,
+    "n_names": 1,
+    "per_name": [
+     {
+      "symbol": "SPY",
+      "worst_usd": 10372.05000000001,
+      "basis": "resting stop 686.54"
+     }
+    ]
+   },
+   "worst_case_after_plan": {
+    "worst_usd": 10372.05,
+    "worst_pct_equity": 10.83,
+    "gross_usd": 90697.23,
+    "gross_over_equity": 0.9467,
+    "n_names": 1,
+    "per_name": [
+     {
+      "symbol": "SPY",
+      "worst_usd": 10372.05000000001,
+      "basis": "resting stop 686.54"
+     }
+    ]
+   },
+   "worst_case_formula_v1": {
+    "n": 6,
+    "notional_frac": 0.03,
+    "stop_frac": 0.5,
+    "worst_frac": 0.09,
+    "worst_usd": 8622.13,
+    "gross_over_equity": 0.18
+   },
+   "worst_case_formula_v2": {
+    "n": 1,
+    "notional_frac": 0.95,
+    "stop_frac": 0.1,
+    "worst_frac": 0.095,
+    "worst_usd": 9101.14,
+    "gross_over_equity": 0.95
+   },
+   "worst_case_printed_before_orders_utc": "2026-10-06T02:56:31+00:00",
+   "actions": [],
+   "stop_counterfactual": {
+    "registered_now": [],
+    "rows_written": []
+   },
+   "state_written": "2026-10-06T02:56:31+00:00",
+   "status": "ok"
+  },
+  {
+   "role": "hack6",
+   "pass": "preclose",
+   "account_number": "PA3I816FLXE9",
+   "equity": 81490.56,
+   "cash": 13120.36,
+   "last_equity": 81126.22,
+   "n_positions": 41,
+   "n_open_orders": 41,
+   "positions": [
+    {
+     "symbol": "ABEO",
+     "qty": 1079.0,
+     "price": 5.1038,
+     "market_value": 5507.0002,
+     "unrealized_plpc": -0.04957,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "ADBE",
+     "qty": 3.0,
+     "price": 238.51,
+     "market_value": 715.53,
+     "unrealized_plpc": -0.00534,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "AKAM",
+     "qty": 7.0,
+     "price": 108.2,
+     "market_value": 757.4,
+     "unrealized_plpc": 0.01654,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "AMD",
+     "qty": 1.0,
+     "price": 631.45,
+     "market_value": 631.45,
+     "unrealized_plpc": -0.01089,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "ARDX",
+     "qty": 1693.0,
+     "price": 3.4093,
+     "market_value": 5771.9449,
+     "unrealized_plpc": 0.00569,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "ATR",
+     "qty": 43.0,
+     "price": 120.61,
+     "market_value": 5186.23,
+     "unrealized_plpc": -0.04467,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "AVGO",
+     "qty": 2.0,
+     "price": 362.95,
+     "market_value": 725.9,
+     "unrealized_plpc": 0.02491,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "BABA",
+     "qty": 7.0,
+     "price": 110.45,
+     "market_value": 773.15,
+     "unrealized_plpc": 0.0262,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "BAM",
+     "qty": 18.0,
+     "price": 44.96,
+     "market_value": 809.28,
+     "unrealized_plpc": -0.00969,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "BE",
+     "qty": 2.0,
+     "price": 286.79,
+     "market_value": 573.58,
+     "unrealized_plpc": 0.01771,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "BHP",
+     "qty": 9.0,
+     "price": 87.1,
+     "market_value": 783.9,
+     "unrealized_plpc": 0.01503,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "BYD",
+     "qty": 11.0,
+     "price": 68.71,
+     "market_value": 755.81,
+     "unrealized_plpc": 0.00439,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "CALX",
+     "qty": 169.0,
+     "price": 34.34,
+     "market_value": 5803.46,
+     "unrealized_plpc": -0.0078,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "CEG",
+     "qty": 3.0,
+     "price": 276.98,
+     "market_value": 830.94,
+     "unrealized_plpc": 0.0744,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "FCEL",
+     "qty": 49.0,
+     "price": 18.0,
+     "market_value": 882.0,
+     "unrealized_plpc": 0.07463,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "FRO",
+     "qty": 16.0,
+     "price": 53.7024,
+     "market_value": 859.2384,
+     "unrealized_plpc": 0.05922,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "GOOGL",
+     "qty": 2.0,
+     "price": 346.91,
+     "market_value": 693.82,
+     "unrealized_plpc": 0.01663,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "HPE",
+     "qty": 11.0,
+     "price": 69.0,
+     "market_value": 759.0,
+     "unrealized_plpc": 0.00058,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "INVA",
+     "qty": 258.0,
+     "price": 20.6,
+     "market_value": 5314.8,
+     "unrealized_plpc": -0.02784,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "KKR",
+     "qty": 8.0,
+     "price": 89.96,
+     "market_value": 719.68,
+     "unrealized_plpc": -0.03008,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "LMT",
+     "qty": 1.0,
+     "price": 509.3,
+     "market_value": 509.3,
+     "unrealized_plpc": 0.00515,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "MAZE",
+     "qty": 242.0,
+     "price": 26.43,
+     "market_value": 6396.06,
+     "unrealized_plpc": 0.11992,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "MP",
+     "qty": 16.0,
+     "price": 46.91,
+     "market_value": 750.56,
+     "unrealized_plpc": -0.03058,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "MRVL",
+     "qty": 2.0,
+     "price": 270.8,
+     "market_value": 541.6,
+     "unrealized_plpc": 0.02782,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "MSFT",
+     "qty": 1.0,
+     "price": 525.56,
+     "market_value": 525.56,
+     "unrealized_plpc": 0.01538,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "NBIS",
+     "qty": 3.0,
+     "price": 232.7,
+     "market_value": 698.1,
+     "unrealized_plpc": -0.03836,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "NVDA",
+     "qty": 3.0,
+     "price": 239.34,
+     "market_value": 718.02,
+     "unrealized_plpc": 0.03921,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "ORCL",
+     "qty": 5.0,
+     "price": 142.83,
+     "market_value": 714.15,
+     "unrealized_plpc": 0.04249,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "PLTR",
+     "qty": 4.0,
+     "price": 189.25,
+     "market_value": 757.0,
+     "unrealized_plpc": -0.00237,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "PRVA",
+     "qty": 263.0,
+     "price": 20.45,
+     "market_value": 5378.35,
+     "unrealized_plpc": -0.01446,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "QQQ",
+     "qty": 1.0,
+     "price": 756.07,
+     "market_value": 756.07,
+     "unrealized_plpc": 0.00288,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "RTX",
+     "qty": 4.0,
+     "price": 184.39,
+     "market_value": 737.56,
+     "unrealized_plpc": -0.00421,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "SMCI",
+     "qty": 18.0,
+     "price": 43.23,
+     "market_value": 778.14,
+     "unrealized_plpc": -0.00712,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "SPCX",
+     "qty": 5.0,
+     "price": 171.86,
+     "market_value": 859.3,
+     "unrealized_plpc": 0.15637,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "STRO",
+     "qty": 374.0,
+     "price": 15.13,
+     "market_value": 5658.62,
+     "unrealized_plpc": -0.01497,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "TGT",
+     "qty": 5.0,
+     "price": 152.99,
+     "market_value": 764.95,
+     "unrealized_plpc": -0.03128,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "TSM",
+     "qty": 1.0,
+     "price": 482.89,
+     "market_value": 482.89,
+     "unrealized_plpc": 0.05649,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "TXN",
+     "qty": 2.0,
+     "price": 294.21,
+     "market_value": 588.42,
+     "unrealized_plpc": 0.0102,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "WDC",
+     "qty": 1.0,
+     "price": 439.1,
+     "market_value": 439.1,
+     "unrealized_plpc": 0.08688,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "XOM",
+     "qty": 4.0,
+     "price": 163.42,
+     "market_value": 653.68,
+     "unrealized_plpc": -0.00122,
+     "asset_class": "us_equity"
+    },
+    {
+     "symbol": "XPEV",
+     "qty": 85.0,
+     "price": 9.52,
+     "market_value": 809.2,
+     "unrealized_plpc": 0.01062,
+     "asset_class": "us_equity"
+    }
+   ],
+   "clock": {
+    "session_day_et": "2026-10-05",
+    "is_open": false,
+    "minutes_to_close": 1023.4
+   },
+   "reconcile": {
+    "status": "OK",
+    "ok": true,
+    "mismatches": [],
+    "foreign_orders": [],
+    "source": "state",
+    "since": "2026-10-05T15:00:01+00:00",
+    "n_fills_since": 0
+   },
+   "contract_active": {
+    "version": "v2",
+    "policy_hash": "12fa05317df05ce1",
+    "alpha_source": "world-digest typed implications through SHADOW_NEWS_v0's frozen news_signal (d > 0 only), fixed 1% of equity per name, <= 10 names, 5 sessions",
+    "frozen_utc": "2026-09-29T13:37:49+00:00"
+   },
+   "contract_proposed": {
+    "version": "v2",
+    "policy_hash": "12fa05317df05ce1",
+    "alpha_source": "world-digest typed implications through SHADOW_NEWS_v0's frozen news_signal (d > 0 only), fixed 1% of equity per name, <= 10 names, 5 sessions"
+   },
+   "digest": {
+    "file": "world_digest_20261005T171732Z.json",
+    "age_h": 9.7,
+    "fresh": true,
+    "n_implications": 71,
+    "n_ticker_signals": 31
+   },
+   "sigma": {
+    "ABEO": 0.03369,
+    "ADBE": 0.02984,
+    "AKAM": 0.03593,
+    "ALB": 0.02614,
+    "AMD": 0.04036,
+    "ARDX": 0.0285,
+    "ATR": 0.01313,
+    "AVGO": 0.02467,
+    "BABA": 0.02785,
+    "BAM": 0.01812,
+    "BE": 0.06743,
+    "BHP": 0.02025,
+    "BYD": 0.01446,
+    "CALX": 0.0211,
+    "CEG": 0.023,
+    "DOW": 0.02126,
+    "FCEL": 0.08006,
+    "FCF": 0.01035,
+    "FRO": 0.02393,
+    "GOOGL": 0.0215,
+    "HPE": 0.04151,
+    "INVA": 0.01402,
+    "KKR": 0.02299,
+    "LMT": 0.01923,
+    "MAZE": 0.04382,
+    "MELI": 0.02457,
+    "MP": 0.0404,
+    "MRVL": 0.04923,
+    "MSFT": 0.02485,
+    "MU": 0.04726,
+    "NBIS": 0.08265,
+    "NVDA": 0.02433,
+    "ORCL": 0.03455,
+    "PBR": 0.02488,
+    "PLTR": 0.04751,
+    "PRVA": 0.01722,
+    "QQQ": 0.01178,
+    "RTX": 0.01494,
+    "SMCI": 0.0547,
+    "SPCX": 0.04521,
+    "STRO": 0.03757,
+    "TGT": 0.01784,
+    "TSM": 0.02087,
+    "TXN": 0.02069,
+    "VALE": 0.01945,
+    "WDC": 0.05064,
+    "XOM": 0.01561,
+    "XPEV": 0.02474,
+    "FXI": 0.01129,
+    "XLE": 0.0133,
+    "EWZ": 0.02136
+   },
+   "panel": {
+    "panel": "bars.parquet",
+    "last_bar": "2026-10-05",
+    "symbols_asked": 52,
+    "symbols_found": 49,
+    "screen": {
+     "enabled": true,
+     "rules": {
+      "dark_run_min_sessions": 5,
+      "nontrade_print_tol": 0.01,
+      "spike_ratio": 4.0,
+      "spike_residual": 0.25,
+      "spike_window_sessions": 3,
+      "break_ratio": 3.0,
+      "quiet_volume_mult": 2.0
+     },
+     "volume_available": true,
+     "rows_in": 13279,
+     "rows_removed": 0,
+     "rows_removed_by_reason": {},
+     "rows_removed_by_year": {},
+     "symbols_with_rows_removed": 0,
+     "n_dark_runs": 0,
+     "nontrade_prints": 0,
+     "n_spikes": 0,
+     "n_cuts": 0,
+     "n_suspects": 0,
+     "cuts_by_reason": {}
+    },
+    "moved_5d_sigma": {
+     "ABEO": -0.452,
+     "ADBE": 0.504,
+     "AKAM": -0.114,
+     "ALB": -0.481,
+     "AMD": 0.435,
+     "ARDX": -0.092,
+     "ATR": -1.051,
+     "AVGO": 0.671,
+     "BABA": 0.301,
+     "BAM": 0.128,
+     "BE": 0.6,
+     "BHP": 0.588,
+     "BYD": -0.215,
+     "CALX": 0.734,
+     "CEG": 0.537,
+     "DOW": 0.468,
+     "FCEL": 0.668,
+     "FCF": -0.399,
+     "FRO": 2.196,
+     "GOOGL": 0.226,
+     "HPE": 0.986,
+     "INVA": -0.886,
+     "KKR": -0.684,
+     "LMT": -0.515,
+     "MAZE": -0.16,
+     "MELI": 1.575,
+     "MP": 0.093,
+     "MRVL": 0.698,
+     "MSFT": 0.564,
+     "MU": 0.09,
+     "NBIS": 0.016,
+     "NVDA": 0.806,
+     "ORCL": 0.964,
+     "PBR": 3.038,
+     "PLTR": 0.096,
+     "PRVA": 0.758,
+     "QQQ": 1.014,
+     "RTX": -0.531,
+     "SMCI": 0.276,
+     "SPCX": 1.742,
+     "SPY": 0.774,
+     "STRO": -0.668,
+     "TGT": -0.861,
+     "TSM": 1.558,
+     "TXN": 1.289,
+     "VALE": 0.947,
+     "WDC": -0.226,
+     "XOM": 0.261,
+     "XPEV": -0.999
+    }
+   },
+   "stop_table": [
+    {
+     "symbol": "ABEO",
+     "qty": 1079.0,
+     "price": 5.1038,
+     "sigma_d": 0.033691211557546036,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0337 = 0.1011, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "4.83",
+       "qty": "1079",
+       "client_order_id": "aat-stop-b5c31053e54dab9bc981d0bb",
+       "expires_at": "2026-12-14T21:00:00Z",
+       "distance_frac": 0.0536,
+       "distance_sigma": 1.59
+      }
+     ]
+    },
+    {
+     "symbol": "ADBE",
+     "qty": 3.0,
+     "price": 238.51,
+     "sigma_d": 0.029843506133443647,
+     "target_stop_frac": 0.0895,
+     "target_stop_how": "3 x sigma 0.0298 = 0.0895",
+     "resting": [
+      {
+       "stop_price": "218.19",
+       "qty": "3",
+       "client_order_id": "aegisfm-hack6-20260930-stop-ADBE-0004662095",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0852,
+       "distance_sigma": 2.85
+      }
+     ]
+    },
+    {
+     "symbol": "AKAM",
+     "qty": 7.0,
+     "price": 108.2,
+     "sigma_d": 0.03592541116018834,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0359 = 0.1078, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "95.64",
+       "qty": "7",
+       "client_order_id": "aegisfm-hack6-20260929-stop-AKAM-dfed8ccc63",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1161,
+       "distance_sigma": 3.23
+      }
+     ]
+    },
+    {
+     "symbol": "AMD",
+     "qty": 1.0,
+     "price": 631.45,
+     "sigma_d": 0.04035948892604595,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0404 = 0.1211, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "574.38",
+       "qty": "1",
+       "client_order_id": "aegisfm-hack6-20261002-stop-AMD-cbd66771af",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.0904,
+       "distance_sigma": 2.24
+      }
+     ]
+    },
+    {
+     "symbol": "ARDX",
+     "qty": 1693.0,
+     "price": 3.4093,
+     "sigma_d": 0.028496459102029144,
+     "target_stop_frac": 0.0855,
+     "target_stop_how": "3 x sigma 0.0285 = 0.0855",
+     "resting": [
+      {
+       "stop_price": "3.05",
+       "qty": "1693",
+       "client_order_id": "aat-stop-3c002a549a3bb66d5f6a6457",
+       "expires_at": "2026-12-15T21:00:00Z",
+       "distance_frac": 0.1054,
+       "distance_sigma": 3.7
+      }
+     ]
+    },
+    {
+     "symbol": "ATR",
+     "qty": 43.0,
+     "price": 120.61,
+     "sigma_d": 0.013133026244638624,
+     "target_stop_frac": 0.04,
+     "target_stop_how": "3 x sigma 0.0131 = 0.0394, clipped to [0.040, 0.100] -> 0.0400",
+     "resting": [
+      {
+       "stop_price": "113.62",
+       "qty": "43",
+       "client_order_id": "aat-stop-796b30907cf2126cb0edaf6c",
+       "expires_at": "2026-12-07T21:00:00Z",
+       "distance_frac": 0.058,
+       "distance_sigma": 4.41
+      }
+     ]
+    },
+    {
+     "symbol": "AVGO",
+     "qty": 2.0,
+     "price": 362.95,
+     "sigma_d": 0.02466986191865242,
+     "target_stop_frac": 0.074,
+     "target_stop_how": "3 x sigma 0.0247 = 0.0740",
+     "resting": [
+      {
+       "stop_price": "327.73",
+       "qty": "2",
+       "client_order_id": "aegisfm-hack6-20260930-stop-AVGO-b70a9762bd",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.097,
+       "distance_sigma": 3.93
+      }
+     ]
+    },
+    {
+     "symbol": "BABA",
+     "qty": 7.0,
+     "price": 110.45,
+     "sigma_d": 0.02785258254586915,
+     "target_stop_frac": 0.0836,
+     "target_stop_how": "3 x sigma 0.0279 = 0.0836",
+     "resting": [
+      {
+       "stop_price": "98.75",
+       "qty": "7",
+       "client_order_id": "aegisfm-hack6-20260929-stop-BABA-8f2f62ba47",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1059,
+       "distance_sigma": 3.8
+      }
+     ]
+    },
+    {
+     "symbol": "BAM",
+     "qty": 18.0,
+     "price": 44.96,
+     "sigma_d": 0.018124476152098563,
+     "target_stop_frac": 0.0544,
+     "target_stop_how": "3 x sigma 0.0181 = 0.0544",
+     "resting": [
+      {
+       "stop_price": "42.87",
+       "qty": "18",
+       "client_order_id": "aegisfm-hack6-20261002-stop-BAM-9a59348ff2",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.0465,
+       "distance_sigma": 2.56
+      }
+     ]
+    },
+    {
+     "symbol": "BE",
+     "qty": 2.0,
+     "price": 286.79,
+     "sigma_d": 0.06743105047231346,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0674 = 0.2023, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "249.8",
+       "qty": "2",
+       "client_order_id": "aegisfm-hack6-20260930-stop-BE-b7972a3978",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.129,
+       "distance_sigma": 1.91
+      }
+     ]
+    },
+    {
+     "symbol": "BHP",
+     "qty": 9.0,
+     "price": 87.1,
+     "sigma_d": 0.02024942376939843,
+     "target_stop_frac": 0.0607,
+     "target_stop_how": "3 x sigma 0.0202 = 0.0607",
+     "resting": [
+      {
+       "stop_price": "80.43",
+       "qty": "9",
+       "client_order_id": "aegisfm-hack6-20261002-stop-BHP-d02c11e4df",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.0766,
+       "distance_sigma": 3.78
+      }
+     ]
+    },
+    {
+     "symbol": "BYD",
+     "qty": 11.0,
+     "price": 68.71,
+     "sigma_d": 0.014460422418217263,
+     "target_stop_frac": 0.0434,
+     "target_stop_how": "3 x sigma 0.0145 = 0.0434",
+     "resting": [
+      {
+       "stop_price": "65.44",
+       "qty": "11",
+       "client_order_id": "aegisfm-hack6-20261005-stop-BYD-732915e017",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.0476,
+       "distance_sigma": 3.29
+      }
+     ]
+    },
+    {
+     "symbol": "CALX",
+     "qty": 169.0,
+     "price": 34.34,
+     "sigma_d": 0.021101200709077502,
+     "target_stop_frac": 0.0633,
+     "target_stop_how": "3 x sigma 0.0211 = 0.0633",
+     "resting": [
+      {
+       "stop_price": "31.15",
+       "qty": "169",
+       "client_order_id": "aat-stop-df88b83ad2d3708777c0cb91",
+       "expires_at": "2026-12-08T21:00:00Z",
+       "distance_frac": 0.0929,
+       "distance_sigma": 4.4
+      }
+     ]
+    },
+    {
+     "symbol": "CEG",
+     "qty": 3.0,
+     "price": 276.98,
+     "sigma_d": 0.02299564405299305,
+     "target_stop_frac": 0.069,
+     "target_stop_how": "3 x sigma 0.0230 = 0.0690",
+     "resting": [
+      {
+       "stop_price": "240.04",
+       "qty": "3",
+       "client_order_id": "aegisfm-hack6-20261002-stop-CEG-54220f8155",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.1334,
+       "distance_sigma": 5.8
+      }
+     ]
+    },
+    {
+     "symbol": "FCEL",
+     "qty": 49.0,
+     "price": 18.0,
+     "sigma_d": 0.08006420667511818,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0801 = 0.2402, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "15.07",
+       "qty": "49",
+       "client_order_id": "aegisfm-hack6-20260930-stop-FCEL-80fd97d5b4",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.1628,
+       "distance_sigma": 2.03
+      }
+     ]
+    },
+    {
+     "symbol": "FRO",
+     "qty": 16.0,
+     "price": 53.7024,
+     "sigma_d": 0.023925195803573187,
+     "target_stop_frac": 0.0718,
+     "target_stop_how": "3 x sigma 0.0239 = 0.0718",
+     "resting": [
+      {
+       "stop_price": "46.93",
+       "qty": "16",
+       "client_order_id": "aegisfm-hack6-20261001-stop-FRO-e1cf75e448",
+       "expires_at": "2026-12-30T21:00:00Z",
+       "distance_frac": 0.1261,
+       "distance_sigma": 5.27
+      }
+     ]
+    },
+    {
+     "symbol": "GOOGL",
+     "qty": 2.0,
+     "price": 346.91,
+     "sigma_d": 0.021502367518216506,
+     "target_stop_frac": 0.0645,
+     "target_stop_how": "3 x sigma 0.0215 = 0.0645",
+     "resting": [
+      {
+       "stop_price": "319.28",
+       "qty": "2",
+       "client_order_id": "aegisfm-hack6-20261001-stop-GOOGL-52a8fe45df",
+       "expires_at": "2026-12-30T21:00:00Z",
+       "distance_frac": 0.0796,
+       "distance_sigma": 3.7
+      }
+     ]
+    },
+    {
+     "symbol": "HPE",
+     "qty": 11.0,
+     "price": 69.0,
+     "sigma_d": 0.041505058191880134,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0415 = 0.1245, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "62.04",
+       "qty": "11",
+       "client_order_id": "aegisfm-hack6-20261002-stop-HPE-f3199f6c15",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.1009,
+       "distance_sigma": 2.43
+      }
+     ]
+    },
+    {
+     "symbol": "INVA",
+     "qty": 258.0,
+     "price": 20.6,
+     "sigma_d": 0.014020562411092683,
+     "target_stop_frac": 0.0421,
+     "target_stop_how": "3 x sigma 0.0140 = 0.0421",
+     "resting": [
+      {
+       "stop_price": "19.07",
+       "qty": "258",
+       "client_order_id": "aat-stop-04d4f115baed11bb77207ce0",
+       "expires_at": "2026-12-07T21:00:00Z",
+       "distance_frac": 0.0743,
+       "distance_sigma": 5.3
+      }
+     ]
+    },
+    {
+     "symbol": "KKR",
+     "qty": 8.0,
+     "price": 89.96,
+     "sigma_d": 0.022988442668921548,
+     "target_stop_frac": 0.069,
+     "target_stop_how": "3 x sigma 0.0230 = 0.0690",
+     "resting": [
+      {
+       "stop_price": "86.2",
+       "qty": "8",
+       "client_order_id": "aegisfm-hack6-20260929-stop-KKR-fec591a12d",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.0418,
+       "distance_sigma": 1.82
+      }
+     ]
+    },
+    {
+     "symbol": "LMT",
+     "qty": 1.0,
+     "price": 509.3,
+     "sigma_d": 0.019234087866699296,
+     "target_stop_frac": 0.0577,
+     "target_stop_how": "3 x sigma 0.0192 = 0.0577",
+     "resting": [
+      {
+       "stop_price": "475.48",
+       "qty": "1",
+       "client_order_id": "aegisfm-hack6-20261001-stop-LMT-0147098b64",
+       "expires_at": "2026-12-30T21:00:00Z",
+       "distance_frac": 0.0664,
+       "distance_sigma": 3.45
+      }
+     ]
+    },
+    {
+     "symbol": "MAZE",
+     "qty": 242.0,
+     "price": 26.43,
+     "sigma_d": 0.04382269598899994,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0438 = 0.1315, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "21.24",
+       "qty": "242",
+       "client_order_id": "aat-stop-187391ba5ec61e5fcc845155",
+       "expires_at": "2026-12-16T21:00:00Z",
+       "distance_frac": 0.1964,
+       "distance_sigma": 4.48
+      }
+     ]
+    },
+    {
+     "symbol": "MP",
+     "qty": 16.0,
+     "price": 46.91,
+     "sigma_d": 0.04040177933612212,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0404 = 0.1212, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "43.52",
+       "qty": "16",
+       "client_order_id": "aegisfm-hack6-20260930-stop-MP-66b3ac3645",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0723,
+       "distance_sigma": 1.79
+      }
+     ]
+    },
+    {
+     "symbol": "MRVL",
+     "qty": 2.0,
+     "price": 270.8,
+     "sigma_d": 0.04923418645844438,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0492 = 0.1477, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "248.53",
+       "qty": "2",
+       "client_order_id": "aegisfm-hack6-20261002-stoprem-MRVL-5bd7a67704",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.0822,
+       "distance_sigma": 1.67
+      }
+     ]
+    },
+    {
+     "symbol": "MSFT",
+     "qty": 1.0,
+     "price": 525.56,
+     "sigma_d": 0.024848087640220732,
+     "target_stop_frac": 0.0745,
+     "target_stop_how": "3 x sigma 0.0248 = 0.0745",
+     "resting": [
+      {
+       "stop_price": "479.22",
+       "qty": "1",
+       "client_order_id": "aegisfm-hack6-20260930-stop-MSFT-a7d228441d",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0882,
+       "distance_sigma": 3.55
+      }
+     ]
+    },
+    {
+     "symbol": "NBIS",
+     "qty": 3.0,
+     "price": 232.7,
+     "sigma_d": 0.08264597646060783,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0826 = 0.2479, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "217.72",
+       "qty": "3",
+       "client_order_id": "aegisfm-hack6-20260929-stop-NBIS-a0164b2a54",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.0644,
+       "distance_sigma": 0.78
+      }
+     ]
+    },
+    {
+     "symbol": "NVDA",
+     "qty": 3.0,
+     "price": 239.34,
+     "sigma_d": 0.02432766755194289,
+     "target_stop_frac": 0.073,
+     "target_stop_how": "3 x sigma 0.0243 = 0.0730",
+     "resting": [
+      {
+       "stop_price": "213.42",
+       "qty": "3",
+       "client_order_id": "aegisfm-hack6-20260929-stop-NVDA-97443de63c",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1083,
+       "distance_sigma": 4.45
+      }
+     ]
+    },
+    {
+     "symbol": "ORCL",
+     "qty": 5.0,
+     "price": 142.83,
+     "sigma_d": 0.03455039511069008,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0346 = 0.1037, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "123.29",
+       "qty": "5",
+       "client_order_id": "aegisfm-hack6-20260930-stop-ORCL-f70147a975",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.1368,
+       "distance_sigma": 3.96
+      }
+     ]
+    },
+    {
+     "symbol": "PLTR",
+     "qty": 4.0,
+     "price": 189.25,
+     "sigma_d": 0.047510547355141694,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0475 = 0.1425, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "170.75",
+       "qty": "4",
+       "client_order_id": "aegisfm-hack6-20260930-stop-PLTR-a9002f0fdd",
+       "expires_at": "2026-12-29T21:00:00Z",
+       "distance_frac": 0.0978,
+       "distance_sigma": 2.06
+      }
+     ]
+    },
+    {
+     "symbol": "PRVA",
+     "qty": 263.0,
+     "price": 20.45,
+     "sigma_d": 0.017215701803213135,
+     "target_stop_frac": 0.0516,
+     "target_stop_how": "3 x sigma 0.0172 = 0.0516",
+     "resting": [
+      {
+       "stop_price": "18.68",
+       "qty": "263",
+       "client_order_id": "aat-stop-e054a720dead4aa05f0f4213",
+       "expires_at": "2026-12-07T21:00:00Z",
+       "distance_frac": 0.0866,
+       "distance_sigma": 5.03
+      }
+     ]
+    },
+    {
+     "symbol": "QQQ",
+     "qty": 1.0,
+     "price": 756.07,
+     "sigma_d": 0.01177845312714498,
+     "target_stop_frac": 0.04,
+     "target_stop_how": "3 x sigma 0.0118 = 0.0353, clipped to [0.040, 0.100] -> 0.0400",
+     "resting": [
+      {
+       "stop_price": "723.71",
+       "qty": "1",
+       "client_order_id": "aegisfm-hack6-20261005-stop-QQQ-74da08f7f1",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.0428,
+       "distance_sigma": 3.63
+      }
+     ]
+    },
+    {
+     "symbol": "RTX",
+     "qty": 4.0,
+     "price": 184.39,
+     "sigma_d": 0.014943133839281465,
+     "target_stop_frac": 0.0448,
+     "target_stop_how": "3 x sigma 0.0149 = 0.0448",
+     "resting": [
+      {
+       "stop_price": "176.31",
+       "qty": "4",
+       "client_order_id": "aegisfm-hack6-20261001-stop-RTX-0493e73116",
+       "expires_at": "2026-12-30T21:00:00Z",
+       "distance_frac": 0.0438,
+       "distance_sigma": 2.93
+      }
+     ]
+    },
+    {
+     "symbol": "SMCI",
+     "qty": 18.0,
+     "price": 43.23,
+     "sigma_d": 0.05469590588394727,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0547 = 0.1641, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "39.21",
+       "qty": "18",
+       "client_order_id": "aegisfm-hack6-20261005-stop-SMCI-1ed73acf4a",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.093,
+       "distance_sigma": 1.7
+      }
+     ]
+    },
+    {
+     "symbol": "SPCX",
+     "qty": 5.0,
+     "price": 171.86,
+     "sigma_d": 0.045206418223907786,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0452 = 0.1356, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "133.81",
+       "qty": "5",
+       "client_order_id": "aegisfm-hack6-20260929-stop-SPCX-6f0dd494f4",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.2214,
+       "distance_sigma": 4.9
+      }
+     ]
+    },
+    {
+     "symbol": "STRO",
+     "qty": 374.0,
+     "price": 15.13,
+     "sigma_d": 0.037572329617148355,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0376 = 0.1127, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "13.82",
+       "qty": "374",
+       "client_order_id": "aat-stop-e830354efc8fe0b18e234569",
+       "expires_at": "2026-12-16T21:00:00Z",
+       "distance_frac": 0.0866,
+       "distance_sigma": 2.3
+      }
+     ]
+    },
+    {
+     "symbol": "TGT",
+     "qty": 5.0,
+     "price": 152.99,
+     "sigma_d": 0.017840619882555312,
+     "target_stop_frac": 0.0535,
+     "target_stop_how": "3 x sigma 0.0178 = 0.0535",
+     "resting": [
+      {
+       "stop_price": "149.11",
+       "qty": "5",
+       "client_order_id": "aegisfm-hack6-20261001-stop-TGT-8cafe7c869",
+       "expires_at": "2026-12-30T21:00:00Z",
+       "distance_frac": 0.0254,
+       "distance_sigma": 1.42
+      }
+     ]
+    },
+    {
+     "symbol": "TSM",
+     "qty": 1.0,
+     "price": 482.89,
+     "sigma_d": 0.020866449629467557,
+     "target_stop_frac": 0.0626,
+     "target_stop_how": "3 x sigma 0.0209 = 0.0626",
+     "resting": [
+      {
+       "stop_price": "423.78",
+       "qty": "1",
+       "client_order_id": "aegisfm-hack6-20260929-stop-TSM-ed8861e12a",
+       "expires_at": "2026-12-28T21:00:00Z",
+       "distance_frac": 0.1224,
+       "distance_sigma": 5.87
+      }
+     ]
+    },
+    {
+     "symbol": "TXN",
+     "qty": 2.0,
+     "price": 294.21,
+     "sigma_d": 0.02068838543680786,
+     "target_stop_frac": 0.0621,
+     "target_stop_how": "3 x sigma 0.0207 = 0.0621",
+     "resting": [
+      {
+       "stop_price": "272.78",
+       "qty": "2",
+       "client_order_id": "aegisfm-hack6-20261005-stop-TXN-033b5132e3",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.0728,
+       "distance_sigma": 3.52
+      }
+     ]
+    },
+    {
+     "symbol": "WDC",
+     "qty": 1.0,
+     "price": 439.1,
+     "sigma_d": 0.05064047320268506,
+     "target_stop_frac": 0.1,
+     "target_stop_how": "3 x sigma 0.0506 = 0.1519, clipped to [0.040, 0.100] -> 0.1000",
+     "resting": [
+      {
+       "stop_price": "399.87",
+       "qty": "1",
+       "client_order_id": "aegisfm-hack6-20261005-stoprem-WDC-70c1f0a458",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.0893,
+       "distance_sigma": 1.76
+      }
+     ]
+    },
+    {
+     "symbol": "XOM",
+     "qty": 4.0,
+     "price": 163.42,
+     "sigma_d": 0.01561103999079133,
+     "target_stop_frac": 0.0468,
+     "target_stop_how": "3 x sigma 0.0156 = 0.0468",
+     "resting": [
+      {
+       "stop_price": "155.67",
+       "qty": "4",
+       "client_order_id": "aegisfm-hack6-20261001-stop-XOM-cf94d2e6e5",
+       "expires_at": "2026-12-30T21:00:00Z",
+       "distance_frac": 0.0474,
+       "distance_sigma": 3.04
+      }
+     ]
+    },
+    {
+     "symbol": "XPEV",
+     "qty": 85.0,
+     "price": 9.52,
+     "sigma_d": 0.024740277982834985,
+     "target_stop_frac": 0.0742,
+     "target_stop_how": "3 x sigma 0.0247 = 0.0742",
+     "resting": [
+      {
+       "stop_price": "8.72",
+       "qty": "85",
+       "client_order_id": "aegisfm-hack6-20261005-stop-XPEV-3da77b2766",
+       "expires_at": "2026-12-31T21:00:00Z",
+       "distance_frac": 0.084,
+       "distance_sigma": 3.4
+      }
+     ]
+    }
+   ],
+   "flags": [],
+   "lot_entry": {
+    "ABEO": {
+     "date": "2026-09-15",
+     "how": "exact",
+     "sessions_held": 14
+    },
+    "ADBE": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "AKAM": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "AMD": {
+     "date": "2026-10-02",
+     "how": "exact",
+     "sessions_held": 1
+    },
+    "ARDX": {
+     "date": "2026-09-16",
+     "how": "exact",
+     "sessions_held": 13
+    },
+    "ATR": {
+     "date": "2026-09-08",
+     "how": "exact",
+     "sessions_held": 19
+    },
+    "AVGO": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "BABA": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "BAM": {
+     "date": "2026-10-02",
+     "how": "exact",
+     "sessions_held": 1
+    },
+    "BE": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "BHP": {
+     "date": "2026-10-02",
+     "how": "exact",
+     "sessions_held": 1
+    },
+    "BYD": {
+     "date": "2026-10-05",
+     "how": "exact",
+     "sessions_held": 0
+    },
+    "CALX": {
+     "date": "2026-09-09",
+     "how": "exact",
+     "sessions_held": 18
+    },
+    "CEG": {
+     "date": "2026-10-02",
+     "how": "exact",
+     "sessions_held": 1
+    },
+    "FCEL": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "FRO": {
+     "date": "2026-10-01",
+     "how": "exact",
+     "sessions_held": 2
+    },
+    "GOOGL": {
+     "date": "2026-10-01",
+     "how": "exact",
+     "sessions_held": 2
+    },
+    "HPE": {
+     "date": "2026-10-02",
+     "how": "exact",
+     "sessions_held": 1
+    },
+    "INVA": {
+     "date": "2026-09-08",
+     "how": "exact",
+     "sessions_held": 19
+    },
+    "KKR": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "LMT": {
+     "date": "2026-10-01",
+     "how": "exact",
+     "sessions_held": 2
+    },
+    "MAZE": {
+     "date": "2026-09-17",
+     "how": "exact",
+     "sessions_held": 12
+    },
+    "MP": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "MRVL": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "MSFT": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "NBIS": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "NVDA": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "ORCL": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "PLTR": {
+     "date": "2026-09-30",
+     "how": "exact",
+     "sessions_held": 3
+    },
+    "PRVA": {
+     "date": "2026-09-08",
+     "how": "exact",
+     "sessions_held": 19
+    },
+    "QQQ": {
+     "date": "2026-10-05",
+     "how": "exact",
+     "sessions_held": 0
+    },
+    "RTX": {
+     "date": "2026-10-01",
+     "how": "exact",
+     "sessions_held": 2
+    },
+    "SMCI": {
+     "date": "2026-10-05",
+     "how": "exact",
+     "sessions_held": 0
+    },
+    "SPCX": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "STRO": {
+     "date": "2026-09-17",
+     "how": "exact",
+     "sessions_held": 12
+    },
+    "TGT": {
+     "date": "2026-10-01",
+     "how": "exact",
+     "sessions_held": 2
+    },
+    "TSM": {
+     "date": "2026-09-29",
+     "how": "exact",
+     "sessions_held": 4
+    },
+    "TXN": {
+     "date": "2026-10-05",
+     "how": "exact",
+     "sessions_held": 0
+    },
+    "WDC": {
+     "date": "2026-10-02",
+     "how": "exact",
+     "sessions_held": 1
+    },
+    "XOM": {
+     "date": "2026-10-01",
+     "how": "exact",
+     "sessions_held": 2
+    },
+    "XPEV": {
+     "date": "2026-10-05",
+     "how": "exact",
+     "sessions_held": 0
+    }
+   },
+   "v2_targets": {
+    "n": 40,
+    "gross_frac": 0.4,
+    "legacy_names": [
+     "ABEO",
+     "ARDX",
+     "ATR",
+     "CALX",
+     "INVA",
+     "MAZE",
+     "PRVA",
+     "STRO"
+    ],
+    "drops": [
+     {
+      "symbol": "EWZ",
+      "why": "not in the screened panel (sigma from Alpaca IEX bars, unscreened)"
+     },
+     {
+      "symbol": "FXI",
+      "why": "not in the screened panel (sigma from Alpaca IEX bars, unscreened)"
+     },
+     {
+      "symbol": "PBR",
+      "why": "already moved +3.04 5-session sigma > 2"
+     },
+     {
+      "symbol": "XLE",
+      "why": "beyond the 10-name sleeve"
+     }
+    ]
+   },
+   "v2_plan_note": "pre-close pass: no new entries (maintenance and exits only)",
+   "worst_case_now": {
+    "worst_usd": 6500.34,
+    "worst_pct_equity": 7.98,
+    "gross_usd": 68370.74,
+    "gross_over_equity": 0.839,
+    "n_names": 41,
+    "per_name": [
+     {
+      "symbol": "ABEO",
+      "worst_usd": 295.43019999999956,
+      "basis": "resting stop 4.83"
+     },
+     {
+      "symbol": "ADBE",
+      "worst_usd": 60.95999999999998,
+      "basis": "resting stop 218.19"
+     },
+     {
+      "symbol": "AKAM",
+      "worst_usd": 87.92000000000002,
+      "basis": "resting stop 95.64"
+     },
+     {
+      "symbol": "AMD",
+      "worst_usd": 57.07000000000005,
+      "basis": "resting stop 574.38"
+     },
+     {
+      "symbol": "ARDX",
+      "worst_usd": 608.2949000000003,
+      "basis": "resting stop 3.05"
+     },
+     {
+      "symbol": "ATR",
+      "worst_usd": 300.56999999999977,
+      "basis": "resting stop 113.62"
+     },
+     {
+      "symbol": "AVGO",
+      "worst_usd": 70.43999999999994,
+      "basis": "resting stop 327.73"
+     },
+     {
+      "symbol": "BABA",
+      "worst_usd": 81.90000000000002,
+      "basis": "resting stop 98.75"
+     },
+     {
+      "symbol": "BAM",
+      "worst_usd": 37.62000000000006,
+      "basis": "resting stop 42.87"
+     },
+     {
+      "symbol": "BE",
+      "worst_usd": 73.98000000000002,
+      "basis": "resting stop 249.8"
+     },
+     {
+      "symbol": "BHP",
+      "worst_usd": 60.02999999999989,
+      "basis": "resting stop 80.43"
+     },
+     {
+      "symbol": "BYD",
+      "worst_usd": 35.969999999999956,
+      "basis": "resting stop 65.44"
+     },
+     {
+      "symbol": "CALX",
+      "worst_usd": 539.1100000000008,
+      "basis": "resting stop 31.15"
+     },
+     {
+      "symbol": "CEG",
+      "worst_usd": 110.82000000000008,
+      "basis": "resting stop 240.04"
+     },
+     {
+      "symbol": "FCEL",
+      "worst_usd": 143.57,
+      "basis": "resting stop 15.07"
+     },
+     {
+      "symbol": "FRO",
+      "worst_usd": 108.35839999999996,
+      "basis": "resting stop 46.93"
+     },
+     {
+      "symbol": "GOOGL",
+      "worst_usd": 55.260000000000105,
+      "basis": "resting stop 319.28"
+     },
+     {
+      "symbol": "HPE",
+      "worst_usd": 76.56,
+      "basis": "resting stop 62.04"
+     },
+     {
+      "symbol": "INVA",
+      "worst_usd": 394.7400000000003,
+      "basis": "resting stop 19.07"
+     },
+     {
+      "symbol": "KKR",
+      "worst_usd": 30.079999999999927,
+      "basis": "resting stop 86.2"
+     },
+     {
+      "symbol": "LMT",
+      "worst_usd": 33.81999999999999,
+      "basis": "resting stop 475.48"
+     },
+     {
+      "symbol": "MAZE",
+      "worst_usd": 1255.9800000000002,
+      "basis": "resting stop 21.24"
+     },
+     {
+      "symbol": "MP",
+      "worst_usd": 54.239999999999895,
+      "basis": "resting stop 43.52"
+     },
+     {
+      "symbol": "MRVL",
+      "worst_usd": 44.54000000000002,
+      "basis": "resting stop 248.53"
+     },
+     {
+      "symbol": "MSFT",
+      "worst_usd": 46.33999999999992,
+      "basis": "resting stop 479.22"
+     },
+     {
+      "symbol": "NBIS",
+      "worst_usd": 44.93999999999997,
+      "basis": "resting stop 217.72"
+     },
+     {
+      "symbol": "NVDA",
+      "worst_usd": 77.76000000000005,
+      "basis": "resting stop 213.42"
+     },
+     {
+      "symbol": "ORCL",
+      "worst_usd": 97.70000000000003,
+      "basis": "resting stop 123.29"
+     },
+     {
+      "symbol": "PLTR",
+      "worst_usd": 74.0,
+      "basis": "resting stop 170.75"
+     },
+     {
+      "symbol": "PRVA",
+      "worst_usd": 465.5099999999999,
+      "basis": "resting stop 18.68"
+     },
+     {
+      "symbol": "QQQ",
+      "worst_usd": 32.360000000000014,
+      "basis": "resting stop 723.71"
+     },
+     {
+      "symbol": "RTX",
+      "worst_usd": 32.319999999999936,
+      "basis": "resting stop 176.31"
+     },
+     {
+      "symbol": "SMCI",
+      "worst_usd": 72.35999999999993,
+      "basis": "resting stop 39.21"
+     },
+     {
+      "symbol": "SPCX",
+      "worst_usd": 190.25000000000006,
+      "basis": "resting stop 133.81"
+     },
+     {
+      "symbol": "STRO",
+      "worst_usd": 489.94000000000017,
+      "basis": "resting stop 13.82"
+     },
+     {
+      "symbol": "TGT",
+      "worst_usd": 19.399999999999977,
+      "basis": "resting stop 149.11"
+     },
+     {
+      "symbol": "TSM",
+      "worst_usd": 59.110000000000014,
+      "basis": "resting stop 423.78"
+     },
+     {
+      "symbol": "TXN",
+      "worst_usd": 42.860000000000014,
+      "basis": "resting stop 272.78"
+     },
+     {
+      "symbol": "WDC",
+      "worst_usd": 39.23000000000002,
+      "basis": "resting stop 399.87"
+     },
+     {
+      "symbol": "XOM",
+      "worst_usd": 31.0,
+      "basis": "resting stop 155.67"
+     },
+     {
+      "symbol": "XPEV",
+      "worst_usd": 67.99999999999991,
+      "basis": "resting stop 8.72"
+     }
+    ]
+   },
+   "worst_case_after_plan": {
+    "worst_usd": 6500.34,
+    "worst_pct_equity": 7.98,
+    "gross_usd": 68370.74,
+    "gross_over_equity": 0.839,
+    "n_names": 41,
+    "per_name": [
+     {
+      "symbol": "ABEO",
+      "worst_usd": 295.43019999999956,
+      "basis": "resting stop 4.83"
+     },
+     {
+      "symbol": "ADBE",
+      "worst_usd": 60.95999999999998,
+      "basis": "resting stop 218.19"
+     },
+     {
+      "symbol": "AKAM",
+      "worst_usd": 87.92000000000002,
+      "basis": "resting stop 95.64"
+     },
+     {
+      "symbol": "AMD",
+      "worst_usd": 57.07000000000005,
+      "basis": "resting stop 574.38"
+     },
+     {
+      "symbol": "ARDX",
+      "worst_usd": 608.2949000000003,
+      "basis": "resting stop 3.05"
+     },
+     {
+      "symbol": "ATR",
+      "worst_usd": 300.56999999999977,
+      "basis": "resting stop 113.62"
+     },
+     {
+      "symbol": "AVGO",
+      "worst_usd": 70.43999999999994,
+      "basis": "resting stop 327.73"
+     },
+     {
+      "symbol": "BABA",
+      "worst_usd": 81.90000000000002,
+      "basis": "resting stop 98.75"
+     },
+     {
+      "symbol": "BAM",
+      "worst_usd": 37.62000000000006,
+      "basis": "resting stop 42.87"
+     },
+     {
+      "symbol": "BE",
+      "worst_usd": 73.98000000000002,
+      "basis": "resting stop 249.8"
+     },
+     {
+      "symbol": "BHP",
+      "worst_usd": 60.02999999999989,
+      "basis": "resting stop 80.43"
+     },
+     {
+      "symbol": "BYD",
+      "worst_usd": 35.969999999999956,
+      "basis": "resting stop 65.44"
+     },
+     {
+      "symbol": "CALX",
+      "worst_usd": 539.1100000000008,
+      "basis": "resting stop 31.15"
+     },
+     {
+      "symbol": "CEG",
+      "worst_usd": 110.82000000000008,
+      "basis": "resting stop 240.04"
+     },
+     {
+      "symbol": "FCEL",
+      "worst_usd": 143.57,
+      "basis": "resting stop 15.07"
+     },
+     {
+      "symbol": "FRO",
+      "worst_usd": 108.35839999999996,
+      "basis": "resting stop 46.93"
+     },
+     {
+      "symbol": "GOOGL",
+      "worst_usd": 55.260000000000105,
+      "basis": "resting stop 319.28"
+     },
+     {
+      "symbol": "HPE",
+      "worst_usd": 76.56,
+      "basis": "resting stop 62.04"
+     },
+     {
+      "symbol": "INVA",
+      "worst_usd": 394.7400000000003,
+      "basis": "resting stop 19.07"
+     },
+     {
+      "symbol": "KKR",
+      "worst_usd": 30.079999999999927,
+      "basis": "resting stop 86.2"
+     },
+     {
+      "symbol": "LMT",
+      "worst_usd": 33.81999999999999,
+      "basis": "resting stop 475.48"
+     },
+     {
+      "symbol": "MAZE",
+      "worst_usd": 1255.9800000000002,
+      "basis": "resting stop 21.24"
+     },
+     {
+      "symbol": "MP",
+      "worst_usd": 54.239999999999895,
+      "basis": "resting stop 43.52"
+     },
+     {
+      "symbol": "MRVL",
+      "worst_usd": 44.54000000000002,
+      "basis": "resting stop 248.53"
+     },
+     {
+      "symbol": "MSFT",
+      "worst_usd": 46.33999999999992,
+      "basis": "resting stop 479.22"
+     },
+     {
+      "symbol": "NBIS",
+      "worst_usd": 44.93999999999997,
+      "basis": "resting stop 217.72"
+     },
+     {
+      "symbol": "NVDA",
+      "worst_usd": 77.76000000000005,
+      "basis": "resting stop 213.42"
+     },
+     {
+      "symbol": "ORCL",
+      "worst_usd": 97.70000000000003,
+      "basis": "resting stop 123.29"
+     },
+     {
+      "symbol": "PLTR",
+      "worst_usd": 74.0,
+      "basis": "resting stop 170.75"
+     },
+     {
+      "symbol": "PRVA",
+      "worst_usd": 465.5099999999999,
+      "basis": "resting stop 18.68"
+     },
+     {
+      "symbol": "QQQ",
+      "worst_usd": 32.360000000000014,
+      "basis": "resting stop 723.71"
+     },
+     {
+      "symbol": "RTX",
+      "worst_usd": 32.319999999999936,
+      "basis": "resting stop 176.31"
+     },
+     {
+      "symbol": "SMCI",
+      "worst_usd": 72.35999999999993,
+      "basis": "resting stop 39.21"
+     },
+     {
+      "symbol": "SPCX",
+      "worst_usd": 190.25000000000006,
+      "basis": "resting stop 133.81"
+     },
+     {
+      "symbol": "STRO",
+      "worst_usd": 489.94000000000017,
+      "basis": "resting stop 13.82"
+     },
+     {
+      "symbol": "TGT",
+      "worst_usd": 19.399999999999977,
+      "basis": "resting stop 149.11"
+     },
+     {
+      "symbol": "TSM",
+      "worst_usd": 59.110000000000014,
+      "basis": "resting stop 423.78"
+     },
+     {
+      "symbol": "TXN",
+      "worst_usd": 42.860000000000014,
+      "basis": "resting stop 272.78"
+     },
+     {
+      "symbol": "WDC",
+      "worst_usd": 39.23000000000002,
+      "basis": "resting stop 399.87"
+     },
+     {
+      "symbol": "XOM",
+      "worst_usd": 31.0,
+      "basis": "resting stop 155.67"
+     },
+     {
+      "symbol": "XPEV",
+      "worst_usd": 67.99999999999991,
+      "basis": "resting stop 8.72"
+     }
+    ]
+   },
+   "worst_case_formula_v1": {
+    "n": 15,
+    "notional_frac": 0.0667,
+    "stop_frac": 0.1,
+    "worst_frac": 0.1,
+    "worst_usd": 8149.06,
+    "gross_over_equity": 1.0
+   },
+   "worst_case_formula_v2": {
+    "n": 10,
+    "notional_frac": 0.01,
+    "stop_frac": 0.1,
+    "worst_frac": 0.01,
+    "worst_usd": 814.91,
+    "gross_over_equity": 0.1
+   },
+   "worst_case_printed_before_orders_utc": "2026-10-06T02:56:46+00:00",
+   "actions": [],
+   "stop_counterfactual": {
+    "registered_now": [],
+    "registered_total": [
+     "EVLV",
+     "KTOS",
+     "NBIS",
+     "FCEL",
+     "MP",
+     "ABEO",
+     "STRO",
+     "TGT"
+    ],
+    "rows_written": []
+   },
+   "state_written": "2026-10-06T02:56:51+00:00",
+   "status": "ok"
+  }
+ ],
+ "finished_utc": "2026-10-06T02:56:52+00:00"
+}

@@ -1,0 +1,5 @@
+World digest 20261006T214443Z (1483 items read; $0.00)
+Since last digest: DROPPED Global bond selloff drives yields to multi-decade highs; DROPPED AI trade drives record highs in chips and megacaps
+Insider cluster buys: NONE x7 $379,740; ACCV x5 $4,098,600; PRHI x5 $248,878; ATCH x5 $162,524; GME x2 $10,818,337
+Crowded (COT 3y extreme): UST 2Y NOTE - CHICAGO BO net_at_3y_high; 5 YEAR ERIS SOFR SWAP -  net_at_3y_high; LEAN HOGS - CHICAGO MERC net_at_3y_low; CRUDE OIL, LIGHT SWEET-W net_at_3y_high
+Direction calls are graded at weight ~0 (LLM direction <= coin here). Not advice, no orders.

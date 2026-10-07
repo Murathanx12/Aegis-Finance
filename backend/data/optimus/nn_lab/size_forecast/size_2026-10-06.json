@@ -1,0 +1,33 @@
+{
+ "decision_date": "2026-10-06",
+ "run_id": "nightly_20261007T003003Z",
+ "written_utc": "2026-10-07T00:31:34+00:00",
+ "what": "expected ABSOLUTE excess move (vs the cross-sectional median) and a symmetric interval; it says NOTHING about direction",
+ "by_horizon": {
+  "h5": {
+   "model": "ridge_abs",
+   "why": "simplest with >= half the best posterior improvement over vol (+0.0126 vs best +0.0126)",
+   "conformal": {
+    "c50": 0.7922,
+    "c90": 2.1216,
+    "n": 5865,
+    "source": "forward"
+   }
+  },
+  "h21": {
+   "model": "ridge_abs",
+   "why": "simplest with >= half the best posterior improvement over vol (+0.0120 vs best +0.0120)",
+   "conformal": {
+    "c50": 0.944,
+    "c90": 2.6948,
+    "n": 809289,
+    "source": "walk_forward",
+    "forward_rows_so_far": 0
+   }
+  }
+ },
+ "status": "FROZEN",
+ "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab\\size_forecast\\size_2026-10-06.parquet",
+ "sha256": "0940343e77891909673755652a61cdf7613c1d17d8eeef277892a6e8a89ab416",
+ "rows": 2934
+}

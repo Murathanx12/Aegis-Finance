@@ -1,0 +1,68 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-10-06",
+ "declared_utc": "2026-10-06T03:07:28+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [],
+ "cells": [
+  {
+   "hyp_id": "H-bd054b8248",
+   "title": "10Y yield spike lifts money-center banks over regionals",
+   "family": "macro_readthrough_rates",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "^TNX",
+    "targets": [
+     "JPM",
+     "BAC",
+     "C",
+     "WFC",
+     "KRE"
+    ],
+    "expected_sign": 1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "If money-center banks do not outperform regional banks after a 10Y yield spike, refuted.",
+   "separation_from_beta": "Compare money-center banks (JPM, BAC, C, WFC) vs regional banks (KRE constituents); money-centers should outperform if curve steepening is the driver."
+  },
+  {
+   "hyp_id": "H-ba83bf6c68",
+   "title": "Equity issuance dilution read-through to cash-poor peers",
+   "family": "event_readthrough_text_link",
+   "target": "return",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "comention",
+    "event_type": "equity_issuance_dilution",
+    "min_ratio": 2.0,
+    "k": 5,
+    "min_source_dv_pct": 0.5
+   },
+   "split": {},
+   "refutation": "If cash-poor peers' next-session residual is not more negative than cash-rich matched peers (spread >= 0, t < 1), refuted.",
+   "separation_from_beta": "Compare cash-poor peers to cash-rich peers matched on size and beta; the cash-poor-minus-cash-rich residual spread should be negative."
+  },
+  {
+   "hyp_id": "H-f954946c67",
+   "title": "Clinical trial failure of one firm drags peers with similar pipeline",
+   "family": "event_readthrough_text_link",
+   "target": "direction",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "comention",
+    "event_type": "clinical_trial_result",
+    "min_ratio": 2.5,
+    "k": 7,
+    "min_source_dv_pct": 0.5
+   },
+   "split": {},
+   "refutation": "If linked peers show no significant negative abnormal return relative to unlinked biotech firms over the next 2 sessions, the hypothesis is refuted.",
+   "separation_from_beta": "Compare peer basket return to a matched set of biotech firms with no pipeline overlap in that therapeutic area, controlling for market beta and sector return."
+  }
+ ],
+ "sha256": "59b290d627a22b791028f744016f9448b3ba5af21062e088ae578e141863f6dc"
+}

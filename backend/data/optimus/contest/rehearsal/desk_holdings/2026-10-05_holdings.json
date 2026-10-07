@@ -1,0 +1,20 @@
+{
+ "day": "2026-10-05",
+ "buys": [
+  {
+   "symbol": "AEHR",
+   "bbg_ticker": "AEHR US Equity",
+   "react_date": "2026-10-06"
+  },
+  {
+   "symbol": "LW",
+   "bbg_ticker": "LW US Equity",
+   "react_date": "2026-10-06"
+  },
+  {
+   "symbol": "RPM",
+   "bbg_ticker": "RPM US Equity",
+   "react_date": "2026-10-06"
+  }
+ ]
+}

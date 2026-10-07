@@ -1,0 +1,583 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-10-06",
+ "days": [
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05",
+  "2026-07-06",
+  "2026-07-07",
+  "2026-07-08",
+  "2026-07-09",
+  "2026-07-10",
+  "2026-07-11",
+  "2026-07-12",
+  "2026-07-13",
+  "2026-07-14",
+  "2026-07-15",
+  "2026-07-16",
+  "2026-07-17",
+  "2026-07-18",
+  "2026-07-19",
+  "2026-07-20",
+  "2026-07-21",
+  "2026-07-22",
+  "2026-07-23",
+  "2026-07-24",
+  "2026-07-25",
+  "2026-07-26",
+  "2026-07-27",
+  "2026-07-28",
+  "2026-07-29",
+  "2026-07-30",
+  "2026-07-31",
+  "2026-08-01",
+  "2026-08-02",
+  "2026-08-03",
+  "2026-08-04",
+  "2026-08-05",
+  "2026-08-06",
+  "2026-08-07",
+  "2026-08-08",
+  "2026-08-09",
+  "2026-08-10",
+  "2026-08-11",
+  "2026-08-12",
+  "2026-08-13",
+  "2026-08-14",
+  "2026-08-15",
+  "2026-08-16",
+  "2026-08-17",
+  "2026-08-18",
+  "2026-08-19",
+  "2026-08-20",
+  "2026-08-21",
+  "2026-08-22",
+  "2026-08-23",
+  "2026-08-24",
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27",
+  "2026-08-28",
+  "2026-08-29",
+  "2026-08-30",
+  "2026-08-31",
+  "2026-09-01",
+  "2026-09-02",
+  "2026-09-03",
+  "2026-09-04",
+  "2026-09-05",
+  "2026-09-06",
+  "2026-09-07",
+  "2026-09-08",
+  "2026-09-09",
+  "2026-09-10",
+  "2026-09-11",
+  "2026-09-12",
+  "2026-09-13",
+  "2026-09-14",
+  "2026-09-15",
+  "2026-09-16",
+  "2026-09-17",
+  "2026-09-18",
+  "2026-09-19",
+  "2026-09-20",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23",
+  "2026-09-24",
+  "2026-09-25",
+  "2026-09-26",
+  "2026-09-27",
+  "2026-09-28",
+  "2026-09-29",
+  "2026-09-30",
+  "2026-10-01",
+  "2026-10-02",
+  "2026-10-03",
+  "2026-10-04",
+  "2026-10-05",
+  "2026-10-06"
+ ],
+ "started_utc": "2026-10-06T13:18:01+00:00",
+ "mw_analyst_snapshot": {
+  "n_pages": 17,
+  "n_rows_written": 17,
+  "thin": [],
+  "tickers": [
+   "PRAX",
+   "CDNL",
+   "REAL",
+   "AGIO",
+   "CCJ",
+   "ABSI",
+   "JAZZ",
+   "BBIO",
+   "AVGO",
+   "TE",
+   "COGT",
+   "BW",
+   "GOOGL",
+   "BHVN",
+   "BBW",
+   "MP",
+   "LEU"
+  ]
+ },
+ "barrons_big_money_poll_index_rows": {
+  "n_articles": 0,
+  "n_rows_written": 0,
+  "per_article": []
+ },
+ "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
+ "purpose": "dowjones_claims",
+ "cap_usd": 3.0,
+ "spent_usd": 0.00932,
+ "n_llm_calls": 29,
+ "stopped": null,
+ "n_articles": 29,
+ "n_claims": 6,
+ "forecast_rows_by_source_id": {
+  "barrons_stock_picks": 3,
+  "barrons_other": 9,
+  "marketwatch_other": 3,
+  "wsj_other": 0,
+  "search_wsj_read_next": 0
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "042f55708a455ec244c7",
+   "url": "https://www.barrons.com/articles/nike-stock-price-downgrades-berenberg-bnp-13-year-low-6f4d2297?mod=mw_latestnews",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "NKE",
+     "why": "REFUSED_DUPLICATE_VIEW: 'NKE' down"
+    }
+   ],
+   "tickers": [
+    "NKE"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "5433c78d77471e2965a2",
+   "url": "https://www.barrons.com/articles/micron-stock-price-memory-bubble-d2329e7d?mod=RTA",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "MU"
+   ],
+   "directions": [
+    "none"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "OK"
+  },
+  {
+   "sha": "6e4d814731d247eb1f32",
+   "url": "https://www.barrons.com/articles/vaxcyte-stock-vaccine-pfizer-merck-cdfe5d9c?mod=searchresults_article&pos=1",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 3,
+   "refused": [],
+   "tickers": [
+    "PCVX",
+    "PFE",
+    "MRK"
+   ],
+   "directions": [
+    "up",
+    "down",
+    "down"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 9,
+   "write_status": "OK"
+  },
+  {
+   "sha": "8616ba2f74d76af5210b",
+   "url": "https://www.barrons.com/articles/skyworks-solutions-stock-ai-sp500-apple-cb28cad2?mod=searchresults_article&pos=1",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "b13accdfe859258ba355",
+   "url": "https://www.barrons.com/articles/pasqal-stock-buy-quantum-computing-a535aeeb",
+   "column": "barrons_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "PSQL",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'PSQL'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c784195b37ba4070bf32",
+   "url": "https://www.barrons.com/articles/skyworks-solutions-stock-apple-qorvo-64596da8?mod=searchresults_article&pos=3",
+   "column": "barrons_stock_picks",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "SWKS",
+     "why": "REFUSED_BACKWARD_LOOKING: 'SWKS'"
+    },
+    {
+     "ticker": "QRVO",
+     "why": "REFUSED_BACKWARD_LOOKING: 'QRVO'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "3789a8007593ee136834",
+   "url": "https://www.marketwatch.com/story/xanadu-quantum-technologies-globalfoundries-partner-to-mass-produce-photonic-quantum-chips-b4f671a6?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4debf152e7c93b07e0e7",
+   "url": "https://www.marketwatch.com/story/locked-out-of-home-ownership-renters-are-rallying-voters-for-affordable-housing-policies-bf946d70?mod=mw_latestnews",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c737b1803aa5ebea7664",
+   "url": "https://www.marketwatch.com/story/americas-favorite-index-is-misleading-investors-about-the-state-of-the-stock-market-2e91ca95?mod=home_ln",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ff90c907c366d21e40e9",
+   "url": "https://www.marketwatch.com/story/google-makes-a-fresh-bet-on-nuclear-power-as-the-ai-energy-crunch-intensifies-a757c296?mod=investing",
+   "column": "marketwatch_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "CEG"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "0237d0745eb63b11d950",
+   "url": "https://www.wsj.com/politics/policy/landmark-crypto-bill-fails-procedural-vote-casting-doubt-on-new-digital-asset-rules-d6fc4c47?mod=Searchresults&pos=4&page=1",
+   "column": "wsj_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "COIN",
+     "why": "REFUSED_BACKWARD_LOOKING: 'COIN'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "146fb79f90ea05211fc5",
+   "url": "https://www.wsj.com/business/health-care-roundup-market-talk-cea218bb?mod=business_lead_story",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "2abaa860066db150d646",
+   "url": "https://www.wsj.com/business/deals/qxo-to-buy-kodiak-building-for-2-25-billion-19e97aff?mod=Searchresults&pos=2&page=1",
+   "column": "wsj_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "QXO",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'QXO'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "386287c578f368e02e5e",
+   "url": "https://www.wsj.com/tech/becton-dickinson-to-invest-19-billion-in-u-s-in-exchange-for-tariff-relief-a7d3dd75",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4e0407b7e7237852cdb9",
+   "url": "https://www.wsj.com/opinion/the-year-of-the-political-outsider-c02c489a",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "51dacbd4c8e4e3cbc36a",
+   "url": "https://www.wsj.com/search?query=measles+outbreak+2026+CDC+update",
+   "column": "search_wsj_read_next",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "search_wsj_read_next",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "5a356d523adade83ed26",
+   "url": "https://www.wsj.com/business/energy-oil/energy-transfer-to-acquire-vaquero-midstream-for-2-63-billion-79c90c47",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "72269aec57e7c457eff2",
+   "url": "https://www.wsj.com/opinion/the-end-of-college-as-we-know-it-e222ab3d?mod=trending_now_opn_3",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "8cb59507b242153bde1f",
+   "url": "https://www.wsj.com/pro/private-equity/private-equity-daily-a-hidden-risk-in-private-credit-588e9c3d?mod=Searchresults&pos=3&page=1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "9e64c3c73d2b817d62e6",
+   "url": "https://www.wsj.com/articles/accounting-rulemaker-to-delve-into-crypto-in-2026-amid-trump-push-1b41bf6e?mod=Searchresults&pos=3&page=1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a0576b8992e11f9b00e4",
+   "url": "https://www.wsj.com/tech/ai/anthropic-researcher-quits-over-out-of-control-ai-fears-707b7628?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "b37f208b1c18118df825",
+   "url": "https://www.wsj.com/politics/policy/trump-says-his-super-pac-will-pay-for-pro-trump-ads-instead-of-taxpayers-5471f1b2?mod=hp_lead_pos2",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "b7238b6794cd4adc4b49",
+   "url": "https://www.wsj.com/health/pennsylvania-measles-outbreak-deaths-e8ef3eaa?mod=Searchresults&pos=2&page=1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c3a7ead9b5daaad098d9",
+   "url": "https://www.wsj.com/business/deals/qxo-to-buy-insulation-company-topbuild-for-17-billion-4c9e6a98?mod=Searchresults&pos=1&page=1",
+   "column": "wsj_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "QXO",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'QXO'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c94218291452a61165e3",
+   "url": "https://www.wsj.com/opinion/free-expression/mr-financial-know-nothing-868b4f4c?mod=free-expression-ribbon",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "cc098ce155c7c60a2be7",
+   "url": "https://www.wsj.com/opinion/cftcs-new-rules-for-crypto-a1314e87",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "db2ab4c55bd5e1e45456",
+   "url": "https://www.wsj.com/health/healthcare/u-s-measles-cases-surpass-last-years-level-in-first-seven-months-of-2026-0728c10a?mod=Searchresults&pos=1&page=1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e3288f8a0b33107954e4",
+   "url": "https://www.wsj.com/us-news/us-measles-elimination-status-outbreak-71d0d2ab?mod=Searchresults&pos=3&page=1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e482e1a3eac0cb63eee1",
+   "url": "https://www.wsj.com/opinion/free-expression/unlocking-the-josephus-code-17a74dd5?mod=free-expression-ribbon",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  }
+ ]
+}

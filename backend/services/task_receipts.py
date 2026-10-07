@@ -552,6 +552,32 @@ def accounts_status(accts: Iterable[Any]) -> tuple[str, str, list]:
     return "OK", "", excused
 
 
+def _eod_audit_status(ctx, d: dict, fm_root: Path, name: str) -> tuple[str, str]:
+    """C26: a Preclose pass must be followed by its end-of-day audit rows
+    (`fleet_manager/eod_audit/audit.jsonl`, same run_id). Missing -> DEGRADED;
+    rows present -> the same per-account rule as the passes (retired excused).
+    Receipts started before FLEET_EOD_AUDIT_SINCE_UTC predate the audit."""
+    since = parse_stamp(getattr(_config, "FLEET_EOD_AUDIT_SINCE_UTC", None))
+    started = parse_stamp(d.get("started_utc"))
+    if since and started and started < since:
+        return "OK", ""
+    from backend.services import system_health as SH                # noqa: PLC0415
+    rows = []
+    for line in SH._tail_lines(fm_root / "eod_audit" / "audit.jsonl", 262144):
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(r, dict) and r.get("run_id") == d.get("run_id"):
+            rows.append(r)
+    if not rows:
+        blk = d.get("eod_audit") or {}
+        return "DEGRADED", (f"no end-of-day audit row for preclose {name}"
+                            + (f" ({str(blk.get('status'))[:120]})" if blk.get("status") else ""))
+    st, why, _ex = accounts_status(rows)
+    return ("OK", "") if st == "OK" else ("DEGRADED", f"eod audit: {why}")
+
+
 def _fleet_pass(which: str):
     def reader(ctx, task) -> Reading:
         folder = ctx.optimus_dir / "paper_accounts" / "fleet_manager" / "runs"
@@ -564,8 +590,11 @@ def _fleet_pass(which: str):
             if isinstance(d, dict) and str(d.get("pass")) == which:
                 st0, why0 = receipt_status(d, fields=("status",))
                 st, why, excused = accounts_status(d.get("accounts"))
+                st_a, why_a = (_eod_audit_status(ctx, d, folder.parent, p.name) if which == "preclose"
+                               else ("OK", ""))
                 return Reading(stamp=parse_stamp(d.get("finished_utc") or d.get("started_utc")),
-                               status=worst(st0, st), reason="; ".join(x for x in (why0, why) if x),
+                               status=worst(st0, st, st_a),
+                               reason="; ".join(x for x in (why0, why, why_a) if x),
                                substance=substance([{k: a.get(k) for k in ("role", "status", "equity")}
                                                     for a in d.get("accounts") or [] if isinstance(a, dict)]),
                                proof=f"fleet_manager/runs/{p.name} accounts[*].status",
