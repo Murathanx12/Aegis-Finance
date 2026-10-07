@@ -8,6 +8,7 @@ Writes
     docs/assets/paper_results_live.svg      1200 x 480   best paper accounts, live (style C)
     docs/assets/architecture_pipeline.svg   1200 x 1060  how it works, module by module (style A)
     docs/assets/og_preview.svg              1200 x 630   the social-preview card (style C, static)
+    docs/assets/gauntlet.svg                1200 x 666   every idea's gauntlet (style A)
     docs/design/aegis_front_page.html       the HTML motion page: the hero, counting results
 
 THE STYLE
@@ -48,6 +49,7 @@ HERO_SVG = ASSETS / "aegis_loop.svg"
 RESULTS_SVG = ASSETS / "paper_results_live.svg"
 PIPELINE_SVG = ASSETS / "architecture_pipeline.svg"
 OG_SVG = ASSETS / "og_preview.svg"
+GAUNTLET_SVG = ASSETS / "gauntlet.svg"
 FRONT_HTML = DESIGN / "aegis_front_page.html"
 PAPER_DIR = REPO / "backend" / "data" / "optimus" / "paper_accounts"
 
@@ -795,6 +797,147 @@ def render_pipeline() -> str:
     return "\n".join(o) + "\n"
 
 
+# ================================================================== style A: the gauntlet
+GAUNT_W, GAUNT_H = 1200, 666
+#: The README's own flowchart, node for node and word for word ("Every idea walks the same
+#: gauntlet"); the count of prior trials is the README's. Re-skinned, not re-argued.
+PRIOR_TRIALS = "335+"
+GAUNTLET_NODES = {
+    "IDEA": ("IDEA", ()),
+    "PREREG": ("PRE-REGISTRATION", ("frozen in a commit", "BEFORE any data")),
+    "RUN": ("RUN", ("every arm prints its", "own 80%-power MDE")),
+    "FWD": ("FORWARD PAPER LANE", ("reality decides,", "24-month clock")),
+    "DEAD": ("REFUSED", ("it already has", "a corpse")),
+    "VOID": ("VOID", ("disclosed with its", "numbers, never deleted")),
+    "NR": ("NEGATIVE_RESULTS.md", ("NOT_DETECTABLE",)),
+}
+GAUNTLET_GATES = {
+    "CORPSE": (("CORPSE", "CHECK"), f"vs {PRIOR_TRIALS} prior trials"),
+    "PLACEBO": (("PLACEBOS", "CLEAN?"), ""),
+    "BAR": (("CLEARS", "OWN MDE?"), ""),
+}
+GAUNTLET_EDGES = (("CORPSE", "DEAD", "match found"), ("CORPSE", "PREREG", "pass"),
+                  ("PLACEBO", "VOID", "no"), ("PLACEBO", "BAR", "yes"),
+                  ("BAR", "NR", "no"), ("BAR", "FWD", "yes"))
+GAUNTLET_LOOP = "every refusal, void and null is a record the next corpse check reads"
+
+
+def render_gauntlet() -> str:
+    css = _pipeline_css() + (
+        f".gt{{font:600 12px {MONO};letter-spacing:1.6px;fill:#fff}}"
+        f".gt.dim{{fill:rgba(255,255,255,.6)}}.gt.go{{fill:{BLUE_HI}}}"
+        f".gd{{font:400 13px {SANS};fill:rgba(255,255,255,.68)}}"
+        f".gd.dim{{fill:rgba(255,255,255,.48)}}"
+        f".gate{{font:600 10.5px {MONO};letter-spacing:1.2px;fill:#fff}}"
+        f".cap{{font:400 11px {MONO};fill:rgba(255,255,255,.5)}}"
+        f".elab{{font:500 10px {MONO};letter-spacing:1px;fill:rgba(255,255,255,.55)}}"
+        ".dead{fill:rgba(255,255,255,.01);stroke:rgba(255,255,255,.12);stroke-width:1}"
+        f".go-frame{{fill:rgba(74,141,255,.06);stroke:{BLUE};stroke-width:1.5}}"
+        ".diamond{fill:#000;stroke:rgba(255,255,255,.75);stroke-width:1.5}"
+        ".ideap{fill:#000;stroke:rgba(255,255,255,.75);stroke-width:1.5}")
+    defs = ('<pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">'
+            '<circle cx="1" cy="1" r="1" fill="rgba(255,255,255,.07)"/></pattern>'
+            + "".join(f'<marker id="{mid}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" '
+                      f'markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9" fill="none" '
+                      f'stroke="{col}" stroke-width="1.6"/></marker>'
+                      for mid, col in (("ab", BLUE), ("aw", "rgba(255,255,255,.5)"), ("ao", ORANGE))))
+    desc = ("Every idea walks the same gauntlet: " + "; ".join(
+        f"{a.lower()} to {b.lower()}" + (f" ({lab})" if lab else "") for a, b, lab in GAUNTLET_EDGES)
+        + f". The corpse check compares against {PRIOR_TRIALS} prior trials; {GAUNTLET_LOOP}.")
+    o = _head(GAUNT_W, GAUNT_H, "Every idea walks the same gauntlet", desc, css, defs)
+    o.append(f'<rect width="{GAUNT_W}" height="{GAUNT_H}" class="bg"/>'
+             f'<rect width="{GAUNT_W}" height="{GAUNT_H}" fill="url(#dots)"/>')
+    for cx_, cy_, dx, dy in ((16, 16, 1, 1), (GAUNT_W - 16, 16, -1, 1), (16, GAUNT_H - 16, 1, -1),
+                             (GAUNT_W - 16, GAUNT_H - 16, -1, -1)):
+        o.append(f'<path d="M{cx_},{cy_ + 14 * dy} L{cx_},{cy_} L{cx_ + 14 * dx},{cy_}" class="brk" '
+                 f'style="stroke:rgba(255,255,255,.35)"/>')
+    o.append('<text x="40" y="60" class="kicker">AEGIS FINANCE · THE HONESTY MACHINE</text>')
+    o.append('<text x="36" y="104" class="h1" style="font-size:32px">EVERY IDEA WALKS THE SAME GAUNTLET</text>')
+    o.append('<text x="40" y="136" class="lede">Most die, cheaply and on the record. Only what survives every '
+             'gate reaches a forward paper lane.</text>')
+    o.append('<line x1="40" y1="166" x2="1160" y2="166" class="rule"/>')
+    cy = 290                                     # the spine
+    box_h = 104
+    spine = {"IDEA": (40, 120), "CORPSE": (150, 270), "PREREG": (300, 460), "RUN": (490, 650),
+             "PLACEBO": (680, 790), "BAR": (820, 930), "FWD": (960, 1160)}
+    low = {"DEAD": (115, 305), "VOID": (590, 770), "NR": (800, 1010)}
+    ly = 446                                     # top of the dead-end row
+    # wires first
+    order = ["IDEA", "CORPSE", "PREREG", "RUN", "PLACEBO", "BAR", "FWD"]
+    for a, b in zip(order, order[1:]):
+        x1, x2 = spine[a][1], spine[b][0]
+        o.append(f'<line x1="{x1}" y1="{cy}" x2="{x2}" y2="{cy}" class="wire"/>')
+        o.append(f'<line x1="{x1}" y1="{cy}" x2="{x2 - 6}" y2="{cy}" class="flow" marker-end="url(#ab)"/>')
+    labels = {(a, b): lab for a, b, lab in GAUNTLET_EDGES}
+    for (a, b), lab in labels.items():
+        if b in spine:
+            x1, x2 = spine[a][1], spine[b][0]
+            o.append(f'<text x="{(x1 + x2) / 2:.0f}" y="{cy - 10}" class="elab" text-anchor="middle">{_t(lab)}</text>')
+        else:
+            gx = (spine[a][0] + spine[a][1]) / 2
+            bx = (low[b][0] + low[b][1]) / 2
+            half = (spine[a][1] - spine[a][0]) / 2
+            y1 = cy + half
+            mid = (y1 + ly) / 2
+            d = (f"M{gx:.0f},{y1:.0f} L{gx:.0f},{mid:.0f} L{bx:.0f},{mid:.0f} L{bx:.0f},{ly - 6}"
+                 if abs(gx - bx) > 1 else f"M{gx:.0f},{y1:.0f} L{gx:.0f},{ly - 6}")
+            o.append(f'<path d="{d}" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.2" '
+                     f'stroke-dasharray="3 5" marker-end="url(#aw)"/>')
+            o.append(f'<text x="{gx + 8:.0f}" y="{y1 + 20:.0f}" class="elab">{_t(lab)}</text>')
+    # the idea
+    x0, x1 = spine["IDEA"]
+    o.append(f'<rect x="{x0}" y="{cy - 26}" width="{x1 - x0}" height="52" rx="26" class="ideap"/>')
+    o.append(f'<text x="{(x0 + x1) / 2:.0f}" y="{cy + 4}" class="gt" text-anchor="middle">IDEA</text>')
+    # gates (diamonds)
+    for g, (lines, cap) in GAUNTLET_GATES.items():
+        gx0, gx1 = spine[g]
+        gx, h = (gx0 + gx1) / 2, (gx1 - gx0) / 2
+        o.append(f'<path d="M{gx:.0f},{cy - h:.0f} L{gx1},{cy} L{gx:.0f},{cy + h:.0f} L{gx0},{cy} Z" '
+                 f'class="diamond"/>')
+        o.append(f'<text x="{gx:.0f}" y="{cy - 3}" class="gate" text-anchor="middle">{_t(lines[0])}</text>')
+        o.append(f'<text x="{gx:.0f}" y="{cy + 11}" class="gate" text-anchor="middle">{_t(lines[1])}</text>')
+        if cap:
+            o.append(f'<text x="{gx:.0f}" y="{cy - h - 12:.0f}" class="cap" text-anchor="middle">{_t(cap)}</text>')
+
+    def box(key: str, x0: int, x1: int, y0: int, kind: str) -> None:
+        title, lines = GAUNTLET_NODES[key]
+        frame = {"go": "go-frame", "dead": "dead", "step": "frame"}[kind]
+        o.append(f'<rect x="{x0}" y="{y0}" width="{x1 - x0}" height="{box_h}" class="{frame}"/>')
+        if kind != "dead":
+            for bx_, by_, dx, dy in ((x0, y0, 1, 1), (x1, y0, -1, 1), (x0, y0 + box_h, 1, -1),
+                                     (x1, y0 + box_h, -1, -1)):
+                o.append(f'<path d="M{bx_},{by_ + 12 * dy} L{bx_},{by_} L{bx_ + 12 * dx},{by_}" class="brk"'
+                         + (f' style="stroke:{BLUE_HI}"' if kind == "go" else "") + "/>")
+        tcls = {"go": "gt go", "dead": "gt dim", "step": "gt"}[kind]
+        dcls = "gd dim" if kind == "dead" else "gd"
+        o.append(f'<text x="{x0 + 16}" y="{y0 + 30}" class="{tcls}">{_t(title)}</text>')
+        for i, ln in enumerate(lines):
+            o.append(f'<text x="{x0 + 16}" y="{y0 + 56 + 19 * i}" class="{dcls}">{_t(ln)}</text>')
+
+    for key, kind in (("PREREG", "step"), ("RUN", "step"), ("FWD", "go")):
+        x0_, x1_ = spine[key]
+        box(key, x0_, x1_, cy - box_h // 2, kind)
+    for key, (x0_, x1_) in low.items():
+        box(key, x0_, x1_, ly, "dead")
+    # the learning loop: the record feeds the next corpse check
+    by = ly + box_h + 30
+    dx_ = (low["DEAD"][0] + low["DEAD"][1]) / 2
+    loop = (f"M{(low['NR'][0] + low['NR'][1]) / 2:.0f},{ly + box_h} L{(low['NR'][0] + low['NR'][1]) / 2:.0f},{by} "
+            f"L{40 + 20},{by} L{40 + 20},{ly - 40} L{spine['CORPSE'][0] - 6},{ly - 40} "
+            f"L{spine['CORPSE'][0] + 30},{cy + 34}")
+    o.append(f'<path d="{loop}" class="loop" marker-end="url(#ao)"/>')
+    for key in ("VOID", "DEAD"):
+        x = (low[key][0] + low[key][1]) / 2
+        o.append(f'<path d="M{x:.0f},{ly + box_h} L{x:.0f},{by}" class="loop"/>')
+    o.append(f'<text x="{dx_ + 120:.0f}" y="{by + 20}" class="looplab">↺ {_t(GAUNTLET_LOOP)}</text>')
+    o.append(f'<circle r="3.5" fill="{ORANGE}"><animateMotion dur="6s" repeatCount="indefinite" '
+             f'path="{loop}"/></circle>')
+    o.append(f'<text x="40" y="{GAUNT_H - 28}" class="foot">PRE-REGISTRATION: docs/TRIALS/ · THE RECORD: '
+             f'NEGATIVE_RESULTS.md · NOTHING IS DELETED</text>')
+    o.append("</svg>")
+    return "\n".join(o) + "\n"
+
+
 # ================================================================== the social card (static)
 OG_W, OG_H = 1200, 630
 OG_DESC_LINES = 5
@@ -1013,7 +1156,7 @@ def _rel(path: Path) -> str:
 
 def outputs() -> dict[Path, str]:
     return {HERO_SVG: render_hero(), RESULTS_SVG: render_results(), PIPELINE_SVG: render_pipeline(),
-            OG_SVG: render_og(), FRONT_HTML: render_front_html()}
+            GAUNTLET_SVG: render_gauntlet(), OG_SVG: render_og(), FRONT_HTML: render_front_html()}
 
 
 def main(argv: list[str] | None = None) -> int:

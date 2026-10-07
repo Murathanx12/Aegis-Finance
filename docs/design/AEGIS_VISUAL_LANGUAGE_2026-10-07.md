@@ -112,8 +112,9 @@ readout shown). SMIL comets keep running there; they carry no text.
   lines of at most 40 characters, and the modules that run it. The test fails when a printed
   path stops existing or a printed function stops being defined, so the picture cannot drift
   from the code.
-- **Orbit hero** (C), **blackline pipeline** (A), **results panel** (C), **social card** (C),
-  **HTML front page** (C, with counting numbers and the same data).
+- **Orbit hero** (C), **blackline pipeline** (A), **blackline gauntlet** (A: the README's former
+  Mermaid flowchart, node for node), **results panel** (C), **social card** (C), **HTML front
+  page** (C, with counting numbers and the same data).
 - **Results panel**: the excess over SPY (big, bright blue), the account, its meta line, its
   evidence label (`OBSERVED(n)`), two bars (account, SPY over the same days), and one line chart
   of the strongest account against its matched random twin and SPY. The SELECTION RULE is code

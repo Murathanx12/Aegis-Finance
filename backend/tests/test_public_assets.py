@@ -5,7 +5,8 @@ results panel, the module-by-module diagram (style A, the blackline), the social
 HTML motion page, in the language the owner chose on 2026-10-07
 (`docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md`). A picture of the code or of a number goes
 stale silently, so this file pins it: the committed files are byte-for-byte what the generator
-renders, every module path printed exists and defines what is printed beside it, every number
+renders, every module path printed exists and defines what is printed beside it, the gauntlet
+draws every node of the flowchart it replaced, every number
 on the results panel is the receipt's number, the featured accounts are what the declared
 selection rule picks, the motion is internally consistent, and no SVG can load anything
 external or carry an image. Offline, stdlib only.
@@ -25,7 +26,7 @@ from scripts import render_public_assets as RPA
 REPO = Path(__file__).resolve().parents[2]
 SVG_NS = "{http://www.w3.org/2000/svg}"
 EXPECTED_SIZE = {RPA.HERO_SVG: (1200, 1000), RPA.RESULTS_SVG: (1200, 470),
-                 RPA.PIPELINE_SVG: (1200, 1060), RPA.OG_SVG: (1200, 630)}
+                 RPA.PIPELINE_SVG: (1200, 1060), RPA.GAUNTLET_SVG: (1200, 666), RPA.OG_SVG: (1200, 630)}
 ALL_OUTPUTS = [*EXPECTED_SIZE, RPA.FRONT_HTML]
 
 
@@ -123,6 +124,21 @@ def test_nine_stages_in_order_and_both_pictures_draw_every_one():
         for m in st.modules:
             assert m.label in pipe, m.label
     assert RPA.LOOP_TO_DECISION in pipe and RPA.LOOP_TO_THEORY in pipe
+
+
+def test_the_gauntlet_draws_every_node_gate_and_edge_of_the_flowchart_it_replaced():
+    """The README's Mermaid gauntlet, re-skinned in style A: same nodes, same words, same edges;
+    the one addition is the loop the corpse check already implies (it reads prior trials)."""
+    text = _text_content(_committed(RPA.GAUNTLET_SVG).decode("utf-8"))
+    for title, lines in RPA.GAUNTLET_NODES.values():
+        assert title in text
+        for ln in lines:
+            assert ln in text, ln
+    for lines, cap in RPA.GAUNTLET_GATES.values():
+        assert all(w in text for w in lines) and (not cap or cap in text)
+    for _, _, lab in RPA.GAUNTLET_EDGES:
+        assert lab in text
+    assert f"{RPA.PRIOR_TRIALS} prior trials" in (REPO / "README.md").read_text(encoding="utf-8")
 
 
 def test_no_string_overflows_its_box():
@@ -230,6 +246,6 @@ def test_every_asset_the_readme_shows_exists():
     readme = (REPO / "README.md").read_text(encoding="utf-8")
     shown = sorted(set(re.findall(r"docs/assets/[\w./-]+\.(?:png|svg)", readme)))
     for must in ("docs/assets/aegis_loop.svg", "docs/assets/paper_results_live.svg",
-                 "docs/assets/architecture_pipeline.svg"):
+                 "docs/assets/architecture_pipeline.svg", "docs/assets/gauntlet.svg"):
         assert must in shown
     assert [p for p in shown if not (REPO / p).is_file()] == []

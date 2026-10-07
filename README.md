@@ -276,22 +276,9 @@ Most retail finance tools show you a backtest and ask you to trust it. Aegis ass
 
 Every idea walks the same gauntlet — and most die, cheaply and on the record:
 
-```mermaid
-flowchart LR
-    IDEA([Idea]) --> CORPSE{Corpse check vs<br/>335+ prior trials}
-    CORPSE -->|match found| DEAD[Refused —<br/>it already has a corpse]
-    CORPSE -->|pass| PREREG[Pre-registration<br/>frozen in a commit<br/>BEFORE any data]
-    PREREG --> RUN[Run — every arm prints<br/>its own 80%-power MDE]
-    RUN --> PLACEBO{Placebos<br/>clean?}
-    PLACEBO -->|no| VOID[VOID — disclosed<br/>with its numbers,<br/>never deleted]
-    PLACEBO -->|yes| BAR{Clears its<br/>own MDE?}
-    BAR -->|no| NR[NEGATIVE_RESULTS.md /<br/>NOT_DETECTABLE]
-    BAR -->|yes| FWD[Forward paper lane —<br/>reality decides,<br/>24-month clock]
-    style DEAD fill:#7f1d1d,color:#fff
-    style VOID fill:#7f1d1d,color:#fff
-    style NR fill:#78350f,color:#fff
-    style FWD fill:#14532d,color:#fff
-```
+<p align="center">
+  <img src="docs/assets/gauntlet.svg" width="100%" alt="Every idea walks the same gauntlet: an idea meets the corpse check against 335+ prior trials (a match is refused: it already has a corpse); if it passes, its pre-registration is frozen in a commit before any data; the run prints every arm's own 80%-power MDE; unclean placebos make it VOID, disclosed with its numbers and never deleted; failing its own MDE sends it to NEGATIVE_RESULTS.md as NOT_DETECTABLE; only an idea that clears both reaches a forward paper lane, where reality decides on a 24-month clock. Every refusal, void and null is a record the next corpse check reads.">
+</p>
 
 ## The brain, in one picture
 

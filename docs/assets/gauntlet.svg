@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="666" viewBox="0 0 1200 666" role="img" aria-labelledby="title desc">
+<title id="title">Every idea walks the same gauntlet</title>
+<desc id="desc">Every idea walks the same gauntlet: corpse to dead (match found); corpse to prereg (pass); placebo to void (no); placebo to bar (yes); bar to nr (no); bar to fwd (yes). The corpse check compares against 335+ prior trials; every refusal, void and null is a record the next corpse check reads.</desc>
+<style>.bg{fill:#000000}.kicker{font:400 12px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:3.5px;fill:rgba(255,255,255,.55)}.h1{font:200 38px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;letter-spacing:6px;fill:#fff}.lede{font:400 15px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:rgba(255,255,255,.7)}.chip{font:500 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:2px;fill:#fff}.live{fill:#4a8dff;animation:live 1.8s ease-out infinite}@keyframes live{0%{opacity:1}100%{opacity:.15}}.num{font:200 34px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:rgba(255,255,255,.28)}.stt{font:600 15px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;letter-spacing:1.8px;fill:#fff}.sd{font:400 14px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:rgba(255,255,255,.7)}.mod{font:400 12px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace}.dir{fill:rgba(255,255,255,.38)}.file{fill:#4a8dff}.sym{fill:rgba(255,255,255,.72)}.frame{fill:rgba(255,255,255,.015);stroke:rgba(255,255,255,.16);stroke-width:1}.brk{fill:none;stroke:rgba(255,255,255,.75);stroke-width:1.5}.hl{fill:none;stroke-width:1.5;opacity:0;animation:hl 9s linear infinite}.hl.b{stroke:#4a8dff}.hl.o{stroke:#ff8a1f}@keyframes hl{0%{opacity:0}2%{opacity:1}10%{opacity:1}15%{opacity:0}100%{opacity:0}}.wire{fill:none;stroke:rgba(255,255,255,.22);stroke-width:1}.flow{fill:none;stroke:#4a8dff;stroke-width:1.6;stroke-dasharray:3 9;animation:flow 1s linear infinite}@keyframes flow{to{stroke-dashoffset:-12}}.loop{fill:none;stroke:#ff8a1f;stroke-width:1.6;stroke-dasharray:6 6;animation:flow2 1.4s linear infinite}@keyframes flow2{to{stroke-dashoffset:-24}}.looplab{font:500 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1px;fill:#ff8a1f}.rule{stroke:rgba(255,255,255,.18)}.sec{font:600 12px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:3px;fill:#fff}.foot{font:400 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1.2px;fill:rgba(255,255,255,.45)}.gt{font:600 12px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1.6px;fill:#fff}.gt.dim{fill:rgba(255,255,255,.6)}.gt.go{fill:#6fb0ff}.gd{font:400 13px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:rgba(255,255,255,.68)}.gd.dim{fill:rgba(255,255,255,.48)}.gate{font:600 10.5px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1.2px;fill:#fff}.cap{font:400 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:rgba(255,255,255,.5)}.elab{font:500 10px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1px;fill:rgba(255,255,255,.55)}.dead{fill:rgba(255,255,255,.01);stroke:rgba(255,255,255,.12);stroke-width:1}.go-frame{fill:rgba(74,141,255,.06);stroke:#4a8dff;stroke-width:1.5}.diamond{fill:#000;stroke:rgba(255,255,255,.75);stroke-width:1.5}.ideap{fill:#000;stroke:rgba(255,255,255,.75);stroke-width:1.5}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style>
+<defs><pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="rgba(255,255,255,.07)"/></pattern><marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9" fill="none" stroke="#4a8dff" stroke-width="1.6"/></marker><marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.6"/></marker><marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9" fill="none" stroke="#ff8a1f" stroke-width="1.6"/></marker></defs>
+<rect width="1200" height="666" class="bg"/><rect width="1200" height="666" fill="url(#dots)"/>
+<path d="M16,30 L16,16 L30,16" class="brk" style="stroke:rgba(255,255,255,.35)"/>
+<path d="M1184,30 L1184,16 L1170,16" class="brk" style="stroke:rgba(255,255,255,.35)"/>
+<path d="M16,636 L16,650 L30,650" class="brk" style="stroke:rgba(255,255,255,.35)"/>
+<path d="M1184,636 L1184,650 L1170,650" class="brk" style="stroke:rgba(255,255,255,.35)"/>
+<text x="40" y="60" class="kicker">AEGIS FINANCE · THE HONESTY MACHINE</text>
+<text x="36" y="104" class="h1" style="font-size:32px">EVERY IDEA WALKS THE SAME GAUNTLET</text>
+<text x="40" y="136" class="lede">Most die, cheaply and on the record. Only what survives every gate reaches a forward paper lane.</text>
+<line x1="40" y1="166" x2="1160" y2="166" class="rule"/>
+<line x1="120" y1="290" x2="150" y2="290" class="wire"/>
+<line x1="120" y1="290" x2="144" y2="290" class="flow" marker-end="url(#ab)"/>
+<line x1="270" y1="290" x2="300" y2="290" class="wire"/>
+<line x1="270" y1="290" x2="294" y2="290" class="flow" marker-end="url(#ab)"/>
+<line x1="460" y1="290" x2="490" y2="290" class="wire"/>
+<line x1="460" y1="290" x2="484" y2="290" class="flow" marker-end="url(#ab)"/>
+<line x1="650" y1="290" x2="680" y2="290" class="wire"/>
+<line x1="650" y1="290" x2="674" y2="290" class="flow" marker-end="url(#ab)"/>
+<line x1="790" y1="290" x2="820" y2="290" class="wire"/>
+<line x1="790" y1="290" x2="814" y2="290" class="flow" marker-end="url(#ab)"/>
+<line x1="930" y1="290" x2="960" y2="290" class="wire"/>
+<line x1="930" y1="290" x2="954" y2="290" class="flow" marker-end="url(#ab)"/>
+<path d="M210,350 L210,440" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.2" stroke-dasharray="3 5" marker-end="url(#aw)"/>
+<text x="218" y="370" class="elab">match found</text>
+<text x="285" y="280" class="elab" text-anchor="middle">pass</text>
+<path d="M735,345 L735,396 L680,396 L680,440" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.2" stroke-dasharray="3 5" marker-end="url(#aw)"/>
+<text x="743" y="365" class="elab">no</text>
+<text x="805" y="280" class="elab" text-anchor="middle">yes</text>
+<path d="M875,345 L875,396 L905,396 L905,440" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.2" stroke-dasharray="3 5" marker-end="url(#aw)"/>
+<text x="883" y="365" class="elab">no</text>
+<text x="945" y="280" class="elab" text-anchor="middle">yes</text>
+<rect x="40" y="264" width="80" height="52" rx="26" class="ideap"/>
+<text x="80" y="294" class="gt" text-anchor="middle">IDEA</text>
+<path d="M210,230 L270,290 L210,350 L150,290 Z" class="diamond"/>
+<text x="210" y="287" class="gate" text-anchor="middle">CORPSE</text>
+<text x="210" y="301" class="gate" text-anchor="middle">CHECK</text>
+<text x="210" y="218" class="cap" text-anchor="middle">vs 335+ prior trials</text>
+<path d="M735,235 L790,290 L735,345 L680,290 Z" class="diamond"/>
+<text x="735" y="287" class="gate" text-anchor="middle">PLACEBOS</text>
+<text x="735" y="301" class="gate" text-anchor="middle">CLEAN?</text>
+<path d="M875,235 L930,290 L875,345 L820,290 Z" class="diamond"/>
+<text x="875" y="287" class="gate" text-anchor="middle">CLEARS</text>
+<text x="875" y="301" class="gate" text-anchor="middle">OWN MDE?</text>
+<rect x="300" y="238" width="160" height="104" class="frame"/>
+<path d="M300,250 L300,238 L312,238" class="brk"/>
+<path d="M460,250 L460,238 L448,238" class="brk"/>
+<path d="M300,330 L300,342 L312,342" class="brk"/>
+<path d="M460,330 L460,342 L448,342" class="brk"/>
+<text x="316" y="268" class="gt">PRE-REGISTRATION</text>
+<text x="316" y="294" class="gd">frozen in a commit</text>
+<text x="316" y="313" class="gd">BEFORE any data</text>
+<rect x="490" y="238" width="160" height="104" class="frame"/>
+<path d="M490,250 L490,238 L502,238" class="brk"/>
+<path d="M650,250 L650,238 L638,238" class="brk"/>
+<path d="M490,330 L490,342 L502,342" class="brk"/>
+<path d="M650,330 L650,342 L638,342" class="brk"/>
+<text x="506" y="268" class="gt">RUN</text>
+<text x="506" y="294" class="gd">every arm prints its</text>
+<text x="506" y="313" class="gd">own 80%-power MDE</text>
+<rect x="960" y="238" width="200" height="104" class="go-frame"/>
+<path d="M960,250 L960,238 L972,238" class="brk" style="stroke:#6fb0ff"/>
+<path d="M1160,250 L1160,238 L1148,238" class="brk" style="stroke:#6fb0ff"/>
+<path d="M960,330 L960,342 L972,342" class="brk" style="stroke:#6fb0ff"/>
+<path d="M1160,330 L1160,342 L1148,342" class="brk" style="stroke:#6fb0ff"/>
+<text x="976" y="268" class="gt go">FORWARD PAPER LANE</text>
+<text x="976" y="294" class="gd">reality decides,</text>
+<text x="976" y="313" class="gd">24-month clock</text>
+<rect x="115" y="446" width="190" height="104" class="dead"/>
+<text x="131" y="476" class="gt dim">REFUSED</text>
+<text x="131" y="502" class="gd dim">it already has</text>
+<text x="131" y="521" class="gd dim">a corpse</text>
+<rect x="590" y="446" width="180" height="104" class="dead"/>
+<text x="606" y="476" class="gt dim">VOID</text>
+<text x="606" y="502" class="gd dim">disclosed with its</text>
+<text x="606" y="521" class="gd dim">numbers, never deleted</text>
+<rect x="800" y="446" width="210" height="104" class="dead"/>
+<text x="816" y="476" class="gt dim">NEGATIVE_RESULTS.md</text>
+<text x="816" y="502" class="gd dim">NOT_DETECTABLE</text>
+<path d="M905,550 L905,580 L60,580 L60,406 L144,406 L180,324" class="loop" marker-end="url(#ao)"/>
+<path d="M680,550 L680,580" class="loop"/>
+<path d="M210,550 L210,580" class="loop"/>
+<text x="330" y="600" class="looplab">↺ every refusal, void and null is a record the next corpse check reads</text>
+<circle r="3.5" fill="#ff8a1f"><animateMotion dur="6s" repeatCount="indefinite" path="M905,550 L905,580 L60,580 L60,406 L144,406 L180,324"/></circle>
+<text x="40" y="638" class="foot">PRE-REGISTRATION: docs/TRIALS/ · THE RECORD: NEGATIVE_RESULTS.md · NOTHING IS DELETED</text>
+</svg>
