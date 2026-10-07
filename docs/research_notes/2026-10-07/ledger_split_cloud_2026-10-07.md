@@ -68,22 +68,36 @@ matches both, and `ledger_archive` now refuses the stream files.)
   `prediction_id`. The **first terminal event wins**; a later one, or one for an unknown id, is counted
   (`FoldStats`) and never applied. That is the legacy semantics made explicit (`resolve_one` never
   re-grades; the void pass skips graded rows). Writers also skip a second terminal event under the lock.
-- **An event may only add.** `make_event` refuses to change or delete a frozen forecast field; a grade
-  sets the resolution fields (`RESOLUTION_KEYS`) or adds new ones.
+- **An event sets resolution fields only.** `event_problem` refuses any `set` key outside
+  `RESOLUTION_KEYS` (so never `prediction_id`, never a field the forecast was made with), a `resolve`
+  without an `outcome` and a `void` without a `void_reason`; `fold()` applies the same check, so a
+  hand-written event that rewrites a forecast is counted (`refused_events`) and never applied, and a
+  malformed event never blocks the real grade. `make_event` compares values NaN-safely, and
+  `record_terminal` refuses a bad pair alone (`refused_by_ledger` on the receipt), not the batch.
 - **Writes:** one fsynced `os.write` per batch to an `O_APPEND` file; LF on every platform; a file whose
   last byte is not `\n` (a torn append) is refused, never glued onto. Every rewrite (manifests, the
   marker, the legacy file before the switch) is temp file -> flush -> fsync -> `os.replace`.
 - **Lock:** one cross-process lock per ledger directory (`.forecast_ledger.lock`; `fcntl.flock` /
   `msvcrt.locking`), re-entrant per thread. Every writer re-selects the backend UNDER it, so the switch
-  is atomic for every writer running this code.
-- **Late forecasts:** a backdated row (a restoration) whose `made_at` month is sealed is filed in the
-  open month; its `made_at` is untouched and the month's manifest counts `rows_made_in_another_month`.
+  is atomic for every writer running this code. A lock file that cannot be opened REFUSES the write
+  (it once degraded to a thread lock with a log line). `os.replace` retries Windows' PermissionError.
+- **Late forecasts:** `filing_month()` files a row in its `made_at` month only while that month can
+  still change honestly (the open month, or last month inside its grace, unsealed, after the chain's
+  tail); anything else, a backdated restoration or a future-dated row, goes to the open month with
+  `made_at` untouched, counted as `late_filed` and in the manifest's `rows_made_in_another_month`. A
+  multi-month batch checks every target for a torn tail before writing any of them.
 - **Sealing:** `forecast_ledger --seal [--apply]`, attended: a month is sealable one whole day
   (`FORECAST_LEDGER_SEAL_GRACE_DAYS`) after it ends, by the run clock (never a file mtime). Chain order
   is (month, forecasts before resolutions); each manifest carries rows, bytes, sha256, first/last id and
-  `prev_manifest_sha256`, and its own `manifest_sha256` over its canonical content. Sealing refuses when
-  the existing chain does not verify (a changed sealed file, an edited manifest, a missing or wrong
-  predecessor) or when a candidate would land before the chain's tail.
+  `prev_manifest_sha256`, and its own `manifest_sha256` over its canonical content; `HEAD.json` names
+  the newest manifest and the count. Sealing refuses when the existing chain does not verify (a changed
+  sealed file, an edited manifest, a missing or wrong predecessor, a HEAD that does not match the
+  chain) or when a candidate would land before the chain's tail. `verify_chain` also checks every
+  stream file the migration wrote (`streams_at_apply`): it still exists, is no shorter, and (rehash)
+  still starts with the exact bytes written; `status(rehash=True)` checks the fold still holds every
+  legacy row.
+- **The frozen legacy file is watched:** `status()` and `ledger_health` compare its size with the
+  marker's on every call (sha256 with rehash): a write by a bypassing writer is DEGRADED at once.
 - **The switch:** `backend_for(path)` answers `legacy` with no marker, `streams` with a valid marker
   naming this file, and **refuses** (`ForecastLedgerError`) when a marker is present but unreadable:
   falling back to the frozen legacy file would read a ledger that stopped growing.
@@ -103,8 +117,9 @@ Per legacy row (`forecast_ledger_migration.split_row`):
   2026-08 voids carry no `voided_at` (a manual void before the void pass stamped one); they are filed
   under their forecast's month with `month_basis` saying so.
 - **verification, every row:** fold == legacy row (dict equality), same canonical content hash, same
-  key order, identical frozen fields; and the planned stream BYTES are parsed back through the reader's
-  own fold and compared to the legacy rows in legacy order. Any mismatch refuses the apply.
+  key order, identical frozen fields; and the planned stream bytes are parsed back through the reader's
+  own parse + fold and compared to the legacy rows, in legacy order, by content hash and key order (a
+  content round trip, not a byte one: line ends become LF). Any mismatch refuses the apply.
 
 ## 5. The plan against the real ledger (cloud run, read-only)
 
@@ -192,9 +207,12 @@ line. Fixed before commit; the label is now built only on a failure.)
   wrote; the legacy file is never modified; readers never left it.
 - **Interrupted apply** (power loss before the marker): readers still use the legacy file and
   `--status` says DEGRADED (stream files beside no marker); `--apply` refuses until
-  `python -m scripts.ledger_split --discard-partial` (refused once a marker exists).
-- **Crash after the switch, before sealing:** the ledger is migrated; `--status` lists the closed
-  months as unsealed; run `forecast_ledger --seal --apply`.
+  `python -m scripts.ledger_split --discard-partial` (refused while ANY marker exists in the
+  directory, whatever `--legacy` name it is given; it never touches `MIGRATION.json`).
+- **Failure after the switch:** "switched" is decided by the marker ON DISK, so a failure after its
+  rename never deletes the streams it names; a seal that fails after the switch is reported as
+  `APPLIED_WITH_PROBLEMS` with `switched: true` and the command to run (`forecast_ledger --seal
+  --apply`), never as REFUSED.
 - **Undo after the switch:** delete `MIGRATION.json` and every reader returns to the legacy file, which
   is byte-for-byte the planned one. Any forecast or grade written to the streams since is then
   invisible, so only do it immediately, and check `--status` first.
@@ -232,10 +250,31 @@ with the frozen file).
 - A process running code from **before** this change does not take the lock: it is caught by the
   apply's legacy re-hash (before the switch) but not after it. Hence step 1.
 - The Windows lock path (`msvcrt.locking`) was reasoned about, not executed, in this cloud session.
-- The manifest chain is in-band: deleting the newest manifest together with its stream file is not
-  visible to the chain alone (any hash chain has this property); git history is the outer check.
+- The chain is in-band: `HEAD.json` and `streams_at_apply` catch a truncated chain or a shrunk
+  stream, but someone who rewrites HEAD, the manifests and the streams consistently is caught only by
+  git history (any in-band chain has this property).
+- The legacy-file watch is size-only on a poll; a same-size edit needs `--status` (rehash).
 - Migrated events carry `recorded_at: null` (the legacy row had only a date); new events carry the
   recording time.
 
-Tests: `backend/tests/test_forecast_ledger_split.py` (44), `backend/tests/test_forecast_ledger_readers.py`
-(5), and the `forecast_ledger` case in `test_guard_missing_input_contract.py`.
+Tests: `backend/tests/test_forecast_ledger_split.py` (69, the module clock pinned so a month boundary
+cannot flake them, one with a real second process holding the lock),
+`backend/tests/test_forecast_ledger_readers.py` (5, now also catching `shutil.copy*` of a ledger path),
+and the `forecast_ledger` case in `test_guard_missing_input_contract.py`.
+
+## 10. The second review: twelve findings, each reproduced, fixed and pinned
+
+| # | finding | fix |
+|---|---|---|
+| 1 | `--discard-partial --legacy other.jsonl` in a migrated directory deleted the live streams and the marker | refused while any marker exists; strays never include `MIGRATION.json`; a second legacy file cannot be split into a migrated directory |
+| 2 | an event could set frozen fields or `prediction_id` | `RESOLUTION_KEYS` only, in `event_problem`, `fold()` and `make_event` |
+| 3 | a `resolve` without an `outcome` closed a record ungraded; `newly_resolved` counted grades another pass had written | the terminal field is required; `resolve_all` reports what was written (`skipped_already_terminal`, `refused_by_ledger`) |
+| 4 | a backdated forecast created a month before the chain tail | `filing_month()` |
+| 5 | writes to the frozen legacy file went unseen | size check on every `status()` / `ledger_health` |
+| 6 | a truncated chain or a shrunk stream still verified | `HEAD.json`; `streams_at_apply` prefix checks; fold >= legacy rows |
+| 7 | rollback decided by a flag set after the marker write | decided by the marker on disk; post-switch failures reported as switched |
+| 8 | NaN read as a frozen-field change and failed the batch | NaN-safe compare; one bad pair refused alone |
+| 9 | Windows `os.replace` PermissionError | bounded retry |
+| 10 | an unopenable lock file degraded silently | refusal |
+| 11 | smaller: plan ignored stray manifests; key order not in `ok`; history counted unreadable versions as continuity; git replay held the lock; bypassing readers (`ensure_ledger_migrated`, `forecast_populations`, two one-file rehearsals, `query_planner` printing zero on a refusal); temp junk | all fixed; the image-to-volume copy refuses a split source; the rehearsals refuse a split ledger; `query_planner` says UNKNOWN |
+| 12 | missing tests (cross-process lock, findings 1-8, a month-boundary flake) | 24 new tests; the clock pinned |
