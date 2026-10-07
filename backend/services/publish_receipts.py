@@ -80,9 +80,14 @@ OPP_MAX_ROWS_PER_LIST = 250
 
 
 def public_dir() -> Path:
-    """`<data>/public_receipts`, the SIBLING of the optimus ledger dir (so a test that points
-    the ledger dir at a tmp folder never reads the real published copies)."""
-    return Path(_config.OPTIMUS_LEDGER_DIR).parent / "public_receipts"
+    """`config.PUBLIC_RECEIPTS_DIR` -- FIXED to the image, deliberately independent of
+    `OPTIMUS_LEDGER_DIR` / `AEGIS_DATA_DIR` (see that constant's docstring: 2026-10-07,
+    all six legibility/opportunities endpoints 404'd in prod because this used to be
+    `OPTIMUS_LEDGER_DIR.parent`, which follows the Railway volume override away from the
+    git-tracked folder baked into the image). A test that points the ledger dir at a tmp
+    folder must ALSO monkeypatch `config.PUBLIC_RECEIPTS_DIR` to stay isolated from the
+    real published copies -- it no longer happens for free."""
+    return Path(_config.PUBLIC_RECEIPTS_DIR)
 
 
 def _now() -> datetime:
