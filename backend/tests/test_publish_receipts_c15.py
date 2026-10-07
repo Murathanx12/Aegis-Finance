@@ -56,6 +56,10 @@ def world(tmp_path, monkeypatch):
     live = tmp_path / "live" / "optimus"
     live.mkdir(parents=True)
     monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", live)
+    # C15 fix (2026-10-07): PUBLIC_RECEIPTS_DIR no longer follows OPTIMUS_LEDGER_DIR (that
+    # coupling is what shadowed the real published copies in prod); isolate it explicitly,
+    # preserving the old sibling layout this fixture's tests assert on.
+    monkeypatch.setattr(_config, "PUBLIC_RECEIPTS_DIR", live.parent / "public_receipts")
     L._CACHE.clear()
     OPP._CACHE.clear()
     PR._CACHE.clear()
@@ -129,6 +133,7 @@ def test_routers_serve_the_published_copy_where_no_live_receipt_exists(world, mo
     rail = tmp / "rail" / "optimus"                                   # a fresh checkout: no receipts
     rail.mkdir(parents=True)
     monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", rail)
+    monkeypatch.setattr(_config, "PUBLIC_RECEIPTS_DIR", tmp / "rail" / "public_receipts")
     L._CACHE.clear()
     OPP._CACHE.clear()
     c = _client()
@@ -162,9 +167,46 @@ def test_published_copy_ages_into_stale_from_its_own_stamp(world, monkeypatch):
     rail = tmp / "rail" / "optimus"
     rail.mkdir(parents=True)
     monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", rail)
+    monkeypatch.setattr(_config, "PUBLIC_RECEIPTS_DIR", tmp / "rail" / "public_receipts")
     later = NOW + timedelta(days=5)
     out = PR.refresh(PR.load_published("system_health"), "system_health", now=later)
     assert out["status"] == "STALE" and out["receipts"][0]["status"] == "STALE"
+
+
+def test_public_receipts_dir_does_not_follow_optimus_ledger_dir(monkeypatch, tmp_path):
+    """Regression for the 2026-10-07 prod incident: all six legibility/opportunities endpoints
+    404'd with /api/health/full green because `public_dir()` used to be
+    `OPTIMUS_LEDGER_DIR.parent`, which follows `AEGIS_DATA_DIR` (set on Railway to a persistent
+    volume, precisely so it does NOT shadow the image). PUBLIC_RECEIPTS_DIR must stay fixed to
+    the image regardless of where the ledger dir points."""
+    before = PR.public_dir()
+    monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", tmp_path / "optimus")
+    assert PR.public_dir() == before, (
+        "public_dir() moved when OPTIMUS_LEDGER_DIR changed; this is exactly the 2026-10-07 "
+        "prod bug (AEGIS_DATA_DIR shadows the git-tracked public_receipts folder)")
+
+
+def test_routers_serve_the_real_committed_receipts_when_live_dir_is_empty_but_present(monkeypatch, tmp_path):
+    """The literal production shape, against the REAL `backend/data/public_receipts/` committed
+    to git (not a tmp fixture standing in for it): a live receipts directory that EXISTS (a
+    checked-out volume) but holds none of these pages' receipts. Every router must fall back to
+    the committed copy and report it, never 404 while /api/health stays green."""
+    empty_live = tmp_path / "optimus"
+    empty_live.mkdir(parents=True)
+    monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", empty_live)      # PUBLIC_RECEIPTS_DIR untouched
+    L._CACHE.clear()
+    OPP._CACHE.clear()
+    PR._CACHE.clear()
+    c = _client()
+    for path in ("/api/arena/v1/latest", "/api/legibility/v1/forecast-lab",
+                 "/api/legibility/v1/theory-lab?board=sticky", "/api/legibility/v1/system-health",
+                 "/api/legibility/v1/brain"):
+        r = c.get(path)
+        assert r.status_code == 200, (path, r.status_code, r.text[:300])
+        assert r.json().get("served_from"), f"{path} did not report served_from=published"
+    r = c.get("/api/opportunities/latest")
+    assert r.status_code == 200
+    assert "public_receipts" in (r.json().get("served_from") or "")
 
 
 def test_publish_has_a_caller_in_the_daily_catalog_job():

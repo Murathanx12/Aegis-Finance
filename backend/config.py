@@ -5817,6 +5817,25 @@ LEGIBILITY_STALE_HOURS: dict = {
 #: sanitised payload into the TRACKED `backend/data/public_receipts/`. The whole folder
 #: is refused (nothing written) when the new set would exceed this many bytes.
 PUBLIC_RECEIPTS_MAX_BYTES = 5_000_000
+#: FIXED TO THE IMAGE, deliberately NOT derived from `DATA_DIR` / `OPTIMUS_LEDGER_DIR`.
+#:
+#: Found 2026-10-07 (prod deploy e041ec14): `/openapi.json` listed the six new routes,
+#: `/api/health/full` was 200, and every one of the six 404'd. `public_dir()` computed
+#: this as `OPTIMUS_LEDGER_DIR.parent / "public_receipts"`, i.e. it FOLLOWED
+#: `AEGIS_DATA_DIR`. Railway sets `AEGIS_DATA_DIR=/data` (the persistent volume) for the
+#: exact reason documented on `DATA_DIR` above -- so the volume does not shadow the
+#: image -- but that same override pointed this fallback at `/data/public_receipts`, an
+#: empty path on the volume, instead of the git-tracked `backend/data/public_receipts/`
+#: baked into the image at `BACKEND_DIR/data/public_receipts`. Both the live receipts
+#: (also under the fresh volume) and the "fallback" were therefore reading the same
+#: empty tree; the committed copy was never consulted. Same family as the "path that
+#: resolves differently when frozen" lesson (CLAUDE.md): correct from source (dev has no
+#: `AEGIS_DATA_DIR`, so this constant and `OPTIMUS_LEDGER_DIR.parent` were byte-identical
+#: and the bug was invisible), wrong once a deploy-time env var moves one of them.
+#:
+#: Override ONLY for test isolation, via `AEGIS_PUBLIC_RECEIPTS_DIR` or by monkeypatching
+#: this constant directly -- never let it follow `AEGIS_DATA_DIR` again.
+PUBLIC_RECEIPTS_DIR = Path(os.getenv("AEGIS_PUBLIC_RECEIPTS_DIR", str(BACKEND_DIR / "data" / "public_receipts")))
 #: C15 review M2: the owner's identity, scrubbed (case-insensitive) from EVERY published
 #: copy and refused by the leak scan if a form survives. The name and the public GitHub
 #: handle only; the e-mail local part and the home-folder name are derived at runtime
