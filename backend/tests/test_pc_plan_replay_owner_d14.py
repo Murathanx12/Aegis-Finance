@@ -57,15 +57,16 @@ def _funnel_held(tmp: Path) -> Path:
 
 
 class ReplayBroker:
-    def __init__(self, *, is_open: bool = True):
+    def __init__(self, *, is_open: bool = True, extra: list | None = None):
         self.is_open = is_open
+        self.extra = list(extra or [])
         self.submitted: list[PB.PlannedOrder] = []
 
     def install(self, mp: pytest.MonkeyPatch) -> "ReplayBroker":
         snap = {"equity": STATE["equity"], "cash": STATE["cash"],
                 "account_number": config.PC_PAPER_ACCOUNT_NUMBER,
                 "n_positions": len(STATE["positions"]),
-                "positions": [dict(p) for p in STATE["positions"]]}
+                "positions": [dict(p) for p in STATE["positions"]] + [dict(p) for p in self.extra]}
         mp.setattr(PB, "snapshot", lambda **kw: snap)
         mp.setattr(PB, "last_prices", lambda syms: {s: float(STATE["prices"].get(s, 50.0))
                                                     for s in syms})
@@ -138,7 +139,7 @@ def _rf_stub(mp: pytest.MonkeyPatch) -> None:
 
 def _final_weights(rec: dict, rb: ReplayBroker) -> dict:
     """Holdings after every submitted order fills at the replay price."""
-    qty = {p["symbol"]: float(p["qty"]) for p in STATE["positions"]}
+    qty = {p["symbol"]: float(p["qty"]) for p in STATE["positions"] + rb.extra}
     for p in rb.submitted:
         qty[p.symbol] = qty.get(p.symbol, 0.0) + (p.qty if p.side == "buy" else -p.qty)
     eq = float(STATE["equity"])
@@ -470,3 +471,61 @@ def test_bound_two_binds_on_windows_with_every_name_priced(tmp_path):
     assert h["worst_window_return_any"] == pytest.approx(0.98 ** 21 - 1, rel=1e-6)
     assert h["worst_window_n_priced_any"] == 2
     assert h["worst_window_return"] > -0.05, "the full-coverage windows saw no crash"
+
+
+# ─────────────────────────────── review fix 4: a refused sleeve HOLDS ────────
+
+def _held_sleeve() -> list:
+    """The sleeve as tonight would leave it: 20 names at 1.5% each."""
+    eq = float(STATE["equity"])
+    out = []
+    for s_ in RF_NAMES:
+        px = float(STATE["prices"][s_])
+        q = int(0.015 * eq // px)
+        out.append({"symbol": s_, "qty": float(q), "market_value": q * px, "current_price": px})
+    return out
+
+
+@pytest.mark.parametrize("why", ["refused", "flag_off"])
+def test_a_refused_or_disabled_sleeve_holds_its_names_never_exits(tmp_path, monkeypatch, why):
+    """Even with the ranker POSITIVE and EXPLOIT acting (so an EXIT would be
+    sent), a failed book read keeps every held sleeve name: no sell, a
+    REVISION_FLOW_HOLD line, and the core leaves room for the held sleeve."""
+    _rf_stub(monkeypatch)
+    _replay(tmp_path, monkeypatch, on=True)               # night 1: membership written
+    members = json.loads((tmp_path / "decisions" / "pc_plan" / S.RF_MEMBERS_FILE)
+                         .read_text(encoding="utf-8"))["members"]
+    assert sorted(members) == sorted(RF_NAMES)
+    from backend.services import expected_return as ER
+    from backend.services import pc_sleeves as SL
+
+    def _no_er(*a, **k):
+        raise RuntimeError("test: no E[r] view")
+    monkeypatch.setattr(ER, "build", _no_er)
+    monkeypatch.setattr(S, "_blend_grade", lambda *a, **k: {
+        "verdict": "MEASURED_POSITIVE", "may_trade": True, "why": "test"})
+
+    def _refuse(**kw):
+        raise SL.SleeveRefused("transient read error: test")
+    monkeypatch.setattr(SL, "load_revision_flow", _refuse)
+    _set_flags(monkeypatch, True)
+    if why == "flag_off":
+        monkeypatch.setattr(config, "PC_SLEEVE_REVISION_FLOW", False)
+    rb = ReplayBroker(extra=_held_sleeve()).install(monkeypatch)
+    (tmp_path / "out" / "intended_book.json").unlink()
+    _ranking(tmp_path / "out", net=+0.05)
+    S.u_plan(tmp_path / "out", "paper_profit", asof=ASOF, funnel_path=tmp_path / "funnel.json",
+             ledger_path=tmp_path / "ledger.jsonl",
+             contracts_dir=tmp_path / "decisions" / "pc_plan", bars_paths=[tmp_path / "b"])
+    rec = json.loads((tmp_path / "out" / "intended_book.json").read_text(encoding="utf-8"))
+    assert rec["exploit_acting"] is True, "the case where an EXIT would actually be sent"
+    assert not any(p.symbol in RF_NAMES for p in rb.submitted),         [(p.symbol, p.side) for p in rb.submitted if p.symbol in RF_NAMES]
+    hold = rec["revision_flow_hold"]
+    assert sorted(hold["names"]) == sorted(RF_NAMES)
+    assert hold["gross"] == pytest.approx(0.30, abs=0.01)
+    assert rec["revision_flow_hold_line"].startswith("REVISION_FLOW_HOLD: 20 held")
+    core = rec["benchmark_core"]
+    assert core["held_residual_gross"] >= hold["gross"] - 1e-9
+    fw = _final_weights(rec, rb)
+    assert all(fw[s_] > 0 for s_ in RF_NAMES)
+    assert sum(fw.values()) <= 1.0 + 1e-9

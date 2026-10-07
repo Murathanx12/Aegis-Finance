@@ -1095,6 +1095,31 @@ def _revision_flow_sleeve(*, probe_syms: list, ex_syms: list, exploit_acting: bo
                      + ("" if mode == "paper_profit" else f"; mode={mode}: not acting"))}
 
 
+#: The revision_flow sleeve's membership, written whenever the sleeve applies
+#: (review 2026-10-07 fix 4): a later cycle whose sleeve is REFUSED or OFF reads
+#: it to keep the held names as REVISION_FLOW_HOLD instead of routing them to EXIT.
+RF_MEMBERS_FILE = "revision_flow_members.json"
+
+
+def _rf_members(folder: Path) -> dict:
+    try:
+        return json.loads((Path(folder) / RF_MEMBERS_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _write_rf_members(folder: Path, *, book_id: str | None, members: list) -> None:
+    """Temp -> replace, so a crash never leaves a half-written membership file."""
+    try:
+        Path(folder).mkdir(parents=True, exist_ok=True)
+        tmp = Path(folder) / (RF_MEMBERS_FILE + ".tmp")
+        tmp.write_text(json.dumps({"book_id": book_id, "members": sorted(set(members)),
+                                   "written_utc": _now()}, indent=1), encoding="utf-8")
+        tmp.replace(Path(folder) / RF_MEMBERS_FILE)
+    except OSError as exc:
+        logger.warning("u_plan: revision_flow membership NOT written: %s", exc)
+
+
 def _held_residual(held: dict, prices: dict, equity: float, *, core_sym: str,
                    will_trade) -> dict:
     """Held names this cycle will NOT trade (a non-acting sleeve's holdings, an
@@ -1754,8 +1779,24 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     if rf_syms and not exploit_acting:
         # a planned-but-not-acting EXPLOIT target yields its symbol to the sleeve
         ex_syms = [s for s in ex_syms if s not in rf_w]
+    # Review 2026-10-07 fix 4: a held sleeve name the sleeve does not plan this
+    # cycle (book refused / voided / unreadable, flag OFF) and no other sleeve
+    # owns is HELD, never routed to EXIT: one failed file read must not sell (or
+    # orphan under an exit label) the whole sleeve. Exits come from an explicit rule.
+    _rf_prev = _rf_members(folder)
+    rf_hold = sorted(s_ for s_ in (_rf_prev.get("members") or [])
+                     if s_ in held and s_ not in rf_w and s_ not in probe_syms
+                     and not (s_ in ex_syms and exploit_acting))
+    if rf_hold:
+        ex_syms = [s_ for s_ in ex_syms if s_ not in rf_hold]
+    _mv = {str(p_.get("symbol")): float(p_.get("market_value") or 0.0)
+           for p_ in snap.get("positions") or []}
+    rf_hold_gross = (sum(max(0.0, _mv.get(s_, 0.0)) for s_ in rf_hold) / equity
+                     if rf_hold and equity > 0 else 0.0)
     room = (max(0.0, 1.0 - probe_gross - float(rf["gross_planned"])) if rf_syms
             else max(0.0, 1.0 - probe_gross))
+    if rf_hold_gross:
+        room = max(0.0, room - rf_hold_gross)
     ex_er = {x["symbol"]: e for x, e in ex_pick if x["symbol"] in ex_syms}
     if ex_syms and all(ex_er.get(s) is not None for s in ex_syms):
         tot = sum(ex_er[s] for s in ex_syms)
@@ -1814,6 +1855,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     # is `held`, and the plan below is byte-identical (test_benchmark_core.py).
     core_on, core_sym = _benchmark_core_flag(targets)
     plan_held = ({s_: q for s_, q in held.items() if s_ != core_sym} if core_on else held)
+    if rf_hold:
+        plan_held = {s_: q for s_, q in plan_held.items() if s_ not in rf_hold}
     syms = [t.symbol for t in targets] + list(held)
     if core_on and core_sym not in syms:
         syms.append(core_sym)
@@ -1828,6 +1871,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         _tsyms = {t.symbol for t in targets}
 
         def _will_trade(sym: str) -> bool:
+            if sym in rf_hold:
+                return False
             if sym in rf_w:
                 return rf_acting
             if sym in probe_syms:
@@ -1874,6 +1919,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             return "CORE"
         if sym in rf_w:
             return "REVISION_FLOW"
+        if sym in rf_hold:
+            return "REVISION_FLOW_HOLD"
         if sym in probe_syms:
             return "PROBE"
         if sym in ex_syms:
@@ -2094,6 +2141,21 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         record["revision_flow_line"] = rf["line"]
         record["sendable_by_state"]["REVISION_FLOW"] = sum(
             1 for p in to_send if _state(p.symbol) == "REVISION_FLOW")
+    if rf_hold:
+        hold_w = {s_: float(held[s_]) * float(prices.get(s_) or 0.0) / float(equity)
+                  for s_ in rf_hold if equity}
+        record["revision_flow_hold"] = {
+            "names": rf_hold, "weights": hold_w, "gross": sum(hold_w.values()),
+            "membership": _rf_prev,
+            "line": (f"REVISION_FLOW_HOLD: {len(rf_hold)} held sleeve name(s), "
+                     f"{sum(hold_w.values()):.2%} of equity, are HELD -- the sleeve did not "
+                     f"plan them this cycle ({rf.get('line') or 'sleeve OFF'}); no exit is "
+                     f"sent; exits come only from an explicit rule")}
+        record["revision_flow_hold_line"] = record["revision_flow_hold"]["line"]
+        logger.warning("u_plan RED: %s", record["revision_flow_hold_line"][:300])
+    if rf.get("applied"):
+        _write_rf_members(folder, book_id=(rf.get("book") or {}).get("book_id"),
+                          members=list(rf_w) + [s_ for s_ in rf_hold])
     if rf.get("enabled") or core.get("enabled"):
         record["worst_case_owner_d14"] = _owner_d14_worst_case(
             equity=equity, targets=targets, core=core, rf=rf, rf_acting=rf_acting,
