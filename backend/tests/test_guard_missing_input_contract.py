@@ -1709,6 +1709,23 @@ def _case_research_instruments():
                                                        fetch_semantic_scholar)
     return (lambda: fetch_semantic_scholar("a tug of war overnight intraday"),
             InstrumentKeyRequired, "semantic_scholar call with no declared API key")
+def _case_forecast_ledger():
+    """Forecast ledger split (2026-10-07): an apply with no source fingerprint refuses.
+
+    The missing input is THE PLAN'S FINGERPRINT (the legacy file's sha256 that
+    `--plan` printed). Applying without it would migrate whatever bytes happen to
+    be there, including rows a live writer appended after anyone looked."""
+    import tempfile
+    from pathlib import Path
+
+    from backend.services import forecast_ledger_migration as MIG
+    from backend.services.forecast_ledger import ForecastLedgerError
+    folder = Path(tempfile.mkdtemp())
+    legacy = folder / "predictions.jsonl"
+    legacy.write_text('{"prediction_id": "x", "made_at": "2020-01-02T00:00:00+00:00"}\n',
+                      encoding="utf-8")
+    return (lambda: MIG.apply(legacy, expect_sha256=None, history=False),
+            ForecastLedgerError, "a ledger split applied with no plan fingerprint")
 
 
 def _case_world_digest():
@@ -1905,6 +1922,7 @@ CASES = {
     "snowball_shadow": _case_snowball_shadow,
     "fleet_eod_audit": _case_fleet_eod_audit,
     "research_instruments": _case_research_instruments,
+    "forecast_ledger": _case_forecast_ledger,
 }
 
 

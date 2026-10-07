@@ -674,19 +674,22 @@ def calibration_date_counts(rep: dict) -> tuple[dict, Optional[str]]:
     writer's own binning (`forecast_reputation.calibration_curve`) on the ledger cut at the
     receipt's `written_utc`. Served only when every bin's n matches the receipt exactly;
     otherwise refused with the reason."""
+    from backend.services import forecast_ledger as FL                 # noqa: PLC0415
     from backend.services import forecast_reputation as FR             # noqa: PLC0415
     ledger = base_dir() / "predictions.jsonl"
     cut = str(rep.get("written_utc") or "")
-    if not ledger.exists() or not cut:
+    if not FL.exists(ledger) or not cut:
         return {}, "no ledger or no written_utc on the reputation receipt"
-    key = ("calib",) + _stat_key(ledger) + (cut,)
+    # legacy file or monthly streams; the key moves when any backing file does
+    key = ("calib",) + FL.fingerprint(ledger) + (cut,)
     hit = _CACHE.get("calib")
     if hit and hit[0] == key:
         return hit[1], hit[2]
     out: dict = {}
     why: Optional[str] = None
     try:
-        rows = [r for r in read_jsonl(ledger) if r.get("resolved_at") and str(r["resolved_at"]) <= cut]
+        rows = [r for r in FL.read_rows(ledger, strict=False)
+                if r.get("resolved_at") and str(r["resolved_at"]) <= cut]
         g = FR.graded_frame_from_rows(rows)
         for hk, bins in (rep.get("calibration") or {}).items():
             h = int(str(hk).lstrip("h"))

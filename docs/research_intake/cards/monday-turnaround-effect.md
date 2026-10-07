@@ -1,5 +1,10 @@
 # CARD: monday-turnaround-effect
 
+## Index fields
+- topic: Monday / weekend effect and "Turnaround Tuesday" (day-of-week seasonality)
+- mechanism_class: behavioural_bias, limits_to_arbitrage
+- dataset_status: DOCUMENTED_NOT_TRACKED
+
 ## Citation
 Frank Cross (1973), "The Behavior of Stock Prices on Fridays and Mondays," *Financial Analysts
 Journal*, 29(6): 67-69. Verified via independent corroborating search records (ScirP reference
@@ -150,3 +155,12 @@ overturning Smith & Robins on AEGIS's own 1990-2024 CRSP panel costs nothing new
 either close the question definitively for this programme or surface a genuine, currently-unknown
 re-emergence worth a second look) — the value of running it is almost entirely in closing the
 question cleanly, not in expecting a positive.
+
+## needs_evidence
+- Does AEGIS's 1990-2024 CRSP panel (or DIA/SPY) show a Monday-minus-other-weekdays return gap
+  after 2000, with a week-blocked t-statistic printed by year, net of a flat round-trip cost and
+  against a random-weekday control?
+- When and where was Smith & Robins's "No More Weekend Effect" published, and what does the
+  unverified ScienceDirect paper on the evolution of the weekend effect actually report?
+- What exactly are the entry and exit conditions of the owner's "Turnaround Tuesday" reel rule
+  (the 25-day SMA's role, what triggers the Tuesday entry), recovered verbatim from the source?

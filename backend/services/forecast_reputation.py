@@ -144,22 +144,22 @@ def graded_frame_from_rows(rows: Iterable[dict]) -> pd.DataFrame:
 
 
 def load_ledger(path: Path | str | None = None) -> list[dict]:
-    """Read-only. Unparseable lines are skipped and counted in the log."""
+    """Read-only. Unparseable lines are skipped and counted in the log.
+
+    Through `forecast_ledger.read_rows` (lenient): the legacy file, or the
+    monthly streams with resolutions folded in once the ledger is split. A
+    missing ledger still raises FileNotFoundError, as the direct open did."""
+    from backend.services import forecast_ledger as FL
     if path is None:
         from backend import config as _config
         path = Path(_config.OPTIMUS_LEDGER_DIR) / "predictions.jsonl"
-    rows, bad = [], 0
-    with Path(path).open(encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                rows.append(json.loads(line))
-            except ValueError:
-                bad += 1
-    if bad:
-        logger.warning("forecast_reputation: %d unparseable ledger lines skipped", bad)
+    if not FL.exists(Path(path)):
+        raise FileNotFoundError(f"no forecast ledger at {path}")
+    stats = FL.FoldStats()
+    rows = FL.read_rows(Path(path), strict=False, stats=stats)
+    if stats.bad_lines:
+        logger.warning("forecast_reputation: %d unparseable ledger lines skipped",
+                       len(stats.bad_lines))
     return rows
 
 

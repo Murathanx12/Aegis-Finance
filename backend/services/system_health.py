@@ -741,6 +741,23 @@ def p_live_market_loop(ctx: ProbeCtx) -> ProbeResult:
                        proof="pc_book/*/nav.jsonl tag open_of_loop")
 
 
+def _FL():
+    """The forecast ledger module (legacy file or monthly streams), lazily."""
+    from backend.services import forecast_ledger as FL                # noqa: PLC0415
+    return FL
+
+
+def _ledger_present(p: Path, ctx: "ProbeCtx") -> bool:
+    """Does the forecast ledger exist? A refused migration marker is NOT read
+    as "no ledger": the reason is kept on the context and the probes print it."""
+    FL = _FL()
+    try:
+        return FL.exists(p)
+    except FL.ForecastLedgerError as exc:
+        ctx.cache["ledger_refused"] = f"forecast ledger REFUSED: {exc}"[:300]
+        return False
+
+
 _RA = re.compile(r'"resolves_after":\s*"([^"]+)"')
 _RS = re.compile(r'"resolved_at":\s*(?:null|"([^"]*)")')
 _MA = re.compile(r'"made_at":\s*"([^"]+)"')
@@ -751,30 +768,31 @@ def _ledger_scan(ctx: ProbeCtx) -> Optional[dict]:
         return ctx.cache["ledger"]
     p = ctx.optimus_dir / "predictions.jsonl"
     out: Optional[dict] = None
-    if p.exists():
+    if _ledger_present(p, ctx):
         today = ctx.now.date().isoformat()
         rows = made_today = due_unresolved = 0
         newest_made = newest_resolved = None
         try:
-            with open(p, "r", encoding="utf-8", errors="replace") as f:
-                for line in f:
-                    if not line.strip():
-                        continue
-                    rows += 1
-                    m = _MA.search(line)
-                    if m:
-                        if newest_made is None or m.group(1) > newest_made:
-                            newest_made = m.group(1)
-                        if m.group(1)[:10] == today:
-                            made_today += 1
-                    r = _RS.search(line)
-                    if r and r.group(1):
-                        if newest_resolved is None or r.group(1) > newest_resolved:
-                            newest_resolved = r.group(1)
-                    else:
-                        a = _RA.search(line)
-                        if a and a.group(1)[:10] < today:
-                            due_unresolved += 1
+            # the legacy file's lines, or the monthly streams' rows with each
+            # record's grade folded in (forecast_ledger.logical_lines)
+            for line in _FL().logical_lines(p):
+                if not line.strip():
+                    continue
+                rows += 1
+                m = _MA.search(line)
+                if m:
+                    if newest_made is None or m.group(1) > newest_made:
+                        newest_made = m.group(1)
+                    if m.group(1)[:10] == today:
+                        made_today += 1
+                r = _RS.search(line)
+                if r and r.group(1):
+                    if newest_resolved is None or r.group(1) > newest_resolved:
+                        newest_resolved = r.group(1)
+                else:
+                    a = _RA.search(line)
+                    if a and a.group(1)[:10] < today:
+                        due_unresolved += 1
             out = {"rows": rows, "made_today": made_today, "due_unresolved": due_unresolved,
                    "newest_made": newest_made, "newest_resolved": newest_resolved}
         except OSError:
@@ -793,29 +811,28 @@ def _writer_scan(ctx: ProbeCtx, writers: dict, since: str) -> Optional[dict]:
         return ctx.cache[key]
     p = ctx.optimus_dir / "predictions.jsonl"
     out: Optional[dict] = None
-    if p.exists():
+    if _ledger_present(p, ctx):
         counts = {w: 0 for w in writers}
         newest = {w: None for w in writers}
         other = 0
         try:
-            with open(p, "r", encoding="utf-8", errors="replace") as f:
-                for line in f:
-                    m = _MA.search(line)
-                    if not m:
-                        continue
-                    s = _SP.search(line)
-                    spec = s.group(1) if s else ""
-                    w = next((k for k, d in writers.items()
-                              if spec.startswith(str(d.get("prefix") or "\0"))), None)
-                    if w is not None and (newest[w] is None or m.group(1) > newest[w]):
-                        newest[w] = m.group(1)
-                    # `since` is a UTC midnight, so the date prefix decides
-                    if m.group(1)[:10] < since[:10]:
-                        continue
-                    if w is None:
-                        other += 1
-                    else:
-                        counts[w] += 1
+            for line in _FL().logical_lines(p):   # legacy file or monthly streams
+                m = _MA.search(line)
+                if not m:
+                    continue
+                s = _SP.search(line)
+                spec = s.group(1) if s else ""
+                w = next((k for k, d in writers.items()
+                          if spec.startswith(str(d.get("prefix") or "\0"))), None)
+                if w is not None and (newest[w] is None or m.group(1) > newest[w]):
+                    newest[w] = m.group(1)
+                # `since` is a UTC midnight, so the date prefix decides
+                if m.group(1)[:10] < since[:10]:
+                    continue
+                if w is None:
+                    other += 1
+                else:
+                    counts[w] += 1
             out = {"counts": counts, "newest": newest, "unregistered": other}
         except OSError:
             out = None
@@ -844,7 +861,8 @@ def p_u_forecast(ctx: ProbeCtx) -> ProbeResult:
     since = datetime.combine(today - timedelta(days=1), dtime(0, 0), tzinfo=timezone.utc)
     W = _writer_scan(ctx, writers, _iso(since))
     if W is None:
-        return _unknown("no forecast ledger (predictions.jsonl) to count writers in")
+        return _unknown(ctx.cache.get("ledger_refused")
+                        or "no forecast ledger (predictions.jsonl) to count writers in")
     bad, parts, n_sched = [], [], 0
     for w, d in writers.items():
         n = W["counts"].get(w, 0)
@@ -883,7 +901,7 @@ def p_u_forecast(ctx: ProbeCtx) -> ProbeResult:
 def p_forecast_ledger(ctx: ProbeCtx) -> ProbeResult:
     L = _ledger_scan(ctx)
     if not L:
-        return _unknown("no forecast ledger")
+        return _unknown(ctx.cache.get("ledger_refused") or "no forecast ledger")
     prev = ctx.prev_state.get("ledger") or {}
     ctx.new_state["ledger"] = {"rows": L["rows"], "utc": _iso(ctx.now)}
     prev_at = _ts(prev.get("utc"))
@@ -1135,7 +1153,7 @@ def _step(receipt: dict, name: str) -> Optional[dict]:
 def p_forecast_grader(ctx: ProbeCtx) -> ProbeResult:
     L = _ledger_scan(ctx)
     if not L:
-        return _unknown("no forecast ledger")
+        return _unknown(ctx.cache.get("ledger_refused") or "no forecast ledger")
     newest = _ts(L["newest_resolved"])
     notes = [f"{L['due_unresolved']} due-but-unresolved row(s); newest resolved_at "
              f"{L['newest_resolved']}"]

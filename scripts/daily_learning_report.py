@@ -243,12 +243,13 @@ def _family(specialist: Any) -> str:
 
 def _read_ledger(base: Path) -> dict:
     """One pass over predictions.jsonl, minimal fields per row."""
+    from backend.services import forecast_ledger as FL
     path = base / "predictions.jsonl"
     rows: dict[str, dict] = {}
     raw: list[dict] = []
-    if not path.exists():
+    if not FL.exists(path):
         return {"path": path, "exists": False, "rows": rows, "raw": raw}
-    for r in _jsonl(path):
+    for r in FL.read_rows(path, strict=False):     # legacy file or monthly streams
         raw.append(r)
         pid = str(r.get("prediction_id") or "")
         if not pid:
@@ -1012,8 +1013,9 @@ def s_learned(day: str, base: Path) -> dict:
 
 def s_health(day: str, base: Path, db_path: Path | None) -> dict:
     sec = _section("health", "Accrual canary (supporting)")
+    from backend.services import forecast_ledger as FL
     ledger = base / "predictions.jsonl"
-    if not ledger.exists():
+    if not FL.exists(ledger):
         _nodata(sec, "no forecast ledger to check")
         return sec
     try:

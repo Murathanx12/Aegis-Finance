@@ -1,5 +1,10 @@
 # CARD: post-earnings-announcement-drift
 
+## Index fields
+- topic: Post-earnings-announcement drift (and consecutive-beat streaks)
+- mechanism_class: behavioural_bias, risk_premium
+- dataset_status: DOCUMENTED_NOT_TRACKED
+
 ## Citation
 Ray Ball, Philip Brown (1968), "An Empirical Evaluation of Accounting Income Numbers," *Journal
 of Accounting Research*, 6(2): 159-178. Verified via independent corroborating search records
@@ -124,3 +129,10 @@ pre-registered as a theory cell, run on the CRSP/IBES bridge, and returned `FAIL
 un-closed thread is the review's own flagged construction defect (non-band-neutral primary); a
 RESURRECTION naming that fix as the new instrument is the only legitimate way back into this
 mechanism, per the `pre-register-trial` skill's BLOCKED/RESURRECTION discipline.
+
+## needs_evidence
+- Would the consecutive-beat-streak cell survive a RESURRECTION whose new instrument fixes the
+  construction defect `docs/reviews/REVIEW_2026-10-06_C12_THEORY_CELLS.md` flags (a primary metric
+  that is not band-neutral, with a validate-window sign that flips between bands)?
+- Does McLean & Pontiff (2016) report PEAD's own post-publication decay by name, which the search
+  summary used this pass did not show?

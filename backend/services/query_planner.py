@@ -1085,33 +1085,38 @@ def _host(u: str) -> str:
         return ""
 
 
-def _pred_claim_rows(od: Path) -> list[tuple[str, str]]:
+def _pred_claim_rows(od: Path) -> list[tuple[str, str]] | None:
     """(made_at, claim_hash) for every forecast row that carries a claim hash,
     cached in `dowjones/query_planner_pred_cache.json` keyed by the ledger's
     size and mtime (review F7: the 50 MB ledger is read once per change, not
-    once per launch)."""
+    once per launch). None when the ledger REFUSED (an unreadable migration
+    marker): that is "unknown", and must not print as zero forecasts."""
+    from backend.services import forecast_ledger as FL
     pred = od / "predictions.jsonl"
     cache = od / "dowjones" / "query_planner_pred_cache.json"
     try:
-        st = pred.stat()
+        if not FL.exists(pred):
+            return []
+        # keyed on every backing file: the legacy file, or the monthly streams
+        stamp = ":".join(str(x) for x in FL.fingerprint(pred))
+    except FL.ForecastLedgerError:
+        return None
     except OSError:
         return []
-    stamp = f"{st.st_size}:{st.st_mtime_ns}"
     c = _read_json(cache)
     if isinstance(c, dict) and c.get("stamp") == stamp:
         return [tuple(x) for x in c.get("rows") or []]
     rows: list[tuple[str, str]] = []
-    with pred.open(encoding="utf-8", errors="replace") as fh:
-        for ln in fh:
-            if '"claim_hash"' not in ln:
-                continue
-            try:
-                p = json.loads(ln)
-            except ValueError:
-                continue
-            ch = (p.get("inputs_used") or {}).get("claim_hash")
-            if ch and p.get("made_at"):
-                rows.append((str(p["made_at"]), str(ch)))
+    for ln in FL.logical_lines(pred, contains='"claim_hash"'):
+        if '"claim_hash"' not in ln:
+            continue
+        try:
+            p = json.loads(ln)
+        except ValueError:
+            continue
+        ch = (p.get("inputs_used") or {}).get("claim_hash")
+        if ch and p.get("made_at"):
+            rows.append((str(p["made_at"]), str(ch)))
     try:
         cache.parent.mkdir(parents=True, exist_ok=True)
         tmp = cache.with_suffix(".json.tmp")
@@ -1214,7 +1219,9 @@ def yield_report(*, now: datetime | None = None, window_h: float = 24.0,
             other["claims"] += 1
             ot_host[h]["claims"] += 1
             ot_claims[str(c.get("claim_hash"))] = h
-    for made, ch in _pred_claim_rows(od):
+    claim_rows = _pred_claim_rows(od)
+    ledger_refused = claim_rows is None
+    for made, ch in claim_rows or []:
         t = _ts(made)
         if t is None or t < since:
             continue
@@ -1251,7 +1258,12 @@ def yield_report(*, now: datetime | None = None, window_h: float = 24.0,
             "non_planner": {**other, "by_host_top": dict(sorted(
                 ot_host.items(), key=lambda kv: -kv[1]["pages_read"])[:12])},
             "claims_per_page_same_hosts": rate,
-            "line": yield_line(zk, q_tot, pl, other, window_h, rate)}
+            # True when the forecast ledger refused to answer: every
+            # forecast_rows count above is then UNKNOWN, not zero.
+            "forecast_rows_unknown": ledger_refused,
+            "line": yield_line(zk, q_tot, pl, other, window_h, rate)
+                    + (" [forecast_rows UNKNOWN: the forecast ledger refused]" if ledger_refused
+                       else "")}
 
 
 def yield_line(zk: str, q: dict, pl: dict, other: dict, window_h: float,

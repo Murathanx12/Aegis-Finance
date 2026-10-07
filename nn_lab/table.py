@@ -558,17 +558,17 @@ def news(rows: pd.DataFrame, panel: pd.DataFrame | None = None) -> pd.DataFrame:
 
 def ledger(rows: pd.DataFrame, path: Path | None = None) -> pd.DataFrame:
     """The forecast ledger's probabilities, only for forecasts MADE before t."""
+    from backend.services import forecast_ledger as FL   # legacy file or monthly streams
     path = path or C.FORECAST_LEDGER
     recs = []
-    if Path(path).exists():
-        with open(path, encoding="utf-8") as fh:
-            for line in fh:
-                try:
-                    r = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if r.get("ticker") and r.get("made_at") and r.get("probability") is not None:
-                    recs.append((r["ticker"], r["made_at"], float(r["probability"])))
+    if FL.exists(Path(path)):
+        for line in FL.logical_lines(Path(path)):
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if r.get("ticker") and r.get("made_at") and r.get("probability") is not None:
+                recs.append((r["ticker"], r["made_at"], float(r["probability"])))
     if not recs:
         return pd.DataFrame({"ledger_prob_10": np.full(len(rows), np.nan, "float32"),
                              "ledger_n_10": np.full(len(rows), np.nan, "float32"),

@@ -1,0 +1,209 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1000" viewBox="0 0 1200 1000" role="img" aria-labelledby="title desc">
+<title id="title">Aegis: one loop, every belief graded</title>
+<desc id="desc">The Aegis loop, nine stages on a ring: 1 world sensors (news_pull · web_reader); 2 evidence (world_digest · data_catalog); 3 world state / theory (world_state · hyp_theory_cells); 4 forecasts (belief_state · forecast_ledger); 5 decision (opportunity_funnel · decision_contract); 6 paper action (sim_session · task_keeper); 7 outcome (daily_pass · forecast_grader); 8 attribution (book_dna · regret_ledger); 9 learning (policy_state · hyp_lab). A wave travels the ring and dwells at each stage while it lights; learning feeds the next cycle's theory and decision through two inner orbits.</desc>
+<style>.bg{fill:#000000}.kicker{font:400 12px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:3.5px;fill:rgba(255,255,255,.55)}.lede{font:400 17px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:rgba(255,255,255,.72)}.brand{font:200 50px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;letter-spacing:16px;fill:#fff}.sub{font:500 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:2px;fill:rgba(255,255,255,.5)}.chip{font:500 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:2px;fill:#fff}.live{fill:#4a8dff;animation:live 1.8s ease-out infinite}@keyframes live{0%{opacity:1}100%{opacity:.15}}.sec{font:700 12px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:3px;fill:#fff}.rule{stroke:rgba(255,255,255,.14)}.ring0{fill:none;stroke:rgba(255,255,255,.06)}.dot{fill:rgba(255,255,255,.30);transform-box:fill-box;transform-origin:center;animation:swell 18s linear infinite}@keyframes swell{0%{transform:scale(1);fill:rgba(255,255,255,.30)}1.2%{transform:scale(2.7);fill:#6fb0ff}5.5%{transform:scale(1.25);fill:rgba(74,141,255,.55)}11%{transform:scale(1);fill:rgba(255,255,255,.30)}100%{transform:scale(1);fill:rgba(255,255,255,.30)}}.node{fill:#000;stroke:rgba(255,255,255,.75);stroke-width:1.5;transform-box:fill-box;transform-origin:center;animation:grow 18s infinite}.node.o{animation-name:growo}@keyframes grow{0%{transform:scale(1);fill:#000;stroke:rgba(255,255,255,.75)}2.4%{transform:scale(1.5);fill:#4a8dff;stroke:#6fb0ff}6.06%{transform:scale(1.42);fill:#4a8dff;stroke:#6fb0ff}9.72%{transform:scale(1);fill:#000;stroke:rgba(255,255,255,.75)}100%{transform:scale(1);fill:#000;stroke:rgba(255,255,255,.75)}}@keyframes growo{0%{transform:scale(1);fill:#000;stroke:rgba(255,255,255,.75)}2.4%{transform:scale(1.5);fill:#ff8a1f;stroke:#ffb36b}6.06%{transform:scale(1.42);fill:#ff8a1f;stroke:#ffb36b}9.72%{transform:scale(1);fill:#000;stroke:rgba(255,255,255,.75)}100%{transform:scale(1);fill:#000;stroke:rgba(255,255,255,.75)}}.halo{fill:none;stroke:#4a8dff;stroke-width:1.2;opacity:0;transform-box:fill-box;transform-origin:center;animation:halo 18s ease-out infinite}.halo.o{stroke:#ff8a1f}@keyframes halo{0%{opacity:.9;transform:scale(1)}6%{opacity:0;transform:scale(2.6)}100%{opacity:0;transform:scale(2.6)}}.nn{font:600 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#fff}.stt{font:600 14px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;letter-spacing:1.6px;fill:rgba(255,255,255,.88);animation:lit 18s infinite}.stt.o{animation-name:lito}@keyframes lit{0%{fill:rgba(255,255,255,.88)}2.4%{fill:#6fb0ff}7.67%{fill:#6fb0ff}10.67%{fill:rgba(255,255,255,.88)}100%{fill:rgba(255,255,255,.88)}}@keyframes lito{0%{fill:rgba(255,255,255,.88)}2.4%{fill:#ffb36b}7.67%{fill:#ffb36b}10.67%{fill:rgba(255,255,255,.88)}100%{fill:rgba(255,255,255,.88)}}.sd{font:400 13px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:rgba(255,255,255,.62)}.mod{font:400 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#4a8dff}.bar{fill:#4a8dff;transform-box:fill-box;transform-origin:left center;transform:scaleX(0);animation:bar 18s infinite}.bar.end{transform-origin:right center}.bar.mid{transform-origin:center}.bar.o{fill:#ff8a1f}@keyframes bar{0%{transform:scaleX(0)}3%{transform:scaleX(1)}7.67%{transform:scaleX(1)}10.67%{transform:scaleX(0)}100%{transform:scaleX(0)}}.orbit{fill:none;stroke:#ff8a1f;stroke-width:1.3;stroke-dasharray:2 6;opacity:.38}.spoke{fill:none;stroke:#ff8a1f;stroke-width:1.3;opacity:.38}.olab{font:500 10.5px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1.5px;fill:#ff8a1f;opacity:.75}.readout{font:600 12px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:2.5px;opacity:0;animation:ro 18s infinite}@keyframes ro{0%{opacity:0}1.5%{opacity:1}10.11%{opacity:1}11.11%{opacity:0}100%{opacity:0}}.foot{font:400 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1.5px;fill:rgba(255,255,255,.4)}@media (prefers-reduced-motion: reduce){.readout.r1{opacity:1}}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style>
+<defs><radialGradient id="core" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#0d1a33" stop-opacity=".95"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient><marker id="ao" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,1 L9,5 L0,9 z" fill="#ff8a1f" opacity=".8"/></marker></defs>
+<rect width="1200" height="1000" class="bg"/>
+<text x="40" y="62" class="kicker">AUDITABLE AI INVESTMENT INTELLIGENCE</text>
+<text x="40" y="100" class="lede">Writes down what it believes before the outcome exists, grades every belief,</text>
+<text x="40" y="124" class="lede">and lets only graded beliefs change how paper capital is sized.</text>
+<rect x="1046" y="48" width="114" height="26" rx="13" fill="none" stroke="rgba(255,255,255,.3)"/>
+<text x="1059" y="65" class="chip">OPEN SOURCE</text>
+<rect x="930" y="48" width="106" height="26" rx="13" fill="none" stroke="rgba(255,255,255,.3)"/>
+<text x="943" y="65" class="chip">PAPER ONLY</text>
+<rect x="784" y="48" width="136" height="26" rx="13" fill="none" stroke="rgba(255,255,255,.3)"/>
+<circle cx="799" cy="61" r="4" class="live"/>
+<text x="811" y="65" class="chip">LOOP RUNNING</text>
+<text x="40" y="180" class="sec">HOW IT WORKS</text>
+<line x1="170" y1="176" x2="1160" y2="176" class="rule"/>
+<circle cx="600" cy="560" r="214" fill="url(#core)"/>
+<circle cx="600" cy="560" r="262" class="ring0"/>
+<path id="orb3" d="M600.0,374.0 A186,186 0 0 1 761.1,653.0" class="orbit"/>
+<path d="M600.0,344.0 L600.0,374.0" class="spoke"/>
+<path d="M761.1,653.0 L786.2,667.5" class="spoke" marker-end="url(#ao)"/>
+<path id="orb5" d="M600.0,404.0 A156,156 0 1 1 546.6,706.6" class="orbit"/>
+<path d="M600.0,344.0 L600.0,404.0" class="spoke"/>
+<path d="M546.6,706.6 L526.5,762.0" class="spoke" marker-end="url(#ao)"/>
+<text class="olab"><textPath href="#orb3" startOffset="9%">NEXT HYPOTHESIS ROUND</textPath></text>
+<text class="olab" dy="-6"><textPath href="#orb5" startOffset="12%">WEIGHTS + PREFERENCES → NEXT CYCLE</textPath></text>
+<circle r="3.6" fill="#ff8a1f" opacity="0"><animateMotion dur="18s" begin="16.8s" repeatCount="indefinite" calcMode="linear" keyPoints="0;1;1" keyTimes="0;0.1222;1" path="M600.0,344.0 L600.0,374.0 A186,186 0 0 1 761.1,653.0 L786.2,667.5"/><animate attributeName="opacity" dur="18s" begin="16.8s" repeatCount="indefinite" values="1;1;0;0" keyTimes="0;0.1124;0.1222;1"/></circle>
+<circle r="3.6" fill="#ff8a1f" opacity="0"><animateMotion dur="18s" begin="16.8s" repeatCount="indefinite" calcMode="linear" keyPoints="0;1;1" keyTimes="0;0.1667;1" path="M600.0,344.0 L600.0,404.0 A156,156 0 1 1 546.6,706.6 L526.5,762.0"/><animate attributeName="opacity" dur="18s" begin="16.8s" repeatCount="indefinite" values="1;1;0;0" keyTimes="0;0.1533;0.1667;1"/></circle>
+<circle cx="624.3" cy="329.3" r="1.7" class="dot" style="animation-delay:0.268s"/>
+<circle cx="636.3" cy="330.9" r="1.7" class="dot" style="animation-delay:0.307s"/>
+<circle cx="648.2" cy="333.1" r="1.7" class="dot" style="animation-delay:0.337s"/>
+<circle cx="660.0" cy="335.9" r="1.7" class="dot" style="animation-delay:0.363s"/>
+<circle cx="671.7" cy="339.4" r="1.7" class="dot" style="animation-delay:0.386s"/>
+<circle cx="683.1" cy="343.4" r="1.7" class="dot" style="animation-delay:0.407s"/>
+<circle cx="694.4" cy="348.1" r="1.7" class="dot" style="animation-delay:0.429s"/>
+<circle cx="705.3" cy="353.3" r="1.7" class="dot" style="animation-delay:0.454s"/>
+<circle cx="716.0" cy="359.1" r="1.7" class="dot" style="animation-delay:0.483s"/>
+<circle cx="726.4" cy="365.4" r="1.7" class="dot" style="animation-delay:0.518s"/>
+<circle cx="764.0" cy="396.0" r="1.7" class="dot" style="animation-delay:2.252s"/>
+<circle cx="772.4" cy="404.8" r="1.7" class="dot" style="animation-delay:2.295s"/>
+<circle cx="780.3" cy="414.0" r="1.7" class="dot" style="animation-delay:2.328s"/>
+<circle cx="787.7" cy="423.6" r="1.7" class="dot" style="animation-delay:2.355s"/>
+<circle cx="794.6" cy="433.6" r="1.7" class="dot" style="animation-delay:2.379s"/>
+<circle cx="800.9" cy="444.0" r="1.7" class="dot" style="animation-delay:2.4s"/>
+<circle cx="806.7" cy="454.7" r="1.7" class="dot" style="animation-delay:2.421s"/>
+<circle cx="811.9" cy="465.6" r="1.7" class="dot" style="animation-delay:2.445s"/>
+<circle cx="816.6" cy="476.9" r="1.7" class="dot" style="animation-delay:2.472s"/>
+<circle cx="820.6" cy="488.3" r="1.7" class="dot" style="animation-delay:2.505s"/>
+<circle cx="824.1" cy="500.0" r="1.7" class="dot" style="animation-delay:2.548s"/>
+<circle cx="831.7" cy="547.9" r="1.7" class="dot" style="animation-delay:4.282s"/>
+<circle cx="832.0" cy="560.0" r="1.7" class="dot" style="animation-delay:4.317s"/>
+<circle cx="831.7" cy="572.1" r="1.7" class="dot" style="animation-delay:4.346s"/>
+<circle cx="830.7" cy="584.3" r="1.7" class="dot" style="animation-delay:4.371s"/>
+<circle cx="829.1" cy="596.3" r="1.7" class="dot" style="animation-delay:4.393s"/>
+<circle cx="826.9" cy="608.2" r="1.7" class="dot" style="animation-delay:4.414s"/>
+<circle cx="824.1" cy="620.0" r="1.7" class="dot" style="animation-delay:4.437s"/>
+<circle cx="820.6" cy="631.7" r="1.7" class="dot" style="animation-delay:4.463s"/>
+<circle cx="816.6" cy="643.1" r="1.7" class="dot" style="animation-delay:4.493s"/>
+<circle cx="811.9" cy="654.4" r="1.7" class="dot" style="animation-delay:4.532s"/>
+<circle cx="787.7" cy="696.4" r="1.7" class="dot" style="animation-delay:6.268s"/>
+<circle cx="780.3" cy="706.0" r="1.7" class="dot" style="animation-delay:6.307s"/>
+<circle cx="772.4" cy="715.2" r="1.7" class="dot" style="animation-delay:6.337s"/>
+<circle cx="764.0" cy="724.0" r="1.7" class="dot" style="animation-delay:6.363s"/>
+<circle cx="755.2" cy="732.4" r="1.7" class="dot" style="animation-delay:6.386s"/>
+<circle cx="746.0" cy="740.3" r="1.7" class="dot" style="animation-delay:6.407s"/>
+<circle cx="736.4" cy="747.7" r="1.7" class="dot" style="animation-delay:6.429s"/>
+<circle cx="726.4" cy="754.6" r="1.7" class="dot" style="animation-delay:6.454s"/>
+<circle cx="716.0" cy="760.9" r="1.7" class="dot" style="animation-delay:6.483s"/>
+<circle cx="705.3" cy="766.7" r="1.7" class="dot" style="animation-delay:6.518s"/>
+<circle cx="660.0" cy="784.1" r="1.7" class="dot" style="animation-delay:8.252s"/>
+<circle cx="648.2" cy="786.9" r="1.7" class="dot" style="animation-delay:8.295s"/>
+<circle cx="636.3" cy="789.1" r="1.7" class="dot" style="animation-delay:8.328s"/>
+<circle cx="624.3" cy="790.7" r="1.7" class="dot" style="animation-delay:8.355s"/>
+<circle cx="612.1" cy="791.7" r="1.7" class="dot" style="animation-delay:8.379s"/>
+<circle cx="600.0" cy="792.0" r="1.7" class="dot" style="animation-delay:8.4s"/>
+<circle cx="587.9" cy="791.7" r="1.7" class="dot" style="animation-delay:8.421s"/>
+<circle cx="575.7" cy="790.7" r="1.7" class="dot" style="animation-delay:8.445s"/>
+<circle cx="563.7" cy="789.1" r="1.7" class="dot" style="animation-delay:8.472s"/>
+<circle cx="551.8" cy="786.9" r="1.7" class="dot" style="animation-delay:8.505s"/>
+<circle cx="540.0" cy="784.1" r="1.7" class="dot" style="animation-delay:8.548s"/>
+<circle cx="494.7" cy="766.7" r="1.7" class="dot" style="animation-delay:10.282s"/>
+<circle cx="484.0" cy="760.9" r="1.7" class="dot" style="animation-delay:10.317s"/>
+<circle cx="473.6" cy="754.6" r="1.7" class="dot" style="animation-delay:10.346s"/>
+<circle cx="463.6" cy="747.7" r="1.7" class="dot" style="animation-delay:10.371s"/>
+<circle cx="454.0" cy="740.3" r="1.7" class="dot" style="animation-delay:10.393s"/>
+<circle cx="444.8" cy="732.4" r="1.7" class="dot" style="animation-delay:10.414s"/>
+<circle cx="436.0" cy="724.0" r="1.7" class="dot" style="animation-delay:10.437s"/>
+<circle cx="427.6" cy="715.2" r="1.7" class="dot" style="animation-delay:10.463s"/>
+<circle cx="419.7" cy="706.0" r="1.7" class="dot" style="animation-delay:10.493s"/>
+<circle cx="412.3" cy="696.4" r="1.7" class="dot" style="animation-delay:10.532s"/>
+<circle cx="388.1" cy="654.4" r="1.7" class="dot" style="animation-delay:12.268s"/>
+<circle cx="383.4" cy="643.1" r="1.7" class="dot" style="animation-delay:12.307s"/>
+<circle cx="379.4" cy="631.7" r="1.7" class="dot" style="animation-delay:12.337s"/>
+<circle cx="375.9" cy="620.0" r="1.7" class="dot" style="animation-delay:12.363s"/>
+<circle cx="373.1" cy="608.2" r="1.7" class="dot" style="animation-delay:12.386s"/>
+<circle cx="370.9" cy="596.3" r="1.7" class="dot" style="animation-delay:12.407s"/>
+<circle cx="369.3" cy="584.3" r="1.7" class="dot" style="animation-delay:12.429s"/>
+<circle cx="368.3" cy="572.1" r="1.7" class="dot" style="animation-delay:12.454s"/>
+<circle cx="368.0" cy="560.0" r="1.7" class="dot" style="animation-delay:12.483s"/>
+<circle cx="368.3" cy="547.9" r="1.7" class="dot" style="animation-delay:12.518s"/>
+<circle cx="375.9" cy="500.0" r="1.7" class="dot" style="animation-delay:14.252s"/>
+<circle cx="379.4" cy="488.3" r="1.7" class="dot" style="animation-delay:14.295s"/>
+<circle cx="383.4" cy="476.9" r="1.7" class="dot" style="animation-delay:14.328s"/>
+<circle cx="388.1" cy="465.6" r="1.7" class="dot" style="animation-delay:14.355s"/>
+<circle cx="393.3" cy="454.7" r="1.7" class="dot" style="animation-delay:14.379s"/>
+<circle cx="399.1" cy="444.0" r="1.7" class="dot" style="animation-delay:14.4s"/>
+<circle cx="405.4" cy="433.6" r="1.7" class="dot" style="animation-delay:14.421s"/>
+<circle cx="412.3" cy="423.6" r="1.7" class="dot" style="animation-delay:14.445s"/>
+<circle cx="419.7" cy="414.0" r="1.7" class="dot" style="animation-delay:14.472s"/>
+<circle cx="427.6" cy="404.8" r="1.7" class="dot" style="animation-delay:14.505s"/>
+<circle cx="436.0" cy="396.0" r="1.7" class="dot" style="animation-delay:14.548s"/>
+<circle cx="473.6" cy="365.4" r="1.7" class="dot" style="animation-delay:16.282s"/>
+<circle cx="484.0" cy="359.1" r="1.7" class="dot" style="animation-delay:16.317s"/>
+<circle cx="494.7" cy="353.3" r="1.7" class="dot" style="animation-delay:16.346s"/>
+<circle cx="505.6" cy="348.1" r="1.7" class="dot" style="animation-delay:16.371s"/>
+<circle cx="516.9" cy="343.4" r="1.7" class="dot" style="animation-delay:16.393s"/>
+<circle cx="528.3" cy="339.4" r="1.7" class="dot" style="animation-delay:16.414s"/>
+<circle cx="540.0" cy="335.9" r="1.7" class="dot" style="animation-delay:16.437s"/>
+<circle cx="551.8" cy="333.1" r="1.7" class="dot" style="animation-delay:16.463s"/>
+<circle cx="563.7" cy="330.9" r="1.7" class="dot" style="animation-delay:16.493s"/>
+<circle cx="575.7" cy="329.3" r="1.7" class="dot" style="animation-delay:16.532s"/>
+<text x="608" y="554" class="brand" text-anchor="middle">AEGIS</text>
+<text x="600" y="582" class="sub" text-anchor="middle">ONE LOOP · EVERY BELIEF GRADED</text>
+<text x="600" y="618" class="readout r1" text-anchor="middle" fill="#6fb0ff" style="animation-delay:0.8s">▸ 01  WORLD SENSORS</text>
+<text x="600" y="618" class="readout" text-anchor="middle" fill="#6fb0ff" style="animation-delay:2.8s">▸ 02  EVIDENCE</text>
+<text x="600" y="618" class="readout" text-anchor="middle" fill="#6fb0ff" style="animation-delay:4.8s">▸ 03  WORLD STATE / THEORY</text>
+<text x="600" y="618" class="readout" text-anchor="middle" fill="#6fb0ff" style="animation-delay:6.8s">▸ 04  FORECASTS</text>
+<text x="600" y="618" class="readout" text-anchor="middle" fill="#6fb0ff" style="animation-delay:8.8s">▸ 05  DECISION</text>
+<text x="600" y="618" class="readout" text-anchor="middle" fill="#6fb0ff" style="animation-delay:10.8s">▸ 06  PAPER ACTION</text>
+<text x="600" y="618" class="readout" text-anchor="middle" fill="#6fb0ff" style="animation-delay:12.8s">▸ 07  OUTCOME</text>
+<text x="600" y="618" class="readout" text-anchor="middle" fill="#6fb0ff" style="animation-delay:14.8s">▸ 08  ATTRIBUTION</text>
+<text x="600" y="618" class="readout" text-anchor="middle" fill="#ff8a1f" style="animation-delay:16.8s">▸ 09  LEARNING</text>
+<circle cx="749.1" cy="382.3" r="13" class="halo" style="animation-delay:0.8s"/>
+<circle cx="749.1" cy="382.3" r="13" class="node" style="animation-delay:0.8s"/>
+<text x="749.1" y="386.3" class="nn" text-anchor="middle">01</text>
+<text x="781.1" y="356.3" class="stt" text-anchor="start" style="animation-delay:0.8s">WORLD SENSORS</text>
+<rect x="781.1" y="362.3" width="125" height="1.6" class="bar" style="animation-delay:0.8s"/>
+<text x="781.1" y="381.3" class="sd" text-anchor="start">Whole-market news, analyst revisions,</text>
+<text x="781.1" y="398.3" class="sd" text-anchor="start">public flows: spending, lobbying, crypto</text>
+<text x="781.1" y="417.3" class="mod" text-anchor="start">news_pull · web_reader</text>
+<circle cx="828.5" cy="519.7" r="13" class="halo" style="animation-delay:2.8s"/>
+<circle cx="828.5" cy="519.7" r="13" class="node" style="animation-delay:2.8s"/>
+<text x="828.5" y="523.7" class="nn" text-anchor="middle">02</text>
+<text x="860.5" y="493.7" class="stt" text-anchor="start" style="animation-delay:2.8s">EVIDENCE</text>
+<rect x="860.5" y="499.7" width="77" height="1.6" class="bar" style="animation-delay:2.8s"/>
+<text x="860.5" y="518.7" class="sd" text-anchor="start">An LLM reads what was stored and</text>
+<text x="860.5" y="535.7" class="sd" text-anchor="start">proposes; deterministic code weighs it</text>
+<text x="860.5" y="554.7" class="mod" text-anchor="start">world_digest · data_catalog</text>
+<circle cx="800.9" cy="676.0" r="13" class="halo" style="animation-delay:4.8s"/>
+<circle cx="800.9" cy="676.0" r="13" class="node" style="animation-delay:4.8s"/>
+<text x="800.9" y="680.0" class="nn" text-anchor="middle">03</text>
+<text x="832.9" y="650.0" class="stt" text-anchor="start" style="animation-delay:4.8s">WORLD STATE / THEORY</text>
+<rect x="832.9" y="656.0" width="192" height="1.6" class="bar" style="animation-delay:4.8s"/>
+<text x="832.9" y="675.0" class="sd" text-anchor="start">Beliefs, scenarios, regimes; every</text>
+<text x="832.9" y="692.0" class="sd" text-anchor="start">theory: mechanism, precursor, falsifier</text>
+<text x="832.9" y="711.0" class="mod" text-anchor="start">world_state · hyp_theory_cells</text>
+<circle cx="679.3" cy="778.0" r="13" class="halo" style="animation-delay:6.8s"/>
+<circle cx="679.3" cy="778.0" r="13" class="node" style="animation-delay:6.8s"/>
+<text x="679.3" y="782.0" class="nn" text-anchor="middle">04</text>
+<text x="703.3" y="822.0" class="stt" text-anchor="start" style="animation-delay:6.8s">FORECASTS</text>
+<rect x="703.3" y="828.0" width="86" height="1.6" class="bar" style="animation-delay:6.8s"/>
+<text x="703.3" y="847.0" class="sd" text-anchor="start">Frozen before the outcome exists,</text>
+<text x="703.3" y="864.0" class="sd" text-anchor="start">graded at 1 / 5 / 21 / 63 sessions</text>
+<text x="703.3" y="883.0" class="mod" text-anchor="start">belief_state · forecast_ledger</text>
+<circle cx="520.7" cy="778.0" r="13" class="halo" style="animation-delay:8.8s"/>
+<circle cx="520.7" cy="778.0" r="13" class="node" style="animation-delay:8.8s"/>
+<text x="520.7" y="782.0" class="nn" text-anchor="middle">05</text>
+<text x="496.7" y="822.0" class="stt" text-anchor="end" style="animation-delay:8.8s">DECISION</text>
+<rect x="419.9" y="828.0" width="77" height="1.6" class="bar end" style="animation-delay:8.8s"/>
+<text x="496.7" y="847.0" class="sd" text-anchor="end">Direction and magnitude kept apart;</text>
+<text x="496.7" y="864.0" class="sd" text-anchor="end">risk priced on what it would buy</text>
+<text x="496.7" y="883.0" class="mod" text-anchor="end">opportunity_funnel · decision_contract</text>
+<circle cx="399.1" cy="676.0" r="13" class="halo" style="animation-delay:10.8s"/>
+<circle cx="399.1" cy="676.0" r="13" class="node" style="animation-delay:10.8s"/>
+<text x="399.1" y="680.0" class="nn" text-anchor="middle">06</text>
+<text x="367.1" y="650.0" class="stt" text-anchor="end" style="animation-delay:10.8s">PAPER ACTION</text>
+<rect x="251.9" y="656.0" width="115" height="1.6" class="bar end" style="animation-delay:10.8s"/>
+<text x="367.1" y="675.0" class="sd" text-anchor="end">Paper only, and a HOLD is a decision.</text>
+<text x="367.1" y="692.0" class="sd" text-anchor="end">No LLM has authority over real capital</text>
+<text x="367.1" y="711.0" class="mod" text-anchor="end">sim_session · task_keeper</text>
+<circle cx="371.5" cy="519.7" r="13" class="halo" style="animation-delay:12.8s"/>
+<circle cx="371.5" cy="519.7" r="13" class="node" style="animation-delay:12.8s"/>
+<text x="371.5" y="523.7" class="nn" text-anchor="middle">07</text>
+<text x="339.5" y="493.7" class="stt" text-anchor="end" style="animation-delay:12.8s">OUTCOME</text>
+<rect x="272.3" y="499.7" width="67" height="1.6" class="bar end" style="animation-delay:12.8s"/>
+<text x="339.5" y="518.7" class="sd" text-anchor="end">A daily pass grades what came due</text>
+<text x="339.5" y="535.7" class="sd" text-anchor="end">and reports refusals, never hides them</text>
+<text x="339.5" y="554.7" class="mod" text-anchor="end">daily_pass · forecast_grader</text>
+<circle cx="450.9" cy="382.3" r="13" class="halo" style="animation-delay:14.8s"/>
+<circle cx="450.9" cy="382.3" r="13" class="node" style="animation-delay:14.8s"/>
+<text x="450.9" y="386.3" class="nn" text-anchor="middle">08</text>
+<text x="418.9" y="356.3" class="stt" text-anchor="end" style="animation-delay:14.8s">ATTRIBUTION</text>
+<rect x="313.3" y="362.3" width="106" height="1.6" class="bar end" style="animation-delay:14.8s"/>
+<text x="418.9" y="381.3" class="sd" text-anchor="end">Which input did it, and when did we</text>
+<text x="418.9" y="398.3" class="sd" text-anchor="end">know? Regret as signed differences</text>
+<text x="418.9" y="417.3" class="mod" text-anchor="end">book_dna · regret_ledger</text>
+<circle cx="600.0" cy="328.0" r="13" class="halo o" style="animation-delay:16.8s"/>
+<circle cx="600.0" cy="328.0" r="13" class="node o" style="animation-delay:16.8s"/>
+<text x="600.0" y="332.0" class="nn" text-anchor="middle">09</text>
+<text x="600.0" y="232.0" class="stt o" text-anchor="middle" style="animation-delay:16.8s">LEARNING</text>
+<rect x="561.6" y="238.0" width="77" height="1.6" class="bar mid o" style="animation-delay:16.8s"/>
+<text x="600.0" y="257.0" class="sd" text-anchor="middle">Only graded outcomes change weights</text>
+<text x="600.0" y="274.0" class="sd" text-anchor="middle">and preferences; gates only shrink</text>
+<text x="600.0" y="293.0" class="mod" text-anchor="middle">policy_state · hyp_lab</text>
+<text x="40" y="972" class="foot">GITHUB.COM/MURATHANX12/AEGIS-FINANCE</text>
+<text x="1160" y="972" class="foot" text-anchor="end">EVERY STAGE NAMES THE CODE THAT RUNS IT</text>
+</svg>

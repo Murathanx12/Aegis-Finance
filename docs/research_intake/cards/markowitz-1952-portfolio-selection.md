@@ -1,5 +1,10 @@
 # CARD: markowitz-1952-portfolio-selection
 
+## Index fields
+- topic: Portfolio construction: mean-variance optimisation vs equal weight (1/N)
+- mechanism_class: estimation_error, methodology
+- dataset_status: DOCUMENTED_NOT_TRACKED
+
 ## Citation
 Harry Markowitz (1952), "Portfolio Selection," *The Journal of Finance*, 7(1): 77-91.
 DOI 10.1111/j.1540-6261.1952.tb01525.x. Verified by fetching
@@ -150,3 +155,12 @@ panel — has not been run; the data to run it already exists and no new pull is
 "NEEDS_DATA" here is a build-and-run gap, not a missing-source gap). The adjacent HRP-vs-EW question
 is already `READY_TO_CELL`-and-running as TRIAL-001; this card's question should be designed as a
 sibling arm reusing TRIAL-001's construction, not a fresh pre-registration from zero.
+
+## needs_evidence
+- Does a mean-variance portfolio with shrinkage (Ledoit-Wolf covariance or James-Stein mean
+  shrinkage) beat equal weight on out-of-sample net Sharpe after the engine's cost model, on the
+  universe TRIAL-001 uses for HRP-vs-EW?
+- How does that answer move with the N/T ratio of the estimation window on AEGIS's own panel,
+  the ratio DeMiguel, Garlappi & Uppal (2009) say decides it?
+- Does the shrinkage and robust-covariance literature (Ledoit-Wolf and successors), not verified
+  this pass, actually narrow the 1/N gap out of sample?

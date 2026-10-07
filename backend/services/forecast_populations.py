@@ -248,7 +248,13 @@ def health(population_id: str, *, root: Path | None = None,
     if pop.dormant_reason:
         row["dormant_reason"] = pop.dormant_reason
 
-    if not path.exists():
+    from backend.services import forecast_ledger as _FL
+    try:
+        present = _FL.exists(path)
+    except _FL.ForecastLedgerError as e:
+        row.update(status="UNREADABLE", exists=None, error=str(e))
+        return row
+    if not present:
         # Absent is a real, reportable state and NOT the same as empty: an
         # empty file means a producer ran and had nothing to say; a missing
         # file means nothing has ever written here.

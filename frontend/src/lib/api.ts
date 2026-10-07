@@ -30,6 +30,8 @@ import { setComputing } from "./computing";
  * public production API (the same URL README.md lists). The Vercel variable
  * itself still needs correcting; this keeps the site alive and loud meanwhile.
  */
+// 2026-10-07 (Q18): the deploy workflow now sets NEXT_PUBLIC_API_URL explicitly and
+// fails the build if the Vercel CLI's "[SENSITIVE]" redaction placeholder reaches a chunk.
 export const PUBLIC_API_FALLBACK = "https://aegis-finance-production.up.railway.app";
 
 export function resolveApiBase(raw: string | undefined, desktop: boolean, isProd = false): string {

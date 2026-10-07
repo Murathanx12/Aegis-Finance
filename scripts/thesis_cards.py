@@ -1067,12 +1067,10 @@ def forecast(day: str, *, root: Path | None = None, path: Path | None = None,
     """Backfill: every card of `day` that has no ledger rows gets them. $0, no LLM.
     Prints the ledger's row count before and after."""
     from backend.services import belief_state as B
+    from backend.services import forecast_ledger as FL
     ledger = Path(path) if path is not None else B.PREDICTIONS
     def _n() -> int:
-        if not ledger.exists():
-            return 0
-        with ledger.open("rb") as fh:
-            return sum(1 for ln in fh if ln.strip())
+        return FL.row_count(ledger)            # legacy file or monthly streams
     before = _n()
     cards = TC.read_cards(day, root=root)
     res = TC.write_forecasts(cards, today=today or datetime.now(timezone.utc).date(),
