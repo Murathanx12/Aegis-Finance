@@ -1,5 +1,10 @@
 # CARD: analyst-revision-momentum
 
+## Index fields
+- topic: Analyst revision momentum (recommendation and forecast revisions, first-mover raises)
+- mechanism_class: information_asymmetry, behavioural_bias
+- dataset_status: DOCUMENTED_NOT_TRACKED
+
 ## Citation
 Narasimhan Jegadeesh, Joonghyuk Kim, Susan D. Krische, Charles M.C. Lee (2004), "Analyzing the
 Analysts: When Do Recommendations Add Value?," *The Journal of Finance*, 59(3): 1083-1124.
@@ -138,6 +143,8 @@ different data source and a different actor entirely). This is a second structur
 taxonomy alongside the portfolio-construction gap in the Markowitz card.
 
 ## Verdict
+**READY_TO_CELL** for the 90-day-quiet-gap first-mover-snowball construction; the
+revision-mediated return channel in general is **ALREADY_CLOSED** (split verdict, justified below).
 **NEEDS_DATA is the wrong label here — the data exists — so the honest verdict is split by
 construction.** The revision-mediated return channel in general is **ALREADY_CLOSED** (three
 independent closures: `ANALYST-IBES-1`, `REVISION-FORECASTER-1`, revision-tilt). The specific
@@ -145,3 +152,12 @@ independent closures: `ANALYST-IBES-1`, `REVISION-FORECASTER-1`, revision-tilt).
 orchestrator SIGNATURE on the already-written unsigned draft (`TRIAL-ANALYST-SNOWBALL-1.md`) — it
 is not blocked on data, build, or design, only on registration, and its own honest prior (stated in
 the draft) is that the return leg most likely dies the same way its siblings did.
+
+## needs_evidence
+- Does a first 12-month price-target raise that ends a >= 90-day no-raise spell draw at least two
+  other brokers to raise within ~63 sessions more often than a matched non-first-mover raise (the
+  well-powered follow-through leg of the unsigned `docs/TRIALS/TRIAL-ANALYST-SNOWBALL-1.md`)?
+- Does that first-mover raise earn a positive market-relative return, net of one round trip, from
+  the first session after it is public (the leg the draft itself expects to be underpowered)?
+- What are the published numeric effect sizes and exact sample bounds of Jegadeesh et al. (2004)
+  and Gleason & Lee (2003), which this pass did not re-extract?

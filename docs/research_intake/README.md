@@ -8,8 +8,9 @@ event studies, causal inference, online portfolio learning, portfolio optimisati
 1952 is a foundational example, not a stopping point).
 
 **Output:** one CARD file per topic/paper, `docs/research_intake/cards/<slug>.md`, following the
-template below. A card is a research note, not a trial — it never registers a hypothesis and never
-arms anything. A card that reaches `READY_TO_CELL` becomes the input to
+template below, plus its regenerated row in the GENERATED `docs/research_intake/INDEX.md`
+(`python -m scripts.research_intake_check --write-index`; see "The checker and the index"). A card
+is a research note, not a trial — it never registers a hypothesis and never arms anything. A card that reaches `READY_TO_CELL` becomes the input to
 `.claude/skills/pre-register-trial/SKILL.md`, which is a separate, later step with its own
 tamper-evident commitment.
 
@@ -50,8 +51,15 @@ is `NOT_A_HYPOTHESIS_YET` and nothing further is built on it.
 ```
 # CARD: <slug>
 
+## Index fields
+- topic: <short topic name>
+- mechanism_class: <one or more of: information_asymmetry, risk_premium, limits_to_arbitrage,
+  behavioural_bias, estimation_error, structural_friction, methodology — comma-separated,
+  primary first>
+- dataset_status: <exactly one of: TRACKED_IN_GIT | DOCUMENTED_NOT_TRACKED | NOT_FOUND | NOT_REQUIRED>
+
 ## Citation
-Author(s), year, "exact title," journal/venue, volume(issue):pages, DOI if one exists.
+Author(s) (YYYY), "Exact title," Venue volume(issue): pages. DOI 10.xxxx/yyyy if one exists.
 Verified by fetching <URL> on <date>. If a fetch 403s, say so and name the independent
 corroborating sources used instead (do not silently fall back to memory).
 
@@ -98,13 +106,76 @@ future pre-registration, not a registration itself>
 this pass" — never silently assume novelty>
 
 ## hyp_lab family
-<one of HYP_LAB_FAMILIES from backend/config.py, or `family_unmapped` with a one-line note on
-the nearest existing family and why it doesn't fit>
+<the FIRST backticked token is the family: one of HYP_LAB_FAMILIES from backend/config.py, or
+`family_unmapped` with a one-line note on the nearest existing family and why it doesn't fit>
 
 ## Verdict
-READY_TO_CELL | NEEDS_DATA | ALREADY_CLOSED | NOT_A_HYPOTHESIS_YET
+<exactly ONE of READY_TO_CELL | NEEDS_DATA | ALREADY_CLOSED | NOT_A_HYPOTHESIS_YET, first on the line>
 <one line of justification>
+
+## needs_evidence
+- <1 to 3 bullet questions: the evidence that would move this card's verdict>
 ```
+
+## The checker and the index
+
+`python -m scripts.research_intake_check` validates every card in `cards/` against the template
+above. It is stdlib only and reads `HYP_LAB_FAMILIES` from `backend/config.py` with `ast`, never
+by importing it. `docs/research_intake/INDEX.md` is GENERATED from the cards and is never edited
+by hand. It has one row per card: topic, mechanism class, dataset status, hyp_lab family, verdict,
+open-evidence count and source years.
+
+    python -m scripts.research_intake_check                # per-card findings + summary line
+    python -m scripts.research_intake_check --write-index  # after adding or editing any card
+    python -m scripts.research_intake_check --check-index  # exit 1 if INDEX.md is stale/missing
+    python -m scripts.research_intake_check --json         # machine-readable findings
+
+Exit codes: 0 when no card has an error (and, with `--check-index`, the index is current), 1
+otherwise, and 2 when the check cannot run. `--write-index` still writes when a card has errors:
+that row is marked `INVALID` and the command exits 1. The index carries no timestamp, so the same
+cards always give the same bytes. `backend/tests/test_research_intake_check.py` runs the same
+check over this directory in the fast suite, so a card added without `--write-index` turns CI red.
+
+A card must satisfy the rules below. Each one is an error unless it says warning.
+
+- `# CARD: <slug>` comes first, and the slug equals the filename stem. No two cards may share a
+  slug, or a title that is the same up to case and `-`/`_`.
+- Every template heading is present and spelled as above. A heading out of template order is a
+  warning.
+- `## Index fields` gives `topic`, `mechanism_class` and `dataset_status`:
+  - `mechanism_class` is one or more of `information_asymmetry`, `risk_premium`,
+    `limits_to_arbitrage`, `behavioural_bias`, `estimation_error`, `structural_friction` and
+    `methodology`, comma-separated with the primary first. These are the template's economic
+    stories, plus `methodology` for a card about a method rather than an inefficiency.
+  - `dataset_status` is exactly one of four values. `TRACKED_IN_GIT`: the data the test needs is
+    committed here, so a fresh checkout can run it. `DOCUMENTED_NOT_TRACKED`: the data is on the
+    research machine and documented (`docs/DATA_CATALOG.md`, a receipt or a consuming service),
+    but it is gitignored or licensed, so a cloud checkout lacks it. `NOT_FOUND`: nothing was
+    found on disk or in the catalog this pass. `NOT_REQUIRED`: the card needs no dataset.
+  - A short note may follow a controlled value, as in `NOT_FOUND (no short-interest table on
+    disk)`. Only the leading value is read, and a note that names a second value is an error.
+- `## Citation` holds at least one DOI or http(s) URL. The index takes the source years as the
+  min and max of `(YYYY)` / `(YYYYa)` in this section. ISO verification dates are not years, and
+  no year at all is a warning. If a DOI is already in another card's `## Citation`, the later
+  card (by slug) must name the earlier card's slug or filename, or it is an error.
+- `## hyp_lab family`: the FIRST backticked token is the family. It must be a member of
+  `HYP_LAB_FAMILIES` or `family_unmapped`. An alias from `HYP_LAB_FAMILY_ALIASES` is a warning
+  that names the canonical family.
+- `## Verdict`: the first line starts with exactly one of the four verdicts, written `WORD`,
+  `WORD.`, `**WORD**` or `**WORD.**`. A line that starts with an explanation (`**NEEDS_DATA is
+  the wrong label here**`) is not a verdict. Two verdicts are an error: a first line that joins
+  two words (`READY_TO_CELL | NEEDS_DATA`), or a later line that is nothing but a verdict word.
+  A **split verdict** is allowed: another vocabulary word in bold later in the justification,
+  giving a sub-construction its own status. The index shows it as `(+WORD)`.
+- `## needs_evidence` comes last, with 1 to 3 bullet questions: the evidence that would move the
+  verdict. The index counts them as open evidence.
+- No unfilled placeholder (`TBD`, `TODO` or a template `<...>`) may remain outside inline code or
+  fenced blocks, so a card can still quote one in backticks to explain it. While the verdict is
+  `NEEDS_DATA`, a placeholder in the dataset section is only a warning.
+- Backticked paths are repo-relative. An absolute path, a drive path, a `~` path or a `..` path is
+  an error. A `docs/`, `scripts/`, `backend/services/`, `backend/tests/` or `.claude/` path that
+  does not exist is a warning. Paths under `backend/data/` are not checked, because a cloud
+  checkout lacks gitignored data.
 
 ## Who runs this routine
 

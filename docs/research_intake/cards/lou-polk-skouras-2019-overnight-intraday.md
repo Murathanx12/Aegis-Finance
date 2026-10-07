@@ -1,5 +1,10 @@
 # CARD: lou-polk-skouras-2019-overnight-intraday
 
+## Index fields
+- topic: Overnight vs intraday returns (the tug of war between clienteles)
+- mechanism_class: behavioural_bias, structural_friction
+- dataset_status: DOCUMENTED_NOT_TRACKED
+
 ## Citation
 Dong Lou, Christopher Polk, Spyros Skouras (2019), "A Tug of War: Overnight versus Intraday
 Expected Returns," *Journal of Financial Economics*, 134(1): 192-213. DOI
@@ -119,3 +124,12 @@ price-location feature, and does not fit cleanly.
 `scripts/overnight_intraday_study.py` is directly extensible to compute a ranked rather than
 universe-wide version, 2013-2024 window only). The TIMING mechanism itself is **ALREADY_CLOSED**
 (cite `docs/FINDING_2026-08-23_OVERNIGHT_INTRADAY.md` — do not re-discover it).
+
+## needs_evidence
+- Does a stock's trailing 21- or 63-session cumulative overnight-return rank predict its forward
+  overnight return (long-short decile spread, t blocked by month) better than ordinary 12-1
+  total-return momentum on the same 2013-2024 CRSP universe, net of costs?
+- Does the answer hold before 2013, which needs a separate WRDS pull of `openprc` for the pre-2013
+  years?
+- What are Lou, Polk & Skouras's (2019) exact sample bounds and per-strategy overnight/intraday
+  effect sizes, which this pass did not re-extract beyond the abstract?
