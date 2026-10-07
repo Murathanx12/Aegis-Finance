@@ -56,6 +56,10 @@ def world(tmp_path, monkeypatch):
     live = tmp_path / "live" / "optimus"
     live.mkdir(parents=True)
     monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", live)
+    # C15 fix (2026-10-07): PUBLIC_RECEIPTS_DIR no longer follows OPTIMUS_LEDGER_DIR (that
+    # coupling is what shadowed the real published copies in prod); isolate it explicitly,
+    # preserving the old sibling layout this fixture's tests assert on.
+    monkeypatch.setattr(_config, "PUBLIC_RECEIPTS_DIR", live.parent / "public_receipts")
     L._CACHE.clear()
     OPP._CACHE.clear()
     PR._CACHE.clear()
@@ -129,6 +133,7 @@ def test_routers_serve_the_published_copy_where_no_live_receipt_exists(world, mo
     rail = tmp / "rail" / "optimus"                                   # a fresh checkout: no receipts
     rail.mkdir(parents=True)
     monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", rail)
+    monkeypatch.setattr(_config, "PUBLIC_RECEIPTS_DIR", tmp / "rail" / "public_receipts")
     L._CACHE.clear()
     OPP._CACHE.clear()
     c = _client()
@@ -149,65 +154,6 @@ def test_routers_serve_the_published_copy_where_no_live_receipt_exists(world, mo
     assert row["links"]["yahoo"].endswith("/quote/VKTX")             # rebuilt from the ticker at serve time
 
 
-def _volume_deployment(tmp, monkeypatch):
-    """Railway's layout: the data dir is a mounted volume, the image carries the published
-    copies at backend/data/public_receipts (committed to git), and the volume holds none."""
-    image_data = tmp / "image" / "data"
-    volume = tmp / "volume"
-    (volume / "optimus").mkdir(parents=True)
-    monkeypatch.setattr(_config, "DATA_DIR", volume)
-    monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", volume / "optimus")
-    monkeypatch.setattr(_config, "OPTIMUS_LEDGER_LEGACY_DIR", image_data / "optimus")
-    L._CACHE.clear()
-    OPP._CACHE.clear()
-    PR._CACHE.clear()
-    return image_data / "public_receipts", volume / "public_receipts"
-
-
-def test_a_volume_deployment_serves_the_copies_baked_into_the_image(world, monkeypatch):
-    """2026-10-07, live: /arena, /forecast-lab, /theory-lab and /health answered "no receipt
-    written yet" because serving read only <volume>/public_receipts, while the published copies
-    ship in the image. The earlier test above models a checkout whose data dir IS the image's;
-    this one models the deployment that actually broke."""
-    tmp, live = world
-    baked = tmp / "image" / "data" / "public_receipts"
-    PR.publish(out_dir=baked)
-    baked_dir, volume_dir = _volume_deployment(tmp, monkeypatch)
-    assert baked_dir == baked and not volume_dir.exists()
-    assert PR.read_dirs() == [volume_dir, baked] and PR.serving_dir() == baked
-    c = _client()
-    for path in ("/api/arena/v1/latest", "/api/legibility/v1/theory-lab?board=sticky",
-                 "/api/legibility/v1/system-health", "/api/legibility/v1/forecast-lab"):
-        r = c.get(path)
-        assert r.status_code == 200, (path, r.text[:200])
-        assert r.json()["served_from"].startswith("public_receipts/"), path
-        assert r.json()["published_utc"]
-    assert "public_receipts" in c.get("/api/opportunities/latest").json()["served_from"]
-
-
-def test_the_newer_published_copy_serves_whichever_folder_holds_it(world, monkeypatch):
-    tmp, live = world
-    baked = tmp / "image" / "data" / "public_receipts"
-    volume_copy = tmp / "volume" / "public_receipts"
-    PR.publish(out_dir=baked, now=NOW - timedelta(days=1))
-    PR.publish(out_dir=volume_copy, now=NOW)
-    _volume_deployment(tmp, monkeypatch)
-    assert PR.serving_dir() == volume_copy                      # the volume's copy is newer
-    man = json.loads((baked / "MANIFEST.json").read_text(encoding="utf-8"))
-    man["published_utc"] = (NOW + timedelta(hours=1)).isoformat(timespec="seconds")
-    (baked / "MANIFEST.json").write_text(json.dumps(man), encoding="utf-8")   # a redeploy ships a newer one
-    assert PR.serving_dir() == baked
-
-
-def test_without_a_volume_serving_never_reaches_outside_the_data_dir(world, monkeypatch):
-    """Locally and in this suite the data dir is the image's: a test that points the ledger
-    dir at tmp must never be served the real committed copies."""
-    tmp, live = world
-    monkeypatch.setattr(_config, "DATA_DIR", Path(_config.BACKEND_DIR) / "data")
-    assert PR.read_dirs() == [PR.public_dir()]
-    assert PR.serving_dir() == live.parent / "public_receipts"
-
-
 def test_live_receipts_win_when_they_are_complete(world):
     tmp, live = world
     PR.publish()
@@ -221,9 +167,46 @@ def test_published_copy_ages_into_stale_from_its_own_stamp(world, monkeypatch):
     rail = tmp / "rail" / "optimus"
     rail.mkdir(parents=True)
     monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", rail)
+    monkeypatch.setattr(_config, "PUBLIC_RECEIPTS_DIR", tmp / "rail" / "public_receipts")
     later = NOW + timedelta(days=5)
     out = PR.refresh(PR.load_published("system_health"), "system_health", now=later)
     assert out["status"] == "STALE" and out["receipts"][0]["status"] == "STALE"
+
+
+def test_public_receipts_dir_does_not_follow_optimus_ledger_dir(monkeypatch, tmp_path):
+    """Regression for the 2026-10-07 prod incident: all six legibility/opportunities endpoints
+    404'd with /api/health/full green because `public_dir()` used to be
+    `OPTIMUS_LEDGER_DIR.parent`, which follows `AEGIS_DATA_DIR` (set on Railway to a persistent
+    volume, precisely so it does NOT shadow the image). PUBLIC_RECEIPTS_DIR must stay fixed to
+    the image regardless of where the ledger dir points."""
+    before = PR.public_dir()
+    monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", tmp_path / "optimus")
+    assert PR.public_dir() == before, (
+        "public_dir() moved when OPTIMUS_LEDGER_DIR changed; this is exactly the 2026-10-07 "
+        "prod bug (AEGIS_DATA_DIR shadows the git-tracked public_receipts folder)")
+
+
+def test_routers_serve_the_real_committed_receipts_when_live_dir_is_empty_but_present(monkeypatch, tmp_path):
+    """The literal production shape, against the REAL `backend/data/public_receipts/` committed
+    to git (not a tmp fixture standing in for it): a live receipts directory that EXISTS (a
+    checked-out volume) but holds none of these pages' receipts. Every router must fall back to
+    the committed copy and report it, never 404 while /api/health stays green."""
+    empty_live = tmp_path / "optimus"
+    empty_live.mkdir(parents=True)
+    monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", empty_live)      # PUBLIC_RECEIPTS_DIR untouched
+    L._CACHE.clear()
+    OPP._CACHE.clear()
+    PR._CACHE.clear()
+    c = _client()
+    for path in ("/api/arena/v1/latest", "/api/legibility/v1/forecast-lab",
+                 "/api/legibility/v1/theory-lab?board=sticky", "/api/legibility/v1/system-health",
+                 "/api/legibility/v1/brain"):
+        r = c.get(path)
+        assert r.status_code == 200, (path, r.status_code, r.text[:300])
+        assert r.json().get("served_from"), f"{path} did not report served_from=published"
+    r = c.get("/api/opportunities/latest")
+    assert r.status_code == 200
+    assert "public_receipts" in (r.json().get("served_from") or "")
 
 
 def test_publish_has_a_caller_in_the_daily_catalog_job():

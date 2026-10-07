@@ -20,6 +20,10 @@ from backend.services import opportunities as O
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", tmp_path)
+    # C15 fix (2026-10-07): PUBLIC_RECEIPTS_DIR no longer follows OPTIMUS_LEDGER_DIR;
+    # isolate it explicitly so a 404-path test never falls through to the real
+    # backend/data/public_receipts/.
+    monkeypatch.setattr(_config, "PUBLIC_RECEIPTS_DIR", tmp_path / "public_receipts")
     app = FastAPI()
     app.include_router(R.router)
     return TestClient(app), tmp_path
@@ -117,8 +121,19 @@ def test_links_and_exchange_for_foreign_tickers():
 
 
 def test_router_is_registered_on_the_app():
+    # Read the OpenAPI schema, not `app.routes`: FastAPI >= 0.141 (CI resolves
+    # 0.142.2 today; the dev venv had pinned-loose to 0.135) wraps an included
+    # router in an `_IncludedRouter` with no `.path`, so walking `app.routes`
+    # found ZERO opportunities routes on CI's fresh install while every route
+    # added directly on `app` (not through include_router) still showed up --
+    # a green-locally, red-on-CI split that looked like a dropped registration
+    # but was a test-helper bug (same defect already fixed in
+    # test_journal_router.py::TestWriteAuthority on 2026-09-08; arena_v1 and
+    # legibility_v1 share the unguarded include_router pattern and are
+    # similarly fine -- verified via this same schema). The schema is the
+    # version-independent statement of which paths exist.
     from backend.main import app
-    paths = {getattr(r, "path", "") for r in app.routes}
+    paths = app.openapi()["paths"]
     assert "/api/opportunities/latest" in paths
     assert "/api/opportunities/{list_id}" in paths
 

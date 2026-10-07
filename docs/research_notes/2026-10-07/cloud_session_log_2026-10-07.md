@@ -29,23 +29,20 @@ the local session, and its exact acceptance.
   vectorised copy used for daily re-looks agrees with them on every sampled pair or the audit refuses;
   a seeded receipt under `backend/data/optimus/audits/`; tests pin the measured band to the rule.
 
-## Task F2: the live evidence pages served nothing (chosen 2026-10-07 ~15:00 HKT)
+## Task F2: the live evidence pages served nothing -- found, fixed, then superseded by main
 
-Recorded honestly: the diagnosis came first (the owner asked "check the websites too"), and this
-entry was written together with the fix rather than before it.
-
-- **Why high EV:** headless screenshots of the live site showed `/arena`, `/forecast-lab`,
-  `/theory-lab` and `/health` answering "no receipt written yet", although sanitised copies of
-  every one are committed in `backend/data/public_receipts/` and ship in the Railway image. Cause:
-  `publish_receipts.public_dir()` is the sibling of `OPTIMUS_LEDGER_DIR`, which on Railway
-  (`AEGIS_DATA_DIR=/data`) is the empty volume. Four public pages the README links to were blank.
-- **Why no local conflict:** one read path in `publish_receipts` (`read_dirs` / `serving_dir`,
-  used by `load_published` and `read_manifest`); writes, the commit job and the routers are
-  unchanged. Locally and in tests the data dir is the image's, so nothing changes there.
-- **Acceptance:** a test that models the volume layout serves every page from the baked copy;
-  the newer manifest wins when both folders hold one; with no volume, serving never leaves the
-  data dir (test isolation kept). Live verification needs the merge and a Railway redeploy
-  (`verify-prod-after-deploy`), which this session cannot do.
+- **What happened:** headless screenshots of the live site showed `/arena`, `/forecast-lab`,
+  `/theory-lab` and `/health` answering "no receipt written yet", although sanitised copies are
+  committed in `backend/data/public_receipts/` and ship in the Railway image: `public_dir()`
+  followed `AEGIS_DATA_DIR` to the empty volume. The cloud session fixed it (a read fallback to the
+  image's folder) and pushed it as `dd5ec11b`.
+- **Superseded:** the local session found the same bug in production the same day and fixed it on
+  `main` (`ad7ddbf6`: `config.PUBLIC_RECEIPTS_DIR`, fixed to the image for reads and writes, plus a
+  Dockerfile guard test). Merging `main` into this branch took that fix verbatim
+  (`publish_receipts.py` and `test_publish_receipts_c15.py` are identical to `main`); the cloud
+  version and its three tests were dropped rather than kept as a second mechanism. The entry is
+  kept because the duplicate effort is itself the finding: the two sessions had no shared signal
+  that one of them was already on it.
 
 ## Owner-directed work added mid-session (not Task F)
 

@@ -70,6 +70,10 @@ def assert_clean(payload) -> None:
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", tmp_path)
+    # C15 fix (2026-10-07): PUBLIC_RECEIPTS_DIR no longer follows OPTIMUS_LEDGER_DIR (that
+    # coupling is what shadowed the real published copies in prod); isolate it explicitly
+    # so a 404-path test never falls through to the real backend/data/public_receipts/.
+    monkeypatch.setattr(_config, "PUBLIC_RECEIPTS_DIR", tmp_path / "public_receipts")
     L._CACHE.clear()
     app = FastAPI()
     app.include_router(RA.router)
