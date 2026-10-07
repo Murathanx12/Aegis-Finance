@@ -329,7 +329,7 @@ public-flow sensors and the analyst weights are all wired to WRITE rows; none ha
 | id | task | worker | why | gate |
 |---|---|---|---|---|
 | Q1 | restore the README's generated bridge block (6 tests) + put C26's two new gates in SHADOW mode | Sonnet | mechanical, test-pinned | now |
-| Q2 | final frozen-tree suite → merge to main → push → `ci_watch` → `verify-prod-after-deploy` on the five pages → first `publish_receipts --commit` | deterministic + Fable | the gate | after Q1 |
+| Q2 DONE 15:10 | merged `92f147f6` → CI hotfix `e041ec14` → prod receipts fix `ad7ddbf6`; CI green; Railway live; six endpoints 200 from published copies; pages render | deterministic + Fable | the gate | — |
 | Q3 | design reference library (p5.js, p5.brush, reasoning orbs, motion for data; GitHub identity plan) → `docs/design/` | Sonnet | research/docs | now |
 | Q4 | the four social-media ideas as theory objects (exact rule, mechanism, literature, data gaps, falsifiable question) + the intake template | Sonnet | research | now |
 | Q5 | Brain page v2: state-driven layout (no force simulation), motion only on state change, every orb traces to a receipt field | Sonnet (frontend) | low-risk UI; deterministic tests review | after Q3 + Q2 |

@@ -91,6 +91,13 @@ hidden the CI run behind the Vercel run). Q12: academic lane live at $0. C26 fix
 tonight's 22:45 HKT pass (hack2's five top-ups will be refused at its own worst-case line, named). The cloud session's
 brief is `docs/CLOUD_BRIEF_2026-10-07.md` v2 (worktrees mandatory after it stashed the shared tree once).
 
+**15:10 HKT: the evidence pages are LIVE in production.** `main` = `ad7ddbf6` (CI green), Railway serving it; all six
+endpoints answer 200 from the published copies (`served_from: public_receipts/...`); `/opportunities /brain /arena
+/forecast-lab /theory-lab /health` render on the site. Q9a measurement is in (`sticky twin v2`: the headline did not move —
+historical alpha on CRSP is not demonstrated; the ROT5_DIR replay as our receipt: the direction filter cuts the left tail
+without giving up right tail at top-5 and its mean gain is noise, t −1.5 with the momentum control). Q17: the 28 MB of raw
+Explorer receipts are untracked going forward.
+
 ## 1. RESULTS SCOREBOARD
 
 **RESULT IMPROVEMENT: NONE.** The night produced controls, measurements and a live loop, not an edge.
