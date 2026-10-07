@@ -339,6 +339,14 @@ public-flow sensors and the analyst weights are all wired to WRITE rows; none ha
 | Q9 | heavy deferred items, one at a time: sticky-twin per-draw check v2, ROT5_DIR replay receipt, contest horizon worst case, extraction cascade (GPU), desktop export check | Opus for the twin/contest measurement; deterministic for exports | measurement | after Q2, memory ≥ 4 GB |
 | Q10 | token-budget view: a small receipt per session (Opus/Sonnet calls, tasks, EV) read by the handoff | Sonnet | plumbing | with Q2's handoff |
 
+**Status 2026-10-07 17:35 HKT:** DONE — Q1, Q2, Q3, Q4, Q5 (`/brain` v2), Q6, Q7 (C26 review), Q8, Q9a (sticky v2 + ROT5_DIR
+replay), Q10, Q12 (academic lane), Q14 (diagnosis; D23 owner), Q15 (two NAV-adjacent spots owed), Q16, Q17, Q18 (D24 owner),
+C26-fix, C27 (live at 22:45 HKT tonight), C24 (builds green; live `.exe` probe owed). IN THE CLOUD SESSION'S BRANCH
+(`claude/beautiful-meitner-hq5614`, PR pending): Q11 ledger split, Q13 brain showcase (optimus repo), GitHub identity,
+research cards + validator, prior-art map, Optimus connection map / MCP tools / author profile, provenance audit.
+WAITING ON TIME: first decision stories and regime grades (10-10), digest 5-session grades (10-09), news trust rule,
+forward reads 10-26/27, contest 10-12. WAITING ON OWNER: D1, D2, D5, D7, D13, D14 (+D21/D22), D15, D18, D19, D20, D23, D24.
+
 **Queue amendments 2026-10-07 12:40 HKT (after the merge of `92f147f6`):**
 
 | id | task | worker | why | gate |
