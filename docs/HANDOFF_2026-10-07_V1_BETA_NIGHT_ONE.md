@@ -81,6 +81,16 @@ without `.path`, so a test walking `app.routes` saw no router at all — the tes
 carried CRLF inside the string; compared on LF now, `lineterminator` pinned, fixtures `eol=lf` in `.gitattributes`.
 The local venv was upgraded to CI's fastapi/starlette/pydantic versions during the reproduction and left there.
 
+**Afternoon 10-07 (to 14:40 HKT):** Railway deploys only after CI is green (the `92f147f6` deploy was SKIPPED while CI was
+red); `e041ec14` is live since 14:09. The six new endpoints answer **404 in production** although `/openapi.json` lists
+them: the container finds no receipts; a Sonnet fix makes the routers fall back to the published copies inside the image
+(verify after the next deploy: all six must be 200 with `served_from: published`). Q14: the Railway `FRED_API_KEY` is
+unregistered → **D23 owner**; new `fred_macro_inputs` health row. Q15: silent imputations in fixed-income and FX made
+loud; two NAV-adjacent ones owed. Q16: `ci_watch` rewritten (it had polled a branch commit that never triggers CI and
+hidden the CI run behind the Vercel run). Q12: academic lane live at $0. C26 fixes + C27 wash-trade sequence apply at
+tonight's 22:45 HKT pass (hack2's five top-ups will be refused at its own worst-case line, named). The cloud session's
+brief is `docs/CLOUD_BRIEF_2026-10-07.md` v2 (worktrees mandatory after it stashed the shared tree once).
+
 ## 1. RESULTS SCOREBOARD
 
 **RESULT IMPROVEMENT: NONE.** The night produced controls, measurements and a live loop, not an edge.
