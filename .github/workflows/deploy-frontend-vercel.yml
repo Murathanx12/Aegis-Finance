@@ -54,7 +54,31 @@ jobs:
       - name: Build
         if: steps.gate.outputs.enabled == 'true'
         working-directory: frontend
+        env:
+          # PUBLIC URL, not a secret -- this is the same host README.md lists
+          # as "Live" and frontend/src/lib/api.ts's PUBLIC_API_FALLBACK.
+          # Set explicitly because Vercel's CLI REDACTS a Project variable
+          # marked "Sensitive" to the literal 11-character string
+          # "[SENSITIVE]" on `vercel pull`, and `vercel build` inlines
+          # NEXT_PUBLIC_* verbatim at build time -- which is exactly what
+          # shipped on 2026-10-07 (console: `NEXT_PUBLIC_API_URL is not an
+          # absolute http(s) URL (got 11 chars starting "[")` on every page).
+          # A step-level env var here wins over whatever `vercel pull` wrote
+          # to .vercel/.env.production.local, because Next's own env loading
+          # never overwrites a variable already present in the process
+          # environment. `vercel pull` stays for everything else.
+          NEXT_PUBLIC_API_URL: https://aegis-finance-production.up.railway.app
         run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Guard built bundle against the Vercel CLI's redaction placeholder
+        # Q18, 2026-10-07: catches a REGRESSION of the above even if a future
+        # change stops setting the env var explicitly -- greps every emitted
+        # .js chunk for the literal "[SENSITIVE]" and requires the Railway
+        # host string to be present instead. Logic lives in
+        # scripts/frontend_check.py so the workflow and a local check share
+        # one implementation rather than two greps that can drift apart.
+        if: steps.gate.outputs.enabled == 'true'
+        run: python3 -m scripts.frontend_check --guard-api-url-dir frontend/.vercel/output/static
 
       - name: Deploy to production
         if: steps.gate.outputs.enabled == 'true'

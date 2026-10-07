@@ -59,6 +59,79 @@ STEPS: list[tuple[str, list[str], dict, str]] = [
 STEP_TIMEOUT_S = float(os.getenv("AEGIS_FRONTEND_CHECK_TIMEOUT_S", "1800"))
 
 
+# ------------------------------------------------------------------ Q18 guard
+#
+# 2026-10-07: the live site's console printed, on every page,
+# `[aegis] NEXT_PUBLIC_API_URL is not an absolute http(s) URL (got 11 chars
+# starting "[")`. `vercel env ls` showed the Project variable set to the real
+# Railway URL -- but Vercel's CLI REDACTS a variable marked "Sensitive" to the
+# literal 11-character string "[SENSITIVE]" on `vercel pull` / `vercel env
+# pull`, and because `NEXT_PUBLIC_*` is inlined by webpack at build time,
+# `vercel build` compiled that placeholder straight into the browser bundle.
+# The site stayed up only because `frontend/src/lib/api.ts`'s `resolveApiBase`
+# (C4, 2026-10-06) refused the bad value and fell back to
+# `PUBLIC_API_FALLBACK` -- the same URL this guard checks for below. That
+# fallback is a mercy, not a fix: it is why this shipped broken for a full day
+# with every request still answering.
+#
+# The fix is the workflow's Build step setting `NEXT_PUBLIC_API_URL` directly
+# (see `.github/workflows/deploy-frontend-vercel.yml`), which wins over
+# whatever `vercel pull` wrote. This guard exists for the regression: the only
+# way the placeholder comes back is `vercel pull` writing it again and
+# something reading that file instead of the explicit env var.
+API_URL_REDACTION_PLACEHOLDER = "[SENSITIVE]"
+
+#: the public production API host every build must inline. NOT a secret --
+#: it is the URL README.md lists as "Live" and `PUBLIC_API_FALLBACK` in
+#: `frontend/src/lib/api.ts`. Kept as a literal here (this file cannot import
+#: TypeScript); `test_frontend_check_api_url.py` pins it equal to that
+#: fallback and to the workflow's Build-step env var so the three cannot
+#: drift apart silently.
+EXPECTED_API_URL = "https://aegis-finance-production.up.railway.app"
+EXPECTED_API_HOST = "aegis-finance-production.up.railway.app"
+
+
+def guard_bundle_for_redacted_api_url(bundle_dir: Path) -> dict:
+    """Grep every emitted `.js` chunk under `bundle_dir` for the Vercel CLI's
+    redaction placeholder and for the Railway host string. Pure function of
+    the filesystem -- never raises, never runs a build. A missing directory
+    or a directory with no `.js` files is CANNOT DETERMINE, not a pass: a
+    guard that reports green for nothing to scan is the same broken shape as
+    `check()`'s own "no Node on PATH" case above.
+    """
+    bundle_dir = Path(bundle_dir)
+    if not bundle_dir.is_dir():
+        return {"ok": None, "verdict": "CANNOT DETERMINE",
+                "reason": f"no bundle directory at {bundle_dir}",
+                "files_scanned": 0, "placeholder_hits": [], "host_found": False}
+    js_files = sorted(bundle_dir.rglob("*.js"))
+    placeholder_hits: list[str] = []
+    host_found = False
+    for f in js_files:
+        try:
+            text = f.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if API_URL_REDACTION_PLACEHOLDER in text:
+            placeholder_hits.append(str(f.relative_to(bundle_dir)))
+        if EXPECTED_API_HOST in text:
+            host_found = True
+    if not js_files:
+        return {"ok": None, "verdict": "CANNOT DETERMINE",
+                "reason": f"no .js files under {bundle_dir}",
+                "files_scanned": 0, "placeholder_hits": [], "host_found": False}
+    ok = not placeholder_hits and host_found
+    if placeholder_hits:
+        reason = f"redaction placeholder {API_URL_REDACTION_PLACEHOLDER!r} found in {len(placeholder_hits)} file(s)"
+    elif not host_found:
+        reason = f"Railway host {EXPECTED_API_HOST!r} not found in any built chunk"
+    else:
+        reason = "ok"
+    return {"ok": ok, "verdict": "GREEN" if ok else "RED", "reason": reason,
+            "files_scanned": len(js_files), "placeholder_hits": placeholder_hits,
+            "host_found": host_found}
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -140,7 +213,19 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--skip", action="append", default=[],
                     choices=[s[0] for s in STEPS], help="skip a step (repeatable)")
     ap.add_argument("--out", default=None, help="where to write the receipt")
+    ap.add_argument("--guard-api-url-dir", default=None, metavar="DIR",
+                    help="run ONLY the Q18 redaction-placeholder guard against this already-"
+                         "built bundle directory (e.g. frontend/.vercel/output/static after "
+                         "`vercel build`, or frontend/.next after a local `next build`) and "
+                         "exit -- skips the three builds entirely")
     a = ap.parse_args(argv)
+    if a.guard_api_url_dir:
+        guard = guard_bundle_for_redacted_api_url(Path(a.guard_api_url_dir))
+        print(f"api-url guard: {guard['verdict']} -- {guard['reason']} "
+              f"({guard['files_scanned']} .js file(s) scanned)")
+        for hit in guard["placeholder_hits"]:
+            print(f"  PLACEHOLDER FOUND: {hit}")
+        return 0 if guard["ok"] else 1
     r = check(skip=tuple(a.skip), receipt_path=Path(a.out) if a.out else None)
     for s in r["steps"]:
         code = s.get("returncode")
