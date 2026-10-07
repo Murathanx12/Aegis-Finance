@@ -98,6 +98,14 @@ historical alpha on CRSP is not demonstrated; the ROT5_DIR replay as our receipt
 without giving up right tail at top-5 and its mean gain is noise, t −1.5 with the momentum control). Q17: the 28 MB of raw
 Explorer receipts are untracked going forward.
 
+**17:10 HKT: Q18 on `main` (`0c16e6eb` + a frontend touch to trigger the Vercel workflow).** The deployed site had been
+inlining the Vercel CLI's `[SENSITIVE]` redaction placeholder as `NEXT_PUBLIC_API_URL` (the workflow built from the pulled
+env file); it ran on the code fallback and logged "fix the build environment" on every page. The workflow now sets the
+public URL explicitly and a post-build guard fails the deploy if the placeholder reaches a chunk. **D24 (owner):** un-mark or
+delete the `NEXT_PUBLIC_API_URL` variable in the Vercel dashboard (the workflow value wins either way). C24: the three
+frontend builds are green on the new pages; the live `.exe` probe is owed for a quiet-memory window (the IIF1 night runs
+from 16:00 HKT). Vercel's bot checkpoint (403) blocks automated browser loads; verification is by API + chunk grep.
+
 ## 1. RESULTS SCOREBOARD
 
 **RESULT IMPROVEMENT: NONE.** The night produced controls, measurements and a live loop, not an edge.
