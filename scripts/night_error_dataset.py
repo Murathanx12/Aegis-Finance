@@ -642,8 +642,10 @@ def ledger_states(dec_dir: Path) -> dict:
 
 def build(*, predictions: Path, decisions_dir: Path, panel: Panel,
           limit: int | None = None, today: str | None = None) -> tuple[list[dict], dict]:
+    from backend.services import forecast_ledger as FL
     today = today or run_date()
-    recs = read_jsonl(predictions)
+    # the forecast ledger's backend answers: legacy file or monthly streams
+    recs = FL.read_rows(Path(predictions), strict=False)
     if limit:
         recs = recs[-int(limit):]
     rows = [prediction_row(r, panel) for r in recs]

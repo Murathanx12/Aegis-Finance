@@ -1,48 +1,110 @@
-# Aegis Finance
+<p align="center">
+  <a href="https://aegis-finance-six.vercel.app"><img src="docs/assets/aegis_loop.svg" width="100%" alt="Aegis, one loop with every belief graded: nine stages on a ring (world sensors, evidence, world state and theory, forecasts, decision, paper action, outcome, attribution, learning). A wave of blue dots travels the ring and each stage lights as it is reached; learning feeds the next cycle's theory and decision through two orange inner orbits. Each stage names the modules that run it."></a>
+</p>
+
+<h1 align="center">Aegis Finance</h1>
+
+<p align="center">
+  <b>Auditable AI investment intelligence</b> — open source, paper only, a receipt behind every headline number.<br>
+  It writes down what it believes before an outcome exists, grades every belief against what then happens,
+  and lets only graded beliefs change how paper capital is sized.
+</p>
 
 <p align="center">
   <a href="https://aegis-finance-six.vercel.app"><img alt="Live app" src="https://img.shields.io/badge/live-aegis--finance-0891b2?style=flat-square"></a>
-  <img alt="Tests" src="https://img.shields.io/badge/fast%20suite-12%2C496%20passed%20on%20main%20(2026--09--29)-2ea44f?style=flat-square">
-  <img alt="Python" src="https://img.shields.io/badge/python-3.12-3776AB?style=flat-square&logo=python&logoColor=white">
-  <img alt="Next.js" src="https://img.shields.io/badge/next.js-14-000000?style=flat-square&logo=nextdotjs">
-  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-backend-009688?style=flat-square&logo=fastapi&logoColor=white">
+  <img alt="Merge gate" src="https://img.shields.io/badge/merge%20gate%202026--10--07%20(92f147f)-13%2C693%20backend%20%2B%20106%20lab%20tests%20green-2ea44f?style=flat-square">
+  <img alt="Capital" src="https://img.shields.io/badge/capital-paper%20only-6e7781?style=flat-square">
   <img alt="Forward record" src="https://img.shields.io/badge/forward%20record-since%202026--06--08-blueviolet?style=flat-square">
+  <img alt="Python" src="https://img.shields.io/badge/python-3.12-3776AB?style=flat-square&logo=python&logoColor=white">
+  <img alt="Next.js" src="https://img.shields.io/badge/next.js-16-000000?style=flat-square&logo=nextdotjs">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-backend-009688?style=flat-square&logo=fastapi&logoColor=white">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square"></a>
 </p>
+
+<p align="center">
+  <img src="docs/assets/paper_results_live.svg" width="100%" alt="Best paper accounts, live, as of the 2026-10-06 close: revision_flow_v0 (frozen LLM book, $1M paper) +7.14% vs SPY +1.40% since 2026-09-28, +5.74 pp, its matched random twin -0.01%; night book b109c886 +6.08% vs SPY +2.19% since 2026-09-11, +3.90 pp; hack2 (Alpaca paper broker, holding the same 20 names as revision_flow_v0) +2.31% vs SPY +1.29% since 2026-08-28, +1.02 pp. Labels OBSERVED(7), OBSERVED(17), OBSERVED(27).">
+</p>
+<p align="center"><sub>Every number on both pictures is read from a committed receipt (<code>backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json</code>) and every stage names the code that runs it; <code>backend/tests/test_public_assets.py</code> fails if either stops being true. The motion version is <a href="docs/design/aegis_front_page.html"><code>docs/design/aegis_front_page.html</code></a>; the design record is <a href="docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md"><code>docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md</code></a>.</sub></p>
 
 Aegis Finance is a free, open-source **self-improving investment intelligence
 system** that measures itself in public and tells you when it is wrong. Its
 objective is compound return under explicit survival constraints — not
-classification accuracy, not a pretty backtest. It searches the *whole* market
-rather than the famous part of it, treats an LLM as something that proposes
-causal hypotheses while deterministic engines compute and grade them, and keeps
-its own corpses: a refused strategy with a written reason is an asset here, not
-an embarrassment. Every idea is pre-registered before it touches data, tested on
-live forward paper portfolios (running since **2026-06-08**), and published
-whether it works or not — the failures live in
-[NEGATIVE_RESULTS.md](NEGATIVE_RESULTS.md), at the top level, where a skeptic
-finds them first. Around that spine sits a full market dashboard: crash-risk and
-fragility measurement, Monte Carlo projections, portfolio construction, factor
-analysis, and point-in-time data collectors — all on free data sources.
-The twelve original + four added invariants are in
-[`docs/AEGIS_STRATEGIC_INVARIANTS.md`](docs/AEGIS_STRATEGIC_INVARIANTS.md); they
+classification accuracy, not a pretty backtest — and it searches the *whole*
+market rather than the famous part of it. Language models read the world and
+propose causal hypotheses; deterministic code ranks, sizes, stops, exits and
+grades. Results are read against a control built to be fair, and every headline
+number names the JSON receipt it came from.
+
+A paper candidate is frozen in a strategy contract before its first decision; a
+public claim needs full pre-registration ([the three
+licences](#three-licences--what-a-result-is-allowed-to-claim)). Results are
+published whether they work or not, and the corpses are kept — the failures live
+in [NEGATIVE_RESULTS.md](NEGATIVE_RESULTS.md), at the top level, where a skeptic
+finds them first. The forward paper record has run since **2026-06-08**. Around
+that spine sits a market dashboard (crash-risk and fragility measurement, Monte
+Carlo projections, portfolio construction, factor analysis, point-in-time data
+collectors), all on free data sources. The sixteen invariants in
+[`docs/AEGIS_STRATEGIC_INVARIANTS.md`](docs/AEGIS_STRATEGIC_INVARIANTS.md)
 outrank any roadmap in this repo.
 
-**This is an educational tool, not financial advice.**
+**This is an educational tool, not financial advice.** It trades paper only; no
+language model has authority over real capital, and nothing here is a claim that
+Aegis beats the market.
+
+### The evidence ladder
+
+Every number shown to a reader carries one label, earned one rung at a time
+(`LABEL_LADDER` in [`backend/services/book_dna.py`](backend/services/book_dna.py)).
+**Today nothing is above `OBSERVED(n)`**; the scoreboard below says where each
+number sits.
+
+| rung | what it means | who may award it |
+|---|---|---|
+| `OBSERVED(n)` | a number measured over *n* sessions: a fact about the past, not evidence of skill | any receipt |
+| `EARLY_EVIDENCE` | at least 21 sessions, excess over SPY above zero, and at least 2 of 3 sub-windows positive | `book_dna` |
+| `REPLICATED` | `EARLY_EVIDENCE` plus a positive excess over the fair twin, or a frozen replication that also qualifies | `book_dna` (its ceiling) |
+| `VALIDATED_EDGE` | a validator run once on data the idea never saw | no module awards it today |
+
+**Read `EARLY_EVIDENCE` with its null rate.** The rule is a sign test, and a book with *no* edge meets
+it about 4 times in 10 at any single look (7 in 10 at some point within a quarter of daily re-looks);
+`REPLICATED` through the fair-twin clause is met by about 3 no-edge books in 10. Measured with
+`book_dna`'s own functions:
+[`docs/research_notes/2026-10-07/evidence_ladder_null_rate_cloud_2026-10-07.md`](docs/research_notes/2026-10-07/evidence_ladder_null_rate_cloud_2026-10-07.md);
+whether the rung should change is an open owner decision.
+
+### Live evidence pages
+
+Base URL: **https://aegis-finance-six.vercel.app**
+
+| page | what it shows |
+|---|---|
+| [`/opportunities`](https://aegis-finance-six.vercel.app/opportunities) | Opportunity Explorer: direction, magnitude and the evidence label in separate columns |
+| [`/brain`](https://aegis-finance-six.vercel.app/brain) | what the system remembers, what it graded, what it decided today, and whether each part is actually running |
+| [`/arena`](https://aegis-finance-six.vercel.app/arena) | every paper account and frozen book, graded against SPY over its own window; nothing on it is a claim of skill |
+| [`/forecast-lab`](https://aegis-finance-six.vercel.app/forecast-lab) | how good the forecasts are, graded against what happened, each beside the baseline it must beat |
+| [`/theory-lab`](https://aegis-finance-six.vercel.app/theory-lab) | every theory with a mechanism, a precursor and a falsifier; negative results listed, not hidden |
+| [`/health`](https://aegis-finance-six.vercel.app/health) | verdicts derived from what each producer wrote; a stale output is red even when its process is alive |
+
+**For funders and reviewers:** [`docs/FUNDING_EVIDENCE_PACK_2026-10-07.md`](docs/FUNDING_EVIDENCE_PACK_2026-10-07.md),
+where every number was checked against the receipt it names and a number no
+receipt holds says `NOT MEASURED`.
 
 ## V1 Beta scoreboard (2026-10-07)
 
-**RESULT IMPROVEMENT: NONE.** That line is the house convention: every handoff opens with it until a
-result moves. Nothing in this repository beats the market after costs on a declared read, historically
-or forward. What exists is a loop that runs, grades itself, freezes the alternatives it did not take, and
-reads every result against a control built to be fair. Every number below names its receipt (paths under
-`backend/data/optimus/`) and carries an evidence label; the ladder is
+**The live result first.** The best strategy account in each of three families is ahead of SPY over its
+own window: `revision_flow_v0` +5.74 pp over 7 sessions (its matched random twin: −1.41 pp), night book
+`b109c886` +3.90 pp over 17, and `hack2`, a real Alpaca paper account holding the same 20 names, +1.02 pp
+over 27, the one book with 21 or more sessions that is ahead. That is a few weeks of paper, picked after
+the fact from 307 priced accounts, so each number carries its label. On the survivorship-free historical
+panel, alpha is not demonstrated yet. What exists is a loop that runs, grades itself, freezes the
+alternatives it did not take, and reads every result against a control built to be fair. Every number
+below names its receipt (paths under `backend/data/optimus/`) and carries an evidence label; the ladder is
 `OBSERVED(n)` → `EARLY_EVIDENCE` → `REPLICATED` → `VALIDATED_EDGE`, and nothing here is above `OBSERVED(n)`.
 
 | line | value | label | receipt |
 |---|---|---|---|
 | Historical, CRSP 1991-2024 (survivorship-free) | On the sticky twin (cost-fair by construction): 44 of 277 rules reach fair-twin t >= 2, 40 also pass pure selection, **1** also beats the market in validation and fails pure selection there (t 1.16). **Historical alpha: not demonstrated.** | `BACKTEST-ONLY` | `hyp_lab/twin_board_SUMMARY_STK_2026-10-07_2.json` |
-| Paper estate | 362 priced books; 147 ahead of SPY over their own window, 160 behind. The 147 are 108 control twins, 3 controls and 36 strategy books worth about **2.6 independent ex-ante bets**. **One** book with >= 21 sessions is ahead: hack2, +1.14 pp over 26 sessions. | `OBSERVED(n)` | `paper_accounts/roi_2026-10-06T163850Z.json`; `paper_accounts/book_dna_2026-10-06T163850Z.json` |
+| Paper estate | 362 priced books; 101 ahead of SPY over their own window, 206 behind. The 101 are 76 control twins, 0 controls and 25 strategy books worth about **2.6 independent ex-ante bets** (the largest holdings cluster, 5 books including revision_flow_v0 and hack2, is one basket). **One** book with >= 21 sessions is ahead: hack2, +1.02 pp over 27 sessions. | `OBSERVED(n)` | `paper_accounts/roi_2026-10-06T235345Z.json`; `paper_accounts/book_dna_2026-10-06T235345Z.json` |
 | Website lanes (since June) | all 10 behind SPY over their own windows (−1.39 pp to −28.26 pp) | `OBSERVED(n)` | `paper_accounts/roi_2026-10-06T163850Z.json` |
 | $1M paper account (PC-PAPER) | +0.27% vs SPY +0.86% since 2026-09-22, holding 79.85% cash; a worst-case gate priced on the names it would buy (14.08% of equity vs a 10% limit) caps the active sleeve at 54% gross | `OBSERVED(n)` | `pc_mandate/reconcile_2026-10-06_147824639837.json` |
 | Live loop | a scheduled owner starts a paper session on US trading days; candidate set refreshed 2026-10-06 (25 names, 2 eligible); positions still UNRECONCILED with the contract | `OBSERVED` | `health/health_20261006T175305Z.json` |
@@ -113,7 +175,7 @@ No LLM ever has authority over real capital.
 | API | Railway (FastAPI backend, auto-deployed from `main`) |
 | Optimus brain showcase | https://optimus-brain-alpha.vercel.app |
 
-**Pages in the web app:** `/opportunities` (Opportunity Explorer: direction, magnitude and the evidence label in separate columns) · `/brain`. **Next** (chunk C19, being built; not yet in the app): `/arena` (every paper book with its label), `/forecast-lab`, `/theory-lab`, `/health`.
+**Pages in the web app:** `/opportunities` · `/brain` · `/arena` · `/forecast-lab` · `/theory-lab` · `/health`; what each shows is in [Live evidence pages](#live-evidence-pages) at the top.
 
 **Paper accounts:** see the [V1 Beta scoreboard](#v1-beta-scoreboard-2026-10-07) above. Every row: [`docs/PAPER_ACCOUNTS.md`](docs/PAPER_ACCOUNTS.md) · [details](#the-track-record-precisely) · `GET /api/pi/paper-accounts`. None of it is a claim.
 
@@ -214,61 +276,20 @@ Most retail finance tools show you a backtest and ask you to trust it. Aegis ass
 
 Every idea walks the same gauntlet — and most die, cheaply and on the record:
 
-```mermaid
-flowchart LR
-    IDEA([Idea]) --> CORPSE{Corpse check vs<br/>335+ prior trials}
-    CORPSE -->|match found| DEAD[Refused —<br/>it already has a corpse]
-    CORPSE -->|pass| PREREG[Pre-registration<br/>frozen in a commit<br/>BEFORE any data]
-    PREREG --> RUN[Run — every arm prints<br/>its own 80%-power MDE]
-    RUN --> PLACEBO{Placebos<br/>clean?}
-    PLACEBO -->|no| VOID[VOID — disclosed<br/>with its numbers,<br/>never deleted]
-    PLACEBO -->|yes| BAR{Clears its<br/>own MDE?}
-    BAR -->|no| NR[NEGATIVE_RESULTS.md /<br/>NOT_DETECTABLE]
-    BAR -->|yes| FWD[Forward paper lane —<br/>reality decides,<br/>24-month clock]
-    style DEAD fill:#7f1d1d,color:#fff
-    style VOID fill:#7f1d1d,color:#fff
-    style NR fill:#78350f,color:#fff
-    style FWD fill:#14532d,color:#fff
-```
+<p align="center">
+  <img src="docs/assets/gauntlet.svg" width="100%" alt="Every idea walks the same gauntlet: an idea meets the corpse check against 335+ prior trials (a match is refused: it already has a corpse); if it passes, its pre-registration is frozen in a commit before any data; the run prints every arm's own 80%-power MDE; unclean placebos make it VOID, disclosed with its numbers and never deleted; failing its own MDE sends it to NEGATIVE_RESULTS.md as NOT_DETECTABLE; only an idea that clears both reaches a forward paper lane, where reality decides on a 24-month clock. Every refusal, void and null is a record the next corpse check reads.">
+</p>
 
 ## The brain, in one picture
 
 The system is converging on a specific architecture: **the LLM perceives, the
 engine computes, learned models forecast, Aegis referees, and reality grades
-everyone** — in a loop.
+everyone** — in a loop. Every card names the modules that run its stage; the
+blue current is one cycle, the orange path is what the next cycle inherits.
 
-```mermaid
-flowchart TB
-    subgraph WORLD["🌍 The world"]
-        NEWS[News · SEC filings ·<br/>public disclosures]
-        MKT[Prices · options ·<br/>fundamentals · revisions]
-        MACRO[FRED macro ·<br/>net liquidity]
-    end
-    subgraph PERCEIVE["🧠 Perception (LLM)"]
-        EV[Event extraction<br/><i>what changed?</i>]
-        REL[Relation graph<br/><i>who affects whom?</i>]
-        IIF[Autonomous investigator<br/><i>IIF-1 — armed, 0/40 valid nights</i>]
-    end
-    subgraph ENGINE["⚙️ Engine (numbers)"]
-        PIT[Point-in-time store<br/><i>nothing peeks at the future</i>]
-        TEACH[Teacher Library<br/><i>insiders · funds · politicians</i>]
-        MODELS[ML: crash · Monte Carlo ·<br/>factors · regimes]
-    end
-    subgraph REFEREE["⚖️ Aegis (the referee)"]
-        DISC[Pre-registration · MDE ·<br/>placebos · read gates]
-    end
-    LANES[📈 Paper lanes — daily NAV,<br/>hash-pinned configs,<br/>since 2026-06-08]
-    REALITY([Reality grades everything])
-    WORLD --> PERCEIVE
-    WORLD --> ENGINE
-    PERCEIVE --> ENGINE
-    ENGINE --> DISC
-    PERCEIVE --> DISC
-    DISC --> LANES
-    LANES --> REALITY
-    REALITY -->|resolved outcomes<br/>feed back| PERCEIVE
-    REALITY -->|calibration| ENGINE
-```
+<p align="center">
+  <a href="docs/assets/architecture_pipeline.svg"><img src="docs/assets/architecture_pipeline.svg" width="100%" alt="How Aegis works, module by module: nine stages in a serpentine grid (world sensors, evidence, world state and theory, forecasts, decision, paper action, outcome, attribution, learning), each card listing the repository modules that run it; blue dashed current flows stage to stage and orange paths carry learning back into the next cycle's decision and theory."></a>
+</p>
 
 ## How to read the evidence here
 

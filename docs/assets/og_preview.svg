@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+<title id="title">AEGIS Finance</title>
+<desc id="desc">AEGIS Finance. Auditable AI investment intelligence. Aegis is an open-source investment research system that writes down what it believes before an outcome exists, grades every belief against what then happens, and lets only graded beliefs change how paper capital is sized. https://aegis-finance-six.vercel.app</desc>
+<style>.bg{fill:#000000}.kicker{font:400 13px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:3.5px;fill:rgba(255,255,255,.6)}.brand{font:200 84px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;letter-spacing:24px;fill:#fff}.fin{font:500 15px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:9px;fill:#6fb0ff}.d{font:400 22px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:rgba(255,255,255,.78)}.url{font:500 19px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#6fb0ff}.meta{font:400 13px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:2px;fill:rgba(255,255,255,.5)}.dot{fill:rgba(255,255,255,.34)}.node{fill:#000;stroke:rgba(255,255,255,.8);stroke-width:1.5}.node.o{stroke:#ff8a1f}.node.a{fill:#4a8dff;stroke:#6fb0ff}.nn{font:600 10px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#fff}.orbit{fill:none;stroke:#ff8a1f;stroke-width:1.2;stroke-dasharray:2 5;opacity:.45}.core{font:200 22px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;letter-spacing:7px;fill:#fff}.csub{font:500 9px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:2px;fill:rgba(255,255,255,.55)}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style>
+<defs></defs>
+<rect width="1200" height="630" class="bg"/>
+<text x="72" y="96" class="kicker">AUDITABLE AI INVESTMENT INTELLIGENCE</text>
+<text x="64" y="196" class="brand">AEGIS</text>
+<text x="74" y="232" class="fin">FINANCE</text>
+<text x="72" y="296" class="d">Aegis is an open-source investment research</text>
+<text x="72" y="330" class="d">system that writes down what it believes before</text>
+<text x="72" y="364" class="d">an outcome exists, grades every belief against</text>
+<text x="72" y="398" class="d">what then happens, and lets only graded beliefs</text>
+<text x="72" y="432" class="d">change how paper capital is sized.</text>
+<text x="72" y="560" class="url">https://aegis-finance-six.vercel.app</text>
+<text x="72" y="590" class="meta">OPEN SOURCE (MIT) · PAPER ONLY · GITHUB.COM/MURATHANX12/AEGIS-FINANCE</text>
+<path d="M930.0,178.0 A142,142 0 0 1 1053.0,391.0" class="orbit"/>
+<path d="M930.0,202.0 A118,118 0 1 1 889.6,430.9" class="orbit"/>
+<circle cx="953.5" cy="141.5" r="1.6" class="dot"/>
+<circle cx="965.1" cy="143.5" r="1.6" class="dot"/>
+<circle cx="976.6" cy="146.1" r="1.6" class="dot"/>
+<circle cx="987.9" cy="149.6" r="1.6" class="dot"/>
+<circle cx="998.9" cy="153.7" r="1.6" class="dot"/>
+<circle cx="1009.6" cy="158.6" r="1.6" class="dot"/>
+<circle cx="1020.0" cy="164.1" r="1.6" class="dot"/>
+<circle cx="1030.0" cy="170.3" r="1.6" class="dot"/>
+<circle cx="1065.3" cy="201.3" r="1.6" class="dot"/>
+<circle cx="1072.8" cy="210.4" r="1.6" class="dot"/>
+<circle cx="1079.7" cy="220.0" r="1.6" class="dot"/>
+<circle cx="1085.9" cy="230.0" r="1.6" class="dot"/>
+<circle cx="1091.4" cy="240.4" r="1.6" class="dot"/>
+<circle cx="1096.3" cy="251.1" r="1.6" class="dot"/>
+<circle cx="1100.4" cy="262.1" r="1.6" class="dot"/>
+<circle cx="1109.6" cy="308.2" r="1.6" class="dot"/>
+<circle cx="1110.0" cy="320.0" r="1.6" class="dot"/>
+<circle cx="1109.6" cy="331.8" r="1.6" class="dot"/>
+<circle cx="1108.5" cy="343.5" r="1.6" class="dot"/>
+<circle cx="1106.5" cy="355.1" r="1.6" class="dot"/>
+<circle cx="1103.9" cy="366.6" r="1.6" class="dot"/>
+<circle cx="1100.4" cy="377.9" r="1.6" class="dot"/>
+<circle cx="1096.3" cy="388.9" r="1.6" class="dot"/>
+<circle cx="1072.8" cy="429.6" r="1.6" class="dot"/>
+<circle cx="1065.3" cy="438.7" r="1.6" class="dot"/>
+<circle cx="1057.3" cy="447.3" r="1.6" class="dot"/>
+<circle cx="1048.7" cy="455.3" r="1.6" class="dot"/>
+<circle cx="1039.6" cy="462.8" r="1.6" class="dot"/>
+<circle cx="1030.0" cy="469.7" r="1.6" class="dot"/>
+<circle cx="1020.0" cy="475.9" r="1.6" class="dot"/>
+<circle cx="1009.6" cy="481.4" r="1.6" class="dot"/>
+<circle cx="965.1" cy="496.5" r="1.6" class="dot"/>
+<circle cx="953.5" cy="498.5" r="1.6" class="dot"/>
+<circle cx="941.8" cy="499.6" r="1.6" class="dot"/>
+<circle cx="930.0" cy="500.0" r="1.6" class="dot"/>
+<circle cx="918.2" cy="499.6" r="1.6" class="dot"/>
+<circle cx="906.5" cy="498.5" r="1.6" class="dot"/>
+<circle cx="894.9" cy="496.5" r="1.6" class="dot"/>
+<circle cx="850.4" cy="481.4" r="1.6" class="dot"/>
+<circle cx="840.0" cy="475.9" r="1.6" class="dot"/>
+<circle cx="830.0" cy="469.7" r="1.6" class="dot"/>
+<circle cx="820.4" cy="462.8" r="1.6" class="dot"/>
+<circle cx="811.3" cy="455.3" r="1.6" class="dot"/>
+<circle cx="802.7" cy="447.3" r="1.6" class="dot"/>
+<circle cx="794.7" cy="438.7" r="1.6" class="dot"/>
+<circle cx="787.2" cy="429.6" r="1.6" class="dot"/>
+<circle cx="763.7" cy="388.9" r="1.6" class="dot"/>
+<circle cx="759.6" cy="377.9" r="1.6" class="dot"/>
+<circle cx="756.1" cy="366.6" r="1.6" class="dot"/>
+<circle cx="753.5" cy="355.1" r="1.6" class="dot"/>
+<circle cx="751.5" cy="343.5" r="1.6" class="dot"/>
+<circle cx="750.4" cy="331.8" r="1.6" class="dot"/>
+<circle cx="750.0" cy="320.0" r="1.6" class="dot"/>
+<circle cx="750.4" cy="308.2" r="1.6" class="dot"/>
+<circle cx="759.6" cy="262.1" r="1.6" class="dot"/>
+<circle cx="763.7" cy="251.1" r="1.6" class="dot"/>
+<circle cx="768.6" cy="240.4" r="1.6" class="dot"/>
+<circle cx="774.1" cy="230.0" r="1.6" class="dot"/>
+<circle cx="780.3" cy="220.0" r="1.6" class="dot"/>
+<circle cx="787.2" cy="210.4" r="1.6" class="dot"/>
+<circle cx="794.7" cy="201.3" r="1.6" class="dot"/>
+<circle cx="830.0" cy="170.3" r="1.6" class="dot"/>
+<circle cx="840.0" cy="164.1" r="1.6" class="dot"/>
+<circle cx="850.4" cy="158.6" r="1.6" class="dot"/>
+<circle cx="861.1" cy="153.7" r="1.6" class="dot"/>
+<circle cx="872.1" cy="149.6" r="1.6" class="dot"/>
+<circle cx="883.4" cy="146.1" r="1.6" class="dot"/>
+<circle cx="894.9" cy="143.5" r="1.6" class="dot"/>
+<circle cx="906.5" cy="141.5" r="1.6" class="dot"/>
+<circle cx="1045.7" cy="182.1" r="11" class="node"/>
+<text x="1045.7" y="185.6" class="nn" text-anchor="middle">01</text>
+<circle cx="1107.3" cy="288.7" r="11" class="node"/>
+<text x="1107.3" y="292.2" class="nn" text-anchor="middle">02</text>
+<circle cx="1085.9" cy="410.0" r="11" class="node"/>
+<text x="1085.9" y="413.5" class="nn" text-anchor="middle">03</text>
+<circle cx="991.6" cy="489.1" r="11" class="node"/>
+<text x="991.6" y="492.6" class="nn" text-anchor="middle">04</text>
+<circle cx="868.4" cy="489.1" r="11" class="node a"/>
+<text x="868.4" y="492.6" class="nn" text-anchor="middle">05</text>
+<circle cx="774.1" cy="410.0" r="11" class="node"/>
+<text x="774.1" y="413.5" class="nn" text-anchor="middle">06</text>
+<circle cx="752.7" cy="288.7" r="11" class="node"/>
+<text x="752.7" y="292.2" class="nn" text-anchor="middle">07</text>
+<circle cx="814.3" cy="182.1" r="11" class="node"/>
+<text x="814.3" y="185.6" class="nn" text-anchor="middle">08</text>
+<circle cx="930.0" cy="140.0" r="11" class="node o"/>
+<text x="930.0" y="143.5" class="nn" text-anchor="middle">09</text>
+<text x="934" y="324" class="core" text-anchor="middle">LOOP</text>
+<text x="930" y="344" class="csub" text-anchor="middle">EVERY BELIEF GRADED</text>
+</svg>
