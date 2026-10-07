@@ -51,6 +51,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import logging
 import os
 import signal
@@ -2027,6 +2028,40 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                               or (st == "CORE" and mode == "paper_profit")
                               or (st == "REVISION_FLOW" and rf_acting))
 
+    # ---- review 2026-10-07 fix 2: the core is clipped to the POST-FILL book ----
+    # The core was sized on TARGET weights; a sleeve rebalance refused by the
+    # drift band leaves the name above its target, so buying SPY to its target
+    # could take gross above 1 (measured 1.02-1.06). Price the book as it will
+    # stand after every sendable order fills (held qty where no order goes) and
+    # cut the SPY buy so it stays <= 1 - cash buffer. Flag OFF: no core, no-op.
+    if core.get("applied") and core_syms:
+        _cs = core["symbol"]
+        _cp = next((p_ for p_ in plans if p_.symbol == _cs and p_.side == "buy"
+                    and p_.qty > 0), None)
+        if _cp is not None and _cp.price > 0:
+            _qty = {s_: float(q_) for s_, q_ in held.items()}
+            for p_ in plans:
+                if p_.qty > 0 and _may_send(p_):
+                    _qty[p_.symbol] = _qty.get(p_.symbol, 0.0) + (
+                        p_.qty if p_.side == "buy" else -p_.qty)
+            _post = sum(max(0.0, q_) * float(prices.get(s_) or 0.0) for s_, q_ in _qty.items())
+            _cap = (1.0 - float(core.get("cash_buffer") or 0.0)) * float(equity)
+            if _post > _cap + 1e-6:
+                _cut = int(math.ceil((_post - _cap) / _cp.price))
+                _new = max(0, _cp.qty - _cut)
+                core["clipped_to_post_fill_gross"] = {
+                    "post_fill_gross_before": _post / float(equity),
+                    "qty_before": _cp.qty, "qty_after": _new,
+                    "line": (f"CORE_CLIPPED_TO_POST_FILL_GROSS: the book after fills would be "
+                             f"{_post / float(equity):.2%} of equity; {_cs} buy cut "
+                             f"{_cp.qty} -> {_new} sh so gross <= {_cap / float(equity):.0%}")}
+                core["line"] += "; " + core["clipped_to_post_fill_gross"]["line"]
+                _cp.notional = _new * _cp.price
+                _cp.target_qty = _cp.current_qty + _new
+                if _new == 0:
+                    _cp.refused = core["clipped_to_post_fill_gross"]["line"]
+                _cp.qty = _new
+
     by_state: dict[str, int] = {}
     for p in plans:
         if p.qty > 0:
@@ -2129,6 +2164,11 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
 
     # ---- send ------------------------------------------------------------------
     to_send = [p for p in plans if _may_send(p)]
+    # review 2026-10-07 fix 3: the core's plan was appended after the sleeves'
+    # sells-first list; re-sort the combined list so every sell (incl. a SPY
+    # trim that funds a sleeve buy) is submitted before any buy. Stable sort:
+    # with no core plan the order is unchanged.
+    to_send.sort(key=lambda p: p.side != "sell")
     sent: list[dict] = []
     send_block = None
     if to_send and risk_gate.get("block"):

@@ -118,8 +118,12 @@ def _pinned(rec: dict, rb: ReplayBroker) -> dict:
 def test_flags_off_plan_is_the_pre_change_plan(tmp_path, monkeypatch):
     rec, rb = _replay(tmp_path, monkeypatch, on=False)
     got = _pinned(rec, rb)
-    if not GOLDEN.exists():                       # captured ONCE, from the pre-change code
-        GOLDEN.write_text(json.dumps(got, indent=1, sort_keys=True), encoding="utf-8")
+    # review fix 7: the golden was captured ONCE from the pre-change code
+    # (committed d8283f29, verified against b3f23c55); a missing file is a
+    # failure, never a fresh capture that would pin whatever the code does now.
+    if not GOLDEN.exists():
+        pytest.fail(f"{GOLDEN} is missing: the flags-OFF pin cannot be re-captured from "
+                    f"the current code; restore it from git")
     want = json.loads(GOLDEN.read_text(encoding="utf-8"))
     assert got == want
 
@@ -590,3 +594,57 @@ def test_the_decision_story_replay_still_matches_with_the_sleeve_on(tmp_path, mo
     assert on["decision_story"].get("replay_matches_actual") == \
         off["decision_story"].get("replay_matches_actual")
     assert on["decision_story"].get("replay_diff") == off["decision_story"].get("replay_diff")
+
+
+# ─────────────────────────────── review fixes 2/3: post-fill gross, order ─────
+
+def test_drift_band_cannot_push_gross_above_one(tmp_path, monkeypatch):
+    """The reviewer's reproduction: the sleeve held ~9% above target (its
+    rebalance refused by the drift band) and SPY held below its target. The
+    SPY buy is cut so the book after fills stays <= 1 - buffer."""
+    _rf_stub(monkeypatch)
+    eq = float(STATE["equity"])
+    extra = []
+    for s_ in RF_NAMES:                                   # 1.5% target, held at 1.64%
+        px = float(STATE["prices"][s_])
+        q = int(0.015 * 1.09 * eq // px)
+        extra.append({"symbol": s_, "qty": float(q), "market_value": q * px,
+                      "current_price": px})
+    spx = float(STATE["prices"]["SPY"])
+    q = int(0.34 * eq // spx)
+    extra.append({"symbol": "SPY", "qty": float(q), "market_value": q * spx,
+                  "current_price": spx})
+    _set_flags(monkeypatch, True)
+    rb = ReplayBroker(extra=extra).install(monkeypatch)
+    _funnel_held(tmp_path)
+    _ranking(tmp_path / "out", net=-0.2)
+    S.u_plan(tmp_path / "out", "paper_profit", asof=ASOF, funnel_path=tmp_path / "funnel.json",
+             ledger_path=tmp_path / "ledger.jsonl",
+             contracts_dir=tmp_path / "decisions" / "pc_plan", bars_paths=[tmp_path / "b"])
+    rec = json.loads((tmp_path / "out" / "intended_book.json").read_text(encoding="utf-8"))
+    fw = _final_weights(rec, rb)
+    assert sum(fw.values()) <= 1.0 - config.PC_BENCHMARK_CORE_CASH_BUFFER + 1e-6, \
+        f"gross after fills {sum(fw.values()):.4f}"
+    assert "CORE_CLIPPED_TO_POST_FILL_GROSS" in rec["benchmark_core"]["line"]
+
+
+def test_sells_are_submitted_before_buys(tmp_path, monkeypatch):
+    """SPY held ABOVE its target while the sleeve is bought: the SPY trim that
+    funds the buys goes first."""
+    _rf_stub(monkeypatch)
+    eq = float(STATE["equity"])
+    spx = float(STATE["prices"]["SPY"])
+    q = int(0.75 * eq // spx)
+    _set_flags(monkeypatch, True)
+    rb = ReplayBroker(extra=[{"symbol": "SPY", "qty": float(q), "market_value": q * spx,
+                              "current_price": spx}]).install(monkeypatch)
+    _funnel_held(tmp_path)
+    _ranking(tmp_path / "out", net=-0.2)
+    S.u_plan(tmp_path / "out", "paper_profit", asof=ASOF, funnel_path=tmp_path / "funnel.json",
+             ledger_path=tmp_path / "ledger.jsonl",
+             contracts_dir=tmp_path / "decisions" / "pc_plan", bars_paths=[tmp_path / "b"])
+    sides = [p.side for p in rb.submitted]
+    assert "sell" in sides and "buy" in sides
+    assert sides.index("buy") > max(i for i, x in enumerate(sides) if x == "sell")
+    spy = [p for p in rb.submitted if p.symbol == "SPY"]
+    assert spy and spy[0].side == "sell"
