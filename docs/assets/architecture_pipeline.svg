@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="860" viewBox="0 0 1200 860" role="img" aria-labelledby="title desc">
+<title id="title">The Aegis V1 Beta pipeline</title>
+<desc id="desc">Nine stages in one loop: world sensors, evidence, world state and theory, forecasts, opportunity and decision, paper action or abstention, outcome, regret and attribution, learning; learning feeds the next cycle's decisions and theory. Each stage names the repository modules that run it. State on 2026-10-07: V1 Beta not reached; RESULT IMPROVEMENT: NONE. Source: docs/AEGIS_V1_BETA_2026-10-07.md.</desc>
+<style>
+.s{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}
+.m{font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace}
+.eb{font-size:12.5px;font-weight:700;letter-spacing:2px;fill:#38bdf8}
+.h1{font-size:25px;font-weight:700;fill:#eef3f9}
+.sub{font-size:14px;fill:#b4c2d4}
+.chip{font-size:13px;font-weight:700;letter-spacing:1.2px;fill:#f5b942}
+.tail{font-size:13px;fill:#b4c2d4}
+.num{font-size:13px;font-weight:700;fill:#eef3f9}
+.st{font-size:15.5px;font-weight:700;letter-spacing:.5px;fill:#eef3f9}
+.ab{font-size:13px;fill:#b4c2d4}
+.mod{font-size:12.5px}
+.dir{fill:#7d90a8}
+.file{fill:#93dcff}
+.sym{fill:#c4b5fd}
+.loop{font-size:12px;font-style:italic;fill:#f5b942}
+.ft{font-size:12.5px;fill:#b4c2d4}
+.ft2{font-size:12px;fill:#8a9bb2}
+</style>
+<defs>
+<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6b86a8"/></marker>
+<marker id="al" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#f5b942"/></marker>
+</defs>
+<rect x="1" y="1" width="1198" height="858" rx="20" fill="#0b1220" stroke="#2b3b57" stroke-width="2"/>
+<text class="s eb" x="36" y="46">AEGIS FINANCE · THE V1 BETA LOOP</text>
+<text class="s h1" x="36" y="79">Every box names the module that runs it</text>
+<text class="s sub" x="36" y="106">Language models read the world and propose; deterministic code ranks, sizes, stops and exits. Paper only.</text>
+<rect x="856" y="30" width="292" height="30" rx="15" fill="#2a2111" stroke="#f5b942" stroke-width="1.2"/>
+<text class="s chip" x="1002" y="50" text-anchor="middle">RESULT IMPROVEMENT: NONE</text>
+<text class="s tail" x="1148" y="82" text-anchor="end">the loop runs, grades itself, and freezes its alternatives</text>
+<path d="M384 216H417" stroke="#6b86a8" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+<path d="M768 216H801" stroke="#6b86a8" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+<path d="M976 308V357" stroke="#6b86a8" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+<path d="M800 448H767" stroke="#6b86a8" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+<path d="M416 448H383" stroke="#6b86a8" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+<path d="M208 540V589" stroke="#6b86a8" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+<path d="M384 680H417" stroke="#6b86a8" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+<path d="M768 680H801" stroke="#6b86a8" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+<path d="M1100 589V578Q1100 566 1088 566H488Q476 566 476 554V539" stroke="#f5b942" stroke-width="2" stroke-dasharray="7 5" fill="none" marker-end="url(#al)"/>
+<text class="s loop" x="788" y="557" text-anchor="middle">weights + preferences, next cycle · gates only shrink</text>
+<path d="M1151 680H1164Q1176 680 1176 668V228Q1176 216 1164 216H1152" stroke="#f5b942" stroke-width="2" stroke-dasharray="7 5" fill="none" marker-end="url(#al)"/>
+<text class="s loop" transform="translate(1191 448) rotate(-90)" text-anchor="middle">family posterior → next round's hypothesis quota · never a kill</text>
+<g id="stage-1">
+<rect x="36" y="128" width="344" height="176" rx="12" fill="#111b2c" stroke="#2a3a55" stroke-width="1.2"/>
+<circle cx="36" cy="155" r="13" fill="#0b1220" stroke="#38bdf8" stroke-width="1.5"/>
+<text class="s num" x="36" y="160" text-anchor="middle">1</text>
+<text class="s st" x="60" y="161">WORLD SENSORS</text>
+<text class="s ab" x="52" y="185">Whole-market news, analyst revisions and</text>
+<text class="s ab" x="52" y="202">public flows (USAspending, lobbying, crypto)</text>
+<path d="M52 215H364" stroke="#2a3a55" stroke-width="1"/>
+<text class="m mod" x="52" y="235"><tspan class="dir">scripts/</tspan><tspan class="file">news_pull.py</tspan></text>
+<text class="m mod" x="52" y="254"><tspan class="dir">backend/services/</tspan><tspan class="file">web_reader.py</tspan></text>
+<text class="m mod" x="52" y="273"><tspan class="dir">scripts/</tspan><tspan class="file">pull_analyst_targets.py</tspan></text>
+<text class="m mod" x="52" y="292"><tspan class="dir">backend/services/</tspan><tspan class="file">public_flow_common.py</tspan></text>
+</g>
+<g id="stage-2">
+<rect x="420" y="128" width="344" height="176" rx="12" fill="#111b2c" stroke="#2a3a55" stroke-width="1.2"/>
+<circle cx="420" cy="155" r="13" fill="#0b1220" stroke="#38bdf8" stroke-width="1.5"/>
+<text class="s num" x="420" y="160" text-anchor="middle">2</text>
+<text class="s st" x="444" y="161">EVIDENCE</text>
+<text class="s ab" x="436" y="185">A language model reads what was stored and</text>
+<text class="s ab" x="436" y="202">proposes; deterministic code weighs it</text>
+<path d="M436 215H748" stroke="#2a3a55" stroke-width="1"/>
+<text class="m mod" x="436" y="235"><tspan class="dir">backend/services/</tspan><tspan class="file">world_digest.py</tspan></text>
+<text class="m mod" x="436" y="254"><tspan class="dir">backend/services/</tspan><tspan class="file">analyst_reputation.py</tspan></text>
+<text class="m mod" x="436" y="273"><tspan class="dir">backend/services/</tspan><tspan class="file">data_catalog.py</tspan></text>
+</g>
+<g id="stage-3">
+<rect x="804" y="128" width="344" height="176" rx="12" fill="#111b2c" stroke="#2a3a55" stroke-width="1.2"/>
+<circle cx="804" cy="155" r="13" fill="#0b1220" stroke="#38bdf8" stroke-width="1.5"/>
+<text class="s num" x="804" y="160" text-anchor="middle">3</text>
+<text class="s st" x="828" y="161">WORLD STATE / THEORY</text>
+<text class="s ab" x="820" y="185">Persistent beliefs, scenarios, regime rows;</text>
+<text class="s ab" x="820" y="202">a theory: mechanism, precursor, falsifier</text>
+<path d="M820 215H1132" stroke="#2a3a55" stroke-width="1"/>
+<text class="m mod" x="820" y="235"><tspan class="dir">backend/services/</tspan><tspan class="file">world_state.py</tspan></text>
+<text class="m mod" x="820" y="254"><tspan class="dir">scripts/</tspan><tspan class="file">hyp_theory_cells.py</tspan></text>
+</g>
+<g id="stage-4">
+<rect x="804" y="360" width="344" height="176" rx="12" fill="#111b2c" stroke="#2a3a55" stroke-width="1.2"/>
+<circle cx="804" cy="387" r="13" fill="#0b1220" stroke="#38bdf8" stroke-width="1.5"/>
+<text class="s num" x="804" y="392" text-anchor="middle">4</text>
+<text class="s st" x="828" y="393">FORECASTS</text>
+<text class="s ab" x="820" y="417">Frozen before the outcome exists; graded</text>
+<text class="s ab" x="820" y="434">at h = 1 / 5 / 21 / 63 sessions</text>
+<path d="M820 447H1132" stroke="#2a3a55" stroke-width="1"/>
+<text class="m mod" x="820" y="467"><tspan class="dir">scripts/</tspan><tspan class="file">sim_run.py</tspan><tspan class="sym"> · u_forecast</tspan></text>
+<text class="m mod" x="820" y="486"><tspan class="dir">backend/services/</tspan><tspan class="file">belief_state.py</tspan></text>
+<text class="m mod" x="820" y="505"><tspan class="dir">nn_lab/</tspan><tspan class="file">nightly.py</tspan></text>
+</g>
+<g id="stage-5">
+<rect x="420" y="360" width="344" height="176" rx="12" fill="#111b2c" stroke="#2a3a55" stroke-width="1.2"/>
+<circle cx="420" cy="387" r="13" fill="#0b1220" stroke="#38bdf8" stroke-width="1.5"/>
+<text class="s num" x="420" y="392" text-anchor="middle">5</text>
+<text class="s st" x="444" y="393">OPPORTUNITY / DECISION</text>
+<text class="s ab" x="436" y="417">Direction and magnitude kept apart; risk</text>
+<text class="s ab" x="436" y="434">priced on the names it would actually buy</text>
+<path d="M436 447H748" stroke="#2a3a55" stroke-width="1"/>
+<text class="m mod" x="436" y="467"><tspan class="dir">backend/services/</tspan><tspan class="file">opportunity_funnel.py</tspan></text>
+<text class="m mod" x="436" y="486"><tspan class="dir">scripts/</tspan><tspan class="file">sim_run.py</tspan><tspan class="sym"> · u_rank</tspan><tspan class="sym"> · u_plan</tspan></text>
+<text class="m mod" x="436" y="505"><tspan class="dir">backend/services/</tspan><tspan class="file">decision_contract.py</tspan></text>
+<text class="m mod" x="436" y="524"><tspan class="dir">backend/services/</tspan><tspan class="file">opportunities.py</tspan></text>
+</g>
+<g id="stage-6">
+<rect x="36" y="360" width="344" height="176" rx="12" fill="#111b2c" stroke="#2a3a55" stroke-width="1.2"/>
+<circle cx="36" cy="387" r="13" fill="#0b1220" stroke="#38bdf8" stroke-width="1.5"/>
+<text class="s num" x="36" y="392" text-anchor="middle">6</text>
+<text class="s st" x="60" y="393">PAPER ACTION OR ABSTENTION</text>
+<text class="s ab" x="52" y="417">Paper only, and a HOLD is a decision too;</text>
+<text class="s ab" x="52" y="434">no LLM has authority over real capital</text>
+<path d="M52 447H364" stroke="#2a3a55" stroke-width="1"/>
+<text class="m mod" x="52" y="467"><tspan class="dir">scripts/</tspan><tspan class="file">task_keeper.py</tspan><tspan class="sym"> · AegisSimOwner</tspan></text>
+<text class="m mod" x="52" y="486"><tspan class="dir">backend/services/</tspan><tspan class="file">sim_session.py</tspan></text>
+<text class="m mod" x="52" y="505"><tspan class="dir">backend/services/</tspan><tspan class="file">pc_broker.py</tspan></text>
+</g>
+<g id="stage-7">
+<rect x="36" y="592" width="344" height="176" rx="12" fill="#111b2c" stroke="#2a3a55" stroke-width="1.2"/>
+<circle cx="36" cy="619" r="13" fill="#0b1220" stroke="#38bdf8" stroke-width="1.5"/>
+<text class="s num" x="36" y="624" text-anchor="middle">7</text>
+<text class="s st" x="60" y="625">OUTCOME</text>
+<text class="s ab" x="52" y="649">A daily pass grades what came due and</text>
+<text class="s ab" x="52" y="666">reports refusals instead of hiding them</text>
+<path d="M52 679H364" stroke="#2a3a55" stroke-width="1"/>
+<text class="m mod" x="52" y="699"><tspan class="dir">scripts/</tspan><tspan class="file">daily_pass.py</tspan></text>
+<text class="m mod" x="52" y="718"><tspan class="dir">backend/services/</tspan><tspan class="file">forecast_grader.py</tspan></text>
+<text class="m mod" x="52" y="737"><tspan class="dir">scripts/</tspan><tspan class="file">sim_run.py</tspan><tspan class="sym"> · u_grade</tspan></text>
+</g>
+<g id="stage-8">
+<rect x="420" y="592" width="344" height="176" rx="12" fill="#111b2c" stroke="#2a3a55" stroke-width="1.2"/>
+<circle cx="420" cy="619" r="13" fill="#0b1220" stroke="#38bdf8" stroke-width="1.5"/>
+<text class="s num" x="420" y="624" text-anchor="middle">8</text>
+<text class="s st" x="444" y="625">REGRET / ATTRIBUTION</text>
+<text class="s ab" x="436" y="649">Which input did it, and when did we know?</text>
+<text class="s ab" x="436" y="666">Regret as signed differences, null-tested</text>
+<path d="M436 679H748" stroke="#2a3a55" stroke-width="1"/>
+<text class="m mod" x="436" y="699"><tspan class="dir">backend/services/</tspan><tspan class="file">book_dna.py</tspan></text>
+<text class="m mod" x="436" y="718"><tspan class="dir">backend/services/</tspan><tspan class="file">decision_story.py</tspan></text>
+<text class="m mod" x="436" y="737"><tspan class="dir">backend/services/</tspan><tspan class="file">regret_ledger.py</tspan></text>
+</g>
+<g id="stage-9">
+<rect x="804" y="592" width="344" height="176" rx="12" fill="#111b2c" stroke="#2a3a55" stroke-width="1.2"/>
+<circle cx="804" cy="619" r="13" fill="#0b1220" stroke="#38bdf8" stroke-width="1.5"/>
+<text class="s num" x="804" y="624" text-anchor="middle">9</text>
+<text class="s st" x="828" y="625">LEARNING</text>
+<text class="s ab" x="820" y="649">Only graded outcomes change weights and</text>
+<text class="s ab" x="820" y="666">preferences; gates only shrink</text>
+<path d="M820 679H1132" stroke="#2a3a55" stroke-width="1"/>
+<text class="m mod" x="820" y="699"><tspan class="dir">backend/services/</tspan><tspan class="file">expected_return.py</tspan></text>
+<text class="m mod" x="820" y="718"><tspan class="dir">backend/services/</tspan><tspan class="file">policy_state.py</tspan></text>
+<text class="m mod" x="820" y="737"><tspan class="dir">backend/services/</tspan><tspan class="file">hyp_lab.py</tspan></text>
+</g>
+<path d="M36 784H1148" stroke="#2a3a55" stroke-width="1"/>
+<text class="s ft" x="36" y="804">State on 2026-10-07 (docs/AEGIS_V1_BETA_2026-10-07.md §9): V1 Beta not reached; 1 of 11 acceptance clauses met, 7 partially, 3 not yet.</text>
+<text class="s ft" x="36" y="823">Not yet closed: no live decision story exists (dry run only), and policy_state is written but not yet read by a plan (§2).</text>
+<text class="s ft2" x="36" y="842">Solid arrows: one cycle. Dashed: what the next cycle inherits. Every path is repo-relative and checked by backend/tests/test_public_assets.py.</text>
+</svg>

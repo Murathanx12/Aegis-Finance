@@ -1,34 +1,86 @@
-# Aegis Finance
+<p align="center">
+  <a href="https://aegis-finance-six.vercel.app"><img src="docs/assets/logo.png" alt="Aegis Finance logo" width="88" height="88"></a>
+</p>
+
+<h1 align="center">Aegis Finance</h1>
+
+<p align="center">
+  <b>Auditable AI investment intelligence</b> — open source, paper only, a receipt behind every headline number.<br>
+  It writes down what it believes before an outcome exists, grades every belief against what then happens,
+  and lets only graded beliefs change how paper capital is sized.
+</p>
 
 <p align="center">
   <a href="https://aegis-finance-six.vercel.app"><img alt="Live app" src="https://img.shields.io/badge/live-aegis--finance-0891b2?style=flat-square"></a>
-  <img alt="Tests" src="https://img.shields.io/badge/fast%20suite-12%2C496%20passed%20on%20main%20(2026--09--29)-2ea44f?style=flat-square">
-  <img alt="Python" src="https://img.shields.io/badge/python-3.12-3776AB?style=flat-square&logo=python&logoColor=white">
-  <img alt="Next.js" src="https://img.shields.io/badge/next.js-14-000000?style=flat-square&logo=nextdotjs">
-  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-backend-009688?style=flat-square&logo=fastapi&logoColor=white">
+  <img alt="Merge gate" src="https://img.shields.io/badge/merge%20gate%202026--10--07%20(92f147f)-13%2C693%20backend%20%2B%20106%20lab%20tests%20green-2ea44f?style=flat-square">
+  <img alt="Capital" src="https://img.shields.io/badge/capital-paper%20only-6e7781?style=flat-square">
   <img alt="Forward record" src="https://img.shields.io/badge/forward%20record-since%202026--06--08-blueviolet?style=flat-square">
+  <img alt="Python" src="https://img.shields.io/badge/python-3.12-3776AB?style=flat-square&logo=python&logoColor=white">
+  <img alt="Next.js" src="https://img.shields.io/badge/next.js-16-000000?style=flat-square&logo=nextdotjs">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-backend-009688?style=flat-square&logo=fastapi&logoColor=white">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square"></a>
 </p>
+
+<p align="center">
+  <a href="docs/assets/architecture_pipeline.svg"><img src="docs/assets/architecture_pipeline.svg" width="100%" alt="The Aegis V1 Beta pipeline: world sensors, evidence, world state and theory, forecasts, opportunity and decision, paper action or abstention, outcome, regret and attribution, learning, and the dashed loops that feed the next cycle. Each stage names the repository modules that run it."></a>
+</p>
+<p align="center"><sub>The V1 Beta loop: every box names the modules that run it, and <code>backend/tests/test_public_assets.py</code> fails if a printed path stops existing. The state of each stage, with its receipt, is §2 of <a href="docs/AEGIS_V1_BETA_2026-10-07.md"><code>docs/AEGIS_V1_BETA_2026-10-07.md</code></a>.</sub></p>
 
 Aegis Finance is a free, open-source **self-improving investment intelligence
 system** that measures itself in public and tells you when it is wrong. Its
 objective is compound return under explicit survival constraints — not
-classification accuracy, not a pretty backtest. It searches the *whole* market
-rather than the famous part of it, treats an LLM as something that proposes
-causal hypotheses while deterministic engines compute and grade them, and keeps
-its own corpses: a refused strategy with a written reason is an asset here, not
-an embarrassment. Every idea is pre-registered before it touches data, tested on
-live forward paper portfolios (running since **2026-06-08**), and published
-whether it works or not — the failures live in
-[NEGATIVE_RESULTS.md](NEGATIVE_RESULTS.md), at the top level, where a skeptic
-finds them first. Around that spine sits a full market dashboard: crash-risk and
-fragility measurement, Monte Carlo projections, portfolio construction, factor
-analysis, and point-in-time data collectors — all on free data sources.
-The twelve original + four added invariants are in
-[`docs/AEGIS_STRATEGIC_INVARIANTS.md`](docs/AEGIS_STRATEGIC_INVARIANTS.md); they
+classification accuracy, not a pretty backtest — and it searches the *whole*
+market rather than the famous part of it. Language models read the world and
+propose causal hypotheses; deterministic code ranks, sizes, stops, exits and
+grades. Results are read against a control built to be fair, and every headline
+number names the JSON receipt it came from.
+
+A paper candidate is frozen in a strategy contract before its first decision; a
+public claim needs full pre-registration ([the three
+licences](#three-licences--what-a-result-is-allowed-to-claim)). Results are
+published whether they work or not, and the corpses are kept — the failures live
+in [NEGATIVE_RESULTS.md](NEGATIVE_RESULTS.md), at the top level, where a skeptic
+finds them first. The forward paper record has run since **2026-06-08**. Around
+that spine sits a market dashboard (crash-risk and fragility measurement, Monte
+Carlo projections, portfolio construction, factor analysis, point-in-time data
+collectors), all on free data sources. The sixteen invariants in
+[`docs/AEGIS_STRATEGIC_INVARIANTS.md`](docs/AEGIS_STRATEGIC_INVARIANTS.md)
 outrank any roadmap in this repo.
 
-**This is an educational tool, not financial advice.**
+**This is an educational tool, not financial advice.** It trades paper only; no
+language model has authority over real capital, and nothing here is a claim that
+Aegis beats the market.
+
+### The evidence ladder
+
+Every number shown to a reader carries one label, earned one rung at a time
+(`LABEL_LADDER` in [`backend/services/book_dna.py`](backend/services/book_dna.py)).
+**Today nothing is above `OBSERVED(n)`**; the scoreboard below says where each
+number sits.
+
+| rung | what it means | who may award it |
+|---|---|---|
+| `OBSERVED(n)` | a number measured over *n* sessions: a fact about the past, not evidence of skill | any receipt |
+| `EARLY_EVIDENCE` | at least 21 sessions, excess over SPY above zero, and at least 2 of 3 sub-windows positive | `book_dna` |
+| `REPLICATED` | `EARLY_EVIDENCE` plus a positive excess over the fair twin, or a frozen replication that also qualifies | `book_dna` (its ceiling) |
+| `VALIDATED_EDGE` | a validator run once on data the idea never saw | no module awards it today |
+
+### Live evidence pages
+
+Base URL: **https://aegis-finance-six.vercel.app**
+
+| page | what it shows |
+|---|---|
+| [`/opportunities`](https://aegis-finance-six.vercel.app/opportunities) | Opportunity Explorer: direction, magnitude and the evidence label in separate columns |
+| [`/brain`](https://aegis-finance-six.vercel.app/brain) | what the system remembers, what it graded, what it decided today, and whether each part is actually running |
+| [`/arena`](https://aegis-finance-six.vercel.app/arena) | every paper account and frozen book, graded against SPY over its own window; nothing on it is a claim of skill |
+| [`/forecast-lab`](https://aegis-finance-six.vercel.app/forecast-lab) | how good the forecasts are, graded against what happened, each beside the baseline it must beat |
+| [`/theory-lab`](https://aegis-finance-six.vercel.app/theory-lab) | every theory with a mechanism, a precursor and a falsifier; negative results listed, not hidden |
+| [`/health`](https://aegis-finance-six.vercel.app/health) | verdicts derived from what each producer wrote; a stale output is red even when its process is alive |
+
+**For funders and reviewers:** [`docs/FUNDING_EVIDENCE_PACK_2026-10-07.md`](docs/FUNDING_EVIDENCE_PACK_2026-10-07.md),
+where every number was checked against the receipt it names and a number no
+receipt holds says `NOT MEASURED`.
 
 ## V1 Beta scoreboard (2026-10-07)
 
@@ -113,7 +165,7 @@ No LLM ever has authority over real capital.
 | API | Railway (FastAPI backend, auto-deployed from `main`) |
 | Optimus brain showcase | https://optimus-brain-alpha.vercel.app |
 
-**Pages in the web app:** `/opportunities` (Opportunity Explorer: direction, magnitude and the evidence label in separate columns) · `/brain`. **Next** (chunk C19, being built; not yet in the app): `/arena` (every paper book with its label), `/forecast-lab`, `/theory-lab`, `/health`.
+**Pages in the web app:** `/opportunities` · `/brain` · `/arena` · `/forecast-lab` · `/theory-lab` · `/health`; what each shows is in [Live evidence pages](#live-evidence-pages) at the top.
 
 **Paper accounts:** see the [V1 Beta scoreboard](#v1-beta-scoreboard-2026-10-07) above. Every row: [`docs/PAPER_ACCOUNTS.md`](docs/PAPER_ACCOUNTS.md) · [details](#the-track-record-precisely) · `GET /api/pi/paper-accounts`. None of it is a claim.
 
