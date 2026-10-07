@@ -35,10 +35,13 @@ SMIL, system font stacks, no script, no external file, no image.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
+import re
 import sys
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from xml.sax.saxutils import escape
 
@@ -52,6 +55,12 @@ OG_SVG = ASSETS / "og_preview.svg"
 GAUNTLET_SVG = ASSETS / "gauntlet.svg"
 FRONT_HTML = DESIGN / "aegis_front_page.html"
 PAPER_DIR = REPO / "backend" / "data" / "optimus" / "paper_accounts"
+README = REPO / "README.md"
+#: The README's results panel (<img alt=...> + its receipt-citing caption) is generated
+#: too (2026-10-07 chunk): `update_readme_results_block` rewrites everything between these
+#: two HTML comments and nothing outside them.
+RESULTS_BLOCK_START = "<!-- results-panel:start -->"
+RESULTS_BLOCK_END = "<!-- results-panel:end -->"
 
 SOURCE_DOC = "docs/AEGIS_V1_BETA_2026-10-07.md"
 LIVE_URL = "https://aegis-finance-six.vercel.app"
@@ -1136,6 +1145,196 @@ border-color:rgba(255,255,255,.75);border-style:solid}}
     )
 
 
+# ================================================================== the pin bump
+#: `python -m scripts.render_public_assets --bump-pin [RUN_ID]` (2026-10-07 chunk): pick the
+#: newest roi/book_dna receipt pair, rewrite RESULTS_RUN_ID in THIS file, re-render every
+#: asset + the README results block, and write a refresh receipt. Refuses (exit 2, nothing
+#: written) when the newest pair is not strictly newer than the pinned one, a featured family
+#: has no LIVE strategy account, or a text budget fails.
+PIN_RE = re.compile(r'(?m)^RESULTS_RUN_ID = "([^"]*)"$')
+
+
+def _generated_utc_of(run_id: str) -> str:
+    """The roi receipt's own `generated_utc`, or "" when it cannot be read (never a file stamp)."""
+    p = PAPER_DIR / f"roi_{run_id}.json"
+    if not p.is_file():
+        return ""
+    try:
+        return str(json.loads(p.read_text(encoding="utf-8")).get("generated_utc") or "")
+    except (OSError, ValueError):
+        return ""
+
+
+def _candidate_run_ids() -> list[str]:
+    """Every run id with BOTH roi_<id>.json and book_dna_<id>.json and a readable
+    `generated_utc`, oldest to newest by that stamp (never by file mtime)."""
+    out: list[tuple[str, str]] = []
+    for p in sorted(PAPER_DIR.glob("roi_*.json")):
+        run_id = p.name[len("roi_"):-len(".json")]
+        if not (PAPER_DIR / f"book_dna_{run_id}.json").is_file():
+            continue
+        gen = _generated_utc_of(run_id)
+        if gen:
+            out.append((gen, run_id))
+    out.sort()
+    return [run_id for _, run_id in out]
+
+
+def choose_new_run_id(explicit: str | None = None) -> str:
+    """The id `--bump-pin` should move to: `explicit` if given (validated), else the newest
+    candidate. Raises SystemExit("REFUSED: ...") when nothing qualifies."""
+    if explicit:
+        roi_p, dna_p = PAPER_DIR / f"roi_{explicit}.json", PAPER_DIR / f"book_dna_{explicit}.json"
+        if not roi_p.is_file():
+            raise SystemExit(f"REFUSED: {_rel(roi_p)} does not exist")
+        if not dna_p.is_file():
+            raise SystemExit(f"REFUSED: {_rel(dna_p)} does not exist")
+        if not _generated_utc_of(explicit):
+            raise SystemExit(f"REFUSED: {_rel(roi_p)} has no generated_utc")
+        return explicit
+    cands = _candidate_run_ids()
+    if not cands:
+        raise SystemExit("REFUSED: no run id has both roi_<id>.json and book_dna_<id>.json with a "
+                         "readable generated_utc")
+    return cands[-1]
+
+
+def _rewrite_pin_line(new_id: str, *, path: Path | None = None) -> str:
+    """Rewrite the `RESULTS_RUN_ID = "..."` line IN PLACE (one regex, one line) in `path`
+    (default: this file's own source). Refuses unless the pattern matches exactly once.
+    Returns the id that was pinned before the rewrite."""
+    src_path = Path(path) if path is not None else Path(__file__).resolve()
+    text = src_path.read_text(encoding="utf-8")
+    matches = PIN_RE.findall(text)
+    if len(matches) != 1:
+        raise SystemExit(f"REFUSED: expected exactly one RESULTS_RUN_ID line in {src_path.name}, "
+                         f"found {len(matches)}")
+    old_id = matches[0]
+    new_text, n = PIN_RE.subn(f'RESULTS_RUN_ID = "{new_id}"', text, count=1)
+    if n != 1:
+        raise SystemExit("REFUSED: the pin rewrite did not apply exactly once")
+    src_path.write_text(new_text, encoding="utf-8")
+    return old_id
+
+
+def _readme_entry(f: dict, d: dict) -> str:
+    """One featured account's clause in the README alt text / caption: name, what it is,
+    its numbers over its own window, and (lead only) the matched twin / (shared only) whose
+    names it holds."""
+    bits = [f["kind"], f"{f['capital']} paper"]
+    out = (f"{f['name']} ({', '.join(bits)}) {f['roi']:+.2f}% vs SPY {f['spy']:+.2f}% "
+          f"since {f['since']}, {f['excess']:+.2f} pp")
+    if f is d["featured"][0] and d["chart"]:
+        out += f", its matched random twin {d['chart']['twin_vals'][-1]:+.2f}%"
+    if f["shares_names_with"]:
+        out += f", holds the same {len(f['tickers'])} names as {f['shares_names_with']}"
+    return out
+
+
+def readme_alt_text(d: dict) -> str:
+    """The `<img alt=...>` text for `docs/assets/paper_results_live.svg`: every number the
+    SVG shows, in words, read straight from `results_data()` -- regenerated on every bump so
+    the alt text can never go stale independently of the picture."""
+    entries = "; ".join(_readme_entry(f, d) for f in d["featured"])
+    labels = ", ".join(f["label"] for f in d["featured"])
+    return f"Best paper accounts, live, as of the {d['as_of']} close: {entries}. Labels {labels}."
+
+
+def readme_sub_caption(d: dict) -> str:
+    return (f'Every number on both pictures is read from a committed receipt '
+           f'(<code>{d["receipt"]}</code>) and every stage names the code that runs it; '
+           f'<code>backend/tests/test_public_assets.py</code> fails if either stops being true. '
+           f'The motion version is <a href="docs/design/aegis_front_page.html">'
+           f'<code>docs/design/aegis_front_page.html</code></a>; the design record is '
+           f'<a href="docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md">'
+           f'<code>docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md</code></a>.')
+
+
+def readme_results_block(d: dict) -> str:
+    """The exact text `update_readme_results_block` writes between the two markers."""
+    alt = escape(readme_alt_text(d), {'"': "&quot;"})
+    return (f'{RESULTS_BLOCK_START}\n'
+           f'<p align="center">\n'
+           f'  <img src="docs/assets/paper_results_live.svg" width="100%" alt="{alt}">\n'
+           f'</p>\n'
+           f'<p align="center"><sub>{readme_sub_caption(d)}</sub></p>\n'
+           f'{RESULTS_BLOCK_END}')
+
+
+def update_readme_results_block(d: dict, *, path: Path | None = None) -> bool:
+    """Rewrite the README's results-panel block in place; True iff the bytes changed.
+    Refuses if the markers are not found (never writes outside them)."""
+    p = Path(path) if path is not None else README
+    text = p.read_text(encoding="utf-8")
+    pattern = re.compile(re.escape(RESULTS_BLOCK_START) + r".*?" + re.escape(RESULTS_BLOCK_END), re.S)
+    if not pattern.search(text):
+        raise SystemExit(f"REFUSED: {RESULTS_BLOCK_START} marker not found in {_rel(p)}")
+    new_text = pattern.sub(lambda _m: readme_results_block(d), text, count=1)
+    if new_text != text:
+        p.write_text(new_text, encoding="utf-8")
+    return new_text != text
+
+
+def bump_pin(run_id: str | None = None, *, pin_path: Path | None = None,
+            readme_path: Path | None = None) -> int:
+    """`--bump-pin [RUN_ID]`. Returns the process exit code; never raises (any REFUSED is
+    printed and turned into 2, with RESULTS_RUN_ID restored)."""
+    global RESULTS_RUN_ID
+    old_id = RESULTS_RUN_ID
+    try:
+        return _bump_pin_inner(run_id, old_id, pin_path=pin_path, readme_path=readme_path)
+    except SystemExit as exc:
+        RESULTS_RUN_ID = old_id
+        print(str(exc))
+        return 2
+
+
+def _bump_pin_inner(run_id: str | None, old_id: str, *, pin_path: Path | None,
+                    readme_path: Path | None) -> int:
+    global RESULTS_RUN_ID
+    new_id = choose_new_run_id(run_id)
+    old_gen, new_gen = _generated_utc_of(old_id), _generated_utc_of(new_id)
+    if (new_gen, new_id) <= (old_gen, old_id):
+        raise SystemExit(f"REFUSED: the newest available pin {new_id!r} ({new_gen or 'undated'}) is "
+                         f"not newer than the pinned {old_id!r} ({old_gen or 'undated'}); nothing written")
+    bad = check_budgets()
+    if bad:
+        raise SystemExit("REFUSED: text would overflow its box:\n  " + "\n  ".join(bad))
+    RESULTS_RUN_ID = new_id
+    d = results_data()                      # REFUSED (SystemExit) if a family has no LIVE account
+    rewritten_old = _rewrite_pin_line(new_id, path=pin_path)
+    if rewritten_old != old_id:
+        raise SystemExit(f"REFUSED: the on-disk pin was {rewritten_old!r}, expected {old_id!r}; "
+                         "another process changed it -- rerun the bump")
+    written: dict[str, str] = {}
+    for path, text in outputs().items():
+        data = text.encode("utf-8")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+        written[_rel(path)] = hashlib.sha256(data).hexdigest()
+    if update_readme_results_block(d, path=readme_path):
+        rp = Path(readme_path) if readme_path is not None else README
+        written[_rel(rp)] = hashlib.sha256(rp.read_bytes()).hexdigest()
+    featured = [{"family": f["family"], "account": f["account"], "name": f["name"]} for f in d["featured"]]
+    receipt = {"schema": "public_assets_refresh/1",
+              "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+              "old_run_id": old_id, "run_id": new_id, "assets": written, "featured": featured}
+    receipt_path = PAPER_DIR / f"public_assets_refresh_{new_id}.json"
+    receipt_path.write_text(json.dumps(receipt, indent=1, default=str), encoding="utf-8")
+    written[_rel(receipt_path)] = hashlib.sha256(receipt_path.read_bytes()).hexdigest()
+    try:
+        from backend.services import public_assets_staleness as _PAS   # noqa: PLC0415
+        prev_age = _PAS.pin_age(datetime.now(timezone.utc), run_id=old_id)
+        age_note = (f" (the previous pin was {prev_age['age_s'] / 86400:.1f} d old)"
+                   if prev_age.get("age_s") is not None else "")
+    except Exception:                                                  # noqa: BLE001 -- cosmetic only
+        age_note = ""
+    print(f"bumped RESULTS_RUN_ID {old_id!r} -> {new_id!r}{age_note}")
+    for rel, sha in sorted(written.items()):
+        print(f"wrote {rel} sha256={sha[:12]}")
+    return 0
+
+
 # ================================================================== cli
 def check_budgets() -> list[str]:
     """Strings that would overflow their box in the widest common fallback font."""
@@ -1163,7 +1362,12 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     ap.add_argument("--check", action="store_true",
                     help="write nothing; exit 1 when a committed asset differs from a fresh render")
+    ap.add_argument("--bump-pin", nargs="?", const="", default=None, metavar="RUN_ID",
+                    help="pin RUN_ID (or the newest available receipt pair), re-render every "
+                         "asset + the README results block, and write a refresh receipt")
     a = ap.parse_args(argv)
+    if a.bump_pin is not None:
+        return bump_pin(a.bump_pin or None)
     bad = check_budgets()
     if bad:
         print("REFUSED: text would overflow its box:\n  " + "\n  ".join(bad))

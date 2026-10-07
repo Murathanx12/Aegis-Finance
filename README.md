@@ -21,10 +21,12 @@
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square"></a>
 </p>
 
+<!-- results-panel:start -->
 <p align="center">
-  <img src="docs/assets/paper_results_live.svg" width="100%" alt="Best paper accounts, live, as of the 2026-10-06 close: revision_flow_v0 (frozen LLM book, $1M paper) +7.14% vs SPY +1.40% since 2026-09-28, +5.74 pp, its matched random twin -0.01%; night book b109c886 +6.08% vs SPY +2.19% since 2026-09-11, +3.90 pp; hack2 (Alpaca paper broker, holding the same 20 names as revision_flow_v0) +2.31% vs SPY +1.29% since 2026-08-28, +1.02 pp. Labels OBSERVED(7), OBSERVED(17), OBSERVED(27).">
+  <img src="docs/assets/paper_results_live.svg" width="100%" alt="Best paper accounts, live, as of the 2026-10-06 close: revision_flow_v0 (frozen LLM book, $1M paper) +7.14% vs SPY +1.40% since 2026-09-28, +5.74 pp, its matched random twin -0.01%; night book b109c886 (night book, $100k paper) +6.08% vs SPY +2.19% since 2026-09-11, +3.90 pp; hack2 (Alpaca paper broker, $100k paper) +2.31% vs SPY +1.29% since 2026-08-28, +1.02 pp, holds the same 20 names as revision_flow_v0. Labels OBSERVED(7), OBSERVED(17), OBSERVED(27).">
 </p>
 <p align="center"><sub>Every number on both pictures is read from a committed receipt (<code>backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json</code>) and every stage names the code that runs it; <code>backend/tests/test_public_assets.py</code> fails if either stops being true. The motion version is <a href="docs/design/aegis_front_page.html"><code>docs/design/aegis_front_page.html</code></a>; the design record is <a href="docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md"><code>docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md</code></a>.</sub></p>
+<!-- results-panel:end -->
 
 Aegis Finance is a free, open-source **self-improving investment intelligence
 system** that measures itself in public and tells you when it is wrong. Its

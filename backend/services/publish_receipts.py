@@ -628,5 +628,89 @@ def _log_commit(row: dict, log_path: Optional[Path]) -> dict:
     return row
 
 
-__all__ = ["commit_public_receipts", "verify_manifest", "owner_pattern", "newest_stamp", "KINDS", "MAX_BYTES", "choose", "folder_bytes", "leak_scan", "load_published", "prefer_published",
+# ═══════════════════════════════════════════════════════════ a generic multi-path H1 commit
+#
+# `commit_public_receipts` above is the C15 H1 pattern for ONE folder; `scripts.task_keeper
+# assets` (2026-10-07) needs the same guards over SEVERAL paths (the generator script, the
+# rendered assets, the motion page and the refresh receipt) -- never README.md or an unrelated
+# change swept in. `log_path` is REQUIRED here (there is no single sensible default log for an
+# arbitrary caller); `commit_public_receipts` keeps its own folder-specific implementation
+# unchanged so its existing callers and tests are untouched.
+
+def commit_paths(paths: tuple[str, ...], *, message: str, log_path: Path, repo: Optional[Path] = None,
+                 runner: Optional[Callable[..., Any]] = None, branch: Optional[str] = None,
+                 remote: Optional[str] = None, push: bool = True, job_name: str = "commit_paths") -> dict:
+    """Commit ONLY the given repo-relative paths (files or folders) on `branch` and push.
+    Same guards as `commit_public_receipts`: the current branch must be `branch` (default
+    `main`), nothing outside `paths` may be staged before or after `git add`, the staged diff
+    of `paths` must be non-empty, and a push is refused (never forced) when `branch` already
+    carries unpushed commits touching anything outside `paths`, or when the remote itself has
+    moved ahead (`git push` then simply fails non-fast-forward)."""
+    import subprocess                                                 # noqa: PLC0415
+    runner = runner or subprocess.run
+    repo = Path(repo or L.REPO)
+    branch = branch or getattr(_config, "PUBLIC_RECEIPTS_BRANCH", "main")
+    remote = remote or getattr(_config, "PUBLIC_RECEIPTS_REMOTE", "origin")
+    rels = [Path(p).as_posix().rstrip("/") for p in paths]
+    row: dict[str, Any] = {"job": job_name, "branch_required": branch, "paths": rels}
+
+    def under_any(x: str) -> bool:
+        return any(_under(x, r) for r in rels)
+
+    try:
+        cur = _lines(_git(runner, repo, "rev-parse", "--abbrev-ref", "HEAD"))
+        row["branch"] = cur[0] if cur else None
+        reasons: list[str] = []
+        if row["branch"] != branch:
+            reasons.append(f"current branch is {row['branch']!r}, not {branch!r}: the public site "
+                           f"builds from {branch}; this job never switches branches")
+        outside = [x for x in _lines(_git(runner, repo, "diff", "--cached", "--name-only")) if not under_any(x)]
+        if outside:
+            reasons.append(f"{len(outside)} staged change(s) outside the committed paths "
+                           f"(e.g. {outside[:3]}); the commit must be scoped to them")
+        if reasons:
+            row.update(status="REFUSED", reasons=reasons)
+            return _log_commit(row, log_path)
+        add = _git(runner, repo, "add", "--", *rels)
+        if add.returncode != 0:
+            row.update(status="REFUSED", reasons=[f"git add failed: {(add.stderr or '').strip()[-300:]}"])
+            return _log_commit(row, log_path)
+        staged = _lines(_git(runner, repo, "diff", "--cached", "--name-only", "--", *rels))
+        if not staged:
+            row.update(status="REFUSED",
+                       reasons=["the staged diff of the committed paths is empty: nothing new to publish"])
+            return _log_commit(row, log_path)
+        outside = [x for x in _lines(_git(runner, repo, "diff", "--cached", "--name-only")) if not under_any(x)]
+        if outside:
+            _git(runner, repo, "reset", "-q", "--", *rels)
+            row.update(status="REFUSED", reasons=[f"staged changes outside the committed paths appeared: "
+                                                  f"{outside[:3]}"])
+            return _log_commit(row, log_path)
+        c = _git(runner, repo, "commit", "-m", message, "--", *rels)
+        if c.returncode != 0:
+            _git(runner, repo, "reset", "-q", "--", *rels)
+            err = ((c.stderr or "") + (c.stdout or "")).strip()[-300:]
+            row.update(status="REFUSED", reasons=[f"git commit failed: {err}"])
+            return _log_commit(row, log_path)
+        head = _lines(_git(runner, repo, "rev-parse", "HEAD"))
+        row.update(status="COMMITTED", commit=head[0] if head else None, message=message, n_files=len(staged))
+        if not push:
+            return _log_commit(row, log_path)
+        ahead = _lines(_git(runner, repo, "log", "--name-only", "--format=", f"{remote}/{branch}..{branch}"))
+        foreign = sorted({x for x in ahead if not under_any(x)})
+        if foreign:
+            row.update(pushed=False,
+                       push_refused=(f"{branch} carries unpushed commits touching path(s) outside the "
+                                     f"committed set (e.g. {foreign[:3]}); a data job never force-pushes"))
+            return _log_commit(row, log_path)
+        ps = _git(runner, repo, "push", remote, branch)
+        row["pushed"] = ps.returncode == 0
+        if ps.returncode != 0:
+            row["push_refused"] = f"git push failed: {(ps.stderr or '').strip()[-300:]}"
+    except Exception as exc:                                          # noqa: BLE001
+        row.update(status="REFUSED", reasons=[f"{type(exc).__name__}: {str(exc)[:300]}"])
+    return _log_commit(row, log_path)
+
+
+__all__ = ["commit_public_receipts", "commit_paths", "verify_manifest", "owner_pattern", "newest_stamp", "KINDS", "MAX_BYTES", "choose", "folder_bytes", "leak_scan", "load_published", "prefer_published",
            "public_dir", "publish", "read_manifest", "refresh", "sanitised_bytes"]

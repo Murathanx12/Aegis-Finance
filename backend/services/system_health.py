@@ -2079,6 +2079,7 @@ PROBES: tuple[Probe, ...] = (
     Probe("process_census", "pc", timedelta(minutes=10), "Win32_Process: live python instances per command-line family (venv shim + child = 1) vs config.PROCESS_CENSUS_FAMILIES caps; DEGRADED above cap, DEAD above 2x; read-only", lambda ctx: __import__("backend.services.process_census", fromlist=["p_process_census"]).p_process_census(ctx), True),
     Probe("openclaw_temp_builds", "pc", timedelta(minutes=10), "count + time-boxed size of %TEMP%/openclaw-plugin-build-* vs OPENCLAW_TEMP_DEGRADED_COUNT / _GB", lambda ctx: __import__("backend.services.openclaw_temp", fromlist=["p_openclaw_temp_builds"]).p_openclaw_temp_builds(ctx), True),
     Probe("backtest_leaderboard", "pc", timedelta(days=7), "strategy_library/leaderboard_<run id>.json: run id in the name vs BACKTEST_LEADERBOARD_STALE_DAYS", lambda ctx: __import__("backend.services.backtest_staleness", fromlist=["p_backtest_leaderboard"]).p_backtest_leaderboard(ctx)),
+    Probe("public_assets", "pc", timedelta(days=7), "scripts/render_public_assets.py RESULTS_RUN_ID vs PUBLIC_ASSETS_MAX_PIN_AGE_DAYS; never a file mtime", lambda ctx: __import__("backend.services.public_assets_staleness", fromlist=["p_public_assets"]).p_public_assets(ctx)),
 )
 
 
