@@ -1274,7 +1274,15 @@ def _owner_d14_worst_case(*, equity: float, targets: list, core: dict, rf: dict,
     the PROBE/EXPLOIT sleeves as planned, and sum|notional|/equity -- at this
     equity, for the PLANNED book and for the LARGEST ADMISSIBLE one (PROBE at
     its cap at the shortlist's highest sigma, the sleeve at its config gross,
-    the core on the remainder). Reporting only; never raises into the plan."""
+    the core on the remainder).
+
+    The sleeve's gross answers TWO bounds (`pc_sleeves.choose_gross`,
+    coordinator 2026-10-07), both printed on the LARGEST ADMISSIBLE line:
+    (1) the whole book's one-day rho=1 k-sigma loss <= FLEET_V3_MAX_K_SIGMA_
+    DAY_LOSS_FRAC (10%); (2) gross x |the basket's worst historical 21-session
+    return| <= PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC (10%). On 2026-10-07
+    bound 1 allowed 60% and bound 2 (-19.05%) allowed 50%: the sleeve is 50%.
+    Reporting only; never raises into the plan."""
     try:
         from backend.services import pc_risk as PR                 # noqa: PLC0415
         from backend.services import pc_sleeves as SL              # noqa: PLC0415
@@ -1298,7 +1306,7 @@ def _owner_d14_worst_case(*, equity: float, targets: list, core: dict, rf: dict,
         resid = dict(core.get("held_residual") or {})
         lines: list = []
         hist: dict = {}
-        if rf_names and not sandbox:
+        if rf_names and (bars_paths or not sandbox):
             hist = SL.basket_history(rf_names, Path(bars_paths[0]) if bars_paths
                                      else PR._bars_path())
         rf_wc = SL.sleeve_worst_case(equity=eq, names=list(rf_planned),
@@ -1336,6 +1344,15 @@ def _owner_d14_worst_case(*, equity: float, targets: list, core: dict, rf: dict,
             f"-${la['core_frac'] * eq:,.0f}; total -${la['total_frac'] * eq:,.0f} "
             f"({la['total_frac']:.2%}, limit {limit:.0%}); sum|notional|/equity "
             f"{la['gross']:.2f} (the ranker's EXPLOIT is sized to fit what is left, every cycle)")
+        wlim = float(getattr(_config, "PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC", 0.10))
+        wwr = (hist or {}).get("worst_window_return")
+        if wwr is not None:
+            w21 = g_cfg * abs(float(wwr))
+            lines[-1] += (f"; 21-SESSION BOUND: revision_flow {g_cfg:.0%} x worst 21 sessions "
+                          f"{float(wwr):.2%} = -${w21 * eq:,.0f} ({w21:.2%}, limit {wlim:.0%}: "
+                          f"{'PASS' if w21 <= wlim + 1e-12 else 'FAIL'})")
+        else:
+            lines[-1] += "; 21-SESSION BOUND: UNREAD (no basket history on this run)"
         return {"equity_usd": eq, "k_sigma": k, "limit_frac": limit,
                 "sigma_source": f"panel daily sigma; missing -> {fb_src} {fb:.2%}",
                 "revision_flow": rf_wc, "planned_frac": planned, "planned_total_frac": tot,

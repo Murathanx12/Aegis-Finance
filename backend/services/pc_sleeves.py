@@ -16,9 +16,15 @@ OBSERVED(7), a PRODUCT_EXPERIMENT, never a claim). This module lets
   rule) and, when a bars panel is given, the basket's worst 21-session return
   and worst day, in dollars.
 * `choose_gross` picks the sleeve's gross from the worst case, NOT from
-  conviction: the largest gross, rounded DOWN to 5%, that keeps the whole
-  book's one-day k-sigma loss (PROBE at its largest admissible + this sleeve
-  + the SPY core on the remainder) <= the limit and total gross <= 100%.
+  conviction: the largest gross, rounded DOWN to 5%, that satisfies BOTH
+  bounds (coordinator, 2026-10-07):
+    1. the whole book's one-day k-sigma loss, rho = 1 (PROBE at its largest
+       admissible + this sleeve + the SPY core on the remainder) <= `limit`
+       (FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC, 0.10) and total gross <= 100%;
+    2. gross x |the basket's worst historical 21-session return| <=
+       `window_limit` (PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC, 0.10).
+  On 2026-10-07: bound 1 alone allows 60% (9.95%); bound 2 with the worst
+  21 sessions -19.05% allows 50% (9.53%; 55% = 10.48% fails) => 50%.
 
 PURE except the two loaders, which only READ files. Never an order.
 """
@@ -143,30 +149,46 @@ def book_loss_frac(*, rf_names: list[str], rf_gross: float, probe_gross: float,
 
 def choose_gross(*, rf_names: list[str], probe_gross: float, probe_sigma: float,
                  core_sigma: float, sigmas: dict, k: float, limit: float, fallback: float,
-                 cash_buffer: float, step: float = 0.05, floor: float = 0.20) -> dict:
-    """The largest sleeve gross (multiple of `step`, rounded DOWN) that keeps the
-    whole book's k-sigma day <= `limit` and gross <= 1. Below `floor` -> says so
-    and returns `floor` only if `floor` itself passes, else 0."""
-    best = 0.0
-    g = 0.0
-    hi = max(0.0, 1.0 - probe_gross - cash_buffer)
-    while g <= hi + 1e-9:
+                 cash_buffer: float, worst_window_return: float | None,
+                 window_limit: float, step: float = 0.05, floor: float = 0.20) -> dict:
+    """The largest sleeve gross (multiple of `step`, rounded DOWN) passing BOTH
+    bounds: (1) the whole book's rho=1 k-sigma day <= `limit` with gross <= 1;
+    (2) gross x |worst_window_return| <= `window_limit` (the basket's worst
+    historical 21-session return). An UNKNOWN worst window (None) fails bound 2
+    at every gross: a bound that cannot be computed does not pass. Below `floor`
+    -> says so and returns `floor` only if `floor` passes both, else 0."""
+    def _passes(g: float) -> tuple[bool, bool, dict]:
         b = book_loss_frac(rf_names=rf_names, rf_gross=g, probe_gross=probe_gross,
                            probe_sigma=probe_sigma, core_sigma=core_sigma, sigmas=sigmas,
                            k=k, fallback=fallback, cash_buffer=cash_buffer)
-        if b["total_frac"] <= limit + 1e-12 and b["gross"] <= 1.0 + 1e-12:
+        one = b["total_frac"] <= limit + 1e-12 and b["gross"] <= 1.0 + 1e-12
+        two = (worst_window_return is not None
+               and g * abs(float(worst_window_return)) <= window_limit + 1e-12)
+        return one, two, b
+    best1 = best2 = best = 0.0
+    g = 0.0
+    hi = max(0.0, 1.0 - probe_gross - cash_buffer)
+    while g <= hi + 1e-9:
+        one, two, _ = _passes(g)
+        if one:
+            best1 = g
+        if two:
+            best2 = g
+        if one and two:
             best = g
         g = round(g + step, 10)
     note = None
     if best < floor:
-        fb = book_loss_frac(rf_names=rf_names, rf_gross=floor, probe_gross=probe_gross,
-                            probe_sigma=probe_sigma, core_sigma=core_sigma, sigmas=sigmas,
-                            k=k, fallback=fallback, cash_buffer=cash_buffer)
+        one, two, _ = _passes(floor)
         note = (f"the worst case allows only {best:.0%} (< {floor:.0%}); "
-                + (f"stopping at {floor:.0%}" if fb["total_frac"] <= limit else
+                + (f"stopping at {floor:.0%}" if one and two else
                    "even the floor fails: sleeve OFF"))
-        best = floor if fb["total_frac"] <= limit else 0.0
-    return {"gross": best, "step": step, "note": note}
+        best = floor if one and two else 0.0
+    return {"gross": best, "step": step, "note": note,
+            "bound_one_day_k_sigma": best1, "bound_worst_21_session": best2,
+            "binding": ("worst_21_session" if best2 < best1 else
+                        "one_day_k_sigma" if best1 < best2 else "both"),
+            "worst_window_return": worst_window_return}
 
 
 def sleeve_worst_case(*, equity: float, names: list[str], gross: float, sigmas: dict,

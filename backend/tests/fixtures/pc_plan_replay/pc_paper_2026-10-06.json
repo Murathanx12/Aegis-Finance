@@ -131,5 +131,7 @@
   "DELL": 0.0504152764011538,
   "SPY": 0.006966830386706793
  },
- "bars_last": "2026-10-06"
+ "bars_last": "2026-10-06",
+ "worst_21_session_return": -0.19045409472620722,
+ "worst_21_session_basis": "revision_flow_v0 equal-weight basket, daily-rebalanced, worst rolling 21-session return on prices_2025_26/bars.parquet 2025-01-02..2026-10-06 (ends 2025-03-13)"
 }

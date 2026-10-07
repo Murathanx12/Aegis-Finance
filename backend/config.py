@@ -5945,18 +5945,25 @@ PC_SLEEVE_REVISION_FLOW_CONTRACT = (OPTIMUS_LEDGER_DIR / "paper_accounts" / "fle
                                     / "contracts" / "hack2_v2.json")
 #: CHOSEN BY THE WORST CASE, NOT BY CONVICTION (session protocol item 4), on
 #: 2026-10-07 from prices_2025_26/bars.parquet (last bar 2026-10-06, 63-session
-#: daily sigma, k = PROBE_WORST_CASE_SIGMA = 3, rho = 1 across names): the largest
-#: gross, rounded DOWN to 5%, keeping the WHOLE book's one-day k-sigma loss --
-#: PROBE at its largest admissible (20% at the universe p90 sigma 4.92%) + this
-#: sleeve (avg sigma 3.67%) + the SPY core on the remainder (sigma 0.70%) --
-#: <= FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC (10%) and gross <= 100%:
-#:   55% -> 9.50%, 60% -> 9.95% (PASS), 65% -> 10.39% (FAIL).  => 60%.
-#: At $1,002,264: sleeve 3-sigma day -$66,146; basket's worst 21-session
-#: return -19.05% (to 2025-03-13) = -$114,532; worst day -8.24% (2025-04-03)
-#: = -$49,527. Sum|notional|/equity after sleeve + core + PROBE = 0.99.
+#: daily sigma, k = PROBE_WORST_CASE_SIGMA = 3), rounded DOWN to 5%, as the
+#: largest gross passing BOTH bounds (`pc_sleeves.choose_gross`):
+#:  (1) ONE DAY, rho = 1 across names: the WHOLE book's k-sigma loss -- PROBE at
+#:      its largest admissible (20% at the universe p90 sigma 4.92%) + this
+#:      sleeve (avg sigma 3.67%) + the SPY core on the remainder (sigma 0.70%) --
+#:      <= FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC (10%), gross <= 100%:
+#:      55% -> 9.50%, 60% -> 9.95% (PASS), 65% -> 10.39% (FAIL)  => 60% alone;
+#:  (2) 21 SESSIONS (coordinator, 2026-10-07): gross x |the equal-weight basket's
+#:      worst historical 21-session return| <= PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC
+#:      (10%). Worst 21 sessions -19.05% (to 2025-03-13):
+#:      50% -> 9.53% (PASS), 55% -> 10.48% (FAIL)                => 50%.
+#: BOTH => 50% (bound 2 binds). At $1,002,264: sleeve 3-sigma day -$55,122;
+#: worst 21 sessions -$95,443; worst day -8.24% (2025-04-03) = -$41,272.
 #: `scripts/sim_run.py` re-prices the acting book on every cycle: over the line,
 #: the ranker's EXPLOIT is scaled first, then this sleeve; nothing is widened.
-PC_SLEEVE_REVISION_FLOW_GROSS = 0.60
+PC_SLEEVE_REVISION_FLOW_GROSS = 0.50
+#: Bound (2) above: the sleeve's gross x |worst historical 21-session basket
+#: return| may not exceed this fraction of equity. Same 0.10 as bound (1).
+PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC = 0.10
 #: The six-role v3 fleet contracts are written HERE, never into
 #: `fleet_manager/contracts/`: no seed path reads this folder, and
 #: `fleet_manager.load_contract`/`freeze_contract` refuse a PREPARED body.

@@ -163,7 +163,8 @@ def test_the_shipped_owner_decision():
                                        "PC_BENCHMARK_CORE_EXEMPT_FROM_NAME_CAP": True,
                                        "PC_SLEEVE_REVISION_FLOW": True,
                                        "PC_CONTRACT_COUNTS_PLAN_SLEEVES": True}
-    assert config.PC_SLEEVE_REVISION_FLOW_GROSS == pytest.approx(0.60)
+    assert config.PC_SLEEVE_REVISION_FLOW_GROSS == pytest.approx(0.50)
+    assert config.PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC == pytest.approx(0.10)
     assert config.PC_SLEEVE_REVISION_FLOW_BOOK_ID == "cb8d492bb8bf9ade"
     assert PB.MAX_NAME_FRAC == pytest.approx(0.12) and PB.MAX_INVESTED_FRAC == pytest.approx(1.0)
 
@@ -175,12 +176,13 @@ def test_flags_on_core_plus_sleeve_plus_probe_within_every_hard_limit(tmp_path, 
     assert core["status"] == "CORE_EXEMPT_BY_OWNER_D22" and core["applied"]
     assert "CORE_EXEMPT_BY_OWNER_D22" in core["line"]
     assert rf["applied"] and rf["acting"] and len(rf["weights"]) == 20
-    assert rf["weight_each"] == pytest.approx(0.60 / 20)
+    assert rf["weight_each"] == pytest.approx(config.PC_SLEEVE_REVISION_FLOW_GROSS / 20)
     assert rec["risk_gate"]["block"] is None
     want = 1.0 - core["active_gross"]
     assert core["want_weight"] == pytest.approx(want)
     assert core["weight_planned"] <= want - config.PC_BENCHMARK_CORE_CASH_BUFFER + 1e-9
-    assert core["active_gross"] == pytest.approx(0.20 + 0.60, abs=1e-6)
+    assert core["active_gross"] == pytest.approx(0.20 + config.PC_SLEEVE_REVISION_FLOW_GROSS,
+                                                 abs=1e-6)
     states: dict = {}
     for s in rec["sent"]:
         states.setdefault(s["state"], []).append(s["symbol"])
@@ -324,17 +326,50 @@ def test_a_refused_book_plans_no_sleeve_and_the_core_takes_the_room(tmp_path, mo
     assert sum(_final_weights(rec, rb).values()) <= 1.0 + 1e-9
 
 
-def test_the_gross_rule_reproduces_sixty_percent():
-    """The config value is the rule's answer on the fixture's sigmas with PROBE
-    at its largest admissible (20% at the universe p90, 4.92% on 2026-10-06)."""
+def test_the_gross_rule_reproduces_the_config_from_both_bounds():
+    """The config value is the rule's answer on BOTH bounds (coordinator
+    2026-10-07): bound 1, the whole book's one-day rho=1 3-sigma loss <= 10%
+    with PROBE at its largest admissible (20% at the universe p90, 4.92% on
+    2026-10-06) -> 60%; bound 2, gross x |worst 21-session basket return
+    -19.05%| <= 10% -> 50%. Expected today: 50%, bound 2 binding."""
     from backend.services import pc_sleeves as SL
     sig = STATE["sigmas"]
+    w21 = STATE["worst_21_session_return"]
     ch = SL.choose_gross(rf_names=RF_NAMES, probe_gross=config.PROBE_GROSS_CAP,
                          probe_sigma=0.049209219472656204, core_sigma=sig["SPY"], sigmas=sig,
                          k=config.PROBE_WORST_CASE_SIGMA,
                          limit=config.FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC, fallback=0.0492,
-                         cash_buffer=0.01)
+                         cash_buffer=0.01, worst_window_return=w21,
+                         window_limit=config.PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC)
+    # derive X from the two bounds independently, then compare
+    step = 0.05
+    x1 = max(g * step for g in range(0, 17)
+             if SL.book_loss_frac(rf_names=RF_NAMES, rf_gross=g * step, probe_gross=0.20,
+                                  probe_sigma=0.049209219472656204, core_sigma=sig["SPY"],
+                                  sigmas=sig, k=3.0, fallback=0.0492,
+                                  cash_buffer=0.01)["total_frac"] <= 0.10 + 1e-12)
+    x2 = max(g * step for g in range(0, 17) if g * step * abs(w21) <= 0.10 + 1e-12)
+    assert x1 == pytest.approx(0.60) and x2 == pytest.approx(0.50)
+    assert ch["gross"] == pytest.approx(min(x1, x2)) == pytest.approx(0.50)
+    assert ch["binding"] == "worst_21_session"
     assert ch["gross"] == pytest.approx(config.PC_SLEEVE_REVISION_FLOW_GROSS)
+
+
+def test_an_unknown_21_session_window_never_passes():
+    from backend.services import pc_sleeves as SL
+    sig = STATE["sigmas"]
+    ch = SL.choose_gross(rf_names=RF_NAMES, probe_gross=0.20, probe_sigma=0.0492,
+                         core_sigma=sig["SPY"], sigmas=sig, k=3.0, limit=0.10,
+                         fallback=0.0492, cash_buffer=0.01, worst_window_return=None,
+                         window_limit=0.10)
+    assert ch["gross"] == 0.0 and "sleeve OFF" in ch["note"]
+
+
+def test_the_planned_receipt_prints_the_21_session_bound(tmp_path, monkeypatch):
+    _rf_stub(monkeypatch)
+    rec, _ = _replay(tmp_path, monkeypatch, on=True)
+    la = rec["worst_case_owner_d14_lines"][-1]
+    assert "21-SESSION BOUND" in la
 
 
 # ─────────────────────────────── D21: the contract counts the sleeves ────────
