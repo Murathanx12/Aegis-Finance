@@ -31,7 +31,15 @@ high-EV work, not on rereading the repo. Give every subagent a narrow brief and 
      sim and the fleet manager run then).
   3. Never kill a process by image name. Never touch `.env`. Never start/stop the reader supervisor, the
      Telegram agent, the OpenClaw gateway, the sim session or any scheduled task.
-  4. Work on your OWN branches only: `cloud/2026-10-07-ledger-split-and-identity` in this repo and
+  4. NEVER run `git checkout`, `git switch`, `git stash`, `git reset` or `git clean` inside the manager's checkouts
+     (`aegis-finance` and `optimus` under the user's home): they are live working trees with uncommitted agent edits
+     and tracked data files that grow every minute; a stash or switch there destroys work (it happened once today:
+     stash@{0} "epitaxy: pre-switch"). Create your own WORKTREE per repo and work there exclusively:
+     `git worktree add ..\aegis-finance-cloud -b cloud/2026-10-07-ledger-split-and-identity main` (run from the
+     aegis-finance checkout) and `git worktree add ..\optimus-cloud -b cloud/2026-10-07-optimus main` (from optimus).
+     Big untracked data (bars, CRSP, vendor parquet) is NOT in a worktree: read it from the main checkout's
+     `backend/data/` read-only, and write your receipts under YOUR worktree's `backend/data/` so the manager's
+     receipts are never touched. Work on your OWN branches only: `cloud/2026-10-07-ledger-split-and-identity` in this repo and
      `cloud/2026-10-07-optimus` in `C:\Users\mrthn\optimus`. Never push to `main` of either repo; never merge;
      one pull request per repo at the end; commit checkpoints often (a token limit must not destroy work).
   5. Receipts you write go under run-id filenames; never overwrite another session's receipt.
