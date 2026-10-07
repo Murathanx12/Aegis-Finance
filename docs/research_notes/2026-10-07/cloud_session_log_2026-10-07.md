@@ -51,6 +51,11 @@ the local session, and its exact acceptance.
   gallery, and gave motion notes; all built as animated SVG + an HTML page, recorded in
   `docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md` and the `aegis-motion-visuals` skill.
 - **Optimus showcase.** The same language applied to the Optimus brain page, in the optimus repo
-  (its own branch and PR).
+  (its own branch and PR, [Murathanx12/Optimus#1](https://github.com/Murathanx12/Optimus/pull/1)).
+- **The language as an Optimus skill.** The owner asked for it to live "in Optimus" for future
+  projects. Every root `aegis_skills` served belonged to one checkout or one machine, so the same PR
+  adds a fourth root: Optimus's own `.claude/skills`, last in precedence. It also adds a
+  self-contained `orbit-blackline-visuals` skill there and pins `mcp>=1.2,<2`. The server needs the
+  1.x `FastMCP` import, and nothing declared the dependency.
 - **Ledger review fixes.** A second review of Task A found twelve defects; every one reproduced,
   fixed and pinned by a test before this PR was finalised.

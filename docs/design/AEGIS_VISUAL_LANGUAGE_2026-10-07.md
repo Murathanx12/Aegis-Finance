@@ -5,7 +5,10 @@ Licence: not applicable (a design system, not a strategy or a claim). Owner deci
 The skill that applies this document is
 [`.claude/skills/aegis-motion-visuals/SKILL.md`](../../.claude/skills/aegis-motion-visuals/SKILL.md);
 Optimus serves it through `aegis_skills` and ingests this file through `tools/refresh_aegis.py`
-(the `aegis-docs` source), so both reach every later session.
+(the `aegis-docs` source), so both reach every later session. For OTHER projects there is a
+self-contained version in Optimus itself: the skill `orbit-blackline-visuals`, served from
+Optimus's own skill root (`aegis_skills('optimus:orbit-blackline-visuals')`,
+[Murathanx12/Optimus#1](https://github.com/Murathanx12/Optimus/pull/1)).
 
 Read with: [`OPTIMUS_CREATIVE_TOOL_LIBRARY_2026-10-07.md`](OPTIMUS_CREATIVE_TOOL_LIBRARY_2026-10-07.md)
 (the same day's spec: rings not physics, motion must mean something) and
@@ -150,9 +153,9 @@ them. Skills/tools in the session: Playwright, the repo's own test conventions
 
 ## 5. Reusing it on the next project
 
-1. Copy the skill to the user-level skills folder so every project sees it:
-   `cp -r .claude/skills/aegis-motion-visuals ~/.claude/skills/` (Optimus's `aegis_skills`
-   already serves it from this repo).
+1. Start from Optimus's cross-project skill: `aegis_skills('optimus:orbit-blackline-visuals')`.
+   It carries the tokens, motion spec, procedure and checklist without needing this repo. On a
+   machine without Optimus, copy that skill folder into `~/.claude/skills/` instead.
 2. Pick by purpose: **C** when the page must say "this is the system, and this part is
    running"; **A** when the page must explain how data moves; never a white canvas.
 3. Start from the stage table and the receipt, not from the picture: the visual is a number

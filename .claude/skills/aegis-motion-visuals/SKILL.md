@@ -8,6 +8,8 @@ description: Make or change a public visual (README hero, architecture diagram, 
 The owner picked two styles on 2026-10-07 after seeing four side by side. The full record —
 tokens, motion timings, why each choice was made, and the tools that could replace these —
 is `docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md`. Read §0 and §1 before drawing anything.
+This skill applies the language to THIS repo. For any other project, use Optimus's self-contained
+version: `aegis_skills('optimus:orbit-blackline-visuals')`.
 
 ## Which style
 
