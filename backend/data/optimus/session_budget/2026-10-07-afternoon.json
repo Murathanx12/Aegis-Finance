@@ -1,0 +1,211 @@
+{
+  "session_id": "2026-10-07-afternoon",
+  "date": "2026-10-07",
+  "opened_utc": "2026-10-07T08:42:28+00:00",
+  "closed_utc": "2026-10-07T08:42:37+00:00",
+  "rows": [
+    {
+      "ts": "2026-10-07T08:42:28+00:00",
+      "task": "C26-fix",
+      "worker": "opus",
+      "priority": 1,
+      "ev": "fleet gates before the 22:45 pass: frozen terms restored, C26 delta line",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:28+00:00",
+      "task": "C27",
+      "worker": "opus",
+      "priority": 1,
+      "ev": "wash-trade order sequence with rollback; 49 of 75 live buys had been rejected",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:28+00:00",
+      "task": "Q7-review-C26",
+      "worker": "opus",
+      "priority": 1,
+      "ev": "adversarial review of live order logic",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:28+00:00",
+      "task": "Q9a",
+      "worker": "opus",
+      "priority": 2,
+      "ev": "sticky twin per-draw v2 + ROT5_DIR replay receipt with momentum control",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:29+00:00",
+      "task": "Q12",
+      "worker": "sonnet",
+      "priority": 4,
+      "ev": "academic lane OpenAlex/CrossRef/NBER at $0",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:29+00:00",
+      "task": "Q14",
+      "worker": "sonnet",
+      "priority": 3,
+      "ev": "prod FRED key unregistered (D23); fred_macro_inputs health row",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:29+00:00",
+      "task": "Q15",
+      "worker": "sonnet",
+      "priority": 3,
+      "ev": "silent FRED imputations made loud",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:29+00:00",
+      "task": "Q16",
+      "worker": "sonnet",
+      "priority": 3,
+      "ev": "ci_watch rewritten after a false negative",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:29+00:00",
+      "task": "Q17",
+      "worker": "sonnet",
+      "priority": 6,
+      "ev": "raw Explorer receipts untracked (28 MB)",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:29+00:00",
+      "task": "CI-hotfix",
+      "worker": "sonnet",
+      "priority": 3,
+      "ev": "FastAPI 0.142 route test + CRLF fixture",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:29+00:00",
+      "task": "prod-receipts-fix",
+      "worker": "sonnet",
+      "priority": 1,
+      "ev": "PUBLIC_RECEIPTS_DIR followed AEGIS_DATA_DIR to an empty volume: six endpoints 404",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:29+00:00",
+      "task": "Q10",
+      "worker": "sonnet",
+      "priority": 7,
+      "ev": "session budget receipt",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:30+00:00",
+      "task": "cloud-brief",
+      "worker": "fable",
+      "priority": 5,
+      "ev": "cloud brief v2 for the Desktop session (worktree rule after a foreign stash)",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    },
+    {
+      "ts": "2026-10-07T08:42:30+00:00",
+      "task": "merge-gate",
+      "worker": "deterministic",
+      "priority": 2,
+      "ev": "frozen-tree suite 13,693 + labs 106 + frontend 0/0/0; merge; CI; Railway; verify-prod",
+      "tokens": null,
+      "tokens_label": null,
+      "usd": null,
+      "usd_label": null,
+      "note": null
+    }
+  ],
+  "summary": {
+    "n_rows": 14,
+    "by_worker": {
+      "opus": 4,
+      "sonnet": 8,
+      "fable": 1,
+      "deterministic": 1
+    },
+    "by_worker_label": "DECLARED",
+    "by_priority": {
+      "1": 4,
+      "2": 2,
+      "4": 1,
+      "3": 4,
+      "6": 1,
+      "7": 1,
+      "5": 1
+    },
+    "by_priority_label": "DECLARED",
+    "opus_share_of_rows": 0.2857,
+    "opus_share_label": "DECLARED",
+    "paid_api_spend": {
+      "label": "MEASURED",
+      "available": true,
+      "ledger": "backend/data/optimus/llm_calls*.jsonl (llm_telemetry.summary)",
+      "since": "2026-10-07",
+      "total_cost_usd": 1.647712,
+      "total_is_lower_bound": true,
+      "cost_is_estimate": true,
+      "n_calls": 1310,
+      "n_unpriced_calls": 0,
+      "note": "DeepSeek + OpenClaw calls recorded in THIS process's telemetry ledger from the session's open date through the moment `close` ran. It is NOT Claude Code's own Opus/Sonnet/Fable usage -- there is no ledger for that, which is why every row above this line is DECLARED rather than measured"
+    },
+    "handoff_block": "### Session budget -- 2026-10-07-afternoon (2026-10-07) [worker mix is DECLARED; paid-API spend is MEASURED]\n\n- rows: 14 | opus share of rows: 0.2857 (DECLARED)\n- by worker (DECLARED): deterministic=1, fable=1, opus=4, sonnet=8\n- by priority (DECLARED): p1=4, p2=2, p3=4, p4=1, p5=1, p6=1, p7=1\n- paid-API spend since 2026-10-07 (MEASURED, backend/data/optimus/llm_calls*.jsonl (llm_telemetry.summary)): $1.647712 (lower bound) over 1310 call(s)"
+  }
+}
