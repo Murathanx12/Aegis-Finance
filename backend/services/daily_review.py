@@ -144,15 +144,10 @@ def closes_by_ticker(bars: Any, tickers: Iterable[str], asof: date | str) -> dic
 # ─────────────────────────────── inputs ─────────────────────────────────────
 
 def _tail_rows(path: Path, tail_bytes: int = TAIL_BYTES) -> list[dict]:
-    if not Path(path).exists():
-        return []
-    with Path(path).open("rb") as fh:
-        fh.seek(0, 2)
-        size = fh.tell()
-        fh.seek(max(0, size - tail_bytes))
-        lines = fh.read().decode("utf-8", errors="replace").splitlines()
-    if size > tail_bytes and lines:
-        lines = lines[1:]
+    # The newest forecast rows as made: the legacy file's tail, or the newest
+    # monthly forecast streams once the ledger is split (forecast_ledger).
+    from backend.services import forecast_ledger as FL
+    lines = FL.tail_lines(Path(path), tail_bytes=tail_bytes)
     out = []
     for ln in lines:
         try:

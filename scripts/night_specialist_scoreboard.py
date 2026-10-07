@@ -90,17 +90,12 @@ MIN_GRADED = 100
 
 
 def load(path: Path | None = None) -> pd.DataFrame:
+    from backend.services import forecast_ledger as FL
     p = Path(path) if path else (Path(_config.OPTIMUS_LEDGER_DIR) / "predictions.jsonl")
-    rows = []
-    with p.open(encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if line:
-                try:
-                    rows.append(json.loads(line))
-                except ValueError:
-                    continue
-    return pd.DataFrame(rows)
+    if not FL.exists(p):
+        raise FileNotFoundError(f"no forecast ledger at {p}")
+    # legacy file or monthly streams (resolutions folded in); lenient, as before
+    return pd.DataFrame(FL.read_rows(p, strict=False))
 
 
 def _outcome_bool(v) -> float | None:

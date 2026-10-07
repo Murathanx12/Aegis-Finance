@@ -90,15 +90,24 @@ def forecast_accrual(ledger_path: Path, *, today: date,
     absent or carries no parseable `made_at` -- an undateable ledger is not a
     fresh one.
     """
+    from backend.services import forecast_ledger as FL
+
     ledger_path = Path(ledger_path)
     base = {"check": "forecast_accrual", "path": str(ledger_path),
             "window_days": window_days, "rows_by_day": {},
             "last_new_row_utc": None}
-    if not ledger_path.exists():
+    try:
+        # legacy file, or the monthly forecast streams once split -- and a
+        # marker that cannot be read is UNKNOWN, never "no ledger"
+        present = FL.exists(ledger_path)
+        base["ledger_backend"] = FL.backend_for(ledger_path).kind
+    except FL.ForecastLedgerError as exc:
+        return {**base, "status": "UNKNOWN", "reason": f"forecast ledger refused: {exc}"}
+    if not present:
         return {**base, "status": "UNKNOWN",
                 "reason": f"no forecast ledger at {ledger_path}"}
     try:
-        lines = _tail_lines(ledger_path, tail_bytes)
+        lines = FL.tail_lines(ledger_path, tail_bytes=tail_bytes)
     except OSError as exc:
         return {**base, "status": "UNKNOWN", "reason": f"unreadable: {exc}"}
 

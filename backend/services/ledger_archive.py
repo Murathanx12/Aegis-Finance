@@ -85,6 +85,15 @@ _STAMP = re.compile(r"^\d{4}-\d{2}-\d{2}")
 STAMP_FIELDS = ("ts", "utc", "timestamp", "created_at", "observed_at_utc", "date")
 #: Growing tracked ledgers this module must never treat as archivable.
 NEVER = ("predictions.jsonl",)
+#: The forecast ledger's monthly streams (`forecast_ledger`) are sealed by their
+#: own manifest chain; a parquet archive here would be a second, conflicting seal.
+NEVER_STREAM = re.compile(r"^(forecasts|resolutions)_\d{4}-(?:0[1-9]|1[0-2])\.jsonl$")
+
+
+def _never(path: Path) -> bool:
+    p = Path(path)
+    return p.name in NEVER or (NEVER_STREAM.match(p.name) is not None
+                               and p.parent.name in ("forecasts", "resolutions"))
 
 
 class ArchiveRefused(RuntimeError):
@@ -307,7 +316,7 @@ def find_candidates(root: Path | None = None, *, min_bytes: int = MIN_BYTES,
         dirnames[:] = [d for d in dirnames if d not in ("__pycache__", ".git", "node_modules")]
         for name in filenames:
             parsed = parse_month_file(Path(name))
-            if parsed is None or name in NEVER:
+            if parsed is None or _never(Path(dirpath) / name):
                 continue
             p = Path(dirpath) / name
             size = p.stat().st_size
@@ -329,8 +338,9 @@ def archive_month(path: Path, *, now: datetime | None = None,
     import pyarrow.parquet as pq
 
     path = Path(path)
-    if path.name in NEVER:
-        raise ArchiveRefused(f"{path.name} is a growing tracked ledger; never archived here")
+    if _never(path):
+        raise ArchiveRefused(f"{path.name} is a growing tracked ledger or a forecast-ledger "
+                             f"stream sealed by its own manifest chain; never archived here")
     parsed = parse_month_file(path)
     if parsed is None:
         raise ArchiveRefused(f"{path.name} is not a <ledger>_<YYYY-MM>.jsonl month file")

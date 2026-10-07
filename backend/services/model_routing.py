@@ -431,24 +431,27 @@ def _cards(t: str, cards_root: Path | None) -> tuple[str, str]:
 
 def _forecast(t: str, predictions_path: Path | None) -> str:
     from backend.services import belief_state as B
+    from backend.services import forecast_ledger as FL
     path = Path(predictions_path or B.PREDICTIONS)
-    if not path.exists():
-        return _na("no predictions.jsonl")
+    try:
+        if not FL.exists(path):
+            return _na("no predictions.jsonl")
+    except FL.ForecastLedgerError as exc:
+        return _na(f"forecast ledger refused ({str(exc)[:80]})")
     needle = f'"ticker": "{t}"'
     best = None
     try:
-        with path.open(encoding="utf-8") as fh:
-            for line in fh:
-                if needle not in line:
-                    continue
-                try:
-                    r = json.loads(line)
-                except ValueError:
-                    continue
-                if str(r.get("ticker", "")).upper() != t:
-                    continue
-                if best is None or str(r.get("made_at") or "") > str(best.get("made_at") or ""):
-                    best = r
+        for line in FL.logical_lines(path):       # legacy file or monthly streams
+            if needle not in line:
+                continue
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            if str(r.get("ticker", "")).upper() != t:
+                continue
+            if best is None or str(r.get("made_at") or "") > str(best.get("made_at") or ""):
+                best = r
     except OSError as exc:
         return _na(f"predictions unreadable ({type(exc).__name__})")
     if best is None:

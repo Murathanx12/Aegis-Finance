@@ -1476,15 +1476,15 @@ def enrich_context(ctx: Context, tickers: set[str]) -> Context:
     except Exception as exc:                                # noqa: BLE001
         logger.warning("revisions unavailable: %s", exc)
     preds = []
-    if PREDICTIONS.exists():
-        with open(PREDICTIONS, encoding="utf-8") as fh:
-            for line in fh:
-                try:
-                    r = json.loads(line)
-                except ValueError:
-                    continue
-                if r.get("ticker") in tickers:
-                    preds.append(r)
+    from backend.services import forecast_ledger as FL   # legacy file or monthly streams
+    if FL.exists(PREDICTIONS):
+        for line in FL.logical_lines(PREDICTIONS):
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            if r.get("ticker") in tickers:
+                preds.append(r)
     ctx.predictions = preds
     ctx.cards = _load_cards()
     ctx.catalysts = _load_catalysts()

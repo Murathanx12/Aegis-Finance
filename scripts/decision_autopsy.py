@@ -120,10 +120,11 @@ def load_decisions(folder: Path = DECISIONS_DIR, skipped: dict | None = None) ->
 
 
 def load_predictions(path: Path = PREDICTIONS_PATH, since: str = PREDICTIONS_SINCE) -> list[dict]:
+    from backend.services import forecast_ledger as FL
     out = []
-    if not path.exists():
+    if not FL.exists(path):
         return out
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in FL.logical_lines(path):        # legacy file or monthly streams
         line = line.strip()
         if not line:
             continue

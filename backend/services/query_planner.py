@@ -1090,28 +1090,30 @@ def _pred_claim_rows(od: Path) -> list[tuple[str, str]]:
     cached in `dowjones/query_planner_pred_cache.json` keyed by the ledger's
     size and mtime (review F7: the 50 MB ledger is read once per change, not
     once per launch)."""
+    from backend.services import forecast_ledger as FL
     pred = od / "predictions.jsonl"
     cache = od / "dowjones" / "query_planner_pred_cache.json"
     try:
-        st = pred.stat()
-    except OSError:
+        if not FL.exists(pred):
+            return []
+        # keyed on every backing file: the legacy file, or the monthly streams
+        stamp = ":".join(str(x) for x in FL.fingerprint(pred))
+    except (OSError, FL.ForecastLedgerError):
         return []
-    stamp = f"{st.st_size}:{st.st_mtime_ns}"
     c = _read_json(cache)
     if isinstance(c, dict) and c.get("stamp") == stamp:
         return [tuple(x) for x in c.get("rows") or []]
     rows: list[tuple[str, str]] = []
-    with pred.open(encoding="utf-8", errors="replace") as fh:
-        for ln in fh:
-            if '"claim_hash"' not in ln:
-                continue
-            try:
-                p = json.loads(ln)
-            except ValueError:
-                continue
-            ch = (p.get("inputs_used") or {}).get("claim_hash")
-            if ch and p.get("made_at"):
-                rows.append((str(p["made_at"]), str(ch)))
+    for ln in FL.logical_lines(pred):
+        if '"claim_hash"' not in ln:
+            continue
+        try:
+            p = json.loads(ln)
+        except ValueError:
+            continue
+        ch = (p.get("inputs_used") or {}).get("claim_hash")
+        if ch and p.get("made_at"):
+            rows.append((str(p["made_at"]), str(ch)))
     try:
         cache.parent.mkdir(parents=True, exist_ok=True)
         tmp = cache.with_suffix(".json.tmp")

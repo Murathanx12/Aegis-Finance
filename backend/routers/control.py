@@ -1029,10 +1029,17 @@ def ledger() -> dict:
         return {"utc": _now(), "available": False,
                 "error": f"{type(e).__name__}: {e}"}
 
+    from backend.services import forecast_ledger as FL
     path = getattr(BS, "PREDICTIONS", None)
+    try:
+        exists = bool(path and FL.exists(Path(path)))
+        backend = FL.backend_for(Path(path)).describe() if path else None
+    except FL.ForecastLedgerError as e:   # a refused marker is reported, not hidden
+        exists, backend = False, {"backend": "REFUSED", "reason": str(e)[:300]}
     out: dict = {"utc": _now(), "available": True,
                  "path": _rel(path) if path else None,
-                 "exists": bool(path and Path(path).exists()),
+                 "exists": exists,
+                 "ledger_backend": backend,
                  "graded_note": "resolved_at is a DATE, so 'last 24h' is today or yesterday"}
     for key, fn in (("health", BS.ledger_health),
                     ("calibration_by_model", lambda: BS.calibration(by="model"))):

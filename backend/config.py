@@ -5539,6 +5539,16 @@ DATA_CATALOG_OWN_ROW_MIN_BYTES = 5 * 1024 * 1024
 #: Local GGUF model directory, outside the repo. Env override wins.
 DATA_CATALOG_LLAMA_MODELS_ENV = "AEGIS_LLAMA_MODELS_DIR"
 
+# ── Forecast ledger streams (2026-10-07 cloud; `backend/services/forecast_ledger.py`) ──
+#: A closed month's stream is sealable only this many whole days after the
+#: month ends, so a writer stamping 23:59Z on the last day is never refused by a
+#: seal taken at 00:01Z. The run clock decides; a file mtime never does.
+FORECAST_LEDGER_SEAL_GRACE_DAYS = 1
+#: How long a writer waits for the cross-process ledger lock before refusing
+#: (`LedgerBusy`). A batch append holds it for well under a second; the
+#: migration's `--apply` holds it for its whole run, which is the point.
+FORECAST_LEDGER_LOCK_TIMEOUT_S = 120.0
+
 # ── Sticky matched twin (CHUNK C1b, 2026-10-07) ──────────────────────────────
 #: `matched_twins.twin_series_sticky`: a partner is drawn once per rule holding (same
 #: size x vol x 12-1 cell as of the entry date) and held until the rule exits that name,

@@ -1709,25 +1709,25 @@ def sigma_63(bars: pd.DataFrame, names: list[str], asof: str) -> dict:
 def magnitude_rows(names: list[str], cutoff_utc: str, h: int = 5) -> dict:
     """Latest investigator P(|move| > threshold) at horizon h per name, made at
     or before `cutoff_utc`. A name with no row is absent from the result."""
+    from backend.services import forecast_ledger as FL   # legacy file or monthly streams
     p = Path(_cfg.OPTIMUS_LEDGER_DIR) / "predictions.jsonl"
     out: dict = {}
-    if not p.exists():
+    if not FL.exists(p):
         return out
-    with p.open(encoding="utf-8") as fh:
-        for line in fh:
-            if '"abs_move_exceeds"' not in line or "investigator" not in line:
-                continue
-            try:
-                r = json.loads(line)
-            except ValueError:
-                continue
-            if (r.get("ticker") in names and r.get("horizon_days") == h
-                    and str(r.get("made_at")) <= cutoff_utc):
-                if r["ticker"] not in out or str(r["made_at"]) >= out[r["ticker"]]["made_at"]:
-                    out[r["ticker"]] = {"p": float(r["probability"]),
-                                        "threshold": r.get("threshold"),
-                                        "made_at": str(r["made_at"]),
-                                        "specialist": r.get("specialist")}
+    for line in FL.logical_lines(p):
+        if '"abs_move_exceeds"' not in line or "investigator" not in line:
+            continue
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        if (r.get("ticker") in names and r.get("horizon_days") == h
+                and str(r.get("made_at")) <= cutoff_utc):
+            if r["ticker"] not in out or str(r["made_at"]) >= out[r["ticker"]]["made_at"]:
+                out[r["ticker"]] = {"p": float(r["probability"]),
+                                    "threshold": r.get("threshold"),
+                                    "made_at": str(r["made_at"]),
+                                    "specialist": r.get("specialist")}
     return out
 
 

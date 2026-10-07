@@ -462,23 +462,26 @@ def void_unresolvable(*, path: Path, today: date, bars=None,
     sample: list[dict] = []
     written = 0
     if plan and write:
+        from backend.services import forecast_ledger as FL
+
         fresh = B.read_predictions(path)                  # re-read: keep late appends
         stamp = _now()
-        out_rows = []
+        pairs = []
         for r in fresh:
             pid = str(r.get("prediction_id"))
             if (pid in plan and r.get("outcome") is None and not r.get("void_reason")):
                 code, sentence = plan[pid]
-                r = dict(r)
-                r["void_reason"] = f"{code}: {sentence}"
-                r["voided_at"] = stamp
-                r["voided_by"] = "forecast_grader.void_unresolvable"
-                written += 1
-            out_rows.append(r)
-        tmp = Path(path).with_name(Path(path).name + f".void.{os.getpid()}.tmp")
-        tmp.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in out_rows)
-                       + "\n", encoding="utf-8")
-        os.replace(tmp, path)
+                v = dict(r)
+                v["void_reason"] = f"{code}: {sentence}"
+                v["voided_at"] = stamp
+                v["voided_by"] = "forecast_grader.void_unresolvable"
+                pairs.append((r, v))
+        # Through the forecast ledger (2026-10-07): legacy = an atomic rewrite
+        # from a re-read under the cross-process lock (a row graded or voided
+        # meanwhile keeps its first terminal state); streams = one `void`
+        # event per record in this month's resolution stream.
+        written = FL.record_terminal(Path(path), pairs, kind="void",
+                                     writer="forecast_grader.void_unresolvable")["written"]
     for pid, (code, sentence) in plan.items():
         by_reason[code] = by_reason.get(code, 0) + 1
     for r in rows:
@@ -580,6 +583,8 @@ def grade_due(*, path: Path | None = None, today: date | None = None,
         "started_utc": started,
         "written_utc": _now(),
         "ledger_path": str(path),
+        # legacy single file or the monthly streams, and why (forecast_ledger)
+        "ledger_backend": _ledger_backend(path),
         "population": population,
         "bars": source,
         "graded_by": ("backend.services.forecast_grader -> "
@@ -629,6 +634,15 @@ def grade_due(*, path: Path | None = None, today: date | None = None,
                                 default=str), encoding="utf-8")
         receipt["path"] = str(p)
     return receipt
+
+
+def _ledger_backend(path: Path) -> dict:
+    """The forecast ledger's backend for the receipt; a refusal is reported."""
+    from backend.services import forecast_ledger as FL
+    try:
+        return FL.backend_for(Path(path)).describe()
+    except FL.ForecastLedgerError as exc:
+        return {"backend": "REFUSED", "reason": str(exc)[:300]}
 
 
 def quarantined_ids(rows: list[dict], report: dict,

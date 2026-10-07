@@ -142,23 +142,21 @@ def load_records(path: Path | str, *, mode: str,
     """
     if mode not in (MODE_POWER, MODE_GRADE):
         raise GradeRefused(f"unknown mode {mode!r}")
+    from backend.services import forecast_ledger as FL
     p = Path(path)
-    if not p.exists():
+    if not FL.exists(p):
         raise GradeRefused(
             f"ledger {p} does not exist. An empty grade over a missing file "
             f"would report 'no records' identically to a genuinely empty "
             f"campaign, and those need opposite responses.")
+    try:
+        rows = FL.read_rows(p, strict=True)        # legacy file or monthly streams
+    except ValueError as e:
+        raise GradeRefused(
+            f"ledger {p} has an unparseable line ({e}). A grader that "
+            f"skips torn rows silently changes its own denominator.") from e
     out: list[dict] = []
-    for line in p.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            r = json.loads(line)
-        except ValueError as e:
-            raise GradeRefused(
-                f"ledger {p} has an unparseable line ({e}). A grader that "
-                f"skips torn rows silently changes its own denominator.") from e
+    for r in rows:
         if population is not None and r.get("evidence_population") != population:
             continue
         if mode == MODE_POWER:

@@ -201,19 +201,12 @@ def population_of(row: dict, *,
 
 # ── reading ─────────────────────────────────────────────────────────────────
 def _read_jsonl(path: Path) -> list[dict]:
-    """Tolerant read: a torn line is counted by the caller, never silently ok."""
-    if not path.exists():
-        return []
-    out: list[dict] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            out.append(json.loads(line))
-        except json.JSONDecodeError:
-            continue
-    return out
+    """Tolerant read: a torn line is counted by the caller, never silently ok.
+
+    Answered by the forecast ledger's backend: the legacy file, or the monthly
+    streams with resolutions folded in once the ledger is split."""
+    from backend.services import forecast_ledger as FL
+    return FL.read_rows(Path(path), strict=False)
 
 
 def read_population(pop: "str | EvidencePopulation",
@@ -317,23 +310,27 @@ def lineage(pop: "str | EvidencePopulation",
     """Everything a verdict must state about the evidence it used."""
     pop = parse(pop)
     p = Path(path) if path is not None else ledger_path(pop)
+    from backend.services import forecast_ledger as FL
     rows = read_population(pop, p)
     made = sorted(str(r.get("made_at") or "") for r in rows if r.get("made_at"))
-    digest = hashlib.sha256()
-    if p.exists():
-        digest.update(p.read_bytes())
+    backend = FL.backend_for(p)
     return {
         "evidence_population": pop.value,
         "ledger_id": pop.ledger_id,
         "logical_uri": f"{pop.ledger_id}#{LEDGER_FILE}",
         "ledger_path": str(p),
-        "ledger_exists": p.exists(),
+        "ledger_backend": backend.kind,
+        "ledger_exists": FL.exists(p),
         "record_count": len(rows),
         "first_record_at": made[0] if made else None,
         "last_record_at": made[-1] if made else None,
-        "provenance_sha256": digest.hexdigest() if p.exists() else None,
-        "provenance_covers": ("the whole file, including records of other "
-                              "populations if the paths coincide"),
+        # legacy: sha256 of the file's bytes (unchanged); streams: sha256 over
+        # every monthly stream file's name and sha256, in chain order
+        "provenance_sha256": FL.content_digest(p),
+        "provenance_covers": (("the whole file" if backend.kind == "legacy" else
+                               "every monthly forecast and resolution stream file")
+                              + ", including records of other populations if the "
+                                "paths coincide"),
         "source_commit": _source_commit(),
         "resolver": pop.resolver,
         "paths_coincide": paths_coincide(),
