@@ -336,6 +336,49 @@ def test_historical_order_404_uses_only_accepted_owned_order_evidence(tmp_path):
                            owned_types=FM.owned_order_types("hackT", tmp_path))
 
 
+@pytest.mark.parametrize("known_type", ["stop", "limit"])
+@pytest.mark.parametrize("unknown_type", [None, "unknown_new_type"])
+@pytest.mark.parametrize("unknown_first", [False, True])
+def test_mixed_live_decision_types_keep_historical_404_unknown(
+        tmp_path, known_type, unknown_type, unknown_first):
+    types = (unknown_type, known_type) if unknown_first else (known_type, unknown_type)
+    rows = [{"row": "decision", "role": "hackT", "run_id": "r", "coid": "c",
+             "mode": "LIVE", "refused": None, "type": typ}
+            for typ in types]
+    for row in rows:
+        FM.append_jsonl(FM.decisions_path(tmp_path), row)
+    FM.append_jsonl(FM.decisions_path(tmp_path),
+                    {"row": "outcome", "role": "hackT", "run_id": "r", "coid": "c",
+                     "outcome": "submitted new id x", "order_id": "x"})
+
+    def t(method, url, headers, body):
+        if "/activities/FILL" in url:
+            return 200, json.dumps([{"symbol": "AAA", "side": "sell", "order_id": "x",
+                                     "transaction_time": "2026-10-01T15:00:00Z"}]).encode()
+        if url.split("?")[0].endswith("/v2/orders"):
+            return 200, b"[]"
+        return 404, b"{}"
+
+    owned = FM.owned_order_types("hackT", tmp_path)
+    assert owned == {}
+    with pytest.raises(FM.FleetRefusal, match="type unknown"):
+        FM.Venue("k", "s", transport=t).stop_fills_since("2026-09-20T00:00:00Z", owned_types=owned)
+
+
+@pytest.mark.parametrize("irrelevant", [{"mode": "DRY", "refused": None},
+                                       {"mode": "LIVE", "refused": "venue_window: closed"}])
+def test_unsubmitted_plans_do_not_poison_accepted_owned_type(tmp_path, irrelevant):
+    for typ, fields in (("stop", {"mode": "LIVE", "refused": None}),
+                        (None, irrelevant)):
+        FM.append_jsonl(FM.decisions_path(tmp_path),
+                        {"row": "decision", "role": "hackT", "run_id": "r", "coid": "c",
+                         "type": typ, **fields})
+    FM.append_jsonl(FM.decisions_path(tmp_path),
+                    {"row": "outcome", "role": "hackT", "run_id": "r", "coid": "c",
+                     "outcome": "submitted new id x", "order_id": "x"})
+    assert FM.owned_order_types("hackT", tmp_path) == {"x": "stop"}
+
+
 # ─────────────────────────────── sector cap ─────────────────────────────────
 #
 # `sector_concentration` is the other NEW_GATES member: these two tests pin

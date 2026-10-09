@@ -159,6 +159,7 @@ def owned_order_types(role: str, base: Optional[Path] = None) -> dict[str, str]:
         if row.get("row") == "decision" and row.get("mode") == "LIVE" and not row.get("refused"):
             typ = row.get("type")
             if typ not in (*STOP_TYPES, "limit"):
+                conflicts.add(key)
                 continue
             if key in decisions and decisions[key] != typ:
                 conflicts.add(key)
