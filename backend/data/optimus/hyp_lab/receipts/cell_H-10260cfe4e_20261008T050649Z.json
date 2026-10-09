@@ -1,0 +1,204 @@
+{
+ "hyp_id": "H-10260cfe4e",
+ "title": "Event readthrough via news co-mentions",
+ "night": "2026-10-08",
+ "run_utc": "2026-10-08T05:06:49+00:00",
+ "result": {
+  "cell_type": "event_readthrough",
+  "params": {
+   "link": "comention",
+   "event_type": "earnings_report",
+   "min_ratio": 3.0,
+   "k": 5,
+   "min_source_dv_pct": 0.5
+  },
+  "outcome_units": "size: log(|x_oc|/vol21) linked minus vol-matched unlinked, same date; signed: sign(source move) x (x_oc linked - x_oc controls)",
+  "n_events_candidate": 206,
+  "design": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.082302,
+    "se": 0.127689,
+    "t": 0.64,
+    "mde": 0.357528,
+    "n": 54,
+    "n_blocks": 21
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -0.003583,
+    "se": 0.003729,
+    "t": -0.96,
+    "mde": 0.010441,
+    "n": 54,
+    "n_blocks": 21
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.293177,
+    "se": 0.138701,
+    "t": 2.11,
+    "mde": 0.388364,
+    "n": 54,
+    "n_blocks": 21
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": -0.001239,
+    "se": 0.003371,
+    "t": -0.37,
+    "mde": 0.009439,
+    "n": 54,
+    "n_blocks": 21
+   },
+   "n_events": 54,
+   "mean_links": 1.8,
+   "by_month_size_t1": {
+    "2025-01": {
+     "mean": 0.128023,
+     "n": 1
+    },
+    "2025-02": {
+     "mean": 0.451945,
+     "n": 4
+    },
+    "2025-05": {
+     "mean": -0.04682,
+     "n": 6
+    },
+    "2025-07": {
+     "mean": 0.170392,
+     "n": 8
+    },
+    "2025-08": {
+     "mean": -0.156448,
+     "n": 11
+    },
+    "2025-09": {
+     "mean": 0.298059,
+     "n": 1
+    },
+    "2025-10": {
+     "mean": 0.279139,
+     "n": 9
+    },
+    "2025-11": {
+     "mean": 0.043505,
+     "n": 13
+    },
+    "2025-12": {
+     "mean": -0.228665,
+     "n": 1
+    }
+   },
+   "loo_month_worst_size_t1": 0.042934
+  },
+  "confirm": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.154998,
+    "se": 0.139678,
+    "t": 1.11,
+    "mde": 0.391098,
+    "n": 50,
+    "n_blocks": 17
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -0.003949,
+    "se": 0.002414,
+    "t": -1.64,
+    "mde": 0.00676,
+    "n": 50,
+    "n_blocks": 17
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.326989,
+    "se": 0.114487,
+    "t": 2.86,
+    "mde": 0.320563,
+    "n": 50,
+    "n_blocks": 17
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.006505,
+    "se": 0.004702,
+    "t": 1.38,
+    "mde": 0.013164,
+    "n": 50,
+    "n_blocks": 17
+   },
+   "n_events": 50,
+   "mean_links": 2.4,
+   "by_month_size_t1": {
+    "2026-02": {
+     "mean": 0.23145,
+     "n": 16
+    },
+    "2026-03": {
+     "mean": -0.050336,
+     "n": 2
+    },
+    "2026-04": {
+     "mean": -0.089835,
+     "n": 6
+    },
+    "2026-05": {
+     "mean": 0.922423,
+     "n": 2
+    },
+    "2026-06": {
+     "mean": -0.532201,
+     "n": 2
+    },
+    "2026-07": {
+     "mean": 0.636882,
+     "n": 8
+    },
+    "2026-08": {
+     "mean": -0.130303,
+     "n": 13
+    },
+    "2026-09": {
+     "mean": 0.504837,
+     "n": 1
+    }
+   },
+   "loo_month_worst_size_t1": 0.063211
+  },
+  "verdict": "CANNOT_DISTINGUISH",
+  "powered": false,
+  "reason": "confirm +0.15500 t 1.11; MDE 0.39110 > effect worth having 0.08230",
+  "direction_verdict_reported": {
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00395 <= 0",
+   "powered": false
+  },
+  "examples": [
+   {
+    "t": "2025-10-29",
+    "source": "MSCI",
+    "links": "MSA",
+    "size_t1": "1.8480115545308358"
+   },
+   {
+    "t": "2025-08-01",
+    "source": "MSTR",
+    "links": "MT",
+    "size_t1": "1.7993723004439968"
+   },
+   {
+    "t": "2025-11-11",
+    "source": "CRWV",
+    "links": "CSCO,CRWD",
+    "size_t1": "1.5867696192108935"
+   },
+   {
+    "t": "2026-02-09",
+    "source": "FTNT",
+    "links": "FTRE,FTV",
+    "size_t1": "1.5189478339665574"
+   },
+   {
+    "t": "2026-05-28",
+    "source": "SNPS",
+    "links": "SNOW,TSM,SMR",
+    "size_t1": "1.298541618901265"
+   }
+  ]
+ }
+}

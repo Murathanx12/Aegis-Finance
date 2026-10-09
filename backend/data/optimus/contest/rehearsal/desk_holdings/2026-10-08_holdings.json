@@ -1,0 +1,30 @@
+{
+ "day": "2026-10-08",
+ "buys": [
+  {
+   "symbol": "3046.T",
+   "bbg_ticker": "3046 JT Equity",
+   "react_date": "2026-10-13"
+  },
+  {
+   "symbol": "6814.T",
+   "bbg_ticker": "6814 JT Equity",
+   "react_date": "2026-10-13"
+  },
+  {
+   "symbol": "6506.T",
+   "bbg_ticker": "6506 JT Equity",
+   "react_date": "2026-10-13"
+  },
+  {
+   "symbol": "DMART.NS",
+   "bbg_ticker": "DMART IN Equity",
+   "react_date": "2026-10-12"
+  },
+  {
+   "symbol": "4443.T",
+   "bbg_ticker": "4443 JT Equity",
+   "react_date": "2026-10-13"
+  }
+ ]
+}

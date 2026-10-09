@@ -1,0 +1,647 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-10-07",
+ "days": [
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05",
+  "2026-07-06",
+  "2026-07-07",
+  "2026-07-08",
+  "2026-07-09",
+  "2026-07-10",
+  "2026-07-11",
+  "2026-07-12",
+  "2026-07-13",
+  "2026-07-14",
+  "2026-07-15",
+  "2026-07-16",
+  "2026-07-17",
+  "2026-07-18",
+  "2026-07-19",
+  "2026-07-20",
+  "2026-07-21",
+  "2026-07-22",
+  "2026-07-23",
+  "2026-07-24",
+  "2026-07-25",
+  "2026-07-26",
+  "2026-07-27",
+  "2026-07-28",
+  "2026-07-29",
+  "2026-07-30",
+  "2026-07-31",
+  "2026-08-01",
+  "2026-08-02",
+  "2026-08-03",
+  "2026-08-04",
+  "2026-08-05",
+  "2026-08-06",
+  "2026-08-07",
+  "2026-08-08",
+  "2026-08-09",
+  "2026-08-10",
+  "2026-08-11",
+  "2026-08-12",
+  "2026-08-13",
+  "2026-08-14",
+  "2026-08-15",
+  "2026-08-16",
+  "2026-08-17",
+  "2026-08-18",
+  "2026-08-19",
+  "2026-08-20",
+  "2026-08-21",
+  "2026-08-22",
+  "2026-08-23",
+  "2026-08-24",
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27",
+  "2026-08-28",
+  "2026-08-29",
+  "2026-08-30",
+  "2026-08-31",
+  "2026-09-01",
+  "2026-09-02",
+  "2026-09-03",
+  "2026-09-04",
+  "2026-09-05",
+  "2026-09-06",
+  "2026-09-07",
+  "2026-09-08",
+  "2026-09-09",
+  "2026-09-10",
+  "2026-09-11",
+  "2026-09-12",
+  "2026-09-13",
+  "2026-09-14",
+  "2026-09-15",
+  "2026-09-16",
+  "2026-09-17",
+  "2026-09-18",
+  "2026-09-19",
+  "2026-09-20",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23",
+  "2026-09-24",
+  "2026-09-25",
+  "2026-09-26",
+  "2026-09-27",
+  "2026-09-28",
+  "2026-09-29",
+  "2026-09-30",
+  "2026-10-01",
+  "2026-10-02",
+  "2026-10-03",
+  "2026-10-04",
+  "2026-10-05",
+  "2026-10-06",
+  "2026-10-07"
+ ],
+ "started_utc": "2026-10-07T14:10:33+00:00",
+ "mw_analyst_snapshot": {
+  "n_pages": 11,
+  "n_rows_written": 11,
+  "thin": [],
+  "tickers": [
+   "CRM",
+   "VG",
+   "HALO",
+   "AGYS",
+   "GXO",
+   "AWI",
+   "HNI",
+   "SNOW",
+   "FRMI",
+   "KN",
+   "ASTE"
+  ]
+ },
+ "barrons_big_money_poll_index_rows": {
+  "n_articles": 0,
+  "n_rows_written": 0,
+  "per_article": []
+ },
+ "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
+ "purpose": "dowjones_claims",
+ "cap_usd": 3.0,
+ "spent_usd": 0.012099,
+ "n_llm_calls": 32,
+ "stopped": null,
+ "n_articles": 32,
+ "n_claims": 8,
+ "forecast_rows_by_source_id": {
+  "barrons_other": 3,
+  "barrons_stock_picks": 6,
+  "marketwatch_other": 0,
+  "marketwatch_upgrades_downgrades": 0,
+  "wsj_other": 3
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "0e279f1034411900f472",
+   "url": "https://www.barrons.com/articles/skydance-stock-3-things-to-know-228b8277?mod=hp_LEDE_C_4_B_1",
+   "column": "barrons_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "SKYD",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'SKYD'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "2bb77e26cf874f7d61b7",
+   "url": "https://www.barrons.com/articles/nvidia-stock-price-ai-startups-ff880306?mod=hp_WIND_A_1_4",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "CRWV",
+     "why": "REFUSED_QUOTE_NOT_IN_ARTICLE"
+    }
+   ],
+   "tickers": [
+    "NVDA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "2d008ed39fe3a0b6a9c6",
+   "url": "https://www.barrons.com/articles/brad-jacobs-how-to-make-a-few-billions-0c4568a8?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4e992ee850581cf77418",
+   "url": "https://www.barrons.com/articles/nvidia-stock-price-ai-chips-mistral-2e82db33?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "NVDA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "54d940399fe66a8156d2",
+   "url": "https://www.barrons.com/articles/markets-may-soon-turn-rocky-time-to-trade-schwab-stock-584e996a?mod=WTRN_pos6",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [],
+   "tickers": [
+    "SCHW",
+    "GS"
+   ],
+   "directions": [
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "8ab5298936fc1847eee8",
+   "url": "https://www.barrons.com/articles/buy-qxo-stock-price-pick-9bfb597f?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "QXO",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'QXO'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "935c0bb982cd4ff92876",
+   "url": "https://www.barrons.com/articles/etf-federal-reserve-interest-rates-5f58f767?mod=WTRN_pos2",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a1ea41442913d2c3a9bf",
+   "url": "https://www.barrons.com/articles/coreweave-stock-price-nvidia-ai-investment-78d0b985?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "CRWV"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "a8f5cb3ef5cb6dcc32f4",
+   "url": "https://www.barrons.com/articles/spacex-stock-price-trump-space-traffic-rules-efa6aa84?mod=RTA",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "SPCX"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "a971b19396cb6d68b773",
+   "url": "https://www.barrons.com/articles/freight-stocks-tariffs-morgan-stanley-2831c2ec?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "b4f729683159bff440c4",
+   "url": "https://www.barrons.com/articles/marvell-stock-price-earnings-target-d2af1a50?mod=RTA",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "MRVL"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "cee6355f4fe3f5cdb610",
+   "url": "https://www.barrons.com/articles/autozone-stock-can-hold-up-amid-tariffs-analyst-says-plus-chewy-chesapeake-and-more-636ec734?mod=stockoverview",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "d618978305435f0d07ba",
+   "url": "https://www.barrons.com/articles/u-s-markets-rose-tuesday-ciena-topped-leaders-05bd3866?mod=RTA",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "036e8a01a61bd18e6cd4",
+   "url": "https://www.marketwatch.com/story/seven-i-expected-to-report-lower-second-quarter-net-profit-earnings-preview-694b3aeb?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "3d04f7ff5698d482f004",
+   "url": "https://www.marketwatch.com/story/the-bond-market-is-seeing-trouble-why-investors-are-buying-now-anyway-065a2f9f?mod=article_inline",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "5033644cc8895c50af97",
+   "url": "https://www.marketwatch.com/story/this-part-of-the-bond-market-offers-compelling-yields-with-minimal-risk-1e7ef2ed?mod=mw_latestnews",
+   "column": "marketwatch_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "TUSI",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'TUSI'"
+    },
+    {
+     "ticker": "FLUD",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'FLUD'"
+    },
+    {
+     "ticker": "PARTX",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'PARTX'"
+    },
+    {
+     "ticker": "JAAA",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'JAAA'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "7f4b51d76c0da2791efe",
+   "url": "https://www.marketwatch.com/story/these-decisions-you-make-in-your-20s-not-your-income-determine-whether-youll-spend-decades-in-debt-or-retire-comfortably-7bbb28f9?mod=mw_latestnews",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a8dc6dea146d1e5ed1a0",
+   "url": "https://www.marketwatch.com/story/investors-see-big-opportunity-in-ferocious-2026-bond-market-rout-e5cc94f3?mod=home_lead",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ba31df1bc8b694a56a64",
+   "url": "https://www.marketwatch.com/story/microns-ridiculously-cheap-stock-could-triple-from-here-according-to-this-analysts-math-7b9b50bc?mod=mw_latestnews",
+   "column": "marketwatch_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "MU",
+     "why": "REFUSED_QUOTE_NOT_IN_ARTICLE"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ebd90c28c66e94e02716",
+   "url": "https://www.marketwatch.com/tools/upgrades-downgrades",
+   "column": "marketwatch_upgrades_downgrades",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_upgrades_downgrades",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "f64365a3695f4bfc00e5",
+   "url": "https://www.marketwatch.com/story/primaris-reit-outlines-three-year-targets-sees-up-to-8-annual-distribution-growth-24dcef34?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "1f5eee3e930a8e37837b",
+   "url": "https://www.wsj.com/articles/halozyme-therapeutics-expands-licensing-agreement-with-argenx-1156ce9a",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "2536d8b255d8d82838f9",
+   "url": "https://www.wsj.com/business/basic-materials-roundup-market-talk-fe6f3808",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "UACJ",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'UACJ'"
+    },
+    {
+     "ticker": "GLEN",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'GLEN'"
+    },
+    {
+     "ticker": "BHP",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'BHP'"
+    },
+    {
+     "ticker": "RRL",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'RRL'"
+    }
+   ],
+   "tickers": [
+    "PKX"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "25d5a98af71e12ec6eed",
+   "url": "https://www.wsj.com/articles/halozyme-granted-another-injunction-against-merck-in-keytruda-patent-case-e891bebc",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "2c6b03dcc8acea8b9de9",
+   "url": "https://www.wsj.com/world/europe/france-debt-bonds-spending-c7981557?mod=hp_lead_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "37032ad4b65db39fa697",
+   "url": "https://www.wsj.com/articles/ptc-stock-alert-halper-sadeh-llc-is-investigating-whether-ptc-inc-is-obtaining-a-fair-price-for-its-shareholders-20c161b7?mod=finance_relatednews_pos2",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "37d5530dd8740316b398",
+   "url": "https://www.wsj.com/finance/commodities-futures/oil-rises-amid-ongoing-mideast-tensions-2c446a1e",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "49bdafb14fffd8e57c4b",
+   "url": "https://www.wsj.com/business/autos/porsche-aims-to-become-more-exclusive-as-it-plots-path-to-higher-profitability-6f5942cc",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "5ca22da7b03b417731c5",
+   "url": "https://www.wsj.com/finance/currencies/dollar-hits-3-month-high-on-prospect-of-higher-u-s-rates-6866460f?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "5de2b842fa5a1588a057",
+   "url": "https://www.wsj.com/economy/global/frances-economy-is-trapped-in-a-negative-feedback-loop-509598a9?mod=economy_feat1_global_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "bd032412cfa6f372a37e",
+   "url": "https://www.wsj.com/opinion/the-tax-bill-on-top-of-your-tax-bill-1d0540cf?mod=wsj_furtherreading_pos_4",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "d865fe08aa072b80129d",
+   "url": "https://www.wsj.com/world/europe/german-industrial-output-rebounds-at-strongest-pace-since-early-2025-2de26cec?mod=economy_feat1_global_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  }
+ ]
+}

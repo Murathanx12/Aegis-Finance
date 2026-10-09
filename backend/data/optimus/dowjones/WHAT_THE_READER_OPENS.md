@@ -1,11 +1,11 @@
 # What the reader opens
 
-Generated from the configuration the reader runs with, at 2026-10-07T05:11:15+00:00 UTC (`python -m backend.services.reader_report --what-opens`). Never edited by hand.
+Generated from the configuration the reader runs with, at 2026-10-09T03:38:29+00:00 UTC (`python -m backend.services.reader_report --what-opens`). Never edited by hand.
 
 The reader's browser window is the dedicated Chrome profile `muratclaw`. It may open ONLY the hosts below, at most 4,000 page loads a day in total. Anything else on that window's screen is either one of these hosts' own frames (ads, video players, a publisher's subscription offer inside an article) or a fault to report. A subscription offer frame (for example `buy.tinypass.com`) is never navigated to: the page carrying it is classed PAYWALL_STUB and the frame is logged as PAYWALL_CHECKOUT_FRAME in `page_log.jsonl`; a pop-up page on a refused address is closed.
 
 
-Subscription offers seen INSIDE allowed pages in the last 24 h (frames the site itself loads; never navigated to, never typed into; the site then reads its fronts only for 6 h): asia.nikkei.com (320: buy-ap.piano.io, js.stripe.com); bbc.com (1: buy-eu.piano.io); cnbc.com (28: buy.tinypass.com); scmp.com (10: buy.tinypass.com)
+Subscription offers seen INSIDE allowed pages in the last 24 h (frames the site itself loads; never navigated to, never typed into; the site then reads its fronts only for 6 h): asia.nikkei.com (42: buy-ap.piano.io, js.stripe.com); bbc.com (2: js.stripe.com, buy-eu.piano.io); cnbc.com (4: buy.tinypass.com); scmp.com (2: buy.tinypass.com)
 
 ## 1. Hosts the browser window may open
 

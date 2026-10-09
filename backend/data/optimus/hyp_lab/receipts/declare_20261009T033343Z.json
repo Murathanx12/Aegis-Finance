@@ -1,0 +1,74 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-10-09",
+ "declared_utc": "2026-10-09T03:33:43+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [],
+ "cells": [
+  {
+   "hyp_id": "H-e4c4f028b3",
+   "title": "10Y yield spike lifts mortgage REITs via steepening",
+   "family": "macro_readthrough_rates",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "^TNX",
+    "targets": [
+     "AGNC",
+     "NLY",
+     "STWD",
+     "BXMT",
+     "ARI"
+    ],
+    "expected_sign": 1,
+    "h": 5,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "If the mREIT basket's beta-adjusted return is not positive over t+1 to t+5 after yield spikes, the steepening benefit is refuted.",
+   "separation_from_beta": "Agency mREIT basket outperforms rate-sensitive utilities and REITs beta-adjusted, isolating curve steepening."
+  },
+  {
+   "hyp_id": "H-7ddc1d8053",
+   "title": "Oil shock lifts tanker equities via freight rate expectations",
+   "family": "macro_readthrough_commodity",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "CL=F",
+    "targets": [
+     "FRO",
+     "DHT",
+     "INSW",
+     "STNG",
+     "TNK"
+    ],
+    "expected_sign": 1,
+    "h": 5,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "If tanker basket's beta-adjusted return is not positive over t+1 to t+5 after oil shocks, the freight-rate read-through fails.",
+   "separation_from_beta": "Tanker basket outperforms its market beta and the energy sector on t+1 to t+5, while other transports do not."
+  },
+  {
+   "hyp_id": "H-4c3cedbde3",
+   "title": "Clinical trial success lifts correlation peers next session",
+   "family": "event_readthrough_corr_peer",
+   "target": "direction",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "corr_peer",
+    "event_type": "clinical_trial_result",
+    "min_ratio": 2.5,
+    "k": 5,
+    "min_source_dv_pct": 0.5
+   },
+   "split": {},
+   "refutation": "If high-correlation peers show no significant next-session abnormal return relative to vol-matched unlinked peers, the hypothesis is refuted.",
+   "separation_from_beta": "Compare peers' next-session return to their own market-beta-adjusted return and to vol-matched non-linked peers; effect should be present only for high-correlation peers."
+  }
+ ],
+ "sha256": "50ec0e9c431b99c3f2303634eb673a6afb6468d1ff80b4c22df48b97ba3f2d79"
+}

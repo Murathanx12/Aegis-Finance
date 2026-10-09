@@ -2,7 +2,7 @@
 
 > HINDSIGHT BACKTEST. Every rule was registered 2026-09-26, after every month in these tables; 'since 2020' is what the rule WOULD have done, not what Aegis did. The quotable record starts at registration and accrues in the lib_ forward books. Read by_year_signs, LOO-worst and the worst breadth cell BEFORE the CAGR column; read DSR before Sharpe.
 
-Run `2026-10-06T181643Z`; receipt `backend/data/optimus/strategy_library/leaderboard_2026-10-06T181643Z.json` (this file is the 'latest' copy and is refreshed by every run; the receipt is not).
+Run `2026-10-07T152142Z`; receipt `backend/data/optimus/strategy_library/leaderboard_2026-10-07T152142Z.json` (this file is the 'latest' copy and is refreshed by every run; the receipt is not).
 
 **Every return below is printed beside five fields (BESIDE THE HEADLINE): the matched-twin verdict, the family verdict, DSR, the CAGR without the best 5 months, and for quarterly rules the spread across the three calendar offsets. NOT COMPUTED means the run did not compute it -- it is not a pass.** Sources: {'twins': 'backend/data/optimus/signal_structure/matched_twins_2026-09-27T082553Z.json', 'families': 'backend/data/optimus/signal_structure/family_pool_2026-09-27T082553Z.json', 'offsets': 'backend/data/optimus/strategy_library/calendar_offsets_2026-09-29T034413Z.json'}.
 
@@ -48,7 +48,7 @@ Rules picked on DEV only (dev net CAGR - SPY), read on the 2024-26 selection win
 | margin_mom | combination | 20 | **+42.2%** | +62.4% (33) | +20.2% | 0.076 | +12.7% | -0.5% | 0.038 (877) | +0.69% | 0.57 | 5.1x | 110 | -51.2% | +18.6% (+17.9%) | `+-++---+++` | twin: CANNOT_DISTINGUISH (dev +0.30%/mo t +0.6; 2024-26 +2.90%/mo t +2.3) [twins 2026-09-27T082553Z]; family: combination: vs twin CANNOT_DISTINGUISH; vs SPY CANNOT_DISTINGUISH [pool 2026-09-27T082553Z]; DSR: 0.038 (n=877; bar 0.95); w/o best 5: +10.5% CAGR (SPY without its best 5 +9.8%); calendar: n/a (hold 1 month: no quarterly calendar) |
 | qc395_sharpe252_above_trend_large | momentum | 10 | **+41.8%** | +62.0% (33) | +20.2% | 0.054 | +26.8% | +13.6% | 0.141 (877) | +1.43% | 0.46 | 5.0x | 47 | -32.6% | +40.8% (+17.9%) | `+--+-+-+++` | twin: CANNOT_DISTINGUISH (dev +0.83%/mo t +1.2; 2024-26 +2.54%/mo t +1.7) [twins 2026-09-27T082553Z]; family: momentum: vs twin CANNOT_DISTINGUISH; vs SPY CANNOT_DISTINGUISH [pool 2026-09-27T082553Z]; DSR: 0.141 (n=877; bar 0.95); w/o best 5: +19.0% CAGR (SPY without its best 5 +9.8%); calendar: n/a (hold 1 month: no quarterly calendar) |
 | skill_mom | analyst_skill | 20 | **+40.8%** | +61.0% (33) | +20.2% | 0.138 | +17.9% | +4.7% | 0.116 (877) | +0.81% | 0.39 | 5.2x | 76 | -27.3% | +25.6% (+17.9%) | `-+++-+-+++` | twin: CANNOT_DISTINGUISH (dev +0.15%/mo t +0.3; 2024-26 +1.76%/mo t +2.1) [twins 2026-09-27T082553Z]; family: analyst_skill: vs twin ALPHA_DETECTED; vs SPY CANNOT_DISTINGUISH [pool 2026-09-27T082553Z]; DSR: 0.116 (n=877; bar 0.95); w/o best 5: +17.6% CAGR (SPY without its best 5 +9.8%); calendar: n/a (hold 1 month: no quarterly calendar) |
-| illiquid | size_liquidity | 20 | **+32.8%** | +52.9% (33) | +20.2% | 0.011 | -2.0% | -15.2% | 0.002 (877) | -0.04% | 1.46 | 8.0x | 276 | -80.7% | +55.1% (+17.9%) | `++-+---+++` | twin: CANNOT_DISTINGUISH (dev -0.58%/mo t -0.8; 2024-26 +2.26%/mo t +1.2) [twins 2026-09-27T082553Z]; family: size_liquidity: vs twin CANNOT_DISTINGUISH; vs SPY CANNOT_DISTINGUISH [pool 2026-09-27T082553Z]; DSR: 0.002 (n=877; bar 0.95); w/o best 5: -5.0% CAGR (SPY without its best 5 +9.8%); calendar: n/a (hold 1 month: no quarterly calendar) |
+| illiquid | size_liquidity | 20 | **+32.8%** | +52.9% (33) | +20.2% | 0.011 | -1.8% | -15.0% | 0.002 (877) | -0.03% | 1.45 | 8.0x | 276 | -80.7% | +55.1% (+17.9%) | `++-+---+++` | twin: CANNOT_DISTINGUISH (dev -0.58%/mo t -0.8; 2024-26 +2.26%/mo t +1.2) [twins 2026-09-27T082553Z]; family: size_liquidity: vs twin CANNOT_DISTINGUISH; vs SPY CANNOT_DISTINGUISH [pool 2026-09-27T082553Z]; DSR: 0.002 (n=877; bar 0.95); w/o best 5: -4.9% CAGR (SPY without its best 5 +9.8%); calendar: n/a (hold 1 month: no quarterly calendar) |
 | low_dtc_mom | short_interest | 20 | **+32.0%** | +52.1% (33) | +20.2% | 0.106 | +5.1% | -8.1% | 0.005 (877) | +0.08% | 0.58 | 6.3x | 147 | -38.1% | +14.6% (+17.9%) | `-----+-+++` | twin: CANNOT_DISTINGUISH (dev -0.73%/mo t -1.6; 2024-26 +1.60%/mo t +1.8) [twins 2026-09-27T082553Z]; family: short_interest: vs twin CANNOT_DISTINGUISH; vs SPY CANNOT_DISTINGUISH [pool 2026-09-27T082553Z]; DSR: 0.005 (n=877; bar 0.95); w/o best 5: +7.1% CAGR (SPY without its best 5 +9.8%); calendar: n/a (hold 1 month: no quarterly calendar) |
 | mom_flow | combination | 20 | **+29.1%** | +49.3% (33) | +20.2% | 0.073 | +20.4% | +7.3% | 0.107 (877) | +0.75% | 0.38 | 5.1x | 73 | -27.2% | +39.9% (+17.9%) | `++++-+-+++` | twin: CANNOT_DISTINGUISH (dev +0.36%/mo t +0.7; 2024-26 +1.22%/mo t +1.4) [twins 2026-09-27T082553Z]; family: combination: vs twin CANNOT_DISTINGUISH; vs SPY CANNOT_DISTINGUISH [pool 2026-09-27T082553Z]; DSR: 0.107 (n=877; bar 0.95); w/o best 5: +17.2% CAGR (SPY without its best 5 +9.8%); calendar: n/a (hold 1 month: no quarterly calendar) |
 
@@ -94,7 +94,7 @@ Rules picked on DEV only (dev net CAGR - SPY), read on the 2024-26 selection win
 - `skill_mom_minus_ranks_21_40`: 2017 -15.9, 2018 -8.6, 2019 +22.8, 2020 +67.2, 2021 -14.4, 2022 +3.9, 2023 -13.8, 2024 +16.7, 2025 +53.5, 2026 +26.6 pp; excluding ['2025']: sum +84.4%, 5 of 9 years positive.
 - `mom_12_1_q_jajo_minus_mom_12_1`: 2017 -5.8, 2018 +8.0, 2019 -6.7, 2020 -10.7, 2021 +1.5, 2022 +4.8, 2023 +12.3, 2024 +69.5, 2025 +29.7, 2026 +3.4 pp; excluding nothing: sum +106.2%, 7 of 10 years positive.
 - `mom_12_1_q_fman_minus_mom_12_1`: 2017 -20.2, 2018 -12.4, 2019 +1.5, 2020 +5.7, 2021 -9.5, 2022 +14.4, 2023 -15.3, 2024 +11.7, 2025 +10.4, 2026 -34.2 pp; excluding nothing: sum -47.9%, 5 of 10 years positive.
-- `mom_12_1_q_mjsd_minus_mom_12_1`: 2017 -1.5, 2018 -7.6, 2019 +2.7, 2020 -40.0, 2021 -10.9, 2022 +3.8, 2023 -15.1, 2024 +18.8, 2025 +3.2, 2026 -4.4 pp; excluding nothing: sum -51.2%, 4 of 10 years positive.
+- `mom_12_1_q_mjsd_minus_mom_12_1`: 2017 -1.5, 2018 -7.6, 2019 +2.6, 2020 -40.0, 2021 -10.9, 2022 +3.8, 2023 -15.1, 2024 +18.8, 2025 +3.2, 2026 -4.4 pp; excluding nothing: sum -51.2%, 4 of 10 years positive.
 
 ## SPY
 
@@ -155,7 +155,7 @@ Quarterly rules: the `cum since 2020` column leads with the CALENDAR-NEUTRAL boo
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | random_1 | control | 20 | `---+++----` | -0.39% (drop 2020) | 50: +10.6% | 0.81 / +2.1% (+15.1%) | -0.55 (116) | 0.56 (116) | 0.000 (877) | +12.2% | +15.5% | +116% | twin: NOT COMPUTED; family: NOT COMPUTED; DSR: 0.000 (n=877; bar 0.95); w/o best 5: +2.1% CAGR (SPY without its best 5 +9.8%); calendar: n/a (hold 1 month: no quarterly calendar) |
 | random_2 | control | 20 | `+---------` | -0.71% (drop 2017) | 10: +2.2% | 1.04 / -0.2% (+15.1%) | -1.89 (116) | 0.41 (116) | 0.000 (877) | +4.8% | +15.5% | +37% | twin: NOT COMPUTED; family: NOT COMPUTED; DSR: 0.000 (n=877; bar 0.95); w/o best 5: -0.2% CAGR (SPY without its best 5 +9.8%); calendar: n/a (hold 1 month: no quarterly calendar) |
-| random_3 | control | 20 | `---+----+-` | -0.46% (drop 2020) | 50: +7.0% | 0.92 / +0.8% (+15.1%) | -0.85 (116) | 0.48 (116) | 0.000 (877) | +11.6% | +15.5% | +108% | twin: NOT COMPUTED; family: NOT COMPUTED; DSR: 0.000 (n=877; bar 0.95); w/o best 5: +0.8% CAGR (SPY without its best 5 +9.8%); calendar: n/a (hold 1 month: no quarterly calendar) |
+| random_3 | control | 20 | `---+----+-` | -0.46% (drop 2020) | 50: +7.0% | 0.92 / +0.8% (+15.1%) | -0.86 (116) | 0.48 (116) | 0.000 (877) | +11.6% | +15.5% | +108% | twin: NOT COMPUTED; family: NOT COMPUTED; DSR: 0.000 (n=877; bar 0.95); w/o best 5: +0.8% CAGR (SPY without its best 5 +9.8%); calendar: n/a (hold 1 month: no quarterly calendar) |
 | monday_ear_drift | earnings_event | 20 | `--++---+--` | -0.68% (drop 2024) | 10: +2.5% | 1.40 / -2.5% (+15.1%) | -1.13 (116) | 0.37 (116) | 0.000 (877) | +4.7% | +15.5% | +36% | twin: NOT COMPUTED; family: earnings_event: vs twin CANNOT_DISTINGUISH; vs SPY CANNOT_DISTINGUISH [pool 2026-09-27T082553Z]; DSR: 0.000 (n=877; bar 0.95); w/o best 5: -2.5% CAGR (SPY without its best 5 +9.8%); calendar: n/a (hold 1 month: no quarterly calendar) |
 | inst_breadth_up_21_40 | institutional_breadth | 20 | `--++--++--` | -0.07% (drop 2024) | 10: +8.6% | 0.79 / +2.9% (+15.1%) | 0.38 (39) | 0.57 (116) | 0.002 (877) | +14.1% | +15.5% | +142% (one calendar of three; calendar-neutral NOT COMPUTED) | twin: NOT COMPUTED; family: NOT COMPUTED (family has too few rules to pool); DSR: 0.002 (n=877; bar 0.95); w/o best 5: +2.9% CAGR (SPY without its best 5 +9.8%); calendar: NOT COMPUTED |
 | distance_to_default_rising_21_40 | credit_risk | 20 | `+---++----` | -0.58% (drop 2022) | 10: +6.9% | 0.76 / +2.2% (+14.8%) | -0.95 (115) | 0.51 (115) | 0.000 (877) | +9.7% | +15.5% | +85% | twin: NOT COMPUTED; family: NOT COMPUTED (family has too few rules to pool); DSR: 0.000 (n=877; bar 0.95); w/o best 5: +2.2% CAGR (SPY without its best 5 +9.4%); calendar: n/a (hold 1 month: no quarterly calendar) |
@@ -195,34 +195,34 @@ Quarterly rules: the `cum since 2020` column leads with the CALENDAR-NEUTRAL boo
 
 ## Backtest vs forward
 
-- lib_mom_12_1_q_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+2.02% (hindsight); forward sessions=6
-- lib_mom_no_downgrades_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+1.72% (hindsight); forward sessions=6
-- lib_net_raises_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+0.77% (hindsight); forward sessions=6
-- lib_big_dv_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+0.82% (hindsight); forward sessions=6
-- lib_mom_12_1_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+1.30% (hindsight); forward sessions=6
-- lib_mom_12_1_small_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+1.19% (hindsight); forward sessions=6
-- lib_mom_flow_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+1.17% (hindsight); forward sessions=6
-- lib_trend_quality_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+0.71% (hindsight); forward sessions=6
-- lib_frog_in_pan_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+1.17% (hindsight); forward sessions=6
-- lib_inflection_flow_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+0.75% (hindsight); forward sessions=6
-- lib_forecast_dispersion_v1_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_book_f_seasonality_11_20_v0_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_rev_5d_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_skill_mom_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_margin_mom_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_illiquid_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_low_dtc_mom_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_low_asset_growth_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_resid_mom_12_1_large_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_mom_12_1_secrel_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_disp_short_avoid_2026-09-27: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+1.85% (hindsight); forward sessions=6
-- lib_qc395_sharpe252_above_trend_large_2026-09-27: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+1.95% (hindsight); forward sessions=6
-- lib_skill_mom_2026-09-27: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+1.24% (hindsight); forward sessions=6
-- lib_mom_flow_ivw_2026-09-27: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=+1.11% (hindsight); forward sessions=6
-- lib_qc470_mom252_quarterly_riskparity_2026-09-27__control: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_mom_no_downgrades_small_2026-09-27__control: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_net_raises_ivw_lead_2026-09-27: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_mom_12_1_ivw_lead_2026-09-27__control: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_mom_12_1_q_trend_lead_2026-09-27: forward_21d_vs_spy=PENDING (needs 21 sessions, has 6); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=6
-- lib_skill_raises_2026-09-30__control: forward_21d_vs_spy=PENDING (needs 21 sessions, has 3); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=3
+- lib_mom_12_1_q_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+2.02% (hindsight); forward sessions=7
+- lib_mom_no_downgrades_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+1.72% (hindsight); forward sessions=7
+- lib_net_raises_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+0.77% (hindsight); forward sessions=7
+- lib_big_dv_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+0.82% (hindsight); forward sessions=7
+- lib_mom_12_1_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+1.30% (hindsight); forward sessions=7
+- lib_mom_12_1_small_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+1.19% (hindsight); forward sessions=7
+- lib_mom_flow_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+1.17% (hindsight); forward sessions=7
+- lib_trend_quality_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+0.71% (hindsight); forward sessions=7
+- lib_frog_in_pan_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+1.17% (hindsight); forward sessions=7
+- lib_inflection_flow_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+0.75% (hindsight); forward sessions=7
+- lib_forecast_dispersion_v1_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_book_f_seasonality_11_20_v0_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_rev_5d_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_skill_mom_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_margin_mom_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_illiquid_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_low_dtc_mom_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_low_asset_growth_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_resid_mom_12_1_large_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_mom_12_1_secrel_sealed_2026-09-26: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_disp_short_avoid_2026-09-27: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+1.85% (hindsight); forward sessions=7
+- lib_qc395_sharpe252_above_trend_large_2026-09-27: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+1.95% (hindsight); forward sessions=7
+- lib_skill_mom_2026-09-27: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+1.24% (hindsight); forward sessions=7
+- lib_mom_flow_ivw_2026-09-27: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=+1.11% (hindsight); forward sessions=7
+- lib_qc470_mom252_quarterly_riskparity_2026-09-27__control: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_mom_no_downgrades_small_2026-09-27__control: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_net_raises_ivw_lead_2026-09-27: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_qc470_mom252_quarterly_riskparity_lead_2026-09-27__control: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_mom_12_1_ivw_lead_2026-09-27__control: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_mom_12_1_q_trend_lead_2026-09-27: forward_21d_vs_spy=PENDING (needs 21 sessions, has 7); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=7
+- lib_skill_raises_2026-09-30__control: forward_21d_vs_spy=PENDING (needs 21 sessions, has 4); backtest_mean_21d_vs_spy=n/a (hindsight); forward sessions=4

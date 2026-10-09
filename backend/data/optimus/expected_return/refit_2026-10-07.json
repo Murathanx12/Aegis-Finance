@@ -3,7 +3,7 @@
  "licence": "PRODUCT_EXPERIMENT",
  "llm_spend_usd": 0.0,
  "date": "2026-10-07",
- "written_utc": "2026-10-06T21:57:01+00:00",
+ "written_utc": "2026-10-07T15:32:39+00:00",
  "sources": "production",
  "unavailable": {
   "regime": "not requested"
@@ -385,6 +385,6 @@
   "horizon": 5,
   "why": "lambda = clip(n/(n+k) * held-out Brier skill on abs_move_exceeds, 0, 1)"
  },
- "n_graded_forecasts": 20106,
+ "n_graded_forecasts": 20180,
  "n_graded_decisions": 41
 }

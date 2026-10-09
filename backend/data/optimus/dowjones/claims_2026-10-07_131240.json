@@ -1,0 +1,782 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-10-07",
+ "days": [
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05",
+  "2026-07-06",
+  "2026-07-07",
+  "2026-07-08",
+  "2026-07-09",
+  "2026-07-10",
+  "2026-07-11",
+  "2026-07-12",
+  "2026-07-13",
+  "2026-07-14",
+  "2026-07-15",
+  "2026-07-16",
+  "2026-07-17",
+  "2026-07-18",
+  "2026-07-19",
+  "2026-07-20",
+  "2026-07-21",
+  "2026-07-22",
+  "2026-07-23",
+  "2026-07-24",
+  "2026-07-25",
+  "2026-07-26",
+  "2026-07-27",
+  "2026-07-28",
+  "2026-07-29",
+  "2026-07-30",
+  "2026-07-31",
+  "2026-08-01",
+  "2026-08-02",
+  "2026-08-03",
+  "2026-08-04",
+  "2026-08-05",
+  "2026-08-06",
+  "2026-08-07",
+  "2026-08-08",
+  "2026-08-09",
+  "2026-08-10",
+  "2026-08-11",
+  "2026-08-12",
+  "2026-08-13",
+  "2026-08-14",
+  "2026-08-15",
+  "2026-08-16",
+  "2026-08-17",
+  "2026-08-18",
+  "2026-08-19",
+  "2026-08-20",
+  "2026-08-21",
+  "2026-08-22",
+  "2026-08-23",
+  "2026-08-24",
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27",
+  "2026-08-28",
+  "2026-08-29",
+  "2026-08-30",
+  "2026-08-31",
+  "2026-09-01",
+  "2026-09-02",
+  "2026-09-03",
+  "2026-09-04",
+  "2026-09-05",
+  "2026-09-06",
+  "2026-09-07",
+  "2026-09-08",
+  "2026-09-09",
+  "2026-09-10",
+  "2026-09-11",
+  "2026-09-12",
+  "2026-09-13",
+  "2026-09-14",
+  "2026-09-15",
+  "2026-09-16",
+  "2026-09-17",
+  "2026-09-18",
+  "2026-09-19",
+  "2026-09-20",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23",
+  "2026-09-24",
+  "2026-09-25",
+  "2026-09-26",
+  "2026-09-27",
+  "2026-09-28",
+  "2026-09-29",
+  "2026-09-30",
+  "2026-10-01",
+  "2026-10-02",
+  "2026-10-03",
+  "2026-10-04",
+  "2026-10-05",
+  "2026-10-06",
+  "2026-10-07"
+ ],
+ "started_utc": "2026-10-07T13:10:28+00:00",
+ "mw_analyst_snapshot": {
+  "n_pages": 5,
+  "n_rows_written": 5,
+  "thin": [],
+  "tickers": [
+   "XRX",
+   "STX",
+   "MWH",
+   "Q",
+   "LITE"
+  ]
+ },
+ "barrons_big_money_poll_index_rows": {
+  "n_articles": 0,
+  "n_rows_written": 0,
+  "per_article": []
+ },
+ "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
+ "purpose": "dowjones_claims",
+ "cap_usd": 3.0,
+ "spent_usd": 0.011933,
+ "n_llm_calls": 44,
+ "stopped": null,
+ "n_articles": 44,
+ "n_claims": 14,
+ "forecast_rows_by_source_id": {
+  "barrons_stock_picks": 24,
+  "barrons_other": 3,
+  "marketwatch_other": 3,
+  "wsj_other": 3,
+  "wsj_heard_on_the_street": 0
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "13857c0af4c0b1696f9c",
+   "url": "https://www.barrons.com/articles/nvidia-stock-price-spacex-chips-musk-35c62365?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "NVDA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "4167377f1d4c047aab09",
+   "url": "https://www.barrons.com/articles/spacex-stock-price-nvidia-musk-ai-chips-54508813?mod=hp_LEDE_C_3",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "47952d51ee2441218d3e",
+   "url": "https://www.barrons.com/articles/paramount-warner-bros-merger-disney-netflix-stock-aea1305c?mod=WTRN_pos1",
+   "column": "barrons_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "SKYD",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'SKYD'"
+    },
+    {
+     "ticker": "NFLX",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'NFLX'"
+    },
+    {
+     "ticker": "DIS",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'DIS'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "817eb3dfa2bf2e88337d",
+   "url": "https://www.barrons.com/articles/small-cap-microcap-megacap-stocks-2a1f813b?mod=hp_LEDE_B_1_B_2",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "8362d1ff0ce35a86ee78",
+   "url": "https://www.barrons.com/articles/micron-stock-price-strike-memory-chip-plant-6550a149?mod=article_inline",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "85984303279aa8f1448e",
+   "url": "https://www.barrons.com/articles/profit-from-sharp-stock-moves-8a71b01a?mod=WTRN_pos5",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "9b8d9b6745a21efacd34",
+   "url": "https://www.barrons.com/articles/micron-stock-price-buy-chips-factory-31e510a4?mod=article_inline",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "MU"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "a1f03b6f75c7d54584df",
+   "url": "https://www.barrons.com/articles/tesla-stock-cybercab-europe-elon-musk-2090d95e?mod=article_inline",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "TSLA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "ae16e083d69a6c5ecd18",
+   "url": "https://www.barrons.com/articles/tesla-stock-price-full-self-driving-eu-7f19b715?mod=RTA",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "TSLA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "b8d562e6904ba298e1fe",
+   "url": "https://www.barrons.com/articles/fed-minutes-interest-rate-hikes-1d672057?mod=RTA",
+   "column": "barrons_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c74c93cf413ad8ff6d98",
+   "url": "https://www.barrons.com/articles/fed-warsh-interest-rates-stock-market-2f5e210b?mod=WTRN_pos2",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c87bf83197cd66f4cc15",
+   "url": "https://www.barrons.com/articles/flutter-stock-buy-upgrade-9458c0bc?mod=WTRN_pos1",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [],
+   "tickers": [
+    "FLUT",
+    "DKNG"
+   ],
+   "directions": [
+    "up",
+    "none"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "c9c5d415dff7f43df2cb",
+   "url": "https://www.barrons.com/articles/tesla-stock-price-full-self-driving-europe-2fcdf1cd?mod=article_inline",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "TSLA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "dbdff5858fb886b6384b",
+   "url": "https://www.barrons.com/articles/stock-market-things-to-know-today-crypto-nvidia-f272bbe1?mod=RTA",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 5,
+   "refused": [],
+   "tickers": [
+    "MRVL",
+    "INTC",
+    "MRNA",
+    "NVAX",
+    "MU"
+   ],
+   "directions": [
+    "up",
+    "up",
+    "down",
+    "down",
+    "down"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 15,
+   "write_status": "OK"
+  },
+  {
+   "sha": "02c93ac949cd8b17751d",
+   "url": "https://www.marketwatch.com/story/fuelcell-energy-names-matthew-latino-to-succeed-cfo-michael-bishop-01686853?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "6380bd343c1a053b7714",
+   "url": "https://www.marketwatch.com/story/third-coast-to-acquire-great-plains-for-nearly-240-million-0e77c240?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "76f4efd4e14ff99576fd",
+   "url": "https://www.marketwatch.com/story/fortuna-mining-3q-output-down-fy-targets-remain-b5ecdde6?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "79c06732672e884a8ce5",
+   "url": "https://www.marketwatch.com/story/escrow-agent-japan-1h-net-y120-00m-vs-net-y126-00m-07351fef?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "994a2bbbfc42522ebf1a",
+   "url": "https://www.marketwatch.com/story/mexican-light-vehicle-production-exports-fell-in-september-49443a8d?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a27b9724cb9b4e48e5b0",
+   "url": "https://www.marketwatch.com/story/helmerich-payne-forecasts-strong-4q-results-continued-momentum-next-year-b50d2ddd?mod=markets",
+   "column": "marketwatch_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "HP"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "c111b50d0eaaacbb7d7d",
+   "url": "https://www.marketwatch.com/story/becton-dickinson-reports-positive-study-results-for-device-to-treat-iliac-artery-disease-12039dc1?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "c5ab29977952fd9f4633",
+   "url": "https://www.marketwatch.com/story/algoma-central-raises-dividend-offers-shareholders-special-payout-39288614?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "d51fc09c69f3111301f5",
+   "url": "https://www.marketwatch.com/story/porsche-plans-20-price-rise-for-top-end-models-in-exclusivity-push-update-cecf0feb?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "20485f8a0524bf6cd239",
+   "url": "https://www.wsj.com/finance/investing/weaning-markets-off-fed-speak-8c93b387",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4e1350df01ac48ec580d",
+   "url": "https://www.wsj.com/tech/ai/a-godfather-of-ai-just-won-a-nobel-he-has-been-warning-the-machines-could-take-over-the-world-b127da71?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "4e45a02b5be3f8f98fa9",
+   "url": "https://www.wsj.com/finance/investing/u-s-european-government-bond-yields-rise-french-bonds-underperform-on-budget-worries-c068d9ae",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "7b428407fefbce23129c",
+   "url": "https://www.wsj.com/sports/football/vrabel-russini-new-england-patriots-835cceb2?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "7ddef84d4099d5ea678b",
+   "url": "https://www.wsj.com/us-news/climate-environment/the-waters-of-the-united-states-are-about-to-legally-dry-up-a085a8ff?mod=Searchresults&pos=3&page=1",
+   "column": "wsj_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "FCX"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "81028a9b2d55302141cd",
+   "url": "https://www.wsj.com/finance/investing/so-you-think-you-own-shares-in-a-hot-startup-anthropic-says-not-so-fast-7b60f938?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "82b3ad2594d543bcb7a4",
+   "url": "https://www.wsj.com/business/pressure-mounts-at-bessents-treasury-amid-staff-turnover-and-unmet-goals-877b5926?mod=business_lead_pos2",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "85e0e22d735c9dd5caea",
+   "url": "https://www.wsj.com/sports/baseball/san-diego-padres-roof-cable-ty-france-28307289?mod=series_olygay",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "91b2a342e5e661e94576",
+   "url": "https://www.wsj.com/sports/the-billionaire-yacht-battle-that-still-makes-sailors-furious-40aedc59?mod=series_olygay",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "993019c727fb1096f136",
+   "url": "https://www.wsj.com/video/series/wsj-leadership-institute-leaders/why-ups-ceo-carol-tome-lets-her-executives-meet-the-board-without-her/021A85F6-EEBA-4B67-9E16-88257C08EB1C?mod=WSJvidctr_businessnews_pos0",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a58adb6335c377834534",
+   "url": "https://www.wsj.com/articles/meet-the-it-companies-that-say-doge-is-good-for-business-49956e47?mod=article_inline",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "b92d2075a385d306f952",
+   "url": "https://www.wsj.com/finance/investing/how-to-buy-gold-and-silver-at-a-discount-if-youre-brave-enough-0ba00ab3?mod=article_inline",
+   "column": "wsj_heard_on_the_street",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "b9ee653e6f631cca7ba0",
+   "url": "https://www.wsj.com/business/health-care-roundup-market-talk-79f724c7",
+   "column": "wsj_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "TOPGLOV",
+     "why": "REFUSED_TICKER: 'TOPGLOV'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "cd2e054f545936afd626",
+   "url": "https://www.wsj.com/tech/samsungs-chip-earnings-push-net-profit-to-record-cf8711bc?mod=Searchresults&pos=3&page=1",
+   "column": "wsj_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "005930.KS",
+     "why": "REFUSED_TICKER: '005930.KS'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "d28c8f7ff84a030f915b",
+   "url": "https://www.wsj.com/finance/commodities-futures/copper-reaches-new-highs-on-u-s-tariff-fears-supply-challenges-93a99fb0?mod=wsj_furtherreading_pos_2",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "d665d65a9dd4bdf6ab73",
+   "url": "https://www.wsj.com/world/europe/ukraines-big-backers-in-europe-try-to-counter-war-fatigue-4c6bcef9?mod=wsj_furtherreading_pos_2",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "d951715d4c79cc626721",
+   "url": "https://www.wsj.com/cfo-journal/big-techs-deals-for-ai-data-center-power-present-accounting-questions-28bbb4e0?mod=Searchresults&pos=5&page=1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "dde6b52adcbc6073c9eb",
+   "url": "https://www.wsj.com/cio-journal/moet-hennessy-directs-ai-to-sniff-out-a-stubborn-problem-in-winemaking-41670bd9",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e71e0f40f49f75c0da44",
+   "url": "https://www.wsj.com/finance/stocks/stocks-futures-steady-as-bond-selloff-extends-oil-prices-rise-ddd8a40e",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "eab28393a621af817067",
+   "url": "https://www.wsj.com/world/asia/u-s-forces-in-okinawa-face-curfew-booze-ban-after-killing-399c01e9",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "f0ae7846a8e64c48b07a",
+   "url": "https://www.wsj.com/sports/football/drake-maye-patriots-63fe74bf",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  }
+ ]
+}

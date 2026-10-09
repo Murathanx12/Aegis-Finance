@@ -1,0 +1,152 @@
+{
+ "hyp_id": "H-0692690079",
+ "title": "Utility equity lag after power price spike",
+ "night": "2026-10-08",
+ "run_utc": "2026-10-08T05:11:58+00:00",
+ "result": {
+  "cell_type": "macro_lead_lag",
+  "params": {
+   "driver": "basket:NRG,VST,CEG,TLN",
+   "targets": [
+    "NRG",
+    "VST",
+    "CEG",
+    "TLN",
+    "D",
+    "SO",
+    "NEE"
+   ],
+   "expected_sign": 1,
+   "h": 1,
+   "shock_z": 2.0
+  },
+  "targets_used": [
+   "NRG",
+   "VST",
+   "CEG",
+   "TLN",
+   "D",
+   "SO",
+   "NEE"
+  ],
+  "beta_to_spy_design": 0.767,
+  "window": "open(t+1) -> close(t+1), residual of beta x SPY; etf: targets use close t -> close t+1",
+  "design": {
+   "primary_signed_next_resid": {
+    "mean": 0.000141,
+    "se": 0.001134,
+    "t": 0.12,
+    "mde": 0.003177,
+    "n": 87,
+    "n_blocks": 45
+   },
+   "net_of_cost": -0.001859,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.017451,
+    "se": 0.0016,
+    "t": 10.9,
+    "mde": 0.004481,
+    "n": 87,
+    "n_blocks": 45
+   },
+   "placebo_all_days_signed_next": {
+    "mean": -0.000222,
+    "se": 0.000197,
+    "t": -1.13,
+    "mde": 0.000551,
+    "n": 1721,
+    "n_blocks": 82
+   },
+   "n_shocks": 87,
+   "by_year": {
+    "2016": {
+     "mean": 0.000933,
+     "n": 9
+    },
+    "2017": {
+     "mean": -0.00017,
+     "n": 6
+    },
+    "2018": {
+     "mean": -0.001045,
+     "n": 17
+    },
+    "2019": {
+     "mean": 0.001136,
+     "n": 13
+    },
+    "2020": {
+     "mean": 0.004217,
+     "n": 18
+    },
+    "2021": {
+     "mean": -0.002433,
+     "n": 13
+    },
+    "2022": {
+     "mean": -0.003313,
+     "n": 11
+    }
+   },
+   "loo_year_worst": -0.000923,
+   "span": [
+    "2016-06-09",
+    "2022-12-06"
+   ]
+  },
+  "confirm": {
+   "primary_signed_next_resid": {
+    "mean": 0.001763,
+    "se": 0.002077,
+    "t": 0.85,
+    "mde": 0.005816,
+    "n": 57,
+    "n_blocks": 31
+   },
+   "net_of_cost": -0.000237,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.030747,
+    "se": 0.002941,
+    "t": 10.46,
+    "mde": 0.008234,
+    "n": 57,
+    "n_blocks": 31
+   },
+   "placebo_all_days_signed_next": {
+    "mean": -0.000726,
+    "se": 0.000459,
+    "t": -1.58,
+    "mde": 0.001284,
+    "n": 943,
+    "n_blocks": 46
+   },
+   "n_shocks": 57,
+   "by_year": {
+    "2023": {
+     "mean": 0.001263,
+     "n": 14
+    },
+    "2024": {
+     "mean": 0.00462,
+     "n": 17
+    },
+    "2025": {
+     "mean": -0.003439,
+     "n": 15
+    },
+    "2026": {
+     "mean": 0.00508,
+     "n": 11
+    }
+   },
+   "loo_year_worst": 0.000549,
+   "span": [
+    "2023-03-06",
+    "2026-10-06"
+   ]
+  },
+  "verdict": "CANNOT_DISTINGUISH",
+  "powered": false,
+  "reason": "confirm +0.00176 t 0.85; MDE 0.00582 > effect worth having 0.00200"
+ }
+}

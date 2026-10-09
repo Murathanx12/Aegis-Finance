@@ -1,0 +1,148 @@
+{
+ "hyp_id": "H-f73a8435aa",
+ "title": "Tanker rate spike lifts product tanker equities next session",
+ "night": "2026-10-08",
+ "run_utc": "2026-10-08T05:07:02+00:00",
+ "result": {
+  "cell_type": "macro_lead_lag",
+  "params": {
+   "driver": "basket:STNG,ASC,INSW",
+   "targets": [
+    "STNG",
+    "ASC",
+    "INSW",
+    "DHT",
+    "FRO"
+   ],
+   "expected_sign": 1,
+   "h": 1,
+   "shock_z": 2.0
+  },
+  "targets_used": [
+   "STNG",
+   "ASC",
+   "INSW",
+   "DHT",
+   "FRO"
+  ],
+  "beta_to_spy_design": 0.917,
+  "window": "open(t+1) -> close(t+1), residual of beta x SPY; etf: targets use close t -> close t+1",
+  "design": {
+   "primary_signed_next_resid": {
+    "mean": -0.002037,
+    "se": 0.002153,
+    "t": -0.95,
+    "mde": 0.006028,
+    "n": 91,
+    "n_blocks": 49
+   },
+   "net_of_cost": -0.004037,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.045916,
+    "se": 0.002792,
+    "t": 16.45,
+    "mde": 0.007817,
+    "n": 91,
+    "n_blocks": 49
+   },
+   "placebo_all_days_signed_next": {
+    "mean": -0.000194,
+    "se": 0.000623,
+    "t": -0.31,
+    "mde": 0.001744,
+    "n": 1721,
+    "n_blocks": 82
+   },
+   "n_shocks": 91,
+   "by_year": {
+    "2016": {
+     "mean": -0.003795,
+     "n": 10
+    },
+    "2017": {
+     "mean": 0.001652,
+     "n": 15
+    },
+    "2018": {
+     "mean": 0.004871,
+     "n": 17
+    },
+    "2019": {
+     "mean": 0.009487,
+     "n": 10
+    },
+    "2020": {
+     "mean": -0.011161,
+     "n": 21
+    },
+    "2021": {
+     "mean": -0.000968,
+     "n": 12
+    },
+    "2022": {
+     "mean": -0.017317,
+     "n": 6
+    }
+   },
+   "loo_year_worst": -0.003624,
+   "span": [
+    "2016-03-08",
+    "2022-09-23"
+   ]
+  },
+  "confirm": {
+   "primary_signed_next_resid": {
+    "mean": -0.005676,
+    "se": 0.002845,
+    "t": -2.0,
+    "mde": 0.007965,
+    "n": 47,
+    "n_blocks": 28
+   },
+   "net_of_cost": -0.007676,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": 0.047125,
+    "se": 0.002613,
+    "t": 18.03,
+    "mde": 0.007317,
+    "n": 47,
+    "n_blocks": 28
+   },
+   "placebo_all_days_signed_next": {
+    "mean": -0.000557,
+    "se": 0.000579,
+    "t": -0.96,
+    "mde": 0.001621,
+    "n": 942,
+    "n_blocks": 46
+   },
+   "n_shocks": 47,
+   "by_year": {
+    "2023": {
+     "mean": -0.007199,
+     "n": 11
+    },
+    "2024": {
+     "mean": -0.006625,
+     "n": 12
+    },
+    "2025": {
+     "mean": -0.005199,
+     "n": 14
+    },
+    "2026": {
+     "mean": -0.003528,
+     "n": 10
+    }
+   },
+   "loo_year_worst": -0.006256,
+   "span": [
+    "2023-01-04",
+    "2026-07-10"
+   ]
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.00568 <= 0",
+  "powered": false
+ }
+}

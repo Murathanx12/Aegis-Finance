@@ -1,0 +1,284 @@
+{
+ "receipt": "shadow_grade",
+ "licence": "PRODUCT_EXPERIMENT",
+ "written_utc": "2026-10-08T06:32:01+00:00",
+ "llm_spend_usd": 0.0,
+ "leaderboard": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_portfolio\\leaderboard_2026-10-08.json",
+ "leaderboard_graded_utc": "2026-10-08T06:32:00+00:00",
+ "bars_through": "2026-10-07",
+ "read_me_first": "a forward reading of fewer sessions than the first read date is reported, never read: it says nothing yet",
+ "books": [
+  {
+   "name": "SHADOW_BAYES_v0",
+   "book_id": "439fd84f869744e0",
+   "twin_book_id": "ec29c635db8ac686",
+   "primary_twin": "random_same_band",
+   "kill": {
+    "kill_line": 0.0,
+    "rule": "at 63 sessions, if the sleeve trails its random_same_band twin, the rule's v0 priors are recorded FAILED_VARIANT; no v0 parameter is changed before then",
+    "source": "REGISTRATION_SHADOW_BAYES_v0_2026-09-28.json",
+    "caveat": "the registered kill rule cannot tell a correct rule from a worthless one. A FAILED_VARIANT written on 2026-12-24 under it carries about two percentage points of information and must be read as CANNOT_DISTINGUISH, not as a rejection. The Brier falsifier has the same defect: with p between 0.506 and 0.510, it fires whenever fewer than half of four names beat SPY."
+   },
+   "read_sessions": [
+    21,
+    63
+   ],
+   "kill_session": 63,
+   "sessions": 7,
+   "book_net": 0.0007168849927664669,
+   "twin_net": 0.009583849713653239,
+   "market_net": 0.013549287325743675,
+   "vs_market": -0.012832402332977208,
+   "nav_gap_vs_twin": -0.008866964720886772,
+   "sleeve_weight": 1.0,
+   "D_vs_twin_sleeve_scale": -0.008866964720886772,
+   "status": "READ_NOT_DUE",
+   "reading": "session 7 of 21 (first read); a forward reading of fewer sessions than the first read date is reported, never read: it says nothing yet"
+  },
+  {
+   "name": "SHADOW_BAYES_v1",
+   "book_id": "0f038859b2ebea62",
+   "twin_book_id": "be5e940728613d94",
+   "primary_twin": "matched_twin21",
+   "kill": {
+    "kill_line": -0.0832,
+    "rule": "D < -1.645 x sd_D = -0.0832",
+    "source": "REGISTRATION_SHADOW_BAYES_v1_2026-09-28_20260929T032138Z.json",
+    "reading": "the design can reject a rule that loses badly; it cannot confirm an edge this small. D inside +/- z sd reads CANNOT_DISTINGUISH, which is the expected outcome and is stated before entry"
+   },
+   "read_sessions": [
+    21,
+    63
+   ],
+   "kill_session": 63,
+   "sessions": 7,
+   "book_net": 0.012560894184019192,
+   "twin_net": 0.01222455251877387,
+   "market_net": 0.013549287325743675,
+   "vs_market": -0.0009883931417244834,
+   "nav_gap_vs_twin": 0.00033634166524532105,
+   "sleeve_weight": 0.05362029361722065,
+   "D_vs_twin_sleeve_scale": 0.006272656163473559,
+   "status": "READ_NOT_DUE",
+   "reading": "session 7 of 21 (first read); a forward reading of fewer sessions than the first read date is reported, never read: it says nothing yet"
+  },
+  {
+   "name": "CRSP_BLEND_v0",
+   "book_id": "b0a33a92c56fddb1",
+   "twin_book_id": "b35d287bdcbf00bb",
+   "primary_twin": "matched_twin21",
+   "kill": {
+    "kill_line": -0.113457,
+    "rule": "D_126 < -11.35% -> FAILED_VARIANT; D_126 > +11.35% -> evidence FOR (still CANNOT_DISTINGUISH as a claim); otherwise CANNOT_DISTINGUISH",
+    "source": "AMENDMENT_CRSP_BLEND_v0_KILL_RULE_2026-09-29.json (AMENDED 2026-09-29; replaces the registration's line)",
+    "bands_by_session": {
+     "21": {
+      "sd_D_vs_twin": 0.028157,
+      "band_vs_twin_1645": [
+       -0.0463,
+       0.0463
+      ],
+      "sd_D_vs_market": 0.04746,
+      "expected_D_if_claim_true": 0.0064,
+      "P_D_positive_if_claim_true": 0.5899,
+      "action": "report only: no kill, no promotion (one kill look keeps the false-kill rate at 5%)"
+     },
+     "63": {
+      "sd_D_vs_twin": 0.04877,
+      "band_vs_twin_1645": [
+       -0.0802,
+       0.0802
+      ],
+      "sd_D_vs_market": 0.08221,
+      "expected_D_if_claim_true": 0.0192,
+      "P_D_positive_if_claim_true": 0.6531,
+      "action": "report only: no kill, no promotion (one kill look keeps the false-kill rate at 5%)"
+     },
+     "126": {
+      "sd_D_vs_twin": 0.068971,
+      "band_vs_twin_1645": [
+       -0.1135,
+       0.1135
+      ],
+      "sd_D_vs_market": 0.11626,
+      "expected_D_if_claim_true": 0.0384,
+      "P_D_positive_if_claim_true": 0.7112,
+      "action": "KILL TEST (the only one)"
+     }
+    }
+   },
+   "read_sessions": [
+    21,
+    63,
+    126
+   ],
+   "kill_session": 126,
+   "sessions": 7,
+   "book_net": 0.010177199057168506,
+   "twin_net": -0.0020036333861158696,
+   "market_net": 0.013549287325743675,
+   "vs_market": -0.0033720882685751696,
+   "nav_gap_vs_twin": 0.012180832443284375,
+   "sleeve_weight": 1.0,
+   "D_vs_twin_sleeve_scale": 0.012180832443284375,
+   "status": "READ_NOT_DUE",
+   "reading": "session 7 of 21 (first read); a forward reading of fewer sessions than the first read date is reported, never read: it says nothing yet"
+  },
+  {
+   "name": "SHADOW_NEWS_v0",
+   "contract_hash": "f3b149ea42311760",
+   "grading_rule": "daily: sum_i (w'_i - w_i) x r_i over the next 5 and 20 sessions = the news tilt's own return; read vs zero by date block",
+   "twin": "the base book itself = this rule with both trusts pinned at 0",
+   "horizons": [
+    5,
+    20
+   ],
+   "n_decisions": 35,
+   "by_entry": [
+    {
+     "entry_session": "2026-09-29",
+     "decision_t": "2026-09-29T10:32:00+00:00",
+     "digest_id": "20260929T103001Z",
+     "trust_dir": 0.0,
+     "trust_size": 0.0,
+     "sum_abs_tilt": 9.3e-07,
+     "h5": {
+      "status": "OK",
+      "unpriced": [],
+      "through": "2026-10-05",
+      "D_tilt": 1.0418793922861452e-08,
+      "shadow_sleeve": 0.03635321461879092,
+      "twin_sleeve_base": 0.036353204199997005,
+      "market_spy": 0.010432560019821846,
+      "shadow_vs_market": 0.025920654598969077
+     },
+     "h20": {
+      "status": "PENDING",
+      "why": "needs 20 sessions from 2026-09-29, has 7"
+     }
+    },
+    {
+     "entry_session": "2026-09-30",
+     "decision_t": "2026-09-30T12:27:40+00:00",
+     "digest_id": "20260930T122531Z",
+     "trust_dir": 0.0,
+     "trust_size": 0.0,
+     "sum_abs_tilt": 9.3e-07,
+     "h5": {
+      "status": "OK",
+      "unpriced": [],
+      "through": "2026-10-06",
+      "D_tilt": -2.373618677144412e-10,
+      "shadow_sleeve": 0.017640710899128643,
+      "twin_sleeve_base": 0.017640711136490513,
+      "market_spy": 0.01649161719616421,
+      "shadow_vs_market": 0.0011490937029644335
+     },
+     "h20": {
+      "status": "PENDING",
+      "why": "needs 20 sessions from 2026-09-30, has 6"
+     }
+    },
+    {
+     "entry_session": "2026-10-01",
+     "decision_t": "2026-10-01T10:31:16+00:00",
+     "digest_id": "20261001T103001Z",
+     "trust_dir": 0.0,
+     "trust_size": 0.0,
+     "sum_abs_tilt": 9.3e-07,
+     "h5": {
+      "status": "OK",
+      "unpriced": [],
+      "through": "2026-10-07",
+      "D_tilt": -3.760830242818111e-09,
+      "shadow_sleeve": 0.00869836039356677,
+      "twin_sleeve_base": 0.008698364154397014,
+      "market_spy": 0.01682453294259245,
+      "shadow_vs_market": -0.008126172549025682
+     },
+     "h20": {
+      "status": "PENDING",
+      "why": "needs 20 sessions from 2026-10-01, has 5"
+     }
+    },
+    {
+     "entry_session": "2026-10-02",
+     "decision_t": "2026-10-02T10:31:22+00:00",
+     "digest_id": "20261002T103001Z",
+     "trust_dir": 0.0,
+     "trust_size": 0.0,
+     "sum_abs_tilt": 9.3e-07,
+     "h5": {
+      "status": "PENDING",
+      "why": "needs 5 sessions from 2026-10-02, has 4"
+     },
+     "h20": {
+      "status": "PENDING",
+      "why": "needs 20 sessions from 2026-10-02, has 4"
+     }
+    },
+    {
+     "entry_session": "2026-10-05",
+     "decision_t": "2026-10-05T12:12:47+00:00",
+     "digest_id": "20261005T121205Z",
+     "trust_dir": 0.0,
+     "trust_size": 0.0,
+     "sum_abs_tilt": 9.3e-07,
+     "h5": {
+      "status": "PENDING",
+      "why": "needs 5 sessions from 2026-10-05, has 3"
+     },
+     "h20": {
+      "status": "PENDING",
+      "why": "needs 20 sessions from 2026-10-05, has 3"
+     }
+    },
+    {
+     "entry_session": "2026-10-06",
+     "decision_t": "2026-10-06T11:17:17+00:00",
+     "digest_id": "20261006T111610Z",
+     "trust_dir": 0.0069,
+     "trust_size": 0.0,
+     "sum_abs_tilt": 0.008674,
+     "h5": {
+      "status": "PENDING",
+      "why": "needs 5 sessions from 2026-10-06, has 2"
+     },
+     "h20": {
+      "status": "PENDING",
+      "why": "needs 20 sessions from 2026-10-06, has 2"
+     }
+    },
+    {
+     "entry_session": "2026-10-07",
+     "decision_t": "2026-10-07T10:31:32+00:00",
+     "digest_id": "20261007T103002Z",
+     "trust_dir": 0.0,
+     "trust_size": 0.0,
+     "sum_abs_tilt": 9.3e-07,
+     "h5": {
+      "status": "PENDING",
+      "why": "needs 5 sessions from 2026-10-07, has 1"
+     },
+     "h20": {
+      "status": "PENDING",
+      "why": "needs 20 sessions from 2026-10-07, has 1"
+     }
+    }
+   ],
+   "aggregate": {
+    "h5": {
+     "n_date_blocks": 3,
+     "mean_D_tilt": 2.140200604109633e-09
+    },
+    "h20": {
+     "n_date_blocks": 0,
+     "mean_D_tilt": null
+    }
+   },
+   "status": "GRADED",
+   "reading": "3 date block(s) resolved; read vs zero by date block"
+  }
+ ],
+ "status": "ok"
+}

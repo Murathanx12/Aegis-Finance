@@ -1,0 +1,10 @@
+{
+ "n_symbols": 5587,
+ "panel_last_session": "2026-10-07",
+ "stopped_30d_before_end": 2372,
+ "stopped_90d_before_end": 2366,
+ "stopped_180d_before_end": 2361,
+ "fraction_dead_90d": 0.4235,
+ "verdict": "2,366 of 5,587 symbols (42.3%) stop trading well before the end, so delistings are represented.",
+ "bars_fingerprint": "bars.parquet:162316570:1791436094|bars_delisted.parquet:38412021:1791436097"
+}

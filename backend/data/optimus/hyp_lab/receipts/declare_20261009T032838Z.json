@@ -1,0 +1,62 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-10-09",
+ "declared_utc": "2026-10-09T03:28:38+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [],
+ "cells": [
+  {
+   "hyp_id": "H-cbade4867c",
+   "title": "Refiner outage lifts rival refiners' crack spreads",
+   "family": "event_readthrough_supply_chain",
+   "target": "return",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "corr_peer",
+    "event_type": "new_contract_or_partnership",
+    "min_ratio": 2.0,
+    "k": 5,
+    "min_source_dv_pct": 0.5
+   },
+   "split": {},
+   "refutation": "If PADD-matched peers show no positive abnormal return vs distant peers in the 1-5 day window, the mechanism is refuted.",
+   "separation_from_beta": "Compare peer refiners in same PADD vs refiners in distant PADDs; distant refiners should show no abnormal move, isolating regional supply shock from oil beta."
+  },
+  {
+   "hyp_id": "H-669afc966a",
+   "title": "Equity issuance dilution read-through to co-owned peers",
+   "family": "event_readthrough_corr_peer",
+   "target": "direction",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "corr_peer",
+    "event_type": "equity_issuance_dilution",
+    "min_ratio": 2.5,
+    "k": 5,
+    "min_source_dv_pct": 0.0
+   },
+   "split": {},
+   "refutation": "If the peer basket does not underperform cash-rich vol-matched controls the next session, or if the effect appears in cash-rich controls too, the hypothesis is refuted.",
+   "separation_from_beta": "Peer basket should underperform cash-rich sector controls; effect should be concentrated in peers with high cash-burn similarity, not broad sector beta."
+  },
+  {
+   "hyp_id": "H-a6243b7de4",
+   "title": "Peer analyst downgrade spills over to thinly covered rivals",
+   "family": "event_readthrough_corr_peer",
+   "target": "return",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "corr_peer",
+    "event_type": "analyst_target_change",
+    "min_ratio": 2.0,
+    "k": 6,
+    "min_source_dv_pct": 0
+   },
+   "split": {},
+   "refutation": "If thinly covered peers show no differential negative return compared to well-covered peers after the downgrade, the hypothesis is refuted.",
+   "separation_from_beta": "Compare returns of thinly covered peers to those of well-covered peers in the same sector, controlling for market and sector returns; the effect should be stronger for low-coverage names."
+  }
+ ],
+ "sha256": "4abca0c26618b40ee7c96287ec4891c64c8e583e093b3b28e5ce9a8ddd8aa657"
+}

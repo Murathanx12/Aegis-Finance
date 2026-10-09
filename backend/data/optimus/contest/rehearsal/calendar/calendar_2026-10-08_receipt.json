@@ -1,0 +1,36 @@
+{
+ "written_utc": "20261008T063057Z",
+ "asof": "2026-10-08",
+ "window": [
+  "2026-10-05",
+  "2026-10-20"
+ ],
+ "sources": {
+  "ESTIMATED_PATTERN": 2192,
+  "yahoo_screener": 9222,
+  "nasdaq": 0,
+  "jpx": 1208,
+  "confirmations_csv": 0
+ },
+ "nasdaq_errors": [],
+ "n_names": 392,
+ "by_status": {
+  "ESTIMATED_PATTERN": 132,
+  "CONFIRMED_EXCHANGE": 108,
+  "VENDOR_ANNOUNCED": 103,
+  "VENDOR_ESTIMATE": 49
+ },
+ "by_market": {
+  "JP": 142,
+  "IN": 136,
+  "EU": 46,
+  "CN": 42,
+  "HK": 12,
+  "TW": 8,
+  "KR": 4,
+  "ID": 2
+ },
+ "n_confirmed": 108,
+ "n_confirmed_timed": 52,
+ "n_confirmed_time_unknown": 56
+}

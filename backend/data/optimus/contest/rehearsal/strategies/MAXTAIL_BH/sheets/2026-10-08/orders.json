@@ -1,0 +1,105 @@
+{
+ "day": "2026-10-08",
+ "mode": "REHEARSAL",
+ "strategy": "MAXTAIL_BH",
+ "contract_sha256": "bdc7348f5ac2bdbb9dc68745430ae035254789df21109b77e987cf33f7289628",
+ "freeze_utc": "2026-10-08T06:33:15",
+ "licence": "PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. Never evidence of skill.",
+ "window_hkt": [
+  "2026-10-08 14:00:00+08:00",
+  "2026-10-09 14:00:00+08:00"
+ ],
+ "nav_usd": 1000000.0,
+ "cap": {
+  "of_notional": 200000.0,
+  "of_nav": 200000.0,
+  "binding": 200000.0,
+  "binding_reading": "20% of notional"
+ },
+ "tickets": [],
+ "control": {
+  "n_lines": 0,
+  "n_buy": 0,
+  "n_sell": 0,
+  "buy_shares": 0,
+  "sell_shares": 0,
+  "buy_notional_usd": 0.0,
+  "sheet_code": "E3B0C442"
+ },
+ "reserves": [],
+ "refused": [],
+ "ranked": [],
+ "n_ranked": 0,
+ "notes": [
+  "No name reports in this window: every slot stays in cash (the rule holds cash; filling slots measured -1.0 pp, t -1.2).",
+  "MAXTAIL_BH bought once on its first sheet; this sheet carries no BUY."
+ ],
+ "worst_case": {
+  "nav_usd": 1000000.0,
+  "k": 5,
+  "cap_binding_usd": 200000.0,
+  "largest_admissible_gross_usd": 1000000.0,
+  "largest_admissible_gross_over_equity": 1.0,
+  "largest_at_stop_usd": {
+   "5%": -50000.0,
+   "10%": -100000.0
+  },
+  "largest_at_2sigma63_usd": -190896.76,
+  "largest_at_2sigma63_basis": "the largest sigma63 among this sheet's book names",
+  "book_n": 5,
+  "book_gross_usd": 999972.65,
+  "book_gross_over_equity": 1.0,
+  "book_at_stop_usd": {
+   "5%": -49998.63,
+   "10%": -99997.27
+  },
+  "book_at_2sigma63_usd": -164418.58,
+  "book_at_2x_trailing_move_usd": null,
+  "stop_note": "No book here carries a stop (ROT5 exits at the open after the print; MAXTAIL holds) and a gap fills through any stop: the stop rows are reference arithmetic, not a bound"
+ },
+ "drift": [
+  {
+   "symbol": "AXTI",
+   "qty": 2266,
+   "price_usd": 79.79,
+   "mv_usd": 180804.14,
+   "pct_nav": 0.1808,
+   "trim_shares_if_at_all_times": 0
+  },
+  {
+   "symbol": "AVBP",
+   "qty": 12626,
+   "price_usd": 16.89,
+   "mv_usd": 213253.14,
+   "pct_nav": 0.2133,
+   "trim_shares_if_at_all_times": 785
+  },
+  {
+   "symbol": "AEHR",
+   "qty": 2067,
+   "price_usd": 89.37,
+   "mv_usd": 184727.79,
+   "pct_nav": 0.1847,
+   "trim_shares_if_at_all_times": 0
+  },
+  {
+   "symbol": "RXT",
+   "qty": 47382,
+   "price_usd": 3.85,
+   "mv_usd": 182420.7,
+   "pct_nav": 0.1824,
+   "trim_shares_if_at_all_times": 0
+  },
+  {
+   "symbol": "UTZ",
+   "qty": 13351,
+   "price_usd": 14.29,
+   "mv_usd": 190785.79,
+   "pct_nav": 0.1908,
+   "trim_shares_if_at_all_times": 0
+  }
+ ],
+ "direction": null,
+ "maxtail": null,
+ "written_utc": "20261008T063316Z"
+}

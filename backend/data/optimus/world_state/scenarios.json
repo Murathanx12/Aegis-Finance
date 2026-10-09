@@ -1,7 +1,7 @@
 {
  "schema": "macro_scenarios/v2",
- "as_of": "2026-10-07T04:32:00+00:00",
- "belief_table_as_of": "2026-10-07T04:32:00+00:00",
+ "as_of": "2026-10-09T04:04:02+00:00",
+ "belief_table_as_of": "2026-10-09T04:04:02+00:00",
  "rule": "slow: indicator smoothing time constant 30 d, max move 0.01/day, logit shift cap 0.5; restatements logged PRIOR_RESTATED",
  "scenarios": [
   {
@@ -58,15 +58,15 @@
    "probability_source": "DECLARED_PRIOR",
    "market": null,
    "probability_sealed": {
-    "value": 0.4004,
+    "value": 0.4056,
     "read_with": "world_state.scenario_probability(s, 'display')"
    },
    "indicator_smooth": {
-    "ai_demand": 0.002418,
-    "semiconductor_capex": 0.000305,
-    "grid_power_demand": 0.000315
+    "ai_demand": 0.025998,
+    "semiconductor_capex": 0.012263,
+    "grid_power_demand": 0.001735
    },
-   "last_updated": "2026-10-07T04:32:00+00:00",
+   "last_updated": "2026-10-09T04:04:02+00:00",
    "update_log": [
     {
      "at": "2026-10-06T23:06:02+00:00",
@@ -74,6 +74,20 @@
      "to": 0.4,
      "kind": "INITIAL",
      "why": "INITIAL_PRIOR"
+    },
+    {
+     "at": "2026-10-08T11:45:24+00:00",
+     "from": 0.4009,
+     "to": 0.4037,
+     "kind": "BELIEF_MOVE",
+     "why": "belief-driven: smoothed shift +0.016 logit, 1.051 d elapsed, step +0.0028"
+    },
+    {
+     "at": "2026-10-09T04:04:02+00:00",
+     "from": 0.4037,
+     "to": 0.4056,
+     "kind": "BELIEF_MOVE",
+     "why": "belief-driven: smoothed shift +0.023 logit, 0.680 d elapsed, step +0.0019"
     }
    ],
    "use": "LABEL_ONLY: never a weight, rank or size input"
@@ -129,14 +143,14 @@
    "probability_source": "DECLARED_PRIOR",
    "market": null,
    "probability_sealed": {
-    "value": 0.2497,
+    "value": 0.2457,
     "read_with": "world_state.scenario_probability(s, 'display')"
    },
    "indicator_smooth": {
-    "ai_demand": 0.002418,
-    "semiconductor_capex": 0.000305
+    "ai_demand": 0.025998,
+    "semiconductor_capex": 0.012263
    },
-   "last_updated": "2026-10-07T04:32:00+00:00",
+   "last_updated": "2026-10-09T04:04:02+00:00",
    "update_log": [
     {
      "at": "2026-10-06T23:06:02+00:00",
@@ -144,6 +158,20 @@
      "to": 0.25,
      "kind": "INITIAL",
      "why": "INITIAL_PRIOR"
+    },
+    {
+     "at": "2026-10-08T11:45:24+00:00",
+     "from": 0.2494,
+     "to": 0.2471,
+     "kind": "BELIEF_MOVE",
+     "why": "belief-driven: smoothed shift -0.015 logit, 1.051 d elapsed, step -0.0023"
+    },
+    {
+     "at": "2026-10-09T04:04:02+00:00",
+     "from": 0.2471,
+     "to": 0.2457,
+     "kind": "BELIEF_MOVE",
+     "why": "belief-driven: smoothed shift -0.023 logit, 0.680 d elapsed, step -0.0014"
     }
    ],
    "use": "LABEL_ONLY: never a weight, rank or size input"
@@ -205,15 +233,15 @@
    "probability_source": "DECLARED_PRIOR",
    "market": null,
    "probability_sealed": {
-    "value": 0.3001,
+    "value": 0.3029,
     "read_with": "world_state.scenario_probability(s, 'display')"
    },
    "indicator_smooth": {
-    "rates": 0.000503,
+    "rates": 0.015249,
     "inflation": 0.0,
-    "liquidity": -0.000609
+    "liquidity": -0.015224
    },
-   "last_updated": "2026-10-07T04:32:00+00:00",
+   "last_updated": "2026-10-09T04:04:02+00:00",
    "update_log": [
     {
      "at": "2026-10-06T23:06:02+00:00",
@@ -221,6 +249,20 @@
      "to": 0.3,
      "kind": "INITIAL",
      "why": "INITIAL_PRIOR"
+    },
+    {
+     "at": "2026-10-08T11:45:24+00:00",
+     "from": 0.3002,
+     "to": 0.3018,
+     "kind": "BELIEF_MOVE",
+     "why": "belief-driven: smoothed shift +0.008 logit, 1.051 d elapsed, step +0.0016"
+    },
+    {
+     "at": "2026-10-09T04:04:02+00:00",
+     "from": 0.3018,
+     "to": 0.3029,
+     "kind": "BELIEF_MOVE",
+     "why": "belief-driven: smoothed shift +0.014 logit, 0.680 d elapsed, step +0.0011"
     }
    ],
    "use": "LABEL_ONLY: never a weight, rank or size input"
@@ -283,15 +325,15 @@
    "probability_source": "DECLARED_PRIOR",
    "market": null,
    "probability_sealed": {
-    "value": 0.2502,
+    "value": 0.2528,
     "read_with": "world_state.scenario_probability(s, 'display')"
    },
    "indicator_smooth": {
-    "consumer_conditions": -0.001133,
-    "credit": 0.0,
-    "liquidity": -0.000609
+    "consumer_conditions": -0.012926,
+    "credit": -0.004467,
+    "liquidity": -0.015224
    },
-   "last_updated": "2026-10-07T04:32:00+00:00",
+   "last_updated": "2026-10-09T04:04:02+00:00",
    "update_log": [
     {
      "at": "2026-10-06T23:06:02+00:00",
@@ -299,6 +341,13 @@
      "to": 0.25,
      "kind": "INITIAL",
      "why": "INITIAL_PRIOR"
+    },
+    {
+     "at": "2026-10-08T11:45:24+00:00",
+     "from": 0.2503,
+     "to": 0.252,
+     "kind": "BELIEF_MOVE",
+     "why": "belief-driven: smoothed shift +0.011 logit, 1.051 d elapsed, step +0.0017"
     }
    ],
    "use": "LABEL_ONLY: never a weight, rank or size input"
@@ -358,23 +407,23 @@
     "matched": true,
     "used": false,
     "snapshot_date": "2026-08-21",
-    "age_days": 47,
+    "age_days": 49,
     "source": "polymarket",
     "ticker": "will-china-invade-taiwan-by-june-30-2027",
     "title": "Will China invade Taiwan by June 30, 2027?",
     "mid": 0.075,
-    "why": "snapshot 47 days old > 7: NOT used; the declared prior stands"
+    "why": "snapshot 49 days old > 7: NOT used; the declared prior stands"
    },
    "probability_sealed": {
-    "value": 0.08,
+    "value": 0.0806,
     "read_with": "world_state.scenario_probability(s, 'display')"
    },
    "indicator_smooth": {
-    "geopolitical_risk": 0.000387,
+    "geopolitical_risk": 0.006531,
     "china_policy": 0.0,
-    "defense_procurement": 0.000377
+    "defense_procurement": 0.012888
    },
-   "last_updated": "2026-10-07T04:32:00+00:00",
+   "last_updated": "2026-10-09T04:04:02+00:00",
    "update_log": [
     {
      "at": "2026-10-06T23:06:02+00:00",
@@ -444,23 +493,23 @@
     "matched": true,
     "used": false,
     "snapshot_date": "2026-08-21",
-    "age_days": 47,
+    "age_days": 49,
     "source": "polymarket",
     "ticker": "will-crude-oil-reach-a-new-all-time-high-by-december-31",
     "title": "Will Crude Oil reach a new all-time high by December 31?",
     "mid": 0.145,
-    "why": "snapshot 47 days old > 7: NOT used; the declared prior stands"
+    "why": "snapshot 49 days old > 7: NOT used; the declared prior stands"
    },
    "probability_sealed": {
-    "value": 0.15,
+    "value": 0.1504,
     "read_with": "world_state.scenario_probability(s, 'display')"
    },
    "indicator_smooth": {
-    "energy_security": 0.000826,
-    "commodity_shortages": -0.000481,
-    "geopolitical_risk": 0.000387
+    "energy_security": 0.009527,
+    "commodity_shortages": -0.007406,
+    "geopolitical_risk": 0.006531
    },
-   "last_updated": "2026-10-07T04:32:00+00:00",
+   "last_updated": "2026-10-09T04:04:02+00:00",
    "update_log": [
     {
      "at": "2026-10-06T23:06:02+00:00",
@@ -525,15 +574,15 @@
    "probability_source": "DECLARED_PRIOR",
    "market": null,
    "probability_sealed": {
-    "value": 0.5003,
+    "value": 0.5026,
     "read_with": "world_state.scenario_probability(s, 'display')"
    },
    "indicator_smooth": {
-    "grid_power_demand": 0.000315,
-    "ai_demand": 0.002418,
-    "energy_security": 0.000826
+    "grid_power_demand": 0.001735,
+    "ai_demand": 0.025998,
+    "energy_security": 0.009527
    },
-   "last_updated": "2026-10-07T04:32:00+00:00",
+   "last_updated": "2026-10-09T04:04:02+00:00",
    "update_log": [
     {
      "at": "2026-10-06T23:06:02+00:00",
@@ -541,6 +590,13 @@
      "to": 0.5,
      "kind": "INITIAL",
      "why": "INITIAL_PRIOR"
+    },
+    {
+     "at": "2026-10-08T11:45:24+00:00",
+     "from": 0.5006,
+     "to": 0.5018,
+     "kind": "BELIEF_MOVE",
+     "why": "belief-driven: smoothed shift +0.007 logit, 1.051 d elapsed, step +0.0012"
     }
    ],
    "use": "LABEL_ONLY: never a weight, rank or size input"
@@ -592,14 +648,14 @@
    "probability_source": "DECLARED_PRIOR",
    "market": null,
    "probability_sealed": {
-    "value": 0.35,
+    "value": 0.349,
     "read_with": "world_state.scenario_probability(s, 'display')"
    },
    "indicator_smooth": {
     "biotech_regulatory": 0.0,
-    "rates": 0.000503
+    "rates": 0.015249
    },
-   "last_updated": "2026-10-07T04:32:00+00:00",
+   "last_updated": "2026-10-09T04:04:02+00:00",
    "update_log": [
     {
      "at": "2026-10-06T23:06:02+00:00",

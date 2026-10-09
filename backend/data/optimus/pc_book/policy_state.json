@@ -14,22 +14,22 @@
   },
   "watchlist_attention": {},
   "reputation_weights": {
-   "investigator:C_tools_only": 0.2417,
-   "investigator:D_all": 0.2393,
-   "investigator:B_tools": 0.1903,
-   "investigator:A_snapshot": 0.1706,
-   "investigator:B_anon": 0.1383,
-   "source:barrons_stock_picks": 0.0121,
-   "review:v0": 0.0076,
-   "investigator:evidence_v3": 0.0,
+   "investigator:D_all": 0.237,
+   "investigator:C_tools_only": 0.225,
+   "investigator:B_tools": 0.1852,
+   "investigator:A_snapshot": 0.1805,
+   "investigator:B_anon": 0.1576,
+   "investigator:evidence_v3": 0.0146,
+   "review:v0": 0.0,
    "source:wsj_other": 0.0,
+   "source:barrons_stock_picks": 0.0,
+   "source:marketwatch_other": 0.0,
+   "source:wsj_heard_on_the_street": 0.0,
    "source:barrons_other": 0.0,
    "news_digest:implication_v0": 0.0,
-   "source:wsj_heard_on_the_street": 0.0,
    "macro_rates": 0.0,
    "skeptic": 0.0,
    "ownership_flow": 0.0,
-   "source:marketwatch_other": 0.0,
    "execution_momentum": 0.0,
    "energy_materials": 0.0,
    "analyst_revisions": 0.0,
@@ -60,20 +60,20 @@
    "why_moved:skeptic": 0.0
   },
   "persona_weights": {
-   "source:barrons_stock_picks": 0.0121,
+   "source:barrons_stock_picks": 0.0,
    "source:wsj_other": 0.0,
+   "source:wsj_heard_on_the_street": 0.0,
    "source:barrons_other": 0.0,
    "news_digest:implication_v0": 0.0,
-   "source:wsj_heard_on_the_street": 0.0,
    "macro_rates": 0.0,
    "skeptic": 0.0,
    "ownership_flow": 0.0,
-   "source:marketwatch_other": 0.0,
    "execution_momentum": 0.0,
    "energy_materials": 0.0,
    "analyst_revisions": 0.0,
    "behavioral_narrative": 0.0,
    "accounting_forensics": 0.0,
+   "source:marketwatch_other": 0.0,
    "geopolitical": 0.0,
    "options_volatility": 0.0,
    "company_fundamental": 0.0,
@@ -117,7 +117,7 @@
    "vol_compression": 4
   }
  },
- "updated": "2026-10-07T01:30:02+00:00",
+ "updated": "2026-10-08T14:30:51+00:00",
  "schema_keys": [
   "book_size",
   "exploration_temperature",
@@ -134,5 +134,82 @@
   "reputation_weights",
   "source_trust",
   "watchlist_attention"
- ]
+ ],
+ "refreshed_utc": "2026-10-08T14:30:51+00:00",
+ "changed_since_last": [],
+ "changes": [],
+ "sources": {
+  "reputation_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\reputation\\reputation_2026-10-08.json",
+  "reputation_date": "2026-10-08",
+  "reputation_carried_from_previous": true,
+  "persona_receipt_section_64": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\specialists\\scoreboard_2026-09-24.json"
+ },
+ "probe_weighting": {
+  "value": "equal",
+  "reason": "twins immature (0 sessions; each needs 21; statuses ['OK'])",
+  "evidence": {
+   "leaderboard": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_portfolio\\leaderboard_2026-10-08.json",
+   "min_sessions": 21,
+   "margin_net_to_date": 0.01,
+   "books": {
+    "equal": "probe_equal_2026-09-26",
+    "inverse_vol": "probe_inverse_vol_2026-09-26",
+    "bigmove_tilt": "probe_bigmove_tilt_2026-09-26"
+   },
+   "by_scheme": {
+    "equal": {
+     "status": "OK",
+     "sessions": null,
+     "net_to_date": null,
+     "vs_benchmark": null
+    },
+    "inverse_vol": {
+     "status": "OK",
+     "sessions": null,
+     "net_to_date": null,
+     "vs_benchmark": null
+    },
+    "bigmove_tilt": {
+     "status": "OK",
+     "sessions": null,
+     "net_to_date": null,
+     "vs_benchmark": null
+    }
+   },
+   "graded_utc": "2026-10-08T06:32:00+00:00",
+   "bars_through": "2026-10-07"
+  }
+ },
+ "observed": {
+  "status": "NO_RECEIPT",
+  "persona_weights_note": "personas pooled at their reputation weight, which is 0.0 while their held-out skill is <= 0 (\u00a764: optimal weight ZERO)",
+  "probe_gate": {
+   "verdict": "UNMEASURED_TRADE_SMALL",
+   "sessions_graded": 5,
+   "sessions_needed": 21,
+   "horizon_sessions": 5,
+   "mean_excess_per_day": -0.0016552683703870562,
+   "why": "5 of 21 scored decision days at h=5: unmeasured, so it trades at the probe cap",
+   "source": "scripts.sim_run._probe_grade"
+  },
+  "direction_vs_magnitude": {
+   "note": "investigator: magnitude held-out skill 0.0727 (n 2060) vs direction -0.0835 (n 1213) -- size on the magnitude read, never the direction read",
+   "by_family": {
+    "investigator": {
+     "direction_skill_heldout": -0.0835,
+     "direction_n_heldout": 1213,
+     "magnitude_skill_heldout": 0.0727,
+     "magnitude_n_heldout": 2060
+    },
+    "personas": {
+     "direction_skill_heldout": -0.1016,
+     "direction_n_heldout": 3599,
+     "magnitude_skill_heldout": -0.6846,
+     "magnitude_n_heldout": 3017
+    }
+   },
+   "source": "learned_rules.jsonl (MEASURED class cells)"
+  }
+ },
+ "contract": "the night changes preferences, never code or risk limits: only SCHEMA keys move, each with a receipt"
 }

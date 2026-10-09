@@ -1,0 +1,5967 @@
+{
+  "night": "2026-10-07",
+  "status": "ok",
+  "void_reason": "",
+  "tickers": [
+    "CEG",
+    "VST",
+    "STZ",
+    "MDT",
+    "PG",
+    "XEL",
+    "LIN",
+    "NEE",
+    "EXC",
+    "DHI",
+    "PEP",
+    "SO",
+    "AMAT",
+    "AEP",
+    "KMI",
+    "NKE",
+    "SCHW",
+    "SBUX",
+    "SPGI",
+    "AMT",
+    "SYY",
+    "COIN",
+    "ETN",
+    "ROST",
+    "SPOT",
+    "SNPS",
+    "CDNS",
+    "TT",
+    "AVGO",
+    "DLR",
+    "DUK",
+    "VICI",
+    "CVX",
+    "TMO",
+    "PSX",
+    "SRE",
+    "CSCO",
+    "SYK",
+    "XYZ",
+    "META"
+  ],
+  "trigger_report": {
+    "as_of": "2026-10-07",
+    "k_requested": 40,
+    "n_universe": 180,
+    "n_eligible": 179,
+    "n_selected": 40,
+    "n_excluded": 1,
+    "short_of_k": false,
+    "tickers": [
+      "CEG",
+      "VST",
+      "STZ",
+      "MDT",
+      "PG",
+      "XEL",
+      "LIN",
+      "NEE",
+      "EXC",
+      "DHI",
+      "PEP",
+      "SO",
+      "AMAT",
+      "AEP",
+      "KMI",
+      "NKE",
+      "SCHW",
+      "SBUX",
+      "SPGI",
+      "AMT",
+      "SYY",
+      "COIN",
+      "ETN",
+      "ROST",
+      "SPOT",
+      "SNPS",
+      "CDNS",
+      "TT",
+      "AVGO",
+      "DLR",
+      "DUK",
+      "VICI",
+      "CVX",
+      "TMO",
+      "PSX",
+      "SRE",
+      "CSCO",
+      "SYK",
+      "XYZ",
+      "META"
+    ],
+    "selected": [
+      {
+        "ticker": "CEG",
+        "score": 11.1942,
+        "components": {
+          "abs_resid_return_z_1d": 5.1942,
+          "volume_z_20d": 6.0,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "VST",
+        "score": 10.1244,
+        "components": {
+          "abs_resid_return_z_1d": 4.1386,
+          "volume_z_20d": 4.9858,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "STZ",
+        "score": 7.5806,
+        "components": {
+          "abs_resid_return_z_1d": 1.1764,
+          "volume_z_20d": 3.9042,
+          "earnings_within_5d": 1.5,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "MDT",
+        "score": 6.0369,
+        "components": {
+          "abs_resid_return_z_1d": 0.5825,
+          "volume_z_20d": 4.4544,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "PG",
+        "score": 4.5133,
+        "components": {
+          "abs_resid_return_z_1d": 1.5162,
+          "volume_z_20d": 1.9971,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "XEL",
+        "score": 4.1798,
+        "components": {
+          "abs_resid_return_z_1d": 1.5173,
+          "volume_z_20d": 2.6626,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "LIN",
+        "score": 3.8601,
+        "components": {
+          "abs_resid_return_z_1d": 1.3121,
+          "volume_z_20d": 1.5481,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "NEE",
+        "score": 3.7927,
+        "components": {
+          "abs_resid_return_z_1d": 2.2675,
+          "volume_z_20d": 0.5252,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "EXC",
+        "score": 3.4046,
+        "components": {
+          "abs_resid_return_z_1d": 1.9458,
+          "volume_z_20d": 0.4589,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "DHI",
+        "score": 3.4001,
+        "components": {
+          "abs_resid_return_z_1d": 1.0712,
+          "volume_z_20d": 2.3289,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "PEP",
+        "score": 3.3755,
+        "components": {
+          "abs_resid_return_z_1d": 0.1063,
+          "volume_z_20d": 0.7692,
+          "earnings_within_5d": 1.5,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SO",
+        "score": 3.2514,
+        "components": {
+          "abs_resid_return_z_1d": 2.2425,
+          "volume_z_20d": 0.0089,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "AMAT",
+        "score": 3.0043,
+        "components": {
+          "abs_resid_return_z_1d": 1.076,
+          "volume_z_20d": 0.9283,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "AEP",
+        "score": 2.9371,
+        "components": {
+          "abs_resid_return_z_1d": 1.5391,
+          "volume_z_20d": 0.3979,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "KMI",
+        "score": 2.8406,
+        "components": {
+          "abs_resid_return_z_1d": 1.8626,
+          "volume_z_20d": 0.9779,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "NKE",
+        "score": 2.8342,
+        "components": {
+          "abs_resid_return_z_1d": 0.9797,
+          "volume_z_20d": 0.8545,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SCHW",
+        "score": 2.799,
+        "components": {
+          "abs_resid_return_z_1d": 0.9705,
+          "volume_z_20d": 0.8286,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SBUX",
+        "score": 2.5486,
+        "components": {
+          "abs_resid_return_z_1d": 1.3184,
+          "volume_z_20d": 0.2302,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SPGI",
+        "score": 2.4858,
+        "components": {
+          "abs_resid_return_z_1d": 0.7129,
+          "volume_z_20d": 0.773,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "AMT",
+        "score": 2.4814,
+        "components": {
+          "abs_resid_return_z_1d": 1.0069,
+          "volume_z_20d": 0.4745,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SYY",
+        "score": 2.4288,
+        "components": {
+          "abs_resid_return_z_1d": 1.2573,
+          "volume_z_20d": 0.1715,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "COIN",
+        "score": 2.4217,
+        "components": {
+          "abs_resid_return_z_1d": 0.6194,
+          "volume_z_20d": 0.8023,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "ETN",
+        "score": 2.3985,
+        "components": {
+          "abs_resid_return_z_1d": 0.7437,
+          "volume_z_20d": 0.6548,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "ROST",
+        "score": 2.3756,
+        "components": {
+          "abs_resid_return_z_1d": 0.7808,
+          "volume_z_20d": 0.5948,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SPOT",
+        "score": 2.3691,
+        "components": {
+          "abs_resid_return_z_1d": 0.5011,
+          "volume_z_20d": 0.868,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SNPS",
+        "score": 2.3663,
+        "components": {
+          "abs_resid_return_z_1d": 0.718,
+          "volume_z_20d": 0.6482,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "CDNS",
+        "score": 2.3655,
+        "components": {
+          "abs_resid_return_z_1d": 0.3119,
+          "volume_z_20d": 1.0537,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "TT",
+        "score": 2.3627,
+        "components": {
+          "abs_resid_return_z_1d": 0.4916,
+          "volume_z_20d": 0.8711,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "AVGO",
+        "score": 2.3329,
+        "components": {
+          "abs_resid_return_z_1d": 1.2941,
+          "volume_z_20d": 1.0388,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "DLR",
+        "score": 2.3268,
+        "components": {
+          "abs_resid_return_z_1d": 1.013,
+          "volume_z_20d": 0.3138,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "DUK",
+        "score": 2.3113,
+        "components": {
+          "abs_resid_return_z_1d": 1.7855,
+          "volume_z_20d": 0.5259,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "VICI",
+        "score": 2.2944,
+        "components": {
+          "abs_resid_return_z_1d": 0.7296,
+          "volume_z_20d": 0.5648,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "CVX",
+        "score": 2.2898,
+        "components": {
+          "abs_resid_return_z_1d": 0.746,
+          "volume_z_20d": 0.5438,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "TMO",
+        "score": 2.2736,
+        "components": {
+          "abs_resid_return_z_1d": 1.5201,
+          "volume_z_20d": 0.7536,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "PSX",
+        "score": 2.2337,
+        "components": {
+          "abs_resid_return_z_1d": 0.1512,
+          "volume_z_20d": 1.0826,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SRE",
+        "score": 2.2209,
+        "components": {
+          "abs_resid_return_z_1d": 1.6593,
+          "volume_z_20d": 0.5615,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "CSCO",
+        "score": 2.2084,
+        "components": {
+          "abs_resid_return_z_1d": 2.0306,
+          "volume_z_20d": 0.1778,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 0.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "SYK",
+        "score": 2.207,
+        "components": {
+          "abs_resid_return_z_1d": 0.9844,
+          "volume_z_20d": 0.2226,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "XYZ",
+        "score": 2.2018,
+        "components": {
+          "abs_resid_return_z_1d": 0.2564,
+          "volume_z_20d": 0.9454,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      },
+      {
+        "ticker": "META",
+        "score": 2.1561,
+        "components": {
+          "abs_resid_return_z_1d": 0.3849,
+          "volume_z_20d": 0.7712,
+          "earnings_within_5d": 0.0,
+          "filing_within_2d": 1.0
+        },
+        "eligible": true,
+        "reason": ""
+      }
+    ],
+    "excluded": [
+      {
+        "ticker": "AVB",
+        "score": 0.0,
+        "components": {
+          "earnings_within_5d": 0.0
+        },
+        "eligible": false,
+        "reason": "liquidity unverifiable: dollar_volume_20d unavailable \u2014 excluded rather than admitted, because the floor cannot be cleared by a value nobody has"
+      }
+    ],
+    "weights": {
+      "abs_resid_return_z_1d": 1.0,
+      "volume_z_20d": 1.0,
+      "earnings_within_5d": 1.5,
+      "filing_within_2d": 1.0
+    },
+    "amendment": "amendment-1 2026-08-19: >=1 measured continuous component required; selected rows carried on the night receipt"
+  },
+  "per_arm": {
+    "A_snapshot": {
+      "n_cells": 40,
+      "n_with_forecasts": 40,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {},
+      "rows": [
+        {
+          "arm": "A_snapshot",
+          "ticker": "CEG",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1370,
+          "tokens_out": 4775,
+          "error": "",
+          "arm_started_at": 1791360715.2268531,
+          "arm_finished_at": 1791360751.080639,
+          "arm_seconds": 35.854
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "VST",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1385,
+          "tokens_out": 4132,
+          "error": "",
+          "arm_started_at": 1791360810.7292671,
+          "arm_finished_at": 1791360836.5881772,
+          "arm_seconds": 25.859
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "STZ",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1380,
+          "tokens_out": 3981,
+          "error": "",
+          "arm_started_at": 1791360894.4856555,
+          "arm_finished_at": 1791360919.4152777,
+          "arm_seconds": 24.93
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "MDT",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1330,
+          "tokens_out": 1984,
+          "error": "",
+          "arm_started_at": 1791360962.3345256,
+          "arm_finished_at": 1791360978.5664055,
+          "arm_seconds": 16.232
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "PG",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1408,
+          "tokens_out": 3230,
+          "error": "",
+          "arm_started_at": 1791361032.2361636,
+          "arm_finished_at": 1791361055.0065289,
+          "arm_seconds": 22.77
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "XEL",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1405,
+          "tokens_out": 3390,
+          "error": "",
+          "arm_started_at": 1791361093.9962356,
+          "arm_finished_at": 1791361117.060475,
+          "arm_seconds": 23.064
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "LIN",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1489,
+          "tokens_out": 2871,
+          "error": "",
+          "arm_started_at": 1791361167.0188258,
+          "arm_finished_at": 1791361186.9339573,
+          "arm_seconds": 19.915
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "NEE",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1348,
+          "tokens_out": 3033,
+          "error": "",
+          "arm_started_at": 1791361227.5917404,
+          "arm_finished_at": 1791361248.2713354,
+          "arm_seconds": 20.68
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "EXC",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1306,
+          "tokens_out": 4770,
+          "error": "",
+          "arm_started_at": 1791361285.9380193,
+          "arm_finished_at": 1791361316.2117496,
+          "arm_seconds": 30.274
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "DHI",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1376,
+          "tokens_out": 3005,
+          "error": "",
+          "arm_started_at": 1791361377.0880795,
+          "arm_finished_at": 1791361397.4983757,
+          "arm_seconds": 20.41
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "PEP",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1412,
+          "tokens_out": 3629,
+          "error": "",
+          "arm_started_at": 1791361452.1350565,
+          "arm_finished_at": 1791361476.8434227,
+          "arm_seconds": 24.708
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "SO",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1308,
+          "tokens_out": 3004,
+          "error": "",
+          "arm_started_at": 1791361532.1808288,
+          "arm_finished_at": 1791361554.7337997,
+          "arm_seconds": 22.553
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "AMAT",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1363,
+          "tokens_out": 3015,
+          "error": "",
+          "arm_started_at": 1791361615.8990605,
+          "arm_finished_at": 1791361637.071965,
+          "arm_seconds": 21.173
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "AEP",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1523,
+          "tokens_out": 3875,
+          "error": "",
+          "arm_started_at": 1791361697.8713098,
+          "arm_finished_at": 1791361723.5960455,
+          "arm_seconds": 25.725
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "KMI",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1438,
+          "tokens_out": 3309,
+          "error": "",
+          "arm_started_at": 1791361794.3128047,
+          "arm_finished_at": 1791361815.7451491,
+          "arm_seconds": 21.432
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "NKE",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1477,
+          "tokens_out": 3249,
+          "error": "",
+          "arm_started_at": 1791361876.2407684,
+          "arm_finished_at": 1791361897.4616222,
+          "arm_seconds": 21.221
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "SCHW",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1300,
+          "tokens_out": 5036,
+          "error": "",
+          "arm_started_at": 1791361972.7350633,
+          "arm_finished_at": 1791362003.9574811,
+          "arm_seconds": 31.222
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "SBUX",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1428,
+          "tokens_out": 3083,
+          "error": "",
+          "arm_started_at": 1791362066.1708553,
+          "arm_finished_at": 1791362088.5811362,
+          "arm_seconds": 22.41
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "SPGI",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1398,
+          "tokens_out": 3924,
+          "error": "",
+          "arm_started_at": 1791362141.6302714,
+          "arm_finished_at": 1791362165.7057154,
+          "arm_seconds": 24.075
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "AMT",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1444,
+          "tokens_out": 3797,
+          "error": "",
+          "arm_started_at": 1791362214.165431,
+          "arm_finished_at": 1791362239.056352,
+          "arm_seconds": 24.891
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "SYY",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1373,
+          "tokens_out": 2629,
+          "error": "",
+          "arm_started_at": 1791362297.2637935,
+          "arm_finished_at": 1791362316.564863,
+          "arm_seconds": 19.301
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "COIN",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1454,
+          "tokens_out": 3109,
+          "error": "",
+          "arm_started_at": 1791362368.280694,
+          "arm_finished_at": 1791362390.2002008,
+          "arm_seconds": 21.92
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "ETN",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1473,
+          "tokens_out": 2072,
+          "error": "",
+          "arm_started_at": 1791362442.866354,
+          "arm_finished_at": 1791362459.5225933,
+          "arm_seconds": 16.656
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "ROST",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1493,
+          "tokens_out": 3080,
+          "error": "",
+          "arm_started_at": 1791362534.6178613,
+          "arm_finished_at": 1791362555.5688262,
+          "arm_seconds": 20.951
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "SPOT",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1304,
+          "tokens_out": 3477,
+          "error": "",
+          "arm_started_at": 1791362613.3511918,
+          "arm_finished_at": 1791362634.9873543,
+          "arm_seconds": 21.636
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "SNPS",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1329,
+          "tokens_out": 3419,
+          "error": "",
+          "arm_started_at": 1791362681.319146,
+          "arm_finished_at": 1791362707.7646801,
+          "arm_seconds": 26.446
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "CDNS",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1319,
+          "tokens_out": 2731,
+          "error": "",
+          "arm_started_at": 1791362770.4297538,
+          "arm_finished_at": 1791362791.6487017,
+          "arm_seconds": 21.219
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "TT",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1355,
+          "tokens_out": 2554,
+          "error": "",
+          "arm_started_at": 1791362883.4845133,
+          "arm_finished_at": 1791362904.226122,
+          "arm_seconds": 20.742
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "AVGO",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1475,
+          "tokens_out": 3238,
+          "error": "",
+          "arm_started_at": 1791362959.273513,
+          "arm_finished_at": 1791362985.177271,
+          "arm_seconds": 25.904
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "DLR",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1517,
+          "tokens_out": 2375,
+          "error": "",
+          "arm_started_at": 1791363042.7126741,
+          "arm_finished_at": 1791363063.4423366,
+          "arm_seconds": 20.73
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "DUK",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1337,
+          "tokens_out": 4687,
+          "error": "",
+          "arm_started_at": 1791363121.9914613,
+          "arm_finished_at": 1791363151.4565275,
+          "arm_seconds": 29.465
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "VICI",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1247,
+          "tokens_out": 5134,
+          "error": "",
+          "arm_started_at": 1791363201.5405135,
+          "arm_finished_at": 1791363232.4960923,
+          "arm_seconds": 30.956
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "CVX",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1509,
+          "tokens_out": 3492,
+          "error": "",
+          "arm_started_at": 1791363271.2165318,
+          "arm_finished_at": 1791363293.3482249,
+          "arm_seconds": 22.132
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "TMO",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1473,
+          "tokens_out": 4094,
+          "error": "",
+          "arm_started_at": 1791363336.745214,
+          "arm_finished_at": 1791363362.1547356,
+          "arm_seconds": 25.41
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "PSX",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1345,
+          "tokens_out": 3922,
+          "error": "",
+          "arm_started_at": 1791363427.170475,
+          "arm_finished_at": 1791363452.179071,
+          "arm_seconds": 25.009
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "SRE",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1315,
+          "tokens_out": 5232,
+          "error": "",
+          "arm_started_at": 1791363513.9107316,
+          "arm_finished_at": 1791363546.1286054,
+          "arm_seconds": 32.218
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "CSCO",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1504,
+          "tokens_out": 3380,
+          "error": "",
+          "arm_started_at": 1791363615.3819225,
+          "arm_finished_at": 1791363637.6625,
+          "arm_seconds": 22.281
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "SYK",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1266,
+          "tokens_out": 3883,
+          "error": "",
+          "arm_started_at": 1791363729.4792373,
+          "arm_finished_at": 1791363754.7919154,
+          "arm_seconds": 25.313
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "XYZ",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1448,
+          "tokens_out": 3586,
+          "error": "",
+          "arm_started_at": 1791363798.8827205,
+          "arm_finished_at": 1791363821.8489442,
+          "arm_seconds": 22.966
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "META",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 1319,
+          "tokens_out": 4193,
+          "error": "",
+          "arm_started_at": 1791363879.7454743,
+          "arm_finished_at": 1791363905.7898216,
+          "arm_seconds": 26.044
+        }
+      ]
+    },
+    "B_tools": {
+      "n_cells": 40,
+      "n_with_forecasts": 40,
+      "n_tool_calls": 441,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {},
+      "rows": [
+        {
+          "arm": "B_tools",
+          "ticker": "CEG",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7752,
+          "tokens_out": 13366,
+          "error": "",
+          "arm_started_at": 1791360715.2268531,
+          "arm_finished_at": 1791360808.1736138,
+          "arm_seconds": 92.947
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "VST",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6305,
+          "tokens_out": 8369,
+          "error": "",
+          "arm_started_at": 1791360810.7292671,
+          "arm_finished_at": 1791360873.6812706,
+          "arm_seconds": 62.952
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "STZ",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 8,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7044,
+          "tokens_out": 7638,
+          "error": "",
+          "arm_started_at": 1791360894.4856555,
+          "arm_finished_at": 1791360950.7697694,
+          "arm_seconds": 56.284
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "MDT",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7529,
+          "tokens_out": 7217,
+          "error": "",
+          "arm_started_at": 1791360962.335127,
+          "arm_finished_at": 1791361015.2060015,
+          "arm_seconds": 52.871
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "PG",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8160,
+          "tokens_out": 8297,
+          "error": "",
+          "arm_started_at": 1791361032.2366714,
+          "arm_finished_at": 1791361092.4371555,
+          "arm_seconds": 60.2
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "XEL",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8184,
+          "tokens_out": 7913,
+          "error": "",
+          "arm_started_at": 1791361093.9962356,
+          "arm_finished_at": 1791361154.5540884,
+          "arm_seconds": 60.558
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "LIN",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8863,
+          "tokens_out": 7164,
+          "error": "",
+          "arm_started_at": 1791361167.019343,
+          "arm_finished_at": 1791361227.4190848,
+          "arm_seconds": 60.4
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "NEE",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6485,
+          "tokens_out": 7081,
+          "error": "",
+          "arm_started_at": 1791361227.5917404,
+          "arm_finished_at": 1791361282.9541564,
+          "arm_seconds": 55.362
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "EXC",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 5373,
+          "tokens_out": 11279,
+          "error": "",
+          "arm_started_at": 1791361285.9386292,
+          "arm_finished_at": 1791361362.1160762,
+          "arm_seconds": 76.177
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "DHI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8209,
+          "tokens_out": 11194,
+          "error": "",
+          "arm_started_at": 1791361377.0886075,
+          "arm_finished_at": 1791361452.1324077,
+          "arm_seconds": 75.044
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "PEP",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 5911,
+          "tokens_out": 10219,
+          "error": "",
+          "arm_started_at": 1791361452.1356003,
+          "arm_finished_at": 1791361520.6572192,
+          "arm_seconds": 68.522
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "SO",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7733,
+          "tokens_out": 6246,
+          "error": "",
+          "arm_started_at": 1791361532.181354,
+          "arm_finished_at": 1791361582.1700528,
+          "arm_seconds": 49.989
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "AMAT",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6671,
+          "tokens_out": 6995,
+          "error": "",
+          "arm_started_at": 1791361615.8995807,
+          "arm_finished_at": 1791361666.8887236,
+          "arm_seconds": 50.989
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "AEP",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8650,
+          "tokens_out": 7484,
+          "error": "",
+          "arm_started_at": 1791361697.8718326,
+          "arm_finished_at": 1791361756.4561613,
+          "arm_seconds": 58.584
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "KMI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8350,
+          "tokens_out": 11443,
+          "error": "",
+          "arm_started_at": 1791361794.3133335,
+          "arm_finished_at": 1791361871.8128765,
+          "arm_seconds": 77.5
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "NKE",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 8,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6664,
+          "tokens_out": 9833,
+          "error": "",
+          "arm_started_at": 1791361876.2413063,
+          "arm_finished_at": 1791361944.589417,
+          "arm_seconds": 68.348
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "SCHW",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7909,
+          "tokens_out": 15359,
+          "error": "",
+          "arm_started_at": 1791361972.7355902,
+          "arm_finished_at": 1791362065.412859,
+          "arm_seconds": 92.677
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "SBUX",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 10,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7728,
+          "tokens_out": 9017,
+          "error": "",
+          "arm_started_at": 1791362066.1713767,
+          "arm_finished_at": 1791362131.6894205,
+          "arm_seconds": 65.518
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "SPGI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7260,
+          "tokens_out": 7845,
+          "error": "",
+          "arm_started_at": 1791362141.6302714,
+          "arm_finished_at": 1791362201.5373917,
+          "arm_seconds": 59.907
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "AMT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 8,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7199,
+          "tokens_out": 7124,
+          "error": "",
+          "arm_started_at": 1791362214.1659777,
+          "arm_finished_at": 1791362271.9639735,
+          "arm_seconds": 57.798
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "SYY",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7552,
+          "tokens_out": 7912,
+          "error": "",
+          "arm_started_at": 1791362297.264297,
+          "arm_finished_at": 1791362356.9785094,
+          "arm_seconds": 59.714
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "COIN",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8571,
+          "tokens_out": 8896,
+          "error": "",
+          "arm_started_at": 1791362368.281216,
+          "arm_finished_at": 1791362442.8642128,
+          "arm_seconds": 74.583
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "ETN",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 5644,
+          "tokens_out": 11438,
+          "error": "",
+          "arm_started_at": 1791362442.866354,
+          "arm_finished_at": 1791362521.0733101,
+          "arm_seconds": 78.207
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "ROST",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8164,
+          "tokens_out": 6728,
+          "error": "",
+          "arm_started_at": 1791362534.6184044,
+          "arm_finished_at": 1791362593.1468625,
+          "arm_seconds": 58.528
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "SPOT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7276,
+          "tokens_out": 8055,
+          "error": "",
+          "arm_started_at": 1791362613.3511918,
+          "arm_finished_at": 1791362672.7251976,
+          "arm_seconds": 59.374
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "SNPS",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 10,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6216,
+          "tokens_out": 12575,
+          "error": "",
+          "arm_started_at": 1791362681.3196757,
+          "arm_finished_at": 1791362767.4835079,
+          "arm_seconds": 86.164
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "CDNS",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7771,
+          "tokens_out": 8773,
+          "error": "",
+          "arm_started_at": 1791362770.4302704,
+          "arm_finished_at": 1791362836.8394473,
+          "arm_seconds": 66.409
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "TT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7032,
+          "tokens_out": 7359,
+          "error": "",
+          "arm_started_at": 1791362883.4856298,
+          "arm_finished_at": 1791362948.0536096,
+          "arm_seconds": 64.568
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "AVGO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 10,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8360,
+          "tokens_out": 4995,
+          "error": "",
+          "arm_started_at": 1791362959.273513,
+          "arm_finished_at": 1791363011.1115775,
+          "arm_seconds": 51.838
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "DLR",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7889,
+          "tokens_out": 11624,
+          "error": "",
+          "arm_started_at": 1791363042.7136784,
+          "arm_finished_at": 1791363121.9888484,
+          "arm_seconds": 79.275
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "DUK",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7958,
+          "tokens_out": 9113,
+          "error": "",
+          "arm_started_at": 1791363121.992653,
+          "arm_finished_at": 1791363188.6905723,
+          "arm_seconds": 66.698
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "VICI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8506,
+          "tokens_out": 6857,
+          "error": "",
+          "arm_started_at": 1791363201.541572,
+          "arm_finished_at": 1791363261.2518892,
+          "arm_seconds": 59.71
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "CVX",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7487,
+          "tokens_out": 7955,
+          "error": "",
+          "arm_started_at": 1791363271.2170496,
+          "arm_finished_at": 1791363331.498092,
+          "arm_seconds": 60.281
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "TMO",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7962,
+          "tokens_out": 8938,
+          "error": "",
+          "arm_started_at": 1791363336.745214,
+          "arm_finished_at": 1791363404.8503234,
+          "arm_seconds": 68.105
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "PSX",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7752,
+          "tokens_out": 7932,
+          "error": "",
+          "arm_started_at": 1791363427.1710086,
+          "arm_finished_at": 1791363487.139253,
+          "arm_seconds": 59.968
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "SRE",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7765,
+          "tokens_out": 7248,
+          "error": "",
+          "arm_started_at": 1791363513.9107316,
+          "arm_finished_at": 1791363567.2786934,
+          "arm_seconds": 53.368
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "CSCO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8576,
+          "tokens_out": 9267,
+          "error": "",
+          "arm_started_at": 1791363615.382457,
+          "arm_finished_at": 1791363682.733175,
+          "arm_seconds": 67.351
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "SYK",
+          "status": "ok",
+          "n_calls": 6,
+          "n_tool_calls": 6,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7334,
+          "tokens_out": 10810,
+          "error": "",
+          "arm_started_at": 1791363729.4797635,
+          "arm_finished_at": 1791363798.8777432,
+          "arm_seconds": 69.398
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "XYZ",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7929,
+          "tokens_out": 10463,
+          "error": "",
+          "arm_started_at": 1791363798.8827205,
+          "arm_finished_at": 1791363872.2221122,
+          "arm_seconds": 73.339
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "META",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6656,
+          "tokens_out": 9189,
+          "error": "",
+          "arm_started_at": 1791363879.7460039,
+          "arm_finished_at": 1791363941.464348,
+          "arm_seconds": 61.718
+        }
+      ]
+    },
+    "C_tools_only": {
+      "n_cells": 40,
+      "n_with_forecasts": 40,
+      "n_tool_calls": 448,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {},
+      "rows": [
+        {
+          "arm": "C_tools_only",
+          "ticker": "CEG",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8148,
+          "tokens_out": 9702,
+          "error": "",
+          "arm_started_at": 1791360715.2268531,
+          "arm_finished_at": 1791360797.2241275,
+          "arm_seconds": 81.997
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "VST",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8420,
+          "tokens_out": 9140,
+          "error": "",
+          "arm_started_at": 1791360810.729791,
+          "arm_finished_at": 1791360879.1409714,
+          "arm_seconds": 68.411
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "STZ",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6754,
+          "tokens_out": 9441,
+          "error": "",
+          "arm_started_at": 1791360894.4861958,
+          "arm_finished_at": 1791360962.3317986,
+          "arm_seconds": 67.846
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "MDT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7969,
+          "tokens_out": 10159,
+          "error": "",
+          "arm_started_at": 1791360962.335127,
+          "arm_finished_at": 1791361032.2340333,
+          "arm_seconds": 69.899
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "PG",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7879,
+          "tokens_out": 6779,
+          "error": "",
+          "arm_started_at": 1791361032.2366714,
+          "arm_finished_at": 1791361086.781791,
+          "arm_seconds": 54.545
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "XEL",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6739,
+          "tokens_out": 10429,
+          "error": "",
+          "arm_started_at": 1791361093.9967525,
+          "arm_finished_at": 1791361167.016176,
+          "arm_seconds": 73.019
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "LIN",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8028,
+          "tokens_out": 6713,
+          "error": "",
+          "arm_started_at": 1791361167.019343,
+          "arm_finished_at": 1791361222.0974321,
+          "arm_seconds": 55.078
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "NEE",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8040,
+          "tokens_out": 8146,
+          "error": "",
+          "arm_started_at": 1791361227.5922682,
+          "arm_finished_at": 1791361285.9358878,
+          "arm_seconds": 58.344
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "EXC",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7643,
+          "tokens_out": 14588,
+          "error": "",
+          "arm_started_at": 1791361285.9386292,
+          "arm_finished_at": 1791361377.0853007,
+          "arm_seconds": 91.147
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "DHI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7451,
+          "tokens_out": 6539,
+          "error": "",
+          "arm_started_at": 1791361377.0886075,
+          "arm_finished_at": 1791361428.585022,
+          "arm_seconds": 51.496
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "PEP",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8668,
+          "tokens_out": 8501,
+          "error": "",
+          "arm_started_at": 1791361452.1356003,
+          "arm_finished_at": 1791361513.618901,
+          "arm_seconds": 61.483
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "SO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7389,
+          "tokens_out": 8312,
+          "error": "",
+          "arm_started_at": 1791361532.181354,
+          "arm_finished_at": 1791361594.2813573,
+          "arm_seconds": 62.1
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "AMAT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6853,
+          "tokens_out": 6346,
+          "error": "",
+          "arm_started_at": 1791361615.8995807,
+          "arm_finished_at": 1791361671.8145285,
+          "arm_seconds": 55.915
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "AEP",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8097,
+          "tokens_out": 8829,
+          "error": "",
+          "arm_started_at": 1791361697.8718326,
+          "arm_finished_at": 1791361766.2149105,
+          "arm_seconds": 68.343
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "KMI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 10,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7980,
+          "tokens_out": 11838,
+          "error": "",
+          "arm_started_at": 1791361794.3133335,
+          "arm_finished_at": 1791361876.2380242,
+          "arm_seconds": 81.925
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "NKE",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7881,
+          "tokens_out": 15773,
+          "error": "",
+          "arm_started_at": 1791361876.2413063,
+          "arm_finished_at": 1791361972.7329752,
+          "arm_seconds": 96.492
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "SCHW",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8183,
+          "tokens_out": 15073,
+          "error": "",
+          "arm_started_at": 1791361972.7355902,
+          "arm_finished_at": 1791362066.1692505,
+          "arm_seconds": 93.434
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "SBUX",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7687,
+          "tokens_out": 7552,
+          "error": "",
+          "arm_started_at": 1791362066.1713767,
+          "arm_finished_at": 1791362120.0660584,
+          "arm_seconds": 53.895
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "SPGI",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7926,
+          "tokens_out": 5600,
+          "error": "",
+          "arm_started_at": 1791362141.6308281,
+          "arm_finished_at": 1791362193.1651194,
+          "arm_seconds": 51.534
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "AMT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7022,
+          "tokens_out": 12118,
+          "error": "",
+          "arm_started_at": 1791362214.1665041,
+          "arm_finished_at": 1791362297.2610195,
+          "arm_seconds": 83.095
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "SYY",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7876,
+          "tokens_out": 10612,
+          "error": "",
+          "arm_started_at": 1791362297.264896,
+          "arm_finished_at": 1791362368.2791038,
+          "arm_seconds": 71.014
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "COIN",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 5149,
+          "tokens_out": 5336,
+          "error": "",
+          "arm_started_at": 1791362368.281216,
+          "arm_finished_at": 1791362408.0621033,
+          "arm_seconds": 39.781
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "ETN",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6668,
+          "tokens_out": 15171,
+          "error": "",
+          "arm_started_at": 1791362442.8669505,
+          "arm_finished_at": 1791362534.615199,
+          "arm_seconds": 91.748
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "ROST",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7944,
+          "tokens_out": 9113,
+          "error": "",
+          "arm_started_at": 1791362534.618929,
+          "arm_finished_at": 1791362599.5526104,
+          "arm_seconds": 64.934
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "SPOT",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7690,
+          "tokens_out": 7054,
+          "error": "",
+          "arm_started_at": 1791362613.3517187,
+          "arm_finished_at": 1791362668.8810885,
+          "arm_seconds": 55.529
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "SNPS",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6526,
+          "tokens_out": 10895,
+          "error": "",
+          "arm_started_at": 1791362681.3202138,
+          "arm_finished_at": 1791362758.367777,
+          "arm_seconds": 77.048
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "CDNS",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 10,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8746,
+          "tokens_out": 9735,
+          "error": "",
+          "arm_started_at": 1791362770.4302704,
+          "arm_finished_at": 1791362843.7795317,
+          "arm_seconds": 73.349
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "TT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 10,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7720,
+          "tokens_out": 6739,
+          "error": "",
+          "arm_started_at": 1791362883.4862082,
+          "arm_finished_at": 1791362942.3535254,
+          "arm_seconds": 58.867
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "AVGO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8265,
+          "tokens_out": 9195,
+          "error": "",
+          "arm_started_at": 1791362959.274032,
+          "arm_finished_at": 1791363034.3366206,
+          "arm_seconds": 75.063
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "DLR",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7727,
+          "tokens_out": 7928,
+          "error": "",
+          "arm_started_at": 1791363042.7136784,
+          "arm_finished_at": 1791363109.9778697,
+          "arm_seconds": 67.264
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "DUK",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6366,
+          "tokens_out": 9000,
+          "error": "",
+          "arm_started_at": 1791363121.992653,
+          "arm_finished_at": 1791363191.169433,
+          "arm_seconds": 69.177
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "VICI",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7152,
+          "tokens_out": 7673,
+          "error": "",
+          "arm_started_at": 1791363201.541572,
+          "arm_finished_at": 1791363259.0396423,
+          "arm_seconds": 57.498
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "CVX",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8039,
+          "tokens_out": 8928,
+          "error": "",
+          "arm_started_at": 1791363271.2170496,
+          "arm_finished_at": 1791363336.7424088,
+          "arm_seconds": 65.525
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "TMO",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8232,
+          "tokens_out": 13054,
+          "error": "",
+          "arm_started_at": 1791363336.7457476,
+          "arm_finished_at": 1791363427.164637,
+          "arm_seconds": 90.419
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "PSX",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7530,
+          "tokens_out": 10435,
+          "error": "",
+          "arm_started_at": 1791363427.1715367,
+          "arm_finished_at": 1791363502.2275906,
+          "arm_seconds": 75.056
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "SRE",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8332,
+          "tokens_out": 9474,
+          "error": "",
+          "arm_started_at": 1791363513.9112477,
+          "arm_finished_at": 1791363583.3212514,
+          "arm_seconds": 69.41
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "CSCO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8786,
+          "tokens_out": 13943,
+          "error": "",
+          "arm_started_at": 1791363615.382457,
+          "arm_finished_at": 1791363709.2495213,
+          "arm_seconds": 93.867
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "SYK",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7821,
+          "tokens_out": 8676,
+          "error": "",
+          "arm_started_at": 1791363729.4803052,
+          "arm_finished_at": 1791363794.5729282,
+          "arm_seconds": 65.093
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "XYZ",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7233,
+          "tokens_out": 9374,
+          "error": "",
+          "arm_started_at": 1791363798.8827205,
+          "arm_finished_at": 1791363865.9764946,
+          "arm_seconds": 67.094
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "META",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 9021,
+          "tokens_out": 5136,
+          "error": "",
+          "arm_started_at": 1791363879.7460039,
+          "arm_finished_at": 1791363926.25693,
+          "arm_seconds": 46.511
+        }
+      ]
+    },
+    "D_all": {
+      "n_cells": 40,
+      "n_with_forecasts": 40,
+      "n_tool_calls": 451,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {},
+      "rows": [
+        {
+          "arm": "D_all",
+          "ticker": "CEG",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6282,
+          "tokens_out": 13976,
+          "error": "",
+          "arm_started_at": 1791360715.2268531,
+          "arm_finished_at": 1791360810.7264237,
+          "arm_seconds": 95.5
+        },
+        {
+          "arm": "D_all",
+          "ticker": "VST",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6280,
+          "tokens_out": 6854,
+          "error": "",
+          "arm_started_at": 1791360810.7303393,
+          "arm_finished_at": 1791360868.3843715,
+          "arm_seconds": 57.654
+        },
+        {
+          "arm": "D_all",
+          "ticker": "STZ",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8172,
+          "tokens_out": 6551,
+          "error": "",
+          "arm_started_at": 1791360894.4861958,
+          "arm_finished_at": 1791360945.1029336,
+          "arm_seconds": 50.617
+        },
+        {
+          "arm": "D_all",
+          "ticker": "MDT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6136,
+          "tokens_out": 5318,
+          "error": "",
+          "arm_started_at": 1791360962.3356495,
+          "arm_finished_at": 1791361010.827602,
+          "arm_seconds": 48.492
+        },
+        {
+          "arm": "D_all",
+          "ticker": "PG",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6165,
+          "tokens_out": 6646,
+          "error": "",
+          "arm_started_at": 1791361032.2372067,
+          "arm_finished_at": 1791361086.2175257,
+          "arm_seconds": 53.98
+        },
+        {
+          "arm": "D_all",
+          "ticker": "XEL",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8463,
+          "tokens_out": 10059,
+          "error": "",
+          "arm_started_at": 1791361093.9967525,
+          "arm_finished_at": 1791361162.7518094,
+          "arm_seconds": 68.755
+        },
+        {
+          "arm": "D_all",
+          "ticker": "LIN",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7763,
+          "tokens_out": 8304,
+          "error": "",
+          "arm_started_at": 1791361167.019882,
+          "arm_finished_at": 1791361227.5890834,
+          "arm_seconds": 60.569
+        },
+        {
+          "arm": "D_all",
+          "ticker": "NEE",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7925,
+          "tokens_out": 6196,
+          "error": "",
+          "arm_started_at": 1791361227.5922682,
+          "arm_finished_at": 1791361281.6461904,
+          "arm_seconds": 54.054
+        },
+        {
+          "arm": "D_all",
+          "ticker": "EXC",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7634,
+          "tokens_out": 10926,
+          "error": "",
+          "arm_started_at": 1791361285.9386292,
+          "arm_finished_at": 1791361357.5147471,
+          "arm_seconds": 71.576
+        },
+        {
+          "arm": "D_all",
+          "ticker": "DHI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6809,
+          "tokens_out": 10451,
+          "error": "",
+          "arm_started_at": 1791361377.0891178,
+          "arm_finished_at": 1791361450.1615455,
+          "arm_seconds": 73.072
+        },
+        {
+          "arm": "D_all",
+          "ticker": "PEP",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6974,
+          "tokens_out": 7651,
+          "error": "",
+          "arm_started_at": 1791361452.1361234,
+          "arm_finished_at": 1791361504.561363,
+          "arm_seconds": 52.425
+        },
+        {
+          "arm": "D_all",
+          "ticker": "SO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7893,
+          "tokens_out": 7148,
+          "error": "",
+          "arm_started_at": 1791361532.181879,
+          "arm_finished_at": 1791361591.4029107,
+          "arm_seconds": 59.221
+        },
+        {
+          "arm": "D_all",
+          "ticker": "AMAT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 5569,
+          "tokens_out": 9456,
+          "error": "",
+          "arm_started_at": 1791361615.8995807,
+          "arm_finished_at": 1791361680.5357072,
+          "arm_seconds": 64.636
+        },
+        {
+          "arm": "D_all",
+          "ticker": "AEP",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7446,
+          "tokens_out": 5446,
+          "error": "",
+          "arm_started_at": 1791361697.8723533,
+          "arm_finished_at": 1791361748.946115,
+          "arm_seconds": 51.074
+        },
+        {
+          "arm": "D_all",
+          "ticker": "KMI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7693,
+          "tokens_out": 6521,
+          "error": "",
+          "arm_started_at": 1791361794.3138547,
+          "arm_finished_at": 1791361847.3874476,
+          "arm_seconds": 53.074
+        },
+        {
+          "arm": "D_all",
+          "ticker": "NKE",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7726,
+          "tokens_out": 13108,
+          "error": "",
+          "arm_started_at": 1791361876.241826,
+          "arm_finished_at": 1791361960.80079,
+          "arm_seconds": 84.559
+        },
+        {
+          "arm": "D_all",
+          "ticker": "SCHW",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7740,
+          "tokens_out": 11578,
+          "error": "",
+          "arm_started_at": 1791361972.7355902,
+          "arm_finished_at": 1791362050.658191,
+          "arm_seconds": 77.923
+        },
+        {
+          "arm": "D_all",
+          "ticker": "SBUX",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7372,
+          "tokens_out": 8425,
+          "error": "",
+          "arm_started_at": 1791362066.1718984,
+          "arm_finished_at": 1791362128.1996906,
+          "arm_seconds": 62.028
+        },
+        {
+          "arm": "D_all",
+          "ticker": "SPGI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 10,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7404,
+          "tokens_out": 7858,
+          "error": "",
+          "arm_started_at": 1791362141.6314337,
+          "arm_finished_at": 1791362204.134693,
+          "arm_seconds": 62.503
+        },
+        {
+          "arm": "D_all",
+          "ticker": "AMT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7884,
+          "tokens_out": 9819,
+          "error": "",
+          "arm_started_at": 1791362214.1665041,
+          "arm_finished_at": 1791362286.2668877,
+          "arm_seconds": 72.1
+        },
+        {
+          "arm": "D_all",
+          "ticker": "SYY",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7543,
+          "tokens_out": 9959,
+          "error": "",
+          "arm_started_at": 1791362297.264896,
+          "arm_finished_at": 1791362367.3579683,
+          "arm_seconds": 70.093
+        },
+        {
+          "arm": "D_all",
+          "ticker": "COIN",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7731,
+          "tokens_out": 7070,
+          "error": "",
+          "arm_started_at": 1791362368.281727,
+          "arm_finished_at": 1791362428.2959352,
+          "arm_seconds": 60.014
+        },
+        {
+          "arm": "D_all",
+          "ticker": "ETN",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7301,
+          "tokens_out": 7723,
+          "error": "",
+          "arm_started_at": 1791362442.8674762,
+          "arm_finished_at": 1791362503.6599395,
+          "arm_seconds": 60.792
+        },
+        {
+          "arm": "D_all",
+          "ticker": "ROST",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8604,
+          "tokens_out": 10900,
+          "error": "",
+          "arm_started_at": 1791362534.618929,
+          "arm_finished_at": 1791362608.933258,
+          "arm_seconds": 74.314
+        },
+        {
+          "arm": "D_all",
+          "ticker": "SPOT",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7811,
+          "tokens_out": 10276,
+          "error": "",
+          "arm_started_at": 1791362613.3517187,
+          "arm_finished_at": 1791362680.7330601,
+          "arm_seconds": 67.381
+        },
+        {
+          "arm": "D_all",
+          "ticker": "SNPS",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6265,
+          "tokens_out": 13152,
+          "error": "",
+          "arm_started_at": 1791362681.3202138,
+          "arm_finished_at": 1791362770.426592,
+          "arm_seconds": 89.106
+        },
+        {
+          "arm": "D_all",
+          "ticker": "CDNS",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6865,
+          "tokens_out": 8214,
+          "error": "",
+          "arm_started_at": 1791362770.4308598,
+          "arm_finished_at": 1791362828.0496829,
+          "arm_seconds": 57.619
+        },
+        {
+          "arm": "D_all",
+          "ticker": "TT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6448,
+          "tokens_out": 9553,
+          "error": "",
+          "arm_started_at": 1791362883.486753,
+          "arm_finished_at": 1791362959.268687,
+          "arm_seconds": 75.782
+        },
+        {
+          "arm": "D_all",
+          "ticker": "AVGO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8560,
+          "tokens_out": 11556,
+          "error": "",
+          "arm_started_at": 1791362959.274032,
+          "arm_finished_at": 1791363042.586367,
+          "arm_seconds": 83.312
+        },
+        {
+          "arm": "D_all",
+          "ticker": "DLR",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8643,
+          "tokens_out": 9085,
+          "error": "",
+          "arm_started_at": 1791363042.7136784,
+          "arm_finished_at": 1791363111.3903744,
+          "arm_seconds": 68.677
+        },
+        {
+          "arm": "D_all",
+          "ticker": "DUK",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6421,
+          "tokens_out": 8718,
+          "error": "",
+          "arm_started_at": 1791363121.9931946,
+          "arm_finished_at": 1791363186.381677,
+          "arm_seconds": 64.388
+        },
+        {
+          "arm": "D_all",
+          "ticker": "VICI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7771,
+          "tokens_out": 7792,
+          "error": "",
+          "arm_started_at": 1791363201.5420957,
+          "arm_finished_at": 1791363262.8334022,
+          "arm_seconds": 61.291
+        },
+        {
+          "arm": "D_all",
+          "ticker": "CVX",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8322,
+          "tokens_out": 7726,
+          "error": "",
+          "arm_started_at": 1791363271.217574,
+          "arm_finished_at": 1791363330.011185,
+          "arm_seconds": 58.794
+        },
+        {
+          "arm": "D_all",
+          "ticker": "TMO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 10,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8253,
+          "tokens_out": 9065,
+          "error": "",
+          "arm_started_at": 1791363336.7457476,
+          "arm_finished_at": 1791363407.2224631,
+          "arm_seconds": 70.477
+        },
+        {
+          "arm": "D_all",
+          "ticker": "PSX",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6099,
+          "tokens_out": 10207,
+          "error": "",
+          "arm_started_at": 1791363427.1715367,
+          "arm_finished_at": 1791363500.0932324,
+          "arm_seconds": 72.922
+        },
+        {
+          "arm": "D_all",
+          "ticker": "SRE",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7992,
+          "tokens_out": 17337,
+          "error": "",
+          "arm_started_at": 1791363513.9118376,
+          "arm_finished_at": 1791363615.3792408,
+          "arm_seconds": 101.467
+        },
+        {
+          "arm": "D_all",
+          "ticker": "CSCO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 5937,
+          "tokens_out": 12168,
+          "error": "",
+          "arm_started_at": 1791363615.382457,
+          "arm_finished_at": 1791363704.8012571,
+          "arm_seconds": 89.419
+        },
+        {
+          "arm": "D_all",
+          "ticker": "SYK",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6947,
+          "tokens_out": 7996,
+          "error": "",
+          "arm_started_at": 1791363729.4808328,
+          "arm_finished_at": 1791363791.2394373,
+          "arm_seconds": 61.759
+        },
+        {
+          "arm": "D_all",
+          "ticker": "XYZ",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 10,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7791,
+          "tokens_out": 12837,
+          "error": "",
+          "arm_started_at": 1791363798.8832405,
+          "arm_finished_at": 1791363879.741776,
+          "arm_seconds": 80.859
+        },
+        {
+          "arm": "D_all",
+          "ticker": "META",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6588,
+          "tokens_out": 9749,
+          "error": "",
+          "arm_started_at": 1791363879.7465203,
+          "arm_finished_at": 1791363949.7109663,
+          "arm_seconds": 69.964
+        }
+      ]
+    },
+    "B_anon": {
+      "n_cells": 40,
+      "n_with_forecasts": 40,
+      "n_tool_calls": 434,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {},
+      "rows": [
+        {
+          "arm": "B_anon",
+          "ticker": "CEG",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8731,
+          "tokens_out": 9242,
+          "error": "",
+          "arm_started_at": 1791360715.2278545,
+          "arm_finished_at": 1791360789.6718926,
+          "arm_seconds": 74.444
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "VST",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7958,
+          "tokens_out": 12270,
+          "error": "",
+          "arm_started_at": 1791360810.7303393,
+          "arm_finished_at": 1791360894.4835331,
+          "arm_seconds": 83.753
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "STZ",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7285,
+          "tokens_out": 7135,
+          "error": "",
+          "arm_started_at": 1791360894.4861958,
+          "arm_finished_at": 1791360949.07559,
+          "arm_seconds": 54.589
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "MDT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6966,
+          "tokens_out": 9757,
+          "error": "",
+          "arm_started_at": 1791360962.3356495,
+          "arm_finished_at": 1791361029.0758617,
+          "arm_seconds": 66.74
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "PG",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7992,
+          "tokens_out": 8932,
+          "error": "",
+          "arm_started_at": 1791361032.2372067,
+          "arm_finished_at": 1791361093.992409,
+          "arm_seconds": 61.755
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "XEL",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 8,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7290,
+          "tokens_out": 6926,
+          "error": "",
+          "arm_started_at": 1791361093.997284,
+          "arm_finished_at": 1791361148.1398766,
+          "arm_seconds": 54.143
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "LIN",
+          "status": "ok",
+          "n_calls": 7,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6608,
+          "tokens_out": 8338,
+          "error": "",
+          "arm_started_at": 1791361167.019882,
+          "arm_finished_at": 1791361225.599064,
+          "arm_seconds": 58.579
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "NEE",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7718,
+          "tokens_out": 7481,
+          "error": "",
+          "arm_started_at": 1791361227.5922682,
+          "arm_finished_at": 1791361285.494612,
+          "arm_seconds": 57.902
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "EXC",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7681,
+          "tokens_out": 13774,
+          "error": "",
+          "arm_started_at": 1791361285.9391541,
+          "arm_finished_at": 1791361371.1072743,
+          "arm_seconds": 85.168
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "DHI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7416,
+          "tokens_out": 9511,
+          "error": "",
+          "arm_started_at": 1791361377.0891178,
+          "arm_finished_at": 1791361444.3200617,
+          "arm_seconds": 67.231
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "PEP",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7101,
+          "tokens_out": 12608,
+          "error": "",
+          "arm_started_at": 1791361452.1361234,
+          "arm_finished_at": 1791361532.1787245,
+          "arm_seconds": 80.043
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "SO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7616,
+          "tokens_out": 12646,
+          "error": "",
+          "arm_started_at": 1791361532.181879,
+          "arm_finished_at": 1791361615.895257,
+          "arm_seconds": 83.713
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "AMAT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 10,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7434,
+          "tokens_out": 12618,
+          "error": "",
+          "arm_started_at": 1791361615.9001076,
+          "arm_finished_at": 1791361697.8687158,
+          "arm_seconds": 81.969
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "AEP",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7701,
+          "tokens_out": 15493,
+          "error": "",
+          "arm_started_at": 1791361697.8723533,
+          "arm_finished_at": 1791361794.3105264,
+          "arm_seconds": 96.438
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "KMI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 6856,
+          "tokens_out": 9958,
+          "error": "",
+          "arm_started_at": 1791361794.3138547,
+          "arm_finished_at": 1791361864.974062,
+          "arm_seconds": 70.66
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "NKE",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7563,
+          "tokens_out": 11835,
+          "error": "",
+          "arm_started_at": 1791361876.2423546,
+          "arm_finished_at": 1791361955.6684866,
+          "arm_seconds": 79.426
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "SCHW",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7834,
+          "tokens_out": 12983,
+          "error": "",
+          "arm_started_at": 1791361972.7361114,
+          "arm_finished_at": 1791362056.562555,
+          "arm_seconds": 83.826
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "SBUX",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7278,
+          "tokens_out": 11476,
+          "error": "",
+          "arm_started_at": 1791362066.1718984,
+          "arm_finished_at": 1791362141.6276567,
+          "arm_seconds": 75.456
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "SPGI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7136,
+          "tokens_out": 10732,
+          "error": "",
+          "arm_started_at": 1791362141.6314337,
+          "arm_finished_at": 1791362214.1624346,
+          "arm_seconds": 72.531
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "AMT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7446,
+          "tokens_out": 10579,
+          "error": "",
+          "arm_started_at": 1791362214.1665041,
+          "arm_finished_at": 1791362288.1861353,
+          "arm_seconds": 74.02
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "SYY",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7290,
+          "tokens_out": 9718,
+          "error": "",
+          "arm_started_at": 1791362297.2654371,
+          "arm_finished_at": 1791362366.4766953,
+          "arm_seconds": 69.211
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "COIN",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7438,
+          "tokens_out": 9314,
+          "error": "",
+          "arm_started_at": 1791362368.281727,
+          "arm_finished_at": 1791362437.4269323,
+          "arm_seconds": 69.145
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "ETN",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7145,
+          "tokens_out": 12424,
+          "error": "",
+          "arm_started_at": 1791362442.8674762,
+          "arm_finished_at": 1791362523.782262,
+          "arm_seconds": 80.915
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "ROST",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7669,
+          "tokens_out": 11362,
+          "error": "",
+          "arm_started_at": 1791362534.619449,
+          "arm_finished_at": 1791362613.347847,
+          "arm_seconds": 78.728
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "SPOT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7246,
+          "tokens_out": 5997,
+          "error": "",
+          "arm_started_at": 1791362613.3517187,
+          "arm_finished_at": 1791362665.8093202,
+          "arm_seconds": 52.458
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "SNPS",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7927,
+          "tokens_out": 9435,
+          "error": "",
+          "arm_started_at": 1791362681.3207428,
+          "arm_finished_at": 1791362752.2229187,
+          "arm_seconds": 70.902
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "CDNS",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7646,
+          "tokens_out": 18323,
+          "error": "",
+          "arm_started_at": 1791362770.4308598,
+          "arm_finished_at": 1791362883.4050326,
+          "arm_seconds": 112.974
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "TT",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 10,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7346,
+          "tokens_out": 7575,
+          "error": "",
+          "arm_started_at": 1791362883.487348,
+          "arm_finished_at": 1791362947.8624406,
+          "arm_seconds": 64.375
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "AVGO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7299,
+          "tokens_out": 10159,
+          "error": "",
+          "arm_started_at": 1791362959.2745526,
+          "arm_finished_at": 1791363037.2342308,
+          "arm_seconds": 77.96
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "DLR",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7262,
+          "tokens_out": 10229,
+          "error": "",
+          "arm_started_at": 1791363042.7146852,
+          "arm_finished_at": 1791363116.5173986,
+          "arm_seconds": 73.803
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "DUK",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 8283,
+          "tokens_out": 11650,
+          "error": "",
+          "arm_started_at": 1791363121.9931946,
+          "arm_finished_at": 1791363201.537795,
+          "arm_seconds": 79.545
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "VICI",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7951,
+          "tokens_out": 10245,
+          "error": "",
+          "arm_started_at": 1791363201.5426211,
+          "arm_finished_at": 1791363271.2149506,
+          "arm_seconds": 69.672
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "CVX",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7674,
+          "tokens_out": 8582,
+          "error": "",
+          "arm_started_at": 1791363271.217574,
+          "arm_finished_at": 1791363334.8763092,
+          "arm_seconds": 63.659
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "TMO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7505,
+          "tokens_out": 7751,
+          "error": "",
+          "arm_started_at": 1791363336.7457476,
+          "arm_finished_at": 1791363402.8802483,
+          "arm_seconds": 66.135
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "PSX",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7229,
+          "tokens_out": 13317,
+          "error": "",
+          "arm_started_at": 1791363427.1715367,
+          "arm_finished_at": 1791363513.9075859,
+          "arm_seconds": 86.736
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "SRE",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7921,
+          "tokens_out": 8284,
+          "error": "",
+          "arm_started_at": 1791363513.9118376,
+          "arm_finished_at": 1791363573.9674857,
+          "arm_seconds": 60.056
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "CSCO",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 9,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7424,
+          "tokens_out": 17756,
+          "error": "",
+          "arm_started_at": 1791363615.382965,
+          "arm_finished_at": 1791363729.4754002,
+          "arm_seconds": 114.092
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "SYK",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7458,
+          "tokens_out": 9265,
+          "error": "",
+          "arm_started_at": 1791363729.4813864,
+          "arm_finished_at": 1791363796.5727873,
+          "arm_seconds": 67.091
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "XYZ",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 11,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7905,
+          "tokens_out": 7635,
+          "error": "",
+          "arm_started_at": 1791363798.8832405,
+          "arm_finished_at": 1791363856.5879612,
+          "arm_seconds": 57.705
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "META",
+          "status": "ok",
+          "n_calls": 8,
+          "n_tool_calls": 12,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "tool_call_drops": {},
+          "n_tool_call_drops": 0,
+          "n_truncated_calls": 0,
+          "finish_reasons": [
+            "stop"
+          ],
+          "served_models": [
+            "deepseek-flash"
+          ],
+          "tokens_in": 7285,
+          "tokens_out": 17253,
+          "error": "",
+          "arm_started_at": 1791363879.747043,
+          "arm_finished_at": 1791363979.5813558,
+          "arm_seconds": 99.834
+        }
+      ]
+    }
+  },
+  "records_written": 600,
+  "calls": 1417,
+  "spend_usd": 2.375061,
+  "served_models": [
+    "deepseek-flash"
+  ],
+  "budget": {
+    "measured_cost_night_1": 2.375061,
+    "measured_cost_status": "measured",
+    "projected_40_night_cost": 95.0024,
+    "current_balance": 23.99,
+    "balance_as_of": "2026-08-24",
+    "funding_gap_or_surplus": -71.0124,
+    "fundable_nights_at_this_rate": 10,
+    "nights_required": 40,
+    "funding_average_per_night": 0.5998,
+    "safety_ceiling_per_night": 12.0,
+    "note": "The ceiling is a stop, not a plan. The planning number is funding_average_per_night; a night under the ceiling but over the average shortens the trial rather than fitting in it. The funding decision is made BEFORE the accrual clock starts, not when the balance runs out."
+  },
+  "cell_pairing": {
+    "n_cells_union": 120,
+    "n_cells_paired": 120,
+    "n_cells_dropped_unpaired": 0,
+    "per_arm": {
+      "A_snapshot": {
+        "n_cells": 120,
+        "n_dropped_for_pairing": 0
+      },
+      "B_tools": {
+        "n_cells": 120,
+        "n_dropped_for_pairing": 0
+      },
+      "C_tools_only": {
+        "n_cells": 120,
+        "n_dropped_for_pairing": 0
+      },
+      "D_all": {
+        "n_cells": 120,
+        "n_dropped_for_pairing": 0
+      },
+      "B_anon": {
+        "n_cells": 120,
+        "n_dropped_for_pairing": 0
+      }
+    },
+    "key": "night x ticker x observable x horizon_days x threshold"
+  },
+  "chain_yield": {
+    "n_chains": 200,
+    "n_chains_minted_nothing": 0,
+    "n_calls_resolved": 1417,
+    "n_calls_in_barren_chains": 0
+  },
+  "truncation": {
+    "n_cells": 200,
+    "n_cells_truncated": 0,
+    "pooled_rate": 0.0,
+    "per_arm_rate": {
+      "A_snapshot": 0.0,
+      "B_tools": 0.0,
+      "C_tools_only": 0.0,
+      "D_all": 0.0,
+      "B_anon": 0.0
+    },
+    "worst_arm": "A_snapshot",
+    "worst_arm_rate": 0.0,
+    "spread": 0.0
+  },
+  "decision_lag_minutes": 11.84,
+  "decision_lag_minutes_at_end": 66.27,
+  "timing": {
+    "projected_minutes": 271.0,
+    "projected_finish_utc": "2026-10-07T12:42+00:00",
+    "next_open_utc": "2026-10-07T13:30+00:00",
+    "next_session": "2026-10-07",
+    "hours_until_open": 5.3,
+    "minutes_of_headroom": 47.1,
+    "call_seconds_assumed": 8.7,
+    "n_calls_projected": 1430,
+    "calls_per_cell_assumed": 7.15,
+    "calls_per_cell_basis": "MEASURED_MAX_OVER_COMPLETED_NIGHTS",
+    "calls_per_cell_declared": 4.8,
+    "calls_per_cell_nights_measured": 15,
+    "decision_basis": "MEASURED_DURATION_BOUND",
+    "decision_clock": "run_night_elapsed",
+    "modelled_serial_minutes": 207.3,
+    "measured_duration_bound": {
+      "value": 271.0,
+      "basis": "MEASURED_WORST_COMPLETED_NIGHT_X_DECLARED_FACTOR",
+      "n_nights": 15,
+      "observed": [
+        {
+          "night": "2026-08-17",
+          "minutes": 115.36,
+          "projected_minutes": 69.6,
+          "projection_error_minutes": 45.8,
+          "projection_ratio": 1.658
+        },
+        {
+          "night": "2026-08-18",
+          "minutes": 113.48,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -117.2,
+          "projection_ratio": 0.492
+        },
+        {
+          "night": "2026-08-19",
+          "minutes": 109.7,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -121.0,
+          "projection_ratio": 0.475
+        },
+        {
+          "night": "2026-08-21",
+          "minutes": 108.53,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -122.2,
+          "projection_ratio": 0.47
+        },
+        {
+          "night": "2026-08-24",
+          "minutes": 112.64,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -118.1,
+          "projection_ratio": 0.488
+        },
+        {
+          "night": "2026-08-25",
+          "minutes": 106.26,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -124.4,
+          "projection_ratio": 0.461
+        },
+        {
+          "night": "2026-08-26",
+          "minutes": 108.17,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -122.5,
+          "projection_ratio": 0.469
+        },
+        {
+          "night": "2026-08-27",
+          "minutes": 117.48,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -113.2,
+          "projection_ratio": 0.509
+        },
+        {
+          "night": "2026-09-22",
+          "minutes": 56.71,
+          "projected_minutes": 235.0,
+          "projection_error_minutes": -178.3,
+          "projection_ratio": 0.241
+        },
+        {
+          "night": "2026-09-24",
+          "minutes": 58.89,
+          "projected_minutes": 235.0,
+          "projection_error_minutes": -176.1,
+          "projection_ratio": 0.251
+        },
+        {
+          "night": "2026-09-25",
+          "minutes": 135.52,
+          "projected_minutes": 235.0,
+          "projection_error_minutes": -99.5,
+          "projection_ratio": 0.577
+        },
+        {
+          "night": "2026-09-28",
+          "minutes": 55.08,
+          "projected_minutes": 271.0,
+          "projection_error_minutes": -215.9,
+          "projection_ratio": 0.203
+        },
+        {
+          "night": "2026-09-29",
+          "minutes": 57.39,
+          "projected_minutes": 271.0,
+          "projection_error_minutes": -213.6,
+          "projection_ratio": 0.212
+        },
+        {
+          "night": "2026-10-01",
+          "minutes": 51.01,
+          "projected_minutes": 271.0,
+          "projection_error_minutes": -220.0,
+          "projection_ratio": 0.188
+        },
+        {
+          "night": "2026-10-06",
+          "minutes": 57.74,
+          "projected_minutes": 271.0,
+          "projection_error_minutes": -213.3,
+          "projection_ratio": 0.213
+        }
+      ],
+      "worst_minutes": 135.52,
+      "safety_factor": 2.0,
+      "clock": "run_night_elapsed"
+    },
+    "runner_concurrency_derived": 5,
+    "concurrency_basis": "DERIVED_FROM_FROZEN_PREREG",
+    "projected_minutes_at_runner_concurrency": 103.7,
+    "arm_concurrency": 5,
+    "concurrency_efficiency_declared": 2.0,
+    "calendar": "XNYS",
+    "actual_finish_utc": "2026-10-07T09:06+00:00",
+    "actual_minutes": 54.4,
+    "actual_headroom_minutes": 263.6,
+    "finished_before_open": true,
+    "measured": {
+      "n_cells_measured": 40,
+      "mean_cell_wall_seconds": 81.586,
+      "mean_cell_serial_seconds": 300.545,
+      "measured_efficiency": 3.684,
+      "declared_efficiency": 2.0
+    }
+  },
+  "arm_start_skew_ms": [
+    1.0,
+    1.1,
+    0.5,
+    1.1,
+    1.0,
+    1.0,
+    1.1,
+    0.5,
+    1.1,
+    1.0,
+    1.1,
+    1.1,
+    1.0,
+    1.0,
+    1.0,
+    1.6,
+    1.0,
+    1.0,
+    1.2,
+    1.1,
+    1.6,
+    1.0,
+    1.1,
+    1.6,
+    0.5,
+    1.6,
+    1.1,
+    2.8,
+    1.0,
+    2.0,
+    1.7,
+    2.1,
+    1.0,
+    0.5,
+    1.1,
+    1.1,
+    1.0,
+    2.1,
+    0.5,
+    1.6
+  ],
+  "dropped_cells": [],
+  "implementation_version": 2,
+  "arm_implementation_fingerprint": "19461700cec485a6",
+  "git_commit": "95158a00a9e709b259bd9c3707d055dee0666baf",
+  "git_dirty": true,
+  "planned_start_utc": null,
+  "actual_start_utc": "2026-10-07T08:11:54+00:00",
+  "start_delay_minutes": null,
+  "arm_failures": {
+    "A_snapshot": {
+      "n_cells": 40,
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {}
+    },
+    "B_tools": {
+      "n_cells": 40,
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {}
+    },
+    "C_tools_only": {
+      "n_cells": 40,
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {}
+    },
+    "D_all": {
+      "n_cells": 40,
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {}
+    },
+    "B_anon": {
+      "n_cells": 40,
+      "n_cells_failed": 0,
+      "n_tool_call_drops": 0,
+      "tool_call_drop_reasons": {}
+    }
+  },
+  "execution_mode": "cells_sequential_arms_concurrent",
+  "arm_concurrency": 5,
+  "peak_calls_in_flight": 5,
+  "sandbox": false,
+  "elapsed_s": 3266.787368700141,
+  "trial": "INTERNET-INVESTIGATOR-FWD-1"
+}

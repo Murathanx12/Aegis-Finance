@@ -1,0 +1,220 @@
+{
+ "hyp_id": "H-cbade4867c",
+ "title": "Refiner outage lifts rival refiners' crack spreads",
+ "night": "2026-10-09",
+ "run_utc": "2026-10-09T03:29:38+00:00",
+ "result": {
+  "cell_type": "event_readthrough",
+  "params": {
+   "link": "corr_peer",
+   "event_type": "new_contract_or_partnership",
+   "min_ratio": 2.0,
+   "k": 5,
+   "min_source_dv_pct": 0.5
+  },
+  "outcome_units": "size: log(|x_oc|/vol21) linked minus vol-matched unlinked, same date; signed: sign(source move) x (x_oc linked - x_oc controls)",
+  "n_events_candidate": 196,
+  "design": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": -0.126887,
+    "se": 0.070995,
+    "t": -1.79,
+    "mde": 0.198786,
+    "n": 104,
+    "n_blocks": 41
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": 0.000351,
+    "se": 0.001679,
+    "t": 0.21,
+    "mde": 0.004702,
+    "n": 104,
+    "n_blocks": 41
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.426718,
+    "se": 0.071034,
+    "t": 6.01,
+    "mde": 0.198896,
+    "n": 104,
+    "n_blocks": 41
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.017724,
+    "se": 0.00224,
+    "t": 7.91,
+    "mde": 0.006271,
+    "n": 104,
+    "n_blocks": 41
+   },
+   "n_events": 104,
+   "mean_links": 5.0,
+   "by_month_size_t1": {
+    "2025-01": {
+     "mean": -0.222459,
+     "n": 11
+    },
+    "2025-02": {
+     "mean": 0.111509,
+     "n": 4
+    },
+    "2025-03": {
+     "mean": 0.032671,
+     "n": 4
+    },
+    "2025-04": {
+     "mean": -0.261953,
+     "n": 7
+    },
+    "2025-05": {
+     "mean": 0.131721,
+     "n": 8
+    },
+    "2025-06": {
+     "mean": -0.14862,
+     "n": 7
+    },
+    "2025-07": {
+     "mean": 0.143776,
+     "n": 8
+    },
+    "2025-08": {
+     "mean": -0.195151,
+     "n": 5
+    },
+    "2025-09": {
+     "mean": -0.296577,
+     "n": 13
+    },
+    "2025-10": {
+     "mean": -0.174766,
+     "n": 20
+    },
+    "2025-11": {
+     "mean": -0.109053,
+     "n": 12
+    },
+    "2025-12": {
+     "mean": -0.204146,
+     "n": 5
+    }
+   },
+   "loo_month_worst_size_t1": -0.149443
+  },
+  "confirm": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.101015,
+    "se": 0.087535,
+    "t": 1.15,
+    "mde": 0.245099,
+    "n": 91,
+    "n_blocks": 28
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": 0.004075,
+    "se": 0.00216,
+    "t": 1.89,
+    "mde": 0.006047,
+    "n": 91,
+    "n_blocks": 28
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.508421,
+    "se": 0.073141,
+    "t": 6.95,
+    "mde": 0.204795,
+    "n": 91,
+    "n_blocks": 28
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.02309,
+    "se": 0.002742,
+    "t": 8.42,
+    "mde": 0.007676,
+    "n": 91,
+    "n_blocks": 28
+   },
+   "n_events": 91,
+   "mean_links": 5.0,
+   "by_month_size_t1": {
+    "2026-01": {
+     "mean": 0.530923,
+     "n": 7
+    },
+    "2026-02": {
+     "mean": 0.20833,
+     "n": 13
+    },
+    "2026-03": {
+     "mean": -0.014265,
+     "n": 14
+    },
+    "2026-04": {
+     "mean": -0.106173,
+     "n": 18
+    },
+    "2026-05": {
+     "mean": 0.302796,
+     "n": 15
+    },
+    "2026-06": {
+     "mean": 0.371954,
+     "n": 7
+    },
+    "2026-07": {
+     "mean": -0.048073,
+     "n": 6
+    },
+    "2026-08": {
+     "mean": -0.095157,
+     "n": 6
+    },
+    "2026-09": {
+     "mean": -0.281561,
+     "n": 5
+    }
+   },
+   "loo_month_worst_size_t1": 0.06119
+  },
+  "verdict": "CANNOT_DISTINGUISH",
+  "powered": false,
+  "reason": "confirm +0.10101 t 1.15; MDE 0.24510 > effect worth having 0.05000",
+  "direction_verdict_reported": {
+   "verdict": "CANNOT_DISTINGUISH",
+   "powered": false,
+   "reason": "confirm +0.00407 t 1.89; MDE 0.00605 > effect worth having 0.00200"
+  },
+  "examples": [
+   {
+    "t": "2026-04-08",
+    "source": "MDB",
+    "links": "SNOW,ESTC,GTLB,DT,NET",
+    "size_t1": "1.7743657008029627"
+   },
+   {
+    "t": "2026-01-21",
+    "source": "NOW",
+    "links": "CRM,HUBS,DT,TEAM,FRSH",
+    "size_t1": "1.673157043760499"
+   },
+   {
+    "t": "2026-05-15",
+    "source": "SNOW",
+    "links": "CRWD,ZS,DDOG,ESTC,TENB",
+    "size_t1": "1.4593828519187975"
+   },
+   {
+    "t": "2025-11-19",
+    "source": "AVGO",
+    "links": "TSM,CLS,ETN,CRDO,MRVL",
+    "size_t1": "1.3143747357779667"
+   },
+   {
+    "t": "2025-03-19",
+    "source": "BAH",
+    "links": "CACI,LDOS,SAIC,PSN,LHX",
+    "size_t1": "1.2665619005346984"
+   }
+  ]
+ }
+}

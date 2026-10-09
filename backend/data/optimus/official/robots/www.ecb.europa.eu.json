@@ -1,6 +1,6 @@
 {
  "host": "www.ecb.europa.eu",
- "fetched_utc": "2026-10-07T03:05:29+00:00",
+ "fetched_utc": "2026-10-08T05:10:11+00:00",
  "status": 200,
  "text": "User-agent: *\nSitemap: https://www.ecb.europa.eu/sitemap.xml\nDisallow: /*_content.bg.html$\nDisallow: /*_content.cs.html$\nDisallow: /*_content.da.html$\nDisallow: /*_content.de.html$\nDisallow: /*_content.el.html$\nDisallow: /*_content.en.html$\nDisallow: /*_content.es.html$\nDisallow: /*_content.et.html$\nDisallow: /*_content.fi.html$\nDisallow: /*_content.fr.html$\nDisallow: /*_content.ga.html$\nDisallow: /*_content.hr.html$\nDisallow: /*_content.hu.html$\nDisallow: /*_content.it.html$\nDisallow: /*_content.lt.html$\nDisallow: /*_content.lv.html$\nDisallow: /*_content.mt.html$\nDisallow: /*_content.nl.html$\nDisallow: /*_content.pl.html$\nDisallow: /*_content.pt.html$\nDisallow: /*_content.ro.html$\nDisallow: /*_content.sk.html$\nDisallow: /*_content.sl.html$\nDisallow: /*_content.sv.html$\nDisallow: /ecb/10ann/shared/movies/\nDisallow: /ecb/educational/pricestab/shared/movie/\nDisallow: /ecb/educational/shared/movies/\nDisallow: /paym/coll/assets/html/dla/EA/\nDisallow: /press/tvservices/webcast/shared/video/\nDisallow: /paym/coll/assets/html/dla/EA/\nDisallow: /events/conferences/shared/movie/\nDisallow: /euro/changeover/shared/data/\nCrawl-delay: 5\n"
 }

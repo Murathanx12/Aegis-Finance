@@ -1,0 +1,162 @@
+{
+ "receipt": "bars_refresh",
+ "run_id": "20261008T050600Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "started_utc": "2026-10-08T05:06:02+00:00",
+ "dry_run": false,
+ "last_closed_session": "2026-10-07",
+ "calendar": "XNYS",
+ "age_before": {
+  "stale": false,
+  "newest": "2026-10-06",
+  "sessions_old": 1,
+  "max_age_sessions": 2,
+  "last_closed_session": "2026-10-07",
+  "calendar": "XNYS",
+  "panels": {
+   "grader_2025_26": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+    "newest": "2026-10-06",
+    "sessions_old": 1,
+    "state": "FRESH"
+   },
+   "ranker_deep": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars.parquet",
+    "newest": "2026-10-06",
+    "sessions_old": 1,
+    "state": "FRESH"
+   }
+  },
+  "line": "BARS_FRESH: newest=2026-10-06 sessions_old=1 (limit 2, last closed session 2026-10-07)"
+ },
+ "panels": {
+  "grader_2025_26": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+   "rows_before": 1309022,
+   "rows_after": 1312068,
+   "rows_added": 3046,
+   "symbols_before": 3060,
+   "symbols_after": 3060,
+   "newest_before": "2026-10-06",
+   "newest_after": "2026-10-07",
+   "first_date": "2025-01-02",
+   "duplicate_keys": 0,
+   "changed": true,
+   "readjusted": 16,
+   "status": "ok",
+   "swap": "swapped"
+  },
+  "ranker_deep": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars.parquet",
+   "rows_before": 6819836,
+   "rows_after": 6822882,
+   "rows_added": 3046,
+   "symbols_before": 3060,
+   "symbols_after": 3060,
+   "newest_before": "2026-10-06",
+   "newest_after": "2026-10-07",
+   "first_date": "2016-01-04",
+   "duplicate_keys": 0,
+   "changed": true,
+   "readjusted": 16,
+   "status": "ok",
+   "swap": "swapped"
+  },
+  "delisted": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars_delisted.parquet",
+   "rows_before": 1862441,
+   "rows_after": 1862650,
+   "rows_added": 209,
+   "symbols_before": 1784,
+   "symbols_after": 1784,
+   "newest_before": "2026-10-06",
+   "newest_after": "2026-10-07",
+   "first_date": "2016-01-04",
+   "duplicate_keys": 0,
+   "changed": true,
+   "readjusted": 4,
+   "status": "ok",
+   "swap": "swapped"
+  },
+  "forecast_only": {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars_forecast_only.parquet",
+   "rows_before": 60164,
+   "rows_after": 60301,
+   "rows_added": 137,
+   "symbols_before": 139,
+   "symbols_after": 139,
+   "newest_before": "2026-10-06",
+   "newest_after": "2026-10-07",
+   "first_date": "2025-01-02",
+   "duplicate_keys": 0,
+   "changed": true,
+   "readjusted": 0,
+   "status": "ok",
+   "swap": "swapped"
+  }
+ },
+ "pull": {
+  "start": "2026-09-26",
+  "symbols": 4930,
+  "feed": "sip",
+  "adjustment": "all",
+  "keep_through": "2026-10-07",
+  "credential_source": "terminal repo .env, HACK1 (data endpoint only, verified)",
+  "rows_returned": 26738,
+  "rejected_symbols": []
+ },
+ "readjusted_symbols": {
+  "n": 20,
+  "sample": [
+   "ATC",
+   "BIGY",
+   "CMCSA",
+   "DUKH",
+   "EIX",
+   "GAP",
+   "GNTX",
+   "IMKTA",
+   "INTU",
+   "LEN",
+   "MAIN",
+   "MTN",
+   "NYT",
+   "SATA",
+   "SCA",
+   "SKHY",
+   "TIGO",
+   "TR",
+   "WFG",
+   "WNC"
+  ]
+ },
+ "status": "ok",
+ "age_after": {
+  "stale": false,
+  "newest": "2026-10-07",
+  "sessions_old": 0,
+  "max_age_sessions": 2,
+  "last_closed_session": "2026-10-07",
+  "calendar": "XNYS",
+  "panels": {
+   "grader_2025_26": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+    "newest": "2026-10-07",
+    "sessions_old": 0,
+    "state": "FRESH"
+   },
+   "ranker_deep": {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars.parquet",
+    "newest": "2026-10-07",
+    "sessions_old": 0,
+    "state": "FRESH"
+   }
+  },
+  "line": "BARS_FRESH: newest=2026-10-07 sessions_old=0 (limit 2, last closed session 2026-10-07)"
+ },
+ "line": "BARS_FRESH: newest=2026-10-07 sessions_old=0 (limit 2, last closed session 2026-10-07)",
+ "elapsed_s": 137.2,
+ "written_utc": "2026-10-08T05:08:17+00:00",
+ "headline": "bars refresh ok: +6,438 rows; BARS_FRESH: newest=2026-10-07 sessions_old=0 (limit 2, last closed session 2026-10-07)"
+}

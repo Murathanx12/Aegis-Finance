@@ -1,0 +1,140 @@
+{
+ "cycle": 7,
+ "at": "2026-10-07T15:32:39+00:00",
+ "mode": "paper_profit",
+ "elapsed_s": 46.7,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 4.1,
+   "result": {
+    "equity": 1001494.42,
+    "cash": -26102.45,
+    "n_positions": 33,
+    "invested_frac": 1.0260635001840548
+   }
+  },
+  "funnel": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "candidate set is fresh",
+    "generated_at": "2026-10-06T15:51:08+00:00",
+    "age_days": 0.99,
+    "n_candidates": 25
+   }
+  },
+  "analyst": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "already pulled today (2026-10-07)",
+    "n_snapshots": 3089,
+    "n_revision_rows": 395047
+   }
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 0.2,
+   "result": {
+    "skipped": "bars unchanged since the last rank",
+    "bars_line": "BARS_FRESH: newest=2026-10-06 sessions_old=0 (limit 2, last closed session 2026-10-06)",
+    "asof": "2026-10-06",
+    "n_eligible": 2878,
+    "top1": "LITE"
+   }
+  },
+  "forecast": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "state": "REFUSED_DEPENDENCY_DOWN",
+    "n_rows_written": 220,
+    "skipped": "dependency down at 2026-10-07T15:04:30+00:00; run 2 of 8 waits 3600s after the last failure",
+    "status": "DEGRADED"
+   }
+  },
+  "review": {
+   "ok": true,
+   "elapsed_s": 24.2,
+   "result": {
+    "intraday": "1131",
+    "asof": "2026-10-07",
+    "n_rows": 1307,
+    "n_minted": 0,
+    "review": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\review\\review_2026-10-07_intraday_1131.json",
+    "morning": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\review\\morning_2026-10-07_intraday_1131.md"
+   }
+  },
+  "plan": {
+   "ok": true,
+   "elapsed_s": 10.0,
+   "result": {
+    "planned": true,
+    "verdict": "MEASURED_NEGATIVE",
+    "acting": true,
+    "bars_line": "BARS_FRESH (limit 2, last closed session 2026-10-06)",
+    "exploit_acting": false,
+    "blend_verdict": "UNMEASURED",
+    "er_present": true,
+    "er_red": null,
+    "probe_verdict": "UNMEASURED_TRADE_SMALL",
+    "probe_acting": true,
+    "shortlist": 23,
+    "shortlist_red": null,
+    "contract": "present",
+    "contract_red": null,
+    "contract_refused_excluded": 1,
+    "mandate_status": "UNRECONCILED",
+    "mandate_line": "MANDATE UNRECONCILED: CAPITAL_SOURCE broker; capital $1,002,057 (derived: PC-PAPER broker equity read 2026-10-06T21:56:49+00:00 (state_latest.json)); broker equity $1,002,057 read 2026-10-06T21:56:49+00:00; per-name cap 2% (tightest: config.PROBE_MAX_WEIGHT (u_plan PROBE)); as configured: 18 EXPLOIT x 10% (gross <= 80%) + 10 PROBE x 2% (<= 20%) = sum|notional|/equity 1.00; priced per name at 3 sigma = -$140,909 (14.06% of equity); no stop, so the ceiling is -$1,002,057 on $1,002,057; WORST CASE REFUSE (largest admissible book, sleeve names): 14.06% of equity (-$140,909) vs limit 10%; universe median 7.51%, p90 14.76%; TRADING PASS_EXPLOIT_CAPPED: EXPLOIT gross capped at 54.46% (~5 names at 10%) in u_plan, every cycle | POSITIONS UNRECONCILED: SLEEVE_BASIS_DISAGREES; SLEEVE_BASIS_DISAGREES; SLEEVE_BASIS_DISAGREES; POSITIONS_DISAGREE -- BROKER HOLDS: 79.90% cash, 20.10% in 10 name(s), 0.00% in a benchmark ETF (read 2026-10-06T21:56:49+00:00)",
+    "mandate_gates_orders": false,
+    "mandate_capital_bases": null,
+    "why_zero_orders": null,
+    "decision_story_line": "44 abstentions frozen with BUY counterfactuals for session 2026-10-07; first grades at 2026-10-14; replay MISMATCH (every leave-one-out NOT_SEPARABLE); live stories on disk: 65, oldest session 2026-10-07",
+    "decision_story_new": 2,
+    "policy_version": "c3-v1",
+    "n_considered": 44,
+    "n_probe": 10,
+    "policy_state_used": true,
+    "policy_state_ignored": null,
+    "order_source": "reputation-weighted E[r_5] (components whose arm has weight > 0), sigma_63 vol prior breaks ties; 7 priced, 16 in shortlist order after them",
+    "probe_weighting": "equal",
+    "probe_gross": 0.2,
+    "n_orders": 2,
+    "n_probe_orders": 0,
+    "n_exploit_orders": 0,
+    "n_sent": 0,
+    "send_block": null,
+    "turnover_usd": 39715.799999999996,
+    "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.03% (3 sigma of 2.68%/day) = -$16,086 on $1,001,604; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$200,321",
+    "decisions_new": 0,
+    "top1": "TSM"
+   }
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 8.1,
+   "result": {
+    "forecasts": "0 newly resolved; 20,180 of 39,156 records now carry an outcome; 0 voided as unresolvable this run; 3 wait on a bar, 18,837 are not yet due",
+    "decisions": "nothing_to_do"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "unit": "survivorship_audit",
+    "skipped": "bars unchanged since this unit last ran",
+    "n_symbols": 5587,
+    "panel_last_session": "2026-10-06",
+    "stopped_30d_before_end": 2372,
+    "stopped_90d_before_end": 2366,
+    "stopped_180d_before_end": 2361,
+    "fraction_dead_90d": 0.4235,
+    "verdict": "2,366 of 5,587 symbols (42.3%) stop trading well before the end, so delistings are represented.",
+    "bars_fingerprint": "bars.parquet:163825302:1791325912|bars_delisted.parquet:38500548:1791325913"
+   }
+  }
+ },
+ "errors": []
+}

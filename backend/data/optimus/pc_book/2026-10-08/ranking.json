@@ -1,0 +1,187 @@
+{
+ "receipt": "sim_ranking",
+ "asof": "2026-10-07",
+ "n_eligible": 2874,
+ "model_version": "435f1b30251a",
+ "ic_mean": 0.018298674081511652,
+ "ic_t": 6.15795265730737,
+ "top20_net_rel_21d": -0.008404328099575739,
+ "top": [
+  {
+   "rank": 1,
+   "symbol": "LITE",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0022191738351598923,
+   "calibration_measured": true
+  },
+  {
+   "rank": 2,
+   "symbol": "CDNL",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0034191738351598924,
+   "calibration_measured": true
+  },
+  {
+   "rank": 3,
+   "symbol": "TE",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0026191738351598924,
+   "calibration_measured": true
+  },
+  {
+   "rank": 4,
+   "symbol": "BW",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0034191738351598924,
+   "calibration_measured": true
+  },
+  {
+   "rank": 5,
+   "symbol": "WULF",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0026191738351598924,
+   "calibration_measured": true
+  },
+  {
+   "rank": 6,
+   "symbol": "ASPN",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005119173835159892,
+   "calibration_measured": true
+  },
+  {
+   "rank": 7,
+   "symbol": "OSS",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005119173835159892,
+   "calibration_measured": true
+  },
+  {
+   "rank": 8,
+   "symbol": "ALOY",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005119173835159892,
+   "calibration_measured": true
+  },
+  {
+   "rank": 9,
+   "symbol": "BETR",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005119173835159892,
+   "calibration_measured": true
+  },
+  {
+   "rank": 10,
+   "symbol": "ALM",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0034191738351598924,
+   "calibration_measured": true
+  },
+  {
+   "rank": 11,
+   "symbol": "SNDK",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0022191738351598923,
+   "calibration_measured": true
+  },
+  {
+   "rank": 12,
+   "symbol": "WDC",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0022191738351598923,
+   "calibration_measured": true
+  },
+  {
+   "rank": 13,
+   "symbol": "AMD",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0022191738351598923,
+   "calibration_measured": true
+  },
+  {
+   "rank": 14,
+   "symbol": "NBTX",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005119173835159892,
+   "calibration_measured": true
+  },
+  {
+   "rank": 15,
+   "symbol": "WYFI",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0034191738351598924,
+   "calibration_measured": true
+  },
+  {
+   "rank": 16,
+   "symbol": "FRMI",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0034191738351598924,
+   "calibration_measured": true
+  },
+  {
+   "rank": 17,
+   "symbol": "CAT",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0022191738351598923,
+   "calibration_measured": true
+  },
+  {
+   "rank": 18,
+   "symbol": "AGX",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0026191738351598924,
+   "calibration_measured": true
+  },
+  {
+   "rank": 19,
+   "symbol": "PLTR",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0022191738351598923,
+   "calibration_measured": true
+  },
+  {
+   "rank": 20,
+   "symbol": "CIFR",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0026191738351598924,
+   "calibration_measured": true
+  },
+  {
+   "rank": 21,
+   "symbol": "MTZ",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0026191738351598924,
+   "calibration_measured": true
+  },
+  {
+   "rank": 22,
+   "symbol": "NB",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005119173835159892,
+   "calibration_measured": true
+  },
+  {
+   "rank": 23,
+   "symbol": "LAR",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005119173835159892,
+   "calibration_measured": true
+  },
+  {
+   "rank": 24,
+   "symbol": "MSFT",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0022191738351598923,
+   "calibration_measured": true
+  },
+  {
+   "rank": 25,
+   "symbol": "UCTT",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0034191738351598924,
+   "calibration_measured": true
+  }
+ ],
+ "bars_fingerprint": "bars.parquet:162316570:1791436094|bars_delisted.parquet:38412021:1791436097"
+}

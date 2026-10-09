@@ -1,0 +1,317 @@
+{
+ "job": "hyp_lab.nightly",
+ "started_utc": "2026-10-08T05:05:12+00:00",
+ "night": "2026-10-08",
+ "k": 3,
+ "cap_usd": 0.4,
+ "free_ram_gb_start": 16.66,
+ "generation": [
+  {
+   "provider": "deepseek",
+   "ok": true,
+   "n_items": 8,
+   "n_rows": 8,
+   "status": {
+    "DUPLICATE_IN_LEDGER": 4,
+    "PROPOSED": 2,
+    "NEEDS_CELL": 2
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\generate_deepseek_20261008T050606Z.json",
+   "served_model": "deepseek-flash"
+  },
+  {
+   "provider": "local",
+   "ok": false,
+   "status": "SKIPPED_SERVER_NOT_UP"
+  }
+ ],
+ "weekly_guarantee": [],
+ "declared": [
+  "H-10260cfe4e",
+  "H-79816372f0",
+  "H-f73a8435aa"
+ ],
+ "declare_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\declare_20261008T050620Z.json",
+ "results": [
+  {
+   "hyp_id": "H-10260cfe4e",
+   "title": "Event readthrough via news co-mentions",
+   "verdict": "CANNOT_DISTINGUISH",
+   "reason": "confirm +0.15500 t 1.11; MDE 0.39110 > effect worth having 0.08230",
+   "powered": false,
+   "design": {
+    "mean": 0.082302,
+    "t": 0.64,
+    "mde": 0.357528,
+    "n": 54,
+    "n_blocks": 21
+   },
+   "confirm": {
+    "mean": 0.154998,
+    "t": 1.11,
+    "mde": 0.391098,
+    "n": 50,
+    "n_blocks": 17
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-10260cfe4e_20261008T050649Z.json"
+  },
+  {
+   "hyp_id": "H-79816372f0",
+   "title": "Analyst target hike spills to co-mentioned peers",
+   "verdict": "CANNOT_DISTINGUISH",
+   "reason": "confirm +0.01203 t 0.11; MDE 0.31201 > effect worth having 0.05000",
+   "powered": false,
+   "design": {
+    "mean": -0.224077,
+    "t": -1.02,
+    "mde": 0.612149,
+    "n": 21,
+    "n_blocks": 18
+   },
+   "confirm": {
+    "mean": 0.012032,
+    "t": 0.11,
+    "mde": 0.312014,
+    "n": 50,
+    "n_blocks": 25
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-79816372f0_20261008T050652Z.json"
+  },
+  {
+   "hyp_id": "H-f73a8435aa",
+   "title": "Tanker rate spike lifts product tanker equities next session",
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00568 <= 0",
+   "powered": false,
+   "design": {
+    "mean": -0.002037,
+    "t": -0.95,
+    "mde": 0.006028,
+    "n": 91,
+    "n_blocks": 49
+   },
+   "confirm": {
+    "mean": -0.005676,
+    "t": -2.0,
+    "mde": 0.007965,
+    "n": 47,
+    "n_blocks": 28
+   },
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hyp_lab\\receipts\\cell_H-f73a8435aa_20261008T050702Z.json"
+  }
+ ],
+ "family_policy": {
+  "floor": 0.15,
+  "min_weight": 0.25,
+  "max_share": 0.5,
+  "n_per_round": 8,
+  "ev_weights": {},
+  "gen_quotas": {
+   "data_vintage": 4,
+   "digest_forward": 4,
+   "earnings_streak": 4,
+   "equity_readthrough_supply_chain": 4,
+   "event_readthrough_corr_peer": 4,
+   "event_readthrough_supply_chain": 4,
+   "event_readthrough_text_link": 4,
+   "family_unmapped": 4,
+   "insider_event": 4,
+   "investable_spread": 4,
+   "llm_belief_elasticity": 4,
+   "llm_leakage": 4,
+   "llm_size_reading": 4,
+   "macro_readthrough_commodity": 4,
+   "macro_readthrough_rates": 4,
+   "official_disclosure": 4,
+   "price_location": 4,
+   "risk_timing": 4,
+   "size_attention": 4,
+   "size_disagreement": 4,
+   "size_event_prior": 4,
+   "vol_compression": 4
+  },
+  "posterior_rule": "powered negatives only; CANNOT_DISTINGUISH 0; re-reads 0; verdicts older than 180 d count half",
+  "policy_state": "UNCHANGED",
+  "families": {
+   "data_vintage": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "digest_forward": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "earnings_streak": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "equity_readthrough_supply_chain": {
+    "posterior": 0.1667,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "event_readthrough_corr_peer": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 2,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "event_readthrough_supply_chain": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "event_readthrough_text_link": {
+    "posterior": 0.5,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "family_unmapped": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "insider_event": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "investable_spread": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "llm_belief_elasticity": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "llm_leakage": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "llm_size_reading": {
+    "posterior": 0.1667,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "macro_readthrough_commodity": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 2,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "macro_readthrough_rates": {
+    "posterior": 0.3333,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "official_disclosure": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "price_location": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "risk_timing": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "size_attention": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "size_disagreement": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "size_event_prior": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   },
+   "vol_compression": {
+    "posterior": 0.2,
+    "weight": 1.0,
+    "quota": 4,
+    "n_generated_tonight": 0,
+    "n_deferred_tonight": 0,
+    "n_shrunk": 0
+   }
+  }
+ },
+ "spend_this_run_usd": 0.0025,
+ "wall_min": 1.8,
+ "status": "OK"
+}

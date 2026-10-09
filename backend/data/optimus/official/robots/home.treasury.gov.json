@@ -1,6 +1,6 @@
 {
  "host": "home.treasury.gov",
- "fetched_utc": "2026-10-07T03:05:43+00:00",
+ "fetched_utc": "2026-10-08T05:10:31+00:00",
  "status": 200,
  "text": "User-agent: *\nAllow: /\n\nSitemap: https://home.treasury.gov/sitemap.xml\n"
 }

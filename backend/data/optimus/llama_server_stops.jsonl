@@ -94,3 +94,4 @@
 {"utc": "2026-10-02T11:31:17+00:00", "pid": 50344, "reason": "idle", "stopped_by": "watchdog", "started_for": "lab:l2_typing", "started_utc": "2026-10-02T11:15:58+00:00"}
 {"utc": "2026-10-02T11:50:41+00:00", "pid": 213944, "reason": "idle", "stopped_by": "watchdog", "started_for": "lab:l2_typing", "started_utc": "2026-10-02T11:35:22+00:00"}
 {"utc": "2026-10-02T12:09:46+00:00", "pid": 25460, "reason": "idle", "stopped_by": "watchdog", "started_for": "lab:l2_typing", "started_utc": "2026-10-02T11:54:25+00:00"}
+{"utc": "2026-10-08T14:42:18+00:00", "pid": 239624, "reason": "operator", "stopped_by": "stop_if_owned", "started_for": null, "started_utc": "2026-10-08T14:40:59+00:00"}

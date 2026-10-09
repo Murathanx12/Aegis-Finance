@@ -1,0 +1,122 @@
+{
+ "graded_utc": "20261008T063007Z",
+ "today_utc": "2026-10-08",
+ "strategy": "MAXTAIL_BH",
+ "price_source": "yfinance",
+ "n_positions": 5,
+ "n_closed": 0,
+ "states": {
+  "OPEN": 5
+ },
+ "pnl_usd_0bps": 0,
+ "nav_usd_0bps": 1000000.0,
+ "book_ret_0bps": 0.0,
+ "nav_usd_10bps": 1000000.0,
+ "book_ret_10bps": 0.0,
+ "nav_usd_25bps": 1000000.0,
+ "book_ret_25bps": 0.0,
+ "metrics": {
+  "n_closed": 0,
+  "n_open": 5,
+  "unrealised_usd": 14615.21
+ },
+ "latest_worst_case": {
+  "sheet": "2026-10-07",
+  "nav_usd": 1000000.0,
+  "k": 5,
+  "cap_binding_usd": 200000.0,
+  "largest_admissible_gross_usd": 1000000.0,
+  "largest_admissible_gross_over_equity": 1.0,
+  "largest_at_stop_usd": {
+   "5%": -50000.0,
+   "10%": -100000.0
+  },
+  "largest_at_2sigma63_usd": -190560.1,
+  "largest_at_2sigma63_basis": "the largest sigma63 among this sheet's book names",
+  "book_n": 5,
+  "book_gross_usd": 999972.65,
+  "book_gross_over_equity": 1.0,
+  "book_at_stop_usd": {
+   "5%": -49998.63,
+   "10%": -99997.27
+  },
+  "book_at_2sigma63_usd": -171494.27,
+  "book_at_2x_trailing_move_usd": null,
+  "stop_note": "No book here carries a stop (ROT5 exits at the open after the print; MAXTAIL holds) and a gap fills through any stop: the stop rows are reference arithmetic, not a bound"
+ },
+ "rows": [
+  {
+   "pos_id": "2026-10-07:AXTI US",
+   "sheet": "2026-10-07",
+   "symbol": "AXTI",
+   "bbg": "AXTI US Equity",
+   "market": "US",
+   "qty": 2266,
+   "entry_session": "2026-10-07",
+   "entry_px": 79.77999877929688,
+   "state": "OPEN",
+   "mark_px": 79.79000091552734,
+   "mark_date": "2026-10-07",
+   "unrealised_usd": 22.66
+  },
+  {
+   "pos_id": "2026-10-07:AVBP US",
+   "sheet": "2026-10-07",
+   "symbol": "AVBP",
+   "bbg": "AVBP US Equity",
+   "market": "US",
+   "qty": 12626,
+   "entry_session": "2026-10-07",
+   "entry_px": 15.244999885559082,
+   "state": "OPEN",
+   "mark_px": 16.889999389648438,
+   "mark_date": "2026-10-07",
+   "unrealised_usd": 20769.76
+  },
+  {
+   "pos_id": "2026-10-07:AEHR US",
+   "sheet": "2026-10-07",
+   "symbol": "AEHR",
+   "bbg": "AEHR US Equity",
+   "market": "US",
+   "qty": 2067,
+   "entry_session": "2026-10-07",
+   "entry_px": 90.36000061035156,
+   "state": "OPEN",
+   "mark_px": 89.37000274658203,
+   "mark_date": "2026-10-07",
+   "unrealised_usd": -2046.33
+  },
+  {
+   "pos_id": "2026-10-07:RXT US",
+   "sheet": "2026-10-07",
+   "symbol": "RXT",
+   "bbg": "RXT US Equity",
+   "market": "US",
+   "qty": 47382,
+   "entry_session": "2026-10-07",
+   "entry_px": 3.940000057220459,
+   "state": "OPEN",
+   "mark_px": 3.8499999046325684,
+   "mark_date": "2026-10-07",
+   "unrealised_usd": -4264.39
+  },
+  {
+   "pos_id": "2026-10-07:UTZ US",
+   "sheet": "2026-10-07",
+   "symbol": "UTZ",
+   "bbg": "UTZ US Equity",
+   "market": "US",
+   "qty": 13351,
+   "entry_session": "2026-10-07",
+   "entry_px": 14.279999732971191,
+   "state": "OPEN",
+   "mark_px": 14.289999961853027,
+   "mark_date": "2026-10-07",
+   "unrealised_usd": 133.51
+  }
+ ],
+ "licence": "PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. Never evidence of skill.",
+ "benchmark": "ACWI opens (WLS proxy)",
+ "contract_sha256": "bdc7348f5ac2bdbb9dc68745430ae035254789df21109b77e987cf33f7289628"
+}

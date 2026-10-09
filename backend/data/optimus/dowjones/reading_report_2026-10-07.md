@@ -1,90 +1,93 @@
 # What the reader read on 2026-10-07
 
-Refreshed 2026-10-07T05:11:15+00:00 (hourly). Pages: **747**; articles stored: **267**; tickers covered: **57 of 128** in the universe.
+Refreshed 2026-10-07T15:14:55+00:00 (hourly). Pages: **2622**; articles stored: **767**; tickers covered: **121 of 128** in the universe.
 
 ## Speed now (page loads in the last 60 minutes)
 
-- all hosts: **93 pages/hour**
-- apnews.com: 5
-- asia.nikkei.com: 4
-- auth.asia.nikkei.com: 7
-- barrons.com: 7
-- bbc.com: 3
-- bls.gov: 1
-- cnbc.com: 9
-- finance.yahoo.com: 7
-- ft.com: 5
+- all hosts: **223 pages/hour**
+- apnews.com: 7
+- asia.nikkei.com: 12
+- auth.asia.nikkei.com: 18
+- barrons.com: 24
+- bbc.com: 9
+- bls.gov: 3
+- cnbc.com: 30
+- finance.yahoo.com: 16
+- ft.com: 11
 - home.treasury.gov: 2
-- marketwatch.com: 10
-- reddit.com: 5
-- reuters.com: 1
-- scmp.com: 1
-- sec.gov: 2
-- stocktwits.com: 6
-- wsj.com: 12
-- x.com: 6
+- marketwatch.com: 26
+- reddit.com: 4
+- scmp.com: 8
+- sec.gov: 3
+- stocktwits.com: 5
+- wsj.com: 32
+- x.com: 13
 
 ## Pages read, per site and lane
 
-- **apnews.com**: related 6, front:apnews:world 6, front:apnews:politics 5, front:apnews:business 5, front:apnews:markets 4, front:apnews:technology 3, front:apnews:home 3
-- **asia.nikkei.com**: money_sweep 12, front:nikkei:business 10, front:nikkei:economy 9, front:nikkei:home 7, front:nikkei:markets 6, robots:asia.nikkei.com 1
-- **auth.asia.nikkei.com**: money_sweep 53
-- **barrons.com**: barrons:stock 33, related 12, front:barrons:latest_news 7, front:barrons:home 6, front:barrons:streetwise 3, front:barrons:markets 3, front:barrons:commodities 2, front:barrons:video 2, front:barrons:podcasts 2, front:barrons:stock_picks 2, front:barrons:technology 2, front:barrons:up_and_down_wall_street 2, front:barrons:the_trader 2, front:barrons:economy_and_policy 1, qp:c4b152864fd9 1
-- **bbc.com**: related 16, front:bbc:business 6, front:bbc:world 4, money_sweep 1
-- **bls.gov**: front:bls:news_releases 9, robots:bls.gov 1
-- **cnbc.com**: front:cnbc:video 8, front:cnbc:politics 7, front:cnbc:technology 6, front:cnbc:economy 6, money_sweep 6, front:cnbc:markets 6, front:cnbc:home 5, related 4, front:cnbc:asia 4, qp:c4b152864fd9 1
-- **finance.yahoo.com**: front:yahoo:latest_news 18, front:yahoo:home 14, front:yahoo:stock_market 6
-- **ft.com**: front:ft:home 10, front:ft:markets 9, front:ft:world 8, front:ft:companies 8, robots:ft.com 1
-- **home.treasury.gov**: front:treasury:press_releases 10
-- **marketwatch.com**: marketwatch:stock 31, marketwatch:analyst 29, front:marketwatch:markets 13, front:marketwatch:home 4, front:marketwatch:personal_finance 3, front:marketwatch:stocks 2, front:marketwatch:earnings 2, front:marketwatch:upgrades_downgrades 2, front:marketwatch:earnings_calendar 2, front:marketwatch:economy_and_politics 2, front:marketwatch:economic_calendar 2, front:marketwatch:latest_news 2, front:marketwatch:investing 2, related 1, qp:c4b152864fd9 1
-- **reddit.com**: social:reddit.com 22
-- **reuters.com**: front:reuters:home 3, front:reuters:business 3, front:reuters:markets 3, front:reuters:world 3, front:reuters:technology 3, front:reuters:commodities 3, qp:18817e66110d 1, search:reuters 1
-- **scmp.com**: front:scmp:business 11, front:scmp:economy 7, front:scmp:china 7, front:scmp:tech 6, money_sweep 2, robots:scmp.com 1
-- **sec.gov**: front:sec:press_releases 10, robots:sec.gov 1
-- **stocktwits.com**: social:stocktwits.com 25
-- **wsj.com**: wsj:stock 42, related 37, front:wsj:latest_headlines 17, front:wsj:world 5, front:wsj:business 5, front:wsj:opinion 3, search:wsj 3, front:wsj:home 2, front:wsj:politics 2, front:wsj:markets 2, front:wsj:economy 2, front:wsj:tech 2, front:wsj:heard_on_the_street 2, front:wsj:video 2, qp:0065233483cc 2, browse 1, marketwatch:stock 1
-- **x.com**: social:x.com 13, social:x.com:handle 10
+- **apnews.com**: front:apnews:business 18, front:apnews:world 18, front:apnews:politics 14, front:apnews:home 11, front:apnews:technology 10, front:apnews:markets 10, related 9, search:apnews 2, robots:apnews.com 1
+- **asia.nikkei.com**: front:nikkei:business 34, front:nikkei:home 31, front:nikkei:economy 30, money_sweep 30, front:nikkei:markets 27, robots:asia.nikkei.com 1, related 1
+- **auth.asia.nikkei.com**: money_sweep 212
+- **barrons.com**: barrons:stock 121, related 39, front:barrons:latest_news 24, front:barrons:home 23, front:barrons:markets 16, front:barrons:stock_picks 13, front:barrons:streetwise 10, search:barrons 8, front:barrons:commodities 7, front:barrons:video 7, front:barrons:podcasts 7, front:barrons:technology 7, front:barrons:up_and_down_wall_street 7, front:barrons:the_trader 7, front:barrons:economy_and_policy 6, qp:c4b152864fd9 1
+- **bbc.com**: related 40, front:bbc:world 26, front:bbc:business 12, money_sweep 1, robots:bbc.com 1
+- **bls.gov**: front:bls:news_releases 34, robots:bls.gov 1
+- **cnbc.com**: front:cnbc:video 43, money_sweep 27, front:cnbc:home 24, front:cnbc:politics 23, front:cnbc:markets 23, front:cnbc:economy 22, front:cnbc:technology 20, front:cnbc:asia 18, search:cnbc 6, related 5, qp:c4b152864fd9 1, robots:cnbc.com 1
+- **finance.yahoo.com**: front:yahoo:latest_news 54, front:yahoo:home 41, front:yahoo:stock_market 18, robots:finance.yahoo.com 1
+- **ft.com**: front:ft:home 33, front:ft:markets 31, front:ft:companies 28, front:ft:world 27, search:ft 6, robots:ft.com 1
+- **home.treasury.gov**: front:treasury:press_releases 32, robots:home.treasury.gov 1
+- **marketwatch.com**: marketwatch:stock 121, marketwatch:analyst 107, front:marketwatch:markets 41, front:marketwatch:home 14, front:marketwatch:personal_finance 8, front:marketwatch:economy_and_politics 8, front:marketwatch:latest_news 8, search:marketwatch 8, front:marketwatch:stocks 7, front:marketwatch:earnings 7, front:marketwatch:upgrades_downgrades 7, front:marketwatch:earnings_calendar 7, front:marketwatch:economic_calendar 7, front:marketwatch:investing 7, related 6, qp:c4b152864fd9 1
+- **reddit.com**: social:reddit.com 82
+- **reuters.com**: front:reuters:home 9, front:reuters:business 9, front:reuters:markets 9, front:reuters:world 9, front:reuters:technology 9, front:reuters:commodities 9, search:reuters 7, qp:18817e66110d 1, robots:reuters.com 1
+- **scmp.com**: front:scmp:business 27, front:scmp:economy 27, front:scmp:china 24, front:scmp:tech 22, search:scmp 15, money_sweep 6, robots:scmp.com 1, related 1
+- **sec.gov**: front:sec:press_releases 33, robots:sec.gov 1
+- **stocktwits.com**: social:stocktwits.com 84
+- **wsj.com**: wsj:stock 156, related 78, front:wsj:latest_headlines 44, search:wsj 18, front:wsj:markets 18, front:wsj:business 17, front:wsj:world 16, front:wsj:economy 12, front:wsj:home 11, front:wsj:tech 10, front:wsj:politics 9, front:wsj:opinion 8, front:wsj:heard_on_the_street 8, front:wsj:video 8, browse 3, marketwatch:stock 2, qp:0065233483cc 2
+- **x.com**: social:x.com 52, social:x.com:handle 37
 
 ## Not found, blocked, walls (every page class that is not OK)
 
-- asia.nikkei.com: PAYWALL_CHECKOUT_FRAME 12
-- auth.asia.nikkei.com: PAYWALL_CHECKOUT_FRAME 53
+- apnews.com: BLANK 2
+- asia.nikkei.com: PAYWALL_CHECKOUT_FRAME 30
+- auth.asia.nikkei.com: PAYWALL_CHECKOUT_FRAME 212
+- barrons.com: BLANK 1
 - bbc.com: PAYWALL_CHECKOUT_FRAME 1
-- cnbc.com: PAYWALL_CHECKOUT_FRAME 6, ROBOTS_DISALLOWED 1
-- ft.com: PAYWALL_STUB 7
-- reuters.com: ROBOTS_DISALLOWED 20
-- scmp.com: PAYWALL_CHECKOUT_FRAME 2
-- wsj.com: NOT_FOUND 10
+- cnbc.com: PAYWALL_CHECKOUT_FRAME 27, ROBOTS_DISALLOWED 7, BLANK 1
+- finance.yahoo.com: ROBOTS_DISALLOWED 2
+- ft.com: PAYWALL_STUB 21, ROBOTS_DISALLOWED 6
+- marketwatch.com: BLANK 2
+- reuters.com: ROBOTS_DISALLOWED 62
+- scmp.com: PAYWALL_CHECKOUT_FRAME 6
+- wsj.com: NOT_FOUND 41
 
 ## Articles stored
 
-- apnews: 24
-- barrons: 29
-- bbc: 19
-- cnbc: 12
-- marketwatch: 63
-- nikkei: 3
-- scmp: 10
-- wsj: 75
-- yahoo: 32
-- by how they were reached: related 74, marketwatch:analyst 34, front:yahoo:latest_news 16, front:wsj:latest_headlines 15, front:yahoo:home 12, front:marketwatch:markets 11, search:wsj 10, search:barrons 8, search:marketwatch 7, search:apnews 5, front:barrons:latest_news 5, marketwatch:stock 5, search:scmp 5, front:apnews:world 4, front:barrons:home 4, front:cnbc:video 4, front:yahoo:stock_market 4, front:apnews:business 3, front:cnbc:politics 3, front:scmp:business 3, front:wsj:business 3, front:wsj:world 3, front:apnews:markets 2, front:apnews:politics 2, qp:c4b152864fd9 2, front:bbc:business 2, front:marketwatch:home 2, front:nikkei:business 2, wsj:stock 2, qp:0065233483cc 2, front:apnews:home 1, front:apnews:technology 1, front:barrons:markets 1, front:bbc:world 1, front:cnbc:technology 1, front:marketwatch:personal_finance 1, front:marketwatch:economic_calendar 1, front:marketwatch:earnings_calendar 1, front:nikkei:economy 1, front:scmp:economy 1, front:scmp:china 1, front:wsj:opinion 1, browse 1
+- apnews: 52
+- barrons: 96
+- bbc: 58
+- cnbc: 38
+- marketwatch: 198
+- nikkei: 10
+- scmp: 33
+- wsj: 192
+- yahoo: 90
+- by how they were reached: related 174, marketwatch:analyst 112, front:yahoo:latest_news 47, front:wsj:latest_headlines 37, front:yahoo:home 32, front:marketwatch:markets 31, front:cnbc:video 26, search:wsj 25, marketwatch:stock 21, search:scmp 20, front:barrons:latest_news 17, search:barrons 16, front:bbc:world 16, search:marketwatch 15, front:apnews:business 11, front:barrons:home 11, front:yahoo:stock_market 11, front:apnews:world 10, front:wsj:business 10, front:wsj:world 9, front:wsj:markets 8, search:apnews 7, front:barrons:stock_picks 6, front:apnews:politics 5, barrons:stock 5, front:barrons:markets 5, front:nikkei:business 5, wsj:stock 5, front:wsj:economy 5, front:apnews:home 4, front:marketwatch:home 4, front:scmp:business 4, front:scmp:china 4, front:apnews:technology 3, front:apnews:markets 3, front:cnbc:politics 3, front:marketwatch:earnings_calendar 3, front:marketwatch:upgrades_downgrades 3, front:scmp:economy 3, front:wsj:tech 3, browse 3, qp:c4b152864fd9 2, front:bbc:business 2, front:cnbc:markets 2, front:nikkei:home 2, front:wsj:politics 2, qp:0065233483cc 2, front:cnbc:home 1, front:cnbc:technology 1, front:marketwatch:personal_finance 1, front:marketwatch:economic_calendar 1, front:marketwatch:economy_and_politics 1, front:marketwatch:latest_news 1, front:nikkei:markets 1, front:nikkei:economy 1, front:scmp:tech 1, front:wsj:opinion 1, front:wsj:home 1, front:wsj:heard_on_the_street 1, front:wsj:video 1
 
 ## Social pages (source_kind = social: never an alert, never an order)
 
-- x.com: 24 pages, 14 tickers
-- reddit.com: 23 pages, 23 tickers
-- stocktwits.com: 26 pages, 26 tickers
+- x.com: 90 pages, 52 tickers
+- reddit.com: 83 pages, 72 tickers
+- stocktwits.com: 85 pages, 72 tickers
 
 ## Media items and transcripts (text the site publishes)
 
-- apnews.com: 25 items, 0 with a transcript
-- barrons.com: 2 items, 0 with a transcript
-- bbc.com: 4 items, 0 with a transcript
-- cnbc.com: 8 items, 6 with a transcript
-- finance.yahoo.com: 6 items, 3 with a transcript
-- marketwatch.com: 35 items, 1 with a transcript
-- scmp.com: 5 items, 0 with a transcript
-- wsj.com: 23 items, 4 with a transcript
+- apnews.com: 53 items, 0 with a transcript
+- barrons.com: 3 items, 1 with a transcript
+- bbc.com: 9 items, 0 with a transcript
+- cnbc.com: 33 items, 20 with a transcript
+- finance.yahoo.com: 10 items, 6 with a transcript
+- marketwatch.com: 114 items, 2 with a transcript
+- scmp.com: 21 items, 0 with a transcript
+- wsj.com: 41 items, 9 with a transcript
 
 ## Section URLs dropped (not found once)
 
@@ -97,120 +100,127 @@ Refreshed 2026-10-07T05:11:15+00:00 (hourly). Pages: **747**; articles stored: *
 ## The ten most recent headlines per site
 
 ### apnews
-- 04:49 read_next
-- 04:41 read_next
-- 04:40 read_next
-- 04:38 read_next
-- 04:36 read_next
-- 04:30 California scientist Karl Deisseroth wins a Nobel Prize, then makes his kids’ school lunches | AP News
-- 04:20 Saudi-backed Yemeni forces expel Houthis from areas around key strait, officials say | AP News
-- 04:20 Mystery surrounds US and global space weapons programs | AP News
-- 04:19 Cyberattack breaches Arizona’s court system | AP News
-- 04:10 US troops are heading to the Middle East | AP News
+- 15:11 The year in review: Influential people who have died in 2026 | AP News
+- 15:10 Rubio to call for Western democratic values in Greece speech | AP News
+- 14:31 IMF chief urges countries to curb debt, regulate AI | AP News
+- 14:30 'The Social Reckoning' review: A classic Sorkin story | AP News
+- 13:31 How the merged Paramount and Warner Bros. stacks up, by the numbers | AP News
+- 13:31 Israelis mark the 3rd anniversary of the Oct. 7 attack | AP News
+- 13:30 McDonald's sued over AI-enhanced pricing tool | AP News
+- 13:29 ABC and the FCC battle in court over free speech, jurisdiction | AP News
+- 13:22 Fighting in Yemen escalates as US-Iran tensions remain high | AP News
+- 13:21 Vietnam police arrest 12 suspected of stealing 2,700 cats for meat | AP News
 
 ### barrons
-- 04:51 read_next
-- 04:50 Search | Barron's
-- 04:49 read_next
-- 04:41 read_next
-- 04:39 read_next
-- 04:38 Search | Barron's
-- 04:37 read_next
-- 04:36 Search | Barron's
-- 04:30 Dan Ives Launches Another AI Fund Amid Conflict of Interest Questions - Barron's
-- 04:20 Stocks Just Finished a Wild Quarter. Why the Final Months Matter More. - Barron's
+- 15:12 Paramount-Warner Merger Closes: Why Disney and Netflix Are Better Stocks - Barron's
+- 15:11 SpaceX Stock Jumps 7.6%. It’s Now a Super Intelligence Company. - Barron's
+- 15:10 Bitcoin, XRP, Ethereum Drop as Cryptos Face Perfect Storm. Coinbase Stock Falls. - Barron's
+- 15:02 Winter Heating Bills Could Be Lower for Most Homes. Why High Oil Prices Don’t Matter. - Barron's
+- 14:34 Webull Stock Plummets as House Panel Flags China Ties as Security Risk: Report - Barron's
+- 14:31 Sign in or subscribe to Barron's Investor Circle - Barron's
+- 14:30 UPS Will Hire 100,000 for the Holidays. What That Means for the Stock. - Barron's
+- 14:29 Videogame Stocks Fall After Meta Announces AI Game Tool. Don’t be Spooked Yet. - Barron's
+- 14:25 Google and Unity’s New Gaming Platform Is a Threat to Roblox Stock - Barron's
+- 14:24 Veraxa Biotech Stock Is Down 96% This Year. Can Next-Gen Drug Testing Save It? - Barron's
 
 ### bbc
-- 04:09 What are the US midterms? A simple guide
-- 03:19 Why Australia chose the world's biggest political stage to reveal OpenAI hack
-- 01:22 BT agrees rescue deal to buy broadband operator TalkTalk
-- 01:21 Purchase of field in Jersey aims to expand 'green lung'
-- 01:20 Billionaire Manchester United owner Sir Jim Ratcliffe says he has lost confidence in UK
-- 01:13 Harvey Nichols stores in Leeds and Bristol to become Flannels, say reports
-- 01:12 Work starts on Great Fen wetland almost the size of Hyde Park
-- 01:12 Covid death probe told of rescue bid to get North Sea worker ashore
-- 01:11 'Concern' as historic Devizes pond still a puddle months after heatwaves
-- 01:02 A beautiful Himalayan bird is changing its voice due to human activity, research shows
+- 15:11 California pair charged with abusing at least 14 surrogate-born children
+- 15:10 They were labelled 'pervert glasses'. Will Meta's camera-free version change their image?
+- 15:10 Fortnite, Roblox, Minecraft and Steam must improve child safety, Australian report finds
+- 15:09 Ted Lasso's Hannah Waddingham to star in Gavin and Stacey's duo's The Choir
+- 15:05 Pornhub returns to Australia but only for adults with Apple devices
+- 15:01 How Karl Bushby battled English Channel doubts to reach UK soil
+- 15:01 France protests: Use of stun grenades suspended
+- 13:21 Elephants treat themselves with medicinal plants, witnesses say
+- 13:20 The Republican candidates walking a Trump tightrope
+- 13:20 Concern for jailed Iranian Nobel laureate Narges Mohammadi as brother fears she is dying
 
 ### cnbc
-- 04:09 Trillions are being ‘wasted’ on the AI boom, Arthur Hayes says
-- 04:09 Hormuz is just a ‘dry run’ if China and U.S. go to war in the Pacific, Singapore foreign minister warns
-- 04:08 Singapore foreign minister Vivian Balakrishnan on Hormuz
-- 04:07 Trump set to talk to Russia's Putin 'very soon' about plague-related death in Siberia
-- 03:50 Lightning Round: Cerebras is a good company, but stock is too expensive, says Jim Cramer
-- 01:12 Cramer: Investors' selling Microsoft stock to fund flashier AI picks won't last forever
-- 00:22 Jim Cramer talks 'what could go right' in the market
-- 00:21 The one thing I am worried about here is the valuation, says Jim Cramer on Grail
-- 00:20 Grail is a long way from being profitable, says Jim Cramer
-- 00:12 Jim Cramer’s AI stock picks: Meta, Microsoft and more
+- 15:08 SpaceX in talks with Apollo, consortium of banks to support $40 billion purchase of Nvidia GPUs
+- 15:04 Watch CNBC's full interview with Marvell CEO Matt Murphy
+- 15:03 Watch CNBC's full interview with CFR’s Rebecca Patterson
+- 15:02 CFR’s Rebecca Patterson: Few areas of AI are 'too much of a good thing'
+- 14:34 Watch CNBC’s full discussion with the ‘Squawk on the Street’ crew
+- 14:32 'Blockers: Rebels in the Deep State': Author Michael Lewis on his new book
+- 14:30 Mistral unveils AI model it says rivals best open systems from China
+- 14:25 Cramer's Mad Dash: Constellation Brands
+- 14:21 Opening Bell: October 7, 2026
+- 12:57 Morning Call Sheet: AI, crypto and market breadth drive the trading day
 
 ### marketwatch
-- 04:50 read_next
-- 04:50 read_next
-- 04:49 read_next
-- 04:49 read_next
-- 04:48 NVEC | NVE Corp. Analyst Estimates | MarketWatch
-- 04:48 HELE | Helen of Troy Ltd. Analyst Estimates | MarketWatch
-- 04:46 FORM | FormFactor Inc. Analyst Estimates | MarketWatch
-- 04:40 SERV | Serve Robotics Inc. Analyst Estimates | MarketWatch
-- 04:39 MCD | McDonald's Corp. Analyst Estimates | MarketWatch
-- 04:39 read_next
+- 15:14 ACI | Albertsons Cos. Inc. Analyst Estimates | MarketWatch
+- 15:11 What Bessent is now saying after bond yields didn’t stop rising on ‘I am the house’ remark - MarketWatch
+- 15:02 BKV Shares Lift After Securing Equipment Contract for 1,200MW Texas Power Project - MarketWatch
+- 15:01 TER | Teradyne Inc. Analyst Estimates | MarketWatch
+- 14:44 KEX | Kirby Corp. Analyst Estimates | MarketWatch
+- 14:40 TDY | Teledyne Technologies Inc. Analyst Estimates | MarketWatch
+- 14:39 OMAB | Grupo Aeroportuario del Centro Norte S.A.B. de C.V. ADR Analyst Estimates | MarketWatch
+- 14:34 PRGS | Progress Software Corp. Analyst Estimates | MarketWatch
+- 14:30 Luxembourg Plans to Launch Inaugural 10-Year Digitally Native Securities - MarketWatch
+- 14:23 Healthcare Services Buys Nexadine Hospitality for $93.5 Million - MarketWatch
 
 ### nikkei
+- 14:20 UK urged to overhaul military procurement to remove China-made parts - Nikkei Asia
+- 14:20 UK proposes duty on imports of Chinese rutile titanium dioxide - Nikkei Asia
+- 14:07 Can India turn AI disruption into job growth? - Nikkei Asia
+- 12:00 Japan's TOPIX stock index revamp: 5 things to know - Nikkei Asia
+- 11:03 Indonesia's new labor law soothes workers, worries businesses - Nikkei Asia
+- 08:37 India's opposition protests pile pressure on Modi government - Nikkei Asia
+- 06:04 Time to get off the roller coaster: South Korea markets must deliver stability - Nikkei Asia
 - 04:09 Tokyo's 37 straight days of rain drive up fresh vegetable prices - Nikkei Asia
 - 03:18 UK universities review China ties after MI5 espionage alert - Nikkei Asia
 - 00:20 My doorway to Wall Street: Stephen Schwarzman (7) - Nikkei Asia
 
 ### scmp
-- 04:41 read_next
-- 04:40 read_next
-- 04:39 read_next
-- 04:37 read_next
-- 04:36 read_next
-- 04:09 China’s Transsion, Africa’s top phone maker, targets US$500 million Hong Kong listing | South China Morning Post
-- 03:19 Hong Kong’s MPF has gained nearly HK$100b this year despite September loss: report | South China Morning Post
-- 00:22 China’s economy to slow as global growth stays solid, US think tank report says | South China Morning Post
-- 00:21 In Focus | After cordial Xi-Trump summit, could China’s US dollar pivot cause tremors? | South China Morning Post
-- 00:20 Hong Kong’s first-store appeal grows as more Japanese, South Korean and Thai brands arrive | South China Morning Post
+- 14:11 Despite rising yields and political gridlock, France not facing a debt crisis: analysts | South China Morning Post
+- 11:59 Kenya reports first Ebola case imported from DR Congo after patient dies | South China Morning Post
+- 11:57 Top Chinese AI models make 10% of OpenAI, Anthropic revenue despite high valuations: report | South China Morning Post
+- 11:57 Record China-US gap in bond yields unlikely to trigger capital flight: Marsh Investment | South China Morning Post
+- 11:56 Paramount and Warner Bros ordered to pause mega-merger | South China Morning Post
+- 11:52 Iran plans new ‘exclusion zone’ outside Strait of Hormuz after ship attacks | South China Morning Post
+- 11:22 read_next
+- 11:21 read_next
+- 10:57 read_next
+- 10:56 read_next
 
 ### wsj
-- 04:50 read_next
-- 04:50 read_next
-- 04:49 read_next
-- 04:40 read_next
-- 04:39 read_next
-- 04:37 read_next
-- 04:36 read_next
-- 04:30 A Firestorm Over Rape Allegations Threatens to Engulf Cornell - WSJ
-- 04:30 Campus Rape Allegations Are Upending the Tenure of Cornell’s President - WSJ
-- 04:29 For Many Individual Traders, Prediction Markets Are Hot—and Crypto Is Not - WSJ
+- 15:11 Meet the Swarm Chasers Sleuthing Out Rogue AI | Technology for Oct. 4 - WSJ
+- 15:10 How AI Helps a Logistics Giant Thrive During a Downturn - WSJ
+- 15:10 C.H. Robinson to Buy RXO for About $5.8 Billion - WSJ
+- 15:09 Qin Gang: The Mystery Behind China’s Missing Foreign Minister - WSJ
+- 15:08 For Years, Chinese Workers Could Retire at 50. Now, China Can’t Afford It. - WSJ
+- 15:05 Bond Yields Are Surging Around the World—but Not in China - WSJ
+- 15:04 Rosalind Eleazar Is the Charming, Riveting Star of Chris Rock’s New Movie - WSJ
+- 15:03 Weston Family Reaches $8.9 Billion Deal to Buy U.K. Pharmacy Boots - WSJ
+- 14:49 Ghost Town on the Gaza Border - WSJ
+- 14:45 The U.S. Is Not an Authoritarian State - WSJ
 
 ### yahoo
-- 04:30 Dividend stocks battered as bond yields hit 24-year highs
-- 04:29 Xeneta: US-bound container rates peak, but sharp collapse unlikely
-- 04:21 BC-BOT-Table
-- 04:20 3 High Growth Stocks To Own In October 2026
-- 04:19 ASOS stock drops 13% after hacker push notification
-- 04:18 The Costco conundrum: Packed parking lots and a falling stock
-- 04:18 Why Nvidia Stock Hit a Record, and the $575 Target a Mid Case Points To
-- 04:10 Strive Adds $169M Bitcoin in Its Biggest Buy in Four Months
-- 04:08 Late Billionaire Charlie Munger Told Value Investors to ‘Get Used To Making Less’ Because They All Want ‘A Diminished Bunch Of Opportunities’ but Warren Buffett Disagrees
-- 03:50 Why Jamie Dimon's warning about Anthropic Mythos is 'absolutely correct'
+- 15:12 Costco's Cash Pile Keeps Building. Could a Special Dividend Come in the Final 3 Months of the Year?
+- 15:11 Neogen Soars 4% as Q1 Revenue Beat and Raised Guidance Show “Encouraging Progress”
+- 15:10 Constellation Brands Q2 FY2027 earnings: profit up 21%
+- 15:05 This Wall Street Firm Just Put a $3,000 Price Target on Micron Stock
+- 15:03 Porsche cutting 9,000 jobs amid China sales collapse
+- 15:02 Chip stock could soar nearly 200%, analyst says: "If you don’t buy it, they will"
+- 14:35 Hawkish Fed triggers emerging market outflows in September
+- 14:34 Most Undervalued Chip Stocks In October 2026: Four Are Cheaper Than The S&P 500
+- 14:33 Mercedes global sales fall 6% as electric car sales hit record high
+- 14:32 Bezos quip, Ive design shaped Ferrari's Luce EV, Elkann says
 
-## Pages by reading-budget lane (2026-10-06T05:11 to 2026-10-07T05:11 UTC)
+## Pages by reading-budget lane (2026-10-06T15:14 to 2026-10-07T15:14 UTC)
 
-- browser: 3272 OK of 3400 loads
-- markets_news: 956 OK / 990 loads
-- macro_world: 607 OK / 624 loads
-- book_names: 423 OK / 460 loads
-- social: 381 OK / 382 loads
-- universe_names: 303 OK / 331 loads
-- politics_policy: 259 OK / 263 loads
-- digest_asks: 183 OK / 188 loads
-- official_releases: 145 OK / 147 loads
+- browser: 3493 OK of 3629 loads
+- markets_news: 1120 OK / 1157 loads
+- macro_world: 733 OK / 755 loads
+- social: 402 OK / 403 loads
+- book_names: 364 OK / 394 loads
+- universe_names: 312 OK / 345 loads
+- politics_policy: 222 OK / 229 loads
+- digest_asks: 166 OK / 172 loads
+- official_releases: 159 OK / 159 loads
 - overhead: 11 OK / 11 loads
 - query_planner: 4 OK / 4 loads
 
-By host: wsj.com 598/664, marketwatch.com 597/601, barrons.com 471/476, cnbc.com 225/232, scmp.com 170/173, asia.nikkei.com 158/160, ft.com 127/159, apnews.com 144/147, x.com 146/146, bbc.com 130/131, finance.yahoo.com 122/124, reddit.com 118/119, stocktwits.com 117/117, home.treasury.gov 51/51, sec.gov 49/50, bls.gov 48/49, reuters.com 1/1
+By host: wsj.com 609/668, marketwatch.com 597/605, barrons.com 475/480, cnbc.com 283/297, asia.nikkei.com 194/199, scmp.com 194/198, ft.com 159/192, finance.yahoo.com 150/152, apnews.com 143/147, x.com 140/140, reddit.com 131/132, stocktwits.com 131/131, bbc.com 124/125, bls.gov 55/55, sec.gov 54/54, home.treasury.gov 53/53, reuters.com 1/1
 
-Official API sources (requests, OK): sec_form4 931/933, sec_8k 234/235, sec_13dg 148/149, fed_rss 61/62, hkma_api 20/39, whitehouse_rss 37/38, ecb_rss 19/21, boj_rss 20/21, boe_rss 13/21, treasury_rss 20/21, fedreg 20/21, sec_13f 20/20, cftc_cot 8/9, house_ptr 6/7, finra_sv 0/4, finra_si 2/3, sec_tickers 1/1
+Official API sources (requests, OK): sec_form4 928/929, sec_8k 258/258, sec_13dg 147/147, fed_rss 67/68, whitehouse_rss 39/40, hkma_api 18/40, fedreg 27/28, ecb_rss 21/23, boj_rss 22/23, boe_rss 14/23, treasury_rss 22/23, sec_13f 22/22, cftc_cot 6/7, house_ptr 5/6, finra_sv 0/3, finra_si 1/2, sec_tickers 1/1

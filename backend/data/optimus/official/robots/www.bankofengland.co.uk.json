@@ -1,6 +1,6 @@
 {
  "host": "www.bankofengland.co.uk",
- "fetched_utc": "2026-10-07T03:05:35+00:00",
+ "fetched_utc": "2026-10-08T05:10:20+00:00",
  "status": 200,
  "text": "User-agent: *\r\nDisallow: /boeapps/database/ShowChart.asp\r\nDisallow: /boeapps/database/_iadb-FromShowColumns.asp\r\nDisallow: /boeapps/iadb\r\nDisallow: /boeapps/titan\r\nDisallow: /error\r\nDisallow: /forms\r\nDisallow: /mfsd\r\nDisallow: /search\r\nDisallow: /test-folder\r\n\r\nSitemap: https://www.bankofengland.co.uk/_api/sitemap/getsitemap\r\nHost: www.bankofengland.co.uk"
 }

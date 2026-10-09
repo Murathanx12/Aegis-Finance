@@ -1,0 +1,220 @@
+{
+ "hyp_id": "H-a6243b7de4",
+ "title": "Peer analyst downgrade spills over to thinly covered rivals",
+ "night": "2026-10-09",
+ "run_utc": "2026-10-09T03:29:54+00:00",
+ "result": {
+  "cell_type": "event_readthrough",
+  "params": {
+   "link": "corr_peer",
+   "event_type": "analyst_target_change",
+   "min_ratio": 2.0,
+   "k": 6,
+   "min_source_dv_pct": 0
+  },
+  "outcome_units": "size: log(|x_oc|/vol21) linked minus vol-matched unlinked, same date; signed: sign(source move) x (x_oc linked - x_oc controls)",
+  "n_events_candidate": 266,
+  "design": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.097068,
+    "se": 0.061759,
+    "t": 1.57,
+    "mde": 0.172925,
+    "n": 109,
+    "n_blocks": 44
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -0.000525,
+    "se": 0.001749,
+    "t": -0.3,
+    "mde": 0.004898,
+    "n": 109,
+    "n_blocks": 44
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.278766,
+    "se": 0.062881,
+    "t": 4.43,
+    "mde": 0.176068,
+    "n": 109,
+    "n_blocks": 44
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.01199,
+    "se": 0.001457,
+    "t": 8.23,
+    "mde": 0.00408,
+    "n": 109,
+    "n_blocks": 44
+   },
+   "n_events": 109,
+   "mean_links": 6.0,
+   "by_month_size_t1": {
+    "2025-01": {
+     "mean": -0.080022,
+     "n": 8
+    },
+    "2025-02": {
+     "mean": 0.368982,
+     "n": 6
+    },
+    "2025-03": {
+     "mean": 0.643082,
+     "n": 7
+    },
+    "2025-04": {
+     "mean": 0.000841,
+     "n": 3
+    },
+    "2025-05": {
+     "mean": 0.354405,
+     "n": 8
+    },
+    "2025-06": {
+     "mean": 0.100982,
+     "n": 8
+    },
+    "2025-07": {
+     "mean": -0.004084,
+     "n": 8
+    },
+    "2025-08": {
+     "mean": -0.215529,
+     "n": 9
+    },
+    "2025-09": {
+     "mean": 0.011317,
+     "n": 7
+    },
+    "2025-10": {
+     "mean": 0.032161,
+     "n": 21
+    },
+    "2025-11": {
+     "mean": 0.137519,
+     "n": 17
+    },
+    "2025-12": {
+     "mean": -0.037205,
+     "n": 7
+    }
+   },
+   "loo_month_worst_size_t1": 0.059597
+  },
+  "confirm": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.159795,
+    "se": 0.053772,
+    "t": 2.97,
+    "mde": 0.15056,
+    "n": 150,
+    "n_blocks": 34
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -3.9e-05,
+    "se": 0.002077,
+    "t": -0.02,
+    "mde": 0.005817,
+    "n": 150,
+    "n_blocks": 34
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.377966,
+    "se": 0.057588,
+    "t": 6.56,
+    "mde": 0.161245,
+    "n": 150,
+    "n_blocks": 34
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.018608,
+    "se": 0.001717,
+    "t": 10.84,
+    "mde": 0.004808,
+    "n": 150,
+    "n_blocks": 34
+   },
+   "n_events": 150,
+   "mean_links": 6.0,
+   "by_month_size_t1": {
+    "2026-01": {
+     "mean": -0.119029,
+     "n": 5
+    },
+    "2026-02": {
+     "mean": 0.146643,
+     "n": 25
+    },
+    "2026-03": {
+     "mean": 0.071629,
+     "n": 14
+    },
+    "2026-04": {
+     "mean": 0.082527,
+     "n": 24
+    },
+    "2026-05": {
+     "mean": 0.254113,
+     "n": 15
+    },
+    "2026-06": {
+     "mean": 0.18994,
+     "n": 25
+    },
+    "2026-07": {
+     "mean": 0.140252,
+     "n": 18
+    },
+    "2026-08": {
+     "mean": 0.331178,
+     "n": 17
+    },
+    "2026-09": {
+     "mean": 0.171445,
+     "n": 7
+    }
+   },
+   "loo_month_worst_size_t1": 0.137889
+  },
+  "verdict": "CONDITIONAL_POSITIVE",
+  "reason": "confirm +0.15979 t 2.97 and design +0.09707 > 0",
+  "powered": false,
+  "direction_verdict_reported": {
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00004 <= 0",
+   "powered": false
+  },
+  "examples": [
+   {
+    "t": "2026-04-10",
+    "source": "KFY",
+    "links": "MAN,RHI,TNET,EFOR,MC,ADP",
+    "size_t1": "1.4902827946803785"
+   },
+   {
+    "t": "2026-08-25",
+    "source": "PANW",
+    "links": "CRWD,FTNT,OKTA,ZS,TENB,RBRK",
+    "size_t1": "1.3490627718089154"
+   },
+   {
+    "t": "2025-10-09",
+    "source": "CSIQ",
+    "links": "JKS,SEDG,MCHPP,DQ,ENPH,RUN",
+    "size_t1": "1.3273544666718484"
+   },
+   {
+    "t": "2026-04-24",
+    "source": "SMR",
+    "links": "OKLO,NNE,LTBR,LEU,FLR,ACHR",
+    "size_t1": "1.2714048553919102"
+   },
+   {
+    "t": "2026-07-09",
+    "source": "GTLB",
+    "links": "CRM,TEAM,DT,ESTC,WDAY,HUBS",
+    "size_t1": "1.2408192991193157"
+   }
+  ]
+ }
+}

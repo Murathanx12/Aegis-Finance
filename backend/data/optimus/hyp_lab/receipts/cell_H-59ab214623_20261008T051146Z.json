@@ -1,0 +1,164 @@
+{
+ "hyp_id": "H-59ab214623",
+ "title": "Hospital read-through after insurer denial policy shift",
+ "night": "2026-10-08",
+ "run_utc": "2026-10-08T05:11:46+00:00",
+ "result": {
+  "cell_type": "event_readthrough",
+  "params": {
+   "link": "comention",
+   "event_type": "regulatory_approval",
+   "min_ratio": 2.5,
+   "k": 6,
+   "min_source_dv_pct": 0.5
+  },
+  "outcome_units": "size: log(|x_oc|/vol21) linked minus vol-matched unlinked, same date; signed: sign(source move) x (x_oc linked - x_oc controls)",
+  "n_events_candidate": 19,
+  "design": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": -0.298522,
+    "se": 0.177182,
+    "t": -1.68,
+    "mde": 0.49611,
+    "n": 5,
+    "n_blocks": 5
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": 0.000703,
+    "se": 0.003271,
+    "t": 0.22,
+    "mde": 0.00916,
+    "n": 5,
+    "n_blocks": 5
+   },
+   "size_t0_same_session (reported)": {
+    "mean": -0.238517,
+    "se": 0.590081,
+    "t": -0.4,
+    "mde": 1.652227,
+    "n": 5,
+    "n_blocks": 5
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.000625,
+    "se": 0.002213,
+    "t": 0.28,
+    "mde": 0.006197,
+    "n": 5,
+    "n_blocks": 5
+   },
+   "n_events": 5,
+   "mean_links": 1.8,
+   "by_month_size_t1": {
+    "2025-06": {
+     "mean": -0.047622,
+     "n": 2
+    },
+    "2025-07": {
+     "mean": -0.384638,
+     "n": 2
+    },
+    "2025-11": {
+     "mean": -0.628087,
+     "n": 1
+    }
+   },
+   "loo_month_worst_size_t1": -0.465788
+  },
+  "confirm": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.466953,
+    "se": 0.352214,
+    "t": 1.33,
+    "mde": 0.986198,
+    "n": 5,
+    "n_blocks": 5
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": 0.005259,
+    "se": 0.007853,
+    "t": 0.67,
+    "mde": 0.021989,
+    "n": 5,
+    "n_blocks": 5
+   },
+   "size_t0_same_session (reported)": {
+    "mean": -0.348485,
+    "se": 0.335696,
+    "t": -1.04,
+    "mde": 0.939948,
+    "n": 5,
+    "n_blocks": 5
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.009635,
+    "se": 0.005166,
+    "t": 1.87,
+    "mde": 0.014464,
+    "n": 5,
+    "n_blocks": 5
+   },
+   "n_events": 5,
+   "mean_links": 3.2,
+   "by_month_size_t1": {
+    "2026-02": {
+     "mean": -0.386324,
+     "n": 1
+    },
+    "2026-04": {
+     "mean": 0.292493,
+     "n": 1
+    },
+    "2026-07": {
+     "mean": 0.440212,
+     "n": 2
+    },
+    "2026-08": {
+     "mean": 1.548173,
+     "n": 1
+    }
+   },
+   "loo_month_worst_size_t1": 0.196648
+  },
+  "verdict": "CANNOT_DISTINGUISH",
+  "powered": false,
+  "reason": "confirm +0.46695 t 1.33; MDE 0.98620 > effect worth having 0.05000",
+  "direction_verdict_reported": {
+   "verdict": "CANNOT_DISTINGUISH",
+   "powered": false,
+   "reason": "confirm +0.00526 t 0.67; MDE 0.02199 > effect worth having 0.00200"
+  },
+  "examples": [
+   {
+    "t": "2026-08-07",
+    "source": "MRNA",
+    "links": "MRK",
+    "size_t1": "1.5481731979091449"
+   },
+   {
+    "t": "2026-07-24",
+    "source": "OKLO",
+    "links": "NVDA,MU,NXT,MRVL,OLMA",
+    "size_t1": "0.9656183100306222"
+   },
+   {
+    "t": "2025-06-20",
+    "source": "GOOG",
+    "links": "GOOGL,GO",
+    "size_t1": "0.3815030834229952"
+   },
+   {
+    "t": "2026-04-08",
+    "source": "COIN",
+    "links": "COHU,COLB,COLM",
+    "size_t1": "0.2924926287994031"
+   },
+   {
+    "t": "2026-07-02",
+    "source": "VRTX",
+    "links": "VRT",
+    "size_t1": "-0.08519502535067885"
+   }
+  ]
+ }
+}

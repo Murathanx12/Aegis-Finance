@@ -1,0 +1,77 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-10-08",
+ "declared_utc": "2026-10-08T05:11:25+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [],
+ "cells": [
+  {
+   "hyp_id": "H-59ab214623",
+   "title": "Hospital read-through after insurer denial policy shift",
+   "family": "event_readthrough_text_link",
+   "target": "co_movement",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "comention",
+    "event_type": "regulatory_approval",
+    "min_ratio": 2.5,
+    "k": 6,
+    "min_source_dv_pct": 0.5
+   },
+   "split": {},
+   "refutation": "No hospital-vs-insurer spread on the day after the policy announcement beyond XLV beta.",
+   "separation_from_beta": "Hospital basket vs insurer basket long-short; XLV beta cancels."
+  },
+  {
+   "hyp_id": "H-6fb6dcf66e",
+   "title": "Airline fuel hedge gap after crude spike",
+   "family": "macro_readthrough_commodity",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "CL=F",
+    "targets": [
+     "DAL",
+     "UAL",
+     "AAL",
+     "LUV",
+     "ALK",
+     "JBLU"
+    ],
+    "expected_sign": 1,
+    "h": 5,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "No hedge-ratio-sorted return spread among airlines in the 5 days after a crude shock beyond XAL beta.",
+   "separation_from_beta": "Within-airline long-short on hedge ratio; sector and market beta cancel."
+  },
+  {
+   "hyp_id": "H-0692690079",
+   "title": "Utility equity lag after power price spike",
+   "family": "macro_readthrough_commodity",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "basket:NRG,VST,CEG,TLN",
+    "targets": [
+     "NRG",
+     "VST",
+     "CEG",
+     "TLN",
+     "D",
+     "SO",
+     "NEE"
+    ],
+    "expected_sign": 1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "No open-to-close spread between merchant and regulated utilities on the day after a power price shock beyond XLU beta.",
+   "separation_from_beta": "Merchant vs regulated utility spread controls for rates and broad utility beta."
+  }
+ ],
+ "sha256": "327076dbc62f5ef301575124b81a643caa5791cef68acb0ac3519de4eba97dae"
+}

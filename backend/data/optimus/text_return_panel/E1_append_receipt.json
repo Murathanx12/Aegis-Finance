@@ -5,8 +5,8 @@
  "what": "corpus rows from label_source sources only, labelled at the first session OPEN strictly after the row's PIT anchor, each minus SPY, with pit_dv_21 from the 21 sessions BEFORE the entry",
  "pit_anchor_rule": "native_stamp -> published_utc (the grade asserts the provider's own stamp is trustworthy, and anchoring a BACKFILL on first_seen would date 2015 news to today); first_seen_only -> first_seen_utc (the provider's stamp is a crawl time it may move, so only our own anchor is safe)",
  "anchors_used": {
-  "published_utc": 49,
-  "first_seen_utc": 99
+  "published_utc": 52,
+  "first_seen_utc": 122
  },
  "label_sources": [
   "alpaca_benzinga_news",
@@ -53,44 +53,40 @@
   "wikipedia_pageviews",
   "greenhouse_lever_ashby_ats"
  ],
- "watermark_first_seen_utc": "2026-10-06T03:16:49+00:00",
+ "watermark_first_seen_utc": "2026-10-06T22:42:48+00:00",
  "funnel": {
-  "corpus_rows": 1439,
-  "no_ticker": 1115,
+  "corpus_rows": 971,
+  "no_ticker": 693,
   "no_symbol_bar": 1,
   "before_calendar": 0,
-  "pending_future_session": 171,
-  "no_bar_that_day": 2,
-  "dup": 8,
-  "kept": 148
+  "pending_future_session": 109,
+  "no_bar_that_day": 1,
+  "dup": 2,
+  "kept": 174
  },
  "archive": {
-  "rows_read": 1560,
-  "archive_rows_excluded": 121,
+  "rows_read": 1078,
+  "archive_rows_excluded": 107,
   "archive_rows_excluded_by_source": {
-   "dj_reader_barrons": 25,
-   "dj_reader_marketwatch": 12,
-   "dj_reader_wsj": 70,
-   "wsj_business": 1,
-   "wsj_markets": 1,
-   "wsj_tech": 2,
-   "wsj_world": 10
+   "dj_reader_barrons": 23,
+   "dj_reader_marketwatch": 13,
+   "dj_reader_wsj": 71
   },
-  "rows_without_stamp_pair": 97,
+  "rows_without_stamp_pair": 54,
   "rule": "news_registry.grade_row: pit_grade 'archive' when first_seen_utc - published_utc > 30 days; a row without both stamps cannot be proven an archive and is kept, counted in rows_without_stamp_pair"
  },
- "rows_appended": 148,
- "panel_rows_before": 350253,
+ "rows_appended": 174,
+ "panel_rows_before": 350401,
  "pit_violations": 0,
  "pit_violations_first_10": [],
  "paths": {
   "panel": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
   "bars": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet"
  },
- "wall_s": 5.11,
- "written_utc": "2026-10-06T23:51:53+00:00",
- "panel_rows_after": 350401,
+ "wall_s": 6.41,
+ "written_utc": "2026-10-08T06:29:43+00:00",
+ "panel_rows_after": 350575,
  "verdict": "APPENDED",
- "headline": "148 rows appended from 1,439 corpus rows over 20 labelling sources (121 archive rows excluded); 171 awaiting a session that has not happened yet; 0 older than the first bar; 0 PIT violations",
+ "headline": "174 rows appended from 971 corpus rows over 20 labelling sources (107 archive rows excluded); 109 awaiting a session that has not happened yet; 0 older than the first bar; 0 PIT violations",
  "next_test": "re-run after the next session's bars land to label the pending rows; when the panel passes ~20k labelled cells over 2+ months, run N3_frozen_embedding_head and C2 against the TF-IDF and shuffled controls"
 }

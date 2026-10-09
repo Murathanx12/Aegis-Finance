@@ -82,3 +82,10 @@
 {"granted_usd": 0.0, "is_available": true, "label": "cost_audit", "read_at": "2026-10-06T22:44:42.923695+00:00", "topped_up_usd": 17.87, "total_usd": 17.87}
 {"granted_usd": 0.0, "is_available": true, "label": "world_digest_20261007T043002Z_start", "read_at": "2026-10-07T04:30:02.786081+00:00", "topped_up_usd": 17.84, "total_usd": 17.84}
 {"granted_usd": 0.0, "is_available": true, "label": "world_digest_20261007T043002Z_end", "read_at": "2026-10-07T04:32:05.039296+00:00", "topped_up_usd": 17.84, "total_usd": 17.84}
+{"granted_usd": 0.0, "is_available": true, "label": "world_digest_20261007T103002Z_start", "read_at": "2026-10-07T10:30:02.606373+00:00", "topped_up_usd": 16.47, "total_usd": 16.47}
+{"granted_usd": 0.0, "is_available": true, "label": "world_digest_20261007T103002Z_end", "read_at": "2026-10-07T10:31:51.545932+00:00", "topped_up_usd": 16.47, "total_usd": 16.47}
+{"granted_usd": 0.0, "is_available": true, "label": "world_digest_20261008T055225Z_start", "read_at": "2026-10-08T05:52:26.245998+00:00", "topped_up_usd": 16.2, "total_usd": 16.2}
+{"granted_usd": 0.0, "is_available": true, "label": "world_digest_20261008T114244Z_start", "read_at": "2026-10-08T11:42:44.690974+00:00", "topped_up_usd": 14.28, "total_usd": 14.28}
+{"granted_usd": 0.0, "is_available": true, "label": "world_digest_20261008T114244Z_end", "read_at": "2026-10-08T11:45:29.191102+00:00", "topped_up_usd": 14.28, "total_usd": 14.28}
+{"granted_usd": 0.0, "is_available": true, "label": "world_digest_20261009T040216Z_start", "read_at": "2026-10-09T04:02:17.176452+00:00", "topped_up_usd": 14.06, "total_usd": 14.06}
+{"granted_usd": 0.0, "is_available": true, "label": "world_digest_20261009T040216Z_end", "read_at": "2026-10-09T04:04:07.196709+00:00", "topped_up_usd": 14.06, "total_usd": 14.06}

@@ -1,0 +1,591 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-10-08",
+ "days": [
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05",
+  "2026-07-06",
+  "2026-07-07",
+  "2026-07-08",
+  "2026-07-09",
+  "2026-07-10",
+  "2026-07-11",
+  "2026-07-12",
+  "2026-07-13",
+  "2026-07-14",
+  "2026-07-15",
+  "2026-07-16",
+  "2026-07-17",
+  "2026-07-18",
+  "2026-07-19",
+  "2026-07-20",
+  "2026-07-21",
+  "2026-07-22",
+  "2026-07-23",
+  "2026-07-24",
+  "2026-07-25",
+  "2026-07-26",
+  "2026-07-27",
+  "2026-07-28",
+  "2026-07-29",
+  "2026-07-30",
+  "2026-07-31",
+  "2026-08-01",
+  "2026-08-02",
+  "2026-08-03",
+  "2026-08-04",
+  "2026-08-05",
+  "2026-08-06",
+  "2026-08-07",
+  "2026-08-08",
+  "2026-08-09",
+  "2026-08-10",
+  "2026-08-11",
+  "2026-08-12",
+  "2026-08-13",
+  "2026-08-14",
+  "2026-08-15",
+  "2026-08-16",
+  "2026-08-17",
+  "2026-08-18",
+  "2026-08-19",
+  "2026-08-20",
+  "2026-08-21",
+  "2026-08-22",
+  "2026-08-23",
+  "2026-08-24",
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27",
+  "2026-08-28",
+  "2026-08-29",
+  "2026-08-30",
+  "2026-08-31",
+  "2026-09-01",
+  "2026-09-02",
+  "2026-09-03",
+  "2026-09-04",
+  "2026-09-05",
+  "2026-09-06",
+  "2026-09-07",
+  "2026-09-08",
+  "2026-09-09",
+  "2026-09-10",
+  "2026-09-11",
+  "2026-09-12",
+  "2026-09-13",
+  "2026-09-14",
+  "2026-09-15",
+  "2026-09-16",
+  "2026-09-17",
+  "2026-09-18",
+  "2026-09-19",
+  "2026-09-20",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23",
+  "2026-09-24",
+  "2026-09-25",
+  "2026-09-26",
+  "2026-09-27",
+  "2026-09-28",
+  "2026-09-29",
+  "2026-09-30",
+  "2026-10-01",
+  "2026-10-02",
+  "2026-10-03",
+  "2026-10-04",
+  "2026-10-05",
+  "2026-10-06",
+  "2026-10-07",
+  "2026-10-08"
+ ],
+ "started_utc": "2026-10-08T06:05:50+00:00",
+ "mw_analyst_snapshot": {
+  "n_pages": 17,
+  "n_rows_written": 17,
+  "thin": [],
+  "tickers": [
+   "ACI",
+   "SMPL",
+   "MAN",
+   "BA",
+   "INCY",
+   "HUBS",
+   "IONQ",
+   "KYTX",
+   "RGEN",
+   "HWM",
+   "META",
+   "NVT",
+   "HOOD",
+   "BN",
+   "JAZZ",
+   "BE",
+   "AAPL"
+  ]
+ },
+ "barrons_big_money_poll_index_rows": {
+  "n_articles": 0,
+  "n_rows_written": 0,
+  "per_article": []
+ },
+ "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
+ "purpose": "dowjones_claims",
+ "cap_usd": 3.0,
+ "spent_usd": 0.010497,
+ "n_llm_calls": 26,
+ "stopped": null,
+ "n_articles": 26,
+ "n_claims": 16,
+ "forecast_rows_by_source_id": {
+  "barrons_stock_picks": 6,
+  "barrons_other": 6,
+  "marketwatch_other": 6,
+  "wsj_other": 0,
+  "marketwatch_economic_calendar": 0,
+  "marketwatch_upgrades_downgrades": 0,
+  "marketwatch_earnings_calendar": 0
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "06a2a5f5ddc7220866c9",
+   "url": "https://www.barrons.com/articles/ptc-stock-schneider-electric-deal-software-7fb87b36?refsec=markets&mod=topics_markets",
+   "column": "barrons_stock_picks",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "PTC",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'PTC'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "13421d9c185119fb3956",
+   "url": "https://www.barrons.com/articles/why-less-is-more-for-corteva-stock-after-vylor-spinoff-96b2cbaa?mod=WTRN_pos1",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "VYLR",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'VYLR'"
+    }
+   ],
+   "tickers": [
+    "CTVA"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "6ac77fef3c6b4561ee83",
+   "url": "https://www.barrons.com/articles/consumer-debt-collections-lawsuits-f126d4ea?mod=RTA",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "PRAA",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'PRAA'"
+    }
+   ],
+   "tickers": [
+    "ECPG"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "79c47c7ac1c70d023363",
+   "url": "https://www.barrons.com/articles/paramount-warner-bros-merger-disney-netflix-stock-aea1305c?mod=WTRN_pos1",
+   "column": "barrons_other",
+   "status": "ALL_REFUSED",
+   "n_claims": 0,
+   "refused": [
+    {
+     "ticker": "SKYD",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'SKYD'"
+    },
+    {
+     "ticker": "DIS",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'DIS'"
+    },
+    {
+     "ticker": "NFLX",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'NFLX'"
+    }
+   ],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ccd409806a2bcf92c8b8",
+   "url": "https://www.barrons.com/articles/utilities-stocks-awaken-after-correction-xlu-etf-chart-of-day-120843bd?mod=WTRN_BIC",
+   "column": "barrons_stock_picks",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e7673de63106f475b121",
+   "url": "https://www.barrons.com/articles/software-stocks-workday-figma-gitlab-6db115f6?mod=article_inline",
+   "column": "barrons_other",
+   "status": "OK",
+   "n_claims": 6,
+   "refused": [],
+   "tickers": [
+    "NOW",
+    "FIG",
+    "WDAY",
+    "ADBE",
+    "GTLB",
+    "SNOW"
+   ],
+   "directions": [
+    "up",
+    "up",
+    "up",
+    "down",
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "478ab02d977cf10d0879",
+   "url": "https://www.marketwatch.com/story/these-10-fast-growing-ai-stocks-may-offer-the-best-bang-for-your-buck-8b6205ef?mod=article_inline",
+   "column": "marketwatch_other",
+   "status": "OK",
+   "n_claims": 4,
+   "refused": [],
+   "tickers": [
+    "NVDA",
+    "UBER",
+    "DASH",
+    "NEE"
+   ],
+   "directions": [
+    "up",
+    "up",
+    "up",
+    "up"
+   ],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": "ARCHIVE_NO_FORECAST"
+  },
+  {
+   "sha": "70fe9a89ebada0b6ccaf",
+   "url": "https://www.marketwatch.com/story/u-s-crude-oil-stockpiles-post-weekly-drop-55ade121?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "7246ada2ff8801a9e246",
+   "url": "https://www.marketwatch.com/story/benchmark-mineral-intelligence-ev-battery-metal-prices-01f3a468?mod=markets",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "993f0c5f32204de81982",
+   "url": "https://www.marketwatch.com/story/spacexs-stock-could-actually-be-a-bargain-according-to-this-metric-ac3ddf45?mod=markets",
+   "column": "marketwatch_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "AMZN",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'AMZN'"
+    },
+    {
+     "ticker": "META",
+     "why": "REFUSED_QUOTE_NOT_IN_ARTICLE"
+    },
+    {
+     "ticker": "GOOGL",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'GOOGL'"
+    }
+   ],
+   "tickers": [
+    "SPCX"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "15e28b077830d9820116",
+   "url": "https://www.wsj.com/cfo-journal/shopify-is-all-in-on-ai-and-likes-the-results-0ca87600?mod=WTRN_pos9",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "1f78705b0d5348a93884",
+   "url": "https://www.wsj.com/finance/commodities-futures/oil-little-changed-as-traders-weigh-mideast-crude-export-data-6785f907",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "549f1ca5a90c4212ab62",
+   "url": "https://www.wsj.com/business/autos/how-britain-learned-to-love-chinese-carsespecially-a-look-alike-range-rover-9440802d?mod=trending_now_news_4",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "980eb6b35833329714ae",
+   "url": "https://www.wsj.com/world/middle-east/why-the-gulf-wants-trump-to-hold-the-line-on-iran-b283a5e1?mod=series_israeliranhav",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "a5e56c348628503d9fbb",
+   "url": "https://www.wsj.com/logistics-report/supplier-issue-paused-ford-f-150-production-hitting-wholesale-deliveries-ab027b01?mod=finance_relatednews_pos2",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "dac3af7293b43d8f805a",
+   "url": "https://www.barrons.com/articles/muse-agentic-ai-retail-power-providers-stocks-6997a95b?mod=stockoverview",
+   "column": "barrons_stock_picks",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [
+    {
+     "ticker": "NRG",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'NRG'"
+    }
+   ],
+   "tickers": [
+    "CEG",
+    "VST"
+   ],
+   "directions": [
+    "up",
+    "up"
+   ],
+   "source_id": "barrons_stock_picks",
+   "forecast_rows": 6,
+   "write_status": "OK"
+  },
+  {
+   "sha": "0f3422fc6fe6494227ff",
+   "url": "https://www.marketwatch.com/economy-politics/calendar",
+   "column": "marketwatch_economic_calendar",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_economic_calendar",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "6affe01e251758063899",
+   "url": "https://www.marketwatch.com/tools/upgrades-downgrades",
+   "column": "marketwatch_upgrades_downgrades",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_upgrades_downgrades",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "6ef1fdeb0ed22075ad80",
+   "url": "https://www.marketwatch.com/story/washington-and-wall-street-chose-to-delay-paying-their-bills-and-to-put-them-on-your-tab-2eba83aa?mod=home_lead",
+   "column": "marketwatch_other",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "APO",
+     "why": "REFUSED_QUOTE_NOT_IN_ARTICLE"
+    }
+   ],
+   "tickers": [
+    "OWL"
+   ],
+   "directions": [
+    "down"
+   ],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "783d14d6852cd7f590c2",
+   "url": "https://www.marketwatch.com/tools/earnings-calendar",
+   "column": "marketwatch_earnings_calendar",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_earnings_calendar",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "e15f33629e963084dd8e",
+   "url": "https://www.marketwatch.com/story/options-traders-are-betting-on-a-dramatic-drop-in-interest-rates-141066fb?mod=home_ln",
+   "column": "marketwatch_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "marketwatch_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "04118b57d79d86ad7e9b",
+   "url": "https://www.wsj.com/world/europe/spains-leader-pins-political-survival-on-public-anger-over-housing-crisis-91438a7a?mod=world_lead_story",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "187ecfe3c96597c23cca",
+   "url": "https://www.wsj.com/podcasts/all-things-with-kim-strassel/can-republicans-energize-their-voters/4414e7b6-a139-444d-838a-24780f73f926?mod=opinion_leadstories_bullet",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "32afb83326984bfdec6a",
+   "url": "https://www.wsj.com/opinion/oct-7-zohran-mamdani-hamas-israel-gaza-2af180c3?mod=opinion_lead_pos1",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "bf7a90ebd6e2ad0314bc",
+   "url": "https://www.wsj.com/politics/elections/democrats-expect-to-win-the-house-heres-their-to-do-list-4e5976d8?mod=politics_lead_story",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "fb5b9620fa7a85bc14a4",
+   "url": "https://www.wsj.com/articles/amazon-s-ring-to-debut-249-smart-lock-d71021ad",
+   "column": "wsj_other",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_other",
+   "forecast_rows": 0,
+   "write_status": null
+  }
+ ]
+}

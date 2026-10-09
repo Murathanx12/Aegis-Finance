@@ -10,5 +10,23 @@
   "why": "INTERSTITIAL: the host showed a interstitial page; its lanes stop for the cooling period, nothing is done to pass it",
   "url": "https://x.com/search?q=%24ICHR&f=live",
   "since": "2026-10-03T07:16:38+00:00"
+ },
+ "wsj.com": {
+  "until": "2026-10-08T08:04:38+00:00",
+  "why": "BLANK_STREAK: the host showed a blank_streak page; its lanes stop for the cooling period, nothing is done to pass it",
+  "url": "https://www.wsj.com/market-data/quotes/NVO",
+  "since": "2026-10-08T07:04:38+00:00"
+ },
+ "marketwatch.com": {
+  "until": "2026-10-08T08:05:13+00:00",
+  "why": "BLANK_STREAK: the host showed a blank_streak page; its lanes stop for the cooling period, nothing is done to pass it",
+  "url": "https://www.marketwatch.com/investing/stock/now/analystestimates",
+  "since": "2026-10-08T07:05:13+00:00"
+ },
+ "barrons.com": {
+  "until": "2026-10-08T08:11:04+00:00",
+  "why": "BLANK_STREAK: the host showed a blank_streak page; its lanes stop for the cooling period, nothing is done to pass it",
+  "url": "https://www.barrons.com/market-data/stocks/pega",
+  "since": "2026-10-08T07:11:04+00:00"
  }
 }

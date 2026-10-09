@@ -1,0 +1,30 @@
+{
+ "day": "2026-10-07",
+ "buys": [
+  {
+   "symbol": "6323.T",
+   "bbg_ticker": "6323 JT Equity",
+   "react_date": "2026-10-09"
+  },
+  {
+   "symbol": "9983.T",
+   "bbg_ticker": "9983 JT Equity",
+   "react_date": "2026-10-09"
+  },
+  {
+   "symbol": "2809.T",
+   "bbg_ticker": "2809 JT Equity",
+   "react_date": "2026-10-09"
+  },
+  {
+   "symbol": "7649.T",
+   "bbg_ticker": "7649 JT Equity",
+   "react_date": "2026-10-09"
+  },
+  {
+   "symbol": "3382.T",
+   "bbg_ticker": "3382 JT Equity",
+   "react_date": "2026-10-09"
+  }
+ ]
+}

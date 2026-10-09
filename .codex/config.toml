@@ -1,0 +1,9 @@
+[mcp_servers.exa]
+url = "https://mcp.exa.ai/mcp"
+
+[mcp_servers.optimus]
+command = 'C:\Users\mrthn\optimus\.venv\Scripts\python.exe'
+args = ['C:\Users\mrthn\optimus\mcp\server.py']
+
+[mcp_servers.optimus.env]
+AEGIS_REPO = 'C:\Users\mrthn\aegis-finance'

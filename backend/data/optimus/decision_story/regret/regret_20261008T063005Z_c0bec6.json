@@ -1,0 +1,42 @@
+{
+ "receipt": "regret_ledger",
+ "schema": 2,
+ "run_id": "20261008T063005Z_c0bec6",
+ "asof": "2026-10-08",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "story_dir": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\decision_story",
+ "n_decisions_frozen": 48,
+ "live_stories": {
+  "n": 65,
+  "oldest_session": "2026-10-07",
+  "n_sessions": 1
+ },
+ "conventions": {
+  "key": "one observation per (XNYS session, ticker); n counts sessions",
+  "entry": "the reference session's open or close (story.entry_basis), a price printed after the decision",
+  "exit": "close after h sessions of exposure, same series as the entry",
+  "pnl": "w*r - (|w - w_held| + |w|) * round_trip/2 (fraction of equity)",
+  "regret": "outcome(alternative) - outcome(actual): signed, never a max",
+  "cohorts": "each scaled to PROBE_GROSS_CAP; net excess over SPY and over the same-band equal-weight panel mean; by session with t and MDE",
+  "cost_model": "xs_ranker.round_trip_bps (frozen mdv, else the panel's 60-bar median before the session); zero refused",
+  "breaks": "a window step > max(0.25 log, 8.0 sigma) is REFUSED",
+  "bars": "xs_ranker.load_bars(survivorship_free_paths(), symbols=...), cut at asof"
+ },
+ "bars_paths": [
+  "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars.parquet",
+  "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_deep\\bars_delisted.parquet"
+ ],
+ "rows": [],
+ "refused_rows": [],
+ "selection_rows": [],
+ "cohort_rows": [],
+ "pending_not_matured": 144,
+ "summary": {
+  "by_horizon": {},
+  "by_week": {},
+  "mdc": {}
+ },
+ "status": "NOTHING_MATURED",
+ "line": "nothing matured yet; 144 (decision, horizon) pairs pending; 0 refused on a basis break; live stories on disk: 65, oldest session 2026-10-07"
+}

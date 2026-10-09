@@ -5,9 +5,14 @@
  "llm_spend_usd": 0.0,
  "stage": "pnl",
  "date": "2026-10-07",
- "started_utc": "2026-10-06T23:52:03+00:00",
- "written_utc": "2026-10-06T23:52:08+00:00",
+ "started_utc": "2026-10-07T15:32:31+00:00",
+ "written_utc": "2026-10-07T15:32:37+00:00",
  "ledger_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\predictions.jsonl",
+ "ledger_backend": {
+  "backend": "legacy",
+  "legacy_path": "backend/data/optimus/predictions.jsonl",
+  "reason": "no migration marker at backend/data/optimus/ledger_manifests/forecast_ledger/MIGRATION.json: the single legacy file is the ledger"
+ },
  "population": null,
  "bars": {
   "available": true,
@@ -18,13 +23,13 @@
   "basis": "`paper_books.load_bars()` — the same local daily panel the paper books are marked against and the agency proposes against. No vendor is called: a step inside the daily pass must not depend on one being up."
  },
  "graded_by": "backend.services.forecast_grader -> ledger_resolver.resolve_due -> belief_state.resolve_one; no return arithmetic lives in the grader itself",
- "n_records": 36799,
- "newly_resolved": 74,
- "graded_before_this_run": 20106,
+ "n_records": 39156,
+ "newly_resolved": 0,
+ "graded_before_this_run": 20180,
  "graded_after_this_run": 20180,
  "resolver_status": "ok",
  "resolver_reason": null,
- "resolver_due": 77,
+ "resolver_due": 3,
  "resolver_priced_from": "fresh_fetch",
  "unpriceable": [
   {
@@ -55,7 +60,7 @@
    "status": "ok",
    "note": "AEGIS_DATA_DIR is unset, so DATA_DIR is the in-repo backend/data — the expected LOCAL configuration. This check cannot distinguish a dev box from a deployment that forgot the variable; the volume-mount contract itself is pinned by test_deploy_gate.py"
   },
-  "n_records": 36799,
+  "n_records": 39156,
   "n_void": 136,
   "n_resolved": 20180,
   "n_overdue": 3,
@@ -84,10 +89,34 @@
     "resolves_after": "2026-10-02"
    }
   ],
-  "last_written": "2026-10-06",
-  "days_quiet": 1,
+  "last_written": "2026-10-07",
+  "days_quiet": 0,
   "distinct_specialists": 55,
-  "distinct_models": 25
+  "distinct_models": 25,
+  "ledger_backend": {
+   "backend": "legacy",
+   "legacy_path": "backend/data/optimus/predictions.jsonl",
+   "reason": "no migration marker at backend/data/optimus/ledger_manifests/forecast_ledger/MIGRATION.json: the single legacy file is the ledger"
+  },
+  "legacy_frozen": {
+   "intact": null,
+   "detail": "not migrated"
+  },
+  "fold": {
+   "rows": 39156,
+   "events": 0,
+   "applied": 0,
+   "duplicate_forecast_ids": 0,
+   "duplicate_forecast_ids_sample": [],
+   "duplicate_terminal_events_ignored": 0,
+   "duplicate_terminal_events_sample": [],
+   "orphan_events_ignored": 0,
+   "orphan_events_sample": [],
+   "refused_events_ignored": 0,
+   "refused_events_sample": [],
+   "bad_lines": 0,
+   "bad_lines_sample": []
+  }
  },
  "counts_by_mechanism": {
   "paper_book_v1": {
@@ -376,7 +405,7 @@
    "NO_BAR_FOR_RESOLUTION_DATE": 0,
    "QUARANTINED": 0,
    "VOID": 15,
-   "not_yet_due": 360
+   "not_yet_due": 480
   },
   "investigator:B_tools": {
    "graded": 1176,
@@ -385,7 +414,7 @@
    "NO_BAR_FOR_RESOLUTION_DATE": 0,
    "QUARANTINED": 0,
    "VOID": 15,
-   "not_yet_due": 360
+   "not_yet_due": 480
   },
   "investigator:C_tools_only": {
    "graded": 1176,
@@ -394,7 +423,7 @@
    "NO_BAR_FOR_RESOLUTION_DATE": 0,
    "QUARANTINED": 0,
    "VOID": 15,
-   "not_yet_due": 360
+   "not_yet_due": 480
   },
   "investigator:D_all": {
    "graded": 1176,
@@ -403,7 +432,7 @@
    "NO_BAR_FOR_RESOLUTION_DATE": 0,
    "QUARANTINED": 0,
    "VOID": 15,
-   "not_yet_due": 360
+   "not_yet_due": 480
   },
   "investigator:B_anon": {
    "graded": 1176,
@@ -412,7 +441,7 @@
    "NO_BAR_FOR_RESOLUTION_DATE": 0,
    "QUARANTINED": 0,
    "VOID": 15,
-   "not_yet_due": 360
+   "not_yet_due": 480
   },
   "headline_arena_v1": {
    "graded": 0,
@@ -439,7 +468,7 @@
    "NO_BAR_FOR_RESOLUTION_DATE": 3,
    "QUARANTINED": 0,
    "VOID": 0,
-   "not_yet_due": 510
+   "not_yet_due": 730
   },
   "thesis_card_v1": {
    "graded": 0,
@@ -457,7 +486,7 @@
    "NO_BAR_FOR_RESOLUTION_DATE": 0,
    "QUARANTINED": 0,
    "VOID": 0,
-   "not_yet_due": 3414
+   "not_yet_due": 4551
   },
   "promise_v1": {
    "graded": 2,
@@ -475,7 +504,7 @@
    "NO_BAR_FOR_RESOLUTION_DATE": 0,
    "QUARANTINED": 0,
    "VOID": 0,
-   "not_yet_due": 1096
+   "not_yet_due": 1258
   },
   "news_digest_v0": {
    "graded": 25,
@@ -484,7 +513,7 @@
    "NO_BAR_FOR_RESOLUTION_DATE": 0,
    "QUARANTINED": 0,
    "VOID": 0,
-   "not_yet_due": 2048
+   "not_yet_due": 2248
   },
   "news_digest_regime_v0": {
    "graded": 0,
@@ -502,7 +531,7 @@
    "NO_BAR_FOR_RESOLUTION_DATE": 0,
    "QUARANTINED": 0,
    "VOID": 0,
-   "not_yet_due": 38
+   "not_yet_due": 76
   }
  },
  "totals": {
@@ -512,12 +541,13 @@
   "NO_BAR_FOR_RESOLUTION_DATE": 3,
   "QUARANTINED": 0,
   "VOID": 136,
-  "not_yet_due": 16480
+  "not_yet_due": 18837
  },
  "n_still_refused": 139,
  "voided_unresolvable": 0,
  "void": {
   "voided_unresolvable": 0,
+  "refused_by_ledger": 0,
   "would_void": 0,
   "by_reason": {
    "UNRESOLVABLE_NO_EQUITY_BAR": 0,
@@ -537,5 +567,5 @@
   "not_yet_due"
  ],
  "read_me_first": "Every record in the ledger is in exactly one bucket of the closed set, and every mechanism is listed even at zero — the failure this step exists to fix was 17,614 due records sitting in no bucket at all while an hourly roll-up reported the number and nothing acted on it. `graded` is read back OFF the ledger after the resolver ran, never predicted. `NO_BAR_FOR_RESOLUTION_DATE` is not a fault in the record: the local panel ends at `bars.last_bar` and those records grade on a later day. Nothing here computes a return: `belief_state.resolve_one` does, with every guard it already had.",
- "headline": "74 newly resolved; 20,180 of 36,799 records now carry an outcome; 0 voided as unresolvable this run; 3 wait on a bar, 16,480 are not yet due"
+ "headline": "0 newly resolved; 20,180 of 39,156 records now carry an outcome; 0 voided as unresolvable this run; 3 wait on a bar, 18,837 are not yet due"
 }

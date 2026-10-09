@@ -1,0 +1,57 @@
+{
+ "stamp_utc": "20261009T032716Z",
+ "read_only": true,
+ "accounts": [
+  {
+   "role": "hack1",
+   "status": "HTTP_0",
+   "flags": [
+    "ACCOUNT_READ_FAILED 0"
+   ]
+  },
+  {
+   "role": "hack2",
+   "status": "HTTP_0",
+   "flags": [
+    "ACCOUNT_READ_FAILED 0"
+   ]
+  },
+  {
+   "role": "hack3",
+   "status": "HTTP_0",
+   "flags": [
+    "ACCOUNT_READ_FAILED 0"
+   ]
+  },
+  {
+   "role": "hack4",
+   "status": "HTTP_0",
+   "flags": [
+    "ACCOUNT_READ_FAILED 0"
+   ]
+  },
+  {
+   "role": "hack5",
+   "status": "HTTP_0",
+   "flags": [
+    "ACCOUNT_READ_FAILED 0"
+   ]
+  },
+  {
+   "role": "hack6",
+   "status": "HTTP_0",
+   "flags": [
+    "ACCOUNT_READ_FAILED 0"
+   ]
+  }
+ ],
+ "website": {
+  "error": "URLError: <urlopen error [Errno 11001] getaddrinfo failed>"
+ },
+ "eod_audit": {
+  "rc": 1,
+  "tail": "hack1  ERROR              equity None stops None/None mismatches None worst $None gross/eq None  URLError: <urlopen error [Errno 11001] getaddrinfo failed>\nhack2  ERROR              equity None stops None/None mismatches None worst $None gross/eq None  URLError: <urlopen error [Errno 11001] getaddrinfo failed>\nhack3  ERROR              equity None stops None/None mismatches None worst $None gross/eq None  URLError: <urlopen error [Errno 11001] getaddrinfo failed>\nhack4  ERROR              equity None stops None/None mismatches None worst $None gross/eq None  URLError: <urlopen error [Errno 11001] getaddrinfo failed>\nhack5  ERROR              equity None stops None/None mismatches None worst $None gross/eq None  URLError: <urlopen error [Errno 11001] getaddrinfo failed>\nhack6  ERROR              equity None stops None/None mismatches None worst $None gross/eq None  URLError: <urlopen error [Errno 11001] getaddrinfo failed>\n\n6 row(s) -> C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\paper_accounts\\fleet_manager\\eod_audit\\audit.jsonl  run_id eod-20261009T032716Z-fb1be7\n",
+  "stderr_tail": ""
+ },
+ "n_flags": 2
+}

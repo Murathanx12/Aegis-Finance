@@ -1,15 +1,15 @@
 {
- "t": "2026-10-07T05:12:53+00:00",
- "rows": 49834,
+ "t": "2026-10-09T03:55:28+00:00",
+ "rows": 50046,
  "rows_by_block": {
-  "insiders": 1102,
-  "politicians": 2098,
+  "insiders": 1284,
+  "politicians": 2129,
   "short_interest": 45164,
   "positioning": 1661
  },
- "tickers": 23147,
+ "tickers": 23149,
  "public_date_min": "2023-11-17",
- "public_date_max": "2026-10-06",
+ "public_date_max": "2026-10-08",
  "schema": {
   "ticker": "issuer symbol (insiders), asset ticker (House), FINRA symbol (short interest), or the proxy ETF (futures positioning)",
   "public_date": "New York date of the rows' public time (acceptance / disclosure / FINRA schedule / CFTC release). JOIN KEY with ticker",

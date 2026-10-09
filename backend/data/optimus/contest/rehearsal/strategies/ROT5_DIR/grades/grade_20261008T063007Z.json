@@ -1,0 +1,102 @@
+{
+ "graded_utc": "20261008T063007Z",
+ "today_utc": "2026-10-08",
+ "strategy": "ROT5_DIR",
+ "price_source": "yfinance",
+ "n_positions": 5,
+ "n_closed": 0,
+ "states": {
+  "PENDING_ENTRY": 5
+ },
+ "pnl_usd_0bps": 0,
+ "nav_usd_0bps": 1000000.0,
+ "book_ret_0bps": 0.0,
+ "nav_usd_10bps": 1000000.0,
+ "book_ret_10bps": 0.0,
+ "nav_usd_25bps": 1000000.0,
+ "book_ret_25bps": 0.0,
+ "metrics": {
+  "n_closed": 0,
+  "n_open": 0,
+  "unrealised_usd": 0
+ },
+ "latest_worst_case": {
+  "sheet": "2026-10-07",
+  "nav_usd": 1000000.0,
+  "k": 5,
+  "cap_binding_usd": 200000.0,
+  "largest_admissible_gross_usd": 1000000.0,
+  "largest_admissible_gross_over_equity": 1.0,
+  "largest_at_stop_usd": {
+   "5%": -50000.0,
+   "10%": -100000.0
+  },
+  "largest_at_2sigma63_usd": -101557.12,
+  "largest_at_2sigma63_basis": "the largest sigma63 among this sheet's book names",
+  "book_n": 5,
+  "book_gross_usd": 945026.37,
+  "book_gross_over_equity": 0.945,
+  "book_at_stop_usd": {
+   "5%": -47251.32,
+   "10%": -94502.64
+  },
+  "book_at_2sigma63_usd": -46409.03,
+  "book_at_2x_trailing_move_usd": -55353.1,
+  "stop_note": "No book here carries a stop (ROT5 exits at the open after the print; MAXTAIL holds) and a gap fills through any stop: the stop rows are reference arithmetic, not a bound"
+ },
+ "rows": [
+  {
+   "pos_id": "2026-10-07:6323 JT",
+   "sheet": "2026-10-07",
+   "symbol": "6323.T",
+   "bbg": "6323 JT Equity",
+   "market": "JP",
+   "qty": 6600,
+   "entry_session": "2026-10-08",
+   "state": "PENDING_ENTRY"
+  },
+  {
+   "pos_id": "2026-10-07:9983 JT",
+   "sheet": "2026-10-07",
+   "symbol": "9983.T",
+   "bbg": "9983 JT Equity",
+   "market": "JP",
+   "qty": 300,
+   "entry_session": "2026-10-08",
+   "state": "PENDING_ENTRY"
+  },
+  {
+   "pos_id": "2026-10-07:2809 JT",
+   "sheet": "2026-10-07",
+   "symbol": "2809.T",
+   "bbg": "2809 JT Equity",
+   "market": "JP",
+   "qty": 6900,
+   "entry_session": "2026-10-08",
+   "state": "PENDING_ENTRY"
+  },
+  {
+   "pos_id": "2026-10-07:7649 JT",
+   "sheet": "2026-10-07",
+   "symbol": "7649.T",
+   "bbg": "7649 JT Equity",
+   "market": "JP",
+   "qty": 24500,
+   "entry_session": "2026-10-08",
+   "state": "PENDING_ENTRY"
+  },
+  {
+   "pos_id": "2026-10-07:3382 JT",
+   "sheet": "2026-10-07",
+   "symbol": "3382.T",
+   "bbg": "3382 JT Equity",
+   "market": "JP",
+   "qty": 15200,
+   "entry_session": "2026-10-08",
+   "state": "PENDING_ENTRY"
+  }
+ ],
+ "licence": "PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. Never evidence of skill.",
+ "benchmark": "ACWI opens (WLS proxy)",
+ "contract_sha256": "298ee42706e4a2a60548c81daa7d7146ee798e30a6e176f3a19dd84e80fc2ec4"
+}

@@ -1,0 +1,150 @@
+{
+ "hyp_id": "H-6fb6dcf66e",
+ "title": "Airline fuel hedge gap after crude spike",
+ "night": "2026-10-08",
+ "run_utc": "2026-10-08T05:11:58+00:00",
+ "result": {
+  "cell_type": "macro_lead_lag",
+  "params": {
+   "driver": "CL=F",
+   "targets": [
+    "DAL",
+    "UAL",
+    "AAL",
+    "LUV",
+    "ALK",
+    "JBLU"
+   ],
+   "expected_sign": 1,
+   "h": 5,
+   "shock_z": 2.0
+  },
+  "targets_used": [
+   "DAL",
+   "UAL",
+   "AAL",
+   "LUV",
+   "ALK",
+   "JBLU"
+  ],
+  "beta_to_spy_design": 1.331,
+  "window": "open(t+1) -> close(t+5), residual of beta x SPY; etf: targets use close t -> close t+5",
+  "design": {
+   "primary_signed_next_resid": {
+    "mean": -0.002444,
+    "se": 0.0052,
+    "t": -0.47,
+    "mde": 0.014559,
+    "n": 97,
+    "n_blocks": 44
+   },
+   "net_of_cost": -0.004444,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": -0.005625,
+    "se": 0.004461,
+    "t": -1.26,
+    "mde": 0.01249,
+    "n": 97,
+    "n_blocks": 44
+   },
+   "placebo_all_days_signed_next": {
+    "mean": 0.000554,
+    "se": 0.001154,
+    "t": 0.48,
+    "mde": 0.003231,
+    "n": 1720,
+    "n_blocks": 82
+   },
+   "n_shocks": 97,
+   "by_year": {
+    "2016": {
+     "mean": -0.015641,
+     "n": 6
+    },
+    "2017": {
+     "mean": -0.001244,
+     "n": 10
+    },
+    "2018": {
+     "mean": -0.004989,
+     "n": 20
+    },
+    "2019": {
+     "mean": -0.002362,
+     "n": 13
+    },
+    "2020": {
+     "mean": 0.017309,
+     "n": 20
+    },
+    "2021": {
+     "mean": -0.002559,
+     "n": 17
+    },
+    "2022": {
+     "mean": -0.02754,
+     "n": 11
+    }
+   },
+   "loo_year_worst": -0.007574,
+   "span": [
+    "2016-06-24",
+    "2022-07-12"
+   ]
+  },
+  "confirm": {
+   "primary_signed_next_resid": {
+    "mean": -0.00884,
+    "se": 0.006276,
+    "t": -1.41,
+    "mde": 0.017573,
+    "n": 57,
+    "n_blocks": 26
+   },
+   "net_of_cost": -0.01084,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": -0.01101,
+    "se": 0.004409,
+    "t": -2.5,
+    "mde": 0.012346,
+    "n": 57,
+    "n_blocks": 26
+   },
+   "placebo_all_days_signed_next": {
+    "mean": -0.002362,
+    "se": 0.001344,
+    "t": -1.76,
+    "mde": 0.003764,
+    "n": 938,
+    "n_blocks": 45
+   },
+   "n_shocks": 57,
+   "by_year": {
+    "2023": {
+     "mean": 0.0044,
+     "n": 13
+    },
+    "2024": {
+     "mean": -0.014774,
+     "n": 15
+    },
+    "2025": {
+     "mean": -0.006937,
+     "n": 12
+    },
+    "2026": {
+     "mean": -0.015073,
+     "n": 17
+    }
+   },
+   "loo_year_worst": -0.012752,
+   "span": [
+    "2023-01-04",
+    "2026-09-10"
+   ]
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.00884 <= 0",
+  "powered": false
+ }
+}

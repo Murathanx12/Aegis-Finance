@@ -1,0 +1,1481 @@
+{
+  "receipt": "query_planner",
+  "run_id": "20261008T050838Z-397bac",
+  "generated_utc": "2026-10-08T05:08:38+00:00",
+  "day": "2026-10-08",
+  "status": "OK",
+  "refusal": null,
+  "budget": {
+    "day": 24,
+    "run": 8,
+    "lanes": {
+      "held_names": 12,
+      "themes": 8,
+      "opportunities": 4
+    }
+  },
+  "mode": "free",
+  "agent_search": {
+    "status": "REFUSED",
+    "reason": "NO_SEARCH_PROVIDER_DECLARED: no search provider declared; owner decision (QUERY_PLANNER_SEARCH_PROVIDER)"
+  },
+  "model": null,
+  "licence": "PRODUCT_EXPERIMENT (reader input; no order, no claim)",
+  "queries": [
+    {
+      "query_id": "e12440e0090c",
+      "day": "2026-10-08",
+      "seed_lane": "held_names",
+      "seed": "DKNG",
+      "seed_key": "held_names:DKNG",
+      "tool": "gnews_rss",
+      "text": "DKNG stock",
+      "t": "2026-10-08T05:12:10+00:00",
+      "run_id": "20261008T050838Z-397bac",
+      "status": "OK",
+      "session_id": null,
+      "call_id": null,
+      "tool_calls": null,
+      "tool_fired": true,
+      "violations": [],
+      "tool_errors": [],
+      "tool_unavailable": false,
+      "cost_usd": 0.0,
+      "cost_known": true,
+      "released": null,
+      "n_urls": 18,
+      "urls": [
+        {
+          "url": "https://kalkinemedia.com",
+          "kind": "headline",
+          "headline": "Why Is DraftKings (NASDAQ:DKNG) Sliding on Event-Contract Spending?",
+          "publisher": "Kalkine Media",
+          "published": "2026-10-08T04:13:00+00:00",
+          "host": "kalkinemedia.com",
+          "verdict": "quarantined",
+          "reason": "new host (kalkinemedia.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.gurufocus.com",
+          "kind": "headline",
+          "headline": "DraftKings Inc (DKNG) Stock Down 3.0% -- Now Undervalued? GF Sco",
+          "publisher": "GuruFocus",
+          "published": "2026-10-07T22:50:47+00:00",
+          "host": "www.gurufocus.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.gurufocus.com): review before it is allowed"
+        },
+        {
+          "url": "https://uk.finance.yahoo.com",
+          "kind": "headline",
+          "headline": "DraftKings (DKNG) Suffers a Larger Drop Than the General Market: Key Insights",
+          "publisher": "Yahoo Finance UK",
+          "published": "2026-10-07T20:50:04+00:00",
+          "host": "uk.finance.yahoo.com",
+          "verdict": "no_site_search",
+          "reason": "publisher uk.finance.yahoo.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://simplywall.st",
+          "kind": "headline",
+          "headline": "Prediction Markets Push Could Be A Game Changer For DraftKings Stock (DKNG)",
+          "publisher": "Simply Wall Street",
+          "published": "2026-10-07T17:48:35+00:00",
+          "host": "simplywall.st",
+          "verdict": "quarantined",
+          "reason": "new host (simplywall.st): review before it is allowed"
+        },
+        {
+          "url": "https://www.gurufocus.com",
+          "kind": "headline",
+          "headline": "DKNG Maintained by Macquarie -- Price Target Lowered to $34",
+          "publisher": "GuruFocus",
+          "published": "2026-10-07T17:01:21+00:00",
+          "host": "www.gurufocus.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.gurufocus.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.marketbeat.com",
+          "kind": "headline",
+          "headline": "DraftKings Stacks the Deck: The $800M Prediction Pivot",
+          "publisher": "MarketBeat",
+          "published": "2026-10-07T15:30:58+00:00",
+          "host": "www.marketbeat.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.marketbeat.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.marketbeat.com",
+          "kind": "headline",
+          "headline": "Wall Street Is Betting These 3 Beaten-Down Stocks Have More Room to Run",
+          "publisher": "MarketBeat",
+          "published": "2026-10-07T14:55:57+00:00",
+          "host": "www.marketbeat.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.marketbeat.com): review before it is allowed"
+        },
+        {
+          "url": "https://kalkinemedia.com",
+          "kind": "headline",
+          "headline": "DraftKings (NASDAQ:DKNG) Rallies on Event Contract Market Push",
+          "publisher": "Kalkine Media",
+          "published": "2026-10-07T14:04:00+00:00",
+          "host": "kalkinemedia.com",
+          "verdict": "quarantined",
+          "reason": "new host (kalkinemedia.com): review before it is allowed"
+        },
+        {
+          "url": "https://finance.yahoo.com",
+          "kind": "headline",
+          "headline": "DKNG iGaming Shows Signs of Recovery: Is a Turnaround Near?",
+          "publisher": "Yahoo Finance",
+          "published": "2026-10-07T13:53:00+00:00",
+          "host": "finance.yahoo.com",
+          "verdict": "no_site_search",
+          "reason": "publisher finance.yahoo.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://www.tikr.com",
+          "kind": "headline",
+          "headline": "DraftKings Stock Surges After Bank of America Upgrades Stock to Buy",
+          "publisher": "TIKR.com",
+          "published": "2026-10-07T13:32:53+00:00",
+          "host": "www.tikr.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.tikr.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.tradingview.com",
+          "kind": "headline",
+          "headline": "Guggenheim maintains Buy rating on DraftKings, $30 price target",
+          "publisher": "TradingView",
+          "published": "2026-10-07T12:55:10+00:00",
+          "host": "www.tradingview.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.tradingview.com): review before it is allowed"
+        },
+        {
+          "url": "https://stocktwits.com",
+          "kind": "headline",
+          "headline": "DKNG Stock Slips After-Hours As Q2 Earnings Disappoint \u2014 CEO Says Predictions Growing Faster Than Expected, Ready To Win NFL Season",
+          "publisher": "Stocktwits",
+          "published": "2026-10-07T10:47:50+00:00",
+          "host": "stocktwits.com",
+          "verdict": "no_site_search",
+          "reason": "publisher stocktwits.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://www.fool.com",
+          "kind": "headline",
+          "headline": "Why Is DraftKings Stock Crashing, and is it a Buying Opportunity?",
+          "publisher": "The Motley Fool",
+          "published": "2026-10-07T08:17:03+00:00",
+          "host": "www.fool.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.fool.com): review before it is allowed"
+        },
+        {
+          "url": "https://kalkinemedia.com",
+          "kind": "headline",
+          "headline": "Can DraftKings (NASDAQ:DKNG) Turn a Super App Into Growth?",
+          "publisher": "Kalkine Media",
+          "published": "2026-10-07T07:34:00+00:00",
+          "host": "kalkinemedia.com",
+          "verdict": "quarantined",
+          "reason": "new host (kalkinemedia.com): review before it is allowed"
+        },
+        {
+          "url": "https://stocktwits.com",
+          "kind": "headline",
+          "headline": "DKNG Stock Gets A Cheer From Wall Street \u2013 Retail Sees Headlines Shifting From \u2018Prediction Market Doom To Prediction Market Boom\u2019",
+          "publisher": "Stocktwits",
+          "published": "2026-10-07T03:17:59+00:00",
+          "host": "stocktwits.com",
+          "verdict": "no_site_search",
+          "reason": "publisher stocktwits.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://stocktwits.com",
+          "kind": "headline",
+          "headline": "Michael Burry More Than Doubles Flutter Position, Calls It a \u2018Fat Pitch\u2019 After Selloff: Sells DKNG Ahead Of Q2 Report",
+          "publisher": "Stocktwits",
+          "published": "2026-10-07T02:55:48+00:00",
+          "host": "stocktwits.com",
+          "verdict": "no_site_search",
+          "reason": "publisher stocktwits.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://au.finance.yahoo.com",
+          "kind": "headline",
+          "headline": "DKNG261016C00022000 interactive stock chart | DKNG Oct 2026 22.000 call stock",
+          "publisher": "Yahoo Finance Australia",
+          "published": "2026-10-07T02:26:35+00:00",
+          "host": "au.finance.yahoo.com",
+          "verdict": "no_site_search",
+          "reason": "publisher au.finance.yahoo.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://uk.finance.yahoo.com",
+          "kind": "headline",
+          "headline": "DKNG Oct 2026 31.000 put (DKNG261002P00031000) interactive stock chart",
+          "publisher": "Yahoo Finance UK",
+          "published": "2026-10-07T01:45:52+00:00",
+          "host": "uk.finance.yahoo.com",
+          "verdict": "no_site_search",
+          "reason": "publisher uk.finance.yahoo.com is allowed but has no own search page here; the redirect is never opened"
+        }
+      ],
+      "error": null
+    },
+    {
+      "query_id": "420ec16c2781",
+      "day": "2026-10-08",
+      "seed_lane": "themes",
+      "seed": "Paramount Skydance completes Warner Bros Discovery merger",
+      "seed_key": "themes:Paramount Skydance completes Warner Bros Discovery merger",
+      "tool": "gnews_rss",
+      "text": "Paramount Skydance completes Warner Bros Discovery merger Paramount Warner merger Skydance",
+      "t": "2026-10-08T05:12:11+00:00",
+      "run_id": "20261008T050838Z-397bac",
+      "status": "OK",
+      "session_id": null,
+      "call_id": null,
+      "tool_calls": null,
+      "tool_fired": true,
+      "violations": [],
+      "tool_errors": [],
+      "tool_unavailable": false,
+      "cost_usd": 0.0,
+      "cost_known": true,
+      "released": null,
+      "n_urls": 18,
+      "urls": [
+        {
+          "url": "https://www.13wmaz.com",
+          "kind": "headline",
+          "headline": "Paramount Skydance completes Warner Bros. Discovery merger | The latest",
+          "publisher": "13WMAZ",
+          "published": "2026-10-07T21:57:00+00:00",
+          "host": "www.13wmaz.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.13wmaz.com): review before it is allowed"
+        },
+        {
+          "url": "https://dallasexpress.com",
+          "kind": "headline",
+          "headline": "Paramount Closes $110 Billion Warner Bros. Deal, Renames Company Skydance",
+          "publisher": "Dallas Express",
+          "published": "2026-10-07T20:12:10+00:00",
+          "host": "dallasexpress.com",
+          "verdict": "quarantined",
+          "reason": "new host (dallasexpress.com): review before it is allowed"
+        },
+        {
+          "url": "https://thenextweb.com",
+          "kind": "headline",
+          "headline": "Skydance closes Warner Bros deal and will merge its streaming apps",
+          "publisher": "The Next Web",
+          "published": "2026-10-07T16:39:45+00:00",
+          "host": "thenextweb.com",
+          "verdict": "quarantined",
+          "reason": "new host (thenextweb.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.streamtvinsider.com",
+          "kind": "headline",
+          "headline": "Skydance forms as Paramount completes Warner Bros. deal",
+          "publisher": "StreamTV Insider",
+          "published": "2026-10-07T15:10:00+00:00",
+          "host": "www.streamtvinsider.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.streamtvinsider.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.aljazeera.com",
+          "kind": "headline",
+          "headline": "Why Paramount-Warner merger has sparked fears about press freedom",
+          "publisher": "Al Jazeera",
+          "published": "2026-10-07T13:59:36+00:00",
+          "host": "www.aljazeera.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.aljazeera.com): review before it is allowed"
+        },
+        {
+          "url": "https://finance.yahoo.com",
+          "kind": "headline",
+          "headline": "How to Play Skydance (SKYD) Stock After the Warner Bros and Paramount Merger Finally Closes",
+          "publisher": "Yahoo Finance",
+          "published": "2026-10-07T12:47:41+00:00",
+          "host": "finance.yahoo.com",
+          "verdict": "no_site_search",
+          "reason": "publisher finance.yahoo.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://www.tvtechnology.com",
+          "kind": "headline",
+          "headline": "Skydance Completes Paramount-WBD Merger",
+          "publisher": "TVTechnology",
+          "published": "2026-10-07T12:07:30+00:00",
+          "host": "www.tvtechnology.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.tvtechnology.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.huntingdondailynews.com",
+          "kind": "headline",
+          "headline": "Paramount completes its takeover of Warner Bros to become one Hollywood giant known as Skydance",
+          "publisher": "huntingdondailynews.com",
+          "published": "2026-10-07T12:00:00+00:00",
+          "host": "www.huntingdondailynews.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.huntingdondailynews.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.theguardian.com",
+          "kind": "headline",
+          "headline": "Goodbye Warner, hello Skydance: how will the major merger really impact Hollywood?",
+          "publisher": "The Guardian",
+          "published": "2026-10-07T11:54:00+00:00",
+          "host": "www.theguardian.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.theguardian.com): review before it is allowed"
+        },
+        {
+          "url": "https://insidersport.com",
+          "kind": "headline",
+          "headline": "Paramount finalises $110bn acquisition of Warner Bros",
+          "publisher": "Insider Sport",
+          "published": "2026-10-07T10:58:12+00:00",
+          "host": "insidersport.com",
+          "verdict": "quarantined",
+          "reason": "new host (insidersport.com): review before it is allowed"
+        },
+        {
+          "url": "https://blooloop.com",
+          "kind": "headline",
+          "headline": "Paramount and Warner Bros. Discovery merge to form Skydance",
+          "publisher": "Blooloop",
+          "published": "2026-10-07T10:20:32+00:00",
+          "host": "blooloop.com",
+          "verdict": "quarantined",
+          "reason": "new host (blooloop.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.japantimes.co.jp",
+          "kind": "headline",
+          "headline": "Paramount closes Warner merger in historic Hollywood deal",
+          "publisher": "The Japan Times",
+          "published": "2026-10-07T08:45:50+00:00",
+          "host": "www.japantimes.co.jp",
+          "verdict": "quarantined",
+          "reason": "new host (www.japantimes.co.jp): review before it is allowed"
+        },
+        {
+          "url": "https://www.gamesindustry.biz",
+          "kind": "headline",
+          "headline": "Paramount and Warner Bros. Discovery operating under Skydance following completion of $111bn merger",
+          "publisher": "GamesIndustry.biz",
+          "published": "2026-10-07T08:21:09+00:00",
+          "host": "www.gamesindustry.biz",
+          "verdict": "quarantined",
+          "reason": "new host (www.gamesindustry.biz): review before it is allowed"
+        },
+        {
+          "url": "https://www.bwmarketingworld.com",
+          "kind": "headline",
+          "headline": "Paramount Skydance Completes $110 Billion Warner Bros Discovery Takeover",
+          "publisher": "BW Marketing World",
+          "published": "2026-10-07T07:56:40+00:00",
+          "host": "www.bwmarketingworld.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.bwmarketingworld.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.redsharknews.com",
+          "kind": "headline",
+          "headline": "Skydance closes Warner Bros. Discovery deal as layoffs loom",
+          "publisher": "RedShark News",
+          "published": "2026-10-07T07:29:30+00:00",
+          "host": "www.redsharknews.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.redsharknews.com): review before it is allowed"
+        },
+        {
+          "url": "https://marketingreport.one",
+          "kind": "headline",
+          "headline": "Paramount completes Warner Bros. Discovery acquisition",
+          "publisher": "https://marketingreport.one/",
+          "published": "2026-10-07T06:34:10+00:00",
+          "host": "marketingreport.one",
+          "verdict": "quarantined",
+          "reason": "new host (marketingreport.one): review before it is allowed"
+        },
+        {
+          "url": "https://celluloidjunkie.com",
+          "kind": "headline",
+          "headline": "Paramount Completes Acquisition of Warner Bros. Discovery, Creating a New Global Entertainment Leader, Skydance",
+          "publisher": "Celluloid Junkie",
+          "published": "2026-10-07T05:28:20+00:00",
+          "host": "celluloidjunkie.com",
+          "verdict": "quarantined",
+          "reason": "new host (celluloidjunkie.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.hollywoodreporterindia.com",
+          "kind": "headline",
+          "headline": "Paramount Acquires Warner Bros. Discovery To Form Global Entertainment Giant Skydance",
+          "publisher": "The Hollywood Reporter India",
+          "published": "2026-10-07T04:50:21+00:00",
+          "host": "www.hollywoodreporterindia.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.hollywoodreporterindia.com): review before it is allowed"
+        }
+      ],
+      "error": null
+    },
+    {
+      "query_id": "82a690849c72",
+      "day": "2026-10-08",
+      "seed_lane": "opportunities",
+      "seed": "NVDA",
+      "seed_key": "opportunities:NVDA",
+      "tool": "gnews_rss",
+      "text": "NVDA stock catalyst",
+      "t": "2026-10-08T05:12:12+00:00",
+      "run_id": "20261008T050838Z-397bac",
+      "status": "OK",
+      "session_id": null,
+      "call_id": null,
+      "tool_calls": null,
+      "tool_fired": true,
+      "violations": [],
+      "tool_errors": [],
+      "tool_unavailable": false,
+      "cost_usd": 0.0,
+      "cost_known": true,
+      "released": null,
+      "n_urls": 18,
+      "urls": [
+        {
+          "url": "https://stocktwits.com",
+          "kind": "headline",
+          "headline": "NVDA, INTC, MU, SNDK: Chip Stocks Rebound Despite Another Escalation In US-Iran Conflict",
+          "publisher": "Stocktwits",
+          "published": "2026-10-07T20:24:25+00:00",
+          "host": "stocktwits.com",
+          "verdict": "no_site_search",
+          "reason": "publisher stocktwits.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://www.theglobeandmail.com",
+          "kind": "headline",
+          "headline": "Why CrowdStrike Stock Slumped on Wednesday",
+          "publisher": "The Globe and Mail",
+          "published": "2026-10-07T19:51:01+00:00",
+          "host": "www.theglobeandmail.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.theglobeandmail.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.fool.com",
+          "kind": "headline",
+          "headline": "SpaceX vs. Nvidia: Which Is the Better Trillion-Dollar Artificial Intelligence (AI) Stock for 2027?",
+          "publisher": "The Motley Fool",
+          "published": "2026-10-07T15:30:00+00:00",
+          "host": "www.fool.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.fool.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.investors.com",
+          "kind": "headline",
+          "headline": "Dow Jones AI Giant Nvidia Stock Hits New High And Fresh Buy Point",
+          "publisher": "Investor's Business Daily",
+          "published": "2026-10-07T15:19:00+00:00",
+          "host": "www.investors.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.investors.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.theglobeandmail.com",
+          "kind": "headline",
+          "headline": "SpaceX vs. Nvidia: Which Is the Better Trillion-Dollar Artificial Intelligence (AI) Stock for 2027?",
+          "publisher": "The Globe and Mail",
+          "published": "2026-10-07T15:00:02+00:00",
+          "host": "www.theglobeandmail.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.theglobeandmail.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.zacks.com",
+          "kind": "headline",
+          "headline": "Uber to Expand Food Delivery Reach Via ezCater Buy: A Growth Catalyst?",
+          "publisher": "Zacks Investment Research",
+          "published": "2026-10-07T14:34:01+00:00",
+          "host": "www.zacks.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.zacks.com): review before it is allowed"
+        },
+        {
+          "url": "https://247wallst.com",
+          "kind": "headline",
+          "headline": "NVIDIA Just Hit a New Buy Point. Morgan Stanley Raised Its Target. Where Does It End?",
+          "publisher": "24/7 Wall St.",
+          "published": "2026-10-07T14:30:00+00:00",
+          "host": "247wallst.com",
+          "verdict": "quarantined",
+          "reason": "new host (247wallst.com): review before it is allowed"
+        },
+        {
+          "url": "https://markets.financialcontent.com",
+          "kind": "headline",
+          "headline": "4 Low-Priced Listed Stocks: VIVS, IGC, RIME, TOPP, With Catalysts to Watch",
+          "publisher": "FinancialContent",
+          "published": "2026-10-07T14:17:00+00:00",
+          "host": "markets.financialcontent.com",
+          "verdict": "quarantined",
+          "reason": "new host (markets.financialcontent.com): review before it is allowed"
+        },
+        {
+          "url": "https://invezz.com",
+          "kind": "headline",
+          "headline": "Nvidia stock is slowly forming a risky pattern: is a reversal coming?",
+          "publisher": "Invezz",
+          "published": "2026-10-07T13:42:53+00:00",
+          "host": "invezz.com",
+          "verdict": "quarantined",
+          "reason": "new host (invezz.com): review before it is allowed"
+        },
+        {
+          "url": "https://stocktwits.com",
+          "kind": "headline",
+          "headline": "Circle, Coinbase Stocks Slide As US Banks Step Up Stablecoin Push Ahead Of CLARITY Act",
+          "publisher": "Stocktwits",
+          "published": "2026-10-07T10:04:56+00:00",
+          "host": "stocktwits.com",
+          "verdict": "no_site_search",
+          "reason": "publisher stocktwits.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://seekingalpha.com",
+          "kind": "headline",
+          "headline": "Top 10 Q3 insider stock sellers led by Nvidia\u2019s Stevens, Jeff Bezos (NVDA:NASDAQ)",
+          "publisher": "Seeking Alpha",
+          "published": "2026-10-07T10:00:46+00:00",
+          "host": "seekingalpha.com",
+          "verdict": "quarantined",
+          "reason": "new host (seekingalpha.com): review before it is allowed"
+        },
+        {
+          "url": "https://themarketperiodical.com",
+          "kind": "headline",
+          "headline": "Nvidia Stock Hits Record as SpaceX Seeks $40B for AI Chips",
+          "publisher": "The Market Periodical",
+          "published": "2026-10-07T09:30:00+00:00",
+          "host": "themarketperiodical.com",
+          "verdict": "quarantined",
+          "reason": "new host (themarketperiodical.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.theglobeandmail.com",
+          "kind": "headline",
+          "headline": "Zacks Investment Ideas feature highlights: Nvidia's",
+          "publisher": "The Globe and Mail",
+          "published": "2026-10-07T09:11:01+00:00",
+          "host": "www.theglobeandmail.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.theglobeandmail.com): review before it is allowed"
+        },
+        {
+          "url": "https://stocktwits.com",
+          "kind": "headline",
+          "headline": "Can AMD Narrow Hardware Gap With NVDA? This Analyst Sees Advancing AI 2026 Event As Key Catalyst",
+          "publisher": "Stocktwits",
+          "published": "2026-10-07T09:04:19+00:00",
+          "host": "stocktwits.com",
+          "verdict": "no_site_search",
+          "reason": "publisher stocktwits.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://stocktwits.com",
+          "kind": "headline",
+          "headline": "Nvidia Shares Will Be Rewarding Over The Long-Term, Says Gene Munster, Citing Strong Fundamentals",
+          "publisher": "Stocktwits",
+          "published": "2026-10-07T03:27:31+00:00",
+          "host": "stocktwits.com",
+          "verdict": "no_site_search",
+          "reason": "publisher stocktwits.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://stocktwits.com",
+          "kind": "headline",
+          "headline": "NVDA Stock Rebounds But Remains Below Key Support For Second Session: Retail Sees Massive Upside",
+          "publisher": "Stocktwits",
+          "published": "2026-10-07T00:52:06+00:00",
+          "host": "stocktwits.com",
+          "verdict": "no_site_search",
+          "reason": "publisher stocktwits.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://www.insidermonkey.com",
+          "kind": "headline",
+          "headline": "Is Nvidia\u2019s (NVDA) Free Cash Flow Keeping Pace With Its Reported Earnings?",
+          "publisher": "Insider Monkey",
+          "published": "2026-10-06T23:39:04+00:00",
+          "host": "www.insidermonkey.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.insidermonkey.com): review before it is allowed"
+        },
+        {
+          "url": "https://seekingalpha.com",
+          "kind": "headline",
+          "headline": "Nvidia: The Capital Bottleneck Is Becoming A $6 Trillion Catalyst (NASDAQ:NVDA)",
+          "publisher": "Seeking Alpha",
+          "published": "2026-10-06T17:28:48+00:00",
+          "host": "seekingalpha.com",
+          "verdict": "quarantined",
+          "reason": "new host (seekingalpha.com): review before it is allowed"
+        }
+      ],
+      "error": null
+    },
+    {
+      "query_id": "0e8c06e5b7aa",
+      "day": "2026-10-08",
+      "seed_lane": "held_names",
+      "seed": "GEV",
+      "seed_key": "held_names:GEV",
+      "tool": "gnews_rss",
+      "text": "GEV stock",
+      "t": "2026-10-08T05:12:13+00:00",
+      "run_id": "20261008T050838Z-397bac",
+      "status": "OK",
+      "session_id": null,
+      "call_id": null,
+      "tool_calls": null,
+      "tool_fired": true,
+      "violations": [],
+      "tool_errors": [],
+      "tool_unavailable": false,
+      "cost_usd": 0.0,
+      "cost_known": true,
+      "released": null,
+      "n_urls": 18,
+      "urls": [
+        {
+          "url": "https://www.theglobeandmail.com",
+          "kind": "headline",
+          "headline": "Anthropic and OpenAI Are Both Headed to IPO. These 3 Industrial Stocks Win Either Way.",
+          "publisher": "The Globe and Mail",
+          "published": "2026-10-08T02:53:07+00:00",
+          "host": "www.theglobeandmail.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.theglobeandmail.com): review before it is allowed"
+        },
+        {
+          "url": "https://au.finance.yahoo.com",
+          "kind": "headline",
+          "headline": "GE Vernova (GEV) Dips More Than Broader Market: What You Should Know",
+          "publisher": "Yahoo Finance Australia",
+          "published": "2026-10-07T21:00:04+00:00",
+          "host": "au.finance.yahoo.com",
+          "verdict": "no_site_search",
+          "reason": "publisher au.finance.yahoo.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://www.theglobeandmail.com",
+          "kind": "headline",
+          "headline": "Could GE Vernova Be Your Ticket to Generational Wealth?",
+          "publisher": "The Globe and Mail",
+          "published": "2026-10-07T20:48:29+00:00",
+          "host": "www.theglobeandmail.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.theglobeandmail.com): review before it is allowed"
+        },
+        {
+          "url": "https://simplywall.st",
+          "kind": "headline",
+          "headline": "GE Vernova (GEV) Dividend News Puts Its AI Power Valuation Back In Focus",
+          "publisher": "Simply Wall Street",
+          "published": "2026-10-07T19:36:30+00:00",
+          "host": "simplywall.st",
+          "verdict": "quarantined",
+          "reason": "new host (simplywall.st): review before it is allowed"
+        },
+        {
+          "url": "https://finance.yahoo.com",
+          "kind": "headline",
+          "headline": "GE Vernova (GEV) Stock Appears Overvalued Following Its 70% Run",
+          "publisher": "Yahoo Finance",
+          "published": "2026-10-07T19:11:01+00:00",
+          "host": "finance.yahoo.com",
+          "verdict": "no_site_search",
+          "reason": "publisher finance.yahoo.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://tradersunion.com",
+          "kind": "headline",
+          "headline": "GEV slides as profit-taking by short-term shareholders triggers pullback",
+          "publisher": "Traders Union",
+          "published": "2026-10-07T19:01:34+00:00",
+          "host": "tradersunion.com",
+          "verdict": "quarantined",
+          "reason": "new host (tradersunion.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.tradingview.com",
+          "kind": "headline",
+          "headline": "GE Vernova Stocks Sink 3.4% Despite First U.S. Small-Reactor Permit",
+          "publisher": "TradingView",
+          "published": "2026-10-07T17:16:53+00:00",
+          "host": "www.tradingview.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.tradingview.com): review before it is allowed"
+        },
+        {
+          "url": "https://tradersunion.com",
+          "kind": "headline",
+          "headline": "GEV slides over 3% amid technical exhaustion and profit-taking pressure",
+          "publisher": "Traders Union",
+          "published": "2026-10-07T16:21:34+00:00",
+          "host": "tradersunion.com",
+          "verdict": "quarantined",
+          "reason": "new host (tradersunion.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.theglobeandmail.com",
+          "kind": "headline",
+          "headline": "Where Will GE Vernova Stock Be in 5 Years?",
+          "publisher": "The Globe and Mail",
+          "published": "2026-10-07T15:25:03+00:00",
+          "host": "www.theglobeandmail.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.theglobeandmail.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.tradingkey.com",
+          "kind": "headline",
+          "headline": "Ge Vernova Inc Stock (GEV) Opened Down by 3.48% on Oct 7: Drivers Behind the Movement",
+          "publisher": "TradingKey",
+          "published": "2026-10-07T13:47:18+00:00",
+          "host": "www.tradingkey.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.tradingkey.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.zacks.com",
+          "kind": "headline",
+          "headline": "GE Vernova Surges 9.4% in a Month: Hold or Fold the Stock?",
+          "publisher": "Zacks Investment Research",
+          "published": "2026-10-07T13:00:25+00:00",
+          "host": "www.zacks.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.zacks.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.insidermonkey.com",
+          "kind": "headline",
+          "headline": "Why Billionaire Ken Fisher Went Big on GE Vernova (GEV)",
+          "publisher": "Insider Monkey",
+          "published": "2026-10-07T13:00:14+00:00",
+          "host": "www.insidermonkey.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.insidermonkey.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.tradingview.com",
+          "kind": "headline",
+          "headline": "GE Vernova Surges 9.4% in a Month: Hold or Fold the Stock?",
+          "publisher": "TradingView",
+          "published": "2026-10-07T12:50:00+00:00",
+          "host": "www.tradingview.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.tradingview.com): review before it is allowed"
+        },
+        {
+          "url": "https://uk.finance.yahoo.com",
+          "kind": "headline",
+          "headline": "GEV Oct 2026 1130.000 put (GEV261002P01130000) interactive stock chart",
+          "publisher": "Yahoo Finance UK",
+          "published": "2026-10-07T12:37:18+00:00",
+          "host": "uk.finance.yahoo.com",
+          "verdict": "no_site_search",
+          "reason": "publisher uk.finance.yahoo.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://www.investors.com",
+          "kind": "headline",
+          "headline": "Futures Fall As Yields Rebound; Six New AI Buys",
+          "publisher": "Investor's Business Daily",
+          "published": "2026-10-07T12:03:00+00:00",
+          "host": "www.investors.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.investors.com): review before it is allowed"
+        },
+        {
+          "url": "https://finance.yahoo.com",
+          "kind": "headline",
+          "headline": "GE Vernova vs. Eaton: Which AI Power Stock Can Earn Its 47x or 29x Price?",
+          "publisher": "Yahoo Finance",
+          "published": "2026-10-07T02:56:00+00:00",
+          "host": "finance.yahoo.com",
+          "verdict": "no_site_search",
+          "reason": "publisher finance.yahoo.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://au.finance.yahoo.com",
+          "kind": "headline",
+          "headline": "GEV Dec 2028 1160.000 put (GEV281215P01160000) stock price, news, quote and history",
+          "publisher": "Yahoo Finance Australia",
+          "published": "2026-10-06T20:12:41+00:00",
+          "host": "au.finance.yahoo.com",
+          "verdict": "no_site_search",
+          "reason": "publisher au.finance.yahoo.com is allowed but has no own search page here; the redirect is never opened"
+        },
+        {
+          "url": "https://finance.yahoo.com",
+          "kind": "headline",
+          "headline": "Q2 Rundown: GE Vernova (NYSE:GEV) Vs Other Electrical Systems Stocks",
+          "publisher": "Yahoo Finance",
+          "published": "2026-10-06T19:12:34+00:00",
+          "host": "finance.yahoo.com",
+          "verdict": "no_site_search",
+          "reason": "publisher finance.yahoo.com is allowed but has no own search page here; the redirect is never opened"
+        }
+      ],
+      "error": null
+    },
+    {
+      "query_id": "85a391c91c50",
+      "day": "2026-10-08",
+      "seed_lane": "themes",
+      "seed": "AI safety, cyber risk, and regulatory scrutiny mount",
+      "seed_key": "themes:AI safety, cyber risk, and regulatory scrutiny mount",
+      "tool": "gnews_rss",
+      "text": "AI safety, cyber risk, and regulatory scrutiny mount AI safety cyber risk",
+      "t": "2026-10-08T05:12:14+00:00",
+      "run_id": "20261008T050838Z-397bac",
+      "status": "OK",
+      "session_id": null,
+      "call_id": null,
+      "tool_calls": null,
+      "tool_fired": true,
+      "violations": [],
+      "tool_errors": [],
+      "tool_unavailable": false,
+      "cost_usd": 0.0,
+      "cost_known": true,
+      "released": null,
+      "n_urls": 18,
+      "urls": [
+        {
+          "url": "https://news.lavx.hu",
+          "kind": "headline",
+          "headline": "Finnish regulator orders Google to halt work on two data centers",
+          "publisher": "news.lavx.hu",
+          "published": "2026-10-07T12:56:58+00:00",
+          "host": "news.lavx.hu",
+          "verdict": "quarantined",
+          "reason": "new host (news.lavx.hu): review before it is allowed"
+        },
+        {
+          "url": "https://www.techbuzz.ai",
+          "kind": "headline",
+          "headline": "OpenAI's Dots Agent Says 'I Love You' in Buggy Debut",
+          "publisher": "The Tech Buzz",
+          "published": "2026-10-07T11:35:00+00:00",
+          "host": "www.techbuzz.ai",
+          "verdict": "quarantined",
+          "reason": "new host (www.techbuzz.ai): review before it is allowed"
+        },
+        {
+          "url": "https://www.bankinfosecurity.com",
+          "kind": "headline",
+          "headline": "Connected Data Exposes Hidden Third-Party Risk",
+          "publisher": "BankInfoSecurity",
+          "published": "2026-10-06T20:32:36+00:00",
+          "host": "www.bankinfosecurity.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.bankinfosecurity.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.politico.com",
+          "kind": "headline",
+          "headline": "AI\u2019s biggest advocates think they have lost an ally",
+          "publisher": "Politico",
+          "published": "2026-10-06T10:55:00+00:00",
+          "host": "www.politico.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.politico.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.techbuzz.ai",
+          "kind": "headline",
+          "headline": "AI Labs Face Heat as NYC Council Grills Execs on Safety",
+          "publisher": "The Tech Buzz",
+          "published": "2026-10-05T20:08:00+00:00",
+          "host": "www.techbuzz.ai",
+          "verdict": "quarantined",
+          "reason": "new host (www.techbuzz.ai): review before it is allowed"
+        },
+        {
+          "url": "https://www.brennancenter.org",
+          "kind": "headline",
+          "headline": "The Conversation We Need to Have About Regulating AI",
+          "publisher": "Brennan Center for Justice",
+          "published": "2026-10-05T16:10:07+00:00",
+          "host": "www.brennancenter.org",
+          "verdict": "quarantined",
+          "reason": "new host (www.brennancenter.org): review before it is allowed"
+        },
+        {
+          "url": "https://www.storyboard18.com",
+          "kind": "headline",
+          "headline": "OpenAI faces legal and regulatory scrutiny as rogue AI agents raise accountability questions",
+          "publisher": "StoryBoard 18",
+          "published": "2026-10-05T13:03:29+00:00",
+          "host": "www.storyboard18.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.storyboard18.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.moneycontrol.com",
+          "kind": "headline",
+          "headline": "OpenAI faces growing legal risks after AI agents linked to dozens of hacks",
+          "publisher": "Moneycontrol.com",
+          "published": "2026-10-05T12:36:28+00:00",
+          "host": "www.moneycontrol.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.moneycontrol.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.firstpost.com",
+          "kind": "headline",
+          "headline": "NYC council to hear from Anthropic, OpenAI, Google and Meta on AI safety risks",
+          "publisher": "Firstpost",
+          "published": "2026-10-05T12:19:18+00:00",
+          "host": "www.firstpost.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.firstpost.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.techbuzz.ai",
+          "kind": "headline",
+          "headline": "Big AI Faces NYC Council Heat Over Safety Practices",
+          "publisher": "The Tech Buzz",
+          "published": "2026-10-05T11:06:00+00:00",
+          "host": "www.techbuzz.ai",
+          "verdict": "quarantined",
+          "reason": "new host (www.techbuzz.ai): review before it is allowed"
+        },
+        {
+          "url": "https://www.cnbc.com/search/?query=AI+researcher+warns+%27we+are+racing+to+build+and+grow+our+own+adversary%27+in+NYC+hearing&qsearchterm=AI+researcher+warns+%27we+are+racing+to+build+and+grow+our+own+adversary%27+in+NYC+hearing",
+          "kind": "search",
+          "headline": "AI researcher warns 'we are racing to build and grow our own adversary' in NYC hearing",
+          "publisher": "CNBC",
+          "published": "2026-10-05T10:41:41+00:00",
+          "host": "www.cnbc.com",
+          "site": "cnbc",
+          "verdict": "duplicate",
+          "reason": "already queued by an earlier query"
+        },
+        {
+          "url": "https://tribuneonlineng.com",
+          "kind": "headline",
+          "headline": "US: Trump unveils \u2018Super Intelligence Force\u2019 to oversee AI policy",
+          "publisher": "Tribune Online",
+          "published": "2026-10-05T09:07:55+00:00",
+          "host": "tribuneonlineng.com",
+          "verdict": "quarantined",
+          "reason": "new host (tribuneonlineng.com): review before it is allowed"
+        },
+        {
+          "url": "https://en.sedaily.com",
+          "kind": "headline",
+          "headline": "Korean Banks Still Run 50-Year-Old COBOL as AI Hacks Mount",
+          "publisher": "Seoul Economic Daily",
+          "published": "2026-10-05T08:49:53+00:00",
+          "host": "en.sedaily.com",
+          "verdict": "quarantined",
+          "reason": "new host (en.sedaily.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.techbuzz.ai",
+          "kind": "headline",
+          "headline": "Trump Unveils Super Intelligence Force for AI Safety",
+          "publisher": "The Tech Buzz",
+          "published": "2026-10-04T15:37:00+00:00",
+          "host": "www.techbuzz.ai",
+          "verdict": "quarantined",
+          "reason": "new host (www.techbuzz.ai): review before it is allowed"
+        },
+        {
+          "url": "https://www.ft.com/search?q=Legal+risks+pile+up+for+Altman+as+OpenAI+uncovers+dozens+of+hacks",
+          "kind": "search",
+          "headline": "Legal risks pile up for Altman as OpenAI uncovers dozens of hacks",
+          "publisher": "Financial Times",
+          "published": "2026-10-04T11:00:08+00:00",
+          "host": "www.ft.com",
+          "site": "ft",
+          "verdict": "admitted",
+          "reason": "allowlisted host"
+        },
+        {
+          "url": "https://www.theatlantic.com",
+          "kind": "headline",
+          "headline": "I Quit OpenAI Because Its Culture Is Broken",
+          "publisher": "The Atlantic",
+          "published": "2026-10-03T11:00:00+00:00",
+          "host": "www.theatlantic.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.theatlantic.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.newsnationnow.com",
+          "kind": "headline",
+          "headline": "In-flight attack on FlyDubai pilot puts aviation security measures under fresh scrutiny",
+          "publisher": "NewsNation",
+          "published": "2026-10-02T12:12:50+00:00",
+          "host": "www.newsnationnow.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.newsnationnow.com): review before it is allowed"
+        },
+        {
+          "url": "https://thefinancialexpress.com.bd",
+          "kind": "headline",
+          "headline": "Committee recommends lower internet costs, stronger cyber security",
+          "publisher": "The Financial Express",
+          "published": "2026-10-02T08:41:22+00:00",
+          "host": "thefinancialexpress.com.bd",
+          "verdict": "quarantined",
+          "reason": "new host (thefinancialexpress.com.bd): review before it is allowed"
+        }
+      ],
+      "error": null
+    },
+    {
+      "query_id": "7f75d0c41dcd",
+      "day": "2026-10-08",
+      "seed_lane": "opportunities",
+      "seed": "TSM",
+      "seed_key": "opportunities:TSM",
+      "tool": "edgar_fts",
+      "text": "TSM",
+      "t": "2026-10-08T05:12:17+00:00",
+      "run_id": "20261008T050838Z-397bac",
+      "status": "OK",
+      "session_id": null,
+      "call_id": null,
+      "tool_calls": null,
+      "tool_fired": true,
+      "violations": [],
+      "tool_errors": [],
+      "tool_unavailable": false,
+      "cost_usd": 0.0,
+      "cost_known": true,
+      "released": null,
+      "n_urls": 0,
+      "urls": [],
+      "error": null
+    },
+    {
+      "query_id": "89a6b8912d79",
+      "day": "2026-10-08",
+      "seed_lane": "held_names",
+      "seed": "HOOD",
+      "seed_key": "held_names:HOOD",
+      "tool": "edgar_fts",
+      "text": "HOOD",
+      "t": "2026-10-08T05:12:19+00:00",
+      "run_id": "20261008T050838Z-397bac",
+      "status": "OK",
+      "session_id": null,
+      "call_id": null,
+      "tool_calls": null,
+      "tool_fired": true,
+      "violations": [],
+      "tool_errors": [],
+      "tool_unavailable": false,
+      "cost_usd": 0.0,
+      "cost_known": true,
+      "released": null,
+      "n_urls": 0,
+      "urls": [],
+      "error": null
+    },
+    {
+      "query_id": "464404586fdf",
+      "day": "2026-10-08",
+      "seed_lane": "themes",
+      "seed": "France fiscal crisis sparks protests and bond worries",
+      "seed_key": "themes:France fiscal crisis sparks protests and bond worries",
+      "tool": "gnews_rss",
+      "text": "France fiscal crisis sparks protests and bond worries France fiscal protests",
+      "t": "2026-10-08T05:12:20+00:00",
+      "run_id": "20261008T050838Z-397bac",
+      "status": "OK",
+      "session_id": null,
+      "call_id": null,
+      "tool_calls": null,
+      "tool_fired": true,
+      "violations": [],
+      "tool_errors": [],
+      "tool_unavailable": false,
+      "cost_usd": 0.0,
+      "cost_known": true,
+      "released": null,
+      "n_urls": 12,
+      "urls": [
+        {
+          "url": "https://www.dailymail.com",
+          "kind": "headline",
+          "headline": "How France has become the 'sick man of Europe' under Macron: The president sneers at Brexit and the UK... while his country is facing an economic disaster",
+          "publisher": "Daily Mail",
+          "published": "2026-10-07T15:15:05+00:00",
+          "host": "www.dailymail.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.dailymail.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.cnbc.com/search/?query=France+is+caught+between+angry+students+and+unforgiving+bond+markets&qsearchterm=France+is+caught+between+angry+students+and+unforgiving+bond+markets",
+          "kind": "search",
+          "headline": "France is caught between angry students and unforgiving bond markets",
+          "publisher": "CNBC",
+          "published": "2026-10-07T13:23:31+00:00",
+          "host": "www.cnbc.com",
+          "site": "cnbc",
+          "verdict": "duplicate",
+          "reason": "already queued by an earlier query"
+        },
+        {
+          "url": "https://www.bankingnews.gr",
+          "kind": "headline",
+          "headline": "France: Macron overwhelmed by protests, bonds collapse \u2013 Fears of crisis contagion in the Eurozone",
+          "publisher": "Bankingnews",
+          "published": "2026-10-07T12:05:33+00:00",
+          "host": "www.bankingnews.gr",
+          "verdict": "quarantined",
+          "reason": "new host (www.bankingnews.gr): review before it is allowed"
+        },
+        {
+          "url": "https://www.news8000.com",
+          "kind": "headline",
+          "headline": "France\u2019s student protests highlight a debt crisis that could spill over to the rest of Europe",
+          "publisher": "news8000.com",
+          "published": "2026-10-07T04:00:33+00:00",
+          "host": "www.news8000.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.news8000.com): review before it is allowed"
+        },
+        {
+          "url": "https://menafn.com",
+          "kind": "headline",
+          "headline": "France\u2019s Debt Pressures Raise Fresh Concerns Over Eurozone Stability",
+          "publisher": "Menafn",
+          "published": "2026-10-06T09:53:26+00:00",
+          "host": "menafn.com",
+          "verdict": "quarantined",
+          "reason": "new host (menafn.com): review before it is allowed"
+        },
+        {
+          "url": "https://aa.com.tr",
+          "kind": "headline",
+          "headline": "France\u2019s political, financial challenges threaten eurozone with new debt crisis",
+          "publisher": "Anadolu Ajans\u0131",
+          "published": "2026-10-06T09:33:33+00:00",
+          "host": "aa.com.tr",
+          "verdict": "quarantined",
+          "reason": "new host (aa.com.tr): review before it is allowed"
+        },
+        {
+          "url": "https://www.euronews.com",
+          "kind": "headline",
+          "headline": "France's sovereign debt crisis explained: How dangerous could it be?",
+          "publisher": "Euronews.com",
+          "published": "2026-10-06T06:02:38+00:00",
+          "host": "www.euronews.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.euronews.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.ft.com/search?q=France%3A+between+the+bond+market+and+the+barricades",
+          "kind": "search",
+          "headline": "France: between the bond market and the barricades",
+          "publisher": "Financial Times",
+          "published": "2026-10-06T04:38:18+00:00",
+          "host": "www.ft.com",
+          "site": "ft",
+          "verdict": "duplicate",
+          "reason": "already queued by an earlier query"
+        },
+        {
+          "url": "https://www.axios.com",
+          "kind": "headline",
+          "headline": "Why France's debt crisis matters",
+          "publisher": "Axios",
+          "published": "2026-10-05T20:54:48+00:00",
+          "host": "www.axios.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.axios.com): review before it is allowed"
+        },
+        {
+          "url": "https://www.businessinsider.com",
+          "kind": "headline",
+          "headline": "France's brutal bond sell-off is sparking fears of wider financial contagion",
+          "publisher": "Business Insider",
+          "published": "2026-10-05T16:10:00+00:00",
+          "host": "www.businessinsider.com",
+          "verdict": "quarantined",
+          "reason": "new host (www.businessinsider.com): review before it is allowed"
+        },
+        {
+          "url": "https://demokratis.co.id",
+          "kind": "headline",
+          "headline": "ECB Unlikely to Intervene in France's Soaring Bond Market",
+          "publisher": "Demokratis.co.id",
+          "published": "2026-10-03T01:46:50+00:00",
+          "host": "demokratis.co.id",
+          "verdict": "quarantined",
+          "reason": "new host (demokratis.co.id): review before it is allowed"
+        },
+        {
+          "url": "https://en.bloomingbit.io",
+          "kind": "headline",
+          "headline": "France Becomes Global Economy\u2019s Weak Link as Fiscal, Political Turmoil Sparks Bond Selloff",
+          "publisher": "bloomingbit",
+          "published": "2026-10-02T11:14:28+00:00",
+          "host": "en.bloomingbit.io",
+          "verdict": "quarantined",
+          "reason": "new host (en.bloomingbit.io): review before it is allowed"
+        }
+      ],
+      "error": null
+    }
+  ],
+  "totals": {
+    "queries": 8,
+    "tool_fired": 8,
+    "tool_unverified": 0,
+    "tool_unavailable": 0,
+    "urls": 102,
+    "admitted": 1,
+    "quarantined": 79,
+    "refused": 0,
+    "duplicate": 3,
+    "already_read": 0,
+    "deferred": 0,
+    "no_site_search": 19,
+    "cost_usd": 0.0,
+    "tool_calls_web_search": 0,
+    "tool_calls_x_search": 0,
+    "by_seed_lane": {
+      "held_names": {
+        "queries": 3,
+        "tool_fired": 3,
+        "tool_unverified": 0,
+        "tool_unavailable": 0,
+        "urls": 36,
+        "admitted": 0,
+        "quarantined": 23,
+        "refused": 0,
+        "duplicate": 0,
+        "already_read": 0,
+        "deferred": 0,
+        "no_site_search": 13,
+        "cost_usd": 0.0
+      },
+      "themes": {
+        "queries": 3,
+        "tool_fired": 3,
+        "tool_unverified": 0,
+        "tool_unavailable": 0,
+        "urls": 48,
+        "admitted": 1,
+        "quarantined": 43,
+        "refused": 0,
+        "duplicate": 3,
+        "already_read": 0,
+        "deferred": 0,
+        "no_site_search": 1,
+        "cost_usd": 0.0
+      },
+      "opportunities": {
+        "queries": 2,
+        "tool_fired": 2,
+        "tool_unverified": 0,
+        "tool_unavailable": 0,
+        "urls": 18,
+        "admitted": 0,
+        "quarantined": 13,
+        "refused": 0,
+        "duplicate": 0,
+        "already_read": 0,
+        "deferred": 0,
+        "no_site_search": 5,
+        "cost_usd": 0.0
+      }
+    },
+    "by_tool": {
+      "gnews_rss": {
+        "queries": 6,
+        "tool_fired": 6,
+        "tool_unverified": 0,
+        "tool_unavailable": 0,
+        "urls": 102,
+        "admitted": 1,
+        "quarantined": 79,
+        "refused": 0,
+        "duplicate": 3,
+        "already_read": 0,
+        "deferred": 0,
+        "no_site_search": 19,
+        "cost_usd": 0.0
+      },
+      "edgar_fts": {
+        "queries": 2,
+        "tool_fired": 2,
+        "tool_unverified": 0,
+        "tool_unavailable": 0,
+        "urls": 0,
+        "admitted": 0,
+        "quarantined": 0,
+        "refused": 0,
+        "duplicate": 0,
+        "already_read": 0,
+        "deferred": 0,
+        "no_site_search": 0,
+        "cost_usd": 0.0
+      }
+    }
+  },
+  "seeds": {
+    "held_names": 88,
+    "themes": 10,
+    "opportunities": 30
+  },
+  "planned": 8,
+  "spent_usd": 0.0,
+  "yield": {
+    "window_h": 24.0,
+    "since_utc": "2026-10-07T05:08:38+00:00",
+    "zero_kind": "ADMITTED_NOT_YET_READ",
+    "queries": {
+      "queries": 24,
+      "tool_fired": 24,
+      "tool_unavailable": 0,
+      "urls": 297,
+      "admitted": 1,
+      "quarantined": 230,
+      "refused": 2,
+      "duplicate": 7,
+      "already_read": 0,
+      "deferred": 0,
+      "no_site_search": 57,
+      "cost_usd": 0.0,
+      "share_already_read": 0.0
+    },
+    "planner": {
+      "pages_read": 0,
+      "pages_ok": 0,
+      "claims": 0,
+      "forecast_rows": 0,
+      "by_seed_lane": {},
+      "by_tool": {},
+      "by_host": {}
+    },
+    "non_planner": {
+      "pages_read": 1970,
+      "pages_ok": 1648,
+      "claims": 45,
+      "forecast_rows": 126,
+      "by_host_top": {
+        "wsj.com": {
+          "pages_read": 304,
+          "pages_ok": 273,
+          "claims": 5,
+          "forecast_rows": 15
+        },
+        "marketwatch.com": {
+          "pages_read": 279,
+          "pages_ok": 277,
+          "claims": 6,
+          "forecast_rows": 18
+        },
+        "barrons.com": {
+          "pages_read": 236,
+          "pages_ok": 235,
+          "claims": 34,
+          "forecast_rows": 93
+        },
+        "buy-ap.piano.io": {
+          "pages_read": 175,
+          "pages_ok": 0,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "cnbc.com": {
+          "pages_read": 142,
+          "pages_ok": 135,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "ft.com": {
+          "pages_read": 95,
+          "pages_ok": 75,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "asia.nikkei.com": {
+          "pages_read": 95,
+          "pages_ok": 95,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "scmp.com": {
+          "pages_read": 89,
+          "pages_ok": 89,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "finance.yahoo.com": {
+          "pages_read": 81,
+          "pages_ok": 79,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "x.com": {
+          "pages_read": 69,
+          "pages_ok": 69,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "apnews.com": {
+          "pages_read": 67,
+          "pages_ok": 65,
+          "claims": 0,
+          "forecast_rows": 0
+        },
+        "bbc.com": {
+          "pages_read": 61,
+          "pages_ok": 61,
+          "claims": 0,
+          "forecast_rows": 0
+        }
+      }
+    },
+    "claims_per_page_same_hosts": {
+      "hosts": [],
+      "planner_pages": 0,
+      "planner_claims": 0,
+      "planner_claims_per_page": null,
+      "fixed_pages": 0,
+      "fixed_claims": 0,
+      "fixed_claims_per_page": null,
+      "pages_before_query_excluded": 0,
+      "pages_already_read_excluded": 0
+    },
+    "forecast_rows_unknown": false,
+    "line": "query_planner 24h: ADMITTED_NOT_YET_READ -- 24 queries (24 answered, 0 tool unavailable), 297 URLs, 1 admitted / 230 quarantined / 2 refused / 0 already read (share 0.0); planner pages 0 -> claims 0 -> forecasts 0; non-planner pages 1970 -> claims 45 -> forecasts 126; claims/page same hosts planner None vs fixed None; spend $0.0000"
+  }
+}

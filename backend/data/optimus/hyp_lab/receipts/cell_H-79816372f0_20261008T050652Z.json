@@ -1,0 +1,208 @@
+{
+ "hyp_id": "H-79816372f0",
+ "title": "Analyst target hike spills to co-mentioned peers",
+ "night": "2026-10-08",
+ "run_utc": "2026-10-08T05:06:52+00:00",
+ "result": {
+  "cell_type": "event_readthrough",
+  "params": {
+   "link": "comention",
+   "event_type": "analyst_target_change",
+   "min_ratio": 2.0,
+   "k": 6,
+   "min_source_dv_pct": 0.5
+  },
+  "outcome_units": "size: log(|x_oc|/vol21) linked minus vol-matched unlinked, same date; signed: sign(source move) x (x_oc linked - x_oc controls)",
+  "n_events_candidate": 117,
+  "design": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": -0.224077,
+    "se": 0.218625,
+    "t": -1.02,
+    "mde": 0.612149,
+    "n": 21,
+    "n_blocks": 18
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -0.001163,
+    "se": 0.003201,
+    "t": -0.36,
+    "mde": 0.008962,
+    "n": 21,
+    "n_blocks": 18
+   },
+   "size_t0_same_session (reported)": {
+    "mean": -0.079937,
+    "se": 0.272599,
+    "t": -0.29,
+    "mde": 0.763278,
+    "n": 21,
+    "n_blocks": 18
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.002473,
+    "se": 0.003614,
+    "t": 0.68,
+    "mde": 0.01012,
+    "n": 21,
+    "n_blocks": 18
+   },
+   "n_events": 21,
+   "mean_links": 2.67,
+   "by_month_size_t1": {
+    "2025-02": {
+     "mean": 1.02269,
+     "n": 1
+    },
+    "2025-04": {
+     "mean": 0.446474,
+     "n": 1
+    },
+    "2025-05": {
+     "mean": -0.033935,
+     "n": 3
+    },
+    "2025-06": {
+     "mean": 0.124499,
+     "n": 1
+    },
+    "2025-08": {
+     "mean": 0.507251,
+     "n": 1
+    },
+    "2025-09": {
+     "mean": -0.653788,
+     "n": 3
+    },
+    "2025-10": {
+     "mean": -0.573252,
+     "n": 3
+    },
+    "2025-11": {
+     "mean": -0.096384,
+     "n": 5
+    },
+    "2025-12": {
+     "mean": -0.847227,
+     "n": 3
+    }
+   },
+   "loo_month_worst_size_t1": -0.286415
+  },
+  "confirm": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.012032,
+    "se": 0.111433,
+    "t": 0.11,
+    "mde": 0.312014,
+    "n": 50,
+    "n_blocks": 25
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": 0.004696,
+    "se": 0.004535,
+    "t": 1.04,
+    "mde": 0.012697,
+    "n": 50,
+    "n_blocks": 25
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.067722,
+    "se": 0.163908,
+    "t": 0.41,
+    "mde": 0.458943,
+    "n": 50,
+    "n_blocks": 25
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.005838,
+    "se": 0.002506,
+    "t": 2.33,
+    "mde": 0.007016,
+    "n": 50,
+    "n_blocks": 25
+   },
+   "n_events": 50,
+   "mean_links": 4.04,
+   "by_month_size_t1": {
+    "2026-01": {
+     "mean": 0.29327,
+     "n": 2
+    },
+    "2026-02": {
+     "mean": -0.148365,
+     "n": 12
+    },
+    "2026-03": {
+     "mean": -0.086885,
+     "n": 2
+    },
+    "2026-04": {
+     "mean": 0.356141,
+     "n": 7
+    },
+    "2026-05": {
+     "mean": 0.103526,
+     "n": 6
+    },
+    "2026-06": {
+     "mean": -0.208126,
+     "n": 8
+    },
+    "2026-07": {
+     "mean": -0.146339,
+     "n": 5
+    },
+    "2026-08": {
+     "mean": 0.219545,
+     "n": 6
+    },
+    "2026-09": {
+     "mean": -0.03274,
+     "n": 2
+    }
+   },
+   "loo_month_worst_size_t1": -0.043985
+  },
+  "verdict": "CANNOT_DISTINGUISH",
+  "powered": false,
+  "reason": "confirm +0.01203 t 0.11; MDE 0.31201 > effect worth having 0.05000",
+  "direction_verdict_reported": {
+   "verdict": "CANNOT_DISTINGUISH",
+   "powered": false,
+   "reason": "confirm +0.00470 t 1.04; MDE 0.01270 > effect worth having 0.00200"
+  },
+  "examples": [
+   {
+    "t": "2026-08-25",
+    "source": "PANW",
+    "links": "QQQ,RBRK,PLUG",
+    "size_t1": "1.4655428969933693"
+   },
+   {
+    "t": "2026-08-26",
+    "source": "RBRK",
+    "links": "PANW,QQQ,P,PATH",
+    "size_t1": "1.324837096731062"
+   },
+   {
+    "t": "2026-02-25",
+    "source": "WDAY",
+    "links": "ZS,URBN,VEEV,WOOF",
+    "size_t1": "1.2455278940296015"
+   },
+   {
+    "t": "2026-05-15",
+    "source": "MDB",
+    "links": "NVDA,MRVL,OKTA,NIO,MU,NTNX",
+    "size_t1": "1.1265429277355574"
+   },
+   {
+    "t": "2025-02-03",
+    "source": "DOW",
+    "links": "DOV",
+    "size_t1": "1.0226901538928024"
+   }
+  ]
+ }
+}

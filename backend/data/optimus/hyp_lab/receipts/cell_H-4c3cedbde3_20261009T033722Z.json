@@ -1,0 +1,164 @@
+{
+ "hyp_id": "H-4c3cedbde3",
+ "title": "Clinical trial success lifts correlation peers next session",
+ "night": "2026-10-09",
+ "run_utc": "2026-10-09T03:37:22+00:00",
+ "result": {
+  "cell_type": "event_readthrough",
+  "params": {
+   "link": "corr_peer",
+   "event_type": "clinical_trial_result",
+   "min_ratio": 2.5,
+   "k": 5,
+   "min_source_dv_pct": 0.5
+  },
+  "outcome_units": "size: log(|x_oc|/vol21) linked minus vol-matched unlinked, same date; signed: sign(source move) x (x_oc linked - x_oc controls)",
+  "n_events_candidate": 11,
+  "design": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": 0.114779,
+    "se": 0.246763,
+    "t": 0.47,
+    "mde": 0.690936,
+    "n": 7,
+    "n_blocks": 5
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -0.004321,
+    "se": 0.007824,
+    "t": -0.55,
+    "mde": 0.021907,
+    "n": 7,
+    "n_blocks": 5
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.404586,
+    "se": 0.376266,
+    "t": 1.08,
+    "mde": 1.053546,
+    "n": 7,
+    "n_blocks": 5
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.02759,
+    "se": 0.013422,
+    "t": 2.06,
+    "mde": 0.037582,
+    "n": 7,
+    "n_blocks": 5
+   },
+   "n_events": 7,
+   "mean_links": 5.0,
+   "by_month_size_t1": {
+    "2025-04": {
+     "mean": 0.725959,
+     "n": 2
+    },
+    "2025-07": {
+     "mean": 0.187757,
+     "n": 2
+    },
+    "2025-08": {
+     "mean": -0.144841,
+     "n": 2
+    },
+    "2025-10": {
+     "mean": -0.7343,
+     "n": 1
+    }
+   },
+   "loo_month_worst_size_t1": -0.129693
+  },
+  "confirm": {
+   "primary_size_t1_vs_volmatched": {
+    "mean": -0.119979,
+    "se": 0.33137,
+    "t": -0.36,
+    "mde": 0.927835,
+    "n": 4,
+    "n_blocks": 3
+   },
+   "signed_t1_vs_volmatched (direction, reported)": {
+    "mean": -0.006679,
+    "se": 0.002974,
+    "t": -2.25,
+    "mde": 0.008326,
+    "n": 4,
+    "n_blocks": 3
+   },
+   "size_t0_same_session (reported)": {
+    "mean": 0.725286,
+    "se": 0.508174,
+    "t": 1.43,
+    "mde": 1.422888,
+    "n": 4,
+    "n_blocks": 3
+   },
+   "signed_t0_same_session (reported)": {
+    "mean": 0.032594,
+    "se": 0.018223,
+    "t": 1.79,
+    "mde": 0.051024,
+    "n": 4,
+    "n_blocks": 3
+   },
+   "n_events": 4,
+   "mean_links": 5.0,
+   "by_month_size_t1": {
+    "2026-01": {
+     "mean": -0.348677,
+     "n": 1
+    },
+    "2026-06": {
+     "mean": 0.629268,
+     "n": 1
+    },
+    "2026-08": {
+     "mean": -0.380254,
+     "n": 2
+    }
+   },
+   "loo_month_worst_size_t1": -0.369728
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.11998 <= 0",
+  "powered": false,
+  "direction_verdict_reported": {
+   "verdict": "FAILED_VARIANT",
+   "reason": "confirm mean -0.00668 <= 0",
+   "powered": false
+  },
+  "examples": [
+   {
+    "t": "2025-04-09",
+    "source": "JNJ",
+    "links": "ED,PFE,AWK,DUK,ES",
+    "size_t1": "0.9773951400318586"
+   },
+   {
+    "t": "2025-07-01",
+    "source": "MRNA",
+    "links": "ARCT,BNTX,LSCC,CRSP,COHU",
+    "size_t1": "0.8476715417902057"
+   },
+   {
+    "t": "2026-06-24",
+    "source": "PFE",
+    "links": "BMY,MRK,AMGN,DHR,NVS",
+    "size_t1": "0.629267514955353"
+   },
+   {
+    "t": "2025-04-07",
+    "source": "JNJ",
+    "links": "ED,PFE,AWK,AEP,DUK",
+    "size_t1": "0.47452355229795834"
+   },
+   {
+    "t": "2025-08-01",
+    "source": "LLY",
+    "links": "HQH,ALC,COST,GEHC,NVO",
+    "size_t1": "0.05117956061567985"
+   }
+  ]
+ }
+}

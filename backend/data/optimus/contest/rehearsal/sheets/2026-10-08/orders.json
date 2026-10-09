@@ -1,0 +1,615 @@
+{
+ "day": "2026-10-08",
+ "mode": "REHEARSAL",
+ "strategy": "ROT5_TRAIL",
+ "freeze_utc": "2026-10-08T06:33:15",
+ "licence": "PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. Never evidence of skill.",
+ "window_hkt": [
+  "2026-10-08 14:00:00+08:00",
+  "2026-10-09 14:00:00+08:00"
+ ],
+ "nav_usd": 1012781.55,
+ "cap": {
+  "of_notional": 200000.0,
+  "of_nav": 202556.31000000003,
+  "binding": 200000.0,
+  "binding_reading": "20% of notional"
+ },
+ "tickets": [
+  {
+   "n": 1,
+   "side": "SELL",
+   "bbg": "6323 JT Equity",
+   "symbol": "6323.T",
+   "market": "JP",
+   "qty": 6600,
+   "order_type": "MARKET AT OPEN",
+   "limit_local": null,
+   "currency": "JPY",
+   "session_date": "2026-10-09",
+   "open_utc": "2026-10-09 00:00:00+00:00",
+   "open_hkt": "Fri 09 Oct 08:00",
+   "open_ny": "Thu 20:00",
+   "notional_usd": 0.0,
+   "status": "LIVE",
+   "note": "report has happened by this open",
+   "report": "",
+   "code": "DF",
+   "extra": {
+    "pos_id": "2026-10-07:6323 JT"
+   }
+  },
+  {
+   "n": 2,
+   "side": "SELL",
+   "bbg": "9983 JT Equity",
+   "symbol": "9983.T",
+   "market": "JP",
+   "qty": 300,
+   "order_type": "MARKET AT OPEN",
+   "limit_local": null,
+   "currency": "JPY",
+   "session_date": "2026-10-09",
+   "open_utc": "2026-10-09 00:00:00+00:00",
+   "open_hkt": "Fri 09 Oct 08:00",
+   "open_ny": "Thu 20:00",
+   "notional_usd": 0.0,
+   "status": "LIVE",
+   "note": "report has happened by this open",
+   "report": "",
+   "code": "UK",
+   "extra": {
+    "pos_id": "2026-10-07:9983 JT"
+   }
+  },
+  {
+   "n": 3,
+   "side": "SELL",
+   "bbg": "2809 JT Equity",
+   "symbol": "2809.T",
+   "market": "JP",
+   "qty": 6900,
+   "order_type": "MARKET AT OPEN",
+   "limit_local": null,
+   "currency": "JPY",
+   "session_date": "2026-10-09",
+   "open_utc": "2026-10-09 00:00:00+00:00",
+   "open_hkt": "Fri 09 Oct 08:00",
+   "open_ny": "Thu 20:00",
+   "notional_usd": 0.0,
+   "status": "LIVE",
+   "note": "report has happened by this open",
+   "report": "",
+   "code": "P9",
+   "extra": {
+    "pos_id": "2026-10-07:2809 JT"
+   }
+  },
+  {
+   "n": 4,
+   "side": "SELL",
+   "bbg": "7649 JT Equity",
+   "symbol": "7649.T",
+   "market": "JP",
+   "qty": 24500,
+   "order_type": "MARKET AT OPEN",
+   "limit_local": null,
+   "currency": "JPY",
+   "session_date": "2026-10-09",
+   "open_utc": "2026-10-09 00:00:00+00:00",
+   "open_hkt": "Fri 09 Oct 08:00",
+   "open_ny": "Thu 20:00",
+   "notional_usd": 0.0,
+   "status": "LIVE",
+   "note": "report has happened by this open",
+   "report": "",
+   "code": "FT",
+   "extra": {
+    "pos_id": "2026-10-07:7649 JT"
+   }
+  },
+  {
+   "n": 5,
+   "side": "SELL",
+   "bbg": "3382 JT Equity",
+   "symbol": "3382.T",
+   "market": "JP",
+   "qty": 15200,
+   "order_type": "MARKET AT OPEN",
+   "limit_local": null,
+   "currency": "JPY",
+   "session_date": "2026-10-09",
+   "open_utc": "2026-10-09 00:00:00+00:00",
+   "open_hkt": "Fri 09 Oct 08:00",
+   "open_ny": "Thu 20:00",
+   "notional_usd": 0.0,
+   "status": "LIVE",
+   "note": "report has happened by this open",
+   "report": "",
+   "code": "FN",
+   "extra": {
+    "pos_id": "2026-10-07:3382 JT"
+   }
+  },
+  {
+   "n": 6,
+   "side": "BUY",
+   "bbg": "3046 JT Equity",
+   "symbol": "3046.T",
+   "market": "JP",
+   "qty": 5300,
+   "order_type": "LIMIT",
+   "limit_local": 5954.0,
+   "currency": "JPY",
+   "session_date": "2026-10-09",
+   "open_utc": "2026-10-09 00:00:00+00:00",
+   "open_hkt": "Fri 09 Oct 08:00",
+   "open_ny": "Thu 20:00",
+   "notional_usd": 199349.31,
+   "status": "LIVE",
+   "note": "report 2026-10-09 AMC, sell at the 2026-10-13 open; CONFIRMED; lot 100 (UNVERIFIED)",
+   "report": "AMC CONFIRMED",
+   "code": "7F",
+   "extra": {
+    "exit_session": "2026-10-13",
+    "exit_open_utc": "2026-10-13 00:00:00+00:00",
+    "ref_local": 5670.0,
+    "fx_local_per_usd": 158.29600524902344,
+    "rank": 1,
+    "trail_abs": 0.12600165605545044,
+    "date_status": "CONFIRMED_EXCHANGE",
+    "timing": "AMC",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 5300,
+     "limit_local": 5954.0,
+     "notional_usd_at_limit": 199349.31,
+     "notional_usd_at_ref": 189840.55,
+     "lot": 100,
+     "lot_status": "100 (UNVERIFIED)"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 202556.31000000003,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  },
+  {
+   "n": 7,
+   "side": "BUY",
+   "bbg": "6814 JT Equity",
+   "symbol": "6814.T",
+   "market": "JP",
+   "qty": 3500,
+   "order_type": "LIMIT",
+   "limit_local": 8852.0,
+   "currency": "JPY",
+   "session_date": "2026-10-09",
+   "open_utc": "2026-10-09 00:00:00+00:00",
+   "open_hkt": "Fri 09 Oct 08:00",
+   "open_ny": "Thu 20:00",
+   "notional_usd": 195721.93,
+   "status": "LIVE",
+   "note": "report 2026-10-09 AMC, sell at the 2026-10-13 open; CONFIRMED; lot 100 (UNVERIFIED)",
+   "report": "AMC CONFIRMED",
+   "code": "AV",
+   "extra": {
+    "exit_session": "2026-10-13",
+    "exit_open_utc": "2026-10-13 00:00:00+00:00",
+    "ref_local": 8430.0,
+    "fx_local_per_usd": 158.29600524902344,
+    "rank": 2,
+    "trail_abs": 0.10817892104387283,
+    "date_status": "CONFIRMED_EXCHANGE",
+    "timing": "AMC",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 3500,
+     "limit_local": 8852.0,
+     "notional_usd_at_limit": 195721.93,
+     "notional_usd_at_ref": 186391.31,
+     "lot": 100,
+     "lot_status": "100 (UNVERIFIED)"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 202556.31000000003,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  },
+  {
+   "n": 8,
+   "side": "BUY",
+   "bbg": "6506 JT Equity",
+   "symbol": "6506.T",
+   "market": "JP",
+   "qty": 6000,
+   "order_type": "LIMIT",
+   "limit_local": 5193.0,
+   "currency": "JPY",
+   "session_date": "2026-10-09",
+   "open_utc": "2026-10-09 00:00:00+00:00",
+   "open_hkt": "Fri 09 Oct 08:00",
+   "open_ny": "Thu 20:00",
+   "notional_usd": 196833.77,
+   "status": "LIVE",
+   "note": "report 2026-10-09 AMC, sell at the 2026-10-13 open; CONFIRMED; lot 100 (UNVERIFIED)",
+   "report": "AMC CONFIRMED",
+   "code": "WC",
+   "extra": {
+    "exit_session": "2026-10-13",
+    "exit_open_utc": "2026-10-13 00:00:00+00:00",
+    "ref_local": 4946.0,
+    "fx_local_per_usd": 158.29600524902344,
+    "rank": 3,
+    "trail_abs": 0.09473525732755661,
+    "date_status": "CONFIRMED_EXCHANGE",
+    "timing": "AMC",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 6000,
+     "limit_local": 5193.0,
+     "notional_usd_at_limit": 196833.77,
+     "notional_usd_at_ref": 187471.57,
+     "lot": 100,
+     "lot_status": "100 (UNVERIFIED)"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 202556.31000000003,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  },
+  {
+   "n": 9,
+   "side": "BUY",
+   "bbg": "DMART IN Equity",
+   "symbol": "DMART.NS",
+   "market": "IN",
+   "qty": 5048,
+   "order_type": "LIMIT",
+   "limit_local": 3818.0,
+   "currency": "INR",
+   "session_date": "2026-10-09",
+   "open_utc": "2026-10-09 03:45:00+00:00",
+   "open_hkt": "Fri 09 Oct 11:45",
+   "open_ny": "Thu 23:45",
+   "notional_usd": 199991.53,
+   "status": "LIVE",
+   "note": "report 2026-10-10 AMC, sell at the 2026-10-12 open; NOT CONFIRMED (VENDOR_ANNOUNCED); lot 1",
+   "report": "AMC NOT CONFIRMED (VENDOR_ANNOUNCED)",
+   "code": "7F",
+   "extra": {
+    "exit_session": "2026-10-12",
+    "exit_open_utc": "2026-10-12 03:45:00+00:00",
+    "ref_local": 3636.0,
+    "fx_local_per_usd": 96.37039947509766,
+    "rank": 4,
+    "trail_abs": 0.03190228343009949,
+    "date_status": "VENDOR_ANNOUNCED",
+    "timing": "AMC",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 5048,
+     "limit_local": 3818.0,
+     "notional_usd_at_limit": 199991.53,
+     "notional_usd_at_ref": 190458.15,
+     "lot": 1,
+     "lot_status": "1"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 202556.31000000003,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  },
+  {
+   "n": 10,
+   "side": "BUY",
+   "bbg": "4443 JT Equity",
+   "symbol": "4443.T",
+   "market": "JP",
+   "qty": 14100,
+   "order_type": "LIMIT",
+   "limit_local": 2241.0,
+   "currency": "JPY",
+   "session_date": "2026-10-09",
+   "open_utc": "2026-10-09 00:00:00+00:00",
+   "open_hkt": "Fri 09 Oct 08:00",
+   "open_ny": "Thu 20:00",
+   "notional_usd": 199614.01,
+   "status": "LIVE",
+   "note": "report 2026-10-09 AMC, sell at the 2026-10-13 open; CONFIRMED; lot 100 (UNVERIFIED)",
+   "report": "AMC CONFIRMED",
+   "code": "ER",
+   "extra": {
+    "exit_session": "2026-10-13",
+    "exit_open_utc": "2026-10-13 00:00:00+00:00",
+    "ref_local": 2134.0,
+    "fx_local_per_usd": 158.29600524902344,
+    "rank": 5,
+    "trail_abs": 0.028377167880535126,
+    "date_status": "CONFIRMED_EXCHANGE",
+    "timing": "AMC",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 14100,
+     "limit_local": 2241.0,
+     "notional_usd_at_limit": 199614.01,
+     "notional_usd_at_ref": 190083.13,
+     "lot": 100,
+     "lot_status": "100 (UNVERIFIED)"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 202556.31000000003,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  }
+ ],
+ "control": {
+  "n_lines": 10,
+  "n_buy": 5,
+  "n_sell": 5,
+  "buy_shares": 33948,
+  "sell_shares": 53500,
+  "buy_notional_usd": 991510.55,
+  "sheet_code": "2F4F9FD1"
+ },
+ "reserves": [],
+ "refused": [
+  {
+   "symbol": "002149.SZ",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  },
+  {
+   "symbol": "002167.SZ",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  },
+  {
+   "symbol": "002364.SZ",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  },
+  {
+   "symbol": "1171.HK",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  },
+  {
+   "symbol": "1308.HK",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  },
+  {
+   "symbol": "1419.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "2653.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "2791.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "300418.SZ",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  },
+  {
+   "symbol": "3048.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "3087.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "3222.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "4343.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "575A.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "5832.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "600096.SS",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  },
+  {
+   "symbol": "600160.SS",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  },
+  {
+   "symbol": "600360.SS",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  },
+  {
+   "symbol": "6136.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "6627.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "7085.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "7512.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "7516.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "8198.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "8570.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "9278.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "9661.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "9974.T",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "BEPL.NS",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "DMART.BO",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "FAN.L",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "NFG.L",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "POONAWALLA.BO",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "POONAWALLA.NS",
+   "refusal": "REFUSED_ILLIQUID (median $vol < $10M)"
+  },
+  {
+   "symbol": "TSCO.L",
+   "refusal": "REFUSED_HISTORY (< 3 past reactions)"
+  }
+ ],
+ "n_ranked": 5,
+ "calendar_file": "calendar_2026-10-08.parquet",
+ "bars_age": [
+  "CN: last bar 2026-09-30 (8 days) STALE",
+  "EU: last bar 2026-10-07 (1 days)",
+  "HK: last bar 2026-10-07 (1 days)",
+  "ID: last bar 2026-10-07 (1 days)",
+  "IN: last bar 2026-10-07 (1 days)",
+  "JP: last bar 2026-10-07 (1 days)",
+  "KR: last bar 2026-10-07 (1 days)",
+  "TW: last bar 2026-10-07 (1 days)",
+  "US: last bar 2026-10-07 (1 days)"
+ ],
+ "wls": {},
+ "banners": [],
+ "refresh": {
+  "calendar": "refreshed",
+  "bars": {
+   "FX": {
+    "n_symbols": 16,
+    "rows_after": 30412,
+    "n_failed": 0,
+    "last_date": "2026-10-07"
+   },
+   "IN": {
+    "n_symbols": 532,
+    "rows_after": 700907,
+    "n_failed": 17,
+    "last_date": "2026-10-07"
+   },
+   "JP": {
+    "n_symbols": 785,
+    "rows_after": 1232739,
+    "n_failed": 0,
+    "last_date": "2026-10-07"
+   },
+   "CN": {
+    "n_symbols": 600,
+    "rows_after": 940948,
+    "n_failed": 0,
+    "last_date": "2026-09-30"
+   },
+   "EU": {
+    "n_symbols": 807,
+    "rows_after": 1224575,
+    "n_failed": 9,
+    "last_date": "2026-10-07"
+   },
+   "HK": {
+    "n_symbols": 400,
+    "rows_after": 535556,
+    "n_failed": 0,
+    "last_date": "2026-10-07"
+   },
+   "TW": {
+    "n_symbols": 410,
+    "rows_after": 691916,
+    "n_failed": 0,
+    "last_date": "2026-10-07"
+   },
+   "ID": {
+    "n_symbols": 31,
+    "rows_after": 46298,
+    "n_failed": 0,
+    "last_date": "2026-10-07"
+   },
+   "KR": {
+    "n_symbols": 292,
+    "rows_after": 479740,
+    "n_failed": 0,
+    "last_date": "2026-10-07"
+   }
+  },
+  "implied": {
+   "n": 0
+  }
+ },
+ "notes": [],
+ "worst_case": {
+  "nav_usd": 1012781.55,
+  "k": 5,
+  "cap_binding_usd": 200000.0,
+  "largest_admissible_gross_usd": 1000000.0,
+  "largest_admissible_gross_over_equity": 0.9874,
+  "largest_at_stop_usd": {
+   "5%": -50000.0,
+   "10%": -100000.0
+  },
+  "largest_at_2sigma63_usd": -76884.38,
+  "largest_at_2sigma63_basis": "the largest sigma63 among this sheet's book names",
+  "book_n": 5,
+  "book_gross_usd": 991510.55,
+  "book_gross_over_equity": 0.979,
+  "book_at_stop_usd": {
+   "5%": -49575.53,
+   "10%": -99151.06
+  },
+  "book_at_2sigma63_usd": -63440.38,
+  "book_at_2x_trailing_move_usd": -153966.19,
+  "stop_note": "No book here carries a stop (ROT5 exits at the open after the print; MAXTAIL holds) and a gap fills through any stop: the stop rows are reference arithmetic, not a bound"
+ },
+ "drift": [],
+ "direction": null
+}

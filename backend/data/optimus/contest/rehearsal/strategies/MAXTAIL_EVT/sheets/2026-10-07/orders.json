@@ -1,0 +1,590 @@
+{
+ "day": "2026-10-07",
+ "mode": "REHEARSAL",
+ "strategy": "MAXTAIL_EVT",
+ "contract_sha256": "5cfe5e7293a63b3319de098d46472ffba29e0680cf4323ef1a2e7a345bd87605",
+ "freeze_utc": "2026-10-07T06:32:45",
+ "licence": "PRODUCT_EXPERIMENT; family of one; utility 'contest rank, right tail'. Never evidence of skill.",
+ "window_hkt": [
+  "2026-10-07 14:00:00+08:00",
+  "2026-10-08 14:00:00+08:00"
+ ],
+ "nav_usd": 1000000.0,
+ "cap": {
+  "of_notional": 200000.0,
+  "of_nav": 200000.0,
+  "binding": 200000.0,
+  "binding_reading": "20% of notional"
+ },
+ "tickets": [
+  {
+   "n": 1,
+   "side": "BUY",
+   "bbg": "AXTI US Equity",
+   "symbol": "AXTI",
+   "market": "US",
+   "qty": 2266,
+   "order_type": "LIMIT",
+   "limit_local": 88.26,
+   "currency": "USD",
+   "session_date": "2026-10-07",
+   "open_utc": "2026-10-07 13:30:00+00:00",
+   "open_hkt": "Wed 07 Oct 21:30",
+   "open_ny": "Wed 09:30",
+   "notional_usd": 199997.16,
+   "status": "LIVE",
+   "note": "report n/a BUY_AND_HOLD, sell at the 2026-10-12 open; CONFIRMED; lot 1",
+   "report": "BUY_AND_HOLD CONFIRMED",
+   "code": "W9",
+   "extra": {
+    "exit_session": "2026-10-12",
+    "exit_open_utc": "2026-10-12 13:30:00+00:00",
+    "ref_local": 84.06,
+    "fx_local_per_usd": 1.0,
+    "rank": 1,
+    "trail_abs": NaN,
+    "date_status": "BUY_AND_HOLD",
+    "timing": "BUY_AND_HOLD",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 2266,
+     "limit_local": 88.26,
+     "notional_usd_at_limit": 199997.16,
+     "notional_usd_at_ref": 190479.96,
+     "lot": 1,
+     "lot_status": "1"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 200000.0,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  },
+  {
+   "n": 2,
+   "side": "BUY",
+   "bbg": "AVBP US Equity",
+   "symbol": "AVBP",
+   "market": "US",
+   "qty": 12626,
+   "order_type": "LIMIT",
+   "limit_local": 15.84,
+   "currency": "USD",
+   "session_date": "2026-10-07",
+   "open_utc": "2026-10-07 13:30:00+00:00",
+   "open_hkt": "Wed 07 Oct 21:30",
+   "open_ny": "Wed 09:30",
+   "notional_usd": 199995.84,
+   "status": "LIVE",
+   "note": "report n/a BUY_AND_HOLD, sell at the 2026-10-12 open; CONFIRMED; lot 1",
+   "report": "BUY_AND_HOLD CONFIRMED",
+   "code": "H4",
+   "extra": {
+    "exit_session": "2026-10-12",
+    "exit_open_utc": "2026-10-12 13:30:00+00:00",
+    "ref_local": 15.09,
+    "fx_local_per_usd": 1.0,
+    "rank": 2,
+    "trail_abs": NaN,
+    "date_status": "BUY_AND_HOLD",
+    "timing": "BUY_AND_HOLD",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 12626,
+     "limit_local": 15.84,
+     "notional_usd_at_limit": 199995.84,
+     "notional_usd_at_ref": 190526.34,
+     "lot": 1,
+     "lot_status": "1"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 200000.0,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  },
+  {
+   "n": 3,
+   "side": "BUY",
+   "bbg": "RXT US Equity",
+   "symbol": "RXT",
+   "market": "US",
+   "qty": 47382,
+   "order_type": "LIMIT",
+   "limit_local": 4.221,
+   "currency": "USD",
+   "session_date": "2026-10-07",
+   "open_utc": "2026-10-07 13:30:00+00:00",
+   "open_hkt": "Wed 07 Oct 21:30",
+   "open_ny": "Wed 09:30",
+   "notional_usd": 199999.42,
+   "status": "LIVE",
+   "note": "report n/a BUY_AND_HOLD, sell at the 2026-10-12 open; CONFIRMED; lot 1",
+   "report": "BUY_AND_HOLD CONFIRMED",
+   "code": "FC",
+   "extra": {
+    "exit_session": "2026-10-12",
+    "exit_open_utc": "2026-10-12 13:30:00+00:00",
+    "ref_local": 4.02,
+    "fx_local_per_usd": 1.0,
+    "rank": 3,
+    "trail_abs": NaN,
+    "date_status": "BUY_AND_HOLD",
+    "timing": "BUY_AND_HOLD",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 47382,
+     "limit_local": 4.221,
+     "notional_usd_at_limit": 199999.42,
+     "notional_usd_at_ref": 190475.64,
+     "lot": 1,
+     "lot_status": "1"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 200000.0,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  },
+  {
+   "n": 4,
+   "side": "BUY",
+   "bbg": "UTZ US Equity",
+   "symbol": "UTZ",
+   "market": "US",
+   "qty": 13351,
+   "order_type": "LIMIT",
+   "limit_local": 14.98,
+   "currency": "USD",
+   "session_date": "2026-10-07",
+   "open_utc": "2026-10-07 13:30:00+00:00",
+   "open_hkt": "Wed 07 Oct 21:30",
+   "open_ny": "Wed 09:30",
+   "notional_usd": 199997.98,
+   "status": "LIVE",
+   "note": "report n/a BUY_AND_HOLD, sell at the 2026-10-12 open; CONFIRMED; lot 1",
+   "report": "BUY_AND_HOLD CONFIRMED",
+   "code": "4E",
+   "extra": {
+    "exit_session": "2026-10-12",
+    "exit_open_utc": "2026-10-12 13:30:00+00:00",
+    "ref_local": 14.27,
+    "fx_local_per_usd": 1.0,
+    "rank": 4,
+    "trail_abs": NaN,
+    "date_status": "BUY_AND_HOLD",
+    "timing": "BUY_AND_HOLD",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 13351,
+     "limit_local": 14.98,
+     "notional_usd_at_limit": 199997.98,
+     "notional_usd_at_ref": 190518.77,
+     "lot": 1,
+     "lot_status": "1"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 200000.0,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  },
+  {
+   "n": 5,
+   "side": "BUY",
+   "bbg": "QMCO US Equity",
+   "symbol": "QMCO",
+   "market": "US",
+   "qty": 5691,
+   "order_type": "LIMIT",
+   "limit_local": 35.14,
+   "currency": "USD",
+   "session_date": "2026-10-07",
+   "open_utc": "2026-10-07 13:30:00+00:00",
+   "open_hkt": "Wed 07 Oct 21:30",
+   "open_ny": "Wed 09:30",
+   "notional_usd": 199981.74,
+   "status": "LIVE",
+   "note": "report n/a BUY_AND_HOLD, sell at the 2026-10-12 open; CONFIRMED; lot 1",
+   "report": "BUY_AND_HOLD CONFIRMED",
+   "code": "VC",
+   "extra": {
+    "exit_session": "2026-10-12",
+    "exit_open_utc": "2026-10-12 13:30:00+00:00",
+    "ref_local": 33.47,
+    "fx_local_per_usd": 1.0,
+    "rank": 5,
+    "trail_abs": NaN,
+    "date_status": "BUY_AND_HOLD",
+    "timing": "BUY_AND_HOLD",
+    "membership": "UNCONFIRMED_MEMBERSHIP",
+    "sizing": {
+     "qty": 5691,
+     "limit_local": 35.14,
+     "notional_usd_at_limit": 199981.74,
+     "notional_usd_at_ref": 190477.77,
+     "lot": 1,
+     "lot_status": "1"
+    },
+    "cap": {
+     "of_notional": 200000.0,
+     "of_nav": 200000.0,
+     "binding": 200000.0,
+     "binding_reading": "20% of notional"
+    }
+   }
+  }
+ ],
+ "control": {
+  "n_lines": 5,
+  "n_buy": 5,
+  "n_sell": 0,
+  "buy_shares": 81316,
+  "sell_shares": 0,
+  "buy_notional_usd": 999972.14,
+  "sheet_code": "0340E65E"
+ },
+ "reserves": [
+  {
+   "symbol": "RARE",
+   "bbg_ticker": "RARE US Equity",
+   "rank": "6",
+   "pre_date": "2026-10-07"
+  },
+  {
+   "symbol": "CIFR",
+   "bbg_ticker": "CIFR US Equity",
+   "rank": "7",
+   "pre_date": "2026-10-07"
+  },
+  {
+   "symbol": "AAOI",
+   "bbg_ticker": "AAOI US Equity",
+   "rank": "8",
+   "pre_date": "2026-10-07"
+  },
+  {
+   "symbol": "MXL",
+   "bbg_ticker": "MXL US Equity",
+   "rank": "9",
+   "pre_date": "2026-10-07"
+  },
+  {
+   "symbol": "IOVA",
+   "bbg_ticker": "IOVA US Equity",
+   "rank": "10",
+   "pre_date": "2026-10-07"
+  },
+  {
+   "symbol": "CDNL",
+   "bbg_ticker": "CDNL US Equity",
+   "rank": "11",
+   "pre_date": "2026-10-07"
+  },
+  {
+   "symbol": "UMAC",
+   "bbg_ticker": "UMAC US Equity",
+   "rank": "12",
+   "pre_date": "2026-10-07"
+  },
+  {
+   "symbol": "AMLX",
+   "bbg_ticker": "AMLX US Equity",
+   "rank": "13",
+   "pre_date": "2026-10-07"
+  }
+ ],
+ "refused": [
+  {
+   "symbol": "CTVA",
+   "refusal": "REFUSED_JUMP_X2 (one-day move x6.2 inside 63 sessions: split / spin / stitch / bad print)"
+  },
+  {
+   "symbol": "CAPR",
+   "refusal": "REFUSED_JUMP_X2 (one-day move x2.8 inside 63 sessions: split / spin / stitch / bad print)"
+  },
+  {
+   "symbol": "MRNA",
+   "refusal": "REFUSED_JUMP_X2 (one-day move x2.8 inside 63 sessions: split / spin / stitch / bad print)"
+  },
+  {
+   "symbol": "KOD",
+   "refusal": "REFUSED_JUMP_X2 (one-day move x2.8 inside 63 sessions: split / spin / stitch / bad print)"
+  },
+  {
+   "symbol": "LQDA",
+   "refusal": "REFUSED_JUMP_X2 (one-day move x2.3 inside 63 sessions: split / spin / stitch / bad print)"
+  },
+  {
+   "symbol": "ALMS",
+   "refusal": "REFUSED_JUMP_X2 (one-day move x2.3 inside 63 sessions: split / spin / stitch / bad print)"
+  }
+ ],
+ "ranked": [
+  {
+   "symbol": "AXTI",
+   "trail_abs": "nan",
+   "rank": "1",
+   "sig63": "0.09528005123138428"
+  },
+  {
+   "symbol": "AVBP",
+   "trail_abs": "nan",
+   "rank": "2",
+   "sig63": "0.08671893924474716"
+  },
+  {
+   "symbol": "RXT",
+   "trail_abs": "nan",
+   "rank": "3",
+   "sig63": "0.08131518214941025"
+  },
+  {
+   "symbol": "UTZ",
+   "trail_abs": "nan",
+   "rank": "4",
+   "sig63": "0.08057524263858795"
+  },
+  {
+   "symbol": "QMCO",
+   "trail_abs": "nan",
+   "rank": "5",
+   "sig63": "0.07980062067508698"
+  },
+  {
+   "symbol": "RARE",
+   "trail_abs": "nan",
+   "rank": "6",
+   "sig63": "0.07896352559328079"
+  },
+  {
+   "symbol": "CIFR",
+   "trail_abs": "nan",
+   "rank": "7",
+   "sig63": "0.07641313225030899"
+  },
+  {
+   "symbol": "AAOI",
+   "trail_abs": "nan",
+   "rank": "8",
+   "sig63": "0.07621490210294724"
+  },
+  {
+   "symbol": "MXL",
+   "trail_abs": "nan",
+   "rank": "9",
+   "sig63": "0.07579672336578369"
+  },
+  {
+   "symbol": "IOVA",
+   "trail_abs": "nan",
+   "rank": "10",
+   "sig63": "0.07552479952573776"
+  },
+  {
+   "symbol": "CDNL",
+   "trail_abs": "nan",
+   "rank": "11",
+   "sig63": "0.0745861679315567"
+  },
+  {
+   "symbol": "UMAC",
+   "trail_abs": "nan",
+   "rank": "12",
+   "sig63": "0.07374215126037598"
+  },
+  {
+   "symbol": "AMLX",
+   "trail_abs": "nan",
+   "rank": "13",
+   "sig63": "0.07235442101955414"
+  },
+  {
+   "symbol": "BAND",
+   "trail_abs": "nan",
+   "rank": "14",
+   "sig63": "0.07029206305742264"
+  },
+  {
+   "symbol": "SNDK",
+   "trail_abs": "nan",
+   "rank": "15",
+   "sig63": "0.07014359533786774"
+  },
+  {
+   "symbol": "AHCO",
+   "trail_abs": "nan",
+   "rank": "16",
+   "sig63": "0.06885021179914474"
+  },
+  {
+   "symbol": "VELO",
+   "trail_abs": "nan",
+   "rank": "17",
+   "sig63": "0.06872551888227463"
+  },
+  {
+   "symbol": "HTZ",
+   "trail_abs": "nan",
+   "rank": "18",
+   "sig63": "0.06784651428461075"
+  },
+  {
+   "symbol": "LPTH",
+   "trail_abs": "nan",
+   "rank": "19",
+   "sig63": "0.06675630807876587"
+  },
+  {
+   "symbol": "FRMI",
+   "trail_abs": "nan",
+   "rank": "20",
+   "sig63": "0.06673330068588257"
+  },
+  {
+   "symbol": "AEVA",
+   "trail_abs": "nan",
+   "rank": "21",
+   "sig63": "0.06640751659870148"
+  },
+  {
+   "symbol": "QURE",
+   "trail_abs": "nan",
+   "rank": "22",
+   "sig63": "0.06625663489103317"
+  },
+  {
+   "symbol": "BE",
+   "trail_abs": "nan",
+   "rank": "23",
+   "sig63": "0.0657319575548172"
+  },
+  {
+   "symbol": "APPS",
+   "trail_abs": "nan",
+   "rank": "24",
+   "sig63": "0.06562783569097519"
+  },
+  {
+   "symbol": "LCID",
+   "trail_abs": "nan",
+   "rank": "25",
+   "sig63": "0.0650397390127182"
+  },
+  {
+   "symbol": "LASR",
+   "trail_abs": "nan",
+   "rank": "26",
+   "sig63": "0.06449658423662186"
+  },
+  {
+   "symbol": "IREN",
+   "trail_abs": "nan",
+   "rank": "27",
+   "sig63": "0.06437761336565018"
+  },
+  {
+   "symbol": "SEDG",
+   "trail_abs": "nan",
+   "rank": "28",
+   "sig63": "0.06417638808488846"
+  },
+  {
+   "symbol": "EOSE",
+   "trail_abs": "nan",
+   "rank": "29",
+   "sig63": "0.06370589882135391"
+  },
+  {
+   "symbol": "NVEC",
+   "trail_abs": "nan",
+   "rank": "30",
+   "sig63": "0.06354844570159912"
+  },
+  {
+   "symbol": "COHR",
+   "trail_abs": "nan",
+   "rank": "31",
+   "sig63": "0.06308935582637787"
+  },
+  {
+   "symbol": "LMB",
+   "trail_abs": "nan",
+   "rank": "32",
+   "sig63": "0.06297768652439117"
+  },
+  {
+   "symbol": "VPG",
+   "trail_abs": "nan",
+   "rank": "33",
+   "sig63": "0.06296650320291519"
+  },
+  {
+   "symbol": "UAMY",
+   "trail_abs": "nan",
+   "rank": "34",
+   "sig63": "0.06292702257633209"
+  },
+  {
+   "symbol": "HUT",
+   "trail_abs": "nan",
+   "rank": "35",
+   "sig63": "0.062110237777233124"
+  },
+  {
+   "symbol": "GRAL",
+   "trail_abs": "nan",
+   "rank": "36",
+   "sig63": "0.06152109056711197"
+  },
+  {
+   "symbol": "FTK",
+   "trail_abs": "nan",
+   "rank": "37",
+   "sig63": "0.0613819882273674"
+  },
+  {
+   "symbol": "ABCL",
+   "trail_abs": "nan",
+   "rank": "38",
+   "sig63": "0.061282724142074585"
+  }
+ ],
+ "n_ranked": 38,
+ "notes": [],
+ "worst_case": {
+  "nav_usd": 1000000.0,
+  "k": 5,
+  "cap_binding_usd": 200000.0,
+  "largest_admissible_gross_usd": 1000000.0,
+  "largest_admissible_gross_over_equity": 1.0,
+  "largest_at_stop_usd": {
+   "5%": -50000.0,
+   "10%": -100000.0
+  },
+  "largest_at_2sigma63_usd": -190560.1,
+  "largest_at_2sigma63_basis": "the largest sigma63 among this sheet's book names",
+  "book_n": 5,
+  "book_gross_usd": 999972.14,
+  "book_gross_over_equity": 1.0,
+  "book_at_stop_usd": {
+   "5%": -49998.61,
+   "10%": -99997.21
+  },
+  "book_at_2sigma63_usd": -169471.42,
+  "book_at_2x_trailing_move_usd": null,
+  "stop_note": "No book here carries a stop (ROT5 exits at the open after the print; MAXTAIL holds) and a gap fills through any stop: the stop rows are reference arithmetic, not a bound"
+ },
+ "drift": [],
+ "direction": null,
+ "maxtail": "rank: raw sigma63; 6 series refused as x2 one-day jumps (CTVA, CAPR, MRNA, KOD, LQDA, ALMS); event filter: 2807 US names with a vendor-announced print 2026-10-13..2026-11-12 in calendar_2026-09-29.parquet.",
+ "written_utc": "20261007T063246Z"
+}

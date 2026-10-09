@@ -1,0 +1,187 @@
+{
+ "receipt": "sim_ranking",
+ "asof": "2026-10-06",
+ "n_eligible": 2878,
+ "model_version": "4db4e66063ba",
+ "ic_mean": 0.01857586811172811,
+ "ic_t": 6.2026600434796535,
+ "top20_net_rel_21d": -0.01104731511798479,
+ "top": [
+  {
+   "rank": 1,
+   "symbol": "LITE",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.002532326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 2,
+   "symbol": "ASPN",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005432326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 3,
+   "symbol": "CDNL",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0037323264489879156,
+   "calibration_measured": true
+  },
+  {
+   "rank": 4,
+   "symbol": "RZLT",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005432326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 5,
+   "symbol": "WDC",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.002532326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 6,
+   "symbol": "WYFI",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0037323264489879156,
+   "calibration_measured": true
+  },
+  {
+   "rank": 7,
+   "symbol": "STX",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.002532326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 8,
+   "symbol": "NBTX",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005432326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 9,
+   "symbol": "SNDK",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.002532326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 10,
+   "symbol": "OSS",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005432326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 11,
+   "symbol": "MSFT",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.002532326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 12,
+   "symbol": "TSM",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.002532326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 13,
+   "symbol": "PLTR",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.002532326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 14,
+   "symbol": "CSTM",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0037323264489879156,
+   "calibration_measured": true
+  },
+  {
+   "rank": 15,
+   "symbol": "MU",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.002532326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 16,
+   "symbol": "HURN",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0037323264489879156,
+   "calibration_measured": true
+  },
+  {
+   "rank": 17,
+   "symbol": "GILT",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005432326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 18,
+   "symbol": "DBVT",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005432326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 19,
+   "symbol": "PRCH",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0037323264489879156,
+   "calibration_measured": true
+  },
+  {
+   "rank": 20,
+   "symbol": "OUT",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.0037323264489879156,
+   "calibration_measured": true
+  },
+  {
+   "rank": 21,
+   "symbol": "CAT",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.002532326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 22,
+   "symbol": "GOOGL",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.002532326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 23,
+   "symbol": "WDS",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.005432326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 24,
+   "symbol": "NVDA",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.002532326448987916,
+   "calibration_measured": true
+  },
+  {
+   "rank": 25,
+   "symbol": "AMD",
+   "decile": 9,
+   "expected_relative_return_21d_net": -0.002532326448987916,
+   "calibration_measured": true
+  }
+ ],
+ "bars_fingerprint": "bars.parquet:163825302:1791325912|bars_delisted.parquet:38500548:1791325913"
+}

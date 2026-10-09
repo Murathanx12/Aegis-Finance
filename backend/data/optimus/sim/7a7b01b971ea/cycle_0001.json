@@ -1,0 +1,144 @@
+{
+ "cycle": 1,
+ "at": "2026-10-08T14:30:51+00:00",
+ "mode": "paper_profit",
+ "elapsed_s": 4839.7,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 3.5,
+   "result": {
+    "equity": 998715.06,
+    "cash": -26104.55,
+    "n_positions": 33,
+    "invested_frac": 1.0261381359363901
+   }
+  },
+  "funnel": {
+   "ok": true,
+   "elapsed_s": 0.1,
+   "result": {
+    "skipped": "candidate set is fresh",
+    "generated_at": "2026-10-06T15:51:08+00:00",
+    "age_days": 1.89,
+    "n_candidates": 25
+   }
+  },
+  "analyst": {
+   "ok": true,
+   "elapsed_s": 3953.0,
+   "result": {
+    "pulled": true,
+    "rc": 0
+   },
+   "slow": "3953s exceeds SLOW_UNIT_S 1800s; reported, not killed \u2014 the loop stops at boundaries by design"
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 173.7,
+   "result": {
+    "n_eligible": 2874,
+    "ic_mean": 0.018298674081511652,
+    "top20_net_rel_21d": -0.008404328099575739,
+    "top1": "LITE"
+   }
+  },
+  "forecast": {
+   "ok": true,
+   "elapsed_s": 618.4,
+   "result": {
+    "state": "REFUSED_DEPENDENCY_DOWN",
+    "n_rows_written": 0,
+    "n_done": 0,
+    "n_unpriced": 1,
+    "n_refused": 0,
+    "spent_usd": 0.0,
+    "dependency_calls": 4,
+    "dependency_failed_calls": 4,
+    "dependency_retries": 3,
+    "dependency_runs_ended_down": 1,
+    "receipt_write_failures": 0,
+    "why": "the OpenClaw call failed 4 time(s) in a row on ABSI (last: RC_NONZERO); the cap was NOT the cause (spent $0.0000 of $2.00). Run 1 ended down (1 of 8 allowed today); a later cycle resumes after 3600s",
+    "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\forecasts\\day_2026-10-08.json",
+    "status": "DEGRADED"
+   }
+  },
+  "review": {
+   "ok": true,
+   "elapsed_s": 20.8,
+   "result": {
+    "morning": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\review\\morning_2026-10-08.md",
+    "asof": "2026-10-08",
+    "n_rows": 1307,
+    "n_minted": 1205,
+    "review": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\review\\review_2026-10-08.json"
+   }
+  },
+  "plan": {
+   "ok": true,
+   "elapsed_s": 23.8,
+   "result": {
+    "planned": true,
+    "verdict": "MEASURED_NEGATIVE",
+    "acting": true,
+    "bars_line": "BARS_FRESH (limit 2, last closed session 2026-10-07)",
+    "exploit_acting": false,
+    "blend_verdict": "UNMEASURED",
+    "er_present": true,
+    "er_red": null,
+    "probe_verdict": "UNMEASURED_TRADE_SMALL",
+    "probe_acting": true,
+    "shortlist": 23,
+    "shortlist_red": null,
+    "contract": "present",
+    "contract_red": null,
+    "contract_refused_excluded": 1,
+    "mandate_status": "UNRECONCILED",
+    "mandate_line": "MANDATE UNRECONCILED: CAPITAL_SOURCE broker; capital $1,001,604 (derived: PC-PAPER broker equity read 2026-10-07T15:32:26+00:00 (state_latest.json)); broker equity $1,001,604 read 2026-10-07T15:32:26+00:00; per-name cap 2% (tightest: config.PROBE_MAX_WEIGHT (u_plan PROBE)); as configured: 18 EXPLOIT x 10% (gross <= 80%) + 10 PROBE x 2% (<= 20%) = sum|notional|/equity 1.00; priced per name at 3 sigma = -$145,500 (14.53% of equity); no stop, so the ceiling is -$1,001,604 on $1,001,604; WORST CASE REFUSE (largest admissible book, sleeve names): 14.53% of equity (-$145,500) vs limit 10%; universe median 7.49%, p90 14.78%; TRADING PASS_EXPLOIT_CAPPED: EXPLOIT gross capped at 52.94% (~5 names at 10%) in u_plan, every cycle | POSITIONS UNRECONCILED: SLEEVE_BASIS_DISAGREES; SLEEVE_BASIS_DISAGREES; SLEEVE_BASIS_DISAGREES -- BROKER HOLDS: -2.61% cash, 102.61% in 33 name(s), 48.98% in a benchmark ETF (read 2026-10-07T15:32:26+00:00)",
+    "mandate_gates_orders": false,
+    "mandate_capital_bases": null,
+    "why_zero_orders": null,
+    "decision_story_line": "45 abstentions frozen with BUY counterfactuals for session 2026-10-08; first grades at 2026-10-15; replay MISMATCH (every leave-one-out NOT_SEPARABLE); live stories on disk: 112, oldest session 2026-10-07",
+    "decision_story_new": 47,
+    "policy_version": "c3-v1",
+    "n_considered": 47,
+    "n_probe": 10,
+    "policy_state_used": true,
+    "policy_state_ignored": null,
+    "order_source": "reputation-weighted E[r_5] (components whose arm has weight > 0), sigma_63 vol prior breaks ties; 7 priced, 16 in shortlist order after them",
+    "probe_weighting": "equal",
+    "probe_gross": 0.2,
+    "n_orders": 2,
+    "n_probe_orders": 0,
+    "n_exploit_orders": 0,
+    "n_sent": 2,
+    "send_block": null,
+    "turnover_usd": 39995.52,
+    "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.03% (3 sigma of 2.68%/day) = -$16,105 on $1,002,832; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$200,566",
+    "decisions_new": 40,
+    "top1": "MSFT"
+   }
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 16.2,
+   "result": {
+    "forecasts": "0 newly resolved; 21,986 of 40,554 records now carry an outcome; 0 voided as unresolvable this run; 14 wait on a bar, 18,418 are not yet due",
+    "decisions": "ok"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 30.2,
+   "result": {
+    "unit": "distil",
+    "day": "2026-10-08",
+    "rc": 0,
+    "status": "ok",
+    "tail": "   \"reputation_weights\"\n  ],\n  \"path\": \"C:\\\\Users\\\\mrthn\\\\aegis-finance\\\\backend\\\\data\\\\optimus\\\\pc_book\\\\policy_state.json\"\n }\n}\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\nllm_telemetry: 5 unreadable ledger line(s) \u00e2\u20ac\u201d reported spend and yield are both LOWER BOUNDS\n | policy_state refreshed",
+    "ran_utc": "2026-10-08T14:30:51+00:00"
+   }
+  }
+ },
+ "errors": []
+}

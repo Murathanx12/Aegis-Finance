@@ -1,0 +1,364 @@
+{
+ "artefact": "NN_LAB_NIGHTLY",
+ "schema": 2,
+ "run_id": "nightly_20261008T051049Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "broker_authority": "NONE: writes predictions, never orders",
+ "started_utc": "2026-10-08T05:10:49+00:00",
+ "table_before": {
+  "rows": 1201403,
+  "grid_rows": 1198469,
+  "grid_dates": 516,
+  "last_date": "2026-10-06",
+  "labels": {
+   "y_5": 1195350,
+   "y_21": 1186443,
+   "y_63": 1162826
+  }
+ },
+ "resumed_from": "nightly_20261008T050542Z",
+ "variant": "dist",
+ "status": "FAILED",
+ "error": "ModuleNotFoundError(\"No module named 'dotenv'\")",
+ "bars": {
+  "table_last_session": "1970-01-01",
+  "last_closed_weekday": "2026-10-07",
+  "note": "weekday calendar: the day after a US holiday can read STALE_BARS falsely"
+ },
+ "new_rows_since_last_run": 0,
+ "previous_run": "nightly_20261008T050542Z",
+ "degraded_reasons": [],
+ "per_model": [],
+ "table_after": {
+  "rows": 1201403,
+  "grid_rows": 1198469,
+  "grid_dates": 516,
+  "last_date": "2026-10-06",
+  "labels": {
+   "y_5": 1195350,
+   "y_21": 1186443,
+   "y_63": 1162826
+  }
+ },
+ "evidence": "NO_NEW_EVIDENCE: night FAILED (ModuleNotFoundError(\"No module named 'dotenv'\"))",
+ "tournament": {
+  "rule": "the NN earns its place at h only if its rank IC beats max(ridge, lgbm) by more than one SE of the difference; otherwise the simpler model stays",
+  "walk_forward": {
+   "receipt": "wf_20261007T_c5_review.json",
+   "folds": 7,
+   "table_sha256_of_that_run": "0a4450e1c31c580b93738a0d7bc533e2b15a320816335054fd91096b2af74cfa",
+   "written_utc": "2026-10-06T16:14:44+00:00",
+   "age_days": 1.54,
+   "same_table_as_tonight": false,
+   "use_crsp_deaths_in_that_run": true,
+   "note": "printed from the receipt, not refit tonight; computed on the table as it stood then",
+   "in_sample_val_ic_vs_walk_forward": {
+    "nn_val_ic_best_epoch_mean": 0.04878,
+    "nn_walk_forward_test_ic": {
+     "h5": 0.01067,
+     "h21": 0.01492,
+     "h63": 0.02631
+    },
+    "note": "validation IC is the early-stopping block's mean over horizons (in-sample for the epoch choice); the test IC is out of sample"
+   },
+   "by_horizon": {
+    "h5": {
+     "nn": {
+      "rank_ic": 0.01067,
+      "se": 0.00859,
+      "t": 1.24,
+      "n_blocks": 81,
+      "t_nonoverlapping": 0.86,
+      "n_blocks_nonoverlapping": 41,
+      "rank_ic_by_year": {
+       "2020": 0.01068,
+       "2021": 0.01153,
+       "2022": -0.02917,
+       "2023": 0.01861,
+       "2024": 0.03943,
+       "2025": 0.0123,
+       "2026": 0.01254
+      },
+      "rank_ic_loyo_worst": 0.00567,
+      "top20_minus_random_net": 0.00178,
+      "top20_t": 0.95
+     },
+     "lgbm": {
+      "rank_ic": 0.01384,
+      "se": 0.00424,
+      "t": 3.26,
+      "n_blocks": 81,
+      "t_nonoverlapping": 2.51,
+      "n_blocks_nonoverlapping": 41,
+      "rank_ic_by_year": {
+       "2020": 0.03488,
+       "2021": 0.01253,
+       "2022": -0.01542,
+       "2023": 0.0108,
+       "2024": 0.02006,
+       "2025": 0.01459,
+       "2026": 0.02254
+      },
+      "rank_ic_loyo_worst": 0.01027,
+      "top20_minus_random_net": 0.0023,
+      "top20_t": 0.72
+     },
+     "ridge": {
+      "rank_ic": 0.01045,
+      "se": 0.00731,
+      "t": 1.43,
+      "n_blocks": 81,
+      "t_nonoverlapping": 2.14,
+      "n_blocks_nonoverlapping": 41,
+      "rank_ic_by_year": {
+       "2020": 0.02287,
+       "2021": -0.00267,
+       "2022": -0.02537,
+       "2023": 0.00722,
+       "2024": 0.02664,
+       "2025": 0.01674,
+       "2026": 0.03448
+      },
+      "rank_ic_loyo_worst": 0.00741,
+      "top20_minus_random_net": 0.00252,
+      "top20_t": 1.17
+     },
+     "mom_12_1": {
+      "rank_ic": 0.01784,
+      "se": 0.0105,
+      "t": 1.7,
+      "n_blocks": 81,
+      "t_nonoverlapping": 0.29,
+      "n_blocks_nonoverlapping": 41,
+      "rank_ic_by_year": {
+       "2020": 0.02198,
+       "2021": -0.01547,
+       "2022": 0.05494,
+       "2023": -0.00665,
+       "2024": 0.03615,
+       "2025": 0.0135,
+       "2026": 0.02039
+      },
+      "rank_ic_loyo_worst": 0.01125,
+      "top20_minus_random_net": 0.00462,
+      "top20_t": 1.54
+     }
+    },
+    "h21": {
+     "nn": {
+      "rank_ic": 0.01492,
+      "se": 0.01129,
+      "t": 1.32,
+      "n_blocks": 80,
+      "t_nonoverlapping": 0.97,
+      "n_blocks_nonoverlapping": 40,
+      "rank_ic_by_year": {
+       "2020": -0.02012,
+       "2021": 0.00049,
+       "2022": 0.00787,
+       "2023": 0.04501,
+       "2024": 0.04586,
+       "2025": 0.00043,
+       "2026": 0.02356
+      },
+      "rank_ic_loyo_worst": 0.00936,
+      "top20_minus_random_net": -0.00248,
+      "top20_t": -0.64
+     },
+     "lgbm": {
+      "rank_ic": 0.02539,
+      "se": 0.00822,
+      "t": 3.09,
+      "n_blocks": 80,
+      "t_nonoverlapping": 2.28,
+      "n_blocks_nonoverlapping": 40,
+      "rank_ic_by_year": {
+       "2020": 0.04987,
+       "2021": 0.04248,
+       "2022": -0.03478,
+       "2023": 0.02289,
+       "2024": 0.03071,
+       "2025": 0.03158,
+       "2026": 0.04044
+      },
+      "rank_ic_loyo_worst": 0.02149,
+      "top20_minus_random_net": 0.01766,
+      "top20_t": 2.04
+     },
+     "ridge": {
+      "rank_ic": 0.02086,
+      "se": 0.0105,
+      "t": 1.99,
+      "n_blocks": 80,
+      "t_nonoverlapping": 1.52,
+      "n_blocks_nonoverlapping": 40,
+      "rank_ic_by_year": {
+       "2020": 0.06329,
+       "2021": 0.03186,
+       "2022": -0.07329,
+       "2023": 0.00408,
+       "2024": 0.0378,
+       "2025": 0.03899,
+       "2026": 0.05443
+      },
+      "rank_ic_loyo_worst": 0.01411,
+      "top20_minus_random_net": 0.01651,
+      "top20_t": 2.55
+     },
+     "mom_12_1": {
+      "rank_ic": 0.01748,
+      "se": 0.01397,
+      "t": 1.25,
+      "n_blocks": 80,
+      "t_nonoverlapping": 0.88,
+      "n_blocks_nonoverlapping": 40,
+      "rank_ic_by_year": {
+       "2020": 0.00814,
+       "2021": -0.01591,
+       "2022": 0.08131,
+       "2023": -0.01011,
+       "2024": 0.04917,
+       "2025": -0.00323,
+       "2026": 0.0098
+      },
+      "rank_ic_loyo_worst": 0.00629,
+      "top20_minus_random_net": 0.01833,
+      "top20_t": 2.08
+     }
+    },
+    "h63": {
+     "nn": {
+      "rank_ic": 0.02631,
+      "se": 0.02058,
+      "t": 1.28,
+      "n_blocks": 26,
+      "t_nonoverlapping": 1.84,
+      "n_blocks_nonoverlapping": 13,
+      "rank_ic_by_year": {
+       "2020": -0.04125,
+       "2021": -0.01074,
+       "2022": 0.03294,
+       "2023": 0.08507,
+       "2024": 0.04041,
+       "2025": 0.00219,
+       "2026": 0.06898
+      },
+      "rank_ic_loyo_worst": 0.01567,
+      "top20_minus_random_net": -0.00839,
+      "top20_t": -0.75
+     },
+     "lgbm": {
+      "rank_ic": 0.02325,
+      "se": 0.01478,
+      "t": 1.57,
+      "n_blocks": 26,
+      "t_nonoverlapping": 0.45,
+      "n_blocks_nonoverlapping": 13,
+      "rank_ic_by_year": {
+       "2020": 0.08822,
+       "2021": 0.02894,
+       "2022": -0.06959,
+       "2023": 0.02809,
+       "2024": 0.02848,
+       "2025": 0.04394,
+       "2026": 0.03404
+      },
+      "rank_ic_loyo_worst": 0.01493,
+      "top20_minus_random_net": 0.07751,
+      "top20_t": 2.14
+     },
+     "ridge": {
+      "rank_ic": 0.03288,
+      "se": 0.01953,
+      "t": 1.68,
+      "n_blocks": 26,
+      "t_nonoverlapping": 0.38,
+      "n_blocks_nonoverlapping": 13,
+      "rank_ic_by_year": {
+       "2020": 0.1148,
+       "2021": 0.02127,
+       "2022": -0.11135,
+       "2023": 0.04668,
+       "2024": 0.04595,
+       "2025": 0.08058,
+       "2026": 0.06034
+      },
+      "rank_ic_loyo_worst": 0.02239,
+      "top20_minus_random_net": 0.03143,
+      "top20_t": 1.59
+     },
+     "mom_12_1": {
+      "rank_ic": 0.0201,
+      "se": 0.02404,
+      "t": 0.84,
+      "n_blocks": 26,
+      "t_nonoverlapping": 2.23,
+      "n_blocks_nonoverlapping": 13,
+      "rank_ic_by_year": {
+       "2020": 0.02479,
+       "2021": -0.07486,
+       "2022": 0.12056,
+       "2023": -0.00754,
+       "2024": 0.0719,
+       "2025": 0.01686,
+       "2026": -0.01668
+      },
+      "rank_ic_loyo_worst": 0.00191,
+      "top20_minus_random_net": 0.06034,
+      "top20_t": 2.54
+     }
+    }
+   },
+   "verdict": {
+    "h5": {
+     "nn_minus_best_baseline": -0.00717,
+     "best_baseline": "mom_12_1",
+     "baselines_compared": [
+      "lgbm",
+      "mom_12_1",
+      "ridge"
+     ],
+     "se_of_difference_upper_bound": 0.01357,
+     "verdict": "NN DOES NOT BEAT the simpler baseline: complexity has not earned its place"
+    },
+    "h21": {
+     "nn_minus_best_baseline": -0.01047,
+     "best_baseline": "lgbm",
+     "baselines_compared": [
+      "lgbm",
+      "mom_12_1",
+      "ridge"
+     ],
+     "se_of_difference_upper_bound": 0.01397,
+     "verdict": "NN DOES NOT BEAT the simpler baseline: complexity has not earned its place"
+    },
+    "h63": {
+     "nn_minus_best_baseline": -0.00657,
+     "best_baseline": "ridge",
+     "baselines_compared": [
+      "lgbm",
+      "mom_12_1",
+      "ridge"
+     ],
+     "se_of_difference_upper_bound": 0.02837,
+     "verdict": "NN DOES NOT BEAT the simpler baseline: complexity has not earned its place"
+    }
+   }
+  },
+  "forward_weight_sentence": "forward weights are non-zero (max 0.146); see trust.ensemble_weights",
+  "forward": {
+   "h5": {
+    "common_decision_dates": 2,
+    "mean_rank_ic": {
+     "nn": 0.04015,
+     "lgbm": 0.0883,
+     "ridge": 0.05845,
+     "mom_12_1": 0.08425
+    },
+    "note": "mean rank IC over decision dates graded for every listed model"
+   }
+  }
+ },
+ "elapsed_s": 109.8,
+ "written_utc": "2026-10-08T05:12:39+00:00"
+}

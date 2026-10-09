@@ -1,0 +1,8 @@
+{
+ "unit": "distil",
+ "day": "2026-10-07",
+ "rc": 3,
+ "status": "DEGRADED rc 3",
+ "tail": "RADED\",\n  \"reason\": \"no new graded rows since 2026-10-07 (20095 graded, resolved through 2026-10-06)\",\n  \"n_rules_written\": 0,\n  \"answered_by\": null,\n  \"local_status\": null,\n  \"cost_usd\": 0.0,\n  \"cost_is_lower_bound\": false,\n  \"learned_md\": \"C:\\\\Users\\\\mrthn\\\\aegis-finance\\\\backend\\\\data\\\\optimus\\\\brain\\\\LEARNED_2026-10.md\",\n  \"rules\": []\n },\n \"policy_state\": {\n  \"changed_since_last\": [],\n  \"path\": \"C:\\\\Users\\\\mrthn\\\\aegis-finance\\\\backend\\\\data\\\\optimus\\\\pc_book\\\\policy_state.json\"\n }\n}\nLEARN_DEGRADED 2026-10-07: no new graded rows since 2026-10-07 (20095 graded, resolved through 2026-10-06)\n",
+ "ran_utc": "2026-10-07T15:27:44+00:00"
+}

@@ -1,0 +1,68 @@
+{
+ "job": "hyp_lab.declare",
+ "licence": "PRODUCT_EXPERIMENT",
+ "night": "2026-10-08",
+ "declared_utc": "2026-10-08T05:06:20+00:00",
+ "verdict_rule": "hyp_cells.verdict: design fold fixes the sign; confirm fold decides. CONDITIONAL_POSITIVE = confirm mean > 0, t >= 2, design mean > 0; FAILED_VARIANT = confirm mean <= 0, or t < 2 with MDE <= effect worth having; else CANNOT_DISTINGUISH. SE over date blocks, MDE = 2.8 SE.",
+ "disclosures": [],
+ "cells": [
+  {
+   "hyp_id": "H-10260cfe4e",
+   "title": "Event readthrough via news co-mentions",
+   "family": "event_readthrough_text_link",
+   "target": "return",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "comention",
+    "event_type": "earnings_report",
+    "min_ratio": 3.0,
+    "k": 5,
+    "min_source_dv_pct": 0.5
+   },
+   "split": {},
+   "refutation": "Linked companies do not show a return increase beyond their own volatility in the next trading session.",
+   "separation_from_beta": "Linked companies show a return increase beyond their own volatility in the next trading session."
+  },
+  {
+   "hyp_id": "H-79816372f0",
+   "title": "Analyst target hike spills to co-mentioned peers",
+   "family": "event_readthrough_text_link",
+   "target": "co_movement",
+   "cell_type": "event_readthrough",
+   "params": {
+    "link": "comention",
+    "event_type": "analyst_target_change",
+    "min_ratio": 2.0,
+    "k": 6,
+    "min_source_dv_pct": 0.5
+   },
+   "split": {},
+   "refutation": "Peer abnormal returns are not statistically different from vol-matched unlinked controls in confirm.",
+   "separation_from_beta": "Peer abnormal return exceeds its beta-implied move and is larger than vol-matched unlinked names."
+  },
+  {
+   "hyp_id": "H-f73a8435aa",
+   "title": "Tanker rate spike lifts product tanker equities next session",
+   "family": "macro_readthrough_commodity",
+   "target": "return",
+   "cell_type": "macro_lead_lag",
+   "params": {
+    "driver": "basket:STNG,ASC,INSW",
+    "targets": [
+     "STNG",
+     "ASC",
+     "INSW",
+     "DHT",
+     "FRO"
+    ],
+    "expected_sign": 1,
+    "h": 1,
+    "shock_z": 2.0
+   },
+   "split": {},
+   "refutation": "If product tanker equities show no positive abnormal return vs crude tankers/dry bulk after controlling for oil and shipping beta, refuted.",
+   "separation_from_beta": "Control for crude oil price change and broad shipping index; residual abnormal return should be positive only for product tankers, not crude tankers or dry bulk."
+  }
+ ],
+ "sha256": "24ec9193550f9288be751dfa0a25eabab06f663a08061cc563054e4879edc333"
+}

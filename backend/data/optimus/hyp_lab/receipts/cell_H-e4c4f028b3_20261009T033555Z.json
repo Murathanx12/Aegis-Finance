@@ -1,0 +1,146 @@
+{
+ "hyp_id": "H-e4c4f028b3",
+ "title": "10Y yield spike lifts mortgage REITs via steepening",
+ "night": "2026-10-09",
+ "run_utc": "2026-10-09T03:35:55+00:00",
+ "result": {
+  "cell_type": "macro_lead_lag",
+  "params": {
+   "driver": "^TNX",
+   "targets": [
+    "AGNC",
+    "NLY",
+    "STWD",
+    "BXMT",
+    "ARI"
+   ],
+   "expected_sign": 1,
+   "h": 5,
+   "shock_z": 2.0
+  },
+  "targets_used": [
+   "AGNC",
+   "NLY",
+   "ARI"
+  ],
+  "beta_to_spy_design": 0.898,
+  "window": "open(t+1) -> close(t+5), residual of beta x SPY; etf: targets use close t -> close t+5",
+  "design": {
+   "primary_signed_next_resid": {
+    "mean": -0.00097,
+    "se": 0.002692,
+    "t": -0.36,
+    "mde": 0.007539,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "net_of_cost": -0.00297,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": -0.006321,
+    "se": 0.002047,
+    "t": -3.09,
+    "mde": 0.00573,
+    "n": 93,
+    "n_blocks": 52
+   },
+   "placebo_all_days_signed_next": {
+    "mean": -0.000222,
+    "se": 0.000734,
+    "t": -0.3,
+    "mde": 0.002055,
+    "n": 1721,
+    "n_blocks": 82
+   },
+   "n_shocks": 93,
+   "by_year": {
+    "2016": {
+     "mean": -0.000896,
+     "n": 6
+    },
+    "2017": {
+     "mean": -0.000425,
+     "n": 9
+    },
+    "2018": {
+     "mean": -0.001256,
+     "n": 14
+    },
+    "2019": {
+     "mean": 0.007883,
+     "n": 18
+    },
+    "2020": {
+     "mean": 0.002509,
+     "n": 16
+    },
+    "2021": {
+     "mean": 0.002894,
+     "n": 13
+    },
+    "2022": {
+     "mean": -0.016652,
+     "n": 17
+    }
+   },
+   "loo_year_worst": -0.003095,
+   "span": [
+    "2016-05-18",
+    "2022-11-10"
+   ]
+  },
+  "confirm": {
+   "primary_signed_next_resid": {
+    "mean": -0.002655,
+    "se": 0.003425,
+    "t": -0.78,
+    "mde": 0.009589,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "net_of_cost": -0.004655,
+   "same_day_signed_resid (ordinary beta, not tradable)": {
+    "mean": -0.010443,
+    "se": 0.00241,
+    "t": -4.33,
+    "mde": 0.006747,
+    "n": 47,
+    "n_blocks": 29
+   },
+   "placebo_all_days_signed_next": {
+    "mean": 0.00046,
+    "se": 0.000759,
+    "t": 0.61,
+    "mde": 0.002126,
+    "n": 938,
+    "n_blocks": 45
+   },
+   "n_shocks": 47,
+   "by_year": {
+    "2023": {
+     "mean": -0.003084,
+     "n": 11
+    },
+    "2024": {
+     "mean": 0.001806,
+     "n": 14
+    },
+    "2025": {
+     "mean": -0.006194,
+     "n": 9
+    },
+    "2026": {
+     "mean": -0.004646,
+     "n": 13
+    }
+   },
+   "loo_year_worst": -0.004547,
+   "span": [
+    "2023-03-10",
+    "2026-09-23"
+   ]
+  },
+  "verdict": "FAILED_VARIANT",
+  "reason": "confirm mean -0.00265 <= 0",
+  "powered": false
+ }
+}
