@@ -142,6 +142,47 @@ def read_jsonl(p: Path) -> list[dict]:
     return out
 
 
+def owned_order_types(role: str, base: Optional[Path] = None) -> dict[str, str]:
+    """Types supported by both an owned LIVE decision and an accepted order outcome.
+
+    A decision alone is a plan, not an order.  The outcome must carry the same
+    run/client id and an actual broker order id.  Conflicting evidence is left
+    unknown rather than guessing a cooldown result.
+    """
+    decisions: dict[tuple[str, str], str] = {}
+    outcomes: dict[tuple[str, str], str] = {}
+    conflicts: set[tuple[str, str]] = set()
+    for row in read_jsonl(decisions_path(base)):
+        if row.get("role") != role or not row.get("run_id") or not row.get("coid"):
+            continue
+        key = (row["run_id"], row["coid"])
+        if row.get("row") == "decision" and row.get("mode") == "LIVE" and not row.get("refused"):
+            typ = row.get("type")
+            if typ not in (*STOP_TYPES, "limit"):
+                continue
+            if key in decisions and decisions[key] != typ:
+                conflicts.add(key)
+            decisions[key] = typ
+        elif row.get("row") == "outcome" and row.get("order_id"):
+            outcome = str(row.get("outcome") or "")
+            if not outcome.startswith("submitted "):
+                continue
+            oid = str(row["order_id"])
+            if key in outcomes and outcomes[key] != oid:
+                conflicts.add(key)
+            outcomes[key] = oid
+    by_id: dict[str, str] = {}
+    ambiguous: set[str] = set()
+    for key, typ in decisions.items():
+        if key in conflicts or key not in outcomes:
+            continue
+        oid = outcomes[key]
+        if oid in by_id and by_id[oid] != typ:
+            ambiguous.add(oid)
+        by_id[oid] = typ
+    return {oid: typ for oid, typ in by_id.items() if oid not in ambiguous}
+
+
 # ─────────────────────────────── contracts ──────────────────────────────────
 
 def policy_hash(body: dict) -> str:
@@ -1790,7 +1831,7 @@ class Venue:
             token = page[-1].get("id")
         return out
 
-    def stop_fills_since(self, iso: str) -> list[dict]:
+    def stop_fills_since(self, iso: str, *, owned_types: Optional[dict[str, str]] = None) -> list[dict]:
         """Sell fills since `iso` whose order was a STOP (C26 cooldown gate),
         newest first: [{symbol, filled_at, order_id, type}].
 
@@ -1798,18 +1839,29 @@ class Venue:
         filters orders by SUBMISSION time, and the stops that matter are GTC
         orders submitted weeks before they fill. An order's type comes from the
         closed orders submitted in the window, else from one GET per order id.
-        Any read failure raises -- the gate then refuses entries, never passes them."""
+        A missing historical order may use a matching accepted local owned-order
+        outcome.  Unresolved or conflicting types raise: history stays UNKNOWN."""
         fills = [f for f in self.fills(after=iso) if f.get("side") == "sell" and f.get("order_id")]
         if not fills:
             return []
         closed = self.get("/v2/orders", params={"status": "closed", "after": iso, "limit": 500,
                                                 "direction": "desc"}) or []
-        type_of = {o.get("id"): o.get("type") for o in closed if o.get("id")}
+        type_of = {o.get("id"): o.get("type") for o in closed if o.get("id") and o.get("type")}
         out = []
         for f in fills:
             oid = f["order_id"]
             if oid not in type_of:
-                type_of[oid] = (self.order(oid) or {}).get("type")
+                st, js = self.call("GET", f"/v2/orders/{oid}")
+                if st == 200 and isinstance(js, dict):
+                    type_of[oid] = js.get("type")
+                elif st == 404:
+                    type_of[oid] = (owned_types or {}).get(oid)
+                else:
+                    raise FleetRefusal(f"historical order type unreadable: HTTP {st}")
+            if not type_of[oid]:
+                raise FleetRefusal("historical order type unknown for a sell fill")
+            if type_of[oid] not in (*STOP_TYPES, "market", "limit"):
+                raise FleetRefusal("historical order type unrecognized for a sell fill")
             if type_of[oid] in STOP_TYPES:
                 out.append({"symbol": f.get("symbol"), "filled_at": f.get("transaction_time"),
                             "order_id": oid, "type": type_of[oid]})

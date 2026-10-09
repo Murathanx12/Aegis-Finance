@@ -201,9 +201,9 @@ def prev_weekday(d: date) -> date:
 
 # ─────────────────────────────── one account ────────────────────────────────
 
-def audit_account(role: str, venue: Optional[FM.Venue], *, state: Optional[dict], grades: list[dict],
+def audit_account(role: str, venue: Optional[FM.Venue], *, state: Optional[dict], grades: Optional[list[dict]],
                   run_id: str, trigger: str, credential_present: bool = True,
-                  decisions: Optional[list[dict]] = None) -> dict:
+                  decisions: Optional[list[dict]] = None, grades_path: Optional[Path] = None) -> dict:
     row: dict[str, Any] = {"schema": SCHEMA, "run_id": run_id, "trigger": trigger, "t": FM._now_iso(),
                            "role": role, "places_orders": False}
     if not credential_present or venue is None:
@@ -236,7 +236,10 @@ def audit_account(role: str, venue: Optional[FM.Venue], *, state: Optional[dict]
     orders_since = venue.orders_since(since) if since else []
     stops = stops_check(positions, open_orders)
     rs = reconcile_state(state, broker, fills, orders_since)
-    rg = reconcile_grades(role, grades, last_eq, prev_weekday(today).isoformat())
+    # Read after the account GETs: a concurrent manager can have appended this
+    # account's grade while the audit was waiting on the broker.
+    fresh_grades = FM.read_jsonl(grades_path) if grades_path is not None else (grades or [])
+    rg = reconcile_grades(role, fresh_grades, last_eq, prev_weekday(today).isoformat())
     flags = []
     if stops["missing"] or stops["partial"]:
         flags.append(f"MISSING_STOP {stops['missing'] + [p['symbol'] for p in stops['partial']]}")
@@ -280,7 +283,6 @@ def run_audit(roles: list[str], env: dict, *, run_id: str, trigger: str, base: O
     exception becomes that account's ERROR row; it never stops the others."""
     if not roles:
         raise EodAuditRefusal("REFUSED: no fleet roles to audit (an audit of nothing would read green)")
-    grades = FM.read_jsonl(FM.grades_path(base))
     decisions = FM.read_jsonl(FM.decisions_path(base))
     inner = transport or FM._urllib_transport
     rows = []
@@ -290,8 +292,9 @@ def run_audit(roles: list[str], env: dict, *, run_id: str, trigger: str, base: O
         try:
             state = json.loads(sp.read_text(encoding="utf-8")) if sp.exists() else None
             v = FM.Venue(kid, sec, transport=readonly_transport(inner)) if (kid and sec) else None
-            row = audit_account(role, v, state=state, grades=grades, run_id=run_id, trigger=trigger,
-                                credential_present=bool(kid and sec), decisions=decisions)
+            row = audit_account(role, v, state=state, grades=None, run_id=run_id, trigger=trigger,
+                                credential_present=bool(kid and sec), decisions=decisions,
+                                grades_path=FM.grades_path(base))
         except Exception as exc:                                # noqa: BLE001 -- one account never stops the rest
             row = {"schema": SCHEMA, "run_id": run_id, "trigger": trigger, "t": FM._now_iso(), "role": role,
                    "places_orders": False, "status": "ERROR", "why": f"{type(exc).__name__}: {exc}"[:300]}
