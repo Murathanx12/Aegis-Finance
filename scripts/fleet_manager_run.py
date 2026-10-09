@@ -1334,10 +1334,11 @@ def main(argv: Optional[list[str]] = None) -> int:
             rc = 3
             break
         try:
-            r = run_role(role, env=env, modes=modes, pass_=a.pass_, live_flag=a.live, run_id=run_id,
-                         books=books, issuer_of=issuer_of, stitched=stitched, digest=digest,
-                         digest_name=digest_name, baseline=baseline, pool={}, rebaseline=role in reb,
-                         sector_of=sector_of, sector_age_days=sector_age)
+            with FM.role_writer_lock(role):
+                r = run_role(role, env=env, modes=modes, pass_=a.pass_, live_flag=a.live, run_id=run_id,
+                             books=books, issuer_of=issuer_of, stitched=stitched, digest=digest,
+                             digest_name=digest_name, baseline=baseline, pool={}, rebaseline=role in reb,
+                             sector_of=sector_of, sector_age_days=sector_age)
         except Exception as exc:                                # noqa: BLE001 -- one account never stops the rest
             r = {"role": role, "status": "ERROR", "why": f"{type(exc).__name__}: {exc}"[:300],
                  "trace": traceback.format_exc()[-1500:]}

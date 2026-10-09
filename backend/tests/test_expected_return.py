@@ -193,6 +193,51 @@ def _er_sources(tmp: Path, positive: bool) -> "ER.Sources":
                       decision_rows=DL.read(tmp / "ledger.jsonl"))
 
 
+def test_expected_return_quarantines_legacy_decision_grades(tmp_path):
+    def score(day, rule, rel):
+        return {"state": "SCORED", "asof": day, "detail": {
+            "grading_rule": rule, "er_horizon": 21, "ticker": "TEST",
+            "excess_return": rel,
+            "er_by_component": {"ranker": {"x": 0.03}}}}
+
+    old = score("2026-01-02", None, 0.50)
+    new = score("2026-01-03", DL.SCORING_RULE, -0.10)
+    src = ER.Sources(label="offline", decision_rows=[old, new])
+    long, wide = ER._decision_frames(src.decision_rows, ASOF)
+    assert len(long) == len(wide[21]) == 1
+    assert long.iloc[0]["rel"] == pytest.approx(-0.10)
+    fit = ER.fit(src, asof=ASOF)
+    assert fit["n_graded_decisions"] == 1
+    assert fit["tables"][21].loc["ranker", "n_rows"] == 1
+    assert fit["oos"][21]["n_dates"] == 0
+    assert fit["decision_grade_provenance"] == {
+        "required_grading_rule": DL.SCORING_RULE,
+        "admitted_decision_rows": 1,
+        "excluded_unapproved_grading_rule": 1,
+        "excluded_invalid_numeric_grade": 0}
+    view = ER.build(ASOF, ["TEST"], src, fitted=fit, write=False)
+    assert view["fit"]["decision_grade_provenance"] == fit["decision_grade_provenance"]
+    with pytest.raises(ValueError, match="approved decision grading provenance"):
+        ER.build(ASOF, ["TEST"], src, fitted={**fit,
+                 "decision_grade_provenance": {}}, write=False)
+
+
+@pytest.mark.parametrize("bad", [float("inf"), float("nan"), True, "0.2"])
+def test_expected_return_rejects_invalid_versioned_numeric_grades(bad):
+    row = {"state": "SCORED", "asof": "2026-01-03", "detail": {
+        "grading_rule": DL.SCORING_RULE, "er_horizon": 21, "ticker": "TEST",
+        "er_total": bad, "excess_return": 0.2,
+        "er_by_component": {"ranker": {"x": 0.03}}}}
+    src = ER.Sources(label="offline", decision_rows=[row])
+    long, wide = ER._decision_frames(src.decision_rows, ASOF)
+    assert long.empty and wide[21].empty
+    fit = ER.fit(src, asof=ASOF)
+    assert fit["n_graded_decisions"] == 0
+    assert fit["decision_grade_provenance"]["excluded_invalid_numeric_grade"] == 1
+    row["detail"].update(er_total=0.1, excess_return=bad)
+    assert ER._decision_frames(src.decision_rows, ASOF)[0].empty
+
+
 def _plant_blend_grade(ledger: Path, n_days: int, excess: float) -> None:
     with ledger.open("a", encoding="utf-8") as fh:
         for i in range(n_days):
@@ -200,7 +245,8 @@ def _plant_blend_grade(ledger: Path, n_days: int, excess: float) -> None:
                 "decision_id": f"bg{i}", "state": "SCORED",
                 "asof": (TODAY - timedelta(days=90 - i)).isoformat(),
                 "detail": {"horizon_sessions": config.ER_BLEND_GRADE_HORIZON,
-                           "er_total": 0.01, "excess_return": excess}}) + "\n")
+                           "er_total": 0.01, "excess_return": excess,
+                           "grading_rule": DL.SCORING_RULE}}) + "\n")
 
 
 def test_u_plan_refuses_exploit_until_the_blend_is_graded_and_still_probes(tmp_path, monkeypatch):

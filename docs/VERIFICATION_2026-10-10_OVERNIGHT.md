@@ -35,3 +35,16 @@ This addendum supersedes the 00:21 status only where it gives newer evidence; th
 - PC-PAPER candidate `ff14efa2` remains inactive. Independent review found three actual consumer/lifecycle bugs; repair is in progress and the candidate is not accepted. Existing owner policy authorization persists, with the contract barring activation before Monday 13:30 UTC.
 
 PR13/Docker push, deployment, task installation, CI, public publication, and consumer acceptance remain pending at this update.
+
+## Current integration snapshot - 2026-10-10 02:06:49 SGT (2026-10-09 18:06:49 UTC)
+
+The 00:21 and 00:27 verification snapshots above remain historical. **Overall: NOT READY.**
+
+- PR13/16 are merged; first-release PR/main CI passed and production f49e3a90 is healthy with NAV, registry and lane YAML unchanged. The initial full suite over 26 source changes recorded 14,412 passed, 74 skipped, 126 deselected and 5 failed, with source hashes stable. Four failures came from inherited AEGIS_PERSONAL_MODE=1; explicit public-mode=0 replay passed 30 tests with 1 skipped. The fifth, guard enrollment, is closed by independently approved and integrated b86cf1e8: 129 guard tests plus the default public-mode check pass, and instrumented prepare confirms missing broker timestamp raises before I/O. Later approved sweep 90387f72 and nested-history 43435112 deltas passed 215 tests across all 10 fleet test files; these later deltas were not in the initial full run. 31 reviewed source/test/FINDINGS files are staged locally; these four docs remain in the worktree. Follow-through is uncommitted and unpushed; exact-commit CI remains pending.
+- PC candidate 0264201d and generic grader 46c59a90 are approved for inactive code; all 15 source pins verify and both activation flags remain false. The activation contract remains not-before Monday 2026-10-12 13:30 UTC; safe transition and fresh venue evidence remain required.
+- Hack5 GET-only status at 18:04:30 UTC is KNOWN: stop_fills empty, SPY cooldown PASS, 117 held and 117 resting stops. No manager run or broker mutation occurred. Sweep source is approved for inactive use; its task is only proposed.
+- APScheduler's separate 12-job database backup completed at 17:55 UTC. Source/snapshot/pre-post key, timestamp and blob hashes matched; local isolated verification passed and production census was 12/12 healthy. The independent SQLite/forecast-ledger two-store restore also passes. This is not a full-volume recovery or cutover.
+- The Saturday 10:30 SGT publication task is installed, but its first manual run refused at provenance validation and preserved its pending transaction. Reviewed repair 4f5b19d9 passed 70 tests but is not deployed; no publication was pushed.
+- News candidates each retain one critical unsupported settlement-date claim. Their 0/6 and 6/6 are numeric token-group scores. Gold-v2 is frozen at 40 examples (SHA-256 prefix 3f5...), with 31 aligned and 9 masked; no complete 20-development/20-held-out candidate benchmark or held-out inference exists. OpenClaw passed the former two-hour browser age boundary and its reader completed 220 pages.
+
+The sim still has zero orders and a stale mandate. Publication success, PC activation, named consumer acceptance, full-volume local cutover, billing evidence and authentic Bloomberg inputs remain pending. The recovery is NOT READY.

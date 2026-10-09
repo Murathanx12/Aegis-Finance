@@ -92,3 +92,25 @@ is nowhere to rotate, so high fragility leaves equity at 1.0. Pinned by
    input → AttributeError, still loud) and F5 (registry-only confidence) noted.
 2. **"the feature-hash guard rejects a tampered model"** — ✅ TRUE when the sidecar is present
    (proven). ⚠️ bypassed when the sidecar is deleted (F3, pinned + backlogged).
+
+## 2026-10-10 erratum: decision-ledger grading window
+
+The decision grader previously fetched one panel from the earliest due decision through
+the grading day, then used each column's first and last non-null prices. It ignored each
+row's frozen as-of and expiry, so overlapping decisions could inherit another row's
+entry price and an expired decision could receive a later recovery. A 21-session offline
+reproduction yielded +20% recorded excess where each frozen-window excess was -10%; this
+is a grader defect, not evidence of skill. Missing benchmark closes could also leave a
+raw SCORED row without a valid excess.
+
+Future `decision_close_endpoints/2` scores require exact row endpoints for the asset and
+SPY, a complete close after the expiry date, and valid ordered price dates and positive
+finite closes. Missing evidence remains unpriceable. PROBE and E[r] blend learning gates
+ignore unversioned earlier scores; prior ledger, fills and NAV are not rewritten. Those
+historical grades remain unverified until a separate dated disposition and may not be
+used as new positive learning evidence.
+
+Follow-up: finite positive endpoint prices can still overflow a close ratio, and two
+infinite returns can yield a NaN excess. The grader now refuses nonfinite computed
+returns before appending; direct learning gates and E[r] reject malformed numeric
+grades even if a row carries the new rule marker. Existing rows remain untouched.

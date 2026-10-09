@@ -673,7 +673,7 @@ def _asof_et() -> str:
     return _now_et().date().isoformat()
 
 
-def _probe_grade(ledger_path: Path | None = None) -> dict:
+def _probe_grade(ledger_path: Path | None = None, *, epoch_hash: str | None = None) -> dict:
     """The SHORTLIST's own forward grade, from SCORED `decision_ledger` rows.
 
     Not `top20_net_rel_21d`: that number measures the ranker, and the shortlist
@@ -683,28 +683,43 @@ def _probe_grade(ledger_path: Path | None = None) -> dict:
     UNMEASURED_TRADE_SMALL and the plan may trade at the probe cap.
     """
     from backend.services import decision_ledger as DL
-    hid = str(_config.PROBE_SHORTLIST_HYPOTHESIS_ID)
+    hid = "PC_EPOCH_PROBE" if epoch_hash else str(_config.PROBE_SHORTLIST_HYPOTHESIS_ID)
     h = min(int(x) for x in _config.PROBE_HORIZONS_SESSIONS)
     by_day: dict[str, list[float]] = {}
+    invalid_rows = 0
     for r in DL.read(ledger_path):
         d = r.get("detail") or {}
         if str(r.get("state")) != "SCORED" or not isinstance(d, dict):
+            continue
+        if d.get("grading_rule") != DL.SCORING_RULE:
+            continue
+        if epoch_hash is not None and d.get("policy_epoch_sha256") != epoch_hash:
+            continue
+        if epoch_hash is None and d.get("policy_epoch_sha256") is not None:
             continue
         # A PROBE row graded under the day's CONTRACT hypothesis (the ALLE
         # fix) keeps the shortlist's id in `shortlist_hypothesis_id`.
         if (hid not in (d.get("hypothesis_id"), d.get("shortlist_hypothesis_id"))
                 or d.get("horizon_sessions") != h):
             continue
-        ex = d.get("excess_return")
+        ex = DL.finite_grade_number(d.get("excess_return"))
         if ex is None:
+            invalid_rows += 1
             continue
-        by_day.setdefault(str(r.get("asof"))[:10], []).append(float(ex))
+        by_day.setdefault(str(r.get("asof"))[:10], []).append(ex)
     need = int(_config.PROBE_GRADE_MIN_SESSIONS)
     n_days = len(by_day)
     day_means = [sum(v) / len(v) for v in by_day.values()]
     mean = (sum(day_means) / n_days) if n_days else None
     base = {"hypothesis_id": hid, "horizon_sessions": h, "n_days_scored": n_days,
-            "min_days": need, "mean_excess_per_day": mean}
+            "min_days": need, "mean_excess_per_day": mean,
+            "invalid_numeric_rows": invalid_rows}
+    if invalid_rows:
+        return {**base, "verdict": "MEASUREMENT_INVALID", "may_trade": False,
+                "why": f"{invalid_rows} matching versioned PROBE grades had invalid excess"}
+    if mean is not None and not math.isfinite(mean):
+        return {**base, "verdict": "MEASUREMENT_INVALID", "may_trade": False,
+                "why": "nonfinite aggregate probe grade"}
     if n_days < need:
         return {**base, "verdict": "UNMEASURED_TRADE_SMALL", "may_trade": True,
                 "why": (f"{n_days} of {need} scored decision days at h={h}: "
@@ -718,7 +733,7 @@ def _probe_grade(ledger_path: Path | None = None) -> dict:
                     f"per decision day at h={h} over {n_days} days")}
 
 
-def _blend_grade(ledger_path: Path | None = None) -> dict:
+def _blend_grade(ledger_path: Path | None = None, *, epoch_hash: str | None = None) -> dict:
     """The E[r] BLEND's own forward grade (chunk 2), from SCORED ledger rows.
 
     A row counts when it carried `er_total` at `ER_BLEND_GRADE_HORIZON`: its
@@ -734,11 +749,23 @@ def _blend_grade(ledger_path: Path | None = None) -> dict:
         d = r.get("detail") or {}
         if str(r.get("state")) != "SCORED" or not isinstance(d, dict):
             continue
-        if d.get("er_total") is None or d.get("excess_return") is None:
+        if d.get("grading_rule") != DL.SCORING_RULE:
             continue
-        if int(d.get("er_horizon") or d.get("horizon_sessions") or 0) != h:
+        if epoch_hash is not None and (d.get("policy_epoch_sha256") != epoch_hash
+                                       or d.get("sleeve") != "EXPLOIT"):
             continue
-        er, ex = float(d["er_total"]), float(d["excess_return"])
+        if epoch_hash is None and d.get("policy_epoch_sha256") is not None:
+            continue
+        er = DL.finite_grade_number(d.get("er_total"))
+        ex = DL.finite_grade_number(d.get("excess_return"))
+        if er is None or ex is None:
+            continue
+        try:
+            row_horizon = int(d.get("er_horizon") or d.get("horizon_sessions") or 0)
+        except (TypeError, ValueError, OverflowError):
+            continue
+        if row_horizon != h:
+            continue
         if er == 0:
             continue
         by_day.setdefault(str(r.get("asof"))[:10], []).append((1.0 if er > 0 else -1.0) * ex)
@@ -748,6 +775,9 @@ def _blend_grade(ledger_path: Path | None = None) -> dict:
     mean = (sum(means) / n_days) if n_days else None
     base = {"horizon_sessions": h, "n_days_scored": n_days, "min_days": need,
             "mean_signed_excess_per_day": mean}
+    if mean is not None and not math.isfinite(mean):
+        return {**base, "verdict": "MEASUREMENT_INVALID", "may_trade": False,
+                "why": "nonfinite aggregate blend grade"}
     if n_days < need:
         return {**base, "verdict": "UNMEASURED", "may_trade": False,
                 "why": (f"the E[r] blend has {n_days} of {need} scored decision days at "
@@ -802,7 +832,8 @@ def _pc_plan_dir(contracts_dir: Path | None) -> Path:
     return Path(DC.DECISIONS_DIR) / PC_PLAN_SUBDIR
 
 
-def _prior_probe_holdings(folder: Path, asof: str) -> set[str]:
+def _prior_probe_holdings(folder: Path, asof: str,
+                          *, epoch_hash: str | None = None) -> set[str]:
     """Tickers an EARLIER plan was permitted to buy as PROBE. Their exits are
     PROBE exits: without this, a PROBE position whose name left the shortlist
     could only ever be sold by the EXPLOIT gate, which is refused."""
@@ -817,7 +848,14 @@ def _prior_probe_holdings(folder: Path, asof: str) -> set[str]:
         except (OSError, ValueError):
             continue
         for r in blob.get("rows") or []:
-            if r.get("direction") == "PROBE" and r.get("acting"):
+            if epoch_hash is not None:
+                relevant = (r.get("policy_epoch_sha256") == epoch_hash
+                            and r.get("sleeve") == "PROBE"
+                            and r.get("direction") == "BUY")
+            else:
+                relevant = (r.get("policy_epoch_sha256") is None
+                            and r.get("direction") == "PROBE")
+            if relevant and r.get("acting"):
                 out.add(str(r.get("ticker")))
     return out
 
@@ -1014,8 +1052,10 @@ def _write_sleeve_decisions(rows: list[dict], *, asof: str, folder: Path,
                               "core_price": r.get("core_price"),
                               "hypothesis_id": r["hypothesis_id"],
                               "book_id": r.get("book_id"),
+                              "policy_epoch_sha256": r.get("policy_epoch_sha256"),
                               "acting": r["acting"], "virtual": r["virtual"],
-                              "contract_file": str(path)})
+                              "contract_file": str(path),
+                              **{k: r.get(k) for k in DL.ER_ROW_FIELDS}})
             recorded += 1
         except DL.DecisionLedgerError as exc:
             refused.append({"decision_id": r["decision_id"], "reason": str(exc)[:200]})
@@ -1603,13 +1643,325 @@ def _freeze_decision_story(*, out: Path, asof: str, mode: str, sandbox: bool,
                                              f"{str(exc)[:200]}", "n_new_stories": 0}
 
 
+def _epoch_selector_evidence(out: Path, asof: str, contract: dict, held: dict,
+                             *, funnel_path: Path | None, bars_paths: list[Path] | None,
+                             now_utc: datetime | None, folder: Path,
+                             ledger_path: Path | None = None,
+                             filled_probe_symbols: set[str] | None = None,
+                             shadow_symbols: set[str] | None = None) -> tuple[dict, dict, dict]:
+    """Adapt the existing, separately gated selectors to frozen epoch inputs."""
+    from backend.services import investment_committee as IC
+    from backend.services import pc_broker as PB
+    from backend.services import pc_risk as PR
+    from backend.services import pc_sleeves as SL
+    from backend.services import expected_return as ER
+    from backend.services import policy_state as PS
+    ranking_path = out / "ranking.json"
+    ranking = json.loads(ranking_path.read_text(encoding="utf-8")) if ranking_path.exists() else {}
+    fresh = not bars_gate(ranking.get("asof"), bars_paths=bars_paths,
+                          now_utc=now_utc)["stale"]
+    try:
+        shortlist = IC.shortlist(asof, funnel_path=funnel_path)
+    except IC.ShortlistRefused:
+        shortlist = []
+    adv_by_symbol = {str(x.get("ticker") or "").upper(): x.get("median_dollar_vol")
+                     for x in shortlist if x.get("ticker")}
+    contract_view = _contract_view(folder, asof, None)
+    shortlist = [x for x in shortlist if str(x.get("ticker") or "").upper()
+                 not in contract_view["refused"]]
+    try:
+        book = SL.load_revision_flow(book_id=contract["content"]["revision_flow"]["book_id"])
+        source_ok = sorted(book["tickers"]) == sorted(
+            contract["content"]["revision_flow"]["members"])
+    except Exception:  # noqa: BLE001 -- an unreadable book cannot add risk
+        source_ok = False
+    symbols = ({str(x.get("symbol") or "") for x in ranking.get("top") or []}
+               | {str(x.get("ticker") or "") for x in shortlist}
+               | set(contract["content"]["revision_flow"]["members"])
+               | set(held) | set(shadow_symbols or ()) | {"SPY"})
+    prices = PB.last_prices(sorted(s for s in symbols if s))
+    try:
+        sigmas = PR.panel_sigmas(Path(bars_paths[0])) if bars_paths else PR.panel_sigmas()
+    except Exception:  # noqa: BLE001 -- unknown sigma blocks buys downstream
+        sigmas = {}
+    er_view = None
+    try:
+        source = ER.Sources.production(asof=asof, out=out)
+        er_view = ER.build(asof, sorted(s for s in symbols if s), source,
+                           out_dir=out / "expected_return")
+    except Exception as exc:  # noqa: BLE001 -- existing rank-order fallback
+        logger.warning("epoch expected return unavailable: %s", exc)
+    try:
+        pview = PS.plan_view(asof)
+        preference = ({"use": True,
+                       "probe_weighting": pview["used"]["probe_weighting"],
+                       "reputation_weights": pview["state"]["values"]["reputation_weights"]}
+                      if pview.get("use") else {"use": False})
+    except Exception as exc:  # noqa: BLE001 -- preferences never raise caps
+        logger.warning("epoch policy preference unavailable: %s", exc)
+        preference = {"use": False}
+    epoch_hash = contract["content_sha256"]
+    prior_probe = (_prior_probe_holdings(folder, asof, epoch_hash=epoch_hash)
+                   | (filled_probe_symbols or set())) & set(held)
+    selectors = {"bars_fresh": fresh, "revision_source_verified": source_ok,
+                 "ranking": ranking,
+                 "blend_grade_may_trade": _blend_grade(ledger_path, epoch_hash=epoch_hash)["may_trade"],
+                 "probe_grade_may_trade": _probe_grade(ledger_path, epoch_hash=epoch_hash)["may_trade"],
+                 "probe_rows": shortlist,
+                 "adv_by_symbol": adv_by_symbol,
+                 "er_view": er_view, "probe_preference": preference,
+                 "prior_probe_holdings": sorted(prior_probe)}
+    return selectors, prices, sigmas
+
+
+def _epoch_decision_rows(plan: dict, *, contract: dict, asof: str, mode: str,
+                         equity: float, prices: dict,
+                         er_view: dict | None = None) -> list[dict]:
+    from backend.services import decision_contract as DC
+    from backend.services import decision_ledger as DL
+    from backend.services import expected_return as ER
+    identity = contract["content_sha256"]
+    rows = []
+    entries = [(target, plan["target_states"][target["symbol"]], False)
+               for target in plan["targets"]]
+    entries.extend(({"symbol": sym, "weight": 0.0}, "EXPLOIT", True)
+                   for sym in plan.get("shadow_exploit") or [])
+    for target, state, shadow in entries:
+        sym = target["symbol"]
+        held_weight = float(plan["held_weights"].get(sym, 0.0))
+        acting = held_weight > 0.0 and not shadow
+        policy_id = (contract["content"]["epoch_id"] + ".EXPLOIT_SHADOW"
+                     if shadow else contract["content"]["epoch_id"])
+        expiry_policy = contract["content"]["eligibility_and_expiry"]
+        horizons = (expiry_policy["probe_horizons_sessions"] if state == "PROBE" else
+                    expiry_policy["exploit_horizons_sessions"] if state == "EXPLOIT" else
+                    expiry_policy["revision_grade_horizons_sessions"])
+        for horizon in horizons:
+            expiry, basis = DC.sessions_expiry(date.fromisoformat(asof), int(horizon))
+            row = {"decision_id": DC.decision_id(
+                        policy_id=policy_id,
+                        policy_version=identity, ticker=sym, asof=asof,
+                        horizon_sessions=int(horizon)),
+                   "asof": asof, "policy_id": policy_id,
+                   "policy_version": identity, "policy_epoch_sha256": identity,
+                   "licence": "PRODUCT_EXPERIMENT", "ticker": sym,
+                   "source": DL.SLEEVE_SOURCE, "sleeve": state,
+                   "direction": "BUY", "authority": state,
+                   "hypothesis_id": ("PC_EPOCH_EXPLOIT_SHADOW" if shadow
+                                     else f"PC_EPOCH_{state}"),
+                   "selector_shadow": shadow,
+                   "horizon_sessions": int(horizon),
+                   "horizon": {"sessions": int(horizon), "basis": "frozen epoch"},
+                   "expiry_utc": expiry, "expiry_basis": basis,
+                   "mode": mode, "acting": acting,
+                   "virtual": not acting,
+                   "entry_price": prices.get(sym), "core_symbol": "SPY",
+                   "core_price": prices.get("SPY"),
+                   "grading": "excess over separately sampled SPY control",
+                   "position_budget": {"weight": held_weight if acting else target["weight"],
+                                       "dollars": (held_weight if acting else target["weight"]) * equity,
+                                       "capital_usd": equity,
+                                       "price": prices.get(sym),
+                                       "target_weight": target["weight"],
+                                       "virtual": not acting},
+                   "built_utc": _now()}
+            if state == "EXPLOIT":
+                try:
+                    row.update(ER.row_fields(er_view, sym, int(horizon)))
+                except (KeyError, TypeError, ValueError):
+                    if not shadow:
+                        raise
+                    cell = (((er_view or {}).get("names") or {}).get(sym) or {}).get(
+                        f"h{int(horizon)}") or {}
+                    row.update({"er_total": cell.get("er"),
+                                "er_horizon": int(horizon),
+                                "er_absent": "shadow E[r] decomposition incomplete"})
+            row["artifact_sha256"] = DC.seal(row)
+            rows.append(row)
+    return rows
+
+
+def _epoch_handoff_if_needed(journal_path: Path, *, contract: dict, broker: Any,
+                             session_id: str, nonce: str) -> None:
+    """Transfer one journal only after the old session and lease closed cleanly."""
+    if not journal_path.exists():
+        return
+    import re
+    from backend.services import pc_broker as PB
+    from backend.services import pc_policy_epoch as PE
+    row = PE._load(journal_path)
+    if row["session_id"] == session_id and row["nonce"] == nonce:
+        return
+    old_nonce = str(row.get("nonce") or "")
+    if not re.fullmatch(r"[0-9a-f]{32}", old_nonce):
+        raise PE.EpochRefused("old lease nonce is not an owned session token")
+    closure_path = PB.STATE_DIR / "lease_history" / f"{old_nonce}.json"
+    closure = json.loads(closure_path.read_text(encoding="utf-8"))
+    prior = next((s for s in reversed(SS.history(limit=1000))
+                  if s.get("id") == row["session_id"]
+                  and s.get("state") in {"STOPPED", "COMPLETED"}
+                  and s.get("ended")), None)
+    if prior is None:
+        recovered = closure.get("unclean_session") or {}
+        if (closure.get("recovered_from_unclean") is True
+                and recovered.get("id") == row["session_id"]):
+            prior = recovered
+        else:
+            raise PE.EpochRefused("prior sim session has no clean or verified recovery receipt")
+    known = PE.stock_client_ids(row)
+    evidence = broker.evidence(known_client_ids=known)
+    PE.handoff(journal_path, contract=contract, old_closure=closure,
+               old_session=prior, new_evidence=evidence,
+               new_session_id=session_id, new_nonce=nonce)
+
+
+def _epoch_legacy_nav_view(out: Path) -> dict:
+    """Archive the last old-policy NAV receipt by hash, never as sizing truth."""
+    from backend.services import pc_policy_epoch as PE
+    path = out / "nav.jsonl"
+    if not path.is_file():
+        return {"status": "ABSENT", "authority": "none"}
+    try:
+        last = next(line for line in reversed(path.read_text(encoding="utf-8").splitlines())
+                    if line.strip())
+        row = json.loads(last)
+        return {"status": "OBSERVED_ONLY", "sha256": PE._sha(row),
+                "observed_utc": row.get("t"), "equity": row.get("equity"),
+                "authority": "broker evidence in current epoch cycle"}
+    except (OSError, StopIteration, ValueError, TypeError) as exc:
+        return {"status": "UNREADABLE", "reason": type(exc).__name__,
+                "authority": "none"}
+
+
+def _run_epoch_plan(out: Path, *, mode: str, asof: str, folder: Path,
+                    contract: dict, journal_path: Path, broker: Any,
+                    session_id: str, nonce: str, review_receipt: dict | None,
+                    selectors: dict | None, prices: dict | None, sigmas: dict | None,
+                    now_utc: datetime | None, funnel_path: Path | None,
+                    bars_paths: list[Path] | None, ledger_path: Path | None) -> dict:
+    from backend.services import pc_policy_epoch as PE
+    from backend.services import pc_epoch_planner as PL
+    out.mkdir(parents=True, exist_ok=True)
+    now = now_utc or datetime.now(timezone.utc)
+    if (not isinstance(review_receipt, dict)
+            or review_receipt.get("approved") is not True
+            or review_receipt.get("contract_sha256") != contract["content_sha256"]
+            or not review_receipt.get("reviewed_utc")):
+        raise PE.EpochRefused("independent reviewed epoch receipt absent before transition")
+    try:
+        reviewed = datetime.fromisoformat(review_receipt["reviewed_utc"])
+    except ValueError as exc:
+        raise PE.EpochRefused("review receipt timestamp invalid") from exc
+    if reviewed.tzinfo is None or reviewed > now:
+        raise PE.EpochRefused("review receipt timestamp is not prior to transition")
+    earliest = datetime.fromisoformat(contract["content"]["transition"]["not_before_utc"])
+    venue_open = broker.venue_open() if now >= earliest else False
+    legacy_sources = {"status": "LEGACY_OBSERVED_AT",
+                      "last_reconcile_nav": _epoch_legacy_nav_view(out),
+                      "config_sha256": contract["content"]["source_sha256"].get(
+                          "backend/config.py"),
+                      "effective_flags": {
+                          "PC_BENCHMARK_CORE": _config.PC_BENCHMARK_CORE,
+                          "PC_SLEEVE_REVISION_FLOW": _config.PC_SLEEVE_REVISION_FLOW,
+                          "PC_SLEEVE_REVISION_FLOW_GROSS":
+                              _config.PC_SLEEVE_REVISION_FLOW_GROSS,
+                          "PROBE_GROSS_CAP": _config.PROBE_GROSS_CAP}}
+    _epoch_handoff_if_needed(journal_path, contract=contract, broker=broker,
+                             session_id=session_id, nonce=nonce)
+    row = PE.transition_cycle(journal_path, contract=contract, broker=broker,
+                              session_id=session_id, nonce=nonce,
+                              legacy_sources=legacy_sources,
+                              may_submit=(mode == "paper_profit" and venue_open),
+                              review_receipt=review_receipt)
+    if row["state"] == "RECONCILED" and review_receipt:
+        evidence = broker.evidence(known_client_ids={
+            row["intent"]["client_order_id"]} if row.get("intent") else set())
+        row = PE.activate(journal_path, contract=contract, evidence=evidence,
+                          review_receipt=review_receipt, venue_open=venue_open,
+                          now_utc=now)
+    if row["state"] != "ACTIVE":
+        record = {"t": _now(), "asof": asof, "mode": mode,
+                  "verdict": "POLICY_EPOCH_TRANSITION", "acting": False,
+                  "policy_epoch_sha256": contract["content_sha256"],
+                  "policy_epoch_state": row["state"],
+                  "transition_id": row["transition_id"],
+                  "why_not": row.get("reason") or "transition not activated",
+                  "n_to_send": 0, "sent": []}
+    else:
+        known = PE.stock_client_ids(row)
+        evidence = broker.evidence(known_client_ids=known)
+        PE._identity(evidence, session_id=session_id, nonce=nonce,
+                     fingerprint=row["account_fingerprint"])
+        held = {p["symbol"]: p["qty"] for p in evidence["positions"]}
+        if selectors is None or prices is None or sigmas is None:
+            selectors, prices, sigmas = _epoch_selector_evidence(
+                out, asof, contract, held, funnel_path=funnel_path,
+                bars_paths=bars_paths, now_utc=now_utc, folder=folder,
+                ledger_path=ledger_path,
+                filled_probe_symbols={str(i["symbol"]) for i in
+                                      row.get("stock_intents") or []
+                                      if i.get("state") == "PROBE"
+                                      and i.get("side") == "buy"
+                                      and i.get("status") == "FILLED"},
+                shadow_symbols={p["symbol"] for p in
+                                row["legacy_observed_at"].get("positions") or []})
+        plan = PL.plan_active(contract=contract, evidence=evidence,
+                              selectors=selectors, prices=prices, sigmas=sigmas)
+        decision_rows = _epoch_decision_rows(
+            plan, contract=contract, asof=asof, mode=mode,
+            equity=float(evidence["account"]["equity"]), prices=prices,
+            er_view=selectors.get("er_view"))
+        decisions = (_write_sleeve_decisions(decision_rows, asof=asof,
+                                             folder=folder, ledger_path=ledger_path)
+                     if decision_rows else {"new_rows": 0})
+        action = PE.execute_stock_cycle(journal_path, contract=contract,
+                                        broker=broker, plan=plan,
+                                        may_submit=(mode == "paper_profit" and venue_open))
+        sent = ([action] if action["status"] not in {"NO_NEW_ORDER",
+                                                   "PENDING_PRE_POST_BOUNDARY"} else [])
+        record = {"t": _now(), "asof": asof, "mode": mode,
+                  "verdict": "POLICY_EPOCH_ACTIVE", "acting": True,
+                  "policy_epoch_sha256": contract["content_sha256"],
+                  "policy_epoch_state": "ACTIVE", "activated_utc": row["activated_utc"],
+                  "since_epoch_equity_change_unadjusted": (
+                      float(evidence["account"]["equity"])
+                      / float(row["opening_economic"]["equity"]) - 1.0),
+                  "since_epoch_return": None,
+                  "performance_status": "UNKNOWN_CASHFLOWS",
+                  "shadow": PE.observed_legacy_shadow(row, prices),
+                  "plan": plan, "decisions": decisions,
+                  "n_to_send": len(plan["sendable"]), "sent": sent,
+                  "stock_action": action,
+                  "why_not": (None if action["status"] == "ACKNOWLEDGED" else
+                              action.get("reason") or action["status"])}
+    (out / "intended_book.json").write_text(
+        json.dumps(record, indent=1, default=str), encoding="utf-8")
+    with (out / "decisions.jsonl").open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(record, default=str) + "\n")
+    return {"planned": row["state"] == "ACTIVE", "verdict": record["verdict"],
+            "policy_epoch_sha256": contract["content_sha256"],
+            "policy_epoch_state": row["state"], "n_orders": record["n_to_send"],
+            "n_sent": len(record["sent"])}
+
+
 def u_plan(out: Path, mode: str, *, asof: str | None = None,
            funnel_path: Path | None = None, ledger_path: Path | None = None,
            contracts_dir: Path | None = None, er_sources: Any = None,
            er_dir: Path | None = None, contract_file: Path | None = None,
            bars_paths: list[Path] | None = None,
            now_utc: datetime | None = None,
-           policy_state_path: Path | None = None) -> dict:
+           policy_state_path: Path | None = None,
+           policy_epoch_path: Path | None = None,
+           policy_epoch_root: Path | None = None,
+           policy_epoch_journal_path: Path | None = None,
+           policy_epoch_broker: Any = None,
+           policy_epoch_session_id: str | None = None,
+           policy_epoch_nonce: str | None = None,
+           policy_epoch_review_receipt: dict | None = None,
+           policy_epoch_selectors: dict | None = None,
+           policy_epoch_prices: dict | None = None,
+           policy_epoch_sigmas: dict | None = None,
+           policy_epoch_now_utc: datetime | None = None) -> dict:
     """Ranking + committee shortlist -> a book, under EXPLOIT and PROBE.
 
     THE UNIT THAT DID NOT EXIST (2026-09-23), and then the unit that could not
@@ -1689,6 +2041,50 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
 
     asof = asof or _asof_et()
     folder = _pc_plan_dir(contracts_dir)
+
+    # A selected no-index epoch must never fall through to the legacy planner.
+    # That planner still consumes mutable config for allocation and grading;
+    # until those consumers are migrated, an epoch is a hard observe-only hold.
+    # This is before the bars gate so a stale selector cannot obscure the hold.
+    if policy_epoch_path is not None:
+        from backend.services import pc_policy_epoch as PE
+        try:
+            frozen = PE.load_contract(policy_epoch_path,
+                                      root=policy_epoch_root or REPO)
+            epoch_hash = frozen["content_sha256"]
+            reason = "epoch execution disabled pending independent review"
+        except Exception as exc:  # noqa: BLE001 -- selected epoch always fails closed
+            epoch_hash = None
+            reason = f"prepared epoch invalid: {type(exc).__name__}: {str(exc)[:160]}"
+            frozen = None
+        if (frozen is not None and PE.ACTIVATION_ALLOWED
+                and policy_epoch_journal_path is not None
+                and policy_epoch_session_id and policy_epoch_nonce
+                and mode == "paper_profit"):
+            from backend.services.pc_epoch_broker import PaperEpochBroker
+            return _run_epoch_plan(
+                out, mode=mode, asof=asof, folder=folder, contract=frozen,
+                journal_path=policy_epoch_journal_path,
+                broker=policy_epoch_broker or PaperEpochBroker(),
+                session_id=policy_epoch_session_id, nonce=policy_epoch_nonce,
+                review_receipt=policy_epoch_review_receipt,
+                selectors=policy_epoch_selectors, prices=policy_epoch_prices,
+                sigmas=policy_epoch_sigmas, now_utc=policy_epoch_now_utc,
+                funnel_path=funnel_path, bars_paths=bars_paths,
+                ledger_path=ledger_path)
+        record = {"t": _now(), "asof": asof, "mode": mode,
+                  "verdict": "REFUSED_POLICY_EPOCH_INACTIVE", "acting": False,
+                  "exploit_acting": False, "probe_acting": False,
+                  "policy_epoch_sha256": epoch_hash, "policy_epoch_state": "INACTIVE",
+                  "why_not": reason, "n_to_send": 0, "sent": []}
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "intended_book.json").write_text(
+            json.dumps(record, indent=1), encoding="utf-8")
+        with (out / "decisions.jsonl").open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record) + "\n")
+        return {"planned": False, "refused": "POLICY_EPOCH_INACTIVE",
+                "verdict": record["verdict"], "policy_epoch_sha256": epoch_hash,
+                "acting": False, "n_orders": 0, "n_sent": 0}
 
     # ---- the ranker (EXPLOIT) -------------------------------------------------
     rank_path = out / "ranking.json"
@@ -2658,21 +3054,52 @@ def run(session_id: str) -> int:
     # owns ... the broker lease"; until 2026-10-06 only live_market_loop took it.
     # A trading session that cannot take it does not trade.
     lease_held = False
+    lease = None
     if mode == "paper_profit":
         from backend.services import pc_broker as PB                # noqa: PLC0415
         try:
-            PB.open_lease(owner=f"sim_run {session_id}")
+            lease = PB.open_lease(owner=f"sim_run {session_id}")
             lease_held = True
         except Exception as exc:                                   # noqa: BLE001
             logger.error("lease refused: %s", exc)
             SS.finish("STOPPED", f"REFUSED_LEASE: {type(exc).__name__}: {exc}"[:300])
             return 5
     try:
+        selected = os.environ.get("AEGIS_PC_EPOCH_CONTRACT")
+        inherited_review = None
+        epoch_journal = (_config.OPTIMUS_LEDGER_DIR / "pc_book" /
+                         "policy_epoch_transition.json")
+        if not selected and epoch_journal.exists():
+            from backend.services import pc_policy_epoch as PE
+            try:
+                inherited = PE._load(epoch_journal)
+                selected = inherited.get("selected_contract_path")
+                if not selected:
+                    raise PE.EpochRefused("persisted epoch selector absent")
+                inherited_review = (inherited.get("activation_review")
+                                    or inherited.get("preparation_review"))
+            except (OSError, ValueError, PE.EpochRefused) as exc:
+                SS.finish("STOPPED", f"REFUSED_POLICY_EPOCH_SELECTOR: "
+                          f"{type(exc).__name__}: {str(exc)[:160]}")
+                return 6
+        if selected:
+            review_file = os.environ.get("AEGIS_PC_EPOCH_REVIEW_RECEIPT")
+            try:
+                review_receipt = (json.loads(Path(review_file).read_text(encoding="utf-8"))
+                                  if review_file else inherited_review)
+            except (OSError, ValueError) as exc:
+                SS.finish("STOPPED", f"REFUSED_POLICY_EPOCH_REVIEW: {type(exc).__name__}: "
+                          f"{str(exc)[:160]}")
+                return 6
+            return _run_loop(session_id, s, mode,
+                             policy_epoch_path=Path(selected),
+                             policy_epoch_nonce=(lease or {}).get("session_nonce"),
+                             policy_epoch_review_receipt=review_receipt)
         return _run_loop(session_id, s, mode)
     finally:
         if lease_held:
             try:
-                PB.close_lease()
+                PB.close_lease(expected_nonce=(lease or {}).get("session_nonce"))
             except Exception:                                      # noqa: BLE001
                 logger.warning("could not close the broker lease", exc_info=True)
 
@@ -2697,7 +3124,10 @@ def cycle_unit_order_in_source() -> list[str]:
     return re.findall(r'c\.unit\("([a-z_]+)"', inspect.getsource(_run_loop))
 
 
-def _run_loop(session_id: str, s: dict, mode: str) -> int:
+def _run_loop(session_id: str, s: dict, mode: str, *,
+              policy_epoch_path: Path | None = None,
+              policy_epoch_nonce: str | None = None,
+              policy_epoch_review_receipt: dict | None = None) -> int:
     day = datetime.now().date().isoformat()
     out = _config.OPTIMUS_LEDGER_DIR / "pc_book" / day
     out.mkdir(parents=True, exist_ok=True)
@@ -2762,7 +3192,14 @@ def _run_loop(session_id: str, s: dict, mode: str) -> int:
                 # day behind their own day receipts, so later cycles skip.
                 c.unit("forecast", lambda: u_forecast(out))
                 c.unit("review", lambda: u_review(out))
-                c.unit("plan", lambda: u_plan(out, mode))
+                c.unit("plan", lambda: (u_plan(
+                    out, mode, policy_epoch_path=policy_epoch_path,
+                    policy_epoch_journal_path=(
+                        _config.OPTIMUS_LEDGER_DIR / "pc_book" / "policy_epoch_transition.json"),
+                    policy_epoch_session_id=session_id,
+                    policy_epoch_nonce=policy_epoch_nonce,
+                    policy_epoch_review_receipt=policy_epoch_review_receipt)
+                    if policy_epoch_path else u_plan(out, mode)))
                 c.unit("grade", u_grade)
                 c.unit("learn", lambda: u_learn(n, out))
 

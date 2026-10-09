@@ -106,9 +106,13 @@ def served_model_id(ls) -> str:
     return next(item for item in ids if expected in item.lower().replace("\\", "/").split("/")[-1])
 
 
-def row_key(doc: dict, *, manifest_hash: str, model_hash: str) -> str:
-    return digest(canonical({"manifest": manifest_hash, "content": doc["content_sha256"],
-                             "model": model_hash, "prompt": PROMPT_VERSION, "schema": SCHEMA}))
+def row_key(doc: dict, *, manifest_hash: str, model_hash: str,
+            prompt_version: str = PROMPT_VERSION, format_hash: str | None = None) -> str:
+    key = {"manifest": manifest_hash, "content": doc["content_sha256"],
+           "model": model_hash, "prompt": prompt_version, "schema": SCHEMA}
+    if format_hash is not None:
+        key.update(id=doc["id"], response_format_sha256=format_hash)
+    return digest(canonical(key))
 
 
 class PilotValidationError(ValueError):
@@ -203,7 +207,8 @@ def preflight(reservation: dict, *, manifest_hash: str, limit: int, ls, now=None
         code_revision = qsp.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True,
                                 text=True, timeout=5, check=True).stdout.strip()
         changed = qsp.run(["git", "status", "--porcelain", "--", "ft_lab/news_pilot_qwen7b.py",
-                           "ft_lab/news_pilot.py", "backend/services/llama_server.py"],
+                           "ft_lab/news_pilot.py", "ft_lab/news_pilot_p3.py",
+                           "backend/services/llama_server.py", "backend/services/model_provider.py"],
                           cwd=repo, capture_output=True, text=True, timeout=5)
         if changed.returncode or changed.stdout.strip():
             raise RuntimeError("reviewed pilot code is dirty")
@@ -285,7 +290,9 @@ def cleanup_owned(ls, launch: dict | None) -> dict:
             "attempt_id": launch["attempt_id"], "action": action}
 
 
-def execution_healthy(state: dict, manifest: dict, model_hash: str, ls) -> bool:
+def execution_healthy(state: dict, manifest: dict, model_hash: str, ls,
+                      *, prompt_version: str = PROMPT_VERSION,
+                      variant_hash: str | None = None) -> bool:
     execution, cleanup = state.get("execution"), state.get("cleanup")
     if not isinstance(execution, dict) or not isinstance(cleanup, dict):
         return False
@@ -297,8 +304,11 @@ def execution_healthy(state: dict, manifest: dict, model_hash: str, ls) -> bool:
         cleanup.get("attempt_id") != launch.get("attempt_id") or cleanup.get("pid") != launch["pid"] or
         cleanup.get("process_created_ts") != launch.get("process_created_ts") or
         execution.get("manifest_sha256") != manifest["freeze_sha256"] or
-        execution.get("model_sha256") != model_hash or execution.get("prompt_version") != PROMPT_VERSION or
+        execution.get("model_sha256") != model_hash or execution.get("prompt_version") != prompt_version or
         execution.get("schema") != SCHEMA):
+        return False
+    if variant_hash is not None and (execution.get("variant_sha256") != variant_hash or
+                                     state.get("variant_sha256") != variant_hash):
         return False
     return not ls.status()["listening"] and not ls.pid_alive(launch["pid"])
 
@@ -390,10 +400,53 @@ def score(manifest: dict, state: dict, *, split: str, model_hash: str) -> dict:
     return out
 
 
+def validate_variant_rows(manifest: dict, state: dict, *, model_hash: str,
+                          prompt_version: str, formats: dict[str, dict],
+                          validate_reply) -> None:
+    """Provenance/strict-output audit without opening gold or computing quality."""
+    docs = {d["id"]: d for d in manifest["documents"]}
+    seen = set()
+    for key, row in state.get("rows", {}).items():
+        doc = docs.get(row.get("id"))
+        if doc is None or doc["id"] in seen or doc["id"] not in formats:
+            raise ValueError("unexpected/duplicate variant row")
+        seen.add(doc["id"])
+        format_hash = digest(canonical(formats[doc["id"]]))
+        if (key != row_key(doc, manifest_hash=manifest["freeze_sha256"], model_hash=model_hash,
+                           prompt_version=prompt_version, format_hash=format_hash) or
+            row.get("split") != doc["split"] or row.get("model_sha256") != model_hash or
+            row.get("prompt_version") != prompt_version or row.get("schema") != SCHEMA or
+            row.get("manifest_sha256") != manifest["freeze_sha256"] or
+            row.get("content_sha256") != doc["content_sha256"] or
+            row.get("response_format_sha256") != format_hash):
+            raise ValueError("mixed variant row provenance")
+        status = row.get("status")
+        if status == "TRANSPORT_ERROR":
+            if row.get("raw_reply") is not None or row.get("prediction") is not None:
+                raise ValueError("variant transport row has content")
+            continue
+        raw = row.get("raw_reply")
+        if not isinstance(raw, str) or row.get("raw_sha256") != digest(raw.encode("utf-8")):
+            raise ValueError("variant raw reply drift")
+        try:
+            parsed = validate_reply(raw, doc["excerpt"], formats[doc["id"]])
+        except PilotValidationError as exc:
+            if status != "INVALID_OUTPUT" or row.get("validation_category") != exc.category or row.get("prediction") is not None:
+                raise ValueError("variant invalid-output drift") from exc
+        else:
+            if status != ("ABSTAIN" if parsed["abstain"] else "OK") or row.get("prediction") != parsed:
+                raise ValueError("variant prediction drift")
+
+
 def run(manifest: dict, *, out: Path, split: str, limit: int = 20, complete=None,
-        lifecycle=None, reservation: dict | None = None, preflight_probe=None, memory_probe=None) -> dict:
+        lifecycle=None, reservation: dict | None = None, preflight_probe=None, memory_probe=None,
+        variant: dict | None = None) -> dict:
     if split not in ("dev", "heldout") or not 1 <= limit <= 20:
         raise ValueError("bounded split/limit required")
+    if variant is not None and (split != "dev" or variant.get("prompt_version") != "qwen7b_article_facts/p3_window_enum_v2" or
+                                not callable(variant.get("response_format")) or
+                                not callable(variant.get("validate_reply"))):
+        raise ValueError("p3 variant is development-only and must be explicit")
     if out.resolve().is_relative_to(Path(__file__).resolve().parents[1]):
         raise ValueError("raw model replies and gold results must stay outside the repository")
     from backend.services import llama_server as ls
@@ -402,6 +455,11 @@ def run(manifest: dict, *, out: Path, split: str, limit: int = 20, complete=None
     ls = lifecycle or ls
     complete = complete or mp.complete
     memory_probe = memory_probe or free_gib
+    version = variant["prompt_version"] if variant else PROMPT_VERSION
+    pending = [d for d in manifest["documents"] if d["split"] == split][:limit]
+    formats = {d["id"]: variant["response_format"](d["excerpt"]) for d in pending} if variant else {}
+    variant_hash = (digest(canonical({"version": version, "formats":
+                       {id: digest(canonical(fmt)) for id, fmt in formats.items()}})) if variant else None)
     expected_endpoint = f"http://{ls.LLAMA_HOST}:{ls.LLAMA_PORT}/v1"
     if ls.LLAMA_HOST not in ("127.0.0.1", "localhost", "::1") or mp.PROVIDERS["local"]["base_url"] != expected_endpoint:
         raise ValueError("model provider local route differs from owned loopback server")
@@ -422,40 +480,56 @@ def run(manifest: dict, *, out: Path, split: str, limit: int = 20, complete=None
     state = None
     try:
         state = json.loads(out.read_text(encoding="utf-8")) if out.exists() else {"rows": {}}
-        pending = [d for d in manifest["documents"] if d["split"] == split][:limit]
         saved_hash = state.get("model_sha256")
-        if saved_hash and all(row_key(d, manifest_hash=manifest["freeze_sha256"], model_hash=saved_hash)
+        if saved_hash and all(row_key(d, manifest_hash=manifest["freeze_sha256"], model_hash=saved_hash,
+                                      prompt_version=version,
+                                      format_hash=digest(canonical(formats[d["id"]])) if variant else None)
                               in state["rows"] for d in pending):
-            score(manifest, state, split=split, model_hash=saved_hash)
-            if not execution_healthy(state, manifest, saved_hash, ls):
+            if variant:
+                validate_variant_rows(manifest, state, model_hash=saved_hash, prompt_version=version,
+                                      formats=formats, validate_reply=variant["validate_reply"])
+            else:
+                score(manifest, state, split=split, model_hash=saved_hash)
+            if not execution_healthy(state, manifest, saved_hash, ls,
+                                     prompt_version=version, variant_hash=variant_hash):
                 raise RuntimeError("completed checkpoint lacks current cleanup confirmation")
             return state
         if reservation is None:
             raise RuntimeError("dated operator reservation required")
+        if variant and reservation.get("variant_sha256") != variant_hash:
+            raise ValueError("operator reservation is for another p3 schema set")
         state["preflight"] = (preflight_probe or preflight)(reservation, manifest_hash=manifest["freeze_sha256"],
                                                            limit=limit, ls=ls)
         model_hash = model_file_hash(ls.LLAMA_MODEL)
         if state.get("freeze_sha256", manifest["freeze_sha256"]) != manifest["freeze_sha256"] or state.get("model_sha256", model_hash) != model_hash:
             raise ValueError("output is for another frozen manifest/model")
-        if state.get("prompt_version", PROMPT_VERSION) != PROMPT_VERSION or state.get("schema", SCHEMA) != SCHEMA:
+        if state.get("prompt_version", version) != version or state.get("schema", SCHEMA) != SCHEMA or (variant and state.get("variant_sha256", variant_hash) != variant_hash):
             raise ValueError("output is for another prompt/schema version")
         prior = state.get("execution")
-        if prior is not None and not execution_healthy(state, manifest, model_hash, ls):
+        if prior is not None and not execution_healthy(state, manifest, model_hash, ls,
+                                                       prompt_version=version, variant_hash=variant_hash):
             raise RuntimeError("previous model execution/cleanup unconfirmed; operator recovery required")
         if prior is None and state.get("rows"):
             raise RuntimeError("checkpoint has no execution provenance; operator recovery required")
         if len({r.get("id") for r in state["rows"].values()}) != len(state["rows"]):
             raise ValueError("duplicate result IDs in checkpoint")
         state.update({"freeze_sha256": manifest["freeze_sha256"], "model_sha256": model_hash,
-                      "model_file": ls.LLAMA_MODEL.name, "prompt_version": PROMPT_VERSION,
+                      "model_file": ls.LLAMA_MODEL.name, "prompt_version": version,
                       "schema": SCHEMA, "paid_calls": 0})
-        score(manifest, state, split=split, model_hash=model_hash)
+        if variant:
+            state["variant_sha256"] = variant_hash
+            validate_variant_rows(manifest, state, model_hash=model_hash,
+                                  prompt_version=version, formats=formats,
+                                  validate_reply=variant["validate_reply"])
+        else:
+            score(manifest, state, split=split, model_hash=model_hash)
         if ls.hold_path().exists() or ls.status()["listening"]:
             raise RuntimeError("HOLD or new listener before startup")
         attempt_id = uuid.uuid4().hex
         state["execution"] = {"attempt_id": attempt_id, "status": "STARTING",
                               "manifest_sha256": manifest["freeze_sha256"], "model_sha256": model_hash,
-                              "prompt_version": PROMPT_VERSION, "schema": SCHEMA, "launch": None}
+                              "prompt_version": version, "schema": SCHEMA,
+                              "variant_sha256": variant_hash, "launch": None}
         state["cleanup"] = None
         atomic_write(out, state)
         os.environ["LLAMA_ARG_MMAP"] = "0"
@@ -480,7 +554,9 @@ def run(manifest: dict, *, out: Path, split: str, limit: int = 20, complete=None
             raise RuntimeError("free RAM below measured 1 GiB loaded floor")
         state["served_model_id"] = served_model_id(ls)
         for d in pending:
-            key = row_key(d, manifest_hash=manifest["freeze_sha256"], model_hash=model_hash)
+            format_hash = digest(canonical(formats[d["id"]])) if variant else None
+            key = row_key(d, manifest_hash=manifest["freeze_sha256"], model_hash=model_hash,
+                          prompt_version=version, format_hash=format_hash)
             if key in state["rows"]:
                 continue
             current_ram = memory_probe()
@@ -488,15 +564,20 @@ def run(manifest: dict, *, out: Path, split: str, limit: int = 20, complete=None
                 raise RuntimeError("free RAM below 1 GiB per-row floor")
             prompt = "<SOURCE>\n" + d["excerpt"] + "\n</SOURCE>"
             try:
-                reply = complete("local", prompt, system=SYSTEM, model="local", max_tokens=500,
-                                 temperature=0, timeout=90, purpose="news_pilot_qwen7b")
+                kwargs = {"system": SYSTEM, "model": "local", "max_tokens": 500,
+                          "temperature": 0, "timeout": 90,
+                          "purpose": "news_pilot_qwen7b_p3" if variant else "news_pilot_qwen7b"}
+                if variant:
+                    kwargs["response_format"] = formats[d["id"]]
+                reply = complete("local", prompt, **kwargs)
             except Exception as exc:
                 result = {"status": "TRANSPORT_ERROR", "prediction": None, "raw_reply": None,
                           "transport_error": type(exc).__name__}
             else:
                 response = response_receipt(reply, state["served_model_id"])
                 try:
-                    pred = parse_reply(reply.text, d["excerpt"])
+                    pred = (variant["validate_reply"](reply.text, d["excerpt"], formats[d["id"]])
+                            if variant else parse_reply(reply.text, d["excerpt"]))
                 except PilotValidationError as exc:
                     result = {"status": "INVALID_OUTPUT", "prediction": None,
                               "validation_category": exc.category,
@@ -506,9 +587,11 @@ def run(manifest: dict, *, out: Path, split: str, limit: int = 20, complete=None
                     result = {"status": "ABSTAIN" if pred["abstain"] else "OK",
                               "prediction": pred, **response}
             state["rows"][key] = {"id": d["id"], "split": split, "model_sha256": model_hash,
-                                   "prompt_version": PROMPT_VERSION, "schema": SCHEMA,
+                                   "prompt_version": version, "schema": SCHEMA,
                                    "manifest_sha256": manifest["freeze_sha256"],
                                    "content_sha256": d["content_sha256"], **result}
+            if variant:
+                state["rows"][key]["response_format_sha256"] = format_hash
             atomic_write(out, state)
         return state
     finally:

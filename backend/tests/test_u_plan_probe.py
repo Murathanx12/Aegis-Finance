@@ -289,7 +289,8 @@ def test_the_exploit_gate_is_unchanged_when_the_ranking_is_positive(tmp_path, mo
                 "decision_id": f"bg{i}", "state": "SCORED",
                 "asof": (TODAY - timedelta(days=90 - i)).isoformat(),
                 "detail": {"horizon_sessions": config.ER_BLEND_GRADE_HORIZON,
-                           "er_total": 0.01, "excess_return": 0.01}}) + "\n")
+                           "er_total": 0.01, "excess_return": 0.01,
+                           "grading_rule": DL.SCORING_RULE}}) + "\n")
     fb = FakeBroker().install(monkeypatch)
     res = _run(tmp_path)
     assert res["verdict"] == "MEASURED_POSITIVE" and res["exploit_acting"] is True
@@ -312,7 +313,8 @@ def test_a_measured_negative_shortlist_stops_probing(tmp_path, monkeypatch):
                 "decision_id": f"x{i}", "state": "SCORED",
                 "asof": (TODAY - timedelta(days=60 - i)).isoformat(),
                 "detail": {"hypothesis_id": config.PROBE_SHORTLIST_HYPOTHESIS_ID,
-                           "horizon_sessions": h, "excess_return": -0.01}}) + "\n")
+                           "horizon_sessions": h, "excess_return": -0.01,
+                           "grading_rule": DL.SCORING_RULE}}) + "\n")
     res = _run(tmp_path)
     assert res["probe_verdict"] == "MEASURED_NEGATIVE"
     assert res["probe_acting"] is False and fb.submitted == []
@@ -328,10 +330,84 @@ def test_one_day_short_of_the_grade_is_still_unmeasured(tmp_path):
                     "decision_id": f"x{i}-{_}", "state": "SCORED",
                     "asof": (TODAY - timedelta(days=60 - i)).isoformat(),
                     "detail": {"hypothesis_id": config.PROBE_SHORTLIST_HYPOTHESIS_ID,
-                               "horizon_sessions": h, "excess_return": -0.01}}) + "\n")
+                                   "horizon_sessions": h, "excess_return": -0.01,
+                                   "grading_rule": DL.SCORING_RULE}}) + "\n")
     g = S._probe_grade(ledger)
     assert g["verdict"] == "UNMEASURED_TRADE_SMALL"
     assert g["n_days_scored"] == config.PROBE_GRADE_MIN_SESSIONS - 1
+
+
+def test_legacy_unversioned_scores_cannot_open_the_blend_gate(tmp_path):
+    ledger = tmp_path / "ledger.jsonl"
+    with ledger.open("w", encoding="utf-8") as fh:
+        for i in range(config.ER_BLEND_GRADE_MIN_SESSIONS):
+            fh.write(json.dumps({"decision_id": f"old{i}", "state": "SCORED",
+                                 "asof": (TODAY - timedelta(days=90 - i)).isoformat(),
+                                 "detail": {"horizon_sessions": config.ER_BLEND_GRADE_HORIZON,
+                                            "er_total": 0.01,
+                                            "excess_return": 0.20}}) + "\n")
+    grade = S._blend_grade(ledger)
+    assert grade["n_days_scored"] == 0
+    assert grade["verdict"] == "UNMEASURED" and grade["may_trade"] is False
+
+
+@pytest.mark.parametrize("bad", [float("inf"), float("nan"), True, "0.2"])
+def test_matching_invalid_probe_grade_refuses_even_with_valid_days(tmp_path, bad):
+    ledger = tmp_path / "ledger.jsonl"
+    h = min(config.PROBE_HORIZONS_SESSIONS)
+    rows = [{"decision_id": "bad", "state": "SCORED", "asof": ASOF,
+             "detail": {"grading_rule": DL.SCORING_RULE,
+                        "hypothesis_id": config.PROBE_SHORTLIST_HYPOTHESIS_ID,
+                        "horizon_sessions": h, "excess_return": bad}}]
+    rows += [{"decision_id": f"good{i}", "state": "SCORED",
+              "asof": (TODAY - timedelta(days=90 - i)).isoformat(),
+              "detail": {"grading_rule": DL.SCORING_RULE,
+                         "hypothesis_id": config.PROBE_SHORTLIST_HYPOTHESIS_ID,
+                         "horizon_sessions": h, "excess_return": 0.01}}
+             for i in range(config.PROBE_GRADE_MIN_SESSIONS)]
+    ledger.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    grade = S._probe_grade(ledger)
+    assert grade["n_days_scored"] == config.PROBE_GRADE_MIN_SESSIONS
+    assert grade["invalid_numeric_rows"] == 1
+    assert grade["verdict"] == "MEASUREMENT_INVALID" and grade["may_trade"] is False
+
+
+def test_absent_and_irrelevant_bad_probe_rows_keep_small_probe_policy(tmp_path):
+    ledger = tmp_path / "ledger.jsonl"
+    h = min(config.PROBE_HORIZONS_SESSIONS)
+    assert S._probe_grade(ledger)["verdict"] == "UNMEASURED_TRADE_SMALL"
+    rows = [{"state": "SCORED", "asof": ASOF, "detail": {
+        "grading_rule": rule, "hypothesis_id": hid,
+        "horizon_sessions": horizon, "excess_return": float("inf")}}
+        for rule, hid, horizon in ((None, config.PROBE_SHORTLIST_HYPOTHESIS_ID, h),
+                                   (DL.SCORING_RULE, "other", h),
+                                   (DL.SCORING_RULE, config.PROBE_SHORTLIST_HYPOTHESIS_ID,
+                                    h + 1))]
+    ledger.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    grade = S._probe_grade(ledger)
+    assert grade["invalid_numeric_rows"] == 0
+    assert grade["verdict"] == "UNMEASURED_TRADE_SMALL" and grade["may_trade"] is True
+
+
+@pytest.mark.parametrize("bad", [float("inf"), float("nan"), True, "0.2"])
+def test_malformed_versioned_scores_cannot_open_blend_or_probe(tmp_path, bad):
+    ledger = tmp_path / "ledger.jsonl"
+    with ledger.open("w", encoding="utf-8") as fh:
+        for i in range(config.ER_BLEND_GRADE_MIN_SESSIONS):
+            day = (TODAY - timedelta(days=90 - i)).isoformat()
+            for sleeve in ("blend", "probe"):
+                fh.write(json.dumps({"decision_id": f"{sleeve}{i}", "state": "SCORED",
+                                     "asof": day, "detail": {
+                                         "grading_rule": DL.SCORING_RULE,
+                                         "hypothesis_id": config.PROBE_SHORTLIST_HYPOTHESIS_ID,
+                                         "horizon_sessions": config.ER_BLEND_GRADE_HORIZON
+                                         if sleeve == "blend" else min(config.PROBE_HORIZONS_SESSIONS),
+                                         "er_total": bad if sleeve == "blend" else 0.01,
+                                         "excess_return": bad}}) + "\n")
+    blend = S._blend_grade(ledger)
+    probe = S._probe_grade(ledger)
+    assert blend["n_days_scored"] == 0 and blend["may_trade"] is False
+    assert probe["n_days_scored"] == 0
 
 
 # ─────────────── the ALLE clash (adjudication 2026-09-26 row 11) ─────────────
@@ -414,6 +490,7 @@ def test_probe_grade_still_counts_rows_graded_under_a_contract_hypothesis(tmp_pa
     DL.record("d1", "SCORED", by="t", asof=ASOF, path=ledger,
               detail={"hypothesis_id": "c0ffee000001", "horizon_sessions": h,
                       "shortlist_hypothesis_id": config.PROBE_SHORTLIST_HYPOTHESIS_ID,
-                      "excess_return": 0.01, "realised_return": 0.01})
+                      "excess_return": 0.01, "realised_return": 0.01,
+                      "grading_rule": DL.SCORING_RULE})
     g = S._probe_grade(ledger)
     assert g["n_days_scored"] == 1

@@ -60,6 +60,8 @@ from __future__ import annotations
 
 import json
 import logging
+import math
+from numbers import Real
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
@@ -357,25 +359,39 @@ def default_price_fetch(tickers: list[str], start: str, end: str):
 
 
 def _close_to_close(frame, ticker: str, start: str, end: str) -> tuple[float | None, str]:
-    """(return, basis). None when the frame cannot price both ends BY NAME."""
+    """(return, basis) from the row's exact two session closes, never panel edges."""
+    import pandas as pd
+
+    try:
+        lo, hi = date.fromisoformat(start[:10]), date.fromisoformat(end[:10])
+        if lo >= hi or not isinstance(frame.index, pd.DatetimeIndex):
+            raise ValueError("invalid window or non-datetime price index")
+        stamps = frame.index
+        if stamps.hasnans or not stamps.is_monotonic_increasing:
+            raise ValueError("unparseable or unordered price index")
+        days = [stamp.date() for stamp in stamps]
+        if len(days) != len(set(days)):
+            raise ValueError("duplicate price session date")
+    except (AttributeError, TypeError, ValueError) as exc:
+        return None, f"CANNOT DETERMINE: invalid price window/index: {exc}"
     try:
         col = frame[ticker]
     except Exception:                                              # noqa: BLE001
         return None, f"CANNOT DETERMINE: {ticker} is not a column of the price frame"
-    try:
-        series = col.dropna()
-    except AttributeError:
-        return None, "CANNOT DETERMINE: the price frame is not a pandas object"
-    if len(series) < 2:
-        return None, (f"CANNOT DETERMINE: {ticker} has {len(series)} priced "
-                      f"session(s) between {start} and {end}; a close-to-close "
-                      f"return needs two")
-    first, last = float(series.iloc[0]), float(series.iloc[-1])
-    if first == 0:
-        return None, f"CANNOT DETERMINE: {ticker}'s first close is zero"
-    return (last / first) - 1.0, (
-        f"close-to-close {series.index[0]} -> {series.index[-1]} "
-        f"({len(series)} sessions)")
+    if not isinstance(col, pd.Series):
+        return None, f"CANNOT DETERMINE: {ticker} has ambiguous price columns"
+    positions = {day: i for i, day in enumerate(days)}
+    if lo not in positions or hi not in positions:
+        return None, (f"CANNOT DETERMINE: {ticker} lacks exact endpoint close "
+                      f"{lo} or {hi}")
+    first, last = col.iloc[positions[lo]], col.iloc[positions[hi]]
+    if any(isinstance(v, bool) or not isinstance(v, Real) or
+           not math.isfinite(v) or v <= 0 for v in (first, last)):
+        return None, f"CANNOT DETERMINE: {ticker} has invalid endpoint close"
+    ret = (float(last) / float(first)) - 1.0
+    if not math.isfinite(ret):
+        return None, f"CANNOT DETERMINE: {ticker} has nonfinite endpoint return"
+    return ret, f"close-to-close {lo} -> {hi} (exact endpoints)"
 
 
 #: Review 2026-10-07 fix 6: PC-PAPER's named sleeves (revision_flow, the SPY
@@ -383,6 +399,18 @@ def _close_to_close(frame, ticker: str, start: str, end: str) -> tuple[float | N
 #: row (ticker close-to-close, excess over DECISION_BENCHMARK_SYMBOL = the core).
 SLEEVE_SOURCE = "sim_run.u_plan.sleeve"
 PRICED_SOURCES = ("investment_committee", SLEEVE_SOURCE)
+SCORING_RULE = "decision_close_endpoints/2"
+
+
+def finite_grade_number(value: Any) -> float | None:
+    """Only a finite real number can be evidence in a decision grade."""
+    if isinstance(value, bool) or not isinstance(value, Real):
+        return None
+    try:
+        number = float(value)
+    except (OverflowError, TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
 
 
 def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
@@ -415,16 +443,24 @@ def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
             unpriceable.append({"decision_id": r.get("decision_id"),
                                 "reason": f"unparseable expiry {expiry!r}"})
             continue
-        if when > day:
+        if when >= day:
             continue
-        due.append((r, when))
+        try:
+            start_day = date.fromisoformat(str(r.get("asof"))[:10])
+            if start_day >= when:
+                raise ValueError("start is not before expiry")
+        except (TypeError, ValueError) as exc:
+            unpriceable.append({"decision_id": r.get("decision_id"),
+                                "reason": f"CANNOT DETERMINE: invalid frozen window: {exc}"})
+            continue
+        due.append((r, start_day, when))
 
     if not due:
         return {"status": "nothing_to_do", "as_of": str(day), "due": 0,
                 "newly_scored": 0, "unpriceable": unpriceable,
                 "reason": "no decision's own expiry had passed by today"}
 
-    tickers = sorted({str(r.get("ticker")) for r, _ in due
+    tickers = sorted({str(r.get("ticker")) for r, _, _ in due
                       if r.get("source") in PRICED_SOURCES})
     # The benchmark is REQUESTED with the names (chunk 23a, §16.5 item 37: an
     # internal figure is quoted beside the external one when one exists). A raw
@@ -433,11 +469,19 @@ def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
     # it, the two benchmark fields are present and None with the reason — never
     # a zero, which would read as "the market did nothing".
     benchmark = str(config.DECISION_BENCHMARK_SYMBOL)
-    start = min(str(r.get("asof")) for r, _ in due)
+    benchmarks = {benchmark}
+    for r, _, _ in due:
+        if r.get("policy_epoch_sha256") is not None:
+            if r.get("core_symbol") != "SPY":
+                unpriceable.append({"decision_id": r.get("decision_id"),
+                                    "reason": "frozen epoch benchmark identity invalid"})
+            benchmarks.add("SPY")
+    start = min(start_day for _, start_day, _ in due)
+    end = max(when for _, _, when in due) + timedelta(days=1)
     frame = None
     if tickers:
         try:
-            frame = fetch(sorted(set(tickers) | {benchmark}), start, str(day))
+            frame = fetch(sorted(set(tickers) | benchmarks), str(start), str(end))
         except Exception as exc:                                   # noqa: BLE001
             return {"status": "refused", "as_of": str(day), "due": len(due),
                     "newly_scored": 0, "unpriceable": unpriceable,
@@ -445,26 +489,36 @@ def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
                                f"{type(exc).__name__}: {exc}. The due rows stay "
                                f"open rather than being graded without one.")}
 
-    for r, when in due:
+    for r, start_day, when in due:
         ticker = str(r.get("ticker"))
+        row_benchmark = "SPY" if r.get("policy_epoch_sha256") is not None else benchmark
+        if r.get("policy_epoch_sha256") is not None and r.get("core_symbol") != "SPY":
+            continue
         if frame is None or r.get("source") not in PRICED_SOURCES:
             unpriceable.append({"decision_id": r.get("decision_id"),
                                 "reason": ("CANNOT DETERMINE: an agency BOOK row "
                                            "is priced by its own NAV, not by a "
                                            "ticker close")})
             continue
-        ret, basis = _close_to_close(frame, ticker, str(r.get("asof")), str(when))
+        ret, basis = _close_to_close(frame, ticker, str(start_day), str(when))
         if ret is None:
             unpriceable.append({"decision_id": r.get("decision_id"),
                                 "reason": basis})
             continue
-        bench_ret, bench_basis = _close_to_close(
-            frame, benchmark, str(r.get("asof")), str(when))
-        excess = None if bench_ret is None else ret - bench_ret
+        bench_ret, bench_basis = _close_to_close(frame, row_benchmark, str(start_day), str(when))
+        if bench_ret is None:
+            unpriceable.append({"decision_id": r.get("decision_id"), "reason": bench_basis})
+            continue
+        excess = ret - bench_ret
+        if finite_grade_number(excess) is None:
+            unpriceable.append({"decision_id": r.get("decision_id"),
+                                "reason": "CANNOT DETERMINE: nonfinite benchmark excess"})
+            continue
         detail = {"ticker": ticker, "realised_return": ret, "basis": basis,
+                  "grading_rule": SCORING_RULE,
                   "direction": r.get("direction"), "expiry_utc": r.get("expiry_utc"),
                   "artifact_sha256": r.get("artifact_sha256"),
-                  "benchmark_symbol": benchmark,
+                  "benchmark_symbol": row_benchmark,
                   "benchmark_return": bench_ret,
                   "excess_return": excess,
                   "benchmark_basis": (
@@ -477,7 +531,8 @@ def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
         # and a join that needed both files would break the day a contract file
         # is rotated out of the year the grader scans.
         for key in ("hypothesis_id", "shortlist_hypothesis_id", "horizon_sessions", "virtual",
-                    "selection_probability", "action_set_sha256", "sleeve", "book_id"):
+                    "selection_probability", "action_set_sha256", "sleeve", "book_id",
+                    "policy_epoch_sha256", "policy_id", "policy_version", "position_budget"):
             if r.get(key) is not None:
                 detail[key] = r.get(key)
         for key in ER_ROW_FIELDS:
