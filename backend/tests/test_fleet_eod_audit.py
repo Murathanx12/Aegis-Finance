@@ -101,6 +101,29 @@ def test_worst_case_arithmetic_at_the_accounts_stops(tmp_path):
     assert fb["worst_usd"] == pytest.approx(10_000.0) and fb["worst_usd"] >= wc["usd_at_stops"]
 
 
+def test_grade_arriving_during_broker_reads_does_not_create_stale_grade_flag(tmp_path):
+    env = _fixture(tmp_path)
+    FM.grades_path(tmp_path).write_text(json.dumps({"role": "hackA",
+        "session": EOD.prev_weekday(PREV).isoformat(), "equity": 9950.0}) + "\n", encoding="utf-8")
+    inner = FleetFake()
+    appended = False
+
+    def concurrent_grade(method, url, headers, body):
+        nonlocal appended
+        if not appended and url.split("?")[0].endswith("/v2/positions"):
+            FM.append_jsonl(FM.grades_path(tmp_path),
+                            {"role": "hackA", "session": PREV.isoformat(), "equity": 9950.0})
+            appended = True
+        return inner(method, url, headers, body)
+
+    row = EOD.run_audit(["hackA"], env, run_id="concurrent", trigger="manual",
+                        base=tmp_path, transport=concurrent_grade, write=False)[0]
+    assert appended
+    assert row["reconciliation"]["grades"]["status"] == "OK"
+    assert not any(flag.startswith("GRADES_") for flag in row["flags"])
+    assert row["stops"]["missing"] == ["BBB"] and row["status"] == "DEGRADED"
+
+
 def test_state_and_grade_mismatches_are_counted_with_examples(tmp_path):
     env = _fixture(tmp_path)
     (tmp_path / "state" / "hackA.json").write_text(json.dumps(

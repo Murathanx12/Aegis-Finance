@@ -43,7 +43,7 @@ from __future__ import annotations
 import json
 import math
 import logging
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -610,27 +610,99 @@ def probe_weighting_from_twins(leaderboard: dict | str | Path | None = None, *,
                 "evidence": ev}
     ev["graded_utc"] = lb.get("graded_utc")
     ev["bars_through"] = lb.get("bars_through")
-    by_name = {g.get("name"): g for g in lb.get("grades") or [] if isinstance(g, dict)}
+    def invalid(why: str) -> dict:
+        return {"value": "equal", "reason": f"twins invalid: {why}", "evidence": ev}
+
+    def finite_number(value: Any) -> bool:
+        try:
+            return (not isinstance(value, bool) and isinstance(value, (int, float))
+                    and math.isfinite(value))
+        except OverflowError:
+            return False
+
+    if lb.get("schema") != "llm_portfolio/1" or lb.get("kind") != "leaderboard":
+        return invalid("unsupported leaderboard schema")
+    bars_through = lb.get("bars_through")
+    try:
+        if not isinstance(bars_through, str) or len(bars_through) != 10:
+            raise ValueError("missing date")
+        date.fromisoformat(bars_through)
+    except ValueError:
+        return invalid("missing or invalid bars_through")
+    grades = lb.get("grades")
+    if not isinstance(grades, list):
+        return invalid("grades missing")
     rows: dict[str, dict] = {}
     for scheme, name in PROBE_TWIN_BOOKS.items():
-        g = by_name.get(name) or {}
-        rows[scheme] = {"status": g.get("status"), "sessions": g.get("sessions"),
-                        "net_to_date": g.get("net_to_date"),
-                        "vs_benchmark": g.get("vs_benchmark")}
+        matches = [g for g in grades if isinstance(g, dict) and g.get("name") == name]
+        if len(matches) != 1:
+            return invalid(f"{name}: expected one grade, found {len(matches)}")
+        g = matches[0]
+        td = g.get("to_date")
+        if g.get("status") != "OK" or not isinstance(td, dict) or td.get("status") != "OK":
+            return invalid(f"{name}: not graded OK")
+        if g.get("benchmark_missing") is not False:
+            return invalid(f"{name}: benchmark missing or unverified")
+        if (any(not finite_number(v) for v in (g.get("weight_priced"),
+                                               g.get("weight_waiting_in_cash"),
+                                               td.get("weight_priced")))
+                or g["weight_priced"] != 1.0 or g["weight_waiting_in_cash"] != 0.0
+                or td["weight_priced"] != 1.0):
+            return invalid(f"{name}: incomplete price coverage")
+        benchmark = g.get("benchmark")
+        if not isinstance(benchmark, str) or not benchmark:
+            return invalid(f"{name}: missing benchmark")
+        sessions = td.get("sessions")
+        if isinstance(sessions, bool) or not isinstance(sessions, int) or sessions < 0:
+            return invalid(f"{name}: invalid sessions")
+        entry_session = g.get("entry_session")
+        try:
+            if not isinstance(entry_session, str) or len(entry_session) != 10:
+                raise ValueError("missing date")
+            if date.fromisoformat(entry_session) > date.fromisoformat(bars_through):
+                raise ValueError("entry after grade")
+        except ValueError:
+            return invalid(f"{name}: invalid entry_session")
+        as_of = td.get("as_of")
+        if as_of != bars_through:
+            return invalid(f"{name}: unequal evaluation window")
+        for field in ("net", "vs_benchmark", "benchmark_return"):
+            value = td.get(field)
+            if not finite_number(value):
+                return invalid(f"{name}: invalid {field}")
+        if not math.isclose(td["net"] - td["benchmark_return"], td["vs_benchmark"],
+                            rel_tol=0.0, abs_tol=1e-9):
+            return invalid(f"{name}: net/benchmark excess inconsistent")
+        if "sessions" in g and g["sessions"] != sessions:
+            return invalid(f"{name}: conflicting top-level sessions")
+        for flat, nested in (("net_to_date", "net"), ("net", "net"),
+                             ("vs_benchmark", "vs_benchmark")):
+            if flat in g and (not finite_number(g[flat]) or not math.isclose(
+                    g[flat], td[nested], rel_tol=0.0, abs_tol=1e-9)):
+                return invalid(f"{name}: conflicting top-level {flat}")
+        rows[scheme] = {"status": td["status"], "sessions": sessions,
+                        "net_to_date": td["net"], "vs_benchmark": td["vs_benchmark"],
+                        "benchmark_return": td["benchmark_return"],
+                        "weight_priced": g["weight_priced"],
+                        "weight_waiting_in_cash": g["weight_waiting_in_cash"],
+                        "to_date_weight_priced": td["weight_priced"],
+                        "benchmark": benchmark, "entry_session": entry_session,
+                        "as_of": as_of}
     ev["by_scheme"] = rows
-    n = [r["sessions"] if isinstance(r["sessions"], (int, float)) else 0
-         for r in rows.values()]
-    if min(n) < min_sessions or any(r["status"] != "OK" for r in rows.values()):
+    n = [r["sessions"] for r in rows.values()]
+    if (len(set(n)) != 1 or len({r["entry_session"] for r in rows.values()}) != 1
+            or len({r["benchmark"] for r in rows.values()}) != 1):
+        return invalid("unequal evaluation window across twins")
+    benchmark_returns = [r["benchmark_return"] for r in rows.values()]
+    if any(not math.isclose(value, benchmark_returns[0], rel_tol=0.0, abs_tol=1e-9)
+           for value in benchmark_returns[1:]):
+        return invalid("unequal benchmark return across twins")
+    if min(n) < min_sessions:
         return {"value": "equal",
-                "reason": (f"twins immature ({int(min(n))} sessions; each needs "
-                           f"{min_sessions}; statuses "
-                           f"{sorted({str(r['status'] or 'MISSING') for r in rows.values()})})"),
+                "reason": (f"twins immature ({min(n)} sessions; each needs "
+                           f"{min_sessions})"),
                 "evidence": ev}
-    try:
-        net = {k: float(r["net_to_date"]) for k, r in rows.items()}
-    except (TypeError, ValueError):
-        return {"value": "equal", "reason": "twins graded but a net_to_date is not numeric",
-                "evidence": ev}
+    net = {k: r["net_to_date"] for k, r in rows.items()}
     lead = max(net, key=lambda k: net[k])
     gap = min(net[lead] - v for k, v in net.items() if k != lead)
     ev["leader"], ev["leader_gap"] = lead, gap

@@ -968,7 +968,7 @@ def chrome_recycle_due(*, age_s: float | None, mem_gb: float | None,
                        free_gb: float | None = None,
                        total_gb: float | None = None) -> str | None:
     """PURE. Why the dedicated Chrome should be recycled now, or None:
-    * older than `READER_CHROME_RECYCLE_S`;
+    * older than `READER_CHROME_RECYCLE_S` when that optional limit is positive;
     * holding more than `READER_CHROME_MAX_GB` (private bytes) whatever the
       machine's state;
     * holding more than `READER_CHROME_SOFT_GB` while free RAM is under
@@ -983,7 +983,7 @@ def chrome_recycle_due(*, age_s: float | None, mem_gb: float | None,
     4 GB about 20 minutes after each recycle (2.0 GB at 5 min, 3.7 at 14,
     4.6 at 26), and every such crossing asked for a recycle that could not
     relieve memory the browser was not holding (4.6 of ~28.5 GB in use)."""
-    max_age = float(getattr(_config, "READER_CHROME_RECYCLE_S", 7200.0))
+    max_age = float(getattr(_config, "READER_CHROME_RECYCLE_S", 0.0))
     max_gb = float(getattr(_config, "READER_CHROME_MAX_GB", 8.0))
     soft_gb = float(getattr(_config, "READER_CHROME_SOFT_GB", 4.0))
     low_free = float(getattr(_config, "READER_CHROME_LOW_FREE_GB", 3.0))
@@ -995,7 +995,7 @@ def chrome_recycle_due(*, age_s: float | None, mem_gb: float | None,
     if mem_gb is not None and free_gb is not None and mem_gb > soft_gb and free_gb < low_free             and squeezer:
         return (f"MEMORY_PRESSURE: the dedicated Chrome holds {mem_gb:.1f} GB > "
                 f"{soft_gb:.1f} GB with {free_gb:.1f} GB free < {low_free:.1f} GB")
-    if age_s is not None and age_s > max_age:
+    if max_age > 0 and age_s is not None and age_s > max_age:
         return f"AGE: {age_s / 3600:.1f} h since the last recycle > {max_age / 3600:.1f} h"
     return None
 

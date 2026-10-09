@@ -678,7 +678,7 @@ def run_role(role: str, *, env: dict, modes: dict, pass_: str, live_flag: bool, 
     stopped_out: Optional[dict] = {}
     try:
         since = (today - timedelta(days=int(_cfg.FLEET_GATE_COOLDOWN_LOOKBACK_DAYS))).isoformat() + "T00:00:00Z"
-        for o in v.stop_fills_since(since):
+        for o in v.stop_fills_since(since, owned_types=FM.owned_order_types(role)):
             d_ = str(o.get("filled_at"))[:10]
             stopped_out[o["symbol"]] = max(stopped_out.get(o["symbol"], d_), d_)
     except Exception as exc:                                    # noqa: BLE001 -- review F4: never abort the account

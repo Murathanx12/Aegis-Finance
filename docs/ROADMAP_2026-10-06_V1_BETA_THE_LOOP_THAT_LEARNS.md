@@ -1,5 +1,7 @@
 # ROADMAP 2026-10-06 — V1 BETA: THE LOOP THAT LEARNS
 
+> **Active queue: §5c (Oct 9).** Earlier model assignments, queues, and status labels are historical; use §5c and its R01–R52 map for current ownership and acceptance.
+
 TIER 1. Supersedes `ROADMAP_2026-09-28_MEASURE_BEFORE_YOU_ADD.md` as the current lane list
 (its rule "measure before you add" survives as §7 here). Gates outrank dates. Licence of every
 item is `PRODUCT_EXPERIMENT` unless stated. Written by Fable 5.1 on the night of 2026-10-06 from
@@ -119,7 +121,11 @@ world graph waits until the digest has graded rows (10-09) to attach to.
 
 ---
 
-## 3. OWNER-REVIEW COVERAGE MATRIX
+## 3. OWNER-REVIEW COVERAGE MATRIX — HISTORICAL 2026-10-06 SNAPSHOT
+
+This 59-item matrix preserves the October 6 review and its original verdicts. Those verdicts
+are historical, not current completion claims. The active October 9 acceptance and owner-review
+map for handoff asks R01–R52 is in §5c below; use that map for this execution window.
 
 Every ask in the review, one row. `ACCEPT` = built or scheduled below; `MODIFIED` = built with the
 stated change; `OWNER` = needs a decision only Murat can make; `REJECTED` = not built, reason given.
@@ -360,6 +366,94 @@ forward reads 10-26/27, contest 10-12. WAITING ON OWNER: D1, D2, D5, D7, D13, D1
 | Q16 | `scripts/ci_watch --wait` reported "no run found for that sha within the wait window" for `e041ec14` while the GitHub API showed `CI completed success` for the same SHA 20 minutes earlier — a watcher that misses a finished run is a gate that cannot go green; fix the lookup (full SHA, `event=push`, pagination) and add a test on a saved API fixture | Sonnet | priority 3 (the push gate) | now |
 | Q17 | three Opportunity Explorer receipts (5-8 MB each) are TRACKED under `backend/data/optimus/opportunities/` — the published copy in `public_receipts/opportunities/latest.json` (≤ 2.4 MB, sanitised) is what the site needs; gitignore the raw receipts going forward (no history rewrite; D10), keep the newest in the catalog, and make `opportunities_build` write only the run-id file + the published copy | Sonnet | priority 6 (repo size) | after the prod-404 fix |
 | Q18 | the live site still inlines the `[SENSITIVE]` placeholder as `NEXT_PUBLIC_API_URL` (Vercel's CLI redacts pulled values; `vercel build` in the workflow consumed the pulled file) — the code fallback keeps the site working but every page logs "Fix the build environment"; set the public URL explicitly in the workflow's build env and add a post-build guard that fails on the placeholder; Vercel's bot checkpoint (403) blocks automated browser verification, so verification is by chunk grep + console | Sonnet | priority 6 | now |
+
+### 5c. ACTIVE EXECUTION QUEUE — 2026-10-09 (supersedes prior queues)
+
+This dated amendment replaces the active execution order above; earlier queues and their receipts
+remain historical. Recovery comes first, then the shortest evidence-producing work proceeds in
+parallel. A blocked external input pauses only its own lane. No new roadmap is created. The
+October 9 handoff is guidance, not evidence that work has run. PC-PAPER's new no-index policy
+epoch is explicitly owner-authorized: preserve the old ledger and SPY control, and never rewrite
+prior NAV. At most three workers run alongside the coordinator; no nested agents, one writer per
+artifact, one PC runtime operator and one OpenClaw browser operator.
+
+| ID / workstream | Owner and dependencies | Observable acceptance and current state |
+|---|---|---|
+| W1 Recovery, scheduled checks + PR #13 | Coordinator owns recovery closeout. Repair builder owns PR #13; independent reviewer reproduces after the fix. One PC runtime owner handles scheduled receipts; one browser owner retains OpenClaw. | **IN PROGRESS / NOT READY.** Valid-window sim ran two full cycles (268 rows; 134 done, 25 unpriced, 1 refused; $0.177312; zero orders); mandate remains stale/unreconciled. Earlier combined suite recorded 14,246 passed, 74 skipped, 126 deselected, plus one audit-ledger enrollment failure; source hashes unchanged. Fix `6c6b62d7` is root-approved after 17 focused tests. At 00:27 SGT, 342 focused tests across 14 changed test files passed with source hashes unchanged; CI and final full verification remain pending. PR13 `adb6a009` passed independent 80 focused tests plus 31 clean-clone checks. Docker `b435700a` passed 10 root tests and simulated-image-path verification. Neither is pushed, deployed, or task-installed. Learning-parser `b20abcf8` passed root closure (66 tests + 16 independent adversarial checks); runtime refresh pending. OpenClaw fix `f2af56fe` is active: default age 0 removes the two-hour Chrome recycle; graceful supervisor/reader handoff 00:14–00:16 SGT had no kills, stable gateway/browser births, and an advancing new reader. Quiet CLI fix is also active. StraddleForward's Oct 9 valid-window task exited 0 with 346 usable quotes and OBSERVE_ONLY because no standard monthly expiry fell in the 21–35 DTE window; observation complete. Public-assets Saturday Oct 10 10:30 SGT is proposed/configured but not installed; DataCatalog remains daily 09:00. Next NN run Oct 10 08:30 SGT; AnalystPull Sunday 10:00; IIF Monday 16:00 (standing 16:45–17:05 exclusion applies). Fleet contract/hack5 status, actual Brain/NN page acceptance and Telegram delivery proof remain open. |
+| W2 PC-PAPER new policy epoch | Capable builder and paper-account owner; a stronger independent reviewer is REQUIRED for policy, sizing and transition; coordinator integrates. Depends on verified existing paper endpoint/account and fleet contracts. | **IN PROGRESS — repair required.** Candidate `ff14efa2` remains inactive; independent review rejected it for three actual consumer/lifecycle bugs. Repair is underway, not accepted. Existing owner policy authorization persists; contract bars activation before Monday 13:30 UTC. Keep old policy, fills and NAV immutable. |
+| W3 Revision-flow attribution | Bounded research worker; coordinator independently checks joins, timing and comparison definitions. Depends on dated source receipts and a common evaluation window. | **PARTIAL.** Audit `d049538d` independently reviewed the 367→362→307 census and exact 51/51 claim construction; this is not article-parser validation or causal attribution. Fee/fill and causal contributions remain unknown. Preserve original classifications. |
+| W4 News interpretation + escalation pilot | Local-model/news worker; coordinator reviews provenance and a small quality/cost sample. Depends on the existing pipeline and one browser owner for any permitted source work. | **IN PROGRESS.** Earlier `ac5ac4e9` p1/p2 runs returned INVALID_OUTPUT on two development examples each. Blind-source-gold audit is complete on 40 rows (31 proposals, 9 ambiguities); final adjudication/benchmark errata remain pending, and no new frozen manifest exists. Cascade `40030617` passed 103 integrated tests. At 16:23 UTC, a two-example schema-only development pilot made two paid-route requests; both returned OK with unique valid telemetry. Local estimated cost was $0.00045633; vendor-balance precision and shared-account charge attribution are UNKNOWN. Cached validation replayed with zero API calls and unchanged hashes. No quality score, new benchmark, held-out result, or promotion follows; the schema-only result proves transport/telemetry only. Keep `NEWS_TILT_IN_PLAN` under its existing trust gate; a separately frozen, bounded `PRODUCT_EXPERIMENT` challenger is permitted but cannot bypass or promote through that gate. |
+| W5 Original-decision audit + labeled replay | Strong research worker with an independent skeptical review; no paper-writer overlap. | **PARTIAL.** Read-only audit construction passed independent review for exact 51/51 matching; this does not establish causal attribution, complete fills/actions, or skill. Reconcile original forecasts, actions, abstentions, winners and losers against dated inputs. Keep any new retrospective replay separately named, with coverage, timing/leakage controls, baseline and costs; never call replay forward performance. |
+| W6 Local cutover + backup/restore | Local infrastructure owner; coordinator reviews restore evidence. Depends on dependency/billing inventory and a recoverable snapshot. | **PARTIAL.** Independent review passed transfer/restore checks for SQLite and forecast ledger only. This is not a whole-volume backup or cutover; inventory remaining dependencies and billing, rollback and ledger boundaries before any cutover or savings claim. |
+| W7 Monday evidence pack | Coordinator integrates; owner supplies authentic Terminal inputs where needed. | **IN PROGRESS / NOT READY.** Include consumer and scheduled-task evidence, audit limits, scoped restore, and release receipts. AnalystPull Sunday and IIF Monday remain pending; authentic Bloomberg inputs remain **EXTERNAL_INPUT**. Continue independent work while those gates are pending. |
+
+#### Current owner-review map for handoff asks R01–R52
+
+The ask names below abbreviate the source requirements in the supplied handoff's §12. Status is
+per ask, not inherited from a neighboring row: `QUEUED`, `IN_PROGRESS`, `PARTIAL`,
+`EVIDENCE_MATURING`, `DEFERRED_WITH_REASON`, or `EXTERNAL_INPUT`. Earlier `ACCEPT` labels are
+not current evidence. Every completion needs its named consumer and dated receipt.
+
+| ID | Ask (short label) | Workstream | Current status and acceptance |
+|---|---|---|---|
+| R01 | Profitability and live learning | W2 | IN_PROGRESS — valid-window sim produced zero orders; mandate remains stale/unreconciled, so no profitability claim. |
+| R02 | Winners and losers | W3 | PARTIAL — audit reports original winners/losers; full fee/fill and causal attribution remains open. |
+| R03 | Books versus accounts; 363/307 and 11/12 | W3 | PARTIAL — reviewed 73-source census construction (367→362→307); reconcile account/book denominators against matched receipts. |
+| R04 | No SPY-dominated flagship | W2 | IN_PROGRESS — inactive candidate review found three consumer/lifecycle bugs; repair and re-review pending, no transition accepted. |
+| R05 | $1M paper and $40k view | W2 | QUEUED — show actual equity and separately executable scaled view. |
+| R06 | Six fleet roles and retired hack3 | W1 | IN_PROGRESS — reconcile existing contracts; no reset/revival without a distinct decision. |
+| R07 | Stale/frozen process health | W1 | PARTIAL — OpenClaw handoff and quiet CLI fixes active; no-kill reader handoff verified; hack5 remains unknown. |
+| R08 | Sim/funnel/forecast chain | W1 | IN_PROGRESS — two full cycles advanced all units; no orders, stale mandate and 2026-10-16 first grades remain open. |
+| R09 | OpenClaw researcher | W1 | PARTIAL — one browser owner; search-led task must return cited missing evidence. |
+| R10 | Local model reads real news | W4 | PARTIAL — p1 and p2 each returned invalid output on two development examples; no valid extraction or held-out evidence. |
+| R11 | Cheap DeepSeek escalation | W4 | PARTIAL — two schema-only requests verified paid-route transport and unique telemetry; local estimate only, vendor-balance attribution and quality/cost validation remain open. |
+| R12 | Newsletters, watchlists and IR | W4 | QUEUED — approved free-source access and real ingestion receipt; no paid trial. |
+| R13 | Social/video sources | W4 | DEFERRED_WITH_REASON — defer until permitted transcript/API and timestamped confirmation path is selected. |
+| R14 | World context and regime | W4 | QUEUED — dated structured beliefs, contradictions and affected sectors. |
+| R15 | Catalyst calendar | W4 | QUEUED — confirmed/estimated/conflicted events with timezone and revisions. |
+| R16 | Direction versus magnitude | W3 | QUEUED — distinct fields and direction-aware long construction. |
+| R17 | Monte Carlo/expected return | W5 | QUEUED — scenarios propagate calibrated assumptions; no invented mean. |
+| R18 | Words-to-numbers bridge | W4 | PARTIAL — two schema-only responses passed transport/schema telemetry; no quality score, frozen benchmark, held-out result, or decision-consumer acceptance. |
+| R19 | Unique contribution/MDC | W5 | QUEUED — frozen ablations, sample size and bounded causal language. |
+| R20 | Missed actions and regret | W5 | QUEUED — retain abstention counterfactual; no forced random trades. |
+| R21 | GPRO, PSNL and TEM chronology | W5 | PARTIAL — chronology is included in the audit; missing cases and outcome attribution remain open. |
+| R22 | Original short-window test and replay | W5 | PARTIAL — 51/51 original claim-to-forecast construction approved; labeled retrospective replay and outcome attribution remain separate and pending. |
+| R23 | First-mover revisions | W3 | QUEUED — as-of breadth/acceleration excludes future followers. |
+| R24 | Analyst skill versus n≥5 | W3 | QUEUED — history by quality, bias, sector/horizon and uncertainty. |
+| R25 | Target upside | W3 | QUEUED — separate price declines, target revisions, dates, dispersion and horizon. |
+| R26 | Fair twin controls | W3 | PARTIAL — exact original twin lineage is matched; full fee/fill and causal attribution remain open. |
+| R27 | DSR/PBO versus paper exploration | W5 | QUEUED — certification gates claims, not every experimental paper decision. |
+| R28 | Distinct original theories | W5 | QUEUED — catalog/search and count mechanism clusters before bounded tests. |
+| R29 | NN/TableShrink | W1 | EVIDENCE_MATURING — next scheduled run Oct 10 08:30 SGT; receipt and forward-roster grades pending. |
+| R30 | ft_lab extraction versus prediction | W4 | PARTIAL — p1/p2 development extractions failed validation; separate extraction quality from prediction and rerun only after reviewed changes. |
+| R31 | RL/continual learning | W5 | DEFERRED_WITH_REASON — first verify current source/policy updates are consumed; no new direct DRL lane now. |
+| R32 | Self-improving code safety | W1 | PARTIAL — reviewed branch/test/review/owner path; no live self-modifying code. |
+| R33 | Repeated downloads/data loss | W6 | PARTIAL — two-store backup/restore independently passed; full-volume and remaining consumer inventory pending. |
+| R34 | Ledger and Git bloat | W6 | PARTIAL — preserve prior index-only cleanup; verify safe archive/backup boundaries. |
+| R35 | Insider/politician/procurement/flow sensors | W4 | QUEUED — verify timestamped source consumption and disclosure latency. |
+| R36 | Political influence features | W5 | DEFERRED_WITH_REASON — economic variables only; protected traits and unsupported allegations excluded. |
+| R37 | Charts/ranges/seasonality | W5 | DEFERRED_WITH_REASON — review existing numeric cells only; no screenshot oracle or brute-force expansion. |
+| R38 | AI/power/materials causal chain | W7 | QUEUED — precursor, horizon and falsifier in evidence pack. |
+| R39 | China/international opportunity | W4 | QUEUED — context/shadows first; venue, FX and data permissions before execution. |
+| R40 | High-risk names | W2 | QUEUED — uncertainty/catalyst/runway/dilution review; no forced inclusion. |
+| R41 | Mirror account performance | W3 | QUEUED — historical error attribution only; no real-money change or recovery gamble. |
+| R42 | Stable/local architecture | W6 | PARTIAL — two-store restore passed; cutover, remaining dependencies and billing remain open. |
+| R43 | Bloomberg Terminal | W7 | EXTERNAL_INPUT — authentic WLS MEMB, rules and verified fills; rehearsal is not a substitute. |
+| R44 | Contest-relative performance | W7 | QUEUED — named utility, valid rules, controlled adaptation and exact P&L. |
+| R45 | Clear dated stock-list preview | W7 | DEFERRED_WITH_REASON — wait for data and decision contracts to pass. |
+| R46 | Foreign tickers/biotech language | W7 | QUEUED — full company/venue/currency, short definitions and binary-risk markers. |
+| R47 | Optimus/brain/NN showcase bugs | W1 | PARTIAL — Brain is FRESH (16 beliefs, 8 scenarios, 40 updates); IC remains 404 until a sim event; ForecastLab report stale since Oct 6, next run due to finish 21:10 UTC. Actual consumer acceptance remains open. |
+| R48 | Telegram conversation/buttons | W1 | PARTIAL — offline query/auth/TTL fixtures pass; no actual tap-delivery proof. |
+| R49 | LEAN/Qlib/TradingAgents/OpenBB/MCP reuse | W6 | DEFERRED_WITH_REASON — targeted pattern or finalist check only; no framework migration. |
+| R50 | Research/patents/funding pack | W7 | DEFERRED_WITH_REASON — long-cycle research follows critical integration; preserve auditable sources. |
+| R51 | Token/worker efficiency | W1 | PARTIAL — bounded smoke task passed; actual model/effort metadata unavailable, so cheaper routing and savings remain unverified. |
+| R52 | Finish roadmap and preserve intent | W7 | IN_PROGRESS — §5c is the active acceptance map; completion requires evidence, not wording. |
+
+A bounded cheaper-worker smoke task passed, but actual model/effort metadata was unavailable;
+the requested route and any savings are therefore unverified. The nonsecret capability receipt,
+with local environment details, is retained outside the public repository. Two full sim cycles
+are verified; the stale mandate and any profitability claim remain open. Scheduled, browser-owned
+and external checks are not complete until their respective consumers or receipts verify them.
 
 ## 6. OWNER DECISIONS (what I did by default, and what only Murat can do)
 

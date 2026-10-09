@@ -160,37 +160,56 @@ def test_the_social_card_carries_name_sentence_and_url():
 
 
 # ------------------------------------------------------------------ the numbers
-def _roi() -> dict:
-    return json.loads((RPA.PAPER_DIR / f"roi_{RPA.RESULTS_RUN_ID}.json").read_text(encoding="utf-8"))
+def _roi() -> dict | None:
+    """Optional local audit input; a published checkout needs only its reviewed snapshot."""
+    path = RPA.PAPER_DIR / f"roi_{RPA.RESULTS_RUN_ID}.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+
+
+def _public_evidence() -> dict:
+    snapshot = RPA._snapshot_display(RPA.RESULTS_RUN_ID)
+    if snapshot is not None:
+        assert snapshot == RPA.results_data()
+        return snapshot
+    assert _roi() is not None, "neither public snapshot nor local raw receipt exists"
+    return RPA.results_data()
 
 
 def test_every_number_on_the_results_panel_is_the_receipts_number():
-    d = RPA.results_data()
-    rows = {r["account"]: r for r in _roi()["rows"]}
+    d = _public_evidence()
+    roi = _roi()
+    rows = {r["account"]: r for r in roi["rows"]} if roi else {}
     text = _text_content(_committed(RPA.RESULTS_SVG).decode("utf-8"))
     html = _committed(RPA.FRONT_HTML).decode("utf-8")
     for f in d["featured"]:
-        r = rows[f["account"]]
-        assert (f["roi"], f["spy"], f["excess"]) == (r["roi_pct"], r["spy_same_window_pct"], r["vs_spy_pp"])
+        if roi:
+            r = rows[f["account"]]
+            assert (f["roi"], f["spy"], f["excess"]) == (
+                r["roi_pct"], r["spy_same_window_pct"], r["vs_spy_pp"])
         for s in (RPA._num(f["excess"]), f"{RPA._num(f['roi'])}%", f"SPY {RPA._num(f['spy'])}%", f["label"]):
             assert s in text, s
             assert s in html, s
-    assert f"roi_{RPA.RESULTS_RUN_ID}" in text and str(d["priced"]) in text
+    assert (f"public_results_{RPA.RESULTS_RUN_ID}" if RPA._snapshot_display(RPA.RESULTS_RUN_ID)
+            else f"roi_{RPA.RESULTS_RUN_ID}") in text
+    assert str(d["priced"]) in text
 
 
 def test_the_featured_accounts_are_what_the_declared_rule_picks():
     """Recomputed here, independently: per named family, the live non-control account with the
     largest excess over SPY. A control (random twin, comparator, `__` twin) is never featured."""
-    rows = _roi()["rows"]
-    d = RPA.results_data()
+    roi = _roi()
+    rows = roi["rows"] if roi else None
+    d = _public_evidence()
     assert [f["family"] for f in d["featured"]] == [fam for fam, _ in RPA.FEATURED_FAMILIES]
     for f in d["featured"]:
         assert not any(m in f["account"] for m in RPA.CONTROL_MARKERS)
-        pool = [r for r in rows if r["family"] == f["family"] and r.get("status") == "LIVE"
-                and r.get("vs_spy_pp") is not None
-                and not any(m in r["account"] for m in RPA.CONTROL_MARKERS)]
-        assert f["excess"] == max(r["vs_spy_pp"] for r in pool)
-    assert d["priced"] == sum(1 for r in rows if r.get("vs_spy_pp") is not None)
+        if rows is not None:
+            pool = [r for r in rows if r["family"] == f["family"] and r.get("status") == "LIVE"
+                    and r.get("vs_spy_pp") is not None
+                    and not any(m in r["account"] for m in RPA.CONTROL_MARKERS)]
+            assert f["excess"] == max(r["vs_spy_pp"] for r in pool)
+    if rows is not None:
+        assert d["priced"] == sum(1 for r in rows if r.get("vs_spy_pp") is not None)
 
 
 def test_the_chart_is_the_lead_account_against_its_matched_twin_on_shared_dates():
@@ -238,6 +257,7 @@ def test_check_mode_says_stale_instead_of_passing(tmp_path, monkeypatch, capsys)
 
 def test_the_results_panel_refuses_without_its_receipt(monkeypatch, tmp_path):
     monkeypatch.setattr(RPA, "PAPER_DIR", tmp_path)
+    monkeypatch.setattr(RPA, "ASSETS", tmp_path)
     with pytest.raises(SystemExit, match="REFUSED"):
         RPA.render_results()
 

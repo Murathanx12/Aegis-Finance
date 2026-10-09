@@ -122,6 +122,7 @@ from backend import config as _config
 from backend.services import browser_policy as _BP
 from backend.services import muratclaw_instance as _MI
 from backend.services import openclaw_temp as _OT
+from backend.services import quiet_subprocess as _QS
 
 logger = logging.getLogger(__name__)
 
@@ -783,9 +784,9 @@ def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProc
         cmdline = [*cli["prefix"], *[str(a) for a in args]]
     t0 = time.monotonic()
     try:
-        r = subprocess.run(cmdline, capture_output=True, text=True,
-                           encoding="utf-8", errors="replace",
-                           timeout=timeout, shell=False)
+        r = _QS.run(cmdline, capture_output=True, text=True,
+                    encoding="utf-8", errors="replace",
+                    timeout=timeout, shell=False)
     except subprocess.TimeoutExpired:
         # A gateway timeout says nothing trustworthy about ANY profile.
         invalidate_profile_cache()

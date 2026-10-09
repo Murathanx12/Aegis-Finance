@@ -783,6 +783,32 @@ def r_public_flow(ctx, task) -> Reading:
                    detail=f"public flow {a}" + (f": {'; '.join(bad)[:140]}" if bad else ""))
 
 
+def r_assets(ctx, task) -> Reading:
+    """2026-10-07: the weekly public-assets refresh (`scripts/task_keeper.py`'s `assets`
+    job -- bump the front-page pin, gate on `test_public_assets.py`, commit + push).
+
+    Read `task_keeper/assets.jsonl`'s own row, NEVER `paper_accounts/public_assets_refresh_
+    <run_id>.json` alone: that refresh receipt is written only on a SUCCESSFUL bump, so a
+    week the job fired and REFUSED (the newest receipt pair not newer than the pinned one,
+    a featured family with no LIVE account, a failed pinning test, an unpushed commit) would
+    read UNKNOWN for want of a file a refusal never writes -- exactly the "a check that did
+    not run is not a check that passed" trap this file exists to close. `action: "ok"` is
+    OK; any `"skip"` (which covers both the ordinary identical-pin no-op most weeks and a
+    real refusal) is DEGRADED rather than silently OK, so a real failure is never hidden
+    behind the common case -- coarse, but never wrongly green."""
+    k = _last_row(ctx.optimus_dir / "task_keeper" / "assets.jsonl")
+    if k is None:
+        return _none("task_keeper/assets.jsonl")
+    a = str(k.get("action"))
+    status = {"ok": "OK"}.get(a, "DEGRADED")
+    why = str(k.get("why") or "")
+    pin_note = (f" (pin {k.get('old_run_id')} -> {k.get('new_run_id')})"
+               if k.get("new_run_id") and k.get("new_run_id") != k.get("old_run_id") else "")
+    return Reading(stamp=parse_stamp(k.get("utc")), status=status, reason=why if status != "OK" else "",
+                   substance=None, proof="task_keeper/assets.jsonl[-1]",
+                   detail=f"public assets {a}{pin_note}" + (f": {why[:140]}" if why else ""))
+
+
 def r_research_lane(ctx, task) -> Reading:
     """Q12 (2026-10-07): the weekly academic lane
     (`backend/services/research_instruments.py`, `scripts/task_keeper.py`'s
@@ -888,6 +914,14 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
                                           "not stale",
                                  unregistered_ok="Q12 academic lane: registration waits for owner review "
                                                  "(python -m scripts.task_keeper register-owners --apply)"),
+    "AegisPublicAssetsWeekly": TaskSpec(
+        r_assets, "task_keeper/assets.jsonl (+ paper_accounts/public_assets_refresh_<run_id>.json "
+                 "on a successful bump)",
+        hash_off="weekly; most weeks are correctly 'nothing newer to pin', which repeats the same "
+                "substance by design",
+        unregistered_ok="2026-10-07: public-assets weekly refresh, printed by `register`; "
+                        "registration waits for owner review (python -m scripts.task_keeper "
+                        "register --apply)"),
     "AegisWRDSPullNight": TaskSpec(r_retired, "none (retired one-shot, 2026-08-21)", retired=True),
     "AegisAlwaysOnLab": TaskSpec(_delegate("p_always_on_lab", "always_on_lab"),
                                  "lab_status.json (judged by the always_on_lab probe)",
