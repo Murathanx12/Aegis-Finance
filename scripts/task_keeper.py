@@ -803,8 +803,10 @@ ASSETS_LOG = KEEPER_DIR / "assets.jsonl"
 # assets and the motion page: `render_public_assets.update_readme_results_block` rewrites its
 # results-panel block on every bump, and leaving it out would leave README.md permanently
 # dirty (and SKIP every following week's job on an already-dirty index).
-ASSETS_COMMIT_PATHS = ("scripts/render_public_assets.py", "docs/assets", "docs/design/aegis_front_page.html",
-                      "README.md")
+ASSETS_COMMIT_PATHS = ("scripts/render_public_assets.py",
+                      "docs/assets/aegis_loop.svg", "docs/assets/paper_results_live.svg",
+                      "docs/assets/architecture_pipeline.svg", "docs/assets/og_preview.svg",
+                      "docs/assets/gauntlet.svg", "docs/design/aegis_front_page.html", "README.md")
 
 
 def run_assets(*, bump: Callable[..., int] | None = None,

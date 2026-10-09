@@ -1217,6 +1217,19 @@ def _rewrite_pin_line(new_id: str, *, path: Path | None = None) -> str:
     return old_id
 
 
+def _pin_text_for(new_id: str, old_id: str, path: Path) -> str:
+    """Validate the on-disk pin and prepare its replacement without writing it."""
+    source = path.read_text(encoding="utf-8")
+    matches = PIN_RE.findall(source)
+    if len(matches) != 1:
+        raise SystemExit(f"REFUSED: expected exactly one RESULTS_RUN_ID line in {path.name}, "
+                         f"found {len(matches)}")
+    if matches[0] != old_id:
+        raise SystemExit(f"REFUSED: the on-disk pin was {matches[0]!r}, expected {old_id!r}; "
+                         "another process changed it -- rerun the bump")
+    return PIN_RE.sub(lambda _m: f'RESULTS_RUN_ID = "{new_id}"', source, count=1)
+
+
 def _readme_entry(f: dict, d: dict) -> str:
     """One featured account's clause in the README alt text / caption: name, what it is,
     its numbers over its own window, and (lead only) the matched twin / (shared only) whose
@@ -1266,13 +1279,17 @@ def update_readme_results_block(d: dict, *, path: Path | None = None) -> bool:
     Refuses if the markers are not found (never writes outside them)."""
     p = Path(path) if path is not None else README
     text = p.read_text(encoding="utf-8")
-    pattern = re.compile(re.escape(RESULTS_BLOCK_START) + r".*?" + re.escape(RESULTS_BLOCK_END), re.S)
-    if not pattern.search(text):
-        raise SystemExit(f"REFUSED: {RESULTS_BLOCK_START} marker not found in {_rel(p)}")
-    new_text = pattern.sub(lambda _m: readme_results_block(d), text, count=1)
+    new_text = _readme_text_for(d, text, p)
     if new_text != text:
         p.write_text(new_text, encoding="utf-8")
     return new_text != text
+
+
+def _readme_text_for(d: dict, text: str, path: Path) -> str:
+    pattern = re.compile(re.escape(RESULTS_BLOCK_START) + r".*?" + re.escape(RESULTS_BLOCK_END), re.S)
+    if len(pattern.findall(text)) != 1 or text.count(RESULTS_BLOCK_START) != 1 or text.count(RESULTS_BLOCK_END) != 1:
+        raise SystemExit(f"REFUSED: expected exactly one results block in {_rel(path)}")
+    return pattern.sub(lambda _m: readme_results_block(d), text, count=1)
 
 
 def bump_pin(run_id: str | None = None, *, pin_path: Path | None = None,
@@ -1283,7 +1300,7 @@ def bump_pin(run_id: str | None = None, *, pin_path: Path | None = None,
     old_id = RESULTS_RUN_ID
     try:
         return _bump_pin_inner(run_id, old_id, pin_path=pin_path, readme_path=readme_path)
-    except SystemExit as exc:
+    except (SystemExit, OSError) as exc:
         RESULTS_RUN_ID = old_id
         print(str(exc))
         return 2
@@ -1300,28 +1317,41 @@ def _bump_pin_inner(run_id: str | None, old_id: str, *, pin_path: Path | None,
     bad = check_budgets()
     if bad:
         raise SystemExit("REFUSED: text would overflow its box:\n  " + "\n  ".join(bad))
+    source_path = Path(pin_path) if pin_path is not None else Path(__file__).resolve()
+    rp = Path(readme_path) if readme_path is not None else README
+    # Complete all validation and rendering before changing any public file.
+    source_bytes = _pin_text_for(new_id, old_id, source_path).encode("utf-8")
     RESULTS_RUN_ID = new_id
-    d = results_data()                      # REFUSED (SystemExit) if a family has no LIVE account
-    rewritten_old = _rewrite_pin_line(new_id, path=pin_path)
-    if rewritten_old != old_id:
-        raise SystemExit(f"REFUSED: the on-disk pin was {rewritten_old!r}, expected {old_id!r}; "
-                         "another process changed it -- rerun the bump")
-    written: dict[str, str] = {}
-    for path, text in outputs().items():
-        data = text.encode("utf-8")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
-        written[_rel(path)] = hashlib.sha256(data).hexdigest()
-    if update_readme_results_block(d, path=readme_path):
-        rp = Path(readme_path) if readme_path is not None else README
-        written[_rel(rp)] = hashlib.sha256(rp.read_bytes()).hexdigest()
+    d = results_data()                      # REFUSED if a family has no LIVE account
+    rendered = {path: text.encode("utf-8") for path, text in outputs().items()}
+    readme_before = rp.read_text(encoding="utf-8")
+    readme_after = _readme_text_for(d, readme_before, rp).encode("utf-8")
+    written = {_rel(path): hashlib.sha256(data).hexdigest() for path, data in rendered.items()}
+    if readme_after != readme_before.encode("utf-8"):
+        written[_rel(rp)] = hashlib.sha256(readme_after).hexdigest()
     featured = [{"family": f["family"], "account": f["account"], "name": f["name"]} for f in d["featured"]]
     receipt = {"schema": "public_assets_refresh/1",
               "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
               "old_run_id": old_id, "run_id": new_id, "assets": written, "featured": featured}
     receipt_path = PAPER_DIR / f"public_assets_refresh_{new_id}.json"
-    receipt_path.write_text(json.dumps(receipt, indent=1, default=str), encoding="utf-8")
-    written[_rel(receipt_path)] = hashlib.sha256(receipt_path.read_bytes()).hexdigest()
+    receipt_bytes = json.dumps(receipt, indent=1, default=str).encode("utf-8")
+    changes = {source_path: source_bytes, **rendered, rp: readme_after, receipt_path: receipt_bytes}
+    previous = {path: path.read_bytes() if path.exists() else None for path in changes}
+    changed: list[Path] = []
+    try:
+        for path, data in changes.items():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            changed.append(path)
+            path.write_bytes(data)
+    except OSError:
+        for path in reversed(changed):
+            before = previous[path]
+            if before is None:
+                path.unlink(missing_ok=True)
+            else:
+                path.write_bytes(before)
+        raise
+    written[_rel(receipt_path)] = hashlib.sha256(receipt_bytes).hexdigest()
     try:
         from backend.services import public_assets_staleness as _PAS   # noqa: PLC0415
         prev_age = _PAS.pin_age(datetime.now(timezone.utc), run_id=old_id)

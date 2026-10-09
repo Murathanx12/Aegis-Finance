@@ -286,6 +286,61 @@ def test_bump_pin_rewrite_mismatch_is_refused_and_restores_the_global(
     assert list(paper_dir.glob("public_assets_refresh_*.json")) == []
 
 
+def test_bump_pin_missing_readme_markers_leaves_every_output_untouched(
+        paper_dir, three_families, pin_copy, readme_copy, rendered_dirs, monkeypatch):
+    three_families("2026-01-01T000000Z", "2026-01-01T00:00:00+00:00")
+    three_families("2026-01-02T000000Z", "2026-01-02T00:00:00+00:00")
+    _set_pin(pin_copy, "2026-01-01T000000Z")
+    monkeypatch.setattr(RPA, "RESULTS_RUN_ID", "2026-01-01T000000Z")
+    readme_copy.write_text("# missing markers\n", encoding="utf-8")
+    before = pin_copy.read_bytes()
+    assert RPA.bump_pin("2026-01-02T000000Z", pin_path=pin_copy, readme_path=readme_copy) == 2
+    assert pin_copy.read_bytes() == before
+    assert RPA.RESULTS_RUN_ID == "2026-01-01T000000Z"
+    assert readme_copy.read_text(encoding="utf-8") == "# missing markers\n"
+    assert not rendered_dirs[0].exists()
+    assert not list(paper_dir.glob("public_assets_refresh_*.json"))
+
+
+def test_bump_pin_on_disk_mismatch_does_not_touch_outputs(
+        paper_dir, three_families, pin_copy, readme_copy, rendered_dirs, monkeypatch):
+    three_families("2026-01-01T000000Z", "2026-01-01T00:00:00+00:00")
+    three_families("2026-01-02T000000Z", "2026-01-02T00:00:00+00:00")
+    _set_pin(pin_copy, "2099-01-01T000000Z")
+    monkeypatch.setattr(RPA, "RESULTS_RUN_ID", "2026-01-01T000000Z")
+    before = pin_copy.read_bytes()
+    assert RPA.bump_pin("2026-01-02T000000Z", pin_path=pin_copy, readme_path=readme_copy) == 2
+    assert pin_copy.read_bytes() == before
+    assert not rendered_dirs[0].exists()
+    assert not list(paper_dir.glob("public_assets_refresh_*.json"))
+
+
+def test_bump_pin_write_failure_restores_previous_files(
+        paper_dir, three_families, pin_copy, readme_copy, rendered_dirs, monkeypatch):
+    three_families("2026-01-01T000000Z", "2026-01-01T00:00:00+00:00")
+    three_families("2026-01-02T000000Z", "2026-01-02T00:00:00+00:00")
+    _set_pin(pin_copy, "2026-01-01T000000Z")
+    monkeypatch.setattr(RPA, "RESULTS_RUN_ID", "2026-01-01T000000Z")
+    source_before, readme_before = pin_copy.read_bytes(), readme_copy.read_bytes()
+    write_bytes = Path.write_bytes
+    failed = False
+
+    def fail_once(path, data):
+        nonlocal failed
+        if path == RPA.RESULTS_SVG and not failed:
+            failed = True
+            raise OSError("simulated write failure")
+        return write_bytes(path, data)
+
+    monkeypatch.setattr(Path, "write_bytes", fail_once)
+    assert RPA.bump_pin("2026-01-02T000000Z", pin_path=pin_copy, readme_path=readme_copy) == 2
+    assert pin_copy.read_bytes() == source_before
+    assert readme_copy.read_bytes() == readme_before
+    assert RPA.RESULTS_RUN_ID == "2026-01-01T000000Z"
+    assert not list(rendered_dirs[0].glob("*"))
+    assert not list(paper_dir.glob("public_assets_refresh_*.json"))
+
+
 # ──────────────────────────────────────────────────────── the README block generator
 
 def test_readme_results_block_is_what_update_readme_results_block_writes(

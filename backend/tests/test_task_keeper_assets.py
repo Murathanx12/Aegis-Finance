@@ -4,6 +4,7 @@
 real `render_public_assets` module's live globals."""
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 from scripts import task_keeper as TK
@@ -143,12 +144,31 @@ def test_the_successful_path_commits_exactly_the_declared_paths_plus_the_receipt
     assert out["action"] == "ok"
     assert out["old_run_id"] != "2026-02-02T000000Z"
     assert out["new_run_id"] == "2026-02-02T000000Z"
-    assert set(TK.ASSETS_COMMIT_PATHS) <= set(captured["paths"])
+    assert set(captured["paths"]) == set(TK.ASSETS_COMMIT_PATHS) | {captured["paths"][-1]}
+    assert "docs/assets" not in captured["paths"]
+    assert all(p != "docs/assets/README.md" for p in captured["paths"])
     assert captured["paths"][-1] == (
         "backend/data/optimus/paper_accounts/public_assets_refresh_2026-02-02T000000Z.json")
     assert "2026-02-02T000000Z" in captured["message"]
     assert captured["log_path"] != tmp_path / "assets.jsonl"   # the commit gets its OWN receipt stream
     assert out["commit"]["status"] == "COMMITTED" and out["commit"]["pushed"] is True
+
+
+def test_asset_allowlist_does_not_stage_an_unrelated_local_file(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    for rel in TK.ASSETS_COMMIT_PATHS:
+        path = repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("updated\n", encoding="utf-8")
+    unrelated = repo / "docs/assets/local_notes.txt"
+    unrelated.write_text("private local note\n", encoding="utf-8")
+    subprocess.run(["git", "add", "--", *TK.ASSETS_COMMIT_PATHS], cwd=repo, check=True)
+    staged = subprocess.run(["git", "diff", "--cached", "--name-only"], cwd=repo,
+                            check=True, capture_output=True, text=True).stdout.splitlines()
+    assert set(staged) == set(TK.ASSETS_COMMIT_PATHS)
+    assert "docs/assets/local_notes.txt" not in staged
 
 
 def test_results_voice_is_named_only_when_the_file_exists(tmp_path):
