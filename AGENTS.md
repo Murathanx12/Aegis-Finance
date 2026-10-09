@@ -13,7 +13,7 @@ Machine-readable web surface: `frontend/public/llms.txt`.
    no skill claims before 24 months of forward record; pre-register or it
    didn't happen; the LLM narrates, the engine computes; closed rabbit holes
    stay closed; every examination leaves a ledger entry.
-3. **`NEGATIVE_RESULTS.md`** — 34 documented dead ends. Check it before
+3. **`NEGATIVE_RESULTS.md`** — the documented dead ends. Check it before
    proposing an idea; yours may already have a corpse with receipts.
 
 ## Map

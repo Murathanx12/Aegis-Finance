@@ -661,11 +661,24 @@ def test_labor_day_is_not_a_trading_day():
     ("backend/data/optimus/digest_inbox/README.md", False),
     ("backend/data/optimus/dowjones/feeds_2026-01-01.json", True),
     ("backend/data/optimus/dowjones/QUEUE_2026-09-27.txt", True),
+    ("backend/data/optimus/dowjones/queue_run_rolling.cmd", True),
+    ("backend/data/optimus/dowjones/reader_pool_run.cmd", True),
+    ("backend/data/optimus/dowjones/supervisor_run.cmd", False),
+    ("backend/data/optimus/dowjones/queue_run.cmd", False),
     ("backend/data/public_receipts/manifest.json", False),
 ])
 def test_raw_news_runtime_is_local_and_sanitized_receipts_are_publishable(path, ignored):
-    r = subprocess.run(["git", "check-ignore", "-q", path], cwd=REPO)
+    r = subprocess.run(["git", "check-ignore", "--no-index", "-q", path], cwd=REPO)
     assert (r.returncode == 0) is ignored
+
+
+def test_static_reader_launcher_templates_survive_a_clean_checkout():
+    for name in ("supervisor_run.cmd", "queue_run.cmd"):
+        path = "backend/data/optimus/dowjones/" + name
+        assert (REPO / path).is_file()
+        r = subprocess.run(["git", "ls-files", "--error-unmatch", path],
+                           cwd=REPO, capture_output=True)
+        assert r.returncode == 0, f"scheduler template must be tracked: {path}"
 
 
 def test_one_article_is_one_view_per_ticker_and_the_ticker_must_be_named():

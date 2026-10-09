@@ -79,13 +79,21 @@ trading strategy.** No trading flag was changed in this recovery.
 
 ## Local data and publication boundary
 
-The reviewed recovery removes 587 OpenClaw/Dow Jones operational files and
+The initial index-only operation removed 587 OpenClaw/Dow Jones operational files and
 source-scorecard snapshots from the integration Git index, preserving all
 248,407,265 bytes on disk. Paths and hashes at the operation are recorded in
 [local_runtime_manifest.json](research_notes/2026-10-09/local_runtime_manifest.json).
 `.gitignore` prevents their re-addition. This is index-only housekeeping, not
 history rewriting, financial-ledger modification or runtime-directory cleanup.
 Existing Git commits retain the old evidence. Active WIP unique work is kept.
+
+Final dependency review restored **two unchanged static launcher templates**:
+`dowjones/supervisor_run.cmd` (used by task_keeper) and `dowjones/queue_run.cmd`
+(read by the rolling-queue builder). They are executable configuration, not logs.
+The final integration therefore removes **585** runtime paths from the index.
+Exactly these two templates are exempted from the folder's ignore rule; generated
+`reader_pool_run.cmd`, `queue_run_rolling.cmd`, queues, logs and snapshots remain
+local. A regression checks template presence in Git on a clean checkout.
 
 Applied the same policy in the active runtime checkout as `8f0054d4` and pushed
 WIP: 638 paths / 308,047,647 bytes were retained locally. This larger count
@@ -126,14 +134,20 @@ No active worktree or open PR was removed. Local worktree branches remain.
 | claude/beautiful-meitner-hq5614 | DELETE, executed | `00bcb808`, PR #11 merged; same checks |
 | lab/weekend-2026-09-06 | DELETE, executed | `c45a825e`, same checks |
 | feat/2026-10-07-assets-refresh | KEEP; PR #13 requires repair | `fb60f2d5`, active worktree; green CI does not cover reproduced publication defects below |
-| astra/2026-10-08-bloomberg-readiness | MERGE, executed | PR #14, `1e51c7bf`, reviewed dated documentation; merge `866c84c8` at 05:42:53 UTC |
+| astra/2026-10-08-bloomberg-readiness | MERGE then DELETE, executed | PR #14, `1e51c7bf`, reviewed dated documentation; merge `866c84c8` at 05:42:53 UTC; unchanged tip deleted after green main CI |
 | docs/canonical-integration-20260828 | ARCHIVE in place | `d4bde9fb`, one unique commit; historical knowledge not discarded |
 | lab/autonomous-rd | KEEP | `4c23ade4`, incorporated but `lab/rd_loop.py:750` still names it as default branch |
 | lab-v5-abandoned | KEEP historical evidence | `78cd3e54`, unique commit, owner's explicit preservation instruction |
+| recovery/2026-10-09-reconciliation | KEEP active integration worktree | PR #15; selected source/docs and index-only log isolation; do not delete its active worktree or retained ignored copies |
 
 After PR #14's main CI passed, its unchanged remote branch was conditionally
 deleted too: **five** obsolete remote branches removed in total. Recovery
 integration is [PR #15](https://github.com/Murathanx12/Aegis-Finance/pull/15).
+
+The archived canonical branch's unique document is
+[the August 28 historical roadmap](https://github.com/Murathanx12/Aegis-Finance/blob/d4bde9fba8023c51a8edf7f9d068cebb68ddcd33/docs/ACTIVE_ROADMAP.md).
+It is retained evidence, not a second active roadmap. The lab default branch
+dependency and abandoned branch's unique rewrite prevent automatic deletion.
 
 PR #13 was reproduced in a disposable repository: its broad `docs/assets`
 allowlist committed an unrelated local file as well as the intended asset.

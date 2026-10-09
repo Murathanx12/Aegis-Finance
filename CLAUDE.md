@@ -181,12 +181,16 @@ hour again.
 Commits move between the two only by hand. A commit hash quoted in a handoff
 belongs to whichever repo that handoff lives in.
 
-**Where the trading loop RUNS (2026-08-28):** Railway project `loving-elegance`,
-one service per account role (`aat-loop-<role>`), volume at `/app/state`,
-image from the terminal repo's `Dockerfile`. The laptop no longer has to be
-on. Railway project `selfless-courage` / `Aegis-Finance` is THIS repo's website
-backend and places no orders. `railway logs --service aat-loop-<role>` is the
-heartbeat; a laptop PID is not.
+**Where the trading loop runs (verified 2026-10-09):** the six legacy
+`loving-elegance/aat-loop-<role>` Railway services were retired September 29;
+their volumes remain preserved. PC fleet managers now own those paper paths,
+so the PC must be awake for scheduled work. Do not restart the old services
+because their offline state looks unhealthy. `loving-elegance/seal-authority`
+still serves advancing sealed books. Railway `selfless-courage/Aegis-Finance`
+is this repo's website backend and places no orders. Verify scheduler receipts,
+broker reconciliation and advancing outputs, not a PID or deployment alone.
+Current evidence and gaps: `docs/VERIFICATION_2026-10-09.md`. The prior August 28
+Railway-only ownership statement is historical and superseded by this check.
 
 ## THE REAL BOTTLENECK WAS A STATIC FILE (found 2026-09-22)
 
