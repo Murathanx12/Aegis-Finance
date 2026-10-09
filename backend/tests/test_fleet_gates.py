@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import random
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
@@ -297,6 +297,88 @@ def test_the_venue_reader_finds_old_gtc_stops_through_their_fills():
     assert not any(u.split("?")[0].endswith("/v2/orders/lim-1") for u in seen)
 
 
+def test_historical_order_404_uses_only_accepted_owned_order_evidence(tmp_path):
+    import json as _json
+    fills = [{"symbol": "AAA", "side": "sell", "order_id": "old-stop",
+              "transaction_time": "2026-10-01T15:00:00Z"}]
+
+    def t(method, url, headers, body):
+        if "/activities/FILL" in url:
+            return 200, _json.dumps(fills).encode()
+        if url.split("?")[0].endswith("/v2/orders"):
+            return 200, b"[]"
+        if url.split("?")[0].endswith("/v2/orders/old-stop"):
+            return 404, b'{"message":"historical order unavailable"}'
+        return 404, b"{}"
+
+    v = FM.Venue("k", "s", transport=t)
+    with pytest.raises(FM.FleetRefusal, match="type unknown"):
+        v.stop_fills_since("2026-09-20T00:00:00Z")
+    FM.append_jsonl(FM.decisions_path(tmp_path), {"row": "decision", "role": "hackT",
+                    "run_id": "r1", "coid": "owned-stop", "mode": "LIVE", "refused": None,
+                    "type": "stop"})
+    # A planned stop alone is not an accepted broker order.
+    assert FM.owned_order_types("hackT", tmp_path) == {}
+    FM.append_jsonl(FM.decisions_path(tmp_path), {"row": "outcome", "role": "hackT",
+                    "run_id": "r1", "coid": "owned-stop", "outcome": "submitted new id old-stop",
+                    "order_id": "old-stop"})
+    assert v.stop_fills_since("2026-09-20T00:00:00Z",
+                              owned_types=FM.owned_order_types("hackT", tmp_path))[0]["type"] == "stop"
+    FM.append_jsonl(FM.decisions_path(tmp_path), {"row": "decision", "role": "hackT",
+                    "run_id": "r2", "coid": "conflict", "mode": "LIVE", "refused": None,
+                    "type": "limit"})
+    FM.append_jsonl(FM.decisions_path(tmp_path), {"row": "outcome", "role": "hackT",
+                    "run_id": "r2", "coid": "conflict", "outcome": "submitted new id old-stop",
+                    "order_id": "old-stop"})
+    assert FM.owned_order_types("hackT", tmp_path) == {}
+    with pytest.raises(FM.FleetRefusal, match="type unknown"):
+        v.stop_fills_since("2026-09-20T00:00:00Z",
+                           owned_types=FM.owned_order_types("hackT", tmp_path))
+
+
+@pytest.mark.parametrize("known_type", ["stop", "limit"])
+@pytest.mark.parametrize("unknown_type", [None, "unknown_new_type"])
+@pytest.mark.parametrize("unknown_first", [False, True])
+def test_mixed_live_decision_types_keep_historical_404_unknown(
+        tmp_path, known_type, unknown_type, unknown_first):
+    types = (unknown_type, known_type) if unknown_first else (known_type, unknown_type)
+    rows = [{"row": "decision", "role": "hackT", "run_id": "r", "coid": "c",
+             "mode": "LIVE", "refused": None, "type": typ}
+            for typ in types]
+    for row in rows:
+        FM.append_jsonl(FM.decisions_path(tmp_path), row)
+    FM.append_jsonl(FM.decisions_path(tmp_path),
+                    {"row": "outcome", "role": "hackT", "run_id": "r", "coid": "c",
+                     "outcome": "submitted new id x", "order_id": "x"})
+
+    def t(method, url, headers, body):
+        if "/activities/FILL" in url:
+            return 200, json.dumps([{"symbol": "AAA", "side": "sell", "order_id": "x",
+                                     "transaction_time": "2026-10-01T15:00:00Z"}]).encode()
+        if url.split("?")[0].endswith("/v2/orders"):
+            return 200, b"[]"
+        return 404, b"{}"
+
+    owned = FM.owned_order_types("hackT", tmp_path)
+    assert owned == {}
+    with pytest.raises(FM.FleetRefusal, match="type unknown"):
+        FM.Venue("k", "s", transport=t).stop_fills_since("2026-09-20T00:00:00Z", owned_types=owned)
+
+
+@pytest.mark.parametrize("irrelevant", [{"mode": "DRY", "refused": None},
+                                       {"mode": "LIVE", "refused": "venue_window: closed"}])
+def test_unsubmitted_plans_do_not_poison_accepted_owned_type(tmp_path, irrelevant):
+    for typ, fields in (("stop", {"mode": "LIVE", "refused": None}),
+                        (None, irrelevant)):
+        FM.append_jsonl(FM.decisions_path(tmp_path),
+                        {"row": "decision", "role": "hackT", "run_id": "r", "coid": "c",
+                         "type": typ, **fields})
+    FM.append_jsonl(FM.decisions_path(tmp_path),
+                    {"row": "outcome", "role": "hackT", "run_id": "r", "coid": "c",
+                     "outcome": "submitted new id x", "order_id": "x"})
+    assert FM.owned_order_types("hackT", tmp_path) == {"x": "stop"}
+
+
 # ─────────────────────────────── sector cap ─────────────────────────────────
 #
 # `sector_concentration` is the other NEW_GATES member: these two tests pin
@@ -452,8 +534,11 @@ def test_order_count_binds_entries(tmp_path):
 class _VenueFake:
     """One readable paper account for `run_role`, every endpoint offline."""
 
-    def __init__(self, today: date, stop_fill_day: date):
+    def __init__(self, today: date, stop_fill_day: date, *, historical_404: bool = False,
+                 is_open: bool = False):
         self.today, self.stop_fill_day, self.calls = today, stop_fill_day, []
+        self.historical_404 = historical_404
+        self.is_open = is_open
 
     def __call__(self, method, url, headers, body):
         import json as _j
@@ -466,7 +551,9 @@ class _VenueFake:
             return 200, _j.dumps({"equity": "100000", "cash": "90000", "last_equity": "100000",
                                   "account_number": "TEST"}).encode()
         if path == "/v2/clock":
-            return 200, _j.dumps({"timestamp": f"{self.today.isoformat()}T10:00:00-04:00", "is_open": False}).encode()
+            return 200, _j.dumps({"timestamp": f"{self.today.isoformat()}T10:00:00-04:00",
+                                  "is_open": self.is_open,
+                                  "next_close": (datetime.now(timezone.utc) + timedelta(hours=6)).isoformat()}).encode()
         if path == "/v2/positions":
             return 200, _j.dumps([
                 {"symbol": "AAA", "qty": "100", "current_price": "50", "market_value": "5000", "asset_class": "us_equity"},
@@ -478,6 +565,8 @@ class _VenueFake:
         if path == "/v2/orders" and "status=closed" in q:
             return 200, b"[]"                           # the stop was a GTC submitted long ago
         if path == "/v2/orders/o-ccc":
+            if self.historical_404:
+                return 404, b'{"message":"historical order unavailable"}'
             return 200, _j.dumps({"id": "o-ccc", "type": "stop"}).encode()
         if path == "/v2/orders":
             return 200, b"[]"
@@ -496,14 +585,15 @@ class _VenueFake:
         return 200, b"{}"
 
 
-def test_run_role_puts_a_named_gate_trace_on_every_action(tmp_path, monkeypatch):
+@pytest.mark.parametrize("historical_404,seed_owned", [(False, False), (True, True), (True, False)])
+def test_run_role_puts_a_named_gate_trace_on_every_action(tmp_path, monkeypatch, historical_404, seed_owned):
     from scripts import fleet_manager_run as RUN
     monkeypatch.setattr(FM, "root", lambda base=None: tmp_path if base is None else base)
     monkeypatch.setattr(RUN, "panel_sigma_and_screen",
                         lambda syms: ({s: 0.02 for s in syms}, {}, {}))
     monkeypatch.setattr(RUN, "stop_counterfactual_step", lambda *a, **k: {"skipped": "test"})
     today = date.today()
-    fake = _VenueFake(today, _session_ago(1, today))
+    fake = _VenueFake(today, _session_ago(1, today), historical_404=historical_404)
     monkeypatch.setattr(FM, "_urllib_transport", fake)
     caps = FM.caps_block()
     for v_, sel in (("v1", {"kind": "legacy_hold"}),
@@ -517,6 +607,13 @@ def test_run_role_puts_a_named_gate_trace_on_every_action(tmp_path, monkeypatch)
     (tmp_path / "state" / "hackT.json").write_text(
         json.dumps({"t": f"{today.isoformat()}T23:59:00+00:00", "positions": {"AAA": 100.0, "BBB": 250.0}}),
         encoding="utf-8")
+    if seed_owned:
+        FM.append_jsonl(FM.decisions_path(tmp_path), {"row": "decision", "role": "hackT",
+                        "run_id": "old", "coid": "old-stop", "mode": "LIVE", "refused": None,
+                        "type": "stop"})
+        FM.append_jsonl(FM.decisions_path(tmp_path), {"row": "outcome", "role": "hackT",
+                        "run_id": "old", "coid": "old-stop", "outcome": "submitted new id o-ccc",
+                        "order_id": "o-ccc"})
     env = {"AAT_HACKT_KEY_ID": "k", "AAT_HACKT_SECRET_KEY": "s"}
     res = RUN.run_role("hackT", env=env, modes={"hackT": {"contract": "v2", "maintenance": "LIVE",
                                                           "entries": "LIVE"}},
@@ -524,6 +621,11 @@ def test_run_role_puts_a_named_gate_trace_on_every_action(tmp_path, monkeypatch)
                        digest=None, digest_name=None, baseline=(None, {}), pool={}, rebaseline=False,
                        sector_of={"AAA": "Tech", "BBB": "Tech", "CCC": "Energy", "DDD": "Tech"})
     assert res["status"] == "ok"
+    if historical_404 and not seed_owned:
+        assert res["stopped_out_recent"] is None and res.get("stop_history_error")
+    else:
+        assert res["stopped_out_recent"]["CCC"] == fake.stop_fill_day.isoformat()
+        assert "stop_history_error" not in res
     assert {m for m, _ in fake.calls} == {"GET"}                     # a DRY run sends nothing
     acts = {(a["kind"], a["symbol"]): a for a in res["actions"]}
     assert all(a.get("gates") and a.get("story_id", "").startswith("fs-") for a in res["actions"])
@@ -545,11 +647,46 @@ def test_run_role_puts_a_named_gate_trace_on_every_action(tmp_path, monkeypatch)
     assert bbb["refused"] is None and bbb["mode"] == "DRY"
     assert res["gate_summary"]["cooldown"]["PASS"] >= 1
     assert "KILL" not in res["gate_summary"].get("cooldown", {})
-    rows = [r for r in FM.read_jsonl(tmp_path / "decisions.jsonl") if r.get("row") == "decision"]
+    rows = [r for r in FM.read_jsonl(tmp_path / "decisions.jsonl")
+            if r.get("row") == "decision" and r.get("run_id") == "t1"]
     assert rows and all(r["gates"] and r["gates_hash"] == RUN.GATES_CFG["hash"] for r in rows)
     # the shadow verdict reaches the committed decision row too
     ccc_row = next(r for r in rows if r.get("symbol") == "CCC" and r.get("side") == "buy")
     assert any(g.get("shadow_verdict", "").startswith("SHADOW_WOULD_KILL") for g in ccc_row["gates"])
+
+
+def test_closed_venue_refuses_missing_stop_and_next_pass_replans_it(tmp_path, monkeypatch):
+    from scripts import fleet_manager_run as RUN
+    monkeypatch.setattr(FM, "root", lambda base=None: tmp_path if base is None else base)
+    monkeypatch.setattr(RUN, "panel_sigma_and_screen", lambda syms: ({s: 0.02 for s in syms}, {}, {}))
+    monkeypatch.setattr(RUN, "stop_counterfactual_step", lambda *a, **k: {"skipped": "test"})
+    today = date.today()
+    fake = _VenueFake(today, _session_ago(1, today))
+    monkeypatch.setattr(FM, "_urllib_transport", fake)
+    body = {"schema": "fleet_manager_contract/1", "role": "hackT", "version": "v1",
+            "licence": FM.LICENCE, "alpha_source": "test", "selection": {"kind": "legacy_hold"},
+            "stop_rule": FM.stop_rule_block(0.10), "caps": FM.caps_block(),
+            "costs": FM.costs_block(), "twin": {"weights": {}}}
+    FM.freeze_contract(body, base=tmp_path)
+    (tmp_path / "state").mkdir()
+    (tmp_path / "state" / "hackT.json").write_text(
+        json.dumps({"t": f"{today.isoformat()}T23:59:00Z", "positions": {"AAA": 100.0, "BBB": 250.0}}),
+        encoding="utf-8")
+    kwargs = dict(env={"AAT_HACKT_KEY_ID": "k", "AAT_HACKT_SECRET_KEY": "s"},
+                  modes={"hackT": {"contract": "v1", "maintenance": "LIVE", "entries": "DRY"}},
+                  pass_="open", live_flag=True, books={}, issuer_of={}, stitched=set(),
+                  digest=None, digest_name=None, baseline=(None, {}), pool={}, rebaseline=False)
+    closed = RUN.run_role("hackT", run_id="closed", **kwargs)
+    missed = next(a for a in closed["actions"] if a["kind"] == "stop_new" and a["symbol"] == "BBB")
+    assert missed["qty"] == 250 and missed["refused"].startswith("venue_window:")
+    assert {m for m, _ in fake.calls} == {"GET"}
+    fake.is_open = True
+    fake.calls.clear()
+    retried = RUN.run_role("hackT", run_id="retry", **kwargs)
+    stop = next(a for a in retried["actions"] if a["kind"] == "stop_new" and a["symbol"] == "BBB")
+    assert stop["qty"] == 250 and stop["refused"] is None
+    assert stop["outcome"].startswith("REJECTED http 500")
+    assert any(m == "POST" for m, _ in fake.calls)  # fixture rejects it; no accepted protection
 
 
 def test_fleet_new_gates_mode_is_shadow_by_default():

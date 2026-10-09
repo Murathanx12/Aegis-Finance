@@ -314,14 +314,17 @@ def test_an_unproven_browser_is_never_recycled():
     assert out["ok"] is False and m.events == []
 
 
-def test_recycle_is_due_on_age_on_size_or_on_size_under_pressure():
+def test_healthy_browser_stays_up_by_default_but_memory_still_recovers(monkeypatch):
     assert GR.chrome_recycle_due(age_s=3600, mem_gb=2.0, free_gb=1.0) is None
-    assert GR.chrome_recycle_due(age_s=3 * 3600, mem_gb=2.0).startswith("AGE")
+    assert GR.chrome_recycle_due(age_s=3 * 3600, mem_gb=2.0) is None
+    assert GR.chrome_recycle_due(age_s=3 * 86400, mem_gb=2.0) is None
     assert GR.chrome_recycle_due(age_s=60, mem_gb=9.0).startswith("MEMORY")
     # a big browser on a roomy machine is left alone (no quarter-hourly churn)
     assert GR.chrome_recycle_due(age_s=900, mem_gb=5.5, free_gb=6.5) is None
     assert GR.chrome_recycle_due(age_s=900, mem_gb=5.5, free_gb=2.2).startswith(
         "MEMORY_PRESSURE")
+    monkeypatch.setattr(GR._config, "READER_CHROME_RECYCLE_S", 7200.0)
+    assert GR.chrome_recycle_due(age_s=3 * 3600, mem_gb=2.0).startswith("AGE")
 
 
 # ───────────────────────── 5. the governor adapts ────────────────────────────
@@ -632,4 +635,4 @@ def test_memory_pressure_recycles_only_a_chrome_that_is_the_squeezer():
     assert GR.chrome_recycle_due(age_s=60, mem_gb=9.0, free_gb=2.9, total_gb=31.4).startswith(
         "MEMORY")                                         # the hard size bar still binds
     assert GR.chrome_recycle_due(age_s=3 * 3600, mem_gb=2.0, free_gb=2.9,
-                                 total_gb=31.4).startswith("AGE")
+                                 total_gb=31.4) is None

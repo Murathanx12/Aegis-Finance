@@ -9,6 +9,7 @@
     python -m scripts.task_keeper opportunities  # C15: rebuild the Opportunity Explorer receipt
     python -m scripts.task_keeper publish     # C15: sanitised public copies -> backend/data/public_receipts/
     python -m scripts.task_keeper publish_commit  # C15 H1: commit ONLY that folder on main + push
+    python -m scripts.task_keeper assets      # bump the public-assets pin, test, commit + push (weekly)
     python -m scripts.task_keeper analyst     # weekly analyst-target pull (refuses in US hours)
     python -m scripts.task_keeper brain       # refresh the Optimus brain (tools/refresh_aegis.py)
     python -m scripts.task_keeper public_flow # C16 sensors: USAspending daily, LDA weekly, crypto daily
@@ -50,6 +51,7 @@ no LLM and no order. The sim owner reads the broker (one GET) before a start.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -61,6 +63,9 @@ from typing import Any, Callable, Optional
 REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
+if (len(sys.argv) > 1 and sys.argv[1] == "assets" and
+        REPO.name == "aegis-finance-publication" and "AEGIS_REPO_ROOT" not in os.environ):
+    os.environ["AEGIS_REPO_ROOT"] = str(REPO.parent / "aegis-finance")
 
 from backend import config as _config  # noqa: E402
 
@@ -91,6 +96,9 @@ CATCHUP_GRACE_MIN = 15.0
 TASK_READER = "AegisReaderSupervisor"
 #: Daily data catalog + closed-ledger archival (chunk C10, 2026-10-06).
 TASK_CATALOG = "AegisDataCatalog"
+#: Weekly public-assets refresh (2026-10-07 chunk): Saturday, after the Friday close's daily
+#: pass and the same-day catalog firing. `config.PUBLIC_ASSETS_REFRESH_WEEKDAY`/`_HHMM`.
+TASK_ASSETS = "AegisPublicAssetsWeekly"
 TASK_CATCHUP = "AegisCatchUp"
 
 
@@ -779,6 +787,193 @@ def run_publish_commit(*, job: Callable[[], dict] | None = None,
     return out
 
 
+# ================================================================ assets (2026-10-07 chunk)
+#
+# WHY. The owner wants the public pictures to refresh "maybe live, maybe once a week, based
+# on the winners" without a human remembering to run three commands. `render_public_assets
+# --bump-pin` already does step 1 (pick the newest receipt pair, re-render, write its own
+# refresh receipt, REFUSE loud on an older/identical pin, a missing LIVE featured account or a
+# text-budget failure); this job is steps 2-3: gate the bump on `test_public_assets.py` (a
+# bump that renders but fails its own pinning test is never committed), then commit ONLY the
+# generator, the rendered assets, the motion page, the README and the refresh receipt on
+# `main` and push -- the SAME H1 guards as `publish_commit` (via `publish_receipts.commit_
+# paths`, the generalised form of its one-folder pattern). A failure at ANY step is a SKIP
+# line in `assets.jsonl`, never a raised exception and never a partial commit.
+
+ASSETS_LOG = KEEPER_DIR / "assets.jsonl"
+#: Committed on every successful bump, beside the run's own refresh receipt (added at call
+#: time: `backend/data/optimus/paper_accounts/public_assets_refresh_<run_id>.json`).
+# README.md is included although the chunk's own wording names only the generator, the
+# assets and the motion page: `render_public_assets.update_readme_results_block` rewrites its
+# results-panel block on every bump, and leaving it out would leave README.md permanently
+# dirty (and SKIP every following week's job on an already-dirty index).
+ASSETS_COMMIT_PATHS = ("scripts/render_public_assets.py",
+                      "docs/assets/aegis_loop.svg", "docs/assets/paper_results_live.svg",
+                      "docs/assets/architecture_pipeline.svg", "docs/assets/og_preview.svg",
+                      "docs/assets/gauntlet.svg", "docs/design/aegis_front_page.html", "README.md")
+ASSETS_PENDING = KEEPER_DIR / "assets_pending.json"
+
+
+def _assets_git(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", *args], cwd=str(REPO), capture_output=True, text=True,
+                          timeout=30, check=False)
+
+
+def _asset_paths(run_id: str) -> tuple[str, ...]:
+    return (*ASSETS_COMMIT_PATHS, f"docs/assets/public_results_{run_id}.json",
+            f"backend/data/optimus/paper_accounts/public_assets_refresh_{run_id}.json")
+
+
+def _asset_hashes(run_id: str) -> dict[str, str]:
+    paths = _asset_paths(run_id)
+    return {rel: hashlib.sha256((REPO / rel).read_bytes()).hexdigest() for rel in paths}
+
+
+def _assets_preflight(paths: tuple[str, ...], *, pending: bool) -> str | None:
+    expected = Path(os.getenv("AEGIS_PUBLICATION_ROOT", str(REPO.parent / "aegis-finance-publication"))).resolve()
+    if REPO.resolve() != expected:
+        return f"assets must run from the dedicated publication checkout {expected}"
+    branch = _assets_git("branch", "--show-current")
+    if branch.returncode != 0 or branch.stdout.strip() != "main":
+        return "publication checkout must be on main"
+    status = _assets_git("status", "--porcelain", "--untracked-files=all", "--", *paths)
+    if status.returncode != 0:
+        return "could not inspect publication paths"
+    if status.stdout.strip() and not pending:
+        return "publication paths already have owner edits; refusing before bump"
+    staged = _assets_git("diff", "--cached", "--name-only")
+    if staged.returncode != 0 or staged.stdout.strip():
+        return "publication index is already staged; refusing before bump"
+    return None
+
+
+def _assets_unpushed_history_scoped(run_id: str) -> bool:
+    """A net tree diff can hide an unrelated commit followed by its revert."""
+    head = _assets_git("log", "-1", "--format=%s")
+    history = _assets_git("log", "--name-only", "--format=", "origin/main..HEAD")
+    return (head.returncode == 0 and
+            head.stdout.strip().startswith(f"public assets refresh {run_id} ") and
+            history.returncode == 0 and bool(history.stdout.strip()) and
+            all(path in _asset_paths(run_id) for path in history.stdout.splitlines()))
+
+
+def run_assets(*, bump: Callable[..., int] | None = None,
+               pytest_runner: Callable[..., Any] | None = None,
+               commit: Callable[..., dict] | None = None, log_path: Path | None = None) -> dict:
+    row: dict = {"job": "assets"}
+    try:
+        from scripts import render_public_assets as RPA                # noqa: PLC0415
+    except Exception as exc:                                           # noqa: BLE001
+        row.update(action="skip", why=f"could not import render_public_assets: "
+                                      f"{type(exc).__name__}: {str(exc)[:300]}")
+        return log(row, log_path or ASSETS_LOG)
+    old_id = RPA.RESULTS_RUN_ID
+    pending: dict | None = None
+    actual_caller = bump is None and commit is None
+    if actual_caller:
+        try:
+            pending = json.loads(ASSETS_PENDING.read_text(encoding="utf-8")) if ASSETS_PENDING.exists() else None
+        except (OSError, ValueError):
+            row.update(action="skip", why="assets pending state is unreadable; manual repair required")
+            return log(row, log_path or ASSETS_LOG)
+        try:
+            prospective = pending["run_id"] if pending else RPA.choose_new_run_id()
+        except (SystemExit, OSError) as exc:
+            row.update(action="skip", why=str(exc))
+            return log(row, log_path or ASSETS_LOG)
+        why = _assets_preflight(_asset_paths(prospective), pending=bool(pending))
+        if why:
+            row.update(action="skip", why=why)
+            return log(row, log_path or ASSETS_LOG)
+        if pending:
+            old_id = pending["old_run_id"]
+            try:
+                if (pending["hashes"] != _asset_hashes(prospective) or
+                        RPA.RESULTS_RUN_ID != prospective):
+                    raise ValueError("pending publication bytes or pin changed")
+            except (OSError, KeyError, ValueError) as exc:
+                row.update(action="skip", why=f"pending assets need manual review: {exc}")
+                return log(row, log_path or ASSETS_LOG)
+    try:
+        rc = 0 if pending else (bump or RPA.bump_pin)()
+    except Exception as exc:                                           # noqa: BLE001
+        row.update(action="skip", why=f"bump_pin raised {type(exc).__name__}: {str(exc)[:300]}")
+        return log(row, log_path or ASSETS_LOG)
+    new_id = pending["run_id"] if pending else RPA.RESULTS_RUN_ID
+    if actual_caller and not pending and rc == 0:
+        try:
+            ASSETS_PENDING.parent.mkdir(parents=True, exist_ok=True)
+            pending = {"run_id": new_id, "old_run_id": old_id, "hashes": _asset_hashes(new_id)}
+            ASSETS_PENDING.write_text(json.dumps(pending), encoding="utf-8")
+        except OSError as exc:
+            row.update(action="skip", why=f"bump created uncommitted outputs but pending record failed: {exc}")
+            return log(row, log_path or ASSETS_LOG)
+    row.update(bump_rc=rc, old_run_id=old_id, new_run_id=new_id)
+    if rc == 2:
+        row.update(action="skip", why="bump_pin refused (the newest receipt pair is not newer than the "
+                                      "pinned one, a featured family has no LIVE strategy account, or a "
+                                      "text budget failed); nothing rendered, nothing to commit")
+        return log(row, log_path or ASSETS_LOG)
+    if rc != 0:
+        row.update(action="skip", why=f"bump_pin exited {rc}")
+        return log(row, log_path or ASSETS_LOG)
+    try:
+        runner = pytest_runner or subprocess.run
+        r = runner([_child_python(), "-m", "pytest", "backend/tests/test_public_assets.py", "-q"],
+                  cwd=str(REPO), capture_output=True, text=True, timeout=180,
+                  creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        rc_test = int(getattr(r, "returncode", 1))
+        row["pytest_rc"] = rc_test
+        if rc_test != 0:
+            tail = [ln for ln in str(getattr(r, "stdout", "") or "").splitlines() if ln.strip()][-8:]
+            row.update(action="skip", why=f"test_public_assets.py failed (rc {rc_test}); the bump stands "
+                                          f"but is NOT committed: {tail}")
+            return log(row, log_path or ASSETS_LOG)
+    except Exception as exc:                                           # noqa: BLE001
+        row.update(action="skip", why=f"pytest raised {type(exc).__name__}: {str(exc)[:300]}")
+        return log(row, log_path or ASSETS_LOG)
+    if actual_caller:
+        try:
+            if pending is None or pending["hashes"] != _asset_hashes(new_id):
+                raise ValueError("verified publication bytes changed during the test gate")
+            staged_now = _assets_git("diff", "--cached", "--name-only")
+            if staged_now.returncode != 0 or staged_now.stdout.strip():
+                raise ValueError("publication index changed during the test gate")
+        except (OSError, KeyError, ValueError) as exc:
+            row.update(action="skip", why=f"publication changed after verification: {exc}")
+            return log(row, log_path or ASSETS_LOG)
+    receipt_rel = f"backend/data/optimus/paper_accounts/public_assets_refresh_{new_id}.json"
+    try:
+        commit = commit or (lambda **kw: __import__(
+            "backend.services.publish_receipts", fromlist=["commit_paths"]).commit_paths(**kw))
+        already_committed = (actual_caller and pending and
+                             not _assets_git("status", "--porcelain", "--", *_asset_paths(new_id)).stdout.strip())
+        if already_committed:
+            if not _assets_unpushed_history_scoped(new_id):
+                raise RuntimeError("pending commit is not the scoped assets refresh")
+            pushed = _assets_git("push", "origin", "main")
+            out = {"status": "COMMITTED", "pushed": pushed.returncode == 0,
+                   "push_refused": pushed.stderr.strip()[-300:] if pushed.returncode else None}
+        else:
+            out = commit(paths=_asset_paths(new_id), repo=REPO,
+                         message=f"public assets refresh {new_id} (bumped pin {old_id} -> {new_id}; "
+                                 f"data + generator only)",
+                         log_path=KEEPER_DIR / "assets_commit.jsonl")
+    except Exception as exc:                                           # noqa: BLE001
+        row.update(action="skip", why=f"commit raised {type(exc).__name__}: {str(exc)[:300]}")
+        return log(row, log_path or ASSETS_LOG)
+    row["commit"] = {k: out.get(k) for k in ("status", "commit", "pushed", "push_refused", "reasons", "n_files")}
+    row["action"] = "ok" if out.get("status") == "COMMITTED" and out.get("pushed") is not False else "skip"
+    if row["action"] == "ok" and actual_caller:
+        ASSETS_PENDING.unlink(missing_ok=True)
+    if row["action"] == "skip":
+        row["why"] = out.get("reasons") or out.get("push_refused") or "commit did not complete"
+    voice = RPA.PAPER_DIR / f"results_voice_{new_id}.md"
+    if voice.is_file():
+        row["results_voice"] = voice.resolve().relative_to(RPA.REPO.resolve()).as_posix()
+    return log(row, log_path or ASSETS_LOG)
+
+
 # ================================================================ owners (C8)
 #
 # WHY (chunk C8, 2026-10-07). Two jobs had NO scheduled caller:
@@ -1034,13 +1229,30 @@ def register_owners(apply: bool = False) -> int:
 
 # ================================================================ register
 
+_PS_WEEKDAY_NAMES = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+
+def _assets_day_name() -> str:
+    """`config.PUBLIC_ASSETS_REFRESH_WEEKDAY` (Mon=0..Sun=6) as the PowerShell day name."""
+    return _PS_WEEKDAY_NAMES[int(getattr(_config, "PUBLIC_ASSETS_REFRESH_WEEKDAY", 5)) % 7]
+
+
+def _assets_hhmm_colon() -> str:
+    """`config.PUBLIC_ASSETS_REFRESH_HHMM` ("0900") as "09:00"."""
+    hhmm = str(getattr(_config, "PUBLIC_ASSETS_REFRESH_HHMM", "0900")).zfill(4)
+    return f"{hhmm[:2]}:{hhmm[2:]}"
+
+
 def registration_ps() -> str:
-    """PowerShell that (re)registers the three tasks. Printed by `register`.
+    """PowerShell that (re)registers the tasks (reader, catch-up, sim owner, catalog, and the
+    weekly public-assets refresh). Printed by `register`.
 
     The logon and unlock triggers are scoped to THIS user: an unscoped unlock
     trigger (any user) needs elevation and fails with 0x80070005 (measured
     2026-10-02)."""
     pyw = REPO / ".venv" / "Scripts" / "pythonw.exe"
+    publication_root = Path(os.getenv("AEGIS_PUBLICATION_ROOT", str(REPO.parent / "aegis-finance-publication")))
+    asset_pyw = Path(os.getenv("AEGIS_REPO_ROOT", str(REPO))) / ".venv" / "Scripts" / "pythonw.exe"
     return "\n".join([
         "$S = New-ScheduledTaskSettingsSet -StartWhenAvailable -WakeToRun -AllowStartIfOnBatteries "
         "-DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 10)",
@@ -1077,6 +1289,14 @@ def registration_ps() -> str:
         f"-WorkingDirectory '{REPO}'",
         "Register-ScheduledTask -TaskName '" + TASK_CATALOG + "' -Action $a -Settings $SC -Force "
         "-Trigger @(New-ScheduledTaskTrigger -Daily -At 09:00)",
+        "# the public-assets refresh: weekly, AFTER the daily catalog path on the same day "
+        f"(config.PUBLIC_ASSETS_REFRESH_WEEKDAY/_HHMM = {_assets_day_name()} "
+        f"{_assets_hhmm_colon()} HKT)",
+        f"$a = New-ScheduledTaskAction -Execute '{asset_pyw}' -Argument \"-m scripts.task_keeper assets\" "
+        f"-WorkingDirectory '{publication_root}'",
+        "Register-ScheduledTask -TaskName '" + TASK_ASSETS + "' -Action $a -Settings $SC -Force "
+        f"-Trigger @(New-ScheduledTaskTrigger -Weekly -DaysOfWeek {_assets_day_name()} "
+        f"-At {_assets_hhmm_colon()})",
     ])
 
 
@@ -1095,7 +1315,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("job", choices=("reader", "catchup", "sim", "status", "register", "catalog",
                                    "regret", "snowball", "opportunities", "publish", "publish_commit",
                                    "analyst", "brain", "register-owners", "public_flow", "research",
-                                   "results"))
+                                   "results", "assets"))
     ap.add_argument("--apply", action="store_true",
                     help="register-owners: run the registration, not only print it")
     a = ap.parse_args(argv)
@@ -1136,11 +1356,11 @@ def main(argv: list[str] | None = None) -> int:
         # C15 H1: LAST, the step that makes the pages public (it refuses off `main`)
         print(json.dumps(run_publish_commit(), default=str))
         return 2 if out.get("action") == "refused" else 0
-    if a.job in ("opportunities", "publish", "publish_commit"):
+    if a.job in ("opportunities", "publish", "publish_commit", "assets"):
         out = {"opportunities": run_opportunities, "publish": run_publish_receipts,
-               "publish_commit": run_publish_commit}[a.job]()
+               "publish_commit": run_publish_commit, "assets": run_assets}[a.job]()
         print(json.dumps(out, default=str))
-        return 2 if out.get("action") == "refused" else 0
+        return 2 if out.get("action") in ("refused", "skip") else 0
     if a.job == "results":
         out = run_results_voice()
         print(json.dumps(out, default=str))

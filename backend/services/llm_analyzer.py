@@ -649,7 +649,10 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
                purpose: str, max_tokens: int | None = None,
                validate=None, ensure_reason: str | None = None,
                temperature: float | None = None,
-               production_budget: bool = True) -> dict:
+               production_budget: bool = True,
+               model_override: str | None = None,
+               no_retry: bool = False,
+               non_thinking: bool = False) -> dict:
     """One chat turn from the NAMED provider. Never raises for a provider error.
 
     Returns `{provider, model, served_model, text, ok, status, latency_s,
@@ -670,11 +673,25 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
            "status": None, "latency_s": None, "cost_usd": None,
            "cost_status": None, "tokens_in": 0, "tokens_out": 0,
            "cached_tokens": 0, "error": None}
+    if model_override is not None and (provider != "deepseek" or model_override != "deepseek-flash"):
+        return {**out, "status": "INVALID_MODEL_OVERRIDE",
+                "error": "only the reviewed DeepSeek Flash override is allowed"}
+    if no_retry and (provider != "deepseek" or model_override != "deepseek-flash"):
+        return {**out, "status": "INVALID_NO_RETRY_SCOPE",
+                "error": "no_retry requires the reviewed DeepSeek Flash route"}
+    if non_thinking and (provider != "deepseek" or model_override != "deepseek-flash" or not no_retry):
+        return {**out, "status": "INVALID_THINKING_SCOPE",
+                "error": "non_thinking requires the reviewed single-attempt DeepSeek Flash route"}
     if provider == "deepseek":
-        model, client = _DEEPSEEK_MODEL, (_get_openai_client() if _DEEPSEEK_API_KEY else None)
+        model = model_override or _DEEPSEEK_MODEL
+        client = _get_openai_client() if _DEEPSEEK_API_KEY else None
         if client is None:
             return {**out, "model": model, "status": "NOT_CONFIGURED",
                     "error": "DEEPSEEK_API_KEY is not set"}
+        if no_retry:
+            # The OpenAI SDK defaults to two HTTP retries. This pilot budgets
+            # physical requests, so use a per-call clone with retries disabled.
+            client = client.with_options(max_retries=0)
         # `production_budget=False` is for an attended BATCH that enforces its
         # own dollar cap (the E-G1 bake-off, $0.15): the 150-call production
         # counter is sized for a user-facing endpoint, not a 240-item batch. The
@@ -716,6 +733,8 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
               max_tokens=mt,
               temperature=(_llm_cfg.get("temperature", 0.3) if temperature is None
                            else float(temperature)))
+    if non_thinking:
+        kw["extra_body"] = {"thinking": {"type": "disabled"}}
     try:
         if provider == "nvidia":
             response, out["n_429"] = _create_with_429_retry(client, provider, **kw)

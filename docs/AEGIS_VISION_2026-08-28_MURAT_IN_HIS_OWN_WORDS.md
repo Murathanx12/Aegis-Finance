@@ -324,3 +324,38 @@ says portfolio utility under a declared personality for Murat's capital AND a
 public tool others run at their utility. What changed in the **priority
 order**: the tool for an average person is now the deliverable the roadmap is
 measured against, and research is what keeps that tool from learning nonsense.
+
+## 7. Execution clarification (2026-10-09; intent, not a result)
+
+The near-term aim is the shortest auditable path from fresh information to
+useful paper decisions. Use cheaper capable workers for bounded tasks and have
+the coordinator review their evidence; verify actual model routing before
+crediting a cost saving. First finish recovery and the publication repair, then
+advance the owner-authorized PC-PAPER no-index policy epoch with a separate
+SPY control and preserved history. Prioritize revision-flow attribution,
+article interpretation with a measured local-first / budgeted escalation
+path, and an audit that keeps original forward decisions distinct from any
+retrospective replay. Prepare a local backup/restore and cutover record and a
+Monday evidence pack. Missing scheduled receipts or authentic Terminal inputs
+block only their dependent work; independent work continues. This dated note
+does not claim any of those deliverables are complete and does not replace the
+active roadmap.
+
+**Evidence update (2026-10-09):** A bounded cheaper-worker smoke task passed,
+but actual model metadata was unavailable, so routing and savings remain
+unverified. The valid-window sim advanced two cycles with no orders; its legacy
+mandate remains unreconciled. A two-store backup/restore passed independent
+checks, with no cutover. The news development sample returned two invalid
+outputs; no held-out evidence or promotion exists. See roadmap §5c for the
+active queue, owners, scheduled checks and remaining evidence gates.
+
+**Evidence update (2026-10-10):** Recovery remains **NOT READY**: the historical
+combined run had one audit-ledger enrollment failure; its fix is approved, but
+CI and final full verification remain pending. Deployment and publication
+receipts are also pending. The PC-PAPER candidate remains inactive pending
+independent review and its contract gate. News blind-source-gold review is
+complete, but final adjudication/benchmark errata remain open; no held-out
+model result exists. Continue bounded worker tasks with coordinator review,
+and credit no routing savings until metadata verifies the route. Current gates
+and evidence limits are recorded in roadmap §5c and the overnight verification
+note.

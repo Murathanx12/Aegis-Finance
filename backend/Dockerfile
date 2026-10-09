@@ -17,6 +17,8 @@ RUN pip install --no-cache-dir --prefer-binary --timeout 600 --retries 10 -r bac
 # Copy application code
 COPY backend/ backend/
 COPY engine/ engine/
+# The public-assets health probe reads this committed pin at /app/scripts/.
+COPY scripts/render_public_assets.py scripts/render_public_assets.py
 
 # Port from env (Railway sets PORT)
 ENV PORT=8000

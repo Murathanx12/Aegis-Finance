@@ -660,12 +660,14 @@ def test_a_url_with_cmd_metacharacters_arrives_as_one_identical_argument(fresh_r
         "bin": "openclaw.CMD", "shim": "openclaw.CMD", "route": "node",
         "prefix": ["C:/node/node.exe", "C:/npm/node_modules/openclaw/openclaw.mjs"]})
     fresh_route.setattr(subprocess, "run", fake_run)
+    fresh_route.setattr(OC._QS, "CREATE_NO_WINDOW", 0x08000000)
     r = OC._run(["browser", "--browser-profile", "muratclaw", "navigate", NASTY])
     assert isinstance(seen["cmd"], list)
     assert seen["cmd"] == ["C:/node/node.exe", "C:/npm/node_modules/openclaw/openclaw.mjs",
                            "browser", "--browser-profile", "muratclaw", "navigate", NASTY]
     assert seen["cmd"][-1].encode("utf-8") == NASTY.encode("utf-8")
     assert seen["kw"]["shell"] is False
+    assert seen["kw"]["creationflags"] & 0x08000000
     assert r.cli_route == "node" and OC.cli_ledger()["cli_route"] == "node"
 
 
@@ -687,8 +689,10 @@ def test_an_unresolvable_shim_falls_back_to_cmd_and_says_so(fresh_route, tmp_pat
         seen["cmd"], seen["kw"] = cmd, kw
         return subprocess.CompletedProcess(cmd, 0, "", "")
     fresh_route.setattr(subprocess, "run", fake_run)
+    fresh_route.setattr(OC._QS, "CREATE_NO_WINDOW", 0x08000000)
     r = OC._run(["browser", "navigate", NASTY])
     assert r.cli_route == "cmd" and seen["kw"]["shell"] is False
+    assert seen["kw"]["creationflags"] & 0x08000000
     line = seen["cmd"]
     assert isinstance(line, str) and " /d /s /c " in line
     # every metacharacter in the URL is caret-escaped, none left bare
@@ -731,10 +735,13 @@ def test_the_module_never_asks_for_a_shell():
                 if kw.arg == "shell":
                     assert isinstance(kw.value, ast.Constant) and kw.value.value is False, \
                         ast.unparse(node)[:120]
-    runs = [n for n in ast.walk(tree) if isinstance(n, ast.Call)
-            and ast.unparse(n.func) in ("subprocess.run", "subprocess.Popen")]
-    assert runs and all(any(k.arg == "shell" for k in n.keywords) for n in runs), \
-        "every subprocess call states shell=False explicitly"
+    direct = [n for n in ast.walk(tree) if isinstance(n, ast.Call)
+              and ast.unparse(n.func) in ("subprocess.run", "subprocess.Popen")]
+    quiet = [n for n in ast.walk(tree) if isinstance(n, ast.Call)
+             and ast.unparse(n.func) == "_QS.run"]
+    assert not direct and quiet, "CLI children must use quiet_subprocess"
+    assert all(any(k.arg == "shell" and isinstance(k.value, ast.Constant)
+                   and k.value.value is False for k in n.keywords) for n in quiet)
 
 
 def test_browser_names_the_route_on_its_receipt(monkeypatch, clock):

@@ -4471,12 +4471,11 @@ READER_HUNG_TAB_TIMEOUT_S = 4.0
 #: pool's own, is closed by the supervisor (the pool's tabs live a minute or two;
 #: a launcher's start page or another job's leftovers otherwise live for hours).
 READER_STALE_TAB_S = 1800.0
-#: Long-lived browsers grow: the dedicated Chrome is recycled gracefully (tabs
-#: closed, Browser.close, relaunched with its port) when older than
-#: READER_CHROME_RECYCLE_S, or holding more than READER_CHROME_MAX_GB (private
-#: bytes), or more than READER_CHROME_SOFT_GB while free RAM is under
-#: READER_CHROME_LOW_FREE_GB; at most READER_CHROME_RECYCLES_PER_HOUR an hour.
-READER_CHROME_RECYCLE_S = 7200.0
+#: Keep the healthy dedicated Chrome up. Age-only recycling visibly closed and
+#: reopened its window every two hours despite low memory and advancing reads.
+#: Set a positive duration only for an attended diagnostic; 0 disables the age
+#: trigger. Memory pressure and stall/dependency recovery remain active.
+READER_CHROME_RECYCLE_S = 0.0
 READER_CHROME_MAX_GB = 8.0
 READER_CHROME_SOFT_GB = 4.0
 READER_CHROME_LOW_FREE_GB = 3.0
@@ -5757,7 +5756,7 @@ HEALTH_TASK_CADENCE_H = {
     "AegisFleetManagerPreclose": 24.0, "AegisFleetDailyCheck": 24.0,
     "AegisReaderSupervisor": 0.5, "AegisCatchUp": 2.0, "AegisTelegramAgent": 0.05,
     "AegisAnalystPanelDaily": 24.0, "AegisAnalystPull": 168.0, "AegisBrainRefresh": 24.0,
-    "AegisPublicFlow": 24.0, "AegisResearchLane": 168.0,
+    "AegisPublicFlow": 24.0, "AegisResearchLane": 168.0, "AegisPublicAssetsWeekly": 168.0,
 }
 #: "Same output for too long": a receipt series whose SUBSTANCE hash (the receipt
 #: with its stamps/run ids removed) is unchanged across at least this many
@@ -5902,6 +5901,20 @@ OWNER_NAME_PATTERNS: tuple = (r"(?<![a-z])murat(?:han)?(?:x12)?",)
 #: folder and pushes this branch to this remote; it refuses on any other branch.
 PUBLIC_RECEIPTS_BRANCH = "main"
 PUBLIC_RECEIPTS_REMOTE = "origin"
+
+# -- public assets refresh (2026-10-07): the front-page pictures' pinned receipt pair --------
+#: `public_assets_staleness.p_public_assets`: the committed `RESULTS_RUN_ID` pin in
+#: `scripts/render_public_assets.py`, read directly from the module (never a file mtime --
+#: CLAUDE.md protocol 7), older than this many days is DEGRADED. The refresh is weekly
+#: (`PUBLIC_ASSETS_REFRESH_WEEKDAY`/`_HHMM`), so one missed Saturday is still within budget
+#: and two is not.
+PUBLIC_ASSETS_MAX_PIN_AGE_DAYS = 10
+#: `scripts.task_keeper assets` / the `AegisPublicAssetsWeekly` scheduled task: Python
+#: `date.weekday()` convention (Mon=0 .. Sun=6) -- Saturday, after the Friday close's daily
+#: pass has written the newest paper-account receipts.
+PUBLIC_ASSETS_REFRESH_WEEKDAY = 5
+#: Local (HKT) 24h "HHMM", after `AegisDataCatalog`'s 09:00 daily firing on the same day.
+PUBLIC_ASSETS_REFRESH_HHMM = "1030"
 #: (C8 review F8) The Railway fleet loops (aat-loop-hack*) were stopped ON PURPOSE on
 #: 2026-09-29 (session S60, to hold the bill at $20). While this is non-empty the
 #: `railway_fleet` probe reads STOPPED_BY_OPERATOR with this reason instead of a

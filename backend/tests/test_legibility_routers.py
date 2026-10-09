@@ -69,6 +69,8 @@ def assert_clean(payload) -> None:
 
 @pytest.fixture
 def client(tmp_path, monkeypatch):
+    # Receipts use module NOW; keep request-time freshness stable after slow collection.
+    monkeypatch.setattr(L, "_now", lambda now=None: now or NOW)
     monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR", tmp_path)
     # C15 fix (2026-10-07): PUBLIC_RECEIPTS_DIR no longer follows OPTIMUS_LEDGER_DIR (that
     # coupling is what shadowed the real published copies in prod); isolate it explicitly

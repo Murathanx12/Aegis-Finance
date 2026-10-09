@@ -231,6 +231,38 @@ def pid_alive(pid: int) -> bool:
         return False
 
 
+def process_created_ts(pid: int) -> float | None:
+    """Process birth timestamp for exact-PID ownership checks (native on Windows)."""
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
+        k32 = ctypes.windll.kernel32
+        k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        k32.OpenProcess.restype = wintypes.HANDLE
+        k32.GetProcessTimes.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.FILETIME),
+                                       ctypes.POINTER(wintypes.FILETIME), ctypes.POINTER(wintypes.FILETIME),
+                                       ctypes.POINTER(wintypes.FILETIME)]
+        k32.CloseHandle.argtypes = [wintypes.HANDLE]
+        handle = k32.OpenProcess(0x1000, False, int(pid))  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not handle:
+            return None
+        try:
+            created, exited, kernel, user = (wintypes.FILETIME() for _ in range(4))
+            ok = k32.GetProcessTimes(handle, ctypes.byref(created), ctypes.byref(exited),
+                                     ctypes.byref(kernel), ctypes.byref(user))
+            if not ok:
+                return None
+            ticks = (created.dwHighDateTime << 32) | created.dwLowDateTime
+            return (ticks - 116444736000000000) / 10000000
+        finally:
+            k32.CloseHandle(handle)
+    try:
+        import psutil
+        return psutil.Process(pid).create_time()
+    except Exception:
+        return None
+
+
 def vram() -> dict | None:
     """`nvidia-smi` used/total in MiB, or None when there is no NVIDIA GPU.
 
@@ -428,7 +460,7 @@ def bind_lifetime(pid: int) -> dict:
         return {"bound": False, "reason": f"{type(exc).__name__}: {exc}"}
 
 
-def start(wait_s: float = 90.0, bind: bool = True) -> dict:
+def start(wait_s: float = 90.0, bind: bool = True, *, attempt_token: str | None = None) -> dict:
     """Start the server, but only when the port is free.
 
     Refusing to start a second copy is not politeness: two servers means two
@@ -468,9 +500,11 @@ def start(wait_s: float = 90.0, bind: bool = True) -> dict:
     # headless instance started for diagnosis called `stop_if_owned()` on exit
     # and killed the model server (PID 53112) that Murat's running .exe had
     # started. Ownership is per PROCESS; the file is merely where it is written.
+    created_ts = process_created_ts(proc.pid)
     _write_owner({"pid": proc.pid, "started_utc": _now(), "model": LLAMA_MODEL.name,
                   "cmd": cmd, "port": LLAMA_PORT, "lifetime_bound": bound,
-                  "owner_pid": os.getpid(), "owner_started_utc": _now()})
+                  "owner_pid": os.getpid(), "owner_started_utc": _now(),
+                  "attempt_token": attempt_token, "process_created_ts": created_ts})
     if not bind:
         # an UNBOUND server outlives this process; the detached reaper is what
         # stops it (G-fix row 7) -- including for the lab, which calls start()

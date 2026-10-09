@@ -16,6 +16,7 @@ Offline. Every date derives from TODAY (session protocol item 5).
 
 from __future__ import annotations
 
+import copy
 import json
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -60,9 +61,17 @@ def _state(tmp: Path, *, rep_date: str | None = ASOF, weighting: str = "equal",
 
 def _lb(sessions: int, nets: dict[str, float] | None = None) -> dict:
     nets = nets or {"equal": 0.0, "inverse_vol": 0.0, "bigmove_tilt": 0.0}
-    return {"graded_utc": "t", "grades": [
-        {"name": PS.PROBE_TWIN_BOOKS[k], "status": "OK", "sessions": sessions,
-         "net_to_date": nets[k], "vs_benchmark": nets[k]} for k in PS.PROBE_TWIN_BOOKS]}
+    return {"schema": "llm_portfolio/1", "kind": "leaderboard",
+            "graded_utc": f"{ASOF}T04:53:14+00:00", "bars_through": ASOF,
+            "grades": [
+                {"name": PS.PROBE_TWIN_BOOKS[k], "status": "OK", "benchmark": "SPY",
+                 "benchmark_missing": False, "weight_priced": 1.0,
+                 "weight_waiting_in_cash": 0.0,
+                 "entry_session": _weekdays_back(sessions - 1),
+                 "to_date": {"status": "OK", "sessions": sessions, "net": nets[k],
+                             "benchmark_return": 0.0, "vs_benchmark": nets[k],
+                             "weight_priced": 1.0, "as_of": ASOF}}
+                for k in PS.PROBE_TWIN_BOOKS]}
 
 
 # ─────────────────────────────── the weighting preference ───────────────────
@@ -72,6 +81,75 @@ def test_weighting_stays_equal_while_twins_are_immature():
         _lb(20, {"equal": 0.0, "inverse_vol": 0.0, "bigmove_tilt": 0.50}))
     assert r["value"] == "equal"
     assert r["reason"].startswith("twins immature (20 sessions")
+
+
+def test_weighting_reads_nested_producer_grade_at_nine_sessions():
+    r = PS.probe_weighting_from_twins(
+        _lb(9, {"equal": 0.0, "inverse_vol": 0.0, "bigmove_tilt": 0.50}))
+    assert r["value"] == "equal"
+    assert "twins immature (9 sessions" in r["reason"]
+    assert {row["sessions"] for row in r["evidence"]["by_scheme"].values()} == {9}
+    assert {row["weight_priced"] for row in r["evidence"]["by_scheme"].values()} == {1.0}
+
+
+@pytest.mark.parametrize("mutation,reason", [
+    (lambda lb: lb["grades"].append(copy.deepcopy(lb["grades"][0])), "expected one grade"),
+    (lambda lb: lb["grades"][0]["to_date"].update(net=float("nan")), "invalid net"),
+    (lambda lb: lb["grades"][0]["to_date"].update(net=float("inf")), "invalid net"),
+    (lambda lb: lb["grades"][0]["to_date"].update(sessions=True), "invalid sessions"),
+    (lambda lb: lb["grades"][0]["to_date"].update(vs_benchmark=None),
+     "invalid vs_benchmark"),
+    (lambda lb: lb["grades"][0]["to_date"].update(status="PENDING"), "not graded OK"),
+    (lambda lb: lb["grades"][0].update(status="PENDING"), "not graded OK"),
+    (lambda lb: lb["grades"][0]["to_date"].update(
+        as_of=(TODAY - timedelta(days=1)).isoformat()),
+     "unequal evaluation window"),
+    (lambda lb: lb["grades"][0].update(entry_session=_weekdays_back(25)),
+     "unequal evaluation window"),
+    (lambda lb: lb["grades"][0]["to_date"].update(sessions=22),
+     "unequal evaluation window"),
+    (lambda lb: lb["grades"][0].update(benchmark="USMV"),
+     "unequal evaluation window"),
+    (lambda lb: lb["grades"][1].update(weight_priced=0.8,
+                                           weight_waiting_in_cash=0.2),
+     "incomplete price coverage"),
+    (lambda lb: lb["grades"][1].pop("weight_priced"), "incomplete price coverage"),
+    (lambda lb: lb["grades"][1]["to_date"].pop("weight_priced"),
+     "incomplete price coverage"),
+    (lambda lb: lb["grades"][1].update(benchmark_missing=True),
+     "benchmark missing"),
+    (lambda lb: lb["grades"][1].pop("benchmark_missing"),
+     "benchmark missing"),
+    (lambda lb: lb["grades"][1]["to_date"].pop("benchmark_return"),
+     "invalid benchmark_return"),
+    (lambda lb: lb["grades"][1]["to_date"].update(benchmark_return=0.30),
+     "net/benchmark excess inconsistent"),
+    (lambda lb: lb["grades"][1]["to_date"].update(vs_benchmark=0.99),
+     "net/benchmark excess inconsistent"),
+    (lambda lb: lb["grades"][1].update(sessions=9),
+     "conflicting top-level sessions"),
+    (lambda lb: lb["grades"][1].update(net_to_date=-0.2),
+     "conflicting top-level net_to_date"),
+    (lambda lb: lb["grades"].pop(), "expected one grade"),
+    (lambda lb: lb.update(schema="unknown"), "unsupported leaderboard schema"),
+])
+def test_weighting_defaults_explicitly_on_invalid_producer_grade(mutation, reason):
+    lb = _lb(21, {"equal": 0.0, "inverse_vol": 0.05, "bigmove_tilt": 0.0})
+    mutation(lb)
+    r = PS.probe_weighting_from_twins(lb)
+    assert r["value"] == "equal"
+    assert reason in r["reason"]
+    assert "leader" not in r["evidence"]
+
+
+def test_weighting_refuses_unequal_benchmark_returns_even_when_excess_is_coherent():
+    lb = _lb(21, {"equal": 0.0, "inverse_vol": 0.05, "bigmove_tilt": 0.0})
+    td = lb["grades"][1]["to_date"]
+    td["benchmark_return"] = 0.01
+    td["vs_benchmark"] = td["net"] - td["benchmark_return"]
+    r = PS.probe_weighting_from_twins(lb)
+    assert r["value"] == "equal"
+    assert "unequal benchmark return" in r["reason"]
 
 
 def test_weighting_stays_equal_when_a_twin_is_missing_or_unreadable(tmp_path):
