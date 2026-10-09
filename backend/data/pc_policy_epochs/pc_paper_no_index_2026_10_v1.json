@@ -1,0 +1,154 @@
+{
+  "content": {
+    "activation_allowed": false,
+    "allocation": {
+      "cash_when_unqualified": "RESERVE_NO_ELIGIBLE_RISK_CAPACITY",
+      "core_weight": 0.0,
+      "exploit": "existing valid selector and per-name caps only; no forced fill",
+      "gross_cap": 1.0,
+      "minimum_cash_buffer": 0.01,
+      "non_core_name_cap": 0.12,
+      "probe_gross_cap": 0.2,
+      "revision_flow_gross_cap": 0.3
+    },
+    "binding_limits": {
+      "exploit_max_weight": 0.1,
+      "gross_cap": 1.0,
+      "leverage": 0.0,
+      "max_adv_participation": 0.02,
+      "max_orders_per_session": 120,
+      "min_order_usd": 250.0,
+      "one_day_worst_case_loss_frac": 0.1,
+      "pending_orders_counted_as_risk": true,
+      "probe_max_names": 10,
+      "probe_max_weight": 0.02,
+      "rebalance_drift_frac": 0.1,
+      "revision_21_session_adverse_return": 0.3203,
+      "revision_worst_21_session_loss_frac": 0.1,
+      "rf_hold_counted_as_held_risk": true,
+      "unknown_inputs": "block incremental risk, never zero",
+      "worst_case_sigma_multiple": 3.0
+    },
+    "costs_and_fills": {
+      "cost_basis": "broker fill price and cash movement measured; slippage versus arrival quote unknown and never imputed zero",
+      "execution": "existing pc_broker paper market day orders, whole-share only",
+      "protection": "no new stop claim; open orders preserved"
+    },
+    "eligibility_and_expiry": {
+      "bars": "existing fresh bars gate for new risk",
+      "exit": "separate verified policy transition evidence, independent of stale selector",
+      "exploit_horizons_sessions": [
+        1,
+        5,
+        21
+      ],
+      "probe_horizons_sessions": [
+        5,
+        21,
+        63,
+        126
+      ],
+      "revision_grade_horizons_sessions": [
+        1,
+        5,
+        21
+      ],
+      "venue": "Alpaca paper clock open for orders"
+    },
+    "epoch_id": "PC_PAPER_NO_STRATEGIC_INDEX_2026_10_v1",
+    "excluded_strategic_index_symbols": [
+      "SPY"
+    ],
+    "legacy": "record only LEGACY_OBSERVED_AT effective config, source hashes, terminal broker snapshot and NAV; no retroactive combined hash or historical rewrite",
+    "licence": "PRODUCT_EXPERIMENT",
+    "paper_account_fingerprint": "083ccc987a01685a7e5bb200ef6f5613d479c2bb72f02f234eec1e6d251f4898",
+    "planning_label": "2026-10-12; not inception or activation",
+    "prepared_utc": "2026-10-09T14:30:00+00:00",
+    "reporting": {
+      "capital_view_usd": 40000,
+      "lot_rule": "whole shares and liquidity limits; never an order source",
+      "performance": [
+        "account equity change since activation is descriptive; return UNKNOWN_CASHFLOWS until funding is reconciled",
+        "new epoch stock decisions graded separately against SPY price control",
+        "archived legacy holdings no-trade price shadow, not old dynamic policy"
+      ],
+      "view_only": true
+    },
+    "revision_flow": {
+      "book_id": "cb8d492bb8bf9ade",
+      "book_name": "revision_flow_v0",
+      "book_row_sha256": "be42690efabc7cbe10a1a92ca355c2ed4b71e83571e8e960a301f6c8c982d7f7",
+      "members": [
+        "OKTA",
+        "SNOW",
+        "CRWD",
+        "PANW",
+        "CRM",
+        "ABNB",
+        "AFRM",
+        "GTLB",
+        "AMD",
+        "ESTC",
+        "AMGN",
+        "TGT",
+        "NET",
+        "DDOG",
+        "MDB",
+        "ZS",
+        "WDAY",
+        "S",
+        "XYZ",
+        "DELL"
+      ],
+      "source": "llm_portfolio/books.jsonl frozen row, cross-checked by hack2_v2"
+    },
+    "schema": "pc_paper_policy_epoch/v1",
+    "selection": {
+      "exploit_source": "ranking.json top 18 and expected_return; existing negative and blend gates",
+      "no_index_rule": "SPY has no target; POLICY_EPOCH_EXIT_CORE may only reduce verified held shares during transition; generic EXIT unchanged",
+      "overlap": "one issuer in one sleeve; acting PROBE and EXPLOIT take precedence over frozen revision names; nonacting RF_HOLD remains held risk",
+      "precedence": [
+        "PROBE with own grade and decision-contract clash",
+        "acting EXPLOIT with ranker plus blend gate",
+        "frozen REVISION_FLOW on untaken issuers",
+        "RESERVE_NO_ELIGIBLE_RISK_CAPACITY"
+      ],
+      "probe_source": "investment_committee shortlist, contract exclusions, policy_state preference only",
+      "revision_source": "frozen revision_flow_v0; no re-selection"
+    },
+    "source_hash_basis": "SHA-256 of source text with CRLF normalized to LF",
+    "source_sha256": {
+      "backend/config.py": "df2d3b2ce6a5e41581b00314701e79560650b15fe52a2c2d3abcd402601bbfb4",
+      "backend/data/optimus/paper_accounts/fleet_manager/contracts/hack2_v2.json": "98db41cebdd78c26c57a7b177f795f88b33555bf0763e62096792a8e83148aa5",
+      "backend/services/decision_contract.py": "8e5acc06ad7aee0108f2d9dc2b4188866295908dab3a3e40d5a303ff37178f1b",
+      "backend/services/decision_ledger.py": "8436f1e0ecf329be6888304c1b021dccd58645030fc495e6e4fb840bb6b41912",
+      "backend/services/expected_return.py": "71bc7540f87d67aec7eb6c31fe22143c92017cb958ce3fbabbf2fd979e75c839",
+      "backend/services/investment_committee.py": "b4b63439e1446f5bb2f69e547fb53e3ea6381bc4ac98be82fc7ed877682a7202",
+      "backend/services/pc_broker.py": "c33672880c537f3a33baea64a943a5cd34f93c47f60aaa9e53902b4146b2c4f9",
+      "backend/services/pc_epoch_broker.py": "f7a34b16e72b0239add8e57ddcd92576daec4e5921d901ed625b3f65bb7dd738",
+      "backend/services/pc_epoch_planner.py": "d1b5e66d1c5da19624cf87d359994239f47be80afa7c90ff7d33f6e1341dbe28",
+      "backend/services/pc_risk.py": "8bb64ffae1a42836e2a371fdca6d4cccff71147fac4b9de096151468ce3a56f1",
+      "backend/services/pc_sleeves.py": "bfb6670ad97d5e4259e03b78194d071ccbae089c55502e6f63d3a0021b3efaaa",
+      "backend/services/policy_state.py": "b05ce89e5a106ee94c6248bef04130861233660163337035c8eaa185ea9af690",
+      "backend/services/revision_flow.py": "e508f9dd7b49355817db8be1390026670fa682c605e37ca2d980639ecd457802",
+      "backend/services/sim_session.py": "5b4b3577d89bb7f24d1954196a5693cd1d1f70198b45528addb8be0e1821c25e",
+      "scripts/sim_run.py": "79f4c030ed2704766c221bae459df1c3742882ecc85e94573f98eb3316debe6b"
+    },
+    "strategic_index_target": null,
+    "transition": {
+      "active_requires": "independent reviewed hash receipt, explicit source gate, verified broker fill/economic reconciliation, no whole SPY or open orders, and open paper venue",
+      "fractional_spy": "record sub-share residual; never round sell above verified held",
+      "idempotency": "durable deterministic client ID before broker send; unresolved lookup is UNKNOWN",
+      "not_before_utc": "2026-10-12T13:30:00+00:00",
+      "states": [
+        "PREPARED",
+        "EXIT_PENDING",
+        "UNKNOWN",
+        "DEGRADED",
+        "RECONCILED",
+        "ACTIVE"
+      ]
+    }
+  },
+  "content_sha256": "2d0018badaac849f1065aca17faa63df663d45f935e1e8faa4dbab73757055ed"
+}

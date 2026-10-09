@@ -61,6 +61,7 @@ import numpy as np
 import pandas as pd
 
 from backend import config
+from backend.services import decision_ledger as DL
 from backend.services import forecast_reputation as fr
 
 logger = logging.getLogger(__name__)
@@ -452,14 +453,19 @@ def _graded_forecasts(preds: list[dict] | None, asof: str) -> pd.DataFrame:
 
 
 def _decision_frames(rows: list[dict] | None, asof: str) -> tuple[pd.DataFrame, dict]:
-    """SCORED decision rows that carried a decomposition -> (long, wide per h)."""
+    """Versioned SCORED decomposition rows -> (long, wide per h)."""
     long_rows, wide_rows = [], {h: [] for h in config.ER_HORIZONS}
     for r in rows or []:
         d = r.get("detail") or {}
         if str(r.get("state")) != "SCORED" or not isinstance(d, dict):
             continue
+        if d.get("grading_rule") != DL.SCORING_RULE:
+            continue
+        if (DL.finite_grade_number(d.get("excess_return")) is None
+                or ("er_total" in d and DL.finite_grade_number(d["er_total"]) is None)):
+            continue
         comp = d.get("er_by_component")
-        rel = _f(d.get("excess_return"))
+        rel = DL.finite_grade_number(d.get("excess_return"))
         h = _alias(d.get("er_horizon") or d.get("horizon_sessions"))
         day = str(r.get("asof") or "")[:10]
         if not isinstance(comp, dict) or rel is None or h is None or not day or day > asof:
@@ -476,6 +482,30 @@ def _decision_frames(rows: list[dict] | None, asof: str) -> tuple[pd.DataFrame, 
     wide = {h: pd.DataFrame(v, columns=["date", "ticker", "rel", *COMPONENTS])
             for h, v in wide_rows.items()}
     return long, wide
+
+
+def _decision_grade_provenance(rows: list[dict] | None, asof: str) -> dict:
+    """Count decomposition grades excluded solely for an unapproved grader."""
+    admitted = excluded = invalid = 0
+    for r in rows or []:
+        d = r.get("detail") or {}
+        if (str(r.get("state")) != "SCORED" or not isinstance(d, dict)
+                or not isinstance(d.get("er_by_component"), dict)
+                or not str(r.get("asof") or "")[:10] <= asof):
+            continue
+        if d.get("grading_rule") == DL.SCORING_RULE:
+            if (DL.finite_grade_number(d.get("excess_return")) is not None
+                    and ("er_total" not in d
+                         or DL.finite_grade_number(d["er_total"]) is not None)):
+                admitted += 1
+            else:
+                invalid += 1
+        else:
+            excluded += 1
+    return {"required_grading_rule": DL.SCORING_RULE,
+            "admitted_decision_rows": admitted,
+            "excluded_unapproved_grading_rule": excluded,
+            "excluded_invalid_numeric_grade": invalid}
 
 
 def _forecast_long(g: pd.DataFrame) -> pd.DataFrame:
@@ -566,7 +596,8 @@ def fit(sources: Sources, *, asof: str) -> dict:
     oos = {h: oos_advantage(wide[h], horizon=h) for h in config.ER_HORIZONS}
     return {"asof": asof, "tables": tables, "oos": oos, "calibration": _calibration(g),
             "magnitude": _magnitude(g), "n_graded_forecasts": int(len(g)),
-            "n_graded_decisions": int(sum(len(w) for w in wide.values()))}
+            "n_graded_decisions": int(sum(len(w) for w in wide.values())),
+            "decision_grade_provenance": _decision_grade_provenance(sources.decision_rows, asof)}
 
 
 def _fit_summary(f: dict) -> dict:
@@ -582,6 +613,7 @@ def _fit_summary(f: dict) -> dict:
         "magnitude": f["magnitude"],
         "n_graded_forecasts": f["n_graded_forecasts"],
         "n_graded_decisions": f["n_graded_decisions"],
+        "decision_grade_provenance": f["decision_grade_provenance"],
     }
 
 
@@ -753,6 +785,9 @@ def build(asof: str, tickers: Iterable[str], sources: Sources, *,
     """
     tickers = list(dict.fromkeys(str(t).upper() for t in tickers if t))
     fitted = fitted or fit(sources, asof=asof)
+    if ((fitted.get("decision_grade_provenance") or {}).get("required_grading_rule")
+            != DL.SCORING_RULE):
+        raise ValueError("E[r] fit lacks approved decision grading provenance")
     reg = dict(sources.regime or {"regime": "unknown",
                                   "reason": sources.unavailable.get("regime", "not read")})
     reg_label = str(reg.get("regime") or "unknown")

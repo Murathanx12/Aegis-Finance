@@ -275,8 +275,8 @@ def test_cooldown_refuses_buys_when_the_stop_history_is_unreadable(tmp_path):
 
 def test_the_venue_reader_finds_old_gtc_stops_through_their_fills():
     import json as _json
-    fills = [{"symbol": "AAA", "side": "sell", "order_id": "old-gtc", "transaction_time": "2026-10-01T15:00:00Z"},
-             {"symbol": "BBB", "side": "sell", "order_id": "lim-1", "transaction_time": "2026-10-01T15:00:00Z"},
+    fills = [{"id": "fill-gtc", "activity_type": "FILL", "qty": "1", "symbol": "AAA", "side": "sell", "order_id": "old-gtc", "transaction_time": "2026-10-01T15:00:00Z"},
+             {"id": "fill-limit", "activity_type": "FILL", "qty": "1", "symbol": "BBB", "side": "sell", "order_id": "lim-1", "transaction_time": "2026-10-01T15:00:00Z"},
              {"symbol": "CCC", "side": "buy", "order_id": "buy-1", "transaction_time": "2026-10-01T15:00:00Z"}]
     closed = [{"id": "lim-1", "type": "limit"}]       # the GTC stop was submitted BEFORE the window
     seen = []
@@ -299,7 +299,7 @@ def test_the_venue_reader_finds_old_gtc_stops_through_their_fills():
 
 def test_historical_order_404_uses_only_accepted_owned_order_evidence(tmp_path):
     import json as _json
-    fills = [{"symbol": "AAA", "side": "sell", "order_id": "old-stop",
+    fills = [{"id": "fill-stop", "activity_type": "FILL", "qty": "1", "symbol": "AAA", "side": "sell", "order_id": "old-stop",
               "transaction_time": "2026-10-01T15:00:00Z"}]
 
     def t(method, url, headers, body):
@@ -353,7 +353,8 @@ def test_mixed_live_decision_types_keep_historical_404_unknown(
 
     def t(method, url, headers, body):
         if "/activities/FILL" in url:
-            return 200, json.dumps([{"symbol": "AAA", "side": "sell", "order_id": "x",
+            return 200, json.dumps([{"id": "fill-x", "activity_type": "FILL", "qty": "1",
+                                     "symbol": "AAA", "side": "sell", "order_id": "x",
                                      "transaction_time": "2026-10-01T15:00:00Z"}]).encode()
         if url.split("?")[0].endswith("/v2/orders"):
             return 200, b"[]"
@@ -575,7 +576,7 @@ class _VenueFake:
             after = dict(_u.parse_qsl(q)).get("after", "")
             fill_t = f"{self.stop_fill_day.isoformat()}T15:00:00Z"
             if after and after < fill_t:
-                return 200, _j.dumps([{"symbol": "CCC", "side": "sell", "qty": "10", "order_id": "o-ccc",
+                return 200, _j.dumps([{"id": "fill-ccc", "activity_type": "FILL", "symbol": "CCC", "side": "sell", "qty": "10", "order_id": "o-ccc",
                                        "transaction_time": fill_t}]).encode()
             return 200, b"[]"
         if path == "/v2/stocks/trades/latest":

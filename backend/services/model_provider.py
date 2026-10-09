@@ -183,7 +183,8 @@ def complete(name: str, prompt: str, *, system: str = "You are a precise researc
              model: str | None = None, max_tokens: int = 512,  # reasoning models need headroom
              temperature: float = 0.2, timeout: int = 60,
              purpose: str = "model_provider",
-             provider_label: str | None = None) -> Reply:
+             provider_label: str | None = None,
+             response_format: dict | None = None) -> Reply:
     """One chat completion. Same shape for every provider in `PROVIDERS`.
 
     `provider_label` is the name the LANGUAGE REFUSAL is counted under. It
@@ -208,6 +209,10 @@ def complete(name: str, prompt: str, *, system: str = "You are a precise researc
         "max_tokens": max_tokens,
         "temperature": temperature,
     }
+    if response_format is not None:
+        if name != "local" or response_format.get("type") != "json_object" or not isinstance(response_format.get("schema"), dict):
+            raise ProviderRefusal("schema response_format is supported only for the local llama server")
+        body["response_format"] = response_format
     headers = {"content-type": "application/json"}
     if key:
         headers["Authorization"] = f"Bearer {key}"

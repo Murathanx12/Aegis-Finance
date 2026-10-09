@@ -47,12 +47,14 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import re
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import asdict, dataclass, field
+from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional
@@ -99,6 +101,37 @@ def decisions_path(base: Optional[Path] = None) -> Path:
 
 def grades_path(base: Optional[Path] = None) -> Path:
     return root(base) / "grades.jsonl"
+
+
+@contextmanager
+def role_writer_lock(role: str, base: Optional[Path] = None):
+    """One manager/protection writer per account; OS releases on process death."""
+    if not re.fullmatch(r"hack[1-6]", role):
+        raise FleetRefusal("invalid fleet role for writer lock")
+    path = root(base) / "locks" / f"{role}.lock"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a+b") as fh:
+        if path.stat().st_size == 0:
+            fh.write(b"\0")
+            fh.flush()
+        fh.seek(0)
+        try:
+            if os.name == "nt":
+                import msvcrt
+                msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as exc:
+            raise FleetRefusal(f"{role}: another fleet writer owns the account") from exc
+        try:
+            yield
+        finally:
+            fh.seek(0)
+            if os.name == "nt":
+                msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
 
 
 def modes_path(base: Optional[Path] = None) -> Path:
@@ -1839,15 +1872,147 @@ class Venue:
         Read from FILL activities, not from the order list: Alpaca's `after`
         filters orders by SUBMISSION time, and the stops that matter are GTC
         orders submitted weeks before they fill. An order's type comes from the
-        closed orders submitted in the window, else from one GET per order id.
+        closed orders submitted in the window, including exact nested child
+        identities, else from one GET per order id.
         A missing historical order may use a matching accepted local owned-order
         outcome.  Unresolved or conflicting types raise: history stays UNKNOWN."""
-        fills = [f for f in self.fills(after=iso) if f.get("side") == "sell" and f.get("order_id")]
+        activities = self.fills(after=iso)
+        if not isinstance(activities, list) or len(activities) >= 1000:
+            raise FleetRefusal("historical FILL pages incomplete")
+        def aware_time(value: Any, label: str) -> datetime:
+            try:
+                stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                if stamp.tzinfo is None or stamp.utcoffset() is None:
+                    raise ValueError("naive time")
+                return stamp
+            except (AttributeError, TypeError, ValueError) as exc:
+                raise FleetRefusal(f"historical {label} time invalid") from exc
+
+        def positive_qty(value: Any, label: str) -> float:
+            try:
+                if isinstance(value, bool):
+                    raise ValueError("boolean quantity")
+                qty = float(value)
+                if not math.isfinite(qty) or qty <= 0:
+                    raise ValueError("nonpositive or nonfinite quantity")
+                return qty
+            except (TypeError, ValueError) as exc:
+                raise FleetRefusal(f"historical {label} quantity invalid") from exc
+
+        since = aware_time(iso, "window")
+        fills = []
+        activity_ids: set[str] = set()
+        for f in activities:
+            if not isinstance(f, dict):
+                raise FleetRefusal("historical FILL row malformed")
+            if f.get("side") == "sell":
+                if (f.get("activity_type") != "FILL"
+                        or not all(isinstance(f.get(key), str) and f[key]
+                                   for key in ("id", "order_id", "symbol"))):
+                    raise FleetRefusal("historical sell FILL identity incomplete")
+                if f["id"] in activity_ids:
+                    raise FleetRefusal("historical sell FILL identity duplicated")
+                activity_ids.add(f["id"])
+                positive_qty(f.get("qty"), "sell FILL")
+                if aware_time(f.get("transaction_time"), "sell FILL") < since:
+                    raise FleetRefusal("historical sell FILL before requested window")
+                fills.append(f)
         if not fills:
             return []
         closed = self.get("/v2/orders", params={"status": "closed", "after": iso, "limit": 500,
-                                                "direction": "desc"}) or []
-        type_of = {o.get("id"): o.get("type") for o in closed if o.get("id") and o.get("type")}
+                                                "direction": "desc", "nested": "true"})
+        if not isinstance(closed, list) or len(closed) >= 500:
+            raise FleetRefusal("historical closed order page incomplete")
+        type_of: dict[str, str] = {}
+        nested: dict[str, dict] = {}
+        seen_ids: set[str] = set()
+        for parent in closed:
+            if not isinstance(parent, dict):
+                raise FleetRefusal("historical closed order row malformed")
+            parent_id = parent.get("id")
+            if parent_id is not None and (not isinstance(parent_id, str) or not parent_id):
+                raise FleetRefusal("historical closed order identity malformed")
+            if parent_id:
+                if parent_id in seen_ids:
+                    raise FleetRefusal("duplicate historical broker order identity")
+                seen_ids.add(parent_id)
+                if parent.get("type"):
+                    type_of[parent_id] = parent["type"]
+            legs = parent.get("legs")
+            if legs is None:
+                continue
+            if (not isinstance(legs, list) or
+                    (legs and (not parent_id or not isinstance(parent.get("order_class"), str)
+                               or parent["order_class"] not in
+                               {"mleg", "bracket", "oco", "oto"}))):
+                raise FleetRefusal("nested historical order structure malformed")
+            for leg in legs:
+                if (not isinstance(leg, dict) or not isinstance(leg.get("id"), str)
+                        or not leg["id"] or leg.get("legs")):
+                    raise FleetRefusal("nested historical order leg malformed")
+                leg_id = leg["id"]
+                if leg_id in seen_ids:
+                    raise FleetRefusal("duplicate historical broker order identity")
+                seen_ids.add(leg_id)
+                nested[leg_id] = leg
+
+        def leg_type(leg: dict, fs: list[dict]) -> str:
+            """Bind a nested child to its exact FILL identity before trusting type."""
+            kind = leg.get("type")
+            if kind not in (*STOP_TYPES, "market", "limit"):
+                raise FleetRefusal("nested historical order type unknown")
+            if leg.get("side") != "sell" or any(f["symbol"] != leg.get("symbol") for f in fs):
+                raise FleetRefusal("nested historical leg symbol/side disagrees with FILL")
+            qty = positive_qty(leg.get("qty"), "nested ordered")
+            filled = positive_qty(leg.get("filled_qty"), "nested filled")
+            activity_qty = sum(positive_qty(f.get("qty"), "nested FILL") for f in fs)
+            if filled > qty + 1e-6 or activity_qty > filled + 1e-6:
+                raise FleetRefusal("nested historical leg/FILL quantity conflicts")
+            if (not isinstance(leg.get("status"), str)
+                    or leg["status"] not in {"filled", "partially_filled"}):
+                raise FleetRefusal("nested historical leg is not a filled order")
+            times = [aware_time(f.get("transaction_time"), "nested FILL") for f in fs]
+            submitted = (aware_time(leg["submitted_at"], "nested submission")
+                         if leg.get("submitted_at") is not None else None)
+            broker = (aware_time(leg["filled_at"], "nested fill")
+                      if leg.get("filled_at") is not None else None)
+            if (leg["status"] == "filled" and broker is None
+                    or submitted is not None and any(t < submitted for t in times)
+                    or broker is not None and any(t > broker for t in times)
+                    or broker is not None and submitted is not None and broker < submitted
+                    or (abs(activity_qty - filled) <= 1e-6 and leg["status"] == "filled"
+                        and max(times) != broker)):
+                raise FleetRefusal("nested historical leg/FILL time conflicts")
+            return kind
+
+        nested_fills: dict[str, list[dict]] = {}
+        for fill in fills:
+            if fill["order_id"] in nested:
+                nested_fills.setdefault(fill["order_id"], []).append(fill)
+        for order_id, matched in nested_fills.items():
+            kind = leg_type(nested[order_id], matched)
+            # A direct child GET may be 404 for mleg legs. If it is readable,
+            # it must corroborate rather than contradict the nested broker row.
+            st, direct = self.call("GET", f"/v2/orders/{order_id}")
+            if st == 200:
+                leg = nested[order_id]
+                if (not isinstance(direct, dict) or direct.get("id") != order_id
+                        or direct.get("type") != kind
+                        or direct.get("symbol") != leg["symbol"]
+                        or direct.get("side") != "sell"
+                        or direct.get("status") != leg.get("status")
+                        or positive_qty(direct.get("qty"), "direct ordered")
+                        != positive_qty(leg.get("qty"), "nested ordered")
+                        or positive_qty(direct.get("filled_qty"), "direct filled")
+                        != positive_qty(leg.get("filled_qty"), "nested filled")
+                        or (aware_time(direct["filled_at"], "direct fill")
+                            if direct.get("filled_at") is not None else None)
+                        != (aware_time(leg["filled_at"], "nested fill")
+                            if leg.get("filled_at") is not None else None)):
+                    raise FleetRefusal("direct and nested historical child identities conflict")
+            elif st != 404:
+                raise FleetRefusal(f"historical nested child unreadable: HTTP {st}")
+            type_of[order_id] = kind
         out = []
         for f in fills:
             oid = f["order_id"]
@@ -1968,7 +2133,7 @@ def wait_terminal(v: Venue, oid: str, *, timeout_s: float = 12.0, sleep: Callabl
     return st or "timeout"
 
 
-def submit_once(v: Venue, a: Action) -> dict:
+def submit_once(v: Venue, a: Action, *, strict_new: bool = False) -> dict:
     """POST an order only if no order with its client id exists at the venue.
 
     The id is deterministic (`client_order_id`), so a re-run of the same pass,
@@ -1980,6 +2145,8 @@ def submit_once(v: Venue, a: Action) -> dict:
     if a.kind == "cancel" or a.order_type not in ("limit", "stop"):
         raise FleetRefusal("submit_once sends limit or stop orders only")
     existing = v.order_by_coid(a.coid)
+    if existing and strict_new:
+        raise FleetRefusal("exact protective client id appeared before POST; no suffix or resend")
     if existing and a.protective:
         # A protective stop whose earlier order under this id is DEAD (cancelled
         # to release shares, expired, rejected) must not be skipped: that skip
@@ -2000,7 +2167,7 @@ def submit_once(v: Venue, a: Action) -> dict:
     st, js = v.submit(a.body())
     if st in (200, 201) and isinstance(js, dict):
         return {"outcome": f"submitted {js.get('status')} id {js.get('id')}", "sent": True,
-                "order_id": js.get("id")}
+                "order_id": js.get("id"), "ack": js}
     return {"outcome": f"REJECTED http {st}: {str(js)[:160]}", "sent": False}
 
 

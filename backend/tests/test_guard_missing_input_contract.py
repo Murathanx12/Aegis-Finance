@@ -1776,6 +1776,27 @@ def _case_pc_sleeves():
             SleeveRefused, "load_revision_flow() with no frozen book")
 
 
+def _case_pc_policy_epoch():
+    # The missing input is the broker observation clock. Preparation must not
+    # create a transition journal from an undated, absent evidence bundle.
+    from pathlib import Path as _P
+
+    from backend.services.pc_policy_epoch import EpochRefused, prepare
+    return (lambda: prepare(_P("does/not/exist/pc-policy-journal.json"),
+                            contract={"content_sha256": "offline"}, evidence={},
+                            session_id="offline", nonce="offline", legacy_sources={}),
+            EpochRefused, "PC policy preparation with no broker evidence timestamp")
+
+
+def test_pc_policy_epoch_malformed_contract_refuses_by_type(tmp_path):
+    from backend.services.pc_policy_epoch import EpochRefused, load_contract
+
+    contract = tmp_path / "malformed-contract.json"
+    contract.write_text('{"content": {}}', encoding="utf-8")
+    with pytest.raises(EpochRefused, match="prepared policy content changed"):
+        load_contract(contract, root=tmp_path)
+
+
 def _case_results_voice():
     # 2026-10-07 "speak with results": the missing input is the receipt pair. A
     # results statement over no ROI rows would print "0 of 0 ahead" as a headline.
@@ -1800,6 +1821,7 @@ def _case_public_flow_common():
 
 CASES = {
     "pc_sleeves": _case_pc_sleeves,
+    "pc_policy_epoch": _case_pc_policy_epoch,
     "results_voice": _case_results_voice,
     "public_flow_common": _case_public_flow_common,
     "fleet_manager": _case_fleet_manager,

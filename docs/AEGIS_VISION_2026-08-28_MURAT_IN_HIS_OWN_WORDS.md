@@ -349,7 +349,7 @@ checks, with no cutover. The news development sample returned two invalid
 outputs; no held-out evidence or promotion exists. See roadmap §5c for the
 active queue, owners, scheduled checks and remaining evidence gates.
 
-**Evidence update (2026-10-10):** Recovery remains **NOT READY**: the historical
+**Evidence update (2026-10-10 00:21 SGT snapshot; historical):** Recovery remains **NOT READY**: the historical
 combined run had one audit-ledger enrollment failure; its fix is approved, but
 CI and final full verification remain pending. Deployment and publication
 receipts are also pending. The PC-PAPER candidate remains inactive pending
@@ -359,3 +359,5 @@ model result exists. Continue bounded worker tasks with coordinator review,
 and credit no routing savings until metadata verifies the route. Current gates
 and evidence limits are recorded in roadmap §5c and the overnight verification
 note.
+
+**Evidence update (2026-10-10 02:06:49 SGT):** PR13/16 are merged and the first release is healthy; NAV, registry and lane YAML are unchanged. The initial follow-through full run had four host-environment failures and one guard-enrollment failure; the guard fix is now independently approved and integrated, while final exact-commit CI remains pending. Hack5 GET-only status is known, and the separate 12-job scheduler database backup passed isolated verification. PC policy activation remains false; publication success and named consumer acceptance remain open. The recovery remains **NOT READY**. See roadmap section 5c and the consolidated verification snapshot.

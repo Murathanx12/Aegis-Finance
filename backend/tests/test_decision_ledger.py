@@ -177,7 +177,8 @@ def test_an_unparseable_line_does_not_hide_the_good_rows(ledger):
 def _frame(rows):
     pd = pytest.importorskip("pandas")
     idx = pd.to_datetime([d for d, _ in rows])
-    return pd.DataFrame({"AAA": [v for _, v in rows]}, index=idx)
+    return pd.DataFrame({"AAA": [v for _, v in rows],
+                         "SPY": [100.0 for _ in rows]}, index=idx)
 
 
 def test_nothing_is_scored_before_its_own_expiry(ledger):
@@ -207,6 +208,86 @@ def test_a_due_row_is_scored_on_close_to_close(ledger):
     assert out["newly_scored"] == 1
     assert out["scored"][0]["realised_return"] == pytest.approx(0.10)
     assert "SCORED" in DL.states_of("a", path=ledger)
+
+
+def test_two_due_rows_use_their_own_exact_windows_not_shared_frame_edges(ledger):
+    pd = pytest.importorskip("pandas")
+    frame = pd.DataFrame({"AAA": [100.0, 120.0, 90.0, 150.0, 250.0],
+                          "SPY": [100.0, 100.0, 100.0, 100.0, 100.0]},
+                         index=pd.to_datetime(["2026-09-18", "2026-09-21", "2026-09-25",
+                                               "2026-09-28", "2026-10-01"]))
+    rows = [{"decision_id": "early", "ticker": "AAA", "asof": "2026-09-18",
+             "direction": "BUY", "source": "investment_committee",
+             "expiry_utc": "2026-09-25T00:00:00+00:00"},
+            {"decision_id": "late", "ticker": "AAA", "asof": "2026-09-21",
+             "direction": "BUY", "source": "investment_committee",
+             "expiry_utc": "2026-09-28T00:00:00+00:00"}]
+    for row in rows:
+        DL.record(row["decision_id"], "DECIDED", by="test", asof=row["asof"], path=ledger)
+    calls = []
+
+    def fetch(tickers, start, end):
+        calls.append((tickers, start, end))
+        return frame  # Deliberately includes a post-expiry rally.
+
+    out = DL.score_due(today=date(2026, 10, 2), contracts=rows,
+                       price_fetch=fetch, path=ledger)
+    assert calls[0][1:] == ("2026-09-18", "2026-09-29")  # provider end-exclusive
+    assert [r["excess_return"] for r in out["scored"]] == pytest.approx([-0.10, 0.25])
+    assert all(r["grading_rule"] == DL.SCORING_RULE for r in out["scored"])
+    assert "2026-09-25" in out["scored"][0]["basis"]
+    assert "2026-09-28" in out["scored"][1]["basis"]
+
+
+def test_expiry_date_is_not_mature_until_the_next_calendar_day(ledger):
+    row = {"decision_id": "intraday", "ticker": "AAA", "asof": "2026-09-18",
+           "direction": "BUY", "source": "investment_committee",
+           "expiry_utc": "2026-09-25T00:00:00+00:00"}
+    out = DL.score_due(today=date(2026, 9, 25), contracts=[row],
+                       price_fetch=lambda *a, **k: (_ for _ in ()).throw(
+                           AssertionError("no intraday close fetch")), path=ledger)
+    assert out["newly_scored"] == 0 and out["due"] == 0
+
+
+@pytest.mark.parametrize("bad", [0.0, -1.0, float("nan"), float("inf"), True])
+def test_invalid_exact_endpoint_price_is_unpriceable(bad):
+    pd = pytest.importorskip("pandas")
+    frame = pd.DataFrame({"AAA": [100.0, bad]},
+                         index=pd.to_datetime(["2026-09-18", "2026-09-25"]))
+    ret, why = DL._close_to_close(frame, "AAA", "2026-09-18", "2026-09-25")
+    assert ret is None and "invalid endpoint" in why
+
+
+@pytest.mark.parametrize("overflow_side", ["asset", "benchmark", "both"])
+def test_finite_endpoint_overflow_never_appends_a_score(ledger, overflow_side):
+    pd = pytest.importorskip("pandas")
+    row = {"decision_id": "overflow", "ticker": "AAA", "asof": "2026-09-18",
+           "direction": "BUY", "source": "investment_committee",
+           "expiry_utc": "2026-09-25T00:00:00+00:00"}
+    DL.record("overflow", "DECIDED", by="offline", asof=row["asof"], path=ledger)
+    extreme = [1e-308, 1e308]
+    frame = pd.DataFrame({"AAA": extreme if overflow_side in ("asset", "both")
+                         else [100.0, 110.0],
+                         "SPY": extreme if overflow_side in ("benchmark", "both")
+                         else [100.0, 100.0]},
+                         index=pd.to_datetime(["2026-09-18", "2026-09-25"]))
+    out = DL.score_due(today=date(2026, 9, 26), contracts=[row],
+                       price_fetch=lambda *_: frame, path=ledger)
+    assert out["newly_scored"] == 0
+    assert "nonfinite" in out["unpriceable"][0]["reason"]
+    assert "SCORED" not in DL.states_of("overflow", path=ledger)
+
+
+def test_missing_or_ambiguous_exact_endpoint_is_unpriceable():
+    pd = pytest.importorskip("pandas")
+    frame = pd.DataFrame({"AAA": [100.0, 110.0]},
+                         index=pd.to_datetime(["2026-09-18", "2026-09-24"]))
+    assert DL._close_to_close(frame, "AAA", "2026-09-18", "2026-09-25")[0] is None
+    frame.index = pd.DatetimeIndex([pd.Timestamp("2026-09-18"),
+                                    pd.Timestamp("2026-09-18 13:00")])
+    assert DL._close_to_close(frame, "AAA", "2026-09-18", "2026-09-25")[0] is None
+    frame.index = pd.to_datetime(["2026-09-25", "2026-09-18"])
+    assert DL._close_to_close(frame, "AAA", "2026-09-18", "2026-09-25")[0] is None
 
 
 def test_the_grader_writes_the_benchmark_beside_the_raw_return(ledger):
@@ -244,19 +325,30 @@ def test_the_grader_writes_the_benchmark_beside_the_raw_return(ledger):
     assert got["benchmark_symbol"] == "SPY"
 
 
-def test_a_missing_benchmark_is_null_with_a_reason_never_a_zero(ledger):
+def test_a_missing_benchmark_keeps_the_row_unpriceable(ledger):
     DL.record("a", "DECIDED", by="morning", asof="2026-09-19", path=ledger)
     row = {"decision_id": "a", "ticker": "AAA", "asof": "2026-09-19",
            "direction": "BUY", "source": "investment_committee",
            "expiry_utc": "2026-09-25T00:00:00+00:00"}
-    frame = _frame([("2026-09-19", 100.0), ("2026-09-25", 110.0)])
+    frame = _frame([("2026-09-19", 100.0), ("2026-09-25", 110.0)]).drop(columns="SPY")
     out = DL.score_due(today=date(2026, 9, 26), contracts=[row],
                        price_fetch=lambda *a, **k: frame, path=ledger)
-    got = out["scored"][0]
-    assert got["realised_return"] == pytest.approx(0.10)
-    assert got["benchmark_return"] is None
-    assert got["excess_return"] is None
-    assert "CANNOT DETERMINE" in got["benchmark_basis"]
+    assert out["newly_scored"] == 0
+    assert "CANNOT DETERMINE" in out["unpriceable"][0]["reason"]
+    assert "SCORED" not in DL.states_of("a", path=ledger)
+
+
+def test_a_missing_benchmark_endpoint_does_not_grade_a_positive_asset(ledger):
+    frame = _frame([("2026-09-18", 100.0), ("2026-09-25", 150.0)])
+    frame.loc["2026-09-25", "SPY"] = float("nan")
+    row = {"decision_id": "a", "ticker": "AAA", "asof": "2026-09-18",
+           "direction": "BUY", "source": "investment_committee",
+           "expiry_utc": "2026-09-25T00:00:00+00:00"}
+    out = DL.score_due(today=date(2026, 9, 26), contracts=[row],
+                       price_fetch=lambda *a, **k: frame, path=ledger)
+    assert out["newly_scored"] == 0
+    assert "invalid endpoint" in out["unpriceable"][0]["reason"]
+    assert "SCORED" not in DL.states_of("a", path=ledger)
 
 
 def test_a_probe_row_is_graded_like_any_other_and_carries_its_hypothesis(

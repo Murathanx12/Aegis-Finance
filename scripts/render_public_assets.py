@@ -505,7 +505,9 @@ def _snapshot_display(run_id: str) -> dict | None:
     sources = payload.get("source_sha256")
     if (not isinstance(sources, dict) or
             f"roi_{run_id}.json" not in sources or f"book_dna_{run_id}.json" not in sources or
-            any(not re.fullmatch(r"(?:roi|book_dna)_2026-[0-9TZ-]+\.json", name) or
+            any(not re.fullmatch(
+                    r"(?:roi_2026-[0-9TZ-]+(?:\.nobroker)?|book_dna_2026-[0-9TZ-]+)\.json",
+                    name) or
                 not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{64}", sha)
                 for name, sha in sources.items())):
         raise SystemExit("REFUSED: invalid public snapshot provenance")

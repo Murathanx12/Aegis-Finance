@@ -384,9 +384,20 @@ def test_snapshot_renders_without_raw_paper_receipts(
         roi["rows"].append({**roi["rows"][0], "account": "acct_0_random_twin",
                             "roi_pct": 1.0, "vs_spy_pp": 0.0})
         roi_path.write_text(json.dumps(roi), encoding="utf-8")
+    # The source inventory includes historical no-broker ROI observations.
+    # Their exact bytes are hashed even though the clean publication checkout
+    # has no access to the underlying paper-account files.
+    (paper_dir / "roi_2026-01-01.nobroker.json").write_text(
+        json.dumps({"generated_utc": "2026-01-01T00:00:00+00:00", "rows": []}),
+        encoding="utf-8")
     _set_pin(pin_copy, "2026-01-01T000000Z")
     monkeypatch.setattr(RPA, "RESULTS_RUN_ID", "2026-01-01T000000Z")
     assert RPA.bump_pin("2026-01-02T000000Z", pin_path=pin_copy, readme_path=readme_copy) == 0
+    snapshot_path = RPA.snapshot_path("2026-01-02T000000Z")
+    snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    import hashlib
+    no_broker = paper_dir / "roi_2026-01-01.nobroker.json"
+    assert snapshot["source_sha256"][no_broker.name] == hashlib.sha256(no_broker.read_bytes()).hexdigest()
     expected = {path: value for path, value in RPA.outputs().items()}
     monkeypatch.setattr(RPA, "PAPER_DIR", tmp_path / "empty_raw_inputs")
     assert RPA.results_data()["receipt"] == "docs/assets/public_results_2026-01-02T000000Z.json"
@@ -395,6 +406,19 @@ def test_snapshot_renders_without_raw_paper_receipts(
     public_gate.test_every_number_on_the_results_panel_is_the_receipts_number()
     public_gate.test_the_featured_accounts_are_what_the_declared_rule_picks()
     public_gate.test_the_chart_is_the_lead_account_against_its_matched_twin_on_shared_dates()
+
+    for bad_name in ("../roi_2026-01-01.nobroker.json", "private_account_2026-01-01.json",
+                     "book_dna_2026-01-01.nobroker.json", "roi_2026-01-01.other.json"):
+        malformed = json.loads(json.dumps(snapshot))
+        malformed["source_sha256"][bad_name] = "0" * 64
+        snapshot_path.write_text(json.dumps(malformed), encoding="utf-8")
+        with pytest.raises(SystemExit, match="invalid public snapshot provenance"):
+            RPA._snapshot_display("2026-01-02T000000Z")
+    malformed = json.loads(json.dumps(snapshot))
+    malformed["source_sha256"][no_broker.name] = "not-a-sha256"
+    snapshot_path.write_text(json.dumps(malformed), encoding="utf-8")
+    with pytest.raises(SystemExit, match="invalid public snapshot provenance"):
+        RPA._snapshot_display("2026-01-02T000000Z")
 
 
 # ──────────────────────────────────────────────────────── the README block generator
