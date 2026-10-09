@@ -87,17 +87,29 @@ source-scorecard snapshots from the integration Git index, preserving all
 history rewriting, financial-ledger modification or runtime-directory cleanup.
 Existing Git commits retain the old evidence. Active WIP unique work is kept.
 
+Applied the same policy in the active runtime checkout as `8f0054d4` and pushed
+WIP: 638 paths / 308,047,647 bytes were retained locally. This larger count
+includes snapshots added by `74f82326`. Unrelated active changes were not staged.
+
 Only the established deny-by-default public-receipt publisher is used to
 refresh public evidence. Its eight output kinds occupy 4,767,640 bytes, below
 the existing 5 MB limit. Raw logs, browser state, account records, full news
 text and local model outputs are not part of that publication.
 
-A bounded content scan inspected heads/tails (up to 2 MB) of eligible changed
+A bounded initial content scan inspected heads/tails (up to 2 MB) of eligible changed
 blobs up to 15 MB. Apparent secret-pattern matches were article URL slugs,
 not matched configured keys. This is **not a full secret or licensing audit**.
 The data contains browser/account metadata and news provenance; no new blanket
 public redistribution is justified. Licensed article text was not found in
 the sampled Dow Jones JSON, but absence in a sample proves no general absence.
+
+A subsequent complete-blob signature scan covered all 429 added/modified blobs
+in the October 9 range (196,191,714 bytes), and all 152 extant added/modified
+blobs in the October 7 range (74,365,158 bytes; the remaining four paths were
+deletions). No private-key, GitHub-token, AWS-access-ID, project-key or JWT
+signature matched. Dow Jones JSON parsed without errors and had no nonempty
+common full-article/body fields. These finite signatures do not prove absence
+of every credential format or establish redistribution rights.
 
 ## Branch disposition and actions
 
@@ -118,6 +130,10 @@ No active worktree or open PR was removed. Local worktree branches remain.
 | docs/canonical-integration-20260828 | ARCHIVE in place | `d4bde9fb`, one unique commit; historical knowledge not discarded |
 | lab/autonomous-rd | KEEP | `4c23ade4`, incorporated but `lab/rd_loop.py:750` still names it as default branch |
 | lab-v5-abandoned | KEEP historical evidence | `78cd3e54`, unique commit, owner's explicit preservation instruction |
+
+After PR #14's main CI passed, its unchanged remote branch was conditionally
+deleted too: **five** obsolete remote branches removed in total. Recovery
+integration is [PR #15](https://github.com/Murathanx12/Aegis-Finance/pull/15).
 
 PR #13 was reproduced in a disposable repository: its broad `docs/assets`
 allowlist committed an unrelated local file as well as the intended asset.
