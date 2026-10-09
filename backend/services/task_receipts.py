@@ -496,6 +496,25 @@ def r_world_digest(ctx, task) -> Reading:
                    detail=f"digest {p.name}: {d.get('n_items')} items")
 
 
+def r_local_runtime_digest(ctx, task) -> Reading:
+    p, d = _newest(ctx.optimus_dir / "local_runtime_digest", "digest_*.json")
+    if not isinstance(d, dict):
+        return _none("local_runtime_digest/digest_*.json")
+    st = map_status(d.get("status") or "FAILED")
+    inputs = d.get("inputs") or []
+    valid = sum(max(0, int(x.get("sampled_rows", 0)) - int(x.get("invalid_rows", 0)))
+                for x in inputs if isinstance(x, dict) and x.get("exists"))
+    why = str(d.get("reason") or "")
+    if st == "OK" and (not valid or not d.get("served_models") or not d.get("summary")
+                       or int(d.get("tokens_out") or 0) <= 0
+                       or d.get("paid_fallback") is not False or d.get("cost_usd") != 0
+                       or d.get("owned_server_stopped") is False):
+        st, why = "DEGRADED", "receipt lacks successful local inference over valid log rows or cleanup failed"
+    return Reading(stamp=parse_stamp(d.get("generated_utc")), status=st, reason=why,
+                   substance=substance(inputs), proof=f"local_runtime_digest/{p.name}",
+                   detail=f"local model status {d.get('status')}; {valid} valid sampled log rows")
+
+
 def r_alerts(ctx, task) -> Reading:
     p, d = _newest(ctx.optimus_dir / "alerts" / "receipts", "alert_pass_*.json")
     if not isinstance(d, dict):
@@ -833,6 +852,8 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
                                  session_only=True),
     "AegisHypLabNightly": TaskSpec(r_hyp_lab, "hyp_lab/receipts/nightly_*.json"),
     "AegisWorldDigest": TaskSpec(r_world_digest, "digest/world_digest_*.json"),
+    "AegisLocalRuntimeDigest": TaskSpec(r_local_runtime_digest,
+                                        "local_runtime_digest/digest_*.json", registered_only=True),
     "AegisAlerts": TaskSpec(r_alerts, "alerts/receipts/alert_pass_*.json",
                             hash_off="a quiet market legitimately repeats the same pass; its own state "
                                      "and bars_health are read instead"),

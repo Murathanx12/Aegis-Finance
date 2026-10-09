@@ -490,3 +490,29 @@ backend/data/optimus/*.tmp.*
 backend/data/optimus/forecasts/*.tmp.*
 backend/data/optimus/resolutions/*.tmp.*
 backend/data/optimus/ledger_manifests/forecast_ledger/*.tmp.*
+
+# 2026-10-09 owner: OpenClaw continuous logs, queues and regenerated scorecards stay local.
+# Preserved bytes and historical Git objects are catalogued in local_runtime_manifest.json.
+# Runtime stays local; retain the two static launcher templates used by the
+# scheduler and rolling-queue builder. Generated launchers remain ignored.
+backend/data/optimus/dowjones/*
+!backend/data/optimus/dowjones/supervisor_run.cmd
+!backend/data/optimus/dowjones/queue_run.cmd
+backend/data/optimus/dowjones/*.jsonl
+backend/data/optimus/dowjones/pool_*.json
+backend/data/optimus/dowjones/claims_*.json
+backend/data/optimus/dowjones/reading_report_*.md
+backend/data/optimus/dowjones/robots/*
+backend/data/optimus/dowjones/*status*.json
+backend/data/optimus/dowjones/*schedule*.json
+backend/data/optimus/dowjones/*cache*.json
+backend/data/optimus/dowjones/chrome_recycle_state.json
+backend/data/optimus/dowjones/WHAT_THE_READER_OPENS.md
+backend/data/optimus/source_scorecard/source_scorecard_*.json
+backend/data/optimus/openclaw_sessions/*
+backend/data/optimus/openclaw_api_bridge/*
+backend/data/optimus/openclaw_temp_sweeps.jsonl
+backend/data/optimus/llama_reaper*
+backend/data/optimus/llama_server_stops.jsonl
+backend/data/optimus/telegram_agent_lock.json
+backend/data/optimus/local_runtime_digest/

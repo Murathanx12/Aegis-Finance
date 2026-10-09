@@ -1,6 +1,0 @@
-{
- "host": "bls.gov",
- "fetched_utc": "2026-10-07T03:26:42+00:00",
- "class": "OK",
- "text": "User-agent: archive.org_bot\nDisallow:/include\nDisallow:/scripts\nDisallow:/crs\nDisallow:/_private\nDisallow:/iisadmin\nDisallow:/srchadm\nDisallow:/advisory/members/\nDisallow:/idcf\nDisallow:/*print*\nDisallow:/schedule/archives/\nDisallow:/*.PDF$\nDisallow:/data.json\n\nSitemap: https://www.bls.gov/sitemap.xml\nUser-agent:*\nDisallow:/scripts  \nDisallow:/crs\nDisallow:/_private\nDisallow:/iisadmin\nDisallow:/srchadm\nDisallow:/advisory/members/\nDisallow:/idcf\nDisallow:/*print*\n"
-}

@@ -659,11 +659,26 @@ def test_labor_day_is_not_a_trading_day():
     ("backend/data/optimus/digest_inbox/pasted.txt", True),
     ("backend/data/optimus/HANDOFF_PC", True),
     ("backend/data/optimus/digest_inbox/README.md", False),
-    ("backend/data/optimus/dowjones/feeds_2026-01-01.json", False),
+    ("backend/data/optimus/dowjones/feeds_2026-01-01.json", True),
+    ("backend/data/optimus/dowjones/QUEUE_2026-09-27.txt", True),
+    ("backend/data/optimus/dowjones/queue_run_rolling.cmd", True),
+    ("backend/data/optimus/dowjones/reader_pool_run.cmd", True),
+    ("backend/data/optimus/dowjones/supervisor_run.cmd", False),
+    ("backend/data/optimus/dowjones/queue_run.cmd", False),
+    ("backend/data/public_receipts/manifest.json", False),
 ])
-def test_full_text_is_gitignored_and_receipts_are_not(path, ignored):
-    r = subprocess.run(["git", "check-ignore", "-q", path], cwd=REPO)
+def test_raw_news_runtime_is_local_and_sanitized_receipts_are_publishable(path, ignored):
+    r = subprocess.run(["git", "check-ignore", "--no-index", "-q", path], cwd=REPO)
     assert (r.returncode == 0) is ignored
+
+
+def test_static_reader_launcher_templates_survive_a_clean_checkout():
+    for name in ("supervisor_run.cmd", "queue_run.cmd"):
+        path = "backend/data/optimus/dowjones/" + name
+        assert (REPO / path).is_file()
+        r = subprocess.run(["git", "ls-files", "--error-unmatch", path],
+                           cwd=REPO, capture_output=True)
+        assert r.returncode == 0, f"scheduler template must be tracked: {path}"
 
 
 def test_one_article_is_one_view_per_ticker_and_the_ticker_must_be_named():
@@ -1807,15 +1822,23 @@ def test_the_shortlist_queue_carries_mw_search_archive_and_claims_in_order():
     assert lines[3] == "--claims --claims-since 2026-09-27"
 
 
-def test_the_committed_v3_queue_file_parses():
+def test_v3_queue_file_parses_without_a_committed_runtime_queue(tmp_path):
     from scripts import dowjones_pull as DP
     import shlex
-    q = REPO / "backend" / "data" / "optimus" / "dowjones" / "QUEUE_2026-09-27.txt"
+    # Queue receipts belong to the PC. Exercise their format from a synthetic
+    # file so a clean checkout never needs a user's historical reading list.
+    q = tmp_path / "queue.txt"
+    q.write_text('# synthetic v3 queue\n\n'
+                 '--plan "marketwatch:analyst_estimates:VKTX|MU|NVDA" --fresh-since 2026-09-27\n'
+                 '--plan "wsj_search:VKTX|MU|NVDA,barrons_search:VKTX|MU|NVDA" --max-pages 60\n'
+                 '--archive 2026-09-22..2026-09-25\n'
+                 '--claims --claims-since 2026-09-27\n', encoding="utf-8")
     lines = [ln for _, ln in DP.queue_lines(q)]
     assert lines[-1].startswith("--claims") and any(ln.startswith("--archive") for ln in lines)
     plans = [DP.parse_plan(shlex.split(ln)[1]) for ln in lines if ln.startswith("--plan")]
     search = next(p for p in plans if p[0]["section"] == "search")
-    assert len(search[0]["tickers"]) == 67 and search[0]["tickers"][0] == "VKTX"
+    assert search[0]["tickers"] == ["VKTX", "MU", "NVDA"]
+    assert search[1]["tickers"] == search[0]["tickers"]
 
 
 # ── the blank-tab route through the REAL openclaw_client guard ──────────────
