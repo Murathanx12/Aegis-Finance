@@ -13,7 +13,7 @@ Machine-readable web surface: `frontend/public/llms.txt`.
    no skill claims before 24 months of forward record; pre-register or it
    didn't happen; the LLM narrates, the engine computes; closed rabbit holes
    stay closed; every examination leaves a ledger entry.
-3. **`NEGATIVE_RESULTS.md`** — 34 documented dead ends. Check it before
+3. **`NEGATIVE_RESULTS.md`** — the documented dead ends. Check it before
    proposing an idea; yours may already have a corpse with receipts.
 
 ## Map
@@ -53,3 +53,32 @@ Machine-readable web surface: `frontend/public/llms.txt`.
 API keys live in environment variables only (`FRED_API_KEY`, optional
 `DEEPSEEK_API_KEY`, `FINNHUB_API_KEY`, `FMP_API_KEY`, `POLYGON_API_KEY`).
 Never commit a key; never echo one into a log or doc. `.env` is gitignored.
+
+## Codex continuity and delegation (2026-10-08)
+
+Claude's files, history and original marketplace cache remain intact. Codex
+shares the project knowledge through `.agents/skills/` and Optimus MCP; it does
+not replace `.claude/` or reinterpret old handoffs as current machine state.
+
+- Start with Optimus `session_briefing` + `aegis_verified_state`, then
+  `docs/INDEX.md`. Codex workflow: `docs/CODEX_OPERATING_MODEL.md`; current setup
+  and next actions: `docs/CODEX_SETUP_2026-10-08.md`.
+- Use `$aegis-codex-session` for pickup/handoff and `$aegis-pc-automation` for
+  authorized OpenClaw/PC tasks. The existing discipline skills still apply.
+- The owner authorizes bounded delegation: deterministic checks first; a small
+  worker for inventory/docs; a capable builder and independent reviewer for
+  behavior changes; stronger independent reasoning for strategy, sizing and
+  evidence. Give workers relevant paths and acceptance criteria, not the full
+  conversation. One writer per file and one operator per browser/profile.
+- Preserve uncommitted runtime receipts and other workers' changes. Never
+  reset, clean, bulk-stage the tree, or stop processes by image name.
+- For Bloomberg, freshness means dated receipts and advancing rows. Keep the
+  authentic WLS MEMB gate. Registration, universe, rules, policy choice and
+  verified fills are separate facts; a passing drill is not a live fill.
+- Use the existing OpenClaw operator for PC/browser work within the user's
+  task. The automated reader's restrictions stay in place; authorized login
+  or free signup requires a distinct scoped workflow. Never pass credentials
+  into a model prompt, transcript, command argument or receipt.
+- Codex-only plugin state belongs in Codex configuration. Imported
+  `security-guidance` is disabled there; preserve Aegis hooks and original
+  Claude plugins. Security tooling availability is not a completed scan.

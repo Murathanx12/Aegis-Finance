@@ -1,7 +1,0 @@
-{
- "receipt": "dowjones_pull.archive",
- "n_articles": 0,
- "days": "2026-09-22..2026-09-25",
- "reattach_log": [],
- "refused": "ReaderRefused: REFUSED_GATEWAY_DOWN: `browser profiles` did not list 'user' (gateway down or timing out?); the reader does not restart it"
-}

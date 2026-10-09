@@ -1,6 +1,6 @@
 # docs/INDEX.md — what to read, in what order (2026-09-04)
 
-268+ markdown files live here; many are roadmaps or handoffs. A new session must
+Hundreds of markdown files live here; many are roadmaps or handoffs. A new session must
 NOT read them all. Tiers below; Optimus should embed TIER 2 and ARCHIVE for
 retrieval and load TIER 0 + the current TIER 1 verbatim.
 
@@ -9,7 +9,7 @@ retrieval and load TIER 0 + the current TIER 1 verbatim.
 | Rung | Read | Cost | You now know |
 |---|---|---|---|
 | 0 | `../README.md` | 5 min | what Aegis is, the current headline results, the three licences |
-| 1 | **this file** | 3 min | which of 268 docs answers your question |
+| 1 | **this file** | 3 min | which document answers your question |
 | 2 | TIER 0 below (five files) + the ONE TIER 1 roadmap | 40 min | the invariants that outrank any roadmap, and the current plan |
 | 3 | the receipt named beside the number | varies | whether the number survives being looked at |
 
@@ -28,6 +28,7 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 - `AEGIS_VISION_2026-08-30_LOG_REVISION_ERA_REPLAY.md` -- TIER 0 addendum (30 Aug): two independent LLMs, the news funnel, the anonymised/fantasy ERA REPLAY backtest (T13), and why the books were not deciding.
 - `OPTIMUS_OBJECTIVE.md` §0 — mission, utility, four personalities.
 - `../CLAUDE.md` — operating rules + `CLAUDE_LESSONS_2026-08.md` — long-form lessons, farm findings, layout and tests.
+- **Recovery pickup (2026-10-09): `HANDOFF_CODEX_2026-10-09.md`** — read its recovery addendum first. Current map: [AEGIS_OPERATING_DIGEST.md](AEGIS_OPERATING_DIGEST.md). Exact push/branch actions: [RECONCILIATION_2026-10-09.md](RECONCILIATION_2026-10-09.md). Health, tests and remaining completion gates: [VERIFICATION_2026-10-09.md](VERIFICATION_2026-10-09.md). Operating instructions: `CODEX_OPERATING_MODEL.md`. Roadmap implementation remains paused until the recovery gate passes; these records do not replace the canon or roadmap.
 - `AEGIS_V1_BETA_2026-10-07.md` — the public story pointer: what Aegis is, the pipeline with each box's module and receipt, the honest scoreboard, what we can and cannot claim, and the roadmap §9 acceptance clause by clause.
 
 **PUBLIC-FACING:** `FUNDING_EVIDENCE_PACK_2026-10-07.md` — the funding evidence pack (every number checked against its receipt; NOT MEASURED where none exists; programme table and HKU Demo Day 2026-10-14).

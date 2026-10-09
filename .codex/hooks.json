@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -c \"import subprocess, runpy; from pathlib import Path; root = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], text=True, timeout=5).strip(); runpy.run_path(str(Path(root) / '.codex/hooks/session_start.py'), run_name='__main__')\"",
+            "timeout": 105
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "codex-session-files-v1",
+  "date": "2026-10-09",
+  "purpose": "Review manifest, not an instruction to bulk-stage the dirty tree",
+  "publication": "Earlier session: .git/index.lock creation denied; no push attempted. Subsequently published by owner in 74f82326cbf5d33d584386c11764d35a9817f4c9; see docs/RECONCILIATION_2026-10-09.md.",
+  "session_files": [
+    "AGENTS.md",
+    "docs/INDEX.md",
+    ".agents/skills/aegis-codex-session/SKILL.md",
+    ".agents/skills/aegis-pc-automation/SKILL.md",
+    ".codex/hooks.json",
+    ".codex/hooks/session_start.py",
+    "backend/tests/test_codex_session_hook.py",
+    "docs/CODEX_OPERATING_MODEL.md",
+    "docs/CODEX_SETUP_2026-10-08.md",
+    "docs/CODEX_BLOOMBERG_TERMINAL_PICKUP.md",
+    "docs/HANDOFF_CODEX_2026-10-09.md",
+    "docs/research_notes/2026-10-08/codex_history_and_workflow.md",
+    "docs/research_notes/2026-10-08/codex_hook_compatibility.md",
+    "docs/research_notes/2026-10-08/codex_openclaw_runtime.md",
+    "backend/data/optimus/contest/rehearsal/drills/drills_20261009T033727Z.json",
+    "backend/data/optimus/contest/rehearsal/drills/drills_20261009T033727Z.md",
+    "docs/research_notes/2026-10-09/codex_session_files.json"
+  ],
+  "preexisting_untracked_integration_files_to_review": [
+    ".codex/config.toml",
+    ".agents/skills/aegis-motion-visuals/SKILL.md",
+    ".agents/skills/lane-integrity-check/SKILL.md",
+    ".agents/skills/pre-register-trial/SKILL.md",
+    ".agents/skills/seed-a-lane/SKILL.md",
+    ".agents/skills/silent-fragility-audit/SKILL.md",
+    ".agents/skills/source-command-grind/SKILL.md",
+    ".agents/skills/verify-prod-after-deploy/SKILL.md"
+  ],
+  "preserve_other_dirty_files": true,
+  "external_codex_config_changes": "Persist only under user .codex; original Claude assets untouched; never commit private config backups",
+  "memory_ingest": "Oct 8 ingestion verified; Oct 9 final docs await writable external Optimus access"
+}

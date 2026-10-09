@@ -25,6 +25,26 @@ REPO = Path(__file__).resolve().parents[2]
 FX = Path(__file__).resolve().parent / "fixtures" / "c8"
 
 
+@pytest.mark.parametrize("status,rows,tokens,cleanup,expected", [
+    ("OK", 20, 10, True, "ALIVE_PROGRESSING"),
+    ("REFUSED", 20, 0, True, "REFUSED"),
+    ("FAILED", 20, 0, True, "DEGRADED"),
+    ("METADATA_ONLY", 20, 0, True, "DEGRADED"),
+    ("OK", 0, 10, True, "DEGRADED"),
+    ("OK", 20, 0, True, "DEGRADED"),
+    ("OK", 20, 10, False, "DEGRADED"),
+])
+def test_local_digest_health_requires_inference_and_useful_input(tmp_path, status, rows, tokens, cleanup, expected):
+    ctx = _ctx(tmp_path)
+    _w(ctx.optimus_dir / "local_runtime_digest/digest_20261009T130000.json", {
+        "generated_utc": ctx.now.isoformat(), "status": status, "paid_fallback": False,
+        "cost_usd": 0, "tokens_out": tokens, "served_models": ["Qwen2.5-7B"],
+        "summary": "A sampled summary", "owned_server_stopped": cleanup,
+        "inputs": [{"exists": True, "sampled_rows": rows, "invalid_rows": 0}],
+    })
+    assert TR.judge(ctx, "AegisLocalRuntimeDigest", _task("AegisLocalRuntimeDigest")).state == expected
+
+
 def _now() -> datetime:
     return datetime.now(timezone.utc).replace(microsecond=0)
 
