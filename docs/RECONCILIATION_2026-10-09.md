@@ -127,7 +127,7 @@ No active worktree or open PR was removed. Local worktree branches remain.
 
 | Branch | Disposition | Evidence / action |
 |---|---|---|
-| main | KEEP | Started `6bc11c4`; PR #14 merged to `866c84c8`; deployment verification is separate |
+| main | KEEP | Started `6bc11c4`; PR #14 merged to `866c84c8`, PR #15 to `d4789050`; deployment verification is separate |
 | wip/2026-10-07-day | KEEP | `74f82326`, active runtime checkout and unique unmerged records; recover selected docs/config instead of merging bulk runtime |
 | wip/2026-10-06-v1-beta | DELETE, executed | `07f2489d`, zero commits ahead of main, no open PR/worktree/automation reference |
 | wip/2026-09-29-day | DELETE, executed | `8ac64468`, same reachability and dependency checks |
@@ -143,6 +143,16 @@ No active worktree or open PR was removed. Local worktree branches remain.
 After PR #14's main CI passed, its unchanged remote branch was conditionally
 deleted too: **five** obsolete remote branches removed in total. Recovery
 integration is [PR #15](https://github.com/Murathanx12/Aegis-Finance/pull/15).
+It merged at 09:55:39 UTC as `d4789050c49ea39210e0e6d433a019034fcbedce` after
+final source `e2a4d5d7` passed backend and frontend CI (`37911817477`, 14,029
+tests passed). The integration branch/worktree stays retained, including its
+ignored local copies; this is not an instruction to clean or remove it.
+The repaired scheduled publisher subsequently pushed `ba135a54`, followed by
+updated health publication `9ea43a12`. Main was merged **into** runtime WIP
+(`661db356`, template-index follow-up `ed9a24c4`), preserving its unique history
+and unstaged writers. It was not merged wholesale into main. Conflicts were
+limited to reviewed recovery files and sanitized public outputs, and owner
+documents/image hashes were unchanged.
 
 The archived canonical branch's unique document is
 [the August 28 historical roadmap](https://github.com/Murathanx12/Aegis-Finance/blob/d4bde9fba8023c51a8edf7f9d068cebb68ddcd33/docs/ACTIVE_ROADMAP.md).

@@ -37,7 +37,10 @@ and keeps its receipts local. Actual inference was measured; no paid fallback.
 Two static scheduler templates, `supervisor_run.cmd` and `queue_run.cmd`, stay
 versioned; generated launchers, queues and logs remain local.
 
-PR #14 merged (`866c84c8`). Five fully incorporated remote branches were safely
+PR #14 merged (`866c84c8`), then PR #15 merged at 09:55:39 UTC as
+`d4789050c49ea39210e0e6d433a019034fcbedce`. PR #15's final source `e2a4d5d7`
+passed full CI run `37911817477`: 14,029 passed, 111 skipped, 126 deselected;
+frontend build also passed. Five fully incorporated remote branches were safely
 deleted, including Astra after its merge and green CI. PR #13 stays open because its asset allowlist and pin-write sequence
 have reproduced defects. Unique WIP, historical canon, abandoned lab evidence
 and the lab automation branch remain. The first hosted workers exhausted the
@@ -45,6 +48,22 @@ account allowance. After it reset, an independent reviewer challenged the local
 digest helper, reproduced an unbound-start cleanup defect, and approved the
 repair after regression checks. This review covers that helper and its health
 reader; it is not a capital-sensitive strategy audit.
+
+The repaired **AegisDataCatalog actually ran** from the dedicated main checkout:
+catalog and sanitized publication succeeded; commit `ba135a54` was pushed at
+09:58 UTC. Opportunity rebuilding correctly refused at 1.67 GB free versus its
+4 GB floor. A full health refresh and publication follow-up (`9ea43a12`) carry
+that current limitation, replacing the old wrong-branch refusal. Public payloads
+total 4,768,221 bytes. Main was merged back into the runtime WIP checkout and
+pushed (`661db356`, then `ed9a24c4` restoring the two static templates in that
+branch's index). Owner BRIDGE/PAPER_ACCOUNTS documents and ROI image were
+hash-verified unchanged; active data was never bulk-staged.
+
+Final main CI and served-content verification follow the documentation push.
+Their exact observed SHA, NAV status and public source stamps are saved locally
+in `../aegis-recovery-evidence/coordinator/final_deploy_summary.json`; use that
+receipt and current GitHub Actions/Optimus live state instead of inferring a
+deploy from a merge. The verification report links the commands and gates.
 
 ### Installed operation and next-session workflow
 
@@ -100,12 +119,14 @@ select work from INDEX's existing current roadmap.
 
 ### What Murat should do
 
-- Keep the PC awake and available for its existing scheduled work, including
+- Keep the PC plugged in, awake and available for its existing scheduled work, including
   the observed **16:00 local IIF trigger** and the 16:45–17:05 load exclusion.
   Windows standby/hibernate interrupted October 9; its refused night cannot be
   retried. Leave OpenClaw's dedicated browser/profile with its
   current reader owner. Free at least 3 GiB before an optional manual local
-  digest; a low-memory refusal is intentional.
+  digest, and at least 4 GB for the opportunity rebuild. Available memory fell
+  again near closeout; low-memory refusals are intentional and never trigger
+  paid fallback.
 - Supply the authentic Bloomberg WLS MEMB export through the existing Terminal
   pickup workflow. Registration, rules and verified fills remain separate
   inputs. No proxy universe or fabricated export can clear that gate.
