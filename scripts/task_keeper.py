@@ -969,8 +969,17 @@ def run_assets(*, bump: Callable[..., int] | None = None,
     if row["action"] == "skip":
         row["why"] = out.get("reasons") or out.get("push_refused") or "commit did not complete"
     voice = RPA.PAPER_DIR / f"results_voice_{new_id}.md"
-    if voice.is_file():
-        row["results_voice"] = voice.resolve().relative_to(RPA.REPO.resolve()).as_posix()
+    # The optional voice receipt can live in the runtime repo while assets run
+    # from the separate publication checkout. It must never turn a completed
+    # push into an exception before this job's durable receipt is logged.
+    try:
+        if voice.is_file():
+            voice_root = Path(os.getenv("AEGIS_REPO_ROOT", str(RPA.REPO))).resolve()
+            row["results_voice"] = voice.resolve(strict=True).relative_to(voice_root).as_posix()
+            if voice_root != RPA.REPO.resolve():
+                row["results_voice_root"] = "runtime"
+    except (OSError, ValueError):
+        row["results_voice_warning"] = "voice attachment is outside configured runtime root"
     return log(row, log_path or ASSETS_LOG)
 
 
