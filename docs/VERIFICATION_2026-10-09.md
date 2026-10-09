@@ -16,8 +16,8 @@ orders, rewritten NAV, or touched the protected IIF launcher.
 |---|---|---|---|
 | API and persistent ledger | Railway selfless-courage, initially `6bc11c4`; main advanced to `866c84c8` | Direct HTTP `/api/health`, `/api/health/full`, OpenAPI and track record 200; 12 jobs reported healthy; all ten NAV dates October 8 | HEALTHY for sampled public API and marks; not a claim that every nested subsystem is healthy |
 | Public frontend | Vercel production `dpl_AbyrBF8Y714h23JV7TRnwfpdzT7H`, October 7 08:57:39; workflow head `3a109566` | Live alias resolves to the exact URL in successful workflow `37597075320`; frontend tree identical to current main. Six pages 200; expected HTML/chunks and API CORS | HEALTHY HTTP/API and deployed-source evidence; interactive browser rendering not independently tested while the guarded reader owns its profile |
-| Public evidence pages | Image receipt publisher → FastAPI legibility and arena/opportunity routes | Seven representative API surfaces 200; takeover copies published October 7 | DEGRADED freshness; eight sanitized refreshed payloads prepared, 4,767,640 bytes; deployed verification must follow merge |
-| Recurring publication | AegisDataCatalog, Windows; action changed to dedicated main worktree `../aegis-finance-publication` | Reads active runtime data with AEGIS_REPO_ROOT and directs sanitized receipts to the publication worktree; fast-forward pull before the existing catalog entry point | REPAIR CONFIGURED; original triggers/principal/settings preserved and diff-verified. Full publishing run still pending final recovery merge |
+| Public evidence pages | Image receipt publisher → FastAPI legibility and arena/opportunity routes | Seven representative surfaces 200; October 9 refreshed copies pushed by the real scheduled task, then health follow-up `9ea43a12`, 4,768,221 bytes | Published successfully; final served-commit/source-stamp evidence is recorded in the closeout receipt below. Opportunity source remains October 7 because rebuilding refused low RAM |
+| Recurring publication | AegisDataCatalog, Windows; dedicated main worktree `../aegis-finance-publication` | Real task started 09:56:17, catalog scanned 45,014 files / 5,872 datasets; publisher wrote all eight kinds and pushed `ba135a54` at 09:58:05 | HEALTHY publishing repair; overall task remains DEGRADED solely on opportunity rebuild's 1.67 GB free vs 4 GB floor. Triggers/principal/settings unchanged; exit 0 alone did not establish step success |
 | Main live forecasts | Railway persistent `/data/optimus/predictions.jsonl` | 736 forecasts, 431 resolved, six void; zero overdue, bad lines or duplicate IDs at probe | HEALTHY for this ledger; proposed split migration not applied; local campaign ledger is a separate dormant population |
 | News ingestion/digest | PC OpenClaw reader + AegisWorldDigest | October 9 04:30 digest: 1,495 inputs, 41 forecast writes, no failed extraction calls; page log advances after 06:00 | HEALTHY advancing path with DEGRADED provenance for 262 undated inputs; model extraction is paid and explicitly budgeted |
 | News decision influence | world_state + sim shadow | 38 shadow decisions; direction/size trust both zero; recent graded mean improvement negative | INTENTIONALLY OFFLINE portfolio tilt; NEWS_TILT_IN_PLAN remains false |
@@ -168,9 +168,47 @@ redacted by the connector. GitHub VERCEL_TOKEN presence and successful deploymen
 steps were checked without reading its value. SQLite WAL persistence is
 `DATA_DIR/aegis_pi.db`; nonempty current track-record reads exercise that path.
 
-PR #14's full CI passed in run `37889896395`; Railway then began deploying
-`866c84c8`. PR #15's initial source is `801beeb1`, with venv/dependency repairs
-following. CI checks are required on the final head before merging.
+PR #14's full CI passed in run `37889896395`; Railway deployed `866c84c8`
+(direct HTTP confirmed again at 09:35 UTC, fresh NAV and no degraded reasons).
+PR #15's final source `e2a4d5d7` passed run **37911817477**: **14,029 passed,
+111 skipped, 126 deselected**, 137,578 existing warnings, 1,305.36 s; frontend
+build passed. PR #15 merged at 09:55:39 UTC as
+`d4789050c49ea39210e0e6d433a019034fcbedce`. Main CI/deployment and the scheduled
+publication receipt are verified separately from this PR check.
+
+### Integration closeout receipts
+
+The real AegisDataCatalog run completed with scheduler exit 0 and explicit
+`publish_commit: COMMITTED`, `pushed: true`, main commit `ba135a54`. The refreshed
+full health receipt `health_20261009T100141Z.json` reports 44 ALIVE, 17 STOPPED,
+16 STALE, one DEAD and one UNKNOWN (CI for the new main commit was still running).
+Its DataCatalog row confirms publication success and names only the memory
+refusal. Publishing this corrected evidence produced `9ea43a12`; all eight
+sanitized kinds passed the manifest and 5 MB checks. Neither task run wrote
+broker orders or changed financial history.
+
+The active runtime merged main with conflicts resolved only in reviewed recovery
+source/docs and sanitized public copies; it did not bulk-stage its dirty data.
+Two static launcher templates were restored in its index without changing their
+local semantics. Owner `docs/BRIDGE.md`, `docs/PAPER_ACCOUNTS.md` and the ROI image
+retained their exact pre-merge hashes. Runtime WIP retains its unique history.
+
+Final verification command (read-only; substitute the pushed main SHA):
+
+```powershell
+gh run list --branch main --limit 3 --json databaseId,headSha,status,conclusion
+python ../aegis-recovery-evidence/coordinator/verify_final_deploy.py --expected-commit <main-sha>
+```
+
+The verifier compares `/api/health/full`'s commit and NAV freshness, then checks
+served receipt stamps against the committed copies on `/api/legibility/v1/brain`,
+`/forecast-lab`, `/system-health`, `/api/arena/v1/latest` and
+`/api/opportunities/latest`. It stores full sampled responses locally and writes
+`coordinator/final_deploy_summary.json` with the actual observation time and SHA.
+Passing this deployment comparison does not erase the component-level gaps above.
+Final main CI is available through [the CI workflow](https://github.com/Murathanx12/Aegis-Finance/actions/workflows/ci.yml);
+the source PR's [14,029-test run](https://github.com/Murathanx12/Aegis-Finance/actions/runs/37911817477)
+is independently fixed evidence, not a claim that a later push already deployed.
 
 ## Completion gate and exact outstanding work
 

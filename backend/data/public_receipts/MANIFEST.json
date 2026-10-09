@@ -1,9 +1,9 @@
 {
  "schema": "public_receipts/1",
- "published_utc": "2026-10-09T09:57:58+00:00",
+ "published_utc": "2026-10-09T10:03:41+00:00",
  "status": "OK",
  "why": null,
- "total_bytes": 4768331,
+ "total_bytes": 4768221,
  "max_bytes": 5000000,
  "how_public": "this folder is TRACKED; a commit of backend/data/public_receipts/ to main and its push make the pages public (publish_receipts.commit_public_receipts, the last step of the AegisDataCatalog firing; it refuses off main). Routers serve whichever of the live receipts and this copy is newer by the receipts' own stamps.",
  "sanitiser": "backend/services/legibility_sanitise.py (deny-by-default, per-page allow-list) + publish_receipts.leak_scan; each copy is a fixed point of the sanitiser",
@@ -31,10 +31,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "3dfd526fd627cae97bc9f288ae9d1029c8a6e2321bfe52897d2deeb88af0b653",
+   "sha256": "ce32b71d29e9692819e9179d521f884df8f62a864af00f7dfff47f67fe96b3fe",
    "bytes": 623836,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-09T09:57:58+00:00"
+   "published_utc": "2026-10-09T10:03:41+00:00"
   },
   "arena_stories": {
    "page": "/arena (decision stories)",
@@ -67,10 +67,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "4da21e2940b060a712301e4fdd16ff520a49edb5927c7d22c9f16a44aee45d02",
-   "bytes": 353092,
+   "sha256": "a5b543f9731c8c9da2c2c11e2a530575abc579f3070fafabe010f49e3c21f1ba",
+   "bytes": 353093,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-09T09:57:58+00:00"
+   "published_utc": "2026-10-09T10:03:41+00:00"
   },
   "forecast_lab": {
    "page": "/forecast-lab",
@@ -143,10 +143,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "396ffaa391b044ce21ee38884403474a089809e807185fb82ae7d12aa1372de9",
-   "bytes": 82295,
+   "sha256": "29c44af6b11c5d7c49c1a243db96b89b8a4d8e04c1c2c9228ffb19a90650ae08",
+   "bytes": 82294,
    "payload_status": "STALE",
-   "published_utc": "2026-10-09T09:57:58+00:00"
+   "published_utc": "2026-10-09T10:03:41+00:00"
   },
   "theory_lab_sticky": {
    "page": "/theory-lab?board=sticky",
@@ -235,10 +235,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "e13f9f6fa66eccd92c7a593a99c40767874699b423dc381fc33fdfd5c3ba5606",
+   "sha256": "be83ee376b9fde32472f481c74870c9b27f84661276bae33db44914f3cfc4870",
    "bytes": 598420,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-09T09:57:58+00:00"
+   "published_utc": "2026-10-09T10:03:41+00:00"
   },
   "theory_lab_basket": {
    "page": "/theory-lab?board=basket",
@@ -327,10 +327,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "29b39fb23b9e1c703e5ea5b2ba6cbaea5a206e333b9030b4102f9c645f3d01ee",
+   "sha256": "99808df2e97c92ab1facbac33a29dbe96f3fe2550446a58f0436ae46adae8585",
    "bytes": 599950,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-09T09:57:58+00:00"
+   "published_utc": "2026-10-09T10:03:41+00:00"
   },
   "system_health": {
    "page": "/health",
@@ -340,17 +340,17 @@
    "sources": [
     {
      "kind": "system_health",
-     "file": "optimus/health/health_20261009T091405Z.json",
-     "sha256": "3d0528295a152787a1a0b302547726ceca3abdc25f497f9bb750697f3c0504d7",
-     "stamp_utc": "2026-10-09T09:14:05+00:00",
+     "file": "optimus/health/health_20261009T100141Z.json",
+     "sha256": "c75e75f79ca16f1306faff67a17104ee24eeee20f26809ccf613e06c012a834a",
+     "stamp_utc": "2026-10-09T10:01:41+00:00",
      "role": "every row",
      "status": "FRESH"
     }
    ],
-   "sha256": "91541291f92f67d135acc0d48d9191fbac7825f2f03e2edbaaf9ffee78ca92e9",
-   "bytes": 61148,
+   "sha256": "700b6b8e1a04aca7b3ece23ab74bc7353f6002840e8fa903aacf9aee16541650",
+   "bytes": 61038,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-09T09:57:58+00:00"
+   "published_utc": "2026-10-09T10:03:41+00:00"
   },
   "opportunities": {
    "page": "/opportunities",
@@ -370,7 +370,7 @@
    "sha256": "e5236f651de9370f4ca9468118dc88dec2a151932a7c48d406406c1a932f89cf",
    "bytes": 2405250,
    "payload_status": null,
-   "published_utc": "2026-10-09T09:57:58+00:00"
+   "published_utc": "2026-10-09T10:03:41+00:00"
   },
   "brain": {
    "page": "/brain",
@@ -411,10 +411,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "8cca12145de909956d75f5d2c45756b6338e2edcd1cc7b4926dd5178d3310011",
+   "sha256": "697148205657aa4f1b76221617715b4fb86021860f20ea5f56250baaec97c92e",
    "bytes": 44340,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-09T09:57:58+00:00"
+   "published_utc": "2026-10-09T10:03:41+00:00"
   }
  },
  "published": [
