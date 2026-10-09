@@ -8,4 +8,5 @@ scikit-learn>=1.5
 lightgbm==4.6.0
 scipy>=1.13
 pytest>=8
+python-dotenv>=1.0.0  # nightly's backend.config dependency; otherwise the scheduled run fails
 autogluon.tabular[lightgbm]==1.6.3   # optional: nn_lab.ag_baseline only

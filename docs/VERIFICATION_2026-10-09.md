@@ -27,7 +27,7 @@ orders, rewritten NAV, or touched the protected IIF launcher.
 | Fleet paper accounts | PC fleet managers; paper API only | Five accounts ACTIVE; positions 22/20/9/1/38; open orders 22/20/9/1/37; four accounts have October 7/8 fills, hack5 none in that window | DEGRADED reconciliation: hack5 historical stop lookup 404, fail-closed cooldown; quiet fills alone are not a failure. FleetDailyCheck exits 1 |
 | Sim market-session owner | AegisSimSessionOwner, PC | Owner ticks advance every 30 minutes; overnight receipts correctly say outside_window; prior sim ended uncleanly October 8 14:42 | DEGRADED: previous session dead; next authorized market-window startup needs observation. Do not force an out-of-window run |
 | IIF-1 | Protected AegisIIF1NightLauncher | October 8 launch permitted, but newest completed night October 7; task exit 0xC000013A | FAILED/missing completion; launcher protected from changes, 16:45–17:05 PC-local load exclusion retained; investigation must respect attended contract |
-| NN research / learning | AegisNNLabNightly and learning jobs | NN task rc=2; audit bars October 7 while panel October 8 | DEGRADED; exact NN exception and next learning advance not yet certified; no unfreeze/retraining to hide it |
+| NN research / learning | AegisNNLabNightly and learning jobs | NN task rc=2; latest night October 9 03:35:36 failed importing `dotenv`; audit bars October 7 while panel October 8 | DEGRADED; missing dependency reproduced and repaired with python-dotenv 1.0.1 in the NN venv and declared in its requirements/lock. Exact import now passes. Full night remains unverified; no unfreeze/retraining to hide it |
 | Old hack1–6 Railway loops | loving-elegance persistent services | No active deployments; configuration/history identifies September 29 retirement and PC replacement | INTENTIONALLY OFFLINE; not restarted |
 | Seal authority | loving-elegance, deployment `aa09c009` September 29 | ONLINE, one replica | UNKNOWN functional health beyond control-plane status; independent endpoint/output verification remains |
 | Optimus | Existing local MCP and aegis-docs index | session_briefing, aegis_verified_state, brain_query and postmortem retrieval work | HEALTHY retrieval; indexed startup snapshot dated 03:32 differs from observed Git state; refreshed document indexing must be verified |
@@ -60,7 +60,9 @@ rows are not fresh independent process evidence.
   refresh alone does not establish production freshness.
 
 Focused validation: **34 passed**, three existing httpx deprecation warnings,
-22.10 seconds. Public manifest validation: no violations. Command:
+22.10 seconds. A subsequent missing-memory test and native Windows probe repair
+passed all **13 hook/digest tests in the actual scheduled-task venv** (6.42 s).
+The 22 publisher tests are unchanged. Public manifest: no violations. Command:
 
 ```powershell
 $env:AEGIS_IGNORE_DOTENV='1'
@@ -78,6 +80,17 @@ explicit local refusal; it is not successful inference. A `run.lock` blocks
 overlap and requires checking its owning PID before manual stale-lock removal.
 The model sees bounded enum counts and normalized timestamps, not credentials,
 article text, URLs, account identifiers or instructions embedded in logs.
+
+Installed `AegisLocalRuntimeDigest`, daily at 13:00 PC-local, with single-instance
+and five-minute limits, using the existing project `pythonw.exe`. The native
+Windows memory probe avoids an undeclared psutil dependency. It refuses during
+the protected IIF window, including delayed scheduled starts. Corrected actual
+log run at 06:00:24 UTC: 668 tokens, 2.52 seconds, $0, 3.36 GiB available loaded,
+owned process stopped. Refusals under later low memory remain explicit receipts.
+
+PR #14's full CI passed in run `37889896395`; Railway then began deploying
+`866c84c8`. PR #15's initial source is `801beeb1`, with venv/dependency repairs
+following. CI checks are required on the final head before merging.
 
 ## Completion gate and exact outstanding work
 

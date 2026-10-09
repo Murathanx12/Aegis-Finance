@@ -87,6 +87,10 @@ source-scorecard snapshots from the integration Git index, preserving all
 history rewriting, financial-ledger modification or runtime-directory cleanup.
 Existing Git commits retain the old evidence. Active WIP unique work is kept.
 
+Applied the same policy in the active runtime checkout as `8f0054d4` and pushed
+WIP: 638 paths / 308,047,647 bytes were retained locally. This larger count
+includes snapshots added by `74f82326`. Unrelated active changes were not staged.
+
 Only the established deny-by-default public-receipt publisher is used to
 refresh public evidence. Its eight output kinds occupy 4,767,640 bytes, below
 the existing 5 MB limit. Raw logs, browser state, account records, full news
@@ -118,6 +122,10 @@ No active worktree or open PR was removed. Local worktree branches remain.
 | docs/canonical-integration-20260828 | ARCHIVE in place | `d4bde9fb`, one unique commit; historical knowledge not discarded |
 | lab/autonomous-rd | KEEP | `4c23ade4`, incorporated but `lab/rd_loop.py:750` still names it as default branch |
 | lab-v5-abandoned | KEEP historical evidence | `78cd3e54`, unique commit, owner's explicit preservation instruction |
+
+After PR #14's main CI passed, its unchanged remote branch was conditionally
+deleted too: **five** obsolete remote branches removed in total. Recovery
+integration is [PR #15](https://github.com/Murathanx12/Aegis-Finance/pull/15).
 
 PR #13 was reproduced in a disposable repository: its broad `docs/assets`
 allowlist committed an unrelated local file as well as the intended asset.
