@@ -23,9 +23,9 @@
 
 <!-- results-panel:start -->
 <p align="center">
-  <img src="docs/assets/paper_results_live.svg" width="100%" alt="Best paper accounts, live, as of the 2026-10-06 close: revision_flow_v0 (frozen LLM book, $1M paper) +7.14% vs SPY +1.40% since 2026-09-28, +5.74 pp, its matched random twin -0.01%; night book b109c886 (night book, $100k paper) +6.08% vs SPY +2.19% since 2026-09-11, +3.90 pp; hack2 (Alpaca paper broker, $100k paper) +2.31% vs SPY +1.29% since 2026-08-28, +1.02 pp, holds the same 20 names as revision_flow_v0. Labels OBSERVED(7), OBSERVED(17), OBSERVED(27).">
+  <img src="docs/assets/paper_results_live.svg" width="100%" alt="Best paper accounts, live, as of the 2026-10-09 close: revision_flow_v0 (frozen LLM book, $1M paper) +6.97% vs SPY +0.73% since 2026-09-28, +6.24 pp, its matched random twin -1.18%; night book b109c886 (night book, $100k paper) +4.03% vs SPY +1.51% since 2026-09-11, +2.52 pp; hack2 (Alpaca paper broker, $100k paper) +2.48% vs SPY +0.62% since 2026-08-28, +1.86 pp, holds the same 20 names as revision_flow_v0. Labels OBSERVED(9), OBSERVED(19), OBSERVED(29).">
 </p>
-<p align="center"><sub>Every number on both pictures is read from a committed receipt (<code>backend/data/optimus/paper_accounts/roi_2026-10-06T235345Z.json</code>) and every stage names the code that runs it; <code>backend/tests/test_public_assets.py</code> fails if either stops being true. The motion version is <a href="docs/design/aegis_front_page.html"><code>docs/design/aegis_front_page.html</code></a>; the design record is <a href="docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md"><code>docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md</code></a>.</sub></p>
+<p align="center"><sub>Every number on both pictures is read from a committed receipt (<code>docs/assets/public_results_2026-10-09T045359Z.json</code>) and every stage names the code that runs it; <code>backend/tests/test_public_assets.py</code> fails if either stops being true. The motion version is <a href="docs/design/aegis_front_page.html"><code>docs/design/aegis_front_page.html</code></a>; the design record is <a href="docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md"><code>docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md</code></a>.</sub></p>
 <!-- results-panel:end -->
 
 Aegis Finance is a free, open-source **self-improving investment intelligence

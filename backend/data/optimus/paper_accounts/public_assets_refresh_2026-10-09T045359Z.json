@@ -1,0 +1,33 @@
+{
+ "schema": "public_assets_refresh/1",
+ "generated_utc": "2026-10-09T17:14:30+00:00",
+ "old_run_id": "2026-10-06T235345Z",
+ "run_id": "2026-10-09T045359Z",
+ "assets": {
+  "docs/assets/aegis_loop.svg": "6f93fae349c7b92f11b353192c7f2ea8630554be28a26d55919e1be79e80eece",
+  "docs/assets/paper_results_live.svg": "427d981c870905e0095db4709b02175813e2875f5e9b7a840f6939f335e22709",
+  "docs/assets/architecture_pipeline.svg": "ff2c76cc02d104febc55c3ab52f9358b8bdeef4025e3d48686417822b3e745cf",
+  "docs/assets/gauntlet.svg": "2cbc85a3dba01dea5a6b1f8e70ab39851b8ca674e12417a63a0418cd710942da",
+  "docs/assets/og_preview.svg": "b5f9fd46168eabbcea13325920da5ea5679a418a9cd46dbe3f083de10ccac1d1",
+  "docs/design/aegis_front_page.html": "9120b013f179444e503a5f951a67925f33d769af7d61033793661b0f975d0d90",
+  "docs/assets/public_results_2026-10-09T045359Z.json": "1d0898597aa32e36c6d709b46ec084f3f19d7fbf3ff2ee68036cf99297fd461f",
+  "README.md": "b69e75686a8b5cb4b0d15698ff7e465405689b6b828b31f3c0e9c3d2f5f56b80"
+ },
+ "featured": [
+  {
+   "family": "llm_portfolio:personal",
+   "account": "revision_flow_v0",
+   "name": "revision_flow_v0"
+  },
+  {
+   "family": "night_books",
+   "account": "Cash/index by default; deviate only above a  [b109c886]",
+   "name": "night book b109c886"
+  },
+  {
+   "family": "alpaca_fleet",
+   "account": "hack2",
+   "name": "hack2"
+  }
+ ]
+}
