@@ -1,8 +1,0 @@
-{
- "receipt": "dowjones_pull.plan",
- "plan": "marketwatch:analyst_estimates:VKTX|NTLA|HWM|IONQ|AGYS|NVT|AMZN|NVDA|TSM|GEV|CLS|PRAX|SNOW|JAZZ|LEU|COGT|BHVN|BBIO|CRM|MP|AVGO|ABSI|LNG|CCJ|BSP|AGIO|ENS|PRGS|BA|GOOGL|TER|VRT|VG|BN|WDAY|WST|DKNG|AVPT|PRCH|VRTX|NOW|MU|SNDR|NVO|HUBS|INCY|HOOD|META|RHI|ACI|PEGA|SMPL|RGEN|MAN|BE|AAPL|AMGN|IRDM|AARD|HELE|KYTX|NOVT|NVEC|PSNL|QUBT|SLDP|SOC",
- "n_articles": 0,
- "reattach_log": [],
- "refused": "ReaderRefused: REFUSED_GATEWAY_DOWN: `browser profiles` did not list 'user' (gateway down or timing out?); the reader does not restart it",
- "finished_utc": "2026-09-27T11:35:31+00:00"
-}
