@@ -1,0 +1,73 @@
+{
+  "utc": "2026-10-09T10:25:59.140204+00:00",
+  "expected_commit": "343a3af1295b89a663bae2eac1f7bfc368b8d5a2",
+  "passed": true,
+  "rows": [
+    {
+      "kind": "health",
+      "path": "/api/health/full",
+      "http": 200,
+      "cors": "https://aegis-finance-six.vercel.app",
+      "commit": "343a3af1295b89a663bae2eac1f7bfc368b8d5a2",
+      "status": "ok",
+      "degraded": [],
+      "nav_fresh": true,
+      "passed": true
+    },
+    {
+      "kind": "brain",
+      "path": "/api/legibility/v1/brain",
+      "http": 200,
+      "cors": "https://aegis-finance-six.vercel.app",
+      "status": "FRESH",
+      "expected_stamp": "2026-10-09T04:31:15+00:00",
+      "served_stamp": "2026-10-09T04:31:15+00:00",
+      "bytes": 47846,
+      "passed": true
+    },
+    {
+      "kind": "forecast_lab",
+      "path": "/api/legibility/v1/forecast-lab",
+      "http": 200,
+      "cors": "https://aegis-finance-six.vercel.app",
+      "status": "STALE",
+      "expected_stamp": "2026-10-09T06:26:30+00:00",
+      "served_stamp": "2026-10-09T06:26:30+00:00",
+      "bytes": 89992,
+      "passed": true
+    },
+    {
+      "kind": "system_health",
+      "path": "/api/legibility/v1/system-health",
+      "http": 200,
+      "cors": "https://aegis-finance-six.vercel.app",
+      "status": "FRESH",
+      "expected_stamp": "2026-10-09T10:01:41+00:00",
+      "served_stamp": "2026-10-09T10:01:41+00:00",
+      "bytes": 64424,
+      "passed": true
+    },
+    {
+      "kind": "arena",
+      "path": "/api/arena/v1/latest",
+      "http": 200,
+      "cors": "https://aegis-finance-six.vercel.app",
+      "status": "FRESH",
+      "expected_stamp": "2026-10-09T04:54:16+00:00",
+      "served_stamp": "2026-10-09T04:54:16+00:00",
+      "bytes": 672902,
+      "passed": true
+    },
+    {
+      "kind": "opportunities",
+      "path": "/api/opportunities/latest",
+      "http": 200,
+      "cors": "https://aegis-finance-six.vercel.app",
+      "status": null,
+      "expected_stamp": "2026-10-09T03:31:21+00:00",
+      "served_stamp": "2026-10-09T03:31:21+00:00",
+      "bytes": 426129,
+      "passed": true
+    }
+  ]
+}

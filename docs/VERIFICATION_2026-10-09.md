@@ -14,9 +14,9 @@ orders, rewritten NAV, or touched the protected IIF launcher.
 
 | Component / purpose | Owner, environment, version | Input / last successful output; test | Result / cause / repair or dependency |
 |---|---|---|---|
-| API and persistent ledger | Railway selfless-courage, initially `6bc11c4`; main advanced to `866c84c8` | Direct HTTP `/api/health`, `/api/health/full`, OpenAPI and track record 200; 12 jobs reported healthy; all ten NAV dates October 8 | HEALTHY for sampled public API and marks; not a claim that every nested subsystem is healthy |
+| API and persistent ledger | Railway selfless-courage, `343a3af1` verified 10:25:59 UTC | Direct HTTP `/api/health`, `/api/health/full`, OpenAPI and track record 200; 12 jobs reported healthy; all ten NAV dates October 8 | HEALTHY for sampled public API and marks; not a claim that every nested subsystem is healthy |
 | Public frontend | Vercel production `dpl_AbyrBF8Y714h23JV7TRnwfpdzT7H`, October 7 08:57:39; workflow head `3a109566` | Live alias resolves to the exact URL in successful workflow `37597075320`; frontend tree identical to current main. Six pages 200; expected HTML/chunks and API CORS | HEALTHY HTTP/API and deployed-source evidence; interactive browser rendering not independently tested while the guarded reader owns its profile |
-| Public evidence pages | Image receipt publisher → FastAPI legibility and arena/opportunity routes | Seven representative surfaces 200; October 9 refreshed copies pushed by the real scheduled task, then health follow-up `9ea43a12`, 4,768,221 bytes | Published successfully; final served-commit/source-stamp evidence is recorded in the closeout receipt below. Opportunity source remains October 7 because rebuilding refused low RAM |
+| Public evidence pages | Image receipt publisher → FastAPI legibility and arena/opportunity routes | Seven representative surfaces 200; October 9 refreshed copies pushed by the real scheduled task, then health follow-up `9ea43a12`, 4,768,221 bytes | Published successfully; final served-commit/source-stamp evidence is recorded in the closeout receipt below. Opportunity source is October 9 03:31:21 UTC; the later rebuild refused low RAM. October 7 was the old deployed copy, not the retained local source |
 | Recurring publication | AegisDataCatalog, Windows; dedicated main worktree `../aegis-finance-publication` | Real task started 09:56:17, catalog scanned 45,014 files / 5,872 datasets; publisher wrote all eight kinds and pushed `ba135a54` at 09:58:05 | HEALTHY publishing repair; overall task remains DEGRADED solely on opportunity rebuild's 1.67 GB free vs 4 GB floor. Triggers/principal/settings unchanged; exit 0 alone did not establish step success |
 | Main live forecasts | Railway persistent `/data/optimus/predictions.jsonl` | 736 forecasts, 431 resolved, six void; zero overdue, bad lines or duplicate IDs at probe | HEALTHY for this ledger; proposed split migration not applied; local campaign ledger is a separate dormant population |
 | News ingestion/digest | PC OpenClaw reader + AegisWorldDigest | October 9 04:30 digest: 1,495 inputs, 41 forecast writes, no failed extraction calls; page log advances after 06:00 | HEALTHY advancing path with DEGRADED provenance for 262 undated inputs; model extraction is paid and explicitly budgeted |
@@ -209,6 +209,24 @@ Passing this deployment comparison does not erase the component-level gaps above
 Final main CI is available through [the CI workflow](https://github.com/Murathanx12/Aegis-Finance/actions/workflows/ci.yml);
 the source PR's [14,029-test run](https://github.com/Murathanx12/Aegis-Finance/actions/runs/37911817477)
 is independently fixed evidence, not a claim that a later push already deployed.
+
+**Verified after publication:** main run
+[37915441250](https://github.com/Murathanx12/Aegis-Finance/actions/runs/37915441250)
+passed 14,029 tests, 111 skipped, 126 deselected (920.52 s) and frontend build.
+Railway deployment `bb279253-10a4-4a9c-8673-7c7d5657d9e3` succeeded, and the
+10:25:59 UTC public probe independently confirmed commit `343a3af1`, fresh NAV
+and all five expected page stamps. Durable sanitized receipt:
+[deployment_verification.json](research_notes/2026-10-09/deployment_verification.json).
+Brain, system health and arena are FRESH. Forecast Lab's aggregate remains
+STALE despite its newest NN receipt advancing: older component evidence remains
+visible. Opportunity source is October 9 03:31:21, not the October 7 copy served
+before deployment. Final closeout edits only document these observations;
+use current main CI/live state for their subsequent documentation commit.
+
+Full Optimus refresh completed at closeout: 861 docs files / 862 pages, 320
+Claude-memory files / 321 pages, plus existing trial, research, negative-result
+and sister-repo sources. Query `CLEANUP_UNCONFIRMED` retrieves the updated
+handoff via `folder:aegis-docs:HANDOFF_CODEX_2026-10-09.md#L1`.
 
 ## Completion gate and exact outstanding work
 
