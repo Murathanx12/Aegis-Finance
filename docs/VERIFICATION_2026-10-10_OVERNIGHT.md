@@ -1,4 +1,18 @@
-# Overnight verification — 2026-10-10
+# Overnight verification
+
+## Current verified snapshot - 2026-10-09 18:54 UTC / 2026-10-10 02:54 SGT
+
+**Overall: NOT READY.** PR17 source `e737` passed PR CI run 37971544592 (14,318 passed, 111 skipped, 126 deselected) and merged as `8146`; main CI 37974587476 targeting `8146` and deployment remain pending. Last known production release `f49e3a90` remains healthy. Earlier 00:21, 00:27 and 02:06 snapshots below are historical.
+
+- Fleet protection: no-action fix `0042` was independently approved and applied before its dry run. The 18:45:36-18:45:55 UTC dry run refused exact resting-stop identity after 18 GETs and zero POSTs, with one history warning; refused role/symbol remain UNKNOWN because metadata was not retained. Separate GET-only PANW snapshot at 18:49:38 UTC showed 12 held and one plain STOP (12 shares, GTC, $350.66), matching accepted local ID/coid/quantity/price/type/TIF; offline strict no-op predicate passed. A later other-role snapshot at 18:51:51 UTC found three Hack4 quantity mismatches and eight Hack6 missing exact accepted orderID mappings; this does not reconstruct the original refusal. No task is installed. Combined monitor/producer/inactive-PC integration passed 446 focused tests (2 existing warnings, 37.10s). Monitor `aaef2c09` independent review and offline checks passed; runtime/task application remains pending. Both PC activation flags are false; all 15 pins and config-only repin verify, not activation.
+- Publication: the 10-file backup and preview against `8146` passed. No apply, retry or push occurred; publication remains pending.
+- News P4: one attempt covered two DEV examples. The first generated `INVALID_OUTPUT` with a `nonoperative_date` claim; the second was refused by the memory guard and never generated. No retry or quality pass occurred. Root offline cached-provenance check passed; this is not model-quality acceptance or promotion.
+- OpenClaw remained stable at the same four process IDs at 18:28 UTC and crossed the three-hour boundary. This supports observed process stability only.
+- R15: builder `071d32` implemented the representation-only catalyst date-certainty/timezone/revision contract and passed 80 tests; independent review is pending, so it is not accepted.
+
+The future sim report (scheduled 21:10 UTC), digest (22:15 UTC), NN (00:30 UTC / 08:30 SGT), catalog (01:00 UTC / 09:00 SGT), assets (02:30 UTC / 10:30 SGT), and other scheduled receipts have not yet been verified in this snapshot. Publication, deployment, consumer acceptance, PC activation, and overall recovery remain open. The evidence does not support READY or performance claims.
+
+## Historical verification snapshots - 2026-10-10
 
 **Snapshot:** 2026-10-10 00:21 SGT (2026-10-09 16:21 UTC). Later CI/API/deployment progress is outside this snapshot.
 
