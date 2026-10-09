@@ -39,7 +39,8 @@ def test_reader_schema_uses_t_and_class_or_event(tmp_path):
 
 
 def test_protected_window_boundaries():
-    assert not D.protected(datetime(2026, 10, 9, 16, 44))
+    assert not D.protected(datetime(2026, 10, 9, 16, 39))
+    assert D.protected(datetime(2026, 10, 9, 16, 40))
     assert D.protected(datetime(2026, 10, 9, 16, 45))
     assert D.protected(datetime(2026, 10, 9, 17, 4))
     assert not D.protected(datetime(2026, 10, 9, 17, 5))

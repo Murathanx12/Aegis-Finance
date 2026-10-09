@@ -72,8 +72,9 @@ def snapshot(ledger: Path) -> list[dict]:
 
 
 def protected(now: datetime) -> bool:
-    # PC-local time, matching the standing IIF protection. The launcher is untouched.
-    return (16, 45) <= (now.hour, now.minute) < (17, 5)
+    # Five-minute entry margin keeps bounded model startup/request/cleanup out
+    # of the standing 16:45-17:05 exclusion. The launcher is untouched.
+    return (16, 40) <= (now.hour, now.minute) < (17, 5)
 
 
 def free_gib() -> float | None:
