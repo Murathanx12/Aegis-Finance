@@ -5915,7 +5915,7 @@ PUBLIC_ASSETS_MAX_PIN_AGE_DAYS = 10
 #: pass has written the newest paper-account receipts.
 PUBLIC_ASSETS_REFRESH_WEEKDAY = 5
 #: Local (HKT) 24h "HHMM", after `AegisDataCatalog`'s 09:00 daily firing on the same day.
-PUBLIC_ASSETS_REFRESH_HHMM = "0900"
+PUBLIC_ASSETS_REFRESH_HHMM = "1030"
 #: (C8 review F8) The Railway fleet loops (aat-loop-hack*) were stopped ON PURPOSE on
 #: 2026-09-29 (session S60, to hold the bill at $20). While this is non-empty the
 #: `railway_fleet` probe reads STOPPED_BY_OPERATOR with this reason instead of a

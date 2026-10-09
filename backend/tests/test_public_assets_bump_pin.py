@@ -44,6 +44,7 @@ def paper_dir(tmp_path, monkeypatch):
     d = tmp_path / "paper_accounts"
     d.mkdir()
     monkeypatch.setattr(RPA, "PAPER_DIR", d)
+    monkeypatch.setattr(RPA, "REFRESH_DIR", d)
     return d
 
 
@@ -120,6 +121,12 @@ def test_choose_new_run_id_picks_the_newest_by_generated_utc_not_by_name(paper_d
     _write_pair(paper_dir, "2026-01-05T000000Z", gen="2026-01-01T00:00:00+00:00")
     _write_pair(paper_dir, "2026-01-01T000000Z", gen="2026-01-09T00:00:00+00:00")
     assert RPA.choose_new_run_id() == "2026-01-01T000000Z"
+
+
+def test_choose_new_run_id_orders_timezone_offsets_by_utc(paper_dir):
+    _write_pair(paper_dir, "2026-01-02T023000Z", gen="2026-01-02T02:30:00+02:00")
+    _write_pair(paper_dir, "2026-01-02T010000Z", gen="2026-01-02T01:00:00+00:00")
+    assert RPA.choose_new_run_id() == "2026-01-02T010000Z"
 
 
 def test_choose_new_run_id_refuses_with_nothing_available(paper_dir):
@@ -339,6 +346,43 @@ def test_bump_pin_write_failure_restores_previous_files(
     assert RPA.RESULTS_RUN_ID == "2026-01-01T000000Z"
     assert not list(rendered_dirs[0].glob("*"))
     assert not list(paper_dir.glob("public_assets_refresh_*.json"))
+
+
+def test_bump_pin_persistent_failure_keeps_disk_pin_and_restores_earlier_output(
+        paper_dir, three_families, pin_copy, readme_copy, rendered_dirs, monkeypatch):
+    three_families("2026-01-01T000000Z", "2026-01-01T00:00:00+00:00")
+    three_families("2026-01-02T000000Z", "2026-01-02T00:00:00+00:00")
+    _set_pin(pin_copy, "2026-01-01T000000Z")
+    monkeypatch.setattr(RPA, "RESULTS_RUN_ID", "2026-01-01T000000Z")
+    assets, _ = rendered_dirs
+    assets.mkdir()
+    RPA.HERO_SVG.write_bytes(b"old hero")
+    RPA.RESULTS_SVG.write_bytes(b"old results")
+    write_bytes = Path.write_bytes
+
+    def always_fail(path, data):
+        if path == RPA.RESULTS_SVG:
+            raise OSError("persistent lock")
+        return write_bytes(path, data)
+
+    monkeypatch.setattr(Path, "write_bytes", always_fail)
+    assert RPA.bump_pin("2026-01-02T000000Z", pin_path=pin_copy, readme_path=readme_copy) == 2
+    assert 'RESULTS_RUN_ID = "2026-01-01T000000Z"' in pin_copy.read_text(encoding="utf-8")
+    assert RPA.HERO_SVG.read_bytes() == b"old hero"
+    assert RPA.RESULTS_SVG.read_bytes() == b"old results"
+
+
+def test_snapshot_renders_without_raw_paper_receipts(
+        paper_dir, three_families, pin_copy, readme_copy, rendered_dirs, monkeypatch, tmp_path):
+    three_families("2026-01-01T000000Z", "2026-01-01T00:00:00+00:00")
+    three_families("2026-01-02T000000Z", "2026-01-02T00:00:00+00:00")
+    _set_pin(pin_copy, "2026-01-01T000000Z")
+    monkeypatch.setattr(RPA, "RESULTS_RUN_ID", "2026-01-01T000000Z")
+    assert RPA.bump_pin("2026-01-02T000000Z", pin_path=pin_copy, readme_path=readme_copy) == 0
+    expected = {path: value for path, value in RPA.outputs().items()}
+    monkeypatch.setattr(RPA, "PAPER_DIR", tmp_path / "empty_raw_inputs")
+    assert RPA.results_data()["receipt"] == "docs/assets/public_results_2026-01-02T000000Z.json"
+    assert RPA.outputs() == expected
 
 
 # ──────────────────────────────────────────────────────── the README block generator

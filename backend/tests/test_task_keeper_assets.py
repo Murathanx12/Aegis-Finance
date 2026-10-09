@@ -144,7 +144,7 @@ def test_the_successful_path_commits_exactly_the_declared_paths_plus_the_receipt
     assert out["action"] == "ok"
     assert out["old_run_id"] != "2026-02-02T000000Z"
     assert out["new_run_id"] == "2026-02-02T000000Z"
-    assert set(captured["paths"]) == set(TK.ASSETS_COMMIT_PATHS) | {captured["paths"][-1]}
+    assert set(captured["paths"]) == set(TK._asset_paths("2026-02-02T000000Z"))
     assert "docs/assets" not in captured["paths"]
     assert all(p != "docs/assets/README.md" for p in captured["paths"])
     assert captured["paths"][-1] == (
@@ -169,6 +169,93 @@ def test_asset_allowlist_does_not_stage_an_unrelated_local_file(tmp_path):
                             check=True, capture_output=True, text=True).stdout.splitlines()
     assert set(staged) == set(TK.ASSETS_COMMIT_PATHS)
     assert "docs/assets/local_notes.txt" not in staged
+
+
+def test_real_asset_caller_refuses_dirty_readme_then_retries_failed_test(
+        tmp_path, monkeypatch):
+    """Exercise the actual bump and Git commit on an isolated main checkout."""
+    import shutil
+    from scripts import render_public_assets as RPA
+    from backend.services import publish_receipts as PR
+
+    repo = tmp_path / "aegis-finance-publication"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
+    subprocess.run(["git", "config", "user.name", "Asset Test"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "asset-test@example.invalid"], cwd=repo, check=True)
+    script = repo / "scripts/render_public_assets.py"
+    script.parent.mkdir()
+    shutil.copy(RPA.__file__, script)
+    readme = repo / "README.md"
+    shutil.copy(RPA.README, readme)
+    subprocess.run(["git", "add", "--", "scripts/render_public_assets.py", "README.md"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "baseline"], cwd=repo, check=True)
+
+    paper = tmp_path / "runtime_paper"
+    paper.mkdir()
+    for day in ("01", "02"):
+        run_id = f"2026-01-{day}T000000Z"
+        rows = [{"account": f"acct_{i}", "family": fam, "status": "LIVE", "roi_pct": 5.0 + i,
+                 "spy_same_window_pct": 1.0, "vs_spy_pp": 4.0 + i, "start_capital": 100_000.0,
+                 "inception": "2026-01-01", "book_id": None}
+                for i, (fam, _) in enumerate(RPA.FEATURED_FAMILIES)]
+        (paper / f"roi_{run_id}.json").write_text(
+            __import__("json").dumps({"generated_utc": f"2026-01-{day}T00:00:00+00:00", "rows": rows}),
+            encoding="utf-8")
+        (paper / f"book_dna_{run_id}.json").write_text(
+            __import__("json").dumps({"books": [{"account": f"acct_{i}", "sessions_graded": 1,
+                                                  "evidence": {"label": "OBSERVED(1)"}, "tickers": []}
+                                                 for i in range(3)]}), encoding="utf-8")
+    source = script.read_text(encoding="utf-8")
+    script.write_text(RPA.PIN_RE.sub('RESULTS_RUN_ID = "2026-01-01T000000Z"', source), encoding="utf-8")
+    subprocess.run(["git", "add", "--", "scripts/render_public_assets.py"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "pin baseline"], cwd=repo, check=True)
+    monkeypatch.setenv("AEGIS_PUBLICATION_ROOT", str(repo))
+    monkeypatch.setattr(TK, "REPO", repo)
+    monkeypatch.setattr(TK, "ASSETS_PENDING", tmp_path / "assets_pending.json")
+    monkeypatch.setattr(RPA, "REPO", repo)
+    monkeypatch.setattr(RPA, "__file__", str(script))
+    monkeypatch.setattr(RPA, "README", readme)
+    monkeypatch.setattr(RPA, "PAPER_DIR", paper)
+    monkeypatch.setattr(RPA, "REFRESH_DIR", repo / "backend/data/optimus/paper_accounts")
+    monkeypatch.setattr(RPA, "ASSETS", repo / "docs/assets")
+    monkeypatch.setattr(RPA, "HERO_SVG", RPA.ASSETS / "aegis_loop.svg")
+    monkeypatch.setattr(RPA, "RESULTS_SVG", RPA.ASSETS / "paper_results_live.svg")
+    monkeypatch.setattr(RPA, "PIPELINE_SVG", RPA.ASSETS / "architecture_pipeline.svg")
+    monkeypatch.setattr(RPA, "OG_SVG", RPA.ASSETS / "og_preview.svg")
+    monkeypatch.setattr(RPA, "GAUNTLET_SVG", RPA.ASSETS / "gauntlet.svg")
+    monkeypatch.setattr(RPA, "FRONT_HTML", repo / "docs/design/aegis_front_page.html")
+    monkeypatch.setattr(RPA, "RESULTS_RUN_ID", "2026-01-01T000000Z")
+    real_commit_paths = PR.commit_paths
+    monkeypatch.setattr(PR, "commit_paths", lambda **kw: real_commit_paths(**kw, push=False))
+    readme_before = readme.read_bytes()
+    readme.write_text(readme.read_text(encoding="utf-8") + "\nUNRELATED OWNER DRAFT\n", encoding="utf-8")
+    refused = TK.run_assets(pytest_runner=lambda *a, **kw: _Rc(0), log_path=tmp_path / "assets.jsonl")
+    assert refused["action"] == "skip" and "owner edits" in refused["why"]
+    assert RPA.RESULTS_RUN_ID == "2026-01-01T000000Z"
+    readme.write_bytes(readme_before)
+    script_before = script.read_bytes()
+    script.write_bytes(script_before + b"\nunrelated_behavior_change = True\n")
+    subprocess.run(["git", "add", "--", "scripts/render_public_assets.py"], cwd=repo, check=True)
+    staged_refusal = TK.run_assets(pytest_runner=lambda *a, **kw: _Rc(0),
+                                   log_path=tmp_path / "assets.jsonl")
+    assert staged_refusal["action"] == "skip"
+    assert b"unrelated_behavior_change" in script.read_bytes()
+    subprocess.run(["git", "restore", "--staged", "--", "scripts/render_public_assets.py"],
+                   cwd=repo, check=True)
+    script.write_bytes(script_before)
+    first = TK.run_assets(pytest_runner=lambda *a, **kw: _Rc(1, "failed"),
+                          log_path=tmp_path / "assets.jsonl")
+    assert first["action"] == "skip" and TK.ASSETS_PENDING.exists()
+    assert RPA.RESULTS_RUN_ID == "2026-01-02T000000Z"
+    second = TK.run_assets(pytest_runner=lambda *a, **kw: _Rc(0, "passed"),
+                           log_path=tmp_path / "assets.jsonl")
+    assert second["action"] == "ok" and not TK.ASSETS_PENDING.exists()
+    tracked = subprocess.run(["git", "ls-tree", "-r", "--name-only", "HEAD"], cwd=repo,
+                             check=True, capture_output=True, text=True).stdout.splitlines()
+    assert "docs/assets/public_results_2026-01-02T000000Z.json" in tracked
+    assert "backend/data/optimus/paper_accounts/roi_2026-01-02T000000Z.json" not in tracked
+    assert "UNRELATED OWNER DRAFT" not in readme.read_text(encoding="utf-8")
 
 
 def test_results_voice_is_named_only_when_the_file_exists(tmp_path):

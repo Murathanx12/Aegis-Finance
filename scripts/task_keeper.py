@@ -51,6 +51,7 @@ no LLM and no order. The sim owner reads the broker (one GET) before a start.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -62,6 +63,9 @@ from typing import Any, Callable, Optional
 REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
+if (len(sys.argv) > 1 and sys.argv[1] == "assets" and
+        REPO.name == "aegis-finance-publication" and "AEGIS_REPO_ROOT" not in os.environ):
+    os.environ["AEGIS_REPO_ROOT"] = str(REPO.parent / "aegis-finance")
 
 from backend import config as _config  # noqa: E402
 
@@ -807,6 +811,40 @@ ASSETS_COMMIT_PATHS = ("scripts/render_public_assets.py",
                       "docs/assets/aegis_loop.svg", "docs/assets/paper_results_live.svg",
                       "docs/assets/architecture_pipeline.svg", "docs/assets/og_preview.svg",
                       "docs/assets/gauntlet.svg", "docs/design/aegis_front_page.html", "README.md")
+ASSETS_PENDING = KEEPER_DIR / "assets_pending.json"
+
+
+def _assets_git(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", *args], cwd=str(REPO), capture_output=True, text=True,
+                          timeout=30, check=False)
+
+
+def _asset_paths(run_id: str) -> tuple[str, ...]:
+    return (*ASSETS_COMMIT_PATHS, f"docs/assets/public_results_{run_id}.json",
+            f"backend/data/optimus/paper_accounts/public_assets_refresh_{run_id}.json")
+
+
+def _asset_hashes(run_id: str) -> dict[str, str]:
+    paths = _asset_paths(run_id)
+    return {rel: hashlib.sha256((REPO / rel).read_bytes()).hexdigest() for rel in paths}
+
+
+def _assets_preflight(paths: tuple[str, ...], *, pending: bool) -> str | None:
+    expected = Path(os.getenv("AEGIS_PUBLICATION_ROOT", str(REPO.parent / "aegis-finance-publication"))).resolve()
+    if REPO.resolve() != expected:
+        return f"assets must run from the dedicated publication checkout {expected}"
+    branch = _assets_git("branch", "--show-current")
+    if branch.returncode != 0 or branch.stdout.strip() != "main":
+        return "publication checkout must be on main"
+    status = _assets_git("status", "--porcelain", "--untracked-files=all", "--", *paths)
+    if status.returncode != 0:
+        return "could not inspect publication paths"
+    if status.stdout.strip() and not pending:
+        return "publication paths already have owner edits; refusing before bump"
+    staged = _assets_git("diff", "--cached", "--name-only")
+    if staged.returncode != 0 or staged.stdout.strip():
+        return "publication index is already staged; refusing before bump"
+    return None
 
 
 def run_assets(*, bump: Callable[..., int] | None = None,
@@ -820,12 +858,46 @@ def run_assets(*, bump: Callable[..., int] | None = None,
                                       f"{type(exc).__name__}: {str(exc)[:300]}")
         return log(row, log_path or ASSETS_LOG)
     old_id = RPA.RESULTS_RUN_ID
+    pending: dict | None = None
+    actual_caller = bump is None and commit is None
+    if actual_caller:
+        try:
+            pending = json.loads(ASSETS_PENDING.read_text(encoding="utf-8")) if ASSETS_PENDING.exists() else None
+        except (OSError, ValueError):
+            row.update(action="skip", why="assets pending state is unreadable; manual repair required")
+            return log(row, log_path or ASSETS_LOG)
+        try:
+            prospective = pending["run_id"] if pending else RPA.choose_new_run_id()
+        except (SystemExit, OSError) as exc:
+            row.update(action="skip", why=str(exc))
+            return log(row, log_path or ASSETS_LOG)
+        why = _assets_preflight(_asset_paths(prospective), pending=bool(pending))
+        if why:
+            row.update(action="skip", why=why)
+            return log(row, log_path or ASSETS_LOG)
+        if pending:
+            old_id = pending["old_run_id"]
+            try:
+                if (pending["hashes"] != _asset_hashes(prospective) or
+                        RPA.RESULTS_RUN_ID != prospective):
+                    raise ValueError("pending publication bytes or pin changed")
+            except (OSError, KeyError, ValueError) as exc:
+                row.update(action="skip", why=f"pending assets need manual review: {exc}")
+                return log(row, log_path or ASSETS_LOG)
     try:
-        rc = (bump or RPA.bump_pin)()
+        rc = 0 if pending else (bump or RPA.bump_pin)()
     except Exception as exc:                                           # noqa: BLE001
         row.update(action="skip", why=f"bump_pin raised {type(exc).__name__}: {str(exc)[:300]}")
         return log(row, log_path or ASSETS_LOG)
-    new_id = RPA.RESULTS_RUN_ID
+    new_id = pending["run_id"] if pending else RPA.RESULTS_RUN_ID
+    if actual_caller and not pending and rc == 0:
+        try:
+            ASSETS_PENDING.parent.mkdir(parents=True, exist_ok=True)
+            ASSETS_PENDING.write_text(json.dumps({"run_id": new_id, "old_run_id": old_id,
+                                                 "hashes": _asset_hashes(new_id)}), encoding="utf-8")
+        except OSError as exc:
+            row.update(action="skip", why=f"bump created uncommitted outputs but pending record failed: {exc}")
+            return log(row, log_path or ASSETS_LOG)
     row.update(bump_rc=rc, old_run_id=old_id, new_run_id=new_id)
     if rc == 2:
         row.update(action="skip", why="bump_pin refused (the newest receipt pair is not newer than the "
@@ -850,20 +922,33 @@ def run_assets(*, bump: Callable[..., int] | None = None,
     except Exception as exc:                                           # noqa: BLE001
         row.update(action="skip", why=f"pytest raised {type(exc).__name__}: {str(exc)[:300]}")
         return log(row, log_path or ASSETS_LOG)
-    receipt_rel = (RPA.PAPER_DIR / f"public_assets_refresh_{new_id}.json").resolve().relative_to(
-        RPA.REPO.resolve()).as_posix()
+    receipt_rel = f"backend/data/optimus/paper_accounts/public_assets_refresh_{new_id}.json"
     try:
         commit = commit or (lambda **kw: __import__(
             "backend.services.publish_receipts", fromlist=["commit_paths"]).commit_paths(**kw))
-        out = commit(paths=(*ASSETS_COMMIT_PATHS, receipt_rel),
-                     message=f"public assets refresh {new_id} (bumped pin {old_id} -> {new_id}; "
-                             f"data + generator only)",
-                     log_path=KEEPER_DIR / "assets_commit.jsonl")
+        already_committed = (actual_caller and pending and
+                             not _assets_git("status", "--porcelain", "--", *_asset_paths(new_id)).stdout.strip())
+        if already_committed:
+            head = _assets_git("log", "-1", "--format=%s").stdout.strip()
+            ahead = _assets_git("diff", "--name-only", "origin/main..HEAD")
+            if (not head.startswith(f"public assets refresh {new_id} ") or ahead.returncode != 0 or
+                    any(p not in _asset_paths(new_id) for p in ahead.stdout.splitlines())):
+                raise RuntimeError("pending commit is not the scoped assets refresh")
+            pushed = _assets_git("push", "origin", "main")
+            out = {"status": "COMMITTED", "pushed": pushed.returncode == 0,
+                   "push_refused": pushed.stderr.strip()[-300:] if pushed.returncode else None}
+        else:
+            out = commit(paths=_asset_paths(new_id), repo=REPO,
+                         message=f"public assets refresh {new_id} (bumped pin {old_id} -> {new_id}; "
+                                 f"data + generator only)",
+                         log_path=KEEPER_DIR / "assets_commit.jsonl")
     except Exception as exc:                                           # noqa: BLE001
         row.update(action="skip", why=f"commit raised {type(exc).__name__}: {str(exc)[:300]}")
         return log(row, log_path or ASSETS_LOG)
     row["commit"] = {k: out.get(k) for k in ("status", "commit", "pushed", "push_refused", "reasons", "n_files")}
     row["action"] = "ok" if out.get("status") == "COMMITTED" and out.get("pushed") is not False else "skip"
+    if row["action"] == "ok" and actual_caller:
+        ASSETS_PENDING.unlink(missing_ok=True)
     if row["action"] == "skip":
         row["why"] = out.get("reasons") or out.get("push_refused") or "commit did not complete"
     voice = RPA.PAPER_DIR / f"results_voice_{new_id}.md"
@@ -1149,6 +1234,8 @@ def registration_ps() -> str:
     trigger (any user) needs elevation and fails with 0x80070005 (measured
     2026-10-02)."""
     pyw = REPO / ".venv" / "Scripts" / "pythonw.exe"
+    publication_root = Path(os.getenv("AEGIS_PUBLICATION_ROOT", str(REPO.parent / "aegis-finance-publication")))
+    asset_pyw = Path(os.getenv("AEGIS_REPO_ROOT", str(REPO))) / ".venv" / "Scripts" / "pythonw.exe"
     return "\n".join([
         "$S = New-ScheduledTaskSettingsSet -StartWhenAvailable -WakeToRun -AllowStartIfOnBatteries "
         "-DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 10)",
@@ -1188,8 +1275,8 @@ def registration_ps() -> str:
         "# the public-assets refresh: weekly, AFTER the daily catalog path on the same day "
         f"(config.PUBLIC_ASSETS_REFRESH_WEEKDAY/_HHMM = {_assets_day_name()} "
         f"{_assets_hhmm_colon()} HKT)",
-        f"$a = New-ScheduledTaskAction -Execute '{pyw}' -Argument \"-m scripts.task_keeper assets\" "
-        f"-WorkingDirectory '{REPO}'",
+        f"$a = New-ScheduledTaskAction -Execute '{asset_pyw}' -Argument \"-m scripts.task_keeper assets\" "
+        f"-WorkingDirectory '{publication_root}'",
         "Register-ScheduledTask -TaskName '" + TASK_ASSETS + "' -Action $a -Settings $SC -Force "
         f"-Trigger @(New-ScheduledTaskTrigger -Weekly -DaysOfWeek {_assets_day_name()} "
         f"-At {_assets_hhmm_colon()})",
